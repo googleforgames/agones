@@ -157,7 +157,7 @@ Dockerfile has changed.
 Assuming that the tests all pass, let's go ahead and compile the code and build the Docker images that Agones 
 consists of.
 
-To compile the Agones images, run `make build-images`. This is often all your need for Agones development.
+To compile the Agones images, run `make build-images`. This is often all you need for Agones development.
 
 If you want to compile and build everything (this can take a while), run `make build`, this will:
 
@@ -181,14 +181,15 @@ First step is to create a Google Cloud Project at https://console.cloud.google.c
 
 The build tools (by default) maintain configuration for gcloud within the `build` folder, to keep
 everything separate (see below for overwriting these config locations). Therefore, once the project has been created,
-we will need to authenticate out gcloud tooling against it. To do that run `make gcloud-init` and fill in the
+we will need to authenticate our gcloud tooling against it. To do that run `make gcloud-init` and fill in the
 prompts as directed.
 
 Once authenticated, to create the test cluster, run `make gcloud-test-cluster`, which will use the Terraform
 configuration found in the `build/terraform/gke` directory.
 
-You can customize GKE cluster via appending them to your amke target, via environment variables, or by setting them 
-within your [`local-includes`](#set-local-make-targets-and-variables-with-local-includes) directory.
+You can customize the GKE cluster by appending the following parameters to your make target, via environment 
+variables, or by setting them within your 
+[`local-includes`](#set-local-make-targets-and-variables-with-local-includes) directory.
 
 See the table below for available customizations :
 
@@ -234,7 +235,7 @@ run `make install` and Agones will install the image that you just built and pus
 created at the beginning of this section. (if you want to see the resulting installation yaml, you can find it in `build/.install.yaml`)
 
 Finally, to run all the end-to-end tests against your development version previously installed in your test cluster run 
-`make test-e2e` (this can also take a while), this will validate the whole application flow (from start to finish). If 
+`make test-e2e` (this can also take a while). This will validate the whole application flow from start to finish. If 
 you're curious about how they work head to [tests/e2e](../test/e2e/).
 Also [see below](#running-individual-end-to-end-tests) for how to run individual end-to-end tests during development.
 
@@ -346,8 +347,7 @@ Now you're ready to begin the development/test cycle:
 
 You can combine some of the above steps into a single one, for example `make build push install` or `make build push test-e2e`.
 
-If you need to clean up your cluster, you can use `make uninstall` to remove Agones and 
-`make clean-custom-test-cluster` to delete the entire cluster.
+If you need to clean up your cluster, you can use `make uninstall` to remove Agones.
 
 ### Set Local Make Targets and Variables with `local-includes`
 
