@@ -512,7 +512,7 @@ push-ping-image: push-ping-image-arm64
 endif
         -DOCKER_CLI_EXPERIMENTAL=enabled docker manifest rm $(ping_tag)
 	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest create $(ping_tag) $(push_ping_manifest)
-	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest push $(ping__tag)
+	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest push $(ping_tag)
 
 push-ping-image-amd64: $(ensure-build-image)
 	docker push $(ping_amd64_tag)
