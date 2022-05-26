@@ -113,6 +113,8 @@ spec:
           value: {{ .Values.agones.controller.logLevel | quote }}
         - name: FEATURE_GATES
           value: {{ .Values.agones.featureGates | quote }}
+        - name: ALLOCATION_BATCH_WAIT_TIME
+          value: {{ .Values.agones.controller.allocationBatchWaitTime | quote }}
 {{- if .Values.agones.controller.persistentLogs }}
         - name: LOG_DIR
           value: "/home/agones/logs"
