@@ -14040,6 +14040,8 @@ spec:
           value: "info"
         - name: FEATURE_GATES
           value: ""
+        - name: ALLOCATION_BATCH_WAIT_TIME
+          value: "500ms"
         - name: LOG_DIR
           value: "/home/agones/logs"
         - name: LOG_SIZE_LIMIT_MB
@@ -14264,6 +14266,8 @@ spec:
           value: "info"
         - name: FEATURE_GATES
           value: ""
+        - name: ALLOCATION_BATCH_WAIT_TIME
+          value: "500ms"
         ports:
         - name: https
           containerPort: 8443
