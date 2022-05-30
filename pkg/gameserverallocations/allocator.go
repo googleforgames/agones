@@ -78,7 +78,6 @@ const (
 	allocatorPort         = "443"
 	maxBatchQueue         = 100
 	maxBatchBeforeRefresh = 100
-	batchWaitTime         = 500 * time.Millisecond
 )
 
 var allocationRetry = wait.Backoff{
@@ -108,6 +107,7 @@ type Allocator struct {
 	remoteAllocationCallback     func(context.Context, string, grpc.DialOption, *pb.AllocationRequest) (*pb.AllocationResponse, error)
 	remoteAllocationTimeout      time.Duration
 	totalRemoteAllocationTimeout time.Duration
+	batchWaitTime                time.Duration
 }
 
 // request is an async request for allocation
@@ -125,7 +125,7 @@ type response struct {
 
 // NewAllocator creates an instance of Allocator
 func NewAllocator(policyInformer multiclusterinformerv1.GameServerAllocationPolicyInformer, secretInformer informercorev1.SecretInformer, gameServerGetter getterv1.GameServersGetter,
-	kubeClient kubernetes.Interface, allocationCache *AllocationCache, remoteAllocationTimeout time.Duration, totalRemoteAllocationTimeout time.Duration) *Allocator {
+	kubeClient kubernetes.Interface, allocationCache *AllocationCache, remoteAllocationTimeout time.Duration, totalRemoteAllocationTimeout time.Duration, batchWaitTime time.Duration) *Allocator {
 	ah := &Allocator{
 		pendingRequests:              make(chan request, maxBatchQueue),
 		allocationPolicyLister:       policyInformer.Lister(),
@@ -134,6 +134,7 @@ func NewAllocator(policyInformer multiclusterinformerv1.GameServerAllocationPoli
 		secretSynced:                 secretInformer.Informer().HasSynced,
 		gameServerGetter:             gameServerGetter,
 		allocationCache:              allocationCache,
+		batchWaitTime:                batchWaitTime,
 		remoteAllocationTimeout:      remoteAllocationTimeout,
 		totalRemoteAllocationTimeout: totalRemoteAllocationTimeout,
 		remoteAllocationCallback: func(ctx context.Context, endpoint string, dialOpts grpc.DialOption, request *pb.AllocationRequest) (*pb.AllocationResponse, error) {
@@ -531,7 +532,7 @@ func (c *Allocator) ListenAndAllocate(ctx context.Context, updateWorkerCount int
 			list = nil
 			requestCount = 0
 			// slow down cpu churn, and allow items to batch
-			time.Sleep(batchWaitTime)
+			time.Sleep(c.batchWaitTime)
 		}
 	}
 }

@@ -242,7 +242,7 @@ func TestAllocatorApplyAllocationToGameServer(t *testing.T) {
 		m.KubeInformerFactory.Core().V1().Secrets(),
 		m.AgonesClient.AgonesV1(), m.KubeClient,
 		NewAllocationCache(m.AgonesInformerFactory.Agones().V1().GameServers(), gameservers.NewPerNodeCounter(m.KubeInformerFactory, m.AgonesInformerFactory), healthcheck.NewHandler()),
-		time.Second, 5*time.Second,
+		time.Second, 5*time.Second, 500*time.Millisecond,
 	)
 
 	gs, err := allocator.applyAllocationToGameServer(ctx, allocationv1.MetaPatch{}, &agonesv1.GameServer{})
@@ -281,7 +281,7 @@ func TestAllocationApplyAllocationError(t *testing.T) {
 		m.KubeInformerFactory.Core().V1().Secrets(),
 		m.AgonesClient.AgonesV1(), m.KubeClient,
 		NewAllocationCache(m.AgonesInformerFactory.Agones().V1().GameServers(), gameservers.NewPerNodeCounter(m.KubeInformerFactory, m.AgonesInformerFactory), healthcheck.NewHandler()),
-		time.Second, 5*time.Second,
+		time.Second, 5*time.Second, 500*time.Millisecond,
 	)
 
 	gsa, err := allocator.applyAllocationToGameServer(ctx, allocationv1.MetaPatch{}, &agonesv1.GameServer{})
@@ -686,7 +686,8 @@ func newFakeAllocator() (*Allocator, agtesting.Mocks) {
 		m.KubeClient,
 		NewAllocationCache(m.AgonesInformerFactory.Agones().V1().GameServers(), counter, healthcheck.NewHandler()),
 		time.Second,
-		5*time.Second)
+		5*time.Second,
+		500*time.Millisecond)
 	a.recorder = m.FakeRecorder
 
 	return a, m

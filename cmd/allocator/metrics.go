@@ -42,6 +42,7 @@ const (
 	apiServerSustainedQPSFlag        = "api-server-qps"
 	apiServerBurstQPSFlag            = "api-server-qps-burst"
 	logLevelFlag                     = "log-level"
+	allocationBatchWaitTime          = "allocation-batch-wait-time"
 )
 
 func init() {
@@ -62,6 +63,7 @@ type config struct {
 	LogLevel                     string
 	totalRemoteAllocationTimeout time.Duration
 	remoteAllocationTimeout      time.Duration
+	allocationBatchWaitTime      time.Duration
 }
 
 func parseEnvFlags() config {
@@ -79,6 +81,7 @@ func parseEnvFlags() config {
 	viper.SetDefault(remoteAllocationTimeoutFlag, 10*time.Second)
 	viper.SetDefault(totalRemoteAllocationTimeoutFlag, 30*time.Second)
 	viper.SetDefault(logLevelFlag, "Info")
+	viper.SetDefault(allocationBatchWaitTime, 500*time.Millisecond)
 
 	pflag.Int32(httpPortFlag, viper.GetInt32(httpPortFlag), "Port to listen on for REST requests")
 	pflag.Int32(grpcPortFlag, viper.GetInt32(grpcPortFlag), "Port to listen on for gRPC requests")
@@ -93,6 +96,7 @@ func parseEnvFlags() config {
 	pflag.Duration(remoteAllocationTimeoutFlag, viper.GetDuration(remoteAllocationTimeoutFlag), "Flag to set remote allocation call timeout.")
 	pflag.Duration(totalRemoteAllocationTimeoutFlag, viper.GetDuration(totalRemoteAllocationTimeoutFlag), "Flag to set total remote allocation timeout including retries.")
 	pflag.String(logLevelFlag, viper.GetString(logLevelFlag), "Agones Log level")
+	pflag.Duration(allocationBatchWaitTime, viper.GetDuration(allocationBatchWaitTime), "Flag to configure the waiting period between allocations batches")
 	runtime.FeaturesBindFlags()
 	pflag.Parse()
 
@@ -127,6 +131,7 @@ func parseEnvFlags() config {
 		LogLevel:                     viper.GetString(logLevelFlag),
 		remoteAllocationTimeout:      viper.GetDuration(remoteAllocationTimeoutFlag),
 		totalRemoteAllocationTimeout: viper.GetDuration(totalRemoteAllocationTimeoutFlag),
+		allocationBatchWaitTime:      viper.GetDuration(allocationBatchWaitTime),
 	}
 }
 
