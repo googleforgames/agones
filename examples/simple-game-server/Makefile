@@ -67,7 +67,7 @@ endif
 build: build-linux-image-amd64
 
 ifeq ($(WITH_WINDOWS), 1)
-build: build-linux-image $(foreach winver, $(WINDOWS_VERSIONS), build-windows-image-$(winver))
+build: $(foreach winver, $(WINDOWS_VERSIONS), build-windows-image-$(winver))
 endif
 
 ifeq ($(WITH_ARM64), 1)
