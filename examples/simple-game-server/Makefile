@@ -64,7 +64,6 @@ ifeq ($(WITH_ARM64), 1)
 push_server_manifest += $(server_tag_linux_arm64)
 endif
 
-push: push-image
 build: build-linux-image-amd64
 
 ifeq ($(WITH_WINDOWS), 1)
@@ -77,12 +76,12 @@ endif
 
 # Builds all image artifacts and create a docker manifest that is used to inform the CRI (Docker or containerd usually)
 # which image is the best fit for the host. See https://www.docker.com/blog/multi-arch-images/ for details.
-push-image: push-linux-image-amd64
+push: push-linux-image-amd64
 ifeq ($(WITH_WINDOWS), 1)
-push-image: push-windows-images
+push: push-windows-images
 endif
 ifeq ($(WITH_ARM64), 1)
-push-image: push-linux-image-arm64
+push: push-linux-image-arm64
 endif
 	# TODO: `docker manifest` does not yet stamp the `os.version` for Windows manifest entry.
 	# This means only 1 Windows version can be supported in a multi-platform build.
