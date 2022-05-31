@@ -38,14 +38,15 @@ WITH_ARM64=1
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_path := $(dir $(mkfile_path))
 server_tag = $(REGISTRY)/simple-game-server:0.13
+
 ifeq ($(WITH_WINDOWS), 1)
-server_tag_linux_amd64 = $(server_tag)-linux_amd64
+server_tag_linux_amd64 = $(server_tag)-linux-amd64
+server_tag_linux_arm64 = $(server_tag)-linux-arm64
 else
-server_tag_linux_amd64 = $(server_tag)
+server_tag_linux_amd64 = $(server_tag)-amd64
+server_tag_linux_arm64 = $(server_tag)-arm64
 endif
-ifeq ($(WITH_ARM64), 1)
-server_tag_linux_arm64 = $(server_tag)-linux_arm64
-endif
+
 push_server_manifest = $(server_tag_linux_amd64)
 root_path = $(realpath $(project_path)/../..)
 
