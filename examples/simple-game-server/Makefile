@@ -106,9 +106,8 @@ push-windows-image-%:
 	$(MAKE) WINDOWS_DOCKER_PUSH_ARGS=--push build-windows-image-$*
 
 build-windows-image-%: build-windows-binary ensure-windows-buildx
-	# TODO: Use `--builder $(BUILDX_WINDOWS_BUILDER)` later once Docker 19.03.13 is the build target. Cloud Build has 19.03.08 https://cloud.google.com/cloud-build/release-notes
 	cd $(root_path) && DOCKER_CLI_EXPERIMENTAL=enabled \
-		docker buildx build --platform windows/amd64 -f $(project_path)Dockerfile.windows \
+		docker buildx build --platform windows/amd64 --builder $(BUILDX_WINDOWS_BUILDER) -f $(project_path)Dockerfile.windows \
 	 	--tag=$(server_tag)-windows_amd64-$* --build-arg WINDOWS_VERSION=$* examples/simple-game-server/ $(WINDOWS_DOCKER_PUSH_ARGS)
 
 # Builds the server binary for Windows (amd64).
