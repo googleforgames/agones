@@ -517,8 +517,13 @@ func (h *serviceHandler) verifyClientCertificate(rawCerts [][]byte, verifiedChai
 		KeyUsages:     []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth},
 	}
 
-	for _, cert := range rawCerts[1:] {
-		opts.Intermediates.AppendCertsFromPEM(cert)
+	for _, rawCert := range rawCerts[1:] {
+		cert, err := x509.ParseCertificate(rawCert)
+		if err != nil {
+			logger.WithError(err).Warning("cannot parse intermediate certificate")
+			return errors.New("bad intermediate certificate: " + err.Error())
+		}
+		opts.Intermediates.AddCert(cert)
 	}
 
 	c, err := x509.ParseCertificate(rawCerts[0])
