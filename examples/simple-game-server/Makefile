@@ -77,18 +77,15 @@ endif
 # Builds all image artifacts and create a docker manifest that is used to inform the CRI (Docker or containerd usually)
 # which image is the best fit for the host. See https://www.docker.com/blog/multi-arch-images/ for details.
 push: push-linux-image-amd64
+	-DOCKER_CLI_EXPERIMENTAL=enabled docker manifest rm $(server_tag)
+	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest create $(server_tag) $(push_server_manifest)
 ifeq ($(WITH_WINDOWS), 1)
 push: push-windows-images
+	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest annotate --os.version $(WINDOWS_VERSIONS) 	
 endif
 ifeq ($(WITH_ARM64), 1)
 push: push-linux-image-arm64
 endif
-	# TODO: `docker manifest` does not yet stamp the `os.version` for Windows manifest entry.
-	# This means only 1 Windows version can be supported in a multi-platform build.
-	# Either adopt, https://github.com/kubernetes-sigs/azuredisk-csi-driver/pull/585/files or
-	# wait for https://github.com/docker/cli/pull/2578 to be available in Docker 20.10.
-	-DOCKER_CLI_EXPERIMENTAL=enabled docker manifest rm $(server_tag)
-	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest create $(server_tag) $(push_server_manifest)
 	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest push $(server_tag) --purge
 
 # Pushes all variants of the Windows images to the container image registry.
