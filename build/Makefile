@@ -115,12 +115,14 @@ allocator_amd64_tag = $(allocator_tag)-amd64
 allocator_arm64_tag = $(allocator_tag)-arm64
 controller_amd64_tag = $(controller_tag)-amd64
 controller_arm64_tag = $(controller_tag)-arm64
+ping_amd64_tag = $(ping_tag)-amd64
+ping_arm64_tag = $(ping_tag)-arm64
 
 # build list of images to include in the manifest for the sidecar image.
 push_sidecar_manifest = $(sidecar_linux_amd64_tag)
 push_allocator_manifest = $(allocator_amd64_tag)
 push_controller_manifest = $(controller_amd64_tag)
-
+push_ping_manifest = $(ping_amd64_tag)
 gomod_on = GO111MODULE=on
 
 go_version_flags = -ldflags "-X agones.dev/agones/pkg.Version=$(VERSION)"
@@ -245,6 +247,7 @@ ifeq ($(WITH_ARM64), 1)
 push_sidecar_manifest += $(sidecar_linux_arm64_tag)
 push_allocator_manifest += $(allocator_arm64_tag)
 push_controller_manifest += $(controller_arm64_tag)
+push_ping_manifest += $(ping_arm64_tag)
 endif
 
 # build all
@@ -426,7 +429,7 @@ push-controller-image: push-controller-image-amd64
 ifeq ($(WITH_ARM64), 1)
 push-controller-image: push-controller-image-arm64
 endif
-	# Ensure that the sidecar manifest is removed before creating a new one.
+	# Ensure that the controller manifest is removed before creating a new one.
 	-DOCKER_CLI_EXPERIMENTAL=enabled docker manifest rm $(controller_tag)
 	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest create $(controller_tag) $(push_controller_manifest)
 	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest push $(controller_tag)
@@ -488,18 +491,45 @@ build-agones-sdk-image-windows-%: $(ensure-build-image) build-agones-sdk-binary 
 	docker buildx build --platform windows/amd64 --builder $(BUILDX_WINDOWS_BUILDER) -f $(agones_path)/cmd/sdk-server/Dockerfile.windows --tag=$(sidecar_tag)-windows_amd64-$* --build-arg WINDOWS_VERSION=$* $(DOCKER_BUILD_ARGS) $(agones_path)/cmd/sdk-server/ $(WINDOWS_DOCKER_PUSH_ARGS)
 
 # Build a static binary for the ping service
-build-ping-binary: $(ensure-build-image)
+build-ping-binary: build-ping-binary-amd64
+ifeq ($(WITH_ARM64), 1)
+build-ping-binary: build-ping-binary-arm64
+endif
+
+build-ping-binary-amd64: $(ensure-build-image)
 	$(GO_BUILD_LINUX_AMD64) \
-	-tags $(GO_BUILD_TAGS) -o $(go_build_base_path)/cmd/ping/bin/ping \
+	-tags $(GO_BUILD_TAGS) -o $(go_build_base_path)/cmd/ping/bin/ping.linux.amd64 \
+	$(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/ping
+build-ping-binary-arm64: $(ensure-build-image)
+	$(GO_BUILD_LINUX_ARM64) \
+	-tags $(GO_BUILD_TAGS) -o $(go_build_base_path)/cmd/ping/bin/ping.linux.arm64 \
 	$(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/ping
 
 # Pushes up the ping image
-push-ping-image: $(ensure-build-image)
-	docker push $(ping_tag)
+push-ping-image: push-ping-image-amd64
+ifeq ($(WITH_ARM64), 1)
+push-ping-image: push-ping-image-arm64
+endif
+	# Ensure that the ping manifest is removed before creating a new one.
+	-DOCKER_CLI_EXPERIMENTAL=enabled docker manifest rm $(ping_tag)
+	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest create $(ping_tag) $(push_ping_manifest)
+	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest push $(ping_tag)
+
+push-ping-image-amd64: $(ensure-build-image)
+	docker push $(ping_amd64_tag)
+push-ping-image-arm64:
+	$(MAKE) DOCKER_BUILD_ARGS=--push build-ping-image-arm64
 
 # Build the image for the ping service
-build-ping-image: $(ensure-build-image) build-ping-binary build-licenses build-required-src-dist
-	docker build $(agones_path)/cmd/ping/ --tag=$(ping_tag) $(DOCKER_BUILD_ARGS)
+build-ping-image: build-ping-image-amd64
+ifeq ($(WITH_ARM64), 1)
+build-ping-image: build-ping-image-arm64
+endif
+
+build-ping-image-amd64: $(ensure-build-image) build-ping-binary build-licenses build-required-src-dist
+	docker build $(agones_path)/cmd/ping/ --tag=$(ping_amd64_tag) $(DOCKER_BUILD_ARGS)
+build-ping-image-arm64: $(ensure-build-image) build-ping-binary
+	docker buildx build --platform linux/arm64 --build-arg ARCH=arm64 $(agones_path)/cmd/ping/ --tag=$(ping_arm64_tag) $(DOCKER_BUILD_ARGS)
 
 # Build a static binary for the allocator service
 build-allocator-binary: $(ensure-build-image) build-allocator-binary-linux-amd64
@@ -521,7 +551,7 @@ push-allocator-image: push-allocator-image-amd64
 ifeq ($(WITH_ARM64), 1)
 push-allocator-image: push-allocator-image-arm64
 endif
-	# Ensure that the sidecar manifest is removed before creating a new one.
+	# Ensure that the allocator manifest is removed before creating a new one.
 	-DOCKER_CLI_EXPERIMENTAL=enabled docker manifest rm $(allocator_tag)
 	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest create $(allocator_tag) $(push_allocator_manifest)
 	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest push $(allocator_tag)
