@@ -429,7 +429,7 @@ push-controller-image: push-controller-image-amd64
 ifeq ($(WITH_ARM64), 1)
 push-controller-image: push-controller-image-arm64
 endif
-	# Ensure that the sidecar manifest is removed before creating a new one.
+	# Ensure that the controller manifest is removed before creating a new one.
 	-DOCKER_CLI_EXPERIMENTAL=enabled docker manifest rm $(controller_tag)
 	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest create $(controller_tag) $(push_controller_manifest)
 	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest push $(controller_tag)
@@ -551,7 +551,7 @@ push-allocator-image: push-allocator-image-amd64
 ifeq ($(WITH_ARM64), 1)
 push-allocator-image: push-allocator-image-arm64
 endif
-	# Ensure that the sidecar manifest is removed before creating a new one.
+	# Ensure that the allocator manifest is removed before creating a new one.
 	-DOCKER_CLI_EXPERIMENTAL=enabled docker manifest rm $(allocator_tag)
 	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest create $(allocator_tag) $(push_allocator_manifest)
 	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest push $(allocator_tag)
