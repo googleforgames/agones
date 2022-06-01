@@ -2,7 +2,7 @@
 name: Upgrade Kubernetes Version
 about: Issue for updating the Kubernetes version (usually decided in community meetings).
 title: 'Update Kubernetes to {version}'
-labels: kind/operations, kind/feature
+labels: kind/operations, kind/breaking
 assignees: ''
 
 ---
@@ -27,7 +27,7 @@ List of items to do for upgrading to {version}:
     - [ ] Kind
 - [ ] Update client-go
 - [ ] Update CRD API reference
-    - [ ] Update links to k8s documentation in site/assets/templates/crd-doc-config.json
+    - [ ] Update links to k8s documentation in `site/assets/templates/crd-doc-config.json`
     - [ ] Regenerate crd api reference docs - `make gen-api-docs`
 - [ ] Regenerate Kubernetes resource includes (e.g. ObjectMeta, PodTemplateSpec)
     - [ ] Start a cluster with `make gcloud-test-cluster`, uninstall agones using `helm uninstall agones -n agones-system`, and then run  `make gen-embedded-openapi` and `make gen-install`
