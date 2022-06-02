@@ -42,7 +42,7 @@ RUN cd stk-code && mkdir cmake_build && cd cmake_build \
     && make -j$(nproc)
 
 # final image
-FROM debian:buster
+FROM debian:bullseye
 
 RUN apt update && apt-get install -y libbluetooth3 libbz2-1.0 libc6 \
  libcurl4 libenet7 libfreetype6 libfribidi0 libgcc1 libgl1 libglu1-mesa \
