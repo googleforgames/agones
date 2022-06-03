@@ -30,19 +30,16 @@ RUN apt update && apt-get install -y build-essential cmake libbluetooth-dev \
 libcurl4-openssl-dev libenet-dev libfreetype6-dev libharfbuzz-dev libfribidi-dev \
 libgl1-mesa-dev libglew-dev libjpeg-dev libogg-dev libopenal-dev libpng-dev \
 libssl-dev libvorbis-dev libxrandr-dev libx11-dev nettle-dev pkg-config zlib1g-dev \
-git subversion
+git subversion wget xz-utils
 
-RUN git clone -b allow-ai https://github.com/markmandel/stk-code.git
-RUN svn co https://svn.code.sf.net/p/supertuxkart/code/stk-assets stk-assets
-RUN rm -rf ./stk-code/.git
-RUN rm -rf ./stk-assets/.svn
+RUN wget https://github.com/supertuxkart/stk-code/releases/download/1.3/SuperTuxKart-1.3-linux-64bit.tar.xz
 
-RUN cd stk-code && mkdir cmake_build && cd cmake_build \
-    && cmake .. -DBUILD_RECORDER=off -DSERVER_ONLY=ON \
-    && make -j$(nproc)
+RUN tar -xf SuperTuxKart-1.3-linux-64bit.tar.xz
+RUN rm -rf SuperTuxKart-1.3-linux-64bit.tar.xz
+RUN ./SuperTuxKart-1.3-linux-64bit/run_game.sh
 
 # final image
-FROM debian:buster
+FROM debian:bullseye
 
 RUN apt update && apt-get install -y libbluetooth3 libbz2-1.0 libc6 \
  libcurl4 libenet7 libfreetype6 libfribidi0 libgcc1 libgl1 libglu1-mesa \
@@ -51,9 +48,6 @@ RUN apt update && apt-get install -y libbluetooth3 libbz2-1.0 libc6 \
 
 RUN useradd -m  -u 1000 supertuxkart
 WORKDIR /home/supertuxkart
-
-COPY --from=stk-builder stk-assets ./stk-assets/
-COPY --from=stk-builder stk-code ./stk-code/
 
 WORKDIR /home/supertuxkart/stk-code
 
