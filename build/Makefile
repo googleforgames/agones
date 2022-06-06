@@ -478,9 +478,9 @@ ifeq ($(WITH_WINDOWS), 1)
 build-agones-sdk-image: build-agones-sdk-image-windows
 endif
 
-build-agones-sdk-image-amd64: $(ensure-build-image) build-agones-sdk-binary 
+build-agones-sdk-image-amd64: $(ensure-build-image) build-agones-sdk-binary-linux-amd64
 	docker build $(agones_path)/cmd/sdk-server/ --tag=$(sidecar_linux_amd64_tag) $(DOCKER_BUILD_ARGS)
-build-agones-sdk-image-arm64: $(ensure-build-image) build-agones-sdk-binary
+build-agones-sdk-image-arm64: $(ensure-build-image) build-agones-sdk-binary-linux-arm64
 	docker buildx build --platform linux/arm64 --build-arg ARCH=arm64 $(agones_path)/cmd/sdk-server/ --tag=$(sidecar_linux_arm64_tag) $(DOCKER_BUILD_ARGS)
 
 build-agones-sdk-image-windows: build-agones-sdk-binary
