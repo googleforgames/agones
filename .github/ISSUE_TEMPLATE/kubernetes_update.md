@@ -25,6 +25,7 @@ List of items to do for upgrading to {version}:
 - [ ] Update the dev tooling to create clusters
     - [ ] Minikube
     - [ ] Kind
+- [ ] Update the k8s image used in the helm [pre-delete-hook](https://github.com/googleforgames/agones/blob/main/install/helm/agones/templates/hooks/pre_delete_hook.yaml)
 - [ ] Update client-go
 - [ ] Update CRD API reference
     - [ ] Update links to k8s documentation in `site/assets/templates/crd-doc-config.json`
