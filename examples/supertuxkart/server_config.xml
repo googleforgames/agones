@@ -164,7 +164,7 @@ limitations under the License.
     <ip-geolocation-table value="ip_mapping" />
 
     <!-- If true this server will auto add / remove AI connected with network-ai=x, which will kick N - 1 bot(s) where N is the number of human players. Only use this for non-GP racing server. -->
-    <ai-handling value="fasle" />
+    <ai-handling value="false" />
 
     <!-- If true this server will allow AI instance to be connected from anywhere. (other than LAN network only) -->
     <ai-anywhere value="true" /> 

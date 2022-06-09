@@ -16,8 +16,6 @@
 FROM golang:1.17.2 as go-builder
 WORKDIR /go/src/supertuxkart
 
-RUN apt-get update && apt-get install -y curl tar xz-utils
-
 COPY main.go .
 COPY go.mod .
 RUN go mod tidy
@@ -26,11 +24,7 @@ RUN go build -o wrapper .
 # compile stk
 FROM debian:buster as stk-builder
 
-RUN apt update && apt-get install -y build-essential cmake libbluetooth-dev \
-libcurl4-openssl-dev libenet-dev libfreetype6-dev libharfbuzz-dev libfribidi-dev \
-libgl1-mesa-dev libglew-dev libjpeg-dev libogg-dev libopenal-dev libpng-dev \
-libssl-dev libvorbis-dev libxrandr-dev libx11-dev nettle-dev pkg-config zlib1g-dev \
-git subversion wget xz-utils
+RUN apt update && apt-get install -y  wget xz-utils
 
 RUN wget https://github.com/supertuxkart/stk-code/releases/download/1.3/SuperTuxKart-1.3-linux-64bit.tar.xz
 
@@ -41,10 +35,7 @@ RUN ./SuperTuxKart-1.3-linux-64bit/run_game.sh
 # final image
 FROM debian:bullseye
 
-RUN apt update && apt-get install -y libbluetooth3 libbz2-1.0 libc6 \
- libcurl4 libenet7 libfreetype6 libfribidi0 libgcc1 libgl1 libglu1-mesa \
- libglu1 libjpeg62-turbo libogg0 libopenal1 libpng16-16 libstdc++6 libvorbis0a \
- libvorbisenc2 libvorbisfile3 libx11-6 libxrandr2 zlib1g libglew2.1 libharfbuzz0b
+RUN apt update && apt-get install -y 
 
 RUN useradd -m  -u 1000 supertuxkart
 WORKDIR /home/supertuxkart
