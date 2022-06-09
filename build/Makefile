@@ -647,7 +647,7 @@ setup-prometheus: SCRAPE_INTERVAL=30s
 setup-prometheus:
 	$(DOCKER_RUN) helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 	$(DOCKER_RUN) helm repo update
-	$(DOCKER_RUN) helm upgrade prom prometheus-community/prometheus --install --wait --version 11.16.2 \
+	$(DOCKER_RUN) helm upgrade prom prometheus-community/prometheus --install --wait --version 15.9.2 \
  		--namespace metrics --create-namespace \
 		--set server.global.scrape_interval=$(SCRAPE_INTERVAL),server.persistentVolume.enabled=$(PVC),server.persistentVolume.size=$(PV_SIZE) \
 		$(HELM_ARGS) -f $(mount_path)/build/prometheus.yaml
@@ -665,7 +665,7 @@ setup-grafana:
 	$(DOCKER_RUN) helm repo add grafana https://grafana.github.io/helm-charts
 	$(DOCKER_RUN) helm repo update
 	$(DOCKER_RUN) kubectl apply -f $(mount_path)/build/grafana/
-	$(DOCKER_RUN) helm upgrade grafana grafana/grafana --install --wait --version=5.7.10 \
+	$(DOCKER_RUN) helm upgrade grafana grafana/grafana --install --wait --version=6.29.6 \
 		--namespace metrics --create-namespace \
 		--set persistence.enabled=$(PVC),server.persistentVolume.size=$(PV_SIZE) \
 		--set adminPassword=$(PASSWORD) $(HELM_ARGS) -f $(mount_path)/build/grafana.yaml
