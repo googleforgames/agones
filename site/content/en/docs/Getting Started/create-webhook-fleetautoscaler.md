@@ -288,7 +288,7 @@ kubectl apply -f https://raw.githubusercontent.com/googleforgames/agones/{{< rel
 
 #### 2. Create X509 Root and Webhook certificates
 
-The procedure of generating a Self-signed CA certificate taken from [here](https://datacenteroverlords.com/2012/03/01/creating-your-own-ssl-certificate-authority/)
+The procedure of generating a Self-signed CA certificate is as follows:
 
 The first step is to create the private root key:
 ```bash

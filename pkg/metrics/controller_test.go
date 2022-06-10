@@ -203,8 +203,8 @@ func TestControllerFleetReplicasCount(t *testing.T) {
 	defer c.close()
 	c.run(t)
 
-	f := fleet("fleet-test", 8, 2, 5, 1)
-	fd := fleet("fleet-deleted", 100, 100, 100, 100)
+	f := fleet("fleet-test", 8, 2, 5, 1, 1)
+	fd := fleet("fleet-deleted", 100, 100, 100, 100, 100)
 	c.fleetWatch.Add(f)
 	f = f.DeepCopy()
 	f.Status.ReadyReplicas = 1
@@ -234,10 +234,12 @@ func TestControllerFleetReplicasCount(t *testing.T) {
 
 	reader.ReadAndExport(exporter)
 	assertMetricData(t, exporter, "fleets_replicas_count", []expectedMetricData{
+		{labels: []string{"fleet-deleted", defaultNs, "reserved"}, val: int64(0)},
 		{labels: []string{"fleet-deleted", defaultNs, "allocated"}, val: int64(0)},
 		{labels: []string{"fleet-deleted", defaultNs, "desired"}, val: int64(0)},
 		{labels: []string{"fleet-deleted", defaultNs, "ready"}, val: int64(0)},
 		{labels: []string{"fleet-deleted", defaultNs, "total"}, val: int64(0)},
+		{labels: []string{"fleet-test", defaultNs, "reserved"}, val: int64(1)},
 		{labels: []string{"fleet-test", defaultNs, "allocated"}, val: int64(2)},
 		{labels: []string{"fleet-test", defaultNs, "desired"}, val: int64(5)},
 		{labels: []string{"fleet-test", defaultNs, "ready"}, val: int64(1)},

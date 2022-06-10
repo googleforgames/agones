@@ -221,7 +221,7 @@ You can [choose any registry region](https://cloud.google.com/container-registry
 but for this example, we'll just use `gcr.io`.
 
 In your shell, run `export REGISTRY=gcr.io/<YOUR-PROJECT-ID>` which will overwrite the default registry settings in our
-Make targets. Then, to rebuild our images for this registry, we run `make build` again.
+Make targets. Then, to rebuild our images for this registry, we run `make build-images` again.
 
 Before we can push the images, there is one more small step! So that we can run regular `docker push` commands
 (rather than `gcloud docker -- push`), we have to authenticate against the registry, which will give us a short
@@ -263,7 +263,7 @@ Enter `kubectl get pods` and press enter. You should see that you have no resour
 Assuming that all works, let's exit the shell by typing `exit` and hitting enter, and look at a building, pushing and
 installing Agones on Minikube next.
 
-You may remember in the first part of this walkthrough, we ran `make build`, which created all the images and binaries
+You may remember in the first part of this walkthrough, we ran `make build-images`, which created all the images and binaries
 we needed to work with Agones locally. We can push these images them straight into Minikube very easily!
 
 Run `make minikube-push` which will send all of Agones's docker images from your local Docker into the Agones Minikube
@@ -306,7 +306,7 @@ Run `make kind-shell` to enter the development shell. You should see a bash shel
 Enter `kubectl get pods` and press enter. You should see that you have no resources currently, but otherwise see no errors.
 Assuming that all works, let's exit the shell by typing `exit` and hitting enter, and look at a building, pushing and installing Agones on Kind next.
 
-You may remember in the first part of this walkthrough, we ran `make build`, which created all the images and binaries
+You may remember in the first part of this walkthrough, we ran `make build-images`, which created all the images and binaries
 we needed to work with Agones locally. We can push these images them straight into kind very easily!
 
 Run `make kind-push` which will send all of Agones's docker images from your local Docker into the Agones Kind container.
