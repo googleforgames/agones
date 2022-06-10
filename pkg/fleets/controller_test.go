@@ -998,6 +998,7 @@ func TestControllerDeleteEmptyGameServerSets(t *testing.T) {
 	assert.Nil(t, err)
 	assert.True(t, deleted, "delete should happen")
 }
+
 func TestControllerRollingUpdateDeploymentNoInactiveGSSNoErrors(t *testing.T) {
 	t.Parallel()
 
@@ -1013,6 +1014,71 @@ func TestControllerRollingUpdateDeploymentNoInactiveGSSNoErrors(t *testing.T) {
 	replicas, err := c.rollingUpdateDeployment(context.Background(), f, active, []*agonesv1.GameServerSet{})
 	assert.Nil(t, err)
 	assert.Equal(t, int32(25), replicas)
+}
+
+// Test when replicas is negative value(0 replicas - 1 allocated = -1)
+func TestControllerRollingUpdateDeploymentNegativeReplica(t *testing.T) {
+	t.Parallel()
+
+	// Create Fleet with replicas: 5
+	f := defaultFixture()
+	f.Status.Replicas = 5
+	// Allocate 1 gameserver
+	f.Status.AllocatedReplicas = 1
+	f.Status.ReadyReplicas = 4
+
+	// Edit fleet spec.template.spec and create new gameserverset
+	f.Spec.Template.Spec.Ports = []agonesv1.GameServerPort{{
+		ContainerPort: 6000,
+		Name:          "gameport",
+		PortPolicy:    agonesv1.Dynamic,
+		Protocol:      corev1.ProtocolUDP,
+	}}
+
+	// old gameserverset has only allocated gameserver
+	inactive := f.GameServerSet()
+	inactive.ObjectMeta.Name = "inactive"
+	inactive.Spec.Replicas = 0
+	inactive.Status.ReadyReplicas = 0
+	inactive.Status.Replicas = 1
+	inactive.Status.AllocatedReplicas = 1
+
+	// new gameserverset has 4 gameserver(replicas:5 - sumAllocated:1)
+	active := f.GameServerSet()
+	active.ObjectMeta.Name = "active"
+	active.Spec.Replicas = 4
+	active.Status.ReadyReplicas = 4
+	active.Status.Replicas = 4
+	active.Status.AllocatedReplicas = 0
+
+	c, m := newFakeController()
+
+	// triggered inside rollingUpdateRest
+	m.AgonesClient.AddReactor("update", "gameserversets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		ca := action.(k8stesting.UpdateAction)
+		gsSet := ca.GetObject().(*agonesv1.GameServerSet)
+		assert.Equal(t, int32(4), gsSet.Spec.Replicas)
+		assert.Equal(t, int32(5), f.Spec.Replicas)
+
+		return true, nil, errors.Errorf("error updating replicas for gameserverset for fleet %s:", f.Name)
+	})
+
+	// assert the active gameserverset's replicas when active and inactive gameserversets exist
+	expected := f.Spec.Replicas - f.Status.AllocatedReplicas
+	replicas, err := c.rollingUpdateDeployment(context.Background(), f, active, []*agonesv1.GameServerSet{inactive})
+	f.Status.ReadyReplicas = replicas
+	assert.NoError(t, err)
+	assert.Equal(t, expected, replicas)
+
+	// happened scale down to 0 by manual operation
+	f.Spec.Replicas = 0
+	// rolling update to scale 0
+	replicas, err = c.rollingUpdateDeployment(context.Background(), f, active, []*agonesv1.GameServerSet{inactive})
+	f.Status.ReadyReplicas = replicas
+	// assert no error, when fleet replicas is negative value(0 replicas - 1 allocated = -1)
+	assert.NoError(t, err)
+	// assert replicas 0, after user scales replicas to 0
+	assert.Equal(t, int32(0), replicas)
 }
 
 func TestControllerRollingUpdateDeploymentGSSUpdateFailedErrExpected(t *testing.T) {
