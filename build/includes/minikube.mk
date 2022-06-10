@@ -38,10 +38,10 @@ minikube-shell: $(ensure-build-image)
 # Push the local Agones Docker images that have already been built
 # via `make build` or `make build-images` into the "agones" minikube instance.
 minikube-push:
-	$(MINIKUBE) cache add $(sidecar_linux_amd64_tag)
-	$(MINIKUBE) cache add $(controller_tag)
-	$(MINIKUBE) cache add $(ping_tag)
-	$(MINIKUBE) cache add $(allocator_tag)
+	$(MINIKUBE) image load $(sidecar_linux_amd64_tag) -p $(MINIKUBE_PROFILE)
+	$(MINIKUBE) image load $(controller_tag) -p $(MINIKUBE_PROFILE)
+	$(MINIKUBE) image load $(ping_tag) -p $(MINIKUBE_PROFILE)
+	$(MINIKUBE) image load $(allocator_tag) -p $(MINIKUBE_PROFILE)
 
 # Installs the current development version of Agones into the Kubernetes cluster.
 # Use this instead of `make install`, as it disables PullAlways on the install.yaml
