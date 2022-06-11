@@ -251,6 +251,17 @@ func (c *Controller) recordFleetDeletion(obj interface{}) {
 	}
 
 	c.recordFleetReplicas(f.Name, f.Namespace, 0, 0, 0, 0, 0)
+
+	// wait 15 minutes, there delete the labels
+	go func() {
+		log := c.logger.WithField("fleet", f.ObjectMeta.Name)
+		log.Debug("Fleet deleted. Waiting to delete metrics")
+		// TOXO: move to 15 minutes
+		time.Sleep(time.Minute)
+		ctx, _ := tag.New(context.Background(), tag.Upsert(keyName, f.ObjectMeta.Name), tag.Upsert(keyNamespace, f.ObjectMeta.Namespace))
+		recordWithTags(ctx, []tag.Mutator{tag.Delete(keyType)}, fleetsReplicasCountStats.M(0))
+		log.Debug("Deleted Fleet metrics")
+	}()
 }
 
 func (c *Controller) recordFleetReplicas(fleetName, fleetNamespace string, total, allocated, ready, desired, reserved int32) {
