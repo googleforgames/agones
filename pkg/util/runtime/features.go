@@ -46,6 +46,10 @@ const (
 
 	// FeatureSDKGracefulTermination is a feature flag that enables SDK to support gracefulTermination
 	FeatureSDKGracefulTermination Feature = "SDKGracefulTermination"
+
+	// FeatureResetMetricsOnDelete is a feature flag that tells the metrics service to unregister and register
+	// relevant metric views to reset their state immediately when an Agones resource is deleted.
+	FeatureResetMetricsOnDelete Feature = "ResetMetricsOnDelete"
 )
 
 var (
@@ -59,6 +63,7 @@ var (
 		FeaturePlayerAllocationFilter: false,
 		FeatureCustomFasSyncInterval:  true,
 		FeatureSDKGracefulTermination: false,
+		FeatureResetMetricsOnDelete:   false,
 	}
 
 	// featureGates is the storage of what features are enabled
