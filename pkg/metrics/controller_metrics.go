@@ -20,6 +20,8 @@ import (
 	"go.opencensus.io/tag"
 )
 
+const fleetReplicaCountName = "fleets_replicas_count"
+
 var (
 	stateDurationSeconds      = []float64{0, 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384}
 	fleetsReplicasCountStats  = stats.Int64("fleets/replicas_count", "The count of replicas per fleet", "1")
@@ -37,7 +39,7 @@ var (
 
 	stateViews = []*view.View{
 		&view.View{
-			Name:        "fleets_replicas_count",
+			Name:        fleetReplicaCountName,
 			Measure:     fleetsReplicasCountStats,
 			Description: "The number of replicas per fleet",
 			Aggregation: view.LastValue(),
@@ -135,5 +137,21 @@ func registerViews() {
 func unRegisterViews() {
 	for _, v := range stateViews {
 		view.Unregister(v)
+	}
+}
+
+// resetViews resets the values of an entire view.
+// Since we have no way to delete a gauge, we have to reset
+// the whole thing and start from scratch.
+func resetViews(names ...string) {
+	for _, v := range stateViews {
+		for _, name := range names {
+			if v.Name == name {
+				view.Unregister(v)
+				if err := view.Register(v); err != nil {
+					logger.WithError(err).Error("could not register view")
+				}
+			}
+		}
 	}
 }

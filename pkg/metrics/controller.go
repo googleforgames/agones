@@ -73,6 +73,7 @@ type Controller struct {
 	nodeLister                v1.NodeLister
 	gameServerSynced          cache.InformerSynced
 	fleetSynced               cache.InformerSynced
+	fleetLister               listerv1.FleetLister
 	fasSynced                 cache.InformerSynced
 	nodeSynced                cache.InformerSynced
 	lock                      sync.Mutex
@@ -113,6 +114,7 @@ func NewController(
 		nodeLister:                node.Lister(),
 		gameServerSynced:          gsInformer.HasSynced,
 		fleetSynced:               fInformer.HasSynced,
+		fleetLister:               fleets.Lister(),
 		fasSynced:                 fasInformer.HasSynced,
 		nodeSynced:                nodeInformer.HasSynced,
 		gsCount:                   GameServerCount{},
@@ -253,15 +255,39 @@ func (c *Controller) recordFleetDeletion(obj interface{}) {
 	c.recordFleetReplicas(f.Name, f.Namespace, 0, 0, 0, 0, 0)
 
 	// wait 15 minutes, there delete the labels
-	go func() {
-		log := c.logger.WithField("fleet", f.ObjectMeta.Name)
-		log.Debug("Fleet deleted. Waiting to delete metrics")
-		// TOXO: move to 15 minutes
-		time.Sleep(time.Minute)
-		ctx, _ := tag.New(context.Background(), tag.Upsert(keyName, f.ObjectMeta.Name), tag.Upsert(keyNamespace, f.ObjectMeta.Namespace))
-		recordWithTags(ctx, []tag.Mutator{tag.Delete(keyType)}, fleetsReplicasCountStats.M(0))
+	// TOXO: need tests for this
+	// TOXO: move to 15 minutes
+	log := c.logger.WithField("fleet", f.ObjectMeta.Name)
+	log.Debug("Fleet deleted. Waiting to delete metrics")
+	err := wait.PollInfinite(time.Minute, func() (bool, error) {
+		err := c.resyncFleets()
+		if err != nil {
+			c.logger.WithError(err).Error("Could not resync Fleet Metrics")
+			return false, nil
+		}
 		log.Debug("Deleted Fleet metrics")
-	}()
+		return err == nil, nil
+	})
+	if err != nil {
+		c.logger.WithError(err).Error("Failed attempting to resync Fleet Metrics")
+	}
+}
+
+// resyncFleets resets the view "fleets_replicas_count" and recalculates all the totals.
+// TOXO: needs tests
+func (c *Controller) resyncFleets() error {
+	// TOXO: probably need a mutex somewhere
+	fleets, err := c.fleetLister.List(labels.Everything())
+	if err != nil {
+		return errors.Wrap(err, "could not resync fleets")
+	}
+
+	resetViews(fleetReplicaCountName)
+	for _, f := range fleets {
+		c.recordFleetChanges(f)
+	}
+
+	return nil
 }
 
 func (c *Controller) recordFleetReplicas(fleetName, fleetNamespace string, total, allocated, ready, desired, reserved int32) {
