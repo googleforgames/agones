@@ -256,10 +256,9 @@ func (c *Controller) recordFleetDeletion(obj interface{}) {
 
 	// wait 15 minutes, there delete the labels
 	// TOXO: need tests for this
-	// TOXO: move to 15 minutes
 	log := c.logger.WithField("fleet", f.ObjectMeta.Name)
 	log.Debug("Fleet deleted. Waiting to delete metrics")
-	err := wait.PollInfinite(time.Minute, func() (bool, error) {
+	err := wait.PollInfinite(15*time.Minute, func() (bool, error) {
 		err := c.resyncFleets()
 		if err != nil {
 			c.logger.WithError(err).Error("Could not resync Fleet Metrics")
@@ -276,7 +275,9 @@ func (c *Controller) recordFleetDeletion(obj interface{}) {
 // resyncFleets resets the view "fleets_replicas_count" and recalculates all the totals.
 // TOXO: needs tests
 func (c *Controller) resyncFleets() error {
-	// TOXO: probably need a mutex somewhere
+	// TOXO: might need it's own mutex? 🤔
+	c.lock.Lock()
+	defer c.lock.Unlock()
 	fleets, err := c.fleetLister.List(labels.Everything())
 	if err != nil {
 		return errors.Wrap(err, "could not resync fleets")
