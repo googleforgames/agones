@@ -30,7 +30,6 @@ RUN wget https://github.com/supertuxkart/stk-code/releases/download/1.3/SuperTux
 
 RUN tar -xf SuperTuxKart-1.3-linux-64bit.tar.xz
 RUN rm -rf SuperTuxKart-1.3-linux-64bit.tar.xz
-#RUN ./SuperTuxKart-1.3-linux-64bit/run_game.sh
 
 RUN useradd -m  -u 1000 supertuxkart
 WORKDIR /home/supertuxkart
