@@ -10,6 +10,27 @@ Check the [Client SDK Documentation]({{< relref "_index.md" >}}) for more detail
 
 ## SDK Functionality
 
+{{% feature expiryVersion="1.24.0" %}}
+| Area                 | Action                   | Implemented                   |
+|----------------------|--------------------------|-------------------------------|
+| Lifecycle            | Ready                    | ✔️                            |
+| Lifecycle            | Health                   | ✔️                            | 
+| Lifecycle            | Reserve                  | ✔️                            | 
+| Lifecycle            | Allocate                 | ✔️                            | 
+| Lifecycle            | Shutdown                 | ✔️                            | 
+| Configuration        | GameServer               | ✔️                            | 
+| Configuration        | Watch                    | ✔️                            | 
+| Metadata             | SetAnnotation            | ✔️                            | 
+| Metadata             | SetLabel                 | ✔️                            | 
+| Player Tracking      | GetConnectedPlayers      | ❌️                            | 
+| Player Tracking      | GetPlayerCapacity        | ❌️                            | 
+| Player Tracking      | GetPlayerCount           | ❌️                            | 
+| Player Tracking      | IsPlayerConnected        | ❌️                            | 
+| Player Tracking      | PlayerConnect            | ❌️                            | 
+| Player Tracking      | PlayerDisconnect         | ❌️                            | 
+| Player Tracking      | SetPlayerCapacity        | ❌️                            | 
+{{% /feature %}}
+{{% feature publishVersion="1.24.0" %}}
 | Area                 | Action                   | Implemented                   |
 |----------------------|--------------------------|-------------------------------|
 | Lifecycle            | Ready                    | ✔️                            |
@@ -28,6 +49,7 @@ Check the [Client SDK Documentation]({{< relref "_index.md" >}}) for more detail
 | Player Tracking      | PlayerConnect            | ✔️                            | 
 | Player Tracking      | PlayerDisconnect         | ✔️                            | 
 | Player Tracking      | SetPlayerCapacity        | ✔️                            | 
+{{% /feature %}}
 
 Additional methods have been added for ease of use:
 
@@ -119,6 +141,8 @@ configuration changes.
 agones.WatchGameServer(gameServer => Debug.Log($"Server - Watch {gameServer}"));
 ```
 
+{{% feature publishVersion="1.24.0" %}}
+
 ## Player Tracking
 
 {{< alpha title="Player Tracking" gate="PlayerTracking" >}}
@@ -190,6 +214,8 @@ This returns a list of the playerIDs that are currently connected to the GameSer
 ```csharp
 List<string> players = await agones.GetConnectedPlayers();
 ```
+
+{{% /feature %}}
 
 
 {{% alert title="Warning" color="warning"%}}
