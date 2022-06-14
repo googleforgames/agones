@@ -43,7 +43,8 @@ These are all examples of simple game server implementations, that integrate the
 
 ## Game Server Allocation
 
-- {{< ghlink href="examples/allocation-endpoint" >}}Allocation Endpoint Example{{< /ghlink >}} An Agones clusters aware proxy, built on Google Cloud.
+- {{< ghlink href="examples/allocation-endpoint" >}}Allocation Endpoint Example{{< /ghlink >}} - An Agones clusters 
+  aware proxy, built on Google Cloud.
 
 ## Integration with Open Match
 
