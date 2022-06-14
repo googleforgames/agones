@@ -21,7 +21,7 @@ COPY go.mod .
 RUN go mod tidy
 RUN go build -o wrapper .
 
-# compile stk
+# Download STK
 FROM debian:bullseye
 
 RUN apt update && apt-get install -y  wget xz-utils
