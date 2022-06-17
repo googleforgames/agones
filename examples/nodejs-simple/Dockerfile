@@ -35,9 +35,12 @@ RUN apt-get update && apt-get install -y nodejs
 
 WORKDIR /home/server
 
+COPY ./sdks/nodejs sdks/nodejs
+RUN cd sdks/nodejs && \
+    npm ci --production
 COPY ./examples/nodejs-simple examples/nodejs-simple
 RUN cd examples/nodejs-simple && \
-    npm install && npm rebuild
+    npm ci --production
 RUN chown -R server /home/server
 USER 1000
 
