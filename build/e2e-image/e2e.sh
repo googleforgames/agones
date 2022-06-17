@@ -15,10 +15,13 @@
 # limitations under the License.
 
 FEATURES=$1
+REGISTRY=$2
+
 echo $FEATURES
+echo $REGISTRY
 set -e
 echo "installing current release"
-DOCKER_RUN= make install FEATURE_GATES='"'$FEATURES'"'
+DOCKER_RUN= make install FEATURE_GATES='"'$FEATURES'"' REGISTRY='"'$REGISTRY'"'
 echo "starting e2e test"
 DOCKER_RUN= make test-e2e ARGS=-parallel=16 FEATURE_GATES='"'$FEATURES'"'
 echo "completed e2e test"
