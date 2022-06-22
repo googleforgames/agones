@@ -15,6 +15,7 @@ Also do bear in mind that infrastructure that will be created after you run the 
 > What this example does though is to simplify deployment of multi-cluster setup with allocation endpoint. It is probably not production ready but if you intend to test allocation-endpoint with multiple clusters it will make your life easier. It helped me with my tests. 
 
 ## Main components
+![architecture diagram](diagram.png)
 1. **VPC with 2 subnets** - One subnet per region that is used. You can easily add additional ones (as described in ./terraform/main.tf file)
 2. **Service account** - It is used by our workloads on GKE
 3. **2 GKE clusters** in two different regions with workload identity enabled. Again you can make as manny as you like. To do that you need to modify ./terraform/main.tf file)
