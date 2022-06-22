@@ -25,7 +25,7 @@ provider "google" {
 }
 
 data "template_file" "api_config" {
-  template = file("api_config.yaml.tpl")
+  template = file("${path.module}/api_config.yaml.tpl")
 
   vars = {
     service-name    = local.aep_endpoints_name
@@ -36,7 +36,7 @@ data "template_file" "api_config" {
 resource "google_endpoints_service" "endpoints_service" {
   service_name         = local.aep_endpoints_name
   grpc_config          = data.template_file.api_config.rendered
-  protoc_output_base64 = filebase64("agones_allocation_api_descriptor.pb")
+  protoc_output_base64 = filebase64("${path.module}/agones_allocation_api_descriptor.pb")
 }
 
 resource "google_endpoints_service_iam_binding" "endpoints_service_binding" {
