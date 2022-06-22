@@ -31,24 +31,12 @@ AKS, while also ensuring that all Cloud providers can support that version.
 
 The following container operating systems and architectures can be utilised with Agones:
 
-{{% feature publishVersion="1.24.0" %}}
 
 | OS        | Architecture | Support    |
 |-----------|--------------|------------|
 | linux     | `amd64`      | **Stable** |
 | linux     | `arm64`      | Alpha      |
 | [windows] | `amd64`      | Alpha      |
-
-{{% /feature %}}
-
-{{% feature expiryVersion="1.24.0" %}}
-
-| OS        | Architecture | Support    |
-|-----------|--------------|------------|
-| linux     | `amd64`      | **Stable** |
-| [windows] | `amd64`      | Alpha      |
-
-{{% /feature %}}
 
 For all the platforms in Alpha, we would appreciate testing and bug reports on any issue found.
 
