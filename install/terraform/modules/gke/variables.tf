@@ -17,6 +17,11 @@ variable "ports" {
   default = "7000-8000"
 }
 
+# SourceRanges can be overriden using tfvars file
+variable "sourceRanges" {
+  default = "0.0.0.0/0"
+}
+
 # Set of GKE cluster parameters which defines its name, zone
 # and primary node pool configuration.
 # It is crucial to set valid ProjectID for "project".

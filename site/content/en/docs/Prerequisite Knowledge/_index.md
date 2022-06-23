@@ -32,7 +32,6 @@ The following resources are great for learning these concepts:
 
 * [Docker Overview](https://docs.docker.com/get-started/overview/)
 * [Docker "Quickstart" guide](https://docs.docker.com/get-started/)
-* [Katacoda's free, interactive Docker course](https://www.katacoda.com/courses/docker)
 
 ## Kubernetes
 
@@ -56,7 +55,6 @@ each `GameServer` that is configured in a cluster. They both have the same name.
 ### Resources
 
 * [You should totally read this comic and interactive tutorial](https://cloud.google.com/kubernetes-engine/kubernetes-comic/)
-* [Katacoda's free, interactive Kubernetes course](https://www.katacoda.com/courses/kubernetes)
 * [Kubernetes concepts, explained](https://kubernetes.io/docs/concepts/)
 
 ## Dedicated Game Servers
