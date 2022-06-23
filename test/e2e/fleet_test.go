@@ -123,6 +123,99 @@ func TestFleetStrategyValidation(t *testing.T) {
 	verifyErr(err)
 }
 
+func TestFleetScaleUpAllocateEditAndScaleDownToZero(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+
+	client := framework.AgonesClient.AgonesV1()
+
+	flt := defaultFleet(framework.Namespace)
+	flt.Spec.Replicas = 1
+	flt, err := client.Fleets(framework.Namespace).Create(ctx, flt, metav1.CreateOptions{})
+	if assert.Nil(t, err) {
+		defer client.Fleets(framework.Namespace).Delete(ctx, flt.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
+	}
+
+	assert.Equal(t, int32(1), flt.Spec.Replicas)
+
+	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
+
+	// Scale up to 5 replicas
+	const targetScale = 5
+	flt = scaleFleetPatch(ctx, t, flt, targetScale)
+	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(targetScale))
+
+	// Allocate 1 replica
+	gsa := framework.CreateAndApplyAllocation(t, flt)
+
+	framework.AssertFleetCondition(t, flt, func(log *logrus.Entry, fleet *agonesv1.Fleet) bool {
+		return fleet.Status.AllocatedReplicas == 1
+	})
+
+	flt, err = client.Fleets(framework.Namespace).Get(ctx, flt.ObjectMeta.GetName(), metav1.GetOptions{})
+	assert.Nil(t, err)
+
+	// Edit Port to 6000
+	// Change Port to trigger creating a new GSSet
+	fltCopy := flt.DeepCopy()
+	fltCopy.Spec.Template.Spec.Ports = []agonesv1.GameServerPort{{
+		ContainerPort: 6000,
+		Name:          "gameport",
+		PortPolicy:    agonesv1.Dynamic,
+		Protocol:      corev1.ProtocolUDP,
+	}}
+
+	flt, err = client.Fleets(framework.Namespace).Update(ctx, fltCopy, metav1.UpdateOptions{})
+	assert.Nil(t, err)
+	assert.Equal(t, int32(6000), flt.Spec.Template.Spec.Ports[0].ContainerPort)
+
+	// Wait for one more GSSet to be created
+	err = wait.PollImmediate(2*time.Second, 2*time.Minute, func() (bool, error) {
+		selector := labels.SelectorFromSet(labels.Set{agonesv1.FleetNameLabel: flt.ObjectMeta.Name})
+		list, err := framework.AgonesClient.AgonesV1().GameServerSets(framework.Namespace).List(ctx,
+			metav1.ListOptions{LabelSelector: selector.String()})
+		if err != nil {
+			return false, err
+		}
+		ready := false
+		// 2 GSSet should be created
+		if len(list.Items) == 2 {
+			ready = true
+		}
+		return ready, nil
+	})
+
+	assert.Nil(t, err)
+
+	// RollingUpdate has happened due to changing Port, so waiting the complete of the RollingUpdate
+	framework.AssertFleetCondition(t, flt, func(log *logrus.Entry, fleet *agonesv1.Fleet) bool {
+		return fleet.Status.ReadyReplicas == 4
+	})
+
+	// Scale down to zero
+	const scaleDownTarget = 0
+	flt = scaleFleetPatch(ctx, t, flt, scaleDownTarget)
+	// Expect Replicas = 0, No GSS or GS
+	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(0))
+
+	// Cleanup the allocated GameServer
+	gp := int64(1)
+	err = client.GameServers(framework.Namespace).Delete(ctx, gsa.Status.GameServerName, metav1.DeleteOptions{GracePeriodSeconds: &gp})
+	assert.Nil(t, err)
+
+	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(0))
+
+	framework.AssertFleetCondition(t, flt, func(log *logrus.Entry, fleet *agonesv1.Fleet) bool {
+		return fleet.Status.AllocatedReplicas == 0
+	})
+
+	framework.AssertFleetCondition(t, flt, func(log *logrus.Entry, fleet *agonesv1.Fleet) bool {
+		return fleet.Status.Replicas == 0
+	})
+
+}
+
 func TestFleetScaleUpEditAndScaleDown(t *testing.T) {
 	t.Parallel()
 
