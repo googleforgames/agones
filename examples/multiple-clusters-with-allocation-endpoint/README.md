@@ -27,7 +27,7 @@ Also do bear in mind that infrastructure that will be created after you run the 
 1. Clone / download agones repository. 
 2. Check terraform backend configuration in ./terraform/main.tf file. For testing purposes we use a local file as a backend so no additional configuration is provided. It will work but for more collaborative approach and to keep your state file safe I strongly suggest to keep the backend in Cloud Storage as described here: https://www.terraform.io/language/settings/backends/gcs
 3. Check the terraform.tfvars file for how the initial setup was configured. Variables are described in variables.tf file. For "fast testing" you can keep everything as it just update value in line <br>
-```project = "your-project-name"```
+```project = "your-project-name"``` in terraform.tfvars file.
 4. Run ```terraform init``` to pull all dependencies and to setup the backend in ./terraform folder 
 5. Run ```terraform plan``` check resources... I know, I know it's ~30 of them but it's better just in case to check them before applying. 
 6. If everything seems fine, run ```terraform apply``` and after all resources are created... enjoy :) 
