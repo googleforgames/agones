@@ -152,12 +152,16 @@ steps:
   waitFor:
     - lint
   dir: "build"
+  env:
+    - "REGISTRY=${_REGISTRY}"
   args: [ "-j", "4", "build-images"]
 - name: "make-docker"
   id: push-images
   waitFor:
     - build-images
   dir: "build"
+  env:
+    - "REGISTRY=${_REGISTRY}"
   args: [ "-j", "4", "push"]
 
 #
@@ -239,7 +243,10 @@ steps:
 #
 
 - name: 'e2e-runner'
-  args: ['PlayerTracking=true&NodeExternalDNS=false&StateAllocationFilter=true&PlayerAllocationFilter=true&CustomFasSyncInterval=true', 'e2e-test-cluster']
+  args:
+    - 'PlayerTracking=true&NodeExternalDNS=false&StateAllocationFilter=true&PlayerAllocationFilter=true&CustomFasSyncInterval=true'
+    - 'e2e-test-cluster'
+    - "${_REGISTRY}"
   id: e2e-feature-gates
   waitFor:
     - push-images
@@ -250,7 +257,10 @@ steps:
 #
 
 - name: 'e2e-runner'
-  args: ['', 'e2e-test-cluster']
+  args:
+    - ''
+    - 'e2e-test-cluster'
+    - "${_REGISTRY}"
   id: e2e-stable
   waitFor:
     - push-images
@@ -319,10 +329,15 @@ substitutions:
   _CPP_SDK_BUILD_CACHE_KEY: cpp-sdk-build
   _CPP_SDK_CONFORMANCE_CACHE_KEY: cpp-sdk-conformance
   _RUST_SDK_BUILD_CACHE_KEY: rust-sdk-build
-
+  _REGISTRY: us-docker.pkg.dev/${PROJECT_ID}/ci
 tags: ['ci']
 timeout: 7200s
-images: ['gcr.io/$PROJECT_ID/agones-controller', 'gcr.io/$PROJECT_ID/agones-ping']
+images:
+  - '${_REGISTRY}/agones-controller'
+  - '${_REGISTRY}/agones-sdk'
+  - '${_REGISTRY}/agones-ping'
+  - '${_REGISTRY}/agones-allocator'
 logsBucket: "gs://agones-build-logs"
 options:
- machineType: 'N1_HIGHCPU_32'
+  machineType: 'E2_HIGHCPU_32'
+  dynamic_substitutions: true
