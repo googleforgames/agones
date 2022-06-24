@@ -27,9 +27,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/spf13/pflag"
-	"github.com/spf13/viper"
-
 	"agones.dev/agones/pkg"
 	"agones.dev/agones/pkg/allocation/converters"
 	pb "agones.dev/agones/pkg/allocation/go"
@@ -40,10 +37,12 @@ import (
 	"agones.dev/agones/pkg/gameservers"
 	"agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/signals"
-	gw_runtime "github.com/grpc-ecosystem/grpc-gateway/runtime"
+	gw_runtime "github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/heptiolabs/healthcheck"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"github.com/spf13/pflag"
+	"github.com/spf13/viper"
 	"go.opencensus.io/plugin/ocgrpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"

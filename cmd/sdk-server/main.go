@@ -33,12 +33,13 @@ import (
 	"agones.dev/agones/pkg/sdkserver"
 	"agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/signals"
-	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
+	gwruntime "github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/pkg/errors"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"github.com/tmc/grpc-websocket-proxy/wsproxy"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )
@@ -228,7 +229,7 @@ func runGrpc(grpcServer *grpc.Server, grpcEndpoint string) {
 
 // runGateway runs the grpc-gateway
 func runGateway(ctx context.Context, grpcEndpoint string, mux *gwruntime.ServeMux, httpServer *http.Server) {
-	conn, err := grpc.DialContext(ctx, grpcEndpoint, grpc.WithBlock(), grpc.WithInsecure())
+	conn, err := grpc.DialContext(ctx, grpcEndpoint, grpc.WithBlock(), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		logger.WithError(err).Fatal("Could not dial grpc server...")
 	}

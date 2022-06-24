@@ -32,7 +32,7 @@
 // To close the open connection, use the Close() method.
 //
 // For information about setting deadlines, reusing contexts, and more
-// please visit godoc.org/cloud.google.com/go.
+// please visit pkg.go.dev/cloud.google.com/go.
 package trace // import "cloud.google.com/go/trace/apiv2"
 
 import (
@@ -41,10 +41,16 @@ import (
 	"strings"
 	"unicode"
 
+	"google.golang.org/api/option"
 	"google.golang.org/grpc/metadata"
 )
 
-const versionClient = "20200305"
+// For more information on implementing a client constructor hook, see
+// https://github.com/googleapis/google-cloud-go/wiki/Customizing-constructors.
+type clientHookParams struct{}
+type clientHook func(context.Context, clientHookParams) ([]option.ClientOption, error)
+
+const versionClient = "20200825"
 
 func insertMetadata(ctx context.Context, mds ...metadata.MD) context.Context {
 	out, _ := metadata.FromOutgoingContext(ctx)

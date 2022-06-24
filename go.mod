@@ -3,16 +3,15 @@ module agones.dev/agones
 go 1.17
 
 require (
-	cloud.google.com/go v0.54.0
+	cloud.google.com/go v0.65.0
 	contrib.go.opencensus.io/exporter/prometheus v0.1.0
 	contrib.go.opencensus.io/exporter/stackdriver v0.8.0
 	fortio.org/fortio v1.3.1
 	github.com/ahmetb/gen-crd-api-reference-docs v0.1.1
 	github.com/fsnotify/fsnotify v1.4.9
 	github.com/go-openapi/spec v0.19.5
-	github.com/golang/protobuf v1.5.2
 	github.com/gorilla/websocket v1.4.2
-	github.com/grpc-ecosystem/grpc-gateway v1.11.3
+	github.com/grpc-ecosystem/grpc-gateway/v2 v2.10.3
 	github.com/hashicorp/golang-lru v0.5.1
 	github.com/heptiolabs/healthcheck v0.0.0-20171201210846-da5fdee475fb
 	github.com/joonix/log v0.0.0-20180502111528-d2d3f2f4a806
@@ -25,12 +24,13 @@ require (
 	github.com/spf13/viper v1.7.0
 	github.com/stretchr/testify v1.7.0
 	github.com/tmc/grpc-websocket-proxy v0.0.0-20190109142713-0ad062ec5ee5
-	go.opencensus.io v0.22.3
-	golang.org/x/net v0.0.0-20211209124913-491a49abca63
+	go.opencensus.io v0.22.4
+	golang.org/x/net v0.0.0-20220622184535-263ec571b305
 	golang.org/x/time v0.0.0-20210723032227-1f47c861a9ac
 	golang.org/x/tools v0.1.0
-	google.golang.org/genproto v0.0.0-20201110150050-8816d57aaa9a
-	google.golang.org/grpc v1.27.1
+	google.golang.org/genproto v0.0.0-20220623142657-077d458a5694
+	google.golang.org/grpc v1.47.0
+	google.golang.org/protobuf v1.28.0
 	gopkg.in/fsnotify.v1 v1.4.7
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 	k8s.io/api v0.22.9
@@ -48,15 +48,15 @@ require (
 	github.com/cespare/xxhash/v2 v2.1.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/evanphx/json-patch v4.11.0+incompatible // indirect
-	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/go-logr/logr v0.4.0 // indirect
 	github.com/go-openapi/jsonpointer v0.19.3 // indirect
 	github.com/go-openapi/jsonreference v0.19.3 // indirect
 	github.com/go-openapi/swag v0.19.5 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
-	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b // indirect
+	github.com/golang/glog v1.0.0 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
-	github.com/google/go-cmp v0.5.5 // indirect
+	github.com/golang/protobuf v1.5.2 // indirect
+	github.com/google/go-cmp v0.5.8 // indirect
 	github.com/google/gofuzz v1.1.0 // indirect
 	github.com/google/uuid v1.1.2 // indirect
 	github.com/googleapis/gax-go/v2 v2.0.5 // indirect
@@ -83,20 +83,19 @@ require (
 	github.com/spf13/jwalterweatherman v1.0.0 // indirect
 	github.com/subosito/gotenv v1.2.0 // indirect
 	golang.org/x/mod v0.3.1-0.20200828183125-ce943fd02449 // indirect
-	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d // indirect
+	golang.org/x/oauth2 v0.0.0-20220411215720-9780585627b5 // indirect
 	golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9 // indirect
-	golang.org/x/sys v0.0.0-20210616094352-59db8d763f22 // indirect
-	golang.org/x/term v0.0.0-20210220032956-6a3ed077a48d // indirect
-	golang.org/x/text v0.3.6 // indirect
+	golang.org/x/sys v0.0.0-20220622161953-175b2fd9d664 // indirect
+	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
+	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
-	google.golang.org/api v0.20.0 // indirect
-	google.golang.org/appengine v1.6.5 // indirect
-	google.golang.org/protobuf v1.26.0 // indirect
+	google.golang.org/api v0.30.0 // indirect
+	google.golang.org/appengine v1.6.6 // indirect
 	gopkg.in/DATA-DOG/go-sqlmock.v1 v1.3.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/ini.v1 v1.51.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 	k8s.io/gengo v0.0.0-20201214224949-b6c5ce23f027 // indirect
 	k8s.io/klog v0.3.0 // indirect
 	k8s.io/klog/v2 v2.9.0 // indirect

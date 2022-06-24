@@ -14,6 +14,8 @@ set(GENERATED_SOURCE_FILES
 set(GENERATED_GOOGLE_SOURCE_FILES
     src/google/annotations.pb.cc
     src/google/http.pb.cc
+    src/protoc-gen-openapiv2/annotations.pb.cc
+    src/protoc-gen-openapiv2/openapiv2.pb.cc
 )
 
 set(GENERATED_HEADER_FILES
@@ -24,6 +26,8 @@ set(GENERATED_HEADER_FILES
 set(GENERATED_GOOGLE_HEADER_FILES
     include/google/api/annotations.pb.h
     include/google/api/http.pb.h
+    include/protoc-gen-openapiv2/options/annotations.pb.h
+    include/protoc-gen-openapiv2/options/openapiv2.pb.h
 )
 
 set(ALL_FILES

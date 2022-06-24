@@ -28,10 +28,10 @@ RUN wget -q https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz && \
 
 ENV PATH /usr/local/go/bin:/go/bin:$PATH
 
-# install go-proto-gen 1.1
-RUN go get github.com/golang/protobuf/protoc-gen-go@v1.2.0 && \
+# install protoc-gen-go
+RUN go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28 && \
+    go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2 && \
     go get -u golang.org/x/tools/cmd/goimports
-    
 
 # code generation scripts
 COPY *.sh /root/

@@ -64,6 +64,7 @@ Table of Contents
         * [make gen-embedded-openapi](#make-gen-embedded-openapi)
         * [make gen-crd-client](#make-gen-crd-client)
         * [make gen-sdk-grpc](#make-gen-sdk-grpc)
+        * [make gen-allocation-grpc](#make-gen-allocation-grpc)
      * [Build Image Targets](#build-image-targets)
         * [make clean-config](#make-clean-config)
         * [make clean-build-image](#make-clean-build-image)
@@ -633,6 +634,9 @@ Generate the Custom Resource Definition client(s)
 
 #### `make gen-sdk-grpc`
 Generate the SDK gRPC server and client code
+
+#### `make gen-allocation-grpc`
+Generate the allocator gRPC code
 
 ### Build Image Targets
 

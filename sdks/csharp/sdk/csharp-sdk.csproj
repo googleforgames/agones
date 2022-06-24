@@ -21,10 +21,10 @@
 
   <ItemGroup>
     <PackageReference Include="Google.Api.CommonProtos" Version="2.0.0" />
-    <PackageReference Include="Google.Protobuf" Version="3.11.4" />
-    <PackageReference Include="Grpc" Version="2.28.1" />
-    <PackageReference Include="Grpc.Core" Version="2.28.1" />
-    <PackageReference Include="Grpc.Tools" Version="2.28.1">
+    <PackageReference Include="Google.Protobuf" Version="3.19.4" />
+    <PackageReference Include="Grpc" Version="2.45.0" />
+    <PackageReference Include="Grpc.Core" Version="2.45.0" />
+    <PackageReference Include="Grpc.Tools" Version="2.45.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
@@ -32,6 +32,6 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(Configuration)' == 'DebugProtoGen'">
-    <Protobuf Include="sdk.proto" ProtoRoot="../../../proto/sdk/;../../../proto/googleapis" OutputDir="generated/" CompileOutputs="false" />
+    <Protobuf Include="sdk.proto" ProtoRoot="../../../proto/sdk/;../../../proto/googleapis;../../../proto/grpc-gateway" OutputDir="generated/" CompileOutputs="false" />
   </ItemGroup>
 </Project>

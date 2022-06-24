@@ -191,6 +191,11 @@ install(
     FILES ${GENERATED_GOOGLE_HEADER_FILES}
     DESTINATION ${_INCLUDE_DIRS}/google/api
 )
+# grpc-gateway header files
+install(
+    FILES ${GENERATED_GOOGLE_HEADER_FILES}
+    DESTINATION ${_INCLUDE_DIRS}/protoc-gen-openapiv2/options
+)
 
 unset(_INCLUDE_DIRS)
 unset(_CMAKE_CONFIG_DESTINATION)

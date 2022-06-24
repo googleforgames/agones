@@ -154,7 +154,7 @@ func main() {
 
 		if count, _, err := alphaCli.SDKApi.GetPlayerCount(ctx); err != nil {
 			log.Fatalf("Error retrieving player count: %s", err)
-		} else if count.Count != "" { // "" is 0, which is empty. This is what the generated client gives us.
+		} else if count.Count != "0" {
 			log.Fatalf("Player Count should be 0, but is %v", count)
 		}
 
