@@ -100,9 +100,9 @@ class AgonesSDK {
 			});
 		}
 		const request = new messages.Empty();
-        this.healthStream.write(request, null, (err) => {
-            if (err) {
-                throw new Error('health ping connection failure:' + err.message)
+        this.healthStream.write(request, null, (error) => {
+            if (error) {
+                throw new Error('health ping connection failure:' + error.message)
             }
         });
 	}
