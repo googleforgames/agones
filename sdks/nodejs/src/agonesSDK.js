@@ -93,16 +93,25 @@ class AgonesSDK {
 		});
 	}
 
-	health() {
+	health(errorCallback) {
 		if (this.healthStream === undefined) {
 			this.healthStream = this.client.health(() => {
 				// Ignore error as this can't be caught
 			});
+			if (typeof this.healthStream.on === 'function') {
+				this.healthStream.on('error', () => {
+					// ignore error, prevent from being uncaught
+				});
+			}
 		}
 		const request = new messages.Empty();
 		this.healthStream.write(request, null, (error) => {
 			if (error) {
-				throw new Error('health ping connection failure:' + error.message)
+				if (errorCallback) {
+					errorCallback(error);
+					return;
+				}
+				throw error;
 			}
 		});
 	}
