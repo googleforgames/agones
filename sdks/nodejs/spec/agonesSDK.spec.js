@@ -203,6 +203,7 @@ describe('AgonesSDK', () => {
 				fail();
 			}
 		});
+
 		it('calls the server and re throws stream write error if no callback', async () => {
 			let stream = jasmine.createSpyObj('stream', ['write', 'on']);
 			stream.write.and.callFake((chunk, encoding, callback) => {
@@ -219,7 +220,8 @@ describe('AgonesSDK', () => {
 				expect(error).toEqual('error');
 			}
 		});
-		it('do not call error callback if there was no stream error', async () => {
+
+		it('does not call error callback if there was no stream error', async () => {
 			let stream = jasmine.createSpyObj('stream', ['write', 'on']);
 			stream.write.and.callFake((chunk, encoding, callback) => {
 				callback();
