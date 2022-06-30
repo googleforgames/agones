@@ -57,7 +57,7 @@ var (
 		FeaturePlayerTracking:         false,
 		FeatureStateAllocationFilter:  false,
 		FeaturePlayerAllocationFilter: false,
-		FeatureCustomFasSyncInterval:  false,
+		FeatureCustomFasSyncInterval:  true,
 		FeatureSDKGracefulTermination: false,
 	}
 

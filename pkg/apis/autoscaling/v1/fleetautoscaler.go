@@ -54,7 +54,7 @@ type FleetAutoscalerSpec struct {
 
 	// Autoscaling policy
 	Policy FleetAutoscalerPolicy `json:"policy"`
-	// [Stage:Alpha]
+	// [Stage:Beta]
 	// [FeatureFlag:CustomFasSyncInterval]
 	// Sync defines when FleetAutoscalers runs autoscaling
 	// +optional
