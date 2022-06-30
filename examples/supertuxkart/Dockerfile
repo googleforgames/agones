@@ -25,15 +25,12 @@ RUN go build -o wrapper .
 FROM debian:bullseye
 
 RUN apt update && apt-get install -y  wget xz-utils
-
+WORKDIR /home/supertuxkart
 RUN wget --quiet https://github.com/supertuxkart/stk-code/releases/download/1.3/SuperTuxKart-1.3-linux-64bit.tar.xz && \
 tar -xf SuperTuxKart-1.3-linux-64bit.tar.xz && rm -rf SuperTuxKart-1.3-linux-64bit.tar.xz
 
-
 RUN useradd -m  -u 1000 supertuxkart
-WORKDIR /home/supertuxkart
-
-WORKDIR /home/supertuxkart/stk-code
+RUN apt-get install -y libcurl4
 
 COPY --from=go-builder /go/src/supertuxkart/wrapper .
 COPY entrypoint.sh .

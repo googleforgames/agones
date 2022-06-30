@@ -17,4 +17,4 @@
 set -e
 set +x
 
-./wrapper -i "./cmake_build/bin/supertuxkart --server-config=$(pwd)/server_config.xml" -player-tracking="$ENABLE_PLAYER_TRACKING"
+./wrapper -i "/home/supertuxkart/SuperTuxKart-1.3-linux-64bit/bin/supertuxkart --server-config=$(pwd)/server_config.xml" -player-tracking="$ENABLE_PLAYER_TRACKING"
