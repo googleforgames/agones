@@ -196,7 +196,9 @@ describe('AgonesSDK', () => {
 				return stream;
 			});
 			try {
-				agonesSDK.health(() => {});
+				agonesSDK.health((error) => {
+					expect(error).toEqual('error');
+				});
 			} catch (error) {
 				fail();
 			}
