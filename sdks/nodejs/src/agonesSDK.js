@@ -98,11 +98,9 @@ class AgonesSDK {
 			this.healthStream = this.client.health(() => {
 				// Ignore error as this can't be caught
 			});
-			if (typeof this.healthStream.on === 'function') {
-				this.healthStream.on('error', () => {
-					// ignore error, prevent from being uncaught
-				});
-			}
+			this.healthStream.on('error', () => {
+				// ignore error, prevent from being uncaught
+			});
 		}
 		const request = new messages.Empty();
 		this.healthStream.write(request, null, (error) => {
