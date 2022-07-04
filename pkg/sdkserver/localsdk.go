@@ -90,7 +90,7 @@ type LocalSDKServer struct {
 }
 
 // NewLocalSDKServer returns the default LocalSDKServer
-func NewLocalSDKServer(filePath string) (*LocalSDKServer, error) {
+func NewLocalSDKServer(filePath string, testSdkName string) (*LocalSDKServer, error) {
 	l := &LocalSDKServer{
 		gsMutex:         sync.RWMutex{},
 		gs:              defaultGs(),
@@ -99,7 +99,7 @@ func NewLocalSDKServer(filePath string) (*LocalSDKServer, error) {
 		testMutex:       sync.Mutex{},
 		requestSequence: make([]string, 0),
 		testMode:        false,
-		testSdkName:     "",
+		testSdkName:     testSdkName,
 		gsState:         agonesv1.GameServerStateScheduled,
 	}
 	l.logger = runtime.NewLoggerWithType(l)
@@ -658,5 +658,19 @@ func (l *LocalSDKServer) setGameServerFromFilePath(filePath string) error {
 	l.gsMutex.Lock()
 	defer l.gsMutex.Unlock()
 	l.gs = convert(&gs)
+
+	// Set LogLevel if specified
+	logLevel := agonesv1.SdkServerLogLevelInfo
+	if gs.Spec.SdkServer.LogLevel != "" {
+		logLevel = gs.Spec.SdkServer.LogLevel
+	}
+	l.logger.WithField("logLevel", logLevel).Debug("Setting LogLevel configuration")
+	level, err := logrus.ParseLevel(strings.ToLower(string(logLevel)))
+	if err == nil {
+		l.logger.Logger.SetLevel(level)
+	} else {
+		l.logger.WithError(err).Warn("Specified wrong Logging.SdkServer. Setting default loglevel - Info")
+		l.logger.Logger.SetLevel(logrus.InfoLevel)
+	}
 	return nil
 }

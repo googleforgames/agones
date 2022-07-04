@@ -203,4 +203,5 @@ resource "google_compute_firewall" "default" {
   }
 
   target_tags = ["game-server"]
+  source_ranges = [var.sourceRanges]
 }

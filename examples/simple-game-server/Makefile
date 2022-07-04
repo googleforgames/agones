@@ -76,15 +76,14 @@ endif
 # Builds all image artifacts and create a docker manifest that is used to inform the CRI (Docker or containerd usually)
 # which image is the best fit for the host. See https://www.docker.com/blog/multi-arch-images/ for details.
 push: push-linux-image-amd64
-	-DOCKER_CLI_EXPERIMENTAL=enabled docker manifest rm $(server_tag)
-	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest create $(server_tag) $(push_server_manifest)
 ifeq ($(WITH_WINDOWS), 1)
 push: push-windows-images
-	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest annotate --os.version $(WINDOWS_VERSIONS) 	
 endif
 ifeq ($(WITH_ARM64), 1)
 push: push-linux-image-arm64
 endif
+	-DOCKER_CLI_EXPERIMENTAL=enabled docker manifest rm $(server_tag)
+	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest create $(server_tag) $(push_server_manifest)
 	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest push $(server_tag) --purge
 
 # Pushes all variants of the Windows images to the container image registry.
@@ -121,7 +120,7 @@ ensure-windows-buildx:
 build-linux-image-amd64:
 	cd $(root_path) && docker build -f $(project_path)Dockerfile --tag=$(server_tag_linux_amd64) .
 build-linux-image-arm64:
-	cd $(root_path) && docker build -f $(project_path)Dockerfile --platform linux/arm64 --tag=$(server_tag_linux_arm64) .
+	cd $(root_path) && docker buildx build --platform linux/arm64 -f $(project_path)Dockerfile $(DOCKER_BUILD_ARGS) --tag=$(server_tag_linux_arm64) .
 
 # check if hosted on Google Cloud Registry
 gcr-check:

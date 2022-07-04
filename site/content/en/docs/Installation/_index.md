@@ -27,9 +27,26 @@ Agones will update its support to the n-1 version of what is available across th
 AKS, while also ensuring that all Cloud providers can support that version.
 {{< /alert >}}
 
-{{< alert title="Note" color="info">}}
+## Supported Container Architectures
+
+The following container operating systems and architectures can be utilised with Agones:
+
+
+| OS        | Architecture | Support    |
+|-----------|--------------|------------|
+| linux     | `amd64`      | **Stable** |
+| linux     | `arm64`      | Alpha      |
+| [windows] | `amd64`      | Alpha      |
+
+For all the platforms in Alpha, we would appreciate testing and bug reports on any issue found.
+
+## Best Practices
+
+### Separation of Agones from GameServer nodes
+
 When running in production, Agones should be scheduled on a dedicated pool of nodes, distinct from where Game Servers
 are scheduled for better isolation and resiliency. By default Agones prefers to be scheduled on nodes labeled with
 `agones.dev/agones-system=true` and tolerates the node taint `agones.dev/agones-system=true:NoExecute`.
 If no dedicated nodes are available, Agones will run on regular nodes.
-{{< /alert >}}
+
+[windows]: {{% ref "/docs/Guides/windows-gameservers.md" %}}

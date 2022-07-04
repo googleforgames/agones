@@ -19,6 +19,7 @@ Table of Contents
      * [Running a Test Minikube cluster](#running-a-test-minikube-cluster)
      * [Running a Test Kind cluster](#running-a-test-kind-cluster)
      * [Running a Custom Test Environment](#running-a-custom-test-environment)
+     * [Common Development Flows](#common-development-flows)
      * [Set Local Make Targets and Variables with `local-includes`](#set-local-make-targets-and-variables-with-local-includes)
      * [Running Individual End-to-End Tests](#running-individual-end-to-end-tests)
   * [Make Variable Reference](#make-variable-reference)
@@ -221,7 +222,7 @@ You can [choose any registry region](https://cloud.google.com/container-registry
 but for this example, we'll just use `gcr.io`.
 
 In your shell, run `export REGISTRY=gcr.io/<YOUR-PROJECT-ID>` which will overwrite the default registry settings in our
-Make targets. Then, to rebuild our images for this registry, we run `make build` again.
+Make targets. Then, to rebuild our images for this registry, we run `make build-images` again.
 
 Before we can push the images, there is one more small step! So that we can run regular `docker push` commands
 (rather than `gcloud docker -- push`), we have to authenticate against the registry, which will give us a short
@@ -263,7 +264,7 @@ Enter `kubectl get pods` and press enter. You should see that you have no resour
 Assuming that all works, let's exit the shell by typing `exit` and hitting enter, and look at a building, pushing and
 installing Agones on Minikube next.
 
-You may remember in the first part of this walkthrough, we ran `make build`, which created all the images and binaries
+You may remember in the first part of this walkthrough, we ran `make build-images`, which created all the images and binaries
 we needed to work with Agones locally. We can push these images them straight into Minikube very easily!
 
 Run `make minikube-push` which will send all of Agones's docker images from your local Docker into the Agones Minikube
@@ -306,7 +307,7 @@ Run `make kind-shell` to enter the development shell. You should see a bash shel
 Enter `kubectl get pods` and press enter. You should see that you have no resources currently, but otherwise see no errors.
 Assuming that all works, let's exit the shell by typing `exit` and hitting enter, and look at a building, pushing and installing Agones on Kind next.
 
-You may remember in the first part of this walkthrough, we ran `make build`, which created all the images and binaries
+You may remember in the first part of this walkthrough, we ran `make build-images`, which created all the images and binaries
 we needed to work with Agones locally. We can push these images them straight into kind very easily!
 
 Run `make kind-push` which will send all of Agones's docker images from your local Docker into the Agones Kind container.
@@ -345,9 +346,16 @@ Now you're ready to begin the development/test cycle:
 - `make install` will install/upgrade Agones into your cluster
 - `make test-e2e` will run end-to-end tests in your cluster
 
-You can combine some of the above steps into a single one, for example `make build push install` or `make build push test-e2e`.
-
 If you need to clean up your cluster, you can use `make uninstall` to remove Agones.
+
+### Common Development Flows
+
+You can combine some of the above steps into a single one, for example `make build-images push install` is very
+common flow, to build you changes on Agones, push them to a container registry and install this development
+version to your cluster.
+
+Another would be to run `make lint test-go` to run the golang linter against the Go code, and then run all the unit 
+tests.
 
 ### Set Local Make Targets and Variables with `local-includes`
 

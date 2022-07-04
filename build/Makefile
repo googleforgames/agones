@@ -24,7 +24,7 @@
 #
 
 # base version target. This is usually the next release.
-base_version = 1.24.0
+base_version = 1.25.0
 
 # agones image release registry
 release_registry = gcr.io/agones-images
@@ -63,7 +63,7 @@ KIND_PROFILE ?= agones
 KIND_CONTAINER_NAME=$(KIND_PROFILE)-control-plane
 
 # Game Server image to use while doing end-to-end tests
-GS_TEST_IMAGE ?= gcr.io/agones-images/simple-game-server:0.12
+GS_TEST_IMAGE ?= gcr.io/agones-images/simple-game-server:0.13
 
 ALPHA_FEATURE_GATES ?= "PlayerTracking=true&StateAllocationFilter=true&PlayerAllocationFilter=true&CustomFasSyncInterval=true"
 
@@ -478,9 +478,9 @@ ifeq ($(WITH_WINDOWS), 1)
 build-agones-sdk-image: build-agones-sdk-image-windows
 endif
 
-build-agones-sdk-image-amd64: $(ensure-build-image) build-agones-sdk-binary 
+build-agones-sdk-image-amd64: $(ensure-build-image) build-agones-sdk-binary-linux-amd64
 	docker build $(agones_path)/cmd/sdk-server/ --tag=$(sidecar_linux_amd64_tag) $(DOCKER_BUILD_ARGS)
-build-agones-sdk-image-arm64: $(ensure-build-image) build-agones-sdk-binary
+build-agones-sdk-image-arm64: $(ensure-build-image) build-agones-sdk-binary-linux-arm64
 	docker buildx build --platform linux/arm64 --build-arg ARCH=arm64 $(agones_path)/cmd/sdk-server/ --tag=$(sidecar_linux_arm64_tag) $(DOCKER_BUILD_ARGS)
 
 build-agones-sdk-image-windows: build-agones-sdk-binary
@@ -647,7 +647,7 @@ setup-prometheus: SCRAPE_INTERVAL=30s
 setup-prometheus:
 	$(DOCKER_RUN) helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 	$(DOCKER_RUN) helm repo update
-	$(DOCKER_RUN) helm upgrade prom prometheus-community/prometheus --install --wait --version 11.16.2 \
+	$(DOCKER_RUN) helm upgrade prom prometheus-community/prometheus --install --wait --version 15.9.2 \
  		--namespace metrics --create-namespace \
 		--set server.global.scrape_interval=$(SCRAPE_INTERVAL),server.persistentVolume.enabled=$(PVC),server.persistentVolume.size=$(PV_SIZE) \
 		$(HELM_ARGS) -f $(mount_path)/build/prometheus.yaml
@@ -665,7 +665,7 @@ setup-grafana:
 	$(DOCKER_RUN) helm repo add grafana https://grafana.github.io/helm-charts
 	$(DOCKER_RUN) helm repo update
 	$(DOCKER_RUN) kubectl apply -f $(mount_path)/build/grafana/
-	$(DOCKER_RUN) helm upgrade grafana grafana/grafana --install --wait --version=5.7.10 \
+	$(DOCKER_RUN) helm upgrade grafana grafana/grafana --install --wait --version=6.29.6 \
 		--namespace metrics --create-namespace \
 		--set persistence.enabled=$(PVC),server.persistentVolume.size=$(PV_SIZE) \
 		--set adminPassword=$(PASSWORD) $(HELM_ARGS) -f $(mount_path)/build/grafana.yaml
