@@ -10,7 +10,7 @@ Check the [Client SDK Documentation]({{< relref "_index.md" >}}) for more detail
 
 ## SDK Functionality
 
-{{% feature expiryVersion="1.24.0" %}}
+{{% feature expiryVersion="1.25.0" %}}
 | Area                 | Action                   | Implemented                   |
 |----------------------|--------------------------|-------------------------------|
 | Lifecycle            | Ready                    | ✔️                            |
