@@ -145,7 +145,7 @@ agones.WatchGameServer(gameServer => Debug.Log($"Server - Watch {gameServer}"));
 
 ## Player Tracking
 
-{{< alpha title="Player Tracking" gate="PlayerTracking" >}}
+{{% alpha title="Player Tracking" gate="PlayerTracking" %}}
 
 To use alpha features use the AgonesAlphaSDK class.
 
