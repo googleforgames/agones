@@ -241,7 +241,7 @@ func (c *Controller) recordFleetChanges(obj interface{}) {
 	}
 
 	c.recordFleetReplicas(f.Name, f.Namespace, f.Status.Replicas, f.Status.AllocatedReplicas,
-		f.Status.ReadyReplicas, f.Spec.Replicas)
+		f.Status.ReadyReplicas, f.Spec.Replicas, f.Status.ReservedReplicas)
 }
 
 func (c *Controller) recordFleetDeletion(obj interface{}) {
@@ -250,10 +250,10 @@ func (c *Controller) recordFleetDeletion(obj interface{}) {
 		return
 	}
 
-	c.recordFleetReplicas(f.Name, f.Namespace, 0, 0, 0, 0)
+	c.recordFleetReplicas(f.Name, f.Namespace, 0, 0, 0, 0, 0)
 }
 
-func (c *Controller) recordFleetReplicas(fleetName, fleetNamespace string, total, allocated, ready, desired int32) {
+func (c *Controller) recordFleetReplicas(fleetName, fleetNamespace string, total, allocated, ready, desired, reserved int32) {
 
 	ctx, _ := tag.New(context.Background(), tag.Upsert(keyName, fleetName), tag.Upsert(keyNamespace, fleetNamespace))
 
@@ -265,6 +265,8 @@ func (c *Controller) recordFleetReplicas(fleetName, fleetNamespace string, total
 		fleetsReplicasCountStats.M(int64(ready)))
 	recordWithTags(ctx, []tag.Mutator{tag.Upsert(keyType, "desired")},
 		fleetsReplicasCountStats.M(int64(desired)))
+	recordWithTags(ctx, []tag.Mutator{tag.Upsert(keyType, "reserved")},
+		fleetsReplicasCountStats.M(int64(reserved)))
 }
 
 // recordGameServerStatusChanged records gameserver status changes, however since it's based

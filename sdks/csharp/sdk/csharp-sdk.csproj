@@ -13,7 +13,7 @@
     <PackageProjectUrl>https://agones.dev</PackageProjectUrl>
     <PackageLicenseUrl>http://www.apache.org/licenses/LICENSE-2.0</PackageLicenseUrl>
     <AssemblyName>AgonesSDK</AssemblyName>
-    <Version>1.24.0-dev</Version>
+    <Version>1.25.0-dev</Version>
     <PackageTags>agones, googleforgames, kuberenetes, multiplayer, gameservers</PackageTags>
     <Company>agones.dev</Company>
     <Configurations>Debug;Release;DebugProtoGen</Configurations>
@@ -21,7 +21,7 @@
 
   <ItemGroup>
     <PackageReference Include="Google.Api.CommonProtos" Version="2.0.0" />
-    <PackageReference Include="Google.Protobuf" Version="3.11.4" />
+    <PackageReference Include="Google.Protobuf" Version="3.15.0" />
     <PackageReference Include="Grpc" Version="2.28.1" />
     <PackageReference Include="Grpc.Core" Version="2.28.1" />
     <PackageReference Include="Grpc.Tools" Version="2.28.1">

@@ -28,7 +28,7 @@ REPOSITORY = gcr.io/agones-images
 # Directory that this Makefile is in.
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_path := $(dir $(mkfile_path))
-server_tag = $(REPOSITORY)/nodejs-simple-server:0.6
+server_tag = $(REPOSITORY)/nodejs-simple-server:0.8
 root_path = $(realpath $(project_path)/../..)
 
 #   _____                    _

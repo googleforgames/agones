@@ -82,9 +82,9 @@ github_repo = "https://github.com/googleforgames/agones"
 gcs_engine_id = "016691298986124624340:x7qv2dywdao"
 
 # current release branch. Never is rc.
-release_branch = "release-1.23.0"
+release_branch = "release-1.24.0"
 # the main version. Never is rc.
-release_version = "1.23.0"
+release_version = "1.24.0"
 
 # shown for production
 supported_k8s = "1.22"
@@ -96,7 +96,7 @@ dev_aks_minor_supported_k8s = "6"
 dev_minikube_minor_supported_k8s = "9"
 
 # example tag
-example_image_tag = "gcr.io/agones-images/simple-game-server:0.12"
+example_image_tag = "gcr.io/agones-images/simple-game-server:0.13"
 
 # Enable syntax highlighting and copy buttons on code blocks with Prism
 prism_syntax_highlighting = true

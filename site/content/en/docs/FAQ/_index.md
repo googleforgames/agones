@@ -203,7 +203,6 @@ If you are interested in this feature and/or contributing, please add a comment 
 
 ### Is there an example of Agones and Open Match working together? 
 
-Space Agon is a demo integration of [Agones](https://agones.dev/) and
-[Open Match](https://open-match.dev/), that runs a browser based game.
-
-You can find it at: https://github.com/Laremere/space-agon.
+Yes! There are several! Check out both our
+[official]({{% ref "/docs/Examples/_index.md#integration-with-open-match" %}}) 
+and [third party]({{% ref "/docs/Third Party Content/examples.md#integration-with-open-match" %}}) examples!

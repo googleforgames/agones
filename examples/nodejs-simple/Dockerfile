@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM debian:buster
+FROM debian:bullseye
 RUN useradd -u 1000 -m server
 RUN apt-get update && apt-get install -y curl software-properties-common gnupg  && \
     apt-get clean
@@ -27,7 +27,7 @@ ARG VERSION=node_16.x
 RUN curl -fsSL https://deb.nodesource.com/gpgkey/nodesource.gpg.key | gpg --dearmor | tee "$KEYRING" >/dev/null
 RUN gpg --no-default-keyring --keyring "$KEYRING" --list-keys
 
-ARG DISTRO="buster"
+ARG DISTRO="bullseye"
 RUN echo "deb [signed-by=$KEYRING] https://deb.nodesource.com/$VERSION $DISTRO main" | tee /etc/apt/sources.list.d/nodesource.list
 RUN echo "deb-src [signed-by=$KEYRING] https://deb.nodesource.com/$VERSION $DISTRO main" | tee -a /etc/apt/sources.list.d/nodesource.list
 
@@ -35,9 +35,12 @@ RUN apt-get update && apt-get install -y nodejs
 
 WORKDIR /home/server
 
+COPY ./sdks/nodejs sdks/nodejs
+RUN cd sdks/nodejs && \
+    npm ci --production
 COPY ./examples/nodejs-simple examples/nodejs-simple
 RUN cd examples/nodejs-simple && \
-    npm install && npm rebuild
+    npm ci --production
 RUN chown -R server /home/server
 USER 1000
 
