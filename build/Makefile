@@ -48,6 +48,7 @@ GCP_BUCKET_CHARTS ?= agones-chart
 MINIKUBE_PROFILE ?= agones
 GO_BUILD_TAGS ?= none
 BUILDX_WINDOWS_BUILDER = windows-builder
+BUILDX_ARM64_BUILDER = arm64-builder
 WINDOWS_DOCKER_PUSH_ARGS =
 # Versions of Windows Server to support, default is Windows Server 2019.
 # For the full list of tags see https://hub.docker.com/_/microsoft-windows-servercore.
@@ -413,6 +414,10 @@ build-licenses:
 build-required-src-dist:
 	docker run --rm $(common_mounts) $(build_tag) $(mount_path)/build/build-required-src-dist.sh
 
+# Create docker builder used in creating arm64 images
+create-arm64-builder:
+	-docker buildx create --name $(BUILDX_ARM64_BUILDER)
+
 # Build the image for the gameserver controller
 build-controller-image: build-controller-image-amd64
 ifeq ($(WITH_ARM64), 1)
@@ -422,7 +427,8 @@ endif
 build-controller-image-amd64: $(ensure-build-image) build-controller-binary build-licenses build-required-src-dist
 	docker build $(agones_path)/cmd/controller/ --tag=$(controller_amd64_tag) $(DOCKER_BUILD_ARGS)
 build-controller-image-arm64: $(ensure-build-image) build-controller-binary
-	docker buildx build --platform linux/arm64 --build-arg ARCH=arm64 $(agones_path)/cmd/controller/ --tag=$(controller_arm64_tag) $(DOCKER_BUILD_ARGS)
+	$(MAKE) create-arm64-builder 
+	docker buildx build --platform linux/arm64 --builder $(BUILDX_ARM64_BUILDER) --build-arg ARCH=arm64 $(agones_path)/cmd/controller/ --tag=$(controller_arm64_tag) $(DOCKER_BUILD_ARGS)
 
 # push the gameservers controller image
 push-controller-image: push-controller-image-amd64
@@ -472,7 +478,7 @@ ensure-windows-buildx:
 # Build the image for the gameserver sidecar and SDK binaries
 build-agones-sdk-image: $(ensure-build-image) build-agones-sdk-binary build-licenses build-required-src-dist build-agones-sdk-image-amd64
 ifeq ($(WITH_ARM64), 1)
-build-agones-sdk-image: build-agones-sdk-image-arm64
+build-agones-sdk-image: build-agones-sdk-image-arm64 
 endif
 ifeq ($(WITH_WINDOWS), 1)
 build-agones-sdk-image: build-agones-sdk-image-windows
@@ -481,7 +487,8 @@ endif
 build-agones-sdk-image-amd64: $(ensure-build-image) build-agones-sdk-binary-linux-amd64
 	docker build $(agones_path)/cmd/sdk-server/ --tag=$(sidecar_linux_amd64_tag) $(DOCKER_BUILD_ARGS)
 build-agones-sdk-image-arm64: $(ensure-build-image) build-agones-sdk-binary-linux-arm64
-	docker buildx build --platform linux/arm64 --build-arg ARCH=arm64 $(agones_path)/cmd/sdk-server/ --tag=$(sidecar_linux_arm64_tag) $(DOCKER_BUILD_ARGS)
+	$(MAKE) create-arm64-builder 
+	docker buildx build --platform linux/arm64 --builder $(BUILDX_ARM64_BUILDER) --build-arg ARCH=arm64 $(agones_path)/cmd/sdk-server/ --tag=$(sidecar_linux_arm64_tag) $(DOCKER_BUILD_ARGS) 
 
 build-agones-sdk-image-windows: build-agones-sdk-binary
 build-agones-sdk-image-windows: $(foreach winver, $(WINDOWS_VERSIONS), build-agones-sdk-image-windows-$(winver))
@@ -515,7 +522,7 @@ endif
 	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest create $(ping_tag) $(push_ping_manifest)
 	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest push $(ping_tag)
 
-push-ping-image-amd64: $(ensure-build-image)
+push-ping-image-amd64: $(ensure-build-image) build-ping-image-amd64
 	docker push $(ping_amd64_tag)
 push-ping-image-arm64:
 	$(MAKE) DOCKER_BUILD_ARGS=--push build-ping-image-arm64
@@ -523,13 +530,14 @@ push-ping-image-arm64:
 # Build the image for the ping service
 build-ping-image: build-ping-image-amd64
 ifeq ($(WITH_ARM64), 1)
-build-ping-image: build-ping-image-arm64
+build-ping-image: build-ping-image-arm64 
 endif
 
 build-ping-image-amd64: $(ensure-build-image) build-ping-binary build-licenses build-required-src-dist
 	docker build $(agones_path)/cmd/ping/ --tag=$(ping_amd64_tag) $(DOCKER_BUILD_ARGS)
 build-ping-image-arm64: $(ensure-build-image) build-ping-binary
-	docker buildx build --platform linux/arm64 --build-arg ARCH=arm64 $(agones_path)/cmd/ping/ --tag=$(ping_arm64_tag) $(DOCKER_BUILD_ARGS)
+	$(MAKE) create-arm64-builder 
+	docker buildx build --platform linux/arm64 --builder $(BUILDX_ARM64_BUILDER) --build-arg ARCH=arm64 $(agones_path)/cmd/ping/ --tag=$(ping_arm64_tag) $(DOCKER_BUILD_ARGS) 
 
 # Build a static binary for the allocator service
 build-allocator-binary: $(ensure-build-image) build-allocator-binary-linux-amd64
@@ -570,7 +578,8 @@ endif
 build-allocator-image-amd64: $(ensure-build-image) build-allocator-binary build-licenses build-required-src-dist
 	docker build $(agones_path)/cmd/allocator/ --tag=$(allocator_amd64_tag) $(DOCKER_BUILD_ARGS)
 build-allocator-image-arm64: $(ensure-build-image) build-allocator-binary
-	docker buildx build $(agones_path)/cmd/allocator/ --tag=$(allocator_arm64_tag) --build-arg ARCH=arm64 --platform linux/arm64 $(DOCKER_BUILD_ARGS)
+	$(MAKE) create-arm64-builder 
+	docker buildx build $(agones_path)/cmd/allocator/ --builder $(BUILDX_ARM64_BUILDER) --tag=$(allocator_arm64_tag) --build-arg ARCH=arm64 --platform linux/arm64 $(DOCKER_BUILD_ARGS) 
 
 # push the gameservers sidecar image
 push-agones-sdk-image: push-agones-sdk-linux-image-amd64
