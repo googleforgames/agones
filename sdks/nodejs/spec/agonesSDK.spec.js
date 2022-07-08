@@ -152,7 +152,7 @@ describe('AgonesSDK', () => {
 
 	describe('health', () => {
 		it('calls the server and passes calls to stream', async () => {
-			let stream = jasmine.createSpyObj('stream', ['write']);
+			let stream = jasmine.createSpyObj('stream', ['write', 'on']);
 			spyOn(agonesSDK.client, 'health').and.callFake(() => {
 				return stream;
 			});
@@ -163,7 +163,7 @@ describe('AgonesSDK', () => {
 		});
 
 		it('uses the same stream for subsequent calls', async () => {
-			let stream = jasmine.createSpyObj('stream', ['write']);
+			let stream = jasmine.createSpyObj('stream', ['write', 'on']);
 			spyOn(agonesSDK.client, 'health').and.callFake(() => {
 				return stream;
 			});
@@ -187,8 +187,55 @@ describe('AgonesSDK', () => {
 			}
 		});
 
+		it('calls the server and handles stream write error if callback provided', async () => {
+			let stream = jasmine.createSpyObj('stream', ['write', 'on']);
+			stream.write.and.callFake((chunk, encoding, callback) => {
+				callback('error');
+			});
+			spyOn(agonesSDK.client, 'health').and.callFake(() => {
+				return stream;
+			});
+			try {
+				agonesSDK.health((error) => {
+					expect(error).toEqual('error');
+				});
+			} catch (error) {
+				fail();
+			}
+		});
+
+		it('calls the server and re throws stream write error if no callback', async () => {
+			let stream = jasmine.createSpyObj('stream', ['write', 'on']);
+			stream.write.and.callFake((chunk, encoding, callback) => {
+				callback('error');
+			});
+			spyOn(agonesSDK.client, 'health').and.callFake(() => {
+				return stream;
+			});
+			try {
+				agonesSDK.health();
+				fail();
+			} catch (error) {
+				expect(agonesSDK.client.health).toHaveBeenCalled();
+				expect(error).toEqual('error');
+			}
+		});
+
+		it('does not call error callback if there was no stream error', async () => {
+			let stream = jasmine.createSpyObj('stream', ['write', 'on']);
+			stream.write.and.callFake((chunk, encoding, callback) => {
+				callback();
+			});
+			spyOn(agonesSDK.client, 'health').and.callFake(() => {
+				return stream;
+			});
+			agonesSDK.health(() => {
+				fail();
+			});
+		});
+
 		it('calls the server and handles stream completing', async () => {
-			let stream = jasmine.createSpyObj('stream', ['write']);
+			let stream = jasmine.createSpyObj('stream', ['write', 'on']);
 			spyOn(agonesSDK.client, 'health').and.callFake((callback) => {
 				let result = new messages.Empty();
 				callback(undefined, result);
@@ -358,7 +405,7 @@ describe('AgonesSDK', () => {
 			expect(agonesSDK.client.close).toHaveBeenCalled();
 		});
 		it('ends the health stream if set', async () => {
-			let stream = jasmine.createSpyObj('stream', ['end', 'write']);
+			let stream = jasmine.createSpyObj('stream', ['end', 'write', 'on']);
 			spyOn(agonesSDK.client, 'health').and.callFake(() => {
 				return stream;
 			});

@@ -21,7 +21,7 @@
 
   <ItemGroup>
     <PackageReference Include="Google.Api.CommonProtos" Version="2.0.0" />
-    <PackageReference Include="Google.Protobuf" Version="3.11.4" />
+    <PackageReference Include="Google.Protobuf" Version="3.15.0" />
     <PackageReference Include="Grpc" Version="2.28.1" />
     <PackageReference Include="Grpc.Core" Version="2.28.1" />
     <PackageReference Include="Grpc.Tools" Version="2.28.1">

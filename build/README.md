@@ -19,6 +19,7 @@ Table of Contents
      * [Running a Test Minikube cluster](#running-a-test-minikube-cluster)
      * [Running a Test Kind cluster](#running-a-test-kind-cluster)
      * [Running a Custom Test Environment](#running-a-custom-test-environment)
+     * [Common Development Flows](#common-development-flows)
      * [Set Local Make Targets and Variables with `local-includes`](#set-local-make-targets-and-variables-with-local-includes)
      * [Running Individual End-to-End Tests](#running-individual-end-to-end-tests)
   * [Make Variable Reference](#make-variable-reference)
@@ -345,9 +346,16 @@ Now you're ready to begin the development/test cycle:
 - `make install` will install/upgrade Agones into your cluster
 - `make test-e2e` will run end-to-end tests in your cluster
 
-You can combine some of the above steps into a single one, for example `make build push install` or `make build push test-e2e`.
-
 If you need to clean up your cluster, you can use `make uninstall` to remove Agones.
+
+### Common Development Flows
+
+You can combine some of the above steps into a single one, for example `make build-images push install` is very
+common flow, to build you changes on Agones, push them to a container registry and install this development
+version to your cluster.
+
+Another would be to run `make lint test-go` to run the golang linter against the Go code, and then run all the unit 
+tests.
 
 ### Set Local Make Targets and Variables with `local-includes`
 

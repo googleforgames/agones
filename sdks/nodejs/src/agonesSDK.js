@@ -93,14 +93,25 @@ class AgonesSDK {
 		});
 	}
 
-	health() {
+	health(errorCallback) {
 		if (this.healthStream === undefined) {
 			this.healthStream = this.client.health(() => {
 				// Ignore error as this can't be caught
 			});
+			this.healthStream.on('error', () => {
+				// ignore error, prevent from being uncaught
+			});
 		}
 		const request = new messages.Empty();
-		this.healthStream.write(request);
+		this.healthStream.write(request, null, (error) => {
+			if (error) {
+				if (errorCallback) {
+					errorCallback(error);
+					return;
+				}
+				throw error;
+			}
+		});
 	}
 
 	async getGameServer() {
