@@ -1167,7 +1167,7 @@ func TestGracefulShutdown(t *testing.T) {
 	gameservers := framework.AgonesClient.AgonesV1().GameServers(framework.Namespace)
 	err = gameservers.Delete(ctx, readyGs.ObjectMeta.Name, metav1.DeleteOptions{})
 	require.NoError(t, err)
-	log.Info("Created GameServer, waited 20 seconds")
+	log.Info("Deleted GameServer, waiting 20 seconds...")
 	time.Sleep(20 * time.Second)
 	log.WithField("gs", gs).Info("Checking GameServer")
 	gs, err = gameservers.Get(ctx, readyGs.ObjectMeta.Name, metav1.GetOptions{})
