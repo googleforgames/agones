@@ -244,7 +244,7 @@ steps:
 
 - name: 'e2e-runner'
   args:
-    - 'PlayerTracking=true&NodeExternalDNS=false&StateAllocationFilter=true&PlayerAllocationFilter=true&CustomFasSyncInterval=true'
+    - 'PlayerTracking=true&StateAllocationFilter=true&PlayerAllocationFilter=true&CustomFasSyncInterval=true'
     - 'e2e-test-cluster'
     - "${_REGISTRY}"
   id: e2e-feature-gates
