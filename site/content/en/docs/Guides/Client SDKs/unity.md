@@ -30,7 +30,7 @@ Check the [Client SDK Documentation]({{< relref "_index.md" >}}) for more detail
 | Player Tracking      | PlayerDisconnect         | ❌️                            | 
 | Player Tracking      | SetPlayerCapacity        | ❌️                            | 
 {{% /feature %}}
-{{% feature publishVersion="1.24.0" %}}
+{{% feature publishVersion="1.25.0" %}}
 | Area                 | Action                   | Implemented                   |
 |----------------------|--------------------------|-------------------------------|
 | Lifecycle            | Ready                    | ✔️                            |
@@ -141,11 +141,11 @@ configuration changes.
 agones.WatchGameServer(gameServer => Debug.Log($"Server - Watch {gameServer}"));
 ```
 
-{{% feature publishVersion="1.24.0" %}}
+{{% feature publishVersion="1.25.0" %}}
 
 ## Player Tracking
 
-{{% alpha title="Player Tracking" gate="PlayerTracking" %}}
+{{< alpha title="Player Tracking" gate="PlayerTracking" >}}
 
 To use alpha features use the AgonesAlphaSDK class.
 
