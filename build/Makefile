@@ -293,8 +293,8 @@ test-go: $(ensure-build-image)
 # Runs end-to-end tests on the current configured cluster
 # For minikube user the minikube-test-e2e targets
 test-e2e:
-	$(MAKE) test-e2e-integration
-	$(MAKE) test-e2e-failure
+	$(MAKE) DOCKER_RUN_ARGS="$(DOCKER_RUN_ARGS)" test-e2e-integration
+	$(MAKE) DOCKER_RUN_ARGS="$(DOCKER_RUN_ARGS)" test-e2e-failure
 
 
 # If GAMESERVERS_NAMESPACE is empty - random namespace will be created

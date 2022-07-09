@@ -45,6 +45,7 @@ Other operating systems and drivers may work, but at this stage have not been ve
 via Agones exposed ports.
 
 **Linux (amd64)**
+* Docker (default)
 * kvm2
 
 **Mac (amd64)**
