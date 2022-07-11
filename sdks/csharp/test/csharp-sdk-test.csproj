@@ -13,7 +13,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Grpc" Version="2.28.1" />
+    <PackageReference Include="Grpc" Version="2.46.3" />
     <PackageReference Include="Grpc.Core.Testing" Version="2.28.1" />
     <PackageReference Include="Moq" Version="4.13.1" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.9.0" />
