@@ -73,7 +73,6 @@ func TestAddress(t *testing.T) {
 					{Address: "internal.example.com", Type: corev1.NodeInternalDNS},
 				}}},
 			expectedAddress: "external.example.com",
-			featureFlags:    "NodeExternalDNS=true",
 		},
 		"node with external and internal dns without feature flag": {
 			node: &corev1.Node{ObjectMeta: metav1.ObjectMeta{Name: nodeFixtureName},
@@ -83,8 +82,7 @@ func TestAddress(t *testing.T) {
 					{Address: "9.9.9.8", Type: corev1.NodeExternalIP},
 					{Address: "12.12.12.12", Type: corev1.NodeInternalIP},
 				}}},
-			expectedAddress: "9.9.9.8",
-			featureFlags:    "NodeExternalDNS=false",
+			expectedAddress: "external.example.com",
 		},
 	}
 
