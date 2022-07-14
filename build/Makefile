@@ -426,6 +426,7 @@ endif
 
 build-controller-image-amd64: $(ensure-build-image) build-controller-binary build-licenses build-required-src-dist
 	docker build $(agones_path)/cmd/controller/ --tag=$(controller_amd64_tag) $(DOCKER_BUILD_ARGS)
+# creating docker builder and then using that builder to build controller image in buildx command
 build-controller-image-arm64: $(ensure-build-image) build-controller-binary
 	$(MAKE) create-arm64-builder 
 	docker buildx build --platform linux/arm64 --builder $(BUILDX_ARM64_BUILDER) --build-arg ARCH=arm64 $(agones_path)/cmd/controller/ --tag=$(controller_arm64_tag) $(DOCKER_BUILD_ARGS)
@@ -486,6 +487,7 @@ endif
 
 build-agones-sdk-image-amd64: $(ensure-build-image) build-agones-sdk-binary-linux-amd64
 	docker build $(agones_path)/cmd/sdk-server/ --tag=$(sidecar_linux_amd64_tag) $(DOCKER_BUILD_ARGS)
+# creating docker builder and then using that builder to build sdk image in buildx command
 build-agones-sdk-image-arm64: $(ensure-build-image) build-agones-sdk-binary-linux-arm64
 	$(MAKE) create-arm64-builder 
 	docker buildx build --platform linux/arm64 --builder $(BUILDX_ARM64_BUILDER) --build-arg ARCH=arm64 $(agones_path)/cmd/sdk-server/ --tag=$(sidecar_linux_arm64_tag) $(DOCKER_BUILD_ARGS) 
@@ -535,6 +537,7 @@ endif
 
 build-ping-image-amd64: $(ensure-build-image) build-ping-binary build-licenses build-required-src-dist
 	docker build $(agones_path)/cmd/ping/ --tag=$(ping_amd64_tag) $(DOCKER_BUILD_ARGS)
+# creating docker builder and then using that builder to build ping image in buildx command
 build-ping-image-arm64: $(ensure-build-image) build-ping-binary
 	$(MAKE) create-arm64-builder 
 	docker buildx build --platform linux/arm64 --builder $(BUILDX_ARM64_BUILDER) --build-arg ARCH=arm64 $(agones_path)/cmd/ping/ --tag=$(ping_arm64_tag) $(DOCKER_BUILD_ARGS) 
@@ -577,6 +580,7 @@ endif
 
 build-allocator-image-amd64: $(ensure-build-image) build-allocator-binary build-licenses build-required-src-dist
 	docker build $(agones_path)/cmd/allocator/ --tag=$(allocator_amd64_tag) $(DOCKER_BUILD_ARGS)
+# creating docker builder and then using that builder to build allocator image in buildx command
 build-allocator-image-arm64: $(ensure-build-image) build-allocator-binary
 	$(MAKE) create-arm64-builder 
 	docker buildx build $(agones_path)/cmd/allocator/ --builder $(BUILDX_ARM64_BUILDER) --tag=$(allocator_arm64_tag) --build-arg ARCH=arm64 --platform linux/arm64 $(DOCKER_BUILD_ARGS) 
