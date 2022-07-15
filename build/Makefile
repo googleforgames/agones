@@ -415,6 +415,8 @@ build-required-src-dist:
 	docker run --rm $(common_mounts) $(build_tag) $(mount_path)/build/build-required-src-dist.sh
 
 # Create docker builder used in creating arm64 images
+# According to the docker documentation, to build the images for ARM64 arch CPU 
+# we would need to use buildx command which uses builder https://docs.docker.com/desktop/multi-arch/
 create-arm64-builder:
 	-docker buildx create --name $(BUILDX_ARM64_BUILDER)
 
