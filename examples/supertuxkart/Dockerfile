@@ -16,25 +16,21 @@
 FROM golang:1.17.2 as go-builder
 WORKDIR /go/src/supertuxkart
 
-COPY main.go .
-COPY go.mod .
-RUN go mod tidy
-RUN go build -o wrapper .
+COPY main.go go.mod ./
+RUN go mod tidy &&\
+    go build -o wrapper .
 
-# Download STK
-FROM debian:bullseye
+# Installing STK
+FROM debian:bookworm
 
-RUN apt update && apt-get install -y  wget xz-utils
 WORKDIR /home/supertuxkart
-RUN wget --quiet https://github.com/supertuxkart/stk-code/releases/download/1.3/SuperTuxKart-1.3-linux-64bit.tar.xz && \
-tar -xf SuperTuxKart-1.3-linux-64bit.tar.xz && rm -rf SuperTuxKart-1.3-linux-64bit.tar.xz
+RUN apt update && apt-get install -y  wget xz-utils &&\
+    apt-get install -y supertuxkart 
 
 RUN useradd -m  -u 1000 supertuxkart
-RUN apt-get install -y libcurl4
 
 COPY --from=go-builder /go/src/supertuxkart/wrapper .
-COPY entrypoint.sh .
-COPY server_config.xml .
+COPY entrypoint.sh server_config.xml ./
 
 RUN chown -R supertuxkart:supertuxkart /home/supertuxkart && chmod +x wrapper
 
