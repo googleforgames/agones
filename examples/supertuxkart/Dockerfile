@@ -24,8 +24,7 @@ RUN go mod tidy &&\
 FROM debian:bookworm
 
 WORKDIR /home/supertuxkart
-RUN apt update && apt-get install -y  wget xz-utils &&\
-    apt-get install -y supertuxkart 
+RUN apt update && apt-get install -y supertuxkart && apt clean
 
 RUN useradd -m  -u 1000 supertuxkart
 
