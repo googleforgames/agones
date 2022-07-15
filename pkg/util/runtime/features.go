@@ -34,9 +34,6 @@ const (
 	// FeaturePlayerTracking is a feature flag to enable/disable player tracking features.
 	FeaturePlayerTracking Feature = "PlayerTracking"
 
-	// NodeExternalDNS is a feature flag to enable/disable node ExternalDNS and InternalDNS use as GameServer address
-	NodeExternalDNS Feature = "NodeExternalDNS"
-
 	// FeatureStateAllocationFilter is a feature flag that enables state filtering on Allocation.
 	FeatureStateAllocationFilter Feature = "StateAllocationFilter"
 
@@ -58,10 +55,9 @@ var (
 	featureDefaults = map[Feature]bool{
 		FeatureExample:                true,
 		FeaturePlayerTracking:         false,
-		NodeExternalDNS:               true,
 		FeatureStateAllocationFilter:  false,
 		FeaturePlayerAllocationFilter: false,
-		FeatureCustomFasSyncInterval:  false,
+		FeatureCustomFasSyncInterval:  true,
 		FeatureSDKGracefulTermination: false,
 	}
 
