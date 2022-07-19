@@ -417,6 +417,7 @@ build-required-src-dist:
 # Create docker builder used in creating arm64 images
 # According to the docker documentation, to build the images for ARM64 arch CPU 
 # we would need to use buildx command which uses builder https://docs.docker.com/desktop/multi-arch/
+# We primarily need this for M1 Macs, see: https://medium.com/geekculture/docker-build-with-mac-m1-d668c802ab96
 create-arm64-builder:
 	-docker buildx create --name $(BUILDX_ARM64_BUILDER)
 
