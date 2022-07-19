@@ -1,8 +1,8 @@
-module agones.dev/agones/examples/xonotic
+module xonotic
 
 go 1.18
 
-require agones.dev/agones v0.0.0-dev
+require agones.dev/agones v1.24.0
 
 require (
 	github.com/golang/protobuf v1.5.2 // indirect
@@ -15,5 +15,3 @@ require (
 	google.golang.org/grpc v1.27.1 // indirect
 	google.golang.org/protobuf v1.26.0 // indirect
 )
-
-replace agones.dev/agones v0.0.0-dev => ../../

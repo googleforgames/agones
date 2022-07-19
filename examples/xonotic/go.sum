@@ -1,3 +1,5 @@
+agones.dev/agones v1.24.0 h1:vmmU6WPc1MtyUYw4SYsXyJlfiZwLR7ucLVhnIDgVTJk=
+agones.dev/agones v1.24.0/go.mod h1:Kzq4UlIQhSxAzwogSTBm9nsmPd2Io9A3yO26CaqI7bU=
 cloud.google.com/go v0.26.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
