@@ -39,7 +39,7 @@ image_tag = $(REPOSITORY)/xonotic-example:0.8
 
 # Build a docker image for the server, and tag it
 build:
-	cd $(root_path) && docker build -f $(project_path)/Dockerfile --tag=$(image_tag) .
+	docker build -f $(project_path)/Dockerfile --tag=$(image_tag) .
 
 # Push a docker image to the GCR, and save it
 push: build

@@ -17,8 +17,8 @@ FROM golang:1.18.3 as builder
 
 RUN apt-get update && apt-get install -y unzip curl
 
-COPY . /go/src/agones.dev/agones
-WORKDIR /go/src/agones.dev/agones/examples/xonotic
+COPY . /go/src/examples/xonotic
+WORKDIR /go/src/examples/xonotic
 RUN go build -o wrapper .
 
 WORKDIR /go/src/xonotic
@@ -37,11 +37,11 @@ RUN useradd -u 1000 -m xonotic
 # `server` directory after downloading the archive from xonotic.org
 #
 
-COPY --from=builder /go/src/agones.dev/agones/examples/xonotic .
+COPY --from=builder /go/src/examples/xonotic .
 COPY --from=builder /go/src/xonotic/Xonotic ./Xonotic
 
 RUN mkdir -p ./.xonotic/data && mv /home/xonotic/Xonotic/server/server_linux.sh /home/xonotic/Xonotic/
-COPY examples/xonotic/server.cfg ./.xonotic/data
+COPY server.cfg ./.xonotic/data
 
 RUN chown -R xonotic:xonotic . && chmod +x wrapper
 
