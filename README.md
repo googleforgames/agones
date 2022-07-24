@@ -65,7 +65,6 @@ Agones is in active development - we would love your help in shaping its future!
 
 ### Kubernetes
 - [You should totally read this comic, and interactive tutorial](https://cloud.google.com/kubernetes-engine/kubernetes-comic/)
-- [Katacoda's free, interactive Kubernetes course](https://www.katacoda.com/courses/kubernetes)
 
 ## Licence
 
