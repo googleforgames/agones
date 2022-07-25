@@ -115,11 +115,8 @@ func setCABundle(caBundle []byte) error {
 	if ok := rootCAs.AppendCertsFromPEM(caBundle); !ok {
 		return errors.New("no certs were appended from caBundle")
 	}
-	client.Transport = &http.Transport{
-		TLSClientConfig: &tls.Config{
-			RootCAs: rootCAs,
-		},
-	}
+	TLSClientConfig := &tls.Config{}
+	TLSClientConfig.RootCAs = rootCAs
 	return nil
 }
 
