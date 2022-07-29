@@ -84,3 +84,7 @@ variable "gameserver_namespaces" {
   default = ["default"]
   type    = list(string)
 }
+
+variable "load_balancer_ip" {
+  default = ""
+}
