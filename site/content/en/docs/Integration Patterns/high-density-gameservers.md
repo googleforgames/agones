@@ -7,7 +7,7 @@ description: >
   How to run multiple concurrent game sessions in a single GameServer process.
 ---
 
-{{< alpha title="Allocation Player Filter and Allocation State Filter" gate="PlayerAllocationFilter,StateAllocationFilter" >}}
+{{< alpha title="Allocation State Filter" gate="StateAllocationFilter" >}}
 
 Depending on the setup and resource requirements of your game server process, sometimes it can be a more economical 
 use of resources to run multiple concurrent game sessions from within a single `GameServer` instance.
