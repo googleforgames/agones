@@ -113,4 +113,8 @@ resource "helm_release" "agones" {
     value = var.gameserver_maxPort
   }
 
+  set {
+    name = "agones.allocator.service.loadBalancerIP"
+    value = var.load_balancer_ip
+  }
 }
