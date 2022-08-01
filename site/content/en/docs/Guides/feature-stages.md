@@ -46,6 +46,12 @@ The current set of `alpha` and `beta` feature gates are:
 | [Graceful Termination for GameServer SDK](https://github.com/googleforgames/agones/pull/2205) | `SDKGracefulTermination` | Disabled | `Alpha` | 1.18.0 |
 {{% /feature %}}
 
+{{< alert title="Note" color="info" >}}
+If you aren't sure if Feature Flags have been set correctly, have a look at the 
+_[The Feature Flag I enabled/disabled isn't working as expected]({{% relref "troubleshooting.md#the-feature-flag-i-enableddisabled-isnt-working-as-expected" %}})_
+troubleshooting section.
+{{< /alert >}}
+
 ## Description of Stages
 
 ### Alpha
