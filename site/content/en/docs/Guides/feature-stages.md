@@ -33,7 +33,6 @@ The current set of `alpha` and `beta` feature gates are:
 | [GameServer state filtering on GameServerAllocations](https://github.com/googleforgames/agones/issues/1239) | `StateAllocationFilter` | Disabled | `Alpha` | 1.14.0 |
 | [GameServer player capacity filtering on GameServerAllocations](https://github.com/googleforgames/agones/issues/1239) | `PlayerAllocationFilter` | Disabled | `Alpha` | 1.14.0 |
 | [Graceful Termination for GameServer SDK](https://github.com/googleforgames/agones/pull/2205) | `SDKGracefulTermination` | Disabled | `Alpha` | 1.18.0 |
-{{% /feature %}}
 
 {{% feature publishVersion="1.25.0" %}}
 | Feature Name | Gate    | Default | Stage | Since |
@@ -44,7 +43,6 @@ The current set of `alpha` and `beta` feature gates are:
 | [GameServer state filtering on GameServerAllocations](https://github.com/googleforgames/agones/issues/1239) | `StateAllocationFilter` | Disabled | `Alpha` | 1.14.0 |
 | [GameServer player capacity filtering on GameServerAllocations](https://github.com/googleforgames/agones/issues/1239) | `PlayerAllocationFilter` | Disabled | `Alpha` | 1.14.0 |
 | [Graceful Termination for GameServer SDK](https://github.com/googleforgames/agones/pull/2205) | `SDKGracefulTermination` | Disabled | `Alpha` | 1.18.0 |
-{{% /feature %}}
 
 {{< alert title="Note" color="info" >}}
 If you aren't sure if Feature Flags have been set correctly, have a look at the 

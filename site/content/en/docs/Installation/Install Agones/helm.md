@@ -218,7 +218,6 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.controller.allocationBatchWaitTime`              | Wait time between each allocation batch when performing allocations in controller mode                                    | `500ms`                |
 | `agones.allocator.allocationBatchWaitTime`               | Wait time between each allocation batch when performing allocations in allocator mode                                     | `500ms`                |
 |                                                          |                                                                                                                           |                        |
-{{% /feature %}}
 
 [toleration]: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
 [nodeSelector]: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#nodeselector
@@ -352,7 +351,6 @@ helm install my-release \
   --namespace agones-system --create-namespace  \
   agones/agones
 ```
-{{% /feature %}}
 
 ## Reserved Allocator Load Balancer IP
 

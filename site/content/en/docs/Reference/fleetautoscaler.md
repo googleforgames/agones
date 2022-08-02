@@ -49,7 +49,6 @@ spec:
       # the time in seconds between each auto scaling
       seconds: 30
 ```
-{{% /feature %}}
 
 {{% feature publishVersion="1.25.0" %}}
 ```yaml
@@ -91,7 +90,6 @@ spec:
       # the time in seconds between each auto scaling
       seconds: 30
 ```
-{{% /feature %}}
 
 Or for Webhook FleetAutoscaler below and in {{< ghlink href="examples/webhookfleetautoscaler.yaml" >}}example folder{{< /ghlink >}}:
 
