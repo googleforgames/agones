@@ -6,7 +6,6 @@
 
 **Implemented enhancements:**
 
-- Support UDP Load Balancers to allow Agones to work with GKE Autopilot mode [\#2687](https://github.com/googleforgames/agones/issues/2687)
 - Adds load balancer ip variable to terraform modules [\#2690](https://github.com/googleforgames/agones/pull/2690) ([austin-space](https://github.com/austin-space))
 
 **Fixed bugs:**
