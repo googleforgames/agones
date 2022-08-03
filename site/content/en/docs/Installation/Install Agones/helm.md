@@ -210,13 +210,14 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `gameservers.maxPort`                                    | Maximum port to use for dynamic port allocation                                                 | `8000`                 |
 | `gameservers.podPreserveUnknownFields`                   | Disable [field pruning][pruning] and schema validation on the Pod template for a [GameServer][gameserver] definition | `false`                |
 | `helm.installTests`                                      | Add an ability to run `helm test agones` to verify the installation                             | `8000`                 |
+| `agones.controller.allocationBatchWaitTime`              | Wait time between each allocation batch when performing allocations in controller mode                                    | `500ms`                |
 
+{{% feature publishVersion="1.26.0" %}}
 **New Configuration Features:**
 | Parameter                                                | Description                                                                                                               | Default                |
 | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
-| `agones.controller.allocationBatchWaitTime`              | Wait time between each allocation batch when performing allocations in controller mode                                    | `500ms`                |
-| `agones.allocator.allocationBatchWaitTime`               | Wait time between each allocation batch when performing allocations in allocator mode                                     | `500ms`                |
 |                                                          |                                                                                                                           |                        |
+{{% /feature %}}
 
 [toleration]: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
 [nodeSelector]: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#nodeselector
