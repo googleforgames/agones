@@ -24,7 +24,6 @@ that can be found in the [Helm configuration]({{< ref "/docs/Installation/Instal
 
 The current set of `alpha` and `beta` feature gates are:
 
-{{% feature expiryVersion="1.25.0" %}}
 | Feature Name | Gate    | Default | Stage | Since |
 |--------------|---------|---------|-------|-------|
 | Example Gate (not in use) | `Example` | Disabled | None | 0.13.0 |
@@ -34,7 +33,6 @@ The current set of `alpha` and `beta` feature gates are:
 | [GameServer player capacity filtering on GameServerAllocations](https://github.com/googleforgames/agones/issues/1239) | `PlayerAllocationFilter` | Disabled | `Alpha` | 1.14.0 |
 | [Graceful Termination for GameServer SDK](https://github.com/googleforgames/agones/pull/2205) | `SDKGracefulTermination` | Disabled | `Alpha` | 1.18.0 |
 
-{{% feature publishVersion="1.25.0" %}}
 | Feature Name | Gate    | Default | Stage | Since |
 |--------------|---------|---------|-------|-------|
 | Example Gate (not in use) | `Example` | Disabled | None | 0.13.0 |

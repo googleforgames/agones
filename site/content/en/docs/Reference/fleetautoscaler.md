@@ -9,7 +9,6 @@ weight: 30
 A full `FleetAutoscaler` specification is available below and in the 
 {{< ghlink href="examples/fleetautoscaler.yaml" >}}example folder{{< /ghlink >}} for reference :
 
-{{% feature expiryVersion="1.25.0" %}}
 ```yaml
 apiVersion: "autoscaling.agones.dev/v1"
 kind: FleetAutoscaler
@@ -50,7 +49,6 @@ spec:
       seconds: 30
 ```
 
-{{% feature publishVersion="1.25.0" %}}
 ```yaml
 apiVersion: "autoscaling.agones.dev/v1"
 kind: FleetAutoscaler
