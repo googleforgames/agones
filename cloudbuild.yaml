@@ -244,7 +244,7 @@ steps:
 
 - name: 'e2e-runner'
   args:
-    - 'PlayerTracking=true&StateAllocationFilter=true&PlayerAllocationFilter=true&SDKGracefulTermination=true'
+    - 'PlayerTracking=true&StateAllocationFilter=true&PlayerAllocationFilter=true&SDKGracefulTermination=true&CustomFasSyncInterval=false'
     - 'e2e-test-cluster'
     - "${_REGISTRY}"
   id: e2e-feature-gates
