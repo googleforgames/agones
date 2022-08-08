@@ -55,7 +55,7 @@ var (
 	featureDefaults = map[Feature]bool{
 		FeatureExample:                true,
 		FeaturePlayerTracking:         false,
-		FeatureStateAllocationFilter:  false,
+		FeatureStateAllocationFilter:  true,
 		FeaturePlayerAllocationFilter: false,
 		FeatureCustomFasSyncInterval:  true,
 		FeatureSDKGracefulTermination: false,

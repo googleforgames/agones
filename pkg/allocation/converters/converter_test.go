@@ -143,7 +143,8 @@ func TestConvertAllocationRequestToGameServerAllocation(t *testing.T) {
 			},
 		},
 		{
-			name: "all fields are set",
+			name:     "all fields are set",
+			features: fmt.Sprintf("%s=false&%s=false", runtime.FeaturePlayerAllocationFilter, runtime.FeatureStateAllocationFilter),
 			in: &pb.AllocationRequest{
 				Namespace: "ns",
 				MultiClusterSetting: &pb.MultiClusterSetting{
@@ -243,7 +244,8 @@ func TestConvertAllocationRequestToGameServerAllocation(t *testing.T) {
 			},
 		},
 		{
-			name: "empty fields to GSA",
+			name:     "empty fields to GSA",
+			features: fmt.Sprintf("%s=false&%s=false", runtime.FeaturePlayerAllocationFilter, runtime.FeatureStateAllocationFilter),
 			in: &pb.AllocationRequest{
 				Namespace:                    "",
 				MultiClusterSetting:          &pb.MultiClusterSetting{},
@@ -286,6 +288,29 @@ func TestConvertAllocationRequestToGameServerAllocation(t *testing.T) {
 					Required: allocationv1.GameServerSelector{
 						GameServerState: &ready,
 					},
+					Scheduling: apis.Distributed,
+				},
+			},
+		},
+		{
+			name:     "empty fields to GSA with selectors fields",
+			features: fmt.Sprintf("%s=false&%s=false", runtime.FeaturePlayerAllocationFilter, runtime.FeatureStateAllocationFilter),
+			in: &pb.AllocationRequest{
+				Namespace:           "",
+				MultiClusterSetting: &pb.MultiClusterSetting{},
+				GameServerSelectors: []*pb.GameServerSelector{{}},
+				Scheduling:          pb.AllocationRequest_Distributed,
+				Metadata:            &pb.MetaPatch{},
+			},
+			want: &allocationv1.GameServerAllocation{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: "",
+				},
+				Spec: allocationv1.GameServerAllocationSpec{
+					MultiClusterSetting: allocationv1.MultiClusterSetting{
+						Enabled: false,
+					},
+					Selectors:  []allocationv1.GameServerSelector{{}},
 					Scheduling: apis.Distributed,
 				},
 			},
@@ -351,6 +376,9 @@ func TestConvertAllocationRequestToGameServerAllocation(t *testing.T) {
 					MultiClusterSetting: allocationv1.MultiClusterSetting{
 						Enabled: false,
 					},
+					Required: allocationv1.GameServerSelector{
+						GameServerState: &ready,
+					},
 					Scheduling: apis.Distributed,
 					MetaPatch: allocationv1.MetaPatch{
 						Labels: map[string]string{
@@ -388,6 +416,9 @@ func TestConvertAllocationRequestToGameServerAllocation(t *testing.T) {
 						Enabled: false,
 					},
 					Scheduling: apis.Distributed,
+					Required: allocationv1.GameServerSelector{
+						GameServerState: &ready,
+					},
 					MetaPatch: allocationv1.MetaPatch{
 						Labels: map[string]string{
 							"a": "b",
