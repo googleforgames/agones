@@ -14,10 +14,11 @@
 
 FROM alpine:3.14
 
+ARG ARCH=amd64
 RUN apk --update add ca-certificates && \
     adduser -D -u 1000 agones
 
-COPY --chown=agones:agones ./bin/ping /home/agones/ping
+COPY --chown=agones:agones ./bin/ping.linux.$ARCH /home/agones/ping
 COPY --chown=agones:agones ./bin/LICENSES ./bin/dependencies-src.tgz /home/agones/
 
 USER 1000

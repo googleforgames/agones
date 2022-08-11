@@ -27,7 +27,7 @@ REPOSITORY ?= gcr.io/agones-images
 
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_path := $(dir $(mkfile_path))
-server_tag = $(REPOSITORY)/rust-simple-server:0.10
+server_tag = $(REPOSITORY)/rust-simple-server:0.11
 
 #   _____                    _
 #  |_   _|_ _ _ __ __ _  ___| |_ ___

@@ -18,6 +18,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"math/rand"
 	"net/http"
 	"strconv"
 	"testing"
@@ -528,6 +529,43 @@ func TestSyncGameServerSet(t *testing.T) {
 		c.syncGameServerSet(ctx, gsSet.ObjectMeta.Namespace+"/"+gsSet.ObjectMeta.Name) // nolint: errcheck
 
 		assert.Equal(t, 5, count)
+	})
+
+	t.Run("Starting GameServers get deleted first", func(t *testing.T) {
+		gsSet := defaultFixture()
+		list := createGameServers(gsSet, 12)
+
+		list[0].Status.State = agonesv1.GameServerStateStarting
+		list[1].Status.State = agonesv1.GameServerStateCreating
+
+		rand.Shuffle(len(list), func(i, j int) {
+			list[i], list[j] = list[j], list[i]
+		})
+
+		var deleted []string
+
+		c, m := newFakeController()
+		m.AgonesClient.AddReactor("list", "gameserversets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			return true, &agonesv1.GameServerSetList{Items: []agonesv1.GameServerSet{*gsSet}}, nil
+		})
+		m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			return true, &agonesv1.GameServerList{Items: list}, nil
+		})
+		m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			ua := action.(k8stesting.UpdateAction)
+			gs := ua.GetObject().(*agonesv1.GameServer)
+			require.Equal(t, gs.Status.State, agonesv1.GameServerStateShutdown)
+
+			deleted = append(deleted, gs.ObjectMeta.Name)
+			return true, nil, nil
+		})
+
+		ctx, cancel := agtesting.StartInformers(m, c.gameServerSetSynced, c.gameServerSynced)
+		defer cancel()
+		require.NoError(t, c.syncGameServerSet(ctx, gsSet.ObjectMeta.Namespace+"/"+gsSet.ObjectMeta.Name))
+
+		require.Len(t, deleted, 2)
+		require.ElementsMatchf(t, []string{"test-0", "test-1"}, deleted, "should be the non-ready GameServers")
 	})
 }
 

@@ -923,7 +923,7 @@ spec:
           preferredDuringSchedulingIgnoredDuringExecution: ERROR
       containers:
         - name: simple-game-server
-          image: gcr.io/agones-images/simple-game-server:0.12
+          image: gcr.io/agones-images/simple-game-server:0.13
 `
 	err := ioutil.WriteFile("/tmp/invalid.yaml", []byte(gsYaml), 0o644)
 	require.NoError(t, err)
@@ -1146,4 +1146,51 @@ func TestPlayerConnectAndDisconnect(t *testing.T) {
 	})
 	assert.NoError(t, err)
 	assert.ElementsMatch(t, []string{"1", "3"}, gs.Status.Players.IDs)
+}
+
+func TestGracefulShutdown(t *testing.T) {
+	if !runtime.FeatureEnabled(runtime.FeatureSDKGracefulTermination) {
+		t.SkipNow()
+	}
+	t.Parallel()
+
+	log := e2eframework.TestLogger(t)
+	ctx := context.Background()
+	gs := framework.DefaultGameServer(framework.Namespace)
+	var minute int64 = 60
+	gs.Spec.Template.Spec.TerminationGracePeriodSeconds = &minute
+	readyGs, err := framework.CreateGameServerAndWaitUntilReady(t, framework.Namespace, gs)
+	if err != nil {
+		t.Fatalf("Could not get a GameServer ready: %v", err)
+	}
+	assert.Equal(t, readyGs.Status.State, agonesv1.GameServerStateReady)
+	gameservers := framework.AgonesClient.AgonesV1().GameServers(framework.Namespace)
+	err = gameservers.Delete(ctx, readyGs.ObjectMeta.Name, metav1.DeleteOptions{})
+	require.NoError(t, err)
+	log.Info("Deleted GameServer, waiting 20 seconds...")
+	time.Sleep(20 * time.Second)
+	log.WithField("gs", gs).Info("Checking GameServer")
+	gs, err = gameservers.Get(ctx, readyGs.ObjectMeta.Name, metav1.GetOptions{})
+	require.NoError(t, err)
+	assert.Equal(t, readyGs.ObjectMeta.Name, gs.ObjectMeta.Name)
+
+	// move it to shutdown
+	gsCopy := gs.DeepCopy()
+	gsCopy.Status.State = agonesv1.GameServerStateShutdown
+	_, err = gameservers.Update(ctx, gsCopy, metav1.UpdateOptions{})
+	require.NoError(t, err)
+
+	start := time.Now()
+	require.Eventually(t, func() bool {
+		_, err := gameservers.Get(ctx, readyGs.ObjectMeta.Name, metav1.GetOptions{})
+		log.WithError(err).Info("checking GameServer")
+		if err == nil {
+			return false
+		}
+		return k8serrors.IsNotFound(err)
+	}, 40*time.Second, time.Second)
+
+	diff := int(time.Since(start).Seconds())
+	log.WithField("diff", diff).Info("Time difference")
+	require.Less(t, diff, 40)
 }

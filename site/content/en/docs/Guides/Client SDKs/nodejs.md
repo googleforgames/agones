@@ -39,10 +39,12 @@ To connect to the SDK server, either local or when running on Agones, run the `a
 await agonesSDK.connect();
 ```
 
-To send a [health check]({{< relref "_index.md#health" >}}) ping call `health()`.
+To send a [health check]({{< relref "_index.md#health" >}}) ping call `health(errorCallback)`. The error callback is optional and if provided will receive an error whenever emitted from the health check stream.
 
 ```javascript
-agonesSDK.health();
+agonesSDK.health((error) => {
+	console.error('error', error);
+});
 ```
 
 To mark the game server as [ready to receive player connections]({{< relref "_index.md#ready" >}}), call the async method `ready()`. The result will be an empty object in this case.

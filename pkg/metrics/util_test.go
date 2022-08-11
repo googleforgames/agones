@@ -150,7 +150,7 @@ func generateGsEvents(count int, state agonesv1.GameServerState, fleetName strin
 	}
 }
 
-func fleet(fleetName string, total, allocated, ready, desired int32) *agonesv1.Fleet {
+func fleet(fleetName string, total, allocated, ready, desired, reserved int32) *agonesv1.Fleet {
 	return &agonesv1.Fleet{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      fleetName,
@@ -161,6 +161,7 @@ func fleet(fleetName string, total, allocated, ready, desired int32) *agonesv1.F
 			Replicas: desired,
 		},
 		Status: agonesv1.FleetStatus{
+			ReservedReplicas:  reserved,
 			AllocatedReplicas: allocated,
 			ReadyReplicas:     ready,
 			Replicas:          total,

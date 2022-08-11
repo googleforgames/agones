@@ -185,7 +185,7 @@ spec:
       containers:
       - name: agones-allocator
         image: "{{ .Values.agones.image.registry }}/{{ .Values.agones.image.allocator.name}}:{{ default .Values.agones.image.tag .Values.agones.image.allocator.tag }}"
-        imagePullPolicy: {{ .Values.agones.image.controller.pullPolicy }}
+        imagePullPolicy: {{ .Values.agones.image.allocator.pullPolicy }}
         livenessProbe:
           httpGet:
             path: /live
@@ -241,6 +241,8 @@ spec:
           value: {{ .Values.agones.allocator.logLevel | quote }}
         - name: FEATURE_GATES
           value: {{ .Values.agones.featureGates | quote }}
+        - name: ALLOCATION_BATCH_WAIT_TIME
+          value: {{ .Values.agones.allocator.allocationBatchWaitTime | quote }}
         ports:
         {{- if .Values.agones.allocator.service.http.enabled }}
         - name: {{ .Values.agones.allocator.service.http.portName }}

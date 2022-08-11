@@ -14,7 +14,7 @@
 
 # ForceUpdate 12 -- change here if you need to force a rebuild
 
-FROM debian:buster
+FROM debian:bullseye
 
 RUN apt-get update && \
     apt-get install -y build-essential gnupg curl git wget psmisc rsync make python bash-completion \
@@ -31,19 +31,17 @@ RUN wget -q https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz && \
 
 # install gcloud + kubectl, because it's an easy way to test/dev against kubernetes.
 WORKDIR /opt
-RUN wget -q https://dl.google.com/dl/cloudsdk/release/google-cloud-sdk.zip && unzip -q google-cloud-sdk.zip && \
-    rm google-cloud-sdk.zip && \
-    /opt/google-cloud-sdk/install.sh --usage-reporting=true --path-update=true --bash-completion=true --rc-path=/root/.bashrc
 
-# update the path for both go and gcloud
-ENV PATH /usr/local/go/bin:/go/bin:/opt/google-cloud-sdk/bin:$PATH
+# credits https://cloud.google.com/sdk/docs/install#deb
+RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] http://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key --keyring /usr/share/keyrings/cloud.google.gpg  add - && apt-get update -y && \
+    apt-get install google-cloud-cli google-cloud-cli-gke-gcloud-auth-plugin google-cloud-cli-app-engine-go -y && \
+    echo "source /usr/share/google-cloud-sdk/completion.bash.inc" >> /root/.bashrc
+
+# update the path for go
+ENV PATH /usr/local/go/bin:/go/bin:$PATH
 
 # install go tooling for development, building and testing
 RUN go install golang.org/x/tools/cmd/goimports@latest
-
-# RUN gcloud components update
-RUN gcloud components update && gcloud components install app-engine-go && \
-    gcloud components install gke-gcloud-auth-plugin
 
 # the kubernetes version for the file
 ENV KUBERNETES_VER 1.22.9

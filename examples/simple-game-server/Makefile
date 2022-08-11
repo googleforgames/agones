@@ -32,15 +32,22 @@ WINDOWS_VERSIONS = ltsc2019
 WINDOWS_DOCKER_PUSH_ARGS = # When pushing set to --push.
 # Build with Windows support
 WITH_WINDOWS=1
+# Build with ARM64 support
+WITH_ARM64=1
 
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_path := $(dir $(mkfile_path))
-server_tag = $(REGISTRY)/simple-game-server:0.12
+server_tag = $(REGISTRY)/simple-game-server:0.13
+
 ifeq ($(WITH_WINDOWS), 1)
-server_tag_linux_amd64 = $(server_tag)-linux_amd64
+server_tag_linux_amd64 = $(server_tag)-linux-amd64
+server_tag_linux_arm64 = $(server_tag)-linux-arm64
 else
-server_tag_linux_amd64 = $(server_tag)
+server_tag_linux_amd64 = $(server_tag)-amd64
+server_tag_linux_arm64 = $(server_tag)-arm64
 endif
+
+push_server_manifest = $(server_tag_linux_amd64)
 root_path = $(realpath $(project_path)/../..)
 
 #   _____                    _
@@ -51,26 +58,39 @@ root_path = $(realpath $(project_path)/../..)
 #                 |___/
 
 ifeq ($(WITH_WINDOWS), 1)
-push: push-multi-arch-image
-build: build-linux-image $(foreach winver, $(WINDOWS_VERSIONS), build-windows-image-$(winver))
-else
-push: push-linux-image
-build: build-linux-image
+push_server_manifest += $(foreach windows_version, $(WINDOWS_VERSIONS), $(server_tag)-windows_amd64-$(windows_version))
+endif
+ifeq ($(WITH_ARM64), 1)
+push_server_manifest += $(server_tag_linux_arm64)
+endif
+
+build: build-linux-image-amd64
+
+ifeq ($(WITH_WINDOWS), 1)
+build: $(foreach winver, $(WINDOWS_VERSIONS), build-windows-image-$(winver))
+endif
+ifeq ($(WITH_ARM64), 1)
+build: build-linux-image-arm64
 endif
 
 # Builds all image artifacts and create a docker manifest that is used to inform the CRI (Docker or containerd usually)
 # which image is the best fit for the host. See https://www.docker.com/blog/multi-arch-images/ for details.
-push-multi-arch-image: push-linux-image push-windows-images
-	# TODO: `docker manifest` does not yet stamp the `os.version` for Windows manifest entry.
-	# This means only 1 Windows version can be supported in a multi-platform build.
-	# Either adopt, https://github.com/kubernetes-sigs/azuredisk-csi-driver/pull/585/files or
-	# wait for https://github.com/docker/cli/pull/2578 to be available in Docker 20.10.
-	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest create $(server_tag) $(server_tag_linux_amd64) $(foreach windows_version, $(WINDOWS_VERSIONS), $(server_tag)-windows_amd64-$(windows_version))
+push: push-linux-image-amd64
+ifeq ($(WITH_WINDOWS), 1)
+push: push-windows-images
+endif
+ifeq ($(WITH_ARM64), 1)
+push: push-linux-image-arm64
+endif
+	-DOCKER_CLI_EXPERIMENTAL=enabled docker manifest rm $(server_tag)
+	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest create $(server_tag) $(push_server_manifest)
 	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest push $(server_tag) --purge
 
 # Pushes all variants of the Windows images to the container image registry.
-push-linux-image: build
+push-linux-image-amd64: build
 	docker push $(server_tag_linux_amd64)
+push-linux-image-arm64: build
+	$(MAKE) DOCKER_BUILD_ARGS=--push build-linux-image-arm64
 
 # Pushes all variants of the Windows images to the container image registry.
 push-windows-images: $(foreach winver, $(WINDOWS_VERSIONS), push-windows-image-$(winver))
@@ -80,9 +100,8 @@ push-windows-image-%:
 	$(MAKE) WINDOWS_DOCKER_PUSH_ARGS=--push build-windows-image-$*
 
 build-windows-image-%: build-windows-binary ensure-windows-buildx
-	# TODO: Use `--builder $(BUILDX_WINDOWS_BUILDER)` later once Docker 19.03.13 is the build target. Cloud Build has 19.03.08 https://cloud.google.com/cloud-build/release-notes
 	cd $(root_path) && DOCKER_CLI_EXPERIMENTAL=enabled \
-		docker buildx build --platform windows/amd64 -f $(project_path)Dockerfile.windows \
+		docker buildx build --platform windows/amd64 --builder $(BUILDX_WINDOWS_BUILDER) -f $(project_path)Dockerfile.windows \
 	 	--tag=$(server_tag)-windows_amd64-$* --build-arg WINDOWS_VERSION=$* examples/simple-game-server/ $(WINDOWS_DOCKER_PUSH_ARGS)
 
 # Builds the server binary for Windows (amd64).
@@ -98,8 +117,10 @@ ensure-windows-buildx:
 	-DOCKER_CLI_EXPERIMENTAL=enabled docker buildx create --name=$(BUILDX_WINDOWS_BUILDER) --use
 
 # Build a docker image for the server, and tag it
-build-linux-image:
+build-linux-image-amd64:
 	cd $(root_path) && docker build -f $(project_path)Dockerfile --tag=$(server_tag_linux_amd64) .
+build-linux-image-arm64:
+	cd $(root_path) && docker buildx build --platform linux/arm64 -f $(project_path)Dockerfile $(DOCKER_BUILD_ARGS) --tag=$(server_tag_linux_arm64) .
 
 # check if hosted on Google Cloud Registry
 gcr-check:
