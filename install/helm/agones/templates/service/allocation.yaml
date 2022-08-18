@@ -257,6 +257,10 @@ spec:
         - name: {{ .Values.agones.allocator.service.grpc.portName }}
           containerPort: {{ .Values.agones.allocator.service.grpc.targetPort }}
         {{- end }}
+        {{- if .Values.agones.metrics.serviceMonitor.exposeMetricsPortsOnPods }}
+        - name: {{ .Values.agones.allocator.serviceMetrics.http.portName }}
+          containerPort:  {{ .Values.agones.allocator.serviceMetrics.http.port }}
+        {{- end }}
         {{- if eq .Values.agones.allocator.disableTLS false }}
         volumeMounts:
         - mountPath: /home/allocator/tls
