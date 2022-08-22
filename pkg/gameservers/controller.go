@@ -624,7 +624,7 @@ func (c *Controller) sidecar(gs *agonesv1.GameServer) corev1.Container {
 		},
 		Resources: corev1.ResourceRequirements{},
 		LivenessProbe: &corev1.Probe{
-			Handler: corev1.Handler{
+			ProbeHandler: corev1.ProbeHandler{
 				HTTPGet: &corev1.HTTPGetAction{
 					Path: "/healthz",
 					Port: intstr.FromInt(8080),
@@ -676,7 +676,7 @@ func (c *Controller) addGameServerHealthCheck(gs *agonesv1.GameServer, pod *core
 	return gs.ApplyToPodContainer(pod, gs.Spec.Container, func(c corev1.Container) corev1.Container {
 		if c.LivenessProbe == nil {
 			c.LivenessProbe = &corev1.Probe{
-				Handler: corev1.Handler{
+				ProbeHandler: corev1.ProbeHandler{
 					HTTPGet: &corev1.HTTPGetAction{
 						Path: "/gshealthz",
 						Port: intstr.FromInt(8080),
