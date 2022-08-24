@@ -20,6 +20,7 @@ using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using System;
+using Microsoft.Extensions.Logging;
 
 namespace Agones.Tests
 {
@@ -239,6 +240,30 @@ namespace Agones.Tests
 
 			var result = await mockSdk.SetAnnotationAsync(expectedKeyValue.Key, expectedKeyValue.Value);
 			Assert.AreEqual(expectedKeyValue, actualKeyValue);
+		}
+
+		[TestMethod]
+		public void InstantiateWithParameters_OK()
+		{
+			var mockClient = new Mock<SDK.SDKClient>().Object;
+			ILogger mockLogger = new Mock<ILogger>().Object;
+			CancellationTokenSource mockCancellationTokenSource = new Mock<CancellationTokenSource>().Object;
+			bool exceptionOccured = false;
+			try
+			{
+				new AgonesSDK(
+					requestTimeoutSec: 15,
+					sdkClient: mockClient,
+					cancellationTokenSource: mockCancellationTokenSource,
+					logger: mockLogger
+				);
+			}
+			catch
+			{
+				exceptionOccured = true;
+			}
+
+			Assert.IsFalse(exceptionOccured);
 		}
 	}
 }
