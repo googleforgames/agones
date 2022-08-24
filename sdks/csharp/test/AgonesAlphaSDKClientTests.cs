@@ -21,6 +21,7 @@ using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using System;
+using Microsoft.Extensions.Logging;
 
 namespace Agones.Tests
 {
@@ -131,6 +132,31 @@ namespace Agones.Tests
 
             var result = await mockSdk.Alpha().GetConnectedPlayersAsync();
             CollectionAssert.AreEquivalent(expected, result);
+        }
+
+        [TestMethod]
+        public void InstantiateWithParameters_OK()
+        {
+            var mockSdk = new AgonesSDK();
+            var mockChannel = new Channel(mockSdk.Host, mockSdk.Port, ChannelCredentials.Insecure);
+            ILogger mockLogger = new Mock<ILogger>().Object;
+            CancellationTokenSource mockCancellationTokenSource = new Mock<CancellationTokenSource>().Object;
+            bool exceptionOccured = false;
+            try
+            {
+                new Alpha(
+                    channel: mockChannel,
+                    requestTimeoutSec: 15,
+                    cancellationTokenSource: mockCancellationTokenSource,
+                    logger: mockLogger
+                );
+            }
+            catch
+            {
+                exceptionOccured = true;
+            }
+
+            Assert.IsFalse(exceptionOccured);
         }
     }
 }
