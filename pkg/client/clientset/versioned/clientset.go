@@ -20,6 +20,7 @@ package versioned
 
 import (
 	"fmt"
+	"net/http"
 
 	agonesv1 "agones.dev/agones/pkg/client/clientset/versioned/typed/agones/v1"
 	allocationv1 "agones.dev/agones/pkg/client/clientset/versioned/typed/allocation/v1"
@@ -79,7 +80,29 @@ func (c *Clientset) Discovery() discovery.DiscoveryInterface {
 // NewForConfig creates a new Clientset for the given config.
 // If config's RateLimiter is not set and QPS and Burst are acceptable,
 // NewForConfig will generate a rate-limiter in configShallowCopy.
+// NewForConfig is equivalent to NewForConfigAndClient(c, httpClient),
+// where httpClient was generated with rest.HTTPClientFor(c).
 func NewForConfig(c *rest.Config) (*Clientset, error) {
+	configShallowCopy := *c
+
+	if configShallowCopy.UserAgent == "" {
+		configShallowCopy.UserAgent = rest.DefaultKubernetesUserAgent()
+	}
+
+	// share the transport between all clients
+	httpClient, err := rest.HTTPClientFor(&configShallowCopy)
+	if err != nil {
+		return nil, err
+	}
+
+	return NewForConfigAndClient(&configShallowCopy, httpClient)
+}
+
+// NewForConfigAndClient creates a new Clientset for the given config and http client.
+// Note the http client provided takes precedence over the configured transport values.
+// If config's RateLimiter is not set and QPS and Burst are acceptable,
+// NewForConfigAndClient will generate a rate-limiter in configShallowCopy.
+func NewForConfigAndClient(c *rest.Config, httpClient *http.Client) (*Clientset, error) {
 	configShallowCopy := *c
 	if configShallowCopy.RateLimiter == nil && configShallowCopy.QPS > 0 {
 		if configShallowCopy.Burst <= 0 {
@@ -87,26 +110,27 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 		}
 		configShallowCopy.RateLimiter = flowcontrol.NewTokenBucketRateLimiter(configShallowCopy.QPS, configShallowCopy.Burst)
 	}
+
 	var cs Clientset
 	var err error
-	cs.agonesV1, err = agonesv1.NewForConfig(&configShallowCopy)
+	cs.agonesV1, err = agonesv1.NewForConfigAndClient(&configShallowCopy, httpClient)
 	if err != nil {
 		return nil, err
 	}
-	cs.allocationV1, err = allocationv1.NewForConfig(&configShallowCopy)
+	cs.allocationV1, err = allocationv1.NewForConfigAndClient(&configShallowCopy, httpClient)
 	if err != nil {
 		return nil, err
 	}
-	cs.autoscalingV1, err = autoscalingv1.NewForConfig(&configShallowCopy)
+	cs.autoscalingV1, err = autoscalingv1.NewForConfigAndClient(&configShallowCopy, httpClient)
 	if err != nil {
 		return nil, err
 	}
-	cs.multiclusterV1, err = multiclusterv1.NewForConfig(&configShallowCopy)
+	cs.multiclusterV1, err = multiclusterv1.NewForConfigAndClient(&configShallowCopy, httpClient)
 	if err != nil {
 		return nil, err
 	}
 
-	cs.DiscoveryClient, err = discovery.NewDiscoveryClientForConfig(&configShallowCopy)
+	cs.DiscoveryClient, err = discovery.NewDiscoveryClientForConfigAndClient(&configShallowCopy, httpClient)
 	if err != nil {
 		return nil, err
 	}
@@ -116,14 +140,11 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 // NewForConfigOrDie creates a new Clientset for the given config and
 // panics if there is an error in the config.
 func NewForConfigOrDie(c *rest.Config) *Clientset {
-	var cs Clientset
-	cs.agonesV1 = agonesv1.NewForConfigOrDie(c)
-	cs.allocationV1 = allocationv1.NewForConfigOrDie(c)
-	cs.autoscalingV1 = autoscalingv1.NewForConfigOrDie(c)
-	cs.multiclusterV1 = multiclusterv1.NewForConfigOrDie(c)
-
-	cs.DiscoveryClient = discovery.NewDiscoveryClientForConfigOrDie(c)
-	return &cs
+	cs, err := NewForConfig(c)
+	if err != nil {
+		panic(err)
+	}
+	return cs
 }
 
 // New creates a new Clientset for the given RESTClient.
