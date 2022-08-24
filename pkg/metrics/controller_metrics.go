@@ -36,6 +36,12 @@ const (
 )
 
 var (
+	// fleetAutoscalerViews are metric views associated with FleetAutoscalers
+	fleetAutoscalerViews = []string{fleetAutoscalerBufferLimitName, fleetAutoscalterBufferSizeName, fleetAutoscalerCurrentReplicaCountName,
+		fleetAutoscalersDesiredReplicaCountName, fleetAutoscalersAbleToScaleName, fleetAutoscalersLimitedName}
+	// fleetViews are metric views associated with Fleets
+	fleetViews = append([]string{fleetReplicaCountName, gameServersCountName, gameServersTotalName, gameServerStateDurationName}, fleetAutoscalerViews...)
+
 	stateDurationSeconds      = []float64{0, 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384}
 	fleetsReplicasCountStats  = stats.Int64("fleets/replicas_count", "The count of replicas per fleet", "1")
 	fasBufferLimitsCountStats = stats.Int64("fas/buffer_limits", "The buffer limits of autoscalers", "1")
@@ -156,7 +162,7 @@ func unRegisterViews() {
 // resetViews resets the values of an entire view.
 // Since we have no way to delete a gauge, we have to reset
 // the whole thing and start from scratch.
-func resetViews(names ...string) {
+func resetViews(names []string) {
 	for _, v := range stateViews {
 		for _, name := range names {
 			if v.Name == name {

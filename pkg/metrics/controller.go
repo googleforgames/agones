@@ -285,9 +285,7 @@ func (c *Controller) resyncFleets() error {
 		return errors.Wrap(err, "could not resync Fleets")
 	}
 
-	resetViews(fleetReplicaCountName, fleetAutoscalerBufferLimitName, fleetAutoscalterBufferSizeName,
-		fleetAutoscalerCurrentReplicaCountName, fleetAutoscalersDesiredReplicaCountName, fleetAutoscalersAbleToScaleName,
-		fleetAutoscalersLimitedName, gameServersCountName, gameServersTotalName, gameServerStateDurationName)
+	resetViews(fleetViews)
 	for _, f := range fleets {
 		c.recordFleetChanges(f)
 	}
@@ -309,9 +307,7 @@ func (c *Controller) resyncFleetAutoScaler() error {
 		return errors.Wrap(err, "could not resync FleetAutoScalers")
 	}
 
-	resetViews(fleetAutoscalerBufferLimitName, fleetAutoscalterBufferSizeName, fleetAutoscalerCurrentReplicaCountName,
-		fleetAutoscalersDesiredReplicaCountName, fleetAutoscalersAbleToScaleName, fleetAutoscalersLimitedName)
-
+	resetViews(fleetAutoscalerViews)
 	for _, fas := range fasList {
 		c.recordFleetAutoScalerChanges(nil, fas)
 	}
