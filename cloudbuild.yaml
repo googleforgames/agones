@@ -22,7 +22,7 @@ steps:
 # Print Docker version
 #
 
-- name: "gcr.io/cloud-builders/docker:20.10.13"
+- name: gcr.io/cloud-builders/docker
   id: docker-version
   args: ["--version"]
 
@@ -63,9 +63,9 @@ steps:
 #
 
 - name: "ubuntu"
-  args: ["bash", "-c", "echo 'FROM gcr.io/cloud-builders/docker:20.10.13\nRUN apt-get install make\nENTRYPOINT [\"/usr/bin/make\"]' > Dockerfile.build"]
+  args: ["bash", "-c", "echo 'FROM gcr.io/cloud-builders/docker\nRUN apt-get install make\nENTRYPOINT [\"/usr/bin/make\"]' > Dockerfile.build"]
   waitFor: ['-']
-- name: "gcr.io/cloud-builders/docker:20.10.13"
+- name: gcr.io/cloud-builders/docker
   id: build-make-docker
   args: ['build', '-f', 'Dockerfile.build', '-t', 'make-docker', '.'] # we need docker and make to run everything.
 
@@ -106,7 +106,7 @@ steps:
 # build the e2e test runner
 #
 
-- name: 'gcr.io/cloud-builders/docker'
+- name: gcr.io/cloud-builders/docker
   args: ['build', '-f', 'Dockerfile', '-t', 'e2e-runner', '.']
   dir: 'build/e2e-image'
   id: build-e2e
@@ -244,7 +244,7 @@ steps:
 
 - name: 'e2e-runner'
   args:
-    - 'PlayerTracking=true&StateAllocationFilter=true&PlayerAllocationFilter=true&SDKGracefulTermination=true'
+    - 'PlayerTracking=true&StateAllocationFilter=false&PlayerAllocationFilter=true&SDKGracefulTermination=true&CustomFasSyncInterval=false'
     - 'e2e-test-cluster'
     - "${_REGISTRY}"
   id: e2e-feature-gates

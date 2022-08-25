@@ -3,7 +3,7 @@
 {{- $title := .Get "title" }}
 <div class="alert alert-warning" role="alert">
     <h4 class="alert-heading">Warning</h4>
-    <p>The {{ $title }} {{- if gt $len_gate 1 }}features are{{ else }}feature is{{ end }} currently <strong><a href="{{ ref . "/docs/Guides/feature-stages.md#alpha" }}">Alpha</a></strong>,
+    <p>The {{ $title }} {{- if gt $len_gate 1 }} features are{{ else }} feature is{{ end }} currently <strong><a href="{{ ref . "/docs/Guides/feature-stages.md#alpha" }}">Alpha</a></strong>,
         not enabled by default, and may change in the future.</p>
 <p>Use the Feature {{- if gt $len_gate 1 }}Gates{{- else}}Gate{{- end }} {{ range $index, $value := first (sub $len_gate 1) $gate }} <code>{{- $value }}</code>, {{ end }}{{ if gt $len_gate 1 }}and{{ end }}{{ range (last 1 $gate) }} <code>{{ . }}</code>{{ end }}
 to enable and test {{ if gt $len_gate 1 }}these features{{else}}this feature{{ end }}.</p>
