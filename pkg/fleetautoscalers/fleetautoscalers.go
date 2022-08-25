@@ -35,8 +35,12 @@ import (
 	"k8s.io/apimachinery/pkg/util/uuid"
 )
 
+var tlsConfig = &tls.Config{}
 var client = http.Client{
 	Timeout: 15 * time.Second,
+	Transport: &http.Transport{
+		TLSClientConfig: tlsConfig,
+	},
 }
 
 // computeDesiredFleetSize computes the new desired size of the given fleet
@@ -115,8 +119,7 @@ func setCABundle(caBundle []byte) error {
 	if ok := rootCAs.AppendCertsFromPEM(caBundle); !ok {
 		return errors.New("no certs were appended from caBundle")
 	}
-	TLSClientConfig := &tls.Config{}
-	TLSClientConfig.RootCAs = rootCAs
+	tlsConfig.RootCAs = rootCAs
 	return nil
 }
 
