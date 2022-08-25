@@ -105,7 +105,7 @@ func (c *FakeGameServers) Update(ctx context.Context, gameServer *agonesv1.GameS
 // Delete takes name of the gameServer and deletes it. Returns an error if one occurs.
 func (c *FakeGameServers) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	_, err := c.Fake.
-		Invokes(testing.NewDeleteAction(gameserversResource, c.ns, name), &agonesv1.GameServer{})
+		Invokes(testing.NewDeleteActionWithOptions(gameserversResource, c.ns, name, opts), &agonesv1.GameServer{})
 
 	return err
 }
