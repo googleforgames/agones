@@ -72,6 +72,7 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 - [ ] Do a `helm install --namespace=agones-system agones agones/agones` 
     (`helm install --namespace=agones-system agones agones/agones --version={version}-rc` if release candidate) and a smoke test to confirm everything is working.
 - [ ] Attach all assets found in the `release` folder to the draft Github Release.
+- [ ] If release candidate check the pre-release box end of the draft Github Release
 - [ ] Publish the draft Github Release.
 - [ ] Send an email to the [mailing list][list] with the release details (copy-paste the release blog post)
 - [ ] Paste the announcement blog post to the #users Slack group.
