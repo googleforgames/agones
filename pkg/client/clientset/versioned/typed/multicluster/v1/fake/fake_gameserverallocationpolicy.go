@@ -105,7 +105,7 @@ func (c *FakeGameServerAllocationPolicies) Update(ctx context.Context, gameServe
 // Delete takes name of the gameServerAllocationPolicy and deletes it. Returns an error if one occurs.
 func (c *FakeGameServerAllocationPolicies) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	_, err := c.Fake.
-		Invokes(testing.NewDeleteAction(gameserverallocationpoliciesResource, c.ns, name), &multiclusterv1.GameServerAllocationPolicy{})
+		Invokes(testing.NewDeleteActionWithOptions(gameserverallocationpoliciesResource, c.ns, name, opts), &multiclusterv1.GameServerAllocationPolicy{})
 
 	return err
 }
