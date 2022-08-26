@@ -214,9 +214,11 @@ The following tables lists the configurable parameters of the Agones chart and t
 
 {{% feature publishVersion="1.26.0" %}}
 **New Configuration Features:**
-| Parameter                                                | Description                                                                                                               | Default                |
-| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
-|                                                          |                                                                                                                           |                        |
+| Parameter                                                | Description                                                                                                                         | Default                |
+| -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
+| `agones.allocator.updateStrategy`                        | The [strategy](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy) to apply to the ping deployment      | `{}`                   |
+| `agones.ping.updateStrategy`                             | The [strategy](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy) to apply to the allocator deployment | `{}`                   |
+
 {{% /feature %}}
 
 [toleration]: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
