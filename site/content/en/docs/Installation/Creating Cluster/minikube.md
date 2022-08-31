@@ -44,14 +44,15 @@ some workarounds listed below.
 Other operating systems and drivers may work, but at this stage have not been verified to work with UDP connections
 via Agones exposed ports.
 
-**Linux**
+**Linux (amd64)**
+* Docker (default)
 * kvm2
 
-**Mac**
+**Mac (amd64)**
 * Docker (default)
 * Hyperkit
 
-**Windows**
+**Windows (amd64)**
 * hyper-v (might need
   <a href="https://blog.thepolyglotprogrammer.com/setting-up-kubernetes-on-wsl-to-work-with-minikube-on-windows-10-90dac3c72fa1" data-proofer-ignore>this blog post</a>
   and/or [this comment](https://github.com/microsoft/WSL/issues/4288#issuecomment-652259640) for WSL support)

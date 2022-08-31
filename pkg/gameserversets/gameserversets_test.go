@@ -38,9 +38,10 @@ func TestSortGameServersByLeastFullNodes(t *testing.T) {
 	}
 
 	list := []*agonesv1.GameServer{
-		{ObjectMeta: metav1.ObjectMeta{Name: "g1"}, Status: agonesv1.GameServerStatus{NodeName: "n2"}},
-		{ObjectMeta: metav1.ObjectMeta{Name: "g2"}, Status: agonesv1.GameServerStatus{NodeName: ""}},
-		{ObjectMeta: metav1.ObjectMeta{Name: "g3"}, Status: agonesv1.GameServerStatus{NodeName: "n1"}},
+		{ObjectMeta: metav1.ObjectMeta{Name: "g1"}, Status: agonesv1.GameServerStatus{NodeName: "n2", State: agonesv1.GameServerStateReady}},
+		{ObjectMeta: metav1.ObjectMeta{Name: "g2"}, Status: agonesv1.GameServerStatus{NodeName: "", State: agonesv1.GameServerStateReady}},
+		{ObjectMeta: metav1.ObjectMeta{Name: "g3"}, Status: agonesv1.GameServerStatus{NodeName: "n1", State: agonesv1.GameServerStateReady}},
+		{ObjectMeta: metav1.ObjectMeta{Name: "g4"}, Status: agonesv1.GameServerStatus{NodeName: "n2", State: agonesv1.GameServerStateCreating}},
 	}
 
 	result := sortGameServersByLeastFullNodes(list, nc)
@@ -48,7 +49,8 @@ func TestSortGameServersByLeastFullNodes(t *testing.T) {
 	require.Len(t, result, len(list))
 	assert.Equal(t, "g2", result[0].ObjectMeta.Name)
 	assert.Equal(t, "g3", result[1].ObjectMeta.Name)
-	assert.Equal(t, "g1", result[2].ObjectMeta.Name)
+	assert.Equal(t, "g4", result[2].ObjectMeta.Name)
+	assert.Equal(t, "g1", result[3].ObjectMeta.Name)
 }
 
 func TestSortGameServersByNewFirst(t *testing.T) {

@@ -95,6 +95,7 @@ agones:
     allocationBatchWaitTime: 500ms
   ping:
     install: true
+    updateStrategy: {}
     resources: {}
       # requests:
       #   cpu: 1
@@ -138,6 +139,7 @@ agones:
       timeoutSeconds: 1
   allocator:
     install: true
+    updateStrategy: {}
     apiServerQPS: 400
     apiServerQPSBurst: 500
     logLevel: info
@@ -203,7 +205,7 @@ agones:
     allocationBatchWaitTime: 500ms
   image:
     registry: gcr.io/agones-images
-    tag: 1.25.0-dev
+    tag: 1.26.0-dev
     controller:
       name: agones-controller
       pullPolicy: IfNotPresent

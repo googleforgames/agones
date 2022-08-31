@@ -24,7 +24,7 @@
 #
 
 # base version target. This is usually the next release.
-base_version = 1.25.0
+base_version = 1.26.0
 
 # agones image release registry
 release_registry = gcr.io/agones-images
@@ -48,6 +48,7 @@ GCP_BUCKET_CHARTS ?= agones-chart
 MINIKUBE_PROFILE ?= agones
 GO_BUILD_TAGS ?= none
 BUILDX_WINDOWS_BUILDER = windows-builder
+BUILDX_ARM64_BUILDER = arm64-builder
 WINDOWS_DOCKER_PUSH_ARGS =
 # Versions of Windows Server to support, default is Windows Server 2019.
 # For the full list of tags see https://hub.docker.com/_/microsoft-windows-servercore.
@@ -65,7 +66,7 @@ KIND_CONTAINER_NAME=$(KIND_PROFILE)-control-plane
 # Game Server image to use while doing end-to-end tests
 GS_TEST_IMAGE ?= gcr.io/agones-images/simple-game-server:0.13
 
-ALPHA_FEATURE_GATES ?= "PlayerTracking=true&StateAllocationFilter=true&PlayerAllocationFilter=true&CustomFasSyncInterval=true"
+ALPHA_FEATURE_GATES ?= "PlayerTracking=true&PlayerAllocationFilter=true&SDKGracefulTermination=true"
 
 # Build with Windows support
 WITH_WINDOWS=1
@@ -293,8 +294,8 @@ test-go: $(ensure-build-image)
 # Runs end-to-end tests on the current configured cluster
 # For minikube user the minikube-test-e2e targets
 test-e2e:
-	$(MAKE) test-e2e-integration
-	$(MAKE) test-e2e-failure
+	$(MAKE) DOCKER_RUN_ARGS="$(DOCKER_RUN_ARGS)" test-e2e-integration
+	$(MAKE) DOCKER_RUN_ARGS="$(DOCKER_RUN_ARGS)" test-e2e-failure
 
 
 # If GAMESERVERS_NAMESPACE is empty - random namespace will be created
@@ -353,7 +354,7 @@ install: FEATURE_GATES ?= $(ALPHA_FEATURE_GATES)
 install: SERVICE_MONITOR := false
 install: HELM_ARGS ?=
 install: $(ensure-build-image) install-custom-pull-secret
-	-$(DOCKER_RUN) bash -c "[[ $$(helm status agones -n agones-system --output json | jq -r '.info.status') =~ (failed|pending-.*) ]] && helm uninstall agones --namespace=agones-system || true"
+	-$(DOCKER_RUN) bash -c '[[ $$(helm status agones -n agones-system --output json | jq -r ".info.status") =~ (failed|pending-.*) ]] && helm uninstall agones --namespace=agones-system || true'
 	$(DOCKER_RUN) \
 		helm upgrade --install --atomic --wait --namespace=agones-system \
 		--create-namespace \
@@ -413,6 +414,14 @@ build-licenses:
 build-required-src-dist:
 	docker run --rm $(common_mounts) $(build_tag) $(mount_path)/build/build-required-src-dist.sh
 
+# Create docker builder used in creating arm64 images
+# According to the docker documentation, to build the images for ARM64 arch CPU 
+# we would need to use buildx command which uses builder https://docs.docker.com/desktop/multi-arch/
+# We primarily need this for M1 Macs, see: https://medium.com/geekculture/docker-build-with-mac-m1-d668c802ab96
+# Making this command optional (using - as prefix) because it will fail once built for the first time, so we ignore failures.
+create-arm64-builder:
+	-docker buildx create --name $(BUILDX_ARM64_BUILDER)
+
 # Build the image for the gameserver controller
 build-controller-image: build-controller-image-amd64
 ifeq ($(WITH_ARM64), 1)
@@ -421,8 +430,9 @@ endif
 
 build-controller-image-amd64: $(ensure-build-image) build-controller-binary build-licenses build-required-src-dist
 	docker build $(agones_path)/cmd/controller/ --tag=$(controller_amd64_tag) $(DOCKER_BUILD_ARGS)
-build-controller-image-arm64: $(ensure-build-image) build-controller-binary
-	docker buildx build --platform linux/arm64 --build-arg ARCH=arm64 $(agones_path)/cmd/controller/ --tag=$(controller_arm64_tag) $(DOCKER_BUILD_ARGS)
+# creating docker builder and then using that builder to build controller image in buildx command
+build-controller-image-arm64: $(ensure-build-image) build-controller-binary create-arm64-builder 
+	docker buildx build --platform linux/arm64 --builder $(BUILDX_ARM64_BUILDER) --build-arg ARCH=arm64 $(agones_path)/cmd/controller/ --tag=$(controller_arm64_tag) $(DOCKER_BUILD_ARGS)
 
 # push the gameservers controller image
 push-controller-image: push-controller-image-amd64
@@ -472,7 +482,7 @@ ensure-windows-buildx:
 # Build the image for the gameserver sidecar and SDK binaries
 build-agones-sdk-image: $(ensure-build-image) build-agones-sdk-binary build-licenses build-required-src-dist build-agones-sdk-image-amd64
 ifeq ($(WITH_ARM64), 1)
-build-agones-sdk-image: build-agones-sdk-image-arm64
+build-agones-sdk-image: build-agones-sdk-image-arm64 
 endif
 ifeq ($(WITH_WINDOWS), 1)
 build-agones-sdk-image: build-agones-sdk-image-windows
@@ -480,8 +490,9 @@ endif
 
 build-agones-sdk-image-amd64: $(ensure-build-image) build-agones-sdk-binary-linux-amd64
 	docker build $(agones_path)/cmd/sdk-server/ --tag=$(sidecar_linux_amd64_tag) $(DOCKER_BUILD_ARGS)
-build-agones-sdk-image-arm64: $(ensure-build-image) build-agones-sdk-binary-linux-arm64
-	docker buildx build --platform linux/arm64 --build-arg ARCH=arm64 $(agones_path)/cmd/sdk-server/ --tag=$(sidecar_linux_arm64_tag) $(DOCKER_BUILD_ARGS)
+# creating docker builder and then using that builder to build sdk image in buildx command
+build-agones-sdk-image-arm64: $(ensure-build-image) build-agones-sdk-binary-linux-arm64 create-arm64-builder 
+	docker buildx build --platform linux/arm64 --builder $(BUILDX_ARM64_BUILDER) --build-arg ARCH=arm64 $(agones_path)/cmd/sdk-server/ --tag=$(sidecar_linux_arm64_tag) $(DOCKER_BUILD_ARGS) 
 
 build-agones-sdk-image-windows: build-agones-sdk-binary
 build-agones-sdk-image-windows: $(foreach winver, $(WINDOWS_VERSIONS), build-agones-sdk-image-windows-$(winver))
@@ -515,7 +526,7 @@ endif
 	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest create $(ping_tag) $(push_ping_manifest)
 	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest push $(ping_tag)
 
-push-ping-image-amd64: $(ensure-build-image)
+push-ping-image-amd64: $(ensure-build-image) build-ping-image-amd64
 	docker push $(ping_amd64_tag)
 push-ping-image-arm64:
 	$(MAKE) DOCKER_BUILD_ARGS=--push build-ping-image-arm64
@@ -523,13 +534,14 @@ push-ping-image-arm64:
 # Build the image for the ping service
 build-ping-image: build-ping-image-amd64
 ifeq ($(WITH_ARM64), 1)
-build-ping-image: build-ping-image-arm64
+build-ping-image: build-ping-image-arm64 
 endif
 
 build-ping-image-amd64: $(ensure-build-image) build-ping-binary build-licenses build-required-src-dist
 	docker build $(agones_path)/cmd/ping/ --tag=$(ping_amd64_tag) $(DOCKER_BUILD_ARGS)
-build-ping-image-arm64: $(ensure-build-image) build-ping-binary
-	docker buildx build --platform linux/arm64 --build-arg ARCH=arm64 $(agones_path)/cmd/ping/ --tag=$(ping_arm64_tag) $(DOCKER_BUILD_ARGS)
+# creating docker builder and then using that builder to build ping image in buildx command
+build-ping-image-arm64: $(ensure-build-image) build-ping-binary create-arm64-builder 
+	docker buildx build --platform linux/arm64 --builder $(BUILDX_ARM64_BUILDER) --build-arg ARCH=arm64 $(agones_path)/cmd/ping/ --tag=$(ping_arm64_tag) $(DOCKER_BUILD_ARGS) 
 
 # Build a static binary for the allocator service
 build-allocator-binary: $(ensure-build-image) build-allocator-binary-linux-amd64
@@ -569,8 +581,9 @@ endif
 
 build-allocator-image-amd64: $(ensure-build-image) build-allocator-binary build-licenses build-required-src-dist
 	docker build $(agones_path)/cmd/allocator/ --tag=$(allocator_amd64_tag) $(DOCKER_BUILD_ARGS)
-build-allocator-image-arm64: $(ensure-build-image) build-allocator-binary
-	docker buildx build $(agones_path)/cmd/allocator/ --tag=$(allocator_arm64_tag) --build-arg ARCH=arm64 --platform linux/arm64 $(DOCKER_BUILD_ARGS)
+# creating docker builder and then using that builder to build allocator image in buildx command
+build-allocator-image-arm64: $(ensure-build-image) build-allocator-binary create-arm64-builder 
+	docker buildx build $(agones_path)/cmd/allocator/ --builder $(BUILDX_ARM64_BUILDER) --tag=$(allocator_arm64_tag) --build-arg ARCH=arm64 --platform linux/arm64 $(DOCKER_BUILD_ARGS) 
 
 # push the gameservers sidecar image
 push-agones-sdk-image: push-agones-sdk-linux-image-amd64

@@ -69,6 +69,7 @@ namespace Agones
 			}
 			else
 			{
+				cts = cancellationTokenSource;
 				ownsCts = false;
 			}
 			

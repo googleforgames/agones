@@ -38,7 +38,7 @@ spec:
       restartPolicy: Never
       containers:
       - name: pre-delete-delete-agones-resources
-        image: "lachlanevenson/k8s-kubectl:v1.22.9"
+        image: "lachlanevenson/k8s-kubectl:v1.23.9"
         command:
         - "/bin/sh"
         - "/scripts/delete_agones_resources.sh"

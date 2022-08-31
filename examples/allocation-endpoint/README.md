@@ -46,7 +46,7 @@ helm upgrade my-release --install --namespace agones-system --create-namespace a
 
 After installing Agones, deploy [ESP](https://cloud.google.com/endpoints/docs/grpc/specify-esp-v2-startup-options) which is an envoy based proxy, deployed as a sidecar along side `agones-alloator` container. Run the following to patch the service deployement, change the service port to ESP and add annotation to `agones-allocator` service account to impersonate GCP service account. 
 
-Replace [GKE-PROJECT-ID] in `patch-agones-allocator.yaml` with your project ID before runing the scripts.
+Replace [GKE-PROJECT-ID] in `patch-agones-allocator.yaml` with your project ID before running the scripts.
 
 ```
 kubectl patch deployment agones-allocator -n agones-system --patch-file patch-agones-allocator.yaml

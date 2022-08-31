@@ -101,7 +101,7 @@ type GameServerAllocationSpec struct {
 type GameServerSelector struct {
 	// See: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
 	metav1.LabelSelector
-	// [Stage:Alpha]
+	// [Stage:Beta]
 	// [FeatureFlag:StateAllocationFilter]
 	// +optional
 	// GameServerState specifies which State is the filter to be used when attempting to retrieve a GameServer

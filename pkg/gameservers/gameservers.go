@@ -18,7 +18,6 @@ import (
 	"net"
 
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
-	"agones.dev/agones/pkg/util/runtime"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -43,13 +42,9 @@ func isGameServerPod(pod *corev1.Pod) bool {
 // that only report an InternalIP.
 func address(node *corev1.Node) (string, error) {
 
-	externalDNS := runtime.FeatureEnabled(runtime.NodeExternalDNS)
-
-	if externalDNS {
-		for _, a := range node.Status.Addresses {
-			if a.Type == corev1.NodeExternalDNS {
-				return a.Address, nil
-			}
+	for _, a := range node.Status.Addresses {
+		if a.Type == corev1.NodeExternalDNS {
+			return a.Address, nil
 		}
 	}
 
@@ -60,11 +55,9 @@ func address(node *corev1.Node) (string, error) {
 	}
 
 	// There might not be a public DNS/IP, so fall back to the private DNS/IP
-	if externalDNS {
-		for _, a := range node.Status.Addresses {
-			if a.Type == corev1.NodeInternalDNS {
-				return a.Address, nil
-			}
+	for _, a := range node.Status.Addresses {
+		if a.Type == corev1.NodeInternalDNS {
+			return a.Address, nil
 		}
 	}
 

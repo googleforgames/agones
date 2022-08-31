@@ -47,19 +47,19 @@ candidate release date - or whichever release is most relevant.
 We have a `feature` shortcode that can be used to show, or hide sections of pages based on the current semantic version
 (set in config.toml, and overwritable by env variable).
 
-For example, to show a section only from 0.8.0 forwards: 
+For example, to show a section only from 1.24.0 forwards:
 
 ```markdown
-{{%/* feature publishVersion="0.8.0" */%}}
-  This is my special content that should only display >= 0.8.0
+{{%/* feature publishVersion="1.24.0" */%}}
+  This is my special content that should only display >= 1.24.0
 {{%/* /feature */%}}
 ```
 
-or to hide a section from 0.8.0 onward:
+or to hide a section from 1.24.0 onward:
 
 ```markdown
-{{%/* feature expiryVersion="0.8.0" */%}}
-  This is my special content that will be hidden >= 0.8.0
+{{%/* feature expiryVersion="1.24.0" */%}}
+  This is my special content that will be hidden >= 1.24.0
 {{%/* /feature */%}}
 ```
 

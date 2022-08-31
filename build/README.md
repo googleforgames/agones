@@ -19,6 +19,7 @@ Table of Contents
      * [Running a Test Minikube cluster](#running-a-test-minikube-cluster)
      * [Running a Test Kind cluster](#running-a-test-kind-cluster)
      * [Running a Custom Test Environment](#running-a-custom-test-environment)
+     * [Common Development Flows](#common-development-flows)
      * [Set Local Make Targets and Variables with `local-includes`](#set-local-make-targets-and-variables-with-local-includes)
      * [Running Individual End-to-End Tests](#running-individual-end-to-end-tests)
   * [Make Variable Reference](#make-variable-reference)
@@ -280,7 +281,16 @@ and makes cross-platform support for the build system much easier.
 To push your own images into the cluster, take a look at Minikube's
 [Pushing Images](https://minikube.sigs.k8s.io/docs/handbook/pushing/) guide.
 
-Running end-to-end tests on Minikube is done via the `make minikube-test-e2e` target. This target use the same `make test-e2e` but also setup some prerequisites for use with a Minikube cluster.
+Running end-to-end tests on Minikube can be done via the `make minikube-test-e2e` target, but this can often overwhelm  
+a local minikube cluster, so use at your own risk. Take a look at
+[Running Individual End-to-End Tests](#running-individual-end-to-end-tests) to run individual tests on a case by case 
+basis.
+
+If you are getting issues connecting to `GameServers` running on minikube, check the
+[Agones minikube](https://agones.dev/site/docs/installation/creating-cluster/minikube/) documentation. You may need to
+change the driver version through the `MINIKUBE_DRIVER` variable. See the
+[local-includes](#set-local-make-targets-and-variables-with-local-includes) on how to change this permanently on 
+your development machine.
 
 ### Running a Test Kind cluster
  This will setup a [Kubernetes IN Docker](https://github.com/kubernetes-sigs/kind) cluster named agones by default.
@@ -345,9 +355,16 @@ Now you're ready to begin the development/test cycle:
 - `make install` will install/upgrade Agones into your cluster
 - `make test-e2e` will run end-to-end tests in your cluster
 
-You can combine some of the above steps into a single one, for example `make build push install` or `make build push test-e2e`.
-
 If you need to clean up your cluster, you can use `make uninstall` to remove Agones.
+
+### Common Development Flows
+
+You can combine some of the above steps into a single one, for example `make build-images push install` is very
+common flow, to build you changes on Agones, push them to a container registry and install this development
+version to your cluster.
+
+Another would be to run `make lint test-go` to run the golang linter against the Go code, and then run all the unit 
+tests.
 
 ### Set Local Make Targets and Variables with `local-includes`
 
@@ -433,6 +450,12 @@ Build ARM64 container images for Agones
 
 This option is enabled by default via implicit `make WITH_ARM64=1 build-images`.
 To disable, use `make WITH_ARM64=0 build-images`.
+
+### MINIKUBE_DRIVER
+
+Which [driver](https://minikube.sigs.k8s.io/docs/drivers/) to use with a Minikube test cluster.
+
+Defaults to "docker".
 
 ## Make Target Reference
 
@@ -756,6 +779,9 @@ port forwarding to the grafana deployment.
 #### `make minikube-test-e2e`
 Runs end-to-end tests on the previously installed version of Agones.
 These tests validate Agones flow from start to finish.
+
+⚠ Running all the e2e tests can often overwhelm a local minikube cluster, so use at your own risk. You should look at
+[Running Individual End-to-End Tests](#running-individual-end-to-end-tests) to run tests on a case by case basis.
 
 #### `make minikube-shell`
 Connecting to Minikube requires so enhanced permissions, so use this target
