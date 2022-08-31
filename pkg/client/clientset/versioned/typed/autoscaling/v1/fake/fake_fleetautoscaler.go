@@ -117,7 +117,7 @@ func (c *FakeFleetAutoscalers) UpdateStatus(ctx context.Context, fleetAutoscaler
 // Delete takes name of the fleetAutoscaler and deletes it. Returns an error if one occurs.
 func (c *FakeFleetAutoscalers) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	_, err := c.Fake.
-		Invokes(testing.NewDeleteAction(fleetautoscalersResource, c.ns, name), &autoscalingv1.FleetAutoscaler{})
+		Invokes(testing.NewDeleteActionWithOptions(fleetautoscalersResource, c.ns, name, opts), &autoscalingv1.FleetAutoscaler{})
 
 	return err
 }
