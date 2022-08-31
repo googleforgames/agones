@@ -49,7 +49,7 @@ resource "helm_release" "agones" {
   ]
 
   set {
-    name  = "crds.CleanupOnDelete"
+    name  = "agones.crds.CleanupOnDelete"
     value = var.crd_cleanup
   }
 
