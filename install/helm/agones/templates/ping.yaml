@@ -25,6 +25,10 @@ metadata:
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
 spec:
+{{- if .Values.agones.ping.updateStrategy }}
+  strategy:
+{{- toYaml .Values.agones.ping.updateStrategy | nindent 4}}
+{{- end }}
   selector:
     matchLabels:
       agones.dev/role: ping
