@@ -25,7 +25,6 @@ agones:
     serviceMonitor:
       enabled: false
       interval: 30s
-      exposeMetricsPortsOnPods: false
   rbacEnabled: true
   registerServiceAccounts: true
   registerWebhooks: true
