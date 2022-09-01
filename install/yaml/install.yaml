@@ -14955,6 +14955,8 @@ spec:
         ports:
         - name: https
           containerPort: 8443
+        - name: http
+          containerPort:  8080
         volumeMounts:
         - mountPath: /home/allocator/tls
           name: tls
