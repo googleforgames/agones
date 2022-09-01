@@ -70,6 +70,18 @@ Follow the [Stackdriver Installation steps](#stackdriver-installation) to see yo
 | agones_k8s_client_workqueue_longest_running_processor | How long the longest running workqueue processor has been running in microseconds                                                                                                           | gauge     |
 | agones_k8s_client_workqueue_unfinished_work_seconds   | How long unfinished work has been sitting in the workqueue in seconds                                                                                                                       | gauge     |
 
+{{% feature publishVersion="1.26.0" %}}
+
+### Dropping Metric Labels
+
+{{% alpha title="Reset Metric Export on Fleet / Autoscaler deletion" gate="ResetMetricsOnDelete" %}}
+
+When a Fleet or FleetAutoscaler is deleted from the system, Agones will automatically clear metrics that utilise 
+their name as a label from the exported metrics, so the metrics exported do not continuously grow in size over the 
+lifecycle of the Agones installation.
+
+{{% /feature %}}
+
 ## Dashboard
 
 ### Grafana Dashboards
