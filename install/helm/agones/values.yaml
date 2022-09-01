@@ -95,6 +95,7 @@ agones:
     allocationBatchWaitTime: 500ms
   ping:
     install: true
+    updateStrategy: {}
     resources: {}
       # requests:
       #   cpu: 1
@@ -138,6 +139,7 @@ agones:
       timeoutSeconds: 1
   allocator:
     install: true
+    updateStrategy: {}
     apiServerQPS: 400
     apiServerQPSBurst: 500
     logLevel: info

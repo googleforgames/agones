@@ -209,14 +209,16 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `gameservers.minPort`                                    | Minimum port to use for dynamic port allocation                                                 | `7000`                 |
 | `gameservers.maxPort`                                    | Maximum port to use for dynamic port allocation                                                 | `8000`                 |
 | `gameservers.podPreserveUnknownFields`                   | Disable [field pruning][pruning] and schema validation on the Pod template for a [GameServer][gameserver] definition | `false`                |
-| `helm.installTests`                                      | Add an ability to run `helm test agones` to verify the installation                             | `8000`                 |
+| `helm.installTests`                                      | Add an ability to run `helm test agones` to verify the installation                             | `false`                |
 | `agones.controller.allocationBatchWaitTime`              | Wait time between each allocation batch when performing allocations in controller mode                                    | `500ms`                |
 
 {{% feature publishVersion="1.26.0" %}}
 **New Configuration Features:**
-| Parameter                                                | Description                                                                                                               | Default                |
-| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
-|                                                          |                                                                                                                           |                        |
+| Parameter                                                | Description                                                                                                                         | Default                |
+| -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
+| `agones.allocator.updateStrategy`                        | The [strategy](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy) to apply to the ping deployment      | `{}`                   |
+| `agones.ping.updateStrategy`                             | The [strategy](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy) to apply to the allocator deployment | `{}`                   |
+
 {{% /feature %}}
 
 [toleration]: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
