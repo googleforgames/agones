@@ -17,6 +17,10 @@ We plan to support multiple exporters in the future via environment variables an
 
 If you are running a [Prometheus](https://prometheus.io/) instance you just need to ensure that metrics and kubernetes service discovery are enabled. (helm chart values `agones.metrics.prometheusEnabled` and `agones.metrics.prometheusServiceDiscovery`). This will automatically add annotations required by Prometheus to discover Agones metrics and start collecting them. (see [example](https://github.com/prometheus/prometheus/tree/main/documentation/examples/kubernetes-rabbitmq))
 
+{{% feature publishVersion="1.26.0" %}}
+If your Prometheus metrics collection agent requires that you scrape from the pods directly(such as with [Google Cloud Managed Prometheus](https://cloud.google.com/stackdriver/docs/managed-prometheus)), then the metrics ports for the controller and allocator will both be named `http` and exposed on `8080`. In the case of the allocator, the port name and number can be overriden with the `agones.allocator.serviceMetrics.http.portName` and `agones.allocator.serviceMetrics.http.port` helm chart values.
+{{% /feature %}}
+
 ### Prometheus Operator
 
 If you have [Prometheus operator](https://github.com/coreos/prometheus-operator) installed in your cluster, just enable ServiceMonitor installation in values:
@@ -153,7 +157,7 @@ gcloud container node-pools create agones-metrics --cluster=... --zone=... \
 By default we will disable the push gateway (we don't need it for Agones) and other exporters.
 
 The helm chart supports
-[nodeSelector](https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#nodeselector), 
+[nodeSelector](https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#nodeselector),
 [affinity](https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity) and [toleration](https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/), you can use them to schedule Prometheus deployments on an isolated node(s) to have an homogeneous game servers workload.
 
 This will install a Prometheus Server in your current cluster with [Persistent Volume Claim](https://kubernetes.io/docs/concepts/storage/persistent-volumes/) (Deactivated for Minikube and Kind) for storing and querying time series, it will automatically start collecting metrics from Agones Controller.
@@ -184,8 +188,8 @@ First we will install [Agones dashboard](#grafana-dashboards) as [config maps](h
 kubectl apply -f ./build/grafana/
 ```
 
-Now we can install the 
-[Grafana Community Kubernetes Helm Charts](https://grafana.github.io/helm-charts/) from  
+Now we can install the
+[Grafana Community Kubernetes Helm Charts](https://grafana.github.io/helm-charts/) from
 their repository. (Replace `<your-admin-password>` with the admin password of your choice)
 
 ```bash

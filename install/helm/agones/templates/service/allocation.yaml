@@ -132,6 +132,10 @@ metadata:
     heritage: {{ .Release.Service }}
 spec:
   replicas: {{ .Values.agones.allocator.replicas }}
+{{- if .Values.agones.allocator.updateStrategy }}
+  strategy:
+{{- toYaml .Values.agones.allocator.updateStrategy | nindent 4}}
+{{- end }}
   selector:
     matchLabels:
       multicluster.agones.dev/role: allocator
@@ -257,6 +261,8 @@ spec:
         - name: {{ .Values.agones.allocator.service.grpc.portName }}
           containerPort: {{ .Values.agones.allocator.service.grpc.targetPort }}
         {{- end }}
+        - name: {{ .Values.agones.allocator.serviceMetrics.http.portName }}
+          containerPort:  {{ .Values.agones.allocator.serviceMetrics.http.port }}
         {{- if eq .Values.agones.allocator.disableTLS false }}
         volumeMounts:
         - mountPath: /home/allocator/tls
