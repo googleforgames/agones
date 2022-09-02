@@ -21,22 +21,17 @@ FROM debian:buster
 
 RUN apt-get update && apt-get install -y \
   build-essential autoconf libtool git pkg-config curl \
-  automake libtool curl make g++ unzip moreutils \
+  automake libtool curl make g++ unzip moreutils cmake \
   && apt-get clean
 
 ARG GRPC_RELEASE_TAG
 # install protobuf first, then grpc
-RUN git clone -b $GRPC_RELEASE_TAG --depth=5 https://github.com/grpc/grpc /var/local/git/grpc && \
+RUN git clone --recurse-submodules -b $GRPC_RELEASE_TAG --depth 1 --shallow-submodules https://github.com/grpc/grpc /var/local/git/grpc && \
     cd /var/local/git/grpc && \
-    git submodule update --init && \
-    echo "--- installing protobuf ---" && \
-    cd third_party/protobuf && \
-    ./autogen.sh && ./configure --enable-shared && \
-    make -j4 && make install && make clean && ldconfig && \
-    export CFLAGS=-Wno-error && export CXXFLAGS=-Wno-error && \
-    echo "--- installing grpc ---" && \
-    cd /var/local/git/grpc && \
-    make -j4 && make install && make clean && ldconfig
+    mkdir -p cmake/build && \
+    cd cmake/build && \
+    cmake -DgRPC_INSTALL=ON -DgRPC_BUILD_TESTS=OFF ../.. && \
+    make -j && make install
 
 WORKDIR /go/src/agones.dev/agones
 
