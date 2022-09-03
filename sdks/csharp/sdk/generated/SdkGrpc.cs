@@ -30,10 +30,40 @@ namespace Agones.Dev.Sdk {
   {
     static readonly string __ServiceName = "agones.dev.sdk.SDK";
 
-    static readonly grpc::Marshaller<global::Agones.Dev.Sdk.Empty> __Marshaller_agones_dev_sdk_Empty = grpc::Marshallers.Create((arg) => global::Google.Protobuf.MessageExtensions.ToByteArray(arg), global::Agones.Dev.Sdk.Empty.Parser.ParseFrom);
-    static readonly grpc::Marshaller<global::Agones.Dev.Sdk.GameServer> __Marshaller_agones_dev_sdk_GameServer = grpc::Marshallers.Create((arg) => global::Google.Protobuf.MessageExtensions.ToByteArray(arg), global::Agones.Dev.Sdk.GameServer.Parser.ParseFrom);
-    static readonly grpc::Marshaller<global::Agones.Dev.Sdk.KeyValue> __Marshaller_agones_dev_sdk_KeyValue = grpc::Marshallers.Create((arg) => global::Google.Protobuf.MessageExtensions.ToByteArray(arg), global::Agones.Dev.Sdk.KeyValue.Parser.ParseFrom);
-    static readonly grpc::Marshaller<global::Agones.Dev.Sdk.Duration> __Marshaller_agones_dev_sdk_Duration = grpc::Marshallers.Create((arg) => global::Google.Protobuf.MessageExtensions.ToByteArray(arg), global::Agones.Dev.Sdk.Duration.Parser.ParseFrom);
+    static void __Helper_SerializeMessage(global::Google.Protobuf.IMessage message, grpc::SerializationContext context)
+    {
+      #if !GRPC_DISABLE_PROTOBUF_BUFFER_SERIALIZATION
+      if (message is global::Google.Protobuf.IBufferMessage)
+      {
+        context.SetPayloadLength(message.CalculateSize());
+        global::Google.Protobuf.MessageExtensions.WriteTo(message, context.GetBufferWriter());
+        context.Complete();
+        return;
+      }
+      #endif
+      context.Complete(global::Google.Protobuf.MessageExtensions.ToByteArray(message));
+    }
+
+    static class __Helper_MessageCache<T>
+    {
+      public static readonly bool IsBufferMessage = global::System.Reflection.IntrospectionExtensions.GetTypeInfo(typeof(global::Google.Protobuf.IBufferMessage)).IsAssignableFrom(typeof(T));
+    }
+
+    static T __Helper_DeserializeMessage<T>(grpc::DeserializationContext context, global::Google.Protobuf.MessageParser<T> parser) where T : global::Google.Protobuf.IMessage<T>
+    {
+      #if !GRPC_DISABLE_PROTOBUF_BUFFER_SERIALIZATION
+      if (__Helper_MessageCache<T>.IsBufferMessage)
+      {
+        return parser.ParseFrom(context.PayloadAsReadOnlySequence());
+      }
+      #endif
+      return parser.ParseFrom(context.PayloadAsNewBuffer());
+    }
+
+    static readonly grpc::Marshaller<global::Agones.Dev.Sdk.Empty> __Marshaller_agones_dev_sdk_Empty = grpc::Marshallers.Create(__Helper_SerializeMessage, context => __Helper_DeserializeMessage(context, global::Agones.Dev.Sdk.Empty.Parser));
+    static readonly grpc::Marshaller<global::Agones.Dev.Sdk.GameServer> __Marshaller_agones_dev_sdk_GameServer = grpc::Marshallers.Create(__Helper_SerializeMessage, context => __Helper_DeserializeMessage(context, global::Agones.Dev.Sdk.GameServer.Parser));
+    static readonly grpc::Marshaller<global::Agones.Dev.Sdk.KeyValue> __Marshaller_agones_dev_sdk_KeyValue = grpc::Marshallers.Create(__Helper_SerializeMessage, context => __Helper_DeserializeMessage(context, global::Agones.Dev.Sdk.KeyValue.Parser));
+    static readonly grpc::Marshaller<global::Agones.Dev.Sdk.Duration> __Marshaller_agones_dev_sdk_Duration = grpc::Marshallers.Create(__Helper_SerializeMessage, context => __Helper_DeserializeMessage(context, global::Agones.Dev.Sdk.Duration.Parser));
 
     static readonly grpc::Method<global::Agones.Dev.Sdk.Empty, global::Agones.Dev.Sdk.Empty> __Method_Ready = new grpc::Method<global::Agones.Dev.Sdk.Empty, global::Agones.Dev.Sdk.Empty>(
         grpc::MethodType.Unary,
@@ -105,6 +135,7 @@ namespace Agones.Dev.Sdk {
     }
 
     /// <summary>Base class for server-side implementations of SDK</summary>
+    [grpc::BindServiceMethod(typeof(SDK), "BindService")]
     public abstract partial class SDKBase
     {
       /// <summary>
@@ -214,7 +245,7 @@ namespace Agones.Dev.Sdk {
     {
       /// <summary>Creates a new client for SDK</summary>
       /// <param name="channel">The channel to use to make remote calls.</param>
-      public SDKClient(grpc::Channel channel) : base(channel)
+      public SDKClient(grpc::ChannelBase channel) : base(channel)
       {
       }
       /// <summary>Creates a new client for SDK that uses a custom <c>CallInvoker</c>.</summary>
