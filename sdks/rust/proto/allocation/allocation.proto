@@ -34,12 +34,16 @@ message AllocationRequest {
   // If specified, multi-cluster policies are applied. Otherwise, allocation will happen locally.
   MultiClusterSetting multiClusterSetting = 2;
 
+  // Deprecated: Please use gameServerSelectors instead. This field is ignored if the
+  // gameServerSelectors field is set
   // The required allocation. Defaults to all GameServers.
-  LabelSelector requiredGameServerSelector = 3;
+  GameServerSelector requiredGameServerSelector = 3 [deprecated = true];
 
+  // Deprecated: Please use gameServerSelectors instead. This field is ignored if the
+  // gameServerSelectors field is set
   // The ordered list of preferred allocations out of the `required` set.
   // If the first selector is not matched, the selection attempts the second selector, and so on.
-  repeated LabelSelector preferredGameServerSelectors = 4;
+  repeated GameServerSelector preferredGameServerSelectors = 4 [deprecated = true];
 
   // Scheduling strategy. Defaults to "Packed".
   SchedulingStrategy scheduling = 5;
@@ -55,6 +59,12 @@ message AllocationRequest {
   // Metadata is optional custom metadata that is added to the game server at
   // allocation. You can use this to tell the server necessary session data
   MetaPatch metadata = 7;
+
+  // Ordered list of GameServer label selectors.
+  // If the first selector is not matched, the selection attempts the second selector, and so on.
+  // This is useful for things like smoke testing of new game servers.
+  // Note: This field can only be set if neither Required or Preferred is set.
+  repeated GameServerSelector gameServerSelectors = 8;
 }
 
 message AllocationResponse {
@@ -78,7 +88,7 @@ message MultiClusterSetting {
     // Selects multi-cluster allocation policies to apply. If not specified, all multi-cluster allocation policies are to be applied.
     LabelSelector policySelector = 2;
 }
-   
+
 // MetaPatch is the metadata used to patch the GameServer metadata on allocation
 message MetaPatch {
     map<string, string> labels = 1;
@@ -88,5 +98,24 @@ message MetaPatch {
 // LabelSelector used for finding a GameServer with matching labels.
 message LabelSelector {
   // Labels to match.
-	map<string, string> matchLabels = 1;
+  map<string, string> matchLabels = 1;
+}
+
+// GameServerSelector used for finding a GameServer with matching filters.
+message GameServerSelector {
+  // Labels to match.
+  map<string, string> matchLabels = 1;
+  enum GameServerState {
+    READY = 0;
+    ALLOCATED = 1;
+  };
+  GameServerState gameServerState = 2;
+  PlayerSelector players = 3;
+}
+
+// PlayerSelector is filter for player capacity values.
+// minAvailable should always be less or equal to maxAvailable.
+message PlayerSelector {
+  uint64 minAvailable = 1;
+  uint64 maxAvailable = 2;
 }
