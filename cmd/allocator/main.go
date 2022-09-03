@@ -126,7 +126,10 @@ func parseEnvFlags() config {
 	runtime.Must(viper.BindEnv(stackdriverLabels))
 	runtime.Must(viper.BindEnv(mTLSDisabledFlag))
 	runtime.Must(viper.BindEnv(tlsDisabledFlag))
+	runtime.Must(viper.BindEnv(remoteAllocationTimeoutFlag))
+	runtime.Must(viper.BindEnv(totalRemoteAllocationTimeoutFlag))
 	runtime.Must(viper.BindEnv(logLevelFlag))
+	runtime.Must(viper.BindEnv(allocationBatchWaitTime))
 	runtime.Must(viper.BindPFlags(pflag.CommandLine))
 	runtime.Must(runtime.FeaturesBindEnv())
 
