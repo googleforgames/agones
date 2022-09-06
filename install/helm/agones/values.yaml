@@ -205,7 +205,7 @@ agones:
     allocationBatchWaitTime: 500ms
   image:
     registry: gcr.io/agones-images
-    tag: 1.26.0-dev
+    tag: 1.26.0-rc
     controller:
       name: agones-controller
       pullPolicy: IfNotPresent
