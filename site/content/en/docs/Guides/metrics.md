@@ -69,7 +69,6 @@ Follow the [Stackdriver Installation steps](#stackdriver-installation) to see yo
 | agones_k8s_client_workqueue_longest_running_processor | How long the longest running workqueue processor has been running in microseconds                                                                                                           | gauge     |
 | agones_k8s_client_workqueue_unfinished_work_seconds   | How long unfinished work has been sitting in the workqueue in seconds                                                                                                                       | gauge     |
 
-{{% feature publishVersion="1.26.0" %}}
 
 ### Dropping Metric Labels
 
