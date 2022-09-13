@@ -11,7 +11,6 @@ A full `GameServerAllocation` specification is available below and in the
 {{< ghlink href="/examples/gameserverallocation.yaml" >}}example folder{{< /ghlink >}} for reference:
 
 
-{{% feature expiryVersion="1.26.0" %}}
 {{< tabpane >}}
   {{< tab header="selectors" lang="yaml" >}}
 apiVersion: "allocation.agones.dev/v1"
