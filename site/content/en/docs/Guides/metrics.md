@@ -17,7 +17,6 @@ We plan to support multiple exporters in the future via environment variables an
 
 If you are running a [Prometheus](https://prometheus.io/) instance you just need to ensure that metrics and kubernetes service discovery are enabled. (helm chart values `agones.metrics.prometheusEnabled` and `agones.metrics.prometheusServiceDiscovery`). This will automatically add annotations required by Prometheus to discover Agones metrics and start collecting them. (see [example](https://github.com/prometheus/prometheus/tree/main/documentation/examples/kubernetes-rabbitmq))
 
-{{% feature publishVersion="1.26.0" %}}
 If your Prometheus metrics collection agent requires that you scrape from the pods directly(such as with [Google Cloud Managed Prometheus](https://cloud.google.com/stackdriver/docs/managed-prometheus)), then the metrics ports for the controller and allocator will both be named `http` and exposed on `8080`. In the case of the allocator, the port name and number can be overriden with the `agones.allocator.serviceMetrics.http.portName` and `agones.allocator.serviceMetrics.http.port` helm chart values.
 
 ### Prometheus Operator
