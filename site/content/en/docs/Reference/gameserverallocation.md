@@ -127,8 +127,6 @@ spec:
       map:  garden22
   {{< /tab >}}
 {{< /tabpane >}}
-{{% /feature %}}
-{{% feature publishVersion="1.26.0" %}}
 {{< tabpane >}}
   {{< tab header="selectors" lang="yaml" >}}
 apiVersion: "allocation.agones.dev/v1"
@@ -243,8 +241,7 @@ spec:
     annotations:
       map:  garden22
   {{< /tab >}}
-{{< /tabpane >}} 
-{{% /feature %}}
+{{< /tabpane >}}
 
 The `spec` field is the actual `GameServerAllocation` specification, and it is composed as follows:
 

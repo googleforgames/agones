@@ -19,7 +19,6 @@ If you are running a [Prometheus](https://prometheus.io/) instance you just need
 
 {{% feature publishVersion="1.26.0" %}}
 If your Prometheus metrics collection agent requires that you scrape from the pods directly(such as with [Google Cloud Managed Prometheus](https://cloud.google.com/stackdriver/docs/managed-prometheus)), then the metrics ports for the controller and allocator will both be named `http` and exposed on `8080`. In the case of the allocator, the port name and number can be overriden with the `agones.allocator.serviceMetrics.http.portName` and `agones.allocator.serviceMetrics.http.port` helm chart values.
-{{% /feature %}}
 
 ### Prometheus Operator
 
@@ -80,7 +79,6 @@ When a Fleet or FleetAutoscaler is deleted from the system, Agones will automati
 their name as a label from the exported metrics, so the metrics exported do not continuously grow in size over the 
 lifecycle of the Agones installation.
 
-{{% /feature %}}
 
 ## Dashboard
 
