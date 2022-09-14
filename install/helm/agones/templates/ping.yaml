@@ -90,6 +90,22 @@ spec:
       imagePullSecrets:
         - name: {{.Values.agones.image.controller.pullSecret}}
 {{- end }}
+{{- if .Values.agones.ping.pdb.enabled }}
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: agones-ping-pdb
+spec:
+  minAvailable: {{ .Values.agones.ping.pdb.minAvailable }}
+  maxUnavailable: {{ .Values.agones.ping.pdb.maxUnavailable }}
+  selector:
+    matchLabels:
+      agones.dev/role: ping
+      app: {{ template "agones.name" . }}
+      release: {{ .Release.Name }}
+      heritage: {{ .Release.Service }}
+{{- end }}
   {{- if .Values.agones.ping.http.expose }}
 ---
 apiVersion: v1
