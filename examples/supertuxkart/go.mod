@@ -1,6 +1,6 @@
 module supertuxkart
 
-go 1.17
+go 1.19
 
 require (
 	agones.dev/agones v1.8.0
