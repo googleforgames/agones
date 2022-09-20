@@ -50,7 +50,7 @@ spec:
       #serviceAccount: autoscaler-webhook
       containers:
       - name: autoscaler-webhook
-        image: gcr.io/agones-images/autoscaler-webhook:0.4
+        image: gcr.io/agones-images/autoscaler-webhook:0.5
         imagePullPolicy: Always
         ports:
         - name: autoscaler

@@ -27,7 +27,7 @@ REPOSITORY = gcr.io/agones-images
 
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_path := $(dir $(mkfile_path))
-autoscaler_webhook_tag = $(REPOSITORY)/autoscaler-webhook:0.4
+autoscaler_webhook_tag = $(REPOSITORY)/autoscaler-webhook:0.5
 root_path = $(realpath $(project_path)/../..)
 
 #   _____                    _

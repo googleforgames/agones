@@ -37,7 +37,7 @@ WITH_ARM64=1
 
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_path := $(dir $(mkfile_path))
-server_tag = $(REGISTRY)/simple-game-server:0.13
+server_tag = $(REGISTRY)/simple-game-server:0.14
 
 ifeq ($(WITH_WINDOWS), 1)
 server_tag_linux_amd64 = $(server_tag)-linux-amd64
