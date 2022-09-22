@@ -1074,21 +1074,23 @@ func TestScaleUpAndDownInParallelStressTest(t *testing.T) {
 	defer scaleDownStats.Report()
 
 	for fleetNumber := 0; fleetNumber < fleetCount; fleetNumber++ {
-		flt := defaultFleet(framework.Namespace)
-		flt.ObjectMeta.GenerateName = fmt.Sprintf("scale-fleet-%v-", fleetNumber)
-		if fleetNumber%2 == 0 {
-			// even-numbered fleets starts at fleetSize and are scaled down to zero and back.
-			flt.Spec.Replicas = fleetSize
-		} else {
-			// odd-numbered fleets starts at default 1 replica and are scaled up to fleetSize and back.
-			flt.Spec.Replicas = defaultReplicas
-		}
+		func() {
+			flt := defaultFleet(framework.Namespace)
+			flt.ObjectMeta.GenerateName = fmt.Sprintf("scale-fleet-%v-", fleetNumber)
+			if fleetNumber%2 == 0 {
+				// even-numbered fleets starts at fleetSize and are scaled down to zero and back.
+				flt.Spec.Replicas = fleetSize
+			} else {
+				// odd-numbered fleets starts at default 1 replica and are scaled up to fleetSize and back.
+				flt.Spec.Replicas = defaultReplicas
+			}
 
-		flt, err := client.Fleets(framework.Namespace).Create(ctx, flt, metav1.CreateOptions{})
-		if assert.Nil(t, err) {
-			defer client.Fleets(framework.Namespace).Delete(ctx, flt.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
-		}
-		fleets = append(fleets, flt)
+			flt, err := client.Fleets(framework.Namespace).Create(ctx, flt, metav1.CreateOptions{})
+			if assert.Nil(t, err) {
+				defer client.Fleets(framework.Namespace).Delete(ctx, flt.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
+			}
+			fleets = append(fleets, flt)
+		}()
 	}
 
 	// wait for initial fleet conditions.

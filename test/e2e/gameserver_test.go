@@ -395,20 +395,22 @@ func TestGameServerUnhealthyAfterReadyCrash(t *testing.T) {
 	}()
 	go func() {
 		for {
-			if atomic.LoadInt32(&stop) > 0 {
-				l.Info("UDP Crash stop signal received. Stopping.")
-				return
-			}
-			conn, err := net.Dial("udp", address)
-			assert.NoError(t, err)
-			defer conn.Close() // nolint: errcheck
-			_, err = conn.Write([]byte("CRASH"))
-			if err != nil {
-				l.WithError(err).Warn("error sending udp packet. Stopping.")
-				return
-			}
-			l.WithField("address", address).Info("sent UDP packet")
-			time.Sleep(5 * time.Second)
+			func() {
+				if atomic.LoadInt32(&stop) > 0 {
+					l.Info("UDP Crash stop signal received. Stopping.")
+					return
+				}
+				conn, err := net.Dial("udp", address)
+				assert.NoError(t, err)
+				defer conn.Close() // nolint: errcheck
+				_, err = conn.Write([]byte("CRASH"))
+				if err != nil {
+					l.WithError(err).Warn("error sending udp packet. Stopping.")
+					return
+				}
+				l.WithField("address", address).Info("sent UDP packet")
+				time.Sleep(5 * time.Second)
+			}()
 		}
 	}()
 	_, err = framework.WaitForGameServerState(t, readyGs, agonesv1.GameServerStateUnhealthy, 3*time.Minute)
