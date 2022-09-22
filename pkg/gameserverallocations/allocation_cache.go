@@ -79,14 +79,13 @@ func NewAllocationCache(informer informerv1.GameServerInformer, counter *gameser
 			if !ok {
 				return
 			}
-			if newGs.IsBeingDeleted() {
+			switch {
+			case newGs.IsBeingDeleted():
 				c.cache.Delete(key)
-			} else if c.matcher(oldGs) || c.matcher(newGs) {
-				if c.matcher(newGs) {
-					c.cache.Store(key, newGs)
-				} else {
-					c.cache.Delete(key)
-				}
+			case c.matcher(newGs):
+				c.cache.Store(key, newGs)
+			case c.matcher(oldGs):
+				c.cache.Delete(key)
 			}
 		},
 		DeleteFunc: func(obj interface{}) {
