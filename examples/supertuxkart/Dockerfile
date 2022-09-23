@@ -13,7 +13,7 @@
 # limitations under the License.
 
 # build go
-FROM golang:1.17.2 as go-builder
+FROM golang:1.19.1 as go-builder
 WORKDIR /go/src/supertuxkart
 
 COPY main.go go.mod ./

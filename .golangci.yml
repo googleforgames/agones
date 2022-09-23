@@ -80,6 +80,8 @@ linters-settings:
       rangeValCopy:
         sizeThreshold: 512
         skipTestFuncs: true
+  revive:
+    confidence: 0.8
 
 issues:
   # This turns off the default excludes - which was causing the linter
@@ -87,3 +89,4 @@ issues:
   exclude-use-default: false
   exclude:
     - Using the variable on range scope .* in function literal
+    - "SA1019: \"io/ioutil\" has been deprecated since Go 1.16"

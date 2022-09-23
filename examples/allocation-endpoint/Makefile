@@ -28,7 +28,7 @@ REPOSITORY = gcr.io/agones-images
 # Directory that this Makefile is in.
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_path := $(dir $(mkfile_path))
-server_tag = $(REPOSITORY)/allocation-endpoint-proxy:0.1
+server_tag = $(REPOSITORY)/allocation-endpoint-proxy:0.2
 root_path = $(realpath $(project_path)/../..)
 
 #   _____                    _

@@ -1,6 +1,6 @@
 module terraform
 
-go 1.17
+go 1.19
 
 require (
 	github.com/gruntwork-io/terratest v0.40.17

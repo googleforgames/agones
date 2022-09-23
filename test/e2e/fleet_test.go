@@ -1086,7 +1086,7 @@ func TestScaleUpAndDownInParallelStressTest(t *testing.T) {
 
 		flt, err := client.Fleets(framework.Namespace).Create(ctx, flt, metav1.CreateOptions{})
 		if assert.Nil(t, err) {
-			defer client.Fleets(framework.Namespace).Delete(ctx, flt.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
+			defer client.Fleets(framework.Namespace).Delete(ctx, flt.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint
 		}
 		fleets = append(fleets, flt)
 	}

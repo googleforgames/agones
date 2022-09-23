@@ -399,11 +399,14 @@ func TestGameServerUnhealthyAfterReadyCrash(t *testing.T) {
 				l.Info("UDP Crash stop signal received. Stopping.")
 				return
 			}
-			conn, err := net.Dial("udp", address)
-			assert.NoError(t, err)
-			defer conn.Close() // nolint: errcheck
-			_, err = conn.Write([]byte("CRASH"))
-			if err != nil {
+			var writeErr error
+			func() {
+				conn, err := net.Dial("udp", address)
+				assert.NoError(t, err)
+				defer conn.Close() // nolint: errcheck
+				_, writeErr = conn.Write([]byte("CRASH"))
+			}()
+			if writeErr != nil {
 				l.WithError(err).Warn("error sending udp packet. Stopping.")
 				return
 			}
