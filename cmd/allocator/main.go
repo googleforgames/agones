@@ -18,7 +18,6 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"os"
@@ -574,17 +573,17 @@ func getCACertPool(path string) (*x509.CertPool, error) {
 	// Add all certificates under client-certs path because there could be multiple clusters
 	// and all client certs should be added.
 	caCertPool := x509.NewCertPool()
-	filesInfo, err := ioutil.ReadDir(path)
+	dirEntries, err := os.ReadDir(path)
 	if err != nil {
 		return nil, fmt.Errorf("error reading certs from dir %s: %s", path, err.Error())
 	}
 
-	for _, file := range filesInfo {
-		if !strings.HasSuffix(file.Name(), ".crt") && !strings.HasSuffix(file.Name(), ".pem") {
+	for _, dirEntry := range dirEntries {
+		if !strings.HasSuffix(dirEntry.Name(), ".crt") && !strings.HasSuffix(dirEntry.Name(), ".pem") {
 			continue
 		}
-		certFile := filepath.Join(path, file.Name())
-		caCert, err := ioutil.ReadFile(certFile)
+		certFile := filepath.Join(path, dirEntry.Name())
+		caCert, err := os.ReadFile(certFile)
 		if err != nil {
 			logger.Errorf("CA cert is not readable or missing: %s", err.Error())
 			continue

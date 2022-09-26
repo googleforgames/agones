@@ -89,4 +89,4 @@ issues:
   exclude-use-default: false
   exclude:
     - Using the variable on range scope .* in function literal
-    - "SA1019: \"io/ioutil\" has been deprecated since Go 1.16"
+#    - "SA1019: \"io/ioutil\" has been deprecated since Go 1.16"

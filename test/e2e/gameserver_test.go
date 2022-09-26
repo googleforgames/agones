@@ -18,8 +18,8 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io/ioutil"
 	"net"
+	"os"
 	"os/exec"
 	"strings"
 	"sync/atomic"
@@ -928,7 +928,7 @@ spec:
         - name: simple-game-server
           image: gcr.io/agones-images/simple-game-server:0.14
 `
-	err := ioutil.WriteFile("/tmp/invalid.yaml", []byte(gsYaml), 0o644)
+	err := os.WriteFile("/tmp/invalid.yaml", []byte(gsYaml), 0o644)
 	require.NoError(t, err)
 
 	cmd := exec.Command("kubectl", "apply", "-f", "/tmp/invalid.yaml")

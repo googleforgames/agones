@@ -16,7 +16,7 @@ package apiserver
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -148,7 +148,7 @@ func TestAPIServerAddAPIResourceDiscovery(t *testing.T) {
 		assert.Equal(t, "application/vnd.kubernetes.protobuf", resp.Header.Get("Content-Type"))
 
 		list := &metav1.APIResourceList{}
-		b, err := ioutil.ReadAll(resp.Body)
+		b, err := io.ReadAll(resp.Body)
 		assert.NoError(t, err)
 
 		info, ok := k8sruntime.SerializerInfoForMediaType(Codecs.SupportedMediaTypes(), "application/vnd.kubernetes.protobuf")

@@ -25,7 +25,7 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"math/big"
 	"net"
 	"net/http"
@@ -291,7 +291,7 @@ func TestRestAllocatorWithDeprecatedRequired(t *testing.T) {
 			logrus.WithError(err).Info("failed Allocate rest request")
 			return false, nil
 		}
-		body, err := ioutil.ReadAll(resp.Body)
+		body, err := io.ReadAll(resp.Body)
 		if err != nil {
 			logrus.WithError(err).Info("failed to read Allocate response body")
 			return false, nil
@@ -355,7 +355,7 @@ func TestRestAllocatorWithSelectors(t *testing.T) {
 			logrus.WithError(err).Info("failed Allocate rest request")
 			return false, nil
 		}
-		body, err := ioutil.ReadAll(resp.Body)
+		body, err := io.ReadAll(resp.Body)
 		if err != nil {
 			logrus.WithError(err).Info("failed to read Allocate response body")
 			return false, nil
