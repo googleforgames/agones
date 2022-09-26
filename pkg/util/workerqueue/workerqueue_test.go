@@ -16,7 +16,7 @@ package workerqueue
 
 import (
 	"context"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -139,7 +139,7 @@ func TestWorkQueueHealthCheck(t *testing.T) {
 				return false, nil
 			}
 
-			body, err := ioutil.ReadAll(resp.Body)
+			body, err := io.ReadAll(resp.Body)
 			assert.Nil(t, err)
 			assert.Equal(t, status, resp.StatusCode)
 			assert.Equal(t, []byte("{}\n"), body)

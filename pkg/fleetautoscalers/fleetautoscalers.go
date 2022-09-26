@@ -21,7 +21,7 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"math"
 	"net/http"
 	"net/url"
@@ -173,7 +173,7 @@ func applyWebhookPolicy(w *autoscalingv1.WebhookPolicy, f *agonesv1.Fleet) (repl
 	if res.StatusCode != http.StatusOK {
 		return 0, false, fmt.Errorf("bad status code %d from the server: %s", res.StatusCode, u.String())
 	}
-	result, err := ioutil.ReadAll(res.Body)
+	result, err := io.ReadAll(res.Body)
 	if err != nil {
 		return 0, false, err
 	}

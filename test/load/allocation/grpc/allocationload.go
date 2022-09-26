@@ -21,7 +21,7 @@ import (
 	"crypto/x509"
 	"flag"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"sync"
 	"time"
 
@@ -45,15 +45,15 @@ func main() {
 	flag.Parse()
 
 	endpoint := *externalIP + ":" + *port
-	cert, err := ioutil.ReadFile(*certFile)
+	cert, err := os.ReadFile(*certFile)
 	if err != nil {
 		panic(err)
 	}
-	key, err := ioutil.ReadFile(*keyFile)
+	key, err := os.ReadFile(*keyFile)
 	if err != nil {
 		panic(err)
 	}
-	cacert, err := ioutil.ReadFile(*cacertFile)
+	cacert, err := os.ReadFile(*cacertFile)
 	if err != nil {
 		panic(err)
 	}

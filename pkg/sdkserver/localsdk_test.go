@@ -18,7 +18,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strconv"
 	"sync"
@@ -309,7 +308,7 @@ func TestLocalSDKServerWatchGameServer(t *testing.T) {
 	j, err := json.Marshal(fixture)
 	assert.Nil(t, err)
 
-	err = ioutil.WriteFile(path, j, os.ModeDevice)
+	err = os.WriteFile(path, j, os.ModeDevice)
 	assert.Nil(t, err)
 
 	assertWatchUpdate(t, stream, "bar", func(gs *sdk.GameServer) interface{} {
@@ -705,7 +704,7 @@ func TestAlphaSDKConformanceFunctionality(t *testing.T) {
 }
 
 func gsToTmpFile(gs *agonesv1.GameServer) (string, error) {
-	file, err := ioutil.TempFile(os.TempDir(), "gameserver-")
+	file, err := os.CreateTemp(os.TempDir(), "gameserver-")
 	if err != nil {
 		return file.Name(), err
 	}
