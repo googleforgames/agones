@@ -25,11 +25,11 @@ spec:
   serviceAccountName: agones-controller
   containers:
   - name: create-gameserver
-    image: gcr.io/agones-images/crd-client:0.6
+    image: gcr.io/agones-images/crd-client:0.7
     imagePullPolicy: Always
     env:
     - name: GAMESERVER_IMAGE
-      value: "gcr.io/agones-images/simple-game-server:0.13"
+      value: "gcr.io/agones-images/simple-game-server:0.14"
     - name: IS_HELM_TEST
       value: "true"
     - name: GAMESERVERS_NAMESPACE
