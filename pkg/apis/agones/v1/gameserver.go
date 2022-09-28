@@ -99,6 +99,10 @@ const (
 	// becomes ready, so we can track when restarts should occur and when a GameServer
 	// should be moved to Unhealthy.
 	GameServerReadyContainerIDAnnotation = agones.GroupName + "/ready-container-id"
+	// PodSafeToEvictAnnotation is an annotation that the Kubernetes cluster autoscaler uses to
+	// determine if a pod can safely be evicted to compact a cluster by moving pods between nodes
+	// and scaling down nodes.
+	PodSafeToEvictAnnotation = "cluster-autoscaler.kubernetes.io/safe-to-evict"
 )
 
 var (
@@ -632,7 +636,7 @@ func (gs *GameServer) podObjectMeta(pod *corev1.Pod) {
 		pod.ObjectMeta.Labels = make(map[string]string, 2)
 	}
 	if pod.ObjectMeta.Annotations == nil {
-		pod.ObjectMeta.Annotations = make(map[string]string, 1)
+		pod.ObjectMeta.Annotations = make(map[string]string, 2)
 	}
 	pod.ObjectMeta.Labels[RoleLabel] = GameServerLabelRole
 	// store the GameServer name as a label, for easy lookup later on
@@ -642,10 +646,13 @@ func (gs *GameServer) podObjectMeta(pod *corev1.Pod) {
 	ref := metav1.NewControllerRef(gs, SchemeGroupVersion.WithKind("GameServer"))
 	pod.ObjectMeta.OwnerReferences = append(pod.ObjectMeta.OwnerReferences, *ref)
 
-	if gs.Spec.Scheduling == apis.Packed {
-		// This means that the autoscaler cannot remove the Node that this Pod is on.
-		// (and evict the Pod in the process)
-		pod.ObjectMeta.Annotations["cluster-autoscaler.kubernetes.io/safe-to-evict"] = "false"
+	// This means that the autoscaler cannot remove the Node that this Pod is on.
+	// (and evict the Pod in the process). Only set the value if it has not already
+	// been configured in the pod template (to not override user specified behavior).
+	// We only set this for packed game servers, under the assumption that if
+	// game servers are distributed then the cluster autoscaler isn't likely running.
+	if _, exists := pod.ObjectMeta.Annotations[PodSafeToEvictAnnotation]; !exists && gs.Spec.Scheduling == apis.Packed {
+		pod.ObjectMeta.Annotations[PodSafeToEvictAnnotation] = "false"
 	}
 
 	// Add Agones version into Pod Annotations
