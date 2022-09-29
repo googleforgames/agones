@@ -32,3 +32,8 @@ List of items to do for upgrading to {version}:
     - [ ] Regenerate crd api reference docs - `make gen-api-docs`
 - [ ] Regenerate Kubernetes resource includes (e.g. ObjectMeta, PodTemplateSpec)
     - [ ] Start a cluster with `make gcloud-test-cluster`, uninstall agones using `helm uninstall agones -n agones-system`, and then run  `make gen-embedded-openapi` and `make gen-install`
+- [ ] If client-go pulled in a new version of gRPC, then also
+    - [ ] Update the SDK [base image grpc version](https://github.com/googleforgames/agones/blob/main/build/includes/sdk.mk#L30) and rebuild the image. Note that this can take a while and in the past we have had to manually push it to gcr because cloud build doesn't like how long it takes.
+    - [ ] Regenerate allocated API endpoints: [make gen-allocation-grpc](https://github.com/googleforgames/agones/blob/main/build/includes/allocation.mk#L55)
+    - [ ] Regenerate all client sdks: [make gen-all-sdk-grpc](https://github.com/googleforgames/agones/blob/main/build/README.md#make-gen-all-sdk-grpc)
+    - [ ] Update the version number in C++ Cmake scripts [here](https://github.com/googleforgames/agones/blob/main/sdks/cpp/CMakeLists.txt#L100) and [here](https://github.com/googleforgames/agones/blob/main/sdks/cpp/cmake/prerequisites.cmake#L34)
