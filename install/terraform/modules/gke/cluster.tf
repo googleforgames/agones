@@ -27,6 +27,7 @@ locals {
   name                    = lookup(var.cluster, "name", "test-cluster")
   machineType             = lookup(var.cluster, "machineType", "e2-standard-4")
   initialNodeCount        = lookup(var.cluster, "initialNodeCount", "4")
+  enableImageStreaming    = lookup(var.cluster, "enableImageStreaming", true)
   network                 = lookup(var.cluster, "network", "default")
   subnetwork              = lookup(var.cluster, "subnetwork", "")
   kubernetesVersion       = lookup(var.cluster, "kubernetesVersion", "1.23")
@@ -84,6 +85,10 @@ resource "google_container_cluster" "primary" {
       ]
 
       tags = ["game-server"]
+
+      gcfs_config {
+        enabled = local.enableImageStreaming
+      }
     }
   }
   node_pool {
@@ -116,6 +121,10 @@ resource "google_container_cluster" "primary" {
         value  = "true"
         effect = "NO_EXECUTE"
       }
+
+      gcfs_config {
+        enabled = true
+      }
     }
   }
   node_pool {
@@ -147,6 +156,10 @@ resource "google_container_cluster" "primary" {
         key    = "agones.dev/agones-metrics"
         value  = "true"
         effect = "NO_EXECUTE"
+      }
+
+      gcfs_config {
+        enabled = true
       }
     }
   }

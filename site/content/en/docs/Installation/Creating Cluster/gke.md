@@ -88,6 +88,7 @@ gcloud container clusters create [CLUSTER_NAME] --cluster-version={{% k8s-versio
   --scopes=gke-default \
   --num-nodes=4 \
   --no-enable-autoupgrade \
+  --enable-image-streaming \
   --machine-type=e2-standard-4
 ```
 
@@ -102,6 +103,7 @@ Flag explanations:
 * scopes: Defines the Oauth scopes required by the nodes.
 * num-nodes: The number of nodes to be created in each of the cluster's zones. Default: 4. Depending on the needs of your game, this parameter should be adjusted.
 * no-enable-autoupgrade: Disable automatic upgrades for nodes to reduce the likelihood of in-use games being disrupted.
+* enable-image-streaming: Use [Image streaming](https://cloud.google.com/kubernetes-engine/docs/how-to/image-streaming) to pull container images, which leads to significant improvements in initialization times. [Limitations](https://cloud.google.com/kubernetes-engine/docs/how-to/image-streaming#limitations) apply to enable this feature.
 * machine-type: The type of machine to use for nodes. Default: e2-standard-4. Depending on the needs of your game, you may wish to [have smaller or larger machines](https://cloud.google.com/compute/docs/machine-types).
 
 ### (Optional) Creating a dedicated node pool

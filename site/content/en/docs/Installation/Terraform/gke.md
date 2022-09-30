@@ -85,6 +85,7 @@ Configurable parameters:
 - agones_version - the version of agones to install (an empty string, which is the default, is the latest version from the [Helm repository](https://agones.dev/chart/stable))
 - machine_type - machine type for hosting game servers (default is "e2-standard-4")
 - node_count - count of game server nodes for the default node pool (default is "4")
+- enable_image_streaming - whether or not to enable image streaming for the `"default"` node pool (default is true)
 - zone - the name of the [zone](https://cloud.google.com/compute/docs/regions-zones) you want your cluster to be
   created in (default is "us-west1-c")
 - network - the name of the VPC network you want your cluster and firewall rules to be connected to (default is "default")
