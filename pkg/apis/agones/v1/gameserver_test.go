@@ -1265,7 +1265,7 @@ func TestGameServerPodObjectMeta(t *testing.T) {
 		gs.podObjectMeta(pod)
 		f(t, gs, pod)
 
-		assert.Equal(t, "false", pod.ObjectMeta.Annotations["cluster-autoscaler.kubernetes.io/safe-to-evict"])
+		assert.Equal(t, "false", pod.ObjectMeta.Annotations[PodSafeToEvictAnnotation])
 	})
 
 	t.Run("distributed", func(t *testing.T) {
@@ -1276,8 +1276,66 @@ func TestGameServerPodObjectMeta(t *testing.T) {
 		gs.podObjectMeta(pod)
 		f(t, gs, pod)
 
-		assert.Equal(t, "", pod.ObjectMeta.Annotations["cluster-autoscaler.kubernetes.io/safe-to-evict"])
+		assert.Equal(t, "", pod.ObjectMeta.Annotations[PodSafeToEvictAnnotation])
 	})
+}
+
+func TestGameServerPodAutoscalerAnnotations(t *testing.T) {
+	testCases := []struct {
+		description        string
+		scheduling         apis.SchedulingStrategy
+		setAnnotation      bool
+		expectedAnnotation string
+	}{
+		{
+			description:        "Packed",
+			scheduling:         apis.Packed,
+			expectedAnnotation: "false",
+		},
+		{
+			description:        "Distributed",
+			scheduling:         apis.Distributed,
+			expectedAnnotation: "",
+		},
+		{
+			description:        "Packed with autoscaler annotation",
+			scheduling:         apis.Packed,
+			setAnnotation:      true,
+			expectedAnnotation: "true",
+		},
+		{
+			description:        "Distributed with autoscaler annotation",
+			scheduling:         apis.Distributed,
+			setAnnotation:      true,
+			expectedAnnotation: "true",
+		},
+	}
+
+	fixture := &GameServer{
+		ObjectMeta: metav1.ObjectMeta{Name: "logan"},
+		Spec:       GameServerSpec{Container: "sheep"},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.description, func(t *testing.T) {
+			gs := fixture.DeepCopy()
+			gs.Spec.Scheduling = tc.scheduling
+			if tc.setAnnotation {
+				gs.Spec.Template = corev1.PodTemplateSpec{ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{PodSafeToEvictAnnotation: "true"},
+				}}
+			}
+			pod, err := gs.Pod()
+			assert.Nil(t, err, "Pod should not return an error")
+			assert.Equal(t, gs.ObjectMeta.Name, pod.ObjectMeta.Name)
+			assert.Equal(t, gs.ObjectMeta.Namespace, pod.ObjectMeta.Namespace)
+			assert.Equal(t, GameServerLabelRole, pod.ObjectMeta.Labels[RoleLabel])
+			assert.Equal(t, "gameserver", pod.ObjectMeta.Labels[agones.GroupName+"/role"])
+			assert.Equal(t, gs.ObjectMeta.Name, pod.ObjectMeta.Labels[GameServerPodLabel])
+			assert.Equal(t, "sheep", pod.ObjectMeta.Annotations[GameServerContainerAnnotation])
+			assert.True(t, metav1.IsControlledBy(pod, gs))
+			assert.Equal(t, tc.expectedAnnotation, pod.ObjectMeta.Annotations[PodSafeToEvictAnnotation])
+		})
+	}
 }
 
 func TestGameServerPodScheduling(t *testing.T) {
