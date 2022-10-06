@@ -107,6 +107,10 @@ variable "feature_gates" {
   default = ""
 }
 
+variable "enable_image_streaming" {
+  default = "true"
+}
+
 module "gke_cluster" {
   source = "../../../install/terraform/modules/gke"
 
@@ -115,6 +119,7 @@ module "gke_cluster" {
     "zone"                    = var.zone
     "machineType"             = var.machine_type
     "initialNodeCount"        = var.node_count
+    "enableImageStreaming"    = var.enable_image_streaming
     "windowsMachineType"      = var.windows_machine_type
     "windowsInitialNodeCount" = var.windows_node_count
     "project"                 = var.project

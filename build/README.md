@@ -195,14 +195,15 @@ variables, or by setting them within your
 
 See the table below for available customizations :
 
-| Parameter                                      | Description                                                                   | Default         |
-|------------------------------------------------|-------------------------------------------------------------------------------|-----------------|
-| `GCP_CLUSTER_NAME`                             | The name of the cluster                                                       | `test-cluster`  |
-| `GCP_CLUSTER_ZONE`                             | The name of the Google Compute Engine zone in which the cluster will resides. | `us-west1-c`    |
-| `GCP_CLUSTER_NODEPOOL_INITIALNODECOUNT`        | The number of nodes to create in this cluster.                                | `4`             |
-| `GCP_CLUSTER_NODEPOOL_MACHINETYPE`             | The name of a Google Compute Engine machine type.                             | `e2-standard-4` |
-| `GCP_CLUSTER_NODEPOOL_WINDOWSINITIALNODECOUNT` | The number of Windows nodes to create in this cluster.                        | `0`             |
-| `GCP_CLUSTER_NODEPOOL_WINDOWSMACHINETYPE`      | The name of a Google Compute Engine machine type for Windows nodes.           | `e2-standard-4` |
+| Parameter                                      | Description                                                                           | Default         |
+|------------------------------------------------|---------------------------------------------------------------------------------------|-----------------|
+| `GCP_CLUSTER_NAME`                             | The name of the cluster                                                               | `test-cluster`  |
+| `GCP_CLUSTER_ZONE`                             | The name of the Google Compute Engine zone in which the cluster will resides.         | `us-west1-c`    |
+| `GCP_CLUSTER_NODEPOOL_INITIALNODECOUNT`        | The number of nodes to create in this cluster.                                        | `4`             |
+| `GCP_CLUSTER_NODEPOOL_MACHINETYPE`             | The name of a Google Compute Engine machine type.                                     | `e2-standard-4` |
+| `GCP_CLUSTER_NODEPOOL_ENABLEIMAGESTREAMING`    | Whether or not to enable image streaming for the `"default"` node pool in the cluster | `true`          |
+| `GCP_CLUSTER_NODEPOOL_WINDOWSINITIALNODECOUNT` | The number of Windows nodes to create in this cluster.                                | `0`             |
+| `GCP_CLUSTER_NODEPOOL_WINDOWSMACHINETYPE`      | The name of a Google Compute Engine machine type for Windows nodes.                   | `e2-standard-4` |
 
 This will take several minutes to complete, but once done you can go to the Google Cloud Platform console and see that
 a cluster is up and running!
