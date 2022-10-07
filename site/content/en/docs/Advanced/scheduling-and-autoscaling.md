@@ -114,20 +114,41 @@ want the Cluster Autoscaler to compact your cluster by evicting game servers whe
 Autoscaler to reduce the number of nodes in the cluster, then this behavior can be overridden by explicitly setting the
 `"cluster-autoscaler.kubernetes.io/safe-to-evict"` annotation to `"true"` in the metadata for the game server pod, e.g.
 
-```
+```yaml
 apiVersion: "agones.dev/v1"
 kind: GameServer
 metadata:
   name: "simple-game-server"
 spec:
   template:
-    # pod metadata. Name & Namespace is overwritten
+    # Pod metadata. Name & Namespace is overwritten
     metadata:
       annotations:
         cluster-autoscaler.kubernetes.io/safe-to-evict: true
     spec:
       containers:
       - image: {{< example-image >}}
+```
+
+or if you are using a Fleet
+
+```yaml
+apiVersion: "agones.dev/v1"
+kind: Fleet
+metadata:
+  name: "simple-game-fleet"
+spec:
+  replicas: 2
+  template:
+    spec:
+      template:
+        # Pod metadata. Name & Namespace is overwritten
+        metadata:
+          annotations:
+            cluster-autoscaler.kubernetes.io/safe-to-evict: true
+        spec:
+          containers:
+          - image: {{< example-image >}}
 ```
 {{% /feature %}}
 
