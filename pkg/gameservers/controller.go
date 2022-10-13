@@ -830,7 +830,7 @@ func (c *Controller) syncGameServerRequestReadyState(ctx context.Context, gs *ag
 				// check to make sure this container is actually running. If there was a recent crash, the cache may
 				// not yet have the newer, running container.
 				if cs.State.Running == nil {
-					return nil, fmt.Errorf("game server container for GameServer %s in namespace %s is not currently running, try again", gsCopy.ObjectMeta.Name, gsCopy.ObjectMeta.Namespace)
+					return nil, workerqueue.NewDebugError(fmt.Errorf("game server container for GameServer %s in namespace %s is not currently running, try again", gsCopy.ObjectMeta.Name, gsCopy.ObjectMeta.Namespace))
 				}
 				gsCopy.ObjectMeta.Annotations[agonesv1.GameServerReadyContainerIDAnnotation] = cs.ContainerID
 			}
