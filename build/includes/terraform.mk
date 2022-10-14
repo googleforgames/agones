@@ -19,7 +19,7 @@ GCP_TF_CLUSTER_NAME ?= agones-tf-cluster
 current_project := $(shell $(DOCKER_RUN) bash -c "gcloud config get-value project 2> /dev/null")
 
 ### Deploy cluster with Terraform
-terraform-init: TERRAFORM_BUILD_DIR ?= $(mount_path)/build/terraform/gke
+terraform-init: TERRAFORM_BUILD_DIR ?= $(mount_path)/build/terraform/$(DIRECTORY)
 terraform-init: $(ensure-build-image)
 terraform-init:
 	docker run --rm -it $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) bash -c '\
