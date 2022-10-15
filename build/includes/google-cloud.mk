@@ -51,6 +51,7 @@ gcloud-e2e-test-cluster:
       	terraform apply -auto-approve -var project="$(GCP_PROJECT)"'
 
 # Deletes the gcloud e2e cluster and cleanup any left pvc volumes
+clean-gcloud-e2e-test-cluster: GCP_PROJECT ?= $(current_project)
 clean-gcloud-e2e-test-cluster: $(ensure-build-image)
 clean-gcloud-e2e-test-cluster:
 	$(MAKE) terraform-init DIRECTORY=e2e

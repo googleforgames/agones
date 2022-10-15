@@ -58,8 +58,9 @@ provider "helm" {
 }
 
 resource "helm_release" "consul" {
-  chart = "hashicorp/consul"
-  name  = "consul"
+  repository = "https://helm.releases.hashicorp.com"
+  chart      = "consul"
+  name       = "consul"
 
   set {
     name  = "server.replicas"
@@ -69,6 +70,11 @@ resource "helm_release" "consul" {
   set {
     name  = "ui.service.type"
     value = "ClusterIP"
+  }
+
+  set {
+    name  = "client.enabled"
+    value = "false"
   }
 }
 
