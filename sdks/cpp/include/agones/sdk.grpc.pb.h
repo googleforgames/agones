@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC All Rights Reserved.
+// Copyright 2022 Google LLC All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -150,42 +150,24 @@ class SDK final {
       virtual ~experimental_async_interface() {}
       // Call when the GameServer is ready
       virtual void Ready(::grpc::ClientContext* context, const ::agones::dev::sdk::Empty* request, ::agones::dev::sdk::Empty* response, std::function<void(::grpc::Status)>) = 0;
-      virtual void Ready(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::agones::dev::sdk::Empty* response, std::function<void(::grpc::Status)>) = 0;
       #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       virtual void Ready(::grpc::ClientContext* context, const ::agones::dev::sdk::Empty* request, ::agones::dev::sdk::Empty* response, ::grpc::ClientUnaryReactor* reactor) = 0;
       #else
       virtual void Ready(::grpc::ClientContext* context, const ::agones::dev::sdk::Empty* request, ::agones::dev::sdk::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
       #endif
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      virtual void Ready(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::agones::dev::sdk::Empty* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      #else
-      virtual void Ready(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::agones::dev::sdk::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
-      #endif
       // Call to self Allocation the GameServer
       virtual void Allocate(::grpc::ClientContext* context, const ::agones::dev::sdk::Empty* request, ::agones::dev::sdk::Empty* response, std::function<void(::grpc::Status)>) = 0;
-      virtual void Allocate(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::agones::dev::sdk::Empty* response, std::function<void(::grpc::Status)>) = 0;
       #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       virtual void Allocate(::grpc::ClientContext* context, const ::agones::dev::sdk::Empty* request, ::agones::dev::sdk::Empty* response, ::grpc::ClientUnaryReactor* reactor) = 0;
       #else
       virtual void Allocate(::grpc::ClientContext* context, const ::agones::dev::sdk::Empty* request, ::agones::dev::sdk::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
       #endif
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      virtual void Allocate(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::agones::dev::sdk::Empty* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      #else
-      virtual void Allocate(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::agones::dev::sdk::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
-      #endif
       // Call when the GameServer is shutting down
       virtual void Shutdown(::grpc::ClientContext* context, const ::agones::dev::sdk::Empty* request, ::agones::dev::sdk::Empty* response, std::function<void(::grpc::Status)>) = 0;
-      virtual void Shutdown(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::agones::dev::sdk::Empty* response, std::function<void(::grpc::Status)>) = 0;
       #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       virtual void Shutdown(::grpc::ClientContext* context, const ::agones::dev::sdk::Empty* request, ::agones::dev::sdk::Empty* response, ::grpc::ClientUnaryReactor* reactor) = 0;
       #else
       virtual void Shutdown(::grpc::ClientContext* context, const ::agones::dev::sdk::Empty* request, ::agones::dev::sdk::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
-      #endif
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      virtual void Shutdown(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::agones::dev::sdk::Empty* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      #else
-      virtual void Shutdown(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::agones::dev::sdk::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
       #endif
       // Send a Empty every d Duration to declare that this GameSever is healthy
       #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
@@ -195,16 +177,10 @@ class SDK final {
       #endif
       // Retrieve the current GameServer data
       virtual void GetGameServer(::grpc::ClientContext* context, const ::agones::dev::sdk::Empty* request, ::agones::dev::sdk::GameServer* response, std::function<void(::grpc::Status)>) = 0;
-      virtual void GetGameServer(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::agones::dev::sdk::GameServer* response, std::function<void(::grpc::Status)>) = 0;
       #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       virtual void GetGameServer(::grpc::ClientContext* context, const ::agones::dev::sdk::Empty* request, ::agones::dev::sdk::GameServer* response, ::grpc::ClientUnaryReactor* reactor) = 0;
       #else
       virtual void GetGameServer(::grpc::ClientContext* context, const ::agones::dev::sdk::Empty* request, ::agones::dev::sdk::GameServer* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
-      #endif
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      virtual void GetGameServer(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::agones::dev::sdk::GameServer* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      #else
-      virtual void GetGameServer(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::agones::dev::sdk::GameServer* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
       #endif
       // Send GameServer details whenever the GameServer is updated
       #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
@@ -214,42 +190,24 @@ class SDK final {
       #endif
       // Apply a Label to the backing GameServer metadata
       virtual void SetLabel(::grpc::ClientContext* context, const ::agones::dev::sdk::KeyValue* request, ::agones::dev::sdk::Empty* response, std::function<void(::grpc::Status)>) = 0;
-      virtual void SetLabel(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::agones::dev::sdk::Empty* response, std::function<void(::grpc::Status)>) = 0;
       #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       virtual void SetLabel(::grpc::ClientContext* context, const ::agones::dev::sdk::KeyValue* request, ::agones::dev::sdk::Empty* response, ::grpc::ClientUnaryReactor* reactor) = 0;
       #else
       virtual void SetLabel(::grpc::ClientContext* context, const ::agones::dev::sdk::KeyValue* request, ::agones::dev::sdk::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
       #endif
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      virtual void SetLabel(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::agones::dev::sdk::Empty* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      #else
-      virtual void SetLabel(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::agones::dev::sdk::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
-      #endif
       // Apply a Annotation to the backing GameServer metadata
       virtual void SetAnnotation(::grpc::ClientContext* context, const ::agones::dev::sdk::KeyValue* request, ::agones::dev::sdk::Empty* response, std::function<void(::grpc::Status)>) = 0;
-      virtual void SetAnnotation(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::agones::dev::sdk::Empty* response, std::function<void(::grpc::Status)>) = 0;
       #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       virtual void SetAnnotation(::grpc::ClientContext* context, const ::agones::dev::sdk::KeyValue* request, ::agones::dev::sdk::Empty* response, ::grpc::ClientUnaryReactor* reactor) = 0;
       #else
       virtual void SetAnnotation(::grpc::ClientContext* context, const ::agones::dev::sdk::KeyValue* request, ::agones::dev::sdk::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
       #endif
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      virtual void SetAnnotation(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::agones::dev::sdk::Empty* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      #else
-      virtual void SetAnnotation(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::agones::dev::sdk::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
-      #endif
       // Marks the GameServer as the Reserved state for Duration
       virtual void Reserve(::grpc::ClientContext* context, const ::agones::dev::sdk::Duration* request, ::agones::dev::sdk::Empty* response, std::function<void(::grpc::Status)>) = 0;
-      virtual void Reserve(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::agones::dev::sdk::Empty* response, std::function<void(::grpc::Status)>) = 0;
       #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       virtual void Reserve(::grpc::ClientContext* context, const ::agones::dev::sdk::Duration* request, ::agones::dev::sdk::Empty* response, ::grpc::ClientUnaryReactor* reactor) = 0;
       #else
       virtual void Reserve(::grpc::ClientContext* context, const ::agones::dev::sdk::Duration* request, ::agones::dev::sdk::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
-      #endif
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      virtual void Reserve(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::agones::dev::sdk::Empty* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      #else
-      virtual void Reserve(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::agones::dev::sdk::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
       #endif
     };
     #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
@@ -355,40 +313,22 @@ class SDK final {
       public StubInterface::experimental_async_interface {
      public:
       void Ready(::grpc::ClientContext* context, const ::agones::dev::sdk::Empty* request, ::agones::dev::sdk::Empty* response, std::function<void(::grpc::Status)>) override;
-      void Ready(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::agones::dev::sdk::Empty* response, std::function<void(::grpc::Status)>) override;
       #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       void Ready(::grpc::ClientContext* context, const ::agones::dev::sdk::Empty* request, ::agones::dev::sdk::Empty* response, ::grpc::ClientUnaryReactor* reactor) override;
       #else
       void Ready(::grpc::ClientContext* context, const ::agones::dev::sdk::Empty* request, ::agones::dev::sdk::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
       #endif
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      void Ready(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::agones::dev::sdk::Empty* response, ::grpc::ClientUnaryReactor* reactor) override;
-      #else
-      void Ready(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::agones::dev::sdk::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
-      #endif
       void Allocate(::grpc::ClientContext* context, const ::agones::dev::sdk::Empty* request, ::agones::dev::sdk::Empty* response, std::function<void(::grpc::Status)>) override;
-      void Allocate(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::agones::dev::sdk::Empty* response, std::function<void(::grpc::Status)>) override;
       #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       void Allocate(::grpc::ClientContext* context, const ::agones::dev::sdk::Empty* request, ::agones::dev::sdk::Empty* response, ::grpc::ClientUnaryReactor* reactor) override;
       #else
       void Allocate(::grpc::ClientContext* context, const ::agones::dev::sdk::Empty* request, ::agones::dev::sdk::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
       #endif
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      void Allocate(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::agones::dev::sdk::Empty* response, ::grpc::ClientUnaryReactor* reactor) override;
-      #else
-      void Allocate(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::agones::dev::sdk::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
-      #endif
       void Shutdown(::grpc::ClientContext* context, const ::agones::dev::sdk::Empty* request, ::agones::dev::sdk::Empty* response, std::function<void(::grpc::Status)>) override;
-      void Shutdown(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::agones::dev::sdk::Empty* response, std::function<void(::grpc::Status)>) override;
       #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       void Shutdown(::grpc::ClientContext* context, const ::agones::dev::sdk::Empty* request, ::agones::dev::sdk::Empty* response, ::grpc::ClientUnaryReactor* reactor) override;
       #else
       void Shutdown(::grpc::ClientContext* context, const ::agones::dev::sdk::Empty* request, ::agones::dev::sdk::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
-      #endif
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      void Shutdown(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::agones::dev::sdk::Empty* response, ::grpc::ClientUnaryReactor* reactor) override;
-      #else
-      void Shutdown(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::agones::dev::sdk::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
       #endif
       #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       void Health(::grpc::ClientContext* context, ::agones::dev::sdk::Empty* response, ::grpc::ClientWriteReactor< ::agones::dev::sdk::Empty>* reactor) override;
@@ -396,16 +336,10 @@ class SDK final {
       void Health(::grpc::ClientContext* context, ::agones::dev::sdk::Empty* response, ::grpc::experimental::ClientWriteReactor< ::agones::dev::sdk::Empty>* reactor) override;
       #endif
       void GetGameServer(::grpc::ClientContext* context, const ::agones::dev::sdk::Empty* request, ::agones::dev::sdk::GameServer* response, std::function<void(::grpc::Status)>) override;
-      void GetGameServer(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::agones::dev::sdk::GameServer* response, std::function<void(::grpc::Status)>) override;
       #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       void GetGameServer(::grpc::ClientContext* context, const ::agones::dev::sdk::Empty* request, ::agones::dev::sdk::GameServer* response, ::grpc::ClientUnaryReactor* reactor) override;
       #else
       void GetGameServer(::grpc::ClientContext* context, const ::agones::dev::sdk::Empty* request, ::agones::dev::sdk::GameServer* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
-      #endif
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      void GetGameServer(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::agones::dev::sdk::GameServer* response, ::grpc::ClientUnaryReactor* reactor) override;
-      #else
-      void GetGameServer(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::agones::dev::sdk::GameServer* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
       #endif
       #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       void WatchGameServer(::grpc::ClientContext* context, ::agones::dev::sdk::Empty* request, ::grpc::ClientReadReactor< ::agones::dev::sdk::GameServer>* reactor) override;
@@ -413,40 +347,22 @@ class SDK final {
       void WatchGameServer(::grpc::ClientContext* context, ::agones::dev::sdk::Empty* request, ::grpc::experimental::ClientReadReactor< ::agones::dev::sdk::GameServer>* reactor) override;
       #endif
       void SetLabel(::grpc::ClientContext* context, const ::agones::dev::sdk::KeyValue* request, ::agones::dev::sdk::Empty* response, std::function<void(::grpc::Status)>) override;
-      void SetLabel(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::agones::dev::sdk::Empty* response, std::function<void(::grpc::Status)>) override;
       #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       void SetLabel(::grpc::ClientContext* context, const ::agones::dev::sdk::KeyValue* request, ::agones::dev::sdk::Empty* response, ::grpc::ClientUnaryReactor* reactor) override;
       #else
       void SetLabel(::grpc::ClientContext* context, const ::agones::dev::sdk::KeyValue* request, ::agones::dev::sdk::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
       #endif
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      void SetLabel(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::agones::dev::sdk::Empty* response, ::grpc::ClientUnaryReactor* reactor) override;
-      #else
-      void SetLabel(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::agones::dev::sdk::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
-      #endif
       void SetAnnotation(::grpc::ClientContext* context, const ::agones::dev::sdk::KeyValue* request, ::agones::dev::sdk::Empty* response, std::function<void(::grpc::Status)>) override;
-      void SetAnnotation(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::agones::dev::sdk::Empty* response, std::function<void(::grpc::Status)>) override;
       #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       void SetAnnotation(::grpc::ClientContext* context, const ::agones::dev::sdk::KeyValue* request, ::agones::dev::sdk::Empty* response, ::grpc::ClientUnaryReactor* reactor) override;
       #else
       void SetAnnotation(::grpc::ClientContext* context, const ::agones::dev::sdk::KeyValue* request, ::agones::dev::sdk::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
       #endif
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      void SetAnnotation(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::agones::dev::sdk::Empty* response, ::grpc::ClientUnaryReactor* reactor) override;
-      #else
-      void SetAnnotation(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::agones::dev::sdk::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
-      #endif
       void Reserve(::grpc::ClientContext* context, const ::agones::dev::sdk::Duration* request, ::agones::dev::sdk::Empty* response, std::function<void(::grpc::Status)>) override;
-      void Reserve(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::agones::dev::sdk::Empty* response, std::function<void(::grpc::Status)>) override;
       #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       void Reserve(::grpc::ClientContext* context, const ::agones::dev::sdk::Duration* request, ::agones::dev::sdk::Empty* response, ::grpc::ClientUnaryReactor* reactor) override;
       #else
       void Reserve(::grpc::ClientContext* context, const ::agones::dev::sdk::Duration* request, ::agones::dev::sdk::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
-      #endif
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      void Reserve(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::agones::dev::sdk::Empty* response, ::grpc::ClientUnaryReactor* reactor) override;
-      #else
-      void Reserve(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::agones::dev::sdk::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
       #endif
      private:
       friend class Stub;
@@ -707,7 +623,7 @@ class SDK final {
       ::grpc::Service::experimental().
     #endif
         MarkMethodCallback(0,
-          new ::grpc_impl::internal::CallbackUnaryHandler< ::agones::dev::sdk::Empty, ::agones::dev::sdk::Empty>(
+          new ::grpc::internal::CallbackUnaryHandler< ::agones::dev::sdk::Empty, ::agones::dev::sdk::Empty>(
             [this](
     #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
                    ::grpc::CallbackServerContext*
@@ -722,7 +638,7 @@ class SDK final {
     #else
       ::grpc::internal::MethodHandler* const handler = ::grpc::Service::experimental().GetHandler(0);
     #endif
-      static_cast<::grpc_impl::internal::CallbackUnaryHandler< ::agones::dev::sdk::Empty, ::agones::dev::sdk::Empty>*>(handler)
+      static_cast<::grpc::internal::CallbackUnaryHandler< ::agones::dev::sdk::Empty, ::agones::dev::sdk::Empty>*>(handler)
               ->SetMessageAllocator(allocator);
     }
     ~ExperimentalWithCallbackMethod_Ready() override {
@@ -754,7 +670,7 @@ class SDK final {
       ::grpc::Service::experimental().
     #endif
         MarkMethodCallback(1,
-          new ::grpc_impl::internal::CallbackUnaryHandler< ::agones::dev::sdk::Empty, ::agones::dev::sdk::Empty>(
+          new ::grpc::internal::CallbackUnaryHandler< ::agones::dev::sdk::Empty, ::agones::dev::sdk::Empty>(
             [this](
     #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
                    ::grpc::CallbackServerContext*
@@ -769,7 +685,7 @@ class SDK final {
     #else
       ::grpc::internal::MethodHandler* const handler = ::grpc::Service::experimental().GetHandler(1);
     #endif
-      static_cast<::grpc_impl::internal::CallbackUnaryHandler< ::agones::dev::sdk::Empty, ::agones::dev::sdk::Empty>*>(handler)
+      static_cast<::grpc::internal::CallbackUnaryHandler< ::agones::dev::sdk::Empty, ::agones::dev::sdk::Empty>*>(handler)
               ->SetMessageAllocator(allocator);
     }
     ~ExperimentalWithCallbackMethod_Allocate() override {
@@ -801,7 +717,7 @@ class SDK final {
       ::grpc::Service::experimental().
     #endif
         MarkMethodCallback(2,
-          new ::grpc_impl::internal::CallbackUnaryHandler< ::agones::dev::sdk::Empty, ::agones::dev::sdk::Empty>(
+          new ::grpc::internal::CallbackUnaryHandler< ::agones::dev::sdk::Empty, ::agones::dev::sdk::Empty>(
             [this](
     #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
                    ::grpc::CallbackServerContext*
@@ -816,7 +732,7 @@ class SDK final {
     #else
       ::grpc::internal::MethodHandler* const handler = ::grpc::Service::experimental().GetHandler(2);
     #endif
-      static_cast<::grpc_impl::internal::CallbackUnaryHandler< ::agones::dev::sdk::Empty, ::agones::dev::sdk::Empty>*>(handler)
+      static_cast<::grpc::internal::CallbackUnaryHandler< ::agones::dev::sdk::Empty, ::agones::dev::sdk::Empty>*>(handler)
               ->SetMessageAllocator(allocator);
     }
     ~ExperimentalWithCallbackMethod_Shutdown() override {
@@ -848,7 +764,7 @@ class SDK final {
       ::grpc::Service::experimental().
     #endif
         MarkMethodCallback(3,
-          new ::grpc_impl::internal::CallbackClientStreamingHandler< ::agones::dev::sdk::Empty, ::agones::dev::sdk::Empty>(
+          new ::grpc::internal::CallbackClientStreamingHandler< ::agones::dev::sdk::Empty, ::agones::dev::sdk::Empty>(
             [this](
     #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
                    ::grpc::CallbackServerContext*
@@ -886,7 +802,7 @@ class SDK final {
       ::grpc::Service::experimental().
     #endif
         MarkMethodCallback(4,
-          new ::grpc_impl::internal::CallbackUnaryHandler< ::agones::dev::sdk::Empty, ::agones::dev::sdk::GameServer>(
+          new ::grpc::internal::CallbackUnaryHandler< ::agones::dev::sdk::Empty, ::agones::dev::sdk::GameServer>(
             [this](
     #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
                    ::grpc::CallbackServerContext*
@@ -901,7 +817,7 @@ class SDK final {
     #else
       ::grpc::internal::MethodHandler* const handler = ::grpc::Service::experimental().GetHandler(4);
     #endif
-      static_cast<::grpc_impl::internal::CallbackUnaryHandler< ::agones::dev::sdk::Empty, ::agones::dev::sdk::GameServer>*>(handler)
+      static_cast<::grpc::internal::CallbackUnaryHandler< ::agones::dev::sdk::Empty, ::agones::dev::sdk::GameServer>*>(handler)
               ->SetMessageAllocator(allocator);
     }
     ~ExperimentalWithCallbackMethod_GetGameServer() override {
@@ -933,7 +849,7 @@ class SDK final {
       ::grpc::Service::experimental().
     #endif
         MarkMethodCallback(5,
-          new ::grpc_impl::internal::CallbackServerStreamingHandler< ::agones::dev::sdk::Empty, ::agones::dev::sdk::GameServer>(
+          new ::grpc::internal::CallbackServerStreamingHandler< ::agones::dev::sdk::Empty, ::agones::dev::sdk::GameServer>(
             [this](
     #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
                    ::grpc::CallbackServerContext*
@@ -971,7 +887,7 @@ class SDK final {
       ::grpc::Service::experimental().
     #endif
         MarkMethodCallback(6,
-          new ::grpc_impl::internal::CallbackUnaryHandler< ::agones::dev::sdk::KeyValue, ::agones::dev::sdk::Empty>(
+          new ::grpc::internal::CallbackUnaryHandler< ::agones::dev::sdk::KeyValue, ::agones::dev::sdk::Empty>(
             [this](
     #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
                    ::grpc::CallbackServerContext*
@@ -986,7 +902,7 @@ class SDK final {
     #else
       ::grpc::internal::MethodHandler* const handler = ::grpc::Service::experimental().GetHandler(6);
     #endif
-      static_cast<::grpc_impl::internal::CallbackUnaryHandler< ::agones::dev::sdk::KeyValue, ::agones::dev::sdk::Empty>*>(handler)
+      static_cast<::grpc::internal::CallbackUnaryHandler< ::agones::dev::sdk::KeyValue, ::agones::dev::sdk::Empty>*>(handler)
               ->SetMessageAllocator(allocator);
     }
     ~ExperimentalWithCallbackMethod_SetLabel() override {
@@ -1018,7 +934,7 @@ class SDK final {
       ::grpc::Service::experimental().
     #endif
         MarkMethodCallback(7,
-          new ::grpc_impl::internal::CallbackUnaryHandler< ::agones::dev::sdk::KeyValue, ::agones::dev::sdk::Empty>(
+          new ::grpc::internal::CallbackUnaryHandler< ::agones::dev::sdk::KeyValue, ::agones::dev::sdk::Empty>(
             [this](
     #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
                    ::grpc::CallbackServerContext*
@@ -1033,7 +949,7 @@ class SDK final {
     #else
       ::grpc::internal::MethodHandler* const handler = ::grpc::Service::experimental().GetHandler(7);
     #endif
-      static_cast<::grpc_impl::internal::CallbackUnaryHandler< ::agones::dev::sdk::KeyValue, ::agones::dev::sdk::Empty>*>(handler)
+      static_cast<::grpc::internal::CallbackUnaryHandler< ::agones::dev::sdk::KeyValue, ::agones::dev::sdk::Empty>*>(handler)
               ->SetMessageAllocator(allocator);
     }
     ~ExperimentalWithCallbackMethod_SetAnnotation() override {
@@ -1065,7 +981,7 @@ class SDK final {
       ::grpc::Service::experimental().
     #endif
         MarkMethodCallback(8,
-          new ::grpc_impl::internal::CallbackUnaryHandler< ::agones::dev::sdk::Duration, ::agones::dev::sdk::Empty>(
+          new ::grpc::internal::CallbackUnaryHandler< ::agones::dev::sdk::Duration, ::agones::dev::sdk::Empty>(
             [this](
     #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
                    ::grpc::CallbackServerContext*
@@ -1080,7 +996,7 @@ class SDK final {
     #else
       ::grpc::internal::MethodHandler* const handler = ::grpc::Service::experimental().GetHandler(8);
     #endif
-      static_cast<::grpc_impl::internal::CallbackUnaryHandler< ::agones::dev::sdk::Duration, ::agones::dev::sdk::Empty>*>(handler)
+      static_cast<::grpc::internal::CallbackUnaryHandler< ::agones::dev::sdk::Duration, ::agones::dev::sdk::Empty>*>(handler)
               ->SetMessageAllocator(allocator);
     }
     ~ExperimentalWithCallbackMethod_Reserve() override {
@@ -1450,7 +1366,7 @@ class SDK final {
       ::grpc::Service::experimental().
     #endif
         MarkMethodRawCallback(0,
-          new ::grpc_impl::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+          new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
     #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
                    ::grpc::CallbackServerContext*
@@ -1488,7 +1404,7 @@ class SDK final {
       ::grpc::Service::experimental().
     #endif
         MarkMethodRawCallback(1,
-          new ::grpc_impl::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+          new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
     #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
                    ::grpc::CallbackServerContext*
@@ -1526,7 +1442,7 @@ class SDK final {
       ::grpc::Service::experimental().
     #endif
         MarkMethodRawCallback(2,
-          new ::grpc_impl::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+          new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
     #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
                    ::grpc::CallbackServerContext*
@@ -1564,7 +1480,7 @@ class SDK final {
       ::grpc::Service::experimental().
     #endif
         MarkMethodRawCallback(3,
-          new ::grpc_impl::internal::CallbackClientStreamingHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+          new ::grpc::internal::CallbackClientStreamingHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
     #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
                    ::grpc::CallbackServerContext*
@@ -1602,7 +1518,7 @@ class SDK final {
       ::grpc::Service::experimental().
     #endif
         MarkMethodRawCallback(4,
-          new ::grpc_impl::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+          new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
     #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
                    ::grpc::CallbackServerContext*
@@ -1640,7 +1556,7 @@ class SDK final {
       ::grpc::Service::experimental().
     #endif
         MarkMethodRawCallback(5,
-          new ::grpc_impl::internal::CallbackServerStreamingHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+          new ::grpc::internal::CallbackServerStreamingHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
     #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
                    ::grpc::CallbackServerContext*
@@ -1678,7 +1594,7 @@ class SDK final {
       ::grpc::Service::experimental().
     #endif
         MarkMethodRawCallback(6,
-          new ::grpc_impl::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+          new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
     #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
                    ::grpc::CallbackServerContext*
@@ -1716,7 +1632,7 @@ class SDK final {
       ::grpc::Service::experimental().
     #endif
         MarkMethodRawCallback(7,
-          new ::grpc_impl::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+          new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
     #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
                    ::grpc::CallbackServerContext*
@@ -1754,7 +1670,7 @@ class SDK final {
       ::grpc::Service::experimental().
     #endif
         MarkMethodRawCallback(8,
-          new ::grpc_impl::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+          new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
     #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
                    ::grpc::CallbackServerContext*
@@ -1787,7 +1703,14 @@ class SDK final {
    public:
     WithStreamedUnaryMethod_Ready() {
       ::grpc::Service::MarkMethodStreamed(0,
-        new ::grpc::internal::StreamedUnaryHandler< ::agones::dev::sdk::Empty, ::agones::dev::sdk::Empty>(std::bind(&WithStreamedUnaryMethod_Ready<BaseClass>::StreamedReady, this, std::placeholders::_1, std::placeholders::_2)));
+        new ::grpc::internal::StreamedUnaryHandler<
+          ::agones::dev::sdk::Empty, ::agones::dev::sdk::Empty>(
+            [this](::grpc::ServerContext* context,
+                   ::grpc::ServerUnaryStreamer<
+                     ::agones::dev::sdk::Empty, ::agones::dev::sdk::Empty>* streamer) {
+                       return this->StreamedReady(context,
+                         streamer);
+                  }));
     }
     ~WithStreamedUnaryMethod_Ready() override {
       BaseClassMustBeDerivedFromService(this);
@@ -1807,7 +1730,14 @@ class SDK final {
    public:
     WithStreamedUnaryMethod_Allocate() {
       ::grpc::Service::MarkMethodStreamed(1,
-        new ::grpc::internal::StreamedUnaryHandler< ::agones::dev::sdk::Empty, ::agones::dev::sdk::Empty>(std::bind(&WithStreamedUnaryMethod_Allocate<BaseClass>::StreamedAllocate, this, std::placeholders::_1, std::placeholders::_2)));
+        new ::grpc::internal::StreamedUnaryHandler<
+          ::agones::dev::sdk::Empty, ::agones::dev::sdk::Empty>(
+            [this](::grpc::ServerContext* context,
+                   ::grpc::ServerUnaryStreamer<
+                     ::agones::dev::sdk::Empty, ::agones::dev::sdk::Empty>* streamer) {
+                       return this->StreamedAllocate(context,
+                         streamer);
+                  }));
     }
     ~WithStreamedUnaryMethod_Allocate() override {
       BaseClassMustBeDerivedFromService(this);
@@ -1827,7 +1757,14 @@ class SDK final {
    public:
     WithStreamedUnaryMethod_Shutdown() {
       ::grpc::Service::MarkMethodStreamed(2,
-        new ::grpc::internal::StreamedUnaryHandler< ::agones::dev::sdk::Empty, ::agones::dev::sdk::Empty>(std::bind(&WithStreamedUnaryMethod_Shutdown<BaseClass>::StreamedShutdown, this, std::placeholders::_1, std::placeholders::_2)));
+        new ::grpc::internal::StreamedUnaryHandler<
+          ::agones::dev::sdk::Empty, ::agones::dev::sdk::Empty>(
+            [this](::grpc::ServerContext* context,
+                   ::grpc::ServerUnaryStreamer<
+                     ::agones::dev::sdk::Empty, ::agones::dev::sdk::Empty>* streamer) {
+                       return this->StreamedShutdown(context,
+                         streamer);
+                  }));
     }
     ~WithStreamedUnaryMethod_Shutdown() override {
       BaseClassMustBeDerivedFromService(this);
@@ -1847,7 +1784,14 @@ class SDK final {
    public:
     WithStreamedUnaryMethod_GetGameServer() {
       ::grpc::Service::MarkMethodStreamed(4,
-        new ::grpc::internal::StreamedUnaryHandler< ::agones::dev::sdk::Empty, ::agones::dev::sdk::GameServer>(std::bind(&WithStreamedUnaryMethod_GetGameServer<BaseClass>::StreamedGetGameServer, this, std::placeholders::_1, std::placeholders::_2)));
+        new ::grpc::internal::StreamedUnaryHandler<
+          ::agones::dev::sdk::Empty, ::agones::dev::sdk::GameServer>(
+            [this](::grpc::ServerContext* context,
+                   ::grpc::ServerUnaryStreamer<
+                     ::agones::dev::sdk::Empty, ::agones::dev::sdk::GameServer>* streamer) {
+                       return this->StreamedGetGameServer(context,
+                         streamer);
+                  }));
     }
     ~WithStreamedUnaryMethod_GetGameServer() override {
       BaseClassMustBeDerivedFromService(this);
@@ -1867,7 +1811,14 @@ class SDK final {
    public:
     WithStreamedUnaryMethod_SetLabel() {
       ::grpc::Service::MarkMethodStreamed(6,
-        new ::grpc::internal::StreamedUnaryHandler< ::agones::dev::sdk::KeyValue, ::agones::dev::sdk::Empty>(std::bind(&WithStreamedUnaryMethod_SetLabel<BaseClass>::StreamedSetLabel, this, std::placeholders::_1, std::placeholders::_2)));
+        new ::grpc::internal::StreamedUnaryHandler<
+          ::agones::dev::sdk::KeyValue, ::agones::dev::sdk::Empty>(
+            [this](::grpc::ServerContext* context,
+                   ::grpc::ServerUnaryStreamer<
+                     ::agones::dev::sdk::KeyValue, ::agones::dev::sdk::Empty>* streamer) {
+                       return this->StreamedSetLabel(context,
+                         streamer);
+                  }));
     }
     ~WithStreamedUnaryMethod_SetLabel() override {
       BaseClassMustBeDerivedFromService(this);
@@ -1887,7 +1838,14 @@ class SDK final {
    public:
     WithStreamedUnaryMethod_SetAnnotation() {
       ::grpc::Service::MarkMethodStreamed(7,
-        new ::grpc::internal::StreamedUnaryHandler< ::agones::dev::sdk::KeyValue, ::agones::dev::sdk::Empty>(std::bind(&WithStreamedUnaryMethod_SetAnnotation<BaseClass>::StreamedSetAnnotation, this, std::placeholders::_1, std::placeholders::_2)));
+        new ::grpc::internal::StreamedUnaryHandler<
+          ::agones::dev::sdk::KeyValue, ::agones::dev::sdk::Empty>(
+            [this](::grpc::ServerContext* context,
+                   ::grpc::ServerUnaryStreamer<
+                     ::agones::dev::sdk::KeyValue, ::agones::dev::sdk::Empty>* streamer) {
+                       return this->StreamedSetAnnotation(context,
+                         streamer);
+                  }));
     }
     ~WithStreamedUnaryMethod_SetAnnotation() override {
       BaseClassMustBeDerivedFromService(this);
@@ -1907,7 +1865,14 @@ class SDK final {
    public:
     WithStreamedUnaryMethod_Reserve() {
       ::grpc::Service::MarkMethodStreamed(8,
-        new ::grpc::internal::StreamedUnaryHandler< ::agones::dev::sdk::Duration, ::agones::dev::sdk::Empty>(std::bind(&WithStreamedUnaryMethod_Reserve<BaseClass>::StreamedReserve, this, std::placeholders::_1, std::placeholders::_2)));
+        new ::grpc::internal::StreamedUnaryHandler<
+          ::agones::dev::sdk::Duration, ::agones::dev::sdk::Empty>(
+            [this](::grpc::ServerContext* context,
+                   ::grpc::ServerUnaryStreamer<
+                     ::agones::dev::sdk::Duration, ::agones::dev::sdk::Empty>* streamer) {
+                       return this->StreamedReserve(context,
+                         streamer);
+                  }));
     }
     ~WithStreamedUnaryMethod_Reserve() override {
       BaseClassMustBeDerivedFromService(this);
@@ -1928,7 +1893,14 @@ class SDK final {
    public:
     WithSplitStreamingMethod_WatchGameServer() {
       ::grpc::Service::MarkMethodStreamed(5,
-        new ::grpc::internal::SplitServerStreamingHandler< ::agones::dev::sdk::Empty, ::agones::dev::sdk::GameServer>(std::bind(&WithSplitStreamingMethod_WatchGameServer<BaseClass>::StreamedWatchGameServer, this, std::placeholders::_1, std::placeholders::_2)));
+        new ::grpc::internal::SplitServerStreamingHandler<
+          ::agones::dev::sdk::Empty, ::agones::dev::sdk::GameServer>(
+            [this](::grpc::ServerContext* context,
+                   ::grpc::ServerSplitStreamer<
+                     ::agones::dev::sdk::Empty, ::agones::dev::sdk::GameServer>* streamer) {
+                       return this->StreamedWatchGameServer(context,
+                         streamer);
+                  }));
     }
     ~WithSplitStreamingMethod_WatchGameServer() override {
       BaseClassMustBeDerivedFromService(this);

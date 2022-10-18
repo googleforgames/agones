@@ -21,7 +21,7 @@ terraform {
   required_providers {
     google = {
       source = "hashicorp/google"
-      version = "~> 3.88"
+      version = "~> 4.25.0"
     }
     helm = {
       source = "hashicorp/helm"
@@ -38,11 +38,12 @@ module "gke_cluster" {
   source = "../../../install/terraform/modules/gke"
 
   cluster = {
-    "name"             = "e2e-test-cluster"
-    "zone"             = "us-west1-c"
-    "machineType"      = "e2-standard-4"
-    "initialNodeCount" = 8
-    "project"          = var.project
+    "name"                  = "e2e-test-cluster"
+    "zone"                  = "us-west1-c"
+    "machineType"           = "e2-standard-4"
+    "initialNodeCount"      = 10
+    "enableImageStreaming"  = true
+    "project"               = var.project
   }
 
   firewallName = "gke-game-server-firewall"
@@ -57,8 +58,9 @@ provider "helm" {
 }
 
 resource "helm_release" "consul" {
-  chart = "hashicorp/consul"
-  name  = "consul"
+  repository = "https://helm.releases.hashicorp.com"
+  chart      = "consul"
+  name       = "consul"
 
   set {
     name  = "server.replicas"
@@ -68,6 +70,11 @@ resource "helm_release" "consul" {
   set {
     name  = "ui.service.type"
     value = "ClusterIP"
+  }
+
+  set {
+    name  = "client.enabled"
+    value = "false"
   }
 }
 
@@ -82,4 +89,5 @@ resource "google_compute_firewall" "tcp" {
   }
 
   target_tags = ["game-server"]
+  source_ranges = ["0.0.0.0/0"]
 }

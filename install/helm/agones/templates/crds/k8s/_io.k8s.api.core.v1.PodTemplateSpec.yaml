@@ -1,4 +1,4 @@
-# Copyright 2021 Google LLC All Rights Reserved.
+# Copyright 2022 Google LLC All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -92,6 +92,9 @@ properties:
             operation:
               description: Operation is the type of operation which lead to this ManagedFieldsEntry being created. The only valid values for this field are 'Apply' and 'Update'.
               type: string
+            subresource:
+              description: Subresource is the name of the subresource used to update that object, or empty string if the object was updated through the main resource. The value of this field is used to distinguish between managers, even if they share the same name. For example, a status update will be distinct from a regular update using the same manager name. Note that the APIVersion field is not related to the Subresource field and it always corresponds to the version of the main resource.
+              type: string
             time:
               description: Time is timestamp of when these fields were set. It should always be empty if Operation is 'Apply'
               type: string
@@ -134,6 +137,7 @@ properties:
             uid:
               description: 'UID of the referent. More info: http://kubernetes.io/docs/user-guide/identifiers#uids'
               type: string
+          x-kubernetes-map-type: atomic
       resourceVersion:
         description: |-
           An opaque value that represents the internal version of this object that can be used by clients to determine when objects have changed. May be used for optimistic concurrency, change detection, and the watch operation on a resource or set of resources. Clients must treat these values as opaque and passed unmodified back to the server. They may only be valid for a particular resource or set of resources.
@@ -196,7 +200,9 @@ properties:
                                 description: The label key that the selector applies to.
                                 type: string
                               operator:
-                                description: Represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists, DoesNotExist. Gt, and Lt.
+                                description: |+
+                                  Represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists, DoesNotExist. Gt, and Lt.
+
                                 type: string
                               values:
                                 description: An array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. If the operator is Gt or Lt, the values array must have a single element, which will be interpreted as an integer. This array is replaced during a strategic merge patch.
@@ -216,13 +222,16 @@ properties:
                                 description: The label key that the selector applies to.
                                 type: string
                               operator:
-                                description: Represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists, DoesNotExist. Gt, and Lt.
+                                description: |+
+                                  Represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists, DoesNotExist. Gt, and Lt.
+
                                 type: string
                               values:
                                 description: An array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. If the operator is Gt or Lt, the values array must have a single element, which will be interpreted as an integer. This array is replaced during a strategic merge patch.
                                 type: array
                                 items:
                                   type: string
+                      x-kubernetes-map-type: atomic
                     weight:
                       description: Weight associated with matching the corresponding nodeSelectorTerm, in the range 1-100.
                       type: integer
@@ -252,7 +261,9 @@ properties:
                                 description: The label key that the selector applies to.
                                 type: string
                               operator:
-                                description: Represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists, DoesNotExist. Gt, and Lt.
+                                description: |+
+                                  Represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists, DoesNotExist. Gt, and Lt.
+
                                 type: string
                               values:
                                 description: An array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. If the operator is Gt or Lt, the values array must have a single element, which will be interpreted as an integer. This array is replaced during a strategic merge patch.
@@ -272,13 +283,17 @@ properties:
                                 description: The label key that the selector applies to.
                                 type: string
                               operator:
-                                description: Represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists, DoesNotExist. Gt, and Lt.
+                                description: |+
+                                  Represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists, DoesNotExist. Gt, and Lt.
+
                                 type: string
                               values:
                                 description: An array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. If the operator is Gt or Lt, the values array must have a single element, which will be interpreted as an integer. This array is replaced during a strategic merge patch.
                                 type: array
                                 items:
                                   type: string
+                      x-kubernetes-map-type: atomic
+                x-kubernetes-map-type: atomic
           podAffinity:
             description: Describes pod affinity scheduling rules (e.g. co-locate this pod in the same node, zone, etc. as some other pod(s)).
             type: object
@@ -329,7 +344,7 @@ properties:
                                 type: string
                           x-kubernetes-map-type: atomic
                         namespaceSelector:
-                          description: A label query over the set of namespaces that the term applies to. The term is applied to the union of the namespaces selected by this field and the ones listed in the namespaces field. null selector and null or empty namespaces list means "this pod's namespace". An empty selector ({}) matches all namespaces. This field is alpha-level and is only honored when PodAffinityNamespaceSelector feature is enabled.
+                          description: A label query over the set of namespaces that the term applies to. The term is applied to the union of the namespaces selected by this field and the ones listed in the namespaces field. null selector and null or empty namespaces list means "this pod's namespace". An empty selector ({}) matches all namespaces. This field is beta-level and is only honored when PodAffinityNamespaceSelector feature is enabled.
                           type: object
                           properties:
                             matchExpressions:
@@ -409,7 +424,7 @@ properties:
                             type: string
                       x-kubernetes-map-type: atomic
                     namespaceSelector:
-                      description: A label query over the set of namespaces that the term applies to. The term is applied to the union of the namespaces selected by this field and the ones listed in the namespaces field. null selector and null or empty namespaces list means "this pod's namespace". An empty selector ({}) matches all namespaces. This field is alpha-level and is only honored when PodAffinityNamespaceSelector feature is enabled.
+                      description: A label query over the set of namespaces that the term applies to. The term is applied to the union of the namespaces selected by this field and the ones listed in the namespaces field. null selector and null or empty namespaces list means "this pod's namespace". An empty selector ({}) matches all namespaces. This field is beta-level and is only honored when PodAffinityNamespaceSelector feature is enabled.
                       type: object
                       properties:
                         matchExpressions:
@@ -496,7 +511,7 @@ properties:
                                 type: string
                           x-kubernetes-map-type: atomic
                         namespaceSelector:
-                          description: A label query over the set of namespaces that the term applies to. The term is applied to the union of the namespaces selected by this field and the ones listed in the namespaces field. null selector and null or empty namespaces list means "this pod's namespace". An empty selector ({}) matches all namespaces. This field is alpha-level and is only honored when PodAffinityNamespaceSelector feature is enabled.
+                          description: A label query over the set of namespaces that the term applies to. The term is applied to the union of the namespaces selected by this field and the ones listed in the namespaces field. null selector and null or empty namespaces list means "this pod's namespace". An empty selector ({}) matches all namespaces. This field is beta-level and is only honored when PodAffinityNamespaceSelector feature is enabled.
                           type: object
                           properties:
                             matchExpressions:
@@ -576,7 +591,7 @@ properties:
                             type: string
                       x-kubernetes-map-type: atomic
                     namespaceSelector:
-                      description: A label query over the set of namespaces that the term applies to. The term is applied to the union of the namespaces selected by this field and the ones listed in the namespaces field. null selector and null or empty namespaces list means "this pod's namespace". An empty selector ({}) matches all namespaces. This field is alpha-level and is only honored when PodAffinityNamespaceSelector feature is enabled.
+                      description: A label query over the set of namespaces that the term applies to. The term is applied to the union of the namespaces selected by this field and the ones listed in the namespaces field. null selector and null or empty namespaces list means "this pod's namespace". An empty selector ({}) matches all namespaces. This field is beta-level and is only honored when PodAffinityNamespaceSelector feature is enabled.
                       type: object
                       properties:
                         matchExpressions:
@@ -625,12 +640,12 @@ properties:
             - name
           properties:
             args:
-              description: 'Arguments to the entrypoint. The docker image''s CMD is used if this is not provided. Variable references $(VAR_NAME) are expanded using the container''s environment. If a variable cannot be resolved, the reference in the input string will be unchanged. The $(VAR_NAME) syntax can be escaped with a double $$, ie: $$(VAR_NAME). Escaped references will never be expanded, regardless of whether the variable exists or not. Cannot be updated. More info: https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell'
+              description: 'Arguments to the entrypoint. The docker image''s CMD is used if this is not provided. Variable references $(VAR_NAME) are expanded using the container''s environment. If a variable cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless of whether the variable exists or not. Cannot be updated. More info: https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell'
               type: array
               items:
                 type: string
             command:
-              description: 'Entrypoint array. Not executed within a shell. The docker image''s ENTRYPOINT is used if this is not provided. Variable references $(VAR_NAME) are expanded using the container''s environment. If a variable cannot be resolved, the reference in the input string will be unchanged. The $(VAR_NAME) syntax can be escaped with a double $$, ie: $$(VAR_NAME). Escaped references will never be expanded, regardless of whether the variable exists or not. Cannot be updated. More info: https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell'
+              description: 'Entrypoint array. Not executed within a shell. The docker image''s ENTRYPOINT is used if this is not provided. Variable references $(VAR_NAME) are expanded using the container''s environment. If a variable cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless of whether the variable exists or not. Cannot be updated. More info: https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell'
               type: array
               items:
                 type: string
@@ -646,7 +661,7 @@ properties:
                     description: Name of the environment variable. Must be a C_IDENTIFIER.
                     type: string
                   value:
-                    description: 'Variable references $(VAR_NAME) are expanded using the previous defined environment variables in the container and any service environment variables. If a variable cannot be resolved, the reference in the input string will be unchanged. The $(VAR_NAME) syntax can be escaped with a double $$, ie: $$(VAR_NAME). Escaped references will never be expanded, regardless of whether the variable exists or not. Defaults to "".'
+                    description: 'Variable references $(VAR_NAME) are expanded using the previously defined environment variables in the container and any service environment variables. If a variable cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless of whether the variable exists or not. Defaults to "".'
                     type: string
                   valueFrom:
                     description: Source for the environment variable's value. Cannot be used if value is not empty.
@@ -667,6 +682,7 @@ properties:
                           optional:
                             description: Specify whether the ConfigMap or its key must be defined
                             type: boolean
+                        x-kubernetes-map-type: atomic
                       fieldRef:
                         description: 'Selects a field of the pod: supports metadata.name, metadata.namespace, `metadata.labels[''<KEY>'']`, `metadata.annotations[''<KEY>'']`, spec.nodeName, spec.serviceAccountName, status.hostIP, status.podIP, status.podIPs.'
                         type: object
@@ -679,6 +695,7 @@ properties:
                           fieldPath:
                             description: Path of the field to select in the specified API version.
                             type: string
+                        x-kubernetes-map-type: atomic
                       resourceFieldRef:
                         description: 'Selects a resource of the container: only resources limits and requests (limits.cpu, limits.memory, limits.ephemeral-storage, requests.cpu, requests.memory and requests.ephemeral-storage) are currently supported.'
                         type: object
@@ -694,6 +711,7 @@ properties:
                           resource:
                             description: 'Required: resource to select'
                             type: string
+                        x-kubernetes-map-type: atomic
                       secretKeyRef:
                         description: Selects a key of a secret in the pod's namespace
                         type: object
@@ -709,6 +727,7 @@ properties:
                           optional:
                             description: Specify whether the Secret or its key must be defined
                             type: boolean
+                        x-kubernetes-map-type: atomic
             envFrom:
               description: List of sources to populate environment variables in the container. The keys defined within a source must be a C_IDENTIFIER. All invalid keys will be reported as an event when the container is starting. When a key exists in multiple sources, the value associated with the last source will take precedence. Values defined by an Env with a duplicate key will take precedence. Cannot be updated.
               type: array
@@ -742,7 +761,9 @@ properties:
               description: 'Docker image name. More info: https://kubernetes.io/docs/concepts/containers/images This field is optional to allow higher level config management to default or override container images in workload controllers like Deployments and StatefulSets.'
               type: string
             imagePullPolicy:
-              description: 'Image pull policy. One of Always, Never, IfNotPresent. Defaults to Always if :latest tag is specified, or IfNotPresent otherwise. Cannot be updated. More info: https://kubernetes.io/docs/concepts/containers/images#updating-images'
+              description: |+
+                Image pull policy. One of Always, Never, IfNotPresent. Defaults to Always if :latest tag is specified, or IfNotPresent otherwise. Cannot be updated. More info: https://kubernetes.io/docs/concepts/containers/images#updating-images
+
               type: string
             lifecycle:
               description: Actions that the management system should take in response to container lifecycle events. Cannot be updated.
@@ -753,7 +774,7 @@ properties:
                   type: object
                   properties:
                     exec:
-                      description: One and only one of the following should be specified. Exec specifies the action to take.
+                      description: Exec specifies the action to take.
                       type: object
                       properties:
                         command:
@@ -793,10 +814,12 @@ properties:
                           format: int-or-string
                           x-kubernetes-int-or-string: true
                         scheme:
-                          description: Scheme to use for connecting to the host. Defaults to HTTP.
+                          description: |+
+                            Scheme to use for connecting to the host. Defaults to HTTP.
+
                           type: string
                     tcpSocket:
-                      description: TCPSocket specifies an action involving a TCP port. TCP hooks not yet supported
+                      description: Deprecated. TCPSocket is NOT supported as a LifecycleHandler and kept for the backward compatibility. There are no validation of this field and lifecycle hooks will fail in runtime when tcp handler is specified.
                       type: object
                       required:
                         - port
@@ -809,11 +832,11 @@ properties:
                           format: int-or-string
                           x-kubernetes-int-or-string: true
                 preStop:
-                  description: 'PreStop is called immediately before a container is terminated due to an API request or management event such as liveness/startup probe failure, preemption, resource contention, etc. The handler is not called if the container crashes or exits. The reason for termination is passed to the handler. The Pod''s termination grace period countdown begins before the PreStop hooked is executed. Regardless of the outcome of the handler, the container will eventually terminate within the Pod''s termination grace period. Other management of the container blocks until the hook completes or until the termination grace period is reached. More info: https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/#container-hooks'
+                  description: 'PreStop is called immediately before a container is terminated due to an API request or management event such as liveness/startup probe failure, preemption, resource contention, etc. The handler is not called if the container crashes or exits. The Pod''s termination grace period countdown begins before the PreStop hook is executed. Regardless of the outcome of the handler, the container will eventually terminate within the Pod''s termination grace period (unless delayed by finalizers). Other management of the container blocks until the hook completes or until the termination grace period is reached. More info: https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/#container-hooks'
                   type: object
                   properties:
                     exec:
-                      description: One and only one of the following should be specified. Exec specifies the action to take.
+                      description: Exec specifies the action to take.
                       type: object
                       properties:
                         command:
@@ -853,10 +876,12 @@ properties:
                           format: int-or-string
                           x-kubernetes-int-or-string: true
                         scheme:
-                          description: Scheme to use for connecting to the host. Defaults to HTTP.
+                          description: |+
+                            Scheme to use for connecting to the host. Defaults to HTTP.
+
                           type: string
                     tcpSocket:
-                      description: TCPSocket specifies an action involving a TCP port. TCP hooks not yet supported
+                      description: Deprecated. TCPSocket is NOT supported as a LifecycleHandler and kept for the backward compatibility. There are no validation of this field and lifecycle hooks will fail in runtime when tcp handler is specified.
                       type: object
                       required:
                         - port
@@ -873,7 +898,7 @@ properties:
               type: object
               properties:
                 exec:
-                  description: One and only one of the following should be specified. Exec specifies the action to take.
+                  description: Exec specifies the action to take.
                   type: object
                   properties:
                     command:
@@ -885,6 +910,22 @@ properties:
                   description: Minimum consecutive failures for the probe to be considered failed after having succeeded. Defaults to 3. Minimum value is 1.
                   type: integer
                   format: int32
+                grpc:
+                  description: GRPC specifies an action involving a GRPC port. This is an alpha field and requires enabling GRPCContainerProbe feature gate.
+                  type: object
+                  required:
+                    - port
+                  properties:
+                    port:
+                      description: Port number of the gRPC service. Number must be in the range 1 to 65535.
+                      type: integer
+                      format: int32
+                    service:
+                      description: |-
+                        Service is the name of the service to place in the gRPC HealthCheckRequest (see https://github.com/grpc/grpc/blob/master/doc/health-checking.md).
+
+                        If this is not specified, the default behavior is defined by gRPC.
+                      type: string
                 httpGet:
                   description: HTTPGet specifies the http request to perform.
                   type: object
@@ -917,7 +958,9 @@ properties:
                       format: int-or-string
                       x-kubernetes-int-or-string: true
                     scheme:
-                      description: Scheme to use for connecting to the host. Defaults to HTTP.
+                      description: |+
+                        Scheme to use for connecting to the host. Defaults to HTTP.
+
                       type: string
                 initialDelaySeconds:
                   description: 'Number of seconds after the container has started before liveness probes are initiated. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes'
@@ -932,7 +975,7 @@ properties:
                   type: integer
                   format: int32
                 tcpSocket:
-                  description: TCPSocket specifies an action involving a TCP port. TCP hooks not yet supported
+                  description: TCPSocket specifies an action involving a TCP port.
                   type: object
                   required:
                     - port
@@ -945,7 +988,7 @@ properties:
                       format: int-or-string
                       x-kubernetes-int-or-string: true
                 terminationGracePeriodSeconds:
-                  description: Optional duration in seconds the pod needs to terminate gracefully upon probe failure. The grace period is the duration in seconds after the processes running in the pod are sent a termination signal and the time when the processes are forcibly halted with a kill signal. Set this value longer than the expected cleanup time for your process. If this value is nil, the pod's terminationGracePeriodSeconds will be used. Otherwise, this value overrides the value provided by the pod spec. Value must be non-negative integer. The value zero indicates stop immediately via the kill signal (no opportunity to shut down). This is an alpha field and requires enabling ProbeTerminationGracePeriod feature gate.
+                  description: Optional duration in seconds the pod needs to terminate gracefully upon probe failure. The grace period is the duration in seconds after the processes running in the pod are sent a termination signal and the time when the processes are forcibly halted with a kill signal. Set this value longer than the expected cleanup time for your process. If this value is nil, the pod's terminationGracePeriodSeconds will be used. Otherwise, this value overrides the value provided by the pod spec. Value must be non-negative integer. The value zero indicates stop immediately via the kill signal (no opportunity to shut down). This is a beta field and requires enabling ProbeTerminationGracePeriod feature gate. Minimum value is 1. spec.terminationGracePeriodSeconds is used if unset.
                   type: integer
                   format: int64
                 timeoutSeconds:
@@ -978,14 +1021,16 @@ properties:
                     description: If specified, this must be an IANA_SVC_NAME and unique within the pod. Each named port in a pod must have a unique name. Name for the port that can be referred to by services.
                     type: string
                   protocol:
-                    description: Protocol for port. Must be UDP, TCP, or SCTP. Defaults to "TCP".
+                    description: |+
+                      Protocol for port. Must be UDP, TCP, or SCTP. Defaults to "TCP".
+
                     type: string
             readinessProbe:
               description: 'Periodic probe of container service readiness. Container will be removed from service endpoints if the probe fails. Cannot be updated. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes'
               type: object
               properties:
                 exec:
-                  description: One and only one of the following should be specified. Exec specifies the action to take.
+                  description: Exec specifies the action to take.
                   type: object
                   properties:
                     command:
@@ -997,6 +1042,22 @@ properties:
                   description: Minimum consecutive failures for the probe to be considered failed after having succeeded. Defaults to 3. Minimum value is 1.
                   type: integer
                   format: int32
+                grpc:
+                  description: GRPC specifies an action involving a GRPC port. This is an alpha field and requires enabling GRPCContainerProbe feature gate.
+                  type: object
+                  required:
+                    - port
+                  properties:
+                    port:
+                      description: Port number of the gRPC service. Number must be in the range 1 to 65535.
+                      type: integer
+                      format: int32
+                    service:
+                      description: |-
+                        Service is the name of the service to place in the gRPC HealthCheckRequest (see https://github.com/grpc/grpc/blob/master/doc/health-checking.md).
+
+                        If this is not specified, the default behavior is defined by gRPC.
+                      type: string
                 httpGet:
                   description: HTTPGet specifies the http request to perform.
                   type: object
@@ -1029,7 +1090,9 @@ properties:
                       format: int-or-string
                       x-kubernetes-int-or-string: true
                     scheme:
-                      description: Scheme to use for connecting to the host. Defaults to HTTP.
+                      description: |+
+                        Scheme to use for connecting to the host. Defaults to HTTP.
+
                       type: string
                 initialDelaySeconds:
                   description: 'Number of seconds after the container has started before liveness probes are initiated. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes'
@@ -1044,7 +1107,7 @@ properties:
                   type: integer
                   format: int32
                 tcpSocket:
-                  description: TCPSocket specifies an action involving a TCP port. TCP hooks not yet supported
+                  description: TCPSocket specifies an action involving a TCP port.
                   type: object
                   required:
                     - port
@@ -1057,7 +1120,7 @@ properties:
                       format: int-or-string
                       x-kubernetes-int-or-string: true
                 terminationGracePeriodSeconds:
-                  description: Optional duration in seconds the pod needs to terminate gracefully upon probe failure. The grace period is the duration in seconds after the processes running in the pod are sent a termination signal and the time when the processes are forcibly halted with a kill signal. Set this value longer than the expected cleanup time for your process. If this value is nil, the pod's terminationGracePeriodSeconds will be used. Otherwise, this value overrides the value provided by the pod spec. Value must be non-negative integer. The value zero indicates stop immediately via the kill signal (no opportunity to shut down). This is an alpha field and requires enabling ProbeTerminationGracePeriod feature gate.
+                  description: Optional duration in seconds the pod needs to terminate gracefully upon probe failure. The grace period is the duration in seconds after the processes running in the pod are sent a termination signal and the time when the processes are forcibly halted with a kill signal. Set this value longer than the expected cleanup time for your process. If this value is nil, the pod's terminationGracePeriodSeconds will be used. Otherwise, this value overrides the value provided by the pod spec. Value must be non-negative integer. The value zero indicates stop immediately via the kill signal (no opportunity to shut down). This is a beta field and requires enabling ProbeTerminationGracePeriod feature gate. Minimum value is 1. spec.terminationGracePeriodSeconds is used if unset.
                   type: integer
                   format: int64
                 timeoutSeconds:
@@ -1079,14 +1142,14 @@ properties:
                   additionalProperties:
                     type: string
             securityContext:
-              description: 'Security options the pod should run with. More info: https://kubernetes.io/docs/concepts/policy/security-context/ More info: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/'
+              description: 'SecurityContext defines the security options the container should be run with. If set, the fields of SecurityContext override the equivalent fields of PodSecurityContext. More info: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/'
               type: object
               properties:
                 allowPrivilegeEscalation:
-                  description: 'AllowPrivilegeEscalation controls whether a process can gain more privileges than its parent process. This bool directly controls if the no_new_privs flag will be set on the container process. AllowPrivilegeEscalation is true always when the container is: 1) run as Privileged 2) has CAP_SYS_ADMIN'
+                  description: 'AllowPrivilegeEscalation controls whether a process can gain more privileges than its parent process. This bool directly controls if the no_new_privs flag will be set on the container process. AllowPrivilegeEscalation is true always when the container is: 1) run as Privileged 2) has CAP_SYS_ADMIN Note that this field cannot be set when spec.os.name is windows.'
                   type: boolean
                 capabilities:
-                  description: The capabilities to add/drop when running containers. Defaults to the default set of capabilities granted by the container runtime.
+                  description: The capabilities to add/drop when running containers. Defaults to the default set of capabilities granted by the container runtime. Note that this field cannot be set when spec.os.name is windows.
                   type: object
                   properties:
                     add:
@@ -1100,27 +1163,27 @@ properties:
                       items:
                         type: string
                 privileged:
-                  description: Run container in privileged mode. Processes in privileged containers are essentially equivalent to root on the host. Defaults to false.
+                  description: Run container in privileged mode. Processes in privileged containers are essentially equivalent to root on the host. Defaults to false. Note that this field cannot be set when spec.os.name is windows.
                   type: boolean
                 procMount:
-                  description: procMount denotes the type of proc mount to use for the containers. The default is DefaultProcMount which uses the container runtime defaults for readonly paths and masked paths. This requires the ProcMountType feature flag to be enabled.
+                  description: procMount denotes the type of proc mount to use for the containers. The default is DefaultProcMount which uses the container runtime defaults for readonly paths and masked paths. This requires the ProcMountType feature flag to be enabled. Note that this field cannot be set when spec.os.name is windows.
                   type: string
                 readOnlyRootFilesystem:
-                  description: Whether this container has a read-only root filesystem. Default is false.
+                  description: Whether this container has a read-only root filesystem. Default is false. Note that this field cannot be set when spec.os.name is windows.
                   type: boolean
                 runAsGroup:
-                  description: The GID to run the entrypoint of the container process. Uses runtime default if unset. May also be set in PodSecurityContext.  If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence.
+                  description: The GID to run the entrypoint of the container process. Uses runtime default if unset. May also be set in PodSecurityContext.  If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence. Note that this field cannot be set when spec.os.name is windows.
                   type: integer
                   format: int64
                 runAsNonRoot:
                   description: Indicates that the container must run as a non-root user. If true, the Kubelet will validate the image at runtime to ensure that it does not run as UID 0 (root) and fail to start the container if it does. If unset or false, no such validation will be performed. May also be set in PodSecurityContext.  If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence.
                   type: boolean
                 runAsUser:
-                  description: The UID to run the entrypoint of the container process. Defaults to user specified in image metadata if unspecified. May also be set in PodSecurityContext.  If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence.
+                  description: The UID to run the entrypoint of the container process. Defaults to user specified in image metadata if unspecified. May also be set in PodSecurityContext.  If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence. Note that this field cannot be set when spec.os.name is windows.
                   type: integer
                   format: int64
                 seLinuxOptions:
-                  description: The SELinux context to be applied to the container. If unspecified, the container runtime will allocate a random SELinux context for each container.  May also be set in PodSecurityContext.  If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence.
+                  description: The SELinux context to be applied to the container. If unspecified, the container runtime will allocate a random SELinux context for each container.  May also be set in PodSecurityContext.  If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence. Note that this field cannot be set when spec.os.name is windows.
                   type: object
                   properties:
                     level:
@@ -1136,7 +1199,7 @@ properties:
                       description: User is a SELinux user label that applies to the container.
                       type: string
                 seccompProfile:
-                  description: The seccomp options to use by this container. If seccomp options are provided at both the pod & container level, the container options override the pod options.
+                  description: The seccomp options to use by this container. If seccomp options are provided at both the pod & container level, the container options override the pod options. Note that this field cannot be set when spec.os.name is windows.
                   type: object
                   required:
                     - type
@@ -1145,13 +1208,14 @@ properties:
                       description: localhostProfile indicates a profile defined in a file on the node should be used. The profile must be preconfigured on the node to work. Must be a descending path, relative to the kubelet's configured seccomp profile location. Must only be set if type is "Localhost".
                       type: string
                     type:
-                      description: |-
+                      description: |+
                         type indicates which kind of seccomp profile will be applied. Valid options are:
 
                         Localhost - a profile defined in a file on the node should be used. RuntimeDefault - the container runtime default profile should be used. Unconfined - no profile should be applied.
+
                       type: string
                 windowsOptions:
-                  description: The Windows specific settings applied to all containers. If unspecified, the options from the PodSecurityContext will be used. If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence.
+                  description: The Windows specific settings applied to all containers. If unspecified, the options from the PodSecurityContext will be used. If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence. Note that this field cannot be set when spec.os.name is linux.
                   type: object
                   properties:
                     gmsaCredentialSpec:
@@ -1160,6 +1224,9 @@ properties:
                     gmsaCredentialSpecName:
                       description: GMSACredentialSpecName is the name of the GMSA credential spec to use.
                       type: string
+                    hostProcess:
+                      description: HostProcess determines if a container should be run as a 'Host Process' container. This field is alpha-level and will only be honored by components that enable the WindowsHostProcessContainers feature flag. Setting this field without the feature flag will result in errors when validating the Pod. All of a Pod's containers must have the same effective HostProcess value (it is not allowed to have a mix of HostProcess containers and non-HostProcess containers).  In addition, if HostProcess is true then HostNetwork must also be set to true.
+                      type: boolean
                     runAsUserName:
                       description: The UserName in Windows to run the entrypoint of the container process. Defaults to the user specified in image metadata if unspecified. May also be set in PodSecurityContext. If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence.
                       type: string
@@ -1168,7 +1235,7 @@ properties:
               type: object
               properties:
                 exec:
-                  description: One and only one of the following should be specified. Exec specifies the action to take.
+                  description: Exec specifies the action to take.
                   type: object
                   properties:
                     command:
@@ -1180,6 +1247,22 @@ properties:
                   description: Minimum consecutive failures for the probe to be considered failed after having succeeded. Defaults to 3. Minimum value is 1.
                   type: integer
                   format: int32
+                grpc:
+                  description: GRPC specifies an action involving a GRPC port. This is an alpha field and requires enabling GRPCContainerProbe feature gate.
+                  type: object
+                  required:
+                    - port
+                  properties:
+                    port:
+                      description: Port number of the gRPC service. Number must be in the range 1 to 65535.
+                      type: integer
+                      format: int32
+                    service:
+                      description: |-
+                        Service is the name of the service to place in the gRPC HealthCheckRequest (see https://github.com/grpc/grpc/blob/master/doc/health-checking.md).
+
+                        If this is not specified, the default behavior is defined by gRPC.
+                      type: string
                 httpGet:
                   description: HTTPGet specifies the http request to perform.
                   type: object
@@ -1212,7 +1295,9 @@ properties:
                       format: int-or-string
                       x-kubernetes-int-or-string: true
                     scheme:
-                      description: Scheme to use for connecting to the host. Defaults to HTTP.
+                      description: |+
+                        Scheme to use for connecting to the host. Defaults to HTTP.
+
                       type: string
                 initialDelaySeconds:
                   description: 'Number of seconds after the container has started before liveness probes are initiated. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes'
@@ -1227,7 +1312,7 @@ properties:
                   type: integer
                   format: int32
                 tcpSocket:
-                  description: TCPSocket specifies an action involving a TCP port. TCP hooks not yet supported
+                  description: TCPSocket specifies an action involving a TCP port.
                   type: object
                   required:
                     - port
@@ -1240,7 +1325,7 @@ properties:
                       format: int-or-string
                       x-kubernetes-int-or-string: true
                 terminationGracePeriodSeconds:
-                  description: Optional duration in seconds the pod needs to terminate gracefully upon probe failure. The grace period is the duration in seconds after the processes running in the pod are sent a termination signal and the time when the processes are forcibly halted with a kill signal. Set this value longer than the expected cleanup time for your process. If this value is nil, the pod's terminationGracePeriodSeconds will be used. Otherwise, this value overrides the value provided by the pod spec. Value must be non-negative integer. The value zero indicates stop immediately via the kill signal (no opportunity to shut down). This is an alpha field and requires enabling ProbeTerminationGracePeriod feature gate.
+                  description: Optional duration in seconds the pod needs to terminate gracefully upon probe failure. The grace period is the duration in seconds after the processes running in the pod are sent a termination signal and the time when the processes are forcibly halted with a kill signal. Set this value longer than the expected cleanup time for your process. If this value is nil, the pod's terminationGracePeriodSeconds will be used. Otherwise, this value overrides the value provided by the pod spec. Value must be non-negative integer. The value zero indicates stop immediately via the kill signal (no opportunity to shut down). This is a beta field and requires enabling ProbeTerminationGracePeriod feature gate. Minimum value is 1. spec.terminationGracePeriodSeconds is used if unset.
                   type: integer
                   format: int64
                 timeoutSeconds:
@@ -1257,7 +1342,9 @@ properties:
               description: 'Optional: Path at which the file to which the container''s termination message will be written is mounted into the container''s filesystem. Message written is intended to be brief final status, such as an assertion failure message. Will be truncated by the node if greater than 4096 bytes. The total message length across all containers will be limited to 12kb. Defaults to /dev/termination-log. Cannot be updated.'
               type: string
             terminationMessagePolicy:
-              description: Indicate how the termination message should be populated. File will use the contents of terminationMessagePath to populate the container status message on both success and failure. FallbackToLogsOnError will use the last chunk of container log output if the termination message file is empty and the container exited with an error. The log output is limited to 2048 bytes or 80 lines, whichever is smaller. Defaults to File. Cannot be updated.
+              description: |+
+                Indicate how the termination message should be populated. File will use the contents of terminationMessagePath to populate the container status message on both success and failure. FallbackToLogsOnError will use the last chunk of container log output if the termination message file is empty and the container exited with an error. The log output is limited to 2048 bytes or 80 lines, whichever is smaller. Defaults to File. Cannot be updated.
+
               type: string
             tty:
               description: Whether this container should allocate a TTY for itself, also requires 'stdin' to be true. Default is false.
@@ -1333,13 +1420,15 @@ properties:
             items:
               type: string
       dnsPolicy:
-        description: Set DNS policy for the pod. Defaults to "ClusterFirst". Valid values are 'ClusterFirstWithHostNet', 'ClusterFirst', 'Default' or 'None'. DNS parameters given in DNSConfig will be merged with the policy selected with DNSPolicy. To have DNS options set along with hostNetwork, you have to specify DNS policy explicitly to 'ClusterFirstWithHostNet'.
+        description: |+
+          Set DNS policy for the pod. Defaults to "ClusterFirst". Valid values are 'ClusterFirstWithHostNet', 'ClusterFirst', 'Default' or 'None'. DNS parameters given in DNSConfig will be merged with the policy selected with DNSPolicy. To have DNS options set along with hostNetwork, you have to specify DNS policy explicitly to 'ClusterFirstWithHostNet'.
+
         type: string
       enableServiceLinks:
         description: 'EnableServiceLinks indicates whether information about services should be injected into pod''s environment variables, matching the syntax of Docker links. Optional: Defaults to true.'
         type: boolean
       ephemeralContainers:
-        description: List of ephemeral containers run in this pod. Ephemeral containers may be run in an existing pod to perform user-initiated actions such as debugging. This list cannot be specified when creating a pod, and it cannot be modified by updating the pod spec. In order to add an ephemeral container to an existing pod, use the pod's ephemeralcontainers subresource. This field is alpha-level and is only honored by servers that enable the EphemeralContainers feature.
+        description: List of ephemeral containers run in this pod. Ephemeral containers may be run in an existing pod to perform user-initiated actions such as debugging. This list cannot be specified when creating a pod, and it cannot be modified by updating the pod spec. In order to add an ephemeral container to an existing pod, use the pod's ephemeralcontainers subresource. This field is beta-level and available on clusters that haven't disabled the EphemeralContainers feature gate.
         type: array
         items:
           type: object
@@ -1347,12 +1436,12 @@ properties:
             - name
           properties:
             args:
-              description: 'Arguments to the entrypoint. The docker image''s CMD is used if this is not provided. Variable references $(VAR_NAME) are expanded using the container''s environment. If a variable cannot be resolved, the reference in the input string will be unchanged. The $(VAR_NAME) syntax can be escaped with a double $$, ie: $$(VAR_NAME). Escaped references will never be expanded, regardless of whether the variable exists or not. Cannot be updated. More info: https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell'
+              description: 'Arguments to the entrypoint. The docker image''s CMD is used if this is not provided. Variable references $(VAR_NAME) are expanded using the container''s environment. If a variable cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless of whether the variable exists or not. Cannot be updated. More info: https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell'
               type: array
               items:
                 type: string
             command:
-              description: 'Entrypoint array. Not executed within a shell. The docker image''s ENTRYPOINT is used if this is not provided. Variable references $(VAR_NAME) are expanded using the container''s environment. If a variable cannot be resolved, the reference in the input string will be unchanged. The $(VAR_NAME) syntax can be escaped with a double $$, ie: $$(VAR_NAME). Escaped references will never be expanded, regardless of whether the variable exists or not. Cannot be updated. More info: https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell'
+              description: 'Entrypoint array. Not executed within a shell. The docker image''s ENTRYPOINT is used if this is not provided. Variable references $(VAR_NAME) are expanded using the container''s environment. If a variable cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless of whether the variable exists or not. Cannot be updated. More info: https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell'
               type: array
               items:
                 type: string
@@ -1368,7 +1457,7 @@ properties:
                     description: Name of the environment variable. Must be a C_IDENTIFIER.
                     type: string
                   value:
-                    description: 'Variable references $(VAR_NAME) are expanded using the previous defined environment variables in the container and any service environment variables. If a variable cannot be resolved, the reference in the input string will be unchanged. The $(VAR_NAME) syntax can be escaped with a double $$, ie: $$(VAR_NAME). Escaped references will never be expanded, regardless of whether the variable exists or not. Defaults to "".'
+                    description: 'Variable references $(VAR_NAME) are expanded using the previously defined environment variables in the container and any service environment variables. If a variable cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless of whether the variable exists or not. Defaults to "".'
                     type: string
                   valueFrom:
                     description: Source for the environment variable's value. Cannot be used if value is not empty.
@@ -1389,6 +1478,7 @@ properties:
                           optional:
                             description: Specify whether the ConfigMap or its key must be defined
                             type: boolean
+                        x-kubernetes-map-type: atomic
                       fieldRef:
                         description: 'Selects a field of the pod: supports metadata.name, metadata.namespace, `metadata.labels[''<KEY>'']`, `metadata.annotations[''<KEY>'']`, spec.nodeName, spec.serviceAccountName, status.hostIP, status.podIP, status.podIPs.'
                         type: object
@@ -1401,6 +1491,7 @@ properties:
                           fieldPath:
                             description: Path of the field to select in the specified API version.
                             type: string
+                        x-kubernetes-map-type: atomic
                       resourceFieldRef:
                         description: 'Selects a resource of the container: only resources limits and requests (limits.cpu, limits.memory, limits.ephemeral-storage, requests.cpu, requests.memory and requests.ephemeral-storage) are currently supported.'
                         type: object
@@ -1416,6 +1507,7 @@ properties:
                           resource:
                             description: 'Required: resource to select'
                             type: string
+                        x-kubernetes-map-type: atomic
                       secretKeyRef:
                         description: Selects a key of a secret in the pod's namespace
                         type: object
@@ -1431,6 +1523,7 @@ properties:
                           optional:
                             description: Specify whether the Secret or its key must be defined
                             type: boolean
+                        x-kubernetes-map-type: atomic
             envFrom:
               description: List of sources to populate environment variables in the container. The keys defined within a source must be a C_IDENTIFIER. All invalid keys will be reported as an event when the container is starting. When a key exists in multiple sources, the value associated with the last source will take precedence. Values defined by an Env with a duplicate key will take precedence. Cannot be updated.
               type: array
@@ -1464,7 +1557,9 @@ properties:
               description: 'Docker image name. More info: https://kubernetes.io/docs/concepts/containers/images'
               type: string
             imagePullPolicy:
-              description: 'Image pull policy. One of Always, Never, IfNotPresent. Defaults to Always if :latest tag is specified, or IfNotPresent otherwise. Cannot be updated. More info: https://kubernetes.io/docs/concepts/containers/images#updating-images'
+              description: |+
+                Image pull policy. One of Always, Never, IfNotPresent. Defaults to Always if :latest tag is specified, or IfNotPresent otherwise. Cannot be updated. More info: https://kubernetes.io/docs/concepts/containers/images#updating-images
+
               type: string
             lifecycle:
               description: Lifecycle is not allowed for ephemeral containers.
@@ -1475,7 +1570,7 @@ properties:
                   type: object
                   properties:
                     exec:
-                      description: One and only one of the following should be specified. Exec specifies the action to take.
+                      description: Exec specifies the action to take.
                       type: object
                       properties:
                         command:
@@ -1515,10 +1610,12 @@ properties:
                           format: int-or-string
                           x-kubernetes-int-or-string: true
                         scheme:
-                          description: Scheme to use for connecting to the host. Defaults to HTTP.
+                          description: |+
+                            Scheme to use for connecting to the host. Defaults to HTTP.
+
                           type: string
                     tcpSocket:
-                      description: TCPSocket specifies an action involving a TCP port. TCP hooks not yet supported
+                      description: Deprecated. TCPSocket is NOT supported as a LifecycleHandler and kept for the backward compatibility. There are no validation of this field and lifecycle hooks will fail in runtime when tcp handler is specified.
                       type: object
                       required:
                         - port
@@ -1531,11 +1628,11 @@ properties:
                           format: int-or-string
                           x-kubernetes-int-or-string: true
                 preStop:
-                  description: 'PreStop is called immediately before a container is terminated due to an API request or management event such as liveness/startup probe failure, preemption, resource contention, etc. The handler is not called if the container crashes or exits. The reason for termination is passed to the handler. The Pod''s termination grace period countdown begins before the PreStop hooked is executed. Regardless of the outcome of the handler, the container will eventually terminate within the Pod''s termination grace period. Other management of the container blocks until the hook completes or until the termination grace period is reached. More info: https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/#container-hooks'
+                  description: 'PreStop is called immediately before a container is terminated due to an API request or management event such as liveness/startup probe failure, preemption, resource contention, etc. The handler is not called if the container crashes or exits. The Pod''s termination grace period countdown begins before the PreStop hook is executed. Regardless of the outcome of the handler, the container will eventually terminate within the Pod''s termination grace period (unless delayed by finalizers). Other management of the container blocks until the hook completes or until the termination grace period is reached. More info: https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/#container-hooks'
                   type: object
                   properties:
                     exec:
-                      description: One and only one of the following should be specified. Exec specifies the action to take.
+                      description: Exec specifies the action to take.
                       type: object
                       properties:
                         command:
@@ -1575,10 +1672,12 @@ properties:
                           format: int-or-string
                           x-kubernetes-int-or-string: true
                         scheme:
-                          description: Scheme to use for connecting to the host. Defaults to HTTP.
+                          description: |+
+                            Scheme to use for connecting to the host. Defaults to HTTP.
+
                           type: string
                     tcpSocket:
-                      description: TCPSocket specifies an action involving a TCP port. TCP hooks not yet supported
+                      description: Deprecated. TCPSocket is NOT supported as a LifecycleHandler and kept for the backward compatibility. There are no validation of this field and lifecycle hooks will fail in runtime when tcp handler is specified.
                       type: object
                       required:
                         - port
@@ -1595,7 +1694,7 @@ properties:
               type: object
               properties:
                 exec:
-                  description: One and only one of the following should be specified. Exec specifies the action to take.
+                  description: Exec specifies the action to take.
                   type: object
                   properties:
                     command:
@@ -1607,6 +1706,22 @@ properties:
                   description: Minimum consecutive failures for the probe to be considered failed after having succeeded. Defaults to 3. Minimum value is 1.
                   type: integer
                   format: int32
+                grpc:
+                  description: GRPC specifies an action involving a GRPC port. This is an alpha field and requires enabling GRPCContainerProbe feature gate.
+                  type: object
+                  required:
+                    - port
+                  properties:
+                    port:
+                      description: Port number of the gRPC service. Number must be in the range 1 to 65535.
+                      type: integer
+                      format: int32
+                    service:
+                      description: |-
+                        Service is the name of the service to place in the gRPC HealthCheckRequest (see https://github.com/grpc/grpc/blob/master/doc/health-checking.md).
+
+                        If this is not specified, the default behavior is defined by gRPC.
+                      type: string
                 httpGet:
                   description: HTTPGet specifies the http request to perform.
                   type: object
@@ -1639,7 +1754,9 @@ properties:
                       format: int-or-string
                       x-kubernetes-int-or-string: true
                     scheme:
-                      description: Scheme to use for connecting to the host. Defaults to HTTP.
+                      description: |+
+                        Scheme to use for connecting to the host. Defaults to HTTP.
+
                       type: string
                 initialDelaySeconds:
                   description: 'Number of seconds after the container has started before liveness probes are initiated. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes'
@@ -1654,7 +1771,7 @@ properties:
                   type: integer
                   format: int32
                 tcpSocket:
-                  description: TCPSocket specifies an action involving a TCP port. TCP hooks not yet supported
+                  description: TCPSocket specifies an action involving a TCP port.
                   type: object
                   required:
                     - port
@@ -1667,7 +1784,7 @@ properties:
                       format: int-or-string
                       x-kubernetes-int-or-string: true
                 terminationGracePeriodSeconds:
-                  description: Optional duration in seconds the pod needs to terminate gracefully upon probe failure. The grace period is the duration in seconds after the processes running in the pod are sent a termination signal and the time when the processes are forcibly halted with a kill signal. Set this value longer than the expected cleanup time for your process. If this value is nil, the pod's terminationGracePeriodSeconds will be used. Otherwise, this value overrides the value provided by the pod spec. Value must be non-negative integer. The value zero indicates stop immediately via the kill signal (no opportunity to shut down). This is an alpha field and requires enabling ProbeTerminationGracePeriod feature gate.
+                  description: Optional duration in seconds the pod needs to terminate gracefully upon probe failure. The grace period is the duration in seconds after the processes running in the pod are sent a termination signal and the time when the processes are forcibly halted with a kill signal. Set this value longer than the expected cleanup time for your process. If this value is nil, the pod's terminationGracePeriodSeconds will be used. Otherwise, this value overrides the value provided by the pod spec. Value must be non-negative integer. The value zero indicates stop immediately via the kill signal (no opportunity to shut down). This is a beta field and requires enabling ProbeTerminationGracePeriod feature gate. Minimum value is 1. spec.terminationGracePeriodSeconds is used if unset.
                   type: integer
                   format: int64
                 timeoutSeconds:
@@ -1700,14 +1817,16 @@ properties:
                     description: If specified, this must be an IANA_SVC_NAME and unique within the pod. Each named port in a pod must have a unique name. Name for the port that can be referred to by services.
                     type: string
                   protocol:
-                    description: Protocol for port. Must be UDP, TCP, or SCTP. Defaults to "TCP".
+                    description: |+
+                      Protocol for port. Must be UDP, TCP, or SCTP. Defaults to "TCP".
+
                     type: string
             readinessProbe:
               description: Probes are not allowed for ephemeral containers.
               type: object
               properties:
                 exec:
-                  description: One and only one of the following should be specified. Exec specifies the action to take.
+                  description: Exec specifies the action to take.
                   type: object
                   properties:
                     command:
@@ -1719,6 +1838,22 @@ properties:
                   description: Minimum consecutive failures for the probe to be considered failed after having succeeded. Defaults to 3. Minimum value is 1.
                   type: integer
                   format: int32
+                grpc:
+                  description: GRPC specifies an action involving a GRPC port. This is an alpha field and requires enabling GRPCContainerProbe feature gate.
+                  type: object
+                  required:
+                    - port
+                  properties:
+                    port:
+                      description: Port number of the gRPC service. Number must be in the range 1 to 65535.
+                      type: integer
+                      format: int32
+                    service:
+                      description: |-
+                        Service is the name of the service to place in the gRPC HealthCheckRequest (see https://github.com/grpc/grpc/blob/master/doc/health-checking.md).
+
+                        If this is not specified, the default behavior is defined by gRPC.
+                      type: string
                 httpGet:
                   description: HTTPGet specifies the http request to perform.
                   type: object
@@ -1751,7 +1886,9 @@ properties:
                       format: int-or-string
                       x-kubernetes-int-or-string: true
                     scheme:
-                      description: Scheme to use for connecting to the host. Defaults to HTTP.
+                      description: |+
+                        Scheme to use for connecting to the host. Defaults to HTTP.
+
                       type: string
                 initialDelaySeconds:
                   description: 'Number of seconds after the container has started before liveness probes are initiated. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes'
@@ -1766,7 +1903,7 @@ properties:
                   type: integer
                   format: int32
                 tcpSocket:
-                  description: TCPSocket specifies an action involving a TCP port. TCP hooks not yet supported
+                  description: TCPSocket specifies an action involving a TCP port.
                   type: object
                   required:
                     - port
@@ -1779,7 +1916,7 @@ properties:
                       format: int-or-string
                       x-kubernetes-int-or-string: true
                 terminationGracePeriodSeconds:
-                  description: Optional duration in seconds the pod needs to terminate gracefully upon probe failure. The grace period is the duration in seconds after the processes running in the pod are sent a termination signal and the time when the processes are forcibly halted with a kill signal. Set this value longer than the expected cleanup time for your process. If this value is nil, the pod's terminationGracePeriodSeconds will be used. Otherwise, this value overrides the value provided by the pod spec. Value must be non-negative integer. The value zero indicates stop immediately via the kill signal (no opportunity to shut down). This is an alpha field and requires enabling ProbeTerminationGracePeriod feature gate.
+                  description: Optional duration in seconds the pod needs to terminate gracefully upon probe failure. The grace period is the duration in seconds after the processes running in the pod are sent a termination signal and the time when the processes are forcibly halted with a kill signal. Set this value longer than the expected cleanup time for your process. If this value is nil, the pod's terminationGracePeriodSeconds will be used. Otherwise, this value overrides the value provided by the pod spec. Value must be non-negative integer. The value zero indicates stop immediately via the kill signal (no opportunity to shut down). This is a beta field and requires enabling ProbeTerminationGracePeriod feature gate. Minimum value is 1. spec.terminationGracePeriodSeconds is used if unset.
                   type: integer
                   format: int64
                 timeoutSeconds:
@@ -1801,14 +1938,14 @@ properties:
                   additionalProperties:
                     type: string
             securityContext:
-              description: SecurityContext is not allowed for ephemeral containers.
+              description: 'Optional: SecurityContext defines the security options the ephemeral container should be run with. If set, the fields of SecurityContext override the equivalent fields of PodSecurityContext.'
               type: object
               properties:
                 allowPrivilegeEscalation:
-                  description: 'AllowPrivilegeEscalation controls whether a process can gain more privileges than its parent process. This bool directly controls if the no_new_privs flag will be set on the container process. AllowPrivilegeEscalation is true always when the container is: 1) run as Privileged 2) has CAP_SYS_ADMIN'
+                  description: 'AllowPrivilegeEscalation controls whether a process can gain more privileges than its parent process. This bool directly controls if the no_new_privs flag will be set on the container process. AllowPrivilegeEscalation is true always when the container is: 1) run as Privileged 2) has CAP_SYS_ADMIN Note that this field cannot be set when spec.os.name is windows.'
                   type: boolean
                 capabilities:
-                  description: The capabilities to add/drop when running containers. Defaults to the default set of capabilities granted by the container runtime.
+                  description: The capabilities to add/drop when running containers. Defaults to the default set of capabilities granted by the container runtime. Note that this field cannot be set when spec.os.name is windows.
                   type: object
                   properties:
                     add:
@@ -1822,27 +1959,27 @@ properties:
                       items:
                         type: string
                 privileged:
-                  description: Run container in privileged mode. Processes in privileged containers are essentially equivalent to root on the host. Defaults to false.
+                  description: Run container in privileged mode. Processes in privileged containers are essentially equivalent to root on the host. Defaults to false. Note that this field cannot be set when spec.os.name is windows.
                   type: boolean
                 procMount:
-                  description: procMount denotes the type of proc mount to use for the containers. The default is DefaultProcMount which uses the container runtime defaults for readonly paths and masked paths. This requires the ProcMountType feature flag to be enabled.
+                  description: procMount denotes the type of proc mount to use for the containers. The default is DefaultProcMount which uses the container runtime defaults for readonly paths and masked paths. This requires the ProcMountType feature flag to be enabled. Note that this field cannot be set when spec.os.name is windows.
                   type: string
                 readOnlyRootFilesystem:
-                  description: Whether this container has a read-only root filesystem. Default is false.
+                  description: Whether this container has a read-only root filesystem. Default is false. Note that this field cannot be set when spec.os.name is windows.
                   type: boolean
                 runAsGroup:
-                  description: The GID to run the entrypoint of the container process. Uses runtime default if unset. May also be set in PodSecurityContext.  If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence.
+                  description: The GID to run the entrypoint of the container process. Uses runtime default if unset. May also be set in PodSecurityContext.  If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence. Note that this field cannot be set when spec.os.name is windows.
                   type: integer
                   format: int64
                 runAsNonRoot:
                   description: Indicates that the container must run as a non-root user. If true, the Kubelet will validate the image at runtime to ensure that it does not run as UID 0 (root) and fail to start the container if it does. If unset or false, no such validation will be performed. May also be set in PodSecurityContext.  If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence.
                   type: boolean
                 runAsUser:
-                  description: The UID to run the entrypoint of the container process. Defaults to user specified in image metadata if unspecified. May also be set in PodSecurityContext.  If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence.
+                  description: The UID to run the entrypoint of the container process. Defaults to user specified in image metadata if unspecified. May also be set in PodSecurityContext.  If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence. Note that this field cannot be set when spec.os.name is windows.
                   type: integer
                   format: int64
                 seLinuxOptions:
-                  description: The SELinux context to be applied to the container. If unspecified, the container runtime will allocate a random SELinux context for each container.  May also be set in PodSecurityContext.  If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence.
+                  description: The SELinux context to be applied to the container. If unspecified, the container runtime will allocate a random SELinux context for each container.  May also be set in PodSecurityContext.  If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence. Note that this field cannot be set when spec.os.name is windows.
                   type: object
                   properties:
                     level:
@@ -1858,7 +1995,7 @@ properties:
                       description: User is a SELinux user label that applies to the container.
                       type: string
                 seccompProfile:
-                  description: The seccomp options to use by this container. If seccomp options are provided at both the pod & container level, the container options override the pod options.
+                  description: The seccomp options to use by this container. If seccomp options are provided at both the pod & container level, the container options override the pod options. Note that this field cannot be set when spec.os.name is windows.
                   type: object
                   required:
                     - type
@@ -1867,13 +2004,14 @@ properties:
                       description: localhostProfile indicates a profile defined in a file on the node should be used. The profile must be preconfigured on the node to work. Must be a descending path, relative to the kubelet's configured seccomp profile location. Must only be set if type is "Localhost".
                       type: string
                     type:
-                      description: |-
+                      description: |+
                         type indicates which kind of seccomp profile will be applied. Valid options are:
 
                         Localhost - a profile defined in a file on the node should be used. RuntimeDefault - the container runtime default profile should be used. Unconfined - no profile should be applied.
+
                       type: string
                 windowsOptions:
-                  description: The Windows specific settings applied to all containers. If unspecified, the options from the PodSecurityContext will be used. If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence.
+                  description: The Windows specific settings applied to all containers. If unspecified, the options from the PodSecurityContext will be used. If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence. Note that this field cannot be set when spec.os.name is linux.
                   type: object
                   properties:
                     gmsaCredentialSpec:
@@ -1882,6 +2020,9 @@ properties:
                     gmsaCredentialSpecName:
                       description: GMSACredentialSpecName is the name of the GMSA credential spec to use.
                       type: string
+                    hostProcess:
+                      description: HostProcess determines if a container should be run as a 'Host Process' container. This field is alpha-level and will only be honored by components that enable the WindowsHostProcessContainers feature flag. Setting this field without the feature flag will result in errors when validating the Pod. All of a Pod's containers must have the same effective HostProcess value (it is not allowed to have a mix of HostProcess containers and non-HostProcess containers).  In addition, if HostProcess is true then HostNetwork must also be set to true.
+                      type: boolean
                     runAsUserName:
                       description: The UserName in Windows to run the entrypoint of the container process. Defaults to the user specified in image metadata if unspecified. May also be set in PodSecurityContext. If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence.
                       type: string
@@ -1890,7 +2031,7 @@ properties:
               type: object
               properties:
                 exec:
-                  description: One and only one of the following should be specified. Exec specifies the action to take.
+                  description: Exec specifies the action to take.
                   type: object
                   properties:
                     command:
@@ -1902,6 +2043,22 @@ properties:
                   description: Minimum consecutive failures for the probe to be considered failed after having succeeded. Defaults to 3. Minimum value is 1.
                   type: integer
                   format: int32
+                grpc:
+                  description: GRPC specifies an action involving a GRPC port. This is an alpha field and requires enabling GRPCContainerProbe feature gate.
+                  type: object
+                  required:
+                    - port
+                  properties:
+                    port:
+                      description: Port number of the gRPC service. Number must be in the range 1 to 65535.
+                      type: integer
+                      format: int32
+                    service:
+                      description: |-
+                        Service is the name of the service to place in the gRPC HealthCheckRequest (see https://github.com/grpc/grpc/blob/master/doc/health-checking.md).
+
+                        If this is not specified, the default behavior is defined by gRPC.
+                      type: string
                 httpGet:
                   description: HTTPGet specifies the http request to perform.
                   type: object
@@ -1934,7 +2091,9 @@ properties:
                       format: int-or-string
                       x-kubernetes-int-or-string: true
                     scheme:
-                      description: Scheme to use for connecting to the host. Defaults to HTTP.
+                      description: |+
+                        Scheme to use for connecting to the host. Defaults to HTTP.
+
                       type: string
                 initialDelaySeconds:
                   description: 'Number of seconds after the container has started before liveness probes are initiated. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes'
@@ -1949,7 +2108,7 @@ properties:
                   type: integer
                   format: int32
                 tcpSocket:
-                  description: TCPSocket specifies an action involving a TCP port. TCP hooks not yet supported
+                  description: TCPSocket specifies an action involving a TCP port.
                   type: object
                   required:
                     - port
@@ -1962,7 +2121,7 @@ properties:
                       format: int-or-string
                       x-kubernetes-int-or-string: true
                 terminationGracePeriodSeconds:
-                  description: Optional duration in seconds the pod needs to terminate gracefully upon probe failure. The grace period is the duration in seconds after the processes running in the pod are sent a termination signal and the time when the processes are forcibly halted with a kill signal. Set this value longer than the expected cleanup time for your process. If this value is nil, the pod's terminationGracePeriodSeconds will be used. Otherwise, this value overrides the value provided by the pod spec. Value must be non-negative integer. The value zero indicates stop immediately via the kill signal (no opportunity to shut down). This is an alpha field and requires enabling ProbeTerminationGracePeriod feature gate.
+                  description: Optional duration in seconds the pod needs to terminate gracefully upon probe failure. The grace period is the duration in seconds after the processes running in the pod are sent a termination signal and the time when the processes are forcibly halted with a kill signal. Set this value longer than the expected cleanup time for your process. If this value is nil, the pod's terminationGracePeriodSeconds will be used. Otherwise, this value overrides the value provided by the pod spec. Value must be non-negative integer. The value zero indicates stop immediately via the kill signal (no opportunity to shut down). This is a beta field and requires enabling ProbeTerminationGracePeriod feature gate. Minimum value is 1. spec.terminationGracePeriodSeconds is used if unset.
                   type: integer
                   format: int64
                 timeoutSeconds:
@@ -1976,13 +2135,18 @@ properties:
               description: Whether the container runtime should close the stdin channel after it has been opened by a single attach. When stdin is true the stdin stream will remain open across multiple attach sessions. If stdinOnce is set to true, stdin is opened on container start, is empty until the first client attaches to stdin, and then remains open and accepts data until the client disconnects, at which time stdin is closed and remains closed until the container is restarted. If this flag is false, a container processes that reads from stdin will never receive an EOF. Default is false
               type: boolean
             targetContainerName:
-              description: If set, the name of the container from PodSpec that this ephemeral container targets. The ephemeral container will be run in the namespaces (IPC, PID, etc) of this container. If not set then the ephemeral container is run in whatever namespaces are shared for the pod. Note that the container runtime must support this feature.
+              description: |-
+                If set, the name of the container from PodSpec that this ephemeral container targets. The ephemeral container will be run in the namespaces (IPC, PID, etc) of this container. If not set then the ephemeral container uses the namespaces configured in the Pod spec.
+
+                The container runtime must implement support for this feature. If the runtime does not support namespace targeting then the result of setting this field is undefined.
               type: string
             terminationMessagePath:
               description: 'Optional: Path at which the file to which the container''s termination message will be written is mounted into the container''s filesystem. Message written is intended to be brief final status, such as an assertion failure message. Will be truncated by the node if greater than 4096 bytes. The total message length across all containers will be limited to 12kb. Defaults to /dev/termination-log. Cannot be updated.'
               type: string
             terminationMessagePolicy:
-              description: Indicate how the termination message should be populated. File will use the contents of terminationMessagePath to populate the container status message on both success and failure. FallbackToLogsOnError will use the last chunk of container log output if the termination message file is empty and the container exited with an error. The log output is limited to 2048 bytes or 80 lines, whichever is smaller. Defaults to File. Cannot be updated.
+              description: |+
+                Indicate how the termination message should be populated. File will use the contents of terminationMessagePath to populate the container status message on both success and failure. FallbackToLogsOnError will use the last chunk of container log output if the termination message file is empty and the container exited with an error. The log output is limited to 2048 bytes or 80 lines, whichever is smaller. Defaults to File. Cannot be updated.
+
               type: string
             tty:
               description: Whether this container should allocate a TTY for itself, also requires 'stdin' to be true. Default is false.
@@ -2003,7 +2167,7 @@ properties:
                     description: name must match the name of a persistentVolumeClaim in the pod
                     type: string
             volumeMounts:
-              description: Pod volumes to mount into the container's filesystem. Cannot be updated.
+              description: Pod volumes to mount into the container's filesystem. Subpath mounts are not allowed for ephemeral containers. Cannot be updated.
               type: array
               items:
                 type: object
@@ -2067,6 +2231,7 @@ properties:
             name:
               description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
               type: string
+          x-kubernetes-map-type: atomic
       initContainers:
         description: 'List of initialization containers belonging to the pod. Init containers are executed in order prior to containers being started. If any init container fails, the pod is considered to have failed and is handled according to its restartPolicy. The name for an init container or normal container must be unique among all containers. Init containers may not have Lifecycle actions, Readiness probes, Liveness probes, or Startup probes. The resourceRequirements of an init container are taken into account during scheduling by finding the highest request/limit for each resource type, and then using the max of of that value or the sum of the normal containers. Limits are applied to init containers in a similar fashion. Init containers cannot currently be added or removed. Cannot be updated. More info: https://kubernetes.io/docs/concepts/workloads/pods/init-containers/'
         type: array
@@ -2076,12 +2241,12 @@ properties:
             - name
           properties:
             args:
-              description: 'Arguments to the entrypoint. The docker image''s CMD is used if this is not provided. Variable references $(VAR_NAME) are expanded using the container''s environment. If a variable cannot be resolved, the reference in the input string will be unchanged. The $(VAR_NAME) syntax can be escaped with a double $$, ie: $$(VAR_NAME). Escaped references will never be expanded, regardless of whether the variable exists or not. Cannot be updated. More info: https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell'
+              description: 'Arguments to the entrypoint. The docker image''s CMD is used if this is not provided. Variable references $(VAR_NAME) are expanded using the container''s environment. If a variable cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless of whether the variable exists or not. Cannot be updated. More info: https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell'
               type: array
               items:
                 type: string
             command:
-              description: 'Entrypoint array. Not executed within a shell. The docker image''s ENTRYPOINT is used if this is not provided. Variable references $(VAR_NAME) are expanded using the container''s environment. If a variable cannot be resolved, the reference in the input string will be unchanged. The $(VAR_NAME) syntax can be escaped with a double $$, ie: $$(VAR_NAME). Escaped references will never be expanded, regardless of whether the variable exists or not. Cannot be updated. More info: https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell'
+              description: 'Entrypoint array. Not executed within a shell. The docker image''s ENTRYPOINT is used if this is not provided. Variable references $(VAR_NAME) are expanded using the container''s environment. If a variable cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless of whether the variable exists or not. Cannot be updated. More info: https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell'
               type: array
               items:
                 type: string
@@ -2097,7 +2262,7 @@ properties:
                     description: Name of the environment variable. Must be a C_IDENTIFIER.
                     type: string
                   value:
-                    description: 'Variable references $(VAR_NAME) are expanded using the previous defined environment variables in the container and any service environment variables. If a variable cannot be resolved, the reference in the input string will be unchanged. The $(VAR_NAME) syntax can be escaped with a double $$, ie: $$(VAR_NAME). Escaped references will never be expanded, regardless of whether the variable exists or not. Defaults to "".'
+                    description: 'Variable references $(VAR_NAME) are expanded using the previously defined environment variables in the container and any service environment variables. If a variable cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless of whether the variable exists or not. Defaults to "".'
                     type: string
                   valueFrom:
                     description: Source for the environment variable's value. Cannot be used if value is not empty.
@@ -2118,6 +2283,7 @@ properties:
                           optional:
                             description: Specify whether the ConfigMap or its key must be defined
                             type: boolean
+                        x-kubernetes-map-type: atomic
                       fieldRef:
                         description: 'Selects a field of the pod: supports metadata.name, metadata.namespace, `metadata.labels[''<KEY>'']`, `metadata.annotations[''<KEY>'']`, spec.nodeName, spec.serviceAccountName, status.hostIP, status.podIP, status.podIPs.'
                         type: object
@@ -2130,6 +2296,7 @@ properties:
                           fieldPath:
                             description: Path of the field to select in the specified API version.
                             type: string
+                        x-kubernetes-map-type: atomic
                       resourceFieldRef:
                         description: 'Selects a resource of the container: only resources limits and requests (limits.cpu, limits.memory, limits.ephemeral-storage, requests.cpu, requests.memory and requests.ephemeral-storage) are currently supported.'
                         type: object
@@ -2145,6 +2312,7 @@ properties:
                           resource:
                             description: 'Required: resource to select'
                             type: string
+                        x-kubernetes-map-type: atomic
                       secretKeyRef:
                         description: Selects a key of a secret in the pod's namespace
                         type: object
@@ -2160,6 +2328,7 @@ properties:
                           optional:
                             description: Specify whether the Secret or its key must be defined
                             type: boolean
+                        x-kubernetes-map-type: atomic
             envFrom:
               description: List of sources to populate environment variables in the container. The keys defined within a source must be a C_IDENTIFIER. All invalid keys will be reported as an event when the container is starting. When a key exists in multiple sources, the value associated with the last source will take precedence. Values defined by an Env with a duplicate key will take precedence. Cannot be updated.
               type: array
@@ -2193,7 +2362,9 @@ properties:
               description: 'Docker image name. More info: https://kubernetes.io/docs/concepts/containers/images This field is optional to allow higher level config management to default or override container images in workload controllers like Deployments and StatefulSets.'
               type: string
             imagePullPolicy:
-              description: 'Image pull policy. One of Always, Never, IfNotPresent. Defaults to Always if :latest tag is specified, or IfNotPresent otherwise. Cannot be updated. More info: https://kubernetes.io/docs/concepts/containers/images#updating-images'
+              description: |+
+                Image pull policy. One of Always, Never, IfNotPresent. Defaults to Always if :latest tag is specified, or IfNotPresent otherwise. Cannot be updated. More info: https://kubernetes.io/docs/concepts/containers/images#updating-images
+
               type: string
             lifecycle:
               description: Actions that the management system should take in response to container lifecycle events. Cannot be updated.
@@ -2204,7 +2375,7 @@ properties:
                   type: object
                   properties:
                     exec:
-                      description: One and only one of the following should be specified. Exec specifies the action to take.
+                      description: Exec specifies the action to take.
                       type: object
                       properties:
                         command:
@@ -2244,10 +2415,12 @@ properties:
                           format: int-or-string
                           x-kubernetes-int-or-string: true
                         scheme:
-                          description: Scheme to use for connecting to the host. Defaults to HTTP.
+                          description: |+
+                            Scheme to use for connecting to the host. Defaults to HTTP.
+
                           type: string
                     tcpSocket:
-                      description: TCPSocket specifies an action involving a TCP port. TCP hooks not yet supported
+                      description: Deprecated. TCPSocket is NOT supported as a LifecycleHandler and kept for the backward compatibility. There are no validation of this field and lifecycle hooks will fail in runtime when tcp handler is specified.
                       type: object
                       required:
                         - port
@@ -2260,11 +2433,11 @@ properties:
                           format: int-or-string
                           x-kubernetes-int-or-string: true
                 preStop:
-                  description: 'PreStop is called immediately before a container is terminated due to an API request or management event such as liveness/startup probe failure, preemption, resource contention, etc. The handler is not called if the container crashes or exits. The reason for termination is passed to the handler. The Pod''s termination grace period countdown begins before the PreStop hooked is executed. Regardless of the outcome of the handler, the container will eventually terminate within the Pod''s termination grace period. Other management of the container blocks until the hook completes or until the termination grace period is reached. More info: https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/#container-hooks'
+                  description: 'PreStop is called immediately before a container is terminated due to an API request or management event such as liveness/startup probe failure, preemption, resource contention, etc. The handler is not called if the container crashes or exits. The Pod''s termination grace period countdown begins before the PreStop hook is executed. Regardless of the outcome of the handler, the container will eventually terminate within the Pod''s termination grace period (unless delayed by finalizers). Other management of the container blocks until the hook completes or until the termination grace period is reached. More info: https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/#container-hooks'
                   type: object
                   properties:
                     exec:
-                      description: One and only one of the following should be specified. Exec specifies the action to take.
+                      description: Exec specifies the action to take.
                       type: object
                       properties:
                         command:
@@ -2304,10 +2477,12 @@ properties:
                           format: int-or-string
                           x-kubernetes-int-or-string: true
                         scheme:
-                          description: Scheme to use for connecting to the host. Defaults to HTTP.
+                          description: |+
+                            Scheme to use for connecting to the host. Defaults to HTTP.
+
                           type: string
                     tcpSocket:
-                      description: TCPSocket specifies an action involving a TCP port. TCP hooks not yet supported
+                      description: Deprecated. TCPSocket is NOT supported as a LifecycleHandler and kept for the backward compatibility. There are no validation of this field and lifecycle hooks will fail in runtime when tcp handler is specified.
                       type: object
                       required:
                         - port
@@ -2324,7 +2499,7 @@ properties:
               type: object
               properties:
                 exec:
-                  description: One and only one of the following should be specified. Exec specifies the action to take.
+                  description: Exec specifies the action to take.
                   type: object
                   properties:
                     command:
@@ -2336,6 +2511,22 @@ properties:
                   description: Minimum consecutive failures for the probe to be considered failed after having succeeded. Defaults to 3. Minimum value is 1.
                   type: integer
                   format: int32
+                grpc:
+                  description: GRPC specifies an action involving a GRPC port. This is an alpha field and requires enabling GRPCContainerProbe feature gate.
+                  type: object
+                  required:
+                    - port
+                  properties:
+                    port:
+                      description: Port number of the gRPC service. Number must be in the range 1 to 65535.
+                      type: integer
+                      format: int32
+                    service:
+                      description: |-
+                        Service is the name of the service to place in the gRPC HealthCheckRequest (see https://github.com/grpc/grpc/blob/master/doc/health-checking.md).
+
+                        If this is not specified, the default behavior is defined by gRPC.
+                      type: string
                 httpGet:
                   description: HTTPGet specifies the http request to perform.
                   type: object
@@ -2368,7 +2559,9 @@ properties:
                       format: int-or-string
                       x-kubernetes-int-or-string: true
                     scheme:
-                      description: Scheme to use for connecting to the host. Defaults to HTTP.
+                      description: |+
+                        Scheme to use for connecting to the host. Defaults to HTTP.
+
                       type: string
                 initialDelaySeconds:
                   description: 'Number of seconds after the container has started before liveness probes are initiated. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes'
@@ -2383,7 +2576,7 @@ properties:
                   type: integer
                   format: int32
                 tcpSocket:
-                  description: TCPSocket specifies an action involving a TCP port. TCP hooks not yet supported
+                  description: TCPSocket specifies an action involving a TCP port.
                   type: object
                   required:
                     - port
@@ -2396,7 +2589,7 @@ properties:
                       format: int-or-string
                       x-kubernetes-int-or-string: true
                 terminationGracePeriodSeconds:
-                  description: Optional duration in seconds the pod needs to terminate gracefully upon probe failure. The grace period is the duration in seconds after the processes running in the pod are sent a termination signal and the time when the processes are forcibly halted with a kill signal. Set this value longer than the expected cleanup time for your process. If this value is nil, the pod's terminationGracePeriodSeconds will be used. Otherwise, this value overrides the value provided by the pod spec. Value must be non-negative integer. The value zero indicates stop immediately via the kill signal (no opportunity to shut down). This is an alpha field and requires enabling ProbeTerminationGracePeriod feature gate.
+                  description: Optional duration in seconds the pod needs to terminate gracefully upon probe failure. The grace period is the duration in seconds after the processes running in the pod are sent a termination signal and the time when the processes are forcibly halted with a kill signal. Set this value longer than the expected cleanup time for your process. If this value is nil, the pod's terminationGracePeriodSeconds will be used. Otherwise, this value overrides the value provided by the pod spec. Value must be non-negative integer. The value zero indicates stop immediately via the kill signal (no opportunity to shut down). This is a beta field and requires enabling ProbeTerminationGracePeriod feature gate. Minimum value is 1. spec.terminationGracePeriodSeconds is used if unset.
                   type: integer
                   format: int64
                 timeoutSeconds:
@@ -2429,14 +2622,16 @@ properties:
                     description: If specified, this must be an IANA_SVC_NAME and unique within the pod. Each named port in a pod must have a unique name. Name for the port that can be referred to by services.
                     type: string
                   protocol:
-                    description: Protocol for port. Must be UDP, TCP, or SCTP. Defaults to "TCP".
+                    description: |+
+                      Protocol for port. Must be UDP, TCP, or SCTP. Defaults to "TCP".
+
                     type: string
             readinessProbe:
               description: 'Periodic probe of container service readiness. Container will be removed from service endpoints if the probe fails. Cannot be updated. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes'
               type: object
               properties:
                 exec:
-                  description: One and only one of the following should be specified. Exec specifies the action to take.
+                  description: Exec specifies the action to take.
                   type: object
                   properties:
                     command:
@@ -2448,6 +2643,22 @@ properties:
                   description: Minimum consecutive failures for the probe to be considered failed after having succeeded. Defaults to 3. Minimum value is 1.
                   type: integer
                   format: int32
+                grpc:
+                  description: GRPC specifies an action involving a GRPC port. This is an alpha field and requires enabling GRPCContainerProbe feature gate.
+                  type: object
+                  required:
+                    - port
+                  properties:
+                    port:
+                      description: Port number of the gRPC service. Number must be in the range 1 to 65535.
+                      type: integer
+                      format: int32
+                    service:
+                      description: |-
+                        Service is the name of the service to place in the gRPC HealthCheckRequest (see https://github.com/grpc/grpc/blob/master/doc/health-checking.md).
+
+                        If this is not specified, the default behavior is defined by gRPC.
+                      type: string
                 httpGet:
                   description: HTTPGet specifies the http request to perform.
                   type: object
@@ -2480,7 +2691,9 @@ properties:
                       format: int-or-string
                       x-kubernetes-int-or-string: true
                     scheme:
-                      description: Scheme to use for connecting to the host. Defaults to HTTP.
+                      description: |+
+                        Scheme to use for connecting to the host. Defaults to HTTP.
+
                       type: string
                 initialDelaySeconds:
                   description: 'Number of seconds after the container has started before liveness probes are initiated. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes'
@@ -2495,7 +2708,7 @@ properties:
                   type: integer
                   format: int32
                 tcpSocket:
-                  description: TCPSocket specifies an action involving a TCP port. TCP hooks not yet supported
+                  description: TCPSocket specifies an action involving a TCP port.
                   type: object
                   required:
                     - port
@@ -2508,7 +2721,7 @@ properties:
                       format: int-or-string
                       x-kubernetes-int-or-string: true
                 terminationGracePeriodSeconds:
-                  description: Optional duration in seconds the pod needs to terminate gracefully upon probe failure. The grace period is the duration in seconds after the processes running in the pod are sent a termination signal and the time when the processes are forcibly halted with a kill signal. Set this value longer than the expected cleanup time for your process. If this value is nil, the pod's terminationGracePeriodSeconds will be used. Otherwise, this value overrides the value provided by the pod spec. Value must be non-negative integer. The value zero indicates stop immediately via the kill signal (no opportunity to shut down). This is an alpha field and requires enabling ProbeTerminationGracePeriod feature gate.
+                  description: Optional duration in seconds the pod needs to terminate gracefully upon probe failure. The grace period is the duration in seconds after the processes running in the pod are sent a termination signal and the time when the processes are forcibly halted with a kill signal. Set this value longer than the expected cleanup time for your process. If this value is nil, the pod's terminationGracePeriodSeconds will be used. Otherwise, this value overrides the value provided by the pod spec. Value must be non-negative integer. The value zero indicates stop immediately via the kill signal (no opportunity to shut down). This is a beta field and requires enabling ProbeTerminationGracePeriod feature gate. Minimum value is 1. spec.terminationGracePeriodSeconds is used if unset.
                   type: integer
                   format: int64
                 timeoutSeconds:
@@ -2530,14 +2743,14 @@ properties:
                   additionalProperties:
                     type: string
             securityContext:
-              description: 'Security options the pod should run with. More info: https://kubernetes.io/docs/concepts/policy/security-context/ More info: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/'
+              description: 'SecurityContext defines the security options the container should be run with. If set, the fields of SecurityContext override the equivalent fields of PodSecurityContext. More info: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/'
               type: object
               properties:
                 allowPrivilegeEscalation:
-                  description: 'AllowPrivilegeEscalation controls whether a process can gain more privileges than its parent process. This bool directly controls if the no_new_privs flag will be set on the container process. AllowPrivilegeEscalation is true always when the container is: 1) run as Privileged 2) has CAP_SYS_ADMIN'
+                  description: 'AllowPrivilegeEscalation controls whether a process can gain more privileges than its parent process. This bool directly controls if the no_new_privs flag will be set on the container process. AllowPrivilegeEscalation is true always when the container is: 1) run as Privileged 2) has CAP_SYS_ADMIN Note that this field cannot be set when spec.os.name is windows.'
                   type: boolean
                 capabilities:
-                  description: The capabilities to add/drop when running containers. Defaults to the default set of capabilities granted by the container runtime.
+                  description: The capabilities to add/drop when running containers. Defaults to the default set of capabilities granted by the container runtime. Note that this field cannot be set when spec.os.name is windows.
                   type: object
                   properties:
                     add:
@@ -2551,27 +2764,27 @@ properties:
                       items:
                         type: string
                 privileged:
-                  description: Run container in privileged mode. Processes in privileged containers are essentially equivalent to root on the host. Defaults to false.
+                  description: Run container in privileged mode. Processes in privileged containers are essentially equivalent to root on the host. Defaults to false. Note that this field cannot be set when spec.os.name is windows.
                   type: boolean
                 procMount:
-                  description: procMount denotes the type of proc mount to use for the containers. The default is DefaultProcMount which uses the container runtime defaults for readonly paths and masked paths. This requires the ProcMountType feature flag to be enabled.
+                  description: procMount denotes the type of proc mount to use for the containers. The default is DefaultProcMount which uses the container runtime defaults for readonly paths and masked paths. This requires the ProcMountType feature flag to be enabled. Note that this field cannot be set when spec.os.name is windows.
                   type: string
                 readOnlyRootFilesystem:
-                  description: Whether this container has a read-only root filesystem. Default is false.
+                  description: Whether this container has a read-only root filesystem. Default is false. Note that this field cannot be set when spec.os.name is windows.
                   type: boolean
                 runAsGroup:
-                  description: The GID to run the entrypoint of the container process. Uses runtime default if unset. May also be set in PodSecurityContext.  If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence.
+                  description: The GID to run the entrypoint of the container process. Uses runtime default if unset. May also be set in PodSecurityContext.  If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence. Note that this field cannot be set when spec.os.name is windows.
                   type: integer
                   format: int64
                 runAsNonRoot:
                   description: Indicates that the container must run as a non-root user. If true, the Kubelet will validate the image at runtime to ensure that it does not run as UID 0 (root) and fail to start the container if it does. If unset or false, no such validation will be performed. May also be set in PodSecurityContext.  If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence.
                   type: boolean
                 runAsUser:
-                  description: The UID to run the entrypoint of the container process. Defaults to user specified in image metadata if unspecified. May also be set in PodSecurityContext.  If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence.
+                  description: The UID to run the entrypoint of the container process. Defaults to user specified in image metadata if unspecified. May also be set in PodSecurityContext.  If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence. Note that this field cannot be set when spec.os.name is windows.
                   type: integer
                   format: int64
                 seLinuxOptions:
-                  description: The SELinux context to be applied to the container. If unspecified, the container runtime will allocate a random SELinux context for each container.  May also be set in PodSecurityContext.  If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence.
+                  description: The SELinux context to be applied to the container. If unspecified, the container runtime will allocate a random SELinux context for each container.  May also be set in PodSecurityContext.  If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence. Note that this field cannot be set when spec.os.name is windows.
                   type: object
                   properties:
                     level:
@@ -2587,7 +2800,7 @@ properties:
                       description: User is a SELinux user label that applies to the container.
                       type: string
                 seccompProfile:
-                  description: The seccomp options to use by this container. If seccomp options are provided at both the pod & container level, the container options override the pod options.
+                  description: The seccomp options to use by this container. If seccomp options are provided at both the pod & container level, the container options override the pod options. Note that this field cannot be set when spec.os.name is windows.
                   type: object
                   required:
                     - type
@@ -2596,13 +2809,14 @@ properties:
                       description: localhostProfile indicates a profile defined in a file on the node should be used. The profile must be preconfigured on the node to work. Must be a descending path, relative to the kubelet's configured seccomp profile location. Must only be set if type is "Localhost".
                       type: string
                     type:
-                      description: |-
+                      description: |+
                         type indicates which kind of seccomp profile will be applied. Valid options are:
 
                         Localhost - a profile defined in a file on the node should be used. RuntimeDefault - the container runtime default profile should be used. Unconfined - no profile should be applied.
+
                       type: string
                 windowsOptions:
-                  description: The Windows specific settings applied to all containers. If unspecified, the options from the PodSecurityContext will be used. If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence.
+                  description: The Windows specific settings applied to all containers. If unspecified, the options from the PodSecurityContext will be used. If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence. Note that this field cannot be set when spec.os.name is linux.
                   type: object
                   properties:
                     gmsaCredentialSpec:
@@ -2611,6 +2825,9 @@ properties:
                     gmsaCredentialSpecName:
                       description: GMSACredentialSpecName is the name of the GMSA credential spec to use.
                       type: string
+                    hostProcess:
+                      description: HostProcess determines if a container should be run as a 'Host Process' container. This field is alpha-level and will only be honored by components that enable the WindowsHostProcessContainers feature flag. Setting this field without the feature flag will result in errors when validating the Pod. All of a Pod's containers must have the same effective HostProcess value (it is not allowed to have a mix of HostProcess containers and non-HostProcess containers).  In addition, if HostProcess is true then HostNetwork must also be set to true.
+                      type: boolean
                     runAsUserName:
                       description: The UserName in Windows to run the entrypoint of the container process. Defaults to the user specified in image metadata if unspecified. May also be set in PodSecurityContext. If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence.
                       type: string
@@ -2619,7 +2836,7 @@ properties:
               type: object
               properties:
                 exec:
-                  description: One and only one of the following should be specified. Exec specifies the action to take.
+                  description: Exec specifies the action to take.
                   type: object
                   properties:
                     command:
@@ -2631,6 +2848,22 @@ properties:
                   description: Minimum consecutive failures for the probe to be considered failed after having succeeded. Defaults to 3. Minimum value is 1.
                   type: integer
                   format: int32
+                grpc:
+                  description: GRPC specifies an action involving a GRPC port. This is an alpha field and requires enabling GRPCContainerProbe feature gate.
+                  type: object
+                  required:
+                    - port
+                  properties:
+                    port:
+                      description: Port number of the gRPC service. Number must be in the range 1 to 65535.
+                      type: integer
+                      format: int32
+                    service:
+                      description: |-
+                        Service is the name of the service to place in the gRPC HealthCheckRequest (see https://github.com/grpc/grpc/blob/master/doc/health-checking.md).
+
+                        If this is not specified, the default behavior is defined by gRPC.
+                      type: string
                 httpGet:
                   description: HTTPGet specifies the http request to perform.
                   type: object
@@ -2663,7 +2896,9 @@ properties:
                       format: int-or-string
                       x-kubernetes-int-or-string: true
                     scheme:
-                      description: Scheme to use for connecting to the host. Defaults to HTTP.
+                      description: |+
+                        Scheme to use for connecting to the host. Defaults to HTTP.
+
                       type: string
                 initialDelaySeconds:
                   description: 'Number of seconds after the container has started before liveness probes are initiated. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes'
@@ -2678,7 +2913,7 @@ properties:
                   type: integer
                   format: int32
                 tcpSocket:
-                  description: TCPSocket specifies an action involving a TCP port. TCP hooks not yet supported
+                  description: TCPSocket specifies an action involving a TCP port.
                   type: object
                   required:
                     - port
@@ -2691,7 +2926,7 @@ properties:
                       format: int-or-string
                       x-kubernetes-int-or-string: true
                 terminationGracePeriodSeconds:
-                  description: Optional duration in seconds the pod needs to terminate gracefully upon probe failure. The grace period is the duration in seconds after the processes running in the pod are sent a termination signal and the time when the processes are forcibly halted with a kill signal. Set this value longer than the expected cleanup time for your process. If this value is nil, the pod's terminationGracePeriodSeconds will be used. Otherwise, this value overrides the value provided by the pod spec. Value must be non-negative integer. The value zero indicates stop immediately via the kill signal (no opportunity to shut down). This is an alpha field and requires enabling ProbeTerminationGracePeriod feature gate.
+                  description: Optional duration in seconds the pod needs to terminate gracefully upon probe failure. The grace period is the duration in seconds after the processes running in the pod are sent a termination signal and the time when the processes are forcibly halted with a kill signal. Set this value longer than the expected cleanup time for your process. If this value is nil, the pod's terminationGracePeriodSeconds will be used. Otherwise, this value overrides the value provided by the pod spec. Value must be non-negative integer. The value zero indicates stop immediately via the kill signal (no opportunity to shut down). This is a beta field and requires enabling ProbeTerminationGracePeriod feature gate. Minimum value is 1. spec.terminationGracePeriodSeconds is used if unset.
                   type: integer
                   format: int64
                 timeoutSeconds:
@@ -2708,7 +2943,9 @@ properties:
               description: 'Optional: Path at which the file to which the container''s termination message will be written is mounted into the container''s filesystem. Message written is intended to be brief final status, such as an assertion failure message. Will be truncated by the node if greater than 4096 bytes. The total message length across all containers will be limited to 12kb. Defaults to /dev/termination-log. Cannot be updated.'
               type: string
             terminationMessagePolicy:
-              description: Indicate how the termination message should be populated. File will use the contents of terminationMessagePath to populate the container status message on both success and failure. FallbackToLogsOnError will use the last chunk of container log output if the termination message file is empty and the container exited with an error. The log output is limited to 2048 bytes or 80 lines, whichever is smaller. Defaults to File. Cannot be updated.
+              description: |+
+                Indicate how the termination message should be populated. File will use the contents of terminationMessagePath to populate the container status message on both success and failure. FallbackToLogsOnError will use the last chunk of container log output if the termination message file is empty and the container exited with an error. The log output is limited to 2048 bytes or 80 lines, whichever is smaller. Defaults to File. Cannot be updated.
+
               type: string
             tty:
               description: Whether this container should allocate a TTY for itself, also requires 'stdin' to be true. Default is false.
@@ -2766,8 +3003,23 @@ properties:
         type: object
         additionalProperties:
           type: string
+        x-kubernetes-map-type: atomic
+      os:
+        description: |-
+          Specifies the OS of the containers in the pod. Some pod and container fields are restricted if this is set.
+
+          If the OS field is set to linux, the following fields must be unset: -securityContext.windowsOptions
+
+          If the OS field is set to windows, following fields must be unset: - spec.hostPID - spec.hostIPC - spec.securityContext.seLinuxOptions - spec.securityContext.seccompProfile - spec.securityContext.fsGroup - spec.securityContext.fsGroupChangePolicy - spec.securityContext.sysctls - spec.shareProcessNamespace - spec.securityContext.runAsUser - spec.securityContext.runAsGroup - spec.securityContext.supplementalGroups - spec.containers[*].securityContext.seLinuxOptions - spec.containers[*].securityContext.seccompProfile - spec.containers[*].securityContext.capabilities - spec.containers[*].securityContext.readOnlyRootFilesystem - spec.containers[*].securityContext.privileged - spec.containers[*].securityContext.allowPrivilegeEscalation - spec.containers[*].securityContext.procMount - spec.containers[*].securityContext.runAsUser - spec.containers[*].securityContext.runAsGroup This is an alpha field and requires the IdentifyPodOS feature
+        type: object
+        required:
+          - name
+        properties:
+          name:
+            description: 'Name is the name of the operating system. The currently supported values are linux and windows. Additional value may be defined in future and can be one of: https://github.com/opencontainers/runtime-spec/blob/master/config.md#platform-specific-configuration Clients should expect to handle additional values and treat unrecognized values in this field as os: null'
+            type: string
       overhead:
-        description: 'Overhead represents the resource overhead associated with running a pod for a given RuntimeClass. This field will be autopopulated at admission time by the RuntimeClass admission controller. If the RuntimeClass admission controller is enabled, overhead must not be set in Pod create requests. The RuntimeClass admission controller will reject Pod create requests which have the overhead already set. If RuntimeClass is configured and selected in the PodSpec, Overhead will be set to the value defined in the corresponding RuntimeClass, otherwise it will remain unset and treated as zero. More info: https://git.k8s.io/enhancements/keps/sig-node/20190226-pod-overhead.md This field is alpha-level as of Kubernetes v1.16, and is only honored by servers that enable the PodOverhead feature.'
+        description: 'Overhead represents the resource overhead associated with running a pod for a given RuntimeClass. This field will be autopopulated at admission time by the RuntimeClass admission controller. If the RuntimeClass admission controller is enabled, overhead must not be set in Pod create requests. The RuntimeClass admission controller will reject Pod create requests which have the overhead already set. If RuntimeClass is configured and selected in the PodSpec, Overhead will be set to the value defined in the corresponding RuntimeClass, otherwise it will remain unset and treated as zero. More info: https://git.k8s.io/enhancements/keps/sig-node/688-pod-overhead/README.md This field is beta-level as of Kubernetes v1.18, and is only honored by servers that enable the PodOverhead feature.'
         type: object
         additionalProperties:
           type: string
@@ -2782,7 +3034,7 @@ properties:
         description: If specified, indicates the pod's priority. "system-node-critical" and "system-cluster-critical" are two special keywords which indicate the highest priorities with the former being the highest priority. Any other name must be defined by creating a PriorityClass object with that name. If not specified, the pod priority will be default or zero if there is no default.
         type: string
       readinessGates:
-        description: 'If specified, all readiness gates will be evaluated for pod readiness. A pod is ready when all its containers are ready AND all conditions specified in the readiness gates have status equal to "True" More info: https://git.k8s.io/enhancements/keps/sig-network/0007-pod-ready%2B%2B.md'
+        description: 'If specified, all readiness gates will be evaluated for pod readiness. A pod is ready when all its containers are ready AND all conditions specified in the readiness gates have status equal to "True" More info: https://git.k8s.io/enhancements/keps/sig-network/580-pod-readiness-gates'
         type: array
         items:
           type: object
@@ -2793,10 +3045,12 @@ properties:
               description: ConditionType refers to a condition in the pod's condition list with matching type.
               type: string
       restartPolicy:
-        description: 'Restart policy for all containers within the pod. One of Always, OnFailure, Never. Default to Always. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#restart-policy'
+        description: |+
+          Restart policy for all containers within the pod. One of Always, OnFailure, Never. Default to Always. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#restart-policy
+
         type: string
       runtimeClassName:
-        description: 'RuntimeClassName refers to a RuntimeClass object in the node.k8s.io group, which should be used to run this pod.  If no RuntimeClass resource matches the named class, the pod will not be run. If unset or empty, the "legacy" RuntimeClass will be used, which is an implicit class with an empty definition that uses the default runtime handler. More info: https://git.k8s.io/enhancements/keps/sig-node/runtime-class.md This is a beta feature as of Kubernetes v1.14.'
+        description: 'RuntimeClassName refers to a RuntimeClass object in the node.k8s.io group, which should be used to run this pod.  If no RuntimeClass resource matches the named class, the pod will not be run. If unset or empty, the "legacy" RuntimeClass will be used, which is an implicit class with an empty definition that uses the default runtime handler. More info: https://git.k8s.io/enhancements/keps/sig-node/585-runtime-class This is a beta feature as of Kubernetes v1.14.'
         type: string
       schedulerName:
         description: If specified, the pod will be dispatched by specified scheduler. If not specified, the pod will be dispatched by default scheduler.
@@ -2811,25 +3065,25 @@ properties:
 
               1. The owning GID will be the FSGroup 2. The setgid bit is set (new files created in the volume will be owned by FSGroup) 3. The permission bits are OR'd with rw-rw----
 
-              If unset, the Kubelet will not modify the ownership and permissions of any volume.
+              If unset, the Kubelet will not modify the ownership and permissions of any volume. Note that this field cannot be set when spec.os.name is windows.
             type: integer
             format: int64
           fsGroupChangePolicy:
-            description: 'fsGroupChangePolicy defines behavior of changing ownership and permission of the volume before being exposed inside Pod. This field will only apply to volume types which support fsGroup based ownership(and permissions). It will have no effect on ephemeral volume types such as: secret, configmaps and emptydir. Valid values are "OnRootMismatch" and "Always". If not specified, "Always" is used.'
+            description: 'fsGroupChangePolicy defines behavior of changing ownership and permission of the volume before being exposed inside Pod. This field will only apply to volume types which support fsGroup based ownership(and permissions). It will have no effect on ephemeral volume types such as: secret, configmaps and emptydir. Valid values are "OnRootMismatch" and "Always". If not specified, "Always" is used. Note that this field cannot be set when spec.os.name is windows.'
             type: string
           runAsGroup:
-            description: The GID to run the entrypoint of the container process. Uses runtime default if unset. May also be set in SecurityContext.  If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence for that container.
+            description: The GID to run the entrypoint of the container process. Uses runtime default if unset. May also be set in SecurityContext.  If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence for that container. Note that this field cannot be set when spec.os.name is windows.
             type: integer
             format: int64
           runAsNonRoot:
             description: Indicates that the container must run as a non-root user. If true, the Kubelet will validate the image at runtime to ensure that it does not run as UID 0 (root) and fail to start the container if it does. If unset or false, no such validation will be performed. May also be set in SecurityContext.  If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence.
             type: boolean
           runAsUser:
-            description: The UID to run the entrypoint of the container process. Defaults to user specified in image metadata if unspecified. May also be set in SecurityContext.  If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence for that container.
+            description: The UID to run the entrypoint of the container process. Defaults to user specified in image metadata if unspecified. May also be set in SecurityContext.  If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence for that container. Note that this field cannot be set when spec.os.name is windows.
             type: integer
             format: int64
           seLinuxOptions:
-            description: The SELinux context to be applied to all containers. If unspecified, the container runtime will allocate a random SELinux context for each container.  May also be set in SecurityContext.  If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence for that container.
+            description: The SELinux context to be applied to all containers. If unspecified, the container runtime will allocate a random SELinux context for each container.  May also be set in SecurityContext.  If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence for that container. Note that this field cannot be set when spec.os.name is windows.
             type: object
             properties:
               level:
@@ -2845,7 +3099,7 @@ properties:
                 description: User is a SELinux user label that applies to the container.
                 type: string
           seccompProfile:
-            description: The seccomp options to use by the containers in this pod.
+            description: The seccomp options to use by the containers in this pod. Note that this field cannot be set when spec.os.name is windows.
             type: object
             required:
               - type
@@ -2854,19 +3108,20 @@ properties:
                 description: localhostProfile indicates a profile defined in a file on the node should be used. The profile must be preconfigured on the node to work. Must be a descending path, relative to the kubelet's configured seccomp profile location. Must only be set if type is "Localhost".
                 type: string
               type:
-                description: |-
+                description: |+
                   type indicates which kind of seccomp profile will be applied. Valid options are:
 
                   Localhost - a profile defined in a file on the node should be used. RuntimeDefault - the container runtime default profile should be used. Unconfined - no profile should be applied.
+
                 type: string
           supplementalGroups:
-            description: A list of groups applied to the first process run in each container, in addition to the container's primary GID.  If unspecified, no groups will be added to any container.
+            description: A list of groups applied to the first process run in each container, in addition to the container's primary GID.  If unspecified, no groups will be added to any container. Note that this field cannot be set when spec.os.name is windows.
             type: array
             items:
               type: integer
               format: int64
           sysctls:
-            description: Sysctls hold a list of namespaced sysctls used for the pod. Pods with unsupported sysctls (by the container runtime) might fail to launch.
+            description: Sysctls hold a list of namespaced sysctls used for the pod. Pods with unsupported sysctls (by the container runtime) might fail to launch. Note that this field cannot be set when spec.os.name is windows.
             type: array
             items:
               type: object
@@ -2881,7 +3136,7 @@ properties:
                   description: Value of a property to set
                   type: string
           windowsOptions:
-            description: The Windows specific settings applied to all containers. If unspecified, the options within a container's SecurityContext will be used. If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence.
+            description: The Windows specific settings applied to all containers. If unspecified, the options within a container's SecurityContext will be used. If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence. Note that this field cannot be set when spec.os.name is linux.
             type: object
             properties:
               gmsaCredentialSpec:
@@ -2890,6 +3145,9 @@ properties:
               gmsaCredentialSpecName:
                 description: GMSACredentialSpecName is the name of the GMSA credential spec to use.
                 type: string
+              hostProcess:
+                description: HostProcess determines if a container should be run as a 'Host Process' container. This field is alpha-level and will only be honored by components that enable the WindowsHostProcessContainers feature flag. Setting this field without the feature flag will result in errors when validating the Pod. All of a Pod's containers must have the same effective HostProcess value (it is not allowed to have a mix of HostProcess containers and non-HostProcess containers).  In addition, if HostProcess is true then HostNetwork must also be set to true.
+                type: boolean
               runAsUserName:
                 description: The UserName in Windows to run the entrypoint of the container process. Defaults to the user specified in image metadata if unspecified. May also be set in PodSecurityContext. If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence.
                 type: string
@@ -2919,13 +3177,17 @@ properties:
           type: object
           properties:
             effect:
-              description: Effect indicates the taint effect to match. Empty means match all taint effects. When specified, allowed values are NoSchedule, PreferNoSchedule and NoExecute.
+              description: |+
+                Effect indicates the taint effect to match. Empty means match all taint effects. When specified, allowed values are NoSchedule, PreferNoSchedule and NoExecute.
+
               type: string
             key:
               description: Key is the taint key that the toleration applies to. Empty means match all taint keys. If the key is empty, operator must be Exists; this combination means to match all values and all keys.
               type: string
             operator:
-              description: Operator represents a key's relationship to the value. Valid operators are Exists and Equal. Defaults to Equal. Exists is equivalent to wildcard for value, so that a pod can tolerate all taints of a particular category.
+              description: |+
+                Operator represents a key's relationship to the value. Valid operators are Exists and Equal. Defaults to Equal. Exists is equivalent to wildcard for value, so that a pod can tolerate all taints of a particular category.
+
               type: string
             tolerationSeconds:
               description: TolerationSeconds represents the period of time the toleration (which must be of effect NoExecute, otherwise this field is ignored) tolerates the taint. By default, it is not set, which means tolerate the taint forever (do not evict). Zero and negative values will be treated as 0 (evict immediately) by the system.
@@ -2982,11 +3244,12 @@ properties:
               description: TopologyKey is the key of node labels. Nodes that have a label with this key and identical values are considered to be in the same topology. We consider each <key, value> as a "bucket", and try to put balanced number of pods into each bucket. It's a required field.
               type: string
             whenUnsatisfiable:
-              description: |-
+              description: |+
                 WhenUnsatisfiable indicates how to deal with a pod if it doesn't satisfy the spread constraint. - DoNotSchedule (default) tells the scheduler not to schedule it. - ScheduleAnyway tells the scheduler to schedule the pod in any location,
                   but giving higher precedence to topologies that would help reduce the
                   skew.
-                A constraint is considered "Unsatisfiable" for an incoming pod if and only if every possible node assigment for that pod would violate "MaxSkew" on some topology. For example, in a 3-zone cluster, MaxSkew is set to 1, and pods with the same labelSelector spread as 3/1/1: | zone1 | zone2 | zone3 | | P P P |   P   |   P   | If WhenUnsatisfiable is set to DoNotSchedule, incoming pod can only be scheduled to zone2(zone3) to become 3/2/1(3/1/2) as ActualSkew(2-1) on zone2(zone3) satisfies MaxSkew(1). In other words, the cluster can still be imbalanced, but scheduler won't make it *more* imbalanced. It's a required field.
+                A constraint is considered "Unsatisfiable" for an incoming pod if and only if every possible node assignment for that pod would violate "MaxSkew" on some topology. For example, in a 3-zone cluster, MaxSkew is set to 1, and pods with the same labelSelector spread as 3/1/1: | zone1 | zone2 | zone3 | | P P P |   P   |   P   | If WhenUnsatisfiable is set to DoNotSchedule, incoming pod can only be scheduled to zone2(zone3) to become 3/2/1(3/1/2) as ActualSkew(2-1) on zone2(zone3) satisfies MaxSkew(1). In other words, the cluster can still be imbalanced, but scheduler won't make it *more* imbalanced. It's a required field.
+
               type: string
       volumes:
         description: 'List of volumes that can be mounted by containers belonging to the pod. More info: https://kubernetes.io/docs/concepts/storage/volumes'
@@ -3083,6 +3346,7 @@ properties:
                     name:
                       description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
                       type: string
+                  x-kubernetes-map-type: atomic
                 user:
                   description: 'Optional: User is the rados user name, default is admin More info: https://examples.k8s.io/volumes/cephfs/README.md#how-to-use-it'
                   type: string
@@ -3105,6 +3369,7 @@ properties:
                     name:
                       description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
                       type: string
+                  x-kubernetes-map-type: atomic
                 volumeID:
                   description: 'volume id used to identify the volume in cinder. More info: https://examples.k8s.io/mysql-cinder-pd/README.md'
                   type: string
@@ -3160,6 +3425,7 @@ properties:
                     name:
                       description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
                       type: string
+                  x-kubernetes-map-type: atomic
                 readOnly:
                   description: Specifies a read-only configuration for the volume. Defaults to false (read/write).
                   type: boolean
@@ -3196,6 +3462,7 @@ properties:
                           fieldPath:
                             description: Path of the field to select in the specified API version.
                             type: string
+                        x-kubernetes-map-type: atomic
                       mode:
                         description: 'Optional: mode bits used to set permissions on this file, must be an octal value between 0000 and 0777 or a decimal value between 0 and 511. YAML accepts both octal and decimal values, JSON requires decimal values for mode bits. If not specified, the volume defaultMode will be used. This might be in conflict with other options that affect the file mode, like fsGroup, and the result can be other mode bits set.'
                         type: integer
@@ -3218,6 +3485,7 @@ properties:
                           resource:
                             description: 'Required: resource to select'
                             type: string
+                        x-kubernetes-map-type: atomic
             emptyDir:
               description: 'EmptyDir represents a temporary directory that shares a pod''s lifetime. More info: https://kubernetes.io/docs/concepts/storage/volumes#emptydir'
               type: object
@@ -3244,8 +3512,6 @@ properties:
                 Use CSI for light-weight local ephemeral volumes if the CSI driver is meant to be used that way - see the documentation of the driver for more information.
 
                 A pod can use both types of ephemeral volumes and persistent volumes at the same time.
-
-                This is a beta feature and only available when the GenericEphemeralVolume feature gate is enabled.
               type: object
               properties:
                 volumeClaimTemplate:
@@ -3335,6 +3601,9 @@ properties:
                               operation:
                                 description: Operation is the type of operation which lead to this ManagedFieldsEntry being created. The only valid values for this field are 'Apply' and 'Update'.
                                 type: string
+                              subresource:
+                                description: Subresource is the name of the subresource used to update that object, or empty string if the object was updated through the main resource. The value of this field is used to distinguish between managers, even if they share the same name. For example, a status update will be distinct from a regular update using the same manager name. Note that the APIVersion field is not related to the Subresource field and it always corresponds to the version of the main resource.
+                                type: string
                               time:
                                 description: Time is timestamp of when these fields were set. It should always be empty if Operation is 'Apply'
                                 type: string
@@ -3377,6 +3646,7 @@ properties:
                               uid:
                                 description: 'UID of the referent. More info: http://kubernetes.io/docs/user-guide/identifiers#uids'
                                 type: string
+                            x-kubernetes-map-type: atomic
                         resourceVersion:
                           description: |-
                             An opaque value that represents the internal version of this object that can be used by clients to determine when objects have changed. May be used for optimistic concurrency, change detection, and the watch operation on a resource or set of resources. Clients must treat these values as opaque and passed unmodified back to the server. They may only be valid for a particular resource or set of resources.
@@ -3405,7 +3675,7 @@ properties:
                           items:
                             type: string
                         dataSource:
-                          description: 'This field can be used to specify either: * An existing VolumeSnapshot object (snapshot.storage.k8s.io/VolumeSnapshot) * An existing PVC (PersistentVolumeClaim) * An existing custom resource that implements data population (Alpha) In order to use custom resource types that implement data population, the AnyVolumeDataSource feature gate must be enabled. If the provisioner or an external controller can support the specified data source, it will create a new volume based on the contents of the specified data source.'
+                          description: 'This field can be used to specify either: * An existing VolumeSnapshot object (snapshot.storage.k8s.io/VolumeSnapshot) * An existing PVC (PersistentVolumeClaim) If the provisioner or an external controller can support the specified data source, it will create a new volume based on the contents of the specified data source. If the AnyVolumeDataSource feature gate is enabled, this field will always have the same contents as the DataSourceRef field.'
                           type: object
                           required:
                             - kind
@@ -3420,8 +3690,32 @@ properties:
                             name:
                               description: Name is the name of resource being referenced
                               type: string
+                          x-kubernetes-map-type: atomic
+                        dataSourceRef:
+                          description: |-
+                            Specifies the object from which to populate the volume with data, if a non-empty volume is desired. This may be any local object from a non-empty API group (non core object) or a PersistentVolumeClaim object. When this field is specified, volume binding will only succeed if the type of the specified object matches some installed volume populator or dynamic provisioner. This field will replace the functionality of the DataSource field and as such if both fields are non-empty, they must have the same value. For backwards compatibility, both fields (DataSource and DataSourceRef) will be set to the same value automatically if one of them is empty and the other is non-empty. There are two important differences between DataSource and DataSourceRef: * While DataSource only allows two specific types of objects, DataSourceRef
+                              allows any non-core object, as well as PersistentVolumeClaim objects.
+                            * While DataSource ignores disallowed values (dropping them), DataSourceRef
+                              preserves all values, and generates an error if a disallowed value is
+                              specified.
+                            (Alpha) Using this field requires the AnyVolumeDataSource feature gate to be enabled.
+                          type: object
+                          required:
+                            - kind
+                            - name
+                          properties:
+                            apiGroup:
+                              description: APIGroup is the group for the resource being referenced. If APIGroup is not specified, the specified Kind must be in the core API group. For any other third-party types, APIGroup is required.
+                              type: string
+                            kind:
+                              description: Kind is the type of resource being referenced
+                              type: string
+                            name:
+                              description: Name is the name of resource being referenced
+                              type: string
+                          x-kubernetes-map-type: atomic
                         resources:
-                          description: 'Resources represents the minimum resources the volume should have. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources'
+                          description: 'Resources represents the minimum resources the volume should have. If RecoverVolumeExpansionFailure feature is enabled users are allowed to specify resource requirements that are lower than previous value but must still be higher than capacity recorded in the status field of the claim. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources'
                           type: object
                           properties:
                             limits:
@@ -3524,6 +3818,7 @@ properties:
                     name:
                       description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
                       type: string
+                  x-kubernetes-map-type: atomic
             flocker:
               description: Flocker represents a Flocker volume attached to a kubelet's host machine. This depends on the Flocker control service being running
               type: object
@@ -3641,6 +3936,7 @@ properties:
                     name:
                       description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
                       type: string
+                  x-kubernetes-map-type: atomic
                 targetPortal:
                   description: iSCSI Target Portal. The Portal is either an IP or ip_addr:port if the port is other than default (typically TCP ports 860 and 3260).
                   type: string
@@ -3769,6 +4065,7 @@ properties:
                                     fieldPath:
                                       description: Path of the field to select in the specified API version.
                                       type: string
+                                  x-kubernetes-map-type: atomic
                                 mode:
                                   description: 'Optional: mode bits used to set permissions on this file, must be an octal value between 0000 and 0777 or a decimal value between 0 and 511. YAML accepts both octal and decimal values, JSON requires decimal values for mode bits. If not specified, the volume defaultMode will be used. This might be in conflict with other options that affect the file mode, like fsGroup, and the result can be other mode bits set.'
                                   type: integer
@@ -3791,6 +4088,7 @@ properties:
                                     resource:
                                       description: 'Required: resource to select'
                                       type: string
+                                  x-kubernetes-map-type: atomic
                       secret:
                         description: information about the secret data to project
                         type: object
@@ -3895,6 +4193,7 @@ properties:
                     name:
                       description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
                       type: string
+                  x-kubernetes-map-type: atomic
                 user:
                   description: 'The rados user name. Default is admin. More info: https://examples.k8s.io/volumes/rbd/README.md#how-to-use-it'
                   type: string
@@ -3925,6 +4224,7 @@ properties:
                     name:
                       description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
                       type: string
+                  x-kubernetes-map-type: atomic
                 sslEnabled:
                   description: Flag to enable/disable SSL communication with Gateway, default false
                   type: boolean
@@ -3990,6 +4290,7 @@ properties:
                     name:
                       description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
                       type: string
+                  x-kubernetes-map-type: atomic
                 volumeName:
                   description: VolumeName is the human-readable name of the StorageOS volume.  Volume names are only unique within a namespace.
                   type: string

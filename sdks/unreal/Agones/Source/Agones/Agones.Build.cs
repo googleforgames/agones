@@ -24,7 +24,7 @@ public class Agones : ModuleRules
 		PublicDependencyModuleNames.AddRange(new[]
 		{
 			"Core",
-			"Http",
+			"HTTP",
 			"Json",
 			"JsonUtilities",
 			"WebSockets"

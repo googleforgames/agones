@@ -255,13 +255,13 @@ namespace Agones
         /// <summary>
         /// Result of a Async HTTP request
         /// </summary>
-        private struct AsyncResult
+        protected struct AsyncResult
         {
             public bool ok;
             public string json;
         }
 
-        private async Task<AsyncResult> SendRequestAsync(string api, string json,
+        protected async Task<AsyncResult> SendRequestAsync(string api, string json,
             string method = UnityWebRequest.kHttpVerbPOST)
         {
             // To prevent that an async method leaks after destroying this gameObject.

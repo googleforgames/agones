@@ -15,7 +15,7 @@
 package https
 
 import (
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	"agones.dev/agones/pkg/util/runtime"
@@ -30,7 +30,7 @@ type ErrorHandlerFunc func(http.ResponseWriter, *http.Request) error
 // FourZeroFour is the standard 404 handler.
 func FourZeroFour(logger *logrus.Entry, w http.ResponseWriter, r *http.Request) {
 	f := ErrorHTTPHandler(logger, func(writer http.ResponseWriter, request *http.Request) error {
-		body, err := ioutil.ReadAll(r.Body)
+		body, err := io.ReadAll(r.Body)
 		if err != nil {
 			return errors.Wrap(err, "error in default handler")
 		}

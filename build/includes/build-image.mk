@@ -29,6 +29,9 @@ build-build-image:
 clean-build-image:
 	docker rmi $(build_tag)
 
+ensure-arm-builder:
+	 docker run --privileged --rm tonistiigi/binfmt:qemu-v6.2.0 --install arm64
+	 
 ensure-build-config:
 	-mkdir -p $(kubeconfig_path)
 	-mkdir -p $(build_path)/.gocache
@@ -39,6 +42,9 @@ ensure-build-config:
 # create the build image if it doesn't exist
 ensure-build-image: ensure-build-config
 	$(MAKE) ensure-image IMAGE_TAG=$(build_tag) BUILD_TARGET=build-build-image
+ifeq ($(WITH_ARM64), 1) 
+ensure-build-image: ensure-arm-builder
+endif
 
 # attempt to pull the image, if it exists and rename it to the local tag
 # exit's clean if it doesn't exist, so can be used on CI
@@ -66,4 +72,4 @@ pull-remote-build-image:
 	-docker pull $(REMOTE_TAG) && docker tag $(REMOTE_TAG) $(LOCAL_TAG)
 
 ensure-agones-sdk-image:
-	$(MAKE) ensure-image IMAGE_TAG=$(sidecar_linux_amd64_tag) BUILD_TARGET=build-agones-sdk-server-image
+	$(MAKE) ensure-image IMAGE_TAG=$(sidecar_linux_amd64_tag) BUILD_TARGET=build-agones-sdk-image

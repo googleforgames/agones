@@ -7,9 +7,10 @@ description: >
   Find a `GameServer` that has room for a specific number of players.
 ---
 
-{{< alpha 
-    title="Player Tracking, Allocation Player Filter, and Allocation State Filter" 
-    gate="PlayerTracking,PlayerAllocationFilter,StateAllocationFilter" >}}
+{{< alpha
+title="Player Tracking and Allocation Player Filter"
+gate="PlayerTracking,PlayerAllocationFilter" >}}
+{{< beta title="Allocation State Filter" gate="StateAllocationFilter" >}}
 
 Using this approach, we are able to be able to make a request that is akin to: "Find me a `GameServer` that is already
 allocated, with room for _n_ number of players, and if one is not available, allocate me a `Ready` `GameServer`".
@@ -30,16 +31,15 @@ to 15 players, and if it cannot find one, will allocate a Ready one from the sam
 apiVersion: "allocation.agones.dev/v1"
 kind: GameServerAllocation
 spec:
-  preferred:
-    - gameServerState: Allocated
-      matchLabels:
+  selectors:
+    - matchLabels:
         agones.dev/fleet: lobby
+      gameServerState: Allocated
       players:
         minAvailable: 10
         maxAvailable: 15
-  required:
-    matchLabels:
-      agones.dev/fleet: lobby
+    - matchLabels:
+        agones.dev/fleet: lobby
 ```
 
 {{< alert title="Note" color="info">}}

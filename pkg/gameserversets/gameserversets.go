@@ -30,6 +30,7 @@ func sortGameServersByLeastFullNodes(list []*agonesv1.GameServer, count map[stri
 	sort.Slice(list, func(i, j int) bool {
 		a := list[i]
 		b := list[j]
+
 		// not scheduled yet/node deleted, put them first
 		ac, ok := count[a.Status.NodeName]
 		if !ok {
@@ -39,6 +40,17 @@ func sortGameServersByLeastFullNodes(list []*agonesv1.GameServer, count map[stri
 		bc, ok := count[b.Status.NodeName]
 		if !ok {
 			return false
+		}
+
+		// if both are in the same node, make sure to delete pre-Ready GameServers first
+		if a.Status.NodeName == b.Status.NodeName {
+			if a.IsBeforeReady() && b.Status.State == agonesv1.GameServerStateReady {
+				return true
+			}
+
+			if b.IsBeforeReady() && a.Status.State == agonesv1.GameServerStateReady {
+				return false
+			}
 		}
 
 		return (ac.Allocated + ac.Ready) < (bc.Allocated + bc.Ready)

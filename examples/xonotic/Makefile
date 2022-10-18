@@ -28,7 +28,7 @@ REPOSITORY = gcr.io/agones-images
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_path := $(dir $(mkfile_path))
 root_path := $(realpath $(project_path)/../..)
-image_tag = $(REPOSITORY)/xonotic-example:0.8
+image_tag = $(REPOSITORY)/xonotic-example:0.9
 
 #   _____                    _
 #  |_   _|_ _ _ __ __ _  ___| |_ ___
@@ -39,7 +39,11 @@ image_tag = $(REPOSITORY)/xonotic-example:0.8
 
 # Build a docker image for the server, and tag it
 build:
-	cd $(root_path) && docker build -f $(project_path)/Dockerfile --tag=$(image_tag) .
+	docker build -f $(project_path)/Dockerfile --tag=$(image_tag) .
+
+# Push a docker image to the GCR, and save it
+push: build
+	docker push $(image_tag) 
 
 # check if hosted on Google Cloud Registry
 gcr-check:

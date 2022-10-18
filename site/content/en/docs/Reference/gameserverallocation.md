@@ -10,7 +10,6 @@ weight: 30
 A full `GameServerAllocation` specification is available below and in the 
 {{< ghlink href="/examples/gameserverallocation.yaml" >}}example folder{{< /ghlink >}} for reference:
 
-
 {{< tabpane >}}
   {{< tab header="selectors" lang="yaml" >}}
 apiVersion: "allocation.agones.dev/v1"
@@ -37,7 +36,7 @@ spec:
         game: my-game
       matchExpressions:
         - {key: tier, operator: In, values: [cache]}
-      # [Stage:Alpha]
+      # [Stage:Beta]
       # [FeatureFlag:StateAllocationFilter]
       # Specifies which State is the filter to be used when attempting to retrieve a GameServer
       # via Allocation. Defaults to "Ready". The only other option is "Allocated", which can be used in conjunction with
@@ -80,7 +79,7 @@ spec:
       game: my-game
     matchExpressions:
       - {key: tier, operator: In, values: [cache]}
-    # [Stage:Alpha]
+    # [Stage:Beta]
     # [FeatureFlag:StateAllocationFilter]
     # Specifies which State is the filter to be used when attempting to retrieve a GameServer
     # via Allocation. Defaults to "Ready". The only other option is "Allocated", which can be used in conjunction with

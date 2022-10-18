@@ -21,7 +21,7 @@ terraform {
   required_providers {
     google = {
       source = "hashicorp/google"
-      version = "~> 3.88"
+      version = "~> 4.25.0"
     }
   }
 }
@@ -48,6 +48,11 @@ variable "machine_type" {
 variable "node_count" {
   default = "4"
 }
+
+variable "enable_image_streaming" {
+  default = "true"
+}
+
 variable "zone" {
   default     = "us-west1-c"
   description = "The GCP zone to create the cluster in"
@@ -91,6 +96,7 @@ module "gke_cluster" {
     "zone"                    = var.zone
     "machineType"             = var.machine_type
     "initialNodeCount"        = var.node_count
+    "enableImageStreaming"    = var.enable_image_streaming
     "project"                 = var.project
     "network"                 = var.network
     "subnetwork"              = var.subnetwork

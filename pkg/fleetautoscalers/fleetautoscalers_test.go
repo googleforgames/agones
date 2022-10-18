@@ -20,7 +20,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -46,7 +45,7 @@ func (t testServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	var faRequest autoscalingv1.FleetAutoscaleReview
 
-	res, err := ioutil.ReadAll(r.Body)
+	res, err := io.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

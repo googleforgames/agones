@@ -17,7 +17,7 @@ package e2e
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"testing"
 
@@ -52,7 +52,7 @@ func TestPingHTTP(t *testing.T) {
 	defer response.Body.Close() // nolint: errcheck
 
 	assert.Equal(t, http.StatusOK, response.StatusCode)
-	body, err := ioutil.ReadAll(response.Body)
+	body, err := io.ReadAll(response.Body)
 	assert.Nil(t, err)
 	assert.Equal(t, []byte("ok"), body)
 }

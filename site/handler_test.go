@@ -16,7 +16,7 @@ package main
 
 import (
 	"bytes"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"sort"
@@ -111,7 +111,7 @@ func TestHandler(t *testing.T) {
 			t.Errorf("%s: http.Get: %v", test.name, err)
 			continue
 		}
-		data, err := ioutil.ReadAll(resp.Body)
+		data, err := io.ReadAll(resp.Body)
 		if err != nil {
 			t.Errorf("Could not read all: %s", err)
 			continue

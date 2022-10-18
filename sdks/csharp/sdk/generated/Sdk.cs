@@ -70,14 +70,14 @@ namespace Agones.Dev.Sdk {
             "BnByb3RvMw=="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { global::Google.Api.AnnotationsReflection.Descriptor, },
-          new pbr::GeneratedClrTypeInfo(null, new pbr::GeneratedClrTypeInfo[] {
-            new pbr::GeneratedClrTypeInfo(typeof(global::Agones.Dev.Sdk.Empty), global::Agones.Dev.Sdk.Empty.Parser, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Agones.Dev.Sdk.KeyValue), global::Agones.Dev.Sdk.KeyValue.Parser, new[]{ "Key", "Value" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Agones.Dev.Sdk.Duration), global::Agones.Dev.Sdk.Duration.Parser, new[]{ "Seconds" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Agones.Dev.Sdk.GameServer), global::Agones.Dev.Sdk.GameServer.Parser, new[]{ "ObjectMeta", "Spec", "Status" }, null, null, new pbr::GeneratedClrTypeInfo[] { new pbr::GeneratedClrTypeInfo(typeof(global::Agones.Dev.Sdk.GameServer.Types.ObjectMeta), global::Agones.Dev.Sdk.GameServer.Types.ObjectMeta.Parser, new[]{ "Name", "Namespace", "Uid", "ResourceVersion", "Generation", "CreationTimestamp", "DeletionTimestamp", "Annotations", "Labels" }, null, null, new pbr::GeneratedClrTypeInfo[] { null, null, }),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Agones.Dev.Sdk.GameServer.Types.Spec), global::Agones.Dev.Sdk.GameServer.Types.Spec.Parser, new[]{ "Health" }, null, null, new pbr::GeneratedClrTypeInfo[] { new pbr::GeneratedClrTypeInfo(typeof(global::Agones.Dev.Sdk.GameServer.Types.Spec.Types.Health), global::Agones.Dev.Sdk.GameServer.Types.Spec.Types.Health.Parser, new[]{ "Disabled", "PeriodSeconds", "FailureThreshold", "InitialDelaySeconds" }, null, null, null)}),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Agones.Dev.Sdk.GameServer.Types.Status), global::Agones.Dev.Sdk.GameServer.Types.Status.Parser, new[]{ "State", "Address", "Ports", "Players" }, null, null, new pbr::GeneratedClrTypeInfo[] { new pbr::GeneratedClrTypeInfo(typeof(global::Agones.Dev.Sdk.GameServer.Types.Status.Types.Port), global::Agones.Dev.Sdk.GameServer.Types.Status.Types.Port.Parser, new[]{ "Name", "Port_" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Agones.Dev.Sdk.GameServer.Types.Status.Types.PlayerStatus), global::Agones.Dev.Sdk.GameServer.Types.Status.Types.PlayerStatus.Parser, new[]{ "Count", "Capacity", "Ids" }, null, null, null)})})
+          new pbr::GeneratedClrTypeInfo(null, null, new pbr::GeneratedClrTypeInfo[] {
+            new pbr::GeneratedClrTypeInfo(typeof(global::Agones.Dev.Sdk.Empty), global::Agones.Dev.Sdk.Empty.Parser, null, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Agones.Dev.Sdk.KeyValue), global::Agones.Dev.Sdk.KeyValue.Parser, new[]{ "Key", "Value" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Agones.Dev.Sdk.Duration), global::Agones.Dev.Sdk.Duration.Parser, new[]{ "Seconds" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Agones.Dev.Sdk.GameServer), global::Agones.Dev.Sdk.GameServer.Parser, new[]{ "ObjectMeta", "Spec", "Status" }, null, null, null, new pbr::GeneratedClrTypeInfo[] { new pbr::GeneratedClrTypeInfo(typeof(global::Agones.Dev.Sdk.GameServer.Types.ObjectMeta), global::Agones.Dev.Sdk.GameServer.Types.ObjectMeta.Parser, new[]{ "Name", "Namespace", "Uid", "ResourceVersion", "Generation", "CreationTimestamp", "DeletionTimestamp", "Annotations", "Labels" }, null, null, null, new pbr::GeneratedClrTypeInfo[] { null, null, }),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Agones.Dev.Sdk.GameServer.Types.Spec), global::Agones.Dev.Sdk.GameServer.Types.Spec.Parser, new[]{ "Health" }, null, null, null, new pbr::GeneratedClrTypeInfo[] { new pbr::GeneratedClrTypeInfo(typeof(global::Agones.Dev.Sdk.GameServer.Types.Spec.Types.Health), global::Agones.Dev.Sdk.GameServer.Types.Spec.Types.Health.Parser, new[]{ "Disabled", "PeriodSeconds", "FailureThreshold", "InitialDelaySeconds" }, null, null, null, null)}),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Agones.Dev.Sdk.GameServer.Types.Status), global::Agones.Dev.Sdk.GameServer.Types.Status.Parser, new[]{ "State", "Address", "Ports", "Players" }, null, null, null, new pbr::GeneratedClrTypeInfo[] { new pbr::GeneratedClrTypeInfo(typeof(global::Agones.Dev.Sdk.GameServer.Types.Status.Types.Port), global::Agones.Dev.Sdk.GameServer.Types.Status.Types.Port.Parser, new[]{ "Name", "Port_" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Agones.Dev.Sdk.GameServer.Types.Status.Types.PlayerStatus), global::Agones.Dev.Sdk.GameServer.Types.Status.Types.PlayerStatus.Parser, new[]{ "Count", "Capacity", "Ids" }, null, null, null, null)})})
           }));
     }
     #endregion
@@ -87,7 +87,11 @@ namespace Agones.Dev.Sdk {
   /// <summary>
   /// I am Empty
   /// </summary>
-  public sealed partial class Empty : pb::IMessage<Empty> {
+  public sealed partial class Empty : pb::IMessage<Empty>
+  #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      , pb::IBufferMessage
+  #endif
+  {
     private static readonly pb::MessageParser<Empty> _parser = new pb::MessageParser<Empty>(() => new Empty());
     private pb::UnknownFieldSet _unknownFields;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -152,10 +156,23 @@ namespace Agones.Dev.Sdk {
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public void WriteTo(pb::CodedOutputStream output) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      output.WriteRawMessage(this);
+    #else
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
       }
+    #endif
     }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(ref output);
+      }
+    }
+    #endif
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public int CalculateSize() {
@@ -176,6 +193,9 @@ namespace Agones.Dev.Sdk {
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public void MergeFrom(pb::CodedInputStream input) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      input.ReadRawMessage(this);
+    #else
       uint tag;
       while ((tag = input.ReadTag()) != 0) {
         switch(tag) {
@@ -184,14 +204,33 @@ namespace Agones.Dev.Sdk {
             break;
         }
       }
+    #endif
     }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    void pb::IBufferMessage.InternalMergeFrom(ref pb::ParseContext input) {
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+        switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
+            break;
+        }
+      }
+    }
+    #endif
 
   }
 
   /// <summary>
   /// Key, Value entry
   /// </summary>
-  public sealed partial class KeyValue : pb::IMessage<KeyValue> {
+  public sealed partial class KeyValue : pb::IMessage<KeyValue>
+  #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      , pb::IBufferMessage
+  #endif
+  {
     private static readonly pb::MessageParser<KeyValue> _parser = new pb::MessageParser<KeyValue>(() => new KeyValue());
     private pb::UnknownFieldSet _unknownFields;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -284,6 +323,9 @@ namespace Agones.Dev.Sdk {
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public void WriteTo(pb::CodedOutputStream output) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      output.WriteRawMessage(this);
+    #else
       if (Key.Length != 0) {
         output.WriteRawTag(10);
         output.WriteString(Key);
@@ -295,7 +337,25 @@ namespace Agones.Dev.Sdk {
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
       }
+    #endif
     }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
+      if (Key.Length != 0) {
+        output.WriteRawTag(10);
+        output.WriteString(Key);
+      }
+      if (Value.Length != 0) {
+        output.WriteRawTag(18);
+        output.WriteString(Value);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(ref output);
+      }
+    }
+    #endif
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public int CalculateSize() {
@@ -328,6 +388,9 @@ namespace Agones.Dev.Sdk {
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public void MergeFrom(pb::CodedInputStream input) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      input.ReadRawMessage(this);
+    #else
       uint tag;
       while ((tag = input.ReadTag()) != 0) {
         switch(tag) {
@@ -344,14 +407,41 @@ namespace Agones.Dev.Sdk {
           }
         }
       }
+    #endif
     }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    void pb::IBufferMessage.InternalMergeFrom(ref pb::ParseContext input) {
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+        switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
+            break;
+          case 10: {
+            Key = input.ReadString();
+            break;
+          }
+          case 18: {
+            Value = input.ReadString();
+            break;
+          }
+        }
+      }
+    }
+    #endif
 
   }
 
   /// <summary>
   /// time duration, in seconds
   /// </summary>
-  public sealed partial class Duration : pb::IMessage<Duration> {
+  public sealed partial class Duration : pb::IMessage<Duration>
+  #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      , pb::IBufferMessage
+  #endif
+  {
     private static readonly pb::MessageParser<Duration> _parser = new pb::MessageParser<Duration>(() => new Duration());
     private pb::UnknownFieldSet _unknownFields;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -430,6 +520,9 @@ namespace Agones.Dev.Sdk {
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public void WriteTo(pb::CodedOutputStream output) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      output.WriteRawMessage(this);
+    #else
       if (Seconds != 0L) {
         output.WriteRawTag(8);
         output.WriteInt64(Seconds);
@@ -437,7 +530,21 @@ namespace Agones.Dev.Sdk {
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
       }
+    #endif
     }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
+      if (Seconds != 0L) {
+        output.WriteRawTag(8);
+        output.WriteInt64(Seconds);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(ref output);
+      }
+    }
+    #endif
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public int CalculateSize() {
@@ -464,6 +571,9 @@ namespace Agones.Dev.Sdk {
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public void MergeFrom(pb::CodedInputStream input) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      input.ReadRawMessage(this);
+    #else
       uint tag;
       while ((tag = input.ReadTag()) != 0) {
         switch(tag) {
@@ -476,7 +586,26 @@ namespace Agones.Dev.Sdk {
           }
         }
       }
+    #endif
     }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    void pb::IBufferMessage.InternalMergeFrom(ref pb::ParseContext input) {
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+        switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
+            break;
+          case 8: {
+            Seconds = input.ReadInt64();
+            break;
+          }
+        }
+      }
+    }
+    #endif
 
   }
 
@@ -485,7 +614,11 @@ namespace Agones.Dev.Sdk {
   /// We will only export those resources that make the most
   /// sense. Can always expand to more as needed.
   /// </summary>
-  public sealed partial class GameServer : pb::IMessage<GameServer> {
+  public sealed partial class GameServer : pb::IMessage<GameServer>
+  #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      , pb::IBufferMessage
+  #endif
+  {
     private static readonly pb::MessageParser<GameServer> _parser = new pb::MessageParser<GameServer>(() => new GameServer());
     private pb::UnknownFieldSet _unknownFields;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -592,6 +725,9 @@ namespace Agones.Dev.Sdk {
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public void WriteTo(pb::CodedOutputStream output) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      output.WriteRawMessage(this);
+    #else
       if (objectMeta_ != null) {
         output.WriteRawTag(10);
         output.WriteMessage(ObjectMeta);
@@ -607,7 +743,29 @@ namespace Agones.Dev.Sdk {
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
       }
+    #endif
     }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
+      if (objectMeta_ != null) {
+        output.WriteRawTag(10);
+        output.WriteMessage(ObjectMeta);
+      }
+      if (spec_ != null) {
+        output.WriteRawTag(18);
+        output.WriteMessage(Spec);
+      }
+      if (status_ != null) {
+        output.WriteRawTag(26);
+        output.WriteMessage(Status);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(ref output);
+      }
+    }
+    #endif
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public int CalculateSize() {
@@ -655,6 +813,9 @@ namespace Agones.Dev.Sdk {
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public void MergeFrom(pb::CodedInputStream input) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      input.ReadRawMessage(this);
+    #else
       uint tag;
       while ((tag = input.ReadTag()) != 0) {
         switch(tag) {
@@ -684,7 +845,43 @@ namespace Agones.Dev.Sdk {
           }
         }
       }
+    #endif
     }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    void pb::IBufferMessage.InternalMergeFrom(ref pb::ParseContext input) {
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+        switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
+            break;
+          case 10: {
+            if (objectMeta_ == null) {
+              ObjectMeta = new global::Agones.Dev.Sdk.GameServer.Types.ObjectMeta();
+            }
+            input.ReadMessage(ObjectMeta);
+            break;
+          }
+          case 18: {
+            if (spec_ == null) {
+              Spec = new global::Agones.Dev.Sdk.GameServer.Types.Spec();
+            }
+            input.ReadMessage(Spec);
+            break;
+          }
+          case 26: {
+            if (status_ == null) {
+              Status = new global::Agones.Dev.Sdk.GameServer.Types.Status();
+            }
+            input.ReadMessage(Status);
+            break;
+          }
+        }
+      }
+    }
+    #endif
 
     #region Nested types
     /// <summary>Container for nested types declared in the GameServer message type.</summary>
@@ -693,7 +890,11 @@ namespace Agones.Dev.Sdk {
       /// <summary>
       /// representation of the K8s ObjectMeta resource
       /// </summary>
-      public sealed partial class ObjectMeta : pb::IMessage<ObjectMeta> {
+      public sealed partial class ObjectMeta : pb::IMessage<ObjectMeta>
+      #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+          , pb::IBufferMessage
+      #endif
+      {
         private static readonly pb::MessageParser<ObjectMeta> _parser = new pb::MessageParser<ObjectMeta>(() => new ObjectMeta());
         private pb::UnknownFieldSet _unknownFields;
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -821,7 +1022,7 @@ namespace Agones.Dev.Sdk {
         /// <summary>Field number for the "annotations" field.</summary>
         public const int AnnotationsFieldNumber = 8;
         private static readonly pbc::MapField<string, string>.Codec _map_annotations_codec
-            = new pbc::MapField<string, string>.Codec(pb::FieldCodec.ForString(10), pb::FieldCodec.ForString(18), 66);
+            = new pbc::MapField<string, string>.Codec(pb::FieldCodec.ForString(10, ""), pb::FieldCodec.ForString(18, ""), 66);
         private readonly pbc::MapField<string, string> annotations_ = new pbc::MapField<string, string>();
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
         public pbc::MapField<string, string> Annotations {
@@ -831,7 +1032,7 @@ namespace Agones.Dev.Sdk {
         /// <summary>Field number for the "labels" field.</summary>
         public const int LabelsFieldNumber = 9;
         private static readonly pbc::MapField<string, string>.Codec _map_labels_codec
-            = new pbc::MapField<string, string>.Codec(pb::FieldCodec.ForString(10), pb::FieldCodec.ForString(18), 74);
+            = new pbc::MapField<string, string>.Codec(pb::FieldCodec.ForString(10, ""), pb::FieldCodec.ForString(18, ""), 74);
         private readonly pbc::MapField<string, string> labels_ = new pbc::MapField<string, string>();
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
         public pbc::MapField<string, string> Labels {
@@ -888,6 +1089,9 @@ namespace Agones.Dev.Sdk {
 
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
         public void WriteTo(pb::CodedOutputStream output) {
+        #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+          output.WriteRawMessage(this);
+        #else
           if (Name.Length != 0) {
             output.WriteRawTag(10);
             output.WriteString(Name);
@@ -921,7 +1125,47 @@ namespace Agones.Dev.Sdk {
           if (_unknownFields != null) {
             _unknownFields.WriteTo(output);
           }
+        #endif
         }
+
+        #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+        void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
+          if (Name.Length != 0) {
+            output.WriteRawTag(10);
+            output.WriteString(Name);
+          }
+          if (Namespace.Length != 0) {
+            output.WriteRawTag(18);
+            output.WriteString(Namespace);
+          }
+          if (Uid.Length != 0) {
+            output.WriteRawTag(26);
+            output.WriteString(Uid);
+          }
+          if (ResourceVersion.Length != 0) {
+            output.WriteRawTag(34);
+            output.WriteString(ResourceVersion);
+          }
+          if (Generation != 0L) {
+            output.WriteRawTag(40);
+            output.WriteInt64(Generation);
+          }
+          if (CreationTimestamp != 0L) {
+            output.WriteRawTag(48);
+            output.WriteInt64(CreationTimestamp);
+          }
+          if (DeletionTimestamp != 0L) {
+            output.WriteRawTag(56);
+            output.WriteInt64(DeletionTimestamp);
+          }
+          annotations_.WriteTo(ref output, _map_annotations_codec);
+          labels_.WriteTo(ref output, _map_labels_codec);
+          if (_unknownFields != null) {
+            _unknownFields.WriteTo(ref output);
+          }
+        }
+        #endif
 
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
         public int CalculateSize() {
@@ -988,6 +1232,9 @@ namespace Agones.Dev.Sdk {
 
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
         public void MergeFrom(pb::CodedInputStream input) {
+        #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+          input.ReadRawMessage(this);
+        #else
           uint tag;
           while ((tag = input.ReadTag()) != 0) {
             switch(tag) {
@@ -1032,11 +1279,66 @@ namespace Agones.Dev.Sdk {
               }
             }
           }
+        #endif
         }
+
+        #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+        void pb::IBufferMessage.InternalMergeFrom(ref pb::ParseContext input) {
+          uint tag;
+          while ((tag = input.ReadTag()) != 0) {
+            switch(tag) {
+              default:
+                _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
+                break;
+              case 10: {
+                Name = input.ReadString();
+                break;
+              }
+              case 18: {
+                Namespace = input.ReadString();
+                break;
+              }
+              case 26: {
+                Uid = input.ReadString();
+                break;
+              }
+              case 34: {
+                ResourceVersion = input.ReadString();
+                break;
+              }
+              case 40: {
+                Generation = input.ReadInt64();
+                break;
+              }
+              case 48: {
+                CreationTimestamp = input.ReadInt64();
+                break;
+              }
+              case 56: {
+                DeletionTimestamp = input.ReadInt64();
+                break;
+              }
+              case 66: {
+                annotations_.AddEntriesFrom(ref input, _map_annotations_codec);
+                break;
+              }
+              case 74: {
+                labels_.AddEntriesFrom(ref input, _map_labels_codec);
+                break;
+              }
+            }
+          }
+        }
+        #endif
 
       }
 
-      public sealed partial class Spec : pb::IMessage<Spec> {
+      public sealed partial class Spec : pb::IMessage<Spec>
+      #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+          , pb::IBufferMessage
+      #endif
+      {
         private static readonly pb::MessageParser<Spec> _parser = new pb::MessageParser<Spec>(() => new Spec());
         private pb::UnknownFieldSet _unknownFields;
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -1115,6 +1417,9 @@ namespace Agones.Dev.Sdk {
 
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
         public void WriteTo(pb::CodedOutputStream output) {
+        #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+          output.WriteRawMessage(this);
+        #else
           if (health_ != null) {
             output.WriteRawTag(10);
             output.WriteMessage(Health);
@@ -1122,7 +1427,21 @@ namespace Agones.Dev.Sdk {
           if (_unknownFields != null) {
             _unknownFields.WriteTo(output);
           }
+        #endif
         }
+
+        #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+        void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
+          if (health_ != null) {
+            output.WriteRawTag(10);
+            output.WriteMessage(Health);
+          }
+          if (_unknownFields != null) {
+            _unknownFields.WriteTo(ref output);
+          }
+        }
+        #endif
 
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
         public int CalculateSize() {
@@ -1152,6 +1471,9 @@ namespace Agones.Dev.Sdk {
 
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
         public void MergeFrom(pb::CodedInputStream input) {
+        #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+          input.ReadRawMessage(this);
+        #else
           uint tag;
           while ((tag = input.ReadTag()) != 0) {
             switch(tag) {
@@ -1167,13 +1489,39 @@ namespace Agones.Dev.Sdk {
               }
             }
           }
+        #endif
         }
+
+        #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+        void pb::IBufferMessage.InternalMergeFrom(ref pb::ParseContext input) {
+          uint tag;
+          while ((tag = input.ReadTag()) != 0) {
+            switch(tag) {
+              default:
+                _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
+                break;
+              case 10: {
+                if (health_ == null) {
+                  Health = new global::Agones.Dev.Sdk.GameServer.Types.Spec.Types.Health();
+                }
+                input.ReadMessage(Health);
+                break;
+              }
+            }
+          }
+        }
+        #endif
 
         #region Nested types
         /// <summary>Container for nested types declared in the Spec message type.</summary>
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
         public static partial class Types {
-          public sealed partial class Health : pb::IMessage<Health> {
+          public sealed partial class Health : pb::IMessage<Health>
+          #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+              , pb::IBufferMessage
+          #endif
+          {
             private static readonly pb::MessageParser<Health> _parser = new pb::MessageParser<Health>(() => new Health());
             private pb::UnknownFieldSet _unknownFields;
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -1294,6 +1642,9 @@ namespace Agones.Dev.Sdk {
 
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
             public void WriteTo(pb::CodedOutputStream output) {
+            #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+              output.WriteRawMessage(this);
+            #else
               if (Disabled != false) {
                 output.WriteRawTag(8);
                 output.WriteBool(Disabled);
@@ -1313,7 +1664,33 @@ namespace Agones.Dev.Sdk {
               if (_unknownFields != null) {
                 _unknownFields.WriteTo(output);
               }
+            #endif
             }
+
+            #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+            void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
+              if (Disabled != false) {
+                output.WriteRawTag(8);
+                output.WriteBool(Disabled);
+              }
+              if (PeriodSeconds != 0) {
+                output.WriteRawTag(16);
+                output.WriteInt32(PeriodSeconds);
+              }
+              if (FailureThreshold != 0) {
+                output.WriteRawTag(24);
+                output.WriteInt32(FailureThreshold);
+              }
+              if (InitialDelaySeconds != 0) {
+                output.WriteRawTag(32);
+                output.WriteInt32(InitialDelaySeconds);
+              }
+              if (_unknownFields != null) {
+                _unknownFields.WriteTo(ref output);
+              }
+            }
+            #endif
 
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
             public int CalculateSize() {
@@ -1358,6 +1735,9 @@ namespace Agones.Dev.Sdk {
 
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
             public void MergeFrom(pb::CodedInputStream input) {
+            #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+              input.ReadRawMessage(this);
+            #else
               uint tag;
               while ((tag = input.ReadTag()) != 0) {
                 switch(tag) {
@@ -1382,7 +1762,38 @@ namespace Agones.Dev.Sdk {
                   }
                 }
               }
+            #endif
             }
+
+            #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+            void pb::IBufferMessage.InternalMergeFrom(ref pb::ParseContext input) {
+              uint tag;
+              while ((tag = input.ReadTag()) != 0) {
+                switch(tag) {
+                  default:
+                    _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
+                    break;
+                  case 8: {
+                    Disabled = input.ReadBool();
+                    break;
+                  }
+                  case 16: {
+                    PeriodSeconds = input.ReadInt32();
+                    break;
+                  }
+                  case 24: {
+                    FailureThreshold = input.ReadInt32();
+                    break;
+                  }
+                  case 32: {
+                    InitialDelaySeconds = input.ReadInt32();
+                    break;
+                  }
+                }
+              }
+            }
+            #endif
 
           }
 
@@ -1391,7 +1802,11 @@ namespace Agones.Dev.Sdk {
 
       }
 
-      public sealed partial class Status : pb::IMessage<Status> {
+      public sealed partial class Status : pb::IMessage<Status>
+      #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+          , pb::IBufferMessage
+      #endif
+      {
         private static readonly pb::MessageParser<Status> _parser = new pb::MessageParser<Status>(() => new Status());
         private pb::UnknownFieldSet _unknownFields;
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -1515,6 +1930,9 @@ namespace Agones.Dev.Sdk {
 
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
         public void WriteTo(pb::CodedOutputStream output) {
+        #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+          output.WriteRawMessage(this);
+        #else
           if (State.Length != 0) {
             output.WriteRawTag(10);
             output.WriteString(State);
@@ -1531,7 +1949,30 @@ namespace Agones.Dev.Sdk {
           if (_unknownFields != null) {
             _unknownFields.WriteTo(output);
           }
+        #endif
         }
+
+        #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+        void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
+          if (State.Length != 0) {
+            output.WriteRawTag(10);
+            output.WriteString(State);
+          }
+          if (Address.Length != 0) {
+            output.WriteRawTag(18);
+            output.WriteString(Address);
+          }
+          ports_.WriteTo(ref output, _repeated_ports_codec);
+          if (players_ != null) {
+            output.WriteRawTag(34);
+            output.WriteMessage(Players);
+          }
+          if (_unknownFields != null) {
+            _unknownFields.WriteTo(ref output);
+          }
+        }
+        #endif
 
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
         public int CalculateSize() {
@@ -1575,6 +2016,9 @@ namespace Agones.Dev.Sdk {
 
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
         public void MergeFrom(pb::CodedInputStream input) {
+        #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+          input.ReadRawMessage(this);
+        #else
           uint tag;
           while ((tag = input.ReadTag()) != 0) {
             switch(tag) {
@@ -1602,13 +2046,51 @@ namespace Agones.Dev.Sdk {
               }
             }
           }
+        #endif
         }
+
+        #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+        void pb::IBufferMessage.InternalMergeFrom(ref pb::ParseContext input) {
+          uint tag;
+          while ((tag = input.ReadTag()) != 0) {
+            switch(tag) {
+              default:
+                _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
+                break;
+              case 10: {
+                State = input.ReadString();
+                break;
+              }
+              case 18: {
+                Address = input.ReadString();
+                break;
+              }
+              case 26: {
+                ports_.AddEntriesFrom(ref input, _repeated_ports_codec);
+                break;
+              }
+              case 34: {
+                if (players_ == null) {
+                  Players = new global::Agones.Dev.Sdk.GameServer.Types.Status.Types.PlayerStatus();
+                }
+                input.ReadMessage(Players);
+                break;
+              }
+            }
+          }
+        }
+        #endif
 
         #region Nested types
         /// <summary>Container for nested types declared in the Status message type.</summary>
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
         public static partial class Types {
-          public sealed partial class Port : pb::IMessage<Port> {
+          public sealed partial class Port : pb::IMessage<Port>
+          #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+              , pb::IBufferMessage
+          #endif
+          {
             private static readonly pb::MessageParser<Port> _parser = new pb::MessageParser<Port>(() => new Port());
             private pb::UnknownFieldSet _unknownFields;
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -1701,6 +2183,9 @@ namespace Agones.Dev.Sdk {
 
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
             public void WriteTo(pb::CodedOutputStream output) {
+            #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+              output.WriteRawMessage(this);
+            #else
               if (Name.Length != 0) {
                 output.WriteRawTag(10);
                 output.WriteString(Name);
@@ -1712,7 +2197,25 @@ namespace Agones.Dev.Sdk {
               if (_unknownFields != null) {
                 _unknownFields.WriteTo(output);
               }
+            #endif
             }
+
+            #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+            void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
+              if (Name.Length != 0) {
+                output.WriteRawTag(10);
+                output.WriteString(Name);
+              }
+              if (Port_ != 0) {
+                output.WriteRawTag(16);
+                output.WriteInt32(Port_);
+              }
+              if (_unknownFields != null) {
+                _unknownFields.WriteTo(ref output);
+              }
+            }
+            #endif
 
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
             public int CalculateSize() {
@@ -1745,6 +2248,9 @@ namespace Agones.Dev.Sdk {
 
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
             public void MergeFrom(pb::CodedInputStream input) {
+            #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+              input.ReadRawMessage(this);
+            #else
               uint tag;
               while ((tag = input.ReadTag()) != 0) {
                 switch(tag) {
@@ -1761,7 +2267,30 @@ namespace Agones.Dev.Sdk {
                   }
                 }
               }
+            #endif
             }
+
+            #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+            void pb::IBufferMessage.InternalMergeFrom(ref pb::ParseContext input) {
+              uint tag;
+              while ((tag = input.ReadTag()) != 0) {
+                switch(tag) {
+                  default:
+                    _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
+                    break;
+                  case 10: {
+                    Name = input.ReadString();
+                    break;
+                  }
+                  case 16: {
+                    Port_ = input.ReadInt32();
+                    break;
+                  }
+                }
+              }
+            }
+            #endif
 
           }
 
@@ -1769,7 +2298,11 @@ namespace Agones.Dev.Sdk {
           /// [Stage:Alpha]
           /// [FeatureFlag:PlayerTracking]
           /// </summary>
-          public sealed partial class PlayerStatus : pb::IMessage<PlayerStatus> {
+          public sealed partial class PlayerStatus : pb::IMessage<PlayerStatus>
+          #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+              , pb::IBufferMessage
+          #endif
+          {
             private static readonly pb::MessageParser<PlayerStatus> _parser = new pb::MessageParser<PlayerStatus>(() => new PlayerStatus());
             private pb::UnknownFieldSet _unknownFields;
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -1875,6 +2408,9 @@ namespace Agones.Dev.Sdk {
 
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
             public void WriteTo(pb::CodedOutputStream output) {
+            #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+              output.WriteRawMessage(this);
+            #else
               if (Count != 0L) {
                 output.WriteRawTag(8);
                 output.WriteInt64(Count);
@@ -1887,7 +2423,26 @@ namespace Agones.Dev.Sdk {
               if (_unknownFields != null) {
                 _unknownFields.WriteTo(output);
               }
+            #endif
             }
+
+            #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+            void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
+              if (Count != 0L) {
+                output.WriteRawTag(8);
+                output.WriteInt64(Count);
+              }
+              if (Capacity != 0L) {
+                output.WriteRawTag(16);
+                output.WriteInt64(Capacity);
+              }
+              ids_.WriteTo(ref output, _repeated_ids_codec);
+              if (_unknownFields != null) {
+                _unknownFields.WriteTo(ref output);
+              }
+            }
+            #endif
 
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
             public int CalculateSize() {
@@ -1922,6 +2477,9 @@ namespace Agones.Dev.Sdk {
 
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
             public void MergeFrom(pb::CodedInputStream input) {
+            #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+              input.ReadRawMessage(this);
+            #else
               uint tag;
               while ((tag = input.ReadTag()) != 0) {
                 switch(tag) {
@@ -1942,7 +2500,34 @@ namespace Agones.Dev.Sdk {
                   }
                 }
               }
+            #endif
             }
+
+            #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+            void pb::IBufferMessage.InternalMergeFrom(ref pb::ParseContext input) {
+              uint tag;
+              while ((tag = input.ReadTag()) != 0) {
+                switch(tag) {
+                  default:
+                    _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
+                    break;
+                  case 8: {
+                    Count = input.ReadInt64();
+                    break;
+                  }
+                  case 16: {
+                    Capacity = input.ReadInt64();
+                    break;
+                  }
+                  case 26: {
+                    ids_.AddEntriesFrom(ref input, _repeated_ids_codec);
+                    break;
+                  }
+                }
+              }
+            }
+            #endif
 
           }
 

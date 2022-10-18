@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//     http://www.apache.org/licenses/LICENSE-2.0
+//	http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,7 +18,6 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/pem"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"testing"
@@ -197,14 +196,17 @@ func TestVerifyClientCertificateFails(t *testing.T) {
 func TestGettingCaCert(t *testing.T) {
 	t.Parallel()
 
-	file, err := ioutil.TempFile(".", "*.crt")
+	file, err := os.CreateTemp(".", "*.crt")
 	if assert.Nil(t, err) {
 		defer os.Remove(file.Name()) // nolint: errcheck
 		_, err = file.WriteString(clientCert)
 		if assert.Nil(t, err) {
 			certPool, err := getCACertPool("./")
 			if assert.Nil(t, err) {
-				assert.Len(t, certPool.Subjects(), 1)
+				// linting complaints certPool.Subjects() has been deprecated since Go 1.18.
+				// But since this cert doesn't come from SystemCertPool, it doesn't seem behavior
+				// should be impacted. So marking the lint as ignored.
+				assert.Len(t, certPool.Subjects(), 1) // nolint
 			}
 		}
 	}

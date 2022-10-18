@@ -34,9 +34,6 @@ const (
 	// FeaturePlayerTracking is a feature flag to enable/disable player tracking features.
 	FeaturePlayerTracking Feature = "PlayerTracking"
 
-	// NodeExternalDNS is a feature flag to enable/disable node ExternalDNS and InternalDNS use as GameServer address
-	NodeExternalDNS Feature = "NodeExternalDNS"
-
 	// FeatureStateAllocationFilter is a feature flag that enables state filtering on Allocation.
 	FeatureStateAllocationFilter Feature = "StateAllocationFilter"
 
@@ -49,6 +46,10 @@ const (
 
 	// FeatureSDKGracefulTermination is a feature flag that enables SDK to support gracefulTermination
 	FeatureSDKGracefulTermination Feature = "SDKGracefulTermination"
+
+	// FeatureResetMetricsOnDelete is a feature flag that tells the metrics service to unregister and register
+	// relevant metric views to reset their state immediately when an Agones resource is deleted.
+	FeatureResetMetricsOnDelete Feature = "ResetMetricsOnDelete"
 )
 
 var (
@@ -58,11 +59,11 @@ var (
 	featureDefaults = map[Feature]bool{
 		FeatureExample:                true,
 		FeaturePlayerTracking:         false,
-		NodeExternalDNS:               true,
-		FeatureStateAllocationFilter:  false,
+		FeatureStateAllocationFilter:  true,
 		FeaturePlayerAllocationFilter: false,
-		FeatureCustomFasSyncInterval:  false,
+		FeatureCustomFasSyncInterval:  true,
 		FeatureSDKGracefulTermination: false,
+		FeatureResetMetricsOnDelete:   false,
 	}
 
 	// featureGates is the storage of what features are enabled

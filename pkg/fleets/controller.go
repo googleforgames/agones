@@ -436,6 +436,12 @@ func (c *Controller) rollingUpdateActive(fleet *agonesv1.Fleet, active *agonesv1
 		return replicas, nil
 	}
 
+	// if the current number replicas from the fleet is zero, the rolling update can be ignored
+	// and the cleanup stage will remove dangling GameServerSets
+	if fleet.Spec.Replicas == 0 {
+		return 0, nil
+	}
+
 	// if the active spec replicas are greater than or equal the fleet spec replicas, then we don't
 	// need to do another rolling update upwards.
 	if active.Spec.Replicas >= (fleet.Spec.Replicas - sumAllocated) {

@@ -17,7 +17,7 @@ package webhooks
 import (
 	"bytes"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -163,7 +163,7 @@ func TestWebHookFleetValidationHandler(t *testing.T) {
 							"template": {
 								"spec": {
 									"containers": [{
-										"image": "gcr.io/agones-images/simple-game-server:0.11",
+										"image": "gcr.io/agones-images/simple-game-server:0.14",
 										"name": false
 									}]
 								}
@@ -217,7 +217,7 @@ func TestWebHookFleetValidationHandler(t *testing.T) {
 			assert.Nil(t, err)
 			defer resp.Body.Close() // nolint: errcheck
 			assert.Equal(t, http.StatusOK, resp.StatusCode)
-			body, err := ioutil.ReadAll(resp.Body)
+			body, err := io.ReadAll(resp.Body)
 			assert.Nil(t, err)
 
 			expected := "cannot unmarshal bool into Go struct field Container.spec.template.spec.template.spec.containers.name of type string"

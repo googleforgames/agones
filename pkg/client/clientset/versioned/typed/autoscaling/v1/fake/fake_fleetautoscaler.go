@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC All Rights Reserved.
+// Copyright 2022 Google LLC All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -117,7 +117,7 @@ func (c *FakeFleetAutoscalers) UpdateStatus(ctx context.Context, fleetAutoscaler
 // Delete takes name of the fleetAutoscaler and deletes it. Returns an error if one occurs.
 func (c *FakeFleetAutoscalers) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	_, err := c.Fake.
-		Invokes(testing.NewDeleteAction(fleetautoscalersResource, c.ns, name), &autoscalingv1.FleetAutoscaler{})
+		Invokes(testing.NewDeleteActionWithOptions(fleetautoscalersResource, c.ns, name, opts), &autoscalingv1.FleetAutoscaler{})
 
 	return err
 }

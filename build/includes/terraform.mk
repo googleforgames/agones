@@ -19,7 +19,7 @@ GCP_TF_CLUSTER_NAME ?= agones-tf-cluster
 current_project := $(shell $(DOCKER_RUN) bash -c "gcloud config get-value project 2> /dev/null")
 
 ### Deploy cluster with Terraform
-terraform-init: TERRAFORM_BUILD_DIR ?= $(mount_path)/build/terraform/gke
+terraform-init: TERRAFORM_BUILD_DIR ?= $(mount_path)/build/terraform/$(DIRECTORY)
 terraform-init: $(ensure-build-image)
 terraform-init:
 	docker run --rm -it $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) bash -c '\
@@ -37,6 +37,7 @@ terraform-clean:
 # Alpha Feature gates are disabled
 gcloud-terraform-cluster: GCP_CLUSTER_NODEPOOL_INITIALNODECOUNT ?= 4
 gcloud-terraform-cluster: GCP_CLUSTER_NODEPOOL_MACHINETYPE ?= e2-standard-4
+gcloud-terraform-cluster: GCP_CLUSTER_NODEPOOL_ENABLEIMAGESTREAMING ?= true
 gcloud-terraform-cluster: GCP_CLUSTER_NODEPOOL_WINDOWSINITIALNODECOUNT ?= 0
 gcloud-terraform-cluster: GCP_CLUSTER_NODEPOOL_WINDOWSMACHINETYPE ?= e2-standard-4
 gcloud-terraform-cluster: AGONES_VERSION ?= ''
@@ -55,6 +56,7 @@ gcloud-terraform-cluster:
 		-var zone="$(GCP_CLUSTER_ZONE)" -var project="$(GCP_PROJECT)" \
 		-var log_level="$(LOG_LEVEL)" \
 		-var node_count=$(GCP_CLUSTER_NODEPOOL_INITIALNODECOUNT) \
+		-var enable_image_streaming=$(GCP_CLUSTER_NODEPOOL_ENABLEIMAGESTREAMING) \
 		-var windows_node_count=$(GCP_CLUSTER_NODEPOOL_WINDOWSINITIALNODECOUNT) \
 		-var windows_machine_type=$(GCP_CLUSTER_NODEPOOL_WINDOWSMACHINETYPE)'
 	GCP_CLUSTER_NAME=$(GCP_TF_CLUSTER_NAME) $(MAKE) gcloud-auth-cluster

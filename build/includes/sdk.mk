@@ -27,7 +27,7 @@ build_sdk_base_tag = agones-build-sdk-base:$(build_sdk_base_version)
 build_sdk_version = $(call sha_dir,$(build_path)/build-sdk-images/$(SDK_FOLDER)/*)
 build_sdk_base_remote_tag = $(REGISTRY)/$(build_sdk_base_tag)
 build_sdk_prefix = agones-build-sdk-
-grpc_release_tag = v1.27.1
+grpc_release_tag = v1.36.1
 sdk_build_folder = build-sdk-images/
 examples_folder = ../examples/
 SDK_FOLDER ?= go
@@ -124,7 +124,7 @@ ensure-build-sdk-image:
 
 # Run SDK conformance Sidecar server in docker in order to run
 # SDK client test against it. Useful for test development
-run-sdk-conformance-local: TIMEOUT ?= 30
+run-sdk-conformance-local: TIMEOUT ?= 40
 run-sdk-conformance-local: TESTS ?= ready,allocate,setlabel,setannotation,gameserver,health,shutdown,watch,reserve
 run-sdk-conformance-local: FEATURE_GATES ?=
 run-sdk-conformance-local: ensure-agones-sdk-image
@@ -133,7 +133,7 @@ run-sdk-conformance-local: ensure-agones-sdk-image
 
 # Run SDK conformance test, previously built, for a specific SDK_FOLDER
 # Sleeps the start of the sidecar to test that the SDK blocks on connection correctly
-run-sdk-conformance-no-build: TIMEOUT ?= 30
+run-sdk-conformance-no-build: TIMEOUT ?= 40
 run-sdk-conformance-no-build: RANDOM := $(shell bash -c 'echo $$RANDOM')
 run-sdk-conformance-no-build: DELAY ?= $(shell bash -c "echo $$[ ($(RANDOM) % 5 ) + 1 ]")
 run-sdk-conformance-no-build: TESTS ?= $(DEFAULT_CONFORMANCE_TESTS)

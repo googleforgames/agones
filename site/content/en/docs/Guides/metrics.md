@@ -17,6 +17,8 @@ We plan to support multiple exporters in the future via environment variables an
 
 If you are running a [Prometheus](https://prometheus.io/) instance you just need to ensure that metrics and kubernetes service discovery are enabled. (helm chart values `agones.metrics.prometheusEnabled` and `agones.metrics.prometheusServiceDiscovery`). This will automatically add annotations required by Prometheus to discover Agones metrics and start collecting them. (see [example](https://github.com/prometheus/prometheus/tree/main/documentation/examples/kubernetes-rabbitmq))
 
+If your Prometheus metrics collection agent requires that you scrape from the pods directly(such as with [Google Cloud Managed Prometheus](https://cloud.google.com/stackdriver/docs/managed-prometheus)), then the metrics ports for the controller and allocator will both be named `http` and exposed on `8080`. In the case of the allocator, the port name and number can be overriden with the `agones.allocator.serviceMetrics.http.portName` and `agones.allocator.serviceMetrics.http.port` helm chart values.
+
 ### Prometheus Operator
 
 If you have [Prometheus operator](https://github.com/coreos/prometheus-operator) installed in your cluster, just enable ServiceMonitor installation in values:
@@ -36,35 +38,45 @@ Follow the [Stackdriver Installation steps](#stackdriver-installation) to see yo
 
 ## Metrics available
 
-| Name                                            | Description                                                         | Type      |
-|-------------------------------------------------|---------------------------------------------------------------------|-----------|
-| agones_gameservers_count                        | The number of gameservers per fleet and status                      | gauge     |
-| agones_gameserver_allocations_duration_seconds  | The distribution of gameserver allocation requests latencies         | histogram     |
-| agones_gameservers_total                        | The total of gameservers per fleet and status                       | counter   |
-| agones_fleets_replicas_count                    | The number of replicas per fleet (total, desired, ready, allocated) | gauge     |
-| agones_fleet_autoscalers_able_to_scale          | The fleet autoscaler can access the fleet to scale                  | gauge     |
-| agones_fleet_autoscalers_buffer_limits          | The limits of buffer based fleet autoscalers (min, max)              | gauge     |
-| agones_fleet_autoscalers_buffer_size            | The buffer size of fleet autoscalers (count or percentage)          | gauge     |
-| agones_fleet_autoscalers_current_replicas_count | The current replicas count as seen by autoscalers                   | gauge     |
-| agones_fleet_autoscalers_desired_replicas_count | The desired replicas count as seen by autoscalers                   | gauge     |
-| agones_fleet_autoscalers_limited                | The fleet autoscaler is capped (1)                                  | gauge     |
-| agones_gameservers_node_count                   | The distribution of gameservers per node                            | histogram |
-| agones_nodes_count                              | The count of nodes empty and with gameservers                       | gauge     |
-| agones_gameservers_state_duration  | The distribution of gameserver state duration in seconds. Note: this metric could have some missing samples by design. Do not use the `_total` counter as the real value for state changes.     | histogram     |
-| agones_k8s_client_http_request_total            | The total of HTTP requests to the Kubernetes API by status code       | counter   |
-| agones_k8s_client_http_request_duration_seconds | The distribution of HTTP requests latencies to the Kubernetes API by status code  | histogram   |
-| agones_k8s_client_cache_list_total              | The total number of list operations for client-go caches                         | counter   |
-| agones_k8s_client_cache_list_duration_seconds   | Duration of a Kubernetes list API call in seconds                        | histogram   |
-| agones_k8s_client_cache_list_items              | Count of items in a list from the Kubernetes API                            | histogram   |
-| agones_k8s_client_cache_watches_total           | The total number of watch operations for client-go caches                         | counter   |
-| agones_k8s_client_cache_last_resource_version   | Last resource version from the Kubernetes API                            | gauge   |
-| agones_k8s_client_workqueue_depth               | Current depth of the work queue                          | gauge   |
-| agones_k8s_client_workqueue_latency_seconds     | How long an item stays in the work queue                          | histogram   |
-| agones_k8s_client_workqueue_items_total         | Total number of items added to the work queue                          | counter   |
-| agones_k8s_client_workqueue_work_duration_seconds | How long processing an item from the work queue takes                          | histogram   |
-| agones_k8s_client_workqueue_retries_total         | Total number of items retried to the work queue                          | counter   |
-| agones_k8s_client_workqueue_longest_running_processor         | How long the longest running workqueue processor has been running in microseconds  | gauge   |
-| agones_k8s_client_workqueue_unfinished_work_seconds         | How long unfinished work has been sitting in the workqueue in seconds    | gauge   |
+| Name                                                  | Description                                                                                                                                                                                 | Type      |
+|-------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------|
+| agones_gameservers_count                              | The number of gameservers per fleet and status                                                                                                                                              | gauge     |
+| agones_gameserver_allocations_duration_seconds        | The distribution of gameserver allocation requests latencies                                                                                                                                | histogram |
+| agones_gameservers_total                              | The total of gameservers per fleet and status                                                                                                                                               | counter   |
+| agones_fleets_replicas_count                          | The number of replicas per fleet (total, desired, ready, reserved, allocated)                                                                                                               | gauge     |
+| agones_fleet_autoscalers_able_to_scale                | The fleet autoscaler can access the fleet to scale                                                                                                                                          | gauge     |
+| agones_fleet_autoscalers_buffer_limits                | The limits of buffer based fleet autoscalers (min, max)                                                                                                                                     | gauge     |
+| agones_fleet_autoscalers_buffer_size                  | The buffer size of fleet autoscalers (count or percentage)                                                                                                                                  | gauge     |
+| agones_fleet_autoscalers_current_replicas_count       | The current replicas count as seen by autoscalers                                                                                                                                           | gauge     |
+| agones_fleet_autoscalers_desired_replicas_count       | The desired replicas count as seen by autoscalers                                                                                                                                           | gauge     |
+| agones_fleet_autoscalers_limited                      | The fleet autoscaler is capped (1)                                                                                                                                                          | gauge     |
+| agones_gameservers_node_count                         | The distribution of gameservers per node                                                                                                                                                    | histogram |
+| agones_nodes_count                                    | The count of nodes empty and with gameservers                                                                                                                                               | gauge     |
+| agones_gameservers_state_duration                     | The distribution of gameserver state duration in seconds. Note: this metric could have some missing samples by design. Do not use the `_total` counter as the real value for state changes. | histogram |
+| agones_k8s_client_http_request_total                  | The total of HTTP requests to the Kubernetes API by status code                                                                                                                             | counter   |
+| agones_k8s_client_http_request_duration_seconds       | The distribution of HTTP requests latencies to the Kubernetes API by status code                                                                                                            | histogram |
+| agones_k8s_client_cache_list_total                    | The total number of list operations for client-go caches                                                                                                                                    | counter   |
+| agones_k8s_client_cache_list_duration_seconds         | Duration of a Kubernetes list API call in seconds                                                                                                                                           | histogram |
+| agones_k8s_client_cache_list_items                    | Count of items in a list from the Kubernetes API                                                                                                                                            | histogram |
+| agones_k8s_client_cache_watches_total                 | The total number of watch operations for client-go caches                                                                                                                                   | counter   |
+| agones_k8s_client_cache_last_resource_version         | Last resource version from the Kubernetes API                                                                                                                                               | gauge     |
+| agones_k8s_client_workqueue_depth                     | Current depth of the work queue                                                                                                                                                             | gauge     |
+| agones_k8s_client_workqueue_latency_seconds           | How long an item stays in the work queue                                                                                                                                                    | histogram |
+| agones_k8s_client_workqueue_items_total               | Total number of items added to the work queue                                                                                                                                               | counter   |
+| agones_k8s_client_workqueue_work_duration_seconds     | How long processing an item from the work queue takes                                                                                                                                       | histogram |
+| agones_k8s_client_workqueue_retries_total             | Total number of items retried to the work queue                                                                                                                                             | counter   |
+| agones_k8s_client_workqueue_longest_running_processor | How long the longest running workqueue processor has been running in microseconds                                                                                                           | gauge     |
+| agones_k8s_client_workqueue_unfinished_work_seconds   | How long unfinished work has been sitting in the workqueue in seconds                                                                                                                       | gauge     |
+
+
+### Dropping Metric Labels
+
+{{% alpha title="Reset Metric Export on Fleet / Autoscaler deletion" gate="ResetMetricsOnDelete" %}}
+
+When a Fleet or FleetAutoscaler is deleted from the system, Agones will automatically clear metrics that utilise 
+their name as a label from the exported metrics, so the metrics exported do not continuously grow in size over the 
+lifecycle of the Agones installation.
+
 
 ## Dashboard
 
@@ -141,7 +153,7 @@ gcloud container node-pools create agones-metrics --cluster=... --zone=... \
 By default we will disable the push gateway (we don't need it for Agones) and other exporters.
 
 The helm chart supports
-[nodeSelector](https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#nodeselector), 
+[nodeSelector](https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#nodeselector),
 [affinity](https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity) and [toleration](https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/), you can use them to schedule Prometheus deployments on an isolated node(s) to have an homogeneous game servers workload.
 
 This will install a Prometheus Server in your current cluster with [Persistent Volume Claim](https://kubernetes.io/docs/concepts/storage/persistent-volumes/) (Deactivated for Minikube and Kind) for storing and querying time series, it will automatically start collecting metrics from Agones Controller.
@@ -172,8 +184,8 @@ First we will install [Agones dashboard](#grafana-dashboards) as [config maps](h
 kubectl apply -f ./build/grafana/
 ```
 
-Now we can install the 
-[Grafana Community Kubernetes Helm Charts](https://grafana.github.io/helm-charts/) from  
+Now we can install the
+[Grafana Community Kubernetes Helm Charts](https://grafana.github.io/helm-charts/) from
 their repository. (Replace `<your-admin-password>` with the admin password of your choice)
 
 ```bash

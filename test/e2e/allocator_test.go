@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//     http://www.apache.org/licenses/LICENSE-2.0
+//	http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -25,7 +25,7 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"math/big"
 	"net"
 	"net/http"
@@ -291,7 +291,7 @@ func TestRestAllocatorWithDeprecatedRequired(t *testing.T) {
 			logrus.WithError(err).Info("failed Allocate rest request")
 			return false, nil
 		}
-		body, err := ioutil.ReadAll(resp.Body)
+		body, err := io.ReadAll(resp.Body)
 		if err != nil {
 			logrus.WithError(err).Info("failed to read Allocate response body")
 			return false, nil
@@ -355,7 +355,7 @@ func TestRestAllocatorWithSelectors(t *testing.T) {
 			logrus.WithError(err).Info("failed Allocate rest request")
 			return false, nil
 		}
-		body, err := ioutil.ReadAll(resp.Body)
+		body, err := io.ReadAll(resp.Body)
 		if err != nil {
 			logrus.WithError(err).Info("failed to read Allocate response body")
 			return false, nil
@@ -509,6 +509,7 @@ func getAllocatorEndpoint(ctx context.Context, t *testing.T) (string, int32) {
 }
 
 // createRemoteClusterDialOption creates a grpc client dial option with proper certs to make a remote call.
+//
 //nolint:unparam
 func createRemoteClusterDialOption(ctx context.Context, namespace, clientSecretName string, tlsCA []byte) (grpc.DialOption, error) {
 	tlsConfig, err := getTLSConfig(ctx, namespace, clientSecretName, tlsCA)

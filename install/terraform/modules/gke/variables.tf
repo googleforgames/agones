@@ -17,6 +17,11 @@ variable "ports" {
   default = "7000-8000"
 }
 
+# SourceRanges can be overriden using tfvars file
+variable "sourceRanges" {
+  default = "0.0.0.0/0"
+}
+
 # Set of GKE cluster parameters which defines its name, zone
 # and primary node pool configuration.
 # It is crucial to set valid ProjectID for "project".
@@ -32,7 +37,7 @@ variable "cluster" {
     "project"                 = "agones"
     "network"                 = "default"
     "subnetwork"              = ""
-    "kubernetesVersion"       = "1.21"
+    "kubernetesVersion"       = "1.23"
     "windowsInitialNodeCount" = "0"
     "windowsMachineType"      = "e2-standard-4"
   }

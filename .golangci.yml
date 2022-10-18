@@ -80,6 +80,8 @@ linters-settings:
       rangeValCopy:
         sizeThreshold: 512
         skipTestFuncs: true
+  revive:
+    confidence: 0.8
 
 issues:
   # This turns off the default excludes - which was causing the linter

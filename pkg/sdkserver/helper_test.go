@@ -17,7 +17,6 @@ package sdkserver
 import (
 	"context"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"testing"
 	"time"
@@ -42,7 +41,7 @@ func testHTTPHealth(t *testing.T, url string, expectedResponse string, expectedS
 		assert.NotNil(t, resp)
 		if resp != nil {
 			defer resp.Body.Close() // nolint: errcheck
-			body, err := ioutil.ReadAll(resp.Body)
+			body, err := io.ReadAll(resp.Body)
 			assert.Nil(t, err, "(%s) read response error should be nil: %v", url, err)
 			assert.Equal(t, expectedStatus, resp.StatusCode, "url: %s", url)
 			assert.Equal(t, []byte(expectedResponse), body, "(%s) response body should be '%s'", url, expectedResponse)

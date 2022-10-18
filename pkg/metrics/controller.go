@@ -27,6 +27,7 @@ import (
 	"agones.dev/agones/pkg/client/clientset/versioned"
 	"agones.dev/agones/pkg/client/informers/externalversions"
 	listerv1 "agones.dev/agones/pkg/client/listers/agones/v1"
+	autoscalinglisterv1 "agones.dev/agones/pkg/client/listers/autoscaling/v1"
 	"agones.dev/agones/pkg/util/runtime"
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/pkg/errors"
@@ -73,8 +74,9 @@ type Controller struct {
 	nodeLister                v1.NodeLister
 	gameServerSynced          cache.InformerSynced
 	fleetSynced               cache.InformerSynced
+	fleetLister               listerv1.FleetLister
 	fasSynced                 cache.InformerSynced
-	nodeSynced                cache.InformerSynced
+	fasLister                 autoscalinglisterv1.FleetAutoscalerLister
 	lock                      sync.Mutex
 	stateLock                 sync.Mutex
 	gsCount                   GameServerCount
@@ -98,7 +100,6 @@ func NewController(
 	fas := agonesInformerFactory.Autoscaling().V1().FleetAutoscalers()
 	fasInformer := fas.Informer()
 	node := kubeInformerFactory.Core().V1().Nodes()
-	nodeInformer := node.Informer()
 
 	// GameServerStateLastChange Contains the time when the GameServer
 	// changed its state last time
@@ -113,8 +114,9 @@ func NewController(
 		nodeLister:                node.Lister(),
 		gameServerSynced:          gsInformer.HasSynced,
 		fleetSynced:               fInformer.HasSynced,
+		fleetLister:               fleets.Lister(),
 		fasSynced:                 fasInformer.HasSynced,
-		nodeSynced:                nodeInformer.HasSynced,
+		fasLister:                 fas.Lister(),
 		gsCount:                   GameServerCount{},
 		faCount:                   map[string]int64{},
 		gameServerStateLastChange: lruCache,
@@ -217,15 +219,22 @@ func (c *Controller) recordFleetAutoScalerDeletion(obj interface{}) {
 	if !ok {
 		return
 	}
-	ctx, _ := tag.New(context.Background(), tag.Upsert(keyName, fas.Name),
-		tag.Upsert(keyFleetName, fas.Spec.FleetName), tag.Upsert(keyNamespace, fas.Namespace))
 
-	// recording status
-	stats.Record(ctx,
-		fasCurrentReplicasStats.M(int64(0)),
-		fasDesiredReplicasStats.M(int64(0)),
-		fasAbleToScaleStats.M(int64(0)),
-		fasLimitedStats.M(int64(0)))
+	if runtime.FeatureEnabled(runtime.FeatureResetMetricsOnDelete) {
+		if err := c.resyncFleetAutoScaler(); err != nil {
+			c.logger.WithError(err).Warn("Could not resync Fleet Autoscaler metrics")
+		}
+	} else {
+		ctx, _ := tag.New(context.Background(), tag.Upsert(keyName, fas.Name),
+			tag.Upsert(keyFleetName, fas.Spec.FleetName), tag.Upsert(keyNamespace, fas.Namespace))
+
+		// recording status
+		stats.Record(ctx,
+			fasCurrentReplicasStats.M(int64(0)),
+			fasDesiredReplicasStats.M(int64(0)),
+			fasAbleToScaleStats.M(int64(0)),
+			fasLimitedStats.M(int64(0)))
+	}
 }
 
 func (c *Controller) recordFleetChanges(obj interface{}) {
@@ -241,7 +250,7 @@ func (c *Controller) recordFleetChanges(obj interface{}) {
 	}
 
 	c.recordFleetReplicas(f.Name, f.Namespace, f.Status.Replicas, f.Status.AllocatedReplicas,
-		f.Status.ReadyReplicas, f.Spec.Replicas)
+		f.Status.ReadyReplicas, f.Spec.Replicas, f.Status.ReservedReplicas)
 }
 
 func (c *Controller) recordFleetDeletion(obj interface{}) {
@@ -250,10 +259,63 @@ func (c *Controller) recordFleetDeletion(obj interface{}) {
 		return
 	}
 
-	c.recordFleetReplicas(f.Name, f.Namespace, 0, 0, 0, 0)
+	if runtime.FeatureEnabled(runtime.FeatureResetMetricsOnDelete) {
+		if err := c.resyncFleets(); err != nil {
+			// If for some reason resync fails, the entire metric state for fleets
+			// will be reset whenever the next Fleet gets deleted, in which case
+			// we end up back in a healthy state - so we aren't going to actively retry.
+			c.logger.WithError(err).Warn("Could not resync Fleet Metrics")
+		}
+	} else {
+		c.recordFleetReplicas(f.Name, f.Namespace, 0, 0, 0, 0, 0)
+	}
 }
 
-func (c *Controller) recordFleetReplicas(fleetName, fleetNamespace string, total, allocated, ready, desired int32) {
+// resyncFleets resets all views associated with a Fleet, and recalculates all totals.
+func (c *Controller) resyncFleets() error {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+	fleets, err := c.fleetLister.List(labels.Everything())
+	if err != nil {
+		return errors.Wrap(err, "could not resync Fleets")
+	}
+
+	fasList, err := c.fasLister.List(labels.Everything())
+	if err != nil {
+		return errors.Wrap(err, "could not resync Fleets")
+	}
+
+	resetViews(fleetViews)
+	for _, f := range fleets {
+		c.recordFleetChanges(f)
+	}
+	for _, fas := range fasList {
+		c.recordFleetAutoScalerChanges(nil, fas)
+	}
+	c.collectGameServerCounts()
+
+	return nil
+}
+
+// resyncFleetAutoScaler resets all views associated with FleetAutoscalers, and recalculates metric totals.
+func (c *Controller) resyncFleetAutoScaler() error {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+
+	fasList, err := c.fasLister.List(labels.Everything())
+	if err != nil {
+		return errors.Wrap(err, "could not resync FleetAutoScalers")
+	}
+
+	resetViews(fleetAutoscalerViews)
+	for _, fas := range fasList {
+		c.recordFleetAutoScalerChanges(nil, fas)
+	}
+
+	return nil
+}
+
+func (c *Controller) recordFleetReplicas(fleetName, fleetNamespace string, total, allocated, ready, desired, reserved int32) {
 
 	ctx, _ := tag.New(context.Background(), tag.Upsert(keyName, fleetName), tag.Upsert(keyNamespace, fleetNamespace))
 
@@ -265,6 +327,8 @@ func (c *Controller) recordFleetReplicas(fleetName, fleetNamespace string, total
 		fleetsReplicasCountStats.M(int64(ready)))
 	recordWithTags(ctx, []tag.Mutator{tag.Upsert(keyType, "desired")},
 		fleetsReplicasCountStats.M(int64(desired)))
+	recordWithTags(ctx, []tag.Mutator{tag.Upsert(keyType, "reserved")},
+		fleetsReplicasCountStats.M(int64(reserved)))
 }
 
 // recordGameServerStatusChanged records gameserver status changes, however since it's based
@@ -353,7 +417,7 @@ func (c *Controller) calcDuration(oldGs, newGs *agonesv1.GameServer) (duration f
 // Run the Metrics controller. Will block until stop is closed.
 // Collect metrics via cache changes and parse the cache periodically to record resource counts.
 func (c *Controller) Run(ctx context.Context, _ int) error {
-	c.logger.Info("Wait for cache sync")
+	c.logger.Debug("Wait for cache sync")
 	if !cache.WaitForCacheSync(ctx.Done(), c.gameServerSynced, c.fleetSynced, c.fasSynced) {
 		return errors.New("failed to wait for caches to sync")
 	}
@@ -415,7 +479,6 @@ func (c *Controller) collectNodeCounts() {
 	for _, node := range nodes {
 		stats.Record(context.Background(), gsPerNodesCountStats.M(int64(gsPerNodes[node.Name])))
 	}
-
 }
 
 func removeSystemNodes(nodes []*corev1.Node) []*corev1.Node {

@@ -199,6 +199,9 @@ func (s *SDKServer) Run(ctx context.Context) error {
 	if !cache.WaitForCacheSync(ctx.Done(), s.gameServerSynced) {
 		return errors.New("failed to wait for caches to sync")
 	}
+
+	// need this for streaming gRPC commands
+	s.ctx = ctx
 	// we have the gameserver details now
 	s.gsWaitForSync.Done()
 
@@ -262,8 +265,6 @@ func (s *SDKServer) Run(ctx context.Context) error {
 	}()
 	defer s.server.Close() // nolint: errcheck
 
-	// need this for streaming gRPC commands
-	s.ctx = ctx
 	s.workerqueue.Run(ctx, 1)
 	return nil
 }
@@ -456,9 +457,7 @@ func (s *SDKServer) Shutdown(ctx context.Context, e *sdk.Empty) (*sdk.Empty, err
 	s.logger.Debug("Received Shutdown request, adding to queue")
 	s.stopReserveTimer()
 	s.enqueueState(agonesv1.GameServerStateShutdown)
-	if runtime.FeatureEnabled(runtime.FeatureSDKGracefulTermination) {
-		s.gsStateChannel <- agonesv1.GameServerStateShutdown
-	}
+
 	return e, nil
 }
 
@@ -734,6 +733,15 @@ func (s *SDKServer) sendGameServerUpdate(gs *agonesv1.GameServer) {
 			s.logger.WithError(errors.WithStack(err)).
 				Error("error sending game server update event")
 		}
+	}
+
+	if runtime.FeatureEnabled(runtime.FeatureSDKGracefulTermination) && gs.Status.State == agonesv1.GameServerStateShutdown {
+		// Wrap this in a go func(), just in case pushing to this channel deadlocks since there is only one instance of
+		// a receiver. In theory, This could leak goroutines a bit, but since we're shuttling down everything anyway,
+		// it shouldn't matter.
+		go func() {
+			s.gsStateChannel <- agonesv1.GameServerStateShutdown
+		}()
 	}
 }
 

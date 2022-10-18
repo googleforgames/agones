@@ -178,7 +178,7 @@ func registerLocal(grpcServer *grpc.Server, ctlConf config) (func(), error) {
 		}
 	}
 
-	s, err := sdkserver.NewLocalSDKServer(filePath)
+	s, err := sdkserver.NewLocalSDKServer(filePath, ctlConf.TestSdkName)
 	if err != nil {
 		return nil, err
 	}
@@ -194,7 +194,7 @@ func registerLocal(grpcServer *grpc.Server, ctlConf config) (func(), error) {
 // registerLocal registers the local test SDK servers, and returns a cancel func that
 // closes all the SDK implementations
 func registerTestSdkServer(grpcServer *grpc.Server, ctlConf config) (func(), error) {
-	s, err := sdkserver.NewLocalSDKServer("")
+	s, err := sdkserver.NewLocalSDKServer("", "")
 	if err != nil {
 		return nil, err
 	}

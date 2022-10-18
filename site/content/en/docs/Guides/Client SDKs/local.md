@@ -7,8 +7,6 @@ description: >
   Working against the SDK without having to run a full kubernetes stack
 ---
 
-## Local Development
-
 When the game server is running on Agones, the SDK communicates over TCP to a small
 gRPC server that Agones coordinated to run in a container in the same network
 namespace as it - usually referred to in Kubernetes terms as a "sidecar".
@@ -22,11 +20,18 @@ that you can see exactly what the SDK in your game server is doing, and can
 confirm everything works.
 
 To do this you will need to download {{% ghrelease file_prefix="agonessdk-server" %}}, and unzip it.
-You will find the executables for the SDK server, one for each type of operating system.
+You will find the executables for the SDK server, for each type of operating system.
 
-- `sdk-server.windows.amd64.exe` - Windows
-- `sdk-server.darwin.amd64` - macOS
-- `sdk-server.linux.amd64` - Linux
+macOS
+* sdk-server.darwin.amd64
+* sdk-server.darwin.arm64
+
+Linux
+* sdk-server.linux.amd64
+* sdk-server.linux.arm64
+
+Windows
+* sdk-server.windows.amd64.exe
 
 To run in local mode, pass the flag `--local` to the executable.
 
@@ -45,7 +50,7 @@ For example:
 {"message":"gameserver update received","severity":"info","time":"2019-10-30T21:46:18.179459+03:00"}
 ```
 
-### Providing your own `GameServer` configuration for local development
+## Providing your own `GameServer` configuration for local development
 
 By default, the local sdk-server will create a default `GameServer` configuration that is used for `GameServer()`
 and `WatchGameServer()` SDK calls. If you wish to provide your own configuration, as either yaml or json, this
@@ -75,7 +80,7 @@ wget https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch 
 {"httpEndpoint":"localhost:9358","message":"Starting SDKServer grpc-gateway...","severity":"info","source":"main","time":"2019-10-30T21:47:45.760312+03:00"}
 ```
 
-### Changing State of a Local GameServer
+## Changing State of a Local GameServer
 
 Some SDK calls would change the GameServer state according to [GameServer State Diagram]({{< ref "../../Reference/gameserver.md#gameserver-state-diagram" >}}). Also local SDK server would persist labels and annotations updates.
 
@@ -109,4 +114,38 @@ curl -GET "http://localhost:9358/gameserver" -H "accept: application/json"
 ```
 ```
 {"object_meta":{"creation_timestamp":"-62135596800","labels":{"agones.dev/sdk-foo":"bar"}},"spec":{"health":{}},"status":{"state":"Ready"}}
+```
+
+## Running Local Mode in a Container
+
+Once you have your game server process in a container, you may also want to test the container build locally as well.
+
+Since the production agones-sdk binary has the `--local` mode built in, you can also use the production container image
+locally as well!
+
+Since the SDK and your game server container need to share a port on `localhost`, one of the easiest ways to do that 
+is to have them both run using the host network, like so:
+
+In one shell run:
+
+```shell
+docker run --network=host --rm gcr.io/agones-images/agones-sdk:{{< release-version >}} --local
+```
+
+You should see a similar output to what you would if you were running the binary directly, i.e. outside a container.
+
+Then in another shell, start your game server container:
+
+```shell
+docker run --network=host --rm <your image here>
+```
+
+If you want to [mount a custom `gameserver.yaml`](#providing-your-own-gameserver-configuration-for-local-development), 
+this is also possible:  
+
+```bash
+wget https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-game-server/gameserver.yaml
+# required so that the `agones` user in the container can read the file
+chmod o+r gameserver.yaml
+docker run --network=host --rm -v $(pwd)/gameserver.yaml:/tmp/gameserver.yaml gcr.io/agones-images/agones-sdk:{{<release-version>}} --local -f /tmp/gameserver.yaml
 ```

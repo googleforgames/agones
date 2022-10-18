@@ -16,7 +16,7 @@ package gameserverallocations
 
 import (
 	"context"
-	"io/ioutil"
+	"io"
 	"mime"
 	"net/http"
 	"time"
@@ -61,6 +61,7 @@ func NewController(apiServer *apiserver.APIServer,
 	agonesInformerFactory externalversions.SharedInformerFactory,
 	remoteAllocationTimeout time.Duration,
 	totalAllocationTimeout time.Duration,
+	allocationBatchWaitTime time.Duration,
 ) *Controller {
 	c := &Controller{
 		api: apiServer,
@@ -71,7 +72,8 @@ func NewController(apiServer *apiserver.APIServer,
 			kubeClient,
 			NewAllocationCache(agonesInformerFactory.Agones().V1().GameServers(), counter, health),
 			remoteAllocationTimeout,
-			totalAllocationTimeout),
+			totalAllocationTimeout,
+			allocationBatchWaitTime),
 	}
 	c.baseLogger = runtime.NewLoggerWithType(c)
 
@@ -170,7 +172,7 @@ func (c *Controller) allocationDeserialization(r *http.Request, namespace string
 		return gsa, errors.New("Could not find deserializer")
 	}
 
-	b, err := ioutil.ReadAll(r.Body)
+	b, err := io.ReadAll(r.Body)
 	if err != nil {
 		return gsa, errors.Wrap(err, "could not read body")
 	}

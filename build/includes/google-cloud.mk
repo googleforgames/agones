@@ -26,12 +26,14 @@ gcloud-init: ensure-build-config
 # Creates and authenticates a small, 6 node GKE cluster to work against (2 nodes are used for agones-metrics and agones-system)
 gcloud-test-cluster: GCP_CLUSTER_NODEPOOL_INITIALNODECOUNT ?= 4
 gcloud-test-cluster: GCP_CLUSTER_NODEPOOL_MACHINETYPE ?= e2-standard-4
+gcloud-test-cluster: GCP_CLUSTER_NODEPOOL_ENABLEIMAGESTREAMING ?= true
 gcloud-test-cluster: GCP_CLUSTER_NODEPOOL_WINDOWSINITIALNODECOUNT ?= 0
 gcloud-test-cluster: GCP_CLUSTER_NODEPOOL_WINDOWSMACHINETYPE ?= e2-standard-4
 gcloud-test-cluster: $(ensure-build-image)
 	$(MAKE) gcloud-terraform-cluster GCP_TF_CLUSTER_NAME="$(GCP_CLUSTER_NAME)" GCP_CLUSTER_ZONE="$(GCP_CLUSTER_ZONE)" \
 		GCP_CLUSTER_NODEPOOL_INITIALNODECOUNT="$(GCP_CLUSTER_NODEPOOL_INITIALNODECOUNT)" \
 		GCP_CLUSTER_NODEPOOL_MACHINETYPE="$(GCP_CLUSTER_NODEPOOL_MACHINETYPE)" \
+		GCP_CLUSTER_NODEPOOL_ENABLEIMAGESTREAMING="$(GCP_CLUSTER_NODEPOOL_ENABLEIMAGESTREAMING)" \
 		GCP_CLUSTER_NODEPOOL_WINDOWSINITIALNODECOUNT="$(GCP_CLUSTER_NODEPOOL_WINDOWSINITIALNODECOUNT)" \
 		GCP_CLUSTER_NODEPOOL_WINDOWSMACHINETYPE="$(GCP_CLUSTER_NODEPOOL_WINDOWSMACHINETYPE)"
 	$(MAKE) gcloud-auth-cluster
@@ -49,6 +51,7 @@ gcloud-e2e-test-cluster:
       	terraform apply -auto-approve -var project="$(GCP_PROJECT)"'
 
 # Deletes the gcloud e2e cluster and cleanup any left pvc volumes
+clean-gcloud-e2e-test-cluster: GCP_PROJECT ?= $(current_project)
 clean-gcloud-e2e-test-cluster: $(ensure-build-image)
 clean-gcloud-e2e-test-cluster:
 	$(MAKE) terraform-init DIRECTORY=e2e

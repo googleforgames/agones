@@ -22,7 +22,6 @@ import (
 	"crypto/x509"
 	"errors"
 	"flag"
-	"io/ioutil"
 	"log"
 	"os"
 	"strconv"
@@ -151,15 +150,15 @@ func main() {
 }
 
 func dialOptions(certFile, keyFile, cacertFile string) (grpc.DialOption, error) {
-	clientCert, err := ioutil.ReadFile(certFile)
+	clientCert, err := os.ReadFile(certFile)
 	if err != nil {
 		return nil, err
 	}
-	clientKey, err := ioutil.ReadFile(keyFile)
+	clientKey, err := os.ReadFile(keyFile)
 	if err != nil {
 		return nil, err
 	}
-	cacert, err := ioutil.ReadFile(cacertFile)
+	cacert, err := os.ReadFile(cacertFile)
 	if err != nil {
 		return nil, err
 	}
