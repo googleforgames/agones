@@ -354,7 +354,10 @@ func (c *Controller) recordGameServerStatusChanges(old, next interface{}) {
 		fleetName = noneValue
 	}
 
-	if runtime.FeatureEnabled(runtime.FeaturePlayerTracking) && newGs.Status.Players.Count != oldGs.Status.Players.Count {
+	if runtime.FeatureEnabled(runtime.FeaturePlayerTracking) &&
+		newGs.Status.Players != nil &&
+		oldGs.Status.Players != nil &&
+		newGs.Status.Players.Count != oldGs.Status.Players.Count {
 		recordWithTags(context.Background(), []tag.Mutator{tag.Upsert(keyFleetName, fleetName),
 			tag.Upsert(keyName, newGs.GetName()), tag.Upsert(keyNamespace, newGs.GetNamespace())}, gameServerPlayersInGame.M(newGs.Status.Players.Count))
 	}
