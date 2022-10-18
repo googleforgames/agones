@@ -348,11 +348,18 @@ func (c *Controller) recordGameServerStatusChanges(old, next interface{}) {
 	if !ok {
 		return
 	}
+
+	fleetName := newGs.Labels[agonesv1.FleetNameLabel]
+	if fleetName == "" {
+		fleetName = noneValue
+	}
+
+	if runtime.FeatureEnabled(runtime.FeaturePlayerTracking) && newGs.Status.Players.Count != oldGs.Status.Players.Count {
+		recordWithTags(context.Background(), []tag.Mutator{tag.Upsert(keyFleetName, fleetName),
+			tag.Upsert(keyName, newGs.GetName()), tag.Upsert(keyNamespace, newGs.GetNamespace())}, gameServerPlayersInGame.M(newGs.Status.Players.Count))
+	}
+
 	if newGs.Status.State != oldGs.Status.State {
-		fleetName := newGs.Labels[agonesv1.FleetNameLabel]
-		if fleetName == "" {
-			fleetName = noneValue
-		}
 		recordWithTags(context.Background(), []tag.Mutator{tag.Upsert(keyType, string(newGs.Status.State)),
 			tag.Upsert(keyFleetName, fleetName), tag.Upsert(keyNamespace, newGs.GetNamespace())}, gameServerTotalStats.M(1))
 

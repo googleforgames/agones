@@ -30,6 +30,7 @@ const (
 	fleetAutoscalersLimitedName             = "fleet_autoscalers_limited"
 	gameServersCountName                    = "gameservers_count"
 	gameServersTotalName                    = "gameservers_total"
+	gameServersPlayersInGameName            = "gameservers_players_in_game"
 	nodeCountName                           = "nodes_count"
 	gameServersNodeCountName                = "gameservers_node_count"
 	gameServerStateDurationName             = "gameserver_state_duration"
@@ -52,6 +53,7 @@ var (
 	fasLimitedStats           = stats.Int64("fas/limited", "The fleet autoscaler is capped (0 indicates false, 1 indicates true)", "1")
 	gameServerCountStats      = stats.Int64("gameservers/count", "The count of gameservers", "1")
 	gameServerTotalStats      = stats.Int64("gameservers/total", "The total of gameservers", "1")
+	gameServerPlayersInGame   = stats.Int64("gameservers/players_in_game", "The total number of players connected to gameservers", "1")
 	nodesCountStats           = stats.Int64("nodes/count", "The count of nodes in the cluster", "1")
 	gsPerNodesCountStats      = stats.Int64("gameservers_node/count", "The count of gameservers per node in the cluster", "1")
 	gsStateDurationSec        = stats.Float64("gameservers_state/duration", "The duration of gameservers to be in a particular state", stats.UnitSeconds)
@@ -119,6 +121,13 @@ var (
 			Description: "The total of gameservers",
 			Aggregation: view.Count(),
 			TagKeys:     []tag.Key{keyType, keyFleetName, keyNamespace},
+		},
+		{
+			Name:        gameServersPlayersInGameName,
+			Measure:     gameServerPlayersInGame,
+			Description: "The current amount of players in gameservers",
+			Aggregation: view.LastValue(),
+			TagKeys:     []tag.Key{keyFleetName, keyName, keyNamespace},
 		},
 		{
 			Name:        nodeCountName,

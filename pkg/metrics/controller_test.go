@@ -150,6 +150,52 @@ func TestControllerGameServerCount(t *testing.T) {
 	})
 }
 
+func TestControllerGameServerPlayerCount(t *testing.T) {
+	runtime.EnableAllFeatures()
+	resetMetrics()
+	exporter := &metricExporter{}
+	reader := metricexport.NewReader()
+
+	c := newFakeController()
+	defer c.close()
+
+	gs1 := gameServerWithFleetAndState("test-fleet", agonesv1.GameServerStateReady)
+	gs1.Status.Players = &agonesv1.PlayerStatus{
+		Count: 0,
+	}
+	c.gsWatch.Add(gs1)
+	gs1 = gs1.DeepCopy()
+	gs1.Status.Players.Count = 1
+	c.gsWatch.Modify(gs1)
+
+	c.run(t)
+	require.True(t, c.sync())
+	require.Eventually(t, func() bool {
+		gs, err := c.gameServerLister.GameServers(gs1.ObjectMeta.Namespace).Get(gs1.ObjectMeta.Name)
+		assert.NoError(t, err)
+		return gs.Status.Players.Count == 1
+	}, 5*time.Second, time.Second)
+	c.collect()
+
+	gs1 = gs1.DeepCopy()
+	gs1.Status.Players.Count = 4
+	c.gsWatch.Modify(gs1)
+
+	c.run(t)
+	require.True(t, c.sync())
+	require.Eventually(t, func() bool {
+		gs, err := c.gameServerLister.GameServers(gs1.ObjectMeta.Namespace).Get(gs1.ObjectMeta.Name)
+		assert.NoError(t, err)
+		return gs.Status.Players.Count == 4
+	}, 5*time.Second, time.Second)
+	c.collect()
+
+	reader.ReadAndExport(exporter)
+	assertMetricData(t, exporter, gameServersPlayersInGameName, []expectedMetricData{
+		{labels: []string{"test-fleet", gs1.GetName(), defaultNs}, val: int64(4)},
+	})
+}
+
 func TestControllerGameServersTotal(t *testing.T) {
 	resetMetrics()
 	exporter := &metricExporter{}
