@@ -30,7 +30,8 @@ const (
 	fleetAutoscalersLimitedName             = "fleet_autoscalers_limited"
 	gameServersCountName                    = "gameservers_count"
 	gameServersTotalName                    = "gameservers_total"
-	gameServersPlayersInGameName            = "gameservers_players_in_game"
+	gameServersPlayerConnectedTotalName     = "gameserver_player_connected_total"
+	gameServersPlayerCapacityTotalName      = "gameserver_player_capacity_total"
 	nodeCountName                           = "nodes_count"
 	gameServersNodeCountName                = "gameservers_node_count"
 	gameServerStateDurationName             = "gameserver_state_duration"
@@ -43,20 +44,21 @@ var (
 	// fleetViews are metric views associated with Fleets
 	fleetViews = append([]string{fleetReplicaCountName, gameServersCountName, gameServersTotalName, gameServerStateDurationName}, fleetAutoscalerViews...)
 
-	stateDurationSeconds      = []float64{0, 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384}
-	fleetsReplicasCountStats  = stats.Int64("fleets/replicas_count", "The count of replicas per fleet", "1")
-	fasBufferLimitsCountStats = stats.Int64("fas/buffer_limits", "The buffer limits of autoscalers", "1")
-	fasBufferSizeStats        = stats.Int64("fas/buffer_size", "The buffer size value of autoscalers", "1")
-	fasCurrentReplicasStats   = stats.Int64("fas/current_replicas_count", "The current replicas cout as seen by autoscalers", "1")
-	fasDesiredReplicasStats   = stats.Int64("fas/desired_replicas_count", "The desired replicas cout as seen by autoscalers", "1")
-	fasAbleToScaleStats       = stats.Int64("fas/able_to_scale", "The fleet autoscaler can access the fleet to scale (0 indicates false, 1 indicates true)", "1")
-	fasLimitedStats           = stats.Int64("fas/limited", "The fleet autoscaler is capped (0 indicates false, 1 indicates true)", "1")
-	gameServerCountStats      = stats.Int64("gameservers/count", "The count of gameservers", "1")
-	gameServerTotalStats      = stats.Int64("gameservers/total", "The total of gameservers", "1")
-	gameServerPlayersInGame   = stats.Int64("gameservers/players_in_game", "The total number of players connected to gameservers", "1")
-	nodesCountStats           = stats.Int64("nodes/count", "The count of nodes in the cluster", "1")
-	gsPerNodesCountStats      = stats.Int64("gameservers_node/count", "The count of gameservers per node in the cluster", "1")
-	gsStateDurationSec        = stats.Float64("gameservers_state/duration", "The duration of gameservers to be in a particular state", stats.UnitSeconds)
+	stateDurationSeconds           = []float64{0, 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384}
+	fleetsReplicasCountStats       = stats.Int64("fleets/replicas_count", "The count of replicas per fleet", "1")
+	fasBufferLimitsCountStats      = stats.Int64("fas/buffer_limits", "The buffer limits of autoscalers", "1")
+	fasBufferSizeStats             = stats.Int64("fas/buffer_size", "The buffer size value of autoscalers", "1")
+	fasCurrentReplicasStats        = stats.Int64("fas/current_replicas_count", "The current replicas cout as seen by autoscalers", "1")
+	fasDesiredReplicasStats        = stats.Int64("fas/desired_replicas_count", "The desired replicas cout as seen by autoscalers", "1")
+	fasAbleToScaleStats            = stats.Int64("fas/able_to_scale", "The fleet autoscaler can access the fleet to scale (0 indicates false, 1 indicates true)", "1")
+	fasLimitedStats                = stats.Int64("fas/limited", "The fleet autoscaler is capped (0 indicates false, 1 indicates true)", "1")
+	gameServerCountStats           = stats.Int64("gameservers/count", "The count of gameservers", "1")
+	gameServerTotalStats           = stats.Int64("gameservers/total", "The total of gameservers", "1")
+	gameServerPlayerConnectedTotal = stats.Int64("gameservers/player_connected", "The total number of players connected to gameservers", "1")
+	gameServerPlayerCapacityTotal  = stats.Int64("gameservers/player_capacity", "The available player capacity for gameservers", "1")
+	nodesCountStats                = stats.Int64("nodes/count", "The count of nodes in the cluster", "1")
+	gsPerNodesCountStats           = stats.Int64("gameservers_node/count", "The count of gameservers per node in the cluster", "1")
+	gsStateDurationSec             = stats.Float64("gameservers_state/duration", "The duration of gameservers to be in a particular state", stats.UnitSeconds)
 
 	stateViews = []*view.View{
 		{
@@ -123,9 +125,16 @@ var (
 			TagKeys:     []tag.Key{keyType, keyFleetName, keyNamespace},
 		},
 		{
-			Name:        gameServersPlayersInGameName,
-			Measure:     gameServerPlayersInGame,
-			Description: "The current amount of players in gameservers",
+			Name:        gameServersPlayerConnectedTotalName,
+			Measure:     gameServerPlayerConnectedTotal,
+			Description: "The current amount of players connected in gameservers",
+			Aggregation: view.LastValue(),
+			TagKeys:     []tag.Key{keyFleetName, keyName, keyNamespace},
+		},
+		{
+			Name:        gameServersPlayerCapacityTotalName,
+			Measure:     gameServerPlayerCapacityTotal,
+			Description: "The available player capacity per gameserver",
 			Aggregation: view.LastValue(),
 			TagKeys:     []tag.Key{keyFleetName, keyName, keyNamespace},
 		},
