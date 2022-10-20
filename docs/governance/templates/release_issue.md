@@ -12,8 +12,11 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 - [ ] Have at least `Editor` level access to `agones-images` project.
 - [ ] Have permission to publish new versions of the App Engine application.
 - [ ] Have write access to Agones github repository.
-- [ ] Have a `gcloud config configurations` configuration called `agones-images` that points to the same project.
+- [ ] Run `git remote -v` and see"
+  - [ ] An `origin` remote that points to a personal fork of Agones, such as `git@github.com:yourname/agones.git`.
+  - [ ] An `upstream` remote that points to `git@github.com:googleforgames/agones.git`.
 - [ ] Have a [Github Personal Access Token](https://github.com/settings/tokens) with repo permissions.
+- [ ] Have a `gcloud config configurations` configuration called `agones-images` that points to the same project.
 - [ ] Edit access to the [Agones Release Calendar](https://calendar.google.com/calendar/u/0?cid=Z29vZ2xlLmNvbV84MjhuOGYxOGhmYnRyczR2dTRoMXNrczIxOEBncm91cC5jYWxlbmRhci5nb29nbGUuY29t)
 
 ## Steps
@@ -57,7 +60,6 @@ and copy it into a release issue. Fill in relevant values, found inside {}
     - [ ] If full release, copy `dev_minikube_minor_supported_k8s` to `minikube_minor_supported_k8s`.
     - [ ] If full release, update documentation with updated example images tags.
 - [ ] Create PR with these changes, and merge them with an approval.
-- [ ] Confirm local git remote `upstream` points at `git@github.com:googleforgames/agones.git`
 - [ ] Run `git remote update && git checkout main && git reset --hard upstream/main` to ensure your code is in line 
    with upstream  (unless this is a hotfix, then do the same, but for the release branch)
 - [ ] Publish SDK packages
@@ -73,6 +75,7 @@ and copy it into a release issue. Fill in relevant values, found inside {}
     (`helm install --namespace=agones-system agones agones/agones --version={version}-rc` if release candidate) and a smoke test to confirm everything is working.
 - [ ] Attach all assets found in the `release` folder to the draft Github Release.
 - [ ] If release candidate check the pre-release box on the draft Github Release
+- [ ] Copy any review changes to the release blog post are copied into the draft Github release.
 - [ ] Publish the draft Github Release.
 - [ ] Send an email to the [mailing list][list] with the release details (copy-paste the release blog post)
 - [ ] Paste the announcement blog post to the #users Slack group.
