@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# ForceUpdate 1 -- change here if you need to force the Cloud Build cache to refresh
-
 cmake_minimum_required (VERSION 3.5.0)
 
 option(AGONES_BUILD_THIRDPARTY_DEBUG "Build debug version of thirdparty libraries (MSVC only)" OFF)
