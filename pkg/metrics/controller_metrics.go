@@ -42,7 +42,7 @@ var (
 	fleetAutoscalerViews = []string{fleetAutoscalerBufferLimitName, fleetAutoscalterBufferSizeName, fleetAutoscalerCurrentReplicaCountName,
 		fleetAutoscalersDesiredReplicaCountName, fleetAutoscalersAbleToScaleName, fleetAutoscalersLimitedName}
 	// fleetViews are metric views associated with Fleets
-	fleetViews = append([]string{fleetReplicaCountName, gameServersCountName, gameServersTotalName, gameServerStateDurationName}, fleetAutoscalerViews...)
+	fleetViews = append([]string{fleetReplicaCountName, gameServersCountName, gameServersTotalName, gameServersPlayerConnectedTotalName, gameServersPlayerCapacityTotalName, gameServerStateDurationName}, fleetAutoscalerViews...)
 
 	stateDurationSeconds           = []float64{0, 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384}
 	fleetsReplicasCountStats       = stats.Int64("fleets/replicas_count", "The count of replicas per fleet", "1")
