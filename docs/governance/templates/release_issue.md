@@ -11,9 +11,12 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 
 - [ ] Have at least `Editor` level access to `agones-images` project.
 - [ ] Have permission to publish new versions of the App Engine application.
-- [ ] Have write access to Agones github repository.
+- [ ] Have write access to Agones GitHub repository.
+- [ ] Run `git remote -v` and see:
+  - [ ] An `origin` remote that points to a personal fork of Agones, such as `git@github.com:yourname/agones.git`.
+  - [ ] An `upstream` remote that points to `git@github.com:googleforgames/agones.git`.
+- [ ] Have a [GitHub Personal Access Token](https://github.com/settings/tokens) with repo permissions.
 - [ ] Have a `gcloud config configurations` configuration called `agones-images` that points to the same project.
-- [ ] Have a [Github Personal Access Token](https://github.com/settings/tokens) with repo permissions.
 - [ ] Edit access to the [Agones Release Calendar](https://calendar.google.com/calendar/u/0?cid=Z29vZ2xlLmNvbV84MjhuOGYxOGhmYnRyczR2dTRoMXNrczIxOEBncm91cC5jYWxlbmRhci5nb29nbGUuY29t)
 
 ## Steps
@@ -33,7 +36,7 @@ and copy it into a release issue. Fill in relevant values, found inside {}
    - For example, if you are creating the 1.18.0 release, then you would deploy the 1-17-0 service (release minus one, and then replace dots with dashes).
 - [ ] Run `make gen-changelog` to generate the CHANGELOG.md (if release candidate 
   `make gen-changelog RELEASE_VERSION={version}-rc`). You will need your 
-  [Github Personal Access Token](https://github.com/settings/tokens) for this.
+  [GitHub Personal Access Token](https://github.com/settings/tokens) for this.
 - [ ] Ensure the [helm `tag` value][values] is correct (should be {version} if a full release, {version}-rc if release candidate)
 - [ ] Ensure the [helm `Chart` version values][chart] are correct (should be {version} if a full release, {version}-rc if release candidate)
 - [ ] Update SDK Package Versions
@@ -57,7 +60,6 @@ and copy it into a release issue. Fill in relevant values, found inside {}
     - [ ] If full release, copy `dev_minikube_minor_supported_k8s` to `minikube_minor_supported_k8s`.
     - [ ] If full release, update documentation with updated example images tags.
 - [ ] Create PR with these changes, and merge them with an approval.
-- [ ] Confirm local git remote `upstream` points at `git@github.com:googleforgames/agones.git`
 - [ ] Run `git remote update && git checkout main && git reset --hard upstream/main` to ensure your code is in line 
    with upstream  (unless this is a hotfix, then do the same, but for the release branch)
 - [ ] Publish SDK packages
@@ -71,12 +73,13 @@ and copy it into a release issue. Fill in relevant values, found inside {}
  version is available via the command `helm search repo agones --versions --devel`.
 - [ ] Do a `helm install --namespace=agones-system agones agones/agones` 
     (`helm install --namespace=agones-system agones agones/agones --version={version}-rc` if release candidate) and a smoke test to confirm everything is working.
-- [ ] Attach all assets found in the `release` folder to the draft Github Release.
-- [ ] If release candidate check the pre-release box on the draft Github Release
-- [ ] Publish the draft Github Release.
-- [ ] Send an email to the [mailing list][list] with the release details (copy-paste the release blog post)
+- [ ] Attach all assets found in the `release` folder to the draft GitHub Release.
+- [ ] If release candidate check the pre-release box on the draft GitHub Release
+- [ ] Copy any review changes from the release blog post into the draft GitHub release.
+- [ ] Publish the draft GitHub Release.
+- [ ] Email the [mailing list][list] with the release details (copy-paste the release blog post).
 - [ ] Paste the announcement blog post to the #users Slack group.
-- [ ] Post to the [agonesdev](https://twitter.com/agonesdev) twitter account.
+- [ ] Post to the [agonesdev](https://twitter.com/agonesdev) Twitter account.
 - [ ] If full release, run `git checkout main`.
 - [ ] If full release, then increment the `base_version` in [`build/Makefile`][build-makefile]
 - [ ] If full release move [helm `tag` value][values] is set to {version}+1-dev
