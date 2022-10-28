@@ -121,6 +121,9 @@ spec:
     spec:
       containers:
       - image: {{< example-image >}}
+      # If you set safe-to-evict to true, be sure to set a corresponding
+      # grace period for terminating the game server safely.
+      terminationGracePeriodSeconds: 300
 ```
 
 or if you are using a Fleet
@@ -142,6 +145,9 @@ spec:
         spec:
           containers:
           - image: {{< example-image >}}
+          # If you set safe-to-evict to true, be sure to set a corresponding
+          # grace period for terminating the game server safely.
+          terminationGracePeriodSeconds: 300
 ```
 
 #### Allocation Scheduling Strategy
