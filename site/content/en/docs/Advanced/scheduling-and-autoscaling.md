@@ -97,13 +97,6 @@ This affects the Cluster autoscaler, Allocation Scheduling, Pod Scheduling and F
 
 #### Cluster Autoscaler
 
-{{% feature expiryVersion="1.27.0" %}}
-To ensure that the Cluster Autoscaler doesn't attempt to evict and move `GameServer` `Pods` onto new Nodes during
-gameplay, Agones adds the annotation [`"cluster-autoscaler.kubernetes.io/safe-to-evict": "false"`](https://github.com/kubernetes/autoscaler/blob/master/cluster-autoscaler/FAQ.md#what-types-of-pods-can-prevent-ca-from-removing-a-node)
-to the backing Pod.
-{{% /feature %}}
-
-{{% feature publishVersion="1.27.0" %}}
 When using the “Packed” strategy, Agones will ensure that the Cluster Autoscaler doesn't attempt to evict and move `GameServer` `Pods` onto new Nodes during
 gameplay by adding the annotation [`"cluster-autoscaler.kubernetes.io/safe-to-evict": "false"`](https://github.com/kubernetes/autoscaler/blob/master/cluster-autoscaler/FAQ.md#what-types-of-pods-can-prevent-ca-from-removing-a-node)
 to the backing Pod.
@@ -150,7 +143,6 @@ spec:
           containers:
           - image: {{< example-image >}}
 ```
-{{% /feature %}}
 
 #### Allocation Scheduling Strategy
 
