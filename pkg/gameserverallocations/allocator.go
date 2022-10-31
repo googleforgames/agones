@@ -451,7 +451,7 @@ func (c *Allocator) allocate(ctx context.Context, gsa *allocationv1.GameServerAl
 	case res := <-req.response: // wait for the batch to be completed
 		return res.gs, res.err
 	case <-ctx.Done():
-		return nil, errors.New("shutting down")
+		return nil, ErrTotalTimeoutExceeded
 	}
 }
 
