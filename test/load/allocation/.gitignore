@@ -1,5 +1,5 @@
-!fixed.txt
-!variable.txt
 *.key
 *.crt
 *.txt
+!fixed.txt
+!variable.txt
