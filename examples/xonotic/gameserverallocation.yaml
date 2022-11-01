@@ -20,6 +20,6 @@ spec:
   # however we can also make available `matchExpressions` for even greater
   # flexibility.
   # Below is an example of a GameServer allocated against a given fleet.
-  required:
-    matchLabels:
-      agones.dev/fleet: xonotic
+  selectors:
+    - matchLabels:
+        agones.dev/fleet: xonotic
