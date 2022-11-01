@@ -22,6 +22,7 @@ header() {
 
 sdk=/go/src/agones.dev/agones/proto/sdk
 googleapis=/go/src/agones.dev/agones/proto/googleapis
+gatewaygrpc=/go/src/agones.dev/agones/proto/grpc-gateway
 
 export GO111MODULE=on
 
@@ -29,36 +30,44 @@ mkdir -p /go/src/
 cp -r /go/src/agones.dev/agones/vendor/* /go/src/
 
 cd /go/src/agones.dev/agones
-go install -mod=vendor github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
-go install -mod=vendor github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger
+go install -mod=vendor github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway
+go install -mod=vendor github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2
 
 mkdir -p ./pkg/sdk/{alpha,beta} || true
 
+rm ./pkg/sdk/beta/beta.pb.go || true
+rm ./pkg/sdk/alpha/alpha.pb.go || true
+rm ./pkg/sdk/beta/beta_grpc.pb.go || true
+rm ./pkg/sdk/alpha/alpha_grpc.pb.go || true
 rm ./pkg/sdk/beta/beta.pb.gw.go || true
 rm ./pkg/sdk/alpha/alpha.pb.gw.go || true
 
 # generate the go code for each feature stage
-protoc -I ${googleapis} -I ${sdk} sdk.proto --go_out=plugins=grpc:pkg/sdk
-protoc -I ${googleapis} -I ${sdk}/alpha alpha.proto --go_out=plugins=grpc:pkg/sdk/alpha
-protoc -I ${googleapis} -I ${sdk}/beta beta.proto --go_out=plugins=grpc:pkg/sdk/beta
+protoc -I ${googleapis} -I ${gatewaygrpc} -I ${sdk} sdk.proto --go_out=pkg --go-grpc_opt=require_unimplemented_servers=false --go-grpc_out=pkg
+protoc -I ${googleapis} -I ${gatewaygrpc} -I ${sdk}/alpha alpha.proto --go_out=pkg/sdk --go-grpc_opt=require_unimplemented_servers=false --go-grpc_out=pkg/sdk
+protoc -I ${googleapis} -I ${gatewaygrpc} -I ${sdk}/beta beta.proto --go_out=pkg/sdk --go-grpc_opt=require_unimplemented_servers=false --go-grpc_out=pkg/sdk
 
 # generate grpc gateway
-protoc -I ${googleapis} -I ${sdk} sdk.proto --grpc-gateway_out=logtostderr=true:pkg/sdk
-protoc -I ${googleapis} -I ${sdk}/alpha alpha.proto --grpc-gateway_out=logtostderr=true:pkg/sdk/alpha
-protoc -I ${googleapis} -I ${sdk}/beta beta.proto --grpc-gateway_out=logtostderr=true:pkg/sdk/beta
+protoc -I ${googleapis} -I ${gatewaygrpc} -I ${sdk} sdk.proto --grpc-gateway_out=logtostderr=true:pkg
+protoc -I ${googleapis} -I ${gatewaygrpc} -I ${sdk}/alpha alpha.proto --grpc-gateway_out=logtostderr=true:pkg/sdk
+protoc -I ${googleapis} -I ${gatewaygrpc} -I ${sdk}/beta beta.proto --grpc-gateway_out=logtostderr=true:pkg/sdk
 
-protoc -I ${googleapis} -I ${sdk} sdk.proto --swagger_out=logtostderr=true:sdks/swagger
-protoc -I ${googleapis} -I ${sdk}/alpha alpha.proto --swagger_out=logtostderr=true:sdks/swagger
-protoc -I ${googleapis} -I ${sdk}/beta beta.proto --swagger_out=logtostderr=true:sdks/swagger
+# generate openapi v2
+protoc -I ${googleapis} -I ${gatewaygrpc} -I ${sdk} sdk.proto --openapiv2_opt=logtostderr=true,simple_operation_ids=true,disable_default_errors=true --openapiv2_out=json_names_for_fields=false,logtostderr=true:sdks/swagger
+protoc -I ${googleapis} -I ${gatewaygrpc} -I ${sdk}/alpha alpha.proto --openapiv2_opt=logtostderr=true,simple_operation_ids=true,disable_default_errors=true --openapiv2_out=json_names_for_fields=false,logtostderr=true:sdks/swagger
+protoc -I ${googleapis} -I ${gatewaygrpc} -I ${sdk}/beta beta.proto --openapiv2_opt=logtostderr=true,simple_operation_ids=true,disable_default_errors=true --openapiv2_out=json_names_for_fields=false,logtostderr=true:sdks/swagger
 
-jq 'del(.schemes[] | select(. == "https"))' ./sdks/swagger/sdk.swagger.json | sponge ./sdks/swagger/sdk.swagger.json
-jq 'del(.schemes[] | select(. == "https"))' ./sdks/swagger/alpha.swagger.json | sponge ./sdks/swagger/alpha.swagger.json
-jq 'del(.schemes[] | select(. == "https"))' ./sdks/swagger/beta.swagger.json | sponge ./sdks/swagger/beta.swagger.json
+# hard coding because protoc-gen-openapiv2 doesn't work well in Stream and doesn't generate 'googlerpcStatus' and 'protobufAny' definitions
+cat sdks/swagger/sdk.swagger.json | jq '.definitions |= .+{"googlerpcStatus": {"type": "object", "properties": { "code": { "type": "integer", "format": "int32"}, "message": { "type":"string"}, "details": { "type": "array", "items": { "$ref": "#/definitions/protobufAny"}}}}}' | sponge sdks/swagger/sdk.swagger.json
+cat sdks/swagger/sdk.swagger.json | jq '.definitions |= .+{"protobufAny": { "type": "object", "properties": { "@type": { "type": "string" }}, "additionalProperties": {}},}' | sponge sdks/swagger/sdk.swagger.json
 
 header ./pkg/sdk/sdk.pb.go
-header ./pkg/sdk/sdk.pb.gw.go
 header ./pkg/sdk/alpha/alpha.pb.go
 header ./pkg/sdk/beta/beta.pb.go
+header ./pkg/sdk/sdk.pb.gw.go
+header ./pkg/sdk/sdk_grpc.pb.go
+header ./pkg/sdk/alpha/alpha_grpc.pb.go
+header ./pkg/sdk/beta/beta_grpc.pb.go
 
 # these files may not exist if there are no grpc services
 if [ -f "./pkg/sdk/alpha/alpha.pb.gw.go" ]; then

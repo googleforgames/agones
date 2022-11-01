@@ -65,6 +65,7 @@ Table of Contents
         * [make gen-install](#make-gen-install)
         * [make gen-embedded-openapi](#make-gen-embedded-openapi)
         * [make gen-crd-client](#make-gen-crd-client)
+        * [make gen-allocation-grpc](#make-gen-allocation-grpc)
         * [make gen-all-sdk-grpc](#make-gen-all-sdk-grpc)
         * [make gen-sdk-grpc](#make-gen-sdk-grpc)
      * [Build Image Targets](#build-image-targets)
@@ -660,6 +661,9 @@ This should be run against a clean or brand new cluster, as external CRD's or sc
 
 #### `make gen-crd-client`
 Generate the Custom Resource Definition client(s)
+
+#### `make gen-allocation-grpc`
+Generate the allocator gRPC code
 
 #### `make gen-all-sdk-grpc`
 Generate the SDK gRPC server and client code for all SDKs.

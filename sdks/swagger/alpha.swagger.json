@@ -4,6 +4,11 @@
     "title": "alpha.proto",
     "version": "version not set"
   },
+  "tags": [
+    {
+      "name": "SDK"
+    }
+  ],
   "schemes": [
     "http"
   ],
@@ -45,6 +50,7 @@
         "parameters": [
           {
             "name": "body",
+            "description": "Store a count variable.",
             "in": "body",
             "required": true,
             "schema": {
@@ -73,6 +79,7 @@
         "parameters": [
           {
             "name": "body",
+            "description": "The unique identifier for a given player.",
             "in": "body",
             "required": true,
             "schema": {
@@ -163,6 +170,7 @@
         "parameters": [
           {
             "name": "body",
+            "description": "The unique identifier for a given player.",
             "in": "body",
             "required": true,
             "schema": {

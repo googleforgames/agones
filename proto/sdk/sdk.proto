@@ -15,9 +15,20 @@
 syntax = "proto3";
 
 package agones.dev.sdk;
-option go_package = "sdk";
+option go_package = "./sdk";
 
 import "google/api/annotations.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+
+option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
+    info: {
+        title: "sdk.proto";
+        version: "version not set";
+    };
+    schemes: HTTP;
+    consumes: "application/json";
+    produces: "application/json";
+};
 
 // SDK service to be used in the GameServer SDK to the Pod Sidecar
 service SDK {
@@ -47,9 +58,9 @@ service SDK {
     // Send a Empty every d Duration to declare that this GameSever is healthy
     rpc Health (stream Empty) returns (Empty) {
         option (google.api.http) = {
-			post: "/health"
-			body: "*"
-		};
+            post: "/health"
+            body: "*"
+        };
     }
     // Retrieve the current GameServer data
     rpc GetGameServer (Empty) returns (GameServer) {
@@ -67,17 +78,17 @@ service SDK {
     // Apply a Label to the backing GameServer metadata
     rpc SetLabel(KeyValue) returns (Empty) {
         option (google.api.http) = {
-			put: "/metadata/label"
-			body: "*"
-		};
+            put: "/metadata/label"
+            body: "*"
+        };
     }
 
     // Apply a Annotation to the backing GameServer metadata
     rpc SetAnnotation(KeyValue) returns (Empty) {
         option (google.api.http) = {
-			put: "/metadata/annotation"
-			body: "*"
-		};
+            put: "/metadata/annotation"
+            body: "*"
+        };
     }
 
     // Marks the GameServer as the Reserved state for Duration
@@ -131,7 +142,7 @@ message GameServer {
         Health health = 1;
 
         message Health {
-            bool disabled = 1;
+            bool disabled = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {format: "boolean"}];
             int32 period_seconds = 2;
             int32 failure_threshold = 3;
             int32 initial_delay_seconds = 4;
