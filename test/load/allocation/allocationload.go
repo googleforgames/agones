@@ -10,87 +10,113 @@
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
-// limitations under the License.
+// limitations under the License
 
+//nolint:typecheck
 package main
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"flag"
-	"os/user"
-	"path/filepath"
+	"fmt"
+	"os"
 	"sync"
+	"time"
 
-	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
-	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
-	e2eframework "agones.dev/agones/test/e2e/framework"
-	"github.com/sirupsen/logrus"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	pb "agones.dev/agones/pkg/allocation/go"
+	"github.com/pkg/errors"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 )
 
-const defaultNs = "default"
-const reqPerClient = 10
-
 func main() {
-	usr, err := user.Current()
-	if err != nil {
-		logrus.Fatalf("Unable to determine the current user: %v", err)
-	}
-	kubeconfig := flag.String("kubeconfig", filepath.Join(usr.HomeDir, ".kube", "config"),
-		"kube config path, e.g. $HOME/.kube/config")
-	fleetName := flag.String("fleet_name", "simple-game-server", "The fleet name that the tests will run against")
-	qps := flag.Int("qps", 1000, "The QPS value that will overwrite the default value")
-	burst := flag.Int("burst", 1000, "The Burst value that will overwrite the default value")
-	clientCnt := flag.Int("clients", 10, "The number of concurrent clients")
+	keyFile := flag.String("key", "missing key", "the private key file for the client certificate in PEM format")
+	certFile := flag.String("cert", "missing cert", "the public key file for the client certificate in PEM format")
+	cacertFile := flag.String("cacert", "missing cacert", "the CA cert file for server signing certificate in PEM format")
+	externalIP := flag.String("ip", "missing external IP", "the external IP for allocator server")
+	port := flag.String("port", "443", "the port for allocator server")
+	namespace := flag.String("namespace", "default", "the game server kubernetes namespace")
+	multicluster := flag.Bool("multicluster", false, "set to true to enable the multi-cluster allocation")
+	numOfClients := flag.Int("numberofclients", 1, "number of clients to do allocations in parallel")
+	perClientAllocs := flag.Int("perclientallocations", 1, "number of allocations to be done per client")
 
 	flag.Parse()
 
-	logrus.SetFormatter(&logrus.TextFormatter{
-		EnvironmentOverrideColors: true,
-		FullTimestamp:             true,
-		TimestampFormat:           "2006-01-02 15:04:05.000",
-	})
-
-	framework, err := e2eframework.NewWithRates(*kubeconfig, float32(*qps), *burst)
+	endpoint := *externalIP + ":" + *port
+	cert, err := os.ReadFile(*certFile)
 	if err != nil {
-		logrus.Fatalf("Failed to setup framework: %v", err)
+		panic(err)
+	}
+	key, err := os.ReadFile(*keyFile)
+	if err != nil {
+		panic(err)
+	}
+	cacert, err := os.ReadFile(*cacertFile)
+	if err != nil {
+		panic(err)
 	}
 
-	logrus.Info("Starting Allocation")
-	allocate(framework, *clientCnt, *fleetName)
-	logrus.Info("Finished Allocation.")
-	logrus.Info("=======================================================================")
-	logrus.Info("=======================================================================")
-	logrus.Info("=======================================================================")
-}
-
-func allocate(framework *e2eframework.Framework, numOfClients int, fleetName string) {
-	gsa := &allocationv1.GameServerAllocation{
-		ObjectMeta: metav1.ObjectMeta{GenerateName: "allocation-"},
-		Spec: allocationv1.GameServerAllocationSpec{
-			Selectors: []allocationv1.GameServerSelector{
-				{LabelSelector: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: fleetName}}},
-			},
+	request := &pb.AllocationRequest{
+		Namespace: *namespace,
+		MultiClusterSetting: &pb.MultiClusterSetting{
+			Enabled: *multicluster,
 		},
 	}
-	var wg sync.WaitGroup
-	wg.Add(numOfClients)
 
-	// Allocate GS by numOfClients in parallel
-	for i := 0; i < numOfClients; i++ {
-		go func() {
-			defer wg.Done()
-			for j := 0; j < reqPerClient; j++ {
-				gsa1, err := framework.AgonesClient.AllocationV1().GameServerAllocations(defaultNs).Create(context.Background(), gsa.DeepCopy(), metav1.CreateOptions{})
-				if err != nil {
-					logrus.Errorf("could not completed gsa1 allocation : %v", err)
-				} else if gsa1.Status.State == "Contention" {
-					logrus.Errorf("could not allocate : %v", gsa1.Status.State)
-				}
-				logrus.Infof("%+v", gsa1)
-			}
-		}()
+	dialOpts, err := createRemoteClusterDialOption(cert, key, cacert)
+	if err != nil {
+		panic(err)
 	}
 
+	fmt.Printf("started: %v\n", time.Now())
+
+	var wg sync.WaitGroup
+
+	// Allocate GS by numOfClients in parallel
+	for k := 0; k < *numOfClients; k++ {
+		wg.Add(1)
+
+		go func(clientID int) {
+			defer wg.Done()
+			conn, err := grpc.Dial(endpoint, dialOpts)
+			if err != nil {
+				fmt.Printf("(failed(client=%v) to get connection: %v\n", clientID, err)
+				return
+			}
+			grpcClient := pb.NewAllocationServiceClient(conn)
+
+			for i := 0; i < *perClientAllocs; i++ {
+				_, err := grpcClient.Allocate(context.Background(), request)
+				if err != nil {
+					fmt.Printf("(failed(client=%v,allocation=%v): %v\n", clientID, i+1, err)
+				}
+			}
+			_ = conn.Close()
+		}(k)
+	}
 	wg.Wait()
+	fmt.Printf("finished: %v\n", time.Now())
+}
+
+// createRemoteClusterDialOption creates a grpc client dial option with TLS configuration.
+func createRemoteClusterDialOption(clientCert, clientKey, caCert []byte) (grpc.DialOption, error) {
+	// Load client cert
+	cert, err := tls.X509KeyPair(clientCert, clientKey)
+	if err != nil {
+		return nil, err
+	}
+
+	tlsConfig := &tls.Config{Certificates: []tls.Certificate{cert}}
+	if len(caCert) != 0 {
+		// Load CA cert, if provided and trust the server certificate.
+		// This is required for self-signed certs.
+		tlsConfig.RootCAs = x509.NewCertPool()
+		if !tlsConfig.RootCAs.AppendCertsFromPEM(caCert) {
+			return nil, errors.New("only PEM format is accepted for server CA")
+		}
+	}
+
+	return grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)), nil
 }
