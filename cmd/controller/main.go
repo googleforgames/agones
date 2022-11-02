@@ -28,6 +28,7 @@ import (
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	"agones.dev/agones/pkg/client/clientset/versioned"
 	"agones.dev/agones/pkg/client/informers/externalversions"
+	"agones.dev/agones/pkg/cloudproduct"
 	"agones.dev/agones/pkg/fleetautoscalers"
 	"agones.dev/agones/pkg/fleets"
 	"agones.dev/agones/pkg/gameserverallocations"
@@ -78,6 +79,7 @@ const (
 	logSizeLimitMBFlag           = "log-size-limit-mb"
 	kubeconfigFlag               = "kubeconfig"
 	allocationBatchWaitTime      = "allocation-batch-wait-time"
+	cloudProductFlag             = "cloud-product"
 	defaultResync                = 30 * time.Second
 )
 
@@ -105,6 +107,7 @@ func setupLogging(logDir string, logSizeLimitMB int) {
 
 // main starts the operator for the gameserver CRD
 func main() {
+	ctx := signals.NewSigKillContext()
 	ctlConf := parseEnvFlags()
 
 	if ctlConf.LogDir != "" {
@@ -152,6 +155,11 @@ func main() {
 	agonesClient, err := versioned.NewForConfig(clientConf)
 	if err != nil {
 		logger.WithError(err).Fatal("Could not create the agones api clientset")
+	}
+
+	cloudProduct, err := cloudproduct.New(ctx, ctlConf.CloudProduct, kubeClient)
+	if err != nil {
+		logger.WithError(err).Fatal("Could not initialize cloud provider")
 	}
 
 	// https server and the items that share the Mux for routing
@@ -207,7 +215,7 @@ func main() {
 		ctlConf.MinPort, ctlConf.MaxPort, ctlConf.SidecarImage, ctlConf.AlwaysPullSidecar,
 		ctlConf.SidecarCPURequest, ctlConf.SidecarCPULimit,
 		ctlConf.SidecarMemoryRequest, ctlConf.SidecarMemoryLimit, ctlConf.SdkServiceAccount,
-		kubeClient, kubeInformerFactory, extClient, agonesClient, agonesInformerFactory)
+		kubeClient, kubeInformerFactory, extClient, agonesClient, agonesInformerFactory, cloudProduct)
 	gsSetController := gameserversets.NewController(wh, health, gsCounter,
 		kubeClient, extClient, agonesClient, agonesInformerFactory)
 	fleetController := fleets.NewController(wh, health, kubeClient, extClient, agonesClient, agonesInformerFactory)
@@ -218,8 +226,6 @@ func main() {
 
 	rs = append(rs,
 		httpsServer, gsCounter, gsController, gsSetController, fleetController, fasController, gasController, server)
-
-	ctx := signals.NewSigKillContext()
 
 	kubeInformerFactory.Start(ctx.Done())
 	agonesInformerFactory.Start(ctx.Done())
@@ -264,6 +270,7 @@ func parseEnvFlags() config {
 	viper.SetDefault(logDirFlag, "")
 	viper.SetDefault(logLevelFlag, "Info")
 	viper.SetDefault(logSizeLimitMBFlag, 10000) // 10 GB, will be split into 100 MB chunks
+	viper.SetDefault(cloudProductFlag, cloudproduct.AutoDetect)
 
 	pflag.String(sidecarImageFlag, viper.GetString(sidecarImageFlag), "Flag to overwrite the GameServer sidecar image that is used. Can also use SIDECAR env variable")
 	pflag.String(sidecarCPULimitFlag, viper.GetString(sidecarCPULimitFlag), "Flag to overwrite the GameServer sidecar container's cpu limit. Can also use SIDECAR_CPU_LIMIT env variable")
@@ -288,6 +295,7 @@ func parseEnvFlags() config {
 	pflag.Int32(logSizeLimitMBFlag, 1000, "Log file size limit in MB")
 	pflag.String(logLevelFlag, viper.GetString(logLevelFlag), "Agones Log level")
 	pflag.Duration(allocationBatchWaitTime, viper.GetDuration(allocationBatchWaitTime), "Flag to configure the waiting period between allocations batches")
+	pflag.String(cloudProductFlag, viper.GetString(cloudProductFlag), "Cloud product. Set to 'auto' to auto-detect, set to 'generic' to force generic behavior, set to 'gke-autopilot' for GKE Autopilot. Can also use CLOUD_PRODUCT env variable.")
 	runtime.FeaturesBindFlags()
 	pflag.Parse()
 
@@ -315,6 +323,7 @@ func parseEnvFlags() config {
 	runtime.Must(viper.BindEnv(logDirFlag))
 	runtime.Must(viper.BindEnv(logSizeLimitMBFlag))
 	runtime.Must(viper.BindEnv(allocationBatchWaitTime))
+	runtime.Must(viper.BindEnv(cloudProductFlag))
 	runtime.Must(viper.BindPFlags(pflag.CommandLine))
 	runtime.Must(runtime.FeaturesBindEnv())
 
@@ -364,6 +373,7 @@ func parseEnvFlags() config {
 		LogSizeLimitMB:          int(viper.GetInt32(logSizeLimitMBFlag)),
 		StackdriverLabels:       viper.GetString(stackdriverLabels),
 		AllocationBatchWaitTime: viper.GetDuration(allocationBatchWaitTime),
+		CloudProduct:            viper.GetString(cloudProductFlag),
 	}
 }
 
@@ -392,6 +402,7 @@ type config struct {
 	LogLevel                string
 	LogSizeLimitMB          int
 	AllocationBatchWaitTime time.Duration
+	CloudProduct            string
 }
 
 // validate ensures the ctlConfig data is valid.

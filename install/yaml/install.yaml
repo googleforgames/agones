@@ -14342,6 +14342,9 @@ rules:
 - apiGroups: [""]
   resources: ["nodes", "secrets"]
   verbs: ["list", "watch"]
+- apiGroups: ["admissionregistration.k8s.io"] # only needed for cloudProduct detection
+  resources: ["mutatingwebhookconfigurations"]
+  verbs: ["get"]
 - apiGroups: ["apiextensions.k8s.io"]
   resources: ["customresourcedefinitions"]
   verbs: ["get"]
@@ -14726,6 +14729,8 @@ spec:
           value: ""
         - name: ALLOCATION_BATCH_WAIT_TIME
           value: "500ms"
+        - name: CLOUD_PRODUCT
+          value: "auto"
         - name: LOG_DIR
           value: "/home/agones/logs"
         - name: LOG_SIZE_LIMIT_MB

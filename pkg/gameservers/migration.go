@@ -23,6 +23,7 @@ import (
 	getterv1 "agones.dev/agones/pkg/client/clientset/versioned/typed/agones/v1"
 	"agones.dev/agones/pkg/client/informers/externalversions"
 	listerv1 "agones.dev/agones/pkg/client/listers/agones/v1"
+	"agones.dev/agones/pkg/cloudproduct"
 	"agones.dev/agones/pkg/util/logfields"
 	"agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/workerqueue"
@@ -55,6 +56,7 @@ type MigrationController struct {
 	nodeSynced       cache.InformerSynced
 	workerqueue      *workerqueue.WorkerQueue
 	recorder         record.EventRecorder
+	cloudProduct     cloudproduct.CloudProduct
 }
 
 // NewMigrationController returns a MigrationController
@@ -62,7 +64,8 @@ func NewMigrationController(health healthcheck.Handler,
 	kubeClient kubernetes.Interface,
 	agonesClient versioned.Interface,
 	kubeInformerFactory informers.SharedInformerFactory,
-	agonesInformerFactory externalversions.SharedInformerFactory) *MigrationController {
+	agonesInformerFactory externalversions.SharedInformerFactory,
+	cloudProduct cloudproduct.CloudProduct) *MigrationController {
 
 	podInformer := kubeInformerFactory.Core().V1().Pods().Informer()
 	gameserverInformer := agonesInformerFactory.Agones().V1().GameServers()
@@ -74,6 +77,7 @@ func NewMigrationController(health healthcheck.Handler,
 		gameServerLister: gameserverInformer.Lister(),
 		nodeLister:       kubeInformerFactory.Core().V1().Nodes().Lister(),
 		nodeSynced:       kubeInformerFactory.Core().V1().Nodes().Informer().HasSynced,
+		cloudProduct:     cloudProduct,
 	}
 
 	mc.baseLogger = runtime.NewLoggerWithType(mc)
@@ -187,7 +191,7 @@ func (mc *MigrationController) syncGameServer(ctx context.Context, key string) e
 		// If the GameServer has yet to become ready, we will reapply the Address and Port
 		// otherwise, we move it to Unhealthy so that a new GameServer will be recreated.
 		if gsCopy.IsBeforeReady() {
-			gsCopy, err = applyGameServerAddressAndPort(gsCopy, node, pod)
+			gsCopy, err = applyGameServerAddressAndPort(gsCopy, node, pod, mc.cloudProduct.SyncPodPortsToGameServer)
 			if err != nil {
 				return err
 			}

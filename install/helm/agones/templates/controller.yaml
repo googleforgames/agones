@@ -115,6 +115,8 @@ spec:
           value: {{ .Values.agones.featureGates | quote }}
         - name: ALLOCATION_BATCH_WAIT_TIME
           value: {{ .Values.agones.controller.allocationBatchWaitTime | quote }}
+        - name: CLOUD_PRODUCT
+          value: {{ .Values.agones.cloudProduct | quote }}
 {{- if .Values.agones.controller.persistentLogs }}
         - name: LOG_DIR
           value: "/home/agones/logs"
