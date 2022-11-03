@@ -212,7 +212,7 @@ func readScenarios(file string) *[]scenario {
 	if err != nil {
 		logger.Fatalf("Failed opening the scenario  file %s: %v", file, err)
 	}
-	defer fp.Close()
+	defer func() { _ = fp.Close() }()
 
 	var scenarios []scenario
 

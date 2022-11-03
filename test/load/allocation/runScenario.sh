@@ -31,6 +31,6 @@ CERT_FILE=${CERT_FILE:-client.crt}
 TLS_CA_FILE=${TLS_CA_FILE:-ca.crt}
 MULTICLUSTER=${MULTICLUSTER:-false}
 
-go run runscenario.go --ip ${EXTERNAL_IP} --namespace ${NAMESPACE} \
+go run runscenario/runscenario.go --ip ${EXTERNAL_IP} --namespace ${NAMESPACE} \
   --key ${KEY_FILE} --cert ${CERT_FILE} --cacert ${TLS_CA_FILE} \
   --scenariosFile ${1}

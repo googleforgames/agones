@@ -31,7 +31,7 @@ counter=1
 while [ $counter -le $TESTRUNSCOUNT ]
 do
     echo "Run number: " $counter
-    go run allocationload.go --ip ${EXTERNAL_IP} --port 443 --namespace ${NAMESPACE} --key ${KEY_FILE} --cert ${CERT_FILE} --cacert ${TLS_CA_FILE} --numberofclients $1 --perclientallocations $2 2>>./allocation_test_results.txt
+    go run allocationload/allocationload.go --ip ${EXTERNAL_IP} --port 443 --namespace ${NAMESPACE} --key ${KEY_FILE} --cert ${CERT_FILE} --cacert ${TLS_CA_FILE} --numberofclients $1 --perclientallocations $2 2>>./allocation_test_results.txt
     sleep 1200
     ((counter++))
 done
