@@ -44,6 +44,7 @@ agones:
       annotations: {}
   createPriorityClass: true
   priorityClassName: agones-system
+  cloudProduct: "auto"
   controller:
     resources: {}
       # requests:

@@ -50,6 +50,11 @@ rules:
 - apiGroups: [""]
   resources: ["nodes", "secrets"]
   verbs: ["list", "watch"]
+{{- if eq .Values.agones.cloudProduct "auto" }}
+- apiGroups: ["admissionregistration.k8s.io"] # only needed for cloudProduct detection
+  resources: ["mutatingwebhookconfigurations"]
+  verbs: ["get"]
+{{- end}}
 - apiGroups: ["apiextensions.k8s.io"]
   resources: ["customresourcedefinitions"]
   verbs: ["get"]
