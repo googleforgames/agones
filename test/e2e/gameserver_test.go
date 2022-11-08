@@ -259,7 +259,8 @@ func TestGameServerUnhealthyAfterDeletingPod(t *testing.T) {
 }
 
 func TestGameServerRestartBeforeReadyCrash(t *testing.T) {
-	t.Parallel()
+	// TODO(#2445): The feature is flaky when pod updates are slow, run serially to avoid.
+	// t.Parallel()
 	ctx := context.Background()
 	logger := e2eframework.TestLogger(t)
 
