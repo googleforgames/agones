@@ -27,7 +27,7 @@ func TestGameServerCacheEntry(t *testing.T) {
 	gs2 := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs2"}}
 	gs3 := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs3"}}
 
-	cache := gameServerCacheEntry{}
+	cache := gameServerCache{}
 
 	gs, ok := cache.Load("gs1")
 	assert.Nil(t, gs)

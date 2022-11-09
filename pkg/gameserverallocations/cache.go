@@ -21,13 +21,15 @@ import (
 )
 
 // gameserver cache to keep the Ready state gameserver.
-type gameServerCacheEntry struct {
+//
+//nolint:govet // ignore fieldalignment, singleton embedded in AllocationCache
+type gameServerCache struct {
 	mu    sync.RWMutex
 	cache map[string]*agonesv1.GameServer
 }
 
 // Store saves the data in the cache.
-func (e *gameServerCacheEntry) Store(key string, gs *agonesv1.GameServer) {
+func (e *gameServerCache) Store(key string, gs *agonesv1.GameServer) {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 	if e.cache == nil {
@@ -37,7 +39,7 @@ func (e *gameServerCacheEntry) Store(key string, gs *agonesv1.GameServer) {
 }
 
 // Delete deletes the data. If it exists returns true.
-func (e *gameServerCacheEntry) Delete(key string) bool {
+func (e *gameServerCache) Delete(key string) bool {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 	ret := false
@@ -52,7 +54,7 @@ func (e *gameServerCacheEntry) Delete(key string) bool {
 }
 
 // Load returns the data from cache. It return true if the value exists in the cache
-func (e *gameServerCacheEntry) Load(key string) (*agonesv1.GameServer, bool) {
+func (e *gameServerCache) Load(key string) (*agonesv1.GameServer, bool) {
 	e.mu.RLock()
 	defer e.mu.RUnlock()
 	val, ok := e.cache[key]
@@ -61,7 +63,7 @@ func (e *gameServerCacheEntry) Load(key string) (*agonesv1.GameServer, bool) {
 }
 
 // Range extracts data from the cache based on provided function f.
-func (e *gameServerCacheEntry) Range(f func(key string, gs *agonesv1.GameServer) bool) {
+func (e *gameServerCache) Range(f func(key string, gs *agonesv1.GameServer) bool) {
 	e.mu.RLock()
 	defer e.mu.RUnlock()
 	for k, v := range e.cache {
@@ -72,7 +74,7 @@ func (e *gameServerCacheEntry) Range(f func(key string, gs *agonesv1.GameServer)
 }
 
 // Len returns the current length of the cache
-func (e *gameServerCacheEntry) Len() int {
+func (e *gameServerCache) Len() int {
 	e.mu.RLock()
 	defer e.mu.RUnlock()
 	return len(e.cache)

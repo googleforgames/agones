@@ -34,6 +34,8 @@ import (
 // Ready GameServers currently exist on each node.
 // This is useful for scheduling allocations, fleet management
 // mostly under a Packed strategy
+//
+//nolint:govet // ignore fieldalignment, singleton
 type PerNodeCounter struct {
 	logger           *logrus.Entry
 	gameServerSynced cache.InformerSynced

@@ -58,12 +58,16 @@ import (
 )
 
 // fasThread is used for tracking each Fleet's autoscaling jobs
+//
+//nolint:govet // ignore fieldalignment, one per fleet autoscaler
 type fasThread struct {
 	generation int64
 	cancel     context.CancelFunc
 }
 
 // Controller is the FleetAutoscaler controller
+//
+//nolint:govet // ignore fieldalignment, singleton
 type Controller struct {
 	baseLogger            *logrus.Entry
 	clock                 clock.Clock

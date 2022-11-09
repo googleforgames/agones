@@ -37,6 +37,8 @@ var logger = runtime.NewLoggerWithSource("gke")
 type gkeAutopilot struct{}
 
 // hostPortAssignment is the JSON structure of the `host-port-assignment` annotation
+//
+//nolint:govet // API-like, keep consistent
 type hostPortAssignment struct {
 	Min           int32           `json:"min,omitempty"`
 	Max           int32           `json:"max,omitempty"`

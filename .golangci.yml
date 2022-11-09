@@ -48,7 +48,6 @@ output:
 linters:
   enable:
     - bodyclose
-    - deadcode
     - dupl
     - exportloopref
     - goconst
@@ -61,11 +60,16 @@ linters:
     - nakedret
     - revive
     - staticcheck
-    - structcheck
     - unconvert
     - unparam
 
 linters-settings:
+  govet:
+    disable-all: false
+    enable-all: true
+    disable:
+      # extremely noisy, also against common Go style in most cases
+      - shadow
   gocritic:
     enabled-tags:
       - performance
@@ -90,3 +94,11 @@ issues:
   exclude-use-default: false
   exclude:
     - Using the variable on range scope .* in function literal
+  exclude-rules:
+    # Skip fieldalignment checks on:
+    # - tests: memory footprint doesn't matter
+    # - cmd/: we assume these are one-off config entries
+    # - pkg/apis: Keep strong convention on TypeMeta/ObjectMeta/Spec/Status
+    - path: '(.+)_test\.go|^test/|^cmd/.*|^pkg/apis/.*'
+      # fieldalignment is in the `govet` linter, so exclude based on text instead of all of govet
+      text: '^fieldalignment: .*'
