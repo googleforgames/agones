@@ -37,6 +37,7 @@ import (
 	"agones.dev/agones/pkg/client/informers/externalversions"
 	"agones.dev/agones/pkg/gameserverallocations"
 	"agones.dev/agones/pkg/gameservers"
+	"agones.dev/agones/pkg/util/fswatch"
 	"agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/signals"
 	gw_runtime "github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -49,7 +50,6 @@ import (
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/keepalive"
 	"google.golang.org/grpc/status"
-	"gopkg.in/fsnotify.v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8sruntime "k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/informers"
@@ -224,70 +224,38 @@ func main() {
 	h := newServiceHandler(kubeClient, agonesClient, health, conf.MTLSDisabled, conf.TLSDisabled, conf.remoteAllocationTimeout, conf.totalRemoteAllocationTimeout, conf.allocationBatchWaitTime)
 
 	if !h.tlsDisabled {
-		watcherTLS, err := fsnotify.NewWatcher()
-		if err != nil {
-			logger.WithError(err).Fatal("could not create watcher for tls certs")
-		}
-		defer watcherTLS.Close() // nolint: errcheck
-		if err := watcherTLS.Add(tlsDir); err != nil {
-			logger.WithError(err).Fatalf("cannot watch folder %s for secret changes", tlsDir)
-		}
-
-		// Watching for the events in certificate directory for updating certificates, when there is a change
-		go func() {
-			for {
-				select {
-				// watch for events
-				case event := <-watcherTLS.Events:
-					tlsCert, err := readTLSCert()
-					if err != nil {
-						logger.WithError(err).Error("could not load TLS cert; keeping old one")
-					} else {
-						h.tlsMutex.Lock()
-						h.tlsCert = tlsCert
-						h.tlsMutex.Unlock()
-					}
-					logger.Infof("Tls directory change event %v", event)
-
-				// watch for errors
-				case err := <-watcherTLS.Errors:
-					logger.WithError(err).Error("error watching for TLS directory")
-				}
+		cancelTLS, err := fswatch.Watch(logger, tlsDir, time.Second, func() {
+			tlsCert, err := readTLSCert()
+			if err != nil {
+				logger.WithError(err).Error("could not load TLS certs; keeping old one")
+				return
 			}
-		}()
+			h.tlsMutex.Lock()
+			defer h.tlsMutex.Unlock()
+			h.tlsCert = tlsCert
+			logger.Info("TLS certs updated")
+		})
+		if err != nil {
+			logger.WithError(err).Fatal("could not create watcher for TLS certs")
+		}
+		defer cancelTLS()
 
 		if !h.mTLSDisabled {
-			// creates a new file watcher for client certificate folder
-			watcher, err := fsnotify.NewWatcher()
-			if err != nil {
-				logger.WithError(err).Fatal("could not create watcher for client certs")
-			}
-			defer watcher.Close() // nolint: errcheck
-			if err := watcher.Add(certDir); err != nil {
-				logger.WithError(err).Fatalf("cannot watch folder %s for secret changes", certDir)
-			}
-
-			go func() {
-				for {
-					select {
-					// watch for events
-					case event := <-watcher.Events:
-						h.certMutex.Lock()
-						caCertPool, err := getCACertPool(certDir)
-						if err != nil {
-							logger.WithError(err).Error("could not load CA certs; keeping old ones")
-						} else {
-							h.caCertPool = caCertPool
-						}
-						logger.Infof("Certificate directory change event %v", event)
-						h.certMutex.Unlock()
-
-					// watch for errors
-					case err := <-watcher.Errors:
-						logger.WithError(err).Error("error watching for certificate directory")
-					}
+			cancelCert, err := fswatch.Watch(logger, certDir, time.Second, func() {
+				h.certMutex.Lock()
+				defer h.certMutex.Unlock()
+				caCertPool, err := getCACertPool(certDir)
+				if err != nil {
+					logger.WithError(err).Error("could not load CA certs; keeping old ones")
+					return
 				}
-			}()
+				h.caCertPool = caCertPool
+				logger.Info("CA certs updated")
+			})
+			if err != nil {
+				logger.WithError(err).Fatal("could not create watcher for CA certs")
+			}
+			defer cancelCert()
 		}
 	}
 
