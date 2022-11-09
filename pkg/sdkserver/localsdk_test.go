@@ -429,7 +429,6 @@ func TestLocalSDKServerPlayerConnectAndDisconnect(t *testing.T) {
 
 	e := &alpha.Empty{}
 
-	// nolint: maligned
 	fixtures := map[string]struct {
 		testMode bool
 		gs       *agonesv1.GameServer

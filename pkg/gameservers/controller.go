@@ -63,6 +63,8 @@ const (
 )
 
 // Controller is a the main GameServer crd controller
+//
+//nolint:govet // ignore fieldalignment, singleton
 type Controller struct {
 	baseLogger             *logrus.Entry
 	sidecarImage           string

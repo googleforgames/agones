@@ -73,6 +73,8 @@ func defaultGs() *sdk.GameServer {
 // LocalSDKServer type is the SDKServer implementation for when the sidecar
 // is being run for local development, and doesn't connect to the
 // Kubernetes cluster
+//
+//nolint:govet // ignore fieldalignment, singleton
 type LocalSDKServer struct {
 	gsMutex           sync.RWMutex
 	gs                *sdk.GameServer

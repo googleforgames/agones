@@ -68,6 +68,8 @@ func init() {
 }
 
 // Controller is a metrics controller collecting Agones state metrics
+//
+//nolint:govet // ignore fieldalignment, singleton
 type Controller struct {
 	logger                    *logrus.Entry
 	gameServerLister          listerv1.GameServerLister

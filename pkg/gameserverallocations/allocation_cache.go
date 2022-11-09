@@ -48,7 +48,7 @@ func readyOrAllocatedGameServerMatcher(gs *agonesv1.GameServer) bool {
 // AllocationCache maintains a cache of GameServers that could potentially be allocated.
 type AllocationCache struct {
 	baseLogger       *logrus.Entry
-	cache            gameServerCacheEntry
+	cache            gameServerCache
 	gameServerLister listerv1.GameServerLister
 	gameServerSynced cache.InformerSynced
 	workerqueue      *workerqueue.WorkerQueue

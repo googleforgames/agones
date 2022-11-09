@@ -41,6 +41,8 @@ type portAllocation map[int32]bool
 // appropriate locking is taken.
 // The PortAllocator does not currently support mixing static portAllocations (or any pods with defined HostPort)
 // within the dynamic port range other than the ones it coordinates.
+//
+//nolint:govet // ignore fieldalignment, singleton
 type PortAllocator struct {
 	logger             *logrus.Entry
 	mutex              sync.RWMutex
