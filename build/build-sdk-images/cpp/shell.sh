@@ -1,4 +1,6 @@
-# Copyright 2018 Google LLC All Rights Reserved.
+#!/usr/bin/env bash
+
+# Copyright 2022 Google LLC All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,13 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM hopsoft/graphite-statsd
-
-# Locust
-RUN pip install locustio
-EXPOSE 8089 5557 5558
-
-RUN mkdir /etc/service/locust
-COPY /locust-files ./
-COPY /run.sh /etc/service/locust/run
-RUN chmod +x /etc/service/locust/run
+set -ex
+cd ./sdks/cpp
+bash

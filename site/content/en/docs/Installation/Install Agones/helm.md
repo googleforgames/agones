@@ -214,7 +214,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.allocator.updateStrategy`                        | The [strategy](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy) to apply to the ping deployment                                                                                          | `{}`                               |
 | `agones.ping.updateStrategy`                             | The [strategy](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy) to apply to the allocator deployment                                                                                     | `{}`                               |
 
-{{% feature publishVersion="1.27.0" %}}
+{{% feature publishVersion="1.28.0" %}}
 **New Configuration Features:**
 
 | Parameter                             | Description                                                                                                                                                                                | Default |

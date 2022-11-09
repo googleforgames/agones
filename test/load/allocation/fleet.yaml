@@ -15,25 +15,33 @@
 apiVersion: "agones.dev/v1"
 kind: Fleet
 metadata:
-  name: simple-game-server
+  name: load-test-fleet
 spec:
-  replicas: 100
+  # the number of GameServers to keep Ready or Allocated in this Fleet
+  replicas: 4000
   template:
+    metadata:
+      labels:
+        foo: bar
+    # GameServer specification
     spec:
-      ports:
-      - name: default
-        containerPort: 7654
-      template:
-        spec:
-          containers:
-          - name: simple-game-server
-            image: gcr.io/agones-images/simple-game-server:0.14
-            resources:
-              requests:
-                memory: "64Mi"
-                cpu: "20m"
-              limits:
-                memory: "64Mi"
-                cpu: "20m"
-            args:
-              - "-automaticShutdownDelaySec=60"
+        ports:
+        - containerPort: 7654
+          name: default
+        # The GameServer's Pod template
+        template:
+            spec:
+                containers:
+                - args:
+                  # We setup the simple-game-server server to shutdown 10 mins after allocation
+                  - -automaticShutdownDelaySec=600
+                  image: gcr.io/agones-images/simple-game-server:0.14
+                  name: simple-game-server
+                  resources:
+                    limits:
+                      cpu: 20m
+                      memory: 32Mi
+                    requests:
+                      cpu: 20m
+                      memory: 32Mi
+

@@ -13,23 +13,25 @@
 # limitations under the License.
 
 #!/bin/bash
-# Provide the number of times you want allocation test to be run
-testRunsCount=3
-if [ -z "$1" ]
-    then
-        echo "No test run count provided, using default which is 3"
-    else
-        testRunsCount=$1
-        if ! [[ $testRunsCount =~ ^[0-9]+$ ]] ; then
-            echo "error: Not a positive number provided" >&2; exit 1
-        fi
-fi
+
+NAMESPACE=${NAMESPACE:-default}
+# extract the required TLS and mTLS files
+kubectl get secret allocator-client.default -n ${NAMESPACE} -ojsonpath="{.data.tls\.crt}" | base64 -d > client.crt
+kubectl get secret allocator-client.default -n ${NAMESPACE} -ojsonpath="{.data.tls\.key}" | base64 -d > client.key
+kubectl get secret allocator-tls-ca -n agones-system -ojsonpath='{.data.tls-ca\.crt}' | base64 -d > ca.crt
+
+# The number of times you want allocation test to be run
+TESTRUNSCOUNT=${TESTRUNSCOUNT:-3}
+EXTERNAL_IP=$(kubectl get services agones-allocator -n agones-system -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+KEY_FILE=${KEY_FILE:-client.key}
+CERT_FILE=${CERT_FILE:-client.crt}
+TLS_CA_FILE=${TLS_CA_FILE:-ca.crt}
 
 counter=1
-while [ $counter -le $testRunsCount ]
+while [ $counter -le $TESTRUNSCOUNT ]
 do
     echo "Run number: " $counter
-    go run allocationload.go 2>>./allocation_test_results.txt
-    sleep 500
+    go run allocationload/allocationload.go --ip ${EXTERNAL_IP} --port 443 --namespace ${NAMESPACE} --key ${KEY_FILE} --cert ${CERT_FILE} --cacert ${TLS_CA_FILE} --numberofclients $1 --perclientallocations $2 2>>./allocation_test_results.txt
+    sleep 1200
     ((counter++))
 done

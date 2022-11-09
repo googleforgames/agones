@@ -107,23 +107,45 @@ func TestAddress(t *testing.T) {
 func TestApplyGameServerAddressAndPort(t *testing.T) {
 	t.Parallel()
 
-	t.Run("OK scenario", func(t *testing.T) {
-		gsFixture := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
-			Spec: newSingleContainerSpec(), Status: agonesv1.GameServerStatus{State: agonesv1.GameServerStateRequestReady}}
-		gsFixture.ApplyDefaults()
-		node := &corev1.Node{ObjectMeta: metav1.ObjectMeta{Name: nodeFixtureName}, Status: corev1.NodeStatus{Addresses: []corev1.NodeAddress{{Address: ipFixture, Type: corev1.NodeExternalIP}}}}
-		pod, err := gsFixture.Pod()
-		require.NoError(t, err)
-		pod.Spec.NodeName = node.ObjectMeta.Name
+	noopMod := func(*corev1.Pod) {}
+	noopSyncer := func(*agonesv1.GameServer, *corev1.Pod) error { return nil }
+	for name, tc := range map[string]struct {
+		podMod       func(*corev1.Pod)
+		podSyncer    func(*agonesv1.GameServer, *corev1.Pod) error
+		wantHostPort int32
+	}{
+		"normal": {noopMod, noopSyncer, 9999},
+		"host ports changed after create": {
+			podMod: func(pod *corev1.Pod) {
+				pod.Spec.Containers[0].Ports[0].HostPort = 9876
+			},
+			podSyncer: func(gs *agonesv1.GameServer, pod *corev1.Pod) error {
+				gs.Spec.Ports[0].HostPort = pod.Spec.Containers[0].Ports[0].HostPort
+				return nil
+			},
+			wantHostPort: 9876,
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			gsFixture := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
+				Spec: newSingleContainerSpec(), Status: agonesv1.GameServerStatus{State: agonesv1.GameServerStateRequestReady}}
+			gsFixture.ApplyDefaults()
+			node := &corev1.Node{ObjectMeta: metav1.ObjectMeta{Name: nodeFixtureName}, Status: corev1.NodeStatus{Addresses: []corev1.NodeAddress{{Address: ipFixture, Type: corev1.NodeExternalIP}}}}
+			pod, err := gsFixture.Pod()
+			require.NoError(t, err)
+			pod.Spec.NodeName = node.ObjectMeta.Name
+			tc.podMod(pod)
 
-		gs, err := applyGameServerAddressAndPort(gsFixture, node, pod)
-		require.NoError(t, err)
-		if assert.NotEmpty(t, gs.Spec.Ports) {
-			assert.Equal(t, gs.Spec.Ports[0].HostPort, gs.Status.Ports[0].Port)
-		}
-		assert.Equal(t, ipFixture, gs.Status.Address)
-		assert.Equal(t, node.ObjectMeta.Name, gs.Status.NodeName)
-	})
+			gs, err := applyGameServerAddressAndPort(gsFixture, node, pod, tc.podSyncer)
+			require.NoError(t, err)
+			if assert.NotEmpty(t, gs.Spec.Ports) {
+				assert.Equal(t, tc.wantHostPort, gs.Status.Ports[0].Port)
+				assert.Equal(t, gs.Spec.Ports[0].HostPort, gs.Status.Ports[0].Port)
+			}
+			assert.Equal(t, ipFixture, gs.Status.Address)
+			assert.Equal(t, node.ObjectMeta.Name, gs.Status.NodeName)
+		})
+	}
 
 	t.Run("No IP specified, err expected", func(t *testing.T) {
 		gsFixture := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
@@ -134,7 +156,7 @@ func TestApplyGameServerAddressAndPort(t *testing.T) {
 		require.NoError(t, err)
 		pod.Spec.NodeName = node.ObjectMeta.Name
 
-		_, err = applyGameServerAddressAndPort(gsFixture, node, pod)
+		_, err = applyGameServerAddressAndPort(gsFixture, node, pod, noopSyncer)
 		if assert.Error(t, err) {
 			assert.Equal(t, "error getting external address for GameServer test: Could not find an address for Node: node1", err.Error())
 		}

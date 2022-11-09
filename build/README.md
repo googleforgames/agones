@@ -38,6 +38,7 @@ Table of Contents
         * [make build-images](#make-build-images)
         * [make build-sdks](#make-build-sdks)
         * [make build-sdk](#make-build-sdk)
+        * [make run-sdk-command](#make-run-sdk-command)
         * [make run-sdk-conformance-tests](#make-run-sdk-conformance-tests)
         * [make clean-sdk-conformance-tests](#make-clean-sdk-conformance-tests)
         * [make test](#make-test)
@@ -479,6 +480,10 @@ Build all the sdks required for Agones
 #### `make build-sdk`
 Next command `make build-sdk SDK_FOLDER=[SDK_TYPE]` will build SDK of `SDK_TYPE`.
 For instance, in order to build the cpp sdk static and dynamic libraries (linux libraries only) use `SDK_FOLDER=cpp`
+
+#### `make run-sdk-command`
+Next command `make run-sdk-command COMMAND=[COMMAND] SDK_FOLDER=[SDK_TYPE]` will execute command for `SDK_TYPE`.
+For instance, in order to generate swagger codes when you change swagger.json definition, use `make run-sdk-command COMMAND=gen SDK_FOLDER=restapi`
 
 #### `make run-sdk-conformance-local`
 Run Agones sidecar which would wait for all requests from the SDK client.

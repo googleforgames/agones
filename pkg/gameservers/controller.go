@@ -28,6 +28,7 @@ import (
 	getterv1 "agones.dev/agones/pkg/client/clientset/versioned/typed/agones/v1"
 	"agones.dev/agones/pkg/client/informers/externalversions"
 	listerv1 "agones.dev/agones/pkg/client/listers/agones/v1"
+	"agones.dev/agones/pkg/cloudproduct"
 	"agones.dev/agones/pkg/util/crd"
 	"agones.dev/agones/pkg/util/logfields"
 	"agones.dev/agones/pkg/util/runtime"
@@ -88,6 +89,7 @@ type Controller struct {
 	creationWorkerQueue    *workerqueue.WorkerQueue // handles creation only
 	deletionWorkerQueue    *workerqueue.WorkerQueue // handles deletion only
 	recorder               record.EventRecorder
+	cloudProduct           cloudproduct.CloudProduct
 }
 
 // NewController returns a new gameserver crd controller
@@ -106,7 +108,9 @@ func NewController(
 	kubeInformerFactory informers.SharedInformerFactory,
 	extClient extclientset.Interface,
 	agonesClient versioned.Interface,
-	agonesInformerFactory externalversions.SharedInformerFactory) *Controller {
+	agonesInformerFactory externalversions.SharedInformerFactory,
+	cloudProduct cloudproduct.CloudProduct,
+) *Controller {
 
 	pods := kubeInformerFactory.Core().V1().Pods()
 	gameServers := agonesInformerFactory.Agones().V1().GameServers()
@@ -131,8 +135,9 @@ func NewController(
 		nodeSynced:             kubeInformerFactory.Core().V1().Nodes().Informer().HasSynced,
 		portAllocator:          NewPortAllocator(minPort, maxPort, kubeInformerFactory, agonesInformerFactory),
 		healthController:       NewHealthController(health, kubeClient, agonesClient, kubeInformerFactory, agonesInformerFactory),
-		migrationController:    NewMigrationController(health, kubeClient, agonesClient, kubeInformerFactory, agonesInformerFactory),
+		migrationController:    NewMigrationController(health, kubeClient, agonesClient, kubeInformerFactory, agonesInformerFactory, cloudProduct),
 		missingPodController:   NewMissingPodController(health, kubeClient, agonesClient, kubeInformerFactory, agonesInformerFactory),
+		cloudProduct:           cloudProduct,
 	}
 
 	c.baseLogger = runtime.NewLoggerWithType(c)
@@ -765,7 +770,7 @@ func (c *Controller) syncGameServerStartingState(ctx context.Context, gs *agones
 		return gs, errors.Wrapf(err, "error retrieving node %s for Pod %s", pod.Spec.NodeName, pod.ObjectMeta.Name)
 	}
 	gsCopy := gs.DeepCopy()
-	gsCopy, err = applyGameServerAddressAndPort(gsCopy, node, pod)
+	gsCopy, err = applyGameServerAddressAndPort(gsCopy, node, pod, c.cloudProduct.SyncPodPortsToGameServer)
 	if err != nil {
 		return gs, err
 	}
@@ -816,7 +821,7 @@ func (c *Controller) syncGameServerRequestReadyState(ctx context.Context, gs *ag
 		if err != nil {
 			return gs, errors.Wrapf(err, "error retrieving node %s for Pod %s", pod.Spec.NodeName, pod.ObjectMeta.Name)
 		}
-		gsCopy, err = applyGameServerAddressAndPort(gsCopy, node, pod)
+		gsCopy, err = applyGameServerAddressAndPort(gsCopy, node, pod, c.cloudProduct.SyncPodPortsToGameServer)
 		if err != nil {
 			return gs, err
 		}

@@ -348,11 +348,29 @@ func (c *Controller) recordGameServerStatusChanges(old, next interface{}) {
 	if !ok {
 		return
 	}
-	if newGs.Status.State != oldGs.Status.State {
-		fleetName := newGs.Labels[agonesv1.FleetNameLabel]
-		if fleetName == "" {
-			fleetName = noneValue
+
+	fleetName := newGs.Labels[agonesv1.FleetNameLabel]
+	if fleetName == "" {
+		fleetName = noneValue
+	}
+
+	if runtime.FeatureEnabled(runtime.FeaturePlayerTracking) &&
+		newGs.Status.Players != nil &&
+		oldGs.Status.Players != nil {
+
+		if newGs.Status.Players.Count != oldGs.Status.Players.Count {
+			recordWithTags(context.Background(), []tag.Mutator{tag.Upsert(keyFleetName, fleetName),
+				tag.Upsert(keyName, newGs.GetName()), tag.Upsert(keyNamespace, newGs.GetNamespace())}, gameServerPlayerConnectedTotal.M(newGs.Status.Players.Count))
 		}
+
+		if newGs.Status.Players.Capacity-newGs.Status.Players.Count != oldGs.Status.Players.Capacity-oldGs.Status.Players.Count {
+			recordWithTags(context.Background(), []tag.Mutator{tag.Upsert(keyFleetName, fleetName),
+				tag.Upsert(keyName, newGs.GetName()), tag.Upsert(keyNamespace, newGs.GetNamespace())}, gameServerPlayerCapacityTotal.M(newGs.Status.Players.Capacity-newGs.Status.Players.Count))
+		}
+
+	}
+
+	if newGs.Status.State != oldGs.Status.State {
 		recordWithTags(context.Background(), []tag.Mutator{tag.Upsert(keyType, string(newGs.Status.State)),
 			tag.Upsert(keyFleetName, fleetName), tag.Upsert(keyNamespace, newGs.GetNamespace())}, gameServerTotalStats.M(1))
 

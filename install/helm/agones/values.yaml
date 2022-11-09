@@ -44,6 +44,7 @@ agones:
       annotations: {}
   createPriorityClass: true
   priorityClassName: agones-system
+  cloudProduct: "auto"
   controller:
     resources: {}
       # requests:
@@ -211,7 +212,7 @@ agones:
     allocationBatchWaitTime: 500ms
   image:
     registry: gcr.io/agones-images
-    tag: 1.27.0-rc
+    tag: 1.28.0-dev
     controller:
       name: agones-controller
       pullPolicy: IfNotPresent
