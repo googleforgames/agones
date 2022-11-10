@@ -19,10 +19,14 @@ import (
 	"fmt"
 
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
+	"agones.dev/agones/pkg/client/informers/externalversions"
 	"agones.dev/agones/pkg/cloudproduct/generic"
 	"agones.dev/agones/pkg/cloudproduct/gke"
+	"agones.dev/agones/pkg/portallocator"
 	"agones.dev/agones/pkg/util/runtime"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -33,6 +37,12 @@ type CloudProduct interface {
 	// SyncPodPortsToGameServer runs after a Pod has been assigned to a Node and before we sync
 	// Pod host ports to the GameServer status.
 	SyncPodPortsToGameServer(*agonesv1.GameServer, *corev1.Pod) error
+
+	// ValidateGameServer is called by GameServer.Validate to allow for product specific validation.
+	ValidateGameServer(*agonesv1.GameServer) []metav1.StatusCause
+
+	// NewPortAllocator creates a PortAllocator. See gameservers.NewPortAllocator for parameters.
+	NewPortAllocator(int32, int32, informers.SharedInformerFactory, externalversions.SharedInformerFactory) portallocator.Interface
 }
 
 const (

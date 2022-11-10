@@ -29,6 +29,7 @@ import (
 	"agones.dev/agones/pkg/client/informers/externalversions"
 	listerv1 "agones.dev/agones/pkg/client/listers/agones/v1"
 	"agones.dev/agones/pkg/cloudproduct"
+	"agones.dev/agones/pkg/portallocator"
 	"agones.dev/agones/pkg/util/crd"
 	"agones.dev/agones/pkg/util/logfields"
 	"agones.dev/agones/pkg/util/runtime"
@@ -83,7 +84,7 @@ type Controller struct {
 	gameServerSynced       cache.InformerSynced
 	nodeLister             corelisterv1.NodeLister
 	nodeSynced             cache.InformerSynced
-	portAllocator          *PortAllocator
+	portAllocator          portallocator.Interface
 	healthController       *HealthController
 	migrationController    *MigrationController
 	missingPodController   *MissingPodController
@@ -135,7 +136,7 @@ func NewController(
 		gameServerSynced:       gsInformer.HasSynced,
 		nodeLister:             kubeInformerFactory.Core().V1().Nodes().Lister(),
 		nodeSynced:             kubeInformerFactory.Core().V1().Nodes().Informer().HasSynced,
-		portAllocator:          NewPortAllocator(minPort, maxPort, kubeInformerFactory, agonesInformerFactory),
+		portAllocator:          cloudProduct.NewPortAllocator(minPort, maxPort, kubeInformerFactory, agonesInformerFactory),
 		healthController:       NewHealthController(health, kubeClient, agonesClient, kubeInformerFactory, agonesInformerFactory),
 		migrationController:    NewMigrationController(health, kubeClient, agonesClient, kubeInformerFactory, agonesInformerFactory, cloudProduct),
 		missingPodController:   NewMissingPodController(health, kubeClient, agonesClient, kubeInformerFactory, agonesInformerFactory),
@@ -287,6 +288,11 @@ func (c *Controller) creationValidationHandler(review admissionv1.AdmissionRevie
 	c.loggerForGameServer(gs).WithField("review", review).Debug("creationValidationHandler")
 
 	causes, ok := gs.Validate()
+	// Merge product-specific validation - we handle it here to avoid introducing cloudproduct to the api packages.
+	if productCauses := c.cloudProduct.ValidateGameServer(gs); len(productCauses) > 0 {
+		ok = false
+		causes = append(causes, productCauses...)
+	}
 	if !ok {
 		review.Response.Allowed = false
 		details := metav1.StatusDetails{
