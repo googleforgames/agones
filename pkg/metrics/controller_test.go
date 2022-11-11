@@ -25,6 +25,7 @@ import (
 	agtesting "agones.dev/agones/pkg/testing"
 	"agones.dev/agones/pkg/util/runtime"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.opencensus.io/metric/metricdata"
@@ -100,14 +101,21 @@ func TestControllerGameServerCount(t *testing.T) {
 	c := newFakeController()
 	defer c.close()
 
+	c.run(t)
+	require.True(t, c.sync())
+
 	gs1 := gameServerWithFleetAndState("test-fleet", agonesv1.GameServerStateCreating)
 	c.gsWatch.Add(gs1)
+	require.Eventually(t, func() bool {
+		gs, err := c.gameServerLister.GameServers(gs1.ObjectMeta.Namespace).Get(gs1.ObjectMeta.Name)
+		assert.NoError(t, err)
+		return gs.Status.State == agonesv1.GameServerStateCreating
+	}, 5*time.Second, time.Second)
+	c.collect()
+
 	gs1 = gs1.DeepCopy()
 	gs1.Status.State = agonesv1.GameServerStateReady
 	c.gsWatch.Modify(gs1)
-
-	c.run(t)
-	require.True(t, c.sync())
 	require.Eventually(t, func() bool {
 		gs, err := c.gameServerLister.GameServers(gs1.ObjectMeta.Namespace).Get(gs1.ObjectMeta.Name)
 		assert.NoError(t, err)
@@ -121,7 +129,6 @@ func TestControllerGameServerCount(t *testing.T) {
 	c.gsWatch.Add(gameServerWithFleetAndState("", agonesv1.GameServerStatePortAllocation))
 	c.gsWatch.Add(gameServerWithFleetAndState("", agonesv1.GameServerStatePortAllocation))
 
-	c.run(t)
 	require.True(t, c.sync())
 	// Port allocation is last, so wait for that come to the state we expect
 	require.Eventually(t, func() bool {
@@ -131,10 +138,11 @@ func TestControllerGameServerCount(t *testing.T) {
 
 		for _, m := range ex.metrics {
 			if m.Descriptor.Name == gameServersCountName {
-				for _, d := range m.TimeSeries {
-					if d.LabelValues[0].Value == "none" && d.LabelValues[1].Value == defaultNs && d.LabelValues[2].Value == "PortAllocation" {
-						return d.Points[0].Value == int64(2)
-					}
+				if len(m.TimeSeries) == 4 {
+					return true
+				} else {
+					logrus.WithField("m", m).Info("Metrics")
+					return false
 				}
 			}
 		}
@@ -144,6 +152,7 @@ func TestControllerGameServerCount(t *testing.T) {
 
 	reader.ReadAndExport(exporter)
 	assertMetricData(t, exporter, gameServersCountName, []expectedMetricData{
+		{labels: []string{"test-fleet", defaultNs, "Creating"}, val: int64(0)},
 		{labels: []string{"test-fleet", defaultNs, "Ready"}, val: int64(0)},
 		{labels: []string{"test-fleet", defaultNs, "Shutdown"}, val: int64(1)},
 		{labels: []string{"none", defaultNs, "PortAllocation"}, val: int64(2)},
