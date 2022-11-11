@@ -17,6 +17,7 @@ package metrics
 import (
 	"context"
 	"reflect"
+	"strconv"
 	"testing"
 
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
@@ -32,6 +33,11 @@ import (
 	"k8s.io/apimachinery/pkg/watch"
 	k8stesting "k8s.io/client-go/testing"
 	"k8s.io/client-go/tools/cache"
+)
+
+var (
+	// counter for unique GameServer names
+	counter = 0
 )
 
 // newFakeController returns a controller, backed by the fake Clientset
@@ -124,9 +130,11 @@ func gameServerWithFleetAndState(fleetName string, state agonesv1.GameServerStat
 	if fleetName != "" {
 		lbs[agonesv1.FleetNameLabel] = fleetName
 	}
+	// ensure the name is unique each time.
+	counter++
 	gs := &agonesv1.GameServer{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      rand.String(10),
+			Name:      rand.String(10) + strconv.Itoa(counter),
 			Namespace: "default",
 			UID:       uuid.NewUUID(),
 			Labels:    lbs,
