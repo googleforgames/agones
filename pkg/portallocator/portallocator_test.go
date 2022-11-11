@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package gameservers
+package portallocator
 
 import (
 	"fmt"
@@ -48,7 +48,7 @@ func TestPortAllocatorAllocate(t *testing.T) {
 
 	t.Run("test allocated port counts", func(t *testing.T) {
 		m := agtesting.NewMocks()
-		pa := NewPortAllocator(10, 50, m.KubeInformerFactory, m.AgonesInformerFactory)
+		pa := newAllocator(10, 50, m.KubeInformerFactory, m.AgonesInformerFactory)
 		nodeWatch := watch.NewFake()
 		m.KubeClient.AddWatchReactor("nodes", k8stesting.DefaultWatchReactor(nodeWatch, nil))
 
@@ -137,7 +137,7 @@ func TestPortAllocatorAllocate(t *testing.T) {
 
 	t.Run("ports are all allocated", func(t *testing.T) {
 		m := agtesting.NewMocks()
-		pa := NewPortAllocator(10, 20, m.KubeInformerFactory, m.AgonesInformerFactory)
+		pa := newAllocator(10, 20, m.KubeInformerFactory, m.AgonesInformerFactory)
 		nodeWatch := watch.NewFake()
 		m.KubeClient.AddWatchReactor("nodes", k8stesting.DefaultWatchReactor(nodeWatch, nil))
 
@@ -173,7 +173,7 @@ func TestPortAllocatorAllocate(t *testing.T) {
 		m := agtesting.NewMocks()
 		minPort := int32(10)
 		maxPort := int32(20)
-		pa := NewPortAllocator(minPort, maxPort, m.KubeInformerFactory, m.AgonesInformerFactory)
+		pa := newAllocator(minPort, maxPort, m.KubeInformerFactory, m.AgonesInformerFactory)
 		nodeWatch := watch.NewFake()
 		m.KubeClient.AddWatchReactor("nodes", k8stesting.DefaultWatchReactor(nodeWatch, nil))
 
@@ -241,7 +241,7 @@ func TestPortAllocatorAllocate(t *testing.T) {
 	t.Run("ports are unique in a node", func(t *testing.T) {
 		fixture := dynamicGameServerFixture()
 		m := agtesting.NewMocks()
-		pa := NewPortAllocator(10, 20, m.KubeInformerFactory, m.AgonesInformerFactory)
+		pa := newAllocator(10, 20, m.KubeInformerFactory, m.AgonesInformerFactory)
 
 		m.KubeClient.AddReactor("list", "nodes", func(action k8stesting.Action) (bool, runtime.Object, error) {
 			nl := &corev1.NodeList{Items: []corev1.Node{n1}}
@@ -264,7 +264,7 @@ func TestPortAllocatorAllocate(t *testing.T) {
 
 	t.Run("portPolicy as an empty string", func(t *testing.T) {
 		m := agtesting.NewMocks()
-		pa := NewPortAllocator(10, 50, m.KubeInformerFactory, m.AgonesInformerFactory)
+		pa := newAllocator(10, 50, m.KubeInformerFactory, m.AgonesInformerFactory)
 		nodeWatch := watch.NewFake()
 		m.KubeClient.AddWatchReactor("nodes", k8stesting.DefaultWatchReactor(nodeWatch, nil))
 
@@ -292,7 +292,7 @@ func TestPortAllocatorAllocate(t *testing.T) {
 func TestPortAllocatorMultithreadAllocate(t *testing.T) {
 	fixture := dynamicGameServerFixture()
 	m := agtesting.NewMocks()
-	pa := NewPortAllocator(10, 20, m.KubeInformerFactory, m.AgonesInformerFactory)
+	pa := newAllocator(10, 20, m.KubeInformerFactory, m.AgonesInformerFactory)
 
 	m.KubeClient.AddReactor("list", "nodes", func(action k8stesting.Action) (bool, runtime.Object, error) {
 		nl := &corev1.NodeList{Items: []corev1.Node{n1, n2}}
@@ -331,7 +331,7 @@ func TestPortAllocatorDeAllocate(t *testing.T) {
 
 	fixture := dynamicGameServerFixture()
 	m := agtesting.NewMocks()
-	pa := NewPortAllocator(10, 20, m.KubeInformerFactory, m.AgonesInformerFactory)
+	pa := newAllocator(10, 20, m.KubeInformerFactory, m.AgonesInformerFactory)
 	nodes := []corev1.Node{n1, n2, n3}
 	m.KubeClient.AddReactor("list", "nodes", func(action k8stesting.Action) (bool, runtime.Object, error) {
 		nl := &corev1.NodeList{Items: nodes}
@@ -372,7 +372,7 @@ func TestPortAllocatorSyncPortAllocations(t *testing.T) {
 	t.Parallel()
 
 	m := agtesting.NewMocks()
-	pa := NewPortAllocator(10, 20, m.KubeInformerFactory, m.AgonesInformerFactory)
+	pa := newAllocator(10, 20, m.KubeInformerFactory, m.AgonesInformerFactory)
 
 	m.KubeClient.AddReactor("list", "nodes", func(action k8stesting.Action) (bool, runtime.Object, error) {
 		nl := &corev1.NodeList{Items: []corev1.Node{n1, n2, n3}}
@@ -463,7 +463,7 @@ func TestPortAllocatorSyncDeleteGameServer(t *testing.T) {
 		},
 		Status: agonesv1.GameServerStatus{State: agonesv1.GameServerStateReady, Ports: []agonesv1.GameServerStatusPort{{Port: 10}}, NodeName: n2.ObjectMeta.Name}}
 
-	pa := NewPortAllocator(10, 20, m.KubeInformerFactory, m.AgonesInformerFactory)
+	pa := newAllocator(10, 20, m.KubeInformerFactory, m.AgonesInformerFactory)
 
 	m.KubeClient.AddReactor("list", "nodes", func(action k8stesting.Action) (bool, runtime.Object, error) {
 		nl := &corev1.NodeList{Items: []corev1.Node{n1, n2, n3}}
@@ -522,7 +522,7 @@ func TestNodePortAllocation(t *testing.T) {
 	t.Parallel()
 
 	m := agtesting.NewMocks()
-	pa := NewPortAllocator(10, 20, m.KubeInformerFactory, m.AgonesInformerFactory)
+	pa := newAllocator(10, 20, m.KubeInformerFactory, m.AgonesInformerFactory)
 	nodes := []corev1.Node{n1, n2, n3}
 	m.KubeClient.AddReactor("list", "nodes", func(action k8stesting.Action) (bool, runtime.Object, error) {
 		nl := &corev1.NodeList{Items: nodes}
@@ -559,7 +559,7 @@ func TestTakePortAllocation(t *testing.T) {
 func TestPortAllocatorRegisterExistingGameServerPorts(t *testing.T) {
 	t.Parallel()
 	m := agtesting.NewMocks()
-	pa := NewPortAllocator(10, 13, m.KubeInformerFactory, m.AgonesInformerFactory)
+	pa := newAllocator(10, 13, m.KubeInformerFactory, m.AgonesInformerFactory)
 
 	gs1 := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs1", UID: "1"},
 		Spec: agonesv1.GameServerSpec{
@@ -603,7 +603,7 @@ func dynamicGameServerFixture() *agonesv1.GameServer {
 
 // countAllocatedPorts counts how many of a given port have been
 // allocated across nodes
-func countAllocatedPorts(pa *PortAllocator, p int32) int {
+func countAllocatedPorts(pa *portAllocator, p int32) int {
 	count := 0
 	for _, node := range pa.portAllocations {
 		if node[p] {
@@ -614,7 +614,7 @@ func countAllocatedPorts(pa *PortAllocator, p int32) int {
 }
 
 // countTotalAllocatedPorts counts the total number of allocated ports
-func countTotalAllocatedPorts(pa *PortAllocator) int {
+func countTotalAllocatedPorts(pa *portAllocator) int {
 	count := 0
 	for _, node := range pa.portAllocations {
 		for _, alloc := range node {
@@ -626,7 +626,7 @@ func countTotalAllocatedPorts(pa *PortAllocator) int {
 	return count
 }
 
-func countTotalPorts(pa *PortAllocator) int {
+func countTotalPorts(pa *portAllocator) int {
 	count := 0
 	for _, node := range pa.portAllocations {
 		count += len(node)
