@@ -184,18 +184,6 @@ This number could vary depending on the underlying scaling capabilities
 of your cloud provider, Kubernetes cluster configuration, and your GameServer Ready startup time, and
 therefore we recommend you always run your own load tests for your specific game and game server containers.
 
-## Operating Systems
-
-### Are Windows Container game servers supported by Agones?
-
-As of Kubernetes 1.14, Windows Container support
-[has been released as GA](https://kubernetes.io/blog/2019/03/25/kubernetes-1-14-release-announcement/).
-
-That being said, Agones has yet to be tested with Windows Nodes and work on this feature has not been started.
-
-If you are interested in this feature and/or contributing, please add a comment to the 
-[Running windows game server](https://github.com/googleforgames/agones/issues/54) ticket.
-
 ## Ecosystem
 
 ### Is there an example of Agones and Open Match working together? 
