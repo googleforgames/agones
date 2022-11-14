@@ -65,4 +65,12 @@ status:
           nullable: true
           items:
             type: string
+{{- if .featureLifecycleContract }}
+    immutableReplicas:
+      type: integer
+      title: Immutable count of Pods to a GameServer. Always 1. (Implementation detail of implementing the Scale subresource.)
+      default: 1
+      minimum: 1
+      maximum: 1
+{{- end}}
 {{- end}}
