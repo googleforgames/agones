@@ -30,7 +30,7 @@ variable "cluster" {
   type        = map
 
   default = {
-    "zone"                    = "us-west1-c"
+    "location"		      = "us-west1-c"
     "name"                    = "test-cluster"
     "machineType"             = "e2-standard-4"
     "initialNodeCount"        = "4"
@@ -40,6 +40,9 @@ variable "cluster" {
     "kubernetesVersion"       = "1.23"
     "windowsInitialNodeCount" = "0"
     "windowsMachineType"      = "e2-standard-4"
+    "autoscale"		      = false
+    "minNodeCount"	      = "1"
+    "maxNodeCount"	      = "5"
   }
 }
 
