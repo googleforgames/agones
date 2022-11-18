@@ -282,7 +282,22 @@ spec:
       imagePullSecrets:
         - name: {{.Values.agones.image.controller.pullSecret}}
 {{- end }}
-
+{{- if .Values.agones.allocator.pdb.enabled }}
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: agones-allocator-pdb
+spec:
+  minAvailable: {{ .Values.agones.allocator.pdb.minAvailable }}
+  maxUnavailable: {{ .Values.agones.allocator.pdb.maxUnavailable }}
+  selector:
+    matchLabels:
+      multicluster.agones.dev/role: allocator
+      app: {{ template "agones.name" . }}
+      release: {{ .Release.Name }}
+      heritage: {{ .Release.Service }}
+{{- end }}
 ---
 # Create a ClusterRole in that grants access to the agones allocation api
 apiVersion: rbac.authorization.k8s.io/v1

@@ -23,7 +23,8 @@ data "google_client_config" "default" {}
 # Set values to default if not key was not set in original map
 locals {
   project                 = lookup(var.cluster, "project", "agones")
-  zone                    = lookup(var.cluster, "zone", "us-west1-c")
+  location		  = lookup(var.cluster, "location", "us-west1-c")
+  zone                    = lookup(var.cluster, "zone", "")
   name                    = lookup(var.cluster, "name", "test-cluster")
   machineType             = lookup(var.cluster, "machineType", "e2-standard-4")
   initialNodeCount        = lookup(var.cluster, "initialNodeCount", "4")
@@ -33,6 +34,9 @@ locals {
   kubernetesVersion       = lookup(var.cluster, "kubernetesVersion", "1.23")
   windowsInitialNodeCount = lookup(var.cluster, "windowsInitialNodeCount", "0")
   windowsMachineType      = lookup(var.cluster, "windowsMachineType", "e2-standard-4")
+  autoscale 		  = lookup(var.cluster, "autoscale", false)
+  minNodeCount		  = lookup(var.cluster, "minNodeCount", "1")
+  maxNodeCount		  = lookup(var.cluster, "maxNodeCount", "5")
 }
 
 # echo command used for debugging purpose
@@ -56,7 +60,7 @@ resource "null_resource" "test-setting-variables" {
 
 resource "google_container_cluster" "primary" {
   name       = local.name
-  location   = local.zone
+  location   = local.zone != "" ? local.zone : local.location
   project    = local.project
   network    = local.network
   subnetwork = local.subnetwork
@@ -65,8 +69,16 @@ resource "google_container_cluster" "primary" {
 
   node_pool {
     name       = "default"
-    node_count = local.initialNodeCount
+    node_count = local.autoscale ? null : local.initialNodeCount
     version    = local.kubernetesVersion
+
+    dynamic "autoscaling" {
+      for_each = local.autoscale ? [1] : []
+      content {
+      	min_node_count = local.minNodeCount
+	max_node_count = local.maxNodeCount
+      }
+    }
 
     management {
       auto_upgrade = false
