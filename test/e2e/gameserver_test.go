@@ -259,8 +259,7 @@ func TestGameServerUnhealthyAfterDeletingPod(t *testing.T) {
 }
 
 func TestGameServerRestartBeforeReadyCrash(t *testing.T) {
-	// TODO(#2445): The feature is flaky when pod updates are slow, run serially to avoid.
-	// t.Parallel()
+	t.Parallel()
 	ctx := context.Background()
 	logger := e2eframework.TestLogger(t)
 
@@ -333,8 +332,9 @@ func TestGameServerRestartBeforeReadyCrash(t *testing.T) {
 	})
 	assert.NoError(t, err)
 
-	// check that the GameServer is not in an unhealthy state. If it does happen, it should happen pretty quick
-	newGs, err = framework.WaitForGameServerState(t, newGs, agonesv1.GameServerStateUnhealthy, 5*time.Second)
+	// check that the GameServer is not in an unhealthy state. If it does happen, it should happen pretty quick.
+	// We wait an extra 5s to close the kubelet race in #2445.
+	newGs, err = framework.WaitForGameServerState(t, newGs, agonesv1.GameServerStateUnhealthy, 10*time.Second)
 	// should be an error, as the state should not occur
 	if !assert.Error(t, err) {
 		assert.FailNow(t, "GameServer should not be Unhealthy")
