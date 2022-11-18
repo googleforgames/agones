@@ -88,7 +88,7 @@ RUN rm -f /etc/apt/sources.list.d/chris-lea-node_js-*.list
 RUN rm -f /etc/apt/sources.list.d/chris-lea-node_js-*.list.save
 
 ARG KEYRING=/usr/share/keyrings/nodesource.gpg
-ARG VERSION=node_16.x
+ARG VERSION=node_18.x
 
 RUN curl -fsSL https://deb.nodesource.com/gpgkey/nodesource.gpg.key | gpg --dearmor | tee "$KEYRING" >/dev/null
 RUN gpg --no-default-keyring --keyring "$KEYRING" --list-keys

@@ -71,7 +71,8 @@ var (
 
 // SDKServer is a gRPC server, that is meant to be a sidecar
 // for a GameServer that will update the game server status on SDK requests
-// nolint: maligned
+//
+//nolint:govet // ignore fieldalignment, singleton
 type SDKServer struct {
 	logger             *logrus.Entry
 	gameServerName     string

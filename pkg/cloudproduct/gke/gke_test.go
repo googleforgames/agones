@@ -17,8 +17,8 @@ import (
 	"testing"
 
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
-	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -66,13 +66,193 @@ func TestSyncPodPortsToGameServer(t *testing.T) {
 				return
 			}
 			if assert.NoError(t, err) {
-				if diff := cmp.Diff(tc.wantGS, tc.gs); diff != "" {
-					t.Errorf("GameServer diff (-want +got):\n%s", diff)
-				}
-				if diff := cmp.Diff(oldPod, tc.pod); diff != "" {
-					t.Errorf("Pod was modified (-old +new):\n%s", diff)
+				require.Equal(t, tc.wantGS, tc.gs)
+				require.Equal(t, oldPod, tc.pod)
+			}
+		})
+	}
+}
+
+func TestValidateGameServer(t *testing.T) {
+	for name, tc := range map[string]struct {
+		ports []agonesv1.GameServerPort
+		want  []metav1.StatusCause
+	}{
+		"no ports => validated": {},
+		"good ports => validated": {
+			ports: []agonesv1.GameServerPort{
+				{
+					Name:          "some-tcpudp",
+					PortPolicy:    agonesv1.Dynamic,
+					ContainerPort: 4321,
+					Protocol:      agonesv1.ProtocolTCPUDP,
+				},
+				{
+					Name:          "awesome-udp",
+					PortPolicy:    agonesv1.Dynamic,
+					ContainerPort: 1234,
+					Protocol:      corev1.ProtocolUDP,
+				},
+				{
+					Name:          "awesome-tcp",
+					PortPolicy:    agonesv1.Dynamic,
+					ContainerPort: 1234,
+					Protocol:      corev1.ProtocolTCP,
+				},
+			},
+		},
+		"bad policy => fails validation": {
+			ports: []agonesv1.GameServerPort{
+				{
+					Name:          "best-tcpudp",
+					PortPolicy:    agonesv1.Dynamic,
+					ContainerPort: 4321,
+					Protocol:      agonesv1.ProtocolTCPUDP,
+				},
+				{
+					Name:          "bad-udp",
+					PortPolicy:    agonesv1.Static,
+					ContainerPort: 1234,
+					Protocol:      corev1.ProtocolUDP,
+				},
+				{
+					Name:          "another-bad-udp",
+					PortPolicy:    agonesv1.Static,
+					ContainerPort: 1234,
+					Protocol:      corev1.ProtocolUDP,
+				},
+			},
+			want: []metav1.StatusCause{
+				{
+					Type:    "FieldValueInvalid",
+					Message: "PortPolicy must be Dynamic on GKE Autopilot",
+					Field:   "bad-udp.portPolicy",
+				},
+				{
+					Type:    "FieldValueInvalid",
+					Message: "PortPolicy must be Dynamic on GKE Autopilot",
+					Field:   "another-bad-udp.portPolicy",
+				},
+			},
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			causes := (&gkeAutopilot{}).ValidateGameServer(&agonesv1.GameServer{Spec: agonesv1.GameServerSpec{Ports: tc.ports}})
+			require.Equal(t, tc.want, causes)
+		})
+	}
+}
+
+func TestAutopilotPortAllocator(t *testing.T) {
+	for name, tc := range map[string]struct {
+		ports          []agonesv1.GameServerPort
+		wantPorts      []agonesv1.GameServerPort
+		wantAnnotation bool
+	}{
+		"no ports => no change": {},
+		"ports => assigned and annotated": {
+			ports: []agonesv1.GameServerPort{
+				{
+					Name:          "some-tcpudp",
+					PortPolicy:    agonesv1.Dynamic,
+					ContainerPort: 4321,
+					Protocol:      agonesv1.ProtocolTCPUDP,
+				},
+				{
+					Name:          "awesome-udp",
+					PortPolicy:    agonesv1.Dynamic,
+					ContainerPort: 1234,
+					Protocol:      corev1.ProtocolUDP,
+				},
+				{
+					Name:          "awesome-tcp",
+					PortPolicy:    agonesv1.Dynamic,
+					ContainerPort: 1234,
+					Protocol:      corev1.ProtocolTCP,
+				},
+				{
+					Name:          "another-tcpudp",
+					PortPolicy:    agonesv1.Dynamic,
+					ContainerPort: 5678,
+					Protocol:      agonesv1.ProtocolTCPUDP,
+				},
+			},
+			wantPorts: []agonesv1.GameServerPort{
+				{
+					Name:          "some-tcpudp-tcp",
+					PortPolicy:    agonesv1.Dynamic,
+					ContainerPort: 4321,
+					HostPort:      1,
+					Protocol:      corev1.ProtocolTCP,
+				},
+				{
+					Name:          "some-tcpudp-udp",
+					PortPolicy:    agonesv1.Dynamic,
+					ContainerPort: 4321,
+					HostPort:      1,
+					Protocol:      corev1.ProtocolUDP,
+				},
+				{
+					Name:          "awesome-udp",
+					PortPolicy:    agonesv1.Dynamic,
+					ContainerPort: 1234,
+					HostPort:      2,
+					Protocol:      corev1.ProtocolUDP,
+				},
+				{
+					Name:          "awesome-tcp",
+					PortPolicy:    agonesv1.Dynamic,
+					ContainerPort: 1234,
+					HostPort:      3,
+					Protocol:      corev1.ProtocolTCP,
+				},
+				{
+					Name:          "another-tcpudp-tcp",
+					PortPolicy:    agonesv1.Dynamic,
+					ContainerPort: 5678,
+					HostPort:      4,
+					Protocol:      corev1.ProtocolTCP,
+				},
+				{
+					Name:          "another-tcpudp-udp",
+					PortPolicy:    agonesv1.Dynamic,
+					ContainerPort: 5678,
+					HostPort:      4,
+					Protocol:      corev1.ProtocolUDP,
+				},
+			},
+			wantAnnotation: true,
+		},
+		"bad policy => no change (should be rejected by webhooks previously)": {
+			ports: []agonesv1.GameServerPort{
+				{
+					Name:          "awesome-udp",
+					PortPolicy:    agonesv1.Static,
+					ContainerPort: 1234,
+					Protocol:      corev1.ProtocolUDP,
+				},
+			},
+			wantPorts: []agonesv1.GameServerPort{
+				{
+					Name:          "awesome-udp",
+					PortPolicy:    agonesv1.Static,
+					ContainerPort: 1234,
+					Protocol:      corev1.ProtocolUDP,
+				},
+			},
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			gs := (&autopilotPortAllocator{minPort: 8000, maxPort: 9000}).Allocate(&agonesv1.GameServer{Spec: agonesv1.GameServerSpec{Ports: tc.ports}})
+			wantGS := &agonesv1.GameServer{Spec: agonesv1.GameServerSpec{Ports: tc.wantPorts}}
+			if tc.wantAnnotation {
+				wantGS.Spec.Template = corev1.PodTemplateSpec{
+					ObjectMeta: metav1.ObjectMeta{
+						Annotations: map[string]string{"autopilot.gke.io/host-port-assignment": `{"min":8000,"max":9000}`},
+					},
 				}
 			}
+			require.Equal(t, wantGS, gs)
 		})
 	}
 }

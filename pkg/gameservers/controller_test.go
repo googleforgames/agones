@@ -126,10 +126,10 @@ func TestControllerSyncGameServer(t *testing.T) {
 			return true, gs, nil
 		})
 
-		ctx, cancel := agtesting.StartInformers(mocks, c.gameServerSynced, c.portAllocator.nodeSynced)
+		ctx, cancel := agtesting.StartInformers(mocks, c.gameServerSynced)
 		defer cancel()
 
-		err := c.portAllocator.syncAll()
+		err := c.portAllocator.Run(ctx)
 		assert.Nil(t, err)
 
 		err = c.syncGameServer(ctx, "default/test")
@@ -213,10 +213,10 @@ func TestControllerSyncGameServerWithDevIP(t *testing.T) {
 			return true, gs, nil
 		})
 
-		ctx, cancel := agtesting.StartInformers(mocks, c.gameServerSynced, c.portAllocator.nodeSynced)
+		ctx, cancel := agtesting.StartInformers(mocks, c.gameServerSynced)
 		defer cancel()
 
-		err := c.portAllocator.syncAll()
+		err := c.portAllocator.Run(ctx)
 		assert.Nil(t, err)
 
 		err = c.syncGameServer(ctx, "default/test")
@@ -241,10 +241,10 @@ func TestControllerSyncGameServerWithDevIP(t *testing.T) {
 			return true, nil, nil
 		})
 
-		ctx, cancel := agtesting.StartInformers(mocks, c.gameServerSynced, c.portAllocator.nodeSynced)
+		ctx, cancel := agtesting.StartInformers(mocks, c.gameServerSynced)
 		defer cancel()
 
-		err := c.portAllocator.syncAll()
+		err := c.portAllocator.Run(ctx)
 		require.NoError(t, err)
 
 		err = c.syncGameServer(ctx, "default/test")
@@ -695,9 +695,9 @@ func TestControllerSyncGameServerPortAllocationState(t *testing.T) {
 			return true, gs, nil
 		})
 
-		ctx, cancel := agtesting.StartInformers(mocks, c.gameServerSynced, c.portAllocator.nodeSynced)
+		ctx, cancel := agtesting.StartInformers(mocks, c.gameServerSynced)
 		defer cancel()
-		err := c.portAllocator.syncAll()
+		err := c.portAllocator.Run(ctx)
 		require.NoError(t, err)
 
 		result, err := c.syncGameServerPortAllocationState(ctx, fixture)
@@ -734,9 +734,9 @@ func TestControllerSyncGameServerPortAllocationState(t *testing.T) {
 			return true, gs, errors.New("update-err")
 		})
 
-		ctx, cancel := agtesting.StartInformers(mocks, c.gameServerSynced, c.portAllocator.nodeSynced)
+		ctx, cancel := agtesting.StartInformers(mocks, c.gameServerSynced)
 		defer cancel()
-		err := c.portAllocator.syncAll()
+		err := c.portAllocator.Run(ctx)
 		require.NoError(t, err)
 
 		_, err = c.syncGameServerPortAllocationState(ctx, fixture)

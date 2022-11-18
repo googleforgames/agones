@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package gameservers
+package portallocator
 
 import (
 	"context"
@@ -33,15 +33,27 @@ import (
 	"k8s.io/client-go/tools/cache"
 )
 
+// portallocator.Interface manages the dynamic port allocation strategy.
+//
+// The portallocator does not currently support mixing static portAllocations (or any pods with defined HostPort)
+// within the dynamic port range other than the ones it coordinates.
+type Interface interface {
+	// Run sets up the current state of port allocations and
+	// starts tracking Pod and Node changes
+	Run(ctx context.Context) error
+
+	// Allocate assigns a port to the GameServer and returns it.
+	Allocate(gs *agonesv1.GameServer) *agonesv1.GameServer
+
+	// DeAllocate marks the given ports as no longer allocated
+	DeAllocate(gs *agonesv1.GameServer)
+}
+
 // A set of port allocations for a node
 type portAllocation map[int32]bool
 
-// PortAllocator manages the dynamic port
-// allocation strategy. Only use exposed methods to ensure
-// appropriate locking is taken.
-// The PortAllocator does not currently support mixing static portAllocations (or any pods with defined HostPort)
-// within the dynamic port range other than the ones it coordinates.
-type PortAllocator struct {
+//nolint:govet // ignore fieldalignment, singleton
+type portAllocator struct {
 	logger             *logrus.Entry
 	mutex              sync.RWMutex
 	portAllocations    []portAllocation
@@ -56,18 +68,23 @@ type PortAllocator struct {
 	nodeInformer       cache.SharedIndexInformer
 }
 
-// NewPortAllocator returns a new dynamic port
-// allocator. minPort and maxPort are the top and bottom portAllocations that can be allocated in the range for
-// the game servers
-func NewPortAllocator(minPort, maxPort int32,
+// New returns a new dynamic port allocator. minPort and maxPort are the
+// top and bottom portAllocations that can be allocated in the range for
+// the game servers.
+func New(minPort, maxPort int32,
 	kubeInformerFactory informers.SharedInformerFactory,
-	agonesInformerFactory externalversions.SharedInformerFactory) *PortAllocator {
+	agonesInformerFactory externalversions.SharedInformerFactory) Interface {
+	return newAllocator(minPort, maxPort, kubeInformerFactory, agonesInformerFactory)
+}
 
+func newAllocator(minPort, maxPort int32,
+	kubeInformerFactory informers.SharedInformerFactory,
+	agonesInformerFactory externalversions.SharedInformerFactory) *portAllocator {
 	v1 := kubeInformerFactory.Core().V1()
 	nodes := v1.Nodes()
 	gameServers := agonesInformerFactory.Agones().V1().GameServers()
 
-	pa := &PortAllocator{
+	pa := &portAllocator{
 		mutex:              sync.RWMutex{},
 		minPort:            minPort,
 		maxPort:            maxPort,
@@ -91,7 +108,7 @@ func NewPortAllocator(minPort, maxPort int32,
 
 // Run sets up the current state of port allocations and
 // starts tracking Pod and Node changes
-func (pa *PortAllocator) Run(ctx context.Context) error {
+func (pa *portAllocator) Run(ctx context.Context) error {
 	pa.logger.Debug("Running")
 
 	if !cache.WaitForCacheSync(ctx.Done(), pa.gameServerSynced, pa.nodeSynced) {
@@ -107,7 +124,7 @@ func (pa *PortAllocator) Run(ctx context.Context) error {
 }
 
 // Allocate assigns a port to the GameServer and returns it.
-func (pa *PortAllocator) Allocate(gs *agonesv1.GameServer) *agonesv1.GameServer {
+func (pa *portAllocator) Allocate(gs *agonesv1.GameServer) *agonesv1.GameServer {
 	pa.mutex.Lock()
 	defer pa.mutex.Unlock()
 
@@ -203,8 +220,8 @@ func (pa *PortAllocator) Allocate(gs *agonesv1.GameServer) *agonesv1.GameServer 
 	return allocate(gs)
 }
 
-// DeAllocate marks the given port as no longer allocated
-func (pa *PortAllocator) DeAllocate(gs *agonesv1.GameServer) {
+// DeAllocate marks the given ports as no longer allocated
+func (pa *portAllocator) DeAllocate(gs *agonesv1.GameServer) {
 	// skip if it wasn't previously allocated
 
 	found := func() bool {
@@ -236,7 +253,7 @@ func (pa *PortAllocator) DeAllocate(gs *agonesv1.GameServer) {
 
 // syncDeleteGameServer when a GameServer Pod is deleted
 // make the HostPort available
-func (pa *PortAllocator) syncDeleteGameServer(object interface{}) {
+func (pa *portAllocator) syncDeleteGameServer(object interface{}) {
 	if gs, ok := object.(*agonesv1.GameServer); ok {
 		pa.logger.WithField("gs", gs).Debug("Syncing deleted GameServer")
 		pa.DeAllocate(gs)
@@ -249,7 +266,7 @@ func (pa *PortAllocator) syncDeleteGameServer(object interface{}) {
 // portAllocations are marked as taken.
 // Locks the mutex while doing this.
 // This is basically a stop the world Garbage Collection on port allocations, but it only happens on startup.
-func (pa *PortAllocator) syncAll() error {
+func (pa *portAllocator) syncAll() error {
 	pa.mutex.Lock()
 	defer pa.mutex.Unlock()
 
@@ -287,7 +304,7 @@ func (pa *PortAllocator) syncAll() error {
 // registerExistingGameServerPorts registers the gameservers against gsRegistry and the ports against nodePorts.
 // and returns an ordered list of portAllocations per cluster nodes, and an array of
 // any GameServers allocated a port, but not yet assigned a Node will returned as an array of port values.
-func (pa *PortAllocator) registerExistingGameServerPorts(gameservers []*agonesv1.GameServer, nodes []*corev1.Node, gsRegistry map[types.UID]bool) ([]portAllocation, []int32) {
+func (pa *portAllocator) registerExistingGameServerPorts(gameservers []*agonesv1.GameServer, nodes []*corev1.Node, gsRegistry map[types.UID]bool) ([]portAllocation, []int32) {
 	// setup blank port values
 	nodePortAllocation := pa.nodePortAllocation(nodes)
 	nodePortCount := make(map[string]int64, len(nodes))
@@ -339,7 +356,7 @@ func (pa *PortAllocator) registerExistingGameServerPorts(gameservers []*agonesv1
 
 // nodePortAllocation returns a map of port allocations all set to being available
 // with a map key for each node, as well as the node registry record (since we're already looping)
-func (pa *PortAllocator) nodePortAllocation(nodes []*corev1.Node) map[string]portAllocation {
+func (pa *portAllocator) nodePortAllocation(nodes []*corev1.Node) map[string]portAllocation {
 	nodePorts := map[string]portAllocation{}
 
 	for _, n := range nodes {
@@ -352,7 +369,7 @@ func (pa *PortAllocator) nodePortAllocation(nodes []*corev1.Node) map[string]por
 	return nodePorts
 }
 
-func (pa *PortAllocator) newPortAllocation() portAllocation {
+func (pa *portAllocator) newPortAllocation() portAllocation {
 	p := make(portAllocation, (pa.maxPort-pa.minPort)+1)
 	for i := pa.minPort; i <= pa.maxPort; i++ {
 		p[i] = false

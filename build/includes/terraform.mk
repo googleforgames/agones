@@ -38,6 +38,9 @@ terraform-clean:
 gcloud-terraform-cluster: GCP_CLUSTER_NODEPOOL_INITIALNODECOUNT ?= 4
 gcloud-terraform-cluster: GCP_CLUSTER_NODEPOOL_MACHINETYPE ?= e2-standard-4
 gcloud-terraform-cluster: GCP_CLUSTER_NODEPOOL_ENABLEIMAGESTREAMING ?= true
+gcloud-terraform-cluster: GCP_CLUSTER_NODEPOOL_AUTOSCALE ?= false
+gcloud-terraform-cluster: GCP_CLUSTER_NODEPOOL_MIN_NODECOUNT ?= 1
+gcloud-terraform-cluster: GCP_CLUSTER_NODEPOOL_MAX_NODECOUNT ?= 5
 gcloud-terraform-cluster: GCP_CLUSTER_NODEPOOL_WINDOWSINITIALNODECOUNT ?= 0
 gcloud-terraform-cluster: GCP_CLUSTER_NODEPOOL_WINDOWSMACHINETYPE ?= e2-standard-4
 gcloud-terraform-cluster: AGONES_VERSION ?= ''
@@ -53,8 +56,12 @@ gcloud-terraform-cluster:
 		-var name=$(GCP_TF_CLUSTER_NAME) -var machine_type="$(GCP_CLUSTER_NODEPOOL_MACHINETYPE)" \
 		-var values_file="" \
 		-var feature_gates=$(FEATURE_GATES) \
-		-var zone="$(GCP_CLUSTER_ZONE)" -var project="$(GCP_PROJECT)" \
+		-var project="$(GCP_PROJECT)" \
+		-var location="$(GCP_CLUSTER_LOCATION)" \
 		-var log_level="$(LOG_LEVEL)" \
+		-var autoscale=$(GCP_CLUSTER_NODEPOOL_AUTOSCALE) \
+		-var min_node_count=$(GCP_CLUSTER_NODEPOOL_MIN_NODECOUNT) \
+		-var max_node_count=$(GCP_CLUSTER_NODEPOOL_MAX_NODECOUNT) \
 		-var node_count=$(GCP_CLUSTER_NODEPOOL_INITIALNODECOUNT) \
 		-var enable_image_streaming=$(GCP_CLUSTER_NODEPOOL_ENABLEIMAGESTREAMING) \
 		-var windows_node_count=$(GCP_CLUSTER_NODEPOOL_WINDOWSINITIALNODECOUNT) \
@@ -66,6 +73,9 @@ gcloud-terraform-cluster:
 # Unifies previous `make gcloud-test-cluster` and `make install` targets
 gcloud-terraform-install: GCP_CLUSTER_NODEPOOL_INITIALNODECOUNT ?= 4
 gcloud-terraform-install: GCP_CLUSTER_NODEPOOL_MACHINETYPE ?= e2-standard-4
+gcloud-terraform-install: GCP_CLUSTER_NODEPOOL_AUTOSCALE ?= false
+gcloud-terraform-install: GCP_CLUSTER_NODEPOOL_MIN_NODECOUNT ?= 1
+gcloud-terraform-install: GCP_CLUSTER_NODEPOOL_MAX_NODECOUNT ?= 5
 gcloud-terraform-install: GCP_CLUSTER_NODEPOOL_WINDOWSINITIALNODECOUNT ?= 0
 gcloud-terraform-install: GCP_CLUSTER_NODEPOOL_WINDOWSMACHINETYPE ?= e2-standard-4
 gcloud-terraform-install: ALWAYS_PULL_SIDECAR := true
@@ -87,8 +97,12 @@ gcloud-terraform-install:
 		-var crd_cleanup="$(CRD_CLEANUP)" \
 		-var chart="../../../install/helm/agones/" \
 		-var name=$(GCP_TF_CLUSTER_NAME) -var machine_type="$(GCP_CLUSTER_NODEPOOL_MACHINETYPE)" \
-		-var zone=$(GCP_CLUSTER_ZONE) -var project=$(GCP_PROJECT) \
+		-var project=$(GCP_PROJECT) \
+		-var location=$(GCP_CLUSTER_LOCATION) \
 		-var log_level=$(LOG_LEVEL) \
+		-var autoscale=$(GCP_CLUSTER_NODEPOOL_AUTOSCALE) \
+		-var min_node_count=$(GCP_CLUSTER_NODEPOOL_MIN_NODECOUNT) \
+		-var max_node_count=$(GCP_CLUSTER_NODEPOOL_MAX_NODECOUNT) \
 		-var feature_gates=$(FEATURE_GATES) \
 		-var node_count=$(GCP_CLUSTER_NODEPOOL_INITIALNODECOUNT) \
 		-var windows_node_count=$(GCP_CLUSTER_NODEPOOL_WINDOWSINITIALNODECOUNT) \

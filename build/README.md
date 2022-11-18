@@ -199,7 +199,10 @@ See the table below for available customizations :
 | Parameter                                      | Description                                                                           | Default         |
 |------------------------------------------------|---------------------------------------------------------------------------------------|-----------------|
 | `GCP_CLUSTER_NAME`                             | The name of the cluster                                                               | `test-cluster`  |
-| `GCP_CLUSTER_ZONE`                             | The name of the Google Compute Engine zone in which the cluster will resides.         | `us-west1-c`    |
+| `GCP_CLUSTER_ZONE` or `GCP_CLUSTER_LOCATION`   | The name of the Google Compute Engine zone/location in which the cluster will resides | `us-west1-c`    |
+| `GCP_CLUSTER_NODEPOOL_AUTOSCALE`               | Whether or not to enable autoscaling on game server nodepool                          | `false`         |
+| `GCP_CLUSTER_NODEPOOL_MIN_NODECOUNT`           | The number of minimum nodes if autoscale is enabled                                   | `1`             |
+| `GCP_CLUSTER_NODEPOOL_MAX_NODECOUNT`           | The number of maximum nodes if autoscale is enabled                                   | `5`             |
 | `GCP_CLUSTER_NODEPOOL_INITIALNODECOUNT`        | The number of nodes to create in this cluster.                                        | `4`             |
 | `GCP_CLUSTER_NODEPOOL_MACHINETYPE`             | The name of a Google Compute Engine machine type.                                     | `e2-standard-4` |
 | `GCP_CLUSTER_NODEPOOL_ENABLEIMAGESTREAMING`    | Whether or not to enable image streaming for the `"default"` node pool in the cluster | `true`          |
