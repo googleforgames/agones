@@ -96,6 +96,9 @@ agones:
     allocationBatchWaitTime: 500ms
   ping:
     install: true
+    pdb:
+      enabled: false
+      minAvailable: 1
     updateStrategy: {}
     resources: {}
       # requests:
@@ -140,6 +143,9 @@ agones:
       timeoutSeconds: 1
   allocator:
     install: true
+    pdb:
+      enabled: false
+      minAvailable: 1
     updateStrategy: {}
     apiServerQPS: 400
     apiServerQPSBurst: 500
