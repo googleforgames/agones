@@ -82,3 +82,6 @@ do-release: $(ensure-build-image)
 	git push -u upstream release-$(RELEASE_VERSION)
 
 	@echo "Now go make the $(RELEASE_VERSION) release on Github!"
+
+test-build:
+	cd $(agones_path) && gcloud builds submit . --config=./build/release/cloudbuild.yaml $(ARGS)
