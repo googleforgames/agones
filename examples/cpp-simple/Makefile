@@ -42,7 +42,7 @@ root_path = $(realpath $(project_path)/../..)
 build:
 	cd $(root_path) && docker build -f $(project_path)/Dockerfile --tag=$(server_tag) .
 
-# check if hosted on Google Cloud Registry
+# check if hosted on Google Artifact Registry
 gar-check:
 	gcloud container images describe $(server_tag)
 

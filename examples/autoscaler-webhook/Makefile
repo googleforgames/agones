@@ -45,7 +45,7 @@ build:
 push: build
 	docker push $(autoscaler_webhook_tag)
 
-# check if hosted on Google Cloud Registry
+# check if hosted on Google Artifact Registry
 gar-check:
 	gcloud container images describe $(autoscaler_webhook_tag)
 

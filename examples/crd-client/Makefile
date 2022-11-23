@@ -41,7 +41,7 @@ build:
 push: build
 	docker push $(server_tag)
 
-# check if hosted on Google Cloud Registry
+# check if hosted on Google Artifact Registry
 gar-check:
 	gcloud container images describe $(server_tag)
 
