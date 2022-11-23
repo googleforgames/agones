@@ -23,7 +23,7 @@
 #     \_/ \__,_|_|  |_|\__,_|_.__/|_|\___|___/
 #
 
-REPOSITORY = gcr.io/agones-images
+REPOSITORY = us-docker.pkg.dev/agones-images/examples
 
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_path := $(dir $(mkfile_path))
@@ -48,8 +48,8 @@ push: build
 test:
 	go test -v ./...
 
-# check if hosted on Google Cloud Registry
-gcr-check:
+# check if hosted on Google Artifact Registry
+gar-check:
 	gcloud container images describe $(image_tag)
 
 #output the tag for this image

@@ -23,7 +23,7 @@
 #     \_/ \__,_|_|  |_|\__,_|_.__/|_|\___|___/
 #
 
-REGISTRY = gcr.io/agones-images
+REGISTRY = us-docker.pkg.dev/agones-images/examples
 BUILDX_WINDOWS_BUILDER = windows-builder
 # Versions of Windows Server to support, default is Windows Server 2019.
 # For the full list of tags see https://hub.docker.com/_/microsoft-windows-servercore.
@@ -122,8 +122,8 @@ build-linux-image-amd64:
 build-linux-image-arm64:
 	cd $(root_path) && docker buildx build --platform linux/arm64 -f $(project_path)Dockerfile $(DOCKER_BUILD_ARGS) --tag=$(server_tag_linux_arm64) .
 
-# check if hosted on Google Cloud Registry
-gcr-check:
+# check if hosted on Google Artifact Registry
+gar-check:
 	gcloud container images describe $(server_tag)
 
 #output the tag for this image

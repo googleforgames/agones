@@ -33,7 +33,7 @@ kind: Fleet
                 - args:
                   # We setup the simple-game-server server to shutdown 10 mins after allocation
                   - -automaticShutdownDelaySec=600
-                  image: gcr.io/agones-images/simple-game-server:0.14
+                  image: us-docker.pkg.dev/agones-images/examples/simple-game-server:0.14
                   name: simple-game-server
   ...
 ```
@@ -185,7 +185,7 @@ spec:
             value: 'true'
           containers:
           - name: simple-game-server
-            image: gcr.io/agones-images/simple-game-server:0.14
+            image: us-docker.pkg.dev/agones-images/examples/simple-game-server:0.14
             args:
             - -automaticShutdownDelaySec=60
             - -readyIterations=10

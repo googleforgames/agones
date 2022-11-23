@@ -23,7 +23,7 @@
 #     \_/ \__,_|_|  |_|\__,_|_.__/|_|\___|___/
 #
 
-REPOSITORY = gcr.io/agones-images
+REPOSITORY = us-docker.pkg.dev/agones-images/examples
 
 # Directory that this Makefile is in.
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
@@ -46,7 +46,7 @@ run:
 	docker run --network=host $(server_tag) $(args)
 
 # check if hosted on Google Cloud Registry
-gcr-check:
+gar-check:
 	gcloud container images describe $(server_tag)
 
 #output the tag for this image

@@ -96,7 +96,7 @@ dev_aks_minor_supported_k8s = "8"
 dev_minikube_minor_supported_k8s = "9"
 
 # example tag
-example_image_tag = "gcr.io/agones-images/simple-game-server:0.14"
+example_image_tag = "us-docker.pkg.dev/agones-images/examples/simple-game-server:0.14"
 
 # Enable syntax highlighting and copy buttons on code blocks with Prism
 prism_syntax_highlighting = true
