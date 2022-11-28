@@ -64,7 +64,7 @@ options:
   env:
     - "CARGO_HOME=/workspace/.cargo"
     - "RUST_BACKTRACE=1"
-    - "QUILKIN_RELEASE=1"
+    - "AGONES_RELEASE=1"
   machineType: E2_HIGHCPU_32
   dynamic_substitutions: true
 substitutions:
