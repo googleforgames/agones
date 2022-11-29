@@ -13,8 +13,8 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 - [ ] Have permission to publish new versions of the App Engine application.
 - [ ] Have write access to Agones GitHub repository.
 - [ ] Run `git remote -v` and see:
-  - [ ] An `origin` remote that points to a personal fork of Agones, such as `git@github.com:yourname/agones.git`.
-  - [ ] An `upstream` remote that points to `git@github.com:googleforgames/agones.git`.
+    - [ ] An `origin` remote that points to a personal fork of Agones, such as `git@github.com:yourname/agones.git`.
+    - [ ] An `upstream` remote that points to `git@github.com:googleforgames/agones.git`.
 - [ ] Have a [GitHub Personal Access Token](https://github.com/settings/tokens) with repo permissions.
 - [ ] Have a `gcloud config configurations` configuration called `agones-images` that points to the same project.
 - [ ] Edit access to the [Agones Release Calendar](https://calendar.google.com/calendar/u/0?cid=Z29vZ2xlLmNvbV84MjhuOGYxOGhmYnRyczR2dTRoMXNrczIxOEBncm91cC5jYWxlbmRhci5nb29nbGUuY29t)
@@ -23,7 +23,7 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 
 - [ ] Run `make shell` and run `gcloud config configurations activate agones-images`.
 - [ ] Review [closed issues with no milestone](https://github.com/googleforgames/agones/issues?q=is%3Aissue+is%3Aclosed+no%3Amilestone++-label%3Ainvalid+-label%3Aduplicate+-label%3Aquestion+-label%3Awontfix++-label%3Aarea%2Fmeta) and add relevant ones to the current milestone.
-  - Issues tagged as `invalid`, `duplicate`, `question`, `wontfix`, or `area/meta` can be ignored
+    - Issues tagged as `invalid`, `duplicate`, `question`, `wontfix`, or `area/meta` can be ignored
 - [ ] Review closed issues in the current milestone to ensure that they have appropriate tags.
 - [ ] Review [merged PRs that have no milestone](https://github.com/googleforgames/agones/pulls?q=is%3Apr+is%3Amerged+no%3Amilestone+) and add them to the current milestone.
 - [ ] Review merged PRs in the current milestone to ensure that they have appropriate tags.
@@ -33,9 +33,9 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 - [ ] If release candidate add the label `feature-freeze-do-not-merge` to any feature pull requests.
 - [ ] `git checkout main && git pull --rebase upstream main`
 - [ ] If full release, run `make site-deploy SERVICE={version}-1`, (replace . with -)
-   - For example, if you are creating the 1.18.0 release, then you would deploy the 1-17-0 service (release minus one, and then replace dots with dashes).
-- [ ] Run `make gen-changelog` to generate the CHANGELOG.md (if release candidate 
-  `make gen-changelog RELEASE_VERSION={version}-rc`). You will need your 
+    - For example, if you are creating the 1.18.0 release, then you would deploy the 1-17-0 service (release minus one, and then replace dots with dashes).
+- [ ] Run `make gen-changelog` to generate the CHANGELOG.md (if release candidate
+  `make gen-changelog RELEASE_VERSION={version}-rc`). You will need your
   [GitHub Personal Access Token](https://github.com/settings/tokens) for this.
 - [ ] Ensure the [helm `tag` value][values] is correct (should be {version} if a full release, {version}-rc if release candidate)
 - [ ] Ensure the [helm `Chart` version values][chart] are correct (should be {version} if a full release, {version}-rc if release candidate)
@@ -44,37 +44,37 @@ and copy it into a release issue. Fill in relevant values, found inside {}
     - [ ] Ensure the [`sdks/csharp/sdk/AgonesSDK.nuspec` and `sdks/csharp/sdk/csharp-sdk.csproj`][csharp] versions are correct (should be {version} if a full release, {version}-rc if release candidate)
     - [ ] Update the package version in the [`sdks/unity/package.json`][unity] package file's `Version` field to {version} if a full release, {version}-rc if release candidate
 - [ ] Run `make gen-install`
-- [ ] Run `make test-examples-on-gcr` to ensure all example images exist on gcr.io/agones-images-
+- [ ] Run `make test-examples-on-gar` to ensure all example images exist on us-docker.pkg.dev/agones-images/examples
 - [ ] Create a *draft* release with the [release template][release-template]
-  - [ ] Make a `tag` with the release version.
+    - [ ] Make a `tag` with the release version.
 - [ ] Site updated
-  - [ ] Copy the draft release content into a new `/site/content/en/blog/releases` content (this will be what you send via email). 
-  - [ ] Review all `link_test` and `data-proofer-ignore` attributes and remove for link testing
-  - [ ] If full release, review and remove all instances of the `feature` shortcode
-  - [ ] If full release, add a link to previous version's documentation to nav dropdown.
-  - [ ] config.toml updates:
-    - [ ] If full release, update `release_branch` to the new release branch for {version}.
-    - [ ] If full release, update `release-version` with the new release version {version}.
-    - [ ] If full release, copy `dev_supported_k8s` to `supported_k8s`.
-    - [ ] If full release, copy `dev_aks_minor_supported_k8s` to `aks_minor_supported_k8s`.
-    - [ ] If full release, copy `dev_minikube_minor_supported_k8s` to `minikube_minor_supported_k8s`.
-    - [ ] If full release, update documentation with updated example images tags.
+    - [ ] Copy the draft release content into a new `/site/content/en/blog/releases` content (this will be what you send via email).
+    - [ ] Review all `link_test` and `data-proofer-ignore` attributes and remove for link testing
+    - [ ] If full release, review and remove all instances of the `feature` shortcode
+    - [ ] If full release, add a link to previous version's documentation to nav dropdown.
+    - [ ] config.toml updates:
+        - [ ] If full release, update `release_branch` to the new release branch for {version}.
+        - [ ] If full release, update `release-version` with the new release version {version}.
+        - [ ] If full release, copy `dev_supported_k8s` to `supported_k8s`.
+        - [ ] If full release, copy `dev_aks_minor_supported_k8s` to `aks_minor_supported_k8s`.
+        - [ ] If full release, copy `dev_minikube_minor_supported_k8s` to `minikube_minor_supported_k8s`.
+        - [ ] If full release, update documentation with updated example images tags.
 - [ ] Create PR with these changes, and merge them with an approval.
-- [ ] Run `git remote update && git checkout main && git reset --hard upstream/main` to ensure your code is in line 
-   with upstream  (unless this is a hotfix, then do the same, but for the release branch)
+- [ ] Run `git remote update && git checkout main && git reset --hard upstream/main` to ensure your code is in line
+  with upstream  (unless this is a hotfix, then do the same, but for the release branch)
 - [ ] Publish SDK packages
-   - [ ] Run `make sdk-shell-node` to get interactive shell to publish node package. Requires Google internal process
-     to publish.
-   - [ ] Run `make sdk-publish-csharp` to deploy to NuGet. Requires login credentials. (if release candidate: 
-   `make sdk-publish-csharp RELEASE_VERSION={version}-rc`).
-   Will need [NuGet API Key](https://www.nuget.org/account/apikeys) from Agones account.
+    - [ ] Run `make sdk-shell-node` to get interactive shell to publish node package. Requires Google internal process
+      to publish.
+    - [ ] Run `make sdk-publish-csharp` to deploy to NuGet. Requires login credentials. (if release candidate:
+      `make sdk-publish-csharp RELEASE_VERSION={version}-rc`).
+      Will need [NuGet API Key](https://www.nuget.org/account/apikeys) from Agones account.
 - [ ] Run `make do-release`. (if release candidate: `make do-release RELEASE_VERSION={version}-rc`) to create and push the docker images and helm chart.
 - [ ] Run `make shell` and run `gcloud config configurations activate <your development project>` to switch Agones
-    development tooling off of the `agones-images` project.
+  development tooling off of the `agones-images` project.
 - [ ] Do a `helm repo add agones https://agones.dev/chart/stable` / `helm repo update` and verify that the new
- version is available via the command `helm search repo agones --versions --devel`.
-- [ ] Do a `helm install --namespace=agones-system agones agones/agones` 
-    (`helm install --namespace=agones-system agones agones/agones --version={version}-rc` if release candidate) and a smoke test to confirm everything is working.
+  version is available via the command `helm search repo agones --versions --devel`.
+- [ ] Do a `helm install --namespace=agones-system agones agones/agones`
+  (`helm install --namespace=agones-system agones agones/agones --version={version}-rc` if release candidate) and a smoke test to confirm everything is working.
 - [ ] Attach all assets found in the `release` folder to the draft GitHub Release.
 - [ ] If release candidate check the pre-release box on the draft GitHub Release
 - [ ] Copy any review changes from the release blog post into the draft GitHub release.

@@ -28,7 +28,7 @@ spec:
         spec:
           containers:
           - name: simple-game-server
-            image: gcr.io/agones-images/simple-game-server:0.14
+            image: us-docker.pkg.dev/agones-images/examples/simple-game-server:0.14
             env:
             # Disables the UDP listener (Enabled by default)
             - name: "UDP"

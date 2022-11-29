@@ -37,7 +37,7 @@ $ make run-image
 
 You will see the following output:
 ```
-docker run --network=host gcr.io/agones-images/rust-simple-server:0.7
+docker run --network=host us-docker.pkg.dev/agones-images/examples/rust-simple-server:0.11
 Rust Game Server has started!
 Creating SDK instance
 Setting a label
