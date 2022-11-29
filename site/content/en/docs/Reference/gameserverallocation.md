@@ -145,14 +145,28 @@ The `spec` field is the actual `GameServerAllocation` specification, and it is c
   "Packed" (default) is aimed at dynamic Kubernetes clusters, such as cloud providers, wherein we want to bin pack
   resources. "Distributed" is aimed at static Kubernetes clusters, wherein we want to distribute resources across the entire
   cluster. See [Scheduling and Autoscaling]({{< ref "/docs/Advanced/scheduling-and-autoscaling.md" >}}) for more details.
-
 - `metadata` is an optional list of custom labels and/or annotations that will be used to patch
   the game server's metadata in the moment of allocation. This can be used to tell the server necessary session data
+
+{{< alert title="Info" color="info" >}}
+
+For performance reasons, the query cache for a `GameServerAllocation` is _eventually consistent_.
+
+Usually, the cache is populated practically immediately on `GameServer` change, but under high load of the Kubernetes
+control plane, it may take some time for updates to `GameServer` selectable features to be populated into the cache
+(although this doesn't affect the atomicity of the Allocation operation).
+
+While Agones will do a small series of retries when an allocatable `GameServer` is not available in its cache,
+depending on your game requirements, it may be worth implementing your own more extend retry mechanism for
+Allocation requests for high load scenarios.
+
+{{< /alert >}}
 
 Each `GameServerAllocation` will allocate from a single [namespace][namespace]. The namespace can be specified outside of
 the spec, either with the `--namespace` flag when using the command line / `kubectl` or
 [in the url]({{% ref "/docs/Guides/access-api.md#allocate-a-gameserver-from-a-fleet-named-simple-game-server-with-gameserverallocation"  %}})
 when using an API call. If not specified when using the command line, the [namespace][namespace] will be automatically set to `default`.
+
 
 [gameserverselector]: {{% ref "/docs/Reference/agones_crd_api_reference.html#allocation.agones.dev/v1.GameServerSelector"  %}}
 [namespace]: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces
