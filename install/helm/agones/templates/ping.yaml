@@ -97,6 +97,11 @@ kind: PodDisruptionBudget
 metadata:
   name: agones-ping-pdb
 spec:
+{{- if .Values.agones.ping.pdb.minAvailable }}
+{{- if .Values.agones.ping.pdb.maxUnavailable }}
+{{- fail "minAvailable and maxUnavailable are mutually exclusive!" }}
+{{- end}}
+{{- end}}
   minAvailable: {{ .Values.agones.ping.pdb.minAvailable }}
   maxUnavailable: {{ .Values.agones.ping.pdb.maxUnavailable }}
   selector:
