@@ -161,6 +161,7 @@ type GameServerSpec struct {
 	// (Alpha, PlayerTracking feature flag) Players provides the configuration for player tracking features.
 	// +optional
 	Players *PlayersSpec `json:"players,omitempty"`
+	// immutableReplicas is present in gameservers.agones.dev but omitted here (it's always 1).
 }
 
 // PlayersSpec tracks the initial player capacity
@@ -233,6 +234,7 @@ type GameServerStatus struct {
 	// [FeatureFlag:PlayerTracking]
 	// +optional
 	Players *PlayerStatus `json:"players"`
+	// immutableReplicas is present in gameservers.agones.dev but omitted here (it's always 1).
 }
 
 // GameServerStatusPort shows the port that was allocated to a

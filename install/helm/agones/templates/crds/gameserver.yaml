@@ -13,6 +13,7 @@
 # limitations under the License.
 
 {{- if .Values.agones.crds.install }}
+{{- $featureGates := include "agones.featureGates" . | fromYaml }}
 
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
@@ -55,7 +56,17 @@ spec:
           type: date
       schema:
         openAPIV3Schema:
-          {{- $data := dict "podPreserveUnknownFields" .Values.gameservers.podPreserveUnknownFields }}
-          {{- include "gameserver.schema" . | indent 9 }}
-          {{- include "gameserver.status" . | indent 11 }} # in an include, as it's easier to align
+          {{- $data := dict "podPreserveUnknownFields" .Values.gameservers.podPreserveUnknownFields "featureLifecycleContract" $featureGates.LifecycleContract }}
+          {{- include "gameserver.schema" $data | indent 9 }}{{- /* include the schema then status, as it's easier to align */ -}}
+          {{- include "gameserver.status" $data | indent 11 }}
+{{- if $featureGates.LifecycleContract }}
+      subresources:
+        # scale enables the scale subresource. We can't actually scale GameServers, but this allows
+        # for the use of PodDisruptionBudget (PDB) without having to use a PDB per Pod.
+        scale:
+          # specReplicasPath defines the JSONPath inside of a custom resource that corresponds to Scale.Spec.Replicas.
+          specReplicasPath: .spec.immutableReplicas
+          # statusReplicasPath defines the JSONPath inside of a custom resource that corresponds to Scale.Status.Replicas.
+          statusReplicasPath: .status.immutableReplicas
+{{- end }}
 {{- end }}

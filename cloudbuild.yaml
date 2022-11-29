@@ -241,10 +241,11 @@ steps:
 #
 # Run the e2e tests with FeatureGates inverted compared to Stable
 #
+# Keep in sync with (the inverse of) pkg/util/runtime/features.go:featureDefaults
 
 - name: 'e2e-runner'
   args:
-    - 'PlayerTracking=true&StateAllocationFilter=false&PlayerAllocationFilter=true&SDKGracefulTermination=true&CustomFasSyncInterval=false&ResetMetricsOnDelete=true'
+    - 'CustomFasSyncInterval=false&StateAllocationFilter=false&LifecycleContract=true&PlayerAllocationFilter=true&PlayerTracking=true&ResetMetricsOnDelete=true&SDKGracefulTermination=true&Example=true'
     - 'e2e-test-cluster'
     - "${_REGISTRY}"
   id: e2e-feature-gates
