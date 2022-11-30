@@ -102,6 +102,7 @@ workdir_path = $(mount_path)
 build_version = $(call sha,$(build_path)/build-image/Dockerfile)
 build_tag = agones-build:$(build_version)
 controller_tag = $(REGISTRY)/agones-controller:$(VERSION)
+extensions_tag = $(REGISTRY)/agones-extensions:$(VERSION)
 sidecar_tag = $(REGISTRY)/agones-sdk:$(VERSION)
 allocator_tag = $(REGISTRY)/agones-allocator:$(VERSION)
 ping_tag = $(REGISTRY)/agones-ping:$(VERSION)
@@ -118,6 +119,8 @@ allocator_amd64_tag = $(allocator_tag)-amd64
 allocator_arm64_tag = $(allocator_tag)-arm64
 controller_amd64_tag = $(controller_tag)-amd64
 controller_arm64_tag = $(controller_tag)-arm64
+extensions_amd64_tag = $(extensions_tag)-amd64
+extensions_arm64_tag = $(extensions_tag)-arm64
 ping_amd64_tag = $(ping_tag)-amd64
 ping_arm64_tag = $(ping_tag)-arm64
 
@@ -125,6 +128,7 @@ ping_arm64_tag = $(ping_tag)-arm64
 push_sidecar_manifest = $(sidecar_linux_amd64_tag)
 push_allocator_manifest = $(allocator_amd64_tag)
 push_controller_manifest = $(controller_amd64_tag)
+push_extensions_manifest = $(extensions_amd64_tag)
 push_ping_manifest = $(ping_amd64_tag)
 gomod_on = GO111MODULE=on
 
@@ -250,6 +254,7 @@ ifeq ($(WITH_ARM64), 1)
 push_sidecar_manifest += $(sidecar_linux_arm64_tag)
 push_allocator_manifest += $(allocator_arm64_tag)
 push_controller_manifest += $(controller_arm64_tag)
+push_extensions_manifest += $(extensions_arm64_tag)
 push_ping_manifest += $(ping_arm64_tag)
 endif
 
@@ -257,7 +262,7 @@ endif
 build: build-images build-sdks
 
 # build the docker images
-build-images: build-controller-image build-agones-sdk-image build-ping-image build-allocator-image
+build-images: build-controller-image build-extensions-image build-agones-sdk-image build-ping-image build-allocator-image
 
 # package the current agones helm chart
 build-chart: RELEASE_VERSION ?= $(base_version)
@@ -342,7 +347,7 @@ test-install-yaml:
 	diff /tmp/agones-install/install.yaml.sorted /tmp/agones-install/install.current.yaml.sorted
 
 # Push all the images up to $(REGISTRY)
-push: push-controller-image push-agones-sdk-image push-ping-image push-allocator-image
+push: push-controller-image push-extensions-image push-agones-sdk-image push-ping-image push-allocator-image
 
 # Installs the current development version of Agones into the Kubernetes cluster
 install: ALWAYS_PULL_SIDECAR := true
@@ -363,9 +368,12 @@ install: $(ensure-build-image) install-custom-pull-secret
 		--set agones.image.tag=$(VERSION),agones.image.registry=$(REGISTRY) \
 		--set agones.image.controller.pullPolicy=$(IMAGE_PULL_POLICY),agones.image.sdk.alwaysPull=$(ALWAYS_PULL_SIDECAR) \
 		--set agones.image.controller.pullSecret=$(IMAGE_PULL_SECRET) \
+		--set agones.image.extensions.pullPolicy=$(IMAGE_PULL_POLICY) \
+		--set agines.image.extensions.pullSecret=$(IMAGE_PULL_SECRET) \
 		--set agones.ping.http.serviceType=$(PING_SERVICE_TYPE),agones.ping.udp.serviceType=$(PING_SERVICE_TYPE) \
 		--set agones.allocator.service.serviceType=$(ALLOCATOR_SERVICE_TYPE) \
 		--set agones.controller.logLevel=$(LOG_LEVEL) \
+		--set agones.extensions.logLevel=$(LOG_LEVEL) \
 		--set agones.crds.cleanupOnDelete=$(CRD_CLEANUP) \
 		--set agones.featureGates=$(FEATURE_GATES) \
 		--set agones.allocator.service.loadBalancerIP=$(EXTERNAL_IP) \
@@ -400,6 +408,22 @@ build-controller-binary-linux-arm64: $(ensure-build-image)
 	$(GO_BUILD_LINUX_ARM64) \
 	-tags $(GO_BUILD_TAGS) -o $(go_build_base_path)/cmd/controller/bin/controller.linux.arm64 \
 	$(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/controller
+
+# Build a static binary for the gamerserver extensions
+ifeq ($(WITH_ARM64), 1)
+build-extensions-binary: $(ensure-build-image) build-extensions-binary-linux-amd64 build-extensions-binary-linux-arm64
+else
+build-extensions-binary: $(ensure-build-image) build-extensions-binary-linux-amd64
+endif
+
+build-extensions-binary-linux-amd64: $(ensure-build-image)
+	$(GO_BUILD_LINUX_AMD64) \
+	-tags $(GO_BUILD_TAGS) -o $(go_build_base_path)/cmd/extensions/bin/extensions.linux.amd64 \
+	$(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/extensions
+build-extensions-binary-linux-arm64: $(ensure-build-image)
+	$(GO_BUILD_LINUX_ARM64) \
+	-tags $(GO_BUILD_TAGS) -o $(go_build_base_path)/cmd/extensions/bin/extensions.linux.arm64 \
+	$(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/extensions
 
 # Lint the go source code.
 # use LINT_TIMEOUT to manipulate the linter timeout
@@ -480,6 +504,34 @@ build-agones-sdk-binary-windows: $(ensure-build-image)
 
 ensure-windows-buildx:
 	-docker buildx create --name=$(BUILDX_WINDOWS_BUILDER) 
+
+# Build the image for the gameserver extensions
+build-extensions-image: build-extensions-image-amd64
+ifeq ($(WITH_ARM64), 1)
+build-extensions-image: build-extensions-image-arm64
+endif
+
+build-extensions-image-amd64: $(ensure-build-image) build-extensions-binary build-licenses build-required-src-dist
+	docker build $(agones_path)/cmd/extensions/ --tag=$(extensions_amd64_tag) $(DOCKER_BUILD_ARGS)
+# creating docker builder and then using that builder to buuld extensions image in buildx command
+build-extensions-image-arm64: $(ensure-build-image) build-extensions-binary create-arm64-builder
+	docker buildx build --platform linux/arm64 --builder $(BUILDX_ARM64_BUILDER) --build-arg ARCH=arm64 $(agones_path)/cmd/extensions/ --tag=$(extensions_arm64_tag) $(DOCKER_BUILD_ARGS)
+
+# push the gameservers extensions image
+push-extensions-image: push-extensions-image-amd64
+ifeq ($(WITH_ARM64), 1)
+push-extensions-image: push-extensions-image-arm64
+endif
+	# Ensure that extensions manifest is removed before creating new one.
+	-DOCKER_CLI_EXPERIMENTAL=enabled docker manifest rm $(extensions_tag)
+	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest create $(extensions_tag) $(push_extensions_manifest)
+	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest push $(extensions_tag)
+
+# push extensions image
+push-extensions-image-amd64: build-extensions-image-amd64
+	docker push $(extensions_amd64_tag)
+push-extensions-image-arm64: build-extensions-image-arm64
+	$(MAKE) DOCKER_BUILD_ARGS=--push build-extensions-image-arm64
 
 # Build the image for the gameserver sidecar and SDK binaries
 build-agones-sdk-image: $(ensure-build-image) build-agones-sdk-binary build-licenses build-required-src-dist build-agones-sdk-image-amd64
