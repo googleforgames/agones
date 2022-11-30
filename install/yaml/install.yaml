@@ -62,6 +62,7 @@ metadata:
     release: agones-manual
     heritage: Helm
 ---
+
 # Source: agones/templates/extensions.yaml
 apiVersion: v1
 kind: Secret
