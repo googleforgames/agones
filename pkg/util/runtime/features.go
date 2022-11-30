@@ -34,6 +34,9 @@ const (
 	// FeatureCustomFasSyncInterval is a feature flag that enables a custom FleetAutoscaler resync interval
 	FeatureCustomFasSyncInterval Feature = "CustomFasSyncInterval"
 
+	// FeatureSDKGracefulTermination is a feature flag that enables SDK to support gracefulTermination
+	FeatureSDKGracefulTermination Feature = "SDKGracefulTermination"
+
 	// FeatureStateAllocationFilter is a feature flag that enables state filtering on Allocation.
 	FeatureStateAllocationFilter Feature = "StateAllocationFilter"
 
@@ -53,9 +56,6 @@ const (
 	// FeatureResetMetricsOnDelete is a feature flag that tells the metrics service to unregister and register
 	// relevant metric views to reset their state immediately when an Agones resource is deleted.
 	FeatureResetMetricsOnDelete Feature = "ResetMetricsOnDelete"
-
-	// FeatureSDKGracefulTermination is a feature flag that enables SDK to support gracefulTermination
-	FeatureSDKGracefulTermination Feature = "SDKGracefulTermination"
 
 	////////////////
 	// Example feature
@@ -92,15 +92,15 @@ var (
 	// In each of these, keep the feature sorted by descending maturity then alphabetical
 	featureDefaults = map[Feature]bool{
 		// Beta features
-		FeatureCustomFasSyncInterval: true,
-		FeatureStateAllocationFilter: true,
+		FeatureCustomFasSyncInterval:  true,
+		FeatureSDKGracefulTermination: true,
+		FeatureStateAllocationFilter:  true,
 
 		// Alpha features
 		FeatureLifecycleContract:      false,
 		FeaturePlayerAllocationFilter: false,
 		FeaturePlayerTracking:         false,
 		FeatureResetMetricsOnDelete:   false,
-		FeatureSDKGracefulTermination: false,
 
 		// Example feature
 		FeatureExample: false,
