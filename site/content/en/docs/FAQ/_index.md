@@ -188,7 +188,7 @@ therefore we recommend you always run your own load tests for your specific game
 
 ### Can't we use a Deployment or a StatefulSet for game server workloads?
 
-Kubernetes [Deployments](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/) where built for 
+Kubernetes [Deployments](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/) were built for 
 _unordered_, _stateless_ workloads. That is, workloads that are essentially homogeneous 
 between each instance, and therefore it doesn't matter which order they are scaled up, or scaled down.
 
@@ -197,12 +197,12 @@ code between instances is the same, and as long as there are enough replicas to 
 load balancer, if we scale from 10 to 5, it doesn't matter which ones are removed and in which order.
 
 Kubernetes [StatefulSets](https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/)
-where built for _ordered_, _stateful_ workloads. That is, workloads in which each instance is 
+were built for _ordered_, _stateful_ workloads. That is, workloads in which each instance is 
 essentially heterogeneous, and for reliability and predictability it's extremely important that scale up happens in 
 order (0 ,1, 2, 3) and scaling down happens in reverse (3, 2, 1, 0).
 
 Databases are a great use case for a StatefulSet, since (depending on the database), instance 0 may be the primary, 
-and instances 1, 2, 3+ may be replicas. Knowing that the order of scale up and down in completely reliable to both 
+and instances 1, 2, 3+ may be replicas. Knowing that the order of scale up and down is completely reliable to both 
 ensure that the correct disk image is in place, but also allow for appropriate synchronisation between a primaries 
 and/or replicas can occur, and no downtime occurs.
 
@@ -214,8 +214,8 @@ are playing on a game server, then it doesn't matter if it gets shut down, or re
 But they are stateful (most often in-memory state, for the game simulation) when players are playing on them, and 
 therefore can't be shutdown while that is going on.
 
-Game Server workloads are also _prioritised_, in that the order of demarkating game servers for player connection 
-and also on game server scale down impact optimial usage of  the hosting infrastructure.   
+Game Server workloads are also _prioritised_, in that the order of demarcating game servers for player connection 
+and also on game server scale down impact optimal usage of the hosting infrastructure.
 
 For example, in Cloud based workloads, you will want to pack the game servers that have players on them as tightly 
 as possible across as few Nodes as possible, while on scale down, will want to prioritise removing game servers from  
@@ -223,7 +223,7 @@ Nodes that are the most empty to create empty Nodes that then can be deleted - t
 infrastructure as possible.
   
 So while one might be able to use Deployments and/or StatefulSets to run game server workloads, it will be extremely 
-hard (impossible? 🤔) to run as optimally as a tailored solutions such as Agones.
+hard (impossible? 🤔) to run as optimally as a tailored solution such as Agones.
 
 ## Ecosystem
 
