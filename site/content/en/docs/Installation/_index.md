@@ -9,15 +9,15 @@ description: >
 ## Usage Requirements
 
 - **Kubernetes cluster version {{% k8s-version %}}**
-    - [Google Kubernetes Engine](https://cloud.google.com/kubernetes-engine/),
-      [Azure Kubernetes Service](https://azure.microsoft.com/en-us/services/kubernetes-service/),
-      [Amazon EKS](https://aws.amazon.com/eks/) and [Minikube](https://github.com/kubernetes/minikube) are supported.
-    - If you are creating and managing your own Kubernetes cluster, the
+  - [Google Kubernetes Engine](https://cloud.google.com/kubernetes-engine/),
+    [Azure Kubernetes Service](https://azure.microsoft.com/en-us/services/kubernetes-service/),
+    [Amazon EKS](https://aws.amazon.com/eks/) and [Minikube](https://github.com/kubernetes/minikube) are supported.
+  - If you are creating and managing your own Kubernetes cluster, the
     [MutatingAdmissionWebhook](https://kubernetes.io/docs/admin/admission-controllers/#mutatingadmissionwebhook-beta-in-19), and
     [ValidatingAdmissionWebhook](https://kubernetes.io/docs/admin/admission-controllers/#validatingadmissionwebhook-alpha-in-18-beta-in-19)
     admission controllers are required.
-       - We also recommend following the
-    [recommended set of admission controllers](https://kubernetes.io/docs/admin/admission-controllers/#is-there-a-recommended-set-of-admission-controllers-to-use).
+    - We also recommend following the
+      [recommended set of admission controllers](https://kubernetes.io/docs/admin/admission-controllers/#is-there-a-recommended-set-of-admission-controllers-to-use).
 - Firewall access for the range of ports that Game Servers can be connected to in the cluster.
 - Game Servers must have the [game server SDK]({{< ref "/docs/Guides/Client SDKs/_index.md"  >}}) integrated, to manage Game Server state, health checking, etc.
 
@@ -31,14 +31,29 @@ AKS, while also ensuring that all Cloud providers can support that version.
 
 The following container operating systems and architectures can be utilised with Agones:
 
-
 | OS        | Architecture | Support    |
-|-----------|--------------|------------|
+| --------- | ------------ | ---------- |
 | linux     | `amd64`      | **Stable** |
 | linux     | `arm64`      | Alpha      |
 | [windows] | `amd64`      | Alpha      |
 
 For all the platforms in Alpha, we would appreciate testing and bug reports on any issue found.
+
+## Agones and Kubernetes Supported Versions
+
+Each version of Agones supports a specific version of Kubernetes. When a new version of Agones supports a new version of Kubernetes, it is explicitly called out in the [release notes](https://agones.dev/site/blog/releases/).
+
+The following table lists recent Agones versions and their corresponding required Kubernetes versions:
+
+| Agones version | Kubernetes version |
+| -------------- | ------------------ |
+| 1.27           | 1.23               |
+| 1.26           | 1.23               |
+| 1.25           | 1.22               |
+| 1.24           | 1.22               |
+| 1.23           | 1.22               |
+| 1.22           | 1.21               |
+| 1.21           | 1.21               |
 
 ## Best Practices
 
