@@ -88,7 +88,9 @@ func TestHostName(t *testing.T) {
 				gs.ObjectMeta.GenerateName = "game-server-1.0-"
 			},
 			test: func(gs *agonesv1.GameServer, pod *corev1.Pod) {
-				assert.Equal(t, strings.ReplaceAll(gs.ObjectMeta.Name, ".", "-"), pod.Spec.Hostname)
+				expected := "game-server-1-0-"
+				// since it's a generated name, we just check the beginning.
+				assert.Equal(t, expected, pod.Spec.Hostname[:len(expected)])
 			},
 		},
 		// generated name will automatically truncate to 63 chars.
