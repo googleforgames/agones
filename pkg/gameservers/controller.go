@@ -567,6 +567,12 @@ func (c *Controller) createGameServerPod(ctx context.Context, gs *agonesv1.GameS
 		gs, err = c.moveToErrorState(ctx, gs, err.Error())
 		return gs, err
 	}
+	if err := c.cloudProduct.MutateGameServerPod(gs, pod); err != nil {
+		// this shouldn't happen, but if it does.
+		c.loggerForGameServer(gs).WithError(err).Error("error from cloud product mutation hook")
+		gs, err = c.moveToErrorState(ctx, gs, err.Error())
+		return gs, err
+	}
 
 	// if the service account is not set, then you are in the "opinionated"
 	// mode. If the user sets the service account, we assume they know what they are
