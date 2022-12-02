@@ -87,7 +87,7 @@ gcloud container clusters create [CLUSTER_NAME] --cluster-version={{% k8s-versio
   --tags=game-server \
   --scopes=gke-default \
   --num-nodes=4 \
-  --no-enable-autoupgrade \ 
+  --no-enable-autoupgrade \
   --enable-image-streaming \
   --machine-type=e2-standard-4
 ```
