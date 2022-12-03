@@ -438,7 +438,7 @@ void UAgonesComponent::SetPlayerCapacity(
 		return;
 	}
 
-	FHttpRequestRef Request = BuildAgonesRequest("alpha/player/capacity", FHttpVerb::Post, Json);
+	FHttpRequestRef Request = BuildAgonesRequest("alpha/player/capacity", FHttpVerb::Put, Json);
 	Request->OnProcessRequestComplete().BindWeakLambda(this,
 		[SuccessDelegate, ErrorDelegate](FHttpRequestPtr HttpRequest, FHttpResponsePtr HttpResponse, const bool bSucceeded) {
 			if (!IsValidResponse(bSucceeded, HttpResponse, ErrorDelegate))
