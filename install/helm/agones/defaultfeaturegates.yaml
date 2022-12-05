@@ -20,10 +20,10 @@ SDKGracefulTermination: true
 StateAllocationFilter: true
 
 # Alpha features
-LifecycleContract: false
 PlayerAllocationFilter: false
 PlayerTracking: false
 ResetMetricsOnDelete: false
+SafeToEvict: false
 
 # Example feature
 Example: false

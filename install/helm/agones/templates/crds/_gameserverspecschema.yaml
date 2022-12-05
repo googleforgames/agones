@@ -153,7 +153,7 @@ properties:
             type: integer
             title: The initial player capacity of this Game Server
             minimum: 0
-{{- if .featureLifecycleContract }}
+{{- if .featureSafeToEvict }}
       immutableReplicas:
         type: integer
         title: Immutable count of Pods to a GameServer. Always 1. (Implementation detail of implementing the Scale subresource.)
