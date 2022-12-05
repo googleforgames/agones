@@ -16,7 +16,7 @@
 GCP_TF_CLUSTER_NAME ?= agones-tf-cluster
 
 # the current project
-current_project := $(shell $(DOCKER_RUN) bash -c "gcloud config get-value project 2> /dev/null")
+current_project := $(DOCKER_RUN) bash -c "gcloud config get-value project 2> /dev/null"
 
 ### Deploy cluster with Terraform
 terraform-init: TERRAFORM_BUILD_DIR ?= $(mount_path)/build/terraform/$(DIRECTORY)
@@ -48,7 +48,7 @@ gcloud-terraform-cluster: GCP_TF_CLUSTER_NAME ?= agones-tf-cluster
 gcloud-terraform-cluster: LOG_LEVEL ?= debug
 gcloud-terraform-cluster: $(ensure-build-image)
 gcloud-terraform-cluster: FEATURE_GATES := ""
-gcloud-terraform-cluster: GCP_PROJECT ?= $(current_project)
+gcloud-terraform-cluster: GCP_PROJECT ?= $(shell $(current_project))
 gcloud-terraform-cluster:
 	$(MAKE) terraform-init DIRECTORY=gke
 	$(DOCKER_RUN) bash -c 'cd $(mount_path)/build/terraform/gke && \
@@ -85,7 +85,7 @@ gcloud-terraform-install: CRD_CLEANUP := true
 gcloud-terraform-install: GCP_TF_CLUSTER_NAME ?= agones-tf-cluster
 gcloud-terraform-install: LOG_LEVEL ?= debug
 gcloud-terraform-install: FEATURE_GATES := $(ALPHA_FEATURE_GATES)
-gcloud-terraform-install: GCP_PROJECT ?= $(current_project)
+gcloud-terraform-install: GCP_PROJECT ?= $(shell $(current_project))
 gcloud-terraform-install:
 	$(MAKE) terraform-init DIRECTORY=gke
 	$(DOCKER_RUN) bash -c ' \
@@ -109,13 +109,13 @@ gcloud-terraform-install:
 		-var windows_machine_type=$(GCP_CLUSTER_NODEPOOL_WINDOWSMACHINETYPE)'
 	GCP_CLUSTER_NAME=$(GCP_TF_CLUSTER_NAME) $(MAKE) gcloud-auth-cluster
 
-gcloud-terraform-destroy-cluster: GCP_PROJECT ?= $(current_project)
+gcloud-terraform-destroy-cluster: GCP_PROJECT ?= $(shell $(current_project))
 gcloud-terraform-destroy-cluster:
 	$(MAKE) terraform-init DIRECTORY=gke
 	$(DOCKER_RUN) bash -c 'cd $(mount_path)/build/terraform/gke && terraform destroy -var project=$(GCP_PROJECT) -auto-approve'
 
 terraform-test: $(ensure-build-image)
-terraform-test: GCP_PROJECT ?= $(current_project)
+terraform-test: GCP_PROJECT ?= $(shell $(current_project))
 terraform-test:
 	$(MAKE) terraform-init TERRAFORM_BUILD_DIR=$(mount_path)/test/terraform
 	$(MAKE) run-terraform-test GCP_PROJECT=$(GCP_PROJECT)
