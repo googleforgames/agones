@@ -215,7 +215,6 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.allocator.updateStrategy`                        | The [strategy](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy) to apply to the ping deployment                                                                                          | `{}`                               |
 | `agones.ping.updateStrategy`                             | The [strategy](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy) to apply to the allocator deployment                                                                                     | `{}`                               |
 
-{{% feature publishVersion="1.28.0" %}}
 **New Configuration Features:**
 
 | Parameter                             | Description                                                                                                                                                                                                                           | Default |
@@ -226,7 +225,6 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.ping.pdb.enabled`             | Set to `true` to enable the creation of a [PodDisruptionBudget](https://kubernetes.io/docs/tasks/run-application/configure-pdb/) for the ping deployment                                                                              | `false` |
 | `agones.ping.pdb.minAvailable`        | Description of the number of pods from that set that must still be available after the eviction, even in the absence of the evicted pod. Can be either an absolute number or a percentage. Mutually Exclusive with `maxUnavailable`   | `1`     |
 | `agones.ping.pdb.maxUnavailable`      | Description of the number of pods from that set that can be unavailable after the eviction. It can be either an absolute number or a percentage Mutually Exclusive with `minAvailable`                                                | \`\`    |
-{{% /feature %}}
 
 [toleration]: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
 [nodeSelector]: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#nodeselector
