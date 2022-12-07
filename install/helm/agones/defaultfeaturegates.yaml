@@ -1,4 +1,4 @@
-# Copyright 2020 Google LLC All Rights Reserved.
+# Copyright 2022 Google LLC All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,21 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: batch/v1
-kind: Job
-metadata:
-  generateName: create-gs-
-spec:
-  backoffLimit: 5
-  activeDeadlineSeconds: 100
-  template:
-    spec:
-      serviceAccountName: agones-controller
-      containers:
-      - name: create-gameserver
-        image: us-docker.pkg.dev/agones-images/examples/crd-client:0.7
-        imagePullPolicy: Always
-        env:
-        - name: GAMESERVER_IMAGE
-          value: "us-docker.pkg.dev/agones-images/examples/simple-game-server:0.14"
-      restartPolicy: Never
+# Default values for feature gates. Keep in sync with pkg/util/runtime/features.go:featureDefaults
+
+# Beta features
+CustomFasSyncInterval: true
+StateAllocationFilter: true
+
+# Alpha features
+LifecycleContract: false
+PlayerAllocationFilter: false
+PlayerTracking: false
+ResetMetricsOnDelete: false
+SDKGracefulTermination: false
+
+# Example feature
+Example: false

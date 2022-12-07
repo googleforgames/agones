@@ -96,6 +96,9 @@ agones:
     allocationBatchWaitTime: 500ms
   ping:
     install: true
+    pdb:
+      enabled: false
+      minAvailable: 1
     updateStrategy: {}
     resources: {}
       # requests:
@@ -140,6 +143,9 @@ agones:
       timeoutSeconds: 1
   allocator:
     install: true
+    pdb:
+      enabled: false
+      minAvailable: 1
     updateStrategy: {}
     apiServerQPS: 400
     apiServerQPSBurst: 500
@@ -206,7 +212,7 @@ agones:
     allocationBatchWaitTime: 500ms
   image:
     registry: gcr.io/agones-images
-    tag: 1.28.0-dev
+    tag: 1.28.0
     controller:
       name: agones-controller
       pullPolicy: IfNotPresent

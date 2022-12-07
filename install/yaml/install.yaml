@@ -8,7 +8,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: agones-1.28.0-dev
+    chart: agones-1.28.0
     release: agones-manual
     heritage: Helm
 ---
@@ -33,7 +33,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: agones-1.28.0-dev
+    chart: agones-1.28.0
     release: agones-manual
     heritage: Helm
 ---
@@ -58,7 +58,7 @@ metadata:
   namespace: default
   labels:
     app: agones
-    chart: agones-1.28.0-dev
+    chart: agones-1.28.0
     release: agones-manual
     heritage: Helm
 ---
@@ -70,7 +70,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: "agones-1.28.0-dev"
+    chart: "agones-1.28.0"
     release: "agones-manual"
     heritage: "Helm"
 type: Opaque
@@ -87,7 +87,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: "agones-1.28.0-dev"
+    chart: "agones-1.28.0"
     release: "agones-manual"
     heritage: "Helm"
 data:
@@ -103,7 +103,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: "agones-1.28.0-dev"
+    chart: "agones-1.28.0"
     release: "agones-manual"
     heritage: "Helm"
 data:
@@ -119,7 +119,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: "agones-1.28.0-dev"
+    chart: "agones-1.28.0"
     release: "agones-manual"
     heritage: "Helm"
 data:
@@ -149,7 +149,7 @@ metadata:
   labels:
     component: crd
     app: agones
-    chart: agones-1.28.0-dev
+    chart: agones-1.28.0
     release: agones-manual
     heritage: Helm
 spec:
@@ -4857,7 +4857,7 @@ metadata:
   labels:
     component: crd
     app: agones
-    chart: agones-1.28.0-dev
+    chart: agones-1.28.0
     release: agones-manual
     heritage: Helm
 spec:
@@ -5003,7 +5003,7 @@ metadata:
   labels:
     component: crd
     app: agones
-    chart: agones-1.28.0-dev
+    chart: agones-1.28.0
     release: agones-manual
     heritage: Helm
 spec:
@@ -9518,7 +9518,7 @@ spec:
                      type: array
                      nullable: true
                      items:
-                       type: string # in an include, as it's easier to align
+                       type: string
 ---
 # Source: agones/templates/crds/gameserverallocationpolicy.yaml
 # Copyright 2019 Google LLC All Rights Reserved.
@@ -9541,7 +9541,7 @@ metadata:
   labels:
     component: crd
     app: agones
-    chart: agones-1.28.0-dev
+    chart: agones-1.28.0
     release: agones-manual
     heritage: Helm
   name: gameserverallocationpolicies.multicluster.agones.dev
@@ -9620,7 +9620,7 @@ metadata:
   labels:
     component: crd
     app: agones
-    chart: agones-1.28.0-dev
+    chart: agones-1.28.0
     release: agones-manual
     heritage: Helm
 spec:
@@ -14298,7 +14298,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: agones-1.28.0-dev
+    chart: agones-1.28.0
     release: agones-manual
     heritage: Helm
 rules:
@@ -14329,7 +14329,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: agones-1.28.0-dev
+    chart: agones-1.28.0
     release: agones-manual
     heritage: Helm
 rules:
@@ -14360,6 +14360,9 @@ rules:
 - apiGroups: ["agones.dev"]
   resources: ["fleets/status", "gameserversets/status"]
   verbs: ["update"]
+- apiGroups: ["agones.dev"]
+  resources: ["fleets/finalizers", "gameserversets/finalizers", "gameservers/finalizers"]
+  verbs: ["update"]
 - apiGroups: ["multicluster.agones.dev"]
   resources: ["gameserverallocationpolicies"]
   verbs: ["create", "delete", "get", "list", "update", "watch"]
@@ -14378,7 +14381,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: agones-1.28.0-dev
+    chart: agones-1.28.0
     release: agones-manual
     heritage: Helm
 rules:
@@ -14398,7 +14401,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: agones-1.28.0-dev
+    chart: agones-1.28.0
     release: agones-manual
     heritage: Helm
 subjects:
@@ -14418,7 +14421,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: agones-1.28.0-dev
+    chart: agones-1.28.0
     release: agones-manual
     heritage: Helm
 subjects:
@@ -14470,7 +14473,7 @@ metadata:
   namespace: default
   labels:
     app: agones
-    chart: agones-1.28.0-dev
+    chart: agones-1.28.0
     release: agones-manual
     heritage: Helm
 subjects:
@@ -14491,7 +14494,7 @@ metadata:
   labels:
     component: ping
     app: agones
-    chart: agones-1.28.0-dev
+    chart: agones-1.28.0
     release: agones-manual
     heritage: Helm
 spec:
@@ -14513,7 +14516,7 @@ metadata:
   labels:
     component: ping
     app: agones
-    chart: agones-1.28.0-dev
+    chart: agones-1.28.0
     release: agones-manual
     heritage: Helm
 spec:
@@ -14549,7 +14552,7 @@ metadata:
   labels:
     agones.dev/role: controller
     app: agones
-    chart: agones-1.28.0-dev
+    chart: agones-1.28.0
     release: agones-manual
     heritage: Helm
 spec:
@@ -14586,7 +14589,7 @@ metadata:
   labels:
     component: allocator
     app: agones
-    chart: agones-1.28.0-dev
+    chart: agones-1.28.0
     release: agones-manual
     heritage: Helm
 spec:
@@ -14608,7 +14611,7 @@ metadata:
   labels:
     multicluster.agones.dev/role: allocator
     app: agones
-    chart: agones-1.28.0-dev
+    chart: agones-1.28.0
     release: agones-manual
     heritage: Helm
 spec:
@@ -14643,7 +14646,7 @@ metadata:
   labels:
     component: controller
     app: agones
-    chart: agones-1.28.0-dev
+    chart: agones-1.28.0
     release: agones-manual
     heritage: Helm
 spec:
@@ -14686,7 +14689,7 @@ spec:
       serviceAccountName: agones-controller
       containers:
       - name: agones-controller
-        image: "gcr.io/agones-images/agones-controller:1.28.0-dev"
+        image: "gcr.io/agones-images/agones-controller:1.28.0"
         imagePullPolicy: IfNotPresent
         env:
         # minimum port that can be exposed to GameServer traffic
@@ -14696,7 +14699,7 @@ spec:
         - name: MAX_PORT
           value: "8000"
         - name: SIDECAR_IMAGE # overwrite the GameServer sidecar image that is used
-          value: "gcr.io/agones-images/agones-sdk:1.28.0-dev"
+          value: "gcr.io/agones-images/agones-sdk:1.28.0"
         - name: ALWAYS_PULL_SIDECAR # set the sidecar imagePullPolicy to Always
           value: "false"
         - name: SIDECAR_CPU_REQUEST
@@ -14794,7 +14797,7 @@ metadata:
   labels:
     component: ping
     app: agones
-    chart: agones-1.28.0-dev
+    chart: agones-1.28.0
     release: agones-manual
     heritage: Helm
 spec:
@@ -14829,7 +14832,7 @@ spec:
       priorityClassName: agones-system
       containers:
         - name: agones-ping
-          image: "gcr.io/agones-images/agones-ping:1.28.0-dev"
+          image: "gcr.io/agones-images/agones-ping:1.28.0"
           imagePullPolicy: IfNotPresent
           livenessProbe:
             httpGet:
@@ -14902,7 +14905,7 @@ spec:
           secretName: allocator-client-ca
       containers:
       - name: agones-allocator
-        image: "gcr.io/agones-images/agones-allocator:1.28.0-dev"
+        image: "gcr.io/agones-images/agones-allocator:1.28.0"
         imagePullPolicy: IfNotPresent
         livenessProbe:
           httpGet:
@@ -14978,7 +14981,7 @@ metadata:
   labels:
     component: controller
     app: agones
-    chart: agones-1.28.0-dev
+    chart: agones-1.28.0
     release: agones-manual
     heritage: Helm
 spec:
@@ -15006,6 +15009,21 @@ spec:
 # See the License for the specific language governing permissions and
 # limitations under the License.
 ---
+# Source: agones/templates/pdb.yaml
+# Copyright 2022 Google LLC All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+---
 # Source: agones/templates/extensions.yaml
 apiVersion: admissionregistration.k8s.io/v1
 kind: MutatingWebhookConfiguration
@@ -15014,7 +15032,7 @@ metadata:
   labels:
     component: controller
     app: agones
-    chart: agones-1.28.0-dev
+    chart: agones-1.28.0
     release: agones-manual
     heritage: Helm
 webhooks:
@@ -15066,7 +15084,7 @@ metadata:
   labels:
     component: controller
     app: agones
-    chart: agones-1.28.0-dev
+    chart: agones-1.28.0
     release: agones-manual
     heritage: Helm
 webhooks:

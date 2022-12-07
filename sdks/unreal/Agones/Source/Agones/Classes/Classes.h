@@ -266,7 +266,7 @@ struct FDuration
 	GENERATED_BODY()
 
 	UPROPERTY(BlueprintReadOnly, Category="Agones")
-	int64 Seconds;
+	int64 Seconds = 0;
 };
 
 USTRUCT(BlueprintType)
@@ -284,7 +284,7 @@ struct FPlayerCapacity
 	GENERATED_BODY()
 
 	UPROPERTY(BlueprintReadOnly, Category="Agones")
-	int64 Count;
+	int64 Count = 0;
 };
 
 USTRUCT(BlueprintType)

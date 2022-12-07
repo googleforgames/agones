@@ -22,11 +22,11 @@ Images available with this release:
 - [gcr.io/agones-images/agones-sdk:{version}](https://gcr.io/agones-images/agones-sdk:{version})
 - [gcr.io/agones-images/agones-ping:{version}](https://gcr.io/agones-images/agones-ping:{version})
 - [gcr.io/agones-images/agones-allocator:{version}](https://gcr.io/agones-images/agones-allocator:{version})
-{ run `make release-example-image-markdown` to populate example images section below (will be more in output than in example) }  
-- [gcr.io/agones-images/cpp-simple-server:{example-version}](https://gcr.io/agones-images/cpp-simple-server:{example-version})
-- [gcr.io/agones-images/crd-client:{example-version}](https://gcr.io/agones-images/crd-client:{example-version})
-- [gcr.io/agones-images/nodejs-simple-server:{example-version}](https://gcr.io/agones-images/nodejs-simple-server:{example-version})
-- [gcr.io/agones-images/rust-simple-server:{example-version}](https://gcr.io/agones-images/rust-simple-server:{example-version})
+  { run `make release-example-image-markdown` to populate example images section below (will be more in output than in example) }
+- [us-docker.pkg.dev/agones-images/examples/cpp-simple-server:{example-version}](https://us-docker.pkg.dev/agones-images/examples/cpp-simple-server:{example-version})
+- [us-docker.pkg.dev/agones-images/examples/crd-client:{example-version}](https://us-docker.pkg.dev/agones-images/examples/crd-client:{example-version})
+- [us-docker.pkg.dev/agones-images/examples/nodejs-simple-server:{example-version}](https://us-docker.pkg.dev/agones-images/examples/nodejs-simple-server:{example-version})
+- [us-docker.pkg.dev/agones-images/examples/rust-simple-server:{example-version}](https://us-docker.pkg.dev/agones-images/examples/rust-simple-server:{example-version})
 
 Helm chart available with this release:
 

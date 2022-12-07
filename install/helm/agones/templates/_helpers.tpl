@@ -46,3 +46,27 @@ Create chart name and version as used by the chart label.
 {{- define "agones.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
+
+{{/*
+Creates a YAML object representing known feature gates. Can then be used as:
+  {{- $featureGates := include "agones.featureGates" . | fromYaml }}
+then you can check a feature gate with e.g. $featureGates.Example
+
+Implemented by intentionally duplicating YAML - later keys take precedence.
+So we start with defaultfeaturegates.yaml and then splat intentionally set
+feature gates. In the process, we validate that the feature gate is known.
+*/}}
+{{- define "agones.featureGates" -}}
+{{- .Files.Get "defaultfeaturegates.yaml" -}}
+{{- if $.Values.agones.featureGates }}
+{{- $gates := .Files.Get "defaultfeaturegates.yaml" | fromYaml }}
+{{- range splitList "&" $.Values.agones.featureGates }}
+{{- $f := splitn "=" 2 . -}}
+{{- if hasKey $gates $f._0 }}
+{{$f._0}}: {{$f._1}}
+{{- else -}}
+{{- printf "Unknown feature gate %q" $f._0 | fail -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
