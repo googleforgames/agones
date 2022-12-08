@@ -26,9 +26,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/spf13/pflag"
-	"github.com/spf13/viper"
-
 	"agones.dev/agones/pkg"
 	"agones.dev/agones/pkg/allocation/converters"
 	pb "agones.dev/agones/pkg/allocation/go"
@@ -40,10 +37,11 @@ import (
 	"agones.dev/agones/pkg/util/fswatch"
 	"agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/signals"
-	gw_runtime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/heptiolabs/healthcheck"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"github.com/spf13/pflag"
+	"github.com/spf13/viper"
 	"go.opencensus.io/plugin/ocgrpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -288,7 +286,7 @@ func runMux(h *serviceHandler, httpPort int) {
 	grpcServer := grpc.NewServer(h.getMuxServerOptions()...)
 	pb.RegisterAllocationServiceServer(grpcServer, h)
 
-	mux := gw_runtime.NewServeMux()
+	mux := runtime.NewServerMux()
 	if err := pb.RegisterAllocationServiceHandlerServer(context.Background(), mux, h); err != nil {
 		panic(err)
 	}
@@ -298,7 +296,7 @@ func runMux(h *serviceHandler, httpPort int) {
 
 func runREST(h *serviceHandler, httpPort int) {
 	logger.WithField("port", httpPort).Info("Running the rest handler")
-	mux := gw_runtime.NewServeMux()
+	mux := runtime.NewServerMux()
 	if err := pb.RegisterAllocationServiceHandlerServer(context.Background(), mux, h); err != nil {
 		panic(err)
 	}

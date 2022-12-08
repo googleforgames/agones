@@ -16,6 +16,11 @@ set(GENERATED_GOOGLE_SOURCE_FILES
     src/google/http.pb.cc
 )
 
+set(GENERATED_GRPC_SOURCE_FILES
+    src/protoc-gen-openapiv2/annotations.pb.cc
+    src/protoc-gen-openapiv2/openapiv2.pb.cc
+)
+
 set(GENERATED_HEADER_FILES
     include/agones/sdk.grpc.pb.h
     include/agones/sdk.pb.h
@@ -26,13 +31,20 @@ set(GENERATED_GOOGLE_HEADER_FILES
     include/google/api/http.pb.h
 )
 
+set(GENERATED_GRPC_HEADER_FILES
+    include/protoc-gen-openapiv2/options/annotations.pb.h
+    include/protoc-gen-openapiv2/options/openapiv2.pb.h
+)
+
 set(ALL_FILES
     ${SOURCE_FILES}
     ${HEADER_FILES}
     ${GENERATED_SOURCE_FILES}
     ${GENERATED_GOOGLE_SOURCE_FILES}
+    ${GENERATED_GRPC_SOURCE_FILES}
     ${GENERATED_HEADER_FILES}
     ${GENERATED_GOOGLE_HEADER_FILES}
+    ${GENERATED_GRPC_HEADER_FILES}
     "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_export.h"
     "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_global.h"
 )
