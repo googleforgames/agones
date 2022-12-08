@@ -271,7 +271,7 @@ namespace Agones
                 {
                     uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(json)),
                     downloadHandler = new DownloadHandlerBuffer()
-                });
+                })
             {
                 req.SetRequestHeader("Content-Type", "application/json");
 
