@@ -56,10 +56,10 @@ spec:
           type: date
       schema:
         openAPIV3Schema:
-          {{- $data := dict "podPreserveUnknownFields" .Values.gameservers.podPreserveUnknownFields "featureLifecycleContract" $featureGates.LifecycleContract }}
+          {{- $data := dict "podPreserveUnknownFields" .Values.gameservers.podPreserveUnknownFields "featureSafeToEvict" $featureGates.SafeToEvict }}
           {{- include "gameserver.schema" $data | indent 9 }}{{- /* include the schema then status, as it's easier to align */ -}}
           {{- include "gameserver.status" $data | indent 11 }}
-{{- if $featureGates.LifecycleContract }}
+{{- if $featureGates.SafeToEvict }}
       subresources:
         # scale enables the scale subresource. We can't actually scale GameServers, but this allows
         # for the use of PodDisruptionBudget (PDB) without having to use a PDB per Pod.

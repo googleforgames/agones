@@ -43,9 +43,6 @@ const (
 	////////////////
 	// Alpha features
 
-	// FeatureLifecycleContract enables the `lifecycleContract` API to specify disruption tolerance.
-	FeatureLifecycleContract Feature = "LifecycleContract"
-
 	// FeaturePlayerAllocationFilter is a feature flag that enables the ability for Allocations to filter based on
 	// player capacity.
 	FeaturePlayerAllocationFilter Feature = "PlayerAllocationFilter"
@@ -56,6 +53,9 @@ const (
 	// FeatureResetMetricsOnDelete is a feature flag that tells the metrics service to unregister and register
 	// relevant metric views to reset their state immediately when an Agones resource is deleted.
 	FeatureResetMetricsOnDelete Feature = "ResetMetricsOnDelete"
+
+	// FeatureSafeToEvict enables the `SafeToEvict` API to specify disruption tolerance.
+	FeatureSafeToEvict Feature = "SafeToEvict"
 
 	////////////////
 	// Example feature
@@ -97,10 +97,10 @@ var (
 		FeatureStateAllocationFilter:  true,
 
 		// Alpha features
-		FeatureLifecycleContract:      false,
 		FeaturePlayerAllocationFilter: false,
 		FeaturePlayerTracking:         false,
 		FeatureResetMetricsOnDelete:   false,
+		FeatureSafeToEvict:            false,
 
 		// Example feature
 		FeatureExample: false,
