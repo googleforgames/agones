@@ -16,6 +16,7 @@
 
 # Beta features
 CustomFasSyncInterval: true
+SDKGracefulTermination: true
 StateAllocationFilter: true
 
 # Alpha features
@@ -23,7 +24,6 @@ LifecycleContract: false
 PlayerAllocationFilter: false
 PlayerTracking: false
 ResetMetricsOnDelete: false
-SDKGracefulTermination: false
 
 # Example feature
 Example: false
