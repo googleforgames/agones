@@ -24,7 +24,7 @@
 #
 
 # base version target. This is usually the next release.
-base_version = 1.28.0
+base_version = 1.29.0
 
 # agones image release registry
 release_registry = gcr.io/agones-images
@@ -65,9 +65,10 @@ KIND_PROFILE ?= agones
 KIND_CONTAINER_NAME=$(KIND_PROFILE)-control-plane
 
 # Game Server image to use while doing end-to-end tests
-GS_TEST_IMAGE ?= gcr.io/agones-images/simple-game-server:0.14
+GS_TEST_IMAGE ?= us-docker.pkg.dev/agones-images/examples/simple-game-server:0.14
 
-ALPHA_FEATURE_GATES ?= "PlayerTracking=true&PlayerAllocationFilter=true&SDKGracefulTermination=true&ResetMetricsOnDelete=true"
+# Enable all alpha feature gates. Keep in sync with `false` (alpha) entries in pkg/util/runtime/features.go:featureDefaults
+ALPHA_FEATURE_GATES ?= "PlayerAllocationFilter=true&PlayerTracking=true&ResetMetricsOnDelete=true&SafeToEvict=true&Example=true"
 
 # Build with Windows support
 WITH_WINDOWS=1

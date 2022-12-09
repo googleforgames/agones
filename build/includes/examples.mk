@@ -23,17 +23,17 @@
 #    |_|\__,_|_|  \__, |\___|\__|___/
 #                 |___/
 
-# test all example images exist on Google Cloud Registry
-test-examples-on-gcr: example-image-test.allocation-endpoint
-test-examples-on-gcr: example-image-test.autoscaler-webhook
-test-examples-on-gcr: example-image-test.cpp-simple
-test-examples-on-gcr: example-image-test.nodejs-simple
-test-examples-on-gcr: example-image-test.rust-simple
-test-examples-on-gcr: example-image-test.unity-simple
-test-examples-on-gcr: example-image-test.xonotic
-test-examples-on-gcr: example-image-test.crd-client
-test-examples-on-gcr: example-image-test.supertuxkart
-test-examples-on-gcr: example-image-test.simple-game-server
+# test all example images exist on Google Artifact Registry
+test-examples-on-gar: example-image-test.allocation-endpoint
+test-examples-on-gar: example-image-test.autoscaler-webhook
+test-examples-on-gar: example-image-test.cpp-simple
+test-examples-on-gar: example-image-test.nodejs-simple
+test-examples-on-gar: example-image-test.rust-simple
+test-examples-on-gar: example-image-test.unity-simple
+test-examples-on-gar: example-image-test.xonotic
+test-examples-on-gar: example-image-test.crd-client
+test-examples-on-gar: example-image-test.supertuxkart
+test-examples-on-gar: example-image-test.simple-game-server
 
 push-example-golang-images: example-image-push.allocation-endpoint
 push-example-golang-images: example-image-push.autoscaler-webhook
@@ -41,9 +41,9 @@ push-example-golang-images: example-image-push.crd-client
 push-example-golang-images: example-image-push.supertuxkart
 push-example-golang-images: example-image-push.simple-game-server
 
-# Test to ensure the example image found in the % folder is on GCR. Fails if it is not.
+# Test to ensure the example image found in the % folder is on GAR. Fails if it is not.
 example-image-test.%:
-	$(DOCKER_RUN) bash -c "cd examples/$* && make gcr-check"
+	$(DOCKER_RUN) bash -c "cd examples/$* && make gar-check"
 
 example-image-push.%:
 	$(DOCKER_RUN) bash -c "cd examples/$* && make push"

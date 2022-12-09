@@ -35,4 +35,4 @@ spec:
         spec:
           containers:
           - name: xonotic
-            image: gcr.io/agones-images/xonotic-example:0.9
+            image: us-docker.pkg.dev/agones-images/examples/xonotic-example:0.9

@@ -22,20 +22,23 @@ header() {
 
 sdk=/go/src/agones.dev/agones/proto/sdk
 googleapis=/go/src/agones.dev/agones/proto/googleapis
+gatewaygrpc=/go/src/agones.dev/agones/proto/grpc-gateway
 protoc_intermediate=/go/src/agones.dev/agones/sdks/cpp/.generated
 protoc_destination=/go/src/agones.dev/agones/sdks/cpp
 
 mkdir -p ${protoc_intermediate}
 mkdir -p ${protoc_destination}/src/agones
 mkdir -p ${protoc_destination}/src/google
+mkdir -p ${protoc_destination}/src/protoc-gen-openapiv2
 mkdir -p ${protoc_destination}/include/agones
 mkdir -p ${protoc_destination}/include/google/api
+mkdir -p ${protoc_destination}/include/protoc-gen-openapiv2/options
 
 cd /go/src/agones.dev/agones/sdks/cpp
 find -name '*.pb.*' -delete
 cd /go/src/agones.dev/agones
-protoc -I ${googleapis} -I ${sdk} --grpc_out=${protoc_intermediate} --plugin=protoc-gen-grpc=`which grpc_cpp_plugin` sdk.proto
-protoc -I ${googleapis} -I ${sdk} --cpp_out=dllexport_decl=AGONES_EXPORT:${protoc_intermediate} sdk.proto ${googleapis}/google/api/annotations.proto ${googleapis}/google/api/http.proto
+protoc -I ${googleapis} -I ${gatewaygrpc} -I ${sdk} --plugin=protoc-gen-grpc=`which grpc_cpp_plugin` --grpc_out=${protoc_intermediate} sdk.proto
+protoc -I ${googleapis} -I ${gatewaygrpc} -I ${sdk} --cpp_out=dllexport_decl=AGONES_EXPORT:${protoc_intermediate} sdk.proto ${googleapis}/google/api/annotations.proto ${googleapis}/google/api/http.proto ${gatewaygrpc}/protoc-gen-openapiv2/options/annotations.proto ${gatewaygrpc}/protoc-gen-openapiv2/options/openapiv2.proto
 
 cd ${protoc_intermediate}
 header sdk.grpc.pb.cc ${protoc_destination}/src/agones
@@ -48,5 +51,11 @@ header annotations.pb.cc ${protoc_destination}/src/google
 header http.pb.cc ${protoc_destination}/src/google
 header annotations.pb.h ${protoc_destination}/include/google/api
 header http.pb.h ${protoc_destination}/include/google/api
+
+cd ${protoc_intermediate}/protoc-gen-openapiv2/options
+header annotations.pb.cc ${protoc_destination}/src/protoc-gen-openapiv2
+header openapiv2.pb.cc ${protoc_destination}/src/protoc-gen-openapiv2
+header annotations.pb.h ${protoc_destination}/include/protoc-gen-openapiv2/options
+header openapiv2.pb.h ${protoc_destination}/include/protoc-gen-openapiv2/options
 
 rm -r ${protoc_intermediate}

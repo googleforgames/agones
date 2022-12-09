@@ -97,7 +97,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_INCLUDE_CURRENT_DIR_IN_INTERFACE ON)
 set(CMAKE_DEBUG_POSTFIX "d")
-set(AGONES_GRPC_VERSION "1.36.1")
+set(AGONES_GRPC_VERSION "1.50.1")
 
 # Platform specific stuff
 if (WIN32)
@@ -190,6 +190,11 @@ install(
 install(
     FILES ${GENERATED_GOOGLE_HEADER_FILES}
     DESTINATION ${_INCLUDE_DIRS}/google/api
+)
+# grpc-gateway header files
+install(
+    FILES ${GENERATED_GRPC_HEADER_FILES}
+    DESTINATION ${_INCLUDE_DIRS}/protoc-gen-openapiv2/options
 )
 
 unset(_INCLUDE_DIRS)

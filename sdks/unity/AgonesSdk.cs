@@ -290,6 +290,8 @@ namespace Agones
                 Log($"Agones SendRequest failed: {api} {req.error}");
             }
 
+            req.Dispose();
+
             return result;
         }
 
