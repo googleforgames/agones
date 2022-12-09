@@ -523,7 +523,7 @@ func TestConvertGSAToAllocationResponse(t *testing.T) {
 					},
 					Address:  "address",
 					NodeName: "node-name",
-					Source: "local",
+					Source:   "local",
 				},
 			},
 			want: &pb.AllocationResponse{

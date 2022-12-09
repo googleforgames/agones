@@ -279,7 +279,7 @@ type GameServerAllocationStatus struct {
 	Ports          []agonesv1.GameServerStatusPort `json:"ports,omitempty"`
 	Address        string                          `json:"address,omitempty"`
 	NodeName       string                          `json:"nodeName,omitempty"`
-	// If the allocation is from remote cluster, Source is the endpoint of the remote agones-allocator.
+	// If the allocation is from a remote cluster, Source is the endpoint of the remote agones-allocator.
 	// Otherwise, Source is "local"
 	Source         string                          `json:"source"`
 }
