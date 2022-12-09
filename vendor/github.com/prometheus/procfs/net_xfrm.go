@@ -79,10 +79,13 @@ type XfrmStat struct {
 	// Policy is dead
 	XfrmOutPolDead int
 	// Policy Error
-	XfrmOutPolError     int
-	XfrmFwdHdrError     int
+	XfrmOutPolError int
+	// Forward routing of a packet is not allowed
+	XfrmFwdHdrError int
+	// State is invalid, perhaps expired
 	XfrmOutStateInvalid int
-	XfrmAcquireError    int
+	// State hasn’t been fully acquired before use
+	XfrmAcquireError int
 }
 
 // NewXfrmStat reads the xfrm_stat statistics.
@@ -112,8 +115,7 @@ func (fs FS) NewXfrmStat() (XfrmStat, error) {
 		fields := strings.Fields(s.Text())
 
 		if len(fields) != 2 {
-			return XfrmStat{}, fmt.Errorf(
-				"couldn't parse %s line %s", file.Name(), s.Text())
+			return XfrmStat{}, fmt.Errorf("couldn't parse %q line %q", file.Name(), s.Text())
 		}
 
 		name := fields[0]
