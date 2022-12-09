@@ -154,6 +154,21 @@ properties:
             title: The initial player capacity of this Game Server
             minimum: 0
 {{- if .featureSafeToEvict }}
+      eviction:
+        type: object
+        title: Eviction tolerance of the game server
+        properties:
+          safe:
+            type: string
+            title: Game server supports termination via SIGTERM
+            description: |
+              - Never: The game server should run to completion. Agones sets Pod annotation `cluster-autoscaler.kubernetes.io/safe-to-evict: "false"` and label `agones.dev/safe-to-evict: "false"`, which matches a restrictive PodDisruptionBudget.
+              - OnUpgrade: On SIGTERM, the game server will exit within `terminationGracePeriodSeconds` or be terminated; Agones sets Pod annotation `cluster-autoscaler.kubernetes.io/safe-to-evict: "false"`, which blocks evictions by Cluster Autoscaler. Evictions from node upgrades proceed normally.
+              - Always: On SIGTERM, the game server will exit within `terminationGracePeriodSeconds` or be terminated, typically within 10m; Agones sets Pod annotation `cluster-autoscaler.kubernetes.io/safe-to-evict: "true"`, which allows evictions by Cluster Autoscaler.
+            enum:
+            - Always
+            - OnUpgrade
+            - Never
       immutableReplicas:
         type: integer
         title: Immutable count of Pods to a GameServer. Always 1. (Implementation detail of implementing the Scale subresource.)

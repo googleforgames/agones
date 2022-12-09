@@ -66,6 +66,15 @@ status:
           items:
             type: string
 {{- if .featureSafeToEvict }}
+    eviction:
+      type: object
+      properties:
+        safe:
+          type: string
+          enum:
+          - Always
+          - OnUpgrade
+          - Never
     immutableReplicas:
       type: integer
       title: Immutable count of Pods to a GameServer. Always 1. (Implementation detail of implementing the Scale subresource.)

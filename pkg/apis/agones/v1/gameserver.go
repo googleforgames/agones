@@ -72,6 +72,16 @@ const (
 	// This will mean that users will need to lookup what port has been opened through the server side SDK.
 	Passthrough PortPolicy = "Passthrough"
 
+	// EvictionSafeAlways means the game server supports termination via SIGTERM, and wants eviction signals
+	// from Cluster Autoscaler scaledown and node upgrades.
+	EvictionSafeAlways EvictionSafe = "Always"
+	// EvictionSafeOnUpgrade means the game server supports termination via SIGTERM, and wants eviction signals
+	// from node upgrades, but not Cluster Autoscaler scaledown.
+	EvictionSafeOnUpgrade EvictionSafe = "OnUpgrade"
+	// EvictionSafeNever means the game server should run to completion and may not understand SIGTERM. Eviction
+	// from ClusterAutoscaler and upgrades should both be blocked.
+	EvictionSafeNever EvictionSafe = "Never"
+
 	// ProtocolTCPUDP Protocol exposes the hostPort allocated for this container for both TCP and UDP.
 	ProtocolTCPUDP corev1.Protocol = "TCPUDP"
 
@@ -162,6 +172,9 @@ type GameServerSpec struct {
 	// (Alpha, PlayerTracking feature flag) Players provides the configuration for player tracking features.
 	// +optional
 	Players *PlayersSpec `json:"players,omitempty"`
+	// (Alpha, SafeToEvict feature flag) Eviction specifies the eviction tolerance of the GameServer. Defaults to "Never".
+	// +optional
+	Eviction Eviction `json:"eviction,omitempty"`
 	// immutableReplicas is present in gameservers.agones.dev but omitted here (it's always 1).
 }
 
@@ -170,11 +183,24 @@ type PlayersSpec struct {
 	InitialCapacity int64 `json:"initialCapacity,omitempty"`
 }
 
+// Eviction specifies the eviction tolerance of the GameServer
+type Eviction struct {
+	// (Alpha, SafeToEvict feature flag)
+	// Game server supports termination via SIGTERM:
+	// - Always: Allow eviction for both Cluster Autoscaler and node drain for upgrades
+	// - OnUpgrade: Allow eviction for upgrades alone
+	// - Never (default): Pod should run to completion
+	Safe EvictionSafe `json:"safe,omitempty"`
+}
+
 // GameServerState is the state for the GameServer
 type GameServerState string
 
 // PortPolicy is the port policy for the GameServer
 type PortPolicy string
+
+// EvictionSafe specified whether the game server supports termination via SIGTERM
+type EvictionSafe string
 
 // Health configures health checking on the GameServer
 type Health struct {
@@ -235,6 +261,8 @@ type GameServerStatus struct {
 	// [FeatureFlag:PlayerTracking]
 	// +optional
 	Players *PlayerStatus `json:"players"`
+	// (Alpha, SafeToEvict feature flag) Eviction specifies the eviction tolerance of the GameServer.
+	Eviction Eviction `json:"eviction,omitempty"`
 	// immutableReplicas is present in gameservers.agones.dev but omitted here (it's always 1).
 }
 
@@ -271,6 +299,7 @@ func (gss *GameServerSpec) ApplyDefaults() {
 	gss.applyContainerDefaults()
 	gss.applyPortDefaults()
 	gss.applyHealthDefaults()
+	gss.applyEvictionDefaults()
 	gss.applySchedulingDefaults()
 	gss.applySdkServerDefaults()
 }
@@ -330,6 +359,8 @@ func (gs *GameServer) applyStatusDefaults() {
 			gs.Status.Players.Capacity = gs.Spec.Players.InitialCapacity
 		}
 	}
+
+	gs.applyEvictionStatus()
 }
 
 // applyPortDefaults applies default values for all ports
@@ -356,6 +387,25 @@ func (gss *GameServerSpec) applySchedulingDefaults() {
 	}
 }
 
+func (gss *GameServerSpec) applyEvictionDefaults() {
+	if !runtime.FeatureEnabled(runtime.FeatureSafeToEvict) {
+		return
+	}
+	if gss.Eviction.Safe == "" {
+		gss.Eviction.Safe = EvictionSafeNever
+	}
+}
+
+func (gs *GameServer) applyEvictionStatus() {
+	if !runtime.FeatureEnabled(runtime.FeatureSafeToEvict) {
+		return
+	}
+	gs.Status.Eviction = gs.Spec.Eviction
+	if gs.Spec.Template.ObjectMeta.Annotations[PodSafeToEvictAnnotation] == "true" {
+		gs.Status.Eviction.Safe = EvictionSafeAlways
+	}
+}
+
 // Validate validates the GameServerSpec configuration.
 // devAddress is a specific IP address used for local Gameservers, for fleets "" is used
 // If a GameServer Spec is invalid there will be > 0 values in
@@ -369,6 +419,16 @@ func (gss *GameServerSpec) Validate(devAddress string) ([]metav1.StatusCause, bo
 				Type:    metav1.CauseTypeFieldValueNotSupported,
 				Field:   "players",
 				Message: fmt.Sprintf("Value cannot be set unless feature flag %s is enabled", runtime.FeaturePlayerTracking),
+			})
+		}
+	}
+
+	if !runtime.FeatureEnabled(runtime.FeatureSafeToEvict) {
+		if gss.Eviction.Safe != "" {
+			causes = append(causes, metav1.StatusCause{
+				Type:    metav1.CauseTypeFieldValueNotSupported,
+				Field:   "safeToEvict",
+				Message: fmt.Sprintf("Value cannot be set unless feature flag %s is enabled", runtime.FeatureSafeToEvict),
 			})
 		}
 	}
