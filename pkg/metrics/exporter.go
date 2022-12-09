@@ -24,6 +24,7 @@ import (
 	"contrib.go.opencensus.io/exporter/stackdriver"
 	"github.com/pkg/errors"
 	prom "github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/collectors"
 	"go.opencensus.io/stats/view"
 	"google.golang.org/genproto/googleapis/api/monitoredres"
 )
@@ -39,10 +40,10 @@ func RegisterPrometheusExporter(registry *prom.Registry) (http.Handler, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err := registry.Register(prom.NewProcessCollector(prom.ProcessCollectorOpts{})); err != nil {
+	if err := registry.Register(collectors.NewProcessCollector(collectors.ProcessCollectorOpts{})); err != nil {
 		return nil, err
 	}
-	if err := registry.Register(prom.NewGoCollector()); err != nil {
+	if err := registry.Register(collectors.NewGoCollector()); err != nil {
 		return nil, err
 	}
 	view.RegisterExporter(pe)
