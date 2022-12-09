@@ -54,7 +54,7 @@ via Agones exposed ports.
 
 **Windows (amd64)**
 * hyper-v (might need
-  <a href="https://blog.thepolyglotprogrammer.com/setting-up-kubernetes-on-wsl-to-work-with-minikube-on-windows-10-90dac3c72fa1" data-proofer-ignore>this blog post</a>
+  <a href="https://blog.thepolyglotprogrammer.com/setting-up-kubernetes-on-wsl-to-work-with-minikube-on-windows-10-90dac3c72fa1">this blog post</a>
   and/or [this comment](https://github.com/microsoft/WSL/issues/4288#issuecomment-652259640) for WSL support)
 
 _If you have successfully tested with other platforms and drivers, please click "edit this page" in the top right hand

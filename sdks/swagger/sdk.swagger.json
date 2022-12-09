@@ -4,6 +4,11 @@
     "title": "sdk.proto",
     "version": "version not set"
   },
+  "tags": [
+    {
+      "name": "SDK"
+    }
+  ],
   "schemes": [
     "http"
   ],
@@ -229,7 +234,16 @@
           "200": {
             "description": "A successful response.(streaming responses)",
             "schema": {
-              "$ref": "#/x-stream-definitions/sdkGameServer"
+              "type": "object",
+              "properties": {
+                "result": {
+                  "$ref": "#/definitions/sdkGameServer"
+                },
+                "error": {
+                  "$ref": "#/definitions/googlerpcStatus"
+                }
+              },
+              "title": "Stream result of sdkGameServer"
             }
           }
         },
@@ -292,27 +306,6 @@
         }
       }
     },
-    "GameServerStatus": {
-      "type": "object",
-      "properties": {
-        "state": {
-          "type": "string"
-        },
-        "address": {
-          "type": "string"
-        },
-        "ports": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/StatusPort"
-          }
-        },
-        "players": {
-          "$ref": "#/definitions/StatusPlayerStatus",
-          "title": "[Stage:Alpha]\n[FeatureFlag:PlayerTracking]"
-        }
-      }
-    },
     "SpecHealth": {
       "type": "object",
       "properties": {
@@ -366,43 +359,6 @@
         }
       }
     },
-    "protobufAny": {
-      "type": "object",
-      "properties": {
-        "type_url": {
-          "type": "string"
-        },
-        "value": {
-          "type": "string",
-          "format": "byte"
-        }
-      }
-    },
-    "runtimeStreamError": {
-      "type": "object",
-      "properties": {
-        "grpc_code": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "http_code": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "message": {
-          "type": "string"
-        },
-        "http_status": {
-          "type": "string"
-        },
-        "details": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/protobufAny"
-          }
-        }
-      }
-    },
     "sdkDuration": {
       "type": "object",
       "properties": {
@@ -427,10 +383,30 @@
           "$ref": "#/definitions/GameServerSpec"
         },
         "status": {
-          "$ref": "#/definitions/GameServerStatus"
+          "$ref": "#/definitions/sdkGameServerStatus"
         }
       },
       "description": "A GameServer Custom Resource Definition object\nWe will only export those resources that make the most\nsense. Can always expand to more as needed."
+    },
+    "sdkGameServerStatus": {
+      "type": "object",
+      "properties": {
+        "state": {
+          "type": "string"
+        },
+        "address": {
+          "type": "string"
+        },
+        "ports": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/StatusPort"
+          }
+        },
+        "players": {
+          "$ref": "#/definitions/StatusPlayerStatus"
+        }
+      }
     },
     "sdkKeyValue": {
       "type": "object",
@@ -443,20 +419,33 @@
         }
       },
       "title": "Key, Value entry"
-    }
-  },
-  "x-stream-definitions": {
-    "sdkGameServer": {
+    },
+    "googlerpcStatus": {
       "type": "object",
       "properties": {
-        "result": {
-          "$ref": "#/definitions/sdkGameServer"
+        "code": {
+          "type": "integer",
+          "format": "int32"
         },
-        "error": {
-          "$ref": "#/definitions/runtimeStreamError"
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
         }
       },
-      "title": "Stream result of sdkGameServer"
+      "additionalProperties": {}
     }
   }
 }

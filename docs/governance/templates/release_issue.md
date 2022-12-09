@@ -39,25 +39,26 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 - [ ] Ensure the [helm `tag` value][values] is correct (should be {version} if a full release, {version}-rc if release candidate)
 - [ ] Ensure the [helm `Chart` version values][chart] are correct (should be {version} if a full release, {version}-rc if release candidate)
 - [ ] Update SDK Package Versions
-    - [ ] Update the package version in [`sdks/nodejs/package.json`][package.json] and [`sdks/nodejs/package-lock.json`][package-lock.json] by running `npm version {version}` if a full release or `npm version {version}-rc` if release candidate
-    - [ ] Ensure the [`sdks/csharp/sdk/AgonesSDK.nuspec` and `sdks/csharp/sdk/csharp-sdk.csproj`][csharp] versions are correct (should be {version} if a full release, {version}-rc if release candidate)
-    - [ ] Update the package version in the [`sdks/unity/package.json`][unity] package file's `Version` field to {version} if a full release, {version}-rc if release candidate
+  - [ ] Update the package version in [`sdks/nodejs/package.json`][package.json] and [`sdks/nodejs/package-lock.json`][package-lock.json] by running `npm version {version}` if a full release or `npm version {version}-rc` if release candidate
+  - [ ] Ensure the [`sdks/csharp/sdk/AgonesSDK.nuspec` and `sdks/csharp/sdk/csharp-sdk.csproj`][csharp] versions are correct (should be {version} if a full release, {version}-rc if release candidate)
+  - [ ] Update the package version in the [`sdks/unity/package.json`][unity] package file's `Version` field to {version} if a full release, {version}-rc if release candidate
 - [ ] Run `make gen-install`
 - [ ] Run `make test-examples-on-gar` to ensure all example images exist on us-docker.pkg.dev/agones-images/examples
 - [ ] Create a *draft* release with the [release template][release-template]
     - [ ] Make a `tag` with the release version.
 - [ ] Site updated
-    - [ ] Copy the draft release content into a new `/site/content/en/blog/releases` content (this will be what you send via email).
-    - [ ] Review all `link_test` and `data-proofer-ignore` attributes and remove for link testing
-    - [ ] If full release, review and remove all instances of the `feature` shortcode
-    - [ ] If full release, add a link to previous version's documentation to nav dropdown.
-    - [ ] config.toml updates:
-        - [ ] If full release, update `release_branch` to the new release branch for {version}.
-        - [ ] If full release, update `release-version` with the new release version {version}.
-        - [ ] If full release, copy `dev_supported_k8s` to `supported_k8s`.
-        - [ ] If full release, copy `dev_aks_minor_supported_k8s` to `aks_minor_supported_k8s`.
-        - [ ] If full release, copy `dev_minikube_minor_supported_k8s` to `minikube_minor_supported_k8s`.
-        - [ ] If full release, update documentation with updated example images tags.
+  - [ ] Copy the draft release content into a new `/site/content/en/blog/releases` content (this will be what you send via email).
+  - [ ] Add the Agones release version and its supported Kubernetes version to the version matrix in `site/content/en/docs/installation/#agones-and-kubernetes-supported-versions`.
+  - [ ] Review all `link_test` and `data-proofer-ignore` attributes and remove for link testing
+  - [ ] If full release, review and remove all instances of the `feature` shortcode
+  - [ ] If full release, add a link to previous version's documentation to nav dropdown.
+  - [ ] config.toml updates:
+    - [ ] If full release, update `release_branch` to the new release branch for {version}.
+    - [ ] If full release, update `release-version` with the new release version {version}.
+    - [ ] If full release, copy `dev_supported_k8s` to `supported_k8s`.
+    - [ ] If full release, copy `dev_aks_minor_supported_k8s` to `aks_minor_supported_k8s`.
+    - [ ] If full release, copy `dev_minikube_minor_supported_k8s` to `minikube_minor_supported_k8s`.
+    - [ ] If full release, update documentation with updated example images tags.
 - [ ] Create PR with these changes, and merge them with an approval.
 - [ ] Run `git remote update && git checkout main && git reset --hard upstream/main` to ensure your code is in line
   with upstream  (unless this is a hotfix, then do the same, but for the release branch)
@@ -69,7 +70,7 @@ and copy it into a release issue. Fill in relevant values, found inside {}
       Will need [NuGet API Key](https://www.nuget.org/account/apikeys) from Agones account.
 - [ ] Run `make do-release`. (if release candidate: `make do-release RELEASE_VERSION={version}-rc`) to create and push the docker images and helm chart.
 - [ ] Run `make shell` and run `gcloud config configurations activate <your development project>` to switch Agones
-  development tooling off of the `agones-images` project.
+    development tooling off of the `agones-images` project.
 - [ ] Do a `helm repo add agones https://agones.dev/chart/stable` / `helm repo update` and verify that the new
   version is available via the command `helm search repo agones --versions --devel`.
 - [ ] Do a `helm install --namespace=agones-system agones agones/agones`
@@ -92,7 +93,7 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 - [ ] Run `make gen-install gen-api-docs`
 - [ ] Create PR with these changes, and merge them with approval
 - [ ] Close this issue.
-- [ ] If full release, close the current milestone. *Congratulations!* - the release is now complete! :tada: :clap: :smile: :+1:
+- [ ] If full release, close the current milestone. _Congratulations!_ - the release is now complete! :tada: :clap: :smile: :+1:
 
 [values]: https://github.com/googleforgames/agones/blob/main/install/helm/agones/values.yaml#L33
 [chart]: https://github.com/googleforgames/agones/blob/main/install/helm/agones/Chart.yaml

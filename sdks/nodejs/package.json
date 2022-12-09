@@ -26,5 +26,5 @@
     "publishConfig": {
         "access": "public"
     },
-    "version": "1.28.0-rc"
+    "version": "1.29.0-dev"
 }

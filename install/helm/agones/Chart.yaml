@@ -15,8 +15,8 @@
 # Declare variables to be passed into your templates.
 
 apiVersion: v1
-appVersion: "1.28.0-rc"
-version: 1.28.0-rc
+appVersion: "1.29.0-dev"
+version: 1.29.0-dev
 name: agones
 description: a library for hosting, running and scaling dedicated game servers on Kubernetes.
 keywords:

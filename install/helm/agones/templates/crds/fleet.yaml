@@ -100,7 +100,7 @@ spec:
                             - type: integer
                             - type: string
                 template:
-                  {{- $data := dict "metadata" true "podPreserveUnknownFields" .Values.gameservers.podPreserveUnknownFields "featureLifecycleContract" $featureGates.LifecycleContract }}
+                  {{- $data := dict "metadata" true "podPreserveUnknownFields" .Values.gameservers.podPreserveUnknownFields "featureSafeToEvict" $featureGates.SafeToEvict }}
                   {{- include "gameserver.schema" $data | indent 17 }}
             status:
               description: 'FleetStatus is the status of a Fleet. More info:

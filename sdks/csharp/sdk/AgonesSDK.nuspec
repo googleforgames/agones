@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>AgonesSDK</id>
-    <version>1.28.0-rc</version>
+    <version>1.29.0-dev</version>
     <authors>Google LLC</authors>
     <owners>Google LLC</owners>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
@@ -14,10 +14,10 @@
     <dependencies>
       <group targetFramework=".NETStandard2.0">
         <dependency id="Google.Api.CommonProtos" version="2.0.0" exclude="Build,Analyzers" />
-        <dependency id="Google.Protobuf" version="3.15.0" exclude="Build,Analyzers" />
-        <dependency id="Grpc" version="2.46.3" exclude="Build,Analyzers" />
-        <dependency id="Grpc.Core" version="2.46.3" exclude="Build,Analyzers" />
-        <dependency id="Grpc.Tools" version="2.47.0" exclude="Build,Analyzers" />
+        <dependency id="Google.Protobuf" version="3.21.9" exclude="Build,Analyzers" />
+        <dependency id="Grpc" version="2.46.5" exclude="Build,Analyzers" />
+        <dependency id="Grpc.Core" version="2.46.5" exclude="Build,Analyzers" />
+        <dependency id="Grpc.Tools" version="2.50.0" exclude="Build,Analyzers" />
       </group>
     </dependencies>
   </metadata>

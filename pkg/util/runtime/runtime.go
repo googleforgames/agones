@@ -19,9 +19,11 @@ package runtime
 import (
 	"fmt"
 
+	gwruntime "github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	joonix "github.com/joonix/log"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"google.golang.org/protobuf/encoding/protojson"
 	"k8s.io/apimachinery/pkg/util/runtime"
 )
 
@@ -80,4 +82,24 @@ func NewLoggerWithSource(source string) *logrus.Entry {
 // such as when you have a struct with methods
 func NewLoggerWithType(obj interface{}) *logrus.Entry {
 	return NewLoggerWithSource(fmt.Sprintf("%T", obj))
+}
+
+// NewServerMux returns a ServeMux which is a request multiplexer for grpc-gateway.
+// It matches http requests to pattern and invokes the corresponding handler.
+// ref: https://grpc-ecosystem.github.io/grpc-gateway/docs/development/grpc-gateway_v2_migration_guide/#we-now-emit-default-values-for-all-fields
+func NewServerMux() *gwruntime.ServeMux {
+	mux := gwruntime.NewServeMux(
+		gwruntime.WithMarshalerOption(gwruntime.MIMEWildcard, &gwruntime.HTTPBodyMarshaler{
+			Marshaler: &gwruntime.JSONPb{
+				MarshalOptions: protojson.MarshalOptions{
+					UseProtoNames:   true,
+					EmitUnpopulated: true,
+				},
+				UnmarshalOptions: protojson.UnmarshalOptions{
+					DiscardUnknown: true,
+				},
+			},
+		}),
+	)
+	return mux
 }

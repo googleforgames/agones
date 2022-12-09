@@ -4,6 +4,11 @@
     "title": "proto/allocation/allocation.proto",
     "version": "version not set"
   },
+  "tags": [
+    {
+      "name": "AllocationService"
+    }
+  ],
   "schemes": [
     "https"
   ],
