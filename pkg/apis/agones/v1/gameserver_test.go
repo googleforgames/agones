@@ -1247,67 +1247,116 @@ func TestGameServerPodWithMultiplePortAllocations(t *testing.T) {
 }
 
 func TestGameServerPodObjectMeta(t *testing.T) {
+	runtime.FeatureTestMutex.Lock()
+	defer runtime.FeatureTestMutex.Unlock()
+
 	fixture := &GameServer{ObjectMeta: metav1.ObjectMeta{Name: "lucy"},
 		Spec: GameServerSpec{Container: "goat"}}
 
-	f := func(t *testing.T, gs *GameServer, pod *corev1.Pod) {
-		assert.Equal(t, gs.ObjectMeta.Name, pod.ObjectMeta.Name)
-		assert.Equal(t, gs.ObjectMeta.Namespace, pod.ObjectMeta.Namespace)
-		assert.Equal(t, GameServerLabelRole, pod.ObjectMeta.Labels[RoleLabel])
-		assert.Equal(t, "gameserver", pod.ObjectMeta.Labels[agones.GroupName+"/role"])
-		assert.Equal(t, gs.ObjectMeta.Name, pod.ObjectMeta.Labels[GameServerPodLabel])
-		assert.Equal(t, "goat", pod.ObjectMeta.Annotations[GameServerContainerAnnotation])
-		assert.True(t, metav1.IsControlledBy(pod, gs))
+	for desc, tc := range map[string]struct {
+		featureFlags string
+		scheduling   apis.SchedulingStrategy
+		wantSafe     string
+	}{
+		"packed, SafeToEvict=false": {
+			featureFlags: "SafeToEvict=false",
+			scheduling:   apis.Packed,
+			wantSafe:     "false",
+		},
+		"distributed, SafeToEvict=false": {
+			featureFlags: "SafeToEvict=false",
+			scheduling:   apis.Distributed,
+		},
+		"packed, SafeToEvict=true": {
+			featureFlags: "SafeToEvict=true",
+			scheduling:   apis.Packed,
+		},
+		"distributed, SafeToEvict=true": {
+			featureFlags: "SafeToEvict=true",
+			scheduling:   apis.Distributed,
+		},
+	} {
+		t.Run(desc, func(t *testing.T) {
+			err := runtime.ParseFeatures(tc.featureFlags)
+			assert.NoError(t, err)
+
+			gs := fixture.DeepCopy()
+			gs.Spec.Scheduling = tc.scheduling
+			pod := &corev1.Pod{}
+
+			gs.podObjectMeta(pod)
+
+			assert.Equal(t, gs.ObjectMeta.Name, pod.ObjectMeta.Name)
+			assert.Equal(t, gs.ObjectMeta.Namespace, pod.ObjectMeta.Namespace)
+			assert.Equal(t, GameServerLabelRole, pod.ObjectMeta.Labels[RoleLabel])
+			assert.Equal(t, "gameserver", pod.ObjectMeta.Labels[agones.GroupName+"/role"])
+			assert.Equal(t, gs.ObjectMeta.Name, pod.ObjectMeta.Labels[GameServerPodLabel])
+			assert.Equal(t, "goat", pod.ObjectMeta.Annotations[GameServerContainerAnnotation])
+			assert.True(t, metav1.IsControlledBy(pod, gs))
+			assert.Equal(t, tc.wantSafe, pod.ObjectMeta.Annotations[PodSafeToEvictAnnotation])
+		})
 	}
-
-	t.Run("packed", func(t *testing.T) {
-		gs := fixture.DeepCopy()
-		gs.Spec.Scheduling = apis.Packed
-		pod := &corev1.Pod{}
-
-		gs.podObjectMeta(pod)
-		f(t, gs, pod)
-
-		assert.Equal(t, "false", pod.ObjectMeta.Annotations[PodSafeToEvictAnnotation])
-	})
-
-	t.Run("distributed", func(t *testing.T) {
-		gs := fixture.DeepCopy()
-		gs.Spec.Scheduling = apis.Distributed
-		pod := &corev1.Pod{}
-
-		gs.podObjectMeta(pod)
-		f(t, gs, pod)
-
-		assert.Equal(t, "", pod.ObjectMeta.Annotations[PodSafeToEvictAnnotation])
-	})
 }
 
 func TestGameServerPodAutoscalerAnnotations(t *testing.T) {
+	runtime.FeatureTestMutex.Lock()
+	defer runtime.FeatureTestMutex.Unlock()
+
 	testCases := []struct {
+		featureFlags       string
 		description        string
 		scheduling         apis.SchedulingStrategy
 		setAnnotation      bool
 		expectedAnnotation string
 	}{
 		{
-			description:        "Packed",
+			featureFlags:       "SafeToEvict=false",
+			description:        "Packed, SafeToEvict=false",
 			scheduling:         apis.Packed,
 			expectedAnnotation: "false",
 		},
 		{
-			description:        "Distributed",
+			featureFlags:       "SafeToEvict=false",
+			description:        "Distributed, SafeToEvict=false",
 			scheduling:         apis.Distributed,
 			expectedAnnotation: "",
 		},
 		{
-			description:        "Packed with autoscaler annotation",
+			featureFlags:       "SafeToEvict=false",
+			description:        "Packed with autoscaler annotation, SafeToEvict=false",
 			scheduling:         apis.Packed,
 			setAnnotation:      true,
 			expectedAnnotation: "true",
 		},
 		{
-			description:        "Distributed with autoscaler annotation",
+			featureFlags:       "SafeToEvict=false",
+			description:        "Distributed with autoscaler annotation, SafeToEvict=false",
+			scheduling:         apis.Distributed,
+			setAnnotation:      true,
+			expectedAnnotation: "true",
+		},
+		{
+			featureFlags:       "SafeToEvict=true",
+			description:        "Packed, SafeToEvict=true",
+			scheduling:         apis.Packed,
+			expectedAnnotation: "false",
+		},
+		{
+			featureFlags:       "SafeToEvict=true",
+			description:        "Distributed, SafeToEvict=true",
+			scheduling:         apis.Distributed,
+			expectedAnnotation: "false",
+		},
+		{
+			featureFlags:       "SafeToEvict=true",
+			description:        "Packed with autoscaler annotation, SafeToEvict=true",
+			scheduling:         apis.Packed,
+			setAnnotation:      true,
+			expectedAnnotation: "true",
+		},
+		{
+			featureFlags:       "SafeToEvict=true",
+			description:        "Distributed with autoscaler annotation, SafeToEvict=true",
 			scheduling:         apis.Distributed,
 			setAnnotation:      true,
 			expectedAnnotation: "true",
@@ -1317,9 +1366,13 @@ func TestGameServerPodAutoscalerAnnotations(t *testing.T) {
 	fixture := &GameServer{
 		ObjectMeta: metav1.ObjectMeta{Name: "logan"},
 		Spec:       GameServerSpec{Container: "sheep"},
+		Status:     GameServerStatus{Eviction: Eviction{Safe: EvictionSafeNever}},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.description, func(t *testing.T) {
+			err := runtime.ParseFeatures(tc.featureFlags)
+			assert.NoError(t, err)
+
 			gs := fixture.DeepCopy()
 			gs.Spec.Scheduling = tc.scheduling
 			if tc.setAnnotation {

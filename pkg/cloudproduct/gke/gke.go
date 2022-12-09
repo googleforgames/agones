@@ -38,8 +38,9 @@ const (
 	noWorkloadDefaulter          = "failed to get MutatingWebhookConfigurations/workload-defaulter.config.common-webhooks.networking.gke.io (error expected if not on GKE Autopilot)"
 	hostPortAssignmentAnnotation = "autopilot.gke.io/host-port-assignment"
 
-	errPortPolicyMustBeDynamic = "PortPolicy must be Dynamic on GKE Autopilot"
-	errSchedulingMustBePacked  = "Scheduling strategy must be Packed on GKE Autopilot"
+	errPortPolicyMustBeDynamic      = "portPolicy must be Dynamic on GKE Autopilot"
+	errSchedulingMustBePacked       = "scheduling strategy must be Packed on GKE Autopilot"
+	errEvictionSafeOnUpgradeInvalid = "eviction.safe OnUpgrade not supported on GKE Autopilot"
 )
 
 var logger = runtime.NewLoggerWithSource("gke")
@@ -127,6 +128,14 @@ func (*gkeAutopilot) ValidateGameServerSpec(gss *agonesv1.GameServerSpec) []meta
 			Message: errSchedulingMustBePacked,
 		})
 	}
+	// See SetEviction comment below for why we block EvictionSafeOnUpgrade.
+	if gss.Eviction.Safe == agonesv1.EvictionSafeOnUpgrade {
+		causes = append(causes, metav1.StatusCause{
+			Type:    metav1.CauseTypeFieldValueInvalid,
+			Field:   "eviction.safe",
+			Message: errEvictionSafeOnUpgradeInvalid,
+		})
+	}
 	return causes
 }
 
@@ -147,6 +156,37 @@ func podSpecSeccompUnconfined(podSpec *corev1.PodSpec) {
 		podSpec.SecurityContext = &corev1.PodSecurityContext{}
 	}
 	podSpec.SecurityContext.SeccompProfile = &corev1.SeccompProfile{Type: corev1.SeccompProfileTypeUnconfined}
+}
+
+// SetEviction sets disruption controls based on GameServer.Status.Eviction. For Autopilot:
+//   - Since the safe-to-evict pod annotation is not supported if "false", we delete it (if it's set
+//     to anything else, we allow it - Autopilot only rejects "false").
+//   - OnUpgrade is not supported and rejected by validation above. Since we can't support
+//     safe-to-evict=false but can support a restrictive PDB, we can support Never and Always, but
+//     OnUpgrade doesn't make sense on Autopilot today. - an overly restrictive PDB prevents
+//     any sort of graceful eviction.
+func (*gkeAutopilot) SetEviction(safe agonesv1.EvictionSafe, pod *corev1.Pod) error {
+	if !runtime.FeatureEnabled(runtime.FeatureSafeToEvict) {
+		return nil
+	}
+	if safeAnnotation := pod.ObjectMeta.Annotations[agonesv1.PodSafeToEvictAnnotation]; safeAnnotation == agonesv1.False {
+		delete(pod.ObjectMeta.Annotations, agonesv1.PodSafeToEvictAnnotation)
+	}
+	if _, exists := pod.ObjectMeta.Labels[agonesv1.SafeToEvictLabel]; !exists {
+		switch safe {
+		case agonesv1.EvictionSafeAlways:
+			// For EvictionSafeAlways, we use a label value that does not match the
+			// agones-gameserver-safe-to-evict-false PDB. But we go ahead and label
+			// it, in case someone wants to adopt custom logic for this group of
+			// game servers.
+			pod.ObjectMeta.Labels[agonesv1.SafeToEvictLabel] = agonesv1.True
+		case agonesv1.EvictionSafeNever:
+			pod.ObjectMeta.Labels[agonesv1.SafeToEvictLabel] = agonesv1.False
+		default:
+			return errors.Errorf("eviction.safe == %s, which webhook should have rejected on Autopilot", safe)
+		}
+	}
+	return nil
 }
 
 type autopilotPortAllocator struct {

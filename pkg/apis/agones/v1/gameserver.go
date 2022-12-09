@@ -114,6 +114,13 @@ const (
 	// determine if a pod can safely be evicted to compact a cluster by moving pods between nodes
 	// and scaling down nodes.
 	PodSafeToEvictAnnotation = "cluster-autoscaler.kubernetes.io/safe-to-evict"
+	// SafeToEvictLabel is a label that, when "false", matches the restrictive PDB agones-gameserver-safe-to-evict-false.
+	SafeToEvictLabel = agones.GroupName + "/safe-to-evict"
+
+	// True is the string "true" to appease the goconst lint.
+	True = "true"
+	// False is the string "false" to appease the goconst lint.
+	False = "false"
 )
 
 var (
@@ -427,7 +434,7 @@ func (gss *GameServerSpec) Validate(devAddress string) ([]metav1.StatusCause, bo
 		if gss.Eviction.Safe != "" {
 			causes = append(causes, metav1.StatusCause{
 				Type:    metav1.CauseTypeFieldValueNotSupported,
-				Field:   "safeToEvict",
+				Field:   "eviction.safe",
 				Message: fmt.Sprintf("Value cannot be set unless feature flag %s is enabled", runtime.FeatureSafeToEvict),
 			})
 		}
@@ -691,6 +698,9 @@ func (gs *GameServer) Pod(sidecars ...corev1.Container) (*corev1.Pod, error) {
 	if err := apiHooks.MutateGameServerPodSpec(&gs.Spec, &pod.Spec); err != nil {
 		return nil, err
 	}
+	if err := apiHooks.SetEviction(gs.Status.Eviction.Safe, pod); err != nil {
+		return nil, err
+	}
 
 	return pod, nil
 }
@@ -720,13 +730,16 @@ func (gs *GameServer) podObjectMeta(pod *corev1.Pod) {
 	ref := metav1.NewControllerRef(gs, SchemeGroupVersion.WithKind("GameServer"))
 	pod.ObjectMeta.OwnerReferences = append(pod.ObjectMeta.OwnerReferences, *ref)
 
-	// This means that the autoscaler cannot remove the Node that this Pod is on.
-	// (and evict the Pod in the process). Only set the value if it has not already
-	// been configured in the pod template (to not override user specified behavior).
-	// We only set this for packed game servers, under the assumption that if
-	// game servers are distributed then the cluster autoscaler isn't likely running.
-	if _, exists := pod.ObjectMeta.Annotations[PodSafeToEvictAnnotation]; !exists && gs.Spec.Scheduling == apis.Packed {
-		pod.ObjectMeta.Annotations[PodSafeToEvictAnnotation] = "false"
+	// When SafeToEvict=true, apiHooks.SetEviction manages disruption controls.
+	if !runtime.FeatureEnabled(runtime.FeatureSafeToEvict) {
+		// This means that the autoscaler cannot remove the Node that this Pod is on.
+		// (and evict the Pod in the process). Only set the value if it has not already
+		// been configured in the pod template (to not override user specified behavior).
+		// We only set this for packed game servers, under the assumption that if
+		// game servers are distributed then the cluster autoscaler isn't likely running.
+		if _, exists := pod.ObjectMeta.Annotations[PodSafeToEvictAnnotation]; !exists && gs.Spec.Scheduling == apis.Packed {
+			pod.ObjectMeta.Annotations[PodSafeToEvictAnnotation] = "false"
+		}
 	}
 
 	// Add Agones version into Pod Annotations
