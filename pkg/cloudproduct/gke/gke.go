@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"agones.dev/agones/pkg/apis"
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	"agones.dev/agones/pkg/client/informers/externalversions"
 	"agones.dev/agones/pkg/portallocator"
@@ -36,6 +37,7 @@ const (
 	hostPortAssignmentAnnotation = "autopilot.gke.io/host-port-assignment"
 
 	errPortPolicyMustBeDynamic = "PortPolicy must be Dynamic on GKE Autopilot"
+	errSchedulingMustBePacked  = "Scheduling strategy must be Packed on GKE Autopilot"
 )
 
 var logger = runtime.NewLoggerWithSource("gke")
@@ -108,7 +110,35 @@ func (*gkeAutopilot) ValidateGameServer(gs *agonesv1.GameServer) []metav1.Status
 			})
 		}
 	}
+	if gs.Spec.Scheduling != apis.Packed {
+		causes = append(causes, metav1.StatusCause{
+			Type:    metav1.CauseTypeFieldValueInvalid,
+			Field:   "scheduling",
+			Message: errSchedulingMustBePacked,
+		})
+	}
 	return causes
+}
+
+func (*gkeAutopilot) MutateGameServerPod(gs *agonesv1.GameServer, pod *corev1.Pod) error {
+	if gs.Spec.Scheduling != apis.Packed {
+		return fmt.Errorf("Scheduling strategy %s != Packed, which webhook should have rejected on Autopilot", gs.Spec.Scheduling)
+	}
+	if len(pod.Spec.Tolerations) > 0 || len(pod.Spec.NodeSelector) > 0 {
+		// If the user has specified tolerations or a node selector already,
+		// we assume they know what they're doing.
+		return nil
+	}
+	pod.Spec.Tolerations = []corev1.Toleration{{
+		Key:      agonesv1.RoleLabel,
+		Value:    agonesv1.GameServerLabelRole,
+		Operator: corev1.TolerationOpEqual,
+		Effect:   corev1.TaintEffectNoSchedule,
+	}}
+	pod.Spec.NodeSelector = map[string]string{
+		agonesv1.RoleLabel: agonesv1.GameServerLabelRole,
+	}
+	return nil
 }
 
 type autopilotPortAllocator struct {
