@@ -41,6 +41,9 @@ type CloudProduct interface {
 	// ValidateGameServer is called by GameServer.Validate to allow for product specific validation.
 	ValidateGameServer(*agonesv1.GameServer) []metav1.StatusCause
 
+	// MutateGameServerPod is called by createGameServerPod to allow for product specific pod mutation.
+	MutateGameServerPod(*agonesv1.GameServer, *corev1.Pod) error
+
 	// NewPortAllocator creates a PortAllocator. See gameservers.NewPortAllocator for parameters.
 	NewPortAllocator(int32, int32, informers.SharedInformerFactory, externalversions.SharedInformerFactory) portallocator.Interface
 }
