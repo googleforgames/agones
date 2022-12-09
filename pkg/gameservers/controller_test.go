@@ -1028,6 +1028,13 @@ func TestControllerCreateGameServerPod(t *testing.T) {
 			assert.Equal(t, fixture.ObjectMeta.Name, pod.ObjectMeta.Labels[agonesv1.GameServerPodLabel])
 			assert.True(t, metav1.IsControlledBy(pod, fixture))
 
+			// gke.MutateGameServerPod assumes that a non-empty NodeSelector / Tolerations are user
+			// intent. The generic cloudproduct that we use in unit tests does not manipulate these.
+			// So we verify using the generic cloudproduct that NodeSelector/Tolerations are empty
+			// as a change detector - if this test fails, gke.MutateGameServerPod will not work.
+			assert.Empty(t, pod.Spec.NodeSelector)
+			assert.Empty(t, pod.Spec.Tolerations)
+
 			assert.Len(t, pod.Spec.Containers, 2, "Should have a sidecar container")
 
 			sidecarContainer := pod.Spec.Containers[0]

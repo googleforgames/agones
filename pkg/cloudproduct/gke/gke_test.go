@@ -16,6 +16,7 @@ package gke
 import (
 	"testing"
 
+	"agones.dev/agones/pkg/apis"
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -75,10 +76,11 @@ func TestSyncPodPortsToGameServer(t *testing.T) {
 
 func TestValidateGameServer(t *testing.T) {
 	for name, tc := range map[string]struct {
-		ports []agonesv1.GameServerPort
-		want  []metav1.StatusCause
+		ports      []agonesv1.GameServerPort
+		scheduling apis.SchedulingStrategy
+		want       []metav1.StatusCause
 	}{
-		"no ports => validated": {},
+		"no ports => validated": {scheduling: apis.Packed},
 		"good ports => validated": {
 			ports: []agonesv1.GameServerPort{
 				{
@@ -100,6 +102,7 @@ func TestValidateGameServer(t *testing.T) {
 					Protocol:      corev1.ProtocolTCP,
 				},
 			},
+			scheduling: apis.Packed,
 		},
 		"bad policy => fails validation": {
 			ports: []agonesv1.GameServerPort{
@@ -122,6 +125,7 @@ func TestValidateGameServer(t *testing.T) {
 					Protocol:      corev1.ProtocolUDP,
 				},
 			},
+			scheduling: apis.Distributed,
 			want: []metav1.StatusCause{
 				{
 					Type:    "FieldValueInvalid",
@@ -133,12 +137,83 @@ func TestValidateGameServer(t *testing.T) {
 					Message: "PortPolicy must be Dynamic on GKE Autopilot",
 					Field:   "another-bad-udp.portPolicy",
 				},
+				{
+					Type:    "FieldValueInvalid",
+					Message: "Scheduling strategy must be Packed on GKE Autopilot",
+					Field:   "scheduling",
+				},
 			},
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
-			causes := (&gkeAutopilot{}).ValidateGameServer(&agonesv1.GameServer{Spec: agonesv1.GameServerSpec{Ports: tc.ports}})
+			causes := (&gkeAutopilot{}).ValidateGameServer(&agonesv1.GameServer{Spec: agonesv1.GameServerSpec{
+				Ports:      tc.ports,
+				Scheduling: tc.scheduling,
+			}})
 			require.Equal(t, tc.want, causes)
+		})
+	}
+}
+
+func TestMutateGameServerPod(t *testing.T) {
+	packedGS := &agonesv1.GameServer{Spec: agonesv1.GameServerSpec{Scheduling: apis.Packed}}
+	distributedGS := &agonesv1.GameServer{Spec: agonesv1.GameServerSpec{Scheduling: apis.Distributed}}
+
+	kvToleration := func(k, v string) []corev1.Toleration {
+		return []corev1.Toleration{{
+			Key:      k,
+			Value:    v,
+			Operator: corev1.TolerationOpEqual,
+			Effect:   corev1.TaintEffectNoSchedule,
+		}}
+	}
+
+	for name, tc := range map[string]struct {
+		gs      *agonesv1.GameServer
+		pod     *corev1.Pod
+		wantPod *corev1.Pod
+		wantErr bool
+	}{
+		"good": {
+			gs:  packedGS,
+			pod: &corev1.Pod{},
+			wantPod: &corev1.Pod{Spec: corev1.PodSpec{
+				Tolerations:  kvToleration(agonesv1.RoleLabel, agonesv1.GameServerLabelRole),
+				NodeSelector: map[string]string{agonesv1.RoleLabel: agonesv1.GameServerLabelRole},
+			}},
+		},
+		"toleration already set": {
+			gs: packedGS,
+			pod: &corev1.Pod{Spec: corev1.PodSpec{
+				Tolerations: kvToleration("moose", "cookie"),
+			}},
+		},
+		"node selector already set": {
+			gs: packedGS,
+			pod: &corev1.Pod{Spec: corev1.PodSpec{
+				NodeSelector: map[string]string{"moose": "cookie"},
+			}},
+		},
+		"not Packed": {
+			gs:      distributedGS,
+			wantErr: true,
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			pod := tc.pod.DeepCopy()
+			err := (&gkeAutopilot{}).MutateGameServerPod(tc.gs, pod)
+			if tc.wantErr {
+				assert.NotNil(t, err)
+				return
+			}
+			// allow nil to indicate no change
+			want := tc.wantPod
+			if want == nil {
+				want = tc.pod
+			}
+			if assert.NoError(t, err) {
+				require.Equal(t, want, pod)
+			}
 		})
 	}
 }
