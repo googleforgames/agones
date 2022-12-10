@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC All Rights Reserved.
+// Copyright 2022 Google LLC All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,16 +15,28 @@
 syntax = "proto3";
 
 package allocation;
+option go_package = "./allocation";
 
 import "google/api/annotations.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+
+option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
+  info: {
+    title: "proto/allocation/allocation.proto";
+    version: "version not set";
+  };
+  schemes: HTTPS;
+  consumes: "application/json";
+  produces: "application/json";
+};
 
 service AllocationService {
- rpc Allocate(AllocationRequest) returns (AllocationResponse) {
-   option (google.api.http) = {
-     post: "/gameserverallocation"
-     body: "*"
-   };
- }
+  rpc Allocate(AllocationRequest) returns (AllocationResponse) {
+    option (google.api.http) = {
+      post: "/gameserverallocation"
+      body: "*"
+    };
+  }
 }
 
 message AllocationRequest {
@@ -82,17 +94,17 @@ message AllocationResponse {
 
 // Specifies settings for multi-cluster allocation.
 message MultiClusterSetting {
-    // If set to true, multi-cluster allocation is enabled.
-    bool enabled = 1;
+  // If set to true, multi-cluster allocation is enabled.
+  bool enabled = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {format: "boolean"}];
 
-    // Selects multi-cluster allocation policies to apply. If not specified, all multi-cluster allocation policies are to be applied.
-    LabelSelector policySelector = 2;
+  // Selects multi-cluster allocation policies to apply. If not specified, all multi-cluster allocation policies are to be applied.
+  LabelSelector policySelector = 2;
 }
 
 // MetaPatch is the metadata used to patch the GameServer metadata on allocation
 message MetaPatch {
-    map<string, string> labels = 1;
-    map<string, string> annotations = 2;
+  map<string, string> labels = 1;
+  map<string, string> annotations = 2;
 }
 
 // LabelSelector used for finding a GameServer with matching labels.

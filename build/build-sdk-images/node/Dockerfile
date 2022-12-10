@@ -35,7 +35,7 @@ RUN echo "deb-src [signed-by=$KEYRING] https://deb.nodesource.com/$VERSION $DIST
 RUN apt-get update && apt-get install -y nodejs
 
 # Installing request is to address a bug with node-pre-gyp
-RUN npm install --unsafe-perm --global request@2.88.2 grpc-tools@1.8.1
+RUN npm install --unsafe-perm --global request@2.88.2 grpc-tools@1.11.3
 
 # code generation scripts
 COPY *.sh /root/

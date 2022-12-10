@@ -30,7 +30,7 @@ RUN git clone --recurse-submodules -b $GRPC_RELEASE_TAG --depth 1 --shallow-subm
     cd /var/local/git/grpc && \
     mkdir -p cmake/build && \
     cd cmake/build && \
-    cmake -DgRPC_INSTALL=ON -DgRPC_BUILD_TESTS=OFF ../.. && \
+    cmake -DCMAKE_BUILD_TYPE=Release -DgRPC_INSTALL=ON -DgRPC_BUILD_TESTS=OFF ../.. && \
     make -j$(nproc) && make install
 
 WORKDIR /go/src/agones.dev/agones
