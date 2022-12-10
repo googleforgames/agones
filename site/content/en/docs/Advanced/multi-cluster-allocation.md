@@ -93,7 +93,7 @@ EOF
 
 ## Allocate multi-cluster
 
-To enable multi-cluster allocation, set `multiClusterSetting.enabled` to `true` in {{< ghlink href="proto/allocation/allocation.proto" >}}allocation.proto{{< /ghlink >}} and send allocation requests. For more information visit [agones-allocator]({{< relref "allocator-service.md">}}). In the following, using {{< ghlink href="examples/allocator-client/main.go" >}}allocator-client sample{{< /ghlink >}}, a multi-cluster allocation request is sent to the agones-allocator service. If the allocation succeeds, the AllocationResponse will contain a [`Source`]({{< ghlink href="proto/allocation/allocation.proto" >}}) field which indicates the endpoint of the remote agones-allocator.
+To enable multi-cluster allocation, set `multiClusterSetting.enabled` to `true` in {{< ghlink href="proto/allocation/allocation.proto" >}}allocation.proto{{< /ghlink >}} and send allocation requests. For more information visit [agones-allocator]({{< relref "allocator-service.md">}}). In the following, using {{< ghlink href="examples/allocator-client/main.go" >}}allocator-client sample{{< /ghlink >}}, a multi-cluster allocation request is sent to the agones-allocator service. If the allocation succeeds, the AllocationResponse will contain a {{< ghlink href="proto/allocation/allocation.proto" >}}Source{{< /ghlink >}} field which indicates the endpoint of the remote agones-allocator.
 
 Set the environment variables and store the client secrets before allocating using gRPC or REST APIs
 
