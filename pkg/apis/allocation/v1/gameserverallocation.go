@@ -281,7 +281,7 @@ type GameServerAllocationStatus struct {
 	NodeName       string                          `json:"nodeName,omitempty"`
 	// If the allocation is from a remote cluster, Source is the endpoint of the remote agones-allocator.
 	// Otherwise, Source is "local"
-	Source         string                          `json:"source"`  //nolint:goimports
+	Source string `json:"source"`
 }
 
 // ApplyDefaults applies the default values to this GameServerAllocation
