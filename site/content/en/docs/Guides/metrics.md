@@ -6,7 +6,7 @@ weight: 50
 
 Agones controller exposes metrics via [OpenCensus](https://opencensus.io/). OpenCensus is a single distribution of libraries that collect metrics and distributed traces from your services, we only use it for metrics but it will allow us to support multiple exporters in the future.
 
-We choose to start with [Prometheus](https://prometheus.io/) as this is the most popular with Kubernetes but it is also compatible with Stackdriver.
+We choose to start with [Prometheus](https://prometheus.io/) as this is the most popular with Kubernetes but it is also compatible with Cloud Monitoring.
 If you need another exporter, check the [list of supported](https://opencensus.io/exporters/supported-exporters/go/) exporters. It should be pretty straightforward to register a new one. (GitHub PRs are more than welcome.)
 
 We plan to support multiple exporters in the future via environment variables and helm flags.
@@ -30,11 +30,11 @@ agones:
       enabled: true
 ```
 
-### Stackdriver
+### Cloud Monitoring (formerly Stackdriver)
 
 We support the [OpenCensus Stackdriver exporter](https://opencensus.io/exporters/supported-exporters/go/stackdriver/).
-In order to use it you should enable [Stackdriver Monitoring API](https://cloud.google.com/monitoring/api/enable-api) in Google Cloud Console.
-Follow the [Stackdriver Installation steps](#stackdriver-installation) to see your metrics on Stackdriver Monitoring website.
+In order to use it you should enable [Cloud Monitoring API](https://cloud.google.com/monitoring/api/enable-api) in Google Cloud Console.
+Follow the [Cloud Monitoring Installation steps](#cloud-monitoring-installation) to see your metrics in Cloud Monitoring.
 
 ## Metrics available
 
@@ -207,7 +207,7 @@ kubectl port-forward deployments/grafana 3000 -n metrics
 
 Open a web browser to [http://localhost:3000](http://localhost:3000), you should see Agones [dashboards](#grafana-dashboards) after login as admin.
 
-### Cloud Monitoring (formerly Stackdriver) installation
+### Cloud Monitoring installation
 
 In order to use [Cloud Monitoring](https://console.cloud.google.com/monitoring) you must [enable the Monitoring API](https://cloud.google.com/monitoring/api/enable-api) in the Google Cloud Console. The Cloud Monitoring exporter uses a strategy called Application Default Credentials (ADC) to find your application's credentials. Details can be found in [Setting Up Authentication for Server to Server Production Applications](https://cloud.google.com/docs/authentication/production).
 
@@ -248,7 +248,7 @@ With this configuration only the Cloud Monitoring exporter would be used instead
 
 #### Using Cloud Monitoring with Workload Identity
 
-If you would like to enable stackdriver in conjunction with [Workload Identity](https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity), there are a few extra steps you need to follow:
+If you would like to enable Cloud Monitoring in conjunction with [Workload Identity](https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity), there are a few extra steps you need to follow:
 
 1. When setting up the Google service account following the instructions for [Authenticating to Google Cloud](https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity#authenticating_to), create two IAM policy bindings, one for `serviceAccount:PROJECT_ID.svc.id.goog[agones-system/agones-controller]` and one for `serviceAccount:PROJECT_ID.svc.id.goog[agones-system/agones-allocator]`.
 
@@ -258,16 +258,16 @@ If you would like to enable stackdriver in conjunction with [Workload Identity](
 helm install my-release --namespace agones-system --create-namespace agones/agones --set agones.metrics.stackdriverEnabled=true --set agones.metrics.prometheusEnabled=false --set agones.metrics.prometheusServiceDiscovery=false --set agones.serviceaccount.allocator.annotations."iam\.gke\.io/gcp-service-account"="GSA_NAME@PROJECT_ID\.iam\.gserviceaccount\.com" --set agones.serviceaccount.controller.annotations."iam\.gke\.io/gcp-service-account"="GSA_NAME@PROJECT_ID\.iam\.gserviceaccount\.com"
 ```
 
-To verify that metrics are being sent to Cloud Monitoring, create a Fleet or a Gameserver and look for the metrics to show up in the Stackdriver dashboard. Navigate to the [Metrics explorer](https://console.cloud.google.com/monitoring/metrics-explorer) and search for metrics with the prefix `agones/`. Select a metric and look for data to be plotted in the graph to the right.
+To verify that metrics are being sent to Cloud Monitoring, create a Fleet or a Gameserver and look for the metrics to show up in the Cloud Monitoring dashboard. Navigate to the [Metrics explorer](https://console.cloud.google.com/monitoring/metrics-explorer) and search for metrics with the prefix `agones/`. Select a metric and look for data to be plotted in the graph to the right.
 
 An example of a custom dashboard is:
 
-![stackdriver monitoring dashboard](../../../images/stackdriver-metrics-dashboard.png)
+![cloud monitoring dashboard](../../../images/stackdriver-metrics-dashboard.png)
 
-Currently there exists only manual way of configuring Stackdriver Dashboard. So it is up to you to set an Alignment Period (minimal is 1 minute), GroupBy, Filter parameters and other graph settings.
+Currently there exists only manual way of configuring Cloud Monitoring Dashboard. So it is up to you to set an Alignment Period (minimal is 1 minute), GroupBy, Filter parameters and other graph settings.
 
 #### Troubleshooting
-If you can't see Agones metrics you should have a look at the controller logs for connection errors. Also ensure that your cluster has the necessary credentials to interact with Stackdriver Monitoring. You can configure `stackdriverProjectID` manually, if the automatic discovery is not working.
+If you can't see Agones metrics you should have a look at the controller logs for connection errors. Also ensure that your cluster has the necessary credentials to interact with Cloud Monitoring. You can configure `stackdriverProjectID` manually, if the automatic discovery is not working.
 
 Permissions problem example from controller logs:
 ```
