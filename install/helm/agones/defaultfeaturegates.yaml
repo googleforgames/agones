@@ -25,5 +25,9 @@ PlayerTracking: false
 ResetMetricsOnDelete: false
 SafeToEvict: false
 
+# Pre-Alpha features
+SplitControllerAndExtensions: false
+
 # Example feature
 Example: false
+
