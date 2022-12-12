@@ -198,8 +198,9 @@ func (c *Controller) mutationHandler(review admissionv1.AdmissionReview) (admiss
 	fas := &autoscalingv1.FleetAutoscaler{}
 	err := json.Unmarshal(obj.Raw, fas)
 	if err != nil {
-		c.baseLogger.WithField("review", review).WithError(err).Error("validationHandler")
-		return review, errors.Wrapf(err, "error unmarshalling original FleetAutoscaler json: %s", obj.Raw)
+		// If the JSON is invalid during mutation, fall through to validation. This allows OpenAPI schema validation
+		// to proceed, resulting in a more user friendly error message.
+		return review, nil
 	}
 
 	fas.ApplyDefaults()
@@ -234,7 +235,7 @@ func (c *Controller) validationHandler(review admissionv1.AdmissionReview) (admi
 	err := json.Unmarshal(obj.Raw, fas)
 	if err != nil {
 		c.baseLogger.WithField("review", review).WithError(err).Error("validationHandler")
-		return review, errors.Wrapf(err, "error unmarshalling original FleetAutoscaler json: %s", obj.Raw)
+		return review, errors.Wrapf(err, "error unmarshalling FleetAutoscaler json after schema validation: %s", obj.Raw)
 	}
 	fas.ApplyDefaults()
 	var causes []metav1.StatusCause

@@ -100,13 +100,14 @@ func (wh *WebHook) handle(path string, w http.ResponseWriter, r *http.Request) e
 					Group: review.Request.Kind.Group,
 					Kind:  review.Request.Kind.Kind,
 					Causes: []metav1.StatusCause{{
+						Type:    metav1.CauseType("InternalError"),
 						Message: err.Error(),
 					}},
 				}
 				review.Response.Result = &metav1.Status{
 					Status:  metav1.StatusFailure,
 					Message: err.Error(),
-					Reason:  metav1.StatusReasonInvalid,
+					Reason:  metav1.StatusReasonInternalError,
 					Details: &details,
 				}
 			}

@@ -136,7 +136,9 @@ func (c *Controller) creationMutationHandler(review admissionv1.AdmissionReview)
 	fleet := &agonesv1.Fleet{}
 	err := json.Unmarshal(obj.Raw, fleet)
 	if err != nil {
-		return review, errors.Wrapf(err, "error unmarshalling original Fleet json: %s", obj.Raw)
+		// If the JSON is invalid during mutation, fall through to validation. This allows OpenAPI schema validation
+		// to proceed, resulting in a more user friendly error message.
+		return review, nil
 	}
 
 	// This is the main logic of this function
@@ -176,7 +178,7 @@ func (c *Controller) creationValidationHandler(review admissionv1.AdmissionRevie
 	fleet := &agonesv1.Fleet{}
 	err := json.Unmarshal(obj.Raw, fleet)
 	if err != nil {
-		return review, errors.Wrapf(err, "error unmarshalling original Fleet json: %s", obj.Raw)
+		return review, errors.Wrapf(err, "error unmarshalling Fleet json after schema validation: %s", obj.Raw)
 	}
 
 	causes, ok := fleet.Validate()
