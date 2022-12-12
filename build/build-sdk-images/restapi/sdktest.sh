@@ -17,9 +17,6 @@
 set -ex
 GO111MODULE=on
 cd /go/src/agones.dev/agones/test/sdk/restapi
-# swagger gen has a bug wherein it doesn't generate the file, so we're providing it by hand
-cp ./model_xstreamdefinitionssdkgameserver.go.nolint ./swagger/model_xstreamdefinitionssdkgameserver.go
-cp ./http-api-test.go.nolint ./http-api-test.go
 go run http-api-test.go
 cd /go/src/agones.dev/agones/test/sdk/websocket-watch
 go run ws-watch-test.go

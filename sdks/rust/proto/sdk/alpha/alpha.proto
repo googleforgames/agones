@@ -15,9 +15,20 @@
 syntax = "proto3";
 
 package agones.dev.sdk.alpha;
-option go_package = "alpha";
+option go_package = "./alpha";
 
 import "google/api/annotations.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+
+option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
+    info: {
+        title: "alpha.proto";
+        version: "version not set";
+    };
+    schemes: HTTP;
+    consumes: "application/json";
+    produces: "application/json";
+};
 
 // SDK service to be used in the GameServer SDK to the Pod Sidecar.
 service SDK {
@@ -124,7 +135,7 @@ message Count {
 
 // Store a boolean result
 message Bool {
-    bool bool = 1;
+    bool bool = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {format: "boolean"}];
 }
 
 // The unique identifier for a given player.
