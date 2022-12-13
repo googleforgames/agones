@@ -928,7 +928,7 @@ func TestCreationValidationHandler(t *testing.T) {
 
 		_, err := c.creationValidationHandler(review)
 		require.Error(t, err)
-		assert.Equal(t, "error unmarshalling new GameServerSet json: : unexpected end of JSON input", err.Error())
+		assert.Equal(t, "error unmarshalling GameServerSet json after schema validation: : unexpected end of JSON input", err.Error())
 	})
 
 	t.Run("invalid gameserverset create", func(t *testing.T) {

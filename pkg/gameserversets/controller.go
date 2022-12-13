@@ -217,7 +217,7 @@ func (c *Controller) creationValidationHandler(review admissionv1.AdmissionRevie
 
 	newObj := review.Request.Object
 	if err := json.Unmarshal(newObj.Raw, newGss); err != nil {
-		return review, errors.Wrapf(err, "error unmarshalling new GameServerSet json: %s", newObj.Raw)
+		return review, errors.Wrapf(err, "error unmarshalling GameServerSet json after schema validation: %s", newObj.Raw)
 	}
 
 	causes, ok := newGss.Validate()

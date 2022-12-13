@@ -232,8 +232,9 @@ func (c *Controller) creationMutationHandler(review admissionv1.AdmissionReview)
 	gs := &agonesv1.GameServer{}
 	err := json.Unmarshal(obj.Raw, gs)
 	if err != nil {
-		c.baseLogger.WithField("review", review).WithError(err).Error("creationMutationHandler failed to unmarshal JSON")
-		return review, errors.Wrapf(err, "error unmarshalling original GameServer json: %s", obj.Raw)
+		// If the JSON is invalid during mutation, fall through to validation. This allows OpenAPI schema validation
+		// to proceed, resulting in a more user friendly error message.
+		return review, nil
 	}
 
 	// This is the main logic of this function
@@ -281,8 +282,7 @@ func (c *Controller) creationValidationHandler(review admissionv1.AdmissionRevie
 	gs := &agonesv1.GameServer{}
 	err := json.Unmarshal(obj.Raw, gs)
 	if err != nil {
-		c.baseLogger.WithField("review", review).WithError(err).Error("creationValidationHandler failed to unmarshal JSON")
-		return review, errors.Wrapf(err, "error unmarshalling original GameServer json: %s", obj.Raw)
+		return review, errors.Wrapf(err, "error unmarshalling GameServer json after schema validation: %s", obj.Raw)
 	}
 
 	c.loggerForGameServer(gs).WithField("review", review).Debug("creationValidationHandler")
