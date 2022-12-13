@@ -368,12 +368,9 @@ install: $(ensure-build-image) install-custom-pull-secret
 		--set agones.image.tag=$(VERSION),agones.image.registry=$(REGISTRY) \
 		--set agones.image.controller.pullPolicy=$(IMAGE_PULL_POLICY),agones.image.sdk.alwaysPull=$(ALWAYS_PULL_SIDECAR) \
 		--set agones.image.controller.pullSecret=$(IMAGE_PULL_SECRET) \
-		--set agones.image.extensions.pullPolicy=$(IMAGE_PULL_POLICY) \
-		--set agines.image.extensions.pullSecret=$(IMAGE_PULL_SECRET) \
 		--set agones.ping.http.serviceType=$(PING_SERVICE_TYPE),agones.ping.udp.serviceType=$(PING_SERVICE_TYPE) \
 		--set agones.allocator.service.serviceType=$(ALLOCATOR_SERVICE_TYPE) \
 		--set agones.controller.logLevel=$(LOG_LEVEL) \
-		--set agones.extensions.logLevel=$(LOG_LEVEL) \
 		--set agones.crds.cleanupOnDelete=$(CRD_CLEANUP) \
 		--set agones.featureGates=$(FEATURE_GATES) \
 		--set agones.allocator.service.loadBalancerIP=$(EXTERNAL_IP) \
@@ -513,7 +510,7 @@ endif
 
 build-extensions-image-amd64: $(ensure-build-image) build-extensions-binary build-licenses build-required-src-dist
 	docker build $(agones_path)/cmd/extensions/ --tag=$(extensions_amd64_tag) $(DOCKER_BUILD_ARGS)
-# creating docker builder and then using that builder to buuld extensions image in buildx command
+# creating docker builder and then using that builder to build extensions image in buildx command
 build-extensions-image-arm64: $(ensure-build-image) build-extensions-binary create-arm64-builder
 	docker buildx build --platform linux/arm64 --builder $(BUILDX_ARM64_BUILDER) --build-arg ARCH=arm64 $(agones_path)/cmd/extensions/ --tag=$(extensions_arm64_tag) $(DOCKER_BUILD_ARGS)
 
