@@ -228,7 +228,7 @@ The default metrics exporter installed with Agones is Prometheus. If you are usi
 helm upgrade --install --wait --set agones.metrics.stackdriverEnabled=true --set agones.metrics.prometheusEnabled=false --set agones.metrics.prometheusServiceDiscovery=false my-release-name agones/agones --namespace=agones-system
 ```
 
-If you are using the [YAML installation]({{< ref "/docs/Installation/Install Agones/yaml.md" >}}), you will need to update the necessary parameters in the install.yaml file using the following commands:
+If you are using the [YAML installation]({{< ref "/docs/Installation/Install Agones/yaml.md" >}}), you will need to update the necessary parameters in the `install.yaml` file using the following commands:
 
 ```bash
 helm pull --untar https://agones.dev/chart/stable/agones-1.27.0.tgz && \
