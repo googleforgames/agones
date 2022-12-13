@@ -418,7 +418,7 @@ func TestControllerCreationValidationHandler(t *testing.T) {
 		review := getAdmissionReview(raw)
 
 		_, err = c.creationValidationHandler(review)
-		assert.EqualError(t, err, "error unmarshalling original Fleet json: \"MQ==\": json: cannot unmarshal string into Go value of type v1.Fleet")
+		assert.EqualError(t, err, "error unmarshalling Fleet json after schema validation: \"MQ==\": json: cannot unmarshal string into Go value of type v1.Fleet")
 	})
 
 	t.Run("invalid fleet", func(t *testing.T) {
@@ -492,8 +492,9 @@ func TestControllerCreationMutationHandler(t *testing.T) {
 		require.NoError(t, err)
 		review := getAdmissionReview(raw)
 
-		_, err = c.creationMutationHandler(review)
-		assert.EqualError(t, err, "error unmarshalling original Fleet json: \"MQ==\": json: cannot unmarshal string into Go value of type v1.Fleet")
+		result, err := c.creationMutationHandler(review)
+		assert.NoError(t, err)
+		require.Nil(t, result.Response.PatchType)
 	})
 }
 
