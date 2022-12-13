@@ -136,6 +136,9 @@
         },
         "nodeName": {
           "type": "string"
+        },
+        "source": {
+          "type": "string"
         }
       }
     },
