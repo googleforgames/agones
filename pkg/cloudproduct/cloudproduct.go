@@ -16,7 +16,7 @@ package cloudproduct
 
 import (
 	"context"
-	"fmt"
+	"sync"
 
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	"agones.dev/agones/pkg/client/informers/externalversions"
@@ -24,33 +24,37 @@ import (
 	"agones.dev/agones/pkg/cloudproduct/gke"
 	"agones.dev/agones/pkg/portallocator"
 	"agones.dev/agones/pkg/util/runtime"
+	"github.com/pkg/errors"
+	"github.com/spf13/pflag"
+	"github.com/spf13/viper"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
 )
 
-// CloudProduct provides a generic interface that abstracts cloud product
-// specific functionality. Users should call New() to instantiate a
-// specific cloud product interface.
-type CloudProduct interface {
+// The Cloud Product abstraction currently consists of disjoint interfaces:
+// * ControllerHooks() is an interface available to the pkg/controller binaries
+// * api hooks are separated into api group and registered directly with the API
+//
+// Users should bind flags with Bind{Flags,Env}, then call Initialize with a
+// k8s client to initialize.
+
+// ControllerHooksInterface provides a generic interface that abstracts cloud product
+// specific functionality for pkg/controller packages.
+type ControllerHooksInterface interface {
 	// SyncPodPortsToGameServer runs after a Pod has been assigned to a Node and before we sync
 	// Pod host ports to the GameServer status.
 	SyncPodPortsToGameServer(*agonesv1.GameServer, *corev1.Pod) error
-
-	// ValidateGameServer is called by GameServer.Validate to allow for product specific validation.
-	ValidateGameServer(*agonesv1.GameServer) []metav1.StatusCause
-
-	// MutateGameServerPod is called by createGameServerPod to allow for product specific pod mutation.
-	MutateGameServerPod(*agonesv1.GameServer, *corev1.Pod) error
 
 	// NewPortAllocator creates a PortAllocator. See gameservers.NewPortAllocator for parameters.
 	NewPortAllocator(int32, int32, informers.SharedInformerFactory, externalversions.SharedInformerFactory) portallocator.Interface
 }
 
 const (
+	cloudProductFlag = "cloud-product"
+
 	// If --cloud-product=auto, auto-detect
-	AutoDetect = "auto"
+	autoDetectString = "auto"
 
 	genericProduct = "generic"
 )
@@ -58,10 +62,60 @@ const (
 var (
 	logger           = runtime.NewLoggerWithSource("cloudproduct")
 	productDetectors = []func(context.Context, *kubernetes.Clientset) string{gke.Detect}
+
+	// singleton cloud product interface
+	cloudProduct ControllerHooksInterface
+
+	initializeOnce sync.Once
 )
 
-// New instantiates a new CloudProduct interface by product name.
-func New(ctx context.Context, product string, kc *kubernetes.Clientset) (CloudProduct, error) {
+// BindFlags binds the --cloud-product flag.
+func BindFlags() {
+	viper.SetDefault(cloudProductFlag, autoDetectString)
+	pflag.String(cloudProductFlag, viper.GetString(cloudProductFlag), "Cloud product. Set to 'auto' to auto-detect, set to 'generic' to force generic behavior, set to 'gke-autopilot' for GKE Autopilot. Can also use CLOUD_PRODUCT env variable.")
+}
+
+// BindEnv binds the CLOUD_PRODUCT env variable.
+func BindEnv() error {
+	return viper.BindEnv(cloudProductFlag)
+}
+
+// Initialize initializes the cloud product from the viper flag.
+// Caller must use BindFlags and BindEnv prior. If this function returns an
+// error, caller should exit, as calling ControllerHooks() after a bad
+// initialization will return a nil interface
+func Initialize(ctx context.Context, kc *kubernetes.Clientset) (err error) {
+	initializeOnce.Do(func() {
+		err = initializeFromString(ctx, viper.GetString(cloudProductFlag), kc)
+	})
+	return err
+}
+
+// ControllerHooks returns the global cloud product controller hooks. If the global singleton
+// is not set, we initialize the current cloud product to the "generic" product - this should
+// only happen in unit tests.
+func ControllerHooks() ControllerHooksInterface {
+	initializeOnce.Do(func() {
+		// If not already initialized, initialize using generic cloud product.
+		runtime.Must(initializeFromString(context.Background(), "generic", nil))
+	})
+	return cloudProduct
+}
+
+// initializeFromString initializes the known hooks (controller, API) from a specific string.
+// Must be called under initializeOnce.Do() to prevent re-initialization.
+func initializeFromString(ctx context.Context, productString string, kc *kubernetes.Clientset) error {
+	controllerHooks, v1hooks, err := newFromName(ctx, productString, kc)
+	if err != nil {
+		return err
+	}
+	cloudProduct = controllerHooks
+	agonesv1.RegisterAPIHooks(v1hooks)
+	return nil
+}
+
+// newFromName instantiates a new CloudProduct interface by product name.
+func newFromName(ctx context.Context, product string, kc *kubernetes.Clientset) (ControllerHooksInterface, agonesv1.APIHooks, error) {
 	product = autoDetect(ctx, product, kc)
 
 	switch product {
@@ -70,11 +124,11 @@ func New(ctx context.Context, product string, kc *kubernetes.Clientset) (CloudPr
 	case genericProduct:
 		return generic.New()
 	}
-	return nil, fmt.Errorf("unknown cloud product: %q", product)
+	return nil, nil, errors.Errorf("unknown cloud product: %q", product)
 }
 
 func autoDetect(ctx context.Context, product string, kc *kubernetes.Clientset) string {
-	if product != AutoDetect {
+	if product != autoDetectString {
 		logger.Infof("Cloud product forced to %q, skipping auto-detection", product)
 		return product
 	}
@@ -87,11 +141,4 @@ func autoDetect(ctx context.Context, product string, kc *kubernetes.Clientset) s
 	}
 	logger.Infof("Cloud product defaulted to %q", genericProduct)
 	return genericProduct
-}
-
-// MustNewGeneric returns the "generic" cloud product, panicking if an error is encountered.
-func MustNewGeneric(ctx context.Context) CloudProduct {
-	c, err := New(ctx, genericProduct, nil)
-	runtime.Must(err)
-	return c
 }

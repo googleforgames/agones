@@ -472,7 +472,9 @@ func (gss *GameServerSpec) Validate(devAddress string) ([]metav1.StatusCause, bo
 	if len(objMetaCauses) > 0 {
 		causes = append(causes, objMetaCauses...)
 	}
-
+	if productCauses := apiHooks.ValidateGameServerSpec(gss); len(productCauses) > 0 {
+		causes = append(causes, productCauses...)
+	}
 	return causes, len(causes) == 0
 }
 
@@ -619,6 +621,10 @@ func (gs *GameServer) Pod(sidecars ...corev1.Container) (*corev1.Pod, error) {
 	pod.Spec.Containers = containers
 
 	gs.podScheduling(pod)
+
+	if err := apiHooks.MutateGameServerPodSpec(&gs.Spec, &pod.Spec); err != nil {
+		return nil, err
+	}
 
 	return pod, nil
 }

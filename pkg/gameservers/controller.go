@@ -92,7 +92,6 @@ type Controller struct {
 	creationWorkerQueue    *workerqueue.WorkerQueue // handles creation only
 	deletionWorkerQueue    *workerqueue.WorkerQueue // handles deletion only
 	recorder               record.EventRecorder
-	cloudProduct           cloudproduct.CloudProduct
 }
 
 // NewController returns a new gameserver crd controller
@@ -112,7 +111,6 @@ func NewController(
 	extClient extclientset.Interface,
 	agonesClient versioned.Interface,
 	agonesInformerFactory externalversions.SharedInformerFactory,
-	cloudProduct cloudproduct.CloudProduct,
 ) *Controller {
 
 	pods := kubeInformerFactory.Core().V1().Pods()
@@ -136,11 +134,10 @@ func NewController(
 		gameServerSynced:       gsInformer.HasSynced,
 		nodeLister:             kubeInformerFactory.Core().V1().Nodes().Lister(),
 		nodeSynced:             kubeInformerFactory.Core().V1().Nodes().Informer().HasSynced,
-		portAllocator:          cloudProduct.NewPortAllocator(minPort, maxPort, kubeInformerFactory, agonesInformerFactory),
+		portAllocator:          cloudproduct.ControllerHooks().NewPortAllocator(minPort, maxPort, kubeInformerFactory, agonesInformerFactory),
 		healthController:       NewHealthController(health, kubeClient, agonesClient, kubeInformerFactory, agonesInformerFactory),
-		migrationController:    NewMigrationController(health, kubeClient, agonesClient, kubeInformerFactory, agonesInformerFactory, cloudProduct),
+		migrationController:    NewMigrationController(health, kubeClient, agonesClient, kubeInformerFactory, agonesInformerFactory),
 		missingPodController:   NewMissingPodController(health, kubeClient, agonesClient, kubeInformerFactory, agonesInformerFactory),
-		cloudProduct:           cloudProduct,
 	}
 
 	c.baseLogger = runtime.NewLoggerWithType(c)
@@ -288,11 +285,6 @@ func (c *Controller) creationValidationHandler(review admissionv1.AdmissionRevie
 	c.loggerForGameServer(gs).WithField("review", review).Debug("creationValidationHandler")
 
 	causes, ok := gs.Validate()
-	// Merge product-specific validation - we handle it here to avoid introducing cloudproduct to the api packages.
-	if productCauses := c.cloudProduct.ValidateGameServer(gs); len(productCauses) > 0 {
-		ok = false
-		causes = append(causes, productCauses...)
-	}
 	if !ok {
 		review.Response.Allowed = false
 		details := metav1.StatusDetails{
@@ -567,12 +559,6 @@ func (c *Controller) createGameServerPod(ctx context.Context, gs *agonesv1.GameS
 		gs, err = c.moveToErrorState(ctx, gs, err.Error())
 		return gs, err
 	}
-	if err := c.cloudProduct.MutateGameServerPod(gs, pod); err != nil {
-		// this shouldn't happen, but if it does.
-		c.loggerForGameServer(gs).WithError(err).Error("error from cloud product mutation hook")
-		gs, err = c.moveToErrorState(ctx, gs, err.Error())
-		return gs, err
-	}
 
 	// if the service account is not set, then you are in the "opinionated"
 	// mode. If the user sets the service account, we assume they know what they are
@@ -784,7 +770,7 @@ func (c *Controller) syncGameServerStartingState(ctx context.Context, gs *agones
 		return gs, errors.Wrapf(err, "error retrieving node %s for Pod %s", pod.Spec.NodeName, pod.ObjectMeta.Name)
 	}
 	gsCopy := gs.DeepCopy()
-	gsCopy, err = applyGameServerAddressAndPort(gsCopy, node, pod, c.cloudProduct.SyncPodPortsToGameServer)
+	gsCopy, err = applyGameServerAddressAndPort(gsCopy, node, pod, cloudproduct.ControllerHooks().SyncPodPortsToGameServer)
 	if err != nil {
 		return gs, err
 	}
@@ -835,7 +821,7 @@ func (c *Controller) syncGameServerRequestReadyState(ctx context.Context, gs *ag
 		if err != nil {
 			return gs, errors.Wrapf(err, "error retrieving node %s for Pod %s", pod.Spec.NodeName, pod.ObjectMeta.Name)
 		}
-		gsCopy, err = applyGameServerAddressAndPort(gsCopy, node, pod, c.cloudProduct.SyncPodPortsToGameServer)
+		gsCopy, err = applyGameServerAddressAndPort(gsCopy, node, pod, cloudproduct.ControllerHooks().SyncPodPortsToGameServer)
 		if err != nil {
 			return gs, err
 		}

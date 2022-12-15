@@ -146,18 +146,18 @@ func TestValidateGameServer(t *testing.T) {
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
-			causes := (&gkeAutopilot{}).ValidateGameServer(&agonesv1.GameServer{Spec: agonesv1.GameServerSpec{
+			causes := (&gkeAutopilot{}).ValidateGameServerSpec(&agonesv1.GameServerSpec{
 				Ports:      tc.ports,
 				Scheduling: tc.scheduling,
-			}})
+			})
 			require.Equal(t, tc.want, causes)
 		})
 	}
 }
 
 func TestMutateGameServerPod(t *testing.T) {
-	packedGS := &agonesv1.GameServer{Spec: agonesv1.GameServerSpec{Scheduling: apis.Packed}}
-	distributedGS := &agonesv1.GameServer{Spec: agonesv1.GameServerSpec{Scheduling: apis.Distributed}}
+	packedGSS := &agonesv1.GameServerSpec{Scheduling: apis.Packed}
+	distributedGSS := &agonesv1.GameServerSpec{Scheduling: apis.Distributed}
 
 	kvToleration := func(k, v string) []corev1.Toleration {
 		return []corev1.Toleration{{
@@ -169,50 +169,50 @@ func TestMutateGameServerPod(t *testing.T) {
 	}
 
 	for name, tc := range map[string]struct {
-		gs      *agonesv1.GameServer
-		pod     *corev1.Pod
-		wantPod *corev1.Pod
-		wantErr bool
+		gss         *agonesv1.GameServerSpec
+		podSpec     *corev1.PodSpec
+		wantPodSpec *corev1.PodSpec
+		wantErr     bool
 	}{
 		"good": {
-			gs:  packedGS,
-			pod: &corev1.Pod{},
-			wantPod: &corev1.Pod{Spec: corev1.PodSpec{
+			gss:     packedGSS,
+			podSpec: &corev1.PodSpec{},
+			wantPodSpec: &corev1.PodSpec{
 				Tolerations:  kvToleration(agonesv1.RoleLabel, agonesv1.GameServerLabelRole),
 				NodeSelector: map[string]string{agonesv1.RoleLabel: agonesv1.GameServerLabelRole},
-			}},
+			},
 		},
 		"toleration already set": {
-			gs: packedGS,
-			pod: &corev1.Pod{Spec: corev1.PodSpec{
+			gss: packedGSS,
+			podSpec: &corev1.PodSpec{
 				Tolerations: kvToleration("moose", "cookie"),
-			}},
+			},
 		},
 		"node selector already set": {
-			gs: packedGS,
-			pod: &corev1.Pod{Spec: corev1.PodSpec{
+			gss: packedGSS,
+			podSpec: &corev1.PodSpec{
 				NodeSelector: map[string]string{"moose": "cookie"},
-			}},
+			},
 		},
 		"not Packed": {
-			gs:      distributedGS,
+			gss:     distributedGSS,
 			wantErr: true,
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
-			pod := tc.pod.DeepCopy()
-			err := (&gkeAutopilot{}).MutateGameServerPod(tc.gs, pod)
+			podSpec := tc.podSpec.DeepCopy()
+			err := (&gkeAutopilot{}).MutateGameServerPodSpec(tc.gss, podSpec)
 			if tc.wantErr {
 				assert.NotNil(t, err)
 				return
 			}
 			// allow nil to indicate no change
-			want := tc.wantPod
+			want := tc.wantPodSpec
 			if want == nil {
-				want = tc.pod
+				want = tc.podSpec
 			}
 			if assert.NoError(t, err) {
-				require.Equal(t, want, pod)
+				require.Equal(t, want, podSpec)
 			}
 		})
 	}
