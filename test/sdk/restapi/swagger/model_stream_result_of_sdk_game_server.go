@@ -23,10 +23,7 @@
  */
 package swagger
 
-type RuntimeStreamError struct {
-	GrpcCode int32 `json:"grpc_code,omitempty"`
-	HttpCode int32 `json:"http_code,omitempty"`
-	Message string `json:"message,omitempty"`
-	HttpStatus string `json:"http_status,omitempty"`
-	Details []ProtobufAny `json:"details,omitempty"`
+type StreamResultOfSdkGameServer struct {
+	Result *SdkGameServer `json:"result,omitempty"`
+	Error_ *GooglerpcStatus `json:"error,omitempty"`
 }
