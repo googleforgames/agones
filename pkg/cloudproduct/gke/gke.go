@@ -11,6 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+// Package gke implements the GKE cloud product (specifically Autopilot for now)
 package gke
 
 import (
@@ -53,6 +55,8 @@ type hostPortAssignment struct {
 	PortsAssigned map[int32]int32 `json:"portsAssigned,omitempty"` // old -> new
 }
 
+// Detect whether we're running on GKE and/or Autopilot and return the appropriate
+// cloud product string.
 func Detect(ctx context.Context, kc *kubernetes.Clientset) string {
 	if !metadata.OnGCE() {
 		return ""
@@ -68,6 +72,9 @@ func Detect(ctx context.Context, kc *kubernetes.Clientset) string {
 	return "gke-autopilot"
 }
 
+// Autopilot returns a GKE Autopilot cloud product
+//
+//nolint:revive // ignore the unexported return; implements ControllerHooksInterface
 func Autopilot() (*gkeAutopilot, agonesv1.APIHooks, error) {
 	ap := &gkeAutopilot{}
 	return ap, ap, nil

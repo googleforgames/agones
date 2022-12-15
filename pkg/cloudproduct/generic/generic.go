@@ -11,6 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+// Package generic implements generic cloud product hooks
 package generic
 
 import (
@@ -21,6 +23,9 @@ import (
 	"k8s.io/client-go/informers"
 )
 
+// New returns a new generic cloud product
+//
+//nolint:revive // ignore the unexported return; implements ControllerHooksInterface
 func New() (*generic, agonesv1.APIHooks, error) { return &generic{}, nil, nil }
 
 type generic struct{}
