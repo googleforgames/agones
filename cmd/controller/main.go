@@ -209,21 +209,30 @@ func main() {
 
 	gsCounter := gameservers.NewPerNodeCounter(kubeInformerFactory, agonesInformerFactory)
 
-	gsController := gameservers.NewController(wh, health,
+	gsController := gameservers.NewController(health,
 		ctlConf.MinPort, ctlConf.MaxPort, ctlConf.SidecarImage, ctlConf.AlwaysPullSidecar,
 		ctlConf.SidecarCPURequest, ctlConf.SidecarCPULimit,
 		ctlConf.SidecarMemoryRequest, ctlConf.SidecarMemoryLimit, ctlConf.SdkServiceAccount,
 		kubeClient, kubeInformerFactory, extClient, agonesClient, agonesInformerFactory)
-	gsSetController := gameserversets.NewController(wh, health, gsCounter,
+	gsSetController := gameserversets.NewController(health, gsCounter,
 		kubeClient, extClient, agonesClient, agonesInformerFactory)
-	fleetController := fleets.NewController(wh, health, kubeClient, extClient, agonesClient, agonesInformerFactory)
-	gasController := gameserverallocations.NewController(api, health, gsCounter, kubeClient, kubeInformerFactory,
-		agonesClient, agonesInformerFactory, 10*time.Second, 30*time.Second, ctlConf.AllocationBatchWaitTime)
-	fasController := fleetautoscalers.NewController(wh, health,
+	fleetController := fleets.NewController(health, kubeClient, extClient, agonesClient, agonesInformerFactory)
+	fasController := fleetautoscalers.NewController(health,
 		kubeClient, extClient, agonesClient, agonesInformerFactory)
 
 	rs = append(rs,
-		httpsServer, gsCounter, gsController, gsSetController, fleetController, fasController, gasController, server)
+		httpsServer, gsCounter, gsController, gsSetController, fleetController, fasController, server)
+
+	if !runtime.FeatureEnabled(runtime.FeatureSplitControllerAndExtensions) {
+		gameservers.NewExtensions(wh)
+		gameserversets.NewExtensions(wh)
+		fleets.NewExtensions(wh)
+		fleetautoscalers.NewExtensions(wh)
+
+		gasController := gameserverallocations.NewExtensions(api, health, gsCounter, kubeClient, kubeInformerFactory,
+			agonesClient, agonesInformerFactory, 10*time.Second, 30*time.Second, ctlConf.AllocationBatchWaitTime)
+		rs = append(rs, gasController)
+	}
 
 	kubeInformerFactory.Start(ctx.Done())
 	agonesInformerFactory.Start(ctx.Done())

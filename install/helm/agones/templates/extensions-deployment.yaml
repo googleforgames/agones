@@ -32,7 +32,7 @@ spec:
       app: {{ template "agones.name" . }}
       release: {{ .Release.Name }}
       heritage: {{ .Release.Service }}
-  replicas: 1
+  replicas: {{ .Values.agones.extensions.replicas }}
   strategy:
     type: Recreate
   template:
@@ -41,11 +41,6 @@ spec:
         cluster-autoscaler.kubernetes.io/safe-to-evict: {{ .Values.agones.controller.safeToEvict | quote }}
 {{- if .Values.agones.controller.generateTLS }}
         revision/tls-cert: {{ .Release.Revision | quote }}
-{{- end }}
-{{- if and (.Values.agones.metrics.prometheusServiceDiscovery) (.Values.agones.metrics.prometheusEnabled) }}
-        prometheus.io/scrape: "true"
-        prometheus.io/port: "8080"
-        prometheus.io/path: "/metrics"
 {{- end }}
 {{- if .Values.agones.controller.annotations }}
 {{- toYaml .Values.agones.controller.annotations | nindent 8 }}
@@ -77,32 +72,6 @@ spec:
         image: "{{ .Values.agones.image.registry }}/{{ .Values.agones.image.extensions.name}}:{{ default .Values.agones.image.tag .Values.agones.image.extensions.tag }}"
         imagePullPolicy: {{ .Values.agones.image.controller.pullPolicy }}
         env:
-        # minimum port that can be exposed to GameServer traffic
-        - name: MIN_PORT
-          value: {{ .Values.gameservers.minPort | quote }}
-        # maximum port that can be exposed to GameServer traffic
-        - name: MAX_PORT
-          value: {{ .Values.gameservers.maxPort | quote }}
-        - name: SIDECAR_IMAGE # overwrite the GameServer sidecar image that is used
-          value: "{{ .Values.agones.image.registry }}/{{ .Values.agones.image.sdk.name}}:{{ default .Values.agones.image.tag .Values.agones.image.sdk.tag }}"
-        - name: ALWAYS_PULL_SIDECAR # set the sidecar imagePullPolicy to Always
-          value: {{ .Values.agones.image.sdk.alwaysPull | quote }}
-        - name: SIDECAR_CPU_REQUEST
-          value: {{ .Values.agones.image.sdk.cpuRequest | quote }}
-        - name: SIDECAR_CPU_LIMIT
-          value: {{ .Values.agones.image.sdk.cpuLimit | quote }}
-        - name: SIDECAR_MEMORY_REQUEST
-          value: {{ .Values.agones.image.sdk.memoryRequest | quote }}
-        - name: SIDECAR_MEMORY_LIMIT
-          value: {{ .Values.agones.image.sdk.memoryLimit | quote }}
-        - name: SDK_SERVICE_ACCOUNT
-          value: {{ .Values.agones.serviceaccount.sdk.name | quote }}
-        - name: PROMETHEUS_EXPORTER
-          value: {{ .Values.agones.metrics.prometheusEnabled | quote }}
-        - name: STACKDRIVER_EXPORTER
-          value: {{ .Values.agones.metrics.stackdriverEnabled | quote }}
-        - name: STACKDRIVER_LABELS
-          value: {{ .Values.agones.metrics.stackdriverLabels | quote }}
         - name: GCP_PROJECT_ID
           value: {{ .Values.agones.metrics.stackdriverProjectID | quote }}
         - name: NUM_WORKERS
@@ -182,4 +151,23 @@ spec:
       imagePullSecrets:
         - name: {{.Values.agones.image.controller.pullSecret}}
 {{- end }}
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: agones-extensions-pdb
+spec:
+{{- if .Values.agones.extensions.pdb.minAvailable }}
+{{- if .Values.agones.extensions.pdb.maxUnavailable }}
+{{- fail "minAvailable and maxUnavailable are mutually exclusive!" }}
+{{- end}}
+{{- end}}
+  minAvailable: {{ .Values.agones.extensions.pdb.minAvailable }}
+  maxUnavailable: {{ .Values.agones.extensions.pdb.maxUnavailable }}
+  selector:
+    matchLabels:
+      agones.dev/role: extensions
+      app: {{ template "agones.name" . }}
+      release: {{ .Release.Name }}
+      heritage: {{ .Release.Service }}
 {{- end }}
