@@ -718,15 +718,15 @@ func (a *SDKApiService) Shutdown(ctx context.Context, body SdkEmpty) (SdkEmpty, 
 /*
 SDKApiService Send GameServer details whenever the GameServer is updated
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-@return XStreamDefinitionssdkGameServer
+@return StreamResultOfSdkGameServer
 */
-func (a *SDKApiService) WatchGameServer(ctx context.Context) (XStreamDefinitionssdkGameServer, *http.Response, error) {
+func (a *SDKApiService) WatchGameServer(ctx context.Context) (StreamResultOfSdkGameServer, *http.Response, error) {
 	var (
 		localVarHttpMethod = strings.ToUpper("Get")
 		localVarPostBody   interface{}
 		localVarFileName   string
 		localVarFileBytes  []byte
-		localVarReturnValue XStreamDefinitionssdkGameServer
+		localVarReturnValue StreamResultOfSdkGameServer
 	)
 
 	// create path and map variables
@@ -783,7 +783,7 @@ func (a *SDKApiService) WatchGameServer(ctx context.Context) (XStreamDefinitions
 			error: localVarHttpResponse.Status,
 		}
 		if localVarHttpResponse.StatusCode == 200 {
-			var v XStreamDefinitionssdkGameServer
+			var v StreamResultOfSdkGameServer
 			err = a.client.decode(&v, localVarBody, localVarHttpResponse.Header.Get("Content-Type"));
 				if err != nil {
 					newErr.error = err.Error()
