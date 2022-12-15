@@ -659,9 +659,6 @@ func (gs *GameServer) podObjectMeta(pod *corev1.Pod) {
 
 	// Add Agones version into Pod Annotations
 	pod.ObjectMeta.Annotations[VersionAnnotation] = pkg.Version
-	if gs.ObjectMeta.Annotations == nil {
-		gs.ObjectMeta.Annotations = make(map[string]string, 1)
-	}
 }
 
 // podScheduling applies the Fleet scheduling strategy to the passed in Pod
