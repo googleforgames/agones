@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
+	"strings"
 
 	"agones.dev/agones/pkg"
 	"agones.dev/agones/pkg/apis"
@@ -596,6 +597,11 @@ func (gs *GameServer) Pod(sidecars ...corev1.Container) (*corev1.Pod, error) {
 	pod := &corev1.Pod{
 		ObjectMeta: *gs.Spec.Template.ObjectMeta.DeepCopy(),
 		Spec:       *gs.Spec.Template.Spec.DeepCopy(),
+	}
+
+	if len(pod.Spec.Hostname) == 0 {
+		// replace . with - since it must match RFC 1123
+		pod.Spec.Hostname = strings.ReplaceAll(gs.ObjectMeta.Name, ".", "-")
 	}
 
 	gs.podObjectMeta(pod)
