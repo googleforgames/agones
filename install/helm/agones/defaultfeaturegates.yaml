@@ -24,6 +24,7 @@ PlayerAllocationFilter: false
 PlayerTracking: false
 ResetMetricsOnDelete: false
 SafeToEvict: false
+PodHostname: false
 
 # Pre-Alpha features
 SplitControllerAndExtensions: false

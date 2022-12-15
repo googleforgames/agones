@@ -133,6 +133,8 @@ The GameServer resource does not support updates. If you need to make regular up
 
 ## Stable Network ID
 
+{{< alpha title="Stable Network ID" gate="PodHostname" >}}
+
 Each Pod attached to a `GameServer` derives its hostname from the name of the `GameServer`. 
 A group of `Pods` attached to `GameServers` can use a 
 [Headless Service](https://kubernetes.io/docs/concepts/services-networking/service/#headless-services) to control 

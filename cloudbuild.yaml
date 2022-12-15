@@ -245,7 +245,7 @@ steps:
 
 - name: 'e2e-runner'
   args:
-    - 'CustomFasSyncInterval=false&SDKGracefulTermination=false&StateAllocationFilter=false&PlayerAllocationFilter=true&PlayerTracking=true&ResetMetricsOnDelete=true&SafeToEvict=true&Example=true'
+    - 'CustomFasSyncInterval=false&SDKGracefulTermination=false&StateAllocationFilter=false&PlayerAllocationFilter=true&PlayerTracking=true&ResetMetricsOnDelete=true&SafeToEvict=true&PodHostname=true&Example=true'
     - 'e2e-test-cluster'
     - "${_REGISTRY}"
   id: e2e-feature-gates
