@@ -58,6 +58,12 @@ const (
 	FeatureSafeToEvict Feature = "SafeToEvict"
 
 	////////////////
+	// "Pre"-Alpha features
+
+	// FeatureSplitControllerAndExtensions is a feature flag that will split agones-controller into two deployments
+	FeatureSplitControllerAndExtensions = "SplitControllerAndExtensions"
+
+	////////////////
 	// Example feature
 
 	// FeatureExample is an example feature gate flag, used for testing and demonstrative purposes
@@ -101,6 +107,9 @@ var (
 		FeaturePlayerTracking:         false,
 		FeatureResetMetricsOnDelete:   false,
 		FeatureSafeToEvict:            false,
+
+		// Pre-Alpha features
+		FeatureSplitControllerAndExtensions: false,
 
 		// Example feature
 		FeatureExample: false,
