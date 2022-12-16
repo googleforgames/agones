@@ -129,7 +129,7 @@ is to have them both run using the host network, like so:
 In one shell run:
 
 ```shell
-docker run --network=host --rm gcr.io/agones-images/agones-sdk:{{< release-version >}} --local
+docker run --network=host --rm us-docker.pkg.dev/agones-images/release/agones-sdk:{{< release-version >}} --local
 ```
 
 You should see a similar output to what you would if you were running the binary directly, i.e. outside a container.
@@ -147,5 +147,5 @@ this is also possible:
 wget https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-game-server/gameserver.yaml
 # required so that the `agones` user in the container can read the file
 chmod o+r gameserver.yaml
-docker run --network=host --rm -v $(pwd)/gameserver.yaml:/tmp/gameserver.yaml gcr.io/agones-images/agones-sdk:{{<release-version>}} --local -f /tmp/gameserver.yaml
+docker run --network=host --rm -v $(pwd)/gameserver.yaml:/tmp/gameserver.yaml us-docker.pkg.dev/agones-images/release/agones-sdk:{{<release-version>}} --local -f /tmp/gameserver.yaml
 ```

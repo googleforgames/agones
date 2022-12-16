@@ -30,28 +30,28 @@ steps:
 # Restore any caches
 #
 
-- name: gcr.io/$PROJECT_ID/restore_cache
+- name: us-docker.pkg.dev/$PROJECT_ID/ci/restore_cache
   id: htmltest-restore-cache
   args:
     - '--bucket=gs://$_CACHE_BUCKET'
     - '--key=$_HTMLTEST_CACHE_KEY'
   waitFor: ['-']
 
-- name: gcr.io/$PROJECT_ID/restore_cache
+- name: us-docker.pkg.dev/$PROJECT_ID/ci/restore_cache
   id: cpp-sdk-build-restore-cache
   args:
     - '--bucket=gs://$_CACHE_BUCKET'
     - '--key=$_CPP_SDK_BUILD_CACHE_KEY-$( checksum sdks/cpp/cmake/prerequisites.cmake )'
   waitFor: ['-']
 
-- name: gcr.io/$PROJECT_ID/restore_cache
+- name: us-docker.pkg.dev/$PROJECT_ID/ci/restore_cache
   id: cpp-sdk-conformance-restore-cache
   args:
     - '--bucket=gs://$_CACHE_BUCKET'
     - '--key=$_CPP_SDK_CONFORMANCE_CACHE_KEY-$( checksum sdks/cpp/cmake/prerequisites.cmake )'
   waitFor: ['-']
 
-- name: gcr.io/$PROJECT_ID/restore_cache
+- name: us-docker.pkg.dev/$PROJECT_ID/ci/restore_cache
   id: rust-sdk-build-restore-cache
   args:
     - '--bucket=gs://$_CACHE_BUCKET'
@@ -181,7 +181,7 @@ steps:
 # Cache the cpp sdk build directory, to speed up subsequent builds (considerably)
 #
 
-- name: 'gcr.io/$PROJECT_ID/save_cache'
+- name: 'us-docker.pkg.dev/$PROJECT_ID/ci/save_cache'
   args:
     - '--bucket=gs://$_CACHE_BUCKET'
     - '--key=$_CPP_SDK_BUILD_CACHE_KEY-$( checksum sdks/cpp/cmake/prerequisites.cmake )'
@@ -207,7 +207,7 @@ steps:
 #
 # Cache the htmltest url checks. Faster builds, and lower network flakiness.
 #
-- name: 'gcr.io/$PROJECT_ID/save_cache'
+- name: 'us-docker.pkg.dev/$PROJECT_ID/ci/save_cache'
   args:
     - '--bucket=gs://$_CACHE_BUCKET'
     - '--key=$_HTMLTEST_CACHE_KEY'
@@ -283,7 +283,7 @@ steps:
 # Cache the CPP conformance build directory, to speed up subsequent builds (considerably)
 #
 
-- name: 'gcr.io/$PROJECT_ID/save_cache'
+- name: 'us-docker.pkg.dev/$PROJECT_ID/ci/save_cache'
   args:
     - '--bucket=gs://$_CACHE_BUCKET'
     - '--key=$_CPP_SDK_CONFORMANCE_CACHE_KEY-$( checksum sdks/cpp/cmake/prerequisites.cmake )'
@@ -296,7 +296,7 @@ steps:
 # Cache the Rust SDK build directory, to speed up subsequent builds (considerably)
 #
 
-- name: 'gcr.io/$PROJECT_ID/save_cache'
+- name: 'us-docker.pkg.dev/$PROJECT_ID/ci/save_cache'
   args:
     - '--bucket=gs://$_CACHE_BUCKET'
     - '--key=$_RUST_SDK_BUILD_CACHE_KEY-$( checksum test/sdk/rust/Cargo.toml )'

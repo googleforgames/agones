@@ -83,9 +83,9 @@ gcloud-auth-cluster: $(ensure-build-image)
 	docker run --rm $(common_mounts) $(build_tag) gcloud container clusters get-credentials $(GCP_CLUSTER_NAME) --zone  $(GCP_CLUSTER_LOCATION)
 
 # authenticate our docker configuration so that you can do a docker push directly
-# to the gcr.io repository
+# to the Google Artifact Registry repository
 gcloud-auth-docker: $(ensure-build-image)
-	docker run --rm $(common_mounts) $(build_tag) gcloud auth print-access-token | docker login -u oauth2accesstoken --password-stdin https://gcr.io
+	docker run --rm $(common_mounts) $(build_tag) gcloud auth print-access-token | docker login -u oauth2accesstoken --password-stdin https://us-docker.pkg.dev
 
 # Clean the gcloud configuration
 clean-gcloud-config:

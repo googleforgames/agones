@@ -78,7 +78,7 @@ variable "pull_policy" {
 }
 
 variable "image_registry" {
-  default = "gcr.io/agones-images"
+  default = "us-docker.pkg.dev/agones-images/release"
 }
 
 variable "always_pull_sidecar" {

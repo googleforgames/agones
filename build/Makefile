@@ -27,7 +27,7 @@
 base_version = 1.29.0
 
 # agones image release registry
-release_registry = gcr.io/agones-images
+release_registry = us-docker.pkg.dev/agones-images/release
 
 #
 # All of the following can be overwritten with environment variables

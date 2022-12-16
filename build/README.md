@@ -226,9 +226,9 @@ installing Agones next.
 
 To prepare building and pushing images, let's set the REGISTRY environment variable to point to our new project.
 You can [choose any registry region](https://cloud.google.com/container-registry/docs/pushing-and-pulling#choosing_a_registry_name)
-but for this example, we'll just use `gcr.io`.
+but for this example, we'll just use `us-docker.pkg.dev`.
 
-In your shell, run `export REGISTRY=gcr.io/<YOUR-PROJECT-ID>` which will overwrite the default registry settings in our
+In your shell, run `export REGISTRY=us-docker.pkg.dev/<YOUR-PROJECT-ID>/<YOUR-REGISTRY-NAME>` which will overwrite the default registry settings in our
 Make targets. Then, to rebuild our images for this registry, we run `make build-images` again.
 
 Before we can push the images, there is one more small step! So that we can run regular `docker push` commands
@@ -347,7 +347,7 @@ Prerequisites:
 To begin, you need to set up the following environment variables:
 - `KUBECONFIG` should point to the kubeconfig file used to access the cluster;
    if unset, it defaults to `~/.kube/config`
-- `REGISTRY` should point to your image repository of your choice (i.e. gcr.io/<YOUR-PROJECT-ID>)
+- `REGISTRY` should point to your image repository of your choice (i.e. us-docker.pkg.dev/<YOUR-PROJECT-ID>/<YOUR-REGISTRY-NAME>)
 - `IMAGE_PULL_SECRET` must contain the name of the secret required to pull the Agones images,
    in case you're using a custom repository; if unset, no pull secret will be used
 - `IMAGE_PULL_SECRET_FILE` must be initialized to the full path of the file containing
@@ -417,7 +417,7 @@ command from within `make shell` or locally, to refresh your authentication toke
 The version of this build. Version defaults to the short hash of the latest commit.
 
 ### REGISTRY
-The registry that is being used to store docker images. Defaults to gcr.io/agones-images - the release + CI registry.
+The registry that is being used to store docker images. Defaults to us-docker.pkg.dev/agones-images/release
 
 ### KUBECONFIG
 The Kubernetes config file used to access the cluster. Defaults to `~/.kube/config` - the file used by default by kubectl.
