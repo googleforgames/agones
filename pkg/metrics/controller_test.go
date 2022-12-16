@@ -140,10 +140,9 @@ func TestControllerGameServerCount(t *testing.T) {
 			if m.Descriptor.Name == gameServersCountName {
 				if len(m.TimeSeries) == 4 {
 					return true
-				} else {
-					logrus.WithField("m", m).Info("Metrics")
-					return false
 				}
+				logrus.WithField("m", m).Info("Metrics")
+				return false
 			}
 		}
 
