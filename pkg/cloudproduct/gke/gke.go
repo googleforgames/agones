@@ -131,23 +131,6 @@ func (*gkeAutopilot) ValidateGameServerSpec(gss *agonesv1.GameServerSpec) []meta
 }
 
 func (*gkeAutopilot) MutateGameServerPodSpec(gss *agonesv1.GameServerSpec, podSpec *corev1.PodSpec) error {
-	if gss.Scheduling != apis.Packed {
-		return errors.Errorf("Scheduling strategy %s != Packed, which webhook should have rejected on Autopilot", gss.Scheduling)
-	}
-	if len(podSpec.Tolerations) > 0 || len(podSpec.NodeSelector) > 0 {
-		// If the user has specified tolerations or a node selector already,
-		// we assume they know what they're doing.
-		return nil
-	}
-	podSpec.Tolerations = []corev1.Toleration{{
-		Key:      agonesv1.RoleLabel,
-		Value:    agonesv1.GameServerLabelRole,
-		Operator: corev1.TolerationOpEqual,
-		Effect:   corev1.TaintEffectNoSchedule,
-	}}
-	podSpec.NodeSelector = map[string]string{
-		agonesv1.RoleLabel: agonesv1.GameServerLabelRole,
-	}
 	return nil
 }
 
