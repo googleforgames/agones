@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC All Rights Reserved.
+// Copyright 2022 Google LLC All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -87,7 +87,7 @@ var (
 )
 
 func setupLogging(logDir string, logSizeLimitMB int) {
-	logFileName := filepath.Join(logDir, "agones-controller-"+time.Now().Format("20060102_150405")+".log")
+	logFileName := filepath.Join(logDir, "agones-extensions-"+time.Now().Format("20060102_150405")+".log")
 
 	const maxLogSizeMB = 100
 	maxBackups := (logSizeLimitMB - maxLogSizeMB) / maxLogSizeMB
@@ -129,7 +129,7 @@ func main() {
 		for _, err := range errs {
 			logger.Error(err)
 		}
-		logger.Fatal("Could not create controller from environment or flags")
+		logger.Fatal("Could not create extensions from environment or flags")
 	}
 
 	// if the kubeconfig fails BuildConfigFromFlags will try in cluster config
@@ -237,7 +237,7 @@ func main() {
 	}
 
 	<-ctx.Done()
-	logger.Info("Shut down agones controllers")
+	logger.Info("Shut down agones extensions")
 }
 
 func parseEnvFlags() config {
@@ -247,7 +247,7 @@ func parseEnvFlags() config {
 	}
 
 	base := filepath.Dir(exec)
-	viper.SetDefault(sidecarImageFlag, "us-docker.pkg.dev/agones-images/release/agones-sdk:"+pkg.Version)
+	viper.SetDefault(sidecarImageFlag, "gcr.io/agones-images/agones-sdk:"+pkg.Version)
 	viper.SetDefault(sidecarCPURequestFlag, "0")
 	viper.SetDefault(sidecarCPULimitFlag, "0")
 	viper.SetDefault(sidecarMemoryRequestFlag, "0")

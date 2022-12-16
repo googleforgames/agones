@@ -12,23 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Default values for feature gates. Keep in sync with pkg/util/runtime/features.go:featureDefaults
+FROM alpine:3.14
 
-# Beta features
-CustomFasSyncInterval: true
-SDKGracefulTermination: true
-StateAllocationFilter: true
+ARG ARCH=amd64
+RUN apk --update add ca-certificates && \
+    adduser -D -u 1000 agones
 
-# Alpha features
-PlayerAllocationFilter: false
-PlayerTracking: false
-ResetMetricsOnDelete: false
-SafeToEvict: false
-PodHostname: false
+COPY --chown=agones:agones ./bin/extensions.linux.$ARCH /home/agones/extensions
+COPY --chown=agones:agones ./bin/LICENSES ./bin/dependencies-src.tgz /home/agones/
 
-# Pre-Alpha features
-SplitControllerAndExtensions: false
-
-# Example feature
-Example: false
-
+USER 1000
+ENTRYPOINT ["/home/agones/extensions"]

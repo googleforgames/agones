@@ -33,6 +33,7 @@ The current set of `alpha` and `beta` feature gates:
 | [GameServer player capacity filtering on GameServerAllocations](https://github.com/googleforgames/agones/issues/1239) | `PlayerAllocationFilter` | Disabled | `Alpha` | 1.14.0 |
 | [Player Tracking]({{< ref "/docs/Guides/player-tracking.md" >}})                                                      | `PlayerTracking`         | Disabled | `Alpha` | 1.6.0  |
 | [Reset Metric Export on Fleet / Autoscaler deletion]({{% relref "./metrics.md#dropping-metric-labels" %}})            | `ResetMetricsOnDelete`   | Disabled | `Alpha` | 1.26.0 |
+| [GameServer Stable Network ID]({{% ref "/docs/Reference/gameserver.md#stable-network-id" %}})                         | `PodHostname`            | Disabled | `Alpha` | 1.29.0 |
 | [GameServer `SafeToEvict` API](https://github.com/googleforgames/agones/issues/2794)                                  | `SafeToEvict`            | Disabled | `Alpha` | 1.29.0 |
 | Example Gate (not in use)                                                                                             | `Example`                | Disabled | None    | 0.13.0 |
 {{% /feature %}}

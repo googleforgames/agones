@@ -216,6 +216,9 @@ agones:
     controller:
       name: agones-controller
       pullPolicy: IfNotPresent
+    # extensions settings ignored unless `SplitControllerAndExtensions` feature gate is enabled
+    extensions:
+      name: agones-extensions
     sdk:
       name: agones-sdk
       cpuRequest: 30m
