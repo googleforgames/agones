@@ -129,7 +129,12 @@ is to have them both run using the host network, like so:
 In one shell run:
 
 ```shell
+{{% feature publishVersion="1.29.0" %}}
 docker run --network=host --rm us-docker.pkg.dev/agones-images/release/agones-sdk:{{< release-version >}} --local
+{{% /feature %}}
+{{% feature expiryVersion="1.29.0" %}}
+docker run --network=host --rm gcr.io/agones-images/agones-sdk:{{< release-version >}} --local
+{{% /feature %}}
 ```
 
 You should see a similar output to what you would if you were running the binary directly, i.e. outside a container.

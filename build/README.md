@@ -225,8 +225,11 @@ Assuming that all works, let's exit the shell by typing `exit` and hitting enter
 installing Agones next.
 
 To prepare building and pushing images, let's set the REGISTRY environment variable to point to our new project.
-You can [choose any registry region](https://cloud.google.com/container-registry/docs/pushing-and-pulling#choosing_a_registry_name)
+You can choose either Google Container Registry or Google Artifact Registry. But for this guidance, we will use Google Artifact Registry.
+You can [choose any registry region](https://cloud.google.com/artifact-registry/docs/docker/pushing-and-pulling)
 but for this example, we'll just use `us-docker.pkg.dev`.
+Please follow the [instructions](https://cloud.google.com/artifact-registry/docs/docker/pushing-and-pulling#before_you_begin) to create the registry
+in your project properly before you contine.
 
 In your shell, run `export REGISTRY=us-docker.pkg.dev/<YOUR-PROJECT-ID>/<YOUR-REGISTRY-NAME>` which will overwrite the default registry settings in our
 Make targets. Then, to rebuild our images for this registry, we run `make build-images` again.
@@ -725,7 +728,7 @@ Change AGONES_VERSION to a specific version you want to install.
 
 #### `make gcloud-terraform-install`
 Create GKE cluster and install current version of agones.
-The current version should be built and pushed to release_registry beforehand:
+The current version should be built and pushed to `$(REGISTRY)` beforehand:
 ```
 make build-images
 make push
