@@ -282,6 +282,8 @@ steps:
 - name: "make-docker"
   id: sdk-conformance
   dir: "build"
+  env:
+    - "REGISTRY=${_REGISTRY}"
   args: [ "-j", "5", "--output-sync=target", "run-sdk-conformance-tests"]
   waitFor:
     - build-images
