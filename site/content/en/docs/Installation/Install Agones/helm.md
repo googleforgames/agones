@@ -98,12 +98,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.serviceaccount.controller`                       | Service account name for the controller. **Note**: Will be replaced with `agones.serviceaccount.controller.name` in Agones 1.16                                                                                         | `agones-controller`                |
 | `agones.serviceaccount.sdk`                              | Service account name for the sdk. **Note**: Will be replaced with `agones.serviceaccount.sdk.name` in Agones 1.16                                                                                                       | `agones-sdk`                       | 
 | `agones.serviceaccount.sdk.annotations`                  | A map of namespaces to maps of [Annotations][annotations] added to the Agones SDK service account for the specified namespaces                                                                                          | `{}`                               |
-{{% feature publishVersion="1.29.0" %}}
-| `agones.image.registry`                                  | Global image registry for all the Agones systrem images                                                                                                                                                                                    | `us-docker.pkg.dev/agones-images/release`             |
-{{% /feature %}}
-{{% feature expiryVersion="1.29.0" %}}
-| `agones.image.registry`                                  | Global image registry for all images                                                                                                                                                                                    | `gcr.io/agones-images`             |
-{{% /feature %}}
+| `agones.image.registry`                                  | Global image registry for all images                                                                                                                                                                                   | `gcr.io/agones-images`             |
 | `agones.image.tag`                                       | Global image tag for all images                                                                                                                                                                                         | `{{< release-version >}}`          |
 | `agones.image.controller.name`                           | Image name for the controller                                                                                                                                                                                           | `agones-controller`                |
 | `agones.image.controller.pullPolicy`                     | Image pull policy for the controller                                                                                                                                                                                    | `IfNotPresent`                     |
@@ -231,6 +226,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 
 | Parameter                             | Description                                                                                                                                                                                                                           | Default |
 |---------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------|
+| `agones.image.registry`                                  | Global image registry for all the Agones systrem images                                                                                                                                                                                   | `us-docker.pkg.dev/agones-images/release`
 {{% /feature %}}
 
 [toleration]: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/

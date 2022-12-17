@@ -225,7 +225,8 @@ Assuming that all works, let's exit the shell by typing `exit` and hitting enter
 installing Agones next.
 
 To prepare building and pushing images, let's set the REGISTRY environment variable to point to our new project.
-You can choose either Google Container Registry or Google Artifact Registry. But for this guidance, we will use Google Artifact Registry.
+You can choose either Google Container Registry or Google Artifact Registry but you must set it explicitly.
+For this guidance, we will use Google Artifact Registry.
 You can [choose any registry region](https://cloud.google.com/artifact-registry/docs/docker/pushing-and-pulling)
 but for this example, we'll just use `us-docker.pkg.dev`.
 Please follow the [instructions](https://cloud.google.com/artifact-registry/docs/docker/pushing-and-pulling#before_you_begin) to create the registry
@@ -420,7 +421,7 @@ command from within `make shell` or locally, to refresh your authentication toke
 The version of this build. Version defaults to the short hash of the latest commit.
 
 ### REGISTRY
-The registry that is being used to store docker images. Defaults to us-docker.pkg.dev/agones-images/release
+The registry that is being used to store docker images. It doesn't have default value and has to be set explicitly.
 
 ### KUBECONFIG
 The Kubernetes config file used to access the cluster. Defaults to `~/.kube/config` - the file used by default by kubectl.

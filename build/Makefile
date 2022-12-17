@@ -26,8 +26,6 @@
 # base version target. This is usually the next release.
 base_version = 1.29.0
 
-# agones image registry for development
-dev_registry = us-docker.pkg.dev/agones-images/dev
 #
 # All of the following can be overwritten with environment variables
 # or passed through directly when invoking the relevent Make targets
@@ -35,8 +33,7 @@ dev_registry = us-docker.pkg.dev/agones-images/dev
 
 # Version defaults to the short hash of the latest commit
 VERSION ?= $(base_version)-$(shell git rev-parse --short=7 HEAD)
-# The registry that is being used to store docker images
-REGISTRY ?= $(dev_registry)
+
 # kubectl configuration to use
 KUBECONFIG ?= ~/.kube/config
 # The (gcloud) test cluster that is being worked against

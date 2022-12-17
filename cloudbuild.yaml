@@ -75,6 +75,8 @@ steps:
 - name: "make-docker"
   id: pull-build-image
   dir: "build"
+  env:
+    - "REGISTRY=${_REGISTRY}"
   args: ["pull-build-image"]
   waitFor:
     - build-make-docker
@@ -86,6 +88,8 @@ steps:
 - name: "make-docker"
   id: pull-build-sdk-base-image
   dir: "build"
+  env:
+    - "REGISTRY=${_REGISTRY}"
   args: ["pull-build-sdk-base-image"]
   waitFor:
     - build-make-docker
@@ -131,6 +135,8 @@ steps:
   waitFor:
     - lint
   dir: "build"
+  env:
+    - "REGISTRY=${_REGISTRY}"
   args: ["push-build-image"] # push the build image (which won't do anything if it's already there)
 
 #
@@ -141,6 +147,8 @@ steps:
   waitFor:
     - ensure-build-sdk-image-base
   dir: "build"
+  env:
+    - "REGISTRY=${_REGISTRY}"
   args: ["push-build-sdk-base-image"]
 
 #
