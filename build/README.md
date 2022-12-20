@@ -232,7 +232,7 @@ but for this example, we'll just use `us-docker.pkg.dev`.
 Please follow the [instructions](https://cloud.google.com/artifact-registry/docs/docker/pushing-and-pulling#before_you_begin) to create the registry
 in your project properly before you contine.
 
-In your shell, run `export REGISTRY=us-docker.pkg.dev/<YOUR-PROJECT-ID>/<YOUR-REGISTRY-NAME>` which will overwrite the default registry settings in our
+In your shell, run `export REGISTRY=us-docker.pkg.dev/<YOUR-PROJECT-ID>/<YOUR-REGISTRY-NAME>` which will set the required `REGISTRY` parameters in our
 Make targets. Then, to rebuild our images for this registry, we run `make build-images` again.
 
 Before we can push the images, there is one more small step! So that we can run regular `docker push` commands

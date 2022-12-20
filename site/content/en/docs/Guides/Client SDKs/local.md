@@ -150,9 +150,19 @@ docker run --network=host --rm <your image here>
 If you want to [mount a custom `gameserver.yaml`](#providing-your-own-gameserver-configuration-for-local-development), 
 this is also possible:  
 
+{{% feature publishVersion="1.29.0" %}}
 ```bash
 wget https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-game-server/gameserver.yaml
 # required so that the `agones` user in the container can read the file
 chmod o+r gameserver.yaml
 docker run --network=host --rm -v $(pwd)/gameserver.yaml:/tmp/gameserver.yaml us-docker.pkg.dev/agones-images/release/agones-sdk:{{<release-version>}} --local -f /tmp/gameserver.yaml
 ```
+{{% /feature %}}
+{{% feature expiryVersion="1.29.0" %}}
+```bash
+wget https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-game-server/gameserver.yaml
+# required so that the `agones` user in the container can read the file
+chmod o+r gameserver.yaml
+docker run --network=host --rm -v $(pwd)/gameserver.yaml:/tmp/gameserver.yaml gcr.io/agones-images/agones-sdk:{{<release-version>}} --local -f /tmp/gameserver.yaml
+```
+{{% /feature %}}
