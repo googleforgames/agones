@@ -1061,7 +1061,7 @@ func TestControllerRollingUpdateDeploymentNegativeReplica(t *testing.T) {
 		assert.Equal(t, int32(4), gsSet.Spec.Replicas)
 		assert.Equal(t, int32(5), f.Spec.Replicas)
 
-		return true, nil, errors.Errorf("error updating replicas for gameserverset for fleet %s:", f.Name)
+		return true, nil, errors.Errorf("error updating replicas for gameserverset for fleet %s", f.Name)
 	})
 
 	// assert the active gameserverset's replicas when active and inactive gameserversets exist

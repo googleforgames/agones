@@ -155,69 +155,6 @@ func TestValidateGameServer(t *testing.T) {
 	}
 }
 
-func TestMutateGameServerPod(t *testing.T) {
-	packedGSS := &agonesv1.GameServerSpec{Scheduling: apis.Packed}
-	distributedGSS := &agonesv1.GameServerSpec{Scheduling: apis.Distributed}
-
-	kvToleration := func(k, v string) []corev1.Toleration {
-		return []corev1.Toleration{{
-			Key:      k,
-			Value:    v,
-			Operator: corev1.TolerationOpEqual,
-			Effect:   corev1.TaintEffectNoSchedule,
-		}}
-	}
-
-	for name, tc := range map[string]struct {
-		gss         *agonesv1.GameServerSpec
-		podSpec     *corev1.PodSpec
-		wantPodSpec *corev1.PodSpec
-		wantErr     bool
-	}{
-		"good": {
-			gss:     packedGSS,
-			podSpec: &corev1.PodSpec{},
-			wantPodSpec: &corev1.PodSpec{
-				Tolerations:  kvToleration(agonesv1.RoleLabel, agonesv1.GameServerLabelRole),
-				NodeSelector: map[string]string{agonesv1.RoleLabel: agonesv1.GameServerLabelRole},
-			},
-		},
-		"toleration already set": {
-			gss: packedGSS,
-			podSpec: &corev1.PodSpec{
-				Tolerations: kvToleration("moose", "cookie"),
-			},
-		},
-		"node selector already set": {
-			gss: packedGSS,
-			podSpec: &corev1.PodSpec{
-				NodeSelector: map[string]string{"moose": "cookie"},
-			},
-		},
-		"not Packed": {
-			gss:     distributedGSS,
-			wantErr: true,
-		},
-	} {
-		t.Run(name, func(t *testing.T) {
-			podSpec := tc.podSpec.DeepCopy()
-			err := (&gkeAutopilot{}).MutateGameServerPodSpec(tc.gss, podSpec)
-			if tc.wantErr {
-				assert.NotNil(t, err)
-				return
-			}
-			// allow nil to indicate no change
-			want := tc.wantPodSpec
-			if want == nil {
-				want = tc.podSpec
-			}
-			if assert.NoError(t, err) {
-				require.Equal(t, want, podSpec)
-			}
-		})
-	}
-}
-
 func TestAutopilotPortAllocator(t *testing.T) {
 	for name, tc := range map[string]struct {
 		ports          []agonesv1.GameServerPort

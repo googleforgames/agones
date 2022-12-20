@@ -32,6 +32,8 @@ type APIHooks interface {
 
 var apiHooks APIHooks = generic{}
 
+// RegisterAPIHooks registers API-specific cloud product hooks. It should only be called by
+// the cloudproduct package on initialization.
 func RegisterAPIHooks(hooks APIHooks) {
 	if hooks == nil {
 		hooks = generic{}

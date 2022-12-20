@@ -33,7 +33,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 )
 
-// portallocator.Interface manages the dynamic port allocation strategy.
+// Interface manages the dynamic port allocation strategy.
 //
 // The portallocator does not currently support mixing static portAllocations (or any pods with defined HostPort)
 // within the dynamic port range other than the ones it coordinates.

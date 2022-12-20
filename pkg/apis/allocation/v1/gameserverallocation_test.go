@@ -50,7 +50,7 @@ func TestGameServerAllocationApplyDefaults(t *testing.T) {
 	assert.Equal(t, int64(0), gsa.Spec.Required.Players.MinAvailable)
 }
 
-//nolint // Current lint duplicate threshold will consider this function is a duplication of the function TestGameServerAllocationSpecSelectors
+// nolint // Current lint duplicate threshold will consider this function is a duplication of the function TestGameServerAllocationSpecSelectors
 func TestGameServerAllocationSpecPreferredSelectors(t *testing.T) {
 	t.Parallel()
 
@@ -78,7 +78,7 @@ func TestGameServerAllocationSpecPreferredSelectors(t *testing.T) {
 	assert.True(t, gsas.Preferred[1].Matches(gs))
 }
 
-//nolint // Current lint duplicate threshold will consider this function is a duplication of the function TestGameServerAllocationSpecPreferredSelectors
+// nolint // Current lint duplicate threshold will consider this function is a duplication of the function TestGameServerAllocationSpecPreferredSelectors
 func TestGameServerAllocationSpecSelectors(t *testing.T) {
 	t.Parallel()
 

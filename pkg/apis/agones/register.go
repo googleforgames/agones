@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package agones implements the agones.dev APIs.
 package agones
 
 const (
