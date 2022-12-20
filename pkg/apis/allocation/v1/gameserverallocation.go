@@ -100,7 +100,7 @@ type GameServerAllocationSpec struct {
 // a GameServer for allocation.
 type GameServerSelector struct {
 	// See: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
-	metav1.LabelSelector
+	metav1.LabelSelector `json:",inline"`
 	// [Stage:Beta]
 	// [FeatureFlag:StateAllocationFilter]
 	// +optional
