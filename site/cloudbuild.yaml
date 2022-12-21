@@ -62,4 +62,6 @@ steps:
     - GOPATH=/workspace/go
     - GO111MODULE=on
 
+substitutions:
+  _REGISTRY: us-docker.pkg.dev/${PROJECT_ID}/ci
 tags: ["site"]
