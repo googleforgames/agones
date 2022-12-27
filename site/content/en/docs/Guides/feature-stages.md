@@ -35,6 +35,7 @@ The current set of `alpha` and `beta` feature gates:
 | [Reset Metric Export on Fleet / Autoscaler deletion]({{% relref "./metrics.md#dropping-metric-labels" %}})            | `ResetMetricsOnDelete`         | Disabled | `Alpha` | 1.26.0 |
 | [GameServer Stable Network ID]({{% ref "/docs/Reference/gameserver.md#stable-network-id" %}})                         | `PodHostname`                  | Disabled | `Alpha` | 1.29.0 |
 | [Split `agones-controller` ](https://github.com/googleforgames/agones/issues/2797)                                    | `SplitControllerAndExtensions` | Disabled | `Alpha` | 1.30.0 |
+| [Allocated GameServers are notified on relevant Fleet Updates](https://github.com/googleforgames/agones/issues/2682)  | `FleetAllocationOverflow`      | Disabled | `Alpha` | 1.30.0 |
 | Example Gate (not in use)                                                                                             | `Example`                      | Disabled | None    | 0.13.0 |
 
 {{< alert title="Note" color="info" >}}
