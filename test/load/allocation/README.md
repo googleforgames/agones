@@ -1,20 +1,30 @@
-# Load Test for gRPC allocation service
+# Load Tests for gRPC Allocation Service
+
+[Allocation Load Test](#allocation-load-test) and [Scenario Tests](#scenario-tests)
+for testing the performance of the gRPC allocation service.
+
+## Prerequisites
+
+1. A [Kubernetes cluster](https://agones.dev/site/docs/installation/creating-cluster/) with [Agones](https://agones.dev/site/docs/installation/install-agones/)
+    - We recommend installing Agones using the [Helm](https://agones.dev/site/docs/installation/install-agones/helm/) package manager.
+    - If you are running in GCP, use a regional cluster instead of a zonal cluster to ensure high availability of the cluster control plane.
+    - Use a dedicated node pool for the Agones controllers with multiple CPUs per node, e.g. `e2-standard-4'.
+    - For Allocation Load Test:
+      - In the default node pool (where the Game Server pods are created), 75 nodes are required to make sure there are enough nodes available for all game servers to move into the ready state. When using a regional cluster, with three zones with the region, that will require a configuration of 25 nodes per zone.
+    - For Scenario Tests:
+      - [Kubernetes Cluster Setup for Scenario Tests](#kubernetes-cluster-setup-for-scenario-tests)
+2. A configured [Allocator Service](https://agones.dev/site/docs/advanced/allocator-service/)
+    - The allocator service uses gRPC. In order to be able to call the service, TLS
+and mTLS have to be set up on the Server and Client.
+3. (Optional) [Metrics](https://agones.dev/site/docs/guides/metrics/) for monitoring Agones workloads
+
+# Allocation Load Test
 
 This load tests aims to validate performance of the gRPC allocation service.
 
-## Kubernetes Cluster Setup
-
-For the load test you can follow the regular Kubernetes and Agones setup. In order to test the allocation performance in isolation, we let Agones to get all
-the game servers to Ready state before starting a test.
-Here are the few important things:
-- If you are running in GCP, use a regional cluster instead of a zonal cluster to ensure high availability of the cluster control plane
-- Use a dedicated node pool for the Agones controllers with multiple CPUs per node, e.g. `e2-standard-4'
-- In the default node pool (where the Game Server pods are created), 75 nodes are required to make sure there are enough nodes available for all game servers to move into the ready state. When using a regional cluster, with three zones with the region, that will require a configuration of 25 nodes per zone.
-
 ## Fleet Setting
 
-We used the sample [fleet configuration](./fleet.yaml) with some minor modifications. We updated the `replicas` to 4000.
-Also we set the `automaticShutdownDelaySec` parameter to 10 so simple-game-server game servers shutdown after 10
+We used the sample [fleet configuration](./fleet.yaml). We set the `automaticShutdownDelaySec` parameter to 10 so simple-game-server game servers shutdown after 10
 minutes (see below).
 This helps to easily re-run the test without having to delete the game servers and allows to run tests continously.
 
@@ -38,12 +48,17 @@ kind: Fleet
   ...
 ```
 
-## Configuring the Allocator Service
-
-The allocator service uses gRPC. In order to be able to call the service, TLS and mTLS has to be setup.
-For more information visit [Allocator Service](https://agones.dev/site/docs/advanced/allocator-service/).
-
 ## Running the test
+
+```
+kubectl apply -f ./fleet.yaml
+````
+Wait until the fleet shows 4000 ready game servers before running the allocation script.
+```
+kubectl get fleet
+NAME              SCHEDULING   DESIRED   CURRENT   ALLOCATED   READY   AGE
+load-test-fleet   Packed       4000      4000      0           4000    2m38s
+```
 
 You can use the provided runAllocation.sh script by providing two parameters:
 - number of clients (to do parallel allocations)
@@ -76,7 +91,7 @@ TESTRUNSCOUNT=1 ./runAllocation.sh 40 10
 ```
 
 
-# Running Scenario tests
+# Scenario Tests
 
 The scenario test allows you to generate a variable number of allocations to
 your cluster over time, simulating a game where clients arrive in an unsteady
@@ -84,7 +99,7 @@ pattern. The game servers used in the test are configured to shutdown after
 being allocated, simulating the GameServer churn that is expected during
 normal game play.
 
-## Kubernetes Cluster Setup
+## Kubernetes Cluster Setup for Scenario Tests
 
 For the scenario test to achieve high throughput, you can create multiple groups
 of nodes in your cluster. During testing (on GKE), we created a node pool for
@@ -108,25 +123,28 @@ availability of the cluster control plane.
 The following commands were used to construct a cluster for testing:
 
 ```bash
-gcloud container clusters create scenario-test --cluster-version=1.21 \
+export REGION="us-west1"
+export VERSION="1.23"
+
+gcloud container clusters create scenario-test --cluster-version=$VERSION \
   --tags=game-server --scopes=gke-default --num-nodes=2 \
   --no-enable-autoupgrade --machine-type=n2-standard-2 \
-  --region=us-west1 --enable-ip-alias --cluster-ipv4-cidr 10.0.0.0/10
+  --region=$REGION --enable-ip-alias
 
 gcloud container node-pools create kube-system --cluster=scenario-test \
   --no-enable-autoupgrade \
   --node-taints components.gke.io/gke-managed-components=true:NoExecute \
-  --num-nodes=1 --machine-type=n2-standard-16 --region us-west1
+  --num-nodes=1 --machine-type=n2-standard-16 --region $REGION
 
 gcloud container node-pools create agones-system --cluster=scenario-test \
   --no-enable-autoupgrade --node-taints agones.dev/agones-system=true:NoExecute \
   --node-labels agones.dev/agones-system=true --num-nodes=1 \
-  --machine-type=n2-standard-16 --region us-west1
+  --machine-type=n2-standard-16 --region $REGION
 
 gcloud container node-pools create game-servers --cluster=scenario-test \
   --node-taints scenario-test.io/game-servers=true:NoExecute --num-nodes=1 \
   --machine-type n2-standard-2 --no-enable-autoupgrade \
-  --region us-west1 --tags=game-server --scopes=gke-default \
+  --region $REGION --tags=game-server --scopes=gke-default \
   --enable-autoscaling --max-nodes=300 --min-nodes=175
 ```
 
@@ -156,7 +174,7 @@ by running [`./configure-agones.sh`](configure-agones.sh).
 
 ## Fleet Setting
 
-We used the following fleet configuration:
+We used the following [fleet configuration](./scenario-fleet.yaml):
 
 ```
 apiVersion: "agones.dev/v1"
@@ -198,7 +216,7 @@ spec:
                 memory: 24Mi
 ```
 
-and fleet autoscaler configuration:
+and [fleet autoscaler configuration](./autoscaler.yaml):
 
 ```
 apiVersion: "autoscaling.agones.dev/v1"
@@ -222,12 +240,6 @@ session](https://agones.dev/site/docs/integration-patterns/reusing-gameservers/)
 integration pattern. After 10 simulated game sessions, the simple game servers
 then exit automatically. The fleet configuration above sets each game session to
 last for 1 minute, representing a short game.
-
-## Configuring the Allocator Service
-
-The allocator service uses gRPC. In order to be able to call the service, TLS
-and mTLS have to be set up. For more information visit
-[Allocator Service](https://agones.dev/site/docs/advanced/allocator-service/).
 
 ## Running the test
 
