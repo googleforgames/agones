@@ -23,7 +23,9 @@
  */
 package swagger
 
-type ProtobufAny struct {
-	TypeUrl string `json:"type_url,omitempty"`
-	Value string `json:"value,omitempty"`
+type SdkGameServerStatus struct {
+	State string `json:"state,omitempty"`
+	Address string `json:"address,omitempty"`
+	Ports []StatusPort `json:"ports,omitempty"`
+	Players *StatusPlayerStatus `json:"players,omitempty"`
 }

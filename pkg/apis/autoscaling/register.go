@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package autoscaling implements the autoscaling.agones.dev APIs.
 package autoscaling
 
 const (

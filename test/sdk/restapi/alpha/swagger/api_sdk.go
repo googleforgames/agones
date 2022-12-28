@@ -377,7 +377,7 @@ func (a *SDKApiService) IsPlayerConnected(ctx context.Context, playerID string) 
 SDKApiService PlayerConnect increases the SDK’s stored player count by one, and appends this playerID to GameServer.Status.Players.IDs.
 GameServer.Status.Players.Count and GameServer.Status.Players.IDs are then set to update the player count and id list a second from now, unless there is already an update pending, in which case the update joins that batch operation.  PlayerConnect returns true and adds the playerID to the list of playerIDs if this playerID was not already in the list of connected playerIDs.  If the playerID exists within the list of connected playerIDs, PlayerConnect will return false, and the list of connected playerIDs will be left unchanged.  An error will be returned if the playerID was not already in the list of connected playerIDs but the player capacity for the server has been reached. The playerID will not be added to the list of playerIDs.  Warning: Do not use this method if you are manually managing GameServer.Status.Players.IDs and GameServer.Status.Players.Count through the Kubernetes API, as indeterminate results will occur.
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @param body
+ * @param body The unique identifier for a given player.
 @return AlphaBool
 */
 func (a *SDKApiService) PlayerConnect(ctx context.Context, body AlphaPlayerId) (AlphaBool, *http.Response, error) {
@@ -463,7 +463,7 @@ func (a *SDKApiService) PlayerConnect(ctx context.Context, body AlphaPlayerId) (
 SDKApiService Decreases the SDK’s stored player count by one, and removes the playerID from GameServer.Status.Players.IDs.
 GameServer.Status.Players.Count and GameServer.Status.Players.IDs are then set to update the player count and id list a second from now, unless there is already an update pending, in which case the update joins that batch operation.  PlayerDisconnect will return true and remove the supplied playerID from the list of connected playerIDs if the playerID value exists within the list.  If the playerID was not in the list of connected playerIDs, the call will return false, and the connected playerID list will be left unchanged.  Warning: Do not use this method if you are manually managing GameServer.status.players.IDs and GameServer.status.players.Count through the Kubernetes API, as indeterminate results will occur.
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @param body
+ * @param body The unique identifier for a given player.
 @return AlphaBool
 */
 func (a *SDKApiService) PlayerDisconnect(ctx context.Context, body AlphaPlayerId) (AlphaBool, *http.Response, error) {
@@ -548,7 +548,7 @@ func (a *SDKApiService) PlayerDisconnect(ctx context.Context, body AlphaPlayerId
 /*
 SDKApiService Update the GameServer.Status.Players.Capacity value with a new capacity.
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @param body
+ * @param body Store a count variable.
 @return AlphaEmpty
 */
 func (a *SDKApiService) SetPlayerCapacity(ctx context.Context, body AlphaCount) (AlphaEmpty, *http.Response, error) {

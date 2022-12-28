@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
+	"strings"
 
 	"agones.dev/agones/pkg"
 	"agones.dev/agones/pkg/apis"
@@ -472,7 +473,9 @@ func (gss *GameServerSpec) Validate(devAddress string) ([]metav1.StatusCause, bo
 	if len(objMetaCauses) > 0 {
 		causes = append(causes, objMetaCauses...)
 	}
-
+	if productCauses := apiHooks.ValidateGameServerSpec(gss); len(productCauses) > 0 {
+		causes = append(causes, productCauses...)
+	}
 	return causes, len(causes) == 0
 }
 
@@ -596,6 +599,11 @@ func (gs *GameServer) Pod(sidecars ...corev1.Container) (*corev1.Pod, error) {
 		Spec:       *gs.Spec.Template.Spec.DeepCopy(),
 	}
 
+	if len(pod.Spec.Hostname) == 0 {
+		// replace . with - since it must match RFC 1123
+		pod.Spec.Hostname = strings.ReplaceAll(gs.ObjectMeta.Name, ".", "-")
+	}
+
 	gs.podObjectMeta(pod)
 	for _, p := range gs.Spec.Ports {
 		cp := corev1.ContainerPort{
@@ -619,6 +627,10 @@ func (gs *GameServer) Pod(sidecars ...corev1.Container) (*corev1.Pod, error) {
 	pod.Spec.Containers = containers
 
 	gs.podScheduling(pod)
+
+	if err := apiHooks.MutateGameServerPodSpec(&gs.Spec, &pod.Spec); err != nil {
+		return nil, err
+	}
 
 	return pod, nil
 }
@@ -659,9 +671,6 @@ func (gs *GameServer) podObjectMeta(pod *corev1.Pod) {
 
 	// Add Agones version into Pod Annotations
 	pod.ObjectMeta.Annotations[VersionAnnotation] = pkg.Version
-	if gs.ObjectMeta.Annotations == nil {
-		gs.ObjectMeta.Annotations = make(map[string]string, 1)
-	}
 }
 
 // podScheduling applies the Fleet scheduling strategy to the passed in Pod

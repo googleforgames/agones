@@ -11,6 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+// Package gke implements the GKE cloud product (specifically Autopilot for now)
 package gke
 
 import (
@@ -53,6 +55,8 @@ type hostPortAssignment struct {
 	PortsAssigned map[int32]int32 `json:"portsAssigned,omitempty"` // old -> new
 }
 
+// Detect whether we're running on GKE and/or Autopilot and return the appropriate
+// cloud product string.
 func Detect(ctx context.Context, kc *kubernetes.Clientset) string {
 	if !metadata.OnGCE() {
 		return ""
@@ -68,7 +72,13 @@ func Detect(ctx context.Context, kc *kubernetes.Clientset) string {
 	return "gke-autopilot"
 }
 
-func Autopilot() (*gkeAutopilot, error) { return &gkeAutopilot{}, nil }
+// Autopilot returns a GKE Autopilot cloud product
+//
+//nolint:revive // ignore the unexported return; implements ControllerHooksInterface
+func Autopilot() (*gkeAutopilot, agonesv1.APIHooks, error) {
+	ap := &gkeAutopilot{}
+	return ap, ap, nil
+}
 
 func (*gkeAutopilot) SyncPodPortsToGameServer(gs *agonesv1.GameServer, pod *corev1.Pod) error {
 	// If applyGameServerAddressAndPort has already filled in Status, SyncPodPortsToGameServer
@@ -99,9 +109,9 @@ func (*gkeAutopilot) NewPortAllocator(minPort, maxPort int32,
 	return &autopilotPortAllocator{minPort: minPort, maxPort: maxPort}
 }
 
-func (*gkeAutopilot) ValidateGameServer(gs *agonesv1.GameServer) []metav1.StatusCause {
+func (*gkeAutopilot) ValidateGameServerSpec(gss *agonesv1.GameServerSpec) []metav1.StatusCause {
 	var causes []metav1.StatusCause
-	for _, p := range gs.Spec.Ports {
+	for _, p := range gss.Ports {
 		if p.PortPolicy != agonesv1.Dynamic {
 			causes = append(causes, metav1.StatusCause{
 				Type:    metav1.CauseTypeFieldValueInvalid,
@@ -110,7 +120,7 @@ func (*gkeAutopilot) ValidateGameServer(gs *agonesv1.GameServer) []metav1.Status
 			})
 		}
 	}
-	if gs.Spec.Scheduling != apis.Packed {
+	if gss.Scheduling != apis.Packed {
 		causes = append(causes, metav1.StatusCause{
 			Type:    metav1.CauseTypeFieldValueInvalid,
 			Field:   "scheduling",
@@ -120,24 +130,7 @@ func (*gkeAutopilot) ValidateGameServer(gs *agonesv1.GameServer) []metav1.Status
 	return causes
 }
 
-func (*gkeAutopilot) MutateGameServerPod(gs *agonesv1.GameServer, pod *corev1.Pod) error {
-	if gs.Spec.Scheduling != apis.Packed {
-		return fmt.Errorf("Scheduling strategy %s != Packed, which webhook should have rejected on Autopilot", gs.Spec.Scheduling)
-	}
-	if len(pod.Spec.Tolerations) > 0 || len(pod.Spec.NodeSelector) > 0 {
-		// If the user has specified tolerations or a node selector already,
-		// we assume they know what they're doing.
-		return nil
-	}
-	pod.Spec.Tolerations = []corev1.Toleration{{
-		Key:      agonesv1.RoleLabel,
-		Value:    agonesv1.GameServerLabelRole,
-		Operator: corev1.TolerationOpEqual,
-		Effect:   corev1.TaintEffectNoSchedule,
-	}}
-	pod.Spec.NodeSelector = map[string]string{
-		agonesv1.RoleLabel: agonesv1.GameServerLabelRole,
-	}
+func (*gkeAutopilot) MutateGameServerPodSpec(gss *agonesv1.GameServerSpec, podSpec *corev1.PodSpec) error {
 	return nil
 }
 

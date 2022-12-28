@@ -26,7 +26,6 @@ import (
 
 	"agones.dev/agones/pkg/apis/agones"
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
-	"agones.dev/agones/pkg/cloudproduct"
 	agtesting "agones.dev/agones/pkg/testing"
 	"agones.dev/agones/pkg/util/webhooks"
 	"github.com/heptiolabs/healthcheck"
@@ -378,7 +377,7 @@ func TestControllerCreationMutationHandler(t *testing.T) {
 	type expected struct {
 		responseAllowed bool
 		patches         []jsonpatch.JsonPatchOperation
-		err             string
+		nilPatch        bool
 	}
 
 	var testCases = []struct {
@@ -400,9 +399,7 @@ func TestControllerCreationMutationHandler(t *testing.T) {
 		{
 			description: "Wrong request object, err expected",
 			fixture:     "WRONG DATA",
-			expected: expected{
-				err: `error unmarshalling original GameServer json: "WRONG DATA": json: cannot unmarshal string into Go value of type v1.GameServer`,
-			},
+			expected:    expected{nilPatch: true},
 		},
 	}
 
@@ -426,8 +423,9 @@ func TestControllerCreationMutationHandler(t *testing.T) {
 
 			result, err := c.creationMutationHandler(review)
 
-			if err != nil && tc.expected.err != "" {
-				require.Equal(t, tc.expected.err, err.Error())
+			assert.NoError(t, err)
+			if tc.expected.nilPatch {
+				require.Nil(t, result.Response.PatchType)
 			} else {
 				assert.True(t, result.Response.Allowed)
 				assert.Equal(t, admissionv1.PatchTypeJSONPatch, *result.Response.PatchType)
@@ -534,7 +532,7 @@ func TestControllerCreationValidationHandler(t *testing.T) {
 
 		_, err = c.creationValidationHandler(review)
 		if assert.Error(t, err) {
-			assert.Equal(t, `error unmarshalling original GameServer json: "WRONG DATA": json: cannot unmarshal string into Go value of type v1.GameServer`, err.Error())
+			assert.Equal(t, `error unmarshalling GameServer json after schema validation: "WRONG DATA": json: cannot unmarshal string into Go value of type v1.GameServer`, err.Error())
 		}
 	})
 }
@@ -1954,7 +1952,7 @@ func newFakeController() (*Controller, agtesting.Mocks) {
 		10, 20, "sidecar:dev", false,
 		resource.MustParse("0.05"), resource.MustParse("0.1"),
 		resource.MustParse("50Mi"), resource.MustParse("100Mi"), "sdk-service-account",
-		m.KubeClient, m.KubeInformerFactory, m.ExtClient, m.AgonesClient, m.AgonesInformerFactory, cloudproduct.MustNewGeneric(context.Background()))
+		m.KubeClient, m.KubeInformerFactory, m.ExtClient, m.AgonesClient, m.AgonesInformerFactory)
 	c.recorder = m.FakeRecorder
 	return c, m
 }

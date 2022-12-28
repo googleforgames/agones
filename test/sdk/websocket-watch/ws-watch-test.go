@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Binary ws-watch-test tests websocket watch in Go.
 package main
 
 import (

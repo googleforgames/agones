@@ -23,9 +23,7 @@
  */
 package swagger
 
-type GameServerStatus struct {
-	State string `json:"state,omitempty"`
-	Address string `json:"address,omitempty"`
-	Ports []StatusPort `json:"ports,omitempty"`
-	Players *StatusPlayerStatus `json:"players,omitempty"`
+type StreamResultOfSdkGameServer struct {
+	Result *SdkGameServer `json:"result,omitempty"`
+	Error_ *GooglerpcStatus `json:"error,omitempty"`
 }

@@ -23,6 +23,9 @@
 # targets for an Agones release
 #
 
+# agones image release registry
+release_registry = us-docker.pkg.dev/agones-images/release
+
 # generate a changelog using github-changelog-generator
 gen-changelog: RELEASE_VERSION ?= $(base_version)
 gen-changelog: RELEASE_BRANCH ?= main

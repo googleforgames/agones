@@ -25,6 +25,7 @@ import (
 	"agones.dev/agones/pkg/apis/agones"
 	"agones.dev/agones/pkg/util/runtime"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -1154,6 +1155,7 @@ func TestGameServerPodNoErrors(t *testing.T) {
 	pod, err := fixture.Pod()
 	assert.Nil(t, err, "Pod should not return an error")
 	assert.Equal(t, fixture.ObjectMeta.Name, pod.ObjectMeta.Name)
+	assert.Equal(t, fixture.ObjectMeta.Name, pod.Spec.Hostname)
 	assert.Equal(t, fixture.ObjectMeta.Namespace, pod.ObjectMeta.Namespace)
 	assert.Equal(t, "gameserver", pod.ObjectMeta.Labels[agones.GroupName+"/role"])
 	assert.Equal(t, fixture.ObjectMeta.Name, pod.ObjectMeta.Labels[GameServerPodLabel])
@@ -1163,6 +1165,25 @@ func TestGameServerPodNoErrors(t *testing.T) {
 	assert.Equal(t, fixture.Spec.Ports[0].ContainerPort, pod.Spec.Containers[0].Ports[0].ContainerPort)
 	assert.Equal(t, corev1.Protocol("UDP"), pod.Spec.Containers[0].Ports[0].Protocol)
 	assert.True(t, metav1.IsControlledBy(pod, fixture))
+}
+
+func TestGameServerPodHostName(t *testing.T) {
+	t.Parallel()
+
+	fixture := defaultGameServer()
+	fixture.ObjectMeta.Name = "test-1.0"
+	fixture.ApplyDefaults()
+	pod, err := fixture.Pod()
+	require.NoError(t, err)
+	assert.Equal(t, "test-1-0", pod.Spec.Hostname)
+
+	fixture = defaultGameServer()
+	fixture.ApplyDefaults()
+	expected := "ORANGE"
+	fixture.Spec.Template.Spec.Hostname = expected
+	pod, err = fixture.Pod()
+	require.NoError(t, err)
+	assert.Equal(t, expected, pod.Spec.Hostname)
 }
 
 func TestGameServerPodContainerNotFoundErrReturned(t *testing.T) {

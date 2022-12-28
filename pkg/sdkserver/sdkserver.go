@@ -112,10 +112,11 @@ func NewSDKServer(gameServerName, namespace string, kubeClient kubernetes.Interf
 	mux := http.NewServeMux()
 
 	// limit the informer to only working with the gameserver that the sdk is attached to
-	factory := externalversions.NewFilteredSharedInformerFactory(agonesClient, 30*time.Second, namespace, func(opts *metav1.ListOptions) {
+	tweakListOptions := func(opts *metav1.ListOptions) {
 		s1 := fields.OneTermEqualSelector("metadata.name", gameServerName)
 		opts.FieldSelector = s1.String()
-	})
+	}
+	factory := externalversions.NewSharedInformerFactoryWithOptions(agonesClient, 30*time.Second, externalversions.WithNamespace(namespace), externalversions.WithTweakListOptions(tweakListOptions))
 	gameServers := factory.Agones().V1().GameServers()
 
 	s := &SDKServer{

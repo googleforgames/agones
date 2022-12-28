@@ -146,74 +146,11 @@ func TestValidateGameServer(t *testing.T) {
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
-			causes := (&gkeAutopilot{}).ValidateGameServer(&agonesv1.GameServer{Spec: agonesv1.GameServerSpec{
+			causes := (&gkeAutopilot{}).ValidateGameServerSpec(&agonesv1.GameServerSpec{
 				Ports:      tc.ports,
 				Scheduling: tc.scheduling,
-			}})
+			})
 			require.Equal(t, tc.want, causes)
-		})
-	}
-}
-
-func TestMutateGameServerPod(t *testing.T) {
-	packedGS := &agonesv1.GameServer{Spec: agonesv1.GameServerSpec{Scheduling: apis.Packed}}
-	distributedGS := &agonesv1.GameServer{Spec: agonesv1.GameServerSpec{Scheduling: apis.Distributed}}
-
-	kvToleration := func(k, v string) []corev1.Toleration {
-		return []corev1.Toleration{{
-			Key:      k,
-			Value:    v,
-			Operator: corev1.TolerationOpEqual,
-			Effect:   corev1.TaintEffectNoSchedule,
-		}}
-	}
-
-	for name, tc := range map[string]struct {
-		gs      *agonesv1.GameServer
-		pod     *corev1.Pod
-		wantPod *corev1.Pod
-		wantErr bool
-	}{
-		"good": {
-			gs:  packedGS,
-			pod: &corev1.Pod{},
-			wantPod: &corev1.Pod{Spec: corev1.PodSpec{
-				Tolerations:  kvToleration(agonesv1.RoleLabel, agonesv1.GameServerLabelRole),
-				NodeSelector: map[string]string{agonesv1.RoleLabel: agonesv1.GameServerLabelRole},
-			}},
-		},
-		"toleration already set": {
-			gs: packedGS,
-			pod: &corev1.Pod{Spec: corev1.PodSpec{
-				Tolerations: kvToleration("moose", "cookie"),
-			}},
-		},
-		"node selector already set": {
-			gs: packedGS,
-			pod: &corev1.Pod{Spec: corev1.PodSpec{
-				NodeSelector: map[string]string{"moose": "cookie"},
-			}},
-		},
-		"not Packed": {
-			gs:      distributedGS,
-			wantErr: true,
-		},
-	} {
-		t.Run(name, func(t *testing.T) {
-			pod := tc.pod.DeepCopy()
-			err := (&gkeAutopilot{}).MutateGameServerPod(tc.gs, pod)
-			if tc.wantErr {
-				assert.NotNil(t, err)
-				return
-			}
-			// allow nil to indicate no change
-			want := tc.wantPod
-			if want == nil {
-				want = tc.pod
-			}
-			if assert.NoError(t, err) {
-				require.Equal(t, want, pod)
-			}
 		})
 	}
 }

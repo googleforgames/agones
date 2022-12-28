@@ -523,6 +523,7 @@ func TestConvertGSAToAllocationResponse(t *testing.T) {
 					},
 					Address:  "address",
 					NodeName: "node-name",
+					Source:   "local",
 				},
 			},
 			want: &pb.AllocationResponse{
@@ -537,6 +538,7 @@ func TestConvertGSAToAllocationResponse(t *testing.T) {
 						Name: "port-name",
 					},
 				},
+				Source: "local",
 			},
 		},
 		{
@@ -629,7 +631,11 @@ func TestConvertGSAToAllocationResponse(t *testing.T) {
 			}
 
 			if !tc.skipConvertToGSA {
-				gsa := ConvertAllocationResponseToGSA(tc.want)
+				source := ""
+				if tc.in != nil {
+					source = tc.in.Status.Source
+				}
+				gsa := ConvertAllocationResponseToGSA(tc.want, source)
 				if !assert.Equal(t, tc.in, gsa) {
 					t.Errorf("mismatch with input after double conversion \"%s\"", tc.name)
 				}
@@ -647,7 +653,8 @@ func TestConvertAllocationResponseToGSA(t *testing.T) {
 		{
 			name: "Empty fields",
 			in: &pb.AllocationResponse{
-				Ports: []*pb.AllocationResponse_GameServerStatusPort{},
+				Ports:  []*pb.AllocationResponse_GameServerStatusPort{},
+				Source: "33.188.237.156:443",
 			},
 			want: &allocationv1.GameServerAllocation{
 				TypeMeta: metav1.TypeMeta{
@@ -655,7 +662,8 @@ func TestConvertAllocationResponseToGSA(t *testing.T) {
 					APIVersion: "allocation.agones.dev/v1",
 				},
 				Status: allocationv1.GameServerAllocationStatus{
-					State: allocationv1.GameServerAllocationAllocated,
+					State:  allocationv1.GameServerAllocationAllocated,
+					Source: "33.188.237.156:443",
 				},
 			},
 		},
@@ -665,7 +673,7 @@ func TestConvertAllocationResponseToGSA(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			out := ConvertAllocationResponseToGSA(tc.in)
+			out := ConvertAllocationResponseToGSA(tc.in, tc.in.Source)
 			if !assert.Equal(t, tc.want, out) {
 				t.Errorf("mismatch with want after conversion: \"%s\"", tc.name)
 			}

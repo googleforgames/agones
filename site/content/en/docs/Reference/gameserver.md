@@ -131,6 +131,25 @@ The `spec` field is the actual GameServer specification and it is composed as fo
 The GameServer resource does not support updates. If you need to make regular updates to the GameServer spec, consider using a [Fleet]({{< ref "/docs/Reference/fleet.md" >}}).
 {{< /alert >}}
 
+## Stable Network ID
+
+{{< alpha title="Stable Network ID" gate="PodHostname" >}}
+
+Each Pod attached to a `GameServer` derives its hostname from the name of the `GameServer`. 
+A group of `Pods` attached to `GameServers` can use a 
+[Headless Service](https://kubernetes.io/docs/concepts/services-networking/service/#headless-services) to control 
+the domain of the Pods, along with providing 
+a [`subdomain` value to the `GameServer` `PodTemplateSpec`](https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-s-hostname-and-subdomain-fields)
+to provide all the required details such that Kubernetes will create a DNS record for each Pod behind the Service.
+
+You are also responsible for setting the labels on the `GameServer.Spec.Template.Metadata` to set the labels on the
+created Pods and creating the Headless Service responsible for the network identity of the pods, Agones will not do
+this for you, as a stable DNS record is not required for all use cases.
+
+To ensure that the `hostName` value matches
+[RFC 1123](https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#dns-label-names), any `.` values 
+in the `GameServer` name are replaced by `-` when setting the `hostName` value.
+
 ## GameServer State Diagram
 
 The following diagram shows the lifecycle of a `GameServer`. 

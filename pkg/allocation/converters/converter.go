@@ -242,11 +242,12 @@ func ConvertGSAToAllocationResponse(in *allocationv1.GameServerAllocation) (*pb.
 		Address:        in.Status.Address,
 		NodeName:       in.Status.NodeName,
 		Ports:          convertGSAAgonesPortsToAllocationPorts(in.Status.Ports),
+		Source:         in.Status.Source,
 	}, nil
 }
 
 // ConvertAllocationResponseToGSA converts AllocationResponse to GameServerAllocation V1 (GSA)
-func ConvertAllocationResponseToGSA(in *pb.AllocationResponse) *allocationv1.GameServerAllocation {
+func ConvertAllocationResponseToGSA(in *pb.AllocationResponse, rs string) *allocationv1.GameServerAllocation {
 	if in == nil {
 		return nil
 	}
@@ -258,6 +259,7 @@ func ConvertAllocationResponseToGSA(in *pb.AllocationResponse) *allocationv1.Gam
 			Address:        in.Address,
 			NodeName:       in.NodeName,
 			Ports:          convertAllocationPortsToGSAAgonesPorts(in.Ports),
+			Source:         rs,
 		},
 	}
 	out.SetGroupVersionKind(allocationv1.SchemeGroupVersion.WithKind("GameServerAllocation"))

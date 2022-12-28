@@ -11,6 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+// Package generic implements generic cloud product hooks
 package generic
 
 import (
@@ -18,11 +20,13 @@ import (
 	"agones.dev/agones/pkg/client/informers/externalversions"
 	"agones.dev/agones/pkg/portallocator"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/informers"
 )
 
-func New() (*generic, error) { return &generic{}, nil }
+// New returns a new generic cloud product
+//
+//nolint:revive // ignore the unexported return; implements ControllerHooksInterface
+func New() (*generic, agonesv1.APIHooks, error) { return &generic{}, nil, nil }
 
 type generic struct{}
 
@@ -33,7 +37,3 @@ func (*generic) NewPortAllocator(minPort, maxPort int32,
 	agonesInformerFactory externalversions.SharedInformerFactory) portallocator.Interface {
 	return portallocator.New(minPort, maxPort, kubeInformerFactory, agonesInformerFactory)
 }
-
-func (*generic) ValidateGameServer(*agonesv1.GameServer) []metav1.StatusCause { return nil }
-
-func (*generic) MutateGameServerPod(gs *agonesv1.GameServer, pod *corev1.Pod) error { return nil }

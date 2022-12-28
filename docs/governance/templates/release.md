@@ -18,10 +18,10 @@ See <a href="https://github.com/googleforgames/agones/blob/release-{version}/CHA
 
 Images available with this release:
 
-- [gcr.io/agones-images/agones-controller:{version}](https://gcr.io/agones-images/agones-controller:{version})
-- [gcr.io/agones-images/agones-sdk:{version}](https://gcr.io/agones-images/agones-sdk:{version})
-- [gcr.io/agones-images/agones-ping:{version}](https://gcr.io/agones-images/agones-ping:{version})
-- [gcr.io/agones-images/agones-allocator:{version}](https://gcr.io/agones-images/agones-allocator:{version})
+- [us-docker.pkg.dev/agones-images/release/agones-controller:{version}](https://us-docker.pkg.dev/agones-images/release/agones-controller:{version})
+- [us-docker.pkg.dev/agones-images/release/agones-sdk:{version}](https://us-docker.pkg.dev/agones-images/release/agones-sdk:{version})
+- [us-docker.pkg.dev/agones-images/release/agones-ping:{version}](https://us-docker.pkg.dev/agones-images/release/agones-ping:{version})
+- [us-docker.pkg.dev/agones-images/release/agones-allocator:{version}](https://us-docker.pkg.dev/agones-images/release/agones-allocator:{version})
   { run `make release-example-image-markdown` to populate example images section below (will be more in output than in example) }
 - [us-docker.pkg.dev/agones-images/examples/cpp-simple-server:{example-version}](https://us-docker.pkg.dev/agones-images/examples/cpp-simple-server:{example-version})
 - [us-docker.pkg.dev/agones-images/examples/crd-client:{example-version}](https://us-docker.pkg.dev/agones-images/examples/crd-client:{example-version})

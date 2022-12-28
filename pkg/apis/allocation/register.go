@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package allocation implements the allocation.agones.dev APIs.
 package allocation
 
 const (
