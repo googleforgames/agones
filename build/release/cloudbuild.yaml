@@ -1,4 +1,4 @@
-# Copyright 2022 Google LLC
+# Copyright 2021 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,28 +13,33 @@
 # limitations under the License.
 
 steps:
-  - name: githubchangeloggenerator/github-changelog-generator:latest 
+  - name: gcr.io/cloud-builders/gsutil
+    entrypoint: bash
+    args:
+      - '-c'
+      - 'gsutil mb $_STORAGE || true'
+    id: create-bucket
+  - name: ferrarimarco/github-changelog-generator:1.15.0
     id: changelog
     entrypoint: sh
     args:
       - '-c'
-      - 'github_changelog_generator --user=mangalpalli --project=agones-mangalpalli --bug-labels=kind/bug --enhancement-labels=kind/feature --breaking-labels=kind/breaking --security-labels=area/security --exclude-labels=duplicate,question,invalid,wontfix,priority/wontfix --future-release "v 1.29.0" --release-branch=main --token $$GH_TOKEN'
+      - 'github_changelog_generator --user=googleforgames --project=agones --bug-labels=kind/bug --enhancement-labels=kind/feature --breaking-labels=kind/breaking --security-labels=area/security --exclude-labels=duplicate,question,invalid,wontfix,priority/wontfix --future-release "v${_VERSION}" --release-branch=main --token $$GH_TOKEN'
     secretEnv:
       - GH_TOKEN
 artifacts:
   objects:
     location: '$_STORAGE'
     paths:
-      - '*.zip'
-      - 'license.html'
       - 'CHANGELOG.md'
-  images:
-    - ${_REPOSITORY}agones
+options:
+  machineType: E2_HIGHCPU_32
+  dynamic_substitutions: true
 substitutions:
-  _REPOSITORY: us-docker.pkg.dev/${PROJECT_ID}/release/
   _STORAGE: gs://${PROJECT_ID}-agones-releases
 availableSecrets:
   secretManager:
     - versionName: projects/${PROJECT_ID}/secrets/release-github-token/versions/latest
       env: GH_TOKEN
 timeout: 1800s
+
