@@ -83,9 +83,6 @@ do-release: $(ensure-build-image)
 
 	@echo "Now go make the $(RELEASE_VERSION) release on Github!"
 
-gen-changelog-build:
-	cd $(agones_path) && gcloud builds submit . --config=./build/release/cloudbuild.yaml $(ARGS)
-
 ifdef RC_RELEASE
 build-release: RELEASE_VERSION=$(base_version)-rc
 else
