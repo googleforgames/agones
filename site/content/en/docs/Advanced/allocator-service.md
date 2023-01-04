@@ -53,7 +53,9 @@ If the `agones-allocator` service is installed as a `LoadBalancer` [using a rese
 
 ```bash
 EXTERNAL_IP=$(kubectl get services agones-allocator -n agones-system -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-helm upgrade my-release agones/agones -n agones-system --wait --set agones.allocator.service.loadBalancerIP=${EXTERNAL_IP}
+helm upgrade my-release agones/agones -n agones-system --wait \
+   --set agones.allocator.service.loadBalancerIP=${EXTERNAL_IP} \
+   ...
 ```
 
 {{< alert title="Warning" color="warning">}} The parameter used to automatically

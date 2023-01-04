@@ -8,11 +8,11 @@ for testing the performance of the gRPC allocation service.
 1. A [Kubernetes cluster](https://agones.dev/site/docs/installation/creating-cluster/) with [Agones](https://agones.dev/site/docs/installation/install-agones/)
     - We recommend installing Agones using the [Helm](https://agones.dev/site/docs/installation/install-agones/helm/) package manager.
     - If you are running in GCP, use a regional cluster instead of a zonal cluster to ensure high availability of the cluster control plane.
-    - Use a dedicated node pool for the Agones controllers with multiple CPUs per node, e.g. `e2-standard-4'.
+    - Use a dedicated node pool for the Agones controllers with multiple CPUs per node, e.g. 'e2-standard-4'.
     - For Allocation Load Test:
-      - In the default node pool (where the Game Server pods are created), 75 nodes are required to make sure there are enough nodes available for all game servers to move into the ready state. When using a regional cluster, with three zones with the region, that will require a configuration of 25 nodes per zone.
+      - In the default node pool (where the Game Server pods are created), 75 nodes are required to make sure there are enough nodes available for all game servers to move into the ready state. When using a regional GKE cluster with three zones that will require a configuration of 25 nodes per zone.
     - For Scenario Tests:
-      - [Kubernetes Cluster Setup for Scenario Tests](#kubernetes-cluster-setup-for-scenario-tests)
+      - See [Kubernetes Cluster Setup for Scenario Tests](#kubernetes-cluster-setup-for-scenario-tests)
 2. A configured [Allocator Service](https://agones.dev/site/docs/advanced/allocator-service/)
     - The allocator service uses gRPC. In order to be able to call the service, TLS
 and mTLS have to be set up on the Server and Client.
@@ -20,33 +20,13 @@ and mTLS have to be set up on the Server and Client.
 
 # Allocation Load Test
 
-This load tests aims to validate performance of the gRPC allocation service.
+This load test aims to validate performance of the gRPC allocation service.
 
 ## Fleet Setting
 
-We used the sample [fleet configuration](./fleet.yaml). We set the `automaticShutdownDelaySec` parameter to 10 so simple-game-server game servers shutdown after 10
-minutes (see below).
-This helps to easily re-run the test without having to delete the game servers and allows to run tests continously.
+We used the sample [fleet configuration](./fleet.yaml). We set the `automaticShutdownDelaySec` parameter to 600 so simple-game-server game servers shutdown after 10
+minutes. This helps to easily re-run the test without having to delete the game servers and allows to run tests continously.
 
-```yaml
-apiVersion: "agones.dev/v1"
-kind: Fleet
- ...
- spec:
-  # the number of GameServers to keep Ready
-  replicas: 4000
-  ...
-        # The GameServer's Pod template
-        template:
-            spec:
-                containers:
-                - args:
-                  # We setup the simple-game-server server to shutdown 10 mins after allocation
-                  - -automaticShutdownDelaySec=600
-                  image: us-docker.pkg.dev/agones-images/examples/simple-game-server:0.14
-                  name: simple-game-server
-  ...
-```
 
 ## Running the test
 
@@ -174,64 +154,7 @@ by running [`./configure-agones.sh`](configure-agones.sh).
 
 ## Fleet Setting
 
-We used the following [fleet configuration](./scenario-fleet.yaml):
-
-```
-apiVersion: "agones.dev/v1"
-kind: Fleet
-metadata:
-  name: scenario-test
-spec:
-  replicas: 10
-  template:
-    metadata:
-      labels:
-        gameName: simple-game-server
-    spec:
-      ports:
-      - containerPort: 7654
-        name: default
-      health:
-        initialDelaySeconds: 30
-        periodSeconds: 60
-      template:
-        spec:
-          tolerations:
-          - effect: NoExecute
-            key: scenario-test.io/game-servers
-            operator: Equal
-            value: 'true'
-          containers:
-          - name: simple-game-server
-            image: us-docker.pkg.dev/agones-images/examples/simple-game-server:0.14
-            args:
-            - -automaticShutdownDelaySec=60
-            - -readyIterations=10
-            resources:
-              limits:
-                cpu: 20m
-                memory: 24Mi
-              requests:
-                cpu: 20m
-                memory: 24Mi
-```
-
-and [fleet autoscaler configuration](./autoscaler.yaml):
-
-```
-apiVersion: "autoscaling.agones.dev/v1"
-kind: FleetAutoscaler
-metadata:
-  name: fleet-autoscaler-scenario-test
-spec:
-  fleetName: scenario-test
-  policy:
-    type: Buffer
-    buffer:
-      bufferSize: 2000
-      minReplicas: 10000
-      maxReplicas: 20000
-```
+We used the sample [fleet configuration](./scenario-fleet.yaml and [fleet autoscaler configuration](./autoscaler.yaml).
 
 To reduce pod churn in the system, the simple game servers are configured to
 return themselves to `Ready` after being allocated the first 10 times following
