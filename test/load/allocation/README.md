@@ -154,7 +154,7 @@ by running [`./configure-agones.sh`](configure-agones.sh).
 
 ## Fleet Setting
 
-We used the sample [fleet configuration](./scenario-fleet.yaml and [fleet autoscaler configuration](./autoscaler.yaml).
+We used the sample [fleet configuration](./scenario-fleet.yaml) and [fleet autoscaler configuration](./autoscaler.yaml).
 
 To reduce pod churn in the system, the simple game servers are configured to
 return themselves to `Ready` after being allocated the first 10 times following
