@@ -155,6 +155,48 @@ func TestValidateGameServer(t *testing.T) {
 	}
 }
 
+func TestPodSeccompUnconfined(t *testing.T) {
+	for name, tc := range map[string]struct {
+		podSpec     *corev1.PodSpec
+		wantPodSpec *corev1.PodSpec
+	}{
+		"no context defined": {
+			podSpec: &corev1.PodSpec{},
+			wantPodSpec: &corev1.PodSpec{
+				SecurityContext: &corev1.PodSecurityContext{
+					SeccompProfile: &corev1.SeccompProfile{Type: corev1.SeccompProfileTypeUnconfined},
+				},
+			},
+		},
+		"security context set, no seccomp set": {
+			podSpec: &corev1.PodSpec{SecurityContext: &corev1.PodSecurityContext{}},
+			wantPodSpec: &corev1.PodSpec{
+				SecurityContext: &corev1.PodSecurityContext{
+					SeccompProfile: &corev1.SeccompProfile{Type: corev1.SeccompProfileTypeUnconfined},
+				},
+			},
+		},
+		"seccomp already set": {
+			podSpec: &corev1.PodSpec{
+				SecurityContext: &corev1.PodSecurityContext{
+					SeccompProfile: &corev1.SeccompProfile{Type: corev1.SeccompProfileTypeRuntimeDefault},
+				},
+			},
+			wantPodSpec: &corev1.PodSpec{
+				SecurityContext: &corev1.PodSecurityContext{
+					SeccompProfile: &corev1.SeccompProfile{Type: corev1.SeccompProfileTypeRuntimeDefault},
+				},
+			},
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			podSpec := tc.podSpec.DeepCopy()
+			podSpecSeccompUnconfined(podSpec)
+			assert.Equal(t, tc.wantPodSpec, podSpec)
+		})
+	}
+}
+
 func TestAutopilotPortAllocator(t *testing.T) {
 	for name, tc := range map[string]struct {
 		ports          []agonesv1.GameServerPort

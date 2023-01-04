@@ -131,7 +131,22 @@ func (*gkeAutopilot) ValidateGameServerSpec(gss *agonesv1.GameServerSpec) []meta
 }
 
 func (*gkeAutopilot) MutateGameServerPodSpec(gss *agonesv1.GameServerSpec, podSpec *corev1.PodSpec) error {
+	podSpecSeccompUnconfined(podSpec)
 	return nil
+}
+
+// podSpecSeccompUnconfined sets to seccomp profile to `Unconfined` to avoid serious performance
+// degradation possible with seccomp. We only set the pod level seccompProfile, and only set
+// it if it hasn't been set - users can then override at either the pod or container level
+// in the GameServer spec.
+func podSpecSeccompUnconfined(podSpec *corev1.PodSpec) {
+	if podSpec.SecurityContext != nil && podSpec.SecurityContext.SeccompProfile != nil {
+		return
+	}
+	if podSpec.SecurityContext == nil {
+		podSpec.SecurityContext = &corev1.PodSecurityContext{}
+	}
+	podSpec.SecurityContext.SeccompProfile = &corev1.SeccompProfile{Type: corev1.SeccompProfileTypeUnconfined}
 }
 
 type autopilotPortAllocator struct {
