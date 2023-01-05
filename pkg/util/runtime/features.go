@@ -57,6 +57,15 @@ const (
 	// FeatureSafeToEvict enables the `SafeToEvict` API to specify disruption tolerance.
 	FeatureSafeToEvict Feature = "SafeToEvict"
 
+	// FeaturePodHostname enables the Pod Hostname being assigned the name of the GameServer
+	FeaturePodHostname = "PodHostname"
+
+	////////////////
+	// "Pre"-Alpha features
+
+	// FeatureSplitControllerAndExtensions is a feature flag that will split agones-controller into two deployments
+	FeatureSplitControllerAndExtensions = "SplitControllerAndExtensions"
+
 	////////////////
 	// Example feature
 
@@ -101,6 +110,10 @@ var (
 		FeaturePlayerTracking:         false,
 		FeatureResetMetricsOnDelete:   false,
 		FeatureSafeToEvict:            false,
+		FeaturePodHostname:            false,
+
+		// Pre-Alpha features
+		FeatureSplitControllerAndExtensions: false,
 
 		// Example feature
 		FeatureExample: false,

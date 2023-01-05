@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC All Rights Reserved.
+// Copyright 2017 Google LLC All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,5 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package pkg is all Agones libraries.
-package pkg
+package main
+
+import (
+	"flag"
+	"fmt"
+
+	semver "github.com/blang/semver/v4"
+)
+
+func main() {
+	baseVersion := flag.String("version", "", "the base version to be taken in as input for release")
+	flag.Parse()
+	v, _ := semver.Parse(*baseVersion)
+	releaseVersion := fmt.Sprintf("%d-%d-%d", v.Major, v.Minor-1, v.Patch)
+	fmt.Println(releaseVersion)
+}

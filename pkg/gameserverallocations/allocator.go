@@ -78,6 +78,7 @@ const (
 	allocatorPort         = "443"
 	maxBatchQueue         = 100
 	maxBatchBeforeRefresh = 100
+	localAllocationSource = "local"
 )
 
 var allocationRetry = wait.Backoff{
@@ -281,6 +282,7 @@ func (c *Allocator) allocateFromLocalCluster(ctx context.Context, gsa *allocatio
 		gsa.Status.Ports = gs.Status.Ports
 		gsa.Status.Address = gs.Status.Address
 		gsa.Status.NodeName = gs.Status.NodeName
+		gsa.Status.Source = localAllocationSource
 	}
 
 	c.loggerForGameServerAllocation(gsa).Debug("Game server allocation")
@@ -356,6 +358,7 @@ func (c *Allocator) allocateFromRemoteCluster(gsa *allocationv1.GameServerAlloca
 	ctx, cancel := context.WithTimeout(context.Background(), c.totalRemoteAllocationTimeout)
 	defer cancel() // nolint: errcheck
 	// Retry on remote call failures.
+	var endpoint string
 	err = Retry(remoteAllocationRetry, func() error {
 		for i, ip := range connectionInfo.AllocationEndpoints {
 			select {
@@ -363,7 +366,7 @@ func (c *Allocator) allocateFromRemoteCluster(gsa *allocationv1.GameServerAlloca
 				return ErrTotalTimeoutExceeded
 			default:
 			}
-			endpoint := addPort(ip)
+			endpoint = addPort(ip)
 			c.loggerForGameServerAllocationKey("remote-allocation").WithField("request", request).WithField("endpoint", endpoint).Debug("forwarding allocation request")
 			allocationResponse, err = c.remoteAllocationCallback(ctx, endpoint, dialOpts, request)
 			if err != nil {
@@ -383,7 +386,7 @@ func (c *Allocator) allocateFromRemoteCluster(gsa *allocationv1.GameServerAlloca
 		return nil
 	})
 
-	return converters.ConvertAllocationResponseToGSA(allocationResponse), err
+	return converters.ConvertAllocationResponseToGSA(allocationResponse, endpoint), err
 }
 
 // createRemoteClusterDialOption creates a grpc client dial option with proper certs to make a remote call.

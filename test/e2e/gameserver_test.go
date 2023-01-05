@@ -68,6 +68,57 @@ func TestCreateConnect(t *testing.T) {
 	assert.Equal(t, "ACK: Hello World !\n", reply)
 }
 
+func TestHostName(t *testing.T) {
+	t.Parallel()
+
+	pods := framework.KubeClient.CoreV1().Pods(framework.Namespace)
+
+	fixtures := map[string]struct {
+		setup func(gs *agonesv1.GameServer)
+		test  func(gs *agonesv1.GameServer, pod *corev1.Pod)
+	}{
+		"standard hostname": {
+			setup: func(_ *agonesv1.GameServer) {},
+			test: func(gs *agonesv1.GameServer, pod *corev1.Pod) {
+				assert.Equal(t, gs.ObjectMeta.Name, pod.Spec.Hostname)
+			},
+		},
+		"a . in the name": {
+			setup: func(gs *agonesv1.GameServer) {
+				gs.ObjectMeta.GenerateName = "game-server-1.0-"
+			},
+			test: func(gs *agonesv1.GameServer, pod *corev1.Pod) {
+				expected := "game-server-1-0-"
+				// since it's a generated name, we just check the beginning.
+				assert.Equal(t, expected, pod.Spec.Hostname[:len(expected)])
+			},
+		},
+		// generated name will automatically truncate to 63 chars.
+		"generated with > 63 chars": {
+			setup: func(gs *agonesv1.GameServer) {
+				gs.ObjectMeta.GenerateName = "game-server-" + strings.Repeat("n", 100)
+			},
+			test: func(gs *agonesv1.GameServer, pod *corev1.Pod) {
+				assert.Equal(t, gs.ObjectMeta.Name, pod.Spec.Hostname)
+			},
+		},
+		// Note: no need to test for a gs.ObjectMeta.Name > 63 chars, as it will be rejected as invalid
+	}
+
+	for k, v := range fixtures {
+		t.Run(k, func(t *testing.T) {
+			gs := framework.DefaultGameServer(framework.Namespace)
+			gs.Spec.Template.Spec.Subdomain = "default"
+			v.setup(gs)
+			readyGs, err := framework.CreateGameServerAndWaitUntilReady(t, framework.Namespace, gs)
+			require.NoError(t, err)
+			pod, err := pods.Get(context.Background(), readyGs.ObjectMeta.Name, metav1.GetOptions{})
+			require.NoError(t, err)
+			v.test(readyGs, pod)
+		})
+	}
+}
+
 // nolint:dupl
 func TestSDKSetLabel(t *testing.T) {
 	t.Parallel()

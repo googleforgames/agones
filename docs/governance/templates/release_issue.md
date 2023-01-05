@@ -32,8 +32,7 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 - [ ] Any issues in the current milestone that are not closed, move to next milestone.
 - [ ] If release candidate add the label `feature-freeze-do-not-merge` to any feature pull requests.
 - [ ] `git checkout main && git pull --rebase upstream main`
-- [ ] If full release, run `make site-deploy SERVICE={version}-1`, (replace . with -)
-    - For example, if you are creating the 1.18.0 release, then you would deploy the 1-17-0 service (release minus one, and then replace dots with dashes).
+- [ ] If full release, run `make release-deploy-site`
 - [ ] Run `make build-release` to generate the CHANGELOG.md (if release candidate
   `RC_RELEASE=1 make build-release`). You will need your
   [GitHub Personal Access Token](https://github.com/settings/tokens) for this.

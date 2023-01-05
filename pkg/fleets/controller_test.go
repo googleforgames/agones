@@ -418,7 +418,7 @@ func TestControllerCreationValidationHandler(t *testing.T) {
 		review := getAdmissionReview(raw)
 
 		_, err = c.creationValidationHandler(review)
-		assert.EqualError(t, err, "error unmarshalling original Fleet json: \"MQ==\": json: cannot unmarshal string into Go value of type v1.Fleet")
+		assert.EqualError(t, err, "error unmarshalling Fleet json after schema validation: \"MQ==\": json: cannot unmarshal string into Go value of type v1.Fleet")
 	})
 
 	t.Run("invalid fleet", func(t *testing.T) {
@@ -492,8 +492,9 @@ func TestControllerCreationMutationHandler(t *testing.T) {
 		require.NoError(t, err)
 		review := getAdmissionReview(raw)
 
-		_, err = c.creationMutationHandler(review)
-		assert.EqualError(t, err, "error unmarshalling original Fleet json: \"MQ==\": json: cannot unmarshal string into Go value of type v1.Fleet")
+		result, err := c.creationMutationHandler(review)
+		assert.NoError(t, err)
+		require.Nil(t, result.Response.PatchType)
 	})
 }
 
@@ -1060,7 +1061,7 @@ func TestControllerRollingUpdateDeploymentNegativeReplica(t *testing.T) {
 		assert.Equal(t, int32(4), gsSet.Spec.Replicas)
 		assert.Equal(t, int32(5), f.Spec.Replicas)
 
-		return true, nil, errors.Errorf("error updating replicas for gameserverset for fleet %s:", f.Name)
+		return true, nil, errors.Errorf("error updating replicas for gameserverset for fleet %s", f.Name)
 	})
 
 	// assert the active gameserverset's replicas when active and inactive gameserversets exist

@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package logfields specifies constants for use in logging.
 package logfields
 
 import (

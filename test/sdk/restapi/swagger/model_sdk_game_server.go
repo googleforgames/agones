@@ -27,5 +27,5 @@ package swagger
 type SdkGameServer struct {
 	ObjectMeta *GameServerObjectMeta `json:"object_meta,omitempty"`
 	Spec *GameServerSpec `json:"spec,omitempty"`
-	Status *GameServerStatus `json:"status,omitempty"`
+	Status *SdkGameServerStatus `json:"status,omitempty"`
 }

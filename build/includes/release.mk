@@ -23,6 +23,9 @@
 # targets for an Agones release
 #
 
+# agones image release registry
+release_registry = us-docker.pkg.dev/agones-images/release
+
 # generate a changelog using github-changelog-generator
 gen-changelog: RELEASE_VERSION ?= $(base_version)
 gen-changelog: RELEASE_BRANCH ?= main
@@ -52,6 +55,15 @@ example-image-markdown.%:
 	@cd $(agones_path)/examples/$* && \
     tag=$$(make -silent echo-image-tag) && \
     echo "- [$$tag](https://$$tag)"
+
+
+# Deploys the site by taking in the base version and deploying the previous version
+release-deploy-site: $(ensure-build-image)
+release-deploy-site: DOCKER_RUN_ARGS += -e GOFLAGS="-mod=mod" --entrypoint=/usr/local/go/bin/go
+release-deploy-site:
+	version=$$($(DOCKER_RUN) run $(mount_path)/build/scripts/previousversion/main.go -version $(base_version)) && \
+	echo "Deploying Site Version: $$version" && \
+	$(MAKE) site-deploy SERVICE=$$version
 
 # Creates a release. Version defaults to the base_version
 # - Checks out a release branch

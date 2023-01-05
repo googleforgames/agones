@@ -1,0 +1,180 @@
+# Copyright 2022 Google LLC All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+{{- $featureGates := include "agones.featureGates" . | fromYaml }}
+{{- if $featureGates.SplitControllerAndExtensions }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agones-extensions
+  namespace: {{ .Release.Namespace }}
+  labels:
+    component: extensions
+    app: {{ template "agones.name" . }}
+    chart: {{ template "agones.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  selector:
+    matchLabels:
+      agones.dev/role: extensions
+      app: {{ template "agones.name" . }}
+      release: {{ .Release.Name }}
+      heritage: {{ .Release.Service }}
+  replicas: 1
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        cluster-autoscaler.kubernetes.io/safe-to-evict: {{ .Values.agones.controller.safeToEvict | quote }}
+{{- if .Values.agones.controller.generateTLS }}
+        revision/tls-cert: {{ .Release.Revision | quote }}
+{{- end }}
+{{- if and (.Values.agones.metrics.prometheusServiceDiscovery) (.Values.agones.metrics.prometheusEnabled) }}
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
+{{- end }}
+{{- if .Values.agones.controller.annotations }}
+{{- toYaml .Values.agones.controller.annotations | nindent 8 }}
+{{- end }}
+      labels:
+        agones.dev/role: extensions
+        app: {{ template "agones.name" . }}
+        release: {{ .Release.Name }}
+        heritage: {{ .Release.Service }}
+    spec:
+      {{- if .Values.agones.controller.affinity }}
+      affinity:
+{{ toYaml .Values.agones.controller.affinity | indent 8 }}
+      {{- end }}
+      {{- if .Values.agones.controller.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.agones.controller.nodeSelector | indent 8 }}
+      {{- end }}
+      {{- if .Values.agones.controller.tolerations }}
+      tolerations:
+{{ toYaml .Values.agones.controller.tolerations | indent 8 }}
+      {{- end }}
+      {{- if .Values.agones.createPriorityClass }}
+      priorityClassName: {{ .Values.agones.priorityClassName }}
+      {{- end }}
+      serviceAccountName: {{ .Values.agones.serviceaccount.controller.name }}
+      containers:
+      - name: agones-extensions
+        image: "{{ .Values.agones.image.registry }}/{{ .Values.agones.image.extensions.name}}:{{ default .Values.agones.image.tag .Values.agones.image.extensions.tag }}"
+        imagePullPolicy: {{ .Values.agones.image.controller.pullPolicy }}
+        env:
+        # minimum port that can be exposed to GameServer traffic
+        - name: MIN_PORT
+          value: {{ .Values.gameservers.minPort | quote }}
+        # maximum port that can be exposed to GameServer traffic
+        - name: MAX_PORT
+          value: {{ .Values.gameservers.maxPort | quote }}
+        - name: SIDECAR_IMAGE # overwrite the GameServer sidecar image that is used
+          value: "{{ .Values.agones.image.registry }}/{{ .Values.agones.image.sdk.name}}:{{ default .Values.agones.image.tag .Values.agones.image.sdk.tag }}"
+        - name: ALWAYS_PULL_SIDECAR # set the sidecar imagePullPolicy to Always
+          value: {{ .Values.agones.image.sdk.alwaysPull | quote }}
+        - name: SIDECAR_CPU_REQUEST
+          value: {{ .Values.agones.image.sdk.cpuRequest | quote }}
+        - name: SIDECAR_CPU_LIMIT
+          value: {{ .Values.agones.image.sdk.cpuLimit | quote }}
+        - name: SIDECAR_MEMORY_REQUEST
+          value: {{ .Values.agones.image.sdk.memoryRequest | quote }}
+        - name: SIDECAR_MEMORY_LIMIT
+          value: {{ .Values.agones.image.sdk.memoryLimit | quote }}
+        - name: SDK_SERVICE_ACCOUNT
+          value: {{ .Values.agones.serviceaccount.sdk.name | quote }}
+        - name: PROMETHEUS_EXPORTER
+          value: {{ .Values.agones.metrics.prometheusEnabled | quote }}
+        - name: STACKDRIVER_EXPORTER
+          value: {{ .Values.agones.metrics.stackdriverEnabled | quote }}
+        - name: STACKDRIVER_LABELS
+          value: {{ .Values.agones.metrics.stackdriverLabels | quote }}
+        - name: GCP_PROJECT_ID
+          value: {{ .Values.agones.metrics.stackdriverProjectID | quote }}
+        - name: NUM_WORKERS
+          value: {{ .Values.agones.controller.numWorkers | quote }}
+        - name: API_SERVER_QPS
+          value: {{ .Values.agones.controller.apiServerQPS | quote }}
+        - name: API_SERVER_QPS_BURST
+          value: {{ .Values.agones.controller.apiServerQPSBurst | quote }}
+        - name: LOG_LEVEL
+          value: {{ .Values.agones.controller.logLevel | quote }}
+        - name: FEATURE_GATES
+          value: {{ .Values.agones.featureGates | quote }}
+        - name: ALLOCATION_BATCH_WAIT_TIME
+          value: {{ .Values.agones.controller.allocationBatchWaitTime | quote }}
+        - name: CLOUD_PRODUCT
+          value: {{ .Values.agones.cloudProduct | quote }}
+{{- if .Values.agones.controller.persistentLogs }}
+        - name: LOG_DIR
+          value: "/home/agones/logs"
+        - name: LOG_SIZE_LIMIT_MB
+          value: {{ .Values.agones.controller.persistentLogsSizeLimitMB | quote }}
+{{- end }}
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: CONTAINER_NAME
+          value: "agones-extensions"
+        ports:
+        - name: webhooks
+          containerPort: 8081
+        - name: http
+          containerPort: 8080
+        livenessProbe:
+          httpGet:
+            path: /live
+            port: http
+          initialDelaySeconds: {{ .Values.agones.controller.healthCheck.initialDelaySeconds }}
+          periodSeconds: {{ .Values.agones.controller.healthCheck.periodSeconds }}
+          failureThreshold: {{ .Values.agones.controller.healthCheck.failureThreshold }}
+          timeoutSeconds: {{ .Values.agones.controller.healthCheck.timeoutSeconds }}
+{{- if .Values.agones.controller.resources }}
+        resources:
+{{ toYaml .Values.agones.controller.resources | indent 10 }}
+{{- end }}
+        volumeMounts:
+        - name: certs
+          mountPath: /home/agones/certs
+          readOnly: true
+{{- if .Values.agones.controller.persistentLogs }}
+        - name: logs
+          mountPath: /home/agones/logs
+          readOnly: false
+{{- end }}
+      volumes:
+      - name: certs
+        secret:
+          secretName: {{ template "agones.fullname" . }}-cert
+{{- if .Values.agones.controller.customCertSecretPath }}
+          items:
+{{- toYaml .Values.agones.controller.customCertSecretPath | nindent 10 }}
+{{- end }}
+{{- if .Values.agones.controller.persistentLogs }}
+      - name: logs
+        emptyDir: {}
+{{- end }}
+{{- if .Values.agones.image.controller.pullSecret }}
+      imagePullSecrets:
+        - name: {{.Values.agones.image.controller.pullSecret}}
+{{- end }}
+{{- end }}

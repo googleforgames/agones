@@ -100,7 +100,7 @@ type GameServerAllocationSpec struct {
 // a GameServer for allocation.
 type GameServerSelector struct {
 	// See: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
-	metav1.LabelSelector
+	metav1.LabelSelector `json:",inline"`
 	// [Stage:Beta]
 	// [FeatureFlag:StateAllocationFilter]
 	// +optional
@@ -279,6 +279,9 @@ type GameServerAllocationStatus struct {
 	Ports          []agonesv1.GameServerStatusPort `json:"ports,omitempty"`
 	Address        string                          `json:"address,omitempty"`
 	NodeName       string                          `json:"nodeName,omitempty"`
+	// If the allocation is from a remote cluster, Source is the endpoint of the remote agones-allocator.
+	// Otherwise, Source is "local"
+	Source string `json:"source"`
 }
 
 // ApplyDefaults applies the default values to this GameServerAllocation

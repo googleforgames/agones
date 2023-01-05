@@ -20,7 +20,6 @@ import (
 	"time"
 
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
-	"agones.dev/agones/pkg/cloudproduct"
 	agtesting "agones.dev/agones/pkg/testing"
 	"github.com/heptiolabs/healthcheck"
 	"github.com/stretchr/testify/assert"
@@ -193,8 +192,7 @@ func TestMigrationControllerSyncGameServer(t *testing.T) {
 	for k, v := range fixtures {
 		t.Run(k, func(t *testing.T) {
 			m := agtesting.NewMocks()
-			c := NewMigrationController(healthcheck.NewHandler(), m.KubeClient, m.AgonesClient, m.KubeInformerFactory, m.AgonesInformerFactory,
-				cloudproduct.MustNewGeneric(context.Background()))
+			c := NewMigrationController(healthcheck.NewHandler(), m.KubeClient, m.AgonesClient, m.KubeInformerFactory, m.AgonesInformerFactory)
 			c.recorder = m.FakeRecorder
 
 			gs := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
@@ -245,8 +243,7 @@ func TestMigrationControllerSyncGameServer(t *testing.T) {
 
 func TestMigrationControllerRun(t *testing.T) {
 	m := agtesting.NewMocks()
-	c := NewMigrationController(healthcheck.NewHandler(), m.KubeClient, m.AgonesClient, m.KubeInformerFactory, m.AgonesInformerFactory,
-		cloudproduct.MustNewGeneric(context.Background()))
+	c := NewMigrationController(healthcheck.NewHandler(), m.KubeClient, m.AgonesClient, m.KubeInformerFactory, m.AgonesInformerFactory)
 	gs := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
 		Spec: newSingleContainerSpec(), Status: agonesv1.GameServerStatus{}}
 	gs.ApplyDefaults()
