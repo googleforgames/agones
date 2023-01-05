@@ -91,8 +91,8 @@ supported_k8s = "1.23"
 aks_minor_supported_k8s = "8"
 minikube_minor_supported_k8s = "9"
 # shown in development (or the next version that will be supported)
-dev_supported_k8s = "1.23"
-dev_aks_minor_supported_k8s = "8"
+dev_supported_k8s = "1.24"
+dev_aks_minor_supported_k8s = "6"
 dev_minikube_minor_supported_k8s = "9"
 
 # example tag
