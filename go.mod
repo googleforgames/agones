@@ -34,10 +34,10 @@ require (
 	google.golang.org/protobuf v1.28.1
 	gopkg.in/fsnotify.v1 v1.4.7
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
-	k8s.io/api v0.23.9
-	k8s.io/apiextensions-apiserver v0.21.5
-	k8s.io/apimachinery v0.23.9
-	k8s.io/client-go v0.23.9
+	k8s.io/api v0.24.9
+	k8s.io/apiextensions-apiserver v0.24.9
+	k8s.io/apimachinery v0.24.9
+	k8s.io/client-go v0.24.9
 	k8s.io/utils v0.0.0-20211116205334-6203023598ed
 )
 
