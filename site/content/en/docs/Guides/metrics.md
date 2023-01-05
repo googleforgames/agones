@@ -6,7 +6,7 @@ weight: 50
 
 Agones controller exposes metrics via [OpenCensus](https://opencensus.io/). OpenCensus is a single distribution of libraries that collect metrics and distributed traces from your services, we only use it for metrics but it will allow us to support multiple exporters in the future.
 
-We choose to start with [Prometheus](https://prometheus.io/) as this is the most popular with Kubernetes but it is also compatible with Stackdriver.
+We choose to start with [Prometheus](https://prometheus.io/) as this is the most popular with Kubernetes but it is also compatible with Cloud Monitoring.
 If you need another exporter, check the [list of supported](https://opencensus.io/exporters/supported-exporters/go/) exporters. It should be pretty straightforward to register a new one. (GitHub PRs are more than welcome.)
 
 We plan to support multiple exporters in the future via environment variables and helm flags.
@@ -30,11 +30,11 @@ agones:
       enabled: true
 ```
 
-### Stackdriver
+### Cloud Monitoring (formerly Stackdriver)
 
 We support the [OpenCensus Stackdriver exporter](https://opencensus.io/exporters/supported-exporters/go/stackdriver/).
-In order to use it you should enable [Stackdriver Monitoring API](https://cloud.google.com/monitoring/api/enable-api) in Google Cloud Console.
-Follow the [Stackdriver Installation steps](#stackdriver-installation) to see your metrics on Stackdriver Monitoring website.
+In order to use it you should enable [Cloud Monitoring API](https://cloud.google.com/monitoring/api/enable-api) in Google Cloud Console.
+Follow the [Cloud Monitoring Installation steps](#cloud-monitoring-installation) to see your metrics in Cloud Monitoring.
 
 ## Metrics available
 
@@ -207,24 +207,36 @@ kubectl port-forward deployments/grafana 3000 -n metrics
 
 Open a web browser to [http://localhost:3000](http://localhost:3000), you should see Agones [dashboards](#grafana-dashboards) after login as admin.
 
-### Stackdriver installation
+### Cloud Monitoring installation
 
-In order to use [Stackdriver monitoring](https://app.google.stackdriver.com) you must [enable the Monitoring API](https://cloud.google.com/monitoring/api/enable-api) in the Google Cloud Console. You need to grant all the necessary permissions to the users (see [Access Control Guide](https://cloud.google.com/monitoring/access-control)). Stackdriver exporter uses a strategy called Application Default Credentials (ADC) to find your application's credentials. Details can be found in [Setting Up Authentication for Server to Server Production Applications](https://cloud.google.com/docs/authentication/production).
+In order to use [Cloud Monitoring](https://console.cloud.google.com/monitoring) you must [enable the Monitoring API](https://cloud.google.com/monitoring/api/enable-api) in the Google Cloud Console. The Cloud Monitoring exporter uses a strategy called Application Default Credentials (ADC) to find your application's credentials. Details can be found in [Setting Up Authentication for Server to Server Production Applications](https://cloud.google.com/docs/authentication/production).
+
+You need to grant all the necessary permissions to the users (see [Access Control Guide](https://cloud.google.com/monitoring/access-control)). The predefined role Monitoring Metric Writer contains those permissions. Use the following command to assign the role to your default service account.
+
+```bash
+gcloud projects add-iam-policy-binding [PROJECT_ID] --member serviceAccount:[PROJECT_NUMBER]-compute@developer.gserviceaccount.com --role roles/monitoring.metricWriter
+```
 
 {{< alert title="Note" color="info">}}
-Cloud Operations for GKE (including stackdriver monitoring) is enabled by default on GKE clusters, however you can follow this [guide](https://cloud.google.com/stackdriver/docs/solutions/gke/installing#upgrade-instructions) if it is currently disabled in your GKE cluster.
+Cloud Operations for GKE (including Cloud Monitoring) is enabled by default on GKE clusters, however you can follow this [guide](https://cloud.google.com/stackdriver/docs/solutions/gke/installing#upgrade-instructions) if it is currently disabled in your GKE cluster.
 {{< /alert >}}
 
-The default metrics exporter installed with Agones is Prometheus. If you are using the [Helm installation]({{< ref "/docs/Installation/Install Agones/helm.md" >}}), you can install or upgrade Agones to use Stackdriver, using the following chart parameters:
+Before proceeding, ensure you have created a metrics node pool as mentioned in the Google Cloud [installation guide]({{< ref "/docs/Installation/Creating Cluster/gke.md" >}}).
+
+The default metrics exporter installed with Agones is Prometheus. If you are using the [Helm installation]({{< ref "/docs/Installation/Install Agones/helm.md" >}}), you can install or upgrade Agones to use Cloud Monitoring, using the following chart parameters:
 ```bash
 helm upgrade --install --wait --set agones.metrics.stackdriverEnabled=true --set agones.metrics.prometheusEnabled=false --set agones.metrics.prometheusServiceDiscovery=false my-release-name agones/agones --namespace=agones-system
 ```
 
-With this configuration only Stackdriver exporter would be used instead of Prometheus exporter.
+{{< alert title="Note" color="info">}}
+If you are using the [YAML installation]({{< ref "/docs/Installation/Install Agones/yaml.md" >}}), follow the instructions on the page to change the above parameters by using helm to generate a custom YAML file locally.
+{{< /alert >}}
 
-#### Using Stackdriver with Workload Identity
+With this configuration only the Cloud Monitoring exporter would be used instead of Prometheus exporter.
 
-If you would like to enable stackdriver in conjunction with [Workload Identity](https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity), there are a few extra steps you need to follow:
+#### Using Cloud Monitoring with Workload Identity
+
+If you would like to enable Cloud Monitoring in conjunction with [Workload Identity](https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity), there are a few extra steps you need to follow:
 
 1. When setting up the Google service account following the instructions for [Authenticating to Google Cloud](https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity#authenticating_to), create two IAM policy bindings, one for `serviceAccount:PROJECT_ID.svc.id.goog[agones-system/agones-controller]` and one for `serviceAccount:PROJECT_ID.svc.id.goog[agones-system/agones-allocator]`.
 
@@ -234,18 +246,20 @@ If you would like to enable stackdriver in conjunction with [Workload Identity](
 helm install my-release --namespace agones-system --create-namespace agones/agones --set agones.metrics.stackdriverEnabled=true --set agones.metrics.prometheusEnabled=false --set agones.metrics.prometheusServiceDiscovery=false --set agones.serviceaccount.allocator.annotations."iam\.gke\.io/gcp-service-account"="GSA_NAME@PROJECT_ID\.iam\.gserviceaccount\.com" --set agones.serviceaccount.controller.annotations."iam\.gke\.io/gcp-service-account"="GSA_NAME@PROJECT_ID\.iam\.gserviceaccount\.com"
 ```
 
-To verify that metrics are being sent to Stackdriver, create a Fleet or a Gameserver and look for the metrics to show up in the Stackdriver dashboard. Navigate to the [Metrics explorer](https://console.cloud.google.com/monitoring/metrics-explorer) and search for metrics with the prefix `agones/`. Select a metric and look for data to be plotted in the graph to the right.
+To verify that metrics are being sent to Cloud Monitoring, create a Fleet or a Gameserver and look for the metrics to show up in the Cloud Monitoring dashboard. Navigate to the [Metrics explorer](https://console.cloud.google.com/monitoring/metrics-explorer) and search for metrics with the prefix `agones/`. Select a metric and look for data to be plotted in the graph to the right.
 
 An example of a custom dashboard is:
 
-![stackdriver monitoring dashboard](../../../images/stackdriver-metrics-dashboard.png)
+![cloud monitoring dashboard](../../../images/stackdriver-metrics-dashboard.png)
 
-Currently there exists only manual way of configuring Stackdriver Dashboard. So it is up to you to set an Alignment Period (minimal is 1 minute), GroupBy, Filter parameters and other graph settings.
+Currently there exists only manual way of configuring Cloud Monitoring Dashboard. So it is up to you to set an Alignment Period (minimal is 1 minute), GroupBy, Filter parameters and other graph settings.
 
 #### Troubleshooting
-If you can't see Agones metrics you should have a look at the controller logs for connection errors. Also ensure that your cluster has the necessary credentials to interact with Stackdriver Monitoring. You can configure `stackdriverProjectID` manually, if the automatic discovery is not working.
+If you can't see Agones metrics you should have a look at the controller logs for connection errors. Also ensure that your cluster has the necessary credentials to interact with Cloud Monitoring. You can configure `stackdriverProjectID` manually, if the automatic discovery is not working.
 
 Permissions problem example from controller logs:
 ```
 Failed to export to Stackdriver: rpc error: code = PermissionDenied desc = Permission monitoring.metricDescriptors.create denied (or the resource may not exist).
 ```
+
+If you receive this error, ensure your service account has the role or corresponding permissions mentioned above.
