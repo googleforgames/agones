@@ -33,11 +33,12 @@ import (
 	"github.com/stretchr/testify/require"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/util/clock"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/apimachinery/pkg/watch"
 	k8stesting "k8s.io/client-go/testing"
 	"k8s.io/client-go/tools/cache"
+	"k8s.io/utils/clock"
+	testclocks "k8s.io/utils/clock/testing"
 )
 
 func TestSidecarRun(t *testing.T) {
@@ -56,7 +57,7 @@ func TestSidecarRun(t *testing.T) {
 
 	fixtures := map[string]struct {
 		f        func(*SDKServer, context.Context)
-		clock    clock.Clock
+		clock    clock.WithTickerAndDelayedExecution
 		expected expected
 	}{
 		"ready": {
@@ -118,7 +119,7 @@ func TestSidecarRun(t *testing.T) {
 				_, err := sc.Allocate(ctx, &sdk.Empty{})
 				assert.NoError(t, err)
 			},
-			clock: clock.NewFakeClock(now),
+			clock: testclocks.NewFakeClock(now),
 			expected: expected{
 				state:      agonesv1.GameServerStateAllocated,
 				recordings: []string{string(agonesv1.GameServerStateAllocated)},
@@ -390,7 +391,7 @@ func TestSidecarHealthLastUpdated(t *testing.T) {
 	require.NoError(t, err)
 
 	sc.health = agonesv1.Health{Disabled: false}
-	fc := clock.NewFakeClock(now)
+	fc := testclocks.NewFakeClock(now)
 	sc.clock = fc
 
 	stream := newEmptyMockStream()
@@ -489,7 +490,7 @@ func TestSidecarHealthy(t *testing.T) {
 	sc.initHealthLastUpdated(0 * time.Second)
 
 	now := time.Now().UTC()
-	fc := clock.NewFakeClock(now)
+	fc := testclocks.NewFakeClock(now)
 	sc.clock = fc
 
 	stream := newEmptyMockStream()
@@ -584,7 +585,7 @@ func TestSidecarHTTPHealthCheck(t *testing.T) {
 	require.NoError(t, err)
 
 	now := time.Now().Add(time.Hour).UTC()
-	fc := clock.NewFakeClock(now)
+	fc := testclocks.NewFakeClock(now)
 	// now we control time - so slow machines won't fail anymore
 	sc.clock = fc
 
