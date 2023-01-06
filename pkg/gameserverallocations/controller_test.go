@@ -283,7 +283,6 @@ func TestMultiClusterAllocationFromLocal(t *testing.T) {
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace:   defaultNs,
 				Name:        "alloc1",
-				ClusterName: "multicluster",
 			},
 			Spec: allocationv1.GameServerAllocationSpec{
 				MultiClusterSetting: allocationv1.MultiClusterSetting{
@@ -344,7 +343,6 @@ func TestMultiClusterAllocationFromLocal(t *testing.T) {
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace:   defaultNs,
 				Name:        "alloc1",
-				ClusterName: "multicluster",
 			},
 			Spec: allocationv1.GameServerAllocationSpec{
 				MultiClusterSetting: allocationv1.MultiClusterSetting{
@@ -422,7 +420,6 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace:   defaultNs,
 				Name:        "alloc1",
-				ClusterName: "localcluster",
 			},
 			Spec: allocationv1.GameServerAllocationSpec{
 				MultiClusterSetting: allocationv1.MultiClusterSetting{
@@ -526,7 +523,6 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace:   defaultNs,
 				Name:        "alloc1",
-				ClusterName: "localcluster",
 			},
 			Spec: allocationv1.GameServerAllocationSpec{
 				MultiClusterSetting: allocationv1.MultiClusterSetting{
@@ -605,7 +601,6 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace:   defaultNs,
 				Name:        "alloc1",
-				ClusterName: "localcluster",
 			},
 			Spec: allocationv1.GameServerAllocationSpec{
 				MultiClusterSetting: allocationv1.MultiClusterSetting{
@@ -673,7 +668,6 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace:   defaultNs,
 				Name:        "alloc1",
-				ClusterName: "localcluster",
 			},
 			Spec: allocationv1.GameServerAllocationSpec{
 				MultiClusterSetting: allocationv1.MultiClusterSetting{
@@ -747,7 +741,6 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace:   defaultNs,
 				Name:        "alloc1",
-				ClusterName: "localcluster",
 			},
 			Spec: allocationv1.GameServerAllocationSpec{
 				MultiClusterSetting: allocationv1.MultiClusterSetting{
