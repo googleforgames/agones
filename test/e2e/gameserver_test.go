@@ -246,6 +246,7 @@ func TestUnhealthyGameServerAfterHealthCheckFail(t *testing.T) {
 }
 
 func TestUnhealthyGameServersWithoutFreePorts(t *testing.T) {
+	framework.SkipOnCloudProduct(t, "gke-autopilot", "does not support Static PortPolicy")
 	t.Parallel()
 	ctx := context.Background()
 	nodes, err := framework.KubeClient.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
@@ -796,6 +797,7 @@ func TestGameServerEvicted(t *testing.T) {
 }
 
 func TestGameServerPassthroughPort(t *testing.T) {
+	framework.SkipOnCloudProduct(t, "gke-autopilot", "does not support Passthrough PortPolicy")
 	t.Parallel()
 	gs := framework.DefaultGameServer(framework.Namespace)
 	gs.Spec.Ports[0] = agonesv1.GameServerPort{PortPolicy: agonesv1.Passthrough}
