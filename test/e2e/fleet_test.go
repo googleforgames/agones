@@ -849,9 +849,7 @@ func TestFleetGSSpecValidation(t *testing.T) {
 	assert.Len(t, statusErr.Status().Details.Causes, 1)
 	assert.Equal(t, agonesv1.ErrHostPort, statusErr.Status().Details.Causes[0].Message)
 
-	fltPort.Spec.Template.Spec.Ports[0].PortPolicy = agonesv1.Static
-	fltPort.Spec.Template.Spec.Ports[0].HostPort = 0
-	fltPort.Spec.Template.Spec.Ports[0].ContainerPort = 5555
+	fltPort.Spec.Template.Spec.Ports[0].HostPort = 0 // validation fails above because the HostPort is specified, make it good.
 	_, err = client.Fleets(framework.Namespace).Create(ctx, fltPort, metav1.CreateOptions{})
 	if assert.Nil(t, err) {
 		defer client.Fleets(framework.Namespace).Delete(ctx, fltPort.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
