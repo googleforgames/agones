@@ -76,6 +76,7 @@ type Framework struct {
 	PerfOutputDir   string
 	Version         string
 	Namespace       string
+	CloudProduct    string
 }
 
 // New setups a testing framework using a kubeconfig path and the game server image to use for testing.
@@ -126,6 +127,7 @@ const (
 	perfOutputDirFlag   = "perf-output"
 	versionFlag         = "version"
 	namespaceFlag       = "namespace"
+	cloudProductFlag    = "cloud-product"
 )
 
 // ParseTestFlags Parses go test flags separately because pflag package ignores flags with '-test.' prefix
@@ -164,6 +166,7 @@ func NewFromFlags() (*Framework, error) {
 	viper.SetDefault(versionFlag, "")
 	viper.SetDefault(runtime.FeatureGateFlag, "")
 	viper.SetDefault(namespaceFlag, "")
+	viper.SetDefault(cloudProductFlag, "generic")
 
 	pflag.String(kubeconfigFlag, viper.GetString(kubeconfigFlag), "kube config path, e.g. $HOME/.kube/config")
 	pflag.String(gsimageFlag, viper.GetString(gsimageFlag), "gameserver image to use for those tests")
@@ -172,6 +175,7 @@ func NewFromFlags() (*Framework, error) {
 	pflag.String(perfOutputDirFlag, viper.GetString(perfOutputDirFlag), "write performance statistics to the specified directory")
 	pflag.String(versionFlag, viper.GetString(versionFlag), "agones controller version to be tested, consists of release version plus a short hash of the latest commit")
 	pflag.String(namespaceFlag, viper.GetString(namespaceFlag), "namespace is used to isolate test runs to their own namespaces")
+	pflag.String(cloudProductFlag, viper.GetString(cloudProductFlag), "cloud product of cluster references by kubeconfig; defaults to 'generic'; options are 'generic', 'gke-autopilot'")
 	runtime.FeaturesBindFlags()
 	pflag.Parse()
 
@@ -183,6 +187,7 @@ func NewFromFlags() (*Framework, error) {
 	runtime.Must(viper.BindEnv(perfOutputDirFlag))
 	runtime.Must(viper.BindEnv(versionFlag))
 	runtime.Must(viper.BindEnv(namespaceFlag))
+	runtime.Must(viper.BindEnv(cloudProductFlag))
 	runtime.Must(viper.BindPFlags(pflag.CommandLine))
 	runtime.Must(runtime.FeaturesBindEnv())
 	runtime.Must(runtime.ParseFeaturesFromEnv())
@@ -197,6 +202,7 @@ func NewFromFlags() (*Framework, error) {
 	framework.PerfOutputDir = viper.GetString(perfOutputDirFlag)
 	framework.Version = viper.GetString(versionFlag)
 	framework.Namespace = viper.GetString(namespaceFlag)
+	framework.CloudProduct = viper.GetString(cloudProductFlag)
 
 	logrus.WithField("gameServerImage", framework.GameServerImage).
 		WithField("pullSecret", framework.PullSecret).
@@ -204,6 +210,7 @@ func NewFromFlags() (*Framework, error) {
 		WithField("perfOutputDir", framework.PerfOutputDir).
 		WithField("version", framework.Version).
 		WithField("namespace", framework.Namespace).
+		WithField("cloudProduct", framework.CloudProduct).
 		WithField("featureGates", runtime.EncodeFeatures()).
 		Info("Starting e2e test(s)")
 
@@ -799,6 +806,13 @@ func (f *Framework) LogEvents(t *testing.T, log *logrus.Entry, namespace string,
 	for i := range events.Items {
 		event := events.Items[i]
 		log.WithField("lastTimestamp", event.LastTimestamp).WithField("type", event.Type).WithField("reason", event.Reason).WithField("message", event.Message).Info("Event!")
+	}
+}
+
+// SkipOnCloudProduct skips the test if the e2e was invoked with --cloud-product=<product>.
+func (f *Framework) SkipOnCloudProduct(t *testing.T, product, reason string) {
+	if f.CloudProduct == product {
+		t.Skipf("skipping test on cloud product %s: %s", product, reason)
 	}
 }
 

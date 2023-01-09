@@ -18,6 +18,7 @@ import (
 
 	"agones.dev/agones/pkg/apis"
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
+	"agones.dev/agones/pkg/util/runtime"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
@@ -76,9 +77,10 @@ func TestSyncPodPortsToGameServer(t *testing.T) {
 
 func TestValidateGameServer(t *testing.T) {
 	for name, tc := range map[string]struct {
-		ports      []agonesv1.GameServerPort
-		scheduling apis.SchedulingStrategy
-		want       []metav1.StatusCause
+		ports       []agonesv1.GameServerPort
+		scheduling  apis.SchedulingStrategy
+		safeToEvict agonesv1.EvictionSafe
+		want        []metav1.StatusCause
 	}{
 		"no ports => validated": {scheduling: apis.Packed},
 		"good ports => validated": {
@@ -102,7 +104,8 @@ func TestValidateGameServer(t *testing.T) {
 					Protocol:      corev1.ProtocolTCP,
 				},
 			},
-			scheduling: apis.Packed,
+			safeToEvict: agonesv1.EvictionSafeAlways,
+			scheduling:  apis.Packed,
 		},
 		"bad policy => fails validation": {
 			ports: []agonesv1.GameServerPort{
@@ -125,22 +128,28 @@ func TestValidateGameServer(t *testing.T) {
 					Protocol:      corev1.ProtocolUDP,
 				},
 			},
-			scheduling: apis.Distributed,
+			safeToEvict: agonesv1.EvictionSafeOnUpgrade,
+			scheduling:  apis.Distributed,
 			want: []metav1.StatusCause{
 				{
 					Type:    "FieldValueInvalid",
-					Message: "PortPolicy must be Dynamic on GKE Autopilot",
+					Message: "portPolicy must be Dynamic on GKE Autopilot",
 					Field:   "bad-udp.portPolicy",
 				},
 				{
 					Type:    "FieldValueInvalid",
-					Message: "PortPolicy must be Dynamic on GKE Autopilot",
+					Message: "portPolicy must be Dynamic on GKE Autopilot",
 					Field:   "another-bad-udp.portPolicy",
 				},
 				{
 					Type:    "FieldValueInvalid",
-					Message: "Scheduling strategy must be Packed on GKE Autopilot",
+					Message: "scheduling strategy must be Packed on GKE Autopilot",
 					Field:   "scheduling",
+				},
+				{
+					Type:    "FieldValueInvalid",
+					Message: "eviction.safe OnUpgrade not supported on GKE Autopilot",
+					Field:   "eviction.safe",
 				},
 			},
 		},
@@ -149,6 +158,7 @@ func TestValidateGameServer(t *testing.T) {
 			causes := (&gkeAutopilot{}).ValidateGameServerSpec(&agonesv1.GameServerSpec{
 				Ports:      tc.ports,
 				Scheduling: tc.scheduling,
+				Eviction:   agonesv1.Eviction{Safe: tc.safeToEvict},
 			})
 			require.Equal(t, tc.want, causes)
 		})
@@ -193,6 +203,103 @@ func TestPodSeccompUnconfined(t *testing.T) {
 			podSpec := tc.podSpec.DeepCopy()
 			podSpecSeccompUnconfined(podSpec)
 			assert.Equal(t, tc.wantPodSpec, podSpec)
+		})
+	}
+}
+
+func TestSetSafeToEvict(t *testing.T) {
+	runtime.FeatureTestMutex.Lock()
+	defer runtime.FeatureTestMutex.Unlock()
+
+	emptyPodAnd := func(f func(*corev1.Pod)) *corev1.Pod {
+		pod := &corev1.Pod{
+			ObjectMeta: metav1.ObjectMeta{
+				Annotations: map[string]string{},
+				Labels:      map[string]string{},
+			},
+		}
+		f(pod)
+		return pod
+	}
+	for desc, tc := range map[string]struct {
+		featureFlags string
+		safeToEvict  agonesv1.EvictionSafe
+		pod          *corev1.Pod
+		wantPod      *corev1.Pod
+		wantErr      bool
+	}{
+		"SafeToEvict feature gate disabled => no change": {
+			featureFlags: "SafeToEvict=false",
+			// intentionally leave pod nil, it'll crash if anything's touched.
+		},
+		"SafeToEvict: Always, no incoming labels/annotations": {
+			featureFlags: "SafeToEvict=true",
+			safeToEvict:  agonesv1.EvictionSafeAlways,
+			pod:          emptyPodAnd(func(*corev1.Pod) {}),
+			wantPod: emptyPodAnd(func(pod *corev1.Pod) {
+				pod.ObjectMeta.Labels[agonesv1.SafeToEvictLabel] = agonesv1.True
+			}),
+		},
+		"SafeToEvict: Never, no incoming labels/annotations": {
+			featureFlags: "SafeToEvict=true",
+			safeToEvict:  agonesv1.EvictionSafeNever,
+			pod:          emptyPodAnd(func(*corev1.Pod) {}),
+			wantPod: emptyPodAnd(func(pod *corev1.Pod) {
+				pod.ObjectMeta.Labels[agonesv1.SafeToEvictLabel] = agonesv1.False
+			}),
+		},
+		"SafeToEvict: OnUpgrade => error": {
+			featureFlags: "SafeToEvict=true",
+			safeToEvict:  agonesv1.EvictionSafeOnUpgrade,
+			pod:          emptyPodAnd(func(*corev1.Pod) {}),
+			wantErr:      true,
+		},
+		"SafeToEvict: Always, incoming labels/annotations": {
+			featureFlags: "SafeToEvict=true",
+			safeToEvict:  agonesv1.EvictionSafeAlways,
+			pod: emptyPodAnd(func(pod *corev1.Pod) {
+				pod.ObjectMeta.Annotations[agonesv1.PodSafeToEvictAnnotation] = "just don't touch, ok?"
+				pod.ObjectMeta.Labels[agonesv1.SafeToEvictLabel] = "seriously, leave it"
+			}),
+			wantPod: emptyPodAnd(func(pod *corev1.Pod) {
+				pod.ObjectMeta.Annotations[agonesv1.PodSafeToEvictAnnotation] = "just don't touch, ok?"
+				pod.ObjectMeta.Labels[agonesv1.SafeToEvictLabel] = "seriously, leave it"
+			}),
+		},
+		"SafeToEvict: Never, incoming labels/annotations": {
+			featureFlags: "SafeToEvict=true",
+			safeToEvict:  agonesv1.EvictionSafeNever,
+			pod: emptyPodAnd(func(pod *corev1.Pod) {
+				pod.ObjectMeta.Annotations[agonesv1.PodSafeToEvictAnnotation] = "a passthrough"
+				pod.ObjectMeta.Labels[agonesv1.SafeToEvictLabel] = "or is it passthru?"
+			}),
+			wantPod: emptyPodAnd(func(pod *corev1.Pod) {
+				pod.ObjectMeta.Annotations[agonesv1.PodSafeToEvictAnnotation] = "a passthrough"
+				pod.ObjectMeta.Labels[agonesv1.SafeToEvictLabel] = "or is it passthru?"
+			}),
+		},
+		"SafeToEvict: Never, but safe-to-evict pod annotation set to false": {
+			featureFlags: "SafeToEvict=true",
+			safeToEvict:  agonesv1.EvictionSafeNever,
+			pod: emptyPodAnd(func(pod *corev1.Pod) {
+				pod.ObjectMeta.Annotations[agonesv1.PodSafeToEvictAnnotation] = agonesv1.False
+			}),
+			wantPod: emptyPodAnd(func(pod *corev1.Pod) {
+				pod.ObjectMeta.Labels[agonesv1.SafeToEvictLabel] = agonesv1.False
+			}),
+		},
+	} {
+		t.Run(desc, func(t *testing.T) {
+			err := runtime.ParseFeatures(tc.featureFlags)
+			assert.NoError(t, err)
+
+			err = (&gkeAutopilot{}).SetEviction(tc.safeToEvict, tc.pod)
+			if tc.wantErr {
+				assert.Error(t, err)
+				return
+			}
+			assert.NoError(t, err)
+			assert.Equal(t, tc.wantPod, tc.pod)
 		})
 	}
 }
