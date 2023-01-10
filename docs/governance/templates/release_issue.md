@@ -33,11 +33,11 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 - [ ] If release candidate add the label `feature-freeze-do-not-merge` to any feature pull requests.
 - [ ] `git checkout main && git pull --rebase upstream main`
 - [ ] If full release, run `make release-deploy-site`
-- [ ] Download all the artifacts from the cloud build.
-- [ ] Move the CHANGELOG.md to the root of this repository, replacing any previous versions.
 - [ ] Run `make build-release` to generate the CHANGELOG.md (if release candidate
   `RC_RELEASE=1 make build-release`). You will need your
   [GitHub Personal Access Token](https://github.com/settings/tokens) for this.
+- [ ] Download all the artifacts from the cloud build.
+- [ ] Move the CHANGELOG.md to the root of this repository, replacing any previous versions.
 - [ ] Ensure the [helm `tag` value][values] is correct (should be {version} if a full release, {version}-rc if release candidate)
 - [ ] Ensure the [helm `Chart` version values][chart] are correct (should be {version} if a full release, {version}-rc if release candidate)
 - [ ] Update SDK Package Versions
