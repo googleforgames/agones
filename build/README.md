@@ -110,6 +110,10 @@ Table of Contents
       * [Error: cluster-admin-binding already exists](#error-cluster-admin-binding-already-exists)
       * [Error: releases do not exist](#error-releases-do-not-exist)
       * [I want to use pprof to profile the controller](#i-want-to-use-pprof-to-profile-the-controller)
+      * [Error: Kubernetes cluster unreachable](#error-kubernetes-cluster-unreachable-invalid-configuration-no-configuration-has-been-provided)
+      * [Error: project: required field is not set](#error-project-required-field-is-not-set-error-invalid-value-for-network-project-required-field-is-not-set)
+      * [Error: could not download chart](#error-could-not-download-chart-failed-to-download-httpsagonesdevchartstableagones-1280tgz)
+      * [Invalid argument "/agones-controller:$(VERSION)" for "-t, --tag" flag: invalid reference format](#invalid-argument-agones-controller1290-961d8ae-amd64-for--t---tag-flag-invalid-reference-format)
 
 ## Building on Different Platforms
 
@@ -158,7 +162,7 @@ free to make cup of tea or coffee at this point. ☕️
 The build image is only created the first time one of the make targets is executed, and will only rebuild if the build
 Dockerfile has changed.
 
-Assuming that the tests all pass, let's go ahead and compile the code and build the Docker images that Agones 
+Assuming that the tests all pass, let's go ahead and compile the code and build the Docker images that Agones
 consists of.
 
 To compile the Agones images, run `make build-images`. This is often all you need for Agones development.
@@ -188,12 +192,13 @@ everything separate (see below for overwriting these config locations). Therefor
 we will need to authenticate our gcloud tooling against it. To do that run `make gcloud-init` and fill in the
 prompts as directed.
 
-Once authenticated, to create the test cluster, run `make gcloud-test-cluster`, which will use the Terraform
-configuration found in the `build/terraform/gke` directory.
+Once authenticated, to create the test cluster, run `make gcloud-test-cluster`
+(or run `make gcloud-e2e-test-cluster` for end to end tests), which will use the Terraform configuration found in the `build/terraform/gke` directory.
 
-You can customize the GKE cluster by appending the following parameters to your make target, via environment 
-variables, or by setting them within your 
-[`local-includes`](#set-local-make-targets-and-variables-with-local-includes) directory.
+You can customize the GKE cluster by appending the following parameters to your make target, via environment
+variables, or by setting them within your
+[`local-includes`](#set-local-make-targets-and-variables-with-local-includes) directory. For end to end tests, update `GCP_CLUSTER_NAME` to e2e-test-cluster
+in the Makefile.
 
 See the table below for available customizations :
 
@@ -246,12 +251,13 @@ Now that the images are pushed, to install the development version (with all ima
 run `make install` and Agones will install the image that you just built and pushed on the test cluster you
 created at the beginning of this section. (if you want to see the resulting installation yaml, you can find it in `build/.install.yaml`)
 
-Finally, to run all the end-to-end tests against your development version previously installed in your test cluster run 
-`make test-e2e` (this can also take a while). This will validate the whole application flow from start to finish. If 
+Finally, to run all the end-to-end tests against your development version previously installed in your test cluster run
+`make test-e2e` (this can also take a while). This will validate the whole application flow from start to finish. If
 you're curious about how they work head to [tests/e2e](../test/e2e/).
 Also [see below](#running-individual-end-to-end-tests) for how to run individual end-to-end tests during development.
 
-When you are finished, you can run `make clean-gcloud-test-cluster` to tear down your cluster.
+When you are finished, you can run `make clean-gcloud-test-cluster` (or
+`make clean-gcloud-e2e-test-cluster`) to tear down your cluster.
 
 ### Running a Test Minikube cluster
 This will setup a [Minikube](https://github.com/kubernetes/minikube) cluster, running on an `agones` profile,
@@ -292,15 +298,15 @@ and makes cross-platform support for the build system much easier.
 To push your own images into the cluster, take a look at Minikube's
 [Pushing Images](https://minikube.sigs.k8s.io/docs/handbook/pushing/) guide.
 
-Running end-to-end tests on Minikube can be done via the `make minikube-test-e2e` target, but this can often overwhelm  
+Running end-to-end tests on Minikube can be done via the `make minikube-test-e2e` target, but this can often overwhelm
 a local minikube cluster, so use at your own risk. Take a look at
-[Running Individual End-to-End Tests](#running-individual-end-to-end-tests) to run individual tests on a case by case 
+[Running Individual End-to-End Tests](#running-individual-end-to-end-tests) to run individual tests on a case by case
 basis.
 
 If you are getting issues connecting to `GameServers` running on minikube, check the
 [Agones minikube](https://agones.dev/site/docs/installation/creating-cluster/minikube/) documentation. You may need to
 change the driver version through the `MINIKUBE_DRIVER` variable. See the
-[local-includes](#set-local-make-targets-and-variables-with-local-includes) on how to change this permanently on 
+[local-includes](#set-local-make-targets-and-variables-with-local-includes) on how to change this permanently on
 your development machine.
 
 ### Running a Test Kind cluster
@@ -374,18 +380,18 @@ You can combine some of the above steps into a single one, for example `make bui
 common flow, to build you changes on Agones, push them to a container registry and install this development
 version to your cluster.
 
-Another would be to run `make lint test-go` to run the golang linter against the Go code, and then run all the unit 
+Another would be to run `make lint test-go` to run the golang linter against the Go code, and then run all the unit
 tests.
 
 ### Set Local Make Targets and Variables with `local-includes`
 
-If you want to permanently set `Makefile` variables or add targets to your local setup, all `local-includes/*.mk` 
-are included into the main `Makefile`, and also ignored by the git repository. 
+If you want to permanently set `Makefile` variables or add targets to your local setup, all `local-includes/*.mk`
+are included into the main `Makefile`, and also ignored by the git repository.
 
-Therefore, you can add your own `.mk` files in the [`local-includes`](./local-includes) directory without affecting 
+Therefore, you can add your own `.mk` files in the [`local-includes`](./local-includes) directory without affecting
 the shared git repository.
 
-For examaple, if I only worked with Linux images for Agones, I could permanently turn off Windows and Arm64 images, 
+For examaple, if I only worked with Linux images for Agones, I could permanently turn off Windows and Arm64 images,
 by writing a `images.mk` within that folder, with the following contents:
 
 ```makefile
@@ -396,11 +402,11 @@ WITH_ARM64=0
 
 ### Running Individual End-to-End Tests
 
-When you are working on an individual feature of Agones, it doesn't make sense to run the entire end-to-end suite of 
+When you are working on an individual feature of Agones, it doesn't make sense to run the entire end-to-end suite of
 tests (and it can take a really long time!).
 
-The end-to-end tests within the [`tests/e2e`](../test/e2e) folder are plain 
-[Go Tests](https://go.dev/doc/tutorial/add-a-test) that will use your local `~/.kube` configuration to connect and 
+The end-to-end tests within the [`tests/e2e`](../test/e2e) folder are plain
+[Go Tests](https://go.dev/doc/tutorial/add-a-test) that will use your local `~/.kube` configuration to connect and
 run against the currently active local cluster.
 
 This means you can run individual e2e tests from within your IDE or as a `go` command.
@@ -412,7 +418,7 @@ go test -race -run ^TestCreateConnect$
 ```
 
 #### Troubleshooting
-If you run into cluster connection issues, this can usually be resolved by running any kind of authenticated `kubectl` 
+If you run into cluster connection issues, this can usually be resolved by running any kind of authenticated `kubectl`
 command from within `make shell` or locally, to refresh your authentication token.
 
 ## Make Variable Reference
@@ -933,3 +939,20 @@ on [http://localhost:6061](http://localhost:6061).
 To view heap metrics, run `make pprof-heap-web`, which will start the web interface with a Heap usage graph.
 on [http://localhost:6062](http://localhost:6062).
 
+#### Error: Kubernetes cluster unreachable: invalid configuration: no configuration has been provided
+
+If you run into this error while creating a test cluster run `make terraform-clean`.
+
+#### Error: project: required field is not set Error: Invalid value for network: project: required field is not set
+
+Run `make gcloud-init`. If you still get the same error, log into the developer
+shell `make shell` and run `gcloud init`.
+
+#### Error: could not download chart: failed to download "https://agones.dev/chart/stable/agones-1.28.0.tgz"
+
+Run `helm repo add agones https://agones.dev/chart/stable` followed by `helm repo update` which will add
+the latest stable version of the agones tar file to your ~/.cache/helm/repository/.
+
+#### Invalid argument "/agones-controller:1.29.0-961d8ae-amd64" for "-t, --tag" flag: invalid reference format
+
+The $(REGISTRY) variable is not set in ~/agones/build/Makefile. For GKE follow instructions under [Running a Test Google Kubernetes Engine Cluster](#running-a-test-google-kubernetes-engine-cluster) for creating a registry and exporting the path to the registry.
