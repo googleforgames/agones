@@ -126,6 +126,14 @@ const (
 var (
 	// GameServerRolePodSelector is the selector to get all GameServer Pods
 	GameServerRolePodSelector = labels.SelectorFromSet(labels.Set{RoleLabel: GameServerLabelRole})
+
+	// TerminalGameServerStates is a set (map[GameServerState]bool) of states from which a GameServer will not recover.
+	// From state diagram at https://agones.dev/site/docs/reference/gameserver/
+	TerminalGameServerStates = map[GameServerState]bool{
+		GameServerStateShutdown:  true,
+		GameServerStateError:     true,
+		GameServerStateUnhealthy: true,
+	}
 )
 
 // +genclient
