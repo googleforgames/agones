@@ -77,17 +77,7 @@ type Framework struct {
 	Version         string
 	Namespace       string
 	CloudProduct    string
-}
-
-// New setups a testing framework using a kubeconfig path and the game server image to use for testing.
-func New(kubeconfig string) (*Framework, error) {
-	return newFramework(kubeconfig, 0, 0)
-}
-
-// NewWithRates setups a testing framework using a kubeconfig path and the game server image
-// to use for load testing with QPS and Burst overwrites.
-func NewWithRates(kubeconfig string, qps float32, burst int) (*Framework, error) {
-	return newFramework(kubeconfig, qps, burst)
+	WaitForState    time.Duration // default time to wait for state changes, may change based on cloud product.
 }
 
 func newFramework(kubeconfig string, qps float32, burst int) (*Framework, error) {
@@ -192,7 +182,7 @@ func NewFromFlags() (*Framework, error) {
 	runtime.Must(runtime.FeaturesBindEnv())
 	runtime.Must(runtime.ParseFeaturesFromEnv())
 
-	framework, err := New(viper.GetString(kubeconfigFlag))
+	framework, err := newFramework(viper.GetString(kubeconfigFlag), 0, 0)
 	if err != nil {
 		return framework, err
 	}
@@ -203,6 +193,10 @@ func NewFromFlags() (*Framework, error) {
 	framework.Version = viper.GetString(versionFlag)
 	framework.Namespace = viper.GetString(namespaceFlag)
 	framework.CloudProduct = viper.GetString(cloudProductFlag)
+	framework.WaitForState = 5 * time.Minute
+	if framework.CloudProduct == "gke-autopilot" {
+		framework.WaitForState = 10 * time.Minute // Autopilot can take a little while due to autoscaling, be a little liberal.
+	}
 
 	logrus.WithField("gameServerImage", framework.GameServerImage).
 		WithField("pullSecret", framework.PullSecret).
@@ -228,7 +222,7 @@ func (f *Framework) CreateGameServerAndWaitUntilReady(t *testing.T, ns string, g
 
 	log.WithField("gs", newGs.ObjectMeta.Name).Info("GameServer created, waiting for Ready")
 
-	readyGs, err := f.WaitForGameServerState(t, newGs, agonesv1.GameServerStateReady, 5*time.Minute)
+	readyGs, err := f.WaitForGameServerState(t, newGs, agonesv1.GameServerStateReady, f.WaitForState)
 
 	if err != nil {
 		return nil, fmt.Errorf("waiting for %v GameServer instance readiness timed out (%v): %v",
@@ -266,22 +260,31 @@ func (f *Framework) WaitForGameServerState(t *testing.T, gs *agonesv1.GameServer
 		checkGs, err = f.AgonesClient.AgonesV1().GameServers(gs.Namespace).Get(context.Background(), gs.Name, metav1.GetOptions{})
 
 		if err != nil {
-			logrus.WithError(err).Warn("error retrieving gameserver")
+			log.WithError(err).Warn("error retrieving GameServer")
 			return false, nil
 		}
 
-		log.WithField("gs", checkGs.ObjectMeta.Name).
-			WithField("currentState", checkGs.Status.State).
-			WithField("awaitingState", state).Info("Waiting for states to match")
-
-		if checkGs.Status.State == state {
+		checkState := checkGs.Status.State
+		if checkState == state {
+			log.WithField("gs", checkGs.ObjectMeta.Name).
+				WithField("currentState", checkState).
+				WithField("awaitingState", state).Info("GameServer states match")
 			return true, nil
 		}
+		if agonesv1.TerminalGameServerStates[checkState] {
+			log.WithField("gs", checkGs.ObjectMeta.Name).
+				WithField("currentState", checkState).
+				WithField("awaitingState", state).Error("GameServer reached terminal state")
+			return false, errors.Errorf("GameServer reached terminal state %s", checkState)
+		}
+		log.WithField("gs", checkGs.ObjectMeta.Name).
+			WithField("currentState", checkState).
+			WithField("awaitingState", state).Info("Waiting for states to match")
 
 		return false, nil
 	})
 
-	return checkGs, errors.Wrapf(err, "waiting for GameServer to be %v %v/%v",
+	return checkGs, errors.Wrapf(err, "waiting for GameServer %v/%v to be %v",
 		state, gs.Namespace, gs.Name)
 }
 
@@ -322,7 +325,7 @@ func (f *Framework) AssertFleetCondition(t *testing.T, flt *agonesv1.Fleet, cond
 func (f *Framework) WaitForFleetCondition(t *testing.T, flt *agonesv1.Fleet, condition func(*logrus.Entry, *agonesv1.Fleet) bool) error {
 	log := TestLogger(t).WithField("fleet", flt.Name)
 	log.Info("waiting for fleet condition")
-	err := wait.PollImmediate(2*time.Second, 5*time.Minute, func() (bool, error) {
+	err := wait.PollImmediate(2*time.Second, f.WaitForState, func() (bool, error) {
 		fleet, err := f.AgonesClient.AgonesV1().Fleets(flt.ObjectMeta.Namespace).Get(context.Background(), flt.ObjectMeta.Name, metav1.GetOptions{})
 		if err != nil {
 			return true, err
@@ -421,7 +424,7 @@ func (f *Framework) WaitForFleetGameServersCondition(flt *agonesv1.Fleet,
 // specified by a callback and the size of GameServers to match fleet's Spec.Replicas.
 func (f *Framework) WaitForFleetGameServerListCondition(flt *agonesv1.Fleet,
 	cond func(servers []agonesv1.GameServer) bool) error {
-	return wait.Poll(2*time.Second, 5*time.Minute, func() (done bool, err error) {
+	return wait.Poll(2*time.Second, f.WaitForState, func() (done bool, err error) {
 		gsList, err := f.ListGameServersFromFleet(flt)
 		if err != nil {
 			return false, err
