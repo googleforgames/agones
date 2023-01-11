@@ -535,13 +535,13 @@ func (gss *GameServerSpec) Validate(devAddress string) ([]metav1.StatusCause, bo
 				})
 			}
 		}
+		if productCauses := apiHooks.ValidateGameServerSpec(gss); len(productCauses) > 0 {
+			causes = append(causes, productCauses...)
+		}
 	}
 	objMetaCauses := validateObjectMeta(&gss.Template.ObjectMeta)
 	if len(objMetaCauses) > 0 {
 		causes = append(causes, objMetaCauses...)
-	}
-	if productCauses := apiHooks.ValidateGameServerSpec(gss); len(productCauses) > 0 {
-		causes = append(causes, productCauses...)
 	}
 	return causes, len(causes) == 0
 }

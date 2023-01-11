@@ -1,6 +1,7 @@
+//go:build !go1.7
 // +build !go1.7
 
-package aws
+package context
 
 import "time"
 
@@ -30,12 +31,11 @@ func (*emptyCtx) Value(key interface{}) interface{} {
 
 func (e *emptyCtx) String() string {
 	switch e {
-	case backgroundCtx:
+	case BackgroundCtx:
 		return "aws.BackgroundContext"
 	}
 	return "unknown empty Context"
 }
 
-var (
-	backgroundCtx = new(emptyCtx)
-)
+// BackgroundCtx is the common base context.
+var BackgroundCtx = new(emptyCtx)
