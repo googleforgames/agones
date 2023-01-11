@@ -373,7 +373,6 @@ func TestMultiClusterAllocationOnLocalCluster(t *testing.T) {
 					},
 				},
 				ObjectMeta: metav1.ObjectMeta{
-					ClusterName:  "multicluster1",
 					GenerateName: "allocation-",
 					Namespace:    namespace,
 				},

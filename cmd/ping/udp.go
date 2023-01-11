@@ -29,8 +29,8 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"golang.org/x/time/rate"
-	"k8s.io/apimachinery/pkg/util/clock"
 	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/utils/clock"
 )
 
 // udpServer is a rate limited udp server that echos
@@ -40,7 +40,7 @@ type udpServer struct {
 	conn        net.PacketConn
 	rateLimit   rate.Limit
 	rateBurst   int
-	clock       clock.Clock
+	clock       clock.WithTickerAndDelayedExecution
 	limitsMutex sync.Mutex
 	limits      map[string]*visitor
 	healthMutex sync.RWMutex

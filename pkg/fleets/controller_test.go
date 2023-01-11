@@ -338,7 +338,7 @@ func TestControllerSyncFleet(t *testing.T) {
 
 		gsSet := f.GameServerSet()
 		// make gsSet.Spec.Template and f.Spec.Template different in order to make 'rest' list not empty
-		gsSet.Spec.Template.ClusterName = "qqqqqqqqqqqqqqqqqqq"
+		gsSet.Spec.Template.Name = "qqqqqqqqqqqqqqqqqqq"
 
 		m.AgonesClient.AddReactor("list", "fleets", func(action k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &agonesv1.FleetList{Items: []agonesv1.Fleet{*f}}, nil
@@ -361,7 +361,7 @@ func TestControllerSyncFleet(t *testing.T) {
 
 		gsSet := f.GameServerSet()
 		// make gsSet.Spec.Template and f.Spec.Template different in order to make 'rest' list not empty
-		gsSet.Spec.Template.ClusterName = "qqqqqqqqqqqqqqqqqqq"
+		gsSet.Spec.Template.Name = "qqqqqqqqqqqqqqqqqqq"
 
 		m.AgonesClient.AddReactor("list", "fleets", func(action k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &agonesv1.FleetList{Items: []agonesv1.Fleet{*f}}, nil
