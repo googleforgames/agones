@@ -30,6 +30,7 @@ List of items to do for upgrading to {version}:
 - [ ] Update CRD API reference
     - [ ] Update links to k8s documentation in `site/assets/templates/crd-doc-config.json`
     - [ ] Regenerate crd api reference docs - `make gen-api-docs`
+    - [ ] Regenerate crd client libraries - `make gen-crd-client`
 - [ ] Regenerate Kubernetes resource includes (e.g. ObjectMeta, PodTemplateSpec)
     - [ ] Start a cluster with `make gcloud-test-cluster`, uninstall agones using `helm uninstall agones -n agones-system`, and then run  `make gen-embedded-openapi` and `make gen-install`
 - [ ] If client-go pulled in a new version of gRPC, then also

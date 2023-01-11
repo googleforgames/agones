@@ -91,9 +91,7 @@ func (r *metrics) setRequest(in *allocationv1.GameServerAllocation) {
 	tags := []tag.Mutator{
 		tag.Update(keySchedulingStrategy, string(in.Spec.Scheduling)),
 	}
-	if in.ClusterName != "" {
-		tags = append(tags, tag.Update(keyClusterName, in.ClusterName))
-	}
+
 	tags = append(tags, tag.Update(keyMultiCluster, strconv.FormatBool(in.Spec.MultiClusterSetting.Enabled)))
 	r.mutate(tags...)
 }

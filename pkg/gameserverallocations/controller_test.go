@@ -281,9 +281,8 @@ func TestMultiClusterAllocationFromLocal(t *testing.T) {
 
 		gsa := &allocationv1.GameServerAllocation{
 			ObjectMeta: metav1.ObjectMeta{
-				Namespace:   defaultNs,
-				Name:        "alloc1",
-				ClusterName: "multicluster",
+				Namespace: defaultNs,
+				Name:      "alloc1",
 			},
 			Spec: allocationv1.GameServerAllocationSpec{
 				MultiClusterSetting: allocationv1.MultiClusterSetting{
@@ -342,9 +341,8 @@ func TestMultiClusterAllocationFromLocal(t *testing.T) {
 
 		gsa := &allocationv1.GameServerAllocation{
 			ObjectMeta: metav1.ObjectMeta{
-				Namespace:   defaultNs,
-				Name:        "alloc1",
-				ClusterName: "multicluster",
+				Namespace: defaultNs,
+				Name:      "alloc1",
 			},
 			Spec: allocationv1.GameServerAllocationSpec{
 				MultiClusterSetting: allocationv1.MultiClusterSetting{
@@ -420,9 +418,8 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 
 		gsa := &allocationv1.GameServerAllocation{
 			ObjectMeta: metav1.ObjectMeta{
-				Namespace:   defaultNs,
-				Name:        "alloc1",
-				ClusterName: "localcluster",
+				Namespace: defaultNs,
+				Name:      "alloc1",
 			},
 			Spec: allocationv1.GameServerAllocationSpec{
 				MultiClusterSetting: allocationv1.MultiClusterSetting{
@@ -524,9 +521,8 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 
 		gsa := &allocationv1.GameServerAllocation{
 			ObjectMeta: metav1.ObjectMeta{
-				Namespace:   defaultNs,
-				Name:        "alloc1",
-				ClusterName: "localcluster",
+				Namespace: defaultNs,
+				Name:      "alloc1",
 			},
 			Spec: allocationv1.GameServerAllocationSpec{
 				MultiClusterSetting: allocationv1.MultiClusterSetting{
@@ -603,9 +599,8 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 
 		gsa := &allocationv1.GameServerAllocation{
 			ObjectMeta: metav1.ObjectMeta{
-				Namespace:   defaultNs,
-				Name:        "alloc1",
-				ClusterName: "localcluster",
+				Namespace: defaultNs,
+				Name:      "alloc1",
 			},
 			Spec: allocationv1.GameServerAllocationSpec{
 				MultiClusterSetting: allocationv1.MultiClusterSetting{
@@ -671,9 +666,8 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 
 		gsa := &allocationv1.GameServerAllocation{
 			ObjectMeta: metav1.ObjectMeta{
-				Namespace:   defaultNs,
-				Name:        "alloc1",
-				ClusterName: "localcluster",
+				Namespace: defaultNs,
+				Name:      "alloc1",
 			},
 			Spec: allocationv1.GameServerAllocationSpec{
 				MultiClusterSetting: allocationv1.MultiClusterSetting{
@@ -745,9 +739,8 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 
 		gsa := &allocationv1.GameServerAllocation{
 			ObjectMeta: metav1.ObjectMeta{
-				Namespace:   defaultNs,
-				Name:        "alloc1",
-				ClusterName: "localcluster",
+				Namespace: defaultNs,
+				Name:      "alloc1",
 			},
 			Spec: allocationv1.GameServerAllocationSpec{
 				MultiClusterSetting: allocationv1.MultiClusterSetting{
