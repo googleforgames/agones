@@ -24,6 +24,7 @@ import (
 	getterv1 "agones.dev/agones/pkg/client/clientset/versioned/typed/agones/v1"
 	"agones.dev/agones/pkg/client/informers/externalversions"
 	listerv1 "agones.dev/agones/pkg/client/listers/agones/v1"
+	"agones.dev/agones/pkg/cloudproduct"
 	"agones.dev/agones/pkg/util/logfields"
 	"agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/workerqueue"
@@ -109,6 +110,10 @@ func (hc *HealthController) isUnhealthy(pod *corev1.Pod) bool {
 // unschedulableWithNoFreePorts checks if the reason the Pod couldn't be scheduled
 // was because there weren't any free ports in the range specified
 func (hc *HealthController) unschedulableWithNoFreePorts(pod *corev1.Pod) bool {
+	// On some cloud products (GKE Autopilot), wait on the Autoscaler to schedule a pod with conflicting ports.
+	if cloudproduct.ControllerHooks().WaitOnFreePorts() {
+		return false
+	}
 	for _, cond := range pod.Status.Conditions {
 		if cond.Type == corev1.PodScheduled && cond.Reason == corev1.PodReasonUnschedulable {
 			if strings.Contains(cond.Message, "free ports") {

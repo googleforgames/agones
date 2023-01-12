@@ -48,6 +48,9 @@ type ControllerHooksInterface interface {
 
 	// NewPortAllocator creates a PortAllocator. See gameservers.NewPortAllocator for parameters.
 	NewPortAllocator(int32, int32, informers.SharedInformerFactory, externalversions.SharedInformerFactory) portallocator.Interface
+
+	// WaitOnFreePorts
+	WaitOnFreePorts() bool
 }
 
 const (

@@ -110,6 +110,8 @@ func (*gkeAutopilot) NewPortAllocator(minPort, maxPort int32,
 	return &autopilotPortAllocator{minPort: minPort, maxPort: maxPort}
 }
 
+func (*gkeAutopilot) WaitOnFreePorts() bool { return true }
+
 func (*gkeAutopilot) ValidateGameServerSpec(gss *agonesv1.GameServerSpec) []metav1.StatusCause {
 	var causes []metav1.StatusCause
 	for _, p := range gss.Ports {

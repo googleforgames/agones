@@ -327,7 +327,7 @@ func TestGameServerRestartBeforeReadyCrash(t *testing.T) {
 	defer gsClient.Delete(ctx, newGs.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint: errcheck
 
 	logger.Info("Waiting for us to have an address to send things to")
-	newGs, err = framework.WaitForGameServerState(t, newGs, agonesv1.GameServerStateScheduled, time.Minute)
+	newGs, err = framework.WaitForGameServerState(t, newGs, agonesv1.GameServerStateScheduled, framework.WaitForState)
 	if err != nil {
 		assert.FailNow(t, "Failed schedule a pod", err.Error())
 	}
