@@ -148,9 +148,14 @@ spec:
           periodSeconds: {{ .Values.agones.controller.healthCheck.periodSeconds }}
           failureThreshold: {{ .Values.agones.controller.healthCheck.failureThreshold }}
           timeoutSeconds: {{ .Values.agones.controller.healthCheck.timeoutSeconds }}
-{{- if .Values.agones.controller.resources }}
         resources:
+{{- if .Values.agones.controller.resources }}
 {{ toYaml .Values.agones.controller.resources | indent 10 }}
+{{- else}}
+          limits:
+            ephemeral-storage: {{ add .Values.agones.controller.persistentLogsSizeLimitMB 100 | printf "%dMi" }}
+          requests:
+            ephemeral-storage: {{ add .Values.agones.controller.persistentLogsSizeLimitMB 100 | printf "%dMi" }}
 {{- end }}
         volumeMounts:
         - name: certs
