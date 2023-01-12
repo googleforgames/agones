@@ -1,5 +1,74 @@
 # Changelog
 
+## [v1.29.0-rc](https://github.com/googleforgames/agones/tree/v1.29.0-rc) (2023-01-11)
+
+[Full Changelog](https://github.com/googleforgames/agones/compare/v1.28.0...v1.29.0-rc)
+
+**Breaking changes:**
+
+- Update Kubernetes to 1.24 [\#2867](https://github.com/googleforgames/agones/issues/2867)
+- Migrate from github.com/golang/protobuf to google.golang.org/protobuf [\#2786](https://github.com/googleforgames/agones/pull/2786) ([govargo](https://github.com/govargo))
+
+**Implemented enhancements:**
+
+- Graduate SDKGracefulTermination to beta [\#2831](https://github.com/googleforgames/agones/issues/2831)
+- Set the hostName of the Pod to the name of the GameServer [\#2704](https://github.com/googleforgames/agones/issues/2704)
+- Update from golang/protobuf to google.golang.org/protobuf [\#2462](https://github.com/googleforgames/agones/issues/2462)
+- Release Automation: Add cloud build target for release builds [\#2460](https://github.com/googleforgames/agones/issues/2460)
+- Release Automation: Generate version of website to push [\#2457](https://github.com/googleforgames/agones/issues/2457)
+- Consider moving agones system images from gcr.io to GCP's artifact registry [\#2358](https://github.com/googleforgames/agones/issues/2358)
+- CI builds should publish a multi-arch manifest for the agones-sdk image [\#2280](https://github.com/googleforgames/agones/issues/2280)
+- Generate Changelog - Release Automation: Add cloud build target for release builds [\#2884](https://github.com/googleforgames/agones/pull/2884) ([mangalpalli](https://github.com/mangalpalli))
+- GameServer Pod: Stable Network ID [\#2826](https://github.com/googleforgames/agones/pull/2826) ([markmandel](https://github.com/markmandel))
+- Release Automation: Generate version of website to push [\#2808](https://github.com/googleforgames/agones/pull/2808) ([mangalpalli](https://github.com/mangalpalli))
+
+**Fixed bugs:**
+
+- Check linter settings for exported symbols [\#2873](https://github.com/googleforgames/agones/issues/2873)
+- GameServerAllocation example yaml file has incorrect format for selectors [\#2853](https://github.com/googleforgames/agones/issues/2853)
+- Invalid warnings when using multi-cluster allocation [\#2498](https://github.com/googleforgames/agones/issues/2498)
+- Update metrics documentation [\#1851](https://github.com/googleforgames/agones/issues/1851)
+- GameServerTemplate validation: no description when used big port values [\#1770](https://github.com/googleforgames/agones/issues/1770)
+- Inline JSON: GameServerAllocation v1.LabelSelector [\#2877](https://github.com/googleforgames/agones/pull/2877) ([markmandel](https://github.com/markmandel))
+
+**Closed issues:**
+
+- Collaborator Request [\#2861](https://github.com/googleforgames/agones/issues/2861)
+- Release 1.28.0 [\#2851](https://github.com/googleforgames/agones/issues/2851)
+- Docs: Rename "Stackdriver" to "Cloud Monitoring" [\#2850](https://github.com/googleforgames/agones/issues/2850)
+
+**Merged pull requests:**
+
+- Fix the json5 vulnerabilities [\#2896](https://github.com/googleforgames/agones/pull/2896) ([gongmax](https://github.com/gongmax))
+- Update Kubernetes version to 1.24 [\#2895](https://github.com/googleforgames/agones/pull/2895) ([gongmax](https://github.com/gongmax))
+- Update aws-sdk-go version to latest [\#2894](https://github.com/googleforgames/agones/pull/2894) ([gongmax](https://github.com/gongmax))
+- e2e framework: Allow variable timing based on cloud product [\#2893](https://github.com/googleforgames/agones/pull/2893) ([zmerlynn](https://github.com/zmerlynn))
+- Don't run cloud product GameServerSpec validation on development GameServers [\#2889](https://github.com/googleforgames/agones/pull/2889) ([zmerlynn](https://github.com/zmerlynn))
+- e2e: Add --cloud-product flag, add SkipOnCloudProduct [\#2886](https://github.com/googleforgames/agones/pull/2886) ([zmerlynn](https://github.com/zmerlynn))
+- Set seccompProfile of `Unconfined` on Autopilot unless overidden by user [\#2885](https://github.com/googleforgames/agones/pull/2885) ([zmerlynn](https://github.com/zmerlynn))
+- Updates allocation load testing documentation [\#2883](https://github.com/googleforgames/agones/pull/2883) ([igooch](https://github.com/igooch))
+- Revert workload separation for Autopilot [\#2876](https://github.com/googleforgames/agones/pull/2876) ([zmerlynn](https://github.com/zmerlynn))
+- Move all actual Agones releases images to GAR [\#2875](https://github.com/googleforgames/agones/pull/2875) ([gongmax](https://github.com/gongmax))
+- lint: Reenable `revive` [\#2874](https://github.com/googleforgames/agones/pull/2874) ([zmerlynn](https://github.com/zmerlynn))
+- cleanup: clean up make\(map\[string\]string, 1\) [\#2872](https://github.com/googleforgames/agones/pull/2872) ([aimuz](https://github.com/aimuz))
+- NewFilteredSharedInformerFactory use NewSharedInformerFactoryWithOptions instead [\#2871](https://github.com/googleforgames/agones/pull/2871) ([aimuz](https://github.com/aimuz))
+- Update restapi conformance-test [\#2869](https://github.com/googleforgames/agones/pull/2869) ([govargo](https://github.com/govargo))
+- cloudproduct: Register API hooks, move validation/mutation to API [\#2868](https://github.com/googleforgames/agones/pull/2868) ([zmerlynn](https://github.com/zmerlynn))
+- Fork `agones-controller` binary and Add `agones-extensions` deployments [\#2866](https://github.com/googleforgames/agones/pull/2866) ([chiayi](https://github.com/chiayi))
+- Skip validation errors in mutating webhooks [\#2865](https://github.com/googleforgames/agones/pull/2865) ([zmerlynn](https://github.com/zmerlynn))
+- Return better error message when mutation webhook gets invalid JSON [\#2863](https://github.com/googleforgames/agones/pull/2863) ([zmerlynn](https://github.com/zmerlynn))
+- Update metrics documentation for Cloud Monitoring/Stackdriver [\#2862](https://github.com/googleforgames/agones/pull/2862) ([junninho](https://github.com/junninho))
+- Introduce the Source field in GameServerAllocationStatus to indicate the allocation source [\#2860](https://github.com/googleforgames/agones/pull/2860) ([gongmax](https://github.com/gongmax))
+- Release final version updates [\#2858](https://github.com/googleforgames/agones/pull/2858) ([mangalpalli](https://github.com/mangalpalli))
+- SafeToEvict: Implement Eviction API, add SetEviction cloud product hook [\#2857](https://github.com/googleforgames/agones/pull/2857) ([zmerlynn](https://github.com/zmerlynn))
+- 1.28.0 release [\#2852](https://github.com/googleforgames/agones/pull/2852) ([mangalpalli](https://github.com/mangalpalli))
+- Rename `LifecycleContract` feature gate to `SafeToEvict` [\#2849](https://github.com/googleforgames/agones/pull/2849) ([zmerlynn](https://github.com/zmerlynn))
+- fix\(make\): current\_project will be executed only when the relevant command is executed [\#2848](https://github.com/googleforgames/agones/pull/2848) ([aimuz](https://github.com/aimuz))
+- refactor: Implemented using the standard library [\#2847](https://github.com/googleforgames/agones/pull/2847) ([aimuz](https://github.com/aimuz))
+- Fixed: vulnerabilities scanned with govulncheck [\#2841](https://github.com/googleforgames/agones/pull/2841) ([aimuz](https://github.com/aimuz))
+- GKE Autopilot: Separate game server workloads [\#2840](https://github.com/googleforgames/agones/pull/2840) ([zmerlynn](https://github.com/zmerlynn))
+- SDKGracefulTermination: Promote to beta [\#2836](https://github.com/googleforgames/agones/pull/2836) ([zmerlynn](https://github.com/zmerlynn))
+
 ## [v1.28.0](https://github.com/googleforgames/agones/tree/v1.28.0) (2022-12-06)
 
 [Full Changelog](https://github.com/googleforgames/agones/compare/v1.28.0-rc...v1.28.0)
