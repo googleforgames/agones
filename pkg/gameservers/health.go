@@ -55,6 +55,7 @@ type HealthController struct {
 	gameServerLister listerv1.GameServerLister
 	workerqueue      *workerqueue.WorkerQueue
 	recorder         record.EventRecorder
+	waitOnFreePorts  bool
 }
 
 // NewHealthController returns a HealthController
@@ -72,6 +73,7 @@ func NewHealthController(health healthcheck.Handler,
 		gameServerSynced: gameserverInformer.Informer().HasSynced,
 		gameServerGetter: agonesClient.AgonesV1(),
 		gameServerLister: gameserverInformer.Lister(),
+		waitOnFreePorts:  cloudproduct.ControllerHooks().WaitOnFreePorts(),
 	}
 
 	hc.baseLogger = runtime.NewLoggerWithType(hc)
@@ -111,7 +113,7 @@ func (hc *HealthController) isUnhealthy(pod *corev1.Pod) bool {
 // was because there weren't any free ports in the range specified
 func (hc *HealthController) unschedulableWithNoFreePorts(pod *corev1.Pod) bool {
 	// On some cloud products (GKE Autopilot), wait on the Autoscaler to schedule a pod with conflicting ports.
-	if cloudproduct.ControllerHooks().WaitOnFreePorts() {
+	if hc.waitOnFreePorts {
 		return false
 	}
 	for _, cond := range pod.Status.Conditions {
