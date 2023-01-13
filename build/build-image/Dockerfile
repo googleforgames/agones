@@ -69,6 +69,9 @@ RUN echo "source <(helm completion bash)" >> /root/.bashrc
 # install golang-ci linter
 RUN go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.49.0
 
+# install gotestsum test runner
+RUN go install gotest.tools/gotestsum@latest
+
 #
 #  \ \      / /__| |__  ___(_) |_ ___
 #   \ \ /\ / / _ \ '_ \/ __| | __/ _ \
