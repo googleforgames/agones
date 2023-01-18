@@ -598,7 +598,7 @@ endif
 
 build-allocator-binary-linux-amd64: $(ensure-build-image)
 	$(GO_BUILD_LINUX_AMD64) \
-	-tags $(GO_BUILD_TAGS) -o $(go_build_base_path)/cmd/allocator/bin/allocator.linux.amd64\
+	-tags $(GO_BUILD_TAGS) -o $(go_build_base_path)/cmd/allocator/bin/allocator.linux.amd64 \
 	$(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/allocator
 build-allocator-binary-linux-arm64:
 	$(GO_BUILD_LINUX_ARM64) \

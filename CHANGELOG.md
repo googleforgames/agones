@@ -1,5 +1,13 @@
 # Changelog
 
+## [v1.29.0](https://github.com/googleforgames/agones/tree/v1.29.0) (2023-01-17)
+
+[Full Changelog](https://github.com/googleforgames/agones/compare/v1.29.0-rc...v1.29.0)
+
+**Closed issues:**
+
+- Release 1.29.0-rc [\#2897](https://github.com/googleforgames/agones/issues/2897)
+
 ## [v1.29.0-rc](https://github.com/googleforgames/agones/tree/v1.29.0-rc) (2023-01-11)
 
 [Full Changelog](https://github.com/googleforgames/agones/compare/v1.28.0...v1.29.0-rc)
