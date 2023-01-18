@@ -226,7 +226,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 
 | Parameter                             | Description                                                                                                                                                                                                                           | Default |
 |---------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------|
-| `agones.image.registry`                                  | RGlobal image registry for all the Agones system images                                                                                                                                                                                                     | `us-docker.pkg.dev/agones-images/release`
+| `agones.image.registry`                                  | Global image registry for all the Agones system images                                                                                                                                                                                                     | `us-docker.pkg.dev/agones-images/release`
 {{% /feature %}}
 
 [toleration]: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
