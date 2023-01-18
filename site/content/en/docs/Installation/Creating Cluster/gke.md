@@ -148,7 +148,7 @@ Flag explanations:
 ### (Optional) Creating a node pool for Windows
 
 If you run game servers on Windows, you
-need to create a dedicated node pool for those servers. Windows Server 2019 (`WINDOWS_LTSC`) is the recommended image for Windows
+need to create a dedicated node pool for those servers. Windows Server 2019 (`WINDOWS_LTSC_CONTAINERD`) is the recommended image for Windows
 game servers.
 
 {{< alert title="Warning" color="warning">}}
@@ -160,7 +160,7 @@ through [Github issues](https://github.com/googleforgames/agones/issues).
 gcloud container node-pools create windows \
   --cluster=[CLUSTER_NAME] \
   --no-enable-autoupgrade \
-  --image-type WINDOWS_LTSC \
+  --image-type WINDOWS_LTSC_CONTAINERD \
   --machine-type e2-standard-4 \
   --num-nodes=4
 ```
