@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+{{- $featureGates := include "agones.featureGates" . | fromYaml }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -36,7 +37,9 @@ spec:
   template:
     metadata:
       annotations:
+{{- if not $featureGates.SplitControllerAndExtensions }}
         cluster-autoscaler.kubernetes.io/safe-to-evict: {{ .Values.agones.controller.safeToEvict | quote }}
+{{- end }}
 {{- if .Values.agones.controller.generateTLS }}
         revision/tls-cert: {{ .Release.Revision | quote }}
 {{- end }}

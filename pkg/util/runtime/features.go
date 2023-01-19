@@ -60,11 +60,11 @@ const (
 	// FeaturePodHostname enables the Pod Hostname being assigned the name of the GameServer
 	FeaturePodHostname = "PodHostname"
 
-	////////////////
-	// "Pre"-Alpha features
-
 	// FeatureSplitControllerAndExtensions is a feature flag that will split agones-controller into two deployments
 	FeatureSplitControllerAndExtensions = "SplitControllerAndExtensions"
+
+	////////////////
+	// "Pre"-Alpha features
 
 	////////////////
 	// Example feature
@@ -106,14 +106,14 @@ var (
 		FeatureStateAllocationFilter:  true,
 
 		// Alpha features
-		FeaturePlayerAllocationFilter: false,
-		FeaturePlayerTracking:         false,
-		FeatureResetMetricsOnDelete:   false,
-		FeatureSafeToEvict:            false,
-		FeaturePodHostname:            false,
+		FeaturePlayerAllocationFilter:       false,
+		FeaturePlayerTracking:               false,
+		FeatureResetMetricsOnDelete:         false,
+		FeatureSafeToEvict:                  false,
+		FeaturePodHostname:                  false,
+		FeatureSplitControllerAndExtensions: false,
 
 		// Pre-Alpha features
-		FeatureSplitControllerAndExtensions: false,
 
 		// Example feature
 		FeatureExample: false,
