@@ -15634,6 +15634,11 @@ spec:
           periodSeconds: 3
           failureThreshold: 3
           timeoutSeconds: 1
+        resources:
+          limits:
+            ephemeral-storage: 10100Mi
+          requests:
+            ephemeral-storage: 10100Mi
         volumeMounts:
         - name: certs
           mountPath: /home/agones/certs
