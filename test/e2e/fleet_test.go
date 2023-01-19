@@ -357,8 +357,6 @@ func TestFleetRollingUpdate(t *testing.T) {
 	for i := range fixtures {
 		fixture := fixtures[i]
 		t.Run(fmt.Sprintf("Use fleet Patch %t %s cycle %t", fixture.usePatch, fixture.maxSurge, fixture.cycleAllocations), func(t *testing.T) {
-			t.Parallel()
-
 			client := framework.AgonesClient.AgonesV1()
 
 			flt := defaultFleet(framework.Namespace)
@@ -367,6 +365,7 @@ func TestFleetRollingUpdate(t *testing.T) {
 			rollingUpdatePercent := intstr.FromString(fixture.maxSurge)
 			flt.Spec.Strategy.RollingUpdate.MaxSurge = &rollingUpdatePercent
 			flt.Spec.Strategy.RollingUpdate.MaxUnavailable = &rollingUpdatePercent
+			log := e2e.TestLogger(t).WithField("fleet", flt.ObjectMeta.Name)
 
 			flt, err := client.Fleets(framework.Namespace).Create(ctx, flt, metav1.CreateOptions{})
 			require.NoError(t, err)
@@ -416,6 +415,9 @@ func TestFleetRollingUpdate(t *testing.T) {
 				fltCopy := flt.DeepCopy()
 				fltCopy.Spec.Template.Spec.Ports[0].ContainerPort++
 				flt, err = client.Fleets(framework.Namespace).Update(ctx, fltCopy, metav1.UpdateOptions{})
+				if err != nil {
+					log.WithError(err).Info("Failed to update Fleet")
+				}
 				return err == nil
 			}, time.Minute, time.Second)
 
@@ -440,11 +442,11 @@ func TestFleetRollingUpdate(t *testing.T) {
 					return false, err
 				}
 
-				maxSurge, err := intstr.GetValueFromIntOrPercent(flt.Spec.Strategy.RollingUpdate.MaxSurge, int(flt.Spec.Replicas), true)
+				maxSurge, err := intstr.GetScaledValueFromIntOrPercent(flt.Spec.Strategy.RollingUpdate.MaxSurge, int(flt.Spec.Replicas), true)
 				assert.Nil(t, err)
 
 				roundUp := false
-				maxUnavailable, err := intstr.GetValueFromIntOrPercent(flt.Spec.Strategy.RollingUpdate.MaxUnavailable, int(flt.Spec.Replicas), roundUp)
+				maxUnavailable, err := intstr.GetScaledValueFromIntOrPercent(flt.Spec.Strategy.RollingUpdate.MaxUnavailable, int(flt.Spec.Replicas), roundUp)
 
 				if maxUnavailable == 0 {
 					maxUnavailable = 1
