@@ -163,9 +163,20 @@ ifdef NO_RACE_DETECTOR
   RACE_DETECTOR_ARGS=
 endif
 
-go_test_cmd = go test -mod=vendor $(RACE_DETECTOR_ARGS)
+go_test_args = -mod=vendor $(RACE_DETECTOR_ARGS)
+go_test_cmd = go test $(go_test_args)
 GO_TEST=$(DOCKER_RUN) $(go_test_cmd)
 GO_E2E_TEST_ARGS=--kubeconfig /root/.kube/$(kubeconfig_file)
+
+gotestsum_json=/tmp/agones.gotestsum.json
+ifdef GOTESTSUM_VERBOSE
+gotestsum_format=--format=testname \
+  --post-run-command="sh -c 'echo; echo --- RAW VERBOSE OUTPUT ---; jq -j \"select(.Output != null) | .Output\" < $(gotestsum_json); echo --- END RAW VERBOSE OUTPUT ---'"
+else
+gotestsum_format=--format=standard-quiet
+endif
+gotestsum_cmd=gotestsum $(gotestsum_format) --jsonfile=$(gotestsum_json) --hide-summary=skipped --rerun-fails=2 $(GOTESTSUM_ARGS)
+GOTESTSUM=$(DOCKER_RUN) $(gotestsum_cmd)
 
 PERF_OUTPUT_DIR=$(mount_path)/build/.perf
 
@@ -178,6 +189,7 @@ ifdef LOCAL_GO
 	GO_BUILD_WINDOWS_AMD64=GOOS=windows GOARCH=amd64 $(gomod_on) $(go_build_cmd)
 	GO_BUILD_DARWIN_AMD64=GOOS=darwin GOARCH=amd64 $(gomod_on) $(go_build_cmd)
 	GO_TEST=$(go_test_cmd) -v
+	GOTESTSUM=$(gotestsum_cmd)
 	GO_E2E_TEST_ARGS=
 	PERF_OUTPUT_DIR=$(build_path)/.perf
 	go_build_base_path=$(agones_path)
@@ -301,31 +313,51 @@ test-e2e:
 	$(MAKE) DOCKER_RUN_ARGS="$(DOCKER_RUN_ARGS)" test-e2e-failure
 
 
+# e2e test args:
+# - Use ARGS to pass args to `go test` (but not the test binary itself)
+# - Use GO_E2E_TEST_ARGS to pass args to the test binary
+# - When E2E_USE_GOTESTSUM is enabled, use GOTESTSUM_ARGS to pass args to gotestsum
 # If GAMESERVERS_NAMESPACE is empty - random namespace will be created
 test-e2e-integration: FEATURE_GATES ?= $(ALPHA_FEATURE_GATES)
 test-e2e-integration: GAMESERVERS_NAMESPACE ?= ""
+test-e2e-integration: GO_E2E_TEST_INTEGRATION_ARGS ?=\
+  --gameserver-image=$(GS_TEST_IMAGE) \
+  --pullsecret=$(IMAGE_PULL_SECRET) \
+  --feature-gates=$(FEATURE_GATES) \
+  --namespace=$(GAMESERVERS_NAMESPACE)
 test-e2e-integration: $(ensure-build-image)
 	echo "Starting e2e integration test!"
-	$(GO_TEST) $(ARGS) -timeout=30m $(agones_package)/test/e2e $(GO_E2E_TEST_ARGS) \
-		--gameserver-image=$(GS_TEST_IMAGE) \
-		--pullsecret=$(IMAGE_PULL_SECRET) \
-		--feature-gates=$(FEATURE_GATES) \
-		--namespace=$(GAMESERVERS_NAMESPACE)
+ifdef E2E_USE_GOTESTSUM
+	$(GOTESTSUM) --packages=$(agones_package)/test/e2e -- $(go_test_args) -timeout=30m $(ARGS) -args \
+		$(GO_E2E_TEST_ARGS) $(GO_E2E_TEST_INTEGRATION_ARGS)
+else
+	$(GO_TEST) -timeout=30m $(ARGS) $(agones_package)/test/e2e -args \
+	    $(GO_E2E_TEST_ARGS) $(GO_E2E_TEST_INTEGRATION_ARGS)
+endif
 	echo "Finishing e2e integration test!"
 
+test-e2e-failure: GO_E2E_TEST_INTEGRATION_ARGS ?=\
+	--gameserver-image=$(GS_TEST_IMAGE) \
+	--pullsecret=$(IMAGE_PULL_SECRET)
 test-e2e-failure: $(ensure-build-image)
-	echo "starting e2e controller failure test"
-	$(GO_TEST) -parallel=1 $(agones_package)/test/e2e/controller $(GO_E2E_TEST_ARGS) \
-    	--gameserver-image=$(GS_TEST_IMAGE) \
-    	--pullsecret=$(IMAGE_PULL_SECRET)
+	echo "Starting e2e controller failure test!"
+ifdef E2E_USE_GOTESTSUM
+	$(GOTESTSUM) --packages=$(agones_package)/test/e2e/controller -- $(go_test_args) $(ARGS) -parallel=1 -args \
+		$(GO_E2E_TEST_ARGS) $(GO_E2E_TEST_INTEGRATION_ARGS)
+else
+	$(GO_TEST) $(ARGS) -parallel=1 $(agones_package)/test/e2e/controller -args \
+	    $(GO_E2E_TEST_ARGS) $(GO_E2E_TEST_INTEGRATION_ARGS)
+endif
 	echo "Finishing e2e controller failure test!"
 
 # Runs end-to-end stress tests on the current configured cluster
 # For minikube user the minikube-stress-test-e2e targets
 stress-test-e2e: $(ensure-build-image)
-	$(GO_TEST) $(agones_package)/test/e2e $(ARGS) $(GO_E2E_TEST_ARGS) \
+	$(GO_TEST) $(agones_package)/test/e2e $(ARGS) \
 		-timeout 1h \
 		-run '.*StressTest.*' \
+		-args \
+		$(GO_E2E_TEST_ARGS) \
 		--gameserver-image=$(GS_TEST_IMAGE) \
 		--pullsecret=$(IMAGE_PULL_SECRET) \
 		--stress $(STRESS_TEST_LEVEL) \
