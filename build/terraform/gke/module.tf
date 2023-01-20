@@ -20,7 +20,7 @@ terraform {
   required_version = ">= 1.0.0"
   required_providers {
     google = {
-      source = "hashicorp/google"
+      source  = "hashicorp/google"
       version = "~> 4.25.0"
     }
   }
@@ -133,7 +133,7 @@ module "gke_cluster" {
 
   cluster = {
     "name"                    = var.name
-    "location"		      = var.location
+    "location"                = var.location
     "zone"                    = var.zone
     "machineType"             = var.machine_type
     "initialNodeCount"        = var.node_count
@@ -142,9 +142,9 @@ module "gke_cluster" {
     "windowsInitialNodeCount" = var.windows_node_count
     "project"                 = var.project
     "network"                 = var.network
-    "autoscale"		      = var.autoscale
-    "minNodeCount"	      = var.min_node_count
-    "maxNodeCount"	      = var.max_node_count
+    "autoscale"               = var.autoscale
+    "minNodeCount"            = var.min_node_count
+    "maxNodeCount"            = var.max_node_count
   }
 }
 
@@ -169,7 +169,7 @@ output "host" {
   value = module.gke_cluster.host
 }
 output "token" {
-  value = module.gke_cluster.token
+  value     = module.gke_cluster.token
   sensitive = true
 }
 output "cluster_ca_certificate" {

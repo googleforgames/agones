@@ -23,7 +23,7 @@ data "google_client_config" "default" {}
 # Set values to default if not key was not set in original map
 locals {
   project                 = lookup(var.cluster, "project", "agones")
-  location		  = lookup(var.cluster, "location", "us-west1-c")
+  location                = lookup(var.cluster, "location", "us-west1-c")
   zone                    = lookup(var.cluster, "zone", "")
   name                    = lookup(var.cluster, "name", "test-cluster")
   machineType             = lookup(var.cluster, "machineType", "e2-standard-4")
@@ -34,9 +34,9 @@ locals {
   kubernetesVersion       = lookup(var.cluster, "kubernetesVersion", "1.24")
   windowsInitialNodeCount = lookup(var.cluster, "windowsInitialNodeCount", "0")
   windowsMachineType      = lookup(var.cluster, "windowsMachineType", "e2-standard-4")
-  autoscale 		  = lookup(var.cluster, "autoscale", false)
-  minNodeCount		  = lookup(var.cluster, "minNodeCount", "1")
-  maxNodeCount		  = lookup(var.cluster, "maxNodeCount", "5")
+  autoscale               = lookup(var.cluster, "autoscale", false)
+  minNodeCount            = lookup(var.cluster, "minNodeCount", "1")
+  maxNodeCount            = lookup(var.cluster, "maxNodeCount", "5")
 }
 
 # echo command used for debugging purpose
@@ -75,8 +75,8 @@ resource "google_container_cluster" "primary" {
     dynamic "autoscaling" {
       for_each = local.autoscale ? [1] : []
       content {
-      	min_node_count = local.minNodeCount
-	max_node_count = local.maxNodeCount
+        min_node_count = local.minNodeCount
+        max_node_count = local.maxNodeCount
       }
     }
 
@@ -218,6 +218,7 @@ resource "google_container_cluster" "primary" {
 }
 
 resource "google_compute_firewall" "default" {
+  count   = var.ports != "" ? 1 : 0
   name    = length(var.firewallName) == 0 ? "game-server-firewall-${local.name}" : var.firewallName
   project = local.project
   network = local.network
@@ -227,6 +228,6 @@ resource "google_compute_firewall" "default" {
     ports    = [var.ports]
   }
 
-  target_tags = ["game-server"]
+  target_tags   = ["game-server"]
   source_ranges = [var.sourceRanges]
 }
