@@ -37,6 +37,7 @@ locals {
   autoscale 		  = lookup(var.cluster, "autoscale", false)
   minNodeCount		  = lookup(var.cluster, "minNodeCount", "1")
   maxNodeCount		  = lookup(var.cluster, "maxNodeCount", "5")
+  installConsul = lookup(var.cluster, "installConsul", false)
 }
 
 # echo command used for debugging purpose
@@ -229,4 +230,34 @@ resource "google_compute_firewall" "default" {
 
   target_tags = ["game-server"]
   source_ranges = [var.sourceRanges]
+}
+
+provider "helm" {
+  kubernetes {
+    host                   = "https://${google_container_cluster.primary.endpoint}"
+    token                  = data.google_client_config.default.access_token
+    cluster_ca_certificate = base64decode(google_container_cluster.primary.master_auth.0.cluster_ca_certificate)
+  }
+}
+
+resource "helm_release" "consul" {
+  count = local.installConsul ? 1 : 0
+  repository = "https://helm.releases.hashicorp.com"
+  chart      = "consul"
+  name       = "consul"
+
+  set {
+    name  = "server.replicas"
+    value = "1"
+  }
+
+  set {
+    name  = "ui.service.type"
+    value = "ClusterIP"
+  }
+
+  set {
+    name  = "client.enabled"
+    value = "false"
+  }
 }

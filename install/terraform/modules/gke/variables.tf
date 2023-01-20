@@ -43,6 +43,7 @@ variable "cluster" {
     "autoscale"		      = false
     "minNodeCount"	      = "1"
     "maxNodeCount"	      = "5"
+    "installConsul"       = false
   }
 }
 

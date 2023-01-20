@@ -44,38 +44,10 @@ module "gke_cluster" {
     "initialNodeCount"      = 10
     "enableImageStreaming"  = true
     "project"               = var.project
+    "installConsul"         = true
   }
 
   firewallName = "gke-game-server-firewall"
-}
-
-provider "helm" {
-  kubernetes {
-    host                   = module.gke_cluster.host
-    token                  = module.gke_cluster.token
-    cluster_ca_certificate = module.gke_cluster.cluster_ca_certificate
-  }
-}
-
-resource "helm_release" "consul" {
-  repository = "https://helm.releases.hashicorp.com"
-  chart      = "consul"
-  name       = "consul"
-
-  set {
-    name  = "server.replicas"
-    value = "1"
-  }
-
-  set {
-    name  = "ui.service.type"
-    value = "ClusterIP"
-  }
-
-  set {
-    name  = "client.enabled"
-    value = "false"
-  }
 }
 
 resource "google_compute_firewall" "tcp" {
