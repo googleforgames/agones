@@ -51,6 +51,11 @@ func TestCreateFleetAndGameServerAllocate(t *testing.T) {
 			fleet := defaultFleet(framework.Namespace)
 			fleet.Spec.Scheduling = strategy
 			flt, err := fleets.Create(ctx, fleet, metav1.CreateOptions{})
+			if strategy != apis.Packed && framework.CloudProduct == "gke-autopilot" {
+				// test that Autopilot rejects anything but Packed and skip the rest of the test
+				assert.ErrorContains(t, err, "configuration is invalid")
+				return
+			}
 			if assert.NoError(t, err) {
 				defer fleets.Delete(ctx, flt.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
 			}
@@ -268,6 +273,9 @@ func TestMultiClusterAllocationOnLocalCluster(t *testing.T) {
 	for _, strategy := range fixtures {
 		strategy := strategy
 		t.Run(string(strategy), func(t *testing.T) {
+			if strategy == apis.Distributed {
+				framework.SkipOnCloudProduct(t, "gke-autopilot", "Autopilot does not support Distributed scheduling")
+			}
 			t.Parallel()
 			ctx := context.Background()
 
@@ -405,6 +413,9 @@ func TestCreateFullFleetAndCantGameServerAllocate(t *testing.T) {
 		strategy := strategy
 
 		t.Run(string(strategy), func(t *testing.T) {
+			if strategy == apis.Distributed {
+				framework.SkipOnCloudProduct(t, "gke-autopilot", "Autopilot does not support Distributed scheduling")
+			}
 			t.Parallel()
 			ctx := context.Background()
 

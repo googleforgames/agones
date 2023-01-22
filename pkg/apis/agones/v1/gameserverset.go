@@ -106,7 +106,9 @@ func (gsSet *GameServerSet) Validate() ([]metav1.StatusCause, bool) {
 	if len(gsCauses) > 0 {
 		causes = append(causes, gsCauses...)
 	}
-
+	if productCauses := apiHooks.ValidateScheduling(gsSet.Spec.Scheduling); len(productCauses) > 0 {
+		causes = append(causes, productCauses...)
+	}
 	objMetaCauses := validateObjectMeta(&gsSet.Spec.Template.ObjectMeta)
 	if len(objMetaCauses) > 0 {
 		causes = append(causes, objMetaCauses...)

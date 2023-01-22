@@ -1165,6 +1165,7 @@ func TestUpdateFleetScheduling(t *testing.T) {
 
 	t.Run("Updating Spec.Scheduling on fleet should be updated in GameServer",
 		func(t *testing.T) {
+			framework.SkipOnCloudProduct(t, "gke-autopilot", "Autopilot does not support Distributed scheduling")
 			client := framework.AgonesClient.AgonesV1()
 
 			flt := defaultFleet(framework.Namespace)

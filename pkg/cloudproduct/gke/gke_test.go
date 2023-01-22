@@ -133,6 +133,11 @@ func TestValidateGameServer(t *testing.T) {
 			want: []metav1.StatusCause{
 				{
 					Type:    "FieldValueInvalid",
+					Message: "scheduling strategy must be Packed on GKE Autopilot",
+					Field:   "scheduling",
+				},
+				{
+					Type:    "FieldValueInvalid",
 					Message: "portPolicy must be Dynamic on GKE Autopilot",
 					Field:   "bad-udp.portPolicy",
 				},
@@ -140,11 +145,6 @@ func TestValidateGameServer(t *testing.T) {
 					Type:    "FieldValueInvalid",
 					Message: "portPolicy must be Dynamic on GKE Autopilot",
 					Field:   "another-bad-udp.portPolicy",
-				},
-				{
-					Type:    "FieldValueInvalid",
-					Message: "scheduling strategy must be Packed on GKE Autopilot",
-					Field:   "scheduling",
 				},
 				{
 					Type:    "FieldValueInvalid",
