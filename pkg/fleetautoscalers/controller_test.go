@@ -138,7 +138,7 @@ func TestControllerCreationMutationHandler(t *testing.T) {
 		},
 	}
 
-	c, _ := newFakeController()
+	ext := newFakeExtensions()
 
 	for _, tc := range testCases {
 		t.Run(tc.description, func(t *testing.T) {
@@ -156,7 +156,7 @@ func TestControllerCreationMutationHandler(t *testing.T) {
 				Response: &admissionv1.AdmissionResponse{Allowed: true},
 			}
 
-			result, err := c.mutationHandler(review)
+			result, err := ext.mutationHandler(review)
 
 			assert.NoError(t, err)
 			if tc.expected.nilPatch {
@@ -190,7 +190,8 @@ func TestControllerCreationValidationHandler(t *testing.T) {
 	t.Parallel()
 
 	t.Run("valid fleet autoscaler", func(t *testing.T) {
-		c, m := newFakeController()
+		_, m := newFakeController()
+		ext := newFakeExtensions()
 		fas, _ := defaultFixtures()
 		_, cancel := agtesting.StartInformers(m)
 		defer cancel()
@@ -198,13 +199,14 @@ func TestControllerCreationValidationHandler(t *testing.T) {
 		review, err := newAdmissionReview(*fas)
 		assert.Nil(t, err)
 
-		result, err := c.validationHandler(review)
+		result, err := ext.validationHandler(review)
 		assert.Nil(t, err)
 		assert.True(t, result.Response.Allowed, fmt.Sprintf("%#v", result.Response))
 	})
 
 	t.Run("invalid fleet autoscaler", func(t *testing.T) {
-		c, m := newFakeController()
+		_, m := newFakeController()
+		ext := newFakeExtensions()
 		fas, _ := defaultFixtures()
 		// this make it invalid
 		fas.Spec.Policy.Buffer = nil
@@ -215,7 +217,7 @@ func TestControllerCreationValidationHandler(t *testing.T) {
 		review, err := newAdmissionReview(*fas)
 		assert.Nil(t, err)
 
-		result, err := c.validationHandler(review)
+		result, err := ext.validationHandler(review)
 		assert.Nil(t, err)
 		assert.False(t, result.Response.Allowed, fmt.Sprintf("%#v", result.Response))
 		assert.Equal(t, metav1.StatusFailure, result.Response.Result.Status)
@@ -224,12 +226,12 @@ func TestControllerCreationValidationHandler(t *testing.T) {
 	})
 
 	t.Run("unable to unmarshal AdmissionRequest", func(t *testing.T) {
-		c, _ := newFakeController()
+		ext := newFakeExtensions()
 
 		review, err := newInvalidAdmissionReview()
 		assert.Nil(t, err)
 
-		_, err = c.validationHandler(review)
+		_, err = ext.validationHandler(review)
 
 		if assert.NotNil(t, err) {
 			assert.Equal(t, "error unmarshalling FleetAutoscaler json after schema validation: \"MQ==\": json: cannot unmarshal string into Go value of type v1.FleetAutoscaler", err.Error())
@@ -241,7 +243,8 @@ func TestWebhookControllerCreationValidationHandler(t *testing.T) {
 	t.Parallel()
 
 	t.Run("valid fleet autoscaler", func(t *testing.T) {
-		c, m := newFakeController()
+		_, m := newFakeController()
+		ext := newFakeExtensions()
 		fas, _ := defaultWebhookFixtures()
 		_, cancel := agtesting.StartInformers(m)
 		defer cancel()
@@ -249,13 +252,14 @@ func TestWebhookControllerCreationValidationHandler(t *testing.T) {
 		review, err := newAdmissionReview(*fas)
 		assert.Nil(t, err)
 
-		result, err := c.validationHandler(review)
+		result, err := ext.validationHandler(review)
 		assert.Nil(t, err)
 		assert.True(t, result.Response.Allowed, fmt.Sprintf("%#v", result.Response))
 	})
 
 	t.Run("invalid fleet autoscaler", func(t *testing.T) {
-		c, m := newFakeController()
+		_, m := newFakeController()
+		ext := newFakeExtensions()
 		fas, _ := defaultWebhookFixtures()
 		// this make it invalid
 		fas.Spec.Policy.Webhook = nil
@@ -266,7 +270,7 @@ func TestWebhookControllerCreationValidationHandler(t *testing.T) {
 		review, err := newAdmissionReview(*fas)
 		assert.Nil(t, err)
 
-		result, err := c.validationHandler(review)
+		result, err := ext.validationHandler(review)
 		assert.Nil(t, err)
 		assert.False(t, result.Response.Allowed, fmt.Sprintf("%#v", result.Response))
 		assert.Equal(t, metav1.StatusFailure, result.Response.Result.Status)
@@ -1241,10 +1245,14 @@ func defaultWebhookFixtures() (*autoscalingv1.FleetAutoscaler, *agonesv1.Fleet) 
 // newFakeController returns a controller, backed by the fake Clientset
 func newFakeController() (*Controller, agtesting.Mocks) {
 	m := agtesting.NewMocks()
-	wh := webhooks.NewWebHook(http.NewServeMux())
-	c := NewController(wh, healthcheck.NewHandler(), m.KubeClient, m.ExtClient, m.AgonesClient, m.AgonesInformerFactory)
+	c := NewController(healthcheck.NewHandler(), m.KubeClient, m.ExtClient, m.AgonesClient, m.AgonesInformerFactory)
 	c.recorder = m.FakeRecorder
 	return c, m
+}
+
+// newFakeExtensions returns a fake extensions struct
+func newFakeExtensions() *Extensions {
+	return NewExtensions(webhooks.NewWebHook(http.NewServeMux()))
 }
 
 func newAdmissionReview(fas autoscalingv1.FleetAutoscaler) (admissionv1.AdmissionReview, error) {

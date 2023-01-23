@@ -254,7 +254,9 @@ steps:
 - name: 'e2e-runner'
   args:
     - 'CustomFasSyncInterval=false&SDKGracefulTermination=false&StateAllocationFilter=false&PlayerAllocationFilter=true&PlayerTracking=true&ResetMetricsOnDelete=true&SafeToEvict=true&PodHostname=true&Example=true'
+    - 'generic'
     - 'e2e-test-cluster'
+    - 'us-west1-c'
     - "${_REGISTRY}"
   id: e2e-feature-gates
   waitFor:
@@ -268,9 +270,46 @@ steps:
 - name: 'e2e-runner'
   args:
     - ''
+    - 'generic'
     - 'e2e-test-cluster'
+    - 'us-west1-c'
     - "${_REGISTRY}"
   id: e2e-stable
+  waitFor:
+    - push-images
+    - build-e2e
+
+#
+# Run the e2e tests on GKE Autopilot with FeatureGates inverted compared to Stable
+#
+# Keep in sync with (the inverse of) pkg/util/runtime/features.go:featureDefaults
+
+- name: 'e2e-runner'
+  args:
+    - 'CustomFasSyncInterval=false&SDKGracefulTermination=false&StateAllocationFilter=false&PlayerAllocationFilter=true&PlayerTracking=true&ResetMetricsOnDelete=true&SafeToEvict=true&PodHostname=true&Example=true'
+    - 'gke-autopilot'
+    - 'gke-autopilot-e2e-test-cluster-1-24'
+    - 'us-west1'
+    - "${_REGISTRY}"
+  id: e2e-feature-gates-gke-autopilot
+  allowFailure: true # for now, run the step but don't block on it
+  waitFor:
+    - push-images
+    - build-e2e
+
+#
+# Run the e2e tests on GKE Autopilot without FeatureGates, except SafeToEvict, which we need on Autopilot
+#
+
+- name: 'e2e-runner'
+  args:
+    - 'SafeToEvict=true'
+    - 'gke-autopilot'
+    - 'gke-autopilot-e2e-test-cluster-1-24'
+    - 'us-west1'
+    - "${_REGISTRY}"
+  id: e2e-stable-gke-autopilot
+  allowFailure: true # for now, run the step but don't block on it
   waitFor:
     - push-images
     - build-e2e

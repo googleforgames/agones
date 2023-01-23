@@ -43,16 +43,16 @@ import (
 	"agones.dev/agones/pkg/util/runtime"
 )
 
-// Controller is a the GameServerAllocation controller
-type Controller struct {
+// Extensions is a GameServerAllocation controller within the Extensions service
+type Extensions struct {
 	api        *apiserver.APIServer
 	baseLogger *logrus.Entry
 	recorder   record.EventRecorder
 	allocator  *Allocator
 }
 
-// NewController returns a controller for a GameServerAllocation
-func NewController(apiServer *apiserver.APIServer,
+// NewExtensions returns the extensions controller for a GameServerAllocation
+func NewExtensions(apiServer *apiserver.APIServer,
 	health healthcheck.Handler,
 	counter *gameservers.PerNodeCounter,
 	kubeClient kubernetes.Interface,
@@ -62,8 +62,8 @@ func NewController(apiServer *apiserver.APIServer,
 	remoteAllocationTimeout time.Duration,
 	totalAllocationTimeout time.Duration,
 	allocationBatchWaitTime time.Duration,
-) *Controller {
-	c := &Controller{
+) *Extensions {
+	c := &Extensions{
 		api: apiServer,
 		allocator: NewAllocator(
 			agonesInformerFactory.Multicluster().V1().GameServerAllocationPolicies(),
@@ -86,7 +86,7 @@ func NewController(apiServer *apiserver.APIServer,
 }
 
 // registers the api resource for gameserverallocation
-func (c *Controller) registerAPIResource(ctx context.Context) {
+func (c *Extensions) registerAPIResource(ctx context.Context) {
 	resource := metav1.APIResource{
 		Name:         "gameserverallocations",
 		SingularName: "gameserverallocation",
@@ -102,9 +102,9 @@ func (c *Controller) registerAPIResource(ctx context.Context) {
 	})
 }
 
-// Run runs this controller. Will block until stop is closed.
+// Run runs this extensions controller. Will block until stop is closed.
 // Ignores threadiness, as we only needs 1 worker for cache sync
-func (c *Controller) Run(ctx context.Context, _ int) error {
+func (c *Extensions) Run(ctx context.Context, _ int) error {
 	if err := c.allocator.Run(ctx); err != nil {
 		return err
 	}
@@ -114,7 +114,7 @@ func (c *Controller) Run(ctx context.Context, _ int) error {
 	return nil
 }
 
-func (c *Controller) processAllocationRequest(ctx context.Context, w http.ResponseWriter, r *http.Request, namespace string) (err error) {
+func (c *Extensions) processAllocationRequest(ctx context.Context, w http.ResponseWriter, r *http.Request, namespace string) (err error) {
 	if r.Body != nil {
 		defer r.Body.Close() // nolint: errcheck
 	}
@@ -152,7 +152,7 @@ func (c *Controller) processAllocationRequest(ctx context.Context, w http.Respon
 
 // allocationDeserialization processes the request and namespace, and attempts to deserialise its values
 // into a GameServerAllocation. Returns an error if it fails for whatever reason.
-func (c *Controller) allocationDeserialization(r *http.Request, namespace string) (*allocationv1.GameServerAllocation, error) {
+func (c *Extensions) allocationDeserialization(r *http.Request, namespace string) (*allocationv1.GameServerAllocation, error) {
 	gsa := &allocationv1.GameServerAllocation{}
 
 	gvks, _, err := scheme.Scheme.ObjectKinds(gsa)
@@ -192,7 +192,7 @@ func (c *Controller) allocationDeserialization(r *http.Request, namespace string
 }
 
 // serialisation takes a runtime.Object, and serialise it to the ResponseWriter in the requested format
-func (c *Controller) serialisation(r *http.Request, w http.ResponseWriter, obj k8sruntime.Object, statusCode int, codecs serializer.CodecFactory) error {
+func (c *Extensions) serialisation(r *http.Request, w http.ResponseWriter, obj k8sruntime.Object, statusCode int, codecs serializer.CodecFactory) error {
 	info, err := apiserver.AcceptedSerializer(r, codecs)
 	if err != nil {
 		return errors.Wrapf(err, "failed to find serialisation info for %T object", obj)

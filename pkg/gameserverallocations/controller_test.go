@@ -756,7 +756,7 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 	})
 }
 
-func executeAllocation(gsa *allocationv1.GameServerAllocation, c *Controller) (*allocationv1.GameServerAllocation, error) {
+func executeAllocation(gsa *allocationv1.GameServerAllocation, c *Extensions) (*allocationv1.GameServerAllocation, error) {
 	r, err := createRequest(gsa)
 	if err != nil {
 		return nil, err
@@ -828,17 +828,17 @@ func defaultFixtures(gsLen int) (*agonesv1.Fleet, []agonesv1.GameServer) {
 }
 
 // newFakeController returns a controller, backed by the fake Clientset
-func newFakeController() (*Controller, agtesting.Mocks) {
+func newFakeController() (*Extensions, agtesting.Mocks) {
 	return newFakeControllerWithTimeout(10*time.Second, 30*time.Second)
 }
 
 // newFakeController returns a controller, backed by the fake Clientset with custom allocation timeouts
-func newFakeControllerWithTimeout(remoteAllocationTimeout time.Duration, totalRemoteAllocationTimeout time.Duration) (*Controller, agtesting.Mocks) {
+func newFakeControllerWithTimeout(remoteAllocationTimeout time.Duration, totalRemoteAllocationTimeout time.Duration) (*Extensions, agtesting.Mocks) {
 	m := agtesting.NewMocks()
 	m.Mux = http.NewServeMux()
 	counter := gameservers.NewPerNodeCounter(m.KubeInformerFactory, m.AgonesInformerFactory)
 	api := apiserver.NewAPIServer(m.Mux)
-	c := NewController(api, healthcheck.NewHandler(), counter, m.KubeClient, m.KubeInformerFactory, m.AgonesClient, m.AgonesInformerFactory, remoteAllocationTimeout, totalRemoteAllocationTimeout, 500*time.Millisecond)
+	c := NewExtensions(api, healthcheck.NewHandler(), counter, m.KubeClient, m.KubeInformerFactory, m.AgonesClient, m.AgonesInformerFactory, remoteAllocationTimeout, totalRemoteAllocationTimeout, 500*time.Millisecond)
 	c.recorder = m.FakeRecorder
 	c.allocator.recorder = m.FakeRecorder
 	return c, m
