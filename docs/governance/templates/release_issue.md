@@ -27,75 +27,72 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 - [ ] Review closed issues in the current milestone to ensure that they have appropriate tags.
 - [ ] Review [merged PRs that have no milestone](https://github.com/googleforgames/agones/pulls?q=is%3Apr+is%3Amerged+no%3Amilestone+) and add them to the current milestone.
 - [ ] Review merged PRs in the current milestone to ensure that they have appropriate tags.
-- [ ] Ensure the next RC and stable releases in the Google Calendar have the correct version number.
+- [ ] Ensure the next stable releases in the Google Calendar have the correct version number.
 - [ ] Ensure the next version milestone is created.
 - [ ] Any issues in the current milestone that are not closed, move to next milestone.
-- [ ] If release candidate add the label `feature-freeze-do-not-merge` to any feature pull requests.
+- [ ] Add the label `feature-freeze-do-not-merge` to any feature pull requests.
 - [ ] `git checkout main && git pull --rebase upstream main`
-- [ ] If full release, run `make release-deploy-site`
-- [ ] Run `make build-release` to generate the CHANGELOG.md (if release candidate
-  `RC_RELEASE=1 make build-release`). You will need your
+- [ ] Run `make release-deploy-site`
+- [ ] Run `make build-release` to generate the CHANGELOG.md. You will need your
   [GitHub Personal Access Token](https://github.com/settings/tokens) for this.
 - [ ] Download all the artifacts from the cloud build.
 - [ ] Move the CHANGELOG.md to the root of this repository, replacing any previous versions.
-- [ ] Ensure the [helm `tag` value][values] is correct (should be {version} if a full release, {version}-rc if release candidate)
-- [ ] Ensure the [helm `Chart` version values][chart] are correct (should be {version} if a full release, {version}-rc if release candidate)
+- [ ] Ensure the [helm `tag` value][values] is correct (should be {version})
+- [ ] Ensure the [helm `Chart` version values][chart] are correct (should be {version})
 - [ ] Update SDK Package Versions
-  - [ ] Update the package version in [`sdks/nodejs/package.json`][package.json] and [`sdks/nodejs/package-lock.json`][package-lock.json] by running `npm version {version}` if a full release or `npm version {version}-rc` if release candidate
-  - [ ] Ensure the [`sdks/csharp/sdk/AgonesSDK.nuspec` and `sdks/csharp/sdk/csharp-sdk.csproj`][csharp] versions are correct (should be {version} if a full release, {version}-rc if release candidate)
-  - [ ] Update the package version in the [`sdks/unity/package.json`][unity] package file's `Version` field to {version} if a full release, {version}-rc if release candidate
+  - [ ] Update the package version in [`sdks/nodejs/package.json`][package.json] and [`sdks/nodejs/package-lock.json`][package-lock.json] by running `npm version {version}` 
+  - [ ] Ensure the [`sdks/csharp/sdk/AgonesSDK.nuspec` and `sdks/csharp/sdk/csharp-sdk.csproj`][csharp] versions are correct (should be {version})
+  - [ ] Update the package version in the [`sdks/unity/package.json`][unity] package file's `Version` field to {version}
 - [ ] Run `make gen-install`
 - [ ] Run `make test-examples-on-gar` to ensure all example images exist on us-docker.pkg.dev/agones-images/examples
 - [ ] Create a *draft* release with the [release template][release-template]
     - [ ] Make a `tag` with the release version.
 - [ ] Site updated
   - [ ] Copy the draft release content into a new `/site/content/en/blog/releases` content (this will be what you send via email).
-  - [ ] Add the Agones release version and its supported Kubernetes version to the version matrix in `site/content/en/docs/installation/#agones-and-kubernetes-supported-versions`.
-  - [ ] Review all `link_test` and `data-proofer-ignore` attributes and remove for link testing
-  - [ ] If full release, review and remove all instances of the `feature` shortcode
-  - [ ] If full release, add a link to previous version's documentation to nav dropdown.
+  - [ ] Add the Agones release version and its supported Kubernetes version to the version matrix in `site/content/en/docs/Installation/_index.md #agones-and-kubernetes-supported-versions`.
+  - [ ] Review all `link_test` and `data-proofer-ignore` attributes and remove for link testing. html files can be ignored.
+  - [ ] Review and remove all instances of the `feature` shortcode
+  - [ ] Add a link to previous version's documentation to nav dropdown.
   - [ ] config.toml updates:
-    - [ ] If full release, update `release_branch` to the new release branch for {version}.
-    - [ ] If full release, update `release-version` with the new release version {version}.
-    - [ ] If full release, copy `dev_supported_k8s` to `supported_k8s`.
-    - [ ] If full release, copy `dev_aks_minor_supported_k8s` to `aks_minor_supported_k8s`.
-    - [ ] If full release, copy `dev_minikube_minor_supported_k8s` to `minikube_minor_supported_k8s`.
-    - [ ] If full release, update documentation with updated example images tags.
+    - [ ] Update `release_branch` to the new release branch for {version}.
+    - [ ] Update `release-version` with the new release version {version}.
+    - [ ] Copy `dev_supported_k8s` to `supported_k8s`.
+    - [ ] Copy `dev_aks_minor_supported_k8s` to `aks_minor_supported_k8s`.
+    - [ ] Copy `dev_minikube_minor_supported_k8s` to `minikube_minor_supported_k8s`.
+    - [ ] Update documentation with updated example images tags.
 - [ ] Create PR with these changes, and merge them with an approval.
 - [ ] Run `git remote update && git checkout main && git reset --hard upstream/main` to ensure your code is in line
   with upstream  (unless this is a hotfix, then do the same, but for the release branch)
 - [ ] Publish SDK packages
     - [ ] Run `make sdk-shell-node` to get interactive shell to publish node package. Requires Google internal process
       to publish.
-    - [ ] Run `make sdk-publish-csharp` to deploy to NuGet. Requires login credentials. (if release candidate:
-      `make sdk-publish-csharp RELEASE_VERSION={version}-rc`).
+    - [ ] Run `make sdk-publish-csharp` to deploy to NuGet. Requires login credentials. 
       Will need [NuGet API Key](https://www.nuget.org/account/apikeys) from Agones account.
-- [ ] Run `make do-release`. (if release candidate: `make do-release RELEASE_VERSION={version}-rc`) to create and push the docker images and helm chart.
+- [ ] Run `make do-release` to create and push the docker images and helm chart.
 - [ ] Run `make shell` and run `gcloud config configurations activate <your development project>` to switch Agones
     development tooling off of the `agones-images` project.
 - [ ] Do a `helm repo add agones https://agones.dev/chart/stable` / `helm repo update` and verify that the new
   version is available via the command `helm search repo agones --versions --devel`.
 - [ ] Do a `helm install --namespace=agones-system agones agones/agones`
-  (`helm install --namespace=agones-system agones agones/agones --version={version}-rc` if release candidate) and a smoke test to confirm everything is working.
+   and a smoke test to confirm everything is working.
 - [ ] Attach all assets found in the `release` folder to the draft GitHub Release.
-- [ ] If release candidate check the pre-release box on the draft GitHub Release
 - [ ] Copy any review changes from the release blog post into the draft GitHub release.
 - [ ] Publish the draft GitHub Release.
 - [ ] Email the [mailing list][list] with the release details (copy-paste the release blog post).
 - [ ] Paste the announcement blog post to the #users Slack group.
 - [ ] Post to the [agonesdev](https://twitter.com/agonesdev) Twitter account.
-- [ ] If full release, run `git checkout main`.
-- [ ] If full release, then increment the `base_version` in [`build/Makefile`][build-makefile]
-- [ ] If full release move [helm `tag` value][values] is set to {version}+1-dev
-- [ ] If full release move the [helm `Chart` version values][chart] is to {version}+1-dev
-- [ ] If full release, change to the `sdks/nodejs` directory and run the command `npm version {version}+1-dev` to update the package version
-- [ ] If full release move the [`sdks/csharp/sdk/AgonesSDK.nuspec` and `sdks/csharp/sdk/csharp-sdk.csproj`][csharp] to {version}+1-dev
-- [ ] If full release update the [`sdks/unity/package.json`][unity] package file's `Version` field to {version}+1-dev
-- [ ] If full release, remove `feature-freeze-do-not-merge` labels from all pull requests
+- [ ] Run `git checkout main`.
+- [ ] Then increment the `base_version` in [`build/Makefile`][build-makefile]
+- [ ] Move [helm `tag` value][values] is set to {version}+1-dev
+- [ ] Move the [helm `Chart` version values][chart] is to {version}+1-dev
+- [ ] Change to the `sdks/nodejs` directory and run the command `npm version {version}+1-dev` to update the package version
+- [ ] Move the [`sdks/csharp/sdk/AgonesSDK.nuspec` and `sdks/csharp/sdk/csharp-sdk.csproj`][csharp] to {version}+1-dev
+- [ ] Update the [`sdks/unity/package.json`][unity] package file's `Version` field to {version}+1-dev
+- [ ] Remove `feature-freeze-do-not-merge` labels from all pull requests
 - [ ] Run `make gen-install gen-api-docs`
 - [ ] Create PR with these changes, and merge them with approval
 - [ ] Close this issue.
-- [ ] If full release, close the current milestone. _Congratulations!_ - the release is now complete! :tada: :clap: :smile: :+1:
+- [ ] Close the current milestone. _Congratulations!_ - the release is now complete! :tada: :clap: :smile: :+1:
 
 [values]: https://github.com/googleforgames/agones/blob/main/install/helm/agones/values.yaml#L33
 [chart]: https://github.com/googleforgames/agones/blob/main/install/helm/agones/Chart.yaml
