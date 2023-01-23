@@ -4,14 +4,6 @@
 
 - Versioned releases will occur every 6 weeks
 - Releases occur on a Tuesday.
-- 6 week development cycle, the project is in "feature-freeze-do-not-merge". Only the following pull requests will be accepted during
-  this time:
-  - Bug fixes.
-  - Build tools enhancements that won't alter build artifacts (i.e. Makefile refactoring is acceptable, Go version
-   upgrading is not).
-  - Documentation and example improvements or fixes.
-- Any new PRs that are submitted during feature freeze, will be tagged with the label `feature-freeze-do-not-merge` 
-  to delineate that they should only be merged after the full release is complete. 
 
 ## Release Calendar
 

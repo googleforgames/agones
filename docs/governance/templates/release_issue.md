@@ -30,7 +30,6 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 - [ ] Ensure the next stable releases in the Google Calendar have the correct version number.
 - [ ] Ensure the next version milestone is created.
 - [ ] Any issues in the current milestone that are not closed, move to next milestone.
-- [ ] Add the label `feature-freeze-do-not-merge` to any feature pull requests.
 - [ ] `git checkout main && git pull --rebase upstream main`
 - [ ] Run `make release-deploy-site`
 - [ ] Run `make build-release` to generate the CHANGELOG.md. You will need your
@@ -88,7 +87,6 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 - [ ] Change to the `sdks/nodejs` directory and run the command `npm version {version}+1-dev` to update the package version
 - [ ] Move the [`sdks/csharp/sdk/AgonesSDK.nuspec` and `sdks/csharp/sdk/csharp-sdk.csproj`][csharp] to {version}+1-dev
 - [ ] Update the [`sdks/unity/package.json`][unity] package file's `Version` field to {version}+1-dev
-- [ ] Remove `feature-freeze-do-not-merge` labels from all pull requests
 - [ ] Run `make gen-install gen-api-docs`
 - [ ] Create PR with these changes, and merge them with approval
 - [ ] Close this issue.
