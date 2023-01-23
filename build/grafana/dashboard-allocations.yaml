@@ -170,7 +170,6 @@ data:
           "nullPointMode": "connected",
           "nullText": null,
           "options": {},
-          "pluginVersion": "6.2.4",
           "postfix": "",
           "postfixFontSize": "50%",
           "prefix": "",

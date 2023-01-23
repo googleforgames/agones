@@ -779,6 +779,7 @@ func TestGameServerShutdown(t *testing.T) {
 // TestGameServerEvicted test that if Gameserver would be evicted than it becomes Unhealthy
 // Ephemeral Storage limit set to 0Mi
 func TestGameServerEvicted(t *testing.T) {
+	framework.SkipOnCloudProduct(t, "gke-autopilot", "Autopilot adjusts ephmeral storage to a minimum of 10Mi, see https://github.com/googleforgames/agones/issues/2890")
 	t.Parallel()
 	ctx := context.Background()
 	gs := framework.DefaultGameServer(framework.Namespace)
