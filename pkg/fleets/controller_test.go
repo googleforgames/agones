@@ -411,33 +411,31 @@ func TestControllerSyncFleet(t *testing.T) {
 func TestControllerCreationValidationHandler(t *testing.T) {
 	t.Parallel()
 
+	ext := newFakeExtensions()
+
 	t.Run("invalid JSON", func(t *testing.T) {
-		c, _ := newFakeController()
 		raw, err := json.Marshal([]byte(`1`))
 		require.NoError(t, err)
 		review := getAdmissionReview(raw)
 
-		_, err = c.creationValidationHandler(review)
+		_, err = ext.creationValidationHandler(review)
 		assert.EqualError(t, err, "error unmarshalling Fleet json after schema validation: \"MQ==\": json: cannot unmarshal string into Go value of type v1.Fleet")
 	})
 
 	t.Run("invalid fleet", func(t *testing.T) {
-		c, _ := newFakeController()
 		fixture := agonesv1.Fleet{}
 
 		raw, err := json.Marshal(fixture)
 		require.NoError(t, err)
 		review := getAdmissionReview(raw)
 
-		result, err := c.creationValidationHandler(review)
+		result, err := ext.creationValidationHandler(review)
 		require.NoError(t, err)
 		assert.False(t, result.Response.Allowed)
 		assert.Equal(t, "Failure", result.Response.Result.Status)
 	})
 
 	t.Run("valid fleet", func(t *testing.T) {
-		c, _ := newFakeController()
-
 		gsSpec := *defaultGSSpec()
 		f := defaultFixture()
 		f.Spec.Template = gsSpec
@@ -446,7 +444,7 @@ func TestControllerCreationValidationHandler(t *testing.T) {
 		require.NoError(t, err)
 		review := getAdmissionReview(raw)
 
-		result, err := c.creationValidationHandler(review)
+		result, err := ext.creationValidationHandler(review)
 		require.NoError(t, err)
 		assert.True(t, result.Response.Allowed)
 	})
@@ -456,14 +454,14 @@ func TestControllerCreationMutationHandler(t *testing.T) {
 	t.Parallel()
 
 	t.Run("ok scenario", func(t *testing.T) {
-		c, _ := newFakeController()
+		ext := newFakeExtensions()
 		fixture := agonesv1.Fleet{}
 
 		raw, err := json.Marshal(fixture)
 		require.NoError(t, err)
 		review := getAdmissionReview(raw)
 
-		result, err := c.creationMutationHandler(review)
+		result, err := ext.creationMutationHandler(review)
 		require.NoError(t, err)
 		assert.True(t, result.Response.Allowed)
 		assert.Equal(t, admissionv1.PatchTypeJSONPatch, *result.Response.PatchType)
@@ -487,12 +485,12 @@ func TestControllerCreationMutationHandler(t *testing.T) {
 	})
 
 	t.Run("invalid JSON", func(t *testing.T) {
-		c, _ := newFakeController()
+		ext := newFakeExtensions()
 		raw, err := json.Marshal([]byte(`1`))
 		require.NoError(t, err)
 		review := getAdmissionReview(raw)
 
-		result, err := c.creationMutationHandler(review)
+		result, err := ext.creationMutationHandler(review)
 		assert.NoError(t, err)
 		require.Nil(t, result.Response.PatchType)
 	})
@@ -1402,10 +1400,14 @@ func TestControllerRollingUpdateDeployment(t *testing.T) {
 // newFakeController returns a controller, backed by the fake Clientset
 func newFakeController() (*Controller, agtesting.Mocks) {
 	m := agtesting.NewMocks()
-	wh := webhooks.NewWebHook(http.NewServeMux())
-	c := NewController(wh, healthcheck.NewHandler(), m.KubeClient, m.ExtClient, m.AgonesClient, m.AgonesInformerFactory)
+	c := NewController(healthcheck.NewHandler(), m.KubeClient, m.ExtClient, m.AgonesClient, m.AgonesInformerFactory)
 	c.recorder = m.FakeRecorder
 	return c, m
+}
+
+// newFakeExtensions returns a fake extensions struct
+func newFakeExtensions() *Extensions {
+	return NewExtensions(webhooks.NewWebHook(http.NewServeMux()))
 }
 
 func defaultFixture() *agonesv1.Fleet {

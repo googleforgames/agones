@@ -94,6 +94,10 @@ agones:
       failureThreshold: 3
       timeoutSeconds: 1
     allocationBatchWaitTime: 500ms
+  extensions:
+    pdb:
+        minAvailable: 1
+    replicas: 2
   ping:
     install: true
     pdb:

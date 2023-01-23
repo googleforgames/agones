@@ -743,7 +743,7 @@ func TestControllerSyncGameServerSetStatus(t *testing.T) {
 func TestControllerUpdateValidationHandler(t *testing.T) {
 	t.Parallel()
 
-	c, _ := newFakeController()
+	ext := newFakeExtensions()
 	gvk := metav1.GroupVersionKind(agonesv1.SchemeGroupVersion.WithKind("GameServerSet"))
 	fixture := &agonesv1.GameServerSet{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
 		Spec: agonesv1.GameServerSetSpec{Replicas: 5},
@@ -771,7 +771,7 @@ func TestControllerUpdateValidationHandler(t *testing.T) {
 			Response: &admissionv1.AdmissionResponse{Allowed: true},
 		}
 
-		result, err := c.updateValidationHandler(review)
+		result, err := ext.updateValidationHandler(review)
 		require.NoError(t, err)
 		if !assert.True(t, result.Response.Allowed) {
 			// show the reason of the failure
@@ -796,7 +796,7 @@ func TestControllerUpdateValidationHandler(t *testing.T) {
 			Response: &admissionv1.AdmissionResponse{Allowed: true},
 		}
 
-		_, err := c.updateValidationHandler(review)
+		_, err := ext.updateValidationHandler(review)
 		require.Error(t, err)
 		assert.Equal(t, "error unmarshalling new GameServerSet json: : unexpected end of JSON input", err.Error())
 	})
@@ -821,7 +821,7 @@ func TestControllerUpdateValidationHandler(t *testing.T) {
 			Response: &admissionv1.AdmissionResponse{Allowed: true},
 		}
 
-		_, err = c.updateValidationHandler(review)
+		_, err = ext.updateValidationHandler(review)
 		require.Error(t, err)
 		assert.Equal(t, "error unmarshalling old GameServerSet json: : unexpected end of JSON input", err.Error())
 	})
@@ -852,7 +852,7 @@ func TestControllerUpdateValidationHandler(t *testing.T) {
 			Response: &admissionv1.AdmissionResponse{Allowed: true},
 		}
 
-		result, err := c.updateValidationHandler(review)
+		result, err := ext.updateValidationHandler(review)
 		require.NoError(t, err)
 		require.NotNil(t, result.Response)
 		require.NotNil(t, result.Response.Result)
@@ -868,7 +868,8 @@ func TestControllerUpdateValidationHandler(t *testing.T) {
 func TestCreationValidationHandler(t *testing.T) {
 	t.Parallel()
 
-	c, _ := newFakeController()
+	ext := newFakeExtensions()
+
 	gvk := metav1.GroupVersionKind(agonesv1.SchemeGroupVersion.WithKind("GameServerSet"))
 	fixture := &agonesv1.GameServerSet{ObjectMeta: metav1.ObjectMeta{Name: "c1", Namespace: "default"},
 		Spec: agonesv1.GameServerSetSpec{
@@ -904,7 +905,7 @@ func TestCreationValidationHandler(t *testing.T) {
 			Response: &admissionv1.AdmissionResponse{Allowed: true},
 		}
 
-		result, err := c.creationValidationHandler(review)
+		result, err := ext.creationValidationHandler(review)
 		require.NoError(t, err)
 		if !assert.True(t, result.Response.Allowed) {
 			// show the reason of the failure
@@ -926,7 +927,7 @@ func TestCreationValidationHandler(t *testing.T) {
 			Response: &admissionv1.AdmissionResponse{Allowed: true},
 		}
 
-		_, err := c.creationValidationHandler(review)
+		_, err := ext.creationValidationHandler(review)
 		require.Error(t, err)
 		assert.Equal(t, "error unmarshalling GameServerSet json after schema validation: : unexpected end of JSON input", err.Error())
 	})
@@ -954,7 +955,7 @@ func TestCreationValidationHandler(t *testing.T) {
 			Response: &admissionv1.AdmissionResponse{Allowed: true},
 		}
 
-		result, err := c.creationValidationHandler(review)
+		result, err := ext.creationValidationHandler(review)
 		require.NoError(t, err)
 		require.NotNil(t, result.Response)
 		require.NotNil(t, result.Response.Result)
@@ -995,9 +996,13 @@ func createGameServers(gsSet *agonesv1.GameServerSet, size int) []agonesv1.GameS
 // newFakeController returns a controller, backed by the fake Clientset
 func newFakeController() (*Controller, agtesting.Mocks) {
 	m := agtesting.NewMocks()
-	wh := webhooks.NewWebHook(http.NewServeMux())
 	counter := gameservers.NewPerNodeCounter(m.KubeInformerFactory, m.AgonesInformerFactory)
-	c := NewController(wh, healthcheck.NewHandler(), counter, m.KubeClient, m.ExtClient, m.AgonesClient, m.AgonesInformerFactory)
+	c := NewController(healthcheck.NewHandler(), counter, m.KubeClient, m.ExtClient, m.AgonesClient, m.AgonesInformerFactory)
 	c.recorder = m.FakeRecorder
 	return c, m
+}
+
+// newFakeExtensions returns an extensions struct
+func newFakeExtensions() *Extensions {
+	return NewExtensions(webhooks.NewWebHook(http.NewServeMux()))
 }
