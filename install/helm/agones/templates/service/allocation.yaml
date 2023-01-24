@@ -309,7 +309,6 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: agones-allocator
-  namespace: {{ .Release.Namespace }}
   labels:
     app: {{ template "agones.name" $ }}
     chart: {{ template "agones.chart" $ }}
@@ -357,7 +356,6 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: agones-allocator
-  namespace: {{ .Release.Namespace }}
   labels:
     app: {{ template "agones.name" $ }}
     chart: {{ template "agones.chart" $ }}
