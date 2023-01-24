@@ -79,7 +79,7 @@ resource "google_container_cluster" "primary" {
 }
 
 resource "google_compute_firewall" "default" {
-  count   = var.ports != "" ? 1 : 0
+  count   = var.udpFirewall ? 1 : 0
   name    = length(var.firewallName) == 0 ? "game-server-firewall-${local.name}" : var.firewallName
   project = local.project
   network = local.network

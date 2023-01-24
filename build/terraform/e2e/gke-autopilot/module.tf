@@ -42,7 +42,7 @@ module "gke_cluster" {
     "location" = "us-west1"
   }
 
-  ports = "" // firewall is created at the project module level
+  udpFirewall = false // firewall is created at the project module level
 }
 
 provider "helm" {

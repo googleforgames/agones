@@ -49,7 +49,7 @@ module "gke_cluster" {
     "project"              = var.project
   }
 
-  ports = "" // firewall is created at the project module level
+  udpFirewall = false // firewall is created at the project module level
 }
 
 provider "helm" {
