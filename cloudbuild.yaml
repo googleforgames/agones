@@ -381,7 +381,8 @@ substitutions:
   _RUST_SDK_BUILD_CACHE_KEY: rust-sdk-build
   _REGISTRY: us-docker.pkg.dev/${PROJECT_ID}/ci
 tags: ['ci']
-timeout: 7200s
+timeout: 9000s # 2.5h
+queueTtl: 21600s # 6h
 images:
   - '${_REGISTRY}/agones-controller'
   - '${_REGISTRY}/agones-sdk'
