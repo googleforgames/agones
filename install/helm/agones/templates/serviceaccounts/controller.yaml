@@ -34,7 +34,6 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: {{ .Values.agones.serviceaccount.controller.name }}
-  namespace: {{ .Release.Namespace }}
   labels:
     app: {{ template "agones.name" . }}
     chart: {{ template "agones.chart" . }}
@@ -87,7 +86,6 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: {{ .Values.agones.serviceaccount.controller.name }}-access
-  namespace: {{ .Release.Namespace }}
   labels:
     app: {{ template "agones.name" . }}
     chart: {{ template "agones.chart" . }}
