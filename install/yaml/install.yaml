@@ -15168,7 +15168,6 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: agones-allocator
-  namespace: agones-system
   labels:
     app: agones
     chart: agones-1.30.0-dev
@@ -15199,7 +15198,6 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: agones-controller
-  namespace: agones-system
   labels:
     app: agones
     chart: agones-1.30.0-dev
@@ -15251,7 +15249,6 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: agones-sdk
-  namespace: agones-system
   labels:
     app: agones
     chart: agones-1.30.0-dev
@@ -15271,7 +15268,6 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: agones-allocator
-  namespace: agones-system
   labels:
     app: agones
     chart: agones-1.30.0-dev
@@ -15291,7 +15287,6 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: agones-controller-access
-  namespace: agones-system
   labels:
     app: agones
     chart: agones-1.30.0-dev
