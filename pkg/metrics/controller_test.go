@@ -159,6 +159,8 @@ func TestControllerGameServerCount(t *testing.T) {
 }
 
 func TestControllerGameServerPlayerConnectedCount(t *testing.T) {
+	runtime.FeatureTestMutex.Lock()
+	defer runtime.FeatureTestMutex.Unlock()
 	runtime.EnableAllFeatures()
 	resetMetrics()
 	exporter := &metricExporter{}
@@ -205,6 +207,8 @@ func TestControllerGameServerPlayerConnectedCount(t *testing.T) {
 }
 
 func TestControllerGameServerPlayerCapacityCount(t *testing.T) {
+	runtime.FeatureTestMutex.Lock()
+	defer runtime.FeatureTestMutex.Unlock()
 	runtime.EnableAllFeatures()
 	resetMetrics()
 	exporter := &metricExporter{}

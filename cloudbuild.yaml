@@ -382,7 +382,7 @@ substitutions:
   _REGISTRY: us-docker.pkg.dev/${PROJECT_ID}/ci
 tags: ['ci']
 timeout: 9000s # 2.5h
-queueTtl: 21600s # 6h
+queueTtl: 259200s # 72h
 images:
   - '${_REGISTRY}/agones-controller'
   - '${_REGISTRY}/agones-sdk'
