@@ -31,6 +31,7 @@ variable "cluster" {
     "windowsInitialNodeCount" = "0"
     "windowsMachineType"      = "e2-standard-4"
     "autoscale"               = false
+    "workloadIdentity"        = false
     "minNodeCount"            = "1"
     "maxNodeCount"            = "5"
   }

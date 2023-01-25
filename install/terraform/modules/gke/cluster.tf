@@ -35,6 +35,7 @@ locals {
   windowsInitialNodeCount = lookup(var.cluster, "windowsInitialNodeCount", "0")
   windowsMachineType      = lookup(var.cluster, "windowsMachineType", "e2-standard-4")
   autoscale               = lookup(var.cluster, "autoscale", false)
+  workloadIdentity        = lookup(var.cluster, "workloadIdentity", false)
   minNodeCount            = lookup(var.cluster, "minNodeCount", "1")
   maxNodeCount            = lookup(var.cluster, "maxNodeCount", "5")
 }
@@ -209,6 +210,12 @@ resource "google_container_cluster" "primary" {
 
         tags = ["game-server"]
       }
+    }
+  }
+  dynamic "workload_identity_config" {
+    for_each = local.workloadIdentity? [1] : []
+    content {
+      workload_pool = "${local.project}.svc.id.goog"
     }
   }
   timeouts {
