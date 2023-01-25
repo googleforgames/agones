@@ -95,11 +95,6 @@ do-release: $(ensure-build-image)
 
 	@echo "Now go make the $(RELEASE_VERSION) release on Github!"
 
-ifdef RC_RELEASE
-build-release: RELEASE_VERSION=$(base_version)-rc
-else
-build-release: RELEASE_VERSION=$(base_version)
-endif
 build-release: 
-	cd $(agones_path) && gcloud builds submit . --substitutions _VERSION=$(RELEASE_VERSION) --config=./build/release/cloudbuild.yaml $(ARGS)
+	cd $(agones_path) && gcloud builds submit . --substitutions _VERSION=$(base_version) --config=./build/release/cloudbuild.yaml $(ARGS)
 
