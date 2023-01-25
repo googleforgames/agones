@@ -36,7 +36,7 @@ kubectl port-forward statefulset/consul-consul-server 8500:8500 &
 echo "Waiting consul port-forward to launch on 8500..."
 timeout 60 bash -c 'until printf "" 2>>/dev/null >>/dev/tcp/$0/$1; do sleep 1; done' 127.0.0.1 8500
 echo "consul port-forward launched. Starting e2e tests..."
-echo "consul lock -child-exit-code=true -timeout 1h -verbose LockE2E '/root/e2e.sh "$FEATURES" "$CLOUD_PRODUCT" "$REGISTRY"'"
+echo "consul lock -child-exit-code=true -timeout 90m -verbose LockE2E '/root/e2e.sh "$FEATURES" "$CLOUD_PRODUCT" "$REGISTRY"'"
 consul lock -child-exit-code=true -timeout 1h -verbose LockE2E '/root/e2e.sh "'$FEATURES'" "'$CLOUD_PRODUCT'" "'$REGISTRY'"'
 killall -q kubectl || true
 echo "successfully killed kubectl proxy"

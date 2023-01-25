@@ -1,4 +1,4 @@
-# Copyright 2019 Google LLC All Rights Reserved.
+# Copyright 2023 Google LLC All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,19 +20,13 @@ variable "cluster" {
   type        = map(any)
 
   default = {
-    "location"                = "us-west1-c"
-    "name"                    = "test-cluster"
-    "machineType"             = "e2-standard-4"
-    "initialNodeCount"        = "4"
-    "project"                 = "agones"
-    "network"                 = "default"
-    "subnetwork"              = ""
-    "kubernetesVersion"       = "1.24"
-    "windowsInitialNodeCount" = "0"
-    "windowsMachineType"      = "e2-standard-4"
-    "autoscale"               = false
-    "minNodeCount"            = "1"
-    "maxNodeCount"            = "5"
+    "name"              = "test-cluster"
+    "project"           = "agones"
+    "location"          = "us-west1"
+    "network"           = "default"
+    "subnetwork"        = ""
+    "releaseChannel"    = "REGULAR"
+    "kubernetesVersion" = "1.24"
   }
 }
 
