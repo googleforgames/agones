@@ -32,8 +32,7 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 - [ ] Any issues in the current milestone that are not closed, move to next milestone.
 - [ ] `git checkout main && git pull --rebase upstream main`
 - [ ] Run `make release-deploy-site`
-- [ ] Run `make build-release` to generate the CHANGELOG.md. You will need your
-  [GitHub Personal Access Token](https://github.com/settings/tokens) for this.
+- [ ] Run `make build-release` to generate the CHANGELOG.md.
 - [ ] Download all the artifacts from the cloud build.
 - [ ] Move the CHANGELOG.md to the root of this repository, replacing any previous versions.
 - [ ] Ensure the [helm `tag` value][values] is correct (should be {version})
