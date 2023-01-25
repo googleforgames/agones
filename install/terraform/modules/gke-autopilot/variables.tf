@@ -25,7 +25,6 @@ variable "cluster" {
     "location"          = "us-west1"
     "network"           = "default"
     "subnetwork"        = ""
-    "workload_id"       = false
     "releaseChannel"    = "REGULAR"
     "kubernetesVersion" = "1.24"
   }

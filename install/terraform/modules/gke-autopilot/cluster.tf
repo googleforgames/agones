@@ -27,7 +27,6 @@ locals {
   location          = lookup(var.cluster, "location", "us-west1")
   network           = lookup(var.cluster, "network", "default")
   subnetwork        = lookup(var.cluster, "subnetwork", "")
-  workload_id       = lookup(var.cluster, "workload_id", false)
   releaseChannel    = lookup(var.cluster, "releaseChannel", "REGULAR")
   kubernetesVersion = lookup(var.cluster, "kubernetesVersion", "1.24")
 }
@@ -70,13 +69,6 @@ resource "google_container_cluster" "primary" {
   node_pool_auto_config {
     network_tags {
       tags = ["game-server"]
-    }
-  }
-
-  dynamic "workload_identity_config" {
-    for_each = local.workload_id ? [1] : []
-    content {
-      workload_pool = "${local.project}.svc.id.goog"
     }
   }
 
