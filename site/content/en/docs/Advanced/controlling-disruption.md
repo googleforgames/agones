@@ -47,18 +47,20 @@ eviction:
 
 You further need to configure [terminationGracePeriodSeconds](https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/#hook-handler-execution) as appropriate for your game server.
 
-Note that to maintain backwards compatibility with Agones prior to the introduction of the `SafeToEvict` feature gate, if your game server previously configured the `cluster-autoscaler.kubernetes.io/safe-to-evict: true` annotation, we assume `eviction.safe: Always` is intended.
+Note that to maintain backward compatibility with Agones prior to the introduction of the `SafeToEvict` feature gate, if your game server previously configured the `cluster-autoscaler.kubernetes.io/safe-to-evict: true` annotation, we assume `eviction.safe: Always` is intended.
 
-### `safe: UpgradesOnly`
+### `safe: OnUpgrade`
 
-If your game server has a session length between ten minutes and one hour, you should set:
+If your game server has a session length between ten minutes and one hour, you can set:
 
 ```
 eviction:
-  safe: UpgradesOnly
+  safe: OnUpgrade
 ```
 
 This will ensure the game server `Pod` can be evicted by node upgrades, but Cluster Autoscaler will not evict it.
+
+If you do not wish your game server to be disrupted by upgrades, you can either set `Never`, or, with a 10m-1h session length, set [terminationGracePeriodSeconds](https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/#hook-handler-execution) to one hour (or your session length), then intercept `SIGTERM` but do nothing with it. Either approach will allow your game server to run to completion.
 
 {{< alert title="GKE Autopilot" color="info" >}}
 GKE Autopilot supports only `Never` and `Always`, not `UpgradeOnly`.
@@ -79,11 +81,11 @@ Outside of Cluster Autoscaler, the main source of disruption for long sessions i
 On GKE, there are currently two possible approaches to manage disruption for session lengths longer than an hour:
 
 * (GKE Standard/Autopilot) [Blue/green deployment](https://martinfowler.com/bliki/BlueGreenDeployment.html) at the cluster level: If you are using an automated deployment process, you can:
-  * create a new, `blue` cluster within a release channel e.g. every week,
+  * create a new, `green` cluster within a release channel e.g. every week,
   * use [maintenance exclusions](https://cloud.google.com/kubernetes-engine/docs/concepts/maintenance-windows-and-exclusions#exclusions) to prevent node upgrades for 30d, and
-  * scale the `Fleet` on the old, `green` cluster down to 0, and
-  * use [multi-cluster allocation]({{< relref "multi-cluster-allocation.md" >}}) on Agones, which will then direct new allocations to the new `blue` cluster (since `green` has 0 desired), then
-  * delete the old, `green` cluster when the `Fleet` successfully scales down.
+  * scale the `Fleet` on the old, `blue` cluster down to 0, and
+  * use [multi-cluster allocation]({{< relref "multi-cluster-allocation.md" >}}) on Agones, which will then direct new allocations to the new `green` cluster (since `blue` has 0 desired), then
+  * delete the old, `blue` cluster when the `Fleet` successfully scales down.
 
 * (GKE Standard only) Use [node pool blue/green upgrades](https://cloud.google.com/kubernetes-engine/docs/concepts/node-pool-upgrade-strategies#blue-green-upgrade-strategy)
 
@@ -105,7 +107,7 @@ As a quick reference:
 | evictions.safe setting  |  `safe-to-evict` pod annotation |  `agones.dev/safe-to-evict` label |
 |-------------------------|---------------------------------|-----------------------------------|
 | `Never` (default)       | `false`                         | `false` (matches PDB)             |
-| `UpgradesOnly`          | `false`                         | `true` (does not match PDB)       |
+| `OnUpdate`              | `false`                         | `true` (does not match PDB)       |
 | `Always`                | `true`                          | `true` (does not match PDB)       |
 
 ## Further Reading
