@@ -28,6 +28,7 @@ PodHostname: false
 SplitControllerAndExtensions: false
 
 # Pre-Alpha features
+CountsAndLists: false
 
 # Example feature
 Example: false
