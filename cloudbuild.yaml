@@ -246,6 +246,39 @@ steps:
     - GOPATH=/workspace/go
     - GO111MODULE=on
 
+# wait for us to be the oldest ongoing build before we run e2es
+
+- name: 'gcr.io/cloud-builders/gcloud'
+  id: e2e-wait-to-become-leader
+  waitFor:
+    - push-images
+    - build-e2e
+  script: |
+    #!/usr/bin/env bash
+
+    TS='date --utc +%FT%TZ' # e.g. 2023-01-26T13:30:37Z
+    echo "$(${TS}): Waiting to become oldest running build"
+    while true; do
+      # Filter to running builds within the same TRIGGER_NAME. We use the trigger name to
+      # filter rather than buildTriggerId because there is no substitution available for
+      # buildTriggerId.
+      TRIGGER_FILTER="status=WORKING AND substitutions[TRIGGER_NAME]='${TRIGGER_NAME}'"
+      OLDEST=$(gcloud builds list --filter "${TRIGGER_FILTER}" --format="value(id,startTime)" --sort-by=startTime --limit=1)
+      echo "$(${TS}): Oldest is (id startTime): ${OLDEST}"
+
+      if echo ${OLDEST} | grep -q "${BUILD_ID}"; then
+        echo "$(${TS}): That's us, we're done!"
+        break
+      fi
+
+      sleep 60
+    done
+  timeout: 5400s # 90m - leave an hour for e2es to run on top of the global timeout of 2.5h
+  env:
+  - 'CLOUDSDK_CORE_PROJECT=$PROJECT_ID'
+  - 'BUILD_ID=$BUILD_ID'
+  - 'TRIGGER_NAME=$TRIGGER_NAME'
+
 #
 # Run the e2e tests with FeatureGates inverted compared to Stable
 #
@@ -260,8 +293,7 @@ steps:
     - "${_REGISTRY}"
   id: e2e-feature-gates
   waitFor:
-    - push-images
-    - build-e2e
+    - e2e-wait-to-become-leader
 
 #
 # Run the e2e tests without FeatureGates
@@ -276,8 +308,7 @@ steps:
     - "${_REGISTRY}"
   id: e2e-stable
   waitFor:
-    - push-images
-    - build-e2e
+    - e2e-feature-gates
 
 #
 # Run the e2e tests on GKE Autopilot with FeatureGates inverted compared to Stable
@@ -294,8 +325,7 @@ steps:
   id: e2e-feature-gates-gke-autopilot
   allowFailure: true # for now, run the step but don't block on it
   waitFor:
-    - push-images
-    - build-e2e
+    - e2e-wait-to-become-leader
 
 #
 # Run the e2e tests on GKE Autopilot without FeatureGates, except SafeToEvict, which we need on Autopilot
@@ -311,8 +341,7 @@ steps:
   id: e2e-stable-gke-autopilot
   allowFailure: true # for now, run the step but don't block on it
   waitFor:
-    - push-images
-    - build-e2e
+    - e2e-feature-gates-gke-autopilot
 
 #
 # SDK conformance tests
@@ -381,7 +410,7 @@ substitutions:
   _RUST_SDK_BUILD_CACHE_KEY: rust-sdk-build
   _REGISTRY: us-docker.pkg.dev/${PROJECT_ID}/ci
 tags: ['ci']
-timeout: 9000s # 2.5h
+timeout: 9000s # 2.5h - if you change this, change e2e-wait-to-become-leader as well
 queueTtl: 259200s # 72h
 images:
   - '${_REGISTRY}/agones-controller'
