@@ -40,7 +40,7 @@ root_path = $(realpath $(project_path)/../..)
 
 # build the allocation endpoint proxy binary
 build:
-	cd $(root_path) && docker build -f $(project_path)/server/Dockerfile --tag=$(server_tag) .
+	cd $(project_path)/server/ && docker build --tag=$(server_tag) .
 
 run:
 	docker run --network=host $(server_tag) $(args)
