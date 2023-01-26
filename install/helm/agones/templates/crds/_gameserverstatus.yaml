@@ -65,6 +65,40 @@ status:
           nullable: true
           items:
             type: string
+{{- if .featureCountsAndLists }}
+    counts:
+      type: array
+      nullable: true
+      maxItems: 1000
+      items:
+        type: object
+        properties:
+          name:
+            type: string
+          count:
+            type: integer
+          capacity:
+            type: integer
+    lists:
+      type: array
+      nullable: true
+      maxItems: 1000
+      items:
+        type: object
+        properties:
+          name:
+            type: string
+          count:
+            type: integer
+          capacity:
+            type: integer
+          values:
+            type: array
+            x-kubernetes-list-type: set
+            maxItems: 1000
+            items:
+              type: string
+{{- end }}
 {{- if .featureSafeToEvict }}
     eviction:
       type: object

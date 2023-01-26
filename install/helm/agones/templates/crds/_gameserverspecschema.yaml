@@ -153,6 +153,42 @@ properties:
             type: integer
             title: The initial player capacity of this Game Server
             minimum: 0
+{{- if .featureCountsAndLists }}
+      counts:
+        type: array
+        title: Array of player, room, session, etc. counters
+        nullable: true
+        maxItems: 1000
+        items:
+          type: object
+          properties:
+            name: # counter name
+              type: string
+            count: # current count
+              type: integer
+            capacity: # max capacity of the counter
+              type: integer
+      lists:
+        type: array
+        title: Array of player, room, session, etc. lists
+        nullable: true
+        maxItems: 1000
+        items:
+          type: object
+          properties:
+            name: # array name (players, sessions, rooms, etc.)
+              type: string
+            count: # number of items in the values array
+              type: integer
+            capacity: # maximum capacity of the array (can be less than or equal to value of maxItems)
+              type: integer
+            values:
+              type: array
+              x-kubernetes-list-type: set # Requires items in the array to be unique
+              maxItems: 1000 # maximum possible size of the value array (cannot be updated)
+              items: # name of the item (player1, session1, room1, etc.)
+                type: string
+{{- end }}
 {{- if .featureSafeToEvict }}
       eviction:
         type: object
