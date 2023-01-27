@@ -53,7 +53,7 @@ You can set `eviction.safe` based on your game server's tolerance for disruption
       * No to either: Set `safe: Never`. If your session length is greater than an hour, see [below](#considerations-for-long-sessions).
 
 {{< alert title="Note" color="info" >}}
-Note: To maintain backward compatibility with Agones prior to the introduction of the `SafeToEvict` feature gate, if your game server previously configured the `cluster-autoscaler.kubernetes.io/safe-to-evict: true` annotation, we assume `eviction.safe: Always` is intended.
+To maintain backward compatibility with Agones prior to the introduction of the `SafeToEvict` feature gate, if your game server previously configured the `cluster-autoscaler.kubernetes.io/safe-to-evict: true` annotation, we assume `eviction.safe: Always` is intended.
 {{</ alert >}}
 
 {{< alert title="Note" color="info" >}}
