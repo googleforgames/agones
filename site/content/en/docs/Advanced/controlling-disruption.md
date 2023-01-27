@@ -14,6 +14,13 @@ By default, Agones assumes your game server should never be disrupted voluntaril
 
 {{< alpha title="`eviction` API" gate="SafeToEvict" >}}
 
+## Benefits of Allowing Voluntary Disruption
+
+It's not always easy to write your game server in a way that allows for disruption, but it can have major benefits:
+
+* Compaction of your cluster using [Cluster Autoscaler](https://github.com/kubernetes/autoscaler/tree/master/cluster-autoscaler) can lead to considerable cost savings for your infrastructure.
+* Allowing automated node upgrades can save you management toil, and lowers the time it takes to patch security vulnerabilites.
+
 ## Considerations
 
 When discussing game server pod disruption, it's important to keep two factors in mind:
@@ -21,45 +28,36 @@ When discussing game server pod disruption, it's important to keep two factors i
 * **Session Length:** What is your game servers session length (the time from when the `GameServer` is allocated to when its shutdown)? In general, we bucket the session lengths into "less than 10 minutes", "10 minutes to an hour", and "greater than an hour". (See [below](#whats-special-about-ten-minutes-and-one-hour) if you are curious about session length considerations.)
 * **Disruption Tolerance:** Is your game server tolerant of disruption in a timely fashion? If your game server can handle the `TERM` signal and has [terminationGracePeriodSeconds](https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/#hook-handler-execution) configured for a period less than 10 minutes, meaning that the game way to control disruption of your game servers that should be applicable to most cloud products with default configurations: [`GameServerSpec.eviction`]({{< ref "/docs/Reference/agones_crd_api_reference.html#agones.dev/v1.GameServerSpec" >}})
 
-### `safe: Never` (default)
+## `eviction` API
 
-By default Agones assumes your game server needs to run indefinitely and tries to prevent `Pod` disruption. This is equivalent to, and can be explicitly set with:
+The `eviction` API is specified as part of the `GameServerSpec`, like:
 
-```
-eviction:
-  safe: Never
-```
-
-Note: If your session length is greater than an hour, Agones may not be able to fully protect your game server from disruption. See [below](#considerations-for-long-sessions).
-
-### `safe: Always`
-
-If your game server is tolerant of disruption in a timely fashion, you should set:
-
-```
-eviction:
-  safe: Always
+```yaml
+apiVersion: "agones.dev/v1"
+kind: GameServer
+metadata:
+  name: "simple-game-server"
+spec:
+  eviction:
+    safe: Always
+  template:
+    [...]
 ```
 
-You further need to configure [terminationGracePeriodSeconds](https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/#hook-handler-execution) as appropriate for your game server.
+You can set `eviction.safe` based on your game server's tolerance for disruption and session length:
 
-Note that to maintain backward compatibility with Agones prior to the introduction of the `SafeToEvict` feature gate, if your game server previously configured the `cluster-autoscaler.kubernetes.io/safe-to-evict: true` annotation, we assume `eviction.safe: Always` is intended.
+* Is the session length less than ten minutes, or is the game server tolerant of disruption in a timely fashion?
+  * Yes to either: Set `safe: Always`, and configure [terminationGracePeriodSeconds](https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/#hook-handler-execution) to the session length.
+  * No to both: Is the session length between 10m-1h, and can the game server handle the `TERM` signal? (It's okay if the server handles `TERM` and runs until the session complete, as long as it's less than an hour.)
+      * Yes to both: Set `safe: OnUpgrade`, and configure [terminationGracePeriodSeconds](https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/#hook-handler-execution) to the session length.
+      * No to either: Set `safe: Never`. If your session length is greater than an hour, see [below](#considerations-for-long-sessions).
 
-### `safe: OnUpgrade`
+{{< alert title="Note" color="info" >}}
+Note: To maintain backward compatibility with Agones prior to the introduction of the `SafeToEvict` feature gate, if your game server previously configured the `cluster-autoscaler.kubernetes.io/safe-to-evict: true` annotation, we assume `eviction.safe: Always` is intended.
+{{</ alert >}}
 
-If your game server has a session length between ten minutes and one hour, you can set:
-
-```
-eviction:
-  safe: OnUpgrade
-```
-
-This will ensure the game server `Pod` can be evicted by node upgrades, but Cluster Autoscaler will not evict it.
-
-If you do not wish your game server to be disrupted by upgrades, you can either set `Never`, or, with a 10m-1h session length, set [terminationGracePeriodSeconds](https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/#hook-handler-execution) to one hour (or your session length), then intercept `SIGTERM` but do nothing with it. Either approach will allow your game server to run to completion.
-
-{{< alert title="GKE Autopilot" color="info" >}}
-GKE Autopilot supports only `Never` and `Always`, not `UpgradeOnly`.
+{{< alert title="Note" color="info" >}}
+GKE Autopilot supports only `Never` and `Always`, not `OnUpgrade`.
 {{< /alert >}}
 
 ## What's special about ten minutes and one hour?
