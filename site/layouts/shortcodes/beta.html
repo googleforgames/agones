@@ -1,5 +1,5 @@
 {{- $gate := .Get "gate" }}
-{{- $title := .Get "title" }}
+{{- $title := .Get "title" | markdownify }}
 <div class="alert alert-warning" role="alert">
     <h4 class="alert-heading">Warning</h4>
     <p>The {{ $title }} feature is currently <strong><a href="{{ ref . "/docs/Guides/feature-stages.md#beta" }}">Beta</a></strong>,

@@ -97,15 +97,16 @@ This affects the Cluster autoscaler, Allocation Scheduling, Pod Scheduling and F
 
 #### Cluster Autoscaler
 
-{{< alert title="SafeToEvict Feature Gate" color="info" >}}
-The [Alpha]({{< ref "/docs/Guides/feature-stages.md#alpha" >}}) `SafeToEvict` feature allows
-[controlling disruption]({{< relref "controlling-disruption.md" >}}) on the `GameServerSpec`. The sample
-configuration below will soon use the `eviction` API instead.
-{{< /alert >}}
-
 When using the “Packed” strategy, Agones will ensure that the Cluster Autoscaler doesn't attempt to evict and move `GameServer` `Pods` onto new Nodes during
 gameplay by adding the annotation [`"cluster-autoscaler.kubernetes.io/safe-to-evict": "false"`](https://github.com/kubernetes/autoscaler/blob/master/cluster-autoscaler/FAQ.md#what-types-of-pods-can-prevent-ca-from-removing-a-node)
 to the backing Pod.
+
+{{< alert title="SafeToEvict Feature Gate" color="info" >}}
+The [Alpha]({{< ref "/docs/Guides/feature-stages.md#alpha" >}}) `SafeToEvict` feature allows
+[controlling disruption]({{< relref "controlling-disruption.md" >}}) in a more holistic way.
+Please consider enabling `SafeToEvict` and using the new `eviction` API - we welcome your
+early feedback!
+{{< /alert >}}
 
 However, if a gameserver can tolerate [being evicted](https://kubernetes.io/docs/concepts/scheduling-eviction/api-eviction/#how-api-initiated-eviction-works)
 (generally in combination with setting an appropriate graceful termination period on the gameserver pod) and you
