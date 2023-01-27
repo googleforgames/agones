@@ -28,6 +28,10 @@ terraform {
       version = "~> 2.3"
     }
   }
+  backend "gcs" {
+   bucket  = "agones-e2e-infra-bucket-tfstate"
+   prefix  = "terraform/state"
+  }
 }
 
 variable "project" {}
