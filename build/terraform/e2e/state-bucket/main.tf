@@ -22,7 +22,7 @@ terraform {
   required_version = ">= 1.0.0"
   required_providers {
     google = {
-      source = "hashicorp/google"
+      source  = "hashicorp/google"
       version = "~> 4.25.0"
     }
   }
@@ -31,12 +31,12 @@ terraform {
 variable "project" {}
 
 resource "google_storage_bucket" "default" {
-  project = var.project
-  name          = "agones-e2e-infra-bucket-tfstate"
-  force_destroy = false
+  project                     = var.project
+  name                        = "agones-e2e-infra-bucket-tfstate"
+  force_destroy               = false
   uniform_bucket_level_access = true
-  location      = "US"
-  storage_class = "STANDARD"
+  location                    = "US"
+  storage_class               = "STANDARD"
   versioning {
     enabled = true
   }
