@@ -18,7 +18,7 @@ we recommend using the [helm installation]({{< relref "helm.md" >}}).
 
 ```bash
 kubectl create namespace agones-system
-kubectl apply -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/install/yaml/install.yaml
+kubectl apply --server-side -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/install/yaml/install.yaml
 ```
 
 To change the [configurable parameters](https://agones.dev/site/docs/installation/install-agones/helm/#configuration) in the `install.yaml` file, you can use helm directly to generate a custom file locally.
