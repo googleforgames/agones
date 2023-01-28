@@ -14,6 +14,7 @@
 
 
 // Run:
+//  terraform init -backend-config="bucket=<YOUR_GCP_ProjectID>-e2e-infra-bucket-tfstate" -backend-config="prefix=terraform/state"
 //  terraform apply -var project="<YOUR_GCP_ProjectID>"
 
 terraform {
@@ -29,8 +30,6 @@ terraform {
     }
   }
   backend "gcs" {
-   bucket  = "agones-e2e-infra-bucket-tfstate"
-   prefix  = "terraform/state"
   }
 }
 

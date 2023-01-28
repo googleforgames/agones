@@ -16,7 +16,7 @@
 // Run:
 //  terraform apply -var project="<YOUR_GCP_ProjectID>"
 
-// # GCS bucket for holding the Terraform state of the e2e Terraform config.
+// # GCS bucket for holding the Terraform state of the prow Terraform config.
 
 terraform {
   required_version = ">= 1.0.0"
@@ -32,7 +32,7 @@ variable "project" {}
 
 resource "google_storage_bucket" "default" {
   project                     = var.project
-  name                        = "${var.project}-e2e-infra-bucket-tfstate"
+  name                        = "${var.project}-prow-infra-bucket-tfstate"
   force_destroy               = false
   uniform_bucket_level_access = true
   location                    = "US"

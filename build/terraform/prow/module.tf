@@ -12,6 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Run:
+//  terraform init -backend-config="bucket=<YOUR_GCP_ProjectID>-prow-infra-bucket-tfstate" -backend-config="prefix=terraform/state"
+//  terraform apply -var project="<YOUR_GCP_ProjectID>"
+
 terraform {
   required_version = ">= 1.0.0"
   required_providers {
@@ -19,6 +23,8 @@ terraform {
       source = "google"
       version = "~> 3.88"
     }
+  }
+  backend "gcs" {
   }
 }
 
