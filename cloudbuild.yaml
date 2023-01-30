@@ -323,7 +323,6 @@ steps:
     - 'us-west1'
     - "${_REGISTRY}"
   id: e2e-feature-gates-gke-autopilot
-  allowFailure: true # for now, run the step but don't block on it
   waitFor:
     - e2e-wait-to-become-leader
 
@@ -339,7 +338,6 @@ steps:
     - 'us-west1'
     - "${_REGISTRY}"
   id: e2e-stable-gke-autopilot
-  allowFailure: true # for now, run the step but don't block on it
   waitFor:
     - e2e-feature-gates-gke-autopilot
 
