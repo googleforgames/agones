@@ -25,9 +25,9 @@ PlayerTracking: false
 ResetMetricsOnDelete: false
 SafeToEvict: false
 PodHostname: false
+SplitControllerAndExtensions: false
 
 # Pre-Alpha features
-SplitControllerAndExtensions: false
 
 # Example feature
 Example: false
