@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC All Rights Reserved.
+// Copyright 2023 Google LLC All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,34 +16,71 @@ import Alpha from './alpha';
 
 type Seconds = number;
 
+type GameServer = {
+	objectMeta: {
+		name: string;
+		namespace: string;
+		uid: string;
+		resourceVersion: string;
+		generation: number;
+		creationTimestamp: number;
+		deletionTimestamp: number;
+		annotationsMap: [string, string][];
+		labelsMap: [string, string][];
+	};
+	spec: {
+		health: {
+			disabled: boolean;
+			periodSeconds: number;
+			failureThreshold: number;
+			initialDelaySeconds: number;
+		};
+	};
+	status: {
+		state:
+		| 'Scheduled'
+		| 'Reserved'
+		| 'RequestReady'
+		| 'Ready'
+		| 'Shutdown'
+		| 'Allocated'
+		| 'Unhealthy';
+		address: string;
+		portsList: {
+			name: string;
+			port: number;
+		}[];
+	};
+};
+
 export declare class AgonesSDK {
-    constructor();
+	constructor();
 
-    alpha: Alpha
+	alpha: Alpha
 
-    get port(): string
+	get port(): string
 
-    connect(): Promise<void>
+	connect(): Promise<void>
 
-    close(): void
+	close(): void
 
-    ready(): Promise<Record<string, any>>
+	ready(): Promise<Record<string, any>>
 
-    allocate(): Promise<Record<string, any>>
+	allocate(): Promise<Record<string, any>>
 
-    shutdown(): Promise<Record<string, any>>
+	shutdown(): Promise<Record<string, any>>
 
-    health(errorCallback: (error: any) => any): void
+	health(errorCallback: (error: any) => any): void
 
-    getGameServer(): Promise<Record<string, any>>
+	getGameServer(): Promise<GameServer>
 
-    watchGameServer(callback: (data: Record<string, any>) => any, errorCallback: (error: any) => any): void
+	watchGameServer(callback: (gameServer: GameServer) => any, errorCallback: (error: any) => any): void
 
-    setLabel(key: string, value: string): Promise<Record<string, any>>
+	setLabel(key: string, value: string): Promise<Record<string, any>>
 
-    setAnnotation(key: string, value: string): Promise<Record<string, any>>
+	setAnnotation(key: string, value: string): Promise<Record<string, any>>
 
-    reserve(duration: Seconds): Promise<Record<string, any>>
+	reserve(duration: Seconds): Promise<Record<string, any>>
 }
 
 export default AgonesSDK
