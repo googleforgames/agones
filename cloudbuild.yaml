@@ -286,7 +286,7 @@ steps:
 
 - name: 'e2e-runner'
   args:
-    - 'CustomFasSyncInterval=false&SDKGracefulTermination=false&StateAllocationFilter=false&PlayerAllocationFilter=true&PlayerTracking=true&ResetMetricsOnDelete=true&SafeToEvict=true&PodHostname=true&Example=true'
+    - 'CustomFasSyncInterval=false&SDKGracefulTermination=false&StateAllocationFilter=false&PlayerAllocationFilter=true&PlayerTracking=true&ResetMetricsOnDelete=true&SafeToEvict=true&PodHostname=true&SplitControllerAndExtensions=true&Example=true'
     - 'generic'
     - 'e2e-test-cluster'
     - 'us-west1-c'
@@ -317,7 +317,7 @@ steps:
 
 - name: 'e2e-runner'
   args:
-    - 'CustomFasSyncInterval=false&SDKGracefulTermination=false&StateAllocationFilter=false&PlayerAllocationFilter=true&PlayerTracking=true&ResetMetricsOnDelete=true&SafeToEvict=true&PodHostname=true&Example=true'
+    - 'CustomFasSyncInterval=false&SDKGracefulTermination=false&StateAllocationFilter=false&PlayerAllocationFilter=true&PlayerTracking=true&ResetMetricsOnDelete=true&SafeToEvict=true&PodHostname=true&SplitControllerAndExtensions=true&Example=true'
     - 'gke-autopilot'
     - 'gke-autopilot-e2e-test-cluster-1-24'
     - 'us-west1'
@@ -327,12 +327,12 @@ steps:
     - e2e-wait-to-become-leader
 
 #
-# Run the e2e tests on GKE Autopilot without FeatureGates, except SafeToEvict, which we need on Autopilot
+# Run the e2e tests on GKE Autopilot without FeatureGates, except SafeToEvict and SplitControllerAndExtensions, which we need on Autopilot
 #
 
 - name: 'e2e-runner'
   args:
-    - 'SafeToEvict=true'
+    - 'SafeToEvict=true&SplitControllerAndExtensions=true'
     - 'gke-autopilot'
     - 'gke-autopilot-e2e-test-cluster-1-24'
     - 'us-west1'
