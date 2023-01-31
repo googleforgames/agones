@@ -25,8 +25,8 @@ It's not always easy to write your game server in a way that allows for disrupti
 
 When discussing game server pod disruption, it's important to keep two factors in mind:
 
-* **Session Length:** What is your game servers session length (the time from when the `GameServer` is allocated to when its shutdown)? In general, we bucket the session lengths into "less than 10 minutes", "10 minutes to an hour", and "greater than an hour". (See [below](#whats-special-about-ten-minutes-and-one-hour) if you are curious about session length considerations.)
-* **Disruption Tolerance:** Is your game server tolerant of disruption in a timely fashion? If your game server can handle the `TERM` signal and has [terminationGracePeriodSeconds](https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/#hook-handler-execution) configured for a period less than 10 minutes, meaning that the game way to control disruption of your game servers that should be applicable to most cloud products with default configurations: [`GameServerSpec.eviction`]({{< ref "/docs/Reference/agones_crd_api_reference.html#agones.dev/v1.GameServerSpec" >}})
+* **`TERM` signal:** Is your game server tolerant of graceful termination? If you wish to support voluntary disruption, your game server must handle the `TERM` signal (even if it runs to completion after receiving `TERM`).
+* **Termination Grace Period:** After receiving `TERM`, how long does your game server need to run? If you run to completion after receiving `TERM`, this is equivalent to the session length - if not, you can think of this as the cleanup time. In general, we bucket the grace period into "less than 10 minutes", "10 minutes to an hour", and "greater than an hour". (See [below](#whats-special-about-ten-minutes-and-one-hour) if you are curious about grace period considerations.)
 
 ## `eviction` API
 
@@ -44,13 +44,17 @@ spec:
     [...]
 ```
 
-You can set `eviction.safe` based on your game server's tolerance for disruption and session length:
+You can set `eviction.safe` based on your game server's tolerance for disruption and session length, based on the following diagram:
 
-* Is the session length less than ten minutes, or is the game server tolerant of disruption in a timely fashion?
-  * Yes to either: Set `safe: Always`, and configure [terminationGracePeriodSeconds](https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/#hook-handler-execution) to the session length.
-  * No to both: Is the session length between 10m-1h, and can the game server handle the `TERM` signal? (It's okay if the server handles `TERM` and runs until the session complete, as long as it's less than an hour.)
-      * Yes to both: Set `safe: OnUpgrade`, and configure [terminationGracePeriodSeconds](https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/#hook-handler-execution) to the session length.
-      * No to either: Set `safe: Never`. If your session length is greater than an hour, see [below](#considerations-for-long-sessions).
+![Eviction Decision Diagram](../../../diagrams/eviction-decision.dot.png)
+
+In words:
+
+* Does the game server support `TERM` and terminate within ten minutes?
+  * Yes to both: Set `safe: Always`, and set [terminationGracePeriodSeconds](https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/#hook-handler-execution) to the session length or cleanup time.
+  * No to either: Does the game server support `TERM` and terminate within an hour?
+      * Yes to both: Set `safe: OnUpgrade`, and configure [terminationGracePeriodSeconds](https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/#hook-handler-execution) to the session length or cleanup time.
+      * No to either: Set `safe: Never`. If your game server does not terminate within an hour, see [below](#considerations-for-long-sessions).
 
 {{< alert title="Note" color="info" >}}
 To maintain backward compatibility with Agones prior to the introduction of the `SafeToEvict` feature gate, if your game server previously configured the `cluster-autoscaler.kubernetes.io/safe-to-evict: true` annotation, we assume `eviction.safe: Always` is intended.
