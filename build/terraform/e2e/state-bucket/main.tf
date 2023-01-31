@@ -16,6 +16,8 @@
 // Run:
 //  terraform apply -var project="<YOUR_GCP_ProjectID>"
 
+// # GCS bucket for holding the Terraform state of the e2e Terraform config.
+
 terraform {
   required_version = ">= 1.0.0"
   required_providers {
@@ -23,24 +25,19 @@ terraform {
       source  = "hashicorp/google"
       version = "~> 4.25.0"
     }
-    helm = {
-      source  = "hashicorp/helm"
-      version = "~> 2.3"
-    }
   }
 }
 
 variable "project" {}
-variable "kubernetesVersion" {}
 
-module "gke_cluster" {
-  source = "../../../../install/terraform/modules/gke-autopilot"
-
-  cluster = {
-    "name"     = format("gke-autopilot-e2e-test-cluster-%s", replace(var.kubernetesVersion, ".", "-"))
-    "project"  = var.project
-    "location" = "us-west1"
+resource "google_storage_bucket" "default" {
+  project                     = var.project
+  name                        = "${var.project}-e2e-infra-bucket-tfstate"
+  force_destroy               = false
+  uniform_bucket_level_access = true
+  location                    = "US"
+  storage_class               = "STANDARD"
+  versioning {
+    enabled = true
   }
-
-  udpFirewall = false // firewall is created at the project module level
 }

@@ -14,6 +14,7 @@
 
 
 // Run:
+//  terraform init -backend-config="bucket=<YOUR_GCP_ProjectID>-e2e-infra-bucket-tfstate" -backend-config="prefix=terraform/state"
 //  terraform apply -var project="<YOUR_GCP_ProjectID>"
 
 terraform {
@@ -27,6 +28,8 @@ terraform {
       source = "hashicorp/helm"
       version = "~> 2.3"
     }
+  }
+  backend "gcs" {
   }
 }
 
