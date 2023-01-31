@@ -58,7 +58,7 @@ use std::time::Duration;
 async fn main() {
     let mut sdk = agones::Sdk::new(None /* default port */, None /* keep_alive */)
         .await
-        .expect("failedt to connect to SDK server");
+        .expect("failed to connect to SDK server");
 }
 ```
 
