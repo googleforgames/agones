@@ -64,19 +64,6 @@ clean-gcloud-e2e-test-cluster:
 	$(MAKE) terraform-init BUCKET=$(GCP_PROJECT)-e2e-infra-bucket-tfstate PREFIX=terraform/state DIRECTORY=e2e
 	$(DOCKER_RUN) bash -c 'cd $(mount_path)/build/terraform/e2e && terraform destroy -var project=$(GCP_PROJECT) -auto-approve'
 
-# Creates a gcloud cluster for prow
-gcloud-prow-build-cluster: GCP_PROJECT ?= $(shell $(current_project))
-gcloud-prow-build-cluster: $(ensure-build-image)
-gcloud-prow-build-cluster:
-	$(MAKE) terraform-init BUCKET=$(GCP_PROJECT)-prow-infra-bucket-tfstate PREFIX=terraform/state DIRECTORY=prow
-	docker run --rm -it $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) bash -c 'cd $(mount_path)/build/terraform/prow && \
-      	terraform apply -auto-approve -var project="$(GCP_PROJECT)"'
-
-# Deletes the gcloud prow build cluster
-clean-gcloud-prow-build-cluster: $(ensure-build-image)
-	$(MAKE) terraform-init BUCKET=$(GCP_PROJECT)-prow-infra-bucket-tfstate PREFIX=terraform/state DIRECTORY=prow
-	$(DOCKER_RUN) bash -c 'cd $(mount_path)/build/terraform/prow && terraform destroy -var project=$(GCP_PROJECT) -auto-approve'
-
 # Pulls down authentication information for kubectl against a cluster, name can be specified through GCP_CLUSTER_NAME
 # (defaults to 'test-cluster')
 gcloud-auth-cluster: $(ensure-build-image)

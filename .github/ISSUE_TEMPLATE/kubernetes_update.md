@@ -13,8 +13,6 @@ List of items to do for upgrading to {version}:
     - [ ] GKE
     - [ ] Azure
     - [ ] EKS
-- [ ] Update prow cluster (even though we aren't using it yet, we should keep it in sync)
-    - [ ] Recreate cluster with new scripts: `cd build/terraform/prow; terraform apply -var project=agones-images`
 - [ ] Update e2e cluster
     - [ ] Recreate cluster with new scripts: `cd build/terraform/e2e; terraform apply -var project=agones-images`
 - [ ] Update kubectl in dev tooling
