@@ -74,8 +74,8 @@ Follow the [Cloud Monitoring Installation steps](#cloud-monitoring-installation)
 
 {{% alpha title="Reset Metric Export on Fleet / Autoscaler deletion" gate="ResetMetricsOnDelete" %}}
 
-When a Fleet or FleetAutoscaler is deleted from the system, Agones will automatically clear metrics that utilise 
-their name as a label from the exported metrics, so the metrics exported do not continuously grow in size over the 
+When a Fleet or FleetAutoscaler is deleted from the system, Agones will automatically clear metrics that utilise
+their name as a label from the exported metrics, so the metrics exported do not continuously grow in size over the
 lifecycle of the Agones installation.
 
 
@@ -131,7 +131,7 @@ Let's install Prometheus using the [Prometheus Community Kubernetes Helm Charts]
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 helm repo update
 
-helm upgrade --install --wait prom prometheus-community/prometheus --version 11.16.2 --namespace metrics \
+helm upgrade --install --wait prom prometheus-community/prometheus --namespace metrics --create-namespace \
     --set server.global.scrape_interval=30s \
     --set server.persistentVolume.enabled=true \
     --set server.persistentVolume.size=64Gi \
@@ -193,7 +193,7 @@ their repository. (Replace `<your-admin-password>` with the admin password of yo
 helm repo add grafana https://grafana.github.io/helm-charts
 helm repo update
 
-helm upgrade --install --wait grafana grafana/grafana --version=5.7.10 --namespace metrics \
+helm upgrade --install --wait grafana grafana/grafana --namespace metrics \
   --set adminPassword=<your-admin-password> -f ./build/grafana.yaml
 ```
 

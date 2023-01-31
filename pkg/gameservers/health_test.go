@@ -68,17 +68,35 @@ func TestHealthUnschedulableWithNoFreePorts(t *testing.T) {
 	gs := agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test"}, Spec: newSingleContainerSpec()}
 	gs.ApplyDefaults()
 
-	pod, err := gs.Pod()
-	require.NoError(t, err)
+	for name, tc := range map[string]struct {
+		message           string
+		waitOnFreePorts   bool
+		wantUnschedulable bool
+	}{
+		"unschedulable, terminal": {
+			message:           "0/4 nodes are available: 4 node(s) didn't have free ports for the requestedpod ports.",
+			wantUnschedulable: true,
+		},
+		"unschedulable, will wait on free ports": {
+			message:         "0/4 nodes are available: 4 node(s) didn't have free ports for the requestedpod ports.",
+			waitOnFreePorts: true,
+		},
+		"some other condition": {
+			message: "twas brillig and the slithy toves",
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			pod, err := gs.Pod()
+			require.NoError(t, err)
 
-	pod.Status.Conditions = []corev1.PodCondition{
-		{Type: corev1.PodScheduled, Reason: corev1.PodReasonUnschedulable,
-			Message: "0/4 nodes are available: 4 node(s) didn't have free ports for the requestedpod ports."},
+			pod.Status.Conditions = []corev1.PodCondition{
+				{Type: corev1.PodScheduled, Reason: corev1.PodReasonUnschedulable,
+					Message: tc.message},
+			}
+			hc.waitOnFreePorts = tc.waitOnFreePorts
+			assert.Equal(t, tc.wantUnschedulable, hc.unschedulableWithNoFreePorts(pod))
+		})
 	}
-	assert.True(t, hc.unschedulableWithNoFreePorts(pod))
-
-	pod.Status.Conditions[0].Message = "not a real reason"
-	assert.False(t, hc.unschedulableWithNoFreePorts(pod))
 }
 
 func TestHealthControllerSkipUnhealthyGameContainer(t *testing.T) {

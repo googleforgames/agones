@@ -45,7 +45,7 @@ agones:
   createPriorityClass: true
   priorityClassName: agones-system
   cloudProduct: "auto"
-  controller:
+  controller: &controllerValues
     resources: {}
       # requests:
       #   cpu: 1
@@ -94,6 +94,11 @@ agones:
       failureThreshold: 3
       timeoutSeconds: 1
     allocationBatchWaitTime: 500ms
+  extensions:
+    <<: *controllerValues
+    pdb:
+        minAvailable: 1
+    replicas: 2
   ping:
     install: true
     pdb:
@@ -212,13 +217,14 @@ agones:
     allocationBatchWaitTime: 500ms
   image:
     registry: us-docker.pkg.dev/agones-images/release
-    tag: 1.29.0-rc
+    tag: 1.30.0-dev
     controller:
       name: agones-controller
       pullPolicy: IfNotPresent
     # extensions settings ignored unless `SplitControllerAndExtensions` feature gate is enabled
     extensions:
       name: agones-extensions
+      pullPolicy: IfNotPresent
     sdk:
       name: agones-sdk
       cpuRequest: 30m

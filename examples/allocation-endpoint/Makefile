@@ -28,7 +28,7 @@ REPOSITORY = us-docker.pkg.dev/agones-images/examples
 # Directory that this Makefile is in.
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_path := $(dir $(mkfile_path))
-server_tag = $(REPOSITORY)/allocation-endpoint-proxy:0.2
+server_tag = $(REPOSITORY)/allocation-endpoint-proxy:0.3
 root_path = $(realpath $(project_path)/../..)
 
 #   _____                    _
@@ -40,7 +40,7 @@ root_path = $(realpath $(project_path)/../..)
 
 # build the allocation endpoint proxy binary
 build:
-	cd $(root_path) && docker build -f $(project_path)/server/Dockerfile --tag=$(server_tag) .
+	cd $(project_path)/server/ && docker build --tag=$(server_tag) .
 
 run:
 	docker run --network=host $(server_tag) $(args)

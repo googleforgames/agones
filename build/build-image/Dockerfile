@@ -57,7 +57,7 @@ RUN mkdir -p /go/src/k8s.io && cd /go/src/k8s.io && \
     git clone -b kubernetes-${KUBERNETES_VER} --depth=3 https://github.com/kubernetes/code-generator.git
 
 # install Helm package manager
-ENV HELM_VER 3.5.0
+ENV HELM_VER 3.10.3
 ENV HELM_URL https://get.helm.sh/helm-v${HELM_VER}-linux-amd64.tar.gz
 RUN curl -L  ${HELM_URL} > /tmp/helm.tar.gz \
     && tar -zxvf /tmp/helm.tar.gz -C /tmp \
@@ -68,6 +68,9 @@ RUN echo "source <(helm completion bash)" >> /root/.bashrc
 
 # install golang-ci linter
 RUN go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.49.0
+
+# install gotestsum test runner
+RUN go install gotest.tools/gotestsum@latest
 
 #
 #  \ \      / /__| |__  ___(_) |_ ___

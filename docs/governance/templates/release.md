@@ -10,10 +10,6 @@ Check the <a href="https://github.com/googleforgames/agones/tree/release-{versio
 
 { insert enhancements from the changelog and/or security and breaking changes }
 
-{ if release candidate }
-Documentation: https://development.agones.dev/site/
-{ end }
-
 See <a href="https://github.com/googleforgames/agones/blob/release-{version}/CHANGELOG.md" data-proofer-ignore>CHANGELOG</a> for more details on changes.
 
 Images available with this release:

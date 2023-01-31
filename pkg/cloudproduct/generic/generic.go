@@ -37,3 +37,5 @@ func (*generic) NewPortAllocator(minPort, maxPort int32,
 	agonesInformerFactory externalversions.SharedInformerFactory) portallocator.Interface {
 	return portallocator.New(minPort, maxPort, kubeInformerFactory, agonesInformerFactory)
 }
+
+func (*generic) WaitOnFreePorts() bool { return false }

@@ -110,8 +110,10 @@ func (*gkeAutopilot) NewPortAllocator(minPort, maxPort int32,
 	return &autopilotPortAllocator{minPort: minPort, maxPort: maxPort}
 }
 
-func (*gkeAutopilot) ValidateGameServerSpec(gss *agonesv1.GameServerSpec) []metav1.StatusCause {
-	var causes []metav1.StatusCause
+func (*gkeAutopilot) WaitOnFreePorts() bool { return true }
+
+func (g *gkeAutopilot) ValidateGameServerSpec(gss *agonesv1.GameServerSpec) []metav1.StatusCause {
+	causes := g.ValidateScheduling(gss.Scheduling)
 	for _, p := range gss.Ports {
 		if p.PortPolicy != agonesv1.Dynamic {
 			causes = append(causes, metav1.StatusCause{
@@ -120,13 +122,6 @@ func (*gkeAutopilot) ValidateGameServerSpec(gss *agonesv1.GameServerSpec) []meta
 				Message: errPortPolicyMustBeDynamic,
 			})
 		}
-	}
-	if gss.Scheduling != apis.Packed {
-		causes = append(causes, metav1.StatusCause{
-			Type:    metav1.CauseTypeFieldValueInvalid,
-			Field:   "scheduling",
-			Message: errSchedulingMustBePacked,
-		})
 	}
 	// See SetEviction comment below for why we block EvictionSafeOnUpgrade.
 	if gss.Eviction.Safe == agonesv1.EvictionSafeOnUpgrade {
@@ -137,6 +132,17 @@ func (*gkeAutopilot) ValidateGameServerSpec(gss *agonesv1.GameServerSpec) []meta
 		})
 	}
 	return causes
+}
+
+func (*gkeAutopilot) ValidateScheduling(ss apis.SchedulingStrategy) []metav1.StatusCause {
+	if ss != apis.Packed {
+		return []metav1.StatusCause{{
+			Type:    metav1.CauseTypeFieldValueInvalid,
+			Field:   "scheduling",
+			Message: errSchedulingMustBePacked,
+		}}
+	}
+	return nil
 }
 
 func (*gkeAutopilot) MutateGameServerPodSpec(gss *agonesv1.GameServerSpec, podSpec *corev1.PodSpec) error {

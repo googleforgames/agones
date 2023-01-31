@@ -33,7 +33,6 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: helm-hook-cleanup
-  namespace: {{ .Release.Namespace }}
   labels:
     app: {{ template "agones.name" . }}
     chart: {{ template "agones.chart" . }}

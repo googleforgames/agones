@@ -15,6 +15,7 @@
 package v1
 
 import (
+	"agones.dev/agones/pkg/apis"
 	"agones.dev/agones/pkg/util/runtime"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
@@ -27,6 +28,9 @@ import (
 type APIHooks interface {
 	// ValidateGameServerSpec is called by GameServer.Validate to allow for product specific validation.
 	ValidateGameServerSpec(*GameServerSpec) []metav1.StatusCause
+
+	// ValidateScheduling is called by Fleet and GameServerSet Validate() to allow for product specific validation of scheduling strategy.
+	ValidateScheduling(apis.SchedulingStrategy) []metav1.StatusCause
 
 	// MutateGameServerPodSpec is called by createGameServerPod to allow for product specific pod mutation.
 	MutateGameServerPodSpec(*GameServerSpec, *corev1.PodSpec) error
@@ -48,8 +52,9 @@ func RegisterAPIHooks(hooks APIHooks) {
 
 type generic struct{}
 
-func (generic) ValidateGameServerSpec(*GameServerSpec) []metav1.StatusCause    { return nil }
-func (generic) MutateGameServerPodSpec(*GameServerSpec, *corev1.PodSpec) error { return nil }
+func (generic) ValidateGameServerSpec(*GameServerSpec) []metav1.StatusCause     { return nil }
+func (generic) ValidateScheduling(apis.SchedulingStrategy) []metav1.StatusCause { return nil }
+func (generic) MutateGameServerPodSpec(*GameServerSpec, *corev1.PodSpec) error  { return nil }
 
 // SetEviction sets disruptions controls based on GameServer.Status.Eviction.
 func (generic) SetEviction(safe EvictionSafe, pod *corev1.Pod) error {

@@ -95,8 +95,6 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.metrics.stackdriverProjectID`                    | This overrides the default gcp project id for use with stackdriver                                                                                                                                                      | \`\`                               |
 | `agones.metrics.stackdriverLabels`                       | A set of default labels to add to all stackdriver metrics generated in form of key value pair (`key=value,key2=value2`). By default metadata are automatically added using Kubernetes API and GCP metadata enpoint.     | \`\`                               |
 | `agones.metrics.serviceMonitor.interval`                 | Default scraping interval for ServiceMonitor                                                                                                                                                                            | `30s`                              |
-| `agones.serviceaccount.controller`                       | Service account name for the controller. **Note**: Will be replaced with `agones.serviceaccount.controller.name` in Agones 1.16                                                                                         | `agones-controller`                |
-| `agones.serviceaccount.sdk`                              | Service account name for the sdk. **Note**: Will be replaced with `agones.serviceaccount.sdk.name` in Agones 1.16                                                                                                       | `agones-sdk`                       | 
 | `agones.serviceaccount.sdk.annotations`                  | A map of namespaces to maps of [Annotations][annotations] added to the Agones SDK service account for the specified namespaces                                                                                          | `{}`                               |
 | `agones.image.registry`                                  | Global image registry for all images                                                                                                                                                                                   | `gcr.io/agones-images`             |
 | `agones.image.tag`                                       | Global image tag for all images                                                                                                                                                                                         | `{{< release-version >}}`          |
@@ -220,14 +218,14 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `gameservers.maxPort`                                    | Maximum port to use for dynamic port allocation                                                                                                                                                                         | `8000`                             |
 | `gameservers.podPreserveUnknownFields`                   | Disable [field pruning][pruning] and schema validation on the Pod template for a [GameServer][gameserver] definition                                                                                                    | `false`                            |
 | `helm.installTests`                                      | Add an ability to run `helm test agones` to verify the installation                                                                                                                                                     | `false`                            |
+| `agones.image.registry`                                  | Global image registry for all the Agones system images                                                                                                                                                                  | `us-docker.pkg.dev/agones-images/release`
 
-{{% feature publishVersion="1.29.0" %}}
+{{% feature publishVersion="1.30.0" %}}
 **New Configuration Features:**
 
 | Parameter                             | Description                                                                                                                                                                                                                           | Default |
 |---------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------|
-| `agones.image.registry`                                  | Global image registry for all the Agones system images                                                                                                                                                                                   | `us-docker.pkg.dev/agones-images/release`
-{{% /feature %}}
+|                                                          |                                                                                                                                                                                                                                                            |   {{% /feature %}}
 
 [toleration]: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
 [nodeSelector]: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#nodeselector
@@ -272,7 +270,7 @@ In order to use `helm test` command described in this section you need to set `h
 
 Check the Agones installation by running the following command:
 ```bash
-helm test my-release --cleanup
+helm test my-release -n agones-system
 ```
 ```
 RUNNING: agones-test

@@ -327,7 +327,7 @@ func TestGameServerRestartBeforeReadyCrash(t *testing.T) {
 	defer gsClient.Delete(ctx, newGs.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint: errcheck
 
 	logger.Info("Waiting for us to have an address to send things to")
-	newGs, err = framework.WaitForGameServerState(t, newGs, agonesv1.GameServerStateScheduled, time.Minute)
+	newGs, err = framework.WaitForGameServerState(t, newGs, agonesv1.GameServerStateScheduled, framework.WaitForState)
 	if err != nil {
 		assert.FailNow(t, "Failed schedule a pod", err.Error())
 	}
@@ -779,6 +779,7 @@ func TestGameServerShutdown(t *testing.T) {
 // TestGameServerEvicted test that if Gameserver would be evicted than it becomes Unhealthy
 // Ephemeral Storage limit set to 0Mi
 func TestGameServerEvicted(t *testing.T) {
+	framework.SkipOnCloudProduct(t, "gke-autopilot", "Autopilot adjusts ephmeral storage to a minimum of 10Mi, see https://github.com/googleforgames/agones/issues/2890")
 	t.Parallel()
 	ctx := context.Background()
 	gs := framework.DefaultGameServer(framework.Namespace)

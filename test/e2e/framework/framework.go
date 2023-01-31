@@ -285,7 +285,7 @@ func (f *Framework) WaitForGameServerState(t *testing.T, gs *agonesv1.GameServer
 	})
 
 	return checkGs, errors.Wrapf(err, "waiting for GameServer %v/%v to be %v",
-		state, gs.Namespace, gs.Name)
+		gs.Namespace, gs.Name, state)
 }
 
 // CycleAllocations repeatedly Allocates a GameServer in the Fleet (if one is available), once every specified period.

@@ -42,6 +42,9 @@ RUN mkdir -p /tmp/build && \
     # tiny smoke test to ensure the binary we downloaded runs
     consul version
 
+# install gotestsum test runner
+RUN go install gotest.tools/gotestsum@latest
+
 # make sure we keep the path to go
 RUN echo "export PATH=/usr/local/go/bin:/go/bin/:\$PATH" >> /root/.bashrc
 # scripts

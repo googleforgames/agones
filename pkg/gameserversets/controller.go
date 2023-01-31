@@ -66,6 +66,11 @@ const (
 	maxPodPendingCount = 5000
 )
 
+// Extensions struct contains what is needed to bind webhook handlers
+type Extensions struct {
+	baseLogger *logrus.Entry
+}
+
 // Controller is a the GameServerSet controller
 type Controller struct {
 	baseLogger          *logrus.Entry
@@ -84,7 +89,6 @@ type Controller struct {
 
 // NewController returns a new gameserverset crd controller
 func NewController(
-	wh *webhooks.WebHook,
 	health healthcheck.Handler,
 	counter *gameservers.PerNodeCounter,
 	kubeClient kubernetes.Interface,
@@ -118,9 +122,6 @@ func NewController(
 	eventBroadcaster.StartRecordingToSink(&typedcorev1.EventSinkImpl{Interface: kubeClient.CoreV1().Events("")})
 	c.recorder = eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: "gameserverset-controller"})
 
-	wh.AddHandler("/validate", agonesv1.Kind("GameServerSet"), admissionv1.Create, c.creationValidationHandler)
-	wh.AddHandler("/validate", agonesv1.Kind("GameServerSet"), admissionv1.Update, c.updateValidationHandler)
-
 	gsSetInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: c.workerqueue.Enqueue,
 		UpdateFunc: func(oldObj, newObj interface{}) {
@@ -150,6 +151,19 @@ func NewController(
 	return c
 }
 
+// NewExtensions binds the handlers to the webhook outside the initialization of the controller
+// initializes a new logger for extensions.
+func NewExtensions(wh *webhooks.WebHook) *Extensions {
+	ext := &Extensions{}
+
+	ext.baseLogger = runtime.NewLoggerWithType(ext)
+
+	wh.AddHandler("/validate", agonesv1.Kind("GameServerSet"), admissionv1.Create, ext.creationValidationHandler)
+	wh.AddHandler("/validate", agonesv1.Kind("GameServerSet"), admissionv1.Update, ext.updateValidationHandler)
+
+	return ext
+}
+
 // Run the GameServerSet controller. Will block until stop is closed.
 // Runs threadiness number workers to process the rate limited queue
 func (c *Controller) Run(ctx context.Context, workers int) error {
@@ -169,8 +183,8 @@ func (c *Controller) Run(ctx context.Context, workers int) error {
 
 // updateValidationHandler that validates a GameServerSet when is updated
 // Should only be called on gameserverset update operations.
-func (c *Controller) updateValidationHandler(review admissionv1.AdmissionReview) (admissionv1.AdmissionReview, error) {
-	c.baseLogger.WithField("review", review).Debug("updateValidationHandler")
+func (ext *Extensions) updateValidationHandler(review admissionv1.AdmissionReview) (admissionv1.AdmissionReview, error) {
+	ext.baseLogger.WithField("review", review).Debug("updateValidationHandler")
 
 	newGss := &agonesv1.GameServerSet{}
 	oldGss := &agonesv1.GameServerSet{}
@@ -201,7 +215,7 @@ func (c *Controller) updateValidationHandler(review admissionv1.AdmissionReview)
 			Details: &details,
 		}
 
-		c.loggerForGameServerSet(newGss).WithField("review", review).Debug("Invalid GameServerSet update")
+		loggerForGameServerSet(newGss, ext.baseLogger).WithField("review", review).Debug("Invalid GameServerSet update")
 		return review, nil
 	}
 
@@ -210,8 +224,8 @@ func (c *Controller) updateValidationHandler(review admissionv1.AdmissionReview)
 
 // creationValidationHandler that validates a GameServerSet when is created
 // Should only be called on gameserverset create operations.
-func (c *Controller) creationValidationHandler(review admissionv1.AdmissionReview) (admissionv1.AdmissionReview, error) {
-	c.baseLogger.WithField("review", review).Debug("creationValidationHandler")
+func (ext *Extensions) creationValidationHandler(review admissionv1.AdmissionReview) (admissionv1.AdmissionReview, error) {
+	ext.baseLogger.WithField("review", review).Debug("creationValidationHandler")
 
 	newGss := &agonesv1.GameServerSet{}
 
@@ -236,10 +250,9 @@ func (c *Controller) creationValidationHandler(review admissionv1.AdmissionRevie
 			Details: &details,
 		}
 
-		c.loggerForGameServerSet(newGss).WithField("review", review).Debug("Invalid GameServerSet update")
+		loggerForGameServerSet(newGss, ext.baseLogger).WithField("review", review).Debug("Invalid GameServerSet update")
 		return review, nil
 	}
-
 	return review, nil
 }
 
@@ -266,16 +279,16 @@ func (c *Controller) gameServerEventHandler(obj interface{}) {
 	c.workerqueue.EnqueueImmediately(gsSet)
 }
 
-func (c *Controller) loggerForGameServerSetKey(key string) *logrus.Entry {
-	return logfields.AugmentLogEntry(c.baseLogger, logfields.GameServerSetKey, key)
+func loggerForGameServerSetKey(key string, logger *logrus.Entry) *logrus.Entry {
+	return logfields.AugmentLogEntry(logger, logfields.GameServerSetKey, key)
 }
 
-func (c *Controller) loggerForGameServerSet(gsSet *agonesv1.GameServerSet) *logrus.Entry {
+func loggerForGameServerSet(gsSet *agonesv1.GameServerSet, logger *logrus.Entry) *logrus.Entry {
 	gsSetName := "NilGameServerSet"
 	if gsSet != nil {
 		gsSetName = gsSet.Namespace + "/" + gsSet.Name
 	}
-	return c.loggerForGameServerSetKey(gsSetName).WithField("gss", gsSet)
+	return loggerForGameServerSetKey(gsSetName, logger).WithField("gss", gsSet)
 }
 
 // syncGameServer synchronises the GameServers for the Set,
@@ -285,14 +298,14 @@ func (c *Controller) syncGameServerSet(ctx context.Context, key string) error {
 	namespace, name, err := cache.SplitMetaNamespaceKey(key)
 	if err != nil {
 		// don't return an error, as we don't want this retried
-		runtime.HandleError(c.loggerForGameServerSetKey(key), errors.Wrapf(err, "invalid resource key"))
+		runtime.HandleError(loggerForGameServerSetKey(key, c.baseLogger), errors.Wrapf(err, "invalid resource key"))
 		return nil
 	}
 
 	gsSet, err := c.gameServerSetLister.GameServerSets(namespace).Get(name)
 	if err != nil {
 		if k8serrors.IsNotFound(err) {
-			c.loggerForGameServerSetKey(key).Debug("GameServerSet is no longer available for syncing")
+			loggerForGameServerSetKey(key, c.baseLogger).Debug("GameServerSet is no longer available for syncing")
 			return nil
 		}
 		return errors.Wrapf(err, "error retrieving GameServerSet %s from namespace %s", name, namespace)
@@ -328,7 +341,7 @@ func (c *Controller) syncGameServerSet(ctx context.Context, key string) error {
 
 		fields[key] = v.(int) + 1
 	}
-	c.loggerForGameServerSet(gsSet).
+	loggerForGameServerSet(gsSet, c.baseLogger).
 		WithField("targetReplicaCount", gsSet.Spec.Replicas).
 		WithField("numServersToAdd", numServersToAdd).
 		WithField("numServersToDelete", len(toDelete)).
@@ -345,13 +358,13 @@ func (c *Controller) syncGameServerSet(ctx context.Context, key string) error {
 
 	if numServersToAdd > 0 {
 		if err := c.addMoreGameServers(ctx, gsSet, numServersToAdd); err != nil {
-			c.loggerForGameServerSet(gsSet).WithError(err).Warning("error adding game servers")
+			loggerForGameServerSet(gsSet, c.baseLogger).WithError(err).Warning("error adding game servers")
 		}
 	}
 
 	if len(toDelete) > 0 {
 		if err := c.deleteGameServers(ctx, gsSet, toDelete); err != nil {
-			c.loggerForGameServerSet(gsSet).WithError(err).Warning("error deleting game servers")
+			loggerForGameServerSet(gsSet, c.baseLogger).WithError(err).Warning("error deleting game servers")
 		}
 	}
 
@@ -481,7 +494,7 @@ func computeReconciliationAction(strategy apis.SchedulingStrategy, list []*agone
 
 // addMoreGameServers adds diff more GameServers to the set
 func (c *Controller) addMoreGameServers(ctx context.Context, gsSet *agonesv1.GameServerSet, count int) error {
-	c.loggerForGameServerSet(gsSet).WithField("count", count).Debug("Adding more gameservers")
+	loggerForGameServerSet(gsSet, c.baseLogger).WithField("count", count).Debug("Adding more gameservers")
 
 	return parallelize(newGameServersChannel(count, gsSet), maxCreationParalellism, func(gs *agonesv1.GameServer) error {
 		gs, err := c.gameServerGetter.GameServers(gs.Namespace).Create(ctx, gs, metav1.CreateOptions{})
@@ -496,7 +509,7 @@ func (c *Controller) addMoreGameServers(ctx context.Context, gsSet *agonesv1.Gam
 }
 
 func (c *Controller) deleteGameServers(ctx context.Context, gsSet *agonesv1.GameServerSet, toDelete []*agonesv1.GameServer) error {
-	c.loggerForGameServerSet(gsSet).WithField("diff", len(toDelete)).Debug("Deleting gameservers")
+	loggerForGameServerSet(gsSet, c.baseLogger).WithField("diff", len(toDelete)).Debug("Deleting gameservers")
 
 	return parallelize(gameServerListToChannel(toDelete), maxDeletionParallelism, func(gs *agonesv1.GameServer) error {
 		// We should not delete the gameservers directly buy set their state to shutdown and let the gameserver controller to delete
