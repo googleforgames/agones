@@ -84,8 +84,11 @@ do-release: $(ensure-build-image)
 
 	$(MAKE) -j 4 build VERSION=$(RELEASE_VERSION) REGISTRY=$(release_registry) FULL_BUILD=1
 	cp $(agones_path)/cmd/sdk-server/bin/agonessdk-server-$(RELEASE_VERSION).zip $(agones_path)/release
+	gsutil cp $(agones_path)/cmd/sdk-server/bin/agonessdk-server-$(RELEASE_VERSION).zip gs://${PROJECT_ID}-agones-releases
 	cp $(agones_path)/sdks/cpp/.archives/agonessdk-$(RELEASE_VERSION)-linux-arch_64.tar.gz $(agones_path)/release
+	gsutil cp $(agones_path)/sdks/cpp/.archives/agonessdk-$(RELEASE_VERSION)-linux-arch_64.tar.gz gs://${PROJECT_ID}-agones-releases
 	cd $(agones_path) &&  zip -r ./release/agones-install-$(RELEASE_VERSION).zip ./README.md ./install ./LICENSE
+	gsutil cp $(agones_path)/release/agones-install-$(RELEASE_VERSION).zip gs://${PROJECT_ID}-agones-releases
 
 	$(MAKE) gcloud-auth-docker
 	$(MAKE) -j 4 push REGISTRY=$(release_registry) VERSION=$(RELEASE_VERSION)
