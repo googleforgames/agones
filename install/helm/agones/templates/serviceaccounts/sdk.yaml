@@ -23,6 +23,10 @@ metadata:
     chart: {{ template "agones.chart" $ }}
     release: {{ $.Release.Name }}
     heritage: {{ $.Release.Service }}
+{{- if hasKey $.Values.agones.serviceaccount.sdk.annotations . }}
+  annotations:
+{{- get $.Values.agones.serviceaccount.sdk.annotations . | toYaml | nindent 4 }}
+{{- end }}
 ---
 {{- end }}
 {{- if .Values.agones.rbacEnabled }}
@@ -30,7 +34,6 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: {{ .Values.agones.serviceaccount.sdk.name }}
-  namespace: {{ .Release.Namespace }}
   labels:
     app: {{ template "agones.name" . }}
     chart: {{ template "agones.chart" . }}

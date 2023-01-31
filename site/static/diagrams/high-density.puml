@@ -1,0 +1,118 @@
+@startuml
+participant Matchmaker
+participant Agones
+participant "Game Server\nProcess" as Binary
+participant SDK
+participant "GameServer\nResource" as GameServer
+box "Game Server Pod"
+  participant Binary
+  participant SDK
+end box
+
+== GameServer Start ==
+
+Agones -> GameServer: GameServer created through\na <i>Fleet</i> configuration
+activate GameServer
+GameServer -> Binary: Agones creates a Pod with the\nconfigured Game Server Container
+activate Binary
+activate SDK
+Binary -> SDK: SDK.WatchGameServer()
+note right
+Use the SDK Watch function
+to watch and react to allocation
+events
+end note
+
+Binary -> SDK: SDK.Ready()
+note right
+  Call <i>Ready()</i> when the
+  Game Server can take player
+  connections and is able to
+  be allocated.
+end note
+GameServer <-- SDK: Update to <i>Ready</i> State
+
+== No allocated <i>GameServers</i> ==
+
+Matchmaker -> Agones: Create: <i>GameServerAllocation</i>
+note left
+  The <i>GameServerAllocation</i> is implemented to
+  optionally select an already allocated <i>GameServer</i>
+  with <i>metadata.labels["agones.dev/sdk-gs-session-ready"] = "true"</i>
+  if one exists. At this stage, one does not, so
+  Agones will allocate a <i>Ready</i> <i>GameServer</i>.
+end note
+Agones -> GameServer: Finds a <i>Ready</i> <i>GameServer</i>.\n\nSets <i>status.state</i> to <i>Allocated</i> State\nand <i>metadata.labels["agones.dev/sdk-gs-session-ready"] = "false"</i>\nand <i>metadata.annotations["agones.dev/last-allocated"] = current timestamp</i>
+note left
+By setting the label "agones.dev/sdk-gs-session-ready" to "false"
+this remove the `GameServer` from possibly being
+re-allocated until it knows it can handle another session.
+end note
+Matchmaker <-- Agones : <i>GameServerAllocation</i> is returned\nwith <i>GameServer</i> details\nincluding IP and port to connect to.
+
+SDK --> Binary: Sends SDK.WatchGameServer()\nevent for Allocation.
+note right
+This initial allocation can be determined
+as a change in <i>GameServer.status.state</i>
+from <i>Ready</i> to <i>Allocated</i>
+end note
+
+Binary -> SDK: SDK.SetLabel("gs-session-ready", "true")
+note right
+Since this game process can handle <i>n</i>
+concurrent sessions, set this label to match
+optional allocation label selectors, so it can be
+re-allocated.
+(See example below for more details)
+end note
+SDK --> GameServer: Sets <i>metadata.labels["agones.dev/sdk-gs-session-ready"] = "true"</i>
+
+== Allocated <i>GameServers</i> with room for more sessions ==
+
+Matchmaker -> Agones: Create: <i>GameServerAllocation</i>
+note left
+  The <i>GameServerAllocation</i> will this time
+  find the Allocated <i>GameServer</i> with the label
+  <i>metadata.labels["agones.dev/sdk-gs-session-ready"] = "true"</i>,
+  indicating that it can accept more
+  concurrent game sessions.
+end note
+Agones -> GameServer: Finds the Allocated <i>GameServer</i> with\n<i>metadata.labels["agones.dev/sdk-gs-session-ready"] = "true"</i>.\n\nSets <i>metadata.labels["agones.dev/sdk-gs-session-ready"] = "false"</i>\nand <i>metadata.annotations["agones.dev/last-allocated"] = current timestamp</i>.
+note right
+  This is the a <i>GameServer</i> that has room
+  for another concurrent game session.
+end note
+Matchmaker <-- Agones: returns <i>Allocated GameServer</i> record
+
+SDK --> Binary: Sends SDK.WatchGameServer()\nevent for Allocation.
+note right
+The game server process can watch for a change
+in <i>metadata.annotations["agones.dev/last-allocated"]</i>
+to determine there is an allocation event.
+end note
+
+alt <i>GameServer</i> can accept more concurrent sessions
+  Binary -> SDK: SDK.SetLabel("gs-session-ready", "true")
+  SDK --> GameServer: Sets <i>metadata.labels["agones.dev/sdk-gs-session-ready"] = "true"</i>.
+end alt
+note right
+  If the <i>GameServer</i> can accept more
+  concurrent sessions, reset the label
+  <i>"agones.dev/sdk-gs-session-ready"</i>
+  back to "true"
+end note
+
+== <i>GameServer</i> has completed <i>n</i> number of complete sessions ==
+
+Binary -> SDK: SDK.Shutdown()
+note left
+The <i>GameServer</i> process tracks the number of sessions
+that it hosts, and after <i>n</i> number, calls <i>Shutdown()</i>
+to delete the <i>GameServer</i> resource and backing Pod.
+end note
+SDK --> GameServer: Update to <i>Shutdown</i> state.
+Agones -> GameServer: Deletes GameServer resource and backing Pod.
+destroy Binary
+destroy SDK
+destroy GameServer
+@enduml

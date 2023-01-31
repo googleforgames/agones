@@ -16,7 +16,6 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -40,7 +39,7 @@ func main() {
 	}
 	log.Printf("loading: %s", configPath)
 
-	vanity, err := ioutil.ReadFile(configPath)
+	vanity, err := os.ReadFile(configPath)
 	if err != nil {
 		log.Fatal(err)
 	}

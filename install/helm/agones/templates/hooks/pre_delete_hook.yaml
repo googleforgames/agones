@@ -17,6 +17,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: "{{.Release.Name}}-delete-agones-resources"
+  namespace: {{ .Release.Namespace }}
   labels:
     app.kubernetes.io/managed-by: {{.Release.Service | quote }}
     app.kubernetes.io/instance: {{.Release.Name | quote }}
@@ -37,8 +38,8 @@ spec:
       restartPolicy: Never
       containers:
       - name: pre-delete-delete-agones-resources
-        image: "lachlanevenson/k8s-kubectl:v1.10.9"
-        command: 
+        image: "lachlanevenson/k8s-kubectl:v1.24.8"
+        command:
         - "/bin/sh"
         - "/scripts/delete_agones_resources.sh"
         {{- range .Values.gameservers.namespaces }}

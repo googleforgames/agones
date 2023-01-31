@@ -4,6 +4,11 @@
     "title": "proto/allocation/allocation.proto",
     "version": "version not set"
   },
+  "tags": [
+    {
+      "name": "AllocationService"
+    }
+  ],
   "schemes": [
     "https"
   ],
@@ -63,6 +68,14 @@
       },
       "description": "The gameserver port info that is allocated."
     },
+    "GameServerSelectorGameServerState": {
+      "type": "string",
+      "enum": [
+        "READY",
+        "ALLOCATED"
+      ],
+      "default": "READY"
+    },
     "allocationAllocationRequest": {
       "type": "object",
       "properties": {
@@ -75,15 +88,15 @@
           "description": "If specified, multi-cluster policies are applied. Otherwise, allocation will happen locally."
         },
         "requiredGameServerSelector": {
-          "$ref": "#/definitions/allocationLabelSelector",
-          "description": "The required allocation. Defaults to all GameServers."
+          "$ref": "#/definitions/allocationGameServerSelector",
+          "description": "Deprecated: Please use gameServerSelectors instead. This field is ignored if the\ngameServerSelectors field is set\nThe required allocation. Defaults to all GameServers."
         },
         "preferredGameServerSelectors": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/allocationLabelSelector"
+            "$ref": "#/definitions/allocationGameServerSelector"
           },
-          "description": "The ordered list of preferred allocations out of the `required` set.\nIf the first selector is not matched, the selection attempts the second selector, and so on."
+          "description": "Deprecated: Please use gameServerSelectors instead. This field is ignored if the\ngameServerSelectors field is set\nThe ordered list of preferred allocations out of the `required` set.\nIf the first selector is not matched, the selection attempts the second selector, and so on."
         },
         "scheduling": {
           "$ref": "#/definitions/AllocationRequestSchedulingStrategy",
@@ -96,6 +109,13 @@
         "metadata": {
           "$ref": "#/definitions/allocationMetaPatch",
           "title": "Metadata is optional custom metadata that is added to the game server at\nallocation. You can use this to tell the server necessary session data"
+        },
+        "gameServerSelectors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/allocationGameServerSelector"
+          },
+          "description": "Ordered list of GameServer label selectors.\nIf the first selector is not matched, the selection attempts the second selector, and so on.\nThis is useful for things like smoke testing of new game servers.\nNote: This field can only be set if neither Required or Preferred is set."
         }
       }
     },
@@ -116,8 +136,30 @@
         },
         "nodeName": {
           "type": "string"
+        },
+        "source": {
+          "type": "string"
         }
       }
+    },
+    "allocationGameServerSelector": {
+      "type": "object",
+      "properties": {
+        "matchLabels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Labels to match."
+        },
+        "gameServerState": {
+          "$ref": "#/definitions/GameServerSelectorGameServerState"
+        },
+        "players": {
+          "$ref": "#/definitions/allocationPlayerSelector"
+        }
+      },
+      "description": "GameServerSelector used for finding a GameServer with matching filters."
     },
     "allocationLabelSelector": {
       "type": "object",
@@ -164,6 +206,20 @@
         }
       },
       "description": "Specifies settings for multi-cluster allocation."
+    },
+    "allocationPlayerSelector": {
+      "type": "object",
+      "properties": {
+        "minAvailable": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "maxAvailable": {
+          "type": "string",
+          "format": "uint64"
+        }
+      },
+      "description": "PlayerSelector is filter for player capacity values.\nminAvailable should always be less or equal to maxAvailable."
     }
   }
 }

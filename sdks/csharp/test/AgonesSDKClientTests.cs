@@ -20,6 +20,7 @@ using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using System;
+using Microsoft.Extensions.Logging;
 
 namespace Agones.Tests
 {
@@ -121,7 +122,7 @@ namespace Agones.Tests
 		}
 
 		[TestMethod]
-		public void WatchGameServer_Returns_OK()
+		public async Task WatchGameServer_Returns_OK()
 		{
 			var mockClient = new Mock<SDK.SDKClient>();
 			var mockResponseStream = new Moq.Mock<IAsyncStreamReader<GameServer>>();
@@ -139,6 +140,17 @@ namespace Agones.Tests
 
 			mockSdk.WatchGameServer((gs) => { actualWatchReturn = gs; });
 
+			// Asynchronously wait for our callback to be invoked and actualWatchReturn to be set.
+			// This is because the underlying watch is started through a task so we can't expect the callback to
+			// run synchronously.
+			using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(2)))
+			{
+				while (actualWatchReturn == null)
+				{
+					await Task.Delay(15, cts.Token);
+				}
+			}
+			
 			Assert.AreSame(expectedWatchReturn, actualWatchReturn);
 		}
 
@@ -228,6 +240,30 @@ namespace Agones.Tests
 
 			var result = await mockSdk.SetAnnotationAsync(expectedKeyValue.Key, expectedKeyValue.Value);
 			Assert.AreEqual(expectedKeyValue, actualKeyValue);
+		}
+
+		[TestMethod]
+		public void InstantiateWithParameters_OK()
+		{
+			var mockClient = new Mock<SDK.SDKClient>().Object;
+			ILogger mockLogger = new Mock<ILogger>().Object;
+			CancellationTokenSource mockCancellationTokenSource = new Mock<CancellationTokenSource>().Object;
+			bool exceptionOccured = false;
+			try
+			{
+				new AgonesSDK(
+					requestTimeoutSec: 15,
+					sdkClient: mockClient,
+					cancellationTokenSource: mockCancellationTokenSource,
+					logger: mockLogger
+				);
+			}
+			catch
+			{
+				exceptionOccured = true;
+			}
+
+			Assert.IsFalse(exceptionOccured);
 		}
 	}
 }

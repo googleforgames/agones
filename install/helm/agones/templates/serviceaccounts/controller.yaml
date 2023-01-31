@@ -34,7 +34,6 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: {{ .Values.agones.serviceaccount.controller.name }}
-  namespace: {{ .Release.Namespace }}
   labels:
     app: {{ template "agones.name" . }}
     chart: {{ template "agones.chart" . }}
@@ -46,10 +45,15 @@ rules:
   verbs: ["create", "patch"]
 - apiGroups: [""]
   resources: ["pods"]
-  verbs: ["create", "delete", "list", "watch"]
+  verbs: ["create", "update", "delete", "list", "watch"]
 - apiGroups: [""]
   resources: ["nodes", "secrets"]
   verbs: ["list", "watch"]
+{{- if eq .Values.agones.cloudProduct "auto" }}
+- apiGroups: ["admissionregistration.k8s.io"] # only needed for cloudProduct detection
+  resources: ["mutatingwebhookconfigurations"]
+  verbs: ["get"]
+{{- end}}
 - apiGroups: ["apiextensions.k8s.io"]
   resources: ["customresourcedefinitions"]
   verbs: ["get"]
@@ -65,6 +69,9 @@ rules:
 - apiGroups: ["agones.dev"]
   resources: ["fleets/status", "gameserversets/status"]
   verbs: ["update"]
+- apiGroups: ["agones.dev"]
+  resources: ["fleets/finalizers", "gameserversets/finalizers", "gameservers/finalizers"]
+  verbs: ["update"]
 - apiGroups: ["multicluster.agones.dev"]
   resources: ["gameserverallocationpolicies"]
   verbs: ["create", "delete", "get", "list", "update", "watch"]
@@ -79,7 +86,6 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: {{ .Values.agones.serviceaccount.controller.name }}-access
-  namespace: {{ .Release.Namespace }}
   labels:
     app: {{ template "agones.name" . }}
     chart: {{ template "agones.chart" . }}

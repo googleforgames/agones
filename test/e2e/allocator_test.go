@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//     http://www.apache.org/licenses/LICENSE-2.0
+//	http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -25,24 +25,26 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"math/big"
 	"net"
 	"net/http"
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
-
 	pb "agones.dev/agones/pkg/allocation/go"
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	multiclusterv1 "agones.dev/agones/pkg/apis/multicluster/v1"
+	"agones.dev/agones/pkg/util/runtime"
 	e2e "agones.dev/agones/test/e2e/framework"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/status"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/uuid"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -59,26 +61,36 @@ const (
 	allocatorClientSecretNamespace = "default"
 )
 
-func TestAllocator(t *testing.T) {
+func TestAllocatorWithDeprecatedRequired(t *testing.T) {
 	ctx := context.Background()
 
 	ip, port := getAllocatorEndpoint(ctx, t)
 	requestURL := fmt.Sprintf(allocatorReqURLFmt, ip, port)
 	tlsCA := refreshAllocatorTLSCerts(ctx, t, ip)
 
-	flt, err := createFleet(ctx, framework.Namespace)
-	if !assert.Nil(t, err) {
-		return
+	var flt *agonesv1.Fleet
+	var err error
+	if runtime.FeatureEnabled(runtime.FeaturePlayerAllocationFilter) {
+		flt, err = createFleetWithOpts(ctx, framework.Namespace, func(f *agonesv1.Fleet) {
+			f.Spec.Template.Spec.Players = &agonesv1.PlayersSpec{
+				InitialCapacity: 10,
+			}
+		})
+	} else {
+		flt, err = createFleet(ctx, framework.Namespace)
 	}
+	assert.NoError(t, err)
+
 	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 	request := &pb.AllocationRequest{
 		Namespace:                    framework.Namespace,
-		RequiredGameServerSelector:   &pb.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}},
-		PreferredGameServerSelectors: []*pb.LabelSelector{{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}}},
+		RequiredGameServerSelector:   &pb.GameServerSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}},
+		PreferredGameServerSelectors: []*pb.GameServerSelector{{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}}},
 		Scheduling:                   pb.AllocationRequest_Packed,
 		Metadata:                     &pb.MetaPatch{Labels: map[string]string{"gslabel": "allocatedbytest"}},
 	}
 
+	var response *pb.AllocationResponse
 	// wait for the allocation system to come online
 	err = wait.PollImmediate(2*time.Second, 5*time.Minute, func() (bool, error) {
 		// create the grpc client each time, as we may end up looking at an old cert
@@ -95,19 +107,146 @@ func TestAllocator(t *testing.T) {
 		defer conn.Close() // nolint: errcheck
 
 		grpcClient := pb.NewAllocationServiceClient(conn)
-		response, err := grpcClient.Allocate(context.Background(), request)
+		response, err = grpcClient.Allocate(context.Background(), request)
 		if err != nil {
 			logrus.WithError(err).Info("failing Allocate request")
 			return false, nil
 		}
 		validateAllocatorResponse(t, response)
+
+		// let's do a re-allocation
+		if runtime.FeatureEnabled(runtime.FeatureStateAllocationFilter) && runtime.FeatureEnabled(runtime.FeaturePlayerAllocationFilter) {
+			logrus.Info("testing state allocation filter")
+			// nolint:staticcheck
+			request.PreferredGameServerSelectors[0].GameServerState = pb.GameServerSelector_ALLOCATED
+			allocatedResponse, err := grpcClient.Allocate(context.Background(), request)
+			require.NoError(t, err)
+			require.Equal(t, response.GameServerName, allocatedResponse.GameServerName)
+			validateAllocatorResponse(t, allocatedResponse)
+
+			// do a capacity based allocation
+			logrus.Info("testing capacity allocation filter")
+			// nolint:staticcheck
+			request.PreferredGameServerSelectors[0].Players = &pb.PlayerSelector{
+				MinAvailable: 5,
+				MaxAvailable: 10,
+			}
+			allocatedResponse, err = grpcClient.Allocate(context.Background(), request)
+			require.NoError(t, err)
+			require.Equal(t, response.GameServerName, allocatedResponse.GameServerName)
+			validateAllocatorResponse(t, allocatedResponse)
+
+			// do a capacity based allocation that should fail
+			// nolint:staticcheck
+			request.PreferredGameServerSelectors = nil
+			// nolint:staticcheck
+			request.RequiredGameServerSelector.GameServerState = pb.GameServerSelector_ALLOCATED
+			// nolint:staticcheck
+			request.RequiredGameServerSelector.Players = &pb.PlayerSelector{MinAvailable: 99, MaxAvailable: 200}
+
+			allocatedResponse, err = grpcClient.Allocate(context.Background(), request)
+			assert.Nil(t, allocatedResponse)
+			status, ok := status.FromError(err)
+			require.True(t, ok)
+			assert.Equal(t, codes.ResourceExhausted, status.Code())
+		}
+
 		return true, nil
 	})
 
 	assert.NoError(t, err)
 }
 
-func TestRestAllocator(t *testing.T) {
+func TestAllocatorWithSelectors(t *testing.T) {
+	ctx := context.Background()
+
+	ip, port := getAllocatorEndpoint(ctx, t)
+	requestURL := fmt.Sprintf(allocatorReqURLFmt, ip, port)
+	tlsCA := refreshAllocatorTLSCerts(ctx, t, ip)
+
+	var flt *agonesv1.Fleet
+	var err error
+	if runtime.FeatureEnabled(runtime.FeaturePlayerAllocationFilter) {
+		flt, err = createFleetWithOpts(ctx, framework.Namespace, func(f *agonesv1.Fleet) {
+			f.Spec.Template.Spec.Players = &agonesv1.PlayersSpec{
+				InitialCapacity: 10,
+			}
+		})
+	} else {
+		flt, err = createFleet(ctx, framework.Namespace)
+	}
+	assert.NoError(t, err)
+
+	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
+	request := &pb.AllocationRequest{
+		Namespace:           framework.Namespace,
+		GameServerSelectors: []*pb.GameServerSelector{{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}}},
+		Scheduling:          pb.AllocationRequest_Packed,
+		Metadata:            &pb.MetaPatch{Labels: map[string]string{"gslabel": "allocatedbytest", "blue-frog.fred_thing": "test.dog_fred-blue"}},
+	}
+
+	var response *pb.AllocationResponse
+	// wait for the allocation system to come online
+	err = wait.PollImmediate(2*time.Second, 5*time.Minute, func() (bool, error) {
+		// create the grpc client each time, as we may end up looking at an old cert
+		dialOpts, err := createRemoteClusterDialOption(ctx, allocatorClientSecretNamespace, allocatorClientSecretName, tlsCA)
+		if err != nil {
+			return false, err
+		}
+
+		conn, err := grpc.Dial(requestURL, dialOpts)
+		if err != nil {
+			logrus.WithError(err).Info("failing grpc.Dial")
+			return false, nil
+		}
+		defer conn.Close() // nolint: errcheck
+
+		grpcClient := pb.NewAllocationServiceClient(conn)
+		response, err = grpcClient.Allocate(context.Background(), request)
+		if err != nil {
+			logrus.WithError(err).Info("failing Allocate request")
+			return false, nil
+		}
+		validateAllocatorResponse(t, response)
+
+		// let's do a re-allocation
+		if runtime.FeatureEnabled(runtime.FeatureStateAllocationFilter) && runtime.FeatureEnabled(runtime.FeaturePlayerAllocationFilter) {
+			logrus.Info("testing state allocation filter")
+			request.GameServerSelectors[0].GameServerState = pb.GameServerSelector_ALLOCATED
+			allocatedResponse, err := grpcClient.Allocate(context.Background(), request)
+			require.NoError(t, err)
+			require.Equal(t, response.GameServerName, allocatedResponse.GameServerName)
+			validateAllocatorResponse(t, allocatedResponse)
+
+			// do a capacity based allocation
+			logrus.Info("testing capacity allocation filter")
+			request.GameServerSelectors[0].Players = &pb.PlayerSelector{
+				MinAvailable: 5,
+				MaxAvailable: 10,
+			}
+			allocatedResponse, err = grpcClient.Allocate(context.Background(), request)
+			require.NoError(t, err)
+			require.Equal(t, response.GameServerName, allocatedResponse.GameServerName)
+			validateAllocatorResponse(t, allocatedResponse)
+
+			// do a capacity based allocation that should fail
+			request.GameServerSelectors[0].GameServerState = pb.GameServerSelector_ALLOCATED
+			request.GameServerSelectors[0].Players = &pb.PlayerSelector{MinAvailable: 99, MaxAvailable: 200}
+
+			allocatedResponse, err = grpcClient.Allocate(context.Background(), request)
+			assert.Nil(t, allocatedResponse)
+			status, ok := status.FromError(err)
+			require.True(t, ok)
+			assert.Equal(t, codes.ResourceExhausted, status.Code())
+		}
+
+		return true, nil
+	})
+
+	assert.NoError(t, err)
+}
+
+func TestRestAllocatorWithDeprecatedRequired(t *testing.T) {
 	ctx := context.Background()
 
 	ip, port := getAllocatorEndpoint(ctx, t)
@@ -121,8 +260,8 @@ func TestRestAllocator(t *testing.T) {
 	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 	request := &pb.AllocationRequest{
 		Namespace:                    framework.Namespace,
-		RequiredGameServerSelector:   &pb.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}},
-		PreferredGameServerSelectors: []*pb.LabelSelector{{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}}},
+		RequiredGameServerSelector:   &pb.GameServerSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}},
+		PreferredGameServerSelectors: []*pb.GameServerSelector{{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}}},
 		Scheduling:                   pb.AllocationRequest_Packed,
 		Metadata:                     &pb.MetaPatch{Labels: map[string]string{"gslabel": "allocatedbytest"}},
 	}
@@ -152,7 +291,7 @@ func TestRestAllocator(t *testing.T) {
 			logrus.WithError(err).Info("failed Allocate rest request")
 			return false, nil
 		}
-		body, err := ioutil.ReadAll(resp.Body)
+		body, err := io.ReadAll(resp.Body)
 		if err != nil {
 			logrus.WithError(err).Info("failed to read Allocate response body")
 			return false, nil
@@ -169,6 +308,74 @@ func TestRestAllocator(t *testing.T) {
 	})
 
 	assert.NoError(t, err)
+}
+
+func TestRestAllocatorWithSelectors(t *testing.T) {
+	ctx := context.Background()
+
+	ip, port := getAllocatorEndpoint(ctx, t)
+	requestURL := fmt.Sprintf(allocatorReqURLFmt, ip, port)
+	tlsCA := refreshAllocatorTLSCerts(ctx, t, ip)
+
+	flt, err := createFleet(ctx, framework.Namespace)
+	if !assert.Nil(t, err) {
+		return
+	}
+	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
+	request := &pb.AllocationRequest{
+		Namespace:           framework.Namespace,
+		GameServerSelectors: []*pb.GameServerSelector{{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}}},
+		Scheduling:          pb.AllocationRequest_Packed,
+		Metadata:            &pb.MetaPatch{Labels: map[string]string{"gslabel": "allocatedbytest", "blue-frog.fred_thing": "test.dog_fred-blue"}},
+	}
+	tlsCfg, err := getTLSConfig(ctx, allocatorClientSecretNamespace, allocatorClientSecretName, tlsCA)
+	if !assert.Nil(t, err) {
+		return
+	}
+	client := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: tlsCfg,
+		},
+	}
+	jsonRes, err := json.Marshal(request)
+	if !assert.Nil(t, err) {
+		return
+	}
+	req, err := http.NewRequest("POST", "https://"+requestURL+"/gameserverallocation", bytes.NewBuffer(jsonRes))
+	if !assert.Nil(t, err) {
+		logrus.WithError(err).Info("failed to create rest request")
+		return
+	}
+
+	// wait for the allocation system to come online
+	var response pb.AllocationResponse
+	err = wait.PollImmediate(2*time.Second, 5*time.Minute, func() (bool, error) {
+		resp, err := client.Do(req)
+		if err != nil {
+			logrus.WithError(err).Info("failed Allocate rest request")
+			return false, nil
+		}
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			logrus.WithError(err).Info("failed to read Allocate response body")
+			return false, nil
+		}
+		defer resp.Body.Close() // nolint: errcheck
+		err = json.Unmarshal(body, &response)
+		if err != nil {
+			logrus.WithError(err).Info("failed to unmarshal Allocate response")
+			return false, nil
+		}
+		validateAllocatorResponse(t, &response)
+		return true, nil
+	})
+	require.NoError(t, err)
+
+	gs, err := framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Get(ctx, response.GameServerName, metav1.GetOptions{})
+	require.NoError(t, err)
+	assert.Equal(t, agonesv1.GameServerStateAllocated, gs.Status.State)
+	assert.Equal(t, "allocatedbytest", gs.ObjectMeta.Labels["gslabel"])
+	assert.Equal(t, "test.dog_fred-blue", gs.ObjectMeta.Labels["blue-frog.fred_thing"])
 }
 
 // Tests multi-cluster allocation by reusing the same cluster but across namespace.
@@ -224,8 +431,8 @@ func TestAllocatorCrossNamespace(t *testing.T) {
 	request := &pb.AllocationRequest{
 		Namespace: namespaceA,
 		// Enable multi-cluster setting
-		MultiClusterSetting:        &pb.MultiClusterSetting{Enabled: true},
-		RequiredGameServerSelector: &pb.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}},
+		MultiClusterSetting: &pb.MultiClusterSetting{Enabled: true},
+		GameServerSelectors: []*pb.GameServerSelector{{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}}},
 	}
 
 	// wait for the allocation system to come online
@@ -302,6 +509,8 @@ func getAllocatorEndpoint(ctx context.Context, t *testing.T) (string, int32) {
 }
 
 // createRemoteClusterDialOption creates a grpc client dial option with proper certs to make a remote call.
+//
+//nolint:unparam
 func createRemoteClusterDialOption(ctx context.Context, namespace, clientSecretName string, tlsCA []byte) (grpc.DialOption, error) {
 	tlsConfig, err := getTLSConfig(ctx, namespace, clientSecretName, tlsCA)
 	if err != nil {
@@ -343,8 +552,13 @@ func getTLSConfig(ctx context.Context, namespace, clientSecretName string, tlsCA
 }
 
 func createFleet(ctx context.Context, namespace string) (*agonesv1.Fleet, error) {
+	return createFleetWithOpts(ctx, namespace, func(*agonesv1.Fleet) {})
+}
+
+func createFleetWithOpts(ctx context.Context, namespace string, opts func(fleet *agonesv1.Fleet)) (*agonesv1.Fleet, error) {
 	fleets := framework.AgonesClient.AgonesV1().Fleets(namespace)
 	fleet := defaultFleet(namespace)
+	opts(fleet)
 	return fleets.Create(ctx, fleet, metav1.CreateOptions{})
 }
 

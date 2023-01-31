@@ -23,11 +23,11 @@
 #     \_/ \__,_|_|  |_|\__,_|_.__/|_|\___|___/
 #
 
-REPOSITORY = gcr.io/agones-images
+REPOSITORY = us-docker.pkg.dev/agones-images/examples
 
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_path := $(dir $(mkfile_path))
-image_tag = $(REPOSITORY)/supertuxkart-example:0.3
+image_tag = $(REPOSITORY)/supertuxkart-example:0.6
 
 #   _____                    _
 #  |_   _|_ _ _ __ __ _  ___| |_ ___
@@ -40,12 +40,16 @@ image_tag = $(REPOSITORY)/supertuxkart-example:0.3
 build:
 	docker build -f $(project_path)/Dockerfile --tag=$(image_tag) .
 
+# Push the docker image
+push: build
+	docker push $(image_tag)
+
 # Run tests
 test:
 	go test -v ./...
 
-# check if hosted on Google Cloud Registry
-gcr-check:
+# check if hosted on Google Artifact Registry
+gar-check:
 	gcloud container images describe $(image_tag)
 
 #output the tag for this image

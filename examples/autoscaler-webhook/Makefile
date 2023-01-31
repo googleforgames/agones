@@ -23,11 +23,11 @@
 #     \_/ \__,_|_|  |_|\__,_|_.__/|_|\___|___/
 #
 
-REPOSITORY = gcr.io/agones-images
+REPOSITORY = us-docker.pkg.dev/agones-images/examples
 
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_path := $(dir $(mkfile_path))
-autoscaler_webhook_tag = $(REPOSITORY)/autoscaler-webhook:0.3
+autoscaler_webhook_tag = $(REPOSITORY)/autoscaler-webhook:0.5
 root_path = $(realpath $(project_path)/../..)
 
 #   _____                    _
@@ -41,8 +41,12 @@ root_path = $(realpath $(project_path)/../..)
 build:
 	cd $(root_path) && docker build -f $(project_path)/Dockerfile --tag=$(autoscaler_webhook_tag) .
 
-# check if hosted on Google Cloud Registry
-gcr-check:
+# Push the docker image
+push: build
+	docker push $(autoscaler_webhook_tag)
+
+# check if hosted on Google Artifact Registry
+gar-check:
 	gcloud container images describe $(autoscaler_webhook_tag)
 
 #output the tag for this image

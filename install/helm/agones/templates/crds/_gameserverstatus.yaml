@@ -15,6 +15,8 @@
 {{/* schema for a gameserver status */}}
 {{- define "gameserver.status" }}
 status:
+  description: 'GameServerStatus is the status for a GameServer resource. More info:
+    https://agones.dev/site/docs/reference/agones_crd_api_reference/#agones.dev/v1.GameServer'
   type: object
   title: The status values for the GameServer
   properties:
@@ -63,4 +65,21 @@ status:
           nullable: true
           items:
             type: string
+{{- if .featureSafeToEvict }}
+    eviction:
+      type: object
+      properties:
+        safe:
+          type: string
+          enum:
+          - Always
+          - OnUpgrade
+          - Never
+    immutableReplicas:
+      type: integer
+      title: Immutable count of Pods to a GameServer. Always 1. (Implementation detail of implementing the Scale subresource.)
+      default: 1
+      minimum: 1
+      maximum: 1
+{{- end}}
 {{- end}}

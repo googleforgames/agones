@@ -37,6 +37,16 @@ spec:
       # maximum fleet size that can be set by this FleetAutoscaler
       # required
       maxReplicas: 20
+  # [Stage:Beta]
+  # [FeatureFlag:CustomFasSyncInterval]
+  # The autoscaling sync strategy
+  sync:
+    # type of the sync. for now, only FixedInterval is available
+    type: FixedInterval
+    # parameters of the fixedInterval sync
+    fixedInterval:
+      # the time in seconds between each auto scaling
+      seconds: 30
 ```
 
 Or for Webhook FleetAutoscaler below and in {{< ghlink href="examples/webhookfleetautoscaler.yaml" >}}example folder{{< /ghlink >}}:
@@ -61,6 +71,14 @@ spec:
       # optional for URL defined webhooks
       # url: ""
       # caBundle:  optional, used for HTTPS webhook type
+  # The autoscaling sync strategy
+  sync:
+    # type of the sync. for now, only FixedInterval is available
+    type: FixedInterval
+    # parameters of the fixedInterval sync
+    fixedInterval:
+      # the time in seconds between each auto scaling
+      seconds: 30
 ```
 
 Since Agones defines a new 
@@ -94,8 +112,11 @@ The `spec` field is the actual `FleetAutoscaler` specification and it is compose
       - `port` is optional, it is the port for the service which is hosting the webhook. The default is 8000 for backward compatibility. If given, it should be a valid port number (1-65535, inclusive).
     - `url` gives the location of the webhook, in standard URL form (`[scheme://]host:port/path`). Exactly one of `url` or `service` must be specified. The `host` should not refer to a service running in the cluster; use the `service` field instead.  (optional, instead of service)
     - `caBundle` is a PEM encoded certificate authority bundle which is used to issue and then validate the webhook's server certificate. Base64 encoded PEM string. Required only for HTTPS. If not present HTTP client would be used.
-
-Note: only one `buffer` or `webhook` could be defined for FleetAutoscaler which is based on the `type` field.
+  - Note: only one `buffer` or `webhook` could be defined for FleetAutoscaler which is based on the `type` field.
+- `sync` is autoscaling sync strategy. It defines when to run the autoscaling
+  - `type` is type of the sync. For now only "FixedInterval" is available
+  - `fixedInterval` parameters of the fixedInterval sync
+    - `seconds` is the time in seconds between each auto scaling
 
 # Webhook Endpoint Specification
 
@@ -158,4 +179,3 @@ For Webhook Fleetautoscaler Policy either HTTP or HTTPS could be used. Switching
 The example of the webhook written in Go could be found {{< ghlink href="examples/autoscaler-webhook/main.go" >}}here{{< /ghlink >}}.
 
 It implements the {{< ghlink href="examples/autoscaler-webhook/" >}}scaling logic{{< /ghlink >}} based on the percentage of allocated gameservers in a fleet.
-

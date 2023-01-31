@@ -117,6 +117,10 @@ For those scenarios, this SDK functionality exists.
 
 There is a chance that GameServer does not actually become `Allocated` after this call. Please refer to the general note in [Function Reference](#function-reference) above.
 
+The `agones.dev/last-allocated` annotation will be set on the GameServer to an RFC3339 formatted timestamp of the time of allocation, even if the GameServer was already in an `Allocated` state.
+
+Note that if using `SDK.Allocate()` in combination with [GameServerAllocation]({{< ref "/docs/Reference/gameserverallocation.md" >}})s, it's possible for the `agones.dev/last-allocated` timestamp to move backwards if clocks are not synchronized between the Agones controller and the GameServer pod.
+
 {{< alert title="Note" color="info">}}
 Using a [GameServerAllocation]({{< ref "/docs/Reference/gameserverallocation.md" >}}) is preferred in all other scenarios, 
 as it gives Agones control over how packed `GameServers` are scheduled within a cluster, whereas with `Allocate()` you
@@ -135,6 +139,9 @@ from Kubernetes when the backing Pod goes into Termination state.
 
 Be aware that if you use a variation of `System.exit(0)` after calling SDK.Shutdown(), your game server container may
 restart for a brief period, inline with our [Health Checking]({{% ref "/docs/Guides/health-checking.md#health-failure-strategy" %}}) policies. 
+
+If the `SDKGracefulTermination` alpha feature is enabled, when the SDK server receives the TERM signal before calling SDK.Shutdown(),
+the SDK server would stay alive for the period of the terminationGracePeriodSeconds until SDK.Shutdown() has been called
 
 ### Configuration Retrieval 
 
@@ -175,11 +182,6 @@ the `message GameServer`.
 For language specific documentation, have a look at the respective source (linked above), 
 and the {{< ghlink href="examples" >}}examples{{< /ghlink >}}.
 
-Currently, in [Beta]({{% ref "/docs/Guides/feature-stages.md#feature-gates" %}}), and enabled by default, the current 
-state of the `GameServer` will be sent to the WatchGameServer function on first invocation.  
-
-Use the feature flag `SDKWatchSendOnExecute` to disable this feature if needed, but if you run into issues,
-please [file an issue](https://github.com/googleforgames/agones/issues).
 
 ### Metadata Management
 

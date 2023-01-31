@@ -12,30 +12,45 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Ports can be overriden using tfvars file
-variable "ports" {
-  default = "7000-8000"
-}
-
 # Set of GKE cluster parameters which defines its name, zone
 # and primary node pool configuration.
 # It is crucial to set valid ProjectID for "project".
 variable "cluster" {
   description = "Set of GKE cluster parameters."
-  type        = map
+  type        = map(any)
 
   default = {
-    "zone"                    = "us-west1-c"
+    "location"                = "us-west1-c"
     "name"                    = "test-cluster"
     "machineType"             = "e2-standard-4"
     "initialNodeCount"        = "4"
     "project"                 = "agones"
     "network"                 = "default"
     "subnetwork"              = ""
-    "kubernetesVersion"       = "1.19"
+    "kubernetesVersion"       = "1.24"
     "windowsInitialNodeCount" = "0"
     "windowsMachineType"      = "e2-standard-4"
+    "autoscale"               = false
+    "workloadIdentity"        = false
+    "minNodeCount"            = "1"
+    "maxNodeCount"            = "5"
   }
+}
+
+# udpFirewall specifies whether to create a UDP firewall named
+# `firewallName` with port range `ports`, source range `sourceRanges` 
+variable "udpFirewall" {
+  default = true
+}
+
+# Ports can be overriden using tfvars file
+variable "ports" {
+  default = "7000-8000"
+}
+
+# SourceRanges can be overriden using tfvars file
+variable "sourceRanges" {
+  default = "0.0.0.0/0"
 }
 
 variable "firewallName" {

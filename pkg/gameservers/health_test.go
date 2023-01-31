@@ -68,25 +68,48 @@ func TestHealthUnschedulableWithNoFreePorts(t *testing.T) {
 	gs := agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test"}, Spec: newSingleContainerSpec()}
 	gs.ApplyDefaults()
 
-	pod, err := gs.Pod()
-	require.NoError(t, err)
+	for name, tc := range map[string]struct {
+		message           string
+		waitOnFreePorts   bool
+		wantUnschedulable bool
+	}{
+		"unschedulable, terminal": {
+			message:           "0/4 nodes are available: 4 node(s) didn't have free ports for the requestedpod ports.",
+			wantUnschedulable: true,
+		},
+		"unschedulable, will wait on free ports": {
+			message:         "0/4 nodes are available: 4 node(s) didn't have free ports for the requestedpod ports.",
+			waitOnFreePorts: true,
+		},
+		"some other condition": {
+			message: "twas brillig and the slithy toves",
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			pod, err := gs.Pod()
+			require.NoError(t, err)
 
-	pod.Status.Conditions = []corev1.PodCondition{
-		{Type: corev1.PodScheduled, Reason: corev1.PodReasonUnschedulable,
-			Message: "0/4 nodes are available: 4 node(s) didn't have free ports for the requestedpod ports."},
+			pod.Status.Conditions = []corev1.PodCondition{
+				{Type: corev1.PodScheduled, Reason: corev1.PodReasonUnschedulable,
+					Message: tc.message},
+			}
+			hc.waitOnFreePorts = tc.waitOnFreePorts
+			assert.Equal(t, tc.wantUnschedulable, hc.unschedulableWithNoFreePorts(pod))
+		})
 	}
-	assert.True(t, hc.unschedulableWithNoFreePorts(pod))
-
-	pod.Status.Conditions[0].Message = "not a real reason"
-	assert.False(t, hc.unschedulableWithNoFreePorts(pod))
 }
 
-func TestHealthControllerSkipUnhealthy(t *testing.T) {
+func TestHealthControllerSkipUnhealthyGameContainer(t *testing.T) {
 	t.Parallel()
+
+	type expected struct {
+		result bool
+		err    string
+	}
 
 	fixtures := map[string]struct {
 		setup    func(*agonesv1.GameServer, *corev1.Pod)
-		expected bool
+		expected expected
 	}{
 		"scheduled and terminated container": {
 			setup: func(gs *agonesv1.GameServer, pod *corev1.Pod) {
@@ -96,7 +119,7 @@ func TestHealthControllerSkipUnhealthy(t *testing.T) {
 					State: corev1.ContainerState{Terminated: &corev1.ContainerStateTerminated{}},
 				}}
 			},
-			expected: true,
+			expected: expected{result: true},
 		},
 		"after ready and terminated container": {
 			setup: func(gs *agonesv1.GameServer, pod *corev1.Pod) {
@@ -106,19 +129,19 @@ func TestHealthControllerSkipUnhealthy(t *testing.T) {
 					State: corev1.ContainerState{Terminated: &corev1.ContainerStateTerminated{}},
 				}}
 			},
-			expected: false,
+			expected: expected{result: false},
 		},
 		"before ready, with no terminated container": {
 			setup: func(gs *agonesv1.GameServer, pod *corev1.Pod) {
 				gs.Status.State = agonesv1.GameServerStateScheduled
 			},
-			expected: false,
+			expected: expected{result: false},
 		},
 		"after ready, with no terminated container": {
 			setup: func(gs *agonesv1.GameServer, pod *corev1.Pod) {
 				gs.Status.State = agonesv1.GameServerStateAllocated
 			},
-			expected: false,
+			expected: expected{result: false},
 		},
 		"before ready, with a LastTerminated container": {
 			setup: func(gs *agonesv1.GameServer, pod *corev1.Pod) {
@@ -128,37 +151,46 @@ func TestHealthControllerSkipUnhealthy(t *testing.T) {
 					LastTerminationState: corev1.ContainerState{Terminated: &corev1.ContainerStateTerminated{}},
 				}}
 			},
-			expected: true,
+			expected: expected{result: true},
 		},
 		"after ready, with a LastTerminated container, not matching": {
 			setup: func(gs *agonesv1.GameServer, pod *corev1.Pod) {
 				gs.Status.State = agonesv1.GameServerStateReady
 				gs.Annotations[agonesv1.GameServerReadyContainerIDAnnotation] = "4321"
+				pod.ObjectMeta.Annotations[agonesv1.GameServerReadyContainerIDAnnotation] = "4321"
 				pod.Status.ContainerStatuses = []corev1.ContainerStatus{{
 					ContainerID:          "1234",
 					Name:                 gs.Spec.Container,
 					LastTerminationState: corev1.ContainerState{Terminated: &corev1.ContainerStateTerminated{}},
 				}}
 			},
-			expected: false,
+			expected: expected{result: false},
 		},
 		"after ready, with a LastTerminated container, matching": {
 			setup: func(gs *agonesv1.GameServer, pod *corev1.Pod) {
 				gs.Status.State = agonesv1.GameServerStateReserved
 				gs.Annotations[agonesv1.GameServerReadyContainerIDAnnotation] = "1234"
+				pod.Annotations[agonesv1.GameServerReadyContainerIDAnnotation] = "1234"
 				pod.Status.ContainerStatuses = []corev1.ContainerStatus{{
 					ContainerID:          "1234",
 					Name:                 gs.Spec.Container,
 					LastTerminationState: corev1.ContainerState{Terminated: &corev1.ContainerStateTerminated{}},
 				}}
 			},
-			expected: true,
+			expected: expected{result: true},
 		},
 		"pod is missing!": {
 			setup: func(server *agonesv1.GameServer, pod *corev1.Pod) {
 				pod.ObjectMeta.Name = "missing"
 			},
-			expected: false,
+			expected: expected{result: false},
+		},
+		"annotations do not match": {
+			setup: func(gs *agonesv1.GameServer, pod *corev1.Pod) {
+				gs.Annotations[agonesv1.GameServerReadyContainerIDAnnotation] = "1234"
+				pod.Annotations[agonesv1.GameServerReadyContainerIDAnnotation] = ""
+			},
+			expected: expected{err: "pod and gameserver test data are out of sync, retrying"},
 		},
 	}
 
@@ -177,12 +209,14 @@ func TestHealthControllerSkipUnhealthy(t *testing.T) {
 				return true, &corev1.PodList{Items: []corev1.Pod{*pod}}, nil
 			})
 
-			_, cancel := agtesting.StartInformers(m, hc.podSynced)
-			defer cancel()
+			result, err := hc.skipUnhealthyGameContainer(gs, pod)
 
-			result, err := hc.skipUnhealthy(gs)
-			assert.NoError(t, err)
-			assert.Equal(t, v.expected, result)
+			if len(v.expected.err) > 0 {
+				require.EqualError(t, err, v.expected.err)
+			} else {
+				assert.NoError(t, err)
+			}
+			assert.Equal(t, v.expected.result, result)
 		})
 	}
 }
@@ -239,6 +273,24 @@ func TestHealthControllerSyncGameServer(t *testing.T) {
 			podStatus: &corev1.PodStatus{ContainerStatuses: []corev1.ContainerStatus{
 				{Name: "container", State: corev1.ContainerState{Terminated: &corev1.ContainerStateTerminated{}}}}},
 			expected: expected{updated: true},
+		},
+		"container recovered and starting after queueing": {
+			state: agonesv1.GameServerStateStarting,
+			podStatus: &corev1.PodStatus{ContainerStatuses: []corev1.ContainerStatus{
+				{Name: "container", State: corev1.ContainerState{Waiting: &corev1.ContainerStateWaiting{}}}}},
+			expected: expected{updated: false},
+		},
+		"container recovered and ready after queueing": {
+			state: agonesv1.GameServerStateReady,
+			podStatus: &corev1.PodStatus{ContainerStatuses: []corev1.ContainerStatus{
+				{Name: "container", State: corev1.ContainerState{Running: &corev1.ContainerStateRunning{}}}}},
+			expected: expected{updated: false},
+		},
+		"container recovered and allocated after queueing": {
+			state: agonesv1.GameServerStateAllocated,
+			podStatus: &corev1.PodStatus{ContainerStatuses: []corev1.ContainerStatus{
+				{Name: "container", State: corev1.ContainerState{Running: &corev1.ContainerStateRunning{}}}}},
+			expected: expected{updated: false},
 		},
 	}
 

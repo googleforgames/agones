@@ -18,6 +18,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"math/rand"
 	"net/http"
 	"strconv"
 	"testing"
@@ -426,6 +427,40 @@ func TestControllerWatchGameServers(t *testing.T) {
 func TestSyncGameServerSet(t *testing.T) {
 	t.Parallel()
 
+	t.Run("gameservers are not recreated when set is marked for deletion", func(t *testing.T) {
+		gsSet := defaultFixture()
+		gsSet.DeletionTimestamp = &metav1.Time{
+			Time: time.Now(),
+		}
+		list := createGameServers(gsSet, 5)
+
+		// mark some as shutdown
+		list[0].Status.State = agonesv1.GameServerStateShutdown
+		list[1].Status.State = agonesv1.GameServerStateShutdown
+
+		c, m := newFakeController()
+		m.AgonesClient.AddReactor("list", "gameserversets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			return true, &agonesv1.GameServerSetList{Items: []agonesv1.GameServerSet{*gsSet}}, nil
+		})
+		m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			return true, &agonesv1.GameServerList{Items: list}, nil
+		})
+		m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			assert.FailNow(t, "gameserver should not update")
+			return false, nil, nil
+		})
+		m.AgonesClient.AddReactor("create", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			assert.FailNow(t, "new gameservers should not be created")
+
+			return false, nil, nil
+		})
+
+		ctx, cancel := agtesting.StartInformers(m, c.gameServerSetSynced, c.gameServerSynced)
+		defer cancel()
+
+		c.syncGameServerSet(ctx, gsSet.ObjectMeta.Namespace+"/"+gsSet.ObjectMeta.Name) // nolint: errcheck
+	})
+
 	t.Run("adding and deleting unhealthy gameservers", func(t *testing.T) {
 		gsSet := defaultFixture()
 		list := createGameServers(gsSet, 5)
@@ -494,6 +529,43 @@ func TestSyncGameServerSet(t *testing.T) {
 		c.syncGameServerSet(ctx, gsSet.ObjectMeta.Namespace+"/"+gsSet.ObjectMeta.Name) // nolint: errcheck
 
 		assert.Equal(t, 5, count)
+	})
+
+	t.Run("Starting GameServers get deleted first", func(t *testing.T) {
+		gsSet := defaultFixture()
+		list := createGameServers(gsSet, 12)
+
+		list[0].Status.State = agonesv1.GameServerStateStarting
+		list[1].Status.State = agonesv1.GameServerStateCreating
+
+		rand.Shuffle(len(list), func(i, j int) {
+			list[i], list[j] = list[j], list[i]
+		})
+
+		var deleted []string
+
+		c, m := newFakeController()
+		m.AgonesClient.AddReactor("list", "gameserversets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			return true, &agonesv1.GameServerSetList{Items: []agonesv1.GameServerSet{*gsSet}}, nil
+		})
+		m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			return true, &agonesv1.GameServerList{Items: list}, nil
+		})
+		m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			ua := action.(k8stesting.UpdateAction)
+			gs := ua.GetObject().(*agonesv1.GameServer)
+			require.Equal(t, gs.Status.State, agonesv1.GameServerStateShutdown)
+
+			deleted = append(deleted, gs.ObjectMeta.Name)
+			return true, nil, nil
+		})
+
+		ctx, cancel := agtesting.StartInformers(m, c.gameServerSetSynced, c.gameServerSynced)
+		defer cancel()
+		require.NoError(t, c.syncGameServerSet(ctx, gsSet.ObjectMeta.Namespace+"/"+gsSet.ObjectMeta.Name))
+
+		require.Len(t, deleted, 2)
+		require.ElementsMatchf(t, []string{"test-0", "test-1"}, deleted, "should be the non-ready GameServers")
 	})
 }
 
@@ -671,7 +743,7 @@ func TestControllerSyncGameServerSetStatus(t *testing.T) {
 func TestControllerUpdateValidationHandler(t *testing.T) {
 	t.Parallel()
 
-	c, _ := newFakeController()
+	ext := newFakeExtensions()
 	gvk := metav1.GroupVersionKind(agonesv1.SchemeGroupVersion.WithKind("GameServerSet"))
 	fixture := &agonesv1.GameServerSet{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
 		Spec: agonesv1.GameServerSetSpec{Replicas: 5},
@@ -699,7 +771,7 @@ func TestControllerUpdateValidationHandler(t *testing.T) {
 			Response: &admissionv1.AdmissionResponse{Allowed: true},
 		}
 
-		result, err := c.updateValidationHandler(review)
+		result, err := ext.updateValidationHandler(review)
 		require.NoError(t, err)
 		if !assert.True(t, result.Response.Allowed) {
 			// show the reason of the failure
@@ -724,7 +796,7 @@ func TestControllerUpdateValidationHandler(t *testing.T) {
 			Response: &admissionv1.AdmissionResponse{Allowed: true},
 		}
 
-		_, err := c.updateValidationHandler(review)
+		_, err := ext.updateValidationHandler(review)
 		require.Error(t, err)
 		assert.Equal(t, "error unmarshalling new GameServerSet json: : unexpected end of JSON input", err.Error())
 	})
@@ -749,7 +821,7 @@ func TestControllerUpdateValidationHandler(t *testing.T) {
 			Response: &admissionv1.AdmissionResponse{Allowed: true},
 		}
 
-		_, err = c.updateValidationHandler(review)
+		_, err = ext.updateValidationHandler(review)
 		require.Error(t, err)
 		assert.Equal(t, "error unmarshalling old GameServerSet json: : unexpected end of JSON input", err.Error())
 	})
@@ -780,7 +852,7 @@ func TestControllerUpdateValidationHandler(t *testing.T) {
 			Response: &admissionv1.AdmissionResponse{Allowed: true},
 		}
 
-		result, err := c.updateValidationHandler(review)
+		result, err := ext.updateValidationHandler(review)
 		require.NoError(t, err)
 		require.NotNil(t, result.Response)
 		require.NotNil(t, result.Response.Result)
@@ -796,7 +868,8 @@ func TestControllerUpdateValidationHandler(t *testing.T) {
 func TestCreationValidationHandler(t *testing.T) {
 	t.Parallel()
 
-	c, _ := newFakeController()
+	ext := newFakeExtensions()
+
 	gvk := metav1.GroupVersionKind(agonesv1.SchemeGroupVersion.WithKind("GameServerSet"))
 	fixture := &agonesv1.GameServerSet{ObjectMeta: metav1.ObjectMeta{Name: "c1", Namespace: "default"},
 		Spec: agonesv1.GameServerSetSpec{
@@ -832,7 +905,7 @@ func TestCreationValidationHandler(t *testing.T) {
 			Response: &admissionv1.AdmissionResponse{Allowed: true},
 		}
 
-		result, err := c.creationValidationHandler(review)
+		result, err := ext.creationValidationHandler(review)
 		require.NoError(t, err)
 		if !assert.True(t, result.Response.Allowed) {
 			// show the reason of the failure
@@ -854,9 +927,9 @@ func TestCreationValidationHandler(t *testing.T) {
 			Response: &admissionv1.AdmissionResponse{Allowed: true},
 		}
 
-		_, err := c.creationValidationHandler(review)
+		_, err := ext.creationValidationHandler(review)
 		require.Error(t, err)
-		assert.Equal(t, "error unmarshalling new GameServerSet json: : unexpected end of JSON input", err.Error())
+		assert.Equal(t, "error unmarshalling GameServerSet json after schema validation: : unexpected end of JSON input", err.Error())
 	})
 
 	t.Run("invalid gameserverset create", func(t *testing.T) {
@@ -882,7 +955,7 @@ func TestCreationValidationHandler(t *testing.T) {
 			Response: &admissionv1.AdmissionResponse{Allowed: true},
 		}
 
-		result, err := c.creationValidationHandler(review)
+		result, err := ext.creationValidationHandler(review)
 		require.NoError(t, err)
 		require.NotNil(t, result.Response)
 		require.NotNil(t, result.Response.Result)
@@ -923,9 +996,13 @@ func createGameServers(gsSet *agonesv1.GameServerSet, size int) []agonesv1.GameS
 // newFakeController returns a controller, backed by the fake Clientset
 func newFakeController() (*Controller, agtesting.Mocks) {
 	m := agtesting.NewMocks()
-	wh := webhooks.NewWebHook(http.NewServeMux())
 	counter := gameservers.NewPerNodeCounter(m.KubeInformerFactory, m.AgonesInformerFactory)
-	c := NewController(wh, healthcheck.NewHandler(), counter, m.KubeClient, m.ExtClient, m.AgonesClient, m.AgonesInformerFactory)
+	c := NewController(healthcheck.NewHandler(), counter, m.KubeClient, m.ExtClient, m.AgonesClient, m.AgonesInformerFactory)
 	c.recorder = m.FakeRecorder
 	return c, m
+}
+
+// newFakeExtensions returns an extensions struct
+func newFakeExtensions() *Extensions {
+	return NewExtensions(webhooks.NewWebHook(http.NewServeMux()))
 }

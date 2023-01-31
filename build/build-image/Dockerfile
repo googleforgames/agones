@@ -14,16 +14,16 @@
 
 # ForceUpdate 12 -- change here if you need to force a rebuild
 
-FROM debian:buster
+FROM debian:bullseye
 
 RUN apt-get update && \
     apt-get install -y build-essential gnupg curl git wget psmisc rsync make python bash-completion \
-    zip nano jq graphviz gettext-base plantuml && \
+    zip nano jq graphviz gettext-base plantuml software-properties-common && \
     apt-get clean
 
 # install go
 WORKDIR /usr/local
-ENV GO_VERSION=1.15.13
+ENV GO_VERSION=1.19.1
 ENV GOPATH /go
 ENV GO111MODULE=on
 RUN wget -q https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz && \
@@ -31,21 +31,20 @@ RUN wget -q https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz && \
 
 # install gcloud + kubectl, because it's an easy way to test/dev against kubernetes.
 WORKDIR /opt
-RUN wget -q https://dl.google.com/dl/cloudsdk/release/google-cloud-sdk.zip && unzip -q google-cloud-sdk.zip && \
-    rm google-cloud-sdk.zip && \
-    /opt/google-cloud-sdk/install.sh --usage-reporting=true --path-update=true --bash-completion=true --rc-path=/root/.bashrc
 
-# update the path for both go and gcloud
-ENV PATH /usr/local/go/bin:/go/bin:/opt/google-cloud-sdk/bin:$PATH
+# credits https://cloud.google.com/sdk/docs/install#deb
+RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] http://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key --keyring /usr/share/keyrings/cloud.google.gpg  add - && apt-get update -y && \
+    apt-get install google-cloud-cli google-cloud-cli-gke-gcloud-auth-plugin google-cloud-cli-app-engine-go -y && \
+    echo "source /usr/share/google-cloud-sdk/completion.bash.inc" >> /root/.bashrc
+
+# update the path for go
+ENV PATH /usr/local/go/bin:/go/bin:$PATH
 
 # install go tooling for development, building and testing
-RUN go get -u golang.org/x/tools/cmd/goimports
-
-# RUN gcloud components update
-RUN gcloud components update && gcloud components install app-engine-go
+RUN go install golang.org/x/tools/cmd/goimports@latest
 
 # the kubernetes version for the file
-ENV KUBERNETES_VER 1.19.12
+ENV KUBERNETES_VER 1.24.9
 
 # overwrite kubectl as we want a specific version
 RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/v${KUBERNETES_VER}/bin/linux/amd64/kubectl && \
@@ -58,7 +57,7 @@ RUN mkdir -p /go/src/k8s.io && cd /go/src/k8s.io && \
     git clone -b kubernetes-${KUBERNETES_VER} --depth=3 https://github.com/kubernetes/code-generator.git
 
 # install Helm package manager
-ENV HELM_VER 3.5.0
+ENV HELM_VER 3.10.3
 ENV HELM_URL https://get.helm.sh/helm-v${HELM_VER}-linux-amd64.tar.gz
 RUN curl -L  ${HELM_URL} > /tmp/helm.tar.gz \
     && tar -zxvf /tmp/helm.tar.gz -C /tmp \
@@ -68,7 +67,10 @@ RUN curl -L  ${HELM_URL} > /tmp/helm.tar.gz \
 RUN echo "source <(helm completion bash)" >> /root/.bashrc
 
 # install golang-ci linter
-RUN curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $GOPATH/bin v1.30.0
+RUN go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.49.0
+
+# install gotestsum test runner
+RUN go install gotest.tools/gotestsum@latest
 
 #
 #  \ \      / /__| |__  ___(_) |_ ___
@@ -84,8 +86,21 @@ RUN mkdir /tmp/hugo && \
     mv /tmp/hugo/hugo /usr/local/bin/ && \
     rm -r /tmp/hugo
 
-RUN curl -sL https://deb.nodesource.com/setup_12.x | bash - && \
-    apt-get install -y nodejs
+RUN add-apt-repository -y -r ppa:chris-lea/node.js
+RUN rm -f /etc/apt/sources.list.d/chris-lea-node_js-*.list
+RUN rm -f /etc/apt/sources.list.d/chris-lea-node_js-*.list.save
+
+ARG KEYRING=/usr/share/keyrings/nodesource.gpg
+ARG VERSION=node_18.x
+
+RUN curl -fsSL https://deb.nodesource.com/gpgkey/nodesource.gpg.key | gpg --dearmor | tee "$KEYRING" >/dev/null
+RUN gpg --no-default-keyring --keyring "$KEYRING" --list-keys
+
+ARG DISTRO="buster"
+RUN echo "deb [signed-by=$KEYRING] https://deb.nodesource.com/$VERSION $DISTRO main" | tee /etc/apt/sources.list.d/nodesource.list
+RUN echo "deb-src [signed-by=$KEYRING] https://deb.nodesource.com/$VERSION $DISTRO main" | tee -a /etc/apt/sources.list.d/nodesource.list
+
+RUN apt-get update && apt-get install -y nodejs
 
 # install API reference docs generator
 RUN mkdir -p /go/src/github.com/ahmetb && \
@@ -105,7 +120,7 @@ RUN echo "export PATH=/usr/local/go/bin:/go/bin/:\$PATH" >> /root/.bashrc
 RUN echo "export EDITOR=nano" >> /root/.bashrc
 
 # install terraform
-RUN wget -nv -O terraform.zip https://releases.hashicorp.com/terraform/0.12.21/terraform_0.12.21_linux_amd64.zip && unzip ./terraform.zip && mv terraform /usr/local/bin/
+RUN wget -nv -O terraform.zip https://releases.hashicorp.com/terraform/1.0.8/terraform_1.0.8_linux_amd64.zip && unzip ./terraform.zip && mv terraform /usr/local/bin/
 
 # code generation scripts
 COPY *.sh /root/

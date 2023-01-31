@@ -302,6 +302,28 @@ via the `agones.controller.logLevel`
 [Helm Configuration parameters]({{% ref "/docs/Installation/Install Agones/helm.md#configuration" %}})
 at installation. 
 
+## The Feature Flag I enabled/disabled isn't working as expected
+
+It's entirely possible that Alpha features may still have bugs in them (They are _alpha_ after all 😃), but the first 
+thing to check is what the actual [Feature Flags]({{% relref "./feature-stages.md#feature-gates" %}}) states 
+were passed to Agones are, and that they were set correctly.
+
+The easiest way is to check the top `info` level log lines from the Agones controller.
+
+For example:
+
+```shell
+$ kubectl logs -n agones-system agones-controller-7575dc59-7p2rg  | head
+{"filename":"/home/agones/logs/agones-controller-20220615_211540.log","message":"logging to file","numbackups":99,"severity":"info","source":"main","time":"2022-06-15T21:15:40.309349789Z"}
+{"logLevel":"info","message":"Setting LogLevel configuration","severity":"info","source":"main","time":"2022-06-15T21:15:40.309403296Z"}
+{"ctlConf":{"MinPort":7000,"MaxPort":8000,"SidecarImage":"gcr.io/agones-images/agones-sdk:1.23.0","SidecarCPURequest":"30m","SidecarCPULimit":"0","SidecarMemoryRequest":"0","SidecarMemoryLimit":"0","SdkServiceAccount":"agones-sdk","AlwaysPullSidecar":false,"PrometheusMetrics":true,"Stackdriver":false,"StackdriverLabels":"","KeyFile":"/home/agones/certs/server.key","CertFile":"/home/agones/certs/server.crt","KubeConfig":"","GCPProjectID":"","NumWorkers":100,"APIServerSustainedQPS":400,"APIServerBurstQPS":500,"LogDir":"/home/agones/logs","LogLevel":"info","LogSizeLimitMB":10000},"featureGates":"CustomFasSyncInterval=false\u0026Example=true\u0026NodeExternalDNS=true\u0026PlayerAllocationFilter=false\u0026PlayerTracking=false\u0026SDKGracefulTermination=false\u0026StateAllocationFilter=false","message":"starting gameServer operator...","severity":"info","source":"main","time":"2022-06-15T21:15:40.309528802Z","version":"1.23.0"}
+...
+```
+
+The `ctlConf` section has the full configuration for Agones as it was passed to the controller. Within that log line 
+there is a `featureGates` key, that has the full Feature Gate configuration as a URL Query String (`\u0026` 
+is JSON for `&`), so you can see if the Feature Gates are set as expected. 
+
 ## I uninstalled Agones before deleted all my `GameServers` and now they won't delete
 
 Agones `GameServers` use [Finalizers](https://kubernetes.io/docs/tasks/access-kubernetes-api/custom-resources/custom-resource-definitions/#finalizers)

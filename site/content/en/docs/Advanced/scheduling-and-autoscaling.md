@@ -28,8 +28,6 @@ or their cloud specific documentation.
 
 ### Amazon Elastic Kubernetes Service
 * [Cluster Autoscaler for EKS](https://docs.aws.amazon.com/eks/latest/userguide/cluster-autoscaler.html)
-* [Terraform EKS Module: Autoscaling Example](https://github.com/terraform-aws-modules/terraform-aws-eks/blob/master/docs/autoscaling.md)
-* [Terraform EKS Module: IAM Roles For Service Accounts Autoscaler Example](https://github.com/terraform-aws-modules/terraform-aws-eks/tree/master/examples/irsa)
 
 ### Azure Kubernetes Service
 * [Cluster Autoscaler on Azure Kubernetes Service (AKS) - Preview](https://docs.microsoft.com/en-us/azure/aks/autoscaler)
@@ -37,7 +35,7 @@ or their cloud specific documentation.
 ## Fleet Autoscaling
 
 Fleet autoscaling is the only type of autoscaling that exists in Agones. It is currently available as a
-buffer autoscaling strategy or as a webhook driven strategy, such that you can provide your own autoscaling logic. 
+buffer autoscaling strategy or as a webhook driven strategy, such that you can provide your own autoscaling logic.
 
 Have a look at the [Create a Fleet Autoscaler]({{< relref "../Getting Started/create-fleetautoscaler.md" >}}) quickstart, the
 [Create a Webhook Fleet Autoscaler]({{< relref "../Getting Started/create-webhook-fleetautoscaler.md" >}}) quickstart,
@@ -60,7 +58,7 @@ when it is created.
 
 ### Fleet Scale Down Strategy
 
-Fleet Scale Down strategy refers to the order in which the `GameServers` that belong to a `Fleet` are deleted, 
+Fleet Scale Down strategy refers to the order in which the `GameServers` that belong to a `Fleet` are deleted,
 when Fleets are shrunk in size.
 
 ## Fleet Scheduling
@@ -88,7 +86,7 @@ spec:
             image: {{% example-image %}}
 ```
 
-This is the *default* Fleet scheduling strategy. It is designed for dynamic Kubernetes environments, wherein you wish 
+This is the *default* Fleet scheduling strategy. It is designed for dynamic Kubernetes environments, wherein you wish
 to scale up and down as load increases or decreases, such as in a Cloud environment where you are paying
 for the infrastructure you use.
 
@@ -99,13 +97,62 @@ This affects the Cluster autoscaler, Allocation Scheduling, Pod Scheduling and F
 
 #### Cluster Autoscaler
 
-To ensure that the Cluster Autoscaler doesn't attempt to evict and move `GameServer` `Pods` onto new Nodes during
-gameplay, Agones adds the annotation [`"cluster-autoscaler.kubernetes.io/safe-to-evict": "false"`](https://github.com/kubernetes/autoscaler/blob/master/cluster-autoscaler/FAQ.md#what-types-of-pods-can-prevent-ca-from-removing-a-node)
+When using the “Packed” strategy, Agones will ensure that the Cluster Autoscaler doesn't attempt to evict and move `GameServer` `Pods` onto new Nodes during
+gameplay by adding the annotation [`"cluster-autoscaler.kubernetes.io/safe-to-evict": "false"`](https://github.com/kubernetes/autoscaler/blob/master/cluster-autoscaler/FAQ.md#what-types-of-pods-can-prevent-ca-from-removing-a-node)
 to the backing Pod.
+
+However, if a gameserver can tolerate [being evicted](https://kubernetes.io/docs/concepts/scheduling-eviction/api-eviction/#how-api-initiated-eviction-works)
+(generally in combination with setting an appropriate graceful termination period on the gameserver pod) and you
+want the Cluster Autoscaler to compact your cluster by evicting game servers when it would allow the Cluster
+Autoscaler to reduce the number of nodes in the cluster, then this behavior can be overridden by explicitly setting the
+`"cluster-autoscaler.kubernetes.io/safe-to-evict"` annotation to `"true"` in the metadata for the game server pod, e.g.
+
+```yaml
+apiVersion: "agones.dev/v1"
+kind: GameServer
+metadata:
+  name: "simple-game-server"
+spec:
+  template:
+    # Pod metadata. Name & Namespace is overwritten
+    metadata:
+      annotations:
+        cluster-autoscaler.kubernetes.io/safe-to-evict: true
+    spec:
+      containers:
+      - image: {{< example-image >}}
+      # If you set safe-to-evict to true, be sure to set a corresponding
+      # grace period for terminating the game server safely.
+      terminationGracePeriodSeconds: 300
+```
+
+or if you are using a Fleet
+
+```yaml
+apiVersion: "agones.dev/v1"
+kind: Fleet
+metadata:
+  name: "simple-game-fleet"
+spec:
+  replicas: 2
+  template:
+    spec:
+      template:
+        # Pod metadata. Name & Namespace is overwritten
+        metadata:
+          annotations:
+            cluster-autoscaler.kubernetes.io/safe-to-evict: true
+        spec:
+          containers:
+          - image: {{< example-image >}}
+          # If you set safe-to-evict to true, be sure to set a corresponding
+          # grace period for terminating the game server safely.
+          terminationGracePeriodSeconds: 300
+```
 
 #### Allocation Scheduling Strategy
 
-Under the "Packed" strategy, allocation will prioritise allocating `GameServers` to nodes that are running on 
+Under the "Packed" strategy, allocation will prioritise allocating `GameServers` to nodes that are running on
 Nodes that already have allocated `GameServers` running on them.
 
 #### Pod Scheduling Strategy
@@ -115,13 +162,13 @@ with a `preferredDuringSchedulingIgnoredDuringExecution` affinity with [hostname
 topology. This attempts to group together `GameServer` Pods within as few nodes in the cluster as it can.
 
 {{< alert title="Note" color="info">}}
-The default Kubernetes scheduler doesn't do a perfect job of packing, but it's a good enough job for what we need - 
-  at least at this stage. 
+The default Kubernetes scheduler doesn't do a perfect job of packing, but it's a good enough job for what we need -
+  at least at this stage.
 {{< /alert >}}
 
 #### Fleet Scale Down Strategy
 
-With the "Packed" strategy, Fleets will remove `Ready` `GameServers` from Nodes with the _least_ number of `Ready` and 
+With the "Packed" strategy, Fleets will remove `Ready` `GameServers` from Nodes with the _least_ number of `Ready` and
 `Allocated` `GameServers` on them. Attempting to empty Nodes so that they can be safely removed.
 
 ### Distributed

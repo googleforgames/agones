@@ -27,7 +27,6 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
 	pb "google.golang.org/grpc/binarylog/grpc_binarylog_v1"
-	"google.golang.org/grpc/grpclog"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 )
@@ -49,7 +48,13 @@ func (g *callIDGenerator) reset() {
 var idGen callIDGenerator
 
 // MethodLogger is the sub-logger for each method.
-type MethodLogger struct {
+type MethodLogger interface {
+	Log(LogEntryConfig)
+}
+
+// TruncatingMethodLogger is a method logger that truncates headers and messages
+// based on configured fields.
+type TruncatingMethodLogger struct {
 	headerMaxLen, messageMaxLen uint64
 
 	callID          uint64
@@ -58,20 +63,23 @@ type MethodLogger struct {
 	sink Sink // TODO(blog): make this plugable.
 }
 
-func newMethodLogger(h, m uint64) *MethodLogger {
-	return &MethodLogger{
+// NewTruncatingMethodLogger returns a new truncating method logger.
+func NewTruncatingMethodLogger(h, m uint64) *TruncatingMethodLogger {
+	return &TruncatingMethodLogger{
 		headerMaxLen:  h,
 		messageMaxLen: m,
 
 		callID:          idGen.next(),
 		idWithinCallGen: &callIDGenerator{},
 
-		sink: defaultSink, // TODO(blog): make it plugable.
+		sink: DefaultSink, // TODO(blog): make it plugable.
 	}
 }
 
-// Log creates a proto binary log entry, and logs it to the sink.
-func (ml *MethodLogger) Log(c LogEntryConfig) {
+// Build is an internal only method for building the proto message out of the
+// input event. It's made public to enable other library to reuse as much logic
+// in TruncatingMethodLogger as possible.
+func (ml *TruncatingMethodLogger) Build(c LogEntryConfig) *pb.GrpcLogEntry {
 	m := c.toProto()
 	timestamp, _ := ptypes.TimestampProto(time.Now())
 	m.Timestamp = timestamp
@@ -86,11 +94,15 @@ func (ml *MethodLogger) Log(c LogEntryConfig) {
 	case *pb.GrpcLogEntry_Message:
 		m.PayloadTruncated = ml.truncateMessage(pay.Message)
 	}
-
-	ml.sink.Write(m)
+	return m
 }
 
-func (ml *MethodLogger) truncateMetadata(mdPb *pb.Metadata) (truncated bool) {
+// Log creates a proto binary log entry, and logs it to the sink.
+func (ml *TruncatingMethodLogger) Log(c LogEntryConfig) {
+	ml.sink.Write(ml.Build(c))
+}
+
+func (ml *TruncatingMethodLogger) truncateMetadata(mdPb *pb.Metadata) (truncated bool) {
 	if ml.headerMaxLen == maxUInt {
 		return false
 	}
@@ -120,7 +132,7 @@ func (ml *MethodLogger) truncateMetadata(mdPb *pb.Metadata) (truncated bool) {
 	return truncated
 }
 
-func (ml *MethodLogger) truncateMessage(msgPb *pb.Message) (truncated bool) {
+func (ml *TruncatingMethodLogger) truncateMessage(msgPb *pb.Message) (truncated bool) {
 	if ml.messageMaxLen == maxUInt {
 		return false
 	}
@@ -219,12 +231,12 @@ func (c *ClientMessage) toProto() *pb.GrpcLogEntry {
 	if m, ok := c.Message.(proto.Message); ok {
 		data, err = proto.Marshal(m)
 		if err != nil {
-			grpclog.Infof("binarylogging: failed to marshal proto message: %v", err)
+			grpclogLogger.Infof("binarylogging: failed to marshal proto message: %v", err)
 		}
 	} else if b, ok := c.Message.([]byte); ok {
 		data = b
 	} else {
-		grpclog.Infof("binarylogging: message to log is neither proto.message nor []byte")
+		grpclogLogger.Infof("binarylogging: message to log is neither proto.message nor []byte")
 	}
 	ret := &pb.GrpcLogEntry{
 		Type: pb.GrpcLogEntry_EVENT_TYPE_CLIENT_MESSAGE,
@@ -259,12 +271,12 @@ func (c *ServerMessage) toProto() *pb.GrpcLogEntry {
 	if m, ok := c.Message.(proto.Message); ok {
 		data, err = proto.Marshal(m)
 		if err != nil {
-			grpclog.Infof("binarylogging: failed to marshal proto message: %v", err)
+			grpclogLogger.Infof("binarylogging: failed to marshal proto message: %v", err)
 		}
 	} else if b, ok := c.Message.([]byte); ok {
 		data = b
 	} else {
-		grpclog.Infof("binarylogging: message to log is neither proto.message nor []byte")
+		grpclogLogger.Infof("binarylogging: message to log is neither proto.message nor []byte")
 	}
 	ret := &pb.GrpcLogEntry{
 		Type: pb.GrpcLogEntry_EVENT_TYPE_SERVER_MESSAGE,
@@ -315,7 +327,7 @@ type ServerTrailer struct {
 func (c *ServerTrailer) toProto() *pb.GrpcLogEntry {
 	st, ok := status.FromError(c.Err)
 	if !ok {
-		grpclog.Info("binarylogging: error in trailer is not a status error")
+		grpclogLogger.Info("binarylogging: error in trailer is not a status error")
 	}
 	var (
 		detailsBytes []byte
@@ -325,7 +337,7 @@ func (c *ServerTrailer) toProto() *pb.GrpcLogEntry {
 	if stProto != nil && len(stProto.Details) != 0 {
 		detailsBytes, err = proto.Marshal(stProto)
 		if err != nil {
-			grpclog.Infof("binarylogging: failed to marshal status proto: %v", err)
+			grpclogLogger.Infof("binarylogging: failed to marshal status proto: %v", err)
 		}
 	}
 	ret := &pb.GrpcLogEntry{

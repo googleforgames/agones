@@ -1,0 +1,37 @@
+# disabled all not necessary chart
+defaultRules:
+  enabled: false
+alertmanager:
+  enabled: false
+kubeApiServer:
+  enabled: false
+kubelet:
+  enabled: false
+kubeControllerManager:
+  enabled: false
+coreDns:
+  enabled: false
+kubeDns:
+  enabled: false
+kubeEtcd:
+  enabled: false
+kubeScheduler:
+  enabled: false
+kubeProxy:
+  enabled: false
+kubeStateMetrics:
+  enabled: false
+nodeExporter:
+  enabled: false
+
+prometheusOperator:
+  enabled: true
+prometheus:
+  enabled: true
+  prometheusSpec:
+    # allow discovery of third party service monitor
+    serviceMonitorSelectorNilUsesHelmValues: false
+grafana:
+  enabled: true
+  adminUser: admin
+  adminPassword: admin

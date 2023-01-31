@@ -84,8 +84,9 @@ Configurable parameters:
 - name - the name of the GKE cluster (default is "agones-terraform-example")
 - agones_version - the version of agones to install (an empty string, which is the default, is the latest version from the [Helm repository](https://agones.dev/chart/stable))
 - machine_type - machine type for hosting game servers (default is "e2-standard-4")
-- node_count - count of game server nodes for the default node pool (default is "4")
-- zone - the name of the [zone](https://cloud.google.com/compute/docs/regions-zones) you want your cluster to be
+- node_count - count of game server nodes for the default node pool (default is "4") 
+- enable_image_streaming - whether or not to enable image streaming for the `"default"` node pool (default is true) 
+- zone - (Deprecated, use location) the name of the [zone](https://cloud.google.com/compute/docs/regions-zones) you want your cluster to be
   created in (default is "us-west1-c")
 - network - the name of the VPC network you want your cluster and firewall rules to be connected to (default is "default")
 - subnetwork - the name of the subnetwork in which the cluster's instances are launched. (required when using non default network)
@@ -95,6 +96,10 @@ Configurable parameters:
 - gameserver_maxPort - the upper bound of the port range which gameservers will listen on (default is "8000")
 - gameserver_namespaces - a list of namespaces which will be used to run gameservers (default is `["default"]`). For example `["default", "xbox-gameservers", "mobile-gameservers"]`
 - force_update - whether or not to force the replacement/update of resource (default is true, false may be required to prevent immutability errors when updating the configuration)
+- location - the name of the [location](https://cloud.google.com/compute/docs/regions-zones) you want your cluster  to eb created in (default is "us-west1-c")
+- autoscale - whether you want to enable autoscale for the gameserver nodepool (default is false)
+- min_node_count - the minimum number of nodes for a nodepool when autoscale is enabled (default is "1")
+- max_node_count - the maximum number of nodes for a nodepool when autoscale is enabled (default is "5")
 
 {{% alert title="Warning" color="warning"%}}
 On the lines that read `source = "git::https://github.com/googleforgames/agones.git//install/terraform/modules/gke/?ref=main"`

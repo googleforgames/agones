@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+{{- $featureGates := include "agones.featureGates" . | fromYaml }}
 
 apiVersion: v1
 kind: Service
@@ -18,17 +19,26 @@ metadata:
   name: agones-controller-service
   namespace: {{ .Release.Namespace }}
   labels:
+{{- if $featureGates.SplitControllerAndExtensions }}
+    agones.dev/role: extensions
+{{- else}}
     agones.dev/role: controller
+{{- end}}
     app: {{ template "agones.name" . }}
     chart: {{ template "agones.chart" . }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
 spec:
   selector:
+{{- if $featureGates.SplitControllerAndExtensions }}
+    agones.dev/role: extensions
+{{- else}}
     agones.dev/role: controller
+{{- end}}
   ports:
     - name: webhooks
       port: 443
-      targetPort: 8081
+      targetPort: webhooks
     - name: web
       port: {{ .Values.agones.controller.http.port }}
+      targetPort: http

@@ -15,7 +15,11 @@
 package main
 
 import (
+	"bytes"
 	"context"
+	"io"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -35,4 +39,28 @@ func TestRegisterTestSdkServer(t *testing.T) {
 	ctlConf.LocalFile = "@@"
 	_, err = registerLocal(grpcServer, ctlConf)
 	assert.Error(t, err, "Wrong file name should produce an error")
+}
+
+func TestHealthCheckWrapper(t *testing.T) {
+	t.Parallel()
+	testCases := []struct {
+		name     string
+		body     io.Reader
+		expected int
+	}{
+		{"empty body", nil, http.StatusBadRequest},
+		{"non-empty body", bytes.NewBuffer([]byte(`{}`)), http.StatusOK},
+	}
+
+	testWrapper := healthCheckWrapper(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			testResponse := httptest.NewRecorder()
+			testWrapper.ServeHTTP(testResponse, httptest.NewRequest("POST", "http://testServer/health", tc.body))
+			assert.Equal(t, tc.expected, testResponse.Code)
+		})
+	}
 }

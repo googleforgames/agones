@@ -25,6 +25,7 @@ import (
 	"agones.dev/agones/pkg/apis/agones"
 	"agones.dev/agones/pkg/util/runtime"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -133,7 +134,20 @@ func TestGameServerApplyDefaults(t *testing.T) {
 
 	ten := int64(10)
 
+	defaultGameServerAnd := func(f func(gss *GameServerSpec)) GameServer {
+		gs := GameServer{
+			Spec: GameServerSpec{
+				Ports: []GameServerPort{{ContainerPort: 999}},
+				Template: corev1.PodTemplateSpec{
+					Spec: corev1.PodSpec{Containers: []corev1.Container{
+						{Name: "testing", Image: "testing/image"},
+					}}}},
+		}
+		f(&gs.Spec)
+		return gs
+	}
 	type expected struct {
+		container           string
 		protocol            corev1.Protocol
 		state               GameServerState
 		policy              PortPolicy
@@ -141,6 +155,30 @@ func TestGameServerApplyDefaults(t *testing.T) {
 		scheduling          apis.SchedulingStrategy
 		sdkServer           SdkServer
 		alphaPlayerCapacity *int64
+		evictionSafeSpec    EvictionSafe
+		evictionSafeStatus  EvictionSafe
+	}
+	wantDefaultAnd := func(f func(e *expected)) expected {
+		e := expected{
+			container:  "testing",
+			protocol:   "UDP",
+			state:      GameServerStatePortAllocation,
+			policy:     Dynamic,
+			scheduling: apis.Packed,
+			health: Health{
+				Disabled:            false,
+				FailureThreshold:    3,
+				InitialDelaySeconds: 5,
+				PeriodSeconds:       5,
+			},
+			sdkServer: SdkServer{
+				LogLevel: SdkServerLogLevelInfo,
+				GRPCPort: 9357,
+				HTTPPort: 9358,
+			},
+		}
+		f(&e)
+		return e
 	}
 	data := map[string]struct {
 		gameServer   GameServer
@@ -149,63 +187,25 @@ func TestGameServerApplyDefaults(t *testing.T) {
 		expected     expected
 	}{
 		"set basic defaults on a very simple gameserver": {
+			gameServer: defaultGameServerAnd(func(gss *GameServerSpec) {}),
+			expected:   wantDefaultAnd(func(e *expected) {}),
+		},
+		"PlayerTracking=true": {
 			featureFlags: string(runtime.FeaturePlayerTracking) + "=true",
-			gameServer: GameServer{
-				Spec: GameServerSpec{
-					Players: &PlayersSpec{InitialCapacity: 10},
-					Ports:   []GameServerPort{{ContainerPort: 999}},
-					Template: corev1.PodTemplateSpec{
-						Spec: corev1.PodSpec{Containers: []corev1.Container{
-							{Name: "testing", Image: "testing/image"},
-						}}}},
-			},
-			container: "testing",
-			expected: expected{
-				protocol:   "UDP",
-				state:      GameServerStatePortAllocation,
-				policy:     Dynamic,
-				scheduling: apis.Packed,
-				health: Health{
-					Disabled:            false,
-					FailureThreshold:    3,
-					InitialDelaySeconds: 5,
-					PeriodSeconds:       5,
-				},
-				sdkServer: SdkServer{
-					LogLevel: SdkServerLogLevelInfo,
-					GRPCPort: 9357,
-					HTTPPort: 9358,
-				},
-				alphaPlayerCapacity: &ten,
-			},
+			gameServer: defaultGameServerAnd(func(gss *GameServerSpec) {
+				gss.Players = &PlayersSpec{InitialCapacity: 10}
+			}),
+			expected: wantDefaultAnd(func(e *expected) {
+				e.alphaPlayerCapacity = &ten
+			}),
 		},
 		"defaults on passthrough": {
-			gameServer: GameServer{
-				Spec: GameServerSpec{
-					Ports: []GameServerPort{{PortPolicy: Passthrough}},
-					Template: corev1.PodTemplateSpec{
-						Spec: corev1.PodSpec{Containers: []corev1.Container{
-							{Name: "testing", Image: "testing/image"},
-						}}}},
-			},
-			container: "testing",
-			expected: expected{
-				protocol:   "UDP",
-				state:      GameServerStatePortAllocation,
-				policy:     Passthrough,
-				scheduling: apis.Packed,
-				health: Health{
-					Disabled:            false,
-					FailureThreshold:    3,
-					InitialDelaySeconds: 5,
-					PeriodSeconds:       5,
-				},
-				sdkServer: SdkServer{
-					LogLevel: SdkServerLogLevelInfo,
-					GRPCPort: 9357,
-					HTTPPort: 9358,
-				},
-			},
+			gameServer: defaultGameServerAnd(func(gss *GameServerSpec) {
+				gss.Ports[0].PortPolicy = Passthrough
+			}),
+			expected: wantDefaultAnd(func(e *expected) {
+				e.policy = Passthrough
+			}),
 		},
 		"defaults are already set": {
 			gameServer: GameServer{
@@ -234,165 +234,146 @@ func TestGameServerApplyDefaults(t *testing.T) {
 					},
 				},
 				Status: GameServerStatus{State: "TestState"}},
-			container: "testing2",
-			expected: expected{
-				protocol:   "TCP",
-				state:      "TestState",
-				policy:     Static,
-				scheduling: apis.Packed,
-				health: Health{
+			expected: wantDefaultAnd(func(e *expected) {
+				e.container = "testing2"
+				e.protocol = "TCP"
+				e.state = "TestState"
+				e.health = Health{
 					Disabled:            false,
 					FailureThreshold:    10,
 					InitialDelaySeconds: 11,
 					PeriodSeconds:       12,
-				},
-				sdkServer: SdkServer{
-					LogLevel: SdkServerLogLevelInfo,
-					GRPCPort: 9357,
-					HTTPPort: 9358,
-				},
-			},
+				}
+			}),
 		},
 		"set basic defaults on static gameserver": {
-			gameServer: GameServer{
-				Spec: GameServerSpec{
-					Ports: []GameServerPort{{PortPolicy: Static}},
-					Template: corev1.PodTemplateSpec{
-						Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "testing", Image: "testing/image"}}}}},
-			},
-			container: "testing",
-			expected: expected{
-				protocol:   "UDP",
-				state:      GameServerStateCreating,
-				policy:     Static,
-				scheduling: apis.Packed,
-				health: Health{
-					Disabled:            false,
-					FailureThreshold:    3,
-					InitialDelaySeconds: 5,
-					PeriodSeconds:       5,
-				},
-				sdkServer: SdkServer{
-					LogLevel: SdkServerLogLevelInfo,
-					GRPCPort: 9357,
-					HTTPPort: 9358,
-				},
-			},
+			gameServer: defaultGameServerAnd(func(gss *GameServerSpec) {
+				gss.Ports[0].PortPolicy = Static
+			}),
+			expected: wantDefaultAnd(func(e *expected) {
+				e.state = GameServerStateCreating
+				e.policy = Static
+			}),
 		},
 		"health is disabled": {
-			gameServer: GameServer{
-				Spec: GameServerSpec{
-					Ports:  []GameServerPort{{ContainerPort: 999}},
-					Health: Health{Disabled: true},
-					Template: corev1.PodTemplateSpec{
-						Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "testing", Image: "testing/image"}}}}},
-			},
-			container: "testing",
-			expected: expected{
-				protocol:   "UDP",
-				state:      GameServerStatePortAllocation,
-				policy:     Dynamic,
-				scheduling: apis.Packed,
-				health: Health{
-					Disabled: true,
-				},
-				sdkServer: SdkServer{
-					LogLevel: SdkServerLogLevelInfo,
-					GRPCPort: 9357,
-					HTTPPort: 9358,
-				},
-			},
+			gameServer: defaultGameServerAnd(func(gss *GameServerSpec) {
+				gss.Health = Health{Disabled: true}
+			}),
+			expected: wantDefaultAnd(func(e *expected) {
+				e.health = Health{Disabled: true}
+			}),
 		},
 		"convert from legacy single port to multiple": {
-			gameServer: GameServer{
-				Spec: GameServerSpec{
-					Ports: []GameServerPort{
-						{
-							ContainerPort: 777,
-							HostPort:      777,
-							PortPolicy:    Static,
-							Protocol:      corev1.ProtocolTCP,
-						},
-					},
-					Health: Health{Disabled: true},
-					Template: corev1.PodTemplateSpec{
-						Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "testing", Image: "testing/image"}}}}},
-			},
-			container: "testing",
-			expected: expected{
-				protocol:   corev1.ProtocolTCP,
-				state:      GameServerStateCreating,
-				policy:     Static,
-				scheduling: apis.Packed,
-				health:     Health{Disabled: true},
-				sdkServer: SdkServer{
-					LogLevel: SdkServerLogLevelInfo,
-					GRPCPort: 9357,
-					HTTPPort: 9358,
-				},
-			},
+			gameServer: defaultGameServerAnd(func(gss *GameServerSpec) {
+				gss.Ports[0] = GameServerPort{
+					ContainerPort: 777,
+					HostPort:      777,
+					PortPolicy:    Static,
+					Protocol:      corev1.ProtocolTCP,
+				}
+			}),
+			expected: wantDefaultAnd(func(e *expected) {
+				e.protocol = "TCP"
+				e.state = GameServerStateCreating
+			}),
 		},
 		"set Debug logging level": {
-			gameServer: GameServer{
-				Spec: GameServerSpec{
-					Ports:     []GameServerPort{{ContainerPort: 999}},
-					SdkServer: SdkServer{LogLevel: SdkServerLogLevelDebug},
-					Template: corev1.PodTemplateSpec{
-						Spec: corev1.PodSpec{Containers: []corev1.Container{
-							{Name: "testing", Image: "testing/image"},
-						}}}},
-			},
-			container: "testing",
-			expected: expected{
-				protocol:   "UDP",
-				state:      GameServerStatePortAllocation,
-				policy:     Dynamic,
-				scheduling: apis.Packed,
-				health: Health{
-					Disabled:            false,
-					FailureThreshold:    3,
-					InitialDelaySeconds: 5,
-					PeriodSeconds:       5,
-				},
-				sdkServer: SdkServer{
-					LogLevel: SdkServerLogLevelDebug,
-					GRPCPort: 9357,
-					HTTPPort: 9358,
-				},
-			},
+			gameServer: defaultGameServerAnd(func(gss *GameServerSpec) {
+				gss.SdkServer = SdkServer{LogLevel: SdkServerLogLevelDebug}
+			}),
+			expected: wantDefaultAnd(func(e *expected) {
+				e.sdkServer.LogLevel = SdkServerLogLevelDebug
+			}),
 		},
 		"set gRPC and HTTP ports on SDK Server": {
-			gameServer: GameServer{
-				Spec: GameServerSpec{
-					Ports: []GameServerPort{{ContainerPort: 999}},
-					SdkServer: SdkServer{
-						LogLevel: SdkServerLogLevelError,
-						GRPCPort: 19357,
-						HTTPPort: 19358,
-					},
-					Template: corev1.PodTemplateSpec{
-						Spec: corev1.PodSpec{Containers: []corev1.Container{
-							{Name: "testing", Image: "testing/image"},
-						}}}},
-			},
-			container: "testing",
-			expected: expected{
-				protocol:   "UDP",
-				state:      GameServerStatePortAllocation,
-				policy:     Dynamic,
-				scheduling: apis.Packed,
-				health: Health{
-					Disabled:            false,
-					FailureThreshold:    3,
-					InitialDelaySeconds: 5,
-					PeriodSeconds:       5,
-				},
-				sdkServer: SdkServer{
+			gameServer: defaultGameServerAnd(func(gss *GameServerSpec) {
+				gss.SdkServer = SdkServer{
 					LogLevel: SdkServerLogLevelError,
 					GRPCPort: 19357,
 					HTTPPort: 19358,
-				},
-			},
+				}
+			}),
+			expected: wantDefaultAnd(func(e *expected) {
+				e.sdkServer = SdkServer{
+					LogLevel: SdkServerLogLevelError,
+					GRPCPort: 19357,
+					HTTPPort: 19358,
+				}
+			}),
+		},
+		"SafeToEvict gate off => no SafeToEvict fields": {
+			featureFlags: string(runtime.FeatureSafeToEvict) + "=false",
+			gameServer:   defaultGameServerAnd(func(gss *GameServerSpec) {}),
+			expected:     wantDefaultAnd(func(e *expected) {}),
+		},
+		"SafeToEvict gate on => SafeToEvict: Never": {
+			featureFlags: string(runtime.FeatureSafeToEvict) + "=true",
+			gameServer:   defaultGameServerAnd(func(gss *GameServerSpec) {}),
+			expected: wantDefaultAnd(func(e *expected) {
+				e.evictionSafeSpec = EvictionSafeNever
+				e.evictionSafeStatus = EvictionSafeNever
+			}),
+		},
+		"SafeToEvict: Always": {
+			featureFlags: string(runtime.FeatureSafeToEvict) + "=true",
+			gameServer: defaultGameServerAnd(func(gss *GameServerSpec) {
+				gss.Eviction.Safe = EvictionSafeAlways
+			}),
+			expected: wantDefaultAnd(func(e *expected) {
+				e.evictionSafeSpec = EvictionSafeAlways
+				e.evictionSafeStatus = EvictionSafeAlways
+			}),
+		},
+		"SafeToEvict: OnUpgrade": {
+			featureFlags: string(runtime.FeatureSafeToEvict) + "=true",
+			gameServer: defaultGameServerAnd(func(gss *GameServerSpec) {
+				gss.Eviction.Safe = EvictionSafeOnUpgrade
+			}),
+			expected: wantDefaultAnd(func(e *expected) {
+				e.evictionSafeSpec = EvictionSafeOnUpgrade
+				e.evictionSafeStatus = EvictionSafeOnUpgrade
+			}),
+		},
+		"SafeToEvict: Never": {
+			featureFlags: string(runtime.FeatureSafeToEvict) + "=true",
+			gameServer: defaultGameServerAnd(func(gss *GameServerSpec) {
+				gss.Eviction.Safe = EvictionSafeNever
+			}),
+			expected: wantDefaultAnd(func(e *expected) {
+				e.evictionSafeSpec = EvictionSafeNever
+				e.evictionSafeStatus = EvictionSafeNever
+			}),
+		},
+		"SafeToEvict: Always inferred from safe-to-evict=true": {
+			featureFlags: string(runtime.FeatureSafeToEvict) + "=true",
+			gameServer: defaultGameServerAnd(func(gss *GameServerSpec) {
+				gss.Template.ObjectMeta.Annotations = map[string]string{PodSafeToEvictAnnotation: "true"}
+			}),
+			expected: wantDefaultAnd(func(e *expected) {
+				e.evictionSafeSpec = EvictionSafeNever
+				e.evictionSafeStatus = EvictionSafeAlways
+			}),
+		},
+		"Nothing inferred from safe-to-evict=false": {
+			featureFlags: string(runtime.FeatureSafeToEvict) + "=true",
+			gameServer: defaultGameServerAnd(func(gss *GameServerSpec) {
+				gss.Template.ObjectMeta.Annotations = map[string]string{PodSafeToEvictAnnotation: "false"}
+			}),
+			expected: wantDefaultAnd(func(e *expected) {
+				e.evictionSafeSpec = EvictionSafeNever
+				e.evictionSafeStatus = EvictionSafeNever
+			}),
+		},
+		"safe-to-evict=false AND SafeToEvict: Always => SafeToEvict: Always": {
+			featureFlags: string(runtime.FeatureSafeToEvict) + "=true",
+			gameServer: defaultGameServerAnd(func(gss *GameServerSpec) {
+				gss.Eviction.Safe = EvictionSafeAlways
+				gss.Template.ObjectMeta.Annotations = map[string]string{PodSafeToEvictAnnotation: "false"}
+			}),
+			expected: wantDefaultAnd(func(e *expected) {
+				e.evictionSafeSpec = EvictionSafeAlways
+				e.evictionSafeStatus = EvictionSafeAlways
+			}),
 		},
 	}
 
@@ -410,7 +391,7 @@ func TestGameServerApplyDefaults(t *testing.T) {
 
 			spec := test.gameServer.Spec
 			assert.Contains(t, test.gameServer.ObjectMeta.Finalizers, agones.GroupName)
-			assert.Equal(t, test.container, spec.Container)
+			assert.Equal(t, test.expected.container, spec.Container)
 			assert.Equal(t, test.expected.protocol, spec.Ports[0].Protocol)
 			assert.Equal(t, test.expected.state, test.gameServer.Status.State)
 			assert.Equal(t, test.expected.scheduling, test.gameServer.Spec.Scheduling)
@@ -422,6 +403,8 @@ func TestGameServerApplyDefaults(t *testing.T) {
 				assert.Nil(t, test.gameServer.Spec.Players)
 				assert.Nil(t, test.gameServer.Status.Players)
 			}
+			assert.Equal(t, test.expected.evictionSafeSpec, spec.Eviction.Safe)
+			assert.Equal(t, test.expected.evictionSafeStatus, test.gameServer.Status.Eviction.Safe)
 		})
 	}
 }
@@ -1154,6 +1137,7 @@ func TestGameServerPodNoErrors(t *testing.T) {
 	pod, err := fixture.Pod()
 	assert.Nil(t, err, "Pod should not return an error")
 	assert.Equal(t, fixture.ObjectMeta.Name, pod.ObjectMeta.Name)
+	assert.Equal(t, fixture.ObjectMeta.Name, pod.Spec.Hostname)
 	assert.Equal(t, fixture.ObjectMeta.Namespace, pod.ObjectMeta.Namespace)
 	assert.Equal(t, "gameserver", pod.ObjectMeta.Labels[agones.GroupName+"/role"])
 	assert.Equal(t, fixture.ObjectMeta.Name, pod.ObjectMeta.Labels[GameServerPodLabel])
@@ -1163,6 +1147,25 @@ func TestGameServerPodNoErrors(t *testing.T) {
 	assert.Equal(t, fixture.Spec.Ports[0].ContainerPort, pod.Spec.Containers[0].Ports[0].ContainerPort)
 	assert.Equal(t, corev1.Protocol("UDP"), pod.Spec.Containers[0].Ports[0].Protocol)
 	assert.True(t, metav1.IsControlledBy(pod, fixture))
+}
+
+func TestGameServerPodHostName(t *testing.T) {
+	t.Parallel()
+
+	fixture := defaultGameServer()
+	fixture.ObjectMeta.Name = "test-1.0"
+	fixture.ApplyDefaults()
+	pod, err := fixture.Pod()
+	require.NoError(t, err)
+	assert.Equal(t, "test-1-0", pod.Spec.Hostname)
+
+	fixture = defaultGameServer()
+	fixture.ApplyDefaults()
+	expected := "ORANGE"
+	fixture.Spec.Template.Spec.Hostname = expected
+	pod, err = fixture.Pod()
+	require.NoError(t, err)
+	assert.Equal(t, expected, pod.Spec.Hostname)
 }
 
 func TestGameServerPodContainerNotFoundErrReturned(t *testing.T) {
@@ -1205,8 +1208,8 @@ func TestGameServerPodWithSidecarNoErrors(t *testing.T) {
 	assert.Equal(t, fixture.ObjectMeta.Name, pod.ObjectMeta.Name)
 	assert.Len(t, pod.Spec.Containers, 2, "Should have two containers")
 	assert.Equal(t, "other-agones-sdk", pod.Spec.ServiceAccountName)
-	assert.Equal(t, "container", pod.Spec.Containers[0].Name)
-	assert.Equal(t, "sidecar", pod.Spec.Containers[1].Name)
+	assert.Equal(t, "sidecar", pod.Spec.Containers[0].Name)
+	assert.Equal(t, "container", pod.Spec.Containers[1].Name)
 	assert.True(t, metav1.IsControlledBy(pod, fixture))
 }
 
@@ -1244,40 +1247,151 @@ func TestGameServerPodWithMultiplePortAllocations(t *testing.T) {
 }
 
 func TestGameServerPodObjectMeta(t *testing.T) {
+	runtime.FeatureTestMutex.Lock()
+	defer runtime.FeatureTestMutex.Unlock()
+
 	fixture := &GameServer{ObjectMeta: metav1.ObjectMeta{Name: "lucy"},
 		Spec: GameServerSpec{Container: "goat"}}
 
-	f := func(t *testing.T, gs *GameServer, pod *corev1.Pod) {
-		assert.Equal(t, gs.ObjectMeta.Name, pod.ObjectMeta.Name)
-		assert.Equal(t, gs.ObjectMeta.Namespace, pod.ObjectMeta.Namespace)
-		assert.Equal(t, GameServerLabelRole, pod.ObjectMeta.Labels[RoleLabel])
-		assert.Equal(t, "gameserver", pod.ObjectMeta.Labels[agones.GroupName+"/role"])
-		assert.Equal(t, gs.ObjectMeta.Name, pod.ObjectMeta.Labels[GameServerPodLabel])
-		assert.Equal(t, "goat", pod.ObjectMeta.Annotations[GameServerContainerAnnotation])
-		assert.True(t, metav1.IsControlledBy(pod, gs))
+	for desc, tc := range map[string]struct {
+		featureFlags string
+		scheduling   apis.SchedulingStrategy
+		wantSafe     string
+	}{
+		"packed, SafeToEvict=false": {
+			featureFlags: "SafeToEvict=false",
+			scheduling:   apis.Packed,
+			wantSafe:     "false",
+		},
+		"distributed, SafeToEvict=false": {
+			featureFlags: "SafeToEvict=false",
+			scheduling:   apis.Distributed,
+		},
+		"packed, SafeToEvict=true": {
+			featureFlags: "SafeToEvict=true",
+			scheduling:   apis.Packed,
+		},
+		"distributed, SafeToEvict=true": {
+			featureFlags: "SafeToEvict=true",
+			scheduling:   apis.Distributed,
+		},
+	} {
+		t.Run(desc, func(t *testing.T) {
+			err := runtime.ParseFeatures(tc.featureFlags)
+			assert.NoError(t, err)
+
+			gs := fixture.DeepCopy()
+			gs.Spec.Scheduling = tc.scheduling
+			pod := &corev1.Pod{}
+
+			gs.podObjectMeta(pod)
+
+			assert.Equal(t, gs.ObjectMeta.Name, pod.ObjectMeta.Name)
+			assert.Equal(t, gs.ObjectMeta.Namespace, pod.ObjectMeta.Namespace)
+			assert.Equal(t, GameServerLabelRole, pod.ObjectMeta.Labels[RoleLabel])
+			assert.Equal(t, "gameserver", pod.ObjectMeta.Labels[agones.GroupName+"/role"])
+			assert.Equal(t, gs.ObjectMeta.Name, pod.ObjectMeta.Labels[GameServerPodLabel])
+			assert.Equal(t, "goat", pod.ObjectMeta.Annotations[GameServerContainerAnnotation])
+			assert.True(t, metav1.IsControlledBy(pod, gs))
+			assert.Equal(t, tc.wantSafe, pod.ObjectMeta.Annotations[PodSafeToEvictAnnotation])
+		})
+	}
+}
+
+func TestGameServerPodAutoscalerAnnotations(t *testing.T) {
+	runtime.FeatureTestMutex.Lock()
+	defer runtime.FeatureTestMutex.Unlock()
+
+	testCases := []struct {
+		featureFlags       string
+		description        string
+		scheduling         apis.SchedulingStrategy
+		setAnnotation      bool
+		expectedAnnotation string
+	}{
+		{
+			featureFlags:       "SafeToEvict=false",
+			description:        "Packed, SafeToEvict=false",
+			scheduling:         apis.Packed,
+			expectedAnnotation: "false",
+		},
+		{
+			featureFlags:       "SafeToEvict=false",
+			description:        "Distributed, SafeToEvict=false",
+			scheduling:         apis.Distributed,
+			expectedAnnotation: "",
+		},
+		{
+			featureFlags:       "SafeToEvict=false",
+			description:        "Packed with autoscaler annotation, SafeToEvict=false",
+			scheduling:         apis.Packed,
+			setAnnotation:      true,
+			expectedAnnotation: "true",
+		},
+		{
+			featureFlags:       "SafeToEvict=false",
+			description:        "Distributed with autoscaler annotation, SafeToEvict=false",
+			scheduling:         apis.Distributed,
+			setAnnotation:      true,
+			expectedAnnotation: "true",
+		},
+		{
+			featureFlags:       "SafeToEvict=true",
+			description:        "Packed, SafeToEvict=true",
+			scheduling:         apis.Packed,
+			expectedAnnotation: "false",
+		},
+		{
+			featureFlags:       "SafeToEvict=true",
+			description:        "Distributed, SafeToEvict=true",
+			scheduling:         apis.Distributed,
+			expectedAnnotation: "false",
+		},
+		{
+			featureFlags:       "SafeToEvict=true",
+			description:        "Packed with autoscaler annotation, SafeToEvict=true",
+			scheduling:         apis.Packed,
+			setAnnotation:      true,
+			expectedAnnotation: "true",
+		},
+		{
+			featureFlags:       "SafeToEvict=true",
+			description:        "Distributed with autoscaler annotation, SafeToEvict=true",
+			scheduling:         apis.Distributed,
+			setAnnotation:      true,
+			expectedAnnotation: "true",
+		},
 	}
 
-	t.Run("packed", func(t *testing.T) {
-		gs := fixture.DeepCopy()
-		gs.Spec.Scheduling = apis.Packed
-		pod := &corev1.Pod{}
+	fixture := &GameServer{
+		ObjectMeta: metav1.ObjectMeta{Name: "logan"},
+		Spec:       GameServerSpec{Container: "sheep"},
+		Status:     GameServerStatus{Eviction: Eviction{Safe: EvictionSafeNever}},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.description, func(t *testing.T) {
+			err := runtime.ParseFeatures(tc.featureFlags)
+			assert.NoError(t, err)
 
-		gs.podObjectMeta(pod)
-		f(t, gs, pod)
-
-		assert.Equal(t, "false", pod.ObjectMeta.Annotations["cluster-autoscaler.kubernetes.io/safe-to-evict"])
-	})
-
-	t.Run("distributed", func(t *testing.T) {
-		gs := fixture.DeepCopy()
-		gs.Spec.Scheduling = apis.Distributed
-		pod := &corev1.Pod{}
-
-		gs.podObjectMeta(pod)
-		f(t, gs, pod)
-
-		assert.Equal(t, "", pod.ObjectMeta.Annotations["cluster-autoscaler.kubernetes.io/safe-to-evict"])
-	})
+			gs := fixture.DeepCopy()
+			gs.Spec.Scheduling = tc.scheduling
+			if tc.setAnnotation {
+				gs.Spec.Template = corev1.PodTemplateSpec{ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{PodSafeToEvictAnnotation: "true"},
+				}}
+			}
+			pod, err := gs.Pod()
+			assert.Nil(t, err, "Pod should not return an error")
+			assert.Equal(t, gs.ObjectMeta.Name, pod.ObjectMeta.Name)
+			assert.Equal(t, gs.ObjectMeta.Namespace, pod.ObjectMeta.Namespace)
+			assert.Equal(t, GameServerLabelRole, pod.ObjectMeta.Labels[RoleLabel])
+			assert.Equal(t, "gameserver", pod.ObjectMeta.Labels[agones.GroupName+"/role"])
+			assert.Equal(t, gs.ObjectMeta.Name, pod.ObjectMeta.Labels[GameServerPodLabel])
+			assert.Equal(t, "sheep", pod.ObjectMeta.Annotations[GameServerContainerAnnotation])
+			assert.True(t, metav1.IsControlledBy(pod, gs))
+			assert.Equal(t, tc.expectedAnnotation, pod.ObjectMeta.Annotations[PodSafeToEvictAnnotation])
+		})
+	}
 }
 
 func TestGameServerPodScheduling(t *testing.T) {

@@ -14,13 +14,13 @@
 ARG BASE_IMAGE=agones-build-sdk-base:latest
 FROM $BASE_IMAGE
 
-RUN apt-get update && \
+RUN apt-get --allow-releaseinfo-change update && \
     apt-get install -y wget jq && \
     apt-get clean
 
 # install go
 WORKDIR /usr/local
-ENV GO_VERSION=1.15.13
+ENV GO_VERSION=1.19.1
 ENV GO111MODULE=on
 ENV GOPATH /go
 RUN wget -q https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz && \
@@ -28,9 +28,10 @@ RUN wget -q https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz && \
 
 ENV PATH /usr/local/go/bin:/go/bin:$PATH
 
-# install go-proto-gen 1.1
-RUN go get github.com/golang/protobuf/protoc-gen-go@v1.2.0 && \
-    go get -u golang.org/x/tools/cmd/goimports
+# install protoc-gen-go
+RUN go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28 && \
+    go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2 && \
+    go install golang.org/x/tools/cmd/goimports@latest
     
 
 # code generation scripts

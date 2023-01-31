@@ -43,7 +43,7 @@ Agones incorporates these abilities:
  on them.
 - Deploy game servers inside a [Docker container](https://www.docker.com/resources/what-container), with any combination of dependencies or binaries.
 - Integrated game server SDK for game server lifecycle managements, including health checking, state management, configuration and more.
-- Autoscaling capabilities to ensure players always have a game server availble to play on.
+- Autoscaling capabilities to ensure players always have a game server available to play on.
 - Out of the box metrics and log aggregation to track and visualise what is happening across all your game server sessions.
 - Modular architecture that can be tailored to your specific multiplayer game mechanics.
 - Game server scheduling and allocation strategies to ensure cost optimisation across cloud and on-premise environments. 

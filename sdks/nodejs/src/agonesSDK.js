@@ -93,14 +93,25 @@ class AgonesSDK {
 		});
 	}
 
-	health() {
+	health(errorCallback) {
 		if (this.healthStream === undefined) {
 			this.healthStream = this.client.health(() => {
 				// Ignore error as this can't be caught
 			});
+			this.healthStream.on('error', () => {
+				// ignore error, prevent from being uncaught
+			});
 		}
 		const request = new messages.Empty();
-		this.healthStream.write(request);
+		this.healthStream.write(request, null, (error) => {
+			if (error) {
+				if (errorCallback) {
+					errorCallback(error);
+					return;
+				}
+				throw error;
+			}
+		});
 	}
 
 	async getGameServer() {
@@ -116,19 +127,17 @@ class AgonesSDK {
 		});
 	}
 
-	watchGameServer(callback) {
+	watchGameServer(callback, errorCallback) {
 		const request = new messages.Empty();
 		const stream = this.client.watchGameServer(request);
 		stream.on('data', (data) => {
 			callback(data.toObject());
 		});
-		stream.on('error', (error) => {
-			if (error.code === grpc.status.CANCELLED) {
-				// Capture error when call is cancelled
-				return;
-			}
-			throw error;
-		});
+		if (errorCallback) {
+			stream.on('error', (error) => {
+				errorCallback(error);
+			});
+		}
 		this.streams.push(stream);
 	}
 

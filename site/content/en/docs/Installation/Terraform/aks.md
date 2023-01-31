@@ -68,7 +68,7 @@ terraform destroy
 ```
 
 ## Reference
-Details on how you can authenticate your AKS terraform provider using official [instructions](https://www.terraform.io/docs/providers/azurerm/auth/service_principal_client_secret.html)
+Details on how you can authenticate your AKS terraform provider using official [instructions](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/guides/service_principal_client_secret).
 
 ## Next Steps
 

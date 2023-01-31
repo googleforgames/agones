@@ -24,10 +24,12 @@ import (
 
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	autoscalingv1 "agones.dev/agones/pkg/apis/autoscaling/v1"
+	"agones.dev/agones/pkg/util/runtime"
 	e2e "agones.dev/agones/test/e2e/framework"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	admregv1 "k8s.io/api/admissionregistration/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -60,13 +62,14 @@ func TestAutoscalerBasicFunctions(t *testing.T) {
 	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 
 	fleetautoscalers := framework.AgonesClient.AutoscalingV1().FleetAutoscalers(framework.Namespace)
-	fas, err := fleetautoscalers.Create(ctx, defaultFleetAutoscaler(flt, framework.Namespace), metav1.CreateOptions{})
-	if assert.Nil(t, err) {
-		defer fleetautoscalers.Delete(ctx, fas.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
-	} else {
-		// if we could not create the autoscaler, their is no point going further
-		logrus.Error("Failed creating autoscaler, aborting TestAutoscalerBasicFunctions")
-		return
+	defaultFas := defaultFleetAutoscaler(flt, framework.Namespace)
+	fas, err := fleetautoscalers.Create(ctx, defaultFas, metav1.CreateOptions{})
+	require.NoError(t, err)
+	defer fleetautoscalers.Delete(ctx, fas.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
+
+	// If the CustomFasSyncInterval feature flag is enabled, the value of fas.spec.sync are equal
+	if runtime.FeatureEnabled(runtime.FeatureCustomFasSyncInterval) {
+		require.Equal(t, defaultFas.Spec.Sync.FixedInterval.Seconds, fas.Spec.Sync.FixedInterval.Seconds)
 	}
 
 	// the fleet autoscaler should scale the fleet up now up to BufferSize
@@ -89,7 +92,7 @@ func TestAutoscalerBasicFunctions(t *testing.T) {
 
 	// do an allocation and watch the fleet scale up
 	gsa := framework.CreateAndApplyAllocation(t, flt)
-	framework.AssertFleetCondition(t, flt, func(fleet *agonesv1.Fleet) bool {
+	framework.AssertFleetCondition(t, flt, func(log *logrus.Entry, fleet *agonesv1.Fleet) bool {
 		return fleet.Status.AllocatedReplicas == 1
 	})
 
@@ -97,39 +100,87 @@ func TestAutoscalerBasicFunctions(t *testing.T) {
 
 	// patch autoscaler to switch to relative buffer size and check if the fleet adjusts
 	_, err = patchFleetAutoscaler(ctx, fas, intstr.FromString("10%"), 1, fas.Spec.Policy.Buffer.MaxReplicas)
-	assert.Nil(t, err, "could not patch fleetautoscaler")
+	require.NoError(t, err, "could not patch fleetautoscaler")
 
-	//10% with only one allocated GS means only one ready server
+	// 10% with only one allocated GS means only one ready server
 	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(1))
 
 	// get the Status of the fleetautoscaler
 	fas, err = framework.AgonesClient.AutoscalingV1().FleetAutoscalers(fas.ObjectMeta.Namespace).Get(ctx, fas.Name, metav1.GetOptions{})
-	assert.Nil(t, err, "could not get fleetautoscaler")
-	assert.True(t, fas.Status.AbleToScale, "Could not get AbleToScale status")
+	require.NoError(t, err, "could not get fleetautoscaler")
+	require.True(t, fas.Status.AbleToScale, "Could not get AbleToScale status")
 
 	// check that we are able to scale
-	framework.WaitForFleetAutoScalerCondition(t, fas, func(fas *autoscalingv1.FleetAutoscaler) bool {
+	framework.WaitForFleetAutoScalerCondition(t, fas, func(log *logrus.Entry, fas *autoscalingv1.FleetAutoscaler) bool {
 		return !fas.Status.ScalingLimited
 	})
 
 	// patch autoscaler to a maxReplicas count equal to current replicas count
 	_, err = patchFleetAutoscaler(ctx, fas, intstr.FromInt(1), 1, 1)
-	assert.Nil(t, err, "could not patch fleetautoscaler")
+	require.NoError(t, err, "could not patch fleetautoscaler")
 
 	// check that we are not able to scale
-	framework.WaitForFleetAutoScalerCondition(t, fas, func(fas *autoscalingv1.FleetAutoscaler) bool {
+	framework.WaitForFleetAutoScalerCondition(t, fas, func(log *logrus.Entry, fas *autoscalingv1.FleetAutoscaler) bool {
 		return fas.Status.ScalingLimited
 	})
 
 	// delete the allocated GameServer and watch the fleet scale down
 	gp := int64(1)
 	err = stable.GameServers(framework.Namespace).Delete(ctx, gsa.Status.GameServerName, metav1.DeleteOptions{GracePeriodSeconds: &gp})
-	assert.Nil(t, err)
-	framework.AssertFleetCondition(t, flt, func(fleet *agonesv1.Fleet) bool {
+	require.NoError(t, err)
+	framework.AssertFleetCondition(t, flt, func(log *logrus.Entry, fleet *agonesv1.Fleet) bool {
 		return fleet.Status.AllocatedReplicas == 0 &&
 			fleet.Status.ReadyReplicas == 1 &&
 			fleet.Status.Replicas == 1
 	})
+}
+
+func TestFleetAutoscalerDefaultSyncInterval(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+
+	stable := framework.AgonesClient.AgonesV1()
+	fleets := stable.Fleets(framework.Namespace)
+	flt, err := fleets.Create(ctx, defaultFleet(framework.Namespace), metav1.CreateOptions{})
+	if assert.Nil(t, err) {
+		defer fleets.Delete(ctx, flt.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
+	}
+
+	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
+
+	fleetautoscalers := framework.AgonesClient.AutoscalingV1().FleetAutoscalers(framework.Namespace)
+	dummyFleetName := "dummy-fleet"
+	defaultFas := &autoscalingv1.FleetAutoscaler{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      dummyFleetName + "-autoscaler",
+			Namespace: framework.Namespace,
+		},
+		Spec: autoscalingv1.FleetAutoscalerSpec{
+			FleetName: dummyFleetName,
+			Policy: autoscalingv1.FleetAutoscalerPolicy{
+				Type: autoscalingv1.BufferPolicyType,
+				Buffer: &autoscalingv1.BufferPolicy{
+					BufferSize:  intstr.FromInt(3),
+					MaxReplicas: 10,
+				},
+			},
+		},
+	}
+	fas, err := fleetautoscalers.Create(ctx, defaultFas, metav1.CreateOptions{})
+	if assert.Nil(t, err) {
+		defer fleetautoscalers.Delete(ctx, fas.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
+	} else {
+		// if we could not create the autoscaler, their is no point going further
+		logrus.Error("Failed creating autoscaler, aborting TestFleetAutoscalerDefaultSyncInterval")
+		return
+	}
+
+	// If the CustomFasSyncInterval feature flag is enabled, fas.spec.sync should be set to its default value
+	if runtime.FeatureEnabled(runtime.FeatureCustomFasSyncInterval) {
+		defaultSyncIntervalFas := &autoscalingv1.FleetAutoscaler{}
+		defaultSyncIntervalFas.ApplyDefaults()
+		assert.Equal(t, defaultSyncIntervalFas.Spec.Sync.FixedInterval.Seconds, fas.Spec.Sync.FixedInterval.Seconds)
+	}
 }
 
 // TestFleetAutoScalerRollingUpdate - test fleet with RollingUpdate strategy work with
@@ -177,11 +228,11 @@ func TestFleetAutoScalerRollingUpdate(t *testing.T) {
 
 	// get the Status of the fleetautoscaler
 	fas, err = framework.AgonesClient.AutoscalingV1().FleetAutoscalers(fas.ObjectMeta.Namespace).Get(ctx, fas.Name, metav1.GetOptions{})
-	assert.Nil(t, err, "could not get fleetautoscaler")
+	require.NoError(t, err, "could not get fleetautoscaler")
 	assert.True(t, fas.Status.AbleToScale, "Could not get AbleToScale status")
 
 	// check that we are able to scale
-	framework.WaitForFleetAutoScalerCondition(t, fas, func(fas *autoscalingv1.FleetAutoscaler) bool {
+	framework.WaitForFleetAutoScalerCondition(t, fas, func(log *logrus.Entry, fas *autoscalingv1.FleetAutoscaler) bool {
 		return !fas.Status.ScalingLimited
 	})
 
@@ -196,7 +247,7 @@ func TestFleetAutoScalerRollingUpdate(t *testing.T) {
 	// In ticket #1156 we apply new Replicas size 2, which is smaller than 7
 	// And RollingUpdate is broken, scaling immediately from 7 to 2 and then back to 7
 	// Uncomment line below to break this test
-	//fltCopy.Spec.Replicas = 2
+	// fltCopy.Spec.Replicas = 2
 
 	flt, err = framework.AgonesClient.AgonesV1().Fleets(framework.Namespace).Update(ctx, fltCopy, metav1.UpdateOptions{})
 	assert.NoError(t, err)
@@ -248,6 +299,7 @@ func TestFleetAutoScalerRollingUpdate(t *testing.T) {
 func TestAutoscalerStressCreate(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
+	log := e2e.TestLogger(t)
 
 	alpha1 := framework.AgonesClient.AgonesV1()
 	fleets := alpha1.Fleets(framework.Namespace)
@@ -277,12 +329,15 @@ func TestAutoscalerStressCreate(t *testing.T) {
 			fas.Spec.Policy.Buffer.MinReplicas <= fas.Spec.Policy.Buffer.MaxReplicas &&
 			(fas.Spec.Policy.Buffer.MinReplicas == 0 || fas.Spec.Policy.Buffer.MinReplicas >= bufferSize)
 
+		log.WithField("buffer", fmt.Sprintf("%#v", fas.Spec.Policy.Buffer)).Info("This is the FAS policy!")
+
 		// create a closure to have defered delete func called on each loop iteration.
 		func() {
 			fas, err := fleetautoscalers.Create(ctx, fas, metav1.CreateOptions{})
 			if err == nil {
+				log.WithField("fas", fas.ObjectMeta.Name).Info("Created!")
 				defer fleetautoscalers.Delete(ctx, fas.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
-				assert.True(t, valid,
+				require.True(t, valid,
 					fmt.Sprintf("FleetAutoscaler created even if the parameters are NOT valid: %d %d %d",
 						bufferSize,
 						fas.Spec.Policy.Buffer.MinReplicas,
@@ -298,7 +353,7 @@ func TestAutoscalerStressCreate(t *testing.T) {
 				// the fleet autoscaler should scale the fleet now to expectedReplicas
 				framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(expectedReplicas))
 			} else {
-				assert.False(t, valid,
+				require.False(t, valid,
 					fmt.Sprintf("FleetAutoscaler NOT created even if the parameters are valid: %d %d %d (%s)",
 						bufferSize,
 						minReplicas,
@@ -315,7 +370,7 @@ func patchFleetAutoscaler(ctx context.Context, fas *autoscalingv1.FleetAutoscale
 	if bufferSize.Type == intstr.Int {
 		bufferSizeFmt = fmt.Sprintf("%d", bufferSize.IntValue())
 	} else {
-		bufferSizeFmt = fmt.Sprintf(`"%s"`, bufferSize.String())
+		bufferSizeFmt = fmt.Sprintf("%q", bufferSize.String())
 	}
 
 	patch := fmt.Sprintf(
@@ -350,33 +405,31 @@ func defaultFleetAutoscaler(f *agonesv1.Fleet, namespace string) *autoscalingv1.
 					MaxReplicas: 10,
 				},
 			},
+			Sync: &autoscalingv1.FleetAutoscalerSync{
+				Type: autoscalingv1.FixedIntervalSyncType,
+				FixedInterval: autoscalingv1.FixedIntervalSync{
+					Seconds: 30,
+				},
+			},
 		},
 	}
 }
 
-//Test fleetautoscaler with webhook policy type
+// Test fleetautoscaler with webhook policy type
 // scaling from Replicas equals to 1 to 2
 func TestAutoscalerWebhook(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
 	pod, svc := defaultAutoscalerWebhook(framework.Namespace)
 	pod, err := framework.KubeClient.CoreV1().Pods(framework.Namespace).Create(ctx, pod, metav1.CreateOptions{})
-	if assert.Nil(t, err) {
-		defer framework.KubeClient.CoreV1().Pods(framework.Namespace).Delete(ctx, pod.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
-	} else {
-		// if we could not create the webhook pod, there is no point going further
-		assert.FailNow(t, "Failed creating webhook pod, aborting TestAutoscalerWebhook")
-	}
+	require.NoError(t, err)
+	defer framework.KubeClient.CoreV1().Pods(framework.Namespace).Delete(ctx, pod.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
 	svc.ObjectMeta.Name = ""
 	svc.ObjectMeta.GenerateName = "test-service-"
 
 	svc, err = framework.KubeClient.CoreV1().Services(framework.Namespace).Create(ctx, svc, metav1.CreateOptions{})
-	if assert.Nil(t, err) {
-		defer framework.KubeClient.CoreV1().Services(framework.Namespace).Delete(ctx, svc.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
-	} else {
-		// if we could not create the webhook service, there is no point going further
-		assert.FailNow(t, "Failed creating webhook service, aborting TestAutoscalerWebhook")
-	}
+	require.NoError(t, err)
+	defer framework.KubeClient.CoreV1().Services(framework.Namespace).Delete(ctx, svc.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
 
 	alpha1 := framework.AgonesClient.AgonesV1()
 	fleets := alpha1.Fleets(framework.Namespace)
@@ -384,9 +437,8 @@ func TestAutoscalerWebhook(t *testing.T) {
 	initialReplicasCount := int32(1)
 	flt.Spec.Replicas = initialReplicasCount
 	flt, err = fleets.Create(ctx, flt, metav1.CreateOptions{})
-	if assert.Nil(t, err) {
-		defer fleets.Delete(ctx, flt.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
-	}
+	require.NoError(t, err)
+	defer fleets.Delete(ctx, flt.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
 
 	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 
@@ -403,18 +455,20 @@ func TestAutoscalerWebhook(t *testing.T) {
 		},
 	}
 	fas, err = fleetautoscalers.Create(ctx, fas, metav1.CreateOptions{})
-	if assert.NoError(t, err) {
-		defer fleetautoscalers.Delete(ctx, fas.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
-	} else {
-		// if we could not create the autoscaler, there is no point going further
-		assert.FailNow(t, "Failed creating autoscaler, aborting TestAutoscalerWebhook")
-	}
+	require.NoError(t, err)
+	defer fleetautoscalers.Delete(ctx, fas.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
+
 	framework.CreateAndApplyAllocation(t, flt)
-	framework.AssertFleetCondition(t, flt, func(fleet *agonesv1.Fleet) bool {
+	framework.AssertFleetCondition(t, flt, func(log *logrus.Entry, fleet *agonesv1.Fleet) bool {
+		log.WithField("fleetStatus", fmt.Sprintf("%+v", fleet.Status)).WithField("fleet", fleet.ObjectMeta.Name).Info("Awaiting fleet.Status.AllocatedReplicas == 1")
 		return fleet.Status.AllocatedReplicas == 1
 	})
 
-	framework.AssertFleetCondition(t, flt, func(fleet *agonesv1.Fleet) bool {
+	framework.AssertFleetCondition(t, flt, func(log *logrus.Entry, fleet *agonesv1.Fleet) bool {
+		log.WithField("fleetStatus", fmt.Sprintf("%+v", fleet.Status)).
+			WithField("fleet", fleet.ObjectMeta.Name).
+			WithField("initialReplicasCount", initialReplicasCount).
+			Info("Awaiting fleet.Status.Replicas > initialReplicasCount")
 		return fleet.Status.Replicas > initialReplicasCount
 	})
 
@@ -437,7 +491,7 @@ func TestAutoscalerWebhook(t *testing.T) {
 
 		return true, nil
 	})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	var l *corev1.EventList
 	errString := "Error calculating desired fleet size on FleetAutoscaler"
@@ -463,80 +517,81 @@ func TestAutoscalerWebhook(t *testing.T) {
 }
 
 // Instructions: https://agones.dev/site/docs/getting-started/create-webhook-fleetautoscaler/#chapter-2-configuring-https-fleetautoscaler-webhook-with-ca-bundle
-// Expiration: Sept 30, 2021
+// Validity
+// 	Not Before: Apr 12 01:37:57 2022 GMT
+//	Not After : Aug 25 01:37:57 2023 GMT
 
 var webhookKey = `
 -----BEGIN RSA PRIVATE KEY-----
-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
+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
 -----END RSA PRIVATE KEY-----`
 
 var caPem = `
 -----BEGIN CERTIFICATE-----
-MIIDazCCAlOgAwIBAgIUZcFCLeoSpuSYusLxYkgGvaAF3cMwDQYJKoZIhvcNAQEL
-BQAwRTELMAkGA1UEBhMCQVUxEzARBgNVBAgMClNvbWUtU3RhdGUxITAfBgNVBAoM
-GEludGVybmV0IFdpZGdpdHMgUHR5IEx0ZDAeFw0yMDExMjUxMzM4MzlaFw0yMzA5
-MTUxMzM4MzlaMEUxCzAJBgNVBAYTAkFVMRMwEQYDVQQIDApTb21lLVN0YXRlMSEw
-HwYDVQQKDBhJbnRlcm5ldCBXaWRnaXRzIFB0eSBMdGQwggEiMA0GCSqGSIb3DQEB
-AQUAA4IBDwAwggEKAoIBAQDEm12qM8qZ4BsFRCXAMTutdvRRLWAeICjOkoK037eX
-F+X8P0yDY9d8PkWafhvtL0qSfS30a0Hj3tyazzsF7GqdRWGadzPMARTlIxij9w7f
-Odd1KQ4/zFpA9WhciBcoIQsiwEhojMoXx8kLrX6ELnbh4zdGnsn0K9g3ZdYKKIu7
-kc3iwzDMTJ2hzvgdB/hAOoYRSZXr/+wLGL8DzriT7slkI/T+n83UuaoTMPO41d7v
-5272Ify+DJxI6bUQTAxS/5UAh9DHCUKuR9fB4eIniv/Zc5TA8BLQaa7DERRhJPfp
-o9pjQVGFsb4gzxY0kY3QPnQHjkSpVc5qQ5KgJHFB7hLvAgMBAAGjUzBRMB0GA1Ud
-DgQWBBRmwkHbhsi96Kuz09+UML+gVV/GkzAfBgNVHSMEGDAWgBRmwkHbhsi96Kuz
-09+UML+gVV/GkzAPBgNVHRMBAf8EBTADAQH/MA0GCSqGSIb3DQEBCwUAA4IBAQAv
-8hh3hxuLgpMfWNe8C/ODBwUkkSuPhvCHJyevTihLV07go+Cj/cBEN6R3hQbMJ+qJ
-JfD3T1fYAn3phq+kcPrZ4auYCDMTw+RoTWjpiknak+iDpUXbBV5Y/Km6ybgFtnlR
-MNvCirTyBjE/uQ3PuJpLMGyaePzwhk0sVdvt8Ei7ZXJVMr6APcXJA3TotdTu3wPZ
-LKBEJ3UpxePZr0IiZjpdlLngkcIzbHQbBhxQzVCHFtH31A56w/l6N75H/sdA/Jcr
-1OJXwNg9mWihC2HVsJl5RKq7WibRmjNICf3v8Mqgkn+2MOps1DXLNqKsKuNOUDhR
-0/GqbK5s1fmTucB5JysM
+MIIDRzCCAi+gAwIBAgIUY3Cpf8jTCBaoNZ++5gyZiRq27hMwDQYJKoZIhvcNAQEL
+BQAwMzELMAkGA1UEBhMCQVUxEzARBgNVBAgMClNvbWUtU3RhdGUxDzANBgNVBAoM
+BkFnb25lczAeFw0yMjA0MTIwMTM1NTNaFw0yNTAxMzAwMTM1NTNaMDMxCzAJBgNV
+BAYTAkFVMRMwEQYDVQQIDApTb21lLVN0YXRlMQ8wDQYDVQQKDAZBZ29uZXMwggEi
+MA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCq1uP65QAXdFCYUC+JiH71pxFy
+8AA7KwzkFGEIqObE5JpJwnuahkWy29QZzKJ1RKneN34+WtrHVoRhjUiFXYtBOzTb
+twd//EJkvYe/5uhV4K4FxMI5+VE81W/66FDc4q0YD6whyT5qyjrLyu8tb2jqbXgY
+UaPiiGsbhCwDpq/FdOT71N2V5kBKu+z8PhqDrMUiDsAnKgwIuk6s8D947jv44Q7e
+bxandSXnYqAUwqAFhT2YyZnfsqQGuOdD83A62Day1eUQnsv3dKL6H7F25jN5/G42
+7GT34Wex/JC7VqfC5RfcrUsr4UOSn4ZyzlCLN8mIM1kU5nMtrYBHZZWxH8ghAgMB
+AAGjUzBRMB0GA1UdDgQWBBRWt1C5GFuIdXqmQA8uhqqwUPmjtDAfBgNVHSMEGDAW
+gBRWt1C5GFuIdXqmQA8uhqqwUPmjtDAPBgNVHRMBAf8EBTADAQH/MA0GCSqGSIb3
+DQEBCwUAA4IBAQApFN9bzBYBWZp4sTyglIjQZzeRdZ/S8WyjhbFeHoqA42izAGGB
+rLiKHKym43U/qDxp93Y0Si0K2dv4fyJWqlRZ+gtmVPLwjqkFCQEs/K3+BUHTWE5+
+Tx4EStkIJs8M2PipnUMCAICEO9JCp5bw5lloTI4fpIvxOXHiCC6pRmDW9GyyUywT
+MoWF7VO43V+aKjMdYxqSK1928Foql4QltnOtPtwySAQujr4kTAdhPuOdnMOdXIS5
+6r3Qftfyui85HzhimrAaQ3ZulbNvw7lCWl1BIiidn6VgpXZM4GNFxL5RWIixAyWK
+V3FOACAGS/XJ2IirQ0+Ed5B7GCGXx58CqBN5
 -----END CERTIFICATE-----`
 
 var webhookCrt = `
 -----BEGIN CERTIFICATE-----
-MIIDUzCCAjugAwIBAgIUB3HgoTF9rHLt++aLHjEAzU80KHYwDQYJKoZIhvcNAQEL
-BQAwRTELMAkGA1UEBhMCQVUxEzARBgNVBAgMClNvbWUtU3RhdGUxITAfBgNVBAoM
-GEludGVybmV0IFdpZGdpdHMgUHR5IEx0ZDAeFw0yMDExMjUxMzM4MzlaFw0yMjA0
-MDkxMzM4MzlaMC0xKzApBgNVBAMMImF1dG9zY2FsZXItdGxzLXNlcnZpY2UuZGVm
-YXVsdC5zdmMwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDNO0VjTZIB
-jiMeKvIlsFFPj7bCfU6WovhZNZQW0ppYSOb6ACe8uWY0H90E8vfqvW8NtgY87YyJ
-YXlQt+h7XL9ixDObBAucYWERfk67vYnakdB9rWFWpiIsPPs+LvSrGMAEiH/hT/Hr
-Hqd8Om+TdrQ8FwKc8MOsm+Sqliomep9iQpPss2s1gJOfXZFMhElPF98OS5AGz3Lh
-EaGZfQ2H1tvmLClhdBGsoefAyeJHUP0y8nbtooIrCkNH5OR1iX8VdgiC4WCKk9R3
-DvwphwUDwMmKnCTIipxG9aaXWjnKGHAmk0NyTexLveD4i+gX9g9HLjZ0JAeFG7hv
-4mio5PaOlQPxAgMBAAGjUzBRMAsGA1UdDwQEAwIHgDATBgNVHSUEDDAKBggrBgEF
-BQcDATAtBgNVHREEJjAkgiJhdXRvc2NhbGVyLXRscy1zZXJ2aWNlLmRlZmF1bHQu
-c3ZjMA0GCSqGSIb3DQEBCwUAA4IBAQBsaIyIEFzPthS73i0+3EiJh3mIJ1vAJPUQ
-E2TEG8Nh/IsqnsCOkwX1LBN3PWhwS1KDVK4Ed1Ct0y7Q7kcni7kTj3TqPVXXm/M9
-33K5SBOdcl4GPVREMMmy7spttHbrydMoHMojbTn5/Dk6tDlGUdreMXWzaN9m3Mtd
-wbX2rOVB9Uq7S077wTviS08Wvox+ia4rnSOquCId6XSPUziBbBccbxLfVSyzvDvm
-ZPGiDqt2GpLYQp2VnVpigB0AACqk8QWjN6hIQ+mmyuXaN+kzwbPWPt5K0Yf9UT75
-0WFzbkggv+mugnl9t1HEdImGdKmUNx1mL/dbODIikDz3bKsQHutd
+MIIDQTCCAimgAwIBAgIUA9ADz3wPH/XvuIei9mWSLOvnzXswDQYJKoZIhvcNAQEL
+BQAwMzELMAkGA1UEBhMCQVUxEzARBgNVBAgMClNvbWUtU3RhdGUxDzANBgNVBAoM
+BkFnb25lczAeFw0yMjA0MTIwMTM3NTdaFw0yMzA4MjUwMTM3NTdaMC0xKzApBgNV
+BAMMImF1dG9zY2FsZXItdGxzLXNlcnZpY2UuZGVmYXVsdC5zdmMwggEiMA0GCSqG
+SIb3DQEBAQUAA4IBDwAwggEKAoIBAQDAw+hKkUlqf2Jb9b6Ft2HwGYysKYksYFUX
+H/hPaXrdvkjP+lt2Dr776YHIM1rVLHMz0l8qQr1Jz7HBjAXe7zw2eJaXHr018GlC
+mccCmBNMyzKxAUpGu+06a9+if0VcvwHWLW7R73+w5ehtCfbJl/GtAgAOXlUNhMig
+BE/CR/9XvVOUSxdnxD0rjOtZT4qIiW5/+Ssaos5uGD2eeQ284Ht4dge10k99Ql92
+56BCgnpkI8P/p4/frxavpWneou5b2FAVYk5v7xZKEyk0EPtXkFBQthjGb+/rnCnP
+9hHHZJcYP4ibTRUWlm3n5JnNCb13d19vwaXO3UppepaU7Q6WS4qrAgMBAAGjUzBR
+MAsGA1UdDwQEAwIHgDATBgNVHSUEDDAKBggrBgEFBQcDATAtBgNVHREEJjAkgiJh
+dXRvc2NhbGVyLXRscy1zZXJ2aWNlLmRlZmF1bHQuc3ZjMA0GCSqGSIb3DQEBCwUA
+A4IBAQBO8MVRJVeaCg80XxnIgcYFXqwgPVqmugYure8cPwsD/tMaISeSavYT/X7L
+YIRUnvOgZtjXpX2+43PZjmoxCtKJUa9Q8qWO4MU/6aD1j6wSasjygaOiW5UEKV4j
+AWt5U8Jbzf5NZLV0udYErSNE1PqbI8zkELxZ5Usf11C2Nu892lrpJrg6CZjiG82w
+PZEUAxKzv6X3w9nF+3fqHkBgRzSwZF9jEAZUkqgqVGAeh2Pzp5O7ciFCL4jAwX9y
+DjTCc3SwhWOqeVVnwjmrpPb14t74boH4TijTuK+umGI6U9g0WVmZA8heYil0x7iP
+xgD9ZcK4JyVWRkFtu1UFbMuR/M1P
 -----END CERTIFICATE-----`
 
 func TestFleetAutoscalerTLSWebhook(t *testing.T) {
@@ -640,11 +695,11 @@ func TestFleetAutoscalerTLSWebhook(t *testing.T) {
 		assert.FailNow(t, "Failed creating autoscaler, aborting TestTlsWebhook")
 	}
 	framework.CreateAndApplyAllocation(t, flt)
-	framework.AssertFleetCondition(t, flt, func(fleet *agonesv1.Fleet) bool {
+	framework.AssertFleetCondition(t, flt, func(log *logrus.Entry, fleet *agonesv1.Fleet) bool {
 		return fleet.Status.AllocatedReplicas == 1
 	})
 
-	framework.AssertFleetCondition(t, flt, func(fleet *agonesv1.Fleet) bool {
+	framework.AssertFleetCondition(t, flt, func(log *logrus.Entry, fleet *agonesv1.Fleet) bool {
 		return fleet.Status.Replicas > initialReplicasCount
 	})
 }
@@ -662,7 +717,7 @@ func defaultAutoscalerWebhook(namespace string) (*corev1.Pod, *corev1.Service) {
 		},
 		Spec: corev1.PodSpec{
 			Containers: []corev1.Container{{Name: "webhook",
-				Image:           "gcr.io/agones-images/autoscaler-webhook:0.3",
+				Image:           "us-docker.pkg.dev/agones-images/examples/autoscaler-webhook:0.5",
 				ImagePullPolicy: corev1.PullAlways,
 				Ports: []corev1.ContainerPort{{
 					ContainerPort: 8000,

@@ -93,20 +93,35 @@ In a scenario where a new `v2` version of a `Fleet` is being slowly scaled up in
 Fleet, we can specify that we `prefer` allocation to occur from the `v2` Fleet, and if none are available, fallback to
 the `v1` Fleet, like so:
 
-```yaml
+
+{{< tabpane >}}
+  {{< tab header="selectors" lang="yaml" >}}
 apiVersion: "allocation.agones.dev/v1"
 kind: GameServerAllocation
 spec:
+  selectors:
+    - matchLabels:
+        agones.dev/fleet: v2
+    - matchLabels:
+        game: my-awesome-game
+  {{< /tab >}}
+  {{< tab header="required & preferred (deprecated)" lang="yaml" >}}
+apiVersion: "allocation.agones.dev/v1"
+kind: GameServerAllocation
+spec:
+  # Deprecated, use field selectors instead.
   required:
     matchLabels:
       game: my-awesome-game
+  # Deprecated, use field selectors instead.
   preferred:
     - matchLabels:
         agones.dev/fleet: v2
-```
+  {{< /tab >}}
+{{< /tabpane >}}
 
 In this example, all `GameServers` have the label `game: my-awesome-game`, so the Allocation will search across both
-Fleets through that mechanism. The `preferred` label matching selector tells the allocation system to first search
+Fleets through that mechanism. The `selectors` label matching selector tells the allocation system to first search
 all `GameServers` with the `v2` `Fleet` label, and if not found, search through the rest of the set.
 
 The above `GameServerAllocation` can then be used while you scale up the `v2` Fleet and scale down the original Fleet at

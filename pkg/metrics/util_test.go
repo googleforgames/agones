@@ -17,6 +17,7 @@ package metrics
 import (
 	"context"
 	"reflect"
+	"strconv"
 	"testing"
 
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
@@ -34,6 +35,11 @@ import (
 	"k8s.io/client-go/tools/cache"
 )
 
+var (
+	// counter for unique GameServer names
+	counter = 0
+)
+
 // newFakeController returns a controller, backed by the fake Clientset
 func newFakeController() *fakeController {
 	m := agtesting.NewMocks()
@@ -48,13 +54,15 @@ func newFakeControllerWithMock(m agtesting.Mocks) *fakeController {
 	fasWatch := watch.NewFake()
 	fleetWatch := watch.NewFake()
 	nodeWatch := watch.NewFake()
+	nsWatch := watch.NewFake()
 
 	m.AgonesClient.AddWatchReactor("gameservers", k8stesting.DefaultWatchReactor(gsWatch, nil))
 	m.AgonesClient.AddWatchReactor("fleetautoscalers", k8stesting.DefaultWatchReactor(fasWatch, nil))
 	m.AgonesClient.AddWatchReactor("fleets", k8stesting.DefaultWatchReactor(fleetWatch, nil))
 	m.KubeClient.AddWatchReactor("nodes", k8stesting.DefaultWatchReactor(nodeWatch, nil))
+	m.KubeClient.AddWatchReactor("namespaces", k8stesting.DefaultWatchReactor(nsWatch, nil))
 
-	ctx, cancel := agtesting.StartInformers(m, c.gameServerSynced, c.fleetSynced, c.fasSynced, c.nodeSynced)
+	ctx, cancel := agtesting.StartInformers(m, c.gameServerSynced, c.fleetSynced, c.fasSynced)
 
 	return &fakeController{
 		Controller: c,
@@ -62,7 +70,6 @@ func newFakeControllerWithMock(m agtesting.Mocks) *fakeController {
 		gsWatch:    gsWatch,
 		fasWatch:   fasWatch,
 		fleetWatch: fleetWatch,
-		nodeWatch:  nodeWatch,
 		cancel:     cancel,
 		ctx:        ctx,
 	}
@@ -83,7 +90,7 @@ func (c *fakeController) run(t *testing.T) {
 }
 
 func (c *fakeController) sync() bool {
-	return cache.WaitForCacheSync(c.ctx.Done(), c.gameServerSynced, c.fleetSynced, c.fasSynced, c.nodeSynced)
+	return cache.WaitForCacheSync(c.ctx.Done(), c.gameServerSynced, c.fleetSynced, c.fasSynced)
 }
 
 type fakeController struct {
@@ -92,7 +99,6 @@ type fakeController struct {
 	gsWatch    *watch.FakeWatcher
 	fasWatch   *watch.FakeWatcher
 	fleetWatch *watch.FakeWatcher
-	nodeWatch  *watch.FakeWatcher
 	ctx        context.Context
 	cancel     context.CancelFunc
 }
@@ -124,9 +130,11 @@ func gameServerWithFleetAndState(fleetName string, state agonesv1.GameServerStat
 	if fleetName != "" {
 		lbs[agonesv1.FleetNameLabel] = fleetName
 	}
+	// ensure the name is unique each time.
+	counter++
 	gs := &agonesv1.GameServer{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      rand.String(10),
+			Name:      rand.String(10) + strconv.Itoa(counter),
 			Namespace: "default",
 			UID:       uuid.NewUUID(),
 			Labels:    lbs,
@@ -150,7 +158,7 @@ func generateGsEvents(count int, state agonesv1.GameServerState, fleetName strin
 	}
 }
 
-func fleet(fleetName string, total, allocated, ready, desired int32) *agonesv1.Fleet {
+func fleet(fleetName string, total, allocated, ready, desired, reserved int32) *agonesv1.Fleet {
 	return &agonesv1.Fleet{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      fleetName,
@@ -161,6 +169,7 @@ func fleet(fleetName string, total, allocated, ready, desired int32) *agonesv1.F
 			Replicas: desired,
 		},
 		Status: agonesv1.FleetStatus{
+			ReservedReplicas:  reserved,
 			AllocatedReplicas: allocated,
 			ReadyReplicas:     ready,
 			Replicas:          total,
@@ -183,6 +192,12 @@ func fleetAutoScaler(fleetName string, fasName string) *autoscalingv1.FleetAutos
 					MaxReplicas: 30,
 					MinReplicas: 10,
 					BufferSize:  intstr.FromInt(11),
+				},
+			},
+			Sync: &autoscalingv1.FleetAutoscalerSync{
+				Type: autoscalingv1.FixedIntervalSyncType,
+				FixedInterval: autoscalingv1.FixedIntervalSync{
+					Seconds: 30,
 				},
 			},
 		},

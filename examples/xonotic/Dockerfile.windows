@@ -36,7 +36,7 @@
 # for details.
 ARG WINDOWS_VERSION=ltsc2019
 
-FROM golang:1.14.12-windowsservercore as base
+FROM golang:1.19.1-windowsservercore as base
 
 # Set the default shell
 # See: https://docs.docker.com/engine/reference/builder/#shell
@@ -44,14 +44,14 @@ SHELL ["powershell", "-command"]
 
 WORKDIR /gopath/src/xonotic
 
-RUN (New-Object System.Net.WebClient).Downloadfile('https://dl.xonotic.org/xonotic-0.8.2.zip', 'C:\xonotic.zip')
+RUN (New-Object System.Net.WebClient).Downloadfile('https://dl.xonotic.org/xonotic-0.8.5.zip', 'C:\xonotic.zip')
 RUN Expand-Archive -Path C:\xonotic.zip -DestinationPath C:\ -Force
 RUN Remove-Item -Path C:\xonotic.zip -Force
 RUN Copy-Item -Path C:\Xonotic\server\server_windows.bat -Destination C:\Xonotic\server_windows.bat
 RUN Copy-Item -Path C:\Xonotic\server\server.cfg -Destination C:\Xonotic\data\server.cfg
 
-COPY examples/xonotic/main.go .
-COPY . /gopath/src/agones.dev/agones
+COPY . /gopath/src/examples/xonotic
+WORKDIR /gopath/src/examples/xonotic
 RUN go build -o wrapper.exe .
 
 FROM mcr.microsoft.com/windows/servercore:${WINDOWS_VERSION}
@@ -59,7 +59,7 @@ FROM mcr.microsoft.com/windows/servercore:${WINDOWS_VERSION}
 WORKDIR /Xonotic
 
 COPY --from=base /Xonotic /Xonotic
-COPY --from=base /gopath/src/xonotic/wrapper.exe /Xonotic/wrapper.exe
+COPY --from=base /gopath/src/examples/xonotic/wrapper.exe /Xonotic/wrapper.exe
 RUN copy C:\Xonotic\server\server_windows.bat C:\Xonotic\server_windows.bat
 RUN copy C:\Xonotic\server\server_windows.bat C:\Xonotic\data\server_windows.bat
 RUN md "C:\Xonotic\userdir\data\"

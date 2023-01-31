@@ -12,14 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//Autoscaler webhook server which handles FleetAutoscaleReview json payload
+// Autoscaler webhook server which handles FleetAutoscaleReview json payload
 package main
 
 import (
 	"encoding/json"
 	"flag"
 	"io"
-	"io/ioutil"
 	"math"
 	"net/http"
 	"os"
@@ -137,7 +136,7 @@ func handleAutoscale(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var faReq autoscalingv1.FleetAutoscaleReview
-	res, err := ioutil.ReadAll(r.Body)
+	res, err := io.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}

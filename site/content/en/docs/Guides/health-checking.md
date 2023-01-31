@@ -19,7 +19,7 @@ The `Health()` function on the [SDK object]({{< relref "./Client SDKs/_index.md"
 interval less than the `spec.health.periodSeconds`
 threshold time to be considered before it will be considered a `failure`.
 
-The health check will also need to have not been called a consecutive number of times (`spec.health.failureTheshold`),
+The health check will also need to have not been called a consecutive number of times (`spec.health.failureThreshold`),
 giving it a chance to heal if it there is an issue.
 
 ## Health Failure Strategy

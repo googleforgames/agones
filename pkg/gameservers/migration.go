@@ -23,6 +23,7 @@ import (
 	getterv1 "agones.dev/agones/pkg/client/clientset/versioned/typed/agones/v1"
 	"agones.dev/agones/pkg/client/informers/externalversions"
 	listerv1 "agones.dev/agones/pkg/client/listers/agones/v1"
+	"agones.dev/agones/pkg/cloudproduct"
 	"agones.dev/agones/pkg/util/logfields"
 	"agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/workerqueue"
@@ -187,7 +188,7 @@ func (mc *MigrationController) syncGameServer(ctx context.Context, key string) e
 		// If the GameServer has yet to become ready, we will reapply the Address and Port
 		// otherwise, we move it to Unhealthy so that a new GameServer will be recreated.
 		if gsCopy.IsBeforeReady() {
-			gsCopy, err = applyGameServerAddressAndPort(gsCopy, node, pod)
+			gsCopy, err = applyGameServerAddressAndPort(gsCopy, node, pod, cloudproduct.ControllerHooks().SyncPodPortsToGameServer)
 			if err != nil {
 				return err
 			}

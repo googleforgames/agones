@@ -15,6 +15,7 @@
 #include "agones/sdk.h"
 
 #include <grpcpp/grpcpp.h>
+
 #include <utility>
 
 namespace agones {

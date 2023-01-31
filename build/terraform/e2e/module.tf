@@ -16,51 +16,47 @@
 // Run:
 //  terraform apply -var project="<YOUR_GCP_ProjectID>"
 
-provider "google" {
-  version = "~> 2.10"
-}
-
-variable "project" {
-  default = ""
-}
-
-module "gke_cluster" {
-  source = "../../../install/terraform/modules/gke"
-
-  cluster = {
-    "name"             = "e2e-test-cluster"
-    "zone"             = "us-west1-c"
-    "machineType"      = "e2-standard-4"
-    "initialNodeCount" = 8
-    "project"          = var.project
-  }
-
-  firewallName = "gke-game-server-firewall"
-}
-
-provider "helm" {
-  version = "~> 1.2"
-  kubernetes {
-    load_config_file       = false
-    host                   = module.gke_cluster.host
-    token                  = module.gke_cluster.token
-    cluster_ca_certificate = module.gke_cluster.cluster_ca_certificate
+terraform {
+  required_version = ">= 1.0.0"
+  required_providers {
+    google = {
+      source = "hashicorp/google"
+      version = "~> 4.25.0"
+    }
+    helm = {
+      source = "hashicorp/helm"
+      version = "~> 2.3"
+    }
   }
 }
 
-resource "helm_release" "consul" {
-  chart = "hashicorp/consul"
-  name  = "consul"
+variable "project" {}
 
-  set {
-    name  = "server.replicas"
-    value = "1"
+module "gke_standard_cluster" {
+  source = "./gke-standard"
+  project = var.project
+  kubernetesVersion = "1.24"
+  overrideName = "e2e-test-cluster"
+}
+
+module "gke_autopilot_cluster" {
+  source = "./gke-autopilot"
+  project = var.project
+  kubernetesVersion = "1.24"
+}
+
+resource "google_compute_firewall" "udp" {
+  name    = "gke-game-server-firewall"
+  project = var.project
+  network = "default"
+
+  allow {
+    protocol = "udp"
+    ports    = ["7000-8000"]
   }
 
-  set {
-    name  = "ui.service.type"
-    value = "ClusterIP"
-  }
+  target_tags = ["game-server"]
+  source_ranges = ["0.0.0.0/0"]
 }
 
 resource "google_compute_firewall" "tcp" {
@@ -74,4 +70,5 @@ resource "google_compute_firewall" "tcp" {
   }
 
   target_tags = ["game-server"]
+  source_ranges = ["0.0.0.0/0"]
 }

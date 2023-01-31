@@ -28,6 +28,10 @@ metadata:
     chart: {{ template "agones.chart" . }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
+{{- if .Values.agones.controller.allocationApiService.annotations }}
+  annotations:
+{{- toYaml .Values.agones.controller.allocationApiService.annotations | nindent 4 }}
+{{- end }}
 spec:
   group: allocation.agones.dev
   groupPriorityMinimum: 1000
@@ -35,11 +39,13 @@ spec:
   service:
     name: agones-controller-service
     namespace: {{ .Release.Namespace }}
-        {{- if .Values.agones.controller.generateTLS }}
+{{- if not .Values.agones.controller.allocationApiService.disableCaBundle }}
+{{- if .Values.agones.controller.generateTLS }}
   caBundle: {{ b64enc $ca.Cert }}
-        {{- else }}
-  caBundle: {{ .Files.Get "certs/server.crt" | b64enc }}
-        {{- end }}
+{{- else }}
+  caBundle: {{ default (.Files.Get "certs/server.crt") .Values.agones.controller.tlsCert | b64enc }}
+{{- end }}
+{{- end }}
   version: v1
 {{- end}}
 {{- if .Values.agones.registerWebhooks }}
@@ -48,6 +54,10 @@ apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
 metadata:
   name: agones-validation-webhook
+{{- if .Values.agones.controller.validatingWebhook.annotations }}
+  annotations:
+{{- toYaml .Values.agones.controller.validatingWebhook.annotations | nindent 4 }}
+{{- end }}
   labels:
     component: controller
     app: {{ template "agones.name" . }}
@@ -65,10 +75,12 @@ webhooks:
         name: agones-controller-service
         namespace: {{ .Release.Namespace }}
         path: /validate
+{{- if not .Values.agones.controller.validatingWebhook.disableCaBundle }}
 {{- if .Values.agones.controller.generateTLS }}
       caBundle: {{ b64enc $ca.Cert }}
 {{- else }}
-      caBundle: {{ .Files.Get "certs/server.crt" | b64enc }}
+      caBundle: {{ default (.Files.Get "certs/server.crt") .Values.agones.controller.tlsCert | b64enc }}
+{{- end }}
 {{- end }}
     rules:
       - apiGroups:
@@ -105,6 +117,10 @@ apiVersion: admissionregistration.k8s.io/v1
 kind: MutatingWebhookConfiguration
 metadata:
   name: agones-mutation-webhook
+{{- if .Values.agones.controller.mutatingWebhook.annotations }}
+  annotations:
+{{- toYaml .Values.agones.controller.mutatingWebhook.annotations | nindent 4 }}
+{{- end }}
   labels:
     component: controller
     app: {{ template "agones.name" . }}
@@ -122,10 +138,12 @@ webhooks:
         name: agones-controller-service
         namespace: {{ .Release.Namespace }}
         path: /mutate
+{{- if not .Values.agones.controller.mutatingWebhook.disableCaBundle }}
 {{- if .Values.agones.controller.generateTLS }}
       caBundle: {{ b64enc $ca.Cert }}
 {{- else }}
-      caBundle: {{ .Files.Get "certs/server.crt" | b64enc }}
+      caBundle: {{ default (.Files.Get "certs/server.crt") .Values.agones.controller.tlsCert | b64enc }}
+{{- end }}
 {{- end }}
     rules:
       - apiGroups:
@@ -137,7 +155,17 @@ webhooks:
           - "v1"
         operations:
           - CREATE
+      - apiGroups:
+          - autoscaling.agones.dev
+        resources:
+          - "fleetautoscalers"
+        apiVersions:
+          - "v1"
+        operations:
+          - CREATE
+          - UPDATE
 {{- end }}
+{{- if not .Values.agones.controller.disableSecret }}
 ---
 apiVersion: v1
 kind: Secret
@@ -155,6 +183,7 @@ data:
   server.crt: {{ b64enc $cert.Cert }}
   server.key: {{ b64enc $cert.Key }}
 {{- else }}
-  server.crt: {{ .Files.Get "certs/server.crt" | b64enc }}
-  server.key: {{ .Files.Get "certs/server.key" | b64enc }}
+  server.crt: {{ default (.Files.Get "certs/server.crt") .Values.agones.controller.tlsCert | b64enc }}
+  server.key: {{ default (.Files.Get "certs/server.key") .Values.agones.controller.tlsKey | b64enc }}
+{{- end }}
 {{- end }}

@@ -68,14 +68,17 @@ var (
 )
 
 const (
-	secretClientCertName       = "tls.crt"
-	secretClientKeyName        = "tls.key"
-	secretCACertName           = "ca.crt"
-	allocatorPort              = "443"
-	maxBatchQueue              = 100
-	maxBatchBeforeRefresh      = 100
-	batchWaitTime              = 500 * time.Millisecond
-	lastAllocatedAnnotationKey = "agones.dev/last-allocated"
+	// LastAllocatedAnnotationKey is a GameServer annotation containing an RFC 3339 formatted
+	// timestamp of the most recent allocation.
+	LastAllocatedAnnotationKey = "agones.dev/last-allocated"
+
+	secretClientCertName  = "tls.crt"
+	secretClientKeyName   = "tls.key"
+	secretCACertName      = "ca.crt"
+	allocatorPort         = "443"
+	maxBatchQueue         = 100
+	maxBatchBeforeRefresh = 100
+	localAllocationSource = "local"
 )
 
 var allocationRetry = wait.Backoff{
@@ -105,6 +108,7 @@ type Allocator struct {
 	remoteAllocationCallback     func(context.Context, string, grpc.DialOption, *pb.AllocationRequest) (*pb.AllocationResponse, error)
 	remoteAllocationTimeout      time.Duration
 	totalRemoteAllocationTimeout time.Duration
+	batchWaitTime                time.Duration
 }
 
 // request is an async request for allocation
@@ -122,7 +126,7 @@ type response struct {
 
 // NewAllocator creates an instance of Allocator
 func NewAllocator(policyInformer multiclusterinformerv1.GameServerAllocationPolicyInformer, secretInformer informercorev1.SecretInformer, gameServerGetter getterv1.GameServersGetter,
-	kubeClient kubernetes.Interface, allocationCache *AllocationCache, remoteAllocationTimeout time.Duration, totalRemoteAllocationTimeout time.Duration) *Allocator {
+	kubeClient kubernetes.Interface, allocationCache *AllocationCache, remoteAllocationTimeout time.Duration, totalRemoteAllocationTimeout time.Duration, batchWaitTime time.Duration) *Allocator {
 	ah := &Allocator{
 		pendingRequests:              make(chan request, maxBatchQueue),
 		allocationPolicyLister:       policyInformer.Lister(),
@@ -131,6 +135,7 @@ func NewAllocator(policyInformer multiclusterinformerv1.GameServerAllocationPoli
 		secretSynced:                 secretInformer.Informer().HasSynced,
 		gameServerGetter:             gameServerGetter,
 		allocationCache:              allocationCache,
+		batchWaitTime:                batchWaitTime,
 		remoteAllocationTimeout:      remoteAllocationTimeout,
 		totalRemoteAllocationTimeout: totalRemoteAllocationTimeout,
 		remoteAllocationCallback: func(ctx context.Context, endpoint string, dialOpts grpc.DialOption, request *pb.AllocationRequest) (*pb.AllocationResponse, error) {
@@ -217,6 +222,9 @@ func (c *Allocator) Allocate(ctx context.Context, gsa *allocationv1.GameServerAl
 		return s, nil
 	}
 
+	// Convert gsa required and preferred fields to selectors field
+	gsa.Converter()
+
 	// If multi-cluster setting is enabled, allocate base on the multicluster allocation policy.
 	if gsa.Spec.MultiClusterSetting.Enabled {
 		out, err = c.applyMultiClusterAllocation(ctx, gsa)
@@ -252,7 +260,7 @@ func (c *Allocator) allocateFromLocalCluster(ctx context.Context, gsa *allocatio
 		var err error
 		gs, err = c.allocate(ctx, gsa)
 		if err != nil {
-			c.loggerForGameServerAllocation(gsa).WithError(err).Warn("failed to allocate. Retrying... ")
+			c.loggerForGameServerAllocation(gsa).WithError(err).Warn("failed to allocate. Retrying...")
 		}
 		return err
 	})
@@ -274,6 +282,7 @@ func (c *Allocator) allocateFromLocalCluster(ctx context.Context, gsa *allocatio
 		gsa.Status.Ports = gs.Status.Ports
 		gsa.Status.Address = gs.Status.Address
 		gsa.Status.NodeName = gs.Status.NodeName
+		gsa.Status.Source = localAllocationSource
 	}
 
 	c.loggerForGameServerAllocation(gsa).Debug("Game server allocation")
@@ -349,6 +358,7 @@ func (c *Allocator) allocateFromRemoteCluster(gsa *allocationv1.GameServerAlloca
 	ctx, cancel := context.WithTimeout(context.Background(), c.totalRemoteAllocationTimeout)
 	defer cancel() // nolint: errcheck
 	// Retry on remote call failures.
+	var endpoint string
 	err = Retry(remoteAllocationRetry, func() error {
 		for i, ip := range connectionInfo.AllocationEndpoints {
 			select {
@@ -356,7 +366,7 @@ func (c *Allocator) allocateFromRemoteCluster(gsa *allocationv1.GameServerAlloca
 				return ErrTotalTimeoutExceeded
 			default:
 			}
-			endpoint := addPort(ip)
+			endpoint = addPort(ip)
 			c.loggerForGameServerAllocationKey("remote-allocation").WithField("request", request).WithField("endpoint", endpoint).Debug("forwarding allocation request")
 			allocationResponse, err = c.remoteAllocationCallback(ctx, endpoint, dialOpts, request)
 			if err != nil {
@@ -376,7 +386,7 @@ func (c *Allocator) allocateFromRemoteCluster(gsa *allocationv1.GameServerAlloca
 		return nil
 	})
 
-	return converters.ConvertAllocationResponseToGSA(allocationResponse), err
+	return converters.ConvertAllocationResponseToGSA(allocationResponse, endpoint), err
 }
 
 // createRemoteClusterDialOption creates a grpc client dial option with proper certs to make a remote call.
@@ -444,7 +454,7 @@ func (c *Allocator) allocate(ctx context.Context, gsa *allocationv1.GameServerAl
 	case res := <-req.response: // wait for the batch to be completed
 		return res.gs, res.err
 	case <-ctx.Done():
-		return nil, errors.New("shutting down")
+		return nil, ErrTotalTimeoutExceeded
 	}
 }
 
@@ -525,7 +535,7 @@ func (c *Allocator) ListenAndAllocate(ctx context.Context, updateWorkerCount int
 			list = nil
 			requestCount = 0
 			// slow down cpu churn, and allow items to batch
-			time.Sleep(batchWaitTime)
+			time.Sleep(c.batchWaitTime)
 		}
 	}
 }
@@ -570,27 +580,31 @@ func (c *Allocator) allocationUpdateWorkers(ctx context.Context, workerCount int
 
 // applyAllocationToGameServer patches the inputted GameServer with the allocation metadata changes, and updates it to the Allocated State.
 // Returns the updated GameServer.
-func (c *Allocator) applyAllocationToGameServer(ctx context.Context, fam allocationv1.MetaPatch, gs *agonesv1.GameServer) (*agonesv1.GameServer, error) {
+func (c *Allocator) applyAllocationToGameServer(ctx context.Context, mp allocationv1.MetaPatch, gs *agonesv1.GameServer) (*agonesv1.GameServer, error) {
 	// patch ObjectMeta labels
-	if fam.Labels != nil {
+	if mp.Labels != nil {
 		if gs.ObjectMeta.Labels == nil {
-			gs.ObjectMeta.Labels = make(map[string]string, len(fam.Labels))
+			gs.ObjectMeta.Labels = make(map[string]string, len(mp.Labels))
 		}
-		for key, value := range fam.Labels {
+		for key, value := range mp.Labels {
 			gs.ObjectMeta.Labels[key] = value
 		}
 	}
 
 	if gs.ObjectMeta.Annotations == nil {
-		gs.ObjectMeta.Annotations = make(map[string]string, len(fam.Annotations))
+		gs.ObjectMeta.Annotations = make(map[string]string, len(mp.Annotations))
 	}
 	// apply annotations patch
-	for key, value := range fam.Annotations {
+	for key, value := range mp.Annotations {
 		gs.ObjectMeta.Annotations[key] = value
 	}
 
 	// add last allocated, so it always gets updated, even if it is already Allocated
-	gs.ObjectMeta.Annotations[lastAllocatedAnnotationKey] = time.Now().String()
+	ts, err := time.Now().MarshalText()
+	if err != nil {
+		return nil, err
+	}
+	gs.ObjectMeta.Annotations[LastAllocatedAnnotationKey] = string(ts)
 	gs.Status.State = agonesv1.GameServerStateAllocated
 
 	return c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(ctx, gs, metav1.UpdateOptions{})

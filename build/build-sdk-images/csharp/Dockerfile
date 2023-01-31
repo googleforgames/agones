@@ -18,8 +18,8 @@ FROM $BASE_IMAGE
 # This should contains tooling required to generate GRPC code, build (if distribution is required) 
 # and test your integration.
 
-RUN  apt-get update \
-    && apt-get install -y wget
+RUN apt-get --allow-releaseinfo-change update && \
+    apt-get install -y wget
 
 RUN apt-get update \
     && apt-get install -y apt-transport-https 
@@ -31,7 +31,7 @@ RUN wget -q https://packages.microsoft.com/config/ubuntu/19.04/packages-microsof
 
 
 RUN apt-get update \
-    && apt-get install -y dotnet-sdk-2.2
+    && apt-get install -y dotnet-sdk-3.1
 
 # code generation scripts
 COPY *.sh /root/

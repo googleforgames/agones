@@ -26,12 +26,21 @@ gcloud-init: ensure-build-config
 # Creates and authenticates a small, 6 node GKE cluster to work against (2 nodes are used for agones-metrics and agones-system)
 gcloud-test-cluster: GCP_CLUSTER_NODEPOOL_INITIALNODECOUNT ?= 4
 gcloud-test-cluster: GCP_CLUSTER_NODEPOOL_MACHINETYPE ?= e2-standard-4
+gcloud-test-cluster: GCP_CLUSTER_NODEPOOL_ENABLEIMAGESTREAMING ?= true
+gcloud-test-cluster: GCP_CLUSTER_NODEPOOL_AUTOSCALE ?= false
+gcloud-test-cluster: GCP_CLUSTER_NODEPOOL_MIN_NODECOUNT ?= 1
+gcloud-test-cluster: GCP_CLUSTER_NODEPOOL_MAX_NODECOUNT ?= 5
 gcloud-test-cluster: GCP_CLUSTER_NODEPOOL_WINDOWSINITIALNODECOUNT ?= 0
 gcloud-test-cluster: GCP_CLUSTER_NODEPOOL_WINDOWSMACHINETYPE ?= e2-standard-4
 gcloud-test-cluster: $(ensure-build-image)
-	$(MAKE) gcloud-terraform-cluster GCP_TF_CLUSTER_NAME="$(GCP_CLUSTER_NAME)" GCP_CLUSTER_ZONE="$(GCP_CLUSTER_ZONE)" \
+	$(MAKE) gcloud-terraform-cluster GCP_TF_CLUSTER_NAME="$(GCP_CLUSTER_NAME)" \
+		GCP_CLUSTER_LOCATION="$(GCP_CLUSTER_LOCATION)" \
+		GCP_CLUSTER_AUTOSCALE="$(GCP_CLUSTER_NODEPOOL_AUTOSCALE)" \
+		GCP_CLUSTER_MIN_NODECOUNT="$(GCP_CLUSTER_NODEPOOL_MIN_NODECOUNT)" \
+		GCP_CLUSTER_MAX_NODECOUNT="$(GCP_CLUSTER_NODEPOOL_MAX_NODECOUNT)" \
 		GCP_CLUSTER_NODEPOOL_INITIALNODECOUNT="$(GCP_CLUSTER_NODEPOOL_INITIALNODECOUNT)" \
 		GCP_CLUSTER_NODEPOOL_MACHINETYPE="$(GCP_CLUSTER_NODEPOOL_MACHINETYPE)" \
+		GCP_CLUSTER_NODEPOOL_ENABLEIMAGESTREAMING="$(GCP_CLUSTER_NODEPOOL_ENABLEIMAGESTREAMING)" \
 		GCP_CLUSTER_NODEPOOL_WINDOWSINITIALNODECOUNT="$(GCP_CLUSTER_NODEPOOL_WINDOWSINITIALNODECOUNT)" \
 		GCP_CLUSTER_NODEPOOL_WINDOWSMACHINETYPE="$(GCP_CLUSTER_NODEPOOL_WINDOWSMACHINETYPE)"
 	$(MAKE) gcloud-auth-cluster
@@ -41,7 +50,7 @@ clean-gcloud-test-cluster: $(ensure-build-image)
 
 # Creates a gcloud cluster for end-to-end
 # it installs also a consul cluster to handle build system concurrency using a distributed lock
-gcloud-e2e-test-cluster: GCP_PROJECT ?= $(current_project)
+gcloud-e2e-test-cluster: GCP_PROJECT ?= $(shell $(current_project))
 gcloud-e2e-test-cluster: $(ensure-build-image)
 gcloud-e2e-test-cluster:
 	$(MAKE) terraform-init DIRECTORY=e2e
@@ -49,13 +58,14 @@ gcloud-e2e-test-cluster:
       	terraform apply -auto-approve -var project="$(GCP_PROJECT)"'
 
 # Deletes the gcloud e2e cluster and cleanup any left pvc volumes
+clean-gcloud-e2e-test-cluster: GCP_PROJECT ?= $(shell $(current_project))
 clean-gcloud-e2e-test-cluster: $(ensure-build-image)
 clean-gcloud-e2e-test-cluster:
 	$(MAKE) terraform-init DIRECTORY=e2e
 	$(DOCKER_RUN) bash -c 'cd $(mount_path)/build/terraform/e2e && terraform destroy -var project=$(GCP_PROJECT) -auto-approve'
 
 # Creates a gcloud cluster for prow
-gcloud-prow-build-cluster: GCP_PROJECT ?= $(current_project)
+gcloud-prow-build-cluster: GCP_PROJECT ?= $(shell $(current_project))
 gcloud-prow-build-cluster: $(ensure-build-image)
 gcloud-prow-build-cluster:
 	$(MAKE) terraform-init DIRECTORY=prow
@@ -70,14 +80,12 @@ clean-gcloud-prow-build-cluster: $(ensure-build-image)
 # Pulls down authentication information for kubectl against a cluster, name can be specified through GCP_CLUSTER_NAME
 # (defaults to 'test-cluster')
 gcloud-auth-cluster: $(ensure-build-image)
-	docker run --rm $(common_mounts) $(build_tag) gcloud config set container/cluster $(GCP_CLUSTER_NAME)
-	docker run --rm $(common_mounts) $(build_tag) gcloud config set compute/zone $(GCP_CLUSTER_ZONE)
-	docker run --rm $(common_mounts) $(build_tag) gcloud container clusters get-credentials $(GCP_CLUSTER_NAME)
+	docker run --rm $(common_mounts) $(build_tag) gcloud container clusters get-credentials $(GCP_CLUSTER_NAME) --zone  $(GCP_CLUSTER_LOCATION)
 
 # authenticate our docker configuration so that you can do a docker push directly
-# to the gcr.io repository
+# to the Google Artifact Registry repository
 gcloud-auth-docker: $(ensure-build-image)
-	docker run --rm $(common_mounts) $(build_tag) gcloud auth print-access-token | docker login -u oauth2accesstoken --password-stdin https://gcr.io
+	docker run --rm $(common_mounts) $(build_tag) gcloud auth print-access-token | docker login -u oauth2accesstoken --password-stdin https://us-docker.pkg.dev
 
 # Clean the gcloud configuration
 clean-gcloud-config:

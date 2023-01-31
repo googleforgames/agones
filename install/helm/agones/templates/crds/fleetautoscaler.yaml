@@ -39,9 +39,12 @@ spec:
       storage: true
       schema:
         openAPIV3Schema:
+          description: 'FleetAutoscaler is the data structure for a FleetAutoscaler resource.'
           type: object
           properties:
             spec:
+              description: 'FleetAutoscalerSpec is the spec for a Fleet Scaler. More info:
+                https://agones.dev/site/docs/reference/agones_crd_api_reference/#autoscaling.agones.dev/v1.FleetAutoscaler'
               type: object
               required:
                 - fleetName
@@ -51,7 +54,7 @@ spec:
                   type: string
                   minLength: 1
                   maxLength: 63
-                  pattern: "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"
+                  pattern: "^[a-z0-9]([-\\.a-z0-9]*[a-z0-9])?$"
                 policy:
                   type: object
                   required:
@@ -102,7 +105,28 @@ spec:
                         caBundle:
                           type: string
                           format: byte
+                sync:
+                  type: object
+                  required:
+                    - type
+                  properties:
+                    type:
+                      type: string
+                      enum:
+                        - FixedInterval
+                    fixedInterval:
+                      type: object
+                      nullable: true
+                      required:
+                        - seconds
+                      properties:
+                        seconds:
+                          type: integer
+                          minimum: 0
+                          exclusiveMinimum: true
             status:
+              description: 'FleetAutoscalerStatus defines the current status of a FleetAutoscaler. More info:
+                https://agones.dev/site/docs/reference/agones_crd_api_reference/#autoscaling.agones.dev/v1.FleetAutoscaler'
               type: object
               properties:
                 currentReplicas:

@@ -39,15 +39,17 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
-	types "k8s.io/apimachinery/pkg/types"
+	k8sruntime "k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/kubernetes/scheme"
 
 	// required to use gcloud login see: https://github.com/kubernetes/client-go/issues/242
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
@@ -74,17 +76,8 @@ type Framework struct {
 	PerfOutputDir   string
 	Version         string
 	Namespace       string
-}
-
-// New setups a testing framework using a kubeconfig path and the game server image to use for testing.
-func New(kubeconfig string) (*Framework, error) {
-	return newFramework(kubeconfig, 0, 0)
-}
-
-// NewWithRates setups a testing framework using a kubeconfig path and the game server image
-// to use for load testing with QPS and Burst overwrites.
-func NewWithRates(kubeconfig string, qps float32, burst int) (*Framework, error) {
-	return newFramework(kubeconfig, qps, burst)
+	CloudProduct    string
+	WaitForState    time.Duration // default time to wait for state changes, may change based on cloud product.
 }
 
 func newFramework(kubeconfig string, qps float32, burst int) (*Framework, error) {
@@ -124,6 +117,7 @@ const (
 	perfOutputDirFlag   = "perf-output"
 	versionFlag         = "version"
 	namespaceFlag       = "namespace"
+	cloudProductFlag    = "cloud-product"
 )
 
 // ParseTestFlags Parses go test flags separately because pflag package ignores flags with '-test.' prefix
@@ -155,21 +149,23 @@ func NewFromFlags() (*Framework, error) {
 	}
 
 	viper.SetDefault(kubeconfigFlag, filepath.Join(usr.HomeDir, ".kube", "config"))
-	viper.SetDefault(gsimageFlag, "gcr.io/agones-images/simple-game-server:0.3")
+	viper.SetDefault(gsimageFlag, "us-docker.pkg.dev/agones-images/examples/simple-game-server:0.14")
 	viper.SetDefault(pullSecretFlag, "")
 	viper.SetDefault(stressTestLevelFlag, 0)
 	viper.SetDefault(perfOutputDirFlag, "")
 	viper.SetDefault(versionFlag, "")
 	viper.SetDefault(runtime.FeatureGateFlag, "")
 	viper.SetDefault(namespaceFlag, "")
+	viper.SetDefault(cloudProductFlag, "generic")
 
 	pflag.String(kubeconfigFlag, viper.GetString(kubeconfigFlag), "kube config path, e.g. $HOME/.kube/config")
-	pflag.String(gsimageFlag, viper.GetString(gsimageFlag), "gameserver image to use for those tests, gcr.io/agones-images/simple-game-server:0.3")
+	pflag.String(gsimageFlag, viper.GetString(gsimageFlag), "gameserver image to use for those tests")
 	pflag.String(pullSecretFlag, viper.GetString(pullSecretFlag), "optional secret to be used for pulling the gameserver and/or Agones SDK sidecar images")
 	pflag.Int(stressTestLevelFlag, viper.GetInt(stressTestLevelFlag), "enable stress test at given level 0-100")
 	pflag.String(perfOutputDirFlag, viper.GetString(perfOutputDirFlag), "write performance statistics to the specified directory")
 	pflag.String(versionFlag, viper.GetString(versionFlag), "agones controller version to be tested, consists of release version plus a short hash of the latest commit")
 	pflag.String(namespaceFlag, viper.GetString(namespaceFlag), "namespace is used to isolate test runs to their own namespaces")
+	pflag.String(cloudProductFlag, viper.GetString(cloudProductFlag), "cloud product of cluster references by kubeconfig; defaults to 'generic'; options are 'generic', 'gke-autopilot'")
 	runtime.FeaturesBindFlags()
 	pflag.Parse()
 
@@ -181,11 +177,12 @@ func NewFromFlags() (*Framework, error) {
 	runtime.Must(viper.BindEnv(perfOutputDirFlag))
 	runtime.Must(viper.BindEnv(versionFlag))
 	runtime.Must(viper.BindEnv(namespaceFlag))
+	runtime.Must(viper.BindEnv(cloudProductFlag))
 	runtime.Must(viper.BindPFlags(pflag.CommandLine))
 	runtime.Must(runtime.FeaturesBindEnv())
 	runtime.Must(runtime.ParseFeaturesFromEnv())
 
-	framework, err := New(viper.GetString(kubeconfigFlag))
+	framework, err := newFramework(viper.GetString(kubeconfigFlag), 0, 0)
 	if err != nil {
 		return framework, err
 	}
@@ -195,6 +192,11 @@ func NewFromFlags() (*Framework, error) {
 	framework.PerfOutputDir = viper.GetString(perfOutputDirFlag)
 	framework.Version = viper.GetString(versionFlag)
 	framework.Namespace = viper.GetString(namespaceFlag)
+	framework.CloudProduct = viper.GetString(cloudProductFlag)
+	framework.WaitForState = 5 * time.Minute
+	if framework.CloudProduct == "gke-autopilot" {
+		framework.WaitForState = 10 * time.Minute // Autopilot can take a little while due to autoscaling, be a little liberal.
+	}
 
 	logrus.WithField("gameServerImage", framework.GameServerImage).
 		WithField("pullSecret", framework.PullSecret).
@@ -202,6 +204,7 @@ func NewFromFlags() (*Framework, error) {
 		WithField("perfOutputDir", framework.PerfOutputDir).
 		WithField("version", framework.Version).
 		WithField("namespace", framework.Namespace).
+		WithField("cloudProduct", framework.CloudProduct).
 		WithField("featureGates", runtime.EncodeFeatures()).
 		Info("Starting e2e test(s)")
 
@@ -209,15 +212,17 @@ func NewFromFlags() (*Framework, error) {
 }
 
 // CreateGameServerAndWaitUntilReady Creates a GameServer and wait for its state to become ready.
-func (f *Framework) CreateGameServerAndWaitUntilReady(ns string, gs *agonesv1.GameServer) (*agonesv1.GameServer, error) {
+func (f *Framework) CreateGameServerAndWaitUntilReady(t *testing.T, ns string, gs *agonesv1.GameServer) (*agonesv1.GameServer, error) {
+	t.Helper()
+	log := TestLogger(t)
 	newGs, err := f.AgonesClient.AgonesV1().GameServers(ns).Create(context.Background(), gs, metav1.CreateOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("creating %v GameServer instances failed (%v): %v", gs.Spec, gs.Name, err)
 	}
 
-	logrus.WithField("gs", newGs.ObjectMeta.Name).Info("GameServer created, waiting for Ready")
+	log.WithField("gs", newGs.ObjectMeta.Name).Info("GameServer created, waiting for Ready")
 
-	readyGs, err := f.WaitForGameServerState(newGs, agonesv1.GameServerStateReady, 5*time.Minute)
+	readyGs, err := f.WaitForGameServerState(t, newGs, agonesv1.GameServerStateReady, f.WaitForState)
 
 	if err != nil {
 		return nil, fmt.Errorf("waiting for %v GameServer instance readiness timed out (%v): %v",
@@ -242,9 +247,12 @@ func (f *Framework) CreateGameServerAndWaitUntilReady(ns string, gs *agonesv1.Ga
 	return readyGs, nil
 }
 
-// WaitForGameServerStateWithLogger Waits untils the gameserver reach a given state before the timeout expires, and logs against
-// a give logger (usually useful to log the name of the test with the checks)
-func (f *Framework) WaitForGameServerStateWithLogger(logger *logrus.Entry, gs *agonesv1.GameServer, state agonesv1.GameServerState, timeout time.Duration) (*agonesv1.GameServer, error) {
+// WaitForGameServerState Waits untils the gameserver reach a given state before the timeout expires (with a default logger)
+func (f *Framework) WaitForGameServerState(t *testing.T, gs *agonesv1.GameServer, state agonesv1.GameServerState,
+	timeout time.Duration) (*agonesv1.GameServer, error) {
+	t.Helper()
+	log := TestLogger(t)
+
 	var checkGs *agonesv1.GameServer
 
 	err := wait.PollImmediate(1*time.Second, timeout, func() (bool, error) {
@@ -252,77 +260,116 @@ func (f *Framework) WaitForGameServerStateWithLogger(logger *logrus.Entry, gs *a
 		checkGs, err = f.AgonesClient.AgonesV1().GameServers(gs.Namespace).Get(context.Background(), gs.Name, metav1.GetOptions{})
 
 		if err != nil {
-			logrus.WithError(err).Warn("error retrieving gameserver")
+			log.WithError(err).Warn("error retrieving GameServer")
 			return false, nil
 		}
 
-		logger.WithField("gs", checkGs.ObjectMeta.Name).
-			WithField("currentState", checkGs.Status.State).
-			WithField("awaitingState", state).Info("Waiting for states to match")
-
-		if checkGs.Status.State == state {
+		checkState := checkGs.Status.State
+		if checkState == state {
+			log.WithField("gs", checkGs.ObjectMeta.Name).
+				WithField("currentState", checkState).
+				WithField("awaitingState", state).Info("GameServer states match")
 			return true, nil
 		}
+		if agonesv1.TerminalGameServerStates[checkState] {
+			log.WithField("gs", checkGs.ObjectMeta.Name).
+				WithField("currentState", checkState).
+				WithField("awaitingState", state).Error("GameServer reached terminal state")
+			return false, errors.Errorf("GameServer reached terminal state %s", checkState)
+		}
+		log.WithField("gs", checkGs.ObjectMeta.Name).
+			WithField("currentState", checkState).
+			WithField("awaitingState", state).Info("Waiting for states to match")
 
 		return false, nil
 	})
 
-	return checkGs, errors.Wrapf(err, "waiting for GameServer to be %v %v/%v",
-		state, gs.Namespace, gs.Name)
+	return checkGs, errors.Wrapf(err, "waiting for GameServer %v/%v to be %v",
+		gs.Namespace, gs.Name, state)
 }
 
-// WaitForGameServerState Waits untils the gameserver reach a given state before the timeout expires (with a default logger)
-func (f *Framework) WaitForGameServerState(gs *agonesv1.GameServer, state agonesv1.GameServerState,
-	timeout time.Duration) (*agonesv1.GameServer, error) {
-	return f.WaitForGameServerStateWithLogger(logrus.WithFields(nil), gs, state, timeout)
-}
+// CycleAllocations repeatedly Allocates a GameServer in the Fleet (if one is available), once every specified period.
+// Each Allocated GameServer gets deleted allocDuration after it was Allocated.
+// GameServers will continue to be Allocated until a message is passed to the done channel.
+func (f *Framework) CycleAllocations(ctx context.Context, t *testing.T, flt *agonesv1.Fleet, period time.Duration, allocDuration time.Duration) {
+	err := wait.PollImmediateUntil(period, func() (bool, error) {
+		gsa := GetAllocation(flt)
+		gsa, err := f.AgonesClient.AllocationV1().GameServerAllocations(flt.Namespace).Create(context.Background(), gsa, metav1.CreateOptions{})
+		if err != nil || gsa.Status.State != allocationv1.GameServerAllocationAllocated {
+			// Ignore error. Could be that the buffer was empty, will try again next cycle.
+			return false, nil
+		}
 
-// AssertFleetCondition waits for the Fleet to be in a specific condition or fails the test if the condition can't be met in 5 minutes.
-func (f *Framework) AssertFleetCondition(t *testing.T, flt *agonesv1.Fleet, condition func(fleet *agonesv1.Fleet) bool) {
-	t.Helper()
-	err := f.WaitForFleetCondition(t, flt, condition)
-	if err != nil {
-		// Do not call Fatalf() from go routine other than main test go routine, because it could cause a race
-		t.Fatalf("error waiting for fleet condition on fleet %v", flt.Name)
+		// Deallocate after allocDuration.
+		go func(gsa *allocationv1.GameServerAllocation) {
+			time.Sleep(allocDuration)
+			err := f.AgonesClient.AgonesV1().GameServers(gsa.Namespace).Delete(context.Background(), gsa.Status.GameServerName, metav1.DeleteOptions{})
+			require.NoError(t, err)
+		}(gsa)
+
+		return false, nil
+	}, ctx.Done())
+	// Ignore wait timeout error, will always be returned when the context is cancelled at the end of the test.
+	if err != wait.ErrWaitTimeout {
+		require.NoError(t, err)
 	}
 }
 
+// AssertFleetCondition waits for the Fleet to be in a specific condition or fails the test if the condition can't be met in 5 minutes.
+func (f *Framework) AssertFleetCondition(t *testing.T, flt *agonesv1.Fleet, condition func(*logrus.Entry, *agonesv1.Fleet) bool) {
+	err := f.WaitForFleetCondition(t, flt, condition)
+	require.NoError(t, err, "error waiting for fleet condition on fleet: %v", flt.Name)
+}
+
 // WaitForFleetCondition waits for the Fleet to be in a specific condition or returns an error if the condition can't be met in 5 minutes.
-func (f *Framework) WaitForFleetCondition(t *testing.T, flt *agonesv1.Fleet, condition func(fleet *agonesv1.Fleet) bool) error {
-	t.Helper()
-	logrus.WithField("fleet", flt.Name).Info("waiting for fleet condition")
-	err := wait.PollImmediate(2*time.Second, 5*time.Minute, func() (bool, error) {
+func (f *Framework) WaitForFleetCondition(t *testing.T, flt *agonesv1.Fleet, condition func(*logrus.Entry, *agonesv1.Fleet) bool) error {
+	log := TestLogger(t).WithField("fleet", flt.Name)
+	log.Info("waiting for fleet condition")
+	err := wait.PollImmediate(2*time.Second, f.WaitForState, func() (bool, error) {
 		fleet, err := f.AgonesClient.AgonesV1().Fleets(flt.ObjectMeta.Namespace).Get(context.Background(), flt.ObjectMeta.Name, metav1.GetOptions{})
 		if err != nil {
 			return true, err
 		}
 
-		return condition(fleet), nil
+		return condition(log, fleet), nil
 	})
 	if err != nil {
-		logrus.WithField("fleet", flt.Name).WithError(err).Info("error waiting for fleet condition")
-		return err
+		// save this to be returned later.
+		resultErr := err
+		log.WithField("fleetStatus", fmt.Sprintf("%+v", flt.Status)).WithError(err).
+			Info("error waiting for fleet condition, dumping Fleet and Gameserver data")
+
+		f.LogEvents(t, log, flt.ObjectMeta.Namespace, flt)
+
+		gsList, err := f.ListGameServersFromFleet(flt)
+		require.NoError(t, err)
+
+		for i := range gsList {
+			gs := gsList[i]
+			log = log.WithField("gs", gs.ObjectMeta.Name)
+			log.WithField("status", fmt.Sprintf("%+v", gs.Status)).Info("GameServer state dump:")
+			f.LogEvents(t, log, gs.ObjectMeta.Namespace, &gs)
+		}
+
+		return resultErr
 	}
 	return nil
 }
 
 // WaitForFleetAutoScalerCondition waits for the FleetAutoscaler to be in a specific condition or fails the test if the condition can't be met in 2 minutes.
 // nolint: dupl
-func (f *Framework) WaitForFleetAutoScalerCondition(t *testing.T, fas *autoscaling.FleetAutoscaler, condition func(fas *autoscaling.FleetAutoscaler) bool) {
-	t.Helper()
-	logrus.WithField("fleetautoscaler", fas.Name).Info("waiting for fleetautoscaler condition")
+func (f *Framework) WaitForFleetAutoScalerCondition(t *testing.T, fas *autoscaling.FleetAutoscaler, condition func(log *logrus.Entry, fas *autoscaling.FleetAutoscaler) bool) {
+	log := TestLogger(t).WithField("fleetautoscaler", fas.Name)
+	log.Info("waiting for fleetautoscaler condition")
 	err := wait.PollImmediate(2*time.Second, 2*time.Minute, func() (bool, error) {
 		fleetautoscaler, err := f.AgonesClient.AutoscalingV1().FleetAutoscalers(fas.ObjectMeta.Namespace).Get(context.Background(), fas.ObjectMeta.Name, metav1.GetOptions{})
 		if err != nil {
 			return true, err
 		}
 
-		return condition(fleetautoscaler), nil
+		return condition(log, fleetautoscaler), nil
 	})
-	if err != nil {
-		logrus.WithField("fleetautoscaler", fas.Name).WithError(err).Info("error waiting for fleetautoscaler condition")
-		t.Fatalf("error waiting for fleetautoscaler condition on fleetautoscaler %v", fas.Name)
-	}
+	require.NoError(t, err, "error waiting for fleetautoscaler condition on fleetautoscaler %v", fas.Name)
 }
 
 // ListGameServersFromFleet lists GameServers from a particular fleet
@@ -350,9 +397,9 @@ func (f *Framework) ListGameServersFromFleet(flt *agonesv1.Fleet) ([]agonesv1.Ga
 }
 
 // FleetReadyCount returns the ready count in a fleet
-func FleetReadyCount(amount int32) func(fleet *agonesv1.Fleet) bool {
-	return func(fleet *agonesv1.Fleet) bool {
-		logrus.Infof("fleet %v has %v/%v ready replicas", fleet.Name, fleet.Status.ReadyReplicas, amount)
+func FleetReadyCount(amount int32) func(*logrus.Entry, *agonesv1.Fleet) bool {
+	return func(log *logrus.Entry, fleet *agonesv1.Fleet) bool {
+		log.WithField("fleetStatus", fmt.Sprintf("%+v", fleet.Status)).WithField("fleet", fleet.ObjectMeta.Name).WithField("expected", amount).Info("Checking Fleet Ready replicas")
 		return fleet.Status.ReadyReplicas == amount
 	}
 }
@@ -377,7 +424,7 @@ func (f *Framework) WaitForFleetGameServersCondition(flt *agonesv1.Fleet,
 // specified by a callback and the size of GameServers to match fleet's Spec.Replicas.
 func (f *Framework) WaitForFleetGameServerListCondition(flt *agonesv1.Fleet,
 	cond func(servers []agonesv1.GameServer) bool) error {
-	return wait.Poll(2*time.Second, 5*time.Minute, func() (done bool, err error) {
+	return wait.Poll(2*time.Second, f.WaitForState, func() (done bool, err error) {
 		gsList, err := f.ListGameServersFromFleet(flt)
 		if err != nil {
 			return false, err
@@ -441,17 +488,15 @@ func (f *Framework) CleanUp(ns string) error {
 func (f *Framework) CreateAndApplyAllocation(t *testing.T, flt *agonesv1.Fleet) *allocationv1.GameServerAllocation {
 	gsa := GetAllocation(flt)
 	gsa, err := f.AgonesClient.AllocationV1().GameServerAllocations(flt.ObjectMeta.Namespace).Create(context.Background(), gsa, metav1.CreateOptions{})
-	if !assert.NoError(t, err) {
-		assert.FailNow(t, "gameserverallocation could not be created")
-	}
-	assert.Equal(t, string(allocationv1.GameServerAllocationAllocated), string(gsa.Status.State))
+	require.NoError(t, err)
+	require.Equal(t, string(allocationv1.GameServerAllocationAllocated), string(gsa.Status.State))
 	return gsa
 }
 
 // SendGameServerUDP sends a message to a gameserver and returns its reply
 // finds the first udp port from the spec to send the message to,
 // returns error if no Ports were allocated
-func SendGameServerUDP(gs *agonesv1.GameServer, msg string) (string, error) {
+func (f *Framework) SendGameServerUDP(t *testing.T, gs *agonesv1.GameServer, msg string) (string, error) {
 	if len(gs.Status.Ports) == 0 {
 		return "", errors.New("Empty Ports array")
 	}
@@ -459,7 +504,7 @@ func SendGameServerUDP(gs *agonesv1.GameServer, msg string) (string, error) {
 	// use first udp port
 	for _, p := range gs.Spec.Ports {
 		if p.Protocol == corev1.ProtocolUDP {
-			return SendGameServerUDPToPort(gs, p.Name, msg)
+			return f.SendGameServerUDPToPort(t, gs, p.Name, msg)
 		}
 	}
 	return "", errors.New("No UDP ports")
@@ -467,7 +512,8 @@ func SendGameServerUDP(gs *agonesv1.GameServer, msg string) (string, error) {
 
 // SendGameServerUDPToPort sends a message to a gameserver at the named port and returns its reply
 // returns error if no Ports were allocated or a port of the specified name doesn't exist
-func SendGameServerUDPToPort(gs *agonesv1.GameServer, portName string, msg string) (string, error) {
+func (f *Framework) SendGameServerUDPToPort(t *testing.T, gs *agonesv1.GameServer, portName string, msg string) (string, error) {
+	log := TestLogger(t)
 	if len(gs.Status.Ports) == 0 {
 		return "", errors.New("Empty Ports array")
 	}
@@ -478,33 +524,59 @@ func SendGameServerUDPToPort(gs *agonesv1.GameServer, portName string, msg strin
 		}
 	}
 	address := fmt.Sprintf("%s:%d", gs.Status.Address, port.Port)
-	return SendUDP(address, msg)
+	reply, err := f.SendUDP(t, address, msg)
+
+	if err != nil {
+		log.WithField("gs", gs.ObjectMeta.Name).WithField("status", fmt.Sprintf("%+v", gs.Status)).Info("Failed to send UDP packet to GameServer. Dumping Events!")
+		f.LogEvents(t, log, gs.ObjectMeta.Namespace, gs)
+	}
+
+	return reply, err
 }
 
 // SendUDP sends a message to an address, and returns its reply if
-// it returns one in 30 seconds
-func SendUDP(address, msg string) (string, error) {
-	conn, err := net.Dial("udp", address)
-	if err != nil {
-		return "", err
-	}
-	defer func() {
-		err = conn.Close()
-	}()
-	_, err = conn.Write([]byte(msg))
-	if err != nil {
-		return "", errors.Wrapf(err, "Could not write message %s", msg)
-	}
+// it returns one in 10 seconds. Will retry 5 times, in case UDP packets drop.
+func (f *Framework) SendUDP(t *testing.T, address, msg string) (string, error) {
+	log := TestLogger(t).WithField("address", address)
 	b := make([]byte, 1024)
+	var n int
+	// sometimes we get I/O timeout, so let's do a retry
+	err := wait.PollImmediate(2*time.Second, time.Minute, func() (bool, error) {
 
-	err = conn.SetReadDeadline(time.Now().Add(30 * time.Second))
+		conn, err := net.Dial("udp", address)
+		if err != nil {
+			log.WithError(err).Info("could not dial address")
+			return false, nil
+		}
+
+		defer func() {
+			err = conn.Close()
+		}()
+
+		_, err = conn.Write([]byte(msg))
+		if err != nil {
+			log.WithError(err).Info("could not write message to address")
+			return false, nil
+		}
+
+		err = conn.SetReadDeadline(time.Now().Add(10 * time.Second))
+		if err != nil {
+			log.WithError(err).Info("Could not set read deadline")
+			return false, nil
+		}
+
+		n, err = conn.Read(b)
+		if err != nil {
+			log.WithError(err).Info("Could not read from address")
+		}
+
+		return err == nil, nil
+	})
+
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(err, "timed out attempting to send UDP packet to address")
 	}
-	n, err := conn.Read(b)
-	if err != nil {
-		return "", err
-	}
+
 	return string(b[:n]), nil
 }
 
@@ -576,7 +648,9 @@ func GetAllocation(f *agonesv1.Fleet) *allocationv1.GameServerAllocation {
 	// get an allocation
 	return &allocationv1.GameServerAllocation{
 		Spec: allocationv1.GameServerAllocationSpec{
-			Required: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: f.ObjectMeta.Name}},
+			Selectors: []allocationv1.GameServerSelector{
+				{LabelSelector: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: f.ObjectMeta.Name}}},
+			},
 		}}
 }
 
@@ -724,4 +798,28 @@ func (f *Framework) DefaultGameServer(namespace string) *agonesv1.GameServer {
 	}
 
 	return gs
+}
+
+// LogEvents logs all the events for a given Kubernetes objects. Useful for debugging why something
+// went wrong.
+func (f *Framework) LogEvents(t *testing.T, log *logrus.Entry, namespace string, objOrRef k8sruntime.Object) {
+	log.WithField("kind", objOrRef.GetObjectKind().GroupVersionKind().Kind).Info("Dumping Events:")
+	events, err := f.KubeClient.CoreV1().Events(namespace).Search(scheme.Scheme, objOrRef)
+	require.NoError(t, err, "error searching for events")
+	for i := range events.Items {
+		event := events.Items[i]
+		log.WithField("lastTimestamp", event.LastTimestamp).WithField("type", event.Type).WithField("reason", event.Reason).WithField("message", event.Message).Info("Event!")
+	}
+}
+
+// SkipOnCloudProduct skips the test if the e2e was invoked with --cloud-product=<product>.
+func (f *Framework) SkipOnCloudProduct(t *testing.T, product, reason string) {
+	if f.CloudProduct == product {
+		t.Skipf("skipping test on cloud product %s: %s", product, reason)
+	}
+}
+
+// TestLogger returns the standard logger for helper functions.
+func TestLogger(t *testing.T) *logrus.Entry {
+	return logrus.WithField("test", t.Name())
 }

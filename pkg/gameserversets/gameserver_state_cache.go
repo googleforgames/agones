@@ -23,9 +23,9 @@ import (
 
 // gameServerSetCacheEntry manages a list of items created and deleted locally for a single game server set.
 type gameServerSetCacheEntry struct {
-	mu              sync.Mutex
 	pendingCreation map[string]*agonesv1.GameServer
 	pendingDeletion map[string]*agonesv1.GameServer
+	mu              sync.Mutex
 }
 
 func (e *gameServerSetCacheEntry) created(gs *agonesv1.GameServer) {

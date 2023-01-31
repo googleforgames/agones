@@ -17,6 +17,7 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -25,6 +26,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	coresdk "agones.dev/agones/pkg/sdk"
@@ -39,7 +41,10 @@ func main() {
 	port := flag.String("port", "7654", "The port to listen to traffic on")
 	passthrough := flag.Bool("passthrough", false, "Get listening port from the SDK, rather than use the 'port' value")
 	readyOnStart := flag.Bool("ready", true, "Mark this GameServer as Ready on startup")
-	shutdownDelay := flag.Int("automaticShutdownDelayMin", 0, "If greater than zero, automatically shut down the server this many minutes after the server becomes allocated")
+	shutdownDelayMin := flag.Int("automaticShutdownDelayMin", 0, "[Deprecated] If greater than zero, automatically shut down the server this many minutes after the server becomes allocated (please use automaticShutdownDelaySec instead)")
+	shutdownDelaySec := flag.Int("automaticShutdownDelaySec", 0, "If greater than zero, automatically shut down the server this many seconds after the server becomes allocated (cannot be used if automaticShutdownDelayMin is set)")
+	readyDelaySec := flag.Int("readyDelaySec", 0, "If greater than zero, wait this many seconds each time before marking the game server as ready")
+	readyIterations := flag.Int("readyIterations", 0, "If greater than zero, return to a ready state this number of times before shutting down")
 	udp := flag.Bool("udp", true, "Server will listen on UDP")
 	tcp := flag.Bool("tcp", false, "Server will listen on TCP")
 
@@ -64,8 +69,12 @@ func main() {
 		tcp = &t
 	}
 
-	if !*udp && !*tcp {
-		log.Fatalf("No protocol enabled, exiting")
+	// Check for incompatible flags.
+	if *shutdownDelayMin > 0 && *shutdownDelaySec > 0 {
+		log.Fatalf("Cannot set both --automaticShutdownDelayMin and --automaticShutdownDelaySec")
+	}
+	if *readyIterations > 0 && *shutdownDelayMin <= 0 && *shutdownDelaySec <= 0 {
+		log.Fatalf("Must set a shutdown delay if using ready iterations")
 	}
 
 	log.Print("Creating SDK instance")
@@ -75,8 +84,8 @@ func main() {
 	}
 
 	log.Print("Starting Health Ping")
-	stop := make(chan struct{})
-	go doHealth(s, stop)
+	ctx, cancel := context.WithCancel(context.Background())
+	go doHealth(s, ctx)
 
 	if *passthrough {
 		var gs *coresdk.GameServer
@@ -89,25 +98,32 @@ func main() {
 		port = &p
 	}
 
+	if *tcp {
+		go tcpListener(port, s, cancel)
+	}
+
+	if *udp {
+		go udpListener(port, s, cancel)
+	}
+
+	if *shutdownDelaySec > 0 {
+		shutdownAfterNAllocations(s, *readyIterations, *shutdownDelaySec)
+	} else if *shutdownDelayMin > 0 {
+		shutdownAfterNAllocations(s, *readyIterations, *shutdownDelayMin*60)
+	}
+
 	if *readyOnStart {
+		if *readyDelaySec > 0 {
+			log.Printf("Waiting %d seconds before moving to ready", *readyDelaySec)
+			time.Sleep(time.Duration(*readyDelaySec) * time.Second)
+		}
 		log.Print("Marking this server as ready")
 		ready(s)
 	}
 
-	if *shutdownDelay > 0 {
-		shutdownAfterAllocation(s, *shutdownDelay)
+	// Prevent the program from quitting as the server is listening on goroutines.
+	for {
 	}
-
-	if *tcp {
-		go tcpListener(port, s, stop)
-	}
-
-	if *udp {
-		go udpListener(port, s, stop)
-	}
-
-	// prevents program from quitting as the server is listening on goroutines
-	for {}
 }
 
 // doSignal shutsdown on SIGTERM/SIGKILL
@@ -118,25 +134,66 @@ func doSignal() {
 	os.Exit(0)
 }
 
-// shutdownAfterAllocation creates a callback to automatically shut down
-// the server a specified number of minutes after the server becomes
-// allocated.
-func shutdownAfterAllocation(s *sdk.SDK, shutdownDelay int) {
-	err := s.WatchGameServer(func(gs *coresdk.GameServer) {
-		if gs.Status.State == "Allocated" {
-			time.Sleep(time.Duration(shutdownDelay) * time.Minute)
-			shutdownErr := s.Shutdown()
-			if shutdownErr != nil {
-				log.Fatalf("Could not shutdown: %v", shutdownErr)
-			}
-		}
-	})
+// shutdownAfterNAllocations creates a callback to automatically shut down
+// the server a specified number of seconds after the server becomes
+// allocated the Nth time.
+//
+// The algorithm is:
+//
+//   1. Move the game server back to ready N times after it is allocated
+//   2. Shutdown the game server after the Nth time is becomes allocated
+//
+// This follows the integration pattern documented on the website at
+// https://agones.dev/site/docs/integration-patterns/reusing-gameservers/
+func shutdownAfterNAllocations(s *sdk.SDK, readyIterations, shutdownDelaySec int) {
+	gs, err := s.GameServer()
 	if err != nil {
+		log.Fatalf("Could not get game server: %v", err)
+	}
+	log.Printf("Initial game Server state = %s", gs.Status.State)
+
+	m := sync.Mutex{} // protects the following two variables
+	lastAllocated := gs.ObjectMeta.Annotations["agones.dev/last-allocated"]
+	remainingIterations := readyIterations
+
+	if err := s.WatchGameServer(func(gs *coresdk.GameServer) {
+		m.Lock()
+		defer m.Unlock()
+		la := gs.ObjectMeta.Annotations["agones.dev/last-allocated"]
+		log.Printf("Watch Game Server callback fired. State = %s, Last Allocated = %q", gs.Status.State, la)
+		if lastAllocated != la {
+			log.Println("Game Server Allocated")
+			lastAllocated = la
+			remainingIterations--
+			// Run asynchronously
+			go func(iterations int) {
+				time.Sleep(time.Duration(shutdownDelaySec) * time.Second)
+
+				if iterations > 0 {
+					log.Println("Moving Game Server back to Ready")
+					readyErr := s.Ready()
+					if readyErr != nil {
+						log.Fatalf("Could not set game server to ready: %v", readyErr)
+					}
+					log.Println("Game Server is Ready")
+					return
+				}
+
+				log.Println("Moving Game Server to Shutdown")
+				if shutdownErr := s.Shutdown(); shutdownErr != nil {
+					log.Fatalf("Could not shutdown game server: %v", shutdownErr)
+				}
+				// The process will exit when Agones removes the pod and the
+				// container receives the SIGTERM signal
+				return
+			}(remainingIterations)
+		}
+	}); err != nil {
 		log.Fatalf("Could not watch Game Server events, %v", err)
 	}
 }
 
-func handleResponse(txt string, s *sdk.SDK, stop chan struct{}) (response string, addACK bool, responseError error) {
+func handleResponse(txt string, s *sdk.SDK, cancel context.CancelFunc) (response string, addACK bool, responseError error) {
 	parts := strings.Split(strings.TrimSpace(txt), " ")
 	response = txt
 	addACK = true
@@ -150,7 +207,7 @@ func handleResponse(txt string, s *sdk.SDK, stop chan struct{}) (response string
 
 	// turns off the health pings
 	case "UNHEALTHY":
-		close(stop)
+		cancel()
 
 	case "GAMESERVER":
 		response = gameServerName(s)
@@ -260,24 +317,24 @@ func handleResponse(txt string, s *sdk.SDK, stop chan struct{}) (response string
 	return
 }
 
-func udpListener(port *string, s *sdk.SDK, stop chan struct{}) {
+func udpListener(port *string, s *sdk.SDK, cancel context.CancelFunc) {
 	log.Printf("Starting UDP server, listening on port %s", *port)
 	conn, err := net.ListenPacket("udp", ":"+*port)
 	if err != nil {
 		log.Fatalf("Could not start UDP server: %v", err)
 	}
 	defer conn.Close() // nolint: errcheck
-	udpReadWriteLoop(conn, stop, s)
+	udpReadWriteLoop(conn, cancel, s)
 }
 
-func udpReadWriteLoop(conn net.PacketConn, stop chan struct{}, s *sdk.SDK) {
+func udpReadWriteLoop(conn net.PacketConn, cancel context.CancelFunc, s *sdk.SDK) {
 	b := make([]byte, 1024)
 	for {
 		sender, txt := readPacket(conn, b)
 
 		log.Printf("Received UDP: %v", txt)
 
-		response, addACK, err := handleResponse(txt, s, stop)
+		response, addACK, err := handleResponse(txt, s, cancel)
 		if err != nil {
 			response = "ERROR: " + response + "\n"
 		} else if addACK {
@@ -299,7 +356,7 @@ func udpRespond(conn net.PacketConn, sender net.Addr, txt string) {
 	}
 }
 
-func tcpListener(port *string, s *sdk.SDK, stop chan struct{}) {
+func tcpListener(port *string, s *sdk.SDK, cancel context.CancelFunc) {
 	log.Printf("Starting TCP server, listening on port %s", *port)
 	ln, err := net.Listen("tcp", ":"+*port)
 	if err != nil {
@@ -312,24 +369,24 @@ func tcpListener(port *string, s *sdk.SDK, stop chan struct{}) {
 		if err != nil {
 			log.Printf("Unable to accept incoming TCP connection: %v", err)
 		}
-		go tcpHandleConnection(conn, s, stop)
+		go tcpHandleConnection(conn, s, cancel)
 	}
 }
 
 // handleConnection services a single tcp connection to the server
-func tcpHandleConnection(conn net.Conn, s *sdk.SDK, stop chan struct{}) {
+func tcpHandleConnection(conn net.Conn, s *sdk.SDK, cancel context.CancelFunc) {
 	log.Printf("TCP Client %s connected", conn.RemoteAddr().String())
 	scanner := bufio.NewScanner(conn)
 	for scanner.Scan() {
-		tcpHandleCommand(conn, scanner.Text(), s, stop)
+		tcpHandleCommand(conn, scanner.Text(), s, cancel)
 	}
 	log.Printf("TCP Client %s disconnected", conn.RemoteAddr().String())
 }
 
-func tcpHandleCommand(conn net.Conn, txt string, s *sdk.SDK, stop chan struct{}) {
+func tcpHandleCommand(conn net.Conn, txt string, s *sdk.SDK, cancel context.CancelFunc) {
 	log.Printf("TCP txt: %v", txt)
 
-	response, addACK, err := handleResponse(txt, s, stop)
+	response, addACK, err := handleResponse(txt, s, cancel)
 	if err != nil {
 		response = "ERROR: " + response + "\n"
 	} else if addACK {
@@ -393,7 +450,8 @@ func exit(s *sdk.SDK) {
 	if shutdownErr != nil {
 		log.Printf("Could not shutdown")
 	}
-	os.Exit(0)
+	// The process will exit when Agones removes the pod and the
+	// container receives the SIGTERM signal
 }
 
 // gameServerName returns the GameServer name
@@ -514,7 +572,7 @@ func getPlayerCount(s *sdk.SDK) string {
 }
 
 // doHealth sends the regular Health Pings
-func doHealth(sdk *sdk.SDK, stop <-chan struct{}) {
+func doHealth(sdk *sdk.SDK, ctx context.Context) {
 	tick := time.Tick(2 * time.Second)
 	for {
 		log.Printf("Health Ping")
@@ -523,7 +581,7 @@ func doHealth(sdk *sdk.SDK, stop <-chan struct{}) {
 			log.Fatalf("Could not send health ping, %v", err)
 		}
 		select {
-		case <-stop:
+		case <-ctx.Done():
 			log.Print("Stopped health pings")
 			return
 		case <-tick:

@@ -73,6 +73,8 @@ func defaultGs() *sdk.GameServer {
 // LocalSDKServer type is the SDKServer implementation for when the sidecar
 // is being run for local development, and doesn't connect to the
 // Kubernetes cluster
+//
+//nolint:govet // ignore fieldalignment, singleton
 type LocalSDKServer struct {
 	gsMutex           sync.RWMutex
 	gs                *sdk.GameServer
@@ -90,7 +92,7 @@ type LocalSDKServer struct {
 }
 
 // NewLocalSDKServer returns the default LocalSDKServer
-func NewLocalSDKServer(filePath string) (*LocalSDKServer, error) {
+func NewLocalSDKServer(filePath string, testSdkName string) (*LocalSDKServer, error) {
 	l := &LocalSDKServer{
 		gsMutex:         sync.RWMutex{},
 		gs:              defaultGs(),
@@ -99,7 +101,7 @@ func NewLocalSDKServer(filePath string) (*LocalSDKServer, error) {
 		testMutex:       sync.Mutex{},
 		requestSequence: make([]string, 0),
 		testMode:        false,
-		testSdkName:     "",
+		testSdkName:     testSdkName,
 		gsState:         agonesv1.GameServerStateScheduled,
 	}
 	l.logger = runtime.NewLoggerWithType(l)
@@ -335,7 +337,7 @@ func (l *LocalSDKServer) GetGameServer(context.Context, *sdk.Empty) (*sdk.GameSe
 // WatchGameServer will return current GameServer configuration, 3 times, every 5 seconds
 func (l *LocalSDKServer) WatchGameServer(_ *sdk.Empty, stream sdk.SDK_WatchGameServerServer) error {
 	l.logger.Info("Connected to watch GameServer...")
-	observer := make(chan struct{})
+	observer := make(chan struct{}, 1)
 
 	defer func() {
 		l.updateObservers.Delete(observer)
@@ -344,6 +346,10 @@ func (l *LocalSDKServer) WatchGameServer(_ *sdk.Empty, stream sdk.SDK_WatchGameS
 	l.updateObservers.Store(observer, true)
 
 	l.recordRequest("watch")
+
+	// send initial game server state
+	observer <- struct{}{}
+
 	for range observer {
 		l.gsMutex.RLock()
 		err := stream.Send(l.gs)
@@ -654,5 +660,19 @@ func (l *LocalSDKServer) setGameServerFromFilePath(filePath string) error {
 	l.gsMutex.Lock()
 	defer l.gsMutex.Unlock()
 	l.gs = convert(&gs)
+
+	// Set LogLevel if specified
+	logLevel := agonesv1.SdkServerLogLevelInfo
+	if gs.Spec.SdkServer.LogLevel != "" {
+		logLevel = gs.Spec.SdkServer.LogLevel
+	}
+	l.logger.WithField("logLevel", logLevel).Debug("Setting LogLevel configuration")
+	level, err := logrus.ParseLevel(strings.ToLower(string(logLevel)))
+	if err == nil {
+		l.logger.Logger.SetLevel(level)
+	} else {
+		l.logger.WithError(err).Warn("Specified wrong Logging.SdkServer. Setting default loglevel - Info")
+		l.logger.Logger.SetLevel(logrus.InfoLevel)
+	}
 	return nil
 }

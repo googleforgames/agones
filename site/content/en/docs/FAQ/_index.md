@@ -28,12 +28,17 @@ If you wish to return an `Allocated` GameServer to the `Ready` state, you can us
 [SDK.Ready()]({{< ref "/docs/Guides/Client SDKs/_index.md#ready" >}}) command whenever it
 makes sense for your GameServer to return to the pool of potentially Allocatable and/or scaled down GameServers.
 
+Have a look at the integration pattern
+["Reusing Allocated GameServers for more than one game session"]({{% ref "/docs/Integration Patterns/reusing-gameservers.md" %}}) 
+for more details.
+
 ## Integration
 
 ### What steps do I need to take to integrate my GameServer?
 
 1. Integrate your game server binary with the [Agones SDK]({{< ref "/docs/Guides/Client SDKs/_index.md" >}}), 
-   calling the appropriate [lifecycle event]({{< ref "/docs/Guides/gameserver-lifecycle.md" >}}) hooks.
+   calling the appropriate [lifecycle event]({{< ref "/docs/Guides/Client SDKs/_index.md#lifecycle-management" >}}) 
+   hooks.
 1. Containerize your game server binary with [Docker](https://www.docker.com/)
 1. Publish your Docker image in a [container registry/repository](https://docs.docker.com/docker-hub/repos/).
 1. Create a [gameserver.yaml]({{< ref "/docs/Reference/gameserver.md" >}}) file for your container image.
@@ -108,7 +113,7 @@ This information is then queryable via the [Kubernetes API]({{< ref "/docs/Guide
 can be used for game specific state integrations with systems like matchmakers and more.
 
 Custom labels could also potentially be utilised with [GameServerAllocation required and/or preferred label
-selectors](http://localhost:1313/docs/reference/gameserverallocation/), to further refine `Ready` GameServer
+selectors]({{< ref "/docs/Reference/gameserverallocation.md" >}}), to further refine `Ready` GameServer
 selection on Allocation.
 
 ## Scaling
@@ -135,17 +140,14 @@ the Node (which it should if it's a publicly addressable Node), that it utilised
 `InternalIP` address. 
 
 ### How do I use the DNS name of the Node?
-[You can make this available by using the feature flag.]({{< ref "/docs/Guides/feature-stages.md" >}})  
-Agones uses an IP address as the game server address by default.
-This works fine in most cases, but can be a problem if your game server and game client are running on different IP protocols.  
-e.g) The game server is connected only to the IPv4 network, and the game client is connected only to the IPv6 network.  
-When this feature is enabled, Agones will preferentially use the External DNS of the Node on which the GameServer Pod is running.
-Since the game client can get the domain name instead of the IP address, it will be able to communicate with the game server via DNS64 and NAT64.
+  
+If the Kubernetes nodes have an `ExternalDNS` record, then it will be utilised as the `GameServer` address 
+preferentially over the `ExternalIP` node record.
 
 ### How is traffic routed from the allocated Port to the GameServer container?
 
 Traffic is routed to the GameServer Container utilising the `hostPort` field on a 
-[Pod's Container specification](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#containerport-v1-core).
+[Pod's Container specification]({{< k8s-api href="#containerport-v1-core" >}}).
 
 This opens a port on the host Node and routes traffic to the container 
 via [iptables](https://en.wikipedia.org/wiki/Iptables) or 
@@ -182,23 +184,51 @@ This number could vary depending on the underlying scaling capabilities
 of your cloud provider, Kubernetes cluster configuration, and your GameServer Ready startup time, and
 therefore we recommend you always run your own load tests for your specific game and game server containers.
 
-## Operating Systems
+## Architecture
 
-### Are Windows Container game servers supported by Agones?
+### Can't we use a Deployment or a StatefulSet for game server workloads?
 
-As of Kubernetes 1.14, Windows Container support
-[has been released as GA](https://kubernetes.io/blog/2019/03/25/kubernetes-1-14-release-announcement/).
+Kubernetes [Deployments](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/) were built for 
+_unordered_, _stateless_ workloads. That is, workloads that are essentially homogeneous 
+between each instance, and therefore it doesn't matter which order they are scaled up, or scaled down.
 
-That being said, Agones has yet to be tested with Windows Nodes and work on this feature has not been started.
+A set of web servers behind the same load balancer are a perfect example of this. The configuration and application 
+code between instances is the same, and as long as there are enough replicas to handle the requests coming through a 
+load balancer, if we scale from 10 to 5, it doesn't matter which ones are removed and in which order.
 
-If you are interested in this feature and/or contributing, please add a comment to the 
-[Running windows game server](https://github.com/googleforgames/agones/issues/54) ticket.
+Kubernetes [StatefulSets](https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/)
+were built for _ordered_, _stateful_ workloads. That is, workloads in which each instance is 
+essentially heterogeneous, and for reliability and predictability it's extremely important that scale up happens in 
+order (0 ,1, 2, 3) and scaling down happens in reverse (3, 2, 1, 0).
+
+Databases are a great use case for a StatefulSet, since (depending on the database), instance 0 may be the primary, 
+and instances 1, 2, 3+ may be replicas. Knowing that the order of scale up and down is completely reliable to both 
+ensure that the correct disk image is in place, but also allow for appropriate synchronisation between a primaries 
+and/or replicas can occur, and no downtime occurs.
+
+Dedicated, authoritative game server workloads are _sometimes stateful_, and while 
+not ordered/unordered, game servers are _prioritised_ for both scale down and allocation for player usage.
+
+Game servers are sometimes stateful, because their state only matters if players are playing on them. If no players 
+are playing on a game server, then it doesn't matter if it gets shut down, or replaced, since nobody will notice. 
+But they are stateful (most often in-memory state, for the game simulation) when players are playing on them, and 
+therefore can't be shutdown while that is going on.
+
+Game Server workloads are also _prioritised_, in that the order of demarcating game servers for player connection 
+and also on game server scale down impact optimal usage of the hosting infrastructure.
+
+For example, in Cloud based workloads, you will want to pack the game servers that have players on them as tightly 
+as possible across as few Nodes as possible, while on scale down, will want to prioritise removing game servers from  
+Nodes that are the most empty to create empty Nodes that then can be deleted - thereby using the least amount of 
+infrastructure as possible.
+  
+So while one might be able to use Deployments and/or StatefulSets to run game server workloads, it will be extremely 
+hard (impossible? 🤔) to run as optimally as a tailored solution such as Agones.
 
 ## Ecosystem
 
 ### Is there an example of Agones and Open Match working together? 
 
-Space Agon is a demo integration of [Agones](https://agones.dev/) and
-[Open Match](https://open-match.dev/), that runs a browser based game.
-
-You can find it at: https://github.com/Laremere/space-agon.
+Yes! There are several! Check out both our
+[official]({{% ref "/docs/Examples/_index.md#integration-with-open-match" %}}) 
+and [third party]({{% ref "/docs/Third Party Content/examples.md#integration-with-open-match" %}}) examples!

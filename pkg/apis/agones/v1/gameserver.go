@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
+	"strings"
 
 	"agones.dev/agones/pkg"
 	"agones.dev/agones/pkg/apis"
@@ -71,6 +72,16 @@ const (
 	// This will mean that users will need to lookup what port has been opened through the server side SDK.
 	Passthrough PortPolicy = "Passthrough"
 
+	// EvictionSafeAlways means the game server supports termination via SIGTERM, and wants eviction signals
+	// from Cluster Autoscaler scaledown and node upgrades.
+	EvictionSafeAlways EvictionSafe = "Always"
+	// EvictionSafeOnUpgrade means the game server supports termination via SIGTERM, and wants eviction signals
+	// from node upgrades, but not Cluster Autoscaler scaledown.
+	EvictionSafeOnUpgrade EvictionSafe = "OnUpgrade"
+	// EvictionSafeNever means the game server should run to completion and may not understand SIGTERM. Eviction
+	// from ClusterAutoscaler and upgrades should both be blocked.
+	EvictionSafeNever EvictionSafe = "Never"
+
 	// ProtocolTCPUDP Protocol exposes the hostPort allocated for this container for both TCP and UDP.
 	ProtocolTCPUDP corev1.Protocol = "TCPUDP"
 
@@ -99,11 +110,30 @@ const (
 	// becomes ready, so we can track when restarts should occur and when a GameServer
 	// should be moved to Unhealthy.
 	GameServerReadyContainerIDAnnotation = agones.GroupName + "/ready-container-id"
+	// PodSafeToEvictAnnotation is an annotation that the Kubernetes cluster autoscaler uses to
+	// determine if a pod can safely be evicted to compact a cluster by moving pods between nodes
+	// and scaling down nodes.
+	PodSafeToEvictAnnotation = "cluster-autoscaler.kubernetes.io/safe-to-evict"
+	// SafeToEvictLabel is a label that, when "false", matches the restrictive PDB agones-gameserver-safe-to-evict-false.
+	SafeToEvictLabel = agones.GroupName + "/safe-to-evict"
+
+	// True is the string "true" to appease the goconst lint.
+	True = "true"
+	// False is the string "false" to appease the goconst lint.
+	False = "false"
 )
 
 var (
 	// GameServerRolePodSelector is the selector to get all GameServer Pods
 	GameServerRolePodSelector = labels.SelectorFromSet(labels.Set{RoleLabel: GameServerLabelRole})
+
+	// TerminalGameServerStates is a set (map[GameServerState]bool) of states from which a GameServer will not recover.
+	// From state diagram at https://agones.dev/site/docs/reference/gameserver/
+	TerminalGameServerStates = map[GameServerState]bool{
+		GameServerStateShutdown:  true,
+		GameServerStateError:     true,
+		GameServerStateUnhealthy: true,
+	}
 )
 
 // +genclient
@@ -157,6 +187,10 @@ type GameServerSpec struct {
 	// (Alpha, PlayerTracking feature flag) Players provides the configuration for player tracking features.
 	// +optional
 	Players *PlayersSpec `json:"players,omitempty"`
+	// (Alpha, SafeToEvict feature flag) Eviction specifies the eviction tolerance of the GameServer. Defaults to "Never".
+	// +optional
+	Eviction Eviction `json:"eviction,omitempty"`
+	// immutableReplicas is present in gameservers.agones.dev but omitted here (it's always 1).
 }
 
 // PlayersSpec tracks the initial player capacity
@@ -164,11 +198,24 @@ type PlayersSpec struct {
 	InitialCapacity int64 `json:"initialCapacity,omitempty"`
 }
 
+// Eviction specifies the eviction tolerance of the GameServer
+type Eviction struct {
+	// (Alpha, SafeToEvict feature flag)
+	// Game server supports termination via SIGTERM:
+	// - Always: Allow eviction for both Cluster Autoscaler and node drain for upgrades
+	// - OnUpgrade: Allow eviction for upgrades alone
+	// - Never (default): Pod should run to completion
+	Safe EvictionSafe `json:"safe,omitempty"`
+}
+
 // GameServerState is the state for the GameServer
 type GameServerState string
 
 // PortPolicy is the port policy for the GameServer
 type PortPolicy string
+
+// EvictionSafe specified whether the game server supports termination via SIGTERM
+type EvictionSafe string
 
 // Health configures health checking on the GameServer
 type Health struct {
@@ -229,6 +276,9 @@ type GameServerStatus struct {
 	// [FeatureFlag:PlayerTracking]
 	// +optional
 	Players *PlayerStatus `json:"players"`
+	// (Alpha, SafeToEvict feature flag) Eviction specifies the eviction tolerance of the GameServer.
+	Eviction Eviction `json:"eviction,omitempty"`
+	// immutableReplicas is present in gameservers.agones.dev but omitted here (it's always 1).
 }
 
 // GameServerStatusPort shows the port that was allocated to a
@@ -264,6 +314,7 @@ func (gss *GameServerSpec) ApplyDefaults() {
 	gss.applyContainerDefaults()
 	gss.applyPortDefaults()
 	gss.applyHealthDefaults()
+	gss.applyEvictionDefaults()
 	gss.applySchedulingDefaults()
 	gss.applySdkServerDefaults()
 }
@@ -323,6 +374,8 @@ func (gs *GameServer) applyStatusDefaults() {
 			gs.Status.Players.Capacity = gs.Spec.Players.InitialCapacity
 		}
 	}
+
+	gs.applyEvictionStatus()
 }
 
 // applyPortDefaults applies default values for all ports
@@ -349,6 +402,25 @@ func (gss *GameServerSpec) applySchedulingDefaults() {
 	}
 }
 
+func (gss *GameServerSpec) applyEvictionDefaults() {
+	if !runtime.FeatureEnabled(runtime.FeatureSafeToEvict) {
+		return
+	}
+	if gss.Eviction.Safe == "" {
+		gss.Eviction.Safe = EvictionSafeNever
+	}
+}
+
+func (gs *GameServer) applyEvictionStatus() {
+	if !runtime.FeatureEnabled(runtime.FeatureSafeToEvict) {
+		return
+	}
+	gs.Status.Eviction = gs.Spec.Eviction
+	if gs.Spec.Template.ObjectMeta.Annotations[PodSafeToEvictAnnotation] == "true" {
+		gs.Status.Eviction.Safe = EvictionSafeAlways
+	}
+}
+
 // Validate validates the GameServerSpec configuration.
 // devAddress is a specific IP address used for local Gameservers, for fleets "" is used
 // If a GameServer Spec is invalid there will be > 0 values in
@@ -362,6 +434,16 @@ func (gss *GameServerSpec) Validate(devAddress string) ([]metav1.StatusCause, bo
 				Type:    metav1.CauseTypeFieldValueNotSupported,
 				Field:   "players",
 				Message: fmt.Sprintf("Value cannot be set unless feature flag %s is enabled", runtime.FeaturePlayerTracking),
+			})
+		}
+	}
+
+	if !runtime.FeatureEnabled(runtime.FeatureSafeToEvict) {
+		if gss.Eviction.Safe != "" {
+			causes = append(causes, metav1.StatusCause{
+				Type:    metav1.CauseTypeFieldValueNotSupported,
+				Field:   "eviction.safe",
+				Message: fmt.Sprintf("Value cannot be set unless feature flag %s is enabled", runtime.FeatureSafeToEvict),
 			})
 		}
 	}
@@ -461,12 +543,14 @@ func (gss *GameServerSpec) Validate(devAddress string) ([]metav1.StatusCause, bo
 				})
 			}
 		}
+		if productCauses := apiHooks.ValidateGameServerSpec(gss); len(productCauses) > 0 {
+			causes = append(causes, productCauses...)
+		}
 	}
 	objMetaCauses := validateObjectMeta(&gss.Template.ObjectMeta)
 	if len(objMetaCauses) > 0 {
 		causes = append(causes, objMetaCauses...)
 	}
-
 	return causes, len(causes) == 0
 }
 
@@ -476,13 +560,13 @@ func (gss *GameServerSpec) Validate(devAddress string) ([]metav1.StatusCause, bo
 func ValidateResource(request resource.Quantity, limit resource.Quantity, resourceName corev1.ResourceName) []error {
 	validationErrors := make([]error, 0)
 	if !limit.IsZero() && request.Cmp(limit) > 0 {
-		validationErrors = append(validationErrors, errors.New(fmt.Sprintf("Request must be less than or equal to %s limit", resourceName)))
+		validationErrors = append(validationErrors, errors.Errorf("Request must be less than or equal to %s limit", resourceName))
 	}
 	if request.Cmp(resource.Quantity{}) < 0 {
-		validationErrors = append(validationErrors, errors.New(fmt.Sprintf("Resource %s request value must be non negative", resourceName)))
+		validationErrors = append(validationErrors, errors.Errorf("Resource %s request value must be non negative", resourceName))
 	}
 	if limit.Cmp(resource.Quantity{}) < 0 {
-		validationErrors = append(validationErrors, errors.New(fmt.Sprintf("Resource %s limit value must be non negative", resourceName)))
+		validationErrors = append(validationErrors, errors.Errorf("Resource %s limit value must be non negative", resourceName))
 	}
 
 	return validationErrors
@@ -590,6 +674,11 @@ func (gs *GameServer) Pod(sidecars ...corev1.Container) (*corev1.Pod, error) {
 		Spec:       *gs.Spec.Template.Spec.DeepCopy(),
 	}
 
+	if len(pod.Spec.Hostname) == 0 {
+		// replace . with - since it must match RFC 1123
+		pod.Spec.Hostname = strings.ReplaceAll(gs.ObjectMeta.Name, ".", "-")
+	}
+
 	gs.podObjectMeta(pod)
 	for _, p := range gs.Spec.Ports {
 		cp := corev1.ContainerPort{
@@ -606,9 +695,20 @@ func (gs *GameServer) Pod(sidecars ...corev1.Container) (*corev1.Pod, error) {
 			return nil, err
 		}
 	}
-	pod.Spec.Containers = append(pod.Spec.Containers, sidecars...)
+	// Put the sidecars at the start of the list of containers so that the kubelet starts them first.
+	containers := make([]corev1.Container, 0, len(sidecars)+len(pod.Spec.Containers))
+	containers = append(containers, sidecars...)
+	containers = append(containers, pod.Spec.Containers...)
+	pod.Spec.Containers = containers
 
 	gs.podScheduling(pod)
+
+	if err := apiHooks.MutateGameServerPodSpec(&gs.Spec, &pod.Spec); err != nil {
+		return nil, err
+	}
+	if err := apiHooks.SetEviction(gs.Status.Eviction.Safe, pod); err != nil {
+		return nil, err
+	}
 
 	return pod, nil
 }
@@ -628,7 +728,7 @@ func (gs *GameServer) podObjectMeta(pod *corev1.Pod) {
 		pod.ObjectMeta.Labels = make(map[string]string, 2)
 	}
 	if pod.ObjectMeta.Annotations == nil {
-		pod.ObjectMeta.Annotations = make(map[string]string, 1)
+		pod.ObjectMeta.Annotations = make(map[string]string, 2)
 	}
 	pod.ObjectMeta.Labels[RoleLabel] = GameServerLabelRole
 	// store the GameServer name as a label, for easy lookup later on
@@ -638,17 +738,20 @@ func (gs *GameServer) podObjectMeta(pod *corev1.Pod) {
 	ref := metav1.NewControllerRef(gs, SchemeGroupVersion.WithKind("GameServer"))
 	pod.ObjectMeta.OwnerReferences = append(pod.ObjectMeta.OwnerReferences, *ref)
 
-	if gs.Spec.Scheduling == apis.Packed {
+	// When SafeToEvict=true, apiHooks.SetEviction manages disruption controls.
+	if !runtime.FeatureEnabled(runtime.FeatureSafeToEvict) {
 		// This means that the autoscaler cannot remove the Node that this Pod is on.
-		// (and evict the Pod in the process)
-		pod.ObjectMeta.Annotations["cluster-autoscaler.kubernetes.io/safe-to-evict"] = "false"
+		// (and evict the Pod in the process). Only set the value if it has not already
+		// been configured in the pod template (to not override user specified behavior).
+		// We only set this for packed game servers, under the assumption that if
+		// game servers are distributed then the cluster autoscaler isn't likely running.
+		if _, exists := pod.ObjectMeta.Annotations[PodSafeToEvictAnnotation]; !exists && gs.Spec.Scheduling == apis.Packed {
+			pod.ObjectMeta.Annotations[PodSafeToEvictAnnotation] = "false"
+		}
 	}
 
 	// Add Agones version into Pod Annotations
 	pod.ObjectMeta.Annotations[VersionAnnotation] = pkg.Version
-	if gs.ObjectMeta.Annotations == nil {
-		gs.ObjectMeta.Annotations = make(map[string]string, 1)
-	}
 }
 
 // podScheduling applies the Fleet scheduling strategy to the passed in Pod

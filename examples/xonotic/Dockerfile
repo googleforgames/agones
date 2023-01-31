@@ -13,20 +13,20 @@
 # limitations under the License.
 
 # build
-FROM golang:1.14.12 as builder
-WORKDIR /go/src/xonotic
+FROM golang:1.19.1 as builder
 
 RUN apt-get update && apt-get install -y unzip curl
 
-COPY examples/xonotic/main.go .
-COPY . /go/src/agones.dev/agones
+COPY . /go/src/examples/xonotic
+WORKDIR /go/src/examples/xonotic
 RUN go build -o wrapper .
 
-RUN curl -o xonotic.zip https://dl.xonotic.org/xonotic-0.8.2.zip && \
+WORKDIR /go/src/xonotic
+RUN curl -o xonotic.zip https://dl.xonotic.org/xonotic-0.8.5.zip && \
     unzip -qq xonotic.zip && rm xonotic.zip
 
 # final image
-FROM debian:stretch
+FROM debian:bullseye
 
 WORKDIR /home/xonotic
 
@@ -37,11 +37,11 @@ RUN useradd -u 1000 -m xonotic
 # `server` directory after downloading the archive from xonotic.org
 #
 
-COPY --from=builder /go/src/xonotic/wrapper .
+COPY --from=builder /go/src/examples/xonotic .
 COPY --from=builder /go/src/xonotic/Xonotic ./Xonotic
 
 RUN mkdir -p ./.xonotic/data && mv /home/xonotic/Xonotic/server/server_linux.sh /home/xonotic/Xonotic/
-COPY examples/xonotic/server.cfg ./.xonotic/data
+COPY server.cfg ./.xonotic/data
 
 RUN chown -R xonotic:xonotic . && chmod +x wrapper
 

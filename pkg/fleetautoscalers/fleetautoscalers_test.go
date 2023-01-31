@@ -20,7 +20,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -46,13 +45,15 @@ func (t testServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	var faRequest autoscalingv1.FleetAutoscaleReview
 
-	res, err := ioutil.ReadAll(r.Body)
+	res, err := io.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 	err = json.Unmarshal(res, &faRequest)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	// return different errors for tests
@@ -65,6 +66,7 @@ func (t testServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		_, err = io.WriteString(w, "invalid data")
 		if err != nil {
 			http.Error(w, "Error writing json from /address", http.StatusInternalServerError)
+			return
 		}
 	}
 
@@ -88,11 +90,13 @@ func (t testServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	result, err := json.Marshal(&review)
 	if err != nil {
 		http.Error(w, "Error marshaling json", http.StatusInternalServerError)
+		return
 	}
 
 	_, err = io.WriteString(w, string(result))
 	if err != nil {
 		http.Error(w, "Error writing json from /address", http.StatusInternalServerError)
+		return
 	}
 }
 

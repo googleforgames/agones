@@ -28,6 +28,7 @@ import (
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	"agones.dev/agones/pkg/client/clientset/versioned"
 	"agones.dev/agones/pkg/client/informers/externalversions"
+	"agones.dev/agones/pkg/cloudproduct"
 	"agones.dev/agones/pkg/fleetautoscalers"
 	"agones.dev/agones/pkg/fleets"
 	"agones.dev/agones/pkg/gameserverallocations"
@@ -77,6 +78,7 @@ const (
 	logLevelFlag                 = "log-level"
 	logSizeLimitMBFlag           = "log-size-limit-mb"
 	kubeconfigFlag               = "kubeconfig"
+	allocationBatchWaitTime      = "allocation-batch-wait-time"
 	defaultResync                = 30 * time.Second
 )
 
@@ -104,6 +106,7 @@ func setupLogging(logDir string, logSizeLimitMB int) {
 
 // main starts the operator for the gameserver CRD
 func main() {
+	ctx := signals.NewSigKillContext()
 	ctlConf := parseEnvFlags()
 
 	if ctlConf.LogDir != "" {
@@ -153,6 +156,10 @@ func main() {
 		logger.WithError(err).Fatal("Could not create the agones api clientset")
 	}
 
+	err = cloudproduct.Initialize(ctx, kubeClient)
+	if err != nil {
+		logger.WithError(err).Fatal("Could not initialize cloud product")
+	}
 	// https server and the items that share the Mux for routing
 	httpsServer := https.NewServer(ctlConf.CertFile, ctlConf.KeyFile)
 	wh := webhooks.NewWebHook(httpsServer.Mux)
@@ -202,22 +209,30 @@ func main() {
 
 	gsCounter := gameservers.NewPerNodeCounter(kubeInformerFactory, agonesInformerFactory)
 
-	gsController := gameservers.NewController(wh, health,
+	gsController := gameservers.NewController(health,
 		ctlConf.MinPort, ctlConf.MaxPort, ctlConf.SidecarImage, ctlConf.AlwaysPullSidecar,
 		ctlConf.SidecarCPURequest, ctlConf.SidecarCPULimit,
 		ctlConf.SidecarMemoryRequest, ctlConf.SidecarMemoryLimit, ctlConf.SdkServiceAccount,
 		kubeClient, kubeInformerFactory, extClient, agonesClient, agonesInformerFactory)
-	gsSetController := gameserversets.NewController(wh, health, gsCounter,
+	gsSetController := gameserversets.NewController(health, gsCounter,
 		kubeClient, extClient, agonesClient, agonesInformerFactory)
-	fleetController := fleets.NewController(wh, health, kubeClient, extClient, agonesClient, agonesInformerFactory)
-	gasController := gameserverallocations.NewController(api, health, gsCounter, kubeClient, kubeInformerFactory, agonesClient, agonesInformerFactory, 10*time.Second, 30*time.Second)
-	fasController := fleetautoscalers.NewController(wh, health,
+	fleetController := fleets.NewController(health, kubeClient, extClient, agonesClient, agonesInformerFactory)
+	fasController := fleetautoscalers.NewController(health,
 		kubeClient, extClient, agonesClient, agonesInformerFactory)
 
 	rs = append(rs,
-		httpsServer, gsCounter, gsController, gsSetController, fleetController, fasController, gasController, server)
+		httpsServer, gsCounter, gsController, gsSetController, fleetController, fasController, server)
 
-	ctx := signals.NewSigKillContext()
+	if !runtime.FeatureEnabled(runtime.FeatureSplitControllerAndExtensions) {
+		gameservers.NewExtensions(wh)
+		gameserversets.NewExtensions(wh)
+		fleets.NewExtensions(wh)
+		fleetautoscalers.NewExtensions(wh)
+
+		gasController := gameserverallocations.NewExtensions(api, health, gsCounter, kubeClient, kubeInformerFactory,
+			agonesClient, agonesInformerFactory, 10*time.Second, 30*time.Second, ctlConf.AllocationBatchWaitTime)
+		rs = append(rs, gasController)
+	}
 
 	kubeInformerFactory.Start(ctx.Done())
 	agonesInformerFactory.Start(ctx.Done())
@@ -241,7 +256,7 @@ func parseEnvFlags() config {
 	}
 
 	base := filepath.Dir(exec)
-	viper.SetDefault(sidecarImageFlag, "gcr.io/agones-images/agones-sdk:"+pkg.Version)
+	viper.SetDefault(sidecarImageFlag, "us-docker.pkg.dev/agones-images/release/agones-sdk:"+pkg.Version)
 	viper.SetDefault(sidecarCPURequestFlag, "0")
 	viper.SetDefault(sidecarCPULimitFlag, "0")
 	viper.SetDefault(sidecarMemoryRequestFlag, "0")
@@ -253,6 +268,7 @@ func parseEnvFlags() config {
 	viper.SetDefault(enablePrometheusMetricsFlag, true)
 	viper.SetDefault(enableStackdriverMetricsFlag, false)
 	viper.SetDefault(stackdriverLabels, "")
+	viper.SetDefault(allocationBatchWaitTime, 500*time.Millisecond)
 
 	viper.SetDefault(projectIDFlag, "")
 	viper.SetDefault(numWorkersFlag, 64)
@@ -284,6 +300,8 @@ func parseEnvFlags() config {
 	pflag.String(logDirFlag, viper.GetString(logDirFlag), "If set, store logs in a given directory.")
 	pflag.Int32(logSizeLimitMBFlag, 1000, "Log file size limit in MB")
 	pflag.String(logLevelFlag, viper.GetString(logLevelFlag), "Agones Log level")
+	pflag.Duration(allocationBatchWaitTime, viper.GetDuration(allocationBatchWaitTime), "Flag to configure the waiting period between allocations batches")
+	cloudproduct.BindFlags()
 	runtime.FeaturesBindFlags()
 	pflag.Parse()
 
@@ -304,13 +322,15 @@ func parseEnvFlags() config {
 	runtime.Must(viper.BindEnv(enableStackdriverMetricsFlag))
 	runtime.Must(viper.BindEnv(stackdriverLabels))
 	runtime.Must(viper.BindEnv(projectIDFlag))
-	runtime.Must(viper.BindPFlags(pflag.CommandLine))
 	runtime.Must(viper.BindEnv(numWorkersFlag))
 	runtime.Must(viper.BindEnv(apiServerSustainedQPSFlag))
 	runtime.Must(viper.BindEnv(apiServerBurstQPSFlag))
 	runtime.Must(viper.BindEnv(logLevelFlag))
 	runtime.Must(viper.BindEnv(logDirFlag))
 	runtime.Must(viper.BindEnv(logSizeLimitMBFlag))
+	runtime.Must(viper.BindEnv(allocationBatchWaitTime))
+	runtime.Must(viper.BindPFlags(pflag.CommandLine))
+	runtime.Must(cloudproduct.BindEnv())
 	runtime.Must(runtime.FeaturesBindEnv())
 
 	runtime.Must(runtime.ParseFeaturesFromEnv())
@@ -336,55 +356,57 @@ func parseEnvFlags() config {
 	}
 
 	return config{
-		MinPort:               int32(viper.GetInt64(minPortFlag)),
-		MaxPort:               int32(viper.GetInt64(maxPortFlag)),
-		SidecarImage:          viper.GetString(sidecarImageFlag),
-		SidecarCPURequest:     requestCPU,
-		SidecarCPULimit:       limitCPU,
-		SidecarMemoryRequest:  requestMemory,
-		SidecarMemoryLimit:    limitMemory,
-		SdkServiceAccount:     viper.GetString(sdkServerAccountFlag),
-		AlwaysPullSidecar:     viper.GetBool(pullSidecarFlag),
-		KeyFile:               viper.GetString(keyFileFlag),
-		CertFile:              viper.GetString(certFileFlag),
-		KubeConfig:            viper.GetString(kubeconfigFlag),
-		PrometheusMetrics:     viper.GetBool(enablePrometheusMetricsFlag),
-		Stackdriver:           viper.GetBool(enableStackdriverMetricsFlag),
-		GCPProjectID:          viper.GetString(projectIDFlag),
-		NumWorkers:            int(viper.GetInt32(numWorkersFlag)),
-		APIServerSustainedQPS: int(viper.GetInt32(apiServerSustainedQPSFlag)),
-		APIServerBurstQPS:     int(viper.GetInt32(apiServerBurstQPSFlag)),
-		LogDir:                viper.GetString(logDirFlag),
-		LogLevel:              viper.GetString(logLevelFlag),
-		LogSizeLimitMB:        int(viper.GetInt32(logSizeLimitMBFlag)),
-		StackdriverLabels:     viper.GetString(stackdriverLabels),
+		MinPort:                 int32(viper.GetInt64(minPortFlag)),
+		MaxPort:                 int32(viper.GetInt64(maxPortFlag)),
+		SidecarImage:            viper.GetString(sidecarImageFlag),
+		SidecarCPURequest:       requestCPU,
+		SidecarCPULimit:         limitCPU,
+		SidecarMemoryRequest:    requestMemory,
+		SidecarMemoryLimit:      limitMemory,
+		SdkServiceAccount:       viper.GetString(sdkServerAccountFlag),
+		AlwaysPullSidecar:       viper.GetBool(pullSidecarFlag),
+		KeyFile:                 viper.GetString(keyFileFlag),
+		CertFile:                viper.GetString(certFileFlag),
+		KubeConfig:              viper.GetString(kubeconfigFlag),
+		PrometheusMetrics:       viper.GetBool(enablePrometheusMetricsFlag),
+		Stackdriver:             viper.GetBool(enableStackdriverMetricsFlag),
+		GCPProjectID:            viper.GetString(projectIDFlag),
+		NumWorkers:              int(viper.GetInt32(numWorkersFlag)),
+		APIServerSustainedQPS:   int(viper.GetInt32(apiServerSustainedQPSFlag)),
+		APIServerBurstQPS:       int(viper.GetInt32(apiServerBurstQPSFlag)),
+		LogDir:                  viper.GetString(logDirFlag),
+		LogLevel:                viper.GetString(logLevelFlag),
+		LogSizeLimitMB:          int(viper.GetInt32(logSizeLimitMBFlag)),
+		StackdriverLabels:       viper.GetString(stackdriverLabels),
+		AllocationBatchWaitTime: viper.GetDuration(allocationBatchWaitTime),
 	}
 }
 
 // config stores all required configuration to create a game server controller.
 type config struct {
-	MinPort               int32
-	MaxPort               int32
-	SidecarImage          string
-	SidecarCPURequest     resource.Quantity
-	SidecarCPULimit       resource.Quantity
-	SidecarMemoryRequest  resource.Quantity
-	SidecarMemoryLimit    resource.Quantity
-	SdkServiceAccount     string
-	AlwaysPullSidecar     bool
-	PrometheusMetrics     bool
-	Stackdriver           bool
-	StackdriverLabels     string
-	KeyFile               string
-	CertFile              string
-	KubeConfig            string
-	GCPProjectID          string
-	NumWorkers            int
-	APIServerSustainedQPS int
-	APIServerBurstQPS     int
-	LogDir                string
-	LogLevel              string
-	LogSizeLimitMB        int
+	MinPort                 int32
+	MaxPort                 int32
+	SidecarImage            string
+	SidecarCPURequest       resource.Quantity
+	SidecarCPULimit         resource.Quantity
+	SidecarMemoryRequest    resource.Quantity
+	SidecarMemoryLimit      resource.Quantity
+	SdkServiceAccount       string
+	AlwaysPullSidecar       bool
+	PrometheusMetrics       bool
+	Stackdriver             bool
+	StackdriverLabels       string
+	KeyFile                 string
+	CertFile                string
+	KubeConfig              string
+	GCPProjectID            string
+	NumWorkers              int
+	APIServerSustainedQPS   int
+	APIServerBurstQPS       int
+	LogDir                  string
+	LogLevel                string
+	LogSizeLimitMB          int
+	AllocationBatchWaitTime time.Duration
 }
 
 // validate ensures the ctlConfig data is valid.

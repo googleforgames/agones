@@ -18,7 +18,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strconv"
 	"sync"
@@ -37,7 +36,7 @@ import (
 func TestLocal(t *testing.T) {
 	ctx := context.Background()
 	e := &sdk.Empty{}
-	l, err := NewLocalSDKServer("")
+	l, err := NewLocalSDKServer("", "")
 	assert.Nil(t, err)
 
 	_, err = l.Ready(ctx, e)
@@ -77,7 +76,7 @@ func TestLocal(t *testing.T) {
 }
 
 func TestLocalSDKWithTestMode(t *testing.T) {
-	l, err := NewLocalSDKServer("")
+	l, err := NewLocalSDKServer("", "")
 	assert.NoError(t, err, "Should be able to create local SDK server")
 	a := []string{"ready", "allocate", "setlabel", "setannotation", "gameserver", "health", "shutdown", "watch"}
 	b := []string{"ready", "health", "ready", "watch", "allocate", "gameserver", "setlabel", "setannotation", "health", "health", "shutdown"}
@@ -102,13 +101,37 @@ func TestLocalSDKWithGameServer(t *testing.T) {
 	path, err := gsToTmpFile(fixture.DeepCopy())
 	assert.Nil(t, err)
 
-	l, err := NewLocalSDKServer(path)
+	l, err := NewLocalSDKServer(path, "")
 	assert.Nil(t, err)
 
 	gs, err := l.GetGameServer(ctx, e)
 	assert.Nil(t, err)
 
 	assert.Equal(t, fixture.ObjectMeta.Name, gs.ObjectMeta.Name)
+}
+
+// nolint:dupl
+func TestLocalSDKWithLogLevel(t *testing.T) {
+	ctx := context.Background()
+	e := &sdk.Empty{}
+
+	fixture := &agonesv1.GameServer{
+		ObjectMeta: metav1.ObjectMeta{Name: "stuff"},
+		Spec: agonesv1.GameServerSpec{
+			SdkServer: agonesv1.SdkServer{LogLevel: "debug"},
+		},
+	}
+	path, err := gsToTmpFile(fixture.DeepCopy())
+	assert.Nil(t, err)
+
+	l, err := NewLocalSDKServer(path, "test")
+	assert.Nil(t, err)
+
+	_, err = l.GetGameServer(ctx, e)
+	assert.Nil(t, err)
+
+	// Check if the LocalSDKServer's logger.LogLevel equal fixture's
+	assert.Equal(t, string(fixture.Spec.SdkServer.LogLevel), l.logger.Logger.Level.String())
 }
 
 // nolint:dupl
@@ -139,7 +162,7 @@ func TestLocalSDKServerSetLabel(t *testing.T) {
 			path, err := gsToTmpFile(v.gs)
 			assert.Nil(t, err)
 
-			l, err := NewLocalSDKServer(path)
+			l, err := NewLocalSDKServer(path, "")
 			assert.Nil(t, err)
 			kv := &sdk.KeyValue{Key: "foo", Value: "bar"}
 
@@ -151,6 +174,7 @@ func TestLocalSDKServerSetLabel(t *testing.T) {
 				err := l.WatchGameServer(e, stream)
 				assert.Nil(t, err)
 			}()
+			assertInitialWatchUpdate(t, stream)
 
 			// make sure length of l.updateObservers is at least 1
 			err = wait.PollImmediate(time.Second, 10*time.Second, func() (bool, error) {
@@ -206,7 +230,7 @@ func TestLocalSDKServerSetAnnotation(t *testing.T) {
 			path, err := gsToTmpFile(v.gs)
 			assert.Nil(t, err)
 
-			l, err := NewLocalSDKServer(path)
+			l, err := NewLocalSDKServer(path, "")
 			assert.Nil(t, err)
 
 			kv := &sdk.KeyValue{Key: "bar", Value: "foo"}
@@ -219,6 +243,7 @@ func TestLocalSDKServerSetAnnotation(t *testing.T) {
 				err := l.WatchGameServer(e, stream)
 				assert.Nil(t, err)
 			}()
+			assertInitialWatchUpdate(t, stream)
 
 			// make sure length of l.updateObservers is at least 1
 			err = wait.PollImmediate(time.Second, 10*time.Second, func() (bool, error) {
@@ -257,7 +282,7 @@ func TestLocalSDKServerWatchGameServer(t *testing.T) {
 	assert.Nil(t, err)
 
 	e := &sdk.Empty{}
-	l, err := NewLocalSDKServer(path)
+	l, err := NewLocalSDKServer(path, "")
 	assert.Nil(t, err)
 
 	stream := newGameServerMockStream()
@@ -265,6 +290,8 @@ func TestLocalSDKServerWatchGameServer(t *testing.T) {
 		err := l.WatchGameServer(e, stream)
 		assert.Nil(t, err)
 	}()
+	assertInitialWatchUpdate(t, stream)
+
 	// wait for watching to begin
 	err = wait.Poll(time.Second, 10*time.Second, func() (bool, error) {
 		found := false
@@ -281,7 +308,7 @@ func TestLocalSDKServerWatchGameServer(t *testing.T) {
 	j, err := json.Marshal(fixture)
 	assert.Nil(t, err)
 
-	err = ioutil.WriteFile(path, j, os.ModeDevice)
+	err = os.WriteFile(path, j, os.ModeDevice)
 	assert.Nil(t, err)
 
 	assertWatchUpdate(t, stream, "bar", func(gs *sdk.GameServer) interface{} {
@@ -301,7 +328,7 @@ func TestLocalSDKServerPlayerCapacity(t *testing.T) {
 	e := &alpha.Empty{}
 	path, err := gsToTmpFile(fixture)
 	assert.NoError(t, err)
-	l, err := NewLocalSDKServer(path)
+	l, err := NewLocalSDKServer(path, "")
 	assert.Nil(t, err)
 
 	stream := newGameServerMockStream()
@@ -309,6 +336,7 @@ func TestLocalSDKServerPlayerCapacity(t *testing.T) {
 		err := l.WatchGameServer(&sdk.Empty{}, stream)
 		assert.Nil(t, err)
 	}()
+	assertInitialWatchUpdate(t, stream)
 
 	// wait for watching to begin
 	err = wait.Poll(time.Second, 10*time.Second, func() (bool, error) {
@@ -351,7 +379,7 @@ func TestLocalSDKServerPlayerConnectAndDisconnectWithoutPlayerTracking(t *testin
 
 	assert.NoError(t, runtime.ParseFeatures(string(runtime.FeaturePlayerTracking)+"=false"))
 
-	l, err := NewLocalSDKServer("")
+	l, err := NewLocalSDKServer("", "")
 	assert.Nil(t, err)
 
 	e := &alpha.Empty{}
@@ -401,7 +429,6 @@ func TestLocalSDKServerPlayerConnectAndDisconnect(t *testing.T) {
 
 	e := &alpha.Empty{}
 
-	// nolint: maligned
 	fixtures := map[string]struct {
 		testMode bool
 		gs       *agonesv1.GameServer
@@ -445,9 +472,9 @@ func TestLocalSDKServerPlayerConnectAndDisconnect(t *testing.T) {
 			if v.useFile {
 				path, pathErr := gsToTmpFile(v.gs)
 				assert.NoError(t, pathErr)
-				l, err = NewLocalSDKServer(path)
+				l, err = NewLocalSDKServer(path, "")
 			} else {
-				l, err = NewLocalSDKServer("")
+				l, err = NewLocalSDKServer("", "")
 			}
 			assert.Nil(t, err)
 			l.SetTestMode(v.testMode)
@@ -457,6 +484,7 @@ func TestLocalSDKServerPlayerConnectAndDisconnect(t *testing.T) {
 				err := l.WatchGameServer(&sdk.Empty{}, stream)
 				assert.Nil(t, err)
 			}()
+			assertInitialWatchUpdate(t, stream)
 
 			// wait for watching to begin
 			err = wait.Poll(time.Second, 10*time.Second, func() (bool, error) {
@@ -583,7 +611,7 @@ func TestLocalSDKServerPlayerConnectAndDisconnect(t *testing.T) {
 // GameServer object
 func TestLocalSDKServerStateUpdates(t *testing.T) {
 	t.Parallel()
-	l, err := NewLocalSDKServer("")
+	l, err := NewLocalSDKServer("", "")
 	assert.Nil(t, err)
 
 	ctx := context.Background()
@@ -622,7 +650,7 @@ func TestLocalSDKServerStateUpdates(t *testing.T) {
 func TestSDKConformanceFunctionality(t *testing.T) {
 	t.Parallel()
 
-	l, err := NewLocalSDKServer("")
+	l, err := NewLocalSDKServer("", "")
 	assert.Nil(t, err)
 	l.testMode = true
 	l.recordRequest("")
@@ -656,7 +684,7 @@ func TestSDKConformanceFunctionality(t *testing.T) {
 
 func TestAlphaSDKConformanceFunctionality(t *testing.T) {
 	t.Parallel()
-	lStable, err := NewLocalSDKServer("")
+	lStable, err := NewLocalSDKServer("", "")
 	assert.Nil(t, err)
 	v := int64(0)
 	lStable.recordRequestWithValue("setplayercapacity", strconv.FormatInt(v, 10), "PlayerCapacity")
@@ -666,7 +694,7 @@ func TestAlphaSDKConformanceFunctionality(t *testing.T) {
 	defer runtime.FeatureTestMutex.Unlock()
 
 	assert.NoError(t, runtime.ParseFeatures(string(runtime.FeaturePlayerTracking)+"=true"))
-	l, err := NewLocalSDKServer("")
+	l, err := NewLocalSDKServer("", "")
 	assert.Nil(t, err)
 	l.testMode = true
 	l.recordRequestWithValue("setplayercapacity", strconv.FormatInt(v, 10), "PlayerCapacity")
@@ -675,7 +703,7 @@ func TestAlphaSDKConformanceFunctionality(t *testing.T) {
 }
 
 func gsToTmpFile(gs *agonesv1.GameServer) (string, error) {
-	file, err := ioutil.TempFile(os.TempDir(), "gameserver-")
+	file, err := os.CreateTemp(os.TempDir(), "gameserver-")
 	if err != nil {
 		return file.Name(), err
 	}
@@ -700,5 +728,14 @@ func assertNoWatchUpdate(t *testing.T, stream *gameServerMockStream) {
 	case <-stream.msgs:
 		assert.Fail(t, "should not get a message")
 	case <-time.After(time.Second):
+	}
+}
+
+// assertInitialWatchUpdate checks that the initial GameServer state is sent immediately after WatchGameServer
+func assertInitialWatchUpdate(t *testing.T, stream *gameServerMockStream) {
+	select {
+	case <-stream.msgs:
+	case <-time.After(time.Second):
+		assert.Fail(t, "timeout on receiving initial message")
 	}
 }

@@ -12,10 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package https provides HTTPS helpers.
 package https
 
 import (
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	"agones.dev/agones/pkg/util/runtime"
@@ -30,7 +31,7 @@ type ErrorHandlerFunc func(http.ResponseWriter, *http.Request) error
 // FourZeroFour is the standard 404 handler.
 func FourZeroFour(logger *logrus.Entry, w http.ResponseWriter, r *http.Request) {
 	f := ErrorHTTPHandler(logger, func(writer http.ResponseWriter, request *http.Request) error {
-		body, err := ioutil.ReadAll(r.Body)
+		body, err := io.ReadAll(r.Body)
 		if err != nil {
 			return errors.Wrap(err, "error in default handler")
 		}
@@ -53,6 +54,7 @@ func ErrorHTTPHandler(logger *logrus.Entry, f ErrorHandlerFunc) http.HandlerFunc
 		if err != nil {
 			runtime.HandleError(LogRequest(logger, r), err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
 	}
 }

@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC All Rights Reserved.
+// Copyright 2022 Google LLC All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -118,7 +118,7 @@ func (c *FakeFleets) UpdateStatus(ctx context.Context, fleet *agonesv1.Fleet, op
 // Delete takes name of the fleet and deletes it. Returns an error if one occurs.
 func (c *FakeFleets) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	_, err := c.Fake.
-		Invokes(testing.NewDeleteAction(fleetsResource, c.ns, name), &agonesv1.Fleet{})
+		Invokes(testing.NewDeleteActionWithOptions(fleetsResource, c.ns, name, opts), &agonesv1.Fleet{})
 
 	return err
 }

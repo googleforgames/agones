@@ -29,6 +29,8 @@ steps:
   args: ['build', '-f', 'Dockerfile.build', '-t', 'make-docker', '.'] # we need docker and make to run everything.
 - name: "make-docker"
   dir: "build"
+  env:
+    - "REGISTRY=${_REGISTRY}"
   args: ["pull-build-image"] # since we are past CI build, we can assume that the build image exists.
 
 #
@@ -60,4 +62,6 @@ steps:
     - GOPATH=/workspace/go
     - GO111MODULE=on
 
+substitutions:
+  _REGISTRY: us-docker.pkg.dev/${PROJECT_ID}/ci
 tags: ["site"]

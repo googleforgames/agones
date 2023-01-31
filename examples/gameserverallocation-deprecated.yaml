@@ -1,0 +1,76 @@
+# Copyright 2018 Google LLC All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+#
+# Full example of a GameServerAllocation. This is used to allocate
+# A GameServer out of a set of GameServers. This could be a Fleet,
+# multiple Fleets, or a self managed group of GameServers.
+#
+
+#
+# For a full reference and details: https://agones.dev/site/docs/reference/gameserverallocation/
+#
+
+apiVersion: "allocation.agones.dev/v1"
+kind: GameServerAllocation
+spec:
+  # Deprecated, use selectors instead.
+  # GameServer selector from which to choose GameServers from.
+  # GameServers still have the hard requirement to be `Ready` to be allocated from
+  # however we can also make available `matchExpressions` for even greater
+  # flexibility.
+  # Below is an example of a GameServer allocated against a given fleet.
+  # See: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/ for more details
+  required:
+    matchLabels:
+      game: my-game
+    matchExpressions:
+      - {key: tier, operator: In, values: [cache]}
+    # [Stage:Beta]
+    # [FeatureFlag:StateAllocationFilter]
+    # Specifies which State is the filter to be used when attempting to retrieve a GameServer
+    # via Allocation. Defaults to "Ready". The only other option is "Allocated", which can be used in conjunction with
+    # label/annotation/player selectors to retrieve an already Allocated GameServer.
+    gameServerState: Ready
+    # [Stage:Alpha]
+    # [FeatureFlag:PlayerAllocationFilter]
+    # Provides a filter on minimum and maximum values for player capacity when retrieving a GameServer
+    # through Allocation. Defaults to no limits.
+    players:
+      minAvailable: 0
+      maxAvailable: 99
+  # Deprecated, use selectors instead.
+  # ordered list of preferred allocations out of the `required` set.
+  # If the first selector is not matched, the selection attempts the second selector, and so on.
+  # This is useful for things like smoke testing of new game servers.
+  # This also support `matchExpressions`
+  preferred:
+    - matchLabels:
+        agones.dev/fleet: green-fleet
+    - matchLabels:
+        agones.dev/fleet: blue-fleet
+  # defines how GameServers are organised across the cluster.
+  # Options include:
+  # "Packed" (default) is aimed at dynamic Kubernetes clusters, such as cloud providers, wherein we want to bin pack
+  # resources
+  # "Distributed" is aimed at static Kubernetes clusters, wherein we want to distribute resources across the entire
+  # cluster
+  scheduling: Packed
+  # Optional custom metadata that is added to the game server at allocation
+  # You can use this to tell the server necessary session data
+  metadata:
+    labels:
+      mode: deathmatch
+    annotations:
+      map:  garden22

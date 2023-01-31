@@ -29,6 +29,7 @@ import (
 	typedv1 "agones.dev/agones/pkg/client/clientset/versioned/typed/agones/v1"
 	"agones.dev/agones/pkg/client/informers/externalversions"
 	listersv1 "agones.dev/agones/pkg/client/listers/agones/v1"
+	"agones.dev/agones/pkg/gameserverallocations"
 	"agones.dev/agones/pkg/sdk"
 	"agones.dev/agones/pkg/sdk/alpha"
 	"agones.dev/agones/pkg/sdk/beta"
@@ -41,13 +42,13 @@ import (
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
-	"k8s.io/apimachinery/pkg/util/clock"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 	k8sv1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
+	"k8s.io/utils/clock"
 )
 
 // Operation is a synchronisation action
@@ -70,7 +71,8 @@ var (
 
 // SDKServer is a gRPC server, that is meant to be a sidecar
 // for a GameServer that will update the game server status on SDK requests
-// nolint: maligned
+//
+//nolint:govet // ignore fieldalignment, singleton
 type SDKServer struct {
 	logger             *logrus.Entry
 	gameServerName     string
@@ -94,6 +96,7 @@ type SDKServer struct {
 	gsLabels           map[string]string
 	gsAnnotations      map[string]string
 	gsState            agonesv1.GameServerState
+	gsStateChannel     chan agonesv1.GameServerState
 	gsUpdateMutex      sync.RWMutex
 	gsWaitForSync      sync.WaitGroup
 	reserveTimer       *time.Timer
@@ -109,10 +112,11 @@ func NewSDKServer(gameServerName, namespace string, kubeClient kubernetes.Interf
 	mux := http.NewServeMux()
 
 	// limit the informer to only working with the gameserver that the sdk is attached to
-	factory := externalversions.NewFilteredSharedInformerFactory(agonesClient, 30*time.Second, namespace, func(opts *metav1.ListOptions) {
+	tweakListOptions := func(opts *metav1.ListOptions) {
 		s1 := fields.OneTermEqualSelector("metadata.name", gameServerName)
 		opts.FieldSelector = s1.String()
-	})
+	}
+	factory := externalversions.NewSharedInformerFactoryWithOptions(agonesClient, 30*time.Second, externalversions.WithNamespace(namespace), externalversions.WithTweakListOptions(tweakListOptions))
 	gameServers := factory.Agones().V1().GameServers()
 
 	s := &SDKServer{
@@ -134,6 +138,7 @@ func NewSDKServer(gameServerName, namespace string, kubeClient kubernetes.Interf
 		gsUpdateMutex:      sync.RWMutex{},
 		gsWaitForSync:      sync.WaitGroup{},
 		gsConnectedPlayers: []string{},
+		gsStateChannel:     make(chan agonesv1.GameServerState, 2),
 	}
 
 	s.informerFactory = factory
@@ -196,6 +201,9 @@ func (s *SDKServer) Run(ctx context.Context) error {
 	if !cache.WaitForCacheSync(ctx.Done(), s.gameServerSynced) {
 		return errors.New("failed to wait for caches to sync")
 	}
+
+	// need this for streaming gRPC commands
+	s.ctx = ctx
 	// we have the gameserver details now
 	s.gsWaitForSync.Done()
 
@@ -259,8 +267,6 @@ func (s *SDKServer) Run(ctx context.Context) error {
 	}()
 	defer s.server.Close() // nolint: errcheck
 
-	// need this for streaming gRPC commands
-	s.ctx = ctx
 	s.workerqueue.Run(ctx, 1)
 	return nil
 }
@@ -291,6 +297,7 @@ func (s *SDKServer) updateState(ctx context.Context) error {
 	s.gsUpdateMutex.RLock()
 	s.logger.WithField("state", s.gsState).Debug("Updating state")
 	if len(s.gsState) == 0 {
+		s.gsUpdateMutex.RUnlock()
 		return errors.Errorf("could not update GameServer %s/%s to empty state", s.namespace, s.gameServerName)
 	}
 	s.gsUpdateMutex.RUnlock()
@@ -325,6 +332,18 @@ func (s *SDKServer) updateState(ctx context.Context) error {
 		gsCopy.Status.ReservedUntil = nil
 	}
 	s.gsUpdateMutex.RUnlock()
+
+	// If we are setting the Allocated status, set the last-allocated annotation as well.
+	if gsCopy.Status.State == agonesv1.GameServerStateAllocated {
+		ts, err := s.clock.Now().MarshalText()
+		if err != nil {
+			return err
+		}
+		if gsCopy.ObjectMeta.Annotations == nil {
+			gsCopy.ObjectMeta.Annotations = map[string]string{}
+		}
+		gsCopy.ObjectMeta.Annotations[gameserverallocations.LastAllocatedAnnotationKey] = string(ts)
+	}
 
 	gs, err = gameServers.Update(ctx, gsCopy, metav1.UpdateOptions{})
 	if err != nil {
@@ -434,11 +453,13 @@ func (s *SDKServer) Allocate(ctx context.Context, e *sdk.Empty) (*sdk.Empty, err
 }
 
 // Shutdown enters the Shutdown state change for this GameServer into
-// the workqueue so it can be updated
+// the workqueue so it can be updated. If gracefulTermination feature is enabled,
+// Shutdown will block on GameServer being shutdown.
 func (s *SDKServer) Shutdown(ctx context.Context, e *sdk.Empty) (*sdk.Empty, error) {
 	s.logger.Debug("Received Shutdown request, adding to queue")
 	s.stopReserveTimer()
 	s.enqueueState(agonesv1.GameServerStateShutdown)
+
 	return e, nil
 }
 
@@ -500,16 +521,13 @@ func (s *SDKServer) GetGameServer(context.Context, *sdk.Empty) (*sdk.GameServer,
 func (s *SDKServer) WatchGameServer(_ *sdk.Empty, stream sdk.SDK_WatchGameServerServer) error {
 	s.logger.Debug("Received WatchGameServer request, adding stream to connectedStreams")
 
-	if runtime.FeatureEnabled(runtime.FeatureSDKWatchSendOnExecute) {
-		gs, err := s.GetGameServer(context.Background(), &sdk.Empty{})
-		if err != nil {
-			return err
-		}
+	gs, err := s.GetGameServer(context.Background(), &sdk.Empty{})
+	if err != nil {
+		return err
+	}
 
-		err = stream.Send(gs)
-		if err != nil {
-			return err
-		}
+	if err := stream.Send(gs); err != nil {
+		return err
 	}
 
 	s.streamMutex.Lock()
@@ -718,6 +736,15 @@ func (s *SDKServer) sendGameServerUpdate(gs *agonesv1.GameServer) {
 				Error("error sending game server update event")
 		}
 	}
+
+	if runtime.FeatureEnabled(runtime.FeatureSDKGracefulTermination) && gs.Status.State == agonesv1.GameServerStateShutdown {
+		// Wrap this in a go func(), just in case pushing to this channel deadlocks since there is only one instance of
+		// a receiver. In theory, This could leak goroutines a bit, but since we're shuttling down everything anyway,
+		// it shouldn't matter.
+		go func() {
+			s.gsStateChannel <- agonesv1.GameServerStateShutdown
+		}()
+	}
 }
 
 // runHealth actively checks the health, and if not
@@ -822,4 +849,20 @@ func (s *SDKServer) updateConnectedPlayers(ctx context.Context) error {
 	}
 	s.recorder.Event(gs, corev1.EventTypeNormal, "PlayerCount", fmt.Sprintf("Set to %d", gs.Status.Players.Count))
 	return nil
+}
+
+// NewSDKServerContext returns a Context that cancels when SIGTERM or os.Interrupt
+// is received and the GameServer's Status is shutdown
+func (s *SDKServer) NewSDKServerContext(ctx context.Context) context.Context {
+	sdkCtx, cancel := context.WithCancel(context.Background())
+	go func() {
+		<-ctx.Done()
+		for {
+			gsState := <-s.gsStateChannel
+			if gsState == agonesv1.GameServerStateShutdown {
+				cancel()
+			}
+		}
+	}()
+	return sdkCtx
 }

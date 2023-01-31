@@ -18,7 +18,6 @@ import (
 	"net"
 
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
-	"agones.dev/agones/pkg/util/runtime"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -43,13 +42,9 @@ func isGameServerPod(pod *corev1.Pod) bool {
 // that only report an InternalIP.
 func address(node *corev1.Node) (string, error) {
 
-	externalDNS := runtime.FeatureEnabled(runtime.NodeExternalDNS)
-
-	if externalDNS {
-		for _, a := range node.Status.Addresses {
-			if a.Type == corev1.NodeExternalDNS {
-				return a.Address, nil
-			}
+	for _, a := range node.Status.Addresses {
+		if a.Type == corev1.NodeExternalDNS {
+			return a.Address, nil
 		}
 	}
 
@@ -60,11 +55,9 @@ func address(node *corev1.Node) (string, error) {
 	}
 
 	// There might not be a public DNS/IP, so fall back to the private DNS/IP
-	if externalDNS {
-		for _, a := range node.Status.Addresses {
-			if a.Type == corev1.NodeInternalDNS {
-				return a.Address, nil
-			}
+	for _, a := range node.Status.Addresses {
+		if a.Type == corev1.NodeInternalDNS {
+			return a.Address, nil
 		}
 	}
 
@@ -79,7 +72,7 @@ func address(node *corev1.Node) (string, error) {
 
 // applyGameServerAddressAndPort gathers the address and port details from the node and pod
 // and applies them to the GameServer that is passed in, and returns it.
-func applyGameServerAddressAndPort(gs *agonesv1.GameServer, node *corev1.Node, pod *corev1.Pod) (*agonesv1.GameServer, error) {
+func applyGameServerAddressAndPort(gs *agonesv1.GameServer, node *corev1.Node, pod *corev1.Pod, syncPodPortsToGameServer func(*agonesv1.GameServer, *corev1.Pod) error) (*agonesv1.GameServer, error) {
 	addr, err := address(node)
 	if err != nil {
 		return gs, errors.Wrapf(err, "error getting external address for GameServer %s", gs.ObjectMeta.Name)
@@ -87,6 +80,11 @@ func applyGameServerAddressAndPort(gs *agonesv1.GameServer, node *corev1.Node, p
 
 	gs.Status.Address = addr
 	gs.Status.NodeName = pod.Spec.NodeName
+
+	if err := syncPodPortsToGameServer(gs, pod); err != nil {
+		return gs, errors.Wrapf(err, "cloud product error syncing ports on GameServer %s", gs.ObjectMeta.Name)
+	}
+
 	// HostPort is always going to be populated, even when dynamic
 	// This will be a double up of information, but it will be easier to read
 	gs.Status.Ports = make([]agonesv1.GameServerStatusPort, len(gs.Spec.Ports))

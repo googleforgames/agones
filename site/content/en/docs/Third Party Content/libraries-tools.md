@@ -10,20 +10,26 @@ weight: 30
 
 - [Cubxity/AgonesKt](https://github.com/Cubxity/AgonesKt) - Agones Client SDK for **Kotlin**  
 - [AndreMicheletti/godot-agones-sdk](https://github.com/AndreMicheletti/godot-agones-sdk) - Agones Client SDK for **Godot Engine**
+- [Infumia/agones4j](https://github.com/infumia/agones4j) - Agones Client SDK for **Java**
 
 ## Messaging
 
 Libraries or applications that implement messaging systems.
 
-- [Agones Event Broadcaster](https://github.com/Octops/agones-event-broadcaster) - Broadcast Agones events to the external world
-- [Agones Broadcaster HTTP](https://github.com/Octops/agones-broadcaster-http) - Expose Agones GameServers information via HTTP
-- [Agones Relay HTTP](https://github.com/Octops/agones-relay-http) - Publish Agones GameServers and Fleets details to HTTP endpoints
+- [Octops/Agones Event Broadcaster](https://github.com/Octops/agones-event-broadcaster) - Broadcast Agones events to the external world
+- [Octops/Agones Broadcaster HTTP](https://github.com/Octops/agones-broadcaster-http) - Expose Agones GameServers information via HTTP
+- [Octops/Agones Relay HTTP](https://github.com/Octops/agones-relay-http) - Publish Agones GameServers and Fleets details to HTTP endpoints
 
-## Match Making
-
-- [Agones x Open Match](https://github.com/Octops/agones-discover-openmatch) - How to implement a matchmaking system using Agones and Open Match
+## Controllers
+- [Octops/Game Server Ingress Controller](https://github.com/Octops/gameserver-ingress-controller) - Automatic Ingress configuration for Game Servers managed by Agones
+- [Octops/Image Syncer](https://github.com/Octops/octops-image-syncer) - Watch Fleets and pre-pull images of game servers on every node running in the cluster
 
 ## Allocation
 
 - [agones-allocator-client](https://github.com/FairwindsOps/agones-allocator-client) - A client for testing allocation servers.
   Made by [Fairwinds](https://fairwinds.com)
+- [Multi-cluster allocation demo](https://github.com/aws-samples/multi-cluster-allocation-demo-for-agones-on-eks) - A demo project for multi-cluster allocation on Amazon EKS with Terraform templates.
+  
+## Development Tools
+
+- [Minikube Agones Cluster](https://github.com/comerford/minikube-agones-cluster) - Automates the creation of a complete Kubernetes/Agones Cluster locally, using Xonotic as a sample gameserver. Intended to provide a local environment for developers which approximates a production Agones deployment.

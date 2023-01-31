@@ -24,10 +24,7 @@
 #
 
 # base version target. This is usually the next release.
-base_version = 1.16.0
-
-# agones image release registry
-release_registry = gcr.io/agones-images
+base_version = 1.30.0
 
 #
 # All of the following can be overwritten with environment variables
@@ -36,18 +33,19 @@ release_registry = gcr.io/agones-images
 
 # Version defaults to the short hash of the latest commit
 VERSION ?= $(base_version)-$(shell git rev-parse --short=7 HEAD)
-# The registry that is being used to store docker images
-REGISTRY ?= $(release_registry)
+
 # kubectl configuration to use
 KUBECONFIG ?= ~/.kube/config
 # The (gcloud) test cluster that is being worked against
 GCP_CLUSTER_NAME ?= test-cluster
 GCP_CLUSTER_ZONE ?= us-west1-c
+GCP_CLUSTER_LOCATION ?= $(GCP_CLUSTER_ZONE)
 GCP_BUCKET_CHARTS ?= agones-chart
 # the profile to use when developing on minikube
 MINIKUBE_PROFILE ?= agones
 GO_BUILD_TAGS ?= none
 BUILDX_WINDOWS_BUILDER = windows-builder
+BUILDX_ARM64_BUILDER = arm64-builder
 WINDOWS_DOCKER_PUSH_ARGS =
 # Versions of Windows Server to support, default is Windows Server 2019.
 # For the full list of tags see https://hub.docker.com/_/microsoft-windows-servercore.
@@ -63,12 +61,15 @@ KIND_PROFILE ?= agones
 KIND_CONTAINER_NAME=$(KIND_PROFILE)-control-plane
 
 # Game Server image to use while doing end-to-end tests
-GS_TEST_IMAGE ?= gcr.io/agones-images/simple-game-server:0.3
+GS_TEST_IMAGE ?= us-docker.pkg.dev/agones-images/examples/simple-game-server:0.14
 
-ALPHA_FEATURE_GATES ?= "PlayerTracking=true&NodeExternalDNS=true"
+# Enable all alpha feature gates. Keep in sync with `false` (alpha) entries in pkg/util/runtime/features.go:featureDefaults
+ALPHA_FEATURE_GATES ?= "PlayerAllocationFilter=true&PlayerTracking=true&ResetMetricsOnDelete=true&SafeToEvict=true&PodHostname=true&SplitControllerAndExtensions=true&Example=true"
 
 # Build with Windows support
 WITH_WINDOWS=1
+# Build with arm64support
+WITH_ARM64=1
 
 # Directory that this Makefile is in.
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
@@ -97,22 +98,38 @@ workdir_path = $(mount_path)
 build_version = $(call sha,$(build_path)/build-image/Dockerfile)
 build_tag = agones-build:$(build_version)
 controller_tag = $(REGISTRY)/agones-controller:$(VERSION)
+extensions_tag = $(REGISTRY)/agones-extensions:$(VERSION)
 sidecar_tag = $(REGISTRY)/agones-sdk:$(VERSION)
+allocator_tag = $(REGISTRY)/agones-allocator:$(VERSION)
+ping_tag = $(REGISTRY)/agones-ping:$(VERSION)
 
 ifeq ($(WITH_WINDOWS), 1)
-sidecar_linux_amd64_tag = $(sidecar_tag)-linux_amd64
+sidecar_linux_amd64_tag = $(REGISTRY)/agones-sdk:$(VERSION)-linux-amd64
+sidecar_linux_arm64_tag = $(REGISTRY)/agones-sdk:$(VERSION)-linux-arm64
 else
-sidecar_linux_amd64_tag = $(sidecar_tag)
+sidecar_linux_amd64_tag = $(REGISTRY)/agones-sdk:$(VERSION)-amd64
+sidecar_linux_arm64_tag = $(REGISTRY)/agones-sdk:$(VERSION)-arm64
 endif
 
-ping_tag = $(REGISTRY)/agones-ping:$(VERSION)
-allocator_tag = $(REGISTRY)/agones-allocator:$(VERSION)
+allocator_amd64_tag = $(allocator_tag)-amd64
+allocator_arm64_tag = $(allocator_tag)-arm64
+controller_amd64_tag = $(controller_tag)-amd64
+controller_arm64_tag = $(controller_tag)-arm64
+extensions_amd64_tag = $(extensions_tag)-amd64
+extensions_arm64_tag = $(extensions_tag)-arm64
+ping_amd64_tag = $(ping_tag)-amd64
+ping_arm64_tag = $(ping_tag)-arm64
 
+# build list of images to include in the manifest for the sidecar image.
+push_sidecar_manifest = $(sidecar_linux_amd64_tag)
+push_allocator_manifest = $(allocator_amd64_tag)
+push_controller_manifest = $(controller_amd64_tag)
+push_extensions_manifest = $(extensions_amd64_tag)
+push_ping_manifest = $(ping_amd64_tag)
 gomod_on = GO111MODULE=on
 
 go_version_flags = -ldflags "-X agones.dev/agones/pkg.Version=$(VERSION)"
 DOCKER_RUN ?= docker run --rm $(common_mounts) -e "KUBECONFIG=/root/.kube/$(kubeconfig_file)" -e "$(gomod_on)" -w $(workdir_path) $(DOCKER_RUN_ARGS) $(build_tag)
-
 
 ifdef DOCKER_RUN
 	ensure-build-image += ensure-build-image
@@ -135,7 +152,9 @@ endif
 
 go_build_cmd = go build -mod=vendor
 GO_BUILD_LINUX_AMD64=docker run --rm -e "CGO_ENABLED=0" -e "$(gomod_on)" -w $(workdir_path) $(common_mounts) $(build_tag) $(go_build_cmd)
+GO_BUILD_LINUX_ARM64=docker run --rm -e "CGO_ENABLED=0" -e "GOOS=linux" -e "GOARCH=arm64" -e "$(gomod_on)" -w $(workdir_path) $(common_mounts) $(build_tag) $(go_build_cmd)
 GO_BUILD_DARWIN_AMD64=docker run --rm -e "GOOS=darwin" -e "GOARCH=amd64" -e "$(gomod_on)" -w $(workdir_path) $(common_mounts) $(build_tag) $(go_build_cmd)
+GO_BUILD_DARWIN_ARM64=docker run --rm -e "GOOS=darwin" -e "GOARCH=arm64" -e "$(gomod_on)" -w $(workdir_path) $(common_mounts) $(build_tag) $(go_build_cmd)
 GO_BUILD_WINDOWS_AMD64=docker run --rm -e "GOOS=windows" -e "GOARCH=amd64" -e "$(gomod_on)" -w $(workdir_path) $(common_mounts) $(build_tag) $(go_build_cmd)
 
 RACE_DETECTOR_ARGS=-race
@@ -144,9 +163,20 @@ ifdef NO_RACE_DETECTOR
   RACE_DETECTOR_ARGS=
 endif
 
-go_test_cmd = go test -mod=vendor $(RACE_DETECTOR_ARGS)
+go_test_args = -mod=vendor $(RACE_DETECTOR_ARGS)
+go_test_cmd = go test $(go_test_args)
 GO_TEST=$(DOCKER_RUN) $(go_test_cmd)
 GO_E2E_TEST_ARGS=--kubeconfig /root/.kube/$(kubeconfig_file)
+
+gotestsum_json=/tmp/agones.gotestsum.json
+ifdef GOTESTSUM_VERBOSE
+gotestsum_format=--format=testname \
+  --post-run-command="sh -c 'echo; echo --- RAW VERBOSE OUTPUT ---; jq -j \"select(.Output != null) | .Output\" < $(gotestsum_json); echo --- END RAW VERBOSE OUTPUT ---'"
+else
+gotestsum_format=--format=standard-quiet
+endif
+gotestsum_cmd=gotestsum $(gotestsum_format) --jsonfile=$(gotestsum_json) --hide-summary=skipped --rerun-fails=2 $(GOTESTSUM_ARGS)
+GOTESTSUM=$(DOCKER_RUN) $(gotestsum_cmd)
 
 PERF_OUTPUT_DIR=$(mount_path)/build/.perf
 
@@ -159,6 +189,7 @@ ifdef LOCAL_GO
 	GO_BUILD_WINDOWS_AMD64=GOOS=windows GOARCH=amd64 $(gomod_on) $(go_build_cmd)
 	GO_BUILD_DARWIN_AMD64=GOOS=darwin GOARCH=amd64 $(gomod_on) $(go_build_cmd)
 	GO_TEST=$(go_test_cmd) -v
+	GOTESTSUM=$(gotestsum_cmd)
 	GO_E2E_TEST_ARGS=
 	PERF_OUTPUT_DIR=$(build_path)/.perf
 	go_build_base_path=$(agones_path)
@@ -169,6 +200,11 @@ ifdef LOCAL_ZIP
 	ZIP_SDK=cd $(agones_path)/cmd/sdk-server/bin && zip -0
 endif
 
+unameprocessor := $(shell uname -p)
+ifeq ($(unameprocessor),arm)
+	DOCKER_BUILD_ARGS += --platform linux/x86_64
+	DOCKER_RUN_ARGS += --platform linux/x86_64
+endif
 
 #    ___  ____    ___            _           _
 #   / _ \/ ___|  |_ _|_ __   ___| |_   _  __| | ___
@@ -216,14 +252,25 @@ include ./includes/examples.mk
 #    |_|\__,_|_|  \__, |\___|\__|___/
 #                 |___/
 
+# Dynamic variables that impact targets below.
+# Do not move as these need to be evaluated after the `local-includes` folder to allow for local override.
+
+ifeq ($(WITH_WINDOWS), 1)
+push_sidecar_manifest += $(foreach windows_version, $(WINDOWS_VERSIONS), $(sidecar_tag)-windows_amd64-$(windows_version))
+endif
+ifeq ($(WITH_ARM64), 1)
+push_sidecar_manifest += $(sidecar_linux_arm64_tag)
+push_allocator_manifest += $(allocator_arm64_tag)
+push_controller_manifest += $(controller_arm64_tag)
+push_extensions_manifest += $(extensions_arm64_tag)
+push_ping_manifest += $(ping_arm64_tag)
+endif
+
 # build all
 build: build-images build-sdks
 
 # build the docker images
-build-images: build-controller-image build-agones-sdk-image build-ping-image build-allocator-image
-ifeq ($(WITH_WINDOWS), 1)
-build-images: build-agones-sdk-image-windows
-endif
+build-images: build-controller-image build-extensions-image build-agones-sdk-image build-ping-image build-allocator-image
 
 # package the current agones helm chart
 build-chart: RELEASE_VERSION ?= $(base_version)
@@ -262,35 +309,59 @@ test-go: $(ensure-build-image)
 # Runs end-to-end tests on the current configured cluster
 # For minikube user the minikube-test-e2e targets
 test-e2e:
-	$(MAKE) test-e2e-integration
-	$(MAKE) test-e2e-failure
+	$(MAKE) DOCKER_RUN_ARGS="$(DOCKER_RUN_ARGS)" test-e2e-integration
+	$(MAKE) DOCKER_RUN_ARGS="$(DOCKER_RUN_ARGS)" test-e2e-failure
 
 
+# e2e test args:
+# - Use ARGS to pass args to `go test` (but not the test binary itself)
+# - Use GO_E2E_TEST_ARGS to pass args to the test binary
+# - When E2E_USE_GOTESTSUM is enabled, use GOTESTSUM_ARGS to pass args to gotestsum
 # If GAMESERVERS_NAMESPACE is empty - random namespace will be created
 test-e2e-integration: FEATURE_GATES ?= $(ALPHA_FEATURE_GATES)
+test-e2e-integration: CLOUD_PRODUCT ?= generic
 test-e2e-integration: GAMESERVERS_NAMESPACE ?= ""
+test-e2e-integration: GO_E2E_TEST_INTEGRATION_ARGS ?=\
+  --cloud-product=$(CLOUD_PRODUCT) \
+  --gameserver-image=$(GS_TEST_IMAGE) \
+  --pullsecret=$(IMAGE_PULL_SECRET) \
+  --feature-gates=$(FEATURE_GATES) \
+  --namespace=$(GAMESERVERS_NAMESPACE)
 test-e2e-integration: $(ensure-build-image)
 	echo "Starting e2e integration test!"
-	$(GO_TEST) $(ARGS) $(agones_package)/test/e2e $(GO_E2E_TEST_ARGS) \
-		--gameserver-image=$(GS_TEST_IMAGE) \
-		--pullsecret=$(IMAGE_PULL_SECRET) \
-		--feature-gates=$(FEATURE_GATES) \
-		--namespace=$(GAMESERVERS_NAMESPACE)
+ifdef E2E_USE_GOTESTSUM
+	$(GOTESTSUM) --packages=$(agones_package)/test/e2e -- $(go_test_args) -timeout=30m $(ARGS) -args \
+		$(GO_E2E_TEST_ARGS) $(GO_E2E_TEST_INTEGRATION_ARGS)
+else
+	$(GO_TEST) -timeout=30m $(ARGS) $(agones_package)/test/e2e -args \
+	    $(GO_E2E_TEST_ARGS) $(GO_E2E_TEST_INTEGRATION_ARGS)
+endif
 	echo "Finishing e2e integration test!"
 
+test-e2e-failure: CLOUD_PRODUCT ?= generic
+test-e2e-failure: GO_E2E_TEST_INTEGRATION_ARGS ?=\
+	--cloud-product=$(CLOUD_PRODUCT) \
+	--gameserver-image=$(GS_TEST_IMAGE) \
+	--pullsecret=$(IMAGE_PULL_SECRET)
 test-e2e-failure: $(ensure-build-image)
-	echo "starting e2e controller failure test"
-	$(GO_TEST) -parallel=1 $(agones_package)/test/e2e/controller $(GO_E2E_TEST_ARGS) \
-    	--gameserver-image=$(GS_TEST_IMAGE) \
-    	--pullsecret=$(IMAGE_PULL_SECRET)
+	echo "Starting e2e controller failure test!"
+ifdef E2E_USE_GOTESTSUM
+	$(GOTESTSUM) --packages=$(agones_package)/test/e2e/controller -- $(go_test_args) $(ARGS) -parallel=1 -args \
+		$(GO_E2E_TEST_ARGS) $(GO_E2E_TEST_INTEGRATION_ARGS)
+else
+	$(GO_TEST) $(ARGS) -parallel=1 $(agones_package)/test/e2e/controller -args \
+	    $(GO_E2E_TEST_ARGS) $(GO_E2E_TEST_INTEGRATION_ARGS)
+endif
 	echo "Finishing e2e controller failure test!"
 
 # Runs end-to-end stress tests on the current configured cluster
 # For minikube user the minikube-stress-test-e2e targets
 stress-test-e2e: $(ensure-build-image)
-	$(GO_TEST) $(agones_package)/test/e2e $(ARGS) $(GO_E2E_TEST_ARGS) \
+	$(GO_TEST) $(agones_package)/test/e2e $(ARGS) \
 		-timeout 1h \
 		-run '.*StressTest.*' \
+		-args \
+		$(GO_E2E_TEST_ARGS) \
 		--gameserver-image=$(GS_TEST_IMAGE) \
 		--pullsecret=$(IMAGE_PULL_SECRET) \
 		--stress $(STRESS_TEST_LEVEL) \
@@ -308,7 +379,7 @@ test-install-yaml:
 	diff /tmp/agones-install/install.yaml.sorted /tmp/agones-install/install.current.yaml.sorted
 
 # Push all the images up to $(REGISTRY)
-push: push-controller-image push-agones-sdk-image push-ping-image push-allocator-image
+push: push-controller-image push-extensions-image push-agones-sdk-image push-ping-image push-allocator-image
 
 # Installs the current development version of Agones into the Kubernetes cluster
 install: ALWAYS_PULL_SIDECAR := true
@@ -319,20 +390,23 @@ install: CRD_CLEANUP := true
 install: LOG_LEVEL := "debug"
 install: EXTERNAL_IP ?= $(shell $(DOCKER_RUN) kubectl get services agones-allocator -n agones-system -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
 install: FEATURE_GATES ?= $(ALPHA_FEATURE_GATES)
+install: SERVICE_MONITOR := false
 install: HELM_ARGS ?=
 install: $(ensure-build-image) install-custom-pull-secret
+	-$(DOCKER_RUN) bash -c '[[ $$(helm status agones -n agones-system --output json | jq -r ".info.status") =~ (failed|pending-.*) ]] && helm uninstall agones --namespace=agones-system || true'
 	$(DOCKER_RUN) \
-		helm upgrade --install --atomic --namespace=agones-system \
+		helm upgrade --install --atomic --wait --namespace=agones-system \
 		--create-namespace \
 		--set agones.image.tag=$(VERSION),agones.image.registry=$(REGISTRY) \
 		--set agones.image.controller.pullPolicy=$(IMAGE_PULL_POLICY),agones.image.sdk.alwaysPull=$(ALWAYS_PULL_SIDECAR) \
 		--set agones.image.controller.pullSecret=$(IMAGE_PULL_SECRET) \
 		--set agones.ping.http.serviceType=$(PING_SERVICE_TYPE),agones.ping.udp.serviceType=$(PING_SERVICE_TYPE) \
-		--set agones.allocator.http.serviceType=$(ALLOCATOR_SERVICE_TYPE) \
+		--set agones.allocator.service.serviceType=$(ALLOCATOR_SERVICE_TYPE) \
 		--set agones.controller.logLevel=$(LOG_LEVEL) \
 		--set agones.crds.cleanupOnDelete=$(CRD_CLEANUP) \
 		--set agones.featureGates=$(FEATURE_GATES) \
-		--set agones.allocator.http.loadBalancerIP=$(EXTERNAL_IP) \
+		--set agones.allocator.service.loadBalancerIP=$(EXTERNAL_IP) \
+		--set agones.metrics.serviceMonitor.enabled=$(SERVICE_MONITOR) \
 		$(HELM_ARGS) \
 		agones $(mount_path)/install/helm/agones/
 
@@ -348,12 +422,37 @@ uninstall: $(ensure-build-image)
 	$(DOCKER_RUN) \
 		helm uninstall agones --namespace=agones-system
 
-
 # Build a static binary for the gameserver controller
-build-controller-binary: $(ensure-build-image)
+ifeq ($(WITH_ARM64), 1)
+build-controller-binary: $(ensure-build-image) build-controller-binary-linux-amd64 build-controller-binary-linux-arm64
+else
+build-controller-binary: $(ensure-build-image) build-controller-binary-linux-amd64
+endif
+
+build-controller-binary-linux-amd64: $(ensure-build-image)
 	$(GO_BUILD_LINUX_AMD64) \
-	-tags $(GO_BUILD_TAGS) -o $(go_build_base_path)/cmd/controller/bin/controller \
+	-tags $(GO_BUILD_TAGS) -o $(go_build_base_path)/cmd/controller/bin/controller.linux.amd64 \
 	$(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/controller
+build-controller-binary-linux-arm64: $(ensure-build-image)
+	$(GO_BUILD_LINUX_ARM64) \
+	-tags $(GO_BUILD_TAGS) -o $(go_build_base_path)/cmd/controller/bin/controller.linux.arm64 \
+	$(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/controller
+
+# Build a static binary for the gamerserver extensions
+ifeq ($(WITH_ARM64), 1)
+build-extensions-binary: $(ensure-build-image) build-extensions-binary-linux-amd64 build-extensions-binary-linux-arm64
+else
+build-extensions-binary: $(ensure-build-image) build-extensions-binary-linux-amd64
+endif
+
+build-extensions-binary-linux-amd64: $(ensure-build-image)
+	$(GO_BUILD_LINUX_AMD64) \
+	-tags $(GO_BUILD_TAGS) -o $(go_build_base_path)/cmd/extensions/bin/extensions.linux.amd64 \
+	$(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/extensions
+build-extensions-binary-linux-arm64: $(ensure-build-image)
+	$(GO_BUILD_LINUX_ARM64) \
+	-tags $(GO_BUILD_TAGS) -o $(go_build_base_path)/cmd/extensions/bin/extensions.linux.arm64 \
+	$(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/extensions
 
 # Lint the go source code.
 # use LINT_TIMEOUT to manipulate the linter timeout
@@ -370,28 +469,62 @@ build-licenses:
 build-required-src-dist:
 	docker run --rm $(common_mounts) $(build_tag) $(mount_path)/build/build-required-src-dist.sh
 
+# Create docker builder used in creating arm64 images
+# According to the docker documentation, to build the images for ARM64 arch CPU
+# we would need to use buildx command which uses builder https://docs.docker.com/desktop/multi-arch/
+# We primarily need this for M1 Macs, see: https://medium.com/geekculture/docker-build-with-mac-m1-d668c802ab96
+# Making this command optional (using - as prefix) because it will fail once built for the first time, so we ignore failures.
+create-arm64-builder:
+	-docker buildx create --name $(BUILDX_ARM64_BUILDER)
+
 # Build the image for the gameserver controller
-build-controller-image: $(ensure-build-image) build-controller-binary build-licenses build-required-src-dist
-	docker build $(agones_path)/cmd/controller/ --tag=$(controller_tag) $(DOCKER_BUILD_ARGS)
+build-controller-image: build-controller-image-amd64
+ifeq ($(WITH_ARM64), 1)
+build-controller-image: build-controller-image-arm64
+endif
+
+build-controller-image-amd64: $(ensure-build-image) build-controller-binary build-licenses build-required-src-dist
+	docker build $(agones_path)/cmd/controller/ --tag=$(controller_amd64_tag) $(DOCKER_BUILD_ARGS)
+# creating docker builder and then using that builder to build controller image in buildx command
+build-controller-image-arm64: $(ensure-build-image) build-controller-binary create-arm64-builder
+	docker buildx build --platform linux/arm64 --builder $(BUILDX_ARM64_BUILDER) --build-arg ARCH=arm64 $(agones_path)/cmd/controller/ --tag=$(controller_arm64_tag) $(DOCKER_BUILD_ARGS)
 
 # push the gameservers controller image
-push-controller-image: $(ensure-build-image)
-	docker push $(controller_tag)
+push-controller-image: push-controller-image-amd64
+ifeq ($(WITH_ARM64), 1)
+push-controller-image: push-controller-image-arm64
+endif
+	# Ensure that the controller manifest is removed before creating a new one.
+	-DOCKER_CLI_EXPERIMENTAL=enabled docker manifest rm $(controller_tag)
+	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest create $(controller_tag) $(push_controller_manifest)
+	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest push $(controller_tag)
+
+push-controller-image-amd64: build-controller-image-amd64
+	docker push $(controller_amd64_tag)
+push-controller-image-arm64: build-controller-image-arm64
+	$(MAKE) DOCKER_BUILD_ARGS=--push build-controller-image-arm64
 
 # build the static binary for the gameserver sidecar
-build-agones-sdk-binary: $(ensure-build-image) build-agones-sdk-binary-linux build-agones-sdk-binary-windows build-agones-sdk-binary-darwin
+build-agones-sdk-binary: $(ensure-build-image) build-agones-sdk-binary-linux-amd64 build-agones-sdk-binary-linux-arm64 build-agones-sdk-binary-windows build-agones-sdk-binary-darwin-amd64 build-agones-sdk-binary-darwin-arm64
 	$(ZIP_SDK) \
-		agonessdk-server-$(VERSION).zip sdk-server.darwin.amd64 sdk-server.linux.amd64 sdk-server.windows.amd64.exe
+		agonessdk-server-$(VERSION).zip sdk-server.darwin.amd64 sdk-server.darwin.arm64 sdk-server.linux.amd64 sdk-server.linux.arm64 sdk-server.windows.amd64.exe
 
 # build the static binary for the gameserver sidecar for Linux
-build-agones-sdk-binary-linux: $(ensure-build-image)
+build-agones-sdk-binary-linux-amd64: $(ensure-build-image)
 	$(GO_BUILD_LINUX_AMD64) \
 		-o $(go_build_base_path)/cmd/sdk-server/bin/sdk-server.linux.amd64 $(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/sdk-server
+build-agones-sdk-binary-linux-arm64: $(ensure-build-image)
+	$(GO_BUILD_LINUX_ARM64) \
+		-o $(go_build_base_path)/cmd/sdk-server/bin/sdk-server.linux.arm64 $(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/sdk-server
+
 
 # build the static binary for the gameserver sidecar for Darwin (macOS)
-build-agones-sdk-binary-darwin: $(ensure-build-image)
+build-agones-sdk-binary-darwin-amd64: $(ensure-build-image)
 	$(GO_BUILD_DARWIN_AMD64) \
 		-o $(go_build_base_path)/cmd/sdk-server/bin/sdk-server.darwin.amd64 $(go_rebuild_flags) $(go_version_flags) $(agones_package)/cmd/sdk-server
+build-agones-sdk-binary-darwin-arm64: $(ensure-build-image)
+	$(GO_BUILD_DARWIN_ARM64) \
+		-o $(go_build_base_path)/cmd/sdk-server/bin/sdk-server.darwin.arm64 $(go_rebuild_flags) $(go_version_flags) $(agones_package)/cmd/sdk-server
 
 # build the windows binary for the gameserver sidecar for Windows
 build-agones-sdk-binary-windows: $(ensure-build-image)
@@ -399,80 +532,164 @@ build-agones-sdk-binary-windows: $(ensure-build-image)
 		-o $(go_build_base_path)/cmd/sdk-server/bin/sdk-server.windows.amd64.exe $(go_rebuild_flags) $(go_version_flags) $(agones_package)/cmd/sdk-server
 
 ensure-windows-buildx:
-	# TODO: Remove `--use` and specify `--builder` for each buildx command once Docker 19.03.13 is available.
-	# `--use` sets the global default buildx context to $(BUILDX_WINDOWS_BUILDER).
-	#
-	# Windows image builds must be directed to a specific buildx context.
-	# The default context does not support building cross platform images.
-	-DOCKER_CLI_EXPERIMENTAL=enabled docker buildx create --name=$(BUILDX_WINDOWS_BUILDER) --use
+	-docker buildx create --name=$(BUILDX_WINDOWS_BUILDER)
+
+# Build the image for the gameserver extensions
+build-extensions-image: build-extensions-image-amd64
+ifeq ($(WITH_ARM64), 1)
+build-extensions-image: build-extensions-image-arm64
+endif
+
+build-extensions-image-amd64: $(ensure-build-image) build-extensions-binary build-licenses build-required-src-dist
+	docker build $(agones_path)/cmd/extensions/ --tag=$(extensions_amd64_tag) $(DOCKER_BUILD_ARGS)
+# creating docker builder and then using that builder to build extensions image in buildx command
+build-extensions-image-arm64: $(ensure-build-image) build-extensions-binary create-arm64-builder
+	docker buildx build --platform linux/arm64 --builder $(BUILDX_ARM64_BUILDER) --build-arg ARCH=arm64 $(agones_path)/cmd/extensions/ --tag=$(extensions_arm64_tag) $(DOCKER_BUILD_ARGS)
+
+# push the gameservers extensions image
+push-extensions-image: push-extensions-image-amd64
+ifeq ($(WITH_ARM64), 1)
+push-extensions-image: push-extensions-image-arm64
+endif
+	# Ensure that extensions manifest is removed before creating new one.
+	-DOCKER_CLI_EXPERIMENTAL=enabled docker manifest rm $(extensions_tag)
+	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest create $(extensions_tag) $(push_extensions_manifest)
+	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest push $(extensions_tag)
+
+# push extensions image
+push-extensions-image-amd64: build-extensions-image-amd64
+	docker push $(extensions_amd64_tag)
+push-extensions-image-arm64: build-extensions-image-arm64
+	$(MAKE) DOCKER_BUILD_ARGS=--push build-extensions-image-arm64
 
 # Build the image for the gameserver sidecar and SDK binaries
-build-agones-sdk-image: $(ensure-build-image) build-agones-sdk-binary build-licenses build-required-src-dist
-	docker build $(agones_path)/cmd/sdk-server/ --tag=$(sidecar_linux_amd64_tag) $(DOCKER_BUILD_ARGS)
+build-agones-sdk-image: $(ensure-build-image) build-agones-sdk-binary build-licenses build-required-src-dist build-agones-sdk-image-amd64
+ifeq ($(WITH_ARM64), 1)
+build-agones-sdk-image: build-agones-sdk-image-arm64
+endif
+ifeq ($(WITH_WINDOWS), 1)
+build-agones-sdk-image: build-agones-sdk-image-windows
+endif
 
+build-agones-sdk-image-amd64: $(ensure-build-image) build-agones-sdk-binary-linux-amd64
+	docker build $(agones_path)/cmd/sdk-server/ --tag=$(sidecar_linux_amd64_tag) $(DOCKER_BUILD_ARGS)
+# creating docker builder and then using that builder to build sdk image in buildx command
+build-agones-sdk-image-arm64: $(ensure-build-image) build-agones-sdk-binary-linux-arm64 create-arm64-builder
+	docker buildx build --platform linux/arm64 --builder $(BUILDX_ARM64_BUILDER) --build-arg ARCH=arm64 $(agones_path)/cmd/sdk-server/ --tag=$(sidecar_linux_arm64_tag) $(DOCKER_BUILD_ARGS)
+
+build-agones-sdk-image-windows: build-agones-sdk-binary
 build-agones-sdk-image-windows: $(foreach winver, $(WINDOWS_VERSIONS), build-agones-sdk-image-windows-$(winver))
 
 # Build the image for the gameserver sidecar and SDK binaries
 build-agones-sdk-image-windows-%: $(ensure-build-image) build-agones-sdk-binary build-licenses build-required-src-dist ensure-windows-buildx
-	# TODO: Use `--builder $(BUILDX_WINDOWS_BUILDER)` later once Docker 19.03.13 is the build target. Cloud Build has 19.03.08 https://cloud.google.com/cloud-build/release-notes
-	DOCKER_CLI_EXPERIMENTAL=enabled docker buildx build --platform windows/amd64 -f $(agones_path)/cmd/sdk-server/Dockerfile.windows --tag=$(sidecar_tag)-windows_amd64-$* --build-arg WINDOWS_VERSION=$* $(DOCKER_BUILD_ARGS) $(agones_path)/cmd/sdk-server/ $(WINDOWS_DOCKER_PUSH_ARGS)
-
-# Build sidecar image only
-build-agones-sdk-server-image: $(ensure-build-image) build-agones-sdk-binary-linux build-licenses build-required-src-dist
-	docker build $(agones_path)/cmd/sdk-server/ --tag=$(sidecar_linux_amd64_tag) $(DOCKER_BUILD_ARGS)
-
-build-agones-sdk-server-image-windows: $(foreach winver, $(WINDOWS_VERSIONS), build-agones-sdk-server-image-windows-$(winver))
-
-# Build sidecar image only
-build-agones-sdk-server-image-windows-%: $(ensure-build-image) build-agones-sdk-binary-linux build-licenses build-required-src-dist ensure-windows-buildx
-	# TODO: Use `--builder $(BUILDX_WINDOWS_BUILDER)` later once Docker 19.03.13 is the build target. Cloud Build has 19.03.08 https://cloud.google.com/cloud-build/release-notes
-	DOCKER_CLI_EXPERIMENTAL=enabled docker buildx build $(agones_path)/cmd/sdk-server/ -f $(agones_path)/cmd/sdk-server/Dockerfile.windows --platform windows/amd64 --tag=$(sidecar_tag)-windows_amd64-$* --build-arg WINDOWS_VERSION=$* $(DOCKER_BUILD_ARGS) $(WINDOWS_DOCKER_PUSH_ARGS)
+	docker buildx build --platform windows/amd64 --builder $(BUILDX_WINDOWS_BUILDER) -f $(agones_path)/cmd/sdk-server/Dockerfile.windows --tag=$(sidecar_tag)-windows_amd64-$* --build-arg WINDOWS_VERSION=$* $(DOCKER_BUILD_ARGS) $(agones_path)/cmd/sdk-server/ $(WINDOWS_DOCKER_PUSH_ARGS)
 
 # Build a static binary for the ping service
-build-ping-binary: $(ensure-build-image)
+build-ping-binary: build-ping-binary-amd64
+ifeq ($(WITH_ARM64), 1)
+build-ping-binary: build-ping-binary-arm64
+endif
+
+build-ping-binary-amd64: $(ensure-build-image)
 	$(GO_BUILD_LINUX_AMD64) \
-	-tags $(GO_BUILD_TAGS) -o $(go_build_base_path)/cmd/ping/bin/ping \
+	-tags $(GO_BUILD_TAGS) -o $(go_build_base_path)/cmd/ping/bin/ping.linux.amd64 \
+	$(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/ping
+build-ping-binary-arm64: $(ensure-build-image)
+	$(GO_BUILD_LINUX_ARM64) \
+	-tags $(GO_BUILD_TAGS) -o $(go_build_base_path)/cmd/ping/bin/ping.linux.arm64 \
 	$(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/ping
 
 # Pushes up the ping image
-push-ping-image: $(ensure-build-image)
-	docker push $(ping_tag)
+push-ping-image: push-ping-image-amd64
+ifeq ($(WITH_ARM64), 1)
+push-ping-image: push-ping-image-arm64
+endif
+	# Ensure that the ping manifest is removed before creating a new one.
+	-DOCKER_CLI_EXPERIMENTAL=enabled docker manifest rm $(ping_tag)
+	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest create $(ping_tag) $(push_ping_manifest)
+	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest push $(ping_tag)
+
+push-ping-image-amd64: $(ensure-build-image) build-ping-image-amd64
+	docker push $(ping_amd64_tag)
+push-ping-image-arm64:
+	$(MAKE) DOCKER_BUILD_ARGS=--push build-ping-image-arm64
 
 # Build the image for the ping service
-build-ping-image: $(ensure-build-image) build-ping-binary build-licenses build-required-src-dist
-	docker build $(agones_path)/cmd/ping/ --tag=$(ping_tag) $(DOCKER_BUILD_ARGS)
+build-ping-image: build-ping-image-amd64
+ifeq ($(WITH_ARM64), 1)
+build-ping-image: build-ping-image-arm64
+endif
+
+build-ping-image-amd64: $(ensure-build-image) build-ping-binary build-licenses build-required-src-dist
+	docker build $(agones_path)/cmd/ping/ --tag=$(ping_amd64_tag) $(DOCKER_BUILD_ARGS)
+# creating docker builder and then using that builder to build ping image in buildx command
+build-ping-image-arm64: $(ensure-build-image) build-ping-binary create-arm64-builder
+	docker buildx build --platform linux/arm64 --builder $(BUILDX_ARM64_BUILDER) --build-arg ARCH=arm64 $(agones_path)/cmd/ping/ --tag=$(ping_arm64_tag) $(DOCKER_BUILD_ARGS)
 
 # Build a static binary for the allocator service
-build-allocator-binary: $(ensure-build-image)
+build-allocator-binary: $(ensure-build-image) build-allocator-binary-linux-amd64
+ifeq ($(WITH_ARM64), 1)
+build-allocator-binary: build-allocator-binary-linux-arm64
+endif
+
+build-allocator-binary-linux-amd64: $(ensure-build-image)
 	$(GO_BUILD_LINUX_AMD64) \
-	-tags $(GO_BUILD_TAGS) -o $(go_build_base_path)/cmd/allocator/bin/allocator \
+	-tags $(GO_BUILD_TAGS) -o $(go_build_base_path)/cmd/allocator/bin/allocator.linux.amd64 \
+	$(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/allocator
+build-allocator-binary-linux-arm64:
+	$(GO_BUILD_LINUX_ARM64) \
+	-tags $(GO_BUILD_TAGS) -o $(go_build_base_path)/cmd/allocator/bin/allocator.linux.arm64 \
 	$(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/allocator
 
 # Pushes up the allocator image
-push-allocator-image: $(ensure-build-image)
-	docker push $(allocator_tag)
+push-allocator-image: push-allocator-image-amd64
+ifeq ($(WITH_ARM64), 1)
+push-allocator-image: push-allocator-image-arm64
+endif
+	# Ensure that the allocator manifest is removed before creating a new one.
+	-DOCKER_CLI_EXPERIMENTAL=enabled docker manifest rm $(allocator_tag)
+	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest create $(allocator_tag) $(push_allocator_manifest)
+	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest push $(allocator_tag)
+
+push-allocator-image-amd64: build-allocator-image-amd64
+	docker push $(allocator_amd64_tag)
+push-allocator-image-arm64: build-allocator-image-arm64
+	$(MAKE) DOCKER_BUILD_ARGS=--push build-allocator-image-arm64
 
 # Build the image for the allocator service
-build-allocator-image: $(ensure-build-image) build-allocator-binary build-licenses build-required-src-dist
-	docker build $(agones_path)/cmd/allocator/ --tag=$(allocator_tag) $(DOCKER_BUILD_ARGS)
+build-allocator-image: build-allocator-image-amd64
+ifeq ($(WITH_ARM64), 1)
+build-allocator-image: build-allocator-image-arm64
+endif
 
-ifeq ($(WITH_WINDOWS), 1)
+build-allocator-image-amd64: $(ensure-build-image) build-allocator-binary build-licenses build-required-src-dist
+	docker build $(agones_path)/cmd/allocator/ --tag=$(allocator_amd64_tag) $(DOCKER_BUILD_ARGS)
+# creating docker builder and then using that builder to build allocator image in buildx command
+build-allocator-image-arm64: $(ensure-build-image) build-allocator-binary create-arm64-builder
+	docker buildx build $(agones_path)/cmd/allocator/ --builder $(BUILDX_ARM64_BUILDER) --tag=$(allocator_arm64_tag) --build-arg ARCH=arm64 --platform linux/arm64 $(DOCKER_BUILD_ARGS)
+
 # push the gameservers sidecar image
-push-agones-sdk-image: push-agones-sdk-linux-image
+push-agones-sdk-image: push-agones-sdk-linux-image-amd64
+ifeq ($(WITH_WINDOWS), 1)
+push-agones-sdk-image: push-agones-sdk-windows
+endif
+ifeq ($(WITH_ARM64), 1)
+push-agones-sdk-image: push-agones-sdk-linux-image-arm64
+endif
 	# Ensure that the sidecar manifest is removed before creating a new one.
 	-DOCKER_CLI_EXPERIMENTAL=enabled docker manifest rm $(sidecar_tag)
+	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest create $(sidecar_tag) $(push_sidecar_manifest)
+	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest push $(sidecar_tag)
+
+push-agones-sdk-windows:
 	# Using docker buildx with foreign OSes is a bit awkward. Since the layers but not the tag
 	# was cached we have to rebuild the image (which should be fast since it's cached).
 	$(MAKE) WINDOWS_DOCKER_PUSH_ARGS=--push build-agones-sdk-image-windows
-	# Agones should start using the -linux_amd64 suffix for Linux images. This allows multi-arch support in the future.
-	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest create $(sidecar_tag) $(sidecar_linux_amd64_tag) $(foreach windows_version, $(WINDOWS_VERSIONS), $(sidecar_tag)-windows_amd64-$(windows_version))
-	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest push $(sidecar_tag)
-else
-push-agones-sdk-image: push-agones-sdk-linux-image
-endif
 
-# push the gameservers sidecar image
-push-agones-sdk-linux-image: $(ensure-build-image)
+push-agones-sdk-linux-image-arm64: $(ensure-build-image)
+	$(MAKE) DOCKER_BUILD_ARGS=--push build-agones-sdk-image-arm64
+
+push-agones-sdk-linux-image-amd64: build-agones-sdk-image-amd64
 	docker push $(sidecar_linux_amd64_tag)
 
 # Generate the Embedded CRD openapi
@@ -526,7 +743,7 @@ setup-prometheus: SCRAPE_INTERVAL=30s
 setup-prometheus:
 	$(DOCKER_RUN) helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 	$(DOCKER_RUN) helm repo update
-	$(DOCKER_RUN) helm upgrade prom prometheus-community/prometheus --install --wait --version 11.16.2 \
+	$(DOCKER_RUN) helm upgrade prom prometheus-community/prometheus --install --wait \
  		--namespace metrics --create-namespace \
 		--set server.global.scrape_interval=$(SCRAPE_INTERVAL),server.persistentVolume.enabled=$(PVC),server.persistentVolume.size=$(PV_SIZE) \
 		$(HELM_ARGS) -f $(mount_path)/build/prometheus.yaml
@@ -544,7 +761,7 @@ setup-grafana:
 	$(DOCKER_RUN) helm repo add grafana https://grafana.github.io/helm-charts
 	$(DOCKER_RUN) helm repo update
 	$(DOCKER_RUN) kubectl apply -f $(mount_path)/build/grafana/
-	$(DOCKER_RUN) helm upgrade grafana grafana/grafana --install --wait --version=5.7.10 \
+	$(DOCKER_RUN) helm upgrade grafana grafana/grafana --install --wait \
 		--namespace metrics --create-namespace \
 		--set persistence.enabled=$(PVC),server.persistentVolume.size=$(PV_SIZE) \
 		--set adminPassword=$(PASSWORD) $(HELM_ARGS) -f $(mount_path)/build/grafana.yaml
@@ -552,6 +769,26 @@ setup-grafana:
 uninstall-grafana: $(ensure-build-image)
 	$(DOCKER_RUN) helm uninstall grafana --namespace=metrics
 	$(DOCKER_RUN) kubectl delete -f $(mount_path)/build/grafana/
+
+# setup prometheus-stack in the current cluster by default Persistent Volume Claims are requested.
+setup-prometheus-stack: PVC ?= true
+setup-prometheus-stack: PV_SIZE ?= 64Gi
+setup-prometheus-stack: SCRAPE_INTERVAL=30s
+setup-prometheus-stack: PASSWORD ?= admin
+setup-prometheus-stack:
+	$(DOCKER_RUN) helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+	$(DOCKER_RUN) helm repo update
+	$(DOCKER_RUN) helm upgrade prometheus-stack prometheus-community/kube-prometheus-stack --install --wait --version 19.0.2 \
+ 		--namespace monitoring --create-namespace \
+		--set prometheus.server.global.scrape_interval=$(SCRAPE_INTERVAL) \
+		--set prometheus.server.persistentVolume.enabled=$(PVC) \
+		--set prometheus.server.persistentVolume.size=$(PV_SIZE) \
+		--set grafana.adminPassword=$(PASSWORD) \
+		$(HELM_ARGS) -f $(mount_path)/build/prometheus-stack.yaml
+
+uninstall-prometheus-stack: $(ensure-build-image)
+	$(DOCKER_RUN) \
+		helm uninstall prometheus-stack --namespace=monitoring
 
 helm-repo-update:
 	$(DOCKER_RUN) helm repo update

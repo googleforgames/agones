@@ -22,6 +22,7 @@
 !.eslintrc.*
 !.nycrc
 !.clang-format
+!.github
 *.iml
 bin
 *.o
@@ -35,3 +36,5 @@ build/allocation
 /release
 debug.test
 obj
+test/sdk/cpp/sdk/
+

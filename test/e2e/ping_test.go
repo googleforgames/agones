@@ -17,11 +17,10 @@ package e2e
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"testing"
 
-	e2eframework "agones.dev/agones/test/e2e/framework"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
@@ -53,7 +52,7 @@ func TestPingHTTP(t *testing.T) {
 	defer response.Body.Close() // nolint: errcheck
 
 	assert.Equal(t, http.StatusOK, response.StatusCode)
-	body, err := ioutil.ReadAll(response.Body)
+	body, err := io.ReadAll(response.Body)
 	assert.Nil(t, err)
 	assert.Equal(t, []byte("ok"), body)
 }
@@ -89,7 +88,7 @@ func TestPingUDP(t *testing.T) {
 	assert.Nil(t, err)
 
 	expected := "hello"
-	reply, err := e2eframework.SendUDP(fmt.Sprintf("%s:%d", externalIP, p), expected)
+	reply, err := framework.SendUDP(t, fmt.Sprintf("%s:%d", externalIP, p), expected)
 	assert.Nil(t, err)
 	assert.Equal(t, expected, reply)
 }

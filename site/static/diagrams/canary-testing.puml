@@ -1,0 +1,35 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+participant Matchmaker
+participant Agones
+
+participant "Canary Fleet\nResource" as CanaryFleet
+participant "Stable Fleet\nResource" as StableFleet
+
+Matchmaker -> Agones: Create: <i>GameServerAllocation</i>
+note left
+  <i>GameServerAllocation</i> is implemented to prefer
+  allocating from the Canary <i>Fleet</i>, but if a Ready
+  <i>GameServer</i> cannot be found in the Canary Fleet,
+  to fall back to the Stable <i>Fleet</i>.
+end note
+
+group GameServerAllocation
+else Check Canary Fleet first
+Agones -> CanaryFleet: Check if <i>GameServer<i> is available
+note right
+  The Canary <i>Fleet</i> is
+  usually a small, fixed size
+end note
+else None available in Canary Fleet
+Agones -> StableFleet: Check if <i>GameServer<i> is available
+note right
+  When the Canary <i>Fleet</i> is fully allocated, the
+  allocation falls over to the Stable <i>Fleet</i>.
+end note
+end group
+
+Matchmaker <-- Agones: returns <i>Allocated GameServer</i> record
+
+@enduml

@@ -21,11 +21,19 @@ import (
 	"golang.org/x/sync/semaphore"
 )
 
+type mode int
+
 const (
 	DefaultDelayThreshold       = time.Second
 	DefaultBundleCountThreshold = 10
 	DefaultBundleByteThreshold  = 1e6 // 1M
 	DefaultBufferedByteLimit    = 1e9 // 1G
+)
+
+const (
+	none mode = iota
+	add
+	addWait
 )
 
 var (
@@ -34,6 +42,10 @@ var (
 
 	// ErrOversizedItem indicates that an item's size exceeds the maximum bundle size.
 	ErrOversizedItem = errors.New("item size exceeds bundle byte limit")
+
+	// errMixedMethods indicates that mutually exclusive methods has been
+	// called subsequently.
+	errMixedMethods = errors.New("calls to Add and AddWait cannot be mixed")
 )
 
 // A Bundler collects items added to it into a bundle until the bundle
@@ -94,6 +106,9 @@ type Bundler struct {
 	curFlush  *sync.WaitGroup // counts outstanding bundles since last flush
 	prevFlush chan bool       // signal used to wait for prior flush
 
+	// The first call to Add or AddWait, mode will be add or addWait respectively.
+	// If there wasn't call yet then mode is none.
+	mode mode
 	// TODO: consider alternative queue implementation for head/tail bundle. see:
 	// https://code-review.googlesource.com/c/google-api-go-client/+/47991/4/support/bundler/bundler.go#74
 }
@@ -149,7 +164,7 @@ func (b *Bundler) initSemaphores() {
 }
 
 // enqueueCurBundle moves curBundle to the end of the queue. The bundle may be
-// handled immediately if we are below handlerLimit. It requires that b.mu is
+// handled immediately if we are below HandlerLimit. It requires that b.mu is
 // locked.
 func (b *Bundler) enqueueCurBundle() {
 	// We don't require callers to check if there is a pending bundle. It
@@ -178,6 +193,18 @@ func (b *Bundler) enqueueCurBundle() {
 	}
 }
 
+// setMode sets the state of Bundler's mode. If mode was defined before
+// and passed state is different from it then return an error.
+func (b *Bundler) setMode(m mode) error {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	if b.mode == m || b.mode == none {
+		b.mode = m
+		return nil
+	}
+	return errMixedMethods
+}
+
 // canFit returns true if bu can fit an additional item of size bytes based
 // on the limits of Bundler b.
 func (b *Bundler) canFit(bu *bundle, size int) bool {
@@ -187,6 +214,8 @@ func (b *Bundler) canFit(bu *bundle, size int) bool {
 
 // Add adds item to the current bundle. It marks the bundle for handling and
 // starts a new one if any of the thresholds or limits are exceeded.
+// The type of item must be assignable to the itemExample parameter of the NewBundler
+// method, otherwise there will be a panic.
 //
 // If the item's size exceeds the maximum bundle size (Bundler.BundleByteLimit), then
 // the item can never be handled. Add returns ErrOversizedItem in this case.
@@ -197,6 +226,9 @@ func (b *Bundler) canFit(bu *bundle, size int) bool {
 //
 // Add never blocks.
 func (b *Bundler) Add(item interface{}, size int) error {
+	if err := b.setMode(add); err != nil {
+		return err
+	}
 	// If this item exceeds the maximum size of a bundle,
 	// we can never send it.
 	if b.BundleByteLimit > 0 && size > b.BundleByteLimit {
@@ -292,17 +324,20 @@ func (b *Bundler) handle(bu *bundle) {
 		b.handler(bu.items.Interface())
 		bu = b.postHandle(bu)
 	}
-	b.mu.Lock()
-	b.handlerCount--
-	b.mu.Unlock()
 }
 
 func (b *Bundler) postHandle(bu *bundle) *bundle {
 	b.mu.Lock()
 	defer b.mu.Unlock()
+
 	b.sem.Release(int64(bu.size))
 	bu.flush.Done()
-	return b.next()
+
+	bu = b.next()
+	if bu == nil {
+		b.handlerCount--
+	}
+	return bu
 }
 
 // AddWait adds item to the current bundle. It marks the bundle for handling and
@@ -316,6 +351,9 @@ func (b *Bundler) postHandle(bu *bundle) *bundle {
 //
 // Calls to Add and AddWait should not be mixed on the same Bundler.
 func (b *Bundler) AddWait(ctx context.Context, item interface{}, size int) error {
+	if err := b.setMode(addWait); err != nil {
+		return err
+	}
 	// If this item exceeds the maximum size of a bundle,
 	// we can never send it.
 	if b.BundleByteLimit > 0 && size > b.BundleByteLimit {

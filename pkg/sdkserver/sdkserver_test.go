@@ -23,6 +23,7 @@ import (
 	"time"
 
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
+	"agones.dev/agones/pkg/gameserverallocations"
 	"agones.dev/agones/pkg/sdk"
 	"agones.dev/agones/pkg/sdk/alpha"
 	agtesting "agones.dev/agones/pkg/testing"
@@ -32,15 +33,20 @@ import (
 	"github.com/stretchr/testify/require"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/util/clock"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/apimachinery/pkg/watch"
 	k8stesting "k8s.io/client-go/testing"
 	"k8s.io/client-go/tools/cache"
+	"k8s.io/utils/clock"
+	testclocks "k8s.io/utils/clock/testing"
 )
 
 func TestSidecarRun(t *testing.T) {
 	t.Parallel()
+
+	now := time.Now().UTC()
+	nowTs, err := now.MarshalText()
+	require.NoError(t, err)
 
 	type expected struct {
 		state       agonesv1.GameServerState
@@ -51,6 +57,7 @@ func TestSidecarRun(t *testing.T) {
 
 	fixtures := map[string]struct {
 		f        func(*SDKServer, context.Context)
+		clock    clock.WithTickerAndDelayedExecution
 		expected expected
 	}{
 		"ready": {
@@ -112,9 +119,13 @@ func TestSidecarRun(t *testing.T) {
 				_, err := sc.Allocate(ctx, &sdk.Empty{})
 				assert.NoError(t, err)
 			},
+			clock: testclocks.NewFakeClock(now),
 			expected: expected{
 				state:      agonesv1.GameServerStateAllocated,
 				recordings: []string{string(agonesv1.GameServerStateAllocated)},
+				annotations: map[string]string{
+					gameserverallocations.LastAllocatedAnnotationKey: string(nowTs),
+				},
 			},
 		},
 		"reserved": {
@@ -176,6 +187,9 @@ func TestSidecarRun(t *testing.T) {
 
 			assert.Nil(t, err)
 			sc.recorder = m.FakeRecorder
+			if v.clock != nil {
+				sc.clock = v.clock
+			}
 
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
@@ -377,7 +391,7 @@ func TestSidecarHealthLastUpdated(t *testing.T) {
 	require.NoError(t, err)
 
 	sc.health = agonesv1.Health{Disabled: false}
-	fc := clock.NewFakeClock(now)
+	fc := testclocks.NewFakeClock(now)
 	sc.clock = fc
 
 	stream := newEmptyMockStream()
@@ -476,7 +490,7 @@ func TestSidecarHealthy(t *testing.T) {
 	sc.initHealthLastUpdated(0 * time.Second)
 
 	now := time.Now().UTC()
-	fc := clock.NewFakeClock(now)
+	fc := testclocks.NewFakeClock(now)
 	sc.clock = fc
 
 	stream := newEmptyMockStream()
@@ -571,7 +585,7 @@ func TestSidecarHTTPHealthCheck(t *testing.T) {
 	require.NoError(t, err)
 
 	now := time.Now().Add(time.Hour).UTC()
-	fc := clock.NewFakeClock(now)
+	fc := testclocks.NewFakeClock(now)
 	// now we control time - so slow machines won't fail anymore
 	sc.clock = fc
 
@@ -652,37 +666,6 @@ func TestSDKServerGetGameServer(t *testing.T) {
 func TestSDKServerWatchGameServer(t *testing.T) {
 	t.Parallel()
 
-	agruntime.FeatureTestMutex.Lock()
-	defer agruntime.FeatureTestMutex.Unlock()
-	err := agruntime.ParseFeatures(string(agruntime.FeatureSDKWatchSendOnExecute) + "=false")
-	require.NoError(t, err, "Can not parse FeatureSDKWatchSendOnExecute")
-
-	m := agtesting.NewMocks()
-	sc, err := defaultSidecar(m)
-	require.NoError(t, err)
-	assert.Empty(t, sc.connectedStreams)
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	sc.ctx = ctx
-
-	stream := newGameServerMockStream()
-	asyncWatchGameServer(t, sc, stream)
-	assert.Nil(t, waitConnectedStreamCount(sc, 1))
-	assert.Equal(t, stream, sc.connectedStreams[0])
-
-	stream = newGameServerMockStream()
-	asyncWatchGameServer(t, sc, stream)
-	assert.Nil(t, waitConnectedStreamCount(sc, 2))
-	assert.Len(t, sc.connectedStreams, 2)
-	assert.Equal(t, stream, sc.connectedStreams[1])
-}
-
-func TestSDKServerWatchGameServerFeatureSDKWatchSendOnExecute(t *testing.T) {
-	t.Parallel()
-
-	agruntime.FeatureTestMutex.Lock()
-	defer agruntime.FeatureTestMutex.Unlock()
-
 	fixture := &agonesv1.GameServer{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test",
@@ -696,9 +679,6 @@ func TestSDKServerWatchGameServerFeatureSDKWatchSendOnExecute(t *testing.T) {
 	m := agtesting.NewMocks()
 	fakeWatch := watch.NewFake()
 	m.AgonesClient.AddWatchReactor("gameservers", k8stesting.DefaultWatchReactor(fakeWatch, nil))
-
-	err := agruntime.ParseFeatures(string(agruntime.FeatureSDKWatchSendOnExecute) + "=true")
-	require.NoError(t, err, "Can not parse FeatureSDKWatchSendOnExecute")
 
 	sc, err := defaultSidecar(m)
 	require.NoError(t, err)
@@ -753,20 +733,26 @@ func TestSDKServerWatchGameServerFeatureSDKWatchSendOnExecute(t *testing.T) {
 		}
 	}
 
-	// if SDKWatchSendOnExecute feature is turned on, there are two stream.Send() calls should happen:
-	// one in sendGameServerUpdate, another one in WatchGameServer.
+	// There are two stream.Send() calls should happen: one in sendGameServerUpdate,
+	// another one in WatchGameServer.
 	assert.Equal(t, 2, totalSendCalls)
 }
 
 func TestSDKServerSendGameServerUpdate(t *testing.T) {
 	t.Parallel()
-
-	agruntime.FeatureTestMutex.Lock()
-	defer agruntime.FeatureTestMutex.Unlock()
-	err := agruntime.ParseFeatures(string(agruntime.FeatureSDKWatchSendOnExecute) + "=false")
-	require.NoError(t, err, "Can not parse FeatureSDKWatchSendOnExecute")
+	fixture := &agonesv1.GameServer{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test",
+			Namespace: "default",
+		},
+		Status: agonesv1.GameServerStatus{
+			State: agonesv1.GameServerStateReady,
+		},
+	}
 
 	m := agtesting.NewMocks()
+	fakeWatch := watch.NewFake()
+	m.AgonesClient.AddWatchReactor("gameservers", k8stesting.DefaultWatchReactor(fakeWatch, nil))
 	sc, err := defaultSidecar(m)
 	require.NoError(t, err)
 	assert.Empty(t, sc.connectedStreams)
@@ -774,12 +760,21 @@ func TestSDKServerSendGameServerUpdate(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	sc.ctx = ctx
+	sc.informerFactory.Start(ctx.Done())
+
+	fakeWatch.Add(fixture.DeepCopy())
+	assert.True(t, cache.WaitForCacheSync(ctx.Done(), sc.gameServerSynced))
+	sc.gsWaitForSync.Done()
+
+	// wait for the GameServer to be populated, as we can't rely on WaitForCacheSync
+	require.Eventually(t, func() bool {
+		_, err := sc.gameServer()
+		return err == nil
+	}, time.Minute, time.Second, "Could not find the GameServer")
 
 	stream := newGameServerMockStream()
 	asyncWatchGameServer(t, sc, stream)
 	assert.Nil(t, waitConnectedStreamCount(sc, 1))
-
-	fixture := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test-server"}}
 
 	sc.sendGameServerUpdate(fixture)
 
@@ -795,35 +790,40 @@ func TestSDKServerSendGameServerUpdate(t *testing.T) {
 
 func TestSDKServerUpdateEventHandler(t *testing.T) {
 	t.Parallel()
-
-	// Acquire lock in order to be sure that
-	// no other parallel test turn on FeatureSDKWatchSendOnExecute
-	agruntime.FeatureTestMutex.Lock()
-	defer agruntime.FeatureTestMutex.Unlock()
-	err := agruntime.ParseFeatures(string(agruntime.FeatureSDKWatchSendOnExecute) + "=false")
-	require.NoError(t, err, "Can not parse FeatureSDKWatchSendOnExecute")
+	fixture := &agonesv1.GameServer{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test",
+			Namespace: "default",
+		},
+		Status: agonesv1.GameServerStatus{
+			State: agonesv1.GameServerStateReady,
+		},
+	}
 
 	m := agtesting.NewMocks()
 	fakeWatch := watch.NewFake()
 	m.AgonesClient.AddWatchReactor("gameservers", k8stesting.DefaultWatchReactor(fakeWatch, nil))
-
 	sc, err := defaultSidecar(m)
 	require.NoError(t, err)
+	assert.Empty(t, sc.connectedStreams)
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	sc.ctx = ctx
-
 	sc.informerFactory.Start(ctx.Done())
+
+	fakeWatch.Add(fixture.DeepCopy())
 	assert.True(t, cache.WaitForCacheSync(ctx.Done(), sc.gameServerSynced))
 	sc.gsWaitForSync.Done()
 
+	// wait for the GameServer to be populated, as we can't rely on WaitForCacheSync
+	require.Eventually(t, func() bool {
+		_, err := sc.gameServer()
+		return err == nil
+	}, time.Minute, time.Second, "Could not find the GameServer")
 	stream := newGameServerMockStream()
 	asyncWatchGameServer(t, sc, stream)
 	assert.Nil(t, waitConnectedStreamCount(sc, 1))
-
-	fixture := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test-server", Namespace: "default"},
-		Spec: agonesv1.GameServerSpec{},
-	}
 
 	// need to add it before it can be modified
 	fakeWatch.Add(fixture.DeepCopy())
@@ -1345,6 +1345,183 @@ func TestSDKServerPlayerConnectAndDisconnect(t *testing.T) {
 	assert.Equal(t, []string{"2"}, list.List)
 }
 
+func TestSDKServerGracefulTerminationInterrupt(t *testing.T) {
+	t.Parallel()
+	agruntime.FeatureTestMutex.Lock()
+	defer agruntime.FeatureTestMutex.Unlock()
+
+	err := agruntime.ParseFeatures(string(agruntime.FeatureSDKGracefulTermination) + "=true")
+	require.NoError(t, err, "Can not parse FeatureSDKGracefulTermination feature")
+
+	m := agtesting.NewMocks()
+	fakeWatch := watch.NewFake()
+	m.AgonesClient.AddWatchReactor("gameservers", k8stesting.DefaultWatchReactor(fakeWatch, nil))
+
+	gs := agonesv1.GameServer{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test", Namespace: "default",
+		},
+		Spec: agonesv1.GameServerSpec{Health: agonesv1.Health{Disabled: true}},
+	}
+	gs.ApplyDefaults()
+	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{*gs.DeepCopy()}}, nil
+	})
+	sc, err := defaultSidecar(m)
+	assert.Nil(t, err)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	sdkCtx := sc.NewSDKServerContext(ctx)
+	sc.informerFactory.Start(sdkCtx.Done())
+	assert.True(t, cache.WaitForCacheSync(sdkCtx.Done(), sc.gameServerSynced))
+
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+
+	go func() {
+		err := sc.Run(sdkCtx)
+		assert.Nil(t, err)
+		wg.Done()
+	}()
+
+	assertContextCancelled := func(expected error, timeout time.Duration, ctx context.Context) {
+		select {
+		case <-ctx.Done():
+			require.Equal(t, expected, ctx.Err())
+		case <-time.After(timeout):
+			require.Fail(t, "should have gone to Reserved by now")
+		}
+	}
+
+	_, err = sc.Ready(sdkCtx, &sdk.Empty{})
+	require.NoError(t, err)
+	assert.Equal(t, agonesv1.GameServerStateRequestReady, sc.gsState)
+	//	Mock interruption signal
+	cancel()
+	// Assert ctx is cancelled and sdkCtx is not cancelled
+	assertContextCancelled(context.Canceled, 1*time.Second, ctx)
+	assert.Nil(t, sdkCtx.Err())
+	//	Assert gs is still requestReady
+	assert.Equal(t, agonesv1.GameServerStateRequestReady, sc.gsState)
+	// gs Shutdown
+	gs.Status.State = agonesv1.GameServerStateShutdown
+	fakeWatch.Modify(gs.DeepCopy())
+
+	// Assert sdkCtx is cancelled after shutdown
+	assertContextCancelled(context.Canceled, 1*time.Second, sdkCtx)
+	wg.Wait()
+}
+
+func TestSDKServerGracefulTerminationShutdown(t *testing.T) {
+	t.Parallel()
+	agruntime.FeatureTestMutex.Lock()
+	defer agruntime.FeatureTestMutex.Unlock()
+
+	err := agruntime.ParseFeatures(string(agruntime.FeatureSDKGracefulTermination) + "=true")
+	require.NoError(t, err, "Can not parse FeatureSDKGracefulTermination feature")
+
+	m := agtesting.NewMocks()
+	fakeWatch := watch.NewFake()
+	m.AgonesClient.AddWatchReactor("gameservers", k8stesting.DefaultWatchReactor(fakeWatch, nil))
+
+	gs := agonesv1.GameServer{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test", Namespace: "default",
+		},
+		Spec: agonesv1.GameServerSpec{Health: agonesv1.Health{Disabled: true}},
+	}
+	gs.ApplyDefaults()
+	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{*gs.DeepCopy()}}, nil
+	})
+
+	sc, err := defaultSidecar(m)
+	assert.Nil(t, err)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	sdkCtx := sc.NewSDKServerContext(ctx)
+	sc.informerFactory.Start(sdkCtx.Done())
+	assert.True(t, cache.WaitForCacheSync(sdkCtx.Done(), sc.gameServerSynced))
+
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+
+	go func() {
+		err = sc.Run(sdkCtx)
+		assert.Nil(t, err)
+		wg.Done()
+	}()
+
+	assertContextCancelled := func(expected error, timeout time.Duration, ctx context.Context) {
+		select {
+		case <-ctx.Done():
+			require.Equal(t, expected, ctx.Err())
+		case <-time.After(timeout):
+			require.Fail(t, "should have gone to Reserved by now")
+		}
+	}
+
+	_, err = sc.Ready(sdkCtx, &sdk.Empty{})
+	require.NoError(t, err)
+	assert.Equal(t, agonesv1.GameServerStateRequestReady, sc.gsState)
+	// gs Shutdown
+	gs.Status.State = agonesv1.GameServerStateShutdown
+	fakeWatch.Modify(gs.DeepCopy())
+
+	// assert none of the context have been cancelled
+	assert.Nil(t, sdkCtx.Err())
+	assert.Nil(t, ctx.Err())
+	//	Mock interruption signal
+	cancel()
+	// Assert ctx is cancelled and sdkCtx is not cancelled
+	assertContextCancelled(context.Canceled, 2*time.Second, ctx)
+	assertContextCancelled(context.Canceled, 2*time.Second, sdkCtx)
+	wg.Wait()
+}
+
+func TestSDKServerGracefulTerminationGameServerStateChannel(t *testing.T) {
+	t.Parallel()
+	agruntime.FeatureTestMutex.Lock()
+	defer agruntime.FeatureTestMutex.Unlock()
+
+	err := agruntime.ParseFeatures(string(agruntime.FeatureSDKGracefulTermination) + "=true")
+	require.NoError(t, err, "Can not parse FeatureSDKGracefulTermination feature")
+
+	m := agtesting.NewMocks()
+	fakeWatch := watch.NewFake()
+	m.AgonesClient.AddWatchReactor("gameservers", k8stesting.DefaultWatchReactor(fakeWatch, nil))
+
+	gs := agonesv1.GameServer{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test", Namespace: "default",
+		},
+		Spec: agonesv1.GameServerSpec{Health: agonesv1.Health{Disabled: true}},
+	}
+	gs.ApplyDefaults()
+	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{*gs.DeepCopy()}}, nil
+	})
+
+	sc, err := defaultSidecar(m)
+	assert.Nil(t, err)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	sdkCtx := sc.NewSDKServerContext(ctx)
+	sc.informerFactory.Start(sdkCtx.Done())
+	assert.True(t, cache.WaitForCacheSync(sdkCtx.Done(), sc.gameServerSynced))
+
+	gs.Status.State = agonesv1.GameServerStateShutdown
+	fakeWatch.Modify(gs.DeepCopy())
+
+	select {
+	case current := <-sc.gsStateChannel:
+		require.Equal(t, agonesv1.GameServerStateShutdown, current)
+	case <-time.After(5 * time.Second):
+		require.Fail(t, "should have gone to Shutdown by now")
+	}
+}
+
 func defaultSidecar(m agtesting.Mocks) (*SDKServer, error) {
 	server, err := NewSDKServer("test", "default", m.KubeClient, m.AgonesClient)
 	if err != nil {
@@ -1372,9 +1549,8 @@ func waitConnectedStreamCount(sc *SDKServer, count int) error {
 }
 
 func asyncWatchGameServer(t *testing.T, sc *SDKServer, stream sdk.SDK_WatchGameServerServer) {
-	// Note that new FeatureSDKWatchSendOnExecute feature gate
-	// uses getGameServer() function and therefore WatchGameServer()
-	// would block if gsWaitForSync is not Done().
+	// Note that WatchGameServer() uses getGameServer() and would block
+	// if gsWaitForSync is not Done().
 	go func() {
 		err := sc.WatchGameServer(&sdk.Empty{}, stream)
 		require.NoError(t, err)

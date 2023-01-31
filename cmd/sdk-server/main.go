@@ -33,12 +33,13 @@ import (
 	"agones.dev/agones/pkg/sdkserver"
 	"agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/signals"
-	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
+	gwruntime "github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/pkg/errors"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"github.com/tmc/grpc-websocket-proxy/wsproxy"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )
@@ -78,16 +79,17 @@ func main() {
 	}
 
 	ctx := signals.NewSigKillContext()
+
 	grpcServer := grpc.NewServer()
 	// don't graceful stop, because if we get a SIGKILL signal
 	// then the gameserver is being shut down, and we no longer
 	// care about running RPC calls.
 	defer grpcServer.Stop()
 
-	mux := gwruntime.NewServeMux()
+	mux := runtime.NewServerMux()
 	httpServer := &http.Server{
 		Addr:    fmt.Sprintf("%s:%d", ctlConf.Address, ctlConf.HTTPPort),
-		Handler: wsproxy.WebsocketProxy(mux),
+		Handler: wsproxy.WebsocketProxy(healthCheckWrapper(mux)),
 	}
 	defer httpServer.Close() // nolint: errcheck
 
@@ -139,7 +141,9 @@ func main() {
 		if err != nil {
 			logger.WithError(err).Fatalf("Could not start sidecar")
 		}
-
+		if runtime.FeatureEnabled(runtime.FeatureSDKGracefulTermination) {
+			ctx = s.NewSDKServerContext(ctx)
+		}
 		go func() {
 			err := s.Run(ctx)
 			if err != nil {
@@ -175,7 +179,7 @@ func registerLocal(grpcServer *grpc.Server, ctlConf config) (func(), error) {
 		}
 	}
 
-	s, err := sdkserver.NewLocalSDKServer(filePath)
+	s, err := sdkserver.NewLocalSDKServer(filePath, ctlConf.TestSdkName)
 	if err != nil {
 		return nil, err
 	}
@@ -191,7 +195,7 @@ func registerLocal(grpcServer *grpc.Server, ctlConf config) (func(), error) {
 // registerLocal registers the local test SDK servers, and returns a cancel func that
 // closes all the SDK implementations
 func registerTestSdkServer(grpcServer *grpc.Server, ctlConf config) (func(), error) {
-	s, err := sdkserver.NewLocalSDKServer("")
+	s, err := sdkserver.NewLocalSDKServer("", "")
 	if err != nil {
 		return nil, err
 	}
@@ -225,7 +229,7 @@ func runGrpc(grpcServer *grpc.Server, grpcEndpoint string) {
 
 // runGateway runs the grpc-gateway
 func runGateway(ctx context.Context, grpcEndpoint string, mux *gwruntime.ServeMux, httpServer *http.Server) {
-	conn, err := grpc.DialContext(ctx, grpcEndpoint, grpc.WithBlock(), grpc.WithInsecure())
+	conn, err := grpc.DialContext(ctx, grpcEndpoint, grpc.WithBlock(), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		logger.WithError(err).Fatal("Could not dial grpc server...")
 	}
@@ -314,4 +318,17 @@ type config struct {
 	TestSdkName string
 	GRPCPort    int
 	HTTPPort    int
+}
+
+// healthCheckWrapper ensures that an http 400 response is returned
+// if the healthcheck receives a request with an empty post body
+func healthCheckWrapper(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/health" && r.Body == http.NoBody {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		h.ServeHTTP(w, r)
+	})
 }

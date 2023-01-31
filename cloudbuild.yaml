@@ -19,32 +19,39 @@
 steps:
 
 #
+# Print Docker version
+#
+
+- name: gcr.io/cloud-builders/docker
+  id: docker-version
+  args: ["--version"]
+
+#
 # Restore any caches
 #
 
-- name: gcr.io/$PROJECT_ID/restore_cache
+- name: us-docker.pkg.dev/$PROJECT_ID/ci/restore_cache
   id: htmltest-restore-cache
   args:
     - '--bucket=gs://$_CACHE_BUCKET'
     - '--key=$_HTMLTEST_CACHE_KEY'
   waitFor: ['-']
 
-- name: gcr.io/$PROJECT_ID/restore_cache
+- name: us-docker.pkg.dev/$PROJECT_ID/ci/restore_cache
   id: cpp-sdk-build-restore-cache
   args:
     - '--bucket=gs://$_CACHE_BUCKET'
     - '--key=$_CPP_SDK_BUILD_CACHE_KEY-$( checksum sdks/cpp/cmake/prerequisites.cmake )'
   waitFor: ['-']
 
-- name: gcr.io/$PROJECT_ID/restore_cache
+- name: us-docker.pkg.dev/$PROJECT_ID/ci/restore_cache
   id: cpp-sdk-conformance-restore-cache
   args:
     - '--bucket=gs://$_CACHE_BUCKET'
     - '--key=$_CPP_SDK_CONFORMANCE_CACHE_KEY-$( checksum sdks/cpp/cmake/prerequisites.cmake )'
   waitFor: ['-']
 
-
-- name: gcr.io/$PROJECT_ID/restore_cache
+- name: us-docker.pkg.dev/$PROJECT_ID/ci/restore_cache
   id: rust-sdk-build-restore-cache
   args:
     - '--bucket=gs://$_CACHE_BUCKET'
@@ -58,7 +65,7 @@ steps:
 - name: "ubuntu"
   args: ["bash", "-c", "echo 'FROM gcr.io/cloud-builders/docker\nRUN apt-get install make\nENTRYPOINT [\"/usr/bin/make\"]' > Dockerfile.build"]
   waitFor: ['-']
-- name: "gcr.io/cloud-builders/docker"
+- name: gcr.io/cloud-builders/docker
   id: build-make-docker
   args: ['build', '-f', 'Dockerfile.build', '-t', 'make-docker', '.'] # we need docker and make to run everything.
 
@@ -68,6 +75,8 @@ steps:
 - name: "make-docker"
   id: pull-build-image
   dir: "build"
+  env:
+    - "REGISTRY=${_REGISTRY}"
   args: ["pull-build-image"]
   waitFor:
     - build-make-docker
@@ -79,6 +88,8 @@ steps:
 - name: "make-docker"
   id: pull-build-sdk-base-image
   dir: "build"
+  env:
+    - "REGISTRY=${_REGISTRY}"
   args: ["pull-build-sdk-base-image"]
   waitFor:
     - build-make-docker
@@ -99,7 +110,7 @@ steps:
 # build the e2e test runner
 #
 
-- name: 'gcr.io/cloud-builders/docker'
+- name: gcr.io/cloud-builders/docker
   args: ['build', '-f', 'Dockerfile', '-t', 'e2e-runner', '.']
   dir: 'build/e2e-image'
   id: build-e2e
@@ -124,6 +135,8 @@ steps:
   waitFor:
     - lint
   dir: "build"
+  env:
+    - "REGISTRY=${_REGISTRY}"
   args: ["push-build-image"] # push the build image (which won't do anything if it's already there)
 
 #
@@ -134,6 +147,8 @@ steps:
   waitFor:
     - ensure-build-sdk-image-base
   dir: "build"
+  env:
+    - "REGISTRY=${_REGISTRY}"
   args: ["push-build-sdk-base-image"]
 
 #
@@ -145,12 +160,16 @@ steps:
   waitFor:
     - lint
   dir: "build"
+  env:
+    - "REGISTRY=${_REGISTRY}"
   args: [ "-j", "4", "build-images"]
 - name: "make-docker"
   id: push-images
   waitFor:
     - build-images
   dir: "build"
+  env:
+    - "REGISTRY=${_REGISTRY}"
   args: [ "-j", "4", "push"]
 
 #
@@ -170,7 +189,7 @@ steps:
 # Cache the cpp sdk build directory, to speed up subsequent builds (considerably)
 #
 
-- name: 'gcr.io/$PROJECT_ID/save_cache'
+- name: 'us-docker.pkg.dev/$PROJECT_ID/ci/save_cache'
   args:
     - '--bucket=gs://$_CACHE_BUCKET'
     - '--key=$_CPP_SDK_BUILD_CACHE_KEY-$( checksum sdks/cpp/cmake/prerequisites.cmake )'
@@ -196,7 +215,7 @@ steps:
 #
 # Cache the htmltest url checks. Faster builds, and lower network flakiness.
 #
-- name: 'gcr.io/$PROJECT_ID/save_cache'
+- name: 'us-docker.pkg.dev/$PROJECT_ID/ci/save_cache'
   args:
     - '--bucket=gs://$_CACHE_BUCKET'
     - '--key=$_HTMLTEST_CACHE_KEY'
@@ -227,27 +246,100 @@ steps:
     - GOPATH=/workspace/go
     - GO111MODULE=on
 
-#
-# Run the e2e tests with FeatureGates inverted compared to Stable
-#
+# wait for us to be the oldest ongoing build before we run e2es
 
-- name: 'e2e-runner'
-  args: ['PlayerTracking=true&SDKWatchSendOnExecute=false&RollingUpdateOnReady=false&NodeExternalDNS=true', 'e2e-test-cluster']
-  id: e2e-feature-gates
+- name: 'gcr.io/cloud-builders/gcloud'
+  id: e2e-wait-to-become-leader
   waitFor:
     - push-images
     - build-e2e
+  script: |
+    #!/usr/bin/env bash
+
+    TS='date --utc +%FT%TZ' # e.g. 2023-01-26T13:30:37Z
+    echo "$(${TS}): Waiting to become oldest running build"
+    while true; do
+      # Filter to running builds within the same TRIGGER_NAME. We use the trigger name to
+      # filter rather than buildTriggerId because there is no substitution available for
+      # buildTriggerId.
+      TRIGGER_FILTER="status=WORKING AND substitutions[TRIGGER_NAME]='${TRIGGER_NAME}'"
+      OLDEST=$(gcloud builds list --filter "${TRIGGER_FILTER}" --format="value(id,startTime)" --sort-by=startTime --limit=1)
+      echo "$(${TS}): Oldest is (id startTime): ${OLDEST}"
+
+      if echo ${OLDEST} | grep -q "${BUILD_ID}"; then
+        echo "$(${TS}): That's us, we're done!"
+        break
+      fi
+
+      sleep 60
+    done
+  timeout: 5400s # 90m - leave an hour for e2es to run on top of the global timeout of 2.5h
+  env:
+  - 'CLOUDSDK_CORE_PROJECT=$PROJECT_ID'
+  - 'BUILD_ID=$BUILD_ID'
+  - 'TRIGGER_NAME=$TRIGGER_NAME'
+
+#
+# Run the e2e tests with FeatureGates inverted compared to Stable
+#
+# Keep in sync with (the inverse of) pkg/util/runtime/features.go:featureDefaults
+
+- name: 'e2e-runner'
+  args:
+    - 'CustomFasSyncInterval=false&SDKGracefulTermination=false&StateAllocationFilter=false&PlayerAllocationFilter=true&PlayerTracking=true&ResetMetricsOnDelete=true&SafeToEvict=true&PodHostname=true&SplitControllerAndExtensions=true&Example=true'
+    - 'generic'
+    - 'e2e-test-cluster'
+    - 'us-west1-c'
+    - "${_REGISTRY}"
+  id: e2e-feature-gates
+  waitFor:
+    - e2e-wait-to-become-leader
 
 #
 # Run the e2e tests without FeatureGates
 #
 
 - name: 'e2e-runner'
-  args: ['', 'e2e-test-cluster']
+  args:
+    - ''
+    - 'generic'
+    - 'e2e-test-cluster'
+    - 'us-west1-c'
+    - "${_REGISTRY}"
   id: e2e-stable
   waitFor:
-    - push-images
-    - build-e2e
+    - e2e-feature-gates
+
+#
+# Run the e2e tests on GKE Autopilot with FeatureGates inverted compared to Stable
+#
+# Keep in sync with (the inverse of) pkg/util/runtime/features.go:featureDefaults
+
+- name: 'e2e-runner'
+  args:
+    - 'CustomFasSyncInterval=false&SDKGracefulTermination=false&StateAllocationFilter=false&PlayerAllocationFilter=true&PlayerTracking=true&ResetMetricsOnDelete=true&SafeToEvict=true&PodHostname=true&SplitControllerAndExtensions=true&Example=true'
+    - 'gke-autopilot'
+    - 'gke-autopilot-e2e-test-cluster-1-24'
+    - 'us-west1'
+    - "${_REGISTRY}"
+  id: e2e-feature-gates-gke-autopilot
+  waitFor:
+    - e2e-wait-to-become-leader
+
+#
+# Run the e2e tests on GKE Autopilot without FeatureGates, except SafeToEvict and SplitControllerAndExtensions, which we need on Autopilot
+#
+
+- name: 'e2e-runner'
+  args:
+    - 'SafeToEvict=true&SplitControllerAndExtensions=true'
+    - 'gke-autopilot'
+    - 'gke-autopilot-e2e-test-cluster-1-24'
+    - 'us-west1'
+    - "${_REGISTRY}"
+  id: e2e-stable-gke-autopilot
+  waitFor:
+    - e2e-feature-gates-gke-autopilot
 
 #
 # SDK conformance tests
@@ -256,6 +348,8 @@ steps:
 - name: "make-docker"
   id: sdk-conformance
   dir: "build"
+  env:
+    - "REGISTRY=${_REGISTRY}"
   args: [ "-j", "5", "--output-sync=target", "run-sdk-conformance-tests"]
   waitFor:
     - build-images
@@ -265,7 +359,7 @@ steps:
 # Cache the CPP conformance build directory, to speed up subsequent builds (considerably)
 #
 
-- name: 'gcr.io/$PROJECT_ID/save_cache'
+- name: 'us-docker.pkg.dev/$PROJECT_ID/ci/save_cache'
   args:
     - '--bucket=gs://$_CACHE_BUCKET'
     - '--key=$_CPP_SDK_CONFORMANCE_CACHE_KEY-$( checksum sdks/cpp/cmake/prerequisites.cmake )'
@@ -278,7 +372,7 @@ steps:
 # Cache the Rust SDK build directory, to speed up subsequent builds (considerably)
 #
 
-- name: 'gcr.io/$PROJECT_ID/save_cache'
+- name: 'us-docker.pkg.dev/$PROJECT_ID/ci/save_cache'
   args:
     - '--bucket=gs://$_CACHE_BUCKET'
     - '--key=$_RUST_SDK_BUILD_CACHE_KEY-$( checksum test/sdk/rust/Cargo.toml )'
@@ -312,10 +406,16 @@ substitutions:
   _CPP_SDK_BUILD_CACHE_KEY: cpp-sdk-build
   _CPP_SDK_CONFORMANCE_CACHE_KEY: cpp-sdk-conformance
   _RUST_SDK_BUILD_CACHE_KEY: rust-sdk-build
-
+  _REGISTRY: us-docker.pkg.dev/${PROJECT_ID}/ci
 tags: ['ci']
-timeout: 7200s
-images: ['gcr.io/$PROJECT_ID/agones-controller', 'gcr.io/$PROJECT_ID/agones-ping']
+timeout: 9000s # 2.5h - if you change this, change e2e-wait-to-become-leader as well
+queueTtl: 259200s # 72h
+images:
+  - '${_REGISTRY}/agones-controller'
+  - '${_REGISTRY}/agones-sdk'
+  - '${_REGISTRY}/agones-ping'
+  - '${_REGISTRY}/agones-allocator'
 logsBucket: "gs://agones-build-logs"
 options:
- machineType: 'N1_HIGHCPU_32'
+  machineType: 'E2_HIGHCPU_32'
+  dynamic_substitutions: true

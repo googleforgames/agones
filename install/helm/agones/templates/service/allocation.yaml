@@ -12,13 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-{{- $useLoadBalancerIP := and (ne .Values.agones.allocator.http.loadBalancerIP "") (eq .Values.agones.allocator.http.serviceType "LoadBalancer") }}
+{{- $useLoadBalancerIP := and (ne .Values.agones.allocator.service.loadBalancerIP "") (eq .Values.agones.allocator.service.serviceType "LoadBalancer") }}
 {{- if .Values.agones.allocator.install }}
 # Define a Service for the agones-allocator
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ $.Values.agones.serviceaccount.allocator.name }}
+  name: {{ $.Values.agones.allocator.service.name }}
   namespace: {{ .Release.Namespace }}
   labels:
     component: allocator
@@ -26,31 +26,100 @@ metadata:
     chart: {{ template "agones.chart" . }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
-{{- if .Values.agones.allocator.http.annotations }}
+{{- if .Values.agones.allocator.service.annotations }}
   annotations:
-{{ toYaml .Values.agones.allocator.http.annotations | indent 4 }}
+{{ toYaml .Values.agones.allocator.service.annotations | indent 4 }}
 {{- end }}
 spec:
   selector:
     multicluster.agones.dev/role: allocator
   ports:
-    - port: {{ .Values.agones.allocator.http.port }}
-      name: https
-      targetPort: 8443
+{{- if .Values.agones.allocator.service.http.enabled }}
+    - port: {{ .Values.agones.allocator.service.http.port }}
+      name: {{ .Values.agones.allocator.service.http.portName }}
+      targetPort: {{ .Values.agones.allocator.service.http.targetPort }}
+      {{- if eq .Values.agones.allocator.service.serviceType "NodePort" }}
+      nodePort: {{ .Values.agones.allocator.service.http.nodePort }}
+      {{- end }}
       protocol: TCP
-  type: {{ .Values.agones.allocator.http.serviceType }}
-{{- if $useLoadBalancerIP }}
-  loadBalancerIP: {{ .Values.agones.allocator.http.loadBalancerIP }}
+{{- if .Values.agones.allocator.service.grpc.enabled }}
+{{- if ne .Values.agones.allocator.service.grpc.port .Values.agones.allocator.service.http.port }}
+    - port: {{ .Values.agones.allocator.service.grpc.port }}
+      name: {{ .Values.agones.allocator.service.grpc.portName }}
+      targetPort: {{ .Values.agones.allocator.service.grpc.targetPort }}
+      {{- if eq .Values.agones.allocator.service.serviceType "NodePort" }}
+      nodePort: {{ .Values.agones.allocator.service.grpc.nodePort }}
+      {{- end }}
+      protocol: TCP
 {{- end }}
-{{- if eq .Values.agones.allocator.http.serviceType "LoadBalancer" }}
-  {{- if .Values.agones.allocator.http.loadBalancerSourceRanges }}
+{{- end }}
+{{- else if .Values.agones.allocator.service.grpc.enabled }}
+    - port: {{ .Values.agones.allocator.service.grpc.port }}
+      name: {{ .Values.agones.allocator.service.grpc.portName }}
+      targetPort: {{ .Values.agones.allocator.service.grpc.targetPort }}
+      {{- if eq .Values.agones.allocator.service.serviceType "NodePort" }}
+      nodePort: {{ .Values.agones.allocator.service.grpc.nodePort }}
+      {{- end }}
+      protocol: TCP
+{{- end }}
+  type: {{ .Values.agones.allocator.service.serviceType }}
+{{- if $useLoadBalancerIP }}
+  loadBalancerIP: {{ .Values.agones.allocator.service.loadBalancerIP }}
+{{- end }}
+{{- if eq .Values.agones.allocator.service.serviceType "LoadBalancer" }}
+  {{- if .Values.agones.allocator.service.loadBalancerSourceRanges }}
   loadBalancerSourceRanges:
-{{ toYaml .Values.agones.allocator.http.loadBalancerSourceRanges | indent 4 }}
+{{ toYaml .Values.agones.allocator.service.loadBalancerSourceRanges | indent 4 }}
   {{- end }}
 {{- end }}
-
 ---
-# Deploy a pod to run the agones-allocator code
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.agones.allocator.serviceMetrics.name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    multicluster.agones.dev/role: allocator
+    app: {{ template "agones.name" . }}
+    chart: {{ template "agones.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+{{- if .Values.agones.allocator.serviceMetrics.annotations }}
+  annotations:
+{{ toYaml .Values.agones.allocator.serviceMetrics.annotations | indent 4 }}
+{{- end }}
+spec:
+  selector:
+    multicluster.agones.dev/role: allocator
+  ports:
+    - port: {{ .Values.agones.allocator.serviceMetrics.http.port }}
+      name: {{ .Values.agones.allocator.serviceMetrics.http.portName }}
+      targetPort: 8080
+      protocol: TCP
+{{- if and (.Values.agones.metrics.prometheusEnabled) (.Values.agones.metrics.serviceMonitor.enabled) }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: agones-allocator-monitor
+  namespace: {{ .Release.Namespace }}
+  labels:
+    multicluster.agones.dev/role: allocator
+    app: {{ template "agones.name" . }}
+    chart: {{ template "agones.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  selector:
+    matchLabels:
+      multicluster.agones.dev/role: allocator
+  endpoints:
+    - port: {{ .Values.agones.allocator.serviceMetrics.http.portName }}
+      path: /metrics
+      interval: {{ .Values.agones.metrics.serviceMonitor.interval }}
+{{- end }}
+---
+# Deploy pods to run the agones-allocator code
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -63,6 +132,10 @@ metadata:
     heritage: {{ .Release.Service }}
 spec:
   replicas: {{ .Values.agones.allocator.replicas }}
+{{- if .Values.agones.allocator.updateStrategy }}
+  strategy:
+{{- toYaml .Values.agones.allocator.updateStrategy | nindent 4}}
+{{- end }}
   selector:
     matchLabels:
       multicluster.agones.dev/role: allocator
@@ -102,17 +175,21 @@ spec:
 {{ toYaml .Values.agones.allocator.tolerations | indent 8 }}
       {{- end }}
       serviceAccountName: {{ $.Values.agones.serviceaccount.allocator.name }}
+      {{- if eq .Values.agones.allocator.disableTLS false }}
       volumes:
       - name: tls
         secret:
           secretName: allocator-tls
+      {{- if eq .Values.agones.allocator.disableMTLS false }}
       - name: client-ca
         secret:
           secretName: allocator-client-ca
+      {{- end }}
+      {{- end }}
       containers:
       - name: agones-allocator
         image: "{{ .Values.agones.image.registry }}/{{ .Values.agones.image.allocator.name}}:{{ default .Values.agones.image.tag .Values.agones.image.allocator.tag }}"
-        imagePullPolicy: {{ .Values.agones.image.controller.pullPolicy }}
+        imagePullPolicy: {{ .Values.agones.image.allocator.pullPolicy }}
         livenessProbe:
           httpGet:
             path: /live
@@ -126,6 +203,14 @@ spec:
             path: /ready
             port: 8080
         env:
+        {{- if .Values.agones.allocator.service.http.enabled }}
+        - name: HTTP_PORT
+          value: {{ .Values.agones.allocator.service.http.targetPort | quote }}
+        {{- end }}
+        {{- if .Values.agones.allocator.service.grpc.enabled }}
+        - name: GRPC_PORT
+          value: {{ .Values.agones.allocator.service.grpc.targetPort | quote }}
+        {{- end }}
         - name: API_SERVER_QPS
           value: {{ .Values.agones.allocator.apiServerQPS | quote }}
         - name: API_SERVER_QPS_BURST
@@ -160,16 +245,35 @@ spec:
           value: {{ .Values.agones.allocator.logLevel | quote }}
         - name: FEATURE_GATES
           value: {{ .Values.agones.featureGates | quote }}
+        - name: ALLOCATION_BATCH_WAIT_TIME
+          value: {{ .Values.agones.allocator.allocationBatchWaitTime | quote }}
         ports:
-        - name: https
-          containerPort: 8443
+        {{- if .Values.agones.allocator.service.http.enabled }}
+        - name: {{ .Values.agones.allocator.service.http.portName }}
+          containerPort: {{ .Values.agones.allocator.service.http.targetPort }}
+        {{- if .Values.agones.allocator.service.grpc.enabled }}
+        {{- if ne .Values.agones.allocator.service.grpc.port .Values.agones.allocator.service.http.port }}
+        - name: {{ .Values.agones.allocator.service.grpc.portName }}
+          containerPort: {{ .Values.agones.allocator.service.grpc.targetPort }}
+        {{- end }}
+        {{- end }}
+        {{- else if .Values.agones.allocator.service.grpc.enabled }}
+        - name: {{ .Values.agones.allocator.service.grpc.portName }}
+          containerPort: {{ .Values.agones.allocator.service.grpc.targetPort }}
+        {{- end }}
+        - name: {{ .Values.agones.allocator.serviceMetrics.http.portName }}
+          containerPort:  {{ .Values.agones.allocator.serviceMetrics.http.port }}
+        {{- if eq .Values.agones.allocator.disableTLS false }}
         volumeMounts:
         - mountPath: /home/allocator/tls
           name: tls
           readOnly: true
+        {{- if eq .Values.agones.allocator.disableMTLS false }}
         - mountPath: /home/allocator/client-ca
           name: client-ca
           readOnly: true
+        {{- end }}
+        {{- end }}
 {{- if .Values.agones.allocator.resources }}
         resources:
 {{ toYaml .Values.agones.allocator.resources | indent 10 }}
@@ -178,14 +282,33 @@ spec:
       imagePullSecrets:
         - name: {{.Values.agones.image.controller.pullSecret}}
 {{- end }}
-
+{{- if .Values.agones.allocator.pdb.enabled }}
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: agones-allocator-pdb
+spec:
+{{- if .Values.agones.allocator.pdb.minAvailable }}
+{{- if .Values.agones.allocator.pdb.maxUnavailable }}
+{{- fail "minAvailable and maxUnavailable are mutually exclusive!" }}
+{{- end}}
+{{- end}}
+  minAvailable: {{ .Values.agones.allocator.pdb.minAvailable }}
+  maxUnavailable: {{ .Values.agones.allocator.pdb.maxUnavailable }}
+  selector:
+    matchLabels:
+      multicluster.agones.dev/role: allocator
+      app: {{ template "agones.name" . }}
+      release: {{ .Release.Name }}
+      heritage: {{ .Release.Service }}
+{{- end }}
 ---
 # Create a ClusterRole in that grants access to the agones allocation api
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: agones-allocator
-  namespace: {{ .Release.Namespace }}
   labels:
     app: {{ template "agones.name" $ }}
     chart: {{ template "agones.chart" $ }}
@@ -233,7 +356,6 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: agones-allocator
-  namespace: {{ .Release.Namespace }}
   labels:
     app: {{ template "agones.name" $ }}
     chart: {{ template "agones.chart" $ }}
@@ -271,13 +393,17 @@ data:
 {{- end }}
 {{- if .Values.agones.allocator.generateTLS }}
   client-ca.crt: {{ b64enc $ca.Cert }}
+{{- else if .Values.agones.allocator.clientCAs }}
+  {{- range $caField, $caContent := .Values.agones.allocator.clientCAs }}
+  {{ $caField }}: {{ b64enc $caContent }}
+  {{- end }}
 {{- else }}
   {{- (.Files.Glob "certs/allocator/client-ca/*").AsSecrets | nindent 2 }}
 {{- end }}
 
 ---
 # Allocation TLS certs
-{{- $cert := genSignedCert "" ($useLoadBalancerIP | ternary (list .Values.agones.allocator.http.loadBalancerIP) nil) nil 3650 $ca }}
+{{- $cert := genSignedCert "" ($useLoadBalancerIP | ternary (list .Values.agones.allocator.service.loadBalancerIP) nil) nil 3650 $ca }}
 apiVersion: v1
 kind: Secret
 type: kubernetes.io/tls
@@ -294,8 +420,8 @@ data:
   tls.crt: {{ b64enc $cert.Cert }}
   tls.key: {{ b64enc $cert.Key }}
 {{- else }}
-  tls.crt: {{ .Files.Get "certs/allocator/server.crt" | b64enc }}
-  tls.key: {{ .Files.Get "certs/allocator/server.key" | b64enc }}
+  tls.crt: {{ default (.Files.Get "certs/allocator/server.crt") .Values.agones.allocator.tlsCert | b64enc }}
+  tls.key: {{ default (.Files.Get "certs/allocator/server.key") .Values.agones.allocator.tlsKey | b64enc }}
 {{- end }}
 
 ---
@@ -314,7 +440,7 @@ data:
 {{- if .Values.agones.allocator.generateTLS }}
   tls-ca.crt: {{ b64enc $ca.Cert }}
 {{- else }}
-  tls-ca.crt: {{ .Files.Get "certs/allocator/server.crt" | b64enc }}
+  tls-ca.crt: {{ default (.Files.Get "certs/allocator/server.crt") .Values.agones.allocator.tlsCert | b64enc }}
 {{- end }}
 
 # Default allocation client secret

@@ -23,11 +23,11 @@
 #     \_/ \__,_|_|  |_|\__,_|_.__/|_|\___|___/
 #
 
-REPOSITORY ?= gcr.io/agones-images
+REPOSITORY ?= us-docker.pkg.dev/agones-images/examples
 
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_path := $(dir $(mkfile_path))
-server_tag = $(REPOSITORY)/rust-simple-server:0.9
+server_tag = $(REPOSITORY)/rust-simple-server:0.11
 
 #   _____                    _
 #  |_   _|_ _ _ __ __ _  ___| |_ ___
@@ -73,8 +73,8 @@ clean:
 clean-docker:
 	rm -rf $(project_path)sdk
 
-# check if hosted on Google Cloud Registry
-gcr-check:
+# check if hosted on Google Artifact Registry
+gar-check:
 	gcloud container images describe $(server_tag)
 
 #output the tag for this image

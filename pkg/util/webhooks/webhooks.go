@@ -67,7 +67,7 @@ func (wh *WebHook) AddHandler(path string, gk schema.GroupKind, op admissionv1.O
 			}
 		})
 	}
-	wh.logger.WithField("path", path).WithField("groupKind", gk).WithField("op", op).Info("Added webhook handler")
+	wh.logger.WithField("path", path).WithField("groupKind", gk).WithField("op", op).Debug("Added webhook handler")
 	wh.handlers[path] = append(wh.handlers[path], operationHandler{groupKind: gk, operation: op, handler: h})
 }
 
@@ -94,18 +94,20 @@ func (wh *WebHook) handle(path string, w http.ResponseWriter, r *http.Request) e
 
 			review, err = oh.handler(review)
 			if err != nil {
-				causes := make([]metav1.StatusCause, 0)
 				review.Response.Allowed = false
 				details := metav1.StatusDetails{
-					Name:   review.Request.Name,
-					Group:  review.Request.Kind.Group,
-					Kind:   review.Request.Kind.Kind,
-					Causes: causes,
+					Name:  review.Request.Name,
+					Group: review.Request.Kind.Group,
+					Kind:  review.Request.Kind.Kind,
+					Causes: []metav1.StatusCause{{
+						Type:    metav1.CauseType("InternalError"),
+						Message: err.Error(),
+					}},
 				}
 				review.Response.Result = &metav1.Status{
 					Status:  metav1.StatusFailure,
 					Message: err.Error(),
-					Reason:  metav1.StatusReasonInvalid,
+					Reason:  metav1.StatusReasonInternalError,
 					Details: &details,
 				}
 			}

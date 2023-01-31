@@ -20,6 +20,7 @@ import (
 	"agones.dev/agones/pkg/apis"
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
+	"agones.dev/agones/pkg/util/runtime"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -36,7 +37,9 @@ func ConvertAllocationRequestToGSA(in *pb.AllocationRequest) *allocationv1.GameS
 			Namespace: in.GetNamespace(),
 		},
 		Spec: allocationv1.GameServerAllocationSpec{
-			Preferred:  convertLabelSelectorsToInternalLabelSelectors(in.GetPreferredGameServerSelectors()),
+			// nolint:staticcheck
+			Preferred:  convertGameServerSelectorsToInternalGameServerSelectors(in.GetPreferredGameServerSelectors()),
+			Selectors:  convertGameServerSelectorsToInternalGameServerSelectors(in.GetGameServerSelectors()),
 			Scheduling: convertAllocationSchedulingToGSASchedulingStrategy(in.GetScheduling()),
 		},
 	}
@@ -63,8 +66,10 @@ func ConvertAllocationRequestToGSA(in *pb.AllocationRequest) *allocationv1.GameS
 		}
 	}
 
-	if ls := convertLabelSelectorToInternalLabelSelector(in.GetRequiredGameServerSelector()); ls != nil {
-		gsa.Spec.Required = *ls
+	// nolint:staticcheck
+	if selector := convertGameServerSelectorToInternalGameServerSelector(in.GetRequiredGameServerSelector()); selector != nil {
+		// nolint:staticcheck
+		gsa.Spec.Required = *selector
 	}
 	return gsa
 }
@@ -76,13 +81,12 @@ func ConvertGSAToAllocationRequest(in *allocationv1.GameServerAllocation) *pb.Al
 	}
 
 	out := &pb.AllocationRequest{
-		Namespace:                    in.GetNamespace(),
-		PreferredGameServerSelectors: convertInternalLabelSelectorsToLabelSelectors(in.Spec.Preferred),
-		Scheduling:                   convertGSASchedulingStrategyToAllocationScheduling(in.Spec.Scheduling),
+		Namespace:           in.GetNamespace(),
+		Scheduling:          convertGSASchedulingStrategyToAllocationScheduling(in.Spec.Scheduling),
+		GameServerSelectors: convertInternalLabelSelectorsToLabelSelectors(in.Spec.Selectors),
 		MultiClusterSetting: &pb.MultiClusterSetting{
 			Enabled: in.Spec.MultiClusterSetting.Enabled,
 		},
-		RequiredGameServerSelector: convertInternalLabelSelectorToLabelSelector(&in.Spec.Required),
 		Metadata: &pb.MetaPatch{
 			Labels:      in.Spec.MetaPatch.Labels,
 			Annotations: in.Spec.MetaPatch.Annotations,
@@ -94,6 +98,14 @@ func ConvertGSAToAllocationRequest(in *allocationv1.GameServerAllocation) *pb.Al
 			Labels:      in.Spec.MetaPatch.Labels,
 			Annotations: in.Spec.MetaPatch.Annotations,
 		},
+	}
+
+	l := len(out.GameServerSelectors)
+	if l > 0 {
+		// nolint:staticcheck
+		out.PreferredGameServerSelectors = out.GameServerSelectors[:l-1]
+		// nolint:staticcheck
+		out.RequiredGameServerSelector = out.GameServerSelectors[l-1]
 	}
 
 	if in.Spec.MultiClusterSetting.Enabled {
@@ -132,6 +144,62 @@ func convertLabelSelectorToInternalLabelSelector(in *pb.LabelSelector) *metav1.L
 	return &metav1.LabelSelector{MatchLabels: in.GetMatchLabels()}
 }
 
+func convertGameServerSelectorToInternalGameServerSelector(in *pb.GameServerSelector) *allocationv1.GameServerSelector {
+	if in == nil {
+		return nil
+	}
+	result := &allocationv1.GameServerSelector{
+		LabelSelector: metav1.LabelSelector{MatchLabels: in.GetMatchLabels()},
+	}
+
+	if runtime.FeatureEnabled(runtime.FeatureStateAllocationFilter) {
+		switch in.GameServerState {
+		case pb.GameServerSelector_ALLOCATED:
+			allocated := agonesv1.GameServerStateAllocated
+			result.GameServerState = &allocated
+		case pb.GameServerSelector_READY:
+			ready := agonesv1.GameServerStateReady
+			result.GameServerState = &ready
+		}
+	}
+
+	if runtime.FeatureEnabled(runtime.FeaturePlayerAllocationFilter) && in.Players != nil {
+		result.Players = &allocationv1.PlayerSelector{
+			MinAvailable: int64(in.Players.MinAvailable),
+			MaxAvailable: int64(in.Players.MaxAvailable),
+		}
+	}
+
+	return result
+}
+
+func convertInternalGameServerSelectorToGameServer(in *allocationv1.GameServerSelector) *pb.GameServerSelector {
+	if in == nil {
+		return nil
+	}
+	result := &pb.GameServerSelector{
+		MatchLabels: in.MatchLabels,
+	}
+
+	if runtime.FeatureEnabled(runtime.FeatureStateAllocationFilter) && in.GameServerState != nil {
+		switch *in.GameServerState {
+		case agonesv1.GameServerStateReady:
+			result.GameServerState = pb.GameServerSelector_READY
+		case agonesv1.GameServerStateAllocated:
+			result.GameServerState = pb.GameServerSelector_ALLOCATED
+		}
+	}
+
+	if runtime.FeatureEnabled(runtime.FeaturePlayerAllocationFilter) && in.Players != nil {
+		result.Players = &pb.PlayerSelector{
+			MinAvailable: uint64(in.Players.MinAvailable),
+			MaxAvailable: uint64(in.Players.MaxAvailable),
+		}
+	}
+
+	return result
+}
+
 func convertInternalLabelSelectorToLabelSelector(in *metav1.LabelSelector) *pb.LabelSelector {
 	if in == nil {
 		return nil
@@ -139,21 +207,21 @@ func convertInternalLabelSelectorToLabelSelector(in *metav1.LabelSelector) *pb.L
 	return &pb.LabelSelector{MatchLabels: in.MatchLabels}
 }
 
-func convertInternalLabelSelectorsToLabelSelectors(in []metav1.LabelSelector) []*pb.LabelSelector {
-	var result []*pb.LabelSelector
+func convertInternalLabelSelectorsToLabelSelectors(in []allocationv1.GameServerSelector) []*pb.GameServerSelector {
+	var result []*pb.GameServerSelector
 	for _, l := range in {
 		l := l
-		c := convertInternalLabelSelectorToLabelSelector(&l)
+		c := convertInternalGameServerSelectorToGameServer(&l)
 		result = append(result, c)
 	}
 	return result
 }
 
-func convertLabelSelectorsToInternalLabelSelectors(in []*pb.LabelSelector) []metav1.LabelSelector {
-	var result []metav1.LabelSelector
+func convertGameServerSelectorsToInternalGameServerSelectors(in []*pb.GameServerSelector) []allocationv1.GameServerSelector {
+	var result []allocationv1.GameServerSelector
 	for _, l := range in {
-		if c := convertLabelSelectorToInternalLabelSelector(l); c != nil {
-			result = append(result, *c)
+		if selector := convertGameServerSelectorToInternalGameServerSelector(l); selector != nil {
+			result = append(result, *selector)
 		}
 	}
 	return result
@@ -174,11 +242,12 @@ func ConvertGSAToAllocationResponse(in *allocationv1.GameServerAllocation) (*pb.
 		Address:        in.Status.Address,
 		NodeName:       in.Status.NodeName,
 		Ports:          convertGSAAgonesPortsToAllocationPorts(in.Status.Ports),
+		Source:         in.Status.Source,
 	}, nil
 }
 
 // ConvertAllocationResponseToGSA converts AllocationResponse to GameServerAllocation V1 (GSA)
-func ConvertAllocationResponseToGSA(in *pb.AllocationResponse) *allocationv1.GameServerAllocation {
+func ConvertAllocationResponseToGSA(in *pb.AllocationResponse, rs string) *allocationv1.GameServerAllocation {
 	if in == nil {
 		return nil
 	}
@@ -190,6 +259,7 @@ func ConvertAllocationResponseToGSA(in *pb.AllocationResponse) *allocationv1.Gam
 			Address:        in.Address,
 			NodeName:       in.NodeName,
 			Ports:          convertAllocationPortsToGSAAgonesPorts(in.Ports),
+			Source:         rs,
 		},
 	}
 	out.SetGroupVersionKind(allocationv1.SchemeGroupVersion.WithKind("GameServerAllocation"))

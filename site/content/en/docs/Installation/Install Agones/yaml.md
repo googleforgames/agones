@@ -9,8 +9,8 @@ description: >
 ### Installing Agones
 
 {{< alert title="Warning" color="warning">}}
-Installing Agones with the `install.yaml` will setup the TLS certificates stored in this repository for securing
-kubernetes webhooks communication. 
+Installing Agones with the `install.yaml` will set up the TLS certificates
+stored in this repository for securing Kubernetes webhooks communication.
 
 If you want to generate new certificates or use your own for production workloads,
 we recommend using the [helm installation]({{< relref "helm.md" >}}).
@@ -18,18 +18,20 @@ we recommend using the [helm installation]({{< relref "helm.md" >}}).
 
 ```bash
 kubectl create namespace agones-system
-kubectl apply -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/install/yaml/install.yaml
+kubectl apply --server-side -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/install/yaml/install.yaml
 ```
 
-If you want to change the parameters in the `install.yaml` file, you can use helm directly to generate a custom file locally, but make sure new parameters correspond to the [following ones](https://agones.dev/site/docs/installation/install-agones/helm/#configuration).
+To change the [configurable parameters](https://agones.dev/site/docs/installation/install-agones/helm/#configuration) in the `install.yaml` file, you can use helm directly to generate a custom file locally.
 
-Example of setting `featureGates` and `generateTLS` helm parameters in `install.yaml`:
+The following example sets the `featureGates` and `generateTLS` helm parameters in `install.yaml`:
+
 ```bash
 helm pull --untar https://agones.dev/chart/stable/agones-{{< release-version >}}.tgz && \
 cd agones && \
 helm template agones-manual --namespace agones-system  . \
   --set agones.controller.generateTLS=false \
   --set agones.allocator.generateTLS=false \
+  --set agones.allocator.generateClientTLS=false \
   --set agones.crds.cleanupOnDelete=false \
   --set agones.featureGates="PlayerTracking=true" \
   > install-custom.yaml

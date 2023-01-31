@@ -23,9 +23,9 @@
 #     \_/ \__,_|_|  |_|\__,_|_.__/|_|\___|___/
 #
 
-REPOSITORY ?= gcr.io/agones-images
+REPOSITORY ?= us-docker.pkg.dev/agones-images/examples
 
-server_tag = $(REPOSITORY)/crd-client:0.5
+server_tag = $(REPOSITORY)/crd-client:0.7
 
 #   _____                    _
 #  |_   _|_ _ _ __ __ _  ___| |_ ___
@@ -38,11 +38,11 @@ server_tag = $(REPOSITORY)/crd-client:0.5
 build:
 	docker build --tag=$(server_tag) .
 
-push:
+push: build
 	docker push $(server_tag)
 
-# check if hosted on Google Cloud Registry
-gcr-check:
+# check if hosted on Google Artifact Registry
+gar-check:
 	gcloud container images describe $(server_tag)
 
 #output the tag for this image

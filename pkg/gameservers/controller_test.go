@@ -125,10 +125,10 @@ func TestControllerSyncGameServer(t *testing.T) {
 			return true, gs, nil
 		})
 
-		ctx, cancel := agtesting.StartInformers(mocks, c.gameServerSynced, c.portAllocator.nodeSynced)
+		ctx, cancel := agtesting.StartInformers(mocks, c.gameServerSynced)
 		defer cancel()
 
-		err := c.portAllocator.syncAll()
+		err := c.portAllocator.Run(ctx)
 		assert.Nil(t, err)
 
 		err = c.syncGameServer(ctx, "default/test")
@@ -212,15 +212,42 @@ func TestControllerSyncGameServerWithDevIP(t *testing.T) {
 			return true, gs, nil
 		})
 
-		ctx, cancel := agtesting.StartInformers(mocks, c.gameServerSynced, c.portAllocator.nodeSynced)
+		ctx, cancel := agtesting.StartInformers(mocks, c.gameServerSynced)
 		defer cancel()
 
-		err := c.portAllocator.syncAll()
+		err := c.portAllocator.Run(ctx)
 		assert.Nil(t, err)
 
 		err = c.syncGameServer(ctx, "default/test")
 		assert.Nil(t, err)
 		assert.Equal(t, 1, updateCount, "update reactor should fire once")
+	})
+
+	t.Run("Allocated GameServer", func(t *testing.T) {
+		c, mocks := newFakeController()
+
+		fixture := templateDevGs.DeepCopy()
+
+		fixture.ApplyDefaults()
+		fixture.Status.State = agonesv1.GameServerStateAllocated
+
+		mocks.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			gameServers := &agonesv1.GameServerList{Items: []agonesv1.GameServer{*fixture}}
+			return true, gameServers, nil
+		})
+		mocks.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			require.Fail(t, "should not update")
+			return true, nil, nil
+		})
+
+		ctx, cancel := agtesting.StartInformers(mocks, c.gameServerSynced)
+		defer cancel()
+
+		err := c.portAllocator.Run(ctx)
+		require.NoError(t, err)
+
+		err = c.syncGameServer(ctx, "default/test")
+		require.NoError(t, err)
 	})
 
 	t.Run("When a GameServer has been deleted, the sync operation should be a noop", func(t *testing.T) {
@@ -319,6 +346,13 @@ func TestControllerWatchGameServers(t *testing.T) {
 	gsWatch.Modify(copyFixture)
 	assert.Equal(t, "default/test", <-received)
 
+	// modify a gameserver with a deletion timestamp
+	now := metav1.Now()
+	deleted := copyFixture.DeepCopy()
+	deleted.ObjectMeta.DeletionTimestamp = &now
+	gsWatch.Modify(deleted)
+	assert.Equal(t, "default/test", <-received)
+
 	podWatch.Delete(pod)
 	assert.Equal(t, "default/test", <-received)
 
@@ -343,7 +377,7 @@ func TestControllerCreationMutationHandler(t *testing.T) {
 	type expected struct {
 		responseAllowed bool
 		patches         []jsonpatch.JsonPatchOperation
-		err             string
+		nilPatch        bool
 	}
 
 	var testCases = []struct {
@@ -365,13 +399,11 @@ func TestControllerCreationMutationHandler(t *testing.T) {
 		{
 			description: "Wrong request object, err expected",
 			fixture:     "WRONG DATA",
-			expected: expected{
-				err: `error unmarshalling original GameServer json: "WRONG DATA": json: cannot unmarshal string into Go value of type v1.GameServer`,
-			},
+			expected:    expected{nilPatch: true},
 		},
 	}
 
-	c, _ := newFakeController()
+	ext := newFakeExtensions()
 
 	for _, tc := range testCases {
 		t.Run(tc.description, func(t *testing.T) {
@@ -389,10 +421,11 @@ func TestControllerCreationMutationHandler(t *testing.T) {
 				Response: &admissionv1.AdmissionResponse{Allowed: true},
 			}
 
-			result, err := c.creationMutationHandler(review)
+			result, err := ext.creationMutationHandler(review)
 
-			if err != nil && tc.expected.err != "" {
-				require.Equal(t, tc.expected.err, err.Error())
+			assert.NoError(t, err)
+			if tc.expected.nilPatch {
+				require.Nil(t, result.Response.PatchType)
 			} else {
 				assert.True(t, result.Response.Allowed)
 				assert.Equal(t, admissionv1.PatchTypeJSONPatch, *result.Response.PatchType)
@@ -419,7 +452,7 @@ func TestControllerCreationMutationHandler(t *testing.T) {
 func TestControllerCreationValidationHandler(t *testing.T) {
 	t.Parallel()
 
-	c, _ := newFakeController()
+	ext := newFakeExtensions()
 
 	t.Run("valid gameserver", func(t *testing.T) {
 		fixture := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
@@ -439,7 +472,7 @@ func TestControllerCreationValidationHandler(t *testing.T) {
 			Response: &admissionv1.AdmissionResponse{Allowed: true},
 		}
 
-		result, err := c.creationValidationHandler(review)
+		result, err := ext.creationValidationHandler(review)
 		require.NoError(t, err)
 		assert.True(t, result.Response.Allowed)
 	})
@@ -472,7 +505,7 @@ func TestControllerCreationValidationHandler(t *testing.T) {
 			Response: &admissionv1.AdmissionResponse{Allowed: true},
 		}
 
-		result, err := c.creationValidationHandler(review)
+		result, err := ext.creationValidationHandler(review)
 		require.NoError(t, err)
 		assert.False(t, result.Response.Allowed)
 		assert.Equal(t, metav1.StatusFailure, review.Response.Result.Status)
@@ -497,9 +530,9 @@ func TestControllerCreationValidationHandler(t *testing.T) {
 			Response: &admissionv1.AdmissionResponse{Allowed: true},
 		}
 
-		_, err = c.creationValidationHandler(review)
+		_, err = ext.creationValidationHandler(review)
 		if assert.Error(t, err) {
-			assert.Equal(t, `error unmarshalling original GameServer json: "WRONG DATA": json: cannot unmarshal string into Go value of type v1.GameServer`, err.Error())
+			assert.Equal(t, `error unmarshalling GameServer json after schema validation: "WRONG DATA": json: cannot unmarshal string into Go value of type v1.GameServer`, err.Error())
 		}
 	})
 }
@@ -660,9 +693,9 @@ func TestControllerSyncGameServerPortAllocationState(t *testing.T) {
 			return true, gs, nil
 		})
 
-		ctx, cancel := agtesting.StartInformers(mocks, c.gameServerSynced, c.portAllocator.nodeSynced)
+		ctx, cancel := agtesting.StartInformers(mocks, c.gameServerSynced)
 		defer cancel()
-		err := c.portAllocator.syncAll()
+		err := c.portAllocator.Run(ctx)
 		require.NoError(t, err)
 
 		result, err := c.syncGameServerPortAllocationState(ctx, fixture)
@@ -699,9 +732,9 @@ func TestControllerSyncGameServerPortAllocationState(t *testing.T) {
 			return true, gs, errors.New("update-err")
 		})
 
-		ctx, cancel := agtesting.StartInformers(mocks, c.gameServerSynced, c.portAllocator.nodeSynced)
+		ctx, cancel := agtesting.StartInformers(mocks, c.gameServerSynced)
 		defer cancel()
-		err := c.portAllocator.syncAll()
+		err := c.portAllocator.Run(ctx)
 		require.NoError(t, err)
 
 		_, err = c.syncGameServerPortAllocationState(ctx, fixture)
@@ -992,7 +1025,29 @@ func TestControllerCreateGameServerPod(t *testing.T) {
 			assert.Equal(t, "gameserver", pod.ObjectMeta.Labels[agones.GroupName+"/role"])
 			assert.Equal(t, fixture.ObjectMeta.Name, pod.ObjectMeta.Labels[agonesv1.GameServerPodLabel])
 			assert.True(t, metav1.IsControlledBy(pod, fixture))
-			gsContainer := pod.Spec.Containers[0]
+
+			// gke.MutateGameServerPod assumes that a non-empty NodeSelector / Tolerations are user
+			// intent. The generic cloudproduct that we use in unit tests does not manipulate these.
+			// So we verify using the generic cloudproduct that NodeSelector/Tolerations are empty
+			// as a change detector - if this test fails, gke.MutateGameServerPod will not work.
+			assert.Empty(t, pod.Spec.NodeSelector)
+			assert.Empty(t, pod.Spec.Tolerations)
+
+			assert.Len(t, pod.Spec.Containers, 2, "Should have a sidecar container")
+
+			sidecarContainer := pod.Spec.Containers[0]
+			assert.Equal(t, sidecarContainer.Image, c.sidecarImage)
+			assert.Equal(t, sidecarContainer.Resources.Limits.Cpu(), &c.sidecarCPULimit)
+			assert.Equal(t, sidecarContainer.Resources.Requests.Cpu(), &c.sidecarCPURequest)
+			assert.Equal(t, sidecarContainer.Resources.Limits.Memory(), &c.sidecarMemoryLimit)
+			assert.Equal(t, sidecarContainer.Resources.Requests.Memory(), &c.sidecarMemoryRequest)
+			assert.Len(t, sidecarContainer.Env, 3, "3 env vars")
+			assert.Equal(t, "GAMESERVER_NAME", sidecarContainer.Env[0].Name)
+			assert.Equal(t, fixture.ObjectMeta.Name, sidecarContainer.Env[0].Value)
+			assert.Equal(t, "POD_NAMESPACE", sidecarContainer.Env[1].Name)
+			assert.Equal(t, "FEATURE_GATES", sidecarContainer.Env[2].Name)
+
+			gsContainer := pod.Spec.Containers[1]
 			assert.Equal(t, fixture.Spec.Ports[0].HostPort, gsContainer.Ports[0].HostPort)
 			assert.Equal(t, fixture.Spec.Ports[0].ContainerPort, gsContainer.Ports[0].ContainerPort)
 			assert.Equal(t, corev1.Protocol("UDP"), gsContainer.Ports[0].Protocol)
@@ -1002,22 +1057,8 @@ func TestControllerCreateGameServerPod(t *testing.T) {
 			assert.Equal(t, fixture.Spec.Health.InitialDelaySeconds, gsContainer.LivenessProbe.InitialDelaySeconds)
 			assert.Equal(t, fixture.Spec.Health.PeriodSeconds, gsContainer.LivenessProbe.PeriodSeconds)
 			assert.Equal(t, fixture.Spec.Health.FailureThreshold, gsContainer.LivenessProbe.FailureThreshold)
-
-			assert.Len(t, pod.Spec.Containers, 2, "Should have a sidecar container")
-
-			assert.Len(t, pod.Spec.Containers[0].VolumeMounts, 1)
-			assert.Equal(t, "/var/run/secrets/kubernetes.io/serviceaccount", pod.Spec.Containers[0].VolumeMounts[0].MountPath)
-
-			assert.Equal(t, pod.Spec.Containers[1].Image, c.sidecarImage)
-			assert.Equal(t, pod.Spec.Containers[1].Resources.Limits.Cpu(), &c.sidecarCPULimit)
-			assert.Equal(t, pod.Spec.Containers[1].Resources.Requests.Cpu(), &c.sidecarCPURequest)
-			assert.Equal(t, pod.Spec.Containers[1].Resources.Limits.Memory(), &c.sidecarMemoryLimit)
-			assert.Equal(t, pod.Spec.Containers[1].Resources.Requests.Memory(), &c.sidecarMemoryRequest)
-			assert.Len(t, pod.Spec.Containers[1].Env, 3, "3 env vars")
-			assert.Equal(t, "GAMESERVER_NAME", pod.Spec.Containers[1].Env[0].Name)
-			assert.Equal(t, fixture.ObjectMeta.Name, pod.Spec.Containers[1].Env[0].Value)
-			assert.Equal(t, "POD_NAMESPACE", pod.Spec.Containers[1].Env[1].Name)
-			assert.Equal(t, "FEATURE_GATES", pod.Spec.Containers[1].Env[2].Name)
+			assert.Len(t, gsContainer.VolumeMounts, 1)
+			assert.Equal(t, "/var/run/secrets/kubernetes.io/serviceaccount", gsContainer.VolumeMounts[0].MountPath)
 
 			return true, pod, nil
 		})
@@ -1127,6 +1168,7 @@ func TestControllerSyncGameServerRequestReadyState(t *testing.T) {
 		}
 
 		gsUpdated := false
+		podUpdated := false
 
 		m.KubeClient.AddReactor("list", "pods", func(action k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &corev1.PodList{Items: []corev1.Pod{*pod}}, nil
@@ -1139,6 +1181,13 @@ func TestControllerSyncGameServerRequestReadyState(t *testing.T) {
 			assert.Equal(t, containerID, gs.Annotations[agonesv1.GameServerReadyContainerIDAnnotation])
 			return true, gs, nil
 		})
+		m.KubeClient.AddReactor("update", "pods", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			podUpdated = true
+			ua := action.(k8stesting.UpdateAction)
+			pod := ua.GetObject().(*corev1.Pod)
+			assert.Equal(t, containerID, pod.Annotations[agonesv1.GameServerReadyContainerIDAnnotation])
+			return true, pod, nil
+		})
 
 		ctx, cancel := agtesting.StartInformers(m, c.podSynced)
 		defer cancel()
@@ -1146,11 +1195,12 @@ func TestControllerSyncGameServerRequestReadyState(t *testing.T) {
 		gs, err := c.syncGameServerRequestReadyState(ctx, gsFixture)
 		assert.NoError(t, err, "should not error")
 		assert.True(t, gsUpdated, "GameServer wasn't updated")
+		assert.True(t, podUpdated, "Pod wasn't updated")
 		assert.Equal(t, agonesv1.GameServerStateReady, gs.Status.State)
 		agtesting.AssertEventContains(t, m.FakeRecorder.Events, "SDK.Ready() complete")
 	})
 
-	t.Run("Error on update", func(t *testing.T) {
+	t.Run("Error on GameServer update", func(t *testing.T) {
 		c, m := newFakeController()
 
 		gsFixture := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
@@ -1166,6 +1216,7 @@ func TestControllerSyncGameServerRequestReadyState(t *testing.T) {
 				ContainerID: containerID,
 			},
 		}
+		podUpdated := false
 
 		m.KubeClient.AddReactor("list", "pods", func(action k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &corev1.PodList{Items: []corev1.Pod{*pod}}, nil
@@ -1177,14 +1228,111 @@ func TestControllerSyncGameServerRequestReadyState(t *testing.T) {
 			assert.Equal(t, containerID, gs.Annotations[agonesv1.GameServerReadyContainerIDAnnotation])
 			return true, gs, errors.New("update-err")
 		})
+		m.KubeClient.AddReactor("update", "pods", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			podUpdated = true
+			ua := action.(k8stesting.UpdateAction)
+			pod := ua.GetObject().(*corev1.Pod)
+			assert.Equal(t, containerID, pod.Annotations[agonesv1.GameServerReadyContainerIDAnnotation])
+			return true, pod, nil
+		})
 
 		ctx, cancel := agtesting.StartInformers(m, c.podSynced)
 		defer cancel()
 
 		_, err = c.syncGameServerRequestReadyState(ctx, gsFixture)
-		if assert.Error(t, err) {
-			assert.Equal(t, `error setting Ready, Port and address on GameServer test Status: update-err`, err.Error())
+		assert.True(t, podUpdated, "pod was not updated")
+		require.EqualError(t, err, "error setting Ready, Port and address on GameServer test Status: update-err")
+	})
+
+	t.Run("Error on pod update", func(t *testing.T) {
+		c, m := newFakeController()
+
+		gsFixture := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
+			Spec: newSingleContainerSpec(), Status: agonesv1.GameServerStatus{State: agonesv1.GameServerStateRequestReady}}
+		gsFixture.ApplyDefaults()
+		gsFixture.Status.NodeName = nodeName
+		pod, err := gsFixture.Pod()
+		require.NoError(t, err)
+		pod.Status.ContainerStatuses = []corev1.ContainerStatus{
+			{
+				Name:        gsFixture.Spec.Container,
+				State:       corev1.ContainerState{Running: &corev1.ContainerStateRunning{}},
+				ContainerID: containerID,
+			},
 		}
+		gsUpdated := false
+		podUpdated := false
+
+		m.KubeClient.AddReactor("list", "pods", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			return true, &corev1.PodList{Items: []corev1.Pod{*pod}}, nil
+		})
+		m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			gsUpdated = true
+			return true, nil, nil
+		})
+		m.KubeClient.AddReactor("update", "pods", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			podUpdated = true
+			ua := action.(k8stesting.UpdateAction)
+			pod := ua.GetObject().(*corev1.Pod)
+			assert.Equal(t, containerID, pod.Annotations[agonesv1.GameServerReadyContainerIDAnnotation])
+			return true, pod, errors.New("pod-error")
+		})
+
+		ctx, cancel := agtesting.StartInformers(m, c.podSynced)
+		defer cancel()
+
+		_, err = c.syncGameServerRequestReadyState(ctx, gsFixture)
+		assert.True(t, podUpdated, "pod was not updated")
+		assert.False(t, gsUpdated, "GameServer was updated")
+		require.EqualError(t, err, "error updating ready annotation on Pod: test: pod-error")
+	})
+
+	t.Run("Pod annotation already set", func(t *testing.T) {
+		c, m := newFakeController()
+
+		gsFixture := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
+			Spec: newSingleContainerSpec(), Status: agonesv1.GameServerStatus{State: agonesv1.GameServerStateRequestReady}}
+		gsFixture.ApplyDefaults()
+		gsFixture.Status.NodeName = nodeName
+		pod, err := gsFixture.Pod()
+		require.NoError(t, err)
+		pod.ObjectMeta.Annotations = map[string]string{agonesv1.GameServerReadyContainerIDAnnotation: containerID}
+		pod.Status.ContainerStatuses = []corev1.ContainerStatus{
+			{
+				Name:        gsFixture.Spec.Container,
+				State:       corev1.ContainerState{Running: &corev1.ContainerStateRunning{}},
+				ContainerID: containerID,
+			},
+		}
+		gsUpdated := false
+		podUpdated := false
+
+		m.KubeClient.AddReactor("list", "pods", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			return true, &corev1.PodList{Items: []corev1.Pod{*pod}}, nil
+		})
+		m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			gsUpdated = true
+			ua := action.(k8stesting.UpdateAction)
+			gs := ua.GetObject().(*agonesv1.GameServer)
+			assert.Equal(t, agonesv1.GameServerStateReady, gs.Status.State)
+			assert.Equal(t, containerID, gs.Annotations[agonesv1.GameServerReadyContainerIDAnnotation])
+			return true, gs, nil
+		})
+		m.KubeClient.AddReactor("update", "pods", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			podUpdated = true
+			return true, nil, nil
+		})
+
+		ctx, cancel := agtesting.StartInformers(m, c.podSynced)
+		defer cancel()
+
+		gs, err := c.syncGameServerRequestReadyState(ctx, gsFixture)
+		assert.NoError(t, err, "should not error")
+		assert.True(t, gsUpdated, "GameServer wasn't updated")
+		assert.False(t, podUpdated, "Pod was updated")
+		assert.Equal(t, agonesv1.GameServerStateReady, gs.Status.State)
+		agtesting.AssertEventContains(t, m.FakeRecorder.Events, "SDK.Ready() complete")
+
 	})
 
 	t.Run("GameServer without an Address, but RequestReady State", func(t *testing.T) {
@@ -1204,6 +1352,7 @@ func TestControllerSyncGameServerRequestReadyState(t *testing.T) {
 			},
 		}
 		gsUpdated := false
+		podUpdated := false
 
 		ipFixture := "12.12.12.12"
 		nodeFixture := corev1.Node{ObjectMeta: metav1.ObjectMeta{Name: nodeFixtureName}, Status: corev1.NodeStatus{Addresses: []corev1.NodeAddress{{Address: ipFixture, Type: corev1.NodeExternalIP}}}}
@@ -1223,6 +1372,13 @@ func TestControllerSyncGameServerRequestReadyState(t *testing.T) {
 			assert.Equal(t, containerID, gs.Annotations[agonesv1.GameServerReadyContainerIDAnnotation])
 			return true, gs, nil
 		})
+		m.KubeClient.AddReactor("update", "pods", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			podUpdated = true
+			ua := action.(k8stesting.UpdateAction)
+			pod := ua.GetObject().(*corev1.Pod)
+			assert.Equal(t, containerID, pod.Annotations[agonesv1.GameServerReadyContainerIDAnnotation])
+			return true, pod, nil
+		})
 
 		ctx, cancel := agtesting.StartInformers(m, c.podSynced, c.nodeSynced)
 		defer cancel()
@@ -1230,6 +1386,7 @@ func TestControllerSyncGameServerRequestReadyState(t *testing.T) {
 		gs, err := c.syncGameServerRequestReadyState(ctx, gsFixture)
 		assert.Nil(t, err, "should not error")
 		assert.True(t, gsUpdated, "GameServer wasn't updated")
+		assert.True(t, podUpdated, "Pod wasn't updated")
 		assert.Equal(t, agonesv1.GameServerStateReady, gs.Status.State)
 
 		assert.Equal(t, gs.Status.NodeName, nodeFixture.ObjectMeta.Name)
@@ -1257,6 +1414,7 @@ func TestControllerSyncGameServerRequestReadyState(t *testing.T) {
 		}
 		assert.Nil(t, err)
 		gsUpdated := false
+		podUpdated := false
 
 		m.KubeClient.AddReactor("list", "pods", func(action k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &corev1.PodList{Items: []corev1.Pod{*pod}}, nil
@@ -1270,6 +1428,13 @@ func TestControllerSyncGameServerRequestReadyState(t *testing.T) {
 
 			return true, gs, nil
 		})
+		m.KubeClient.AddReactor("update", "pods", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			podUpdated = true
+			ua := action.(k8stesting.UpdateAction)
+			pod := ua.GetObject().(*corev1.Pod)
+			assert.NotEqual(t, containerID, pod.Annotations[agonesv1.GameServerReadyContainerIDAnnotation])
+			return true, pod, nil
+		})
 
 		ctx, cancel := agtesting.StartInformers(m, c.podSynced)
 		defer cancel()
@@ -1277,6 +1442,7 @@ func TestControllerSyncGameServerRequestReadyState(t *testing.T) {
 		gs, err := c.syncGameServerRequestReadyState(ctx, gsFixture)
 		assert.NoError(t, err, "should not error")
 		assert.True(t, gsUpdated, "GameServer wasn't updated")
+		assert.True(t, podUpdated, "Pod wasn't updated")
 		assert.Equal(t, agonesv1.GameServerStateReady, gs.Status.State)
 		agtesting.AssertEventContains(t, m.FakeRecorder.Events, "SDK.Ready() complete")
 	})
@@ -1301,12 +1467,17 @@ func TestControllerSyncGameServerRequestReadyState(t *testing.T) {
 		pod.Status.ContainerStatuses = []corev1.ContainerStatus{{Name: gsFixture.Spec.Container}}
 		assert.Nil(t, err)
 		gsUpdated := false
+		podUpdated := false
 
 		m.KubeClient.AddReactor("list", "pods", func(action k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &corev1.PodList{Items: []corev1.Pod{*pod}}, nil
 		})
 		m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
 			gsUpdated = true
+			return true, nil, nil
+		})
+		m.KubeClient.AddReactor("update", "pods", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			podUpdated = true
 			return true, nil, nil
 		})
 
@@ -1316,6 +1487,7 @@ func TestControllerSyncGameServerRequestReadyState(t *testing.T) {
 		_, err = c.syncGameServerRequestReadyState(ctx, gsFixture)
 		assert.EqualError(t, err, "game server container for GameServer test in namespace default is not currently running, try again")
 		assert.False(t, gsUpdated, "GameServer was updated")
+		assert.False(t, podUpdated, "Pod was updated")
 	})
 
 	t.Run("GameServer with non zero deletion datetime", func(t *testing.T) {
@@ -1775,14 +1947,18 @@ func testWithNonZeroDeletionTimestamp(t *testing.T, f func(*Controller, *agonesv
 // newFakeController returns a controller, backed by the fake Clientset
 func newFakeController() (*Controller, agtesting.Mocks) {
 	m := agtesting.NewMocks()
-	wh := webhooks.NewWebHook(http.NewServeMux())
-	c := NewController(wh, healthcheck.NewHandler(),
+	c := NewController(healthcheck.NewHandler(),
 		10, 20, "sidecar:dev", false,
 		resource.MustParse("0.05"), resource.MustParse("0.1"),
 		resource.MustParse("50Mi"), resource.MustParse("100Mi"), "sdk-service-account",
 		m.KubeClient, m.KubeInformerFactory, m.ExtClient, m.AgonesClient, m.AgonesInformerFactory)
 	c.recorder = m.FakeRecorder
 	return c, m
+}
+
+// newFakeExtensions return a fake extensions struct
+func newFakeExtensions() *Extensions {
+	return NewExtensions(webhooks.NewWebHook(http.NewServeMux()))
 }
 
 func newSingleContainerSpec() agonesv1.GameServerSpec {

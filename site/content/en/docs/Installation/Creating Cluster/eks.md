@@ -4,7 +4,7 @@ linkTitle: "Amazon Web Services"
 weight: 20
 description: >
   Follow these steps to create an [Amazon Elastic Kubernetes Service (EKS)](https://aws.amazon.com/eks/)
-  cluster for your Agones install.  
+  cluster for your Agones install.
 ---
 
 Create your EKS Cluster using the [Getting Started Guide](https://docs.aws.amazon.com/eks/latest/userguide/getting-started.html).
@@ -23,13 +23,12 @@ eksctl create cluster \
 --node-type t3.medium \
 --nodes 3 \
 --nodes-min 3 \
---nodes-max 4 \
---node-ami auto
+--nodes-max 4
 ```
 
 {{< alert title="Note" color="info">}}
 EKS does not use the normal Kubernetes networking since it
-is [incompatible with Amazon VPC networking](https://itnext.io/kubernetes-is-hard-why-eks-makes-it-easier-for-network-and-security-architects-ea6d8b2ca965).
+is <a href="https://itnext.io/kubernetes-is-hard-why-eks-makes-it-easier-for-network-and-security-architects-ea6d8b2ca965">incompatible with Amazon VPC networking</a>.
 {{< /alert >}}
 
 ## Allowing UDP Traffic

@@ -49,7 +49,7 @@ variable "crd_cleanup" {
 }
 
 variable "image_registry" {
-  default = "gcr.io/agones-images"
+  default = "us-docker.pkg.dev/agones-images/release"
 }
 
 variable "pull_policy" {
@@ -83,4 +83,8 @@ variable "gameserver_maxPort" {
 variable "gameserver_namespaces" {
   default = ["default"]
   type    = list(string)
+}
+
+variable "load_balancer_ip" {
+  default = ""
 }

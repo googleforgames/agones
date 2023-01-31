@@ -14,10 +14,10 @@
 
 
 // Run:
-//  terraform apply [-var agones_version="1.3.0"]
+//  terraform apply [-var agones_version="1.17.0"]
 
 terraform {
-  required_version = ">= 0.12.26"
+  required_version = ">= 1.0.0"
 }
 
 // Install latest version of agones
@@ -66,6 +66,10 @@ variable "resource_group_name" {
 }
 
 module "aks_cluster" {
+  // ***************************************************************************************************
+  // Update ?ref= to the agones release you are installing. For example, ?ref=release-1.17.0 corresponds
+  // to Agones version 1.17.0
+  // ***************************************************************************************************
   source = "git::https://github.com/googleforgames/agones.git//install/terraform/modules/aks/?ref=main"
 
   client_id               = var.client_id
@@ -79,6 +83,10 @@ module "aks_cluster" {
 }
 
 module "helm_agones" {
+  // ***************************************************************************************************
+  // Update ?ref= to the agones release you are installing. For example, ?ref=release-1.17.0 corresponds
+  // to Agones version 1.17.0
+  // ***************************************************************************************************
   source = "git::https://github.com/googleforgames/agones.git//install/terraform/modules/helm3/?ref=main"
 
   agones_version         = var.agones_version

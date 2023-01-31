@@ -35,10 +35,10 @@ type Config struct {
 
 	// Username and password for basic authentication
 	Username string
-	Password string
+	Password string `datapolicy:"password"`
 
 	// Bearer token for authentication
-	BearerToken string
+	BearerToken string `datapolicy:"token"`
 
 	// Path to a file containing a BearerToken.
 	// If set, the contents are periodically read.
@@ -68,9 +68,13 @@ type Config struct {
 	WrapTransport WrapperFunc
 
 	// Dial specifies the dial function for creating unencrypted TCP connections.
+	// If specified, this transport will be non-cacheable unless DialHolder is also set.
 	Dial func(ctx context.Context, network, address string) (net.Conn, error)
+	// DialHolder can be populated to make transport configs cacheable.
+	// If specified, DialHolder.Dial must be equal to Dial.
+	DialHolder *DialHolder
 
-	// Proxy is the the proxy func to be used for all requests made by this
+	// Proxy is the proxy func to be used for all requests made by this
 	// transport. If Proxy is nil, http.ProxyFromEnvironment is used. If Proxy
 	// returns a nil *URL, no proxy is used.
 	//
@@ -78,10 +82,17 @@ type Config struct {
 	Proxy func(*http.Request) (*url.URL, error)
 }
 
+// DialHolder is used to make the wrapped function comparable so that it can be used as a map key.
+type DialHolder struct {
+	Dial func(ctx context.Context, network, address string) (net.Conn, error)
+}
+
 // ImpersonationConfig has all the available impersonation options
 type ImpersonationConfig struct {
 	// UserName matches user.Info.GetName()
 	UserName string
+	// UID matches user.Info.GetUID()
+	UID string
 	// Groups matches user.Info.GetGroups()
 	Groups []string
 	// Extra matches user.Info.GetExtra()
@@ -108,7 +119,7 @@ func (c *Config) HasCertAuth() bool {
 	return (len(c.TLS.CertData) != 0 || len(c.TLS.CertFile) != 0) && (len(c.TLS.KeyData) != 0 || len(c.TLS.KeyFile) != 0)
 }
 
-// HasCertCallbacks returns whether the configuration has certificate callback or not.
+// HasCertCallback returns whether the configuration has certificate callback or not.
 func (c *Config) HasCertCallback() bool {
 	return c.TLS.GetCert != nil
 }
@@ -141,5 +152,15 @@ type TLSConfig struct {
 	// To use only http/1.1, set to ["http/1.1"].
 	NextProtos []string
 
-	GetCert func() (*tls.Certificate, error) // Callback that returns a TLS client certificate. CertData, CertFile, KeyData and KeyFile supercede this field.
+	// Callback that returns a TLS client certificate. CertData, CertFile, KeyData and KeyFile supercede this field.
+	// If specified, this transport is non-cacheable unless CertHolder is populated.
+	GetCert func() (*tls.Certificate, error)
+	// CertHolder can be populated to make transport configs that set GetCert cacheable.
+	// If set, CertHolder.GetCert must be equal to GetCert.
+	GetCertHolder *GetCertHolder
+}
+
+// GetCertHolder is used to make the wrapped function comparable so that it can be used as a map key.
+type GetCertHolder struct {
+	GetCert func() (*tls.Certificate, error)
 }

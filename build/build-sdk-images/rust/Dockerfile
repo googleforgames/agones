@@ -14,7 +14,7 @@
 ARG BASE_IMAGE=agones-build-sdk-base:latest
 FROM $BASE_IMAGE
 
-RUN apt-get update && \
+RUN apt-get --allow-releaseinfo-change update && \
     apt-get install -y wget && \
     apt-get clean
 
@@ -22,7 +22,7 @@ RUN apt-get update && \
 ENV RUSTUP_HOME=/usr/local/rustup \
     CARGO_HOME=/usr/local/cargo \
     PATH=/usr/local/cargo/bin:$PATH \
-    RUST_VERSION=1.51.0
+    RUST_VERSION=1.61.0
 RUN wget -q https://static.rust-lang.org/rustup/dist/x86_64-unknown-linux-gnu/rustup-init && \
     chmod +x rustup-init && \
     ./rustup-init -y --no-modify-path --default-toolchain $RUST_VERSION && \

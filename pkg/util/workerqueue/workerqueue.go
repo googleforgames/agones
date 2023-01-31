@@ -70,6 +70,8 @@ type Handler func(context.Context, string) error
 // WorkerQueue is an opinionated queue + worker for use
 // with controllers and related and processing Kubernetes watched
 // events and synchronising resources
+//
+//nolint:govet // ignore fieldalignment, singleton
 type WorkerQueue struct {
 	logger  *logrus.Entry
 	keyName string

@@ -40,3 +40,13 @@ These are all examples of simple game server implementations, that integrate the
 - {{< ghlink href="examples/crd-client" >}}Agones API Usage Example{{< /ghlink >}} (Go) -
   This service provides an example of using the [Agones API](https://pkg.go.dev/agones.dev/agones/pkg/client/clientset/versioned/typed/agones/v1)
   to create a GameServer.
+
+## Game Server Allocation
+
+- {{< ghlink href="examples/allocation-endpoint" >}}Allocation Endpoint Example{{< /ghlink >}} - An Agones clusters 
+  aware proxy, built on Google Cloud.
+
+## Integration with Open Match
+
+* [googleforgames/space-agon](https://github.com/googleforgames/space-agon) - Space Agon is a demo of Agones and 
+  Open Match with a browser based game.

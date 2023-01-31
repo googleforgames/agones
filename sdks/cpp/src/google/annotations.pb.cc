@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC All Rights Reserved.
+// Copyright 2022 Google LLC All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,10 +20,9 @@
 
 #include <algorithm>
 
-#include <google/protobuf/stubs/common.h>
 #include <google/protobuf/io/coded_stream.h>
 #include <google/protobuf/extension_set.h>
-#include <google/protobuf/wire_format_lite_inl.h>
+#include <google/protobuf/wire_format_lite.h>
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/generated_message_reflection.h>
 #include <google/protobuf/reflection_ops.h>
@@ -31,28 +30,22 @@
 // @@protoc_insertion_point(includes)
 #include <google/protobuf/port_def.inc>
 
-extern PROTOBUF_INTERNAL_EXPORT_google_2fapi_2fhttp_2eproto ::google::protobuf::internal::SCCInfo<1> scc_info_HttpRule_google_2fapi_2fhttp_2eproto;
+PROTOBUF_PRAGMA_INIT_SEG
+
+namespace _pb = ::PROTOBUF_NAMESPACE_ID;
+namespace _pbi = _pb::internal;
+
 namespace google {
 namespace api {
 }  // namespace api
 }  // namespace google
-void InitDefaults_google_2fapi_2fannotations_2eproto() {
-}
+static constexpr ::_pb::EnumDescriptor const** file_level_enum_descriptors_google_2fapi_2fannotations_2eproto = nullptr;
+static constexpr ::_pb::ServiceDescriptor const** file_level_service_descriptors_google_2fapi_2fannotations_2eproto = nullptr;
+const uint32_t TableStruct_google_2fapi_2fannotations_2eproto::offsets[1] = {};
+static constexpr ::_pbi::MigrationSchema* schemas = nullptr;
+static constexpr ::_pb::Message* const* file_default_instances = nullptr;
 
-constexpr ::google::protobuf::Metadata* file_level_metadata_google_2fapi_2fannotations_2eproto = nullptr;
-constexpr ::google::protobuf::EnumDescriptor const** file_level_enum_descriptors_google_2fapi_2fannotations_2eproto = nullptr;
-constexpr ::google::protobuf::ServiceDescriptor const** file_level_service_descriptors_google_2fapi_2fannotations_2eproto = nullptr;
-const ::google::protobuf::uint32 TableStruct_google_2fapi_2fannotations_2eproto::offsets[1] = {};
-static constexpr ::google::protobuf::internal::MigrationSchema* schemas = nullptr;
-static constexpr ::google::protobuf::Message* const* file_default_instances = nullptr;
-
-::google::protobuf::internal::AssignDescriptorsTable assign_descriptors_table_google_2fapi_2fannotations_2eproto = {
-  {}, AddDescriptors_google_2fapi_2fannotations_2eproto, "google/api/annotations.proto", schemas,
-  file_default_instances, TableStruct_google_2fapi_2fannotations_2eproto::offsets,
-  file_level_metadata_google_2fapi_2fannotations_2eproto, 0, file_level_enum_descriptors_google_2fapi_2fannotations_2eproto, file_level_service_descriptors_google_2fapi_2fannotations_2eproto,
-};
-
-const char descriptor_table_protodef_google_2fapi_2fannotations_2eproto[] =
+const char descriptor_table_protodef_google_2fapi_2fannotations_2eproto[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) =
   "\n\034google/api/annotations.proto\022\ngoogle.a"
   "pi\032\025google/api/http.proto\032 google/protob"
   "uf/descriptor.proto:E\n\004http\022\036.google.pro"
@@ -62,36 +55,36 @@ const char descriptor_table_protodef_google_2fapi_2fannotations_2eproto[] =
   "gleapis/api/annotations;annotations\242\002\004GA"
   "PIb\006proto3"
   ;
-::google::protobuf::internal::DescriptorTable descriptor_table_google_2fapi_2fannotations_2eproto = {
-  false, InitDefaults_google_2fapi_2fannotations_2eproto, 
-  descriptor_table_protodef_google_2fapi_2fannotations_2eproto,
-  "google/api/annotations.proto", &assign_descriptors_table_google_2fapi_2fannotations_2eproto, 290,
+static const ::_pbi::DescriptorTable* const descriptor_table_google_2fapi_2fannotations_2eproto_deps[2] = {
+  &::descriptor_table_google_2fapi_2fhttp_2eproto,
+  &::descriptor_table_google_2fprotobuf_2fdescriptor_2eproto,
 };
-
-void AddDescriptors_google_2fapi_2fannotations_2eproto() {
-  static constexpr ::google::protobuf::internal::InitFunc deps[2] =
-  {
-    ::AddDescriptors_google_2fapi_2fhttp_2eproto,
-    ::AddDescriptors_google_2fprotobuf_2fdescriptor_2eproto,
-  };
- ::google::protobuf::internal::AddDescriptors(&descriptor_table_google_2fapi_2fannotations_2eproto, deps, 2);
+static ::_pbi::once_flag descriptor_table_google_2fapi_2fannotations_2eproto_once;
+const ::_pbi::DescriptorTable descriptor_table_google_2fapi_2fannotations_2eproto = {
+    false, false, 290, descriptor_table_protodef_google_2fapi_2fannotations_2eproto,
+    "google/api/annotations.proto",
+    &descriptor_table_google_2fapi_2fannotations_2eproto_once, descriptor_table_google_2fapi_2fannotations_2eproto_deps, 2, 0,
+    schemas, file_default_instances, TableStruct_google_2fapi_2fannotations_2eproto::offsets,
+    nullptr, file_level_enum_descriptors_google_2fapi_2fannotations_2eproto,
+    file_level_service_descriptors_google_2fapi_2fannotations_2eproto,
+};
+PROTOBUF_ATTRIBUTE_WEAK const ::_pbi::DescriptorTable* descriptor_table_google_2fapi_2fannotations_2eproto_getter() {
+  return &descriptor_table_google_2fapi_2fannotations_2eproto;
 }
 
 // Force running AddDescriptors() at dynamic initialization time.
-static bool dynamic_init_dummy_google_2fapi_2fannotations_2eproto = []() { AddDescriptors_google_2fapi_2fannotations_2eproto(); return true; }();
+PROTOBUF_ATTRIBUTE_INIT_PRIORITY2 static ::_pbi::AddDescriptorsRunner dynamic_init_dummy_google_2fapi_2fannotations_2eproto(&descriptor_table_google_2fapi_2fannotations_2eproto);
 namespace google {
 namespace api {
-::google::protobuf::internal::ExtensionIdentifier< ::google::protobuf::MethodOptions,
-    ::google::protobuf::internal::MessageTypeTraits< ::google::api::HttpRule >, 11, false >
-  http(kHttpFieldNumber, *::google::api::HttpRule::internal_default_instance());
+PROTOBUF_ATTRIBUTE_INIT_PRIORITY2 ::PROTOBUF_NAMESPACE_ID::internal::ExtensionIdentifier< ::PROTOBUF_NAMESPACE_ID::MethodOptions,
+    ::PROTOBUF_NAMESPACE_ID::internal::MessageTypeTraits< ::google::api::HttpRule >, 11, false>
+  http(kHttpFieldNumber, ::google::api::HttpRule::default_instance(), nullptr);
 
 // @@protoc_insertion_point(namespace_scope)
 }  // namespace api
 }  // namespace google
-namespace google {
-namespace protobuf {
-}  // namespace protobuf
-}  // namespace google
+PROTOBUF_NAMESPACE_OPEN
+PROTOBUF_NAMESPACE_CLOSE
 
 // @@protoc_insertion_point(global_scope)
 #include <google/protobuf/port_undef.inc>

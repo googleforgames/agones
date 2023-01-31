@@ -15,7 +15,6 @@ digraph {
     Allocated
     Shutdown
     Unhealthy
-    Allocated
     Deleted [ label = "game server deleted" ]
 
     Created -> PortAllocation [ label ="has any port\nwith dynamic policy", color="red" ]

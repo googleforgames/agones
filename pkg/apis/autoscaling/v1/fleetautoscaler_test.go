@@ -17,6 +17,7 @@ package v1
 import (
 	"testing"
 
+	"agones.dev/agones/pkg/util/runtime"
 	"github.com/stretchr/testify/assert"
 	admregv1 "k8s.io/api/admissionregistration/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -111,6 +112,21 @@ func TestFleetAutoscalerValidateUpdate(t *testing.T) {
 
 		assert.Len(t, causes, 1)
 		assert.Equal(t, "minReplicas", causes[0].Field)
+	})
+
+	t.Run("bad sync interval seconds", func(t *testing.T) {
+		if !runtime.FeatureEnabled(runtime.FeatureCustomFasSyncInterval) {
+			// Do not run test if FeatureCustomFasSyncInterval is not enabled
+			t.Skip()
+		}
+
+		fas := defaultFixture()
+		fas.Spec.Sync.FixedInterval.Seconds = 0
+
+		causes := fas.Validate(nil)
+
+		assert.Len(t, causes, 1)
+		assert.Equal(t, "seconds", causes[0].Field)
 	})
 }
 func TestFleetAutoscalerWebhookValidateUpdate(t *testing.T) {
@@ -223,6 +239,12 @@ func customFixture(t FleetAutoscalerPolicyType) *FleetAutoscaler {
 				Buffer: &BufferPolicy{
 					BufferSize:  intstr.FromInt(5),
 					MaxReplicas: 10,
+				},
+			},
+			Sync: &FleetAutoscalerSync{
+				Type: FixedIntervalSyncType,
+				FixedInterval: FixedIntervalSync{
+					Seconds: 30,
 				},
 			},
 		},

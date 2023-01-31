@@ -25,9 +25,11 @@ import (
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
 	multiclusterv1 "agones.dev/agones/pkg/apis/multicluster/v1"
+	"agones.dev/agones/pkg/util/runtime"
 	e2e "agones.dev/agones/test/e2e/framework"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/uuid"
@@ -49,24 +51,219 @@ func TestCreateFleetAndGameServerAllocate(t *testing.T) {
 			fleet := defaultFleet(framework.Namespace)
 			fleet.Spec.Scheduling = strategy
 			flt, err := fleets.Create(ctx, fleet, metav1.CreateOptions{})
+			if strategy != apis.Packed && framework.CloudProduct == "gke-autopilot" {
+				// test that Autopilot rejects anything but Packed and skip the rest of the test
+				assert.ErrorContains(t, err, "configuration is invalid")
+				return
+			}
 			if assert.NoError(t, err) {
 				defer fleets.Delete(ctx, flt.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
 			}
 
 			framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 
-			gsa := &allocationv1.GameServerAllocation{
-				Spec: allocationv1.GameServerAllocationSpec{
+			gsaList := []*allocationv1.GameServerAllocation{
+				{Spec: allocationv1.GameServerAllocationSpec{
 					Scheduling: strategy,
-					Required:   metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}},
-				}}
+					Selectors:  []allocationv1.GameServerSelector{{LabelSelector: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}}}}},
+				},
+				{Spec: allocationv1.GameServerAllocationSpec{
+					Scheduling: strategy,
+					Required:   allocationv1.GameServerSelector{LabelSelector: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}}}},
+				},
+			}
 
-			gsa, err = framework.AgonesClient.AllocationV1().GameServerAllocations(fleet.ObjectMeta.Namespace).Create(ctx, gsa, metav1.CreateOptions{})
-			if assert.NoError(t, err) {
-				assert.Equal(t, string(allocationv1.GameServerAllocationAllocated), string(gsa.Status.State))
+			for _, gsa := range gsaList {
+				gsa, err = framework.AgonesClient.AllocationV1().GameServerAllocations(fleet.ObjectMeta.Namespace).Create(ctx, gsa, metav1.CreateOptions{})
+				if assert.NoError(t, err) {
+					assert.Equal(t, string(allocationv1.GameServerAllocationAllocated), string(gsa.Status.State))
+				}
 			}
 		})
 	}
+}
+
+func TestCreateFleetAndGameServerStateFilterAllocation(t *testing.T) {
+	if !runtime.FeatureEnabled(runtime.FeatureStateAllocationFilter) {
+		t.SkipNow()
+	}
+	t.Parallel()
+
+	fleets := framework.AgonesClient.AgonesV1().Fleets(framework.Namespace)
+	fleet := defaultFleet(framework.Namespace)
+	ctx := context.Background()
+
+	flt, err := fleets.Create(ctx, fleet, metav1.CreateOptions{})
+	require.NoError(t, err)
+	defer fleets.Delete(ctx, flt.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
+
+	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
+
+	fleetSelector := metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}}
+	gsa := &allocationv1.GameServerAllocation{
+		Spec: allocationv1.GameServerAllocationSpec{
+			Selectors: []allocationv1.GameServerSelector{{LabelSelector: fleetSelector}},
+		}}
+
+	// standard allocation
+	gsa, err = framework.AgonesClient.AllocationV1().GameServerAllocations(fleet.ObjectMeta.Namespace).Create(ctx, gsa, metav1.CreateOptions{})
+	require.NoError(t, err)
+	assert.Equal(t, string(allocationv1.GameServerAllocationAllocated), string(gsa.Status.State))
+
+	gs1, err := framework.AgonesClient.AgonesV1().GameServers(fleet.ObjectMeta.Namespace).Get(ctx, gsa.Status.GameServerName, metav1.GetOptions{})
+	require.NoError(t, err)
+	assert.Equal(t, agonesv1.GameServerStateAllocated, gs1.Status.State)
+	assert.NotNil(t, gs1.ObjectMeta.Annotations["agones.dev/last-allocated"])
+
+	// now let's get it back again
+	gsa = gsa.DeepCopy()
+	allocated := agonesv1.GameServerStateAllocated
+	gsa.Spec.Selectors[0].GameServerState = &allocated
+
+	gsa, err = framework.AgonesClient.AllocationV1().GameServerAllocations(fleet.ObjectMeta.Namespace).Create(ctx, gsa, metav1.CreateOptions{})
+	require.NoError(t, err)
+	assert.Equal(t, string(allocationv1.GameServerAllocationAllocated), string(gsa.Status.State))
+	assert.Equal(t, gs1.ObjectMeta.Name, gsa.Status.GameServerName)
+
+	gs2, err := framework.AgonesClient.AgonesV1().GameServers(fleet.ObjectMeta.Namespace).Get(ctx, gsa.Status.GameServerName, metav1.GetOptions{})
+	require.NoError(t, err)
+	assert.Equal(t, agonesv1.GameServerStateAllocated, gs2.Status.State)
+
+	require.Equal(t, gs1.ObjectMeta.Name, gs2.ObjectMeta.Name)
+	require.NotEqual(t, gs1.ObjectMeta.ResourceVersion, gs2.ObjectMeta.ResourceVersion)
+	require.NotEqual(t, gs1.ObjectMeta.Annotations["agones.dev/last-allocated"], gs2.ObjectMeta.Annotations["agones.dev/last-allocated"])
+}
+
+func TestHighDensityGameServerFlow(t *testing.T) {
+	if !runtime.FeatureEnabled(runtime.FeatureStateAllocationFilter) {
+		t.SkipNow()
+	}
+	t.Parallel()
+	log := e2e.TestLogger(t)
+	ctx := context.Background()
+
+	fleets := framework.AgonesClient.AgonesV1().Fleets(framework.Namespace)
+	fleet := defaultFleet(framework.Namespace)
+	lockLabel := "agones.dev/sdk-available"
+	// to start they are all available
+	fleet.Spec.Template.ObjectMeta.Labels = map[string]string{lockLabel: "true"}
+
+	flt, err := fleets.Create(ctx, fleet, metav1.CreateOptions{})
+	require.NoError(t, err)
+	defer fleets.Delete(ctx, flt.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
+
+	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
+
+	fleetSelector := metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}}
+	allocatedSelector := fleetSelector.DeepCopy()
+
+	allocated := agonesv1.GameServerStateAllocated
+	allocatedSelector.MatchLabels[lockLabel] = "true"
+	gsa := &allocationv1.GameServerAllocation{
+		Spec: allocationv1.GameServerAllocationSpec{
+			MetaPatch: allocationv1.MetaPatch{Labels: map[string]string{lockLabel: "false"}},
+			Selectors: []allocationv1.GameServerSelector{
+				{LabelSelector: *allocatedSelector, GameServerState: &allocated},
+				{LabelSelector: fleetSelector},
+			},
+		}}
+
+	// standard allocation
+	result, err := framework.AgonesClient.AllocationV1().GameServerAllocations(fleet.ObjectMeta.Namespace).Create(ctx, gsa, metav1.CreateOptions{})
+	require.NoError(t, err)
+	require.Equal(t, string(allocationv1.GameServerAllocationAllocated), string(result.Status.State))
+
+	gs, err := framework.AgonesClient.AgonesV1().GameServers(fleet.ObjectMeta.Namespace).Get(ctx, result.Status.GameServerName, metav1.GetOptions{})
+	require.NoError(t, err)
+	require.Equal(t, allocated, gs.Status.State)
+
+	// set the label to being available again
+	_, err = framework.SendGameServerUDP(t, gs, "LABEL available true")
+	require.NoError(t, err)
+
+	// wait for the label to be applied!
+	require.Eventuallyf(t, func() bool {
+		gs, err := framework.AgonesClient.AgonesV1().GameServers(fleet.ObjectMeta.Namespace).Get(ctx, result.Status.GameServerName, metav1.GetOptions{})
+		require.NoError(t, err)
+		log.WithField("labels", gs.ObjectMeta.Labels).Info("checking labels")
+		return gs.ObjectMeta.Labels[lockLabel] == "true"
+	}, time.Minute, time.Second, "GameServer did not unlock")
+
+	// Run the same allocation again, we should get back the preferred item.
+	expected := result.Status.GameServerName
+
+	// we will run this as an Eventually, as caches are eventually consistent
+	require.Eventuallyf(t, func() bool {
+		result, err = framework.AgonesClient.AllocationV1().GameServerAllocations(fleet.ObjectMeta.Namespace).Create(ctx, gsa, metav1.CreateOptions{})
+		require.NoError(t, err)
+		require.Equal(t, string(allocationv1.GameServerAllocationAllocated), string(result.Status.State))
+
+		if expected != result.Status.GameServerName {
+			log.WithField("expected", expected).WithField("gsa", result).Info("Re-allocation attempt failed. Retrying.")
+			return false
+		}
+
+		return true
+	}, time.Minute, time.Second, "Could not re-allocation")
+}
+
+func TestCreateFleetAndGameServerPlayerCapacityAllocation(t *testing.T) {
+	if !(runtime.FeatureEnabled(runtime.FeatureStateAllocationFilter) && runtime.FeatureEnabled(runtime.FeaturePlayerAllocationFilter)) {
+		t.SkipNow()
+	}
+	t.Parallel()
+
+	fleets := framework.AgonesClient.AgonesV1().Fleets(framework.Namespace)
+	fleet := defaultFleet(framework.Namespace)
+	fleet.Spec.Template.Spec.Players = &agonesv1.PlayersSpec{InitialCapacity: 10}
+	ctx := context.Background()
+
+	flt, err := fleets.Create(ctx, fleet, metav1.CreateOptions{})
+	require.NoError(t, err)
+	defer fleets.Delete(ctx, flt.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
+
+	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
+
+	fleetSelector := metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}}
+	allocated := agonesv1.GameServerStateAllocated
+	gsa := &allocationv1.GameServerAllocation{
+		Spec: allocationv1.GameServerAllocationSpec{
+			Selectors: []allocationv1.GameServerSelector{
+				{
+					LabelSelector:   fleetSelector,
+					GameServerState: &allocated,
+					Players: &allocationv1.PlayerSelector{
+						MinAvailable: 1,
+						MaxAvailable: 99,
+					},
+				},
+				{LabelSelector: fleetSelector, Players: &allocationv1.PlayerSelector{MinAvailable: 5, MaxAvailable: 10}},
+			},
+		}}
+
+	// first try should give me a Ready->Allocated server
+	gsa, err = framework.AgonesClient.AllocationV1().GameServerAllocations(fleet.ObjectMeta.Namespace).Create(ctx, gsa.DeepCopy(), metav1.CreateOptions{})
+	require.NoError(t, err)
+	assert.Equal(t, string(allocationv1.GameServerAllocationAllocated), string(gsa.Status.State))
+
+	gs1, err := framework.AgonesClient.AgonesV1().GameServers(fleet.ObjectMeta.Namespace).Get(ctx, gsa.Status.GameServerName, metav1.GetOptions{})
+	require.NoError(t, err)
+	assert.Equal(t, agonesv1.GameServerStateAllocated, gs1.Status.State)
+	assert.NotNil(t, gs1.ObjectMeta.Annotations["agones.dev/last-allocated"])
+
+	// second try should give me the same allocated server
+	gsa, err = framework.AgonesClient.AllocationV1().GameServerAllocations(fleet.ObjectMeta.Namespace).Create(ctx, gsa.DeepCopy(), metav1.CreateOptions{})
+	require.NoError(t, err)
+	assert.Equal(t, string(allocationv1.GameServerAllocationAllocated), string(gsa.Status.State))
+	assert.Equal(t, gs1.ObjectMeta.Name, gsa.Status.GameServerName)
+
+	gs2, err := framework.AgonesClient.AgonesV1().GameServers(fleet.ObjectMeta.Namespace).Get(ctx, gsa.Status.GameServerName, metav1.GetOptions{})
+	require.NoError(t, err)
+	assert.Equal(t, agonesv1.GameServerStateAllocated, gs2.Status.State)
+
+	require.Equal(t, gs1.ObjectMeta.Name, gs2.ObjectMeta.Name)
+	require.NotEqual(t, gs1.ObjectMeta.ResourceVersion, gs2.ObjectMeta.ResourceVersion)
+	require.NotEqual(t, gs1.ObjectMeta.Annotations["agones.dev/last-allocated"], gs2.ObjectMeta.Annotations["agones.dev/last-allocated"])
 }
 
 func TestMultiClusterAllocationOnLocalCluster(t *testing.T) {
@@ -76,6 +273,9 @@ func TestMultiClusterAllocationOnLocalCluster(t *testing.T) {
 	for _, strategy := range fixtures {
 		strategy := strategy
 		t.Run(string(strategy), func(t *testing.T) {
+			if strategy == apis.Distributed {
+				framework.SkipOnCloudProduct(t, "gke-autopilot", "Autopilot does not support Distributed scheduling")
+			}
 			t.Parallel()
 			ctx := context.Background()
 
@@ -170,7 +370,7 @@ func TestMultiClusterAllocationOnLocalCluster(t *testing.T) {
 			gsa := &allocationv1.GameServerAllocation{
 				Spec: allocationv1.GameServerAllocationSpec{
 					Scheduling: strategy,
-					Required:   metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}},
+					Selectors:  []allocationv1.GameServerSelector{{LabelSelector: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}}}},
 					MultiClusterSetting: allocationv1.MultiClusterSetting{
 						Enabled: true,
 						PolicySelector: metav1.LabelSelector{
@@ -181,7 +381,6 @@ func TestMultiClusterAllocationOnLocalCluster(t *testing.T) {
 					},
 				},
 				ObjectMeta: metav1.ObjectMeta{
-					ClusterName:  "multicluster1",
 					GenerateName: "allocation-",
 					Namespace:    namespace,
 				},
@@ -214,6 +413,9 @@ func TestCreateFullFleetAndCantGameServerAllocate(t *testing.T) {
 		strategy := strategy
 
 		t.Run(string(strategy), func(t *testing.T) {
+			if strategy == apis.Distributed {
+				framework.SkipOnCloudProduct(t, "gke-autopilot", "Autopilot does not support Distributed scheduling")
+			}
 			t.Parallel()
 			ctx := context.Background()
 
@@ -230,7 +432,7 @@ func TestCreateFullFleetAndCantGameServerAllocate(t *testing.T) {
 			gsa := &allocationv1.GameServerAllocation{
 				Spec: allocationv1.GameServerAllocationSpec{
 					Scheduling: strategy,
-					Required:   metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}},
+					Selectors:  []allocationv1.GameServerSelector{{LabelSelector: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}}}},
 				}}
 
 			for i := 0; i < replicasCount; i++ {
@@ -241,7 +443,7 @@ func TestCreateFullFleetAndCantGameServerAllocate(t *testing.T) {
 				}
 			}
 
-			framework.AssertFleetCondition(t, flt, func(fleet *agonesv1.Fleet) bool {
+			framework.AssertFleetCondition(t, flt, func(log *logrus.Entry, fleet *agonesv1.Fleet) bool {
 				return fleet.Status.AllocatedReplicas == replicasCount
 			})
 
@@ -257,42 +459,61 @@ func TestGameServerAllocationMetaDataPatch(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
 
-	gs := framework.DefaultGameServer(framework.Namespace)
-	gs.ObjectMeta.Labels = map[string]string{"test": t.Name()}
+	log := logrus.WithField("test", t.Name())
+	createAndAllocate := func(input *allocationv1.GameServerAllocation) *allocationv1.GameServerAllocation {
+		gs := framework.DefaultGameServer(framework.Namespace)
+		gs.ObjectMeta.Labels = map[string]string{"test": t.Name()}
+		gs, err := framework.CreateGameServerAndWaitUntilReady(t, framework.Namespace, gs)
+		require.NoError(t, err)
 
-	gs, err := framework.CreateGameServerAndWaitUntilReady(framework.Namespace, gs)
-	if !assert.Nil(t, err) {
-		assert.FailNow(t, "could not create GameServer")
+		log.WithField("gs", gs.ObjectMeta.Name).Info("👍 created and ready")
+
+		// poll, as it may take a moment for the allocation cache to be populated
+		err = wait.PollImmediate(time.Second, 30*time.Second, func() (bool, error) {
+			input, err = framework.AgonesClient.AllocationV1().GameServerAllocations(framework.Namespace).Create(ctx, input, metav1.CreateOptions{})
+			if err != nil {
+				log.WithError(err).Info("Failed, trying again...")
+				return false, err
+			}
+
+			return allocationv1.GameServerAllocationAllocated == input.Status.State, nil
+		})
+		require.NoError(t, err)
+		return input
 	}
-	defer framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Delete(ctx, gs.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint: errcheck
 
+	// two standard labels
 	gsa := &allocationv1.GameServerAllocation{ObjectMeta: metav1.ObjectMeta{GenerateName: "allocation-"},
 		Spec: allocationv1.GameServerAllocationSpec{
-			Required: metav1.LabelSelector{MatchLabels: map[string]string{"test": t.Name()}},
+			Selectors: []allocationv1.GameServerSelector{{LabelSelector: metav1.LabelSelector{MatchLabels: map[string]string{"test": t.Name()}}}},
 			MetaPatch: allocationv1.MetaPatch{
 				Labels:      map[string]string{"red": "blue"},
 				Annotations: map[string]string{"dog": "good"},
 			},
 		}}
+	result := createAndAllocate(gsa)
+	defer framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Delete(ctx, result.Status.GameServerName, metav1.DeleteOptions{}) // nolint: errcheck
 
-	err = wait.PollImmediate(time.Second, 30*time.Second, func() (bool, error) {
-		gsa, err = framework.AgonesClient.AllocationV1().GameServerAllocations(framework.Namespace).Create(ctx, gsa.DeepCopy(), metav1.CreateOptions{})
+	gs, err := framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Get(ctx, result.Status.GameServerName, metav1.GetOptions{})
+	require.NoError(t, err)
+	assert.Equal(t, "blue", gs.ObjectMeta.Labels["red"])
+	assert.Equal(t, "good", gs.ObjectMeta.Annotations["dog"])
 
-		if err != nil {
-			return true, err
-		}
+	// use special characters that are valid
+	gsa.Spec.MetaPatch = allocationv1.MetaPatch{Labels: map[string]string{"blue-frog.fred_thing": "test"}}
+	result = createAndAllocate(gsa)
+	defer framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Delete(ctx, result.Status.GameServerName, metav1.DeleteOptions{}) // nolint: errcheck
 
-		return allocationv1.GameServerAllocationAllocated == gsa.Status.State, nil
-	})
-	if err != nil {
-		assert.FailNow(t, err.Error())
-	}
+	gs, err = framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Get(ctx, result.Status.GameServerName, metav1.GetOptions{})
+	require.NoError(t, err)
+	assert.Equal(t, "test", gs.ObjectMeta.Labels["blue-frog.fred_thing"])
 
-	gs, err = framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Get(ctx, gsa.Status.GameServerName, metav1.GetOptions{})
-	if assert.Nil(t, err) {
-		assert.Equal(t, "blue", gs.ObjectMeta.Labels["red"])
-		assert.Equal(t, "good", gs.ObjectMeta.Annotations["dog"])
-	}
+	// throw something invalid at it.
+	gsa.Spec.MetaPatch = allocationv1.MetaPatch{Labels: map[string]string{"$$$$$$$": "test"}}
+	result, err = framework.AgonesClient.AllocationV1().GameServerAllocations(framework.Namespace).Create(ctx, gsa.DeepCopy(), metav1.CreateOptions{})
+	log.WithField("result", result).WithError(err).Info("Failed allocation")
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "GameServerAllocation is invalid")
 }
 
 func TestGameServerAllocationPreferredSelection(t *testing.T) {
@@ -330,9 +551,9 @@ func TestGameServerAllocationPreferredSelection(t *testing.T) {
 
 	gsa := &allocationv1.GameServerAllocation{ObjectMeta: metav1.ObjectMeta{GenerateName: "allocation-"},
 		Spec: allocationv1.GameServerAllocationSpec{
-			Required: metav1.LabelSelector{MatchLabels: label},
-			Preferred: []metav1.LabelSelector{
-				{MatchLabels: map[string]string{agonesv1.FleetNameLabel: preferred.ObjectMeta.Name}},
+			Selectors: []allocationv1.GameServerSelector{
+				{LabelSelector: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: preferred.ObjectMeta.Name}}},
+				{LabelSelector: metav1.LabelSelector{MatchLabels: label}},
 			},
 		}}
 
@@ -395,7 +616,7 @@ func TestGameServerAllocationDeletionOnUnAllocate(t *testing.T) {
 
 	gsa := &allocationv1.GameServerAllocation{ObjectMeta: metav1.ObjectMeta{GenerateName: "allocation-"},
 		Spec: allocationv1.GameServerAllocationSpec{
-			Required: metav1.LabelSelector{MatchLabels: map[string]string{"never": "goingtohappen"}},
+			Selectors: []allocationv1.GameServerSelector{{LabelSelector: metav1.LabelSelector{MatchLabels: map[string]string{"never": "goingtohappen"}}}},
 		}}
 
 	gsa, err := allocations.Create(ctx, gsa.DeepCopy(), metav1.CreateOptions{})
@@ -429,9 +650,9 @@ func TestGameServerAllocationDuringMultipleAllocationClients(t *testing.T) {
 
 	gsa := &allocationv1.GameServerAllocation{ObjectMeta: metav1.ObjectMeta{GenerateName: "allocation-"},
 		Spec: allocationv1.GameServerAllocationSpec{
-			Required: metav1.LabelSelector{MatchLabels: label},
-			Preferred: []metav1.LabelSelector{
-				{MatchLabels: map[string]string{agonesv1.FleetNameLabel: "preferred"}},
+			Selectors: []allocationv1.GameServerSelector{
+				{LabelSelector: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: "preferred"}}},
+				{LabelSelector: metav1.LabelSelector{MatchLabels: label}},
 			},
 		}}
 
