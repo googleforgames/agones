@@ -75,6 +75,7 @@ site-test:
 
 # generate site images, if they don't exist
 site-images: $(site_path)/static/diagrams/gameserver-states.dot.png
+site-images: $(site_path)/static/diagrams/eviction-decision.dot.png
 site-images: $(site_path)/static/diagrams/gameserver-lifecycle.puml.png
 site-images: $(site_path)/static/diagrams/gameserver-reserved.puml.png
 site-images: $(site_path)/static/diagrams/canary-testing.puml.png

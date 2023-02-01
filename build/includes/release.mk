@@ -63,7 +63,7 @@ release-deploy-site: DOCKER_RUN_ARGS += -e GOFLAGS="-mod=mod" --entrypoint=/usr/
 release-deploy-site:
 	version=$$($(DOCKER_RUN) run $(mount_path)/build/scripts/previousversion/main.go -version $(base_version)) && \
 	echo "Deploying Site Version: $$version" && \
-	$(MAKE) site-deploy SERVICE=$$version
+	$(MAKE) ENV=HUGO_ENV=snapshot site-deploy SERVICE=$$version
 
 # Creates a release. Version defaults to the base_version
 # - Checks out a release branch
@@ -95,6 +95,6 @@ do-release: $(ensure-build-image)
 
 	@echo "Now go make the $(RELEASE_VERSION) release on Github!"
 
-build-release: 
+build-release:
 	cd $(agones_path) && gcloud builds submit . --substitutions _VERSION=$(base_version) --config=./build/release/cloudbuild.yaml $(ARGS)
 

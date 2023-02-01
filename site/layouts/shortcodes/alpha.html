@@ -1,6 +1,6 @@
 {{- $gate := split (.Get "gate") "," }}
 {{- $len_gate := len $gate }}
-{{- $title := .Get "title" }}
+{{- $title := .Get "title" | markdownify }}
 <div class="alert alert-warning" role="alert">
     <h4 class="alert-heading">Warning</h4>
     <p>The {{ $title }} {{- if gt $len_gate 1 }} features are{{ else }} feature is{{ end }} currently <strong><a href="{{ ref . "/docs/Guides/feature-stages.md#alpha" }}">Alpha</a></strong>,
