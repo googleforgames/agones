@@ -1,2 +1,8 @@
-{{- $version := cond (eq (getenv "HUGO_ENV") "production") $.Page.Site.Params.supported_k8s $.Page.Site.Params.dev_supported_k8s }}
-{{- $prefix := replace $version "." "-" }}https://v{{- $prefix }}.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v{{- $version }}/{{- .Get "href" }}
+<!-- $version must be assigned outside of if statement for variable scope purposes.
+  Default to "supported_k8s" version. -->
+{{- $version := $.Page.Site.Params.supported_k8s }}
+{{- if and (ne (getenv "HUGO_ENV") "production") (ne (getenv "HUGO_ENV") "snapshot")}}
+{{- $version = $.Page.Site.Params.dev_supported_k8s }}
+{{- end}}
+{{- $prefix := replace $version "." "-" }}https://v{{- $prefix
+}}.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v{{- $version }}/{{- .Get "href" -}}

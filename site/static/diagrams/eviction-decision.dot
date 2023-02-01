@@ -1,0 +1,29 @@
+digraph {
+    graph [fontname = "helvetica", ordering="out"];
+    node [fontname = "helvetica"];
+    edge [fontname = "helvetica", pad="0.2", penwidth="2"];
+
+    CanTerm [ label = "Supports TERM signal" ]
+    TenMinuteTermination [ label = "Terminates in < 10m after TERM?" ]
+    OneHourTermination [ label="Terminates in < 1h after TERM?" ]
+
+    SetAlways [label = <Set <font face="courier">safe: Always</font>>]
+    SetOnUpgrade [label = <Set <font face="courier">safe: OnUpgrade</font>>]
+    SetNever [label = <Set <font face="courier">safe: Never</font>>]
+
+    ConfigureTGPS [label = "Configure terminationGracePeriodSeconds\nto session or cleanup time"]
+    Special [label = "See Long Sessions below"]
+
+    CanTerm -> TenMinuteTermination [ label = "yes" ]
+    CanTerm -> SetNever [ label = "no" ]
+
+    TenMinuteTermination -> SetAlways [ label = "yes" ]
+    TenMinuteTermination -> OneHourTermination [ label="no" ]
+
+    OneHourTermination -> SetOnUpgrade [ label = "yes" ]
+    OneHourTermination -> SetNever [ label = "no" ]
+
+    SetAlways -> ConfigureTGPS [ label = "and" ]
+    SetOnUpgrade -> ConfigureTGPS [ label = "and" ]
+    SetNever -> Special [ label = "and" ]
+}
