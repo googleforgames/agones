@@ -64,7 +64,7 @@ KIND_CONTAINER_NAME=$(KIND_PROFILE)-control-plane
 GS_TEST_IMAGE ?= us-docker.pkg.dev/agones-images/examples/simple-game-server:0.14
 
 # Enable all alpha feature gates. Keep in sync with `false` (alpha) entries in pkg/util/runtime/features.go:featureDefaults
-ALPHA_FEATURE_GATES ?= "PlayerAllocationFilter=true&PlayerTracking=true&ResetMetricsOnDelete=true&SafeToEvict=true&PodHostname=true&Example=true"
+ALPHA_FEATURE_GATES ?= "PlayerAllocationFilter=true&PlayerTracking=true&ResetMetricsOnDelete=true&SafeToEvict=true&PodHostname=true&SplitControllerAndExtensions=true&Example=true"
 
 # Build with Windows support
 WITH_WINDOWS=1
@@ -391,7 +391,6 @@ install: LOG_LEVEL := "debug"
 install: EXTERNAL_IP ?= $(shell $(DOCKER_RUN) kubectl get services agones-allocator -n agones-system -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
 install: FEATURE_GATES ?= $(ALPHA_FEATURE_GATES)
 install: SERVICE_MONITOR := false
-install: CONTROLLER_SAFE_TO_EVICT := false # TODO(#2797): Remove when `SplitControllerAndExtensions` => safe-to-evict=true
 install: HELM_ARGS ?=
 install: $(ensure-build-image) install-custom-pull-secret
 	-$(DOCKER_RUN) bash -c '[[ $$(helm status agones -n agones-system --output json | jq -r ".info.status") =~ (failed|pending-.*) ]] && helm uninstall agones --namespace=agones-system || true'
@@ -408,7 +407,6 @@ install: $(ensure-build-image) install-custom-pull-secret
 		--set agones.featureGates=$(FEATURE_GATES) \
 		--set agones.allocator.service.loadBalancerIP=$(EXTERNAL_IP) \
 		--set agones.metrics.serviceMonitor.enabled=$(SERVICE_MONITOR) \
-		--set agones.controller.safeToEvict=$(CONTROLLER_SAFE_TO_EVICT) \
 		$(HELM_ARGS) \
 		agones $(mount_path)/install/helm/agones/
 

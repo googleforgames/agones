@@ -23,7 +23,7 @@ terraform-init: TERRAFORM_BUILD_DIR ?= $(mount_path)/build/terraform/$(DIRECTORY
 terraform-init: $(ensure-build-image)
 terraform-init:
 	docker run --rm -it $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) bash -c '\
-	cd $(TERRAFORM_BUILD_DIR) && terraform init && gcloud auth application-default login'
+	cd $(TERRAFORM_BUILD_DIR) && terraform init -backend-config="bucket=$(BUCKET)" -backend-config="prefix=$(PREFIX)" && gcloud auth application-default login'
 
 terraform-clean: TERRAFORM_BUILD_DIR ?= $(mount_path)/build/terraform/gke
 terraform-clean:
