@@ -196,7 +196,7 @@ resource "google_container_cluster" "primary" {
       }
 
       node_config {
-        image_type   = "WINDOWS_LTSC"
+        image_type   = "WINDOWS_LTSC_CONTAINERD"
         machine_type = local.windowsMachineType
 
         oauth_scopes = [
