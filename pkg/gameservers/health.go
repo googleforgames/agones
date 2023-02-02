@@ -24,7 +24,6 @@ import (
 	getterv1 "agones.dev/agones/pkg/client/clientset/versioned/typed/agones/v1"
 	"agones.dev/agones/pkg/client/informers/externalversions"
 	listerv1 "agones.dev/agones/pkg/client/listers/agones/v1"
-	"agones.dev/agones/pkg/cloudproduct"
 	"agones.dev/agones/pkg/util/logfields"
 	"agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/workerqueue"
@@ -59,11 +58,13 @@ type HealthController struct {
 }
 
 // NewHealthController returns a HealthController
-func NewHealthController(health healthcheck.Handler,
+func NewHealthController(
+	health healthcheck.Handler,
 	kubeClient kubernetes.Interface,
 	agonesClient versioned.Interface,
 	kubeInformerFactory informers.SharedInformerFactory,
-	agonesInformerFactory externalversions.SharedInformerFactory) *HealthController {
+	agonesInformerFactory externalversions.SharedInformerFactory,
+	waitOnFreePorts bool) *HealthController {
 
 	podInformer := kubeInformerFactory.Core().V1().Pods().Informer()
 	gameserverInformer := agonesInformerFactory.Agones().V1().GameServers()
@@ -73,7 +74,7 @@ func NewHealthController(health healthcheck.Handler,
 		gameServerSynced: gameserverInformer.Informer().HasSynced,
 		gameServerGetter: agonesClient.AgonesV1(),
 		gameServerLister: gameserverInformer.Lister(),
-		waitOnFreePorts:  cloudproduct.ControllerHooks().WaitOnFreePorts(),
+		waitOnFreePorts:  waitOnFreePorts,
 	}
 
 	hc.baseLogger = runtime.NewLoggerWithType(hc)

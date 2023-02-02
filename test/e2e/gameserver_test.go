@@ -804,7 +804,7 @@ func TestGameServerPassthroughPort(t *testing.T) {
 	gs.Spec.Ports[0] = agonesv1.GameServerPort{PortPolicy: agonesv1.Passthrough}
 	gs.Spec.Template.Spec.Containers[0].Env = []corev1.EnvVar{{Name: "PASSTHROUGH", Value: "TRUE"}}
 	// gate
-	_, valid := gs.Validate()
+	_, valid := gs.Validate(agonesv1.FakeAPIHooks{})
 	assert.True(t, valid)
 
 	readyGs, err := framework.CreateGameServerAndWaitUntilReady(t, framework.Namespace, gs)
@@ -832,7 +832,7 @@ func TestGameServerTcpProtocol(t *testing.T) {
 	gs.Spec.Ports[0].Protocol = corev1.ProtocolTCP
 	gs.Spec.Template.Spec.Containers[0].Env = []corev1.EnvVar{{Name: "TCP", Value: "TRUE"}}
 
-	_, valid := gs.Validate()
+	_, valid := gs.Validate(agonesv1.FakeAPIHooks{})
 	require.True(t, valid)
 
 	readyGs, err := framework.CreateGameServerAndWaitUntilReady(t, framework.Namespace, gs)
@@ -851,7 +851,7 @@ func TestGameServerTcpUdpProtocol(t *testing.T) {
 	gs.Spec.Ports[0].Name = "gameserver"
 	gs.Spec.Template.Spec.Containers[0].Env = []corev1.EnvVar{{Name: "TCP", Value: "TRUE"}}
 
-	_, valid := gs.Validate()
+	_, valid := gs.Validate(agonesv1.FakeAPIHooks{})
 	assert.True(t, valid)
 
 	readyGs, err := framework.CreateGameServerAndWaitUntilReady(t, framework.Namespace, gs)
@@ -896,7 +896,7 @@ func TestGameServerWithoutPort(t *testing.T) {
 	gs := framework.DefaultGameServer(framework.Namespace)
 	gs.Spec.Ports = nil
 
-	_, valid := gs.Validate()
+	_, valid := gs.Validate(agonesv1.FakeAPIHooks{})
 	assert.True(t, valid)
 
 	readyGs, err := framework.CreateGameServerAndWaitUntilReady(t, framework.Namespace, gs)
@@ -915,7 +915,7 @@ func TestGameServerResourceValidation(t *testing.T) {
 	gs.Spec.Template.Spec.Containers[0].Resources.Limits[corev1.ResourceMemory] = mi64
 	gs.Spec.Template.Spec.Containers[0].Resources.Requests[corev1.ResourceMemory] = resource.MustParse("128Mi")
 
-	_, valid := gs.Validate()
+	_, valid := gs.Validate(agonesv1.FakeAPIHooks{})
 	assert.False(t, valid)
 
 	gsClient := framework.AgonesClient.AgonesV1().GameServers(framework.Namespace)
@@ -945,7 +945,7 @@ func TestGameServerResourceValidation(t *testing.T) {
 	gs.Spec.Template.Spec.Containers[0].Resources.Limits[corev1.ResourceCPU] = m50
 
 	// confirm we have a valid GameServer before running the test
-	cause, valid := gs.Validate()
+	cause, valid := gs.Validate(agonesv1.FakeAPIHooks{})
 	require.True(t, valid, cause)
 
 	gsCopy, err := gsClient.Create(ctx, gs.DeepCopy(), metav1.CreateOptions{})

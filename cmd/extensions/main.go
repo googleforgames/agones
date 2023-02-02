@@ -126,7 +126,8 @@ func main() {
 		logger.WithError(err).Fatal("Could not create the agones api clientset")
 	}
 
-	if err := cloudproduct.Initialize(ctx, kubeClient); err != nil {
+	controllerHooks, err := cloudproduct.NewFromFlag(ctx, kubeClient)
+	if err != nil {
 		logger.WithError(err).Fatal("Could not initialize cloud product")
 	}
 	// https server and the items that share the Mux for routing
@@ -148,9 +149,9 @@ func main() {
 	gasExtensions := gameserverallocations.NewExtensions(api, health, gsCounter, kubeClient, kubeInformerFactory,
 		agonesClient, agonesInformerFactory, 10*time.Second, 30*time.Second, ctlConf.AllocationBatchWaitTime)
 
-	gameservers.NewExtensions(wh)
-	gameserversets.NewExtensions(wh)
-	fleets.NewExtensions(wh)
+	gameservers.NewExtensions(controllerHooks, wh)
+	gameserversets.NewExtensions(controllerHooks, wh)
+	fleets.NewExtensions(controllerHooks, wh)
 	fleetautoscalers.NewExtensions(wh)
 
 	kubeInformerFactory.Start(ctx.Done())

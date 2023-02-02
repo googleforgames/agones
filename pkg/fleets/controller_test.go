@@ -27,6 +27,7 @@ import (
 	v1 "agones.dev/agones/pkg/apis/agones/v1"
 	agonesv1clientset "agones.dev/agones/pkg/client/clientset/versioned/typed/agones/v1"
 	agonesv1client "agones.dev/agones/pkg/client/listers/agones/v1"
+	"agones.dev/agones/pkg/cloudproduct/generic"
 	agtesting "agones.dev/agones/pkg/testing"
 	utilruntime "agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/webhooks"
@@ -1407,7 +1408,8 @@ func newFakeController() (*Controller, agtesting.Mocks) {
 
 // newFakeExtensions returns a fake extensions struct
 func newFakeExtensions() *Extensions {
-	return NewExtensions(webhooks.NewWebHook(http.NewServeMux()))
+	hooks, _ := generic.New()
+	return NewExtensions(hooks, webhooks.NewWebHook(http.NewServeMux()))
 }
 
 func defaultFixture() *agonesv1.Fleet {

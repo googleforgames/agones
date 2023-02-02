@@ -76,9 +76,9 @@ func Detect(ctx context.Context, kc *kubernetes.Clientset) string {
 // Autopilot returns a GKE Autopilot cloud product
 //
 //nolint:revive // ignore the unexported return; implements ControllerHooksInterface
-func Autopilot() (*gkeAutopilot, agonesv1.APIHooks, error) {
+func Autopilot() (*gkeAutopilot, error) {
 	ap := &gkeAutopilot{}
-	return ap, ap, nil
+	return ap, nil
 }
 
 func (*gkeAutopilot) SyncPodPortsToGameServer(gs *agonesv1.GameServer, pod *corev1.Pod) error {

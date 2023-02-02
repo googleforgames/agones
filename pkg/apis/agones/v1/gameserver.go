@@ -425,7 +425,7 @@ func (gs *GameServer) applyEvictionStatus() {
 // devAddress is a specific IP address used for local Gameservers, for fleets "" is used
 // If a GameServer Spec is invalid there will be > 0 values in
 // the returned array
-func (gss *GameServerSpec) Validate(devAddress string) ([]metav1.StatusCause, bool) {
+func (gss *GameServerSpec) Validate(apiHooks APIHooks, devAddress string) ([]metav1.StatusCause, bool) {
 	var causes []metav1.StatusCause
 
 	if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
@@ -585,12 +585,12 @@ func validateResources(container corev1.Container) []error {
 // Validate validates the GameServer configuration.
 // If a GameServer is invalid there will be > 0 values in
 // the returned array
-func (gs *GameServer) Validate() ([]metav1.StatusCause, bool) {
+func (gs *GameServer) Validate(apiHooks APIHooks) ([]metav1.StatusCause, bool) {
 	causes := validateName(gs)
 
 	// make sure the host port is specified if this is a development server
 	devAddress, _ := gs.GetDevAddress()
-	gssCauses, _ := gs.Spec.Validate(devAddress)
+	gssCauses, _ := gs.Spec.Validate(apiHooks, devAddress)
 	causes = append(causes, gssCauses...)
 	return causes, len(causes) == 0
 }
@@ -668,7 +668,7 @@ func (gs *GameServer) ApplyToPodContainer(pod *corev1.Pod, containerName string,
 
 // Pod creates a new Pod from the PodTemplateSpec
 // attached to the GameServer resource
-func (gs *GameServer) Pod(sidecars ...corev1.Container) (*corev1.Pod, error) {
+func (gs *GameServer) Pod(apiHooks APIHooks, sidecars ...corev1.Container) (*corev1.Pod, error) {
 	pod := &corev1.Pod{
 		ObjectMeta: *gs.Spec.Template.ObjectMeta.DeepCopy(),
 		Spec:       *gs.Spec.Template.Spec.DeepCopy(),
