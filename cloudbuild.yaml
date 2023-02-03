@@ -309,7 +309,7 @@ steps:
           testClusterLocation="us-west1"
           testCluster="gke-autopilot-e2e-test-cluster-1-24"
         fi
-        # TODO: Add more versions in the list, and generate the test cluster name in the loop, rather than hardcode once the clusters are created
+        # TODO: Add more versions in the list, and generate the test cluster name in the loop rather than hardcode once the clusters are created
         k8sVersions=("1.24")
         for k8sVersion in ${k8sVersions[@]}
         do
