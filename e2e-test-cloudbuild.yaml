@@ -59,8 +59,6 @@ steps:
   waitFor:
     - e2e-feature-gates
 
-substitutions:
-  _REGISTRY: us-docker.pkg.dev/${PROJECT_ID}/ci
 tags: ['e2e-test']
 timeout: 7200s # 2h
 queueTtl: 21600s # 6h

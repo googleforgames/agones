@@ -1,6 +1,6 @@
 .gcloudignore
-.git
 .gitignore
 cpp*tgz
 rust*tgz
 #!include:.gitignore
+!.git
