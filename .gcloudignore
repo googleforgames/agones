@@ -1,6 +1,6 @@
 .gcloudignore
-# If you would like to upload your .git directory, .gitignore file or
-# files from your .gitignore file, remove the corresponding line below:
 .git
 .gitignore
+cpp*tgz
+rust*tgz
 #!include:.gitignore
