@@ -107,16 +107,6 @@ steps:
   args: ["ensure-build-sdk-image-base"]
 
 #
-# build the e2e test runner
-#
-
-- name: gcr.io/cloud-builders/docker
-  args: ['build', '-f', 'Dockerfile', '-t', 'e2e-runner', '.']
-  dir: 'build/e2e-image'
-  id: build-e2e
-  waitFor: ['-']
-
-#
 # Runs the linter -- but also builds the build image, if not able to download
 #
 
@@ -252,7 +242,6 @@ steps:
   id: e2e-wait-to-become-leader
   waitFor:
     - push-images
-    - build-e2e
   script: |
     #!/usr/bin/env bash
 
@@ -279,67 +268,77 @@ steps:
   - 'BUILD_ID=$BUILD_ID'
   - 'TRIGGER_NAME=$TRIGGER_NAME'
 
-#
-# Run the e2e tests with FeatureGates inverted compared to Stable
-#
-# Keep in sync with (the inverse of) pkg/util/runtime/features.go:featureDefaults
+# cancel all the orphan e2e test cloud builds, fail to cancel any of the build will fail this whole build
 
-- name: 'e2e-runner'
-  args:
-    - 'CustomFasSyncInterval=false&SDKGracefulTermination=false&StateAllocationFilter=false&PlayerAllocationFilter=true&PlayerTracking=true&ResetMetricsOnDelete=true&SafeToEvict=true&PodHostname=true&SplitControllerAndExtensions=true&Example=true'
-    - 'generic'
-    - 'e2e-test-cluster'
-    - 'us-west1-c'
-    - "${_REGISTRY}"
-  id: e2e-feature-gates
+- name: 'gcr.io/cloud-builders/gcloud'
+  id: cancel-orphan-e2e-tests
   waitFor:
     - e2e-wait-to-become-leader
+  script: |
+    #!/usr/bin/env bash
 
-#
-# Run the e2e tests without FeatureGates
-#
+    on_going_builds=($(gcloud builds list --ongoing --filter "tags:'e2e-test'" --format="value(id)" | xargs))
+    for on_going_build in ${on_going_builds[@]}
+    do
+      echo "Cancelling e2e test build $on_going_build"
+      gcloud builds cancel $on_going_build
+    done
 
-- name: 'e2e-runner'
-  args:
-    - ''
-    - 'generic'
-    - 'e2e-test-cluster'
-    - 'us-west1-c'
-    - "${_REGISTRY}"
-  id: e2e-stable
+# kick off the child e2e test cloud builds in parallel, fail this build if any of the child build fails
+
+- name: 'gcr.io/cloud-builders/gcloud'
+  id: submit-e2e-test-cloud-build
+  entrypoint: bash
+  args: 
+   - '-c'
+   - |
+      set -e
+      pids=()
+      cloudProducts=("generic" "gke-autopilot")
+      for cloudProduct in ${cloudProducts[@]}
+      do
+        if [ $cloudProduct = generic ]
+        then 
+          featureWithGate="CustomFasSyncInterval=false&SDKGracefulTermination=false&StateAllocationFilter=false&PlayerAllocationFilter=true&PlayerTracking=true&ResetMetricsOnDelete=true&SafeToEvict=true&PodHostname=true&SplitControllerAndExtensions=true&Example=true"
+          featureWithoutGate=""
+          testClusterLocation="us-west1-c"
+          testCluster="e2e-test-cluster"
+        else
+          featureWithGate="CustomFasSyncInterval=false&SDKGracefulTermination=false&StateAllocationFilter=false&PlayerAllocationFilter=true&PlayerTracking=true&ResetMetricsOnDelete=true&SafeToEvict=true&PodHostname=true&SplitControllerAndExtensions=true&Example=true"
+          featureWithoutGate="SafeToEvict=true&SplitControllerAndExtensions=true"
+          testClusterLocation="us-west1"
+          testCluster="gke-autopilot-e2e-test-cluster-1-24"
+        fi
+        # TODO: Add more versions in the list, and generate the test cluster name in the loop, rather than hardcode once the clusters are created
+        k8sVersions=("1.24")
+        for k8sVersion in ${k8sVersions[@]}
+        do
+          gcloud builds submit --config=e2e-test-cloudbuild.yaml \
+            --substitutions _FEATURE_WITH_GATE=$featureWithGate,_FEATURE_WITHOUT_GATE=$featureWithoutGate,_CLOUD_PRODUCT=$cloudProduct,_TEST_CLUSTER_NAME=$testCluster,_TEST_CLUSTER_LOCATION=$testClusterLocation &
+          pids+=($!)
+        done
+      done
+
+      # If any of the subprocess exit with nonzero code, exit the main process and kill all subprocesses
+      for pid in "${pids[@]}"; do
+        if wait -n; then
+          :
+        else
+          status=$?
+          echo "One of the e2e test child cloud build exited with nonzero status $status. Aborting."
+          for pid in "${pids[@]}"; do
+            # Send a termination signal to all the children, and ignore errors
+            # due to children that no longer exist.
+            kill "$pid" 2> /dev/null || :
+            echo "killed $pid"
+          done
+          exit "$status"
+        fi
+      done
+      
+      echo "all done"
   waitFor:
-    - e2e-feature-gates
-
-#
-# Run the e2e tests on GKE Autopilot with FeatureGates inverted compared to Stable
-#
-# Keep in sync with (the inverse of) pkg/util/runtime/features.go:featureDefaults
-
-- name: 'e2e-runner'
-  args:
-    - 'CustomFasSyncInterval=false&SDKGracefulTermination=false&StateAllocationFilter=false&PlayerAllocationFilter=true&PlayerTracking=true&ResetMetricsOnDelete=true&SafeToEvict=true&PodHostname=true&SplitControllerAndExtensions=true&Example=true'
-    - 'gke-autopilot'
-    - 'gke-autopilot-e2e-test-cluster-1-24'
-    - 'us-west1'
-    - "${_REGISTRY}"
-  id: e2e-feature-gates-gke-autopilot
-  waitFor:
-    - e2e-wait-to-become-leader
-
-#
-# Run the e2e tests on GKE Autopilot without FeatureGates, except SafeToEvict and SplitControllerAndExtensions, which we need on Autopilot
-#
-
-- name: 'e2e-runner'
-  args:
-    - 'SafeToEvict=true&SplitControllerAndExtensions=true'
-    - 'gke-autopilot'
-    - 'gke-autopilot-e2e-test-cluster-1-24'
-    - 'us-west1'
-    - "${_REGISTRY}"
-  id: e2e-stable-gke-autopilot
-  waitFor:
-    - e2e-feature-gates-gke-autopilot
+    - cancel-orphan-e2e-tests
 
 #
 # SDK conformance tests
