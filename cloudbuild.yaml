@@ -30,28 +30,28 @@ steps:
 # Restore any caches
 #
 
-- name: gcr.io/$PROJECT_ID/restore_cache
+- name: us-docker.pkg.dev/$PROJECT_ID/ci/restore_cache
   id: htmltest-restore-cache
   args:
     - '--bucket=gs://$_CACHE_BUCKET'
     - '--key=$_HTMLTEST_CACHE_KEY'
   waitFor: ['-']
 
-- name: gcr.io/$PROJECT_ID/restore_cache
+- name: us-docker.pkg.dev/$PROJECT_ID/ci/restore_cache
   id: cpp-sdk-build-restore-cache
   args:
     - '--bucket=gs://$_CACHE_BUCKET'
     - '--key=$_CPP_SDK_BUILD_CACHE_KEY-$( checksum sdks/cpp/cmake/prerequisites.cmake )'
   waitFor: ['-']
 
-- name: gcr.io/$PROJECT_ID/restore_cache
+- name: us-docker.pkg.dev/$PROJECT_ID/ci/restore_cache
   id: cpp-sdk-conformance-restore-cache
   args:
     - '--bucket=gs://$_CACHE_BUCKET'
     - '--key=$_CPP_SDK_CONFORMANCE_CACHE_KEY-$( checksum sdks/cpp/cmake/prerequisites.cmake )'
   waitFor: ['-']
 
-- name: gcr.io/$PROJECT_ID/restore_cache
+- name: us-docker.pkg.dev/$PROJECT_ID/ci/restore_cache
   id: rust-sdk-build-restore-cache
   args:
     - '--bucket=gs://$_CACHE_BUCKET'
@@ -75,6 +75,8 @@ steps:
 - name: "make-docker"
   id: pull-build-image
   dir: "build"
+  env:
+    - "REGISTRY=${_REGISTRY}"
   args: ["pull-build-image"]
   waitFor:
     - build-make-docker
@@ -86,6 +88,8 @@ steps:
 - name: "make-docker"
   id: pull-build-sdk-base-image
   dir: "build"
+  env:
+    - "REGISTRY=${_REGISTRY}"
   args: ["pull-build-sdk-base-image"]
   waitFor:
     - build-make-docker
@@ -102,11 +106,142 @@ steps:
   dir: "build"
   args: ["ensure-build-sdk-image-base"]
 
+#
+# Runs the linter -- but also builds the build image, if not able to download
+#
+
+- name: "make-docker"
+  id: lint
+  waitFor:
+    - pull-build-image
+  dir: "build"
+  args: ["lint"] # pull the build image if it exists
+
+#
+# Push the build image, can run while we do other things.
+#
+
+- name: "make-docker"
+  waitFor:
+    - lint
+  dir: "build"
+  env:
+    - "REGISTRY=${_REGISTRY}"
+  args: ["push-build-image"] # push the build image (which won't do anything if it's already there)
+
+#
+# Push the sdk base build image, which can also run while we do other things
+#
+
+- name: "make-docker"
+  waitFor:
+    - ensure-build-sdk-image-base
+  dir: "build"
+  env:
+    - "REGISTRY=${_REGISTRY}"
+  args: ["push-build-sdk-base-image"]
+
+#
+# Build all the images and sdks, and push them up to the repository
+#
+
+- name: "make-docker"
+  id: build-images
+  waitFor:
+    - lint
+  dir: "build"
+  env:
+    - "REGISTRY=${_REGISTRY}"
+  args: [ "-j", "4", "build-images"]
+- name: "make-docker"
+  id: push-images
+  waitFor:
+    - build-images
+  dir: "build"
+  env:
+    - "REGISTRY=${_REGISTRY}"
+  args: [ "-j", "4", "push"]
+
+#
+# Build all the SDKs
+#
+
+- name: "make-docker"
+  id: build-sdks
+  waitFor:
+    - lint
+    - cpp-sdk-build-restore-cache
+    - ensure-build-sdk-image-base
+  dir: "build"
+  args: [ "-j", "4", "--output-sync=target", "build-sdks"]
+
+#
+# Cache the cpp sdk build directory, to speed up subsequent builds (considerably)
+#
+
+- name: 'us-docker.pkg.dev/$PROJECT_ID/ci/save_cache'
+  args:
+    - '--bucket=gs://$_CACHE_BUCKET'
+    - '--key=$_CPP_SDK_BUILD_CACHE_KEY-$( checksum sdks/cpp/cmake/prerequisites.cmake )'
+    - '--path=sdks/cpp/.build'
+  id: cpp-sdk-build-save-cache
+  waitFor:
+    - build-sdks
+
+#
+# Run the all the automated tests (except e2e) in parallel
+#
+
+- name: "make-docker"
+  id: tests
+  waitFor:
+    - lint
+    - ensure-build-sdk-image-base
+    - htmltest-restore-cache
+    - build-sdks
+  dir: "build"
+  args: [ "-j", "5", "--output-sync=target", "test" ]
+
+#
+# Cache the htmltest url checks. Faster builds, and lower network flakiness.
+#
+- name: 'us-docker.pkg.dev/$PROJECT_ID/ci/save_cache'
+  args:
+    - '--bucket=gs://$_CACHE_BUCKET'
+    - '--key=$_HTMLTEST_CACHE_KEY'
+    - '--path=site/tmp'
+  id: htmltest-save-cache
+  waitFor:
+    - tests
+
+#
+# Site preview
+#
+
+# don't promote, as it can cause failures when two deploys try and promote at the same time.
+
+- name: "make-docker" # build a preview of the website
+  id: site-static
+  waitFor:
+    - tests
+  dir: "build"
+  args: ["site-static-preview", "site-gen-app-yaml", "SERVICE=preview"]
+- name: "gcr.io/cloud-builders/gcloud" # deploy the preview of the website
+  id: "deploy-site-static"
+  waitFor:
+    - site-static
+  dir: "site"
+  args: ["app", "deploy", ".app.yaml", "--no-promote", "--version=$SHORT_SHA"]
+  env:
+    - GOPATH=/workspace/go
+    - GO111MODULE=on
+
 # wait for us to be the oldest ongoing build before we run e2es
 
 - name: 'gcr.io/cloud-builders/gcloud'
   id: e2e-wait-to-become-leader
-  waitFor: ['-']
+  waitFor:
+    - push-images
   script: |
     #!/usr/bin/env bash
 
@@ -174,15 +309,17 @@ steps:
           testClusterLocation="us-west1"
           testCluster="gke-autopilot-e2e-test-cluster-1-24"
         fi
+        # TODO: Add more versions in the list, and generate the test cluster name in the loop, rather than hardcode once the clusters are created
         k8sVersions=("1.24")
         for k8sVersion in ${k8sVersions[@]}
         do
-          gcloud builds submit --config=e2e-test-cloudbuild.yaml \
+          gcloud builds submit "/workspace/build/e2e-image/" --machine-type=e2-highcpu-32 --config=e2e-test-cloudbuild.yaml \
             --substitutions _FEATURE_WITH_GATE=$featureWithGate,_FEATURE_WITHOUT_GATE=$featureWithoutGate,_CLOUD_PRODUCT=$cloudProduct,_TEST_CLUSTER_NAME=$testCluster,_TEST_CLUSTER_LOCATION=$testClusterLocation &
           pids+=($!)
         done
       done
 
+      # If any of the subprocess exit with nonzero code, exit the main process and kill all subprocesses
       for pid in "${pids[@]}"; do
         if wait -n; then
           :
@@ -198,328 +335,69 @@ steps:
           exit "$status"
         fi
       done
-      # wait
-
-      # for file in "$dir"/*; do
-      #   printf '%s returned %d\n' "${file##*/}" "$(<"$file")"
-      #   if [ $(<"$file") -ne 0 ]
-      #   then
-      #     rm -r "$dir"
-      #     exit 1
-      #   fi
-      # done
-
-      # rm -r "$dir"
+      
       echo "all done"
   waitFor:
     - cancel-orphan-e2e-tests
-
-# - name: 'gcr.io/cloud-builders/gcloud'
-#   id: test-$PROJECT_ID
-#   entrypoint: bash
-#   args: 
-#    - '-c'
-#    - |
-#       dir=$(mktemp -d)
-#       cloudProducts=("generic" "gke-autopilot")
-      
-#       for cloudProduct in ${cloudProducts[@]}
-#       do
-#         if [ $cloudProduct = generic ]
-#         then 
-#           featureWithGate="woshigenericgate"
-#           featureWithoutGate="woshigeneric"
-#         else
-#           featureWithGate="woshiautopilotgate"
-#           featureWithoutGate="woshiautopilot"
-#         fi
-#         ( gcloud builds submit --config=cloudbuild1.yaml \
-#             --substitutions _FEATURE_WITH_GATE=$featureWithGate,_FEATURE_WITHOUT_GATE=$featureWithoutGate,_NUM=$cloudProduct;
-#             echo "$?" > "$dir/$cloudProduct-$cloudProduct"; ) &
-#       done
-#       wait
-
-#       echo "all done"
-
-#       # exitCodes+=("out")
-#       # for str in ${exitCodes[@]}; do
-#       #   echo "exit code: "
-#       #   echo $str
-#       # done
-
-#       for file in "$dir"/*; do
-#         printf 'PID %s returned %d\n' "${file##*/}" "$(<"$file")"
-#         if [ $(<"$file") -eq 1 ];
-#           then exit 1
-#         fi
-#       done
-
-#       rm -r "$dir"
-#       echo "print done"
-#   waitFor:
-#     - cancel-orphan-e2e-tests
-
-#
-# Runs the linter -- but also builds the build image, if not able to download
-#
-
-# - name: "make-docker"
-#   id: lint
-#   waitFor:
-#     - pull-build-image
-#   dir: "build"
-#   args: ["lint"] # pull the build image if it exists
-
-#
-# Push the build image, can run while we do other things.
-#
-
-# - name: "make-docker"
-#   waitFor:
-#     - lint
-#   dir: "build"
-#   args: ["push-build-image"] # push the build image (which won't do anything if it's already there)
-
-#
-# Push the sdk base build image, which can also run while we do other things
-#
-
-# - name: "make-docker"
-#   waitFor:
-#     - ensure-build-sdk-image-base
-#   dir: "build"
-#   args: ["push-build-sdk-base-image"]
-
-#
-# Build all the images and sdks, and push them up to the repository
-#
-
-# - name: "make-docker"
-#   id: build-images
-#   waitFor:
-#     - lint
-#   dir: "build"
-#   env:
-#     - "REGISTRY=${_REGISTRY}"
-#   args: [ "-j", "4", "build-images"]
-# - name: "make-docker"
-#   id: push-images
-#   waitFor:
-#     - build-images
-#   dir: "build"
-#   env:
-#     - "REGISTRY=${_REGISTRY}"
-#   args: [ "-j", "4", "push"]
-
-# #
-# # Build all the SDKs
-# #
-
-# - name: "make-docker"
-#   id: build-sdks
-#   waitFor:
-#     - lint
-#     - cpp-sdk-build-restore-cache
-#     - ensure-build-sdk-image-base
-#   dir: "build"
-#   args: [ "-j", "4", "--output-sync=target", "build-sdks"]
-
-#
-# Cache the cpp sdk build directory, to speed up subsequent builds (considerably)
-#
-
-# - name: 'gcr.io/$PROJECT_ID/save_cache'
-#   args:
-#     - '--bucket=gs://$_CACHE_BUCKET'
-#     - '--key=$_CPP_SDK_BUILD_CACHE_KEY-$( checksum sdks/cpp/cmake/prerequisites.cmake )'
-#     - '--path=sdks/cpp/.build'
-#   id: cpp-sdk-build-save-cache
-#   waitFor:
-#     - build-sdks
-
-#
-# Run the all the automated tests (except e2e) in parallel
-#
-
-# - name: "make-docker"
-#   id: tests
-#   waitFor:
-#     - lint
-#     - ensure-build-sdk-image-base
-#     - htmltest-restore-cache
-#     - build-sdks
-#   dir: "build"
-#   args: [ "-j", "5", "--output-sync=target", "test" ]
-
-#
-# Cache the htmltest url checks. Faster builds, and lower network flakiness.
-#
-# - name: 'gcr.io/$PROJECT_ID/save_cache'
-#   args:
-#     - '--bucket=gs://$_CACHE_BUCKET'
-#     - '--key=$_HTMLTEST_CACHE_KEY'
-#     - '--path=site/tmp'
-#   id: htmltest-save-cache
-#   waitFor:
-#     - tests
-
-#
-# Site preview
-#
-
-# don't promote, as it can cause failures when two deploys try and promote at the same time.
-
-# - name: "make-docker" # build a preview of the website
-#   id: site-static
-#   waitFor:
-#     - tests
-#   dir: "build"
-#   args: ["site-static-preview", "site-gen-app-yaml", "SERVICE=preview"]
-# - name: "gcr.io/cloud-builders/gcloud" # deploy the preview of the website
-#   id: "deploy-site-static"
-#   waitFor:
-#     - site-static
-#   dir: "site"
-#   args: ["app", "deploy", ".app.yaml", "--no-promote", "--version=$SHORT_SHA"]
-#   env:
-#     - GOPATH=/workspace/go
-#     - GO111MODULE=on
-
-#
-# Run the e2e tests with FeatureGates inverted compared to Stable
-#
-# Keep in sync with (the inverse of) pkg/util/runtime/features.go:featureDefaults
-
-# - name: 'e2e-runner'
-#   args:
-#     - 'CustomFasSyncInterval=false&StateAllocationFilter=false&LifecycleContract=true&PlayerAllocationFilter=true&PlayerTracking=true&ResetMetricsOnDelete=true&SDKGracefulTermination=true&Example=true'
-#     - 'e2e-test-cluster'
-#     - "${_REGISTRY}"
-#   id: e2e-feature-gates-1
-#   waitFor:
-#     # - push-images
-#     - build-e2e
-###
-
-
-# #
-# # Run the e2e tests without FeatureGates
-# #
-
-# - name: 'e2e-runner'
-#   args:
-#     - ''
-#     - 'e2e-test-cluster'
-#     - "${_REGISTRY}"
-#   id: e2e-stable-1
-#   waitFor:
-#     # - push-images
-#     - build-e2e
-
-# - name: 'e2e-runner'
-#   args:
-#     - 'CustomFasSyncInterval=false&StateAllocationFilter=false&LifecycleContract=true&PlayerAllocationFilter=true&PlayerTracking=true&ResetMetricsOnDelete=true&SDKGracefulTermination=true&Example=true'
-#     - 'e2e-test-cluster-1'
-#     - "${_REGISTRY}"
-#   id: e2e-feature-gates-2
-#   waitFor:
-#     # - push-images
-#     - build-e2e
-
-# #
-# # Run the e2e tests without FeatureGates
-# #
-
-# - name: 'e2e-runner'
-#   args:
-#     - ''
-#     - 'e2e-test-cluster-1'
-#     - "${_REGISTRY}"
-#   id: e2e-stable-2
-#   waitFor:
-#     # - push-images
-#     - build-e2e
-
-# - name: 'e2e-runner'
-#   args:
-#     - 'CustomFasSyncInterval=false&StateAllocationFilter=false&LifecycleContract=true&PlayerAllocationFilter=true&PlayerTracking=true&ResetMetricsOnDelete=true&SDKGracefulTermination=true&Example=true'
-#     - 'e2e-test-cluster-2'
-#     - "${_REGISTRY}"
-#   id: e2e-feature-gates-3
-#   waitFor:
-#     # - push-images
-#     - build-e2e
-
-# #
-# # Run the e2e tests without FeatureGates
-# #
-
-# - name: 'e2e-runner'
-#   args:
-#     - ''
-#     - 'e2e-test-cluster-2'
-#     - "${_REGISTRY}"
-#   id: e2e-stable-3
-#   waitFor:
-#     # - push-images
-#     - build-e2e
 
 #
 # SDK conformance tests
 #
 
-# - name: "make-docker"
-#   id: sdk-conformance
-#   dir: "build"
-#   args: [ "-j", "5", "--output-sync=target", "run-sdk-conformance-tests"]
-#   waitFor:
-#     - build-images
-#     - tests
+- name: "make-docker"
+  id: sdk-conformance
+  dir: "build"
+  env:
+    - "REGISTRY=${_REGISTRY}"
+  args: [ "-j", "5", "--output-sync=target", "run-sdk-conformance-tests"]
+  waitFor:
+    - build-images
+    - tests
 
 #
 # Cache the CPP conformance build directory, to speed up subsequent builds (considerably)
 #
 
-# - name: 'gcr.io/$PROJECT_ID/save_cache'
-#   args:
-#     - '--bucket=gs://$_CACHE_BUCKET'
-#     - '--key=$_CPP_SDK_CONFORMANCE_CACHE_KEY-$( checksum sdks/cpp/cmake/prerequisites.cmake )'
-#     - '--path=test/sdk/cpp/sdk'
-#   id: cpp-sdk-conformance-save-cache
-#   waitFor:
-#     - sdk-conformance
+- name: 'us-docker.pkg.dev/$PROJECT_ID/ci/save_cache'
+  args:
+    - '--bucket=gs://$_CACHE_BUCKET'
+    - '--key=$_CPP_SDK_CONFORMANCE_CACHE_KEY-$( checksum sdks/cpp/cmake/prerequisites.cmake )'
+    - '--path=test/sdk/cpp/sdk'
+  id: cpp-sdk-conformance-save-cache
+  waitFor:
+    - sdk-conformance
 
 #
 # Cache the Rust SDK build directory, to speed up subsequent builds (considerably)
 #
 
-# - name: 'gcr.io/$PROJECT_ID/save_cache'
-#   args:
-#     - '--bucket=gs://$_CACHE_BUCKET'
-#     - '--key=$_RUST_SDK_BUILD_CACHE_KEY-$( checksum test/sdk/rust/Cargo.toml )'
-#     - '--path=test/sdk/rust/.cargo'
-#     - '--path=test/sdk/rust/.cargo-targets'
-#     - '--no-clobber'
-#   id: rust-build-save-cache
-#   waitFor:
-#     - sdk-conformance
+- name: 'us-docker.pkg.dev/$PROJECT_ID/ci/save_cache'
+  args:
+    - '--bucket=gs://$_CACHE_BUCKET'
+    - '--key=$_RUST_SDK_BUILD_CACHE_KEY-$( checksum test/sdk/rust/Cargo.toml )'
+    - '--path=test/sdk/rust/.cargo'
+    - '--path=test/sdk/rust/.cargo-targets'
+    - '--no-clobber'
+  id: rust-build-save-cache
+  waitFor:
+    - sdk-conformance
 
 #
 # Zip up artifacts and push to storage
 #
 
-# - name: 'gcr.io/cloud-builders/gsutil'
-#   waitFor:
-#     - build-sdks
-#     - tests
-#   dir: "sdks/cpp/.archives"
-#   args: [ '-m', 'cp', '*.tar.gz', 'gs://agones-artifacts/cpp-sdk']
-# - name: 'gcr.io/cloud-builders/gsutil'
-#   waitFor:
-#     - build-images
-#     - tests
-#   dir: "cmd/sdk-server/bin"
-#   args: [ '-m', 'cp', '*.zip', 'gs://agones-artifacts/sdk-server']
+- name: 'gcr.io/cloud-builders/gsutil'
+  waitFor:
+    - build-sdks
+    - tests
+  dir: "sdks/cpp/.archives"
+  args: [ '-m', 'cp', '*.tar.gz', 'gs://agones-artifacts/cpp-sdk']
+- name: 'gcr.io/cloud-builders/gsutil'
+  waitFor:
+    - build-images
+    - tests
+  dir: "cmd/sdk-server/bin"
+  args: [ '-m', 'cp', '*.zip', 'gs://agones-artifacts/sdk-server']
 
 substitutions:
   _CACHE_BUCKET: agones-build-cache
@@ -529,12 +407,14 @@ substitutions:
   _RUST_SDK_BUILD_CACHE_KEY: rust-sdk-build
   _REGISTRY: us-docker.pkg.dev/${PROJECT_ID}/ci
 tags: ['ci']
-timeout: 7200s
-# images:
-#   - '${_REGISTRY}/agones-controller'
-#   - '${_REGISTRY}/agones-sdk'
-#   - '${_REGISTRY}/agones-ping'
-#   - '${_REGISTRY}/agones-allocator'
+timeout: 9000s # 2.5h - if you change this, change e2e-wait-to-become-leader as well
+queueTtl: 259200s # 72h
+images:
+  - '${_REGISTRY}/agones-controller'
+  - '${_REGISTRY}/agones-sdk'
+  - '${_REGISTRY}/agones-ping'
+  - '${_REGISTRY}/agones-allocator'
+logsBucket: "gs://agones-build-logs"
 options:
   machineType: 'E2_HIGHCPU_32'
   dynamic_substitutions: true
