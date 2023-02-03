@@ -313,7 +313,8 @@ steps:
         k8sVersions=("1.24")
         for k8sVersion in ${k8sVersions[@]}
         do
-          gcloud builds submit "/workspace/build/e2e-image/" --machine-type=e2-highcpu-32 --config=e2e-test-cloudbuild.yaml \
+          ls -a -l
+          gcloud builds submit . --machine-type=e2-highcpu-32 --config=e2e-test-cloudbuild.yaml \
             --substitutions _FEATURE_WITH_GATE=$featureWithGate,_FEATURE_WITHOUT_GATE=$featureWithoutGate,_CLOUD_PRODUCT=$cloudProduct,_TEST_CLUSTER_NAME=$testCluster,_TEST_CLUSTER_LOCATION=$testClusterLocation &
           pids+=($!)
         done
