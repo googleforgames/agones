@@ -176,6 +176,8 @@ func TestGameServerApplyDefaults(t *testing.T) {
 				GRPCPort: 9357,
 				HTTPPort: 9358,
 			},
+			evictionSafeSpec:   EvictionSafeNever,
+			evictionSafeStatus: EvictionSafeNever,
 		}
 		f(&e)
 		return e
@@ -301,21 +303,22 @@ func TestGameServerApplyDefaults(t *testing.T) {
 				}
 			}),
 		},
-		"SafeToEvict gate off => no SafeToEvict fields": {
+		"SafeToEvict gate off => no eviction.safe fields": {
 			featureFlags: string(runtime.FeatureSafeToEvict) + "=false",
 			gameServer:   defaultGameServerAnd(func(gss *GameServerSpec) {}),
-			expected:     wantDefaultAnd(func(e *expected) {}),
+			expected: wantDefaultAnd(func(e *expected) {
+				e.evictionSafeSpec = ""
+				e.evictionSafeStatus = ""
+			}),
 		},
-		"SafeToEvict gate on => SafeToEvict: Never": {
-			featureFlags: string(runtime.FeatureSafeToEvict) + "=true",
-			gameServer:   defaultGameServerAnd(func(gss *GameServerSpec) {}),
+		"defaults are eviction.safe: Never": {
+			gameServer: defaultGameServerAnd(func(gss *GameServerSpec) {}),
 			expected: wantDefaultAnd(func(e *expected) {
 				e.evictionSafeSpec = EvictionSafeNever
 				e.evictionSafeStatus = EvictionSafeNever
 			}),
 		},
-		"SafeToEvict: Always": {
-			featureFlags: string(runtime.FeatureSafeToEvict) + "=true",
+		"eviction.safe: Always": {
 			gameServer: defaultGameServerAnd(func(gss *GameServerSpec) {
 				gss.Eviction.Safe = EvictionSafeAlways
 			}),
@@ -324,8 +327,7 @@ func TestGameServerApplyDefaults(t *testing.T) {
 				e.evictionSafeStatus = EvictionSafeAlways
 			}),
 		},
-		"SafeToEvict: OnUpgrade": {
-			featureFlags: string(runtime.FeatureSafeToEvict) + "=true",
+		"eviction.safe: OnUpgrade": {
 			gameServer: defaultGameServerAnd(func(gss *GameServerSpec) {
 				gss.Eviction.Safe = EvictionSafeOnUpgrade
 			}),
@@ -334,8 +336,7 @@ func TestGameServerApplyDefaults(t *testing.T) {
 				e.evictionSafeStatus = EvictionSafeOnUpgrade
 			}),
 		},
-		"SafeToEvict: Never": {
-			featureFlags: string(runtime.FeatureSafeToEvict) + "=true",
+		"eviction.safe: Never": {
 			gameServer: defaultGameServerAnd(func(gss *GameServerSpec) {
 				gss.Eviction.Safe = EvictionSafeNever
 			}),
@@ -344,8 +345,7 @@ func TestGameServerApplyDefaults(t *testing.T) {
 				e.evictionSafeStatus = EvictionSafeNever
 			}),
 		},
-		"SafeToEvict: Always inferred from safe-to-evict=true": {
-			featureFlags: string(runtime.FeatureSafeToEvict) + "=true",
+		"eviction.safe: Always inferred from safe-to-evict=true": {
 			gameServer: defaultGameServerAnd(func(gss *GameServerSpec) {
 				gss.Template.ObjectMeta.Annotations = map[string]string{PodSafeToEvictAnnotation: "true"}
 			}),
@@ -355,7 +355,6 @@ func TestGameServerApplyDefaults(t *testing.T) {
 			}),
 		},
 		"Nothing inferred from safe-to-evict=false": {
-			featureFlags: string(runtime.FeatureSafeToEvict) + "=true",
 			gameServer: defaultGameServerAnd(func(gss *GameServerSpec) {
 				gss.Template.ObjectMeta.Annotations = map[string]string{PodSafeToEvictAnnotation: "false"}
 			}),
@@ -364,8 +363,7 @@ func TestGameServerApplyDefaults(t *testing.T) {
 				e.evictionSafeStatus = EvictionSafeNever
 			}),
 		},
-		"safe-to-evict=false AND SafeToEvict: Always => SafeToEvict: Always": {
-			featureFlags: string(runtime.FeatureSafeToEvict) + "=true",
+		"safe-to-evict=false AND eviction.safe: Always => eviction.safe: Always": {
 			gameServer: defaultGameServerAnd(func(gss *GameServerSpec) {
 				gss.Eviction.Safe = EvictionSafeAlways
 				gss.Template.ObjectMeta.Annotations = map[string]string{PodSafeToEvictAnnotation: "false"}
