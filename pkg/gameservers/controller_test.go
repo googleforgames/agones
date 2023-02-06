@@ -1948,9 +1948,8 @@ func testWithNonZeroDeletionTimestamp(t *testing.T, f func(*Controller, *agonesv
 // newFakeController returns a controller, backed by the fake Clientset
 func newFakeController() (*Controller, agtesting.Mocks) {
 	m := agtesting.NewMocks()
-	hooks, _ := generic.New()
 	c := NewController(
-		hooks,
+		generic.New(),
 		healthcheck.NewHandler(),
 		10, 20, "sidecar:dev", false,
 		resource.MustParse("0.05"), resource.MustParse("0.1"),
@@ -1962,8 +1961,7 @@ func newFakeController() (*Controller, agtesting.Mocks) {
 
 // newFakeExtensions return a fake extensions struct
 func newFakeExtensions() *Extensions {
-	hooks, _ := generic.New()
-	return NewExtensions(hooks, webhooks.NewWebHook(http.NewServeMux()))
+	return NewExtensions(generic.New(), webhooks.NewWebHook(http.NewServeMux()))
 }
 
 func newSingleContainerSpec() agonesv1.GameServerSpec {

@@ -86,9 +86,9 @@ func NewFromFlag(ctx context.Context, kc *kubernetes.Clientset) (ControllerHooks
 
 	switch product {
 	case gkeAutopilotProduct:
-		return gke.Autopilot()
+		return gke.Autopilot(), nil
 	case genericProduct:
-		return generic.New()
+		return generic.New(), nil
 	}
 	return nil, errors.Errorf("unknown cloud product: %q", product)
 }

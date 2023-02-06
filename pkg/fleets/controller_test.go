@@ -1408,8 +1408,7 @@ func newFakeController() (*Controller, agtesting.Mocks) {
 
 // newFakeExtensions returns a fake extensions struct
 func newFakeExtensions() *Extensions {
-	hooks, _ := generic.New()
-	return NewExtensions(hooks, webhooks.NewWebHook(http.NewServeMux()))
+	return NewExtensions(generic.New(), webhooks.NewWebHook(http.NewServeMux()))
 }
 
 func defaultFixture() *agonesv1.Fleet {

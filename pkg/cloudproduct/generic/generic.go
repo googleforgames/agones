@@ -30,7 +30,7 @@ import (
 // New returns a new generic cloud product
 //
 //nolint:revive // ignore the unexported return; implements ControllerHooksInterface
-func New() (*generic, error) { return &generic{}, nil }
+func New() *generic { return &generic{} }
 
 type generic struct{}
 

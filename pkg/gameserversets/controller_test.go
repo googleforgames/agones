@@ -1005,6 +1005,5 @@ func newFakeController() (*Controller, agtesting.Mocks) {
 
 // newFakeExtensions returns an extensions struct
 func newFakeExtensions() *Extensions {
-	hooks, _ := generic.New()
-	return NewExtensions(hooks, webhooks.NewWebHook(http.NewServeMux()))
+	return NewExtensions(generic.New(), webhooks.NewWebHook(http.NewServeMux()))
 }

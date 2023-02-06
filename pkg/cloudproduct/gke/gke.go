@@ -76,10 +76,7 @@ func Detect(ctx context.Context, kc *kubernetes.Clientset) string {
 // Autopilot returns a GKE Autopilot cloud product
 //
 //nolint:revive // ignore the unexported return; implements ControllerHooksInterface
-func Autopilot() (*gkeAutopilot, error) {
-	ap := &gkeAutopilot{}
-	return ap, nil
-}
+func Autopilot() *gkeAutopilot { return &gkeAutopilot{} }
 
 func (*gkeAutopilot) SyncPodPortsToGameServer(gs *agonesv1.GameServer, pod *corev1.Pod) error {
 	// If applyGameServerAddressAndPort has already filled in Status, SyncPodPortsToGameServer
