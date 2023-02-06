@@ -277,12 +277,7 @@ steps:
   script: |
     #!/usr/bin/env bash
 
-    on_going_builds=($(gcloud builds list --ongoing --filter "tags:'e2e-test'" --format="value(id)" | xargs))
-    for on_going_build in ${on_going_builds[@]}
-    do
-      echo "Cancelling e2e test build $on_going_build"
-      gcloud builds cancel $on_going_build
-    done
+    gcloud builds list --ongoing --filter "tags:'e2e-test'" --format="value(id)" | xargs --no-run-if-empty gcloud builds cancel 
 
 # kick off the child e2e test cloud builds in parallel, fail this build if any of the child build fails
 
