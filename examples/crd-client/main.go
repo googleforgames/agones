@@ -93,9 +93,8 @@ func main() {
 			Container: "simple-game-server",
 			Ports: []agonesv1.GameServerPort{{
 				ContainerPort: 7654,
-				HostPort:      7654,
 				Name:          "gameport",
-				PortPolicy:    agonesv1.Static,
+				PortPolicy:    agonesv1.Dynamic,
 				Protocol:      corev1.ProtocolUDP,
 			}},
 			Template: corev1.PodTemplateSpec{

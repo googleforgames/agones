@@ -16,15 +16,25 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   generateName: create-gs-
+  namespace: agones-system
 spec:
   backoffLimit: 5
-  activeDeadlineSeconds: 100
+  activeDeadlineSeconds: 1000
   template:
     spec:
       serviceAccountName: agones-controller
       containers:
       - name: create-gameserver
-        image: us-docker.pkg.dev/agones-images/examples/crd-client:0.7
+        resources:
+          limits:
+            cpu: 500m
+            ephemeral-storage: 1Gi
+            memory: 2Gi
+          requests:
+            cpu: 500m
+            ephemeral-storage: 1Gi
+            memory: 2Gi
+        image: us-docker.pkg.dev/agones-images/examples/crd-client:0.8
         imagePullPolicy: Always
         env:
         - name: GAMESERVER_IMAGE
