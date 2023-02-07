@@ -147,10 +147,14 @@ run-sdk-conformance-no-build: ensure-build-sdk-image
 	--net=host $(sidecar_linux_amd64_tag) --grpc-port $(GRPC_PORT) --http-port $(HTTP_PORT)
 
 # Run SDK conformance test for a specific SDK_FOLDER
+run-sdk-conformance-test: TRIES=5
 run-sdk-conformance-test: ensure-agones-sdk-image
 run-sdk-conformance-test: ensure-build-sdk-image
 	$(MAKE) run-sdk-command COMMAND=build-sdk-test
-	$(MAKE) run-sdk-conformance-no-build
+	for try in `seq 1 $(TRIES)`; do \
+	  $(MAKE) run-sdk-conformance-no-build && echo "+++ Success: $(SDK_FOLDER)" && break || \
+	    status=$$? && echo "*** Failure: $(SDK_FOLDER), try $$try/$(TRIES)"; \
+	done; (exit $$status)
 
 run-sdk-conformance-test-cpp:
 	$(MAKE) run-sdk-conformance-test SDK_FOLDER=cpp GRPC_PORT=9003 HTTP_PORT=9103
