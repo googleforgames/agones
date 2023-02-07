@@ -69,6 +69,7 @@ const (
 // Extensions struct contains what is needed to bind webhook handlers
 type Extensions struct {
 	baseLogger *logrus.Entry
+	apiHooks   agonesv1.APIHooks
 }
 
 // Controller is a the GameServerSet controller
@@ -153,8 +154,8 @@ func NewController(
 
 // NewExtensions binds the handlers to the webhook outside the initialization of the controller
 // initializes a new logger for extensions.
-func NewExtensions(wh *webhooks.WebHook) *Extensions {
-	ext := &Extensions{}
+func NewExtensions(apiHooks agonesv1.APIHooks, wh *webhooks.WebHook) *Extensions {
+	ext := &Extensions{apiHooks: apiHooks}
 
 	ext.baseLogger = runtime.NewLoggerWithType(ext)
 
@@ -234,7 +235,7 @@ func (ext *Extensions) creationValidationHandler(review admissionv1.AdmissionRev
 		return review, errors.Wrapf(err, "error unmarshalling GameServerSet json after schema validation: %s", newObj.Raw)
 	}
 
-	causes, ok := newGss.Validate()
+	causes, ok := newGss.Validate(ext.apiHooks)
 	if !ok {
 		review.Response.Allowed = false
 		details := metav1.StatusDetails{

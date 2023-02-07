@@ -124,7 +124,7 @@ func TestMissingPodControllerSyncGameServer(t *testing.T) {
 				Spec: newSingleContainerSpec(), Status: agonesv1.GameServerStatus{}}
 			gs.ApplyDefaults()
 
-			pod, err := gs.Pod()
+			pod, err := gs.Pod(agonesv1.FakeAPIHooks{})
 			assert.NoError(t, err)
 
 			gs, pod = v.setup(gs, pod)

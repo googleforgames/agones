@@ -172,7 +172,7 @@ func (f *Fleet) validateRollingUpdate(value *intstr.IntOrString, causes *[]metav
 // Validate validates the Fleet configuration.
 // If a Fleet is invalid there will be > 0 values in
 // the returned array
-func (f *Fleet) Validate() ([]metav1.StatusCause, bool) {
+func (f *Fleet) Validate(apiHooks APIHooks) ([]metav1.StatusCause, bool) {
 	causes := validateName(f)
 
 	if f.Spec.Strategy.Type == appsv1.RollingUpdateDeploymentStrategyType {
@@ -186,7 +186,7 @@ func (f *Fleet) Validate() ([]metav1.StatusCause, bool) {
 		})
 	}
 	// check Gameserver specification in a Fleet
-	gsCauses := validateGSSpec(f)
+	gsCauses := validateGSSpec(apiHooks, f)
 	if len(gsCauses) > 0 {
 		causes = append(causes, gsCauses...)
 	}

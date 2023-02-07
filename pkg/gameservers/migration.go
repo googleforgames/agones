@@ -23,7 +23,6 @@ import (
 	getterv1 "agones.dev/agones/pkg/client/clientset/versioned/typed/agones/v1"
 	"agones.dev/agones/pkg/client/informers/externalversions"
 	listerv1 "agones.dev/agones/pkg/client/listers/agones/v1"
-	"agones.dev/agones/pkg/cloudproduct"
 	"agones.dev/agones/pkg/util/logfields"
 	"agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/workerqueue"
@@ -46,16 +45,17 @@ import (
 // event happens on a node, and a Pod is recreated with a new Address for a
 // GameServer
 type MigrationController struct {
-	baseLogger       *logrus.Entry
-	podSynced        cache.InformerSynced
-	podLister        corelisterv1.PodLister
-	gameServerSynced cache.InformerSynced
-	gameServerGetter getterv1.GameServersGetter
-	gameServerLister listerv1.GameServerLister
-	nodeLister       corelisterv1.NodeLister
-	nodeSynced       cache.InformerSynced
-	workerqueue      *workerqueue.WorkerQueue
-	recorder         record.EventRecorder
+	baseLogger               *logrus.Entry
+	podSynced                cache.InformerSynced
+	podLister                corelisterv1.PodLister
+	gameServerSynced         cache.InformerSynced
+	gameServerGetter         getterv1.GameServersGetter
+	gameServerLister         listerv1.GameServerLister
+	nodeLister               corelisterv1.NodeLister
+	nodeSynced               cache.InformerSynced
+	workerqueue              *workerqueue.WorkerQueue
+	recorder                 record.EventRecorder
+	syncPodPortsToGameServer func(*agonesv1.GameServer, *corev1.Pod) error
 }
 
 // NewMigrationController returns a MigrationController
@@ -63,18 +63,21 @@ func NewMigrationController(health healthcheck.Handler,
 	kubeClient kubernetes.Interface,
 	agonesClient versioned.Interface,
 	kubeInformerFactory informers.SharedInformerFactory,
-	agonesInformerFactory externalversions.SharedInformerFactory) *MigrationController {
+	agonesInformerFactory externalversions.SharedInformerFactory,
+	syncPodPortsToGameServer func(*agonesv1.GameServer, *corev1.Pod) error,
+) *MigrationController {
 
 	podInformer := kubeInformerFactory.Core().V1().Pods().Informer()
 	gameserverInformer := agonesInformerFactory.Agones().V1().GameServers()
 	mc := &MigrationController{
-		podSynced:        podInformer.HasSynced,
-		podLister:        kubeInformerFactory.Core().V1().Pods().Lister(),
-		gameServerSynced: gameserverInformer.Informer().HasSynced,
-		gameServerGetter: agonesClient.AgonesV1(),
-		gameServerLister: gameserverInformer.Lister(),
-		nodeLister:       kubeInformerFactory.Core().V1().Nodes().Lister(),
-		nodeSynced:       kubeInformerFactory.Core().V1().Nodes().Informer().HasSynced,
+		podSynced:                podInformer.HasSynced,
+		podLister:                kubeInformerFactory.Core().V1().Pods().Lister(),
+		gameServerSynced:         gameserverInformer.Informer().HasSynced,
+		gameServerGetter:         agonesClient.AgonesV1(),
+		gameServerLister:         gameserverInformer.Lister(),
+		nodeLister:               kubeInformerFactory.Core().V1().Nodes().Lister(),
+		nodeSynced:               kubeInformerFactory.Core().V1().Nodes().Informer().HasSynced,
+		syncPodPortsToGameServer: syncPodPortsToGameServer,
 	}
 
 	mc.baseLogger = runtime.NewLoggerWithType(mc)
@@ -188,7 +191,7 @@ func (mc *MigrationController) syncGameServer(ctx context.Context, key string) e
 		// If the GameServer has yet to become ready, we will reapply the Address and Port
 		// otherwise, we move it to Unhealthy so that a new GameServer will be recreated.
 		if gsCopy.IsBeforeReady() {
-			gsCopy, err = applyGameServerAddressAndPort(gsCopy, node, pod, cloudproduct.ControllerHooks().SyncPodPortsToGameServer)
+			gsCopy, err = applyGameServerAddressAndPort(gsCopy, node, pod, mc.syncPodPortsToGameServer)
 			if err != nil {
 				return err
 			}

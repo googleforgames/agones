@@ -71,10 +71,10 @@ type gsSpec interface {
 
 // validateGSSpec Check GameServerSpec of a CRD
 // Used by Fleet and GameServerSet
-func validateGSSpec(gs gsSpec) []metav1.StatusCause {
+func validateGSSpec(apiHooks APIHooks, gs gsSpec) []metav1.StatusCause {
 	gsSpec := gs.GetGameServerSpec()
 	gsSpec.ApplyDefaults()
-	causes, _ := gsSpec.Validate("")
+	causes, _ := gsSpec.Validate(apiHooks, "")
 
 	return causes
 }

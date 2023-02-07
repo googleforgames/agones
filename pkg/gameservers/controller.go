@@ -66,6 +66,7 @@ const (
 // Extensions struct contains what is needed to bind webhook handlers
 type Extensions struct {
 	baseLogger *logrus.Entry
+	apiHooks   agonesv1.APIHooks
 }
 
 // Controller is a the main GameServer crd controller
@@ -73,6 +74,7 @@ type Extensions struct {
 //nolint:govet // ignore fieldalignment, singleton
 type Controller struct {
 	baseLogger             *logrus.Entry
+	controllerHooks        cloudproduct.ControllerHooksInterface
 	sidecarImage           string
 	alwaysPullSidecarImage bool
 	sidecarCPURequest      resource.Quantity
@@ -101,6 +103,7 @@ type Controller struct {
 
 // NewController returns a new gameserver crd controller
 func NewController(
+	controllerHooks cloudproduct.ControllerHooksInterface,
 	health healthcheck.Handler,
 	minPort, maxPort int32,
 	sidecarImage string,
@@ -122,6 +125,7 @@ func NewController(
 	gsInformer := gameServers.Informer()
 
 	c := &Controller{
+		controllerHooks:        controllerHooks,
 		sidecarImage:           sidecarImage,
 		sidecarCPULimit:        sidecarCPULimit,
 		sidecarCPURequest:      sidecarCPURequest,
@@ -138,9 +142,9 @@ func NewController(
 		gameServerSynced:       gsInformer.HasSynced,
 		nodeLister:             kubeInformerFactory.Core().V1().Nodes().Lister(),
 		nodeSynced:             kubeInformerFactory.Core().V1().Nodes().Informer().HasSynced,
-		portAllocator:          cloudproduct.ControllerHooks().NewPortAllocator(minPort, maxPort, kubeInformerFactory, agonesInformerFactory),
-		healthController:       NewHealthController(health, kubeClient, agonesClient, kubeInformerFactory, agonesInformerFactory),
-		migrationController:    NewMigrationController(health, kubeClient, agonesClient, kubeInformerFactory, agonesInformerFactory),
+		portAllocator:          controllerHooks.NewPortAllocator(minPort, maxPort, kubeInformerFactory, agonesInformerFactory),
+		healthController:       NewHealthController(health, kubeClient, agonesClient, kubeInformerFactory, agonesInformerFactory, controllerHooks.WaitOnFreePorts()),
+		migrationController:    NewMigrationController(health, kubeClient, agonesClient, kubeInformerFactory, agonesInformerFactory, controllerHooks.SyncPodPortsToGameServer),
 		missingPodController:   NewMissingPodController(health, kubeClient, agonesClient, kubeInformerFactory, agonesInformerFactory),
 	}
 
@@ -198,8 +202,8 @@ func NewController(
 
 // NewExtensions binds the handlers to the webhook outside the initialization of the controller
 // initializes a new logger for extensions.
-func NewExtensions(wh *webhooks.WebHook) *Extensions {
-	ext := &Extensions{}
+func NewExtensions(apiHooks agonesv1.APIHooks, wh *webhooks.WebHook) *Extensions {
+	ext := &Extensions{apiHooks: apiHooks}
 
 	ext.baseLogger = runtime.NewLoggerWithType(ext)
 
@@ -298,7 +302,7 @@ func (ext *Extensions) creationValidationHandler(review admissionv1.AdmissionRev
 
 	loggerForGameServer(gs, ext.baseLogger).WithField("review", review).Debug("creationValidationHandler")
 
-	causes, ok := gs.Validate()
+	causes, ok := gs.Validate(ext.apiHooks)
 	if !ok {
 		review.Response.Allowed = false
 		details := metav1.StatusDetails{
@@ -566,7 +570,7 @@ func (c *Controller) syncDevelopmentGameServer(ctx context.Context, gs *agonesv1
 // createGameServerPod creates the backing Pod for a given GameServer
 func (c *Controller) createGameServerPod(ctx context.Context, gs *agonesv1.GameServer) (*agonesv1.GameServer, error) {
 	sidecar := c.sidecar(gs)
-	pod, err := gs.Pod(sidecar)
+	pod, err := gs.Pod(c.controllerHooks, sidecar)
 	if err != nil {
 		// this shouldn't happen, but if it does.
 		loggerForGameServer(gs, c.baseLogger).WithError(err).Error("error creating pod from Game Server")
@@ -784,7 +788,7 @@ func (c *Controller) syncGameServerStartingState(ctx context.Context, gs *agones
 		return gs, errors.Wrapf(err, "error retrieving node %s for Pod %s", pod.Spec.NodeName, pod.ObjectMeta.Name)
 	}
 	gsCopy := gs.DeepCopy()
-	gsCopy, err = applyGameServerAddressAndPort(gsCopy, node, pod, cloudproduct.ControllerHooks().SyncPodPortsToGameServer)
+	gsCopy, err = applyGameServerAddressAndPort(gsCopy, node, pod, c.controllerHooks.SyncPodPortsToGameServer)
 	if err != nil {
 		return gs, err
 	}
@@ -835,7 +839,7 @@ func (c *Controller) syncGameServerRequestReadyState(ctx context.Context, gs *ag
 		if err != nil {
 			return gs, errors.Wrapf(err, "error retrieving node %s for Pod %s", pod.Spec.NodeName, pod.ObjectMeta.Name)
 		}
-		gsCopy, err = applyGameServerAddressAndPort(gsCopy, node, pod, cloudproduct.ControllerHooks().SyncPodPortsToGameServer)
+		gsCopy, err = applyGameServerAddressAndPort(gsCopy, node, pod, c.controllerHooks.SyncPodPortsToGameServer)
 		if err != nil {
 			return gs, err
 		}
