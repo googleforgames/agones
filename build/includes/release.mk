@@ -24,7 +24,7 @@
 #
 
 # agones image release registry
-release_registry = us-docker.pkg.dev/agones-images/release
+release_registry = us-docker.pkg.dev/agones-mangalpalli/release
 
 # generate a changelog using github-changelog-generator
 gen-changelog: RELEASE_VERSION ?= $(base_version)
@@ -76,22 +76,28 @@ do-release: $(ensure-build-image)
 	@echo "Starting release for version: $(RELEASE_VERSION)"
 
 	# switch to the right project
-	$(DOCKER_RUN) gcloud config configurations activate agones-images
+	$(DOCKER_RUN) gcloud config configurations activate agones-mangalpalli
 
 	git checkout -b release-$(RELEASE_VERSION)
 	-rm -rf $(agones_path)/release
 	mkdir $(agones_path)/release
 
+	@echo "above Make OK**************"
 	$(MAKE) -j 4 build VERSION=$(RELEASE_VERSION) REGISTRY=$(release_registry) FULL_BUILD=1
+	@echo "inside Make OK**************"
 	cp $(agones_path)/cmd/sdk-server/bin/agonessdk-server-$(RELEASE_VERSION).zip $(agones_path)/release
+	@echo "inside server OK**************"
 	cp $(agones_path)/sdks/cpp/.archives/agonessdk-$(RELEASE_VERSION)-linux-arch_64.tar.gz $(agones_path)/release
+	@echo "inside linux OK**************"
 	cd $(agones_path) &&  zip -r ./release/agones-install-$(RELEASE_VERSION).zip ./README.md ./install ./LICENSE
+	@echo "install server OK**************"
 
 	$(MAKE) gcloud-auth-docker
 	$(MAKE) -j 4 push REGISTRY=$(release_registry) VERSION=$(RELEASE_VERSION)
 
 	$(MAKE) push-chart VERSION=$(RELEASE_VERSION)
-	git push -u upstream release-$(RELEASE_VERSION)
+	#git push -u upstream release-$(RELEASE_VERSION)
+	git push -u origin release-$(RELEASE_VERSION)
 
 	@echo "Now go make the $(RELEASE_VERSION) release on Github!"
 

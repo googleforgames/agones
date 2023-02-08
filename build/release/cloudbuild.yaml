@@ -19,19 +19,30 @@ steps:
       - '-c'
       - 'gsutil mb $_STORAGE || true'
     id: create-bucket
-  - name: ferrarimarco/github-changelog-generator:1.15.0
-    id: changelog
+  - name: gcr.io/agones-mangalpalli/git
+    args: ['clone', 'https://github.com/agones-mangalpalli/agones.git']
+    secretEnv:
+      - GH_TOKEN
+  - name: gcr.io/cloud-builders/git
     entrypoint: sh
     args:
       - '-c'
-      - 'github_changelog_generator --user=googleforgames --project=agones --bug-labels=kind/bug --enhancement-labels=kind/feature --breaking-labels=kind/breaking --security-labels=area/security --exclude-labels=duplicate,question,invalid,wontfix,priority/wontfix --future-release "v${_VERSION}" --release-branch=main --token $$GH_TOKEN'
+      - 'git checkout -b release-$(RELEASE_VERSION)'
+      - 'rm -rf $(agones_path)/release'
+      - 'mkdir $(agones_path)/release'
+      - echo "KALAITEST123"
     secretEnv:
       - GH_TOKEN
+  - name: gcr.io/cloud-builders/gcloud
+    entrypoint: sh
+    args: ['make -j 4 build VERSION=1.30.0 REGISTRY=us-docker.pkg.dev/agones-mangalpalli/release FULL_BUILD=1']
 artifacts:
   objects:
-    location: '$_STORAGE'
+    location: 'gs://kalai-gcs-temp'
     paths:
-      - 'CHANGELOG.md'
+      - 'agonessdk-server-$(RELEASE_VERSION).zip'
+      - 'agonessdk-$(RELEASE_VERSION)-linux-arch_64.tar.gz'
+      - 'agones-install-$(RELEASE_VERSION).zip'
 options:
   machineType: E2_HIGHCPU_32
   dynamic_substitutions: true
