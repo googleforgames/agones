@@ -59,24 +59,3 @@ provider "helm" {
     cluster_ca_certificate = module.gke_cluster.cluster_ca_certificate
   }
 }
-
-resource "helm_release" "consul" {
-  repository = "https://helm.releases.hashicorp.com"
-  chart      = "consul"
-  name       = "consul"
-
-  set {
-    name  = "server.replicas"
-    value = "1"
-  }
-
-  set {
-    name  = "ui.service.type"
-    value = "ClusterIP"
-  }
-
-  set {
-    name  = "client.enabled"
-    value = "false"
-  }
-}
