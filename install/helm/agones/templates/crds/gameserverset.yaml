@@ -113,7 +113,7 @@ spec:
                       type: integer
                       minimum: 0
 {{- if $featureGates.CountsAndLists }}
-                counts:
+                counters:
                   type: array
                   nullable: true
                   maxItems: 1000

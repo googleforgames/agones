@@ -154,7 +154,7 @@ properties:
             title: The initial player capacity of this Game Server
             minimum: 0
 {{- if .featureCountsAndLists }}
-      counts:
+      counters:
         type: array
         title: Array of player, room, session, etc. counters
         nullable: true
