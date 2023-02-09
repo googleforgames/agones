@@ -164,7 +164,7 @@ properties:
           properties:
             name: # counter name
               type: string
-            count: # current count
+            count: # initial count
               type: integer
             capacity: # max capacity of the counter
               type: integer
@@ -178,14 +178,14 @@ properties:
           properties:
             name: # array name (players, sessions, rooms, etc.)
               type: string
-            count: # number of items in the values array
+            count: # initial number of items in the values array
               type: integer
-            capacity: # maximum capacity of the array (can be less than or equal to value of maxItems)
+            capacity: # max capacity of the array (can be less than or equal to value of maxItems)
               type: integer
             values:
               type: array
               x-kubernetes-list-type: set # Requires items in the array to be unique
-              maxItems: 1000 # maximum possible size of the value array (cannot be updated)
+              maxItems: 1000 # max possible size of the value array (cannot be updated)
               items: # name of the item (player1, session1, room1, etc.)
                 type: string
 {{- end }}
