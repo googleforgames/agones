@@ -156,7 +156,7 @@ func main() {
 		logger.WithError(err).Fatal("Could not create the agones api clientset")
 	}
 
-	err = cloudproduct.Initialize(ctx, kubeClient)
+	controllerHooks, err := cloudproduct.NewFromFlag(ctx, kubeClient)
 	if err != nil {
 		logger.WithError(err).Fatal("Could not initialize cloud product")
 	}
@@ -209,7 +209,7 @@ func main() {
 
 	gsCounter := gameservers.NewPerNodeCounter(kubeInformerFactory, agonesInformerFactory)
 
-	gsController := gameservers.NewController(health,
+	gsController := gameservers.NewController(controllerHooks, health,
 		ctlConf.MinPort, ctlConf.MaxPort, ctlConf.SidecarImage, ctlConf.AlwaysPullSidecar,
 		ctlConf.SidecarCPURequest, ctlConf.SidecarCPULimit,
 		ctlConf.SidecarMemoryRequest, ctlConf.SidecarMemoryLimit, ctlConf.SdkServiceAccount,
@@ -224,9 +224,9 @@ func main() {
 		httpsServer, gsCounter, gsController, gsSetController, fleetController, fasController, server)
 
 	if !runtime.FeatureEnabled(runtime.FeatureSplitControllerAndExtensions) {
-		gameservers.NewExtensions(wh)
-		gameserversets.NewExtensions(wh)
-		fleets.NewExtensions(wh)
+		gameservers.NewExtensions(controllerHooks, wh)
+		gameserversets.NewExtensions(controllerHooks, wh)
+		fleets.NewExtensions(controllerHooks, wh)
 		fleetautoscalers.NewExtensions(wh)
 
 		gasController := gameserverallocations.NewExtensions(api, health, gsCounter, kubeClient, kubeInformerFactory,

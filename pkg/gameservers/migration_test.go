@@ -73,7 +73,7 @@ func TestMigrationControllerIsRunningGameServer(t *testing.T) {
 				Spec: newSingleContainerSpec()}
 			gs.ApplyDefaults()
 
-			gsPod, err := gs.Pod()
+			gsPod, err := gs.Pod(agonesv1.FakeAPIHooks{})
 			require.NoError(t, err)
 
 			pod := v.setup(gsPod)
@@ -192,14 +192,14 @@ func TestMigrationControllerSyncGameServer(t *testing.T) {
 	for k, v := range fixtures {
 		t.Run(k, func(t *testing.T) {
 			m := agtesting.NewMocks()
-			c := NewMigrationController(healthcheck.NewHandler(), m.KubeClient, m.AgonesClient, m.KubeInformerFactory, m.AgonesInformerFactory)
+			c := NewMigrationController(healthcheck.NewHandler(), m.KubeClient, m.AgonesClient, m.KubeInformerFactory, m.AgonesInformerFactory, nilSyncPodPortsToGameServer)
 			c.recorder = m.FakeRecorder
 
 			gs := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
 				Spec: newSingleContainerSpec(), Status: agonesv1.GameServerStatus{}}
 			gs.ApplyDefaults()
 
-			pod, err := gs.Pod()
+			pod, err := gs.Pod(agonesv1.FakeAPIHooks{})
 			require.NoError(t, err)
 			pod.Spec.NodeName = nodeFixtureName
 
@@ -243,11 +243,11 @@ func TestMigrationControllerSyncGameServer(t *testing.T) {
 
 func TestMigrationControllerRun(t *testing.T) {
 	m := agtesting.NewMocks()
-	c := NewMigrationController(healthcheck.NewHandler(), m.KubeClient, m.AgonesClient, m.KubeInformerFactory, m.AgonesInformerFactory)
+	c := NewMigrationController(healthcheck.NewHandler(), m.KubeClient, m.AgonesClient, m.KubeInformerFactory, m.AgonesInformerFactory, nilSyncPodPortsToGameServer)
 	gs := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
 		Spec: newSingleContainerSpec(), Status: agonesv1.GameServerStatus{}}
 	gs.ApplyDefaults()
-	gsPod, err := gs.Pod()
+	gsPod, err := gs.Pod(agonesv1.FakeAPIHooks{})
 	require.NoError(t, err)
 	gsPod.Spec.NodeName = nodeFixtureName
 
@@ -316,3 +316,5 @@ func TestMigrationControllerRun(t *testing.T) {
 	podWatch.Modify(pod.DeepCopy())
 	noChange()
 }
+
+func nilSyncPodPortsToGameServer(*agonesv1.GameServer, *corev1.Pod) error { return nil }

@@ -49,7 +49,6 @@ clean-gcloud-test-cluster: $(ensure-build-image)
 	$(MAKE) gcloud-terraform-destroy-cluster
 
 # Creates a gcloud cluster for end-to-end
-# it installs also a consul cluster to handle build system concurrency using a distributed lock
 gcloud-e2e-test-cluster: GCP_PROJECT ?= $(shell $(current_project))
 gcloud-e2e-test-cluster: $(ensure-build-image)
 gcloud-e2e-test-cluster:

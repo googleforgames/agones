@@ -98,11 +98,11 @@ func (gsSet *GameServerSet) ValidateUpdate(newGSS *GameServerSet) ([]metav1.Stat
 }
 
 // Validate validates when Create occurs. Check the name size
-func (gsSet *GameServerSet) Validate() ([]metav1.StatusCause, bool) {
+func (gsSet *GameServerSet) Validate(apiHooks APIHooks) ([]metav1.StatusCause, bool) {
 	causes := validateName(gsSet)
 
 	// check GameServer specification in a GameServerSet
-	gsCauses := validateGSSpec(gsSet)
+	gsCauses := validateGSSpec(apiHooks, gsSet)
 	if len(gsCauses) > 0 {
 		causes = append(causes, gsCauses...)
 	}

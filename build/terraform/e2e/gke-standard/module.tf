@@ -51,32 +51,3 @@ module "gke_cluster" {
 
   udpFirewall = false // firewall is created at the project module level
 }
-
-provider "helm" {
-  kubernetes {
-    host                   = module.gke_cluster.host
-    token                  = module.gke_cluster.token
-    cluster_ca_certificate = module.gke_cluster.cluster_ca_certificate
-  }
-}
-
-resource "helm_release" "consul" {
-  repository = "https://helm.releases.hashicorp.com"
-  chart      = "consul"
-  name       = "consul"
-
-  set {
-    name  = "server.replicas"
-    value = "1"
-  }
-
-  set {
-    name  = "ui.service.type"
-    value = "ClusterIP"
-  }
-
-  set {
-    name  = "client.enabled"
-    value = "false"
-  }
-}

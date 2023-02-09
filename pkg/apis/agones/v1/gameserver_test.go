@@ -1011,7 +1011,7 @@ func TestGameServerValidate(t *testing.T) {
 				tc.gs.ApplyDefaults()
 			}
 
-			causes, ok := tc.gs.Validate()
+			causes, ok := tc.gs.Validate(FakeAPIHooks{})
 
 			assert.Equal(t, tc.isValid, ok)
 			assert.ElementsMatch(t, tc.causesExpected, causes, "causes check")
@@ -1121,7 +1121,7 @@ func TestGameServerValidateFeatures(t *testing.T) {
 			err := runtime.ParseFeatures(tc.feature)
 			assert.NoError(t, err)
 
-			causes, ok := tc.gs.Validate()
+			causes, ok := tc.gs.Validate(FakeAPIHooks{})
 
 			assert.Equal(t, tc.isValid, ok)
 			assert.ElementsMatch(t, tc.causesExpected, causes, "causes check")
@@ -1134,7 +1134,7 @@ func TestGameServerPodNoErrors(t *testing.T) {
 	fixture := defaultGameServer()
 	fixture.ApplyDefaults()
 
-	pod, err := fixture.Pod()
+	pod, err := fixture.Pod(FakeAPIHooks{})
 	assert.Nil(t, err, "Pod should not return an error")
 	assert.Equal(t, fixture.ObjectMeta.Name, pod.ObjectMeta.Name)
 	assert.Equal(t, fixture.ObjectMeta.Name, pod.Spec.Hostname)
@@ -1155,7 +1155,7 @@ func TestGameServerPodHostName(t *testing.T) {
 	fixture := defaultGameServer()
 	fixture.ObjectMeta.Name = "test-1.0"
 	fixture.ApplyDefaults()
-	pod, err := fixture.Pod()
+	pod, err := fixture.Pod(FakeAPIHooks{})
 	require.NoError(t, err)
 	assert.Equal(t, "test-1-0", pod.Spec.Hostname)
 
@@ -1163,7 +1163,7 @@ func TestGameServerPodHostName(t *testing.T) {
 	fixture.ApplyDefaults()
 	expected := "ORANGE"
 	fixture.Spec.Template.Spec.Hostname = expected
-	pod, err = fixture.Pod()
+	pod, err = fixture.Pod(FakeAPIHooks{})
 	require.NoError(t, err)
 	assert.Equal(t, expected, pod.Spec.Hostname)
 }
@@ -1190,7 +1190,7 @@ func TestGameServerPodContainerNotFoundErrReturned(t *testing.T) {
 			},
 		}, Status: GameServerStatus{State: GameServerStateCreating}}
 
-	_, err := fixture.Pod()
+	_, err := fixture.Pod(FakeAPIHooks{})
 	if assert.NotNil(t, err, "Pod should return an error") {
 		assert.Equal(t, "failed to find container named Container1 in pod spec", err.Error())
 	}
@@ -1203,7 +1203,7 @@ func TestGameServerPodWithSidecarNoErrors(t *testing.T) {
 
 	sidecar := corev1.Container{Name: "sidecar", Image: "container/sidecar"}
 	fixture.Spec.Template.Spec.ServiceAccountName = "other-agones-sdk"
-	pod, err := fixture.Pod(sidecar)
+	pod, err := fixture.Pod(FakeAPIHooks{}, sidecar)
 	assert.Nil(t, err, "Pod should not return an error")
 	assert.Equal(t, fixture.ObjectMeta.Name, pod.ObjectMeta.Name)
 	assert.Len(t, pod.Spec.Containers, 2, "Should have two containers")
@@ -1228,7 +1228,7 @@ func TestGameServerPodWithMultiplePortAllocations(t *testing.T) {
 	fixture.Spec.Container = fixture.Spec.Template.Spec.Containers[0].Name
 	fixture.ApplyDefaults()
 
-	pod, err := fixture.Pod()
+	pod, err := fixture.Pod(FakeAPIHooks{})
 	assert.NoError(t, err, "Pod should not return an error")
 	assert.Equal(t, fixture.ObjectMeta.Name, pod.ObjectMeta.Name)
 	assert.Equal(t, fixture.ObjectMeta.Namespace, pod.ObjectMeta.Namespace)
@@ -1298,102 +1298,6 @@ func TestGameServerPodObjectMeta(t *testing.T) {
 	}
 }
 
-func TestGameServerPodAutoscalerAnnotations(t *testing.T) {
-	runtime.FeatureTestMutex.Lock()
-	defer runtime.FeatureTestMutex.Unlock()
-
-	testCases := []struct {
-		featureFlags       string
-		description        string
-		scheduling         apis.SchedulingStrategy
-		setAnnotation      bool
-		expectedAnnotation string
-	}{
-		{
-			featureFlags:       "SafeToEvict=false",
-			description:        "Packed, SafeToEvict=false",
-			scheduling:         apis.Packed,
-			expectedAnnotation: "false",
-		},
-		{
-			featureFlags:       "SafeToEvict=false",
-			description:        "Distributed, SafeToEvict=false",
-			scheduling:         apis.Distributed,
-			expectedAnnotation: "",
-		},
-		{
-			featureFlags:       "SafeToEvict=false",
-			description:        "Packed with autoscaler annotation, SafeToEvict=false",
-			scheduling:         apis.Packed,
-			setAnnotation:      true,
-			expectedAnnotation: "true",
-		},
-		{
-			featureFlags:       "SafeToEvict=false",
-			description:        "Distributed with autoscaler annotation, SafeToEvict=false",
-			scheduling:         apis.Distributed,
-			setAnnotation:      true,
-			expectedAnnotation: "true",
-		},
-		{
-			featureFlags:       "SafeToEvict=true",
-			description:        "Packed, SafeToEvict=true",
-			scheduling:         apis.Packed,
-			expectedAnnotation: "false",
-		},
-		{
-			featureFlags:       "SafeToEvict=true",
-			description:        "Distributed, SafeToEvict=true",
-			scheduling:         apis.Distributed,
-			expectedAnnotation: "false",
-		},
-		{
-			featureFlags:       "SafeToEvict=true",
-			description:        "Packed with autoscaler annotation, SafeToEvict=true",
-			scheduling:         apis.Packed,
-			setAnnotation:      true,
-			expectedAnnotation: "true",
-		},
-		{
-			featureFlags:       "SafeToEvict=true",
-			description:        "Distributed with autoscaler annotation, SafeToEvict=true",
-			scheduling:         apis.Distributed,
-			setAnnotation:      true,
-			expectedAnnotation: "true",
-		},
-	}
-
-	fixture := &GameServer{
-		ObjectMeta: metav1.ObjectMeta{Name: "logan"},
-		Spec:       GameServerSpec{Container: "sheep"},
-		Status:     GameServerStatus{Eviction: Eviction{Safe: EvictionSafeNever}},
-	}
-	for _, tc := range testCases {
-		t.Run(tc.description, func(t *testing.T) {
-			err := runtime.ParseFeatures(tc.featureFlags)
-			assert.NoError(t, err)
-
-			gs := fixture.DeepCopy()
-			gs.Spec.Scheduling = tc.scheduling
-			if tc.setAnnotation {
-				gs.Spec.Template = corev1.PodTemplateSpec{ObjectMeta: metav1.ObjectMeta{
-					Annotations: map[string]string{PodSafeToEvictAnnotation: "true"},
-				}}
-			}
-			pod, err := gs.Pod()
-			assert.Nil(t, err, "Pod should not return an error")
-			assert.Equal(t, gs.ObjectMeta.Name, pod.ObjectMeta.Name)
-			assert.Equal(t, gs.ObjectMeta.Namespace, pod.ObjectMeta.Namespace)
-			assert.Equal(t, GameServerLabelRole, pod.ObjectMeta.Labels[RoleLabel])
-			assert.Equal(t, "gameserver", pod.ObjectMeta.Labels[agones.GroupName+"/role"])
-			assert.Equal(t, gs.ObjectMeta.Name, pod.ObjectMeta.Labels[GameServerPodLabel])
-			assert.Equal(t, "sheep", pod.ObjectMeta.Annotations[GameServerContainerAnnotation])
-			assert.True(t, metav1.IsControlledBy(pod, gs))
-			assert.Equal(t, tc.expectedAnnotation, pod.ObjectMeta.Annotations[PodSafeToEvictAnnotation])
-		})
-	}
-}
-
 func TestGameServerPodScheduling(t *testing.T) {
 	fixture := &corev1.Pod{Spec: corev1.PodSpec{}}
 
@@ -1428,7 +1332,7 @@ func TestGameServerDisableServiceAccount(t *testing.T) {
 		}}}
 
 	gs.ApplyDefaults()
-	pod, err := gs.Pod()
+	pod, err := gs.Pod(FakeAPIHooks{})
 	assert.NoError(t, err)
 	assert.Len(t, pod.Spec.Containers, 1)
 	assert.Empty(t, pod.Spec.Containers[0].VolumeMounts)

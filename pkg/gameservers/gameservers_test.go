@@ -31,7 +31,7 @@ func TestIsGameServerPod(t *testing.T) {
 	t.Run("it is a game server pod", func(t *testing.T) {
 		gs := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gameserver", UID: "1234"}, Spec: newSingleContainerSpec()}
 		gs.ApplyDefaults()
-		pod, err := gs.Pod()
+		pod, err := gs.Pod(agonesv1.FakeAPIHooks{})
 		require.NoError(t, err)
 		assert.True(t, isGameServerPod(pod))
 	})
@@ -131,7 +131,7 @@ func TestApplyGameServerAddressAndPort(t *testing.T) {
 				Spec: newSingleContainerSpec(), Status: agonesv1.GameServerStatus{State: agonesv1.GameServerStateRequestReady}}
 			gsFixture.ApplyDefaults()
 			node := &corev1.Node{ObjectMeta: metav1.ObjectMeta{Name: nodeFixtureName}, Status: corev1.NodeStatus{Addresses: []corev1.NodeAddress{{Address: ipFixture, Type: corev1.NodeExternalIP}}}}
-			pod, err := gsFixture.Pod()
+			pod, err := gsFixture.Pod(agonesv1.FakeAPIHooks{})
 			require.NoError(t, err)
 			pod.Spec.NodeName = node.ObjectMeta.Name
 			tc.podMod(pod)
@@ -152,7 +152,7 @@ func TestApplyGameServerAddressAndPort(t *testing.T) {
 			Spec: newSingleContainerSpec(), Status: agonesv1.GameServerStatus{State: agonesv1.GameServerStateRequestReady}}
 		gsFixture.ApplyDefaults()
 		node := &corev1.Node{ObjectMeta: metav1.ObjectMeta{Name: nodeFixtureName}, Status: corev1.NodeStatus{Addresses: []corev1.NodeAddress{}}}
-		pod, err := gsFixture.Pod()
+		pod, err := gsFixture.Pod(agonesv1.FakeAPIHooks{})
 		require.NoError(t, err)
 		pod.Spec.NodeName = node.ObjectMeta.Name
 

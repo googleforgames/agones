@@ -26,6 +26,7 @@ import (
 
 	"agones.dev/agones/pkg/apis"
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
+	"agones.dev/agones/pkg/cloudproduct/generic"
 	"agones.dev/agones/pkg/gameservers"
 	agtesting "agones.dev/agones/pkg/testing"
 	utilruntime "agones.dev/agones/pkg/util/runtime"
@@ -1004,5 +1005,5 @@ func newFakeController() (*Controller, agtesting.Mocks) {
 
 // newFakeExtensions returns an extensions struct
 func newFakeExtensions() *Extensions {
-	return NewExtensions(webhooks.NewWebHook(http.NewServeMux()))
+	return NewExtensions(generic.New(), webhooks.NewWebHook(http.NewServeMux()))
 }
