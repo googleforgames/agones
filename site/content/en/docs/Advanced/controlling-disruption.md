@@ -12,7 +12,12 @@ description: >
 
 By default, Agones assumes your game server should never be disrupted voluntarily and configures the `Pod` appropriately - but this isn't always the ideal setting. Here we discuss how Agones allows you to control the two most significant sources of voluntary `Pod` evictions, node upgrades and Cluster Autoscaler, using the `eviction` API on the `GameServer` object. 
 
+{{% feature publishVersion="1.30.0" %}}
 {{< beta title="`eviction` API" gate="SafeToEvict" >}}
+{{% /feature %}}
+{{< feature expiryVersion="1.30.0" >}}
+{{< alpha title="`eviction` API" gate="SafeToEvict" >}}
+{{% /feature %}}
 
 ## Benefits of Allowing Voluntary Disruption
 
