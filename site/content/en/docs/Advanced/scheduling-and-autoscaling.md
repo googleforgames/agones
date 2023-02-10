@@ -98,6 +98,8 @@ This affects the Cluster autoscaler, Allocation Scheduling, Pod Scheduling and F
 #### Cluster Autoscaler
 
 {{% feature publishVersion="1.30.0" %}}
+When using the "Packed" strategy, Agones will ensure that the Cluster Autoscaler doesn't attempt to evict and move `GameServer` `Pods` onto new Nodes during
+gameplay.
 
 {{< beta title="`eviction` API" gate="SafeToEvict" >}}
 
@@ -106,13 +108,14 @@ If a gameserver can tolerate [being evicted](https://kubernetes.io/docs/concepts
 want the Cluster Autoscaler to compact your cluster by evicting game servers when it would allow the Cluster
 Autoscaler to reduce the number of nodes in the cluster, [Controlling Disruption]({{< relref "controlling-disruption.md" >}}) describes
 how to choose the `.eviction` setting appropriate for your `GameServer` or `Fleet`.
-
 {{% /feature %}}
-{{< feature expiryVersion="1.30.0" >}}
+
+{{% feature expiryVersion="1.30.0" %}}
 When using the “Packed” strategy, Agones will ensure that the Cluster Autoscaler doesn't attempt to evict and move `GameServer` `Pods` onto new Nodes during
 gameplay by adding the annotation [`"cluster-autoscaler.kubernetes.io/safe-to-evict": "false"`](https://github.com/kubernetes/autoscaler/blob/master/cluster-autoscaler/FAQ.md#what-types-of-pods-can-prevent-ca-from-removing-a-node)
 to the backing Pod.
-
+{{% /feature %}}
+{{< feature expiryVersion="1.30.0" >}}
 {{% alert title="SafeToEvict Feature Gate" color="info" %}}
 The [Alpha]({{< ref "/docs/Guides/feature-stages.md#alpha" >}}) `SafeToEvict` feature allows
 [controlling disruption]({{< relref "controlling-disruption.md" >}}) in a more holistic way.
