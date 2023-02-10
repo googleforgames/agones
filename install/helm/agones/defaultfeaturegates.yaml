@@ -16,6 +16,7 @@
 
 # Beta features
 CustomFasSyncInterval: true
+SafeToEvict: true
 SDKGracefulTermination: true
 StateAllocationFilter: true
 
@@ -23,7 +24,6 @@ StateAllocationFilter: true
 PlayerAllocationFilter: false
 PlayerTracking: false
 ResetMetricsOnDelete: false
-SafeToEvict: false
 PodHostname: false
 SplitControllerAndExtensions: false
 
