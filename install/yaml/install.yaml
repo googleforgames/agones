@@ -1,4 +1,16 @@
 ---
+# Source: agones/templates/pdb.yaml
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: agones-gameserver-safe-to-evict-false
+  namespace: default
+spec:
+  maxUnavailable: 0%
+  selector:
+    matchLabels:
+      agones.dev/safe-to-evict: "false"
+---
 # Source: agones/templates/service/allocation.yaml
 # Create a ServiceAccount that will be bound to the above role
 apiVersion: v1
@@ -5087,6 +5099,27 @@ spec:
                              type: integer
                              title: The initial player capacity of this Game Server
                              minimum: 0
+                       eviction:
+                         type: object
+                         title: Eviction tolerance of the game server
+                         properties:
+                           safe:
+                             type: string
+                             title: Game server supports termination via SIGTERM
+                             description: |
+                               - Never: The game server should run to completion. Agones sets Pod annotation `cluster-autoscaler.kubernetes.io/safe-to-evict: "false"` and label `agones.dev/safe-to-evict: "false"`, which matches a restrictive PodDisruptionBudget.
+                               - OnUpgrade: On SIGTERM, the game server will exit within `terminationGracePeriodSeconds` or be terminated; Agones sets Pod annotation `cluster-autoscaler.kubernetes.io/safe-to-evict: "false"`, which blocks evictions by Cluster Autoscaler. Evictions from node upgrades proceed normally.
+                               - Always: On SIGTERM, the game server will exit within `terminationGracePeriodSeconds` or be terminated, typically within 10m; Agones sets Pod annotation `cluster-autoscaler.kubernetes.io/safe-to-evict: "true"`, which allows evictions by Cluster Autoscaler.
+                             enum:
+                             - Always
+                             - OnUpgrade
+                             - Never
+                       immutableReplicas:
+                         type: integer
+                         title: Immutable count of Pods to a GameServer. Always 1. (Implementation detail of implementing the Scale subresource.)
+                         default: 1
+                         minimum: 1
+                         maximum: 1
             status:
               description: 'FleetStatus is the status of a Fleet. More info:
                 https://agones.dev/site/docs/reference/agones_crd_api_reference/#agones.dev/v1.Fleet'
@@ -10049,7 +10082,28 @@ spec:
                    initialCapacity:
                      type: integer
                      title: The initial player capacity of this Game Server
-                     minimum: 0           
+                     minimum: 0
+               eviction:
+                 type: object
+                 title: Eviction tolerance of the game server
+                 properties:
+                   safe:
+                     type: string
+                     title: Game server supports termination via SIGTERM
+                     description: |
+                       - Never: The game server should run to completion. Agones sets Pod annotation `cluster-autoscaler.kubernetes.io/safe-to-evict: "false"` and label `agones.dev/safe-to-evict: "false"`, which matches a restrictive PodDisruptionBudget.
+                       - OnUpgrade: On SIGTERM, the game server will exit within `terminationGracePeriodSeconds` or be terminated; Agones sets Pod annotation `cluster-autoscaler.kubernetes.io/safe-to-evict: "false"`, which blocks evictions by Cluster Autoscaler. Evictions from node upgrades proceed normally.
+                       - Always: On SIGTERM, the game server will exit within `terminationGracePeriodSeconds` or be terminated, typically within 10m; Agones sets Pod annotation `cluster-autoscaler.kubernetes.io/safe-to-evict: "true"`, which allows evictions by Cluster Autoscaler.
+                     enum:
+                     - Always
+                     - OnUpgrade
+                     - Never
+               immutableReplicas:
+                 type: integer
+                 title: Immutable count of Pods to a GameServer. Always 1. (Implementation detail of implementing the Scale subresource.)
+                 default: 1
+                 minimum: 1
+                 maximum: 1           
            status:
              description: 'GameServerStatus is the status for a GameServer resource. More info:
                https://agones.dev/site/docs/reference/agones_crd_api_reference/#agones.dev/v1.GameServer'
@@ -10101,6 +10155,29 @@ spec:
                      nullable: true
                      items:
                        type: string
+               eviction:
+                 type: object
+                 properties:
+                   safe:
+                     type: string
+                     enum:
+                     - Always
+                     - OnUpgrade
+                     - Never
+               immutableReplicas:
+                 type: integer
+                 title: Immutable count of Pods to a GameServer. Always 1. (Implementation detail of implementing the Scale subresource.)
+                 default: 1
+                 minimum: 1
+                 maximum: 1
+      subresources:
+        # scale enables the scale subresource. We can't actually scale GameServers, but this allows
+        # for the use of PodDisruptionBudget (PDB) without having to use a PDB per Pod.
+        scale:
+          # specReplicasPath defines the JSONPath inside of a custom resource that corresponds to Scale.Spec.Replicas.
+          specReplicasPath: .spec.immutableReplicas
+          # statusReplicasPath defines the JSONPath inside of a custom resource that corresponds to Scale.Status.Replicas.
+          statusReplicasPath: .status.immutableReplicas
 ---
 # Source: agones/templates/crds/gameserverallocationpolicy.yaml
 # Copyright 2019 Google LLC All Rights Reserved.
@@ -15120,6 +15197,27 @@ spec:
                               type: integer
                               title: The initial player capacity of this Game Server
                               minimum: 0
+                        eviction:
+                          type: object
+                          title: Eviction tolerance of the game server
+                          properties:
+                            safe:
+                              type: string
+                              title: Game server supports termination via SIGTERM
+                              description: |
+                                - Never: The game server should run to completion. Agones sets Pod annotation `cluster-autoscaler.kubernetes.io/safe-to-evict: "false"` and label `agones.dev/safe-to-evict: "false"`, which matches a restrictive PodDisruptionBudget.
+                                - OnUpgrade: On SIGTERM, the game server will exit within `terminationGracePeriodSeconds` or be terminated; Agones sets Pod annotation `cluster-autoscaler.kubernetes.io/safe-to-evict: "false"`, which blocks evictions by Cluster Autoscaler. Evictions from node upgrades proceed normally.
+                                - Always: On SIGTERM, the game server will exit within `terminationGracePeriodSeconds` or be terminated, typically within 10m; Agones sets Pod annotation `cluster-autoscaler.kubernetes.io/safe-to-evict: "true"`, which allows evictions by Cluster Autoscaler.
+                              enum:
+                              - Always
+                              - OnUpgrade
+                              - Never
+                        immutableReplicas:
+                          type: integer
+                          title: Immutable count of Pods to a GameServer. Always 1. (Implementation detail of implementing the Scale subresource.)
+                          default: 1
+                          minimum: 1
+                          maximum: 1
             status:
               description: 'GameServerSetStatus is the status of a GameServerSet. More info:
                 https://agones.dev/site/docs/reference/agones_crd_api_reference/#agones.dev/v1.GameServerSet'
