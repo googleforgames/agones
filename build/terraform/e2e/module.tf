@@ -34,18 +34,32 @@ terraform {
 }
 
 variable "project" {}
+variable "kubernetes_versions" {
+  description = "Create e2e test clusters with these k8s versions"
+  type        = list(string)
+  default     = ["1.23", "1.24", "1.25"]
+}
 
-module "gke_standard_cluster" {
+# TODO: remove this cluster once the e2e tests are switched to use the new standard clusters
+module "gke_standard_cluster_old" {
   source = "./gke-standard"
   project = var.project
   kubernetesVersion = "1.24"
   overrideName = "e2e-test-cluster"
 }
 
+module "gke_standard_cluster" {
+  for_each = toset(var.kubernetes_versions)
+  source = "./gke-standard"
+  project = var.project
+  kubernetesVersion = each.value
+}
+
 module "gke_autopilot_cluster" {
+  for_each = toset(var.kubernetes_versions)
   source = "./gke-autopilot"
   project = var.project
-  kubernetesVersion = "1.24"
+  kubernetesVersion = each.value
 }
 
 resource "google_compute_firewall" "udp" {
