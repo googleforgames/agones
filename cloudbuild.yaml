@@ -295,12 +295,12 @@ steps:
       do
         if [ $cloudProduct = generic ]
         then 
-          featureWithGate="CustomFasSyncInterval=false&SafeToEvict=false&SDKGracefulTermination=false&StateAllocationFilter=false&PlayerAllocationFilter=true&PlayerTracking=true&ResetMetricsOnDelete=true&PodHostname=true&SplitControllerAndExtensions=true&Example=true"
+          featureWithGate="CustomFasSyncInterval=false&SafeToEvict=false&SDKGracefulTermination=false&StateAllocationFilter=false&PlayerAllocationFilter=true&PlayerTracking=true&ResetMetricsOnDelete=true&PodHostname=true&SplitControllerAndExtensions=true&FleetAllocationOverflow=true&Example=true"
           featureWithoutGate=""
           testClusterLocation="us-west1-c"
           testCluster="e2e-test-cluster"
         else
-          featureWithGate="CustomFasSyncInterval=false&SafeToEvict=true&SDKGracefulTermination=false&StateAllocationFilter=false&PlayerAllocationFilter=true&PlayerTracking=true&ResetMetricsOnDelete=true&PodHostname=true&SplitControllerAndExtensions=true&Example=true"
+          featureWithGate="CustomFasSyncInterval=false&SafeToEvict=true&SDKGracefulTermination=false&StateAllocationFilter=false&PlayerAllocationFilter=true&PlayerTracking=true&ResetMetricsOnDelete=true&PodHostname=true&SplitControllerAndExtensions=true&FleetAllocationOverflow=true&Example=true"
           featureWithoutGate="SplitControllerAndExtensions=true"
           testClusterLocation="us-west1"
           testCluster="gke-autopilot-e2e-test-cluster-1-24"
