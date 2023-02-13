@@ -165,8 +165,10 @@ properties:
             count: # initial count
               type: integer
               default: 0
+              minimum: 0
             capacity: # max capacity of the counter
               type: integer
+              minimum: 0
       lists:
         type: object
         title: Map of player, room, session, etc. lists
@@ -177,6 +179,8 @@ properties:
           properties:
             capacity: # max capacity of the array (can be less than or equal to value of maxItems)
               type: integer
+              minimum: 0
+              maximum: 1000 # must be equal to values.maxItems
             values:
               type: array
               x-kubernetes-list-type: set # Requires items in the array to be unique

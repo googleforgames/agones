@@ -1112,6 +1112,62 @@ func TestGameServerValidateFeatures(t *testing.T) {
 			isValid:        true,
 			causesExpected: []metav1.StatusCause{},
 		},
+		{
+			description: "CountsAndLists is disabled, Counters field specified",
+			feature:     fmt.Sprintf("%s=false", runtime.FeatureCountsAndLists),
+			gs: GameServer{
+				Spec: GameServerSpec{
+					Container: "testing",
+					Counters:  &CountersSpec{},
+					Template: corev1.PodTemplateSpec{
+						Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "testing", Image: "testing/image"}}}}},
+			},
+			isValid: false,
+			causesExpected: []metav1.StatusCause{
+				{Type: metav1.CauseTypeFieldValueNotSupported, Message: "Value cannot be set unless feature flag CountsAndLists is enabled", Field: "counters"},
+			},
+		},
+		{
+			description: "CountsAndLists is disabled, Lists field specified",
+			feature:     fmt.Sprintf("%s=false", runtime.FeatureCountsAndLists),
+			gs: GameServer{
+				Spec: GameServerSpec{
+					Container: "testing",
+					Lists:     &ListsSpec{Capacity: 100},
+					Template: corev1.PodTemplateSpec{
+						Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "testing", Image: "testing/image"}}}}},
+			},
+			isValid: false,
+			causesExpected: []metav1.StatusCause{
+				{Type: metav1.CauseTypeFieldValueNotSupported, Message: "Value cannot be set unless feature flag CountsAndLists is enabled", Field: "lists"},
+			},
+		},
+		{
+			description: "CountsAndLists is enabled, Counters field specified",
+			feature:     fmt.Sprintf("%s=true", runtime.FeatureCountsAndLists),
+			gs: GameServer{
+				Spec: GameServerSpec{
+					Container: "testing",
+					Counters:  &CountersSpec{},
+					Template: corev1.PodTemplateSpec{
+						Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "testing", Image: "testing/image"}}}}},
+			},
+			isValid:        true,
+			causesExpected: []metav1.StatusCause{},
+		},
+		{
+			description: "CountsAndLists is enabled, Lists field specified",
+			feature:     fmt.Sprintf("%s=true", runtime.FeatureCountsAndLists),
+			gs: GameServer{
+				Spec: GameServerSpec{
+					Container: "testing",
+					Lists:     &ListsSpec{Capacity: 100},
+					Template: corev1.PodTemplateSpec{
+						Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "testing", Image: "testing/image"}}}}},
+			},
+			isValid:        true,
+			causesExpected: []metav1.StatusCause{},
+		},
 	}
 
 	for _, tc := range testCases {

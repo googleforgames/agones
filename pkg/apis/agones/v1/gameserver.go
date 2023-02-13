@@ -187,6 +187,10 @@ type GameServerSpec struct {
 	// (Alpha, PlayerTracking feature flag) Players provides the configuration for player tracking features.
 	// +optional
 	Players *PlayersSpec `json:"players,omitempty"`
+	// (Alpha, CountsAndLists feature flag) Counters and Lists provides the configuration for generic tracking features.
+	// +optional
+	Counters *CountersSpec `json:"counters,omitempty"`
+	Lists    *ListsSpec    `json:"lists,omitempty"`
 	// (Alpha, SafeToEvict feature flag) Eviction specifies the eviction tolerance of the GameServer. Defaults to "Never".
 	// +optional
 	Eviction Eviction `json:"eviction,omitempty"`
@@ -196,6 +200,15 @@ type GameServerSpec struct {
 // PlayersSpec tracks the initial player capacity
 type PlayersSpec struct {
 	InitialCapacity int64 `json:"initialCapacity,omitempty"`
+}
+
+// CountersSpec tracks if counter specified (for giving error message if feature gate not set)
+type CountersSpec struct {
+}
+
+// ListsSpec tracks the list capacity
+type ListsSpec struct {
+	Capacity int64 `json:"capacity,omitempty"`
 }
 
 // Eviction specifies the eviction tolerance of the GameServer
@@ -434,6 +447,23 @@ func (gss *GameServerSpec) Validate(apiHooks APIHooks, devAddress string) ([]met
 				Type:    metav1.CauseTypeFieldValueNotSupported,
 				Field:   "players",
 				Message: fmt.Sprintf("Value cannot be set unless feature flag %s is enabled", runtime.FeaturePlayerTracking),
+			})
+		}
+	}
+
+	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
+		if gss.Counters != nil {
+			causes = append(causes, metav1.StatusCause{
+				Type:    metav1.CauseTypeFieldValueNotSupported,
+				Field:   "counters",
+				Message: fmt.Sprintf("Value cannot be set unless feature flag %s is enabled", runtime.FeatureCountsAndLists),
+			})
+		}
+		if gss.Lists != nil {
+			causes = append(causes, metav1.StatusCause{
+				Type:    metav1.CauseTypeFieldValueNotSupported,
+				Field:   "lists",
+				Message: fmt.Sprintf("Value cannot be set unless feature flag %s is enabled", runtime.FeatureCountsAndLists),
 			})
 		}
 	}
