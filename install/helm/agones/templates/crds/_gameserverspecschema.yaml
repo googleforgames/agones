@@ -155,31 +155,26 @@ properties:
             minimum: 0
 {{- if .featureCountsAndLists }}
       counters:
-        type: array
-        title: Array of player, room, session, etc. counters
+        type: object
+        title: Map of player, room, session, etc. counters
         nullable: true
-        maxItems: 1000
-        items:
+        maxProperties: 1000
+        additionalProperties:
           type: object
           properties:
-            name: # counter name
-              type: string
             count: # initial count
               type: integer
+              default: 0
             capacity: # max capacity of the counter
               type: integer
       lists:
-        type: array
-        title: Array of player, room, session, etc. lists
+        type: object
+        title: Map of player, room, session, etc. lists
         nullable: true
-        maxItems: 1000
-        items:
+        maxProperties: 1000
+        additionalProperties:
           type: object
           properties:
-            name: # array name (players, sessions, rooms, etc.)
-              type: string
-            count: # initial number of items in the values array
-              type: integer
             capacity: # max capacity of the array (can be less than or equal to value of maxItems)
               type: integer
             values:
