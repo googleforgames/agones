@@ -292,12 +292,13 @@ steps:
       pids=()
       cloudProducts=("generic" "gke-autopilot")
       k8sVersions=("1.23" "1.24" "1.25")
+      clusterRegions=("us-east1" "us-west1" "us-central1")
 
       for cloudProduct in ${cloudProducts[@]}
       do
-        for k8sVersion in ${k8sVersions[@]}
+        for i in ${!k8sVersions[@]}
         do
-          if [ $cloudProduct = gke-autopilot ] && [ $k8sVersion = 1.23 ]
+          if [ $cloudProduct = gke-autopilot ] && [ ${k8sVersions[$i]} = 1.23 ]
           then
             continue
           fi
@@ -305,17 +306,17 @@ steps:
           then
             featureWithGate="CustomFasSyncInterval=false&SafeToEvict=true&SDKGracefulTermination=false&StateAllocationFilter=false&PlayerAllocationFilter=true&PlayerTracking=true&ResetMetricsOnDelete=true&PodHostname=true&SplitControllerAndExtensions=true&Example=true"
             featureWithoutGate="SplitControllerAndExtensions=true"
-            testClusterLocation="us-west1"
-            testCluster="gke-autopilot-e2e-test-cluster-${k8sVersion//./-}"
+            testClusterLocation="${clusterRegions[$i]}"
+            testCluster="gke-autopilot-e2e-test-cluster-${k8sVersions[$i]//./-}"
           else
             featureWithGate="CustomFasSyncInterval=false&SafeToEvict=false&SDKGracefulTermination=false&StateAllocationFilter=false&PlayerAllocationFilter=true&PlayerTracking=true&ResetMetricsOnDelete=true&PodHostname=true&SplitControllerAndExtensions=true&Example=true"
             featureWithoutGate=""
-            testClusterLocation="us-west1-c"
-            testCluster="gke-standard-e2e-test-cluster-${k8sVersion//./-}"
+            testClusterLocation="${clusterRegions[$i]}-c"
+            testCluster="gke-standard-e2e-test-cluster-${k8sVersions[$i]//./-}"
           fi
           { gcloud builds submit . --config=e2e-test-cloudbuild.yaml \
             --substitutions _FEATURE_WITH_GATE=$featureWithGate,_FEATURE_WITHOUT_GATE=$featureWithoutGate,_CLOUD_PRODUCT=$cloudProduct,_TEST_CLUSTER_NAME=$testCluster,_TEST_CLUSTER_LOCATION=$testClusterLocation,_REGISTRY=${_REGISTRY} \
-            |& sed "s/^/${cloudProduct}-${k8sVersion}: /"; } &
+            |& sed "s/^/${cloudProduct}-${k8sVersions[$i]}: /"; } &
           pids+=($!)
         done
       done
