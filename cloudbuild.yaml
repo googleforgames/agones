@@ -304,12 +304,12 @@ steps:
           fi
           if [ $cloudProduct = gke-autopilot ]
           then
-            featureWithGate="CustomFasSyncInterval=false&SafeToEvict=true&SDKGracefulTermination=false&StateAllocationFilter=false&PlayerAllocationFilter=true&PlayerTracking=true&ResetMetricsOnDelete=true&PodHostname=true&SplitControllerAndExtensions=true&Example=true"
-            featureWithoutGate="SplitControllerAndExtensions=true"
+            featureWithGate="CustomFasSyncInterval=false&SDKGracefulTermination=false&StateAllocationFilter=false&PlayerAllocationFilter=true&PlayerTracking=true&ResetMetricsOnDelete=true&SafeToEvict=true&PodHostname=true&SplitControllerAndExtensions=true&Example=true"
+            featureWithoutGate="SafeToEvict=true&SplitControllerAndExtensions=true"
             testClusterLocation="${clusterRegions[$i]}"
             testCluster="gke-autopilot-e2e-test-cluster-${k8sVersions[$i]//./-}"
           else
-            featureWithGate="CustomFasSyncInterval=false&SafeToEvict=false&SDKGracefulTermination=false&StateAllocationFilter=false&PlayerAllocationFilter=true&PlayerTracking=true&ResetMetricsOnDelete=true&PodHostname=true&SplitControllerAndExtensions=true&Example=true"
+            featureWithGate="CustomFasSyncInterval=false&SDKGracefulTermination=false&StateAllocationFilter=false&PlayerAllocationFilter=true&PlayerTracking=true&ResetMetricsOnDelete=true&SafeToEvict=true&PodHostname=true&SplitControllerAndExtensions=true&Example=true"
             featureWithoutGate=""
             testClusterLocation="${clusterRegions[$i]}-c"
             testCluster="gke-standard-e2e-test-cluster-${k8sVersions[$i]//./-}"
