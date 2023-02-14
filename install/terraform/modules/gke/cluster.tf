@@ -40,6 +40,13 @@ locals {
   maxNodeCount            = lookup(var.cluster, "maxNodeCount", "5")
 }
 
+data "google_container_engine_versions" "version" {
+  project        = local.project
+  provider       = google-beta
+  location       = local.zone
+  version_prefix = format("%s.",local.kubernetesVersion)
+}
+
 # echo command used for debugging purpose
 # Run `terraform taint null_resource.test-setting-variables` before second execution
 resource "null_resource" "test-setting-variables" {
@@ -71,7 +78,7 @@ resource "google_container_cluster" "primary" {
   node_pool {
     name       = "default"
     node_count = local.autoscale ? null : local.initialNodeCount
-    version    = local.kubernetesVersion
+    version    = data.google_container_engine_versions.version.latest_node_version
 
     dynamic "autoscaling" {
       for_each = local.autoscale ? [1] : []
@@ -107,7 +114,7 @@ resource "google_container_cluster" "primary" {
   node_pool {
     name       = "agones-system"
     node_count = 1
-    version    = local.kubernetesVersion
+    version    = data.google_container_engine_versions.version.latest_node_version
 
     management {
       auto_upgrade = false
@@ -143,7 +150,7 @@ resource "google_container_cluster" "primary" {
   node_pool {
     name       = "agones-metrics"
     node_count = 1
-    version    = local.kubernetesVersion
+    version    = data.google_container_engine_versions.version.latest_node_version
 
     management {
       auto_upgrade = false
@@ -189,7 +196,7 @@ resource "google_container_cluster" "primary" {
     content {
       name       = "windows"
       node_count = local.windowsInitialNodeCount
-      version    = local.kubernetesVersion
+      version    = data.google_container_engine_versions.version.latest_node_version
 
       management {
         auto_upgrade = false

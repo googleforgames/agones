@@ -32,6 +32,7 @@ terraform {
 
 variable "project" {}
 variable "kubernetesVersion" {}
+variable "zone" {}
 
 variable "overrideName" {
   default = ""
@@ -42,11 +43,12 @@ module "gke_cluster" {
 
   cluster = {
     "name"                 = var.overrideName != "" ? var.overrideName : format("gke-standard-e2e-test-cluster-%s", replace(var.kubernetesVersion, ".", "-"))
-    "zone"                 = "us-west1-c"
+    "zone"                 = var.zone
     "machineType"          = "e2-standard-4"
     "initialNodeCount"     = 10
     "enableImageStreaming" = true
     "project"              = var.project
+    "kubernetesVersion"    = var.kubernetesVersion
   }
 
   udpFirewall = false // firewall is created at the project module level
