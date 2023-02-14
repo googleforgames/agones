@@ -96,5 +96,5 @@ do-release: $(ensure-build-image)
 	@echo "Now go make the $(RELEASE_VERSION) release on Github!"
 
 build-release:
-	cd $(agones_path) && gcloud builds submit . --substitutions _VERSION=$(base_version) --config=./build/release/cloudbuild.yaml $(ARGS)
-
+	docker run --rm $(common_mounts) -w $(workdir_path) $(build_tag) \
+		gcloud builds submit . --substitutions _VERSION=$(base_version) --config=./build/release/cloudbuild.yaml $(ARGS)
