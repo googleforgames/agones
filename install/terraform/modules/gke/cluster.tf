@@ -43,7 +43,7 @@ locals {
 data "google_container_engine_versions" "version" {
   project        = local.project
   provider       = google-beta
-  location       = local.zone
+  location       = local.location
   version_prefix = format("%s.",local.kubernetesVersion)
 }
 
@@ -52,13 +52,14 @@ data "google_container_engine_versions" "version" {
 resource "null_resource" "test-setting-variables" {
   provisioner "local-exec" {
     command = <<EOT
-    ${format("echo Current variables set as following - name: %s, project: %s, machineType: %s, initialNodeCount: %s, network: %s, zone: %s, windowsInitialNodeCount: %s, windowsMachineType: %s",
+    ${format("echo Current variables set as following - name: %s, project: %s, machineType: %s, initialNodeCount: %s, network: %s, zone: %s, location: %s,windowsInitialNodeCount: %s, windowsMachineType: %s",
     local.name,
     local.project,
     local.machineType,
     local.initialNodeCount,
     local.network,
     local.zone,
+    local.location,
     local.windowsInitialNodeCount,
     local.windowsMachineType,
 )}

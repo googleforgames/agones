@@ -60,7 +60,7 @@ module "gke_standard_cluster_old" {
   project = var.project
   kubernetesVersion = "1.24"
   overrideName = "e2e-test-cluster"
-  zone = "us-west1-c"
+  location = "us-west1-c"
 }
 
 module "gke_standard_cluster" {
@@ -68,7 +68,7 @@ module "gke_standard_cluster" {
   source = "./gke-standard"
   project = var.project
   kubernetesVersion = each.key
-  zone = each.value
+  location = each.value
 }
 
 module "gke_autopilot_cluster" {
