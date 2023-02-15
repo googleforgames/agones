@@ -189,8 +189,8 @@ type GameServerSpec struct {
 	Players *PlayersSpec `json:"players,omitempty"`
 	// (Alpha, CountsAndLists feature flag) Counters and Lists provides the configuration for generic tracking features.
 	// +optional
-	Counters *CountersSpec `json:"counters,omitempty"`
-	Lists    *ListsSpec    `json:"lists,omitempty"`
+	Counters map[string]*CounterSpec `json:"counters,omitempty"`
+	Lists    map[string]*ListSpec    `json:"lists,omitempty"`
 	// (Alpha, SafeToEvict feature flag) Eviction specifies the eviction tolerance of the GameServer. Defaults to "Never".
 	// +optional
 	Eviction Eviction `json:"eviction,omitempty"`
@@ -202,13 +202,16 @@ type PlayersSpec struct {
 	InitialCapacity int64 `json:"initialCapacity,omitempty"`
 }
 
-// CountersSpec tracks if counter specified (for giving error message if feature gate not set)
-type CountersSpec struct {
+// CounterSpec tracks if counter specified (for giving error message if feature gate not set)
+type CounterSpec struct {
+	Count    int64 `json:"count,omitempty"`
+	Capacity int64 `json:"capacity,omitempty"`
 }
 
-// ListsSpec tracks the list capacity
-type ListsSpec struct {
-	Capacity int64 `json:"capacity,omitempty"`
+// ListSpec tracks the list capacity
+type ListSpec struct {
+	Capacity int64    `json:"capacity,omitempty"`
+	Values   []string `json:"values,omitempty"`
 }
 
 // Eviction specifies the eviction tolerance of the GameServer
@@ -434,11 +437,8 @@ func (gs *GameServer) applyEvictionStatus() {
 	}
 }
 
-// Validate validates the GameServerSpec configuration.
-// devAddress is a specific IP address used for local Gameservers, for fleets "" is used
-// If a GameServer Spec is invalid there will be > 0 values in
-// the returned array
-func (gss *GameServerSpec) Validate(apiHooks APIHooks, devAddress string) ([]metav1.StatusCause, bool) {
+// validateFeatureGates checks if fields are set when the associated feature gate is not set.
+func (gss *GameServerSpec) validateFeatureGates() []metav1.StatusCause {
 	var causes []metav1.StatusCause
 
 	if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
@@ -477,6 +477,17 @@ func (gss *GameServerSpec) Validate(apiHooks APIHooks, devAddress string) ([]met
 			})
 		}
 	}
+
+	return causes
+}
+
+// Validate validates the GameServerSpec configuration.
+// devAddress is a specific IP address used for local Gameservers, for fleets "" is used
+// If a GameServer Spec is invalid there will be > 0 values in the returned array
+func (gss *GameServerSpec) Validate(apiHooks APIHooks, devAddress string) ([]metav1.StatusCause, bool) {
+	var causes []metav1.StatusCause
+
+	causes = append(causes, gss.validateFeatureGates()...)
 
 	if devAddress != "" {
 		// verify that the value is a valid IP address.

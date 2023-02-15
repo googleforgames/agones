@@ -91,16 +91,16 @@ spec:
   # Counts and Lists provides the configuration for generic (player, room, session, etc.) tracking features.
   # Commented out since Alpha, and disabled by default
   # counters:
-  #   gameCounter:
+  #   games:
   #     count: 1
   #     capacity: 100
-  #   sessionCounter:
+  #   sessions:
   #     capacity: 999
   # lists:
-  #   playerList:
+  #   players:
   #     capacity: 1000
   #     values:
-  #   roomList:
+  #   rooms:
   #     capacity: 333
   #     values:
   #       - room1
