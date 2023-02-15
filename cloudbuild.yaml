@@ -302,17 +302,17 @@ steps:
           then
             continue
           fi
-          if [ $cloudProduct = gke-autopilot ]
+          if [ $cloudProduct = generic ]
           then
-            featureWithGate="CustomFasSyncInterval=false&SafeToEvict=true&SDKGracefulTermination=false&StateAllocationFilter=false&PlayerAllocationFilter=true&PlayerTracking=true&ResetMetricsOnDelete=true&PodHostname=true&SplitControllerAndExtensions=true&Example=true"
-            featureWithoutGate="SplitControllerAndExtensions=true"
-            testClusterLocation="${clusterRegions[$i]}"
-            testCluster="gke-autopilot-e2e-test-cluster-${k8sVersions[$i]//./-}"
-          else
-            featureWithGate="CustomFasSyncInterval=false&SafeToEvict=false&SDKGracefulTermination=false&StateAllocationFilter=false&PlayerAllocationFilter=true&PlayerTracking=true&ResetMetricsOnDelete=true&PodHostname=true&SplitControllerAndExtensions=true&Example=true"
+            featureWithGate="CustomFasSyncInterval=false&SafeToEvict=false&SDKGracefulTermination=false&StateAllocationFilter=false&PlayerAllocationFilter=true&PlayerTracking=true&ResetMetricsOnDelete=true&PodHostname=true&SplitControllerAndExtensions=true&FleetAllocationOverflow=true&Example=true"
             featureWithoutGate=""
             testClusterLocation="${clusterRegions[$i]}-c"
             testCluster="gke-standard-e2e-test-cluster-${k8sVersions[$i]//./-}"
+          else
+            featureWithGate="CustomFasSyncInterval=false&SafeToEvict=true&SDKGracefulTermination=false&StateAllocationFilter=false&PlayerAllocationFilter=true&PlayerTracking=true&ResetMetricsOnDelete=true&PodHostname=true&SplitControllerAndExtensions=true&FleetAllocationOverflow=true&Example=true"
+            featureWithoutGate="SplitControllerAndExtensions=true"
+            testClusterLocation="${clusterRegions[$i]}"
+            testCluster="gke-autopilot-e2e-test-cluster-${k8sVersions[$i]//./-}"
           fi
           { gcloud builds submit . --config=e2e-test-cloudbuild.yaml \
             --substitutions _FEATURE_WITH_GATE=$featureWithGate,_FEATURE_WITHOUT_GATE=$featureWithoutGate,_CLOUD_PRODUCT=$cloudProduct,_TEST_CLUSTER_NAME=$testCluster,_TEST_CLUSTER_LOCATION=$testClusterLocation,_REGISTRY=${_REGISTRY} \

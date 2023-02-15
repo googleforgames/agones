@@ -25,6 +25,7 @@ PlayerAllocationFilter: false
 PlayerTracking: false
 ResetMetricsOnDelete: false
 PodHostname: false
+FleetAllocationOverflow: false
 SplitControllerAndExtensions: false
 
 # Pre-Alpha features
