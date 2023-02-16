@@ -308,7 +308,7 @@ private:
 
 	TSharedPtr<IWebSocket> WatchWebSocket;
 
-	FString WatchMessageBuffer;
+	TArray<UTF8CHAR> WatchMessageBuffer;
 
 	TArray<FGameServerDelegate> WatchGameServerCallbacks;
 	
