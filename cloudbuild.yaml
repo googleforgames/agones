@@ -306,7 +306,7 @@ steps:
           then
             featureWithGate="CustomFasSyncInterval=false&SafeToEvict=false&SDKGracefulTermination=false&StateAllocationFilter=false&PlayerAllocationFilter=true&PlayerTracking=true&ResetMetricsOnDelete=true&PodHostname=true&SplitControllerAndExtensions=true&FleetAllocationOverflow=true&Example=true"
             featureWithoutGate=""
-            testClusterLocation="${region}-c"
+            testClusterLocation="${region}"
             testCluster="gke-standard-e2e-test-cluster-${version//./-}"
           else
             featureWithGate="CustomFasSyncInterval=false&SafeToEvict=true&SDKGracefulTermination=false&StateAllocationFilter=false&PlayerAllocationFilter=true&PlayerTracking=true&ResetMetricsOnDelete=true&PodHostname=true&SplitControllerAndExtensions=true&FleetAllocationOverflow=true&Example=true"
