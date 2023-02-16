@@ -1118,7 +1118,7 @@ func TestGameServerValidateFeatures(t *testing.T) {
 			gs: GameServer{
 				Spec: GameServerSpec{
 					Container: "testing",
-					Counters:  map[string]*CounterSpec{},
+					Counters:  map[string]CounterSpec{},
 					Template: corev1.PodTemplateSpec{
 						Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "testing", Image: "testing/image"}}}}},
 			},
@@ -1133,7 +1133,7 @@ func TestGameServerValidateFeatures(t *testing.T) {
 			gs: GameServer{
 				Spec: GameServerSpec{
 					Container: "testing",
-					Lists:     map[string]*ListSpec{},
+					Lists:     map[string]ListSpec{},
 					Template: corev1.PodTemplateSpec{
 						Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "testing", Image: "testing/image"}}}}},
 			},
@@ -1148,7 +1148,7 @@ func TestGameServerValidateFeatures(t *testing.T) {
 			gs: GameServer{
 				Spec: GameServerSpec{
 					Container: "testing",
-					Counters:  map[string]*CounterSpec{},
+					Counters:  map[string]CounterSpec{},
 					Template: corev1.PodTemplateSpec{
 						Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "testing", Image: "testing/image"}}}}},
 			},
@@ -1161,7 +1161,7 @@ func TestGameServerValidateFeatures(t *testing.T) {
 			gs: GameServer{
 				Spec: GameServerSpec{
 					Container: "testing",
-					Lists:     map[string]*ListSpec{},
+					Lists:     map[string]ListSpec{},
 					Template: corev1.PodTemplateSpec{
 						Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "testing", Image: "testing/image"}}}}},
 			},

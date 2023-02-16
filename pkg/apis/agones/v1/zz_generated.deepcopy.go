@@ -374,32 +374,16 @@ func (in *GameServerSpec) DeepCopyInto(out *GameServerSpec) {
 	}
 	if in.Counters != nil {
 		in, out := &in.Counters, &out.Counters
-		*out = make(map[string]*CounterSpec, len(*in))
+		*out = make(map[string]CounterSpec, len(*in))
 		for key, val := range *in {
-			var outVal *CounterSpec
-			if val == nil {
-				(*out)[key] = nil
-			} else {
-				in, out := &val, &outVal
-				*out = new(CounterSpec)
-				**out = **in
-			}
-			(*out)[key] = outVal
+			(*out)[key] = val
 		}
 	}
 	if in.Lists != nil {
 		in, out := &in.Lists, &out.Lists
-		*out = make(map[string]*ListSpec, len(*in))
+		*out = make(map[string]ListSpec, len(*in))
 		for key, val := range *in {
-			var outVal *ListSpec
-			if val == nil {
-				(*out)[key] = nil
-			} else {
-				in, out := &val, &outVal
-				*out = new(ListSpec)
-				(*in).DeepCopyInto(*out)
-			}
-			(*out)[key] = outVal
+			(*out)[key] = *val.DeepCopy()
 		}
 	}
 	out.Eviction = in.Eviction

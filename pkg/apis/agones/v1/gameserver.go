@@ -189,8 +189,8 @@ type GameServerSpec struct {
 	Players *PlayersSpec `json:"players,omitempty"`
 	// (Alpha, CountsAndLists feature flag) Counters and Lists provides the configuration for generic tracking features.
 	// +optional
-	Counters map[string]*CounterSpec `json:"counters,omitempty"`
-	Lists    map[string]*ListSpec    `json:"lists,omitempty"`
+	Counters map[string]CounterSpec `json:"counters,omitempty"`
+	Lists    map[string]ListSpec    `json:"lists,omitempty"`
 	// (Alpha, SafeToEvict feature flag) Eviction specifies the eviction tolerance of the GameServer. Defaults to "Never".
 	// +optional
 	Eviction Eviction `json:"eviction,omitempty"`
