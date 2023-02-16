@@ -19,9 +19,11 @@ import (
 	"agones.dev/agones/pkg/apis"
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	"agones.dev/agones/pkg/util/runtime"
+	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -203,6 +205,200 @@ func TestPodSeccompUnconfined(t *testing.T) {
 			podSpec := tc.podSpec.DeepCopy()
 			podSpecSeccompUnconfined(podSpec)
 			assert.Equal(t, tc.wantPodSpec, podSpec)
+		})
+	}
+}
+
+func TestSetMinResourceForAutopilotContainforers(t *testing.T) {
+	for name, tc := range map[string]struct {
+		inputPodSpec    *corev1.PodSpec
+		expectedPodSpec *corev1.PodSpec
+		gameServerSpec  *agonesv1.GameServerSpec
+	}{
+		"cpuBelowMinimum": {
+			inputPodSpec: &corev1.PodSpec{
+				Containers: []corev1.Container{
+					{
+						Name: "game-server-sidecar",
+						Resources: corev1.ResourceRequirements{
+							Requests: map[corev1.ResourceName]resource.Quantity{
+								corev1.ResourceCPU:              resource.MustParse("70m"),
+								corev1.ResourceMemory:           resource.MustParse("100Mi"),
+								corev1.ResourceEphemeralStorage: resource.MustParse("100Mi"),
+							},
+						},
+					},
+					{
+						Name: "game-server-test",
+						Resources: corev1.ResourceRequirements{
+							Requests: map[corev1.ResourceName]resource.Quantity{
+								corev1.ResourceCPU:    resource.MustParse("110m"),
+								corev1.ResourceMemory: resource.MustParse("120Mi"),
+							},
+						},
+					},
+				},
+			},
+			expectedPodSpec: &corev1.PodSpec{
+				Containers: []corev1.Container{
+					{
+						Name: "game-server-sidecar",
+						Resources: corev1.ResourceRequirements{
+							Requests: map[corev1.ResourceName]resource.Quantity{
+								corev1.ResourceCPU:              resource.MustParse("70m"),
+								corev1.ResourceMemory:           resource.MustParse("100Mi"),
+								corev1.ResourceEphemeralStorage: resource.MustParse("1024Mi"),
+							},
+						},
+					},
+					{
+						Name: "game-server-test",
+						Resources: corev1.ResourceRequirements{
+							Requests: map[corev1.ResourceName]resource.Quantity{
+								corev1.ResourceCPU:              resource.MustParse("180m"),
+								corev1.ResourceMemory:           resource.MustParse("412Mi"),
+								corev1.ResourceEphemeralStorage: resource.MustParse("1024Mi"),
+							},
+						},
+					},
+				},
+			},
+			gameServerSpec: &agonesv1.GameServerSpec{
+				Container: "game-server-test",
+			},
+		},
+		"cpuAboveMinimum": {
+			inputPodSpec: &corev1.PodSpec{
+				Containers: []corev1.Container{
+					{
+						Name: "game-server-sidecar",
+						Resources: corev1.ResourceRequirements{
+							Requests: map[corev1.ResourceName]resource.Quantity{
+								corev1.ResourceCPU:              resource.MustParse("30m"),
+								corev1.ResourceMemory:           resource.MustParse("100Mi"),
+								corev1.ResourceEphemeralStorage: resource.MustParse("100Mi"),
+							},
+						},
+					},
+					{
+						Name: "game-server-test",
+						Resources: corev1.ResourceRequirements{
+							Requests: map[corev1.ResourceName]resource.Quantity{
+								corev1.ResourceCPU:              resource.MustParse("240m"),
+								corev1.ResourceMemory:           resource.MustParse("120Mi"),
+								corev1.ResourceEphemeralStorage: resource.MustParse("200Mi"),
+							},
+						},
+					},
+				},
+			},
+			expectedPodSpec: &corev1.PodSpec{
+				Containers: []corev1.Container{
+					{
+						Name: "game-server-sidecar",
+						Resources: corev1.ResourceRequirements{
+							Requests: map[corev1.ResourceName]resource.Quantity{
+								corev1.ResourceCPU:              resource.MustParse("30m"),
+								corev1.ResourceMemory:           resource.MustParse("100Mi"),
+								corev1.ResourceEphemeralStorage: resource.MustParse("1024Mi"),
+							},
+						},
+					},
+					{
+						Name: "game-server-test",
+						Resources: corev1.ResourceRequirements{
+							Requests: map[corev1.ResourceName]resource.Quantity{
+								corev1.ResourceCPU:              resource.MustParse("470m"),
+								corev1.ResourceMemory:           resource.MustParse("412Mi"),
+								corev1.ResourceEphemeralStorage: resource.MustParse("1024Mi"),
+							},
+						},
+					},
+				},
+			},
+			gameServerSpec: &agonesv1.GameServerSpec{
+				Container: "game-server-test",
+			},
+		},
+		"cpuBelowMinimumwithMultipleSidecar": {
+			inputPodSpec: &corev1.PodSpec{
+				Containers: []corev1.Container{
+					{
+						Name: "game-server-sidecar",
+						Resources: corev1.ResourceRequirements{
+							Requests: map[corev1.ResourceName]resource.Quantity{
+								corev1.ResourceCPU:              resource.MustParse("15m"),
+								corev1.ResourceMemory:           resource.MustParse("50Mi"),
+								corev1.ResourceEphemeralStorage: resource.MustParse("100Mi"),
+							},
+						},
+					},
+					{
+						Name: "game-server-sidecar2",
+						Resources: corev1.ResourceRequirements{
+							Requests: map[corev1.ResourceName]resource.Quantity{
+								corev1.ResourceCPU:    resource.MustParse("15m"),
+								corev1.ResourceMemory: resource.MustParse("50Mi"),
+							},
+						},
+					},
+					{
+						Name: "game-server-test",
+						Resources: corev1.ResourceRequirements{
+							Requests: map[corev1.ResourceName]resource.Quantity{
+								corev1.ResourceCPU:              resource.MustParse("240m"),
+								corev1.ResourceMemory:           resource.MustParse("120Mi"),
+								corev1.ResourceEphemeralStorage: resource.MustParse("200Mi"),
+							},
+						},
+					},
+				},
+			},
+			expectedPodSpec: &corev1.PodSpec{
+				Containers: []corev1.Container{
+					{
+						Name: "game-server-sidecar",
+						Resources: corev1.ResourceRequirements{
+							Requests: map[corev1.ResourceName]resource.Quantity{
+								corev1.ResourceCPU:              resource.MustParse("15m"),
+								corev1.ResourceMemory:           resource.MustParse("50Mi"),
+								corev1.ResourceEphemeralStorage: resource.MustParse("1024Mi"),
+							},
+						},
+					},
+					{
+						Name: "game-server-sidecar2",
+						Resources: corev1.ResourceRequirements{
+							Requests: map[corev1.ResourceName]resource.Quantity{
+								corev1.ResourceCPU:              resource.MustParse("15m"),
+								corev1.ResourceMemory:           resource.MustParse("50Mi"),
+								corev1.ResourceEphemeralStorage: resource.MustParse("1024Mi"),
+							},
+						},
+					},
+					{
+						Name: "game-server-test",
+						Resources: corev1.ResourceRequirements{
+							Requests: map[corev1.ResourceName]resource.Quantity{
+								corev1.ResourceCPU:              resource.MustParse("470m"),
+								corev1.ResourceMemory:           resource.MustParse("412Mi"),
+								corev1.ResourceEphemeralStorage: resource.MustParse("1024Mi"),
+							},
+						},
+					},
+				},
+			},
+			gameServerSpec: &agonesv1.GameServerSpec{
+				Container: "game-server-test",
+			},
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			setMinResourceForAutopilotContainers(tc.inputPodSpec, tc.gameServerSpec)
+
+			if diff := cmp.Diff(tc.expectedPodSpec, tc.inputPodSpec); diff != "" {
+				t.Errorf("adjustMin (...): -want, +got\n%s", diff)
+			}
 		})
 	}
 }
