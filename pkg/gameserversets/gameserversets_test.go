@@ -35,6 +35,8 @@ func TestSortGameServersByLeastFullNodes(t *testing.T) {
 	nc := map[string]gameservers.NodeCount{
 		"n1": {Ready: 1, Allocated: 0},
 		"n2": {Ready: 0, Allocated: 2},
+		"n3": {Ready: 2, Allocated: 0},
+		"n4": {Ready: 2, Allocated: 0},
 	}
 
 	list := []*agonesv1.GameServer{
@@ -42,6 +44,10 @@ func TestSortGameServersByLeastFullNodes(t *testing.T) {
 		{ObjectMeta: metav1.ObjectMeta{Name: "g2"}, Status: agonesv1.GameServerStatus{NodeName: "", State: agonesv1.GameServerStateReady}},
 		{ObjectMeta: metav1.ObjectMeta{Name: "g3"}, Status: agonesv1.GameServerStatus{NodeName: "n1", State: agonesv1.GameServerStateReady}},
 		{ObjectMeta: metav1.ObjectMeta{Name: "g4"}, Status: agonesv1.GameServerStatus{NodeName: "n2", State: agonesv1.GameServerStateCreating}},
+		{ObjectMeta: metav1.ObjectMeta{Name: "g5"}, Status: agonesv1.GameServerStatus{NodeName: "n3", State: agonesv1.GameServerStateReady}},
+		{ObjectMeta: metav1.ObjectMeta{Name: "g6"}, Status: agonesv1.GameServerStatus{NodeName: "n4", State: agonesv1.GameServerStateReady}},
+		{ObjectMeta: metav1.ObjectMeta{Name: "g7"}, Status: agonesv1.GameServerStatus{NodeName: "n3", State: agonesv1.GameServerStateReady}},
+		{ObjectMeta: metav1.ObjectMeta{Name: "g8"}, Status: agonesv1.GameServerStatus{NodeName: "n4", State: agonesv1.GameServerStateReady}},
 	}
 
 	result := sortGameServersByLeastFullNodes(list, nc)
@@ -51,6 +57,10 @@ func TestSortGameServersByLeastFullNodes(t *testing.T) {
 	assert.Equal(t, "g3", result[1].ObjectMeta.Name)
 	assert.Equal(t, "g4", result[2].ObjectMeta.Name)
 	assert.Equal(t, "g1", result[3].ObjectMeta.Name)
+	assert.Equal(t, "g5", result[4].ObjectMeta.Name)
+	assert.Equal(t, "g7", result[5].ObjectMeta.Name)
+	assert.Equal(t, "g6", result[6].ObjectMeta.Name)
+	assert.Equal(t, "g8", result[7].ObjectMeta.Name)
 }
 
 func TestSortGameServersByNewFirst(t *testing.T) {
