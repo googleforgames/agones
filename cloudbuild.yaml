@@ -291,27 +291,32 @@ steps:
       set -o pipefail
       pids=()
       cloudProducts=("generic" "gke-autopilot")
+      declare -A versionsAndRegions=( [1.23]=us-east1 [1.24]=us-west1 [1.25]=us-central1 )
+
       for cloudProduct in ${cloudProducts[@]}
       do
-        if [ $cloudProduct = generic ]
-        then 
-          featureWithGate="CustomFasSyncInterval=false&SafeToEvict=false&SDKGracefulTermination=false&StateAllocationFilter=false&PlayerAllocationFilter=true&PlayerTracking=true&ResetMetricsOnDelete=true&PodHostname=true&SplitControllerAndExtensions=true&FleetAllocationOverflow=true&Example=true"
-          featureWithoutGate=""
-          testClusterLocation="us-west1-c"
-          testCluster="e2e-test-cluster"
-        else
-          featureWithGate="CustomFasSyncInterval=false&SafeToEvict=true&SDKGracefulTermination=false&StateAllocationFilter=false&PlayerAllocationFilter=true&PlayerTracking=true&ResetMetricsOnDelete=true&PodHostname=true&SplitControllerAndExtensions=true&FleetAllocationOverflow=true&Example=true"
-          featureWithoutGate="SplitControllerAndExtensions=true"
-          testClusterLocation="us-west1"
-          testCluster="gke-autopilot-e2e-test-cluster-1-24"
-        fi
-        # TODO: Add more versions in the list, and generate the test cluster name in the loop rather than hardcode once the clusters are created
-        k8sVersions=("1.24")
-        for k8sVersion in ${k8sVersions[@]}
+        for version in "${!versionsAndRegions[@]}"
         do
+          region=${versionsAndRegions[$version]}
+          if [ $cloudProduct = gke-autopilot ] && [ $version = 1.23 ]
+          then
+            continue
+          fi
+          if [ $cloudProduct = generic ]
+          then
+            featureWithGate="CustomFasSyncInterval=false&SafeToEvict=false&SDKGracefulTermination=false&StateAllocationFilter=false&PlayerAllocationFilter=true&PlayerTracking=true&ResetMetricsOnDelete=true&PodHostname=true&SplitControllerAndExtensions=true&FleetAllocationOverflow=true&Example=true"
+            featureWithoutGate=""
+            testClusterLocation="${region}-c"
+            testCluster="gke-standard-e2e-test-cluster-${version//./-}"
+          else
+            featureWithGate="CustomFasSyncInterval=false&SafeToEvict=true&SDKGracefulTermination=false&StateAllocationFilter=false&PlayerAllocationFilter=true&PlayerTracking=true&ResetMetricsOnDelete=true&PodHostname=true&SplitControllerAndExtensions=true&FleetAllocationOverflow=true&Example=true"
+            featureWithoutGate="SplitControllerAndExtensions=true"
+            testClusterLocation="${region}"
+            testCluster="gke-autopilot-e2e-test-cluster-${version//./-}"
+          fi
           { gcloud builds submit . --config=e2e-test-cloudbuild.yaml \
             --substitutions _FEATURE_WITH_GATE=$featureWithGate,_FEATURE_WITHOUT_GATE=$featureWithoutGate,_CLOUD_PRODUCT=$cloudProduct,_TEST_CLUSTER_NAME=$testCluster,_TEST_CLUSTER_LOCATION=$testClusterLocation,_REGISTRY=${_REGISTRY} \
-            |& sed "s/^/${cloudProduct}-${k8sVersion}: /"; } &
+            |& sed "s/^/${cloudProduct}-${version}: /"; } &
           pids+=($!)
         done
       done
