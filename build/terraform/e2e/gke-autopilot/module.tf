@@ -32,14 +32,16 @@ terraform {
 
 variable "project" {}
 variable "kubernetesVersion" {}
+variable "location" {}
 
 module "gke_cluster" {
   source = "../../../../install/terraform/modules/gke-autopilot"
 
   cluster = {
-    "name"     = format("gke-autopilot-e2e-test-cluster-%s", replace(var.kubernetesVersion, ".", "-"))
-    "project"  = var.project
-    "location" = "us-west1"
+    "name"              = format("gke-autopilot-e2e-test-cluster-%s", replace(var.kubernetesVersion, ".", "-"))
+    "project"           = var.project
+    "location"          = var.location
+    "kubernetesVersion" = var.kubernetesVersion
   }
 
   udpFirewall = false // firewall is created at the project module level

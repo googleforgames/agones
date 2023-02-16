@@ -995,7 +995,7 @@ spec:
 	err = cmd.Run()
 	logrus.WithField("stdout", stdout.String()).WithField("stderr", stderr.String()).WithError(err).Info("Ran command!")
 	require.Error(t, err)
-	assert.Contains(t, stderr.String(), "ValidationError(GameServer.spec.template.spec.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution)")
+	assert.Contains(t, stderr.String(), "spec.template.spec.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution")
 }
 
 func TestGameServerSetPlayerCapacity(t *testing.T) {
