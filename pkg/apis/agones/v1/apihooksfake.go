@@ -20,18 +20,19 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// FakeAPIHooks is a stubabble, fake implementation of APIHooks
-type FakeAPIHooks struct {
+// fakeAPIHooks is a stubabble, fake implementation of APIHooks
+// This needs to be private, so it doesn't get picked up by the DeepCopy() generation toolkit.
+type fakeAPIHooks struct {
 	StubValidateGameServerSpec  func(*GameServerSpec) []metav1.StatusCause
 	StubValidateScheduling      func(apis.SchedulingStrategy) []metav1.StatusCause
 	StubMutateGameServerPodSpec func(*GameServerSpec, *corev1.PodSpec) error
 	StubSetEviction             func(EvictionSafe, *corev1.Pod) error
 }
 
-var _ APIHooks = FakeAPIHooks{}
+var _ APIHooks = fakeAPIHooks{}
 
 // ValidateGameServerSpec is called by GameServer.Validate to allow for product specific validation.
-func (f FakeAPIHooks) ValidateGameServerSpec(gss *GameServerSpec) []metav1.StatusCause {
+func (f fakeAPIHooks) ValidateGameServerSpec(gss *GameServerSpec) []metav1.StatusCause {
 	if f.StubValidateGameServerSpec != nil {
 		return f.StubValidateGameServerSpec(gss)
 	}
@@ -39,7 +40,7 @@ func (f FakeAPIHooks) ValidateGameServerSpec(gss *GameServerSpec) []metav1.Statu
 }
 
 // ValidateScheduling is called by Fleet and GameServerSet Validate() to allow for product specific validation of scheduling strategy.
-func (f FakeAPIHooks) ValidateScheduling(strategy apis.SchedulingStrategy) []metav1.StatusCause {
+func (f fakeAPIHooks) ValidateScheduling(strategy apis.SchedulingStrategy) []metav1.StatusCause {
 	if f.StubValidateScheduling != nil {
 		return f.StubValidateScheduling(strategy)
 	}
@@ -47,7 +48,7 @@ func (f FakeAPIHooks) ValidateScheduling(strategy apis.SchedulingStrategy) []met
 }
 
 // MutateGameServerPodSpec is called by createGameServerPod to allow for product specific pod mutation.
-func (f FakeAPIHooks) MutateGameServerPodSpec(gss *GameServerSpec, podSpec *corev1.PodSpec) error {
+func (f fakeAPIHooks) MutateGameServerPodSpec(gss *GameServerSpec, podSpec *corev1.PodSpec) error {
 	if f.StubMutateGameServerPodSpec != nil {
 		return f.StubMutateGameServerPodSpec(gss, podSpec)
 	}
@@ -55,7 +56,7 @@ func (f FakeAPIHooks) MutateGameServerPodSpec(gss *GameServerSpec, podSpec *core
 }
 
 // SetEviction is called by gs.Pod to enforce GameServer.Status.Eviction.
-func (f FakeAPIHooks) SetEviction(safe EvictionSafe, pod *corev1.Pod) error {
+func (f fakeAPIHooks) SetEviction(safe EvictionSafe, pod *corev1.Pod) error {
 	if f.StubSetEviction != nil {
 		return f.StubSetEviction(safe, pod)
 	}

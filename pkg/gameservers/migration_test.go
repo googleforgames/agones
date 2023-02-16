@@ -73,7 +73,7 @@ func TestMigrationControllerIsRunningGameServer(t *testing.T) {
 				Spec: newSingleContainerSpec()}
 			gs.ApplyDefaults()
 
-			gsPod, err := gs.Pod(agonesv1.FakeAPIHooks{})
+			gsPod, err := gs.Pod(agtesting.FakeAPIHooks{})
 			require.NoError(t, err)
 
 			pod := v.setup(gsPod)
@@ -199,7 +199,7 @@ func TestMigrationControllerSyncGameServer(t *testing.T) {
 				Spec: newSingleContainerSpec(), Status: agonesv1.GameServerStatus{}}
 			gs.ApplyDefaults()
 
-			pod, err := gs.Pod(agonesv1.FakeAPIHooks{})
+			pod, err := gs.Pod(agtesting.FakeAPIHooks{})
 			require.NoError(t, err)
 			pod.Spec.NodeName = nodeFixtureName
 
@@ -247,7 +247,7 @@ func TestMigrationControllerRun(t *testing.T) {
 	gs := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
 		Spec: newSingleContainerSpec(), Status: agonesv1.GameServerStatus{}}
 	gs.ApplyDefaults()
-	gsPod, err := gs.Pod(agonesv1.FakeAPIHooks{})
+	gsPod, err := gs.Pod(agtesting.FakeAPIHooks{})
 	require.NoError(t, err)
 	gsPod.Spec.NodeName = nodeFixtureName
 
