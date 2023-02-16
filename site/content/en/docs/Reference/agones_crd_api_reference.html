@@ -3239,6 +3239,23 @@ int32
 </tr>
 <tr>
 <td>
+<code>allocationOverflow</code></br>
+<em>
+<a href="#agones.dev/v1.AllocationOverflow">
+AllocationOverflow
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>[Stage: Alpha]
+[FeatureFlag:FleetAllocationOverflow]
+Labels and Annotations to apply to GameServers when the number of Allocated GameServers drops below
+the desired replicas on the underlying <code>GameServerSet</code></p>
+</td>
+</tr>
+<tr>
+<td>
 <code>strategy</code></br>
 <em>
 <a href="https://v1-24.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#deploymentstrategy-v1-apps">
@@ -3570,6 +3587,23 @@ int32
 </tr>
 <tr>
 <td>
+<code>allocationOverflow</code></br>
+<em>
+<a href="#agones.dev/v1.AllocationOverflow">
+AllocationOverflow
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>[Stage: Alpha]
+[FeatureFlag:FleetAllocationOverflow]
+Labels and Annotations to apply to GameServers when the number of Allocated GameServers drops below
+the desired replicas on the underlying <code>GameServerSet</code></p>
+</td>
+</tr>
+<tr>
+<td>
 <code>scheduling</code></br>
 <em>
 agones.dev/agones/pkg/apis.SchedulingStrategy
@@ -3645,6 +3679,52 @@ int64
 </em>
 </td>
 <td>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="agones.dev/v1.AllocationOverflow">AllocationOverflow
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#agones.dev/v1.FleetSpec">FleetSpec</a>, 
+<a href="#agones.dev/v1.GameServerSetSpec">GameServerSetSpec</a>)
+</p>
+<p>
+<p>AllocationOverflow specifies what labels and/or annotations to apply on Allocated GameServers
+if the desired number of the underlying <code>GameServerSet</code> drops below the number of Allocated GameServers
+attached to it.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>labels</code></br>
+<em>
+map[string]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Labels to be applied to the <code>GameServer</code></p>
+</td>
+</tr>
+<tr>
+<td>
+<code>annotations</code></br>
+<em>
+map[string]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Annotations to be applied to the <code>GameServer</code></p>
 </td>
 </tr>
 </tbody>
@@ -3760,6 +3840,23 @@ int32
 </td>
 <td>
 <p>Replicas are the number of GameServers that should be in this set. Defaults to 0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>allocationOverflow</code></br>
+<em>
+<a href="#agones.dev/v1.AllocationOverflow">
+AllocationOverflow
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>[Stage: Alpha]
+[FeatureFlag:FleetAllocationOverflow]
+Labels and Annotations to apply to GameServers when the number of Allocated GameServers drops below
+the desired replicas on the underlying <code>GameServerSet</code></p>
 </td>
 </tr>
 <tr>
@@ -4003,6 +4100,23 @@ int32
 </td>
 <td>
 <p>Replicas are the number of GameServers that should be in this set</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>allocationOverflow</code></br>
+<em>
+<a href="#agones.dev/v1.AllocationOverflow">
+AllocationOverflow
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>[Stage: Alpha]
+[FeatureFlag:FleetAllocationOverflow]
+Labels and Annotations to apply to GameServers when the number of Allocated GameServers drops below
+the desired replicas on the underlying <code>GameServerSet</code></p>
 </td>
 </tr>
 <tr>
