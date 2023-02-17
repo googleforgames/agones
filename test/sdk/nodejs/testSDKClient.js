@@ -30,6 +30,8 @@ const connect = async () => {
 				agonesSDK.setAnnotation('annotation', UID);
 				once = false;
 			}
+		}, (error) => {
+			console.error('Watch ERROR', error);
 		});
 		await agonesSDK.ready();
 
