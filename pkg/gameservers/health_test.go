@@ -41,7 +41,7 @@ func TestHealthControllerFailedContainer(t *testing.T) {
 	gs := agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test"}, Spec: newSingleContainerSpec()}
 	gs.ApplyDefaults()
 
-	pod, err := gs.Pod(agonesv1.FakeAPIHooks{})
+	pod, err := gs.Pod(agtesting.FakeAPIHooks{})
 	require.NoError(t, err)
 	pod.Status = corev1.PodStatus{ContainerStatuses: []corev1.ContainerStatus{{Name: gs.Spec.Container,
 		State: corev1.ContainerState{Terminated: &corev1.ContainerStateTerminated{}}}}}
@@ -86,7 +86,7 @@ func TestHealthUnschedulableWithNoFreePorts(t *testing.T) {
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
-			pod, err := gs.Pod(agonesv1.FakeAPIHooks{})
+			pod, err := gs.Pod(agtesting.FakeAPIHooks{})
 			require.NoError(t, err)
 
 			pod.Status.Conditions = []corev1.PodCondition{
@@ -200,7 +200,7 @@ func TestHealthControllerSkipUnhealthyGameContainer(t *testing.T) {
 			hc := NewHealthController(healthcheck.NewHandler(), m.KubeClient, m.AgonesClient, m.KubeInformerFactory, m.AgonesInformerFactory, false)
 			gs := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: defaultNs}, Spec: newSingleContainerSpec()}
 			gs.ApplyDefaults()
-			pod, err := gs.Pod(agonesv1.FakeAPIHooks{})
+			pod, err := gs.Pod(agtesting.FakeAPIHooks{})
 			assert.NoError(t, err)
 
 			v.setup(gs, pod)
@@ -309,7 +309,7 @@ func TestHealthControllerSyncGameServer(t *testing.T) {
 			m.KubeClient.AddReactor("list", "pods", func(action k8stesting.Action) (bool, runtime.Object, error) {
 				list := &corev1.PodList{Items: []corev1.Pod{}}
 				if test.podStatus != nil {
-					pod, err := gs.Pod(agonesv1.FakeAPIHooks{})
+					pod, err := gs.Pod(agtesting.FakeAPIHooks{})
 					assert.NoError(t, err)
 					pod.Status = *test.podStatus
 					list.Items = append(list.Items, *pod)
@@ -403,7 +403,7 @@ func TestHealthControllerRun(t *testing.T) {
 	gs := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Namespace: "default", Name: "test"}, Spec: newSingleContainerSpec(),
 		Status: agonesv1.GameServerStatus{State: agonesv1.GameServerStateReady}}
 	gs.ApplyDefaults()
-	pod, err := gs.Pod(agonesv1.FakeAPIHooks{})
+	pod, err := gs.Pod(agtesting.FakeAPIHooks{})
 	require.NoError(t, err)
 
 	stop, cancel := agtesting.StartInformers(m)

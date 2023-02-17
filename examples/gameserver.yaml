@@ -88,15 +88,19 @@ spec:
   #
   # [Stage:Alpha]
   # [FeatureFlag:CountsAndLists]
-  # Lists provides the configuration for generic (player, room, session, etc.) tracking features.
+  # Counts and Lists provides the configuration for generic (player, room, session, etc.) tracking features.
   # Commented out since Alpha, and disabled by default
+  # counters:
+  #   games:
+  #     count: 1
+  #     capacity: 100
+  #   sessions:
+  #     capacity: 999
   # lists:
-  #   - name: playerlist
-  #     count: 0
+  #   players:
   #     capacity: 1000
   #     values:
-  #   - name: roomlist
-  #     count: 3
+  #   rooms:
   #     capacity: 333
   #     values:
   #       - room1
