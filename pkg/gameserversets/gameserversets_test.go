@@ -59,8 +59,10 @@ func TestSortGameServersByLeastFullNodes(t *testing.T) {
 	assert.Equal(t, "g1", result[3].ObjectMeta.Name)
 	// gs on the same node are adjacent (g5 and g7, g6 and g8).
 	// The order among the two is not stable, since sort.Slice is.
-	assert.Equal(t, result[4].Status.NodeName, result[5].Status.NodeName)
-	assert.Equal(t, result[6].Status.NodeName, result[7].Status.NodeName)
+	assert.Equal(t, "n3", result[4].Status.NodeName)
+	assert.Equal(t, "n3", result[5].Status.NodeName)
+	assert.Equal(t, "n4", result[6].Status.NodeName)
+	assert.Equal(t, "n4", result[7].Status.NodeName)
 }
 
 func TestSortGameServersByNewFirst(t *testing.T) {
