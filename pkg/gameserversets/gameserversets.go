@@ -52,8 +52,12 @@ func sortGameServersByLeastFullNodes(list []*agonesv1.GameServer, count map[stri
 				return false
 			}
 		}
-
-		return (ac.Allocated + ac.Ready) < (bc.Allocated + bc.Ready)
+		// if both Nodes have the same count, one node is emptied first (packed scheduling behavior)
+		acTotal, bcTotal := ac.Allocated+ac.Ready, bc.Allocated+bc.Ready
+		if acTotal == bcTotal {
+			return a.Status.NodeName < b.Status.NodeName
+		}
+		return acTotal < bcTotal
 	})
 
 	return list
