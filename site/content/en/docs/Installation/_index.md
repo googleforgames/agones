@@ -22,9 +22,7 @@ description: >
 - Game Servers must have the [game server SDK]({{< ref "/docs/Guides/Client SDKs/_index.md"  >}}) integrated, to manage Game Server state, health checking, etc.
 
 {{< alert title="Warning" color="warning">}}
-Later versions of Kubernetes may work, but this project is tested against {{% k8s-version %}}, and is therefore the supported version.
-Agones will update its support to the n-1 version of what is available across the majority of major cloud providers - GKE, EKS and
-AKS, while also ensuring that all Cloud providers can support that version.
+This release has been tested against Kubernetes versions {{% k8s-version %}}. Other versions may work, but are unsupported.
 {{< /alert >}}
 
 ## Supported Container Architectures
@@ -45,17 +43,17 @@ Each version of Agones supports a specific version of Kubernetes. When a new ver
 
 The following table lists recent Agones versions and their corresponding required Kubernetes versions:
 
-| Agones version | Kubernetes version |
-| -------------- | ------------------ |
-| 1.29           | 1.24               |
-| 1.28           | 1.23               |
-| 1.27           | 1.23               |
-| 1.26           | 1.23               |
-| 1.25           | 1.22               |
-| 1.24           | 1.22               |
-| 1.23           | 1.22               |
-| 1.22           | 1.21               |
-| 1.21           | 1.21               |
+| Agones version | Kubernetes version   |
+| -------------- | ------------------   |
+| 1.29           | {{% k8s-version %}}  |
+| 1.28           | 1.23                 |
+| 1.27           | 1.23                 |
+| 1.26           | 1.23                 |
+| 1.25           | 1.22                 |
+| 1.24           | 1.22                 |
+| 1.23           | 1.22                 |
+| 1.22           | 1.21                 |
+| 1.21           | 1.21                 |
 
 ## Best Practices
 
