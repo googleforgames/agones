@@ -92,14 +92,14 @@ func TestGameServerSetValidateUpdate(t *testing.T) {
 	newGSS = gsSet.DeepCopy()
 	longName := strings.Repeat("f", validation.LabelValueMaxLength+1)
 	newGSS.Name = longName
-	causes, ok = newGSS.Validate(FakeAPIHooks{})
+	causes, ok = newGSS.Validate(fakeAPIHooks{})
 	assert.False(t, ok)
 	assert.Len(t, causes, 1)
 	assert.Equal(t, "Name", causes[0].Field)
 
 	newGSS.Name = ""
 	newGSS.GenerateName = longName
-	causes, ok = newGSS.Validate(FakeAPIHooks{})
+	causes, ok = newGSS.Validate(fakeAPIHooks{})
 	assert.True(t, ok)
 	assert.Len(t, causes, 0)
 
@@ -113,7 +113,7 @@ func TestGameServerSetValidateUpdate(t *testing.T) {
 	newGSS = gsSet.DeepCopy()
 	newGSS.Spec.Template.ObjectMeta.Labels = make(map[string]string)
 	newGSS.Spec.Template.ObjectMeta.Labels[longName] = ""
-	causes, ok = newGSS.Validate(FakeAPIHooks{})
+	causes, ok = newGSS.Validate(fakeAPIHooks{})
 	assert.False(t, ok)
 	assert.Len(t, causes, 1)
 	assert.Equal(t, "labels", causes[0].Field)
@@ -122,7 +122,7 @@ func TestGameServerSetValidateUpdate(t *testing.T) {
 	newGSS = gsSet.DeepCopy()
 	newGSS.Spec.Template.Spec.Template.ObjectMeta.Labels = make(map[string]string)
 	newGSS.Spec.Template.Spec.Template.ObjectMeta.Labels[longName] = ""
-	causes, ok = newGSS.Validate(FakeAPIHooks{})
+	causes, ok = newGSS.Validate(fakeAPIHooks{})
 	assert.False(t, ok)
 	assert.Len(t, causes, 1)
 	assert.Equal(t, "labels", causes[0].Field)
@@ -131,7 +131,7 @@ func TestGameServerSetValidateUpdate(t *testing.T) {
 	newGSS = gsSet.DeepCopy()
 	newGSS.Spec.Template.ObjectMeta.Annotations = make(map[string]string)
 	newGSS.Spec.Template.ObjectMeta.Annotations[longName] = ""
-	causes, ok = newGSS.Validate(FakeAPIHooks{})
+	causes, ok = newGSS.Validate(fakeAPIHooks{})
 	assert.False(t, ok)
 	assert.Len(t, causes, 1)
 	assert.Equal(t, "annotations", causes[0].Field)
@@ -140,7 +140,7 @@ func TestGameServerSetValidateUpdate(t *testing.T) {
 	newGSS = gsSet.DeepCopy()
 	newGSS.Spec.Template.Spec.Template.ObjectMeta.Annotations = make(map[string]string)
 	newGSS.Spec.Template.Spec.Template.ObjectMeta.Annotations[longName] = ""
-	causes, ok = newGSS.Validate(FakeAPIHooks{})
+	causes, ok = newGSS.Validate(fakeAPIHooks{})
 	assert.False(t, ok)
 	assert.Len(t, causes, 1)
 	assert.Equal(t, "annotations", causes[0].Field)
@@ -151,7 +151,7 @@ func TestGameServerSetValidateUpdate(t *testing.T) {
 				Containers: []corev1.Container{{Name: "container", Image: "myimage"}, {Name: "container2", Image: "myimage"}},
 			},
 		}
-	causes, ok = gsSet.Validate(FakeAPIHooks{})
+	causes, ok = gsSet.Validate(fakeAPIHooks{})
 
 	assert.False(t, ok)
 	assert.Len(t, causes, 2)
