@@ -65,7 +65,6 @@ status:
           nullable: true
           items:
             type: string
-{{- if .featureCountsAndLists }}
     counters:
       type: object
       title: Map of player, room, session, etc. counters
@@ -74,11 +73,12 @@ status:
       additionalProperties:
         type: object
         properties:
-          count: # initial count
+          count:
+            title: The current count
             type: integer
             default: 0
             minimum: 0
-          capacity: # max capacity of the counter
+          capacity:
             type: integer
             minimum: 0
     lists:
@@ -89,18 +89,18 @@ status:
       additionalProperties:
         type: object
         properties:
-          capacity: # max capacity of the array (can be less than or equal to value of values.maxItems)
+          capacity:
+            title: Max capacity of the array (can be less than or equal to value of values.maxItems)
             type: integer
             minimum: 0
             maximum: 1000 # must be equal to values.maxItems
           values:
+            title: Set of all the items in the list
             type: array
             x-kubernetes-list-type: set # Requires items in the array to be unique
             maxItems: 1000 # max possible size of the value array (cannot be updated)
             items: # name of the item (player1, session1, room1, etc.)
               type: string
-{{- end }}
-{{- if .featureSafeToEvict }}
     eviction:
       type: object
       properties:
@@ -116,5 +116,4 @@ status:
       default: 1
       minimum: 1
       maximum: 1
-{{- end}}
 {{- end}}
