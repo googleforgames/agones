@@ -155,6 +155,8 @@ func TestGameServerApplyDefaults(t *testing.T) {
 		scheduling          apis.SchedulingStrategy
 		sdkServer           SdkServer
 		alphaPlayerCapacity *int64
+		alphaCounterSpec    map[string]CounterStatus
+		alphaListSpec       map[string]ListStatus
 		evictionSafeSpec    EvictionSafe
 		evictionSafeStatus  EvictionSafe
 	}
@@ -199,6 +201,28 @@ func TestGameServerApplyDefaults(t *testing.T) {
 			}),
 			expected: wantDefaultAnd(func(e *expected) {
 				e.alphaPlayerCapacity = &ten
+			}),
+		},
+		"CountsAndLists=true, Counters": {
+			featureFlags: string(runtime.FeatureCountsAndLists) + "=true",
+			gameServer: defaultGameServerAnd(func(gss *GameServerSpec) {
+				gss.Counters = make(map[string]CounterStatus)
+				gss.Counters["games"] = CounterStatus{Count: 1, Capacity: 100}
+			}),
+			expected: wantDefaultAnd(func(e *expected) {
+				e.alphaCounterSpec = make(map[string]CounterStatus)
+				e.alphaCounterSpec["games"] = CounterStatus{Count: 1, Capacity: 100}
+			}),
+		},
+		"CountsAndLists=true, Lists": {
+			featureFlags: string(runtime.FeatureCountsAndLists) + "=true",
+			gameServer: defaultGameServerAnd(func(gss *GameServerSpec) {
+				gss.Lists = make(map[string]ListStatus)
+				gss.Lists["players"] = ListStatus{Capacity: 100, Values: []string{"foo", "bar"}}
+			}),
+			expected: wantDefaultAnd(func(e *expected) {
+				e.alphaListSpec = make(map[string]ListStatus)
+				e.alphaListSpec["players"] = ListStatus{Capacity: 100, Values: []string{"foo", "bar"}}
 			}),
 		},
 		"defaults on passthrough": {
@@ -402,15 +426,26 @@ func TestGameServerApplyDefaults(t *testing.T) {
 				assert.Nil(t, test.gameServer.Status.Players)
 			}
 			if len(test.expected.evictionSafeSpec) > 0 {
-				assert.Equal(t, test.expected.evictionSafeSpec, spec.Eviction.Safe)
+			assert.Equal(t, test.expected.evictionSafeSpec, spec.Eviction.Safe)
 			} else {
 				assert.Nil(t, spec.Eviction)
 			}
-
 			if len(test.expected.evictionSafeStatus) > 0 {
 				assert.Equal(t, test.expected.evictionSafeStatus, test.gameServer.Status.Eviction.Safe)
 			} else {
 				assert.Nil(t, test.gameServer.Status.Eviction)
+			}
+			if test.expected.alphaCounterSpec != nil {
+				assert.Equal(t, test.expected.alphaCounterSpec, test.gameServer.Status.Counters)
+			} else {
+				assert.Nil(t, test.gameServer.Spec.Counters)
+				assert.Nil(t, test.gameServer.Status.Counters)
+			}
+			if test.expected.alphaListSpec != nil {
+				assert.Equal(t, test.expected.alphaListSpec, test.gameServer.Status.Lists)
+			} else {
+				assert.Nil(t, test.gameServer.Spec.Lists)
+				assert.Nil(t, test.gameServer.Status.Lists)
 			}
 		})
 	}
@@ -1127,7 +1162,7 @@ func TestGameServerValidateFeatures(t *testing.T) {
 			gs: GameServer{
 				Spec: GameServerSpec{
 					Container: "testing",
-					Counters:  map[string]CounterSpec{},
+					Counters:  map[string]CounterStatus{},
 					Template: corev1.PodTemplateSpec{
 						Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "testing", Image: "testing/image"}}}}},
 			},
@@ -1142,7 +1177,7 @@ func TestGameServerValidateFeatures(t *testing.T) {
 			gs: GameServer{
 				Spec: GameServerSpec{
 					Container: "testing",
-					Lists:     map[string]ListSpec{},
+					Lists:     map[string]ListStatus{},
 					Template: corev1.PodTemplateSpec{
 						Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "testing", Image: "testing/image"}}}}},
 			},
@@ -1157,7 +1192,7 @@ func TestGameServerValidateFeatures(t *testing.T) {
 			gs: GameServer{
 				Spec: GameServerSpec{
 					Container: "testing",
-					Counters:  map[string]CounterSpec{},
+					Counters:  map[string]CounterStatus{},
 					Template: corev1.PodTemplateSpec{
 						Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "testing", Image: "testing/image"}}}}},
 			},
@@ -1170,7 +1205,7 @@ func TestGameServerValidateFeatures(t *testing.T) {
 			gs: GameServer{
 				Spec: GameServerSpec{
 					Container: "testing",
-					Lists:     map[string]ListSpec{},
+					Lists:     map[string]ListStatus{},
 					Template: corev1.PodTemplateSpec{
 						Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "testing", Image: "testing/image"}}}}},
 			},
