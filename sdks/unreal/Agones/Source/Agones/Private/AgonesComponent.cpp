@@ -227,7 +227,7 @@ void UAgonesComponent::HandleWatchMessage(const void* Data, SIZE_T Size, SIZE_T 
     if (BytesRemaining <= 0 && WatchMessageBuffer.IsEmpty())
     {
         FUTF8ToTCHAR Message(static_cast<const UTF8CHAR*>(Data), Size);
-        DeserializeAndBroadcastWatch(Message.Get());
+        DeserializeAndBroadcastWatch(FString(Message.Length(), Message.Get()));
         return;
     }
 
@@ -238,7 +238,7 @@ void UAgonesComponent::HandleWatchMessage(const void* Data, SIZE_T Size, SIZE_T 
     }
 
     FUTF8ToTCHAR Message(WatchMessageBuffer.GetData(), WatchMessageBuffer.Num());
-    DeserializeAndBroadcastWatch(Message.Get());
+    DeserializeAndBroadcastWatch(FString(Message.Length(), Message.Get()));
     WatchMessageBuffer.Empty();
 }
 
