@@ -62,8 +62,8 @@ artifacts:
       - 'CHANGELOG.md'
 
 options:
-    machineType: E2_HIGHCPU_32
-    dynamic_substitutions: true
+  machineType: E2_HIGHCPU_32
+  dynamic_substitutions: true
 substitutions:
   _STORAGE: gs://${PROJECT_ID}-agones-releases
 
