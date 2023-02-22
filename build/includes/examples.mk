@@ -42,8 +42,9 @@ push-example-golang-images: example-image-push.supertuxkart
 push-example-golang-images: example-image-push.simple-game-server
 
 # Test to ensure the example image found in the % folder is on GAR. Fails if it is not.
-example-image-test.%:
-	$(DOCKER_RUN) bash -c "cd examples/$* && make gar-check"
+example-image-test.%: 
+	$(DOCKER_RUN) bash -c "cd examples/$* && make gar-check" $(DOCKER_RUN_ARGS)
 
 example-image-push.%:
 	$(DOCKER_RUN) bash -c "cd examples/$* && make push"
+
