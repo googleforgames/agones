@@ -22,7 +22,8 @@ description: >
 - Game Servers must have the [game server SDK]({{< ref "/docs/Guides/Client SDKs/_index.md"  >}}) integrated, to manage Game Server state, health checking, etc.
 
 {{< alert title="Warning" color="warning">}}
-This release has been tested against Kubernetes versions {{% k8s-version %}}. Other versions may work, but are unsupported.
+This release has been tested against Kubernetes versions {{% k8s-version %}} on GKE. Other versions may work, but are unsupported. It is also likely that not all of these versions are supported by other cloud providers.
+Agones will support 3 releases of Kubernetes, targeting the newest version as being the [default version in the GKE Rapid channel](https://cloud.google.com/kubernetes-engine/docs/release-notes#current_versions). However, we will ensure that at least one of the 3 versions chosen for each Agones release is supported by each of the major cloud providers (EKS and AKS). The vendored version of client-go will be aligned with the middle of the three supported Kubernetes versions.
 {{< /alert >}}
 
 ## Supported Container Architectures
@@ -39,21 +40,21 @@ For all the platforms in Alpha, we would appreciate testing and bug reports on a
 
 ## Agones and Kubernetes Supported Versions
 
-Each version of Agones supports a specific version of Kubernetes. When a new version of Agones supports a new version of Kubernetes, it is explicitly called out in the [release notes](https://agones.dev/site/blog/releases/).
+Each version of Agones supports specific versions of Kubernetes. When a new version of Agones supports new versions of Kubernetes, it is explicitly called out in the [release notes](https://agones.dev/site/blog/releases/).
 
 The following table lists recent Agones versions and their corresponding required Kubernetes versions:
 
-| Agones version | Kubernetes version   |
-| -------------- | ------------------   |
-| 1.29           | {{% k8s-version %}}  |
-| 1.28           | 1.23                 |
-| 1.27           | 1.23                 |
-| 1.26           | 1.23                 |
-| 1.25           | 1.22                 |
-| 1.24           | 1.22                 |
-| 1.23           | 1.22                 |
-| 1.22           | 1.21                 |
-| 1.21           | 1.21                 |
+| Agones version | Kubernetes version(s) |
+| -------------- | ------------------    |
+| 1.29           | {{% k8s-version %}}   |
+| 1.28           | 1.23                  |
+| 1.27           | 1.23                  |
+| 1.26           | 1.23                  |
+| 1.25           | 1.22                  |
+| 1.24           | 1.22                  |
+| 1.23           | 1.22                  |
+| 1.22           | 1.21                  |
+| 1.21           | 1.21                  |
 
 ## Best Practices
 
