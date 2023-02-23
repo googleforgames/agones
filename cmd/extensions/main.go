@@ -33,6 +33,7 @@ import (
 	"agones.dev/agones/pkg/gameserverallocations"
 	"agones.dev/agones/pkg/gameservers"
 	"agones.dev/agones/pkg/gameserversets"
+	"agones.dev/agones/pkg/metrics"
 	"agones.dev/agones/pkg/util/apiserver"
 	"agones.dev/agones/pkg/util/https"
 	"agones.dev/agones/pkg/util/runtime"
@@ -40,6 +41,7 @@ import (
 	"agones.dev/agones/pkg/util/webhooks"
 	"github.com/heptiolabs/healthcheck"
 	"github.com/pkg/errors"
+	prom "github.com/prometheus/client_golang/prometheus"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -50,18 +52,21 @@ import (
 )
 
 const (
-	projectIDFlag             = "gcp-project-id"
-	certFileFlag              = "cert-file"
-	keyFileFlag               = "key-file"
-	numWorkersFlag            = "num-workers"
-	logDirFlag                = "log-dir"
-	logLevelFlag              = "log-level"
-	logSizeLimitMBFlag        = "log-size-limit-mb"
-	allocationBatchWaitTime   = "allocation-batch-wait-time"
-	kubeconfigFlag            = "kubeconfig"
-	defaultResync             = 30 * time.Second
-	apiServerSustainedQPSFlag = "api-server-qps"
-	apiServerBurstQPSFlag     = "api-server-qps-burst"
+	enableStackdriverMetricsFlag = "stackdriver-exporter"
+	stackdriverLabels            = "stackdriver-labels"
+	enablePrometheusMetricsFlag  = "prometheus-exporter"
+	projectIDFlag                = "gcp-project-id"
+	certFileFlag                 = "cert-file"
+	keyFileFlag                  = "key-file"
+	numWorkersFlag               = "num-workers"
+	logDirFlag                   = "log-dir"
+	logLevelFlag                 = "log-level"
+	logSizeLimitMBFlag           = "log-size-limit-mb"
+	allocationBatchWaitTime      = "allocation-batch-wait-time"
+	kubeconfigFlag               = "kubeconfig"
+	defaultResync                = 30 * time.Second
+	apiServerSustainedQPSFlag    = "api-server-qps"
+	apiServerBurstQPSFlag        = "api-server-qps-burst"
 )
 
 var (
@@ -139,8 +144,36 @@ func main() {
 	kubeInformerFactory := informers.NewSharedInformerFactory(kubeClient, defaultResync)
 
 	server := &httpServer{}
+	var health healthcheck.Handler
 
-	health := healthcheck.NewHandler()
+	// Stackdriver metrics
+	if ctlConf.Stackdriver {
+		sd, err := metrics.RegisterStackdriverExporter(ctlConf.GCPProjectID, ctlConf.StackdriverLabels)
+		if err != nil {
+			logger.WithError(err).Fatal("Could not register stackdriver exporter")
+		}
+		// It is imperative to invoke flush before your main function exits
+		defer sd.Flush()
+	}
+
+	// Prometheus metrics
+	if ctlConf.PrometheusMetrics {
+		registry := prom.NewRegistry()
+		metricHandler, err := metrics.RegisterPrometheusExporter(registry)
+		if err != nil {
+			logger.WithError(err).Fatal("Could not register prometheus exporter in extensions")
+		}
+		server.Handle("/metrics", metricHandler)
+		health = healthcheck.NewMetricsHandler(registry, "agones")
+	} else {
+		logger.Info("Not registaring prometheus metrics")
+		health = healthcheck.NewHandler()
+	}
+
+	// If we are using Prometheus only exporter we can make reporting more often,
+	// every 1 seconds, if we are using Stackdriver we would use 60 seconds reporting period,
+	// which is a requirements of Stackdriver, otherwise most of time series would be invalid for Stackdriver
+	metrics.SetReportingPeriod(ctlConf.PrometheusMetrics, ctlConf.Stackdriver)
 
 	server.Handle("/", health)
 
@@ -180,6 +213,10 @@ func parseEnvFlags() config {
 	viper.SetDefault(keyFileFlag, filepath.Join(base, "certs", "server.key"))
 	viper.SetDefault(allocationBatchWaitTime, 500*time.Millisecond)
 
+	viper.SetDefault(enablePrometheusMetricsFlag, true)
+	viper.SetDefault(enableStackdriverMetricsFlag, false)
+	viper.SetDefault(stackdriverLabels, "")
+
 	viper.SetDefault(projectIDFlag, "")
 	viper.SetDefault(numWorkersFlag, 64)
 	viper.SetDefault(apiServerSustainedQPSFlag, 100)
@@ -191,6 +228,11 @@ func parseEnvFlags() config {
 	pflag.String(keyFileFlag, viper.GetString(keyFileFlag), "Optional. Path to the key file")
 	pflag.String(certFileFlag, viper.GetString(certFileFlag), "Optional. Path to the crt file")
 	pflag.String(kubeconfigFlag, viper.GetString(kubeconfigFlag), "Optional. kubeconfig to run the controller out of the cluster. Only use it for debugging as webhook won't works.")
+
+	pflag.Bool(enablePrometheusMetricsFlag, viper.GetBool(enablePrometheusMetricsFlag), "Flag to activate metrics of Agones. Can also use PROMETHEUS_EXPORTER env variable.")
+	pflag.Bool(enableStackdriverMetricsFlag, viper.GetBool(enableStackdriverMetricsFlag), "Flag to activate stackdriver monitoring metrics for Agones. Can also use STACKDRIVER_EXPORTER env variable.")
+	pflag.String(stackdriverLabels, viper.GetString(stackdriverLabels), "A set of default labels to add to all stackdriver metrics generated. By default metadata are automatically added using Kubernetes API and GCP metadata enpoint.")
+
 	pflag.String(projectIDFlag, viper.GetString(projectIDFlag), "GCP ProjectID used for Stackdriver, if not specified ProjectID from Application Default Credentials would be used. Can also use GCP_PROJECT_ID env variable.")
 	pflag.Int32(numWorkersFlag, 64, "Number of controller workers per resource type")
 	pflag.Int32(apiServerSustainedQPSFlag, 100, "Maximum sustained queries per second to send to the API server")
@@ -204,9 +246,15 @@ func parseEnvFlags() config {
 	pflag.Parse()
 
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
+
 	runtime.Must(viper.BindEnv(keyFileFlag))
 	runtime.Must(viper.BindEnv(certFileFlag))
 	runtime.Must(viper.BindEnv(kubeconfigFlag))
+
+	runtime.Must(viper.BindEnv(enablePrometheusMetricsFlag))
+	runtime.Must(viper.BindEnv(enableStackdriverMetricsFlag))
+	runtime.Must(viper.BindEnv(stackdriverLabels))
+
 	runtime.Must(viper.BindEnv(projectIDFlag))
 	runtime.Must(viper.BindEnv(numWorkersFlag))
 	runtime.Must(viper.BindEnv(apiServerSustainedQPSFlag))
@@ -221,10 +269,15 @@ func parseEnvFlags() config {
 	runtime.Must(runtime.ParseFeaturesFromEnv())
 
 	return config{
-		KeyFile:                 viper.GetString(keyFileFlag),
-		CertFile:                viper.GetString(certFileFlag),
-		KubeConfig:              viper.GetString(kubeconfigFlag),
-		GCPProjectID:            viper.GetString(projectIDFlag),
+		KeyFile:      viper.GetString(keyFileFlag),
+		CertFile:     viper.GetString(certFileFlag),
+		KubeConfig:   viper.GetString(kubeconfigFlag),
+		GCPProjectID: viper.GetString(projectIDFlag),
+
+		PrometheusMetrics: viper.GetBool(enablePrometheusMetricsFlag),
+		Stackdriver:       viper.GetBool(enableStackdriverMetricsFlag),
+		StackdriverLabels: viper.GetString(stackdriverLabels),
+
 		NumWorkers:              int(viper.GetInt32(numWorkersFlag)),
 		APIServerSustainedQPS:   int(viper.GetInt32(apiServerSustainedQPSFlag)),
 		APIServerBurstQPS:       int(viper.GetInt32(apiServerBurstQPSFlag)),
@@ -237,9 +290,14 @@ func parseEnvFlags() config {
 
 // config stores all required configuration to create a game server extensions.
 type config struct {
-	KeyFile                 string
-	CertFile                string
-	KubeConfig              string
+	KeyFile    string
+	CertFile   string
+	KubeConfig string
+
+	PrometheusMetrics bool
+	Stackdriver       bool
+	StackdriverLabels string
+
 	GCPProjectID            string
 	NumWorkers              int
 	APIServerSustainedQPS   int

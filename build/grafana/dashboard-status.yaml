@@ -188,7 +188,7 @@ data:
           "tableColumn": "",
           "targets": [
             {
-              "expr": "up{app=\"agones\",kubernetes_pod_name=~\"agones-controller.*\"} OR on() vector(0)",
+              "expr": "up{app=\"agones\",agones_dev_role=\"controller\"} OR on() vector(0)",
               "format": "time_series",
               "instant": true,
               "intervalFactor": 1,
@@ -360,7 +360,7 @@ data:
           "tableColumn": "",
           "targets": [
             {
-              "expr": "sum(up{app=\"agones\",kubernetes_pod_name=~\"agones-allocator.*\"}) OR on() vector(0)",
+              "expr": "sum(up{app=\"agones\",multicluster_agones_dev_role=\"allocator\"}) OR on() vector(0)",
               "format": "time_series",
               "instant": true,
               "intervalFactor": 1,
@@ -449,7 +449,7 @@ data:
           "tableColumn": "",
           "targets": [
             {
-              "expr": "count(up{app=\"agones\",kubernetes_pod_name=~\"agones-allocator.*\"}) OR on() vector(0)",
+              "expr": "count(up{app=\"agones\",multicluster_agones_dev_role=\"allocator\"}) OR on() vector(0)",
               "format": "time_series",
               "instant": true,
               "intervalFactor": 1,
