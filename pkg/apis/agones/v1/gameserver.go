@@ -454,12 +454,19 @@ func (gs *GameServer) applyCountsListsStatus() {
 	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
 		return
 	}
-	copyGS := gs.Spec.DeepCopy()
 	if gs.Spec.Counters != nil {
-		gs.Status.Counters = copyGS.Counters
+		countersCopy := make(map[string]CounterStatus, len(gs.Spec.Counters))
+		for key, val := range gs.Spec.Counters {
+			countersCopy[key] = *val.DeepCopy()
+		}
+		gs.Status.Counters = countersCopy
 	}
 	if gs.Spec.Lists != nil {
-		gs.Status.Lists = copyGS.Lists
+		listsCopy := make(map[string]ListStatus, len(gs.Spec.Lists))
+		for key, val := range gs.Spec.Lists {
+			listsCopy[key] = *val.DeepCopy()
+		}
+		gs.Status.Lists = listsCopy
 	}
 }
 
