@@ -41,6 +41,11 @@ spec:
 {{- if .Values.agones.extensions.generateTLS }}
         revision/tls-cert: {{ .Release.Revision | quote }}
 {{- end }}
+{{- if and (.Values.agones.metrics.prometheusServiceDiscovery) (.Values.agones.metrics.prometheusEnabled) }}
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
+{{- end }}
 {{- if .Values.agones.extensions.annotations }}
 {{- toYaml .Values.agones.extensions.annotations | nindent 8 }}
 {{- end }}
@@ -71,6 +76,12 @@ spec:
         image: "{{ .Values.agones.image.registry }}/{{ .Values.agones.image.extensions.name}}:{{ default .Values.agones.image.tag .Values.agones.image.extensions.tag }}"
         imagePullPolicy: {{ .Values.agones.image.extensions.pullPolicy }}
         env:
+        - name: PROMETHEUS_EXPORTER
+          value: {{ .Values.agones.metrics.prometheusEnabled | quote }}
+        - name: STACKDRIVER_EXPORTER
+          value: {{ .Values.agones.metrics.stackdriverEnabled | quote }}
+        - name: STACKDRIVER_LABELS
+          value: {{ .Values.agones.metrics.stackdriverLabels | quote }}       
         - name: GCP_PROJECT_ID
           value: {{ .Values.agones.metrics.stackdriverProjectID | quote }}
         - name: NUM_WORKERS
