@@ -43,6 +43,6 @@ func (f FakeAPIHooks) MutateGameServerPodSpec(_ *agonesv1.GameServerSpec, podSpe
 }
 
 // SetEviction is called by gs.Pod to enforce GameServer.Status.Eviction.
-func (f FakeAPIHooks) SetEviction(_ agonesv1.EvictionSafe, pod *corev1.Pod) error {
+func (f FakeAPIHooks) SetEviction(_ *agonesv1.Eviction, pod *corev1.Pod) error {
 	return nil
 }

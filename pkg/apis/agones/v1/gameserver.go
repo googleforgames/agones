@@ -193,7 +193,7 @@ type GameServerSpec struct {
 	Lists    map[string]ListSpec    `json:"lists,omitempty"`
 	// (Alpha, SafeToEvict feature flag) Eviction specifies the eviction tolerance of the GameServer. Defaults to "Never".
 	// +optional
-	Eviction Eviction `json:"eviction,omitempty"`
+	Eviction *Eviction `json:"eviction,omitempty"`
 	// immutableReplicas is present in gameservers.agones.dev but omitted here (it's always 1).
 }
 
@@ -293,7 +293,8 @@ type GameServerStatus struct {
 	// +optional
 	Players *PlayerStatus `json:"players"`
 	// (Alpha, SafeToEvict feature flag) Eviction specifies the eviction tolerance of the GameServer.
-	Eviction Eviction `json:"eviction,omitempty"`
+	// +optional
+	Eviction *Eviction `json:"eviction,omitempty"`
 	// immutableReplicas is present in gameservers.agones.dev but omitted here (it's always 1).
 }
 
@@ -422,6 +423,9 @@ func (gss *GameServerSpec) applyEvictionDefaults() {
 	if !runtime.FeatureEnabled(runtime.FeatureSafeToEvict) {
 		return
 	}
+	if gss.Eviction == nil {
+		gss.Eviction = &Eviction{}
+	}
 	if gss.Eviction.Safe == "" {
 		gss.Eviction.Safe = EvictionSafeNever
 	}
@@ -431,8 +435,11 @@ func (gs *GameServer) applyEvictionStatus() {
 	if !runtime.FeatureEnabled(runtime.FeatureSafeToEvict) {
 		return
 	}
-	gs.Status.Eviction = gs.Spec.Eviction
+	gs.Status.Eviction = gs.Spec.Eviction.DeepCopy()
 	if gs.Spec.Template.ObjectMeta.Annotations[PodSafeToEvictAnnotation] == "true" {
+		if gs.Status.Eviction == nil {
+			gs.Status.Eviction = &Eviction{}
+		}
 		gs.Status.Eviction.Safe = EvictionSafeAlways
 	}
 }
@@ -469,7 +476,7 @@ func (gss *GameServerSpec) validateFeatureGates() []metav1.StatusCause {
 	}
 
 	if !runtime.FeatureEnabled(runtime.FeatureSafeToEvict) {
-		if gss.Eviction.Safe != "" {
+		if gss.Eviction != nil {
 			causes = append(causes, metav1.StatusCause{
 				Type:    metav1.CauseTypeFieldValueNotSupported,
 				Field:   "eviction.safe",
@@ -747,7 +754,7 @@ func (gs *GameServer) Pod(apiHooks APIHooks, sidecars ...corev1.Container) (*cor
 	if err := apiHooks.MutateGameServerPodSpec(&gs.Spec, &pod.Spec); err != nil {
 		return nil, err
 	}
-	if err := apiHooks.SetEviction(gs.Status.Eviction.Safe, pod); err != nil {
+	if err := apiHooks.SetEviction(gs.Status.Eviction, pod); err != nil {
 		return nil, err
 	}
 

@@ -320,7 +320,7 @@ func TestGameServerApplyDefaults(t *testing.T) {
 		},
 		"eviction.safe: Always": {
 			gameServer: defaultGameServerAnd(func(gss *GameServerSpec) {
-				gss.Eviction.Safe = EvictionSafeAlways
+				gss.Eviction = &Eviction{Safe: EvictionSafeAlways}
 			}),
 			expected: wantDefaultAnd(func(e *expected) {
 				e.evictionSafeSpec = EvictionSafeAlways
@@ -329,7 +329,7 @@ func TestGameServerApplyDefaults(t *testing.T) {
 		},
 		"eviction.safe: OnUpgrade": {
 			gameServer: defaultGameServerAnd(func(gss *GameServerSpec) {
-				gss.Eviction.Safe = EvictionSafeOnUpgrade
+				gss.Eviction = &Eviction{Safe: EvictionSafeOnUpgrade}
 			}),
 			expected: wantDefaultAnd(func(e *expected) {
 				e.evictionSafeSpec = EvictionSafeOnUpgrade
@@ -338,7 +338,7 @@ func TestGameServerApplyDefaults(t *testing.T) {
 		},
 		"eviction.safe: Never": {
 			gameServer: defaultGameServerAnd(func(gss *GameServerSpec) {
-				gss.Eviction.Safe = EvictionSafeNever
+				gss.Eviction = &Eviction{Safe: EvictionSafeNever}
 			}),
 			expected: wantDefaultAnd(func(e *expected) {
 				e.evictionSafeSpec = EvictionSafeNever
@@ -365,7 +365,7 @@ func TestGameServerApplyDefaults(t *testing.T) {
 		},
 		"safe-to-evict=false AND eviction.safe: Always => eviction.safe: Always": {
 			gameServer: defaultGameServerAnd(func(gss *GameServerSpec) {
-				gss.Eviction.Safe = EvictionSafeAlways
+				gss.Eviction = &Eviction{Safe: EvictionSafeAlways}
 				gss.Template.ObjectMeta.Annotations = map[string]string{PodSafeToEvictAnnotation: "false"}
 			}),
 			expected: wantDefaultAnd(func(e *expected) {
@@ -401,8 +401,17 @@ func TestGameServerApplyDefaults(t *testing.T) {
 				assert.Nil(t, test.gameServer.Spec.Players)
 				assert.Nil(t, test.gameServer.Status.Players)
 			}
-			assert.Equal(t, test.expected.evictionSafeSpec, spec.Eviction.Safe)
-			assert.Equal(t, test.expected.evictionSafeStatus, test.gameServer.Status.Eviction.Safe)
+			if len(test.expected.evictionSafeSpec) > 0 {
+				assert.Equal(t, test.expected.evictionSafeSpec, spec.Eviction.Safe)
+			} else {
+				assert.Nil(t, spec.Eviction)
+			}
+
+			if len(test.expected.evictionSafeStatus) > 0 {
+				assert.Equal(t, test.expected.evictionSafeStatus, test.gameServer.Status.Eviction.Safe)
+			} else {
+				assert.Nil(t, test.gameServer.Status.Eviction)
+			}
 		})
 	}
 }

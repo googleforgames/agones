@@ -386,7 +386,11 @@ func (in *GameServerSpec) DeepCopyInto(out *GameServerSpec) {
 			(*out)[key] = *val.DeepCopy()
 		}
 	}
-	out.Eviction = in.Eviction
+	if in.Eviction != nil {
+		in, out := &in.Eviction, &out.Eviction
+		*out = new(Eviction)
+		**out = **in
+	}
 	return
 }
 
@@ -417,7 +421,11 @@ func (in *GameServerStatus) DeepCopyInto(out *GameServerStatus) {
 		*out = new(PlayerStatus)
 		(*in).DeepCopyInto(*out)
 	}
-	out.Eviction = in.Eviction
+	if in.Eviction != nil {
+		in, out := &in.Eviction, &out.Eviction
+		*out = new(Eviction)
+		**out = **in
+	}
 	return
 }
 
