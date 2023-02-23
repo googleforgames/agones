@@ -107,7 +107,7 @@ func TestSumStatusAllocatedReplicas(t *testing.T) {
 func TestFleetGameserverSpec(t *testing.T) {
 	f := defaultFleet()
 	f.ApplyDefaults()
-	causes, ok := f.Validate(FakeAPIHooks{})
+	causes, ok := f.Validate(fakeAPIHooks{})
 	assert.True(t, ok)
 	assert.Len(t, causes, 0)
 
@@ -117,21 +117,21 @@ func TestFleetGameserverSpec(t *testing.T) {
 				Containers: []corev1.Container{{Name: "container", Image: "myimage"}, {Name: "container2", Image: "myimage"}},
 			},
 		}
-	causes, ok = f.Validate(FakeAPIHooks{})
+	causes, ok = f.Validate(fakeAPIHooks{})
 
 	assert.False(t, ok)
 	assert.Len(t, causes, 1)
 	assert.Equal(t, "container", causes[0].Field)
 
 	f.Spec.Template.Spec.Container = "testing"
-	causes, ok = f.Validate(FakeAPIHooks{})
+	causes, ok = f.Validate(fakeAPIHooks{})
 
 	assert.False(t, ok)
 	assert.Len(t, causes, 1)
 	assert.Equal(t, "Could not find a container named testing", causes[0].Message)
 
 	f.Spec.Template.Spec.Container = "container"
-	causes, ok = f.Validate(FakeAPIHooks{})
+	causes, ok = f.Validate(fakeAPIHooks{})
 	assert.True(t, ok)
 	assert.Len(t, causes, 0)
 
@@ -139,21 +139,21 @@ func TestFleetGameserverSpec(t *testing.T) {
 	percent := intstr.FromString("0%")
 	f.Spec.Strategy.RollingUpdate.MaxUnavailable = &percent
 	f.Spec.Strategy.RollingUpdate.MaxSurge = &percent
-	causes, ok = f.Validate(FakeAPIHooks{})
+	causes, ok = f.Validate(fakeAPIHooks{})
 	assert.False(t, ok)
 	assert.Len(t, causes, 2)
 
 	intParam := intstr.FromInt(0)
 	f.Spec.Strategy.RollingUpdate.MaxUnavailable = &intParam
 	f.Spec.Strategy.RollingUpdate.MaxSurge = &intParam
-	causes, ok = f.Validate(FakeAPIHooks{})
+	causes, ok = f.Validate(fakeAPIHooks{})
 	assert.False(t, ok)
 	assert.Len(t, causes, 2)
 
 	percent = intstr.FromString("2a")
 	f.Spec.Strategy.RollingUpdate.MaxUnavailable = &percent
 	f.Spec.Strategy.RollingUpdate.MaxSurge = &percent
-	causes, ok = f.Validate(FakeAPIHooks{})
+	causes, ok = f.Validate(fakeAPIHooks{})
 	assert.False(t, ok)
 	assert.Len(t, causes, 2)
 
@@ -162,7 +162,7 @@ func TestFleetGameserverSpec(t *testing.T) {
 	f.ApplyDefaults()
 	f.Spec.Template.ObjectMeta.Labels = make(map[string]string)
 	f.Spec.Template.ObjectMeta.Labels["label"] = longName
-	causes, ok = f.Validate(FakeAPIHooks{})
+	causes, ok = f.Validate(fakeAPIHooks{})
 	assert.False(t, ok)
 	assert.Len(t, causes, 1)
 
@@ -170,7 +170,7 @@ func TestFleetGameserverSpec(t *testing.T) {
 	f.ApplyDefaults()
 	f.Spec.Template.Spec.Template.ObjectMeta.Labels = make(map[string]string)
 	f.Spec.Template.Spec.Template.ObjectMeta.Labels["label"] = longName
-	causes, ok = f.Validate(FakeAPIHooks{})
+	causes, ok = f.Validate(fakeAPIHooks{})
 	assert.False(t, ok)
 	assert.Len(t, causes, 1)
 
@@ -179,7 +179,7 @@ func TestFleetGameserverSpec(t *testing.T) {
 	f.ApplyDefaults()
 	f.Spec.Template.Spec.Template.ObjectMeta.Annotations = make(map[string]string)
 	f.Spec.Template.Spec.Template.ObjectMeta.Annotations[longName] = ""
-	causes, ok = f.Validate(FakeAPIHooks{})
+	causes, ok = f.Validate(fakeAPIHooks{})
 	assert.False(t, ok)
 	assert.Len(t, causes, 1)
 
@@ -187,7 +187,7 @@ func TestFleetGameserverSpec(t *testing.T) {
 	f = defaultFleet()
 	f.ApplyDefaults()
 	f.Spec.Strategy.Type = appsv1.DeploymentStrategyType("")
-	causes, ok = f.Validate(FakeAPIHooks{})
+	causes, ok = f.Validate(fakeAPIHooks{})
 	assert.False(t, ok)
 	assert.Len(t, causes, 1)
 }
@@ -198,14 +198,14 @@ func TestFleetName(t *testing.T) {
 
 	longName := strings.Repeat("f", validation.LabelValueMaxLength+1)
 	f.Name = longName
-	causes, ok := f.Validate(FakeAPIHooks{})
+	causes, ok := f.Validate(fakeAPIHooks{})
 	assert.False(t, ok)
 	assert.Len(t, causes, 1)
 	assert.Equal(t, "Name", causes[0].Field)
 
 	f.Name = ""
 	f.GenerateName = longName
-	causes, ok = f.Validate(FakeAPIHooks{})
+	causes, ok = f.Validate(fakeAPIHooks{})
 	assert.True(t, ok)
 	assert.Len(t, causes, 0)
 }

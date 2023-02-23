@@ -32,6 +32,7 @@ terraform {
 
 variable "project" {}
 variable "kubernetesVersion" {}
+variable "location" {}
 
 variable "overrideName" {
   default = ""
@@ -42,41 +43,13 @@ module "gke_cluster" {
 
   cluster = {
     "name"                 = var.overrideName != "" ? var.overrideName : format("gke-standard-e2e-test-cluster-%s", replace(var.kubernetesVersion, ".", "-"))
-    "zone"                 = "us-west1-c"
+    "location"             = var.location
     "machineType"          = "e2-standard-4"
     "initialNodeCount"     = 10
     "enableImageStreaming" = true
     "project"              = var.project
+    "kubernetesVersion"    = var.kubernetesVersion
   }
 
   udpFirewall = false // firewall is created at the project module level
-}
-
-provider "helm" {
-  kubernetes {
-    host                   = module.gke_cluster.host
-    token                  = module.gke_cluster.token
-    cluster_ca_certificate = module.gke_cluster.cluster_ca_certificate
-  }
-}
-
-resource "helm_release" "consul" {
-  repository = "https://helm.releases.hashicorp.com"
-  chart      = "consul"
-  name       = "consul"
-
-  set {
-    name  = "server.replicas"
-    value = "1"
-  }
-
-  set {
-    name  = "ui.service.type"
-    value = "ClusterIP"
-  }
-
-  set {
-    name  = "client.enabled"
-    value = "false"
-  }
 }

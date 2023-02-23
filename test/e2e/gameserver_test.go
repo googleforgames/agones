@@ -28,6 +28,7 @@ import (
 
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
+	agtesting "agones.dev/agones/pkg/testing"
 	"agones.dev/agones/pkg/util/runtime"
 	e2eframework "agones.dev/agones/test/e2e/framework"
 	"github.com/sirupsen/logrus"
@@ -804,7 +805,7 @@ func TestGameServerPassthroughPort(t *testing.T) {
 	gs.Spec.Ports[0] = agonesv1.GameServerPort{PortPolicy: agonesv1.Passthrough}
 	gs.Spec.Template.Spec.Containers[0].Env = []corev1.EnvVar{{Name: "PASSTHROUGH", Value: "TRUE"}}
 	// gate
-	_, valid := gs.Validate(agonesv1.FakeAPIHooks{})
+	_, valid := gs.Validate(agtesting.FakeAPIHooks{})
 	assert.True(t, valid)
 
 	readyGs, err := framework.CreateGameServerAndWaitUntilReady(t, framework.Namespace, gs)
@@ -832,7 +833,7 @@ func TestGameServerTcpProtocol(t *testing.T) {
 	gs.Spec.Ports[0].Protocol = corev1.ProtocolTCP
 	gs.Spec.Template.Spec.Containers[0].Env = []corev1.EnvVar{{Name: "TCP", Value: "TRUE"}}
 
-	_, valid := gs.Validate(agonesv1.FakeAPIHooks{})
+	_, valid := gs.Validate(agtesting.FakeAPIHooks{})
 	require.True(t, valid)
 
 	readyGs, err := framework.CreateGameServerAndWaitUntilReady(t, framework.Namespace, gs)
@@ -851,7 +852,7 @@ func TestGameServerTcpUdpProtocol(t *testing.T) {
 	gs.Spec.Ports[0].Name = "gameserver"
 	gs.Spec.Template.Spec.Containers[0].Env = []corev1.EnvVar{{Name: "TCP", Value: "TRUE"}}
 
-	_, valid := gs.Validate(agonesv1.FakeAPIHooks{})
+	_, valid := gs.Validate(agtesting.FakeAPIHooks{})
 	assert.True(t, valid)
 
 	readyGs, err := framework.CreateGameServerAndWaitUntilReady(t, framework.Namespace, gs)
@@ -896,7 +897,7 @@ func TestGameServerWithoutPort(t *testing.T) {
 	gs := framework.DefaultGameServer(framework.Namespace)
 	gs.Spec.Ports = nil
 
-	_, valid := gs.Validate(agonesv1.FakeAPIHooks{})
+	_, valid := gs.Validate(agtesting.FakeAPIHooks{})
 	assert.True(t, valid)
 
 	readyGs, err := framework.CreateGameServerAndWaitUntilReady(t, framework.Namespace, gs)
@@ -915,7 +916,7 @@ func TestGameServerResourceValidation(t *testing.T) {
 	gs.Spec.Template.Spec.Containers[0].Resources.Limits[corev1.ResourceMemory] = mi64
 	gs.Spec.Template.Spec.Containers[0].Resources.Requests[corev1.ResourceMemory] = resource.MustParse("128Mi")
 
-	_, valid := gs.Validate(agonesv1.FakeAPIHooks{})
+	_, valid := gs.Validate(agtesting.FakeAPIHooks{})
 	assert.False(t, valid)
 
 	gsClient := framework.AgonesClient.AgonesV1().GameServers(framework.Namespace)
@@ -945,7 +946,7 @@ func TestGameServerResourceValidation(t *testing.T) {
 	gs.Spec.Template.Spec.Containers[0].Resources.Limits[corev1.ResourceCPU] = m50
 
 	// confirm we have a valid GameServer before running the test
-	cause, valid := gs.Validate(agonesv1.FakeAPIHooks{})
+	cause, valid := gs.Validate(agtesting.FakeAPIHooks{})
 	require.True(t, valid, cause)
 
 	gsCopy, err := gsClient.Create(ctx, gs.DeepCopy(), metav1.CreateOptions{})
@@ -994,7 +995,7 @@ spec:
 	err = cmd.Run()
 	logrus.WithField("stdout", stdout.String()).WithField("stderr", stderr.String()).WithError(err).Info("Ran command!")
 	require.Error(t, err)
-	assert.Contains(t, stderr.String(), "ValidationError(GameServer.spec.template.spec.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution)")
+	assert.Contains(t, stderr.String(), "spec.template.spec.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution")
 }
 
 func TestGameServerSetPlayerCapacity(t *testing.T) {

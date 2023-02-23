@@ -176,6 +176,8 @@ func TestGameServerApplyDefaults(t *testing.T) {
 				GRPCPort: 9357,
 				HTTPPort: 9358,
 			},
+			evictionSafeSpec:   EvictionSafeNever,
+			evictionSafeStatus: EvictionSafeNever,
 		}
 		f(&e)
 		return e
@@ -301,51 +303,49 @@ func TestGameServerApplyDefaults(t *testing.T) {
 				}
 			}),
 		},
-		"SafeToEvict gate off => no SafeToEvict fields": {
+		"SafeToEvict gate off => no eviction.safe fields": {
 			featureFlags: string(runtime.FeatureSafeToEvict) + "=false",
 			gameServer:   defaultGameServerAnd(func(gss *GameServerSpec) {}),
-			expected:     wantDefaultAnd(func(e *expected) {}),
+			expected: wantDefaultAnd(func(e *expected) {
+				e.evictionSafeSpec = ""
+				e.evictionSafeStatus = ""
+			}),
 		},
-		"SafeToEvict gate on => SafeToEvict: Never": {
-			featureFlags: string(runtime.FeatureSafeToEvict) + "=true",
-			gameServer:   defaultGameServerAnd(func(gss *GameServerSpec) {}),
+		"defaults are eviction.safe: Never": {
+			gameServer: defaultGameServerAnd(func(gss *GameServerSpec) {}),
 			expected: wantDefaultAnd(func(e *expected) {
 				e.evictionSafeSpec = EvictionSafeNever
 				e.evictionSafeStatus = EvictionSafeNever
 			}),
 		},
-		"SafeToEvict: Always": {
-			featureFlags: string(runtime.FeatureSafeToEvict) + "=true",
+		"eviction.safe: Always": {
 			gameServer: defaultGameServerAnd(func(gss *GameServerSpec) {
-				gss.Eviction.Safe = EvictionSafeAlways
+				gss.Eviction = &Eviction{Safe: EvictionSafeAlways}
 			}),
 			expected: wantDefaultAnd(func(e *expected) {
 				e.evictionSafeSpec = EvictionSafeAlways
 				e.evictionSafeStatus = EvictionSafeAlways
 			}),
 		},
-		"SafeToEvict: OnUpgrade": {
-			featureFlags: string(runtime.FeatureSafeToEvict) + "=true",
+		"eviction.safe: OnUpgrade": {
 			gameServer: defaultGameServerAnd(func(gss *GameServerSpec) {
-				gss.Eviction.Safe = EvictionSafeOnUpgrade
+				gss.Eviction = &Eviction{Safe: EvictionSafeOnUpgrade}
 			}),
 			expected: wantDefaultAnd(func(e *expected) {
 				e.evictionSafeSpec = EvictionSafeOnUpgrade
 				e.evictionSafeStatus = EvictionSafeOnUpgrade
 			}),
 		},
-		"SafeToEvict: Never": {
-			featureFlags: string(runtime.FeatureSafeToEvict) + "=true",
+		"eviction.safe: Never": {
 			gameServer: defaultGameServerAnd(func(gss *GameServerSpec) {
-				gss.Eviction.Safe = EvictionSafeNever
+				gss.Eviction = &Eviction{Safe: EvictionSafeNever}
 			}),
 			expected: wantDefaultAnd(func(e *expected) {
 				e.evictionSafeSpec = EvictionSafeNever
 				e.evictionSafeStatus = EvictionSafeNever
 			}),
 		},
-		"SafeToEvict: Always inferred from safe-to-evict=true": {
-			featureFlags: string(runtime.FeatureSafeToEvict) + "=true",
+		"eviction.safe: Always inferred from safe-to-evict=true": {
 			gameServer: defaultGameServerAnd(func(gss *GameServerSpec) {
 				gss.Template.ObjectMeta.Annotations = map[string]string{PodSafeToEvictAnnotation: "true"}
 			}),
@@ -355,7 +355,6 @@ func TestGameServerApplyDefaults(t *testing.T) {
 			}),
 		},
 		"Nothing inferred from safe-to-evict=false": {
-			featureFlags: string(runtime.FeatureSafeToEvict) + "=true",
 			gameServer: defaultGameServerAnd(func(gss *GameServerSpec) {
 				gss.Template.ObjectMeta.Annotations = map[string]string{PodSafeToEvictAnnotation: "false"}
 			}),
@@ -364,10 +363,9 @@ func TestGameServerApplyDefaults(t *testing.T) {
 				e.evictionSafeStatus = EvictionSafeNever
 			}),
 		},
-		"safe-to-evict=false AND SafeToEvict: Always => SafeToEvict: Always": {
-			featureFlags: string(runtime.FeatureSafeToEvict) + "=true",
+		"safe-to-evict=false AND eviction.safe: Always => eviction.safe: Always": {
 			gameServer: defaultGameServerAnd(func(gss *GameServerSpec) {
-				gss.Eviction.Safe = EvictionSafeAlways
+				gss.Eviction = &Eviction{Safe: EvictionSafeAlways}
 				gss.Template.ObjectMeta.Annotations = map[string]string{PodSafeToEvictAnnotation: "false"}
 			}),
 			expected: wantDefaultAnd(func(e *expected) {
@@ -403,8 +401,17 @@ func TestGameServerApplyDefaults(t *testing.T) {
 				assert.Nil(t, test.gameServer.Spec.Players)
 				assert.Nil(t, test.gameServer.Status.Players)
 			}
-			assert.Equal(t, test.expected.evictionSafeSpec, spec.Eviction.Safe)
-			assert.Equal(t, test.expected.evictionSafeStatus, test.gameServer.Status.Eviction.Safe)
+			if len(test.expected.evictionSafeSpec) > 0 {
+				assert.Equal(t, test.expected.evictionSafeSpec, spec.Eviction.Safe)
+			} else {
+				assert.Nil(t, spec.Eviction)
+			}
+
+			if len(test.expected.evictionSafeStatus) > 0 {
+				assert.Equal(t, test.expected.evictionSafeStatus, test.gameServer.Status.Eviction.Safe)
+			} else {
+				assert.Nil(t, test.gameServer.Status.Eviction)
+			}
 		})
 	}
 }
@@ -1011,7 +1018,7 @@ func TestGameServerValidate(t *testing.T) {
 				tc.gs.ApplyDefaults()
 			}
 
-			causes, ok := tc.gs.Validate(FakeAPIHooks{})
+			causes, ok := tc.gs.Validate(fakeAPIHooks{})
 
 			assert.Equal(t, tc.isValid, ok)
 			assert.ElementsMatch(t, tc.causesExpected, causes, "causes check")
@@ -1114,6 +1121,62 @@ func TestGameServerValidateFeatures(t *testing.T) {
 			isValid:        true,
 			causesExpected: []metav1.StatusCause{},
 		},
+		{
+			description: "CountsAndLists is disabled, Counters field specified",
+			feature:     fmt.Sprintf("%s=false", runtime.FeatureCountsAndLists),
+			gs: GameServer{
+				Spec: GameServerSpec{
+					Container: "testing",
+					Counters:  map[string]CounterSpec{},
+					Template: corev1.PodTemplateSpec{
+						Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "testing", Image: "testing/image"}}}}},
+			},
+			isValid: false,
+			causesExpected: []metav1.StatusCause{
+				{Type: metav1.CauseTypeFieldValueNotSupported, Message: "Value cannot be set unless feature flag CountsAndLists is enabled", Field: "counters"},
+			},
+		},
+		{
+			description: "CountsAndLists is disabled, Lists field specified",
+			feature:     fmt.Sprintf("%s=false", runtime.FeatureCountsAndLists),
+			gs: GameServer{
+				Spec: GameServerSpec{
+					Container: "testing",
+					Lists:     map[string]ListSpec{},
+					Template: corev1.PodTemplateSpec{
+						Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "testing", Image: "testing/image"}}}}},
+			},
+			isValid: false,
+			causesExpected: []metav1.StatusCause{
+				{Type: metav1.CauseTypeFieldValueNotSupported, Message: "Value cannot be set unless feature flag CountsAndLists is enabled", Field: "lists"},
+			},
+		},
+		{
+			description: "CountsAndLists is enabled, Counters field specified",
+			feature:     fmt.Sprintf("%s=true", runtime.FeatureCountsAndLists),
+			gs: GameServer{
+				Spec: GameServerSpec{
+					Container: "testing",
+					Counters:  map[string]CounterSpec{},
+					Template: corev1.PodTemplateSpec{
+						Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "testing", Image: "testing/image"}}}}},
+			},
+			isValid:        true,
+			causesExpected: []metav1.StatusCause{},
+		},
+		{
+			description: "CountsAndLists is enabled, Lists field specified",
+			feature:     fmt.Sprintf("%s=true", runtime.FeatureCountsAndLists),
+			gs: GameServer{
+				Spec: GameServerSpec{
+					Container: "testing",
+					Lists:     map[string]ListSpec{},
+					Template: corev1.PodTemplateSpec{
+						Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "testing", Image: "testing/image"}}}}},
+			},
+			isValid:        true,
+			causesExpected: []metav1.StatusCause{},
+		},
 	}
 
 	for _, tc := range testCases {
@@ -1121,7 +1184,7 @@ func TestGameServerValidateFeatures(t *testing.T) {
 			err := runtime.ParseFeatures(tc.feature)
 			assert.NoError(t, err)
 
-			causes, ok := tc.gs.Validate(FakeAPIHooks{})
+			causes, ok := tc.gs.Validate(fakeAPIHooks{})
 
 			assert.Equal(t, tc.isValid, ok)
 			assert.ElementsMatch(t, tc.causesExpected, causes, "causes check")
@@ -1134,7 +1197,7 @@ func TestGameServerPodNoErrors(t *testing.T) {
 	fixture := defaultGameServer()
 	fixture.ApplyDefaults()
 
-	pod, err := fixture.Pod(FakeAPIHooks{})
+	pod, err := fixture.Pod(fakeAPIHooks{})
 	assert.Nil(t, err, "Pod should not return an error")
 	assert.Equal(t, fixture.ObjectMeta.Name, pod.ObjectMeta.Name)
 	assert.Equal(t, fixture.ObjectMeta.Name, pod.Spec.Hostname)
@@ -1155,7 +1218,7 @@ func TestGameServerPodHostName(t *testing.T) {
 	fixture := defaultGameServer()
 	fixture.ObjectMeta.Name = "test-1.0"
 	fixture.ApplyDefaults()
-	pod, err := fixture.Pod(FakeAPIHooks{})
+	pod, err := fixture.Pod(fakeAPIHooks{})
 	require.NoError(t, err)
 	assert.Equal(t, "test-1-0", pod.Spec.Hostname)
 
@@ -1163,7 +1226,7 @@ func TestGameServerPodHostName(t *testing.T) {
 	fixture.ApplyDefaults()
 	expected := "ORANGE"
 	fixture.Spec.Template.Spec.Hostname = expected
-	pod, err = fixture.Pod(FakeAPIHooks{})
+	pod, err = fixture.Pod(fakeAPIHooks{})
 	require.NoError(t, err)
 	assert.Equal(t, expected, pod.Spec.Hostname)
 }
@@ -1190,7 +1253,7 @@ func TestGameServerPodContainerNotFoundErrReturned(t *testing.T) {
 			},
 		}, Status: GameServerStatus{State: GameServerStateCreating}}
 
-	_, err := fixture.Pod(FakeAPIHooks{})
+	_, err := fixture.Pod(fakeAPIHooks{})
 	if assert.NotNil(t, err, "Pod should return an error") {
 		assert.Equal(t, "failed to find container named Container1 in pod spec", err.Error())
 	}
@@ -1203,7 +1266,7 @@ func TestGameServerPodWithSidecarNoErrors(t *testing.T) {
 
 	sidecar := corev1.Container{Name: "sidecar", Image: "container/sidecar"}
 	fixture.Spec.Template.Spec.ServiceAccountName = "other-agones-sdk"
-	pod, err := fixture.Pod(FakeAPIHooks{}, sidecar)
+	pod, err := fixture.Pod(fakeAPIHooks{}, sidecar)
 	assert.Nil(t, err, "Pod should not return an error")
 	assert.Equal(t, fixture.ObjectMeta.Name, pod.ObjectMeta.Name)
 	assert.Len(t, pod.Spec.Containers, 2, "Should have two containers")
@@ -1228,7 +1291,7 @@ func TestGameServerPodWithMultiplePortAllocations(t *testing.T) {
 	fixture.Spec.Container = fixture.Spec.Template.Spec.Containers[0].Name
 	fixture.ApplyDefaults()
 
-	pod, err := fixture.Pod(FakeAPIHooks{})
+	pod, err := fixture.Pod(fakeAPIHooks{})
 	assert.NoError(t, err, "Pod should not return an error")
 	assert.Equal(t, fixture.ObjectMeta.Name, pod.ObjectMeta.Name)
 	assert.Equal(t, fixture.ObjectMeta.Namespace, pod.ObjectMeta.Namespace)
@@ -1332,7 +1395,7 @@ func TestGameServerDisableServiceAccount(t *testing.T) {
 		}}}
 
 	gs.ApplyDefaults()
-	pod, err := gs.Pod(FakeAPIHooks{})
+	pod, err := gs.Pod(fakeAPIHooks{})
 	assert.NoError(t, err)
 	assert.Len(t, pod.Spec.Containers, 1)
 	assert.Empty(t, pod.Spec.Containers[0].VolumeMounts)

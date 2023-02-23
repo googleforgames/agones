@@ -187,15 +187,31 @@ type GameServerSpec struct {
 	// (Alpha, PlayerTracking feature flag) Players provides the configuration for player tracking features.
 	// +optional
 	Players *PlayersSpec `json:"players,omitempty"`
+	// (Alpha, CountsAndLists feature flag) Counters and Lists provides the configuration for generic tracking features.
+	// +optional
+	Counters map[string]CounterSpec `json:"counters,omitempty"`
+	Lists    map[string]ListSpec    `json:"lists,omitempty"`
 	// (Alpha, SafeToEvict feature flag) Eviction specifies the eviction tolerance of the GameServer. Defaults to "Never".
 	// +optional
-	Eviction Eviction `json:"eviction,omitempty"`
+	Eviction *Eviction `json:"eviction,omitempty"`
 	// immutableReplicas is present in gameservers.agones.dev but omitted here (it's always 1).
 }
 
 // PlayersSpec tracks the initial player capacity
 type PlayersSpec struct {
 	InitialCapacity int64 `json:"initialCapacity,omitempty"`
+}
+
+// CounterSpec tracks if counter specified (for giving error message if feature gate not set)
+type CounterSpec struct {
+	Count    int64 `json:"count,omitempty"`
+	Capacity int64 `json:"capacity,omitempty"`
+}
+
+// ListSpec tracks the list capacity
+type ListSpec struct {
+	Capacity int64    `json:"capacity,omitempty"`
+	Values   []string `json:"values,omitempty"`
 }
 
 // Eviction specifies the eviction tolerance of the GameServer
@@ -277,7 +293,8 @@ type GameServerStatus struct {
 	// +optional
 	Players *PlayerStatus `json:"players"`
 	// (Alpha, SafeToEvict feature flag) Eviction specifies the eviction tolerance of the GameServer.
-	Eviction Eviction `json:"eviction,omitempty"`
+	// +optional
+	Eviction *Eviction `json:"eviction,omitempty"`
 	// immutableReplicas is present in gameservers.agones.dev but omitted here (it's always 1).
 }
 
@@ -406,6 +423,9 @@ func (gss *GameServerSpec) applyEvictionDefaults() {
 	if !runtime.FeatureEnabled(runtime.FeatureSafeToEvict) {
 		return
 	}
+	if gss.Eviction == nil {
+		gss.Eviction = &Eviction{}
+	}
 	if gss.Eviction.Safe == "" {
 		gss.Eviction.Safe = EvictionSafeNever
 	}
@@ -415,17 +435,17 @@ func (gs *GameServer) applyEvictionStatus() {
 	if !runtime.FeatureEnabled(runtime.FeatureSafeToEvict) {
 		return
 	}
-	gs.Status.Eviction = gs.Spec.Eviction
+	gs.Status.Eviction = gs.Spec.Eviction.DeepCopy()
 	if gs.Spec.Template.ObjectMeta.Annotations[PodSafeToEvictAnnotation] == "true" {
+		if gs.Status.Eviction == nil {
+			gs.Status.Eviction = &Eviction{}
+		}
 		gs.Status.Eviction.Safe = EvictionSafeAlways
 	}
 }
 
-// Validate validates the GameServerSpec configuration.
-// devAddress is a specific IP address used for local Gameservers, for fleets "" is used
-// If a GameServer Spec is invalid there will be > 0 values in
-// the returned array
-func (gss *GameServerSpec) Validate(apiHooks APIHooks, devAddress string) ([]metav1.StatusCause, bool) {
+// validateFeatureGates checks if fields are set when the associated feature gate is not set.
+func (gss *GameServerSpec) validateFeatureGates() []metav1.StatusCause {
 	var causes []metav1.StatusCause
 
 	if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
@@ -438,8 +458,25 @@ func (gss *GameServerSpec) Validate(apiHooks APIHooks, devAddress string) ([]met
 		}
 	}
 
+	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
+		if gss.Counters != nil {
+			causes = append(causes, metav1.StatusCause{
+				Type:    metav1.CauseTypeFieldValueNotSupported,
+				Field:   "counters",
+				Message: fmt.Sprintf("Value cannot be set unless feature flag %s is enabled", runtime.FeatureCountsAndLists),
+			})
+		}
+		if gss.Lists != nil {
+			causes = append(causes, metav1.StatusCause{
+				Type:    metav1.CauseTypeFieldValueNotSupported,
+				Field:   "lists",
+				Message: fmt.Sprintf("Value cannot be set unless feature flag %s is enabled", runtime.FeatureCountsAndLists),
+			})
+		}
+	}
+
 	if !runtime.FeatureEnabled(runtime.FeatureSafeToEvict) {
-		if gss.Eviction.Safe != "" {
+		if gss.Eviction != nil {
 			causes = append(causes, metav1.StatusCause{
 				Type:    metav1.CauseTypeFieldValueNotSupported,
 				Field:   "eviction.safe",
@@ -447,6 +484,17 @@ func (gss *GameServerSpec) Validate(apiHooks APIHooks, devAddress string) ([]met
 			})
 		}
 	}
+
+	return causes
+}
+
+// Validate validates the GameServerSpec configuration.
+// devAddress is a specific IP address used for local Gameservers, for fleets "" is used
+// If a GameServer Spec is invalid there will be > 0 values in the returned array
+func (gss *GameServerSpec) Validate(apiHooks APIHooks, devAddress string) ([]metav1.StatusCause, bool) {
+	var causes []metav1.StatusCause
+
+	causes = append(causes, gss.validateFeatureGates()...)
 
 	if devAddress != "" {
 		// verify that the value is a valid IP address.
@@ -706,7 +754,7 @@ func (gs *GameServer) Pod(apiHooks APIHooks, sidecars ...corev1.Container) (*cor
 	if err := apiHooks.MutateGameServerPodSpec(&gs.Spec, &pod.Spec); err != nil {
 		return nil, err
 	}
-	if err := apiHooks.SetEviction(gs.Status.Eviction.Safe, pod); err != nil {
+	if err := apiHooks.SetEviction(gs.Status.Eviction, pod); err != nil {
 		return nil, err
 	}
 

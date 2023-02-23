@@ -158,7 +158,7 @@ func TestValidateGameServer(t *testing.T) {
 			causes := (&gkeAutopilot{}).ValidateGameServerSpec(&agonesv1.GameServerSpec{
 				Ports:      tc.ports,
 				Scheduling: tc.scheduling,
-				Eviction:   agonesv1.Eviction{Safe: tc.safeToEvict},
+				Eviction:   &agonesv1.Eviction{Safe: tc.safeToEvict},
 			})
 			require.Equal(t, tc.want, causes)
 		})
@@ -223,7 +223,7 @@ func TestSetSafeToEvict(t *testing.T) {
 	}
 	for desc, tc := range map[string]struct {
 		featureFlags string
-		safeToEvict  agonesv1.EvictionSafe
+		eviction     *agonesv1.Eviction
 		pod          *corev1.Pod
 		wantPod      *corev1.Pod
 		wantErr      bool
@@ -234,7 +234,7 @@ func TestSetSafeToEvict(t *testing.T) {
 		},
 		"SafeToEvict: Always, no incoming labels/annotations": {
 			featureFlags: "SafeToEvict=true",
-			safeToEvict:  agonesv1.EvictionSafeAlways,
+			eviction:     &agonesv1.Eviction{Safe: agonesv1.EvictionSafeAlways},
 			pod:          emptyPodAnd(func(*corev1.Pod) {}),
 			wantPod: emptyPodAnd(func(pod *corev1.Pod) {
 				pod.ObjectMeta.Labels[agonesv1.SafeToEvictLabel] = agonesv1.True
@@ -242,7 +242,7 @@ func TestSetSafeToEvict(t *testing.T) {
 		},
 		"SafeToEvict: Never, no incoming labels/annotations": {
 			featureFlags: "SafeToEvict=true",
-			safeToEvict:  agonesv1.EvictionSafeNever,
+			eviction:     &agonesv1.Eviction{Safe: agonesv1.EvictionSafeNever},
 			pod:          emptyPodAnd(func(*corev1.Pod) {}),
 			wantPod: emptyPodAnd(func(pod *corev1.Pod) {
 				pod.ObjectMeta.Labels[agonesv1.SafeToEvictLabel] = agonesv1.False
@@ -250,13 +250,13 @@ func TestSetSafeToEvict(t *testing.T) {
 		},
 		"SafeToEvict: OnUpgrade => error": {
 			featureFlags: "SafeToEvict=true",
-			safeToEvict:  agonesv1.EvictionSafeOnUpgrade,
+			eviction:     &agonesv1.Eviction{Safe: agonesv1.EvictionSafeOnUpgrade},
 			pod:          emptyPodAnd(func(*corev1.Pod) {}),
 			wantErr:      true,
 		},
 		"SafeToEvict: Always, incoming labels/annotations": {
 			featureFlags: "SafeToEvict=true",
-			safeToEvict:  agonesv1.EvictionSafeAlways,
+			eviction:     &agonesv1.Eviction{Safe: agonesv1.EvictionSafeAlways},
 			pod: emptyPodAnd(func(pod *corev1.Pod) {
 				pod.ObjectMeta.Annotations[agonesv1.PodSafeToEvictAnnotation] = "just don't touch, ok?"
 				pod.ObjectMeta.Labels[agonesv1.SafeToEvictLabel] = "seriously, leave it"
@@ -268,7 +268,7 @@ func TestSetSafeToEvict(t *testing.T) {
 		},
 		"SafeToEvict: Never, incoming labels/annotations": {
 			featureFlags: "SafeToEvict=true",
-			safeToEvict:  agonesv1.EvictionSafeNever,
+			eviction:     &agonesv1.Eviction{Safe: agonesv1.EvictionSafeNever},
 			pod: emptyPodAnd(func(pod *corev1.Pod) {
 				pod.ObjectMeta.Annotations[agonesv1.PodSafeToEvictAnnotation] = "a passthrough"
 				pod.ObjectMeta.Labels[agonesv1.SafeToEvictLabel] = "or is it passthru?"
@@ -280,7 +280,7 @@ func TestSetSafeToEvict(t *testing.T) {
 		},
 		"SafeToEvict: Never, but safe-to-evict pod annotation set to false": {
 			featureFlags: "SafeToEvict=true",
-			safeToEvict:  agonesv1.EvictionSafeNever,
+			eviction:     &agonesv1.Eviction{Safe: agonesv1.EvictionSafeNever},
 			pod: emptyPodAnd(func(pod *corev1.Pod) {
 				pod.ObjectMeta.Annotations[agonesv1.PodSafeToEvictAnnotation] = agonesv1.False
 			}),
@@ -293,7 +293,7 @@ func TestSetSafeToEvict(t *testing.T) {
 			err := runtime.ParseFeatures(tc.featureFlags)
 			assert.NoError(t, err)
 
-			err = (&gkeAutopilot{}).SetEviction(tc.safeToEvict, tc.pod)
+			err = (&gkeAutopilot{}).SetEviction(tc.eviction, tc.pod)
 			if tc.wantErr {
 				assert.Error(t, err)
 				return

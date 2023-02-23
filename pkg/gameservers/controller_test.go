@@ -273,7 +273,7 @@ func TestControllerWatchGameServers(t *testing.T) {
 	c, m := newFakeController()
 	fixture := agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"}, Spec: newSingleContainerSpec()}
 	fixture.ApplyDefaults()
-	pod, err := fixture.Pod(agonesv1.FakeAPIHooks{})
+	pod, err := fixture.Pod(agtesting.FakeAPIHooks{})
 	assert.Nil(t, err)
 	pod.ObjectMeta.Name = pod.ObjectMeta.GenerateName + "-pod"
 
@@ -358,7 +358,7 @@ func TestControllerWatchGameServers(t *testing.T) {
 	assert.Equal(t, "default/test", <-received)
 
 	// add an unscheduled game pod
-	pod, err = fixture.Pod(agonesv1.FakeAPIHooks{})
+	pod, err = fixture.Pod(agtesting.FakeAPIHooks{})
 	assert.Nil(t, err)
 	pod.ObjectMeta.Name = pod.ObjectMeta.GenerateName + "-pod2"
 	podWatch.Add(pod)
@@ -547,7 +547,7 @@ func TestControllerSyncGameServerDeletionTimestamp(t *testing.T) {
 		fixture := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default", DeletionTimestamp: &now},
 			Spec: newSingleContainerSpec()}
 		fixture.ApplyDefaults()
-		pod, err := fixture.Pod(agonesv1.FakeAPIHooks{})
+		pod, err := fixture.Pod(agtesting.FakeAPIHooks{})
 		assert.Nil(t, err)
 
 		deleted := false
@@ -578,7 +578,7 @@ func TestControllerSyncGameServerDeletionTimestamp(t *testing.T) {
 		fixture := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default", DeletionTimestamp: &now},
 			Spec: newSingleContainerSpec()}
 		fixture.ApplyDefaults()
-		pod, err := fixture.Pod(agonesv1.FakeAPIHooks{})
+		pod, err := fixture.Pod(agtesting.FakeAPIHooks{})
 		assert.Nil(t, err)
 
 		mocks.KubeClient.AddReactor("list", "pods", func(action k8stesting.Action) (bool, runtime.Object, error) {
@@ -839,7 +839,7 @@ func TestControllerSyncGameServerCreatingState(t *testing.T) {
 		fixture := newFixture()
 		podCreated := false
 		gsUpdated := false
-		pod, err := fixture.Pod(agonesv1.FakeAPIHooks{})
+		pod, err := fixture.Pod(agtesting.FakeAPIHooks{})
 		assert.Nil(t, err)
 
 		m.KubeClient.AddReactor("list", "pods", func(action k8stesting.Action) (bool, runtime.Object, error) {
@@ -925,7 +925,7 @@ func TestControllerSyncGameServerStartingState(t *testing.T) {
 		c, m := newFakeController()
 		gsFixture := newFixture()
 		gsFixture.ApplyDefaults()
-		pod, err := gsFixture.Pod(agonesv1.FakeAPIHooks{})
+		pod, err := gsFixture.Pod(agtesting.FakeAPIHooks{})
 		assert.Nil(t, err)
 		pod.Spec.NodeName = nodeFixtureName
 		gsUpdated := false
@@ -962,7 +962,7 @@ func TestControllerSyncGameServerStartingState(t *testing.T) {
 		c, m := newFakeController()
 		gsFixture := newFixture()
 		gsFixture.ApplyDefaults()
-		pod, err := gsFixture.Pod(agonesv1.FakeAPIHooks{})
+		pod, err := gsFixture.Pod(agtesting.FakeAPIHooks{})
 		require.NoError(t, err)
 		pod.Spec.NodeName = nodeFixtureName
 
@@ -1158,7 +1158,7 @@ func TestControllerSyncGameServerRequestReadyState(t *testing.T) {
 			Spec: newSingleContainerSpec(), Status: agonesv1.GameServerStatus{State: agonesv1.GameServerStateRequestReady}}
 		gsFixture.ApplyDefaults()
 		gsFixture.Status.NodeName = nodeName
-		pod, err := gsFixture.Pod(agonesv1.FakeAPIHooks{})
+		pod, err := gsFixture.Pod(agtesting.FakeAPIHooks{})
 		require.NoError(t, err)
 		pod.Status.ContainerStatuses = []corev1.ContainerStatus{
 			{
@@ -1208,7 +1208,7 @@ func TestControllerSyncGameServerRequestReadyState(t *testing.T) {
 			Spec: newSingleContainerSpec(), Status: agonesv1.GameServerStatus{State: agonesv1.GameServerStateRequestReady}}
 		gsFixture.ApplyDefaults()
 		gsFixture.Status.NodeName = nodeName
-		pod, err := gsFixture.Pod(agonesv1.FakeAPIHooks{})
+		pod, err := gsFixture.Pod(agtesting.FakeAPIHooks{})
 		require.NoError(t, err)
 		pod.Status.ContainerStatuses = []corev1.ContainerStatus{
 			{
@@ -1252,7 +1252,7 @@ func TestControllerSyncGameServerRequestReadyState(t *testing.T) {
 			Spec: newSingleContainerSpec(), Status: agonesv1.GameServerStatus{State: agonesv1.GameServerStateRequestReady}}
 		gsFixture.ApplyDefaults()
 		gsFixture.Status.NodeName = nodeName
-		pod, err := gsFixture.Pod(agonesv1.FakeAPIHooks{})
+		pod, err := gsFixture.Pod(agtesting.FakeAPIHooks{})
 		require.NoError(t, err)
 		pod.Status.ContainerStatuses = []corev1.ContainerStatus{
 			{
@@ -1295,7 +1295,7 @@ func TestControllerSyncGameServerRequestReadyState(t *testing.T) {
 			Spec: newSingleContainerSpec(), Status: agonesv1.GameServerStatus{State: agonesv1.GameServerStateRequestReady}}
 		gsFixture.ApplyDefaults()
 		gsFixture.Status.NodeName = nodeName
-		pod, err := gsFixture.Pod(agonesv1.FakeAPIHooks{})
+		pod, err := gsFixture.Pod(agtesting.FakeAPIHooks{})
 		require.NoError(t, err)
 		pod.ObjectMeta.Annotations = map[string]string{agonesv1.GameServerReadyContainerIDAnnotation: containerID}
 		pod.Status.ContainerStatuses = []corev1.ContainerStatus{
@@ -1342,7 +1342,7 @@ func TestControllerSyncGameServerRequestReadyState(t *testing.T) {
 		gsFixture := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
 			Spec: newSingleContainerSpec(), Status: agonesv1.GameServerStatus{State: agonesv1.GameServerStateRequestReady}}
 		gsFixture.ApplyDefaults()
-		pod, err := gsFixture.Pod(agonesv1.FakeAPIHooks{})
+		pod, err := gsFixture.Pod(agtesting.FakeAPIHooks{})
 		assert.Nil(t, err)
 		pod.Spec.NodeName = nodeFixtureName
 		pod.Status.ContainerStatuses = []corev1.ContainerStatus{
@@ -1405,7 +1405,7 @@ func TestControllerSyncGameServerRequestReadyState(t *testing.T) {
 		gsFixture.ApplyDefaults()
 		gsFixture.Status.NodeName = nodeName
 		gsFixture.Annotations[agonesv1.GameServerReadyContainerIDAnnotation] = "4321"
-		pod, err := gsFixture.Pod(agonesv1.FakeAPIHooks{})
+		pod, err := gsFixture.Pod(agtesting.FakeAPIHooks{})
 		pod.Status.ContainerStatuses = []corev1.ContainerStatus{
 			{
 				Name:        gsFixture.Spec.Container,
@@ -1464,7 +1464,7 @@ func TestControllerSyncGameServerRequestReadyState(t *testing.T) {
 			Spec: newSingleContainerSpec(), Status: agonesv1.GameServerStatus{State: agonesv1.GameServerStateRequestReady}}
 		gsFixture.ApplyDefaults()
 		gsFixture.Status.NodeName = nodeName
-		pod, err := gsFixture.Pod(agonesv1.FakeAPIHooks{})
+		pod, err := gsFixture.Pod(agtesting.FakeAPIHooks{})
 		pod.Status.ContainerStatuses = []corev1.ContainerStatus{{Name: gsFixture.Spec.Container}}
 		assert.Nil(t, err)
 		gsUpdated := false
@@ -1648,7 +1648,7 @@ func TestControllerGameServerPod(t *testing.T) {
 		c, gs, fakeWatch, _, cancel := setup()
 
 		defer cancel()
-		pod, err := gs.Pod(agonesv1.FakeAPIHooks{})
+		pod, err := gs.Pod(agtesting.FakeAPIHooks{})
 		require.NoError(t, err)
 
 		fakeWatch.Add(pod.DeepCopy())
@@ -1716,7 +1716,7 @@ func TestControllerAddGameServerHealthCheck(t *testing.T) {
 	fixture.ApplyDefaults()
 
 	assert.False(t, fixture.Spec.Health.Disabled)
-	pod, err := fixture.Pod(agonesv1.FakeAPIHooks{})
+	pod, err := fixture.Pod(agtesting.FakeAPIHooks{})
 	require.NoError(t, err)
 	err = c.addGameServerHealthCheck(fixture, pod)
 
@@ -1743,7 +1743,7 @@ func TestControllerAddSDKServerEnvVars(t *testing.T) {
 		}
 		gs.ApplyDefaults()
 		gs.Spec.SdkServer = agonesv1.SdkServer{}
-		pod, err := gs.Pod(agonesv1.FakeAPIHooks{})
+		pod, err := gs.Pod(agtesting.FakeAPIHooks{})
 		require.NoError(t, err)
 		before := pod.DeepCopy()
 		c.addSDKServerEnvVars(gs, pod)
@@ -1757,7 +1757,7 @@ func TestControllerAddSDKServerEnvVars(t *testing.T) {
 			Spec:       newSingleContainerSpec(),
 		}
 		gs.ApplyDefaults()
-		pod, err := gs.Pod(agonesv1.FakeAPIHooks{})
+		pod, err := gs.Pod(agtesting.FakeAPIHooks{})
 		require.NoError(t, err)
 		c.addSDKServerEnvVars(gs, pod)
 		assert.Len(t, pod.Spec.Containers, 1, "Expected 1 container, found %d", len(pod.Spec.Containers))
@@ -1785,7 +1785,7 @@ func TestControllerAddSDKServerEnvVars(t *testing.T) {
 			},
 		}
 		gs.ApplyDefaults()
-		pod, err := gs.Pod(agonesv1.FakeAPIHooks{})
+		pod, err := gs.Pod(agtesting.FakeAPIHooks{})
 		require.NoError(t, err)
 		c.addSDKServerEnvVars(gs, pod)
 		assert.Len(t, pod.Spec.Containers, 1, "Expected 1 container, found %d", len(pod.Spec.Containers))
@@ -1813,7 +1813,7 @@ func TestControllerAddSDKServerEnvVars(t *testing.T) {
 			},
 		}
 		gs.ApplyDefaults()
-		pod, err := gs.Pod(agonesv1.FakeAPIHooks{})
+		pod, err := gs.Pod(agtesting.FakeAPIHooks{})
 		require.NoError(t, err)
 		c.addSDKServerEnvVars(gs, pod)
 		assert.Len(t, pod.Spec.Containers, 1, "Expected 1 container, found %d", len(pod.Spec.Containers))
@@ -1851,7 +1851,7 @@ func TestControllerAddSDKServerEnvVars(t *testing.T) {
 			},
 		}
 		gs.ApplyDefaults()
-		pod, err := gs.Pod(agonesv1.FakeAPIHooks{})
+		pod, err := gs.Pod(agtesting.FakeAPIHooks{})
 		require.NoError(t, err)
 		c.addSDKServerEnvVars(gs, pod)
 		for _, c := range pod.Spec.Containers {
@@ -1891,7 +1891,7 @@ func TestControllerAddSDKServerEnvVars(t *testing.T) {
 		}
 		gs.ApplyDefaults()
 		sidecar := c.sidecar(gs)
-		pod, err := gs.Pod(agonesv1.FakeAPIHooks{}, sidecar)
+		pod, err := gs.Pod(agtesting.FakeAPIHooks{}, sidecar)
 		require.NoError(t, err)
 		c.addSDKServerEnvVars(gs, pod)
 		for _, c := range pod.Spec.Containers {

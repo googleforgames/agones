@@ -56,7 +56,7 @@ spec:
           type: date
       schema:
         openAPIV3Schema:
-          {{- $data := dict "podPreserveUnknownFields" .Values.gameservers.podPreserveUnknownFields "featureSafeToEvict" $featureGates.SafeToEvict }}
+          {{- $data := dict "podPreserveUnknownFields" .Values.gameservers.podPreserveUnknownFields }}
           {{- include "gameserver.schema" $data | indent 9 }}{{- /* include the schema then status, as it's easier to align */ -}}
           {{- include "gameserver.status" $data | indent 11 }}
 {{- if $featureGates.SafeToEvict }}

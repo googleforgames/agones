@@ -1,4 +1,4 @@
-# Copyright 2022 Google LLC All Rights Reserved.
+# Copyright 2023 Google LLC All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,26 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-# Default values for feature gates. Keep in sync with pkg/util/runtime/features.go:featureDefaults
-
-# Beta features
-CustomFasSyncInterval: true
-SafeToEvict: true
-SDKGracefulTermination: true
-StateAllocationFilter: true
-
-# Alpha features
-PlayerAllocationFilter: false
-PlayerTracking: false
-ResetMetricsOnDelete: false
-PodHostname: false
-FleetAllocationOverflow: false
-SplitControllerAndExtensions: false
-
-# Pre-Alpha features
-CountsAndLists: false
-
-# Example feature
-Example: false
-
+.gcloudignore
+.gitignore
+cpp*tgz
+rust*tgz
+#!include:.gitignore
+!.git

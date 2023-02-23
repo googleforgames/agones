@@ -34,6 +34,9 @@ const (
 	// FeatureCustomFasSyncInterval is a feature flag that enables a custom FleetAutoscaler resync interval
 	FeatureCustomFasSyncInterval Feature = "CustomFasSyncInterval"
 
+	// FeatureSafeToEvict enables the `SafeToEvict` API to specify disruption tolerance.
+	FeatureSafeToEvict Feature = "SafeToEvict"
+
 	// FeatureSDKGracefulTermination is a feature flag that enables SDK to support gracefulTermination
 	FeatureSDKGracefulTermination Feature = "SDKGracefulTermination"
 
@@ -54,9 +57,6 @@ const (
 	// relevant metric views to reset their state immediately when an Agones resource is deleted.
 	FeatureResetMetricsOnDelete Feature = "ResetMetricsOnDelete"
 
-	// FeatureSafeToEvict enables the `SafeToEvict` API to specify disruption tolerance.
-	FeatureSafeToEvict Feature = "SafeToEvict"
-
 	// FeaturePodHostname enables the Pod Hostname being assigned the name of the GameServer
 	FeaturePodHostname = "PodHostname"
 
@@ -65,6 +65,14 @@ const (
 
 	////////////////
 	// "Pre"-Alpha features
+
+	// FeatureFleetAllocateOverflow enables setting labels and/or annotations on Allocated GameServers
+	// if the desired number of the underlying GameServerSet drops below the number of Allocated GameServers
+	FeatureFleetAllocateOverflow = "FleetAllocationOverflow"
+
+	// FeatureCountsAndLists is a feature flag that enables/disables counts and lists feature
+	// (a generic implenetation of the player tracking feature).
+	FeatureCountsAndLists Feature = "CountsAndLists"
 
 	////////////////
 	// Example feature
@@ -102,6 +110,7 @@ var (
 	featureDefaults = map[Feature]bool{
 		// Beta features
 		FeatureCustomFasSyncInterval:  true,
+		FeatureSafeToEvict:            true,
 		FeatureSDKGracefulTermination: true,
 		FeatureStateAllocationFilter:  true,
 
@@ -109,11 +118,12 @@ var (
 		FeaturePlayerAllocationFilter:       false,
 		FeaturePlayerTracking:               false,
 		FeatureResetMetricsOnDelete:         false,
-		FeatureSafeToEvict:                  false,
 		FeaturePodHostname:                  false,
 		FeatureSplitControllerAndExtensions: false,
 
 		// Pre-Alpha features
+		FeatureCountsAndLists:        false,
+		FeatureFleetAllocateOverflow: false,
 
 		// Example feature
 		FeatureExample: false,

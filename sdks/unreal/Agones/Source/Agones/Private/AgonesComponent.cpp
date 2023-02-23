@@ -22,6 +22,8 @@
 #include "WebSockets/Public/IWebSocket.h"
 #include "WebSockets/Public/WebSocketsModule.h"
 
+DEFINE_LOG_CATEGORY_STATIC(LogAgones, Log, Log);
+
 UAgonesComponent::UAgonesComponent()
 {
 	PrimaryComponentTick.bCanEverTick = false;
@@ -206,6 +208,7 @@ void UAgonesComponent::WatchGameServer(const FGameServerDelegate WatchDelegate)
         !JsonObject->TryGetObjectField(TEXT("result"), ResultObject) ||
         !ResultObject->IsValid())
     {
+        UE_LOG(LogAgones, Error, TEXT("Failed to parse json: %s"), *JsonString);
         return;
     }
 
@@ -221,22 +224,22 @@ void UAgonesComponent::WatchGameServer(const FGameServerDelegate WatchDelegate)
 
 void UAgonesComponent::HandleWatchMessage(const void* Data, SIZE_T Size, SIZE_T BytesRemaining)
 {
-    if (BytesRemaining > 0)
+    if (BytesRemaining <= 0 && WatchMessageBuffer.IsEmpty())
     {
-        WatchMessageBuffer.Append(UTF8_TO_TCHAR(static_cast<const UTF8CHAR*>(Data)), Size);
+        FUTF8ToTCHAR Message(static_cast<const UTF8CHAR*>(Data), Size);
+        DeserializeAndBroadcastWatch(FString(Message.Length(), Message.Get()));
         return;
     }
 
-    FString const Message = FString(Size, UTF8_TO_TCHAR(static_cast<const UTF8CHAR*>(Data)));
-
-    // If the LHS of FString + is empty, it just uses the RHS directly so there's no copy here with an empty buffer.
-    DeserializeAndBroadcastWatch(WatchMessageBuffer + Message);
-
-    // Faster to check and then empty vs blindly emptying - normal case is that the buffer is already empty
-    if (!WatchMessageBuffer.IsEmpty())
+    WatchMessageBuffer.Insert(static_cast<const UTF8CHAR*>(Data), Size, WatchMessageBuffer.Num());
+    if (BytesRemaining > 0)
     {
-        WatchMessageBuffer.Empty();
+        return;
     }
+
+    FUTF8ToTCHAR Message(WatchMessageBuffer.GetData(), WatchMessageBuffer.Num());
+    DeserializeAndBroadcastWatch(FString(Message.Length(), Message.Get()));
+    WatchMessageBuffer.Empty();
 }
 
 void UAgonesComponent::SetLabel(

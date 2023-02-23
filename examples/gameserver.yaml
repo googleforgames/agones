@@ -86,6 +86,27 @@ spec:
   #   # set this GameServer's initial player capacity
   #   initialCapacity: 10
   #
+  # [Stage:Alpha]
+  # [FeatureFlag:CountsAndLists]
+  # Counts and Lists provides the configuration for generic (player, room, session, etc.) tracking features.
+  # Commented out since Alpha, and disabled by default
+  # counters:
+  #   games:
+  #     count: 1
+  #     capacity: 100
+  #   sessions:
+  #     capacity: 999
+  # lists:
+  #   players:
+  #     capacity: 1000
+  #     values:
+  #   rooms:
+  #     capacity: 333
+  #     values:
+  #       - room1
+  #       - room2
+  #       - room3
+  #
   # Pod template configuration
   template:
     # pod metadata. Name & Namespace is overwritten

@@ -34,18 +34,49 @@ terraform {
 }
 
 variable "project" {}
+variable "kubernetes_versions_standard" {
+  description = "Create standard e2e test clusters with these k8s versions in these zones"
+  type        = map(string)
+  default     = {
+    "1.23" = "us-east1-c"
+    "1.24" = "us-west1-c"
+    "1.25" = "us-central1-c"
+  }
+}
 
-module "gke_standard_cluster" {
+variable "kubernetes_versions_autopilot" {
+  description = "Create Autopilot e2e test clusters with these k8s versions in these regions"
+  type        = map(string)
+  default     = {
+    "1.23" = "us-east1"
+    "1.24" = "us-west1"
+    "1.25" = "us-central1"
+  }
+}
+
+# TODO: remove this cluster once the e2e tests are switched to use the new standard clusters
+module "gke_standard_cluster_old" {
   source = "./gke-standard"
   project = var.project
   kubernetesVersion = "1.24"
   overrideName = "e2e-test-cluster"
+  location = "us-west1-c"
+}
+
+module "gke_standard_cluster" {
+  for_each = var.kubernetes_versions_standard
+  source = "./gke-standard"
+  project = var.project
+  kubernetesVersion = each.key
+  location = each.value
 }
 
 module "gke_autopilot_cluster" {
+  for_each = var.kubernetes_versions_autopilot
   source = "./gke-autopilot"
   project = var.project
-  kubernetesVersion = "1.24"
+  kubernetesVersion = each.key
+  location = each.value
 }
 
 resource "google_compute_firewall" "udp" {
