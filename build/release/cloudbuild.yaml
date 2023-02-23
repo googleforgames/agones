@@ -35,7 +35,7 @@ steps:
     id: test-examples-on-gar
     dir: "build"
     env:
-    - "REGISTRY= us-docker.pkg.dev/${PROJECT_ID}"
+    - "REGISTRY=us-docker.pkg.dev/${PROJECT_ID}"
     - DOCKER_RUN_ARGS=--network=cloudbuild
     args: ["test-examples-on-gar"] 
 
