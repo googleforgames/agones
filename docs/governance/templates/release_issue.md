@@ -32,7 +32,7 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 - [ ] Any issues in the current milestone that are not closed, move to next milestone.
 - [ ] `git checkout main && git pull --rebase upstream main`
 - [ ] Run `make release-deploy-site`
-- [ ] Run `make build-release` to generate the CHANGELOG.md.
+- [ ] Run `make build-release` to generate the CHANGELOG.md and to ensure all example images exist on us-docker.pkg.dev/agones-images/examples.
 - [ ] Download all the artifacts from the cloud build.
 - [ ] Move the CHANGELOG.md to the root of this repository, replacing any previous versions.
 - [ ] Ensure the [helm `tag` value][values] is correct (should be {version})
@@ -42,7 +42,6 @@ and copy it into a release issue. Fill in relevant values, found inside {}
   - [ ] Ensure the [`sdks/csharp/sdk/AgonesSDK.nuspec` and `sdks/csharp/sdk/csharp-sdk.csproj`][csharp] versions are correct (should be {version})
   - [ ] Update the package version in the [`sdks/unity/package.json`][unity] package file's `Version` field to {version}
 - [ ] Run `make gen-install`
-- [ ] Run `make test-examples-on-gar` to ensure all example images exist on us-docker.pkg.dev/agones-images/examples
 - [ ] Create a *draft* release with the [release template][release-template]
     - [ ] Make a `tag` with the release version.
 - [ ] Site updated
