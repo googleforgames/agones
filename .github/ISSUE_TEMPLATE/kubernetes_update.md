@@ -45,7 +45,7 @@ List of items to do for upgrading to {version_1} {version_2} {version_3}
 - [ ] Confirm the update works as expected by running e2e tests
     - [ ] Update the Kubernetes version of the e2e clusters
         - [ ] In `terraform/e2e/module.tf`, update variable `kubernetes_versions_standard` and `kubernetes_versions_autopilot` to the new versions to be supported
-        - [ ] Recreate cluster with new scripts: `cd build/terraform/e2e; terraform init -backend-config="bucket=agones-images-e2e-infra-bucket-tfstate" -backend-config="prefix=terraform/state"; terraform apply -var project=agones-images`
+        - [ ] Recreate cluster with new scripts: `cd build; make GCP_PROJECT=agones-images gcloud-e2e-test-cluster`
     - [ ] Update the Cloud Build configuration to run e2e test on the new created clusters
         - [ ] Update the `versionsAndRegions` variable to reflect new versions in `cloudbuild.yaml` `submit-e2e-test-cloud-build` step
         - [ ] Submit a PR to trigger the e2e tests and verfiy they all pass
