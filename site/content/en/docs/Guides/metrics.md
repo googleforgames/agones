@@ -30,11 +30,18 @@ agones:
       enabled: true
 ```
 
-### Cloud Monitoring (formerly Stackdriver)
+{{% feature publishVersion="1.30.0" %}}
+### Google Cloud Managed Service for Prometheus
+
+[Google Cloud Managed Service for Prometheus](https://cloud.google.com/stackdriver/docs/managed-prometheus) is a fully managed multi-cloud solution for [Prometheus](https://prometheus.io/).
+If you wish to use Managed Prometheus with Agones, follow the [Google Cloud Managed Service for Prometheus installation steps](#google-cloud-managed-service-for-prometheus-installation).
+{{% /feature %}}
+
+### Google Cloud Monitoring (formerly Stackdriver)
 
 We support the [OpenCensus Stackdriver exporter](https://opencensus.io/exporters/supported-exporters/go/stackdriver/).
 In order to use it you should enable [Cloud Monitoring API](https://cloud.google.com/monitoring/api/enable-api) in Google Cloud Console.
-Follow the [Cloud Monitoring Installation steps](#cloud-monitoring-installation) to see your metrics in Cloud Monitoring.
+Follow the [Google Cloud Monitoring installation steps](#google-cloud-monitoring-installation) to see your metrics in Cloud Monitoring.
 
 ## Metrics available
 
@@ -207,9 +214,30 @@ kubectl port-forward deployments/grafana 3000 -n metrics
 
 Open a web browser to [http://localhost:3000](http://localhost:3000), you should see Agones [dashboards](#grafana-dashboards) after login as admin.
 
-### Cloud Monitoring installation
+{{% feature publishVersion="1.30.0" %}}
+### Google Cloud Managed Service for Prometheus installation
 
-In order to use [Cloud Monitoring](https://console.cloud.google.com/monitoring) you must [enable the Monitoring API](https://cloud.google.com/monitoring/api/enable-api) in the Google Cloud Console. The Cloud Monitoring exporter uses a strategy called Application Default Credentials (ADC) to find your application's credentials. Details can be found in [Setting Up Authentication for Server to Server Production Applications](https://cloud.google.com/docs/authentication/production).
+To collect Agones metrics using [Managed Prometheus](https://cloud.google.com/stackdriver/docs/managed-prometheus):
+
+* Follow the instructions to enable managed collection for a [GKE cluster](https://cloud.google.com/stackdriver/docs/managed-prometheus/setup-managed#enable-mgdcoll-gke) or [non-GKE cluster](https://cloud.google.com/stackdriver/docs/managed-prometheus/setup-managed#enable-mgdcoll-non-gke).
+
+* Configure Managed Prometheus to scrape Agones by creating a `PodMonitoring` resource:
+```bash
+kubectl apply -n agones-system -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/build/prometheus-google-managed.yaml
+```
+* Confirm that you can see [Prometheus metrics in Cloud Monitoring](https://cloud.google.com/monitoring/promql). If that's all you need, you can stop here.
+
+To install Grafana using a Managed Prometheus backend:
+
+* Install the [Standalone Prometheus frontend UI](https://cloud.google.com/stackdriver/docs/managed-prometheus/query#ui-prometheus) - this will act as your authentication proxy for PromQL queries. To group it together with our [Grafana installation](#grafana-installation), install it in the `metrics` namespace.
+
+* [Install Grafana as above](#grafana-installation), but use `-f ./build/grafana-frontend.yaml` instead of `-f ./build/grafana.yaml`.
+
+{{% /feature %}}
+
+### Google Cloud Monitoring installation
+
+In order to use [Google Cloud Monitoring](https://console.cloud.google.com/monitoring) you must [enable the Monitoring API](https://cloud.google.com/monitoring/api/enable-api) in the Google Cloud Console. The Cloud Monitoring exporter uses a strategy called Application Default Credentials (ADC) to find your application's credentials. Details can be found in [Setting Up Authentication for Server to Server Production Applications](https://cloud.google.com/docs/authentication/production).
 
 You need to grant all the necessary permissions to the users (see [Access Control Guide](https://cloud.google.com/monitoring/access-control)). The predefined role Monitoring Metric Writer contains those permissions. Use the following command to assign the role to your default service account.
 
