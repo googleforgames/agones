@@ -87,7 +87,7 @@ release_branch = "release-1.29.0"
 release_version = "1.29.0"
 
 # shown for production
-supported_k8s = "1.24"
+supported_k8s = ["1.24"]
 k8s_api_version = "1.24"
 gke_example_cluster_version = "1.24"
 aks_example_cluster_version = "1.24.6"

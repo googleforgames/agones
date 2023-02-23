@@ -7,7 +7,7 @@ assignees: ''
 
 ---
 
-Agones supports and is tested against 3 releases of Kubernetes, targeting the newest version as being the version available in the GKE rapid channel. The vendored version of client-go will be aligned with the middle of the three supported Kubernetes versions ({version_2}). All the example clusters will use the middle of the three supported Kubernetes versions ({version_2}).
+Agones supports and is tested against 3 releases of Kubernetes, targeting the newest version as being the [default version in the GKE Rapid channel](https://cloud.google.com/kubernetes-engine/docs/release-notes#current_versions). The vendored version of client-go will be aligned with the middle of the three supported Kubernetes versions ({version_2}). All the example clusters will use the middle of the three supported Kubernetes versions ({version_2}).
 
 List of items to do for upgrading to {version_1} {version_2} {version_3}
 
