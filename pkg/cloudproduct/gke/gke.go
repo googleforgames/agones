@@ -168,15 +168,18 @@ func podSpecSeccompUnconfined(podSpec *corev1.PodSpec) {
 //     safe-to-evict=false but can support a restrictive PDB, we can support Never and Always, but
 //     OnUpgrade doesn't make sense on Autopilot today. - an overly restrictive PDB prevents
 //     any sort of graceful eviction.
-func (*gkeAutopilot) SetEviction(safe agonesv1.EvictionSafe, pod *corev1.Pod) error {
+func (*gkeAutopilot) SetEviction(eviction *agonesv1.Eviction, pod *corev1.Pod) error {
 	if !runtime.FeatureEnabled(runtime.FeatureSafeToEvict) {
 		return nil
 	}
 	if safeAnnotation := pod.ObjectMeta.Annotations[agonesv1.PodSafeToEvictAnnotation]; safeAnnotation == agonesv1.False {
 		delete(pod.ObjectMeta.Annotations, agonesv1.PodSafeToEvictAnnotation)
 	}
+	if eviction == nil {
+		return errors.New("No eviction value set. Should be the default value")
+	}
 	if _, exists := pod.ObjectMeta.Labels[agonesv1.SafeToEvictLabel]; !exists {
-		switch safe {
+		switch eviction.Safe {
 		case agonesv1.EvictionSafeAlways:
 			// For EvictionSafeAlways, we use a label value that does not match the
 			// agones-gameserver-safe-to-evict-false PDB. But we go ahead and label
@@ -186,7 +189,7 @@ func (*gkeAutopilot) SetEviction(safe agonesv1.EvictionSafe, pod *corev1.Pod) er
 		case agonesv1.EvictionSafeNever:
 			pod.ObjectMeta.Labels[agonesv1.SafeToEvictLabel] = agonesv1.False
 		default:
-			return errors.Errorf("eviction.safe == %s, which webhook should have rejected on Autopilot", safe)
+			return errors.Errorf("eviction.safe == %s, which webhook should have rejected on Autopilot", eviction.Safe)
 		}
 	}
 	return nil

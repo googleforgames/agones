@@ -39,23 +39,26 @@ func (*generic) ValidateScheduling(apis.SchedulingStrategy) []metav1.StatusCause
 func (*generic) MutateGameServerPodSpec(*agonesv1.GameServerSpec, *corev1.PodSpec) error { return nil }
 
 // SetEviction sets disruptions controls based on GameServer.Status.Eviction.
-func (*generic) SetEviction(safe agonesv1.EvictionSafe, pod *corev1.Pod) error {
+func (*generic) SetEviction(eviction *agonesv1.Eviction, pod *corev1.Pod) error {
 	if !runtime.FeatureEnabled(runtime.FeatureSafeToEvict) {
 		return nil
 	}
+	if eviction == nil {
+		return errors.New("No eviction value set. Should be the default value")
+	}
 	if _, exists := pod.ObjectMeta.Annotations[agonesv1.PodSafeToEvictAnnotation]; !exists {
-		switch safe {
+		switch eviction.Safe {
 		case agonesv1.EvictionSafeAlways:
 			pod.ObjectMeta.Annotations[agonesv1.PodSafeToEvictAnnotation] = agonesv1.True
 		case agonesv1.EvictionSafeOnUpgrade, agonesv1.EvictionSafeNever:
 			// For EvictionSafeOnUpgrade and EvictionSafeNever, we block Cluster Autoscaler.
 			pod.ObjectMeta.Annotations[agonesv1.PodSafeToEvictAnnotation] = agonesv1.False
 		default:
-			return errors.Errorf("unknown eviction.safe value %q", string(safe))
+			return errors.Errorf("unknown eviction.safe value %q", string(eviction.Safe))
 		}
 	}
 	if _, exists := pod.ObjectMeta.Labels[agonesv1.SafeToEvictLabel]; !exists {
-		switch safe {
+		switch eviction.Safe {
 		case agonesv1.EvictionSafeAlways, agonesv1.EvictionSafeOnUpgrade:
 			// For EvictionSafeAlways and EvictionSafeOnUpgrade, we use a label value
 			// that does not match the agones-gameserver-safe-to-evict-false PDB. But
@@ -66,7 +69,7 @@ func (*generic) SetEviction(safe agonesv1.EvictionSafe, pod *corev1.Pod) error {
 			// For EvictionSafeNever, match gones-gameserver-safe-to-evict-false PDB.
 			pod.ObjectMeta.Labels[agonesv1.SafeToEvictLabel] = agonesv1.False
 		default:
-			return errors.Errorf("unknown eviction.safe value %q", string(safe))
+			return errors.Errorf("unknown eviction.safe value %q", string(eviction.Safe))
 		}
 	}
 	return nil

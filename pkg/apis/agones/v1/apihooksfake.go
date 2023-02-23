@@ -26,7 +26,7 @@ type fakeAPIHooks struct {
 	StubValidateGameServerSpec  func(*GameServerSpec) []metav1.StatusCause
 	StubValidateScheduling      func(apis.SchedulingStrategy) []metav1.StatusCause
 	StubMutateGameServerPodSpec func(*GameServerSpec, *corev1.PodSpec) error
-	StubSetEviction             func(EvictionSafe, *corev1.Pod) error
+	StubSetEviction             func(*Eviction, *corev1.Pod) error
 }
 
 var _ APIHooks = fakeAPIHooks{}
@@ -56,9 +56,9 @@ func (f fakeAPIHooks) MutateGameServerPodSpec(gss *GameServerSpec, podSpec *core
 }
 
 // SetEviction is called by gs.Pod to enforce GameServer.Status.Eviction.
-func (f fakeAPIHooks) SetEviction(safe EvictionSafe, pod *corev1.Pod) error {
+func (f fakeAPIHooks) SetEviction(eviction *Eviction, pod *corev1.Pod) error {
 	if f.StubSetEviction != nil {
-		return f.StubSetEviction(safe, pod)
+		return f.StubSetEviction(eviction, pod)
 	}
 	return nil
 }

@@ -32,5 +32,5 @@ type APIHooks interface {
 	MutateGameServerPodSpec(*GameServerSpec, *corev1.PodSpec) error
 
 	// SetEviction is called by gs.Pod to enforce GameServer.Status.Eviction.
-	SetEviction(EvictionSafe, *corev1.Pod) error
+	SetEviction(*Eviction, *corev1.Pod) error
 }
