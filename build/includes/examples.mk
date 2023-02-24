@@ -47,3 +47,4 @@ example-image-test.%:
 
 example-image-push.%:
 	$(DOCKER_RUN) bash -c "cd examples/$* && make push"
+

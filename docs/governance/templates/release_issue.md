@@ -32,7 +32,7 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 - [ ] Any issues in the current milestone that are not closed, move to next milestone.
 - [ ] `git checkout main && git pull --rebase upstream main`
 - [ ] Run `make release-deploy-site`
-- [ ] Run `make build-release` to generate the CHANGELOG.md.
+- [ ] Run `make build-release` to generate the CHANGELOG.md and to ensure all example images exist on us-docker.pkg.dev/agones-images/examples.
 - [ ] Download all the artifacts from the cloud build.
 - [ ] Move the CHANGELOG.md to the root of this repository, replacing any previous versions.
 - [ ] Ensure the [helm `tag` value][values] is correct (should be {version})
@@ -42,12 +42,11 @@ and copy it into a release issue. Fill in relevant values, found inside {}
   - [ ] Ensure the [`sdks/csharp/sdk/AgonesSDK.nuspec` and `sdks/csharp/sdk/csharp-sdk.csproj`][csharp] versions are correct (should be {version})
   - [ ] Update the package version in the [`sdks/unity/package.json`][unity] package file's `Version` field to {version}
 - [ ] Run `make gen-install`
-- [ ] Run `make test-examples-on-gar` to ensure all example images exist on us-docker.pkg.dev/agones-images/examples
 - [ ] Create a *draft* release with the [release template][release-template]
     - [ ] Make a `tag` with the release version.
 - [ ] Site updated
   - [ ] Copy the draft release content into a new `/site/content/en/blog/releases` content (this will be what you send via email).
-  - [ ] Add the Agones release version and its supported Kubernetes version to the version matrix in `site/content/en/docs/Installation/_index.md #agones-and-kubernetes-supported-versions`.
+  - [ ] In `site/content/en/docs/Installation/_index.md #agones-and-kubernetes-supported-versions`, for the current version, replace `{{% k8s-version %}}` with hardcoded Kubernetes versions supported by the current version. And add a row for the Agones release version with `{{% k8s-version %}}` as its supported Kubernetes versions.
   - [ ] Review all `link_test` and `data-proofer-ignore` attributes and remove for link testing
   - [ ] Review and remove all instances of the `feature` shortcode
   - [ ] Add a link to previous version's documentation to nav dropdown.
@@ -55,8 +54,11 @@ and copy it into a release issue. Fill in relevant values, found inside {}
     - [ ] Update `release_branch` to the new release branch for {version}.
     - [ ] Update `release-version` with the new release version {version}.
     - [ ] Copy `dev_supported_k8s` to `supported_k8s`.
-    - [ ] Copy `dev_aks_minor_supported_k8s` to `aks_minor_supported_k8s`.
-    - [ ] Copy `dev_minikube_minor_supported_k8s` to `minikube_minor_supported_k8s`.
+    - [ ] Copy `dev_k8s_api_version` to `k8s_api_version`.
+    - [ ] Copy `dev_gke_example_cluster_version` to `gke_example_cluster_version`.
+    - [ ] Copy `dev_aks_example_cluster_version` to `aks_example_cluster_version`.
+    - [ ] Copy `dev_eks_example_cluster_version` to `eks_example_cluster_version`.
+    - [ ] Copy `dev_minikube_example_cluster_version` to `minikube_example_cluster_version`.
     - [ ] Update documentation with updated example images tags.
 - [ ] Create PR with these changes, and merge them with an approval.
 - [ ] Run `git remote update && git checkout main && git reset --hard upstream/main` to ensure your code is in line
