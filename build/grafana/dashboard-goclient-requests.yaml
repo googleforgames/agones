@@ -27,34 +27,45 @@ data:
         "list": [
           {
             "builtIn": 1,
-            "datasource": "-- Grafana --",
+            "datasource": {
+              "type": "datasource",
+              "uid": "grafana"
+            },
             "enable": true,
             "hide": true,
             "iconColor": "rgba(0, 211, 255, 1)",
             "name": "Annotations & Alerts",
+            "target": {
+              "limit": 100,
+              "matchAny": false,
+              "tags": [],
+              "type": "dashboard"
+            },
             "type": "dashboard"
           }
         ]
       },
       "editable": true,
-      "gnetId": null,
+      "fiscalYearStartMonth": 0,
       "graphTooltip": 0,
-      "id": 5,
       "links": [],
+      "liveNow": false,
       "panels": [
         {
           "aliasColors": {},
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": null,
+          "datasource": "prometheus"
           "fill": 1,
+          "fillGradient": 0,
           "gridPos": {
             "h": 9,
             "w": 12,
             "x": 0,
             "y": 0
           },
+          "hiddenSeries": false,
           "id": 4,
           "legend": {
             "avg": false,
@@ -70,7 +81,11 @@ data:
           "linewidth": 1,
           "links": [],
           "nullPointMode": "null",
+          "options": {
+            "alertThreshold": true
+          },
           "percentage": false,
+          "pluginVersion": "9.3.6",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -80,16 +95,18 @@ data:
           "steppedLine": false,
           "targets": [
             {
-              "expr": "rate(agones_k8s_client_http_request_total[5m])",
+              "datasource": "prometheus"
+              "editorMode": "code",
+              "expr": "rate(agones_k8s_client_http_request_total{$DevRole}[5m])",
               "format": "time_series",
               "intervalFactor": 1,
               "legendFormat": "{{status_code}} {{verb}}",
+              "range": true,
               "refId": "A"
             }
           ],
           "thresholds": [],
-          "timeFrom": null,
-          "timeShift": null,
+          "timeRegions": [],
           "title": "Requests rate by status",
           "tooltip": {
             "shared": true,
@@ -98,33 +115,26 @@ data:
           },
           "type": "graph",
           "xaxis": {
-            "buckets": null,
             "mode": "time",
-            "name": null,
             "show": true,
             "values": []
           },
           "yaxes": [
             {
+              "$$hashKey": "object:373",
               "format": "short",
-              "label": null,
               "logBase": 1,
-              "max": null,
-              "min": null,
               "show": true
             },
             {
+              "$$hashKey": "object:374",
               "format": "short",
-              "label": null,
               "logBase": 1,
-              "max": null,
-              "min": null,
               "show": true
             }
           ],
           "yaxis": {
-            "align": false,
-            "alignLevel": null
+            "align": false
           }
         },
         {
@@ -132,14 +142,16 @@ data:
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": null,
+          "datasource": "prometheus"
           "fill": 1,
+          "fillGradient": 0,
           "gridPos": {
             "h": 9,
             "w": 12,
             "x": 12,
             "y": 0
           },
+          "hiddenSeries": false,
           "id": 6,
           "legend": {
             "alignAsTable": false,
@@ -158,7 +170,11 @@ data:
           "linewidth": 1,
           "links": [],
           "nullPointMode": "null",
+          "options": {
+            "alertThreshold": true
+          },
           "percentage": false,
+          "pluginVersion": "9.3.6",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -168,16 +184,18 @@ data:
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum(rate(agones_k8s_client_http_request_duration_seconds_count[5m])) by (endpoint,verb)",
+              "datasource": "prometheus"
+              "editorMode": "code",
+              "expr": "sum(rate(agones_k8s_client_http_request_duration_seconds_count{$DevRole}[5m])) by (endpoint,verb)",
               "format": "time_series",
               "intervalFactor": 1,
               "legendFormat": "{{verb}} {{endpoint}}",
+              "range": true,
               "refId": "A"
             }
           ],
           "thresholds": [],
-          "timeFrom": null,
-          "timeShift": null,
+          "timeRegions": [],
           "title": "Requests rate by verb and path",
           "tooltip": {
             "shared": true,
@@ -186,33 +204,26 @@ data:
           },
           "type": "graph",
           "xaxis": {
-            "buckets": null,
             "mode": "time",
-            "name": null,
             "show": true,
             "values": []
           },
           "yaxes": [
             {
+              "$$hashKey": "object:2151",
               "format": "short",
-              "label": null,
               "logBase": 1,
-              "max": null,
-              "min": null,
               "show": true
             },
             {
+              "$$hashKey": "object:2152",
               "format": "short",
-              "label": null,
               "logBase": 1,
-              "max": null,
-              "min": null,
               "show": true
             }
           ],
           "yaxis": {
-            "align": false,
-            "alignLevel": null
+            "align": false
           }
         },
         {
@@ -220,14 +231,16 @@ data:
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": null,
+          "datasource": "prometheus"
           "fill": 1,
+          "fillGradient": 0,
           "gridPos": {
             "h": 9,
             "w": 24,
             "x": 0,
             "y": 9
           },
+          "hiddenSeries": false,
           "id": 2,
           "legend": {
             "alignAsTable": true,
@@ -246,7 +259,11 @@ data:
           "linewidth": 1,
           "links": [],
           "nullPointMode": "null",
+          "options": {
+            "alertThreshold": true
+          },
           "percentage": false,
+          "pluginVersion": "9.3.6",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -256,16 +273,18 @@ data:
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum(rate(agones_k8s_client_http_request_duration_seconds_sum[5m]) / rate(agones_k8s_client_http_request_duration_seconds_count[5m])) by (endpoint,verb)",
+              "datasource": "prometheus"
+              "editorMode": "code",
+              "expr": "sum(rate(agones_k8s_client_http_request_duration_seconds_sum{$DevRole}[5m]) / rate(agones_k8s_client_http_request_duration_seconds_count{$DevRole}[5m])) by (endpoint,verb)",
               "format": "time_series",
               "intervalFactor": 1,
               "legendFormat": "{{verb}} {{endpoint}}",
+              "range": true,
               "refId": "A"
             }
           ],
           "thresholds": [],
-          "timeFrom": null,
-          "timeShift": null,
+          "timeRegions": [],
           "title": "Average request duration",
           "tooltip": {
             "shared": true,
@@ -274,38 +293,31 @@ data:
           },
           "type": "graph",
           "xaxis": {
-            "buckets": null,
             "mode": "time",
-            "name": null,
             "show": true,
             "values": []
           },
           "yaxes": [
             {
+              "$$hashKey": "object:2301",
               "format": "s",
-              "label": null,
               "logBase": 1,
-              "max": null,
-              "min": null,
               "show": true
             },
             {
+              "$$hashKey": "object:2302",
               "format": "short",
-              "label": null,
               "logBase": 1,
-              "max": null,
-              "min": null,
               "show": true
             }
           ],
           "yaxis": {
-            "align": false,
-            "alignLevel": null
+            "align": false
           }
         }
       ],
       "refresh": "10s",
-      "schemaVersion": 16,
+      "schemaVersion": 37,
       "style": "dark",
       "tags": [
         "agones",
@@ -313,7 +325,42 @@ data:
         "client-go"
       ],
       "templating": {
-        "list": []
+        "list": [
+          {
+            "allValue": " ",
+            "current": {
+              "selected": true,
+              "text": "All",
+              "value": "$__all"
+            },
+            "hide": 0,
+            "includeAll": true,
+            "label": "DevRole",
+            "multi": false,
+            "name": "DevRole",
+            "options": [
+              {
+                "selected": true,
+                "text": "All",
+                "value": "$__all"
+              },
+              {
+                "selected": false,
+                "text": "controller",
+                "value": "agones_dev_role=\"controller\""
+              },
+              {
+                "selected": false,
+                "text": "extensions",
+                "value": "agones_dev_role=\"extensions\""
+              }
+            ],
+            "query": "controller : agones_dev_role=\"controller\", extensions : agones_dev_role=\"extensions\"",
+            "queryValue": "",
+            "skipUrlSync": false,
+            "type": "custom"
+          }
+        ]
       },
       "time": {
         "from": "now-30m",
@@ -347,5 +394,6 @@ data:
       "timezone": "",
       "title": "Agones Controller go-client requests",
       "uid": "9VRr_m_iz",
-      "version": 4
+      "version": 1,
+      "weekStart": ""
     }
