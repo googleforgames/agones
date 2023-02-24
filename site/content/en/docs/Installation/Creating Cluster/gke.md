@@ -83,7 +83,7 @@ gcloud compute firewall-rules create game-server-firewall \
 A [cluster][cluster] consists of at least one *control plane* machine and multiple worker machines called *nodes*. In Google Kubernetes Engine, nodes are [Compute Engine virtual machine][vms] instances that run the Kubernetes processes necessary to make them part of the cluster.
 
 ```bash
-gcloud container clusters create [CLUSTER_NAME] --cluster-version={{% k8s-version %}} \
+gcloud container clusters create [CLUSTER_NAME] --cluster-version={{% gke-example-cluster-version %}} \
   --tags=game-server \
   --scopes=gke-default \
   --num-nodes=4 \
