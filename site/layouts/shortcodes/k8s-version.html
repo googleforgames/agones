@@ -1,5 +1,15 @@
+{{- $index := 0}}
+{{- $versionsList := slice }}
 {{- if or (eq (getenv "HUGO_ENV") "production") (eq (getenv "HUGO_ENV") "snapshot")}}
-{{- $.Page.Site.Params.supported_k8s }}
+{{- $versionsList = $.Page.Site.Params.supported_k8s}}
 {{- else }}
-{{- $.Page.Site.Params.dev_supported_k8s }}
-{{- end -}}
+{{- $versionsList = $.Page.Site.Params.dev_supported_k8s }}
+{{- end}}
+{{- $length := len $versionsList}}
+{{- range $versionsList}}
+    {{- (index $versionsList $index) }}
+    {{- if (ne $index (sub $length 1))}}
+    {{- ", "}}
+    {{- end}}
+    {{- $index = (add $index 1) }}
+{{- end}}

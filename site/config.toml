@@ -87,13 +87,19 @@ release_branch = "release-1.29.0"
 release_version = "1.29.0"
 
 # shown for production
-supported_k8s = "1.24"
-aks_minor_supported_k8s = "6"
-minikube_minor_supported_k8s = "9"
-# shown in development (or the next version that will be supported)
-dev_supported_k8s = "1.24"
-dev_aks_minor_supported_k8s = "6"
-dev_minikube_minor_supported_k8s = "9"
+supported_k8s = ["1.24"]
+k8s_api_version = "1.24"
+gke_example_cluster_version = "1.24"
+aks_example_cluster_version = "1.24.6"
+eks_example_cluster_version = "1.24"
+minikube_example_cluster_version = "1.24.9"
+# shown in development (or the next versions that will be supported)
+dev_supported_k8s = ["1.23", "1.24", "1.25"]
+dev_k8s_api_version = "1.24"
+dev_gke_example_cluster_version = "1.24"
+dev_aks_example_cluster_version = "1.24.6"
+dev_eks_example_cluster_version = "1.24"
+dev_minikube_example_cluster_version = "1.24.9"
 
 # example tag
 example_image_tag = "us-docker.pkg.dev/agones-images/examples/simple-game-server:0.14"

@@ -1,0 +1,5 @@
+{{- if or (eq (getenv "HUGO_ENV") "production") (eq (getenv "HUGO_ENV") "snapshot")}}
+{{- $.Page.Site.Params.gke_example_cluster_version }}
+{{- else }}
+{{- $.Page.Site.Params.dev_gke_example_cluster_version }}
+{{- end -}}

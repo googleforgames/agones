@@ -20,6 +20,7 @@ import (
 	apivalidation "k8s.io/apimachinery/pkg/api/validation"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	metav1validation "k8s.io/apimachinery/pkg/apis/meta/v1/validation"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/apimachinery/pkg/util/validation/field"
@@ -106,4 +107,92 @@ func validateObjectMeta(objMeta *metav1.ObjectMeta) []metav1.StatusCause {
 		}
 	}
 	return causes
+}
+
+// AllocationOverflow specifies what labels and/or annotations to apply on Allocated GameServers
+// if the desired number of the underlying `GameServerSet` drops below the number of Allocated GameServers
+// attached to it.
+type AllocationOverflow struct {
+	// Labels to be applied to the `GameServer`
+	// +optional
+	Labels map[string]string `json:"labels,omitempty"`
+	// Annotations to be applied to the `GameServer`
+	// +optional
+	Annotations map[string]string `json:"annotations,omitempty"`
+}
+
+// Validate validates the label and annotation values
+func (ao *AllocationOverflow) Validate() ([]metav1.StatusCause, bool) {
+	var causes []metav1.StatusCause
+	parentField := "Spec.AllocationOverflow"
+
+	errs := metav1validation.ValidateLabels(ao.Labels, field.NewPath(parentField))
+	if len(errs) != 0 {
+		for _, v := range errs {
+			causes = append(causes, metav1.StatusCause{
+				Type:    metav1.CauseTypeFieldValueInvalid,
+				Field:   "labels",
+				Message: v.Error(),
+			})
+		}
+	}
+	errs = apivalidation.ValidateAnnotations(ao.Annotations,
+		field.NewPath(parentField))
+	if len(errs) != 0 {
+		for _, v := range errs {
+			causes = append(causes, metav1.StatusCause{
+				Type:    metav1.CauseTypeFieldValueInvalid,
+				Field:   "annotations",
+				Message: v.Error(),
+			})
+		}
+	}
+
+	return causes, len(causes) == 0
+}
+
+// CountMatches returns the number of Allocated GameServers that match the labels and annotations, and
+// the set of GameServers left over.
+func (ao *AllocationOverflow) CountMatches(list []*GameServer) (int32, []*GameServer) {
+	count := int32(0)
+	var rest []*GameServer
+	labelSelector := labels.Set(ao.Labels).AsSelector()
+	annotationSelector := labels.Set(ao.Annotations).AsSelector()
+
+	for _, gs := range list {
+		if gs.Status.State != GameServerStateAllocated {
+			continue
+		}
+		if !labelSelector.Matches(labels.Set(gs.ObjectMeta.Labels)) {
+			rest = append(rest, gs)
+			continue
+		}
+		if !annotationSelector.Matches(labels.Set(gs.ObjectMeta.Annotations)) {
+			rest = append(rest, gs)
+			continue
+		}
+		count++
+	}
+
+	return count, rest
+}
+
+// Apply applies the labels and annotations to the passed in GameServer
+func (ao *AllocationOverflow) Apply(gs *GameServer) {
+	if ao.Annotations != nil {
+		if gs.ObjectMeta.Annotations == nil {
+			gs.ObjectMeta.Annotations = map[string]string{}
+		}
+		for k, v := range ao.Annotations {
+			gs.ObjectMeta.Annotations[k] = v
+		}
+	}
+	if ao.Labels != nil {
+		if gs.ObjectMeta.Labels == nil {
+			gs.ObjectMeta.Labels = map[string]string{}
+		}
+		for k, v := range ao.Labels {
+			gs.ObjectMeta.Labels[k] = v
+		}
+	}
 }

@@ -15,9 +15,12 @@
 package v1
 
 import (
+	"fmt"
+
 	"agones.dev/agones/pkg"
 	"agones.dev/agones/pkg/apis"
 	"agones.dev/agones/pkg/apis/agones"
+	"agones.dev/agones/pkg/util/runtime"
 	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -57,6 +60,12 @@ type FleetList struct {
 type FleetSpec struct {
 	// Replicas are the number of GameServers that should be in this set. Defaults to 0.
 	Replicas int32 `json:"replicas"`
+	// [Stage: Alpha]
+	// [FeatureFlag:FleetAllocationOverflow]
+	// Labels and Annotations to apply to GameServers when the number of Allocated GameServers drops below
+	// the desired replicas on the underlying `GameServerSet`
+	// +optional
+	AllocationOverflow *AllocationOverflow `json:"allocationOverflow,omitempty"`
 	// Deployment strategy
 	Strategy appsv1.DeploymentStrategy `json:"strategy"`
 	// Scheduling strategy. Defaults to "Packed".
@@ -109,6 +118,10 @@ func (f *Fleet) GameServerSet() *GameServerSet {
 	}
 
 	gsSet.ObjectMeta.Labels[FleetNameLabel] = f.ObjectMeta.Name
+
+	if runtime.FeatureEnabled(runtime.FeatureFleetAllocateOverflow) && f.Spec.AllocationOverflow != nil {
+		gsSet.Spec.AllocationOverflow = f.Spec.AllocationOverflow.DeepCopy()
+	}
 
 	return gsSet
 }
@@ -185,6 +198,7 @@ func (f *Fleet) Validate(apiHooks APIHooks) ([]metav1.StatusCause, bool) {
 			Message: "Strategy Type should be one of: RollingUpdate, Recreate.",
 		})
 	}
+
 	// check Gameserver specification in a Fleet
 	gsCauses := validateGSSpec(apiHooks, f)
 	if len(gsCauses) > 0 {
@@ -196,6 +210,21 @@ func (f *Fleet) Validate(apiHooks APIHooks) ([]metav1.StatusCause, bool) {
 	objMetaCauses := validateObjectMeta(&f.Spec.Template.ObjectMeta)
 	if len(objMetaCauses) > 0 {
 		causes = append(causes, objMetaCauses...)
+	}
+
+	if f.Spec.AllocationOverflow != nil {
+		if runtime.FeatureEnabled(runtime.FeatureFleetAllocateOverflow) {
+			aoCauses, valid := f.Spec.AllocationOverflow.Validate()
+			if !valid {
+				causes = append(causes, aoCauses...)
+			}
+		} else {
+			causes = append(causes, metav1.StatusCause{
+				Type:    metav1.CauseTypeFieldValueNotSupported,
+				Field:   "allocationOverflow",
+				Message: fmt.Sprintf("Value cannot be set unless feature flag %s is enabled", runtime.FeatureFleetAllocateOverflow),
+			})
+		}
 	}
 
 	return causes, len(causes) == 0
