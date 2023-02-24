@@ -15,11 +15,14 @@
 package v1
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
 	"agones.dev/agones/pkg/apis"
+	"agones.dev/agones/pkg/util/runtime"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -28,6 +31,8 @@ import (
 )
 
 func TestFleetGameServerSetGameServer(t *testing.T) {
+	t.Parallel()
+
 	f := Fleet{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test",
@@ -59,6 +64,22 @@ func TestFleetGameServerSetGameServer(t *testing.T) {
 	assert.Equal(t, f.Spec.Scheduling, gsSet.Spec.Scheduling)
 	assert.Equal(t, f.Spec.Template, gsSet.Spec.Template)
 	assert.True(t, metav1.IsControlledBy(gsSet, &f))
+
+	runtime.FeatureTestMutex.Lock()
+	defer runtime.FeatureTestMutex.Unlock()
+
+	runtime.Must(runtime.ParseFeatures(fmt.Sprintf("%s=true", runtime.FeatureFleetAllocateOverflow)))
+	gsSet = f.GameServerSet()
+	assert.Nil(t, gsSet.Spec.AllocationOverflow)
+
+	f.Spec.AllocationOverflow = &AllocationOverflow{
+		Labels:      map[string]string{"stuff": "things"},
+		Annotations: nil,
+	}
+
+	gsSet = f.GameServerSet()
+	assert.NotNil(t, gsSet.Spec.AllocationOverflow)
+	assert.Equal(t, "things", gsSet.Spec.AllocationOverflow.Labels["stuff"])
 }
 
 func TestFleetApplyDefaults(t *testing.T) {
@@ -190,6 +211,37 @@ func TestFleetGameserverSpec(t *testing.T) {
 	causes, ok = f.Validate(fakeAPIHooks{})
 	assert.False(t, ok)
 	assert.Len(t, causes, 1)
+}
+
+func TestFleetAllocationOverflow(t *testing.T) {
+	t.Parallel()
+	runtime.FeatureTestMutex.Lock()
+	defer runtime.FeatureTestMutex.Unlock()
+
+	runtime.Must(runtime.ParseFeatures(fmt.Sprintf("%s=true", runtime.FeatureFleetAllocateOverflow)))
+
+	f := defaultFleet()
+	f.ApplyDefaults()
+
+	causes, valid := f.Validate(fakeAPIHooks{})
+	require.True(t, valid)
+	require.Empty(t, causes)
+
+	f.Spec.AllocationOverflow = &AllocationOverflow{
+		Labels:      map[string]string{"$$$nope": "value"},
+		Annotations: nil,
+	}
+
+	causes, valid = f.Validate(fakeAPIHooks{})
+	require.False(t, valid)
+	require.Len(t, causes, 1)
+	require.Equal(t, metav1.CauseTypeFieldValueInvalid, causes[0].Type)
+
+	runtime.Must(runtime.ParseFeatures(fmt.Sprintf("%s=false", runtime.FeatureFleetAllocateOverflow)))
+	causes, valid = f.Validate(fakeAPIHooks{})
+	require.False(t, valid)
+	require.Len(t, causes, 1)
+	require.Equal(t, metav1.CauseTypeFieldValueNotSupported, causes[0].Type)
 }
 
 func TestFleetName(t *testing.T) {
