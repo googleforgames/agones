@@ -16,7 +16,7 @@ A full `Fleet` specification is available below and in the {{< ghlink href="exam
 apiVersion: "agones.dev/v1"
 kind: Fleet
 # Fleet Metadata
-# {{< k8s-api href="#objectmeta-v1-meta" >}}
+# {{< k8s-api-version href="#objectmeta-v1-meta" >}}
 metadata:
   name: fleet-example
 spec:

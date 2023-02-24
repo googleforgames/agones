@@ -86,6 +86,14 @@ build system.
 See the [Container Builder documentation](https://cloud.google.com/container-builder/docs/) for more details on
 how to edit and expand the build process.
 
+## Kubernetes Versions Update
+Each version of Agones supports specific versions of Kubernetes by following the [version update policy](https://agones.dev/site/docs/installation/#agones-and-kubernetes-supported-versions). Please follow the steps below to update the Kubernetes versions supported.
+
+1. Create a Issue from the [kubernetes update issue template](../../.github/ISSUE_TEMPLATE/kubernetes_update.md) with the newly supported versions.
+2. Complete all items in the issue checklist.
+3. Close the issue.
+
+
 ## Community Meetings
 
 Community meetings occur every month, and are open to all who wish to attend!

@@ -24,7 +24,7 @@ Optionally, we also recommend starting with an `agones` profile, using `-p` to k
 clusters you may have running with Minikube.
 
 ```bash
-minikube start --kubernetes-version v{{% k8s-version %}}.{{% minikube-k8s-minor-version %}} -p agones
+minikube start --kubernetes-version v{{% minikube-example-cluster-version %}} -p agones
 ```
 
 Check the official [minikube start](https://minikube.sigs.k8s.io/docs/commands/start/) reference for more options that

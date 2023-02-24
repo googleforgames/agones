@@ -18,7 +18,7 @@ Possible steps are the following:
 ```bash
 eksctl create cluster \
 --name prod \
---version {{% k8s-version %}} \
+--version {{% eks-example-cluster-version %}} \
 --nodegroup-name standard-workers \
 --node-type t3.medium \
 --nodes 3 \

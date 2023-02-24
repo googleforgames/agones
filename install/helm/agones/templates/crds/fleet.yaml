@@ -72,6 +72,18 @@ spec:
                 replicas:
                   type: integer
                   minimum: 0
+                allocationOverflow:
+                  type: object
+                  nullable: true
+                  properties:
+                    labels:
+                      type: object
+                      additionalProperties:
+                        type: string
+                    annotations:
+                      type: object
+                      additionalProperties:
+                        type: string
                 scheduling:
                   type: string
                   enum:
