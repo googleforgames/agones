@@ -65,8 +65,8 @@ FHttpRequestRef UAgonesComponent::BuildAgonesRequest(const FString Path, const F
 	FHttpRequestRef Request = Http->CreateRequest();
 
 	Request->SetURL(FString::Format(
-		TEXT("http://localhost:{0}/{1}"), 
-{FStringFormatArg(HttpPort), FStringFormatArg(Path)}	
+		TEXT("http://{0}:{1}/{2}"), 
+{FStringFormatArg(HttpHost), FStringFormatArg(HttpPort), FStringFormatArg(Path)}	
 	));
 	Request->SetVerb(Verb.ToString());
 	Request->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
@@ -157,9 +157,10 @@ void UAgonesComponent::EnsureWebSocketConnection()
         // Unreal WebSockets are not able to do DNS resolution for localhost for some reason
         // so this is using the IPv4 Loopback Address instead.
         WatchWebSocket = FWebSocketsModule::Get().CreateWebSocket(
-            FString::Format(TEXT("ws://127.0.0.1:{0}/watch/gameserver"),
+            FString::Format(TEXT("ws://{0}:{1}/watch/gameserver"),
             	static_cast<FStringFormatOrderedArguments>(
-                    TArray<FStringFormatArg, TFixedAllocator<1>>{
+                    TArray<FStringFormatArg, TFixedAllocator<2>>{
+                         FStringFormatArg(HttpHost),
                          FStringFormatArg(HttpPort)
                     }
                 )

@@ -101,6 +101,12 @@ class AGONES_API UAgonesComponent final : public UActorComponent
 public:
 	UAgonesComponent();
 
+    /**
+     * \brief HttpHost is the default Agones HTTP host to use.
+     */
+    UPROPERTY(EditAnywhere, Category = Agones, Config)
+    FString HttpHost = "127.0.0.1";
+	
 	/**
 	 * \brief HttpPort is the default Agones HTTP port to use.
 	 */
