@@ -22,6 +22,7 @@ import (
 	"agones.dev/agones/pkg/util/runtime"
 	e2eframework "agones.dev/agones/test/e2e/framework"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -41,18 +42,23 @@ func TestGameServerHealthyAfterDeletingPodWhileOneExtensionsDown(t *testing.T) {
 
 	list, err := getAgoneseExtensionsPods(ctx)
 	logger.Infof("Length of pod list is %v", len(list.Items))
-	assert.NoError(t, err, "Could not get list of Extension pods")
+	for i := range list.Items {
+		logger.Infof("Name of extensions pod %v: %v", i, list.Items[i].ObjectMeta.Name)
+		logger.Infof("Host IP %v", list.Items[i].Status.HostIP)
+		logger.Infof("Pod IPs %v", list.Items[i].Status.PodIPs)
+	}
+	require.NoError(t, err, "Could not get list of Extension pods")
 	assert.Greater(t, len(list.Items), 1, "Cluster has no Extensions pod or has only 1 extensions pod")
 
-	logger.Info("Removing one of the Extensions Pods")
-	deleteAgonesExtensionsPods(ctx, t)
+	logger.Infof("Removing one of the Extensions Pods: %v", list.Items[1].ObjectMeta.Name)
+	deleteAgonesExtensionsPod(ctx, t)
 
-	assert.NoError(t, waitForAgonesExtensionsRunning(ctx))
+	require.NoError(t, waitForAgonesExtensionsRunning(ctx))
 
-	logger.Info("Creating default game server")
 	gs := framework.DefaultGameServer(defaultNs)
+	logger.Infof("Creating game-server %s...", gs.Name)
 	readyGs, err := framework.CreateGameServerAndWaitUntilReady(t, defaultNs, gs)
-	assert.NoError(t, err, "Could not get a GameServer ready")
+	require.NoError(t, err, "Could not get a GameServer ready")
 	logger.WithField("gsKey", readyGs.ObjectMeta.Name).Info("GameServer Ready")
 
 	assert.NoError(t, framework.AgonesClient.AgonesV1().GameServers(defaultNs).Delete(ctx, readyGs.ObjectMeta.Name, metav1.DeleteOptions{})) // nolint: errcheck
@@ -60,14 +66,19 @@ func TestGameServerHealthyAfterDeletingPodWhileOneExtensionsDown(t *testing.T) {
 
 // deleteAgonesExtensionsPod deletes one of the extensions pod for the Agones extensions,
 // faking a extensions pod crash.
-func deleteAgonesExtensionsPods(ctx context.Context, t *testing.T) {
+func deleteAgonesExtensionsPod(ctx context.Context, t *testing.T) {
 	list, err := getAgoneseExtensionsPods(ctx)
 	assert.NoError(t, err)
 
 	policy := metav1.DeletePropagationBackground
-	err = framework.KubeClient.CoreV1().Pods("agones-system").Delete(ctx, list.Items[1].ObjectMeta.Name,
+	podToDelete := list.Items[1]
+	err = framework.KubeClient.CoreV1().Pods("agones-system").Delete(ctx, podToDelete.ObjectMeta.Name,
 		metav1.DeleteOptions{PropagationPolicy: &policy})
 	assert.NoError(t, err)
+	require.Eventually(t, func() bool {
+		_, err := framework.KubeClient.CoreV1().Pods("agones-system").Get(ctx, podToDelete.ObjectMeta.Name, metav1.GetOptions{})
+		return err != nil
+	}, 5*time.Minute, time.Second)
 }
 
 func waitForAgonesExtensionsRunning(ctx context.Context) error {
@@ -75,6 +86,10 @@ func waitForAgonesExtensionsRunning(ctx context.Context) error {
 		list, err := getAgoneseExtensionsPods(ctx)
 		if err != nil {
 			return true, err
+		}
+
+		if len(list.Items) != 2 {
+			return false, nil
 		}
 
 		for i := range list.Items {

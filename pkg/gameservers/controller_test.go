@@ -28,6 +28,7 @@ import (
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	"agones.dev/agones/pkg/cloudproduct/generic"
 	agtesting "agones.dev/agones/pkg/testing"
+	agruntime "agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/webhooks"
 	"github.com/heptiolabs/healthcheck"
 	"github.com/mattbaird/jsonpatch"
@@ -760,6 +761,10 @@ func TestControllerSyncGameServerPortAllocationState(t *testing.T) {
 func TestControllerSyncGameServerCreatingState(t *testing.T) {
 	t.Parallel()
 
+	// TODO: remove when "SafeToEvict" feature flag is removed.
+	agruntime.FeatureTestMutex.Lock()
+	defer agruntime.FeatureTestMutex.Unlock()
+
 	newFixture := func() *agonesv1.GameServer {
 		fixture := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
 			Spec: newSingleContainerSpec(), Status: agonesv1.GameServerStatus{State: agonesv1.GameServerStateCreating}}
@@ -789,13 +794,12 @@ func TestControllerSyncGameServerCreatingState(t *testing.T) {
 			return true, gs, nil
 		})
 
-		ctx, cancel := agtesting.StartInformers(m, c.gameServerSynced)
+		ctx, cancel := agtesting.StartInformers(m, c.gameServerSynced, c.podSynced)
 		defer cancel()
 
 		gs, err := c.syncGameServerCreatingState(ctx, fixture)
 
-		logrus.Printf("err: %+v", err)
-		assert.Nil(t, err)
+		assert.NoError(t, err)
 		assert.True(t, podCreated, "Pod should have been created")
 
 		assert.Equal(t, agonesv1.GameServerStateStarting, gs.Status.State)
@@ -823,7 +827,7 @@ func TestControllerSyncGameServerCreatingState(t *testing.T) {
 			return true, gs, errors.New("update-err")
 		})
 
-		ctx, cancel := agtesting.StartInformers(m, c.gameServerSynced)
+		ctx, cancel := agtesting.StartInformers(m, c.gameServerSynced, c.podSynced)
 		defer cancel()
 
 		_, err := c.syncGameServerCreatingState(ctx, fixture)
@@ -857,7 +861,7 @@ func TestControllerSyncGameServerCreatingState(t *testing.T) {
 			return true, gs, nil
 		})
 
-		ctx, cancel := agtesting.StartInformers(m, c.podSynced)
+		ctx, cancel := agtesting.StartInformers(m, c.gameServerSynced, c.podSynced)
 		defer cancel()
 
 		gs, err := c.syncGameServerCreatingState(ctx, fixture)
@@ -885,7 +889,7 @@ func TestControllerSyncGameServerCreatingState(t *testing.T) {
 			return true, gs, nil
 		})
 
-		ctx, cancel := agtesting.StartInformers(mocks, c.gameServerSynced)
+		ctx, cancel := agtesting.StartInformers(mocks, c.gameServerSynced, c.podSynced)
 		defer cancel()
 
 		gs, err := c.syncGameServerCreatingState(ctx, fixture)
