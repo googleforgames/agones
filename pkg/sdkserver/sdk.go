@@ -77,5 +77,16 @@ func convert(gs *agonesv1.GameServer) *sdk.GameServer {
 		}
 	}
 
+	if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
+		if gs.Status.Counters != nil {
+			counters := make(map[string]*sdk.GameServer_Status_CounterStatus, len(gs.Status.Counters))
+			for key, counter := range gs.Status.Counters {
+				tmpCounter := counter.DeepCopy()
+				counters[key] = &sdk.GameServer_Status_CounterStatus{Count: tmpCounter.Count, Capacity: tmpCounter.Capacity}
+			}
+			result.Status.Counters = counters
+		}
+	}
+
 	return result
 }
