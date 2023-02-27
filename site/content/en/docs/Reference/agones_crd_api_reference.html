@@ -449,7 +449,7 @@ GameServerSetStatus
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#agones.dev/v1.FleetStatus">FleetStatus</a>, 
+<a href="#agones.dev/v1.FleetStatus">FleetStatus</a>,
 <a href="#agones.dev/v1.GameServerSetStatus">GameServerSetStatus</a>)
 </p>
 <p>
@@ -489,7 +489,7 @@ int64
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#agones.dev/v1.GameServerSpec">GameServerSpec</a>, 
+<a href="#agones.dev/v1.GameServerSpec">GameServerSpec</a>,
 <a href="#agones.dev/v1.GameServerStatus">GameServerStatus</a>)
 </p>
 <p>
@@ -602,7 +602,7 @@ GameServerTemplateSpec
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#agones.dev/v1.Fleet">Fleet</a>, 
+<a href="#agones.dev/v1.Fleet">Fleet</a>,
 <a href="#autoscaling.agones.dev/v1.FleetAutoscaleRequest">FleetAutoscaleRequest</a>)
 </p>
 <p>
@@ -922,7 +922,7 @@ Players is the current total player capacity and count for this GameServerSet</p
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#agones.dev/v1.GameServer">GameServer</a>, 
+<a href="#agones.dev/v1.GameServer">GameServer</a>,
 <a href="#agones.dev/v1.GameServerTemplateSpec">GameServerTemplateSpec</a>)
 </p>
 <p>
@@ -1045,7 +1045,7 @@ Eviction
 (<code>string</code> alias)</p></h3>
 <p>
 (<em>Appears on:</em>
-<a href="#allocation.agones.dev/v1.GameServerSelector">GameServerSelector</a>, 
+<a href="#allocation.agones.dev/v1.GameServerSelector">GameServerSelector</a>,
 <a href="#agones.dev/v1.GameServerStatus">GameServerStatus</a>)
 </p>
 <p>
@@ -1159,7 +1159,7 @@ Eviction
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#allocation.agones.dev/v1.GameServerAllocationStatus">GameServerAllocationStatus</a>, 
+<a href="#allocation.agones.dev/v1.GameServerAllocationStatus">GameServerAllocationStatus</a>,
 <a href="#agones.dev/v1.GameServerStatus">GameServerStatus</a>)
 </p>
 <p>
@@ -1200,7 +1200,7 @@ int32
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#agones.dev/v1.FleetSpec">FleetSpec</a>, 
+<a href="#agones.dev/v1.FleetSpec">FleetSpec</a>,
 <a href="#agones.dev/v1.GameServerSetSpec">GameServerSetSpec</a>)
 </p>
 <p>
@@ -3462,8 +3462,8 @@ PlayersSpec
 <td>
 <code>counters</code></br>
 <em>
-<a href="#agones.dev/v1.CounterSpec">
-map[string]agones.dev/agones/pkg/apis/agones/v1.CounterSpec
+<a href="#agones.dev/v1.CounterStatus">
+map[string]agones.dev/agones/pkg/apis/agones/v1.CounterStatus
 </a>
 </em>
 </td>
@@ -3476,8 +3476,8 @@ map[string]agones.dev/agones/pkg/apis/agones/v1.CounterSpec
 <td>
 <code>lists</code></br>
 <em>
-<a href="#agones.dev/v1.ListSpec">
-map[string]agones.dev/agones/pkg/apis/agones/v1.ListSpec
+<a href="#agones.dev/v1.ListStatus">
+map[string]agones.dev/agones/pkg/apis/agones/v1.ListStatus
 </a>
 </em>
 </td>
@@ -3729,14 +3729,15 @@ map[string]string
 </tr>
 </tbody>
 </table>
-<h3 id="agones.dev/v1.CounterSpec">CounterSpec
+<h3 id="agones.dev/v1.CounterStatus">CounterStatus
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#agones.dev/v1.GameServerSpec">GameServerSpec</a>)
+<a href="#agones.dev/v1.GameServerSpec">GameServerSpec</a>, 
+<a href="#agones.dev/v1.GameServerStatus">GameServerStatus</a>)
 </p>
 <p>
-<p>CounterSpec tracks if counter specified (for giving error message if feature gate not set)</p>
+<p>CounterStatus stores the current counter values</p>
 </p>
 <table>
 <thead>
@@ -4346,8 +4347,8 @@ PlayersSpec
 <td>
 <code>counters</code></br>
 <em>
-<a href="#agones.dev/v1.CounterSpec">
-map[string]agones.dev/agones/pkg/apis/agones/v1.CounterSpec
+<a href="#agones.dev/v1.CounterStatus">
+map[string]agones.dev/agones/pkg/apis/agones/v1.CounterStatus
 </a>
 </em>
 </td>
@@ -4360,8 +4361,8 @@ map[string]agones.dev/agones/pkg/apis/agones/v1.CounterSpec
 <td>
 <code>lists</code></br>
 <em>
-<a href="#agones.dev/v1.ListSpec">
-map[string]agones.dev/agones/pkg/apis/agones/v1.ListSpec
+<a href="#agones.dev/v1.ListStatus">
+map[string]agones.dev/agones/pkg/apis/agones/v1.ListStatus
 </a>
 </em>
 </td>
@@ -4481,6 +4482,33 @@ PlayerStatus
 <em>(Optional)</em>
 <p>[Stage:Alpha]
 [FeatureFlag:PlayerTracking]</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>counters</code></br>
+<em>
+<a href="#agones.dev/v1.CounterStatus">
+map[string]agones.dev/agones/pkg/apis/agones/v1.CounterStatus
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>(Alpha, CountsAndLists feature flag) Counters and Lists provides the configuration for generic tracking features.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>lists</code></br>
+<em>
+<a href="#agones.dev/v1.ListStatus">
+map[string]agones.dev/agones/pkg/apis/agones/v1.ListStatus
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
 </td>
 </tr>
 <tr>
@@ -4678,8 +4706,8 @@ PlayersSpec
 <td>
 <code>counters</code></br>
 <em>
-<a href="#agones.dev/v1.CounterSpec">
-map[string]agones.dev/agones/pkg/apis/agones/v1.CounterSpec
+<a href="#agones.dev/v1.CounterStatus">
+map[string]agones.dev/agones/pkg/apis/agones/v1.CounterStatus
 </a>
 </em>
 </td>
@@ -4692,8 +4720,8 @@ map[string]agones.dev/agones/pkg/apis/agones/v1.CounterSpec
 <td>
 <code>lists</code></br>
 <em>
-<a href="#agones.dev/v1.ListSpec">
-map[string]agones.dev/agones/pkg/apis/agones/v1.ListSpec
+<a href="#agones.dev/v1.ListStatus">
+map[string]agones.dev/agones/pkg/apis/agones/v1.ListStatus
 </a>
 </em>
 </td>
@@ -4782,14 +4810,15 @@ int32
 </tr>
 </tbody>
 </table>
-<h3 id="agones.dev/v1.ListSpec">ListSpec
+<h3 id="agones.dev/v1.ListStatus">ListStatus
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#agones.dev/v1.GameServerSpec">GameServerSpec</a>)
+<a href="#agones.dev/v1.GameServerSpec">GameServerSpec</a>, 
+<a href="#agones.dev/v1.GameServerStatus">GameServerStatus</a>)
 </p>
 <p>
-<p>ListSpec tracks the list capacity</p>
+<p>ListStatus stores the current list values</p>
 </p>
 <table>
 <thead>
