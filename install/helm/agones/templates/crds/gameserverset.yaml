@@ -13,7 +13,6 @@
 # limitations under the License.
 
 {{- if .Values.agones.crds.install }}
-{{- $featureGates := include "agones.featureGates" . | fromYaml }}
 
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
@@ -92,7 +91,7 @@ spec:
                     - Packed
                     - Distributed
                 template:
-                  {{- $data := dict "metadata" true "podPreserveUnknownFields" .Values.gameservers.podPreserveUnknownFields "featureSafeToEvict" $featureGates.SafeToEvict "featureCountsAndLists" $featureGates.CountsAndLists}}
+                  {{- $data := dict "metadata" true "podPreserveUnknownFields" .Values.gameservers.podPreserveUnknownFields }}
                   {{- include "gameserver.schema" $data | indent 18 }}
             status:
               description: 'GameServerSetStatus is the status of a GameServerSet. More info:
@@ -124,7 +123,6 @@ spec:
                     capacity:
                       type: integer
                       minimum: 0
-{{- if $featureGates.CountsAndLists }}
                 counters:
                   type: object
                   title: Map of player, room, session, etc. counters
@@ -161,7 +159,6 @@ spec:
                         items: # name of the item (player1, session1, room1, etc.)
                           type: string
                         default: []
-{{- end }}
       subresources:
         # status enables the status subresource.
         status: { }

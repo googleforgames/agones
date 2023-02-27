@@ -426,7 +426,7 @@ func TestGameServerApplyDefaults(t *testing.T) {
 				assert.Nil(t, test.gameServer.Status.Players)
 			}
 			if len(test.expected.evictionSafeSpec) > 0 {
-			assert.Equal(t, test.expected.evictionSafeSpec, spec.Eviction.Safe)
+				assert.Equal(t, test.expected.evictionSafeSpec, spec.Eviction.Safe)
 			} else {
 				assert.Nil(t, spec.Eviction)
 			}

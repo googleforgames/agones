@@ -193,8 +193,6 @@ properties:
               items: # name of the item (player1, session1, room1, etc.)
                 type: string
               default: []
-{{- end }}
-{{- if .featureSafeToEvict }}
       eviction:
         type: object
         title: Eviction tolerance of the game server
