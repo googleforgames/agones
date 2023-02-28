@@ -17,10 +17,10 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: agones-allocator
-  namespace: agones-system
+  namespace: default
   labels:
     app: agones
-    chart: agones-1.30.0-dev
+    chart: agones-1.30.0
     release: agones-manual
     heritage: Helm
 ---
@@ -42,10 +42,10 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: agones-controller
-  namespace: agones-system
+  namespace: default
   labels:
     app: agones
-    chart: agones-1.30.0-dev
+    chart: agones-1.30.0
     release: agones-manual
     heritage: Helm
 ---
@@ -70,7 +70,7 @@ metadata:
   namespace: default
   labels:
     app: agones
-    chart: agones-1.30.0-dev
+    chart: agones-1.30.0
     release: agones-manual
     heritage: Helm
 ---
@@ -79,10 +79,10 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: agones-manual-cert
-  namespace: agones-system
+  namespace: default
   labels:
     app: agones
-    chart: "agones-1.30.0-dev"
+    chart: "agones-1.30.0"
     release: "agones-manual"
     heritage: "Helm"
 type: Opaque
@@ -96,10 +96,10 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: allocator-client-ca
-  namespace: agones-system
+  namespace: default
   labels:
     app: agones
-    chart: "agones-1.30.0-dev"
+    chart: "agones-1.30.0"
     release: "agones-manual"
     heritage: "Helm"
 data:
@@ -112,10 +112,10 @@ kind: Secret
 type: kubernetes.io/tls
 metadata:
   name: allocator-tls
-  namespace: agones-system
+  namespace: default
   labels:
     app: agones
-    chart: "agones-1.30.0-dev"
+    chart: "agones-1.30.0"
     release: "agones-manual"
     heritage: "Helm"
 data:
@@ -128,10 +128,10 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: allocator-tls-ca
-  namespace: agones-system
+  namespace: default
   labels:
     app: agones
-    chart: "agones-1.30.0-dev"
+    chart: "agones-1.30.0"
     release: "agones-manual"
     heritage: "Helm"
 data:
@@ -161,7 +161,7 @@ metadata:
   labels:
     component: crd
     app: agones
-    chart: agones-1.30.0-dev
+    chart: agones-1.30.0
     release: agones-manual
     heritage: Helm
 spec:
@@ -5269,7 +5269,7 @@ metadata:
   labels:
     component: crd
     app: agones
-    chart: agones-1.30.0-dev
+    chart: agones-1.30.0
     release: agones-manual
     heritage: Helm
 spec:
@@ -5415,7 +5415,7 @@ metadata:
   labels:
     component: crd
     app: agones
-    chart: agones-1.30.0-dev
+    chart: agones-1.30.0
     release: agones-manual
     heritage: Helm
 spec:
@@ -10367,7 +10367,7 @@ metadata:
   labels:
     component: crd
     app: agones
-    chart: agones-1.30.0-dev
+    chart: agones-1.30.0
     release: agones-manual
     heritage: Helm
   name: gameserverallocationpolicies.multicluster.agones.dev
@@ -10446,7 +10446,7 @@ metadata:
   labels:
     component: crd
     app: agones
-    chart: agones-1.30.0-dev
+    chart: agones-1.30.0
     release: agones-manual
     heritage: Helm
 spec:
@@ -15523,7 +15523,7 @@ metadata:
   name: agones-allocator
   labels:
     app: agones
-    chart: agones-1.30.0-dev
+    chart: agones-1.30.0
     release: agones-manual
     heritage: Helm
 rules:
@@ -15553,7 +15553,7 @@ metadata:
   name: agones-controller
   labels:
     app: agones
-    chart: agones-1.30.0-dev
+    chart: agones-1.30.0
     release: agones-manual
     heritage: Helm
 rules:
@@ -15604,7 +15604,7 @@ metadata:
   name: agones-sdk
   labels:
     app: agones
-    chart: agones-1.30.0-dev
+    chart: agones-1.30.0
     release: agones-manual
     heritage: Helm
 rules:
@@ -15623,13 +15623,13 @@ metadata:
   name: agones-allocator
   labels:
     app: agones
-    chart: agones-1.30.0-dev
+    chart: agones-1.30.0
     release: agones-manual
     heritage: Helm
 subjects:
 - kind: ServiceAccount
   name: agones-allocator
-  namespace: agones-system
+  namespace: default
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -15642,12 +15642,12 @@ metadata:
   name: agones-controller-access
   labels:
     app: agones
-    chart: agones-1.30.0-dev
+    chart: agones-1.30.0
     release: agones-manual
     heritage: Helm
 subjects:
 - kind: User
-  name: system:serviceaccount:agones-system:agones-controller
+  name: system:serviceaccount:default:agones-controller
   apiGroup: rbac.authorization.k8s.io
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -15669,7 +15669,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: agones-controller
-    namespace: agones-system
+    namespace: default
 ---
 # Source: agones/templates/serviceaccounts/controller.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -15684,7 +15684,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: agones-controller
-    namespace: agones-system
+    namespace: default
 ---
 # Source: agones/templates/serviceaccounts/sdk.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -15694,7 +15694,7 @@ metadata:
   namespace: default
   labels:
     app: agones
-    chart: agones-1.30.0-dev
+    chart: agones-1.30.0
     release: agones-manual
     heritage: Helm
 subjects:
@@ -15711,11 +15711,11 @@ apiVersion: v1
 kind: Service
 metadata:
   name: agones-ping-http-service
-  namespace: agones-system
+  namespace: default
   labels:
     component: ping
     app: agones
-    chart: agones-1.30.0-dev
+    chart: agones-1.30.0
     release: agones-manual
     heritage: Helm
 spec:
@@ -15733,11 +15733,11 @@ apiVersion: v1
 kind: Service
 metadata:
   name: agones-ping-udp-service
-  namespace: agones-system
+  namespace: default
   labels:
     component: ping
     app: agones
-    chart: agones-1.30.0-dev
+    chart: agones-1.30.0
     release: agones-manual
     heritage: Helm
 spec:
@@ -15769,11 +15769,11 @@ apiVersion: v1
 kind: Service
 metadata:
   name: agones-controller-service
-  namespace: agones-system
+  namespace: default
   labels:
     agones.dev/role: controller
     app: agones
-    chart: agones-1.30.0-dev
+    chart: agones-1.30.0
     release: agones-manual
     heritage: Helm
 spec:
@@ -15806,11 +15806,11 @@ apiVersion: v1
 kind: Service
 metadata:
   name: agones-allocator
-  namespace: agones-system
+  namespace: default
   labels:
     component: allocator
     app: agones
-    chart: agones-1.30.0-dev
+    chart: agones-1.30.0
     release: agones-manual
     heritage: Helm
 spec:
@@ -15828,11 +15828,11 @@ apiVersion: v1
 kind: Service
 metadata:
   name: agones-allocator-metrics-service
-  namespace: agones-system
+  namespace: default
   labels:
     multicluster.agones.dev/role: allocator
     app: agones
-    chart: agones-1.30.0-dev
+    chart: agones-1.30.0
     release: agones-manual
     heritage: Helm
 spec:
@@ -15862,11 +15862,11 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: agones-controller
-  namespace: agones-system
+  namespace: default
   labels:
     component: controller
     app: agones
-    chart: agones-1.30.0-dev
+    chart: agones-1.30.0
     release: agones-manual
     heritage: Helm
 spec:
@@ -15909,7 +15909,7 @@ spec:
       serviceAccountName: agones-controller
       containers:
       - name: agones-controller
-        image: "us-docker.pkg.dev/agones-images/release/agones-controller:1.30.0-dev"
+        image: "us-docker.pkg.dev/agones-images/release/agones-controller:1.30.0"
         imagePullPolicy: IfNotPresent
         env:
         # minimum port that can be exposed to GameServer traffic
@@ -15919,7 +15919,7 @@ spec:
         - name: MAX_PORT
           value: "8000"
         - name: SIDECAR_IMAGE # overwrite the GameServer sidecar image that is used
-          value: "us-docker.pkg.dev/agones-images/release/agones-sdk:1.30.0-dev"
+          value: "us-docker.pkg.dev/agones-images/release/agones-sdk:1.30.0"
         - name: ALWAYS_PULL_SIDECAR # set the sidecar imagePullPolicy to Always
           value: "false"
         - name: SIDECAR_CPU_REQUEST
@@ -16018,11 +16018,11 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: agones-ping
-  namespace: agones-system
+  namespace: default
   labels:
     component: ping
     app: agones
-    chart: agones-1.30.0-dev
+    chart: agones-1.30.0
     release: agones-manual
     heritage: Helm
 spec:
@@ -16057,7 +16057,7 @@ spec:
       priorityClassName: agones-system
       containers:
         - name: agones-ping
-          image: "us-docker.pkg.dev/agones-images/release/agones-ping:1.30.0-dev"
+          image: "us-docker.pkg.dev/agones-images/release/agones-ping:1.30.0"
           imagePullPolicy: IfNotPresent
           livenessProbe:
             httpGet:
@@ -16081,7 +16081,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: agones-allocator
-  namespace: agones-system
+  namespace: default
   labels:
     multicluster.agones.dev/role: allocator
     app: agones
@@ -16130,7 +16130,7 @@ spec:
           secretName: allocator-client-ca
       containers:
       - name: agones-allocator
-        image: "us-docker.pkg.dev/agones-images/release/agones-allocator:1.30.0-dev"
+        image: "us-docker.pkg.dev/agones-images/release/agones-allocator:1.30.0"
         imagePullPolicy: IfNotPresent
         livenessProbe:
           httpGet:
@@ -16206,7 +16206,7 @@ metadata:
   labels:
     component: controller
     app: agones
-    chart: agones-1.30.0-dev
+    chart: agones-1.30.0
     release: agones-manual
     heritage: Helm
 spec:
@@ -16215,7 +16215,7 @@ spec:
   versionPriority: 15
   service:
     name: agones-controller-service
-    namespace: agones-system
+    namespace: default
   caBundle: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUVjVENDQTFtZ0F3SUJBZ0lVRm5DOUsxT1kzRnFNaWhqN3RWbXh5R3hwUVdzd0RRWUpLb1pJaHZjTkFRRUwKQlFBd2dhb3hDekFKQmdOVkJBWVRBbFZUTVJNd0VRWURWUVFJREFwVGIyMWxMVk4wWVhSbE1ROHdEUVlEVlFRSwpEQVpCWjI5dVpYTXhEekFOQmdOVkJBc01Ca0ZuYjI1bGN6RTBNRElHQTFVRUF3d3JZV2R2Ym1WekxXTnZiblJ5CmIyeHNaWEl0YzJWeWRtbGpaUzVoWjI5dVpYTXRjM2x6ZEdWdExuTjJZekV1TUN3R0NTcUdTSWIzRFFFSkFSWWYKWVdkdmJtVnpMV1JwYzJOMWMzTkFaMjl2WjJ4bFozSnZkWEJ6TG1OdmJUQWVGdzB5TVRBMk16QXhPVFUyTWpGYQpGdzB6TVRBMk1qZ3hPVFUyTWpGYU1JR3FNUXN3Q1FZRFZRUUdFd0pWVXpFVE1CRUdBMVVFQ0F3S1UyOXRaUzFUCmRHRjBaVEVQTUEwR0ExVUVDZ3dHUVdkdmJtVnpNUTh3RFFZRFZRUUxEQVpCWjI5dVpYTXhOREF5QmdOVkJBTU0KSzJGbmIyNWxjeTFqYjI1MGNtOXNiR1Z5TFhObGNuWnBZMlV1WVdkdmJtVnpMWE41YzNSbGJTNXpkbU14TGpBcwpCZ2txaGtpRzl3MEJDUUVXSDJGbmIyNWxjeTFrYVhOamRYTnpRR2R2YjJkc1pXZHliM1Z3Y3k1amIyMHdnZ0VpCk1BMEdDU3FHU0liM0RRRUJBUVVBQTRJQkR3QXdnZ0VLQW9JQkFRQ2dka0xPS0NINThLSkJpdEJqeVlyTDArRTkKdEl0TFhGVGdxQU9TMGdBQitSVXNZMGhicmVWRHd0SExKYXBnMG55Ni9UYTcvMEc1Wm9kaGR4RlFtS2JWMUxmWQpmZGR0Qm4vOGd4Wi9JQ2dRblU3N3RqY1pLV3JxaW4vZ3h3ZUJua3hjWEtrT3Z1MldoRHdZZVFLN3ZHNEljOGhzClZHb1hTZWo4US94d2M4a0FCRG04YVRSU1RUYmsyWi9kem9mUmswU2xrc1BrVWV5b0NwRGVGbERqY0tTcDAzWnUKV2dBUTNpVy83c1AxVFV5WEtnblZ5M2ZpWm1RQUZreEtOQkxVV0gvVEJJeWtMdUVCMmRYYUd0L0VpZzQ4SWpVOQpMYUxyM3JWSW1Dcmt6dlB5V3VEZTd6MmVKdDE3WEhoTFVHcnE4YTFUSFp3d1NSWUZRc29tQ09ORVNBSTdBZ01CCkFBR2pnWXd3Z1lrd0hRWURWUjBPQkJZRUZMa3FUUWNMQloyMUlWc3BGbkNiaS9TbGtUbzlNQjhHQTFVZEl3UVkKTUJhQUZMa3FUUWNMQloyMUlWc3BGbkNiaS9TbGtUbzlNQThHQTFVZEV3RUIvd1FGTUFNQkFmOHdOZ1lEVlIwUgpCQzh3TFlJcllXZHZibVZ6TFdOdmJuUnliMnhzWlhJdGMyVnlkbWxqWlM1aFoyOXVaWE10YzNsemRHVnRMbk4yCll6QU5CZ2txaGtpRzl3MEJBUXNGQUFPQ0FRRUFWQTUxU3dNcEhZY20zUnRuc2I5MkgwUTZYT1ZndEJzSWRaY1QKbFBuSmFBSGdybEt2SnhiMU0rdTdQYllDZkZOTWlUTStyWGZ5cWtJRXY3VU1aN0dWeS9CYm9zTk1sb2M0UHJjaAo3RnVlai9zVnArcW1GT1c0VzlPVTFwcytqWm5vcHJ4Z3R1OVgzbmpBZjZiWWVqQWMzaVo0Q0xpem8vMDd2Qk94CnA5L3J4R0FjSVVjQW04Y3hXa01kaEduNnZOYkNFcXJoVTRJdnZSYlMwVnlrckhPY3RGM25raC9GbnRHQU80RDEKUEgrUThSQXBNK2xBeGtXcFIvNXlHTXdLM05WcS9kc2JaclQ5RHhId0hUU2tqL3JXZVRrWmxIN042MHpZL3JqbwpNUjBJNEtOWHl3WElTcGdNbE93dkxPdGY2aUNYeHJDNyt1RjdyQmxCei9tSUNxYnR0dz09Ci0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K
   version: v1
 ---
@@ -16272,7 +16272,7 @@ metadata:
   labels:
     component: controller
     app: agones
-    chart: agones-1.30.0-dev
+    chart: agones-1.30.0
     release: agones-manual
     heritage: Helm
 webhooks:
@@ -16284,7 +16284,7 @@ webhooks:
     clientConfig:
       service:
         name: agones-controller-service
-        namespace: agones-system
+        namespace: default
         path: /mutate
       caBundle: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUVjVENDQTFtZ0F3SUJBZ0lVRm5DOUsxT1kzRnFNaWhqN3RWbXh5R3hwUVdzd0RRWUpLb1pJaHZjTkFRRUwKQlFBd2dhb3hDekFKQmdOVkJBWVRBbFZUTVJNd0VRWURWUVFJREFwVGIyMWxMVk4wWVhSbE1ROHdEUVlEVlFRSwpEQVpCWjI5dVpYTXhEekFOQmdOVkJBc01Ca0ZuYjI1bGN6RTBNRElHQTFVRUF3d3JZV2R2Ym1WekxXTnZiblJ5CmIyeHNaWEl0YzJWeWRtbGpaUzVoWjI5dVpYTXRjM2x6ZEdWdExuTjJZekV1TUN3R0NTcUdTSWIzRFFFSkFSWWYKWVdkdmJtVnpMV1JwYzJOMWMzTkFaMjl2WjJ4bFozSnZkWEJ6TG1OdmJUQWVGdzB5TVRBMk16QXhPVFUyTWpGYQpGdzB6TVRBMk1qZ3hPVFUyTWpGYU1JR3FNUXN3Q1FZRFZRUUdFd0pWVXpFVE1CRUdBMVVFQ0F3S1UyOXRaUzFUCmRHRjBaVEVQTUEwR0ExVUVDZ3dHUVdkdmJtVnpNUTh3RFFZRFZRUUxEQVpCWjI5dVpYTXhOREF5QmdOVkJBTU0KSzJGbmIyNWxjeTFqYjI1MGNtOXNiR1Z5TFhObGNuWnBZMlV1WVdkdmJtVnpMWE41YzNSbGJTNXpkbU14TGpBcwpCZ2txaGtpRzl3MEJDUUVXSDJGbmIyNWxjeTFrYVhOamRYTnpRR2R2YjJkc1pXZHliM1Z3Y3k1amIyMHdnZ0VpCk1BMEdDU3FHU0liM0RRRUJBUVVBQTRJQkR3QXdnZ0VLQW9JQkFRQ2dka0xPS0NINThLSkJpdEJqeVlyTDArRTkKdEl0TFhGVGdxQU9TMGdBQitSVXNZMGhicmVWRHd0SExKYXBnMG55Ni9UYTcvMEc1Wm9kaGR4RlFtS2JWMUxmWQpmZGR0Qm4vOGd4Wi9JQ2dRblU3N3RqY1pLV3JxaW4vZ3h3ZUJua3hjWEtrT3Z1MldoRHdZZVFLN3ZHNEljOGhzClZHb1hTZWo4US94d2M4a0FCRG04YVRSU1RUYmsyWi9kem9mUmswU2xrc1BrVWV5b0NwRGVGbERqY0tTcDAzWnUKV2dBUTNpVy83c1AxVFV5WEtnblZ5M2ZpWm1RQUZreEtOQkxVV0gvVEJJeWtMdUVCMmRYYUd0L0VpZzQ4SWpVOQpMYUxyM3JWSW1Dcmt6dlB5V3VEZTd6MmVKdDE3WEhoTFVHcnE4YTFUSFp3d1NSWUZRc29tQ09ORVNBSTdBZ01CCkFBR2pnWXd3Z1lrd0hRWURWUjBPQkJZRUZMa3FUUWNMQloyMUlWc3BGbkNiaS9TbGtUbzlNQjhHQTFVZEl3UVkKTUJhQUZMa3FUUWNMQloyMUlWc3BGbkNiaS9TbGtUbzlNQThHQTFVZEV3RUIvd1FGTUFNQkFmOHdOZ1lEVlIwUgpCQzh3TFlJcllXZHZibVZ6TFdOdmJuUnliMnhzWlhJdGMyVnlkbWxqWlM1aFoyOXVaWE10YzNsemRHVnRMbk4yCll6QU5CZ2txaGtpRzl3MEJBUXNGQUFPQ0FRRUFWQTUxU3dNcEhZY20zUnRuc2I5MkgwUTZYT1ZndEJzSWRaY1QKbFBuSmFBSGdybEt2SnhiMU0rdTdQYllDZkZOTWlUTStyWGZ5cWtJRXY3VU1aN0dWeS9CYm9zTk1sb2M0UHJjaAo3RnVlai9zVnArcW1GT1c0VzlPVTFwcytqWm5vcHJ4Z3R1OVgzbmpBZjZiWWVqQWMzaVo0Q0xpem8vMDd2Qk94CnA5L3J4R0FjSVVjQW04Y3hXa01kaEduNnZOYkNFcXJoVTRJdnZSYlMwVnlrckhPY3RGM25raC9GbnRHQU80RDEKUEgrUThSQXBNK2xBeGtXcFIvNXlHTXdLM05WcS9kc2JaclQ5RHhId0hUU2tqL3JXZVRrWmxIN042MHpZL3JqbwpNUjBJNEtOWHl3WElTcGdNbE93dkxPdGY2aUNYeHJDNyt1RjdyQmxCei9tSUNxYnR0dz09Ci0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K
     rules:
@@ -16324,7 +16324,7 @@ metadata:
   labels:
     component: controller
     app: agones
-    chart: agones-1.30.0-dev
+    chart: agones-1.30.0
     release: agones-manual
     heritage: Helm
 webhooks:
@@ -16336,7 +16336,7 @@ webhooks:
     clientConfig:
       service:
         name: agones-controller-service
-        namespace: agones-system
+        namespace: default
         path: /validate
       caBundle: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUVjVENDQTFtZ0F3SUJBZ0lVRm5DOUsxT1kzRnFNaWhqN3RWbXh5R3hwUVdzd0RRWUpLb1pJaHZjTkFRRUwKQlFBd2dhb3hDekFKQmdOVkJBWVRBbFZUTVJNd0VRWURWUVFJREFwVGIyMWxMVk4wWVhSbE1ROHdEUVlEVlFRSwpEQVpCWjI5dVpYTXhEekFOQmdOVkJBc01Ca0ZuYjI1bGN6RTBNRElHQTFVRUF3d3JZV2R2Ym1WekxXTnZiblJ5CmIyeHNaWEl0YzJWeWRtbGpaUzVoWjI5dVpYTXRjM2x6ZEdWdExuTjJZekV1TUN3R0NTcUdTSWIzRFFFSkFSWWYKWVdkdmJtVnpMV1JwYzJOMWMzTkFaMjl2WjJ4bFozSnZkWEJ6TG1OdmJUQWVGdzB5TVRBMk16QXhPVFUyTWpGYQpGdzB6TVRBMk1qZ3hPVFUyTWpGYU1JR3FNUXN3Q1FZRFZRUUdFd0pWVXpFVE1CRUdBMVVFQ0F3S1UyOXRaUzFUCmRHRjBaVEVQTUEwR0ExVUVDZ3dHUVdkdmJtVnpNUTh3RFFZRFZRUUxEQVpCWjI5dVpYTXhOREF5QmdOVkJBTU0KSzJGbmIyNWxjeTFqYjI1MGNtOXNiR1Z5TFhObGNuWnBZMlV1WVdkdmJtVnpMWE41YzNSbGJTNXpkbU14TGpBcwpCZ2txaGtpRzl3MEJDUUVXSDJGbmIyNWxjeTFrYVhOamRYTnpRR2R2YjJkc1pXZHliM1Z3Y3k1amIyMHdnZ0VpCk1BMEdDU3FHU0liM0RRRUJBUVVBQTRJQkR3QXdnZ0VLQW9JQkFRQ2dka0xPS0NINThLSkJpdEJqeVlyTDArRTkKdEl0TFhGVGdxQU9TMGdBQitSVXNZMGhicmVWRHd0SExKYXBnMG55Ni9UYTcvMEc1Wm9kaGR4RlFtS2JWMUxmWQpmZGR0Qm4vOGd4Wi9JQ2dRblU3N3RqY1pLV3JxaW4vZ3h3ZUJua3hjWEtrT3Z1MldoRHdZZVFLN3ZHNEljOGhzClZHb1hTZWo4US94d2M4a0FCRG04YVRSU1RUYmsyWi9kem9mUmswU2xrc1BrVWV5b0NwRGVGbERqY0tTcDAzWnUKV2dBUTNpVy83c1AxVFV5WEtnblZ5M2ZpWm1RQUZreEtOQkxVV0gvVEJJeWtMdUVCMmRYYUd0L0VpZzQ4SWpVOQpMYUxyM3JWSW1Dcmt6dlB5V3VEZTd6MmVKdDE3WEhoTFVHcnE4YTFUSFp3d1NSWUZRc29tQ09ORVNBSTdBZ01CCkFBR2pnWXd3Z1lrd0hRWURWUjBPQkJZRUZMa3FUUWNMQloyMUlWc3BGbkNiaS9TbGtUbzlNQjhHQTFVZEl3UVkKTUJhQUZMa3FUUWNMQloyMUlWc3BGbkNiaS9TbGtUbzlNQThHQTFVZEV3RUIvd1FGTUFNQkFmOHdOZ1lEVlIwUgpCQzh3TFlJcllXZHZibVZ6TFdOdmJuUnliMnhzWlhJdGMyVnlkbWxqWlM1aFoyOXVaWE10YzNsemRHVnRMbk4yCll6QU5CZ2txaGtpRzl3MEJBUXNGQUFPQ0FRRUFWQTUxU3dNcEhZY20zUnRuc2I5MkgwUTZYT1ZndEJzSWRaY1QKbFBuSmFBSGdybEt2SnhiMU0rdTdQYllDZkZOTWlUTStyWGZ5cWtJRXY3VU1aN0dWeS9CYm9zTk1sb2M0UHJjaAo3RnVlai9zVnArcW1GT1c0VzlPVTFwcytqWm5vcHJ4Z3R1OVgzbmpBZjZiWWVqQWMzaVo0Q0xpem8vMDd2Qk94CnA5L3J4R0FjSVVjQW04Y3hXa01kaEduNnZOYkNFcXJoVTRJdnZSYlMwVnlrckhPY3RGM25raC9GbnRHQU80RDEKUEgrUThSQXBNK2xBeGtXcFIvNXlHTXdLM05WcS9kc2JaclQ5RHhId0hUU2tqL3JXZVRrWmxIN042MHpZL3JqbwpNUjBJNEtOWHl3WElTcGdNbE93dkxPdGY2aUNYeHJDNyt1RjdyQmxCei9tSUNxYnR0dz09Ci0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K
     rules:

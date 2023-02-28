@@ -58,7 +58,6 @@ printf "\n" >> $TITLE
 doc_version=$(grep 'feature publishVersion=' $FILE )
 echo $doc_version
 publish='{{% feature publishVersion="'$VERSION'" %}}'
-expiry='{{% feature expiryVersion="'$VERSION'" %}}'
 
 #Get previous expiry version tag
 sed '/\ expiryVersion="'$VERSION'"/,/%\ \/feature/!d;/%\ \/feature/q' $FILE > $EXPIRY_DOC
