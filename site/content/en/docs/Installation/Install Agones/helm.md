@@ -219,13 +219,6 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `gameservers.podPreserveUnknownFields`                   | Disable [field pruning][pruning] and schema validation on the Pod template for a [GameServer][gameserver] definition                                                                                                    | `false`                            |
 | `helm.installTests`                                      | Add an ability to run `helm test agones` to verify the installation                                                                                                                                                     | `false`                            |
 | `agones.image.registry`                                  | Global image registry for all the Agones system images                                                                                                                                                                  | `us-docker.pkg.dev/agones-images/release`
-
-{{% feature publishVersion="1.30.0" %}}
-**New Configuration Features:**
-
-| Parameter                             | Description                                                                                                                                                                                                                           | Default |
-|---------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------|
-|                                                          |                                                                                                                                                                                                                                                            |
 | `agones.extensions.http.port`                            | Port to use for liveness probe service and metrics                                                                                                                                                                      | `8080`                             |
 | `agones.extensions.healthCheck.initialDelaySeconds`      | Initial delay before performing the first probe (in seconds)                                                                                                                                                            | `3`                                |
 | `agones.extensions.healthCheck.periodSeconds`            | Seconds between every liveness probe (in seconds)                                                                                                                                                                       | `3`                                |
@@ -259,6 +252,13 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.extensions.pdb.minAvailable`      | Description of the number of pods from that set that must still be available after the eviction, even in the absence of the evicted pod. Can be either an absolute number or a percentage. Mutually Exclusive with maxUnavailable   | `1`     |
 | `agones.extensions.pdb.maxUnavailable`    | Description of the number of pods from that set that can be unavailable after the eviction. It can be either an absolute number or a percentage Mutually Exclusive with `minAvailable`                                                | \`\`    |
 | `agones.extensions.replicas`                              | The number of replicas to run in the deployment                                                        | `2`                                |
+
+{{% feature publishVersion="1.31.0" %}}
+**New Configuration Features:**
+
+| Parameter                             | Description                                                                                                                                                                                                                           | Default |
+|---------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------|
+|                                                          |                                                                                                                                                                                                                                                            |
 {{% /feature %}}
 
 [toleration]: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/

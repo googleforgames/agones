@@ -1,5 +1,67 @@
 # Changelog
 
+## [v1.30.0](https://github.com/googleforgames/agones/tree/v1.30.0) (2023-03-01)
+
+[Full Changelog](https://github.com/googleforgames/agones/compare/v1.29.0...v1.30.0)
+
+**Breaking changes:**
+
+- Add error callback to testSDKClient [\#2964](https://github.com/googleforgames/agones/pull/2964) ([steven-supersolid](https://github.com/steven-supersolid))
+
+**Implemented enhancements:**
+
+- TypeScript types for Node SDK [\#2937](https://github.com/googleforgames/agones/issues/2937)
+- Graduate `SafeToEvict` to Beta [\#2931](https://github.com/googleforgames/agones/issues/2931)
+- Upgrade windows node image on GKE [\#2582](https://github.com/googleforgames/agones/issues/2582)
+- Player Tracking for each GameServer [\#1033](https://github.com/googleforgames/agones/issues/1033)
+- Add extensions status dash and dash name change [\#3000](https://github.com/googleforgames/agones/pull/3000) ([chiayi](https://github.com/chiayi))
+- Add variable to go-client request dashboard [\#2998](https://github.com/googleforgames/agones/pull/2998) ([chiayi](https://github.com/chiayi))
+- Add more time and logging to extensions test [\#2996](https://github.com/googleforgames/agones/pull/2996) ([chiayi](https://github.com/chiayi))
+- Add Extensions Resource Dashboard [\#2993](https://github.com/googleforgames/agones/pull/2993) ([chiayi](https://github.com/chiayi))
+- Add integration guide for Google Cloud Managed Service for Prometheus [\#2990](https://github.com/googleforgames/agones/pull/2990) ([zmerlynn](https://github.com/zmerlynn))
+- Added back metrics support for extensions [\#2988](https://github.com/googleforgames/agones/pull/2988) ([chiayi](https://github.com/chiayi))
+- Adds default values for Counters and Lists fields [\#2983](https://github.com/googleforgames/agones/pull/2983) ([igooch](https://github.com/igooch))
+- Kubernetes Update template, Release template, and site content change for multiple k8s version support [\#2980](https://github.com/googleforgames/agones/pull/2980) ([gongmax](https://github.com/gongmax))
+- CRDs for AllocationOverflow [\#2979](https://github.com/googleforgames/agones/pull/2979) ([markmandel](https://github.com/markmandel))
+- More "packed" behavior when reducing GameServerSet replicas. [\#2974](https://github.com/googleforgames/agones/pull/2974) ([castaneai](https://github.com/castaneai))
+- Create e2e test clusters in different regions to mitigate quota limit issue [\#2969](https://github.com/googleforgames/agones/pull/2969) ([gongmax](https://github.com/gongmax))
+- Run e2e tests on multiple clusters with different versions [\#2968](https://github.com/googleforgames/agones/pull/2968) ([gongmax](https://github.com/gongmax))
+- Pre-Alpha Feature Gate: FleetAllocationOverflow [\#2967](https://github.com/googleforgames/agones/pull/2967) ([markmandel](https://github.com/markmandel))
+- Updates counters lists schema status CRDs for gameservers fleets [\#2965](https://github.com/googleforgames/agones/pull/2965) ([igooch](https://github.com/igooch))
+- Create e2e test clusters with multiple k8s versions [\#2962](https://github.com/googleforgames/agones/pull/2962) ([gongmax](https://github.com/gongmax))
+- Add e2e test for Extensions [\#2947](https://github.com/googleforgames/agones/pull/2947) ([chiayi](https://github.com/chiayi))
+- Arbitrary Counts and Lists Feature/CRD [\#2946](https://github.com/googleforgames/agones/pull/2946) ([igooch](https://github.com/igooch))
+- Add types for nodejs sdk [\#2940](https://github.com/googleforgames/agones/pull/2940) ([vasily-polonsky](https://github.com/vasily-polonsky))
+- Use GCS as the Terraform state backend [\#2938](https://github.com/googleforgames/agones/pull/2938) ([gongmax](https://github.com/gongmax))
+- Disable consul locking if consul is not present [\#2934](https://github.com/googleforgames/agones/pull/2934) ([zmerlynn](https://github.com/zmerlynn))
+- Allocation Endpoint: Fix Makefile to correctly call docker build  [\#2933](https://github.com/googleforgames/agones/pull/2933) ([abmarcum](https://github.com/abmarcum))
+- Added GKE Workload Identity flag to GKE Terraform modules [\#2928](https://github.com/googleforgames/agones/pull/2928) ([abmarcum](https://github.com/abmarcum))
+- Add doc for "Controlling Disruption", document `SafeToEvict` [\#2924](https://github.com/googleforgames/agones/pull/2924) ([zmerlynn](https://github.com/zmerlynn))
+- Enable SplitControllerAndExtensions for e2e testing and changed valueâ€¦ [\#2923](https://github.com/googleforgames/agones/pull/2923) ([chiayi](https://github.com/chiayi))
+- Allow 30m more to acquire consul lock [\#2922](https://github.com/googleforgames/agones/pull/2922) ([zmerlynn](https://github.com/zmerlynn))
+- Add GKE Autopilot to e2e [\#2913](https://github.com/googleforgames/agones/pull/2913) ([zmerlynn](https://github.com/zmerlynn))
+- GKE Autopilot: Add terraform module, users [\#2912](https://github.com/googleforgames/agones/pull/2912) ([zmerlynn](https://github.com/zmerlynn))
+- e2e: Use gotestsum for CI e2e runs, change e2e ARGS handling [\#2904](https://github.com/googleforgames/agones/pull/2904) ([zmerlynn](https://github.com/zmerlynn))
+- Wait on free ports on GKE Autopilot [\#2901](https://github.com/googleforgames/agones/pull/2901) ([zmerlynn](https://github.com/zmerlynn))
+- controller/extensions: Add explicit requests/limits for ephemeral storage [\#2900](https://github.com/googleforgames/agones/pull/2900) ([zmerlynn](https://github.com/zmerlynn))
+- Validate the .scheduling field in the fleet and gameserverset [\#2892](https://github.com/googleforgames/agones/pull/2892) ([zmerlynn](https://github.com/zmerlynn))
+- Trim down `agones-extensions` and add flag to `agones-controller` [\#2891](https://github.com/googleforgames/agones/pull/2891) ([chiayi](https://github.com/chiayi))
+
+**Fixed bugs:**
+
+- Unreal Engine - non-ascii characters in annotations breaks websocket. [\#2976](https://github.com/googleforgames/agones/issues/2976)
+- Node.js SDK test is flaky [\#2954](https://github.com/googleforgames/agones/issues/2954)
+- Install Agones using YAML doesn't work [\#2935](https://github.com/googleforgames/agones/issues/2935)
+- Omit namepace Helm install includes [\#2920](https://github.com/googleforgames/agones/issues/2920)
+- README.md refers to katacoda.com is now closed by Oâ€™Reilly [\#2907](https://github.com/googleforgames/agones/issues/2907)
+- The Documentation/Installation page on old releases shows an incorrect Kubernetes version [\#2279](https://github.com/googleforgames/agones/issues/2279)
+- Fix HandleWatchMessage [\#2977](https://github.com/googleforgames/agones/pull/2977) ([tvandijck](https://github.com/tvandijck))
+- Fix for `make gen-crd-client` [\#2971](https://github.com/googleforgames/agones/pull/2971) ([markmandel](https://github.com/markmandel))
+- Fix the broken example yaml [\#2956](https://github.com/googleforgames/agones/pull/2956) ([gongmax](https://github.com/gongmax))
+- Omit namespace from cluster scopped resources in helm install [\#2925](https://github.com/googleforgames/agones/pull/2925) ([mbychkowski](https://github.com/mbychkowski))
+- Adds snapshot Hugo env to separate from default env [\#2914](https://github.com/googleforgames/agones/pull/2914) ([igooch](https://github.com/igooch))
+- flaky/TestFleetRollingUpdate [\#2902](https://github.com/googleforgames/agones/pull/2902) ([markmandel](https://github.com/markmandel))
+
 ## [v1.29.0](https://github.com/googleforgames/agones/tree/v1.29.0) (2023-01-17)
 
 [Full Changelog](https://github.com/googleforgames/agones/compare/v1.29.0-rc...v1.29.0)

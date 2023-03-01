@@ -30,12 +30,10 @@ agones:
       enabled: true
 ```
 
-{{% feature publishVersion="1.30.0" %}}
 ### Google Cloud Managed Service for Prometheus
 
 [Google Cloud Managed Service for Prometheus](https://cloud.google.com/stackdriver/docs/managed-prometheus) is a fully managed multi-cloud solution for [Prometheus](https://prometheus.io/).
 If you wish to use Managed Prometheus with Agones, follow the [Google Cloud Managed Service for Prometheus installation steps](#google-cloud-managed-service-for-prometheus-installation).
-{{% /feature %}}
 
 ### Google Cloud Monitoring (formerly Stackdriver)
 
@@ -214,7 +212,6 @@ kubectl port-forward deployments/grafana 3000 -n metrics
 
 Open a web browser to [http://localhost:3000](http://localhost:3000), you should see Agones [dashboards](#grafana-dashboards) after login as admin.
 
-{{% feature publishVersion="1.30.0" %}}
 ### Google Cloud Managed Service for Prometheus installation
 
 To collect Agones metrics using [Managed Prometheus](https://cloud.google.com/stackdriver/docs/managed-prometheus):
@@ -233,7 +230,6 @@ To install Grafana using a Managed Prometheus backend:
 
 * [Install Grafana as above](#grafana-installation), but use `-f ./build/grafana-frontend.yaml` instead of `-f ./build/grafana.yaml`.
 
-{{% /feature %}}
 
 ### Google Cloud Monitoring installation
 
