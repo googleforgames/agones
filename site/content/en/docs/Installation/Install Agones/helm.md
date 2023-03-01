@@ -253,7 +253,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.extensions.pdb.maxUnavailable`    | Description of the number of pods from that set that can be unavailable after the eviction. It can be either an absolute number or a percentage Mutually Exclusive with `minAvailable`                                                | \`\`    |
 | `agones.extensions.replicas`                              | The number of replicas to run in the deployment                                                        | `2`                                |
 
-{{% feature publishVersion="1.30.0" %}}
+{{% feature publishVersion="1.31.0" %}}
 **New Configuration Features:**
 
 | Parameter                             | Description                                                                                                                                                                                                                           | Default |
