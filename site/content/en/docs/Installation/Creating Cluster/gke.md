@@ -31,7 +31,7 @@ If you prefer using your local shell, you must install the `gcloud` and `kubectl
 
 [cloud-shell]: https://cloud.google.com/shell/
 [gcloud]: https://cloud.google.com/sdk/gcloud/
-[kubectl]: https://kubernetes.io/docs/user-guide/kubectl-overview/
+[kubectl]: https://kubernetes.io/docs/reference/kubectl/
 
 #### Cloud shell
 
