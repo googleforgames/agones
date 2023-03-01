@@ -97,7 +97,6 @@ This affects the Cluster autoscaler, Allocation Scheduling, Pod Scheduling and F
 
 #### Cluster Autoscaler
 
-{{% feature publishVersion="1.30.0" %}}
 When using the "Packed" strategy, Agones will ensure that the Cluster Autoscaler doesn't attempt to evict and move `GameServer` `Pods` onto new Nodes during
 gameplay.
 
@@ -108,7 +107,6 @@ If a gameserver can tolerate [being evicted](https://kubernetes.io/docs/concepts
 want the Cluster Autoscaler to compact your cluster by evicting game servers when it would allow the Cluster
 Autoscaler to reduce the number of nodes in the cluster, [Controlling Disruption]({{< relref "controlling-disruption.md" >}}) describes
 how to choose the `.eviction` setting appropriate for your `GameServer` or `Fleet`.
-{{% /feature %}}
 
 #### Allocation Scheduling Strategy
 
