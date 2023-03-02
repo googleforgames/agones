@@ -17,7 +17,9 @@ package trace
 // ProjectPath returns the path for the project resource.
 //
 // Deprecated: Use
-//   fmt.Sprintf("projects/%s", project)
+//
+//	fmt.Sprintf("projects/%s", project)
+//
 // instead.
 func ProjectPath(project string) string {
 	return "" +
@@ -29,7 +31,9 @@ func ProjectPath(project string) string {
 // SpanPath returns the path for the span resource.
 //
 // Deprecated: Use
-//   fmt.Sprintf("projects/%s/traces/%s/spans/%s", project, trace, span)
+//
+//	fmt.Sprintf("projects/%s/traces/%s/spans/%s", project, trace, span)
+//
 // instead.
 func SpanPath(project, trace, span string) string {
 	return "" +

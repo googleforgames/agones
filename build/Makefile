@@ -826,3 +826,8 @@ install-custom-pull-secret:
 		docker run --rm $(common_mounts) -e "KUBECONFIG=/root/.kube/$(kubeconfig_file)" -v $(dir $(IMAGE_PULL_SECRET_FILE)):/root/secret $(DOCKER_RUN_ARGS) $(build_tag) \
 			kubectl apply --namespace default -f /root/secret/$(notdir $(IMAGE_PULL_SECRET_FILE)); \
 	fi
+
+update-go-deps:
+	$(DOCKER_RUN) go get -u agones.dev/agones
+	$(DOCKER_RUN) go mod tidy
+	$(DOCKER_RUN) go mod vendor

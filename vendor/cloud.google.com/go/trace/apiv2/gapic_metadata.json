@@ -21,6 +21,21 @@
               ]
             }
           }
+        },
+        "rest": {
+          "libraryClient": "Client",
+          "rpcs": {
+            "BatchWriteSpans": {
+              "methods": [
+                "BatchWriteSpans"
+              ]
+            },
+            "CreateSpan": {
+              "methods": [
+                "CreateSpan"
+              ]
+            }
+          }
         }
       }
     }
