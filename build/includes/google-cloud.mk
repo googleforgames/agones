@@ -48,9 +48,22 @@ gcloud-test-cluster: $(ensure-build-image)
 clean-gcloud-test-cluster: $(ensure-build-image)
 	$(MAKE) gcloud-terraform-destroy-cluster
 
+gcloud-e2e-infra-state-bucket: GCP_PROJECT ?= $(shell $(current_project))
+gcloud-e2e-infra-state-bucket:
+	docker run --rm -it $(common_mounts) $(build_tag) bash -c 'cd $(mount_path)/build/terraform/e2e/state-bucket && \
+      	terraform apply -auto-approve -var project="$(GCP_PROJECT)"'
+
+ensure-e2e-infra-state-bucket: GCP_PROJECT ?= $(shell $(current_project))
+ensure-e2e-infra-state-bucket:
+	@buckets=$$(docker run --rm $(common_mounts) $(build_tag) gcloud storage buckets describe gs://$(GCP_PROJECT)-e2e-infra-bucket-tfstate --format="value(id)");\
+	if [ -z $${buckets} ]; then\
+		echo "E2E infra state bucket $(GCP_PROJECT)-e2e-infra-bucket-tfstate does not exist, creating...";\
+		$(MAKE) gcloud-e2e-infra-state-bucket;\
+	fi
+
 # Creates a gcloud cluster for end-to-end
 gcloud-e2e-test-cluster: GCP_PROJECT ?= $(shell $(current_project))
-gcloud-e2e-test-cluster: $(ensure-build-image)
+gcloud-e2e-test-cluster: $(ensure-build-image) ensure-e2e-infra-state-bucket
 gcloud-e2e-test-cluster:
 	$(MAKE) terraform-init BUCKET=$(GCP_PROJECT)-e2e-infra-bucket-tfstate PREFIX=terraform/state DIRECTORY=e2e
 	docker run --rm -it $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) bash -c 'cd $(mount_path)/build/terraform/e2e && \
