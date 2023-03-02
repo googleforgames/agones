@@ -34,7 +34,5 @@ steps:
     go run build/report/report.go
     gcloud storage cp tmp/report/* gs://agones-build-reports/
 
-substitutions:
-  _REGISTRY: us-docker.pkg.dev/${PROJECT_ID}/ci
 tags: ["build-report"]
 logsBucket: "gs://agones-build-logs"

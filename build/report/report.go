@@ -1,4 +1,4 @@
-// Copyright 2019 Google LLC All Rights Reserved.
+// Copyright 2023 Google LLC All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -36,7 +36,6 @@ const (
 	window             = time.Hour * 24 * 7 * 4 // 4 weeks
 	wantBuildTriggerID = "da003bb8-e9bb-4983-a556-e77fb92f17ca"
 	outPath            = "tmp/report"
-	reportBucket       = "agones-build-reports"
 
 	reportTemplate = `
 <!DOCTYPE html>
@@ -54,7 +53,7 @@ const (
 {{- range .Flakes -}}
 		<tr>
 			<td>{{ .CreateTime }}</td>
-			<td><a href="https://console.cloud.google.com/cloud-build/builds;region=global/{{ .Id }}?project=agones-images">{{ .Id }}</a></td>
+			<td><a href="https://console.cloud.google.com/cloud-build/builds;region=global/{{ .ID }}?project=agones-images">{{ .ID }}</a></td>
 		</tr>
 {{- end -}}
 	</table>
@@ -88,10 +87,14 @@ type flake struct {
 	CreateTime string
 }
 
+type redirect struct {
+	Date string
+}
+
 func main() {
 	ctx := context.Background()
-	reportTmpl := template.Must(template.New("report").Parse(reportTemplate))
-	redirTmpl := template.Must(template.New("redir").Parse(redirectTemplate))
+	reportTmpl := newReportTemplate()
+	redirTmpl := newRedirectTemplate()
 
 	windowEnd := time.Now().UTC()
 	windowStart := windowEnd.Add(-window)
@@ -196,7 +199,15 @@ func main() {
 		log.Fatalf("failure rendering report: %v", err)
 	}
 
-	if err := redirTmpl.Execute(redirFile, struct{ Date string }{date}); err != nil {
+	if err := redirTmpl.Execute(redirFile, redirect{Date: date}); err != nil {
 		log.Fatalf("failure rendering redirect: %v", err)
 	}
+}
+
+func newReportTemplate() *template.Template {
+	return template.Must(template.New("report").Parse(reportTemplate)).Option("missingkey=error")
+}
+
+func newRedirectTemplate() *template.Template {
+	return template.Must(template.New("redir").Parse(redirectTemplate)).Option("missingkey=error")
 }
