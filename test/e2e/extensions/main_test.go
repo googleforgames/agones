@@ -19,7 +19,6 @@ import (
 	"testing"
 
 	e2eframework "agones.dev/agones/test/e2e/framework"
-	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -28,7 +27,7 @@ const defaultNs = "default"
 var framework *e2eframework.Framework
 
 func TestMain(m *testing.M) {
-	logrus.SetFormatter(&logrus.TextFormatter{
+	log.SetFormatter(&log.TextFormatter{
 		EnvironmentOverrideColors: true,
 		FullTimestamp:             true,
 		TimestampFormat:           "2006-01-02 15:04:05.000",

@@ -71,6 +71,7 @@ spec:
       priorityClassName: {{ .Values.agones.priorityClassName }}
       {{- end }}
       serviceAccountName: {{ .Values.agones.serviceaccount.controller.name }}
+      terminationGracePeriodSeconds: {{ mul .Values.agones.extensions.readiness.periodSeconds .Values.agones.extensions.readiness.failureThreshold 3 }}
       containers:
       - name: agones-extensions
         image: "{{ .Values.agones.image.registry }}/{{ .Values.agones.image.extensions.name}}:{{ default .Values.agones.image.tag .Values.agones.image.extensions.tag }}"
@@ -114,6 +115,8 @@ spec:
               fieldPath: metadata.namespace
         - name: CONTAINER_NAME
           value: "agones-extensions"
+        - name: READINESS_SHUTDOWN_DURATION
+          value: {{ mul .Values.agones.extensions.readiness.periodSeconds .Values.agones.extensions.readiness.failureThreshold 2 }}s
         ports:
         - name: webhooks
           containerPort: 8081
@@ -127,6 +130,13 @@ spec:
           periodSeconds: {{ .Values.agones.extensions.healthCheck.periodSeconds }}
           failureThreshold: {{ .Values.agones.extensions.healthCheck.failureThreshold }}
           timeoutSeconds: {{ .Values.agones.extensions.healthCheck.timeoutSeconds }}
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8080
+          initialDelaySeconds: {{ .Values.agones.extensions.readiness.initialDelaySeconds }}
+          periodSeconds: {{ .Values.agones.extensions.readiness.periodSeconds }}
+          failureThreshold: {{ .Values.agones.extensions.readiness.failureThreshold }}
         resources:
 {{- if .Values.agones.extensions.resources }}
 {{ toYaml .Values.agones.extensions.resources | indent 10 }}
