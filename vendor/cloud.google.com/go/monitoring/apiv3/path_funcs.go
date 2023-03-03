@@ -17,7 +17,9 @@ package monitoring
 // GroupProjectPath returns the path for the project resource.
 //
 // Deprecated: Use
-//   fmt.Sprintf("projects/%s", project)
+//
+//	fmt.Sprintf("projects/%s", project)
+//
 // instead.
 func GroupProjectPath(project string) string {
 	return "" +
@@ -29,7 +31,9 @@ func GroupProjectPath(project string) string {
 // GroupGroupPath returns the path for the group resource.
 //
 // Deprecated: Use
-//   fmt.Sprintf("projects/%s/groups/%s", project, group)
+//
+//	fmt.Sprintf("projects/%s/groups/%s", project, group)
+//
 // instead.
 func GroupGroupPath(project, group string) string {
 	return "" +
@@ -43,7 +47,9 @@ func GroupGroupPath(project, group string) string {
 // MetricProjectPath returns the path for the project resource.
 //
 // Deprecated: Use
-//   fmt.Sprintf("projects/%s", project)
+//
+//	fmt.Sprintf("projects/%s", project)
+//
 // instead.
 func MetricProjectPath(project string) string {
 	return "" +
@@ -55,7 +61,9 @@ func MetricProjectPath(project string) string {
 // MetricMetricDescriptorPath returns the path for the metric descriptor resource.
 //
 // Deprecated: Use
-//   fmt.Sprintf("projects/%s/metricDescriptors/%s", project, metricDescriptor)
+//
+//	fmt.Sprintf("projects/%s/metricDescriptors/%s", project, metricDescriptor)
+//
 // instead.
 func MetricMetricDescriptorPath(project, metricDescriptor string) string {
 	return "" +
@@ -69,7 +77,9 @@ func MetricMetricDescriptorPath(project, metricDescriptor string) string {
 // MetricMonitoredResourceDescriptorPath returns the path for the monitored resource descriptor resource.
 //
 // Deprecated: Use
-//   fmt.Sprintf("projects/%s/monitoredResourceDescriptors/%s", project, monitoredResourceDescriptor)
+//
+//	fmt.Sprintf("projects/%s/monitoredResourceDescriptors/%s", project, monitoredResourceDescriptor)
+//
 // instead.
 func MetricMonitoredResourceDescriptorPath(project, monitoredResourceDescriptor string) string {
 	return "" +
@@ -83,7 +93,9 @@ func MetricMonitoredResourceDescriptorPath(project, monitoredResourceDescriptor 
 // UptimeCheckProjectPath returns the path for the project resource.
 //
 // Deprecated: Use
-//   fmt.Sprintf("projects/%s", project)
+//
+//	fmt.Sprintf("projects/%s", project)
+//
 // instead.
 func UptimeCheckProjectPath(project string) string {
 	return "" +
@@ -95,7 +107,9 @@ func UptimeCheckProjectPath(project string) string {
 // UptimeCheckUptimeCheckConfigPath returns the path for the uptime check config resource.
 //
 // Deprecated: Use
-//   fmt.Sprintf("projects/%s/uptimeCheckConfigs/%s", project, uptimeCheckConfig)
+//
+//	fmt.Sprintf("projects/%s/uptimeCheckConfigs/%s", project, uptimeCheckConfig)
+//
 // instead.
 func UptimeCheckUptimeCheckConfigPath(project, uptimeCheckConfig string) string {
 	return "" +
