@@ -54,15 +54,6 @@ variable "kubernetes_versions_autopilot" {
   }
 }
 
-# TODO: remove this cluster once the e2e tests are switched to use the new standard clusters
-module "gke_standard_cluster_old" {
-  source = "./gke-standard"
-  project = var.project
-  kubernetesVersion = "1.24"
-  overrideName = "e2e-test-cluster"
-  location = "us-west1-c"
-}
-
 module "gke_standard_cluster" {
   for_each = var.kubernetes_versions_standard
   source = "./gke-standard"
