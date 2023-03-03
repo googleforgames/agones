@@ -23,11 +23,12 @@ import (
 
 func TestTemplateRendering(t *testing.T) {
 	require.NoError(t, newReportTemplate().Execute(io.Discard, report{
-		WindowStart:  "2014-09-01",
-		WindowEnd:    "2100-09-01",
-		Builds:       1000,
-		FlakePercent: 100,
-		Flakes:       []flake{{ID: "awesome-id", CreateTime: "1978-04-28"}},
+		WindowStart: "2014-09-01",
+		WindowEnd:   "2100-09-01",
+		BuildCount:  1000,
+		FlakeCount:  10000,
+		FlakeRatio:  0.12,
+		Flakes:      []flake{{ID: "awesome-id", CreateTime: "1978-04-28"}},
 	}))
 
 	require.NoError(t, newRedirectTemplate().Execute(io.Discard, redirect{"2014-09-01"}))

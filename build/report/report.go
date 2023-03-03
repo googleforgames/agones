@@ -49,9 +49,8 @@ const (
 	<header>
 	Flake Report {{ .WindowStart }} to {{ .WindowEnd }}
 	</header>
-	<p><b>{{ .FlakePercent }}%</b> of {{ .Builds }} successful builds from {{ .WindowStart }} to {{ .WindowEnd }}
-	required at least one re-run to succeed. Flakes:</p>
-	
+	<p><b>Flake Ratio:<b> {{ printf "%.3f" .FlakeRatio }} ({{ .FlakeCount }} flakes / {{ .BuildCount }} successful builds)</p>
+
 	<table>
 		<tr>
 			<th>Time</th>
@@ -64,6 +63,12 @@ const (
 		</tr>
 {{- end -}}
 	</table>
+
+	<p><b>Methodology:</b> For every successful build of a given commit hash, we count the number of failed
+	builds on the same commit hash. The <em>Flake Ratio</em> is the ratio of flakes to successes, giving an
+	expected value for how many times a build has to be retried before succeeding, on the same SHA.
+	This methodology only covers manual re-runs in Cloud Build - builds retried via rebase are not counted,
+	as in general it's difficult to attribute flakes between commit hashes.	
 </body>
 </html>
 `
@@ -82,11 +87,12 @@ const (
 )
 
 type report struct {
-	WindowStart  string
-	WindowEnd    string
-	Flakes       []flake
-	Builds       int
-	FlakePercent int
+	WindowStart string
+	WindowEnd   string
+	Flakes      []flake
+	FlakeCount  int
+	BuildCount  int
+	FlakeRatio  float32
 }
 
 type flake struct {
@@ -179,29 +185,27 @@ func main() {
 		}
 	}
 
-	buildCount := 0
+	buildCount := len(success)
 	flakeCount := 0
 	var flakes []flake
 	for sha := range success {
-		buildCount++
-		if ids, ok := failure[sha]; ok {
-			flakeCount++
-			for _, id := range ids {
-				flakes = append(flakes, flake{
-					ID:         id,
-					CreateTime: idTime[id].Format(time.RFC3339),
-				})
-			}
+		flakeCount += len(failure[sha])
+		for _, id := range failure[sha] {
+			flakes = append(flakes, flake{
+				ID:         id,
+				CreateTime: idTime[id].Format(time.RFC3339),
+			})
 		}
 	}
 	sort.Slice(flakes, func(i, j int) bool { return flakes[i].CreateTime > flakes[j].CreateTime })
 
 	if err := reportTmpl.Execute(reportFile, report{
-		WindowStart:  windowStart.Format("2006-01-02"),
-		WindowEnd:    windowEnd.Format("2006-01-02"),
-		Builds:       buildCount,
-		FlakePercent: 100 * flakeCount / buildCount,
-		Flakes:       flakes,
+		WindowStart: windowStart.Format("2006-01-02"),
+		WindowEnd:   windowEnd.Format("2006-01-02"),
+		BuildCount:  buildCount,
+		FlakeCount:  flakeCount,
+		FlakeRatio:  float32(flakeCount) / float32(buildCount),
+		Flakes:      flakes,
 	}); err != nil {
 		log.Fatalf("failure rendering report: %v", err)
 	}
