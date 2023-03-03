@@ -39,11 +39,18 @@ const (
 
 	reportTemplate = `
 <!DOCTYPE html>
-<html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Flake Report From {{ .WindowStart }} to {{ .WindowEnd }}</title>
+    <link rel="stylesheet" href="https://cdn.simplecss.org/simple.min.css">
+</head>
 <body>
-
-	<b>{{ .FlakePercent }}%</b> of {{ .Builds }} successful builds from {{ .WindowStart }} to {{ .WindowEnd }}
-	required at least one re-run to succeed. Examples flakes:
+	<header>
+	Flake Report {{ .WindowStart }} to {{ .WindowEnd }}
+	</header>
+	<p><b>{{ .FlakePercent }}%</b> of {{ .Builds }} successful builds from {{ .WindowStart }} to {{ .WindowEnd }}
+	required at least one re-run to succeed. Flakes:</p>
 	
 	<table>
 		<tr>
@@ -190,8 +197,8 @@ func main() {
 	sort.Slice(flakes, func(i, j int) bool { return flakes[i].CreateTime > flakes[j].CreateTime })
 
 	if err := reportTmpl.Execute(reportFile, report{
-		WindowStart:  windowStart.Format(time.RFC3339),
-		WindowEnd:    windowEnd.Format(time.RFC3339),
+		WindowStart:  windowStart.Format("2006-01-02"),
+		WindowEnd:    windowEnd.Format("2006-01-02"),
 		Builds:       buildCount,
 		FlakePercent: 100 * flakeCount / buildCount,
 		Flakes:       flakes,
