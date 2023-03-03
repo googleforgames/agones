@@ -262,7 +262,7 @@ Agones supports Autopilot clusters in [alpha]({{<ref "/docs/Guides/feature-stage
 * **RELEASE_CHANNEL**: one of
   `rapid`, `regular`, or `stable`. The default is `regular`. To set a specific
   available version in the release channel, use the
-  --cluster-version=[VERSION]` flag.
+  `--cluster-version=[VERSION]` flag.
 
 ## Setting up cluster credentials
 
