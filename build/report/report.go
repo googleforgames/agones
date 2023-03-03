@@ -49,7 +49,7 @@ const (
 	<header>
 	Flake Report {{ .WindowStart }} to {{ .WindowEnd }}
 	</header>
-	<p><b>Flake Ratio:<b> {{ printf "%.3f" .FlakeRatio }} ({{ .FlakeCount }} flakes / {{ .BuildCount }} successful builds)</p>
+	<p><b>Flake Ratio:</b> {{ printf "%.3f" .FlakeRatio }} ({{ .FlakeCount }} flakes / {{ .BuildCount }} successful builds)</p>
 
 	<table>
 		<tr>
