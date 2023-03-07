@@ -99,6 +99,10 @@ agones:
     pdb:
         minAvailable: 1
     replicas: 2
+    readiness:
+      initialDelaySeconds: 3
+      periodSeconds: 3
+      failureThreshold: 3
   ping:
     install: true
     pdb:

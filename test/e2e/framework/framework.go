@@ -239,7 +239,7 @@ func (f *Framework) CreateGameServerAndWaitUntilReady(t *testing.T, ns string, g
 	}
 
 	if len(readyGs.Status.Ports) != expectedPortCount {
-		return nil, fmt.Errorf("Ready GameServer instance has %d port(s), want %d", len(readyGs.Status.Ports), expectedPortCount)
+		return nil, fmt.Errorf("ready GameServer instance has %d port(s), want %d", len(readyGs.Status.Ports), expectedPortCount)
 	}
 
 	logrus.WithField("gs", newGs.ObjectMeta.Name).Info("GameServer Ready")

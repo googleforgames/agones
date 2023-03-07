@@ -18,6 +18,7 @@ package signals
 
 import (
 	"context"
+	"os"
 	"os/signal"
 	"syscall"
 )
@@ -26,4 +27,15 @@ import (
 func NewSigKillContext() context.Context {
 	ctx, _ := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	return ctx
+}
+
+// NewSigTermHandler creates a channel to listen to SIGTERM and runs the handle function
+func NewSigTermHandler(handle func()) {
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, syscall.SIGTERM)
+
+	go func() {
+		<-c
+		handle()
+	}()
 }
