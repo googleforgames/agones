@@ -1,0 +1,25 @@
+changelog:
+  exclude:
+    labels:
+      - area/meta
+      - duplicate
+      - question
+      - invalid
+      - wontfix
+      - priority/wontfix
+  categories:
+    - title: Breaking Changes
+      labels:
+        - kind/breaking
+    - title: Implemented enhancements
+      labels:
+        - kind/feature
+    - title: Fixed bugs
+      labels:
+        - kind/bug
+    - title: Security
+      labels:
+        - area/security
+    - title: Other
+      labels:
+        - "*"
