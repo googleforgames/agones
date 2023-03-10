@@ -78,8 +78,7 @@ and copy it into a release issue. Fill in relevant values, found inside {}
     development tooling off of the `agones-images` project.
 - [ ] Do a `helm repo add agones https://agones.dev/chart/stable` / `helm repo update` and verify that the new
   version is available via the command `helm search repo agones --versions --devel`.
-- [ ] Do a `helm install --namespace=agones-system agones agones/agones` or `helm install --create-namespace --namespace=agones-system agones agones/agones` if the namespace was deleted
-   and a smoke test to confirm everything is working.
+- [ ] Do a `helm install --namespace=agones-system agones agones/agones` or `helm install --create-namespace --namespace=agones-system agones agones/agones` if the namespace was deleted and a smoke test to confirm everything is working.
 - [ ] Attach all assets found in the `release` folder to the draft GitHub Release.
 - [ ] Copy any review changes from the release blog post into the draft GitHub release.
 - [ ] Publish the draft GitHub Release.
