@@ -37,14 +37,14 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 - [ ] Ensure the [helm `tag` value][values] is correct (tag field value in image should be {version})
 - [ ] Ensure the [helm `Chart` version values][chart] are correct (appVersion and version fields value should be {version})
 - [ ] Update SDK Package Versions
-  - [ ] cd to the `sdks/nodejs` directory and run `npm version {version}` to update the package version in [`sdks/nodejs/package.json`][package.json] and [`sdks/nodejs/package-lock.json`][package-lock.json]
+  - [ ] Navigate to the `sdks/nodejs` directory and run `npm version {version}` to update the package version in [`sdks/nodejs/package.json`][package.json] and [`sdks/nodejs/package-lock.json`][package-lock.json]
   - [ ] Ensure the [`sdks/csharp/sdk/AgonesSDK.nuspec` and `sdks/csharp/sdk/csharp-sdk.csproj`][csharp] versions are correct (package -> version field value in AgonesSDK.nuspec and PropertyGroup -> Version field value in csharp-sdk.csproj should be {version})
   - [ ] Update the package version in the [`sdks/unity/package.json`][unity] package file's `version` field to {version}
 - [ ] Run `make gen-install`
 - [ ] Create a _draft_ release with the [release template][release-template].
   - run `make release-example-image-markdown` to populate example images and append the output in `Images available with this release` section
   - [ ] Draft a new release with [release draft][release-draft]. Update the `Tag version` and `Release title` with the release version and click on `Generate release notes` to generate the release notes with `Full Changelog` info for {version}. Make sure to add the description. Include the `Images available with this release` section from the previous step that will be present after the `Full Changelog` and save the draft.
-  - [ ] copy the {version} release details from the `Full Changelog` and paste it in top of the CHANGELOG.md file
+  - [ ] copy the {version} release details from the `Full Changelog` and paste it on top of the CHANGELOG.md file
 - [ ] Site updated
   - [ ] Create a new file named {version}.md in `/site/content/en/blog/releases`. Copy the draft release content in this file (this will be what you send via email)[refer the previous release file].
   - run `make site-server` frequently to make sure everything looks fine for the release in your localhost
