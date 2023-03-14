@@ -400,11 +400,13 @@
         "ports": {
           "type": "array",
           "items": {
+            "type": "object",
             "$ref": "#/definitions/StatusPort"
           }
         },
         "players": {
-          "$ref": "#/definitions/StatusPlayerStatus"
+          "$ref": "#/definitions/StatusPlayerStatus",
+          "title": "[Stage:Alpha]\n[FeatureFlag:PlayerTracking]"
         }
       }
     },
