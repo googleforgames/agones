@@ -31,7 +31,7 @@ locals {
   enableImageStreaming    = lookup(var.cluster, "enableImageStreaming", true)
   network                 = lookup(var.cluster, "network", "default")
   subnetwork              = lookup(var.cluster, "subnetwork", "")
-  kubernetesVersion       = lookup(var.cluster, "kubernetesVersion", "1.24")
+  kubernetesVersion       = lookup(var.cluster, "kubernetesVersion", "1.25")
   windowsInitialNodeCount = lookup(var.cluster, "windowsInitialNodeCount", "0")
   windowsMachineType      = lookup(var.cluster, "windowsMachineType", "e2-standard-4")
   autoscale               = lookup(var.cluster, "autoscale", false)

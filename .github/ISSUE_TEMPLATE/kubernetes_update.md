@@ -15,13 +15,13 @@ List of items to do for upgrading to {version_1} {version_2} {version_3}
     - [ ] Update Kubernetes version of GKE cluster to {version_2}
     - [ ] Update Kubernetes version of AKS to the newest supported version in {version_1} {version_2} {version_3}
     - [ ] Update Kubernetes version of EKS to the newest supported version in {version_1} {version_2} {version_3}
-- [ ] Update kubectl in dev tooling to {version_2}
+- [ ] Update kubectl in dev tooling to {version_2}, the latest patch version can be found [here](https://kubernetes.io/releases/)
     - [ ] Update kubectl in `build/build-image/Dockerfile`
     - [ ] Update kubectl in `build/e2e-image/Dockerfile`
 - [ ] Update the Kubernetes version of the below test clusters to {version_2}
-    - [ ] Minikube (Get the patch version [here](https://github.com/kubernetes/minikube/blob/master/CHANGELOG.md))
-    - [ ] Kind (Confirm {version_2} is supported and get the patch version [here](https://github.com/kubernetes-sigs/kind/releases))
-- [ ] Update the k8s image used in the helm [pre-delete-hook](https://github.com/googleforgames/agones/blob/main/install/helm/agones/templates/hooks/pre_delete_hook.yaml) to {version_2}
+    - [ ] Minikube in `build/includes/minikube.mk` (Get the patch version [here](https://kubernetes.io/releases/) since minikube supports the latest Kubernetes release)
+    - [ ] Kind in `build/includes/kind.mk` (Confirm {version_2} is supported and get the patch version [here](https://github.com/kubernetes-sigs/kind/releases))
+- [ ] Update the k8s image used in the helm [pre-delete-hook](https://github.com/googleforgames/agones/blob/main/install/helm/agones/templates/hooks/pre_delete_hook.yaml) to {version_2} (Get the patch version [here](https://hub.docker.com/r/lachlanevenson/k8s-kubectl))
 - [ ] Update client-go in `go.mod` and `test/terraform/go.mod` to {version_2} by running `go get -u k8s.io/client-go@{CORRESPONDING_VERSION}` and `go get -u k8s.io/apiextensions-apiserver@{CORRESPONDING_VERSION}`, then re-run `go mod tidy` and `go mod vendor`
 - [ ] Update CRD API reference to {version_2}
     - [ ] Update links to k8s documentation in `site/assets/templates/crd-doc-config.json`
