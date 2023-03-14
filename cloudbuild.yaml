@@ -300,17 +300,13 @@ steps:
       set -o pipefail
       pids=()
       cloudProducts=("generic" "gke-autopilot")
-      declare -A versionsAndRegions=( [1.23]=us-east1 [1.24]=us-west1 [1.25]=us-central1 )
+      declare -A versionsAndRegions=( [1.24]=us-west1 [1.25]=us-central1 [1.26]=asia-east1 )
 
       for cloudProduct in ${cloudProducts[@]}
       do
         for version in "${!versionsAndRegions[@]}"
         do
           region=${versionsAndRegions[$version]}
-          if [ $cloudProduct = gke-autopilot ] && [ $version = 1.23 ]
-          then
-            continue
-          fi
           if [ $cloudProduct = generic ]
           then
             featureWithGate="CustomFasSyncInterval=false&SafeToEvict=false&SDKGracefulTermination=false&StateAllocationFilter=false&PlayerAllocationFilter=true&PlayerTracking=true&ResetMetricsOnDelete=true&PodHostname=true&SplitControllerAndExtensions=true&FleetAllocationOverflow=true&Example=true"

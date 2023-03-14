@@ -27,6 +27,7 @@ variable "cluster" {
     "project"                 = "agones"
     "network"                 = "default"
     "subnetwork"              = ""
+    "releaseChannel"          = "UNSPECIFIED"
     "kubernetesVersion"       = "1.25"
     "windowsInitialNodeCount" = "0"
     "windowsMachineType"      = "e2-standard-4"

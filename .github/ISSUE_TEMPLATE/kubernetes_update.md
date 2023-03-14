@@ -43,9 +43,12 @@ List of items to do for upgrading to {version_1} {version_2} {version_3}
     - [ ] Regenerate all client sdks: [make gen-all-sdk-grpc](https://github.com/googleforgames/agones/blob/main/build/README.md#make-gen-all-sdk-grpc)
     - [ ] Update the version number in C++ Cmake scripts [here](https://github.com/googleforgames/agones/blob/main/sdks/cpp/CMakeLists.txt#L100) and [here](https://github.com/googleforgames/agones/blob/main/sdks/cpp/cmake/prerequisites.cmake#L34)
 - [ ] Confirm the update works as expected by running e2e tests
-    - [ ] Update the Kubernetes version of the e2e clusters
-        - [ ] In `terraform/e2e/module.tf`, update variable `kubernetes_versions_standard` and `kubernetes_versions_autopilot` to the new versions to be supported
-        - [ ] Recreate cluster with new scripts: `cd build; make GCP_PROJECT=agones-images gcloud-e2e-test-cluster`
-    - [ ] Update the Cloud Build configuration to run e2e test on the new created clusters
-        - [ ] Update the `versionsAndRegions` variable to reflect new versions in `cloudbuild.yaml` `submit-e2e-test-cloud-build` step
+     - [ ] Add the new supported Kubernetes versions to the e2e clusters creation
+        - [ ] In `terraform/e2e/module.tf`, add the new supported version to the map `kubernetes_versions_standard` and `kubernetes_versions_autopilot`. Noted the location of the new clusters should have enough quota (CPU, In-use IP addresses) to create cluster. And the new supported version is usually only available in RAPID channel.
+        - [ ] Recreate clusters with new scripts: `cd build; make GCP_PROJECT=agones-images gcloud-e2e-test-cluster`
+    - [ ] Update the Cloud Build configuration to run e2e test on the new created clusters, and disable the e2e test on the cluster with the oldest supported K8s version
+        - [ ] Update the `versionsAndRegions` variable to add the new supported version and remove the oldest supported K8s version in `cloudbuild.yaml` `submit-e2e-test-cloud-build` step
         - [ ] Submit a PR to trigger the e2e tests and verfiy they all pass
+    - [ ] After the PR that includes the above Cloud Build configuration change has been merged and all the existing pending PRs in the Cloud Build queue have picked up the new configuration, submit a separate PR to update the e2e clusters terraform module to remove the e2e cluster with the oldest supported K8s version.
+        - [ ] In `terraform/e2e/module.tf`, remove the oldest supported version from the map `kubernetes_versions_standard` and `kubernetes_versions_autopilot`.
+        - [ ] Destroy the old clusters with new scripts: `cd build; make GCP_PROJECT=agones-images gcloud-e2e-test-cluster`
