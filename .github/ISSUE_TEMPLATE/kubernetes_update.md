@@ -12,7 +12,7 @@ Agones supports and is tested against 3 releases of Kubernetes, targeting the ne
 List of items to do for upgrading to {version_1} {version_2} {version_3}
 
 - [ ] Update the cluster version of terraform submodules in `install/terraform/modules`
-    - [ ] Update Kubernetes version of GKE cluster to {version_2}
+    - [ ] Update Kubernetes version of GKE cluster (both `gke` and `gke-autopilot`) to {version_2}
     - [ ] Update Kubernetes version of AKS to the newest supported version in {version_1} {version_2} {version_3}
     - [ ] Update Kubernetes version of EKS to the newest supported version in {version_1} {version_2} {version_3}
 - [ ] Update kubectl in dev tooling to {version_2}, the latest patch version can be found [here](https://kubernetes.io/releases/)
@@ -43,8 +43,8 @@ List of items to do for upgrading to {version_1} {version_2} {version_3}
     - [ ] Regenerate all client sdks: [make gen-all-sdk-grpc](https://github.com/googleforgames/agones/blob/main/build/README.md#make-gen-all-sdk-grpc)
     - [ ] Update the version number in C++ Cmake scripts [here](https://github.com/googleforgames/agones/blob/main/sdks/cpp/CMakeLists.txt#L100) and [here](https://github.com/googleforgames/agones/blob/main/sdks/cpp/cmake/prerequisites.cmake#L34)
 - [ ] Confirm the update works as expected by running e2e tests
-     - [ ] Add the new supported Kubernetes versions to the e2e clusters creation
-        - [ ] In `terraform/e2e/module.tf`, add the new supported version to the map `kubernetes_versions_standard` and `kubernetes_versions_autopilot`. Noted the location of the new clusters should have enough quota (CPU, In-use IP addresses) to create cluster. And the new supported version is usually only available in RAPID channel.
+    - [ ] Add the new supported Kubernetes versions to the e2e clusters creation
+        - [ ] In `terraform/e2e/module.tf`, add the new supported version to the map `kubernetes_versions_standard` and `kubernetes_versions_autopilot`. Noted the location of the new clusters should have enough quota (CPU, In-use IP addresses) to create the cluster. And the new supported version is usually only available in RAPID channel.
         - [ ] Recreate clusters with new scripts: `cd build; make GCP_PROJECT=agones-images gcloud-e2e-test-cluster`
     - [ ] Update the Cloud Build configuration to run e2e test on the new created clusters, and disable the e2e test on the cluster with the oldest supported K8s version
         - [ ] Update the `versionsAndRegions` variable to add the new supported version and remove the oldest supported K8s version in `cloudbuild.yaml` `submit-e2e-test-cloud-build` step
