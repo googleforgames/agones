@@ -27,7 +27,7 @@ REPOSITORY = us-docker.pkg.dev/agones-images/examples
 
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_path := $(dir $(mkfile_path))
-image_tag = $(REPOSITORY)/supertuxkart-example:0.6
+image_tag = $(REPOSITORY)/supertuxkart-example:0.7
 
 #   _____                    _
 #  |_   _|_ _ _ __ __ _  ___| |_ ___
