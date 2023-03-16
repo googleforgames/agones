@@ -44,7 +44,7 @@ const (
 var (
 	autopilotMutatingWebhooks = []string{
 		"workload-defaulter.config.common-webhooks.networking.gke.io", // pre-1.26
-		"warden-mutating.config.common-webhooks.networking.gke.io",    // 1.26+
+		"sasecret-redacter.config.common-webhooks.networking.gke.io",  // 1.26+
 	}
 	noWorkloadDefaulter = fmt.Sprintf("found no MutatingWebhookConfigurations matching %v", autopilotMutatingWebhooks)
 
