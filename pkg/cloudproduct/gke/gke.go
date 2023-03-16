@@ -34,6 +34,8 @@ import (
 )
 
 const (
+	workloadDefaulterWebhook     = "workload-defaulter.config.common-webhooks.networking.gke.io"
+	noWorkloadDefaulter          = "failed to get MutatingWebhookConfigurations/workload-defaulter.config.common-webhooks.networking.gke.io (error expected if not on GKE Autopilot)"
 	hostPortAssignmentAnnotation = "autopilot.gke.io/host-port-assignment"
 
 	errPortPolicyMustBeDynamic      = "portPolicy must be Dynamic on GKE Autopilot"
@@ -41,15 +43,7 @@ const (
 	errEvictionSafeOnUpgradeInvalid = "eviction.safe OnUpgrade not supported on GKE Autopilot"
 )
 
-var (
-	autopilotMutatingWebhooks = []string{
-		"workload-defaulter.config.common-webhooks.networking.gke.io", // pre-1.26
-		"warden-mutating.config.common-webhooks.networking.gke.io",    // 1.26+
-	}
-	noWorkloadDefaulter = fmt.Sprintf("found no MutatingWebhookConfigurations matching %v", autopilotMutatingWebhooks)
-
-	logger = runtime.NewLoggerWithSource("gke")
-)
+var logger = runtime.NewLoggerWithSource("gke")
 
 type gkeAutopilot struct{}
 
@@ -69,19 +63,10 @@ func Detect(ctx context.Context, kc *kubernetes.Clientset) string {
 		return ""
 	}
 	// Look for the workload defaulter - this is the current best method to detect Autopilot
-	found := false
-	for _, webhook := range autopilotMutatingWebhooks {
-		if _, err := kc.AdmissionregistrationV1().MutatingWebhookConfigurations().Get(
-			ctx, webhook, metav1.GetOptions{}); err != nil {
-			logger.WithError(err).WithField("webhook", webhook).Info("Detecting Autopilot MutatingWebhookConfiguration")
-		} else {
-			found = true
-			break
-		}
-	}
-	if !found {
-		logger.WithField("reason", noWorkloadDefaulter).Info(
-			"Assuming GKE Standard and defaulting to generic provider (expected if not on GKE Autopilot)")
+	if _, err := kc.AdmissionregistrationV1().MutatingWebhookConfigurations().Get(
+		ctx, workloadDefaulterWebhook, metav1.GetOptions{}); err != nil {
+		logger.WithError(err).WithField("reason", noWorkloadDefaulter).Info(
+			"Assuming GKE Standard and defaulting to generic provider")
 		return "" // GKE standard, but we don't need an interface for it just yet.
 	}
 	logger.Info("Running on GKE Autopilot (skip detection with --cloud-product=gke-autopilot)")
