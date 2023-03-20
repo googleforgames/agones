@@ -30,6 +30,7 @@ import (
 	"agones.dev/agones/pkg/util/runtime"
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/testing/protocmp"
 	"google.golang.org/protobuf/types/known/fieldmaskpb"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -669,9 +670,9 @@ func TestLocalSDKServerUpdateCounter(t *testing.T) {
 	defer runtime.FeatureTestMutex.Unlock()
 	assert.NoError(t, runtime.ParseFeatures(string(runtime.FeatureCountsAndLists)+"=true"))
 
-	name := "sessions"
+	counterName := "sessions"
 	counters := map[string]agonesv1.CounterStatus{
-		name: {Count: 1, Capacity: 100},
+		counterName: {Count: 1, Capacity: 100},
 	}
 	fixture := &agonesv1.GameServer{
 		ObjectMeta: metav1.ObjectMeta{Name: "stuff"},
@@ -703,33 +704,29 @@ func TestLocalSDKServerUpdateCounter(t *testing.T) {
 	})
 	assert.NoError(t, err)
 
-	ONE := int64(1)
-	HUNDRED := int64(100)
-	notupdated := &alpha.Counter{Name: name, Count: &ONE, Capacity: &HUNDRED}
-	startingCounter, err := l.GetCounter(context.Background(), &alpha.GetCounterRequest{Name: "sessions"})
+	// Check UpdateCounter only updates fields in the FieldMask
+	got, err := l.UpdateCounter(context.Background(), &alpha.UpdateCounterRequest{
+		Counter: &alpha.Counter{
+			Name:     counterName,
+			Count:    proto.Int64(9),
+			Capacity: proto.Int64(999),
+		},
+		UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"count"}},
+	})
+	want := &alpha.Counter{
+		Name:     counterName,
+		Count:    proto.Int64(9),
+		Capacity: proto.Int64(100),
+	}
 	assert.NoError(t, err)
-	if diff := cmp.Diff(notupdated, startingCounter, protocmp.Transform()); diff != "" {
+	if diff := cmp.Diff(want, got, protocmp.Transform()); diff != "" {
 		t.Errorf("unexpected difference:\n%v", diff)
 	}
 
-	count := int64(9)
-	capacity := int64(999)
-	// Note: the field mask filter in UpdateCounter will remove fields from the request object that
-	// are not included in the FieldMask Paths. Here `Name` and `Capacity` will be removed from
-	// the `updated` object after we call `l.UpdateCounter()`.
-	updated := &alpha.Counter{Name: name, Count: &count, Capacity: &capacity}
-	fm := fieldmaskpb.FieldMask{Paths: []string{"count"}}
-	expected := &alpha.Counter{Name: name, Count: &count, Capacity: &HUNDRED}
-	counterRequest := alpha.UpdateCounterRequest{Counter: updated, UpdateMask: &fm}
-	counter, err := l.UpdateCounter(context.Background(), &counterRequest)
+	// Confirm updated Counter has been properly written to the GameServer
+	got, err = l.GetCounter(context.Background(), &alpha.GetCounterRequest{Name: counterName})
 	assert.NoError(t, err)
-	if diff := cmp.Diff(expected, counter, protocmp.Transform()); diff != "" {
-		t.Errorf("unexpected difference:\n%v", diff)
-	}
-
-	endingCounter, err := l.GetCounter(context.Background(), &alpha.GetCounterRequest{Name: "sessions"})
-	assert.NoError(t, err)
-	if diff := cmp.Diff(expected, endingCounter, protocmp.Transform()); diff != "" {
+	if diff := cmp.Diff(want, got, protocmp.Transform()); diff != "" {
 		t.Errorf("unexpected difference:\n%v", diff)
 	}
 }

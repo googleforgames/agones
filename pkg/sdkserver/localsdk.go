@@ -34,8 +34,6 @@ import (
 	"github.com/mennanov/fmutils"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
 	"k8s.io/apimachinery/pkg/util/yaml"
 )
@@ -597,7 +595,7 @@ func (l *LocalSDKServer) GetCounter(ctx context.Context, in *alpha.GetCounterReq
 		return nil, errors.Errorf("%s not enabled", runtime.FeatureCountsAndLists)
 	}
 
-	l.logger.Info("Getting Counter")
+	l.logger.WithField("name", in.Name).Info("Getting Counter")
 	l.recordRequest("getcounter")
 	l.gsMutex.RLock()
 	defer l.gsMutex.RUnlock()
@@ -605,7 +603,7 @@ func (l *LocalSDKServer) GetCounter(ctx context.Context, in *alpha.GetCounterReq
 	if counter, ok := l.gs.Status.Counters[in.Name]; ok {
 		return &alpha.Counter{Name: in.Name, Count: &counter.Count, Capacity: &counter.Capacity}, nil
 	}
-	return nil, status.Errorf(codes.NotFound, "%s Counter NOT_FOUND", in.Name)
+	return nil, errors.Errorf("NOT_FOUND. %s Counter not found", in.Name)
 }
 
 // UpdateCounter returns the updated Counter. Returns NOT_FOUND if the Counter does not exist.
@@ -617,7 +615,7 @@ func (l *LocalSDKServer) UpdateCounter(ctx context.Context, in *alpha.UpdateCoun
 		return nil, errors.Errorf("%s not enabled", runtime.FeatureCountsAndLists)
 	}
 
-	l.logger.Info("Update Counter")
+	l.logger.WithField("name", in.Counter.Name).Info("Updating Counter")
 	l.recordRequest("updatecounter")
 	l.gsMutex.RLock()
 	defer l.gsMutex.RUnlock()
@@ -625,6 +623,7 @@ func (l *LocalSDKServer) UpdateCounter(ctx context.Context, in *alpha.UpdateCoun
 	name := in.Counter.Name
 	if counter, ok := l.gs.Status.Counters[name]; ok {
 		// Check if the UpdateMask paths are valid, return INVALID_ARGUMENT if not.
+		// TODO: https://google.aip.dev/134, "Update masks must support a special value *, meaning full replacement".
 		if in.UpdateMask.IsValid(counter.ProtoReflect().Interface()) {
 			// Create *alpha.Counter from *sdk.GameServer_Status_CounterStatus for merging.
 			tmpCounter := &alpha.Counter{Name: name, Count: &counter.Count, Capacity: &counter.Capacity}
@@ -637,9 +636,9 @@ func (l *LocalSDKServer) UpdateCounter(ctx context.Context, in *alpha.UpdateCoun
 			l.gs.Status.Counters[name].Capacity = *tmpCounter.Capacity
 			return &alpha.Counter{Name: name, Count: &l.gs.Status.Counters[name].Count, Capacity: &l.gs.Status.Counters[name].Capacity}, nil
 		}
-		return nil, status.Errorf(codes.InvalidArgument, "Field Mask Path(s) %v are invalid for Counter. Use valid %v", in.UpdateMask.GetPaths(), counter.ProtoReflect().Descriptor().Fields())
+		return nil, errors.Errorf("INVALID_ARGUMENT. Field Mask Path(s) %v are invalid for Counter. Use valid %v", in.UpdateMask.GetPaths(), counter.ProtoReflect().Descriptor().Fields())
 	}
-	return nil, status.Errorf(codes.NotFound, "%s Counter NOT_FOUND", name)
+	return nil, errors.Errorf("NOT_FOUND. %s Counter not found", name)
 }
 
 // Close tears down all the things
