@@ -38,6 +38,8 @@ import (
 	"agones.dev/agones/pkg/util/workerqueue"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	corev1 "k8s.io/api/core/v1"
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -717,6 +719,29 @@ func (s *SDKServer) GetPlayerCapacity(ctx context.Context, _ *alpha.Empty) (*alp
 	s.gsUpdateMutex.RLock()
 	defer s.gsUpdateMutex.RUnlock()
 	return &alpha.Count{Count: s.gsPlayerCapacity}, nil
+}
+
+// GetCounter returns a Counter. Returns NOT_FOUND if the counter does not exist.
+// [Stage:Alpha]
+// [FeatureFlag:CountsAndLists]
+func (s *SDKServer) GetCounter(ctx context.Context, in *alpha.GetCounterRequest) (*alpha.Counter, error) {
+	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
+		return nil, errors.Errorf("%s not enabled", runtime.FeatureCountsAndLists)
+	}
+	// TODO(#2716): Implement me
+	return nil, status.Error(codes.Unimplemented, "GetCounter coming soon")
+}
+
+// UpdateCounter returns the updated Counter. Returns NOT_FOUND if the Counter does not exist.
+// Returns INVALID_ARGUMENT if the FieldMask paths are invalid.
+// [Stage:Alpha]
+// [FeatureFlag:CountsAndLists]
+func (s *SDKServer) UpdateCounter(ctx context.Context, in *alpha.UpdateCounterRequest) (*alpha.Counter, error) {
+	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
+		return nil, errors.Errorf("%s not enabled", runtime.FeatureCountsAndLists)
+	}
+	// TODO(#2716): Implement Me
+	return nil, status.Error(codes.Unimplemented, "UpdateCounter coming soon")
 }
 
 // sendGameServerUpdate sends a watch game server event

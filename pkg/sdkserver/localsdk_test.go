@@ -28,7 +28,11 @@ import (
 	"agones.dev/agones/pkg/sdk"
 	"agones.dev/agones/pkg/sdk/alpha"
 	"agones.dev/agones/pkg/util/runtime"
+	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/testing/protocmp"
+	"google.golang.org/protobuf/types/known/fieldmaskpb"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 )
@@ -604,6 +608,126 @@ func TestLocalSDKServerPlayerConnectAndDisconnect(t *testing.T) {
 			assert.Equal(t, int64(0), count.Count)
 			assertNoWatchUpdate(t, stream)
 		})
+	}
+}
+
+func TestLocalSDKServerGetCounter(t *testing.T) {
+	t.Parallel()
+
+	runtime.FeatureTestMutex.Lock()
+	defer runtime.FeatureTestMutex.Unlock()
+	assert.NoError(t, runtime.ParseFeatures(string(runtime.FeatureCountsAndLists)+"=true"))
+
+	name := "sessions"
+	count := int64(1)
+	capacity := int64(100)
+	counters := map[string]agonesv1.CounterStatus{
+		name: {Count: count, Capacity: capacity},
+	}
+	fixture := &agonesv1.GameServer{
+		ObjectMeta: metav1.ObjectMeta{Name: "stuff"},
+		Status: agonesv1.GameServerStatus{
+			Counters: counters,
+		},
+	}
+
+	path, err := gsToTmpFile(fixture)
+	assert.NoError(t, err)
+	l, err := NewLocalSDKServer(path, "")
+	assert.Nil(t, err)
+
+	stream := newGameServerMockStream()
+	go func() {
+		err := l.WatchGameServer(&sdk.Empty{}, stream)
+		assert.Nil(t, err)
+	}()
+	assertInitialWatchUpdate(t, stream)
+
+	// wait for watching to begin
+	err = wait.Poll(time.Second, 10*time.Second, func() (bool, error) {
+		found := false
+		l.updateObservers.Range(func(_, _ interface{}) bool {
+			found = true
+			return false
+		})
+		return found, nil
+	})
+	assert.NoError(t, err)
+
+	counterRequest := alpha.GetCounterRequest{Name: name}
+	expected := &alpha.Counter{Name: name, Count: &count, Capacity: &capacity}
+	counter, err := l.GetCounter(context.Background(), &counterRequest)
+	assert.NoError(t, err)
+	if diff := cmp.Diff(expected, counter, protocmp.Transform()); diff != "" {
+		t.Errorf("unexpected difference:\n%v", diff)
+	}
+}
+
+func TestLocalSDKServerUpdateCounter(t *testing.T) {
+	t.Parallel()
+
+	runtime.FeatureTestMutex.Lock()
+	defer runtime.FeatureTestMutex.Unlock()
+	assert.NoError(t, runtime.ParseFeatures(string(runtime.FeatureCountsAndLists)+"=true"))
+
+	counterName := "sessions"
+	counters := map[string]agonesv1.CounterStatus{
+		counterName: {Count: 1, Capacity: 100},
+	}
+	fixture := &agonesv1.GameServer{
+		ObjectMeta: metav1.ObjectMeta{Name: "stuff"},
+		Status: agonesv1.GameServerStatus{
+			Counters: counters,
+		},
+	}
+
+	path, err := gsToTmpFile(fixture)
+	assert.NoError(t, err)
+	l, err := NewLocalSDKServer(path, "")
+	assert.Nil(t, err)
+
+	stream := newGameServerMockStream()
+	go func() {
+		err := l.WatchGameServer(&sdk.Empty{}, stream)
+		assert.Nil(t, err)
+	}()
+	assertInitialWatchUpdate(t, stream)
+
+	// wait for watching to begin
+	err = wait.Poll(time.Second, 10*time.Second, func() (bool, error) {
+		found := false
+		l.updateObservers.Range(func(_, _ interface{}) bool {
+			found = true
+			return false
+		})
+		return found, nil
+	})
+	assert.NoError(t, err)
+
+	// Check UpdateCounter only updates fields in the FieldMask
+	got, err := l.UpdateCounter(context.Background(), &alpha.UpdateCounterRequest{
+		Counter: &alpha.Counter{
+			Name:     counterName,
+			Count:    proto.Int64(9),
+			Capacity: proto.Int64(999),
+		},
+		UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"count"}},
+	})
+	want := &alpha.Counter{
+		Name:     counterName,
+		Count:    proto.Int64(9),
+		Capacity: proto.Int64(100),
+	}
+	assert.NoError(t, err)
+	if diff := cmp.Diff(want, got, protocmp.Transform()); diff != "" {
+		t.Errorf("unexpected difference:\n%v", diff)
+	}
+
+	// Confirm updated Counter has been properly written to the GameServer
+	got, err = l.GetCounter(context.Background(), &alpha.GetCounterRequest{Name: counterName})
+	assert.NoError(t, err)
+	if diff := cmp.Diff(want, got, protocmp.Transform()); diff != "" {
+		t.Errorf("unexpected difference:\n%v", diff)
 	}
 }
 

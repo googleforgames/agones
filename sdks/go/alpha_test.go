@@ -18,11 +18,11 @@ import (
 	"context"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-
-	"google.golang.org/grpc"
-
 	"agones.dev/agones/pkg/sdk/alpha"
+	"github.com/stretchr/testify/assert"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func TestAlphaGetAndSetPlayerCapacity(t *testing.T) {
@@ -111,4 +111,16 @@ func (a *alphaMock) GetPlayerCapacity(ctx context.Context, in *alpha.Empty, opts
 
 func (a *alphaMock) GetPlayerCount(ctx context.Context, in *alpha.Empty, opts ...grpc.CallOption) (*alpha.Count, error) {
 	return &alpha.Count{Count: a.playerCount}, nil
+}
+
+// GetCounter to be implemented
+func (a *alphaMock) GetCounter(ctx context.Context, in *alpha.GetCounterRequest, opts ...grpc.CallOption) (*alpha.Counter, error) {
+	// TODO(#2716): Implement me!
+	return nil, status.Error(codes.Unimplemented, "GetCounter coming soon")
+}
+
+// UpdateCounter to be implemented
+func (a *alphaMock) UpdateCounter(ctx context.Context, in *alpha.UpdateCounterRequest, opts ...grpc.CallOption) (*alpha.Counter, error) {
+	// TODO(#2716): Implement me!
+	return nil, status.Error(codes.Unimplemented, "UpdateCounter coming soon")
 }

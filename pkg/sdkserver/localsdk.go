@@ -31,8 +31,10 @@ import (
 	"agones.dev/agones/pkg/sdk/beta"
 	"agones.dev/agones/pkg/util/runtime"
 	"github.com/fsnotify/fsnotify"
+	"github.com/mennanov/fmutils"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"google.golang.org/protobuf/proto"
 	"k8s.io/apimachinery/pkg/util/yaml"
 )
 
@@ -583,6 +585,60 @@ func (l *LocalSDKServer) GetPlayerCapacity(_ context.Context, _ *alpha.Empty) (*
 	}
 
 	return result, nil
+}
+
+// GetCounter returns a Counter. Returns NOT_FOUND if the counter does not exist.
+// [Stage:Alpha]
+// [FeatureFlag:CountsAndLists]
+func (l *LocalSDKServer) GetCounter(ctx context.Context, in *alpha.GetCounterRequest) (*alpha.Counter, error) {
+	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
+		return nil, errors.Errorf("%s not enabled", runtime.FeatureCountsAndLists)
+	}
+
+	l.logger.WithField("name", in.Name).Info("Getting Counter")
+	l.recordRequest("getcounter")
+	l.gsMutex.RLock()
+	defer l.gsMutex.RUnlock()
+
+	if counter, ok := l.gs.Status.Counters[in.Name]; ok {
+		return &alpha.Counter{Name: in.Name, Count: &counter.Count, Capacity: &counter.Capacity}, nil
+	}
+	return nil, errors.Errorf("NOT_FOUND. %s Counter not found", in.Name)
+}
+
+// UpdateCounter returns the updated Counter. Returns NOT_FOUND if the Counter does not exist.
+// Returns INVALID_ARGUMENT if the FieldMask paths are invalid.
+// [Stage:Alpha]
+// [FeatureFlag:CountsAndLists]
+func (l *LocalSDKServer) UpdateCounter(ctx context.Context, in *alpha.UpdateCounterRequest) (*alpha.Counter, error) {
+	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
+		return nil, errors.Errorf("%s not enabled", runtime.FeatureCountsAndLists)
+	}
+
+	l.logger.WithField("name", in.Counter.Name).Info("Updating Counter")
+	l.recordRequest("updatecounter")
+	l.gsMutex.RLock()
+	defer l.gsMutex.RUnlock()
+
+	name := in.Counter.Name
+	if counter, ok := l.gs.Status.Counters[name]; ok {
+		// Check if the UpdateMask paths are valid, return INVALID_ARGUMENT if not.
+		// TODO: https://google.aip.dev/134, "Update masks must support a special value *, meaning full replacement".
+		if in.UpdateMask.IsValid(counter.ProtoReflect().Interface()) {
+			// Create *alpha.Counter from *sdk.GameServer_Status_CounterStatus for merging.
+			tmpCounter := &alpha.Counter{Name: name, Count: &counter.Count, Capacity: &counter.Capacity}
+			// Removes any fields from the request that are not included in the FieldMask Paths.
+			fmutils.Filter(in.Counter, in.UpdateMask.Paths)
+			// Now that the request is filtered we can merge it with the Counter entity.
+			proto.Merge(tmpCounter, in.Counter)
+			// Write newly updated Counter to gameserverstatus.
+			l.gs.Status.Counters[name].Count = *tmpCounter.Count
+			l.gs.Status.Counters[name].Capacity = *tmpCounter.Capacity
+			return &alpha.Counter{Name: name, Count: &l.gs.Status.Counters[name].Count, Capacity: &l.gs.Status.Counters[name].Capacity}, nil
+		}
+		return nil, errors.Errorf("INVALID_ARGUMENT. Field Mask Path(s) %v are invalid for Counter. Use valid %v", in.UpdateMask.GetPaths(), counter.ProtoReflect().Descriptor().Fields())
+	}
+	return nil, errors.Errorf("NOT_FOUND. %s Counter not found", name)
 }
 
 // Close tears down all the things

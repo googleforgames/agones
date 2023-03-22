@@ -91,6 +91,11 @@ type SDKClient interface {
 	//
 	// If GameServer.Status.Players.IDs is set manually through the Kubernetes API, use SDK.GameServer() or SDK.WatchGameServer() instead to view this value.
 	GetConnectedPlayers(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*PlayerIDList, error)
+	// Gets a Counter. Returns NOT_FOUND if the Counter does not exist.
+	GetCounter(ctx context.Context, in *GetCounterRequest, opts ...grpc.CallOption) (*Counter, error)
+	// Updates a Counter. Returns NOT_FOUND if the Counter does not exist (name cannot be updated).
+	// Returns INVALID_ARGUMENT if the field mask path(s) are not field(s) of the Counter.
+	UpdateCounter(ctx context.Context, in *UpdateCounterRequest, opts ...grpc.CallOption) (*Counter, error)
 }
 
 type sDKClient struct {
@@ -164,6 +169,24 @@ func (c *sDKClient) GetConnectedPlayers(ctx context.Context, in *Empty, opts ...
 	return out, nil
 }
 
+func (c *sDKClient) GetCounter(ctx context.Context, in *GetCounterRequest, opts ...grpc.CallOption) (*Counter, error) {
+	out := new(Counter)
+	err := c.cc.Invoke(ctx, "/agones.dev.sdk.alpha.SDK/GetCounter", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sDKClient) UpdateCounter(ctx context.Context, in *UpdateCounterRequest, opts ...grpc.CallOption) (*Counter, error) {
+	out := new(Counter)
+	err := c.cc.Invoke(ctx, "/agones.dev.sdk.alpha.SDK/UpdateCounter", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // SDKServer is the server API for SDK service.
 // All implementations should embed UnimplementedSDKServer
 // for forward compatibility
@@ -221,6 +244,11 @@ type SDKServer interface {
 	//
 	// If GameServer.Status.Players.IDs is set manually through the Kubernetes API, use SDK.GameServer() or SDK.WatchGameServer() instead to view this value.
 	GetConnectedPlayers(context.Context, *Empty) (*PlayerIDList, error)
+	// Gets a Counter. Returns NOT_FOUND if the Counter does not exist.
+	GetCounter(context.Context, *GetCounterRequest) (*Counter, error)
+	// Updates a Counter. Returns NOT_FOUND if the Counter does not exist (name cannot be updated).
+	// Returns INVALID_ARGUMENT if the field mask path(s) are not field(s) of the Counter.
+	UpdateCounter(context.Context, *UpdateCounterRequest) (*Counter, error)
 }
 
 // UnimplementedSDKServer should be embedded to have forward compatible implementations.
@@ -247,6 +275,12 @@ func (UnimplementedSDKServer) IsPlayerConnected(context.Context, *PlayerID) (*Bo
 }
 func (UnimplementedSDKServer) GetConnectedPlayers(context.Context, *Empty) (*PlayerIDList, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetConnectedPlayers not implemented")
+}
+func (UnimplementedSDKServer) GetCounter(context.Context, *GetCounterRequest) (*Counter, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetCounter not implemented")
+}
+func (UnimplementedSDKServer) UpdateCounter(context.Context, *UpdateCounterRequest) (*Counter, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateCounter not implemented")
 }
 
 // UnsafeSDKServer may be embedded to opt out of forward compatibility for this service.
@@ -386,6 +420,42 @@ func _SDK_GetConnectedPlayers_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _SDK_GetCounter_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetCounterRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SDKServer).GetCounter(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/agones.dev.sdk.alpha.SDK/GetCounter",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SDKServer).GetCounter(ctx, req.(*GetCounterRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SDK_UpdateCounter_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateCounterRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SDKServer).UpdateCounter(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/agones.dev.sdk.alpha.SDK/UpdateCounter",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SDKServer).UpdateCounter(ctx, req.(*UpdateCounterRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // SDK_ServiceDesc is the grpc.ServiceDesc for SDK service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -420,6 +490,14 @@ var SDK_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetConnectedPlayers",
 			Handler:    _SDK_GetConnectedPlayers_Handler,
+		},
+		{
+			MethodName: "GetCounter",
+			Handler:    _SDK_GetCounter_Handler,
+		},
+		{
+			MethodName: "UpdateCounter",
+			Handler:    _SDK_UpdateCounter_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
