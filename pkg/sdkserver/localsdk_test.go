@@ -30,7 +30,6 @@ import (
 	"agones.dev/agones/pkg/util/runtime"
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
-	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/testing/protocmp"
 	"google.golang.org/protobuf/types/known/fieldmaskpb"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -654,11 +653,10 @@ func TestLocalSDKServerGetCounter(t *testing.T) {
 	})
 	assert.NoError(t, err)
 
-	counterRequest := alpha.GetCounterRequest{Name: name}
-	expected := &alpha.Counter{Name: name, Count: &count, Capacity: &capacity}
-	counter, err := l.GetCounter(context.Background(), &counterRequest)
+	want := &alpha.Counter{Name: name, Count: count, Capacity: capacity}
+	got, err := l.GetCounter(context.Background(), &alpha.GetCounterRequest{Name: name})
 	assert.NoError(t, err)
-	if diff := cmp.Diff(expected, counter, protocmp.Transform()); diff != "" {
+	if diff := cmp.Diff(want, got, protocmp.Transform()); diff != "" {
 		t.Errorf("unexpected difference:\n%v", diff)
 	}
 }
@@ -704,19 +702,19 @@ func TestLocalSDKServerUpdateCounter(t *testing.T) {
 	})
 	assert.NoError(t, err)
 
-	// Check UpdateCounter only updates fields in the FieldMask
+	// Check UpdateCounter only updates fields in the FieldMask, and that the default value for Count
+	// is applied (since not specified in the request Counter object).
 	got, err := l.UpdateCounter(context.Background(), &alpha.UpdateCounterRequest{
 		Counter: &alpha.Counter{
 			Name:     counterName,
-			Count:    proto.Int64(9),
-			Capacity: proto.Int64(999),
+			Capacity: int64(999),
 		},
 		UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"count"}},
 	})
 	want := &alpha.Counter{
 		Name:     counterName,
-		Count:    proto.Int64(9),
-		Capacity: proto.Int64(100),
+		Count:    int64(0),
+		Capacity: int64(100),
 	}
 	assert.NoError(t, err)
 	if diff := cmp.Diff(want, got, protocmp.Transform()); diff != "" {
@@ -725,6 +723,243 @@ func TestLocalSDKServerUpdateCounter(t *testing.T) {
 
 	// Confirm updated Counter has been properly written to the GameServer
 	got, err = l.GetCounter(context.Background(), &alpha.GetCounterRequest{Name: counterName})
+	assert.NoError(t, err)
+	if diff := cmp.Diff(want, got, protocmp.Transform()); diff != "" {
+		t.Errorf("unexpected difference:\n%v", diff)
+	}
+}
+
+func TestLocalSDKServerGetList(t *testing.T) {
+	t.Parallel()
+
+	runtime.FeatureTestMutex.Lock()
+	defer runtime.FeatureTestMutex.Unlock()
+	assert.NoError(t, runtime.ParseFeatures(string(runtime.FeatureCountsAndLists)+"=true"))
+
+	name := "games"
+	capacity := int64(100)
+	values := []string{"game1", "game2"}
+	lists := map[string]agonesv1.ListStatus{
+		name: {Capacity: capacity, Values: values},
+	}
+	fixture := &agonesv1.GameServer{
+		ObjectMeta: metav1.ObjectMeta{Name: "stuff"},
+		Status: agonesv1.GameServerStatus{
+			Lists: lists,
+		},
+	}
+
+	path, err := gsToTmpFile(fixture)
+	assert.NoError(t, err)
+	l, err := NewLocalSDKServer(path, "")
+	assert.Nil(t, err)
+
+	stream := newGameServerMockStream()
+	go func() {
+		err := l.WatchGameServer(&sdk.Empty{}, stream)
+		assert.Nil(t, err)
+	}()
+	assertInitialWatchUpdate(t, stream)
+
+	// wait for watching to begin
+	err = wait.Poll(time.Second, 10*time.Second, func() (bool, error) {
+		found := false
+		l.updateObservers.Range(func(_, _ interface{}) bool {
+			found = true
+			return false
+		})
+		return found, nil
+	})
+	assert.NoError(t, err)
+
+	want := &alpha.List{Name: name, Capacity: capacity, Values: values}
+	got, err := l.GetList(context.Background(), &alpha.GetListRequest{Name: name})
+	assert.NoError(t, err)
+	if diff := cmp.Diff(want, got, protocmp.Transform()); diff != "" {
+		t.Errorf("unexpected difference:\n%v", diff)
+	}
+}
+
+func TestLocalSDKServerUpdateList(t *testing.T) {
+	t.Parallel()
+
+	runtime.FeatureTestMutex.Lock()
+	defer runtime.FeatureTestMutex.Unlock()
+	assert.NoError(t, runtime.ParseFeatures(string(runtime.FeatureCountsAndLists)+"=true"))
+
+	name := "games"
+	lists := map[string]agonesv1.ListStatus{
+		name: {Capacity: 100, Values: []string{"game1", "game2"}},
+	}
+	fixture := &agonesv1.GameServer{
+		ObjectMeta: metav1.ObjectMeta{Name: "stuff"},
+		Status: agonesv1.GameServerStatus{
+			Lists: lists,
+		},
+	}
+
+	path, err := gsToTmpFile(fixture)
+	assert.NoError(t, err)
+	l, err := NewLocalSDKServer(path, "")
+	assert.Nil(t, err)
+
+	stream := newGameServerMockStream()
+	go func() {
+		err := l.WatchGameServer(&sdk.Empty{}, stream)
+		assert.Nil(t, err)
+	}()
+	assertInitialWatchUpdate(t, stream)
+
+	// wait for watching to begin
+	err = wait.Poll(time.Second, 10*time.Second, func() (bool, error) {
+		found := false
+		l.updateObservers.Range(func(_, _ interface{}) bool {
+			found = true
+			return false
+		})
+		return found, nil
+	})
+	assert.NoError(t, err)
+
+	// Check UpdateList only overwrites fields in the FieldMask, and that the default value for "values"
+	// is applied (since not specified in the request List object).
+	got, err := l.UpdateList(context.Background(), &alpha.UpdateListRequest{
+		List: &alpha.List{
+			Name:     name,
+			Capacity: int64(10),
+		},
+		UpdateMask: &fieldmaskpb.FieldMask{
+			Paths: []string{"values"},
+		},
+	})
+	want := &alpha.List{
+		Name:     name,
+		Capacity: int64(100),
+		Values:   []string{},
+	}
+	assert.NoError(t, err)
+	if diff := cmp.Diff(want, got, protocmp.Transform()); diff != "" {
+		t.Errorf("unexpected difference:\n%v", diff)
+	}
+
+	// Confirm updated List has been properly written to the GameServer
+	got, err = l.GetList(context.Background(), &alpha.GetListRequest{Name: name})
+	assert.NoError(t, err)
+	if diff := cmp.Diff(want, got, protocmp.Transform()); diff != "" {
+		t.Errorf("unexpected difference:\n%v", diff)
+	}
+}
+
+func TestLocalSDKServerAddListValue(t *testing.T) {
+	t.Parallel()
+
+	runtime.FeatureTestMutex.Lock()
+	defer runtime.FeatureTestMutex.Unlock()
+	assert.NoError(t, runtime.ParseFeatures(string(runtime.FeatureCountsAndLists)+"=true"))
+
+	name := "lemmings"
+	capacity := int64(100)
+	lists := map[string]agonesv1.ListStatus{
+		name: {Capacity: capacity, Values: []string{"lemming1", "lemming2"}},
+	}
+	fixture := &agonesv1.GameServer{
+		ObjectMeta: metav1.ObjectMeta{Name: "stuff"},
+		Status: agonesv1.GameServerStatus{
+			Lists: lists,
+		},
+	}
+
+	path, err := gsToTmpFile(fixture)
+	assert.NoError(t, err)
+	l, err := NewLocalSDKServer(path, "")
+	assert.Nil(t, err)
+
+	stream := newGameServerMockStream()
+	go func() {
+		err := l.WatchGameServer(&sdk.Empty{}, stream)
+		assert.Nil(t, err)
+	}()
+	assertInitialWatchUpdate(t, stream)
+
+	// wait for watching to begin
+	err = wait.Poll(time.Second, 10*time.Second, func() (bool, error) {
+		found := false
+		l.updateObservers.Range(func(_, _ interface{}) bool {
+			found = true
+			return false
+		})
+		return found, nil
+	})
+	assert.NoError(t, err)
+
+	// Add new unique value to list
+	got, err := l.AddListValue(context.Background(), &alpha.AddListValueRequest{Name: name, Value: "lemming3"})
+	want := &alpha.List{Name: name, Capacity: capacity, Values: []string{"lemming1", "lemming2", "lemming3"}}
+	assert.NoError(t, err)
+	if diff := cmp.Diff(want, got, protocmp.Transform()); diff != "" {
+		t.Errorf("unexpected difference:\n%v", diff)
+	}
+
+	// Confirm updated List has been properly written to the GameServer
+	got, err = l.GetList(context.Background(), &alpha.GetListRequest{Name: name})
+	assert.NoError(t, err)
+	if diff := cmp.Diff(want, got, protocmp.Transform()); diff != "" {
+		t.Errorf("unexpected difference:\n%v", diff)
+	}
+}
+
+func TestLocalSDKServerRemoveListValue(t *testing.T) {
+	t.Parallel()
+
+	runtime.FeatureTestMutex.Lock()
+	defer runtime.FeatureTestMutex.Unlock()
+	assert.NoError(t, runtime.ParseFeatures(string(runtime.FeatureCountsAndLists)+"=true"))
+
+	name := "players"
+	capacity := int64(100)
+	lists := map[string]agonesv1.ListStatus{
+		name: {Capacity: capacity, Values: []string{"player1", "player2"}},
+	}
+	fixture := &agonesv1.GameServer{
+		ObjectMeta: metav1.ObjectMeta{Name: "stuff"},
+		Status: agonesv1.GameServerStatus{
+			Lists: lists,
+		},
+	}
+
+	path, err := gsToTmpFile(fixture)
+	assert.NoError(t, err)
+	l, err := NewLocalSDKServer(path, "")
+	assert.Nil(t, err)
+
+	stream := newGameServerMockStream()
+	go func() {
+		err := l.WatchGameServer(&sdk.Empty{}, stream)
+		assert.Nil(t, err)
+	}()
+	assertInitialWatchUpdate(t, stream)
+
+	// wait for watching to begin
+	err = wait.Poll(time.Second, 10*time.Second, func() (bool, error) {
+		found := false
+		l.updateObservers.Range(func(_, _ interface{}) bool {
+			found = true
+			return false
+		})
+		return found, nil
+	})
+	assert.NoError(t, err)
+
+	// Remove existing value form list
+	got, err := l.RemoveListValue(context.Background(), &alpha.RemoveListValueRequest{Name: name, Value: "player2"})
+	want := &alpha.List{Name: name, Capacity: capacity, Values: []string{"player1"}}
+	assert.NoError(t, err)
+	if diff := cmp.Diff(want, got, protocmp.Transform()); diff != "" {
+		t.Errorf("unexpected difference:\n%v", diff)
+	}
+
+	// Confirm updated List has been properly written to the GameServer
+	got, err = l.GetList(context.Background(), &alpha.GetListRequest{Name: name})
 	assert.NoError(t, err)
 	if diff := cmp.Diff(want, got, protocmp.Transform()); diff != "" {
 		t.Errorf("unexpected difference:\n%v", diff)
