@@ -50,6 +50,7 @@ clean-gcloud-test-cluster: $(ensure-build-image)
 
 gcloud-e2e-infra-state-bucket: GCP_PROJECT ?= $(shell $(current_project))
 gcloud-e2e-infra-state-bucket:
+	$(MAKE) terraform-init DIRECTORY=e2e/state-bucket
 	docker run --rm -it $(common_mounts) $(build_tag) bash -c 'cd $(mount_path)/build/terraform/e2e/state-bucket && \
       	terraform apply -auto-approve -var project="$(GCP_PROJECT)"'
 
