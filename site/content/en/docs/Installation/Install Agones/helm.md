@@ -259,6 +259,9 @@ The following tables lists the configurable parameters of the Agones chart and t
 | Parameter                             | Description                                                                                                                                                                                                                           | Default |
 |---------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------|
 |                                                          |                                                                                                                                                                                                                                                            |
+| `agones.controller.replicas`                                   | The number of replicas to run in the `agones-controller` deployment. (Ignored unless [SplitControllerAndExtensions][split-controller] is enabled)                                                                                                                                                                        | `2`                                |
+| `agones.controller.pdb.minAvailable`        | Description of the number of pods from that set that must still be available after the eviction, even in the absence of the evicted pod. Can be either an absolute number or a percentage. Mutually Exclusive with `maxUnavailable` (Ignored unless [SplitControllerAndExtensions][split-controller] is enabled)   | `1`     |
+| `agones.controller.pdb.maxUnavailable`      | Description of the number of pods from that set that can be unavailable after the eviction. It can be either an absolute number or a percentage Mutually Exclusive with `minAvailable` (Ignored unless [SplitControllerAndExtensions][split-controller] is enabled)                                                | \`\`    |
 {{% /feature %}}
 
 [toleration]: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
@@ -276,6 +279,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 [gameserver]: {{< ref "/docs/Reference/gameserver.md" >}}
 [rest-requests]: {{< ref "/docs/Advanced/allocator-service.md#using-rest" >}}
 [grpc-requests]: {{< ref "/docs/Advanced/allocator-service.md#using-grpc" >}}
+[split-controller]: {{< ref "/docs/Advanced/high-availability-agones" >}}
 
 Specify each parameter using the `--set key=value[,key=value]` argument to `helm install`. For example,
 
