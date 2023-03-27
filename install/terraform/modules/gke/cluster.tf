@@ -31,7 +31,8 @@ locals {
   enableImageStreaming    = lookup(var.cluster, "enableImageStreaming", true)
   network                 = lookup(var.cluster, "network", "default")
   subnetwork              = lookup(var.cluster, "subnetwork", "")
-  kubernetesVersion       = lookup(var.cluster, "kubernetesVersion", "1.24")
+  releaseChannel          = lookup(var.cluster, "releaseChannel", "UNSPECIFIED")
+  kubernetesVersion       = lookup(var.cluster, "kubernetesVersion", "1.25")
   windowsInitialNodeCount = lookup(var.cluster, "windowsInitialNodeCount", "0")
   windowsMachineType      = lookup(var.cluster, "windowsMachineType", "e2-standard-4")
   autoscale               = lookup(var.cluster, "autoscale", false)
@@ -52,7 +53,7 @@ data "google_container_engine_versions" "version" {
 resource "null_resource" "test-setting-variables" {
   provisioner "local-exec" {
     command = <<EOT
-    ${format("echo Current variables set as following - name: %s, project: %s, machineType: %s, initialNodeCount: %s, network: %s, zone: %s, location: %s,windowsInitialNodeCount: %s, windowsMachineType: %s",
+    ${format("echo Current variables set as following - name: %s, project: %s, machineType: %s, initialNodeCount: %s, network: %s, zone: %s, location: %s, windowsInitialNodeCount: %s, windowsMachineType: %s, releaseChannel: %s, kubernetesVersion: %s",
     local.name,
     local.project,
     local.machineType,
@@ -62,6 +63,8 @@ resource "null_resource" "test-setting-variables" {
     local.location,
     local.windowsInitialNodeCount,
     local.windowsMachineType,
+    local.releaseChannel,
+    local.kubernetesVersion,
 )}
     EOT
 }
@@ -74,12 +77,16 @@ resource "google_container_cluster" "primary" {
   network    = local.network
   subnetwork = local.subnetwork
 
+  release_channel {
+    channel = local.releaseChannel
+  }
+
   min_master_version = local.kubernetesVersion
 
   node_pool {
     name       = "default"
     node_count = local.autoscale ? null : local.initialNodeCount
-    version    = data.google_container_engine_versions.version.latest_node_version
+    version    = local.releaseChannel == "UNSPECIFIED" ? data.google_container_engine_versions.version.latest_node_version : data.google_container_engine_versions.version.release_channel_latest_version[local.releaseChannel]
 
     dynamic "autoscaling" {
       for_each = local.autoscale ? [1] : []
@@ -90,7 +97,7 @@ resource "google_container_cluster" "primary" {
     }
 
     management {
-      auto_upgrade = false
+      auto_upgrade = local.releaseChannel == "UNSPECIFIED" ? false : true
     }
 
     node_config {
@@ -115,10 +122,10 @@ resource "google_container_cluster" "primary" {
   node_pool {
     name       = "agones-system"
     node_count = 1
-    version    = data.google_container_engine_versions.version.latest_node_version
+    version    = local.releaseChannel == "UNSPECIFIED" ? data.google_container_engine_versions.version.latest_node_version : data.google_container_engine_versions.version.release_channel_latest_version[local.releaseChannel]
 
     management {
-      auto_upgrade = false
+      auto_upgrade = local.releaseChannel == "UNSPECIFIED" ? false : true
     }
 
     node_config {
@@ -151,10 +158,10 @@ resource "google_container_cluster" "primary" {
   node_pool {
     name       = "agones-metrics"
     node_count = 1
-    version    = data.google_container_engine_versions.version.latest_node_version
+    version    = local.releaseChannel == "UNSPECIFIED" ? data.google_container_engine_versions.version.latest_node_version : data.google_container_engine_versions.version.release_channel_latest_version[local.releaseChannel]
 
     management {
-      auto_upgrade = false
+      auto_upgrade = local.releaseChannel == "UNSPECIFIED" ? false : true
     }
 
     node_config {
@@ -197,10 +204,10 @@ resource "google_container_cluster" "primary" {
     content {
       name       = "windows"
       node_count = local.windowsInitialNodeCount
-      version    = data.google_container_engine_versions.version.latest_node_version
+      version    = local.releaseChannel == "UNSPECIFIED" ? data.google_container_engine_versions.version.latest_node_version : data.google_container_engine_versions.version.release_channel_latest_version[local.releaseChannel]
 
       management {
-        auto_upgrade = false
+        auto_upgrade = local.releaseChannel == "UNSPECIFIED" ? false : true
       }
 
       node_config {

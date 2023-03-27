@@ -84,6 +84,7 @@ message AllocationResponse {
   repeated GameServerStatusPort ports = 3;
   string address = 4;
   string nodeName = 5;
+  string source = 6;
 
   // The gameserver port info that is allocated.
   message GameServerStatusPort {

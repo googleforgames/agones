@@ -26,7 +26,7 @@ variable "cluster" {
     "network"           = "default"
     "subnetwork"        = ""
     "releaseChannel"    = "REGULAR"
-    "kubernetesVersion" = "1.24"
+    "kubernetesVersion" = "1.25"
   }
 }
 
