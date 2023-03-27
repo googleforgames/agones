@@ -98,7 +98,7 @@ They may require adjustment to your particular game architecture but should prov
 The recommended approach is to use [multiple clusters](#multiple-clusters), such that the upgrade can be tested
 gradually with production load and easily rolled back if the need arises.
 
-Agones has [multiple supported Kubernetes version]({{< relref "_index.md#usage-requirements" >}}) for each version. You can stick with a minor Kubernetes version until it is not supported by Agones, but it is recommended to do supported minor (e.g. 1.12.1 ➡ 1.13.2) Kubernetes version upgrades at the same time as a matching Agones upgrades.
+Agones has [multiple supported Kubernetes versions]({{< relref "_index.md#usage-requirements" >}}) for each version. You can stick with a minor Kubernetes version until it is not supported by Agones, but it is recommended to do supported minor (e.g. 1.12.1 ➡ 1.13.2) Kubernetes version upgrades at the same time as a matching Agones upgrades.
 
 Patch upgrades (e.g. 1.12.1 ➡ 1.12.3) within the same minor version of Kubernetes can be done at any time. 
 
