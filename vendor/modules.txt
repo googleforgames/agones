@@ -157,6 +157,7 @@ github.com/google/gnostic/openapiv3
 # github.com/google/go-cmp v0.5.9
 ## explicit; go 1.13
 github.com/google/go-cmp/cmp
+github.com/google/go-cmp/cmp/cmpopts
 github.com/google/go-cmp/cmp/internal/diff
 github.com/google/go-cmp/cmp/internal/flags
 github.com/google/go-cmp/cmp/internal/function
@@ -244,6 +245,9 @@ github.com/mattbaird/jsonpatch
 # github.com/matttproud/golang_protobuf_extensions v1.0.4
 ## explicit; go 1.9
 github.com/matttproud/golang_protobuf_extensions/pbutil
+# github.com/mennanov/fmutils v0.2.0
+## explicit; go 1.15
+github.com/mennanov/fmutils
 # github.com/mitchellh/mapstructure v1.4.1
 ## explicit; go 1.14
 github.com/mitchellh/mapstructure
@@ -534,6 +538,7 @@ google.golang.org/protobuf/internal/filetype
 google.golang.org/protobuf/internal/flags
 google.golang.org/protobuf/internal/genid
 google.golang.org/protobuf/internal/impl
+google.golang.org/protobuf/internal/msgfmt
 google.golang.org/protobuf/internal/order
 google.golang.org/protobuf/internal/pragma
 google.golang.org/protobuf/internal/set
@@ -545,6 +550,7 @@ google.golang.org/protobuf/reflect/protoreflect
 google.golang.org/protobuf/reflect/protoregistry
 google.golang.org/protobuf/runtime/protoiface
 google.golang.org/protobuf/runtime/protoimpl
+google.golang.org/protobuf/testing/protocmp
 google.golang.org/protobuf/types/descriptorpb
 google.golang.org/protobuf/types/known/anypb
 google.golang.org/protobuf/types/known/durationpb

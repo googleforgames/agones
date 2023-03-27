@@ -18,6 +18,11 @@ package agones.dev.sdk.alpha;
 option go_package = "./alpha";
 
 import "google/api/annotations.proto";
+import "google/api/client.proto";
+import "google/api/field_behavior.proto";
+import "google/api/resource.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/field_mask.proto";
 import "protoc-gen-openapiv2/options/annotations.proto";
 
 option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
@@ -122,6 +127,24 @@ service SDK {
             get: "/alpha/player/connected"
         };
     }
+
+    // Gets a Counter. Returns NOT_FOUND if the Counter does not exist.
+    rpc GetCounter(GetCounterRequest) returns (Counter) {
+      option (google.api.http) = {
+        get: "/v1alpha1/{name=counters/*}"
+      };
+      option (google.api.method_signature) = "name";
+    }
+
+    // Updates a Counter. Returns NOT_FOUND if the Counter does not exist (name cannot be updated).
+    // Returns INVALID_ARGUMENT if the field mask path(s) are not field(s) of the Counter.
+    rpc UpdateCounter(UpdateCounterRequest) returns (Counter) {
+      option (google.api.http) = {
+        patch: "/v1alpha1/{counter.name=counters/*}"
+        body: "counter"
+      };
+      option (google.api.method_signature) = "counter,update_mask";
+    }
 }
 
 // I am Empty
@@ -146,4 +169,41 @@ message PlayerID {
 // List of Player IDs
 message PlayerIDList {
     repeated string list = 1;
+}
+
+// A representation of a Counter.
+message Counter {
+  option (google.api.resource) = {
+      type: "agones.dev/Counter"
+      pattern: "counters/{counter}"
+  };
+  // The name of the Counter
+  string name = 1;
+  // The current count of the Counter
+  optional int64 count = 2;
+  // The maximum capacity of the Counter
+  optional int64 capacity = 3;
+}
+
+message GetCounterRequest {
+  // The name of the Counter to get
+  string name = 1 [
+                  (google.api.field_behavior) = REQUIRED,
+                  (google.api.resource_reference) = {
+    type: "agones.dev/Counter"
+  }];
+}
+
+message UpdateCounterRequest {
+  // The Counter to update
+  Counter counter = 1 [
+                  (google.api.field_behavior) = REQUIRED,
+                  (google.api.resource_reference) = {
+    type: "agones.dev/Counter"
+  }];
+
+  // Required. Mask (list) of fields to update.
+  // Fields are specified relative to the Counter
+  // (e.g. `count`, `capacity`; *not* `Counter.count` or `Counter.capacity`).
+  google.protobuf.FieldMask update_mask = 2 [(google.api.field_behavior) = REQUIRED];
 }

@@ -18,6 +18,7 @@ import (
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	"agones.dev/agones/pkg/sdk"
 	"agones.dev/agones/pkg/util/runtime"
+	"google.golang.org/protobuf/proto"
 )
 
 const (
@@ -74,6 +75,16 @@ func convert(gs *agonesv1.GameServer) *sdk.GameServer {
 				Capacity: gs.Status.Players.Capacity,
 				Ids:      gs.Status.Players.IDs,
 			}
+		}
+	}
+
+	if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
+		if gs.Status.Counters != nil {
+			counters := make(map[string]*sdk.GameServer_Status_CounterStatus, len(gs.Status.Counters))
+			for key, counter := range gs.Status.Counters {
+				counters[key] = &sdk.GameServer_Status_CounterStatus{Count: *proto.Int64(counter.Count), Capacity: *proto.Int64(counter.Capacity)}
+			}
+			result.Status.Counters = counters
 		}
 	}
 

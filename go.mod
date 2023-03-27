@@ -11,12 +11,14 @@ require (
 	github.com/ahmetb/gen-crd-api-reference-docs v0.3.0
 	github.com/fsnotify/fsnotify v1.4.9
 	github.com/go-openapi/spec v0.19.5
+	github.com/google/go-cmp v0.5.9
 	github.com/gorilla/websocket v1.4.2
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.15.2
 	github.com/hashicorp/golang-lru v0.5.1
 	github.com/heptiolabs/healthcheck v0.0.0-20171201210846-da5fdee475fb
 	github.com/joonix/log v0.0.0-20180502111528-d2d3f2f4a806
 	github.com/mattbaird/jsonpatch v0.0.0-20171005235357-81af80346b1a
+	github.com/mennanov/fmutils v0.2.0
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.14.0
@@ -66,7 +68,6 @@ require (
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/gnostic v0.5.7-v3refs // indirect
-	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/google/gofuzz v1.1.0 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.2.3 // indirect

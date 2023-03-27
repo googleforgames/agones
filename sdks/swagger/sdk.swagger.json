@@ -327,6 +327,20 @@
         }
       }
     },
+    "StatusCounterStatus": {
+      "type": "object",
+      "properties": {
+        "count": {
+          "type": "string",
+          "format": "int64"
+        },
+        "capacity": {
+          "type": "string",
+          "format": "int64"
+        }
+      },
+      "title": "[Stage:Alpha]\n[FeatureFlag:CountsAndLists]"
+    },
     "StatusPlayerStatus": {
       "type": "object",
       "properties": {
@@ -407,6 +421,13 @@
         "players": {
           "$ref": "#/definitions/StatusPlayerStatus",
           "title": "[Stage:Alpha]\n[FeatureFlag:PlayerTracking]"
+        },
+        "counters": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/StatusCounterStatus"
+          },
+          "title": "[Stage:Alpha]\n[FeatureFlag:CountsAndLists]"
         }
       }
     },

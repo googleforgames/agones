@@ -43,7 +43,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/alphaEmpty"
+              "$ref": "#/definitions/sdkalphaEmpty"
             }
           }
         },
@@ -182,6 +182,82 @@
           "SDK"
         ]
       }
+    },
+    "/v1alpha1/{counter.name}": {
+      "patch": {
+        "summary": "Updates a Counter. Returns NOT_FOUND if the Counter does not exist (name cannot be updated).\nReturns INVALID_ARGUMENT if the field mask path(s) are not field(s) of the Counter.",
+        "operationId": "UpdateCounter",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/alphaCounter"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "counter.name",
+            "description": "The name of the Counter",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "pattern": "counters/[^/]+"
+          },
+          {
+            "name": "counter",
+            "description": "The Counter to update",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "string",
+                  "format": "int64",
+                  "title": "The current count of the Counter"
+                },
+                "capacity": {
+                  "type": "string",
+                  "format": "int64",
+                  "title": "The maximum capacity of the Counter"
+                }
+              },
+              "title": "The Counter to update"
+            }
+          }
+        ],
+        "tags": [
+          "SDK"
+        ]
+      }
+    },
+    "/v1alpha1/{name}": {
+      "get": {
+        "summary": "Gets a Counter. Returns NOT_FOUND if the Counter does not exist.",
+        "operationId": "GetCounter",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/alphaCounter"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "name",
+            "description": "The name of the Counter to get",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "pattern": "counters/[^/]+"
+          }
+        ],
+        "tags": [
+          "SDK"
+        ]
+      }
     }
   },
   "definitions": {
@@ -205,9 +281,25 @@
       },
       "description": "Store a count variable."
     },
-    "alphaEmpty": {
+    "alphaCounter": {
       "type": "object",
-      "title": "I am Empty"
+      "properties": {
+        "name": {
+          "type": "string",
+          "title": "The name of the Counter"
+        },
+        "count": {
+          "type": "string",
+          "format": "int64",
+          "title": "The current count of the Counter"
+        },
+        "capacity": {
+          "type": "string",
+          "format": "int64",
+          "title": "The maximum capacity of the Counter"
+        }
+      },
+      "description": "A representation of a Counter."
     },
     "alphaPlayerID": {
       "type": "object",
@@ -229,6 +321,10 @@
         }
       },
       "title": "List of Player IDs"
+    },
+    "sdkalphaEmpty": {
+      "type": "object",
+      "title": "I am Empty"
     }
   }
 }
