@@ -94,6 +94,7 @@
         "preferredGameServerSelectors": {
           "type": "array",
           "items": {
+            "type": "object",
             "$ref": "#/definitions/allocationGameServerSelector"
           },
           "description": "Deprecated: Please use gameServerSelectors instead. This field is ignored if the\ngameServerSelectors field is set\nThe ordered list of preferred allocations out of the `required` set.\nIf the first selector is not matched, the selection attempts the second selector, and so on."
@@ -113,6 +114,7 @@
         "gameServerSelectors": {
           "type": "array",
           "items": {
+            "type": "object",
             "$ref": "#/definitions/allocationGameServerSelector"
           },
           "description": "Ordered list of GameServer label selectors.\nIf the first selector is not matched, the selection attempts the second selector, and so on.\nThis is useful for things like smoke testing of new game servers.\nNote: This field can only be set if neither Required or Preferred is set."
@@ -128,6 +130,7 @@
         "ports": {
           "type": "array",
           "items": {
+            "type": "object",
             "$ref": "#/definitions/AllocationResponseGameServerStatusPort"
           }
         },

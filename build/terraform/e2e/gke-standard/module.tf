@@ -33,6 +33,7 @@ terraform {
 variable "project" {}
 variable "kubernetesVersion" {}
 variable "location" {}
+variable "releaseChannel" {}
 
 variable "overrideName" {
   default = ""
@@ -44,6 +45,7 @@ module "gke_cluster" {
   cluster = {
     "name"                 = var.overrideName != "" ? var.overrideName : format("gke-standard-e2e-test-cluster-%s", replace(var.kubernetesVersion, ".", "-"))
     "location"             = var.location
+    "releaseChannel"       = var.releaseChannel
     "machineType"          = "e2-standard-4"
     "initialNodeCount"     = 10
     "enableImageStreaming" = true
