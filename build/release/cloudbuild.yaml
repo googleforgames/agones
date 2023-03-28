@@ -13,62 +13,149 @@
 # limitations under the License.
 
 steps:
+  #
+  # Restore any caches
+  #
+  - name: us-docker.pkg.dev/$PROJECT_ID/ci/restore_cache
+    id: cpp-sdk-build-restore-cache
+    args:
+      - "--bucket=gs://$_CACHE_BUCKET"
+      - "--key=$_CPP_SDK_BUILD_CACHE_KEY-$( checksum sdks/cpp/cmake/prerequisites.cmake )"
+    waitFor: ["-"]
 
+  - name: us-docker.pkg.dev/$PROJECT_ID/ci/restore_cache
+    id: cpp-sdk-conformance-restore-cache
+    args:
+      - "--bucket=gs://$_CACHE_BUCKET"
+      - "--key=$_CPP_SDK_CONFORMANCE_CACHE_KEY-$( checksum sdks/cpp/cmake/prerequisites.cmake )"
+    waitFor: ["-"]
+
+  - name: us-docker.pkg.dev/$PROJECT_ID/ci/restore_cache
+    id: rust-sdk-build-restore-cache
+    args:
+      - "--bucket=gs://$_CACHE_BUCKET"
+      - "--key=$_RUST_SDK_BUILD_CACHE_KEY-$( checksum test/sdk/rust/Cargo.toml )"
+    waitFor: ["-"]
+
+  #
+  # Creates the initial make + docker build platform
+  #
   - name: "ubuntu"
-    args: ["bash", "-c", "echo 'FROM gcr.io/cloud-builders/docker\nRUN apt-get install make\nENTRYPOINT [\"/usr/bin/make\"]' > Dockerfile.build"]
-    waitFor: ['-']
-
+    args:
+      [
+        "bash",
+        "-c",
+        "echo 'FROM gcr.io/cloud-builders/docker\nRUN apt-get install make\nENTRYPOINT [\"/usr/bin/make\"]' > Dockerfile.build",
+      ]
+    waitFor: ["-"]
   - name: gcr.io/cloud-builders/docker
     id: build-make-docker
-    args: ['build', '-f', 'Dockerfile.build', '-t', 'make-docker', '.']
-  
-  - name: "make-docker"
+    args: ["build", "-f", "Dockerfile.build", "-t", "make-docker", "."]
+
+  #
+  # pull the main build image if it exists
+  #
+  - name: make-docker
     id: pull-build-image
     dir: "build"
     env:
-      - "REGISTRY=us-docker.pkg.dev/${PROJECT_ID}/ci"
+      - "REGISTRY=${_REGISTRY}/ci"
     args: ["pull-build-image"]
     waitFor:
       - build-make-docker
-  
+
+  #
+  # Ensure example images exists
+  #
   - name: make-docker
     id: test-examples-on-gar
     dir: "build"
     env:
-    - "REGISTRY=us-docker.pkg.dev/${PROJECT_ID}"
-    - DOCKER_RUN_ARGS=--network=cloudbuild
-    args: ["test-examples-on-gar"] 
+      - "REGISTRY=${_REGISTRY}"
+      - DOCKER_RUN_ARGS=--network=cloudbuild
+    args: ["test-examples-on-gar"]
 
+  #
+  # Build all the images
+  #
+  - name: make-docker
+    id: build
+    dir: "build"
+    env:
+      - "VERSION=${_VERSION}"
+      - "REGISTRY=${_REGISTRY}/release"
+      - "FULL_BUILD=1"
+    args: ["-j", "1", "build"]
+
+  #
+  # Creating cloud storage bucket
+  #
   - name: gcr.io/cloud-builders/gsutil
     entrypoint: bash
     args:
-      - '-c'
-      - 'gsutil mb $_STORAGE || true'
+      - "-c"
+      - "gsutil mb $_STORAGE || true"
     id: create-bucket
 
-  - name: ferrarimarco/github-changelog-generator:1.15.0
-    id: changelog
-    entrypoint: sh
+  #
+  # Zip up artifacts and push to cloud storage
+  #
+  - name: gcr.io/cloud-builders/gsutil
+    waitFor:
+      - build
+    dir: "go/src/agones.dev/agones/cmd/sdk-server/bin"
     args:
-      - '-c'
-      - 'github_changelog_generator --user=googleforgames --project=agones --bug-labels=kind/bug --enhancement-labels=kind/feature --breaking-labels=kind/breaking --security-labels=area/security --exclude-labels=duplicate,question,invalid,wontfix,priority/wontfix --future-release "v${_VERSION}" --release-branch=main --token $$GH_TOKEN'
-    secretEnv:
-      - GH_TOKEN
+      - gsutil -m cp agonessdk-server-${_VERSION}.zip $_STORAGE
 
-artifacts:
-  objects:
-    location: '$_STORAGE'
-    paths:
-      - 'CHANGELOG.md'
+  - name: gcr.io/cloud-builders/gsutil
+    waitFor:
+      - build
+    dir: "go/src/agones.dev/agones/sdks/cpp/.archives"
+    args:
+      - gsutil -m cp agonessdk-${_VERSION}-linux-arch_64.tar.gz $_STORAGE
+
+  - name: gcr.io/cloud-builders/gsutil
+    entrypoint: bash
+    waitFor:
+      - build
+    dir: "go/src/agones.dev/agones"
+    args:
+      - "-c"
+      - zip -r agones-install-${_VERSION}.zip ./README.md ./install ./LICENSE
+      - gsutil -m cp agones-install-${_VERSION}.zip $_STORAGE
+
+  #
+  # Generate the Changelog file in the cloud storage
+  #
+#   - name: ferrarimarco/github-changelog-generator:1.15.0
+#     id: changelog
+#     entrypoint: sh
+#     args:
+#       - "-c"
+#       - 'github_changelog_generator --user=googleforgames --project=agones --bug-labels=kind/bug --enhancement-labels=kind/feature --breaking-labels=kind/breaking --security-labels=area/security --exclude-labels=duplicate,question,invalid,wontfix,priority/wontfix --future-release "v${_VERSION}" --release-branch=main --token $$GH_TOKEN'
+#     secretEnv:
+#       - GH_TOKEN
+
+# artifacts:
+#   objects:
+#     location: "$_STORAGE"
+#     paths:
+#       - "CHANGELOG.md"
 
 options:
   machineType: E2_HIGHCPU_32
   dynamic_substitutions: true
 substitutions:
   _STORAGE: gs://${PROJECT_ID}-agones-releases
+  _VERSION: v1.31.0
+  _REGISTRY: us-docker.pkg.dev/${PROJECT_ID}
+  _CACHE_BUCKET: agones-build-cache
+  _CPP_SDK_BUILD_CACHE_KEY: cpp-sdk-build
+  _CPP_SDK_CONFORMANCE_CACHE_KEY: cpp-sdk-conformance
+  _RUST_SDK_BUILD_CACHE_KEY: rust-sdk-build
 
-availableSecrets:
-  secretManager:
-    - versionName: projects/${PROJECT_ID}/secrets/release-github-token/versions/latest
-      env: GH_TOKEN
-timeout: 1800s
+# availableSecrets:
+#   secretManager:
+#     - versionName: projects/${PROJECT_ID}/secrets/release-github-token/versions/latest
+#       env: GH_TOKEN
+timeout: 3600s
