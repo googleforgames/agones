@@ -1,0 +1,36 @@
+# This workflow warns and then closes issues and PRs that have had no activity for a specified amount of time.
+#
+# You can adjust the behavior by modifying this file.
+# For more information, see:
+# https://github.com/actions/stale
+name: Mark stale issues obsolete
+
+on:
+  schedule:
+  - cron: '0 2 1,15 * *'
+  workflow_dispatch:
+        
+
+jobs:
+  stale:
+
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    name: Track Obsolete Issues
+
+    steps:
+    - name: Track stale issues and check if obsolete
+      uses: actions/stale@v5
+      with:
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+        days-before-issue-stale: 29
+        stale-issue-message: >
+          This issue is marked as obsolete due to inactivity for last 60 days. 
+          To avoid being marked as "Obsolete" please add a comment or add "awaiting-maintainer" label. Thank you for your contributions
+        stale-issue-label: 'obsolete'
+        only-labels: 'stale'
+        exempt-issue-labels: awaiting-maintainer
+        remove-stale-when-updated: true
+        ascending: true
+        enable-statistics: true
