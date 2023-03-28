@@ -176,7 +176,7 @@ service SDK {
     // Returns OUT_OF_RANGE if the List is already at Capacity.
     rpc AddListValue(AddListValueRequest) returns (List) {
       option (google.api.http) = {
-        post: "/v1/{name=lists/*}:addValue"
+        post: "/v1alpha1/{name=lists/*}:addValue"
         body: "*"
       };
     }
@@ -185,7 +185,7 @@ service SDK {
     // Returns NOT_FOUND if the value is not in the List.
     rpc RemoveListValue(RemoveListValueRequest) returns (List) {
       option (google.api.http) = {
-        post: "/v1/{name=lists/*}:removeValue"
+        post: "/v1alpha1/{name=lists/*}:removeValue"
         body: "*"
       };
     }

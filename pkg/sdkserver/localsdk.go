@@ -618,6 +618,10 @@ func (l *LocalSDKServer) UpdateCounter(ctx context.Context, in *alpha.UpdateCoun
 		return nil, errors.Errorf("%s not enabled", runtime.FeatureCountsAndLists)
 	}
 
+	if in.Counter == nil || in.UpdateMask == nil {
+		return nil, errors.Errorf("INVALID_ARGUMENT. Counter: %v and UpdateMask %v cannot be nil", in.Counter, in.UpdateMask)
+	}
+
 	l.logger.WithField("name", in.Counter.Name).Info("Updating Counter")
 	l.recordRequest("updatecounter")
 	l.gsMutex.Lock()
@@ -627,6 +631,11 @@ func (l *LocalSDKServer) UpdateCounter(ctx context.Context, in *alpha.UpdateCoun
 	// Check if the UpdateMask paths are valid, return INVALID_ARGUMENT if not.
 	if !in.UpdateMask.IsValid(in.Counter.ProtoReflect().Interface()) {
 		return nil, errors.Errorf("INVALID_ARGUMENT. Field Mask Path(s): %v are invalid for Counter. Use valid field name(s): %v", in.UpdateMask.GetPaths(), in.Counter.ProtoReflect().Descriptor().Fields())
+	}
+
+	// TODO: Pull in variable Max Capacity from CRD instead of hard-coded number here.
+	if in.Counter.Capacity < 0 || in.Counter.Capacity > 1000 {
+		return nil, errors.Errorf("OUT_OF_RANGE. Capacity must be within range [0,1000]. Found Capacity: %d", in.Counter.Capacity)
 	}
 
 	name := in.Counter.Name
@@ -643,7 +652,6 @@ func (l *LocalSDKServer) UpdateCounter(ctx context.Context, in *alpha.UpdateCoun
 		if tmpCounter.Count < 0 || tmpCounter.Count > tmpCounter.Capacity {
 			return nil, errors.Errorf("OUT_OF_RANGE. Count must be within range [0,Capacity]. Found Count: %d, Capacity: %d", tmpCounter.Count, tmpCounter.Capacity)
 		}
-		// TODO: Verify that Capacity is within bounds determined by CRD.
 		// Write newly updated Counter to gameserverstatus.
 		l.gs.Status.Counters[name].Count = tmpCounter.Count
 		l.gs.Status.Counters[name].Capacity = tmpCounter.Capacity
@@ -684,6 +692,10 @@ func (l *LocalSDKServer) UpdateList(ctx context.Context, in *alpha.UpdateListReq
 		return nil, errors.Errorf("%s not enabled", runtime.FeatureCountsAndLists)
 	}
 
+	if in.List == nil || in.UpdateMask == nil {
+		return nil, errors.Errorf("INVALID_ARGUMENT. List: %v and UpdateMask %v cannot be nil", in.List, in.UpdateMask)
+	}
+
 	l.logger.WithField("name", in.List.Name).Info("Updating List")
 	l.recordRequest("updatelist")
 	l.gsMutex.Lock()
@@ -692,7 +704,12 @@ func (l *LocalSDKServer) UpdateList(ctx context.Context, in *alpha.UpdateListReq
 	// TODO: https://google.aip.dev/134, "Update masks must support a special value *, meaning full replacement."
 	// Check if the UpdateMask paths are valid, return INVALID_ARGUMENT if not.
 	if !in.UpdateMask.IsValid(in.List.ProtoReflect().Interface()) {
-		return nil, errors.Errorf("INVALID_ARGUMENT. Field Mask Path(s): %v are invalid for Counter. Use valid field name(s): %v", in.UpdateMask.GetPaths(), in.List.ProtoReflect().Descriptor().Fields())
+		return nil, errors.Errorf("INVALID_ARGUMENT. Field Mask Path(s): %v are invalid for List. Use valid field name(s): %v", in.UpdateMask.GetPaths(), in.List.ProtoReflect().Descriptor().Fields())
+	}
+
+	// TODO: Pull in variable Max Capacity from CRD instead of hard-coded number here.
+	if in.List.Capacity < 0 || in.List.Capacity > 1000 {
+		return nil, errors.Errorf("OUT_OF_RANGE. Capacity must be within range [0,1000]. Found Capacity: %d", in.List.Capacity)
 	}
 
 	name := in.List.Name
@@ -705,7 +722,6 @@ func (l *LocalSDKServer) UpdateList(ctx context.Context, in *alpha.UpdateListReq
 		fmutils.Prune(tmpList, in.UpdateMask.Paths)
 		// Due due filtering and pruning all gameserver object field(s) contained in the FieldMask are overwritten by the request object field(s).
 		proto.Merge(tmpList, in.List)
-		// TODO: Verify that Capacity is within bounds determined by CRD.
 		// Verify that Capacity >= len(tmpList.values)
 		if tmpList.Capacity < int64(len(tmpList.Values)) {
 			return nil, errors.Errorf("OUT_OF_RANGE. Capacity must be great than or equal to the size of the List of values. Found Capacity: %d, List Size: %d", tmpList.Capacity, len(tmpList.Values))
