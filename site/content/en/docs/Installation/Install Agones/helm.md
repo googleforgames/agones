@@ -298,6 +298,8 @@ You can use the default {{< ghlink href="install/helm/agones/values.yaml" >}}val
 
 ## Helm test
 
+This test would create a `GameServer` resource and delete it afterwards.
+
 {{< alert title="Tip" color="info">}}
 In order to use `helm test` command described in this section you need to set `helm.installTests` helm parameter to `true`.
 {{< /alert >}}
@@ -306,22 +308,19 @@ Check the Agones installation by running the following command:
 ```bash
 helm test my-release -n agones-system
 ```
-```
-RUNNING: agones-test
-PASSED: agones-test
-```
 
-This test would create a `GameServer` resource and delete it afterwards.
-
-{{< alert title="Tip" color="info">}}
-If you receive the following error:
+You should see a successful output similar to this :
 ```
-RUNNING: agones-test
-ERROR: pods "agones-test" already exists
-Error: 1 test(s) failed
+NAME: my-release
+LAST DEPLOYED: Wed Mar 29 06:13:23 2023
+NAMESPACE: agones-system
+STATUS: deployed
+REVISION: 4
+TEST SUITE:     my-release-test
+Last Started:   Wed Mar 29 06:17:52 2023
+Last Completed: Wed Mar 29 06:18:10 2023
+Phase:          Succeeded
 ```
-That means that you skipped the `--cleanup` flag and you should either delete the `agones-test` pod manually or run with the same test `helm test my-release --cleanup` two more times.
-{{< /alert >}}
 
 ## Controller TLS Certificates
 
