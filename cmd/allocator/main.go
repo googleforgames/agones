@@ -369,7 +369,7 @@ func newServiceHandler(kubeClient kubernetes.Interface, agonesClient versioned.I
 		totalRemoteAllocationTimeout,
 		allocationBatchWaitTime)
 
-	ctx := signals.NewSigKillContext()
+	ctx, _ := signals.NewSigKillContext()
 	h := serviceHandler{
 		allocationCallback: func(gsa *allocationv1.GameServerAllocation) (k8sruntime.Object, error) {
 			return allocator.Allocate(ctx, gsa)
