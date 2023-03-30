@@ -169,6 +169,13 @@ message GameServer {
           int64 capacity = 2;
         }
 
+        // [Stage:Alpha]
+        // [FeatureFlag:CountsAndLists]
+        message ListStatus {
+          int64 capacity = 1;
+          repeated string values = 2;
+        }
+
         string state = 1;
         string address = 2;
         repeated Port ports = 3;
@@ -180,5 +187,9 @@ message GameServer {
         // [Stage:Alpha]
         // [FeatureFlag:CountsAndLists]
         map<string, CounterStatus> counters = 5;
+
+        // [Stage:Alpha]
+        // [FeatureFlag:CountsAndLists]
+        map<string, ListStatus> lists = 6;
     }
 }
