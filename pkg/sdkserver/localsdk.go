@@ -601,13 +601,16 @@ func (l *LocalSDKServer) GetCounter(ctx context.Context, in *alpha.GetCounterReq
 	defer l.gsMutex.RUnlock()
 
 	if counter, ok := l.gs.Status.Counters[in.Name]; ok {
-		return &alpha.Counter{Name: in.Name, Count: &counter.Count, Capacity: &counter.Capacity}, nil
+		return &alpha.Counter{Name: in.Name, Count: counter.Count, Capacity: counter.Capacity}, nil
 	}
 	return nil, errors.Errorf("NOT_FOUND. %s Counter not found", in.Name)
 }
 
-// UpdateCounter returns the updated Counter. Returns NOT_FOUND if the Counter does not exist.
-// Returns INVALID_ARGUMENT if the FieldMask paths are invalid.
+// UpdateCounter returns the updated Counter. Returns NOT_FOUND if the Counter does not exist (name cannot be updated).
+// Returns OUT_OF_RANGE if the Count is out of range [0,Capacity].
+// Returns INVALID_ARGUMENT if the field mask path(s) are not field(s) of the Counter.
+// If a field mask path(s) is specified, but the value is not set in the request Counter object,
+// then the default value for the variable will be set (i.e. 0 for "capacity" or "count").
 // [Stage:Alpha]
 // [FeatureFlag:CountsAndLists]
 func (l *LocalSDKServer) UpdateCounter(ctx context.Context, in *alpha.UpdateCounterRequest) (*alpha.Counter, error) {
@@ -615,30 +618,183 @@ func (l *LocalSDKServer) UpdateCounter(ctx context.Context, in *alpha.UpdateCoun
 		return nil, errors.Errorf("%s not enabled", runtime.FeatureCountsAndLists)
 	}
 
+	if in.Counter == nil || in.UpdateMask == nil {
+		return nil, errors.Errorf("INVALID_ARGUMENT. Counter: %v and UpdateMask %v cannot be nil", in.Counter, in.UpdateMask)
+	}
+
 	l.logger.WithField("name", in.Counter.Name).Info("Updating Counter")
 	l.recordRequest("updatecounter")
-	l.gsMutex.RLock()
-	defer l.gsMutex.RUnlock()
+	l.gsMutex.Lock()
+	defer l.gsMutex.Unlock()
+
+	// TODO: https://google.aip.dev/134, "Update masks must support a special value *, meaning full replacement."
+	// Check if the UpdateMask paths are valid, return INVALID_ARGUMENT if not.
+	if !in.UpdateMask.IsValid(in.Counter.ProtoReflect().Interface()) {
+		return nil, errors.Errorf("INVALID_ARGUMENT. Field Mask Path(s): %v are invalid for Counter. Use valid field name(s): %v", in.UpdateMask.GetPaths(), in.Counter.ProtoReflect().Descriptor().Fields())
+	}
+
+	// TODO: Pull in variable Max Capacity from CRD instead of hard-coded number here.
+	if in.Counter.Capacity < 0 || in.Counter.Capacity > 1000 {
+		return nil, errors.Errorf("OUT_OF_RANGE. Capacity must be within range [0,1000]. Found Capacity: %d", in.Counter.Capacity)
+	}
 
 	name := in.Counter.Name
 	if counter, ok := l.gs.Status.Counters[name]; ok {
-		// Check if the UpdateMask paths are valid, return INVALID_ARGUMENT if not.
-		// TODO: https://google.aip.dev/134, "Update masks must support a special value *, meaning full replacement".
-		if in.UpdateMask.IsValid(counter.ProtoReflect().Interface()) {
-			// Create *alpha.Counter from *sdk.GameServer_Status_CounterStatus for merging.
-			tmpCounter := &alpha.Counter{Name: name, Count: &counter.Count, Capacity: &counter.Capacity}
-			// Removes any fields from the request that are not included in the FieldMask Paths.
-			fmutils.Filter(in.Counter, in.UpdateMask.Paths)
-			// Now that the request is filtered we can merge it with the Counter entity.
-			proto.Merge(tmpCounter, in.Counter)
-			// Write newly updated Counter to gameserverstatus.
-			l.gs.Status.Counters[name].Count = *tmpCounter.Count
-			l.gs.Status.Counters[name].Capacity = *tmpCounter.Capacity
-			return &alpha.Counter{Name: name, Count: &l.gs.Status.Counters[name].Count, Capacity: &l.gs.Status.Counters[name].Capacity}, nil
+		// Create *alpha.Counter from *sdk.GameServer_Status_CounterStatus for merging.
+		tmpCounter := &alpha.Counter{Name: name, Count: counter.Count, Capacity: counter.Capacity}
+		// Removes any fields from the request object that are not included in the FieldMask Paths.
+		fmutils.Filter(in.Counter, in.UpdateMask.Paths)
+		// Removes any fields from the existing gameserver object that are included in the FieldMask Paths.
+		fmutils.Prune(tmpCounter, in.UpdateMask.Paths)
+		// Due due filtering and pruning all gameserver object field(s) contained in the FieldMask are overwritten by the request object field(s).
+		proto.Merge(tmpCounter, in.Counter)
+		// Verify that 0 <= Count >= Capacity
+		if tmpCounter.Count < 0 || tmpCounter.Count > tmpCounter.Capacity {
+			return nil, errors.Errorf("OUT_OF_RANGE. Count must be within range [0,Capacity]. Found Count: %d, Capacity: %d", tmpCounter.Count, tmpCounter.Capacity)
 		}
-		return nil, errors.Errorf("INVALID_ARGUMENT. Field Mask Path(s) %v are invalid for Counter. Use valid %v", in.UpdateMask.GetPaths(), counter.ProtoReflect().Descriptor().Fields())
+		// Write newly updated Counter to gameserverstatus.
+		l.gs.Status.Counters[name].Count = tmpCounter.Count
+		l.gs.Status.Counters[name].Capacity = tmpCounter.Capacity
+		return &alpha.Counter{Name: name, Count: l.gs.Status.Counters[name].Count, Capacity: l.gs.Status.Counters[name].Capacity}, nil
 	}
 	return nil, errors.Errorf("NOT_FOUND. %s Counter not found", name)
+}
+
+// GetList returns a List. Returns NOT_FOUND if the List does not exist.
+// [Stage:Alpha]
+// [FeatureFlag:CountsAndLists]
+func (l *LocalSDKServer) GetList(ctx context.Context, in *alpha.GetListRequest) (*alpha.List, error) {
+	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
+		return nil, errors.Errorf("%s not enabled", runtime.FeatureCountsAndLists)
+	}
+
+	l.logger.WithField("name", in.Name).Info("Getting List")
+	l.recordRequest("getlist")
+	l.gsMutex.RLock()
+	defer l.gsMutex.RUnlock()
+
+	if list, ok := l.gs.Status.Lists[in.Name]; ok {
+		return &alpha.List{Name: in.Name, Capacity: list.Capacity, Values: list.Values}, nil
+	}
+	return nil, errors.Errorf("NOT_FOUND. %s List not found", in.Name)
+}
+
+// UpdateList returns the updated List. Returns NOT_FOUND if the List does not exist (name cannot be updated).
+// **THIS WILL OVERWRITE ALL EXISTING LIST.VALUES WITH ANY REQUEST LIST.VALUES**
+// Use AddListValue() or RemoveListValue() for modifying the List.Values field.
+// Returns INVALID_ARGUMENT if the field mask path(s) are not field(s) of the List.
+// If a field mask path(s) is specified, but the value is not set in the request List object,
+// then the default value for the variable will be set (i.e. 0 for "capacity", empty list for "values").
+// [Stage:Alpha]
+// [FeatureFlag:CountsAndLists]
+func (l *LocalSDKServer) UpdateList(ctx context.Context, in *alpha.UpdateListRequest) (*alpha.List, error) {
+	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
+		return nil, errors.Errorf("%s not enabled", runtime.FeatureCountsAndLists)
+	}
+
+	if in.List == nil || in.UpdateMask == nil {
+		return nil, errors.Errorf("INVALID_ARGUMENT. List: %v and UpdateMask %v cannot be nil", in.List, in.UpdateMask)
+	}
+
+	l.logger.WithField("name", in.List.Name).Info("Updating List")
+	l.recordRequest("updatelist")
+	l.gsMutex.Lock()
+	defer l.gsMutex.Unlock()
+
+	// TODO: https://google.aip.dev/134, "Update masks must support a special value *, meaning full replacement."
+	// Check if the UpdateMask paths are valid, return INVALID_ARGUMENT if not.
+	if !in.UpdateMask.IsValid(in.List.ProtoReflect().Interface()) {
+		return nil, errors.Errorf("INVALID_ARGUMENT. Field Mask Path(s): %v are invalid for List. Use valid field name(s): %v", in.UpdateMask.GetPaths(), in.List.ProtoReflect().Descriptor().Fields())
+	}
+
+	// TODO: Pull in variable Max Capacity from CRD instead of hard-coded number here.
+	if in.List.Capacity < 0 || in.List.Capacity > 1000 {
+		return nil, errors.Errorf("OUT_OF_RANGE. Capacity must be within range [0,1000]. Found Capacity: %d", in.List.Capacity)
+	}
+
+	name := in.List.Name
+	if list, ok := l.gs.Status.Lists[name]; ok {
+		// Create *alpha.List from *sdk.GameServer_Status_ListStatus for merging.
+		tmpList := &alpha.List{Name: name, Capacity: list.Capacity, Values: list.Values}
+		// Removes any fields from the request object that are not included in the FieldMask Paths.
+		fmutils.Filter(in.List, in.UpdateMask.Paths)
+		// Removes any fields from the existing gameserver object that are included in the FieldMask Paths.
+		fmutils.Prune(tmpList, in.UpdateMask.Paths)
+		// Due due filtering and pruning all gameserver object field(s) contained in the FieldMask are overwritten by the request object field(s).
+		proto.Merge(tmpList, in.List)
+		// Verify that Capacity >= len(tmpList.values)
+		if tmpList.Capacity < int64(len(tmpList.Values)) {
+			return nil, errors.Errorf("OUT_OF_RANGE. Capacity must be great than or equal to the size of the List of values. Found Capacity: %d, List Size: %d", tmpList.Capacity, len(tmpList.Values))
+		}
+		// Write newly updated List to gameserverstatus.
+		l.gs.Status.Lists[name].Capacity = tmpList.Capacity
+		l.gs.Status.Lists[name].Values = tmpList.Values
+		return &alpha.List{Name: name, Capacity: l.gs.Status.Lists[name].Capacity, Values: l.gs.Status.Lists[name].Values}, nil
+	}
+	return nil, errors.Errorf("NOT_FOUND. %s List not found", name)
+}
+
+// AddListValue appends a value to the end of a List and returns updated List.
+// Returns NOT_FOUND if the List does not exist.
+// Returns ALREADY_EXISTS if the value is already in the List.
+// Returns OUT_OF_RANGE if the List is already at Capacity.
+// [Stage:Alpha]
+// [FeatureFlag:CountsAndLists]
+func (l *LocalSDKServer) AddListValue(ctx context.Context, in *alpha.AddListValueRequest) (*alpha.List, error) {
+	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
+		return nil, errors.Errorf("%s not enabled", runtime.FeatureCountsAndLists)
+	}
+
+	l.logger.WithField("name", in.Name).Info("Adding Value to List")
+	l.recordRequest("addlistvalue")
+	l.gsMutex.Lock()
+	defer l.gsMutex.Unlock()
+
+	if list, ok := l.gs.Status.Lists[in.Name]; ok {
+		// Verify room to add another value
+		if list.Capacity <= int64(len(list.Values)) {
+			return nil, errors.Errorf("OUT_OF_RANGE. No available capacity. Current Capacity: %d, List Size: %d", list.Capacity, len(list.Values))
+		}
+		// Verify value does not already exist in the list
+		for _, val := range l.gs.Status.Lists[in.Name].Values {
+			if in.Value == val {
+				return nil, errors.Errorf("ALREADY_EXISTS. Value: %s already in List: %s", in.Value, in.Name)
+			}
+		}
+		// Add new value to gameserverstatus.
+		l.gs.Status.Lists[in.Name].Values = append(l.gs.Status.Lists[in.Name].Values, in.Value)
+		return &alpha.List{Name: in.Name, Capacity: l.gs.Status.Lists[in.Name].Capacity, Values: l.gs.Status.Lists[in.Name].Values}, nil
+	}
+	return nil, errors.Errorf("NOT_FOUND. %s List not found", in.Name)
+}
+
+// RemoveListValue removes a value from a List and returns updated List.
+// Returns NOT_FOUND if the List does not exist.
+// Returns NOT_FOUND if the value is not in the List.
+// [Stage:Alpha]
+// [FeatureFlag:CountsAndLists]
+func (l *LocalSDKServer) RemoveListValue(ctx context.Context, in *alpha.RemoveListValueRequest) (*alpha.List, error) {
+	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
+		return nil, errors.Errorf("%s not enabled", runtime.FeatureCountsAndLists)
+	}
+
+	l.logger.WithField("name", in.Name).Info("Removing Value from List")
+	l.recordRequest("removelistvalue")
+	l.gsMutex.Lock()
+	defer l.gsMutex.Unlock()
+
+	if list, ok := l.gs.Status.Lists[in.Name]; ok {
+		// Verify value exists in the list
+		for i, val := range l.gs.Status.Lists[in.Name].Values {
+			if in.Value == val {
+				// Remove value (maintains list ordering and modifies underlying gameserverstatus List.Values array).
+				list.Values = append(list.Values[:i], list.Values[i+1:]...)
+				return &alpha.List{Name: in.Name, Capacity: l.gs.Status.Lists[in.Name].Capacity, Values: l.gs.Status.Lists[in.Name].Values}, nil
+			}
+		}
+		return nil, errors.Errorf("NOT_FOUND. Value: %s not found in List: %s", in.Value, in.Name)
+	}
+	return nil, errors.Errorf("NOT_FOUND. %s List not found", in.Name)
 }
 
 // Close tears down all the things
