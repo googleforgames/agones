@@ -23,7 +23,7 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 
 - [ ] Run `make shell` and run `gcloud config configurations activate agones-images`.
 - [ ] Review [closed issues with no milestone](https://github.com/googleforgames/agones/issues?q=is%3Aissue+is%3Aclosed+no%3Amilestone++-label%3Ainvalid+-label%3Aduplicate+-label%3Aquestion+-label%3Awontfix++-label%3Aarea%2Fmeta) and add relevant ones to the current milestone.
-  - Issues tagged as `invalid`, `duplicate`, `question`, `wontfix`, or `area/meta` can be ignored
+  - Issues tagged as `invalid`, `duplicate`, `question`, `wontfix`, or `area/meta` don't need review.
 - [ ] Review closed issues in the current milestone to ensure that they have appropriate tags.
 - [ ] Review [merged PRs that have no milestone](https://github.com/googleforgames/agones/pulls?q=is%3Apr+is%3Amerged+no%3Amilestone+) and add them to the current milestone.
 - [ ] Review merged PRs in the current milestone to ensure that they have appropriate tags.
@@ -32,7 +32,7 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 - [ ] Any issues in the current milestone that are not closed, move to next milestone.
 - [ ] `git checkout main && git pull --rebase upstream main`
 - [ ] Run `make release-deploy-site`
-      -For example, if you are creating the {version} release, then you would deploy the {version}-1 service (release minus one, and then replace dots with dashes) [check for this change in GCP -> App Engine/Service]
+      - For example, if you are creating the {version} release, then this would deploy the {version}-1 service (release minus one, and then replace dots with dashes)
 - [ ] Run `make build-release` to ensure all example images exist on us-docker.pkg.dev/agones-images/examples.
 - [ ] Ensure the [helm `tag` value][values] is correct (tag field value in image should be {version})
 - [ ] Ensure the [helm `Chart` version values][chart] are correct (appVersion and version fields value should be {version})
@@ -106,3 +106,4 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 [package.json]: https://github.com/googleforgames/agones/blob/main/sdks/nodejs/package.json
 [package-lock.json]: https://github.com/googleforgames/agones/blob/main/sdks/nodejs/package-lock.json
 [csharp]: https://github.com/googleforgames/agones/blob/main/sdks/csharp/sdk/
+[unity]: https://github.com/googleforgames/agones/blob/main/sdks/unity/package.json

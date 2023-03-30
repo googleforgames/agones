@@ -15,14 +15,12 @@
 changelog:
   exclude:
     labels:
-      - area/meta
       - duplicate
       - question
       - invalid
       - wontfix
-      - priority/wontfix
   categories:
-    - title: Breaking Changes
+    - title: Breaking changes
       labels:
         - kind/breaking
     - title: Implemented enhancements
@@ -31,7 +29,7 @@ changelog:
     - title: Fixed bugs
       labels:
         - kind/bug
-    - title: Security
+    - title: Security fixes
       labels:
         - area/security
     - title: Other
