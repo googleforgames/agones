@@ -119,8 +119,7 @@ steps:
     dir: "."
     args:
       - "-c"
-      - zip -r agones-install-${_VERSION}.zip ./README.md ./install ./LICENSE
-      - cp agones-install-${_VERSION}.zip $_STORAGE
+      - zip -r agones-install-${_VERSION}.zip ./README.md ./install ./LICENSE | gsutil -m cp -r agones-install-${_VERSION}.zip $_STORAGE
 
   #
   # Generate the Changelog file in the cloud storage
@@ -144,7 +143,7 @@ options:
   machineType: E2_HIGHCPU_32
   dynamic_substitutions: true
 substitutions:
-  _STORAGE: gs://${PROJECT_ID}-agones-releases-kal
+  _STORAGE: gs://${PROJECT_ID}-agones-releases
   _VERSION: 1.31.0
   _REGISTRY: us-docker.pkg.dev/${PROJECT_ID}
   _CACHE_BUCKET: agones-build-cache
