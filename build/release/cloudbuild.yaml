@@ -55,25 +55,25 @@ steps:
   #
   # pull the main build image if it exists
   #
-  - name: make-docker
-    id: pull-build-image
-    dir: "build"
-    env:
-      - "REGISTRY=${_REGISTRY}/ci"
-    args: ["pull-build-image"]
-    waitFor:
-      - build-make-docker
+  # - name: make-docker
+  #   id: pull-build-image
+  #   dir: "build"
+  #   env:
+  #     - "REGISTRY=${_REGISTRY}/ci"
+  #   args: ["pull-build-image"]
+  #   waitFor:
+  #     - build-make-docker
 
   #
   # Ensure example images exists
   #
-  - name: make-docker
-    id: test-examples-on-gar
-    dir: "build"
-    env:
-      - "REGISTRY=${_REGISTRY}"
-      - DOCKER_RUN_ARGS=--network=cloudbuild
-    args: ["test-examples-on-gar"]
+  # - name: make-docker
+  #   id: test-examples-on-gar
+  #   dir: "build"
+  #   env:
+  #     - "REGISTRY=${_REGISTRY}"
+  #     - DOCKER_RUN_ARGS=--network=cloudbuild
+  #   args: ["test-examples-on-gar"]
 
   #
   # Build all the images
@@ -103,26 +103,24 @@ steps:
   - name: gcr.io/cloud-builders/gsutil
     waitFor:
       - build
-    dir: "go/src/agones.dev/agones/cmd/sdk-server/bin"
-    args:
-      - gsutil -m cp agonessdk-server-${_VERSION}.zip $_STORAGE
+    dir: "cmd/sdk-server/bin"
+    args: ["-m", "cp", "*.zip", $_STORAGE]
 
   - name: gcr.io/cloud-builders/gsutil
     waitFor:
       - build
-    dir: "go/src/agones.dev/agones/sdks/cpp/.archives"
-    args:
-      - gsutil -m cp agonessdk-${_VERSION}-linux-arch_64.tar.gz $_STORAGE
+    dir: "sdks/cpp/.archives"
+    args: ["-m", "cp", "*.tar.gz", $_STORAGE]
 
   - name: gcr.io/cloud-builders/gsutil
     entrypoint: bash
     waitFor:
       - build
-    dir: "go/src/agones.dev/agones"
+    dir: "."
     args:
       - "-c"
       - zip -r agones-install-${_VERSION}.zip ./README.md ./install ./LICENSE
-      - gsutil -m cp agones-install-${_VERSION}.zip $_STORAGE
+      - cp agones-install-${_VERSION}.zip $_STORAGE
 
   #
   # Generate the Changelog file in the cloud storage
@@ -146,8 +144,8 @@ options:
   machineType: E2_HIGHCPU_32
   dynamic_substitutions: true
 substitutions:
-  _STORAGE: gs://${PROJECT_ID}-agones-releases
-  _VERSION: v1.31.0
+  _STORAGE: gs://${PROJECT_ID}-agones-releases-kal
+  _VERSION: 1.31.0
   _REGISTRY: us-docker.pkg.dev/${PROJECT_ID}
   _CACHE_BUCKET: agones-build-cache
   _CPP_SDK_BUILD_CACHE_KEY: cpp-sdk-build
@@ -158,4 +156,4 @@ substitutions:
 #   secretManager:
 #     - versionName: projects/${PROJECT_ID}/secrets/release-github-token/versions/latest
 #       env: GH_TOKEN
-timeout: 3600s
+timeout: 7200s
