@@ -1088,7 +1088,6 @@ func TestPlayerConnectWithCapacityZero(t *testing.T) {
 		t.SkipNow()
 	}
 	t.Parallel()
-	ctx := context.Background()
 
 	gs := framework.DefaultGameServer(framework.Namespace)
 	playerCount := int64(0)
@@ -1103,13 +1102,10 @@ func TestPlayerConnectWithCapacityZero(t *testing.T) {
 	logrus.WithField("msg", msg).Info("Sending Player Connect")
 	_, err = framework.SendGameServerUDP(t, gs, msg)
 	// expected error from the log.Fatalf("could not connect player: %v", err)
-	require.Error(t, err)
-	assert.Eventually(t, func() bool {
-		gs, err = framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Get(ctx, gs.ObjectMeta.Name, metav1.GetOptions{})
-		require.NoError(t, err)
-
-		return assert.Equal(t, gs.Status.State, agonesv1.GameServerStateUnhealthy)
-	}, time.Minute, time.Second)
+	if assert.Error(t, err) {
+		_, err := framework.WaitForGameServerState(t, gs, agonesv1.GameServerStateUnhealthy, time.Minute)
+		assert.NoError(t, err)
+	}
 }
 
 func TestPlayerConnectAndDisconnect(t *testing.T) {
