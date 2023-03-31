@@ -33,7 +33,7 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 - [ ] `git checkout main && git pull --rebase upstream main`
 - [ ] Run `make release-deploy-site`
       - For example, if you are creating the {version} release, then this would deploy the {version}-1 service (release minus one, and then replace dots with dashes)
-- [ ] Run `make build-release` to ensure all example images exist on us-docker.pkg.dev/agones-images/examples.
+- [ ] Run `make build-release` to ensure all example images exist on us-docker.pkg.dev/agones-images/examples and to store the artifacts in the cloud storage.
 - [ ] Ensure the [helm `tag` value][values] is correct (tag field value in image should be {version})
 - [ ] Ensure the [helm `Chart` version values][chart] are correct (appVersion and version fields value should be {version})
 - [ ] Update SDK Package Versions
@@ -106,4 +106,4 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 [package.json]: https://github.com/googleforgames/agones/blob/main/sdks/nodejs/package.json
 [package-lock.json]: https://github.com/googleforgames/agones/blob/main/sdks/nodejs/package-lock.json
 [csharp]: https://github.com/googleforgames/agones/blob/main/sdks/csharp/sdk/
-[unity]: https://github.com/googleforgames/agones/blob/main/sdks/unity/package.json
+[unity]: https://github.com/googleforgames/agones/blob/main/sdks/unity/package.json#L3
