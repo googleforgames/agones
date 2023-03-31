@@ -719,6 +719,73 @@ func (s *SDKServer) GetPlayerCapacity(ctx context.Context, _ *alpha.Empty) (*alp
 	return &alpha.Count{Count: s.gsPlayerCapacity}, nil
 }
 
+// GetCounter returns a Counter. Returns NOT_FOUND if the counter does not exist.
+// [Stage:Alpha]
+// [FeatureFlag:CountsAndLists]
+func (s *SDKServer) GetCounter(ctx context.Context, in *alpha.GetCounterRequest) (*alpha.Counter, error) {
+	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
+		return nil, errors.Errorf("%s not enabled", runtime.FeatureCountsAndLists)
+	}
+	// TODO(#2716): Implement me
+	return nil, errors.Errorf("Unimplemented -- GetCounter coming soon")
+}
+
+// UpdateCounter returns the updated Counter. Returns NOT_FOUND if the Counter does not exist.
+// Returns INVALID_ARGUMENT if the FieldMask paths are invalid.
+// [Stage:Alpha]
+// [FeatureFlag:CountsAndLists]
+func (s *SDKServer) UpdateCounter(ctx context.Context, in *alpha.UpdateCounterRequest) (*alpha.Counter, error) {
+	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
+		return nil, errors.Errorf("%s not enabled", runtime.FeatureCountsAndLists)
+	}
+	// TODO(#2716): Implement Me
+	return nil, errors.Errorf("Unimplemented -- UpdateCounter coming soon")
+}
+
+// GetList returns a List. Returns NOT_FOUND if the List does not exist.
+// [Stage:Alpha]
+// [FeatureFlag:CountsAndLists]
+func (s *SDKServer) GetList(ctx context.Context, in *alpha.GetListRequest) (*alpha.List, error) {
+	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
+		return nil, errors.Errorf("%s not enabled", runtime.FeatureCountsAndLists)
+	}
+	// TODO(#2716): Implement me
+	return nil, errors.Errorf("Unimplemented -- GetList coming soon")
+}
+
+// UpdateList returns the updated List.
+// [Stage:Alpha]
+// [FeatureFlag:CountsAndLists]
+func (s *SDKServer) UpdateList(ctx context.Context, in *alpha.UpdateListRequest) (*alpha.List, error) {
+	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
+		return nil, errors.Errorf("%s not enabled", runtime.FeatureCountsAndLists)
+	}
+	// TODO(#2716): Implement Me
+	return nil, errors.Errorf("Unimplemented -- UpdateList coming soon")
+}
+
+// AddListValue returns the updated List.
+// [Stage:Alpha]
+// [FeatureFlag:CountsAndLists]
+func (s *SDKServer) AddListValue(ctx context.Context, in *alpha.AddListValueRequest) (*alpha.List, error) {
+	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
+		return nil, errors.Errorf("%s not enabled", runtime.FeatureCountsAndLists)
+	}
+	// TODO(#2716): Implement Me
+	return nil, errors.Errorf("Unimplemented -- AddListValue coming soon")
+}
+
+// RemoveListValue returns the updated List.
+// [Stage:Alpha]
+// [FeatureFlag:CountsAndLists]
+func (s *SDKServer) RemoveListValue(ctx context.Context, in *alpha.RemoveListValueRequest) (*alpha.List, error) {
+	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
+		return nil, errors.Errorf("%s not enabled", runtime.FeatureCountsAndLists)
+	}
+	// TODO(#2716): Implement Me
+	return nil, errors.Errorf("Unimplemented -- RemoveListValue coming soon")
+}
+
 // sendGameServerUpdate sends a watch game server event
 func (s *SDKServer) sendGameServerUpdate(gs *agonesv1.GameServer) {
 	s.logger.Debug("Sending GameServer Event to connectedStreams")

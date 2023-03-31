@@ -78,7 +78,7 @@ func main() {
 		time.Sleep(time.Duration(ctlConf.Delay) * time.Second)
 	}
 
-	ctx := signals.NewSigKillContext()
+	ctx, _ := signals.NewSigKillContext()
 
 	grpcServer := grpc.NewServer()
 	// don't graceful stop, because if we get a SIGKILL signal

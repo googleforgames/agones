@@ -23,12 +23,6 @@ properties:
     type: object
     additionalProperties:
       type: string
-  clusterName:
-    description: |-
-      Deprecated: ClusterName is a legacy field that was always cleared by the system and never used; it will be removed completely in 1.25.
-
-      The name in the go struct is changed to help clients detect accidental use.
-    type: string
   creationTimestamp:
     description: |-
       CreationTimestamp is a timestamp representing the server time when this object was created. It is not guaranteed to be set in happens-before order across separate operations. Clients may not set this value. It is represented in RFC3339 form and is in UTC.
