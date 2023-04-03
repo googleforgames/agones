@@ -477,6 +477,12 @@ func TestSidecarUnhealthyMessage(t *testing.T) {
 	// manually push through an unhealthy state change
 	sc.enqueueState(agonesv1.GameServerStateUnhealthy)
 	agtesting.AssertEventContains(t, m.FakeRecorder.Events, "Health check failure")
+
+	// try to push back to Ready, enqueueState should block it.
+	sc.enqueueState(agonesv1.GameServerStateRequestReady)
+	sc.gsUpdateMutex.Lock()
+	assert.Equal(t, agonesv1.GameServerStateUnhealthy, sc.gsState)
+	sc.gsUpdateMutex.Unlock()
 }
 
 func TestSidecarHealthy(t *testing.T) {

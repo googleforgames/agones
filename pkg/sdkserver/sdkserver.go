@@ -423,7 +423,10 @@ func (s *SDKServer) updateAnnotations(ctx context.Context) error {
 // workerqueue
 func (s *SDKServer) enqueueState(state agonesv1.GameServerState) {
 	s.gsUpdateMutex.Lock()
-	s.gsState = state
+	// Update cached state, but prevent transitions out of `Unhealthy` by the SDK.
+	if s.gsState != agonesv1.GameServerStateUnhealthy {
+		s.gsState = state
+	}
 	s.gsUpdateMutex.Unlock()
 	s.workerqueue.Enqueue(cache.ExplicitKey(string(updateState)))
 }
