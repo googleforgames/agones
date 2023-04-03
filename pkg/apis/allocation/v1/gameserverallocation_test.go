@@ -111,7 +111,10 @@ func TestGameServerSelectorApplyDefaults(t *testing.T) {
 	runtime.FeatureTestMutex.Lock()
 	defer runtime.FeatureTestMutex.Unlock()
 
-	assert.NoError(t, runtime.ParseFeatures(fmt.Sprintf("%s=true&%s=true", runtime.FeaturePlayerAllocationFilter, runtime.FeatureStateAllocationFilter)))
+	assert.NoError(t, runtime.ParseFeatures(fmt.Sprintf("%s=true&%s=true&%s=true",
+		runtime.FeaturePlayerAllocationFilter,
+		runtime.FeatureStateAllocationFilter,
+		runtime.FeatureCountsAndLists)))
 
 	s := &GameServerSelector{}
 
@@ -120,17 +123,28 @@ func TestGameServerSelectorApplyDefaults(t *testing.T) {
 	assert.Equal(t, agonesv1.GameServerStateReady, *s.GameServerState)
 	assert.Equal(t, int64(0), s.Players.MinAvailable)
 	assert.Equal(t, int64(0), s.Players.MaxAvailable)
+	assert.NotNil(t, s.Counters)
+	assert.NotNil(t, s.Lists)
 
 	state := agonesv1.GameServerStateAllocated
 	// set values
 	s = &GameServerSelector{
 		GameServerState: &state,
 		Players:         &PlayerSelector{MinAvailable: 10, MaxAvailable: 20},
+		Counters:        map[string]CounterSelector{"foo": {MinAvailable: 1, MaxAvailable: 10}},
+		Lists:           map[string]ListSelector{"bar": {MinAvailable: 2}},
 	}
 	s.ApplyDefaults()
 	assert.Equal(t, state, *s.GameServerState)
 	assert.Equal(t, int64(10), s.Players.MinAvailable)
 	assert.Equal(t, int64(20), s.Players.MaxAvailable)
+	assert.Equal(t, int64(0), s.Counters["foo"].MinCount)
+	assert.Equal(t, int64(0), s.Counters["foo"].MaxCount)
+	assert.Equal(t, int64(1), s.Counters["foo"].MinAvailable)
+	assert.Equal(t, int64(10), s.Counters["foo"].MaxAvailable)
+	assert.Equal(t, int64(2), s.Lists["bar"].MinAvailable)
+	assert.Equal(t, int64(0), s.Lists["bar"].MaxAvailable)
+	assert.Equal(t, "", s.Lists["bar"].ContainsValue)
 }
 
 func TestGameServerSelectorValidate(t *testing.T) {
@@ -139,7 +153,7 @@ func TestGameServerSelectorValidate(t *testing.T) {
 	runtime.FeatureTestMutex.Lock()
 	defer runtime.FeatureTestMutex.Unlock()
 
-	assert.NoError(t, runtime.ParseFeatures(fmt.Sprintf("%s=true&%s=true", runtime.FeaturePlayerAllocationFilter, runtime.FeatureStateAllocationFilter)))
+	assert.NoError(t, runtime.ParseFeatures(fmt.Sprintf("%s=true&%s=true&%s=true", runtime.FeaturePlayerAllocationFilter, runtime.FeatureStateAllocationFilter, runtime.FeatureCountsAndLists)))
 
 	type expected struct {
 		valid    bool
@@ -223,6 +237,96 @@ func TestGameServerSelectorValidate(t *testing.T) {
 			selector: &GameServerSelector{
 				LabelSelector: metav1.LabelSelector{
 					MatchLabels: map[string]string{"$$$$": "true"},
+				},
+			},
+			expected: expected{
+				valid:    false,
+				causeLen: 1,
+				fields:   []string{"fieldName"},
+			},
+		},
+		"invalid min/max Counter available value": {
+			selector: &GameServerSelector{
+				Counters: map[string]CounterSelector{
+					"counter": {
+						MinAvailable: -1,
+						MaxAvailable: -1,
+					},
+				},
+			},
+			expected: expected{
+				valid:    false,
+				causeLen: 2,
+				fields:   []string{"fieldName", "fieldName"},
+			},
+		},
+		"invalid max less than min Counter available value": {
+			selector: &GameServerSelector{
+				Counters: map[string]CounterSelector{
+					"foo": {
+						MinAvailable: 10,
+						MaxAvailable: 1,
+					},
+				},
+			},
+			expected: expected{
+				valid:    false,
+				causeLen: 1,
+				fields:   []string{"fieldName"},
+			},
+		},
+		"invalid min/max Counter count value": {
+			selector: &GameServerSelector{
+				Counters: map[string]CounterSelector{
+					"counter": {
+						MinCount: -1,
+						MaxCount: -1,
+					},
+				},
+			},
+			expected: expected{
+				valid:    false,
+				causeLen: 2,
+				fields:   []string{"fieldName", "fieldName"},
+			},
+		},
+		"invalid max less than min Counter count value": {
+			selector: &GameServerSelector{
+				Counters: map[string]CounterSelector{
+					"foo": {
+						MinCount: 10,
+						MaxCount: 1,
+					},
+				},
+			},
+			expected: expected{
+				valid:    false,
+				causeLen: 1,
+				fields:   []string{"fieldName"},
+			},
+		},
+		"invalid min/max List value": {
+			selector: &GameServerSelector{
+				Lists: map[string]ListSelector{
+					"list": {
+						MinAvailable: -11,
+						MaxAvailable: -11,
+					},
+				},
+			},
+			expected: expected{
+				valid:    false,
+				causeLen: 2,
+				fields:   []string{"fieldName", "fieldName"},
+			},
+		},
+		"invalid max less than min List value": {
+			selector: &GameServerSelector{
+				Lists: map[string]ListSelector{
+					"list": {
+						MinAvailable: 11,
+						MaxAvailable: 2,
+					},
 				},
 			},
 			expected: expected{
@@ -468,6 +572,272 @@ func TestGameServerSelectorMatches(t *testing.T) {
 				},
 			},
 			matches: true,
+		},
+		"Counter has available capacity": {
+			features: string(runtime.FeatureCountsAndLists) + "=true",
+			selector: &GameServerSelector{Counters: map[string]CounterSelector{
+				"sessions": {
+					MinAvailable: 1,
+					MaxAvailable: 1000,
+				},
+			}},
+			gameServer: &agonesv1.GameServer{Status: agonesv1.GameServerStatus{
+				Counters: map[string]agonesv1.CounterStatus{
+					"sessions": {
+						Count:    10,
+						Capacity: 1000,
+					},
+				},
+			}},
+			matches: true,
+		},
+		"Counter has below minimum available capacity": {
+			features: string(runtime.FeatureCountsAndLists) + "=true",
+			selector: &GameServerSelector{Counters: map[string]CounterSelector{
+				"players": {
+					MinAvailable: 100,
+					MaxAvailable: 0,
+				},
+			}},
+			gameServer: &agonesv1.GameServer{Status: agonesv1.GameServerStatus{
+				Counters: map[string]agonesv1.CounterStatus{
+					"players": {
+						Count:    999,
+						Capacity: 1000,
+					},
+				},
+			}},
+			matches: false,
+		},
+		"Counter has above maximum available capacity": {
+			features: string(runtime.FeatureCountsAndLists) + "=true",
+			selector: &GameServerSelector{Counters: map[string]CounterSelector{
+				"animals": {
+					MinAvailable: 1,
+					MaxAvailable: 100,
+				},
+			}},
+			gameServer: &agonesv1.GameServer{Status: agonesv1.GameServerStatus{
+				Counters: map[string]agonesv1.CounterStatus{
+					"animals": {
+						Count:    0,
+						Capacity: 1000,
+					},
+				},
+			}},
+			matches: false,
+		},
+		"Counter has count in requested range (MaxCount undefined = 0 = unlimited)": {
+			features: string(runtime.FeatureCountsAndLists) + "=true",
+			selector: &GameServerSelector{Counters: map[string]CounterSelector{
+				"games": {
+					MinCount: 1,
+				},
+			}},
+			gameServer: &agonesv1.GameServer{Status: agonesv1.GameServerStatus{
+				Counters: map[string]agonesv1.CounterStatus{
+					"games": {
+						Count:    10,
+						Capacity: 1000,
+					},
+				},
+			}},
+			matches: true,
+		},
+		"Counter has count below minimum": {
+			features: string(runtime.FeatureCountsAndLists) + "=true",
+			selector: &GameServerSelector{Counters: map[string]CounterSelector{
+				"characters": {
+					MinCount: 1,
+					MaxCount: 0,
+				},
+			}},
+			gameServer: &agonesv1.GameServer{Status: agonesv1.GameServerStatus{
+				Counters: map[string]agonesv1.CounterStatus{
+					"characters": {
+						Count:    0,
+						Capacity: 100,
+					},
+				},
+			}},
+			matches: false,
+		},
+		"Counter has count above maximum": {
+			features: string(runtime.FeatureCountsAndLists) + "=true",
+			selector: &GameServerSelector{Counters: map[string]CounterSelector{
+				"monsters": {
+					MinCount: 0,
+					MaxCount: 10,
+				},
+			}},
+			gameServer: &agonesv1.GameServer{Status: agonesv1.GameServerStatus{
+				Counters: map[string]agonesv1.CounterStatus{
+					"monsters": {
+						Count:    11,
+						Capacity: 100,
+					},
+				},
+			}},
+			matches: false,
+		},
+		"Counter does not exist": {
+			features: string(runtime.FeatureCountsAndLists) + "=true",
+			selector: &GameServerSelector{Counters: map[string]CounterSelector{
+				"dragoons": {
+					MinCount: 1,
+					MaxCount: 10,
+				},
+			}},
+			gameServer: &agonesv1.GameServer{Status: agonesv1.GameServerStatus{
+				Counters: map[string]agonesv1.CounterStatus{
+					"dragons": {
+						Count:    1,
+						Capacity: 100,
+					},
+				},
+			}},
+			matches: false,
+		},
+		"GameServer does not have Counters": {
+			features: string(runtime.FeatureCountsAndLists) + "=true",
+			selector: &GameServerSelector{Counters: map[string]CounterSelector{
+				"dragoons": {
+					MinCount: 1,
+					MaxCount: 10,
+				},
+			}},
+			gameServer: &agonesv1.GameServer{Status: agonesv1.GameServerStatus{
+				Lists: map[string]agonesv1.ListStatus{
+					"bazzles": {
+						Capacity: 3,
+						Values:   []string{"baz1", "baz2", "baz3"},
+					},
+				},
+			}},
+			matches: false,
+		},
+		"List has available capacity": {
+			features: string(runtime.FeatureCountsAndLists) + "=true",
+			selector: &GameServerSelector{Lists: map[string]ListSelector{
+				"lobbies": {
+					MinAvailable: 1,
+					MaxAvailable: 3,
+				},
+			}},
+			gameServer: &agonesv1.GameServer{Status: agonesv1.GameServerStatus{
+				Lists: map[string]agonesv1.ListStatus{
+					"lobbies": {
+						Capacity: 3,
+						Values:   []string{"lobby1", "lobby2"},
+					},
+				},
+			}},
+			matches: true,
+		},
+		"List has below minimum available capacity": {
+			features: string(runtime.FeatureCountsAndLists) + "=true",
+			selector: &GameServerSelector{Lists: map[string]ListSelector{
+				"avatars": {
+					MinAvailable: 1,
+					MaxAvailable: 1000,
+				},
+			}},
+			gameServer: &agonesv1.GameServer{Status: agonesv1.GameServerStatus{
+				Lists: map[string]agonesv1.ListStatus{
+					"avatars": {
+						Capacity: 3,
+						Values:   []string{"avatar1", "avatar2", "avatar3"},
+					},
+				},
+			}},
+			matches: false,
+		},
+		"List has above maximum available capacity": {
+			features: string(runtime.FeatureCountsAndLists) + "=true",
+			selector: &GameServerSelector{Lists: map[string]ListSelector{
+				"things": {
+					MinAvailable: 1,
+					MaxAvailable: 10,
+				},
+			}},
+			gameServer: &agonesv1.GameServer{Status: agonesv1.GameServerStatus{
+				Lists: map[string]agonesv1.ListStatus{
+					"things": {
+						Capacity: 1000,
+						Values:   []string{"thing1", "thing2", "thing3"},
+					},
+				},
+			}},
+			matches: false,
+		},
+		"List does not exist": {
+			features: string(runtime.FeatureCountsAndLists) + "=true",
+			selector: &GameServerSelector{Lists: map[string]ListSelector{
+				"thingamabobs": {
+					MinAvailable: 1,
+					MaxAvailable: 100,
+				},
+			}},
+			gameServer: &agonesv1.GameServer{Status: agonesv1.GameServerStatus{
+				Lists: map[string]agonesv1.ListStatus{
+					"thingamajigs": {
+						Capacity: 100,
+						Values:   []string{"thingamajig1", "thingamajig2"},
+					},
+				},
+			}},
+			matches: false,
+		},
+		"List contains value": {
+			features: string(runtime.FeatureCountsAndLists) + "=true",
+			selector: &GameServerSelector{Lists: map[string]ListSelector{
+				"bazzles": {
+					ContainsValue: "baz1",
+				},
+			}},
+			gameServer: &agonesv1.GameServer{Status: agonesv1.GameServerStatus{
+				Lists: map[string]agonesv1.ListStatus{
+					"bazzles": {
+						Capacity: 3,
+						Values:   []string{"baz1", "baz2", "baz3"},
+					},
+				},
+			}},
+			matches: true,
+		},
+		"List does not contain value": {
+			features: string(runtime.FeatureCountsAndLists) + "=true",
+			selector: &GameServerSelector{Lists: map[string]ListSelector{
+				"bazzles": {
+					ContainsValue: "BAZ1",
+				},
+			}},
+			gameServer: &agonesv1.GameServer{Status: agonesv1.GameServerStatus{
+				Lists: map[string]agonesv1.ListStatus{
+					"bazzles": {
+						Capacity: 3,
+						Values:   []string{"baz1", "baz2", "baz3"},
+					},
+				},
+			}},
+			matches: false,
+		},
+		"GameServer does not have Lists": {
+			features: string(runtime.FeatureCountsAndLists) + "=true",
+			selector: &GameServerSelector{Lists: map[string]ListSelector{
+				"bazzles": {
+					ContainsValue: "BAZ1",
+				},
+			}},
+			gameServer: &agonesv1.GameServer{Status: agonesv1.GameServerStatus{
+				Counters: map[string]agonesv1.CounterStatus{
+					"dragons": {
+						Count:    1,
+						Capacity: 100,
+					},
+				},
+			}},
+			matches: false,
 		},
 	}
 
