@@ -86,6 +86,14 @@ func convert(gs *agonesv1.GameServer) *sdk.GameServer {
 			}
 			result.Status.Counters = counters
 		}
+
+		if gs.Status.Lists != nil {
+			lists := make(map[string]*sdk.GameServer_Status_ListStatus, len(gs.Status.Lists))
+			for key, list := range gs.Status.Lists {
+				lists[key] = &sdk.GameServer_Status_ListStatus{Capacity: *proto.Int64(list.Capacity), Values: list.DeepCopy().Values}
+			}
+			result.Status.Lists = lists
+		}
 	}
 
 	return result
