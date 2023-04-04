@@ -271,7 +271,7 @@ steps:
 
       sleep 60
     done
-  timeout: 5400s # 90m - leave an hour for e2es to run on top of the global timeout of 2.5h
+  timeout: 10800s # 3h - if you change this, change the global timeout as well
   env:
   - 'CLOUDSDK_CORE_PROJECT=$PROJECT_ID'
   - 'BUILD_ID=$BUILD_ID'
@@ -300,14 +300,14 @@ steps:
       set -o pipefail
       pids=()
       cloudProducts=("generic" "gke-autopilot")
-      declare -A versionsAndRegions=( [1.23]=us-east1 [1.24]=us-west1 [1.25]=us-central1 )
+      declare -A versionsAndRegions=( [1.24]=us-west1 [1.25]=us-central1 [1.26]=asia-east1 )
 
       for cloudProduct in ${cloudProducts[@]}
       do
         for version in "${!versionsAndRegions[@]}"
         do
           region=${versionsAndRegions[$version]}
-          if [ $cloudProduct = gke-autopilot ] && [ $version = 1.23 ]
+          if [ $cloudProduct = gke-autopilot ] && [ $version = 1.26 ]
           then
             continue
           fi
@@ -418,7 +418,7 @@ substitutions:
   _RUST_SDK_BUILD_CACHE_KEY: rust-sdk-build
   _REGISTRY: us-docker.pkg.dev/${PROJECT_ID}/ci
 tags: ['ci']
-timeout: 9000s # 2.5h - if you change this, change e2e-wait-to-become-leader as well
+timeout: 18000s # 5h: 3h (e2e-wait-to-become-leader) + 1.5h (e2e timeout) + 0.5h (everything else)
 queueTtl: 259200s # 72h
 images:
   - '${_REGISTRY}/agones-controller'

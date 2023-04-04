@@ -33,6 +33,7 @@ terraform {
 variable "project" {}
 variable "kubernetesVersion" {}
 variable "location" {}
+variable "releaseChannel" {}
 
 module "gke_cluster" {
   source = "../../../../install/terraform/modules/gke-autopilot"
@@ -41,6 +42,7 @@ module "gke_cluster" {
     "name"              = format("gke-autopilot-e2e-test-cluster-%s", replace(var.kubernetesVersion, ".", "-"))
     "project"           = var.project
     "location"          = var.location
+    "releaseChannel"    = var.releaseChannel
     "kubernetesVersion" = var.kubernetesVersion
   }
 
