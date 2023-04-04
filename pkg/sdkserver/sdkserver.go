@@ -205,7 +205,9 @@ func (s *SDKServer) Run(ctx context.Context) error {
 		return err
 	}
 
-	logLevel := agonesv1.SdkServerLogLevelInfo
+	// XXXZML DO NOT SUBMIT
+	// logLevel := agonesv1.SdkServerLogLevelInfo
+	logLevel := agonesv1.SdkServerLogLevelDebug
 	// grab configuration details
 	if gs.Spec.SdkServer.LogLevel != "" {
 		logLevel = gs.Spec.SdkServer.LogLevel
