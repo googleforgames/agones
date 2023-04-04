@@ -60,6 +60,6 @@ steps:
     - e2e-feature-gates
 
 tags: ['e2e-test']
-timeout: 7200s # 2h
-queueTtl: 21600s # 6h
+timeout: 5400s # 1.5h
+queueTtl: 7200s # 2h // only one set of e2es should be running at once
 

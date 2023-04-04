@@ -19,10 +19,9 @@ import (
 	"testing"
 
 	"agones.dev/agones/pkg/sdk/alpha"
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 func TestAlphaGetAndSetPlayerCapacity(t *testing.T) {
@@ -116,11 +115,35 @@ func (a *alphaMock) GetPlayerCount(ctx context.Context, in *alpha.Empty, opts ..
 // GetCounter to be implemented
 func (a *alphaMock) GetCounter(ctx context.Context, in *alpha.GetCounterRequest, opts ...grpc.CallOption) (*alpha.Counter, error) {
 	// TODO(#2716): Implement me!
-	return nil, status.Error(codes.Unimplemented, "GetCounter coming soon")
+	return nil, errors.Errorf("Unimplemented -- GetCounter coming soon")
 }
 
 // UpdateCounter to be implemented
 func (a *alphaMock) UpdateCounter(ctx context.Context, in *alpha.UpdateCounterRequest, opts ...grpc.CallOption) (*alpha.Counter, error) {
 	// TODO(#2716): Implement me!
-	return nil, status.Error(codes.Unimplemented, "UpdateCounter coming soon")
+	return nil, errors.Errorf("Unimplemented -- UpdateCounter coming soon")
+}
+
+// GetList to be implemented
+func (a *alphaMock) GetList(ctx context.Context, in *alpha.GetListRequest, opts ...grpc.CallOption) (*alpha.List, error) {
+	// TODO(#2716): Implement me!
+	return nil, errors.Errorf("Unimplemented -- GetList coming soon")
+}
+
+// UpdateList to be implemented
+func (a *alphaMock) UpdateList(ctx context.Context, in *alpha.UpdateListRequest, opts ...grpc.CallOption) (*alpha.List, error) {
+	// TODO(#2716): Implement me!
+	return nil, errors.Errorf("Unimplemented -- UpdateList coming soon")
+}
+
+// AddListValue to be implemented
+func (a *alphaMock) AddListValue(ctx context.Context, in *alpha.AddListValueRequest, opts ...grpc.CallOption) (*alpha.List, error) {
+	// TODO(#2716): Implement me!
+	return nil, errors.Errorf("Unimplemented -- AddListValue coming soon")
+}
+
+// RemoveListValue to be implemented
+func (a *alphaMock) RemoveListValue(ctx context.Context, in *alpha.RemoveListValueRequest, opts ...grpc.CallOption) (*alpha.List, error) {
+	// TODO(#2716): Implement me!
+	return nil, errors.Errorf("Unimplemented -- RemoveListValue coming soon")
 }
