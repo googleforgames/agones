@@ -234,8 +234,8 @@ Agones supports Autopilot clusters in [alpha]({{<ref "/docs/Guides/feature-stage
    gcloud container get-server-config \
      --region=[COMPUTE_REGION] \
      --flatten="channels" \
-     --format="yaml(channels) \
-     --filter="(channels.channel~[RELEASE_CHANNEL]"
+     --format="yaml(channels)" \
+     --filter="channels.channel~[RELEASE_CHANNEL]"
    ```
    Replace the following:
 

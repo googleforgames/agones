@@ -308,6 +308,10 @@ steps:
         for version in "${!versionsAndRegions[@]}"
         do
           region=${versionsAndRegions[$version]}
+          if [ $cloudProduct = gke-autopilot ] && [ $version = 1.26 ]
+          then
+            continue
+          fi
           if [ $cloudProduct = generic ]
           then
             featureWithGate="CustomFasSyncInterval=false&SafeToEvict=false&SDKGracefulTermination=false&StateAllocationFilter=false&PlayerAllocationFilter=true&PlayerTracking=true&ResetMetricsOnDelete=true&PodHostname=true&SplitControllerAndExtensions=true&FleetAllocationOverflow=true&Example=true"
