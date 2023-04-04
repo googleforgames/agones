@@ -42,6 +42,7 @@ import (
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 	k8sv1 "k8s.io/client-go/kubernetes/typed/core/v1"
@@ -163,7 +164,7 @@ func NewSDKServer(gameServerName, namespace string, kubeClient kubernetes.Interf
 		}
 	})
 	mux.HandleFunc("/gshealthz", func(w http.ResponseWriter, r *http.Request) {
-		if s.runHealth() {
+		if s.healthy() {
 			_, err := w.Write([]byte("ok"))
 			if err != nil {
 				s.logger.WithError(err).Error("could not send ok response on gshealthz")
@@ -185,6 +186,12 @@ func NewSDKServer(gameServerName, namespace string, kubeClient kubernetes.Interf
 	s.logger.Info("Created GameServer sidecar")
 
 	return s, nil
+}
+
+// initHealthLastUpdated adds the initial delay to now, then it will always be after `now`
+// until the delay passes
+func (s *SDKServer) initHealthLastUpdated(healthInitialDelay time.Duration) {
+	s.healthLastUpdated = s.clock.Now().UTC().Add(healthInitialDelay)
 }
 
 // Run processes the rate limited queue.
@@ -222,7 +229,7 @@ func (s *SDKServer) Run(ctx context.Context) error {
 	s.health = gs.Spec.Health
 	s.logger.WithField("health", s.health).Debug("Setting health configuration")
 	s.healthTimeout = time.Duration(gs.Spec.Health.PeriodSeconds) * time.Second
-	s.touchHealthLastUpdated()
+	s.initHealthLastUpdated(time.Duration(gs.Spec.Health.InitialDelaySeconds) * time.Second)
 
 	if gs.Status.State == agonesv1.GameServerStateReserved && gs.Status.ReservedUntil != nil {
 		s.gsUpdateMutex.Lock()
@@ -233,6 +240,7 @@ func (s *SDKServer) Run(ctx context.Context) error {
 	// start health checking running
 	if !s.health.Disabled {
 		s.logger.Debug("Starting GameServer health checking")
+		go wait.Until(s.runHealth, s.healthTimeout, ctx.Done())
 	}
 
 	// populate player tracking values
@@ -423,10 +431,7 @@ func (s *SDKServer) updateAnnotations(ctx context.Context) error {
 // workerqueue
 func (s *SDKServer) enqueueState(state agonesv1.GameServerState) {
 	s.gsUpdateMutex.Lock()
-	// Update cached state, but prevent transitions out of `Unhealthy` by the SDK.
-	if s.gsState != agonesv1.GameServerStateUnhealthy {
-		s.gsState = state
-	}
+	s.gsState = state
 	s.gsUpdateMutex.Unlock()
 	s.workerqueue.Enqueue(cache.ExplicitKey(string(updateState)))
 }
@@ -809,17 +814,15 @@ func (s *SDKServer) sendGameServerUpdate(gs *agonesv1.GameServer) {
 	}
 }
 
-// runHealth checks the health as part of the /gshealthz hook, and if not
-// healthy will push the Unhealthy state into the queue so it can be updated.
-// Returns current health.
-func (s *SDKServer) runHealth() bool {
+// runHealth actively checks the health, and if not
+// healthy will push the Unhealthy state into the queue so
+// it can be updated
+func (s *SDKServer) runHealth() {
 	s.checkHealth()
-	if s.healthy() {
-		return true
+	if !s.healthy() {
+		s.logger.WithField("gameServerName", s.gameServerName).Warn("GameServer has failed health check")
+		s.enqueueState(agonesv1.GameServerStateUnhealthy)
 	}
-	s.logger.WithField("gameServerName", s.gameServerName).Warn("GameServer has failed health check")
-	s.enqueueState(agonesv1.GameServerStateUnhealthy)
-	return false
 }
 
 // touchHealthLastUpdated sets the healthLastUpdated
@@ -835,11 +838,10 @@ func (s *SDKServer) touchHealthLastUpdated() {
 // and if it is outside the timeout value, logger and
 // count a failure
 func (s *SDKServer) checkHealth() {
-	s.healthMutex.Lock()
-	defer s.healthMutex.Unlock()
-
 	timeout := s.healthLastUpdated.Add(s.healthTimeout)
 	if timeout.Before(s.clock.Now().UTC()) {
+		s.healthMutex.Lock()
+		defer s.healthMutex.Unlock()
 		s.healthFailureCount++
 		s.logger.WithField("failureCount", s.healthFailureCount).Warn("GameServer Health Check failed")
 	}
