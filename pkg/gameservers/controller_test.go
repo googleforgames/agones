@@ -1061,7 +1061,7 @@ func TestControllerCreateGameServerPod(t *testing.T) {
 			assert.Equal(t, intstr.FromInt(8080), gsContainer.LivenessProbe.HTTPGet.Port)
 			assert.Equal(t, fixture.Spec.Health.InitialDelaySeconds, gsContainer.LivenessProbe.InitialDelaySeconds)
 			assert.Equal(t, fixture.Spec.Health.PeriodSeconds, gsContainer.LivenessProbe.PeriodSeconds)
-			assert.Equal(t, int32(1), gsContainer.LivenessProbe.FailureThreshold)
+			assert.Equal(t, fixture.Spec.Health.FailureThreshold, gsContainer.LivenessProbe.FailureThreshold)
 			assert.Len(t, gsContainer.VolumeMounts, 1)
 			assert.Equal(t, "/var/run/secrets/kubernetes.io/serviceaccount", gsContainer.VolumeMounts[0].MountPath)
 
@@ -1730,7 +1730,7 @@ func TestControllerAddGameServerHealthCheck(t *testing.T) {
 	require.NotNil(t, probe)
 	assert.Equal(t, "/gshealthz", probe.HTTPGet.Path)
 	assert.Equal(t, intstr.IntOrString{IntVal: 8080}, probe.HTTPGet.Port)
-	assert.Equal(t, int32(1), probe.FailureThreshold)
+	assert.Equal(t, fixture.Spec.Health.FailureThreshold, probe.FailureThreshold)
 	assert.Equal(t, fixture.Spec.Health.InitialDelaySeconds, probe.InitialDelaySeconds)
 	assert.Equal(t, fixture.Spec.Health.PeriodSeconds, probe.PeriodSeconds)
 }
