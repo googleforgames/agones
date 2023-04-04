@@ -80,8 +80,10 @@ func TestSidecarRun(t *testing.T) {
 		},
 		"unhealthy": {
 			f: func(sc *SDKServer, ctx context.Context) {
-				// we have a 1 second timeout
-				time.Sleep(2 * time.Second)
+				time.Sleep(1 * time.Second)
+				sc.runHealth()              // normally invoked from /gshealthz handler
+				time.Sleep(2 * time.Second) // exceed 1s timeout
+				sc.runHealth()              // normally invoked from /gshealthz handler
 			},
 			expected: expected{
 				state:      agonesv1.GameServerStateUnhealthy,
@@ -475,6 +477,12 @@ func TestSidecarUnhealthyMessage(t *testing.T) {
 	// manually push through an unhealthy state change
 	sc.enqueueState(agonesv1.GameServerStateUnhealthy)
 	agtesting.AssertEventContains(t, m.FakeRecorder.Events, "Health check failure")
+
+	// try to push back to Ready, enqueueState should block it.
+	sc.enqueueState(agonesv1.GameServerStateRequestReady)
+	sc.gsUpdateMutex.Lock()
+	assert.Equal(t, agonesv1.GameServerStateUnhealthy, sc.gsState)
+	sc.gsUpdateMutex.Unlock()
 }
 
 func TestSidecarHealthy(t *testing.T) {
@@ -487,7 +495,7 @@ func TestSidecarHealthy(t *testing.T) {
 	// manually set the values
 	sc.health = agonesv1.Health{FailureThreshold: 1}
 	sc.healthTimeout = 5 * time.Second
-	sc.initHealthLastUpdated(0 * time.Second)
+	sc.touchHealthLastUpdated()
 
 	now := time.Now().UTC()
 	fc := testclocks.NewFakeClock(now)
@@ -532,15 +540,12 @@ func TestSidecarHealthy(t *testing.T) {
 	t.Run("initial delay", func(t *testing.T) {
 		sc.health.Disabled = false
 		fc.SetTime(time.Now().UTC())
-		sc.initHealthLastUpdated(0)
-		sc.healthFailureCount = 0
-		sc.checkHealth()
-		assert.True(t, sc.healthy())
+		sc.touchHealthLastUpdated()
 
-		sc.initHealthLastUpdated(10 * time.Second)
-		sc.checkHealth()
-		assert.True(t, sc.healthy())
-		fc.Step(9 * time.Second)
+		// initial delay is handled by kubelet, runHealth() isn't
+		// called until container starts.
+		fc.Step(10 * time.Second)
+		sc.touchHealthLastUpdated()
 		sc.checkHealth()
 		assert.True(t, sc.healthy())
 
@@ -553,8 +558,7 @@ func TestSidecarHealthy(t *testing.T) {
 		sc.health.Disabled = false
 		sc.health.FailureThreshold = 3
 		fc.SetTime(time.Now().UTC())
-		sc.initHealthLastUpdated(0)
-		sc.healthFailureCount = 0
+		sc.touchHealthLastUpdated()
 
 		sc.checkHealth()
 		assert.True(t, sc.healthy())
@@ -622,8 +626,8 @@ func TestSidecarHTTPHealthCheck(t *testing.T) {
 
 	fc.Step(step)
 	time.Sleep(step)
+	testHTTPHealth(t, "http://localhost:8080/gshealthz", "", http.StatusInternalServerError) // force runHealth to run
 	assert.False(t, sc.healthy())
-	testHTTPHealth(t, "http://localhost:8080/gshealthz", "", http.StatusInternalServerError)
 	cancel()
 	wg.Wait() // wait for go routine test results.
 }
