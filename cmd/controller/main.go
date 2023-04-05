@@ -226,7 +226,7 @@ func main() {
 		kubeClient, extClient, agonesClient, agonesInformerFactory)
 
 	rs = append(rs,
-		httpsServer, gsCounter, gsController, gsSetController, fleetController, fasController, server)
+		gsCounter, gsController, gsSetController, fleetController, fasController)
 
 	if !runtime.FeatureEnabled(runtime.FeatureSplitControllerAndExtensions) {
 		gameservers.NewExtensions(controllerHooks, wh)
@@ -236,19 +236,25 @@ func main() {
 
 		gasController := gameserverallocations.NewExtensions(api, health, gsCounter, kubeClient, kubeInformerFactory,
 			agonesClient, agonesInformerFactory, 10*time.Second, 30*time.Second, ctlConf.AllocationBatchWaitTime)
-		rs = append(rs, gasController)
+		rs = append(rs, httpsServer, gasController)
 	}
+
+	runRunner := func(r runner) {
+		if err := r.Run(ctx, ctlConf.NumWorkers); err != nil {
+			logger.WithError(err).Fatalf("could not start runner! %T", r)
+		}
+	}
+
+	// Server has to be started earlier because it contains the health check.
+	// This allows the controller to not fail health check during install when there is replication
+	go runRunner(server)
 
 	whenLeader(ctx, cancel, logger, ctlConf.LeaderElection, kubeClient, func(ctx context.Context) {
 		kubeInformerFactory.Start(ctx.Done())
 		agonesInformerFactory.Start(ctx.Done())
 
 		for _, r := range rs {
-			go func(rr runner) {
-				if runErr := rr.Run(ctx, ctlConf.NumWorkers); runErr != nil {
-					logger.WithError(runErr).Fatalf("could not start runner: %T", rr)
-				}
-			}(r)
+			go runRunner(r)
 		}
 
 		<-ctx.Done()
