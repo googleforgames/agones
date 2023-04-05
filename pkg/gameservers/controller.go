@@ -867,6 +867,10 @@ func (c *Controller) syncGameServerRequestReadyState(ctx context.Context, gs *ag
 			break
 		}
 	}
+	// Verify that we found the game server container - we may have a stale cache where pod is missing ContainerStatuses.
+	if _, ok := gsCopy.ObjectMeta.Annotations[agonesv1.GameServerReadyContainerIDAnnotation]; !ok {
+		return nil, workerqueue.NewDebugError(fmt.Errorf("game server container for GameServer %s in namespace %s not present in pod status, try again", gsCopy.ObjectMeta.Name, gsCopy.ObjectMeta.Namespace))
+	}
 
 	// Also update the pod with the same annotation, so we can check if the Pod data is up-to-date, now and also in the HealthController.
 	// But if it is already set, then ignore it, since we only need to do this one time.
