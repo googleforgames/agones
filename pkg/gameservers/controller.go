@@ -705,16 +705,9 @@ func (c *Controller) addGameServerHealthCheck(gs *agonesv1.GameServer, pod *core
 						Port: intstr.FromInt(8080),
 					},
 				},
-				// The sidecar relies on kubelet to delay by InitialDelaySeconds after the
-				// container is started (after image pull, etc), and relies on the kubelet
-				// for PeriodSeconds heartbeats to evaluate health.
 				InitialDelaySeconds: gs.Spec.Health.InitialDelaySeconds,
 				PeriodSeconds:       gs.Spec.Health.PeriodSeconds,
-
-				// By the time /gshealthz returns unhealthy, the sidecar has already evaluated
-				// FailureThreshold in a row failed health checks, so on the kubelet side, one
-				// failure is sufficient to know the game server is unhealthy.
-				FailureThreshold: 1,
+				FailureThreshold:    gs.Spec.Health.FailureThreshold,
 			}
 		}
 

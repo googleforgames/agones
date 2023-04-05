@@ -6,7 +6,7 @@ description: "Community contributed Dedicated Game Server examples on Agones."
 weight: 20
 ---
 
-## Integration with Open Match
+## Integrations with other projects
 
 * [Octops/Agones x Open Match](https://github.com/Octops/agones-discover-openmatch) - How to implement a matchmaking 
   system using Agones and Open Match

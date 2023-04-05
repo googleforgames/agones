@@ -227,8 +227,8 @@ hard (impossible? 🤔) to run as optimally as a tailored solution such as Agone
 
 ## Ecosystem
 
-### Is there an example of Agones and Open Match working together? 
+### Is there an example of Agones and other project working together? 
 
 Yes! There are several! Check out both our
-[official]({{% ref "/docs/Examples/_index.md#integration-with-open-match" %}}) 
-and [third party]({{% ref "/docs/Third Party Content/examples.md#integration-with-open-match" %}}) examples!
+[official]({{% ref "/docs/Examples/_index.md#integrations-with-other-projects" %}}) 
+and [third party]({{% ref "/docs/Third Party Content/examples.md#integrations-with-other-projects" %}}) examples!
