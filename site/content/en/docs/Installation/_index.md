@@ -39,7 +39,7 @@ For all the platforms in Alpha, we would appreciate testing and bug reports on a
 
 ## Agones and Kubernetes Supported Versions
 
-Agones will support 3 releases of Kubernetes, targeting the newest version as being the [default version in the GKE Rapid channel](https://cloud.google.com/kubernetes-engine/docs/release-notes#current_versions). However, we will ensure that at least one of the 3 versions chosen for each Agones release is supported by each of the major cloud providers (EKS and AKS). The vendored version of client-go will be aligned with the middle of the three supported Kubernetes versions. When a new version of Agones supports new versions of Kubernetes, it is explicitly called out in the [release notes](https://agones.dev/site/blog/releases/).
+Agones will support 3 releases of Kubernetes, targeting the newest version as being the [latest available version in the GKE Rapid channel](https://cloud.google.com/kubernetes-engine/docs/release-notes#current_versions). However, we will ensure that at least one of the 3 versions chosen for each Agones release is supported by each of the major cloud providers (EKS and AKS). The vendored version of client-go will be aligned with the middle of the three supported Kubernetes versions. When a new version of Agones supports new versions of Kubernetes, it is explicitly called out in the [release notes](https://agones.dev/site/blog/releases/).
 
 The following table lists recent Agones versions and their corresponding required Kubernetes versions:
 
