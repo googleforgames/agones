@@ -13,6 +13,13 @@
 # limitations under the License.
 
 {{- $featureGates := include "agones.featureGates" . | fromYaml }}
+{{- $replicas := (int .Values.agones.controller.replicas) }}
+{{- if not $featureGates.SplitControllerAndExtensions }}
+{{- $replicas = 1 }}
+{{- end }}
+{{- if lt $replicas 1 }}
+{{- fail "agones.controller.replica field has an invalid value!" }}
+{{- end }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -31,13 +38,13 @@ spec:
       app: {{ template "agones.name" . }}
       release: {{ .Release.Name }}
       heritage: {{ .Release.Service }}
-  replicas: 1
+  replicas: {{ $replicas }}
   strategy:
     type: Recreate
   template:
     metadata:
       annotations:
-{{- if not $featureGates.SplitControllerAndExtensions }}
+{{- if eq $replicas 1 }}
         cluster-autoscaler.kubernetes.io/safe-to-evict: {{ .Values.agones.controller.safeToEvict | quote }}
 {{- end }}
 {{- if .Values.agones.controller.generateTLS }}
@@ -136,6 +143,10 @@ spec:
               fieldPath: metadata.namespace
         - name: CONTAINER_NAME
           value: "agones-controller"
+        {{- if gt $replicas 1 }}
+        - name: LEADER_ELECTION
+          value: "true"
+        {{- end }}
         ports:
         - name: webhooks
           containerPort: 8081
@@ -182,4 +193,25 @@ spec:
 {{- if .Values.agones.image.controller.pullSecret }}
       imagePullSecrets:
         - name: {{.Values.agones.image.controller.pullSecret}}
+{{- end }}
+---
+{{- if gt $replicas 1 }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: agones-controller-pdb
+spec:
+{{- if .Values.agones.controller.pdb.minAvailable }}
+{{- if .Values.agones.controller.pdb.maxUnavailable }}
+{{- fail "minAvailable and maxUnavailable are mutually exclusive!" }}
+{{- end}}
+{{- end}}
+  minAvailable: {{ .Values.agones.controller.pdb.minAvailable }}
+  maxUnavailable: {{ .Values.agones.controller.pdb.maxUnavailable }}
+  selector:
+    matchLabels:
+      agones.dev/role: controller
+      app: {{ template "agones.name" . }}
+      release: {{ .Release.Name }}
+      heritage: {{ .Release.Service }}
 {{- end }}

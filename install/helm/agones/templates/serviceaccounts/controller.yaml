@@ -81,6 +81,9 @@ rules:
 - apiGroups: ["autoscaling.agones.dev"]
   resources: ["fleetautoscalers/status"]
   verbs: ["update"]
+- apiGroups: ["coordination.k8s.io"]
+  resources: ["leases"]
+  verbs: ["create", "delete", "get", "list", "update", "watch"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
