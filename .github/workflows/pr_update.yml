@@ -25,15 +25,9 @@ jobs:
       - name: Automatically update PR
         uses: adRise/update-pr-branch@v0.6.0
         with:
-          token: ${{ secrets.GH_TOKEN }}
+          token: ${{ secrets.ACTION_USER_TOKEN }}
           base: "main"
           required_approval_count: 1
           require_passed_checks: true
           sort: "created"
           direction: "desc"
-        secretEnv:
-          - GH_TOKEN
-    availableSecrets:
-      secretManager:
-        - versionName: projects/${PROJECT_ID}/secrets/release-github-token/versions/latest
-          env: GH_TOKEN
