@@ -20,8 +20,10 @@ import (
 	"time"
 
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
+	"agones.dev/agones/pkg/util/runtime"
 	e2eframework "agones.dev/agones/test/e2e/framework"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -55,7 +57,47 @@ func TestGameServerUnhealthyAfterDeletingPodWhileControllerDown(t *testing.T) {
 	_, err = framework.WaitForGameServerState(t, readyGs, agonesv1.GameServerStateUnhealthy, 3*time.Minute)
 	assert.NoError(t, err)
 	logger.Info("waiting for Agones controller to come back to running")
-	assert.NoError(t, waitForAgonesControllerRunning(ctx))
+	assert.NoError(t, waitForAgonesControllerRunning(ctx, -1))
+}
+
+func TestLeaderElectionAfterDeletingLeader(t *testing.T) {
+	logger := e2eframework.TestLogger(t)
+	gs := framework.DefaultGameServer(defaultNs)
+	ctx := context.Background()
+
+	if !runtime.FeatureEnabled(runtime.FeatureSplitControllerAndExtensions) {
+		t.Skip("Skip test. SplitControllerAndExtensions feature is not enabled")
+	}
+
+	err := waitForAgonesControllerRunning(ctx, -1)
+	require.NoError(t, err, "Could not ensure controller running")
+
+	list, err := getAgonesControllerPods(ctx)
+	require.NoError(t, err, "Could not get list of Extension pods")
+	if len(list.Items) == 1 {
+		t.Skip("Skip test. Leader Election is not enabled since there is only 1 controller")
+	}
+
+	replication := len(list.Items)
+
+	// Deleting other controller pods to make sure that the last one becomes leader
+	willBeLeader := list.Items[0].ObjectMeta.Name
+	for _, pod := range list.Items[1:] {
+		err = deleteAgonesControllerPod(ctx, pod.ObjectMeta.Name)
+		require.NoError(t, err, "Could not delete controller pod")
+	}
+
+	err = waitForAgonesControllerRunning(ctx, replication)
+	require.NoError(t, err, "Could not get controller ready after delete")
+
+	err = deleteAgonesControllerPod(ctx, willBeLeader)
+	require.NoError(t, err, "Could not delete leader controller pod")
+
+	readyGs, err := framework.CreateGameServerAndWaitUntilReady(t, defaultNs, gs)
+	if err != nil {
+		t.Fatalf("Could not get a GameServer ready: %v", err)
+	}
+	logger.WithField("gsKey", readyGs.ObjectMeta.Name).Info("GameServer Ready")
 }
 
 // deleteAgonesControllerPods deletes all the Controller pods for the Agones controller,
@@ -66,10 +108,8 @@ func deleteAgonesControllerPods(ctx context.Context) error {
 		return err
 	}
 
-	policy := metav1.DeletePropagationBackground
 	for i := range list.Items {
-		err = framework.KubeClient.CoreV1().Pods("agones-system").Delete(ctx, list.Items[i].ObjectMeta.Name,
-			metav1.DeleteOptions{PropagationPolicy: &policy})
+		err = deleteAgonesControllerPod(ctx, list.Items[i].ObjectMeta.Name)
 		if err != nil {
 			return err
 		}
@@ -77,11 +117,15 @@ func deleteAgonesControllerPods(ctx context.Context) error {
 	return nil
 }
 
-func waitForAgonesControllerRunning(ctx context.Context) error {
+func waitForAgonesControllerRunning(ctx context.Context, wantReplicas int) error {
 	return wait.PollImmediate(time.Second, 5*time.Minute, func() (bool, error) {
 		list, err := getAgonesControllerPods(ctx)
 		if err != nil {
 			return true, err
+		}
+
+		if wantReplicas != -1 && len(list.Items) != wantReplicas {
+			return false, nil
 		}
 
 		for i := range list.Items {
@@ -100,4 +144,12 @@ func waitForAgonesControllerRunning(ctx context.Context) error {
 func getAgonesControllerPods(ctx context.Context) (*corev1.PodList, error) {
 	opts := metav1.ListOptions{LabelSelector: labels.Set{"agones.dev/role": "controller"}.String()}
 	return framework.KubeClient.CoreV1().Pods("agones-system").List(ctx, opts)
+}
+
+// deleteAgonesControllerPod deletes a Agones controller pod
+func deleteAgonesControllerPod(ctx context.Context, podName string) error {
+	policy := metav1.DeletePropagationBackground
+	err := framework.KubeClient.CoreV1().Pods("agones-system").Delete(ctx, podName,
+		metav1.DeleteOptions{PropagationPolicy: &policy})
+	return err
 }
