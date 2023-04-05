@@ -36,7 +36,7 @@ import (
 
 // main starts a UDP or TCP server
 func main() {
-	go doSignal()
+	sigCtx, _ := signals.NewSigKillContext()
 
 	port := flag.String("port", "7654", "The port to listen to traffic on")
 	passthrough := flag.Bool("passthrough", false, "Get listening port from the SDK, rather than use the 'port' value")
@@ -121,16 +121,7 @@ func main() {
 		ready(s)
 	}
 
-	// Prevent the program from quitting as the server is listening on goroutines.
-	for {
-	}
-}
-
-// doSignal shutsdown on SIGTERM/SIGKILL
-func doSignal() {
-	ctx := signals.NewSigKillContext()
-	<-ctx.Done()
-	log.Println("Exit signal received. Shutting down.")
+	<-sigCtx.Done()
 	os.Exit(0)
 }
 
