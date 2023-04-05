@@ -286,7 +286,12 @@ steps:
   script: |
     #!/usr/bin/env bash
 
-    gcloud builds list --ongoing --filter "tags:'e2e-test'" --format="value(id)" | xargs --no-run-if-empty gcloud builds cancel 
+    until gcloud builds list --ongoing --filter "tags:'e2e-test'" --format="value(id)" | xargs --no-run-if-empty gcloud builds cancel
+    do
+      echo "== encountered error; assuming retryable error and trying again =="
+      sleep 5
+    done
+
 
 # kick off the child e2e test cloud builds in parallel, fail this build if any of the child build fails
 
