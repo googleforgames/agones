@@ -24,10 +24,9 @@ import (
 )
 
 // NewSigKillContext returns a Context that cancels when os.Interrupt or os.Kill is received
+// along with a stop function that can be used to unregister the signal behavior.
 func NewSigKillContext() (context.Context, context.CancelFunc) {
-	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
-
-	return ctx, cancel
+	return signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 }
 
 // NewSigTermHandler creates a channel to listen to SIGTERM and runs the handle function
