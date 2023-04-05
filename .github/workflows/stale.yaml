@@ -1,4 +1,4 @@
-# This workflow applies stale label to issues that have had no activity for a specified amount of time.
+# This workflow applies stale label to issues that have had no activity for atleast 30 days.
 #
 # You can adjust the behavior by modifying this file.
 # For more information, see:
