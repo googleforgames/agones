@@ -1,4 +1,4 @@
-# This workflow applies 'obsolete' label to issues that have had no activity for a specified amount of time since marked as 'stale'.
+# This workflow applies 'obsolete' label to issues that have had no activity for 60 days.
 #
 # You can adjust the behavior by modifying this file.
 # For more information, see:
@@ -27,7 +27,7 @@ jobs:
         days-before-issue-stale: 29
         stale-issue-message: >
           This issue is marked as obsolete due to inactivity for last 60 days. 
-          To avoid being marked as "Obsolete" please add a comment or add "awaiting-maintainer" label. Thank you for your contributions
+          To avoid getting closed in next 30 days, please add a comment or add 'awaiting-maintainer' label. Thank you for your contributions
         stale-issue-label: 'obsolete'
         only-labels: 'stale'
         exempt-issue-labels: awaiting-maintainer
