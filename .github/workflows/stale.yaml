@@ -1,0 +1,33 @@
+# This workflow applies stale label to issues that have had no activity for atleast 30 days.
+#
+# You can adjust the behavior by modifying this file.
+# For more information, see:
+# https://github.com/actions/stale
+name: Mark stale 
+
+on:
+  workflow_dispatch:
+  schedule:
+  - cron: '0 10 1,15 * *'
+
+jobs:
+  stale:
+
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    name: stale issues
+
+    steps:
+    - name: Stale issues
+      uses: actions/stale@v5
+      with:
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+        days-before-issue-stale: 30
+        stale-issue-message: >
+          'This issue is marked as Stale due to inactivity for more than 30 days. 
+          To avoid being marked as 'stale' please add 'awaiting-maintainer' label or add a comment. Thank you for your contributions '
+        stale-issue-label: 'stale'
+        exempt-issue-labels: 'awaiting-maintainer, obsolete'
+        ascending: true
+        enable-statistics: true
