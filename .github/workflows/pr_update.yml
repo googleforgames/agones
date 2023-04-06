@@ -25,7 +25,7 @@ jobs:
       - name: Automatically update PR
         uses: adRise/update-pr-branch@v0.6.0
         with:
-          token: ${{ secrets.ACTION_USER_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           base: "main"
           required_approval_count: 1
           require_passed_checks: true
