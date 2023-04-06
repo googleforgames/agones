@@ -131,8 +131,8 @@ func main() {
 //
 // The algorithm is:
 //
-//   1. Move the game server back to ready N times after it is allocated
-//   2. Shutdown the game server after the Nth time is becomes allocated
+//  1. Move the game server back to ready N times after it is allocated
+//  2. Shutdown the game server after the Nth time is becomes allocated
 //
 // This follows the integration pattern documented on the website at
 // https://agones.dev/site/docs/integration-patterns/reusing-gameservers/
