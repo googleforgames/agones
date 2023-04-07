@@ -43,11 +43,4 @@ steps:
       - DOCKER_RUN_ARGS=--network=cloudbuild
     args: ["test-examples-on-gar"]
 
-  - name: gcr.io/cloud-builders/gsutil
-    entrypoint: bash
-    args:
-      - "-c"
-      - "gsutil mb $_STORAGE || true"
-    id: create-bucket
-
 timeout: 3600s
