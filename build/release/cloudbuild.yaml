@@ -13,15 +13,19 @@
 # limitations under the License.
 
 steps:
-
   - name: "ubuntu"
-    args: ["bash", "-c", "echo 'FROM gcr.io/cloud-builders/docker\nRUN apt-get install make\nENTRYPOINT [\"/usr/bin/make\"]' > Dockerfile.build"]
-    waitFor: ['-']
+    args:
+      [
+        "bash",
+        "-c",
+        "echo 'FROM gcr.io/cloud-builders/docker\nRUN apt-get install make\nENTRYPOINT [\"/usr/bin/make\"]' > Dockerfile.build",
+      ]
+    waitFor: ["-"]
 
   - name: gcr.io/cloud-builders/docker
     id: build-make-docker
-    args: ['build', '-f', 'Dockerfile.build', '-t', 'make-docker', '.']
-  
+    args: ["build", "-f", "Dockerfile.build", "-t", "make-docker", "."]
+
   - name: "make-docker"
     id: pull-build-image
     dir: "build"
@@ -30,45 +34,20 @@ steps:
     args: ["pull-build-image"]
     waitFor:
       - build-make-docker
-  
+
   - name: make-docker
     id: test-examples-on-gar
     dir: "build"
     env:
-    - "REGISTRY=us-docker.pkg.dev/${PROJECT_ID}"
-    - DOCKER_RUN_ARGS=--network=cloudbuild
-    args: ["test-examples-on-gar"] 
+      - "REGISTRY=us-docker.pkg.dev/${PROJECT_ID}"
+      - DOCKER_RUN_ARGS=--network=cloudbuild
+    args: ["test-examples-on-gar"]
 
   - name: gcr.io/cloud-builders/gsutil
     entrypoint: bash
     args:
-      - '-c'
-      - 'gsutil mb $_STORAGE || true'
+      - "-c"
+      - "gsutil mb $_STORAGE || true"
     id: create-bucket
 
-  - name: ferrarimarco/github-changelog-generator:1.15.0
-    id: changelog
-    entrypoint: sh
-    args:
-      - '-c'
-      - 'github_changelog_generator --user=googleforgames --project=agones --bug-labels=kind/bug --enhancement-labels=kind/feature --breaking-labels=kind/breaking --security-labels=area/security --exclude-labels=duplicate,question,invalid,wontfix,priority/wontfix --future-release "v${_VERSION}" --release-branch=main --token $$GH_TOKEN'
-    secretEnv:
-      - GH_TOKEN
-
-artifacts:
-  objects:
-    location: '$_STORAGE'
-    paths:
-      - 'CHANGELOG.md'
-
-options:
-  machineType: E2_HIGHCPU_32
-  dynamic_substitutions: true
-substitutions:
-  _STORAGE: gs://${PROJECT_ID}-agones-releases
-
-availableSecrets:
-  secretManager:
-    - versionName: projects/${PROJECT_ID}/secrets/release-github-token/versions/latest
-      env: GH_TOKEN
-timeout: 1800s
+timeout: 3600s
