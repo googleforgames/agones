@@ -325,7 +325,7 @@ steps:
             testCluster="gke-autopilot-e2e-test-cluster-${version//./-}"
           fi
           { gcloud builds submit . --config=./ci/e2e-test-cloudbuild.yaml \
-            --substitutions _FEATURE_WITH_GATE=$featureWithGate,_FEATURE_WITHOUT_GATE=$featureWithoutGate,_CLOUD_PRODUCT=$cloudProduct,_TEST_CLUSTER_NAME=$testCluster,_TEST_CLUSTER_LOCATION=$testClusterLocation,_REGISTRY=${_REGISTRY} \
+            --substitutions _FEATURE_WITH_GATE=$featureWithGate,_FEATURE_WITHOUT_GATE=$featureWithoutGate,_CLOUD_PRODUCT=$cloudProduct,_TEST_CLUSTER_NAME=$testCluster,_TEST_CLUSTER_LOCATION=$testClusterLocation,_REGISTRY=${_REGISTRY},_PARENT_COMMIT_SHA=${COMMIT_SHA} \
             |& sed "s/^/${cloudProduct}-${version}: /"; } &
           pids+=($!)
         done
