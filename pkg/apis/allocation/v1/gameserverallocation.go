@@ -114,6 +114,16 @@ type GameServerSelector struct {
 	// Players provides a filter on minimum and maximum values for player capacity when retrieving a GameServer
 	// through Allocation. Defaults to no limits.
 	Players *PlayerSelector `json:"players,omitempty"`
+	// (Alpha, CountsAndLists feature flag) Counters provides filters on minimum and maximum values
+	// for a Counter's count and available capacity when retrieving a GameServer through Allocation.
+	// Defaults to no limits.
+	// +optional
+	Counters map[string]CounterSelector `json:"counters,omitempty"`
+	// (Alpha, CountsAndLists feature flag) Lists provides filters on minimum and maximum values
+	// for List capacity, and for the existence of a value in a List, when retrieving a GameServer
+	// through Allocation. Defaults to no limits.
+	// +optional
+	Lists map[string]ListSelector `json:"lists,omitempty"`
 }
 
 // PlayerSelector is the filter options for a GameServer based on player counts
@@ -122,7 +132,26 @@ type PlayerSelector struct {
 	MaxAvailable int64 `json:"maxAvailable,omitempty"`
 }
 
-// ApplyDefaults applies default values to the PlayerSelector
+// CounterSelector is the filter options for a GameServer based on the count and/or available capacity.
+// 0 for MaxCount or MaxAvailable means unlimited maximum. Default for all fields: 0
+type CounterSelector struct {
+	MinCount     int64 `json:"minCount"`
+	MaxCount     int64 `json:"maxCount"`
+	MinAvailable int64 `json:"minAvailable"`
+	MaxAvailable int64 `json:"maxAvailable"`
+}
+
+// ListSelector is the filter options for a GameServer based on List available capacity and/or the
+// existence of a value in a List.
+// 0 for MaxAvailable means unlimited maximum. Default for integer fields: 0
+// "" for ContainsValue means ignore field. Default for string field: ""
+type ListSelector struct {
+	ContainsValue string `json:"containsValue"`
+	MinAvailable  int64  `json:"minAvailable"`
+	MaxAvailable  int64  `json:"maxAvailable"`
+}
+
+// ApplyDefaults applies default values
 func (s *GameServerSelector) ApplyDefaults() {
 	if runtime.FeatureEnabled(runtime.FeatureStateAllocationFilter) {
 		if s.GameServerState == nil {
@@ -134,6 +163,15 @@ func (s *GameServerSelector) ApplyDefaults() {
 	if runtime.FeatureEnabled(runtime.FeaturePlayerAllocationFilter) {
 		if s.Players == nil {
 			s.Players = &PlayerSelector{}
+		}
+	}
+
+	if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
+		if s.Counters == nil {
+			s.Counters = make(map[string]CounterSelector)
+		}
+		if s.Lists == nil {
+			s.Lists = make(map[string]ListSelector)
 		}
 	}
 }
@@ -174,6 +212,81 @@ func (s *GameServerSelector) Matches(gs *agonesv1.GameServer) bool {
 		}
 	}
 
+	if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
+		// Only check for matches if there are CounterSelectors or ListSelectors
+		if (s.Counters != nil) && (len(s.Counters) != 0) {
+			if !(s.matchCounters(gs)) {
+				return false
+			}
+		}
+		if (s.Lists != nil) && (len(s.Lists) != 0) {
+			if !(s.matchLists(gs)) {
+				return false
+			}
+		}
+	}
+
+	return true
+}
+
+// matchCounters returns true if there is a match for the CounterSelector in the GameServerStatus
+func (s *GameServerSelector) matchCounters(gs *agonesv1.GameServer) bool {
+	if gs.Status.Counters == nil {
+		return false
+	}
+	for counter, counterSelector := range s.Counters {
+		// If the Counter Selector does not exist in GameServerStatus, return false.
+		counterStatus, ok := gs.Status.Counters[counter]
+		if !ok {
+			return false
+		}
+		// 0 means undefined (unlimited) for MaxAvailable.
+		available := counterStatus.Capacity - counterStatus.Count
+		if available < counterSelector.MinAvailable ||
+			(counterSelector.MaxAvailable != 0 && available > counterSelector.MaxAvailable) {
+			return false
+		}
+		// 0 means undefined (unlimited) for MaxCount.
+		if counterStatus.Count < counterSelector.MinCount ||
+			(counterSelector.MaxCount != 0 && counterStatus.Count > counterSelector.MaxCount) {
+			return false
+		}
+	}
+	return true
+}
+
+// matchLists returns true if there is a match for the ListSelector in the GameServerStatus
+func (s *GameServerSelector) matchLists(gs *agonesv1.GameServer) bool {
+	if gs.Status.Lists == nil {
+		return false
+	}
+	for list, listSelector := range s.Lists {
+		// If the List Selector does not exist in GameServerStatus, return false.
+		listStatus, ok := gs.Status.Lists[list]
+		if !ok {
+			return false
+		}
+		// Match List based on capacity
+		available := listStatus.Capacity - int64(len(listStatus.Values))
+		// 0 means undefined (unlimited) for MaxAvailable.
+		if available < listSelector.MinAvailable ||
+			(listSelector.MaxAvailable != 0 && available > listSelector.MaxAvailable) {
+			return false
+		}
+		// Check if List contains ContainsValue (if a value has been specified)
+		if listSelector.ContainsValue != "" {
+			valueExists := false
+			for _, value := range listStatus.Values {
+				if value == listSelector.ContainsValue {
+					valueExists = true
+					break
+				}
+			}
+			if !valueExists {
+				return false
+			}
+		}
+	}
 	return true
 }
 
@@ -226,7 +339,107 @@ func (s *GameServerSelector) Validate(field string) ([]metav1.StatusCause, bool)
 		}
 	}
 
+	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) && (s.Counters != nil || s.Lists != nil) {
+		causes = append(causes, metav1.StatusCause{
+			Type:    metav1.CauseTypeFieldValueInvalid,
+			Message: "Feature CountsAndLists must be enabled if Counters or Lists are specified",
+			Field:   field,
+		})
+	}
+
+	if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
+		if s.Counters != nil {
+			causes = append(causes, s.validateCounters(field)...)
+		}
+		if s.Lists != nil {
+			causes = append(causes, s.validateLists(field)...)
+		}
+	}
+
 	return causes, len(causes) == 0
+}
+
+// validateCounters validates that the selection field has valid values for CounterSelectors
+func (s *GameServerSelector) validateCounters(field string) []metav1.StatusCause {
+	var causes []metav1.StatusCause
+
+	for _, counterSelector := range s.Counters {
+		if counterSelector.MinCount < 0 {
+			causes = append(causes, metav1.StatusCause{
+				Type:    metav1.CauseTypeFieldValueInvalid,
+				Message: "CounterSelector.MinCount must be greater than zero",
+				Field:   field,
+			})
+		}
+		if counterSelector.MaxCount < 0 {
+			causes = append(causes, metav1.StatusCause{
+				Type:    metav1.CauseTypeFieldValueInvalid,
+				Message: "CounterSelector.MaxCount must be greater than zero",
+				Field:   field,
+			})
+		}
+		if (counterSelector.MaxCount < counterSelector.MinCount) && (counterSelector.MaxCount != 0) {
+			causes = append(causes, metav1.StatusCause{
+				Type:    metav1.CauseTypeFieldValueInvalid,
+				Message: "CounterSelector.MaxCount must zero or greater than counterSelector.MinCount",
+				Field:   field,
+			})
+		}
+		if counterSelector.MinAvailable < 0 {
+			causes = append(causes, metav1.StatusCause{
+				Type:    metav1.CauseTypeFieldValueInvalid,
+				Message: "CounterSelector.MinAvailable must be greater than zero",
+				Field:   field,
+			})
+		}
+		if counterSelector.MaxAvailable < 0 {
+			causes = append(causes, metav1.StatusCause{
+				Type:    metav1.CauseTypeFieldValueInvalid,
+				Message: "CounterSelector.MaxAvailable must be greater than zero",
+				Field:   field,
+			})
+		}
+		if (counterSelector.MaxAvailable < counterSelector.MinAvailable) && (counterSelector.MaxAvailable != 0) {
+			causes = append(causes, metav1.StatusCause{
+				Type:    metav1.CauseTypeFieldValueInvalid,
+				Message: "CounterSelector.MaxAvailable must zero or greater than counterSelector.MinAvailable",
+				Field:   field,
+			})
+		}
+	}
+
+	return causes
+}
+
+// validateLists validates that the selection field has valid values for ListSelectors
+func (s *GameServerSelector) validateLists(field string) []metav1.StatusCause {
+	var causes []metav1.StatusCause
+
+	for _, listSelector := range s.Lists {
+		if listSelector.MinAvailable < 0 {
+			causes = append(causes, metav1.StatusCause{
+				Type:    metav1.CauseTypeFieldValueInvalid,
+				Message: "ListSelector.MinAvailable must be greater than zero",
+				Field:   field,
+			})
+		}
+		if listSelector.MaxAvailable < 0 {
+			causes = append(causes, metav1.StatusCause{
+				Type:    metav1.CauseTypeFieldValueInvalid,
+				Message: "ListSelector.MaxAvailable must be greater than zero",
+				Field:   field,
+			})
+		}
+		if (listSelector.MaxAvailable < listSelector.MinAvailable) && (listSelector.MaxAvailable != 0) {
+			causes = append(causes, metav1.StatusCause{
+				Type:    metav1.CauseTypeFieldValueInvalid,
+				Message: "ListSelector.MaxAvailable must zero or greater than ListSelector.MinAvailable",
+				Field:   field,
+			})
+		}
+	}
+
+	return causes
 }
 
 // MultiClusterSetting specifies settings for multi-cluster allocation.
