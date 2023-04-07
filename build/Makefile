@@ -171,7 +171,7 @@ GO_E2E_TEST_ARGS=--kubeconfig /root/.kube/$(kubeconfig_file)
 gotestsum_json=/tmp/agones.gotestsum.json
 ifdef GOTESTSUM_VERBOSE
 gotestsum_format=--format=testname \
-  --post-run-command="sh -c 'echo; echo --- RAW VERBOSE OUTPUT ---; jq -j \"select(.Output != null) | .Output\" < $(gotestsum_json); echo --- END RAW VERBOSE OUTPUT ---'"
+  --post-run-command="sh -c 'echo; echo --- RAW VERBOSE OUTPUT ---; jq -j \"select(.Output != null) | (\\\"VERBOSE: \\\" + .Output)\" < $(gotestsum_json); echo --- END RAW VERBOSE OUTPUT ---'"
 else
 gotestsum_format=--format=standard-quiet
 endif

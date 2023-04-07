@@ -286,7 +286,12 @@ steps:
   script: |
     #!/usr/bin/env bash
 
-    gcloud builds list --ongoing --filter "tags:'e2e-test'" --format="value(id)" | xargs --no-run-if-empty gcloud builds cancel 
+    until gcloud builds list --ongoing --filter "tags:'e2e-test'" --format="value(id)" | xargs --no-run-if-empty gcloud builds cancel
+    do
+      echo "== encountered error; assuming retryable error and trying again =="
+      sleep 5
+    done
+
 
 # kick off the child e2e test cloud builds in parallel, fail this build if any of the child build fails
 
@@ -307,10 +312,6 @@ steps:
         for version in "${!versionsAndRegions[@]}"
         do
           region=${versionsAndRegions[$version]}
-          if [ $cloudProduct = gke-autopilot ] && [ $version = 1.26 ]
-          then
-            continue
-          fi
           if [ $cloudProduct = generic ]
           then
             featureWithGate="CustomFasSyncInterval=false&SafeToEvict=false&SDKGracefulTermination=false&StateAllocationFilter=false&PlayerAllocationFilter=true&PlayerTracking=true&ResetMetricsOnDelete=true&PodHostname=true&SplitControllerAndExtensions=true&FleetAllocationOverflow=true&Example=true"
@@ -324,7 +325,7 @@ steps:
             testCluster="gke-autopilot-e2e-test-cluster-${version//./-}"
           fi
           { gcloud builds submit . --config=./ci/e2e-test-cloudbuild.yaml \
-            --substitutions _FEATURE_WITH_GATE=$featureWithGate,_FEATURE_WITHOUT_GATE=$featureWithoutGate,_CLOUD_PRODUCT=$cloudProduct,_TEST_CLUSTER_NAME=$testCluster,_TEST_CLUSTER_LOCATION=$testClusterLocation,_REGISTRY=${_REGISTRY} \
+            --substitutions _FEATURE_WITH_GATE=$featureWithGate,_FEATURE_WITHOUT_GATE=$featureWithoutGate,_CLOUD_PRODUCT=$cloudProduct,_TEST_CLUSTER_NAME=$testCluster,_TEST_CLUSTER_LOCATION=$testClusterLocation,_REGISTRY=${_REGISTRY},_PARENT_COMMIT_SHA=${COMMIT_SHA} \
             |& sed "s/^/${cloudProduct}-${version}: /"; } &
           pids+=($!)
         done
