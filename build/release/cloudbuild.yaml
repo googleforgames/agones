@@ -35,7 +35,7 @@ steps:
     waitFor:
       - build-make-docker
 
-  - name: make-docker
+  - name: "make-docker"
     id: test-examples-on-gar
     dir: "build"
     env:
