@@ -55,11 +55,16 @@ steps:
     - "${_TEST_CLUSTER_NAME}"
     - "${_TEST_CLUSTER_LOCATION}"
     - "${_REGISTRY}"
+    - "${_PARENT_COMMIT_SHA}"
   id: e2e-stable
   waitFor:
     - e2e-feature-gates
 
-tags: ['e2e-test']
+tags:
+  - "e2e-test"
+  - "cluster-${_TEST_CLUSTER_NAME}"
+  - "location-${_TEST_CLUSTER_LOCATION}"
+  - "commit-${_PARENT_COMMIT_SHA}"
 timeout: 5400s # 1.5h
 queueTtl: 7200s # 2h // only one set of e2es should be running at once
 
