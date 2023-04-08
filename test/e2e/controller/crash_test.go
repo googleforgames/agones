@@ -73,7 +73,7 @@ func TestLeaderElectionAfterDeletingLeader(t *testing.T) {
 	require.NoError(t, err, "Could not ensure controller running")
 
 	list, err := getAgonesControllerPods(ctx)
-	require.NoError(t, err, "Could not get list of Extension pods")
+	require.NoError(t, err, "Could not get list of controller pods")
 	if len(list.Items) == 1 {
 		t.Skip("Skip test. Leader Election is not enabled since there is only 1 controller")
 	}
