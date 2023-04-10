@@ -104,6 +104,45 @@ func TestConvert(t *testing.T) {
 		assert.Equal(t, gs.Status.Players.IDs, sdkGs.Status.Players.Ids)
 	})
 
+	t.Run(string(runtime.FeatureCountsAndLists)+" disabled", func(t *testing.T) {
+		assert.NoError(t, runtime.ParseFeatures(""))
+
+		gs := fixture.DeepCopy()
+
+		sdkGs := convert(gs)
+		eq(t, fixture, sdkGs)
+		assert.Zero(t, sdkGs.ObjectMeta.DeletionTimestamp)
+		assert.Nil(t, sdkGs.Status.Counters)
+		assert.Nil(t, sdkGs.Status.Lists)
+	})
+
+	t.Run(string(runtime.FeatureCountsAndLists)+" enabled", func(t *testing.T) {
+		assert.NoError(t, runtime.ParseFeatures(string(runtime.FeatureCountsAndLists)+"=true"))
+
+		gs := fixture.DeepCopy()
+		gs.Status.Counters = map[string]agonesv1.CounterStatus{
+			"Games": {
+				Count:    1,
+				Capacity: 999,
+			},
+		}
+		gs.Status.Lists = map[string]agonesv1.ListStatus{
+			"Lobbies": {
+				Capacity: 100,
+				Values:   []string{"Lobby1", "Lobby2", "Lobby0"},
+			},
+		}
+
+		sdkGs := convert(gs)
+		eq(t, fixture, sdkGs)
+		assert.Zero(t, sdkGs.ObjectMeta.DeletionTimestamp)
+		assert.Equal(t, gs.Status.Counters["Games"].Count, sdkGs.Status.Counters["Games"].Count)
+		assert.Equal(t, gs.Status.Counters["Games"].Capacity, sdkGs.Status.Counters["Games"].Capacity)
+		// Using assert.Equal for List Values here to check for items and item order equal in the List.
+		assert.Equal(t, gs.Status.Lists["Lobbies"].Values, sdkGs.Status.Lists["Lobbies"].Values)
+		assert.Equal(t, gs.Status.Lists["Lobbies"].Capacity, sdkGs.Status.Lists["Lobbies"].Capacity)
+	})
+
 	t.Run("DeletionTimestamp", func(t *testing.T) {
 		gs := fixture.DeepCopy()
 

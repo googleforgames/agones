@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/internal/descriptor"
+	"gopkg.in/yaml.v3"
 )
 
 type param struct {
@@ -126,6 +127,7 @@ type openapiOperationObject struct {
 	Parameters  openapiParametersObject `json:"parameters,omitempty" yaml:"parameters,omitempty"`
 	Tags        []string                `json:"tags,omitempty" yaml:"tags,omitempty"`
 	Deprecated  bool                    `json:"deprecated,omitempty" yaml:"deprecated,omitempty"`
+	Consumes    []string                `json:"consumes,omitempty" yaml:"consumes,omitempty"`
 	Produces    []string                `json:"produces,omitempty" yaml:"produces,omitempty"`
 
 	Security     *[]openapiSecurityRequirementObject `json:"security,omitempty" yaml:"security,omitempty"`
@@ -181,6 +183,10 @@ type schemaCore struct {
 	Default string   `json:"default,omitempty" yaml:"default,omitempty"`
 }
 
+type allOfEntry struct {
+	Ref string `json:"$ref,omitempty" yaml:"$ref,omitempty"`
+}
+
 type RawExample json.RawMessage
 
 func (m RawExample) MarshalJSON() ([]byte, error) {
@@ -218,7 +224,7 @@ func (e RawExample) MarshalYAML() (interface{}, error) {
 func (s *schemaCore) setRefFromFQN(ref string, reg *descriptor.Registry) error {
 	name, ok := fullyQualifiedNameToOpenAPIName(ref, reg)
 	if !ok {
-		return fmt.Errorf("setRefFromFQN: can't resolve OpenAPI name from '%v'", ref)
+		return fmt.Errorf("setRefFromFQN: can't resolve OpenAPI name from %q", ref)
 	}
 	s.Ref = fmt.Sprintf("#/definitions/%s", name)
 	return nil
@@ -258,13 +264,23 @@ type keyVal struct {
 type openapiSchemaObjectProperties []keyVal
 
 func (p openapiSchemaObjectProperties) MarshalYAML() (interface{}, error) {
-	m := make(map[string]interface{}, len(p))
-
-	for _, v := range p {
-		m[v.Key] = v.Value
+	n := yaml.Node{
+		Kind:    yaml.MappingNode,
+		Content: make([]*yaml.Node, len(p)*2),
 	}
-
-	return m, nil
+	for i, v := range p {
+		keyNode := yaml.Node{}
+		if err := keyNode.Encode(v.Key); err != nil {
+			return nil, err
+		}
+		valueNode := yaml.Node{}
+		if err := valueNode.Encode(v.Value); err != nil {
+			return nil, err
+		}
+		n.Content[i*2+0] = &keyNode
+		n.Content[i*2+1] = &valueNode
+	}
+	return n, nil
 }
 
 func (op openapiSchemaObjectProperties) MarshalJSON() ([]byte, error) {
@@ -320,6 +336,8 @@ type openapiSchemaObject struct {
 	Required         []string `json:"required,omitempty" yaml:"required,omitempty"`
 
 	extensions []extension
+
+	AllOf []allOfEntry `json:"allOf,omitempty" yaml:"allOf,omitempty"`
 }
 
 // http://swagger.io/specification/#definitionsObject

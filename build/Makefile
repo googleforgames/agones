@@ -24,7 +24,7 @@
 #
 
 # base version target. This is usually the next release.
-base_version = 1.30.0
+base_version = 1.31.0
 
 #
 # All of the following can be overwritten with environment variables
@@ -150,7 +150,7 @@ ifndef FULL_BUILD
 	zip_flags = -0
 endif
 
-go_build_cmd = go build -mod=vendor
+go_build_cmd = go build -mod=vendor -buildvcs=false
 GO_BUILD_LINUX_AMD64=docker run --rm -e "CGO_ENABLED=0" -e "$(gomod_on)" -w $(workdir_path) $(common_mounts) $(build_tag) $(go_build_cmd)
 GO_BUILD_LINUX_ARM64=docker run --rm -e "CGO_ENABLED=0" -e "GOOS=linux" -e "GOARCH=arm64" -e "$(gomod_on)" -w $(workdir_path) $(common_mounts) $(build_tag) $(go_build_cmd)
 GO_BUILD_DARWIN_AMD64=docker run --rm -e "GOOS=darwin" -e "GOARCH=amd64" -e "$(gomod_on)" -w $(workdir_path) $(common_mounts) $(build_tag) $(go_build_cmd)
@@ -171,7 +171,7 @@ GO_E2E_TEST_ARGS=--kubeconfig /root/.kube/$(kubeconfig_file)
 gotestsum_json=/tmp/agones.gotestsum.json
 ifdef GOTESTSUM_VERBOSE
 gotestsum_format=--format=testname \
-  --post-run-command="sh -c 'echo; echo --- RAW VERBOSE OUTPUT ---; jq -j \"select(.Output != null) | .Output\" < $(gotestsum_json); echo --- END RAW VERBOSE OUTPUT ---'"
+  --post-run-command="sh -c 'echo; echo --- RAW VERBOSE OUTPUT ---; jq -j \"select(.Output != null) | (\\\"VERBOSE: \\\" + .Output)\" < $(gotestsum_json); echo --- END RAW VERBOSE OUTPUT ---'"
 else
 gotestsum_format=--format=standard-quiet
 endif
@@ -826,3 +826,8 @@ install-custom-pull-secret:
 		docker run --rm $(common_mounts) -e "KUBECONFIG=/root/.kube/$(kubeconfig_file)" -v $(dir $(IMAGE_PULL_SECRET_FILE)):/root/secret $(DOCKER_RUN_ARGS) $(build_tag) \
 			kubectl apply --namespace default -f /root/secret/$(notdir $(IMAGE_PULL_SECRET_FILE)); \
 	fi
+
+update-go-deps:
+	$(DOCKER_RUN) go get -u agones.dev/agones
+	$(DOCKER_RUN) go mod tidy
+	$(DOCKER_RUN) go mod vendor

@@ -18,12 +18,24 @@ package signals
 
 import (
 	"context"
+	"os"
 	"os/signal"
 	"syscall"
 )
 
 // NewSigKillContext returns a Context that cancels when os.Interrupt or os.Kill is received
-func NewSigKillContext() context.Context {
-	ctx, _ := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
-	return ctx
+// along with a stop function that can be used to unregister the signal behavior.
+func NewSigKillContext() (context.Context, context.CancelFunc) {
+	return signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+}
+
+// NewSigTermHandler creates a channel to listen to SIGTERM and runs the handle function
+func NewSigTermHandler(handle func()) {
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, syscall.SIGTERM)
+
+	go func() {
+		<-c
+		handle()
+	}()
 }

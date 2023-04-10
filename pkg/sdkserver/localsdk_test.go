@@ -28,7 +28,11 @@ import (
 	"agones.dev/agones/pkg/sdk"
 	"agones.dev/agones/pkg/sdk/alpha"
 	"agones.dev/agones/pkg/util/runtime"
+	"github.com/google/go-cmp/cmp"
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/protobuf/testing/protocmp"
+	"google.golang.org/protobuf/types/known/fieldmaskpb"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 )
@@ -603,6 +607,712 @@ func TestLocalSDKServerPlayerConnectAndDisconnect(t *testing.T) {
 			assert.NoError(t, err)
 			assert.Equal(t, int64(0), count.Count)
 			assertNoWatchUpdate(t, stream)
+		})
+	}
+}
+
+func TestLocalSDKServerGetCounter(t *testing.T) {
+	t.Parallel()
+
+	runtime.FeatureTestMutex.Lock()
+	defer runtime.FeatureTestMutex.Unlock()
+	assert.NoError(t, runtime.ParseFeatures(string(runtime.FeatureCountsAndLists)+"=true"))
+
+	counters := map[string]agonesv1.CounterStatus{
+		"sessions": {Count: int64(1), Capacity: int64(100)},
+	}
+	fixture := &agonesv1.GameServer{
+		ObjectMeta: metav1.ObjectMeta{Name: "stuff"},
+		Status: agonesv1.GameServerStatus{
+			Counters: counters,
+		},
+	}
+
+	path, err := gsToTmpFile(fixture)
+	assert.NoError(t, err)
+	l, err := NewLocalSDKServer(path, "")
+	assert.Nil(t, err)
+
+	stream := newGameServerMockStream()
+	go func() {
+		err := l.WatchGameServer(&sdk.Empty{}, stream)
+		assert.Nil(t, err)
+	}()
+	assertInitialWatchUpdate(t, stream)
+
+	// wait for watching to begin
+	err = wait.Poll(time.Second, 10*time.Second, func() (bool, error) {
+		found := false
+		l.updateObservers.Range(func(_, _ interface{}) bool {
+			found = true
+			return false
+		})
+		return found, nil
+	})
+	assert.NoError(t, err)
+
+	testScenarios := map[string]struct {
+		name    string
+		want    *alpha.Counter
+		wantErr error
+	}{
+		"Counter exists": {
+			name: "sessions",
+			want: &alpha.Counter{Name: "sessions", Count: int64(1), Capacity: int64(100)},
+		},
+		"Counter does not exist": {
+			name:    "noName",
+			wantErr: errors.Errorf("NOT_FOUND. %s Counter not found", "noName"),
+		},
+	}
+
+	for testName, testScenario := range testScenarios {
+		t.Run(testName, func(t *testing.T) {
+			got, err := l.GetCounter(context.Background(), &alpha.GetCounterRequest{Name: testScenario.name})
+			// Check tests expecting non-errors
+			if testScenario.want != nil {
+				assert.NoError(t, err)
+				if diff := cmp.Diff(testScenario.want, got, protocmp.Transform()); diff != "" {
+					t.Errorf("Unexpected difference:\n%v", diff)
+				}
+			} else {
+				// Check tests expecting errors
+				assert.EqualError(t, err, testScenario.wantErr.Error())
+			}
+		})
+	}
+}
+
+func TestLocalSDKServerUpdateCounter(t *testing.T) {
+	t.Parallel()
+
+	runtime.FeatureTestMutex.Lock()
+	defer runtime.FeatureTestMutex.Unlock()
+	assert.NoError(t, runtime.ParseFeatures(string(runtime.FeatureCountsAndLists)+"=true"))
+
+	counters := map[string]agonesv1.CounterStatus{
+		"sessions": {Count: 1, Capacity: 100},
+		"players":  {Count: 100, Capacity: 100},
+		"lobbies":  {Count: 0, Capacity: 0},
+	}
+	fixture := &agonesv1.GameServer{
+		ObjectMeta: metav1.ObjectMeta{Name: "stuff"},
+		Status: agonesv1.GameServerStatus{
+			Counters: counters,
+		},
+	}
+
+	path, err := gsToTmpFile(fixture)
+	assert.NoError(t, err)
+	l, err := NewLocalSDKServer(path, "")
+	assert.Nil(t, err)
+
+	stream := newGameServerMockStream()
+	go func() {
+		err := l.WatchGameServer(&sdk.Empty{}, stream)
+		assert.Nil(t, err)
+	}()
+	assertInitialWatchUpdate(t, stream)
+
+	// wait for watching to begin
+	err = wait.Poll(time.Second, 10*time.Second, func() (bool, error) {
+		found := false
+		l.updateObservers.Range(func(_, _ interface{}) bool {
+			found = true
+			return false
+		})
+		return found, nil
+	})
+	assert.NoError(t, err)
+
+	testScenarios := map[string]struct {
+		updateRequest *alpha.UpdateCounterRequest
+		want          *alpha.Counter
+		wantErr       error
+	}{
+		"only updates fields in the FieldMask": {
+			updateRequest: &alpha.UpdateCounterRequest{
+				Counter: &alpha.Counter{
+					Name:     "sessions",
+					Count:    int64(10),
+					Capacity: int64(999),
+				},
+				UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"count"}},
+			},
+			want: &alpha.Counter{
+				Name:     "sessions",
+				Count:    int64(10),
+				Capacity: int64(100),
+			},
+		},
+		"updates both fields in the FieldMask": {
+			updateRequest: &alpha.UpdateCounterRequest{
+				Counter: &alpha.Counter{
+					Name:     "lobbies",
+					Count:    int64(9),
+					Capacity: int64(999),
+				},
+				UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"capacity", "count"}},
+			},
+			want: &alpha.Counter{
+				Name:     "lobbies",
+				Count:    int64(9),
+				Capacity: int64(999),
+			},
+		},
+		"default value for Count is applied": {
+			updateRequest: &alpha.UpdateCounterRequest{
+				Counter: &alpha.Counter{
+					Name: "players",
+				},
+				UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"count"}},
+			},
+			want: &alpha.Counter{
+				Name:     "players",
+				Count:    int64(0),
+				Capacity: int64(100),
+			},
+		},
+		"Counter does not exist": {
+			updateRequest: &alpha.UpdateCounterRequest{
+				Counter: &alpha.Counter{
+					Name: "dragons",
+				},
+				UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"count"}},
+			},
+			wantErr: errors.Errorf("NOT_FOUND. %s Counter not found", "dragons"),
+		},
+		"request Counter is nil": {
+			updateRequest: &alpha.UpdateCounterRequest{
+				Counter:    nil,
+				UpdateMask: &fieldmaskpb.FieldMask{},
+			},
+			wantErr: errors.Errorf("INVALID_ARGUMENT. Counter: %v and UpdateMask %v cannot be nil", nil, &fieldmaskpb.FieldMask{}),
+		},
+		"request UpdateMask is nil": {
+			updateRequest: &alpha.UpdateCounterRequest{
+				Counter:    &alpha.Counter{},
+				UpdateMask: nil,
+			},
+			wantErr: errors.Errorf("INVALID_ARGUMENT. Counter: %v and UpdateMask %v cannot be nil", &alpha.Counter{}, nil),
+		},
+		"updateMask contains invalid path": {
+			updateRequest: &alpha.UpdateCounterRequest{
+				Counter: &alpha.Counter{
+					Name: "lobbies",
+				},
+				UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"foo"}},
+			},
+			wantErr: errors.Errorf("INVALID_ARGUMENT. Field Mask Path(s): [foo] are invalid for Counter. Use valid field name(s): "),
+		},
+		"updateMask is empty": {
+			updateRequest: &alpha.UpdateCounterRequest{
+				Counter: &alpha.Counter{
+					Name: "lobbies",
+				},
+				UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{""}},
+			},
+			wantErr: errors.Errorf("INVALID_ARGUMENT. Field Mask Path(s): [] are invalid for Counter. Use valid field name(s): "),
+		},
+		"capacity is less than zero": {
+			updateRequest: &alpha.UpdateCounterRequest{
+				Counter: &alpha.Counter{
+					Name:     "lobbies",
+					Capacity: -1,
+				},
+				UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"capacity"}},
+			},
+			wantErr: errors.Errorf("OUT_OF_RANGE. Capacity must be within range [0,1000]. Found Capacity: %d", int64(-1)),
+		},
+		"capacity greater than max capacity (1000)": {
+			updateRequest: &alpha.UpdateCounterRequest{
+				Counter: &alpha.Counter{
+					Name:     "lobbies",
+					Capacity: 1001,
+				},
+				UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"capacity"}},
+			},
+			wantErr: errors.Errorf("OUT_OF_RANGE. Capacity must be within range [0,1000]. Found Capacity: %d", int64(1001)),
+		},
+		"count is less than zero": {
+			updateRequest: &alpha.UpdateCounterRequest{
+				Counter: &alpha.Counter{
+					Name:  "players",
+					Count: -1,
+				},
+				UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"count"}},
+			},
+			wantErr: errors.Errorf("OUT_OF_RANGE. Count must be within range [0,Capacity]. Found Count: %d, Capacity: %d", -1, int64(100)),
+		},
+		"count is greater than capacity": {
+			updateRequest: &alpha.UpdateCounterRequest{
+				Counter: &alpha.Counter{
+					Name:  "players",
+					Count: 101,
+				},
+				UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"count"}},
+			},
+			wantErr: errors.Errorf("OUT_OF_RANGE. Count must be within range [0,Capacity]. Found Count: %d, Capacity: %d", 101, int64(100)),
+		},
+	}
+
+	for testName, testScenario := range testScenarios {
+		t.Run(testName, func(t *testing.T) {
+			got, err := l.UpdateCounter(context.Background(), testScenario.updateRequest)
+			// Check tests expecting non-errors
+			if testScenario.want != nil {
+				assert.NoError(t, err)
+				if diff := cmp.Diff(testScenario.want, got, protocmp.Transform()); diff != "" {
+					t.Errorf("Unexpected difference:\n%v", diff)
+				}
+			} else {
+				// Check tests expecting errors
+				assert.ErrorContains(t, err, testScenario.wantErr.Error())
+			}
+		})
+	}
+}
+
+func TestLocalSDKServerGetList(t *testing.T) {
+	t.Parallel()
+
+	runtime.FeatureTestMutex.Lock()
+	defer runtime.FeatureTestMutex.Unlock()
+	assert.NoError(t, runtime.ParseFeatures(string(runtime.FeatureCountsAndLists)+"=true"))
+
+	lists := map[string]agonesv1.ListStatus{
+		"games": {Capacity: int64(100), Values: []string{"game1", "game2"}},
+	}
+	fixture := &agonesv1.GameServer{
+		ObjectMeta: metav1.ObjectMeta{Name: "stuff"},
+		Status: agonesv1.GameServerStatus{
+			Lists: lists,
+		},
+	}
+
+	path, err := gsToTmpFile(fixture)
+	assert.NoError(t, err)
+	l, err := NewLocalSDKServer(path, "")
+	assert.Nil(t, err)
+
+	stream := newGameServerMockStream()
+	go func() {
+		err := l.WatchGameServer(&sdk.Empty{}, stream)
+		assert.Nil(t, err)
+	}()
+	assertInitialWatchUpdate(t, stream)
+
+	// wait for watching to begin
+	err = wait.Poll(time.Second, 10*time.Second, func() (bool, error) {
+		found := false
+		l.updateObservers.Range(func(_, _ interface{}) bool {
+			found = true
+			return false
+		})
+		return found, nil
+	})
+	assert.NoError(t, err)
+
+	testScenarios := map[string]struct {
+		name    string
+		want    *alpha.List
+		wantErr error
+	}{
+		"List exists": {
+			name: "games",
+			want: &alpha.List{Name: "games", Capacity: int64(100), Values: []string{"game1", "game2"}},
+		},
+		"List does not exist": {
+			name:    "noName",
+			wantErr: errors.Errorf("NOT_FOUND. %s List not found", "noName"),
+		},
+	}
+
+	for testName, testScenario := range testScenarios {
+		t.Run(testName, func(t *testing.T) {
+			got, err := l.GetList(context.Background(), &alpha.GetListRequest{Name: testScenario.name})
+			// Check tests expecting non-errors
+			if testScenario.want != nil {
+				assert.NoError(t, err)
+				if diff := cmp.Diff(testScenario.want, got, protocmp.Transform()); diff != "" {
+					t.Errorf("Unexpected difference:\n%v", diff)
+				}
+			} else {
+				// Check tests expecting errors
+				assert.EqualError(t, err, testScenario.wantErr.Error())
+			}
+		})
+	}
+}
+
+func TestLocalSDKServerUpdateList(t *testing.T) {
+	t.Parallel()
+
+	runtime.FeatureTestMutex.Lock()
+	defer runtime.FeatureTestMutex.Unlock()
+	assert.NoError(t, runtime.ParseFeatures(string(runtime.FeatureCountsAndLists)+"=true"))
+
+	lists := map[string]agonesv1.ListStatus{
+		"games":    {Capacity: 100, Values: []string{"game1", "game2"}},
+		"unicorns": {Capacity: 1000, Values: []string{"unicorn1", "unicorn2"}},
+		"clients":  {Capacity: 10, Values: []string{}},
+		"assets":   {Capacity: 1, Values: []string{"asset1"}},
+		"models":   {Capacity: 11, Values: []string{"model1", "model2"}},
+	}
+	fixture := &agonesv1.GameServer{
+		ObjectMeta: metav1.ObjectMeta{Name: "stuff"},
+		Status: agonesv1.GameServerStatus{
+			Lists: lists,
+		},
+	}
+
+	path, err := gsToTmpFile(fixture)
+	assert.NoError(t, err)
+	l, err := NewLocalSDKServer(path, "")
+	assert.Nil(t, err)
+
+	stream := newGameServerMockStream()
+	go func() {
+		err := l.WatchGameServer(&sdk.Empty{}, stream)
+		assert.Nil(t, err)
+	}()
+	assertInitialWatchUpdate(t, stream)
+
+	// wait for watching to begin
+	err = wait.Poll(time.Second, 10*time.Second, func() (bool, error) {
+		found := false
+		l.updateObservers.Range(func(_, _ interface{}) bool {
+			found = true
+			return false
+		})
+		return found, nil
+	})
+	assert.NoError(t, err)
+
+	testScenarios := map[string]struct {
+		updateRequest *alpha.UpdateListRequest
+		want          *alpha.List
+		wantErr       error
+	}{
+		"only updates fields in the FieldMask": {
+			updateRequest: &alpha.UpdateListRequest{
+				List: &alpha.List{
+					Name:     "games",
+					Capacity: int64(999),
+					Values:   []string{"game3"},
+				},
+				UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"capacity"}},
+			},
+			want: &alpha.List{
+				Name:     "games",
+				Capacity: int64(999),
+				Values:   []string{"game1", "game2"},
+			},
+		},
+		"updates both fields in the FieldMask": {
+			updateRequest: &alpha.UpdateListRequest{
+				List: &alpha.List{
+					Name:     "unicorns",
+					Capacity: int64(42),
+					Values:   []string{"unicorn0"},
+				},
+				UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"values", "capacity"}},
+			},
+			want: &alpha.List{
+				Name:     "unicorns",
+				Capacity: int64(42),
+				Values:   []string{"unicorn0"},
+			},
+		},
+		"default value for Capacity applied": {
+			updateRequest: &alpha.UpdateListRequest{
+				List: &alpha.List{
+					Name: "clients",
+				},
+				UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"capacity"}},
+			},
+			want: &alpha.List{
+				Name:     "clients",
+				Capacity: int64(0),
+				Values:   []string{},
+			},
+		},
+		"default value for Values applied": {
+			updateRequest: &alpha.UpdateListRequest{
+				List: &alpha.List{
+					Name: "assets",
+				},
+				UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"values"}},
+			},
+			want: &alpha.List{
+				Name:     "assets",
+				Capacity: int64(1),
+				Values:   []string{},
+			},
+		},
+		"List does not exist": {
+			updateRequest: &alpha.UpdateListRequest{
+				List: &alpha.List{
+					Name: "dragons",
+				},
+				UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"capacity"}},
+			},
+			wantErr: errors.Errorf("NOT_FOUND. %s List not found", "dragons"),
+		},
+		"request List is nil": {
+			updateRequest: &alpha.UpdateListRequest{
+				List:       nil,
+				UpdateMask: &fieldmaskpb.FieldMask{},
+			},
+			wantErr: errors.Errorf("INVALID_ARGUMENT. List: %v and UpdateMask %v cannot be nil", nil, &fieldmaskpb.FieldMask{}),
+		},
+		"request UpdateMask is nil": {
+			updateRequest: &alpha.UpdateListRequest{
+				List:       &alpha.List{},
+				UpdateMask: nil,
+			},
+			wantErr: errors.Errorf("INVALID_ARGUMENT. List: %v and UpdateMask %v cannot be nil", &alpha.Counter{}, nil),
+		},
+		"updateMask contains invalid path": {
+			updateRequest: &alpha.UpdateListRequest{
+				List: &alpha.List{
+					Name: "assets",
+				},
+				UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"foo"}},
+			},
+			wantErr: errors.Errorf("INVALID_ARGUMENT. Field Mask Path(s): [foo] are invalid for List. Use valid field name(s): "),
+		},
+		"updateMask is empty": {
+			updateRequest: &alpha.UpdateListRequest{
+				List: &alpha.List{
+					Name: "unicorns",
+				},
+				UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{""}},
+			},
+			wantErr: errors.Errorf("INVALID_ARGUMENT. Field Mask Path(s): [] are invalid for List. Use valid field name(s): "),
+		},
+		"capacity is less than zero": {
+			updateRequest: &alpha.UpdateListRequest{
+				List: &alpha.List{
+					Name:     "clients",
+					Capacity: -1,
+				},
+				UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"capacity"}},
+			},
+			wantErr: errors.Errorf("OUT_OF_RANGE. Capacity must be within range [0,1000]. Found Capacity: %d", int64(-1)),
+		},
+		"capacity greater than max capacity (1000)": {
+			updateRequest: &alpha.UpdateListRequest{
+				List: &alpha.List{
+					Name:     "clients",
+					Capacity: 1001,
+				},
+				UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"capacity"}},
+			},
+			wantErr: errors.Errorf("OUT_OF_RANGE. Capacity must be within range [0,1000]. Found Capacity: %d", int64(1001)),
+		},
+		"capacity is less than List length": {
+			updateRequest: &alpha.UpdateListRequest{
+				List: &alpha.List{
+					Name:     "models",
+					Capacity: 1,
+				},
+				UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"capacity"}},
+			},
+			wantErr: errors.Errorf("OUT_OF_RANGE. Capacity must be great than or equal to the size of the List of values. Found Capacity: %d, List Size: %d", int64(1), int64(2)),
+		},
+	}
+
+	for testName, testScenario := range testScenarios {
+		t.Run(testName, func(t *testing.T) {
+			got, err := l.UpdateList(context.Background(), testScenario.updateRequest)
+			// Check tests expecting non-errors
+			if testScenario.want != nil {
+				assert.NoError(t, err)
+				if diff := cmp.Diff(testScenario.want, got, protocmp.Transform()); diff != "" {
+					t.Errorf("Unexpected difference:\n%v", diff)
+				}
+			} else {
+				// Check tests expecting errors
+				assert.ErrorContains(t, err, testScenario.wantErr.Error())
+			}
+		})
+	}
+}
+
+func TestLocalSDKServerAddListValue(t *testing.T) {
+	t.Parallel()
+
+	runtime.FeatureTestMutex.Lock()
+	defer runtime.FeatureTestMutex.Unlock()
+	assert.NoError(t, runtime.ParseFeatures(string(runtime.FeatureCountsAndLists)+"=true"))
+
+	lists := map[string]agonesv1.ListStatus{
+		"lemmings": {Capacity: int64(100), Values: []string{"lemming1", "lemming2"}},
+		"hacks":    {Capacity: int64(2), Values: []string{"hack1", "hack2"}},
+	}
+	fixture := &agonesv1.GameServer{
+		ObjectMeta: metav1.ObjectMeta{Name: "stuff"},
+		Status: agonesv1.GameServerStatus{
+			Lists: lists,
+		},
+	}
+
+	path, err := gsToTmpFile(fixture)
+	assert.NoError(t, err)
+	l, err := NewLocalSDKServer(path, "")
+	assert.Nil(t, err)
+
+	stream := newGameServerMockStream()
+	go func() {
+		err := l.WatchGameServer(&sdk.Empty{}, stream)
+		assert.Nil(t, err)
+	}()
+	assertInitialWatchUpdate(t, stream)
+
+	// wait for watching to begin
+	err = wait.Poll(time.Second, 10*time.Second, func() (bool, error) {
+		found := false
+		l.updateObservers.Range(func(_, _ interface{}) bool {
+			found = true
+			return false
+		})
+		return found, nil
+	})
+	assert.NoError(t, err)
+
+	testScenarios := map[string]struct {
+		addRequest *alpha.AddListValueRequest
+		want       *alpha.List
+		wantErr    error
+	}{
+		"add List value": {
+			addRequest: &alpha.AddListValueRequest{
+				Name:  "lemmings",
+				Value: "lemming3",
+			},
+			want: &alpha.List{Name: "lemmings", Capacity: int64(100), Values: []string{"lemming1", "lemming2", "lemming3"}},
+		},
+		"List does not exist": {
+			addRequest: &alpha.AddListValueRequest{
+				Name: "dragons",
+			},
+			wantErr: errors.Errorf("NOT_FOUND. %s List not found", "dragons"),
+		},
+		"add more values than capacity": {
+			addRequest: &alpha.AddListValueRequest{
+				Name:  "hacks",
+				Value: "hack3",
+			},
+			wantErr: errors.Errorf("OUT_OF_RANGE. No available capacity. Current Capacity: %d, List Size: %d", int64(2), int64(2)),
+		},
+		"add existing value": {
+			addRequest: &alpha.AddListValueRequest{
+				Name:  "lemmings",
+				Value: "lemming1",
+			},
+			wantErr: errors.Errorf("ALREADY_EXISTS. Value: %s already in List: %s", "lemming1", "lemmings"),
+		},
+	}
+
+	for testName, testScenario := range testScenarios {
+		t.Run(testName, func(t *testing.T) {
+			got, err := l.AddListValue(context.Background(), testScenario.addRequest)
+			// Check tests expecting non-errors
+			if testScenario.want != nil {
+				assert.NoError(t, err)
+				if diff := cmp.Diff(testScenario.want, got, protocmp.Transform()); diff != "" {
+					t.Errorf("Unexpected difference:\n%v", diff)
+				}
+			} else {
+				// Check tests expecting errors
+				assert.ErrorContains(t, err, testScenario.wantErr.Error())
+			}
+		})
+	}
+}
+
+func TestLocalSDKServerRemoveListValue(t *testing.T) {
+	t.Parallel()
+
+	runtime.FeatureTestMutex.Lock()
+	defer runtime.FeatureTestMutex.Unlock()
+	assert.NoError(t, runtime.ParseFeatures(string(runtime.FeatureCountsAndLists)+"=true"))
+
+	lists := map[string]agonesv1.ListStatus{
+		"players": {Capacity: int64(100), Values: []string{"player1", "player2"}},
+		"items":   {Capacity: int64(1000), Values: []string{"item1", "item2"}},
+	}
+	fixture := &agonesv1.GameServer{
+		ObjectMeta: metav1.ObjectMeta{Name: "stuff"},
+		Status: agonesv1.GameServerStatus{
+			Lists: lists,
+		},
+	}
+
+	path, err := gsToTmpFile(fixture)
+	assert.NoError(t, err)
+	l, err := NewLocalSDKServer(path, "")
+	assert.Nil(t, err)
+
+	stream := newGameServerMockStream()
+	go func() {
+		err := l.WatchGameServer(&sdk.Empty{}, stream)
+		assert.Nil(t, err)
+	}()
+	assertInitialWatchUpdate(t, stream)
+
+	// wait for watching to begin
+	err = wait.Poll(time.Second, 10*time.Second, func() (bool, error) {
+		found := false
+		l.updateObservers.Range(func(_, _ interface{}) bool {
+			found = true
+			return false
+		})
+		return found, nil
+	})
+	assert.NoError(t, err)
+
+	testScenarios := map[string]struct {
+		removeRequest *alpha.RemoveListValueRequest
+		want          *alpha.List
+		wantErr       error
+	}{
+		"remove List value": {
+			removeRequest: &alpha.RemoveListValueRequest{
+				Name:  "players",
+				Value: "player1",
+			},
+			want: &alpha.List{Name: "players", Capacity: int64(100), Values: []string{"player2"}},
+		},
+		"List does not exist": {
+			removeRequest: &alpha.RemoveListValueRequest{
+				Name: "dragons",
+			},
+			wantErr: errors.Errorf("NOT_FOUND. %s List not found", "dragons"),
+		},
+		"value does not exist": {
+			removeRequest: &alpha.RemoveListValueRequest{
+				Name:  "items",
+				Value: "item3",
+			},
+			wantErr: errors.Errorf("NOT_FOUND. Value: %s not found in List: %s", "item3", "items"),
+		},
+	}
+
+	for testName, testScenario := range testScenarios {
+		t.Run(testName, func(t *testing.T) {
+			got, err := l.RemoveListValue(context.Background(), testScenario.removeRequest)
+			// Check tests expecting non-errors
+			if testScenario.want != nil {
+				assert.NoError(t, err)
+				if diff := cmp.Diff(testScenario.want, got, protocmp.Transform()); diff != "" {
+					t.Errorf("Unexpected difference:\n%v", diff)
+				}
+			} else {
+				// Check tests expecting errors
+				assert.ErrorContains(t, err, testScenario.wantErr.Error())
+			}
 		})
 	}
 }

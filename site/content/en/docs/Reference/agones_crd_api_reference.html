@@ -3,7 +3,7 @@ title="Agones Kubernetes API"
 description="Detailed list of Agones Custom Resource Definitions available"
 +++
 
-{{% feature expiryVersion="1.30.0" %}}
+{{% feature expiryVersion="1.31.0" %}}
 <p>Packages:</p>
 <ul>
 <li>
@@ -97,6 +97,23 @@ int32
 </td>
 <td>
 <p>Replicas are the number of GameServers that should be in this set. Defaults to 0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>allocationOverflow</code></br>
+<em>
+<a href="#agones.dev/v1.AllocationOverflow">
+AllocationOverflow
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>[Stage: Alpha]
+[FeatureFlag:FleetAllocationOverflow]
+Labels and Annotations to apply to GameServers when the number of Allocated GameServers drops below
+the desired replicas on the underlying <code>GameServerSet</code></p>
 </td>
 </tr>
 <tr>
@@ -305,6 +322,32 @@ PlayersSpec
 </tr>
 <tr>
 <td>
+<code>counters</code></br>
+<em>
+<a href="#agones.dev/v1.CounterStatus">
+map[string]agones.dev/agones/pkg/apis/agones/v1.CounterStatus
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>(Alpha, CountsAndLists feature flag) Counters and Lists provides the configuration for generic tracking features.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>lists</code></br>
+<em>
+<a href="#agones.dev/v1.ListStatus">
+map[string]agones.dev/agones/pkg/apis/agones/v1.ListStatus
+</a>
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
 <code>eviction</code></br>
 <em>
 <a href="#agones.dev/v1.Eviction">
@@ -406,6 +449,23 @@ int32
 </tr>
 <tr>
 <td>
+<code>allocationOverflow</code></br>
+<em>
+<a href="#agones.dev/v1.AllocationOverflow">
+AllocationOverflow
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>[Stage: Alpha]
+[FeatureFlag:FleetAllocationOverflow]
+Labels and Annotations to apply to GameServers when the number of Allocated GameServers drops below
+the desired replicas on the underlying <code>GameServerSet</code></p>
+</td>
+</tr>
+<tr>
+<td>
 <code>scheduling</code></br>
 <em>
 agones.dev/agones/pkg/apis.SchedulingStrategy
@@ -454,6 +514,92 @@ GameServerSetStatus
 </p>
 <p>
 <p>AggregatedPlayerStatus stores total player tracking values</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>count</code></br>
+<em>
+int64
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>capacity</code></br>
+<em>
+int64
+</em>
+</td>
+<td>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="agones.dev/v1.AllocationOverflow">AllocationOverflow
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#agones.dev/v1.FleetSpec">FleetSpec</a>, 
+<a href="#agones.dev/v1.GameServerSetSpec">GameServerSetSpec</a>)
+</p>
+<p>
+<p>AllocationOverflow specifies what labels and/or annotations to apply on Allocated GameServers
+if the desired number of the underlying <code>GameServerSet</code> drops below the number of Allocated GameServers
+attached to it.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>labels</code></br>
+<em>
+map[string]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Labels to be applied to the <code>GameServer</code></p>
+</td>
+</tr>
+<tr>
+<td>
+<code>annotations</code></br>
+<em>
+map[string]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Annotations to be applied to the <code>GameServer</code></p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="agones.dev/v1.CounterStatus">CounterStatus
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#agones.dev/v1.GameServerSpec">GameServerSpec</a>, 
+<a href="#agones.dev/v1.GameServerStatus">GameServerStatus</a>)
+</p>
+<p>
+<p>CounterStatus stores the current counter values</p>
 </p>
 <table>
 <thead>
@@ -557,6 +703,23 @@ int32
 </td>
 <td>
 <p>Replicas are the number of GameServers that should be in this set. Defaults to 0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>allocationOverflow</code></br>
+<em>
+<a href="#agones.dev/v1.AllocationOverflow">
+AllocationOverflow
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>[Stage: Alpha]
+[FeatureFlag:FleetAllocationOverflow]
+Labels and Annotations to apply to GameServers when the number of Allocated GameServers drops below
+the desired replicas on the underlying <code>GameServerSet</code></p>
 </td>
 </tr>
 <tr>
@@ -804,6 +967,23 @@ int32
 </tr>
 <tr>
 <td>
+<code>allocationOverflow</code></br>
+<em>
+<a href="#agones.dev/v1.AllocationOverflow">
+AllocationOverflow
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>[Stage: Alpha]
+[FeatureFlag:FleetAllocationOverflow]
+Labels and Annotations to apply to GameServers when the number of Allocated GameServers drops below
+the desired replicas on the underlying <code>GameServerSet</code></p>
+</td>
+</tr>
+<tr>
+<td>
 <code>scheduling</code></br>
 <em>
 agones.dev/agones/pkg/apis.SchedulingStrategy
@@ -1027,6 +1207,32 @@ PlayersSpec
 </tr>
 <tr>
 <td>
+<code>counters</code></br>
+<em>
+<a href="#agones.dev/v1.CounterStatus">
+map[string]agones.dev/agones/pkg/apis/agones/v1.CounterStatus
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>(Alpha, CountsAndLists feature flag) Counters and Lists provides the configuration for generic tracking features.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>lists</code></br>
+<em>
+<a href="#agones.dev/v1.ListStatus">
+map[string]agones.dev/agones/pkg/apis/agones/v1.ListStatus
+</a>
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
 <code>eviction</code></br>
 <em>
 <a href="#agones.dev/v1.Eviction">
@@ -1142,6 +1348,33 @@ PlayerStatus
 </tr>
 <tr>
 <td>
+<code>counters</code></br>
+<em>
+<a href="#agones.dev/v1.CounterStatus">
+map[string]agones.dev/agones/pkg/apis/agones/v1.CounterStatus
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>(Alpha, CountsAndLists feature flag) Counters and Lists provides the configuration for generic tracking features.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>lists</code></br>
+<em>
+<a href="#agones.dev/v1.ListStatus">
+map[string]agones.dev/agones/pkg/apis/agones/v1.ListStatus
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+</td>
+</tr>
+<tr>
+<td>
 <code>eviction</code></br>
 <em>
 <a href="#agones.dev/v1.Eviction">
@@ -1150,6 +1383,7 @@ Eviction
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>(Alpha, SafeToEvict feature flag) Eviction specifies the eviction tolerance of the GameServer.</p>
 </td>
 </tr>
@@ -1332,6 +1566,32 @@ PlayersSpec
 </tr>
 <tr>
 <td>
+<code>counters</code></br>
+<em>
+<a href="#agones.dev/v1.CounterStatus">
+map[string]agones.dev/agones/pkg/apis/agones/v1.CounterStatus
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>(Alpha, CountsAndLists feature flag) Counters and Lists provides the configuration for generic tracking features.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>lists</code></br>
+<em>
+<a href="#agones.dev/v1.ListStatus">
+map[string]agones.dev/agones/pkg/apis/agones/v1.ListStatus
+</a>
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
 <code>eviction</code></br>
 <em>
 <a href="#agones.dev/v1.Eviction">
@@ -1408,6 +1668,46 @@ int32
 </td>
 <td>
 <p>InitialDelaySeconds initial delay before checking health</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="agones.dev/v1.ListStatus">ListStatus
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#agones.dev/v1.GameServerSpec">GameServerSpec</a>, 
+<a href="#agones.dev/v1.GameServerStatus">GameServerStatus</a>)
+</p>
+<p>
+<p>ListStatus stores the current list values</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>capacity</code></br>
+<em>
+int64
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>values</code></br>
+<em>
+[]string
+</em>
+</td>
+<td>
 </td>
 </tr>
 </tbody>
@@ -3141,7 +3441,7 @@ ClusterConnectionInfo
 Generated with <code>gen-crd-api-reference-docs</code>.
 </em></p>
 {{% /feature %}}
-{{% feature publishVersion="1.30.0" %}}
+{{% feature publishVersion="1.31.0" %}}
 <p>Packages:</p>
 <ul>
 <li>
@@ -3203,7 +3503,7 @@ string
 <td>
 <code>metadata</code></br>
 <em>
-<a href="https://v1-24.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#objectmeta-v1-meta">
+<a href="https://v1-25.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#objectmeta-v1-meta">
 Kubernetes meta/v1.ObjectMeta
 </a>
 </em>
@@ -3258,7 +3558,7 @@ the desired replicas on the underlying <code>GameServerSet</code></p>
 <td>
 <code>strategy</code></br>
 <em>
-<a href="https://v1-24.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#deploymentstrategy-v1-apps">
+<a href="https://v1-25.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#deploymentstrategy-v1-apps">
 Kubernetes apps/v1.DeploymentStrategy
 </a>
 </em>
@@ -3346,7 +3646,7 @@ string
 <td>
 <code>metadata</code></br>
 <em>
-<a href="https://v1-24.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#objectmeta-v1-meta">
+<a href="https://v1-25.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#objectmeta-v1-meta">
 Kubernetes meta/v1.ObjectMeta
 </a>
 </em>
@@ -3435,7 +3735,7 @@ SdkServer
 <td>
 <code>template</code></br>
 <em>
-<a href="https://v1-24.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#podtemplatespec-v1-core">
+<a href="https://v1-25.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#podtemplatespec-v1-core">
 Kubernetes core/v1.PodTemplateSpec
 </a>
 </em>
@@ -3462,8 +3762,8 @@ PlayersSpec
 <td>
 <code>counters</code></br>
 <em>
-<a href="#agones.dev/v1.CounterSpec">
-map[string]agones.dev/agones/pkg/apis/agones/v1.CounterSpec
+<a href="#agones.dev/v1.CounterStatus">
+map[string]agones.dev/agones/pkg/apis/agones/v1.CounterStatus
 </a>
 </em>
 </td>
@@ -3476,8 +3776,8 @@ map[string]agones.dev/agones/pkg/apis/agones/v1.CounterSpec
 <td>
 <code>lists</code></br>
 <em>
-<a href="#agones.dev/v1.ListSpec">
-map[string]agones.dev/agones/pkg/apis/agones/v1.ListSpec
+<a href="#agones.dev/v1.ListStatus">
+map[string]agones.dev/agones/pkg/apis/agones/v1.ListStatus
 </a>
 </em>
 </td>
@@ -3551,7 +3851,7 @@ string
 <td>
 <code>metadata</code></br>
 <em>
-<a href="https://v1-24.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#objectmeta-v1-meta">
+<a href="https://v1-25.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#objectmeta-v1-meta">
 Kubernetes meta/v1.ObjectMeta
 </a>
 </em>
@@ -3729,14 +4029,15 @@ map[string]string
 </tr>
 </tbody>
 </table>
-<h3 id="agones.dev/v1.CounterSpec">CounterSpec
+<h3 id="agones.dev/v1.CounterStatus">CounterStatus
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#agones.dev/v1.GameServerSpec">GameServerSpec</a>)
+<a href="#agones.dev/v1.GameServerSpec">GameServerSpec</a>, 
+<a href="#agones.dev/v1.GameServerStatus">GameServerStatus</a>)
 </p>
 <p>
-<p>CounterSpec tracks if counter specified (for giving error message if feature gate not set)</p>
+<p>CounterStatus stores the current counter values</p>
 </p>
 <table>
 <thead>
@@ -3863,7 +4164,7 @@ the desired replicas on the underlying <code>GameServerSet</code></p>
 <td>
 <code>strategy</code></br>
 <em>
-<a href="https://v1-24.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#deploymentstrategy-v1-apps">
+<a href="https://v1-25.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#deploymentstrategy-v1-apps">
 Kubernetes apps/v1.DeploymentStrategy
 </a>
 </em>
@@ -4063,7 +4364,7 @@ int32
 <td>
 <code>protocol</code></br>
 <em>
-<a href="https://v1-24.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#protocol-v1-core">
+<a href="https://v1-25.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#protocol-v1-core">
 Kubernetes core/v1.Protocol
 </a>
 </em>
@@ -4319,7 +4620,7 @@ SdkServer
 <td>
 <code>template</code></br>
 <em>
-<a href="https://v1-24.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#podtemplatespec-v1-core">
+<a href="https://v1-25.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#podtemplatespec-v1-core">
 Kubernetes core/v1.PodTemplateSpec
 </a>
 </em>
@@ -4346,8 +4647,8 @@ PlayersSpec
 <td>
 <code>counters</code></br>
 <em>
-<a href="#agones.dev/v1.CounterSpec">
-map[string]agones.dev/agones/pkg/apis/agones/v1.CounterSpec
+<a href="#agones.dev/v1.CounterStatus">
+map[string]agones.dev/agones/pkg/apis/agones/v1.CounterStatus
 </a>
 </em>
 </td>
@@ -4360,8 +4661,8 @@ map[string]agones.dev/agones/pkg/apis/agones/v1.CounterSpec
 <td>
 <code>lists</code></br>
 <em>
-<a href="#agones.dev/v1.ListSpec">
-map[string]agones.dev/agones/pkg/apis/agones/v1.ListSpec
+<a href="#agones.dev/v1.ListStatus">
+map[string]agones.dev/agones/pkg/apis/agones/v1.ListStatus
 </a>
 </em>
 </td>
@@ -4460,7 +4761,7 @@ string
 <td>
 <code>reservedUntil</code></br>
 <em>
-<a href="https://v1-24.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#time-v1-meta">
+<a href="https://v1-25.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#time-v1-meta">
 Kubernetes meta/v1.Time
 </a>
 </em>
@@ -4481,6 +4782,33 @@ PlayerStatus
 <em>(Optional)</em>
 <p>[Stage:Alpha]
 [FeatureFlag:PlayerTracking]</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>counters</code></br>
+<em>
+<a href="#agones.dev/v1.CounterStatus">
+map[string]agones.dev/agones/pkg/apis/agones/v1.CounterStatus
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>(Alpha, CountsAndLists feature flag) Counters and Lists provides the configuration for generic tracking features.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>lists</code></br>
+<em>
+<a href="#agones.dev/v1.ListStatus">
+map[string]agones.dev/agones/pkg/apis/agones/v1.ListStatus
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
 </td>
 </tr>
 <tr>
@@ -4562,7 +4890,7 @@ int32
 <td>
 <code>metadata</code></br>
 <em>
-<a href="https://v1-24.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#objectmeta-v1-meta">
+<a href="https://v1-25.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#objectmeta-v1-meta">
 Kubernetes meta/v1.ObjectMeta
 </a>
 </em>
@@ -4651,7 +4979,7 @@ SdkServer
 <td>
 <code>template</code></br>
 <em>
-<a href="https://v1-24.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#podtemplatespec-v1-core">
+<a href="https://v1-25.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#podtemplatespec-v1-core">
 Kubernetes core/v1.PodTemplateSpec
 </a>
 </em>
@@ -4678,8 +5006,8 @@ PlayersSpec
 <td>
 <code>counters</code></br>
 <em>
-<a href="#agones.dev/v1.CounterSpec">
-map[string]agones.dev/agones/pkg/apis/agones/v1.CounterSpec
+<a href="#agones.dev/v1.CounterStatus">
+map[string]agones.dev/agones/pkg/apis/agones/v1.CounterStatus
 </a>
 </em>
 </td>
@@ -4692,8 +5020,8 @@ map[string]agones.dev/agones/pkg/apis/agones/v1.CounterSpec
 <td>
 <code>lists</code></br>
 <em>
-<a href="#agones.dev/v1.ListSpec">
-map[string]agones.dev/agones/pkg/apis/agones/v1.ListSpec
+<a href="#agones.dev/v1.ListStatus">
+map[string]agones.dev/agones/pkg/apis/agones/v1.ListStatus
 </a>
 </em>
 </td>
@@ -4782,14 +5110,15 @@ int32
 </tr>
 </tbody>
 </table>
-<h3 id="agones.dev/v1.ListSpec">ListSpec
+<h3 id="agones.dev/v1.ListStatus">ListStatus
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#agones.dev/v1.GameServerSpec">GameServerSpec</a>)
+<a href="#agones.dev/v1.GameServerSpec">GameServerSpec</a>, 
+<a href="#agones.dev/v1.GameServerStatus">GameServerStatus</a>)
 </p>
 <p>
-<p>ListSpec tracks the list capacity</p>
+<p>ListStatus stores the current list values</p>
 </p>
 <table>
 <thead>
@@ -5015,7 +5344,7 @@ string
 <td>
 <code>metadata</code></br>
 <em>
-<a href="https://v1-24.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#objectmeta-v1-meta">
+<a href="https://v1-25.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#objectmeta-v1-meta">
 Kubernetes meta/v1.ObjectMeta
 </a>
 </em>
@@ -5136,6 +5465,66 @@ You can use this to tell the server necessary session data</p>
 <a href="#allocation.agones.dev/v1.GameServerAllocationStatus">
 GameServerAllocationStatus
 </a>
+</em>
+</td>
+<td>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="allocation.agones.dev/v1.CounterSelector">CounterSelector
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#allocation.agones.dev/v1.GameServerSelector">GameServerSelector</a>)
+</p>
+<p>
+<p>CounterSelector is the filter options for a GameServer based on the count and/or available capacity.
+0 for MaxCount or MaxAvailable means unlimited maximum. Default for all fields: 0</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>minCount</code></br>
+<em>
+int64
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>maxCount</code></br>
+<em>
+int64
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>minAvailable</code></br>
+<em>
+int64
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>maxAvailable</code></br>
+<em>
+int64
 </em>
 </td>
 <td>
@@ -5367,7 +5756,7 @@ a GameServer for allocation.</p>
 <td>
 <code>LabelSelector</code></br>
 <em>
-<a href="https://v1-24.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#labelselector-v1-meta">
+<a href="https://v1-25.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#labelselector-v1-meta">
 Kubernetes meta/v1.LabelSelector
 </a>
 </em>
@@ -5412,6 +5801,90 @@ PlayerSelector
 [FeatureFlag:PlayerAllocationFilter]
 Players provides a filter on minimum and maximum values for player capacity when retrieving a GameServer
 through Allocation. Defaults to no limits.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>counters</code></br>
+<em>
+<a href="#allocation.agones.dev/v1.CounterSelector">
+map[string]agones.dev/agones/pkg/apis/allocation/v1.CounterSelector
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>(Alpha, CountsAndLists feature flag) Counters provides filters on minimum and maximum values
+for a Counter&rsquo;s count and available capacity when retrieving a GameServer through Allocation.
+Defaults to no limits.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>lists</code></br>
+<em>
+<a href="#allocation.agones.dev/v1.ListSelector">
+map[string]agones.dev/agones/pkg/apis/allocation/v1.ListSelector
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>(Alpha, CountsAndLists feature flag) Lists provides filters on minimum and maximum values
+for List capacity, and for the existence of a value in a List, when retrieving a GameServer
+through Allocation. Defaults to no limits.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="allocation.agones.dev/v1.ListSelector">ListSelector
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#allocation.agones.dev/v1.GameServerSelector">GameServerSelector</a>)
+</p>
+<p>
+<p>ListSelector is the filter options for a GameServer based on List available capacity and/or the
+existence of a value in a List.
+0 for MaxAvailable means unlimited maximum. Default for integer fields: 0
+&ldquo;&rdquo; for ContainsValue means ignore field. Default for string field: &ldquo;&rdquo;</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>containsValue</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>minAvailable</code></br>
+<em>
+int64
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>maxAvailable</code></br>
+<em>
+int64
+</em>
+</td>
+<td>
 </td>
 </tr>
 </tbody>
@@ -5486,7 +5959,7 @@ bool
 <td>
 <code>policySelector</code></br>
 <em>
-<a href="https://v1-24.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#labelselector-v1-meta">
+<a href="https://v1-25.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#labelselector-v1-meta">
 Kubernetes meta/v1.LabelSelector
 </a>
 </em>
@@ -5578,7 +6051,7 @@ string
 <td>
 <code>metadata</code></br>
 <em>
-<a href="https://v1-24.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#objectmeta-v1-meta">
+<a href="https://v1-25.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#objectmeta-v1-meta">
 Kubernetes meta/v1.ObjectMeta
 </a>
 </em>
@@ -6085,7 +6558,7 @@ of the fleet managed by this autoscaler, as last calculated by the autoscaler</p
 <td>
 <code>lastScaleTime</code></br>
 <em>
-<a href="https://v1-24.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#time-v1-meta">
+<a href="https://v1-25.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#time-v1-meta">
 Kubernetes meta/v1.Time
 </a>
 </em>
@@ -6229,7 +6702,7 @@ allowed, either.</p>
 <td>
 <code>service</code></br>
 <em>
-<a href="https://v1-24.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#servicereference-v1-admissionregistration">
+<a href="https://v1-25.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#servicereference-v1-admissionregistration">
 Kubernetes admissionregistration/v1.ServiceReference
 </a>
 </em>
@@ -6299,7 +6772,7 @@ string
 <td>
 <code>metadata</code></br>
 <em>
-<a href="https://v1-24.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#objectmeta-v1-meta">
+<a href="https://v1-25.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#objectmeta-v1-meta">
 Kubernetes meta/v1.ObjectMeta
 </a>
 </em>

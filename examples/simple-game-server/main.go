@@ -36,7 +36,7 @@ import (
 
 // main starts a UDP or TCP server
 func main() {
-	go doSignal()
+	sigCtx, _ := signals.NewSigKillContext()
 
 	port := flag.String("port", "7654", "The port to listen to traffic on")
 	passthrough := flag.Bool("passthrough", false, "Get listening port from the SDK, rather than use the 'port' value")
@@ -121,16 +121,7 @@ func main() {
 		ready(s)
 	}
 
-	// Prevent the program from quitting as the server is listening on goroutines.
-	for {
-	}
-}
-
-// doSignal shutsdown on SIGTERM/SIGKILL
-func doSignal() {
-	ctx := signals.NewSigKillContext()
-	<-ctx.Done()
-	log.Println("Exit signal received. Shutting down.")
+	<-sigCtx.Done()
 	os.Exit(0)
 }
 
@@ -140,8 +131,8 @@ func doSignal() {
 //
 // The algorithm is:
 //
-//   1. Move the game server back to ready N times after it is allocated
-//   2. Shutdown the game server after the Nth time is becomes allocated
+//  1. Move the game server back to ready N times after it is allocated
+//  2. Shutdown the game server after the Nth time is becomes allocated
 //
 // This follows the integration pattern documented on the website at
 // https://agones.dev/site/docs/integration-patterns/reusing-gameservers/

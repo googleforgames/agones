@@ -94,11 +94,18 @@ agones:
       failureThreshold: 3
       timeoutSeconds: 1
     allocationBatchWaitTime: 500ms
+    replicas: 2
+    pdb:
+        minAvailable: 1
   extensions:
     <<: *controllerValues
     pdb:
         minAvailable: 1
     replicas: 2
+    readiness:
+      initialDelaySeconds: 3
+      periodSeconds: 3
+      failureThreshold: 3
   ping:
     install: true
     pdb:
@@ -217,7 +224,7 @@ agones:
     allocationBatchWaitTime: 500ms
   image:
     registry: us-docker.pkg.dev/agones-images/release
-    tag: 1.30.0-dev
+    tag: 1.31.0-dev
     controller:
       name: agones-controller
       pullPolicy: IfNotPresent

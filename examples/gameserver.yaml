@@ -95,11 +95,10 @@ spec:
   #     count: 1
   #     capacity: 100
   #   sessions:
-  #     capacity: 999
+  #     count: # Count and/or capacity must be listed (but may be nil) otherwise the counter will by dropped by the CRD schema.
   # lists:
   #   players:
-  #     capacity: 1000
-  #     values:
+  #     capacity: # Capacity and/or values must be listed (but may be nil) otherwise the list will be dropped by the CRD schema.
   #   rooms:
   #     capacity: 333
   #     values:

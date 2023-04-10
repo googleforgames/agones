@@ -24,6 +24,12 @@
 
 DEFINE_LOG_CATEGORY_STATIC(LogAgones, Log, Log);
 
+#if ENGINE_MAJOR_VERSION > 4
+typedef UTF8CHAR UTF8FromType;
+#else
+typedef ANSICHAR UTF8FromType;
+#endif
+
 UAgonesComponent::UAgonesComponent()
 {
 	PrimaryComponentTick.bCanEverTick = false;
@@ -225,22 +231,22 @@ void UAgonesComponent::WatchGameServer(const FGameServerDelegate WatchDelegate)
 
 void UAgonesComponent::HandleWatchMessage(const void* Data, SIZE_T Size, SIZE_T BytesRemaining)
 {
-    if (BytesRemaining <= 0 && WatchMessageBuffer.IsEmpty())
-    {
-        FUTF8ToTCHAR Message(static_cast<const UTF8CHAR*>(Data), Size);
-        DeserializeAndBroadcastWatch(FString(Message.Length(), Message.Get()));
-        return;
-    }
+	if (BytesRemaining <= 0 && (WatchMessageBuffer.Num() == 0))
+	{
+		FUTF8ToTCHAR Message(static_cast<const UTF8FromType*>(Data), Size);
+		DeserializeAndBroadcastWatch(FString(Message.Length(), Message.Get()));
+		return;
+	}
 
-    WatchMessageBuffer.Insert(static_cast<const UTF8CHAR*>(Data), Size, WatchMessageBuffer.Num());
-    if (BytesRemaining > 0)
-    {
-        return;
-    }
+	WatchMessageBuffer.Insert(static_cast<const UTF8CHAR*>(Data), Size, WatchMessageBuffer.Num());
+	if (BytesRemaining > 0)
+	{
+		return;
+	}
 
-    FUTF8ToTCHAR Message(WatchMessageBuffer.GetData(), WatchMessageBuffer.Num());
-    DeserializeAndBroadcastWatch(FString(Message.Length(), Message.Get()));
-    WatchMessageBuffer.Empty();
+	FUTF8ToTCHAR Message((const UTF8FromType*)WatchMessageBuffer.GetData(), WatchMessageBuffer.Num());
+	DeserializeAndBroadcastWatch(FString(Message.Length(), Message.Get()));
+	WatchMessageBuffer.Empty();
 }
 
 void UAgonesComponent::SetLabel(

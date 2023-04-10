@@ -30,7 +30,7 @@ Some of Agones' advantages:
 - Any game server that can run on Linux can be hosted and orchestrated on Agones - in any language, or set of dependencies.
 - Run Agones anywhere Kubernetes can run - in the cloud, on premise, on your local machine or anywhere else you need it.
 - Game services and your game servers can be on the same foundational platform - simplifying your tooling and your operations knowledge.
-- By extending Kubernetes, Agones allows you to take advantage of the thousands of developers that have worked on the features of Kubernetes, and the ecosystem of tools surround it.
+- By extending Kubernetes, Agones allows you to take advantage of the thousands of developers that have worked on the features of Kubernetes, and the ecosystem of tools that surround it.
 - Agones is free, open source and developed entirely in the public. Help shape its future by getting involved with the community.
 
 ## Major Features

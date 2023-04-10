@@ -49,7 +49,7 @@ func main() {
 	logger.WithField("version", pkg.Version).WithField("featureGates", runtime.EncodeFeatures()).
 		WithField("ctlConf", ctlConf).Info("Starting ping...")
 
-	ctx := signals.NewSigKillContext()
+	ctx, _ := signals.NewSigKillContext()
 
 	udpSrv := serveUDP(ctx, ctlConf)
 	defer udpSrv.close()

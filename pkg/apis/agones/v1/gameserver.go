@@ -189,8 +189,8 @@ type GameServerSpec struct {
 	Players *PlayersSpec `json:"players,omitempty"`
 	// (Alpha, CountsAndLists feature flag) Counters and Lists provides the configuration for generic tracking features.
 	// +optional
-	Counters map[string]CounterSpec `json:"counters,omitempty"`
-	Lists    map[string]ListSpec    `json:"lists,omitempty"`
+	Counters map[string]CounterStatus `json:"counters,omitempty"`
+	Lists    map[string]ListStatus    `json:"lists,omitempty"`
 	// (Alpha, SafeToEvict feature flag) Eviction specifies the eviction tolerance of the GameServer. Defaults to "Never".
 	// +optional
 	Eviction *Eviction `json:"eviction,omitempty"`
@@ -200,18 +200,6 @@ type GameServerSpec struct {
 // PlayersSpec tracks the initial player capacity
 type PlayersSpec struct {
 	InitialCapacity int64 `json:"initialCapacity,omitempty"`
-}
-
-// CounterSpec tracks if counter specified (for giving error message if feature gate not set)
-type CounterSpec struct {
-	Count    int64 `json:"count,omitempty"`
-	Capacity int64 `json:"capacity,omitempty"`
-}
-
-// ListSpec tracks the list capacity
-type ListSpec struct {
-	Capacity int64    `json:"capacity,omitempty"`
-	Values   []string `json:"values,omitempty"`
 }
 
 // Eviction specifies the eviction tolerance of the GameServer
@@ -292,6 +280,11 @@ type GameServerStatus struct {
 	// [FeatureFlag:PlayerTracking]
 	// +optional
 	Players *PlayerStatus `json:"players"`
+	// (Alpha, CountsAndLists feature flag) Counters and Lists provides the configuration for generic tracking features.
+	// +optional
+	Counters map[string]CounterStatus `json:"counters,omitempty"`
+	// +optional
+	Lists map[string]ListStatus `json:"lists,omitempty"`
 	// (Alpha, SafeToEvict feature flag) Eviction specifies the eviction tolerance of the GameServer.
 	// +optional
 	Eviction *Eviction `json:"eviction,omitempty"`
@@ -310,6 +303,18 @@ type PlayerStatus struct {
 	Count    int64    `json:"count"`
 	Capacity int64    `json:"capacity"`
 	IDs      []string `json:"ids"`
+}
+
+// CounterStatus stores the current counter values
+type CounterStatus struct {
+	Count    int64 `json:"count"`
+	Capacity int64 `json:"capacity"`
+}
+
+// ListStatus stores the current list values
+type ListStatus struct {
+	Capacity int64    `json:"capacity"`
+	Values   []string `json:"values"`
 }
 
 // ApplyDefaults applies default values to the GameServer if they are not already populated
@@ -393,6 +398,7 @@ func (gs *GameServer) applyStatusDefaults() {
 	}
 
 	gs.applyEvictionStatus()
+	gs.applyCountsListsStatus()
 }
 
 // applyPortDefaults applies default values for all ports
@@ -441,6 +447,26 @@ func (gs *GameServer) applyEvictionStatus() {
 			gs.Status.Eviction = &Eviction{}
 		}
 		gs.Status.Eviction.Safe = EvictionSafeAlways
+	}
+}
+
+func (gs *GameServer) applyCountsListsStatus() {
+	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
+		return
+	}
+	if gs.Spec.Counters != nil {
+		countersCopy := make(map[string]CounterStatus, len(gs.Spec.Counters))
+		for key, val := range gs.Spec.Counters {
+			countersCopy[key] = *val.DeepCopy()
+		}
+		gs.Status.Counters = countersCopy
+	}
+	if gs.Spec.Lists != nil {
+		listsCopy := make(map[string]ListStatus, len(gs.Spec.Lists))
+		for key, val := range gs.Spec.Lists {
+			listsCopy[key] = *val.DeepCopy()
+		}
+		gs.Status.Lists = listsCopy
 	}
 }
 

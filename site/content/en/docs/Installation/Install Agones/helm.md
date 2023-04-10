@@ -177,14 +177,18 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.allocator.replicas`                              | The number of replicas to run in the deployment                                                                                                                                                                         | `3`                                |
 | `agones.allocator.service.name`                          | Service name for the allocator                                                                                                                                                                                          | `agones-allocator`                 |
 | `agones.allocator.service.serviceType`                   | The [Service Type][service] of the HTTP Service                                                                                                                                                                         | `LoadBalancer`                     |
+| `agones.allocator.service.http.nodePort`                   | If the ServiceType is set to "NodePort",  this is the NodePort that the allocator http service is exposed on.                                                                                                                                                                         | `30000-32767`                     |
 | `agones.allocator.service.loadBalancerIP`                | The [Load Balancer IP][loadBalancer] of the Agones allocator load balancer. Only works if the Kubernetes provider supports this option.                                                                                 | \`\`                               |
 | `agones.allocator.service.loadBalancerSourceRanges`      | The [Load Balancer SourceRanges][loadBalancer] of the Agones allocator load balancer. Only works if the Kubernetes provider supports this option.                                                                       | `[]`                               |
 | `agones.allocator.service.annotations`                   | [Annotations][annotations] added to the Agones allocator service                                                                                                                                                        | `{}`                               |
 | `agones.allocator.service.http.enabled`                  | If true the [allocator service][allocator] will respond to [REST requests][rest-requests]                                                                                                                               | `true`                             |
 | `agones.allocator.service.http.port`                     | The port that is exposed externally by the [allocator service][allocator] for [REST requests][rest-requests]                                                                                                            | `443`                              |
+| `agones.allocator.service.http.portName`               | The name of exposed port                                                               | `http`                             |
 | `agones.allocator.service.http.targetPort`               | The port that is used by the allocator pod to listen for [REST requests][rest-requests]. Note that the allocator server cannot bind to low numbered ports.                                                              | `8443`                             |
 | `agones.allocator.service.grpc.enabled`                  | If true the [allocator service][allocator] will respond to [gRPC requests][grpc-requests]                                                                                                                               | `true`                             |
 | `agones.allocator.service.grpc.port`                     | The port that is exposed externally by the [allocator service][allocator] for [gRPC requests][grpc-requests]                                                                                                            | `443`                              |
+| `agones.allocator.service.grpc.portName`                     | The name of exposed port                                                                                                            | ``                              |
+| `agones.allocator.service.grpc.nodePort`                   | If the ServiceType is set to "NodePort",  this is the NodePort that the allocator gRPC service is exposed on.                                                                                                                                                                          | `30000-32767`                     |
 | `agones.allocator.service.grpc.targetPort`               | The port that is used by the allocator pod to listen for [gRPC requests][grpc-requests]. Note that the allocator server cannot bind to low numbered ports.                                                              | `8443`                             |
 | `agones.allocator.generateClientTLS`                     | Set to true to generate client TLS certificates or false to provide certificates in `certs/allocator/allocator-client.default/*`                                                                                        | `true`                             |
 | `agones.allocator.generateTLS`                           | Set to true to generate TLS certificates or false to provide your own certificates                                                                                                                                      | `true`                             |
@@ -219,13 +223,6 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `gameservers.podPreserveUnknownFields`                   | Disable [field pruning][pruning] and schema validation on the Pod template for a [GameServer][gameserver] definition                                                                                                    | `false`                            |
 | `helm.installTests`                                      | Add an ability to run `helm test agones` to verify the installation                                                                                                                                                     | `false`                            |
 | `agones.image.registry`                                  | Global image registry for all the Agones system images                                                                                                                                                                  | `us-docker.pkg.dev/agones-images/release`
-
-{{% feature publishVersion="1.30.0" %}}
-**New Configuration Features:**
-
-| Parameter                             | Description                                                                                                                                                                                                                           | Default |
-|---------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------|
-|                                                          |                                                                                                                                                                                                                                                            |
 | `agones.extensions.http.port`                            | Port to use for liveness probe service and metrics                                                                                                                                                                      | `8080`                             |
 | `agones.extensions.healthCheck.initialDelaySeconds`      | Initial delay before performing the first probe (in seconds)                                                                                                                                                            | `3`                                |
 | `agones.extensions.healthCheck.periodSeconds`            | Seconds between every liveness probe (in seconds)                                                                                                                                                                       | `3`                                |
@@ -259,6 +256,16 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.extensions.pdb.minAvailable`      | Description of the number of pods from that set that must still be available after the eviction, even in the absence of the evicted pod. Can be either an absolute number or a percentage. Mutually Exclusive with maxUnavailable   | `1`     |
 | `agones.extensions.pdb.maxUnavailable`    | Description of the number of pods from that set that can be unavailable after the eviction. It can be either an absolute number or a percentage Mutually Exclusive with `minAvailable`                                                | \`\`    |
 | `agones.extensions.replicas`                              | The number of replicas to run in the deployment                                                        | `2`                                |
+
+{{% feature publishVersion="1.31.0" %}}
+**New Configuration Features:**
+
+| Parameter                             | Description                                                                                                                                                                                                                           | Default |
+|---------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------|
+|                                                          |                                                                                                                                                                                                                                                            |
+| `agones.controller.replicas`                                   | The number of replicas to run in the `agones-controller` deployment. (Ignored unless [SplitControllerAndExtensions][split-controller] is enabled)                                                                                                                                                                        | `2`                                |
+| `agones.controller.pdb.minAvailable`        | Description of the number of pods from that set that must still be available after the eviction, even in the absence of the evicted pod. Can be either an absolute number or a percentage. Mutually Exclusive with `maxUnavailable` (Ignored unless [SplitControllerAndExtensions][split-controller] is enabled)   | `1`     |
+| `agones.controller.pdb.maxUnavailable`      | Description of the number of pods from that set that can be unavailable after the eviction. It can be either an absolute number or a percentage Mutually Exclusive with `minAvailable` (Ignored unless [SplitControllerAndExtensions][split-controller] is enabled)                                                | \`\`    |
 {{% /feature %}}
 
 [toleration]: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
@@ -276,6 +283,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 [gameserver]: {{< ref "/docs/Reference/gameserver.md" >}}
 [rest-requests]: {{< ref "/docs/Advanced/allocator-service.md#using-rest" >}}
 [grpc-requests]: {{< ref "/docs/Advanced/allocator-service.md#using-grpc" >}}
+[split-controller]: {{< ref "/docs/Advanced/high-availability-agones" >}}
 
 Specify each parameter using the `--set key=value[,key=value]` argument to `helm install`. For example,
 
@@ -298,6 +306,8 @@ You can use the default {{< ghlink href="install/helm/agones/values.yaml" >}}val
 
 ## Helm test
 
+This test would create a `GameServer` resource and delete it afterwards.
+
 {{< alert title="Tip" color="info">}}
 In order to use `helm test` command described in this section you need to set `helm.installTests` helm parameter to `true`.
 {{< /alert >}}
@@ -306,22 +316,19 @@ Check the Agones installation by running the following command:
 ```bash
 helm test my-release -n agones-system
 ```
-```
-RUNNING: agones-test
-PASSED: agones-test
-```
 
-This test would create a `GameServer` resource and delete it afterwards.
-
-{{< alert title="Tip" color="info">}}
-If you receive the following error:
+You should see a successful output similar to this :
 ```
-RUNNING: agones-test
-ERROR: pods "agones-test" already exists
-Error: 1 test(s) failed
+NAME: my-release
+LAST DEPLOYED: Wed Mar 29 06:13:23 2023
+NAMESPACE: agones-system
+STATUS: deployed
+REVISION: 4
+TEST SUITE:     my-release-test
+Last Started:   Wed Mar 29 06:17:52 2023
+Last Completed: Wed Mar 29 06:18:10 2023
+Phase:          Succeeded
 ```
-That means that you skipped the `--cleanup` flag and you should either delete the `agones-test` pod manually or run with the same test `helm test my-release --cleanup` two more times.
-{{< /alert >}}
 
 ## Controller TLS Certificates
 

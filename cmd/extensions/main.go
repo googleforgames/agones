@@ -67,10 +67,12 @@ const (
 	defaultResync                = 30 * time.Second
 	apiServerSustainedQPSFlag    = "api-server-qps"
 	apiServerBurstQPSFlag        = "api-server-qps-burst"
+	readinessShutdownDuration    = "readiness-shutdown-duration"
 )
 
 var (
-	logger = runtime.NewLoggerWithSource("main")
+	podReady bool
+	logger   = runtime.NewLoggerWithSource("main")
 )
 
 func setupLogging(logDir string, logSizeLimitMB int) {
@@ -93,7 +95,7 @@ func setupLogging(logDir string, logSizeLimitMB int) {
 
 // main initializes the extensions service for Agones
 func main() {
-	ctx := signals.NewSigKillContext()
+	ctx, cancelCtx := context.WithCancel(context.Background())
 	ctlConf := parseEnvFlags()
 
 	if ctlConf.LogDir != "" {
@@ -170,6 +172,23 @@ func main() {
 		health = healthcheck.NewHandler()
 	}
 
+	podReady = true
+	health.AddReadinessCheck("agones-extensions", func() error {
+		if !podReady {
+			return errors.New("asked to shut down, failed readiness check")
+		}
+		return nil
+	})
+
+	signals.NewSigTermHandler(func() {
+		logger.Info("Pod shutdown has been requested, failing readiness check")
+		podReady = false
+		time.Sleep(ctlConf.ReadinessShutdownDuration)
+		cancelCtx()
+		logger.Infof("Readiness shutdown duration has passed, exiting pod")
+		os.Exit(0)
+	})
+
 	// If we are using Prometheus only exporter we can make reporting more often,
 	// every 1 seconds, if we are using Stackdriver we would use 60 seconds reporting period,
 	// which is a requirements of Stackdriver, otherwise most of time series would be invalid for Stackdriver
@@ -241,6 +260,7 @@ func parseEnvFlags() config {
 	pflag.Int32(logSizeLimitMBFlag, 1000, "Log file size limit in MB")
 	pflag.String(logLevelFlag, viper.GetString(logLevelFlag), "Agones Log level")
 	pflag.Duration(allocationBatchWaitTime, viper.GetDuration(allocationBatchWaitTime), "Flag to configure the waiting period between allocations batches")
+	pflag.Duration(readinessShutdownDuration, viper.GetDuration(readinessShutdownDuration), "Time in seconds for SIGTERM handler to sleep for.")
 	cloudproduct.BindFlags()
 	runtime.FeaturesBindFlags()
 	pflag.Parse()
@@ -264,6 +284,7 @@ func parseEnvFlags() config {
 	runtime.Must(viper.BindEnv(logSizeLimitMBFlag))
 	runtime.Must(viper.BindEnv(allocationBatchWaitTime))
 	runtime.Must(viper.BindPFlags(pflag.CommandLine))
+	runtime.Must(viper.BindEnv(readinessShutdownDuration))
 	runtime.Must(cloudproduct.BindEnv())
 	runtime.Must(runtime.FeaturesBindEnv())
 	runtime.Must(runtime.ParseFeaturesFromEnv())
@@ -278,13 +299,14 @@ func parseEnvFlags() config {
 		Stackdriver:       viper.GetBool(enableStackdriverMetricsFlag),
 		StackdriverLabels: viper.GetString(stackdriverLabels),
 
-		NumWorkers:              int(viper.GetInt32(numWorkersFlag)),
-		APIServerSustainedQPS:   int(viper.GetInt32(apiServerSustainedQPSFlag)),
-		APIServerBurstQPS:       int(viper.GetInt32(apiServerBurstQPSFlag)),
-		LogDir:                  viper.GetString(logDirFlag),
-		LogLevel:                viper.GetString(logLevelFlag),
-		LogSizeLimitMB:          int(viper.GetInt32(logSizeLimitMBFlag)),
-		AllocationBatchWaitTime: viper.GetDuration(allocationBatchWaitTime),
+		NumWorkers:                int(viper.GetInt32(numWorkersFlag)),
+		APIServerSustainedQPS:     int(viper.GetInt32(apiServerSustainedQPSFlag)),
+		APIServerBurstQPS:         int(viper.GetInt32(apiServerBurstQPSFlag)),
+		LogDir:                    viper.GetString(logDirFlag),
+		LogLevel:                  viper.GetString(logLevelFlag),
+		LogSizeLimitMB:            int(viper.GetInt32(logSizeLimitMBFlag)),
+		AllocationBatchWaitTime:   viper.GetDuration(allocationBatchWaitTime),
+		ReadinessShutdownDuration: viper.GetDuration(readinessShutdownDuration),
 	}
 }
 
@@ -298,14 +320,15 @@ type config struct {
 	Stackdriver       bool
 	StackdriverLabels string
 
-	GCPProjectID            string
-	NumWorkers              int
-	APIServerSustainedQPS   int
-	APIServerBurstQPS       int
-	LogDir                  string
-	LogLevel                string
-	LogSizeLimitMB          int
-	AllocationBatchWaitTime time.Duration
+	GCPProjectID              string
+	NumWorkers                int
+	APIServerSustainedQPS     int
+	APIServerBurstQPS         int
+	LogDir                    string
+	LogLevel                  string
+	LogSizeLimitMB            int
+	AllocationBatchWaitTime   time.Duration
+	ReadinessShutdownDuration time.Duration
 }
 
 type runner interface {

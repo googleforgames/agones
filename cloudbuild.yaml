@@ -19,6 +19,15 @@
 steps:
 
 #
+# Cancel the previous build for the same branch
+#
+
+- name: 'gcr.io/cloud-builders/gcloud-slim:latest'
+  id: cancelot
+  entrypoint: 'bash'
+  args: ['./ci/cancelot.sh', '--current_build_id', '$BUILD_ID']
+
+#
 # Print Docker version
 #
 
@@ -262,7 +271,7 @@ steps:
 
       sleep 60
     done
-  timeout: 5400s # 90m - leave an hour for e2es to run on top of the global timeout of 2.5h
+  timeout: 10800s # 3h - if you change this, change the global timeout as well
   env:
   - 'CLOUDSDK_CORE_PROJECT=$PROJECT_ID'
   - 'BUILD_ID=$BUILD_ID'
@@ -277,7 +286,12 @@ steps:
   script: |
     #!/usr/bin/env bash
 
-    gcloud builds list --ongoing --filter "tags:'e2e-test'" --format="value(id)" | xargs --no-run-if-empty gcloud builds cancel 
+    until gcloud builds list --ongoing --filter "tags:'e2e-test'" --format="value(id)" | xargs --no-run-if-empty gcloud builds cancel
+    do
+      echo "== encountered error; assuming retryable error and trying again =="
+      sleep 5
+    done
+
 
 # kick off the child e2e test cloud builds in parallel, fail this build if any of the child build fails
 
@@ -291,17 +305,13 @@ steps:
       set -o pipefail
       pids=()
       cloudProducts=("generic" "gke-autopilot")
-      declare -A versionsAndRegions=( [1.23]=us-east1 [1.24]=us-west1 [1.25]=us-central1 )
+      declare -A versionsAndRegions=( [1.24]=us-west1 [1.25]=us-central1 [1.26]=asia-east1 )
 
       for cloudProduct in ${cloudProducts[@]}
       do
         for version in "${!versionsAndRegions[@]}"
         do
           region=${versionsAndRegions[$version]}
-          if [ $cloudProduct = gke-autopilot ] && [ $version = 1.23 ]
-          then
-            continue
-          fi
           if [ $cloudProduct = generic ]
           then
             featureWithGate="CustomFasSyncInterval=false&SafeToEvict=false&SDKGracefulTermination=false&StateAllocationFilter=false&PlayerAllocationFilter=true&PlayerTracking=true&ResetMetricsOnDelete=true&PodHostname=true&SplitControllerAndExtensions=true&FleetAllocationOverflow=true&Example=true"
@@ -314,8 +324,8 @@ steps:
             testClusterLocation="${region}"
             testCluster="gke-autopilot-e2e-test-cluster-${version//./-}"
           fi
-          { gcloud builds submit . --config=e2e-test-cloudbuild.yaml \
-            --substitutions _FEATURE_WITH_GATE=$featureWithGate,_FEATURE_WITHOUT_GATE=$featureWithoutGate,_CLOUD_PRODUCT=$cloudProduct,_TEST_CLUSTER_NAME=$testCluster,_TEST_CLUSTER_LOCATION=$testClusterLocation,_REGISTRY=${_REGISTRY} \
+          { gcloud builds submit . --config=./ci/e2e-test-cloudbuild.yaml \
+            --substitutions _FEATURE_WITH_GATE=$featureWithGate,_FEATURE_WITHOUT_GATE=$featureWithoutGate,_CLOUD_PRODUCT=$cloudProduct,_TEST_CLUSTER_NAME=$testCluster,_TEST_CLUSTER_LOCATION=$testClusterLocation,_REGISTRY=${_REGISTRY},_PARENT_COMMIT_SHA=${COMMIT_SHA},_PARENT_BUILD_ID=${BUILD_ID} \
             |& sed "s/^/${cloudProduct}-${version}: /"; } &
           pids+=($!)
         done
@@ -408,8 +418,10 @@ substitutions:
   _CPP_SDK_CONFORMANCE_CACHE_KEY: cpp-sdk-conformance
   _RUST_SDK_BUILD_CACHE_KEY: rust-sdk-build
   _REGISTRY: us-docker.pkg.dev/${PROJECT_ID}/ci
-tags: ['ci']
-timeout: 9000s # 2.5h - if you change this, change e2e-wait-to-become-leader as well
+tags:
+  - "ci"
+  - "commit-${COMMIT_SHA}"
+timeout: 18000s # 5h: 3h (e2e-wait-to-become-leader) + 1.5h (e2e timeout) + 0.5h (everything else)
 queueTtl: 259200s # 72h
 images:
   - '${_REGISTRY}/agones-controller'

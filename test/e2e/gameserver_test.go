@@ -1088,7 +1088,6 @@ func TestPlayerConnectWithCapacityZero(t *testing.T) {
 		t.SkipNow()
 	}
 	t.Parallel()
-	ctx := context.Background()
 
 	gs := framework.DefaultGameServer(framework.Namespace)
 	playerCount := int64(0)
@@ -1103,13 +1102,10 @@ func TestPlayerConnectWithCapacityZero(t *testing.T) {
 	logrus.WithField("msg", msg).Info("Sending Player Connect")
 	_, err = framework.SendGameServerUDP(t, gs, msg)
 	// expected error from the log.Fatalf("could not connect player: %v", err)
-	require.Error(t, err)
-	assert.Eventually(t, func() bool {
-		gs, err = framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Get(ctx, gs.ObjectMeta.Name, metav1.GetOptions{})
-		require.NoError(t, err)
-
-		return assert.Equal(t, gs.Status.State, agonesv1.GameServerStateUnhealthy)
-	}, time.Minute, time.Second)
+	if assert.Error(t, err) {
+		_, err := framework.WaitForGameServerState(t, gs, agonesv1.GameServerStateUnhealthy, time.Minute)
+		assert.NoError(t, err)
+	}
 }
 
 func TestPlayerConnectAndDisconnect(t *testing.T) {
@@ -1252,4 +1248,45 @@ func TestGracefulShutdown(t *testing.T) {
 	diff := int(time.Since(start).Seconds())
 	log.WithField("diff", diff).Info("Time difference")
 	require.Less(t, diff, 40)
+}
+
+func TestGameServerSlowStart(t *testing.T) {
+	t.Parallel()
+
+	// Inject an additional game server sidecar that forces a delayed start
+	// to the main game server container following the pattern at
+	// https://medium.com/@marko.luksa/delaying-application-start-until-sidecar-is-ready-2ec2d21a7b74
+	gs := framework.DefaultGameServer(framework.Namespace)
+	gs.Spec.Template.Spec.Containers = append(
+		[]corev1.Container{{
+			Name:            "delay-game-server-start",
+			Image:           "alpine:latest",
+			ImagePullPolicy: corev1.PullIfNotPresent,
+			Command:         []string{"sleep", "3600"},
+			Lifecycle: &corev1.Lifecycle{
+				PostStart: &corev1.LifecycleHandler{
+					Exec: &corev1.ExecAction{
+						Command: []string{"sleep", "60"},
+					},
+				},
+			},
+			Resources: corev1.ResourceRequirements{
+				Requests: corev1.ResourceList{
+					corev1.ResourceCPU:    resource.MustParse("30m"),
+					corev1.ResourceMemory: resource.MustParse("64Mi"),
+				},
+				Limits: corev1.ResourceList{
+					corev1.ResourceCPU:    resource.MustParse("30m"),
+					corev1.ResourceMemory: resource.MustParse("64Mi"),
+				},
+			},
+		}},
+		gs.Spec.Template.Spec.Containers...)
+
+	// Validate that a game server whose primary container starts slowly (a full minute
+	// after the SDK starts) is capable of reaching Ready. Here we force the condition
+	// with a lifecycle hook, but it imitates a slow image pull, or other container
+	// start delays.
+	_, err := framework.CreateGameServerAndWaitUntilReady(t, framework.Namespace, gs)
+	assert.NoError(t, err)
 }

@@ -30,12 +30,10 @@ agones:
       enabled: true
 ```
 
-{{% feature publishVersion="1.30.0" %}}
 ### Google Cloud Managed Service for Prometheus
 
 [Google Cloud Managed Service for Prometheus](https://cloud.google.com/stackdriver/docs/managed-prometheus) is a fully managed multi-cloud solution for [Prometheus](https://prometheus.io/).
 If you wish to use Managed Prometheus with Agones, follow the [Google Cloud Managed Service for Prometheus installation steps](#google-cloud-managed-service-for-prometheus-installation).
-{{% /feature %}}
 
 ### Google Cloud Monitoring (formerly Stackdriver)
 
@@ -214,7 +212,6 @@ kubectl port-forward deployments/grafana 3000 -n metrics
 
 Open a web browser to [http://localhost:3000](http://localhost:3000), you should see Agones [dashboards](#grafana-dashboards) after login as admin.
 
-{{% feature publishVersion="1.30.0" %}}
 ### Google Cloud Managed Service for Prometheus installation
 
 To collect Agones metrics using [Managed Prometheus](https://cloud.google.com/stackdriver/docs/managed-prometheus):
@@ -229,11 +226,10 @@ kubectl apply -n agones-system -f https://raw.githubusercontent.com/googleforgam
 
 To install Grafana using a Managed Prometheus backend:
 
-* Install the [Standalone Prometheus frontend UI](https://cloud.google.com/stackdriver/docs/managed-prometheus/query#ui-prometheus) - this will act as your authentication proxy for PromQL queries. To group it together with our [Grafana installation](#grafana-installation), install it in the `metrics` namespace.
-
-* [Install Grafana as above](#grafana-installation), but use `-f ./build/grafana-frontend.yaml` instead of `-f ./build/grafana.yaml`.
-
-{{% /feature %}}
+* Complete the [Before you begin](https://cloud.google.com/stackdriver/docs/managed-prometheus/query#begin). To align with the Agones [Grafana installation](#grafana-installation), we'll be installing in the `metrics` namespace, which you'll need to create.
+  * If your cluster has Workload Identity enabled, which is enabled on GKE Autopilot by default, follow [Configure a service account for Workload Identity](https://cloud.google.com/stackdriver/docs/managed-prometheus/query#gmp-wli-svcacct) to ensure that you have appropriately authorized the default Kubernetes service account in the `metrics` namespace.
+* Install the [Standalone Prometheus frontend UI](https://cloud.google.com/stackdriver/docs/managed-prometheus/query#ui-prometheus) in the `metrics` namespace - this will act as your authentication proxy for PromQL queries.
+* [Install Grafana as above](#grafana-installation), using `-f ./build/grafana-frontend.yaml` instead of `-f ./build/grafana.yaml`.
 
 ### Google Cloud Monitoring installation
 

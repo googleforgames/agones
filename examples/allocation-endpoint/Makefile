@@ -28,7 +28,7 @@ REPOSITORY = us-docker.pkg.dev/agones-images/examples
 # Directory that this Makefile is in.
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_path := $(dir $(mkfile_path))
-server_tag = $(REPOSITORY)/allocation-endpoint-proxy:0.3
+server_tag = $(REPOSITORY)/allocation-endpoint-proxy:0.4
 root_path = $(realpath $(project_path)/../..)
 
 #   _____                    _

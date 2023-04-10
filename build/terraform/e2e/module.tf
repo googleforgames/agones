@@ -36,31 +36,23 @@ terraform {
 variable "project" {}
 variable "kubernetes_versions_standard" {
   description = "Create standard e2e test clusters with these k8s versions in these zones"
-  type        = map(string)
+  type        = map(list(string))
   default     = {
-    "1.23" = "us-east1-c"
-    "1.24" = "us-west1-c"
-    "1.25" = "us-central1-c"
+    "1.23" = ["us-east1-c", "UNSPECIFIED"]
+    "1.24" = ["us-west1-c", "UNSPECIFIED"]
+    "1.25" = ["us-central1-c", "UNSPECIFIED"]
+    "1.26" = ["asia-east1-c", "RAPID"]
   }
 }
 
 variable "kubernetes_versions_autopilot" {
   description = "Create Autopilot e2e test clusters with these k8s versions in these regions"
-  type        = map(string)
+  type        = map(list(string))
   default     = {
-    "1.23" = "us-east1"
-    "1.24" = "us-west1"
-    "1.25" = "us-central1"
+    "1.24" = ["us-west1", "REGULAR"]
+    "1.25" = ["us-central1", "REGULAR"]
+    "1.26" = ["asia-east1", "RAPID"]
   }
-}
-
-# TODO: remove this cluster once the e2e tests are switched to use the new standard clusters
-module "gke_standard_cluster_old" {
-  source = "./gke-standard"
-  project = var.project
-  kubernetesVersion = "1.24"
-  overrideName = "e2e-test-cluster"
-  location = "us-west1-c"
 }
 
 module "gke_standard_cluster" {
@@ -68,7 +60,8 @@ module "gke_standard_cluster" {
   source = "./gke-standard"
   project = var.project
   kubernetesVersion = each.key
-  location = each.value
+  location = each.value[0]
+  releaseChannel = each.value[1]
 }
 
 module "gke_autopilot_cluster" {
@@ -76,7 +69,8 @@ module "gke_autopilot_cluster" {
   source = "./gke-autopilot"
   project = var.project
   kubernetesVersion = each.key
-  location = each.value
+  location = each.value[0]
+  releaseChannel = each.value[1]
 }
 
 resource "google_compute_firewall" "udp" {

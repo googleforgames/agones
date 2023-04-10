@@ -1061,7 +1061,7 @@ func TestControllerCreateGameServerPod(t *testing.T) {
 			assert.Equal(t, intstr.FromInt(8080), gsContainer.LivenessProbe.HTTPGet.Port)
 			assert.Equal(t, fixture.Spec.Health.InitialDelaySeconds, gsContainer.LivenessProbe.InitialDelaySeconds)
 			assert.Equal(t, fixture.Spec.Health.PeriodSeconds, gsContainer.LivenessProbe.PeriodSeconds)
-			assert.Equal(t, fixture.Spec.Health.FailureThreshold, gsContainer.LivenessProbe.FailureThreshold)
+			assert.Equal(t, int32(1), gsContainer.LivenessProbe.FailureThreshold)
 			assert.Len(t, gsContainer.VolumeMounts, 1)
 			assert.Equal(t, "/var/run/secrets/kubernetes.io/serviceaccount", gsContainer.VolumeMounts[0].MountPath)
 
@@ -1495,6 +1495,39 @@ func TestControllerSyncGameServerRequestReadyState(t *testing.T) {
 		assert.False(t, podUpdated, "Pod was updated")
 	})
 
+	t.Run("GameServer whose pod is missing ContainerStatuses, so should retry and not update", func(t *testing.T) {
+		c, m := newFakeController()
+
+		gsFixture := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
+			Spec: newSingleContainerSpec(), Status: agonesv1.GameServerStatus{State: agonesv1.GameServerStateRequestReady}}
+		gsFixture.ApplyDefaults()
+		gsFixture.Status.NodeName = nodeName
+		pod, err := gsFixture.Pod(agtesting.FakeAPIHooks{})
+		assert.Nil(t, err)
+		gsUpdated := false
+		podUpdated := false
+
+		m.KubeClient.AddReactor("list", "pods", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			return true, &corev1.PodList{Items: []corev1.Pod{*pod}}, nil
+		})
+		m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			gsUpdated = true
+			return true, nil, nil
+		})
+		m.KubeClient.AddReactor("update", "pods", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			podUpdated = true
+			return true, nil, nil
+		})
+
+		ctx, cancel := agtesting.StartInformers(m, c.podSynced)
+		defer cancel()
+
+		_, err = c.syncGameServerRequestReadyState(ctx, gsFixture)
+		assert.EqualError(t, err, "game server container for GameServer test in namespace default not present in pod status, try again")
+		assert.False(t, gsUpdated, "GameServer was updated")
+		assert.False(t, podUpdated, "Pod was updated")
+	})
+
 	t.Run("GameServer with non zero deletion datetime", func(t *testing.T) {
 		testWithNonZeroDeletionTimestamp(t, func(c *Controller, fixture *agonesv1.GameServer) (*agonesv1.GameServer, error) {
 			return c.syncGameServerRequestReadyState(context.Background(), fixture)
@@ -1730,7 +1763,7 @@ func TestControllerAddGameServerHealthCheck(t *testing.T) {
 	require.NotNil(t, probe)
 	assert.Equal(t, "/gshealthz", probe.HTTPGet.Path)
 	assert.Equal(t, intstr.IntOrString{IntVal: 8080}, probe.HTTPGet.Port)
-	assert.Equal(t, fixture.Spec.Health.FailureThreshold, probe.FailureThreshold)
+	assert.Equal(t, int32(1), probe.FailureThreshold)
 	assert.Equal(t, fixture.Spec.Health.InitialDelaySeconds, probe.InitialDelaySeconds)
 	assert.Equal(t, fixture.Spec.Health.PeriodSeconds, probe.PeriodSeconds)
 }

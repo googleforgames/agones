@@ -20,7 +20,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: agones-1.30.0-dev
+    chart: agones-1.31.0-dev
     release: agones-manual
     heritage: Helm
 ---
@@ -45,7 +45,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: agones-1.30.0-dev
+    chart: agones-1.31.0-dev
     release: agones-manual
     heritage: Helm
 ---
@@ -70,7 +70,7 @@ metadata:
   namespace: default
   labels:
     app: agones
-    chart: agones-1.30.0-dev
+    chart: agones-1.31.0-dev
     release: agones-manual
     heritage: Helm
 ---
@@ -82,7 +82,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: "agones-1.30.0-dev"
+    chart: "agones-1.31.0-dev"
     release: "agones-manual"
     heritage: "Helm"
 type: Opaque
@@ -99,7 +99,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: "agones-1.30.0-dev"
+    chart: "agones-1.31.0-dev"
     release: "agones-manual"
     heritage: "Helm"
 data:
@@ -115,7 +115,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: "agones-1.30.0-dev"
+    chart: "agones-1.31.0-dev"
     release: "agones-manual"
     heritage: "Helm"
 data:
@@ -131,7 +131,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: "agones-1.30.0-dev"
+    chart: "agones-1.31.0-dev"
     release: "agones-manual"
     heritage: "Helm"
 data:
@@ -161,7 +161,7 @@ metadata:
   labels:
     component: crd
     app: agones
-    chart: agones-1.30.0-dev
+    chart: agones-1.31.0-dev
     release: agones-manual
     heritage: Helm
 spec:
@@ -265,12 +265,6 @@ spec:
                          type: object
                          additionalProperties:
                            type: string
-                       clusterName:
-                         description: |-
-                           Deprecated: ClusterName is a legacy field that was always cleared by the system and never used; it will be removed completely in 1.25.
-                     
-                           The name in the go struct is changed to help clients detect accidental use.
-                         type: string
                        creationTimestamp:
                          description: |-
                            CreationTimestamp is a timestamp representing the server time when this object was created. It is not guaranteed to be set in happens-before order across separate operations. Clients may not set this value. It is represented in RFC3339 form and is in UTC.
@@ -414,12 +408,6 @@ spec:
                                  type: object
                                  additionalProperties:
                                    type: string
-                               clusterName:
-                                 description: |-
-                                   Deprecated: ClusterName is a legacy field that was always cleared by the system and never used; it will be removed completely in 1.25.
-                         
-                                   The name in the go struct is changed to help clients detect accidental use.
-                                 type: string
                                creationTimestamp:
                                  description: |-
                                    CreationTimestamp is a timestamp representing the server time when this object was created. It is not guaranteed to be set in happens-before order across separate operations. Clients may not set this value. It is represented in RFC3339 form and is in UTC.
@@ -1468,7 +1456,7 @@ spec:
                                        description: Name of the container specified as a DNS_LABEL. Each container in a pod must have a unique name (DNS_LABEL). Cannot be updated.
                                        type: string
                                      ports:
-                                       description: List of ports to expose from the container. Exposing a port here gives the system additional information about the network connections a container uses, but is primarily informational. Not specifying a port here DOES NOT prevent that port from being exposed. Any port which is listening on the default "0.0.0.0" address inside a container will be accessible from the network. Cannot be updated.
+                                       description: List of ports to expose from the container. Not specifying a port here DOES NOT prevent that port from being exposed. Any port which is listening on the default "0.0.0.0" address inside a container will be accessible from the network. Modifying this array with strategic merge patch may corrupt the data. For more information See https://github.com/kubernetes/kubernetes/issues/108255. Cannot be updated.
                                        type: array
                                        items:
                                          type: object
@@ -1941,7 +1929,7 @@ spec:
                                  description: 'EnableServiceLinks indicates whether information about services should be injected into pod''s environment variables, matching the syntax of Docker links. Optional: Defaults to true.'
                                  type: boolean
                                ephemeralContainers:
-                                 description: List of ephemeral containers run in this pod. Ephemeral containers may be run in an existing pod to perform user-initiated actions such as debugging. This list cannot be specified when creating a pod, and it cannot be modified by updating the pod spec. In order to add an ephemeral container to an existing pod, use the pod's ephemeralcontainers subresource. This field is beta-level and available on clusters that haven't disabled the EphemeralContainers feature gate.
+                                 description: List of ephemeral containers run in this pod. Ephemeral containers may be run in an existing pod to perform user-initiated actions such as debugging. This list cannot be specified when creating a pod, and it cannot be modified by updating the pod spec. In order to add an ephemeral container to an existing pod, use the pod's ephemeralcontainers subresource.
                                  type: array
                                  items:
                                    type: object
@@ -2792,6 +2780,9 @@ spec:
                                hostPID:
                                  description: 'Use the host''s pid namespace. Optional: Default to false.'
                                  type: boolean
+                               hostUsers:
+                                 description: 'Use the host''s user namespace. Optional: Default to true. If set to true or not present, the pod will be run in the host user namespace, useful for when the pod needs a feature only available to the host user namespace, such as loading a kernel module with CAP_SYS_MODULE. When set to false, a new userns is created for the pod. Setting false is useful for mitigating container breakout vulnerabilities even allowing users to run their containers as root without actually having root privileges on the host. This field is alpha-level and is only honored by servers that enable the UserNamespacesSupport feature.'
+                                 type: boolean
                                hostname:
                                  description: Specifies the hostname of the Pod If not specified, the pod's hostname will be set to a system-defined value.
                                  type: string
@@ -3199,7 +3190,7 @@ spec:
                                        description: Name of the container specified as a DNS_LABEL. Each container in a pod must have a unique name (DNS_LABEL). Cannot be updated.
                                        type: string
                                      ports:
-                                       description: List of ports to expose from the container. Exposing a port here gives the system additional information about the network connections a container uses, but is primarily informational. Not specifying a port here DOES NOT prevent that port from being exposed. Any port which is listening on the default "0.0.0.0" address inside a container will be accessible from the network. Cannot be updated.
+                                       description: List of ports to expose from the container. Not specifying a port here DOES NOT prevent that port from being exposed. Any port which is listening on the default "0.0.0.0" address inside a container will be accessible from the network. Modifying this array with strategic merge patch may corrupt the data. For more information See https://github.com/kubernetes/kubernetes/issues/108255. Cannot be updated.
                                        type: array
                                        items:
                                          type: object
@@ -3643,7 +3634,7 @@ spec:
                          
                                    If the OS field is set to linux, the following fields must be unset: -securityContext.windowsOptions
                          
-                                   If the OS field is set to windows, following fields must be unset: - spec.hostPID - spec.hostIPC - spec.securityContext.seLinuxOptions - spec.securityContext.seccompProfile - spec.securityContext.fsGroup - spec.securityContext.fsGroupChangePolicy - spec.securityContext.sysctls - spec.shareProcessNamespace - spec.securityContext.runAsUser - spec.securityContext.runAsGroup - spec.securityContext.supplementalGroups - spec.containers[*].securityContext.seLinuxOptions - spec.containers[*].securityContext.seccompProfile - spec.containers[*].securityContext.capabilities - spec.containers[*].securityContext.readOnlyRootFilesystem - spec.containers[*].securityContext.privileged - spec.containers[*].securityContext.allowPrivilegeEscalation - spec.containers[*].securityContext.procMount - spec.containers[*].securityContext.runAsUser - spec.containers[*].securityContext.runAsGroup This is a beta field and requires the IdentifyPodOS feature
+                                   If the OS field is set to windows, following fields must be unset: - spec.hostPID - spec.hostIPC - spec.hostUsers - spec.securityContext.seLinuxOptions - spec.securityContext.seccompProfile - spec.securityContext.fsGroup - spec.securityContext.fsGroupChangePolicy - spec.securityContext.sysctls - spec.shareProcessNamespace - spec.securityContext.runAsUser - spec.securityContext.runAsGroup - spec.securityContext.supplementalGroups - spec.containers[*].securityContext.seLinuxOptions - spec.containers[*].securityContext.seccompProfile - spec.containers[*].securityContext.capabilities - spec.containers[*].securityContext.readOnlyRootFilesystem - spec.containers[*].securityContext.privileged - spec.containers[*].securityContext.allowPrivilegeEscalation - spec.containers[*].securityContext.procMount - spec.containers[*].securityContext.runAsUser - spec.containers[*].securityContext.runAsGroup
                                  type: object
                                  required:
                                    - name
@@ -3899,6 +3890,11 @@ spec:
                                            additionalProperties:
                                              type: string
                                        x-kubernetes-map-type: atomic
+                                     matchLabelKeys:
+                                       description: MatchLabelKeys is a set of pod label keys to select the pods over which spreading will be calculated. The keys are used to lookup values from the incoming pod labels, those key-value labels are ANDed with labelSelector to select the group of existing pods over which spreading will be calculated for the incoming pod. Keys that don't exist in the incoming pod labels will be ignored. A null or empty list means only match against labelSelector.
+                                       type: array
+                                       items:
+                                         type: string
                                      maxSkew:
                                        description: 'MaxSkew describes the degree to which pods may be unevenly distributed. When `whenUnsatisfiable=DoNotSchedule`, it is the maximum permitted difference between the number of matching pods in the target topology and the global minimum. The global minimum is the minimum number of matching pods in an eligible domain or zero if the number of eligible domains is less than MinDomains. For example, in a 3-zone cluster, MaxSkew is set to 1, and pods with the same labelSelector spread as 2/2/1: In this case, the global minimum is 1. | zone1 | zone2 | zone3 | |  P P  |  P P  |   P   | - if MaxSkew is 1, incoming pod can only be scheduled to zone3 to become 2/2/2; scheduling it onto zone1(zone2) would make the ActualSkew(3-1) on zone1(zone2) violate MaxSkew(1). - if MaxSkew is 2, incoming pod can be scheduled onto any zone. When `whenUnsatisfiable=ScheduleAnyway`, it is used to give higher precedence to topologies that satisfy it. It''s a required field. Default value is 1 and 0 is not allowed.'
                                        type: integer
@@ -3909,11 +3905,23 @@ spec:
                          
                                          For example, in a 3-zone cluster, MaxSkew is set to 2, MinDomains is set to 5 and pods with the same labelSelector spread as 2/2/2: | zone1 | zone2 | zone3 | |  P P  |  P P  |  P P  | The number of domains is less than 5(MinDomains), so "global minimum" is treated as 0. In this situation, new pod with the same labelSelector cannot be scheduled, because computed skew will be 3(3 - 0) if new Pod is scheduled to any of the three zones, it will violate MaxSkew.
                          
-                                         This is an alpha field and requires enabling MinDomainsInPodTopologySpread feature gate.
+                                         This is a beta field and requires the MinDomainsInPodTopologySpread feature gate to be enabled (enabled by default).
                                        type: integer
                                        format: int32
+                                     nodeAffinityPolicy:
+                                       description: |-
+                                         NodeAffinityPolicy indicates how we will treat Pod's nodeAffinity/nodeSelector when calculating pod topology spread skew. Options are: - Honor: only nodes matching nodeAffinity/nodeSelector are included in the calculations. - Ignore: nodeAffinity/nodeSelector are ignored. All nodes are included in the calculations.
+                         
+                                         If this value is nil, the behavior is equivalent to the Honor policy. This is a alpha-level feature enabled by the NodeInclusionPolicyInPodTopologySpread feature flag.
+                                       type: string
+                                     nodeTaintsPolicy:
+                                       description: |-
+                                         NodeTaintsPolicy indicates how we will treat node taints when calculating pod topology spread skew. Options are: - Honor: nodes without taints, along with tainted nodes for which the incoming pod has a toleration, are included. - Ignore: node taints are ignored. All nodes are included.
+                         
+                                         If this value is nil, the behavior is equivalent to the Ignore policy. This is a alpha-level feature enabled by the NodeInclusionPolicyInPodTopologySpread feature flag.
+                                       type: string
                                      topologyKey:
-                                       description: TopologyKey is the key of node labels. Nodes that have a label with this key and identical values are considered to be in the same topology. We consider each <key, value> as a "bucket", and try to put balanced number of pods into each bucket. We define a domain as a particular instance of a topology. Also, we define an eligible domain as a domain whose nodes match the node selector. e.g. If TopologyKey is "kubernetes.io/hostname", each Node is a domain of that topology. And, if TopologyKey is "topology.kubernetes.io/zone", each zone is a domain of that topology. It's a required field.
+                                       description: TopologyKey is the key of node labels. Nodes that have a label with this key and identical values are considered to be in the same topology. We consider each <key, value> as a "bucket", and try to put balanced number of pods into each bucket. We define a domain as a particular instance of a topology. Also, we define an eligible domain as a domain whose nodes meet the requirements of nodeAffinityPolicy and nodeTaintsPolicy. e.g. If TopologyKey is "kubernetes.io/hostname", each Node is a domain of that topology. And, if TopologyKey is "topology.kubernetes.io/zone", each zone is a domain of that topology. It's a required field.
                                        type: string
                                      whenUnsatisfiable:
                                        description: |-
@@ -4214,12 +4222,6 @@ spec:
                                                    type: object
                                                    additionalProperties:
                                                      type: string
-                                                 clusterName:
-                                                   description: |-
-                                                     Deprecated: ClusterName is a legacy field that was always cleared by the system and never used; it will be removed completely in 1.25.
-                         
-                                                     The name in the go struct is changed to help clients detect accidental use.
-                                                   type: string
                                                  creationTimestamp:
                                                    description: |-
                                                      CreationTimestamp is a timestamp representing the server time when this object was created. It is not guaranteed to be set in happens-before order across separate operations. Clients may not set this value. It is represented in RFC3339 form and is in UTC.
@@ -5127,6 +5129,7 @@ spec:
                              capacity:
                                title: Max capacity of the counter
                                type: integer
+                               default: 1000
                                minimum: 0
                        lists:
                          type: object
@@ -5140,6 +5143,7 @@ spec:
                                type: integer
                                title: Max capacity of the array (can be less than or equal to value of maxItems)
                                minimum: 0
+                               default: 1000
                                maximum: 1000 # must be equal to values.maxItems
                              values:
                                title: set of all the items in the list
@@ -5148,6 +5152,7 @@ spec:
                                maxItems: 1000 # max possible size of the value array (cannot be updated)
                                items: # name of the item (player1, session1, room1, etc.)
                                  type: string
+                               default: []
                        eviction:
                          type: object
                          title: Eviction tolerance of the game server
@@ -5196,6 +5201,42 @@ spec:
                     capacity:
                       type: integer
                       minimum: 0
+                counters:
+                  type: object
+                  title: Map of player, room, session, etc. counters
+                  nullable: true
+                  maxProperties: 1000
+                  additionalProperties:
+                    type: object
+                    properties:
+                      count: # initial count
+                        type: integer
+                        default: 0
+                        minimum: 0
+                      capacity: # max capacity of the counter
+                        type: integer
+                        default: 1000
+                        minimum: 0
+                lists:
+                  type: object
+                  title: Map of player, room, session, etc. lists
+                  nullable: true
+                  maxProperties: 1000
+                  additionalProperties:
+                    type: object
+                    properties:
+                      capacity: # max capacity of the array (can be less than or equal to value of maxItems)
+                        type: integer
+                        minimum: 0
+                        default: 1000
+                        maximum: 1000 # must be equal to values.maxItems
+                      values:
+                        type: array
+                        x-kubernetes-list-type: set # Requires items in the array to be unique
+                        maxItems: 1000 # max possible size of the value array (cannot be updated)
+                        items: # name of the item (player1, session1, room1, etc.)
+                          type: string
+                        default: []
       subresources:
         # status enables the status subresource.
         status: { }
@@ -5230,7 +5271,7 @@ metadata:
   labels:
     component: crd
     app: agones
-    chart: agones-1.30.0-dev
+    chart: agones-1.31.0-dev
     release: agones-manual
     heritage: Helm
 spec:
@@ -5376,7 +5417,7 @@ metadata:
   labels:
     component: crd
     app: agones
-    chart: agones-1.30.0-dev
+    chart: agones-1.31.0-dev
     release: agones-manual
     heritage: Helm
 spec:
@@ -5435,12 +5476,6 @@ spec:
                          type: object
                          additionalProperties:
                            type: string
-                       clusterName:
-                         description: |-
-                           Deprecated: ClusterName is a legacy field that was always cleared by the system and never used; it will be removed completely in 1.25.
-                 
-                           The name in the go struct is changed to help clients detect accidental use.
-                         type: string
                        creationTimestamp:
                          description: |-
                            CreationTimestamp is a timestamp representing the server time when this object was created. It is not guaranteed to be set in happens-before order across separate operations. Clients may not set this value. It is represented in RFC3339 form and is in UTC.
@@ -6489,7 +6524,7 @@ spec:
                                description: Name of the container specified as a DNS_LABEL. Each container in a pod must have a unique name (DNS_LABEL). Cannot be updated.
                                type: string
                              ports:
-                               description: List of ports to expose from the container. Exposing a port here gives the system additional information about the network connections a container uses, but is primarily informational. Not specifying a port here DOES NOT prevent that port from being exposed. Any port which is listening on the default "0.0.0.0" address inside a container will be accessible from the network. Cannot be updated.
+                               description: List of ports to expose from the container. Not specifying a port here DOES NOT prevent that port from being exposed. Any port which is listening on the default "0.0.0.0" address inside a container will be accessible from the network. Modifying this array with strategic merge patch may corrupt the data. For more information See https://github.com/kubernetes/kubernetes/issues/108255. Cannot be updated.
                                type: array
                                items:
                                  type: object
@@ -6962,7 +6997,7 @@ spec:
                          description: 'EnableServiceLinks indicates whether information about services should be injected into pod''s environment variables, matching the syntax of Docker links. Optional: Defaults to true.'
                          type: boolean
                        ephemeralContainers:
-                         description: List of ephemeral containers run in this pod. Ephemeral containers may be run in an existing pod to perform user-initiated actions such as debugging. This list cannot be specified when creating a pod, and it cannot be modified by updating the pod spec. In order to add an ephemeral container to an existing pod, use the pod's ephemeralcontainers subresource. This field is beta-level and available on clusters that haven't disabled the EphemeralContainers feature gate.
+                         description: List of ephemeral containers run in this pod. Ephemeral containers may be run in an existing pod to perform user-initiated actions such as debugging. This list cannot be specified when creating a pod, and it cannot be modified by updating the pod spec. In order to add an ephemeral container to an existing pod, use the pod's ephemeralcontainers subresource.
                          type: array
                          items:
                            type: object
@@ -7813,6 +7848,9 @@ spec:
                        hostPID:
                          description: 'Use the host''s pid namespace. Optional: Default to false.'
                          type: boolean
+                       hostUsers:
+                         description: 'Use the host''s user namespace. Optional: Default to true. If set to true or not present, the pod will be run in the host user namespace, useful for when the pod needs a feature only available to the host user namespace, such as loading a kernel module with CAP_SYS_MODULE. When set to false, a new userns is created for the pod. Setting false is useful for mitigating container breakout vulnerabilities even allowing users to run their containers as root without actually having root privileges on the host. This field is alpha-level and is only honored by servers that enable the UserNamespacesSupport feature.'
+                         type: boolean
                        hostname:
                          description: Specifies the hostname of the Pod If not specified, the pod's hostname will be set to a system-defined value.
                          type: string
@@ -8220,7 +8258,7 @@ spec:
                                description: Name of the container specified as a DNS_LABEL. Each container in a pod must have a unique name (DNS_LABEL). Cannot be updated.
                                type: string
                              ports:
-                               description: List of ports to expose from the container. Exposing a port here gives the system additional information about the network connections a container uses, but is primarily informational. Not specifying a port here DOES NOT prevent that port from being exposed. Any port which is listening on the default "0.0.0.0" address inside a container will be accessible from the network. Cannot be updated.
+                               description: List of ports to expose from the container. Not specifying a port here DOES NOT prevent that port from being exposed. Any port which is listening on the default "0.0.0.0" address inside a container will be accessible from the network. Modifying this array with strategic merge patch may corrupt the data. For more information See https://github.com/kubernetes/kubernetes/issues/108255. Cannot be updated.
                                type: array
                                items:
                                  type: object
@@ -8664,7 +8702,7 @@ spec:
                  
                            If the OS field is set to linux, the following fields must be unset: -securityContext.windowsOptions
                  
-                           If the OS field is set to windows, following fields must be unset: - spec.hostPID - spec.hostIPC - spec.securityContext.seLinuxOptions - spec.securityContext.seccompProfile - spec.securityContext.fsGroup - spec.securityContext.fsGroupChangePolicy - spec.securityContext.sysctls - spec.shareProcessNamespace - spec.securityContext.runAsUser - spec.securityContext.runAsGroup - spec.securityContext.supplementalGroups - spec.containers[*].securityContext.seLinuxOptions - spec.containers[*].securityContext.seccompProfile - spec.containers[*].securityContext.capabilities - spec.containers[*].securityContext.readOnlyRootFilesystem - spec.containers[*].securityContext.privileged - spec.containers[*].securityContext.allowPrivilegeEscalation - spec.containers[*].securityContext.procMount - spec.containers[*].securityContext.runAsUser - spec.containers[*].securityContext.runAsGroup This is a beta field and requires the IdentifyPodOS feature
+                           If the OS field is set to windows, following fields must be unset: - spec.hostPID - spec.hostIPC - spec.hostUsers - spec.securityContext.seLinuxOptions - spec.securityContext.seccompProfile - spec.securityContext.fsGroup - spec.securityContext.fsGroupChangePolicy - spec.securityContext.sysctls - spec.shareProcessNamespace - spec.securityContext.runAsUser - spec.securityContext.runAsGroup - spec.securityContext.supplementalGroups - spec.containers[*].securityContext.seLinuxOptions - spec.containers[*].securityContext.seccompProfile - spec.containers[*].securityContext.capabilities - spec.containers[*].securityContext.readOnlyRootFilesystem - spec.containers[*].securityContext.privileged - spec.containers[*].securityContext.allowPrivilegeEscalation - spec.containers[*].securityContext.procMount - spec.containers[*].securityContext.runAsUser - spec.containers[*].securityContext.runAsGroup
                          type: object
                          required:
                            - name
@@ -8920,6 +8958,11 @@ spec:
                                    additionalProperties:
                                      type: string
                                x-kubernetes-map-type: atomic
+                             matchLabelKeys:
+                               description: MatchLabelKeys is a set of pod label keys to select the pods over which spreading will be calculated. The keys are used to lookup values from the incoming pod labels, those key-value labels are ANDed with labelSelector to select the group of existing pods over which spreading will be calculated for the incoming pod. Keys that don't exist in the incoming pod labels will be ignored. A null or empty list means only match against labelSelector.
+                               type: array
+                               items:
+                                 type: string
                              maxSkew:
                                description: 'MaxSkew describes the degree to which pods may be unevenly distributed. When `whenUnsatisfiable=DoNotSchedule`, it is the maximum permitted difference between the number of matching pods in the target topology and the global minimum. The global minimum is the minimum number of matching pods in an eligible domain or zero if the number of eligible domains is less than MinDomains. For example, in a 3-zone cluster, MaxSkew is set to 1, and pods with the same labelSelector spread as 2/2/1: In this case, the global minimum is 1. | zone1 | zone2 | zone3 | |  P P  |  P P  |   P   | - if MaxSkew is 1, incoming pod can only be scheduled to zone3 to become 2/2/2; scheduling it onto zone1(zone2) would make the ActualSkew(3-1) on zone1(zone2) violate MaxSkew(1). - if MaxSkew is 2, incoming pod can be scheduled onto any zone. When `whenUnsatisfiable=ScheduleAnyway`, it is used to give higher precedence to topologies that satisfy it. It''s a required field. Default value is 1 and 0 is not allowed.'
                                type: integer
@@ -8930,11 +8973,23 @@ spec:
                  
                                  For example, in a 3-zone cluster, MaxSkew is set to 2, MinDomains is set to 5 and pods with the same labelSelector spread as 2/2/2: | zone1 | zone2 | zone3 | |  P P  |  P P  |  P P  | The number of domains is less than 5(MinDomains), so "global minimum" is treated as 0. In this situation, new pod with the same labelSelector cannot be scheduled, because computed skew will be 3(3 - 0) if new Pod is scheduled to any of the three zones, it will violate MaxSkew.
                  
-                                 This is an alpha field and requires enabling MinDomainsInPodTopologySpread feature gate.
+                                 This is a beta field and requires the MinDomainsInPodTopologySpread feature gate to be enabled (enabled by default).
                                type: integer
                                format: int32
+                             nodeAffinityPolicy:
+                               description: |-
+                                 NodeAffinityPolicy indicates how we will treat Pod's nodeAffinity/nodeSelector when calculating pod topology spread skew. Options are: - Honor: only nodes matching nodeAffinity/nodeSelector are included in the calculations. - Ignore: nodeAffinity/nodeSelector are ignored. All nodes are included in the calculations.
+                 
+                                 If this value is nil, the behavior is equivalent to the Honor policy. This is a alpha-level feature enabled by the NodeInclusionPolicyInPodTopologySpread feature flag.
+                               type: string
+                             nodeTaintsPolicy:
+                               description: |-
+                                 NodeTaintsPolicy indicates how we will treat node taints when calculating pod topology spread skew. Options are: - Honor: nodes without taints, along with tainted nodes for which the incoming pod has a toleration, are included. - Ignore: node taints are ignored. All nodes are included.
+                 
+                                 If this value is nil, the behavior is equivalent to the Ignore policy. This is a alpha-level feature enabled by the NodeInclusionPolicyInPodTopologySpread feature flag.
+                               type: string
                              topologyKey:
-                               description: TopologyKey is the key of node labels. Nodes that have a label with this key and identical values are considered to be in the same topology. We consider each <key, value> as a "bucket", and try to put balanced number of pods into each bucket. We define a domain as a particular instance of a topology. Also, we define an eligible domain as a domain whose nodes match the node selector. e.g. If TopologyKey is "kubernetes.io/hostname", each Node is a domain of that topology. And, if TopologyKey is "topology.kubernetes.io/zone", each zone is a domain of that topology. It's a required field.
+                               description: TopologyKey is the key of node labels. Nodes that have a label with this key and identical values are considered to be in the same topology. We consider each <key, value> as a "bucket", and try to put balanced number of pods into each bucket. We define a domain as a particular instance of a topology. Also, we define an eligible domain as a domain whose nodes meet the requirements of nodeAffinityPolicy and nodeTaintsPolicy. e.g. If TopologyKey is "kubernetes.io/hostname", each Node is a domain of that topology. And, if TopologyKey is "topology.kubernetes.io/zone", each zone is a domain of that topology. It's a required field.
                                type: string
                              whenUnsatisfiable:
                                description: |-
@@ -9235,12 +9290,6 @@ spec:
                                            type: object
                                            additionalProperties:
                                              type: string
-                                         clusterName:
-                                           description: |-
-                                             Deprecated: ClusterName is a legacy field that was always cleared by the system and never used; it will be removed completely in 1.25.
-                 
-                                             The name in the go struct is changed to help clients detect accidental use.
-                                           type: string
                                          creationTimestamp:
                                            description: |-
                                              CreationTimestamp is a timestamp representing the server time when this object was created. It is not guaranteed to be set in happens-before order across separate operations. Clients may not set this value. It is represented in RFC3339 form and is in UTC.
@@ -10148,6 +10197,7 @@ spec:
                      capacity:
                        title: Max capacity of the counter
                        type: integer
+                       default: 1000
                        minimum: 0
                lists:
                  type: object
@@ -10161,6 +10211,7 @@ spec:
                        type: integer
                        title: Max capacity of the array (can be less than or equal to value of maxItems)
                        minimum: 0
+                       default: 1000
                        maximum: 1000 # must be equal to values.maxItems
                      values:
                        title: set of all the items in the list
@@ -10169,6 +10220,7 @@ spec:
                        maxItems: 1000 # max possible size of the value array (cannot be updated)
                        items: # name of the item (player1, session1, room1, etc.)
                          type: string
+                       default: []
                eviction:
                  type: object
                  title: Eviction tolerance of the game server
@@ -10256,6 +10308,7 @@ spec:
                        minimum: 0
                      capacity:
                        type: integer
+                       default: 1000
                        minimum: 0
                lists:
                  type: object
@@ -10269,6 +10322,7 @@ spec:
                        title: Max capacity of the array (can be less than or equal to value of values.maxItems)
                        type: integer
                        minimum: 0
+                       default: 1000
                        maximum: 1000 # must be equal to values.maxItems
                      values:
                        title: Set of all the items in the list
@@ -10277,6 +10331,7 @@ spec:
                        maxItems: 1000 # max possible size of the value array (cannot be updated)
                        items: # name of the item (player1, session1, room1, etc.)
                          type: string
+                       default: []
                eviction:
                  type: object
                  properties:
@@ -10322,7 +10377,7 @@ metadata:
   labels:
     component: crd
     app: agones
-    chart: agones-1.30.0-dev
+    chart: agones-1.31.0-dev
     release: agones-manual
     heritage: Helm
   name: gameserverallocationpolicies.multicluster.agones.dev
@@ -10401,7 +10456,7 @@ metadata:
   labels:
     component: crd
     app: agones
-    chart: agones-1.30.0-dev
+    chart: agones-1.31.0-dev
     release: agones-manual
     heritage: Helm
 spec:
@@ -10485,12 +10540,6 @@ spec:
                           type: object
                           additionalProperties:
                             type: string
-                        clusterName:
-                          description: |-
-                            Deprecated: ClusterName is a legacy field that was always cleared by the system and never used; it will be removed completely in 1.25.
-                      
-                            The name in the go struct is changed to help clients detect accidental use.
-                          type: string
                         creationTimestamp:
                           description: |-
                             CreationTimestamp is a timestamp representing the server time when this object was created. It is not guaranteed to be set in happens-before order across separate operations. Clients may not set this value. It is represented in RFC3339 form and is in UTC.
@@ -10634,12 +10683,6 @@ spec:
                                   type: object
                                   additionalProperties:
                                     type: string
-                                clusterName:
-                                  description: |-
-                                    Deprecated: ClusterName is a legacy field that was always cleared by the system and never used; it will be removed completely in 1.25.
-                          
-                                    The name in the go struct is changed to help clients detect accidental use.
-                                  type: string
                                 creationTimestamp:
                                   description: |-
                                     CreationTimestamp is a timestamp representing the server time when this object was created. It is not guaranteed to be set in happens-before order across separate operations. Clients may not set this value. It is represented in RFC3339 form and is in UTC.
@@ -11688,7 +11731,7 @@ spec:
                                         description: Name of the container specified as a DNS_LABEL. Each container in a pod must have a unique name (DNS_LABEL). Cannot be updated.
                                         type: string
                                       ports:
-                                        description: List of ports to expose from the container. Exposing a port here gives the system additional information about the network connections a container uses, but is primarily informational. Not specifying a port here DOES NOT prevent that port from being exposed. Any port which is listening on the default "0.0.0.0" address inside a container will be accessible from the network. Cannot be updated.
+                                        description: List of ports to expose from the container. Not specifying a port here DOES NOT prevent that port from being exposed. Any port which is listening on the default "0.0.0.0" address inside a container will be accessible from the network. Modifying this array with strategic merge patch may corrupt the data. For more information See https://github.com/kubernetes/kubernetes/issues/108255. Cannot be updated.
                                         type: array
                                         items:
                                           type: object
@@ -12161,7 +12204,7 @@ spec:
                                   description: 'EnableServiceLinks indicates whether information about services should be injected into pod''s environment variables, matching the syntax of Docker links. Optional: Defaults to true.'
                                   type: boolean
                                 ephemeralContainers:
-                                  description: List of ephemeral containers run in this pod. Ephemeral containers may be run in an existing pod to perform user-initiated actions such as debugging. This list cannot be specified when creating a pod, and it cannot be modified by updating the pod spec. In order to add an ephemeral container to an existing pod, use the pod's ephemeralcontainers subresource. This field is beta-level and available on clusters that haven't disabled the EphemeralContainers feature gate.
+                                  description: List of ephemeral containers run in this pod. Ephemeral containers may be run in an existing pod to perform user-initiated actions such as debugging. This list cannot be specified when creating a pod, and it cannot be modified by updating the pod spec. In order to add an ephemeral container to an existing pod, use the pod's ephemeralcontainers subresource.
                                   type: array
                                   items:
                                     type: object
@@ -13012,6 +13055,9 @@ spec:
                                 hostPID:
                                   description: 'Use the host''s pid namespace. Optional: Default to false.'
                                   type: boolean
+                                hostUsers:
+                                  description: 'Use the host''s user namespace. Optional: Default to true. If set to true or not present, the pod will be run in the host user namespace, useful for when the pod needs a feature only available to the host user namespace, such as loading a kernel module with CAP_SYS_MODULE. When set to false, a new userns is created for the pod. Setting false is useful for mitigating container breakout vulnerabilities even allowing users to run their containers as root without actually having root privileges on the host. This field is alpha-level and is only honored by servers that enable the UserNamespacesSupport feature.'
+                                  type: boolean
                                 hostname:
                                   description: Specifies the hostname of the Pod If not specified, the pod's hostname will be set to a system-defined value.
                                   type: string
@@ -13419,7 +13465,7 @@ spec:
                                         description: Name of the container specified as a DNS_LABEL. Each container in a pod must have a unique name (DNS_LABEL). Cannot be updated.
                                         type: string
                                       ports:
-                                        description: List of ports to expose from the container. Exposing a port here gives the system additional information about the network connections a container uses, but is primarily informational. Not specifying a port here DOES NOT prevent that port from being exposed. Any port which is listening on the default "0.0.0.0" address inside a container will be accessible from the network. Cannot be updated.
+                                        description: List of ports to expose from the container. Not specifying a port here DOES NOT prevent that port from being exposed. Any port which is listening on the default "0.0.0.0" address inside a container will be accessible from the network. Modifying this array with strategic merge patch may corrupt the data. For more information See https://github.com/kubernetes/kubernetes/issues/108255. Cannot be updated.
                                         type: array
                                         items:
                                           type: object
@@ -13863,7 +13909,7 @@ spec:
                           
                                     If the OS field is set to linux, the following fields must be unset: -securityContext.windowsOptions
                           
-                                    If the OS field is set to windows, following fields must be unset: - spec.hostPID - spec.hostIPC - spec.securityContext.seLinuxOptions - spec.securityContext.seccompProfile - spec.securityContext.fsGroup - spec.securityContext.fsGroupChangePolicy - spec.securityContext.sysctls - spec.shareProcessNamespace - spec.securityContext.runAsUser - spec.securityContext.runAsGroup - spec.securityContext.supplementalGroups - spec.containers[*].securityContext.seLinuxOptions - spec.containers[*].securityContext.seccompProfile - spec.containers[*].securityContext.capabilities - spec.containers[*].securityContext.readOnlyRootFilesystem - spec.containers[*].securityContext.privileged - spec.containers[*].securityContext.allowPrivilegeEscalation - spec.containers[*].securityContext.procMount - spec.containers[*].securityContext.runAsUser - spec.containers[*].securityContext.runAsGroup This is a beta field and requires the IdentifyPodOS feature
+                                    If the OS field is set to windows, following fields must be unset: - spec.hostPID - spec.hostIPC - spec.hostUsers - spec.securityContext.seLinuxOptions - spec.securityContext.seccompProfile - spec.securityContext.fsGroup - spec.securityContext.fsGroupChangePolicy - spec.securityContext.sysctls - spec.shareProcessNamespace - spec.securityContext.runAsUser - spec.securityContext.runAsGroup - spec.securityContext.supplementalGroups - spec.containers[*].securityContext.seLinuxOptions - spec.containers[*].securityContext.seccompProfile - spec.containers[*].securityContext.capabilities - spec.containers[*].securityContext.readOnlyRootFilesystem - spec.containers[*].securityContext.privileged - spec.containers[*].securityContext.allowPrivilegeEscalation - spec.containers[*].securityContext.procMount - spec.containers[*].securityContext.runAsUser - spec.containers[*].securityContext.runAsGroup
                                   type: object
                                   required:
                                     - name
@@ -14119,6 +14165,11 @@ spec:
                                             additionalProperties:
                                               type: string
                                         x-kubernetes-map-type: atomic
+                                      matchLabelKeys:
+                                        description: MatchLabelKeys is a set of pod label keys to select the pods over which spreading will be calculated. The keys are used to lookup values from the incoming pod labels, those key-value labels are ANDed with labelSelector to select the group of existing pods over which spreading will be calculated for the incoming pod. Keys that don't exist in the incoming pod labels will be ignored. A null or empty list means only match against labelSelector.
+                                        type: array
+                                        items:
+                                          type: string
                                       maxSkew:
                                         description: 'MaxSkew describes the degree to which pods may be unevenly distributed. When `whenUnsatisfiable=DoNotSchedule`, it is the maximum permitted difference between the number of matching pods in the target topology and the global minimum. The global minimum is the minimum number of matching pods in an eligible domain or zero if the number of eligible domains is less than MinDomains. For example, in a 3-zone cluster, MaxSkew is set to 1, and pods with the same labelSelector spread as 2/2/1: In this case, the global minimum is 1. | zone1 | zone2 | zone3 | |  P P  |  P P  |   P   | - if MaxSkew is 1, incoming pod can only be scheduled to zone3 to become 2/2/2; scheduling it onto zone1(zone2) would make the ActualSkew(3-1) on zone1(zone2) violate MaxSkew(1). - if MaxSkew is 2, incoming pod can be scheduled onto any zone. When `whenUnsatisfiable=ScheduleAnyway`, it is used to give higher precedence to topologies that satisfy it. It''s a required field. Default value is 1 and 0 is not allowed.'
                                         type: integer
@@ -14129,11 +14180,23 @@ spec:
                           
                                           For example, in a 3-zone cluster, MaxSkew is set to 2, MinDomains is set to 5 and pods with the same labelSelector spread as 2/2/2: | zone1 | zone2 | zone3 | |  P P  |  P P  |  P P  | The number of domains is less than 5(MinDomains), so "global minimum" is treated as 0. In this situation, new pod with the same labelSelector cannot be scheduled, because computed skew will be 3(3 - 0) if new Pod is scheduled to any of the three zones, it will violate MaxSkew.
                           
-                                          This is an alpha field and requires enabling MinDomainsInPodTopologySpread feature gate.
+                                          This is a beta field and requires the MinDomainsInPodTopologySpread feature gate to be enabled (enabled by default).
                                         type: integer
                                         format: int32
+                                      nodeAffinityPolicy:
+                                        description: |-
+                                          NodeAffinityPolicy indicates how we will treat Pod's nodeAffinity/nodeSelector when calculating pod topology spread skew. Options are: - Honor: only nodes matching nodeAffinity/nodeSelector are included in the calculations. - Ignore: nodeAffinity/nodeSelector are ignored. All nodes are included in the calculations.
+                          
+                                          If this value is nil, the behavior is equivalent to the Honor policy. This is a alpha-level feature enabled by the NodeInclusionPolicyInPodTopologySpread feature flag.
+                                        type: string
+                                      nodeTaintsPolicy:
+                                        description: |-
+                                          NodeTaintsPolicy indicates how we will treat node taints when calculating pod topology spread skew. Options are: - Honor: nodes without taints, along with tainted nodes for which the incoming pod has a toleration, are included. - Ignore: node taints are ignored. All nodes are included.
+                          
+                                          If this value is nil, the behavior is equivalent to the Ignore policy. This is a alpha-level feature enabled by the NodeInclusionPolicyInPodTopologySpread feature flag.
+                                        type: string
                                       topologyKey:
-                                        description: TopologyKey is the key of node labels. Nodes that have a label with this key and identical values are considered to be in the same topology. We consider each <key, value> as a "bucket", and try to put balanced number of pods into each bucket. We define a domain as a particular instance of a topology. Also, we define an eligible domain as a domain whose nodes match the node selector. e.g. If TopologyKey is "kubernetes.io/hostname", each Node is a domain of that topology. And, if TopologyKey is "topology.kubernetes.io/zone", each zone is a domain of that topology. It's a required field.
+                                        description: TopologyKey is the key of node labels. Nodes that have a label with this key and identical values are considered to be in the same topology. We consider each <key, value> as a "bucket", and try to put balanced number of pods into each bucket. We define a domain as a particular instance of a topology. Also, we define an eligible domain as a domain whose nodes meet the requirements of nodeAffinityPolicy and nodeTaintsPolicy. e.g. If TopologyKey is "kubernetes.io/hostname", each Node is a domain of that topology. And, if TopologyKey is "topology.kubernetes.io/zone", each zone is a domain of that topology. It's a required field.
                                         type: string
                                       whenUnsatisfiable:
                                         description: |-
@@ -14434,12 +14497,6 @@ spec:
                                                     type: object
                                                     additionalProperties:
                                                       type: string
-                                                  clusterName:
-                                                    description: |-
-                                                      Deprecated: ClusterName is a legacy field that was always cleared by the system and never used; it will be removed completely in 1.25.
-                          
-                                                      The name in the go struct is changed to help clients detect accidental use.
-                                                    type: string
                                                   creationTimestamp:
                                                     description: |-
                                                       CreationTimestamp is a timestamp representing the server time when this object was created. It is not guaranteed to be set in happens-before order across separate operations. Clients may not set this value. It is represented in RFC3339 form and is in UTC.
@@ -15347,6 +15404,7 @@ spec:
                               capacity:
                                 title: Max capacity of the counter
                                 type: integer
+                                default: 1000
                                 minimum: 0
                         lists:
                           type: object
@@ -15360,6 +15418,7 @@ spec:
                                 type: integer
                                 title: Max capacity of the array (can be less than or equal to value of maxItems)
                                 minimum: 0
+                                default: 1000
                                 maximum: 1000 # must be equal to values.maxItems
                               values:
                                 title: set of all the items in the list
@@ -15368,6 +15427,7 @@ spec:
                                 maxItems: 1000 # max possible size of the value array (cannot be updated)
                                 items: # name of the item (player1, session1, room1, etc.)
                                   type: string
+                                default: []
                         eviction:
                           type: object
                           title: Eviction tolerance of the game server
@@ -15419,6 +15479,42 @@ spec:
                     capacity:
                       type: integer
                       minimum: 0
+                counters:
+                  type: object
+                  title: Map of player, room, session, etc. counters
+                  nullable: true
+                  maxProperties: 1000
+                  additionalProperties:
+                    type: object
+                    properties:
+                      count: # initial count
+                        type: integer
+                        default: 0
+                        minimum: 0
+                      capacity: # max capacity of the counter
+                        type: integer
+                        default: 1000
+                        minimum: 0
+                lists:
+                  type: object
+                  title: Map of player, room, session, etc. lists
+                  nullable: true
+                  maxProperties: 1000
+                  additionalProperties:
+                    type: object
+                    properties:
+                      capacity: # max capacity of the array (can be less than or equal to value of maxItems)
+                        type: integer
+                        minimum: 0
+                        default: 1000
+                        maximum: 1000 # must be equal to values.maxItems
+                      values:
+                        type: array
+                        x-kubernetes-list-type: set # Requires items in the array to be unique
+                        maxItems: 1000 # max possible size of the value array (cannot be updated)
+                        items: # name of the item (player1, session1, room1, etc.)
+                          type: string
+                        default: []
       subresources:
         # status enables the status subresource.
         status: { }
@@ -15439,7 +15535,7 @@ metadata:
   name: agones-allocator
   labels:
     app: agones
-    chart: agones-1.30.0-dev
+    chart: agones-1.31.0-dev
     release: agones-manual
     heritage: Helm
 rules:
@@ -15469,7 +15565,7 @@ metadata:
   name: agones-controller
   labels:
     app: agones
-    chart: agones-1.30.0-dev
+    chart: agones-1.31.0-dev
     release: agones-manual
     heritage: Helm
 rules:
@@ -15512,6 +15608,9 @@ rules:
 - apiGroups: ["autoscaling.agones.dev"]
   resources: ["fleetautoscalers/status"]
   verbs: ["update"]
+- apiGroups: ["coordination.k8s.io"]
+  resources: ["leases"]
+  verbs: ["create", "delete", "get", "list", "update", "watch"]
 ---
 # Source: agones/templates/serviceaccounts/sdk.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -15520,7 +15619,7 @@ metadata:
   name: agones-sdk
   labels:
     app: agones
-    chart: agones-1.30.0-dev
+    chart: agones-1.31.0-dev
     release: agones-manual
     heritage: Helm
 rules:
@@ -15539,7 +15638,7 @@ metadata:
   name: agones-allocator
   labels:
     app: agones
-    chart: agones-1.30.0-dev
+    chart: agones-1.31.0-dev
     release: agones-manual
     heritage: Helm
 subjects:
@@ -15558,7 +15657,7 @@ metadata:
   name: agones-controller-access
   labels:
     app: agones
-    chart: agones-1.30.0-dev
+    chart: agones-1.31.0-dev
     release: agones-manual
     heritage: Helm
 subjects:
@@ -15610,7 +15709,7 @@ metadata:
   namespace: default
   labels:
     app: agones
-    chart: agones-1.30.0-dev
+    chart: agones-1.31.0-dev
     release: agones-manual
     heritage: Helm
 subjects:
@@ -15631,7 +15730,7 @@ metadata:
   labels:
     component: ping
     app: agones
-    chart: agones-1.30.0-dev
+    chart: agones-1.31.0-dev
     release: agones-manual
     heritage: Helm
 spec:
@@ -15653,7 +15752,7 @@ metadata:
   labels:
     component: ping
     app: agones
-    chart: agones-1.30.0-dev
+    chart: agones-1.31.0-dev
     release: agones-manual
     heritage: Helm
 spec:
@@ -15689,7 +15788,7 @@ metadata:
   labels:
     agones.dev/role: controller
     app: agones
-    chart: agones-1.30.0-dev
+    chart: agones-1.31.0-dev
     release: agones-manual
     heritage: Helm
 spec:
@@ -15726,7 +15825,7 @@ metadata:
   labels:
     component: allocator
     app: agones
-    chart: agones-1.30.0-dev
+    chart: agones-1.31.0-dev
     release: agones-manual
     heritage: Helm
 spec:
@@ -15748,7 +15847,7 @@ metadata:
   labels:
     multicluster.agones.dev/role: allocator
     app: agones
-    chart: agones-1.30.0-dev
+    chart: agones-1.31.0-dev
     release: agones-manual
     heritage: Helm
 spec:
@@ -15782,7 +15881,7 @@ metadata:
   labels:
     component: controller
     app: agones
-    chart: agones-1.30.0-dev
+    chart: agones-1.31.0-dev
     release: agones-manual
     heritage: Helm
 spec:
@@ -15825,7 +15924,7 @@ spec:
       serviceAccountName: agones-controller
       containers:
       - name: agones-controller
-        image: "us-docker.pkg.dev/agones-images/release/agones-controller:1.30.0-dev"
+        image: "us-docker.pkg.dev/agones-images/release/agones-controller:1.31.0-dev"
         imagePullPolicy: IfNotPresent
         env:
         # minimum port that can be exposed to GameServer traffic
@@ -15835,7 +15934,7 @@ spec:
         - name: MAX_PORT
           value: "8000"
         - name: SIDECAR_IMAGE # overwrite the GameServer sidecar image that is used
-          value: "us-docker.pkg.dev/agones-images/release/agones-sdk:1.30.0-dev"
+          value: "us-docker.pkg.dev/agones-images/release/agones-sdk:1.31.0-dev"
         - name: ALWAYS_PULL_SIDECAR # set the sidecar imagePullPolicy to Always
           value: "false"
         - name: SIDECAR_CPU_REQUEST
@@ -15938,7 +16037,7 @@ metadata:
   labels:
     component: ping
     app: agones
-    chart: agones-1.30.0-dev
+    chart: agones-1.31.0-dev
     release: agones-manual
     heritage: Helm
 spec:
@@ -15973,7 +16072,7 @@ spec:
       priorityClassName: agones-system
       containers:
         - name: agones-ping
-          image: "us-docker.pkg.dev/agones-images/release/agones-ping:1.30.0-dev"
+          image: "us-docker.pkg.dev/agones-images/release/agones-ping:1.31.0-dev"
           imagePullPolicy: IfNotPresent
           livenessProbe:
             httpGet:
@@ -16046,7 +16145,7 @@ spec:
           secretName: allocator-client-ca
       containers:
       - name: agones-allocator
-        image: "us-docker.pkg.dev/agones-images/release/agones-allocator:1.30.0-dev"
+        image: "us-docker.pkg.dev/agones-images/release/agones-allocator:1.31.0-dev"
         imagePullPolicy: IfNotPresent
         livenessProbe:
           httpGet:
@@ -16122,7 +16221,7 @@ metadata:
   labels:
     component: controller
     app: agones
-    chart: agones-1.30.0-dev
+    chart: agones-1.31.0-dev
     release: agones-manual
     heritage: Helm
 spec:
@@ -16188,7 +16287,7 @@ metadata:
   labels:
     component: controller
     app: agones
-    chart: agones-1.30.0-dev
+    chart: agones-1.31.0-dev
     release: agones-manual
     heritage: Helm
 webhooks:
@@ -16240,7 +16339,7 @@ metadata:
   labels:
     component: controller
     app: agones
-    chart: agones-1.30.0-dev
+    chart: agones-1.31.0-dev
     release: agones-manual
     heritage: Helm
 webhooks:

@@ -40,6 +40,7 @@ import (
 	"agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/signals"
 	"agones.dev/agones/pkg/util/webhooks"
+	"github.com/google/uuid"
 	"github.com/heptiolabs/healthcheck"
 	"github.com/pkg/errors"
 	prom "github.com/prometheus/client_golang/prometheus"
@@ -50,9 +51,12 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	extclientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/apimachinery/pkg/api/resource"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/tools/leaderelection"
+	"k8s.io/client-go/tools/leaderelection/resourcelock"
 )
 
 const (
@@ -80,6 +84,7 @@ const (
 	kubeconfigFlag               = "kubeconfig"
 	allocationBatchWaitTime      = "allocation-batch-wait-time"
 	defaultResync                = 30 * time.Second
+	leaderElectionFlag           = "leader-election"
 )
 
 var (
@@ -106,7 +111,7 @@ func setupLogging(logDir string, logSizeLimitMB int) {
 
 // main starts the operator for the gameserver CRD
 func main() {
-	ctx := signals.NewSigKillContext()
+	ctx, cancel := signals.NewSigKillContext()
 	ctlConf := parseEnvFlags()
 
 	if ctlConf.LogDir != "" {
@@ -221,7 +226,7 @@ func main() {
 		kubeClient, extClient, agonesClient, agonesInformerFactory)
 
 	rs = append(rs,
-		httpsServer, gsCounter, gsController, gsSetController, fleetController, fasController, server)
+		gsCounter, gsController, gsSetController, fleetController, fasController)
 
 	if !runtime.FeatureEnabled(runtime.FeatureSplitControllerAndExtensions) {
 		gameservers.NewExtensions(controllerHooks, wh)
@@ -231,22 +236,30 @@ func main() {
 
 		gasController := gameserverallocations.NewExtensions(api, health, gsCounter, kubeClient, kubeInformerFactory,
 			agonesClient, agonesInformerFactory, 10*time.Second, 30*time.Second, ctlConf.AllocationBatchWaitTime)
-		rs = append(rs, gasController)
+		rs = append(rs, httpsServer, gasController)
 	}
 
-	kubeInformerFactory.Start(ctx.Done())
-	agonesInformerFactory.Start(ctx.Done())
-
-	for _, r := range rs {
-		go func(rr runner) {
-			if runErr := rr.Run(ctx, ctlConf.NumWorkers); runErr != nil {
-				logger.WithError(runErr).Fatalf("could not start runner: %T", rr)
-			}
-		}(r)
+	runRunner := func(r runner) {
+		if err := r.Run(ctx, ctlConf.NumWorkers); err != nil {
+			logger.WithError(err).Fatalf("could not start runner! %T", r)
+		}
 	}
 
-	<-ctx.Done()
-	logger.Info("Shut down agones controllers")
+	// Server has to be started earlier because it contains the health check.
+	// This allows the controller to not fail health check during install when there is replication
+	go runRunner(server)
+
+	whenLeader(ctx, cancel, logger, ctlConf.LeaderElection, kubeClient, func(ctx context.Context) {
+		kubeInformerFactory.Start(ctx.Done())
+		agonesInformerFactory.Start(ctx.Done())
+
+		for _, r := range rs {
+			go runRunner(r)
+		}
+
+		<-ctx.Done()
+		logger.Info("Shut down agones controllers")
+	})
 }
 
 func parseEnvFlags() config {
@@ -269,6 +282,7 @@ func parseEnvFlags() config {
 	viper.SetDefault(enableStackdriverMetricsFlag, false)
 	viper.SetDefault(stackdriverLabels, "")
 	viper.SetDefault(allocationBatchWaitTime, 500*time.Millisecond)
+	viper.SetDefault(leaderElectionFlag, false)
 
 	viper.SetDefault(projectIDFlag, "")
 	viper.SetDefault(numWorkersFlag, 64)
@@ -301,6 +315,7 @@ func parseEnvFlags() config {
 	pflag.Int32(logSizeLimitMBFlag, 1000, "Log file size limit in MB")
 	pflag.String(logLevelFlag, viper.GetString(logLevelFlag), "Agones Log level")
 	pflag.Duration(allocationBatchWaitTime, viper.GetDuration(allocationBatchWaitTime), "Flag to configure the waiting period between allocations batches")
+	pflag.Bool(leaderElectionFlag, viper.GetBool(leaderElectionFlag), "Flag to enable/disable leader election for controller pod")
 	cloudproduct.BindFlags()
 	runtime.FeaturesBindFlags()
 	pflag.Parse()
@@ -329,6 +344,7 @@ func parseEnvFlags() config {
 	runtime.Must(viper.BindEnv(logDirFlag))
 	runtime.Must(viper.BindEnv(logSizeLimitMBFlag))
 	runtime.Must(viper.BindEnv(allocationBatchWaitTime))
+	runtime.Must(viper.BindEnv(leaderElectionFlag))
 	runtime.Must(viper.BindPFlags(pflag.CommandLine))
 	runtime.Must(cloudproduct.BindEnv())
 	runtime.Must(runtime.FeaturesBindEnv())
@@ -379,6 +395,7 @@ func parseEnvFlags() config {
 		LogSizeLimitMB:          int(viper.GetInt32(logSizeLimitMBFlag)),
 		StackdriverLabels:       viper.GetString(stackdriverLabels),
 		AllocationBatchWaitTime: viper.GetDuration(allocationBatchWaitTime),
+		LeaderElection:          viper.GetBool(leaderElectionFlag),
 	}
 }
 
@@ -407,6 +424,7 @@ type config struct {
 	LogLevel                string
 	LogSizeLimitMB          int
 	AllocationBatchWaitTime time.Duration
+	LeaderElection          bool
 }
 
 // validate ensures the ctlConfig data is valid.
@@ -431,6 +449,56 @@ type runner interface {
 
 type httpServer struct {
 	http.ServeMux
+}
+
+func whenLeader(ctx context.Context, cancel context.CancelFunc, logger *logrus.Entry, doLeaderElection bool, kubeClient *kubernetes.Clientset, start func(_ context.Context)) {
+	if !doLeaderElection {
+		start(ctx)
+		return
+	}
+
+	id := uuid.New().String()
+
+	lock := &resourcelock.LeaseLock{
+		LeaseMeta: metav1.ObjectMeta{
+			Name:      "agones-controller-lock",
+			Namespace: "agones-system",
+		},
+		Client: kubeClient.CoordinationV1(),
+		LockConfig: resourcelock.ResourceLockConfig{
+			Identity: id,
+		},
+	}
+
+	logger.WithField("id", id).Info("Leader Election ID")
+
+	leaderelection.RunOrDie(ctx, leaderelection.LeaderElectionConfig{
+		Lock: lock,
+		// IMPORTANT: you MUST ensure that any code you have that
+		// is protected by the lease must terminate **before**
+		// you call cancel. Otherwise, you could have a background
+		// loop still running and another process could
+		// get elected before your background loop finished, violating
+		// the stated goal of the lease.
+		ReleaseOnCancel: true,
+		LeaseDuration:   15 * time.Second,
+		RenewDeadline:   10 * time.Second,
+		RetryPeriod:     2 * time.Second,
+		Callbacks: leaderelection.LeaderCallbacks{
+			OnStartedLeading: start,
+			OnStoppedLeading: func() {
+				logger.WithField("id", id).Info("Leader Lost")
+				cancel()
+				os.Exit(0)
+			},
+			OnNewLeader: func(identity string) {
+				if identity == id {
+					return
+				}
+				logger.WithField("id", id).Info("New Leader Elected")
+			},
+		},
+	})
 }
 
 func (h *httpServer) Run(_ context.Context, _ int) error {
