@@ -1,5 +1,74 @@
 # Changelog
 
+## [v1.31.0](https://github.com/googleforgames/agones/tree/v1.31.0) (2023-04-11)
+
+[Full Changelog](https://github.com/googleforgames/agones/compare/v1.30.0...v1.31.0)
+
+**Breaking changes:**
+- Update Supported Kubernetes to 1.24 1.25 1.26 by @gongmax in https://github.com/googleforgames/agones/pull/3029
+
+**Implemented enhancements:**
+- Add automation to report on recent build flakes by @zmerlynn in https://github.com/googleforgames/agones/pull/3012
+- Fix GKE Autopilot auto-detection for 1.26 by @zmerlynn in https://github.com/googleforgames/agones/pull/3032
+- Adds Counter to SDK alpha.proto by @igooch in https://github.com/googleforgames/agones/pull/3002
+- Add leader election feature to `agones-controller` by @chiayi in https://github.com/googleforgames/agones/pull/3025
+- Adds List to SDK alpha.proto by @igooch in https://github.com/googleforgames/agones/pull/3039
+- Link to Global Scale Demo from Agones Examples page by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3064
+- Add timeout to SDK k8s client by @zmerlynn in https://github.com/googleforgames/agones/pull/3070
+- Add helm setting for leader election by @chiayi in https://github.com/googleforgames/agones/pull/3051
+- Have TestPlayerConnectWithCapacityZero use framework to wait by @zmerlynn in https://github.com/googleforgames/agones/pull/3062
+- Retry build cancellation if it fails by @zmerlynn in https://github.com/googleforgames/agones/pull/3073
+- GitHub action for stale issues by @geetachavan1 in https://github.com/googleforgames/agones/pull/3075
+- GameServer Allocation Filtering for Counts and Lists by @igooch in https://github.com/googleforgames/agones/pull/3065
+- Automation: Update Approved Auto-Merge PR's to latest main by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3066
+- Add e2e test for leader election by @chiayi in https://github.com/googleforgames/agones/pull/3076
+
+**Fixed bugs:**
+- Ensure the state bucket exists before creating e2e test clusters by @gongmax in https://github.com/googleforgames/agones/pull/3014
+- Add Sigterm handler and readiness probe to extensions by @chiayi in https://github.com/googleforgames/agones/pull/3011
+- Use actually distinct webhook for Autopilot by @zmerlynn in https://github.com/googleforgames/agones/pull/3035
+- Changes to resolve error in creating gcloud-e2e-test-cluster by @igooch in https://github.com/googleforgames/agones/pull/3040
+- Replaces functionality and types to make plugin cross-compilable between UE4 and UE5 by @DevChagrins in https://github.com/googleforgames/agones/pull/3060
+- Rework game server health initial delay handling by @zmerlynn in https://github.com/googleforgames/agones/pull/3046
+- Fix simple-game-server to use context substitute for the infinite loop by @oniku-2929 in https://github.com/googleforgames/agones/pull/3050
+- Added -buildvcs=false in build/Makefile by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3069
+- Rework game server health initial delay handling by @zmerlynn in https://github.com/googleforgames/agones/pull/3072
+
+**Other:**
+- Prep for 1.31.0 release by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3013
+- Clarify instructions for Managed Prometheus by @zmerlynn in https://github.com/googleforgames/agones/pull/3015
+- Delete unused e2e test cluster by @gongmax in https://github.com/googleforgames/agones/pull/3017
+- Add autopilot instructions to doc as Alpha by @shannonxtreme in https://github.com/googleforgames/agones/pull/3004
+- Removing dzlier-gcp from approvers list. by @dzlier-gcp in https://github.com/googleforgames/agones/pull/3021
+- Fix Dependabot vulnerabilites by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3027
+- Update _index.md by @deibu in https://github.com/googleforgames/agones/pull/3045
+- Fix doc for multiple k8s version support by @gongmax in https://github.com/googleforgames/agones/pull/3038
+- Helm test instruction cleanup in Agones doc by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3052
+- Add licence to cancelot.sh by @markmandel in https://github.com/googleforgames/agones/pull/3055
+- Generate release notes and Changelog using Github by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3022
+- Fixed example images by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3063
+- Extend e2e queue timings / Disable testing on Autopilot 1.26 by @zmerlynn in https://github.com/googleforgames/agones/pull/3059
+- Revert "Rework game server health initial delay handling (#3046)" by @zmerlynn in https://github.com/googleforgames/agones/pull/3068
+- Document missing Allocation Service helm variables by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3053
+- Remove unnecessary intermediate variables. by @roberthbailey in https://github.com/googleforgames/agones/pull/3056
+- Add description on when to upgrade supported Kubernetes version by @gongmax in https://github.com/googleforgames/agones/pull/3049
+- Fix release tag on Unity SDK installation document page (#2622) by @oniku-2929 in https://github.com/googleforgames/agones/pull/3071
+- Compilation errors on simple-game-server by @markmandel in https://github.com/googleforgames/agones/pull/3054
+- Add tags for cluster, location, commit to e2e-test builds by @zmerlynn in https://github.com/googleforgames/agones/pull/3074
+- Update examples images to latest version on agones-images by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3077
+- Tag CI build with commit, tag e2e with parent build ID by @zmerlynn in https://github.com/googleforgames/agones/pull/3080
+- Renamed action-secret by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3081
+- simple-game-server with latest version 0.15 by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3078
+- Remove changelog generation from release/cloudbuild.yaml by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3079
+- Remove 1.23 e2e test cluster by @gongmax in https://github.com/googleforgames/agones/pull/3082
+
+**New Contributors:**
+- @shannonxtreme made their first contribution in https://github.com/googleforgames/agones/pull/3004
+- @deibu made their first contribution in https://github.com/googleforgames/agones/pull/3045
+- @DevChagrins made their first contribution in https://github.com/googleforgames/agones/pull/3060
+- @oniku-2929 made their first contribution in https://github.com/googleforgames/agones/pull/3050
+- @geetachavan1 made their first contribution in https://github.com/googleforgames/agones/pull/3075
+
 ## [v1.30.0](https://github.com/googleforgames/agones/tree/v1.30.0) (2023-03-01)
 
 [Full Changelog](https://github.com/googleforgames/agones/compare/v1.29.0...v1.30.0)

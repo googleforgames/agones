@@ -42,7 +42,7 @@ site-static: ensure-build-image
 	docker run --rm $(common_mounts) --workdir=$(mount_path)/site $(DOCKER_RUN_ARGS) $(build_tag) \
 		bash -c "npm list autoprefixer || npm install autoprefixer@9.8.6"
 	docker run --rm $(common_mounts) --workdir=$(mount_path)/site $(DOCKER_RUN_ARGS) $(build_tag) bash -c \
-		"$(ENV) hugo --config=config.toml $(ARGS)"
+        "git config --global --add safe.directory /go/src/agones.dev/agones &&  $(ENV) hugo --config=config.toml $(ARGS)"
 
 site-gen-app-yaml: SERVICE ?= default
 site-gen-app-yaml:
