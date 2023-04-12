@@ -13,6 +13,33 @@
 # limitations under the License.
 
 steps:
+  #
+  # Restore any caches
+  #
+  - name: us-docker.pkg.dev/$PROJECT_ID/ci/restore_cache
+    id: cpp-sdk-build-restore-cache
+    args:
+      - "--bucket=gs://$_CACHE_BUCKET"
+      - "--key=$_CPP_SDK_BUILD_CACHE_KEY-$( checksum sdks/cpp/cmake/prerequisites.cmake )"
+    waitFor: ["-"]
+
+  - name: us-docker.pkg.dev/$PROJECT_ID/ci/restore_cache
+    id: cpp-sdk-conformance-restore-cache
+    args:
+      - "--bucket=gs://$_CACHE_BUCKET"
+      - "--key=$_CPP_SDK_CONFORMANCE_CACHE_KEY-$( checksum sdks/cpp/cmake/prerequisites.cmake )"
+    waitFor: ["-"]
+
+  - name: us-docker.pkg.dev/$PROJECT_ID/ci/restore_cache
+    id: rust-sdk-build-restore-cache
+    args:
+      - "--bucket=gs://$_CACHE_BUCKET"
+      - "--key=$_RUST_SDK_BUILD_CACHE_KEY-$( checksum test/sdk/rust/Cargo.toml )"
+    waitFor: ["-"]
+
+  #
+  # Creates the initial make + docker build platform
+  #
   - name: "ubuntu"
     args:
       [
@@ -26,21 +53,96 @@ steps:
     id: build-make-docker
     args: ["build", "-f", "Dockerfile.build", "-t", "make-docker", "."]
 
+  #
+  # pull the main build image if it exists
+  #
   - name: "make-docker"
     id: pull-build-image
     dir: "build"
     env:
-      - "REGISTRY=us-docker.pkg.dev/${PROJECT_ID}/ci"
+      - "REGISTRY=${_REGISTRY}/ci"
     args: ["pull-build-image"]
     waitFor:
       - build-make-docker
 
+  #
+  # Ensure example images exists
+  #
   - name: "make-docker"
     id: test-examples-on-gar
     dir: "build"
     env:
-      - "REGISTRY=us-docker.pkg.dev/${PROJECT_ID}"
+      - "REGISTRY=${_REGISTRY}"
       - DOCKER_RUN_ARGS=--network=cloudbuild
     args: ["test-examples-on-gar"]
 
-timeout: 3600s
+  #
+  # Build all the images
+  #
+  - name: "make-docker"
+    id: build-images
+    dir: "build"
+    env:
+      - "VERSION=${_VERSION}"
+      - "REGISTRY=${_REGISTRY}/release"
+      - "FULL_BUILD=1"
+    args: ["-j", "1", "build"]
+
+  #
+  # push all the images
+  #
+  - name: "make-docker"
+    id: push-images
+    waitFor:
+      - build-images
+    dir: "build"
+    env:
+      - "VERSION=${_VERSION}"
+      - "REGISTRY=${_REGISTRY}/release"
+    args: ["-j", "1", "push"]
+
+  #
+  # Creating cloud storage bucket
+  #
+  - name: gcr.io/cloud-builders/gsutil
+    entrypoint: bash
+    args:
+      - "-c"
+      - "gsutil mb $_STORAGE || true"
+    id: create-bucket
+
+  #
+  # Zip up artifacts and push to cloud storage
+  #
+  - name: gcr.io/cloud-builders/gsutil
+    waitFor:
+      - build-images
+    dir: "cmd/sdk-server/bin"
+    args: ["-m", "cp", "*.zip", $_STORAGE]
+
+  - name: gcr.io/cloud-builders/gsutil
+    waitFor:
+      - build-images
+    dir: "sdks/cpp/.archives"
+    args: ["-m", "cp", "*.tar.gz", $_STORAGE]
+
+  - name: gcr.io/cloud-builders/gsutil
+    entrypoint: bash
+    waitFor:
+      - build-images
+    dir: "."
+    args:
+      - "-c"
+      - zip -r agones-install-${_VERSION}.zip ./README.md ./install ./LICENSE | gsutil -m cp -r agones-install-${_VERSION}.zip $_STORAGE
+
+options:
+  machineType: E2_HIGHCPU_32
+  dynamic_substitutions: true
+substitutions:
+  _STORAGE: gs://${PROJECT_ID}-agones-releases
+  _REGISTRY: us-docker.pkg.dev/${PROJECT_ID}
+  _CACHE_BUCKET: agones-build-cache
+  _CPP_SDK_BUILD_CACHE_KEY: cpp-sdk-build
+  _CPP_SDK_CONFORMANCE_CACHE_KEY: cpp-sdk-conformance
+  _RUST_SDK_BUILD_CACHE_KEY: rust-sdk-build
+timeout: 18000s
