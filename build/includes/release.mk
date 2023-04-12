@@ -65,9 +65,13 @@ release-deploy-site:
 	echo "Deploying Site Version: $$version" && \
 	$(MAKE) ENV=HUGO_ENV=snapshot site-deploy SERVICE=$$version
 
-# Automation in cloud for ensuring the example images exists,
-# build and push the images in the release repository,
-# stores artifacts in GCS
-build-release:
+# Ensure the example images exists,
+before-pr-release:
 	docker run --rm $(common_mounts) -w $(workdir_path) $(build_tag) \
-		gcloud builds submit . --substitutions _VERSION=$(base_version) --config=./build/release/cloudbuild.yaml $(ARGS)
+		gcloud builds submit . --config=./build/release/cloudbuild.yaml --step=3,4,5,6 $(ARGS)
+
+# Build and push the images in the release repository,
+# stores artifacts in GCS
+after-pr-release:
+	docker run --rm $(common_mounts) -w $(workdir_path) $(build_tag) \
+		gcloud builds submit . --substitutions _VERSION=$(base_version) --config=./build/release/cloudbuild.yaml --exclude-tags=pull-build-image,test-examples-on-gar $(ARGS)
