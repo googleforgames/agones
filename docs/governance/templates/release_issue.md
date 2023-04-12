@@ -15,7 +15,6 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 - [ ] Run `git remote -v` and see:
   - [ ] An `origin` remote that points to a personal fork of Agones, such as `git@github.com:yourname/agones.git`.
   - [ ] An `upstream` remote that points to `git@github.com:googleforgames/agones.git`.
-- [ ] Have a [GitHub Personal Access Token](https://github.com/settings/tokens) with repo permissions.
 - [ ] Have a `gcloud config configurations` configuration called `agones-images` that points to the same project.
 - [ ] Edit access to the [Agones Release Calendar](https://calendar.google.com/calendar/u/0?cid=Z29vZ2xlLmNvbV84MjhuOGYxOGhmYnRyczR2dTRoMXNrczIxOEBncm91cC5jYWxlbmRhci5nb29nbGUuY29t)
 
@@ -73,7 +72,6 @@ and copy it into a release issue. Fill in relevant values, found inside {}
         to publish.
   - [ ] Run `make sdk-publish-csharp` to deploy to NuGet. Requires login credentials.
         Will need [NuGet API Key](https://www.nuget.org/account/apikeys) from Agones account.
-- [ ] Run `make do-release` to create and push the docker images and helm chart.
 - [ ] Run `make shell` and run `gcloud config configurations activate <your development project>` to switch Agones
       development tooling off of the `agones-images` project.
 - [ ] Do a `helm repo add agones https://agones.dev/chart/stable` / `helm repo update` and verify that the new
