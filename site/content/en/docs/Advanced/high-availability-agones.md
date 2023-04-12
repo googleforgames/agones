@@ -13,9 +13,9 @@ publishDate: 2023-02-28
 
 When `SplitControllerAndExtensions` is enabled, the `agones-controller` responsibility is split up into `agones-controller`, which enacts the Agones control loop, and `agones-extensions`, which acts as a service endpoint for webhooks and the allocation extension API. Splitting these responsibilities allows the `agones-extensions` pod to be **horizontally scaled**, making the Agones control plane **highly available** and more **resiliant to disruption**.
 
-{{< alert title="GKE Autopilot Clusters" color="warning" >}}
+`SplitControllerAndExtensions` enables multiple `agones-controller` pods, with a primary controller selected via leader election. Having multiple `agones-controller` minimizes downtime of the service from pod disruptions such as deployment updates, autoscaler evictions, and crashes.
+
 `SplitControllerAndExtensions` must be enabled for GKE Autopilot.
-{{< /alert >}}
 
 ## Extension Pod Configrations 
 
@@ -34,7 +34,9 @@ An important configuration to note is the PodDisruptionBudget fields, `agones.ex
 
 ## Deployment Considerations
 
-When `SplitControllerAndExtensions` is enabled, what was previously a single `agones-controller` pod is deployed as `agones-controller` and 2 `agones-extensions` pods. For example: 
+Leader election will automatically be enabled when `SplitControllerAndExtensions` is enabled and `agones.controller.replicas` is > 1. [`agones.controller.replicas`]({{< relref "/docs/Installation/Install Agones/helm.md#configuration" >}}) defaults to 2.
+
+When `SplitControllerAndExtensions` is enabled, what was previously a single `agones-controller` pod is deployed by default as 2 `agones-controller` and 2 `agones-extensions` pods. For example:
 
 ```
 NAME                                 READY   STATUS    RESTARTS   AGE
@@ -42,6 +44,7 @@ agones-allocator-78c6b8c79-h9nqc     1/1     Running   0          23h
 agones-allocator-78c6b8c79-l2bzp     1/1     Running   0          23h
 agones-allocator-78c6b8c79-rw75j     1/1     Running   0          23h
 agones-controller-fbf944f4-vs9xx     1/1     Running   0          23h
+agones-controller-fbf944f4-sjk3t     1/1     Running   0          23h
 agones-extensions-5648fc7dcf-hm6lk   1/1     Running   0          23h
 agones-extensions-5648fc7dcf-qbc6h   1/1     Running   0          23h
 agones-ping-5b9647874-2rrl6          1/1     Running   0          27h
