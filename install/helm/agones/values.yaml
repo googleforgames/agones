@@ -224,7 +224,7 @@ agones:
     allocationBatchWaitTime: 500ms
   image:
     registry: us-docker.pkg.dev/agones-images/release
-    tag: 1.31.0-dev
+    tag: 1.31.0
     controller:
       name: agones-controller
       pullPolicy: IfNotPresent
