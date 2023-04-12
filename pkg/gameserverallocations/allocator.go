@@ -25,6 +25,7 @@ import (
 
 	"agones.dev/agones/pkg/allocation/converters"
 	pb "agones.dev/agones/pkg/allocation/go"
+	"agones.dev/agones/pkg/apis"
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
 	multiclusterv1 "agones.dev/agones/pkg/apis/multicluster/v1"
@@ -509,11 +510,23 @@ func (c *Allocator) ListenAndAllocate(ctx context.Context, updateWorkerCount int
 				requestCount = 0
 			}
 
+			// FeatureCountsAndLists: Sorting based on GameServerAllocation Priority only for strategy Distributed.
 			if list == nil {
-				list = c.allocationCache.ListSortedGameServers()
+				if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) && (req.gsa.Spec.Scheduling != apis.Packed) {
+					list = c.allocationCache.PrioritySortGameServers(req.gsa)
+				} else {
+					list = c.allocationCache.ListSortedGameServers(req.gsa)
+				}
 			}
 
-			gs, index, err := findGameServerForAllocation(req.gsa, list)
+			var gs *agonesv1.GameServer
+			var index int
+			var err error
+			if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) && (req.gsa.Spec.Scheduling != apis.Packed) {
+				gs, index, err = findGameServerForAllocationDistributed(req.gsa, list)
+			} else {
+				gs, index, err = findGameServerForAllocation(req.gsa, list)
+			}
 			if err != nil {
 				req.response <- response{request: req, gs: nil, err: err}
 				continue

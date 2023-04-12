@@ -40,6 +40,7 @@ func findGameServerForAllocation(gsa *allocationv1.GameServerAllocation, list []
 	var loop func(list []*agonesv1.GameServer, f func(i int, gs *agonesv1.GameServer))
 
 	// packed is forward looping, distributed is random looping
+	// TODO: Discuss if we change findGameServerForAllocation so all strategies use forward looping for the the pre-sorted list for each strategy once FeatureCountsAndLists gate is graduated.
 	switch gsa.Spec.Scheduling {
 	case apis.Packed:
 		loop = func(list []*agonesv1.GameServer, f func(i int, gs *agonesv1.GameServer)) {
@@ -66,6 +67,47 @@ func findGameServerForAllocation(gsa *allocationv1.GameServerAllocation, list []
 		}
 	default:
 		return nil, -1, errors.Errorf("scheduling strategy of '%s' is not supported", gsa.Spec.Scheduling)
+	}
+
+	loop(list, func(i int, gs *agonesv1.GameServer) {
+		// only search the same namespace
+		if gs.ObjectMeta.Namespace != gsa.ObjectMeta.Namespace {
+			return
+		}
+
+		for j, sel := range gsa.Spec.Selectors {
+			if selectors[j] == nil && sel.Matches(gs) {
+				selectors[j] = &result{gs: gs, index: i}
+			}
+		}
+	})
+
+	for _, r := range selectors {
+		if r != nil {
+			return r.gs, r.index, nil
+		}
+	}
+
+	return nil, 0, ErrNoGameServer
+}
+
+// findGameServerForAllocationDistributed finds an optimal gameserver, given the
+// set of preferred and required selectors on the GameServerAllocation. This also returns the index
+// that the gameserver was found at in `list`, in case you want to remove it from the list
+// This searches the list from start to finish. It is assumed that all gameservers passed in, are
+// Ready and not being deleted, and are sorted in GameServerAllocationSpec Priority order.
+func findGameServerForAllocationDistributed(gsa *allocationv1.GameServerAllocation, list []*agonesv1.GameServer) (*agonesv1.GameServer, int, error) {
+	type result struct {
+		gs    *agonesv1.GameServer
+		index int
+	}
+
+	selectors := make([]*result, len(gsa.Spec.Selectors))
+
+	loop := func(list []*agonesv1.GameServer, f func(i int, gs *agonesv1.GameServer)) {
+		for i, gs := range list {
+			f(i, gs)
+		}
 	}
 
 	loop(list, func(i int, gs *agonesv1.GameServer) {

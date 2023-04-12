@@ -40,7 +40,7 @@ func TestGameServerAllocationApplyDefaults(t *testing.T) {
 
 	runtime.FeatureTestMutex.Lock()
 	defer runtime.FeatureTestMutex.Unlock()
-	assert.NoError(t, runtime.ParseFeatures(fmt.Sprintf("%s=true&%s=true", runtime.FeaturePlayerAllocationFilter, runtime.FeatureStateAllocationFilter)))
+	assert.NoError(t, runtime.ParseFeatures(fmt.Sprintf("%s=true&%s=true&%s=true", runtime.FeaturePlayerAllocationFilter, runtime.FeatureStateAllocationFilter, runtime.FeatureCountsAndLists)))
 
 	gsa = &GameServerAllocation{}
 	gsa.ApplyDefaults()
@@ -48,6 +48,8 @@ func TestGameServerAllocationApplyDefaults(t *testing.T) {
 	assert.Equal(t, agonesv1.GameServerStateReady, *gsa.Spec.Required.GameServerState)
 	assert.Equal(t, int64(0), gsa.Spec.Required.Players.MaxAvailable)
 	assert.Equal(t, int64(0), gsa.Spec.Required.Players.MinAvailable)
+	assert.Equal(t, []Priority(nil), gsa.Spec.Priorities)
+	assert.Nil(t, gsa.Spec.Priorities)
 }
 
 // nolint // Current lint duplicate threshold will consider this function is a duplication of the function TestGameServerAllocationSpecSelectors
