@@ -118,7 +118,7 @@ func (wq *WorkerQueue) Enqueue(obj interface{}) {
 		runtime.HandleError(wq.logger.WithField("obj", obj), err)
 		return
 	}
-	wq.logger.WithField(wq.keyName, key).Debug("Enqueuing")
+	wq.logger.WithField(wq.keyName, key).Trace("Enqueuing")
 	wq.queue.AddRateLimited(key)
 }
 
@@ -133,7 +133,7 @@ func (wq *WorkerQueue) EnqueueImmediately(obj interface{}) {
 		runtime.HandleError(wq.logger.WithField("obj", obj), err)
 		return
 	}
-	wq.logger.WithField(wq.keyName, key).Debug("Enqueuing immediately")
+	wq.logger.WithField(wq.keyName, key).Trace("Enqueuing immediately")
 	wq.queue.Add(key)
 }
 
@@ -147,7 +147,7 @@ func (wq *WorkerQueue) EnqueueAfter(obj interface{}, duration time.Duration) {
 		return
 	}
 
-	wq.logger.WithField(wq.keyName, key).WithField("duration", duration).Debug("Enqueueing after duration")
+	wq.logger.WithField(wq.keyName, key).WithField("duration", duration).Trace("Enqueueing after duration")
 	wq.queue.AddAfter(key, duration)
 }
 
@@ -183,7 +183,7 @@ func (wq *WorkerQueue) processNextWorkItem(ctx context.Context) bool {
 		// Conflicts are expected, so only show them in debug operations.
 		// Also check is debugError for other expected errors.
 		if k8serror.IsConflict(errors.Cause(err)) || isDebugError(err) {
-			wq.logger.WithField(wq.keyName, obj).Debug(err)
+			wq.logger.WithField(wq.keyName, obj).Trace(err)
 		} else {
 			runtime.HandleError(wq.logger.WithField(wq.keyName, obj), err)
 		}
