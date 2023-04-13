@@ -135,8 +135,10 @@ The GameServer resource does not support updates. If you need to make regular up
 
 {{< alpha title="Stable Network ID" gate="PodHostname" >}}
 
-Each Pod attached to a `GameServer` derives its hostname from the name of the `GameServer`. 
-A group of `Pods` attached to `GameServers` can use a 
+If you want to connect to a `GameServer` from within your Kubernetes cluster via a convention based
+DNS entry, each Pod attached to a `GameServer` automatically derives its hostname from the name of the `GameServer`.
+
+To create internal DNS entries within the cluster, a group of `Pods` attached to `GameServers` can use a 
 [Headless Service](https://kubernetes.io/docs/concepts/services-networking/service/#headless-services) to control 
 the domain of the Pods, along with providing 
 a [`subdomain` value to the `GameServer` `PodTemplateSpec`](https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-s-hostname-and-subdomain-fields)
@@ -148,7 +150,7 @@ this for you, as a stable DNS record is not required for all use cases.
 
 To ensure that the `hostName` value matches
 [RFC 1123](https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#dns-label-names), any `.` values 
-in the `GameServer` name are replaced by `-` when setting the `hostName` value.
+in the `GameServer` name are replaced by `-` when setting the underlying `Pod.Spec.HostName` value.
 
 ## GameServer State Diagram
 
