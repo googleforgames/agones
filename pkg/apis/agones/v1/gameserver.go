@@ -32,6 +32,9 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 )
 
+// GameServerState is the state for the GameServer
+type GameServerState string
+
 const (
 	// GameServerStatePortAllocation is for when a dynamically allocating GameServer
 	// is being created, an open port needs to be allocated
@@ -61,7 +64,12 @@ const (
 	GameServerStateReserved GameServerState = "Reserved"
 	// GameServerStateAllocated is when the GameServer has been allocated to a session
 	GameServerStateAllocated GameServerState = "Allocated"
+)
 
+// PortPolicy is the port policy for the GameServer
+type PortPolicy string
+
+const (
 	// Static PortPolicy means that the user defines the hostPort to be used
 	// in the configuration.
 	Static PortPolicy = "Static"
@@ -71,7 +79,12 @@ const (
 	// Passthrough dynamically sets the `containerPort` to the same value as the dynamically selected hostPort.
 	// This will mean that users will need to lookup what port has been opened through the server side SDK.
 	Passthrough PortPolicy = "Passthrough"
+)
 
+// EvictionSafe specified whether the game server supports termination via SIGTERM
+type EvictionSafe string
+
+const (
 	// EvictionSafeAlways means the game server supports termination via SIGTERM, and wants eviction signals
 	// from Cluster Autoscaler scaledown and node upgrades.
 	EvictionSafeAlways EvictionSafe = "Always"
@@ -81,16 +94,23 @@ const (
 	// EvictionSafeNever means the game server should run to completion and may not understand SIGTERM. Eviction
 	// from ClusterAutoscaler and upgrades should both be blocked.
 	EvictionSafeNever EvictionSafe = "Never"
+)
 
-	// ProtocolTCPUDP Protocol exposes the hostPort allocated for this container for both TCP and UDP.
-	ProtocolTCPUDP corev1.Protocol = "TCPUDP"
+// SdkServerLogLevel is the log level for SDK server (sidecar) logs
+type SdkServerLogLevel string
 
+const (
 	// SdkServerLogLevelInfo will cause the SDK server to output all messages except for debug messages.
 	SdkServerLogLevelInfo SdkServerLogLevel = "Info"
 	// SdkServerLogLevelDebug will cause the SDK server to output all messages including debug messages.
 	SdkServerLogLevelDebug SdkServerLogLevel = "Debug"
 	// SdkServerLogLevelError will cause the SDK server to only output error messages.
 	SdkServerLogLevelError SdkServerLogLevel = "Error"
+)
+
+const (
+	// ProtocolTCPUDP Protocol exposes the hostPort allocated for this container for both TCP and UDP.
+	ProtocolTCPUDP corev1.Protocol = "TCPUDP"
 
 	// RoleLabel is the label in which the Agones role is specified.
 	// Pods from a GameServer will have the value "gameserver"
@@ -212,15 +232,6 @@ type Eviction struct {
 	Safe EvictionSafe `json:"safe,omitempty"`
 }
 
-// GameServerState is the state for the GameServer
-type GameServerState string
-
-// PortPolicy is the port policy for the GameServer
-type PortPolicy string
-
-// EvictionSafe specified whether the game server supports termination via SIGTERM
-type EvictionSafe string
-
 // Health configures health checking on the GameServer
 type Health struct {
 	// Disabled is whether health checking is disabled or not
@@ -254,9 +265,6 @@ type GameServerPort struct {
 	// Protocol is the network protocol being used. Defaults to UDP. TCP and TCPUDP are other options.
 	Protocol corev1.Protocol `json:"protocol,omitempty"`
 }
-
-// SdkServerLogLevel is the log level for SDK server (sidecar) logs
-type SdkServerLogLevel string
 
 // SdkServer specifies parameters for the Agones SDK Server sidecar container
 type SdkServer struct {
