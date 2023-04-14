@@ -48,33 +48,10 @@ steps:
         "echo 'FROM gcr.io/cloud-builders/docker\nRUN apt-get install make\nENTRYPOINT [\"/usr/bin/make\"]' > Dockerfile.build",
       ]
     waitFor: ["-"]
-
+    
   - name: gcr.io/cloud-builders/docker
     id: build-make-docker
     args: ["build", "-f", "Dockerfile.build", "-t", "make-docker", "."]
-
-  #
-  # pull the main build image if it exists
-  #
-  - name: "make-docker"
-    id: pull-build-image
-    dir: "build"
-    env:
-      - "REGISTRY=${_REGISTRY}/ci"
-    args: ["pull-build-image"]
-    waitFor:
-      - build-make-docker
-
-  #
-  # Ensure example images exists
-  #
-  - name: "make-docker"
-    id: test-examples-on-gar
-    dir: "build"
-    env:
-      - "REGISTRY=${_REGISTRY}"
-      - DOCKER_RUN_ARGS=--network=cloudbuild
-    args: ["test-examples-on-gar"]
 
   #
   # Build all the images
@@ -145,4 +122,4 @@ substitutions:
   _CPP_SDK_BUILD_CACHE_KEY: cpp-sdk-build
   _CPP_SDK_CONFORMANCE_CACHE_KEY: cpp-sdk-conformance
   _RUST_SDK_BUILD_CACHE_KEY: rust-sdk-build
-timeout: 18000s
+timeout: 7200s
