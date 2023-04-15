@@ -65,6 +65,21 @@ release-deploy-site:
 	echo "Deploying Site Version: $$version" && \
 	$(MAKE) ENV=HUGO_ENV=snapshot site-deploy SERVICE=$$version
 
+# - Pushes the current chart version to the helm repository hosted on gcs.
+do-release: RELEASE_VERSION ?= $(base_version)
+do-release: $(ensure-build-image)
+	@echo "Starting release for version: $(RELEASE_VERSION)"
+
+	# switch to the right project
+	$(DOCKER_RUN) gcloud config configurations activate agones-images
+
+	git checkout -b release-$(RELEASE_VERSION)	
+	$(MAKE) push-chart VERSION=$(RELEASE_VERSION)
+	git push -u upstream release-$(RELEASE_VERSION)
+
+	@echo "Now go make the $(RELEASE_VERSION) release on Github!"
+
+
 # Ensure the example images exists
 pre-build-release:
 	docker run --rm $(common_mounts) -w $(workdir_path) $(build_tag) \
