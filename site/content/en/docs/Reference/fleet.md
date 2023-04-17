@@ -45,9 +45,9 @@ spec:
       maxUnavailable: 25%
   # [Stage:Alpha]
   # [FeatureFlag:FleetAllocationOverflow]
-  # Labels and/or Annotations to apply to GameServers when the number of Allocated GameServers drops below
-  # the desired replicas on the underlying `GameServerSet`.
-  allocationOverflow: # applied to the GameServerSet's number Allocated GameServers that are over the desired replicas
+  # Labels and/or Annotations to apply to overflowing GameServers when the number of Allocated GameServers is more
+  # than the desired replicas on the underlying `GameServerSet`
+  allocationOverflow:
     labels:
       mykey: myvalue
       version: "" # empty an existing label value

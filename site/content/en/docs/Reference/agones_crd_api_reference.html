@@ -3782,8 +3782,8 @@ AllocationOverflow
 <em>(Optional)</em>
 <p>[Stage: Alpha]
 [FeatureFlag:FleetAllocationOverflow]
-Labels and/or Annotations to apply to GameServers when the number of Allocated GameServers drops below
-the desired replicas on the underlying <code>GameServerSet</code></p>
+Labels and/or Annotations to apply to overflowing GameServers when the number of Allocated GameServers is more
+than the desired replicas on the underlying <code>GameServerSet</code></p>
 </td>
 </tr>
 <tr>
@@ -4388,8 +4388,8 @@ AllocationOverflow
 <em>(Optional)</em>
 <p>[Stage: Alpha]
 [FeatureFlag:FleetAllocationOverflow]
-Labels and/or Annotations to apply to GameServers when the number of Allocated GameServers drops below
-the desired replicas on the underlying <code>GameServerSet</code></p>
+Labels and/or Annotations to apply to overflowing GameServers when the number of Allocated GameServers is more
+than the desired replicas on the underlying <code>GameServerSet</code></p>
 </td>
 </tr>
 <tr>
@@ -5648,6 +5648,23 @@ This is useful for things like smoke testing of new game servers.</p>
 </tr>
 <tr>
 <td>
+<code>priorities</code></br>
+<em>
+<a href="#allocation.agones.dev/v1.Priority">
+[]Priority
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>(Alpha, CountsAndLists feature flag) The first Priority on the array of Priorities is the most
+important for sorting. The allocator will use the first priority for sorting GameServers in the
+Selector set, and will only use any following priority for tie-breaking during sort.
+Impacts which GameServer is checked first.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>selectors</code></br>
 <em>
 <a href="#allocation.agones.dev/v1.GameServerSelector">
@@ -5826,6 +5843,23 @@ that are optional to be fulfilled, but will be searched before the <code>require
 If the first selector is not matched, the selection attempts the second selector, and so on.
 If any of the preferred selectors are matched, the required selector is not considered.
 This is useful for things like smoke testing of new game servers.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>priorities</code></br>
+<em>
+<a href="#allocation.agones.dev/v1.Priority">
+[]Priority
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>(Alpha, CountsAndLists feature flag) The first Priority on the array of Priorities is the most
+important for sorting. The allocator will use the first priority for sorting GameServers in the
+Selector set, and will only use any following priority for tie-breaking during sort.
+Impacts which GameServer is checked first.</p>
 </td>
 </tr>
 <tr>
@@ -6233,6 +6267,60 @@ int64
 <code>maxAvailable</code></br>
 <em>
 int64
+</em>
+</td>
+<td>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="allocation.agones.dev/v1.Priority">Priority
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#allocation.agones.dev/v1.GameServerAllocationSpec">GameServerAllocationSpec</a>)
+</p>
+<p>
+<p>Priority is a sorting option for GameServers with Counters or Lists based on the count or
+number of items in a List.
+PriorityType: Sort by a &ldquo;Counter&rdquo; or a &ldquo;List&rdquo;.
+Key: The name of the Counter or List. If not found on the GameServer, has no impact.
+Order: Sort by &ldquo;Ascending&rdquo; or &ldquo;Descending&rdquo;. Default is &ldquo;Descending&rdquo; so bigger count is preferred.
+&ldquo;Ascending&rdquo; would be smaller count is preferred.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>priorityType</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>key</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>order</code></br>
+<em>
+string
 </em>
 </td>
 <td>
