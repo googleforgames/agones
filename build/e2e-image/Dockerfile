@@ -29,19 +29,6 @@ RUN curl -L  ${HELM_URL} > /tmp/helm.tar.gz \
     && chmod go+rx /usr/local/bin/helm \
     && rm /tmp/helm.tar.gz && rm -rf /tmp/linux-amd64
 
-# set up Consul.
-ENV CONSUL_VERSION=1.2.1
-ENV HASHICORP_RELEASES=https://releases.hashicorp.com
-RUN mkdir -p /tmp/build && \
-    wget ${HASHICORP_RELEASES}/consul/${CONSUL_VERSION}/consul_${CONSUL_VERSION}_linux_amd64.zip \
-    -P /tmp/build/  && \
-    unzip -d /usr/local/bin/ /tmp/build/consul_${CONSUL_VERSION}_linux_amd64.zip && \
-    cd /tmp && \
-    rm -rf /tmp/build && \
-    chmod go+rx /usr/local/bin/consul && \
-    # tiny smoke test to ensure the binary we downloaded runs
-    consul version
-
 # install gotestsum test runner
 RUN go install gotest.tools/gotestsum@latest
 
