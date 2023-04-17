@@ -184,6 +184,10 @@ func TestSidecarRun(t *testing.T) {
 			sc, err := NewSDKServer("test", "default", m.KubeClient, m.AgonesClient)
 			stop := make(chan struct{})
 			defer close(stop)
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+
+			assert.NoError(t, sc.waitForConnection(ctx))
 			sc.informerFactory.Start(stop)
 			assert.True(t, cache.WaitForCacheSync(stop, sc.gameServerSynced))
 
@@ -193,8 +197,6 @@ func TestSidecarRun(t *testing.T) {
 				sc.clock = v.clock
 			}
 
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
 			wg := sync.WaitGroup{}
 			wg.Add(1)
 
@@ -459,16 +461,17 @@ func TestSidecarUnhealthyMessage(t *testing.T) {
 		return true, gs, nil
 	})
 
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 	stop := make(chan struct{})
 	defer close(stop)
 
+	assert.NoError(t, sc.waitForConnection(ctx))
 	sc.informerFactory.Start(stop)
 	assert.True(t, cache.WaitForCacheSync(stop, sc.gameServerSynced))
 
 	sc.recorder = m.FakeRecorder
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
 	go func() {
 		err := sc.Run(ctx)
 		assert.Nil(t, err)
@@ -878,6 +881,7 @@ func TestSDKServerReserveTimeoutOnRun(t *testing.T) {
 	require.NoError(t, err)
 
 	ctx, cancel := context.WithCancel(context.Background())
+	assert.NoError(t, sc.waitForConnection(ctx))
 	sc.informerFactory.Start(ctx.Done())
 	assert.True(t, cache.WaitForCacheSync(ctx.Done(), sc.gameServerSynced))
 
@@ -933,6 +937,7 @@ func TestSDKServerReserveTimeout(t *testing.T) {
 
 	assert.NoError(t, err)
 	ctx, cancel := context.WithCancel(context.Background())
+	assert.NoError(t, sc.waitForConnection(ctx))
 	sc.informerFactory.Start(ctx.Done())
 	assert.True(t, cache.WaitForCacheSync(ctx.Done(), sc.gameServerSynced))
 
@@ -1061,6 +1066,7 @@ func TestSDKServerPlayerCapacity(t *testing.T) {
 		return true, gs, nil
 	})
 
+	assert.NoError(t, sc.waitForConnection(ctx))
 	sc.informerFactory.Start(ctx.Done())
 	assert.True(t, cache.WaitForCacheSync(ctx.Done(), sc.gameServerSynced))
 
@@ -1126,6 +1132,7 @@ func TestSDKServerPlayerConnectAndDisconnectWithoutPlayerTracking(t *testing.T) 
 	sc, err := defaultSidecar(m)
 	require.NoError(t, err)
 
+	assert.NoError(t, sc.waitForConnection(ctx))
 	sc.informerFactory.Start(ctx.Done())
 	assert.True(t, cache.WaitForCacheSync(ctx.Done(), sc.gameServerSynced))
 
@@ -1210,6 +1217,7 @@ func TestSDKServerPlayerConnectAndDisconnect(t *testing.T) {
 		return true, gs, nil
 	})
 
+	assert.NoError(t, sc.waitForConnection(ctx))
 	sc.informerFactory.Start(ctx.Done())
 	assert.True(t, cache.WaitForCacheSync(ctx.Done(), sc.gameServerSynced))
 
@@ -1376,6 +1384,7 @@ func TestSDKServerGracefulTerminationInterrupt(t *testing.T) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	sdkCtx := sc.NewSDKServerContext(ctx)
+	assert.NoError(t, sc.waitForConnection(sdkCtx))
 	sc.informerFactory.Start(sdkCtx.Done())
 	assert.True(t, cache.WaitForCacheSync(sdkCtx.Done(), sc.gameServerSynced))
 
@@ -1444,6 +1453,7 @@ func TestSDKServerGracefulTerminationShutdown(t *testing.T) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	sdkCtx := sc.NewSDKServerContext(ctx)
+	assert.NoError(t, sc.waitForConnection(sdkCtx))
 	sc.informerFactory.Start(sdkCtx.Done())
 	assert.True(t, cache.WaitForCacheSync(sdkCtx.Done(), sc.gameServerSynced))
 
