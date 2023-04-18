@@ -65,11 +65,6 @@ release-deploy-site:
 	echo "Deploying Site Version: $$version" && \
 	$(MAKE) ENV=HUGO_ENV=snapshot site-deploy SERVICE=$$version
 
-# Creates a release. Version defaults to the base_version
-# - Checks out a release branch
-# - Build binaries and images
-# - Creates sdk and binary archives, and moves the into the /release folder for upload
-# - Creates a zip of the install.yaml, LICENCE and README.md for installation
 # - Pushes the current chart version to the helm repository hosted on gcs.
 do-release: RELEASE_VERSION ?= $(base_version)
 do-release: $(ensure-build-image)
@@ -78,23 +73,21 @@ do-release: $(ensure-build-image)
 	# switch to the right project
 	$(DOCKER_RUN) gcloud config configurations activate agones-images
 
-	git checkout -b release-$(RELEASE_VERSION)
-	-rm -rf $(agones_path)/release
-	mkdir $(agones_path)/release
-
-	$(MAKE) -j 4 build VERSION=$(RELEASE_VERSION) REGISTRY=$(release_registry) FULL_BUILD=1
-	cp $(agones_path)/cmd/sdk-server/bin/agonessdk-server-$(RELEASE_VERSION).zip $(agones_path)/release
-	cp $(agones_path)/sdks/cpp/.archives/agonessdk-$(RELEASE_VERSION)-linux-arch_64.tar.gz $(agones_path)/release
-	cd $(agones_path) &&  zip -r ./release/agones-install-$(RELEASE_VERSION).zip ./README.md ./install ./LICENSE
-
-	$(MAKE) gcloud-auth-docker
-	$(MAKE) -j 4 push REGISTRY=$(release_registry) VERSION=$(RELEASE_VERSION)
-
+	git checkout -b release-$(RELEASE_VERSION)	
 	$(MAKE) push-chart VERSION=$(RELEASE_VERSION)
 	git push -u upstream release-$(RELEASE_VERSION)
 
 	@echo "Now go make the $(RELEASE_VERSION) release on Github!"
 
-build-release:
+
+# Ensure the example images exists
+pre-build-release:
 	docker run --rm $(common_mounts) -w $(workdir_path) $(build_tag) \
-		gcloud builds submit . --substitutions _VERSION=$(base_version) --config=./build/release/cloudbuild.yaml $(ARGS)
+		gcloud builds submit . --config=./build/release/pre_cloudbuild.yaml $(ARGS)
+
+# Build and push the images in the release repository,
+# stores artifacts,
+# Pushes the current chart version to the helm repository hosted on gcs.
+post-build-release:
+	docker run --rm $(common_mounts) -w $(workdir_path) $(build_tag) \
+		gcloud builds submit . --substitutions _VERSION=$(base_version) --config=./build/release/post_cloudbuild.yaml $(ARGS)

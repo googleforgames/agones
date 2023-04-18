@@ -15,7 +15,6 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 - [ ] Run `git remote -v` and see:
   - [ ] An `origin` remote that points to a personal fork of Agones, such as `git@github.com:yourname/agones.git`.
   - [ ] An `upstream` remote that points to `git@github.com:googleforgames/agones.git`.
-- [ ] Have a [GitHub Personal Access Token](https://github.com/settings/tokens) with repo permissions.
 - [ ] Have a `gcloud config configurations` configuration called `agones-images` that points to the same project.
 - [ ] Edit access to the [Agones Release Calendar](https://calendar.google.com/calendar/u/0?cid=Z29vZ2xlLmNvbV84MjhuOGYxOGhmYnRyczR2dTRoMXNrczIxOEBncm91cC5jYWxlbmRhci5nb29nbGUuY29t)
 
@@ -33,7 +32,7 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 - [ ] `git checkout main && git pull --rebase upstream main`
 - [ ] Run `make release-deploy-site`
       - For example, if you are creating the {version} release, then this would deploy the {version}-1 service (release minus one, and then replace dots with dashes)
-- [ ] Run `make build-release` to ensure all example images exist on us-docker.pkg.dev/agones-images/examples.
+- [ ] Run `make pre-build-release` to ensure all example images exist on agones-images/examples repository.
 - [ ] Ensure the [helm `tag` value][values] is correct (tag field value in image should be {version})
 - [ ] Ensure the [helm `Chart` version values][chart] are correct (appVersion and version fields value should be {version})
 - [ ] Update SDK Package Versions
@@ -73,13 +72,13 @@ and copy it into a release issue. Fill in relevant values, found inside {}
         to publish.
   - [ ] Run `make sdk-publish-csharp` to deploy to NuGet. Requires login credentials.
         Will need [NuGet API Key](https://www.nuget.org/account/apikeys) from Agones account.
-- [ ] Run `make do-release` to create and push the docker images and helm chart.
+- [ ] Run `make post-build-release` to build the artifacts in GCS(These files will be attached in the release notes) and to push the latest images in the release repository.
 - [ ] Run `make shell` and run `gcloud config configurations activate <your development project>` to switch Agones
       development tooling off of the `agones-images` project.
 - [ ] Do a `helm repo add agones https://agones.dev/chart/stable` / `helm repo update` and verify that the new
       version is available via the command `helm search repo agones --versions --devel`.
 - [ ] Do a `helm install --namespace=agones-system agones agones/agones` or `helm install --create-namespace --namespace=agones-system agones agones/agones` if the namespace was deleted and a smoke test to confirm everything is working.
-- [ ] Attach all assets found in the `release` folder to the draft GitHub Release.
+- [ ] Attach all assets found in the cloud storage with {version} to the draft GitHub Release.
 - [ ] Copy any review changes from the release blog post into the draft GitHub release.
 - [ ] Publish the draft GitHub Release.
 - [ ] Email the [mailing list][list] with the release details (copy-paste the release blog post).

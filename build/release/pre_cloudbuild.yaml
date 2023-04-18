@@ -1,4 +1,4 @@
-# Copyright 2021 Google LLC
+# Copyright 2023 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,6 +13,9 @@
 # limitations under the License.
 
 steps:
+  #
+  # Creates the initial make + docker build platform
+  #
   - name: "ubuntu"
     args:
       [
@@ -26,6 +29,9 @@ steps:
     id: build-make-docker
     args: ["build", "-f", "Dockerfile.build", "-t", "make-docker", "."]
 
+  #
+  # pull the main build image if it exists
+  #
   - name: "make-docker"
     id: pull-build-image
     dir: "build"
@@ -35,6 +41,9 @@ steps:
     waitFor:
       - build-make-docker
 
+  #
+  # Ensure example images exists
+  #
   - name: "make-docker"
     id: test-examples-on-gar
     dir: "build"
