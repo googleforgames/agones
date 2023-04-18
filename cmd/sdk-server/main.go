@@ -122,13 +122,6 @@ func main() {
 		if err != nil {
 			logger.WithError(err).Fatal("Could not create in cluster config")
 		}
-		// The SDK client only ever accesses small amounts of data (single object list /
-		// event updates), latency more than a couple of seconds is excessive. We need to
-		// keep a relatively tight timeout during initialization as well to allow the
-		// informer a chance to retry - the SDK won't reply to /healthz checks until the
-		// informer has synced once, and our liveness configuration only allows 9s before
-		// a positive /healthz.
-		config.Timeout = 3 * time.Second
 
 		var kubeClient *kubernetes.Clientset
 		kubeClient, err = kubernetes.NewForConfig(config)

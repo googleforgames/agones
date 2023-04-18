@@ -24,6 +24,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	typedv1 "k8s.io/client-go/kubernetes/typed/core/v1"
@@ -35,25 +36,25 @@ func TestPingHTTP(t *testing.T) {
 
 	kubeCore := framework.KubeClient.CoreV1()
 	svc, err := kubeCore.Services("agones-system").Get(ctx, "agones-ping-http-service", metav1.GetOptions{})
-	assert.Nil(t, err)
+	require.NoError(t, err)
 
 	ip, err := externalIP(t, kubeCore, svc)
-	assert.Nil(t, err)
+	require.NoError(t, err)
 
 	port := svc.Spec.Ports[0]
 	// gate
 	assert.Equal(t, "http", port.Name)
 	assert.Equal(t, corev1.ProtocolTCP, port.Protocol)
 	p, err := externalPort(svc, port)
-	assert.Nil(t, err)
+	require.NoError(t, err)
 
 	response, err := http.Get(fmt.Sprintf("http://%s:%d", ip, p))
-	assert.Nil(t, err)
+	require.NoError(t, err)
 	defer response.Body.Close() // nolint: errcheck
 
 	assert.Equal(t, http.StatusOK, response.StatusCode)
 	body, err := io.ReadAll(response.Body)
-	assert.Nil(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, []byte("ok"), body)
 }
 
@@ -75,21 +76,21 @@ func TestPingUDP(t *testing.T) {
 
 	kubeCore := framework.KubeClient.CoreV1()
 	svc, err := kubeCore.Services("agones-system").Get(ctx, "agones-ping-udp-service", metav1.GetOptions{})
-	assert.Nil(t, err)
+	require.NoError(t, err)
 
 	externalIP, err := externalIP(t, kubeCore, svc)
-	assert.Nil(t, err)
+	require.NoError(t, err)
 
 	port := svc.Spec.Ports[0]
 	// gate
 	assert.Equal(t, "udp", port.Name)
 	assert.Equal(t, corev1.ProtocolUDP, port.Protocol)
 	p, err := externalPort(svc, port)
-	assert.Nil(t, err)
+	require.NoError(t, err)
 
 	expected := "hello"
 	reply, err := framework.SendUDP(t, fmt.Sprintf("%s:%d", externalIP, p), expected)
-	assert.Nil(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, expected, reply)
 }
 

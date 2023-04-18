@@ -42,6 +42,7 @@ import (
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 	k8sv1 "k8s.io/client-go/kubernetes/typed/core/v1"
@@ -80,6 +81,7 @@ type SDKServer struct {
 	gameServerGetter   typedv1.GameServersGetter
 	gameServerLister   listersv1.GameServerLister
 	gameServerSynced   cache.InformerSynced
+	connected          bool
 	server             *http.Server
 	clock              clock.Clock
 	health             agonesv1.Health
@@ -190,6 +192,9 @@ func NewSDKServer(gameServerName, namespace string, kubeClient kubernetes.Interf
 // Run processes the rate limited queue.
 // Will block until stop is closed
 func (s *SDKServer) Run(ctx context.Context) error {
+	if err := s.waitForConnection(ctx); err != nil {
+		return err
+	}
 	s.informerFactory.Start(ctx.Done())
 	if !cache.WaitForCacheSync(ctx.Done(), s.gameServerSynced) {
 		return errors.New("failed to wait for caches to sync")
@@ -261,6 +266,40 @@ func (s *SDKServer) Run(ctx context.Context) error {
 
 	s.workerqueue.Run(ctx, 1)
 	return nil
+}
+
+// waitForConnection attempts a GameServer GET every 3s until the client responds.
+// This is a workaround for the informer hanging indefinitely on first LIST due
+// to a flaky network to the Kubernetes service endpoint.
+func (s *SDKServer) waitForConnection(ctx context.Context) error {
+	// In normal operaiton, waitForConnection is called exactly once in Run().
+	// In unit tests, waitForConnection() can be called before Run() to ensure
+	// that connected is true when Run() is called, otherwise the List() below
+	// may race with a test that changes a mock. (Despite the fact that we drop
+	// the data on the ground, the Go race detector will pereceive a data race.)
+	if s.connected {
+		return nil
+	}
+
+	try := 0
+	return wait.PollImmediateInfiniteWithContext(ctx, 4*time.Second, func(ctx context.Context) (bool, error) {
+		ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+		defer cancel()
+
+		// Specifically use gameServerGetter since it's the raw client (gameServerLister is the informer).
+		// We use List here to avoid needing permission to Get().
+		_, err := s.gameServerGetter.GameServers(s.namespace).List(ctx, metav1.ListOptions{
+			FieldSelector: fields.OneTermEqualSelector("metadata.name", s.gameServerName).String(),
+		})
+		if err != nil {
+			s.logger.WithField("try", try).WithError(err).Info("Connection to Kubernetes service failed")
+			try++
+			return false, nil
+		}
+		s.logger.WithField("try", try).Info("Connection to Kubernetes service established")
+		s.connected = true
+		return true, nil
+	})
 }
 
 // syncGameServer synchronises the GameServer with the requested operations.
