@@ -153,7 +153,8 @@ As an example, to set up a dedicated node pool for Prometheus on GKE, run the fo
 gcloud container node-pools create agones-metrics --cluster=... --zone=... \
   --node-taints agones.dev/agones-metrics=true:NoExecute \
   --node-labels agones.dev/agones-metrics=true \
-  --num-nodes=1
+  --num-nodes=1 \
+  --machine-type=e2-standard-4
 ```
 
 By default we will disable the push gateway (we don't need it for Agones) and other exporters.

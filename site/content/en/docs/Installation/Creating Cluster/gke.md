@@ -191,7 +191,8 @@ gcloud container node-pools create agones-metrics \
   --no-enable-autoupgrade \
   --node-taints agones.dev/agones-metrics=true:NoExecute \
   --node-labels agones.dev/agones-metrics=true \
-  --num-nodes=1
+  --num-nodes=1 \
+  --machine-type=e2-standard-4
 ```
 
 Flag explanations:
