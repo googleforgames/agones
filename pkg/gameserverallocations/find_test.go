@@ -57,7 +57,7 @@ func TestFindGameServerForAllocationPacked(t *testing.T) {
 		list     []agonesv1.GameServer
 		test     func(*testing.T, []*agonesv1.GameServer)
 		features string
-		gsa  *allocationv1.GameServerAllocation
+		gsa      *allocationv1.GameServerAllocation
 	}{
 		"empty selector": {
 			list: []agonesv1.GameServer{{ObjectMeta: metav1.ObjectMeta{Name: "gs1", Namespace: defaultNs, Labels: oneLabel}, Status: agonesv1.GameServerStatus{NodeName: "node1", State: agonesv1.GameServerStateReady}}},

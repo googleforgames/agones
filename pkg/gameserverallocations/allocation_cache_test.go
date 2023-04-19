@@ -78,7 +78,7 @@ func TestAllocationCacheListSortedGameServers(t *testing.T) {
 		list     []agonesv1.GameServer
 		test     func(*testing.T, []*agonesv1.GameServer)
 		features string
-		gsa  *allocationv1.GameServerAllocation
+		gsa      *allocationv1.GameServerAllocation
 	}{
 		"most allocated": {
 			// node1: 1 ready, 1 allocated, node2: 1 ready
