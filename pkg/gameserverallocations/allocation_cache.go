@@ -232,7 +232,7 @@ func (c *AllocationCache) ListSortedGameServers(gsa *allocationv1.GameServerAllo
 			}
 		}
 
-		// if we end up here, then break the tie with Pounter or List Priority.
+		// if we end up here, then break the tie with Counter or List Priority.
 		if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) && (gsa != nil) {
 			for _, priority := range gsa.Spec.Priorities {
 				res := compareGameServers(&priority, gs1, gs2)
@@ -316,48 +316,6 @@ func compareGameServers(p *allocationv1.Priority, gs1, gs2 *agonesv1.GameServer)
 	}
 	// If neither game server has the Priority
 	return 0
-}
-
-// PrioritySortGameServers returns a list of the cached gameservers sorted by Priorities.
-func (c *AllocationCache) PrioritySortGameServers(gsa *allocationv1.GameServerAllocation) []*agonesv1.GameServer {
-	list := c.getGameServers()
-	if list == nil {
-		return []*agonesv1.GameServer{}
-	}
-
-	if gsa == nil {
-		return list
-	}
-
-	sort.Slice(list, func(i, j int) bool {
-		gs1 := list[i]
-		gs2 := list[j]
-
-		for _, priority := range gsa.Spec.Priorities {
-			res := compareGameServers(&priority, gs1, gs2)
-			switch priority.Order {
-			case allocationv1.GameServerAllocationAscending:
-				if res == -1 {
-					return true
-				}
-				if res == 1 {
-					return false
-				}
-			case allocationv1.GameServerAllocationDescending, "":
-				if res == -1 {
-					return false
-				}
-				if res == 1 {
-					return true
-				}
-			}
-		}
-
-		// if neither game server has any Priority
-		return true
-	})
-
-	return list
 }
 
 // SyncGameServers synchronises the GameServers to Gameserver cache. This is called when a failure

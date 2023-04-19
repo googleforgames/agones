@@ -221,7 +221,7 @@ func TestAllocationCacheListSortedGameServers(t *testing.T) {
 	}
 }
 
-func TestAllocationCachePrioritySortGameServers(t *testing.T) {
+func TestAllocationCacheCompareGameServers(t *testing.T) {
 	t.Parallel()
 	runtime.FeatureTestMutex.Lock()
 	defer runtime.FeatureTestMutex.Unlock()
@@ -239,7 +239,7 @@ func TestAllocationCachePrioritySortGameServers(t *testing.T) {
 					Capacity: 100,
 				}}}}
 	gs2 := agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs2", Namespace: defaultNs, UID: "2"},
-		Status: agonesv1.GameServerStatus{NodeName: "node2", State: agonesv1.GameServerStateReady,
+		Status: agonesv1.GameServerStatus{NodeName: "node1", State: agonesv1.GameServerStateReady,
 			Lists: map[string]agonesv1.ListStatus{
 				"players": {
 					Values:   []string{},
@@ -253,7 +253,7 @@ func TestAllocationCachePrioritySortGameServers(t *testing.T) {
 				},
 			}}}
 	gs3 := agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs3", Namespace: defaultNs, UID: "3"},
-		Status: agonesv1.GameServerStatus{NodeName: "node1", State: agonesv1.GameServerStateAllocated,
+		Status: agonesv1.GameServerStatus{NodeName: "node1", State: agonesv1.GameServerStateReady,
 			Lists: map[string]agonesv1.ListStatus{
 				"players": {
 					Values:   []string{"player2", "player3"},
@@ -270,7 +270,7 @@ func TestAllocationCachePrioritySortGameServers(t *testing.T) {
 				},
 			}}}
 	gs4 := agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs4", Namespace: defaultNs, UID: "4"},
-		Status: agonesv1.GameServerStatus{NodeName: "node2", State: agonesv1.GameServerStateReady,
+		Status: agonesv1.GameServerStatus{NodeName: "node1", State: agonesv1.GameServerStateReady,
 			Counters: map[string]agonesv1.CounterStatus{
 				"sessions": {
 					Count:    99,
@@ -538,7 +538,7 @@ func TestAllocationCachePrioritySortGameServers(t *testing.T) {
 			err = cache.counter.Run(ctx, 0)
 			assert.Nil(t, err)
 
-			got := cache.PrioritySortGameServers(testScenario.gsa)
+			got := cache.ListSortedGameServers(testScenario.gsa)
 
 			assert.Equal(t, testScenario.want, got)
 		})
