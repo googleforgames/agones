@@ -353,6 +353,167 @@ func TestGameServerSelectorValidate(t *testing.T) {
 	}
 }
 
+func TestGameServerPriorityValidate(t *testing.T) {
+	t.Parallel()
+
+	runtime.FeatureTestMutex.Lock()
+	defer runtime.FeatureTestMutex.Unlock()
+	assert.NoError(t, runtime.ParseFeatures(fmt.Sprintf("%s=true", runtime.FeatureCountsAndLists)))
+
+	type expected struct {
+		valid    bool
+		causeLen int
+		fields   []string
+	}
+
+	fixtures := map[string]struct {
+		gsa      *GameServerAllocation
+		expected expected
+	}{
+		"valid Counter Ascending": {
+			gsa: &GameServerAllocation{
+				Spec: GameServerAllocationSpec{Priorities: []Priority{
+					{
+						PriorityType: "Counter",
+						Key:          "Foo",
+						Order:        "Ascending",
+					},
+				},
+				},
+			},
+			expected: expected{
+				valid:    true,
+				causeLen: 0,
+			},
+		},
+		"valid Counter Descending": {
+			gsa: &GameServerAllocation{
+				Spec: GameServerAllocationSpec{Priorities: []Priority{
+					{
+						PriorityType: "Counter",
+						Key:          "Bar",
+						Order:        "Descending",
+					},
+				},
+				},
+			},
+			expected: expected{
+				valid:    true,
+				causeLen: 0,
+			},
+		},
+		"valid Counter empty Order": {
+			gsa: &GameServerAllocation{
+				Spec: GameServerAllocationSpec{Priorities: []Priority{
+					{
+						PriorityType: "Counter",
+						Key:          "Bar",
+						Order:        "",
+					},
+				},
+				},
+			},
+			expected: expected{
+				valid:    true,
+				causeLen: 0,
+			},
+		},
+		"invalid counter type and order": {
+			gsa: &GameServerAllocation{
+				Spec: GameServerAllocationSpec{Priorities: []Priority{
+					{
+						PriorityType: "counter",
+						Key:          "Babar",
+						Order:        "descending",
+					},
+				},
+				},
+			},
+			expected: expected{
+				valid:    false,
+				causeLen: 2,
+			},
+		},
+		"valid List Ascending": {
+			gsa: &GameServerAllocation{
+				Spec: GameServerAllocationSpec{Priorities: []Priority{
+					{
+						PriorityType: "List",
+						Key:          "Baz",
+						Order:        "Ascending",
+					},
+				},
+				},
+			},
+			expected: expected{
+				valid:    true,
+				causeLen: 0,
+			},
+		},
+		"valid List Descending": {
+			gsa: &GameServerAllocation{
+				Spec: GameServerAllocationSpec{Priorities: []Priority{
+					{
+						PriorityType: "List",
+						Key:          "Blerg",
+						Order:        "Descending",
+					},
+				},
+				},
+			},
+			expected: expected{
+				valid:    true,
+				causeLen: 0,
+			},
+		},
+		"valid List empty Order": {
+			gsa: &GameServerAllocation{
+				Spec: GameServerAllocationSpec{Priorities: []Priority{
+					{
+						PriorityType: "List",
+						Key:          "Blerg",
+						Order:        "Ascending",
+					},
+				},
+				},
+			},
+			expected: expected{
+				valid:    true,
+				causeLen: 0,
+			},
+		},
+		"invalid list type and order": {
+			gsa: &GameServerAllocation{
+				Spec: GameServerAllocationSpec{Priorities: []Priority{
+					{
+						PriorityType: "list",
+						Key:          "Schmorg",
+						Order:        "ascending",
+					},
+				},
+				},
+			},
+			expected: expected{
+				valid:    false,
+				causeLen: 2,
+			},
+		},
+	}
+
+	for k, v := range fixtures {
+		t.Run(k, func(t *testing.T) {
+			v.gsa.ApplyDefaults()
+			causes, valid := v.gsa.Validate()
+			assert.Equal(t, v.expected.valid, valid)
+			assert.Len(t, causes, v.expected.causeLen)
+
+			for i := range v.expected.fields {
+				assert.Equal(t, v.expected.fields[i], causes[i].Field)
+			}
+		})
+	}
+}
+
 func TestMetaPatchValidate(t *testing.T) {
 	t.Parallel()
 
