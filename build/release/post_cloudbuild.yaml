@@ -48,7 +48,7 @@ steps:
         "echo 'FROM gcr.io/cloud-builders/docker\nRUN apt-get install make\nENTRYPOINT [\"/usr/bin/make\"]' > Dockerfile.build",
       ]
     waitFor: ["-"]
-    
+
   - name: gcr.io/cloud-builders/docker
     id: build-make-docker
     args: ["build", "-f", "Dockerfile.build", "-t", "make-docker", "."]
@@ -111,6 +111,19 @@ steps:
     args:
       - "-c"
       - zip -r agones-install-${_VERSION}.zip ./README.md ./install ./LICENSE | gsutil -m cp -r agones-install-${_VERSION}.zip $_STORAGE
+
+  #
+  # Pushes the current chart version to the helm repository hosted on gcs.
+  #
+  - name: "make-docker"
+    id: push-chart
+    waitFor:
+      - build-images
+      - push-images
+    dir: "build"
+    env:
+      - "VERSION=${_VERSION}"
+    args: ["push-chart"]
 
 options:
   machineType: E2_HIGHCPU_32
