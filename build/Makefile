@@ -282,7 +282,7 @@ build-chart: $(ensure-build-image)
 
 # push the current chart to google cloud storage and update the index
 push-chart: $(ensure-build-image) build-chart
-	docker run --network=cloudbuild --rm $(common_mounts) -w $(workdir_path) $(build_tag) bash -c \
+	docker run $(DOCKER_RUN_ARGS) --rm $(common_mounts) -w $(workdir_path) $(build_tag) bash -c \
 		"gsutil copy gs://$(GCP_BUCKET_CHARTS)/index.yaml ./install/helm/bin/index.yaml || /bin/true && \
 		helm repo index --merge ./install/helm/bin/index.yaml ./install/helm/bin && \
 		cat ./install/helm/bin/index.yaml && ls ./install/helm/bin/ && \
