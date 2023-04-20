@@ -35,6 +35,14 @@ const (
 	// GameServerAllocationContention when the allocation is unsuccessful
 	// because of contention
 	GameServerAllocationContention GameServerAllocationState = "Contention"
+	// GameServerAllocationPriorityCounter is a PriorityType for sorting Game Servers by Counter
+	GameServerAllocationPriorityCounter string = "Counter"
+	// GameServerAllocationPriorityList is a PriorityType for sorting Game Servers by List
+	GameServerAllocationPriorityList string = "List"
+	// GameServerAllocationAscending is a Priority Order where the smaller count is preferred in sorting.
+	GameServerAllocationAscending string = "Ascending"
+	// GameServerAllocationDescending is a Priority Order where the larger count is preferred in sorting.
+	GameServerAllocationDescending string = "Descending"
 )
 
 // GameServerAllocationState is the Allocation state
@@ -81,6 +89,13 @@ type GameServerAllocationSpec struct {
 	// If any of the preferred selectors are matched, the required selector is not considered.
 	// This is useful for things like smoke testing of new game servers.
 	Preferred []GameServerSelector `json:"preferred,omitempty"`
+
+	// (Alpha, CountsAndLists feature flag) The first Priority on the array of Priorities is the most
+	// important for sorting. The allocator will use the first priority for sorting GameServers in the
+	// Selector set, and will only use any following priority for tie-breaking during sort.
+	// Impacts which GameServer is checked first.
+	// +optional
+	Priorities []Priority `json:"priorities,omitempty"`
 
 	// Ordered list of GameServer label selectors.
 	// If the first selector is not matched, the selection attempts the second selector, and so on.
@@ -484,6 +499,41 @@ func (mp *MetaPatch) Validate() ([]metav1.StatusCause, bool) {
 	return causes, len(causes) == 0
 }
 
+// Priority is a sorting option for GameServers with Counters or Lists based on the count or
+// number of items in a List.
+// PriorityType: Sort by a "Counter" or a "List".
+// Key: The name of the Counter or List. If not found on the GameServer, has no impact.
+// Order: Sort by "Ascending" or "Descending". Default is "Descending" so bigger count is preferred.
+// "Ascending" would be smaller count is preferred.
+type Priority struct {
+	PriorityType string `json:"priorityType"`
+	Key          string `json:"key"`
+	Order        string `json:"order"`
+}
+
+// Validate returns if the Priority is valid.
+func (p *Priority) validate(field string) ([]metav1.StatusCause, bool) {
+	var causes []metav1.StatusCause
+
+	if !(p.PriorityType == GameServerAllocationPriorityCounter || p.PriorityType == GameServerAllocationPriorityList) {
+		causes = append(causes, metav1.StatusCause{
+			Type:    metav1.CauseTypeFieldValueInvalid,
+			Message: "Priority.Sort must be either `Counter` or `List`",
+			Field:   field,
+		})
+	}
+
+	if !(p.Order == GameServerAllocationAscending || p.Order == GameServerAllocationDescending || p.Order == "") {
+		causes = append(causes, metav1.StatusCause{
+			Type:    metav1.CauseTypeFieldValueInvalid,
+			Message: "Priority.Order must be either `Ascending` or `Descending`",
+			Field:   field,
+		})
+	}
+
+	return causes, len(causes) == 0
+}
+
 // GameServerAllocationStatus is the status for an GameServerAllocation resource
 type GameServerAllocationStatus struct {
 	// GameServerState is the current state of an GameServerAllocation, e.g. Allocated, or UnAllocated
@@ -544,6 +594,22 @@ func (gsa *GameServerAllocation) Validate() ([]metav1.StatusCause, bool) {
 	for i := range gsa.Spec.Selectors {
 		if c, ok := gsa.Spec.Selectors[i].Validate(fmt.Sprintf("spec.selectors[%d]", i)); !ok {
 			causes = append(causes, c...)
+		}
+	}
+
+	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) && (gsa.Spec.Priorities != nil) {
+		causes = append(causes, metav1.StatusCause{
+			Type:    metav1.CauseTypeFieldValueInvalid,
+			Message: "Feature CountsAndLists must be enabled if Priorities is specified",
+			Field:   "spec.priorities",
+		})
+	}
+
+	if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) && (gsa.Spec.Priorities != nil) {
+		for i := range gsa.Spec.Priorities {
+			if c, ok := gsa.Spec.Priorities[i].validate(fmt.Sprintf("spec.priorities[%d]", i)); !ok {
+				causes = append(causes, c...)
+			}
 		}
 	}
 
