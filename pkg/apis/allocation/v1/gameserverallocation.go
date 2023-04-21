@@ -109,6 +109,12 @@ type GameServerAllocationSpec struct {
 	// MetaPatch is optional custom metadata that is added to the game server at allocation
 	// You can use this to tell the server necessary session data
 	MetaPatch MetaPatch `json:"metadata,omitempty"`
+
+	// (Alpha, CountsAndLists feature flag) Counters and Lists provide a set of actions to perform
+	// on Counters and Lists during allocation.
+	// +optional
+	Counters map[string]CounterAction `json:"counters,omitempty"`
+	Lists    map[string]ListAction    `json:"lists,omitempty"`
 }
 
 // GameServerSelector contains all the filter options for selecting
@@ -164,6 +170,24 @@ type ListSelector struct {
 	ContainsValue string `json:"containsValue"`
 	MinAvailable  int64  `json:"minAvailable"`
 	MaxAvailable  int64  `json:"maxAvailable"`
+}
+
+// CounterAction is an optional action that can be performed on a Counter at allocation.
+// Action: "Increment" or "Decrement" the Counter's Count (optional). Must also define the Amount.
+// Amount: The amount to increment or decrement the Count (optional). Must be a positive integer.
+// Capacity: Update the maximum capacity of the Counter to this number (optional). Min 0, Max int64.
+type CounterAction struct {
+	Action   *string `json:"action,omitempty"`
+	Amount   *int64  `json:"amount,omitempty"`
+	Capacity *int64  `json:"capacity,omitempty"`
+}
+
+// ListAction is an optional action that can be performed on a List at allocation.
+// AddValues: Append values to a List's Values array (optional). Any duplicate values will be ignored.
+// Capacity: Update the maximum capacity of the Counter to this number (optional). Min 0, Max 1000.
+type ListAction struct {
+	AddValues *[]string `json:"addValues,omitempty"`
+	Capacity  *int64    `json:"capacity,omitempty"`
 }
 
 // ApplyDefaults applies default values
@@ -268,6 +292,29 @@ func (s *GameServerSelector) matchCounters(gs *agonesv1.GameServer) bool {
 		}
 	}
 	return true
+}
+
+// CounterActions attempts to peform any actions from the CounterAction on the GameServer Counter.
+// TODO: Silent no-op on all actions if one cannot be performed? Or silent no-op on the action that can't be performed?
+// Silent no-op if unable to perform the action.
+func (ca *CounterAction) CounterActions(counter string, gs *agonesv1.GameServer) {
+	if ca.Capacity != nil {
+		gs.UpdateCounterCapacity(counter, *ca.Capacity)
+	}
+	if ca.Action != nil && ca.Amount != nil {
+		gs.UpdateCount(counter, *ca.Action, *ca.Amount)
+	}
+}
+
+// ListActions attempts to peform any actions from the ListAction on the GameServer List.
+// Silent no-op if unable to perform the action.
+func (la *ListAction) ListActions(list string, gs *agonesv1.GameServer) {
+	if la.Capacity != nil {
+		gs.UpdateListCapacity(list, *la.Capacity)
+	}
+	if la.AddValues != nil {
+		gs.AppendListValues(list, *la.AddValues)
+	}
 }
 
 // matchLists returns true if there is a match for the ListSelector in the GameServerStatus

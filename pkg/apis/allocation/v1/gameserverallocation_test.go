@@ -1016,6 +1016,191 @@ func TestGameServerSelectorMatches(t *testing.T) {
 	}
 }
 
+// Helper function for creating int64 pointers
+func int64Pointer(x int64) *int64 {
+	return &x
+}
+
+func TestGameServerCounterActions(t *testing.T) {
+	t.Parallel()
+
+	runtime.FeatureTestMutex.Lock()
+	defer runtime.FeatureTestMutex.Unlock()
+	assert.NoError(t, runtime.ParseFeatures(fmt.Sprintf("%s=true", runtime.FeatureCountsAndLists)))
+
+	DECREMENT := "Decrement"
+	INCREMENT := "Increment"
+
+	testScenarios := map[string]struct {
+		ca      CounterAction
+		counter string
+		gs      *agonesv1.GameServer
+		want    *agonesv1.GameServer
+	}{
+		"update counter capacity": {
+			ca: CounterAction{
+				Capacity: int64Pointer(0),
+			},
+			counter: "mages",
+			gs: &agonesv1.GameServer{Status: agonesv1.GameServerStatus{
+				Counters: map[string]agonesv1.CounterStatus{
+					"mages": {
+						Count:    1,
+						Capacity: 100,
+					}}}},
+			want: &agonesv1.GameServer{Status: agonesv1.GameServerStatus{
+				Counters: map[string]agonesv1.CounterStatus{
+					"mages": {
+						Count:    1,
+						Capacity: 0,
+					}}}},
+		},
+		"update counter count": {
+			ca: CounterAction{
+				Action: &INCREMENT,
+				Amount: int64Pointer(10),
+			},
+			counter: "baddies",
+			gs: &agonesv1.GameServer{Status: agonesv1.GameServerStatus{
+				Counters: map[string]agonesv1.CounterStatus{
+					"baddies": {
+						Count:    1,
+						Capacity: 100,
+					}}}},
+			want: &agonesv1.GameServer{Status: agonesv1.GameServerStatus{
+				Counters: map[string]agonesv1.CounterStatus{
+					"baddies": {
+						Count:    11,
+						Capacity: 100,
+					}}}},
+		},
+		"update counter count and capacity": {
+			ca: CounterAction{
+				Action:   &DECREMENT,
+				Amount:   int64Pointer(10),
+				Capacity: int64Pointer(10),
+			},
+			counter: "heroes",
+			gs: &agonesv1.GameServer{Status: agonesv1.GameServerStatus{
+				Counters: map[string]agonesv1.CounterStatus{
+					"heroes": {
+						Count:    11,
+						Capacity: 100,
+					}}}},
+			want: &agonesv1.GameServer{Status: agonesv1.GameServerStatus{
+				Counters: map[string]agonesv1.CounterStatus{
+					"heroes": {
+						Count:    1,
+						Capacity: 10,
+					}}}},
+		},
+	}
+
+	for test, testScenario := range testScenarios {
+		t.Run(test, func(t *testing.T) {
+			testScenario.ca.CounterActions(testScenario.counter, testScenario.gs)
+			assert.Equal(t, testScenario.want, testScenario.gs)
+		})
+	}
+}
+
+func TestGameServerListActions(t *testing.T) {
+	t.Parallel()
+
+	runtime.FeatureTestMutex.Lock()
+	defer runtime.FeatureTestMutex.Unlock()
+	assert.NoError(t, runtime.ParseFeatures(fmt.Sprintf("%s=true", runtime.FeatureCountsAndLists)))
+
+	testScenarios := map[string]struct {
+		la   ListAction
+		list string
+		gs   *agonesv1.GameServer
+		want *agonesv1.GameServer
+	}{
+		"update list capacity": {
+			la: ListAction{
+				Capacity: int64Pointer(0),
+			},
+			list: "pages",
+			gs: &agonesv1.GameServer{Status: agonesv1.GameServerStatus{
+				Lists: map[string]agonesv1.ListStatus{
+					"pages": {
+						Values:   []string{"page1", "page2"},
+						Capacity: 100,
+					}}}},
+			want: &agonesv1.GameServer{Status: agonesv1.GameServerStatus{
+				Lists: map[string]agonesv1.ListStatus{
+					"pages": {
+						Values:   []string{"page1", "page2"},
+						Capacity: 0,
+					}}}},
+		},
+		"update list values": {
+			la: ListAction{
+				AddValues: &[]string{"sage1", "sage3"},
+			},
+			list: "sages",
+			gs: &agonesv1.GameServer{Status: agonesv1.GameServerStatus{
+				Lists: map[string]agonesv1.ListStatus{
+					"sages": {
+						Values:   []string{"sage1", "sage2"},
+						Capacity: 100,
+					}}}},
+			want: &agonesv1.GameServer{Status: agonesv1.GameServerStatus{
+				Lists: map[string]agonesv1.ListStatus{
+					"sages": {
+						Values:   []string{"sage1", "sage2", "sage3"},
+						Capacity: 100,
+					}}}},
+		},
+		"update list values and capacity": {
+			la: ListAction{
+				AddValues: &[]string{"magician1", "magician3"},
+				Capacity:  int64Pointer(42),
+			},
+			list: "magicians",
+			gs: &agonesv1.GameServer{Status: agonesv1.GameServerStatus{
+				Lists: map[string]agonesv1.ListStatus{
+					"magicians": {
+						Values:   []string{"magician1", "magician2"},
+						Capacity: 100,
+					}}}},
+			want: &agonesv1.GameServer{Status: agonesv1.GameServerStatus{
+				Lists: map[string]agonesv1.ListStatus{
+					"magicians": {
+						Values:   []string{"magician1", "magician2", "magician3"},
+						Capacity: 42,
+					}}}},
+		},
+		"update list values and capacity - value add fails": {
+			la: ListAction{
+				AddValues: &[]string{"fairy1", "fairy3"},
+				Capacity:  int64Pointer(2),
+			},
+			list: "fairies",
+			gs: &agonesv1.GameServer{Status: agonesv1.GameServerStatus{
+				Lists: map[string]agonesv1.ListStatus{
+					"fairies": {
+						Values:   []string{"fairy1", "fairy2"},
+						Capacity: 100,
+					}}}},
+			want: &agonesv1.GameServer{Status: agonesv1.GameServerStatus{
+				Lists: map[string]agonesv1.ListStatus{
+					"fairies": {
+						Values:   []string{"fairy1", "fairy2"},
+						Capacity: 2,
+					}}}},
+		},
+	}
+
+	for test, testScenario := range testScenarios {
+		t.Run(test, func(t *testing.T) {
+			testScenario.la.ListActions(testScenario.list, testScenario.gs)
+			assert.Equal(t, testScenario.want, testScenario.gs)
+		})
+	}
+}
+
 func TestGameServerAllocationValidate(t *testing.T) {
 	t.Parallel()
 

@@ -926,3 +926,83 @@ func (gs *GameServer) Patch(delta *GameServer) ([]byte, error) {
 	result, err = json.Marshal(patch)
 	return result, errors.Wrapf(err, "error creating json for patch for GameServer %s", gs.ObjectMeta.Name)
 }
+
+// UpdateCount increments or decrements a CounterStatus on a Game Server by the given amount.
+// TODO: Should we log on noncomplemention or return false? Issue #2716 asks for "silent no-op"
+func (gs *GameServer) UpdateCount(name string, action string, amount int64) {
+	if !(action == GameServerAllocationIncrement || action == GameServerAllocationDecrement) || amount < 0 {
+		return
+	}
+	if counter, ok := gs.Status.Counters[name]; ok {
+		cnt := counter.Count
+		if action == GameServerAllocationIncrement {
+			cnt += amount
+		}
+		if action == GameServerAllocationDecrement {
+			cnt -= amount
+		}
+		// TODO: Can we force the Capacity to update first before updating the Count if CounterAction updates both?
+		if (cnt < 0) || (cnt > counter.Capacity) {
+			return
+		}
+		counter.Count = cnt
+		gs.Status.Counters[name] = counter
+	}
+}
+
+// UpdateCounterCapacity updates the CounterStatus Capacity to the given capacity. Silent no-op.
+// TODO: Do anything if Capacity is updated to be less than the current Count?
+func (gs *GameServer) UpdateCounterCapacity(name string, capacity int64) {
+	if capacity < 0 {
+		return
+	}
+	if counter, ok := gs.Status.Counters[name]; ok {
+		counter.Capacity = capacity
+		gs.Status.Counters[name] = counter
+	}
+}
+
+// UpdateListCapacity updates the ListStatus Capacity to the given capacity. Silent no-op.
+func (gs *GameServer) UpdateListCapacity(name string, capacity int64) {
+	if capacity < 0 || capacity > 1000 {
+		return
+	}
+	if list, ok := gs.Status.Lists[name]; ok {
+		list.Capacity = capacity
+		gs.Status.Lists[name] = list
+	}
+}
+
+// AppendListValues adds given the values to the ListStatus Values list. Any duplicates are silently
+// dropped. Silent no-op.
+func (gs *GameServer) AppendListValues(name string, values []string) {
+	if len(values) == 0 {
+		return
+	}
+	if list, ok := gs.Status.Lists[name]; ok {
+		vals := []string{}
+		// Maintain ordering so new values are appended to the end of list.Values
+		vals = append(vals, list.Values...)
+		vals = append(vals, values...)
+		vals = removeDuplicates(vals)
+		if (len(vals) > int(list.Capacity)) || (len(vals) == len(list.Values)) {
+			return
+		}
+		// TODO: Do we need deepcopy here?
+		list.Values = vals
+		gs.Status.Lists[name] = list
+	}
+}
+
+// removeDuplicates removes any duplicate values from a list. Returns new list with unique values only.
+func removeDuplicates(values []string) []string {
+	listMap := make(map[string]bool)
+	uniqueValues := []string{}
+	for _, v := range values {
+		if _, ok := listMap[v]; !ok {
+			uniqueValues = append(uniqueValues, v)
+			listMap[v] = true
+		}
+	}
+	return uniqueValues
+}
