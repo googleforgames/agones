@@ -137,6 +137,7 @@ func TestMigrationControllerSyncGameServer(t *testing.T) {
 					assert.Equal(t, ipChangeFixture, gs.Status.Address)
 				},
 				postTests: func(t *testing.T, m agtesting.Mocks) {
+					agtesting.AssertEventContains(t, m.FakeRecorder.Events, "Warning Scheduled GameServer/Node address mismatch: gs.Name=test: gs.Status.Address=12.12.12.12, node.Status.Addresses=99.99.99.99")
 					agtesting.AssertEventContains(t, m.FakeRecorder.Events, "Warning Scheduled Address updated due to Node migration")
 				},
 			},
