@@ -510,7 +510,7 @@ func (c *Allocator) ListenAndAllocate(ctx context.Context, updateWorkerCount int
 			}
 
 			if list == nil {
-				list = c.allocationCache.ListSortedGameServers()
+				list = c.allocationCache.ListSortedGameServers(req.gsa)
 			}
 
 			gs, index, err := findGameServerForAllocation(req.gsa, list)
