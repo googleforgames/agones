@@ -16,6 +16,8 @@ package gameservers
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	"agones.dev/agones/pkg/apis/agones"
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
@@ -30,6 +32,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
+	k8sv1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/informers"
@@ -179,12 +182,8 @@ func (mc *MigrationController) syncGameServer(ctx context.Context, key string) e
 	if err != nil {
 		return errors.Wrapf(err, "error retrieving node %s for Pod %s", pod.Spec.NodeName, pod.ObjectMeta.Name)
 	}
-	address, err := address(node)
-	if err != nil {
-		return err
-	}
 
-	if pod.Spec.NodeName != gs.Status.NodeName || address != gs.Status.Address {
+	if pod.Spec.NodeName != gs.Status.NodeName || !mc.anyAddressMatch(node, gs) {
 		gsCopy := gs.DeepCopy()
 
 		var eventMsg string
@@ -210,4 +209,18 @@ func (mc *MigrationController) syncGameServer(ctx context.Context, key string) e
 	}
 
 	return nil
+}
+
+func (mc *MigrationController) anyAddressMatch(node *k8sv1.Node, gs *agonesv1.GameServer) bool {
+	nodeAddresses := []string{}
+	for _, a := range node.Status.Addresses {
+		if a.Address == gs.Status.Address {
+			return true
+		}
+		nodeAddresses = append(nodeAddresses, a.Address)
+	}
+	eventMsg := fmt.Sprintf("GameServer/Node address mismatch: gs.Name=%s: gs.Status.Address=%s, node.Status.Addresses=%s",
+		gs.Name, gs.Status.Address, strings.Join(nodeAddresses, ","))
+	mc.recorder.Event(gs, corev1.EventTypeWarning, string(gs.Status.State), eventMsg)
+	return false
 }
