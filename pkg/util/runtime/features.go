@@ -60,15 +60,15 @@ const (
 	// FeaturePodHostname enables the Pod Hostname being assigned the name of the GameServer
 	FeaturePodHostname = "PodHostname"
 
+	// FeatureFleetAllocateOverflow enables setting labels and/or annotations on Allocated GameServers
+	// if the desired number of the underlying GameServerSet drops below the number of Allocated GameServers.
+	FeatureFleetAllocateOverflow = "FleetAllocationOverflow"
+
 	// FeatureSplitControllerAndExtensions is a feature flag that will split agones-controller into two deployments
 	FeatureSplitControllerAndExtensions = "SplitControllerAndExtensions"
 
 	////////////////
 	// "Pre"-Alpha features
-
-	// FeatureFleetAllocateOverflow enables setting labels and/or annotations on Allocated GameServers
-	// if the desired number of the underlying GameServerSet drops below the number of Allocated GameServers
-	FeatureFleetAllocateOverflow = "FleetAllocationOverflow"
 
 	// FeatureCountsAndLists is a feature flag that enables/disables counts and lists feature
 	// (a generic implenetation of the player tracking feature).
@@ -119,11 +119,11 @@ var (
 		FeaturePlayerTracking:               false,
 		FeatureResetMetricsOnDelete:         false,
 		FeaturePodHostname:                  false,
+		FeatureFleetAllocateOverflow:        false,
 		FeatureSplitControllerAndExtensions: false,
 
 		// Pre-Alpha features
-		FeatureCountsAndLists:        false,
-		FeatureFleetAllocateOverflow: false,
+		FeatureCountsAndLists: false,
 
 		// Example feature
 		FeatureExample: false,

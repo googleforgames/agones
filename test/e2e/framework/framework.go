@@ -315,6 +315,30 @@ func (f *Framework) CycleAllocations(ctx context.Context, t *testing.T, flt *ago
 	}
 }
 
+// ScaleFleet will scale a Fleet with retries to a specified replica size.
+func (f *Framework) ScaleFleet(t *testing.T, log *logrus.Entry, flt *agonesv1.Fleet, replicas int32) {
+	fleets := f.AgonesClient.AgonesV1().Fleets(f.Namespace)
+	ctx := context.Background()
+
+	require.Eventuallyf(t, func() bool {
+		flt, err := fleets.Get(ctx, flt.ObjectMeta.Name, metav1.GetOptions{})
+		if err != nil {
+			log.WithError(err).Info("Could not get Fleet")
+			return false
+		}
+
+		fltCopy := flt.DeepCopy()
+		fltCopy.Spec.Replicas = replicas
+		_, err = fleets.Update(ctx, fltCopy, metav1.UpdateOptions{})
+		if err != nil {
+			log.WithError(err).Info("Could not scale Fleet")
+			return false
+		}
+
+		return true
+	}, 5*time.Minute, time.Second, "Could not scale Fleet %s", flt.ObjectMeta.Name)
+}
+
 // AssertFleetCondition waits for the Fleet to be in a specific condition or fails the test if the condition can't be met in 5 minutes.
 func (f *Framework) AssertFleetCondition(t *testing.T, flt *agonesv1.Fleet, condition func(*logrus.Entry, *agonesv1.Fleet) bool) {
 	err := f.WaitForFleetCondition(t, flt, condition)

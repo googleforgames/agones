@@ -43,6 +43,16 @@ spec:
       maxSurge: 25%
       # the amount to decrements GameServers by. Defaults to 25%
       maxUnavailable: 25%
+  # [Stage:Alpha]
+  # [FeatureFlag:FleetAllocationOverflow]
+  # Labels and/or Annotations to apply to overflowing GameServers when the number of Allocated GameServers is more
+  # than the desired replicas on the underlying `GameServerSet`
+  allocationOverflow:
+    labels:
+      mykey: myvalue
+      version: "" # empty an existing label value
+    annotations:
+      otherkey: setthisvalue
   template:
     # GameServer metadata
     metadata:
@@ -98,6 +108,11 @@ The `spec` field is the actual `Fleet` specification and it is composed as follo
   - `rollingUpdate` is only relevant when `type: RollingUpdate`
     - `maxSurge` is the amount to increment the new GameServers by. Defaults to 25%
     - `maxUnavailable` is the amount to decrements GameServers by. Defaults to 25%
+- `allocationOverflow` (Alpha, requires `FleetAllocationOverflow` flag) The labels and/or Annotations to apply to 
+  GameServers when the number of Allocated GameServers drops below the desired replicas on the underlying 
+  `GameServerSet`.
+  - `labels` the map of labels to be applied
+  - `annotations` the map of annotations to be applied
 - `template` a full `GameServer` configuration template.
    See the [GameServer]({{< relref "gameserver.md" >}}) reference for all available fields.
 

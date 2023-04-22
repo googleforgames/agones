@@ -1528,6 +1528,103 @@ func TestFleetAggregatedPlayerStatus(t *testing.T) {
 	})
 }
 
+func TestFleetAllocationOverflow(t *testing.T) {
+	if !runtime.FeatureEnabled(runtime.FeatureFleetAllocateOverflow) {
+		t.SkipNow()
+	}
+	t.Parallel()
+	ctx := context.Background()
+	client := framework.AgonesClient.AgonesV1()
+	fleets := client.Fleets(framework.Namespace)
+
+	setup := func() *agonesv1.Fleet {
+		flt := defaultFleet(framework.Namespace)
+		flt.Spec.AllocationOverflow = &agonesv1.AllocationOverflow{Labels: map[string]string{"colour": "green"}, Annotations: map[string]string{"action": "update"}}
+		flt, err := fleets.Create(ctx, flt.DeepCopy(), metav1.CreateOptions{})
+		require.NoError(t, err)
+		framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
+
+		// allocate two of them.
+		framework.CreateAndApplyAllocation(t, flt)
+		framework.CreateAndApplyAllocation(t, flt)
+		framework.AssertFleetCondition(t, flt, func(entry *logrus.Entry, fleet *agonesv1.Fleet) bool {
+			return fleet.Status.AllocatedReplicas == 2
+		})
+
+		flt, err = fleets.Get(ctx, flt.ObjectMeta.Name, metav1.GetOptions{})
+		require.NoError(t, err)
+		return flt
+	}
+
+	assertCount := func(t *testing.T, log *logrus.Entry, flt *agonesv1.Fleet, expected int) {
+		require.Eventuallyf(t, func() bool {
+			log.Info("Checking GameServers")
+			list, err := framework.ListGameServersFromFleet(flt)
+			require.NoError(t, err)
+			count := 0
+
+			for _, gs := range list {
+				if gs.ObjectMeta.Labels["colour"] != "green" {
+					log.WithField("gs", gs).Info("Label not set")
+					continue
+				}
+				if gs.ObjectMeta.Annotations["action"] != "update" {
+					log.WithField("gs", gs).Info("Annotation not set")
+					continue
+				}
+				count++
+			}
+
+			return count == expected
+		}, 5*time.Minute, time.Second, "Labels and annotations not set")
+	}
+
+	t.Run("scale down", func(t *testing.T) {
+		log := e2e.TestLogger(t)
+		flt := setup()
+		defer fleets.Delete(ctx, flt.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint: errcheck
+
+		framework.ScaleFleet(t, log, flt, 0)
+
+		// wait for scale down
+		framework.AssertFleetCondition(t, flt, func(entry *logrus.Entry, fleet *agonesv1.Fleet) bool {
+			return fleet.Status.AllocatedReplicas == 2 && fleet.Status.ReadyReplicas == 0
+		})
+
+		assertCount(t, log, flt, 2)
+	})
+
+	t.Run("rolling update", func(t *testing.T) {
+		log := e2e.TestLogger(t)
+		flt := setup()
+		defer fleets.Delete(ctx, flt.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint: errcheck
+
+		fltCopy := flt.DeepCopy()
+		if fltCopy.Spec.Template.ObjectMeta.Labels == nil {
+			fltCopy.Spec.Template.ObjectMeta.Labels = map[string]string{}
+		}
+		fltCopy.Spec.Template.ObjectMeta.Labels["version"] = "2.0"
+		flt, err := fleets.Update(ctx, fltCopy, metav1.UpdateOptions{})
+		require.NoError(t, err)
+
+		// wait for rolling update to finish
+		require.Eventuallyf(t, func() bool {
+			list, err := framework.ListGameServersFromFleet(flt)
+			assert.NoError(t, err)
+			for _, gs := range list {
+				log.WithField("gs", gs).Info("checking game server")
+				if gs.Status.State == agonesv1.GameServerStateReady && gs.ObjectMeta.Labels["version"] == "2.0" {
+					return true
+				}
+			}
+
+			return false
+		}, 5*time.Minute, time.Second, "Rolling update did not complete")
+
+		assertCount(t, log, flt, 1)
+	})
+}
+
 func assertCausesContainsString(t *testing.T, causes []metav1.StatusCause, expected string) {
 	found := false
 	for _, v := range causes {
