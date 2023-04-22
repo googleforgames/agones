@@ -221,6 +221,6 @@ func (mc *MigrationController) anyAddressMatch(node *k8sv1.Node, gs *agonesv1.Ga
 	}
 	msg := fmt.Sprintf("GameServer/Node address mismatch: gs.Name=%s: gs.Status.Address=%s, node.Status.Addresses=%s",
 		gs.Name, gs.Status.Address, strings.Join(nodeAddresses, ","))
-	mc.loggerForGameServer(gs).Debug(msg)
+	mc.loggerForGameServer(gs).Warn(msg)
 	return false
 }
