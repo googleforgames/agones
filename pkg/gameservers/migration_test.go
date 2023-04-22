@@ -137,7 +137,6 @@ func TestMigrationControllerSyncGameServer(t *testing.T) {
 					assert.Equal(t, ipChangeFixture, gs.Status.Address)
 				},
 				postTests: func(t *testing.T, m agtesting.Mocks) {
-					agtesting.AssertEventContains(t, m.FakeRecorder.Events, "Warning Scheduled GameServer/Node address mismatch: gs.Name=test: gs.Status.Address=12.12.12.12, node.Status.Addresses=99.99.99.99")
 					agtesting.AssertEventContains(t, m.FakeRecorder.Events, "Warning Scheduled Address updated due to Node migration")
 				},
 			},
@@ -316,6 +315,88 @@ func TestMigrationControllerRun(t *testing.T) {
 	pod.Spec.NodeName += "+changed"
 	podWatch.Modify(pod.DeepCopy())
 	noChange()
+}
+
+func TestMigrationControllerAnyAddressMatch(t *testing.T) {
+	fixtures := map[string]struct {
+		matches       bool
+		gsAddress     string
+		nodeAddresses []corev1.NodeAddress
+	}{
+		"NodeHostName matches": {
+			matches:       true,
+			gsAddress:     "NodeHostName",
+			nodeAddresses: []corev1.NodeAddress{{Address: "NodeHostName", Type: corev1.NodeHostName}},
+		},
+		"NodeExternalDNS matches": {
+			matches:       true,
+			gsAddress:     "NodeExternalDNS",
+			nodeAddresses: []corev1.NodeAddress{{Address: "NodeExternalDNS", Type: corev1.NodeExternalDNS}},
+		},
+		"NodeExternalIP matches": {
+			matches:       true,
+			gsAddress:     "NodeExternalIP",
+			nodeAddresses: []corev1.NodeAddress{{Address: "NodeExternalIP", Type: corev1.NodeExternalIP}},
+		},
+		"NodeInternalDNS matches": {
+			matches:       true,
+			gsAddress:     "NodeInternalDNS",
+			nodeAddresses: []corev1.NodeAddress{{Address: "NodeInternalDNS", Type: corev1.NodeInternalDNS}},
+		},
+		"NodeInternalIP matches": {
+			matches:       true,
+			gsAddress:     "NodeInternalIP",
+			nodeAddresses: []corev1.NodeAddress{{Address: "NodeInternalIP", Type: corev1.NodeInternalIP}},
+		},
+		"no matches": {
+			matches:   false,
+			gsAddress: "no-match",
+			nodeAddresses: []corev1.NodeAddress{
+				{Address: "NodeHostName", Type: corev1.NodeHostName},
+				{Address: "NodeExternalDNS", Type: corev1.NodeExternalDNS},
+				{Address: "NodeExternalIP", Type: corev1.NodeExternalIP},
+				{Address: "NodeInternalDNS", Type: corev1.NodeInternalDNS},
+				{Address: "NodeInternalIP", Type: corev1.NodeInternalIP},
+			},
+		},
+		"matches one of many 1": {
+			matches:   true,
+			gsAddress: "NodeInternalDNS",
+			nodeAddresses: []corev1.NodeAddress{
+				{Address: "NodeHostName", Type: corev1.NodeHostName},
+				{Address: "NodeExternalDNS", Type: corev1.NodeExternalDNS},
+				{Address: "NodeExternalIP", Type: corev1.NodeExternalIP},
+				{Address: "NodeInternalDNS", Type: corev1.NodeInternalDNS},
+				{Address: "NodeInternalIP", Type: corev1.NodeInternalIP},
+			},
+		},
+		"matches one of many 2": {
+			matches:   true,
+			gsAddress: "NodeInternalIP",
+			nodeAddresses: []corev1.NodeAddress{
+				{Address: "NodeHostName", Type: corev1.NodeHostName},
+				{Address: "NodeExternalDNS", Type: corev1.NodeExternalDNS},
+				{Address: "NodeExternalIP", Type: corev1.NodeExternalIP},
+				{Address: "NodeInternalDNS", Type: corev1.NodeInternalDNS},
+				{Address: "NodeInternalIP", Type: corev1.NodeInternalIP},
+			},
+		},
+	}
+	for k, v := range fixtures {
+		t.Run(k, func(t *testing.T) {
+			m := agtesting.NewMocks()
+			c := NewMigrationController(healthcheck.NewHandler(), m.KubeClient, m.AgonesClient, m.KubeInformerFactory, m.AgonesInformerFactory, nilSyncPodPortsToGameServer)
+			gs := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
+				Spec: newSingleContainerSpec(), Status: agonesv1.GameServerStatus{
+					Address: v.gsAddress,
+				}}
+			node := &corev1.Node{ObjectMeta: metav1.ObjectMeta{Name: nodeFixtureName},
+				Status: corev1.NodeStatus{Addresses: v.nodeAddresses}}
+
+			matches := c.anyAddressMatch(node, gs)
+			assert.Equal(t, v.matches, matches)
+		})
+	}
 }
 
 func nilSyncPodPortsToGameServer(*agonesv1.GameServer, *corev1.Pod) error { return nil }

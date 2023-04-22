@@ -219,8 +219,8 @@ func (mc *MigrationController) anyAddressMatch(node *k8sv1.Node, gs *agonesv1.Ga
 		}
 		nodeAddresses = append(nodeAddresses, a.Address)
 	}
-	eventMsg := fmt.Sprintf("GameServer/Node address mismatch: gs.Name=%s: gs.Status.Address=%s, node.Status.Addresses=%s",
+	msg := fmt.Sprintf("GameServer/Node address mismatch: gs.Name=%s: gs.Status.Address=%s, node.Status.Addresses=%s",
 		gs.Name, gs.Status.Address, strings.Join(nodeAddresses, ","))
-	mc.recorder.Event(gs, corev1.EventTypeWarning, string(gs.Status.State), eventMsg)
+	mc.loggerForGameServer(gs).Debug(msg)
 	return false
 }
