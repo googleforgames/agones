@@ -23,6 +23,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"agones.dev/agones/pkg"
@@ -156,10 +157,19 @@ func main() {
 	}
 
 	grpcEndpoint := fmt.Sprintf("%s:%d", ctlConf.Address, ctlConf.GRPCPort)
-	go runGrpc(grpcServer, grpcEndpoint)
-	go runGateway(ctx, grpcEndpoint, mux, httpServer)
 
-	<-ctx.Done()
+	wg := sync.WaitGroup{}
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		runGrpc(ctx, grpcServer, grpcEndpoint)
+	}()
+	go func() {
+		defer wg.Done()
+		runGateway(ctx, grpcEndpoint, mux, httpServer)
+	}()
+
+	wg.Wait()
 	logger.Info("shutting down sdk server")
 }
 
@@ -215,12 +225,16 @@ func registerTestSdkServer(grpcServer *grpc.Server, ctlConf config) (func(), err
 }
 
 // runGrpc runs the grpc service
-func runGrpc(grpcServer *grpc.Server, grpcEndpoint string) {
+func runGrpc(ctx context.Context, grpcServer *grpc.Server, grpcEndpoint string) {
 	lis, err := net.Listen("tcp", grpcEndpoint)
 	if err != nil {
 		logger.WithField("grpcEndpoint", grpcEndpoint).Fatal("Could not listen on grpc endpoint")
 	}
 
+	go func() {
+		<-ctx.Done()
+		grpcServer.GracefulStop()
+	}()
 	logger.WithField("grpcEndpoint", grpcEndpoint).Info("Starting SDKServer grpc service...")
 	if err := grpcServer.Serve(lis); err != nil {
 		logger.WithError(err).Fatal("Could not serve grpc server")
@@ -234,13 +248,19 @@ func runGateway(ctx context.Context, grpcEndpoint string, mux *gwruntime.ServeMu
 		logger.WithError(err).Fatal("Could not dial grpc server...")
 	}
 
-	if err := sdk.RegisterSDKHandler(ctx, mux, conn); err != nil {
-		logger.WithError(err).Fatal("Could not register sdk grpc-gateway")
-	}
-	if err := sdkalpha.RegisterSDKHandler(ctx, mux, conn); err != nil {
-		logger.WithError(err).Fatal("Could not register alpha sdk grpc-gateway")
-	}
+	// errors always return nil
+	_ = sdk.RegisterSDKHandler(ctx, mux, conn)
+	_ = sdkalpha.RegisterSDKHandler(ctx, mux, conn)
 
+	go func() {
+		<-ctx.Done()
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+		defer cancel()
+		err = httpServer.Shutdown(ctx)
+		if err != nil {
+			logger.WithError(err).Fatal("Could not shutdown http server")
+		}
+	}()
 	logger.WithField("httpEndpoint", httpServer.Addr).Info("Starting SDKServer grpc-gateway...")
 	if err := httpServer.ListenAndServe(); err != nil {
 		if err == http.ErrServerClosed {
