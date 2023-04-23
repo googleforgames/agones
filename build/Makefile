@@ -280,15 +280,6 @@ build-chart: $(ensure-build-image)
 		"mkdir -p install/helm/bin/ && rm -rf install/helm/bin/* && \
 			helm package -d install/helm/bin/ --version $(RELEASE_VERSION) $(CHART_DIR)"
 
-# push the current chart to google cloud storage and update the index
-push-chart: $(ensure-build-image) build-chart
-	docker run $(DOCKER_RUN_ARGS) --rm $(common_mounts) -w $(workdir_path) $(build_tag) bash -c \
-		"gsutil copy gs://$(GCP_BUCKET_CHARTS)/index.yaml ./install/helm/bin/index.yaml || /bin/true && \
-		helm repo index --merge ./install/helm/bin/index.yaml ./install/helm/bin && \
-		cat ./install/helm/bin/index.yaml && ls ./install/helm/bin/ && \
-		cp ./install/helm/bin/index.yaml ./install/helm/bin/index-$(VERSION).yaml && \
-		gsutil copy ./install/helm/bin/*.* gs://$(GCP_BUCKET_CHARTS)/"
-
 # push a specific release useful to push previous missing release
 push-release-chart: RELEASE_VERSION ?= $(base_version)
 push-release-chart: $(ensure-build-image)

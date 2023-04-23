@@ -65,9 +65,9 @@ release-deploy-site:
 	echo "Deploying Site Version: $$version" && \
 	$(MAKE) ENV=HUGO_ENV=snapshot site-deploy SERVICE=$$version
 
-# - Pushes the current chart version to the helm repository hosted on gcs.
-do-release: RELEASE_VERSION ?= $(base_version)
-do-release: $(ensure-build-image)
+# no-op-release
+void-release: RELEASE_VERSION ?= $(base_version)
+void-release: $(ensure-build-image)
 	@echo "Starting release for version: $(RELEASE_VERSION)"
 
 	# switch to the right project
@@ -79,6 +79,14 @@ do-release: $(ensure-build-image)
 
 	@echo "Now go make the $(RELEASE_VERSION) release on Github!"
 
+# push the current chart to google cloud storage and update the index
+push-chart: $(ensure-build-image) build-chart
+	docker run $(DOCKER_RUN_ARGS) --rm $(common_mounts) -w $(workdir_path) $(build_tag) bash -c \
+		"gsutil copy gs://$(GCP_BUCKET_CHARTS)/index.yaml ./install/helm/bin/index.yaml || /bin/true && \
+		helm repo index --merge ./install/helm/bin/index.yaml ./install/helm/bin && \
+		cat ./install/helm/bin/index.yaml && ls ./install/helm/bin/ && \
+		cp ./install/helm/bin/index.yaml ./install/helm/bin/index-$(VERSION).yaml && \
+		gsutil copy ./install/helm/bin/*.* gs://$(GCP_BUCKET_CHARTS)/"
 
 # Ensure the example images exists
 pre-build-release:
