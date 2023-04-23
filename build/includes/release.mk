@@ -74,7 +74,6 @@ void-release: $(ensure-build-image)
 	$(DOCKER_RUN) gcloud config configurations activate agones-images
 
 	git checkout -b release-$(RELEASE_VERSION)	
-	$(MAKE) push-chart VERSION=$(RELEASE_VERSION)
 	git push -u upstream release-$(RELEASE_VERSION)
 
 	@echo "Now go make the $(RELEASE_VERSION) release on Github!"
