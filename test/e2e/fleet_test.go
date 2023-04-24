@@ -780,7 +780,11 @@ func TestReservedGameServerInFleet(t *testing.T) {
 			return true, err
 		}
 		l := len(list)
-		logrus.WithField("len", l).WithField("state", list[0].Status.State).Info("waiting for 1 reserved gs")
+		e := logrus.WithField("len", l)
+		if l >= 1 {
+			e = e.WithField("state", list[0].Status.State)
+		}
+		e.Info("waiting for 1 reserved gs")
 		return l == 1 && list[0].Status.State == agonesv1.GameServerStateReserved, nil
 	})
 	assert.NoError(t, err)
