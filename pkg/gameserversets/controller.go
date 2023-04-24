@@ -72,20 +72,21 @@ type Extensions struct {
 	apiHooks   agonesv1.APIHooks
 }
 
-// Controller is a the GameServerSet controller
+// Controller is a GameServerSet controller
 type Controller struct {
-	baseLogger          *logrus.Entry
-	counter             *gameservers.PerNodeCounter
-	crdGetter           apiextclientv1.CustomResourceDefinitionInterface
-	gameServerGetter    getterv1.GameServersGetter
-	gameServerLister    listerv1.GameServerLister
-	gameServerSynced    cache.InformerSynced
-	gameServerSetGetter getterv1.GameServerSetsGetter
-	gameServerSetLister listerv1.GameServerSetLister
-	gameServerSetSynced cache.InformerSynced
-	workerqueue         *workerqueue.WorkerQueue
-	recorder            record.EventRecorder
-	stateCache          *gameServerStateCache
+	baseLogger           *logrus.Entry
+	counter              *gameservers.PerNodeCounter
+	crdGetter            apiextclientv1.CustomResourceDefinitionInterface
+	gameServerGetter     getterv1.GameServersGetter
+	gameServerLister     listerv1.GameServerLister
+	gameServerSynced     cache.InformerSynced
+	gameServerSetGetter  getterv1.GameServerSetsGetter
+	gameServerSetLister  listerv1.GameServerSetLister
+	gameServerSetSynced  cache.InformerSynced
+	workerqueue          *workerqueue.WorkerQueue
+	recorder             record.EventRecorder
+	stateCache           *gameServerStateCache
+	allocationController *AllocationOverflowController
 }
 
 // NewController returns a new gameserverset crd controller
@@ -122,6 +123,10 @@ func NewController(
 	eventBroadcaster.StartLogging(c.baseLogger.Debugf)
 	eventBroadcaster.StartRecordingToSink(&typedcorev1.EventSinkImpl{Interface: kubeClient.CoreV1().Events("")})
 	c.recorder = eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: "gameserverset-controller"})
+
+	if runtime.FeatureEnabled(runtime.FeatureFleetAllocateOverflow) {
+		c.allocationController = NewAllocatorOverflowController(health, counter, agonesClient, agonesInformerFactory)
+	}
 
 	gsSetInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: c.workerqueue.Enqueue,
@@ -178,6 +183,14 @@ func (c *Controller) Run(ctx context.Context, workers int) error {
 		return errors.New("failed to wait for caches to sync")
 	}
 
+	if runtime.FeatureEnabled(runtime.FeatureFleetAllocateOverflow) {
+		go func() {
+			if err := c.allocationController.Run(ctx); err != nil {
+				c.baseLogger.WithError(err).Error("error running allocation overflow controller")
+			}
+		}()
+	}
+
 	c.workerqueue.Run(ctx, workers)
 	return nil
 }
@@ -216,7 +229,7 @@ func (ext *Extensions) updateValidationHandler(review admissionv1.AdmissionRevie
 			Details: &details,
 		}
 
-		loggerForGameServerSet(newGss, ext.baseLogger).WithField("review", review).Debug("Invalid GameServerSet update")
+		loggerForGameServerSet(ext.baseLogger, newGss).WithField("review", review).Debug("Invalid GameServerSet update")
 		return review, nil
 	}
 
@@ -251,7 +264,7 @@ func (ext *Extensions) creationValidationHandler(review admissionv1.AdmissionRev
 			Details: &details,
 		}
 
-		loggerForGameServerSet(newGss, ext.baseLogger).WithField("review", review).Debug("Invalid GameServerSet update")
+		loggerForGameServerSet(ext.baseLogger, newGss).WithField("review", review).Debug("Invalid GameServerSet update")
 		return review, nil
 	}
 	return review, nil
@@ -280,18 +293,6 @@ func (c *Controller) gameServerEventHandler(obj interface{}) {
 	c.workerqueue.EnqueueImmediately(gsSet)
 }
 
-func loggerForGameServerSetKey(key string, logger *logrus.Entry) *logrus.Entry {
-	return logfields.AugmentLogEntry(logger, logfields.GameServerSetKey, key)
-}
-
-func loggerForGameServerSet(gsSet *agonesv1.GameServerSet, logger *logrus.Entry) *logrus.Entry {
-	gsSetName := "NilGameServerSet"
-	if gsSet != nil {
-		gsSetName = gsSet.Namespace + "/" + gsSet.Name
-	}
-	return loggerForGameServerSetKey(gsSetName, logger).WithField("gss", gsSet)
-}
-
 // syncGameServer synchronises the GameServers for the Set,
 // making sure there are aways as many GameServers as requested
 func (c *Controller) syncGameServerSet(ctx context.Context, key string) error {
@@ -299,14 +300,14 @@ func (c *Controller) syncGameServerSet(ctx context.Context, key string) error {
 	namespace, name, err := cache.SplitMetaNamespaceKey(key)
 	if err != nil {
 		// don't return an error, as we don't want this retried
-		runtime.HandleError(loggerForGameServerSetKey(key, c.baseLogger), errors.Wrapf(err, "invalid resource key"))
+		runtime.HandleError(loggerForGameServerSetKey(c.baseLogger, key), errors.Wrapf(err, "invalid resource key"))
 		return nil
 	}
 
 	gsSet, err := c.gameServerSetLister.GameServerSets(namespace).Get(name)
 	if err != nil {
 		if k8serrors.IsNotFound(err) {
-			loggerForGameServerSetKey(key, c.baseLogger).Debug("GameServerSet is no longer available for syncing")
+			loggerForGameServerSetKey(c.baseLogger, key).Debug("GameServerSet is no longer available for syncing")
 			return nil
 		}
 		return errors.Wrapf(err, "error retrieving GameServerSet %s from namespace %s", name, namespace)
@@ -342,7 +343,7 @@ func (c *Controller) syncGameServerSet(ctx context.Context, key string) error {
 
 		fields[key] = v.(int) + 1
 	}
-	loggerForGameServerSet(gsSet, c.baseLogger).
+	loggerForGameServerSet(c.baseLogger, gsSet).
 		WithField("targetReplicaCount", gsSet.Spec.Replicas).
 		WithField("numServersToAdd", numServersToAdd).
 		WithField("numServersToDelete", len(toDelete)).
@@ -359,13 +360,13 @@ func (c *Controller) syncGameServerSet(ctx context.Context, key string) error {
 
 	if numServersToAdd > 0 {
 		if err := c.addMoreGameServers(ctx, gsSet, numServersToAdd); err != nil {
-			loggerForGameServerSet(gsSet, c.baseLogger).WithError(err).Warning("error adding game servers")
+			loggerForGameServerSet(c.baseLogger, gsSet).WithError(err).Warning("error adding game servers")
 		}
 	}
 
 	if len(toDelete) > 0 {
 		if err := c.deleteGameServers(ctx, gsSet, toDelete); err != nil {
-			loggerForGameServerSet(gsSet, c.baseLogger).WithError(err).Warning("error deleting game servers")
+			loggerForGameServerSet(c.baseLogger, gsSet).WithError(err).Warning("error deleting game servers")
 		}
 	}
 
@@ -476,12 +477,7 @@ func computeReconciliationAction(strategy apis.SchedulingStrategy, list []*agone
 	}
 
 	if deleteCount > 0 {
-		if strategy == apis.Packed {
-			potentialDeletions = sortGameServersByLeastFullNodes(potentialDeletions, counts)
-		} else {
-			potentialDeletions = sortGameServersByNewFirst(potentialDeletions)
-		}
-
+		potentialDeletions = sortGameServersByStrategy(strategy, potentialDeletions, counts)
 		toDelete = append(toDelete, potentialDeletions[0:deleteCount]...)
 	}
 
@@ -495,7 +491,7 @@ func computeReconciliationAction(strategy apis.SchedulingStrategy, list []*agone
 
 // addMoreGameServers adds diff more GameServers to the set
 func (c *Controller) addMoreGameServers(ctx context.Context, gsSet *agonesv1.GameServerSet, count int) error {
-	loggerForGameServerSet(gsSet, c.baseLogger).WithField("count", count).Debug("Adding more gameservers")
+	loggerForGameServerSet(c.baseLogger, gsSet).WithField("count", count).Debug("Adding more gameservers")
 
 	return parallelize(newGameServersChannel(count, gsSet), maxCreationParalellism, func(gs *agonesv1.GameServer) error {
 		gs, err := c.gameServerGetter.GameServers(gs.Namespace).Create(ctx, gs, metav1.CreateOptions{})
@@ -510,7 +506,7 @@ func (c *Controller) addMoreGameServers(ctx context.Context, gsSet *agonesv1.Gam
 }
 
 func (c *Controller) deleteGameServers(ctx context.Context, gsSet *agonesv1.GameServerSet, toDelete []*agonesv1.GameServer) error {
-	loggerForGameServerSet(gsSet, c.baseLogger).WithField("diff", len(toDelete)).Debug("Deleting gameservers")
+	loggerForGameServerSet(c.baseLogger, gsSet).WithField("diff", len(toDelete)).Debug("Deleting gameservers")
 
 	return parallelize(gameServerListToChannel(toDelete), maxDeletionParallelism, func(gs *agonesv1.GameServer) error {
 		// We should not delete the gameservers directly buy set their state to shutdown and let the gameserver controller to delete

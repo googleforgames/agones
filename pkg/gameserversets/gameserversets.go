@@ -17,13 +17,36 @@ package gameserversets
 import (
 	"sort"
 
+	"agones.dev/agones/pkg/apis"
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	listerv1 "agones.dev/agones/pkg/client/listers/agones/v1"
 	"agones.dev/agones/pkg/gameservers"
+	"agones.dev/agones/pkg/util/logfields"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 )
+
+func loggerForGameServerSetKey(log *logrus.Entry, key string) *logrus.Entry {
+	return logfields.AugmentLogEntry(log, logfields.GameServerSetKey, key)
+}
+
+func loggerForGameServerSet(log *logrus.Entry, gsSet *agonesv1.GameServerSet) *logrus.Entry {
+	gsSetName := "NilGameServerSet"
+	if gsSet != nil {
+		gsSetName = gsSet.Namespace + "/" + gsSet.Name
+	}
+	return loggerForGameServerSetKey(log, gsSetName).WithField("gss", gsSet)
+}
+
+// sortGameServersByStrategy will sort by least full nodes when Packed, and newest first when Distributed
+func sortGameServersByStrategy(strategy apis.SchedulingStrategy, list []*agonesv1.GameServer, counts map[string]gameservers.NodeCount) []*agonesv1.GameServer {
+	if strategy == apis.Packed {
+		return sortGameServersByLeastFullNodes(list, counts)
+	}
+	return sortGameServersByNewFirst(list)
+}
 
 // sortGameServersByLeastFullNodes sorts the list of gameservers by which gameservers reside on the least full nodes
 func sortGameServersByLeastFullNodes(list []*agonesv1.GameServer, count map[string]gameservers.NodeCount) []*agonesv1.GameServer {

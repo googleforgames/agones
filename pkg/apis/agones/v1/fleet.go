@@ -62,8 +62,8 @@ type FleetSpec struct {
 	Replicas int32 `json:"replicas"`
 	// [Stage: Alpha]
 	// [FeatureFlag:FleetAllocationOverflow]
-	// Labels and Annotations to apply to GameServers when the number of Allocated GameServers drops below
-	// the desired replicas on the underlying `GameServerSet`
+	// Labels and/or Annotations to apply to overflowing GameServers when the number of Allocated GameServers is more
+	// than the desired replicas on the underlying `GameServerSet`
 	// +optional
 	AllocationOverflow *AllocationOverflow `json:"allocationOverflow,omitempty"`
 	// Deployment strategy
