@@ -16,7 +16,6 @@ package gameservers
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	"agones.dev/agones/pkg/apis/agones"
@@ -219,8 +218,10 @@ func (mc *MigrationController) anyAddressMatch(node *k8sv1.Node, gs *agonesv1.Ga
 		}
 		nodeAddresses = append(nodeAddresses, a.Address)
 	}
-	msg := fmt.Sprintf("GameServer/Node address mismatch: gs.Name=%s: gs.Status.Address=%s, node.Status.Addresses=%s",
-		gs.Name, gs.Status.Address, strings.Join(nodeAddresses, ","))
-	mc.loggerForGameServer(gs).Warn(msg)
+	mc.loggerForGameServer(gs).
+		WithField("gs", gs.Name).
+		WithField("gs.Status.Address", gs.Status.Address).
+		WithField("node.Status.Addresses", strings.Join(nodeAddresses, ",")).
+		Warn("GameServer/Node address mismatch")
 	return false
 }
