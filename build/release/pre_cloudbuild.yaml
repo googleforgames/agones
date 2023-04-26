@@ -14,6 +14,17 @@
 
 steps:
   #
+  # Shallow clone of Agones/main branch from the main repository
+  #
+  - name: "gcr.io/cloud-builders/git"
+    dir: "/workspace"
+    args:
+      - "clone"
+      - "--depth=1"
+      - "--branch=main"
+      - "https://github.com/googleforgames/agones.git"
+
+  #
   # Creates the initial make + docker build platform
   #
   - name: "ubuntu"
