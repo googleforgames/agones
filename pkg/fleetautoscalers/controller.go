@@ -193,16 +193,24 @@ func (c *Controller) Run(ctx context.Context, workers int) error {
 	return nil
 }
 
-func (c *Controller) loggerForFleetAutoscalerKey(key string) *logrus.Entry {
-	return logfields.AugmentLogEntry(c.baseLogger, logfields.FleetAutoscalerKey, key)
+func loggerForFleetAutoscalerKey(key string, logger *logrus.Entry) *logrus.Entry {
+	return logfields.AugmentLogEntry(logger, logfields.FleetAutoscalerKey, key)
 }
 
-func (c *Controller) loggerForFleetAutoscaler(fas *autoscalingv1.FleetAutoscaler) *logrus.Entry {
+func loggerForFleetAutoscaler(fas *autoscalingv1.FleetAutoscaler, logger *logrus.Entry) *logrus.Entry {
 	fasName := "NilFleetAutoScaler"
 	if fas != nil {
 		fasName = fas.Namespace + "/" + fas.Name
 	}
-	return c.loggerForFleetAutoscalerKey(fasName).WithField("fas", fas)
+	return loggerForFleetAutoscalerKey(fasName, logger).WithField("fas", fas)
+}
+
+func (c *Controller) loggerForFleetAutoscalerKey(key string) *logrus.Entry {
+	return loggerForFleetAutoscalerKey(key, c.baseLogger)
+}
+
+func (c *Controller) loggerForFleetAutoscaler(fas *autoscalingv1.FleetAutoscaler) *logrus.Entry {
+	return loggerForFleetAutoscaler(fas, c.baseLogger)
 }
 
 // creationMutationHandler is the handler for the mutating webhook that sets the
@@ -268,6 +276,7 @@ func (ext *Extensions) validationHandler(review admissionv1.AdmissionReview) (ad
 			Reason:  metav1.StatusReasonInvalid,
 			Details: &details,
 		}
+		loggerForFleetAutoscaler(fas, ext.baseLogger).WithField("review", review).Debug("Invalid FleetAutoscaler")
 	}
 
 	return review, nil

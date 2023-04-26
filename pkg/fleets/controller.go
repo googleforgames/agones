@@ -212,8 +212,7 @@ func (ext *Extensions) creationValidationHandler(review admissionv1.AdmissionRev
 			Details: &details,
 		}
 
-		loggerForFleet(fleet, ext.baseLogger).WithField("review", review).Warn("Invalid Fleet")
-		return review, nil
+		loggerForFleet(fleet, ext.baseLogger).WithField("review", review).Debug("Invalid Fleet")
 	}
 
 	return review, nil
