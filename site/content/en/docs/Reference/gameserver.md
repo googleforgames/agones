@@ -133,7 +133,7 @@ The GameServer resource does not support updates. If you need to make regular up
 
 ## Stable Network ID
 
-{{< alpha title="Stable Network ID" gate="PodHostname" >}}
+{{< beta title="Stable Network ID" gate="PodHostname" >}}
 
 If you want to connect to a `GameServer` from within your Kubernetes cluster via a convention based
 DNS entry, each Pod attached to a `GameServer` automatically derives its hostname from the name of the `GameServer`.

@@ -92,7 +92,7 @@ As documented in the [version update policy](https://agones.dev/site/docs/instal
 ### How to update supported Kubernetes Versions
 Please follow the steps below to update the Kubernetes versions supported.
 
-1. Create a Issue from the [kubernetes update issue template](../../.github/ISSUE_TEMPLATE/kubernetes_update.md) with the newly supported versions.
+1. Create a Issue from the [kubernetes update issue template](./.github/ISSUE_TEMPLATE/kubernetes_update.md) with the newly supported versions.
 2. Complete all items in the issue checklist.
 3. Close the issue.
 
