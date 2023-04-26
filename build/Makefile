@@ -64,7 +64,7 @@ KIND_CONTAINER_NAME=$(KIND_PROFILE)-control-plane
 GS_TEST_IMAGE ?= us-docker.pkg.dev/agones-images/examples/simple-game-server:0.15
 
 # Enable all alpha feature gates. Keep in sync with `false` (alpha) entries in pkg/util/runtime/features.go:featureDefaults
-ALPHA_FEATURE_GATES ?= "PlayerAllocationFilter=true&PlayerTracking=true&ResetMetricsOnDelete=true&PodHostname=true&SplitControllerAndExtensions=true&CountsAndLists=true&FleetAllocationOverflow=true&Example=true"
+ALPHA_FEATURE_GATES ?= "PlayerAllocationFilter=true&PlayerTracking=true&ResetMetricsOnDelete=true&SplitControllerAndExtensions=true&CountsAndLists=true&FleetAllocationOverflow=true&Example=true"
 
 # Build with Windows support
 WITH_WINDOWS=1
@@ -279,15 +279,6 @@ build-chart: $(ensure-build-image)
 	docker run --rm $(common_mounts) -w $(workdir_path) $(build_tag) bash -c \
 		"mkdir -p install/helm/bin/ && rm -rf install/helm/bin/* && \
 			helm package -d install/helm/bin/ --version $(RELEASE_VERSION) $(CHART_DIR)"
-
-# push the current chart to google cloud storage and update the index
-push-chart: $(ensure-build-image) build-chart
-	docker run $(DOCKER_RUN_ARGS) --rm $(common_mounts) -w $(workdir_path) $(build_tag) bash -c \
-		"gsutil copy gs://$(GCP_BUCKET_CHARTS)/index.yaml ./install/helm/bin/index.yaml || /bin/true && \
-		helm repo index --merge ./install/helm/bin/index.yaml ./install/helm/bin && \
-		cat ./install/helm/bin/index.yaml && ls ./install/helm/bin/ && \
-		cp ./install/helm/bin/index.yaml ./install/helm/bin/index-$(VERSION).yaml && \
-		gsutil copy ./install/helm/bin/*.* gs://$(GCP_BUCKET_CHARTS)/"
 
 # push a specific release useful to push previous missing release
 push-release-chart: RELEASE_VERSION ?= $(base_version)
