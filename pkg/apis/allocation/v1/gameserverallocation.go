@@ -186,7 +186,7 @@ type CounterAction struct {
 // AddValues: Append values to a List's Values array (optional). Any duplicate values will be ignored.
 // Capacity: Update the maximum capacity of the Counter to this number (optional). Min 0, Max 1000.
 type ListAction struct {
-	AddValues *[]string `json:"addValues,omitempty"`
+	AddValues []string `json:"addValues,omitempty"`
 	Capacity  *int64    `json:"capacity,omitempty"`
 }
 
@@ -312,8 +312,8 @@ func (la *ListAction) ListActions(list string, gs *agonesv1.GameServer) {
 	if la.Capacity != nil {
 		gs.UpdateListCapacity(list, *la.Capacity)
 	}
-	if la.AddValues != nil {
-		gs.AppendListValues(list, *la.AddValues)
+	if la.AddValues != nil && len(la.AddValues) > 0 {
+		gs.AppendListValues(list, la.AddValues)
 	}
 }
 

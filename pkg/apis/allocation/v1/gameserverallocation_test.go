@@ -1137,7 +1137,7 @@ func TestGameServerListActions(t *testing.T) {
 		},
 		"update list values": {
 			la: ListAction{
-				AddValues: &[]string{"sage1", "sage3"},
+				AddValues: []string{"sage1", "sage3"},
 			},
 			list: "sages",
 			gs: &agonesv1.GameServer{Status: agonesv1.GameServerStatus{
@@ -1155,7 +1155,7 @@ func TestGameServerListActions(t *testing.T) {
 		},
 		"update list values and capacity": {
 			la: ListAction{
-				AddValues: &[]string{"magician1", "magician3"},
+				AddValues: []string{"magician1", "magician3"},
 				Capacity:  int64Pointer(42),
 			},
 			list: "magicians",
@@ -1174,7 +1174,7 @@ func TestGameServerListActions(t *testing.T) {
 		},
 		"update list values and capacity - value add fails": {
 			la: ListAction{
-				AddValues: &[]string{"fairy1", "fairy3"},
+				AddValues: []string{"fairy1", "fairy3"},
 				Capacity:  int64Pointer(2),
 			},
 			list: "fairies",

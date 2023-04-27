@@ -442,7 +442,7 @@ func TestFindGameServerForAllocationCountListActions(t *testing.T) {
 						}},
 					Lists: map[string]allocationv1.ListAction{
 						"players": {
-							AddValues: &[]string{"x7un", "8inz"},
+							AddValues: []string{"x7un", "8inz"},
 							Capacity:  &FORTY,
 						}}}},
 			list:        []agonesv1.GameServer{gs1},
