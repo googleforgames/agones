@@ -201,6 +201,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.allocator.tolerations`                           | Allocator [toleration][toleration] labels for pod assignment                                                                                                                                                            | `[]`                               |
 | `agones.allocator.affinity`                              | Allocator [affinity][affinity] settings for pod assignment                                                                                                                                                              | `{}`                               |
 | `agones.allocator.annotations`                           | [Annotations][annotations] added to the Agones allocator pods                                                                                                                                                           | `{}`                               |
+| `agones.allocator.labels`                           | [Labels][labels] added to the Agones allocator pods                                                                                                                                                           | `{}`                               |
 | `agones.allocator.resources`                             | Allocator pods [resource requests/limit][resources]                                                                                                                                                                     | `{}`                               |
 | `agones.allocator.nodeSelector`                          | Allocator [node labels][nodeSelector] for pod assignment                                                                                                                                                                | `{}`                               |
 | `agones.allocator.serviceMetrics.name`                   | Second Service name for the allocator                                                                                                                                                                                   | `agones-allocator-metrics-service` |
@@ -279,6 +280,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 [allocator]: {{< ref "/docs/advanced/allocator-service.md" >}}
 [loadBalancer]: https://kubernetes.io/docs/concepts/services-networking/service/#loadbalancer
 [annotations]: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
+[labels]:https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
 [resources]: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
 [pruning]: https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/#field-pruning
 [gameserver]: {{< ref "/docs/Reference/gameserver.md" >}}
