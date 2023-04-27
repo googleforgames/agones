@@ -113,12 +113,12 @@ var (
 		FeatureSafeToEvict:            true,
 		FeatureSDKGracefulTermination: true,
 		FeatureStateAllocationFilter:  true,
+		FeaturePodHostname:            true,
 
 		// Alpha features
 		FeaturePlayerAllocationFilter:       false,
 		FeaturePlayerTracking:               false,
 		FeatureResetMetricsOnDelete:         false,
-		FeaturePodHostname:                  false,
 		FeatureFleetAllocateOverflow:        false,
 		FeatureSplitControllerAndExtensions: false,
 
