@@ -187,7 +187,7 @@ type CounterAction struct {
 // Capacity: Update the maximum capacity of the Counter to this number (optional). Min 0, Max 1000.
 type ListAction struct {
 	AddValues []string `json:"addValues,omitempty"`
-	Capacity  *int64    `json:"capacity,omitempty"`
+	Capacity  *int64   `json:"capacity,omitempty"`
 }
 
 // ApplyDefaults applies default values
