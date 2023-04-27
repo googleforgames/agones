@@ -26,19 +26,6 @@
 # agones image release registry
 release_registry = us-docker.pkg.dev/agones-images/release
 
-# generate a changelog using github-changelog-generator
-gen-changelog: RELEASE_VERSION ?= $(base_version)
-gen-changelog: RELEASE_BRANCH ?= main
-gen-changelog:
-	read -p 'Github Token: ' TOKEN && \
-    docker run -it --rm -v "$(agones_path)":/usr/local/src/your-app ferrarimarco/github-changelog-generator:1.15.0 \
-		--user=googleforgames --project=agones \
-		--bug-labels=kind/bug --enhancement-labels=kind/feature \
-		--breaking-labels=kind/breaking --security-labels=area/security \
-		--future-release "v$(RELEASE_VERSION)" \
-		--release-branch=$(RELEASE_BRANCH) \
-		--token $$TOKEN
-
 # outputs the markdown for the example images section of the release template
 release-example-image-markdown: example-image-markdown.allocation-endpoint
 release-example-image-markdown: example-image-markdown.autoscaler-webhook
