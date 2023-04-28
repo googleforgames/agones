@@ -127,3 +127,67 @@ all `GameServers` with the `v2` `Fleet` label, and if not found, search through 
 The above `GameServerAllocation` can then be used while you scale up the `v2` Fleet and scale down the original Fleet at
 the rate that you deem fit for your specific rollout.
 
+{{% feature publishVersion="1.32.0" %}}
+
+## Notifying GameServers on Fleet Update/Downscale
+
+{{< alpha title="Allocated GameSever Overflow Notification" gate="FleetAllocationOverflow" >}}
+
+When `Allocated` `GameServers` are utilised for a long time, such as a Lobby `GameServer`, 
+or a `GameServer` that is being reused multiple times in a row, it can be useful 
+to notify an `Allocated` `GameServer` process when its backing Fleet has been updated. 
+When an update occurs, the `Allocated` `GameServer`, may want to actively perform a graceful shutdown and release its 
+resources such that it can be replaced by a new version, or similar actions.
+
+To do this, we provide the ability to apply a user-provided set of labels and/or annotations to the `Allocated` 
+`GameServers` when a `Fleet` update occurs that updates its `GameServer` template, or generally
+causes the `Fleet` replica count to drop below the number of currently `Allocated` `GameServers`. 
+
+This provides two useful capabilities:
+
+1. The `GameServer` [`SDK.WatchGameServer()`]({{% relref "./Client SDKs/_index.md#watchgameserverfunctiongameserver" %}})
+   command can be utilised to react to this annotation and/or label change to 
+   indicate the Fleet system change, and the game server binary could execute code accordingly.
+2. This can also be used to proactively update `GameServer` labels, to effect change in allocation strategy - such as 
+   preferring the newer `GameServers` when allocating, but falling back to the older version if there aren't enough 
+   of the new ones yet spun up.
+
+Example yaml configuration:
+
+```yaml
+apiVersion: "agones.dev/v1"
+kind: Fleet
+metadata:
+  name: simple-game-server
+spec:
+  replicas: 2
+  allocationOverflow: # This specifies which annotations and/or labels are applied
+    labels:
+      mykey: myvalue
+      version: "" # empty an existing label value, so it's no longer in the allocation selection
+    annotations:
+      event: overflow
+  template:
+    spec:
+      ports:
+        - name: default
+          containerPort: 7654
+      template:
+        spec:
+          containers:
+            - name: simple-game-server
+              image: gcr.io/agones-images/simple-game-server:0.13
+```
+
+See the [Fleet reference]({{% relref "../Reference/fleet.md" %}}) for more details.
+
+{{% /feature %}}
+
+<!-- This is the only way I could get the alert to work in a feature code -->
+{{< feature publishVersion="1.32.0" >}}
+{{< alert title="Note" color="info" >}}This works the same across Fleet resizing and Rolling/Recreate Updates, in that the implementation responds to the
+underlying `GameServerSet`'s replicas being shrunk to a value smaller than the number of `Allocated`
+`GameServers` it controls. Therefore, this functionality works equally well with a rolling update as it does with an
+update strategy that requires at least two `Fleets`.
+{{< /alert >}}
+{{< /feature >}}
