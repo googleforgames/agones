@@ -19,12 +19,12 @@ CustomFasSyncInterval: true
 SafeToEvict: true
 SDKGracefulTermination: true
 StateAllocationFilter: true
+PodHostname: true
 
 # Alpha features
 PlayerAllocationFilter: false
 PlayerTracking: false
 ResetMetricsOnDelete: false
-PodHostname: false
 FleetAllocationOverflow: false
 SplitControllerAndExtensions: false
 
