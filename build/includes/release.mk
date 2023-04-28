@@ -60,7 +60,8 @@ release-branch: $(ensure-build-image)
 	# switch to the right project
 	$(DOCKER_RUN) gcloud config configurations activate agones-images
     git remote update -p
-	git checkout -b release-$(RELEASE_VERSION)	
+	git fetch --all --tags
+	git checkout -b release-$(RELEASE_VERSION) v$(RELEASE_VERSION)
 	git push -u upstream release-$(RELEASE_VERSION)
 
 	@echo "Now go make the $(RELEASE_VERSION) release on Github!"
