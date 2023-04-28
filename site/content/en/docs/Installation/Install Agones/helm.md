@@ -265,7 +265,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 
 | Parameter                             | Description                                                                                                                                                                                                                           | Default |
 |---------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------|
-| `agones.allocator.labels`                           | [Labels][labels] added to the Agones allocator pods                                                                                                                                                           | `{}`                               |
+| `agones.allocator.labels`                           | [Labels][labels] added to the Agones Allocator pods                                                                                                                                                           | `{}`                               |
 
 {{% /feature %}}
 
