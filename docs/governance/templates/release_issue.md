@@ -30,9 +30,7 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 - [ ] Ensure the next version milestone is created.
 - [ ] Any issues in the current milestone that are not closed, move to next milestone.
 - [ ] `git checkout main && git pull --rebase upstream main`
-- [ ] Run `make release-deploy-site`
-      - For example, if you are creating the {version} release, then this would deploy the {version}-1 service (release minus one, and then replace dots with dashes)
-- [ ] Run `make pre-build-release` to ensure all example images exist on agones-images/examples repository.
+- [ ] Run `make pre-build-release` to ensure all example images exist on agones-images/examples repository and to deploy the {version}-1 service on GCP/App Engine/Services.
 - [ ] Ensure the [helm `tag` value][values] is correct (tag field value in image should be {version})
 - [ ] Ensure the [helm `Chart` version values][chart] are correct (appVersion and version fields value should be {version})
 - [ ] Update SDK Package Versions
