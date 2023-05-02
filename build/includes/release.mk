@@ -52,15 +52,17 @@ release-deploy-site:
 	echo "Deploying Site Version: $$version" && \
 	$(MAKE) ENV=HUGO_ENV=snapshot site-deploy SERVICE=$$version
 
-# no-op-release
-void-release: RELEASE_VERSION ?= $(base_version)
-void-release: $(ensure-build-image)
+# creates release-branch
+release-branch: RELEASE_VERSION ?= $(base_version)
+release-branch: $(ensure-build-image)
 	@echo "Starting release for version: $(RELEASE_VERSION)"
 
 	# switch to the right project
 	$(DOCKER_RUN) gcloud config configurations activate agones-images
-
-	git checkout -b release-$(RELEASE_VERSION)	
+    
+	git remote update -p
+	git fetch --all --tags
+	git checkout -b release-$(RELEASE_VERSION) v$(RELEASE_VERSION)
 	git push -u upstream release-$(RELEASE_VERSION)
 
 	@echo "Now go make the $(RELEASE_VERSION) release on Github!"
