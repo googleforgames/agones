@@ -20,7 +20,6 @@ import (
 	"agones.dev/agones/pkg/apis"
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
-	"agones.dev/agones/pkg/util/runtime"
 	"github.com/pkg/errors"
 )
 
@@ -78,19 +77,6 @@ func findGameServerForAllocation(gsa *allocationv1.GameServerAllocation, list []
 		for j, sel := range gsa.Spec.Selectors {
 			if selectors[j] == nil && sel.Matches(gs) {
 				selectors[j] = &result{gs: gs, index: i}
-				// Once we have found a matching game server for allocation, perfom any Counter or List actions.
-				if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
-					if gsa.Spec.Counters != nil {
-						for c, ca := range gsa.Spec.Counters {
-							ca.CounterActions(c, gs)
-						}
-					}
-					if gsa.Spec.Lists != nil {
-						for l, la := range gsa.Spec.Lists {
-							la.ListActions(l, gs)
-						}
-					}
-				}
 			}
 		}
 	})

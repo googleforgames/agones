@@ -295,26 +295,41 @@ func (s *GameServerSelector) matchCounters(gs *agonesv1.GameServer) bool {
 }
 
 // CounterActions attempts to peform any actions from the CounterAction on the GameServer Counter.
-// TODO: Silent no-op on all actions if one cannot be performed? Or silent no-op on the action that can't be performed?
-// Silent no-op if unable to perform the action.
-func (ca *CounterAction) CounterActions(counter string, gs *agonesv1.GameServer) {
+// Returns a string list of any actions that could not be performed.
+func (ca *CounterAction) CounterActions(counter string, gs *agonesv1.GameServer) []string {
+	errors := []string{}
 	if ca.Capacity != nil {
-		gs.UpdateCounterCapacity(counter, *ca.Capacity)
+		capErr := gs.UpdateCounterCapacity(counter, *ca.Capacity)
+		if capErr != nil {
+			errors = append(errors, capErr.Error())
+		}
 	}
 	if ca.Action != nil && ca.Amount != nil {
-		gs.UpdateCount(counter, *ca.Action, *ca.Amount)
+		cntErr := gs.UpdateCount(counter, *ca.Action, *ca.Amount)
+		if cntErr != nil {
+			errors = append(errors, cntErr.Error())
+		}
 	}
+	return errors
 }
 
 // ListActions attempts to peform any actions from the ListAction on the GameServer List.
-// Silent no-op if unable to perform the action.
-func (la *ListAction) ListActions(list string, gs *agonesv1.GameServer) {
+// Returns a string list of any actions that could not be performed.
+func (la *ListAction) ListActions(list string, gs *agonesv1.GameServer) []string {
+	errors := []string{}
 	if la.Capacity != nil {
-		gs.UpdateListCapacity(list, *la.Capacity)
+		capErr := gs.UpdateListCapacity(list, *la.Capacity)
+		if capErr != nil {
+			errors = append(errors, capErr.Error())
+		}
 	}
 	if la.AddValues != nil && len(la.AddValues) > 0 {
-		gs.AppendListValues(list, la.AddValues)
+		cntErr := gs.AppendListValues(list, la.AddValues)
+		if cntErr != nil {
+			errors = append(errors, cntErr.Error())
+		}
 	}
+	return errors
 }
 
 // matchLists returns true if there is a match for the ListSelector in the GameServerStatus

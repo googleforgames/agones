@@ -1032,10 +1032,11 @@ func TestGameServerCounterActions(t *testing.T) {
 	INCREMENT := "Increment"
 
 	testScenarios := map[string]struct {
-		ca      CounterAction
-		counter string
-		gs      *agonesv1.GameServer
-		want    *agonesv1.GameServer
+		ca        CounterAction
+		counter   string
+		gs        *agonesv1.GameServer
+		want      *agonesv1.GameServer
+		errLength int
 	}{
 		"update counter capacity": {
 			ca: CounterAction{
@@ -1054,6 +1055,28 @@ func TestGameServerCounterActions(t *testing.T) {
 						Count:    1,
 						Capacity: 0,
 					}}}},
+			errLength: 0,
+		},
+		"fail update counter capacity and count": {
+			ca: CounterAction{
+				Action:   &INCREMENT,
+				Amount:   int64Pointer(10),
+				Capacity: int64Pointer(-1),
+			},
+			counter: "sages",
+			gs: &agonesv1.GameServer{Status: agonesv1.GameServerStatus{
+				Counters: map[string]agonesv1.CounterStatus{
+					"sages": {
+						Count:    99,
+						Capacity: 100,
+					}}}},
+			want: &agonesv1.GameServer{Status: agonesv1.GameServerStatus{
+				Counters: map[string]agonesv1.CounterStatus{
+					"sages": {
+						Count:    99,
+						Capacity: 100,
+					}}}},
+			errLength: 2,
 		},
 		"update counter count": {
 			ca: CounterAction{
@@ -1073,6 +1096,7 @@ func TestGameServerCounterActions(t *testing.T) {
 						Count:    11,
 						Capacity: 100,
 					}}}},
+			errLength: 0,
 		},
 		"update counter count and capacity": {
 			ca: CounterAction{
@@ -1093,13 +1117,15 @@ func TestGameServerCounterActions(t *testing.T) {
 						Count:    1,
 						Capacity: 10,
 					}}}},
+			errLength: 0,
 		},
 	}
 
 	for test, testScenario := range testScenarios {
 		t.Run(test, func(t *testing.T) {
-			testScenario.ca.CounterActions(testScenario.counter, testScenario.gs)
+			errs := testScenario.ca.CounterActions(testScenario.counter, testScenario.gs)
 			assert.Equal(t, testScenario.want, testScenario.gs)
+			assert.Equal(t, testScenario.errLength, len(errs))
 		})
 	}
 }
@@ -1112,10 +1138,11 @@ func TestGameServerListActions(t *testing.T) {
 	assert.NoError(t, runtime.ParseFeatures(fmt.Sprintf("%s=true", runtime.FeatureCountsAndLists)))
 
 	testScenarios := map[string]struct {
-		la   ListAction
-		list string
-		gs   *agonesv1.GameServer
-		want *agonesv1.GameServer
+		la        ListAction
+		list      string
+		gs        *agonesv1.GameServer
+		want      *agonesv1.GameServer
+		errLength int
 	}{
 		"update list capacity": {
 			la: ListAction{
@@ -1134,6 +1161,7 @@ func TestGameServerListActions(t *testing.T) {
 						Values:   []string{"page1", "page2"},
 						Capacity: 0,
 					}}}},
+			errLength: 0,
 		},
 		"update list values": {
 			la: ListAction{
@@ -1152,6 +1180,7 @@ func TestGameServerListActions(t *testing.T) {
 						Values:   []string{"sage1", "sage2", "sage3"},
 						Capacity: 100,
 					}}}},
+			errLength: 0,
 		},
 		"update list values and capacity": {
 			la: ListAction{
@@ -1171,6 +1200,7 @@ func TestGameServerListActions(t *testing.T) {
 						Values:   []string{"magician1", "magician2", "magician3"},
 						Capacity: 42,
 					}}}},
+			errLength: 0,
 		},
 		"update list values and capacity - value add fails": {
 			la: ListAction{
@@ -1190,13 +1220,15 @@ func TestGameServerListActions(t *testing.T) {
 						Values:   []string{"fairy1", "fairy2"},
 						Capacity: 2,
 					}}}},
+			errLength: 1,
 		},
 	}
 
 	for test, testScenario := range testScenarios {
 		t.Run(test, func(t *testing.T) {
-			testScenario.la.ListActions(testScenario.list, testScenario.gs)
+			errs := testScenario.la.ListActions(testScenario.list, testScenario.gs)
 			assert.Equal(t, testScenario.want, testScenario.gs)
+			assert.Equal(t, testScenario.errLength, len(errs))
 		})
 	}
 }

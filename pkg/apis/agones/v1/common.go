@@ -26,7 +26,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
-// Block of const
+// nolint:stylecheck
 const (
 	ErrContainerRequired        = "Container is required when using multiple containers in the pod template"
 	ErrHostPort                 = "HostPort cannot be specified with a Dynamic or Passthrough PortPolicy"

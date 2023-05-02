@@ -928,56 +928,67 @@ func (gs *GameServer) Patch(delta *GameServer) ([]byte, error) {
 }
 
 // UpdateCount increments or decrements a CounterStatus on a Game Server by the given amount.
-// TODO: Should we log on noncomplemention or return false? Issue #2716 asks for "silent no-op"
-func (gs *GameServer) UpdateCount(name string, action string, amount int64) {
+func (gs *GameServer) UpdateCount(name string, action string, amount int64) error {
+	err := fmt.Errorf("unable to UpdateCount: Name %s, Action %s, Amount %d", name, action, amount)
 	if !(action == GameServerAllocationIncrement || action == GameServerAllocationDecrement) || amount < 0 {
-		return
+		return err
 	}
 	if counter, ok := gs.Status.Counters[name]; ok {
 		cnt := counter.Count
 		if action == GameServerAllocationIncrement {
 			cnt += amount
+			// only check for Count > Capacity when incrementing
+			if cnt > counter.Capacity {
+				return err
+			}
 		}
 		if action == GameServerAllocationDecrement {
 			cnt -= amount
 		}
-		// TODO: Can we force the Capacity to update first before updating the Count if CounterAction updates both?
-		if (cnt < 0) || (cnt > counter.Capacity) {
-			return
+		if cnt < 0 {
+			return err
 		}
 		counter.Count = cnt
 		gs.Status.Counters[name] = counter
+		return nil
 	}
+	return err
 }
 
-// UpdateCounterCapacity updates the CounterStatus Capacity to the given capacity. Silent no-op.
-// TODO: Do anything if Capacity is updated to be less than the current Count?
-func (gs *GameServer) UpdateCounterCapacity(name string, capacity int64) {
+// UpdateCounterCapacity updates the CounterStatus Capacity to the given capacity.
+func (gs *GameServer) UpdateCounterCapacity(name string, capacity int64) error {
+	err := fmt.Errorf("unable to UpdateCounterCapacity: Name %s, Capacity %d", name, capacity)
 	if capacity < 0 {
-		return
+		return err
 	}
 	if counter, ok := gs.Status.Counters[name]; ok {
 		counter.Capacity = capacity
 		gs.Status.Counters[name] = counter
+		return nil
 	}
+	return err
 }
 
-// UpdateListCapacity updates the ListStatus Capacity to the given capacity. Silent no-op.
-func (gs *GameServer) UpdateListCapacity(name string, capacity int64) {
+// UpdateListCapacity updates the ListStatus Capacity to the given capacity.
+func (gs *GameServer) UpdateListCapacity(name string, capacity int64) error {
+	err := fmt.Errorf("unable to UpdateListCapacity: Name %s, Capacity %d", name, capacity)
 	if capacity < 0 || capacity > 1000 {
-		return
+		return err
 	}
 	if list, ok := gs.Status.Lists[name]; ok {
 		list.Capacity = capacity
 		gs.Status.Lists[name] = list
+		return nil
 	}
+	return err
 }
 
 // AppendListValues adds given the values to the ListStatus Values list. Any duplicates are silently
-// dropped. Silent no-op.
-func (gs *GameServer) AppendListValues(name string, values []string) {
+// dropped.
+func (gs *GameServer) AppendListValues(name string, values []string) error {
+	err := fmt.Errorf("unable to AppendListValues: Name %s, Values %s", name, values)
 	if len(values) == 0 {
-		return
+		return err
 	}
 	if list, ok := gs.Status.Lists[name]; ok {
 		vals := []string{}
@@ -986,12 +997,13 @@ func (gs *GameServer) AppendListValues(name string, values []string) {
 		vals = append(vals, values...)
 		vals = removeDuplicates(vals)
 		if (len(vals) > int(list.Capacity)) || (len(vals) == len(list.Values)) {
-			return
+			return err
 		}
-		// TODO: Do we need deepcopy here?
 		list.Values = vals
 		gs.Status.Lists[name] = list
+		return nil
 	}
+	return err
 }
 
 // removeDuplicates removes any duplicate values from a list. Returns new list with unique values only.

@@ -553,7 +553,7 @@ func (c *Allocator) allocationUpdateWorkers(ctx context.Context, workerCount int
 			for {
 				select {
 				case res := <-updateQueue:
-					gs, err := c.applyAllocationToGameServer(ctx, res.request.gsa.Spec.MetaPatch, res.gs)
+					gs, err := c.applyAllocationToGameServer(ctx, res.request.gsa.Spec.MetaPatch, res.gs, res.request.gsa)
 					if err != nil {
 						if !k8serrors.IsConflict(errors.Cause(err)) {
 							// since we could not allocate, we should put it back
@@ -580,7 +580,7 @@ func (c *Allocator) allocationUpdateWorkers(ctx context.Context, workerCount int
 
 // applyAllocationToGameServer patches the inputted GameServer with the allocation metadata changes, and updates it to the Allocated State.
 // Returns the updated GameServer.
-func (c *Allocator) applyAllocationToGameServer(ctx context.Context, mp allocationv1.MetaPatch, gs *agonesv1.GameServer) (*agonesv1.GameServer, error) {
+func (c *Allocator) applyAllocationToGameServer(ctx context.Context, mp allocationv1.MetaPatch, gs *agonesv1.GameServer, gsa *allocationv1.GameServerAllocation) (*agonesv1.GameServer, error) {
 	// patch ObjectMeta labels
 	if mp.Labels != nil {
 		if gs.ObjectMeta.Labels == nil {
@@ -606,6 +606,27 @@ func (c *Allocator) applyAllocationToGameServer(ctx context.Context, mp allocati
 	}
 	gs.ObjectMeta.Annotations[LastAllocatedAnnotationKey] = string(ts)
 	gs.Status.State = agonesv1.GameServerStateAllocated
+
+	// perfom any Counter or List actions
+	if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
+		actionErrors := []string{}
+		if gsa.Spec.Counters != nil {
+			for counter, ca := range gsa.Spec.Counters {
+				errs := ca.CounterActions(counter, gs)
+				actionErrors = append(actionErrors, errs...)
+			}
+		}
+		if gsa.Spec.Lists != nil {
+			for list, la := range gsa.Spec.Lists {
+				errs := la.ListActions(list, gs)
+				actionErrors = append(actionErrors, errs...)
+			}
+		}
+		// record any Counter or List action errors as a warning
+		if len(actionErrors) != 0 {
+			c.recorder.Event(gs, corev1.EventTypeWarning, string(runtime.FeatureCountsAndLists), fmt.Sprint(actionErrors))
+		}
+	}
 
 	return c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(ctx, gs, metav1.UpdateOptions{})
 }

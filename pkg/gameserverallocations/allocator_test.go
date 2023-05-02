@@ -17,6 +17,7 @@ package gameserverallocations
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 	"time"
 
@@ -26,6 +27,7 @@ import (
 	multiclusterv1 "agones.dev/agones/pkg/apis/multicluster/v1"
 	"agones.dev/agones/pkg/gameservers"
 	agtesting "agones.dev/agones/pkg/testing"
+	"agones.dev/agones/pkg/util/runtime"
 	"github.com/heptiolabs/healthcheck"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
@@ -245,14 +247,14 @@ func TestAllocatorApplyAllocationToGameServer(t *testing.T) {
 		time.Second, 5*time.Second, 500*time.Millisecond,
 	)
 
-	gs, err := allocator.applyAllocationToGameServer(ctx, allocationv1.MetaPatch{}, &agonesv1.GameServer{})
+	gs, err := allocator.applyAllocationToGameServer(ctx, allocationv1.MetaPatch{}, &agonesv1.GameServer{}, &allocationv1.GameServerAllocation{})
 	assert.NoError(t, err)
 	assert.Equal(t, agonesv1.GameServerStateAllocated, gs.Status.State)
 	assert.NotNil(t, gs.ObjectMeta.Annotations["agones.dev/last-allocated"])
 	var ts time.Time
 	assert.NoError(t, ts.UnmarshalText([]byte(gs.ObjectMeta.Annotations[LastAllocatedAnnotationKey])))
 
-	gs, err = allocator.applyAllocationToGameServer(ctx, allocationv1.MetaPatch{Labels: map[string]string{"foo": "bar"}}, &agonesv1.GameServer{})
+	gs, err = allocator.applyAllocationToGameServer(ctx, allocationv1.MetaPatch{Labels: map[string]string{"foo": "bar"}}, &agonesv1.GameServer{}, &allocationv1.GameServerAllocation{})
 	assert.NoError(t, err)
 	assert.Equal(t, agonesv1.GameServerStateAllocated, gs.Status.State)
 	assert.Equal(t, "bar", gs.ObjectMeta.Labels["foo"])
@@ -260,12 +262,158 @@ func TestAllocatorApplyAllocationToGameServer(t *testing.T) {
 
 	gs, err = allocator.applyAllocationToGameServer(ctx,
 		allocationv1.MetaPatch{Labels: map[string]string{"foo": "bar"}, Annotations: map[string]string{"bar": "foo"}},
-		&agonesv1.GameServer{})
+		&agonesv1.GameServer{}, &allocationv1.GameServerAllocation{})
 	assert.NoError(t, err)
 	assert.Equal(t, agonesv1.GameServerStateAllocated, gs.Status.State)
 	assert.Equal(t, "bar", gs.ObjectMeta.Labels["foo"])
 	assert.Equal(t, "foo", gs.ObjectMeta.Annotations["bar"])
 	assert.NotNil(t, gs.ObjectMeta.Annotations[LastAllocatedAnnotationKey])
+}
+
+func TestAllocatorApplyAllocationToGameServerCountsListsActions(t *testing.T) {
+	t.Parallel()
+	m := agtesting.NewMocks()
+	ctx := context.Background()
+	mp := allocationv1.MetaPatch{}
+
+	m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
+		ua := action.(k8stesting.UpdateAction)
+		gs := ua.GetObject().(*agonesv1.GameServer)
+		return true, gs, nil
+	})
+
+	allocator := NewAllocator(m.AgonesInformerFactory.Multicluster().V1().GameServerAllocationPolicies(),
+		m.KubeInformerFactory.Core().V1().Secrets(),
+		m.AgonesClient.AgonesV1(), m.KubeClient,
+		NewAllocationCache(m.AgonesInformerFactory.Agones().V1().GameServers(), gameservers.NewPerNodeCounter(m.KubeInformerFactory, m.AgonesInformerFactory), healthcheck.NewHandler()),
+		time.Second, 5*time.Second, 500*time.Millisecond,
+	)
+
+	ONE := int64(1)
+	FORTY := int64(40)
+	THOUSAND := int64(1000)
+	INCREMENT := "Increment"
+	READY := agonesv1.GameServerStateReady
+
+	gs1 := agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs1", Namespace: defaultNs, UID: "1"},
+		Status: agonesv1.GameServerStatus{NodeName: "node1", State: agonesv1.GameServerStateReady,
+			Lists: map[string]agonesv1.ListStatus{
+				"players": {
+					Values:   []string{},
+					Capacity: 100,
+				},
+			},
+			Counters: map[string]agonesv1.CounterStatus{
+				"rooms": {
+					Count:    101,
+					Capacity: 1000,
+				}}}}
+	gs2 := agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs2", Namespace: defaultNs, UID: "2"},
+		Status: agonesv1.GameServerStatus{NodeName: "node1", State: agonesv1.GameServerStateReady,
+			Lists: map[string]agonesv1.ListStatus{
+				"players": {
+					Values:   []string{},
+					Capacity: 100,
+				},
+			},
+			Counters: map[string]agonesv1.CounterStatus{
+				"rooms": {
+					Count:    101,
+					Capacity: 1000,
+				}}}}
+
+	testScenarios := map[string]struct {
+		features     string
+		gs           *agonesv1.GameServer
+		gsa          *allocationv1.GameServerAllocation
+		wantCounters map[string]agonesv1.CounterStatus
+		wantLists    map[string]agonesv1.ListStatus
+	}{
+		"CounterActions increment and ListActions append and update capacity": {
+			features: fmt.Sprintf("%s=true", runtime.FeatureCountsAndLists),
+			gs:       &gs1,
+			gsa: &allocationv1.GameServerAllocation{
+				ObjectMeta: metav1.ObjectMeta{Namespace: defaultNs},
+				Spec: allocationv1.GameServerAllocationSpec{
+					Selectors: []allocationv1.GameServerSelector{{
+						GameServerState: &READY,
+					}},
+					Scheduling: apis.Packed,
+					Counters: map[string]allocationv1.CounterAction{
+						"rooms": {
+							Action: &INCREMENT,
+							Amount: &ONE,
+						}},
+					Lists: map[string]allocationv1.ListAction{
+						"players": {
+							AddValues: []string{"x7un", "8inz"},
+							Capacity:  &FORTY,
+						}}}},
+			wantCounters: map[string]agonesv1.CounterStatus{
+				"rooms": {
+					Count:    102,
+					Capacity: 1000,
+				}},
+			wantLists: map[string]agonesv1.ListStatus{
+				"players": {
+					Values:   []string{"x7un", "8inz"},
+					Capacity: 40,
+				}},
+		},
+		"CounterActions and ListActions only update list capacity": {
+			features: fmt.Sprintf("%s=true", runtime.FeatureCountsAndLists),
+			gs:       &gs2,
+			gsa: &allocationv1.GameServerAllocation{
+				ObjectMeta: metav1.ObjectMeta{Namespace: defaultNs},
+				Spec: allocationv1.GameServerAllocationSpec{
+					Selectors: []allocationv1.GameServerSelector{{
+						GameServerState: &READY,
+					}},
+					Scheduling: apis.Packed,
+					Counters: map[string]allocationv1.CounterAction{
+						"rooms": {
+							Action: &INCREMENT,
+							Amount: &THOUSAND,
+						}},
+					Lists: map[string]allocationv1.ListAction{
+						"players": {
+							AddValues: []string{"x7un", "8inz"},
+							Capacity:  &ONE,
+						}}}},
+			wantCounters: map[string]agonesv1.CounterStatus{
+				"rooms": {
+					Count:    101,
+					Capacity: 1000,
+				}},
+			wantLists: map[string]agonesv1.ListStatus{
+				"players": {
+					Values:   []string{},
+					Capacity: 1,
+				}},
+		},
+	}
+
+	for test, testScenario := range testScenarios {
+		t.Run(test, func(t *testing.T) {
+			runtime.FeatureTestMutex.Lock()
+			defer runtime.FeatureTestMutex.Unlock()
+			// we always set the feature flag in all these tests, so always process it.
+			require.NoError(t, runtime.ParseFeatures(testScenario.features))
+
+			foundGs, err := allocator.applyAllocationToGameServer(ctx, mp, testScenario.gs, testScenario.gsa)
+			assert.NoError(t, err)
+			for counter, counterStatus := range testScenario.wantCounters {
+				if gsCounter, ok := foundGs.Status.Counters[counter]; ok {
+					assert.Equal(t, counterStatus, gsCounter)
+				}
+			}
+			for list, listStatus := range testScenario.wantLists {
+				if gsList, ok := foundGs.Status.Lists[list]; ok {
+					assert.Equal(t, listStatus, gsList)
+				}
+			}
+		})
+	}
 }
 
 func TestAllocationApplyAllocationError(t *testing.T) {
@@ -284,7 +432,7 @@ func TestAllocationApplyAllocationError(t *testing.T) {
 		time.Second, 5*time.Second, 500*time.Millisecond,
 	)
 
-	gsa, err := allocator.applyAllocationToGameServer(ctx, allocationv1.MetaPatch{}, &agonesv1.GameServer{})
+	gsa, err := allocator.applyAllocationToGameServer(ctx, allocationv1.MetaPatch{}, &agonesv1.GameServer{}, &allocationv1.GameServerAllocation{})
 	logrus.WithError(err).WithField("gsa", gsa).WithField("test", t.Name()).Info("Allocation should fail")
 	assert.Error(t, err)
 }
