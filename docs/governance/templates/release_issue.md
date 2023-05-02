@@ -81,6 +81,7 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 - [ ] Attach all assets found in the cloud storage with {version} to the draft GitHub Release.
 - [ ] Copy any review changes from the release blog post into the draft GitHub release.
 - [ ] Publish the draft GitHub Release.
+- [ ] Run `make release-branch` to create a release branch.
 - [ ] Email the [mailing list][list] with the release details (copy-paste the release blog post).
 - [ ] Paste the announcement blog post to the #users Slack group.
 - [ ] Post to the [agonesdev](https://twitter.com/agonesdev) Twitter account.

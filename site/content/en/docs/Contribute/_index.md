@@ -63,13 +63,6 @@ or to hide a section from 1.24.0 onward:
 {{%/* /feature */%}}
 ```
 
-
-{{< alert title="Warning" color="warning">}}
- Due to [this hugo bug](https://github.com/gohugoio/hugo/issues/4695) headers wrapped in this shortcode will
-  not be displayed in the Table of Contents. So we will need to actively remove the `feature` shortcode once
-  the release versions have been passed for new content, for content that is affected.
-{{< /alert >}}
-
 ## Regenerate Diagrams
 
 To regenerate the [PlantUML](http://plantuml.com/) or [Dot](https://www.graphviz.org/doc/info/lang.html) diagrams,
