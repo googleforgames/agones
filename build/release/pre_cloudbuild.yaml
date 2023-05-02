@@ -63,4 +63,12 @@ steps:
       - DOCKER_RUN_ARGS=--network=cloudbuild
     args: ["test-examples-on-gar"]
 
-timeout: 3600s
+  #
+  # Deploys the site by taking in the base version and deploying the previous version
+  #
+  - name: "make-docker"
+    id: release-deploy-site
+    dir: "build"
+    args: ["release-deploy-site"]
+
+timeout: 5400s
