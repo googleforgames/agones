@@ -50,7 +50,7 @@ site-gen-app-yaml:
 			"SERVICE=$(SERVICE) envsubst < app.yaml > .app.yaml"
 
 site-deploy: site-gen-app-yaml site-static
-	docker run -t --rm $(common_mounts) --workdir=$(mount_path) $(DOCKER_RUN_ARGS) \
+	docker run --network=cloudbuild -t --rm $(common_mounts) --workdir=$(mount_path) $(DOCKER_RUN_ARGS) \
 	-e GO111MODULE=on -e SHORT_SHA=$(shell git rev-parse --short=7 HEAD) $(build_tag) bash -c \
 	'printenv && cd  ./site && \
     gcloud app deploy .app.yaml --no-promote --quiet --version=$$SHORT_SHA'
