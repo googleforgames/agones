@@ -21,7 +21,7 @@ steps:
   script: |
     #!/usr/bin/env bash
 
-    export GO_VERSION=1.19.1
+    export GO_VERSION=1.20.4
     cd /usr/local
     curl -SsL https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz | tar -xzf-
 

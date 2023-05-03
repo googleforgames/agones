@@ -1,6 +1,6 @@
 module agones.dev/agones/examples/allocation-endpoint/server
 
-go 1.19
+go 1.20
 
 require (
 	agones.dev/agones v1.30.0
