@@ -67,7 +67,7 @@ RUN curl -L  ${HELM_URL} > /tmp/helm.tar.gz \
 RUN echo "source <(helm completion bash)" >> /root/.bashrc
 
 # install golang-ci linter
-RUN go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.49.0
+RUN go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.51.2
 
 # install gotestsum test runner
 RUN go install gotest.tools/gotestsum@latest
