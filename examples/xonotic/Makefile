@@ -28,7 +28,7 @@ REPOSITORY = us-docker.pkg.dev/agones-images/examples
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_path := $(dir $(mkfile_path))
 root_path := $(realpath $(project_path)/../..)
-image_tag = $(REPOSITORY)/xonotic-example:1.0
+image_tag = $(REPOSITORY)/xonotic-example:1.1
 
 #   _____                    _
 #  |_   _|_ _ _ __ __ _  ___| |_ ___
@@ -43,7 +43,7 @@ build:
 
 # Push a docker image to the repository, and save it
 push: build
-	docker push $(image_tag) 
+	docker push $(image_tag)
 
 # check if hosted on Google Artifact Registry
 gar-check:
