@@ -20,13 +20,13 @@ RUN apt-get --allow-releaseinfo-change update && \
 
 # install go
 WORKDIR /usr/local
-ENV GO_VERSION=1.19.1
+ENV GO_VERSION=1.20.4
 ENV GO111MODULE=on
 ENV GOPATH /go
 RUN wget -q https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz && \
     tar -xzf go${GO_VERSION}.linux-amd64.tar.gz && rm go${GO_VERSION}.linux-amd64.tar.gz && mkdir -p ${GOPATH}
 
-RUN echo '§' && apt-get -qy update 
+RUN echo '§' && apt-get -qy update
 RUN add-apt-repository -y -r ppa:chris-lea/node.js
 RUN rm -f /etc/apt/sources.list.d/chris-lea-node_js-*.list
 RUN rm -f /etc/apt/sources.list.d/chris-lea-node_js-*.list.save
