@@ -23,7 +23,7 @@
 #    |_|\__,_|_|  \__, |\___|\__|___/
 #                 |___/
 
-# test all example images exist on Google Artifact Registry
+# test all example images exist on Google Artifact Registry (GAR)
 test-examples-on-gar: example-image-test.allocation-endpoint
 test-examples-on-gar: example-image-test.autoscaler-webhook
 test-examples-on-gar: example-image-test.cpp-simple
@@ -38,8 +38,9 @@ test-examples-on-gar: example-image-test.simple-game-server
 push-example-golang-images: example-image-push.allocation-endpoint
 push-example-golang-images: example-image-push.autoscaler-webhook
 push-example-golang-images: example-image-push.crd-client
-push-example-golang-images: example-image-push.supertuxkart
 push-example-golang-images: example-image-push.simple-game-server
+push-example-golang-images: example-image-push.supertuxkart
+push-example-golang-images: example-image-push.xonotic
 
 # Test to ensure the example image found in the % folder is on GAR. Fails if it is not.
 example-image-test.%:
@@ -48,3 +49,44 @@ example-image-test.%:
 example-image-push.%:
 	$(DOCKER_RUN) bash -c "cd examples/$* && make push"
 
+# Perform make build for golang examples
+build-go-examples: build-example-allocation-endpoint build-example-autoscaler-webhook build-example-crd-client build-example-simple-game-server build-example-supertuxkart build-example-xonotic
+
+# Perform make build for all examples
+build-examples: build-example-allocation-endpoint build-example-autoscaler-webhook build-example-cpp-simple build-example-crd-client build-example-nodejs-simple build-example-rust-simple build-example-simple-game-server build-example-supertuxkart build-example-xonotic
+
+# Run "make build" command for one example directory
+build-example:
+	cd  $(examples_folder)/$(EXAMPLE); \
+	if [ -f Makefile ] ; then \
+		make build; \
+	else \
+		echo "Makefile was not found in "/examples/$(EXAMPLE)" directory - nothing to execute" ; \
+	fi
+
+build-example-allocation-endpoint:
+	$(MAKE) build-example EXAMPLE=allocation-endpoint
+
+build-example-autoscaler-webhook:
+	$(MAKE) build-example EXAMPLE=autoscaler-webhook
+
+build-example-cpp-simple:
+	$(MAKE) build-example EXAMPLE=cpp-simple
+
+build-example-crd-client:
+	$(MAKE) build-example EXAMPLE=crd-client
+
+build-example-nodejs-simple:
+	$(MAKE) build-example EXAMPLE=nodejs-simple
+
+build-example-rust-simple:
+	$(MAKE) build-example EXAMPLE=rust-simple
+
+build-example-simple-game-server:
+	$(MAKE) build-example EXAMPLE=simple-game-server
+
+build-example-supertuxkart:
+	$(MAKE) build-example EXAMPLE=supertuxkart
+
+build-example-xonotic:
+	$(MAKE) build-example EXAMPLE=xonotic

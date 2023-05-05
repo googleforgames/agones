@@ -87,4 +87,4 @@ spec:
         spec:
           containers:
           - name: simple-game-server
-            image: us-docker.pkg.dev/agones-images/examples/simple-game-server:0.15
+            image: us-docker.pkg.dev/agones-images/examples/simple-game-server:0.16
