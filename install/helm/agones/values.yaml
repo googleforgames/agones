@@ -36,6 +36,7 @@ agones:
     allocator:
       name: agones-allocator
       annotations: {}
+      labels: {}
     controller:
       name: agones-controller
       annotations: {}

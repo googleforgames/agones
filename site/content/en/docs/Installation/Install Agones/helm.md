@@ -265,7 +265,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 
 | Parameter                             | Description                                                                                                                                                                                                                           | Default |
 |---------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------|
-|                                                          |                                                                                                                                                                                                                                                            |
+| `agones.allocator.labels`                           | [Labels][labels] Added to the Agones Allocator pods                                                                                                                                                           | `{}`                               |
 
 {{% /feature %}}
 
@@ -279,6 +279,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 [allocator]: {{< ref "/docs/advanced/allocator-service.md" >}}
 [loadBalancer]: https://kubernetes.io/docs/concepts/services-networking/service/#loadbalancer
 [annotations]: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
+[labels]:https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
 [resources]: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
 [pruning]: https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/#field-pruning
 [gameserver]: {{< ref "/docs/Reference/gameserver.md" >}}

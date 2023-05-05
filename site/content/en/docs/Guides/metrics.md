@@ -268,7 +268,7 @@ If you would like to enable Cloud Monitoring in conjunction with [Workload Ident
 1. Pass parameters to helm when installing Agones to add annotations to the `agones-controller` and `agones-allocator` Kubernetes service accounts:
 
 ```bash
-helm install my-release --namespace agones-system --create-namespace agones/agones --set agones.metrics.stackdriverEnabled=true --set agones.metrics.prometheusEnabled=false --set agones.metrics.prometheusServiceDiscovery=false --set agones.serviceaccount.allocator.annotations."iam\.gke\.io/gcp-service-account"="GSA_NAME@PROJECT_ID\.iam\.gserviceaccount\.com" --set agones.serviceaccount.controller.annotations."iam\.gke\.io/gcp-service-account"="GSA_NAME@PROJECT_ID\.iam\.gserviceaccount\.com"
+helm install my-release --namespace agones-system --create-namespace agones/agones --set agones.metrics.stackdriverEnabled=true --set agones.metrics.prometheusEnabled=false --set agones.metrics.prometheusServiceDiscovery=false --set agones.serviceaccount.allocator.annotations."iam\.gke\.io/gcp-service-account"="GSA_NAME@PROJECT_ID\.iam\.gserviceaccount\.com" --set agones.serviceaccount.allocator.labels."iam\.gke\.io/gcp-service-account"="GSA_NAME@PROJECT_ID\.iam\.gserviceaccount\.com" --set agones.serviceaccount.controller.annotations."iam\.gke\.io/gcp-service-account"="GSA_NAME@PROJECT_ID\.iam\.gserviceaccount\.com"
 ```
 
 To verify that metrics are being sent to Cloud Monitoring, create a Fleet or a Gameserver and look for the metrics to show up in the Cloud Monitoring dashboard. Navigate to the [Metrics explorer](https://console.cloud.google.com/monitoring/metrics-explorer) and search for metrics with the prefix `agones/`. Select a metric and look for data to be plotted in the graph to the right.

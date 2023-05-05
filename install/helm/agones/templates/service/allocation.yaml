@@ -149,6 +149,9 @@ spec:
         app: {{ template "agones.name" . }}
         release: {{ .Release.Name }}
         heritage: {{ .Release.Service }}
+{{- if .Values.agones.allocator.labels }}
+{{- toYaml .Values.agones.allocator.labels | nindent 8 }}
+{{- end }}
       annotations:
 {{- if .Values.agones.allocator.generateTLS }}
         revision/tls-cert: {{ .Release.Revision | quote }}
@@ -349,6 +352,10 @@ metadata:
 {{- if .Values.agones.serviceaccount.allocator.annotations }}
   annotations:
 {{- toYaml .Values.agones.serviceaccount.allocator.annotations | nindent 4 }}
+{{- end }}
+{{- if .Values.agones.serviceaccount.allocator.labels }}
+  labels:
+{{- toYaml .Values.agones.serviceaccount.allocator.labels | nindent 4 }}
 {{- end }}
 ---
 # Bind the agones-allocator ServiceAccount to the agones-allocator ClusterRole
