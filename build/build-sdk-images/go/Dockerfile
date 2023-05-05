@@ -20,7 +20,7 @@ RUN apt-get --allow-releaseinfo-change update && \
 
 # install go
 WORKDIR /usr/local
-ENV GO_VERSION=1.19.1
+ENV GO_VERSION=1.20.4
 ENV GO111MODULE=on
 ENV GOPATH /go
 RUN wget -q https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz && \
@@ -32,7 +32,7 @@ ENV PATH /usr/local/go/bin:/go/bin:$PATH
 RUN go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28 && \
     go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2 && \
     go install golang.org/x/tools/cmd/goimports@latest
-    
+
 
 # code generation scripts
 COPY *.sh /root/

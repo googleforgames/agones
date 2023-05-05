@@ -21,18 +21,9 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 ## Steps
 
 - [ ] Run `make shell` and run `gcloud config configurations activate agones-images`.
-- [ ] Review [closed issues with no milestone](https://github.com/googleforgames/agones/issues?q=is%3Aissue+is%3Aclosed+no%3Amilestone++-label%3Ainvalid+-label%3Aduplicate+-label%3Aquestion+-label%3Awontfix++-label%3Aarea%2Fmeta) and add relevant ones to the current milestone.
-  - Issues tagged as `invalid`, `duplicate`, `question`, `wontfix`, or `area/meta` don't need review.
-- [ ] Review closed issues in the current milestone to ensure that they have appropriate tags.
-- [ ] Review [merged PRs that have no milestone](https://github.com/googleforgames/agones/pulls?q=is%3Apr+is%3Amerged+no%3Amilestone+) and add them to the current milestone.
-- [ ] Review merged PRs in the current milestone to ensure that they have appropriate tags.
 - [ ] Ensure the next stable releases in the Google Calendar have the correct version number.
-- [ ] Ensure the next version milestone is created.
-- [ ] Any issues in the current milestone that are not closed, move to next milestone.
 - [ ] `git checkout main && git pull --rebase upstream main`
-- [ ] Run `make release-deploy-site`
-      - For example, if you are creating the {version} release, then this would deploy the {version}-1 service (release minus one, and then replace dots with dashes)
-- [ ] Run `make pre-build-release` to ensure all example images exist on agones-images/examples repository.
+- [ ] Run `make pre-build-release` to ensure all example images exist on agones-images/examples repository and to deploy the {version}-1 service on GCP/App Engine/Services.
 - [ ] Ensure the [helm `tag` value][values] is correct (tag field value in image should be {version})
 - [ ] Ensure the [helm `Chart` version values][chart] are correct (appVersion and version fields value should be {version})
 - [ ] Update SDK Package Versions
@@ -94,8 +85,7 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 - [ ] Update the [`sdks/unity/package.json`][unity] package file's `version` field to {version}+1-dev
 - [ ] Run `make gen-install gen-api-docs`
 - [ ] Create PR with these changes, and merge them with approval
-- [ ] Close this issue.
-- [ ] Close the current milestone. _Congratulations!_ - the release is now complete! :tada: :clap: :smile: :+1:
+- [ ] Close this issue. _Congratulations!_ - the release is now complete! :tada: :clap: :smile: :+1:
 
 [values]: https://github.com/googleforgames/agones/blob/main/install/helm/agones/values.yaml#L224
 [chart]: https://github.com/googleforgames/agones/blob/main/install/helm/agones/Chart.yaml#L18-L19

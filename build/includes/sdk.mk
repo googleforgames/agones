@@ -213,30 +213,3 @@ sdk-shell-csharp:
 sdk-publish-csharp: RELEASE_VERSION ?= $(base_version)
 sdk-publish-csharp:
 	$(MAKE) run-sdk-command-csharp COMMAND=publish VERSION=$(RELEASE_VERSION) DOCKER_RUN_ARGS="$(DOCKER_RUN_ARGS) -it"
-
-# Perform make build for all examples
-build-examples: build-example-xonotic build-example-cpp-simple build-example-autoscaler-webhook build-example-nodejs-simple
-
-# Run "make build" command for one example directory
-build-example:
-	cd  $(examples_folder)/$(EXAMPLE); \
-	if [ -f Makefile ] ; then \
-		make build; \
-	else \
-		echo "Makefile was not found in "/examples/$(EXAMPLE)" directory - nothing to execute" ; \
-	fi
-
-build-example-xonotic:
-	$(MAKE) build-example EXAMPLE=xonotic
-
-build-example-cpp-simple:
-	$(MAKE) build-example EXAMPLE=cpp-simple
-
-build-example-rust-simple:
-	$(MAKE) build-example EXAMPLE=rust-simple
-
-build-example-autoscaler-webhook:
-	$(MAKE) build-example EXAMPLE=autoscaler-webhook
-
-build-example-nodejs-simple:
-	$(MAKE) build-example EXAMPLE=nodejs-simple

@@ -36,7 +36,7 @@
 # for details.
 ARG WINDOWS_VERSION=ltsc2019
 
-FROM golang:1.19.1-windowsservercore as base
+FROM golang:1.20.4-windowsservercore as base
 
 # Set the default shell
 # See: https://docs.docker.com/engine/reference/builder/#shell
