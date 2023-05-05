@@ -15,6 +15,7 @@
 package v1
 
 import (
+	"errors"
 	"fmt"
 
 	"agones.dev/agones/pkg/apis"
@@ -295,41 +296,41 @@ func (s *GameServerSelector) matchCounters(gs *agonesv1.GameServer) bool {
 }
 
 // CounterActions attempts to peform any actions from the CounterAction on the GameServer Counter.
-// Returns a string list of any actions that could not be performed.
-func (ca *CounterAction) CounterActions(counter string, gs *agonesv1.GameServer) []string {
-	errors := []string{}
+// Returns the errors of any actions that could not be performed.
+func (ca *CounterAction) CounterActions(counter string, gs *agonesv1.GameServer) error {
+	var errs error
 	if ca.Capacity != nil {
 		capErr := gs.UpdateCounterCapacity(counter, *ca.Capacity)
 		if capErr != nil {
-			errors = append(errors, capErr.Error())
+			errs = errors.Join(errs, capErr)
 		}
 	}
 	if ca.Action != nil && ca.Amount != nil {
 		cntErr := gs.UpdateCount(counter, *ca.Action, *ca.Amount)
 		if cntErr != nil {
-			errors = append(errors, cntErr.Error())
+			errs = errors.Join(errs, cntErr)
 		}
 	}
-	return errors
+	return errs
 }
 
 // ListActions attempts to peform any actions from the ListAction on the GameServer List.
 // Returns a string list of any actions that could not be performed.
-func (la *ListAction) ListActions(list string, gs *agonesv1.GameServer) []string {
-	errors := []string{}
+func (la *ListAction) ListActions(list string, gs *agonesv1.GameServer) error {
+	var errs error
 	if la.Capacity != nil {
 		capErr := gs.UpdateListCapacity(list, *la.Capacity)
 		if capErr != nil {
-			errors = append(errors, capErr.Error())
+			errs = errors.Join(errs, capErr)
 		}
 	}
 	if la.AddValues != nil && len(la.AddValues) > 0 {
 		cntErr := gs.AppendListValues(list, la.AddValues)
 		if cntErr != nil {
-			errors = append(errors, cntErr.Error())
+			errs = errors.Join(errs, cntErr)
 		}
 	}
-	return errors
+	return errs
 }
 
 // matchLists returns true if there is a match for the ListSelector in the GameServerStatus

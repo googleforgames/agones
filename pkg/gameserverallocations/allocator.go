@@ -18,6 +18,7 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
+	goErrors "errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -609,22 +610,24 @@ func (c *Allocator) applyAllocationToGameServer(ctx context.Context, mp allocati
 
 	// perfom any Counter or List actions
 	if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
-		actionErrors := []string{}
+		var counterErrors error
+		var listErrors error
 		if gsa.Spec.Counters != nil {
 			for counter, ca := range gsa.Spec.Counters {
-				errs := ca.CounterActions(counter, gs)
-				actionErrors = append(actionErrors, errs...)
+				counterErrors = goErrors.Join(counterErrors, ca.CounterActions(counter, gs))
 			}
 		}
 		if gsa.Spec.Lists != nil {
 			for list, la := range gsa.Spec.Lists {
-				errs := la.ListActions(list, gs)
-				actionErrors = append(actionErrors, errs...)
+				listErrors = goErrors.Join(listErrors, la.ListActions(list, gs))
 			}
 		}
 		// record any Counter or List action errors as a warning
-		if len(actionErrors) != 0 {
-			c.recorder.Event(gs, corev1.EventTypeWarning, string(runtime.FeatureCountsAndLists), fmt.Sprint(actionErrors))
+		if counterErrors != nil {
+			c.recorder.Event(gs, corev1.EventTypeWarning, "Counter Errors", counterErrors.Error())
+		}
+		if listErrors != nil {
+			c.recorder.Event(gs, corev1.EventTypeWarning, "List Errors", listErrors.Error())
 		}
 	}
 

@@ -2050,34 +2050,39 @@ func TestGameServerAppendListValues(t *testing.T) {
 	}
 }
 
-func TestRemoveDuplicates(t *testing.T) {
+func TestMergeRemoveDuplicates(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]struct {
-		values []string
-		want   []string
+		str1 []string
+		str2 []string
+		want []string
 	}{
-		"empty string array": {
-			values: []string{},
-			want:   []string{},
+		"empty string arrays": {
+			str1: []string{},
+			str2: []string{},
+			want: []string{},
 		},
 		"no duplicates": {
-			values: []string{"one", "two", "three"},
-			want:   []string{"one", "two", "three"},
+			str1: []string{"one"},
+			str2: []string{"two", "three"},
+			want: []string{"one", "two", "three"},
 		},
 		"remove one duplicate": {
-			values: []string{"one", "one", "one"},
-			want:   []string{"one"},
+			str1: []string{"one", "one", "one"},
+			str2: []string{"one", "one", "one"},
+			want: []string{"one"},
 		},
 		"remove multiple duplicates": {
-			values: []string{"one", "two", "one", "one", "two"},
-			want:   []string{"one", "two"},
+			str1: []string{"one", "two"},
+			str2: []string{"two", "one"},
+			want: []string{"one", "two"},
 		},
 	}
 
 	for test, testCase := range testCases {
 		t.Run(test, func(t *testing.T) {
-			got := removeDuplicates(testCase.values)
+			got := mergeRemoveDuplicates(testCase.str1, testCase.str2)
 			assert.Equal(t, testCase.want, got)
 		})
 	}

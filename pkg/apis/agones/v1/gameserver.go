@@ -929,9 +929,11 @@ func (gs *GameServer) Patch(delta *GameServer) ([]byte, error) {
 
 // UpdateCount increments or decrements a CounterStatus on a Game Server by the given amount.
 func (gs *GameServer) UpdateCount(name string, action string, amount int64) error {
-	err := fmt.Errorf("unable to UpdateCount: Name %s, Action %s, Amount %d", name, action, amount)
-	if !(action == GameServerAllocationIncrement || action == GameServerAllocationDecrement) || amount < 0 {
-		return err
+	if !(action == GameServerAllocationIncrement || action == GameServerAllocationDecrement) {
+		return errors.Errorf("unable to UpdateCount with Name %s, Action %s, Amount %d. Allocation action must be one of %s or %s", name, action, amount, GameServerAllocationIncrement, GameServerAllocationDecrement)
+	}
+	if amount < 0 {
+		return errors.Errorf("unable to UpdateCount with Name %s, Action %s, Amount %d. Amount must be greater than 0", name, action, amount)
 	}
 	if counter, ok := gs.Status.Counters[name]; ok {
 		cnt := counter.Count
@@ -939,82 +941,87 @@ func (gs *GameServer) UpdateCount(name string, action string, amount int64) erro
 			cnt += amount
 			// only check for Count > Capacity when incrementing
 			if cnt > counter.Capacity {
-				return err
+				return errors.Errorf("unable to UpdateCount with Name %s, Action %s, Amount %d. Incremented Count %d is greater than available capacity %d", name, action, amount, cnt, counter.Capacity)
 			}
-		}
-		if action == GameServerAllocationDecrement {
+		} else {
 			cnt -= amount
-		}
-		if cnt < 0 {
-			return err
+			// only check for Count < 0 when decrementing
+			if cnt < 0 {
+				return errors.Errorf("unable to UpdateCount with Name %s, Action %s, Amount %d. Decremented Count %d is less than 0", name, action, amount, cnt)
+			}
 		}
 		counter.Count = cnt
 		gs.Status.Counters[name] = counter
 		return nil
 	}
-	return err
+	return errors.Errorf("unable to UpdateCount with Name %s, Action %s, Amount %d. Counter not found in GameServer %s", name, action, amount, gs.ObjectMeta.GetName())
 }
 
 // UpdateCounterCapacity updates the CounterStatus Capacity to the given capacity.
 func (gs *GameServer) UpdateCounterCapacity(name string, capacity int64) error {
-	err := fmt.Errorf("unable to UpdateCounterCapacity: Name %s, Capacity %d", name, capacity)
 	if capacity < 0 {
-		return err
+		return errors.Errorf("unable to UpdateCounterCapacity: Name %s, Capacity %d. Capacity must be greater than or equal to 0", name, capacity)
 	}
 	if counter, ok := gs.Status.Counters[name]; ok {
 		counter.Capacity = capacity
 		gs.Status.Counters[name] = counter
 		return nil
 	}
-	return err
+	return errors.Errorf("unable to UpdateCounterCapacity: Name %s, Capacity %d. Counter not found in GameServer %s", name, capacity, gs.ObjectMeta.GetName())
 }
 
 // UpdateListCapacity updates the ListStatus Capacity to the given capacity.
 func (gs *GameServer) UpdateListCapacity(name string, capacity int64) error {
-	err := fmt.Errorf("unable to UpdateListCapacity: Name %s, Capacity %d", name, capacity)
 	if capacity < 0 || capacity > 1000 {
-		return err
+		return errors.Errorf("unable to UpdateListCapacity: Name %s, Capacity %d. Capacity must be between 0 and 1000, inclusive", name, capacity)
 	}
 	if list, ok := gs.Status.Lists[name]; ok {
 		list.Capacity = capacity
 		gs.Status.Lists[name] = list
 		return nil
 	}
-	return err
+	return errors.Errorf("unable to UpdateListCapacity: Name %s, Capacity %d. List not found in GameServer %s", name, capacity, gs.ObjectMeta.GetName())
 }
 
-// AppendListValues adds given the values to the ListStatus Values list. Any duplicates are silently
-// dropped.
+// AppendListValues adds unique values to the ListStatus Values list.
 func (gs *GameServer) AppendListValues(name string, values []string) error {
-	err := fmt.Errorf("unable to AppendListValues: Name %s, Values %s", name, values)
 	if len(values) == 0 {
-		return err
+		return errors.Errorf("unable to AppendListValues: Name %s, Values %s. No values to append", name, values)
 	}
 	if list, ok := gs.Status.Lists[name]; ok {
-		vals := []string{}
-		// Maintain ordering so new values are appended to the end of list.Values
-		vals = append(vals, list.Values...)
-		vals = append(vals, values...)
-		vals = removeDuplicates(vals)
-		if (len(vals) > int(list.Capacity)) || (len(vals) == len(list.Values)) {
-			return err
+		mergedList := mergeRemoveDuplicates(list.Values, values)
+		if len(mergedList) > int(list.Capacity) {
+			return errors.Errorf("unable to AppendListValues: Name %s, Values %s. Appended list length %d exceeds list capacity %d", name, values, len(mergedList), list.Capacity)
 		}
-		list.Values = vals
+		// If all given values are duplicates we give an error warning.
+		if len(mergedList) == len(list.Values) {
+			return errors.Errorf("unable to AppendListValues: Name %s, Values %s. All appended values are duplicates of the existing list", name, values)
+		}
+		// If only some values are duplicates, those duplicate values are silently dropped.
+		list.Values = mergedList
 		gs.Status.Lists[name] = list
 		return nil
 	}
-	return err
+	return errors.Errorf("unable to AppendListValues: Name %s, Values %s. List not found in GameServer %s", name, values, gs.ObjectMeta.GetName())
 }
 
-// removeDuplicates removes any duplicate values from a list. Returns new list with unique values only.
-func removeDuplicates(values []string) []string {
+// mergeRemoveDuplicates merges two lists and removes any duplicate values.
+// Maintains ordering, so new values from list2 are appended to the end of list1.
+// Returns a new list with unique values only.
+func mergeRemoveDuplicates(list1 []string, list2 []string) []string {
+	uniqueList := []string{}
 	listMap := make(map[string]bool)
-	uniqueValues := []string{}
-	for _, v := range values {
-		if _, ok := listMap[v]; !ok {
-			uniqueValues = append(uniqueValues, v)
-			listMap[v] = true
+	for _, v1 := range list1 {
+		if _, ok := listMap[v1]; !ok {
+			uniqueList = append(uniqueList, v1)
+			listMap[v1] = true
 		}
 	}
-	return uniqueValues
+	for _, v2 := range list2 {
+		if _, ok := listMap[v2]; !ok {
+			uniqueList = append(uniqueList, v2)
+			listMap[v2] = true
+		}
+	}
+	return uniqueList
 }
