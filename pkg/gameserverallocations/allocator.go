@@ -565,7 +565,6 @@ func (c *Allocator) allocationUpdateWorkers(ctx context.Context, workerCount int
 						res.err = errors.Wrap(err, "error updating allocated gameserver")
 					} else {
 						res.gs = gs
-						c.recorder.Event(res.gs, corev1.EventTypeNormal, string(res.gs.Status.State), "Allocated")
 					}
 
 					res.request.response <- res
@@ -609,9 +608,9 @@ func (c *Allocator) applyAllocationToGameServer(ctx context.Context, mp allocati
 	gs.Status.State = agonesv1.GameServerStateAllocated
 
 	// perfom any Counter or List actions
+	var counterErrors error
+	var listErrors error
 	if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
-		var counterErrors error
-		var listErrors error
 		if gsa.Spec.Counters != nil {
 			for counter, ca := range gsa.Spec.Counters {
 				counterErrors = goErrors.Join(counterErrors, ca.CounterActions(counter, gs))
@@ -622,16 +621,23 @@ func (c *Allocator) applyAllocationToGameServer(ctx context.Context, mp allocati
 				listErrors = goErrors.Join(listErrors, la.ListActions(list, gs))
 			}
 		}
-		// record any Counter or List action errors as a warning
-		if counterErrors != nil {
-			c.recorder.Event(gs, corev1.EventTypeWarning, "Counter Errors", counterErrors.Error())
-		}
-		if listErrors != nil {
-			c.recorder.Event(gs, corev1.EventTypeWarning, "List Errors", listErrors.Error())
-		}
 	}
 
-	return c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(ctx, gs, metav1.UpdateOptions{})
+	gsUpdate, updateErr := c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(ctx, gs, metav1.UpdateOptions{})
+	if updateErr != nil {
+		return gsUpdate, updateErr
+	}
+
+	// If successful Update record any Counter or List action errors as a warning
+	if counterErrors != nil {
+		c.recorder.Event(gsUpdate, corev1.EventTypeWarning, "CounterActionError", counterErrors.Error())
+	}
+	if listErrors != nil {
+		c.recorder.Event(gsUpdate, corev1.EventTypeWarning, "ListActionError", listErrors.Error())
+	}
+	c.recorder.Event(gsUpdate, corev1.EventTypeNormal, string(gsUpdate.Status.State), "Allocated")
+
+	return gsUpdate, updateErr
 }
 
 // Retry retries fn based on backoff provided.
