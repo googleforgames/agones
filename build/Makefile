@@ -303,6 +303,7 @@ test-e2e:
 	$(MAKE) DOCKER_RUN_ARGS="$(DOCKER_RUN_ARGS)" test-e2e-integration
 	$(MAKE) DOCKER_RUN_ARGS="$(DOCKER_RUN_ARGS)" test-e2e-failure
 	$(MAKE) DOCKER_RUN_ARGS="$(DOCKER_RUN_ARGS)" test-e2e-ha-extensions
+	$(MAKE) DOCKER_RUN_ARGS="$(DOCKER_RUN_ARGS)" test-e2e-allocator-crash
 
 
 # e2e test args:
@@ -363,6 +364,24 @@ else
 	    $(GO_E2E_TEST_ARGS) $(GO_E2E_TEST_INTEGRATION_ARGS)
 endif
 	echo "Finishing e2e extensions high availability test!"
+
+test-e2e-allocator-crash: FEATURE_GATES ?= $(ALPHA_FEATURE_GATES)
+test-e2e-allocator-crash: CLOUD_PRODUCT ?= generic
+test-e2e-allocator-crash: GO_E2E_TEST_INTEGRATION_ARGS ?=\
+	--cloud-product=$(CLOUD_PRODUCT) \
+	--gameserver-image=$(GS_TEST_IMAGE) \
+	--feature-gates=$(FEATURE_GATES) \
+	--pullsecret=$(IMAGE_PULL_SECRET)
+test-e2e-allocator-crash: $(ensure-build-image)
+	echo "Starting e2e allocation pod deletion test!"
+ifdef E2E_USE_GOTESTSUM
+	$(GOTESTSUM) --packages=$(agones_package)/test/e2e/allocator -- $(go_test_args) $(ARGS) -parallel=1 -args \
+		$(GO_E2E_TEST_ARGS) $(GO_E2E_TEST_INTEGRATION_ARGS)
+else
+	$(GO_TEST) $(ARGS) -parallel=1 $(agones_package)/test/e2e/allocator -args \
+	    $(GO_E2E_TEST_ARGS) $(GO_E2E_TEST_INTEGRATION_ARGS)
+endif
+	echo "Finishing e2e allocation pod deletion test!"
 
 # Runs end-to-end stress tests on the current configured cluster
 # For minikube user the minikube-stress-test-e2e targets

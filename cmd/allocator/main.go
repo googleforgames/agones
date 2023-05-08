@@ -55,7 +55,10 @@ import (
 	"k8s.io/client-go/rest"
 )
 
-var logger = runtime.NewLoggerWithSource("main")
+var (
+	podReady bool
+	logger   = runtime.NewLoggerWithSource("main")
+)
 
 const (
 	certDir = "/home/allocator/client-ca/"
@@ -77,6 +80,7 @@ const (
 	apiServerBurstQPSFlag            = "api-server-qps-burst"
 	logLevelFlag                     = "log-level"
 	allocationBatchWaitTime          = "allocation-batch-wait-time"
+	readinessShutdownDuration        = "readiness-shutdown-duration"
 )
 
 func parseEnvFlags() config {
@@ -109,6 +113,7 @@ func parseEnvFlags() config {
 	pflag.Duration(totalRemoteAllocationTimeoutFlag, viper.GetDuration(totalRemoteAllocationTimeoutFlag), "Flag to set total remote allocation timeout including retries.")
 	pflag.String(logLevelFlag, viper.GetString(logLevelFlag), "Agones Log level")
 	pflag.Duration(allocationBatchWaitTime, viper.GetDuration(allocationBatchWaitTime), "Flag to configure the waiting period between allocations batches")
+	pflag.Duration(readinessShutdownDuration, viper.GetDuration(readinessShutdownDuration), "Time in seconds for SIGTERM/SIGINT handler to sleep for.")
 	runtime.FeaturesBindFlags()
 	pflag.Parse()
 
@@ -127,6 +132,7 @@ func parseEnvFlags() config {
 	runtime.Must(viper.BindEnv(totalRemoteAllocationTimeoutFlag))
 	runtime.Must(viper.BindEnv(logLevelFlag))
 	runtime.Must(viper.BindEnv(allocationBatchWaitTime))
+	runtime.Must(viper.BindEnv(readinessShutdownDuration))
 	runtime.Must(viper.BindPFlags(pflag.CommandLine))
 	runtime.Must(runtime.FeaturesBindEnv())
 
@@ -147,6 +153,7 @@ func parseEnvFlags() config {
 		remoteAllocationTimeout:      viper.GetDuration(remoteAllocationTimeoutFlag),
 		totalRemoteAllocationTimeout: viper.GetDuration(totalRemoteAllocationTimeoutFlag),
 		allocationBatchWaitTime:      viper.GetDuration(allocationBatchWaitTime),
+		ReadinessShutdownDuration:    viper.GetDuration(readinessShutdownDuration),
 	}
 }
 
@@ -165,6 +172,7 @@ type config struct {
 	totalRemoteAllocationTimeout time.Duration
 	remoteAllocationTimeout      time.Duration
 	allocationBatchWaitTime      time.Duration
+	ReadinessShutdownDuration    time.Duration
 }
 
 // grpcHandlerFunc returns an http.Handler that delegates to grpcServer on incoming gRPC
@@ -214,12 +222,29 @@ func main() {
 	// This will test the connection to agones on each readiness probe
 	// so if one of the allocator pod can't reach Kubernetes it will be removed
 	// from the Kubernetes service.
+	ctx, cancelCtx := context.WithCancel(context.Background())
+	podReady = true
 	health.AddReadinessCheck("allocator-agones-client", func() error {
+		if !podReady {
+			return errors.New("asked to shut down, failed readiness check")
+		}
 		_, err := agonesClient.ServerVersion()
-		return err
+		if err != nil {
+			return fmt.Errorf("failed to reach Kubernetes: %w", err)
+		}
+		return nil
 	})
 
-	h := newServiceHandler(kubeClient, agonesClient, health, conf.MTLSDisabled, conf.TLSDisabled, conf.remoteAllocationTimeout, conf.totalRemoteAllocationTimeout, conf.allocationBatchWaitTime)
+	signals.NewSigTermHandler(func() {
+		logger.Info("Pod shutdown has been requested, failing readiness check")
+		podReady = false
+		time.Sleep(conf.ReadinessShutdownDuration)
+		cancelCtx()
+		logger.Infof("Readiness shutdown duration has passed, exiting pod")
+		os.Exit(0)
+	})
+
+	h := newServiceHandler(ctx, kubeClient, agonesClient, health, conf.MTLSDisabled, conf.TLSDisabled, conf.remoteAllocationTimeout, conf.totalRemoteAllocationTimeout, conf.allocationBatchWaitTime)
 
 	if !h.tlsDisabled {
 		cancelTLS, err := fswatch.Watch(logger, tlsDir, time.Second, func() {
@@ -353,7 +378,7 @@ func runGRPC(h *serviceHandler, grpcPort int) {
 	}()
 }
 
-func newServiceHandler(kubeClient kubernetes.Interface, agonesClient versioned.Interface, health healthcheck.Handler, mTLSDisabled bool, tlsDisabled bool, remoteAllocationTimeout time.Duration, totalRemoteAllocationTimeout time.Duration, allocationBatchWaitTime time.Duration) *serviceHandler {
+func newServiceHandler(ctx context.Context, kubeClient kubernetes.Interface, agonesClient versioned.Interface, health healthcheck.Handler, mTLSDisabled bool, tlsDisabled bool, remoteAllocationTimeout time.Duration, totalRemoteAllocationTimeout time.Duration, allocationBatchWaitTime time.Duration) *serviceHandler {
 	defaultResync := 30 * time.Second
 	agonesInformerFactory := externalversions.NewSharedInformerFactory(agonesClient, defaultResync)
 	kubeInformerFactory := informers.NewSharedInformerFactory(kubeClient, defaultResync)
@@ -369,7 +394,6 @@ func newServiceHandler(kubeClient kubernetes.Interface, agonesClient versioned.I
 		totalRemoteAllocationTimeout,
 		allocationBatchWaitTime)
 
-	ctx, _ := signals.NewSigKillContext()
 	h := serviceHandler{
 		allocationCallback: func(gsa *allocationv1.GameServerAllocation) (k8sruntime.Object, error) {
 			return allocator.Allocate(ctx, gsa)

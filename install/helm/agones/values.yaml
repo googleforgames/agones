@@ -173,6 +173,10 @@ agones:
       periodSeconds: 3
       failureThreshold: 3
       timeoutSeconds: 1
+    readiness:
+      initialDelaySeconds: 3
+      periodSeconds: 3
+      failureThreshold: 3
     tolerations:
     - key: "agones.dev/agones-system"
       operator: "Equal"

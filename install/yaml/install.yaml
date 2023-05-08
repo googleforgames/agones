@@ -16136,6 +16136,7 @@ spec:
           operator: Equal
           value: "true"
       serviceAccountName: agones-allocator
+      terminationGracePeriodSeconds: 27
       volumes:
       - name: tls
         secret:
@@ -16159,6 +16160,9 @@ spec:
           httpGet:
             path: /ready
             port: 8080
+          initialDelaySeconds: 3
+          periodSeconds: 3
+          failureThreshold: 3
         env:
         - name: HTTP_PORT
           value: "8443"
@@ -16200,6 +16204,8 @@ spec:
           value: ""
         - name: ALLOCATION_BATCH_WAIT_TIME
           value: "500ms"
+        - name: READINESS_SHUTDOWN_DURATION
+          value: 18s
         ports:
         - name: https
           containerPort: 8443

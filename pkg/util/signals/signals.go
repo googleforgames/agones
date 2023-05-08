@@ -32,7 +32,7 @@ func NewSigKillContext() (context.Context, context.CancelFunc) {
 // NewSigTermHandler creates a channel to listen to SIGTERM and runs the handle function
 func NewSigTermHandler(handle func()) {
 	c := make(chan os.Signal, 1)
-	signal.Notify(c, syscall.SIGTERM)
+	signal.Notify(c, syscall.SIGTERM, syscall.SIGINT)
 
 	go func() {
 		<-c
