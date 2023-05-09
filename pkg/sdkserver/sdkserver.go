@@ -344,12 +344,10 @@ func (s *SDKServer) updateState(ctx context.Context) error {
 		s.logger.Debug("GameServerState being shutdown. Skipping update.")
 
 		// Explicitly update gsStateChannel if current state is Shutdown since sendGameServerUpdate will not triggered.
-		if runtime.FeatureEnabled(runtime.FeatureSDKGracefulTermination) {
-			if s.gsState == agonesv1.GameServerStateShutdown && gs.Status.State != agonesv1.GameServerStateShutdown {
-				go func() {
-					s.gsStateChannel <- agonesv1.GameServerStateShutdown
-				}()
-			}
+		if runtime.FeatureEnabled(runtime.FeatureSDKGracefulTermination) && s.gsState == agonesv1.GameServerStateShutdown && gs.Status.State != agonesv1.GameServerStateShutdown {
+			go func() {
+				s.gsStateChannel <- agonesv1.GameServerStateShutdown
+			}()
 		}
 
 		return nil
