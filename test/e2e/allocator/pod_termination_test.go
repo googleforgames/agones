@@ -28,6 +28,8 @@ import (
 	"github.com/stretchr/testify/require"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (
@@ -40,11 +42,20 @@ func TestAllocatorAfterDeleteReplica(t *testing.T) {
 
 	var list *v1.PodList
 
+	dep, err := framework.KubeClient.AppsV1().Deployments("agones-system").Get(ctx, "agones-allocator", metav1.GetOptions{})
+	require.NoError(t, err, "Failed to get replicas")
+	replicaCnt := int(*(dep.Spec.Replicas))
+	logrus.Infof("Replica count config is %d", replicaCnt)
+
 	// poll and wait until all allocator pods are running
 	_ = wait.PollImmediate(retryInterval, retryTimeout, func() (done bool, err error) {
 		list, err = helper.GetAgonesAllocatorPods(ctx, framework)
 		if err != nil {
 			return true, err
+		}
+
+		if len(list.Items) != replicaCnt {
+			return false, nil
 		}
 
 		for _, allocpod := range list.Items {
@@ -57,9 +68,6 @@ func TestAllocatorAfterDeleteReplica(t *testing.T) {
 
 		return true, nil
 	})
-
-	grpcClient, err := helper.GetAllocatorClient(ctx, t, framework)
-	require.NoError(t, err, "Could not initialize rpc client")
 
 	// create fleet
 	flt, err := helper.CreateFleet(ctx, framework.Namespace, framework)
@@ -81,6 +89,9 @@ func TestAllocatorAfterDeleteReplica(t *testing.T) {
 		err = helper.DeleteAgonesAllocatorPod(ctx, pod.ObjectMeta.Name, framework)
 		require.NoError(t, err, "Could not delete allocator pod")
 	}
+
+	grpcClient, err := helper.GetAllocatorClient(ctx, t, framework)
+	require.NoError(t, err, "Could not initialize rpc client")
 
 	// Wait and keep making calls till we know the draining time has passed
 	_ = wait.PollImmediate(retryInterval, retryTimeout, func() (bool, error) {
