@@ -20,7 +20,6 @@ import (
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	"agones.dev/agones/pkg/client/informers/externalversions"
 	"agones.dev/agones/pkg/portallocator"
-	"agones.dev/agones/pkg/util/runtime"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -40,9 +39,6 @@ func (*generic) MutateGameServerPodSpec(*agonesv1.GameServerSpec, *corev1.PodSpe
 
 // SetEviction sets disruptions controls based on GameServer.Status.Eviction.
 func (*generic) SetEviction(eviction *agonesv1.Eviction, pod *corev1.Pod) error {
-	if !runtime.FeatureEnabled(runtime.FeatureSafeToEvict) {
-		return nil
-	}
 	if eviction == nil {
 		return errors.New("No eviction value set. Should be the default value")
 	}

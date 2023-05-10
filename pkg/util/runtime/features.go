@@ -34,9 +34,6 @@ const (
 	// FeatureCustomFasSyncInterval is a feature flag that enables a custom FleetAutoscaler resync interval
 	FeatureCustomFasSyncInterval Feature = "CustomFasSyncInterval"
 
-	// FeatureSafeToEvict enables the `SafeToEvict` API to specify disruption tolerance.
-	FeatureSafeToEvict Feature = "SafeToEvict"
-
 	// FeatureSDKGracefulTermination is a feature flag that enables SDK to support gracefulTermination
 	FeatureSDKGracefulTermination Feature = "SDKGracefulTermination"
 
@@ -110,7 +107,6 @@ var (
 	featureDefaults = map[Feature]bool{
 		// Beta features
 		FeatureCustomFasSyncInterval:  true,
-		FeatureSafeToEvict:            true,
 		FeatureSDKGracefulTermination: true,
 		FeatureStateAllocationFilter:  true,
 		FeaturePodHostname:            true,

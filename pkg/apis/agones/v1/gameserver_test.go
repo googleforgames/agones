@@ -327,14 +327,6 @@ func TestGameServerApplyDefaults(t *testing.T) {
 				}
 			}),
 		},
-		"SafeToEvict gate off => no eviction.safe fields": {
-			featureFlags: string(runtime.FeatureSafeToEvict) + "=false",
-			gameServer:   defaultGameServerAnd(func(gss *GameServerSpec) {}),
-			expected: wantDefaultAnd(func(e *expected) {
-				e.evictionSafeSpec = ""
-				e.evictionSafeStatus = ""
-			}),
-		},
 		"defaults are eviction.safe: Never": {
 			gameServer: defaultGameServerAnd(func(gss *GameServerSpec) {}),
 			expected: wantDefaultAnd(func(e *expected) {
@@ -1345,39 +1337,21 @@ func TestGameServerPodWithMultiplePortAllocations(t *testing.T) {
 }
 
 func TestGameServerPodObjectMeta(t *testing.T) {
-	runtime.FeatureTestMutex.Lock()
-	defer runtime.FeatureTestMutex.Unlock()
-
 	fixture := &GameServer{ObjectMeta: metav1.ObjectMeta{Name: "lucy"},
 		Spec: GameServerSpec{Container: "goat"}}
 
 	for desc, tc := range map[string]struct {
-		featureFlags string
-		scheduling   apis.SchedulingStrategy
-		wantSafe     string
+		scheduling apis.SchedulingStrategy
+		wantSafe   string
 	}{
-		"packed, SafeToEvict=false": {
-			featureFlags: "SafeToEvict=false",
-			scheduling:   apis.Packed,
-			wantSafe:     "false",
+		"packed": {
+			scheduling: apis.Packed,
 		},
-		"distributed, SafeToEvict=false": {
-			featureFlags: "SafeToEvict=false",
-			scheduling:   apis.Distributed,
-		},
-		"packed, SafeToEvict=true": {
-			featureFlags: "SafeToEvict=true",
-			scheduling:   apis.Packed,
-		},
-		"distributed, SafeToEvict=true": {
-			featureFlags: "SafeToEvict=true",
-			scheduling:   apis.Distributed,
+		"distributed": {
+			scheduling: apis.Distributed,
 		},
 	} {
 		t.Run(desc, func(t *testing.T) {
-			err := runtime.ParseFeatures(tc.featureFlags)
-			assert.NoError(t, err)
-
 			gs := fixture.DeepCopy()
 			gs.Spec.Scheduling = tc.scheduling
 			pod := &corev1.Pod{}

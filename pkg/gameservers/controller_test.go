@@ -28,7 +28,6 @@ import (
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	"agones.dev/agones/pkg/cloudproduct/generic"
 	agtesting "agones.dev/agones/pkg/testing"
-	agruntime "agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/webhooks"
 	"github.com/heptiolabs/healthcheck"
 	"github.com/mattbaird/jsonpatch"
@@ -760,10 +759,6 @@ func TestControllerSyncGameServerPortAllocationState(t *testing.T) {
 
 func TestControllerSyncGameServerCreatingState(t *testing.T) {
 	t.Parallel()
-
-	// TODO: remove when "SafeToEvict" feature flag is removed.
-	agruntime.FeatureTestMutex.Lock()
-	defer agruntime.FeatureTestMutex.Unlock()
 
 	newFixture := func() *agonesv1.GameServer {
 		fixture := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
