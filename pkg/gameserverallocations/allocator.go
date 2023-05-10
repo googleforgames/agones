@@ -18,6 +18,7 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
+	goErrors "errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -553,7 +554,7 @@ func (c *Allocator) allocationUpdateWorkers(ctx context.Context, workerCount int
 			for {
 				select {
 				case res := <-updateQueue:
-					gs, err := c.applyAllocationToGameServer(ctx, res.request.gsa.Spec.MetaPatch, res.gs)
+					gs, err := c.applyAllocationToGameServer(ctx, res.request.gsa.Spec.MetaPatch, res.gs, res.request.gsa)
 					if err != nil {
 						if !k8serrors.IsConflict(errors.Cause(err)) {
 							// since we could not allocate, we should put it back
@@ -564,7 +565,6 @@ func (c *Allocator) allocationUpdateWorkers(ctx context.Context, workerCount int
 						res.err = errors.Wrap(err, "error updating allocated gameserver")
 					} else {
 						res.gs = gs
-						c.recorder.Event(res.gs, corev1.EventTypeNormal, string(res.gs.Status.State), "Allocated")
 					}
 
 					res.request.response <- res
@@ -580,7 +580,7 @@ func (c *Allocator) allocationUpdateWorkers(ctx context.Context, workerCount int
 
 // applyAllocationToGameServer patches the inputted GameServer with the allocation metadata changes, and updates it to the Allocated State.
 // Returns the updated GameServer.
-func (c *Allocator) applyAllocationToGameServer(ctx context.Context, mp allocationv1.MetaPatch, gs *agonesv1.GameServer) (*agonesv1.GameServer, error) {
+func (c *Allocator) applyAllocationToGameServer(ctx context.Context, mp allocationv1.MetaPatch, gs *agonesv1.GameServer, gsa *allocationv1.GameServerAllocation) (*agonesv1.GameServer, error) {
 	// patch ObjectMeta labels
 	if mp.Labels != nil {
 		if gs.ObjectMeta.Labels == nil {
@@ -607,7 +607,37 @@ func (c *Allocator) applyAllocationToGameServer(ctx context.Context, mp allocati
 	gs.ObjectMeta.Annotations[LastAllocatedAnnotationKey] = string(ts)
 	gs.Status.State = agonesv1.GameServerStateAllocated
 
-	return c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(ctx, gs, metav1.UpdateOptions{})
+	// perfom any Counter or List actions
+	var counterErrors error
+	var listErrors error
+	if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
+		if gsa.Spec.Counters != nil {
+			for counter, ca := range gsa.Spec.Counters {
+				counterErrors = goErrors.Join(counterErrors, ca.CounterActions(counter, gs))
+			}
+		}
+		if gsa.Spec.Lists != nil {
+			for list, la := range gsa.Spec.Lists {
+				listErrors = goErrors.Join(listErrors, la.ListActions(list, gs))
+			}
+		}
+	}
+
+	gsUpdate, updateErr := c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(ctx, gs, metav1.UpdateOptions{})
+	if updateErr != nil {
+		return gsUpdate, updateErr
+	}
+
+	// If successful Update record any Counter or List action errors as a warning
+	if counterErrors != nil {
+		c.recorder.Event(gsUpdate, corev1.EventTypeWarning, "CounterActionError", counterErrors.Error())
+	}
+	if listErrors != nil {
+		c.recorder.Event(gsUpdate, corev1.EventTypeWarning, "ListActionError", listErrors.Error())
+	}
+	c.recorder.Event(gsUpdate, corev1.EventTypeNormal, string(gsUpdate.Status.State), "Allocated")
+
+	return gsUpdate, updateErr
 }
 
 // Retry retries fn based on backoff provided.

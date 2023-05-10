@@ -5704,6 +5704,33 @@ MetaPatch
 You can use this to tell the server necessary session data</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>counters</code></br>
+<em>
+<a href="#allocation.agones.dev/v1.CounterAction">
+map[string]agones.dev/agones/pkg/apis/allocation/v1.CounterAction
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>(Alpha, CountsAndLists feature flag) Counters and Lists provide a set of actions to perform
+on Counters and Lists during allocation.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>lists</code></br>
+<em>
+<a href="#allocation.agones.dev/v1.ListAction">
+map[string]agones.dev/agones/pkg/apis/allocation/v1.ListAction
+</a>
+</em>
+</td>
+<td>
+</td>
+</tr>
 </table>
 </td>
 </tr>
@@ -5714,6 +5741,58 @@ You can use this to tell the server necessary session data</p>
 <a href="#allocation.agones.dev/v1.GameServerAllocationStatus">
 GameServerAllocationStatus
 </a>
+</em>
+</td>
+<td>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="allocation.agones.dev/v1.CounterAction">CounterAction
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#allocation.agones.dev/v1.GameServerAllocationSpec">GameServerAllocationSpec</a>)
+</p>
+<p>
+<p>CounterAction is an optional action that can be performed on a Counter at allocation.
+Action: &ldquo;Increment&rdquo; or &ldquo;Decrement&rdquo; the Counter&rsquo;s Count (optional). Must also define the Amount.
+Amount: The amount to increment or decrement the Count (optional). Must be a positive integer.
+Capacity: Update the maximum capacity of the Counter to this number (optional). Min 0, Max int64.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>action</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>amount</code></br>
+<em>
+int64
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>capacity</code></br>
+<em>
+int64
 </em>
 </td>
 <td>
@@ -5901,6 +5980,33 @@ MetaPatch
 <td>
 <p>MetaPatch is optional custom metadata that is added to the game server at allocation
 You can use this to tell the server necessary session data</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>counters</code></br>
+<em>
+<a href="#allocation.agones.dev/v1.CounterAction">
+map[string]agones.dev/agones/pkg/apis/allocation/v1.CounterAction
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>(Alpha, CountsAndLists feature flag) Counters and Lists provide a set of actions to perform
+on Counters and Lists during allocation.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>lists</code></br>
+<em>
+<a href="#allocation.agones.dev/v1.ListAction">
+map[string]agones.dev/agones/pkg/apis/allocation/v1.ListAction
+</a>
+</em>
+</td>
+<td>
 </td>
 </tr>
 </tbody>
@@ -6099,6 +6205,47 @@ map[string]agones.dev/agones/pkg/apis/allocation/v1.ListSelector
 <p>(Alpha, CountsAndLists feature flag) Lists provides filters on minimum and maximum values
 for List capacity, and for the existence of a value in a List, when retrieving a GameServer
 through Allocation. Defaults to no limits.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="allocation.agones.dev/v1.ListAction">ListAction
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#allocation.agones.dev/v1.GameServerAllocationSpec">GameServerAllocationSpec</a>)
+</p>
+<p>
+<p>ListAction is an optional action that can be performed on a List at allocation.
+AddValues: Append values to a List&rsquo;s Values array (optional). Any duplicate values will be ignored.
+Capacity: Update the maximum capacity of the Counter to this number (optional). Min 0, Max 1000.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>addValues</code></br>
+<em>
+[]string
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>capacity</code></br>
+<em>
+int64
+</em>
+</td>
+<td>
 </td>
 </tr>
 </tbody>

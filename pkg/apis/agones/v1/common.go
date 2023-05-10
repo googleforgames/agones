@@ -26,7 +26,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
-// Block of const Error messages
+// Block of const Error messages and GameServerAllocation Counter actions
 const (
 	ErrContainerRequired        = "Container is required when using multiple containers in the pod template"
 	ErrHostPort                 = "HostPort cannot be specified with a Dynamic or Passthrough PortPolicy"
@@ -34,6 +34,10 @@ const (
 	ErrContainerPortRequired    = "ContainerPort must be defined for Dynamic and Static PortPolicies"
 	ErrContainerPortPassthrough = "ContainerPort cannot be specified with Passthrough PortPolicy"
 	ErrContainerNameInvalid     = "Container must be empty or the name of a container in the pod template"
+	// GameServerAllocationIncrement is a Counter Action that indiciates the Counter's Count should be incremented at Allocation.
+	GameServerAllocationIncrement string = "Increment"
+	// GameServerAllocationDecrement is a Counter Action that indiciates the Counter's Count should be decremented at Allocation.
+	GameServerAllocationDecrement string = "Decrement"
 )
 
 // AggregatedPlayerStatus stores total player tracking values

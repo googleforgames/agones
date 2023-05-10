@@ -1635,3 +1635,455 @@ func defaultGameServer() *GameServer {
 			},
 		}, Status: GameServerStatus{State: GameServerStateCreating}}
 }
+
+func TestGameServerUpdateCount(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		gs      GameServer
+		name    string
+		action  string
+		amount  int64
+		want    CounterStatus
+		wantErr bool
+	}{
+		"counter not in game server no-op and error": {
+			gs: GameServer{Status: GameServerStatus{
+				Counters: map[string]CounterStatus{
+					"foos": {
+						Count:    0,
+						Capacity: 100,
+					}}}},
+			name:    "foo",
+			action:  "Increment",
+			amount:  1,
+			wantErr: true,
+		},
+		"amount less than zero no-op and error": {
+			gs: GameServer{Status: GameServerStatus{
+				Counters: map[string]CounterStatus{
+					"foos": {
+						Count:    1,
+						Capacity: 100,
+					}}}},
+			name:   "foos",
+			action: "Decrement",
+			amount: -1,
+			want: CounterStatus{
+				Count:    1,
+				Capacity: 100,
+			},
+			wantErr: true,
+		},
+		"increment by 1": {
+			gs: GameServer{Status: GameServerStatus{
+				Counters: map[string]CounterStatus{
+					"players": {
+						Count:    0,
+						Capacity: 100,
+					}}}},
+			name:   "players",
+			action: "Increment",
+			amount: 1,
+			want: CounterStatus{
+				Count:    1,
+				Capacity: 100,
+			},
+			wantErr: false,
+		},
+		"decrement by 10": {
+			gs: GameServer{Status: GameServerStatus{
+				Counters: map[string]CounterStatus{
+					"bars": {
+						Count:    99,
+						Capacity: 100,
+					}}}},
+			name:   "bars",
+			action: "Decrement",
+			amount: 10,
+			want: CounterStatus{
+				Count:    89,
+				Capacity: 100,
+			},
+			wantErr: false,
+		},
+		"incorrect action no-op and error": {
+			gs: GameServer{Status: GameServerStatus{
+				Counters: map[string]CounterStatus{
+					"bazes": {
+						Count:    99,
+						Capacity: 100,
+					}}}},
+			name:   "bazes",
+			action: "decrement",
+			amount: 10,
+			want: CounterStatus{
+				Count:    99,
+				Capacity: 100,
+			},
+			wantErr: true,
+		},
+		"decrement beyond count no-op and error": {
+			gs: GameServer{Status: GameServerStatus{
+				Counters: map[string]CounterStatus{
+					"baz": {
+						Count:    99,
+						Capacity: 100,
+					}}}},
+			name:   "baz",
+			action: "Decrement",
+			amount: 100,
+			want: CounterStatus{
+				Count:    99,
+				Capacity: 100,
+			},
+			wantErr: true,
+		},
+		"increment beyond capacity no-op and error": {
+			gs: GameServer{Status: GameServerStatus{
+				Counters: map[string]CounterStatus{
+					"splayers": {
+						Count:    99,
+						Capacity: 100,
+					}}}},
+			name:   "splayers",
+			action: "Increment",
+			amount: 2,
+			want: CounterStatus{
+				Count:    99,
+				Capacity: 100,
+			},
+			wantErr: true,
+		},
+	}
+
+	for test, testCase := range testCases {
+		t.Run(test, func(t *testing.T) {
+			err := testCase.gs.UpdateCount(testCase.name, testCase.action, testCase.amount)
+			if err != nil {
+				assert.True(t, testCase.wantErr)
+			} else {
+				assert.False(t, testCase.wantErr)
+			}
+			if counter, ok := testCase.gs.Status.Counters[testCase.name]; ok {
+				assert.Equal(t, testCase.want, counter)
+			}
+		})
+	}
+}
+
+func TestGameServerUpdateCounterCapacity(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		gs       GameServer
+		name     string
+		capacity int64
+		want     CounterStatus
+		wantErr  bool
+	}{
+		"counter not in game server no-op with error": {
+			gs: GameServer{Status: GameServerStatus{
+				Counters: map[string]CounterStatus{
+					"foos": {
+						Count:    0,
+						Capacity: 100,
+					}}}},
+			name:     "foo",
+			capacity: 1000,
+			wantErr:  true,
+		},
+		"capacity less than zero no-op with error": {
+			gs: GameServer{Status: GameServerStatus{
+				Counters: map[string]CounterStatus{
+					"foos": {
+						Count:    0,
+						Capacity: 100,
+					}}}},
+			name:     "foos",
+			capacity: -1000,
+			want: CounterStatus{
+				Count:    0,
+				Capacity: 100,
+			},
+			wantErr: true,
+		},
+		"update capacity": {
+			gs: GameServer{Status: GameServerStatus{
+				Counters: map[string]CounterStatus{
+					"sessions": {
+						Count:    0,
+						Capacity: 100,
+					}}}},
+			name:     "sessions",
+			capacity: 9223372036854775807,
+			want: CounterStatus{
+				Count:    0,
+				Capacity: 9223372036854775807,
+			},
+		},
+	}
+
+	for test, testCase := range testCases {
+		t.Run(test, func(t *testing.T) {
+			err := testCase.gs.UpdateCounterCapacity(testCase.name, testCase.capacity)
+			if err != nil {
+				assert.True(t, testCase.wantErr)
+			} else {
+				assert.False(t, testCase.wantErr)
+			}
+			if counter, ok := testCase.gs.Status.Counters[testCase.name]; ok {
+				assert.Equal(t, testCase.want, counter)
+			}
+		})
+	}
+}
+
+func TestGameServerUpdateListCapacity(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		gs       GameServer
+		name     string
+		capacity int64
+		want     ListStatus
+		wantErr  bool
+	}{
+		"list not in game server no-op with error": {
+			gs: GameServer{Status: GameServerStatus{
+				Lists: map[string]ListStatus{
+					"things": {
+						Values:   []string{},
+						Capacity: 100,
+					}}}},
+			name:     "thing",
+			capacity: 1000,
+			wantErr:  true,
+		},
+		"update list capacity": {
+			gs: GameServer{Status: GameServerStatus{
+				Lists: map[string]ListStatus{
+					"things": {
+						Values:   []string{},
+						Capacity: 100,
+					}}}},
+			name:     "things",
+			capacity: 1000,
+			want: ListStatus{
+				Values:   []string{},
+				Capacity: 1000,
+			},
+			wantErr: false,
+		},
+		"list capacity above max no-op with error": {
+			gs: GameServer{Status: GameServerStatus{
+				Lists: map[string]ListStatus{
+					"slings": {
+						Values:   []string{},
+						Capacity: 100,
+					}}}},
+			name:     "slings",
+			capacity: 10000,
+			want: ListStatus{
+				Values:   []string{},
+				Capacity: 100,
+			},
+			wantErr: true,
+		},
+		"list capacity less than zero no-op with error": {
+			gs: GameServer{Status: GameServerStatus{
+				Lists: map[string]ListStatus{
+					"flings": {
+						Values:   []string{},
+						Capacity: 999,
+					}}}},
+			name:     "flings",
+			capacity: -100,
+			want: ListStatus{
+				Values:   []string{},
+				Capacity: 999,
+			},
+			wantErr: true,
+		},
+	}
+
+	for test, testCase := range testCases {
+		t.Run(test, func(t *testing.T) {
+			err := testCase.gs.UpdateListCapacity(testCase.name, testCase.capacity)
+			if err != nil {
+				assert.True(t, testCase.wantErr)
+			} else {
+				assert.False(t, testCase.wantErr)
+			}
+			if list, ok := testCase.gs.Status.Lists[testCase.name]; ok {
+				assert.Equal(t, testCase.want, list)
+			}
+		})
+	}
+}
+
+func TestGameServerAppendListValues(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		gs      GameServer
+		name    string
+		values  []string
+		want    ListStatus
+		wantErr bool
+	}{
+		"list not in game server no-op with error": {
+			gs: GameServer{Status: GameServerStatus{
+				Lists: map[string]ListStatus{
+					"things": {
+						Values:   []string{},
+						Capacity: 100,
+					}}}},
+			name:    "thing",
+			values:  []string{"thing1", "thing2", "thing3"},
+			wantErr: true,
+		},
+		"append values": {
+			gs: GameServer{Status: GameServerStatus{
+				Lists: map[string]ListStatus{
+					"things": {
+						Values:   []string{"thing1"},
+						Capacity: 100,
+					}}}},
+			name:   "things",
+			values: []string{"thing2", "thing3"},
+			want: ListStatus{
+				Values:   []string{"thing1", "thing2", "thing3"},
+				Capacity: 100,
+			},
+			wantErr: false,
+		},
+		"append values with silent drop of duplicates": {
+			gs: GameServer{Status: GameServerStatus{
+				Lists: map[string]ListStatus{
+					"games": {
+						Values:   []string{"game0"},
+						Capacity: 10,
+					}}}},
+			name:   "games",
+			values: []string{"game1", "game2", "game2", "game1"},
+			want: ListStatus{
+				Values:   []string{"game0", "game1", "game2"},
+				Capacity: 10,
+			},
+			wantErr: false,
+		},
+		"append values with silent drop of duplicates in original list": {
+			gs: GameServer{Status: GameServerStatus{
+				Lists: map[string]ListStatus{
+					"objects": {
+						Values:   []string{"object1", "object2"},
+						Capacity: 10,
+					}}}},
+			name:   "objects",
+			values: []string{"object2", "object1", "object3", "object3"},
+			want: ListStatus{
+				Values:   []string{"object1", "object2", "object3"},
+				Capacity: 10,
+			},
+			wantErr: false,
+		},
+		"append no values no-op with error": {
+			gs: GameServer{Status: GameServerStatus{
+				Lists: map[string]ListStatus{
+					"blings": {
+						Values:   []string{"bling1"},
+						Capacity: 10,
+					}}}},
+			name:   "blings",
+			values: []string{},
+			want: ListStatus{
+				Values:   []string{"bling1"},
+				Capacity: 10,
+			},
+			wantErr: true,
+		},
+		"append only duplicates no-op with error": {
+			gs: GameServer{Status: GameServerStatus{
+				Lists: map[string]ListStatus{
+					"slings": {
+						Values:   []string{"slings1", "sling2"},
+						Capacity: 4,
+					}}}},
+			name:   "blings",
+			values: []string{},
+			want: ListStatus{
+				Values:   []string{"slings1", "sling2"},
+				Capacity: 4,
+			},
+			wantErr: true,
+		},
+		"append too many values no-op with error": {
+			gs: GameServer{Status: GameServerStatus{
+				Lists: map[string]ListStatus{
+					"bananaslugs": {
+						Values:   []string{"bananaslugs1", "bananaslug2", "bananaslug3"},
+						Capacity: 5,
+					}}}},
+			name:   "bananaslugs",
+			values: []string{"bananaslug4", "bananaslug5", "bananaslug6"},
+			want: ListStatus{
+				Values:   []string{"bananaslugs1", "bananaslug2", "bananaslug3"},
+				Capacity: 5,
+			},
+			wantErr: true,
+		},
+	}
+
+	for test, testCase := range testCases {
+		t.Run(test, func(t *testing.T) {
+			err := testCase.gs.AppendListValues(testCase.name, testCase.values)
+			if err != nil {
+				assert.True(t, testCase.wantErr)
+			} else {
+				assert.False(t, testCase.wantErr)
+			}
+			if list, ok := testCase.gs.Status.Lists[testCase.name]; ok {
+				assert.Equal(t, testCase.want, list)
+			}
+		})
+	}
+}
+
+func TestMergeRemoveDuplicates(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		str1 []string
+		str2 []string
+		want []string
+	}{
+		"empty string arrays": {
+			str1: []string{},
+			str2: []string{},
+			want: []string{},
+		},
+		"no duplicates": {
+			str1: []string{"one"},
+			str2: []string{"two", "three"},
+			want: []string{"one", "two", "three"},
+		},
+		"remove one duplicate": {
+			str1: []string{"one", "one", "one"},
+			str2: []string{"one", "one", "one"},
+			want: []string{"one"},
+		},
+		"remove multiple duplicates": {
+			str1: []string{"one", "two"},
+			str2: []string{"two", "one"},
+			want: []string{"one", "two"},
+		},
+	}
+
+	for test, testCase := range testCases {
+		t.Run(test, func(t *testing.T) {
+			got := mergeRemoveDuplicates(testCase.str1, testCase.str2)
+			assert.Equal(t, testCase.want, got)
+		})
+	}
+}

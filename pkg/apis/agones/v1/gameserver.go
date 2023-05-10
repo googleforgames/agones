@@ -926,3 +926,102 @@ func (gs *GameServer) Patch(delta *GameServer) ([]byte, error) {
 	result, err = json.Marshal(patch)
 	return result, errors.Wrapf(err, "error creating json for patch for GameServer %s", gs.ObjectMeta.Name)
 }
+
+// UpdateCount increments or decrements a CounterStatus on a Game Server by the given amount.
+func (gs *GameServer) UpdateCount(name string, action string, amount int64) error {
+	if !(action == GameServerAllocationIncrement || action == GameServerAllocationDecrement) {
+		return errors.Errorf("unable to UpdateCount with Name %s, Action %s, Amount %d. Allocation action must be one of %s or %s", name, action, amount, GameServerAllocationIncrement, GameServerAllocationDecrement)
+	}
+	if amount < 0 {
+		return errors.Errorf("unable to UpdateCount with Name %s, Action %s, Amount %d. Amount must be greater than 0", name, action, amount)
+	}
+	if counter, ok := gs.Status.Counters[name]; ok {
+		cnt := counter.Count
+		if action == GameServerAllocationIncrement {
+			cnt += amount
+			// only check for Count > Capacity when incrementing
+			if cnt > counter.Capacity {
+				return errors.Errorf("unable to UpdateCount with Name %s, Action %s, Amount %d. Incremented Count %d is greater than available capacity %d", name, action, amount, cnt, counter.Capacity)
+			}
+		} else {
+			cnt -= amount
+			// only check for Count < 0 when decrementing
+			if cnt < 0 {
+				return errors.Errorf("unable to UpdateCount with Name %s, Action %s, Amount %d. Decremented Count %d is less than 0", name, action, amount, cnt)
+			}
+		}
+		counter.Count = cnt
+		gs.Status.Counters[name] = counter
+		return nil
+	}
+	return errors.Errorf("unable to UpdateCount with Name %s, Action %s, Amount %d. Counter not found in GameServer %s", name, action, amount, gs.ObjectMeta.GetName())
+}
+
+// UpdateCounterCapacity updates the CounterStatus Capacity to the given capacity.
+func (gs *GameServer) UpdateCounterCapacity(name string, capacity int64) error {
+	if capacity < 0 {
+		return errors.Errorf("unable to UpdateCounterCapacity: Name %s, Capacity %d. Capacity must be greater than or equal to 0", name, capacity)
+	}
+	if counter, ok := gs.Status.Counters[name]; ok {
+		counter.Capacity = capacity
+		gs.Status.Counters[name] = counter
+		return nil
+	}
+	return errors.Errorf("unable to UpdateCounterCapacity: Name %s, Capacity %d. Counter not found in GameServer %s", name, capacity, gs.ObjectMeta.GetName())
+}
+
+// UpdateListCapacity updates the ListStatus Capacity to the given capacity.
+func (gs *GameServer) UpdateListCapacity(name string, capacity int64) error {
+	if capacity < 0 || capacity > 1000 {
+		return errors.Errorf("unable to UpdateListCapacity: Name %s, Capacity %d. Capacity must be between 0 and 1000, inclusive", name, capacity)
+	}
+	if list, ok := gs.Status.Lists[name]; ok {
+		list.Capacity = capacity
+		gs.Status.Lists[name] = list
+		return nil
+	}
+	return errors.Errorf("unable to UpdateListCapacity: Name %s, Capacity %d. List not found in GameServer %s", name, capacity, gs.ObjectMeta.GetName())
+}
+
+// AppendListValues adds unique values to the ListStatus Values list.
+func (gs *GameServer) AppendListValues(name string, values []string) error {
+	if len(values) == 0 {
+		return errors.Errorf("unable to AppendListValues: Name %s, Values %s. No values to append", name, values)
+	}
+	if list, ok := gs.Status.Lists[name]; ok {
+		mergedList := mergeRemoveDuplicates(list.Values, values)
+		if len(mergedList) > int(list.Capacity) {
+			return errors.Errorf("unable to AppendListValues: Name %s, Values %s. Appended list length %d exceeds list capacity %d", name, values, len(mergedList), list.Capacity)
+		}
+		// If all given values are duplicates we give an error warning.
+		if len(mergedList) == len(list.Values) {
+			return errors.Errorf("unable to AppendListValues: Name %s, Values %s. All appended values are duplicates of the existing list", name, values)
+		}
+		// If only some values are duplicates, those duplicate values are silently dropped.
+		list.Values = mergedList
+		gs.Status.Lists[name] = list
+		return nil
+	}
+	return errors.Errorf("unable to AppendListValues: Name %s, Values %s. List not found in GameServer %s", name, values, gs.ObjectMeta.GetName())
+}
+
+// mergeRemoveDuplicates merges two lists and removes any duplicate values.
+// Maintains ordering, so new values from list2 are appended to the end of list1.
+// Returns a new list with unique values only.
+func mergeRemoveDuplicates(list1 []string, list2 []string) []string {
+	uniqueList := []string{}
+	listMap := make(map[string]bool)
+	for _, v1 := range list1 {
+		if _, ok := listMap[v1]; !ok {
+			uniqueList = append(uniqueList, v1)
+			listMap[v1] = true
+		}
+	}
+	for _, v2 := range list2 {
+		if _, ok := listMap[v2]; !ok {
+			uniqueList = append(uniqueList, v2)
+			listMap[v2] = true
+		}
+	}
+	return uniqueList
+}

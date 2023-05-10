@@ -15,6 +15,7 @@
 package v1
 
 import (
+	"errors"
 	"fmt"
 
 	"agones.dev/agones/pkg/apis"
@@ -109,6 +110,12 @@ type GameServerAllocationSpec struct {
 	// MetaPatch is optional custom metadata that is added to the game server at allocation
 	// You can use this to tell the server necessary session data
 	MetaPatch MetaPatch `json:"metadata,omitempty"`
+
+	// (Alpha, CountsAndLists feature flag) Counters and Lists provide a set of actions to perform
+	// on Counters and Lists during allocation.
+	// +optional
+	Counters map[string]CounterAction `json:"counters,omitempty"`
+	Lists    map[string]ListAction    `json:"lists,omitempty"`
 }
 
 // GameServerSelector contains all the filter options for selecting
@@ -164,6 +171,24 @@ type ListSelector struct {
 	ContainsValue string `json:"containsValue"`
 	MinAvailable  int64  `json:"minAvailable"`
 	MaxAvailable  int64  `json:"maxAvailable"`
+}
+
+// CounterAction is an optional action that can be performed on a Counter at allocation.
+// Action: "Increment" or "Decrement" the Counter's Count (optional). Must also define the Amount.
+// Amount: The amount to increment or decrement the Count (optional). Must be a positive integer.
+// Capacity: Update the maximum capacity of the Counter to this number (optional). Min 0, Max int64.
+type CounterAction struct {
+	Action   *string `json:"action,omitempty"`
+	Amount   *int64  `json:"amount,omitempty"`
+	Capacity *int64  `json:"capacity,omitempty"`
+}
+
+// ListAction is an optional action that can be performed on a List at allocation.
+// AddValues: Append values to a List's Values array (optional). Any duplicate values will be ignored.
+// Capacity: Update the maximum capacity of the Counter to this number (optional). Min 0, Max 1000.
+type ListAction struct {
+	AddValues []string `json:"addValues,omitempty"`
+	Capacity  *int64   `json:"capacity,omitempty"`
 }
 
 // ApplyDefaults applies default values
@@ -268,6 +293,44 @@ func (s *GameServerSelector) matchCounters(gs *agonesv1.GameServer) bool {
 		}
 	}
 	return true
+}
+
+// CounterActions attempts to peform any actions from the CounterAction on the GameServer Counter.
+// Returns the errors of any actions that could not be performed.
+func (ca *CounterAction) CounterActions(counter string, gs *agonesv1.GameServer) error {
+	var errs error
+	if ca.Capacity != nil {
+		capErr := gs.UpdateCounterCapacity(counter, *ca.Capacity)
+		if capErr != nil {
+			errs = errors.Join(errs, capErr)
+		}
+	}
+	if ca.Action != nil && ca.Amount != nil {
+		cntErr := gs.UpdateCount(counter, *ca.Action, *ca.Amount)
+		if cntErr != nil {
+			errs = errors.Join(errs, cntErr)
+		}
+	}
+	return errs
+}
+
+// ListActions attempts to peform any actions from the ListAction on the GameServer List.
+// Returns a string list of any actions that could not be performed.
+func (la *ListAction) ListActions(list string, gs *agonesv1.GameServer) error {
+	var errs error
+	if la.Capacity != nil {
+		capErr := gs.UpdateListCapacity(list, *la.Capacity)
+		if capErr != nil {
+			errs = errors.Join(errs, capErr)
+		}
+	}
+	if la.AddValues != nil && len(la.AddValues) > 0 {
+		cntErr := gs.AppendListValues(list, la.AddValues)
+		if cntErr != nil {
+			errs = errors.Join(errs, cntErr)
+		}
+	}
+	return errs
 }
 
 // matchLists returns true if there is a match for the ListSelector in the GameServerStatus
