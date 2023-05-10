@@ -266,6 +266,9 @@ The following tables lists the configurable parameters of the Agones chart and t
 | Parameter                             | Description                                                                                                                                                                                                                           | Default |
 |---------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------|
 | `agones.allocator.labels`                           | [Labels][labels] Added to the Agones Allocator pods                                                                                                                                                           | `{}`                               |
+| `agones.allocator.readiness.initialDelaySeconds`      | Initial delay before performing the first probe (in seconds)                                                                                                                                                            | `3`                                |
+| `agones.allocator.readiness.periodSeconds`            | Seconds between every liveness probe (in seconds)                                                                                                                                                                       | `3`                                |
+| `agones.allocator.readiness.failureThreshold`         | Number of times before giving up (in seconds)                                                                                                                                                                           | `3`                                |
 
 {{% /feature %}}
 

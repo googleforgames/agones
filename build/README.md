@@ -584,6 +584,9 @@ make test-e2e-integration ARGS='-run TestGameServerReserve'
 #### `make test-e2e-failure`
 Run controller failure portion of the end-to-end tests.
 
+#### `make test-e2e-allocator-crash`
+Run allocator failure portion of the end-to-end test. 
+
 #### `make setup-prometheus`
 
 Install Prometheus server using [Prometheus Community](https://prometheus-community.github.io/helm-charts)
