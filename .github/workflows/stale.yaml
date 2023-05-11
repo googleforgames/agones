@@ -36,7 +36,7 @@ jobs:
       with:
         repo-token: ${{ secrets.GITHUB_TOKEN }}
         days-before-issue-stale: 30
-        days-before-issue-close: -1
+        days-before-issue-close: 60
         stale-issue-message: >
           'This issue is marked as Stale due to inactivity for more than 30 days. 
           To avoid being marked as 'stale' please add 'awaiting-maintainer' label or add a comment. Thank you for your contributions '
