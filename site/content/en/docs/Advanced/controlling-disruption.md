@@ -12,7 +12,9 @@ description: >
 
 By default, Agones assumes your game server should never be disrupted voluntarily and configures the `Pod` appropriately - but this isn't always the ideal setting. Here we discuss how Agones allows you to control the two most significant sources of voluntary `Pod` evictions, node upgrades and Cluster Autoscaler, using the `eviction` API on the `GameServer` object. 
 
+{{% feature expiryVersion="1.32.0" %}}
 {{< beta title="`eviction` API" gate="SafeToEvict" >}}
+{{% /feature %}}
 
 ## Benefits of Allowing Voluntary Disruption
 
@@ -57,7 +59,7 @@ In words:
       * No to either: Set `safe: Never`. If your game server does not terminate within an hour, see [below](#considerations-for-long-sessions).
 
 {{< alert title="Note" color="info" >}}
-To maintain backward compatibility with Agones prior to the introduction of the `SafeToEvict` feature gate, if your game server previously configured the `cluster-autoscaler.kubernetes.io/safe-to-evict: true` annotation, we assume `eviction.safe: Always` is intended.
+To maintain backward compatibility with Agones prior to the introduction of `eviction` API, if your game server previously configured the `cluster-autoscaler.kubernetes.io/safe-to-evict: true` annotation, we assume `eviction.safe: Always` is intended.
 {{</ alert >}}
 
 {{< alert title="Note" color="info" >}}

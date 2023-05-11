@@ -184,9 +184,6 @@ func podSpecSeccompUnconfined(podSpec *corev1.PodSpec) {
 //     OnUpgrade doesn't make sense on Autopilot today. - an overly restrictive PDB prevents
 //     any sort of graceful eviction.
 func (*gkeAutopilot) SetEviction(eviction *agonesv1.Eviction, pod *corev1.Pod) error {
-	if !runtime.FeatureEnabled(runtime.FeatureSafeToEvict) {
-		return nil
-	}
 	if safeAnnotation := pod.ObjectMeta.Annotations[agonesv1.PodSafeToEvictAnnotation]; safeAnnotation == agonesv1.False {
 		delete(pod.ObjectMeta.Annotations, agonesv1.PodSafeToEvictAnnotation)
 	}

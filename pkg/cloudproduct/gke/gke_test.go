@@ -18,7 +18,6 @@ import (
 
 	"agones.dev/agones/pkg/apis"
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
-	"agones.dev/agones/pkg/util/runtime"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
@@ -208,9 +207,6 @@ func TestPodSeccompUnconfined(t *testing.T) {
 }
 
 func TestSetSafeToEvict(t *testing.T) {
-	runtime.FeatureTestMutex.Lock()
-	defer runtime.FeatureTestMutex.Unlock()
-
 	emptyPodAnd := func(f func(*corev1.Pod)) *corev1.Pod {
 		pod := &corev1.Pod{
 			ObjectMeta: metav1.ObjectMeta{
@@ -222,41 +218,32 @@ func TestSetSafeToEvict(t *testing.T) {
 		return pod
 	}
 	for desc, tc := range map[string]struct {
-		featureFlags string
-		eviction     *agonesv1.Eviction
-		pod          *corev1.Pod
-		wantPod      *corev1.Pod
-		wantErr      bool
+		eviction *agonesv1.Eviction
+		pod      *corev1.Pod
+		wantPod  *corev1.Pod
+		wantErr  bool
 	}{
-		"SafeToEvict feature gate disabled => no change": {
-			featureFlags: "SafeToEvict=false",
-			// intentionally leave pod nil, it'll crash if anything's touched.
-		},
-		"SafeToEvict: Always, no incoming labels/annotations": {
-			featureFlags: "SafeToEvict=true",
-			eviction:     &agonesv1.Eviction{Safe: agonesv1.EvictionSafeAlways},
-			pod:          emptyPodAnd(func(*corev1.Pod) {}),
+		"eviction: safe: Always, no incoming labels/annotations": {
+			eviction: &agonesv1.Eviction{Safe: agonesv1.EvictionSafeAlways},
+			pod:      emptyPodAnd(func(*corev1.Pod) {}),
 			wantPod: emptyPodAnd(func(pod *corev1.Pod) {
 				pod.ObjectMeta.Labels[agonesv1.SafeToEvictLabel] = agonesv1.True
 			}),
 		},
-		"SafeToEvict: Never, no incoming labels/annotations": {
-			featureFlags: "SafeToEvict=true",
-			eviction:     &agonesv1.Eviction{Safe: agonesv1.EvictionSafeNever},
-			pod:          emptyPodAnd(func(*corev1.Pod) {}),
+		"eviction: safe: Never, no incoming labels/annotations": {
+			eviction: &agonesv1.Eviction{Safe: agonesv1.EvictionSafeNever},
+			pod:      emptyPodAnd(func(*corev1.Pod) {}),
 			wantPod: emptyPodAnd(func(pod *corev1.Pod) {
 				pod.ObjectMeta.Labels[agonesv1.SafeToEvictLabel] = agonesv1.False
 			}),
 		},
-		"SafeToEvict: OnUpgrade => error": {
-			featureFlags: "SafeToEvict=true",
-			eviction:     &agonesv1.Eviction{Safe: agonesv1.EvictionSafeOnUpgrade},
-			pod:          emptyPodAnd(func(*corev1.Pod) {}),
-			wantErr:      true,
+		"eviction: safe: OnUpgrade => error": {
+			eviction: &agonesv1.Eviction{Safe: agonesv1.EvictionSafeOnUpgrade},
+			pod:      emptyPodAnd(func(*corev1.Pod) {}),
+			wantErr:  true,
 		},
-		"SafeToEvict: Always, incoming labels/annotations": {
-			featureFlags: "SafeToEvict=true",
-			eviction:     &agonesv1.Eviction{Safe: agonesv1.EvictionSafeAlways},
+		"eviction: safe: Always, incoming labels/annotations": {
+			eviction: &agonesv1.Eviction{Safe: agonesv1.EvictionSafeAlways},
 			pod: emptyPodAnd(func(pod *corev1.Pod) {
 				pod.ObjectMeta.Annotations[agonesv1.PodSafeToEvictAnnotation] = "just don't touch, ok?"
 				pod.ObjectMeta.Labels[agonesv1.SafeToEvictLabel] = "seriously, leave it"
@@ -266,9 +253,8 @@ func TestSetSafeToEvict(t *testing.T) {
 				pod.ObjectMeta.Labels[agonesv1.SafeToEvictLabel] = "seriously, leave it"
 			}),
 		},
-		"SafeToEvict: Never, incoming labels/annotations": {
-			featureFlags: "SafeToEvict=true",
-			eviction:     &agonesv1.Eviction{Safe: agonesv1.EvictionSafeNever},
+		"eviction: safe: Never, incoming labels/annotations": {
+			eviction: &agonesv1.Eviction{Safe: agonesv1.EvictionSafeNever},
 			pod: emptyPodAnd(func(pod *corev1.Pod) {
 				pod.ObjectMeta.Annotations[agonesv1.PodSafeToEvictAnnotation] = "a passthrough"
 				pod.ObjectMeta.Labels[agonesv1.SafeToEvictLabel] = "or is it passthru?"
@@ -278,9 +264,8 @@ func TestSetSafeToEvict(t *testing.T) {
 				pod.ObjectMeta.Labels[agonesv1.SafeToEvictLabel] = "or is it passthru?"
 			}),
 		},
-		"SafeToEvict: Never, but safe-to-evict pod annotation set to false": {
-			featureFlags: "SafeToEvict=true",
-			eviction:     &agonesv1.Eviction{Safe: agonesv1.EvictionSafeNever},
+		"eviction: safe: Never, but safe-to-evict pod annotation set to false": {
+			eviction: &agonesv1.Eviction{Safe: agonesv1.EvictionSafeNever},
 			pod: emptyPodAnd(func(pod *corev1.Pod) {
 				pod.ObjectMeta.Annotations[agonesv1.PodSafeToEvictAnnotation] = agonesv1.False
 			}),
@@ -290,10 +275,7 @@ func TestSetSafeToEvict(t *testing.T) {
 		},
 	} {
 		t.Run(desc, func(t *testing.T) {
-			err := runtime.ParseFeatures(tc.featureFlags)
-			assert.NoError(t, err)
-
-			err = (&gkeAutopilot{}).SetEviction(tc.eviction, tc.pod)
+			err := (&gkeAutopilot{}).SetEviction(tc.eviction, tc.pod)
 			if tc.wantErr {
 				assert.Error(t, err)
 				return

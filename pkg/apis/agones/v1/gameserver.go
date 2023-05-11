@@ -211,7 +211,7 @@ type GameServerSpec struct {
 	// +optional
 	Counters map[string]CounterStatus `json:"counters,omitempty"`
 	Lists    map[string]ListStatus    `json:"lists,omitempty"`
-	// (Alpha, SafeToEvict feature flag) Eviction specifies the eviction tolerance of the GameServer. Defaults to "Never".
+	// Eviction specifies the eviction tolerance of the GameServer. Defaults to "Never".
 	// +optional
 	Eviction *Eviction `json:"eviction,omitempty"`
 	// immutableReplicas is present in gameservers.agones.dev but omitted here (it's always 1).
@@ -224,7 +224,6 @@ type PlayersSpec struct {
 
 // Eviction specifies the eviction tolerance of the GameServer
 type Eviction struct {
-	// (Alpha, SafeToEvict feature flag)
 	// Game server supports termination via SIGTERM:
 	// - Always: Allow eviction for both Cluster Autoscaler and node drain for upgrades
 	// - OnUpgrade: Allow eviction for upgrades alone
@@ -293,7 +292,7 @@ type GameServerStatus struct {
 	Counters map[string]CounterStatus `json:"counters,omitempty"`
 	// +optional
 	Lists map[string]ListStatus `json:"lists,omitempty"`
-	// (Alpha, SafeToEvict feature flag) Eviction specifies the eviction tolerance of the GameServer.
+	// Eviction specifies the eviction tolerance of the GameServer.
 	// +optional
 	Eviction *Eviction `json:"eviction,omitempty"`
 	// immutableReplicas is present in gameservers.agones.dev but omitted here (it's always 1).
@@ -434,9 +433,6 @@ func (gss *GameServerSpec) applySchedulingDefaults() {
 }
 
 func (gss *GameServerSpec) applyEvictionDefaults() {
-	if !runtime.FeatureEnabled(runtime.FeatureSafeToEvict) {
-		return
-	}
 	if gss.Eviction == nil {
 		gss.Eviction = &Eviction{}
 	}
@@ -446,9 +442,6 @@ func (gss *GameServerSpec) applyEvictionDefaults() {
 }
 
 func (gs *GameServer) applyEvictionStatus() {
-	if !runtime.FeatureEnabled(runtime.FeatureSafeToEvict) {
-		return
-	}
 	gs.Status.Eviction = gs.Spec.Eviction.DeepCopy()
 	if gs.Spec.Template.ObjectMeta.Annotations[PodSafeToEvictAnnotation] == "true" {
 		if gs.Status.Eviction == nil {
@@ -505,16 +498,6 @@ func (gss *GameServerSpec) validateFeatureGates() []metav1.StatusCause {
 				Type:    metav1.CauseTypeFieldValueNotSupported,
 				Field:   "lists",
 				Message: fmt.Sprintf("Value cannot be set unless feature flag %s is enabled", runtime.FeatureCountsAndLists),
-			})
-		}
-	}
-
-	if !runtime.FeatureEnabled(runtime.FeatureSafeToEvict) {
-		if gss.Eviction != nil {
-			causes = append(causes, metav1.StatusCause{
-				Type:    metav1.CauseTypeFieldValueNotSupported,
-				Field:   "eviction.safe",
-				Message: fmt.Sprintf("Value cannot be set unless feature flag %s is enabled", runtime.FeatureSafeToEvict),
 			})
 		}
 	}
@@ -819,18 +802,6 @@ func (gs *GameServer) podObjectMeta(pod *corev1.Pod) {
 	pod.ObjectMeta.Annotations[GameServerContainerAnnotation] = gs.Spec.Container
 	ref := metav1.NewControllerRef(gs, SchemeGroupVersion.WithKind("GameServer"))
 	pod.ObjectMeta.OwnerReferences = append(pod.ObjectMeta.OwnerReferences, *ref)
-
-	// When SafeToEvict=true, apiHooks.SetEviction manages disruption controls.
-	if !runtime.FeatureEnabled(runtime.FeatureSafeToEvict) {
-		// This means that the autoscaler cannot remove the Node that this Pod is on.
-		// (and evict the Pod in the process). Only set the value if it has not already
-		// been configured in the pod template (to not override user specified behavior).
-		// We only set this for packed game servers, under the assumption that if
-		// game servers are distributed then the cluster autoscaler isn't likely running.
-		if _, exists := pod.ObjectMeta.Annotations[PodSafeToEvictAnnotation]; !exists && gs.Spec.Scheduling == apis.Packed {
-			pod.ObjectMeta.Annotations[PodSafeToEvictAnnotation] = "false"
-		}
-	}
 
 	// Add Agones version into Pod Annotations
 	pod.ObjectMeta.Annotations[VersionAnnotation] = pkg.Version

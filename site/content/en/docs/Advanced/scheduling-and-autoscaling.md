@@ -100,7 +100,9 @@ This affects the Cluster autoscaler, Allocation Scheduling, Pod Scheduling and F
 When using the "Packed" strategy, Agones will ensure that the Cluster Autoscaler doesn't attempt to evict and move `GameServer` `Pods` onto new Nodes during
 gameplay.
 
+{{% feature expiryVersion="1.32.0" %}}
 {{< beta title="`eviction` API" gate="SafeToEvict" >}}
+{{% /feature %}}
 
 If a gameserver can tolerate [being evicted](https://kubernetes.io/docs/concepts/scheduling-eviction/api-eviction/#how-api-initiated-eviction-works)
 (generally in combination with setting an appropriate graceful termination period on the gameserver pod) and you

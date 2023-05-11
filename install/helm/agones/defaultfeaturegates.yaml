@@ -16,7 +16,6 @@
 
 # Beta features
 CustomFasSyncInterval: true
-SafeToEvict: true
 SDKGracefulTermination: true
 StateAllocationFilter: true
 PodHostname: true
