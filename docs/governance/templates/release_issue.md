@@ -24,13 +24,7 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 - [ ] Ensure the next stable releases in the Google Calendar have the correct version number.
 - [ ] `git checkout main && git pull --rebase upstream main`
 - [ ] Run `make pre-build-release` to ensure all example images exist on agones-images/examples repository and to deploy the {version}-1 service on GCP/App Engine/Services.
-- [ ] Ensure the [helm `tag` value][values] is correct (tag field value in image should be {version})
-- [ ] Ensure the [helm `Chart` version values][chart] are correct (appVersion and version fields value should be {version})
-- [ ] Update SDK Package Versions
-  - [ ] Navigate to the `sdks/nodejs` directory and run `npm version {version}` to update the package version in [`sdks/nodejs/package.json`][package.json] and [`sdks/nodejs/package-lock.json`][package-lock.json]
-  - [ ] Ensure the [`sdks/csharp/sdk/AgonesSDK.nuspec` and `sdks/csharp/sdk/csharp-sdk.csproj`][csharp] versions are correct (package -> version field value in AgonesSDK.nuspec and PropertyGroup -> Version field value in csharp-sdk.csproj should be {version})
-  - [ ] Update the package version in the [`sdks/unity/package.json`][unity] package file's `version` field to {version}
-- [ ] Run `make gen-install`
+- [ ] Navigate to `agones` directory and execute the `build/scripts/version-update/before-release/before-release.go` file. This will update the version number of the Helm/SDK/Install packages to {version}.
 - [ ] Create a _draft_ release with the [release template][release-template].
   - run `make release-example-image-markdown` to populate example images and append the output in `Images available with this release` section
   - [ ] Draft a new release with [release draft][release-draft]. Update the `Tag version` and `Release title` with the release version and click on `Generate release notes` to generate the release notes with `Full Changelog` info for {version}. Make sure to add the description. Include the `Images available with this release` section from the previous step that will be present after the `Full Changelog` and save the draft.
@@ -78,22 +72,11 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 - [ ] Post to the [agonesdev](https://twitter.com/agonesdev) Twitter account.
 - [ ] Run `git checkout main`.
 - [ ] Then increment the `base_version` in [`build/Makefile`][build-makefile]
-- [ ] Move [helm `tag` value][values] is set to {version}+1-dev (update tag field value under image)
-- [ ] Move the [helm `Chart` version values][chart] is to {version}+1-dev (update appVersion and version fields)
-- [ ] Change to the `sdks/nodejs` directory and run the command `npm version {version}+1-dev` to update the package version
-- [ ] Move the [`sdks/csharp/sdk/AgonesSDK.nuspec` and `sdks/csharp/sdk/csharp-sdk.csproj`][csharp] to {version}+1-dev
-- [ ] Update the [`sdks/unity/package.json`][unity] package file's `version` field to {version}+1-dev
-- [ ] Run `make gen-install gen-api-docs`
+- [ ] Navigate to `agones` directory and execute the `build/scripts/version-update/after-release/after-release.go` file. This will update the version number of the Helm/SDK/Install packages to {version}+1-dev.
 - [ ] Create PR with these changes, and merge them with approval
 - [ ] Close this issue. _Congratulations!_ - the release is now complete! :tada: :clap: :smile: :+1:
 
-[values]: https://github.com/googleforgames/agones/blob/main/install/helm/agones/values.yaml#L224
-[chart]: https://github.com/googleforgames/agones/blob/main/install/helm/agones/Chart.yaml#L18-L19
 [list]: https://groups.google.com/forum/#!forum/agones-discuss
 [release-template]: https://github.com/googleforgames/agones/blob/main/docs/governance/templates/release.md
 [release-draft]: https://github.com/googleforgames/agones/releases
 [build-makefile]: https://github.com/googleforgames/agones/blob/main/build/Makefile
-[package.json]: https://github.com/googleforgames/agones/blob/main/sdks/nodejs/package.json
-[package-lock.json]: https://github.com/googleforgames/agones/blob/main/sdks/nodejs/package-lock.json
-[csharp]: https://github.com/googleforgames/agones/blob/main/sdks/csharp/sdk/
-[unity]: https://github.com/googleforgames/agones/blob/main/sdks/unity/package.json
