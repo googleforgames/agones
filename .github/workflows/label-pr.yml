@@ -1,0 +1,90 @@
+name: Label PR
+
+on:
+  pull_request:
+    types: [opened]
+
+jobs:
+  label:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Label PR
+        uses: actions/github-script@v4
+        with:
+          async: yes
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const keywords = {
+              "breaking": "kind/breaking",
+              "bug": "kind/bug",
+              "feature": "kind/feature",
+              "cleanup": "kind/cleanup",
+              "documentation": "kind/documentation",
+              "hotfix": "kind/hotfix"
+            };
+
+            const prBody = context.payload.pull_request.body;
+            const prLabels = [];
+
+            const regex = /^\s*\/kind\s+(.+)$/m;
+            const match = prBody.match(regex);
+
+            console.log(`PR body: '${prBody}'`);
+            console.log(`Regex match: '${match}'`);
+
+            if (match && match[1] in keywords) {
+              const keyword = match[1];
+              const label = keywords[keyword];
+              console.log(`Adding label: '${label}' based on keyword '${keyword}'`);
+              prLabels.push(label);
+            } else {
+              console.log(`Adding label: 'kind/other' as no matching keyword found.`);
+              prLabels.push("kind/other");
+            }
+
+            try {
+              // Retrieve the PR's changed files using the GitHub REST API
+              const filesResponse = await github.pulls.listFiles({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: context.payload.pull_request.number
+              });
+              const files = filesResponse.data;
+
+              // Calculate the total number of lines changed
+              let totalLinesChanged = 0;
+              for (const file of files) {
+                const additions = file.additions || 0;
+                const deletions = file.deletions || 0;
+                totalLinesChanged += additions + deletions;
+              }
+
+              console.log(`Total lines changed: ${totalLinesChanged}`);
+
+              // Label the PR based on lines changed
+              let sizeLabel;
+              if (totalLinesChanged < 9) {
+                sizeLabel = 'size:XS';
+              } else if (totalLinesChanged < 49) {
+                sizeLabel = 'size:S';
+              } else if (totalLinesChanged < 249) {
+                sizeLabel = 'size:M';
+              } else if (totalLinesChanged < 999) {
+                sizeLabel = 'size:L';
+              } else {
+                sizeLabel = 'size:XL';
+              }
+
+              await github.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number,
+                labels: [...prLabels, sizeLabel]
+              });
+            } catch (error) {
+              console.error(`Error retrieving files: ${error}`);
+            }
