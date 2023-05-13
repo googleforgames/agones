@@ -21,6 +21,7 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 ## Steps
 
 - [ ] Run `make shell` and run `gcloud config configurations activate agones-images`.
+- [ ] Review merged PRs in the current milestone to ensure that they have appropriate tags.
 - [ ] Ensure the next stable releases in the Google Calendar have the correct version number.
 - [ ] `git checkout main && git pull --rebase upstream main`
 - [ ] Run `make pre-build-release` to ensure all example images exist on agones-images/examples repository and to deploy the {version}-1 service on GCP/App Engine/Services.
