@@ -110,11 +110,11 @@ var (
 		FeatureSDKGracefulTermination: true,
 		FeatureStateAllocationFilter:  true,
 		FeaturePodHostname:            true,
+		FeatureResetMetricsOnDelete:   true,
 
 		// Alpha features
 		FeaturePlayerAllocationFilter:       false,
 		FeaturePlayerTracking:               false,
-		FeatureResetMetricsOnDelete:         false,
 		FeatureFleetAllocateOverflow:        false,
 		FeatureSplitControllerAndExtensions: false,
 
