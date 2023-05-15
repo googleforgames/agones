@@ -16,10 +16,10 @@
 
 # Beta features
 CustomFasSyncInterval: true
-SDKGracefulTermination: true
-StateAllocationFilter: true
 PodHostname: true
 ResetMetricsOnDelete: true
+SDKGracefulTermination: true
+StateAllocationFilter: true
 
 # Alpha features
 PlayerAllocationFilter: false
