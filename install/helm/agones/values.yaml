@@ -46,7 +46,7 @@ agones:
   createPriorityClass: true
   priorityClassName: agones-system
   cloudProduct: "auto"
-  controller: &controllerValues
+  controller:
     resources: {}
       # requests:
       #   cpu: 1
@@ -99,7 +99,53 @@ agones:
     pdb:
         minAvailable: 1
   extensions:
-    <<: *controllerValues
+    resources: {}
+      # requests:
+      #   cpu: 1
+      #   memory: 256Mi
+    nodeSelector: {}
+    annotations: {}
+    tolerations:
+    - key: "agones.dev/agones-system"
+      operator: "Equal"
+      value: "true"
+      effect: "NoExecute"
+    affinity:
+      nodeAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 1
+          preference:
+            matchExpressions:
+              - key: agones.dev/agones-system
+                operator: Exists
+    generateTLS: true
+    tlsCert: ""
+    tlsKey: ""
+    disableSecret: false
+    allocationApiService:
+      annotations: {}
+      disableCaBundle: false
+    validatingWebhook:
+      annotations: {}
+      disableCaBundle: false
+    mutatingWebhook:
+      annotations: {}
+      disableCaBundle: false
+    customCertSecretPath: {}
+    persistentLogs: true
+    persistentLogsSizeLimitMB: 10000
+    logLevel: info
+    numWorkers: 100
+    apiServerQPS: 400
+    apiServerQPSBurst: 500
+    http:
+      port: 8080
+    healthCheck:
+      initialDelaySeconds: 3
+      periodSeconds: 3
+      failureThreshold: 3
+      timeoutSeconds: 1
+    allocationBatchWaitTime: 500ms
     pdb:
         minAvailable: 1
     replicas: 2
