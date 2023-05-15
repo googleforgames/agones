@@ -57,13 +57,7 @@ The following table lists recent Agones versions and their corresponding require
 | 1.22           | 1.21                  |
 | 1.21           | 1.21                  |
 
-## Best Practices
+## Best Practices {#separation-of-agones-from-gameserver-nodes}
+{{/* keep installation/#separation-of-agones-from-gameserver-nodes permalink */}}
 
-### Separation of Agones from GameServer nodes
-
-When running in production, Agones should be scheduled on a dedicated pool of nodes, distinct from where Game Servers
-are scheduled for better isolation and resiliency. By default Agones prefers to be scheduled on nodes labeled with
-`agones.dev/agones-system=true` and tolerates the node taint `agones.dev/agones-system=true:NoExecute`.
-If no dedicated nodes are available, Agones will run on regular nodes.
-
-[windows]: {{% ref "/docs/Guides/windows-gameservers.md" %}}
+For detailed guides on best practices running Agones in production, see [Best Practices]({{< relref "../Guides/Best Practices" >}}).
