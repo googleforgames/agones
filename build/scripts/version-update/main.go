@@ -4,31 +4,27 @@ import (
 	"flag"
 	"io/ioutil"
 	"log"
-	"os"
 	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
 )
 
-var releaseType string
+var releaseStage string
 
 func init() {
-	flag.StringVar(&releaseType, "type", "", "Specify the release type ('before' or 'after')")
+	flag.StringVar(&releaseStage, "release-stage", "", "Specify the release stage ('before' or 'after')")
 }
 
 func main() {
 	flag.Parse()
 
-	if len(os.Args) < 3 {
-		log.Fatalf("Please provide the release type ('before' or 'after') and the initial version as command-line arguments")
-		return
+	if len(flag.Args()) < 1 {
+		log.Fatalf("Please provide the release stage ('before' or 'after') and the initial version as command-line arguments")
 	}
 
-	releaseType := os.Args[1]
-	initialVersion := os.Args[2]
+	initialVersion := flag.Arg(0)
 
-	log.Printf("Release Type: %s", releaseType)
 	log.Printf("Initial Version: %s", initialVersion)
 
 	files := []string{
@@ -43,22 +39,14 @@ func main() {
 	}
 
 	for _, filename := range files {
-		var err error
-		if releaseType == "before" {
-			err = UpdateValueInFileBeforeRelease(filename, initialVersion)
-		} else if releaseType == "after" {
-			err = UpdateVersionInFileAfterRelease(filename, initialVersion)
-		} else {
-			log.Fatalf("Invalid release type. Please specify 'before' or 'after'.")
-		}
-
+		err := UpdateFile(filename, initialVersion)
 		if err != nil {
 			log.Fatalf("Error updating file %s: %s\n", filename, err.Error())
 		}
 	}
 }
 
-func UpdateValueInFileBeforeRelease(filename string, valueToUpdate string) error {
+func UpdateFile(filename string, initialVersion string) error {
 	fileBytes, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return err
@@ -66,13 +54,48 @@ func UpdateValueInFileBeforeRelease(filename string, valueToUpdate string) error
 
 	content := string(fileBytes)
 
-	// Check the file extension and update values accordingly
 	ext := filepath.Ext(filename)
-	switch ext {
-	case ".yaml", ".yml", ".nuspec", ".csproj":
-		content = updateValuesBeforeRelease(content, valueToUpdate)
-	case ".json":
-		content = updateJSONValuesBeforeRelease(content, valueToUpdate)
+	validExtensions := []string{".yaml", ".yml", ".nuspec", ".csproj"}
+
+	switch releaseStage {
+	case "before":
+		valid := false
+		for _, validExt := range validExtensions {
+			if ext == validExt {
+				valid = true
+				break
+			}
+		}
+		if valid {
+			re := regexp.MustCompile(`(\d+\.\d+\.\d+)-dev`)
+			content = re.ReplaceAllString(content, "${1}")
+		} else if ext == ".json" {
+			re := regexp.MustCompile(`"(\d+\.\d+\.\d+)-dev"`)
+			content = re.ReplaceAllString(content, `"$1"`)
+		} else {
+			log.Fatalf("Unsupported file extension: %s", ext)
+		}
+	case "after":
+		valid := false
+		for _, validExt := range validExtensions {
+			if ext == validExt {
+				valid = true
+				break
+			}
+		}
+		if valid {
+			re := regexp.MustCompile(regexp.QuoteMeta(initialVersion))
+			newVersion := incrementVersionAfterRelease(initialVersion)
+			content = re.ReplaceAllString(content, newVersion+"-dev")
+		} else if ext == ".json" {
+			re := regexp.MustCompile(`"` + regexp.QuoteMeta(initialVersion) + `"`)
+			newVersion := incrementVersionAfterRelease(initialVersion) + "-dev"
+			content = re.ReplaceAllString(content, `"`+newVersion+`"`)
+		} else {
+			log.Fatalf("Unsupported file extension: %s", ext)
+		}
+	default:
+		log.Fatalf("Invalid release stage. Please specify 'before' or 'after'.")
 	}
 
 	err = ioutil.WriteFile(filename, []byte(content), 0644)
@@ -81,53 +104,6 @@ func UpdateValueInFileBeforeRelease(filename string, valueToUpdate string) error
 	}
 
 	return nil
-}
-
-func updateValuesBeforeRelease(content string, valueToUpdate string) string {
-	re := regexp.MustCompile(`(\d+\.\d+\.\d+)-dev`)
-	return re.ReplaceAllString(content, "${1}")
-}
-
-func updateJSONValuesBeforeRelease(content string, valueToUpdate string) string {
-	re := regexp.MustCompile(`"(\d+\.\d+\.\d+)-dev"`)
-	return re.ReplaceAllString(content, `"$1"`)
-}
-
-func UpdateVersionInFileAfterRelease(filename string, initialVersion string) error {
-	fileBytes, err := ioutil.ReadFile(filename)
-	if err != nil {
-		return err
-	}
-
-	content := string(fileBytes)
-
-	// Check the file extension and update version accordingly
-	ext := filepath.Ext(filename)
-	switch ext {
-	case ".yaml", ".yml", ".nuspec", ".csproj":
-		content = updateVersionAfterRelease(content, initialVersion)
-	case ".json":
-		content = updateJSONVersionAfterRelease(content, initialVersion)
-	}
-
-	err = ioutil.WriteFile(filename, []byte(content), 0644)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func updateVersionAfterRelease(content string, initialVersion string) string {
-	re := regexp.MustCompile(regexp.QuoteMeta(initialVersion))
-	newVersion := incrementVersionAfterRelease(initialVersion)
-	return re.ReplaceAllString(content, newVersion+"-dev")
-}
-
-func updateJSONVersionAfterRelease(content string, initialVersion string) string {
-	re := regexp.MustCompile(`"` + regexp.QuoteMeta(initialVersion) + `"`)
-	newVersion := incrementVersionAfterRelease(initialVersion) + "-dev"
-	return re.ReplaceAllString(content, `"`+newVersion+`"`)
 }
 
 func incrementVersionAfterRelease(version string) string {
