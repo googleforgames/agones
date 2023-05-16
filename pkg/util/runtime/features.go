@@ -37,9 +37,6 @@ const (
 	// FeatureSDKGracefulTermination is a feature flag that enables SDK to support gracefulTermination
 	FeatureSDKGracefulTermination Feature = "SDKGracefulTermination"
 
-	// FeatureStateAllocationFilter is a feature flag that enables state filtering on Allocation.
-	FeatureStateAllocationFilter Feature = "StateAllocationFilter"
-
 	////////////////
 	// Alpha features
 
@@ -108,7 +105,6 @@ var (
 		// Beta features
 		FeatureCustomFasSyncInterval:  true,
 		FeatureSDKGracefulTermination: true,
-		FeatureStateAllocationFilter:  true,
 		FeaturePodHostname:            true,
 
 		// Alpha features

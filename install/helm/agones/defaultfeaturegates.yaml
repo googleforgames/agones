@@ -17,7 +17,6 @@
 # Beta features
 CustomFasSyncInterval: true
 SDKGracefulTermination: true
-StateAllocationFilter: true
 PodHostname: true
 
 # Alpha features
