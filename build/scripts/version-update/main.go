@@ -2,8 +2,8 @@ package main
 
 import (
 	"flag"
-	"io/ioutil"
 	"log"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -47,7 +47,7 @@ func main() {
 }
 
 func UpdateFile(filename string, initialVersion string) error {
-	fileBytes, err := ioutil.ReadFile(filename)
+	fileBytes, err := os.ReadFile(filename)
 	if err != nil {
 		return err
 	}
@@ -79,7 +79,7 @@ func UpdateFile(filename string, initialVersion string) error {
 		log.Fatalf("Invalid release stage. Please specify 'before' or 'after'.")
 	}
 
-	err = ioutil.WriteFile(filename, []byte(content), 0644)
+	err = os.WriteFile(filename, []byte(content), 0644)
 	if err != nil {
 		return err
 	}
