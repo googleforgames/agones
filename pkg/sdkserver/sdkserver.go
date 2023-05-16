@@ -342,14 +342,6 @@ func (s *SDKServer) updateState(ctx context.Context) error {
 	// If we are currently in shutdown/being deleted, there is no escaping.
 	if gs.IsBeingDeleted() {
 		s.logger.Debug("GameServerState being shutdown. Skipping update.")
-
-		// Explicitly update gsStateChannel if current state is Shutdown since sendGameServerUpdate will not triggered.
-		if runtime.FeatureEnabled(runtime.FeatureSDKGracefulTermination) && s.gsState == agonesv1.GameServerStateShutdown && gs.Status.State != agonesv1.GameServerStateShutdown {
-			go func() {
-				s.gsStateChannel <- agonesv1.GameServerStateShutdown
-			}()
-		}
-
 		return nil
 	}
 
