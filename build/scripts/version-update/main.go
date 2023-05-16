@@ -55,44 +55,25 @@ func UpdateFile(filename string, initialVersion string) error {
 	content := string(fileBytes)
 
 	ext := filepath.Ext(filename)
-	validExtensions := []string{".yaml", ".yml", ".nuspec", ".csproj"}
 
 	switch releaseStage {
 	case "before":
-		valid := false
-		for _, validExt := range validExtensions {
-			if ext == validExt {
-				valid = true
-				break
-			}
-		}
-		if valid {
-			re := regexp.MustCompile(`(\d+\.\d+\.\d+)-dev`)
-			content = re.ReplaceAllString(content, "${1}")
-		} else if ext == ".json" {
+		if ext == ".json" {
 			re := regexp.MustCompile(`"(\d+\.\d+\.\d+)-dev"`)
 			content = re.ReplaceAllString(content, `"$1"`)
 		} else {
-			log.Fatalf("Unsupported file extension: %s", ext)
+			re := regexp.MustCompile(`(\d+\.\d+\.\d+)-dev`)
+			content = re.ReplaceAllString(content, "${1}")
 		}
 	case "after":
-		valid := false
-		for _, validExt := range validExtensions {
-			if ext == validExt {
-				valid = true
-				break
-			}
-		}
-		if valid {
-			re := regexp.MustCompile(regexp.QuoteMeta(initialVersion))
-			newVersion := incrementVersionAfterRelease(initialVersion)
-			content = re.ReplaceAllString(content, newVersion+"-dev")
-		} else if ext == ".json" {
+		if ext == ".json" {
 			re := regexp.MustCompile(`"` + regexp.QuoteMeta(initialVersion) + `"`)
 			newVersion := incrementVersionAfterRelease(initialVersion) + "-dev"
 			content = re.ReplaceAllString(content, `"`+newVersion+`"`)
 		} else {
-			log.Fatalf("Unsupported file extension: %s", ext)
+			re := regexp.MustCompile(regexp.QuoteMeta(initialVersion))
+			newVersion := incrementVersionAfterRelease(initialVersion)
+			content = re.ReplaceAllString(content, newVersion+"-dev")
 		}
 	default:
 		log.Fatalf("Invalid release stage. Please specify 'before' or 'after'.")
