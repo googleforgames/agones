@@ -64,10 +64,17 @@ spec:
         release: {{ .Release.Name }}
         heritage: {{ .Release.Service }}
     spec:
-      {{- if .Values.agones.controller.affinity }}
-      affinity:
-{{ toYaml .Values.agones.controller.affinity | indent 8 }}
-      {{- end }}
+      nodeAffinity:
+        {{- if .Values.agones.system.requireDedicatedNode }}
+        requiredDuringSchedulingIgnoredDuringExecution:
+        {{- else}}
+        preferredDuringSchedulingIgnoredDuringExecution:
+        {{- end }}
+        - weight: 1
+          preference:
+            matchExpressions:
+            - key: agones.dev/agones-system
+              operator: Exists
       {{- if .Values.agones.controller.nodeSelector }}
       nodeSelector:
 {{ toYaml .Values.agones.controller.nodeSelector | indent 8 }}

@@ -165,10 +165,17 @@ spec:
 {{- toYaml .Values.agones.allocator.annotations | nindent 8 }}
 {{- end }}
     spec:
-      {{- if .Values.agones.allocator.affinity }}
-      affinity:
-{{ toYaml .Values.agones.allocator.affinity | indent 8 }}
-      {{- end }}
+      nodeAffinity:
+        {{- if .Values.agones.system.requireDedicatedNode }}
+        requiredDuringSchedulingIgnoredDuringExecution:
+        {{- else}}
+        preferredDuringSchedulingIgnoredDuringExecution:
+        {{- end }}
+        - weight: 1
+          preference:
+            matchExpressions:
+            - key: agones.dev/agones-system
+              operator: Exists
       {{- if .Values.agones.allocator.nodeSelector }}
       nodeSelector:
 {{ toYaml .Values.agones.allocator.nodeSelector | indent 8 }}
