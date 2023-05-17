@@ -71,6 +71,11 @@ func ConvertAllocationRequestToGSA(in *pb.AllocationRequest) *allocationv1.GameS
 		// nolint:staticcheck
 		gsa.Spec.Required = *selector
 	}
+
+	if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) && in.Priorities != nil {
+		gsa.Spec.Priorities = convertAllocationPrioritiesToGSAPriorities(in.GetPriorities())
+	}
+
 	return gsa
 }
 
@@ -103,13 +108,19 @@ func ConvertGSAToAllocationRequest(in *allocationv1.GameServerAllocation) *pb.Al
 	l := len(out.GameServerSelectors)
 	if l > 0 {
 		// nolint:staticcheck
+		// Sets all but the last GameServerSelector as PreferredGameServerSelectors
 		out.PreferredGameServerSelectors = out.GameServerSelectors[:l-1]
 		// nolint:staticcheck
+		// Sets the last GameServerSelector as RequiredGameServerSelector
 		out.RequiredGameServerSelector = out.GameServerSelectors[l-1]
 	}
 
 	if in.Spec.MultiClusterSetting.Enabled {
 		out.MultiClusterSetting.PolicySelector = convertInternalLabelSelectorToLabelSelector(&in.Spec.MultiClusterSetting.PolicySelector)
+	}
+
+	if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) && in.Spec.Priorities != nil {
+		out.Priorities = convertGSAPrioritiesToAllocationPriorities(in.Spec.Priorities)
 	}
 
 	return out
@@ -170,6 +181,30 @@ func convertGameServerSelectorToInternalGameServerSelector(in *pb.GameServerSele
 		}
 	}
 
+	if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
+		if in.Counters != nil {
+			result.Counters = map[string]allocationv1.CounterSelector{}
+			for k, v := range in.GetCounters() {
+				result.Counters[k] = allocationv1.CounterSelector{
+					MinCount:     v.MinCount,
+					MaxCount:     v.MaxCount,
+					MinAvailable: v.MinAvailable,
+					MaxAvailable: v.MaxAvailable,
+				}
+			}
+		}
+		if in.Lists != nil {
+			result.Lists = map[string]allocationv1.ListSelector{}
+			for k, v := range in.GetLists() {
+				result.Lists[k] = allocationv1.ListSelector{
+					ContainsValue: v.ContainsValue,
+					MinAvailable:  v.MinAvailable,
+					MaxAvailable:  v.MaxAvailable,
+				}
+			}
+		}
+	}
+
 	return result
 }
 
@@ -194,6 +229,30 @@ func convertInternalGameServerSelectorToGameServer(in *allocationv1.GameServerSe
 		result.Players = &pb.PlayerSelector{
 			MinAvailable: uint64(in.Players.MinAvailable),
 			MaxAvailable: uint64(in.Players.MaxAvailable),
+		}
+	}
+
+	if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
+		if in.Counters != nil {
+			result.Counters = map[string]*pb.CounterSelector{}
+			for k, v := range in.Counters {
+				result.Counters[k] = &pb.CounterSelector{
+					MinCount:     v.MinCount,
+					MaxCount:     v.MaxCount,
+					MinAvailable: v.MinAvailable,
+					MaxAvailable: v.MaxAvailable,
+				}
+			}
+		}
+		if in.Lists != nil {
+			result.Lists = map[string]*pb.ListSelector{}
+			for k, v := range in.Lists {
+				result.Lists[k] = &pb.ListSelector{
+					ContainsValue: v.ContainsValue,
+					MinAvailable:  v.MinAvailable,
+					MaxAvailable:  v.MaxAvailable,
+				}
+			}
 		}
 	}
 
@@ -304,4 +363,34 @@ func convertStateV1ToError(in allocationv1.GameServerAllocationState) error {
 		return status.Error(codes.Aborted, "too many concurrent requests have overwhelmed the system")
 	}
 	return status.Error(codes.Unknown, "unknown issue")
+}
+
+// convertAllocationPrioritiesToGSAPriorities converts a list of AllocationRequest_Priorities to a
+// list of GameServerAllocationSpec (GSA.Spec) Priorities
+func convertAllocationPrioritiesToGSAPriorities(in []*pb.Priority) []allocationv1.Priority {
+	var out []allocationv1.Priority
+	for _, p := range in {
+		priority := allocationv1.Priority{
+			PriorityType: p.PriorityType,
+			Key:          p.Key,
+			Order:        p.Order,
+		}
+		out = append(out, priority)
+	}
+	return out
+}
+
+// convertAllocationPrioritiesToGSAPriorities converts a list of GameServerAllocationSpec (GSA.Spec)
+// Priorities to a list of AllocationRequest_Priorities
+func convertGSAPrioritiesToAllocationPriorities(in []allocationv1.Priority) []*pb.Priority {
+	var out []*pb.Priority
+	for _, p := range in {
+		priority := pb.Priority{
+			PriorityType: p.PriorityType,
+			Key:          p.Key,
+			Order:        p.Order,
+		}
+		out = append(out, &priority)
+	}
+	return out
 }
