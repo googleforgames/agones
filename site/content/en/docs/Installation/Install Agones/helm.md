@@ -269,7 +269,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.allocator.readiness.initialDelaySeconds`      | Initial delay before performing the first probe (in seconds)                                                                                                                                                            | `3`                                |
 | `agones.allocator.readiness.periodSeconds`            | Seconds between every liveness probe (in seconds)                                                                                                                                                                       | `3`                                |
 | `agones.allocator.readiness.failureThreshold`         | Number of times before giving up (in seconds)                                                                                                                                                                           | `3`                                |
-| `agones.system.requireDedicatedNode`         | Forces Agones system components to be scheduled on dedicated nodes                                                                                                                                                                           |  `false`                              |
+| `agones.system.requireDedicatedNode`                  | Forces Agones system components to be scheduled on dedicated nodes                                                                                                                                                                           |  `false`                          |
 
 {{% /feature %}}
 
@@ -279,13 +279,13 @@ The following tables lists the configurable parameters of the Agones chart and t
 [cpu-constraints]: https://kubernetes.io/docs/tasks/administer-cluster/manage-resources/cpu-constraint-namespace/
 [memory-constraints]: https://kubernetes.io/docs/tasks/administer-cluster/manage-resources/memory-constraint-namespace/
 [ping]: {{< ref "/docs/Guides/ping-service.md" >}}
-[service]: https://kubernetes.io/docs/concepts/services-networking/service/
+[service]: <https://kubernetes.io/docs/concepts/services-networking/service/>
 [allocator]: {{< ref "/docs/advanced/allocator-service.md" >}}
-[loadBalancer]: https://kubernetes.io/docs/concepts/services-networking/service/#loadbalancer
-[annotations]: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
-[labels]:https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
-[resources]: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
-[pruning]: https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/#field-pruning
+[loadBalancer]: <https://kubernetes.io/docs/concepts/services-networking/service/#loadbalancer>
+[annotations]: <https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/>
+[labels]:<https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/>
+[resources]: <https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/>
+[pruning]: <https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/#field-pruning>
 [gameserver]: {{< ref "/docs/Reference/gameserver.md" >}}
 [rest-requests]: {{< ref "/docs/Advanced/allocator-service.md#using-rest" >}}
 [grpc-requests]: {{< ref "/docs/Advanced/allocator-service.md#using-grpc" >}}
@@ -319,11 +319,13 @@ In order to use `helm test` command described in this section you need to set `h
 {{< /alert >}}
 
 Check the Agones installation by running the following command:
+
 ```bash
 helm test my-release -n agones-system
 ```
 
 You should see a successful output similar to this :
+
 ```
 NAME: my-release
 LAST DEPLOYED: Wed Mar 29 06:13:23 2023
