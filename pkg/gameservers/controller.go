@@ -706,15 +706,19 @@ func (c *Controller) addGameServerHealthCheck(gs *agonesv1.GameServer, pod *core
 					},
 				},
 				// The sidecar relies on kubelet to delay by InitialDelaySeconds after the
-				// container is started (after image pull, etc), and relies on the kubelet
-				// for PeriodSeconds heartbeats to evaluate health.
+				// container is started (after image pull, etc).
 				InitialDelaySeconds: gs.Spec.Health.InitialDelaySeconds,
 				PeriodSeconds:       gs.Spec.Health.PeriodSeconds,
 
 				// By the time /gshealthz returns unhealthy, the sidecar has already evaluated
-				// FailureThreshold in a row failed health checks, so on the kubelet side, one
-				// failure is sufficient to know the game server is unhealthy.
-				FailureThreshold: 1,
+				// {FailureThreshold in a row} failed health checks, so in theory on the kubelet
+				// side, one failure is sufficient to know the game server is unhealthy. However,
+				// with only one failure, if the sidecar doesn't come up at all, we unnecessarily
+				// restart the game server. So use FailureThreshold as startup wiggle-room as well.
+				//
+				// Note that in general, FailureThreshold could also be infinite - the controller
+				// and sidecar are responsible for health management.
+				FailureThreshold: gs.Spec.Health.FailureThreshold,
 			}
 		}
 
