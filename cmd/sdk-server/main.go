@@ -97,7 +97,7 @@ func main() {
 	case ctlConf.IsLocal:
 		cancel, err := registerLocal(grpcServer, ctlConf)
 		if err != nil {
-			logger.WithError(err).Fatal("Could not start local sdk server")
+			logger.WithError(err).Fatal("Could not start local SDK server")
 		}
 		defer cancel()
 
@@ -108,7 +108,7 @@ func main() {
 	case ctlConf.Test != "":
 		cancel, err := registerTestSdkServer(grpcServer, ctlConf)
 		if err != nil {
-			logger.WithError(err).Fatal("Could not start test sdk server")
+			logger.WithError(err).Fatal("Could not start test SDK server")
 		}
 		defer cancel()
 
@@ -141,6 +141,11 @@ func main() {
 		if err != nil {
 			logger.WithError(err).Fatalf("Could not start sidecar")
 		}
+		// wait for networking prior to replacing context, otherwise we'll
+		// end up waiting the full grace period if it fails.
+		if err := s.WaitForConnection(ctx); err != nil {
+			logger.WithError(err).Fatalf("Sidecar networking failure")
+		}
 		if runtime.FeatureEnabled(runtime.FeatureSDKGracefulTermination) {
 			ctx = s.NewSDKServerContext(ctx)
 		}
@@ -160,7 +165,7 @@ func main() {
 	go runGateway(ctx, grpcEndpoint, mux, httpServer)
 
 	<-ctx.Done()
-	logger.Info("shutting down sdk server")
+	logger.Info("Shutting down SDK server")
 }
 
 // registerLocal registers the local SDK servers, and returns a cancel func that
