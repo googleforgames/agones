@@ -60,7 +60,7 @@ func main() {
 	}
 }
 
-// The UpdateFile updates the specified file to the current release version, both before and after the release.
+// UpdateFile updates the specified file to the current release version before and after the release process.
 func UpdateFile(filename string, initialVersion string) error {
 	fileBytes, err := os.ReadFile(filename)
 	if err != nil {
