@@ -314,12 +314,12 @@ steps:
           region=${versionsAndRegions[$version]}
           if [ $cloudProduct = generic ]
           then
-            featureWithGate="CustomFasSyncInterval=false&SDKGracefulTermination=false&PlayerAllocationFilter=true&PlayerTracking=true&ResetMetricsOnDelete=true&PodHostname=false&SplitControllerAndExtensions=true&FleetAllocationOverflow=true&Example=true"
+            featureWithGate="CustomFasSyncInterval=false&SDKGracefulTermination=false&StateAllocationFilter=false&PlayerAllocationFilter=true&PlayerTracking=true&ResetMetricsOnDelete=false&PodHostname=false&SplitControllerAndExtensions=true&FleetAllocationOverflow=true&Example=true"
             featureWithoutGate=""
             testClusterLocation="${region}-c"
             testCluster="gke-standard-e2e-test-cluster-${version//./-}"
           else
-            featureWithGate="CustomFasSyncInterval=false&SDKGracefulTermination=false&PlayerAllocationFilter=true&PlayerTracking=true&ResetMetricsOnDelete=true&PodHostname=false&SplitControllerAndExtensions=true&FleetAllocationOverflow=true&Example=true"
+            featureWithGate="CustomFasSyncInterval=false&SDKGracefulTermination=false&StateAllocationFilter=false&PlayerAllocationFilter=true&PlayerTracking=true&ResetMetricsOnDelete=false&PodHostname=false&SplitControllerAndExtensions=true&FleetAllocationOverflow=true&Example=true"
             featureWithoutGate="SplitControllerAndExtensions=true"
             testClusterLocation="${region}"
             testCluster="gke-autopilot-e2e-test-cluster-${version//./-}"

@@ -118,6 +118,14 @@
             "$ref": "#/definitions/allocationGameServerSelector"
           },
           "description": "Ordered list of GameServer label selectors.\nIf the first selector is not matched, the selection attempts the second selector, and so on.\nThis is useful for things like smoke testing of new game servers.\nNote: This field can only be set if neither Required or Preferred is set."
+        },
+        "priorities": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/allocationPriority"
+          },
+          "description": "(Alpha, CountsAndLists feature flag) The first Priority on the array of Priorities is the most\nimportant for sorting. The allocator will use the first priority for sorting GameServers in the\nSelector set, and will only use any following priority for tie-breaking during sort.\nImpacts which GameServer is checked first."
         }
       }
     },
@@ -145,6 +153,28 @@
         }
       }
     },
+    "allocationCounterSelector": {
+      "type": "object",
+      "properties": {
+        "minCount": {
+          "type": "string",
+          "format": "int64"
+        },
+        "maxCount": {
+          "type": "string",
+          "format": "int64"
+        },
+        "minAvailable": {
+          "type": "string",
+          "format": "int64"
+        },
+        "maxAvailable": {
+          "type": "string",
+          "format": "int64"
+        }
+      },
+      "title": "CounterSelector is the filter options for a GameServer based on the count and/or available capacity.\n0 for MaxCount or MaxAvailable means unlimited maximum. Default for all fields: 0"
+    },
     "allocationGameServerSelector": {
       "type": "object",
       "properties": {
@@ -160,6 +190,18 @@
         },
         "players": {
           "$ref": "#/definitions/allocationPlayerSelector"
+        },
+        "counters": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/allocationCounterSelector"
+          }
+        },
+        "lists": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/allocationListSelector"
+          }
         }
       },
       "description": "GameServerSelector used for finding a GameServer with matching filters."
@@ -176,6 +218,23 @@
         }
       },
       "description": "LabelSelector used for finding a GameServer with matching labels."
+    },
+    "allocationListSelector": {
+      "type": "object",
+      "properties": {
+        "containsValue": {
+          "type": "string"
+        },
+        "minAvailable": {
+          "type": "string",
+          "format": "int64"
+        },
+        "maxAvailable": {
+          "type": "string",
+          "format": "int64"
+        }
+      },
+      "title": "ListSelector is the filter options for a GameServer based on List available capacity and/or the\nexistence of a value in a List.\n0 for MaxAvailable means unlimited maximum. Default for integer fields: 0\n\"\" for ContainsValue means ignore field. Default for string field: \"\""
     },
     "allocationMetaPatch": {
       "type": "object",
@@ -223,6 +282,21 @@
         }
       },
       "description": "PlayerSelector is filter for player capacity values.\nminAvailable should always be less or equal to maxAvailable."
+    },
+    "allocationPriority": {
+      "type": "object",
+      "properties": {
+        "priorityType": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        },
+        "order": {
+          "type": "string"
+        }
+      },
+      "description": "Priority is a sorting option for GameServers with Counters or Lists based on the count or\nnumber of items in a List.\nPriorityType: Sort by a \"Counter\" or a \"List\".\nKey: The name of the Counter or List. If not found on the GameServer, has no impact.\nOrder: Sort by \"Ascending\" or \"Descending\". Default is \"Descending\" so bigger count is preferred.\n\"Ascending\" would be smaller count is preferred."
     }
   }
 }

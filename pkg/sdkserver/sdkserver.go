@@ -74,36 +74,37 @@ var (
 //
 //nolint:govet // ignore fieldalignment, singleton
 type SDKServer struct {
-	logger             *logrus.Entry
-	gameServerName     string
-	namespace          string
-	informerFactory    externalversions.SharedInformerFactory
-	gameServerGetter   typedv1.GameServersGetter
-	gameServerLister   listersv1.GameServerLister
-	gameServerSynced   cache.InformerSynced
-	connected          bool
-	server             *http.Server
-	clock              clock.Clock
-	health             agonesv1.Health
-	healthTimeout      time.Duration
-	healthMutex        sync.RWMutex
-	healthLastUpdated  time.Time
-	healthFailureCount int32
-	workerqueue        *workerqueue.WorkerQueue
-	streamMutex        sync.RWMutex
-	connectedStreams   []sdk.SDK_WatchGameServerServer
-	ctx                context.Context
-	recorder           record.EventRecorder
-	gsLabels           map[string]string
-	gsAnnotations      map[string]string
-	gsState            agonesv1.GameServerState
-	gsStateChannel     chan agonesv1.GameServerState
-	gsUpdateMutex      sync.RWMutex
-	gsWaitForSync      sync.WaitGroup
-	reserveTimer       *time.Timer
-	gsReserveDuration  *time.Duration
-	gsPlayerCapacity   int64
-	gsConnectedPlayers []string
+	logger              *logrus.Entry
+	gameServerName      string
+	namespace           string
+	informerFactory     externalversions.SharedInformerFactory
+	gameServerGetter    typedv1.GameServersGetter
+	gameServerLister    listersv1.GameServerLister
+	gameServerSynced    cache.InformerSynced
+	connected           bool
+	server              *http.Server
+	clock               clock.Clock
+	health              agonesv1.Health
+	healthTimeout       time.Duration
+	healthMutex         sync.RWMutex
+	healthLastUpdated   time.Time
+	healthFailureCount  int32
+	healthChecksRunning sync.Once
+	workerqueue         *workerqueue.WorkerQueue
+	streamMutex         sync.RWMutex
+	connectedStreams    []sdk.SDK_WatchGameServerServer
+	ctx                 context.Context
+	recorder            record.EventRecorder
+	gsLabels            map[string]string
+	gsAnnotations       map[string]string
+	gsState             agonesv1.GameServerState
+	gsStateChannel      chan agonesv1.GameServerState
+	gsUpdateMutex       sync.RWMutex
+	gsWaitForSync       sync.WaitGroup
+	reserveTimer        *time.Timer
+	gsReserveDuration   *time.Duration
+	gsPlayerCapacity    int64
+	gsConnectedPlayers  []string
 }
 
 // NewSDKServer creates a SDKServer that sets up an
@@ -165,7 +166,8 @@ func NewSDKServer(gameServerName, namespace string, kubeClient kubernetes.Interf
 		}
 	})
 	mux.HandleFunc("/gshealthz", func(w http.ResponseWriter, r *http.Request) {
-		if s.runHealth() {
+		s.ensureHealthChecksRunning()
+		if s.healthy() {
 			_, err := w.Write([]byte("ok"))
 			if err != nil {
 				s.logger.WithError(err).Error("could not send ok response on gshealthz")
@@ -192,9 +194,6 @@ func NewSDKServer(gameServerName, namespace string, kubeClient kubernetes.Interf
 // Run processes the rate limited queue.
 // Will block until stop is closed
 func (s *SDKServer) Run(ctx context.Context) error {
-	if err := s.waitForConnection(ctx); err != nil {
-		return err
-	}
 	s.informerFactory.Start(ctx.Done())
 	if !cache.WaitForCacheSync(ctx.Done(), s.gameServerSynced) {
 		return errors.New("failed to wait for caches to sync")
@@ -235,11 +234,6 @@ func (s *SDKServer) Run(ctx context.Context) error {
 		s.gsUpdateMutex.Unlock()
 	}
 
-	// start health checking running
-	if !s.health.Disabled {
-		s.logger.Debug("Starting GameServer health checking")
-	}
-
 	// populate player tracking values
 	if runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
 		s.gsUpdateMutex.Lock()
@@ -268,10 +262,10 @@ func (s *SDKServer) Run(ctx context.Context) error {
 	return nil
 }
 
-// waitForConnection attempts a GameServer GET every 3s until the client responds.
+// WaitForConnection attempts a GameServer GET every 3s until the client responds.
 // This is a workaround for the informer hanging indefinitely on first LIST due
 // to a flaky network to the Kubernetes service endpoint.
-func (s *SDKServer) waitForConnection(ctx context.Context) error {
+func (s *SDKServer) WaitForConnection(ctx context.Context) error {
 	// In normal operaiton, waitForConnection is called exactly once in Run().
 	// In unit tests, waitForConnection() can be called before Run() to ensure
 	// that connected is true when Run() is called, otherwise the List() below
@@ -856,17 +850,14 @@ func (s *SDKServer) sendGameServerUpdate(gs *agonesv1.GameServer) {
 	}
 }
 
-// runHealth checks the health as part of the /gshealthz hook, and if not
+// checkHealthUpdateState checks the health as part of the /gshealthz hook, and if not
 // healthy will push the Unhealthy state into the queue so it can be updated.
-// Returns current health.
-func (s *SDKServer) runHealth() bool {
+func (s *SDKServer) checkHealthUpdateState() {
 	s.checkHealth()
-	if s.healthy() {
-		return true
+	if !s.healthy() {
+		s.logger.WithField("gameServerName", s.gameServerName).Warn("GameServer has failed health check")
+		s.enqueueState(agonesv1.GameServerStateUnhealthy)
 	}
-	s.logger.WithField("gameServerName", s.gameServerName).Warn("GameServer has failed health check")
-	s.enqueueState(agonesv1.GameServerStateUnhealthy)
-	return false
 }
 
 // touchHealthLastUpdated sets the healthLastUpdated
@@ -876,6 +867,17 @@ func (s *SDKServer) touchHealthLastUpdated() {
 	defer s.healthMutex.Unlock()
 	s.healthLastUpdated = s.clock.Now().UTC()
 	s.healthFailureCount = 0
+}
+
+func (s *SDKServer) ensureHealthChecksRunning() {
+	if s.health.Disabled {
+		return
+	}
+	s.healthChecksRunning.Do(func() {
+		// start health checking running
+		s.logger.Debug("Starting GameServer health checking")
+		go wait.Until(s.checkHealthUpdateState, s.healthTimeout, s.ctx.Done())
+	})
 }
 
 // checkHealth checks the healthLastUpdated value
@@ -969,12 +971,25 @@ func (s *SDKServer) NewSDKServerContext(ctx context.Context) context.Context {
 	sdkCtx, cancel := context.WithCancel(context.Background())
 	go func() {
 		<-ctx.Done()
-		for {
+
+		keepWaiting := true
+		s.gsUpdateMutex.RLock()
+		if len(s.gsState) > 0 {
+			s.logger.WithField("state", s.gsState).Info("SDK server shutdown requested, waiting for game server shutdown")
+		} else {
+			s.logger.Info("SDK server state never updated by game server, shutting down sdk server without waiting")
+			keepWaiting = false
+		}
+		s.gsUpdateMutex.RUnlock()
+
+		for keepWaiting {
 			gsState := <-s.gsStateChannel
 			if gsState == agonesv1.GameServerStateShutdown {
-				cancel()
+				keepWaiting = false
 			}
 		}
+
+		cancel()
 	}()
 	return sdkCtx
 }

@@ -89,11 +89,12 @@ var (
 	// * add it to site/content/en/docs/Guides/feature-stages.md
 	//
 	// To promote a feature from alpha->beta:
-	// * move from `false` to `true` in `featureDefaults`
+	// * move from `false` to `true` in `featureDefaults`.
 	// * move from `false` to `true` in install/helm/agones/defaultfeaturegates.yaml
 	// * remove from `ALPHA_FEATURE_GATES` in build/Makefile
 	// * invert in the e2e-runner config in cloudbuild.yaml
-	// * change the value in site/content/en/docs/Guides/feature-stages.md
+	// * change the value in site/content/en/docs/Guides/feature-stages.md.
+	// * Ensure that the features in each file are organized alphabetically.
 	//
 	// To promote a feature from beta->GA:
 	// * remove all places consuming the feature gate and fold logic to true
@@ -104,13 +105,13 @@ var (
 	featureDefaults = map[Feature]bool{
 		// Beta features
 		FeatureCustomFasSyncInterval:  true,
-		FeatureSDKGracefulTermination: true,
 		FeaturePodHostname:            true,
+		FeatureResetMetricsOnDelete:   true,
+		FeatureSDKGracefulTermination: true,
 
 		// Alpha features
 		FeaturePlayerAllocationFilter:       false,
 		FeaturePlayerTracking:               false,
-		FeatureResetMetricsOnDelete:         false,
 		FeatureFleetAllocateOverflow:        false,
 		FeatureSplitControllerAndExtensions: false,
 
