@@ -269,7 +269,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.allocator.readiness.initialDelaySeconds`      | Initial delay before performing the first probe (in seconds)                                                                                                                                                            | `3`                                |
 | `agones.allocator.readiness.periodSeconds`            | Seconds between every liveness probe (in seconds)                                                                                                                                                                       | `3`                                |
 | `agones.allocator.readiness.failureThreshold`         | Number of times before giving up (in seconds)                                                                                                                                                                           | `3`                                |
-| `agones.system.requireDedicatedNode`                  | Forces Agones system components to be scheduled on dedicated nodes                                                                                                                                                                           |  `false`                           |
+| `agones.system.requireDedicatedNode`                  | Forces Agones system components to be scheduled on dedicated nodes, only applies to the GKE Standard mode cluster                                                                                                                                                                          |  `false`                           |
 
 {{% /feature %}}
 
