@@ -167,15 +167,15 @@ spec:
     spec:
       affinity:
       {{- if .Values.agones.allocator.affinity }}
-      {{- if .Values.agones.allocator.requireDedicatedNode }}
-      {{- fail "agones.allocator.affinity and agones.allocator.requireDedicatedNode cannot be set at the same time!" }}
+      {{- if .Values.agones.system.requireDedicatedNode }}
+      {{- fail "agones.allocator.affinity and agones.system.requireDedicatedNode cannot be set at the same time!" }}
       {{- end}}
       {{- end}}
       {{- if .Values.agones.allocator.affinity }}
 {{ toYaml .Values.agones.allocator.affinity | indent 8 }}
       {{- else}}
         nodeAffinity:
-          {{- if .Values.agones.allocator.requireDedicatedNode }}
+          {{- if .Values.agones.system.requireDedicatedNode }}
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
             - matchExpressions:
