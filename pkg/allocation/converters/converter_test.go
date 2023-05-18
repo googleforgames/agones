@@ -215,130 +215,6 @@ func TestConvertAllocationRequestToGameServerAllocation(t *testing.T) {
 			},
 		},
 		{
-			name:     "all fields are set",
-			features: fmt.Sprintf("%s=false&%s=false", runtime.FeaturePlayerAllocationFilter, runtime.FeatureCountsAndLists),
-			in: &pb.AllocationRequest{
-				Namespace: "ns",
-				MultiClusterSetting: &pb.MultiClusterSetting{
-					Enabled: true,
-					PolicySelector: &pb.LabelSelector{
-						MatchLabels: map[string]string{
-							"a": "b",
-						},
-					},
-				},
-				RequiredGameServerSelector: &pb.GameServerSelector{
-					MatchLabels: map[string]string{
-						"c": "d",
-					},
-				},
-				PreferredGameServerSelectors: []*pb.GameServerSelector{
-					{
-						MatchLabels: map[string]string{
-							"e": "f",
-						},
-					},
-					{
-						MatchLabels: map[string]string{
-							"g": "h",
-						},
-					},
-				},
-				GameServerSelectors: []*pb.GameServerSelector{
-					{
-						MatchLabels: map[string]string{
-							"m": "n",
-						},
-					},
-				},
-				Scheduling: pb.AllocationRequest_Packed,
-				Metadata: &pb.MetaPatch{
-					Labels: map[string]string{
-						"i": "j",
-					},
-				},
-				MetaPatch: &pb.MetaPatch{
-					Labels: map[string]string{
-						"i": "j",
-					},
-				},
-			},
-			want: &allocationv1.GameServerAllocation{
-				ObjectMeta: metav1.ObjectMeta{
-					Namespace: "ns",
-				},
-				Spec: allocationv1.GameServerAllocationSpec{
-					MultiClusterSetting: allocationv1.MultiClusterSetting{
-						Enabled: true,
-						PolicySelector: metav1.LabelSelector{
-							MatchLabels: map[string]string{
-								"a": "b",
-							},
-						},
-					},
-					Required: allocationv1.GameServerSelector{LabelSelector: metav1.LabelSelector{
-						MatchLabels: map[string]string{
-							"c": "d",
-						},
-					}},
-					Preferred: []allocationv1.GameServerSelector{
-						{
-							LabelSelector: metav1.LabelSelector{
-								MatchLabels: map[string]string{
-									"e": "f",
-								},
-							},
-						},
-						{
-							LabelSelector: metav1.LabelSelector{
-								MatchLabels: map[string]string{
-									"g": "h",
-								},
-							},
-						},
-					},
-					Selectors: []allocationv1.GameServerSelector{
-						{
-							LabelSelector: metav1.LabelSelector{
-								MatchLabels: map[string]string{
-									"m": "n",
-								},
-							},
-						},
-					},
-					Scheduling: apis.Packed,
-					MetaPatch: allocationv1.MetaPatch{
-						Labels: map[string]string{
-							"i": "j",
-						},
-					},
-				},
-			},
-		},
-		{
-			name:     "empty fields to GSA",
-			features: fmt.Sprintf("%s=false&%s=false", runtime.FeaturePlayerAllocationFilter, runtime.FeatureCountsAndLists),
-			in: &pb.AllocationRequest{
-				Namespace:                    "",
-				MultiClusterSetting:          &pb.MultiClusterSetting{},
-				RequiredGameServerSelector:   &pb.GameServerSelector{},
-				PreferredGameServerSelectors: []*pb.GameServerSelector{},
-				Scheduling:                   pb.AllocationRequest_Distributed,
-				Metadata:                     &pb.MetaPatch{},
-			},
-			want: &allocationv1.GameServerAllocation{
-				ObjectMeta: metav1.ObjectMeta{
-					Namespace: "",
-				},
-				Spec: allocationv1.GameServerAllocationSpec{
-					MultiClusterSetting: allocationv1.MultiClusterSetting{
-						Enabled: false,
-					},
-					Scheduling: apis.Distributed,
-				},
-			},
-		},
-		{
 			name:     "empty fields to GSA (PlayerAllocationFilter, CountsAndListsFilter)",
 			features: fmt.Sprintf("%s=true&%s=true&%s=true", runtime.FeaturePlayerAllocationFilter, runtime.FeatureCountsAndLists),
 			in: &pb.AllocationRequest{
@@ -501,7 +377,7 @@ func TestConvertAllocationRequestToGameServerAllocation(t *testing.T) {
 		},
 		{
 			name:     "partially empty Counters and Lists fields to GSA (StateAllocationFilter, PlayerAllocationFilter, CountsAndListsFilter)",
-			features: fmt.Sprintf("%s=true&%s=true&%s=true", runtime.FeaturePlayerAllocationFilter, runtime.FeatureStateAllocationFilter, runtime.FeatureCountsAndLists),
+			features: fmt.Sprintf("%s=true&%s=true", runtime.FeaturePlayerAllocationFilter, runtime.FeatureCountsAndLists),
 			in: &pb.AllocationRequest{
 				Namespace:                    "",
 				MultiClusterSetting:          &pb.MultiClusterSetting{},
