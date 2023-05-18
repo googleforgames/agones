@@ -49,8 +49,16 @@ spec:
 {{- end }}
     spec:
       affinity:
+      {{- if .Values.agones.ping.affinity }}
+      {{- if .Values.agones.ping.requireDedicatedNode }}
+      {{- fail "agones.ping.affinity and agones.ping.requireDedicatedNode cannot be set at the same time!" }}
+      {{- end}}
+      {{- end}}
+      {{- if .Values.agones.ping.affinity }}
+{{ toYaml .Values.agones.ping.affinity | indent 8 }}
+      {{- else}}
         nodeAffinity:
-          {{- if .Values.agones.system.requireDedicatedNode }}
+          {{- if .Values.agones.ping.requireDedicatedNode }}
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
             - matchExpressions:
@@ -62,7 +70,8 @@ spec:
           {{- end }}
               - key: agones.dev/agones-system
                 operator: Exists
-        {{- if .Values.agones.controller.nodeSelector }}
+      {{- end }}
+      {{- if .Values.agones.ping.nodeSelector }}
       nodeSelector:
 {{ toYaml .Values.agones.ping.nodeSelector | indent 8 }}
       {{- end }}

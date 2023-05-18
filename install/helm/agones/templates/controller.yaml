@@ -65,8 +65,16 @@ spec:
         heritage: {{ .Release.Service }}
     spec:
       affinity:
+      {{- if .Values.agones.controller.affinity }}
+      {{- if .Values.agones.controller.requireDedicatedNode }}
+      {{- fail "agones.controller.affinity and agones.controller.requireDedicatedNode cannot be set at the same time!" }}
+      {{- end}}
+      {{- end}}
+      {{- if .Values.agones.controller.affinity }}
+{{ toYaml .Values.agones.controller.affinity | indent 8 }}
+      {{- else}}
         nodeAffinity:
-          {{- if .Values.agones.system.requireDedicatedNode }}
+          {{- if .Values.agones.controller.requireDedicatedNode }}
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
             - matchExpressions:
@@ -78,7 +86,8 @@ spec:
           {{- end }}
               - key: agones.dev/agones-system
                 operator: Exists
-        {{- if .Values.agones.controller.nodeSelector }}
+      {{- end }}
+      {{- if .Values.agones.controller.nodeSelector }}
       nodeSelector:
 {{ toYaml .Values.agones.controller.nodeSelector | indent 8 }}
       {{- end }}

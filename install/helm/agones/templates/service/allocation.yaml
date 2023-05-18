@@ -166,8 +166,16 @@ spec:
 {{- end }}
     spec:
       affinity:
+      {{- if .Values.agones.allocator.affinity }}
+      {{- if .Values.agones.allocator.requireDedicatedNode }}
+      {{- fail "agones.allocator.affinity and agones.allocator.requireDedicatedNode cannot be set at the same time!" }}
+      {{- end}}
+      {{- end}}
+      {{- if .Values.agones.allocator.affinity }}
+{{ toYaml .Values.agones.allocator.affinity | indent 8 }}
+      {{- else}}
         nodeAffinity:
-          {{- if .Values.agones.system.requireDedicatedNode }}
+          {{- if .Values.agones.allocator.requireDedicatedNode }}
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
             - matchExpressions:
@@ -179,7 +187,8 @@ spec:
           {{- end }}
               - key: agones.dev/agones-system
                 operator: Exists
-        {{- if .Values.agones.controller.nodeSelector }}
+      {{- end }}
+      {{- if .Values.agones.allocator.nodeSelector }}
       nodeSelector:
 {{ toYaml .Values.agones.allocator.nodeSelector | indent 8 }}
       {{- end }}

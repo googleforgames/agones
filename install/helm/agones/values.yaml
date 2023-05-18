@@ -46,13 +46,12 @@ agones:
   createPriorityClass: true
   priorityClassName: agones-system
   cloudProduct: "auto"
-  system:
-    requireDedicatedNode: false
   controller: &controllerValues
     resources: {}
       # requests:
       #   cpu: 1
       #   memory: 256Mi
+    requireDedicatedNode: false
     nodeSelector: {}
     annotations: {}
     tolerations:
@@ -111,6 +110,7 @@ agones:
       # requests:
       #   cpu: 1
       #   memory: 256Mi
+    requireDedicatedNode: false
     nodeSelector: {}
     annotations: {}
     tolerations:
@@ -163,6 +163,7 @@ agones:
       initialDelaySeconds: 3
       periodSeconds: 3
       failureThreshold: 3
+    requireDedicatedNode: false
     tolerations:
     - key: "agones.dev/agones-system"
       operator: "Equal"
