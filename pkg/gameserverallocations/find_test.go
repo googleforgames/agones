@@ -127,7 +127,7 @@ func TestFindGameServerForAllocationPacked(t *testing.T) {
 				assert.Equal(t, ErrNoGameServer, err)
 				assert.Nil(t, gs)
 			},
-			features: fmt.Sprintf("%s=false&%s=false", runtime.FeaturePlayerAllocationFilter, runtime.FeatureStateAllocationFilter),
+			features: fmt.Sprintf("%s=false", runtime.FeaturePlayerAllocationFilter),
 		},
 		"one label with player state (StateAllocationFilter)": {
 			// nolint: dupl
@@ -186,7 +186,7 @@ func TestFindGameServerForAllocationPacked(t *testing.T) {
 				assert.Equal(t, ErrNoGameServer, err)
 				assert.Nil(t, gs)
 			},
-			features: fmt.Sprintf("%s=true&%s=true", runtime.FeaturePlayerAllocationFilter, runtime.FeatureStateAllocationFilter),
+			features: fmt.Sprintf("%s=true", runtime.FeaturePlayerAllocationFilter),
 		},
 		"one label with player counts and state (PlayerAllocationFilter)": {
 			list: []agonesv1.GameServer{
@@ -219,7 +219,7 @@ func TestFindGameServerForAllocationPacked(t *testing.T) {
 				assert.Equal(t, gs, list[index])
 				assert.Equal(t, agonesv1.GameServerStateAllocated, gs.Status.State)
 			},
-			features: fmt.Sprintf("%s=true&%s=true", runtime.FeaturePlayerAllocationFilter, runtime.FeatureStateAllocationFilter),
+			features: fmt.Sprintf("%s=true", runtime.FeaturePlayerAllocationFilter),
 		},
 		"preferred": {
 			list: []agonesv1.GameServer{
@@ -256,7 +256,7 @@ func TestFindGameServerForAllocationPacked(t *testing.T) {
 				assert.Equal(t, gs, list[index])
 				assert.Equal(t, agonesv1.GameServerStateReady, gs.Status.State)
 			},
-			features: fmt.Sprintf("%s=false&%s=false", runtime.FeaturePlayerAllocationFilter, runtime.FeatureStateAllocationFilter),
+			features: fmt.Sprintf("%s=false", runtime.FeaturePlayerAllocationFilter),
 		},
 		"allocation trap": {
 			list: []agonesv1.GameServer{
@@ -278,7 +278,7 @@ func TestFindGameServerForAllocationPacked(t *testing.T) {
 				assert.Equal(t, gs, list[index])
 				assert.Equal(t, agonesv1.GameServerStateReady, gs.Status.State)
 			},
-			features: fmt.Sprintf("%s=false&%s=false", runtime.FeaturePlayerAllocationFilter, runtime.FeatureStateAllocationFilter),
+			features: fmt.Sprintf("%s=false", runtime.FeaturePlayerAllocationFilter),
 		},
 	}
 

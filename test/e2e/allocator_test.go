@@ -106,7 +106,7 @@ func TestAllocatorWithDeprecatedRequired(t *testing.T) {
 		helper.ValidateAllocatorResponse(t, response)
 
 		// let's do a re-allocation
-		if runtime.FeatureEnabled(runtime.FeatureStateAllocationFilter) && runtime.FeatureEnabled(runtime.FeaturePlayerAllocationFilter) {
+		if runtime.FeatureEnabled(runtime.FeaturePlayerAllocationFilter) {
 			logrus.Info("testing state allocation filter")
 			// nolint:staticcheck
 			request.PreferredGameServerSelectors[0].GameServerState = pb.GameServerSelector_ALLOCATED
@@ -201,7 +201,7 @@ func TestAllocatorWithSelectors(t *testing.T) {
 		helper.ValidateAllocatorResponse(t, response)
 
 		// let's do a re-allocation
-		if runtime.FeatureEnabled(runtime.FeatureStateAllocationFilter) && runtime.FeatureEnabled(runtime.FeaturePlayerAllocationFilter) {
+		if runtime.FeatureEnabled(runtime.FeaturePlayerAllocationFilter) {
 			logrus.Info("testing state allocation filter")
 			request.GameServerSelectors[0].GameServerState = pb.GameServerSelector_ALLOCATED
 			allocatedResponse, err := grpcClient.Allocate(context.Background(), request)

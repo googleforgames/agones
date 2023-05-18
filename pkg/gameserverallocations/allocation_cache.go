@@ -67,9 +67,7 @@ func NewAllocationCache(informer informerv1.GameServerInformer, counter *gameser
 	}
 
 	// if we can do state filtering, then cache both Ready and Allocated GameServers
-	if runtime.FeatureEnabled(runtime.FeatureStateAllocationFilter) {
-		c.matcher = readyOrAllocatedGameServerMatcher
-	}
+	c.matcher = readyOrAllocatedGameServerMatcher
 
 	informer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
 		UpdateFunc: func(oldObj, newObj interface{}) {
@@ -184,11 +182,9 @@ func (c *AllocationCache) ListSortedGameServers(gsa *allocationv1.GameServerAllo
 		gs1 := list[i]
 		gs2 := list[j]
 
-		if runtime.FeatureEnabled(runtime.FeatureStateAllocationFilter) {
-			// Search Allocated GameServers first.
-			if gs1.Status.State != gs2.Status.State {
-				return gs1.Status.State == agonesv1.GameServerStateAllocated
-			}
+		// Search Allocated GameServers first.
+		if gs1.Status.State != gs2.Status.State {
+			return gs1.Status.State == agonesv1.GameServerStateAllocated
 		}
 
 		c1, ok := counts[gs1.Status.NodeName]

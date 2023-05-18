@@ -42,7 +42,7 @@ func TestConvertAllocationRequestToGameServerAllocation(t *testing.T) {
 	}{
 		{
 			name:     "all fields are set (StateAllocationFilter, PlayerAllocationFilter)",
-			features: fmt.Sprintf("%s=true&%s=true", runtime.FeaturePlayerAllocationFilter, runtime.FeatureStateAllocationFilter),
+			features: fmt.Sprintf("%s=true", runtime.FeaturePlayerAllocationFilter),
 			in: &pb.AllocationRequest{
 				Namespace: "ns",
 				MultiClusterSetting: &pb.MultiClusterSetting{
@@ -144,7 +144,7 @@ func TestConvertAllocationRequestToGameServerAllocation(t *testing.T) {
 		},
 		{
 			name:     "all fields are set",
-			features: fmt.Sprintf("%s=false&%s=false", runtime.FeaturePlayerAllocationFilter, runtime.FeatureStateAllocationFilter),
+			features: fmt.Sprintf("%s=false", runtime.FeaturePlayerAllocationFilter),
 			in: &pb.AllocationRequest{
 				Namespace: "ns",
 				MultiClusterSetting: &pb.MultiClusterSetting{
@@ -245,7 +245,7 @@ func TestConvertAllocationRequestToGameServerAllocation(t *testing.T) {
 		},
 		{
 			name:     "empty fields to GSA",
-			features: fmt.Sprintf("%s=false&%s=false", runtime.FeaturePlayerAllocationFilter, runtime.FeatureStateAllocationFilter),
+			features: fmt.Sprintf("%s=false", runtime.FeaturePlayerAllocationFilter),
 			in: &pb.AllocationRequest{
 				Namespace:                    "",
 				MultiClusterSetting:          &pb.MultiClusterSetting{},
@@ -267,8 +267,8 @@ func TestConvertAllocationRequestToGameServerAllocation(t *testing.T) {
 			},
 		},
 		{
-			name:     "empty fields to GSA (StateAllocationFilter, PlayerAllocationFilter)",
-			features: fmt.Sprintf("%s=true&%s=true", runtime.FeaturePlayerAllocationFilter, runtime.FeatureStateAllocationFilter),
+			name:     "empty fields to GSA (PlayerAllocationFilter)",
+			features: fmt.Sprintf("%s=true&%s=true", runtime.FeaturePlayerAllocationFilter),
 			in: &pb.AllocationRequest{
 				Namespace:                    "",
 				MultiClusterSetting:          &pb.MultiClusterSetting{},
@@ -294,7 +294,7 @@ func TestConvertAllocationRequestToGameServerAllocation(t *testing.T) {
 		},
 		{
 			name:     "empty fields to GSA with selectors fields",
-			features: fmt.Sprintf("%s=false&%s=false", runtime.FeaturePlayerAllocationFilter, runtime.FeatureStateAllocationFilter),
+			features: fmt.Sprintf("%s=false", runtime.FeaturePlayerAllocationFilter),
 			in: &pb.AllocationRequest{
 				Namespace:           "",
 				MultiClusterSetting: &pb.MultiClusterSetting{},
@@ -316,8 +316,8 @@ func TestConvertAllocationRequestToGameServerAllocation(t *testing.T) {
 			},
 		},
 		{
-			name:     "empty fields to GSA (StateAllocationFilter, PlayerAllocationFilter) with selectors fields",
-			features: fmt.Sprintf("%s=true&%s=true", runtime.FeaturePlayerAllocationFilter, runtime.FeatureStateAllocationFilter),
+			name:     "empty fields to GSA (PlayerAllocationFilter) with selectors fields",
+			features: fmt.Sprintf("%s=true&%s=true", runtime.FeaturePlayerAllocationFilter),
 			in: &pb.AllocationRequest{
 				Namespace:           "",
 				MultiClusterSetting: &pb.MultiClusterSetting{},

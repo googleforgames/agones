@@ -193,11 +193,9 @@ type ListAction struct {
 
 // ApplyDefaults applies default values
 func (s *GameServerSelector) ApplyDefaults() {
-	if runtime.FeatureEnabled(runtime.FeatureStateAllocationFilter) {
-		if s.GameServerState == nil {
-			state := agonesv1.GameServerStateReady
-			s.GameServerState = &state
-		}
+	if s.GameServerState == nil {
+		state := agonesv1.GameServerStateReady
+		s.GameServerState = &state
 	}
 
 	if runtime.FeatureEnabled(runtime.FeaturePlayerAllocationFilter) {
@@ -235,10 +233,8 @@ func (s *GameServerSelector) Matches(gs *agonesv1.GameServer) bool {
 	}
 
 	// then if state is being checked, check state
-	if runtime.FeatureEnabled(runtime.FeatureStateAllocationFilter) {
-		if s.GameServerState != nil && gs.Status.State != *s.GameServerState {
-			return false
-		}
+	if s.GameServerState != nil && gs.Status.State != *s.GameServerState {
+		return false
 	}
 
 	// then if player count is being checked, check that
@@ -381,14 +377,12 @@ func (s *GameServerSelector) Validate(field string) ([]metav1.StatusCause, bool)
 		})
 	}
 
-	if runtime.FeatureEnabled(runtime.FeatureStateAllocationFilter) {
-		if s.GameServerState != nil && !(*s.GameServerState == agonesv1.GameServerStateAllocated || *s.GameServerState == agonesv1.GameServerStateReady) {
-			causes = append(causes, metav1.StatusCause{
-				Type:    metav1.CauseTypeFieldValueInvalid,
-				Message: "GameServerState value can only be Allocated or Ready",
-				Field:   field,
-			})
-		}
+	if s.GameServerState != nil && !(*s.GameServerState == agonesv1.GameServerStateAllocated || *s.GameServerState == agonesv1.GameServerStateReady) {
+		causes = append(causes, metav1.StatusCause{
+			Type:    metav1.CauseTypeFieldValueInvalid,
+			Message: "GameServerState value can only be Allocated or Ready",
+			Field:   field,
+		})
 	}
 
 	if runtime.FeatureEnabled(runtime.FeaturePlayerAllocationFilter) && s.Players != nil {
