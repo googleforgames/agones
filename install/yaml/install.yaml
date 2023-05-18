@@ -15910,11 +15910,11 @@ spec:
       affinity:
         nodeAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
-          - preference:
+          - weight: 1
+            preference:
               matchExpressions:
               - key: agones.dev/agones-system
                 operator: Exists
-            weight: 1
       tolerations:
         - effect: NoExecute
           key: agones.dev/agones-system
@@ -16059,11 +16059,11 @@ spec:
       affinity:
         nodeAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
-          - preference:
+          - weight: 1
+            preference:
               matchExpressions:
               - key: agones.dev/agones-system
                 operator: Exists
-            weight: 1
       tolerations:
         - effect: NoExecute
           key: agones.dev/agones-system
@@ -16125,11 +16125,11 @@ spec:
       affinity:
         nodeAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
-          - preference:
+          - weight: 1
+            preference:
               matchExpressions:
               - key: agones.dev/agones-system
                 operator: Exists
-            weight: 1
       tolerations:
         - effect: NoExecute
           key: agones.dev/agones-system
