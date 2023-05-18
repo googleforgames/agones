@@ -216,7 +216,7 @@ func TestConvertAllocationRequestToGameServerAllocation(t *testing.T) {
 		},
 		{
 			name:     "empty fields to GSA (PlayerAllocationFilter, CountsAndListsFilter)",
-			features: fmt.Sprintf("%s=true&%s=true&%s=true", runtime.FeaturePlayerAllocationFilter, runtime.FeatureCountsAndLists),
+			features: fmt.Sprintf("%s=true&%s=true", runtime.FeaturePlayerAllocationFilter, runtime.FeatureCountsAndLists),
 			in: &pb.AllocationRequest{
 				Namespace:                    "",
 				MultiClusterSetting:          &pb.MultiClusterSetting{},

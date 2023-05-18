@@ -202,7 +202,7 @@ func TestHighDensityGameServerFlow(t *testing.T) {
 }
 
 func TestCreateFleetAndGameServerPlayerCapacityAllocation(t *testing.T) {
-	if runtime.FeatureEnabled(runtime.FeaturePlayerAllocationFilter)) {
+	if runtime.FeatureEnabled(runtime.FeaturePlayerAllocationFilter) {
 		t.SkipNow()
 	}
 	t.Parallel()
