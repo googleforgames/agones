@@ -1350,13 +1350,19 @@ func TestFleetRecreateGameServers(t *testing.T) {
 
 			list, err := listGameServers(ctx, flt, client)
 			assert.NoError(t, err)
-			assert.Len(t, list.Items, int(flt.Spec.Replicas))
+			var gameservers []agonesv1.GameServer
+			for _, gs := range list.Items {
+				if gs.Status.State != agonesv1.GameServerStateShutdown {
+					gameservers = append(gameservers, gs)
+				}
+			}
+			assert.Len(t, gameservers, int(flt.Spec.Replicas))
 
 			// apply deletion function
 			logrus.Info("applying deletion function")
 			v.f(t, list)
 
-			for i, gs := range list.Items {
+			for i, gs := range gameservers {
 				err = wait.Poll(time.Second, 5*time.Minute, func() (done bool, err error) {
 					_, err = client.GameServers(framework.Namespace).Get(ctx, gs.ObjectMeta.Name, metav1.GetOptions{})
 
