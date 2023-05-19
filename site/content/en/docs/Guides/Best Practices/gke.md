@@ -1,13 +1,13 @@
 ---
-title: "GKE Best Practices"
-linkTitle: "GKE"
+title: "Google Kubernetes Engine Best Practices"
+linkTitle: "Google Cloud"
 date: 2023-05-12T00:00:00Z
-description: "Best practices for running Agones on GKE."
+description: "Best practices for running Agones on Google Kubernetes Engine (GKE)."
 ---
 
 ## Overview
 
-On this page, we've collected several GKE best practices.
+On this page, we've collected several [Google Kubernetes Engine (GKE)](https://cloud.google.com/kubernetes-engine/) best practices.
 
 ## Release Channels
 
@@ -30,7 +30,7 @@ If you need to disallow minor version upgrades for more than 6 months, consider 
 
 ### What versions are available on a given channel?
 
-You can query the versions available across different channels using `gcloud` using:
+You can query the versions available across different channels using `gcloud`:
 
 ```
 gcloud container get-server-config \
@@ -42,7 +42,7 @@ Replace the following:
 
 * **COMPUTE_REGION**: the
 [Google Cloud region](https://cloud.google.com/compute/docs/regions-zones#available)
-for the cluster.
+where you will create the cluster.
 
 ## Managing Game Server Disruption on GKE
 

@@ -1,6 +1,6 @@
 ---
-title: "Cloud Best Practices" 
-linkTitle: "Cloud Best Practices"
+title: "Best Practices" 
+linkTitle: "Best Practices"
 date: 2023-05-12T00:00:00Z
 weight: 9
 description: "Best practices for running Agones in production."
@@ -16,14 +16,16 @@ some general best practices. We also have cloud specific pages for:
 
 If you are interested in submitting best practices for your cloud prodiver / on-prem, [please contribute!]({{< relref "/Contribute" >}})
 
-## Separate game servers from other workloads
+## Separation of Agones from GameServer nodes
 
-We recommend using [taints and tolerations](https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/) to ensure that your game servers are running separate from Agones controllers. There are many ways to accomplish this, here we discuss one:
+When running in production, Agones should be scheduled on a dedicated pool of nodes, distinct from where Game Servers
+are scheduled for better isolation and resiliency. By default Agones prefers to be scheduled on nodes labeled with
+`agones.dev/agones-system=true` and tolerates the node taint `agones.dev/agones-system=true:NoExecute`.
+If no dedicated nodes are available, Agones will run on regular nodes. See [taints and tolerations](https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/)
+for more information about Kubernetes taints and tolerations.
 
-* Label a group of nodes `agones.dev/agones-system=true`
-* Taint the same group of nodes with `agones.dev/agones-system=true:NoExecute`
-
-If you are collecting [Metrics]({{< relref "metrics" >}}) using our standard Prometheus installation, consider isolating the `agones-metrics` namespace as well.
+If you are collecting [Metrics]({{< relref "metrics" >}}) using our standard Prometheus installation, see
+[the installation guide]({{< relref "metrics#prometheus-installation" >}}) for instructions on configuring a separate node pool for the `agones.dev/agones-metrics=true` taint.
 
 See [Creating a Cluster]({{< relref "Creating Cluster" >}}) for initial set up on your cloud provider.
 
