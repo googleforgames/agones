@@ -64,7 +64,7 @@ KIND_CONTAINER_NAME=$(KIND_PROFILE)-control-plane
 GS_TEST_IMAGE ?= us-docker.pkg.dev/agones-images/examples/simple-game-server:0.16
 
 # Enable all alpha feature gates. Keep in sync with `false` (alpha) entries in pkg/util/runtime/features.go:featureDefaults
-ALPHA_FEATURE_GATES ?= "PlayerAllocationFilter=true&PlayerTracking=true&ResetMetricsOnDelete=true&SplitControllerAndExtensions=true&CountsAndLists=true&FleetAllocationOverflow=true&Example=true"
+ALPHA_FEATURE_GATES ?= "PlayerAllocationFilter=true&PlayerTracking=true&SplitControllerAndExtensions=true&CountsAndLists=true&FleetAllocationOverflow=true&Example=true"
 
 # Build with Windows support
 WITH_WINDOWS=1
@@ -427,8 +427,9 @@ install: $(ensure-build-image) install-custom-pull-secret
 		helm upgrade --install --atomic --wait --namespace=agones-system \
 		--create-namespace \
 		--set agones.image.tag=$(VERSION),agones.image.registry=$(REGISTRY) \
-		--set agones.image.controller.pullPolicy=$(IMAGE_PULL_POLICY),agones.image.sdk.alwaysPull=$(ALWAYS_PULL_SIDECAR) \
-		--set agones.image.controller.pullSecret=$(IMAGE_PULL_SECRET) \
+		--set agones.image.controller.pullPolicy=$(IMAGE_PULL_POLICY),agones.image.controller.pullSecret=$(IMAGE_PULL_SECRET) \
+		--set agones.image.extensions.pullPolicy=$(IMAGE_PULL_POLICY),agones.image.allocator.pullPolicy=$(IMAGE_PULL_POLICY) \
+		--set agones.image.ping.pullPolicy=$(IMAGE_PULL_POLICY),agones.image.sdk.alwaysPull=$(ALWAYS_PULL_SIDECAR) \
 		--set agones.ping.http.serviceType=$(PING_SERVICE_TYPE),agones.ping.udp.serviceType=$(PING_SERVICE_TYPE) \
 		--set agones.allocator.service.serviceType=$(ALLOCATOR_SERVICE_TYPE) \
 		--set agones.controller.logLevel=$(LOG_LEVEL) \

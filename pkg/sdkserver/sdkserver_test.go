@@ -81,9 +81,9 @@ func TestSidecarRun(t *testing.T) {
 		"unhealthy": {
 			f: func(sc *SDKServer, ctx context.Context) {
 				time.Sleep(1 * time.Second)
-				sc.runHealth()              // normally invoked from /gshealthz handler
+				sc.checkHealthUpdateState() // normally invoked from health check loop
 				time.Sleep(2 * time.Second) // exceed 1s timeout
-				sc.runHealth()              // normally invoked from /gshealthz handler
+				sc.checkHealthUpdateState() // normally invoked from health check loop
 			},
 			expected: expected{
 				state:      agonesv1.GameServerStateUnhealthy,
@@ -187,7 +187,7 @@ func TestSidecarRun(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 
-			assert.NoError(t, sc.waitForConnection(ctx))
+			assert.NoError(t, sc.WaitForConnection(ctx))
 			sc.informerFactory.Start(stop)
 			assert.True(t, cache.WaitForCacheSync(stop, sc.gameServerSynced))
 
@@ -466,7 +466,7 @@ func TestSidecarUnhealthyMessage(t *testing.T) {
 	stop := make(chan struct{})
 	defer close(stop)
 
-	assert.NoError(t, sc.waitForConnection(ctx))
+	assert.NoError(t, sc.WaitForConnection(ctx))
 	sc.informerFactory.Start(stop)
 	assert.True(t, cache.WaitForCacheSync(stop, sc.gameServerSynced))
 
@@ -629,7 +629,7 @@ func TestSidecarHTTPHealthCheck(t *testing.T) {
 
 	fc.Step(step)
 	time.Sleep(step)
-	testHTTPHealth(t, "http://localhost:8080/gshealthz", "", http.StatusInternalServerError) // force runHealth to run
+	sc.checkHealthUpdateState()
 	assert.False(t, sc.healthy())
 	cancel()
 	wg.Wait() // wait for go routine test results.
@@ -881,7 +881,7 @@ func TestSDKServerReserveTimeoutOnRun(t *testing.T) {
 	require.NoError(t, err)
 
 	ctx, cancel := context.WithCancel(context.Background())
-	assert.NoError(t, sc.waitForConnection(ctx))
+	assert.NoError(t, sc.WaitForConnection(ctx))
 	sc.informerFactory.Start(ctx.Done())
 	assert.True(t, cache.WaitForCacheSync(ctx.Done(), sc.gameServerSynced))
 
@@ -937,7 +937,7 @@ func TestSDKServerReserveTimeout(t *testing.T) {
 
 	assert.NoError(t, err)
 	ctx, cancel := context.WithCancel(context.Background())
-	assert.NoError(t, sc.waitForConnection(ctx))
+	assert.NoError(t, sc.WaitForConnection(ctx))
 	sc.informerFactory.Start(ctx.Done())
 	assert.True(t, cache.WaitForCacheSync(ctx.Done(), sc.gameServerSynced))
 
@@ -1066,7 +1066,7 @@ func TestSDKServerPlayerCapacity(t *testing.T) {
 		return true, gs, nil
 	})
 
-	assert.NoError(t, sc.waitForConnection(ctx))
+	assert.NoError(t, sc.WaitForConnection(ctx))
 	sc.informerFactory.Start(ctx.Done())
 	assert.True(t, cache.WaitForCacheSync(ctx.Done(), sc.gameServerSynced))
 
@@ -1132,7 +1132,7 @@ func TestSDKServerPlayerConnectAndDisconnectWithoutPlayerTracking(t *testing.T) 
 	sc, err := defaultSidecar(m)
 	require.NoError(t, err)
 
-	assert.NoError(t, sc.waitForConnection(ctx))
+	assert.NoError(t, sc.WaitForConnection(ctx))
 	sc.informerFactory.Start(ctx.Done())
 	assert.True(t, cache.WaitForCacheSync(ctx.Done(), sc.gameServerSynced))
 
@@ -1217,7 +1217,7 @@ func TestSDKServerPlayerConnectAndDisconnect(t *testing.T) {
 		return true, gs, nil
 	})
 
-	assert.NoError(t, sc.waitForConnection(ctx))
+	assert.NoError(t, sc.WaitForConnection(ctx))
 	sc.informerFactory.Start(ctx.Done())
 	assert.True(t, cache.WaitForCacheSync(ctx.Done(), sc.gameServerSynced))
 
@@ -1384,7 +1384,7 @@ func TestSDKServerGracefulTerminationInterrupt(t *testing.T) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	sdkCtx := sc.NewSDKServerContext(ctx)
-	assert.NoError(t, sc.waitForConnection(sdkCtx))
+	assert.NoError(t, sc.WaitForConnection(sdkCtx))
 	sc.informerFactory.Start(sdkCtx.Done())
 	assert.True(t, cache.WaitForCacheSync(sdkCtx.Done(), sc.gameServerSynced))
 
@@ -1453,7 +1453,7 @@ func TestSDKServerGracefulTerminationShutdown(t *testing.T) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	sdkCtx := sc.NewSDKServerContext(ctx)
-	assert.NoError(t, sc.waitForConnection(sdkCtx))
+	assert.NoError(t, sc.WaitForConnection(sdkCtx))
 	sc.informerFactory.Start(sdkCtx.Done())
 	assert.True(t, cache.WaitForCacheSync(sdkCtx.Done(), sc.gameServerSynced))
 
