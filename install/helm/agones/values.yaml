@@ -183,6 +183,7 @@ agones:
       expose: true
       response: ok
       port: 80
+      nodePort: 0 # nodePort will be used if the serviceType is set to NodePort
       serviceType: LoadBalancer
       loadBalancerIP: ""
       loadBalancerSourceRanges: []
@@ -191,6 +192,7 @@ agones:
       expose: true
       rateLimit: 20
       port: 50000
+      nodePort: 0 # nodePort will be used if the serviceType is set to NodePort
       serviceType: LoadBalancer
       loadBalancerIP: ""
       loadBalancerSourceRanges: []
