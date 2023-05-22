@@ -7,7 +7,12 @@ description: >
 publishDate: 2023-02-28
 ---
 
+{{% feature expiryVersion="1.32.0" %}}
 {{< alpha title="split controller and extensions" gate="SplitControllerAndExtensions" >}}
+{{% /feature %}}
+{{% feature publishVersion="1.32.0" %}}
+{{< beta title="split controller and extensions" gate="SplitControllerAndExtensions" >}}
+{{% /feature %}}
 
 ## High Availability for Agones Controller
 
