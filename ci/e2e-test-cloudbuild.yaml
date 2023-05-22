@@ -50,7 +50,6 @@ steps:
 
 - name: 'e2e-runner'
   args:
-    - "${_FEATURE_WITHOUT_GATE}"
     - "${_CLOUD_PRODUCT}"
     - "${_TEST_CLUSTER_NAME}"
     - "${_TEST_CLUSTER_LOCATION}"
