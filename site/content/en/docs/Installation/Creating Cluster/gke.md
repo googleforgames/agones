@@ -41,13 +41,8 @@ To launch Cloud Shell, perform the following steps:
 1. From the top-right corner of the console, click the
    **Activate Google Cloud Shell** button: ![cloud shell](../../../../images/cloud-shell.png)
 1. A Cloud Shell session opens inside a frame at the bottom of the console. Use this shell to run `gcloud` and `kubectl` commands.
-1. Set a compute zone in your geographical region with the following command. An example compute zone is `us-west1-a`. A full list can be found at [Available regions and zones][zones].
-   ```bash
-   gcloud config set compute/zone [COMPUTE_ZONE]
-   ```
 
 [cloud]: https://console.cloud.google.com/home/dashboard
-[zones]: https://cloud.google.com/compute/docs/regions-zones/#available
 
 #### Local shell
 
@@ -66,15 +61,39 @@ To install `gcloud` and `kubectl`, perform the following steps:
 
 [gcloud-install]: https://cloud.google.com/sdk/docs/quickstarts
 
+### Choosing a Regional or Zonal Cluster
+
+You will need to pick a geographical region or zone where you want to deploy your cluster, and whether to
+create a [regional or zonal cluster](https://cloud.google.com/kubernetes-engine/docs/concepts/types-of-clusters).
+We recommend using a Regional cluster, as the zonal GKE control plane can go down temporarily to adjust for cluster resizing,
+[automatic upgrades](https://cloud.google.com/kubernetes-engine/docs/concepts/cluster-upgrades) and
+[repairs](https://cloud.google.com/kubernetes-engine/docs/concepts/maintenance-windows-and-exclusions#repairs).
+
+After choosing a cluster type, [choose a region or zone][regions]. The region you chose is `COMPUTE_REGION` below.
+(Note that if you chose a zone, replace `--region=[COMPUTE_REGION]` with `--zone=[COMPUTE_ZONE]` in commands below.)
+
+[regions]: https://cloud.google.com/compute/docs/regions-zones/#available
+
+### Choosing a Release Channel and Optional Version
+
+We recommend using the `regular` release channel, which offers a balance between stability and freshness.
+If you'd like to read more, see our guide on [Release Channels]({{< ref "/docs/Guides/Best Practices/gke.md#release-channels" >}}).
+The release channel you chose is `RELEASE_CHANNEL` below.
+
+(Optional) During cluster creation, to set a specific available version in the release channel, use the `--cluster-version=[VERSION]` flag, e.g. `--cluster-version={{% gke-example-cluster-version %}}`. Be sure to choose a [version supported by Agones]({{< relref "../../Installation/#usage-requirements" >}}). (If you rely on release channels, the latest Agones release [should be supported]({{< relref "../../Installation/#agones-and-kubernetes-supported-versions" >}}) by the default versions of all channels.)
+
 ### Choosing a GKE cluster mode
 
 A [cluster][cluster] consists of at least one *control plane* machine and multiple worker machines called *nodes*. In Google Kubernetes Engine, nodes are [Compute Engine virtual machine][vms] instances that run the Kubernetes processes necessary to make them part of the cluster.
 
-Agones supports GKE Standard mode and has alpha support for GKE Autopilot mode.
+Agones supports both GKE Standard mode and GKE Autopilot mode. 
 Agones `GameServer` and `Fleet` manifests that work on Standard are compatible
-on Autopilot with some constraints, described in the following section. You
-can't convert existing Standard clusters to Autopilot; create new Autopilot
+on Autopilot with some constraints, described in the following section. We recommend
+running GKE Autopilot clusters, if you meet the constraints.
+
+You can't convert existing Standard clusters to Autopilot; create new Autopilot
 clusters instead.
+
 
 #### Agones on GKE Autopilot
 
@@ -133,35 +152,35 @@ gcloud compute firewall-rules create game-server-firewall \
 
 Create a GKE cluster in which you'll install Agones. You can use
 [GKE Standard mode](#create-a-standard-mode-cluster-for-agones)
-or [GKE Autopilot mode](#create-an-autopilot-mode-cluster-for-agones)
-(Alpha).
+or [GKE Autopilot mode](#create-an-autopilot-mode-cluster-for-agones).
 
 ### Create a Standard mode cluster for Agones
 
+Create the cluster:
 ```bash
-gcloud container clusters create [CLUSTER_NAME] --cluster-version={{% gke-example-cluster-version %}} \
+gcloud container clusters create [CLUSTER_NAME] \
+  --region=[COMPUTE_REGION] \
+  --release-channel=[RELEASE_CHANNEL] \
   --tags=game-server \
   --scopes=gke-default \
   --num-nodes=4 \
-  --no-enable-autoupgrade \
   --enable-image-streaming \
   --machine-type=e2-standard-4
 ```
 
-{{< alert title="Note" color="info">}}
-If you're creating a cluster to run Windows game servers, you need to add the `--enable-ip-alias` flag to create the cluster with [Alias IP ranges](https://cloud.google.com/vpc/docs/alias-ip) instead of routes-based networking.
-{{< /alert >}}
+Replace the following:
+* `[CLUSTER_NAME]`: The name of the cluster you want to create
+* `[COMPUTE_REGION]`: The GCP region to create the cluster in, [chosen above](#choosing-a-gke-cluster-mode)
+* `[RELEASE_CHANNEL]`: The GKE release channel, [chosen above](#choosing-a-release-channel-and-optional-version)
 
 Flag explanations:
-
-* cluster-version: Agones requires a
-  [supported Kubernetes version]({{<ref "/docs/Installation#usage-requirements">}}).
-* tags: Defines the tags that will be attached to new nodes in the cluster. This is to grant access through ports via the firewall created in the next step.
-* scopes: Defines the Oauth scopes required by the nodes.
-* num-nodes: The number of nodes to be created in each of the cluster's zones. Default: 4. Depending on the needs of your game, this parameter should be adjusted.
-* no-enable-autoupgrade: Disable automatic upgrades for nodes to reduce the likelihood of in-use games being disrupted.
-* enable-image-streaming: Use [Image streaming](https://cloud.google.com/kubernetes-engine/docs/how-to/image-streaming) to pull container images, which leads to significant improvements in initialization times. [Limitations](https://cloud.google.com/kubernetes-engine/docs/how-to/image-streaming#limitations) apply to enable this feature.
-* machine-type: The type of machine to use for nodes. Default: e2-standard-4. Depending on the needs of your game, you may wish to [have smaller or larger machines](https://cloud.google.com/compute/docs/machine-types).
+* `--region`: The compute region [you chose above](#choosing-a-gke-cluster-mode).
+* `--release-channel`: The release channel [you chose above](#choosing-a-release-channel-and-optional-version).
+* `--tags`: Defines the tags that will be attached to new nodes in the cluster. This is to grant access through ports via the [firewall created above](#creating-the-firewall).
+* `--scopes`: Defines the Oauth scopes required by the nodes.
+* `--num-nodes`: The number of nodes to be created in each of the cluster's zones. Default: 4. Depending on the needs of your game, this parameter should be adjusted.
+* `--enable-image-streaming`: Use [Image streaming](https://cloud.google.com/kubernetes-engine/docs/how-to/image-streaming) to pull container images, which leads to significant improvements in initialization times. [Limitations](https://cloud.google.com/kubernetes-engine/docs/how-to/image-streaming#limitations) apply to enable this feature.
+* `--machine-type`: The type of machine to use for nodes. Default: `e2-standard-4`. Depending on the needs of your game, you may wish to [have smaller or larger machines](https://cloud.google.com/compute/docs/machine-types).
 
 #### (Optional) Creating a dedicated node pool
 
@@ -173,12 +192,24 @@ recommended for a production deployment.
 ```bash
 gcloud container node-pools create agones-system \
   --cluster=[CLUSTER_NAME] \
-  --no-enable-autoupgrade \
+  --region=[COMPUTE_REGION] \
   --node-taints agones.dev/agones-system=true:NoExecute \
   --node-labels agones.dev/agones-system=true \
-  --num-nodes=1
+  --num-nodes=1 \
+  --machine-type=e2-standard-4
 ```
-where [CLUSTER_NAME] is the name of the cluster you created.
+
+Replace the following:
+* `[CLUSTER_NAME]`: The name of the cluster you created
+* `[COMPUTE_REGION]`: The GCP region to create the cluster in, [chosen above](#choosing-a-gke-cluster-mode)
+
+Flag explanations:
+* `--cluster`: The name of the cluster you created.
+* `--region`: The compute region [you chose above](#choosing-a-gke-cluster-mode).
+* `--node-taints`: The Kubernetes taints to automatically apply to nodes in this node pool.
+* `--node-labels`: The Kubernetes labels to automatically apply to nodes in this node pool.
+* `--num-nodes`: The number of nodes per cluster zone. For regional clusters, `--num-nodes=1` creates one node in 3 separate zones in the region, giving you faster recovery time in the event of a node failure.
+* `--machine-type`: The type of machine to use for nodes. Default: `e2-standard-4`. Depending on the needs of your game, you may wish to [have smaller or larger machines](https://cloud.google.com/compute/docs/machine-types).
 
 #### (Optional) Creating a metrics node pool
 
@@ -188,20 +219,24 @@ Create a node pool for [Metrics]({{< relref "../../Guides/metrics.md" >}}) if yo
 ```bash
 gcloud container node-pools create agones-metrics \
   --cluster=[CLUSTER_NAME] \
-  --no-enable-autoupgrade \
+  --region=[COMPUTE_REGION] \
   --node-taints agones.dev/agones-metrics=true:NoExecute \
   --node-labels agones.dev/agones-metrics=true \
   --num-nodes=1 \
   --machine-type=e2-standard-4
 ```
 
-Flag explanations:
+Replace the following:
+* `[CLUSTER_NAME]`: The name of the cluster you created
+* `[COMPUTE_REGION]`: The GCP region to create the cluster in, [chosen above](#choosing-a-gke-cluster-mode)
 
-* cluster: The name of your existing cluster in which the node pool is created.
-* no-enable-autoupgrade: Disable automatic upgrades for nodes to reduce the likelihood of in-use games being disrupted.
-* node-taints: The Kubernetes taints to automatically apply to nodes in this node pool.
-* node-labels: The Kubernetes labels to automatically apply to nodes in this node pool.
-* num-nodes: The Agones system controllers only require a single node of capacity to run. For faster recovery time in the event of a node failure, you can increase the size to 2.
+Flag explanations:
+* `--cluster`: The name of the cluster you created.
+* `--region`: The compute region [you chose above](#choosing-a-gke-cluster-mode).
+* `--node-taints`: The Kubernetes taints to automatically apply to nodes in this node pool.
+* `--node-labels`: The Kubernetes labels to automatically apply to nodes in this node pool.
+* `--num-nodes`: The number of nodes per cluster zone. For regional clusters, `--num-nodes=1` creates one node in 3 separate zones in the region, giving you faster recovery time in the event of a node failure.
+* `--machine-type`: The type of machine to use for nodes. Default: `e2-standard-4`. Depending on the needs of your game, you may wish to [have smaller or larger machines](https://cloud.google.com/compute/docs/machine-types).
 
 #### (Optional) Creating a node pool for Windows
 
@@ -217,37 +252,26 @@ through [Github issues](https://github.com/googleforgames/agones/issues).
 ```bash
 gcloud container node-pools create windows \
   --cluster=[CLUSTER_NAME] \
-  --no-enable-autoupgrade \
+  --region=[COMPUTE_REGION] \
   --image-type WINDOWS_LTSC_CONTAINERD \
   --machine-type e2-standard-4 \
   --num-nodes=4
 ```
 
-where [CLUSTER_NAME] is the name of the cluster you created.
+Replace the following:
+* `[CLUSTER_NAME]`: The name of the cluster you created
+* `[COMPUTE_REGION]`: The GCP region to create the cluster in, [chosen above](#choosing-a-gke-cluster-mode)
+
+Flag explanations:
+* `--cluster`: The name of the cluster you created.
+* `--region`: The compute region [you chose above](#choosing-a-gke-cluster-mode).
+* `--image-type`: The image type of the instances in the node pool - `WINDOWS_LTSC_CONTAINERD` in this case.
+* `--machine-type`: The type of machine to use for nodes. Default: `e2-standard-4`. Depending on the needs of your game, you may wish to [have smaller or larger machines](https://cloud.google.com/compute/docs/machine-types).
+* `--num-nodes`: The number of nodes per cluster zone. For regional clusters, `--num-nodes=1` creates one node in 3 separate zones in the region, giving you faster recovery time in the event of a node failure.
 
 ### Create an Autopilot mode cluster for Agones
 
-Agones supports Autopilot clusters in [alpha]({{<ref "/docs/Guides/feature-stages#alpha">}}).
-
-1. Find a release channel that has a supported Kubernetes version for Agones:
-
-   ```
-   gcloud container get-server-config \
-     --region=[COMPUTE_REGION] \
-     --flatten="channels" \
-     --format="yaml(channels)" \
-     --filter="channels.channel~[RELEASE_CHANNEL]"
-   ```
-   Replace the following:
-
-   * **COMPUTE_REGION**: the
-   [Google Cloud region](https://cloud.google.com/compute/docs/regions-zones#available)
-   for the cluster.
-   * **RELEASE_CHANNEL**: the name of the release channel. Can be `RAPID`,
-     `REGULAR`, or `STABLE`. Omit the `--filter` flag to view all channels.
-  
-   The output shows the default and available versions in the specified
-   channel.
+1. Choose a [Release Channel]({{<ref "/docs/Guides/Best Practices/gke.md#release-channels" >}}) (Autopilot clusters must be on a Release Channel).
 
 1. Create the cluster:
 
@@ -255,39 +279,29 @@ Agones supports Autopilot clusters in [alpha]({{<ref "/docs/Guides/feature-stage
     gcloud container clusters create-auto [CLUSTER_NAME] \
       --region=[COMPUTE_REGION] \
       --release-channel=[RELEASE_CHANNEL] \
-      --autoprovisioning-network-tags=game-server \
+      --autoprovisioning-network-tags=game-server
     ```
-    Replace the following:
 
-* **CLUSTER_NAME**: the name of your cluster.
-* **RELEASE_CHANNEL**: one of
-  `rapid`, `regular`, or `stable`. The default is `regular`. To set a specific
-  available version in the release channel, use the
-  `--cluster-version=[VERSION]` flag.
+Replace the following:
+* `[CLUSTER_NAME]`: The name of your cluster.
+* `[COMPUTE_REGION]`: the GCP region to create the cluster in.
+* `[RELEASE_CHANNEL]`: one of `rapid`, `regular`, or `stable`, chosen [above](#choosing-a-release-channel-and-optional-version). The default is `regular`.
+
+Flag explanations:
+* `--region`: The compute region [you chose above](#choosing-a-gke-cluster-mode).
+* `--release-channel`: The release channel [you chose above](#choosing-a-release-channel-and-optional-version).
+* `--autoprovisioning-network-tags`: Defines the tags that will be attached to new nodes in the cluster. This is to grant access through ports via the [firewall created above](#creating-the-firewall).
 
 ## Setting up cluster credentials
 
-Finally, let's tell `gcloud` that we are speaking with this cluster, and get auth credentials for `kubectl` to use.
+`gcloud container clusters create` configurates credentials for `kubectl` automatically. If you ever lose those, run:
 
 ```bash
-gcloud config set container/cluster [CLUSTER_NAME]
-gcloud container clusters get-credentials [CLUSTER_NAME]
+gcloud container clusters get-credentials [CLUSTER_NAME] --region=[COMPUTE_REGION]
 ```
 
 [cluster]: https://cloud.google.com/kubernetes-engine/docs/concepts/cluster-architecture
 [vms]: https://cloud.google.com/compute/docs/instances/
-
-
-{{< alert title="Note" color="info">}}
-Before planning your production GKE infrastructure, it is worth reviewing the
-[different types of GKE clusters that can be created](https://cloud.google.com/kubernetes-engine/docs/concepts/types-of-clusters),
-such as Zonal or Regional, as each has different reliability and cost values, and ensuring this aligns with your
-Service Level Objectives or Agreements.
-
-This is particularly true for a zonal GKE control plane, which can go down temporarily to adjust for cluster resizing,
-[automatic upgrades](https://cloud.google.com/kubernetes-engine/docs/concepts/cluster-upgrades) and
-[repairs](https://cloud.google.com/kubernetes-engine/docs/concepts/maintenance-windows-and-exclusions#repairs).
-{{< /alert >}}
 
 ## Next Steps
 
@@ -298,7 +312,7 @@ If you created a GKE Standard cluster, continue to [Install Agones]({{< relref "
 ### GKE Autopilot
 
 {{<alert title="Note" color="info">}}
-These installation instructions apply to Agones 1.30.
+These installation instructions apply to Agones 1.30+
 {{</alert>}}
 
 If you created a GKE Autopilot cluster:

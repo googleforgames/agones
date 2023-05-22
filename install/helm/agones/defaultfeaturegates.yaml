@@ -19,11 +19,12 @@ CustomFasSyncInterval: true
 PodHostname: true
 ResetMetricsOnDelete: true
 SDKGracefulTermination: true
+SplitControllerAndExtensions: true
+
 # Alpha features
 PlayerAllocationFilter: false
 PlayerTracking: false
 FleetAllocationOverflow: false
-SplitControllerAndExtensions: false
 
 # Pre-Alpha features
 CountsAndLists: false

@@ -263,13 +263,14 @@ The following tables lists the configurable parameters of the Agones chart and t
 {{% feature publishVersion="1.32.0" %}}
 **New Configuration Features:**
 
-| Parameter                             | Description                                                                                                                                                                                                                           | Default |
-|---------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------|
-| `agones.allocator.labels`                           | [Labels][labels] Added to the Agones Allocator pods                                                                                                                                                           | `{}`                               |
-| `agones.allocator.readiness.initialDelaySeconds`      | Initial delay before performing the first probe (in seconds)                                                                                                                                                            | `3`                                |
-| `agones.allocator.readiness.periodSeconds`            | Seconds between every liveness probe (in seconds)                                                                                                                                                                       | `3`                                |
-| `agones.allocator.readiness.failureThreshold`         | Number of times before giving up (in seconds)                                                                                                                                                                           | `3`                                |
-
+| Parameter                             | Description                                                                                                                                                                                                               | Default |
+|---------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------|
+| `agones.allocator.labels`                         | [Labels][labels] Added to the Agones Allocator pods                                                                                                                                                           | `{}`    |
+| `agones.allocator.readiness.initialDelaySeconds`  | Initial delay before performing the first probe (in seconds)                                                                                                                                                  | `3`     |
+| `agones.allocator.readiness.periodSeconds`        | Seconds between every liveness probe (in seconds)                                                                                                                                                             | `3`     |
+| `agones.allocator.readiness.failureThreshold`     | Number of times before giving up (in seconds)                                                                                                                                                                 | `3`     |
+| `agones.ping.udp.nodePort`                        | Static node port to use for UDP ping service. (Only applies when `agones.ping.udp.serviceType` is `NodePort`.)                                                                                                | `0`     |
+| `agones.ping.http.nodePort`                       | Static node port to use for HTTP ping service. (Only applies when `agones.ping.http.serviceType` is `NodePort`.)                                                                                              | `0`     |
 {{% /feature %}}
 
 [toleration]: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
