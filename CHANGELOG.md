@@ -24,6 +24,7 @@
 - Add parametric host address by @MiniaczQ in https://github.com/googleforgames/agones/pull/3111
 - Allow setting a static NodePort for the ping service by @towolf in https://github.com/googleforgames/agones/pull/3148
 - Promote SplitControllerAndExtensions to beta by @chiayi in https://github.com/googleforgames/agones/pull/3165
+
 **Fixed bugs:**
 - Revert #3070, wait on networking a different way by @zmerlynn in https://github.com/googleforgames/agones/pull/3107
 - Make migration controller more forgiving wrt Node/GameServer addresses by @luckyswede in https://github.com/googleforgames/agones/pull/3116
@@ -36,6 +37,7 @@
 - sdkserver: When waitForConnection fails, container should restart quickly by @zmerlynn in https://github.com/googleforgames/agones/pull/3157
 - Move back to FailureThreshold failures of /gshealthz by @zmerlynn in https://github.com/googleforgames/agones/pull/3160
 - Add fix for one issue with TestFleetRecreateGameServers test by @chiayi in https://github.com/googleforgames/agones/pull/3163
+
 **Other:**
 - Preparation for 1.32.0 by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3086
 - Add to SplitControllerAndExtensions documentation for leader election by @chiayi in https://github.com/googleforgames/agones/pull/3083
