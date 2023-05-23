@@ -685,6 +685,128 @@ func TestControllerUpdateFleetPlayerStatus(t *testing.T) {
 	assert.True(t, updated)
 }
 
+func TestControllerUpdateFleetCounterStatus(t *testing.T) {
+	t.Parallel()
+
+	utilruntime.FeatureTestMutex.Lock()
+	defer utilruntime.FeatureTestMutex.Unlock()
+
+	require.NoError(t, utilruntime.ParseFeatures(string(utilruntime.FeatureCountsAndLists)+"=true"))
+
+	fleet := defaultFixture()
+	c, m := newFakeController()
+
+	gsSet1 := fleet.GameServerSet()
+	gsSet1.ObjectMeta.Name = "gsSet1"
+	gsSet1.Status.Counters = map[string]agonesv1.AggregatedCounterStatus{
+		"fullCounter": {
+			Capacity: 1000,
+			Count:    1000,
+		},
+	}
+
+	gsSet2 := fleet.GameServerSet()
+	gsSet2.ObjectMeta.Name = "gsSet2"
+	gsSet2.Status.Counters = map[string]agonesv1.AggregatedCounterStatus{
+		"fullCounter": {
+			Capacity: 1000,
+			Count:    1000,
+		},
+		"anotherCounter": {
+			Capacity: 10,
+			Count:    0,
+		},
+	}
+
+	m.AgonesClient.AddReactor("list", "gameserversets",
+		func(action k8stesting.Action) (bool, runtime.Object, error) {
+			return true, &agonesv1.GameServerSetList{Items: []agonesv1.GameServerSet{*gsSet1, *gsSet2}}, nil
+		})
+
+	updated := false
+	m.AgonesClient.AddReactor("update", "fleets",
+		func(action k8stesting.Action) (bool, runtime.Object, error) {
+			updated = true
+			ua := action.(k8stesting.UpdateAction)
+			fleet := ua.GetObject().(*agonesv1.Fleet)
+
+			assert.Equal(t, int64(2000), fleet.Status.Counters["fullCounter"].Capacity)
+			assert.Equal(t, int64(2000), fleet.Status.Counters["fullCounter"].Count)
+			assert.Equal(t, int64(10), fleet.Status.Counters["anotherCounter"].Capacity)
+			assert.Equal(t, int64(0), fleet.Status.Counters["anotherCounter"].Count)
+
+			return true, fleet, nil
+		})
+
+	ctx, cancel := agtesting.StartInformers(m, c.fleetSynced, c.gameServerSetSynced)
+	defer cancel()
+
+	err := c.updateFleetStatus(ctx, fleet)
+	assert.Nil(t, err)
+	assert.True(t, updated)
+}
+
+func TestControllerUpdateFleetListStatus(t *testing.T) {
+	t.Parallel()
+
+	utilruntime.FeatureTestMutex.Lock()
+	defer utilruntime.FeatureTestMutex.Unlock()
+
+	require.NoError(t, utilruntime.ParseFeatures(string(utilruntime.FeatureCountsAndLists)+"=true"))
+
+	fleet := defaultFixture()
+	c, m := newFakeController()
+
+	gsSet1 := fleet.GameServerSet()
+	gsSet1.ObjectMeta.Name = "gsSet1"
+	gsSet1.Status.Lists = map[string]agonesv1.AggregatedListStatus{
+		"fullList": {
+			Capacity: 1000,
+			Values:   []string{"ab", "ba", "ac", "ca", "ad", "da", "ae", "ea", "af", "fa", "ag", "ga", "ah", "ha", "ai", "ia", "aj", "ja", "ak", "ka", "al", "la", "am", "ma", "an", "na", "ao", "oa", "ap", "pa", "aq", "qa", "ar", "ra", "as", "sa", "at", "ta", "au", "ua", "av", "va", "aw", "wa", "ax", "xa", "ay", "ya", "az", "za", "aA", "Aa", "aB", "Ba", "aC", "Ca", "aD", "Da", "aE", "Ea", "aF", "Fa", "aG", "Ga", "aH", "Ha", "aI", "Ia", "aJ", "Ja", "aK", "Ka", "aL", "La", "aM", "Ma", "aN", "Na", "aO", "Oa", "aP", "Pa", "aQ", "Qa", "aR", "Ra", "aS", "Sa", "aT", "Ta", "aU", "Ua", "aV", "Va", "aW", "Wa", "aX", "Xa", "aY", "Ya", "aZ", "Za", "a0", "0a", "a1", "1a", "a2", "2a", "a3", "3a", "a4", "4a", "a5", "5a", "a6", "6a", "a7", "7a", "a8", "8a", "a9", "9a", "bc", "cb", "bd", "db", "be", "eb", "bf", "fb", "bg", "gb", "bh", "hb", "bi", "ib", "bj", "jb", "bk", "kb", "bl", "lb", "bm", "mb", "bn", "nb", "bo", "ob", "bp", "pb", "bq", "qb", "br", "rb", "bs", "sb", "bt", "tb", "bu", "ub", "bv", "vb", "bw", "wb", "bx", "xb", "by", "yb", "bz", "zb", "bA", "Ab", "bB", "Bb", "bC", "Cb", "bD", "Db", "bE", "Eb", "bF", "Fb", "bG", "Gb", "bH", "Hb", "bI", "Ib", "bJ", "Jb", "bK", "Kb", "bL", "Lb", "bM", "Mb", "bN", "Nb", "bO", "Ob", "bP", "Pb", "bQ", "Qb", "bR", "Rb", "bS", "Sb", "bT", "Tb", "bU", "Ub", "bV", "Vb", "bW", "Wb", "bX", "Xb", "bY", "Yb", "bZ", "Zb", "b0", "0b", "b1", "1b", "b2", "2b", "b3", "3b", "b4", "4b", "b5", "5b", "b6", "6b", "b7", "7b", "b8", "8b", "b9", "9b", "cd", "dc", "ce", "ec", "cf", "fc", "cg", "gc", "ch", "hc", "ci", "ic", "cj", "jc", "ck", "kc", "cl", "lc", "cm", "mc", "cn", "nc", "co", "oc", "cp", "pc", "cq", "qc", "cr", "rc", "cs", "sc", "ct", "tc", "cu", "uc", "cv", "vc", "cw", "wc", "cx", "xc", "cy", "yc", "cz", "zc", "cA", "Ac", "cB", "Bc", "cC", "Cc", "cD", "Dc", "cE", "Ec", "cF", "Fc", "cG", "Gc", "cH", "Hc", "cI", "Ic", "cJ", "Jc", "cK", "Kc", "cL", "Lc", "cM", "Mc", "cN", "Nc", "cO", "Oc", "cP", "Pc", "cQ", "Qc", "cR", "Rc", "cS", "Sc", "cT", "Tc", "cU", "Uc", "cV", "Vc", "cW", "Wc", "cX", "Xc", "cY", "Yc", "cZ", "Zc", "c0", "0c", "c1", "1c", "c2", "2c", "c3", "3c", "c4", "4c", "c5", "5c", "c6", "6c", "c7", "7c", "c8", "8c", "c9", "9c", "de", "ed", "df", "fd", "dg", "gd", "dh", "hd", "di", "id", "dj", "jd", "dk", "kd", "dl", "ld", "dm", "md", "dn", "nd", "do", "od", "dp", "pd", "dq", "qd", "dr", "rd", "ds", "sd", "dt", "td", "du", "ud", "dv", "vd", "dw", "wd", "dx", "xd", "dy", "yd", "dz", "zd", "dA", "Ad", "dB", "Bd", "dC", "Cd", "dD", "Dd", "dE", "Ed", "dF", "Fd", "dG", "Gd", "dH", "Hd", "dI", "Id", "dJ", "Jd", "dK", "Kd", "dL", "Ld", "dM", "Md", "dN", "Nd", "dO", "Od", "dP", "Pd", "dQ", "Qd", "dR", "Rd", "dS", "Sd", "dT", "Td", "dU", "Ud", "dV", "Vd", "dW", "Wd", "dX", "Xd", "dY", "Yd", "dZ", "Zd", "d0", "0d", "d1", "1d", "d2", "2d", "d3", "3d", "d4", "4d", "d5", "5d", "d6", "6d", "d7", "7d", "d8", "8d", "d9", "9d", "ef", "fe", "eg", "ge", "eh", "he", "ei", "ie", "ej", "je", "ek", "ke", "el", "le", "em", "me", "en", "ne", "eo", "oe", "ep", "pe", "eq", "qe", "er", "re", "es", "se", "et", "te", "eu", "ue", "ev", "ve", "ew", "we", "ex", "xe", "ey", "ye", "ez", "ze", "eA", "Ae", "eB", "Be", "eC", "Ce", "eD", "De", "eE", "Ee", "eF", "Fe", "eG", "Ge", "eH", "He", "eI", "Ie", "eJ", "Je", "eK", "Ke", "eL", "Le", "eM", "Me", "eN", "Ne", "eO", "Oe", "eP", "Pe", "eQ", "Qe", "eR", "Re", "eS", "Se", "eT", "Te", "eU", "Ue", "eV", "Ve", "eW", "We", "eX", "Xe", "eY", "Ye", "eZ", "Ze", "e0", "0e", "e1", "1e", "e2", "2e", "e3", "3e", "e4", "4e", "e5", "5e", "e6", "6e", "e7", "7e", "e8", "8e", "e9", "9e", "fg", "gf", "fh", "hf", "fi", "if", "fj", "jf", "fk", "kf", "fl", "lf", "fm", "mf", "fn", "nf", "fo", "of", "fp", "pf", "fq", "qf", "fr", "rf", "fs", "sf", "ft", "tf", "fu", "uf", "fv", "vf", "fw", "wf", "fx", "xf", "fy", "yf", "fz", "zf", "fA", "Af", "fB", "Bf", "fC", "Cf", "fD", "Df", "fE", "Ef", "fF", "Ff", "fG", "Gf", "fH", "Hf", "fI", "If", "fJ", "Jf", "fK", "Kf", "fL", "Lf", "fM", "Mf", "fN", "Nf", "fO", "Of", "fP", "Pf", "fQ", "Qf", "fR", "Rf", "fS", "Sf", "fT", "Tf", "fU", "Uf", "fV", "Vf", "fW", "Wf", "fX", "Xf", "fY", "Yf", "fZ", "Zf", "f0", "0f", "f1", "1f", "f2", "2f", "f3", "3f", "f4", "4f", "f5", "5f", "f6", "6f", "f7", "7f", "f8", "8f", "f9", "9f", "gh", "hg", "gi", "ig", "gj", "jg", "gk", "kg", "gl", "lg", "gm", "mg", "gn", "ng", "go", "og", "gp", "pg", "gq", "qg", "gr", "rg", "gs", "sg", "gt", "tg", "gu", "ug", "gv", "vg", "gw", "wg", "gx", "xg", "gy", "yg", "gz", "zg", "gA", "Ag", "gB", "Bg", "gC", "Cg", "gD", "Dg", "gE", "Eg", "gF", "Fg", "gG", "Gg", "gH", "Hg", "gI", "Ig", "gJ", "Jg", "gK", "Kg", "gL", "Lg", "gM", "Mg", "gN", "Ng", "gO", "Og", "gP", "Pg", "gQ", "Qg", "gR", "Rg", "gS", "Sg", "gT", "Tg", "gU", "Ug", "gV", "Vg", "gW", "Wg", "gX", "Xg", "gY", "Yg", "gZ", "Zg", "g0", "0g", "g1", "1g", "g2", "2g", "g3", "3g", "g4", "4g", "g5", "5g", "g6", "6g", "g7", "7g", "g8", "8g", "g9", "9g", "hi", "ih", "hj", "jh", "hk", "kh", "hl", "lh", "hm", "mh", "hn", "nh", "ho", "oh", "hp", "ph", "hq", "qh", "hr", "rh", "hs", "sh", "ht", "th", "hu", "uh", "hv", "vh", "hw", "wh", "hx", "xh", "hy", "yh", "hz", "zh", "hA", "Ah", "hB", "Bh", "hC", "Ch", "hD", "Dh", "hE", "Eh", "hF", "Fh", "hG", "Gh", "hH", "Hh", "hI", "Ih", "hJ", "Jh", "hK", "Kh", "hL", "Lh", "hM", "Mh", "hN", "Nh", "hO", "Oh", "hP", "Ph", "hQ", "Qh", "hR", "Rh", "hS", "Sh", "hT", "Th", "hU", "Uh", "hV", "Vh", "hW", "Wh", "hX", "Xh", "hY", "Yh", "hZ", "Zh", "h0", "0h", "h1", "1h", "h2", "2h", "h3", "3h", "h4", "4h", "h5", "5h", "h6", "6h", "h7", "7h", "h8", "8h", "h9", "9h", "ij", "ji", "ik", "ki", "il", "li", "im", "mi", "in", "ni", "io", "oi", "ip", "pi", "iq", "qi", "ir", "ri", "is", "si", "it", "ti", "iu", "ui", "iv", "vi", "iw", "wi", "ix", "xi", "iy", "yi", "iz", "zi", "iA", "Ai", "iB", "Bi", "iC", "Ci", "iD", "Di", "iE", "Ei", "iF", "Fi", "iG", "Gi", "iH", "Hi", "iI", "Ii", "iJ", "Ji", "iK", "Ki", "iL", "Li", "iM", "Mi", "iN", "Ni", "iO", "Oi", "iP", "Pi", "iQ", "Qi", "iR", "Ri", "iS", "Si", "iT", "Ti", "iU", "Ui", "iV", "Vi", "iW", "Wi"},
+		},
+	}
+
+	gsSet2 := fleet.GameServerSet()
+	gsSet2.ObjectMeta.Name = "gsSet2"
+	gsSet2.Status.Lists = map[string]agonesv1.AggregatedListStatus{
+		"fullList": {
+			Capacity: 1000,
+			Values:   []string{"abc"},
+		},
+		"anotherList": {
+			Capacity: 10,
+			Values:   []string{"123"},
+		},
+	}
+
+	m.AgonesClient.AddReactor("list", "gameserversets",
+		func(action k8stesting.Action) (bool, runtime.Object, error) {
+			return true, &agonesv1.GameServerSetList{Items: []agonesv1.GameServerSet{*gsSet1, *gsSet2}}, nil
+		})
+
+	updated := false
+	m.AgonesClient.AddReactor("update", "fleets",
+		func(action k8stesting.Action) (bool, runtime.Object, error) {
+			updated = true
+			ua := action.(k8stesting.UpdateAction)
+			fleet := ua.GetObject().(*agonesv1.Fleet)
+
+			assert.Equal(t, int64(2000), fleet.Status.Lists["fullList"].Capacity)
+			assert.Equal(t, []string{"ab", "ba", "ac", "ca", "ad", "da", "ae", "ea", "af", "fa", "ag", "ga", "ah", "ha", "ai", "ia", "aj", "ja", "ak", "ka", "al", "la", "am", "ma", "an", "na", "ao", "oa", "ap", "pa", "aq", "qa", "ar", "ra", "as", "sa", "at", "ta", "au", "ua", "av", "va", "aw", "wa", "ax", "xa", "ay", "ya", "az", "za", "aA", "Aa", "aB", "Ba", "aC", "Ca", "aD", "Da", "aE", "Ea", "aF", "Fa", "aG", "Ga", "aH", "Ha", "aI", "Ia", "aJ", "Ja", "aK", "Ka", "aL", "La", "aM", "Ma", "aN", "Na", "aO", "Oa", "aP", "Pa", "aQ", "Qa", "aR", "Ra", "aS", "Sa", "aT", "Ta", "aU", "Ua", "aV", "Va", "aW", "Wa", "aX", "Xa", "aY", "Ya", "aZ", "Za", "a0", "0a", "a1", "1a", "a2", "2a", "a3", "3a", "a4", "4a", "a5", "5a", "a6", "6a", "a7", "7a", "a8", "8a", "a9", "9a", "bc", "cb", "bd", "db", "be", "eb", "bf", "fb", "bg", "gb", "bh", "hb", "bi", "ib", "bj", "jb", "bk", "kb", "bl", "lb", "bm", "mb", "bn", "nb", "bo", "ob", "bp", "pb", "bq", "qb", "br", "rb", "bs", "sb", "bt", "tb", "bu", "ub", "bv", "vb", "bw", "wb", "bx", "xb", "by", "yb", "bz", "zb", "bA", "Ab", "bB", "Bb", "bC", "Cb", "bD", "Db", "bE", "Eb", "bF", "Fb", "bG", "Gb", "bH", "Hb", "bI", "Ib", "bJ", "Jb", "bK", "Kb", "bL", "Lb", "bM", "Mb", "bN", "Nb", "bO", "Ob", "bP", "Pb", "bQ", "Qb", "bR", "Rb", "bS", "Sb", "bT", "Tb", "bU", "Ub", "bV", "Vb", "bW", "Wb", "bX", "Xb", "bY", "Yb", "bZ", "Zb", "b0", "0b", "b1", "1b", "b2", "2b", "b3", "3b", "b4", "4b", "b5", "5b", "b6", "6b", "b7", "7b", "b8", "8b", "b9", "9b", "cd", "dc", "ce", "ec", "cf", "fc", "cg", "gc", "ch", "hc", "ci", "ic", "cj", "jc", "ck", "kc", "cl", "lc", "cm", "mc", "cn", "nc", "co", "oc", "cp", "pc", "cq", "qc", "cr", "rc", "cs", "sc", "ct", "tc", "cu", "uc", "cv", "vc", "cw", "wc", "cx", "xc", "cy", "yc", "cz", "zc", "cA", "Ac", "cB", "Bc", "cC", "Cc", "cD", "Dc", "cE", "Ec", "cF", "Fc", "cG", "Gc", "cH", "Hc", "cI", "Ic", "cJ", "Jc", "cK", "Kc", "cL", "Lc", "cM", "Mc", "cN", "Nc", "cO", "Oc", "cP", "Pc", "cQ", "Qc", "cR", "Rc", "cS", "Sc", "cT", "Tc", "cU", "Uc", "cV", "Vc", "cW", "Wc", "cX", "Xc", "cY", "Yc", "cZ", "Zc", "c0", "0c", "c1", "1c", "c2", "2c", "c3", "3c", "c4", "4c", "c5", "5c", "c6", "6c", "c7", "7c", "c8", "8c", "c9", "9c", "de", "ed", "df", "fd", "dg", "gd", "dh", "hd", "di", "id", "dj", "jd", "dk", "kd", "dl", "ld", "dm", "md", "dn", "nd", "do", "od", "dp", "pd", "dq", "qd", "dr", "rd", "ds", "sd", "dt", "td", "du", "ud", "dv", "vd", "dw", "wd", "dx", "xd", "dy", "yd", "dz", "zd", "dA", "Ad", "dB", "Bd", "dC", "Cd", "dD", "Dd", "dE", "Ed", "dF", "Fd", "dG", "Gd", "dH", "Hd", "dI", "Id", "dJ", "Jd", "dK", "Kd", "dL", "Ld", "dM", "Md", "dN", "Nd", "dO", "Od", "dP", "Pd", "dQ", "Qd", "dR", "Rd", "dS", "Sd", "dT", "Td", "dU", "Ud", "dV", "Vd", "dW", "Wd", "dX", "Xd", "dY", "Yd", "dZ", "Zd", "d0", "0d", "d1", "1d", "d2", "2d", "d3", "3d", "d4", "4d", "d5", "5d", "d6", "6d", "d7", "7d", "d8", "8d", "d9", "9d", "ef", "fe", "eg", "ge", "eh", "he", "ei", "ie", "ej", "je", "ek", "ke", "el", "le", "em", "me", "en", "ne", "eo", "oe", "ep", "pe", "eq", "qe", "er", "re", "es", "se", "et", "te", "eu", "ue", "ev", "ve", "ew", "we", "ex", "xe", "ey", "ye", "ez", "ze", "eA", "Ae", "eB", "Be", "eC", "Ce", "eD", "De", "eE", "Ee", "eF", "Fe", "eG", "Ge", "eH", "He", "eI", "Ie", "eJ", "Je", "eK", "Ke", "eL", "Le", "eM", "Me", "eN", "Ne", "eO", "Oe", "eP", "Pe", "eQ", "Qe", "eR", "Re", "eS", "Se", "eT", "Te", "eU", "Ue", "eV", "Ve", "eW", "We", "eX", "Xe", "eY", "Ye", "eZ", "Ze", "e0", "0e", "e1", "1e", "e2", "2e", "e3", "3e", "e4", "4e", "e5", "5e", "e6", "6e", "e7", "7e", "e8", "8e", "e9", "9e", "fg", "gf", "fh", "hf", "fi", "if", "fj", "jf", "fk", "kf", "fl", "lf", "fm", "mf", "fn", "nf", "fo", "of", "fp", "pf", "fq", "qf", "fr", "rf", "fs", "sf", "ft", "tf", "fu", "uf", "fv", "vf", "fw", "wf", "fx", "xf", "fy", "yf", "fz", "zf", "fA", "Af", "fB", "Bf", "fC", "Cf", "fD", "Df", "fE", "Ef", "fF", "Ff", "fG", "Gf", "fH", "Hf", "fI", "If", "fJ", "Jf", "fK", "Kf", "fL", "Lf", "fM", "Mf", "fN", "Nf", "fO", "Of", "fP", "Pf", "fQ", "Qf", "fR", "Rf", "fS", "Sf", "fT", "Tf", "fU", "Uf", "fV", "Vf", "fW", "Wf", "fX", "Xf", "fY", "Yf", "fZ", "Zf", "f0", "0f", "f1", "1f", "f2", "2f", "f3", "3f", "f4", "4f", "f5", "5f", "f6", "6f", "f7", "7f", "f8", "8f", "f9", "9f", "gh", "hg", "gi", "ig", "gj", "jg", "gk", "kg", "gl", "lg", "gm", "mg", "gn", "ng", "go", "og", "gp", "pg", "gq", "qg", "gr", "rg", "gs", "sg", "gt", "tg", "gu", "ug", "gv", "vg", "gw", "wg", "gx", "xg", "gy", "yg", "gz", "zg", "gA", "Ag", "gB", "Bg", "gC", "Cg", "gD", "Dg", "gE", "Eg", "gF", "Fg", "gG", "Gg", "gH", "Hg", "gI", "Ig", "gJ", "Jg", "gK", "Kg", "gL", "Lg", "gM", "Mg", "gN", "Ng", "gO", "Og", "gP", "Pg", "gQ", "Qg", "gR", "Rg", "gS", "Sg", "gT", "Tg", "gU", "Ug", "gV", "Vg", "gW", "Wg", "gX", "Xg", "gY", "Yg", "gZ", "Zg", "g0", "0g", "g1", "1g", "g2", "2g", "g3", "3g", "g4", "4g", "g5", "5g", "g6", "6g", "g7", "7g", "g8", "8g", "g9", "9g", "hi", "ih", "hj", "jh", "hk", "kh", "hl", "lh", "hm", "mh", "hn", "nh", "ho", "oh", "hp", "ph", "hq", "qh", "hr", "rh", "hs", "sh", "ht", "th", "hu", "uh", "hv", "vh", "hw", "wh", "hx", "xh", "hy", "yh", "hz", "zh", "hA", "Ah", "hB", "Bh", "hC", "Ch", "hD", "Dh", "hE", "Eh", "hF", "Fh", "hG", "Gh", "hH", "Hh", "hI", "Ih", "hJ", "Jh", "hK", "Kh", "hL", "Lh", "hM", "Mh", "hN", "Nh", "hO", "Oh", "hP", "Ph", "hQ", "Qh", "hR", "Rh", "hS", "Sh", "hT", "Th", "hU", "Uh", "hV", "Vh", "hW", "Wh", "hX", "Xh", "hY", "Yh", "hZ", "Zh", "h0", "0h", "h1", "1h", "h2", "2h", "h3", "3h", "h4", "4h", "h5", "5h", "h6", "6h", "h7", "7h", "h8", "8h", "h9", "9h", "ij", "ji", "ik", "ki", "il", "li", "im", "mi", "in", "ni", "io", "oi", "ip", "pi", "iq", "qi", "ir", "ri", "is", "si", "it", "ti", "iu", "ui", "iv", "vi", "iw", "wi", "ix", "xi", "iy", "yi", "iz", "zi", "iA", "Ai", "iB", "Bi", "iC", "Ci", "iD", "Di", "iE", "Ei", "iF", "Fi", "iG", "Gi", "iH", "Hi", "iI", "Ii", "iJ", "Ji", "iK", "Ki", "iL", "Li", "iM", "Mi", "iN", "Ni", "iO", "Oi", "iP", "Pi", "iQ", "Qi", "iR", "Ri", "iS", "Si", "iT", "Ti", "iU", "Ui", "iV", "Vi", "iW", "Wi", "abc"}, fleet.Status.Lists["fullList"].Values)
+			assert.Equal(t, int64(10), fleet.Status.Lists["anotherList"].Capacity)
+			assert.Equal(t, []string{"123"}, fleet.Status.Lists["anotherList"].Values)
+
+			return true, fleet, nil
+		})
+
+	ctx, cancel := agtesting.StartInformers(m, c.fleetSynced, c.gameServerSetSynced)
+	defer cancel()
+
+	err := c.updateFleetStatus(ctx, fleet)
+	assert.Nil(t, err)
+	assert.True(t, updated)
+}
+
 func TestControllerFilterGameServerSetByActive(t *testing.T) {
 	t.Parallel()
 

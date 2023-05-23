@@ -33,6 +33,7 @@ import (
 	"agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/webhooks"
 	"agones.dev/agones/pkg/util/workerqueue"
+	"github.com/google/go-cmp/cmp"
 	"github.com/heptiolabs/healthcheck"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -588,7 +589,7 @@ func (c *Controller) syncGameServerSetStatus(ctx context.Context, gsSet *agonesv
 
 // updateStatusIfChanged updates GameServerSet status if it's different than provided.
 func (c *Controller) updateStatusIfChanged(ctx context.Context, gsSet *agonesv1.GameServerSet, status agonesv1.GameServerSetStatus) error {
-	if gsSet.Status != status {
+	if !cmp.Equal(gsSet.Status, status) {
 		gsSetCopy := gsSet.DeepCopy()
 		gsSetCopy.Status = status
 		_, err := c.gameServerSetGetter.GameServerSets(gsSet.ObjectMeta.Namespace).UpdateStatus(ctx, gsSetCopy, metav1.UpdateOptions{})
@@ -618,6 +619,14 @@ func computeStatus(list []*agonesv1.GameServer) agonesv1.GameServerSetStatus {
 		case agonesv1.GameServerStateReserved:
 			status.ReservedReplicas++
 		}
+
+		// TODO: Aggregates all Counters and Lists for all GameServer States that are not Deleting. This
+		// means that unlike player tracking below, this will aggregate values during GameServerStateCreating.
+		// Should I mimic player tracking below and only aggregate for cases Ready, Reserved, and Allocated?
+		if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
+			status.Counters = aggregateCounters(status.Counters, gs.Status.Counters)
+			status.Lists = aggregateLists(status.Lists, gs.Status.Lists)
+		}
 	}
 
 	if runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
@@ -639,4 +648,48 @@ func computeStatus(list []*agonesv1.GameServer) agonesv1.GameServerSetStatus {
 	}
 
 	return status
+}
+
+// aggregateCounters adds the contents of a CounterStatus map to an AggregatedCounterStatus map.
+func aggregateCounters(aggCounterStatus map[string]agonesv1.AggregatedCounterStatus, counterStatus map[string]agonesv1.CounterStatus) map[string]agonesv1.AggregatedCounterStatus {
+	if aggCounterStatus == nil {
+		aggCounterStatus = make(map[string]agonesv1.AggregatedCounterStatus)
+	}
+
+	for key, val := range counterStatus {
+		// If the Counter exists in both maps, aggregate the values.
+		if counter, ok := aggCounterStatus[key]; ok {
+			counter.Count += val.Count
+			counter.Capacity += val.Capacity
+			aggCounterStatus[key] = counter
+		} else {
+			aggCounterStatus[key] = agonesv1.AggregatedCounterStatus(*val.DeepCopy())
+		}
+	}
+
+	return aggCounterStatus
+}
+
+// aggregateLists adds the contents of a ListStatus map to an AggregatedListStatus map.
+func aggregateLists(aggListStatus map[string]agonesv1.AggregatedListStatus, listStatus map[string]agonesv1.ListStatus) map[string]agonesv1.AggregatedListStatus {
+	if aggListStatus == nil {
+		aggListStatus = make(map[string]agonesv1.AggregatedListStatus)
+	}
+
+	for key, val := range listStatus {
+		// If the List exists in both maps, aggregate the values.
+		// TODO: Will this cause issues with install/helm/agones/templates/crds/gameserverset.yaml because in
+		// the CRD we define a maximum capacity and maximum number of values as 1000? (Also a possible
+		// issue with there being a max of 1000 Lists in a GameServerSet per the CRD?)
+		if list, ok := aggListStatus[key]; ok {
+			list.Capacity += val.Capacity
+			// We do not remove duplicates here.
+			list.Values = append(list.Values, val.Values...)
+			aggListStatus[key] = list
+		} else {
+			aggListStatus[key] = agonesv1.AggregatedListStatus(*val.DeepCopy())
+		}
+	}
+
+	return aggListStatus
 }
