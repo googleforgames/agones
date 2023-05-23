@@ -28,7 +28,7 @@ The current set of `alpha` and `beta` feature gates:
 |-----------------------------------------------------------------------------------------------------------------------|--------------------------------|----------|---------|--------|
 | [Custom resync period for FleetAutoscaler](https://github.com/googleforgames/agones/issues/1955)                      | `CustomFasSyncInterval`        | Enabled  | `Beta`  | 1.25.0 |
 | [GameServer Stable Network ID]({{% ref "/docs/Reference/gameserver.md#stable-network-id" %}})                         | `PodHostname`                  | Enabled  | `Beta`  | 1.32.0 |
-| [Reset Metric Export on Fleet / Autoscaler deletion]({{% relref "./metrics.md#dropping-metric-labels" %}})            | `ResetMetricsOnDelete`         | Enabled  | `Beta`  | 1.26.0 |
+| [Reset Metric Export on Fleet / Autoscaler deletion]({{% relref "./metrics.md#dropping-metric-labels" %}})            | `ResetMetricsOnDelete`         | Enabled  | `Beta`  | 1.32.0 |
 | [Graceful Termination for GameServer SDK](https://github.com/googleforgames/agones/pull/2205)                         | `SDKGracefulTermination`       | Enabled  | `Beta`  | 1.18.0 |
 | [Split `agones-controller` ](https://github.com/googleforgames/agones/issues/2797)                                    | `SplitControllerAndExtensions` | Enabled  | `Beta`  | 1.32.0 |
 | [GameServer state filtering on GameServerAllocations](https://github.com/googleforgames/agones/issues/1239)           | `StateAllocationFilter`        | Enabled  | `Beta`  | 1.26.0 |
