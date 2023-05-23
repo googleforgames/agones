@@ -1,5 +1,72 @@
 # Changelog
 
+## [v1.32.0](https://github.com/googleforgames/agones/tree/v1.32.0) (2023-05-23)
+
+[Full Changelog](https://github.com/googleforgames/agones/compare/v1.31.0...v1.32.0)
+
+**Implemented enhancements:**
+- Release Automation: Push images on cloud by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3090
+- Sort By Counters or Lists during GameServerAllocation 2716 by @igooch in https://github.com/googleforgames/agones/pull/3091
+- Push-Chart to Helm Repo on GCS by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3114
+- Allocated GameServers updated on Fleet update by @markmandel in https://github.com/googleforgames/agones/pull/3101
+- require.NoError in fleet tests instead of continuing by @zmerlynn in https://github.com/googleforgames/agones/pull/3124
+- Move PodHostName to Beta by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3118
+- Creating a branch for release by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3127
+- Documentation: Allocated GameServer Overflow by @markmandel in https://github.com/googleforgames/agones/pull/3131
+- Move make release-deploy-site into pre-build-release by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3132
+- Upgrade to Golang version 1.20.4 by @igooch in https://github.com/googleforgames/agones/pull/3137
+- Added labels to the agones.allocator by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3125
+- GameServerAllocation Actions for Counters and Lists by @igooch in https://github.com/googleforgames/agones/pull/3117
+- Graduate SafeToEvict to GA by @zmerlynn in https://github.com/googleforgames/agones/pull/3146
+- Move ResetMetricsOnDelete to Beta by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3154
+- [Release Automation] Update Helm/SDK/Install Packages Version Numbers by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3149
+- Allocation.proto Updates for Counts and Lists by @igooch in https://github.com/googleforgames/agones/pull/3150
+- Add parametric host address by @MiniaczQ in https://github.com/googleforgames/agones/pull/3111
+- Allow setting a static NodePort for the ping service by @towolf in https://github.com/googleforgames/agones/pull/3148
+- Promote SplitControllerAndExtensions to beta by @chiayi in https://github.com/googleforgames/agones/pull/3165
+**Fixed bugs:**
+- Revert #3070, wait on networking a different way by @zmerlynn in https://github.com/googleforgames/agones/pull/3107
+- Make migration controller more forgiving wrt Node/GameServer addresses by @luckyswede in https://github.com/googleforgames/agones/pull/3116
+- Docs: Fix some bugs in the feature gate page by @markmandel in https://github.com/googleforgames/agones/pull/3136
+- Fix an invalid xonotic-example image path by @gongmax in https://github.com/googleforgames/agones/pull/3139
+- Add a more graceful termination to Allocator by @chiayi in https://github.com/googleforgames/agones/pull/3105
+- GraceTermination when GameServer get deleted by @qizichao-dm in https://github.com/googleforgames/agones/pull/3141
+- Update stale.yaml by @geetachavan1 in https://github.com/googleforgames/agones/pull/3147
+- Ignore twitter link in html tests by @gongmax in https://github.com/googleforgames/agones/pull/3158
+- sdkserver: When waitForConnection fails, container should restart quickly by @zmerlynn in https://github.com/googleforgames/agones/pull/3157
+- Move back to FailureThreshold failures of /gshealthz by @zmerlynn in https://github.com/googleforgames/agones/pull/3160
+- Add fix for one issue with TestFleetRecreateGameServers test by @chiayi in https://github.com/googleforgames/agones/pull/3163
+**Other:**
+- Preparation for 1.32.0 by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3086
+- Add to SplitControllerAndExtensions documentation for leader election by @chiayi in https://github.com/googleforgames/agones/pull/3083
+- Update docs for Stable Network ID by @markmandel in https://github.com/googleforgames/agones/pull/3088
+- Drop log level of worker queue to Trace by @zmerlynn in https://github.com/googleforgames/agones/pull/3092
+- refactor: type and constant definitions are in the same area. by @aimuz in https://github.com/googleforgames/agones/pull/3102
+- Remove consul install by @zmerlynn in https://github.com/googleforgames/agones/pull/3104
+- Specify the machine type for agones-metrics nodepool since  the default one doesn't meet resource requirement by @gongmax in https://github.com/googleforgames/agones/pull/3109
+- Clone Agones for release targets by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3119
+- Fix broken link by @gongmax in https://github.com/googleforgames/agones/pull/3123
+- Move PushChart into releaseFile by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3120
+- Refactor: Modify logger implementation and log level by @aimuz in https://github.com/googleforgames/agones/pull/3103
+- Remove unused target for generating change log by @gongmax in https://github.com/googleforgames/agones/pull/3126
+- Docs: Remove contributing warning about bug. by @markmandel in https://github.com/googleforgames/agones/pull/3130
+- Quilkin added in third-party-content/examples by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3129
+- Remove milestone steps from release by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3135
+- Bump example image versions by @igooch in https://github.com/googleforgames/agones/pull/3138
+- Add allocator readiness configurations doc by @chiayi in https://github.com/googleforgames/agones/pull/3142
+- Update values yaml file for `SplitControllerAndExtensions` by @chiayi in https://github.com/googleforgames/agones/pull/3153
+- Always pull development images when running `make install`. by @roberthbailey in https://github.com/googleforgames/agones/pull/3162
+- Add Cloud Best Practices guide, add guide on Release Channels by @zmerlynn in https://github.com/googleforgames/agones/pull/3152
+- Suppress full e2e logs so the per-configuration links are obvious by @zmerlynn in https://github.com/googleforgames/agones/pull/3164
+- Strengthen the warning about reusing certificates in the yaml installation. by @roberthbailey in https://github.com/googleforgames/agones/pull/3167
+- Add docs for #3148 by @zmerlynn in https://github.com/googleforgames/agones/pull/3173
+
+**New Contributors:**
+- @luckyswede made their first contribution in https://github.com/googleforgames/agones/pull/3116
+- @qizichao-dm made their first contribution in https://github.com/googleforgames/agones/pull/3141
+- @MiniaczQ made their first contribution in https://github.com/googleforgames/agones/pull/3111
+- @towolf made their first contribution in https://github.com/googleforgames/agones/pull/3148
+
 ## [v1.31.0](https://github.com/googleforgames/agones/tree/v1.31.0) (2023-04-11)
 
 [Full Changelog](https://github.com/googleforgames/agones/compare/v1.30.0...v1.31.0)
