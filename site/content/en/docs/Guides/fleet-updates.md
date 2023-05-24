@@ -127,8 +127,6 @@ all `GameServers` with the `v2` `Fleet` label, and if not found, search through 
 The above `GameServerAllocation` can then be used while you scale up the `v2` Fleet and scale down the original Fleet at
 the rate that you deem fit for your specific rollout.
 
-{{% feature publishVersion="1.32.0" %}}
-
 ## Notifying GameServers on Fleet Update/Downscale
 
 {{< alpha title="Allocated GameSever Overflow Notification" gate="FleetAllocationOverflow" >}}
@@ -181,13 +179,10 @@ spec:
 
 See the [Fleet reference]({{% relref "../Reference/fleet.md" %}}) for more details.
 
-{{% /feature %}}
 
 <!-- This is the only way I could get the alert to work in a feature code -->
-{{< feature publishVersion="1.32.0" >}}
 {{< alert title="Note" color="info" >}}This works the same across Fleet resizing and Rolling/Recreate Updates, in that the implementation responds to the
 underlying `GameServerSet`'s replicas being shrunk to a value smaller than the number of `Allocated`
 `GameServers` it controls. Therefore, this functionality works equally well with a rolling update as it does with an
 update strategy that requires at least two `Fleets`.
 {{< /alert >}}
-{{< /feature >}}
