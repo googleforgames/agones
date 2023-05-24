@@ -37,6 +37,8 @@ The following container operating systems and architectures can be utilised with
 
 For all the platforms in Alpha, we would appreciate testing and bug reports on any issue found.
 
+[windows]: {{% relref "windows-gameservers.md" %}}
+
 ## Agones and Kubernetes Supported Versions
 
 Agones will support 3 releases of Kubernetes, targeting the newest version as being the [latest available version in the GKE Rapid channel](https://cloud.google.com/kubernetes-engine/docs/release-notes#current_versions). However, we will ensure that at least one of the 3 versions chosen for each Agones release is supported by each of the major cloud providers (EKS and AKS). The vendored version of client-go will be aligned with the middle of the three supported Kubernetes versions. When a new version of Agones supports new versions of Kubernetes, it is explicitly called out in the [release notes](https://agones.dev/site/blog/releases/).
@@ -45,7 +47,8 @@ The following table lists recent Agones versions and their corresponding require
 
 | Agones version | Kubernetes version(s) |
 | -------------- | ------------------    |
-| 1.31           | {{% k8s-version %}}   |
+| 1.32           | {{% k8s-version %}}   |
+| 1.31           | 1.24, 1.25, 1.26      |
 | 1.30           | 1.23, 1.24, 1.25      |
 | 1.29           | 1.24                  |
 | 1.28           | 1.23                  |
@@ -57,13 +60,7 @@ The following table lists recent Agones versions and their corresponding require
 | 1.22           | 1.21                  |
 | 1.21           | 1.21                  |
 
-## Best Practices
+## Best Practices {#separation-of-agones-from-gameserver-nodes}
+<!-- keep installation/#separation-of-agones-from-gameserver-nodes permalink -->
 
-### Separation of Agones from GameServer nodes
-
-When running in production, Agones should be scheduled on a dedicated pool of nodes, distinct from where Game Servers
-are scheduled for better isolation and resiliency. By default Agones prefers to be scheduled on nodes labeled with
-`agones.dev/agones-system=true` and tolerates the node taint `agones.dev/agones-system=true:NoExecute`.
-If no dedicated nodes are available, Agones will run on regular nodes.
-
-[windows]: {{% ref "/docs/Guides/windows-gameservers.md" %}}
+For detailed guides on best practices running Agones in production, see [Best Practices]({{< relref "../Guides/Best Practices" >}}).
