@@ -36,6 +36,14 @@ spec:
         game: my-game
       matchExpressions:
         - {key: tier, operator: In, values: [cache]}
+      # Specifies which State is the filter to be used when attempting to retrieve a GameServer
+      # via Allocation. Defaults to "Ready". The only other option is "Allocated", which can be used in conjunction with
+      # label/annotation/player selectors to retrieve an already Allocated GameServer.    
+      gameServerState: Ready
+      # [Stage:Alpha]
+      # [FeatureFlag:PlayerAllocationFilter]
+      # Provides a filter on minimum and maximum values for player capacity when retrieving a GameServer
+      # through Allocation. Defaults to no limits.
       players:
         minAvailable: 0
         maxAvailable: 99
