@@ -730,9 +730,6 @@ func mergeLists(l1, l2 map[string]agonesv1.AggregatedListStatus) map[string]agon
 
 	for key, val := range l2 {
 		// If the List exists in both maps, aggregate the values.
-		// TODO: Will this cause issues with install/helm/agones/templates/crds/fleet.yaml because in
-		// the CRD we define a maximum capacity and maximum number of values as 1000? (Also a possible
-		// issue with there being a max of 1000 Lists in a Fleet per the CRD?) So far it passes unit tests...
 		if list, ok := l1[key]; ok {
 			list.Capacity += val.Capacity
 			// We do not remove duplicates here.

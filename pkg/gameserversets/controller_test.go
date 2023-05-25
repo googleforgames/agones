@@ -359,7 +359,8 @@ func TestComputeStatus(t *testing.T) {
 		}
 		gs4 := gsWithState(agonesv1.GameServerStateReady)
 		gs4.Status.Counters = map[string]agonesv1.CounterStatus{
-			"firstCounter": {Count: 15, Capacity: 30},
+			"firstCounter":  {Count: 15, Capacity: 30},
+			"secondCounter": {Count: 20, Capacity: 200},
 		}
 		list = append(list, gs1, gs2, gs3, gs4)
 
@@ -370,12 +371,12 @@ func TestComputeStatus(t *testing.T) {
 			AllocatedReplicas: 1,
 			Counters: map[string]agonesv1.AggregatedCounterStatus{
 				"firstCounter": {
-					Count:    50,
-					Capacity: 85,
+					Count:    30,
+					Capacity: 55,
 				},
 				"secondCounter": {
-					Count:    200,
-					Capacity: 2000,
+					Count:    120,
+					Capacity: 1200,
 				},
 			},
 			Lists: map[string]agonesv1.AggregatedListStatus{},
@@ -407,7 +408,8 @@ func TestComputeStatus(t *testing.T) {
 		}
 		gs4 := gsWithState(agonesv1.GameServerStateReady)
 		gs4.Status.Lists = map[string]agonesv1.ListStatus{
-			"firstList": {Capacity: 30},
+			"firstList":  {Capacity: 30},
+			"secondList": {Capacity: 100, Values: []string{"4"}},
 		}
 		list = append(list, gs1, gs2, gs3, gs4)
 
@@ -419,12 +421,12 @@ func TestComputeStatus(t *testing.T) {
 			Counters:          map[string]agonesv1.AggregatedCounterStatus{},
 			Lists: map[string]agonesv1.AggregatedListStatus{
 				"firstList": {
-					Capacity: 85,
-					Values:   []string{"a", "b", "c", "d"},
+					Capacity: 55,
+					Values:   []string{"a", "b", "c"},
 				},
 				"secondList": {
-					Capacity: 2000,
-					Values:   []string{"1", "2", "3"},
+					Capacity: 1100,
+					Values:   []string{"1", "2", "4"},
 				},
 			},
 		}

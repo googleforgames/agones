@@ -620,10 +620,11 @@ func computeStatus(list []*agonesv1.GameServer) agonesv1.GameServerSetStatus {
 			status.ReservedReplicas++
 		}
 
-		// TODO: Aggregates all Counters and Lists for all GameServer States that are not Deleting. This
-		// means that unlike player tracking below, this will aggregate values during GameServerStateCreating.
-		// Should I mimic player tracking below and only aggregate for cases Ready, Reserved, and Allocated?
-		if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
+		// Aggregates all Counters and Lists only for GameServer states Ready, Reserved, or Allocated.
+		if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) &&
+			(gs.Status.State == agonesv1.GameServerStateReady ||
+				gs.Status.State == agonesv1.GameServerStateAllocated ||
+				gs.Status.State == agonesv1.GameServerStateReserved) {
 			status.Counters = aggregateCounters(status.Counters, gs.Status.Counters)
 			status.Lists = aggregateLists(status.Lists, gs.Status.Lists)
 		}
@@ -678,9 +679,6 @@ func aggregateLists(aggListStatus map[string]agonesv1.AggregatedListStatus, list
 
 	for key, val := range listStatus {
 		// If the List exists in both maps, aggregate the values.
-		// TODO: Will this cause issues with install/helm/agones/templates/crds/gameserverset.yaml because in
-		// the CRD we define a maximum capacity and maximum number of values as 1000? (Also a possible
-		// issue with there being a max of 1000 Lists in a GameServerSet per the CRD?)
 		if list, ok := aggListStatus[key]; ok {
 			list.Capacity += val.Capacity
 			// We do not remove duplicates here.
