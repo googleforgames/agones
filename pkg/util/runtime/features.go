@@ -37,6 +37,9 @@ const (
 	// FeatureSDKGracefulTermination is a feature flag that enables SDK to support gracefulTermination
 	FeatureSDKGracefulTermination Feature = "SDKGracefulTermination"
 
+	// FeatureSplitControllerAndExtensions is a feature flag that will split agones-controller into two deployments
+	FeatureSplitControllerAndExtensions Feature = "SplitControllerAndExtensions"
+
 	// FeatureStateAllocationFilter is a feature flag that enables state filtering on Allocation.
 	FeatureStateAllocationFilter Feature = "StateAllocationFilter"
 
@@ -60,9 +63,6 @@ const (
 	// FeatureFleetAllocateOverflow enables setting labels and/or annotations on Allocated GameServers
 	// if the desired number of the underlying GameServerSet drops below the number of Allocated GameServers.
 	FeatureFleetAllocateOverflow = "FleetAllocationOverflow"
-
-	// FeatureSplitControllerAndExtensions is a feature flag that will split agones-controller into two deployments
-	FeatureSplitControllerAndExtensions = "SplitControllerAndExtensions"
 
 	////////////////
 	// "Pre"-Alpha features
@@ -107,17 +107,17 @@ var (
 	// In each of these, keep the feature sorted by descending maturity then alphabetical
 	featureDefaults = map[Feature]bool{
 		// Beta features
-		FeatureCustomFasSyncInterval:  true,
-		FeaturePodHostname:            true,
-		FeatureResetMetricsOnDelete:   true,
-		FeatureSDKGracefulTermination: true,
-		FeatureStateAllocationFilter:  true,
+		FeatureCustomFasSyncInterval:        true,
+		FeaturePodHostname:                  true,
+		FeatureResetMetricsOnDelete:         true,
+		FeatureSDKGracefulTermination:       true,
+		FeatureSplitControllerAndExtensions: true,
+		FeatureStateAllocationFilter:        true,
 
 		// Alpha features
-		FeaturePlayerAllocationFilter:       false,
-		FeaturePlayerTracking:               false,
-		FeatureFleetAllocateOverflow:        false,
-		FeatureSplitControllerAndExtensions: false,
+		FeaturePlayerAllocationFilter: false,
+		FeaturePlayerTracking:         false,
+		FeatureFleetAllocateOverflow:  false,
 
 		// Pre-Alpha features
 		FeatureCountsAndLists: false,
