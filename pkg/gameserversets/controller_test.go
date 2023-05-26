@@ -409,7 +409,7 @@ func TestComputeStatus(t *testing.T) {
 		gs4 := gsWithState(agonesv1.GameServerStateReady)
 		gs4.Status.Lists = map[string]agonesv1.ListStatus{
 			"firstList":  {Capacity: 30},
-			"secondList": {Capacity: 100, Values: []string{"4"}},
+			"secondList": {Capacity: 100, Values: []string{"4", "5", "6"}},
 		}
 		list = append(list, gs1, gs2, gs3, gs4)
 
@@ -422,11 +422,11 @@ func TestComputeStatus(t *testing.T) {
 			Lists: map[string]agonesv1.AggregatedListStatus{
 				"firstList": {
 					Capacity: 55,
-					Values:   []string{"a", "b", "c"},
+					Count:    3,
 				},
 				"secondList": {
 					Capacity: 1100,
-					Values:   []string{"1", "2", "4"},
+					Count:    5,
 				},
 			},
 		}

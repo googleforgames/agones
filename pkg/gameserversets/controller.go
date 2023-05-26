@@ -681,11 +681,15 @@ func aggregateLists(aggListStatus map[string]agonesv1.AggregatedListStatus, list
 		// If the List exists in both maps, aggregate the values.
 		if list, ok := aggListStatus[key]; ok {
 			list.Capacity += val.Capacity
-			// We do not remove duplicates here.
-			list.Values = append(list.Values, val.Values...)
+			// We do include duplicates in the Count.
+			list.Count += int64(len(val.Values))
 			aggListStatus[key] = list
 		} else {
-			aggListStatus[key] = agonesv1.AggregatedListStatus(*val.DeepCopy())
+			tmp := val.DeepCopy()
+			aggListStatus[key] = agonesv1.AggregatedListStatus{
+				Capacity: tmp.Capacity,
+				Count:    int64(len(tmp.Values)),
+			}
 		}
 	}
 

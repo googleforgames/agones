@@ -54,8 +54,8 @@ type AggregatedCounterStatus struct {
 
 // AggregatedListStatus stores total List tracking values
 type AggregatedListStatus struct {
-	Capacity int64    `json:"capacity"`
-	Values   []string `json:"values"`
+	Count    int64 `json:"count"`
+	Capacity int64 `json:"capacity"`
 }
 
 // crd is an interface to get Name and Kind of CRD

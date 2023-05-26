@@ -702,7 +702,7 @@ func (c *Controller) filterGameServerSetByActive(fleet *agonesv1.Fleet, list []*
 	return active, rest
 }
 
-// mergeCounters adds the contents of c2 into c1.
+// mergeCounters adds the contents of AggregatedCounterStatus c2 into c1.
 func mergeCounters(c1, c2 map[string]agonesv1.AggregatedCounterStatus) map[string]agonesv1.AggregatedCounterStatus {
 	if c1 == nil {
 		c1 = make(map[string]agonesv1.AggregatedCounterStatus)
@@ -722,7 +722,7 @@ func mergeCounters(c1, c2 map[string]agonesv1.AggregatedCounterStatus) map[strin
 	return c1
 }
 
-// mergeLists adds the contents of l2 into l1.
+// mergeLists adds the contents of AggregatedListStatus l2 into l1.
 func mergeLists(l1, l2 map[string]agonesv1.AggregatedListStatus) map[string]agonesv1.AggregatedListStatus {
 	if l1 == nil {
 		l1 = make(map[string]agonesv1.AggregatedListStatus)
@@ -732,8 +732,7 @@ func mergeLists(l1, l2 map[string]agonesv1.AggregatedListStatus) map[string]agon
 		// If the List exists in both maps, aggregate the values.
 		if list, ok := l1[key]; ok {
 			list.Capacity += val.Capacity
-			// We do not remove duplicates here.
-			list.Values = append(list.Values, val.Values...)
+			list.Count += val.Count
 			l1[key] = list
 		} else {
 			l1[key] = *val.DeepCopy()
