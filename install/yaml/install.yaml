@@ -15517,13 +15517,12 @@ spec:
                   additionalProperties:
                     type: object
                     properties:
-                      count: # initial count
+                      count: # Aggregated count of the Counter across the GameServerSet
                         type: integer
                         default: 0
                         minimum: 0
-                      capacity: # max capacity of the counter
+                      capacity: # Aggregated maximum capacity of the Counter across the GameServerSet
                         type: integer
-                        default: 1000
                         minimum: 0
                 lists:
                   type: object
@@ -15533,18 +15532,13 @@ spec:
                   additionalProperties:
                     type: object
                     properties:
-                      capacity: # max capacity of the array (can be less than or equal to value of maxItems)
+                      capacity: # Aggregated maximum capacity of the List across the GameServerSet
                         type: integer
                         minimum: 0
-                        default: 1000
-                        maximum: 1000 # must be equal to values.maxItems
-                      values:
-                        type: array
-                        x-kubernetes-list-type: set # Requires items in the array to be unique
-                        maxItems: 1000 # max possible size of the value array (cannot be updated)
-                        items: # name of the item (player1, session1, room1, etc.)
-                          type: string
-                        default: []
+                      count: # Aggregated number of items in the List across the GameServerSet
+                        type: integer
+                        minimum: 0
+                        default: 0
       subresources:
         # status enables the status subresource.
         status: { }
