@@ -16,5 +16,5 @@
 
 set -ex
 
-cd ./sdks/cpp
+cd /go/src/agones.dev/agones/sdks/cpp
 make build verify install archive VERSION=$VERSION

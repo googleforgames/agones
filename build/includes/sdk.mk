@@ -98,12 +98,18 @@ run-sdk-command:
 # Builds the base GRPC docker image.
 build-build-sdk-image-base: DOCKER_BUILD_ARGS= --build-arg GRPC_RELEASE_TAG=$(grpc_release_tag)
 build-build-sdk-image-base:
-	docker build --tag=$(build_sdk_base_tag) $(build_path)build-sdk-images/tool/base $(DOCKER_BUILD_ARGS)
+	docker build --tag=$(build_sdk_base_tag) $(build_path)build-sdk-images/tool/base \
+		--build-arg USER_ID="$(shell id -u ${USER})" \
+                --build-arg GROUP_ID="$(shell id -g ${USER})" \
+		$(DOCKER_BUILD_ARGS)
 
 # Builds the docker image used by commands for a specific sdk
 build-build-sdk-image: DOCKER_BUILD_ARGS= --build-arg BASE_IMAGE=$(build_sdk_base_tag)
 build-build-sdk-image: ensure-build-sdk-image-base
-		docker build --tag=$(SDK_IMAGE_TAG) $(build_path)build-sdk-images/$(SDK_FOLDER) $(DOCKER_BUILD_ARGS)
+		docker build --tag=$(SDK_IMAGE_TAG) $(build_path)build-sdk-images/$(SDK_FOLDER) \
+			--build-arg USER_ID="$(shell id -u ${USER})" \
+			--build-arg GROUP_ID="$(shell id -g ${USER})" \
+			$(DOCKER_BUILD_ARGS)
 
 # attempt to pull the image, if it exists and rename it to the local tag
 # exit's clean if it doesn't exist, so can be used on CI
@@ -199,7 +205,7 @@ clean-sdk-conformance-tests:
 sdk-shell:
 	$(MAKE) ensure-build-sdk-image SDK_FOLDER=$(SDK_FOLDER)
 	docker run --rm -it $(common_mounts) -v ~/.ssh:/tmp/.ssh:ro $(DOCKER_RUN_ARGS) \
- 	--entrypoint=/root/shell.sh $(SDK_IMAGE_TAG)
+		--entrypoint=/home/agones-dev/shell.sh $(SDK_IMAGE_TAG)
 
 # SDK shell for node
 sdk-shell-node:

@@ -23,7 +23,10 @@ build_remote_tag = $(REGISTRY)/$(build_tag)
 
 # Creates the build docker image
 build-build-image:
-	docker build --tag=$(build_tag) $(build_path)/build-image $(DOCKER_BUILD_ARGS)
+	docker build --tag=$(build_tag) $(build_path)/build-image \
+		--build-arg USER_ID="$(shell id -u ${USER})" \
+		--build-arg GROUP_ID="$(shell id -g ${USER})" \
+		$(DOCKER_BUILD_ARGS)
 
 # Deletes the local build docker image
 clean-build-image:
@@ -31,7 +34,7 @@ clean-build-image:
 
 ensure-arm-builder:
 	 docker run --privileged --rm tonistiigi/binfmt:qemu-v6.2.0 --install arm64
-	 
+
 ensure-build-config:
 	-mkdir -p $(kubeconfig_path)
 	-mkdir -p $(build_path)/.gocache
@@ -42,7 +45,7 @@ ensure-build-config:
 # create the build image if it doesn't exist
 ensure-build-image: ensure-build-config
 	$(MAKE) ensure-image IMAGE_TAG=$(build_tag) BUILD_TARGET=build-build-image
-ifeq ($(WITH_ARM64), 1) 
+ifeq ($(WITH_ARM64), 1)
 ensure-build-image: ensure-arm-builder
 endif
 

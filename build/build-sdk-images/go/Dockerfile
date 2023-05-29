@@ -14,6 +14,12 @@
 ARG BASE_IMAGE=agones-build-sdk-base:latest
 FROM $BASE_IMAGE
 
+ARG USER_ID
+ARG GROUP_ID
+RUN userdel -f agones-dev && if getent group agones-dev ; then groupdel agones-dev; fi &&\
+    groupadd -g ${GROUP_ID:-1338} agones-dev && \
+    useradd -l -u ${USER_ID:-1337} -g agones-dev agones-dev
+
 RUN apt-get --allow-releaseinfo-change update && \
     apt-get install -y wget jq && \
     apt-get clean
@@ -33,7 +39,11 @@ RUN go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28 && \
     go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2 && \
     go install golang.org/x/tools/cmd/goimports@latest
 
+WORKDIR /go/src/agones.dev/agones
 
 # code generation scripts
-COPY *.sh /root/
-RUN chmod +x /root/*.sh
+COPY *.sh /home/agones-dev/
+RUN chmod +x /home/agones-dev/*.sh
+
+RUN chown --silent --no-dereference --recursive ${USER_ID:-1337}:${GROUP_ID:-1338} /home/agones-dev /go
+USER agones-dev

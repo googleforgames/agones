@@ -15,4 +15,4 @@
 # limitations under the License.
 
 set -ex
-/root/$1.sh
+/home/agones-dev/$1.sh

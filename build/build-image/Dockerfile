@@ -16,6 +16,14 @@
 
 FROM debian:bullseye
 
+ARG USER_ID
+ARG GROUP_ID
+RUN groupadd -g ${GROUP_ID:-1338} agones-dev && \
+    useradd -l -u ${USER_ID:-1337} -g agones-dev -s /bin/bash agones-dev && \
+    install -d -m 0755 -o agones-dev -g agones-dev /home/agones-dev && \
+    mkdir /home/agones-dev/.cache && mkdir /home/agones-dev/.config && \
+    mkdir /go/pkg
+
 RUN apt-get update && \
     apt-get install -y build-essential gnupg curl git wget psmisc rsync make python bash-completion \
     zip nano jq graphviz gettext-base plantuml software-properties-common && \
@@ -35,7 +43,7 @@ WORKDIR /opt
 # credits https://cloud.google.com/sdk/docs/install#deb
 RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] http://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key --keyring /usr/share/keyrings/cloud.google.gpg  add - && apt-get update -y && \
     apt-get install google-cloud-cli google-cloud-cli-gke-gcloud-auth-plugin google-cloud-cli-app-engine-go -y && \
-    echo "source /usr/share/google-cloud-sdk/completion.bash.inc" >> /root/.bashrc
+    echo "source /usr/share/google-cloud-sdk/completion.bash.inc" >> /home/agones-dev/.bashrc
 
 # update the path for go
 ENV PATH /usr/local/go/bin:/go/bin:$PATH
@@ -50,7 +58,7 @@ ENV KUBERNETES_VER 1.25.7
 RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/v${KUBERNETES_VER}/bin/linux/amd64/kubectl && \
     chmod go+rx ./kubectl && \
     mv ./kubectl /usr/local/bin/kubectl
-RUN echo "source <(kubectl completion bash)" >> /root/.bashrc
+RUN echo "source <(kubectl completion bash)" >> /home/agones-dev/.bashrc
 
 # install the release branch of the code generator tools
 RUN mkdir -p /go/src/k8s.io && cd /go/src/k8s.io && \
@@ -64,7 +72,7 @@ RUN curl -L  ${HELM_URL} > /tmp/helm.tar.gz \
     && mv /tmp/linux-amd64/helm /usr/local/bin/helm \
     && chmod go+rx /usr/local/bin/helm \
     && rm /tmp/helm.tar.gz && rm -rf /tmp/linux-amd64
-RUN echo "source <(helm completion bash)" >> /root/.bashrc
+RUN echo "source <(helm completion bash)" >> /home/agones-dev/.bashrc
 
 # install golang-ci linter
 RUN go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.51.2
@@ -115,15 +123,22 @@ RUN mkdir /tmp/htmltest && \
     rm -r /tmp/htmltest
 
 # make sure we keep the path to go
-RUN echo "export PATH=/usr/local/go/bin:/go/bin/:\$PATH" >> /root/.bashrc
+RUN echo "export PATH=/usr/local/go/bin:/go/bin/:\$PATH" >> /home/agones-dev/.bashrc
 # make nano the editor
-RUN echo "export EDITOR=nano" >> /root/.bashrc
+RUN echo "export EDITOR=nano" >> /home/agones-dev/.bashrc
 
 # install terraform
 RUN wget -nv -O terraform.zip https://releases.hashicorp.com/terraform/1.0.8/terraform_1.0.8_linux_amd64.zip && unzip ./terraform.zip && mv terraform /usr/local/bin/
 
 # code generation scripts
-COPY *.sh /root/
-RUN chmod +x /root/*.sh
+COPY *.sh /home/agones-dev/
+RUN chmod +x /home/agones-dev/*.sh
 
 WORKDIR /go
+
+# .bash_profile is used in `make shell` since it creates a login shell
+RUN echo "source ~/.bashrc" >> /home/agones-dev/.bash_profile
+
+RUN chown --silent --no-dereference --recursive ${USER_ID:-1337}:${GROUP_ID:-1338} /home/agones-dev /go
+
+USER agones-dev

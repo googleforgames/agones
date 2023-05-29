@@ -14,10 +14,18 @@
 
 
 #
-# Base images for SDKs Bump: 2
+# Base images for SDKs Bump: 5
 #
 
 FROM debian:bullseye
+
+ARG USER_ID
+ARG GROUP_ID
+RUN groupadd -g ${GROUP_ID:-1338} agones-dev && \
+    useradd -l -u ${USER_ID:-1337} -g agones-dev agones-dev && \
+    install -d -m 0755 -o agones-dev -g agones-dev /home/agones-dev && \
+    mkdir /home/agones-dev/.cache && mkdir /home/agones-dev/.config && \
+    mkdir /go/pkg
 
 RUN apt-get update && apt-get install -y \
   build-essential autoconf libtool git pkg-config curl \
@@ -36,6 +44,9 @@ RUN git clone --recurse-submodules -b $GRPC_RELEASE_TAG --depth 1 --shallow-subm
 WORKDIR /go/src/agones.dev/agones
 
 # code generation scripts
-COPY entrypoint.sh /root/
-RUN chmod +x /root/entrypoint.sh
-ENTRYPOINT [ "/root/entrypoint.sh" ]
+COPY entrypoint.sh /home/agones-dev/
+RUN chmod +x /home/agones-dev/entrypoint.sh
+
+RUN chown --silent --no-dereference --recursive ${USER_ID:-1337}:${GROUP_ID:-1338} /home/agones-dev /go
+
+ENTRYPOINT [ "/home/agones-dev/entrypoint.sh" ]

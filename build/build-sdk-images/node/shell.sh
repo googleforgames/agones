@@ -15,7 +15,7 @@
 # limitations under the License.
 
 set -ex
-mkdir -p /root/.ssh || true
-cp /tmp/.ssh/* /root/.ssh/
+mkdir -p /home/agones-dev/.ssh || true
+cp /tmp/.ssh/* /home/agones-dev/.ssh/
 cd ./sdks/nodejs
 bash

@@ -85,10 +85,10 @@ helm_cache := ~/.cache/helm
 
 agones_package = agones.dev/agones
 mount_path = /go/src/$(agones_package)
-common_mounts = -v $(build_path)/.config/gcloud:/root/.config/gcloud \
-				-v $(kubeconfig_path):/root/.kube \
-				-v $(helm_config):/root/.config/helm \
-				-v $(helm_cache):/root/.cache/helm \
+common_mounts = -v $(build_path)/.config/gcloud:/home/agones-dev/.config/gcloud \
+				-v $(kubeconfig_path):/home/agones-dev/.kube \
+				-v $(helm_config):/home/agones-dev/.config/helm \
+				-v $(helm_cache):/home/agones-dev/.cache/helm \
 				-v $(agones_path):$(mount_path) \
 				-v $(build_path)/.gomod:/go/pkg/mod
 
@@ -129,7 +129,7 @@ push_ping_manifest = $(ping_amd64_tag)
 gomod_on = GO111MODULE=on
 
 go_version_flags = -ldflags "-X agones.dev/agones/pkg.Version=$(VERSION)"
-DOCKER_RUN ?= docker run --rm $(common_mounts) -e "KUBECONFIG=/root/.kube/$(kubeconfig_file)" -e "$(gomod_on)" -w $(workdir_path) $(DOCKER_RUN_ARGS) $(build_tag)
+DOCKER_RUN ?= docker run --rm $(common_mounts) -e "KUBECONFIG=/home/agones-dev/.kube/$(kubeconfig_file)" -e "$(gomod_on)" -w $(workdir_path) $(DOCKER_RUN_ARGS) $(build_tag)
 
 ifdef DOCKER_RUN
 	ensure-build-image += ensure-build-image
@@ -143,7 +143,7 @@ endif
 
 ifndef FULL_BUILD
 	# keep a cache of files built by Go across docker invocations in a local directory.
-	common_mounts += -v $(build_path)/.gocache:/root/.cache/go-build
+	common_mounts += -v $(build_path)/.gocache:/home/agones-dev/.cache/go-build
 	go_rebuild_flags =
 
 	# do not compress files in zips, slightly faster
@@ -166,7 +166,7 @@ endif
 go_test_args = -mod=vendor $(RACE_DETECTOR_ARGS)
 go_test_cmd = go test $(go_test_args)
 GO_TEST=$(DOCKER_RUN) $(go_test_cmd)
-GO_E2E_TEST_ARGS=--kubeconfig /root/.kube/$(kubeconfig_file)
+GO_E2E_TEST_ARGS=--kubeconfig /home/agones-dev/.kube/$(kubeconfig_file)
 
 gotestsum_json=/tmp/agones.gotestsum.json
 ifdef GOTESTSUM_VERBOSE
@@ -514,7 +514,7 @@ build-controller-image: build-controller-image-arm64
 endif
 
 build-controller-image-amd64: $(ensure-build-image) build-controller-binary build-licenses build-required-src-dist
-	docker build $(agones_path)/cmd/controller/ --tag=$(controller_amd64_tag) $(DOCKER_BUILD_ARGS)
+	docker build --tag=$(controller_amd64_tag) $(agones_path)/cmd/controller/ $(DOCKER_BUILD_ARGS)
 # creating docker builder and then using that builder to build controller image in buildx command
 build-controller-image-arm64: $(ensure-build-image) build-controller-binary create-arm64-builder
 	docker buildx build --platform linux/arm64 --builder $(BUILDX_ARM64_BUILDER) --build-arg ARCH=arm64 $(agones_path)/cmd/controller/ --tag=$(controller_arm64_tag) $(DOCKER_BUILD_ARGS)
@@ -738,7 +738,7 @@ gen-install: $(ensure-build-image)
 
 # Generate the client for our CustomResourceDefinition
 gen-crd-client: $(ensure-build-image)
-	docker run --rm $(common_mounts) -w $(workdir_path) $(build_tag) /root/gen-crd-client.sh
+	docker run --rm $(common_mounts) -w $(workdir_path) $(build_tag) /home/agones-dev/gen-crd-client.sh
 	docker run --rm $(common_mounts) -w $(workdir_path)/pkg $(build_tag) goimports -w .
 
 # Run a bash shell with the developer tools in it. (Creates the image if it doesn't exist)
@@ -747,13 +747,13 @@ shell: $(ensure-build-image)
 	docker run -it --rm \
 		$(common_mounts) \
 		-w $(workdir_path) \
-		-e "KUBECONFIG=/root/.kube/$(kubeconfig_file)" \
+		-e "KUBECONFIG=/home/agones-dev/.kube/$(kubeconfig_file)" \
 		$(DOCKER_RUN_ARGS) \
 		$(build_tag) bash -l
 
 # run a container with godoc
 godoc:
-	docker run -p 8888:8888 --rm $(common_mounts) -v $(build_path)/.index:/root/.index \
+	docker run -p 8888:8888 --rm $(common_mounts) -v $(build_path)/.index:/home/agones-dev/.index \
 		$(build_tag) godoc -http=":8888" -index=true
 
 # start cpu profiling pprof with a web ui
@@ -831,11 +831,11 @@ install-custom-pull-secret:
 		echo "Creating agones-system namespace..." ;\
 		$(DOCKER_RUN) kubectl create namespace agones-system; \
 		echo "Installing secret $(IMAGE_PULL_SECRET_FILE) in agones-system namespace..."; \
-		docker run --rm $(common_mounts) -e "KUBECONFIG=/root/.kube/$(kubeconfig_file)" -v $(dir $(IMAGE_PULL_SECRET_FILE)):/root/secret $(DOCKER_RUN_ARGS) $(build_tag) \
-			kubectl apply --namespace agones-system -f /root/secret/$(notdir $(IMAGE_PULL_SECRET_FILE)); \
+		docker run --rm $(common_mounts) -e "KUBECONFIG=/home/agones-dev/.kube/$(kubeconfig_file)" -v $(dir $(IMAGE_PULL_SECRET_FILE)):/home/agones-dev/secret $(DOCKER_RUN_ARGS) $(build_tag) \
+			kubectl apply --namespace agones-system -f /home/agones-dev/secret/$(notdir $(IMAGE_PULL_SECRET_FILE)); \
 		echo "Installing secret $(IMAGE_PULL_SECRET_FILE) in default namespace..."; \
-		docker run --rm $(common_mounts) -e "KUBECONFIG=/root/.kube/$(kubeconfig_file)" -v $(dir $(IMAGE_PULL_SECRET_FILE)):/root/secret $(DOCKER_RUN_ARGS) $(build_tag) \
-			kubectl apply --namespace default -f /root/secret/$(notdir $(IMAGE_PULL_SECRET_FILE)); \
+		docker run --rm $(common_mounts) -e "KUBECONFIG=/home/agones-dev/.kube/$(kubeconfig_file)" -v $(dir $(IMAGE_PULL_SECRET_FILE)):/home/agones-dev/secret $(DOCKER_RUN_ARGS) $(build_tag) \
+			kubectl apply --namespace default -f /home/agones-dev/secret/$(notdir $(IMAGE_PULL_SECRET_FILE)); \
 	fi
 
 update-go-deps:
