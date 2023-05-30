@@ -16,7 +16,7 @@
 # Use `--build-arg WINDOWS_VERSION=` to select the correct base image
 # See https://docs.microsoft.com/en-us/virtualization/windowscontainers/deploy-containers/version-compatibility
 # for details.
-ARG WINDOWS_VERSION=ltsc2019
+ARG WINDOWS_VERSION=ltsc2022
 
 FROM mcr.microsoft.com/windows/servercore:${WINDOWS_VERSION}
 

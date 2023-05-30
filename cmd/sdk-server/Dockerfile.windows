@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ARG WINDOWS_VERSION=ltsc2019
+ARG WINDOWS_VERSION=ltsc2022
 FROM mcr.microsoft.com/windows/servercore:${WINDOWS_VERSION}
 
 COPY ./bin/sdk-server.windows.amd64.exe /agones/sdk-server.exe

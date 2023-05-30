@@ -28,7 +28,7 @@ BUILDX_WINDOWS_BUILDER = windows-builder
 # Versions of Windows Server to support, default is Windows Server 2019.
 # For the full list of tags see https://hub.docker.com/_/microsoft-windows-servercore.
 # GKE-Windows version map: https://cloud.google.com/kubernetes-engine/docs/how-to/creating-a-cluster-windows#version_mapping
-WINDOWS_VERSIONS = ltsc2019
+WINDOWS_VERSIONS = ltsc2022
 WINDOWS_DOCKER_PUSH_ARGS = # When pushing set to --push.
 # Build with Windows support
 WITH_WINDOWS=1
