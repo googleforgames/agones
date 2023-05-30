@@ -18,7 +18,6 @@ package fleets
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"testing"
 	"time"
@@ -686,183 +685,128 @@ func TestControllerUpdateFleetPlayerStatus(t *testing.T) {
 	assert.True(t, updated)
 }
 
-// nolint Errors on duplicate code to TestControllerUpdateFleetListStatus
+// nolint // Linter errors on lines are duplicate of TestControllerUpdateFleetListStatus
 func TestControllerUpdateFleetCounterStatus(t *testing.T) {
 	t.Parallel()
 
-	testCases := map[string]struct {
-		feature              string
-		gsSet1StatusCounters map[string]agonesv1.AggregatedCounterStatus
-		gsSet2StatusCounters map[string]agonesv1.AggregatedCounterStatus
-		want                 map[string]agonesv1.AggregatedCounterStatus
-	}{
-		"Full Counter": {
-			feature: fmt.Sprintf("%s=true", utilruntime.FeatureCountsAndLists),
-			gsSet1StatusCounters: map[string]agonesv1.AggregatedCounterStatus{
-				"fullCounter": {
-					Capacity: 100,
-					Count:    100,
-				},
-			},
-			gsSet2StatusCounters: map[string]agonesv1.AggregatedCounterStatus{
-				"fullCounter": {
-					Capacity: 10,
-					Count:    10,
-				},
-			},
-			want: map[string]agonesv1.AggregatedCounterStatus{
-				"fullCounter": {
-					Capacity: 110,
-					Count:    110,
-				},
-			},
-		},
-		"One Counter": {
-			feature: fmt.Sprintf("%s=true", utilruntime.FeatureCountsAndLists),
-			gsSet2StatusCounters: map[string]agonesv1.AggregatedCounterStatus{
-				"oneCounter": {
-					Capacity: 100,
-					Count:    1,
-				},
-			},
-			want: map[string]agonesv1.AggregatedCounterStatus{
-				"oneCounter": {
-					Capacity: 100,
-					Count:    1,
-				},
-			},
+	utilruntime.FeatureTestMutex.Lock()
+	defer utilruntime.FeatureTestMutex.Unlock()
+
+	require.NoError(t, utilruntime.ParseFeatures(string(utilruntime.FeatureCountsAndLists)+"=true"))
+
+	fleet := defaultFixture()
+	c, m := newFakeController()
+
+	gsSet1 := fleet.GameServerSet()
+	gsSet1.ObjectMeta.Name = "gsSet1"
+	gsSet1.Status.Counters = map[string]agonesv1.AggregatedCounterStatus{
+		"fullCounter": {
+			Capacity: 1000,
+			Count:    1000,
 		},
 	}
 
-	for name, tc := range testCases {
-		t.Run(name, func(t *testing.T) {
-			err := utilruntime.ParseFeatures(tc.feature)
-			assert.NoError(t, err)
+	gsSet2 := fleet.GameServerSet()
+	gsSet2.ObjectMeta.Name = "gsSet2"
+	gsSet2.Status.Counters = map[string]agonesv1.AggregatedCounterStatus{
+		"fullCounter": {
+			Capacity: 1000,
+			Count:    1000,
+		},
+		"anotherCounter": {
+			Capacity: 10,
+			Count:    0,
+		},
+	}
 
-			fleet := defaultFixture()
-
-			gsSet1 := fleet.GameServerSet()
-			gsSet1.ObjectMeta.Name = "gsSet1"
-			gsSet1.Status.Counters = tc.gsSet1StatusCounters
-
-			gsSet2 := fleet.GameServerSet()
-			gsSet2.ObjectMeta.Name = "gsSet2"
-			gsSet2.Status.Counters = tc.gsSet2StatusCounters
-
-			c, m := newFakeController()
-
-			m.AgonesClient.AddReactor("list", "gameserversets",
-				func(action k8stesting.Action) (bool, runtime.Object, error) {
-					return true, &agonesv1.GameServerSetList{Items: []agonesv1.GameServerSet{*gsSet1, *gsSet2}}, nil
-				})
-
-			updated := false
-
-			m.AgonesClient.AddReactor("update", "fleets",
-				func(action k8stesting.Action) (bool, runtime.Object, error) {
-					updated = true
-					ua := action.(k8stesting.UpdateAction)
-					fleet := ua.GetObject().(*agonesv1.Fleet)
-
-					assert.Equal(t, tc.want, fleet.Status.Counters)
-
-					return true, fleet, nil
-				})
-
-			ctx, cancel := agtesting.StartInformers(m, c.fleetSynced, c.gameServerSetSynced)
-			defer cancel()
-
-			err = c.updateFleetStatus(ctx, fleet)
-			assert.Nil(t, err)
-			assert.True(t, updated)
+	m.AgonesClient.AddReactor("list", "gameserversets",
+		func(action k8stesting.Action) (bool, runtime.Object, error) {
+			return true, &agonesv1.GameServerSetList{Items: []agonesv1.GameServerSet{*gsSet1, *gsSet2}}, nil
 		})
-	}
+
+	updated := false
+	m.AgonesClient.AddReactor("update", "fleets",
+		func(action k8stesting.Action) (bool, runtime.Object, error) {
+			updated = true
+			ua := action.(k8stesting.UpdateAction)
+			fleet := ua.GetObject().(*agonesv1.Fleet)
+
+			assert.Equal(t, int64(2000), fleet.Status.Counters["fullCounter"].Capacity)
+			assert.Equal(t, int64(2000), fleet.Status.Counters["fullCounter"].Count)
+			assert.Equal(t, int64(10), fleet.Status.Counters["anotherCounter"].Capacity)
+			assert.Equal(t, int64(0), fleet.Status.Counters["anotherCounter"].Count)
+
+			return true, fleet, nil
+		})
+
+	ctx, cancel := agtesting.StartInformers(m, c.fleetSynced, c.gameServerSetSynced)
+	defer cancel()
+
+	err := c.updateFleetStatus(ctx, fleet)
+	assert.Nil(t, err)
+	assert.True(t, updated)
 }
 
-// nolint Errors on duplicate code to TestControllerUpdateFleetCounterStatus
+// nolint // Linter errors on lines are duplicate of TestControllerUpdateFleetCounterStatus
 func TestControllerUpdateFleetListStatus(t *testing.T) {
 	t.Parallel()
 
-	testCases := map[string]struct {
-		feature           string
-		gsSet1StatusLists map[string]agonesv1.AggregatedListStatus
-		gsSet2StatusLists map[string]agonesv1.AggregatedListStatus
-		want              map[string]agonesv1.AggregatedListStatus
-	}{
-		"Full List": {
-			feature: fmt.Sprintf("%s=true", utilruntime.FeatureCountsAndLists),
-			gsSet1StatusLists: map[string]agonesv1.AggregatedListStatus{
-				"fullList": {
-					Capacity: 1000,
-					Count:    1000,
-				},
-			},
-			gsSet2StatusLists: map[string]agonesv1.AggregatedListStatus{
-				"fullList": {
-					Capacity: 2000,
-					Count:    2000,
-				},
-				"anotherList": {
-					Capacity: 10,
-					Count:    1,
-				},
-			},
-			want: map[string]agonesv1.AggregatedListStatus{
-				"fullList": {
-					Capacity: 3000,
-					Count:    3000,
-				},
-				"anotherList": {
-					Capacity: 10,
-					Count:    1,
-				},
-			},
+	utilruntime.FeatureTestMutex.Lock()
+	defer utilruntime.FeatureTestMutex.Unlock()
+
+	require.NoError(t, utilruntime.ParseFeatures(string(utilruntime.FeatureCountsAndLists)+"=true"))
+
+	fleet := defaultFixture()
+	c, m := newFakeController()
+
+	gsSet1 := fleet.GameServerSet()
+	gsSet1.ObjectMeta.Name = "gsSet1"
+	gsSet1.Status.Lists = map[string]agonesv1.AggregatedListStatus{
+		"fullList": {
+			Capacity: 1000,
+			Count:    1000,
 		},
 	}
 
-	for name, tc := range testCases {
-		t.Run(name, func(t *testing.T) {
-			err := utilruntime.ParseFeatures(tc.feature)
-			assert.NoError(t, err)
-
-			fleet := defaultFixture()
-
-			gsSet1 := fleet.GameServerSet()
-			gsSet1.ObjectMeta.Name = "gsSet1"
-			gsSet1.Status.Lists = tc.gsSet1StatusLists
-
-			gsSet2 := fleet.GameServerSet()
-			gsSet2.ObjectMeta.Name = "gsSet2"
-			gsSet2.Status.Lists = tc.gsSet2StatusLists
-
-			c, m := newFakeController()
-
-			m.AgonesClient.AddReactor("list", "gameserversets",
-				func(action k8stesting.Action) (bool, runtime.Object, error) {
-					return true, &agonesv1.GameServerSetList{Items: []agonesv1.GameServerSet{*gsSet1, *gsSet2}}, nil
-				})
-
-			updated := false
-
-			m.AgonesClient.AddReactor("update", "fleets",
-				func(action k8stesting.Action) (bool, runtime.Object, error) {
-					updated = true
-					ua := action.(k8stesting.UpdateAction)
-					fleet := ua.GetObject().(*agonesv1.Fleet)
-
-					assert.Equal(t, tc.want, fleet.Status.Lists)
-
-					return true, fleet, nil
-				})
-
-			ctx, cancel := agtesting.StartInformers(m, c.fleetSynced, c.gameServerSetSynced)
-			defer cancel()
-
-			err = c.updateFleetStatus(ctx, fleet)
-			assert.Nil(t, err)
-			assert.True(t, updated)
-		})
+	gsSet2 := fleet.GameServerSet()
+	gsSet2.ObjectMeta.Name = "gsSet2"
+	gsSet2.Status.Lists = map[string]agonesv1.AggregatedListStatus{
+		"fullList": {
+			Capacity: 200,
+			Count:    200,
+		},
+		"anotherList": {
+			Capacity: 10,
+			Count:    1,
+		},
 	}
+
+	m.AgonesClient.AddReactor("list", "gameserversets",
+		func(action k8stesting.Action) (bool, runtime.Object, error) {
+			return true, &agonesv1.GameServerSetList{Items: []agonesv1.GameServerSet{*gsSet1, *gsSet2}}, nil
+		})
+
+	updated := false
+	m.AgonesClient.AddReactor("update", "fleets",
+		func(action k8stesting.Action) (bool, runtime.Object, error) {
+			updated = true
+			ua := action.(k8stesting.UpdateAction)
+			fleet := ua.GetObject().(*agonesv1.Fleet)
+
+			assert.Equal(t, int64(1200), fleet.Status.Lists["fullList"].Capacity)
+			assert.Equal(t, int64(1200), fleet.Status.Lists["fullList"].Count)
+			assert.Equal(t, int64(10), fleet.Status.Lists["anotherList"].Capacity)
+			assert.Equal(t, int64(1), fleet.Status.Lists["anotherList"].Count)
+
+			return true, fleet, nil
+		})
+
+	ctx, cancel := agtesting.StartInformers(m, c.fleetSynced, c.gameServerSetSynced)
+	defer cancel()
+
+	err := c.updateFleetStatus(ctx, fleet)
+	assert.Nil(t, err)
+	assert.True(t, updated)
 }
 
 func TestControllerFilterGameServerSetByActive(t *testing.T) {
