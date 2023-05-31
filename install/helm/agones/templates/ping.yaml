@@ -154,6 +154,9 @@ spec:
     - port: {{ .Values.agones.ping.http.port }}
       name: http
       targetPort: 8080
+      {{- if eq .Values.agones.ping.http.serviceType "NodePort" }}
+      nodePort: {{ .Values.agones.ping.http.nodePort }}
+      {{- end }}
       protocol: TCP
   type: {{ .Values.agones.ping.http.serviceType }}
 {{- if eq .Values.agones.ping.http.serviceType "LoadBalancer" }}
@@ -192,6 +195,9 @@ spec:
       name: udp
       targetPort: 8080
       protocol: UDP
+      {{- if eq .Values.agones.ping.udp.serviceType "NodePort" }}
+      nodePort: {{ .Values.agones.ping.udp.nodePort }}
+      {{- end }}
   type: {{ .Values.agones.ping.udp.serviceType }}
 {{- if eq .Values.agones.ping.udp.serviceType "LoadBalancer" }}
   {{- if .Values.agones.ping.udp.loadBalancerIP }}

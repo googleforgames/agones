@@ -161,6 +161,7 @@ agones:
       expose: true
       response: ok
       port: 80
+      nodePort: 0 # nodePort will be used if the serviceType is set to NodePort
       serviceType: LoadBalancer
       loadBalancerIP: ""
       loadBalancerSourceRanges: []
@@ -169,6 +170,7 @@ agones:
       expose: true
       rateLimit: 20
       port: 50000
+      nodePort: 0 # nodePort will be used if the serviceType is set to NodePort
       serviceType: LoadBalancer
       loadBalancerIP: ""
       loadBalancerSourceRanges: []
@@ -245,7 +247,7 @@ agones:
     allocationBatchWaitTime: 500ms
   image:
     registry: us-docker.pkg.dev/agones-images/release
-    tag: 1.32.0-dev
+    tag: 1.33.0-dev
     controller:
       name: agones-controller
       pullPolicy: IfNotPresent

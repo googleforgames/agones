@@ -12,10 +12,6 @@ description: >
 
 By default, Agones assumes your game server should never be disrupted voluntarily and configures the `Pod` appropriately - but this isn't always the ideal setting. Here we discuss how Agones allows you to control the two most significant sources of voluntary `Pod` evictions, node upgrades and Cluster Autoscaler, using the `eviction` API on the `GameServer` object. 
 
-{{% feature expiryVersion="1.32.0" %}}
-{{< beta title="`eviction` API" gate="SafeToEvict" >}}
-{{% /feature %}}
-
 ## Benefits of Allowing Voluntary Disruption
 
 It's not always easy to write your game server in a way that allows for disruption, but it can have major benefits:
@@ -74,26 +70,7 @@ GKE Autopilot supports only `Never` and `Always`, not `OnUpgrade`.
 
 ## Considerations for long sessions
 
-Outside of Cluster Autoscaler, the main source of disruption for long sessions is node upgrade. On some cloud products, such as GKE Standard, node upgrades are entirely within your control. On others, such as GKE Autopilot, node upgrade is automatic. Typical node upgrades use an eviction based, rolling recreate strategy, and may not honor `PodDisruptionBudget` for longer than an hour. Here we document strategies you can use for your cloud product to support long sessions.
-
-### On GKE
-
-On GKE, there are currently two possible approaches to manage disruption for session lengths longer than an hour:
-
-* (GKE Standard/Autopilot) [Blue/green deployment](https://martinfowler.com/bliki/BlueGreenDeployment.html) at the cluster level: If you are using an automated deployment process, you can:
-  * create a new, `green` cluster within a release channel e.g. every week,
-  * use [maintenance exclusions](https://cloud.google.com/kubernetes-engine/docs/concepts/maintenance-windows-and-exclusions#exclusions) to prevent node upgrades for 30d, and
-  * scale the `Fleet` on the old, `blue` cluster down to 0, and
-  * use [multi-cluster allocation]({{< relref "multi-cluster-allocation.md" >}}) on Agones, which will then direct new allocations to the new `green` cluster (since `blue` has 0 desired), then
-  * delete the old, `blue` cluster when the `Fleet` successfully scales down.
-
-* (GKE Standard only) Use [node pool blue/green upgrades](https://cloud.google.com/kubernetes-engine/docs/concepts/node-pool-upgrade-strategies#blue-green-upgrade-strategy)
-
-### Other cloud products
-
-The blue/green cluster strategy described for GKE is likely applicable to your cloud product.
-
-We welcome contributions to this section for other products!
+Outside of Cluster Autoscaler, the main source of disruption for long sessions is node upgrade. On some cloud products, such as GKE Standard, node upgrades are entirely within your control. On others, such as GKE Autopilot, node upgrade is automatic. Typical node upgrades use an eviction based, rolling recreate strategy, and may not honor `PodDisruptionBudget` for longer than an hour. See [Best Practices]({{< relref "Best Practices" >}}) for information specific to your cloud product.
 
 ## Implementation / Under the hood
 
