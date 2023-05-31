@@ -1,3 +1,5 @@
+XXX DO NOT SUBMIT FORCING E2ES TO RUN XXX
+
 <img src="./docs/agones.png" alt="Agones logo" width="250px" height="250px" />
 
 [![go.dev reference](https://img.shields.io/badge/go.dev-reference-007d9c?logo=go&logoColor=white&style=flat-square)](https://pkg.go.dev/agones.dev/agones)
