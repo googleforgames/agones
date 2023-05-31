@@ -34,18 +34,8 @@ terraform {
 }
 
 variable "project" {}
-variable "kubernetes_versions_standard" {
-  description = "Create standard e2e test clusters with these k8s versions in these zones"
-  type        = map(list(string))
-  default     = {
-    "1.24" = ["us-west1-c", "UNSPECIFIED"]
-    "1.25" = ["us-central1-c", "UNSPECIFIED"]
-    "1.26" = ["asia-east1-c", "RAPID"]
-  }
-}
-
-variable "kubernetes_versions_autopilot" {
-  description = "Create Autopilot e2e test clusters with these k8s versions in these regions"
+variable "kubernetes_versions" {
+  description = "Create e2e test clusters with these k8s versions in these regions"
   type        = map(list(string))
   default     = {
     "1.24" = ["us-west1", "REGULAR"]
@@ -55,7 +45,7 @@ variable "kubernetes_versions_autopilot" {
 }
 
 module "gke_standard_cluster" {
-  for_each = var.kubernetes_versions_standard
+  for_each = var.kubernetes_versions
   source = "./gke-standard"
   project = var.project
   kubernetesVersion = each.key
@@ -64,7 +54,7 @@ module "gke_standard_cluster" {
 }
 
 module "gke_autopilot_cluster" {
-  for_each = var.kubernetes_versions_autopilot
+  for_each = var.kubernetes_versions
   source = "./gke-autopilot"
   project = var.project
   kubernetesVersion = each.key
