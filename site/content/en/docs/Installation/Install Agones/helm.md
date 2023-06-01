@@ -271,6 +271,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 
 | Parameter                             | Description                                                                                                                                                                                                               | Default |
 |---------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------|
+| `agones.system.requireDedicatedNode`                  | Forces Agones system components to be scheduled on dedicated nodes, only applies to the GKE Standard without node auto-provisioning                                                                                                                                                                |  `false`                           |
 
 {{% /feature %}}
 
