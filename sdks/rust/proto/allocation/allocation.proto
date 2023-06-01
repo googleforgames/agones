@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC All Rights Reserved.
+// Copyright 2022 Google LLC All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -77,12 +77,6 @@ message AllocationRequest {
   // This is useful for things like smoke testing of new game servers.
   // Note: This field can only be set if neither Required or Preferred is set.
   repeated GameServerSelector gameServerSelectors = 8;
-
-  // (Alpha, CountsAndLists feature flag) The first Priority on the array of Priorities is the most
-	// important for sorting. The allocator will use the first priority for sorting GameServers in the
-	// Selector set, and will only use any following priority for tie-breaking during sort.
-	// Impacts which GameServer is checked first.
-	repeated Priority priorities = 9;
 }
 
 message AllocationResponse {
@@ -91,17 +85,11 @@ message AllocationResponse {
   string address = 4;
   string nodeName = 5;
   string source = 6;
-  optional GameServerMetadata metadata = 7;
 
   // The gameserver port info that is allocated.
   message GameServerStatusPort {
     string name = 1;
     int32 port = 2;
-  }
-
-  message GameServerMetadata {
-    map<string, string> labels = 1;
-    map<string, string> annotations = 2;
   }
 }
 
@@ -136,8 +124,6 @@ message GameServerSelector {
   };
   GameServerState gameServerState = 2;
   PlayerSelector players = 3;
-  map<string, CounterSelector> counters = 4;
-  map<string, ListSelector> lists = 5;
 }
 
 // PlayerSelector is filter for player capacity values.
@@ -145,35 +131,4 @@ message GameServerSelector {
 message PlayerSelector {
   uint64 minAvailable = 1;
   uint64 maxAvailable = 2;
-}
-
-// CounterSelector is the filter options for a GameServer based on the count and/or available capacity.
-// 0 for MaxCount or MaxAvailable means unlimited maximum. Default for all fields: 0
-message CounterSelector {
-	int64 minCount = 1;
-	int64 maxCount = 2;
-	int64 minAvailable = 3;
-	int64 maxAvailable = 4;
-}
-
-// ListSelector is the filter options for a GameServer based on List available capacity and/or the
-// existence of a value in a List.
-// 0 for MaxAvailable means unlimited maximum. Default for integer fields: 0
-// "" for ContainsValue means ignore field. Default for string field: ""
-message ListSelector {
-	string containsValue = 1;
-	int64 minAvailable = 2;
-	int64 maxAvailable = 3;
-}
-
-// Priority is a sorting option for GameServers with Counters or Lists based on the count or
-// number of items in a List.
-// PriorityType: Sort by a "Counter" or a "List".
-// Key: The name of the Counter or List. If not found on the GameServer, has no impact.
-// Order: Sort by "Ascending" or "Descending". Default is "Descending" so bigger count is preferred.
-// "Ascending" would be smaller count is preferred.
-message Priority {
-  string priorityType = 1;
-  string key = 2;
-  string order = 3;
 }
