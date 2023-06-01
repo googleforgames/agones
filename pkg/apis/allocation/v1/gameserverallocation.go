@@ -611,6 +611,7 @@ type GameServerAllocationStatus struct {
 	Metadata *GameServerMetadata `json:"metadata,omitempty"`
 }
 
+// GameServerMetadata is the metadata from the allocated game server at allocation time
 type GameServerMetadata struct {
 	Labels      map[string]string `json:"labels,omitempty"`
 	Annotations map[string]string `json:"annotations,omitempty"`
