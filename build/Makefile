@@ -842,3 +842,10 @@ update-go-deps:
 	$(DOCKER_RUN) go get -u agones.dev/agones
 	$(DOCKER_RUN) go mod tidy
 	$(DOCKER_RUN) go mod vendor
+
+test-gen-crd-clients:
+    mkdir -p build/tmp
+    mv pkg/client build/tmp
+    make gen-crd-clients
+    diff -r build/tmp/client pkg/client || true
+
