@@ -652,12 +652,20 @@ func (c *Controller) updateFleetStatus(ctx context.Context, fleet *agonesv1.Flee
 	fCopy.Status.ReadyReplicas = 0
 	fCopy.Status.ReservedReplicas = 0
 	fCopy.Status.AllocatedReplicas = 0
+	if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
+		fCopy.Status.Counters = make(map[string]agonesv1.AggregatedCounterStatus)
+		fCopy.Status.Lists = make(map[string]agonesv1.AggregatedListStatus)
+	}
 
 	for _, gsSet := range list {
 		fCopy.Status.Replicas += gsSet.Status.Replicas
 		fCopy.Status.ReadyReplicas += gsSet.Status.ReadyReplicas
 		fCopy.Status.ReservedReplicas += gsSet.Status.ReservedReplicas
 		fCopy.Status.AllocatedReplicas += gsSet.Status.AllocatedReplicas
+		if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
+			fCopy.Status.Counters = mergeCounters(fCopy.Status.Counters, gsSet.Status.Counters)
+			fCopy.Status.Lists = mergeLists(fCopy.Status.Lists, gsSet.Status.Lists)
+		}
 	}
 	if runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
 		// to make this code simpler, while the feature gate is in place,
@@ -692,4 +700,44 @@ func (c *Controller) filterGameServerSetByActive(fleet *agonesv1.Fleet, list []*
 	}
 
 	return active, rest
+}
+
+// mergeCounters adds the contents of AggregatedCounterStatus c2 into c1.
+func mergeCounters(c1, c2 map[string]agonesv1.AggregatedCounterStatus) map[string]agonesv1.AggregatedCounterStatus {
+	if c1 == nil {
+		c1 = make(map[string]agonesv1.AggregatedCounterStatus)
+	}
+
+	for key, val := range c2 {
+		// If the Counter exists in both maps, aggregate the values.
+		if counter, ok := c1[key]; ok {
+			counter.Capacity += val.Capacity
+			counter.Count += val.Count
+			c1[key] = counter
+		} else {
+			c1[key] = *val.DeepCopy()
+		}
+	}
+
+	return c1
+}
+
+// mergeLists adds the contents of AggregatedListStatus l2 into l1.
+func mergeLists(l1, l2 map[string]agonesv1.AggregatedListStatus) map[string]agonesv1.AggregatedListStatus {
+	if l1 == nil {
+		l1 = make(map[string]agonesv1.AggregatedListStatus)
+	}
+
+	for key, val := range l2 {
+		// If the List exists in both maps, aggregate the values.
+		if list, ok := l1[key]; ok {
+			list.Capacity += val.Capacity
+			list.Count += val.Count
+			l1[key] = list
+		} else {
+			l1[key] = *val.DeepCopy()
+		}
+	}
+
+	return l1
 }

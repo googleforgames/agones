@@ -685,6 +685,130 @@ func TestControllerUpdateFleetPlayerStatus(t *testing.T) {
 	assert.True(t, updated)
 }
 
+// nolint:dupl // Linter errors on lines are duplicate of TestControllerUpdateFleetListStatus
+func TestControllerUpdateFleetCounterStatus(t *testing.T) {
+	t.Parallel()
+
+	utilruntime.FeatureTestMutex.Lock()
+	defer utilruntime.FeatureTestMutex.Unlock()
+
+	require.NoError(t, utilruntime.ParseFeatures(string(utilruntime.FeatureCountsAndLists)+"=true"))
+
+	fleet := defaultFixture()
+	c, m := newFakeController()
+
+	gsSet1 := fleet.GameServerSet()
+	gsSet1.ObjectMeta.Name = "gsSet1"
+	gsSet1.Status.Counters = map[string]agonesv1.AggregatedCounterStatus{
+		"fullCounter": {
+			Capacity: 1000,
+			Count:    1000,
+		},
+	}
+
+	gsSet2 := fleet.GameServerSet()
+	gsSet2.ObjectMeta.Name = "gsSet2"
+	gsSet2.Status.Counters = map[string]agonesv1.AggregatedCounterStatus{
+		"fullCounter": {
+			Capacity: 1000,
+			Count:    1000,
+		},
+		"anotherCounter": {
+			Capacity: 10,
+			Count:    0,
+		},
+	}
+
+	m.AgonesClient.AddReactor("list", "gameserversets",
+		func(action k8stesting.Action) (bool, runtime.Object, error) {
+			return true, &agonesv1.GameServerSetList{Items: []agonesv1.GameServerSet{*gsSet1, *gsSet2}}, nil
+		})
+
+	updated := false
+	m.AgonesClient.AddReactor("update", "fleets",
+		func(action k8stesting.Action) (bool, runtime.Object, error) {
+			updated = true
+			ua := action.(k8stesting.UpdateAction)
+			fleet := ua.GetObject().(*agonesv1.Fleet)
+
+			assert.Equal(t, int64(2000), fleet.Status.Counters["fullCounter"].Capacity)
+			assert.Equal(t, int64(2000), fleet.Status.Counters["fullCounter"].Count)
+			assert.Equal(t, int64(10), fleet.Status.Counters["anotherCounter"].Capacity)
+			assert.Equal(t, int64(0), fleet.Status.Counters["anotherCounter"].Count)
+
+			return true, fleet, nil
+		})
+
+	ctx, cancel := agtesting.StartInformers(m, c.fleetSynced, c.gameServerSetSynced)
+	defer cancel()
+
+	err := c.updateFleetStatus(ctx, fleet)
+	assert.Nil(t, err)
+	assert.True(t, updated)
+}
+
+// nolint:dupl // Linter errors on lines are duplicate of TestControllerUpdateFleetCounterStatus
+func TestControllerUpdateFleetListStatus(t *testing.T) {
+	t.Parallel()
+
+	utilruntime.FeatureTestMutex.Lock()
+	defer utilruntime.FeatureTestMutex.Unlock()
+
+	require.NoError(t, utilruntime.ParseFeatures(string(utilruntime.FeatureCountsAndLists)+"=true"))
+
+	fleet := defaultFixture()
+	c, m := newFakeController()
+
+	gsSet1 := fleet.GameServerSet()
+	gsSet1.ObjectMeta.Name = "gsSet1"
+	gsSet1.Status.Lists = map[string]agonesv1.AggregatedListStatus{
+		"fullList": {
+			Capacity: 1000,
+			Count:    1000,
+		},
+	}
+
+	gsSet2 := fleet.GameServerSet()
+	gsSet2.ObjectMeta.Name = "gsSet2"
+	gsSet2.Status.Lists = map[string]agonesv1.AggregatedListStatus{
+		"fullList": {
+			Capacity: 200,
+			Count:    200,
+		},
+		"anotherList": {
+			Capacity: 10,
+			Count:    1,
+		},
+	}
+
+	m.AgonesClient.AddReactor("list", "gameserversets",
+		func(action k8stesting.Action) (bool, runtime.Object, error) {
+			return true, &agonesv1.GameServerSetList{Items: []agonesv1.GameServerSet{*gsSet1, *gsSet2}}, nil
+		})
+
+	updated := false
+	m.AgonesClient.AddReactor("update", "fleets",
+		func(action k8stesting.Action) (bool, runtime.Object, error) {
+			updated = true
+			ua := action.(k8stesting.UpdateAction)
+			fleet := ua.GetObject().(*agonesv1.Fleet)
+
+			assert.Equal(t, int64(1200), fleet.Status.Lists["fullList"].Capacity)
+			assert.Equal(t, int64(1200), fleet.Status.Lists["fullList"].Count)
+			assert.Equal(t, int64(10), fleet.Status.Lists["anotherList"].Capacity)
+			assert.Equal(t, int64(1), fleet.Status.Lists["anotherList"].Count)
+
+			return true, fleet, nil
+		})
+
+	ctx, cancel := agtesting.StartInformers(m, c.fleetSynced, c.gameServerSetSynced)
+	defer cancel()
+
+	err := c.updateFleetStatus(ctx, fleet)
+	assert.Nil(t, err)
+	assert.True(t, updated)
+}
+
 func TestControllerFilterGameServerSetByActive(t *testing.T) {
 	t.Parallel()
 
