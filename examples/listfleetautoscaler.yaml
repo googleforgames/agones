@@ -1,0 +1,45 @@
+# Copyright 2023 Google LLC All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+#
+# [Stage:Alpha]
+# [FeatureFlag:CountsAndLists]
+# Example of a FleetAutoscaler - this is used to scale a Fleet automatically depending on the
+# available capacity of a List across the fleet.
+#
+
+#
+# For a full reference and details: https://agones.dev/site/docs/reference/fleetautoscaler/
+#
+
+apiVersion: "autoscaling.agones.dev/v1"
+kind: FleetAutoscaler
+metadata:
+  name: fleet-autoscaler-list
+spec:
+  fleetName: fleet-example
+  policy:
+    type: List # List based autoscaling.
+    count:
+      # The name of the List.
+      key: rooms
+      # Size of a buffer based on the list capacity that is available over the current aggregate list length in the Fleet.
+      # It can be specified either in absolute (i.e. 5) or percentage format (i.e. 5%)
+      bufferLength: 5
+      # minimum aggregate list capacity that can be provided by this FleetAutoscaler.
+      # if not specified, the actual minimum capacity will be bufferLength
+      minLength: 10
+      # maximum aggregate list capacity that can be provided by this FleetAutoscaler.
+      # required
+      maxLength: 100
