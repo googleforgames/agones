@@ -55,9 +55,28 @@ spec:
         release: {{ .Release.Name }}
         heritage: {{ .Release.Service }}
     spec:
-      {{- if .Values.agones.extensions.affinity }}
       affinity:
+      {{- if .Values.agones.extensions.affinity }}
+      {{- if .Values.agones.system.requireDedicatedNode }}
+      {{- fail "agones.extensions.affinity and agones.system.requireDedicatedNode cannot be set at the same time!" }}
+      {{- end}}
+      {{- end}}
+      {{- if .Values.agones.extensions.affinity }}
 {{ toYaml .Values.agones.extensions.affinity | indent 8 }}
+      {{- else}}
+        nodeAffinity:
+          {{- if .Values.agones.system.requireDedicatedNode }}
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+          {{- else}}
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 1
+            preference:
+              matchExpressions:
+          {{- end }}
+              - key: agones.dev/agones-system
+                operator: Exists
       {{- end }}
       {{- if .Values.agones.extensions.nodeSelector }}
       nodeSelector:

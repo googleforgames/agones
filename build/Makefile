@@ -50,7 +50,7 @@ WINDOWS_DOCKER_PUSH_ARGS =
 # Versions of Windows Server to support, default is Windows Server 2019.
 # For the full list of tags see https://hub.docker.com/_/microsoft-windows-servercore.
 # GKE-Windows version map: https://cloud.google.com/kubernetes-engine/docs/how-to/creating-a-cluster-windows#version_mapping
-WINDOWS_VERSIONS = ltsc2019
+WINDOWS_VERSIONS = ltsc2019 ltsc2022
 
 # Specify stress test level 1..100
 # STRESS_TEST_LEVEL=n requires capacity between 50*n up to 100*n simple-game-server Game Servers.
@@ -561,8 +561,8 @@ build-agones-sdk-binary-windows: $(ensure-build-image)
 	$(GO_BUILD_WINDOWS_AMD64) \
 		-o $(go_build_base_path)/cmd/sdk-server/bin/sdk-server.windows.amd64.exe $(go_rebuild_flags) $(go_version_flags) $(agones_package)/cmd/sdk-server
 
-ensure-windows-buildx:
-	-docker buildx create --name=$(BUILDX_WINDOWS_BUILDER)
+ensure-windows-buildx-%:
+	-docker buildx create --name=$(BUILDX_WINDOWS_BUILDER)-$*
 
 # Build the image for the gameserver extensions
 build-extensions-image: build-extensions-image-amd64
@@ -611,8 +611,8 @@ build-agones-sdk-image-windows: build-agones-sdk-binary
 build-agones-sdk-image-windows: $(foreach winver, $(WINDOWS_VERSIONS), build-agones-sdk-image-windows-$(winver))
 
 # Build the image for the gameserver sidecar and SDK binaries
-build-agones-sdk-image-windows-%: $(ensure-build-image) build-agones-sdk-binary build-licenses build-required-src-dist ensure-windows-buildx
-	docker buildx build --platform windows/amd64 --builder $(BUILDX_WINDOWS_BUILDER) -f $(agones_path)/cmd/sdk-server/Dockerfile.windows --tag=$(sidecar_tag)-windows_amd64-$* --build-arg WINDOWS_VERSION=$* $(DOCKER_BUILD_ARGS) $(agones_path)/cmd/sdk-server/ $(WINDOWS_DOCKER_PUSH_ARGS)
+build-agones-sdk-image-windows-%: $(ensure-build-image) build-agones-sdk-binary build-licenses build-required-src-dist ensure-windows-buildx-%
+	docker buildx build --platform windows/amd64 --builder $(BUILDX_WINDOWS_BUILDER)-$* -f $(agones_path)/cmd/sdk-server/Dockerfile.windows --tag=$(sidecar_tag)-windows_amd64-$* --build-arg WINDOWS_VERSION=$* $(DOCKER_BUILD_ARGS) $(agones_path)/cmd/sdk-server/ $(WINDOWS_DOCKER_PUSH_ARGS)
 
 # Build a static binary for the ping service
 build-ping-binary: build-ping-binary-amd64

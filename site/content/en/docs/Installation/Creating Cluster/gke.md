@@ -271,6 +271,10 @@ Flag explanations:
 
 ### Create an Autopilot mode cluster for Agones
 
+{{<alert title="Note" color="info">}}
+These installation instructions apply to Agones 1.30+
+{{</alert>}}
+
 1. Choose a [Release Channel]({{<ref "/docs/Guides/Best Practices/gke.md#release-channels" >}}) (Autopilot clusters must be on a Release Channel).
 
 1. Create the cluster:
@@ -292,6 +296,12 @@ Flag explanations:
 * `--release-channel`: The release channel [you chose above](#choosing-a-release-channel-and-optional-version).
 * `--autoprovisioning-network-tags`: Defines the tags that will be attached to new nodes in the cluster. This is to grant access through ports via the [firewall created above](#creating-the-firewall).
 
+{{<alert title="Warning" color="warning">}}
+To install Agones on version 1.30-1.31, you must enable the `SplitControllerAndExtensions`
+[feature gate]({{% ref "/docs/Guides/feature-stages.md#feature-gates" %}}).
+This feature is enabled by default starting in Agones 1.32.0.
+{{</alert>}}
+
 ## Setting up cluster credentials
 
 `gcloud container clusters create` configurates credentials for `kubectl` automatically. If you ever lose those, run:
@@ -305,31 +315,4 @@ gcloud container clusters get-credentials [CLUSTER_NAME] --region=[COMPUTE_REGIO
 
 ## Next Steps
 
-### GKE Standard
-
-If you created a GKE Standard cluster, continue to [Install Agones]({{< relref "../Install Agones/_index.md" >}}).
-
-### GKE Autopilot
-
-{{<alert title="Note" color="info">}}
-These installation instructions apply to Agones 1.30+
-{{</alert>}}
-
-If you created a GKE Autopilot cluster:
-
-1.  [Install Helm](https://helm.sh/docs/intro/quickstart/)
-1.  Install Agones:
-
-    ```bash
-    helm repo add agones https://agones.dev/chart/stable
-    helm repo update
-    helm install my-release \
-      --namespace agones-system \
-      --create-namespace agones/agones \
-      --set agones.featureGates="SplitControllerAndExtensions=true"
-    ```
-    The `SplitControllerAndExtensions=true` feature gate is in the Alpha stage.
-    You must specify this feature gate to enable Agones on an Autopilot cluster.
-
-To verify the installation,
-[create a GameServer]({{<ref "/docs/Getting Started/create-gameserver.md" >}}).
+* Continue to [Install Agones]({{< relref "../Install Agones/_index.md" >}}).
