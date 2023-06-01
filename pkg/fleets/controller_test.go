@@ -685,7 +685,7 @@ func TestControllerUpdateFleetPlayerStatus(t *testing.T) {
 	assert.True(t, updated)
 }
 
-// nolint // Linter errors on lines are duplicate of TestControllerUpdateFleetListStatus
+// nolint:dupl // Linter errors on lines are duplicate of TestControllerUpdateFleetListStatus
 func TestControllerUpdateFleetCounterStatus(t *testing.T) {
 	t.Parallel()
 
@@ -747,7 +747,7 @@ func TestControllerUpdateFleetCounterStatus(t *testing.T) {
 	assert.True(t, updated)
 }
 
-// nolint // Linter errors on lines are duplicate of TestControllerUpdateFleetCounterStatus
+// nolint:dupl // Linter errors on lines are duplicate of TestControllerUpdateFleetCounterStatus
 func TestControllerUpdateFleetListStatus(t *testing.T) {
 	t.Parallel()
 
