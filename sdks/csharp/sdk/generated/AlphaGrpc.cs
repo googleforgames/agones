@@ -88,6 +88,22 @@ namespace Agones.Dev.Sdk.Alpha {
     static readonly grpc::Marshaller<global::Agones.Dev.Sdk.Alpha.Empty> __Marshaller_agones_dev_sdk_alpha_Empty = grpc::Marshallers.Create(__Helper_SerializeMessage, context => __Helper_DeserializeMessage(context, global::Agones.Dev.Sdk.Alpha.Empty.Parser));
     [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
     static readonly grpc::Marshaller<global::Agones.Dev.Sdk.Alpha.PlayerIDList> __Marshaller_agones_dev_sdk_alpha_PlayerIDList = grpc::Marshallers.Create(__Helper_SerializeMessage, context => __Helper_DeserializeMessage(context, global::Agones.Dev.Sdk.Alpha.PlayerIDList.Parser));
+    [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+    static readonly grpc::Marshaller<global::Agones.Dev.Sdk.Alpha.GetCounterRequest> __Marshaller_agones_dev_sdk_alpha_GetCounterRequest = grpc::Marshallers.Create(__Helper_SerializeMessage, context => __Helper_DeserializeMessage(context, global::Agones.Dev.Sdk.Alpha.GetCounterRequest.Parser));
+    [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+    static readonly grpc::Marshaller<global::Agones.Dev.Sdk.Alpha.Counter> __Marshaller_agones_dev_sdk_alpha_Counter = grpc::Marshallers.Create(__Helper_SerializeMessage, context => __Helper_DeserializeMessage(context, global::Agones.Dev.Sdk.Alpha.Counter.Parser));
+    [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+    static readonly grpc::Marshaller<global::Agones.Dev.Sdk.Alpha.UpdateCounterRequest> __Marshaller_agones_dev_sdk_alpha_UpdateCounterRequest = grpc::Marshallers.Create(__Helper_SerializeMessage, context => __Helper_DeserializeMessage(context, global::Agones.Dev.Sdk.Alpha.UpdateCounterRequest.Parser));
+    [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+    static readonly grpc::Marshaller<global::Agones.Dev.Sdk.Alpha.GetListRequest> __Marshaller_agones_dev_sdk_alpha_GetListRequest = grpc::Marshallers.Create(__Helper_SerializeMessage, context => __Helper_DeserializeMessage(context, global::Agones.Dev.Sdk.Alpha.GetListRequest.Parser));
+    [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+    static readonly grpc::Marshaller<global::Agones.Dev.Sdk.Alpha.List> __Marshaller_agones_dev_sdk_alpha_List = grpc::Marshallers.Create(__Helper_SerializeMessage, context => __Helper_DeserializeMessage(context, global::Agones.Dev.Sdk.Alpha.List.Parser));
+    [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+    static readonly grpc::Marshaller<global::Agones.Dev.Sdk.Alpha.UpdateListRequest> __Marshaller_agones_dev_sdk_alpha_UpdateListRequest = grpc::Marshallers.Create(__Helper_SerializeMessage, context => __Helper_DeserializeMessage(context, global::Agones.Dev.Sdk.Alpha.UpdateListRequest.Parser));
+    [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+    static readonly grpc::Marshaller<global::Agones.Dev.Sdk.Alpha.AddListValueRequest> __Marshaller_agones_dev_sdk_alpha_AddListValueRequest = grpc::Marshallers.Create(__Helper_SerializeMessage, context => __Helper_DeserializeMessage(context, global::Agones.Dev.Sdk.Alpha.AddListValueRequest.Parser));
+    [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+    static readonly grpc::Marshaller<global::Agones.Dev.Sdk.Alpha.RemoveListValueRequest> __Marshaller_agones_dev_sdk_alpha_RemoveListValueRequest = grpc::Marshallers.Create(__Helper_SerializeMessage, context => __Helper_DeserializeMessage(context, global::Agones.Dev.Sdk.Alpha.RemoveListValueRequest.Parser));
 
     [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
     static readonly grpc::Method<global::Agones.Dev.Sdk.Alpha.PlayerID, global::Agones.Dev.Sdk.Alpha.Bool> __Method_PlayerConnect = new grpc::Method<global::Agones.Dev.Sdk.Alpha.PlayerID, global::Agones.Dev.Sdk.Alpha.Bool>(
@@ -144,6 +160,54 @@ namespace Agones.Dev.Sdk.Alpha {
         "GetConnectedPlayers",
         __Marshaller_agones_dev_sdk_alpha_Empty,
         __Marshaller_agones_dev_sdk_alpha_PlayerIDList);
+
+    [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+    static readonly grpc::Method<global::Agones.Dev.Sdk.Alpha.GetCounterRequest, global::Agones.Dev.Sdk.Alpha.Counter> __Method_GetCounter = new grpc::Method<global::Agones.Dev.Sdk.Alpha.GetCounterRequest, global::Agones.Dev.Sdk.Alpha.Counter>(
+        grpc::MethodType.Unary,
+        __ServiceName,
+        "GetCounter",
+        __Marshaller_agones_dev_sdk_alpha_GetCounterRequest,
+        __Marshaller_agones_dev_sdk_alpha_Counter);
+
+    [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+    static readonly grpc::Method<global::Agones.Dev.Sdk.Alpha.UpdateCounterRequest, global::Agones.Dev.Sdk.Alpha.Counter> __Method_UpdateCounter = new grpc::Method<global::Agones.Dev.Sdk.Alpha.UpdateCounterRequest, global::Agones.Dev.Sdk.Alpha.Counter>(
+        grpc::MethodType.Unary,
+        __ServiceName,
+        "UpdateCounter",
+        __Marshaller_agones_dev_sdk_alpha_UpdateCounterRequest,
+        __Marshaller_agones_dev_sdk_alpha_Counter);
+
+    [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+    static readonly grpc::Method<global::Agones.Dev.Sdk.Alpha.GetListRequest, global::Agones.Dev.Sdk.Alpha.List> __Method_GetList = new grpc::Method<global::Agones.Dev.Sdk.Alpha.GetListRequest, global::Agones.Dev.Sdk.Alpha.List>(
+        grpc::MethodType.Unary,
+        __ServiceName,
+        "GetList",
+        __Marshaller_agones_dev_sdk_alpha_GetListRequest,
+        __Marshaller_agones_dev_sdk_alpha_List);
+
+    [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+    static readonly grpc::Method<global::Agones.Dev.Sdk.Alpha.UpdateListRequest, global::Agones.Dev.Sdk.Alpha.List> __Method_UpdateList = new grpc::Method<global::Agones.Dev.Sdk.Alpha.UpdateListRequest, global::Agones.Dev.Sdk.Alpha.List>(
+        grpc::MethodType.Unary,
+        __ServiceName,
+        "UpdateList",
+        __Marshaller_agones_dev_sdk_alpha_UpdateListRequest,
+        __Marshaller_agones_dev_sdk_alpha_List);
+
+    [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+    static readonly grpc::Method<global::Agones.Dev.Sdk.Alpha.AddListValueRequest, global::Agones.Dev.Sdk.Alpha.List> __Method_AddListValue = new grpc::Method<global::Agones.Dev.Sdk.Alpha.AddListValueRequest, global::Agones.Dev.Sdk.Alpha.List>(
+        grpc::MethodType.Unary,
+        __ServiceName,
+        "AddListValue",
+        __Marshaller_agones_dev_sdk_alpha_AddListValueRequest,
+        __Marshaller_agones_dev_sdk_alpha_List);
+
+    [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+    static readonly grpc::Method<global::Agones.Dev.Sdk.Alpha.RemoveListValueRequest, global::Agones.Dev.Sdk.Alpha.List> __Method_RemoveListValue = new grpc::Method<global::Agones.Dev.Sdk.Alpha.RemoveListValueRequest, global::Agones.Dev.Sdk.Alpha.List>(
+        grpc::MethodType.Unary,
+        __ServiceName,
+        "RemoveListValue",
+        __Marshaller_agones_dev_sdk_alpha_RemoveListValueRequest,
+        __Marshaller_agones_dev_sdk_alpha_List);
 
     /// <summary>Service descriptor</summary>
     public static global::Google.Protobuf.Reflection.ServiceDescriptor Descriptor
@@ -274,6 +338,90 @@ namespace Agones.Dev.Sdk.Alpha {
       /// <returns>The response to send back to the client (wrapped by a task).</returns>
       [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
       public virtual global::System.Threading.Tasks.Task<global::Agones.Dev.Sdk.Alpha.PlayerIDList> GetConnectedPlayers(global::Agones.Dev.Sdk.Alpha.Empty request, grpc::ServerCallContext context)
+      {
+        throw new grpc::RpcException(new grpc::Status(grpc::StatusCode.Unimplemented, ""));
+      }
+
+      /// <summary>
+      /// Gets a Counter. Returns NOT_FOUND if the Counter does not exist.
+      /// </summary>
+      /// <param name="request">The request received from the client.</param>
+      /// <param name="context">The context of the server-side call handler being invoked.</param>
+      /// <returns>The response to send back to the client (wrapped by a task).</returns>
+      [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+      public virtual global::System.Threading.Tasks.Task<global::Agones.Dev.Sdk.Alpha.Counter> GetCounter(global::Agones.Dev.Sdk.Alpha.GetCounterRequest request, grpc::ServerCallContext context)
+      {
+        throw new grpc::RpcException(new grpc::Status(grpc::StatusCode.Unimplemented, ""));
+      }
+
+      /// <summary>
+      /// UpdateCounter returns the updated Counter. Returns NOT_FOUND if the Counter does not exist (name cannot be updated).
+      /// Returns OUT_OF_RANGE if the Count is out of range [0,Capacity].
+      /// Returns INVALID_ARGUMENT if the field mask path(s) are not field(s) of the Counter.
+      /// If a field mask path(s) is specified, but the value is not set in the request Counter object,
+      /// then the default value for the variable will be set (i.e. 0 for "capacity" or "count").
+      /// </summary>
+      /// <param name="request">The request received from the client.</param>
+      /// <param name="context">The context of the server-side call handler being invoked.</param>
+      /// <returns>The response to send back to the client (wrapped by a task).</returns>
+      [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+      public virtual global::System.Threading.Tasks.Task<global::Agones.Dev.Sdk.Alpha.Counter> UpdateCounter(global::Agones.Dev.Sdk.Alpha.UpdateCounterRequest request, grpc::ServerCallContext context)
+      {
+        throw new grpc::RpcException(new grpc::Status(grpc::StatusCode.Unimplemented, ""));
+      }
+
+      /// <summary>
+      /// Gets a List. Returns NOT_FOUND if the List does not exist.
+      /// </summary>
+      /// <param name="request">The request received from the client.</param>
+      /// <param name="context">The context of the server-side call handler being invoked.</param>
+      /// <returns>The response to send back to the client (wrapped by a task).</returns>
+      [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+      public virtual global::System.Threading.Tasks.Task<global::Agones.Dev.Sdk.Alpha.List> GetList(global::Agones.Dev.Sdk.Alpha.GetListRequest request, grpc::ServerCallContext context)
+      {
+        throw new grpc::RpcException(new grpc::Status(grpc::StatusCode.Unimplemented, ""));
+      }
+
+      /// <summary>
+      /// UpdateList returns the updated List. Returns NOT_FOUND if the List does not exist (name cannot be updated).
+      /// **THIS WILL OVERWRITE ALL EXISTING LIST.VALUES WITH ANY REQUEST LIST.VALUES**
+      /// Use AddListValue() or RemoveListValue() for modifying the List.Values field.
+      /// Returns INVALID_ARGUMENT if the field mask path(s) are not field(s) of the List.
+      /// If a field mask path(s) is specified, but the value is not set in the request List object,
+      /// then the default value for the variable will be set (i.e. 0 for "capacity", empty list for "values").
+      /// </summary>
+      /// <param name="request">The request received from the client.</param>
+      /// <param name="context">The context of the server-side call handler being invoked.</param>
+      /// <returns>The response to send back to the client (wrapped by a task).</returns>
+      [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+      public virtual global::System.Threading.Tasks.Task<global::Agones.Dev.Sdk.Alpha.List> UpdateList(global::Agones.Dev.Sdk.Alpha.UpdateListRequest request, grpc::ServerCallContext context)
+      {
+        throw new grpc::RpcException(new grpc::Status(grpc::StatusCode.Unimplemented, ""));
+      }
+
+      /// <summary>
+      /// Adds a value to a List and returns updated List. Returns NOT_FOUND if the List does not exist.
+      /// Returns ALREADY_EXISTS if the value is already in the List.
+      /// Returns OUT_OF_RANGE if the List is already at Capacity.
+      /// </summary>
+      /// <param name="request">The request received from the client.</param>
+      /// <param name="context">The context of the server-side call handler being invoked.</param>
+      /// <returns>The response to send back to the client (wrapped by a task).</returns>
+      [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+      public virtual global::System.Threading.Tasks.Task<global::Agones.Dev.Sdk.Alpha.List> AddListValue(global::Agones.Dev.Sdk.Alpha.AddListValueRequest request, grpc::ServerCallContext context)
+      {
+        throw new grpc::RpcException(new grpc::Status(grpc::StatusCode.Unimplemented, ""));
+      }
+
+      /// <summary>
+      /// Removes a value from a List and returns updated List. Returns NOT_FOUND if the List does not exist.
+      /// Returns NOT_FOUND if the value is not in the List.
+      /// </summary>
+      /// <param name="request">The request received from the client.</param>
+      /// <param name="context">The context of the server-side call handler being invoked.</param>
+      /// <returns>The response to send back to the client (wrapped by a task).</returns>
+      [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+      public virtual global::System.Threading.Tasks.Task<global::Agones.Dev.Sdk.Alpha.List> RemoveListValue(global::Agones.Dev.Sdk.Alpha.RemoveListValueRequest request, grpc::ServerCallContext context)
       {
         throw new grpc::RpcException(new grpc::Status(grpc::StatusCode.Unimplemented, ""));
       }
@@ -799,6 +947,342 @@ namespace Agones.Dev.Sdk.Alpha {
       {
         return CallInvoker.AsyncUnaryCall(__Method_GetConnectedPlayers, null, options, request);
       }
+      /// <summary>
+      /// Gets a Counter. Returns NOT_FOUND if the Counter does not exist.
+      /// </summary>
+      /// <param name="request">The request to send to the server.</param>
+      /// <param name="headers">The initial metadata to send with the call. This parameter is optional.</param>
+      /// <param name="deadline">An optional deadline for the call. The call will be cancelled if deadline is hit.</param>
+      /// <param name="cancellationToken">An optional token for canceling the call.</param>
+      /// <returns>The response received from the server.</returns>
+      [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+      public virtual global::Agones.Dev.Sdk.Alpha.Counter GetCounter(global::Agones.Dev.Sdk.Alpha.GetCounterRequest request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+      {
+        return GetCounter(request, new grpc::CallOptions(headers, deadline, cancellationToken));
+      }
+      /// <summary>
+      /// Gets a Counter. Returns NOT_FOUND if the Counter does not exist.
+      /// </summary>
+      /// <param name="request">The request to send to the server.</param>
+      /// <param name="options">The options for the call.</param>
+      /// <returns>The response received from the server.</returns>
+      [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+      public virtual global::Agones.Dev.Sdk.Alpha.Counter GetCounter(global::Agones.Dev.Sdk.Alpha.GetCounterRequest request, grpc::CallOptions options)
+      {
+        return CallInvoker.BlockingUnaryCall(__Method_GetCounter, null, options, request);
+      }
+      /// <summary>
+      /// Gets a Counter. Returns NOT_FOUND if the Counter does not exist.
+      /// </summary>
+      /// <param name="request">The request to send to the server.</param>
+      /// <param name="headers">The initial metadata to send with the call. This parameter is optional.</param>
+      /// <param name="deadline">An optional deadline for the call. The call will be cancelled if deadline is hit.</param>
+      /// <param name="cancellationToken">An optional token for canceling the call.</param>
+      /// <returns>The call object.</returns>
+      [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+      public virtual grpc::AsyncUnaryCall<global::Agones.Dev.Sdk.Alpha.Counter> GetCounterAsync(global::Agones.Dev.Sdk.Alpha.GetCounterRequest request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+      {
+        return GetCounterAsync(request, new grpc::CallOptions(headers, deadline, cancellationToken));
+      }
+      /// <summary>
+      /// Gets a Counter. Returns NOT_FOUND if the Counter does not exist.
+      /// </summary>
+      /// <param name="request">The request to send to the server.</param>
+      /// <param name="options">The options for the call.</param>
+      /// <returns>The call object.</returns>
+      [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+      public virtual grpc::AsyncUnaryCall<global::Agones.Dev.Sdk.Alpha.Counter> GetCounterAsync(global::Agones.Dev.Sdk.Alpha.GetCounterRequest request, grpc::CallOptions options)
+      {
+        return CallInvoker.AsyncUnaryCall(__Method_GetCounter, null, options, request);
+      }
+      /// <summary>
+      /// UpdateCounter returns the updated Counter. Returns NOT_FOUND if the Counter does not exist (name cannot be updated).
+      /// Returns OUT_OF_RANGE if the Count is out of range [0,Capacity].
+      /// Returns INVALID_ARGUMENT if the field mask path(s) are not field(s) of the Counter.
+      /// If a field mask path(s) is specified, but the value is not set in the request Counter object,
+      /// then the default value for the variable will be set (i.e. 0 for "capacity" or "count").
+      /// </summary>
+      /// <param name="request">The request to send to the server.</param>
+      /// <param name="headers">The initial metadata to send with the call. This parameter is optional.</param>
+      /// <param name="deadline">An optional deadline for the call. The call will be cancelled if deadline is hit.</param>
+      /// <param name="cancellationToken">An optional token for canceling the call.</param>
+      /// <returns>The response received from the server.</returns>
+      [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+      public virtual global::Agones.Dev.Sdk.Alpha.Counter UpdateCounter(global::Agones.Dev.Sdk.Alpha.UpdateCounterRequest request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+      {
+        return UpdateCounter(request, new grpc::CallOptions(headers, deadline, cancellationToken));
+      }
+      /// <summary>
+      /// UpdateCounter returns the updated Counter. Returns NOT_FOUND if the Counter does not exist (name cannot be updated).
+      /// Returns OUT_OF_RANGE if the Count is out of range [0,Capacity].
+      /// Returns INVALID_ARGUMENT if the field mask path(s) are not field(s) of the Counter.
+      /// If a field mask path(s) is specified, but the value is not set in the request Counter object,
+      /// then the default value for the variable will be set (i.e. 0 for "capacity" or "count").
+      /// </summary>
+      /// <param name="request">The request to send to the server.</param>
+      /// <param name="options">The options for the call.</param>
+      /// <returns>The response received from the server.</returns>
+      [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+      public virtual global::Agones.Dev.Sdk.Alpha.Counter UpdateCounter(global::Agones.Dev.Sdk.Alpha.UpdateCounterRequest request, grpc::CallOptions options)
+      {
+        return CallInvoker.BlockingUnaryCall(__Method_UpdateCounter, null, options, request);
+      }
+      /// <summary>
+      /// UpdateCounter returns the updated Counter. Returns NOT_FOUND if the Counter does not exist (name cannot be updated).
+      /// Returns OUT_OF_RANGE if the Count is out of range [0,Capacity].
+      /// Returns INVALID_ARGUMENT if the field mask path(s) are not field(s) of the Counter.
+      /// If a field mask path(s) is specified, but the value is not set in the request Counter object,
+      /// then the default value for the variable will be set (i.e. 0 for "capacity" or "count").
+      /// </summary>
+      /// <param name="request">The request to send to the server.</param>
+      /// <param name="headers">The initial metadata to send with the call. This parameter is optional.</param>
+      /// <param name="deadline">An optional deadline for the call. The call will be cancelled if deadline is hit.</param>
+      /// <param name="cancellationToken">An optional token for canceling the call.</param>
+      /// <returns>The call object.</returns>
+      [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+      public virtual grpc::AsyncUnaryCall<global::Agones.Dev.Sdk.Alpha.Counter> UpdateCounterAsync(global::Agones.Dev.Sdk.Alpha.UpdateCounterRequest request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+      {
+        return UpdateCounterAsync(request, new grpc::CallOptions(headers, deadline, cancellationToken));
+      }
+      /// <summary>
+      /// UpdateCounter returns the updated Counter. Returns NOT_FOUND if the Counter does not exist (name cannot be updated).
+      /// Returns OUT_OF_RANGE if the Count is out of range [0,Capacity].
+      /// Returns INVALID_ARGUMENT if the field mask path(s) are not field(s) of the Counter.
+      /// If a field mask path(s) is specified, but the value is not set in the request Counter object,
+      /// then the default value for the variable will be set (i.e. 0 for "capacity" or "count").
+      /// </summary>
+      /// <param name="request">The request to send to the server.</param>
+      /// <param name="options">The options for the call.</param>
+      /// <returns>The call object.</returns>
+      [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+      public virtual grpc::AsyncUnaryCall<global::Agones.Dev.Sdk.Alpha.Counter> UpdateCounterAsync(global::Agones.Dev.Sdk.Alpha.UpdateCounterRequest request, grpc::CallOptions options)
+      {
+        return CallInvoker.AsyncUnaryCall(__Method_UpdateCounter, null, options, request);
+      }
+      /// <summary>
+      /// Gets a List. Returns NOT_FOUND if the List does not exist.
+      /// </summary>
+      /// <param name="request">The request to send to the server.</param>
+      /// <param name="headers">The initial metadata to send with the call. This parameter is optional.</param>
+      /// <param name="deadline">An optional deadline for the call. The call will be cancelled if deadline is hit.</param>
+      /// <param name="cancellationToken">An optional token for canceling the call.</param>
+      /// <returns>The response received from the server.</returns>
+      [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+      public virtual global::Agones.Dev.Sdk.Alpha.List GetList(global::Agones.Dev.Sdk.Alpha.GetListRequest request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+      {
+        return GetList(request, new grpc::CallOptions(headers, deadline, cancellationToken));
+      }
+      /// <summary>
+      /// Gets a List. Returns NOT_FOUND if the List does not exist.
+      /// </summary>
+      /// <param name="request">The request to send to the server.</param>
+      /// <param name="options">The options for the call.</param>
+      /// <returns>The response received from the server.</returns>
+      [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+      public virtual global::Agones.Dev.Sdk.Alpha.List GetList(global::Agones.Dev.Sdk.Alpha.GetListRequest request, grpc::CallOptions options)
+      {
+        return CallInvoker.BlockingUnaryCall(__Method_GetList, null, options, request);
+      }
+      /// <summary>
+      /// Gets a List. Returns NOT_FOUND if the List does not exist.
+      /// </summary>
+      /// <param name="request">The request to send to the server.</param>
+      /// <param name="headers">The initial metadata to send with the call. This parameter is optional.</param>
+      /// <param name="deadline">An optional deadline for the call. The call will be cancelled if deadline is hit.</param>
+      /// <param name="cancellationToken">An optional token for canceling the call.</param>
+      /// <returns>The call object.</returns>
+      [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+      public virtual grpc::AsyncUnaryCall<global::Agones.Dev.Sdk.Alpha.List> GetListAsync(global::Agones.Dev.Sdk.Alpha.GetListRequest request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+      {
+        return GetListAsync(request, new grpc::CallOptions(headers, deadline, cancellationToken));
+      }
+      /// <summary>
+      /// Gets a List. Returns NOT_FOUND if the List does not exist.
+      /// </summary>
+      /// <param name="request">The request to send to the server.</param>
+      /// <param name="options">The options for the call.</param>
+      /// <returns>The call object.</returns>
+      [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+      public virtual grpc::AsyncUnaryCall<global::Agones.Dev.Sdk.Alpha.List> GetListAsync(global::Agones.Dev.Sdk.Alpha.GetListRequest request, grpc::CallOptions options)
+      {
+        return CallInvoker.AsyncUnaryCall(__Method_GetList, null, options, request);
+      }
+      /// <summary>
+      /// UpdateList returns the updated List. Returns NOT_FOUND if the List does not exist (name cannot be updated).
+      /// **THIS WILL OVERWRITE ALL EXISTING LIST.VALUES WITH ANY REQUEST LIST.VALUES**
+      /// Use AddListValue() or RemoveListValue() for modifying the List.Values field.
+      /// Returns INVALID_ARGUMENT if the field mask path(s) are not field(s) of the List.
+      /// If a field mask path(s) is specified, but the value is not set in the request List object,
+      /// then the default value for the variable will be set (i.e. 0 for "capacity", empty list for "values").
+      /// </summary>
+      /// <param name="request">The request to send to the server.</param>
+      /// <param name="headers">The initial metadata to send with the call. This parameter is optional.</param>
+      /// <param name="deadline">An optional deadline for the call. The call will be cancelled if deadline is hit.</param>
+      /// <param name="cancellationToken">An optional token for canceling the call.</param>
+      /// <returns>The response received from the server.</returns>
+      [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+      public virtual global::Agones.Dev.Sdk.Alpha.List UpdateList(global::Agones.Dev.Sdk.Alpha.UpdateListRequest request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+      {
+        return UpdateList(request, new grpc::CallOptions(headers, deadline, cancellationToken));
+      }
+      /// <summary>
+      /// UpdateList returns the updated List. Returns NOT_FOUND if the List does not exist (name cannot be updated).
+      /// **THIS WILL OVERWRITE ALL EXISTING LIST.VALUES WITH ANY REQUEST LIST.VALUES**
+      /// Use AddListValue() or RemoveListValue() for modifying the List.Values field.
+      /// Returns INVALID_ARGUMENT if the field mask path(s) are not field(s) of the List.
+      /// If a field mask path(s) is specified, but the value is not set in the request List object,
+      /// then the default value for the variable will be set (i.e. 0 for "capacity", empty list for "values").
+      /// </summary>
+      /// <param name="request">The request to send to the server.</param>
+      /// <param name="options">The options for the call.</param>
+      /// <returns>The response received from the server.</returns>
+      [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+      public virtual global::Agones.Dev.Sdk.Alpha.List UpdateList(global::Agones.Dev.Sdk.Alpha.UpdateListRequest request, grpc::CallOptions options)
+      {
+        return CallInvoker.BlockingUnaryCall(__Method_UpdateList, null, options, request);
+      }
+      /// <summary>
+      /// UpdateList returns the updated List. Returns NOT_FOUND if the List does not exist (name cannot be updated).
+      /// **THIS WILL OVERWRITE ALL EXISTING LIST.VALUES WITH ANY REQUEST LIST.VALUES**
+      /// Use AddListValue() or RemoveListValue() for modifying the List.Values field.
+      /// Returns INVALID_ARGUMENT if the field mask path(s) are not field(s) of the List.
+      /// If a field mask path(s) is specified, but the value is not set in the request List object,
+      /// then the default value for the variable will be set (i.e. 0 for "capacity", empty list for "values").
+      /// </summary>
+      /// <param name="request">The request to send to the server.</param>
+      /// <param name="headers">The initial metadata to send with the call. This parameter is optional.</param>
+      /// <param name="deadline">An optional deadline for the call. The call will be cancelled if deadline is hit.</param>
+      /// <param name="cancellationToken">An optional token for canceling the call.</param>
+      /// <returns>The call object.</returns>
+      [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+      public virtual grpc::AsyncUnaryCall<global::Agones.Dev.Sdk.Alpha.List> UpdateListAsync(global::Agones.Dev.Sdk.Alpha.UpdateListRequest request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+      {
+        return UpdateListAsync(request, new grpc::CallOptions(headers, deadline, cancellationToken));
+      }
+      /// <summary>
+      /// UpdateList returns the updated List. Returns NOT_FOUND if the List does not exist (name cannot be updated).
+      /// **THIS WILL OVERWRITE ALL EXISTING LIST.VALUES WITH ANY REQUEST LIST.VALUES**
+      /// Use AddListValue() or RemoveListValue() for modifying the List.Values field.
+      /// Returns INVALID_ARGUMENT if the field mask path(s) are not field(s) of the List.
+      /// If a field mask path(s) is specified, but the value is not set in the request List object,
+      /// then the default value for the variable will be set (i.e. 0 for "capacity", empty list for "values").
+      /// </summary>
+      /// <param name="request">The request to send to the server.</param>
+      /// <param name="options">The options for the call.</param>
+      /// <returns>The call object.</returns>
+      [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+      public virtual grpc::AsyncUnaryCall<global::Agones.Dev.Sdk.Alpha.List> UpdateListAsync(global::Agones.Dev.Sdk.Alpha.UpdateListRequest request, grpc::CallOptions options)
+      {
+        return CallInvoker.AsyncUnaryCall(__Method_UpdateList, null, options, request);
+      }
+      /// <summary>
+      /// Adds a value to a List and returns updated List. Returns NOT_FOUND if the List does not exist.
+      /// Returns ALREADY_EXISTS if the value is already in the List.
+      /// Returns OUT_OF_RANGE if the List is already at Capacity.
+      /// </summary>
+      /// <param name="request">The request to send to the server.</param>
+      /// <param name="headers">The initial metadata to send with the call. This parameter is optional.</param>
+      /// <param name="deadline">An optional deadline for the call. The call will be cancelled if deadline is hit.</param>
+      /// <param name="cancellationToken">An optional token for canceling the call.</param>
+      /// <returns>The response received from the server.</returns>
+      [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+      public virtual global::Agones.Dev.Sdk.Alpha.List AddListValue(global::Agones.Dev.Sdk.Alpha.AddListValueRequest request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+      {
+        return AddListValue(request, new grpc::CallOptions(headers, deadline, cancellationToken));
+      }
+      /// <summary>
+      /// Adds a value to a List and returns updated List. Returns NOT_FOUND if the List does not exist.
+      /// Returns ALREADY_EXISTS if the value is already in the List.
+      /// Returns OUT_OF_RANGE if the List is already at Capacity.
+      /// </summary>
+      /// <param name="request">The request to send to the server.</param>
+      /// <param name="options">The options for the call.</param>
+      /// <returns>The response received from the server.</returns>
+      [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+      public virtual global::Agones.Dev.Sdk.Alpha.List AddListValue(global::Agones.Dev.Sdk.Alpha.AddListValueRequest request, grpc::CallOptions options)
+      {
+        return CallInvoker.BlockingUnaryCall(__Method_AddListValue, null, options, request);
+      }
+      /// <summary>
+      /// Adds a value to a List and returns updated List. Returns NOT_FOUND if the List does not exist.
+      /// Returns ALREADY_EXISTS if the value is already in the List.
+      /// Returns OUT_OF_RANGE if the List is already at Capacity.
+      /// </summary>
+      /// <param name="request">The request to send to the server.</param>
+      /// <param name="headers">The initial metadata to send with the call. This parameter is optional.</param>
+      /// <param name="deadline">An optional deadline for the call. The call will be cancelled if deadline is hit.</param>
+      /// <param name="cancellationToken">An optional token for canceling the call.</param>
+      /// <returns>The call object.</returns>
+      [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+      public virtual grpc::AsyncUnaryCall<global::Agones.Dev.Sdk.Alpha.List> AddListValueAsync(global::Agones.Dev.Sdk.Alpha.AddListValueRequest request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+      {
+        return AddListValueAsync(request, new grpc::CallOptions(headers, deadline, cancellationToken));
+      }
+      /// <summary>
+      /// Adds a value to a List and returns updated List. Returns NOT_FOUND if the List does not exist.
+      /// Returns ALREADY_EXISTS if the value is already in the List.
+      /// Returns OUT_OF_RANGE if the List is already at Capacity.
+      /// </summary>
+      /// <param name="request">The request to send to the server.</param>
+      /// <param name="options">The options for the call.</param>
+      /// <returns>The call object.</returns>
+      [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+      public virtual grpc::AsyncUnaryCall<global::Agones.Dev.Sdk.Alpha.List> AddListValueAsync(global::Agones.Dev.Sdk.Alpha.AddListValueRequest request, grpc::CallOptions options)
+      {
+        return CallInvoker.AsyncUnaryCall(__Method_AddListValue, null, options, request);
+      }
+      /// <summary>
+      /// Removes a value from a List and returns updated List. Returns NOT_FOUND if the List does not exist.
+      /// Returns NOT_FOUND if the value is not in the List.
+      /// </summary>
+      /// <param name="request">The request to send to the server.</param>
+      /// <param name="headers">The initial metadata to send with the call. This parameter is optional.</param>
+      /// <param name="deadline">An optional deadline for the call. The call will be cancelled if deadline is hit.</param>
+      /// <param name="cancellationToken">An optional token for canceling the call.</param>
+      /// <returns>The response received from the server.</returns>
+      [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+      public virtual global::Agones.Dev.Sdk.Alpha.List RemoveListValue(global::Agones.Dev.Sdk.Alpha.RemoveListValueRequest request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+      {
+        return RemoveListValue(request, new grpc::CallOptions(headers, deadline, cancellationToken));
+      }
+      /// <summary>
+      /// Removes a value from a List and returns updated List. Returns NOT_FOUND if the List does not exist.
+      /// Returns NOT_FOUND if the value is not in the List.
+      /// </summary>
+      /// <param name="request">The request to send to the server.</param>
+      /// <param name="options">The options for the call.</param>
+      /// <returns>The response received from the server.</returns>
+      [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+      public virtual global::Agones.Dev.Sdk.Alpha.List RemoveListValue(global::Agones.Dev.Sdk.Alpha.RemoveListValueRequest request, grpc::CallOptions options)
+      {
+        return CallInvoker.BlockingUnaryCall(__Method_RemoveListValue, null, options, request);
+      }
+      /// <summary>
+      /// Removes a value from a List and returns updated List. Returns NOT_FOUND if the List does not exist.
+      /// Returns NOT_FOUND if the value is not in the List.
+      /// </summary>
+      /// <param name="request">The request to send to the server.</param>
+      /// <param name="headers">The initial metadata to send with the call. This parameter is optional.</param>
+      /// <param name="deadline">An optional deadline for the call. The call will be cancelled if deadline is hit.</param>
+      /// <param name="cancellationToken">An optional token for canceling the call.</param>
+      /// <returns>The call object.</returns>
+      [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+      public virtual grpc::AsyncUnaryCall<global::Agones.Dev.Sdk.Alpha.List> RemoveListValueAsync(global::Agones.Dev.Sdk.Alpha.RemoveListValueRequest request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+      {
+        return RemoveListValueAsync(request, new grpc::CallOptions(headers, deadline, cancellationToken));
+      }
+      /// <summary>
+      /// Removes a value from a List and returns updated List. Returns NOT_FOUND if the List does not exist.
+      /// Returns NOT_FOUND if the value is not in the List.
+      /// </summary>
+      /// <param name="request">The request to send to the server.</param>
+      /// <param name="options">The options for the call.</param>
+      /// <returns>The call object.</returns>
+      [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+      public virtual grpc::AsyncUnaryCall<global::Agones.Dev.Sdk.Alpha.List> RemoveListValueAsync(global::Agones.Dev.Sdk.Alpha.RemoveListValueRequest request, grpc::CallOptions options)
+      {
+        return CallInvoker.AsyncUnaryCall(__Method_RemoveListValue, null, options, request);
+      }
       /// <summary>Creates a new instance of client from given <c>ClientBaseConfiguration</c>.</summary>
       [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
       protected override SDKClient NewInstance(ClientBaseConfiguration configuration)
@@ -819,7 +1303,13 @@ namespace Agones.Dev.Sdk.Alpha {
           .AddMethod(__Method_GetPlayerCapacity, serviceImpl.GetPlayerCapacity)
           .AddMethod(__Method_GetPlayerCount, serviceImpl.GetPlayerCount)
           .AddMethod(__Method_IsPlayerConnected, serviceImpl.IsPlayerConnected)
-          .AddMethod(__Method_GetConnectedPlayers, serviceImpl.GetConnectedPlayers).Build();
+          .AddMethod(__Method_GetConnectedPlayers, serviceImpl.GetConnectedPlayers)
+          .AddMethod(__Method_GetCounter, serviceImpl.GetCounter)
+          .AddMethod(__Method_UpdateCounter, serviceImpl.UpdateCounter)
+          .AddMethod(__Method_GetList, serviceImpl.GetList)
+          .AddMethod(__Method_UpdateList, serviceImpl.UpdateList)
+          .AddMethod(__Method_AddListValue, serviceImpl.AddListValue)
+          .AddMethod(__Method_RemoveListValue, serviceImpl.RemoveListValue).Build();
     }
 
     /// <summary>Register service method with a service binder with or without implementation. Useful when customizing the service binding logic.
@@ -836,6 +1326,12 @@ namespace Agones.Dev.Sdk.Alpha {
       serviceBinder.AddMethod(__Method_GetPlayerCount, serviceImpl == null ? null : new grpc::UnaryServerMethod<global::Agones.Dev.Sdk.Alpha.Empty, global::Agones.Dev.Sdk.Alpha.Count>(serviceImpl.GetPlayerCount));
       serviceBinder.AddMethod(__Method_IsPlayerConnected, serviceImpl == null ? null : new grpc::UnaryServerMethod<global::Agones.Dev.Sdk.Alpha.PlayerID, global::Agones.Dev.Sdk.Alpha.Bool>(serviceImpl.IsPlayerConnected));
       serviceBinder.AddMethod(__Method_GetConnectedPlayers, serviceImpl == null ? null : new grpc::UnaryServerMethod<global::Agones.Dev.Sdk.Alpha.Empty, global::Agones.Dev.Sdk.Alpha.PlayerIDList>(serviceImpl.GetConnectedPlayers));
+      serviceBinder.AddMethod(__Method_GetCounter, serviceImpl == null ? null : new grpc::UnaryServerMethod<global::Agones.Dev.Sdk.Alpha.GetCounterRequest, global::Agones.Dev.Sdk.Alpha.Counter>(serviceImpl.GetCounter));
+      serviceBinder.AddMethod(__Method_UpdateCounter, serviceImpl == null ? null : new grpc::UnaryServerMethod<global::Agones.Dev.Sdk.Alpha.UpdateCounterRequest, global::Agones.Dev.Sdk.Alpha.Counter>(serviceImpl.UpdateCounter));
+      serviceBinder.AddMethod(__Method_GetList, serviceImpl == null ? null : new grpc::UnaryServerMethod<global::Agones.Dev.Sdk.Alpha.GetListRequest, global::Agones.Dev.Sdk.Alpha.List>(serviceImpl.GetList));
+      serviceBinder.AddMethod(__Method_UpdateList, serviceImpl == null ? null : new grpc::UnaryServerMethod<global::Agones.Dev.Sdk.Alpha.UpdateListRequest, global::Agones.Dev.Sdk.Alpha.List>(serviceImpl.UpdateList));
+      serviceBinder.AddMethod(__Method_AddListValue, serviceImpl == null ? null : new grpc::UnaryServerMethod<global::Agones.Dev.Sdk.Alpha.AddListValueRequest, global::Agones.Dev.Sdk.Alpha.List>(serviceImpl.AddListValue));
+      serviceBinder.AddMethod(__Method_RemoveListValue, serviceImpl == null ? null : new grpc::UnaryServerMethod<global::Agones.Dev.Sdk.Alpha.RemoveListValueRequest, global::Agones.Dev.Sdk.Alpha.List>(serviceImpl.RemoveListValue));
     }
 
   }
