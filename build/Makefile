@@ -846,7 +846,6 @@ update-go-deps:
 test-gen-crd-client:
 	mkdir -p build/tmp
 	mv ../pkg/client build/tmp
-	ls -ltra build/tmp
 	make gen-crd-client
 	diff -r build/tmp/client ../pkg/client || true
 
