@@ -46,6 +46,8 @@ agones:
   createPriorityClass: true
   priorityClassName: agones-system
   cloudProduct: "auto"
+  system:
+    requireDedicatedNode: false
   controller:
     resources: {}
       # requests:
@@ -58,14 +60,6 @@ agones:
       operator: "Equal"
       value: "true"
       effect: "NoExecute"
-    affinity:
-      nodeAffinity:
-        preferredDuringSchedulingIgnoredDuringExecution:
-        - weight: 1
-          preference:
-            matchExpressions:
-              - key: agones.dev/agones-system
-                operator: Exists
     generateTLS: true
     tlsCert: ""
     tlsKey: ""
@@ -110,14 +104,6 @@ agones:
       operator: "Equal"
       value: "true"
       effect: "NoExecute"
-    affinity:
-      nodeAffinity:
-        preferredDuringSchedulingIgnoredDuringExecution:
-        - weight: 1
-          preference:
-            matchExpressions:
-              - key: agones.dev/agones-system
-                operator: Exists
     generateTLS: true
     tlsCert: ""
     tlsKey: ""
@@ -170,14 +156,6 @@ agones:
       operator: "Equal"
       value: "true"
       effect: "NoExecute"
-    affinity:
-      nodeAffinity:
-        preferredDuringSchedulingIgnoredDuringExecution:
-        - weight: 1
-          preference:
-            matchExpressions:
-              - key: agones.dev/agones-system
-                operator: Exists
     replicas: 2
     http:
       expose: true
@@ -230,14 +208,6 @@ agones:
       operator: "Equal"
       value: "true"
       effect: "NoExecute"
-    affinity:
-      nodeAffinity:
-        preferredDuringSchedulingIgnoredDuringExecution:
-        - weight: 1
-          preference:
-            matchExpressions:
-              - key: agones.dev/agones-system
-                operator: Exists
     replicas: 3
     service:
       name: agones-allocator
