@@ -844,8 +844,8 @@ update-go-deps:
 	$(DOCKER_RUN) go mod vendor
 
 test-gen-crd-client:
-    mkdir -p build/tmp
-    mv pkg/client build/tmp
-    make gen-crd-client
-    diff -r build/tmp/client pkg/client || true
+	mkdir -p build/tmp
+	mv pkg/client build/tmp
+	make gen-crd-client
+	diff -r build/tmp/client pkg/client || true
 
