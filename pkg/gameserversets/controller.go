@@ -621,7 +621,7 @@ func computeStatus(list []*agonesv1.GameServer) agonesv1.GameServerSetStatus {
 		}
 
 		// Aggregates all Counters and Lists only for GameServer states Ready, Reserved, or Allocated.
-		if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) && gs.IsReady() {
+		if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) && gs.IsActive() {
 			status.Counters = aggregateCounters(status.Counters, gs.Status.Counters)
 			status.Lists = aggregateLists(status.Lists, gs.Status.Lists)
 		}

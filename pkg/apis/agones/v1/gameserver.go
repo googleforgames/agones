@@ -700,8 +700,8 @@ func (gs *GameServer) IsBeforeReady() bool {
 	return false
 }
 
-// IsReady returns true if the GameServer status is Ready, Reserved, or Allocated state.
-func (gs *GameServer) IsReady() bool {
+// IsActive returns true if the GameServer status is Ready, Reserved, or Allocated state.
+func (gs *GameServer) IsActive() bool {
 	switch gs.Status.State {
 	case GameServerStateAllocated:
 		return true
