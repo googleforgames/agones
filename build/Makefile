@@ -847,5 +847,12 @@ test-gen-crd-client:
 	mkdir -p build/tmp
 	mv ../pkg/client build/tmp
 	make gen-crd-client
-	diff -r build/tmp/client ../pkg/client || true
+	diff_output=$$(diff -bBr build/tmp/client ../pkg/client); \
+	if [ -z "$$diff_output" ]; then \
+		echo "No differences found. Deleting build/tmp"; \
+		rm -r build/tmp; \
+	else \
+		echo "Differences found."; \
+		echo "$$diff_output"; \
+	fi
 
