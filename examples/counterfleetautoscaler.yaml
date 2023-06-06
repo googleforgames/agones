@@ -33,13 +33,15 @@ spec:
    type: Counter # Counter based autoscaling
    counter:
      # The name of the Counter.
+     # Required.
      key: players
-     # Size of a buffer of counted items that are available in the Fleet.
-     # it can be specified either in absolute (i.e. 5) or percentage format (i.e. 5%)
-     bufferCount: 5
-     # minimum aggregate count capacity that can be provided by this FleetAutoscaler.
-     # if not specified, the actual minimum capacity will be bufferCount
-     minCount: 10
-     # maximum aggregate count capacity that can be provided by this FleetAutoscaler.
-     # required
-     maxCount: 100
+     # Size of a buffer of counted items that are available in the Fleet (available capacity).
+     # bufferSize can be specified either in absolute (i.e. 5) or percentage format (i.e. 5%).
+     # Required.
+     bufferSize: 5
+     # Minimum aggregate counter capacity that can be provided by this FleetAutoscaler.
+     # If minCapacity is not specified, the actual minimum capacity will be bufferSize.
+     minCapacity: 10
+     # Maximum aggregate counter capacity that can be provided by this FleetAutoscaler.
+     # Required.
+     maxCapacity: 100

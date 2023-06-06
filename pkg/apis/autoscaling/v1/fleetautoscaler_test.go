@@ -251,72 +251,72 @@ func TestFleetAutoscalerCounterValidateUpdate(t *testing.T) {
 			wantLength:   1,
 			wantField:    "counter",
 		},
-		"minCount size too large": {
+		"minCapacity size too large": {
 			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
-				fap.Counter.MinCount = int64(11)
+				fap.Counter.MinCapacity = int64(11)
 			}),
 			featureFlags: string(runtime.FeatureCountsAndLists) + "=true",
 			wantLength:   1,
-			wantField:    "minCount",
+			wantField:    "minCapacity",
 		},
-		"bufferCount size too small": {
+		"bufferSize size too small": {
 			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
-				fap.Counter.BufferCount = intstr.FromInt(0)
+				fap.Counter.BufferSize = intstr.FromInt(0)
 			}),
 			featureFlags: string(runtime.FeatureCountsAndLists) + "=true",
 			wantLength:   1,
-			wantField:    "bufferCount",
+			wantField:    "bufferSize",
 		},
-		"maxCount size too small": {
+		"maxCapacity size too small": {
 			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
-				fap.Counter.MaxCount = int64(4)
+				fap.Counter.MaxCapacity = int64(4)
 			}),
 			featureFlags: string(runtime.FeatureCountsAndLists) + "=true",
 			wantLength:   1,
-			wantField:    "maxCount",
+			wantField:    "maxCapacity",
 		},
-		"minCount size too small": {
+		"minCapacity size too small": {
 			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
-				fap.Counter.MinCount = int64(4)
+				fap.Counter.MinCapacity = int64(4)
 			}),
 			featureFlags: string(runtime.FeatureCountsAndLists) + "=true",
 			wantLength:   1,
-			wantField:    "minCount",
+			wantField:    "minCapacity",
 		},
-		"bufferCount percentage OK": {
+		"bufferSize percentage OK": {
 			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
-				fap.Counter.BufferCount.Type = intstr.String
-				fap.Counter.BufferCount = intstr.FromString("99%")
+				fap.Counter.BufferSize.Type = intstr.String
+				fap.Counter.BufferSize = intstr.FromString("99%")
 			}),
 			featureFlags: string(runtime.FeatureCountsAndLists) + "=true",
 			wantLength:   0,
 		},
-		"bufferCount percentage can't parse": {
+		"bufferSize percentage can't parse": {
 			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
-				fap.Counter.BufferCount.Type = intstr.String
-				fap.Counter.BufferCount = intstr.FromString("99.0%")
+				fap.Counter.BufferSize.Type = intstr.String
+				fap.Counter.BufferSize = intstr.FromString("99.0%")
 			}),
 			featureFlags: string(runtime.FeatureCountsAndLists) + "=true",
 			wantLength:   1,
-			wantField:    "bufferCount",
+			wantField:    "bufferSize",
 		},
-		"bufferCount percentage too small": {
+		"bufferSize percentage too small": {
 			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
-				fap.Counter.BufferCount.Type = intstr.String
-				fap.Counter.BufferCount = intstr.FromString("0%")
+				fap.Counter.BufferSize.Type = intstr.String
+				fap.Counter.BufferSize = intstr.FromString("0%")
 			}),
 			featureFlags: string(runtime.FeatureCountsAndLists) + "=true",
 			wantLength:   1,
-			wantField:    "bufferCount",
+			wantField:    "bufferSize",
 		},
-		"bufferCount percentage too large": {
+		"bufferSize percentage too large": {
 			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
-				fap.Counter.BufferCount.Type = intstr.String
-				fap.Counter.BufferCount = intstr.FromString("100%")
+				fap.Counter.BufferSize.Type = intstr.String
+				fap.Counter.BufferSize = intstr.FromString("100%")
 			}),
 			featureFlags: string(runtime.FeatureCountsAndLists) + "=true",
 			wantLength:   1,
-			wantField:    "bufferCount",
+			wantField:    "bufferSize",
 		},
 	}
 
@@ -368,72 +368,72 @@ func TestFleetAutoscalerListValidateUpdate(t *testing.T) {
 			wantLength:   1,
 			wantField:    "list",
 		},
-		"minLength size too large": {
+		"minCapacity size too large": {
 			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
-				fap.List.MinLength = int64(11)
+				fap.List.MinCapacity = int64(11)
 			}),
 			featureFlags: string(runtime.FeatureCountsAndLists) + "=true",
 			wantLength:   1,
-			wantField:    "minLength",
+			wantField:    "minCapacity",
 		},
-		"bufferLength size too small": {
+		"bufferSize size too small": {
 			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
-				fap.List.BufferLength = intstr.FromInt(0)
+				fap.List.BufferSize = intstr.FromInt(0)
 			}),
 			featureFlags: string(runtime.FeatureCountsAndLists) + "=true",
 			wantLength:   1,
-			wantField:    "bufferLength",
+			wantField:    "bufferSize",
 		},
-		"maxLength size too small": {
+		"maxCapacity size too small": {
 			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
-				fap.List.MaxLength = int64(4)
+				fap.List.MaxCapacity = int64(4)
 			}),
 			featureFlags: string(runtime.FeatureCountsAndLists) + "=true",
 			wantLength:   1,
-			wantField:    "maxLength",
+			wantField:    "maxCapacity",
 		},
-		"minLength size too small": {
+		"minCapacity size too small": {
 			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
-				fap.List.MinLength = int64(4)
+				fap.List.MinCapacity = int64(4)
 			}),
 			featureFlags: string(runtime.FeatureCountsAndLists) + "=true",
 			wantLength:   1,
-			wantField:    "minLength",
+			wantField:    "minCapacity",
 		},
-		"bufferLength percentage OK": {
+		"bufferSize percentage OK": {
 			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
-				fap.List.BufferLength.Type = intstr.String
-				fap.List.BufferLength = intstr.FromString("99%")
+				fap.List.BufferSize.Type = intstr.String
+				fap.List.BufferSize = intstr.FromString("99%")
 			}),
 			featureFlags: string(runtime.FeatureCountsAndLists) + "=true",
 			wantLength:   0,
 		},
-		"bufferLength percentage can't parse": {
+		"bufferSize percentage can't parse": {
 			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
-				fap.List.BufferLength.Type = intstr.String
-				fap.List.BufferLength = intstr.FromString("99.0%")
+				fap.List.BufferSize.Type = intstr.String
+				fap.List.BufferSize = intstr.FromString("99.0%")
 			}),
 			featureFlags: string(runtime.FeatureCountsAndLists) + "=true",
 			wantLength:   1,
-			wantField:    "bufferLength",
+			wantField:    "bufferSize",
 		},
-		"bufferLength percentage too small": {
+		"bufferSize percentage too small": {
 			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
-				fap.List.BufferLength.Type = intstr.String
-				fap.List.BufferLength = intstr.FromString("0%")
+				fap.List.BufferSize.Type = intstr.String
+				fap.List.BufferSize = intstr.FromString("0%")
 			}),
 			featureFlags: string(runtime.FeatureCountsAndLists) + "=true",
 			wantLength:   1,
-			wantField:    "bufferLength",
+			wantField:    "bufferSize",
 		},
-		"bufferLength percentage too large": {
+		"bufferSize percentage too large": {
 			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
-				fap.List.BufferLength.Type = intstr.String
-				fap.List.BufferLength = intstr.FromString("100%")
+				fap.List.BufferSize.Type = intstr.String
+				fap.List.BufferSize = intstr.FromString("100%")
 			}),
 			featureFlags: string(runtime.FeatureCountsAndLists) + "=true",
 			wantLength:   1,
-			wantField:    "bufferLength",
+			wantField:    "bufferSize",
 		},
 	}
 
@@ -508,15 +508,15 @@ func customFixture(t FleetAutoscalerPolicyType) *FleetAutoscaler {
 		res.Spec.Policy.Type = CounterPolicyType
 		res.Spec.Policy.Buffer = nil
 		res.Spec.Policy.Counter = &CounterPolicy{
-			BufferCount: intstr.FromInt(5),
-			MaxCount:    10,
+			BufferSize:  intstr.FromInt(5),
+			MaxCapacity: 10,
 		}
 	case ListPolicyType:
 		res.Spec.Policy.Type = ListPolicyType
 		res.Spec.Policy.Buffer = nil
 		res.Spec.Policy.List = &ListPolicy{
-			BufferLength: intstr.FromInt(5),
-			MaxLength:    10,
+			BufferSize:  intstr.FromInt(5),
+			MaxCapacity: 10,
 		}
 	}
 	return res

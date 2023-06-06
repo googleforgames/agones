@@ -111,17 +111,19 @@ spec:
                       type: object
                       nullable: true
                       required:
-                        - maxCount
+                        - key
+                        - bufferSize
+                        - maxCapacity
                       properties:
                         key:  # The name of the Counter.
                           type: string
-                        minCount:  # Minimum aggregate count capacity that can be provided by this FleetAutoscaler. If not specified, the actual minimum capacity will be bufferCount.
+                        minCapacity:  # Minimum aggregate counter capacity that can be provided by this FleetAutoscaler. If not specified, the actual minimum capacity will be bufferSize.
                           type: integer
                           minimum: 0
-                        maxCount:  # Maximum aggregate count capacity that can be provided by this FleetAutoscaler. Required.
+                        maxCapacity:  # Maximum aggregate counter capacity that can be provided by this FleetAutoscaler. Required.
                           type: integer
                           minimum: 1
-                        bufferCount:  # Size of a buffer of counted items that are available in the Fleet. It can be specified either in absolute (i.e. 5) or percentage format (i.e. 5%).
+                        bufferSize:  # Size of a buffer of counted items that are available in the Fleet (available capacity). It can be specified either in absolute (i.e. 5) or percentage format (i.e. 5%).
                           x-kubernetes-int-or-string: true
                           anyOf:
                             - type: integer
@@ -130,17 +132,19 @@ spec:
                       type: object
                       nullable: true
                       required:
-                        - maxLength
+                        - key
+                        - bufferSize
+                        - maxCapacity
                       properties:
                         key:  # The name of the List.
                           type: string
-                        minLength:  # Minimum aggregate list capacity that can be provided by this FleetAutoscaler. If not specified, the actual minimum capacity will be bufferCount.
+                        minCapacity:  # Minimum aggregate list capacity that can be provided by this FleetAutoscaler. If not specified, the actual minimum capacity will be bufferSize.
                           type: integer
                           minimum: 0
-                        maxLength:  # Maximum aggregate list capacity that can be provided by this FleetAutoscaler. Required.
+                        maxCapacity:  # Maximum aggregate list capacity that can be provided by this FleetAutoscaler. Required.
                           type: integer
                           minimum: 1
-                        bufferLength:  # Size of a buffer based on the list capacity that is available over the current aggregate list length in the Fleet. It can be specified either in absolute (i.e. 5) or percentage format (i.e. 5%).
+                        bufferSize:  # Size of a buffer based on the list capacity that is available over the current aggregate list length in the Fleet. It can be specified either in absolute (i.e. 5) or percentage format (i.e. 5%).
                           x-kubernetes-int-or-string: true
                           anyOf:
                             - type: integer

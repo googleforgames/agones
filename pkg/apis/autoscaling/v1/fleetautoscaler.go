@@ -155,48 +155,44 @@ type WebhookPolicy admregv1.WebhookClientConfig
 
 // CounterPolicy controls the desired behavior of the Counter autoscaler policy.
 type CounterPolicy struct {
-	// Key is the name of the Counter
+	// Key is the name of the Counter. Required field.
 	Key string `json:"key"`
 
-	// MaxCount is the maximum aggregate Counter available capacity (Counter.Capacity minus Counter.Count)
-	// across the fleet.
-	// MaxCount must be bigger than both MinCount and BufferCount
-	MaxCount int64 `json:"maxCount"`
+	// MaxCapacity is the maximum aggregate Counter total capacity across the fleet.
+	// MaxCapacity must be bigger than both MinCapacity and BufferSize. Required field.
+	MaxCapacity int64 `json:"maxCapacity"`
 
-	// MinCount is the minimum aggregate Counter available capacity (Counter.Capacity minus Counter.Count)
-	// across the fleet.
-	// If zero, MinCount is ignored.
-	// If non zero, MinCount must be smaller than MaxCount and bigger than BufferCount
-	MinCount int64 `json:"minCount"`
+	// MinCapacity is the minimum aggregate Counter total capacity across the fleet.
+	// If zero, MinCapacity is ignored.
+	// If non zero, MinCapacity must be smaller than MaxCapacity and bigger than BufferSize
+	MinCapacity int64 `json:"minCapacity"`
 
-	// BufferCount is the size of a buffer of counted items that are available in the Fleet.
-	// Value can be an absolute number (ex: 5) or a percentage of desired gs instances (ex: 5%)
-	// Absolute number is calculated from percentage by rounding up.
-	// Must be bigger than 0
-	BufferCount intstr.IntOrString `json:"bufferCount"`
+	// BufferSize is the size of a buffer of counted items that are available in the Fleet (available
+	// capacity). Value can be an absolute number (ex: 5) or a percentage of desired gs instances
+	// (ex: 5%). An absolute number is calculated from percentage by rounding up.
+	// Must be bigger than 0. Required field.
+	BufferSize intstr.IntOrString `json:"bufferSize"`
 }
 
 // ListPolicy controls the desired behavior of the list autoscaler policy.
 type ListPolicy struct {
-	// Key is the name of the List
+	// Key is the name of the List. Required field.
 	Key string `json:"key"`
 
-	// MaxLength is the maximum aggregate List available capacity (List.Capacity minus length(List.Items))
-	// across the fleet.
-	// MaxLength must be bigger than both MinLength and BufferLength.
-	MaxLength int64 `json:"maxLength"`
+	// MaxCapacity is the maximum aggregate List total capacity across the fleet.
+	// MaxCapacity must be bigger than both MinCapacity and BufferSize. Required field.
+	MaxCapacity int64 `json:"maxCapacity"`
 
-	// MinLength is the maximum aggregate List available capacity (List.Capacity minus length(List.Items))
-	// across the fleet.
+	// MinCapacity is the minimum aggregate List total capacity across the fleet.
 	// If zero, it is ignored.
-	// If non zero, it must be smaller than MaxLength and bigger than BufferLength
-	MinLength int64 `json:"minLength"`
+	// If non zero, it must be smaller than MaxCapacity and bigger than BufferSize
+	MinCapacity int64 `json:"minCapacity"`
 
-	// BufferLength is the size of a buffer based on the list capacity that is available over the
-	// current aggregate list length in the Fleet. It can be specified either in absolute (i.e. 5)
-	// or percentage format (i.e. 5%).
-	// Must be bigger than 0
-	BufferLength intstr.IntOrString `json:"bufferLength"`
+	// BufferSize is the size of a buffer based on the list capacity that is available over the
+	// current aggregate list length in the Fleet (available capacity). It can be specified either
+	// as an absolute value (i.e. 5) or percentage format (i.e. 5%).
+	// Must be bigger than 0. Required field.
+	BufferSize intstr.IntOrString `json:"bufferSize"`
 }
 
 // FixedIntervalSync controls the desired behavior of the fixed interval based sync.
@@ -400,8 +396,8 @@ func (b *BufferPolicy) ValidateBufferPolicy(causes []metav1.StatusCause) []metav
 	return causes
 }
 
-// ValidateCounterPolicy validates the FleetAutoscaler Counter policy settings
-// #TODO: Does NOT validate if a Counter with name CounterPolicy.Key is present in the fleet.
+// ValidateCounterPolicy validates the FleetAutoscaler Counter policy settings.
+// Does not validate if a Counter with name CounterPolicy.Key is present in the fleet.
 // nolint:dupl  // Linter errors on lines are duplicate of ValidateListPolicy
 func (c *CounterPolicy) ValidateCounterPolicy(causes []metav1.StatusCause) []metav1.StatusCause {
 	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
@@ -420,43 +416,43 @@ func (c *CounterPolicy) ValidateCounterPolicy(causes []metav1.StatusCause) []met
 		})
 	}
 
-	if c.MinCount > c.MaxCount {
+	if c.MinCapacity > c.MaxCapacity {
 		causes = append(causes, metav1.StatusCause{
 			Type:    metav1.CauseTypeFieldValueInvalid,
-			Field:   "minCount",
-			Message: "minCount is bigger than maxCount",
+			Field:   "minCapacity",
+			Message: "minCapacity is bigger than maxCapacity",
 		})
 	}
 
-	if c.BufferCount.Type == intstr.Int {
-		if c.BufferCount.IntValue() <= 0 {
+	if c.BufferSize.Type == intstr.Int {
+		if c.BufferSize.IntValue() <= 0 {
 			causes = append(causes, metav1.StatusCause{
 				Type:    metav1.CauseTypeFieldValueInvalid,
-				Field:   "bufferCount",
-				Message: "bufferCount must be bigger than 0",
+				Field:   "bufferSize",
+				Message: "bufferSize must be bigger than 0",
 			})
 		}
-		if c.MaxCount < int64(c.BufferCount.IntValue()) {
+		if c.MaxCapacity < int64(c.BufferSize.IntValue()) {
 			causes = append(causes, metav1.StatusCause{
 				Type:    metav1.CauseTypeFieldValueInvalid,
-				Field:   "maxCount",
-				Message: "maxCount must be bigger than bufferCount",
+				Field:   "maxCapacity",
+				Message: "maxCapacity must be bigger than bufferSize",
 			})
 		}
-		if c.MinCount != 0 && c.MinCount < int64(c.BufferCount.IntValue()) {
+		if c.MinCapacity != 0 && c.MinCapacity < int64(c.BufferSize.IntValue()) {
 			causes = append(causes, metav1.StatusCause{
 				Type:    metav1.CauseTypeFieldValueInvalid,
-				Field:   "minCount",
-				Message: "minCount is smaller than bufferCount",
+				Field:   "minCapacity",
+				Message: "minCapacity is smaller than bufferSize",
 			})
 		}
 	} else {
-		r, err := intstr.GetValueFromIntOrPercent(&c.BufferCount, 100, true)
+		r, err := intstr.GetValueFromIntOrPercent(&c.BufferSize, 100, true)
 		if err != nil || r < 1 || r > 99 {
 			causes = append(causes, metav1.StatusCause{
 				Type:    metav1.CauseTypeFieldValueInvalid,
-				Field:   "bufferCount",
-				Message: "bufferCount does not have a valid percentage value (1%-99%)",
+				Field:   "bufferSize",
+				Message: "bufferSize does not have a valid percentage value (1%-99%)",
 			})
 		}
 	}
@@ -464,8 +460,8 @@ func (c *CounterPolicy) ValidateCounterPolicy(causes []metav1.StatusCause) []met
 	return causes
 }
 
-// ValidateListPolicy validates the FleetAutoscaler List policy settings
-// #TODO: Does NOT validate if a List with name ListPolicy.Key is present in the fleet.
+// ValidateListPolicy validates the FleetAutoscaler List policy settings.
+// Does not validate if a List with name ListPolicy.Key is present in the fleet.
 // nolint:dupl  // Linter errors on lines are duplicate of ValidateCounterPolicy
 func (l *ListPolicy) ValidateListPolicy(causes []metav1.StatusCause) []metav1.StatusCause {
 	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
@@ -482,42 +478,42 @@ func (l *ListPolicy) ValidateListPolicy(causes []metav1.StatusCause) []metav1.St
 			Message: "list policy config params are missing",
 		})
 	}
-	if l.MinLength > l.MaxLength {
+	if l.MinCapacity > l.MaxCapacity {
 		causes = append(causes, metav1.StatusCause{
 			Type:    metav1.CauseTypeFieldValueInvalid,
-			Field:   "minLength",
-			Message: "minLength is bigger than maxLength",
+			Field:   "minCapacity",
+			Message: "minCapacity is bigger than maxCapacity",
 		})
 	}
-	if l.BufferLength.Type == intstr.Int {
-		if l.BufferLength.IntValue() <= 0 {
+	if l.BufferSize.Type == intstr.Int {
+		if l.BufferSize.IntValue() <= 0 {
 			causes = append(causes, metav1.StatusCause{
 				Type:    metav1.CauseTypeFieldValueInvalid,
-				Field:   "bufferLength",
-				Message: "bufferLength must be bigger than 0",
+				Field:   "bufferSize",
+				Message: "bufferSize must be bigger than 0",
 			})
 		}
-		if l.MaxLength < int64(l.BufferLength.IntValue()) {
+		if l.MaxCapacity < int64(l.BufferSize.IntValue()) {
 			causes = append(causes, metav1.StatusCause{
 				Type:    metav1.CauseTypeFieldValueInvalid,
-				Field:   "maxLength",
-				Message: "maxLength must be bigger than bufferLength",
+				Field:   "maxCapacity",
+				Message: "maxCapacity must be bigger than bufferSize",
 			})
 		}
-		if l.MinLength != 0 && l.MinLength < int64(l.BufferLength.IntValue()) {
+		if l.MinCapacity != 0 && l.MinCapacity < int64(l.BufferSize.IntValue()) {
 			causes = append(causes, metav1.StatusCause{
 				Type:    metav1.CauseTypeFieldValueInvalid,
-				Field:   "minLength",
-				Message: "minLength is smaller than bufferLength",
+				Field:   "minCapacity",
+				Message: "minCapacity is smaller than bufferSize",
 			})
 		}
 	} else {
-		r, err := intstr.GetValueFromIntOrPercent(&l.BufferLength, 100, true)
+		r, err := intstr.GetValueFromIntOrPercent(&l.BufferSize, 100, true)
 		if err != nil || r < 1 || r > 99 {
 			causes = append(causes, metav1.StatusCause{
 				Type:    metav1.CauseTypeFieldValueInvalid,
-				Field:   "bufferLength",
-				Message: "bufferLength does not have a valid percentage value (1%-99%)",
+				Field:   "bufferSize",
+				Message: "bufferSize does not have a valid percentage value (1%-99%)",
 			})
 		}
 	}
