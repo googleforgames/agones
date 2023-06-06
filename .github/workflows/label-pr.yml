@@ -25,15 +25,15 @@ jobs:
   label:
     runs-on: ubuntu-latest
     permissions:
+      contents: read
       pull-requests: write
+      issues: write
 
     steps:
-
       - name: Label PR
         uses: actions/github-script@v4
         with:
-          async: yes
-          repo-token: ${{ secrets.AGONES_BOT }}
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const keywords = {
               "breaking": "kind/breaking",
@@ -43,16 +43,12 @@ jobs:
               "documentation": "kind/documentation",
               "hotfix": "kind/hotfix"
             };
-
             const prBody = context.payload.pull_request.body;
             const prLabels = [];
-
             const regex = /^\s*\/kind\s+(.+)$/m;
             const match = prBody.match(regex);
-
             console.log(`PR body: '${prBody}'`);
             console.log(`Regex match: '${match}'`);
-
             if (match && match[1] in keywords) {
               const keyword = match[1];
               const label = keywords[keyword];
@@ -62,9 +58,8 @@ jobs:
               console.log(`Adding label: 'kind/other' as no matching keyword found.`);
               prLabels.push("kind/other");
             }
-
             try {
-              await github.issues.addLabels({
+              github.issues.addLabels({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: context.payload.pull_request.number,
