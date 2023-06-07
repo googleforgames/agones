@@ -842,3 +842,17 @@ update-go-deps:
 	$(DOCKER_RUN) go get -u agones.dev/agones
 	$(DOCKER_RUN) go mod tidy
 	$(DOCKER_RUN) go mod vendor
+
+test-gen-crd-client:
+	mkdir -p build/tmp
+	mv ../pkg/client build/tmp
+	make gen-crd-client
+	diff_output=$$(diff -bBr build/tmp/client ../pkg/client); \
+	if [ -z "$$diff_output" ]; then \
+		echo "No differences found. Deleting build/tmp"; \
+		rm -r build/tmp; \
+	else \
+		echo "Differences found."; \
+		echo "$$diff_output"; \
+	fi
+
