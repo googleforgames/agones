@@ -43,12 +43,7 @@ and copy it into a release issue. Fill in relevant values, found inside {}
   - [ ] config.toml updates:
     - [ ] Update `release_branch` to the new release branch for {version}.
     - [ ] Update `release_version` with the new release version {version}.
-    - [ ] Copy `dev_supported_k8s` to `supported_k8s`.
-    - [ ] Copy `dev_k8s_api_version` to `k8s_api_version`.
-    - [ ] Copy `dev_gke_example_cluster_version` to `gke_example_cluster_version`.
-    - [ ] Copy `dev_aks_example_cluster_version` to `aks_example_cluster_version`.
-    - [ ] Copy `dev_eks_example_cluster_version` to `eks_example_cluster_version`.
-    - [ ] Copy `dev_minikube_example_cluster_version` to `minikube_example_cluster_version`.
+    - [ ] Navigate to `agones` directory and run `go run build/scripts/site-config-version-update/main.go` to synchronizes data between dev and prod.
     - [ ] Update documentation with updated example images tags.
 - [ ] Create PR with these changes, and merge them with an approval.
 - [ ] Run `git remote update && git checkout main && git reset --hard upstream/main` to ensure your code is in line
