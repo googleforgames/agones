@@ -6946,6 +6946,75 @@ capacity in the cluster etc)</p>
 </tr>
 </tbody>
 </table>
+<h3 id="autoscaling.agones.dev/v1.CounterPolicy">CounterPolicy
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#autoscaling.agones.dev/v1.FleetAutoscalerPolicy">FleetAutoscalerPolicy</a>)
+</p>
+<p>
+<p>CounterPolicy controls the desired behavior of the Counter autoscaler policy.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>key</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Key is the name of the Counter. Required field.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>maxCapacity</code></br>
+<em>
+int64
+</em>
+</td>
+<td>
+<p>MaxCapacity is the maximum aggregate Counter total capacity across the fleet.
+MaxCapacity must be bigger than both MinCapacity and BufferSize. Required field.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>minCapacity</code></br>
+<em>
+int64
+</em>
+</td>
+<td>
+<p>MinCapacity is the minimum aggregate Counter total capacity across the fleet.
+If zero, MinCapacity is ignored.
+If non zero, MinCapacity must be smaller than MaxCapacity and bigger than BufferSize</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>bufferSize</code></br>
+<em>
+k8s.io/apimachinery/pkg/util/intstr.IntOrString
+</em>
+</td>
+<td>
+<p>BufferSize is the size of a buffer of counted items that are available in the Fleet (available
+capacity). Value can be an absolute number (ex: 5) or a percentage of desired gs instances
+(ex: 5%). An absolute number is calculated from percentage by rounding up.
+Must be bigger than 0. Required field.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="autoscaling.agones.dev/v1.FixedIntervalSync">FixedIntervalSync
 </h3>
 <p>
@@ -7195,6 +7264,38 @@ WebhookPolicy
 <p>Webhook policy config params. Present only if FleetAutoscalerPolicyType = Webhook.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>counter</code></br>
+<em>
+<a href="#autoscaling.agones.dev/v1.CounterPolicy">
+CounterPolicy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>[Stage:Alpha]
+[FeatureFlag:CountsAndLists]
+Counter policy config params. Present only if FleetAutoscalerPolicyType = Counter.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>list</code></br>
+<em>
+<a href="#autoscaling.agones.dev/v1.ListPolicy">
+ListPolicy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>[Stage:Alpha]
+[FeatureFlag:CountsAndLists]
+List policy config params. Present only if FleetAutoscalerPolicyType = List.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="autoscaling.agones.dev/v1.FleetAutoscalerPolicyType">FleetAutoscalerPolicyType
@@ -7400,6 +7501,75 @@ FixedIntervalSync
 <p>
 <p>FleetAutoscalerSyncType is the sync strategy for a given Fleet</p>
 </p>
+<h3 id="autoscaling.agones.dev/v1.ListPolicy">ListPolicy
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#autoscaling.agones.dev/v1.FleetAutoscalerPolicy">FleetAutoscalerPolicy</a>)
+</p>
+<p>
+<p>ListPolicy controls the desired behavior of the list autoscaler policy.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>key</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Key is the name of the List. Required field.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>maxCapacity</code></br>
+<em>
+int64
+</em>
+</td>
+<td>
+<p>MaxCapacity is the maximum aggregate List total capacity across the fleet.
+MaxCapacity must be bigger than both MinCapacity and BufferSize. Required field.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>minCapacity</code></br>
+<em>
+int64
+</em>
+</td>
+<td>
+<p>MinCapacity is the minimum aggregate List total capacity across the fleet.
+If zero, it is ignored.
+If non zero, it must be smaller than MaxCapacity and bigger than BufferSize</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>bufferSize</code></br>
+<em>
+k8s.io/apimachinery/pkg/util/intstr.IntOrString
+</em>
+</td>
+<td>
+<p>BufferSize is the size of a buffer based on the list capacity that is available over the
+current aggregate list length in the Fleet (available capacity). It can be specified either
+as an absolute value (i.e. 5) or percentage format (i.e. 5%).
+Must be bigger than 0. Required field.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="autoscaling.agones.dev/v1.WebhookPolicy">WebhookPolicy
 </h3>
 <p>
