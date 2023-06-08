@@ -72,6 +72,16 @@ type FleetAutoscalerPolicy struct {
 	// Webhook policy config params. Present only if FleetAutoscalerPolicyType = Webhook.
 	// +optional
 	Webhook *WebhookPolicy `json:"webhook,omitempty"`
+	// [Stage:Alpha]
+	// [FeatureFlag:CountsAndLists]
+	// Counter policy config params. Present only if FleetAutoscalerPolicyType = Counter.
+	// +optional
+	Counter *CounterPolicy `json:"counter,omitempty"`
+	// [Stage:Alpha]
+	// [FeatureFlag:CountsAndLists]
+	// List policy config params. Present only if FleetAutoscalerPolicyType = List.
+	// +optional
+	List *ListPolicy `json:"list,omitempty"`
 }
 
 // FleetAutoscalerPolicyType is the policy for autoscaling
@@ -98,6 +108,16 @@ const (
 	// WebhookPolicyType is a simple webhook strategy used for horizontal fleet scaling
 	// GameServers
 	WebhookPolicyType FleetAutoscalerPolicyType = "Webhook"
+	// [Stage:Alpha]
+	// [FeatureFlag:CountsAndLists]
+	// CounterPolicyType is for Counter based fleet autoscaling
+	// nolint:revive // Linter contains comment doesn't start with CounterPolicyType
+	CounterPolicyType FleetAutoscalerPolicyType = "Counter"
+	// [Stage:Alpha]
+	// [FeatureFlag:CountsAndLists]
+	// ListPolicyType is for List based fleet autoscaling
+	// nolint:revive // Linter contains comment doesn't start with ListPolicyType
+	ListPolicyType FleetAutoscalerPolicyType = "List"
 	// FixedIntervalSyncType is a simple fixed interval based strategy for trigger autoscaling
 	FixedIntervalSyncType FleetAutoscalerSyncType = "FixedInterval"
 
@@ -132,6 +152,48 @@ type BufferPolicy struct {
 // It contains the description of the webhook autoscaler service
 // used to form url which is accessible inside the cluster
 type WebhookPolicy admregv1.WebhookClientConfig
+
+// CounterPolicy controls the desired behavior of the Counter autoscaler policy.
+type CounterPolicy struct {
+	// Key is the name of the Counter. Required field.
+	Key string `json:"key"`
+
+	// MaxCapacity is the maximum aggregate Counter total capacity across the fleet.
+	// MaxCapacity must be bigger than both MinCapacity and BufferSize. Required field.
+	MaxCapacity int64 `json:"maxCapacity"`
+
+	// MinCapacity is the minimum aggregate Counter total capacity across the fleet.
+	// If zero, MinCapacity is ignored.
+	// If non zero, MinCapacity must be smaller than MaxCapacity and bigger than BufferSize
+	MinCapacity int64 `json:"minCapacity"`
+
+	// BufferSize is the size of a buffer of counted items that are available in the Fleet (available
+	// capacity). Value can be an absolute number (ex: 5) or a percentage of desired gs instances
+	// (ex: 5%). An absolute number is calculated from percentage by rounding up.
+	// Must be bigger than 0. Required field.
+	BufferSize intstr.IntOrString `json:"bufferSize"`
+}
+
+// ListPolicy controls the desired behavior of the list autoscaler policy.
+type ListPolicy struct {
+	// Key is the name of the List. Required field.
+	Key string `json:"key"`
+
+	// MaxCapacity is the maximum aggregate List total capacity across the fleet.
+	// MaxCapacity must be bigger than both MinCapacity and BufferSize. Required field.
+	MaxCapacity int64 `json:"maxCapacity"`
+
+	// MinCapacity is the minimum aggregate List total capacity across the fleet.
+	// If zero, it is ignored.
+	// If non zero, it must be smaller than MaxCapacity and bigger than BufferSize
+	MinCapacity int64 `json:"minCapacity"`
+
+	// BufferSize is the size of a buffer based on the list capacity that is available over the
+	// current aggregate list length in the Fleet (available capacity). It can be specified either
+	// as an absolute value (i.e. 5) or percentage format (i.e. 5%).
+	// Must be bigger than 0. Required field.
+	BufferSize intstr.IntOrString `json:"bufferSize"`
+}
 
 // FixedIntervalSync controls the desired behavior of the fixed interval based sync.
 type FixedIntervalSync struct {
@@ -202,6 +264,12 @@ func (fas *FleetAutoscaler) Validate(causes []metav1.StatusCause) []metav1.Statu
 
 	case WebhookPolicyType:
 		causes = fas.Spec.Policy.Webhook.ValidateWebhookPolicy(causes)
+
+	case CounterPolicyType:
+		causes = fas.Spec.Policy.Counter.ValidateCounterPolicy(causes)
+
+	case ListPolicyType:
+		causes = fas.Spec.Policy.List.ValidateListPolicy(causes)
 	}
 
 	if runtime.FeatureEnabled(runtime.FeatureCustomFasSyncInterval) && fas.Spec.Sync != nil {
@@ -322,6 +390,130 @@ func (b *BufferPolicy) ValidateBufferPolicy(causes []metav1.StatusCause) []metav
 				Type:    metav1.CauseTypeFieldValueInvalid,
 				Field:   "minReplicas",
 				Message: "minReplicas should be above 0 when used with percentage value bufferSize",
+			})
+		}
+	}
+	return causes
+}
+
+// ValidateCounterPolicy validates the FleetAutoscaler Counter policy settings.
+// Does not validate if a Counter with name CounterPolicy.Key is present in the fleet.
+// nolint:dupl  // Linter errors on lines are duplicate of ValidateListPolicy
+func (c *CounterPolicy) ValidateCounterPolicy(causes []metav1.StatusCause) []metav1.StatusCause {
+	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
+		return append(causes, metav1.StatusCause{
+			Type:    metav1.CauseTypeFieldValueInvalid,
+			Field:   "counter",
+			Message: "feature CountsAndLists must be enabled",
+		})
+	}
+
+	if c == nil {
+		return append(causes, metav1.StatusCause{
+			Type:    metav1.CauseTypeFieldValueInvalid,
+			Field:   "counter",
+			Message: "counter policy config params are missing",
+		})
+	}
+
+	if c.MinCapacity > c.MaxCapacity {
+		causes = append(causes, metav1.StatusCause{
+			Type:    metav1.CauseTypeFieldValueInvalid,
+			Field:   "minCapacity",
+			Message: "minCapacity is bigger than maxCapacity",
+		})
+	}
+
+	if c.BufferSize.Type == intstr.Int {
+		if c.BufferSize.IntValue() <= 0 {
+			causes = append(causes, metav1.StatusCause{
+				Type:    metav1.CauseTypeFieldValueInvalid,
+				Field:   "bufferSize",
+				Message: "bufferSize must be bigger than 0",
+			})
+		}
+		if c.MaxCapacity < int64(c.BufferSize.IntValue()) {
+			causes = append(causes, metav1.StatusCause{
+				Type:    metav1.CauseTypeFieldValueInvalid,
+				Field:   "maxCapacity",
+				Message: "maxCapacity must be bigger than bufferSize",
+			})
+		}
+		if c.MinCapacity != 0 && c.MinCapacity < int64(c.BufferSize.IntValue()) {
+			causes = append(causes, metav1.StatusCause{
+				Type:    metav1.CauseTypeFieldValueInvalid,
+				Field:   "minCapacity",
+				Message: "minCapacity is smaller than bufferSize",
+			})
+		}
+	} else {
+		r, err := intstr.GetValueFromIntOrPercent(&c.BufferSize, 100, true)
+		if err != nil || r < 1 || r > 99 {
+			causes = append(causes, metav1.StatusCause{
+				Type:    metav1.CauseTypeFieldValueInvalid,
+				Field:   "bufferSize",
+				Message: "bufferSize does not have a valid percentage value (1%-99%)",
+			})
+		}
+	}
+
+	return causes
+}
+
+// ValidateListPolicy validates the FleetAutoscaler List policy settings.
+// Does not validate if a List with name ListPolicy.Key is present in the fleet.
+// nolint:dupl  // Linter errors on lines are duplicate of ValidateCounterPolicy
+func (l *ListPolicy) ValidateListPolicy(causes []metav1.StatusCause) []metav1.StatusCause {
+	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
+		return append(causes, metav1.StatusCause{
+			Type:    metav1.CauseTypeFieldValueInvalid,
+			Field:   "list",
+			Message: "feature CountsAndLists must be enabled",
+		})
+	}
+	if l == nil {
+		return append(causes, metav1.StatusCause{
+			Type:    metav1.CauseTypeFieldValueInvalid,
+			Field:   "list",
+			Message: "list policy config params are missing",
+		})
+	}
+	if l.MinCapacity > l.MaxCapacity {
+		causes = append(causes, metav1.StatusCause{
+			Type:    metav1.CauseTypeFieldValueInvalid,
+			Field:   "minCapacity",
+			Message: "minCapacity is bigger than maxCapacity",
+		})
+	}
+	if l.BufferSize.Type == intstr.Int {
+		if l.BufferSize.IntValue() <= 0 {
+			causes = append(causes, metav1.StatusCause{
+				Type:    metav1.CauseTypeFieldValueInvalid,
+				Field:   "bufferSize",
+				Message: "bufferSize must be bigger than 0",
+			})
+		}
+		if l.MaxCapacity < int64(l.BufferSize.IntValue()) {
+			causes = append(causes, metav1.StatusCause{
+				Type:    metav1.CauseTypeFieldValueInvalid,
+				Field:   "maxCapacity",
+				Message: "maxCapacity must be bigger than bufferSize",
+			})
+		}
+		if l.MinCapacity != 0 && l.MinCapacity < int64(l.BufferSize.IntValue()) {
+			causes = append(causes, metav1.StatusCause{
+				Type:    metav1.CauseTypeFieldValueInvalid,
+				Field:   "minCapacity",
+				Message: "minCapacity is smaller than bufferSize",
+			})
+		}
+	} else {
+		r, err := intstr.GetValueFromIntOrPercent(&l.BufferSize, 100, true)
+		if err != nil || r < 1 || r > 99 {
+			causes = append(causes, metav1.StatusCause{
+				Type:    metav1.CauseTypeFieldValueInvalid,
+				Field:   "bufferSize",
+				Message: "bufferSize does not have a valid percentage value (1%-99%)",
 			})
 		}
 	}
