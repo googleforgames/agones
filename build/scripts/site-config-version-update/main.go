@@ -24,23 +24,24 @@ import (
 	"github.com/pelletier/go-toml"
 )
 
+// The Config struct holds two nested structs, DevConfig and ProdConfig, which represent the current and previous version of the Kubernetes.
 type Config struct {
 	DevConfig struct {
-		DevSupportedK8s                  []string `toml:"dev_supported_k8s"`
-		DevK8sAPIVersion                 string   `toml:"dev_k8s_api_version"`
 		DevGKEExampleClusterVersion      string   `toml:"dev_gke_example_cluster_version"`
 		DevAKSExampleClusterVersion      string   `toml:"dev_aks_example_cluster_version"`
 		DevEKSExampleClusterVersion      string   `toml:"dev_eks_example_cluster_version"`
 		DevMinikubeExampleClusterVersion string   `toml:"dev_minikube_example_cluster_version"`
+		DevK8sAPIVersion                 string   `toml:"dev_k8s_api_version"`
+		DevSupportedK8s                  []string `toml:"dev_supported_k8s"`
 	} `toml:"params"`
 
 	ProdConfig struct {
-		SupportedK8s                  []string `toml:"supported_k8s"`
 		K8sAPIVersion                 string   `toml:"k8s_api_version"`
 		GKEExampleClusterVersion      string   `toml:"gke_example_cluster_version"`
 		AKSExampleClusterVersion      string   `toml:"aks_example_cluster_version"`
 		EKSExampleClusterVersion      string   `toml:"eks_example_cluster_version"`
 		MinikubeExampleClusterVersion string   `toml:"minikube_example_cluster_version"`
+		SupportedK8s                  []string `toml:"supported_k8s"`
 	} `toml:"params"`
 }
 
@@ -70,26 +71,26 @@ func main() {
 	// Construct the updated TOML content
 	var lines []string
 	for _, line := range strings.Split(string(content), "\n") {
-		if strings.HasPrefix(line, "supported_k8s") {
+		switch {
+		case strings.HasPrefix(line, "supported_k8s"):
 			line = "supported_k8s = " + tomlArray(config.ProdConfig.SupportedK8s)
-		} else if strings.HasPrefix(line, "k8s_api_version") {
+		case strings.HasPrefix(line, "k8s_api_version"):
 			line = "k8s_api_version = \"" + config.ProdConfig.K8sAPIVersion + "\""
-		} else if strings.HasPrefix(line, "gke_example_cluster_version") {
+		case strings.HasPrefix(line, "gke_example_cluster_version"):
 			line = "gke_example_cluster_version = \"" + config.ProdConfig.GKEExampleClusterVersion + "\""
-		} else if strings.HasPrefix(line, "aks_example_cluster_version") {
+		case strings.HasPrefix(line, "aks_example_cluster_version"):
 			line = "aks_example_cluster_version = \"" + config.ProdConfig.AKSExampleClusterVersion + "\""
-		} else if strings.HasPrefix(line, "eks_example_cluster_version") {
+		case strings.HasPrefix(line, "eks_example_cluster_version"):
 			line = "eks_example_cluster_version = \"" + config.ProdConfig.EKSExampleClusterVersion + "\""
-		} else if strings.HasPrefix(line, "minikube_example_cluster_version") {
+		case strings.HasPrefix(line, "minikube_example_cluster_version"):
 			line = "minikube_example_cluster_version = \"" + config.ProdConfig.MinikubeExampleClusterVersion + "\""
 		}
 		lines = append(lines, line)
 	}
-
 	updatedContent := []byte(strings.Join(lines, "\n"))
 
 	// Write the updated content back to the config.toml file
-	err = os.WriteFile(configFile, updatedContent, 0644)
+	err = os.WriteFile(configFile, updatedContent, 0o644)
 	if err != nil {
 		log.Fatal("Write File: ", err)
 	}
