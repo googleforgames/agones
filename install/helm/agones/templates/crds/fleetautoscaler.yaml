@@ -65,6 +65,8 @@ spec:
                       enum:
                       - Buffer
                       - Webhook
+                      - Counter
+                      - List
                     buffer:
                       type: object
                       nullable: true
@@ -105,6 +107,48 @@ spec:
                         caBundle:
                           type: string
                           format: byte
+                    counter:
+                      type: object
+                      nullable: true
+                      required:
+                        - key
+                        - bufferSize
+                        - maxCapacity
+                      properties:
+                        key:  # The name of the Counter.
+                          type: string
+                        minCapacity:  # Minimum aggregate counter capacity that can be provided by this FleetAutoscaler. If not specified, the actual minimum capacity will be bufferSize.
+                          type: integer
+                          minimum: 0
+                        maxCapacity:  # Maximum aggregate counter capacity that can be provided by this FleetAutoscaler. Required.
+                          type: integer
+                          minimum: 1
+                        bufferSize:  # Size of a buffer of counted items that are available in the Fleet (available capacity). It can be specified either in absolute (i.e. 5) or percentage format (i.e. 5%).
+                          x-kubernetes-int-or-string: true
+                          anyOf:
+                            - type: integer
+                            - type: string
+                    list:
+                      type: object
+                      nullable: true
+                      required:
+                        - key
+                        - bufferSize
+                        - maxCapacity
+                      properties:
+                        key:  # The name of the List.
+                          type: string
+                        minCapacity:  # Minimum aggregate list capacity that can be provided by this FleetAutoscaler. If not specified, the actual minimum capacity will be bufferSize.
+                          type: integer
+                          minimum: 0
+                        maxCapacity:  # Maximum aggregate list capacity that can be provided by this FleetAutoscaler. Required.
+                          type: integer
+                          minimum: 1
+                        bufferSize:  # Size of a buffer based on the list capacity that is available over the current aggregate list length in the Fleet. It can be specified either in absolute (i.e. 5) or percentage format (i.e. 5%).
+                          x-kubernetes-int-or-string: true
+                          anyOf:
+                            - type: integer
+                            - type: string
                 sync:
                   type: object
                   required:
