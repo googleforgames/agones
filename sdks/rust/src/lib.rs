@@ -18,4 +18,4 @@ pub mod alpha;
 pub mod errors;
 mod sdk;
 
-pub use sdk::Sdk;
+pub use sdk::{GameServer, ObjectMeta, PlayerStatus, Port, Sdk, Spec, Status};
