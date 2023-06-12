@@ -1,18 +1,3 @@
-// Copyright 2023 Google LLC All Rights Reserved.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//	http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
-// Package main implements a program to remove the feature expiry version shortcodes in .md files.
 package main
 
 import (
@@ -45,7 +30,11 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		defer file.Close()
+		defer func() {
+			if err := file.Close(); err != nil {
+				log.Fatal(err)
+			}
+		}()
 
 		scanner := bufio.NewScanner(file)
 		modifiedContent := removeBlocks(scanner, *version)
@@ -55,14 +44,21 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		defer outputFile.Close()
+		defer func() {
+			if err := outputFile.Close(); err != nil {
+				log.Fatal(err)
+			}
+		}()
 
 		writer := bufio.NewWriter(outputFile)
 		_, err = writer.WriteString(modifiedContent)
 		if err != nil {
 			log.Fatal(err)
 		}
-		writer.Flush()
+		err = writer.Flush()
+		if err != nil {
+			log.Fatal(err)
+		}
 
 		log.Printf("Processed file: %s\n", filePath)
 
@@ -95,8 +91,14 @@ func removeBlocks(scanner *bufio.Scanner, version string) string {
 
 		// Append the line if it is not within an expiryVersion block
 		if !expiryBlock {
-			sb.WriteString(line)
-			sb.WriteString("\n")
+			_, err := sb.WriteString(line)
+			if err != nil {
+				log.Fatal(err)
+			}
+			_, err = sb.WriteString("\n")
+			if err != nil {
+				log.Fatal(err)
+			}
 		}
 	}
 
