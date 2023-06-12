@@ -18,17 +18,13 @@
 name: Label PR
 
 on:
-  pull_request:
+  pull_request_target:
     types: [opened]
 
 jobs:
   label:
     runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-      contents: read
-      pull-requests: write
-      issues: write
+    permissions: write-all
 
     steps:
       - name: Label PR
