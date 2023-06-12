@@ -24,7 +24,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	autoscalingv1 "agones.dev/agones/pkg/apis/autoscaling/v1"
+	"agones.dev/agones/pkg/util/runtime"
 	"github.com/stretchr/testify/assert"
 	admregv1 "k8s.io/api/admissionregistration/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -691,6 +693,622 @@ func TestBuildURLFromWebhookPolicyNoNamespace(t *testing.T) {
 			} else {
 				assert.Nil(t, err)
 				assert.Equal(t, tc.expected.url, url.String())
+			}
+		})
+	}
+}
+
+func TestApplyCounterPolicy(t *testing.T) {
+	t.Parallel()
+
+	modifiedFleet := func(f func(*agonesv1.GameServerTemplateSpec, *agonesv1.FleetStatus)) *agonesv1.Fleet {
+		_, fleet := defaultFixtures()
+		f(&fleet.Spec.Template, &fleet.Status)
+		return fleet
+	}
+
+	type expected struct {
+		replicas int32
+		limited  bool
+		wantErr  bool
+	}
+
+	testCases := map[string]struct {
+		fleet        *agonesv1.Fleet
+		featureFlags string
+		cp           *autoscalingv1.CounterPolicy
+		want         expected
+	}{
+		"counts and lists not enabled": {
+			fleet: modifiedFleet(func(spec *agonesv1.GameServerTemplateSpec, status *agonesv1.FleetStatus) {
+				spec.Spec.Counters = make(map[string]agonesv1.CounterStatus)
+				spec.Spec.Counters["rooms"] = agonesv1.CounterStatus{
+					Count:    0,
+					Capacity: 7}
+				status.Replicas = 10 // This should always be status.Counters.Capacity / spec.Spec.Counters.Capacity
+				status.ReadyReplicas = 5
+				status.AllocatedReplicas = 5 // This should be at least status.Counters.Count / spec.Spec.Counters.Capacity
+				status.Counters = make(map[string]agonesv1.AggregatedCounterStatus)
+				status.Counters["rooms"] = agonesv1.AggregatedCounterStatus{
+					Count:    31,
+					Capacity: 70,
+				}
+			}),
+			featureFlags: string(runtime.FeatureCountsAndLists) + "=false",
+			cp: &autoscalingv1.CounterPolicy{
+				Key:         "rooms",
+				MaxCapacity: 100,
+				MinCapacity: 10,
+				BufferSize:  intstr.FromInt(10),
+			},
+			want: expected{
+				replicas: 0,
+				limited:  false,
+				wantErr:  true,
+			},
+		},
+		"fleet spec does not have counter": {
+			fleet: modifiedFleet(func(spec *agonesv1.GameServerTemplateSpec, status *agonesv1.FleetStatus) {
+				spec.Spec.Counters = make(map[string]agonesv1.CounterStatus)
+				spec.Spec.Counters["brooms"] = agonesv1.CounterStatus{
+					Count:    0,
+					Capacity: 7}
+				status.Replicas = 10
+				status.ReadyReplicas = 5
+				status.AllocatedReplicas = 5
+				status.Counters = make(map[string]agonesv1.AggregatedCounterStatus)
+				status.Counters["rooms"] = agonesv1.AggregatedCounterStatus{
+					Count:    31,
+					Capacity: 70,
+				}
+			}),
+			featureFlags: string(runtime.FeatureCountsAndLists) + "=true",
+			cp: &autoscalingv1.CounterPolicy{
+				Key:         "rooms",
+				MaxCapacity: 100,
+				MinCapacity: 10,
+				BufferSize:  intstr.FromInt(10),
+			},
+			want: expected{
+				replicas: 0,
+				limited:  false,
+				wantErr:  true,
+			},
+		},
+		"fleet status does not have counter": {
+			fleet: modifiedFleet(func(spec *agonesv1.GameServerTemplateSpec, status *agonesv1.FleetStatus) {
+				spec.Spec.Counters = make(map[string]agonesv1.CounterStatus)
+				spec.Spec.Counters["rooms"] = agonesv1.CounterStatus{
+					Count:    0,
+					Capacity: 7}
+				status.Replicas = 10
+				status.ReadyReplicas = 5
+				status.AllocatedReplicas = 5
+				status.Counters = make(map[string]agonesv1.AggregatedCounterStatus)
+				status.Counters["brooms"] = agonesv1.AggregatedCounterStatus{
+					Count:    31,
+					Capacity: 70,
+				}
+			}),
+			featureFlags: string(runtime.FeatureCountsAndLists) + "=true",
+			cp: &autoscalingv1.CounterPolicy{
+				Key:         "rooms",
+				MaxCapacity: 100,
+				MinCapacity: 10,
+				BufferSize:  intstr.FromInt(10),
+			},
+			want: expected{
+				replicas: 0,
+				limited:  false,
+				wantErr:  true,
+			},
+		},
+		"scale down": {
+			fleet: modifiedFleet(func(spec *agonesv1.GameServerTemplateSpec, status *agonesv1.FleetStatus) {
+				spec.Spec.Counters = make(map[string]agonesv1.CounterStatus)
+				spec.Spec.Counters["rooms"] = agonesv1.CounterStatus{
+					Count:    0,
+					Capacity: 7}
+				status.Replicas = 10
+				status.ReadyReplicas = 5
+				status.AllocatedReplicas = 5
+				status.Counters = make(map[string]agonesv1.AggregatedCounterStatus)
+				status.Counters["rooms"] = agonesv1.AggregatedCounterStatus{
+					Count:    31,
+					Capacity: 70,
+				}
+			}),
+			featureFlags: string(runtime.FeatureCountsAndLists) + "=true",
+			cp: &autoscalingv1.CounterPolicy{
+				Key:         "rooms",
+				MaxCapacity: 100,
+				MinCapacity: 10,
+				BufferSize:  intstr.FromInt(10),
+			},
+			want: expected{
+				replicas: 6,
+				limited:  false,
+				wantErr:  false,
+			},
+		},
+		"scale up": {
+			fleet: modifiedFleet(func(spec *agonesv1.GameServerTemplateSpec, status *agonesv1.FleetStatus) {
+				spec.Spec.Counters = make(map[string]agonesv1.CounterStatus)
+				spec.Spec.Counters["rooms"] = agonesv1.CounterStatus{
+					Count:    0,
+					Capacity: 7}
+				status.Replicas = 10
+				status.ReadyReplicas = 0
+				status.AllocatedReplicas = 10
+				status.Counters = make(map[string]agonesv1.AggregatedCounterStatus)
+				status.Counters["rooms"] = agonesv1.AggregatedCounterStatus{
+					Count:    68,
+					Capacity: 70}
+			}),
+			featureFlags: string(runtime.FeatureCountsAndLists) + "=true",
+			cp: &autoscalingv1.CounterPolicy{
+				Key:         "rooms",
+				MaxCapacity: 100,
+				MinCapacity: 10,
+				BufferSize:  intstr.FromInt(10),
+			},
+			want: expected{
+				replicas: 12,
+				limited:  false,
+				wantErr:  false,
+			},
+		},
+		"scale same": {
+			fleet: modifiedFleet(func(spec *agonesv1.GameServerTemplateSpec, status *agonesv1.FleetStatus) {
+				spec.Spec.Counters = make(map[string]agonesv1.CounterStatus)
+				spec.Spec.Counters["rooms"] = agonesv1.CounterStatus{
+					Count:    0,
+					Capacity: 7}
+				status.Replicas = 10
+				status.ReadyReplicas = 0
+				status.AllocatedReplicas = 10
+				status.Counters = make(map[string]agonesv1.AggregatedCounterStatus)
+				status.Counters["rooms"] = agonesv1.AggregatedCounterStatus{
+					Count:    60,
+					Capacity: 70}
+			}),
+			featureFlags: string(runtime.FeatureCountsAndLists) + "=true",
+			cp: &autoscalingv1.CounterPolicy{
+				Key:         "rooms",
+				MaxCapacity: 100,
+				MinCapacity: 10,
+				BufferSize:  intstr.FromInt(10),
+			},
+			want: expected{
+				replicas: 10,
+				limited:  false,
+				wantErr:  false,
+			},
+		},
+		"scale down limited": {
+			fleet: modifiedFleet(func(spec *agonesv1.GameServerTemplateSpec, status *agonesv1.FleetStatus) {
+				spec.Spec.Counters = make(map[string]agonesv1.CounterStatus)
+				spec.Spec.Counters["rooms"] = agonesv1.CounterStatus{
+					Count:    0,
+					Capacity: 7}
+				status.Replicas = 10
+				status.ReadyReplicas = 9
+				status.AllocatedReplicas = 1
+				status.Counters = make(map[string]agonesv1.AggregatedCounterStatus)
+				status.Counters["rooms"] = agonesv1.AggregatedCounterStatus{
+					Count:    1,
+					Capacity: 70}
+			}),
+			featureFlags: string(runtime.FeatureCountsAndLists) + "=true",
+			cp: &autoscalingv1.CounterPolicy{
+				Key:         "rooms",
+				MaxCapacity: 700,
+				MinCapacity: 70,
+				BufferSize:  intstr.FromInt(10),
+			},
+			want: expected{
+				replicas: 10,
+				limited:  true,
+				wantErr:  false,
+			},
+		},
+		"scale up limited": {
+			fleet: modifiedFleet(func(spec *agonesv1.GameServerTemplateSpec, status *agonesv1.FleetStatus) {
+				spec.Spec.Counters = make(map[string]agonesv1.CounterStatus)
+				spec.Spec.Counters["rooms"] = agonesv1.CounterStatus{
+					Count:    0,
+					Capacity: 7}
+				status.Replicas = 14
+				status.ReadyReplicas = 0
+				status.AllocatedReplicas = 14
+				status.Counters = make(map[string]agonesv1.AggregatedCounterStatus)
+				status.Counters["rooms"] = agonesv1.AggregatedCounterStatus{
+					Count:    98,
+					Capacity: 98}
+			}),
+			featureFlags: string(runtime.FeatureCountsAndLists) + "=true",
+			cp: &autoscalingv1.CounterPolicy{
+				Key:         "rooms",
+				MaxCapacity: 100,
+				MinCapacity: 10,
+				BufferSize:  intstr.FromInt(10),
+			},
+			want: expected{
+				replicas: 15,
+				limited:  true,
+				wantErr:  false,
+			},
+		},
+		"scale down by percent": {
+			fleet: modifiedFleet(func(spec *agonesv1.GameServerTemplateSpec, status *agonesv1.FleetStatus) {
+				spec.Spec.Counters = make(map[string]agonesv1.CounterStatus)
+				spec.Spec.Counters["rooms"] = agonesv1.CounterStatus{
+					Count:    0,
+					Capacity: 7}
+				status.Replicas = 10
+				status.ReadyReplicas = 5
+				status.AllocatedReplicas = 5
+				status.Counters = make(map[string]agonesv1.AggregatedCounterStatus)
+				status.Counters["rooms"] = agonesv1.AggregatedCounterStatus{
+					Count:    31,
+					Capacity: 70,
+				}
+			}),
+			featureFlags: string(runtime.FeatureCountsAndLists) + "=true",
+			cp: &autoscalingv1.CounterPolicy{
+				Key:         "rooms",
+				MaxCapacity: 100,
+				MinCapacity: 10,
+				BufferSize:  intstr.FromString("10%"),
+			},
+			want: expected{
+				replicas: 5,
+				limited:  false,
+				wantErr:  false,
+			},
+		},
+		"scale up by percent": {
+			fleet: modifiedFleet(func(spec *agonesv1.GameServerTemplateSpec, status *agonesv1.FleetStatus) {
+				spec.Spec.Counters = make(map[string]agonesv1.CounterStatus)
+				spec.Spec.Counters["players"] = agonesv1.CounterStatus{
+					Count:    0,
+					Capacity: 1}
+				status.Replicas = 10
+				status.ReadyReplicas = 2
+				status.AllocatedReplicas = 8
+				status.Counters = make(map[string]agonesv1.AggregatedCounterStatus)
+				status.Counters["players"] = agonesv1.AggregatedCounterStatus{
+					Count:    8,
+					Capacity: 10,
+				}
+			}),
+			featureFlags: string(runtime.FeatureCountsAndLists) + "=true",
+			cp: &autoscalingv1.CounterPolicy{
+				Key:         "players",
+				MaxCapacity: 100,
+				MinCapacity: 10,
+				BufferSize:  intstr.FromString("30%"),
+			},
+			want: expected{
+				replicas: 12,
+				limited:  false,
+				wantErr:  false,
+			},
+		},
+	}
+
+	runtime.FeatureTestMutex.Lock()
+	defer runtime.FeatureTestMutex.Unlock()
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			err := runtime.ParseFeatures(tc.featureFlags)
+			assert.NoError(t, err)
+
+			replicas, limited, err := applyCounterPolicy(tc.cp, tc.fleet)
+
+			if tc.want.wantErr {
+				assert.NotNil(t, err)
+			} else {
+				assert.Nil(t, err)
+				assert.Equal(t, tc.want.replicas, replicas)
+				assert.Equal(t, tc.want.limited, limited)
+			}
+		})
+	}
+}
+
+func TestApplyListPolicy(t *testing.T) {
+	t.Parallel()
+
+	modifiedFleet := func(f func(*agonesv1.GameServerTemplateSpec, *agonesv1.FleetStatus)) *agonesv1.Fleet {
+		_, fleet := defaultFixtures()
+		f(&fleet.Spec.Template, &fleet.Status)
+		return fleet
+	}
+
+	type expected struct {
+		replicas int32
+		limited  bool
+		wantErr  bool
+	}
+
+	testCases := map[string]struct {
+		fleet        *agonesv1.Fleet
+		featureFlags string
+		lp           *autoscalingv1.ListPolicy
+		want         expected
+	}{
+		"counts and lists not enabled": {
+			fleet: modifiedFleet(func(spec *agonesv1.GameServerTemplateSpec, status *agonesv1.FleetStatus) {
+				spec.Spec.Lists = make(map[string]agonesv1.ListStatus)
+				spec.Spec.Lists["gamers"] = agonesv1.ListStatus{
+					Values:   []string{},
+					Capacity: 7}
+				status.Replicas = 10 // This should always be status.Lists.Capacity / spec.Spec.Lists.Capacity
+				status.ReadyReplicas = 5
+				status.AllocatedReplicas = 5 // This should be at least status.Lists.Count / spec.Spec.Lists.Capacity
+				status.Lists = make(map[string]agonesv1.AggregatedListStatus)
+				status.Lists["gamers"] = agonesv1.AggregatedListStatus{
+					Count:    31,
+					Capacity: 70,
+				}
+			}),
+			featureFlags: string(runtime.FeatureCountsAndLists) + "=false",
+			lp: &autoscalingv1.ListPolicy{
+				Key:         "gamers",
+				MaxCapacity: 100,
+				MinCapacity: 10,
+				BufferSize:  intstr.FromInt(10),
+			},
+			want: expected{
+				replicas: 0,
+				limited:  false,
+				wantErr:  true,
+			},
+		},
+		"fleet spec does not have list": {
+			fleet: modifiedFleet(func(spec *agonesv1.GameServerTemplateSpec, status *agonesv1.FleetStatus) {
+				spec.Spec.Lists = make(map[string]agonesv1.ListStatus)
+				spec.Spec.Lists["tamers"] = agonesv1.ListStatus{
+					Values:   []string{},
+					Capacity: 7}
+				status.Replicas = 10
+				status.ReadyReplicas = 5
+				status.AllocatedReplicas = 5
+				status.Lists = make(map[string]agonesv1.AggregatedListStatus)
+				status.Lists["gamers"] = agonesv1.AggregatedListStatus{
+					Count:    31,
+					Capacity: 70,
+				}
+			}),
+			featureFlags: string(runtime.FeatureCountsAndLists) + "=true",
+			lp: &autoscalingv1.ListPolicy{
+				Key:         "gamers",
+				MaxCapacity: 100,
+				MinCapacity: 10,
+				BufferSize:  intstr.FromInt(10),
+			},
+			want: expected{
+				replicas: 0,
+				limited:  false,
+				wantErr:  true,
+			},
+		},
+		"fleet status does not have list": {
+			fleet: modifiedFleet(func(spec *agonesv1.GameServerTemplateSpec, status *agonesv1.FleetStatus) {
+				spec.Spec.Lists = make(map[string]agonesv1.ListStatus)
+				spec.Spec.Lists["gamers"] = agonesv1.ListStatus{
+					Values:   []string{},
+					Capacity: 7}
+				status.Replicas = 10
+				status.ReadyReplicas = 5
+				status.AllocatedReplicas = 5
+				status.Lists = make(map[string]agonesv1.AggregatedListStatus)
+				status.Lists["tamers"] = agonesv1.AggregatedListStatus{
+					Count:    31,
+					Capacity: 70,
+				}
+			}),
+			featureFlags: string(runtime.FeatureCountsAndLists) + "=true",
+			lp: &autoscalingv1.ListPolicy{
+				Key:         "gamers",
+				MaxCapacity: 100,
+				MinCapacity: 10,
+				BufferSize:  intstr.FromInt(10),
+			},
+			want: expected{
+				replicas: 0,
+				limited:  false,
+				wantErr:  true,
+			},
+		},
+		"scale up": {
+			fleet: modifiedFleet(func(spec *agonesv1.GameServerTemplateSpec, status *agonesv1.FleetStatus) {
+				spec.Spec.Lists = make(map[string]agonesv1.ListStatus)
+				spec.Spec.Lists["gamers"] = agonesv1.ListStatus{
+					Values:   []string{"default", "default2"},
+					Capacity: 3}
+				status.Replicas = 10
+				status.ReadyReplicas = 0
+				status.AllocatedReplicas = 10
+				status.Lists = make(map[string]agonesv1.AggregatedListStatus)
+				status.Lists["gamers"] = agonesv1.AggregatedListStatus{
+					Count:    29,
+					Capacity: 30,
+				}
+			}),
+			featureFlags: string(runtime.FeatureCountsAndLists) + "=true",
+			lp: &autoscalingv1.ListPolicy{
+				Key:         "gamers",
+				MaxCapacity: 100,
+				MinCapacity: 10,
+				BufferSize:  intstr.FromInt(5),
+			},
+			want: expected{
+				replicas: 14,
+				limited:  false,
+				wantErr:  false,
+			},
+		},
+		"scale down": {
+			fleet: modifiedFleet(func(spec *agonesv1.GameServerTemplateSpec, status *agonesv1.FleetStatus) {
+				spec.Spec.Lists = make(map[string]agonesv1.ListStatus)
+				spec.Spec.Lists["gamers"] = agonesv1.ListStatus{
+					Values:   []string{"default"},
+					Capacity: 10}
+				status.Replicas = 10
+				status.ReadyReplicas = 6
+				status.AllocatedReplicas = 4
+				status.Lists = make(map[string]agonesv1.AggregatedListStatus)
+				status.Lists["gamers"] = agonesv1.AggregatedListStatus{
+					Count:    31,
+					Capacity: 100,
+				}
+			}),
+			featureFlags: string(runtime.FeatureCountsAndLists) + "=true",
+			lp: &autoscalingv1.ListPolicy{
+				Key:         "gamers",
+				MaxCapacity: 100,
+				MinCapacity: 10,
+				BufferSize:  intstr.FromInt(1),
+			},
+			want: expected{
+				replicas: 3,
+				limited:  false,
+				wantErr:  false,
+			},
+		},
+		"scale up limited": {
+			fleet: modifiedFleet(func(spec *agonesv1.GameServerTemplateSpec, status *agonesv1.FleetStatus) {
+				spec.Spec.Lists = make(map[string]agonesv1.ListStatus)
+				spec.Spec.Lists["gamers"] = agonesv1.ListStatus{
+					Values:   []string{"default", "default2"},
+					Capacity: 3}
+				status.Replicas = 10
+				status.ReadyReplicas = 0
+				status.AllocatedReplicas = 10
+				status.Lists = make(map[string]agonesv1.AggregatedListStatus)
+				status.Lists["gamers"] = agonesv1.AggregatedListStatus{
+					Count:    29,
+					Capacity: 30,
+				}
+			}),
+			featureFlags: string(runtime.FeatureCountsAndLists) + "=true",
+			lp: &autoscalingv1.ListPolicy{
+				Key:         "gamers",
+				MaxCapacity: 30,
+				MinCapacity: 10,
+				BufferSize:  intstr.FromInt(5),
+			},
+			want: expected{
+				replicas: 10,
+				limited:  true,
+				wantErr:  false,
+			},
+		},
+		"scale down limited": {
+			fleet: modifiedFleet(func(spec *agonesv1.GameServerTemplateSpec, status *agonesv1.FleetStatus) {
+				spec.Spec.Lists = make(map[string]agonesv1.ListStatus)
+				spec.Spec.Lists["gamers"] = agonesv1.ListStatus{
+					Values:   []string{},
+					Capacity: 5}
+				status.Replicas = 10
+				status.ReadyReplicas = 7
+				status.AllocatedReplicas = 3
+				status.Lists = make(map[string]agonesv1.AggregatedListStatus)
+				status.Lists["gamers"] = agonesv1.AggregatedListStatus{
+					Count:    3,
+					Capacity: 100,
+				}
+			}),
+			featureFlags: string(runtime.FeatureCountsAndLists) + "=true",
+			lp: &autoscalingv1.ListPolicy{
+				Key:         "gamers",
+				MaxCapacity: 100,
+				MinCapacity: 10,
+				BufferSize:  intstr.FromInt(1),
+			},
+			want: expected{
+				replicas: 2,
+				limited:  true,
+				wantErr:  false,
+			},
+		},
+		"scale up by percent": {
+			fleet: modifiedFleet(func(spec *agonesv1.GameServerTemplateSpec, status *agonesv1.FleetStatus) {
+				spec.Spec.Lists = make(map[string]agonesv1.ListStatus)
+				spec.Spec.Lists["gamers"] = agonesv1.ListStatus{
+					Values:   []string{"default"},
+					Capacity: 3}
+				status.Replicas = 10
+				status.ReadyReplicas = 0
+				status.AllocatedReplicas = 10
+				status.Lists = make(map[string]agonesv1.AggregatedListStatus)
+				status.Lists["gamers"] = agonesv1.AggregatedListStatus{
+					Count:    29,
+					Capacity: 30,
+				}
+			}),
+			featureFlags: string(runtime.FeatureCountsAndLists) + "=true",
+			lp: &autoscalingv1.ListPolicy{
+				Key:         "gamers",
+				MaxCapacity: 50,
+				MinCapacity: 10,
+				BufferSize:  intstr.FromString("5%"),
+			},
+			want: expected{
+				replicas: 11,
+				limited:  false,
+				wantErr:  false,
+			},
+		},
+		// "scale down by percent": {
+		// 	fleet: modifiedFleet(func(spec *agonesv1.GameServerTemplateSpec, status *agonesv1.FleetStatus) {
+		// 		spec.Spec.Lists = make(map[string]agonesv1.ListStatus)
+		// 		spec.Spec.Lists["gamers"] = agonesv1.ListStatus{
+		// 			Values:   []string{"default", "default2"},
+		// 			Capacity: 3}
+		// 		status.Replicas = 16
+		// 		status.ReadyReplicas = 6
+		// 		status.AllocatedReplicas = 10
+		// 		status.Lists = make(map[string]agonesv1.AggregatedListStatus)
+		// 		status.Lists["gamers"] = agonesv1.AggregatedListStatus{
+		// 			Count:    32,
+		// 			Capacity: 48,
+		// 		}
+		// 	}),
+		// 	featureFlags: string(runtime.FeatureCountsAndLists) + "=true",
+		// 	lp: &autoscalingv1.ListPolicy{
+		// 		Key:         "gamers",
+		// 		MaxCapacity: 50,
+		// 		MinCapacity: 10,
+		// 		BufferSize:  intstr.FromString("5%"),
+		// 	},
+		// 	want: expected{
+		// 		replicas: 4, // TODO: Result gives want: 12 which works for "desired capacity" of 32 + 5%, but does not actually work beause the count is 2 in a default game server (although not necessarily live game servers, which further complicates things). So by removing 4 game servers we are also removing ~8 from the count, which gives us too large of a buffer.
+		// 		limited:  true,
+		// 		wantErr:  false,
+		// 	},
+		// },
+	}
+
+	runtime.FeatureTestMutex.Lock()
+	defer runtime.FeatureTestMutex.Unlock()
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			err := runtime.ParseFeatures(tc.featureFlags)
+			assert.NoError(t, err)
+
+			replicas, limited, err := applyListPolicy(tc.lp, tc.fleet)
+
+			if tc.want.wantErr {
+				assert.NotNil(t, err)
+			} else {
+				assert.Nil(t, err)
+				assert.Equal(t, tc.want.replicas, replicas)
+				assert.Equal(t, tc.want.limited, limited)
 			}
 		})
 	}

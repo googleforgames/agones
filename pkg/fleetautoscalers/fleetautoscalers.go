@@ -30,6 +30,7 @@ import (
 
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	autoscalingv1 "agones.dev/agones/pkg/apis/autoscaling/v1"
+	"agones.dev/agones/pkg/util/runtime"
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/uuid"
@@ -50,6 +51,8 @@ func computeDesiredFleetSize(fas *autoscalingv1.FleetAutoscaler, f *agonesv1.Fle
 		return applyBufferPolicy(fas.Spec.Policy.Buffer, f)
 	case autoscalingv1.WebhookPolicyType:
 		return applyWebhookPolicy(fas.Spec.Policy.Webhook, f)
+	case autoscalingv1.CounterPolicyType:
+		return applyCounterPolicy(fas.Spec.Policy.Counter, f)
 	}
 
 	return 0, false, errors.New("wrong policy type, should be one of: Buffer, Webhook")
@@ -223,4 +226,146 @@ func applyBufferPolicy(b *autoscalingv1.BufferPolicy, f *agonesv1.Fleet) (int32,
 	}
 
 	return replicas, limited, nil
+}
+
+func applyCounterPolicy(c *autoscalingv1.CounterPolicy, f *agonesv1.Fleet) (int32, bool, error) {
+	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
+		return 0, false, errors.Errorf("cannot apply CounterPolicy unless feature flag %s is enabled", runtime.FeatureCountsAndLists)
+	}
+
+	counter, ok := f.Spec.Template.Spec.Counters[c.Key]
+	if !ok {
+		return 0, false, errors.Errorf("cannot apply CounterPolicy as counter key %s does not exist in the Fleet Spec", c.Key)
+	}
+
+	aggCounter, ok := f.Status.Counters[c.Key]
+	if !ok {
+		return 0, false, errors.Errorf("cannot apply CounterPolicy as counter key %s does not exist in the Fleet Status", c.Key)
+	}
+
+	var replicas float64
+
+	// Current available capacity across the fleet
+	availableCapacity := float64(aggCounter.Capacity - aggCounter.Count)
+
+	// How much available capacity is gained by adding one more replica to the fleet.
+	replicaCapacity := float64(counter.Capacity - counter.Count)
+
+	// Desired replicas based on BufferSize specified as an absolute value (i.e. 5)
+	if c.BufferSize.Type == intstr.Int {
+		// If our current available is the same as our buffer, then we already have the desired replicas
+		buffer := float64(c.BufferSize.IntValue())
+		if availableCapacity == buffer {
+			replicas = float64(f.Status.Replicas)
+		} else {
+			diffReplicas := math.Floor((availableCapacity - buffer) / replicaCapacity)
+			// TODO: Our aggregate counts in include Allocated, Ready, and Reserved replicas, however
+			// I'm not 100% sure if f.Status.Replicas includes all three states or just Allocated and Ready?
+			// If it's the latter, then we would need to add in f.Status.ReservedReplicas.
+			// There may be some additional nuance here since "Reserved instances won't be deleted on scale down, but won't cause an autoscaler to scale up"
+			replicas = float64(f.Status.Replicas) - diffReplicas
+		}
+	} else {
+		// Desired replicas based on BufferSize specified as a percent (i.e. 5%)
+		bufferPercent, err := intstr.GetValueFromIntOrPercent(&c.BufferSize, 100, true)
+		if err != nil {
+			return 0, false, err
+		}
+		// The desired total capacity across the fleet (see applyBufferPolicy for explanation)
+		desiredCapacity := float64(aggCounter.Count*100) / float64(100-bufferPercent)
+		if math.Ceil(desiredCapacity) == float64(aggCounter.Capacity) {
+			replicas = float64(f.Status.Replicas)
+		} else {
+			// TODO: How to better handle case where removing ready game servers also reduces the count?
+			// Using replicaCapacity or using counter.Capacity do not work in all cases.
+			// replicas = math.Ceil(desiredCapacity / replicaCapacity)
+			replicas = math.Ceil(desiredCapacity / float64(counter.Capacity))
+		}
+	}
+
+	// limited indicates that the calculated scale would be above or below the range defined by
+	// MinCapacity and MaxCapacity
+	limited := false
+
+	if replicas < math.Ceil(float64(c.MinCapacity)/float64(counter.Capacity)) {
+		replicas = math.Ceil(float64(c.MinCapacity) / float64(counter.Capacity))
+		limited = true
+	}
+	// Note that we may have a greater MaxCapacity than stated in the CounterPolicy. For example, if
+	// the MaxCapacity is 10 and each replica adds 3 to the total capacity we could end up with 4
+	// replicas for a total capacity of 12.
+	if replicas > math.Ceil(float64(c.MaxCapacity)/float64(counter.Capacity)) {
+		replicas = math.Ceil(float64(c.MaxCapacity) / float64(counter.Capacity))
+		limited = true
+	}
+
+	return int32(replicas), limited, nil
+}
+
+func applyListPolicy(l *autoscalingv1.ListPolicy, f *agonesv1.Fleet) (int32, bool, error) {
+	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
+		return 0, false, errors.Errorf("cannot apply ListPolicy unless feature flag %s is enabled", runtime.FeatureCountsAndLists)
+	}
+
+	list, ok := f.Spec.Template.Spec.Lists[l.Key]
+	if !ok {
+		return 0, false, errors.Errorf("cannot apply ListPolicy as list key %s does not exist in the Fleet Spec", l.Key)
+	}
+
+	aggList, ok := f.Status.Lists[l.Key]
+	if !ok {
+		return 0, false, errors.Errorf("cannot apply ListPolicy as list key %s does not exist in the Fleet Status", l.Key)
+	}
+
+	var replicas float64
+
+	// Current available capacity across the fleet
+	availableCapacity := float64(aggList.Capacity - aggList.Count)
+
+	// How much capacity is gained by adding one more replica to the fleet.
+	replicaCapacity := float64(list.Capacity - int64(len(list.Values)))
+
+	// Desired replicas based on BufferSize specified as an absolute value (i.e. 5)
+	if l.BufferSize.Type == intstr.Int {
+		// If our current available is the same as our buffer, then we already have the desired replicas
+		buffer := float64(l.BufferSize.IntValue())
+		if availableCapacity == buffer {
+			replicas = float64(f.Status.Replicas)
+		} else {
+			diffReplicas := math.Floor((availableCapacity - buffer) / replicaCapacity)
+			replicas = float64(f.Status.Replicas) - diffReplicas
+		}
+	} else {
+		// Desired replicas based on BufferSize specified as a percent (i.e. 5%)
+		bufferPercent, err := intstr.GetValueFromIntOrPercent(&l.BufferSize, 100, true)
+		if err != nil {
+			return 0, false, err
+		}
+		// The desired total capacity across the fleet (see applyBufferPolicy for explanation)
+		desiredCapacity := float64(aggList.Count*100) / float64(100-bufferPercent)
+		if math.Ceil(desiredCapacity) == float64(aggList.Capacity) {
+			replicas = float64(f.Status.Replicas)
+		} else {
+			// TODO: Scale down & up roesn't work in all cases -- see applyCounterPolicy and TestApplyListPolicy
+			replicas = math.Ceil(desiredCapacity / float64(list.Capacity))
+		}
+	}
+
+	// limited indicates that the calculated scale would be above or below the range defined by
+	// MinCapacity and MaxCapacity
+	limited := false
+
+	if replicas < math.Ceil(float64(l.MinCapacity)/float64(list.Capacity)) {
+		replicas = math.Ceil(float64(l.MinCapacity) / float64(list.Capacity))
+		limited = true
+	}
+	// Note that we may have a greater MaxCapacity than stated in the ListPolicy. For example, if
+	// the MaxCapacity is 10 and each replica adds 3 to the total capacity we could end up with 4
+	// replicas for a total capacity of 12.
+	if replicas > math.Ceil(float64(l.MaxCapacity)/float64(list.Capacity)) {
+		replicas = math.Ceil(float64(l.MaxCapacity) / float64(list.Capacity))
+		limited = true
+	}
+
+	return int32(replicas), limited, nil
 }
