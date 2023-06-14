@@ -618,7 +618,6 @@ func TestGameServerAllocationReturnLabels(t *testing.T) {
 	annotations := map[string]string{"someAnnotation": "someValue"}
 
 	flt := defaultFleet(framework.Namespace)
-	flt.ObjectMeta.GenerateName = "preferred-"
 	flt.Spec.Replicas = 1
 	flt.Spec.Template.ObjectMeta.Labels = label
 	flt.Spec.Template.ObjectMeta.Annotations = annotations
