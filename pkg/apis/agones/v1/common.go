@@ -36,6 +36,14 @@ const (
 	GameServerAllocationIncrement string = "Increment"
 	// GameServerAllocationDecrement is a Counter Action that indiciates the Counter's Count should be decremented at Allocation.
 	GameServerAllocationDecrement string = "Decrement"
+	// GameServerAllocationPriorityCounter is a PriorityType for sorting Game Servers by Counter
+	GameServerAllocationPriorityCounter string = "Counter"
+	// GameServerAllocationPriorityList is a PriorityType for sorting Game Servers by List
+	GameServerAllocationPriorityList string = "List"
+	// GameServerAllocationAscending is a Priority Order where the smaller count is preferred in sorting.
+	GameServerAllocationAscending string = "Ascending"
+	// GameServerAllocationDescending is a Priority Order where the larger count is preferred in sorting.
+	GameServerAllocationDescending string = "Descending"
 )
 
 // AggregatedPlayerStatus stores total player tracking values
@@ -159,4 +167,29 @@ func (ao *AllocationOverflow) Apply(gs *GameServer) {
 			gs.ObjectMeta.Labels[k] = v
 		}
 	}
+}
+
+// Priority is a sorting option for GameServers with Counters or Lists based on the Capacity.
+// PriorityType: Sort by a "Counter" or a "List".
+// Key: The name of the Counter or List. If not found on the GameServer, has no impact.
+// Order: Sort by "Ascending" or "Descending". Default is "Descending" so bigger Capacity is preferred.
+// "Ascending" would be smaller Capacity is preferred.
+type Priority struct {
+	PriorityType string `json:"priorityType"`
+	Key          string `json:"key"`
+	Order        string `json:"order"`
+}
+
+// Validate returns if the Priority is valid.
+func (p *Priority) Validate(fldPath *field.Path) field.ErrorList {
+	var allErrs field.ErrorList
+	if !(p.PriorityType == GameServerAllocationPriorityCounter || p.PriorityType == GameServerAllocationPriorityList) {
+		allErrs = append(allErrs, field.NotSupported(fldPath.Child("priorityType"), p.PriorityType, []string{GameServerAllocationPriorityCounter, GameServerAllocationPriorityList}))
+	}
+
+	if !(p.Order == GameServerAllocationAscending || p.Order == GameServerAllocationDescending || p.Order == "") {
+		allErrs = append(allErrs, field.NotSupported(fldPath.Child("order"), p.Order, []string{GameServerAllocationAscending, GameServerAllocationDescending}))
+	}
+
+	return allErrs
 }

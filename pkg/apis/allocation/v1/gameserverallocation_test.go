@@ -49,7 +49,7 @@ func TestGameServerAllocationApplyDefaults(t *testing.T) {
 	assert.Equal(t, agonesv1.GameServerStateReady, *gsa.Spec.Required.GameServerState)
 	assert.Equal(t, int64(0), gsa.Spec.Required.Players.MaxAvailable)
 	assert.Equal(t, int64(0), gsa.Spec.Required.Players.MinAvailable)
-	assert.Equal(t, []Priority(nil), gsa.Spec.Priorities)
+	assert.Equal(t, []agonesv1.Priority(nil), gsa.Spec.Priorities)
 	assert.Nil(t, gsa.Spec.Priorities)
 }
 
@@ -334,7 +334,7 @@ func TestGameServerPriorityValidate(t *testing.T) {
 	}{
 		"valid Counter Ascending": {
 			gsa: &GameServerAllocation{
-				Spec: GameServerAllocationSpec{Priorities: []Priority{
+				Spec: GameServerAllocationSpec{Priorities: []agonesv1.Priority{
 					{
 						PriorityType: "Counter",
 						Key:          "Foo",
@@ -346,7 +346,7 @@ func TestGameServerPriorityValidate(t *testing.T) {
 		},
 		"valid Counter Descending": {
 			gsa: &GameServerAllocation{
-				Spec: GameServerAllocationSpec{Priorities: []Priority{
+				Spec: GameServerAllocationSpec{Priorities: []agonesv1.Priority{
 					{
 						PriorityType: "Counter",
 						Key:          "Bar",
@@ -358,7 +358,7 @@ func TestGameServerPriorityValidate(t *testing.T) {
 		},
 		"valid Counter empty Order": {
 			gsa: &GameServerAllocation{
-				Spec: GameServerAllocationSpec{Priorities: []Priority{
+				Spec: GameServerAllocationSpec{Priorities: []agonesv1.Priority{
 					{
 						PriorityType: "Counter",
 						Key:          "Bar",
@@ -370,7 +370,7 @@ func TestGameServerPriorityValidate(t *testing.T) {
 		},
 		"invalid counter type and order": {
 			gsa: &GameServerAllocation{
-				Spec: GameServerAllocationSpec{Priorities: []Priority{
+				Spec: GameServerAllocationSpec{Priorities: []agonesv1.Priority{
 					{
 						PriorityType: "counter",
 						Key:          "Babar",
@@ -386,7 +386,7 @@ func TestGameServerPriorityValidate(t *testing.T) {
 		},
 		"valid List Ascending": {
 			gsa: &GameServerAllocation{
-				Spec: GameServerAllocationSpec{Priorities: []Priority{
+				Spec: GameServerAllocationSpec{Priorities: []agonesv1.Priority{
 					{
 						PriorityType: "List",
 						Key:          "Baz",
@@ -398,7 +398,7 @@ func TestGameServerPriorityValidate(t *testing.T) {
 		},
 		"valid List Descending": {
 			gsa: &GameServerAllocation{
-				Spec: GameServerAllocationSpec{Priorities: []Priority{
+				Spec: GameServerAllocationSpec{Priorities: []agonesv1.Priority{
 					{
 						PriorityType: "List",
 						Key:          "Blerg",
@@ -410,7 +410,7 @@ func TestGameServerPriorityValidate(t *testing.T) {
 		},
 		"valid List empty Order": {
 			gsa: &GameServerAllocation{
-				Spec: GameServerAllocationSpec{Priorities: []Priority{
+				Spec: GameServerAllocationSpec{Priorities: []agonesv1.Priority{
 					{
 						PriorityType: "List",
 						Key:          "Blerg",
@@ -422,7 +422,7 @@ func TestGameServerPriorityValidate(t *testing.T) {
 		},
 		"invalid list type and order": {
 			gsa: &GameServerAllocation{
-				Spec: GameServerAllocationSpec{Priorities: []Priority{
+				Spec: GameServerAllocationSpec{Priorities: []agonesv1.Priority{
 					{
 						PriorityType: "list",
 						Key:          "Schmorg",

@@ -37,14 +37,6 @@ const (
 	// GameServerAllocationContention when the allocation is unsuccessful
 	// because of contention
 	GameServerAllocationContention GameServerAllocationState = "Contention"
-	// GameServerAllocationPriorityCounter is a PriorityType for sorting Game Servers by Counter
-	GameServerAllocationPriorityCounter string = "Counter"
-	// GameServerAllocationPriorityList is a PriorityType for sorting Game Servers by List
-	GameServerAllocationPriorityList string = "List"
-	// GameServerAllocationAscending is a Priority Order where the smaller count is preferred in sorting.
-	GameServerAllocationAscending string = "Ascending"
-	// GameServerAllocationDescending is a Priority Order where the larger count is preferred in sorting.
-	GameServerAllocationDescending string = "Descending"
 )
 
 // GameServerAllocationState is the Allocation state
@@ -93,11 +85,11 @@ type GameServerAllocationSpec struct {
 	Preferred []GameServerSelector `json:"preferred,omitempty"`
 
 	// (Alpha, CountsAndLists feature flag) The first Priority on the array of Priorities is the most
-	// important for sorting. The allocator will use the first priority for sorting GameServers in the
-	// Selector set, and will only use any following priority for tie-breaking during sort.
-	// Impacts which GameServer is checked first.
+	// important for sorting. The allocator will use the first priority for sorting GameServers by
+	// available Capacity in the Selector set and acts as a tie-breaker after sorting the game servers
+	// by State and Strategy. Impacts which GameServer is checked first.
 	// +optional
-	Priorities []Priority `json:"priorities,omitempty"`
+	Priorities []agonesv1.Priority `json:"priorities,omitempty"`
 
 	// Ordered list of GameServer label selectors.
 	// If the first selector is not matched, the selection attempts the second selector, and so on.
@@ -484,32 +476,6 @@ func (mp *MetaPatch) Validate(fldPath *field.Path) field.ErrorList {
 	return allErrs
 }
 
-// Priority is a sorting option for GameServers with Counters or Lists based on the count or
-// number of items in a List.
-// PriorityType: Sort by a "Counter" or a "List".
-// Key: The name of the Counter or List. If not found on the GameServer, has no impact.
-// Order: Sort by "Ascending" or "Descending". Default is "Descending" so bigger count is preferred.
-// "Ascending" would be smaller count is preferred.
-type Priority struct {
-	PriorityType string `json:"priorityType"`
-	Key          string `json:"key"`
-	Order        string `json:"order"`
-}
-
-// Validate returns if the Priority is valid.
-func (p *Priority) validate(fldPath *field.Path) field.ErrorList {
-	var allErrs field.ErrorList
-	if !(p.PriorityType == GameServerAllocationPriorityCounter || p.PriorityType == GameServerAllocationPriorityList) {
-		allErrs = append(allErrs, field.NotSupported(fldPath.Child("priorityType"), p.PriorityType, []string{GameServerAllocationPriorityCounter, GameServerAllocationPriorityList}))
-	}
-
-	if !(p.Order == GameServerAllocationAscending || p.Order == GameServerAllocationDescending || p.Order == "") {
-		allErrs = append(allErrs, field.NotSupported(fldPath.Child("order"), p.Order, []string{GameServerAllocationAscending, GameServerAllocationDescending}))
-	}
-
-	return allErrs
-}
-
 // GameServerAllocationStatus is the status for an GameServerAllocation resource
 type GameServerAllocationStatus struct {
 	// GameServerState is the current state of an GameServerAllocation, e.g. Allocated, or UnAllocated
@@ -573,7 +539,7 @@ func (gsa *GameServerAllocation) Validate() field.ErrorList {
 	if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) && (gsa.Spec.Priorities != nil) {
 		pPath := specPath.Child("priorities")
 		for i := range gsa.Spec.Priorities {
-			allErrs = append(allErrs, gsa.Spec.Priorities[i].validate(pPath.Index(i))...)
+			allErrs = append(allErrs, gsa.Spec.Priorities[i].Validate(pPath.Index(i))...)
 		}
 	}
 

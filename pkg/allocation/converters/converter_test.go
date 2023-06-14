@@ -168,7 +168,7 @@ func TestConvertAllocationRequestToGameServerAllocation(t *testing.T) {
 							GameServerState: &ready,
 						},
 					},
-					Priorities: []allocationv1.Priority{
+					Priorities: []agonesv1.Priority{
 						{
 							PriorityType: "Counter",
 							Key:          "o",
@@ -646,7 +646,7 @@ func TestConvertGSAToAllocationRequest(t *testing.T) {
 							},
 						},
 					},
-					Priorities: []allocationv1.Priority{
+					Priorities: []agonesv1.Priority{
 						{
 							PriorityType: "Counter",
 							Key:          "a",

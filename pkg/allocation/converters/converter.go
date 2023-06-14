@@ -389,10 +389,10 @@ func convertStateV1ToError(in allocationv1.GameServerAllocationState) error {
 
 // convertAllocationPrioritiesToGSAPriorities converts a list of AllocationRequest_Priorities to a
 // list of GameServerAllocationSpec (GSA.Spec) Priorities
-func convertAllocationPrioritiesToGSAPriorities(in []*pb.Priority) []allocationv1.Priority {
-	var out []allocationv1.Priority
+func convertAllocationPrioritiesToGSAPriorities(in []*pb.Priority) []agonesv1.Priority {
+	var out []agonesv1.Priority
 	for _, p := range in {
-		priority := allocationv1.Priority{
+		priority := agonesv1.Priority{
 			PriorityType: p.PriorityType,
 			Key:          p.Key,
 			Order:        p.Order,
@@ -404,7 +404,7 @@ func convertAllocationPrioritiesToGSAPriorities(in []*pb.Priority) []allocationv
 
 // convertAllocationPrioritiesToGSAPriorities converts a list of GameServerAllocationSpec (GSA.Spec)
 // Priorities to a list of AllocationRequest_Priorities
-func convertGSAPrioritiesToAllocationPriorities(in []allocationv1.Priority) []*pb.Priority {
+func convertGSAPrioritiesToAllocationPriorities(in []agonesv1.Priority) []*pb.Priority {
 	var out []*pb.Priority
 	for _, p := range in {
 		priority := pb.Priority{
