@@ -614,8 +614,11 @@ func TestGameServerAllocationReturnLabels(t *testing.T) {
 
 	fleets := framework.AgonesClient.AgonesV1().Fleets(framework.Namespace)
 	gameServers := framework.AgonesClient.AgonesV1().GameServers(framework.Namespace)
-	label := map[string]string{"role": t.Name()}
-	annotations := map[string]string{"someAnnotation": "someValue"}
+	role := "role"
+	label := map[string]string{role: t.Name()}
+	annotationKey := "someAnnotation"
+	annotationValue := "someValue"
+	annotations := map[string]string{annotationKey: annotationValue}
 
 	flt := defaultFleet(framework.Namespace)
 	flt.Spec.Replicas = 1
@@ -640,8 +643,9 @@ func TestGameServerAllocationReturnLabels(t *testing.T) {
 	gsa, err = framework.AgonesClient.AllocationV1().GameServerAllocations(framework.Namespace).Create(ctx, gsa.DeepCopy(), metav1.CreateOptions{})
 	if assert.Nil(t, err) {
 		assert.Equal(t, allocationv1.GameServerAllocationAllocated, gsa.Status.State)
-		assert.Equal(t, label, gsa.Status.Metadata.Labels)
-		assert.Equal(t, annotations, gsa.Status.Metadata.Annotations)
+		assert.Equal(t, t.Name(), gsa.Status.Metadata.Labels[role])
+		assert.Equal(t, flt.ObjectMeta.Name, gsa.Status.Metadata.Labels[agonesv1.FleetNameLabel])
+		assert.Equal(t, annotationValue, gsa.Status.Metadata.Annotations[annotationKey])
 		gs, err := gameServers.Get(ctx, gsa.Status.GameServerName, metav1.GetOptions{})
 		assert.Nil(t, err)
 		assert.Equal(t, flt.ObjectMeta.Name, gs.ObjectMeta.Labels[agonesv1.FleetNameLabel])
