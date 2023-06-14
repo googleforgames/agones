@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package main implements a program to remove the feature expiry version shortcodes in .md files.
+// Package main implements a program that removes the contents of feature expiry version shortcodes and publish version blocks in .md files
 package main
 
 import (
@@ -25,9 +25,8 @@ import (
 )
 
 func main() {
-	dirPath := "build/scripts"
+	dirPath := "site/content/en/docs"
 
-	// Parse command-line arguments
 	version := flag.String("version", "", "Expiry version to remove")
 	flag.Parse()
 
@@ -40,7 +39,6 @@ func main() {
 			return nil
 		}
 
-		// Read the content of the .md file
 		file, err := os.Open(filePath)
 		if err != nil {
 			log.Fatal(err)
@@ -88,6 +86,8 @@ func main() {
 func removeBlocks(scanner *bufio.Scanner, version string) string {
 	var sb strings.Builder
 	expiryBlock := false
+	publishBlock := false
+	preserveLines := true
 
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -95,25 +95,33 @@ func removeBlocks(scanner *bufio.Scanner, version string) string {
 		// Check if the line contains the starting of the expiryVersion shortcode with the specified version
 		if strings.Contains(line, "{{% feature expiryVersion=\""+version+"\" %}}") {
 			expiryBlock = true
+			preserveLines = false
 			continue
 		}
 
 		// Check if the line contains the ending of the expiryVersion shortcode
 		if strings.Contains(line, "{{% /feature %}}") && expiryBlock {
 			expiryBlock = false
+			preserveLines = true
 			continue
 		}
 
-		// Append the line if it is not within an expiryVersion block
-		if !expiryBlock {
-			_, err := sb.WriteString(line)
-			if err != nil {
-				log.Fatal(err)
-			}
-			_, err = sb.WriteString("\n")
-			if err != nil {
-				log.Fatal(err)
-			}
+		// Check if the line contains the starting of the publishVersion shortcode with the specified version
+		if strings.Contains(line, "{{% feature publishVersion=\""+version+"\" %}}") {
+			publishBlock = true
+			continue
+		}
+
+		// Check if the line contains the ending of the publishVersion shortcode
+		if strings.Contains(line, "{{% /feature %}}") && publishBlock {
+			publishBlock = false
+			continue
+		}
+
+		// Preserve the line if it is not within an expiryVersion or publishVersion block
+		if preserveLines {
+			sb.WriteString(line)
+			sb.WriteString("\n")
 		}
 	}
 
