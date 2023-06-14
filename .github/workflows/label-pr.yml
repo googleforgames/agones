@@ -18,7 +18,7 @@
 name: Label PR
 
 on:
-  pull_request:
+  pull_request_target:
     types: [opened]
 
 jobs:
@@ -29,6 +29,8 @@ jobs:
       contents: read
       pull-requests: write
       issues: write
+      checks: write
+      security-events: write
 
     steps:
       - name: Label PR
