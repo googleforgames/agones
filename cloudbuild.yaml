@@ -116,6 +116,16 @@ steps:
   args: ["ensure-build-sdk-image-base"]
 
 #
+# Preventing Broken PR Merges in CI
+#
+- name: "make-docker"
+  id: test-gen-crd-client
+  waitFor:
+    - pull-build-image
+  dir: "build"
+  args: ["test-gen-crd-client"]  
+
+#
 # Runs the linter -- but also builds the build image, if not able to download
 #
 
@@ -123,6 +133,7 @@ steps:
   id: lint
   waitFor:
     - pull-build-image
+    - test-gen-crd-client
   dir: "build"
   args: ["lint"] # pull the build image if it exists
 

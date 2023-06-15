@@ -86,6 +86,14 @@ type GameServerSetStatus struct {
 	// Players is the current total player capacity and count for this GameServerSet
 	// +optional
 	Players *AggregatedPlayerStatus `json:"players,omitempty"`
+	// (Alpha, CountsAndLists feature flag) Counters provides aggregated Counter capacity and Counter
+	// count for this GameServerSet.
+	// +optional
+	Counters map[string]AggregatedCounterStatus `json:"counters,omitempty"`
+	// (Alpha, CountsAndLists feature flag) Lists provides aggregated List capacity and List values
+	// for this GameServerSet.
+	// +optional
+	Lists map[string]AggregatedListStatus `json:"lists,omitempty"`
 }
 
 // ValidateUpdate validates when updates occur. The argument

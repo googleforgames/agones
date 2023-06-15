@@ -20,7 +20,13 @@ mod api {
 }
 
 use api::sdk_client::SdkClient;
-pub use api::GameServer;
+pub use api::{
+    game_server::{
+        status::{PlayerStatus, Port},
+        ObjectMeta, Spec, Status,
+    },
+    GameServer,
+};
 
 pub type WatchStream = tonic::Streaming<GameServer>;
 

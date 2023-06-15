@@ -700,6 +700,20 @@ func (gs *GameServer) IsBeforeReady() bool {
 	return false
 }
 
+// IsActive returns true if the GameServer status is Ready, Reserved, or Allocated state.
+func (gs *GameServer) IsActive() bool {
+	switch gs.Status.State {
+	case GameServerStateAllocated:
+		return true
+	case GameServerStateReady:
+		return true
+	case GameServerStateReserved:
+		return true
+	}
+
+	return false
+}
+
 // FindContainer returns the container specified by the name parameter. Returns the index and the value.
 // Returns an error if not found.
 func (gss *GameServerSpec) FindContainer(name string) (int, corev1.Container, error) {

@@ -5345,6 +5345,8 @@ spec:
                       enum:
                       - Buffer
                       - Webhook
+                      - Counter
+                      - List
                     buffer:
                       type: object
                       nullable: true
@@ -5385,6 +5387,48 @@ spec:
                         caBundle:
                           type: string
                           format: byte
+                    counter:
+                      type: object
+                      nullable: true
+                      required:
+                        - key
+                        - bufferSize
+                        - maxCapacity
+                      properties:
+                        key:  # The name of the Counter.
+                          type: string
+                        minCapacity:  # Minimum aggregate counter capacity that can be provided by this FleetAutoscaler. If not specified, the actual minimum capacity will be bufferSize.
+                          type: integer
+                          minimum: 0
+                        maxCapacity:  # Maximum aggregate counter capacity that can be provided by this FleetAutoscaler. Required.
+                          type: integer
+                          minimum: 1
+                        bufferSize:  # Size of a buffer of counted items that are available in the Fleet (available capacity). It can be specified either in absolute (i.e. 5) or percentage format (i.e. 5%).
+                          x-kubernetes-int-or-string: true
+                          anyOf:
+                            - type: integer
+                            - type: string
+                    list:
+                      type: object
+                      nullable: true
+                      required:
+                        - key
+                        - bufferSize
+                        - maxCapacity
+                      properties:
+                        key:  # The name of the List.
+                          type: string
+                        minCapacity:  # Minimum aggregate list capacity that can be provided by this FleetAutoscaler. If not specified, the actual minimum capacity will be bufferSize.
+                          type: integer
+                          minimum: 0
+                        maxCapacity:  # Maximum aggregate list capacity that can be provided by this FleetAutoscaler. Required.
+                          type: integer
+                          minimum: 1
+                        bufferSize:  # Size of a buffer based on the list capacity that is available over the current aggregate list length in the Fleet. It can be specified either in absolute (i.e. 5) or percentage format (i.e. 5%).
+                          x-kubernetes-int-or-string: true
+                          anyOf:
+                            - type: integer
+                            - type: string
                 sync:
                   type: object
                   required:
@@ -15517,13 +15561,12 @@ spec:
                   additionalProperties:
                     type: object
                     properties:
-                      count: # initial count
+                      count: # Aggregated count of the Counter across the GameServerSet
                         type: integer
                         default: 0
                         minimum: 0
-                      capacity: # max capacity of the counter
+                      capacity: # Aggregated maximum capacity of the Counter across the GameServerSet
                         type: integer
-                        default: 1000
                         minimum: 0
                 lists:
                   type: object
@@ -15533,18 +15576,13 @@ spec:
                   additionalProperties:
                     type: object
                     properties:
-                      capacity: # max capacity of the array (can be less than or equal to value of maxItems)
+                      capacity: # Aggregated maximum capacity of the List across the GameServerSet
                         type: integer
                         minimum: 0
-                        default: 1000
-                        maximum: 1000 # must be equal to values.maxItems
-                      values:
-                        type: array
-                        x-kubernetes-list-type: set # Requires items in the array to be unique
-                        maxItems: 1000 # max possible size of the value array (cannot be updated)
-                        items: # name of the item (player1, session1, room1, etc.)
-                          type: string
-                        default: []
+                      count: # Aggregated number of items in the List across the GameServerSet
+                        type: integer
+                        minimum: 0
+                        default: 0
       subresources:
         # status enables the status subresource.
         status: { }
@@ -15939,11 +15977,11 @@ spec:
       affinity:
         nodeAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
-          - preference:
+          - weight: 1
+            preference:
               matchExpressions:
               - key: agones.dev/agones-system
                 operator: Exists
-            weight: 1
       tolerations:
         - effect: NoExecute
           key: agones.dev/agones-system
@@ -16097,11 +16135,11 @@ spec:
       affinity:
         nodeAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
-          - preference:
+          - weight: 1
+            preference:
               matchExpressions:
               - key: agones.dev/agones-system
                 operator: Exists
-            weight: 1
       tolerations:
         - effect: NoExecute
           key: agones.dev/agones-system
@@ -16236,11 +16274,11 @@ spec:
       affinity:
         nodeAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
-          - preference:
+          - weight: 1
+            preference:
               matchExpressions:
               - key: agones.dev/agones-system
                 operator: Exists
-            weight: 1
       tolerations:
         - effect: NoExecute
           key: agones.dev/agones-system
@@ -16302,11 +16340,11 @@ spec:
       affinity:
         nodeAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
-          - preference:
+          - weight: 1
+            preference:
               matchExpressions:
               - key: agones.dev/agones-system
                 operator: Exists
-            weight: 1
       tolerations:
         - effect: NoExecute
           key: agones.dev/agones-system

@@ -33,6 +33,7 @@ import (
 	"agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/webhooks"
 	"agones.dev/agones/pkg/util/workerqueue"
+	"github.com/google/go-cmp/cmp"
 	"github.com/heptiolabs/healthcheck"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -588,7 +589,7 @@ func (c *Controller) syncGameServerSetStatus(ctx context.Context, gsSet *agonesv
 
 // updateStatusIfChanged updates GameServerSet status if it's different than provided.
 func (c *Controller) updateStatusIfChanged(ctx context.Context, gsSet *agonesv1.GameServerSet, status agonesv1.GameServerSetStatus) error {
-	if gsSet.Status != status {
+	if !cmp.Equal(gsSet.Status, status) {
 		gsSetCopy := gsSet.DeepCopy()
 		gsSetCopy.Status = status
 		_, err := c.gameServerSetGetter.GameServerSets(gsSet.ObjectMeta.Namespace).UpdateStatus(ctx, gsSetCopy, metav1.UpdateOptions{})
@@ -618,6 +619,12 @@ func computeStatus(list []*agonesv1.GameServer) agonesv1.GameServerSetStatus {
 		case agonesv1.GameServerStateReserved:
 			status.ReservedReplicas++
 		}
+
+		// Aggregates all Counters and Lists only for GameServer states Ready, Reserved, or Allocated.
+		if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) && gs.IsActive() {
+			status.Counters = aggregateCounters(status.Counters, gs.Status.Counters)
+			status.Lists = aggregateLists(status.Lists, gs.Status.Lists)
+		}
 	}
 
 	if runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
@@ -639,4 +646,49 @@ func computeStatus(list []*agonesv1.GameServer) agonesv1.GameServerSetStatus {
 	}
 
 	return status
+}
+
+// aggregateCounters adds the contents of a CounterStatus map to an AggregatedCounterStatus map.
+func aggregateCounters(aggCounterStatus map[string]agonesv1.AggregatedCounterStatus, counterStatus map[string]agonesv1.CounterStatus) map[string]agonesv1.AggregatedCounterStatus {
+	if aggCounterStatus == nil {
+		aggCounterStatus = make(map[string]agonesv1.AggregatedCounterStatus)
+	}
+
+	for key, val := range counterStatus {
+		// If the Counter exists in both maps, aggregate the values.
+		if counter, ok := aggCounterStatus[key]; ok {
+			counter.Count += val.Count
+			counter.Capacity += val.Capacity
+			aggCounterStatus[key] = counter
+		} else {
+			aggCounterStatus[key] = agonesv1.AggregatedCounterStatus(*val.DeepCopy())
+		}
+	}
+
+	return aggCounterStatus
+}
+
+// aggregateLists adds the contents of a ListStatus map to an AggregatedListStatus map.
+func aggregateLists(aggListStatus map[string]agonesv1.AggregatedListStatus, listStatus map[string]agonesv1.ListStatus) map[string]agonesv1.AggregatedListStatus {
+	if aggListStatus == nil {
+		aggListStatus = make(map[string]agonesv1.AggregatedListStatus)
+	}
+
+	for key, val := range listStatus {
+		// If the List exists in both maps, aggregate the values.
+		if list, ok := aggListStatus[key]; ok {
+			list.Capacity += val.Capacity
+			// We do include duplicates in the Count.
+			list.Count += int64(len(val.Values))
+			aggListStatus[key] = list
+		} else {
+			tmp := val.DeepCopy()
+			aggListStatus[key] = agonesv1.AggregatedListStatus{
+				Capacity: tmp.Capacity,
+				Count:    int64(len(tmp.Values)),
+			}
+		}
+	}
+
+	return aggListStatus
 }
