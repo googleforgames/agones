@@ -83,12 +83,6 @@ Given the above, the steps for upgrade are simpler:
 6. Close your maintenance window.
 7. Congratulations - you have now upgraded to a new version of Agones! 👍
 
-{{< alert color="warning" title="Warning" >}}
-If you are getting an error of `cannot convert int64 to float64` on `helm upgrade` you will need to `helm uninstall` 
-the original installation and do a full `helm install` to the new version to upgrade Agones. 
-
-This is due to [helm/helm#5806](https://github.com/helm/helm/issues/5806) and will be resolved with Kubernetes 1.20
-{{< /alert >}}
 
 ## Upgrading Kubernetes
 
@@ -98,7 +92,7 @@ They may require adjustment to your particular game architecture but should prov
 The recommended approach is to use [multiple clusters](#multiple-clusters), such that the upgrade can be tested
 gradually with production load and easily rolled back if the need arises.
 
-Agones has [multiple supported Kubernetes versions]({{< relref "_index.md#usage-requirements" >}}) for each version. You can stick with a minor Kubernetes version until it is not supported by Agones, but it is recommended to do supported minor (e.g. 1.12.1 ➡ 1.13.2) Kubernetes version upgrades at the same time as a matching Agones upgrades.
+Agones has [multiple supported Kubernetes versions]({{< relref "_index.md#agones-and-kubernetes-supported-versions" >}}) for each version. You can stick with a minor Kubernetes version until it is not supported by Agones, but it is recommended to do supported minor (e.g. 1.12.1 ➡ 1.13.2) Kubernetes version upgrades at the same time as a matching Agones upgrades.
 
 Patch upgrades (e.g. 1.12.1 ➡ 1.12.3) within the same minor version of Kubernetes can be done at any time. 
 
