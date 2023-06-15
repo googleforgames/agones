@@ -84,6 +84,7 @@ const (
 	kubeconfigFlag               = "kubeconfig"
 	allocationBatchWaitTime      = "allocation-batch-wait-time"
 	defaultResync                = 30 * time.Second
+	podNamespace                 = "pod-namespace"
 	leaderElectionFlag           = "leader-election"
 )
 
@@ -249,7 +250,7 @@ func main() {
 	// This allows the controller to not fail health check during install when there is replication
 	go runRunner(server)
 
-	whenLeader(ctx, cancel, logger, ctlConf.LeaderElection, kubeClient, func(ctx context.Context) {
+	whenLeader(ctx, cancel, logger, ctlConf.LeaderElection, kubeClient, ctlConf.PodNamespace, func(ctx context.Context) {
 		kubeInformerFactory.Start(ctx.Done())
 		agonesInformerFactory.Start(ctx.Done())
 
@@ -282,6 +283,7 @@ func parseEnvFlags() config {
 	viper.SetDefault(enableStackdriverMetricsFlag, false)
 	viper.SetDefault(stackdriverLabels, "")
 	viper.SetDefault(allocationBatchWaitTime, 500*time.Millisecond)
+	viper.SetDefault(podNamespace, "agones-system")
 	viper.SetDefault(leaderElectionFlag, false)
 
 	viper.SetDefault(projectIDFlag, "")
@@ -315,6 +317,7 @@ func parseEnvFlags() config {
 	pflag.Int32(logSizeLimitMBFlag, 1000, "Log file size limit in MB")
 	pflag.String(logLevelFlag, viper.GetString(logLevelFlag), "Agones Log level")
 	pflag.Duration(allocationBatchWaitTime, viper.GetDuration(allocationBatchWaitTime), "Flag to configure the waiting period between allocations batches")
+	pflag.String(podNamespace, viper.GetString(podNamespace), "namespace of current pod")
 	pflag.Bool(leaderElectionFlag, viper.GetBool(leaderElectionFlag), "Flag to enable/disable leader election for controller pod")
 	cloudproduct.BindFlags()
 	runtime.FeaturesBindFlags()
@@ -344,6 +347,7 @@ func parseEnvFlags() config {
 	runtime.Must(viper.BindEnv(logDirFlag))
 	runtime.Must(viper.BindEnv(logSizeLimitMBFlag))
 	runtime.Must(viper.BindEnv(allocationBatchWaitTime))
+	runtime.Must(viper.BindEnv(podNamespace))
 	runtime.Must(viper.BindEnv(leaderElectionFlag))
 	runtime.Must(viper.BindPFlags(pflag.CommandLine))
 	runtime.Must(cloudproduct.BindEnv())
@@ -395,6 +399,7 @@ func parseEnvFlags() config {
 		LogSizeLimitMB:          int(viper.GetInt32(logSizeLimitMBFlag)),
 		StackdriverLabels:       viper.GetString(stackdriverLabels),
 		AllocationBatchWaitTime: viper.GetDuration(allocationBatchWaitTime),
+		PodNamespace:            viper.GetString(podNamespace),
 		LeaderElection:          viper.GetBool(leaderElectionFlag),
 	}
 }
@@ -424,6 +429,7 @@ type config struct {
 	LogLevel                string
 	LogSizeLimitMB          int
 	AllocationBatchWaitTime time.Duration
+	PodNamespace            string
 	LeaderElection          bool
 }
 
@@ -451,7 +457,7 @@ type httpServer struct {
 	http.ServeMux
 }
 
-func whenLeader(ctx context.Context, cancel context.CancelFunc, logger *logrus.Entry, doLeaderElection bool, kubeClient *kubernetes.Clientset, start func(_ context.Context)) {
+func whenLeader(ctx context.Context, cancel context.CancelFunc, logger *logrus.Entry, doLeaderElection bool, kubeClient *kubernetes.Clientset, namespace string, start func(_ context.Context)) {
 	if !doLeaderElection {
 		start(ctx)
 		return
@@ -462,7 +468,7 @@ func whenLeader(ctx context.Context, cancel context.CancelFunc, logger *logrus.E
 	lock := &resourcelock.LeaseLock{
 		LeaseMeta: metav1.ObjectMeta{
 			Name:      "agones-controller-lock",
-			Namespace: "agones-system",
+			Namespace: namespace,
 		},
 		Client: kubeClient.CoordinationV1(),
 		LockConfig: resourcelock.ResourceLockConfig{
