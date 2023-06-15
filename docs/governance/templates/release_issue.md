@@ -43,7 +43,7 @@ and copy it into a release issue. Fill in relevant values, found inside {}
   - [ ] config.toml updates:
     - [ ] Update `release_branch` to the new release branch for {version}.
     - [ ] Update `release_version` with the new release version {version}.
-    - [ ] Navigate to `agones` directory and run `go run build/scripts/site-config-version-update/main.go` to synchronizes data between dev and prod.
+    - [ ] Run `make site-config-update-version` to sync data between dev and prod.
     - [ ] Update documentation with updated example images tags.
 - [ ] Create PR with these changes, and merge them with an approval.
 - [ ] Run `git remote update && git checkout main && git reset --hard upstream/main` to ensure your code is in line
