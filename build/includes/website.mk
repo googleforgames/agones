@@ -109,3 +109,8 @@ test-gen-api-docs: ensure-build-image
 	$(GEN_API_DOCS)
 	sort $(expected_docs) > /tmp/result.sorted
 	diff -bB /tmp/result.sorted /tmp/generated.html.sorted
+
+# Remove feature expiry/publish version shortcodes update in site/content/en/docs
+feature-shortcode-update: ensure-build-image
+	docker run --rm $(common_mounts) --workdir=$(mount_path) $(DOCKER_RUN_ARGS) $(build_tag) \
+		go run build/scripts/feature-shortcode-update/main.go -version=$(version)
