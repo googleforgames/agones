@@ -105,7 +105,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.registerServiceAccounts`     | Attempts to create service accounts for the controllers                                                                                                                                                                 | `true`          |
 | `agones.createPriorityClass`         | Attempts to create priority classes for the controllers                                                                                                                                                                 | `true`          |
 | `agones.priorityClassName`           | Name of the priority classes to create                                                                                                                                                                                  | `agones-system` |
-| `agones.system.requireDedicatedNode` | Forces Agones system components to be scheduled on dedicated nodes, only applies to the GKE Standard without node auto-provisioning                                                                                     | `false`         |
+| `agones.requireDedicatedNodes` | Forces Agones system components to be scheduled on dedicated nodes, only applies to the GKE Standard without node auto-provisioning                                                                                     | `false`         |
 
 {{% /feature %}}
 
