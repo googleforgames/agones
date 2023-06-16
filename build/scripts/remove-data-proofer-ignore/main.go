@@ -33,11 +33,15 @@ func main() {
 
 	filePath := "site/content/en/blog/releases/" + *fileName
 
-	file, err := os.OpenFile(filePath, os.O_RDWR, 0644)
+	file, err := os.OpenFile(filePath, os.O_RDWR, 0o644)
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer file.Close()
+	defer func() {
+		if cerr := file.Close(); cerr != nil {
+			log.Fatal(cerr)
+		}
+	}()
 
 	// Read the file content
 	stat, err := file.Stat()
@@ -53,7 +57,7 @@ func main() {
 	contentStr := string(content)
 
 	// Remove the "data-proofer-ignore" word from the content
-	modifiedContent := strings.Replace(contentStr, "data-proofer-ignore", "", -1)
+	modifiedContent := strings.ReplaceAll(contentStr, "data-proofer-ignore", "")
 
 	// Truncate the file before writing the modified content
 	err = file.Truncate(0)
