@@ -150,7 +150,7 @@ The `spec` field is the actual `GameServerAllocation` specification, and it is c
 
 Once created the `GameServerAllocation` will have a `status` field consisting of the following:
 
-- `state` is the current state of a GameServerAllocation, e.g. `Allocated`, or `UnAllocated`
+- `State` is the current state of a GameServerAllocation, e.g. `Allocated`, or `UnAllocated`
 - `GameServerName` is the name of the game server attached to this allocation, once the `state` is `Allocated`
 - `Ports` is a list of the ports that the game server makes available. See [the GameServer Reference]({{< ref "/docs/Reference/gameserver.md" >}}) for more details.
 - `Address` is the network address where the game server can be reached.
