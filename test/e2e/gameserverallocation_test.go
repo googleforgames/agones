@@ -641,17 +641,15 @@ func TestGameServerAllocationReturnLabels(t *testing.T) {
 		}}
 
 	gsa, err = framework.AgonesClient.AllocationV1().GameServerAllocations(framework.Namespace).Create(ctx, gsa.DeepCopy(), metav1.CreateOptions{})
-	if assert.Nil(t, err) {
-		assert.Equal(t, allocationv1.GameServerAllocationAllocated, gsa.Status.State)
-		assert.Equal(t, t.Name(), gsa.Status.Metadata.Labels[role])
-		assert.Equal(t, flt.ObjectMeta.Name, gsa.Status.Metadata.Labels[agonesv1.FleetNameLabel])
-		assert.Equal(t, annotationValue, gsa.Status.Metadata.Annotations[annotationKey])
-		gs, err := gameServers.Get(ctx, gsa.Status.GameServerName, metav1.GetOptions{})
-		assert.Nil(t, err)
-		assert.Equal(t, flt.ObjectMeta.Name, gs.ObjectMeta.Labels[agonesv1.FleetNameLabel])
-	} else {
-		assert.FailNow(t, "could not completed gsa1 allocation")
-	}
+  require.NoError(t, err)
+
+  assert.Equal(t, allocationv1.GameServerAllocationAllocated, gsa.Status.State)
+  assert.Equal(t, t.Name(), gsa.Status.Metadata.Labels[role])
+  assert.Equal(t, flt.ObjectMeta.Name, gsa.Status.Metadata.Labels[agonesv1.FleetNameLabel])
+  assert.Equal(t, annotationValue, gsa.Status.Metadata.Annotations[annotationKey])
+  gs, err := gameServers.Get(ctx, gsa.Status.GameServerName, metav1.GetOptions{})
+  require.NoError(t, err)
+  assert.Equal(t, flt.ObjectMeta.Name, gs.ObjectMeta.Labels[agonesv1.FleetNameLabel])
 }
 
 func TestGameServerAllocationDeletionOnUnAllocate(t *testing.T) {
