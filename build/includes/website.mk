@@ -114,3 +114,8 @@ test-gen-api-docs: ensure-build-image
 site-config-update-version: ensure-build-image
 	docker run --rm $(common_mounts) --workdir=$(mount_path) $(DOCKER_RUN_ARGS) $(build_tag) \
 		go run build/scripts/site-config-version-update/main.go
+
+# update SDKS/Install version
+sdk-update-version: ensure-build-image
+	docker run --rm $(common_mounts) --workdir=$(mount_path) $(DOCKER_RUN_ARGS) $(build_tag) \
+		go run build/scripts/sdk-update-version/main.go -release-stage=$(release_stage) -version=$(version)

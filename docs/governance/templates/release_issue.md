@@ -25,7 +25,7 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 - [ ] Ensure the next stable releases in the Google Calendar have the correct version number.
 - [ ] `git checkout main && git pull --rebase upstream main`
 - [ ] Run `make pre-build-release` to ensure all example images exist on agones-images/examples repository and to deploy the {version}-1 service on GCP/App Engine/Services.
-- [ ] Navigate to `agones` directory and run `go run build/scripts/version-update/main.go --release-stage=before {version}`. This will update the version number of the Helm/SDK/Install packages to {version}.
+- [ ] Run `make sdk-update-version release_stage=before version={version}` file. This command will update the version number in the sdks/install files to {version}.
 - [ ] Create a _draft_ release with the [release template][release-template].
   - run `make release-example-image-markdown` to populate example images and append the output in `Images available with this release` section
   - [ ] Draft a new release with [release draft][release-draft]. Update the `Tag version` and `Release title` with the release version and click on `Generate release notes` to generate the release notes with `Full Changelog` info for {version}. Make sure to add the description. Include the `Images available with this release` section from the previous step that will be present after the `Full Changelog` and save the draft.
@@ -68,7 +68,7 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 - [ ] Post to the [agonesdev](https://twitter.com/agonesdev) Twitter account.
 - [ ] Run `git checkout main`.
 - [ ] Then increment the `base_version` in [`build/Makefile`][build-makefile]
-- [ ] Navigate to `agones` directory and run `go run build/scripts/version-update/main.go --release-stage=after {version}` file. This will update the version number of the Helm/SDK/Install packages to {version}+1-dev.
+- [ ] Run `make sdk-update-version release_stage=after version={version}` file. This command will update the version number in the sdks/install files to {version}+1-dev.
 - [ ] Create PR with these changes, and merge them with approval
 - [ ] Close this issue. _Congratulations!_ - the release is now complete! :tada: :clap: :smile: :+1:
 
