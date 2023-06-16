@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package main implements a program that performs version update operations.
+// Package main implements a program that updates the version of files in the sdks and install directories.
 package main
 
 import (
@@ -26,21 +26,22 @@ import (
 )
 
 var releaseStage string
+var version string
 
 func init() {
 	flag.StringVar(&releaseStage, "release-stage", "", "Specify the release stage ('before' or 'after')")
+	flag.StringVar(&version, "version", "", "Specify the initial version")
 }
 
 func main() {
 	flag.Parse()
 
-	if len(flag.Args()) < 1 {
-		log.Fatalf("Please provide the release stage ('before' or 'after') and the initial version as command-line arguments")
+	if releaseStage == "" || version == "" {
+		log.Fatalf("Please provide the release stage ('before' or 'after') and the version as command-line arguments")
 	}
 
-	initialVersion := flag.Arg(0)
-
-	log.Printf("Initial Version: %s", initialVersion)
+	log.Printf("Release Stage: %s", releaseStage)
+	log.Printf("Version: %s", version)
 
 	files := []string{
 		"install/helm/agones/Chart.yaml",
@@ -54,7 +55,11 @@ func main() {
 	}
 
 	for _, filename := range files {
-		err := UpdateFile(filename, initialVersion)
+		// Print the directory path
+		dir := filepath.Dir(filename)
+		log.Printf("Directory: %s", dir)
+
+		err := UpdateFile(filename, version)
 		if err != nil {
 			log.Fatalf("Error updating file %s: %s\n", filename, err.Error())
 		}
@@ -62,7 +67,7 @@ func main() {
 }
 
 // UpdateFile updates the specified file to the current release version before and after the release process.
-func UpdateFile(filename string, initialVersion string) error {
+func UpdateFile(filename string, version string) error {
 	fileBytes, err := os.ReadFile(filename)
 	if err != nil {
 		return err
@@ -83,12 +88,12 @@ func UpdateFile(filename string, initialVersion string) error {
 		}
 	case "after":
 		if ext == ".json" {
-			re := regexp.MustCompile(`"` + regexp.QuoteMeta(initialVersion) + `"`)
-			newVersion := incrementVersionAfterRelease(initialVersion) + "-dev"
+			re := regexp.MustCompile(`"` + regexp.QuoteMeta(version) + `"`)
+			newVersion := incrementVersionAfterRelease(version) + "-dev"
 			content = re.ReplaceAllString(content, `"`+newVersion+`"`)
 		} else {
-			re := regexp.MustCompile(regexp.QuoteMeta(initialVersion))
-			newVersion := incrementVersionAfterRelease(initialVersion)
+			re := regexp.MustCompile(regexp.QuoteMeta(version))
+			newVersion := incrementVersionAfterRelease(version)
 			content = re.ReplaceAllString(content, newVersion+"-dev")
 		}
 	default:
@@ -105,7 +110,14 @@ func UpdateFile(filename string, initialVersion string) error {
 
 func incrementVersionAfterRelease(version string) string {
 	segments := strings.Split(version, ".")
-	lastButOneSegment, _ := strconv.Atoi(segments[len(segments)-2])
+	if len(segments) < 3 {
+		log.Fatalf("Invalid version format: %s\n", version)
+	}
+
+	lastButOneSegment, err := strconv.Atoi(segments[len(segments)-2])
+	if err != nil {
+		log.Fatalf("Error converting version segment to integer: %s\n", err.Error())
+	}
 	segments[len(segments)-2] = strconv.Itoa(lastButOneSegment + 1)
 	return strings.Join(segments, ".")
 }
