@@ -625,11 +625,8 @@ func TestGameServerAllocationReturnLabels(t *testing.T) {
 	flt.Spec.Template.ObjectMeta.Labels = label
 	flt.Spec.Template.ObjectMeta.Annotations = annotations
 	flt, err := fleets.Create(ctx, flt, metav1.CreateOptions{})
-	if assert.Nil(t, err) {
-		defer fleets.Delete(ctx, flt.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
-	} else {
-		assert.FailNow(t, "could not create first fleet")
-	}
+  defer fleets.Delete(ctx, flt.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
+  require.NoError(t, err)
 
 	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 
