@@ -28,30 +28,32 @@ func main() {
 	flag.Parse()
 
 	if *fileName == "" {
-		log.Fatal("Please provide the file name using the -file flag")
+		log.Println("Please provide the file name using the -file flag")
 	}
 
 	filePath := "site/content/en/blog/releases/" + *fileName
 
 	file, err := os.OpenFile(filePath, os.O_RDWR, 0o644)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 	defer func() {
 		if cerr := file.Close(); cerr != nil {
-			log.Fatal(cerr)
+			log.Println(cerr)
 		}
 	}()
 
 	// Read the file content
 	stat, err := file.Stat()
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return
 	}
 	content := make([]byte, stat.Size())
 	_, err = file.Read(content)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return
 	}
 
 	contentStr := string(content)
@@ -62,19 +64,22 @@ func main() {
 	// Truncate the file before writing the modified content
 	err = file.Truncate(0)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return
 	}
 
 	// Move the file offset to the beginning
 	_, err = file.Seek(0, 0)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return
 	}
 
 	// Write the modified content back to the file
 	_, err = file.WriteString(modifiedContent)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return
 	}
 
 	log.Println("File successfully modified:", filePath)
