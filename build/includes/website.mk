@@ -115,7 +115,9 @@ sdk-update-version: ensure-build-image
 	docker run --rm $(common_mounts) --workdir=$(mount_path) $(DOCKER_RUN_ARGS) $(build_tag) \
 		go run build/scripts/sdk-update-version/main.go -release-stage=$(release_stage) -version=$(version)
 
+FILENAME ?= ""
+
 # delete "data-proofer-ignore" attribute from previous release blog.
 del-data-proofer-ignore: ensure-build-image
 	docker run --rm $(common_mounts) --workdir=$(mount_path) $(DOCKER_RUN_ARGS) $(build_tag) \
-		go run build/scripts/remove-data-proofer-ignore/main.go -file=$(word 2, $(MAKECMDGOALS))
+		go run build/scripts/remove-data-proofer-ignore/main.go -file=$(FILENAME)

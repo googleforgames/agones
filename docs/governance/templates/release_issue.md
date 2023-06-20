@@ -34,7 +34,7 @@ and copy it into a release issue. Fill in relevant values, found inside {}
   - [ ] Create a new file named {version}.md in `/site/content/en/blog/releases`. Copy the draft release content in this file (this will be what you send via email)[refer the previous release file].
   - run `make site-server` frequently to make sure everything looks fine for the release in your localhost
   - [ ] In `site/content/en/docs/Installation/_index.md #agones-and-kubernetes-supported-versions`, for the current version, replace `{{% k8s-version %}}` with hardcoded Kubernetes versions supported by the current version. And add a row for the Agones release version with `{{% k8s-version %}}` as its supported Kubernetes versions.
-  - [ ] Run `make del-data-proofer-ignore {version}-1.md` to remove `data-proofer-ignore` attribute from previous release blog. Review all occurrences of the link_test and data-proofer-ignore attributes globally. Exclude html and release files.
+  - [ ] Run `make del-data-proofer-ignore FILENAME={version}-1.md` to remove `data-proofer-ignore` attribute from previous release blog. Review all occurrences of the link_test and data-proofer-ignore attributes globally. Exclude html and release files.
   - [ ] Review and remove all instances of the `feature` shortcode.
     - Ignore html and release files.
     - remove the `feature expiryVersion` block with content. remove only the block of `feature publishVersion` and do not remove the content.
