@@ -110,10 +110,15 @@ test-gen-api-docs: ensure-build-image
 	sort $(expected_docs) > /tmp/result.sorted
 	diff -bB /tmp/result.sorted /tmp/generated.html.sorted
 
-# Replicate data between dev and prod in site/config.toml
+# update release version and replicate data between dev and prod in site/config.toml
 site-config-update-version: ensure-build-image
 	docker run --rm $(common_mounts) --workdir=$(mount_path) $(DOCKER_RUN_ARGS) $(build_tag) \
 		go run build/scripts/site-config-version-update/main.go
+
+# Remove feature expiry/publish version shortcodes update in site/content/en/docs
+feature-shortcode-update: ensure-build-image
+	docker run --rm $(common_mounts) --workdir=$(mount_path) $(DOCKER_RUN_ARGS) $(build_tag) \
+		go run build/scripts/feature-shortcode-update/main.go -version=$(version)
 
 # update SDKS/Install version
 sdk-update-version: ensure-build-image
