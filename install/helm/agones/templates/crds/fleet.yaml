@@ -110,7 +110,7 @@ spec:
                           anyOf:
                             - type: integer
                             - type: string
-                priorities: # which gameservers in the Fleet are most important to keep around - impacts scale down logic
+                priorities: # which gameservers in the Fleet are most important to keep around - impacts scale down logic. Must be identical to priorities in gameserverset.yaml.
                   type: array
                   title: Configuration of Counters and Lists scale down logic
                   nullable: true

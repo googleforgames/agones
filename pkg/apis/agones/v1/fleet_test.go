@@ -78,10 +78,6 @@ func TestFleetGameServerSetGameServer(t *testing.T) {
 		Annotations: nil,
 	}
 
-	gsSet = f.GameServerSet()
-	assert.NotNil(t, gsSet.Spec.AllocationOverflow)
-	assert.Equal(t, "things", gsSet.Spec.AllocationOverflow.Labels["stuff"])
-
 	assert.Nil(t, f.Spec.Priorities)
 	f.Spec.Priorities = []Priority{
 		{PriorityType: "Counter",
@@ -89,6 +85,12 @@ func TestFleetGameServerSetGameServer(t *testing.T) {
 			Order: "Ascending"}}
 	assert.NotNil(t, f.Spec.Priorities)
 	assert.Equal(t, f.Spec.Priorities[0], Priority{PriorityType: "Counter", Key: "Foo", Order: "Ascending"})
+
+	gsSet = f.GameServerSet()
+	assert.NotNil(t, gsSet.Spec.AllocationOverflow)
+	assert.Equal(t, "things", gsSet.Spec.AllocationOverflow.Labels["stuff"])
+
+	assert.Equal(t, gsSet.Spec.Priorities[0], Priority{PriorityType: "Counter", Key: "Foo", Order: "Ascending"})
 }
 
 func TestFleetApplyDefaults(t *testing.T) {
@@ -295,6 +297,7 @@ func TestGetReadyReplicaCountForGameServerSets(t *testing.T) {
 	assert.Equal(t, int32(1020), GetReadyReplicaCountForGameServerSets(fixture))
 }
 
+// nolint:dupl  // Linter errors on lines are duplicate of TestGameServerSetPriorityValidate
 func TestFleetPriorityValidate(t *testing.T) {
 	t.Parallel()
 

@@ -136,6 +136,11 @@ func (f *Fleet) GameServerSet() *GameServerSet {
 		gsSet.Spec.AllocationOverflow = f.Spec.AllocationOverflow.DeepCopy()
 	}
 
+	// TODO: Do we need a DeepCopy here? (Priorities does not have a method DeepCopy) Priorities should not change (unless changes are made directly to the fleet CRD yaml and the fleet re-applied at which point this field would get update anyways)
+	if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) && f.Spec.Priorities != nil {
+		gsSet.Spec.Priorities = f.Spec.Priorities
+	}
+
 	return gsSet
 }
 
