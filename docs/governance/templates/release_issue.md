@@ -17,6 +17,7 @@ and copy it into a release issue. Fill in relevant values, found inside {}
   - [ ] An `upstream` remote that points to `git@github.com:googleforgames/agones.git`.
 - [ ] Have a `gcloud config configurations` configuration called `agones-images` that points to the same project.
 - [ ] Edit access to the [Agones Release Calendar](https://calendar.google.com/calendar/u/0?cid=Z29vZ2xlLmNvbV84MjhuOGYxOGhmYnRyczR2dTRoMXNrczIxOEBncm91cC5jYWxlbmRhci5nb29nbGUuY29t)
+- [ ] Get approval for [Release Title and Description](https://docs.google.com/document/d/1bRZCxYB8lrVcrru41b6s5D_9uU0zS49vVGdBhg0yDIY/edit)
 
 ## Steps
 
