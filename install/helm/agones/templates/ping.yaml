@@ -50,15 +50,15 @@ spec:
     spec:
       affinity:
       {{- if .Values.agones.ping.affinity }}
-      {{- if .Values.agones.system.requireDedicatedNode }}
-      {{- fail "agones.ping.affinity and agones.system.requireDedicatedNode cannot be set at the same time!" }}
+      {{- if .Values.agones.requireDedicatedNodes }}
+      {{- fail "agones.ping.affinity and agones.requireDedicatedNodes cannot be set at the same time!" }}
       {{- end}}
       {{- end}}
       {{- if .Values.agones.ping.affinity }}
 {{ toYaml .Values.agones.ping.affinity | indent 8 }}
       {{- else}}
         nodeAffinity:
-          {{- if .Values.agones.system.requireDedicatedNode }}
+          {{- if .Values.agones.requireDedicatedNodes }}
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
             - matchExpressions:
