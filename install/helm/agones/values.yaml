@@ -46,8 +46,7 @@ agones:
   createPriorityClass: true
   priorityClassName: agones-system
   cloudProduct: "auto"
-  system:
-    requireDedicatedNode: false
+  requireDedicatedNodes: false
   controller:
     resources: {}
       # requests:
