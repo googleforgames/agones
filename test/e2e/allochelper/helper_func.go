@@ -255,6 +255,8 @@ func ValidateAllocatorResponse(t *testing.T, resp *pb.AllocationResponse) {
 	assert.NotEmpty(t, resp.GameServerName)
 	assert.NotEmpty(t, resp.Address)
 	assert.NotEmpty(t, resp.NodeName)
+	assert.NotEmpty(t, resp.Metadata.Labels)
+	assert.NotEmpty(t, resp.Metadata.Annotations)
 }
 
 // DeleteAgonesAllocatorPod deletes a Agones allocator pod

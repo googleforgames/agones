@@ -855,6 +855,64 @@ func TestConvertGSAToAllocationResponse(t *testing.T) {
 			in:   nil,
 			want: nil,
 		},
+		{
+			name: "status metadata contains labels and annotations",
+			in: &allocationv1.GameServerAllocation{
+				TypeMeta: metav1.TypeMeta{
+					Kind:       "GameServerAllocation",
+					APIVersion: "allocation.agones.dev/v1",
+				},
+				Status: allocationv1.GameServerAllocationStatus{
+					State:          allocationv1.GameServerAllocationAllocated,
+					GameServerName: "GSN",
+					Ports: []agonesv1.GameServerStatusPort{
+						{
+							Port: 123,
+						},
+						{
+							Name: "port-name",
+						},
+					},
+					Address:  "address",
+					NodeName: "node-name",
+					Source:   "local",
+					Metadata: &allocationv1.GameServerMetadata{
+						Labels: map[string]string{
+							"label-key": "label-value",
+							"other-key": "other-value",
+						},
+						Annotations: map[string]string{
+							"annotation-key": "annotation-value",
+							"other-key":      "other-value",
+						},
+					},
+				},
+			},
+			want: &pb.AllocationResponse{
+				GameServerName: "GSN",
+				Address:        "address",
+				NodeName:       "node-name",
+				Ports: []*pb.AllocationResponse_GameServerStatusPort{
+					{
+						Port: 123,
+					},
+					{
+						Name: "port-name",
+					},
+				},
+				Source: "local",
+				Metadata: &pb.AllocationResponse_GameServerMetadata{
+					Labels: map[string]string{
+						"label-key": "label-value",
+						"other-key": "other-value",
+					},
+					Annotations: map[string]string{
+						"annotation-key": "annotation-value",
+						"other-key":      "other-value",
+					},
+				},
+			},
+		},
 	}
 	for _, tc := range tests {
 		tc := tc

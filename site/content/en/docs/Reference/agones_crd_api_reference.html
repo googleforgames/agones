@@ -1519,7 +1519,7 @@ GameServerSetStatus
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#agones.dev/v1.FleetStatus">FleetStatus</a>, 
+<a href="#agones.dev/v1.FleetStatus">FleetStatus</a>,
 <a href="#agones.dev/v1.GameServerSetStatus">GameServerSetStatus</a>)
 </p>
 <p>
@@ -1559,7 +1559,7 @@ int64
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#agones.dev/v1.FleetSpec">FleetSpec</a>, 
+<a href="#agones.dev/v1.FleetSpec">FleetSpec</a>,
 <a href="#agones.dev/v1.GameServerSetSpec">GameServerSetSpec</a>)
 </p>
 <p>
@@ -1605,7 +1605,7 @@ map[string]string
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#agones.dev/v1.GameServerSpec">GameServerSpec</a>, 
+<a href="#agones.dev/v1.GameServerSpec">GameServerSpec</a>,
 <a href="#agones.dev/v1.GameServerStatus">GameServerStatus</a>)
 </p>
 <p>
@@ -1645,7 +1645,7 @@ int64
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#agones.dev/v1.GameServerSpec">GameServerSpec</a>, 
+<a href="#agones.dev/v1.GameServerSpec">GameServerSpec</a>,
 <a href="#agones.dev/v1.GameServerStatus">GameServerStatus</a>)
 </p>
 <p>
@@ -1774,7 +1774,7 @@ GameServerTemplateSpec
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#agones.dev/v1.Fleet">Fleet</a>, 
+<a href="#agones.dev/v1.Fleet">Fleet</a>,
 <a href="#autoscaling.agones.dev/v1.FleetAutoscaleRequest">FleetAutoscaleRequest</a>)
 </p>
 <p>
@@ -2111,7 +2111,7 @@ Players is the current total player capacity and count for this GameServerSet</p
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#agones.dev/v1.GameServer">GameServer</a>, 
+<a href="#agones.dev/v1.GameServer">GameServer</a>,
 <a href="#agones.dev/v1.GameServerTemplateSpec">GameServerTemplateSpec</a>)
 </p>
 <p>
@@ -2260,7 +2260,7 @@ Eviction
 (<code>string</code> alias)</p></h3>
 <p>
 (<em>Appears on:</em>
-<a href="#allocation.agones.dev/v1.GameServerSelector">GameServerSelector</a>, 
+<a href="#allocation.agones.dev/v1.GameServerSelector">GameServerSelector</a>,
 <a href="#agones.dev/v1.GameServerStatus">GameServerStatus</a>)
 </p>
 <p>
@@ -2402,7 +2402,7 @@ Eviction
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#allocation.agones.dev/v1.GameServerAllocationStatus">GameServerAllocationStatus</a>, 
+<a href="#allocation.agones.dev/v1.GameServerAllocationStatus">GameServerAllocationStatus</a>,
 <a href="#agones.dev/v1.GameServerStatus">GameServerStatus</a>)
 </p>
 <p>
@@ -2443,7 +2443,7 @@ int32
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#agones.dev/v1.FleetSpec">FleetSpec</a>, 
+<a href="#agones.dev/v1.FleetSpec">FleetSpec</a>,
 <a href="#agones.dev/v1.GameServerSetSpec">GameServerSetSpec</a>)
 </p>
 <p>
@@ -2685,7 +2685,7 @@ int32
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#agones.dev/v1.GameServerSpec">GameServerSpec</a>, 
+<a href="#agones.dev/v1.GameServerSpec">GameServerSpec</a>,
 <a href="#agones.dev/v1.GameServerStatus">GameServerStatus</a>)
 </p>
 <p>
@@ -6387,6 +6387,57 @@ string
 <td>
 <p>If the allocation is from a remote cluster, Source is the endpoint of the remote agones-allocator.
 Otherwise, Source is &ldquo;local&rdquo;</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>metadata</code></br>
+<em>
+<a href="#allocation.agones.dev/v1.GameServerMetadata">
+GameServerMetadata
+</a>
+</em>
+</td>
+<td>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="allocation.agones.dev/v1.GameServerMetadata">GameServerMetadata
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#allocation.agones.dev/v1.GameServerAllocationStatus">GameServerAllocationStatus</a>)
+</p>
+<p>
+<p>GameServerMetadata is the metadata from the allocated game server at allocation time</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>labels</code></br>
+<em>
+map[string]string
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>annotations</code></br>
+<em>
+map[string]string
+</em>
+</td>
+<td>
 </td>
 </tr>
 </tbody>
