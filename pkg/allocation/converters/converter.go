@@ -302,6 +302,7 @@ func ConvertGSAToAllocationResponse(in *allocationv1.GameServerAllocation) (*pb.
 		NodeName:       in.Status.NodeName,
 		Ports:          convertGSAAgonesPortsToAllocationPorts(in.Status.Ports),
 		Source:         in.Status.Source,
+		Metadata:       convertGSAMetadataToAllocationMetadata(in.Status.Metadata),
 	}, nil
 }
 
@@ -319,6 +320,7 @@ func ConvertAllocationResponseToGSA(in *pb.AllocationResponse, rs string) *alloc
 			NodeName:       in.NodeName,
 			Ports:          convertAllocationPortsToGSAAgonesPorts(in.Ports),
 			Source:         rs,
+			Metadata:       convertAllocationMetadataToGSAMetadata(in.Metadata),
 		},
 	}
 	out.SetGroupVersionKind(allocationv1.SchemeGroupVersion.WithKind("GameServerAllocation"))
@@ -350,6 +352,26 @@ func convertAllocationPortsToGSAAgonesPorts(in []*pb.AllocationResponse_GameServ
 		out = append(out, *p)
 	}
 	return out
+}
+
+func convertGSAMetadataToAllocationMetadata(in *allocationv1.GameServerMetadata) *pb.AllocationResponse_GameServerMetadata {
+	if in == nil {
+		return nil
+	}
+	metadata := &pb.AllocationResponse_GameServerMetadata{}
+	metadata.Labels = in.Labels
+	metadata.Annotations = in.Annotations
+	return metadata
+}
+
+func convertAllocationMetadataToGSAMetadata(in *pb.AllocationResponse_GameServerMetadata) *allocationv1.GameServerMetadata {
+	if in == nil {
+		return nil
+	}
+	metadata := &allocationv1.GameServerMetadata{}
+	metadata.Labels = in.Labels
+	metadata.Annotations = in.Annotations
+	return metadata
 }
 
 // convertStateV1ToError converts GameServerAllocationState V1 (GSA) to AllocationResponse_GameServerAllocationState

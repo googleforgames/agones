@@ -208,6 +208,7 @@ func TestAllocatorWithSelectors(t *testing.T) {
 			require.NoError(t, err)
 			require.Equal(t, response.GameServerName, allocatedResponse.GameServerName)
 			helper.ValidateAllocatorResponse(t, allocatedResponse)
+			assert.Equal(t, flt.ObjectMeta.Name, allocatedResponse.Metadata.Labels[agonesv1.FleetNameLabel])
 
 			// do a capacity based allocation
 			logrus.Info("testing capacity allocation filter")
