@@ -55,6 +55,23 @@
       ],
       "default": "Packed"
     },
+    "AllocationResponseGameServerMetadata": {
+      "type": "object",
+      "properties": {
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "annotations": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
     "AllocationResponseGameServerStatusPort": {
       "type": "object",
       "properties": {
@@ -150,6 +167,9 @@
         },
         "source": {
           "type": "string"
+        },
+        "metadata": {
+          "$ref": "#/definitions/AllocationResponseGameServerMetadata"
         }
       }
     },

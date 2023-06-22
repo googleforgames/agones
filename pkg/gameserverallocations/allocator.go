@@ -284,6 +284,10 @@ func (c *Allocator) allocateFromLocalCluster(ctx context.Context, gsa *allocatio
 		gsa.Status.Address = gs.Status.Address
 		gsa.Status.NodeName = gs.Status.NodeName
 		gsa.Status.Source = localAllocationSource
+		gsa.Status.Metadata = &allocationv1.GameServerMetadata{
+			Labels:      gs.ObjectMeta.Labels,
+			Annotations: gs.ObjectMeta.Annotations,
+		}
 	}
 
 	c.loggerForGameServerAllocation(gsa).Debug("Game server allocation")
