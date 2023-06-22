@@ -57,15 +57,15 @@ spec:
     spec:
       affinity:
       {{- if .Values.agones.extensions.affinity }}
-      {{- if .Values.agones.system.requireDedicatedNode }}
-      {{- fail "agones.extensions.affinity and agones.system.requireDedicatedNode cannot be set at the same time!" }}
+      {{- if .Values.agones.requireDedicatedNodes }}
+      {{- fail "agones.extensions.affinity and agones.requireDedicatedNodes cannot be set at the same time!" }}
       {{- end}}
       {{- end}}
       {{- if .Values.agones.extensions.affinity }}
 {{ toYaml .Values.agones.extensions.affinity | indent 8 }}
       {{- else}}
         nodeAffinity:
-          {{- if .Values.agones.system.requireDedicatedNode }}
+          {{- if .Values.agones.requireDedicatedNodes }}
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
             - matchExpressions:
