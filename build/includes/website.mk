@@ -119,3 +119,8 @@ feature-shortcode-update: ensure-build-image
 sdk-update-version: ensure-build-image
 	docker run --rm $(common_mounts) --workdir=$(mount_path) $(DOCKER_RUN_ARGS) $(build_tag) \
 		go run build/scripts/sdk-update-version/main.go -release-stage=$(release_stage) -version=$(version)
+
+# update release version and replicate data between dev and prod in site/config.toml
+site-config-update-version: ensure-build-image
+	docker run --rm $(common_mounts) --workdir=$(mount_path) $(DOCKER_RUN_ARGS) $(build_tag) \
+		go run build/scripts/site-config-update-version/main.go
