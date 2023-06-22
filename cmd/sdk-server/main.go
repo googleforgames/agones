@@ -146,9 +146,7 @@ func main() {
 		if err := s.WaitForConnection(ctx); err != nil {
 			logger.WithError(err).Fatalf("Sidecar networking failure")
 		}
-		if runtime.FeatureEnabled(runtime.FeatureSDKGracefulTermination) {
-			ctx = s.NewSDKServerContext(ctx)
-		}
+		ctx = s.NewSDKServerContext(ctx)
 		go func() {
 			err := s.Run(ctx)
 			if err != nil {
