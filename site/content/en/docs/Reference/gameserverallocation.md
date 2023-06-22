@@ -2,12 +2,12 @@
 title: "GameServerAllocation Specification"
 linkTitle: "GameServerAllocation"
 date: 2019-07-07T03:58:52Z
-description: "A `GameServerAllocation` is used to atomically allocate a GameServer out of a set of GameServers. 
+description: "A `GameServerAllocation` is used to atomically allocate a GameServer out of a set of GameServers.
               This could be a single Fleet, multiple Fleets, or a self managed group of GameServers."
 weight: 30
 ---
 
-A full `GameServerAllocation` specification is available below and in the 
+A full `GameServerAllocation` specification is available below and in the
 {{< ghlink href="/examples/gameserverallocation.yaml" >}}example folder{{< /ghlink >}} for reference:
 
 {{< tabpane >}}
@@ -26,7 +26,7 @@ spec:
     - matchLabels:
         agones.dev/fleet: green-fleet
         # [Stage:Alpha]
-        # [FeatureFlag:PlayerAllocationFilter]    
+        # [FeatureFlag:PlayerAllocationFilter]
       players:
         minAvailable: 0
         maxAvailable: 99
@@ -40,7 +40,7 @@ spec:
       # [FeatureFlag:StateAllocationFilter]
       # Specifies which State is the filter to be used when attempting to retrieve a GameServer
       # via Allocation. Defaults to "Ready". The only other option is "Allocated", which can be used in conjunction with
-      # label/annotation/player selectors to retrieve an already Allocated GameServer.    
+      # label/annotation/player selectors to retrieve an already Allocated GameServer.
       gameServerState: Ready
       # [Stage:Alpha]
       # [FeatureFlag:PlayerAllocationFilter]
@@ -83,7 +83,7 @@ spec:
     # [FeatureFlag:StateAllocationFilter]
     # Specifies which State is the filter to be used when attempting to retrieve a GameServer
     # via Allocation. Defaults to "Ready". The only other option is "Allocated", which can be used in conjunction with
-    # label/annotation/player selectors to retrieve an already Allocated GameServer.    
+    # label/annotation/player selectors to retrieve an already Allocated GameServer.
     gameServerState: Ready
     # [Stage:Alpha]
     # [FeatureFlag:PlayerAllocationFilter]
@@ -103,7 +103,7 @@ spec:
     - matchLabels:
         agones.dev/fleet: green-fleet
       # [Stage:Alpha]
-      # [FeatureFlag:PlayerAllocationFilter]    
+      # [FeatureFlag:PlayerAllocationFilter]
       players:
         minAvailable: 0
         maxAvailable: 99
@@ -147,6 +147,18 @@ The `spec` field is the actual `GameServerAllocation` specification, and it is c
   cluster. See [Scheduling and Autoscaling]({{< ref "/docs/Advanced/scheduling-and-autoscaling.md" >}}) for more details.
 - `metadata` is an optional list of custom labels and/or annotations that will be used to patch
   the game server's metadata in the moment of allocation. This can be used to tell the server necessary session data
+
+Once created the `GameServerAllocation` will have a `status` field consisting of the following:
+
+- `State` is the current state of a GameServerAllocation, e.g. `Allocated`, or `UnAllocated`
+- `GameServerName` is the name of the game server attached to this allocation, once the `state` is `Allocated`
+- `Ports` is a list of the ports that the game server makes available. See [the GameServer Reference]({{< ref "/docs/Reference/gameserver.md" >}}) for more details.
+- `Address` is the network address where the game server can be reached.
+- `NodeName` is the name of the node that the gameserver is running on.
+- `Source` is "local" unless this allocation is from a remote cluster, in which case `Source` is the endpoint of the remote agones-allocator. See [Multi-cluster Allocation]({{< ref "/docs/Advanced/multi-cluster-allocation.md" >}}) for more details.
+- `Metadata` conststs of:
+  - `Labels` containing the labels of the game server at allocation time.
+  - `Annotations` containing the annotations of the underlying game server at allocation time.
 
 {{< alert title="Info" color="info" >}}
 
