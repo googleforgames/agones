@@ -34,9 +34,6 @@ const (
 	// FeatureCustomFasSyncInterval is a feature flag that enables a custom FleetAutoscaler resync interval
 	FeatureCustomFasSyncInterval Feature = "CustomFasSyncInterval"
 
-	// FeatureSDKGracefulTermination is a feature flag that enables SDK to support gracefulTermination
-	FeatureSDKGracefulTermination Feature = "SDKGracefulTermination"
-
 	// FeatureSplitControllerAndExtensions is a feature flag that will split agones-controller into two deployments
 	FeatureSplitControllerAndExtensions Feature = "SplitControllerAndExtensions"
 
@@ -110,7 +107,6 @@ var (
 		FeatureCustomFasSyncInterval:        true,
 		FeaturePodHostname:                  true,
 		FeatureResetMetricsOnDelete:         true,
-		FeatureSDKGracefulTermination:       true,
 		FeatureSplitControllerAndExtensions: true,
 		FeatureStateAllocationFilter:        true,
 

@@ -338,7 +338,7 @@ func (s *SDKServer) updateState(ctx context.Context) error {
 		s.logger.Debug("GameServerState being shutdown. Skipping update.")
 
 		// Explicitly update gsStateChannel if current state is Shutdown since sendGameServerUpdate will not triggered.
-		if runtime.FeatureEnabled(runtime.FeatureSDKGracefulTermination) && s.gsState == agonesv1.GameServerStateShutdown && gs.Status.State != agonesv1.GameServerStateShutdown {
+		if s.gsState == agonesv1.GameServerStateShutdown && gs.Status.State != agonesv1.GameServerStateShutdown {
 			go func() {
 				s.gsStateChannel <- agonesv1.GameServerStateShutdown
 			}()
@@ -840,7 +840,7 @@ func (s *SDKServer) sendGameServerUpdate(gs *agonesv1.GameServer) {
 		}
 	}
 
-	if runtime.FeatureEnabled(runtime.FeatureSDKGracefulTermination) && gs.Status.State == agonesv1.GameServerStateShutdown {
+	if gs.Status.State == agonesv1.GameServerStateShutdown {
 		// Wrap this in a go func(), just in case pushing to this channel deadlocks since there is only one instance of
 		// a receiver. In theory, This could leak goroutines a bit, but since we're shuttling down everything anyway,
 		// it shouldn't matter.
