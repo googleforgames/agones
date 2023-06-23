@@ -17,6 +17,7 @@ and copy it into a release issue. Fill in relevant values, found inside {}
   - [ ] An `upstream` remote that points to `git@github.com:googleforgames/agones.git`.
 - [ ] Have a `gcloud config configurations` configuration called `agones-images` that points to the same project.
 - [ ] Edit access to the [Agones Release Calendar](https://calendar.google.com/calendar/u/0?cid=Z29vZ2xlLmNvbV84MjhuOGYxOGhmYnRyczR2dTRoMXNrczIxOEBncm91cC5jYWxlbmRhci5nb29nbGUuY29t)
+- [ ] Get approval for [Release Title and Description](https://docs.google.com/document/d/1bRZCxYB8lrVcrru41b6s5D_9uU0zS49vVGdBhg0yDIY/edit)
 
 ## Steps
 
@@ -38,14 +39,7 @@ and copy it into a release issue. Fill in relevant values, found inside {}
   - [ ] Run `make feature-shortcode-update version={version}` to remove all instances of the `feature expiryVersion` shortcode, including the associated content, while preserving the rest of the content within the .md files located in site/content/en/docs. Additionally, ensure that only the block of `feature publishVersion` is removed without affecting the content.
   - [ ] Add a link to previous version's documentation to nav dropdown in `site/layouts/partials/navbar.html`
   - [ ] config.toml updates:
-    - [ ] Update `release_branch` to the new release branch for {version}.
-    - [ ] Update `release_version` with the new release version {version}.
-    - [ ] Copy `dev_supported_k8s` to `supported_k8s`.
-    - [ ] Copy `dev_k8s_api_version` to `k8s_api_version`.
-    - [ ] Copy `dev_gke_example_cluster_version` to `gke_example_cluster_version`.
-    - [ ] Copy `dev_aks_example_cluster_version` to `aks_example_cluster_version`.
-    - [ ] Copy `dev_eks_example_cluster_version` to `eks_example_cluster_version`.
-    - [ ] Copy `dev_minikube_example_cluster_version` to `minikube_example_cluster_version`.
+    - [ ] Run `make site-config-update-version` to update the release version and sync data between dev and prod.
     - [ ] Update documentation with updated example images tags.
 - [ ] Create PR with these changes, and merge them with an approval.
 - [ ] Run `git remote update && git checkout main && git reset --hard upstream/main` to ensure your code is in line

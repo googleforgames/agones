@@ -91,11 +91,17 @@ message AllocationResponse {
   string address = 4;
   string nodeName = 5;
   string source = 6;
+  optional GameServerMetadata metadata = 7;
 
   // The gameserver port info that is allocated.
   message GameServerStatusPort {
     string name = 1;
     int32 port = 2;
+  }
+
+  message GameServerMetadata {
+    map<string, string> labels = 1;
+    map<string, string> annotations = 2;
   }
 }
 
