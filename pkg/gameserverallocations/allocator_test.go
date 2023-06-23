@@ -71,7 +71,7 @@ func TestAllocatorAllocate(t *testing.T) {
 		return true, gs, nil
 	})
 
-	ctx, cancel := agtesting.StartInformers(m)
+	ctx, cancel := agtesting.StartInformers(m, a.allocationCache.gameServerSynced)
 	defer cancel()
 
 	require.NoError(t, a.Run(ctx))
@@ -79,7 +79,7 @@ func TestAllocatorAllocate(t *testing.T) {
 	err := wait.PollImmediate(time.Second, 10*time.Second, func() (done bool, err error) {
 		return a.allocationCache.workerqueue.RunCount() == 1, nil
 	})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	gsa := allocationv1.GameServerAllocation{ObjectMeta: metav1.ObjectMeta{Name: "gsa-1", Namespace: defaultNs},
 		Spec: allocationv1.GameServerAllocationSpec{
@@ -91,7 +91,7 @@ func TestAllocatorAllocate(t *testing.T) {
 	require.True(t, ok)
 
 	gs, err := a.allocate(ctx, &gsa)
-	assert.Nil(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, agonesv1.GameServerStateAllocated, gs.Status.State)
 	assert.True(t, updated)
 	for key, value := range fam.Labels {
@@ -107,19 +107,19 @@ func TestAllocatorAllocate(t *testing.T) {
 
 	updated = false
 	gs, err = a.allocate(ctx, &gsa)
-	assert.Nil(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, agonesv1.GameServerStateAllocated, gs.Status.State)
 	assert.True(t, updated)
 
 	updated = false
 	gs, err = a.allocate(ctx, &gsa)
-	assert.Nil(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, agonesv1.GameServerStateAllocated, gs.Status.State)
 	assert.True(t, updated)
 
 	updated = false
 	_, err = a.allocate(ctx, &gsa)
-	assert.NotNil(t, err)
+	require.Error(t, err)
 	assert.Equal(t, ErrNoGameServer, err)
 	assert.False(t, updated)
 }
@@ -150,7 +150,7 @@ func TestAllocatorAllocatePriority(t *testing.T) {
 			return true, gs, nil
 		})
 
-		ctx, cancel := agtesting.StartInformers(m)
+		ctx, cancel := agtesting.StartInformers(m, a.allocationCache.gameServerSynced)
 		defer cancel()
 
 		require.NoError(t, a.Run(ctx))
@@ -158,7 +158,7 @@ func TestAllocatorAllocatePriority(t *testing.T) {
 		err := wait.PollImmediate(time.Second, 10*time.Second, func() (done bool, err error) {
 			return a.allocationCache.workerqueue.RunCount() == 1, nil
 		})
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		gsa := &allocationv1.GameServerAllocation{ObjectMeta: metav1.ObjectMeta{Name: "fa-1", Namespace: defaultNs},
 			Spec: allocationv1.GameServerAllocationSpec{
