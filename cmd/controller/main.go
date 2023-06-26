@@ -223,7 +223,7 @@ func main() {
 		kubeClient, extClient, agonesClient, agonesInformerFactory)
 	fleetController := fleets.NewController(health, kubeClient, extClient, agonesClient, agonesInformerFactory)
 	fasController := fleetautoscalers.NewController(health,
-		kubeClient, extClient, agonesClient, agonesInformerFactory)
+		kubeClient, extClient, agonesClient, agonesInformerFactory, gsCounter)
 
 	rs = append(rs,
 		gsCounter, gsController, gsSetController, fleetController, fasController)

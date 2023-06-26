@@ -237,14 +237,14 @@ func (c *AllocationCache) ListSortedGameServers(gsa *allocationv1.GameServerAllo
 			for _, priority := range gsa.Spec.Priorities {
 				res := compareGameServers(&priority, gs1, gs2)
 				switch priority.Order {
-				case agonesv1.GameServerAllocationAscending:
+				case agonesv1.GameServerPriorityAscending:
 					if res == -1 {
 						return true
 					}
 					if res == 1 {
 						return false
 					}
-				case agonesv1.GameServerAllocationDescending, "":
+				case agonesv1.GameServerPriorityDescending, "":
 					if res == -1 {
 						return false
 					}
@@ -269,7 +269,7 @@ func (c *AllocationCache) ListSortedGameServers(gsa *allocationv1.GameServerAllo
 func compareGameServers(p *agonesv1.Priority, gs1, gs2 *agonesv1.GameServer) int {
 	var gs1ok, gs2ok bool
 	switch p.PriorityType {
-	case agonesv1.GameServerAllocationPriorityCounter:
+	case agonesv1.GameServerPriorityCounter:
 		// Check if both game servers contain the Counter.
 		counter1, ok1 := gs1.Status.Counters[p.Key]
 		counter2, ok2 := gs2.Status.Counters[p.Key]
@@ -287,7 +287,7 @@ func compareGameServers(p *agonesv1.Priority, gs1, gs2 *agonesv1.GameServer) int
 		}
 		gs1ok = ok1
 		gs2ok = ok2
-	case agonesv1.GameServerAllocationPriorityList:
+	case agonesv1.GameServerPriorityList:
 		// Check if both game servers contain the List.
 		list1, ok1 := gs1.Status.Lists[p.Key]
 		list2, ok2 := gs2.Status.Lists[p.Key]
@@ -308,13 +308,13 @@ func compareGameServers(p *agonesv1.Priority, gs1, gs2 *agonesv1.GameServer) int
 	}
 	// If only one game server has the Priority, prefer that server. I.e. nil < gsX when Order is
 	// Descending (3, 2, 1, 0, nil), and nil > gsX when Order is Ascending (0, 1, 2, 3, nil).
-	if (gs1ok && p.Order == agonesv1.GameServerAllocationDescending) ||
+	if (gs1ok && p.Order == agonesv1.GameServerPriorityDescending) ||
 		(gs1ok && p.Order == "") ||
-		(gs2ok && p.Order == agonesv1.GameServerAllocationAscending) {
+		(gs2ok && p.Order == agonesv1.GameServerPriorityAscending) {
 		return 1
 	}
-	if (gs1ok && p.Order == agonesv1.GameServerAllocationAscending) ||
-		(gs2ok && p.Order == agonesv1.GameServerAllocationDescending) ||
+	if (gs1ok && p.Order == agonesv1.GameServerPriorityAscending) ||
+		(gs2ok && p.Order == agonesv1.GameServerPriorityDescending) ||
 		(gs2ok && p.Order == "") {
 		return -1
 	}

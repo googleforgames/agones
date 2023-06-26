@@ -306,7 +306,7 @@ func (c *Controller) syncGameServerSet(ctx context.Context, key string) error {
 	list = c.stateCache.forGameServerSet(gsSet).reconcileWithUpdatedServerList(list)
 
 	numServersToAdd, toDelete, isPartial := computeReconciliationAction(gsSet.Spec.Scheduling, list, c.counter.Counts(),
-		int(gsSet.Spec.Replicas), maxGameServerCreationsPerBatch, maxGameServerDeletionsPerBatch, maxPodPendingCount)
+		int(gsSet.Spec.Replicas), maxGameServerCreationsPerBatch, maxGameServerDeletionsPerBatch, maxPodPendingCount, gsSet.Spec.Priorities)
 
 	// GameserverSet is marked for deletion then don't add gameservers.
 	if !gsSet.DeletionTimestamp.IsZero() {
@@ -362,7 +362,7 @@ func (c *Controller) syncGameServerSet(ctx context.Context, key string) error {
 // the list of game servers that were found and target replica count.
 func computeReconciliationAction(strategy apis.SchedulingStrategy, list []*agonesv1.GameServer,
 	counts map[string]gameservers.NodeCount, targetReplicaCount int, maxCreations int, maxDeletions int,
-	maxPending int) (int, []*agonesv1.GameServer, bool) {
+	maxPending int, priorities []agonesv1.Priority) (int, []*agonesv1.GameServer, bool) {
 	var upCount int     // up == Ready or will become ready
 	var deleteCount int // number of gameservers to delete
 
@@ -425,7 +425,7 @@ func computeReconciliationAction(strategy apis.SchedulingStrategy, list []*agone
 			handleGameServerUp(gs)
 		case agonesv1.GameServerStateReady:
 			handleGameServerUp(gs)
-		case agonesv1.GameServerStateReserved:
+		case agonesv1.GameServerStateReserved: // TODO: Isn't this already handled above in pass 1?
 			handleGameServerUp(gs)
 
 		// GameServerStateShutdown - already handled above
@@ -462,7 +462,7 @@ func computeReconciliationAction(strategy apis.SchedulingStrategy, list []*agone
 	}
 
 	if deleteCount > 0 {
-		potentialDeletions = sortGameServersByStrategy(strategy, potentialDeletions, counts)
+		potentialDeletions = SortGameServersByStrategy(strategy, potentialDeletions, counts, priorities)
 		toDelete = append(toDelete, potentialDeletions[0:deleteCount]...)
 	}
 

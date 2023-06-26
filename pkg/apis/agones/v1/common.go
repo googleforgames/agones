@@ -32,18 +32,18 @@ const (
 	ErrContainerPortRequired    = "ContainerPort must be defined for Dynamic and Static PortPolicies"
 	ErrContainerPortPassthrough = "ContainerPort cannot be specified with Passthrough PortPolicy"
 	ErrContainerNameInvalid     = "Container must be empty or the name of a container in the pod template"
-	// GameServerAllocationIncrement is a Counter Action that indiciates the Counter's Count should be incremented at Allocation.
-	GameServerAllocationIncrement string = "Increment"
-	// GameServerAllocationDecrement is a Counter Action that indiciates the Counter's Count should be decremented at Allocation.
-	GameServerAllocationDecrement string = "Decrement"
-	// GameServerAllocationPriorityCounter is a PriorityType for sorting Game Servers by Counter
-	GameServerAllocationPriorityCounter string = "Counter"
-	// GameServerAllocationPriorityList is a PriorityType for sorting Game Servers by List
-	GameServerAllocationPriorityList string = "List"
-	// GameServerAllocationAscending is a Priority Order where the smaller count is preferred in sorting.
-	GameServerAllocationAscending string = "Ascending"
-	// GameServerAllocationDescending is a Priority Order where the larger count is preferred in sorting.
-	GameServerAllocationDescending string = "Descending"
+	// GameServerPriorityIncrement is a Counter Action that indiciates the Counter's Count should be incremented at Allocation.
+	GameServerPriorityIncrement string = "Increment"
+	// GameServerPriorityDecrement is a Counter Action that indiciates the Counter's Count should be decremented at Allocation.
+	GameServerPriorityDecrement string = "Decrement"
+	// GameServerPriorityCounter is a PriorityType for sorting Game Servers by Counter
+	GameServerPriorityCounter string = "Counter"
+	// GameServerPriorityList is a PriorityType for sorting Game Servers by List
+	GameServerPriorityList string = "List"
+	// GameServerPriorityAscending is a Priority Order where the smaller count is preferred in sorting.
+	GameServerPriorityAscending string = "Ascending"
+	// GameServerPriorityDescending is a Priority Order where the larger count is preferred in sorting.
+	GameServerPriorityDescending string = "Descending"
 )
 
 // AggregatedPlayerStatus stores total player tracking values
@@ -183,12 +183,12 @@ type Priority struct {
 // Validate returns if the Priority is valid.
 func (p *Priority) Validate(fldPath *field.Path) field.ErrorList {
 	var allErrs field.ErrorList
-	if !(p.PriorityType == GameServerAllocationPriorityCounter || p.PriorityType == GameServerAllocationPriorityList) {
-		allErrs = append(allErrs, field.NotSupported(fldPath.Child("priorityType"), p.PriorityType, []string{GameServerAllocationPriorityCounter, GameServerAllocationPriorityList}))
+	if !(p.PriorityType == GameServerPriorityCounter || p.PriorityType == GameServerPriorityList) {
+		allErrs = append(allErrs, field.NotSupported(fldPath.Child("priorityType"), p.PriorityType, []string{GameServerPriorityCounter, GameServerPriorityList}))
 	}
 
-	if !(p.Order == GameServerAllocationAscending || p.Order == GameServerAllocationDescending || p.Order == "") {
-		allErrs = append(allErrs, field.NotSupported(fldPath.Child("order"), p.Order, []string{GameServerAllocationAscending, GameServerAllocationDescending}))
+	if !(p.Order == GameServerPriorityAscending || p.Order == GameServerPriorityDescending || p.Order == "") {
+		allErrs = append(allErrs, field.NotSupported(fldPath.Child("order"), p.Order, []string{GameServerPriorityAscending, GameServerPriorityDescending}))
 	}
 
 	return allErrs
