@@ -1362,9 +1362,6 @@ func TestSDKServerGracefulTerminationInterrupt(t *testing.T) {
 	agruntime.FeatureTestMutex.Lock()
 	defer agruntime.FeatureTestMutex.Unlock()
 
-	err := agruntime.ParseFeatures(string(agruntime.FeatureSDKGracefulTermination) + "=true")
-	require.NoError(t, err, "Can not parse FeatureSDKGracefulTermination feature")
-
 	m := agtesting.NewMocks()
 	fakeWatch := watch.NewFake()
 	m.AgonesClient.AddWatchReactor("gameservers", k8stesting.DefaultWatchReactor(fakeWatch, nil))
@@ -1430,9 +1427,6 @@ func TestSDKServerGracefulTerminationShutdown(t *testing.T) {
 	agruntime.FeatureTestMutex.Lock()
 	defer agruntime.FeatureTestMutex.Unlock()
 
-	err := agruntime.ParseFeatures(string(agruntime.FeatureSDKGracefulTermination) + "=true")
-	require.NoError(t, err, "Can not parse FeatureSDKGracefulTermination feature")
-
 	m := agtesting.NewMocks()
 	fakeWatch := watch.NewFake()
 	m.AgonesClient.AddWatchReactor("gameservers", k8stesting.DefaultWatchReactor(fakeWatch, nil))
@@ -1497,9 +1491,6 @@ func TestSDKServerGracefulTerminationGameServerStateChannel(t *testing.T) {
 	t.Parallel()
 	agruntime.FeatureTestMutex.Lock()
 	defer agruntime.FeatureTestMutex.Unlock()
-
-	err := agruntime.ParseFeatures(string(agruntime.FeatureSDKGracefulTermination) + "=true")
-	require.NoError(t, err, "Can not parse FeatureSDKGracefulTermination feature")
 
 	m := agtesting.NewMocks()
 	fakeWatch := watch.NewFake()

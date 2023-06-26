@@ -1204,9 +1204,6 @@ func TestPlayerConnectAndDisconnect(t *testing.T) {
 }
 
 func TestGracefulShutdown(t *testing.T) {
-	if !runtime.FeatureEnabled(runtime.FeatureSDKGracefulTermination) {
-		t.SkipNow()
-	}
 	t.Parallel()
 
 	log := e2eframework.TestLogger(t)

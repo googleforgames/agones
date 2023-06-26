@@ -17,7 +17,6 @@
 # Beta features
 PodHostname: true
 ResetMetricsOnDelete: true
-SDKGracefulTermination: true
 SplitControllerAndExtensions: true
 StateAllocationFilter: true
 

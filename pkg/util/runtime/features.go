@@ -31,9 +31,6 @@ const (
 	////////////////
 	// Beta features
 
-	// FeatureSDKGracefulTermination is a feature flag that enables SDK to support gracefulTermination
-	FeatureSDKGracefulTermination Feature = "SDKGracefulTermination"
-
 	// FeatureSplitControllerAndExtensions is a feature flag that will split agones-controller into two deployments
 	FeatureSplitControllerAndExtensions Feature = "SplitControllerAndExtensions"
 
@@ -106,7 +103,6 @@ var (
 		// Beta features
 		FeaturePodHostname:                  true,
 		FeatureResetMetricsOnDelete:         true,
-		FeatureSDKGracefulTermination:       true,
 		FeatureSplitControllerAndExtensions: true,
 		FeatureStateAllocationFilter:        true,
 
