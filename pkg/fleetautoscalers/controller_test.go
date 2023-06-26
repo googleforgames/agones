@@ -169,17 +169,15 @@ func TestControllerCreationMutationHandler(t *testing.T) {
 				err = json.Unmarshal(result.Response.Patch, patch)
 				require.NoError(t, err)
 
-				if utilruntime.FeatureEnabled(utilruntime.FeatureCustomFasSyncInterval) {
-					found := false
+				found := false
 
-					for _, expected := range tc.expected.patches {
-						for _, p := range *patch {
-							if assert.ObjectsAreEqual(p, expected) {
-								found = true
-							}
+				for _, expected := range tc.expected.patches {
+					for _, p := range *patch {
+						if assert.ObjectsAreEqual(p, expected) {
+							found = true
 						}
-						assert.True(t, found, "Could not find operation %#v in patch %v", expected, *patch)
 					}
+					assert.True(t, found, "Could not find operation %#v in patch %v", expected, *patch)
 				}
 			}
 		})
@@ -283,8 +281,6 @@ func TestWebhookControllerCreationValidationHandler(t *testing.T) {
 func TestControllerSyncFleetAutoscaler(t *testing.T) {
 	utilruntime.FeatureTestMutex.Lock()
 	defer utilruntime.FeatureTestMutex.Unlock()
-
-	assert.NoError(t, utilruntime.ParseFeatures(string(utilruntime.FeatureCustomFasSyncInterval)+"=false"))
 
 	t.Run("no scaling up because fleet is marked for deletion, buffer policy", func(t *testing.T) {
 		t.Parallel()
@@ -764,7 +760,6 @@ func TestControllerSyncFleetAutoscaler(t *testing.T) {
 
 		utilruntime.FeatureTestMutex.Lock()
 		defer utilruntime.FeatureTestMutex.Unlock()
-		require.NoError(t, utilruntime.ParseFeatures(fmt.Sprintf("%s=true", utilruntime.FeatureCustomFasSyncInterval)))
 
 		c, m := newFakeController()
 		ctx, cancel := agtesting.StartInformers(m, c.fleetSynced, c.fleetAutoscalerSynced)
@@ -1016,8 +1011,6 @@ func TestControllerEvents(t *testing.T) {
 	utilruntime.FeatureTestMutex.Lock()
 	defer utilruntime.FeatureTestMutex.Unlock()
 
-	require.NoError(t, utilruntime.ParseFeatures(fmt.Sprintf("%s=true", utilruntime.FeatureCustomFasSyncInterval)))
-
 	c, mocks := newFakeController()
 	fakeWatch := watch.NewFake()
 	mocks.AgonesClient.AddWatchReactor("fleetautoscalers", k8stesting.DefaultWatchReactor(fakeWatch, nil))
@@ -1062,8 +1055,6 @@ func TestControllerAddUpdateDeleteFasThread(t *testing.T) {
 
 	utilruntime.FeatureTestMutex.Lock()
 	defer utilruntime.FeatureTestMutex.Unlock()
-
-	assert.NoError(t, utilruntime.ParseFeatures(fmt.Sprintf("%s=true", utilruntime.FeatureCustomFasSyncInterval)))
 
 	var counter int64
 	c, m := newFakeController()
