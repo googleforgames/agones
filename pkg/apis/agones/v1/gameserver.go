@@ -782,7 +782,7 @@ func (gs *GameServer) Pod(apiHooks APIHooks, sidecars ...corev1.Container) (*cor
 
 	gs.podScheduling(pod)
 
-	if err := apiHooks.MutateGameServerPodSpec(&gs.Spec, &pod.Spec); err != nil {
+	if err := apiHooks.MutateGameServerPod(&gs.Spec, pod); err != nil {
 		return nil, err
 	}
 	if err := apiHooks.SetEviction(gs.Status.Eviction, pod); err != nil {

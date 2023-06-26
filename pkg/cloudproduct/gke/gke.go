@@ -35,6 +35,7 @@ import (
 
 const (
 	hostPortAssignmentAnnotation = "autopilot.gke.io/host-port-assignment"
+	primaryContainerAnnotation   = "autopilot.gke.io/primary-container"
 
 	errPortPolicyMustBeDynamic      = "portPolicy must be Dynamic on GKE Autopilot"
 	errSchedulingMustBePacked       = "scheduling strategy must be Packed on GKE Autopilot"
@@ -157,9 +158,21 @@ func (*gkeAutopilot) ValidateScheduling(ss apis.SchedulingStrategy) []metav1.Sta
 	return nil
 }
 
-func (*gkeAutopilot) MutateGameServerPodSpec(gss *agonesv1.GameServerSpec, podSpec *corev1.PodSpec) error {
-	podSpecSeccompUnconfined(podSpec)
+func (*gkeAutopilot) MutateGameServerPod(gss *agonesv1.GameServerSpec, pod *corev1.Pod) error {
+	setPrimaryContainer(pod, gss.Container)
+	podSpecSeccompUnconfined(&pod.Spec)
 	return nil
+}
+
+// setPrimaryContainer sets the autopilot.gke.io/primary-container annotation to the game server container.
+// This acts as a hint to Autopilot for which container to add resources to during resource adjustment.
+// See https://cloud.google.com/kubernetes-engine/docs/concepts/autopilot-resource-requests#autopilot-resource-management
+// for more details.
+func setPrimaryContainer(pod *corev1.Pod, containerName string) {
+	if _, ok := pod.ObjectMeta.Annotations[primaryContainerAnnotation]; ok {
+		return
+	}
+	pod.ObjectMeta.Annotations[primaryContainerAnnotation] = containerName
 }
 
 // podSpecSeccompUnconfined sets to seccomp profile to `Unconfined` to avoid serious performance
