@@ -37,8 +37,8 @@ func (f FakeAPIHooks) ValidateScheduling(_ apis.SchedulingStrategy) []metav1.Sta
 	return nil
 }
 
-// MutateGameServerPodSpec is called by createGameServerPod to allow for product specific pod mutation.
-func (f FakeAPIHooks) MutateGameServerPodSpec(_ *agonesv1.GameServerSpec, podSpec *corev1.PodSpec) error {
+// MutateGameServerPod is called by createGameServerPod to allow for product specific pod mutation.
+func (f FakeAPIHooks) MutateGameServerPod(_ *agonesv1.GameServerSpec, pod *corev1.Pod) error {
 	return nil
 }
 
