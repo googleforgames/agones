@@ -28,7 +28,7 @@ type APIHooks interface {
 	// ValidateScheduling is called by Fleet and GameServerSet Validate() to allow for product specific validation of scheduling strategy.
 	ValidateScheduling(apis.SchedulingStrategy) []metav1.StatusCause
 
-	// MutateGameServerPodc is called by createGameServerPod to allow for product specific pod mutation.
+	// MutateGameServerPod is called by createGameServerPod to allow for product specific pod mutation.
 	MutateGameServerPod(*GameServerSpec, *corev1.Pod) error
 
 	// SetEviction is called by gs.Pod to enforce GameServer.Status.Eviction.
