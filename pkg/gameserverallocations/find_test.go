@@ -108,7 +108,7 @@ func TestFindGameServerForAllocationPacked(t *testing.T) {
 
 				// mock that the first found game server is allocated
 				list = append(list[:index], list[index+1:]...)
-				assert.Equal(t, agonesv1.GameServerStateReady, list[0].Status.State)
+				assert.Equal(t, agonesv1.GameServerStateAllocated, list[0].Status.State)
 				assert.Len(t, list, 4)
 
 				gs, index, err = findGameServerForAllocation(gsa, list)
