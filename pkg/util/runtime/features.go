@@ -31,9 +31,6 @@ const (
 	////////////////
 	// Beta features
 
-	// FeatureCustomFasSyncInterval is a feature flag that enables a custom FleetAutoscaler resync interval
-	FeatureCustomFasSyncInterval Feature = "CustomFasSyncInterval"
-
 	// FeatureSplitControllerAndExtensions is a feature flag that will split agones-controller into two deployments
 	FeatureSplitControllerAndExtensions Feature = "SplitControllerAndExtensions"
 
@@ -104,7 +101,6 @@ var (
 	// In each of these, keep the feature sorted by descending maturity then alphabetical
 	featureDefaults = map[Feature]bool{
 		// Beta features
-		FeatureCustomFasSyncInterval:        true,
 		FeaturePodHostname:                  true,
 		FeatureResetMetricsOnDelete:         true,
 		FeatureSplitControllerAndExtensions: true,

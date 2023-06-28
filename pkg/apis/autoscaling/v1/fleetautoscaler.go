@@ -54,8 +54,6 @@ type FleetAutoscalerSpec struct {
 
 	// Autoscaling policy
 	Policy FleetAutoscalerPolicy `json:"policy"`
-	// [Stage:Beta]
-	// [FeatureFlag:CustomFasSyncInterval]
 	// Sync defines when FleetAutoscalers runs autoscaling
 	// +optional
 	Sync *FleetAutoscalerSync `json:"sync,omitempty"`
@@ -272,7 +270,7 @@ func (fas *FleetAutoscaler) Validate(causes []metav1.StatusCause) []metav1.Statu
 		causes = fas.Spec.Policy.List.ValidateListPolicy(causes)
 	}
 
-	if runtime.FeatureEnabled(runtime.FeatureCustomFasSyncInterval) && fas.Spec.Sync != nil {
+	if fas.Spec.Sync != nil {
 		causes = fas.Spec.Sync.FixedInterval.ValidateFixedIntervalSync(causes)
 	}
 	return causes
@@ -541,15 +539,13 @@ func (i *FixedIntervalSync) ValidateFixedIntervalSync(causes []metav1.StatusCaus
 
 // ApplyDefaults applies default values to the FleetAutoscaler
 func (fas *FleetAutoscaler) ApplyDefaults() {
-	if runtime.FeatureEnabled(runtime.FeatureCustomFasSyncInterval) {
-		if fas.Spec.Sync == nil {
-			fas.Spec.Sync = &FleetAutoscalerSync{}
-		}
-		if fas.Spec.Sync.Type == "" {
-			fas.Spec.Sync.Type = FixedIntervalSyncType
-		}
-		if fas.Spec.Sync.FixedInterval.Seconds == 0 {
-			fas.Spec.Sync.FixedInterval.Seconds = defaultIntervalSyncSeconds
-		}
+	if fas.Spec.Sync == nil {
+		fas.Spec.Sync = &FleetAutoscalerSync{}
+	}
+	if fas.Spec.Sync.Type == "" {
+		fas.Spec.Sync.Type = FixedIntervalSyncType
+	}
+	if fas.Spec.Sync.FixedInterval.Seconds == 0 {
+		fas.Spec.Sync.FixedInterval.Seconds = defaultIntervalSyncSeconds
 	}
 }

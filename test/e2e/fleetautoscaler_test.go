@@ -24,7 +24,6 @@ import (
 
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	autoscalingv1 "agones.dev/agones/pkg/apis/autoscaling/v1"
-	"agones.dev/agones/pkg/util/runtime"
 	e2e "agones.dev/agones/test/e2e/framework"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -66,11 +65,6 @@ func TestAutoscalerBasicFunctions(t *testing.T) {
 	fas, err := fleetautoscalers.Create(ctx, defaultFas, metav1.CreateOptions{})
 	require.NoError(t, err)
 	defer fleetautoscalers.Delete(ctx, fas.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
-
-	// If the CustomFasSyncInterval feature flag is enabled, the value of fas.spec.sync are equal
-	if runtime.FeatureEnabled(runtime.FeatureCustomFasSyncInterval) {
-		require.Equal(t, defaultFas.Spec.Sync.FixedInterval.Seconds, fas.Spec.Sync.FixedInterval.Seconds)
-	}
 
 	// the fleet autoscaler should scale the fleet up now up to BufferSize
 	bufferSize := int32(fas.Spec.Policy.Buffer.BufferSize.IntValue())
@@ -175,12 +169,9 @@ func TestFleetAutoscalerDefaultSyncInterval(t *testing.T) {
 		return
 	}
 
-	// If the CustomFasSyncInterval feature flag is enabled, fas.spec.sync should be set to its default value
-	if runtime.FeatureEnabled(runtime.FeatureCustomFasSyncInterval) {
-		defaultSyncIntervalFas := &autoscalingv1.FleetAutoscaler{}
-		defaultSyncIntervalFas.ApplyDefaults()
-		assert.Equal(t, defaultSyncIntervalFas.Spec.Sync.FixedInterval.Seconds, fas.Spec.Sync.FixedInterval.Seconds)
-	}
+	defaultSyncIntervalFas := &autoscalingv1.FleetAutoscaler{}
+	defaultSyncIntervalFas.ApplyDefaults()
+	assert.Equal(t, defaultSyncIntervalFas.Spec.Sync.FixedInterval.Seconds, fas.Spec.Sync.FixedInterval.Seconds)
 }
 
 // TestFleetAutoScalerRollingUpdate - test fleet with RollingUpdate strategy work with

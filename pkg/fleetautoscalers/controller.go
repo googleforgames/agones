@@ -122,28 +122,18 @@ func NewController(
 
 	autoscaler.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
-			if runtime.FeatureEnabled(runtime.FeatureCustomFasSyncInterval) {
-				c.addFasThread(obj.(*autoscalingv1.FleetAutoscaler), true)
-			} else {
-				c.workerqueue.Enqueue(obj)
-			}
+			c.workerqueue.Enqueue(obj)
 		},
 		UpdateFunc: func(_, newObj interface{}) {
-			if runtime.FeatureEnabled(runtime.FeatureCustomFasSyncInterval) {
-				c.updateFasThread(newObj.(*autoscalingv1.FleetAutoscaler))
-			} else {
-				c.workerqueue.Enqueue(newObj)
-			}
+			c.workerqueue.Enqueue(newObj)
 		},
 		DeleteFunc: func(obj interface{}) {
-			if runtime.FeatureEnabled(runtime.FeatureCustomFasSyncInterval) {
-				// Could be a DeletedFinalStateUnknown, in which case, just ignore it
-				fas, ok := obj.(*autoscalingv1.FleetAutoscaler)
-				if !ok {
-					return
-				}
-				c.deleteFasThread(fas, true)
+			// Could be a DeletedFinalStateUnknown, in which case, just ignore it
+			fas, ok := obj.(*autoscalingv1.FleetAutoscaler)
+			if !ok {
+				return
 			}
+			c.deleteFasThread(fas, true)
 		},
 	})
 
@@ -292,11 +282,6 @@ func (c *Controller) syncFleetAutoscaler(ctx context.Context, key string) error 
 	}
 
 	if fas == nil {
-		// just in case we don't catch a delete event for some reason, use this as a
-		// failsafe to ensure we don't end up leaking goroutines.
-		if runtime.FeatureEnabled(runtime.FeatureCustomFasSyncInterval) {
-			return c.cleanFasThreads(key)
-		}
 		return nil
 	}
 

@@ -26,7 +26,6 @@ The current set of `alpha` and `beta` feature gates:
 
 | Feature Name                                                                                                          | Gate                           | Default  | Stage   | Since  |
 |-----------------------------------------------------------------------------------------------------------------------|--------------------------------|----------|---------|--------|
-| [Custom resync period for FleetAutoscaler](https://github.com/googleforgames/agones/issues/1955)                      | `CustomFasSyncInterval`        | Enabled  | `Beta`  | 1.25.0 |
 | [GameServer Stable Network ID]({{% ref "/docs/Reference/gameserver.md#stable-network-id" %}})                         | `PodHostname`                  | Enabled  | `Beta`  | 1.32.0 |
 | [Reset Metric Export on Fleet / Autoscaler deletion]({{% relref "./metrics.md#dropping-metric-labels" %}})            | `ResetMetricsOnDelete`         | Enabled  | `Beta`  | 1.32.0 |
 | [Split `agones-controller` ](https://github.com/googleforgames/agones/issues/2797)                                    | `SplitControllerAndExtensions` | Enabled  | `Beta`  | 1.32.0 |
