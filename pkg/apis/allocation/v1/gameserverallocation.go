@@ -123,8 +123,6 @@ type GameServerAllocationSpec struct {
 type GameServerSelector struct {
 	// See: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
 	metav1.LabelSelector `json:",inline"`
-	// [Stage:Beta]
-	// [FeatureFlag:StateAllocationFilter]
 	// +optional
 	// GameServerState specifies which State is the filter to be used when attempting to retrieve a GameServer
 	// via Allocation. Defaults to "Ready". The only other option is "Allocated", which can be used in conjunction with
@@ -193,12 +191,10 @@ type ListAction struct {
 
 // ApplyDefaults applies default values
 func (s *GameServerSelector) ApplyDefaults() {
-	if runtime.FeatureEnabled(runtime.FeatureStateAllocationFilter) {
 		if s.GameServerState == nil {
 			state := agonesv1.GameServerStateReady
 			s.GameServerState = &state
 		}
-	}
 
 	if runtime.FeatureEnabled(runtime.FeaturePlayerAllocationFilter) {
 		if s.Players == nil {
@@ -235,11 +231,9 @@ func (s *GameServerSelector) Matches(gs *agonesv1.GameServer) bool {
 	}
 
 	// then if state is being checked, check state
-	if runtime.FeatureEnabled(runtime.FeatureStateAllocationFilter) {
 		if s.GameServerState != nil && gs.Status.State != *s.GameServerState {
 			return false
 		}
-	}
 
 	// then if player count is being checked, check that
 	if runtime.FeatureEnabled(runtime.FeaturePlayerAllocationFilter) {
@@ -381,7 +375,6 @@ func (s *GameServerSelector) Validate(field string) ([]metav1.StatusCause, bool)
 		})
 	}
 
-	if runtime.FeatureEnabled(runtime.FeatureStateAllocationFilter) {
 		if s.GameServerState != nil && !(*s.GameServerState == agonesv1.GameServerStateAllocated || *s.GameServerState == agonesv1.GameServerStateReady) {
 			causes = append(causes, metav1.StatusCause{
 				Type:    metav1.CauseTypeFieldValueInvalid,
@@ -389,7 +382,6 @@ func (s *GameServerSelector) Validate(field string) ([]metav1.StatusCause, bool)
 				Field:   field,
 			})
 		}
-	}
 
 	if runtime.FeatureEnabled(runtime.FeaturePlayerAllocationFilter) && s.Players != nil {
 		if s.Players.MinAvailable < 0 {

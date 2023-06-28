@@ -163,7 +163,6 @@ func convertGameServerSelectorToInternalGameServerSelector(in *pb.GameServerSele
 		LabelSelector: metav1.LabelSelector{MatchLabels: in.GetMatchLabels()},
 	}
 
-	if runtime.FeatureEnabled(runtime.FeatureStateAllocationFilter) {
 		switch in.GameServerState {
 		case pb.GameServerSelector_ALLOCATED:
 			allocated := agonesv1.GameServerStateAllocated
@@ -172,7 +171,6 @@ func convertGameServerSelectorToInternalGameServerSelector(in *pb.GameServerSele
 			ready := agonesv1.GameServerStateReady
 			result.GameServerState = &ready
 		}
-	}
 
 	if runtime.FeatureEnabled(runtime.FeaturePlayerAllocationFilter) && in.Players != nil {
 		result.Players = &allocationv1.PlayerSelector{
@@ -216,7 +214,7 @@ func convertInternalGameServerSelectorToGameServer(in *allocationv1.GameServerSe
 		MatchLabels: in.MatchLabels,
 	}
 
-	if runtime.FeatureEnabled(runtime.FeatureStateAllocationFilter) && in.GameServerState != nil {
+	if in.GameServerState != nil {
 		switch *in.GameServerState {
 		case agonesv1.GameServerStateReady:
 			result.GameServerState = pb.GameServerSelector_READY

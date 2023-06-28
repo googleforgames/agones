@@ -3481,24 +3481,6 @@ Kubernetes meta/v1.LabelSelector
 </tr>
 <tr>
 <td>
-<code>gameServerState</code></br>
-<em>
-<a href="#agones.dev/v1.GameServerState">
-GameServerState
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>[Stage:Beta]
-[FeatureFlag:StateAllocationFilter]
-GameServerState specifies which State is the filter to be used when attempting to retrieve a GameServer
-via Allocation. Defaults to &ldquo;Ready&rdquo;. The only other option is &ldquo;Allocated&rdquo;, which can be used in conjunction with
-label/annotation/player selectors to retrieve an already Allocated GameServer.</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>players</code></br>
 <em>
 <a href="#allocation.agones.dev/v1.PlayerSelector">
@@ -6474,24 +6456,6 @@ Kubernetes meta/v1.LabelSelector
 (Members of <code>LabelSelector</code> are embedded into this type.)
 </p>
 <p>See: <a href="https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/">https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/</a></p>
-</td>
-</tr>
-<tr>
-<td>
-<code>gameServerState</code></br>
-<em>
-<a href="#agones.dev/v1.GameServerState">
-GameServerState
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>[Stage:Beta]
-[FeatureFlag:StateAllocationFilter]
-GameServerState specifies which State is the filter to be used when attempting to retrieve a GameServer
-via Allocation. Defaults to &ldquo;Ready&rdquo;. The only other option is &ldquo;Allocated&rdquo;, which can be used in conjunction with
-label/annotation/player selectors to retrieve an already Allocated GameServer.</p>
 </td>
 </tr>
 <tr>

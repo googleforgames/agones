@@ -84,9 +84,7 @@ func TestCreateFleetAndGameServerAllocate(t *testing.T) {
 }
 
 func TestCreateFleetAndGameServerStateFilterAllocation(t *testing.T) {
-	if !runtime.FeatureEnabled(runtime.FeatureStateAllocationFilter) {
-		t.SkipNow()
-	}
+
 	t.Parallel()
 
 	fleets := framework.AgonesClient.AgonesV1().Fleets(framework.Namespace)
@@ -135,9 +133,7 @@ func TestCreateFleetAndGameServerStateFilterAllocation(t *testing.T) {
 }
 
 func TestHighDensityGameServerFlow(t *testing.T) {
-	if !runtime.FeatureEnabled(runtime.FeatureStateAllocationFilter) {
-		t.SkipNow()
-	}
+
 	t.Parallel()
 	log := e2e.TestLogger(t)
 	ctx := context.Background()
@@ -208,7 +204,7 @@ func TestHighDensityGameServerFlow(t *testing.T) {
 }
 
 func TestCreateFleetAndGameServerPlayerCapacityAllocation(t *testing.T) {
-	if !(runtime.FeatureEnabled(runtime.FeatureStateAllocationFilter) && runtime.FeatureEnabled(runtime.FeaturePlayerAllocationFilter)) {
+	if !(runtime.FeatureEnabled(runtime.FeaturePlayerAllocationFilter)) {
 		t.SkipNow()
 	}
 	t.Parallel()
