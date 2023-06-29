@@ -4,7 +4,7 @@ linkTitle: "Unreal Engine"
 date: 2019-06-13T10:17:50Z
 publishDate: 2019-05-13
 weight: 10
-description: "This is the Unreal Engine 4 Agones Game Server Client Plugin. "
+description: "This is the Unreal Engine Agones Game Server Client Plugin. "
 ---
 
 Check the [Client SDK Documentation]({{< relref "_index.md" >}}) for more details on each of the SDK functions and how to run the SDK locally.
@@ -56,18 +56,25 @@ With this in mind there is a vast amount to learn to run a production game using
 
 However as your Unreal/Agones project gets more advanced you will want to understand more about the engine itself and how it can be used to integrate with this project. There will be different ways of interacting via in Play In Editor (PIE) versus running as an actual dedicated game server packaged into a container.
 
-A few helpful links for Unreal:
+There are few helpful links for latest Unreal Engine 5:
+- [UE5 Documentation Site](https://docs.unrealengine.com/en-US/)
+- [UE5 Dedicated Servers](https://docs.unrealengine.com/en-US/setting-up-dedicated-servers-in-unreal-engine/)
+  - useful guide to getting started with dedicated servers in Unreal
+- [UE5 Game Mode and Game State](https://docs.unrealengine.com/en-US/game-mode-and-game-state-in-unreal-engine/)
+- [UE5 Game Mode API Reference](https://docs.unrealengine.com/en-US/API/Runtime/Engine/GameFramework/AGameMode/)
+  - useful for hooking up calls to Agones
+- [UE5 Game Session API Reference](https://docs.unrealengine.com/en-US/API/Runtime/Engine/GameFramework/AGameSession/)
+  - as above there are hooks in Game Session that can be used to call into Agones
+- [UE5 Building & Packaging Games](https://docs.unrealengine.com/en-US/build-operations-cooking-packaging-deploying-and-running-projects-in-unreal-engine/)
+  - only building out Unreal game servers / clients, will also need to package into a container
 
+If you use Unreal Engine 4, There are few helpful links for it:
 - [UE4 Documentation Site](https://docs.unrealengine.com/4.27/en-US/index.html)
 - [UE4 Dedicated Servers](https://docs.unrealengine.com/4.27/en-US/Gameplay/Networking/HowTo/DedicatedServers/index.html)
-  - useful guide to getting started with dedicated servers in Unreal
 - [UE4 Game Flow](https://docs.unrealengine.com/4.27/en-US/InteractiveExperiences/Framework/GameFlow/)
 - [UE4 Game Mode](https://docs.unrealengine.com/4.27/en-US/API/Runtime/Engine/GameFramework/AGameMode/index.html)
-  - useful for hooking up calls to Agones
 - [UE4 Game Session](https://docs.unrealengine.com/4.27/en-US/API/Runtime/Engine/GameFramework/AGameSession/index.html)
-  - as above there are hooks in Game Session that can be used to call into Agones
 - [UE4 Building & Packaging Games](https://docs.unrealengine.com/4.27/en-US/Engine/Deployment/BuildOperations/index.html)
-  - only building out Unreal game servers / clients, will also need to package into a container
 
 ## Getting Started
 
@@ -77,9 +84,9 @@ This is a SDK inspired by the REST API to the Agones sidecars that allows engine
 
 Easiest way to get this code is to clone the repository and drop the entire plugin folder into your own `Plugins` folder. This runs the plugin as a Project plugin rather than an engine plugin.
 
-We could however turn this into a marketplace plugin that can be retrived from the marketplace directly into the UE4 editor.
+We could however turn this into a marketplace plugin that can be retrived from the marketplace directly into the UE editor.
 
-#### Using C++
+#### Using C++ (UE5/UE4)
 - Add Plugin (in your own `.uproject` file)
 ```json
   "Plugins": [
@@ -124,7 +131,15 @@ void APlatformGameSession::PostLogin(APlayerController* NewPlayer)
 }
 ```
 
-#### Using Blueprints
+#### Using Blueprints (UE5)
+- Add Component to your Blueprint GameMode
+![component](../../../../images/unreal5_bp_component.png)
+- This will automatically call `/health` every 10 seconds and once `/gameserver` calls are succesful it will call `/ready`.
+
+- Accessing other functionality of Agones can be done via adding a node in Blueprints.
+![actions](../../../../images/unreal5_bp_actions.png)
+
+#### Using Blueprints (UE4)
 - Add Component to your Blueprint GameMode
 ![component](../../../../images/unreal_bp_component.png)
 - This will automatically call `/health` every 10 seconds and once `/gameserver` calls are succesful it will call `/ready`.
