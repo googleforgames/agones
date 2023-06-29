@@ -244,7 +244,7 @@ func (c *AllocationCache) ListSortedGameServers(gsa *allocationv1.GameServerAllo
 					if res == 1 {
 						return false
 					}
-				case agonesv1.GameServerPriorityDescending, "":
+				case agonesv1.GameServerPriorityDescending:
 					if res == -1 {
 						return false
 					}
@@ -268,7 +268,7 @@ func (c *AllocationCache) ListSortedGameServers(gsa *allocationv1.GameServerAllo
 // Order is Descending (3, 2, 1, 0, nil), and nil > gsX when Order is Ascending (0, 1, 2, 3, nil).
 func compareGameServers(p *agonesv1.Priority, gs1, gs2 *agonesv1.GameServer) int {
 	var gs1ok, gs2ok bool
-	switch p.PriorityType {
+	switch p.Type {
 	case agonesv1.GameServerPriorityCounter:
 		// Check if both game servers contain the Counter.
 		counter1, ok1 := gs1.Status.Counters[p.Key]

@@ -36,9 +36,9 @@ const (
 	GameServerPriorityIncrement string = "Increment"
 	// GameServerPriorityDecrement is a Counter Action that indiciates the Counter's Count should be decremented at Allocation.
 	GameServerPriorityDecrement string = "Decrement"
-	// GameServerPriorityCounter is a PriorityType for sorting Game Servers by Counter
+	// GameServerPriorityCounter is a Type for sorting Game Servers by Counter
 	GameServerPriorityCounter string = "Counter"
-	// GameServerPriorityList is a PriorityType for sorting Game Servers by List
+	// GameServerPriorityList is a Type for sorting Game Servers by List
 	GameServerPriorityList string = "List"
 	// GameServerPriorityAscending is a Priority Order where the smaller count is preferred in sorting.
 	GameServerPriorityAscending string = "Ascending"
@@ -170,26 +170,12 @@ func (ao *AllocationOverflow) Apply(gs *GameServer) {
 }
 
 // Priority is a sorting option for GameServers with Counters or Lists based on the Capacity.
-// PriorityType: Sort by a "Counter" or a "List".
+// Type: Sort by a "Counter" or a "List".
 // Key: The name of the Counter or List. If not found on the GameServer, has no impact.
-// Order: Sort by "Ascending" or "Descending". Default is "Descending" so bigger Capacity is preferred.
+// Order: Sort by "Ascending" or "Descending". "Descending" a bigger Capacity is preferred.
 // "Ascending" would be smaller Capacity is preferred.
 type Priority struct {
-	PriorityType string `json:"priorityType"`
-	Key          string `json:"key"`
-	Order        string `json:"order"`
-}
-
-// Validate returns if the Priority is valid.
-func (p *Priority) Validate(fldPath *field.Path) field.ErrorList {
-	var allErrs field.ErrorList
-	if !(p.PriorityType == GameServerPriorityCounter || p.PriorityType == GameServerPriorityList) {
-		allErrs = append(allErrs, field.NotSupported(fldPath.Child("priorityType"), p.PriorityType, []string{GameServerPriorityCounter, GameServerPriorityList}))
-	}
-
-	if !(p.Order == GameServerPriorityAscending || p.Order == GameServerPriorityDescending || p.Order == "") {
-		allErrs = append(allErrs, field.NotSupported(fldPath.Child("order"), p.Order, []string{GameServerPriorityAscending, GameServerPriorityDescending}))
-	}
-
-	return allErrs
+	Type  string `json:"type"`
+	Key   string `json:"key"`
+	Order string `json:"order"`
 }

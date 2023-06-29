@@ -536,13 +536,6 @@ func (gsa *GameServerAllocation) Validate() field.ErrorList {
 		allErrs = append(allErrs, field.Forbidden(specPath.Child("priorities"), "Feature CountsAndLists must be enabled if Priorities is specified"))
 	}
 
-	if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) && (gsa.Spec.Priorities != nil) {
-		pPath := specPath.Child("priorities")
-		for i := range gsa.Spec.Priorities {
-			allErrs = append(allErrs, gsa.Spec.Priorities[i].Validate(pPath.Index(i))...)
-		}
-	}
-
 	allErrs = append(allErrs, gsa.Spec.MetaPatch.Validate(specPath.Child("metadata"))...)
 	return allErrs
 }

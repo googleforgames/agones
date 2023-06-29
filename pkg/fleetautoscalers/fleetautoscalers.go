@@ -33,7 +33,7 @@ import (
 	listeragonesv1 "agones.dev/agones/pkg/client/listers/agones/v1"
 	"agones.dev/agones/pkg/fleets"
 	"agones.dev/agones/pkg/gameservers"
-	gsSets "agones.dev/agones/pkg/gameserversets"
+	gssets "agones.dev/agones/pkg/gameserversets"
 	"agones.dev/agones/pkg/util/runtime"
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -391,7 +391,7 @@ func getSortedGameServers(f *agonesv1.Fleet, gameServerLister listeragonesv1.Gam
 	if err != nil {
 		return nil, err
 	}
-	gameServers := gsSets.SortGameServersByStrategy(gss.Scheduling, gsList, nodeCounts, f.Spec.Priorities)
+	gameServers := gssets.SortGameServersByStrategy(gss.Scheduling, gsList, nodeCounts, f.Spec.Priorities)
 	return gameServers, nil
 }
 
@@ -615,7 +615,7 @@ func scaleDownByPercent(f *agonesv1.Fleet, gameServerLister listeragonesv1.GameS
 		return 0, false, err
 	}
 
-	// Determine the desiredCapacity based on removing one gameserver
+	// Determine the desiredCapacity based on removing one gameserver at a time
 	limited := false
 	var desiredCapacity int64
 	for _, gs := range gameServers {

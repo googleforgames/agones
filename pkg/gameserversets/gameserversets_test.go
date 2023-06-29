@@ -89,9 +89,9 @@ func TestSortGameServersByLeastFullNodes(t *testing.T) {
 	}
 
 	priorities := []agonesv1.Priority{{
-		PriorityType: "Counter",
-		Key:          "foo",
-		Order:        "Descending",
+		Type:  "Counter",
+		Key:   "foo",
+		Order: "Descending",
 	}}
 
 	result := sortGameServersByLeastFullNodes(list, nc, priorities)
@@ -111,33 +111,11 @@ func TestSortGameServersByLeastFullNodes(t *testing.T) {
 	assert.Equal(t, "g8", result[11].ObjectMeta.Name)
 
 	priorities = []agonesv1.Priority{{
-		PriorityType: "Counter",
-		Key:          "foo",
-		Order:        "Ascending",
+		Type:  "Counter",
+		Key:   "foo",
+		Order: "Ascending",
 	}}
 
-	result = sortGameServersByLeastFullNodes(list, nc, priorities)
-
-	require.Len(t, result, len(list))
-	assert.Equal(t, "g2", result[0].ObjectMeta.Name)
-	assert.Equal(t, "g3", result[1].ObjectMeta.Name)
-	assert.Equal(t, "g4", result[2].ObjectMeta.Name)
-	assert.Equal(t, "g1", result[3].ObjectMeta.Name)
-	assert.Equal(t, "g11", result[4].ObjectMeta.Name)
-	assert.Equal(t, "g12", result[5].ObjectMeta.Name)
-	assert.Equal(t, "g9", result[6].ObjectMeta.Name)
-	assert.Equal(t, "g10", result[7].ObjectMeta.Name)
-	assert.Equal(t, "g5", result[8].ObjectMeta.Name)
-	assert.Equal(t, "g7", result[9].ObjectMeta.Name)
-	assert.Equal(t, "g6", result[10].ObjectMeta.Name)
-	assert.Equal(t, "g8", result[11].ObjectMeta.Name)
-
-	priorities = []agonesv1.Priority{{
-		PriorityType: "Counter",
-		Key:          "foo",
-		Order:        "",
-	}}
-	// Result should be same as for Ascending
 	result = sortGameServersByLeastFullNodes(list, nc, priorities)
 
 	require.Len(t, result, len(list))

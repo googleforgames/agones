@@ -831,7 +831,7 @@ func TestApplyCounterPolicy(t *testing.T) {
 				f.Spec.Template.Spec.Counters["rooms"] = agonesv1.CounterStatus{
 					Count:    0,
 					Capacity: 7}
-				f.Spec.Priorities = []agonesv1.Priority{{PriorityType: "Counter", Key: "rooms", Order: "Ascending"}}
+				f.Spec.Priorities = []agonesv1.Priority{{Type: "Counter", Key: "rooms", Order: "Ascending"}}
 				f.Status.Replicas = 8
 				f.Status.ReadyReplicas = 4
 				f.Status.AllocatedReplicas = 4
@@ -1029,7 +1029,7 @@ func TestApplyCounterPolicy(t *testing.T) {
 				f.Spec.Template.Spec.Counters["rooms"] = agonesv1.CounterStatus{
 					Count:    0,
 					Capacity: 7}
-				f.Spec.Priorities = []agonesv1.Priority{{PriorityType: "Counter", Key: "rooms", Order: "Descending"}}
+				f.Spec.Priorities = []agonesv1.Priority{{Type: "Counter", Key: "rooms", Order: "Descending"}}
 				f.Status.Replicas = 4
 				f.Status.ReadyReplicas = 3
 				f.Status.AllocatedReplicas = 1
@@ -1152,7 +1152,7 @@ func TestApplyCounterPolicy(t *testing.T) {
 				f.Spec.Template.Spec.Counters["rooms"] = agonesv1.CounterStatus{
 					Count:    0,
 					Capacity: 7}
-				f.Spec.Priorities = []agonesv1.Priority{{PriorityType: "Counter", Key: "rooms", Order: "Descending"}}
+				f.Spec.Priorities = []agonesv1.Priority{{Type: "Counter", Key: "rooms", Order: "Descending"}}
 				f.Status.Replicas = 1
 				f.Status.ReadyReplicas = 0
 				f.Status.AllocatedReplicas = 1
@@ -1191,7 +1191,7 @@ func TestApplyCounterPolicy(t *testing.T) {
 				f.Spec.Template.Spec.Counters["rooms"] = agonesv1.CounterStatus{
 					Count:    0,
 					Capacity: 10}
-				f.Spec.Priorities = []agonesv1.Priority{{PriorityType: "Counter", Key: "rooms", Order: "Descending"}}
+				f.Spec.Priorities = []agonesv1.Priority{{Type: "Counter", Key: "rooms", Order: "Descending"}}
 				f.Status.Replicas = 3
 				f.Status.ReadyReplicas = 0
 				f.Status.AllocatedReplicas = 3
@@ -1448,7 +1448,7 @@ func TestApplyListPolicy(t *testing.T) {
 				f.Spec.Template.Spec.Lists["gamers"] = agonesv1.ListStatus{
 					Values:   []string{"default"},
 					Capacity: 10}
-				f.Spec.Priorities = []agonesv1.Priority{{PriorityType: "List", Key: "gamers", Order: "Descending"}}
+				f.Spec.Priorities = []agonesv1.Priority{{Type: "List", Key: "gamers", Order: "Descending"}}
 				f.Status.Replicas = 8
 				f.Status.ReadyReplicas = 6
 				f.Status.AllocatedReplicas = 4
@@ -1587,7 +1587,7 @@ func TestApplyListPolicy(t *testing.T) {
 				f.Spec.Template.Spec.Lists["gamers"] = agonesv1.ListStatus{
 					Values:   []string{},
 					Capacity: 5}
-				f.Spec.Priorities = []agonesv1.Priority{{PriorityType: "List", Key: "gamers", Order: "Ascending"}}
+				f.Spec.Priorities = []agonesv1.Priority{{Type: "List", Key: "gamers", Order: "Ascending"}}
 				f.Status.Replicas = 4
 				f.Status.ReadyReplicas = 3
 				f.Status.AllocatedReplicas = 1
@@ -1713,7 +1713,7 @@ func TestApplyListPolicy(t *testing.T) {
 				f.Spec.Template.Spec.Lists["gamers"] = agonesv1.ListStatus{
 					Values:   []string{"default", "default2"},
 					Capacity: 10}
-				f.Spec.Priorities = []agonesv1.Priority{{PriorityType: "List", Key: "gamers", Order: "Descending"}}
+				f.Spec.Priorities = []agonesv1.Priority{{Type: "List", Key: "gamers", Order: "Descending"}}
 				f.Status.Replicas = 3
 				f.Status.ReadyReplicas = 3
 				f.Status.AllocatedReplicas = 0
@@ -1774,7 +1774,7 @@ func TestApplyListPolicy(t *testing.T) {
 				f.Spec.Template.Spec.Lists["gamers"] = agonesv1.ListStatus{
 					Values:   []string{"default", "default2"},
 					Capacity: 10}
-				f.Spec.Priorities = []agonesv1.Priority{{PriorityType: "List", Key: "gamers", Order: "Descending"}}
+				f.Spec.Priorities = []agonesv1.Priority{{Type: "List", Key: "gamers", Order: "Descending"}}
 				f.Status.Replicas = 3
 				f.Status.ReadyReplicas = 3
 				f.Status.AllocatedReplicas = 0

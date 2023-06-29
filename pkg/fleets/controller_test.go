@@ -1076,9 +1076,9 @@ func TestControllerUpsertGameServerSet(t *testing.T) {
 		// Add Priorities to the Fleet
 		f.Spec.Priorities = []agonesv1.Priority{
 			{
-				PriorityType: "List",
-				Key:          "Baz",
-				Order:        "Ascending",
+				Type:  "List",
+				Key:   "Baz",
+				Order: "Ascending",
 			}}
 		update := false
 
@@ -1086,7 +1086,7 @@ func TestControllerUpsertGameServerSet(t *testing.T) {
 			update = true
 			ca := action.(k8stesting.UpdateAction)
 			gsSet := ca.GetObject().(*agonesv1.GameServerSet)
-			assert.Equal(t, agonesv1.Priority{PriorityType: "List", Key: "Baz", Order: "Ascending"}, gsSet.Spec.Priorities[0])
+			assert.Equal(t, agonesv1.Priority{Type: "List", Key: "Baz", Order: "Ascending"}, gsSet.Spec.Priorities[0])
 			return true, gsSet, nil
 		})
 

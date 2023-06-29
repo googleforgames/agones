@@ -173,14 +173,6 @@ func (f *Fleet) ApplyDefaults() {
 	}
 	f.ObjectMeta.Annotations[VersionAnnotation] = pkg.Version
 
-	if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) && (f.Spec.Priorities != nil) {
-		for i, p := range f.Spec.Priorities {
-			if p.Order == "" {
-				p.Order = "Ascending"
-				f.Spec.Priorities[i] = p
-			}
-		}
-	}
 }
 
 // GetGameServerSpec get underlying Gameserver specification

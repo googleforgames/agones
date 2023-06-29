@@ -97,15 +97,21 @@ spec:
                   items:
                     type: object
                     properties:
-                      priorityType:
+                      type:
                         type: string
                         title: Whether a Counter or a List.
+                        enum:
+                          - Counter
+                          - List
                       key:
                         type: string
                         title: The name of the Counter or List
                       order:
                         type: string
                         title: Ascending or Descending sort order
+                        enum:
+                          - Ascending
+                          - Descending
                 template:
                   {{- $data := dict "metadata" true "podPreserveUnknownFields" .Values.gameservers.podPreserveUnknownFields }}
                   {{- include "gameserver.schema" $data | indent 18 }}

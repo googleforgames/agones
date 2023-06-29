@@ -93,7 +93,7 @@ func sortGameServersByLeastFullNodes(list []*agonesv1.GameServer, count map[stri
 			for _, priority := range priorities {
 				res := compareGameServerCapacity(&priority, a, b)
 				switch priority.Order {
-				case agonesv1.GameServerPriorityAscending, "":
+				case agonesv1.GameServerPriorityAscending:
 					if res == -1 {
 						return true
 					}
@@ -160,7 +160,7 @@ func ListGameServersByGameServerSetOwner(gameServerLister listerv1.GameServerLis
 // Order is Descending (3, 2, 1, 0, nil), and nil > gsX when Order is Ascending (0, 1, 2, 3, nil).
 func compareGameServerCapacity(p *agonesv1.Priority, gs1, gs2 *agonesv1.GameServer) int {
 	var gs1ok, gs2ok bool
-	switch p.PriorityType {
+	switch p.Type {
 	case agonesv1.GameServerPriorityCounter:
 		// Check if both game servers contain the Counter.
 		counter1, ok1 := gs1.Status.Counters[p.Key]
@@ -214,12 +214,10 @@ func compareGameServerCapacity(p *agonesv1.Priority, gs1, gs2 *agonesv1.GameServ
 	// Descending (3, 2, 1, 0, nil), and nil > gsX when Order is Ascending (0, 1, 2, 3, nil).
 	// No Order specified "" is the same as Ascending.
 	if (gs1ok && p.Order == agonesv1.GameServerPriorityDescending) ||
-		(gs2ok && p.Order == "") ||
 		(gs2ok && p.Order == agonesv1.GameServerPriorityAscending) {
 		return 1
 	}
 	if (gs1ok && p.Order == agonesv1.GameServerPriorityAscending) ||
-		(gs1ok && p.Order == "") ||
 		(gs2ok && p.Order == agonesv1.GameServerPriorityDescending) {
 		return -1
 	}

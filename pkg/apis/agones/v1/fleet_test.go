@@ -80,17 +80,17 @@ func TestFleetGameServerSetGameServer(t *testing.T) {
 
 	assert.Nil(t, f.Spec.Priorities)
 	f.Spec.Priorities = []Priority{
-		{PriorityType: "Counter",
+		{Type: "Counter",
 			Key:   "Foo",
 			Order: "Ascending"}}
 	assert.NotNil(t, f.Spec.Priorities)
-	assert.Equal(t, f.Spec.Priorities[0], Priority{PriorityType: "Counter", Key: "Foo", Order: "Ascending"})
+	assert.Equal(t, f.Spec.Priorities[0], Priority{Type: "Counter", Key: "Foo", Order: "Ascending"})
 
 	gsSet = f.GameServerSet()
 	assert.NotNil(t, gsSet.Spec.AllocationOverflow)
 	assert.Equal(t, "things", gsSet.Spec.AllocationOverflow.Labels["stuff"])
 
-	assert.Equal(t, gsSet.Spec.Priorities[0], Priority{PriorityType: "Counter", Key: "Foo", Order: "Ascending"})
+	assert.Equal(t, gsSet.Spec.Priorities[0], Priority{Type: "Counter", Key: "Foo", Order: "Ascending"})
 }
 
 func TestFleetApplyDefaults(t *testing.T) {
@@ -107,15 +107,6 @@ func TestFleetApplyDefaults(t *testing.T) {
 	assert.Equal(t, "25%", f.Spec.Strategy.RollingUpdate.MaxSurge.String())
 	assert.Equal(t, apis.Packed, f.Spec.Scheduling)
 	assert.Equal(t, int32(0), f.Spec.Replicas)
-
-	// Counts and Lists Feature Gate
-	runtime.FeatureTestMutex.Lock()
-	defer runtime.FeatureTestMutex.Unlock()
-	runtime.Must(runtime.ParseFeatures(fmt.Sprintf("%s=true", runtime.FeatureCountsAndLists)))
-	assert.Equal(t, []Priority(nil), f.Spec.Priorities)
-	f.Spec.Priorities = []Priority{{PriorityType: "Counter", Key: "Foo"}}
-	f.ApplyDefaults()
-	assert.Equal(t, Priority{PriorityType: "Counter", Key: "Foo", Order: "Ascending"}, f.Spec.Priorities[0])
 }
 
 func TestFleetUpperBoundReplicas(t *testing.T) {
@@ -295,158 +286,6 @@ func TestGetReadyReplicaCountForGameServerSets(t *testing.T) {
 	}
 
 	assert.Equal(t, int32(1020), GetReadyReplicaCountForGameServerSets(fixture))
-}
-
-// nolint:dupl  // Linter errors on lines are duplicate of TestGameServerSetPriorityValidate
-func TestFleetPriorityValidate(t *testing.T) {
-	t.Parallel()
-
-	runtime.FeatureTestMutex.Lock()
-	defer runtime.FeatureTestMutex.Unlock()
-	assert.NoError(t, runtime.ParseFeatures(fmt.Sprintf("%s=true", runtime.FeatureCountsAndLists)))
-
-	modifiedFleet := func(f func(*FleetSpec)) *Fleet {
-		fleet := defaultFleet()
-		f(&fleet.Spec)
-		return fleet
-	}
-
-	type expected struct {
-		valid    bool
-		causeLen int
-		fields   []string
-	}
-
-	fixtures := map[string]struct {
-		f        *Fleet
-		expected expected
-	}{
-		"valid Counter Ascending": {
-			f: modifiedFleet(func(fs *FleetSpec) {
-				fs.Priorities = []Priority{
-					{
-						PriorityType: "Counter",
-						Key:          "Foo",
-						Order:        "Ascending",
-					}}
-			}),
-			expected: expected{
-				valid:    true,
-				causeLen: 0,
-			},
-		},
-		"valid Counter Descending": {
-			f: modifiedFleet(func(fs *FleetSpec) {
-				fs.Priorities = []Priority{
-					{
-						PriorityType: "Counter",
-						Key:          "Bar",
-						Order:        "Descending",
-					}}
-			}),
-			expected: expected{
-				valid:    true,
-				causeLen: 0,
-			},
-		},
-		"valid Counter empty Order": {
-			f: modifiedFleet(func(fs *FleetSpec) {
-				fs.Priorities = []Priority{
-					{
-						PriorityType: "Counter",
-						Key:          "Bar",
-						Order:        "",
-					}}
-			}),
-			expected: expected{
-				valid:    true,
-				causeLen: 0,
-			},
-		},
-		"invalid counter type and order": {
-			f: modifiedFleet(func(fs *FleetSpec) {
-				fs.Priorities = []Priority{
-					{
-						PriorityType: "counter",
-						Key:          "Babar",
-						Order:        "descending",
-					}}
-			}),
-			expected: expected{
-				valid:    false,
-				causeLen: 2,
-			},
-		},
-		"valid List Ascending": {
-			f: modifiedFleet(func(fs *FleetSpec) {
-				fs.Priorities = []Priority{
-					{
-						PriorityType: "List",
-						Key:          "Baz",
-						Order:        "Ascending",
-					}}
-			}),
-			expected: expected{
-				valid:    true,
-				causeLen: 0,
-			},
-		},
-		"valid List Descending": {
-			f: modifiedFleet(func(fs *FleetSpec) {
-				fs.Priorities = []Priority{
-					{
-						PriorityType: "List",
-						Key:          "Blerg",
-						Order:        "Descending",
-					}}
-			}),
-			expected: expected{
-				valid:    true,
-				causeLen: 0,
-			},
-		},
-		"valid List empty Order": {
-			f: modifiedFleet(func(fs *FleetSpec) {
-				fs.Priorities = []Priority{
-					{
-						PriorityType: "List",
-						Key:          "Blerg",
-						Order:        "Ascending",
-					}}
-			}),
-			expected: expected{
-				valid:    true,
-				causeLen: 0,
-			},
-		},
-		"invalid list type and order": {
-			f: modifiedFleet(func(fs *FleetSpec) {
-				fs.Priorities = []Priority{
-					{
-						PriorityType: "list",
-						Key:          "Schmorg",
-						Order:        "ascending",
-					}}
-			}),
-			expected: expected{
-				valid:    false,
-				causeLen: 2,
-			},
-		},
-	}
-
-	for k, v := range fixtures {
-		t.Run(k, func(t *testing.T) {
-			v.f.ApplyDefaults()
-			causes, valid := v.f.Validate(fakeAPIHooks{})
-			assert.Equal(t, v.expected.valid, valid)
-			assert.Len(t, causes, v.expected.causeLen)
-
-			for i := range v.expected.fields {
-				assert.Equal(t, v.expected.fields[i], causes[i].Field)
-			}
-		})
-	}
 }
 
 func defaultFleet() *Fleet {
