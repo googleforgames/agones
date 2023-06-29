@@ -27,7 +27,6 @@ import (
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	autoscalingv1 "agones.dev/agones/pkg/apis/autoscaling/v1"
 	agtesting "agones.dev/agones/pkg/testing"
-	utilruntime "agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/webhooks"
 	"github.com/heptiolabs/healthcheck"
 	"github.com/mattbaird/jsonpatch"
@@ -279,8 +278,6 @@ func TestWebhookControllerCreationValidationHandler(t *testing.T) {
 
 // nolint:dupl
 func TestControllerSyncFleetAutoscaler(t *testing.T) {
-	utilruntime.FeatureTestMutex.Lock()
-	defer utilruntime.FeatureTestMutex.Unlock()
 
 	t.Run("no scaling up because fleet is marked for deletion, buffer policy", func(t *testing.T) {
 		t.Parallel()
@@ -758,9 +755,6 @@ func TestControllerSyncFleetAutoscaler(t *testing.T) {
 	t.Run("Missing fleet autoscaler, doesn't fail/panic", func(t *testing.T) {
 		t.Parallel()
 
-		utilruntime.FeatureTestMutex.Lock()
-		defer utilruntime.FeatureTestMutex.Unlock()
-
 		c, m := newFakeController()
 		ctx, cancel := agtesting.StartInformers(m, c.fleetSynced, c.fleetAutoscalerSynced)
 		defer cancel()
@@ -1008,9 +1002,6 @@ func TestControllerUpdateStatusUnableToScale(t *testing.T) {
 func TestControllerEvents(t *testing.T) {
 	t.Parallel()
 
-	utilruntime.FeatureTestMutex.Lock()
-	defer utilruntime.FeatureTestMutex.Unlock()
-
 	c, mocks := newFakeController()
 	fakeWatch := watch.NewFake()
 	mocks.AgonesClient.AddWatchReactor("fleetautoscalers", k8stesting.DefaultWatchReactor(fakeWatch, nil))
@@ -1052,9 +1043,6 @@ func TestControllerEvents(t *testing.T) {
 
 func TestControllerAddUpdateDeleteFasThread(t *testing.T) {
 	t.Parallel()
-
-	utilruntime.FeatureTestMutex.Lock()
-	defer utilruntime.FeatureTestMutex.Unlock()
 
 	var counter int64
 	c, m := newFakeController()

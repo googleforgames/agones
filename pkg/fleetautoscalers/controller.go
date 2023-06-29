@@ -122,10 +122,10 @@ func NewController(
 
 	autoscaler.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
-			c.workerqueue.Enqueue(obj)
+			c.addFasThread(obj.(*autoscalingv1.FleetAutoscaler), true)
 		},
 		UpdateFunc: func(_, newObj interface{}) {
-			c.workerqueue.Enqueue(newObj)
+			c.updateFasThread(newObj.(*autoscalingv1.FleetAutoscaler))
 		},
 		DeleteFunc: func(obj interface{}) {
 			// Could be a DeletedFinalStateUnknown, in which case, just ignore it
