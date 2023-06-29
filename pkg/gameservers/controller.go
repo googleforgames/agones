@@ -46,6 +46,7 @@ import (
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	runtimeschema "k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
@@ -302,26 +303,15 @@ func (ext *Extensions) creationValidationHandler(review admissionv1.AdmissionRev
 
 	loggerForGameServer(gs, ext.baseLogger).WithField("review", review).Debug("creationValidationHandler")
 
-	causes, ok := gs.Validate(ext.apiHooks)
-	if !ok {
-		review.Response.Allowed = false
-		details := metav1.StatusDetails{
-			Name:   review.Request.Name,
-			Group:  review.Request.Kind.Group,
-			Kind:   review.Request.Kind.Kind,
-			Causes: causes,
+	if errs := gs.Validate(ext.apiHooks); len(errs) > 0 {
+		kind := runtimeschema.GroupKind{
+			Group: review.Request.Kind.Group,
+			Kind:  review.Request.Kind.Kind,
 		}
-		review.Response.Result = &metav1.Status{
-			Status:  metav1.StatusFailure,
-			Message: "GameServer configuration is invalid",
-			Reason:  metav1.StatusReasonInvalid,
-			Details: &details,
-		}
-
+		statusErr := k8serrors.NewInvalid(kind, review.Request.Name, errs)
+		review.Response.Result = &statusErr.ErrStatus
 		loggerForGameServer(gs, ext.baseLogger).WithField("review", review).Debug("Invalid GameServer")
-		return review, nil
 	}
-
 	return review, nil
 }
 

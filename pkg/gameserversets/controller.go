@@ -43,6 +43,7 @@ import (
 	apiextclientv1 "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/typed/apiextensions/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	runtimeschema "k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 	typedcorev1 "k8s.io/client-go/kubernetes/typed/core/v1"
@@ -214,24 +215,14 @@ func (ext *Extensions) updateValidationHandler(review admissionv1.AdmissionRevie
 		return review, errors.Wrapf(err, "error unmarshalling old GameServerSet json: %s", oldObj.Raw)
 	}
 
-	causes, ok := oldGss.ValidateUpdate(newGss)
-	if !ok {
-		review.Response.Allowed = false
-		details := metav1.StatusDetails{
-			Name:   review.Request.Name,
-			Group:  review.Request.Kind.Group,
-			Kind:   review.Request.Kind.Kind,
-			Causes: causes,
+	if errs := oldGss.ValidateUpdate(newGss); len(errs) > 0 {
+		kind := runtimeschema.GroupKind{
+			Group: review.Request.Kind.Group,
+			Kind:  review.Request.Kind.Kind,
 		}
-		review.Response.Result = &metav1.Status{
-			Status:  metav1.StatusFailure,
-			Message: "GameServerSet update is invalid",
-			Reason:  metav1.StatusReasonInvalid,
-			Details: &details,
-		}
-
+		statusErr := k8serrors.NewInvalid(kind, review.Request.Name, errs)
+		review.Response.Result = &statusErr.ErrStatus
 		loggerForGameServerSet(ext.baseLogger, newGss).WithField("review", review).Debug("Invalid GameServerSet update")
-		return review, nil
 	}
 
 	return review, nil
@@ -249,25 +240,16 @@ func (ext *Extensions) creationValidationHandler(review admissionv1.AdmissionRev
 		return review, errors.Wrapf(err, "error unmarshalling GameServerSet json after schema validation: %s", newObj.Raw)
 	}
 
-	causes, ok := newGss.Validate(ext.apiHooks)
-	if !ok {
-		review.Response.Allowed = false
-		details := metav1.StatusDetails{
-			Name:   review.Request.Name,
-			Group:  review.Request.Kind.Group,
-			Kind:   review.Request.Kind.Kind,
-			Causes: causes,
+	if errs := newGss.Validate(ext.apiHooks); len(errs) > 0 {
+		kind := runtimeschema.GroupKind{
+			Group: review.Request.Kind.Group,
+			Kind:  review.Request.Kind.Kind,
 		}
-		review.Response.Result = &metav1.Status{
-			Status:  metav1.StatusFailure,
-			Message: "GameServerSet create is invalid",
-			Reason:  metav1.StatusReasonInvalid,
-			Details: &details,
-		}
-
+		statusErr := k8serrors.NewInvalid(kind, review.Request.Name, errs)
+		review.Response.Result = &statusErr.ErrStatus
 		loggerForGameServerSet(ext.baseLogger, newGss).WithField("review", review).Debug("Invalid GameServerSet update")
-		return review, nil
 	}
+
 	return review, nil
 }
 

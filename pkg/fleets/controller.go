@@ -43,6 +43,7 @@ import (
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	runtimeschema "k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -196,22 +197,13 @@ func (ext *Extensions) creationValidationHandler(review admissionv1.AdmissionRev
 		return review, errors.Wrapf(err, "error unmarshalling Fleet json after schema validation: %s", obj.Raw)
 	}
 
-	causes, ok := fleet.Validate(ext.apiHooks)
-	if !ok {
-		review.Response.Allowed = false
-		details := metav1.StatusDetails{
-			Name:   review.Request.Name,
-			Group:  review.Request.Kind.Group,
-			Kind:   review.Request.Kind.Kind,
-			Causes: causes,
+	if errs := fleet.Validate(ext.apiHooks); len(errs) > 0 {
+		kind := runtimeschema.GroupKind{
+			Group: review.Request.Kind.Group,
+			Kind:  review.Request.Kind.Kind,
 		}
-		review.Response.Result = &metav1.Status{
-			Status:  metav1.StatusFailure,
-			Message: "Fleet configuration is invalid",
-			Reason:  metav1.StatusReasonInvalid,
-			Details: &details,
-		}
-
+		statusErr := k8serrors.NewInvalid(kind, review.Request.Name, errs)
+		review.Response.Result = &statusErr.ErrStatus
 		loggerForFleet(fleet, ext.baseLogger).WithField("review", review).Debug("Invalid Fleet")
 	}
 

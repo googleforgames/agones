@@ -15,8 +15,6 @@
 package v1
 
 import (
-	"fmt"
-
 	apivalidation "k8s.io/apimachinery/pkg/api/validation"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	metav1validation "k8s.io/apimachinery/pkg/apis/meta/v1/validation"
@@ -65,19 +63,14 @@ type crd interface {
 }
 
 // validateName Check NameSize of a CRD
-func validateName(c crd) []metav1.StatusCause {
-	var causes []metav1.StatusCause
+func validateName(c crd, fldPath *field.Path) field.ErrorList {
+	var allErrs field.ErrorList
 	name := c.GetName()
-	kind := c.GetObjectKind().GroupVersionKind().Kind
 	// make sure the Name of a Fleet does not oversize the Label size in GSS and GS
 	if len(name) > validation.LabelValueMaxLength {
-		causes = append(causes, metav1.StatusCause{
-			Type:    metav1.CauseTypeFieldValueInvalid,
-			Field:   "Name",
-			Message: fmt.Sprintf("Length of %s '%s' name should be no more than 63 characters.", kind, name),
-		})
+		allErrs = append(allErrs, field.TooLongMaxLength(fldPath.Child("name"), name, 63))
 	}
-	return causes
+	return allErrs
 }
 
 // gsSpec is an interface which contains all necessary
@@ -88,41 +81,20 @@ type gsSpec interface {
 
 // validateGSSpec Check GameServerSpec of a CRD
 // Used by Fleet and GameServerSet
-func validateGSSpec(apiHooks APIHooks, gs gsSpec) []metav1.StatusCause {
+func validateGSSpec(apiHooks APIHooks, gs gsSpec, fldPath *field.Path) field.ErrorList {
 	gsSpec := gs.GetGameServerSpec()
 	gsSpec.ApplyDefaults()
-	causes, _ := gsSpec.Validate(apiHooks, "")
-
-	return causes
+	allErrs := gsSpec.Validate(apiHooks, "", fldPath)
+	return allErrs
 }
 
 // validateObjectMeta Check ObjectMeta specification
 // Used by Fleet, GameServerSet and GameServer
-func validateObjectMeta(objMeta *metav1.ObjectMeta) []metav1.StatusCause {
-	var causes []metav1.StatusCause
-
-	errs := metav1validation.ValidateLabels(objMeta.Labels, field.NewPath("labels"))
-	if len(errs) != 0 {
-		for _, v := range errs {
-			causes = append(causes, metav1.StatusCause{
-				Type:    metav1.CauseTypeFieldValueInvalid,
-				Field:   "labels",
-				Message: v.Error(),
-			})
-		}
-	}
-	errs = apivalidation.ValidateAnnotations(objMeta.Annotations,
-		field.NewPath("annotations"))
-	if len(errs) != 0 {
-		for _, v := range errs {
-			causes = append(causes, metav1.StatusCause{
-				Type:    metav1.CauseTypeFieldValueInvalid,
-				Field:   "annotations",
-				Message: v.Error(),
-			})
-		}
-	}
-	return causes
+func validateObjectMeta(objMeta *metav1.ObjectMeta, fldPath *field.Path) field.ErrorList {
+	var allErrs field.ErrorList
+	allErrs = append(allErrs, metav1validation.ValidateLabels(objMeta.Labels, fldPath.Child("labels"))...)
+	allErrs = append(allErrs, apivalidation.ValidateAnnotations(objMeta.Annotations, fldPath.Child("annotations"))...)
+	return allErrs
 }
 
 // AllocationOverflow specifies what labels and/or annotations to apply on Allocated GameServers
@@ -138,33 +110,10 @@ type AllocationOverflow struct {
 }
 
 // Validate validates the label and annotation values
-func (ao *AllocationOverflow) Validate() ([]metav1.StatusCause, bool) {
-	var causes []metav1.StatusCause
-	parentField := "Spec.AllocationOverflow"
-
-	errs := metav1validation.ValidateLabels(ao.Labels, field.NewPath(parentField))
-	if len(errs) != 0 {
-		for _, v := range errs {
-			causes = append(causes, metav1.StatusCause{
-				Type:    metav1.CauseTypeFieldValueInvalid,
-				Field:   "labels",
-				Message: v.Error(),
-			})
-		}
-	}
-	errs = apivalidation.ValidateAnnotations(ao.Annotations,
-		field.NewPath(parentField))
-	if len(errs) != 0 {
-		for _, v := range errs {
-			causes = append(causes, metav1.StatusCause{
-				Type:    metav1.CauseTypeFieldValueInvalid,
-				Field:   "annotations",
-				Message: v.Error(),
-			})
-		}
-	}
-
-	return causes, len(causes) == 0
+func (ao *AllocationOverflow) Validate(fldPath *field.Path) field.ErrorList {
+	allErrs := metav1validation.ValidateLabels(ao.Labels, fldPath.Child("labels"))
+	allErrs = append(allErrs, apivalidation.ValidateAnnotations(ao.Annotations, fldPath.Child("annotations"))...)
+	return allErrs
 }
 
 // CountMatches returns the number of Allocated GameServers that match the labels and annotations, and
