@@ -221,6 +221,7 @@ func (ext *Extensions) updateValidationHandler(review admissionv1.AdmissionRevie
 			Kind:  review.Request.Kind.Kind,
 		}
 		statusErr := k8serrors.NewInvalid(kind, review.Request.Name, errs)
+		review.Response.Allowed = false
 		review.Response.Result = &statusErr.ErrStatus
 		loggerForGameServerSet(ext.baseLogger, newGss).WithField("review", review).Debug("Invalid GameServerSet update")
 	}
@@ -246,6 +247,7 @@ func (ext *Extensions) creationValidationHandler(review admissionv1.AdmissionRev
 			Kind:  review.Request.Kind.Kind,
 		}
 		statusErr := k8serrors.NewInvalid(kind, review.Request.Name, errs)
+		review.Response.Allowed = false
 		review.Response.Result = &statusErr.ErrStatus
 		loggerForGameServerSet(ext.baseLogger, newGss).WithField("review", review).Debug("Invalid GameServerSet update")
 	}

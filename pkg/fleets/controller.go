@@ -203,6 +203,7 @@ func (ext *Extensions) creationValidationHandler(review admissionv1.AdmissionRev
 			Kind:  review.Request.Kind.Kind,
 		}
 		statusErr := k8serrors.NewInvalid(kind, review.Request.Name, errs)
+		review.Response.Allowed = false
 		review.Response.Result = &statusErr.ErrStatus
 		loggerForFleet(fleet, ext.baseLogger).WithField("review", review).Debug("Invalid Fleet")
 	}
