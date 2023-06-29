@@ -318,6 +318,7 @@ data:
       "style": "dark",
       "tags": [
         "agones",
+        "controller",
         "client-go"
       ],
       "templating": {
@@ -393,7 +394,7 @@ data:
         ]
       },
       "timezone": "",
-      "title": "Agones go-client requests",
+      "title": "Agones Controller go-client requests",
       "uid": "9VRr_m_iz",
       "version": 1,
       "weekStart": ""
