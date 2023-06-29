@@ -16,6 +16,7 @@ package v1
 
 import (
 	"encoding/json"
+	"fmt"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"net"
 	"strings"
@@ -476,16 +477,16 @@ func (gss *GameServerSpec) validateFeatureGates(fldPath *field.Path) field.Error
 	var allErrs field.ErrorList
 	if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
 		if gss.Players != nil {
-			allErrs = append(allErrs, field.Forbidden(fldPath.Child("players"), "players is not allowed when feature flag is not enabled"))
+			allErrs = append(allErrs, field.Forbidden(fldPath.Child("players"), fmt.Sprintf("Value cannot be set unless feature flag %s is enabled", runtime.FeaturePlayerTracking)))
 		}
 	}
 
 	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
 		if gss.Counters != nil {
-			allErrs = append(allErrs, field.Forbidden(fldPath.Child("counters"), "counters is not allowed when feature flag is not enabled"))
+			allErrs = append(allErrs, field.Forbidden(fldPath.Child("counters"), fmt.Sprintf("Value cannot be set unless feature flag %s is enabled", runtime.FeatureCountsAndLists)))
 		}
 		if gss.Lists != nil {
-			allErrs = append(allErrs, field.Forbidden(fldPath.Child("lists"), "lists is not allowed when feature flag is not enabled"))
+			allErrs = append(allErrs, field.Forbidden(fldPath.Child("lists"), fmt.Sprintf("Value cannot be set unless feature flag %s is enabled", runtime.FeatureCountsAndLists)))
 		}
 	}
 
@@ -586,6 +587,7 @@ func ValidateResource(request resource.Quantity, limit resource.Quantity, resour
 // validateResources validate CPU and Memory resources
 func validateResources(container corev1.Container, fldPath *field.Path) field.ErrorList {
 	var allErrs field.ErrorList
+	// TODO: ValidateResource using field.ErrorList
 	for _, err := range ValidateResource(container.Resources.Requests[corev1.ResourceCPU], container.Resources.Limits[corev1.ResourceCPU], corev1.ResourceCPU) {
 		allErrs = append(allErrs, field.Invalid(fldPath.Child("resources", "requests", string(corev1.ResourceCPU)), container.Resources.Requests[corev1.ResourceCPU], err.Error()))
 	}
