@@ -15870,6 +15870,26 @@ spec:
       port: 8080
       targetPort: http
 ---
+# Source: agones/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: agones-controller-metrics
+  namespace: agones-system
+  labels:
+    agones.dev/role: controller
+    app: agones
+    chart: agones-1.33.0-dev
+    release: agones-manual
+    heritage: Helm
+spec:
+  selector:
+    agones.dev/role: controller
+  ports:
+    - name: web
+      port: 8080
+      targetPort: http
+---
 # Source: agones/templates/service/allocation.yaml
 # Copyright 2019 Google LLC All Rights Reserved.
 #
