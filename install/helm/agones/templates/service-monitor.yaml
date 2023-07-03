@@ -12,33 +12,26 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-{{- $featureGates := include "agones.featureGates" . | fromYaml }}
-
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: agones-controller-monitor
   namespace: {{ .Release.Namespace }}
   labels:
-{{- if $featureGates.SplitControllerAndExtensions }}
-    agones.dev/role: extensions
-{{- else}}
-    agones.dev/role: controller
-{{- end}}  
     app: {{ template "agones.name" . }}
     chart: {{ template "agones.chart" . }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
 spec:
   selector:
-    matchLabels:
-{{- if $featureGates.SplitControllerAndExtensions }}
-      agones.dev/role: extensions
-{{- else}}
-      agones.dev/role: controller
-{{- end}}
+    matchExpressions:
+      - key: agones.dev/role
+        operator: In
+        values:
+          - controller
+          - extensions
   endpoints:
-    - port: web
+    - port: metrics
       path: /metrics
       interval: {{ .Values.agones.metrics.serviceMonitor.interval }}
       relabelings:
