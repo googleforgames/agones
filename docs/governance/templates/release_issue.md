@@ -49,7 +49,7 @@ and copy it into a release issue. Fill in relevant values, found inside {}
         to publish.
   - [ ] Run `make sdk-publish-csharp` to deploy to NuGet. Requires login credentials.
         Will need [NuGet API Key](https://www.nuget.org/account/apikeys) from Agones account.
-- [ ] Run `make post-build-release` to build the artifacts in GCS(These files will be attached in the release notes) and to push the latest images in the release repository.
+- [ ] Run `make post-build-release` to build the artifacts in GCS(These files will be attached in the release notes) and to push the latest images in the release repository and push chart on agones-chart.
 - [ ] Run `make shell` and run `gcloud config configurations activate <your development project>` to switch Agones
       development tooling off of the `agones-images` project.
 - [ ] Do a `helm repo add agones https://agones.dev/chart/stable` / `helm repo update` and verify that the new
@@ -58,8 +58,8 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 - [ ] Attach all assets found in the cloud storage with {version} to the draft GitHub Release.
 - [ ] Copy any review changes from the release blog post into the draft GitHub release.
 - [ ] Publish the draft GitHub Release.
-- [ ] Run `make release-branch` to create a release branch.
-- [ ] Email the [mailing list][list] with the release details (copy-paste the release blog post).
+- [ ] Run `make release-branch` to create a release branch and run `gcloud config configurations activate <your development project>` to switch Agones development tooling off of the `agones-images` project.
+- [ ] Email the `mailing list` with the release details (copy-paste the release blog post). `Internal Agones Release Guide` has the mailing list.
 - [ ] Paste the announcement blog post to the #users Slack group.
 - [ ] Post to the [agonesdev](https://twitter.com/agonesdev) Twitter account.
 - [ ] Run `git checkout main`.
@@ -68,7 +68,6 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 - [ ] Create PR with these changes, and merge them with approval
 - [ ] Close this issue. _Congratulations!_ - the release is now complete! :tada: :clap: :smile: :+1:
 
-[list]: https://groups.google.com/forum/#!forum/agones-discuss
 [release-template]: https://github.com/googleforgames/agones/blob/main/docs/governance/templates/release.md
 [release-draft]: https://github.com/googleforgames/agones/releases
 [build-makefile]: https://github.com/googleforgames/agones/blob/main/build/Makefile
