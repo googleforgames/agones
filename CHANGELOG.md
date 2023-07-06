@@ -1,5 +1,51 @@
 # Changelog
 
+## [v1.33.0](https://github.com/googleforgames/agones/tree/v1.33.0) (2023-07-05)
+
+[Full Changelog](https://github.com/googleforgames/agones/compare/v1.32.0...v1.33.0)
+
+**Implemented enhancements:**
+- Cloud Build config to trigger a build if no build is running by @zmerlynn in https://github.com/googleforgames/agones/pull/3174
+- Add a helm flag to force Agones system components onto dedicated nodes by @gongmax in https://github.com/googleforgames/agones/pull/3161
+- Counts and Lists Aggregate Values for Fleet Status and GameServerSet Status by @igooch in https://github.com/googleforgames/agones/pull/3180
+- [Release Automation] Label PRs with GitHub Action by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3151
+- Add make gen-crd-clients to the CI suite by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3196
+- Adds Counters and Lists to FleetAutoScaler CRD by @igooch in https://github.com/googleforgames/agones/pull/3198
+- Expose GameServer types by @MiniaczQ in https://github.com/googleforgames/agones/pull/3205
+- Label PR by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3216
+- Remove Feature Expiry Version Shortcodes by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3210
+- Add labels and annotations to allocation response by @austin-space in https://github.com/googleforgames/agones/pull/3197
+- Update Version in site/config.toml by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3227
+- Move SDKGracefulTermination To Stable by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3231
+- Delete data-proofer-ignore attribute by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3225
+- GKE Autopilot: Add primary container annotation for game server container by @zmerlynn in https://github.com/googleforgames/agones/pull/3234
+- Fix goclient request dashboard and add allocator to the drill down; Change goclient workqueue dashboard y axis unit by @gongmax in https://github.com/googleforgames/agones/pull/3240
+
+**Fixed bugs:**
+- Fix container name conflict when build windows image by @gongmax in https://github.com/googleforgames/agones/pull/3195
+- Have leader election use namespace from env var by @chiayi in https://github.com/googleforgames/agones/pull/3209
+- Make sdk-update-version by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3221
+- Add label changes for service-monitor by @chiayi in https://github.com/googleforgames/agones/pull/3201
+
+**Other:**
+- Preparation for next release v1.33.0 by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3181
+- Run e2e test on regional standard clusters by @gongmax in https://github.com/googleforgames/agones/pull/3182
+- Remove zonal test clusters, and create regional clusters with release channel by @gongmax in https://github.com/googleforgames/agones/pull/3186
+- Update GKE installation instructions now that `SplitControllerAndExtensions` has been enabled by default. by @roberthbailey in https://github.com/googleforgames/agones/pull/3191
+- build: add ltsc2022 target for windows builds by @davidedmondsMPG in https://github.com/googleforgames/agones/pull/3187
+- Remove Rolling Update on Ready warning in docs by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3192
+- Add write permission to id-token by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3207
+- remove old warning of conversion int64 to float64 by @ashutosji in https://github.com/googleforgames/agones/pull/3214
+- Docs: Break up Helm configuration table by @markmandel in https://github.com/googleforgames/agones/pull/3215
+- Change pre-release version to MAJOR.MINOR.PATCH-dev-HASH by @gongmax in https://github.com/googleforgames/agones/pull/3219
+- Change the helm config field `agones.system.requireDedicatedNode` to `agones.requireDedicatedNodes` by @gongmax in https://github.com/googleforgames/agones/pull/3226
+- Potential fix for TestAllocatorAllocate* flakiness by @markmandel in https://github.com/googleforgames/agones/pull/3232
+- Fix Unreal Engine SDK page for UE5 information. by @oniku-2929 in https://github.com/googleforgames/agones/pull/3237
+
+**New Contributors:**
+- @davidedmondsMPG made their first contribution in https://github.com/googleforgames/agones/pull/3187
+- @ashutosji made their first contribution in https://github.com/googleforgames/agones/pull/3214
+
 ## [v1.32.0](https://github.com/googleforgames/agones/tree/v1.32.0) (2023-05-23)
 
 [Full Changelog](https://github.com/googleforgames/agones/compare/v1.31.0...v1.32.0)

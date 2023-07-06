@@ -366,7 +366,7 @@ data:
           },
           "yaxes": [
             {
-              "format": "dtdurations",
+              "format": "s",
               "label": null,
               "logBase": 1,
               "max": null,
@@ -452,7 +452,7 @@ data:
           },
           "yaxes": [
             {
-              "format": "dtdurations",
+              "format": "s",
               "label": null,
               "logBase": 1,
               "max": null,

@@ -80,21 +80,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 
 ### General
 
-{{% feature expiryVersion="1.33.0" %}}
 
-| Parameter                                                | Description                                                                                                                                                                                                                                                                                                      | Default                                   |
-|----------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------|
-| `agones.featureGates`                                    | A URL query encoded string of Flags to enable/disable e.g. `Example=true&OtherThing=false`. Any value accepted by [strconv.ParseBool(string)](https://golang.org/pkg/strconv/#ParseBool) can be used as a boolean value                                                                                          | \`\`                                      |
-| `agones.rbacEnabled`                                     | Creates RBAC resources. Must be set for any cluster configured with RBAC                                                                                                                                                                                                                                         | `true`                                    |
-| `agones.registerWebhooks`                                | Registers the webhooks used for the admission controller                                                                                                                                                                                                                                                         | `true`                                    |
-| `agones.registerApiService`                              | Registers the apiservice(s) used for the Kubernetes API extension                                                                                                                                                                                                                                                | `true`                                    |
-| `agones.registerServiceAccounts`                         | Attempts to create service accounts for the controllers                                                                                                                                                                                                                                                          | `true`                                    |
-| `agones.createPriorityClass`                             | Attempts to create priority classes for the controllers                                                                                                                                                                                                                                                          | `true`                                    |
-| `agones.priorityClassName`                               | Name of the priority classes to create                                                                                                                                                                                                                                                                           | `agones-system`                           |
-
-{{% /feature %}}
-
-{{% feature publishVersion="1.33.0" %}}
 
 | Parameter                            | Description                                                                                                                                                                                                             | Default         |
 |--------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------|
@@ -107,7 +93,6 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.priorityClassName`           | Name of the priority classes to create                                                                                                                                                                                  | `agones-system` |
 | `agones.requireDedicatedNodes` | Forces Agones system components to be scheduled on dedicated nodes, only applies to the GKE Standard without node auto-provisioning                                                                                     | `false`         |
 
-{{% /feature %}}
 
 ### Custom Resource Definitions
 

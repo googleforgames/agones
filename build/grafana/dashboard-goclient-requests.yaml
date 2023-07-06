@@ -56,7 +56,7 @@ data:
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "prometheus"
+          "datasource": null,
           "fill": 1,
           "fillGradient": 0,
           "gridPos": {
@@ -95,7 +95,6 @@ data:
           "steppedLine": false,
           "targets": [
             {
-              "datasource": "prometheus"
               "editorMode": "code",
               "expr": "rate(agones_k8s_client_http_request_total{$DevRole}[5m])",
               "format": "time_series",
@@ -142,7 +141,7 @@ data:
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "prometheus"
+          "datasource": null,
           "fill": 1,
           "fillGradient": 0,
           "gridPos": {
@@ -184,7 +183,6 @@ data:
           "steppedLine": false,
           "targets": [
             {
-              "datasource": "prometheus"
               "editorMode": "code",
               "expr": "sum(rate(agones_k8s_client_http_request_duration_seconds_count{$DevRole}[5m])) by (endpoint,verb)",
               "format": "time_series",
@@ -231,7 +229,7 @@ data:
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "prometheus"
+          "datasource": null,
           "fill": 1,
           "fillGradient": 0,
           "gridPos": {
@@ -273,7 +271,6 @@ data:
           "steppedLine": false,
           "targets": [
             {
-              "datasource": "prometheus"
               "editorMode": "code",
               "expr": "sum(rate(agones_k8s_client_http_request_duration_seconds_sum{$DevRole}[5m]) / rate(agones_k8s_client_http_request_duration_seconds_count{$DevRole}[5m])) by (endpoint,verb)",
               "format": "time_series",
@@ -351,11 +348,16 @@ data:
               },
               {
                 "selected": false,
+                "text": "allocator",
+                "value": "multicluster_agones_dev_role=\"allocator\""
+              },
+              {
+                "selected": false,
                 "text": "extensions",
                 "value": "agones_dev_role=\"extensions\""
               }
             ],
-            "query": "controller : agones_dev_role=\"controller\", extensions : agones_dev_role=\"extensions\"",
+            "query": "controller : agones_dev_role=\"controller\", allocator : multicluster_agones_dev_role=\"allocator\", extensions : agones_dev_role=\"extensions\"",
             "queryValue": "",
             "skipUrlSync": false,
             "type": "custom"
