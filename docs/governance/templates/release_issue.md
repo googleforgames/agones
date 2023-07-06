@@ -59,7 +59,7 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 - [ ] Copy any review changes from the release blog post into the draft GitHub release.
 - [ ] Publish the draft GitHub Release.
 - [ ] Run `make release-branch` to create a release branch and run `gcloud config configurations activate <your development project>` to switch Agones development tooling off of the `agones-images` project.
-- [ ] Email the `mailing list` with the release details (copy-paste the release blog post). `Internal Agones Release Guide` has the mailing list.
+- [ ] Email the `mailing list` with the release details (copy-paste the release blog post). Refer [Internal Mailing list posting](go/agones-release-guide). 
 - [ ] Paste the announcement blog post to the #users Slack group.
 - [ ] Post to the [agonesdev](https://twitter.com/agonesdev) Twitter account.
 - [ ] Run `git checkout main`.
