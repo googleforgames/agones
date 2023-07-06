@@ -29,14 +29,13 @@ const opAddTagsToResource = "AddTagsToResource"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the AddTagsToResourceRequest method.
+//	req, resp := client.AddTagsToResourceRequest(params)
 //
-//    // Example sending a request using the AddTagsToResourceRequest method.
-//    req, resp := client.AddTagsToResourceRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/AddTagsToResource
 func (c *SSM) AddTagsToResourceRequest(input *AddTagsToResourceInput) (req *request.Request, output *AddTagsToResourceOutput) {
@@ -59,27 +58,28 @@ func (c *SSM) AddTagsToResourceRequest(input *AddTagsToResourceInput) (req *requ
 // AddTagsToResource API operation for Amazon Simple Systems Manager (SSM).
 //
 // Adds or overwrites one or more tags for the specified resource. Tags are
-// metadata that you can assign to your documents, managed instances, maintenance
-// windows, Parameter Store parameters, and patch baselines. Tags enable you
-// to categorize your resources in different ways, for example, by purpose,
-// owner, or environment. Each tag consists of a key and an optional value,
-// both of which you define. For example, you could define a set of tags for
-// your account's managed instances that helps you track each instance's owner
-// and stack level. For example:
+// metadata that you can assign to your automations, documents, managed nodes,
+// maintenance windows, Parameter Store parameters, and patch baselines. Tags
+// enable you to categorize your resources in different ways, for example, by
+// purpose, owner, or environment. Each tag consists of a key and an optional
+// value, both of which you define. For example, you could define a set of tags
+// for your account's managed nodes that helps you track each node's owner and
+// stack level. For example:
 //
-//    * Key=Owner,Value=DbAdmin
+//   - Key=Owner,Value=DbAdmin
 //
-//    * Key=Owner,Value=SysAdmin
+//   - Key=Owner,Value=SysAdmin
 //
-//    * Key=Owner,Value=Dev
+//   - Key=Owner,Value=Dev
 //
-//    * Key=Stack,Value=Production
+//   - Key=Stack,Value=Production
 //
-//    * Key=Stack,Value=Pre-Production
+//   - Key=Stack,Value=Pre-Production
 //
-//    * Key=Stack,Value=Test
+//   - Key=Stack,Value=Test
 //
-// Each resource can have a maximum of 50 tags.
+// Most resources can have a maximum of 50 tags. Automations can have a maximum
+// of 5 tags.
 //
 // We recommend that you devise a set of tag keys that meets your needs for
 // each resource type. Using a consistent set of tag keys makes it easier for
@@ -99,24 +99,25 @@ func (c *SSM) AddTagsToResourceRequest(input *AddTagsToResourceInput) (req *requ
 // API operation AddTagsToResource for usage and error information.
 //
 // Returned Error Types:
-//   * InvalidResourceType
-//   The resource type isn't valid. For example, if you are attempting to tag
-//   an instance, the instance must be a registered, managed instance.
 //
-//   * InvalidResourceId
-//   The resource ID isn't valid. Verify that you entered the correct ID and try
-//   again.
+//   - InvalidResourceType
+//     The resource type isn't valid. For example, if you are attempting to tag
+//     an EC2 instance, the instance must be a registered managed node.
 //
-//   * InternalServerError
-//   An error occurred on the server side.
+//   - InvalidResourceId
+//     The resource ID isn't valid. Verify that you entered the correct ID and try
+//     again.
 //
-//   * TooManyTagsError
-//   The Targets parameter includes too many tags. Remove one or more tags and
-//   try the command again.
+//   - InternalServerError
+//     An error occurred on the server side.
 //
-//   * TooManyUpdates
-//   There are concurrent updates for a resource that supports one update at a
-//   time.
+//   - TooManyTagsError
+//     The Targets parameter includes too many tags. Remove one or more tags and
+//     try the command again.
+//
+//   - TooManyUpdates
+//     There are concurrent updates for a resource that supports one update at a
+//     time.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/AddTagsToResource
 func (c *SSM) AddTagsToResource(input *AddTagsToResourceInput) (*AddTagsToResourceOutput, error) {
@@ -156,14 +157,13 @@ const opAssociateOpsItemRelatedItem = "AssociateOpsItemRelatedItem"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the AssociateOpsItemRelatedItemRequest method.
+//	req, resp := client.AssociateOpsItemRelatedItemRequest(params)
 //
-//    // Example sending a request using the AssociateOpsItemRelatedItemRequest method.
-//    req, resp := client.AssociateOpsItemRelatedItemRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/AssociateOpsItemRelatedItem
 func (c *SSM) AssociateOpsItemRelatedItemRequest(input *AssociateOpsItemRelatedItemInput) (req *request.Request, output *AssociateOpsItemRelatedItemOutput) {
@@ -197,22 +197,23 @@ func (c *SSM) AssociateOpsItemRelatedItemRequest(input *AssociateOpsItemRelatedI
 // API operation AssociateOpsItemRelatedItem for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
 //
-//   * OpsItemNotFoundException
-//   The specified OpsItem ID doesn't exist. Verify the ID and try again.
+//   - InternalServerError
+//     An error occurred on the server side.
 //
-//   * OpsItemLimitExceededException
-//   The request caused OpsItems to exceed one or more quotas. For information
-//   about OpsItem quotas, see What are the resource limits for OpsCenter? (https://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-learn-more.html#OpsCenter-learn-more-limits).
+//   - OpsItemNotFoundException
+//     The specified OpsItem ID doesn't exist. Verify the ID and try again.
 //
-//   * OpsItemInvalidParameterException
-//   A specified parameter argument isn't valid. Verify the available arguments
-//   and try again.
+//   - OpsItemLimitExceededException
+//     The request caused OpsItems to exceed one or more quotas. For information
+//     about OpsItem quotas, see What are the resource limits for OpsCenter? (https://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-learn-more.html#OpsCenter-learn-more-limits).
 //
-//   * OpsItemRelatedItemAlreadyExistsException
-//   The Amazon Resource Name (ARN) is already associated with the OpsItem.
+//   - OpsItemInvalidParameterException
+//     A specified parameter argument isn't valid. Verify the available arguments
+//     and try again.
+//
+//   - OpsItemRelatedItemAlreadyExistsException
+//     The Amazon Resource Name (ARN) is already associated with the OpsItem.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/AssociateOpsItemRelatedItem
 func (c *SSM) AssociateOpsItemRelatedItem(input *AssociateOpsItemRelatedItemInput) (*AssociateOpsItemRelatedItemOutput, error) {
@@ -252,14 +253,13 @@ const opCancelCommand = "CancelCommand"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the CancelCommandRequest method.
+//	req, resp := client.CancelCommandRequest(params)
 //
-//    // Example sending a request using the CancelCommandRequest method.
-//    req, resp := client.CancelCommandRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CancelCommand
 func (c *SSM) CancelCommandRequest(input *CancelCommandInput) (req *request.Request, output *CancelCommandOutput) {
@@ -292,28 +292,29 @@ func (c *SSM) CancelCommandRequest(input *CancelCommandInput) (req *request.Requ
 // API operation CancelCommand for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
 //
-//   * InvalidCommandId
-//   The specified command ID isn't valid. Verify the ID and try again.
+//   - InternalServerError
+//     An error occurred on the server side.
 //
-//   * InvalidInstanceId
-//   The following problems can cause this exception:
+//   - InvalidCommandId
+//     The specified command ID isn't valid. Verify the ID and try again.
 //
-//      * You don't have permission to access the instance.
+//   - InvalidInstanceId
+//     The following problems can cause this exception:
 //
-//      * Amazon Web Services Systems Manager Agent(SSM Agent) isn't running.
-//      Verify that SSM Agent is running.
+//   - You don't have permission to access the managed node.
 //
-//      * SSM Agent isn't registered with the SSM endpoint. Try reinstalling SSM
-//      Agent.
+//   - Amazon Web Services Systems Manager Agent(SSM Agent) isn't running.
+//     Verify that SSM Agent is running.
 //
-//      * The instance isn't in valid state. Valid states are: Running, Pending,
-//      Stopped, and Stopping. Invalid states are: Shutting-down and Terminated.
+//   - SSM Agent isn't registered with the SSM endpoint. Try reinstalling SSM
+//     Agent.
 //
-//   * DuplicateInstanceId
-//   You can't specify an instance ID in more than one association.
+//   - The managed node isn't in valid state. Valid states are: Running, Pending,
+//     Stopped, and Stopping. Invalid states are: Shutting-down and Terminated.
+//
+//   - DuplicateInstanceId
+//     You can't specify a managed node ID in more than one association.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CancelCommand
 func (c *SSM) CancelCommand(input *CancelCommandInput) (*CancelCommandOutput, error) {
@@ -353,14 +354,13 @@ const opCancelMaintenanceWindowExecution = "CancelMaintenanceWindowExecution"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the CancelMaintenanceWindowExecutionRequest method.
+//	req, resp := client.CancelMaintenanceWindowExecutionRequest(params)
 //
-//    // Example sending a request using the CancelMaintenanceWindowExecutionRequest method.
-//    req, resp := client.CancelMaintenanceWindowExecutionRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CancelMaintenanceWindowExecution
 func (c *SSM) CancelMaintenanceWindowExecutionRequest(input *CancelMaintenanceWindowExecutionInput) (req *request.Request, output *CancelMaintenanceWindowExecutionOutput) {
@@ -393,16 +393,17 @@ func (c *SSM) CancelMaintenanceWindowExecutionRequest(input *CancelMaintenanceWi
 // API operation CancelMaintenanceWindowExecution for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
 //
-//   * DoesNotExistException
-//   Error returned when the ID specified for a resource, such as a maintenance
-//   window or patch baseline, doesn't exist.
+//   - InternalServerError
+//     An error occurred on the server side.
 //
-//   For information about resource quotas in Amazon Web Services Systems Manager,
-//   see Systems Manager service quotas (https://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
-//   in the Amazon Web Services General Reference.
+//   - DoesNotExistException
+//     Error returned when the ID specified for a resource, such as a maintenance
+//     window or patch baseline, doesn't exist.
+//
+//     For information about resource quotas in Amazon Web Services Systems Manager,
+//     see Systems Manager service quotas (https://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//     in the Amazon Web Services General Reference.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CancelMaintenanceWindowExecution
 func (c *SSM) CancelMaintenanceWindowExecution(input *CancelMaintenanceWindowExecutionInput) (*CancelMaintenanceWindowExecutionOutput, error) {
@@ -442,14 +443,13 @@ const opCreateActivation = "CreateActivation"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the CreateActivationRequest method.
+//	req, resp := client.CreateActivationRequest(params)
 //
-//    // Example sending a request using the CreateActivationRequest method.
-//    req, resp := client.CreateActivationRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CreateActivation
 func (c *SSM) CreateActivationRequest(input *CreateActivationInput) (req *request.Request, output *CreateActivationOutput) {
@@ -471,18 +471,18 @@ func (c *SSM) CreateActivationRequest(input *CreateActivationInput) (req *reques
 // CreateActivation API operation for Amazon Simple Systems Manager (SSM).
 //
 // Generates an activation code and activation ID you can use to register your
-// on-premises server or virtual machine (VM) with Amazon Web Services Systems
-// Manager. Registering these machines with Systems Manager makes it possible
-// to manage them using Systems Manager capabilities. You use the activation
-// code and ID when installing SSM Agent on machines in your hybrid environment.
-// For more information about requirements for managing on-premises instances
-// and VMs using Systems Manager, see Setting up Amazon Web Services Systems
-// Manager for hybrid environments (https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-managedinstances.html)
+// on-premises servers, edge devices, or virtual machine (VM) with Amazon Web
+// Services Systems Manager. Registering these machines with Systems Manager
+// makes it possible to manage them using Systems Manager capabilities. You
+// use the activation code and ID when installing SSM Agent on machines in your
+// hybrid environment. For more information about requirements for managing
+// on-premises machines using Systems Manager, see Setting up Amazon Web Services
+// Systems Manager for hybrid environments (https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-managedinstances.html)
 // in the Amazon Web Services Systems Manager User Guide.
 //
-// On-premises servers or VMs that are registered with Systems Manager and Amazon
-// Elastic Compute Cloud (Amazon EC2) instances that you manage with Systems
-// Manager are all called managed instances.
+// Amazon Elastic Compute Cloud (Amazon EC2) instances, edge devices, and on-premises
+// servers and VMs that are configured for Systems Manager are all called managed
+// nodes.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -492,8 +492,14 @@ func (c *SSM) CreateActivationRequest(input *CreateActivationInput) (req *reques
 // API operation CreateActivation for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
+//
+//   - InvalidParameters
+//     You must specify values for all required parameters in the Amazon Web Services
+//     Systems Manager document (SSM document). You can only supply values to parameters
+//     defined in the SSM document.
+//
+//   - InternalServerError
+//     An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CreateActivation
 func (c *SSM) CreateActivation(input *CreateActivationInput) (*CreateActivationOutput, error) {
@@ -533,14 +539,13 @@ const opCreateAssociation = "CreateAssociation"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the CreateAssociationRequest method.
+//	req, resp := client.CreateAssociationRequest(params)
 //
-//    // Example sending a request using the CreateAssociationRequest method.
-//    req, resp := client.CreateAssociationRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CreateAssociation
 func (c *SSM) CreateAssociationRequest(input *CreateAssociationInput) (req *request.Request, output *CreateAssociationOutput) {
@@ -562,18 +567,18 @@ func (c *SSM) CreateAssociationRequest(input *CreateAssociationInput) (req *requ
 // CreateAssociation API operation for Amazon Simple Systems Manager (SSM).
 //
 // A State Manager association defines the state that you want to maintain on
-// your instances. For example, an association can specify that anti-virus software
-// must be installed and running on your instances, or that certain ports must
-// be closed. For static targets, the association specifies a schedule for when
-// the configuration is reapplied. For dynamic targets, such as an Amazon Web
-// Services resource group or an Amazon Web Services autoscaling group, State
-// Manager, a capability of Amazon Web Services Systems Manager applies the
-// configuration when new instances are added to the group. The association
-// also specifies actions to take when applying the configuration. For example,
-// an association for anti-virus software might run once a day. If the software
-// isn't installed, then State Manager installs it. If the software is installed,
-// but the service isn't running, then the association might instruct State
-// Manager to start the service.
+// your managed nodes. For example, an association can specify that anti-virus
+// software must be installed and running on your managed nodes, or that certain
+// ports must be closed. For static targets, the association specifies a schedule
+// for when the configuration is reapplied. For dynamic targets, such as an
+// Amazon Web Services resource group or an Amazon Web Services autoscaling
+// group, State Manager, a capability of Amazon Web Services Systems Manager
+// applies the configuration when new managed nodes are added to the group.
+// The association also specifies actions to take when applying the configuration.
+// For example, an association for anti-virus software might run once a day.
+// If the software isn't installed, then State Manager installs it. If the software
+// is installed, but the service isn't running, then the association might instruct
+// State Manager to start the service.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -583,53 +588,61 @@ func (c *SSM) CreateAssociationRequest(input *CreateAssociationInput) (req *requ
 // API operation CreateAssociation for usage and error information.
 //
 // Returned Error Types:
-//   * AssociationAlreadyExists
-//   The specified association already exists.
 //
-//   * AssociationLimitExceeded
-//   You can have at most 2,000 active associations.
+//   - AssociationAlreadyExists
+//     The specified association already exists.
 //
-//   * InternalServerError
-//   An error occurred on the server side.
+//   - AssociationLimitExceeded
+//     You can have at most 2,000 active associations.
 //
-//   * InvalidDocument
-//   The specified SSM document doesn't exist.
+//   - InternalServerError
+//     An error occurred on the server side.
 //
-//   * InvalidDocumentVersion
-//   The document version isn't valid or doesn't exist.
+//   - InvalidDocument
+//     The specified SSM document doesn't exist.
 //
-//   * InvalidInstanceId
-//   The following problems can cause this exception:
+//   - InvalidDocumentVersion
+//     The document version isn't valid or doesn't exist.
 //
-//      * You don't have permission to access the instance.
+//   - InvalidInstanceId
+//     The following problems can cause this exception:
 //
-//      * Amazon Web Services Systems Manager Agent(SSM Agent) isn't running.
-//      Verify that SSM Agent is running.
+//   - You don't have permission to access the managed node.
 //
-//      * SSM Agent isn't registered with the SSM endpoint. Try reinstalling SSM
-//      Agent.
+//   - Amazon Web Services Systems Manager Agent(SSM Agent) isn't running.
+//     Verify that SSM Agent is running.
 //
-//      * The instance isn't in valid state. Valid states are: Running, Pending,
-//      Stopped, and Stopping. Invalid states are: Shutting-down and Terminated.
+//   - SSM Agent isn't registered with the SSM endpoint. Try reinstalling SSM
+//     Agent.
 //
-//   * UnsupportedPlatformType
-//   The document doesn't support the platform type of the given instance ID(s).
-//   For example, you sent an document for a Windows instance to a Linux instance.
+//   - The managed node isn't in valid state. Valid states are: Running, Pending,
+//     Stopped, and Stopping. Invalid states are: Shutting-down and Terminated.
 //
-//   * InvalidOutputLocation
-//   The output location isn't valid or doesn't exist.
+//   - UnsupportedPlatformType
+//     The document doesn't support the platform type of the given managed node
+//     ID(s). For example, you sent an document for a Windows managed node to a
+//     Linux node.
 //
-//   * InvalidParameters
-//   You must specify values for all required parameters in the Amazon Web Services
-//   Systems Manager document (SSM document). You can only supply values to parameters
-//   defined in the SSM document.
+//   - InvalidOutputLocation
+//     The output location isn't valid or doesn't exist.
 //
-//   * InvalidTarget
-//   The target isn't valid or doesn't exist. It might not be configured for Systems
-//   Manager or you might not have permission to perform the operation.
+//   - InvalidParameters
+//     You must specify values for all required parameters in the Amazon Web Services
+//     Systems Manager document (SSM document). You can only supply values to parameters
+//     defined in the SSM document.
 //
-//   * InvalidSchedule
-//   The schedule is invalid. Verify your cron or rate expression and try again.
+//   - InvalidTarget
+//     The target isn't valid or doesn't exist. It might not be configured for Systems
+//     Manager or you might not have permission to perform the operation.
+//
+//   - InvalidSchedule
+//     The schedule is invalid. Verify your cron or rate expression and try again.
+//
+//   - InvalidTargetMaps
+//     TargetMap parameter isn't valid.
+//
+//   - InvalidTag
+//     The specified tag key or value isn't valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CreateAssociation
 func (c *SSM) CreateAssociation(input *CreateAssociationInput) (*CreateAssociationOutput, error) {
@@ -669,14 +682,13 @@ const opCreateAssociationBatch = "CreateAssociationBatch"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the CreateAssociationBatchRequest method.
+//	req, resp := client.CreateAssociationBatchRequest(params)
 //
-//    // Example sending a request using the CreateAssociationBatchRequest method.
-//    req, resp := client.CreateAssociationBatchRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CreateAssociationBatch
 func (c *SSM) CreateAssociationBatchRequest(input *CreateAssociationBatchInput) (req *request.Request, output *CreateAssociationBatchOutput) {
@@ -698,13 +710,13 @@ func (c *SSM) CreateAssociationBatchRequest(input *CreateAssociationBatchInput) 
 // CreateAssociationBatch API operation for Amazon Simple Systems Manager (SSM).
 //
 // Associates the specified Amazon Web Services Systems Manager document (SSM
-// document) with the specified instances or targets.
+// document) with the specified managed nodes or targets.
 //
-// When you associate a document with one or more instances using instance IDs
-// or tags, Amazon Web Services Systems Manager Agent (SSM Agent) running on
-// the instance processes the document and configures the instance as specified.
+// When you associate a document with one or more managed nodes using IDs or
+// tags, Amazon Web Services Systems Manager Agent (SSM Agent) running on the
+// managed node processes the document and configures the node as specified.
 //
-// If you associate a document with an instance that already has an associated
+// If you associate a document with a managed node that already has an associated
 // document, the system returns the AssociationAlreadyExists exception.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -715,53 +727,58 @@ func (c *SSM) CreateAssociationBatchRequest(input *CreateAssociationBatchInput) 
 // API operation CreateAssociationBatch for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
 //
-//   * InvalidDocument
-//   The specified SSM document doesn't exist.
+//   - InternalServerError
+//     An error occurred on the server side.
 //
-//   * InvalidDocumentVersion
-//   The document version isn't valid or doesn't exist.
+//   - InvalidDocument
+//     The specified SSM document doesn't exist.
 //
-//   * InvalidInstanceId
-//   The following problems can cause this exception:
+//   - InvalidDocumentVersion
+//     The document version isn't valid or doesn't exist.
 //
-//      * You don't have permission to access the instance.
+//   - InvalidInstanceId
+//     The following problems can cause this exception:
 //
-//      * Amazon Web Services Systems Manager Agent(SSM Agent) isn't running.
-//      Verify that SSM Agent is running.
+//   - You don't have permission to access the managed node.
 //
-//      * SSM Agent isn't registered with the SSM endpoint. Try reinstalling SSM
-//      Agent.
+//   - Amazon Web Services Systems Manager Agent(SSM Agent) isn't running.
+//     Verify that SSM Agent is running.
 //
-//      * The instance isn't in valid state. Valid states are: Running, Pending,
-//      Stopped, and Stopping. Invalid states are: Shutting-down and Terminated.
+//   - SSM Agent isn't registered with the SSM endpoint. Try reinstalling SSM
+//     Agent.
 //
-//   * InvalidParameters
-//   You must specify values for all required parameters in the Amazon Web Services
-//   Systems Manager document (SSM document). You can only supply values to parameters
-//   defined in the SSM document.
+//   - The managed node isn't in valid state. Valid states are: Running, Pending,
+//     Stopped, and Stopping. Invalid states are: Shutting-down and Terminated.
 //
-//   * DuplicateInstanceId
-//   You can't specify an instance ID in more than one association.
+//   - InvalidParameters
+//     You must specify values for all required parameters in the Amazon Web Services
+//     Systems Manager document (SSM document). You can only supply values to parameters
+//     defined in the SSM document.
 //
-//   * AssociationLimitExceeded
-//   You can have at most 2,000 active associations.
+//   - DuplicateInstanceId
+//     You can't specify a managed node ID in more than one association.
 //
-//   * UnsupportedPlatformType
-//   The document doesn't support the platform type of the given instance ID(s).
-//   For example, you sent an document for a Windows instance to a Linux instance.
+//   - AssociationLimitExceeded
+//     You can have at most 2,000 active associations.
 //
-//   * InvalidOutputLocation
-//   The output location isn't valid or doesn't exist.
+//   - UnsupportedPlatformType
+//     The document doesn't support the platform type of the given managed node
+//     ID(s). For example, you sent an document for a Windows managed node to a
+//     Linux node.
 //
-//   * InvalidTarget
-//   The target isn't valid or doesn't exist. It might not be configured for Systems
-//   Manager or you might not have permission to perform the operation.
+//   - InvalidOutputLocation
+//     The output location isn't valid or doesn't exist.
 //
-//   * InvalidSchedule
-//   The schedule is invalid. Verify your cron or rate expression and try again.
+//   - InvalidTarget
+//     The target isn't valid or doesn't exist. It might not be configured for Systems
+//     Manager or you might not have permission to perform the operation.
+//
+//   - InvalidSchedule
+//     The schedule is invalid. Verify your cron or rate expression and try again.
+//
+//   - InvalidTargetMaps
+//     TargetMap parameter isn't valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CreateAssociationBatch
 func (c *SSM) CreateAssociationBatch(input *CreateAssociationBatchInput) (*CreateAssociationBatchOutput, error) {
@@ -801,14 +818,13 @@ const opCreateDocument = "CreateDocument"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the CreateDocumentRequest method.
+//	req, resp := client.CreateDocumentRequest(params)
 //
-//    // Example sending a request using the CreateDocumentRequest method.
-//    req, resp := client.CreateDocumentRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CreateDocument
 func (c *SSM) CreateDocumentRequest(input *CreateDocumentInput) (req *request.Request, output *CreateDocumentOutput) {
@@ -830,7 +846,7 @@ func (c *SSM) CreateDocumentRequest(input *CreateDocumentInput) (req *request.Re
 // CreateDocument API operation for Amazon Simple Systems Manager (SSM).
 //
 // Creates a Amazon Web Services Systems Manager (SSM document). An SSM document
-// defines the actions that Systems Manager performs on your managed instances.
+// defines the actions that Systems Manager performs on your managed nodes.
 // For more information about SSM documents, including information about supported
 // schemas, features, and syntax, see Amazon Web Services Systems Manager Documents
 // (https://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-ssm-docs.html)
@@ -844,23 +860,24 @@ func (c *SSM) CreateDocumentRequest(input *CreateDocumentInput) (req *request.Re
 // API operation CreateDocument for usage and error information.
 //
 // Returned Error Types:
-//   * DocumentAlreadyExists
-//   The specified document already exists.
 //
-//   * MaxDocumentSizeExceeded
-//   The size limit of a document is 64 KB.
+//   - DocumentAlreadyExists
+//     The specified document already exists.
 //
-//   * InternalServerError
-//   An error occurred on the server side.
+//   - MaxDocumentSizeExceeded
+//     The size limit of a document is 64 KB.
 //
-//   * InvalidDocumentContent
-//   The content for the document isn't valid.
+//   - InternalServerError
+//     An error occurred on the server side.
 //
-//   * DocumentLimitExceeded
-//   You can have at most 500 active SSM documents.
+//   - InvalidDocumentContent
+//     The content for the document isn't valid.
 //
-//   * InvalidDocumentSchemaVersion
-//   The version of the document schema isn't supported.
+//   - DocumentLimitExceeded
+//     You can have at most 500 active SSM documents.
+//
+//   - InvalidDocumentSchemaVersion
+//     The version of the document schema isn't supported.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CreateDocument
 func (c *SSM) CreateDocument(input *CreateDocumentInput) (*CreateDocumentOutput, error) {
@@ -900,14 +917,13 @@ const opCreateMaintenanceWindow = "CreateMaintenanceWindow"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the CreateMaintenanceWindowRequest method.
+//	req, resp := client.CreateMaintenanceWindowRequest(params)
 //
-//    // Example sending a request using the CreateMaintenanceWindowRequest method.
-//    req, resp := client.CreateMaintenanceWindowRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CreateMaintenanceWindow
 func (c *SSM) CreateMaintenanceWindowRequest(input *CreateMaintenanceWindowInput) (req *request.Request, output *CreateMaintenanceWindowOutput) {
@@ -945,20 +961,21 @@ func (c *SSM) CreateMaintenanceWindowRequest(input *CreateMaintenanceWindowInput
 // API operation CreateMaintenanceWindow for usage and error information.
 //
 // Returned Error Types:
-//   * IdempotentParameterMismatch
-//   Error returned when an idempotent operation is retried and the parameters
-//   don't match the original call to the API with the same idempotency token.
 //
-//   * ResourceLimitExceededException
-//   Error returned when the caller has exceeded the default resource quotas.
-//   For example, too many maintenance windows or patch baselines have been created.
+//   - IdempotentParameterMismatch
+//     Error returned when an idempotent operation is retried and the parameters
+//     don't match the original call to the API with the same idempotency token.
 //
-//   For information about resource quotas in Systems Manager, see Systems Manager
-//   service quotas (https://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
-//   in the Amazon Web Services General Reference.
+//   - ResourceLimitExceededException
+//     Error returned when the caller has exceeded the default resource quotas.
+//     For example, too many maintenance windows or patch baselines have been created.
 //
-//   * InternalServerError
-//   An error occurred on the server side.
+//     For information about resource quotas in Systems Manager, see Systems Manager
+//     service quotas (https://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//     in the Amazon Web Services General Reference.
+//
+//   - InternalServerError
+//     An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CreateMaintenanceWindow
 func (c *SSM) CreateMaintenanceWindow(input *CreateMaintenanceWindowInput) (*CreateMaintenanceWindowOutput, error) {
@@ -998,14 +1015,13 @@ const opCreateOpsItem = "CreateOpsItem"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the CreateOpsItemRequest method.
+//	req, resp := client.CreateOpsItemRequest(params)
 //
-//    // Example sending a request using the CreateOpsItemRequest method.
-//    req, resp := client.CreateOpsItemRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CreateOpsItem
 func (c *SSM) CreateOpsItemRequest(input *CreateOpsItemInput) (req *request.Request, output *CreateOpsItemOutput) {
@@ -1045,19 +1061,20 @@ func (c *SSM) CreateOpsItemRequest(input *CreateOpsItemInput) (req *request.Requ
 // API operation CreateOpsItem for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
 //
-//   * OpsItemAlreadyExistsException
-//   The OpsItem already exists.
+//   - InternalServerError
+//     An error occurred on the server side.
 //
-//   * OpsItemLimitExceededException
-//   The request caused OpsItems to exceed one or more quotas. For information
-//   about OpsItem quotas, see What are the resource limits for OpsCenter? (https://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-learn-more.html#OpsCenter-learn-more-limits).
+//   - OpsItemAlreadyExistsException
+//     The OpsItem already exists.
 //
-//   * OpsItemInvalidParameterException
-//   A specified parameter argument isn't valid. Verify the available arguments
-//   and try again.
+//   - OpsItemLimitExceededException
+//     The request caused OpsItems to exceed one or more quotas. For information
+//     about OpsItem quotas, see What are the resource limits for OpsCenter? (https://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-learn-more.html#OpsCenter-learn-more-limits).
+//
+//   - OpsItemInvalidParameterException
+//     A specified parameter argument isn't valid. Verify the available arguments
+//     and try again.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CreateOpsItem
 func (c *SSM) CreateOpsItem(input *CreateOpsItemInput) (*CreateOpsItemOutput, error) {
@@ -1097,14 +1114,13 @@ const opCreateOpsMetadata = "CreateOpsMetadata"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the CreateOpsMetadataRequest method.
+//	req, resp := client.CreateOpsMetadataRequest(params)
 //
-//    // Example sending a request using the CreateOpsMetadataRequest method.
-//    req, resp := client.CreateOpsMetadataRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CreateOpsMetadata
 func (c *SSM) CreateOpsMetadataRequest(input *CreateOpsMetadataInput) (req *request.Request, output *CreateOpsMetadataOutput) {
@@ -1137,23 +1153,24 @@ func (c *SSM) CreateOpsMetadataRequest(input *CreateOpsMetadataInput) (req *requ
 // API operation CreateOpsMetadata for usage and error information.
 //
 // Returned Error Types:
-//   * OpsMetadataAlreadyExistsException
-//   An OpsMetadata object already exists for the selected resource.
 //
-//   * OpsMetadataTooManyUpdatesException
-//   The system is processing too many concurrent updates. Wait a few moments
-//   and try again.
+//   - OpsMetadataAlreadyExistsException
+//     An OpsMetadata object already exists for the selected resource.
 //
-//   * OpsMetadataInvalidArgumentException
-//   One of the arguments passed is invalid.
+//   - OpsMetadataTooManyUpdatesException
+//     The system is processing too many concurrent updates. Wait a few moments
+//     and try again.
 //
-//   * OpsMetadataLimitExceededException
-//   Your account reached the maximum number of OpsMetadata objects allowed by
-//   Application Manager. The maximum is 200 OpsMetadata objects. Delete one or
-//   more OpsMetadata object and try again.
+//   - OpsMetadataInvalidArgumentException
+//     One of the arguments passed is invalid.
 //
-//   * InternalServerError
-//   An error occurred on the server side.
+//   - OpsMetadataLimitExceededException
+//     Your account reached the maximum number of OpsMetadata objects allowed by
+//     Application Manager. The maximum is 200 OpsMetadata objects. Delete one or
+//     more OpsMetadata object and try again.
+//
+//   - InternalServerError
+//     An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CreateOpsMetadata
 func (c *SSM) CreateOpsMetadata(input *CreateOpsMetadataInput) (*CreateOpsMetadataOutput, error) {
@@ -1193,14 +1210,13 @@ const opCreatePatchBaseline = "CreatePatchBaseline"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the CreatePatchBaselineRequest method.
+//	req, resp := client.CreatePatchBaselineRequest(params)
 //
-//    // Example sending a request using the CreatePatchBaselineRequest method.
-//    req, resp := client.CreatePatchBaselineRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CreatePatchBaseline
 func (c *SSM) CreatePatchBaselineRequest(input *CreatePatchBaselineInput) (req *request.Request, output *CreatePatchBaselineOutput) {
@@ -1234,20 +1250,21 @@ func (c *SSM) CreatePatchBaselineRequest(input *CreatePatchBaselineInput) (req *
 // API operation CreatePatchBaseline for usage and error information.
 //
 // Returned Error Types:
-//   * IdempotentParameterMismatch
-//   Error returned when an idempotent operation is retried and the parameters
-//   don't match the original call to the API with the same idempotency token.
 //
-//   * ResourceLimitExceededException
-//   Error returned when the caller has exceeded the default resource quotas.
-//   For example, too many maintenance windows or patch baselines have been created.
+//   - IdempotentParameterMismatch
+//     Error returned when an idempotent operation is retried and the parameters
+//     don't match the original call to the API with the same idempotency token.
 //
-//   For information about resource quotas in Systems Manager, see Systems Manager
-//   service quotas (https://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
-//   in the Amazon Web Services General Reference.
+//   - ResourceLimitExceededException
+//     Error returned when the caller has exceeded the default resource quotas.
+//     For example, too many maintenance windows or patch baselines have been created.
 //
-//   * InternalServerError
-//   An error occurred on the server side.
+//     For information about resource quotas in Systems Manager, see Systems Manager
+//     service quotas (https://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//     in the Amazon Web Services General Reference.
+//
+//   - InternalServerError
+//     An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CreatePatchBaseline
 func (c *SSM) CreatePatchBaseline(input *CreatePatchBaselineInput) (*CreatePatchBaselineOutput, error) {
@@ -1287,14 +1304,13 @@ const opCreateResourceDataSync = "CreateResourceDataSync"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the CreateResourceDataSyncRequest method.
+//	req, resp := client.CreateResourceDataSyncRequest(params)
 //
-//    // Example sending a request using the CreateResourceDataSyncRequest method.
-//    req, resp := client.CreateResourceDataSyncRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CreateResourceDataSync
 func (c *SSM) CreateResourceDataSyncRequest(input *CreateResourceDataSyncInput) (req *request.Request, output *CreateResourceDataSyncOutput) {
@@ -1352,17 +1368,18 @@ func (c *SSM) CreateResourceDataSyncRequest(input *CreateResourceDataSyncInput) 
 // API operation CreateResourceDataSync for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
 //
-//   * ResourceDataSyncCountExceededException
-//   You have exceeded the allowed maximum sync configurations.
+//   - InternalServerError
+//     An error occurred on the server side.
 //
-//   * ResourceDataSyncAlreadyExistsException
-//   A sync configuration with the same name already exists.
+//   - ResourceDataSyncCountExceededException
+//     You have exceeded the allowed maximum sync configurations.
 //
-//   * ResourceDataSyncInvalidConfigurationException
-//   The specified sync configuration is invalid.
+//   - ResourceDataSyncAlreadyExistsException
+//     A sync configuration with the same name already exists.
+//
+//   - ResourceDataSyncInvalidConfigurationException
+//     The specified sync configuration is invalid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CreateResourceDataSync
 func (c *SSM) CreateResourceDataSync(input *CreateResourceDataSyncInput) (*CreateResourceDataSyncOutput, error) {
@@ -1402,14 +1419,13 @@ const opDeleteActivation = "DeleteActivation"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DeleteActivationRequest method.
+//	req, resp := client.DeleteActivationRequest(params)
 //
-//    // Example sending a request using the DeleteActivationRequest method.
-//    req, resp := client.DeleteActivationRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeleteActivation
 func (c *SSM) DeleteActivationRequest(input *DeleteActivationInput) (req *request.Request, output *DeleteActivationOutput) {
@@ -1433,8 +1449,8 @@ func (c *SSM) DeleteActivationRequest(input *DeleteActivationInput) (req *reques
 //
 // Deletes an activation. You aren't required to delete an activation. If you
 // delete an activation, you can no longer use it to register additional managed
-// instances. Deleting an activation doesn't de-register managed instances.
-// You must manually de-register managed instances.
+// nodes. Deleting an activation doesn't de-register managed nodes. You must
+// manually de-register managed nodes.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1444,20 +1460,21 @@ func (c *SSM) DeleteActivationRequest(input *DeleteActivationInput) (req *reques
 // API operation DeleteActivation for usage and error information.
 //
 // Returned Error Types:
-//   * InvalidActivationId
-//   The activation ID isn't valid. Verify the you entered the correct ActivationId
-//   or ActivationCode and try again.
 //
-//   * InvalidActivation
-//   The activation isn't valid. The activation might have been deleted, or the
-//   ActivationId and the ActivationCode don't match.
+//   - InvalidActivationId
+//     The activation ID isn't valid. Verify the you entered the correct ActivationId
+//     or ActivationCode and try again.
 //
-//   * InternalServerError
-//   An error occurred on the server side.
+//   - InvalidActivation
+//     The activation isn't valid. The activation might have been deleted, or the
+//     ActivationId and the ActivationCode don't match.
 //
-//   * TooManyUpdates
-//   There are concurrent updates for a resource that supports one update at a
-//   time.
+//   - InternalServerError
+//     An error occurred on the server side.
+//
+//   - TooManyUpdates
+//     There are concurrent updates for a resource that supports one update at a
+//     time.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeleteActivation
 func (c *SSM) DeleteActivation(input *DeleteActivationInput) (*DeleteActivationOutput, error) {
@@ -1497,14 +1514,13 @@ const opDeleteAssociation = "DeleteAssociation"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DeleteAssociationRequest method.
+//	req, resp := client.DeleteAssociationRequest(params)
 //
-//    // Example sending a request using the DeleteAssociationRequest method.
-//    req, resp := client.DeleteAssociationRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeleteAssociation
 func (c *SSM) DeleteAssociationRequest(input *DeleteAssociationInput) (req *request.Request, output *DeleteAssociationOutput) {
@@ -1527,14 +1543,14 @@ func (c *SSM) DeleteAssociationRequest(input *DeleteAssociationInput) (req *requ
 // DeleteAssociation API operation for Amazon Simple Systems Manager (SSM).
 //
 // Disassociates the specified Amazon Web Services Systems Manager document
-// (SSM document) from the specified instance. If you created the association
+// (SSM document) from the specified managed node. If you created the association
 // by using the Targets parameter, then you must delete the association by using
 // the association ID.
 //
-// When you disassociate a document from an instance, it doesn't change the
-// configuration of the instance. To change the configuration state of an instance
-// after you disassociate a document, you must create a new document with the
-// desired configuration and associate it with the instance.
+// When you disassociate a document from a managed node, it doesn't change the
+// configuration of the node. To change the configuration state of a managed
+// node after you disassociate a document, you must create a new document with
+// the desired configuration and associate it with the node.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1544,32 +1560,33 @@ func (c *SSM) DeleteAssociationRequest(input *DeleteAssociationInput) (req *requ
 // API operation DeleteAssociation for usage and error information.
 //
 // Returned Error Types:
-//   * AssociationDoesNotExist
-//   The specified association doesn't exist.
 //
-//   * InternalServerError
-//   An error occurred on the server side.
+//   - AssociationDoesNotExist
+//     The specified association doesn't exist.
 //
-//   * InvalidDocument
-//   The specified SSM document doesn't exist.
+//   - InternalServerError
+//     An error occurred on the server side.
 //
-//   * InvalidInstanceId
-//   The following problems can cause this exception:
+//   - InvalidDocument
+//     The specified SSM document doesn't exist.
 //
-//      * You don't have permission to access the instance.
+//   - InvalidInstanceId
+//     The following problems can cause this exception:
 //
-//      * Amazon Web Services Systems Manager Agent(SSM Agent) isn't running.
-//      Verify that SSM Agent is running.
+//   - You don't have permission to access the managed node.
 //
-//      * SSM Agent isn't registered with the SSM endpoint. Try reinstalling SSM
-//      Agent.
+//   - Amazon Web Services Systems Manager Agent(SSM Agent) isn't running.
+//     Verify that SSM Agent is running.
 //
-//      * The instance isn't in valid state. Valid states are: Running, Pending,
-//      Stopped, and Stopping. Invalid states are: Shutting-down and Terminated.
+//   - SSM Agent isn't registered with the SSM endpoint. Try reinstalling SSM
+//     Agent.
 //
-//   * TooManyUpdates
-//   There are concurrent updates for a resource that supports one update at a
-//   time.
+//   - The managed node isn't in valid state. Valid states are: Running, Pending,
+//     Stopped, and Stopping. Invalid states are: Shutting-down and Terminated.
+//
+//   - TooManyUpdates
+//     There are concurrent updates for a resource that supports one update at a
+//     time.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeleteAssociation
 func (c *SSM) DeleteAssociation(input *DeleteAssociationInput) (*DeleteAssociationOutput, error) {
@@ -1609,14 +1626,13 @@ const opDeleteDocument = "DeleteDocument"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DeleteDocumentRequest method.
+//	req, resp := client.DeleteDocumentRequest(params)
 //
-//    // Example sending a request using the DeleteDocumentRequest method.
-//    req, resp := client.DeleteDocumentRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeleteDocument
 func (c *SSM) DeleteDocumentRequest(input *DeleteDocumentInput) (req *request.Request, output *DeleteDocumentOutput) {
@@ -1639,10 +1655,10 @@ func (c *SSM) DeleteDocumentRequest(input *DeleteDocumentInput) (req *request.Re
 // DeleteDocument API operation for Amazon Simple Systems Manager (SSM).
 //
 // Deletes the Amazon Web Services Systems Manager document (SSM document) and
-// all instance associations to the document.
+// all managed node associations to the document.
 //
 // Before you delete the document, we recommend that you use DeleteAssociation
-// to disassociate all instances that are associated with the document.
+// to disassociate all managed nodes that are associated with the document.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1652,19 +1668,20 @@ func (c *SSM) DeleteDocumentRequest(input *DeleteDocumentInput) (req *request.Re
 // API operation DeleteDocument for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
 //
-//   * InvalidDocument
-//   The specified SSM document doesn't exist.
+//   - InternalServerError
+//     An error occurred on the server side.
 //
-//   * InvalidDocumentOperation
-//   You attempted to delete a document while it is still shared. You must stop
-//   sharing the document before you can delete it.
+//   - InvalidDocument
+//     The specified SSM document doesn't exist.
 //
-//   * AssociatedInstances
-//   You must disassociate a document from all instances before you can delete
-//   it.
+//   - InvalidDocumentOperation
+//     You attempted to delete a document while it is still shared. You must stop
+//     sharing the document before you can delete it.
+//
+//   - AssociatedInstances
+//     You must disassociate a document from all managed nodes before you can delete
+//     it.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeleteDocument
 func (c *SSM) DeleteDocument(input *DeleteDocumentInput) (*DeleteDocumentOutput, error) {
@@ -1704,14 +1721,13 @@ const opDeleteInventory = "DeleteInventory"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DeleteInventoryRequest method.
+//	req, resp := client.DeleteInventoryRequest(params)
 //
-//    // Example sending a request using the DeleteInventoryRequest method.
-//    req, resp := client.DeleteInventoryRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeleteInventory
 func (c *SSM) DeleteInventoryRequest(input *DeleteInventoryInput) (req *request.Request, output *DeleteInventoryOutput) {
@@ -1744,22 +1760,23 @@ func (c *SSM) DeleteInventoryRequest(input *DeleteInventoryInput) (req *request.
 // API operation DeleteInventory for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
 //
-//   * InvalidTypeNameException
-//   The parameter type name isn't valid.
+//   - InternalServerError
+//     An error occurred on the server side.
 //
-//   * InvalidOptionException
-//   The delete inventory option specified isn't valid. Verify the option and
-//   try again.
+//   - InvalidTypeNameException
+//     The parameter type name isn't valid.
 //
-//   * InvalidDeleteInventoryParametersException
-//   One or more of the parameters specified for the delete operation isn't valid.
-//   Verify all parameters and try again.
+//   - InvalidOptionException
+//     The delete inventory option specified isn't valid. Verify the option and
+//     try again.
 //
-//   * InvalidInventoryRequestException
-//   The request isn't valid.
+//   - InvalidDeleteInventoryParametersException
+//     One or more of the parameters specified for the delete operation isn't valid.
+//     Verify all parameters and try again.
+//
+//   - InvalidInventoryRequestException
+//     The request isn't valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeleteInventory
 func (c *SSM) DeleteInventory(input *DeleteInventoryInput) (*DeleteInventoryOutput, error) {
@@ -1799,14 +1816,13 @@ const opDeleteMaintenanceWindow = "DeleteMaintenanceWindow"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DeleteMaintenanceWindowRequest method.
+//	req, resp := client.DeleteMaintenanceWindowRequest(params)
 //
-//    // Example sending a request using the DeleteMaintenanceWindowRequest method.
-//    req, resp := client.DeleteMaintenanceWindowRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeleteMaintenanceWindow
 func (c *SSM) DeleteMaintenanceWindowRequest(input *DeleteMaintenanceWindowInput) (req *request.Request, output *DeleteMaintenanceWindowOutput) {
@@ -1837,8 +1853,8 @@ func (c *SSM) DeleteMaintenanceWindowRequest(input *DeleteMaintenanceWindowInput
 // API operation DeleteMaintenanceWindow for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
+//   - InternalServerError
+//     An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeleteMaintenanceWindow
 func (c *SSM) DeleteMaintenanceWindow(input *DeleteMaintenanceWindowInput) (*DeleteMaintenanceWindowOutput, error) {
@@ -1878,14 +1894,13 @@ const opDeleteOpsMetadata = "DeleteOpsMetadata"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DeleteOpsMetadataRequest method.
+//	req, resp := client.DeleteOpsMetadataRequest(params)
 //
-//    // Example sending a request using the DeleteOpsMetadataRequest method.
-//    req, resp := client.DeleteOpsMetadataRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeleteOpsMetadata
 func (c *SSM) DeleteOpsMetadataRequest(input *DeleteOpsMetadataInput) (req *request.Request, output *DeleteOpsMetadataOutput) {
@@ -1917,14 +1932,15 @@ func (c *SSM) DeleteOpsMetadataRequest(input *DeleteOpsMetadataInput) (req *requ
 // API operation DeleteOpsMetadata for usage and error information.
 //
 // Returned Error Types:
-//   * OpsMetadataNotFoundException
-//   The OpsMetadata object doesn't exist.
 //
-//   * OpsMetadataInvalidArgumentException
-//   One of the arguments passed is invalid.
+//   - OpsMetadataNotFoundException
+//     The OpsMetadata object doesn't exist.
 //
-//   * InternalServerError
-//   An error occurred on the server side.
+//   - OpsMetadataInvalidArgumentException
+//     One of the arguments passed is invalid.
+//
+//   - InternalServerError
+//     An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeleteOpsMetadata
 func (c *SSM) DeleteOpsMetadata(input *DeleteOpsMetadataInput) (*DeleteOpsMetadataOutput, error) {
@@ -1964,14 +1980,13 @@ const opDeleteParameter = "DeleteParameter"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DeleteParameterRequest method.
+//	req, resp := client.DeleteParameterRequest(params)
 //
-//    // Example sending a request using the DeleteParameterRequest method.
-//    req, resp := client.DeleteParameterRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeleteParameter
 func (c *SSM) DeleteParameterRequest(input *DeleteParameterInput) (req *request.Request, output *DeleteParameterOutput) {
@@ -2004,11 +2019,12 @@ func (c *SSM) DeleteParameterRequest(input *DeleteParameterInput) (req *request.
 // API operation DeleteParameter for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
 //
-//   * ParameterNotFound
-//   The parameter couldn't be found. Verify the name and try again.
+//   - InternalServerError
+//     An error occurred on the server side.
+//
+//   - ParameterNotFound
+//     The parameter couldn't be found. Verify the name and try again.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeleteParameter
 func (c *SSM) DeleteParameter(input *DeleteParameterInput) (*DeleteParameterOutput, error) {
@@ -2048,14 +2064,13 @@ const opDeleteParameters = "DeleteParameters"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DeleteParametersRequest method.
+//	req, resp := client.DeleteParametersRequest(params)
 //
-//    // Example sending a request using the DeleteParametersRequest method.
-//    req, resp := client.DeleteParametersRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeleteParameters
 func (c *SSM) DeleteParametersRequest(input *DeleteParametersInput) (req *request.Request, output *DeleteParametersOutput) {
@@ -2087,8 +2102,8 @@ func (c *SSM) DeleteParametersRequest(input *DeleteParametersInput) (req *reques
 // API operation DeleteParameters for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
+//   - InternalServerError
+//     An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeleteParameters
 func (c *SSM) DeleteParameters(input *DeleteParametersInput) (*DeleteParametersOutput, error) {
@@ -2128,14 +2143,13 @@ const opDeletePatchBaseline = "DeletePatchBaseline"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DeletePatchBaselineRequest method.
+//	req, resp := client.DeletePatchBaselineRequest(params)
 //
-//    // Example sending a request using the DeletePatchBaselineRequest method.
-//    req, resp := client.DeletePatchBaselineRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeletePatchBaseline
 func (c *SSM) DeletePatchBaselineRequest(input *DeletePatchBaselineInput) (req *request.Request, output *DeletePatchBaselineOutput) {
@@ -2166,12 +2180,13 @@ func (c *SSM) DeletePatchBaselineRequest(input *DeletePatchBaselineInput) (req *
 // API operation DeletePatchBaseline for usage and error information.
 //
 // Returned Error Types:
-//   * ResourceInUseException
-//   Error returned if an attempt is made to delete a patch baseline that is registered
-//   for a patch group.
 //
-//   * InternalServerError
-//   An error occurred on the server side.
+//   - ResourceInUseException
+//     Error returned if an attempt is made to delete a patch baseline that is registered
+//     for a patch group.
+//
+//   - InternalServerError
+//     An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeletePatchBaseline
 func (c *SSM) DeletePatchBaseline(input *DeletePatchBaselineInput) (*DeletePatchBaselineOutput, error) {
@@ -2211,14 +2226,13 @@ const opDeleteResourceDataSync = "DeleteResourceDataSync"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DeleteResourceDataSyncRequest method.
+//	req, resp := client.DeleteResourceDataSyncRequest(params)
 //
-//    // Example sending a request using the DeleteResourceDataSyncRequest method.
-//    req, resp := client.DeleteResourceDataSyncRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeleteResourceDataSync
 func (c *SSM) DeleteResourceDataSyncRequest(input *DeleteResourceDataSyncInput) (req *request.Request, output *DeleteResourceDataSyncOutput) {
@@ -2241,8 +2255,8 @@ func (c *SSM) DeleteResourceDataSyncRequest(input *DeleteResourceDataSyncInput) 
 // DeleteResourceDataSync API operation for Amazon Simple Systems Manager (SSM).
 //
 // Deletes a resource data sync configuration. After the configuration is deleted,
-// changes to data on managed instances are no longer synced to or from the
-// target. Deleting a sync configuration doesn't delete data.
+// changes to data on managed nodes are no longer synced to or from the target.
+// Deleting a sync configuration doesn't delete data.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2252,14 +2266,15 @@ func (c *SSM) DeleteResourceDataSyncRequest(input *DeleteResourceDataSyncInput) 
 // API operation DeleteResourceDataSync for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
 //
-//   * ResourceDataSyncNotFoundException
-//   The specified sync name wasn't found.
+//   - InternalServerError
+//     An error occurred on the server side.
 //
-//   * ResourceDataSyncInvalidConfigurationException
-//   The specified sync configuration is invalid.
+//   - ResourceDataSyncNotFoundException
+//     The specified sync name wasn't found.
+//
+//   - ResourceDataSyncInvalidConfigurationException
+//     The specified sync configuration is invalid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeleteResourceDataSync
 func (c *SSM) DeleteResourceDataSync(input *DeleteResourceDataSyncInput) (*DeleteResourceDataSyncOutput, error) {
@@ -2299,14 +2314,13 @@ const opDeregisterManagedInstance = "DeregisterManagedInstance"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DeregisterManagedInstanceRequest method.
+//	req, resp := client.DeregisterManagedInstanceRequest(params)
 //
-//    // Example sending a request using the DeregisterManagedInstanceRequest method.
-//    req, resp := client.DeregisterManagedInstanceRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeregisterManagedInstance
 func (c *SSM) DeregisterManagedInstanceRequest(input *DeregisterManagedInstanceInput) (req *request.Request, output *DeregisterManagedInstanceOutput) {
@@ -2329,8 +2343,8 @@ func (c *SSM) DeregisterManagedInstanceRequest(input *DeregisterManagedInstanceI
 // DeregisterManagedInstance API operation for Amazon Simple Systems Manager (SSM).
 //
 // Removes the server or virtual machine from the list of registered servers.
-// You can reregister the instance again at any time. If you don't plan to use
-// Run Command on the server, we suggest uninstalling SSM Agent first.
+// You can reregister the node again at any time. If you don't plan to use Run
+// Command on the server, we suggest uninstalling SSM Agent first.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2340,22 +2354,23 @@ func (c *SSM) DeregisterManagedInstanceRequest(input *DeregisterManagedInstanceI
 // API operation DeregisterManagedInstance for usage and error information.
 //
 // Returned Error Types:
-//   * InvalidInstanceId
-//   The following problems can cause this exception:
 //
-//      * You don't have permission to access the instance.
+//   - InvalidInstanceId
+//     The following problems can cause this exception:
 //
-//      * Amazon Web Services Systems Manager Agent(SSM Agent) isn't running.
-//      Verify that SSM Agent is running.
+//   - You don't have permission to access the managed node.
 //
-//      * SSM Agent isn't registered with the SSM endpoint. Try reinstalling SSM
-//      Agent.
+//   - Amazon Web Services Systems Manager Agent(SSM Agent) isn't running.
+//     Verify that SSM Agent is running.
 //
-//      * The instance isn't in valid state. Valid states are: Running, Pending,
-//      Stopped, and Stopping. Invalid states are: Shutting-down and Terminated.
+//   - SSM Agent isn't registered with the SSM endpoint. Try reinstalling SSM
+//     Agent.
 //
-//   * InternalServerError
-//   An error occurred on the server side.
+//   - The managed node isn't in valid state. Valid states are: Running, Pending,
+//     Stopped, and Stopping. Invalid states are: Shutting-down and Terminated.
+//
+//   - InternalServerError
+//     An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeregisterManagedInstance
 func (c *SSM) DeregisterManagedInstance(input *DeregisterManagedInstanceInput) (*DeregisterManagedInstanceOutput, error) {
@@ -2395,14 +2410,13 @@ const opDeregisterPatchBaselineForPatchGroup = "DeregisterPatchBaselineForPatchG
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DeregisterPatchBaselineForPatchGroupRequest method.
+//	req, resp := client.DeregisterPatchBaselineForPatchGroupRequest(params)
 //
-//    // Example sending a request using the DeregisterPatchBaselineForPatchGroupRequest method.
-//    req, resp := client.DeregisterPatchBaselineForPatchGroupRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeregisterPatchBaselineForPatchGroup
 func (c *SSM) DeregisterPatchBaselineForPatchGroupRequest(input *DeregisterPatchBaselineForPatchGroupInput) (req *request.Request, output *DeregisterPatchBaselineForPatchGroupOutput) {
@@ -2433,12 +2447,13 @@ func (c *SSM) DeregisterPatchBaselineForPatchGroupRequest(input *DeregisterPatch
 // API operation DeregisterPatchBaselineForPatchGroup for usage and error information.
 //
 // Returned Error Types:
-//   * InvalidResourceId
-//   The resource ID isn't valid. Verify that you entered the correct ID and try
-//   again.
 //
-//   * InternalServerError
-//   An error occurred on the server side.
+//   - InvalidResourceId
+//     The resource ID isn't valid. Verify that you entered the correct ID and try
+//     again.
+//
+//   - InternalServerError
+//     An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeregisterPatchBaselineForPatchGroup
 func (c *SSM) DeregisterPatchBaselineForPatchGroup(input *DeregisterPatchBaselineForPatchGroupInput) (*DeregisterPatchBaselineForPatchGroupOutput, error) {
@@ -2478,14 +2493,13 @@ const opDeregisterTargetFromMaintenanceWindow = "DeregisterTargetFromMaintenance
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DeregisterTargetFromMaintenanceWindowRequest method.
+//	req, resp := client.DeregisterTargetFromMaintenanceWindowRequest(params)
 //
-//    // Example sending a request using the DeregisterTargetFromMaintenanceWindowRequest method.
-//    req, resp := client.DeregisterTargetFromMaintenanceWindowRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeregisterTargetFromMaintenanceWindow
 func (c *SSM) DeregisterTargetFromMaintenanceWindowRequest(input *DeregisterTargetFromMaintenanceWindowInput) (req *request.Request, output *DeregisterTargetFromMaintenanceWindowOutput) {
@@ -2516,20 +2530,21 @@ func (c *SSM) DeregisterTargetFromMaintenanceWindowRequest(input *DeregisterTarg
 // API operation DeregisterTargetFromMaintenanceWindow for usage and error information.
 //
 // Returned Error Types:
-//   * DoesNotExistException
-//   Error returned when the ID specified for a resource, such as a maintenance
-//   window or patch baseline, doesn't exist.
 //
-//   For information about resource quotas in Amazon Web Services Systems Manager,
-//   see Systems Manager service quotas (https://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
-//   in the Amazon Web Services General Reference.
+//   - DoesNotExistException
+//     Error returned when the ID specified for a resource, such as a maintenance
+//     window or patch baseline, doesn't exist.
 //
-//   * InternalServerError
-//   An error occurred on the server side.
+//     For information about resource quotas in Amazon Web Services Systems Manager,
+//     see Systems Manager service quotas (https://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//     in the Amazon Web Services General Reference.
 //
-//   * TargetInUseException
-//   You specified the Safe option for the DeregisterTargetFromMaintenanceWindow
-//   operation, but the target is still referenced in a task.
+//   - InternalServerError
+//     An error occurred on the server side.
+//
+//   - TargetInUseException
+//     You specified the Safe option for the DeregisterTargetFromMaintenanceWindow
+//     operation, but the target is still referenced in a task.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeregisterTargetFromMaintenanceWindow
 func (c *SSM) DeregisterTargetFromMaintenanceWindow(input *DeregisterTargetFromMaintenanceWindowInput) (*DeregisterTargetFromMaintenanceWindowOutput, error) {
@@ -2569,14 +2584,13 @@ const opDeregisterTaskFromMaintenanceWindow = "DeregisterTaskFromMaintenanceWind
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DeregisterTaskFromMaintenanceWindowRequest method.
+//	req, resp := client.DeregisterTaskFromMaintenanceWindowRequest(params)
 //
-//    // Example sending a request using the DeregisterTaskFromMaintenanceWindowRequest method.
-//    req, resp := client.DeregisterTaskFromMaintenanceWindowRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeregisterTaskFromMaintenanceWindow
 func (c *SSM) DeregisterTaskFromMaintenanceWindowRequest(input *DeregisterTaskFromMaintenanceWindowInput) (req *request.Request, output *DeregisterTaskFromMaintenanceWindowOutput) {
@@ -2607,16 +2621,17 @@ func (c *SSM) DeregisterTaskFromMaintenanceWindowRequest(input *DeregisterTaskFr
 // API operation DeregisterTaskFromMaintenanceWindow for usage and error information.
 //
 // Returned Error Types:
-//   * DoesNotExistException
-//   Error returned when the ID specified for a resource, such as a maintenance
-//   window or patch baseline, doesn't exist.
 //
-//   For information about resource quotas in Amazon Web Services Systems Manager,
-//   see Systems Manager service quotas (https://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
-//   in the Amazon Web Services General Reference.
+//   - DoesNotExistException
+//     Error returned when the ID specified for a resource, such as a maintenance
+//     window or patch baseline, doesn't exist.
 //
-//   * InternalServerError
-//   An error occurred on the server side.
+//     For information about resource quotas in Amazon Web Services Systems Manager,
+//     see Systems Manager service quotas (https://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//     in the Amazon Web Services General Reference.
+//
+//   - InternalServerError
+//     An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeregisterTaskFromMaintenanceWindow
 func (c *SSM) DeregisterTaskFromMaintenanceWindow(input *DeregisterTaskFromMaintenanceWindowInput) (*DeregisterTaskFromMaintenanceWindowOutput, error) {
@@ -2656,14 +2671,13 @@ const opDescribeActivations = "DescribeActivations"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DescribeActivationsRequest method.
+//	req, resp := client.DescribeActivationsRequest(params)
 //
-//    // Example sending a request using the DescribeActivationsRequest method.
-//    req, resp := client.DescribeActivationsRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeActivations
 func (c *SSM) DescribeActivationsRequest(input *DescribeActivationsInput) (req *request.Request, output *DescribeActivationsOutput) {
@@ -2692,7 +2706,7 @@ func (c *SSM) DescribeActivationsRequest(input *DescribeActivationsInput) (req *
 //
 // Describes details about the activation, such as the date and time the activation
 // was created, its expiration date, the Identity and Access Management (IAM)
-// role assigned to the instances in the activation, and the number of instances
+// role assigned to the managed nodes in the activation, and the number of nodes
 // registered by using this activation.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -2703,15 +2717,16 @@ func (c *SSM) DescribeActivationsRequest(input *DescribeActivationsInput) (req *
 // API operation DescribeActivations for usage and error information.
 //
 // Returned Error Types:
-//   * InvalidFilter
-//   The filter name isn't valid. Verify the you entered the correct name and
-//   try again.
 //
-//   * InvalidNextToken
-//   The specified token isn't valid.
+//   - InvalidFilter
+//     The filter name isn't valid. Verify the you entered the correct name and
+//     try again.
 //
-//   * InternalServerError
-//   An error occurred on the server side.
+//   - InvalidNextToken
+//     The specified token isn't valid.
+//
+//   - InternalServerError
+//     An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeActivations
 func (c *SSM) DescribeActivations(input *DescribeActivationsInput) (*DescribeActivationsOutput, error) {
@@ -2743,15 +2758,14 @@ func (c *SSM) DescribeActivationsWithContext(ctx aws.Context, input *DescribeAct
 //
 // Note: This operation can generate multiple requests to a service.
 //
-//    // Example iterating over at most 3 pages of a DescribeActivations operation.
-//    pageNum := 0
-//    err := client.DescribeActivationsPages(params,
-//        func(page *ssm.DescribeActivationsOutput, lastPage bool) bool {
-//            pageNum++
-//            fmt.Println(page)
-//            return pageNum <= 3
-//        })
-//
+//	// Example iterating over at most 3 pages of a DescribeActivations operation.
+//	pageNum := 0
+//	err := client.DescribeActivationsPages(params,
+//	    func(page *ssm.DescribeActivationsOutput, lastPage bool) bool {
+//	        pageNum++
+//	        fmt.Println(page)
+//	        return pageNum <= 3
+//	    })
 func (c *SSM) DescribeActivationsPages(input *DescribeActivationsInput, fn func(*DescribeActivationsOutput, bool) bool) error {
 	return c.DescribeActivationsPagesWithContext(aws.BackgroundContext(), input, fn)
 }
@@ -2803,14 +2817,13 @@ const opDescribeAssociation = "DescribeAssociation"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DescribeAssociationRequest method.
+//	req, resp := client.DescribeAssociationRequest(params)
 //
-//    // Example sending a request using the DescribeAssociationRequest method.
-//    req, resp := client.DescribeAssociationRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeAssociation
 func (c *SSM) DescribeAssociationRequest(input *DescribeAssociationInput) (req *request.Request, output *DescribeAssociationOutput) {
@@ -2831,9 +2844,9 @@ func (c *SSM) DescribeAssociationRequest(input *DescribeAssociationInput) (req *
 
 // DescribeAssociation API operation for Amazon Simple Systems Manager (SSM).
 //
-// Describes the association for the specified target or instance. If you created
-// the association by using the Targets parameter, then you must retrieve the
-// association by using the association ID.
+// Describes the association for the specified target or managed node. If you
+// created the association by using the Targets parameter, then you must retrieve
+// the association by using the association ID.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2843,33 +2856,34 @@ func (c *SSM) DescribeAssociationRequest(input *DescribeAssociationInput) (req *
 // API operation DescribeAssociation for usage and error information.
 //
 // Returned Error Types:
-//   * AssociationDoesNotExist
-//   The specified association doesn't exist.
 //
-//   * InvalidAssociationVersion
-//   The version you specified isn't valid. Use ListAssociationVersions to view
-//   all versions of an association according to the association ID. Or, use the
-//   $LATEST parameter to view the latest version of the association.
+//   - AssociationDoesNotExist
+//     The specified association doesn't exist.
 //
-//   * InternalServerError
-//   An error occurred on the server side.
+//   - InvalidAssociationVersion
+//     The version you specified isn't valid. Use ListAssociationVersions to view
+//     all versions of an association according to the association ID. Or, use the
+//     $LATEST parameter to view the latest version of the association.
 //
-//   * InvalidDocument
-//   The specified SSM document doesn't exist.
+//   - InternalServerError
+//     An error occurred on the server side.
 //
-//   * InvalidInstanceId
-//   The following problems can cause this exception:
+//   - InvalidDocument
+//     The specified SSM document doesn't exist.
 //
-//      * You don't have permission to access the instance.
+//   - InvalidInstanceId
+//     The following problems can cause this exception:
 //
-//      * Amazon Web Services Systems Manager Agent(SSM Agent) isn't running.
-//      Verify that SSM Agent is running.
+//   - You don't have permission to access the managed node.
 //
-//      * SSM Agent isn't registered with the SSM endpoint. Try reinstalling SSM
-//      Agent.
+//   - Amazon Web Services Systems Manager Agent(SSM Agent) isn't running.
+//     Verify that SSM Agent is running.
 //
-//      * The instance isn't in valid state. Valid states are: Running, Pending,
-//      Stopped, and Stopping. Invalid states are: Shutting-down and Terminated.
+//   - SSM Agent isn't registered with the SSM endpoint. Try reinstalling SSM
+//     Agent.
+//
+//   - The managed node isn't in valid state. Valid states are: Running, Pending,
+//     Stopped, and Stopping. Invalid states are: Shutting-down and Terminated.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeAssociation
 func (c *SSM) DescribeAssociation(input *DescribeAssociationInput) (*DescribeAssociationOutput, error) {
@@ -2909,14 +2923,13 @@ const opDescribeAssociationExecutionTargets = "DescribeAssociationExecutionTarge
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DescribeAssociationExecutionTargetsRequest method.
+//	req, resp := client.DescribeAssociationExecutionTargetsRequest(params)
 //
-//    // Example sending a request using the DescribeAssociationExecutionTargetsRequest method.
-//    req, resp := client.DescribeAssociationExecutionTargetsRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeAssociationExecutionTargets
 func (c *SSM) DescribeAssociationExecutionTargetsRequest(input *DescribeAssociationExecutionTargetsInput) (req *request.Request, output *DescribeAssociationExecutionTargetsOutput) {
@@ -2953,17 +2966,18 @@ func (c *SSM) DescribeAssociationExecutionTargetsRequest(input *DescribeAssociat
 // API operation DescribeAssociationExecutionTargets for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
 //
-//   * AssociationDoesNotExist
-//   The specified association doesn't exist.
+//   - InternalServerError
+//     An error occurred on the server side.
 //
-//   * InvalidNextToken
-//   The specified token isn't valid.
+//   - AssociationDoesNotExist
+//     The specified association doesn't exist.
 //
-//   * AssociationExecutionDoesNotExist
-//   The specified execution ID doesn't exist. Verify the ID number and try again.
+//   - InvalidNextToken
+//     The specified token isn't valid.
+//
+//   - AssociationExecutionDoesNotExist
+//     The specified execution ID doesn't exist. Verify the ID number and try again.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeAssociationExecutionTargets
 func (c *SSM) DescribeAssociationExecutionTargets(input *DescribeAssociationExecutionTargetsInput) (*DescribeAssociationExecutionTargetsOutput, error) {
@@ -2995,15 +3009,14 @@ func (c *SSM) DescribeAssociationExecutionTargetsWithContext(ctx aws.Context, in
 //
 // Note: This operation can generate multiple requests to a service.
 //
-//    // Example iterating over at most 3 pages of a DescribeAssociationExecutionTargets operation.
-//    pageNum := 0
-//    err := client.DescribeAssociationExecutionTargetsPages(params,
-//        func(page *ssm.DescribeAssociationExecutionTargetsOutput, lastPage bool) bool {
-//            pageNum++
-//            fmt.Println(page)
-//            return pageNum <= 3
-//        })
-//
+//	// Example iterating over at most 3 pages of a DescribeAssociationExecutionTargets operation.
+//	pageNum := 0
+//	err := client.DescribeAssociationExecutionTargetsPages(params,
+//	    func(page *ssm.DescribeAssociationExecutionTargetsOutput, lastPage bool) bool {
+//	        pageNum++
+//	        fmt.Println(page)
+//	        return pageNum <= 3
+//	    })
 func (c *SSM) DescribeAssociationExecutionTargetsPages(input *DescribeAssociationExecutionTargetsInput, fn func(*DescribeAssociationExecutionTargetsOutput, bool) bool) error {
 	return c.DescribeAssociationExecutionTargetsPagesWithContext(aws.BackgroundContext(), input, fn)
 }
@@ -3055,14 +3068,13 @@ const opDescribeAssociationExecutions = "DescribeAssociationExecutions"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DescribeAssociationExecutionsRequest method.
+//	req, resp := client.DescribeAssociationExecutionsRequest(params)
 //
-//    // Example sending a request using the DescribeAssociationExecutionsRequest method.
-//    req, resp := client.DescribeAssociationExecutionsRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeAssociationExecutions
 func (c *SSM) DescribeAssociationExecutionsRequest(input *DescribeAssociationExecutionsInput) (req *request.Request, output *DescribeAssociationExecutionsOutput) {
@@ -3099,14 +3111,15 @@ func (c *SSM) DescribeAssociationExecutionsRequest(input *DescribeAssociationExe
 // API operation DescribeAssociationExecutions for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
 //
-//   * AssociationDoesNotExist
-//   The specified association doesn't exist.
+//   - InternalServerError
+//     An error occurred on the server side.
 //
-//   * InvalidNextToken
-//   The specified token isn't valid.
+//   - AssociationDoesNotExist
+//     The specified association doesn't exist.
+//
+//   - InvalidNextToken
+//     The specified token isn't valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeAssociationExecutions
 func (c *SSM) DescribeAssociationExecutions(input *DescribeAssociationExecutionsInput) (*DescribeAssociationExecutionsOutput, error) {
@@ -3138,15 +3151,14 @@ func (c *SSM) DescribeAssociationExecutionsWithContext(ctx aws.Context, input *D
 //
 // Note: This operation can generate multiple requests to a service.
 //
-//    // Example iterating over at most 3 pages of a DescribeAssociationExecutions operation.
-//    pageNum := 0
-//    err := client.DescribeAssociationExecutionsPages(params,
-//        func(page *ssm.DescribeAssociationExecutionsOutput, lastPage bool) bool {
-//            pageNum++
-//            fmt.Println(page)
-//            return pageNum <= 3
-//        })
-//
+//	// Example iterating over at most 3 pages of a DescribeAssociationExecutions operation.
+//	pageNum := 0
+//	err := client.DescribeAssociationExecutionsPages(params,
+//	    func(page *ssm.DescribeAssociationExecutionsOutput, lastPage bool) bool {
+//	        pageNum++
+//	        fmt.Println(page)
+//	        return pageNum <= 3
+//	    })
 func (c *SSM) DescribeAssociationExecutionsPages(input *DescribeAssociationExecutionsInput, fn func(*DescribeAssociationExecutionsOutput, bool) bool) error {
 	return c.DescribeAssociationExecutionsPagesWithContext(aws.BackgroundContext(), input, fn)
 }
@@ -3198,14 +3210,13 @@ const opDescribeAutomationExecutions = "DescribeAutomationExecutions"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DescribeAutomationExecutionsRequest method.
+//	req, resp := client.DescribeAutomationExecutionsRequest(params)
 //
-//    // Example sending a request using the DescribeAutomationExecutionsRequest method.
-//    req, resp := client.DescribeAutomationExecutionsRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeAutomationExecutions
 func (c *SSM) DescribeAutomationExecutionsRequest(input *DescribeAutomationExecutionsInput) (req *request.Request, output *DescribeAutomationExecutionsOutput) {
@@ -3242,17 +3253,18 @@ func (c *SSM) DescribeAutomationExecutionsRequest(input *DescribeAutomationExecu
 // API operation DescribeAutomationExecutions for usage and error information.
 //
 // Returned Error Types:
-//   * InvalidFilterKey
-//   The specified key isn't valid.
 //
-//   * InvalidFilterValue
-//   The filter value isn't valid. Verify the value and try again.
+//   - InvalidFilterKey
+//     The specified key isn't valid.
 //
-//   * InvalidNextToken
-//   The specified token isn't valid.
+//   - InvalidFilterValue
+//     The filter value isn't valid. Verify the value and try again.
 //
-//   * InternalServerError
-//   An error occurred on the server side.
+//   - InvalidNextToken
+//     The specified token isn't valid.
+//
+//   - InternalServerError
+//     An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeAutomationExecutions
 func (c *SSM) DescribeAutomationExecutions(input *DescribeAutomationExecutionsInput) (*DescribeAutomationExecutionsOutput, error) {
@@ -3284,15 +3296,14 @@ func (c *SSM) DescribeAutomationExecutionsWithContext(ctx aws.Context, input *De
 //
 // Note: This operation can generate multiple requests to a service.
 //
-//    // Example iterating over at most 3 pages of a DescribeAutomationExecutions operation.
-//    pageNum := 0
-//    err := client.DescribeAutomationExecutionsPages(params,
-//        func(page *ssm.DescribeAutomationExecutionsOutput, lastPage bool) bool {
-//            pageNum++
-//            fmt.Println(page)
-//            return pageNum <= 3
-//        })
-//
+//	// Example iterating over at most 3 pages of a DescribeAutomationExecutions operation.
+//	pageNum := 0
+//	err := client.DescribeAutomationExecutionsPages(params,
+//	    func(page *ssm.DescribeAutomationExecutionsOutput, lastPage bool) bool {
+//	        pageNum++
+//	        fmt.Println(page)
+//	        return pageNum <= 3
+//	    })
 func (c *SSM) DescribeAutomationExecutionsPages(input *DescribeAutomationExecutionsInput, fn func(*DescribeAutomationExecutionsOutput, bool) bool) error {
 	return c.DescribeAutomationExecutionsPagesWithContext(aws.BackgroundContext(), input, fn)
 }
@@ -3344,14 +3355,13 @@ const opDescribeAutomationStepExecutions = "DescribeAutomationStepExecutions"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DescribeAutomationStepExecutionsRequest method.
+//	req, resp := client.DescribeAutomationStepExecutionsRequest(params)
 //
-//    // Example sending a request using the DescribeAutomationStepExecutionsRequest method.
-//    req, resp := client.DescribeAutomationStepExecutionsRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeAutomationStepExecutions
 func (c *SSM) DescribeAutomationStepExecutionsRequest(input *DescribeAutomationStepExecutionsInput) (req *request.Request, output *DescribeAutomationStepExecutionsOutput) {
@@ -3389,21 +3399,22 @@ func (c *SSM) DescribeAutomationStepExecutionsRequest(input *DescribeAutomationS
 // API operation DescribeAutomationStepExecutions for usage and error information.
 //
 // Returned Error Types:
-//   * AutomationExecutionNotFoundException
-//   There is no automation execution information for the requested automation
-//   execution ID.
 //
-//   * InvalidNextToken
-//   The specified token isn't valid.
+//   - AutomationExecutionNotFoundException
+//     There is no automation execution information for the requested automation
+//     execution ID.
 //
-//   * InvalidFilterKey
-//   The specified key isn't valid.
+//   - InvalidNextToken
+//     The specified token isn't valid.
 //
-//   * InvalidFilterValue
-//   The filter value isn't valid. Verify the value and try again.
+//   - InvalidFilterKey
+//     The specified key isn't valid.
 //
-//   * InternalServerError
-//   An error occurred on the server side.
+//   - InvalidFilterValue
+//     The filter value isn't valid. Verify the value and try again.
+//
+//   - InternalServerError
+//     An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeAutomationStepExecutions
 func (c *SSM) DescribeAutomationStepExecutions(input *DescribeAutomationStepExecutionsInput) (*DescribeAutomationStepExecutionsOutput, error) {
@@ -3435,15 +3446,14 @@ func (c *SSM) DescribeAutomationStepExecutionsWithContext(ctx aws.Context, input
 //
 // Note: This operation can generate multiple requests to a service.
 //
-//    // Example iterating over at most 3 pages of a DescribeAutomationStepExecutions operation.
-//    pageNum := 0
-//    err := client.DescribeAutomationStepExecutionsPages(params,
-//        func(page *ssm.DescribeAutomationStepExecutionsOutput, lastPage bool) bool {
-//            pageNum++
-//            fmt.Println(page)
-//            return pageNum <= 3
-//        })
-//
+//	// Example iterating over at most 3 pages of a DescribeAutomationStepExecutions operation.
+//	pageNum := 0
+//	err := client.DescribeAutomationStepExecutionsPages(params,
+//	    func(page *ssm.DescribeAutomationStepExecutionsOutput, lastPage bool) bool {
+//	        pageNum++
+//	        fmt.Println(page)
+//	        return pageNum <= 3
+//	    })
 func (c *SSM) DescribeAutomationStepExecutionsPages(input *DescribeAutomationStepExecutionsInput, fn func(*DescribeAutomationStepExecutionsOutput, bool) bool) error {
 	return c.DescribeAutomationStepExecutionsPagesWithContext(aws.BackgroundContext(), input, fn)
 }
@@ -3495,14 +3505,13 @@ const opDescribeAvailablePatches = "DescribeAvailablePatches"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DescribeAvailablePatchesRequest method.
+//	req, resp := client.DescribeAvailablePatchesRequest(params)
 //
-//    // Example sending a request using the DescribeAvailablePatchesRequest method.
-//    req, resp := client.DescribeAvailablePatchesRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeAvailablePatches
 func (c *SSM) DescribeAvailablePatchesRequest(input *DescribeAvailablePatchesInput) (req *request.Request, output *DescribeAvailablePatchesOutput) {
@@ -3539,8 +3548,8 @@ func (c *SSM) DescribeAvailablePatchesRequest(input *DescribeAvailablePatchesInp
 // API operation DescribeAvailablePatches for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
+//   - InternalServerError
+//     An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeAvailablePatches
 func (c *SSM) DescribeAvailablePatches(input *DescribeAvailablePatchesInput) (*DescribeAvailablePatchesOutput, error) {
@@ -3572,15 +3581,14 @@ func (c *SSM) DescribeAvailablePatchesWithContext(ctx aws.Context, input *Descri
 //
 // Note: This operation can generate multiple requests to a service.
 //
-//    // Example iterating over at most 3 pages of a DescribeAvailablePatches operation.
-//    pageNum := 0
-//    err := client.DescribeAvailablePatchesPages(params,
-//        func(page *ssm.DescribeAvailablePatchesOutput, lastPage bool) bool {
-//            pageNum++
-//            fmt.Println(page)
-//            return pageNum <= 3
-//        })
-//
+//	// Example iterating over at most 3 pages of a DescribeAvailablePatches operation.
+//	pageNum := 0
+//	err := client.DescribeAvailablePatchesPages(params,
+//	    func(page *ssm.DescribeAvailablePatchesOutput, lastPage bool) bool {
+//	        pageNum++
+//	        fmt.Println(page)
+//	        return pageNum <= 3
+//	    })
 func (c *SSM) DescribeAvailablePatchesPages(input *DescribeAvailablePatchesInput, fn func(*DescribeAvailablePatchesOutput, bool) bool) error {
 	return c.DescribeAvailablePatchesPagesWithContext(aws.BackgroundContext(), input, fn)
 }
@@ -3632,14 +3640,13 @@ const opDescribeDocument = "DescribeDocument"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DescribeDocumentRequest method.
+//	req, resp := client.DescribeDocumentRequest(params)
 //
-//    // Example sending a request using the DescribeDocumentRequest method.
-//    req, resp := client.DescribeDocumentRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeDocument
 func (c *SSM) DescribeDocumentRequest(input *DescribeDocumentInput) (req *request.Request, output *DescribeDocumentOutput) {
@@ -3671,14 +3678,15 @@ func (c *SSM) DescribeDocumentRequest(input *DescribeDocumentInput) (req *reques
 // API operation DescribeDocument for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
 //
-//   * InvalidDocument
-//   The specified SSM document doesn't exist.
+//   - InternalServerError
+//     An error occurred on the server side.
 //
-//   * InvalidDocumentVersion
-//   The document version isn't valid or doesn't exist.
+//   - InvalidDocument
+//     The specified SSM document doesn't exist.
+//
+//   - InvalidDocumentVersion
+//     The document version isn't valid or doesn't exist.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeDocument
 func (c *SSM) DescribeDocument(input *DescribeDocumentInput) (*DescribeDocumentOutput, error) {
@@ -3718,14 +3726,13 @@ const opDescribeDocumentPermission = "DescribeDocumentPermission"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DescribeDocumentPermissionRequest method.
+//	req, resp := client.DescribeDocumentPermissionRequest(params)
 //
-//    // Example sending a request using the DescribeDocumentPermissionRequest method.
-//    req, resp := client.DescribeDocumentPermissionRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeDocumentPermission
 func (c *SSM) DescribeDocumentPermissionRequest(input *DescribeDocumentPermissionInput) (req *request.Request, output *DescribeDocumentPermissionOutput) {
@@ -3759,22 +3766,23 @@ func (c *SSM) DescribeDocumentPermissionRequest(input *DescribeDocumentPermissio
 // API operation DescribeDocumentPermission for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
 //
-//   * InvalidDocument
-//   The specified SSM document doesn't exist.
+//   - InternalServerError
+//     An error occurred on the server side.
 //
-//   * InvalidNextToken
-//   The specified token isn't valid.
+//   - InvalidDocument
+//     The specified SSM document doesn't exist.
 //
-//   * InvalidPermissionType
-//   The permission type isn't supported. Share is the only supported permission
-//   type.
+//   - InvalidNextToken
+//     The specified token isn't valid.
 //
-//   * InvalidDocumentOperation
-//   You attempted to delete a document while it is still shared. You must stop
-//   sharing the document before you can delete it.
+//   - InvalidPermissionType
+//     The permission type isn't supported. Share is the only supported permission
+//     type.
+//
+//   - InvalidDocumentOperation
+//     You attempted to delete a document while it is still shared. You must stop
+//     sharing the document before you can delete it.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeDocumentPermission
 func (c *SSM) DescribeDocumentPermission(input *DescribeDocumentPermissionInput) (*DescribeDocumentPermissionOutput, error) {
@@ -3814,14 +3822,13 @@ const opDescribeEffectiveInstanceAssociations = "DescribeEffectiveInstanceAssoci
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DescribeEffectiveInstanceAssociationsRequest method.
+//	req, resp := client.DescribeEffectiveInstanceAssociationsRequest(params)
 //
-//    // Example sending a request using the DescribeEffectiveInstanceAssociationsRequest method.
-//    req, resp := client.DescribeEffectiveInstanceAssociationsRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeEffectiveInstanceAssociations
 func (c *SSM) DescribeEffectiveInstanceAssociationsRequest(input *DescribeEffectiveInstanceAssociationsInput) (req *request.Request, output *DescribeEffectiveInstanceAssociationsOutput) {
@@ -3848,7 +3855,7 @@ func (c *SSM) DescribeEffectiveInstanceAssociationsRequest(input *DescribeEffect
 
 // DescribeEffectiveInstanceAssociations API operation for Amazon Simple Systems Manager (SSM).
 //
-// All associations for the instance(s).
+// All associations for the managed node(s).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -3858,25 +3865,26 @@ func (c *SSM) DescribeEffectiveInstanceAssociationsRequest(input *DescribeEffect
 // API operation DescribeEffectiveInstanceAssociations for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
 //
-//   * InvalidInstanceId
-//   The following problems can cause this exception:
+//   - InternalServerError
+//     An error occurred on the server side.
 //
-//      * You don't have permission to access the instance.
+//   - InvalidInstanceId
+//     The following problems can cause this exception:
 //
-//      * Amazon Web Services Systems Manager Agent(SSM Agent) isn't running.
-//      Verify that SSM Agent is running.
+//   - You don't have permission to access the managed node.
 //
-//      * SSM Agent isn't registered with the SSM endpoint. Try reinstalling SSM
-//      Agent.
+//   - Amazon Web Services Systems Manager Agent(SSM Agent) isn't running.
+//     Verify that SSM Agent is running.
 //
-//      * The instance isn't in valid state. Valid states are: Running, Pending,
-//      Stopped, and Stopping. Invalid states are: Shutting-down and Terminated.
+//   - SSM Agent isn't registered with the SSM endpoint. Try reinstalling SSM
+//     Agent.
 //
-//   * InvalidNextToken
-//   The specified token isn't valid.
+//   - The managed node isn't in valid state. Valid states are: Running, Pending,
+//     Stopped, and Stopping. Invalid states are: Shutting-down and Terminated.
+//
+//   - InvalidNextToken
+//     The specified token isn't valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeEffectiveInstanceAssociations
 func (c *SSM) DescribeEffectiveInstanceAssociations(input *DescribeEffectiveInstanceAssociationsInput) (*DescribeEffectiveInstanceAssociationsOutput, error) {
@@ -3908,15 +3916,14 @@ func (c *SSM) DescribeEffectiveInstanceAssociationsWithContext(ctx aws.Context, 
 //
 // Note: This operation can generate multiple requests to a service.
 //
-//    // Example iterating over at most 3 pages of a DescribeEffectiveInstanceAssociations operation.
-//    pageNum := 0
-//    err := client.DescribeEffectiveInstanceAssociationsPages(params,
-//        func(page *ssm.DescribeEffectiveInstanceAssociationsOutput, lastPage bool) bool {
-//            pageNum++
-//            fmt.Println(page)
-//            return pageNum <= 3
-//        })
-//
+//	// Example iterating over at most 3 pages of a DescribeEffectiveInstanceAssociations operation.
+//	pageNum := 0
+//	err := client.DescribeEffectiveInstanceAssociationsPages(params,
+//	    func(page *ssm.DescribeEffectiveInstanceAssociationsOutput, lastPage bool) bool {
+//	        pageNum++
+//	        fmt.Println(page)
+//	        return pageNum <= 3
+//	    })
 func (c *SSM) DescribeEffectiveInstanceAssociationsPages(input *DescribeEffectiveInstanceAssociationsInput, fn func(*DescribeEffectiveInstanceAssociationsOutput, bool) bool) error {
 	return c.DescribeEffectiveInstanceAssociationsPagesWithContext(aws.BackgroundContext(), input, fn)
 }
@@ -3968,14 +3975,13 @@ const opDescribeEffectivePatchesForPatchBaseline = "DescribeEffectivePatchesForP
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DescribeEffectivePatchesForPatchBaselineRequest method.
+//	req, resp := client.DescribeEffectivePatchesForPatchBaselineRequest(params)
 //
-//    // Example sending a request using the DescribeEffectivePatchesForPatchBaselineRequest method.
-//    req, resp := client.DescribeEffectivePatchesForPatchBaselineRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeEffectivePatchesForPatchBaseline
 func (c *SSM) DescribeEffectivePatchesForPatchBaselineRequest(input *DescribeEffectivePatchesForPatchBaselineInput) (req *request.Request, output *DescribeEffectivePatchesForPatchBaselineOutput) {
@@ -4014,24 +4020,25 @@ func (c *SSM) DescribeEffectivePatchesForPatchBaselineRequest(input *DescribeEff
 // API operation DescribeEffectivePatchesForPatchBaseline for usage and error information.
 //
 // Returned Error Types:
-//   * InvalidResourceId
-//   The resource ID isn't valid. Verify that you entered the correct ID and try
-//   again.
 //
-//   * DoesNotExistException
-//   Error returned when the ID specified for a resource, such as a maintenance
-//   window or patch baseline, doesn't exist.
+//   - InvalidResourceId
+//     The resource ID isn't valid. Verify that you entered the correct ID and try
+//     again.
 //
-//   For information about resource quotas in Amazon Web Services Systems Manager,
-//   see Systems Manager service quotas (https://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
-//   in the Amazon Web Services General Reference.
+//   - DoesNotExistException
+//     Error returned when the ID specified for a resource, such as a maintenance
+//     window or patch baseline, doesn't exist.
 //
-//   * UnsupportedOperatingSystem
-//   The operating systems you specified isn't supported, or the operation isn't
-//   supported for the operating system.
+//     For information about resource quotas in Amazon Web Services Systems Manager,
+//     see Systems Manager service quotas (https://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//     in the Amazon Web Services General Reference.
 //
-//   * InternalServerError
-//   An error occurred on the server side.
+//   - UnsupportedOperatingSystem
+//     The operating systems you specified isn't supported, or the operation isn't
+//     supported for the operating system.
+//
+//   - InternalServerError
+//     An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeEffectivePatchesForPatchBaseline
 func (c *SSM) DescribeEffectivePatchesForPatchBaseline(input *DescribeEffectivePatchesForPatchBaselineInput) (*DescribeEffectivePatchesForPatchBaselineOutput, error) {
@@ -4063,15 +4070,14 @@ func (c *SSM) DescribeEffectivePatchesForPatchBaselineWithContext(ctx aws.Contex
 //
 // Note: This operation can generate multiple requests to a service.
 //
-//    // Example iterating over at most 3 pages of a DescribeEffectivePatchesForPatchBaseline operation.
-//    pageNum := 0
-//    err := client.DescribeEffectivePatchesForPatchBaselinePages(params,
-//        func(page *ssm.DescribeEffectivePatchesForPatchBaselineOutput, lastPage bool) bool {
-//            pageNum++
-//            fmt.Println(page)
-//            return pageNum <= 3
-//        })
-//
+//	// Example iterating over at most 3 pages of a DescribeEffectivePatchesForPatchBaseline operation.
+//	pageNum := 0
+//	err := client.DescribeEffectivePatchesForPatchBaselinePages(params,
+//	    func(page *ssm.DescribeEffectivePatchesForPatchBaselineOutput, lastPage bool) bool {
+//	        pageNum++
+//	        fmt.Println(page)
+//	        return pageNum <= 3
+//	    })
 func (c *SSM) DescribeEffectivePatchesForPatchBaselinePages(input *DescribeEffectivePatchesForPatchBaselineInput, fn func(*DescribeEffectivePatchesForPatchBaselineOutput, bool) bool) error {
 	return c.DescribeEffectivePatchesForPatchBaselinePagesWithContext(aws.BackgroundContext(), input, fn)
 }
@@ -4123,14 +4129,13 @@ const opDescribeInstanceAssociationsStatus = "DescribeInstanceAssociationsStatus
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DescribeInstanceAssociationsStatusRequest method.
+//	req, resp := client.DescribeInstanceAssociationsStatusRequest(params)
 //
-//    // Example sending a request using the DescribeInstanceAssociationsStatusRequest method.
-//    req, resp := client.DescribeInstanceAssociationsStatusRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeInstanceAssociationsStatus
 func (c *SSM) DescribeInstanceAssociationsStatusRequest(input *DescribeInstanceAssociationsStatusInput) (req *request.Request, output *DescribeInstanceAssociationsStatusOutput) {
@@ -4157,7 +4162,7 @@ func (c *SSM) DescribeInstanceAssociationsStatusRequest(input *DescribeInstanceA
 
 // DescribeInstanceAssociationsStatus API operation for Amazon Simple Systems Manager (SSM).
 //
-// The status of the associations for the instance(s).
+// The status of the associations for the managed node(s).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4167,25 +4172,26 @@ func (c *SSM) DescribeInstanceAssociationsStatusRequest(input *DescribeInstanceA
 // API operation DescribeInstanceAssociationsStatus for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
 //
-//   * InvalidInstanceId
-//   The following problems can cause this exception:
+//   - InternalServerError
+//     An error occurred on the server side.
 //
-//      * You don't have permission to access the instance.
+//   - InvalidInstanceId
+//     The following problems can cause this exception:
 //
-//      * Amazon Web Services Systems Manager Agent(SSM Agent) isn't running.
-//      Verify that SSM Agent is running.
+//   - You don't have permission to access the managed node.
 //
-//      * SSM Agent isn't registered with the SSM endpoint. Try reinstalling SSM
-//      Agent.
+//   - Amazon Web Services Systems Manager Agent(SSM Agent) isn't running.
+//     Verify that SSM Agent is running.
 //
-//      * The instance isn't in valid state. Valid states are: Running, Pending,
-//      Stopped, and Stopping. Invalid states are: Shutting-down and Terminated.
+//   - SSM Agent isn't registered with the SSM endpoint. Try reinstalling SSM
+//     Agent.
 //
-//   * InvalidNextToken
-//   The specified token isn't valid.
+//   - The managed node isn't in valid state. Valid states are: Running, Pending,
+//     Stopped, and Stopping. Invalid states are: Shutting-down and Terminated.
+//
+//   - InvalidNextToken
+//     The specified token isn't valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeInstanceAssociationsStatus
 func (c *SSM) DescribeInstanceAssociationsStatus(input *DescribeInstanceAssociationsStatusInput) (*DescribeInstanceAssociationsStatusOutput, error) {
@@ -4217,15 +4223,14 @@ func (c *SSM) DescribeInstanceAssociationsStatusWithContext(ctx aws.Context, inp
 //
 // Note: This operation can generate multiple requests to a service.
 //
-//    // Example iterating over at most 3 pages of a DescribeInstanceAssociationsStatus operation.
-//    pageNum := 0
-//    err := client.DescribeInstanceAssociationsStatusPages(params,
-//        func(page *ssm.DescribeInstanceAssociationsStatusOutput, lastPage bool) bool {
-//            pageNum++
-//            fmt.Println(page)
-//            return pageNum <= 3
-//        })
-//
+//	// Example iterating over at most 3 pages of a DescribeInstanceAssociationsStatus operation.
+//	pageNum := 0
+//	err := client.DescribeInstanceAssociationsStatusPages(params,
+//	    func(page *ssm.DescribeInstanceAssociationsStatusOutput, lastPage bool) bool {
+//	        pageNum++
+//	        fmt.Println(page)
+//	        return pageNum <= 3
+//	    })
 func (c *SSM) DescribeInstanceAssociationsStatusPages(input *DescribeInstanceAssociationsStatusInput, fn func(*DescribeInstanceAssociationsStatusOutput, bool) bool) error {
 	return c.DescribeInstanceAssociationsStatusPagesWithContext(aws.BackgroundContext(), input, fn)
 }
@@ -4277,14 +4282,13 @@ const opDescribeInstanceInformation = "DescribeInstanceInformation"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DescribeInstanceInformationRequest method.
+//	req, resp := client.DescribeInstanceInformationRequest(params)
 //
-//    // Example sending a request using the DescribeInstanceInformationRequest method.
-//    req, resp := client.DescribeInstanceInformationRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeInstanceInformation
 func (c *SSM) DescribeInstanceInformationRequest(input *DescribeInstanceInformationInput) (req *request.Request, output *DescribeInstanceInformationOutput) {
@@ -4311,18 +4315,18 @@ func (c *SSM) DescribeInstanceInformationRequest(input *DescribeInstanceInformat
 
 // DescribeInstanceInformation API operation for Amazon Simple Systems Manager (SSM).
 //
-// Describes one or more of your instances, including information about the
-// operating system platform, the version of SSM Agent installed on the instance,
-// instance status, and so on.
+// Describes one or more of your managed nodes, including information about
+// the operating system platform, the version of SSM Agent installed on the
+// managed node, node status, and so on.
 //
-// If you specify one or more instance IDs, it returns information for those
-// instances. If you don't specify instance IDs, it returns information for
-// all your instances. If you specify an instance ID that isn't valid or an
-// instance that you don't own, you receive an error.
+// If you specify one or more managed node IDs, it returns information for those
+// managed nodes. If you don't specify node IDs, it returns information for
+// all your managed nodes. If you specify a node ID that isn't valid or a node
+// that you don't own, you receive an error.
 //
 // The IamRole field for this API operation is the Identity and Access Management
-// (IAM) role assigned to on-premises instances. This call doesn't return the
-// IAM role for EC2 instances.
+// (IAM) role assigned to on-premises managed nodes. This call doesn't return
+// the IAM role for EC2 instances.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4332,31 +4336,32 @@ func (c *SSM) DescribeInstanceInformationRequest(input *DescribeInstanceInformat
 // API operation DescribeInstanceInformation for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
 //
-//   * InvalidInstanceId
-//   The following problems can cause this exception:
+//   - InternalServerError
+//     An error occurred on the server side.
 //
-//      * You don't have permission to access the instance.
+//   - InvalidInstanceId
+//     The following problems can cause this exception:
 //
-//      * Amazon Web Services Systems Manager Agent(SSM Agent) isn't running.
-//      Verify that SSM Agent is running.
+//   - You don't have permission to access the managed node.
 //
-//      * SSM Agent isn't registered with the SSM endpoint. Try reinstalling SSM
-//      Agent.
+//   - Amazon Web Services Systems Manager Agent(SSM Agent) isn't running.
+//     Verify that SSM Agent is running.
 //
-//      * The instance isn't in valid state. Valid states are: Running, Pending,
-//      Stopped, and Stopping. Invalid states are: Shutting-down and Terminated.
+//   - SSM Agent isn't registered with the SSM endpoint. Try reinstalling SSM
+//     Agent.
 //
-//   * InvalidNextToken
-//   The specified token isn't valid.
+//   - The managed node isn't in valid state. Valid states are: Running, Pending,
+//     Stopped, and Stopping. Invalid states are: Shutting-down and Terminated.
 //
-//   * InvalidInstanceInformationFilterValue
-//   The specified filter value isn't valid.
+//   - InvalidNextToken
+//     The specified token isn't valid.
 //
-//   * InvalidFilterKey
-//   The specified key isn't valid.
+//   - InvalidInstanceInformationFilterValue
+//     The specified filter value isn't valid.
+//
+//   - InvalidFilterKey
+//     The specified key isn't valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeInstanceInformation
 func (c *SSM) DescribeInstanceInformation(input *DescribeInstanceInformationInput) (*DescribeInstanceInformationOutput, error) {
@@ -4388,15 +4393,14 @@ func (c *SSM) DescribeInstanceInformationWithContext(ctx aws.Context, input *Des
 //
 // Note: This operation can generate multiple requests to a service.
 //
-//    // Example iterating over at most 3 pages of a DescribeInstanceInformation operation.
-//    pageNum := 0
-//    err := client.DescribeInstanceInformationPages(params,
-//        func(page *ssm.DescribeInstanceInformationOutput, lastPage bool) bool {
-//            pageNum++
-//            fmt.Println(page)
-//            return pageNum <= 3
-//        })
-//
+//	// Example iterating over at most 3 pages of a DescribeInstanceInformation operation.
+//	pageNum := 0
+//	err := client.DescribeInstanceInformationPages(params,
+//	    func(page *ssm.DescribeInstanceInformationOutput, lastPage bool) bool {
+//	        pageNum++
+//	        fmt.Println(page)
+//	        return pageNum <= 3
+//	    })
 func (c *SSM) DescribeInstanceInformationPages(input *DescribeInstanceInformationInput, fn func(*DescribeInstanceInformationOutput, bool) bool) error {
 	return c.DescribeInstanceInformationPagesWithContext(aws.BackgroundContext(), input, fn)
 }
@@ -4448,14 +4452,13 @@ const opDescribeInstancePatchStates = "DescribeInstancePatchStates"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DescribeInstancePatchStatesRequest method.
+//	req, resp := client.DescribeInstancePatchStatesRequest(params)
 //
-//    // Example sending a request using the DescribeInstancePatchStatesRequest method.
-//    req, resp := client.DescribeInstancePatchStatesRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeInstancePatchStates
 func (c *SSM) DescribeInstancePatchStatesRequest(input *DescribeInstancePatchStatesInput) (req *request.Request, output *DescribeInstancePatchStatesOutput) {
@@ -4482,7 +4485,7 @@ func (c *SSM) DescribeInstancePatchStatesRequest(input *DescribeInstancePatchSta
 
 // DescribeInstancePatchStates API operation for Amazon Simple Systems Manager (SSM).
 //
-// Retrieves the high-level patch state of one or more instances.
+// Retrieves the high-level patch state of one or more managed nodes.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4492,11 +4495,12 @@ func (c *SSM) DescribeInstancePatchStatesRequest(input *DescribeInstancePatchSta
 // API operation DescribeInstancePatchStates for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
 //
-//   * InvalidNextToken
-//   The specified token isn't valid.
+//   - InternalServerError
+//     An error occurred on the server side.
+//
+//   - InvalidNextToken
+//     The specified token isn't valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeInstancePatchStates
 func (c *SSM) DescribeInstancePatchStates(input *DescribeInstancePatchStatesInput) (*DescribeInstancePatchStatesOutput, error) {
@@ -4528,15 +4532,14 @@ func (c *SSM) DescribeInstancePatchStatesWithContext(ctx aws.Context, input *Des
 //
 // Note: This operation can generate multiple requests to a service.
 //
-//    // Example iterating over at most 3 pages of a DescribeInstancePatchStates operation.
-//    pageNum := 0
-//    err := client.DescribeInstancePatchStatesPages(params,
-//        func(page *ssm.DescribeInstancePatchStatesOutput, lastPage bool) bool {
-//            pageNum++
-//            fmt.Println(page)
-//            return pageNum <= 3
-//        })
-//
+//	// Example iterating over at most 3 pages of a DescribeInstancePatchStates operation.
+//	pageNum := 0
+//	err := client.DescribeInstancePatchStatesPages(params,
+//	    func(page *ssm.DescribeInstancePatchStatesOutput, lastPage bool) bool {
+//	        pageNum++
+//	        fmt.Println(page)
+//	        return pageNum <= 3
+//	    })
 func (c *SSM) DescribeInstancePatchStatesPages(input *DescribeInstancePatchStatesInput, fn func(*DescribeInstancePatchStatesOutput, bool) bool) error {
 	return c.DescribeInstancePatchStatesPagesWithContext(aws.BackgroundContext(), input, fn)
 }
@@ -4588,14 +4591,13 @@ const opDescribeInstancePatchStatesForPatchGroup = "DescribeInstancePatchStatesF
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DescribeInstancePatchStatesForPatchGroupRequest method.
+//	req, resp := client.DescribeInstancePatchStatesForPatchGroupRequest(params)
 //
-//    // Example sending a request using the DescribeInstancePatchStatesForPatchGroupRequest method.
-//    req, resp := client.DescribeInstancePatchStatesForPatchGroupRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeInstancePatchStatesForPatchGroup
 func (c *SSM) DescribeInstancePatchStatesForPatchGroupRequest(input *DescribeInstancePatchStatesForPatchGroupInput) (req *request.Request, output *DescribeInstancePatchStatesForPatchGroupOutput) {
@@ -4622,8 +4624,8 @@ func (c *SSM) DescribeInstancePatchStatesForPatchGroupRequest(input *DescribeIns
 
 // DescribeInstancePatchStatesForPatchGroup API operation for Amazon Simple Systems Manager (SSM).
 //
-// Retrieves the high-level patch state for the instances in the specified patch
-// group.
+// Retrieves the high-level patch state for the managed nodes in the specified
+// patch group.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4633,15 +4635,16 @@ func (c *SSM) DescribeInstancePatchStatesForPatchGroupRequest(input *DescribeIns
 // API operation DescribeInstancePatchStatesForPatchGroup for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
 //
-//   * InvalidFilter
-//   The filter name isn't valid. Verify the you entered the correct name and
-//   try again.
+//   - InternalServerError
+//     An error occurred on the server side.
 //
-//   * InvalidNextToken
-//   The specified token isn't valid.
+//   - InvalidFilter
+//     The filter name isn't valid. Verify the you entered the correct name and
+//     try again.
+//
+//   - InvalidNextToken
+//     The specified token isn't valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeInstancePatchStatesForPatchGroup
 func (c *SSM) DescribeInstancePatchStatesForPatchGroup(input *DescribeInstancePatchStatesForPatchGroupInput) (*DescribeInstancePatchStatesForPatchGroupOutput, error) {
@@ -4673,15 +4676,14 @@ func (c *SSM) DescribeInstancePatchStatesForPatchGroupWithContext(ctx aws.Contex
 //
 // Note: This operation can generate multiple requests to a service.
 //
-//    // Example iterating over at most 3 pages of a DescribeInstancePatchStatesForPatchGroup operation.
-//    pageNum := 0
-//    err := client.DescribeInstancePatchStatesForPatchGroupPages(params,
-//        func(page *ssm.DescribeInstancePatchStatesForPatchGroupOutput, lastPage bool) bool {
-//            pageNum++
-//            fmt.Println(page)
-//            return pageNum <= 3
-//        })
-//
+//	// Example iterating over at most 3 pages of a DescribeInstancePatchStatesForPatchGroup operation.
+//	pageNum := 0
+//	err := client.DescribeInstancePatchStatesForPatchGroupPages(params,
+//	    func(page *ssm.DescribeInstancePatchStatesForPatchGroupOutput, lastPage bool) bool {
+//	        pageNum++
+//	        fmt.Println(page)
+//	        return pageNum <= 3
+//	    })
 func (c *SSM) DescribeInstancePatchStatesForPatchGroupPages(input *DescribeInstancePatchStatesForPatchGroupInput, fn func(*DescribeInstancePatchStatesForPatchGroupOutput, bool) bool) error {
 	return c.DescribeInstancePatchStatesForPatchGroupPagesWithContext(aws.BackgroundContext(), input, fn)
 }
@@ -4733,14 +4735,13 @@ const opDescribeInstancePatches = "DescribeInstancePatches"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DescribeInstancePatchesRequest method.
+//	req, resp := client.DescribeInstancePatchesRequest(params)
 //
-//    // Example sending a request using the DescribeInstancePatchesRequest method.
-//    req, resp := client.DescribeInstancePatchesRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeInstancePatches
 func (c *SSM) DescribeInstancePatchesRequest(input *DescribeInstancePatchesInput) (req *request.Request, output *DescribeInstancePatchesOutput) {
@@ -4767,8 +4768,8 @@ func (c *SSM) DescribeInstancePatchesRequest(input *DescribeInstancePatchesInput
 
 // DescribeInstancePatches API operation for Amazon Simple Systems Manager (SSM).
 //
-// Retrieves information about the patches on the specified instance and their
-// state relative to the patch baseline being used for the instance.
+// Retrieves information about the patches on the specified managed node and
+// their state relative to the patch baseline being used for the node.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4778,29 +4779,30 @@ func (c *SSM) DescribeInstancePatchesRequest(input *DescribeInstancePatchesInput
 // API operation DescribeInstancePatches for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
 //
-//   * InvalidInstanceId
-//   The following problems can cause this exception:
+//   - InternalServerError
+//     An error occurred on the server side.
 //
-//      * You don't have permission to access the instance.
+//   - InvalidInstanceId
+//     The following problems can cause this exception:
 //
-//      * Amazon Web Services Systems Manager Agent(SSM Agent) isn't running.
-//      Verify that SSM Agent is running.
+//   - You don't have permission to access the managed node.
 //
-//      * SSM Agent isn't registered with the SSM endpoint. Try reinstalling SSM
-//      Agent.
+//   - Amazon Web Services Systems Manager Agent(SSM Agent) isn't running.
+//     Verify that SSM Agent is running.
 //
-//      * The instance isn't in valid state. Valid states are: Running, Pending,
-//      Stopped, and Stopping. Invalid states are: Shutting-down and Terminated.
+//   - SSM Agent isn't registered with the SSM endpoint. Try reinstalling SSM
+//     Agent.
 //
-//   * InvalidFilter
-//   The filter name isn't valid. Verify the you entered the correct name and
-//   try again.
+//   - The managed node isn't in valid state. Valid states are: Running, Pending,
+//     Stopped, and Stopping. Invalid states are: Shutting-down and Terminated.
 //
-//   * InvalidNextToken
-//   The specified token isn't valid.
+//   - InvalidFilter
+//     The filter name isn't valid. Verify the you entered the correct name and
+//     try again.
+//
+//   - InvalidNextToken
+//     The specified token isn't valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeInstancePatches
 func (c *SSM) DescribeInstancePatches(input *DescribeInstancePatchesInput) (*DescribeInstancePatchesOutput, error) {
@@ -4832,15 +4834,14 @@ func (c *SSM) DescribeInstancePatchesWithContext(ctx aws.Context, input *Describ
 //
 // Note: This operation can generate multiple requests to a service.
 //
-//    // Example iterating over at most 3 pages of a DescribeInstancePatches operation.
-//    pageNum := 0
-//    err := client.DescribeInstancePatchesPages(params,
-//        func(page *ssm.DescribeInstancePatchesOutput, lastPage bool) bool {
-//            pageNum++
-//            fmt.Println(page)
-//            return pageNum <= 3
-//        })
-//
+//	// Example iterating over at most 3 pages of a DescribeInstancePatches operation.
+//	pageNum := 0
+//	err := client.DescribeInstancePatchesPages(params,
+//	    func(page *ssm.DescribeInstancePatchesOutput, lastPage bool) bool {
+//	        pageNum++
+//	        fmt.Println(page)
+//	        return pageNum <= 3
+//	    })
 func (c *SSM) DescribeInstancePatchesPages(input *DescribeInstancePatchesInput, fn func(*DescribeInstancePatchesOutput, bool) bool) error {
 	return c.DescribeInstancePatchesPagesWithContext(aws.BackgroundContext(), input, fn)
 }
@@ -4892,14 +4893,13 @@ const opDescribeInventoryDeletions = "DescribeInventoryDeletions"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DescribeInventoryDeletionsRequest method.
+//	req, resp := client.DescribeInventoryDeletionsRequest(params)
 //
-//    // Example sending a request using the DescribeInventoryDeletionsRequest method.
-//    req, resp := client.DescribeInventoryDeletionsRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeInventoryDeletions
 func (c *SSM) DescribeInventoryDeletionsRequest(input *DescribeInventoryDeletionsInput) (req *request.Request, output *DescribeInventoryDeletionsOutput) {
@@ -4936,15 +4936,16 @@ func (c *SSM) DescribeInventoryDeletionsRequest(input *DescribeInventoryDeletion
 // API operation DescribeInventoryDeletions for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
 //
-//   * InvalidDeletionIdException
-//   The ID specified for the delete operation doesn't exist or isn't valid. Verify
-//   the ID and try again.
+//   - InternalServerError
+//     An error occurred on the server side.
 //
-//   * InvalidNextToken
-//   The specified token isn't valid.
+//   - InvalidDeletionIdException
+//     The ID specified for the delete operation doesn't exist or isn't valid. Verify
+//     the ID and try again.
+//
+//   - InvalidNextToken
+//     The specified token isn't valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeInventoryDeletions
 func (c *SSM) DescribeInventoryDeletions(input *DescribeInventoryDeletionsInput) (*DescribeInventoryDeletionsOutput, error) {
@@ -4976,15 +4977,14 @@ func (c *SSM) DescribeInventoryDeletionsWithContext(ctx aws.Context, input *Desc
 //
 // Note: This operation can generate multiple requests to a service.
 //
-//    // Example iterating over at most 3 pages of a DescribeInventoryDeletions operation.
-//    pageNum := 0
-//    err := client.DescribeInventoryDeletionsPages(params,
-//        func(page *ssm.DescribeInventoryDeletionsOutput, lastPage bool) bool {
-//            pageNum++
-//            fmt.Println(page)
-//            return pageNum <= 3
-//        })
-//
+//	// Example iterating over at most 3 pages of a DescribeInventoryDeletions operation.
+//	pageNum := 0
+//	err := client.DescribeInventoryDeletionsPages(params,
+//	    func(page *ssm.DescribeInventoryDeletionsOutput, lastPage bool) bool {
+//	        pageNum++
+//	        fmt.Println(page)
+//	        return pageNum <= 3
+//	    })
 func (c *SSM) DescribeInventoryDeletionsPages(input *DescribeInventoryDeletionsInput, fn func(*DescribeInventoryDeletionsOutput, bool) bool) error {
 	return c.DescribeInventoryDeletionsPagesWithContext(aws.BackgroundContext(), input, fn)
 }
@@ -5036,14 +5036,13 @@ const opDescribeMaintenanceWindowExecutionTaskInvocations = "DescribeMaintenance
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DescribeMaintenanceWindowExecutionTaskInvocationsRequest method.
+//	req, resp := client.DescribeMaintenanceWindowExecutionTaskInvocationsRequest(params)
 //
-//    // Example sending a request using the DescribeMaintenanceWindowExecutionTaskInvocationsRequest method.
-//    req, resp := client.DescribeMaintenanceWindowExecutionTaskInvocationsRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeMaintenanceWindowExecutionTaskInvocations
 func (c *SSM) DescribeMaintenanceWindowExecutionTaskInvocationsRequest(input *DescribeMaintenanceWindowExecutionTaskInvocationsInput) (req *request.Request, output *DescribeMaintenanceWindowExecutionTaskInvocationsOutput) {
@@ -5081,16 +5080,17 @@ func (c *SSM) DescribeMaintenanceWindowExecutionTaskInvocationsRequest(input *De
 // API operation DescribeMaintenanceWindowExecutionTaskInvocations for usage and error information.
 //
 // Returned Error Types:
-//   * DoesNotExistException
-//   Error returned when the ID specified for a resource, such as a maintenance
-//   window or patch baseline, doesn't exist.
 //
-//   For information about resource quotas in Amazon Web Services Systems Manager,
-//   see Systems Manager service quotas (https://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
-//   in the Amazon Web Services General Reference.
+//   - DoesNotExistException
+//     Error returned when the ID specified for a resource, such as a maintenance
+//     window or patch baseline, doesn't exist.
 //
-//   * InternalServerError
-//   An error occurred on the server side.
+//     For information about resource quotas in Amazon Web Services Systems Manager,
+//     see Systems Manager service quotas (https://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//     in the Amazon Web Services General Reference.
+//
+//   - InternalServerError
+//     An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeMaintenanceWindowExecutionTaskInvocations
 func (c *SSM) DescribeMaintenanceWindowExecutionTaskInvocations(input *DescribeMaintenanceWindowExecutionTaskInvocationsInput) (*DescribeMaintenanceWindowExecutionTaskInvocationsOutput, error) {
@@ -5122,15 +5122,14 @@ func (c *SSM) DescribeMaintenanceWindowExecutionTaskInvocationsWithContext(ctx a
 //
 // Note: This operation can generate multiple requests to a service.
 //
-//    // Example iterating over at most 3 pages of a DescribeMaintenanceWindowExecutionTaskInvocations operation.
-//    pageNum := 0
-//    err := client.DescribeMaintenanceWindowExecutionTaskInvocationsPages(params,
-//        func(page *ssm.DescribeMaintenanceWindowExecutionTaskInvocationsOutput, lastPage bool) bool {
-//            pageNum++
-//            fmt.Println(page)
-//            return pageNum <= 3
-//        })
-//
+//	// Example iterating over at most 3 pages of a DescribeMaintenanceWindowExecutionTaskInvocations operation.
+//	pageNum := 0
+//	err := client.DescribeMaintenanceWindowExecutionTaskInvocationsPages(params,
+//	    func(page *ssm.DescribeMaintenanceWindowExecutionTaskInvocationsOutput, lastPage bool) bool {
+//	        pageNum++
+//	        fmt.Println(page)
+//	        return pageNum <= 3
+//	    })
 func (c *SSM) DescribeMaintenanceWindowExecutionTaskInvocationsPages(input *DescribeMaintenanceWindowExecutionTaskInvocationsInput, fn func(*DescribeMaintenanceWindowExecutionTaskInvocationsOutput, bool) bool) error {
 	return c.DescribeMaintenanceWindowExecutionTaskInvocationsPagesWithContext(aws.BackgroundContext(), input, fn)
 }
@@ -5182,14 +5181,13 @@ const opDescribeMaintenanceWindowExecutionTasks = "DescribeMaintenanceWindowExec
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DescribeMaintenanceWindowExecutionTasksRequest method.
+//	req, resp := client.DescribeMaintenanceWindowExecutionTasksRequest(params)
 //
-//    // Example sending a request using the DescribeMaintenanceWindowExecutionTasksRequest method.
-//    req, resp := client.DescribeMaintenanceWindowExecutionTasksRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeMaintenanceWindowExecutionTasks
 func (c *SSM) DescribeMaintenanceWindowExecutionTasksRequest(input *DescribeMaintenanceWindowExecutionTasksInput) (req *request.Request, output *DescribeMaintenanceWindowExecutionTasksOutput) {
@@ -5226,16 +5224,17 @@ func (c *SSM) DescribeMaintenanceWindowExecutionTasksRequest(input *DescribeMain
 // API operation DescribeMaintenanceWindowExecutionTasks for usage and error information.
 //
 // Returned Error Types:
-//   * DoesNotExistException
-//   Error returned when the ID specified for a resource, such as a maintenance
-//   window or patch baseline, doesn't exist.
 //
-//   For information about resource quotas in Amazon Web Services Systems Manager,
-//   see Systems Manager service quotas (https://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
-//   in the Amazon Web Services General Reference.
+//   - DoesNotExistException
+//     Error returned when the ID specified for a resource, such as a maintenance
+//     window or patch baseline, doesn't exist.
 //
-//   * InternalServerError
-//   An error occurred on the server side.
+//     For information about resource quotas in Amazon Web Services Systems Manager,
+//     see Systems Manager service quotas (https://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//     in the Amazon Web Services General Reference.
+//
+//   - InternalServerError
+//     An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeMaintenanceWindowExecutionTasks
 func (c *SSM) DescribeMaintenanceWindowExecutionTasks(input *DescribeMaintenanceWindowExecutionTasksInput) (*DescribeMaintenanceWindowExecutionTasksOutput, error) {
@@ -5267,15 +5266,14 @@ func (c *SSM) DescribeMaintenanceWindowExecutionTasksWithContext(ctx aws.Context
 //
 // Note: This operation can generate multiple requests to a service.
 //
-//    // Example iterating over at most 3 pages of a DescribeMaintenanceWindowExecutionTasks operation.
-//    pageNum := 0
-//    err := client.DescribeMaintenanceWindowExecutionTasksPages(params,
-//        func(page *ssm.DescribeMaintenanceWindowExecutionTasksOutput, lastPage bool) bool {
-//            pageNum++
-//            fmt.Println(page)
-//            return pageNum <= 3
-//        })
-//
+//	// Example iterating over at most 3 pages of a DescribeMaintenanceWindowExecutionTasks operation.
+//	pageNum := 0
+//	err := client.DescribeMaintenanceWindowExecutionTasksPages(params,
+//	    func(page *ssm.DescribeMaintenanceWindowExecutionTasksOutput, lastPage bool) bool {
+//	        pageNum++
+//	        fmt.Println(page)
+//	        return pageNum <= 3
+//	    })
 func (c *SSM) DescribeMaintenanceWindowExecutionTasksPages(input *DescribeMaintenanceWindowExecutionTasksInput, fn func(*DescribeMaintenanceWindowExecutionTasksOutput, bool) bool) error {
 	return c.DescribeMaintenanceWindowExecutionTasksPagesWithContext(aws.BackgroundContext(), input, fn)
 }
@@ -5327,14 +5325,13 @@ const opDescribeMaintenanceWindowExecutions = "DescribeMaintenanceWindowExecutio
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DescribeMaintenanceWindowExecutionsRequest method.
+//	req, resp := client.DescribeMaintenanceWindowExecutionsRequest(params)
 //
-//    // Example sending a request using the DescribeMaintenanceWindowExecutionsRequest method.
-//    req, resp := client.DescribeMaintenanceWindowExecutionsRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeMaintenanceWindowExecutions
 func (c *SSM) DescribeMaintenanceWindowExecutionsRequest(input *DescribeMaintenanceWindowExecutionsInput) (req *request.Request, output *DescribeMaintenanceWindowExecutionsOutput) {
@@ -5373,8 +5370,8 @@ func (c *SSM) DescribeMaintenanceWindowExecutionsRequest(input *DescribeMaintena
 // API operation DescribeMaintenanceWindowExecutions for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
+//   - InternalServerError
+//     An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeMaintenanceWindowExecutions
 func (c *SSM) DescribeMaintenanceWindowExecutions(input *DescribeMaintenanceWindowExecutionsInput) (*DescribeMaintenanceWindowExecutionsOutput, error) {
@@ -5406,15 +5403,14 @@ func (c *SSM) DescribeMaintenanceWindowExecutionsWithContext(ctx aws.Context, in
 //
 // Note: This operation can generate multiple requests to a service.
 //
-//    // Example iterating over at most 3 pages of a DescribeMaintenanceWindowExecutions operation.
-//    pageNum := 0
-//    err := client.DescribeMaintenanceWindowExecutionsPages(params,
-//        func(page *ssm.DescribeMaintenanceWindowExecutionsOutput, lastPage bool) bool {
-//            pageNum++
-//            fmt.Println(page)
-//            return pageNum <= 3
-//        })
-//
+//	// Example iterating over at most 3 pages of a DescribeMaintenanceWindowExecutions operation.
+//	pageNum := 0
+//	err := client.DescribeMaintenanceWindowExecutionsPages(params,
+//	    func(page *ssm.DescribeMaintenanceWindowExecutionsOutput, lastPage bool) bool {
+//	        pageNum++
+//	        fmt.Println(page)
+//	        return pageNum <= 3
+//	    })
 func (c *SSM) DescribeMaintenanceWindowExecutionsPages(input *DescribeMaintenanceWindowExecutionsInput, fn func(*DescribeMaintenanceWindowExecutionsOutput, bool) bool) error {
 	return c.DescribeMaintenanceWindowExecutionsPagesWithContext(aws.BackgroundContext(), input, fn)
 }
@@ -5466,14 +5462,13 @@ const opDescribeMaintenanceWindowSchedule = "DescribeMaintenanceWindowSchedule"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DescribeMaintenanceWindowScheduleRequest method.
+//	req, resp := client.DescribeMaintenanceWindowScheduleRequest(params)
 //
-//    // Example sending a request using the DescribeMaintenanceWindowScheduleRequest method.
-//    req, resp := client.DescribeMaintenanceWindowScheduleRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeMaintenanceWindowSchedule
 func (c *SSM) DescribeMaintenanceWindowScheduleRequest(input *DescribeMaintenanceWindowScheduleInput) (req *request.Request, output *DescribeMaintenanceWindowScheduleOutput) {
@@ -5510,16 +5505,17 @@ func (c *SSM) DescribeMaintenanceWindowScheduleRequest(input *DescribeMaintenanc
 // API operation DescribeMaintenanceWindowSchedule for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
 //
-//   * DoesNotExistException
-//   Error returned when the ID specified for a resource, such as a maintenance
-//   window or patch baseline, doesn't exist.
+//   - InternalServerError
+//     An error occurred on the server side.
 //
-//   For information about resource quotas in Amazon Web Services Systems Manager,
-//   see Systems Manager service quotas (https://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
-//   in the Amazon Web Services General Reference.
+//   - DoesNotExistException
+//     Error returned when the ID specified for a resource, such as a maintenance
+//     window or patch baseline, doesn't exist.
+//
+//     For information about resource quotas in Amazon Web Services Systems Manager,
+//     see Systems Manager service quotas (https://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//     in the Amazon Web Services General Reference.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeMaintenanceWindowSchedule
 func (c *SSM) DescribeMaintenanceWindowSchedule(input *DescribeMaintenanceWindowScheduleInput) (*DescribeMaintenanceWindowScheduleOutput, error) {
@@ -5551,15 +5547,14 @@ func (c *SSM) DescribeMaintenanceWindowScheduleWithContext(ctx aws.Context, inpu
 //
 // Note: This operation can generate multiple requests to a service.
 //
-//    // Example iterating over at most 3 pages of a DescribeMaintenanceWindowSchedule operation.
-//    pageNum := 0
-//    err := client.DescribeMaintenanceWindowSchedulePages(params,
-//        func(page *ssm.DescribeMaintenanceWindowScheduleOutput, lastPage bool) bool {
-//            pageNum++
-//            fmt.Println(page)
-//            return pageNum <= 3
-//        })
-//
+//	// Example iterating over at most 3 pages of a DescribeMaintenanceWindowSchedule operation.
+//	pageNum := 0
+//	err := client.DescribeMaintenanceWindowSchedulePages(params,
+//	    func(page *ssm.DescribeMaintenanceWindowScheduleOutput, lastPage bool) bool {
+//	        pageNum++
+//	        fmt.Println(page)
+//	        return pageNum <= 3
+//	    })
 func (c *SSM) DescribeMaintenanceWindowSchedulePages(input *DescribeMaintenanceWindowScheduleInput, fn func(*DescribeMaintenanceWindowScheduleOutput, bool) bool) error {
 	return c.DescribeMaintenanceWindowSchedulePagesWithContext(aws.BackgroundContext(), input, fn)
 }
@@ -5611,14 +5606,13 @@ const opDescribeMaintenanceWindowTargets = "DescribeMaintenanceWindowTargets"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DescribeMaintenanceWindowTargetsRequest method.
+//	req, resp := client.DescribeMaintenanceWindowTargetsRequest(params)
 //
-//    // Example sending a request using the DescribeMaintenanceWindowTargetsRequest method.
-//    req, resp := client.DescribeMaintenanceWindowTargetsRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeMaintenanceWindowTargets
 func (c *SSM) DescribeMaintenanceWindowTargetsRequest(input *DescribeMaintenanceWindowTargetsInput) (req *request.Request, output *DescribeMaintenanceWindowTargetsOutput) {
@@ -5655,16 +5649,17 @@ func (c *SSM) DescribeMaintenanceWindowTargetsRequest(input *DescribeMaintenance
 // API operation DescribeMaintenanceWindowTargets for usage and error information.
 //
 // Returned Error Types:
-//   * DoesNotExistException
-//   Error returned when the ID specified for a resource, such as a maintenance
-//   window or patch baseline, doesn't exist.
 //
-//   For information about resource quotas in Amazon Web Services Systems Manager,
-//   see Systems Manager service quotas (https://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
-//   in the Amazon Web Services General Reference.
+//   - DoesNotExistException
+//     Error returned when the ID specified for a resource, such as a maintenance
+//     window or patch baseline, doesn't exist.
 //
-//   * InternalServerError
-//   An error occurred on the server side.
+//     For information about resource quotas in Amazon Web Services Systems Manager,
+//     see Systems Manager service quotas (https://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//     in the Amazon Web Services General Reference.
+//
+//   - InternalServerError
+//     An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeMaintenanceWindowTargets
 func (c *SSM) DescribeMaintenanceWindowTargets(input *DescribeMaintenanceWindowTargetsInput) (*DescribeMaintenanceWindowTargetsOutput, error) {
@@ -5696,15 +5691,14 @@ func (c *SSM) DescribeMaintenanceWindowTargetsWithContext(ctx aws.Context, input
 //
 // Note: This operation can generate multiple requests to a service.
 //
-//    // Example iterating over at most 3 pages of a DescribeMaintenanceWindowTargets operation.
-//    pageNum := 0
-//    err := client.DescribeMaintenanceWindowTargetsPages(params,
-//        func(page *ssm.DescribeMaintenanceWindowTargetsOutput, lastPage bool) bool {
-//            pageNum++
-//            fmt.Println(page)
-//            return pageNum <= 3
-//        })
-//
+//	// Example iterating over at most 3 pages of a DescribeMaintenanceWindowTargets operation.
+//	pageNum := 0
+//	err := client.DescribeMaintenanceWindowTargetsPages(params,
+//	    func(page *ssm.DescribeMaintenanceWindowTargetsOutput, lastPage bool) bool {
+//	        pageNum++
+//	        fmt.Println(page)
+//	        return pageNum <= 3
+//	    })
 func (c *SSM) DescribeMaintenanceWindowTargetsPages(input *DescribeMaintenanceWindowTargetsInput, fn func(*DescribeMaintenanceWindowTargetsOutput, bool) bool) error {
 	return c.DescribeMaintenanceWindowTargetsPagesWithContext(aws.BackgroundContext(), input, fn)
 }
@@ -5756,14 +5750,13 @@ const opDescribeMaintenanceWindowTasks = "DescribeMaintenanceWindowTasks"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DescribeMaintenanceWindowTasksRequest method.
+//	req, resp := client.DescribeMaintenanceWindowTasksRequest(params)
 //
-//    // Example sending a request using the DescribeMaintenanceWindowTasksRequest method.
-//    req, resp := client.DescribeMaintenanceWindowTasksRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeMaintenanceWindowTasks
 func (c *SSM) DescribeMaintenanceWindowTasksRequest(input *DescribeMaintenanceWindowTasksInput) (req *request.Request, output *DescribeMaintenanceWindowTasksOutput) {
@@ -5805,16 +5798,17 @@ func (c *SSM) DescribeMaintenanceWindowTasksRequest(input *DescribeMaintenanceWi
 // API operation DescribeMaintenanceWindowTasks for usage and error information.
 //
 // Returned Error Types:
-//   * DoesNotExistException
-//   Error returned when the ID specified for a resource, such as a maintenance
-//   window or patch baseline, doesn't exist.
 //
-//   For information about resource quotas in Amazon Web Services Systems Manager,
-//   see Systems Manager service quotas (https://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
-//   in the Amazon Web Services General Reference.
+//   - DoesNotExistException
+//     Error returned when the ID specified for a resource, such as a maintenance
+//     window or patch baseline, doesn't exist.
 //
-//   * InternalServerError
-//   An error occurred on the server side.
+//     For information about resource quotas in Amazon Web Services Systems Manager,
+//     see Systems Manager service quotas (https://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//     in the Amazon Web Services General Reference.
+//
+//   - InternalServerError
+//     An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeMaintenanceWindowTasks
 func (c *SSM) DescribeMaintenanceWindowTasks(input *DescribeMaintenanceWindowTasksInput) (*DescribeMaintenanceWindowTasksOutput, error) {
@@ -5846,15 +5840,14 @@ func (c *SSM) DescribeMaintenanceWindowTasksWithContext(ctx aws.Context, input *
 //
 // Note: This operation can generate multiple requests to a service.
 //
-//    // Example iterating over at most 3 pages of a DescribeMaintenanceWindowTasks operation.
-//    pageNum := 0
-//    err := client.DescribeMaintenanceWindowTasksPages(params,
-//        func(page *ssm.DescribeMaintenanceWindowTasksOutput, lastPage bool) bool {
-//            pageNum++
-//            fmt.Println(page)
-//            return pageNum <= 3
-//        })
-//
+//	// Example iterating over at most 3 pages of a DescribeMaintenanceWindowTasks operation.
+//	pageNum := 0
+//	err := client.DescribeMaintenanceWindowTasksPages(params,
+//	    func(page *ssm.DescribeMaintenanceWindowTasksOutput, lastPage bool) bool {
+//	        pageNum++
+//	        fmt.Println(page)
+//	        return pageNum <= 3
+//	    })
 func (c *SSM) DescribeMaintenanceWindowTasksPages(input *DescribeMaintenanceWindowTasksInput, fn func(*DescribeMaintenanceWindowTasksOutput, bool) bool) error {
 	return c.DescribeMaintenanceWindowTasksPagesWithContext(aws.BackgroundContext(), input, fn)
 }
@@ -5906,14 +5899,13 @@ const opDescribeMaintenanceWindows = "DescribeMaintenanceWindows"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DescribeMaintenanceWindowsRequest method.
+//	req, resp := client.DescribeMaintenanceWindowsRequest(params)
 //
-//    // Example sending a request using the DescribeMaintenanceWindowsRequest method.
-//    req, resp := client.DescribeMaintenanceWindowsRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeMaintenanceWindows
 func (c *SSM) DescribeMaintenanceWindowsRequest(input *DescribeMaintenanceWindowsInput) (req *request.Request, output *DescribeMaintenanceWindowsOutput) {
@@ -5950,8 +5942,8 @@ func (c *SSM) DescribeMaintenanceWindowsRequest(input *DescribeMaintenanceWindow
 // API operation DescribeMaintenanceWindows for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
+//   - InternalServerError
+//     An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeMaintenanceWindows
 func (c *SSM) DescribeMaintenanceWindows(input *DescribeMaintenanceWindowsInput) (*DescribeMaintenanceWindowsOutput, error) {
@@ -5983,15 +5975,14 @@ func (c *SSM) DescribeMaintenanceWindowsWithContext(ctx aws.Context, input *Desc
 //
 // Note: This operation can generate multiple requests to a service.
 //
-//    // Example iterating over at most 3 pages of a DescribeMaintenanceWindows operation.
-//    pageNum := 0
-//    err := client.DescribeMaintenanceWindowsPages(params,
-//        func(page *ssm.DescribeMaintenanceWindowsOutput, lastPage bool) bool {
-//            pageNum++
-//            fmt.Println(page)
-//            return pageNum <= 3
-//        })
-//
+//	// Example iterating over at most 3 pages of a DescribeMaintenanceWindows operation.
+//	pageNum := 0
+//	err := client.DescribeMaintenanceWindowsPages(params,
+//	    func(page *ssm.DescribeMaintenanceWindowsOutput, lastPage bool) bool {
+//	        pageNum++
+//	        fmt.Println(page)
+//	        return pageNum <= 3
+//	    })
 func (c *SSM) DescribeMaintenanceWindowsPages(input *DescribeMaintenanceWindowsInput, fn func(*DescribeMaintenanceWindowsOutput, bool) bool) error {
 	return c.DescribeMaintenanceWindowsPagesWithContext(aws.BackgroundContext(), input, fn)
 }
@@ -6043,14 +6034,13 @@ const opDescribeMaintenanceWindowsForTarget = "DescribeMaintenanceWindowsForTarg
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DescribeMaintenanceWindowsForTargetRequest method.
+//	req, resp := client.DescribeMaintenanceWindowsForTargetRequest(params)
 //
-//    // Example sending a request using the DescribeMaintenanceWindowsForTargetRequest method.
-//    req, resp := client.DescribeMaintenanceWindowsForTargetRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeMaintenanceWindowsForTarget
 func (c *SSM) DescribeMaintenanceWindowsForTargetRequest(input *DescribeMaintenanceWindowsForTargetInput) (req *request.Request, output *DescribeMaintenanceWindowsForTargetOutput) {
@@ -6078,7 +6068,7 @@ func (c *SSM) DescribeMaintenanceWindowsForTargetRequest(input *DescribeMaintena
 // DescribeMaintenanceWindowsForTarget API operation for Amazon Simple Systems Manager (SSM).
 //
 // Retrieves information about the maintenance window targets or tasks that
-// an instance is associated with.
+// a managed node is associated with.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -6088,8 +6078,8 @@ func (c *SSM) DescribeMaintenanceWindowsForTargetRequest(input *DescribeMaintena
 // API operation DescribeMaintenanceWindowsForTarget for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
+//   - InternalServerError
+//     An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeMaintenanceWindowsForTarget
 func (c *SSM) DescribeMaintenanceWindowsForTarget(input *DescribeMaintenanceWindowsForTargetInput) (*DescribeMaintenanceWindowsForTargetOutput, error) {
@@ -6121,15 +6111,14 @@ func (c *SSM) DescribeMaintenanceWindowsForTargetWithContext(ctx aws.Context, in
 //
 // Note: This operation can generate multiple requests to a service.
 //
-//    // Example iterating over at most 3 pages of a DescribeMaintenanceWindowsForTarget operation.
-//    pageNum := 0
-//    err := client.DescribeMaintenanceWindowsForTargetPages(params,
-//        func(page *ssm.DescribeMaintenanceWindowsForTargetOutput, lastPage bool) bool {
-//            pageNum++
-//            fmt.Println(page)
-//            return pageNum <= 3
-//        })
-//
+//	// Example iterating over at most 3 pages of a DescribeMaintenanceWindowsForTarget operation.
+//	pageNum := 0
+//	err := client.DescribeMaintenanceWindowsForTargetPages(params,
+//	    func(page *ssm.DescribeMaintenanceWindowsForTargetOutput, lastPage bool) bool {
+//	        pageNum++
+//	        fmt.Println(page)
+//	        return pageNum <= 3
+//	    })
 func (c *SSM) DescribeMaintenanceWindowsForTargetPages(input *DescribeMaintenanceWindowsForTargetInput, fn func(*DescribeMaintenanceWindowsForTargetOutput, bool) bool) error {
 	return c.DescribeMaintenanceWindowsForTargetPagesWithContext(aws.BackgroundContext(), input, fn)
 }
@@ -6181,14 +6170,13 @@ const opDescribeOpsItems = "DescribeOpsItems"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DescribeOpsItemsRequest method.
+//	req, resp := client.DescribeOpsItemsRequest(params)
 //
-//    // Example sending a request using the DescribeOpsItemsRequest method.
-//    req, resp := client.DescribeOpsItemsRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeOpsItems
 func (c *SSM) DescribeOpsItemsRequest(input *DescribeOpsItemsInput) (req *request.Request, output *DescribeOpsItemsOutput) {
@@ -6234,8 +6222,8 @@ func (c *SSM) DescribeOpsItemsRequest(input *DescribeOpsItemsInput) (req *reques
 // API operation DescribeOpsItems for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
+//   - InternalServerError
+//     An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeOpsItems
 func (c *SSM) DescribeOpsItems(input *DescribeOpsItemsInput) (*DescribeOpsItemsOutput, error) {
@@ -6267,15 +6255,14 @@ func (c *SSM) DescribeOpsItemsWithContext(ctx aws.Context, input *DescribeOpsIte
 //
 // Note: This operation can generate multiple requests to a service.
 //
-//    // Example iterating over at most 3 pages of a DescribeOpsItems operation.
-//    pageNum := 0
-//    err := client.DescribeOpsItemsPages(params,
-//        func(page *ssm.DescribeOpsItemsOutput, lastPage bool) bool {
-//            pageNum++
-//            fmt.Println(page)
-//            return pageNum <= 3
-//        })
-//
+//	// Example iterating over at most 3 pages of a DescribeOpsItems operation.
+//	pageNum := 0
+//	err := client.DescribeOpsItemsPages(params,
+//	    func(page *ssm.DescribeOpsItemsOutput, lastPage bool) bool {
+//	        pageNum++
+//	        fmt.Println(page)
+//	        return pageNum <= 3
+//	    })
 func (c *SSM) DescribeOpsItemsPages(input *DescribeOpsItemsInput, fn func(*DescribeOpsItemsOutput, bool) bool) error {
 	return c.DescribeOpsItemsPagesWithContext(aws.BackgroundContext(), input, fn)
 }
@@ -6327,14 +6314,13 @@ const opDescribeParameters = "DescribeParameters"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DescribeParametersRequest method.
+//	req, resp := client.DescribeParametersRequest(params)
 //
-//    // Example sending a request using the DescribeParametersRequest method.
-//    req, resp := client.DescribeParametersRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeParameters
 func (c *SSM) DescribeParametersRequest(input *DescribeParametersInput) (req *request.Request, output *DescribeParametersOutput) {
@@ -6384,21 +6370,22 @@ func (c *SSM) DescribeParametersRequest(input *DescribeParametersInput) (req *re
 // API operation DescribeParameters for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
 //
-//   * InvalidFilterKey
-//   The specified key isn't valid.
+//   - InternalServerError
+//     An error occurred on the server side.
 //
-//   * InvalidFilterOption
-//   The specified filter option isn't valid. Valid options are Equals and BeginsWith.
-//   For Path filter, valid options are Recursive and OneLevel.
+//   - InvalidFilterKey
+//     The specified key isn't valid.
 //
-//   * InvalidFilterValue
-//   The filter value isn't valid. Verify the value and try again.
+//   - InvalidFilterOption
+//     The specified filter option isn't valid. Valid options are Equals and BeginsWith.
+//     For Path filter, valid options are Recursive and OneLevel.
 //
-//   * InvalidNextToken
-//   The specified token isn't valid.
+//   - InvalidFilterValue
+//     The filter value isn't valid. Verify the value and try again.
+//
+//   - InvalidNextToken
+//     The specified token isn't valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeParameters
 func (c *SSM) DescribeParameters(input *DescribeParametersInput) (*DescribeParametersOutput, error) {
@@ -6430,15 +6417,14 @@ func (c *SSM) DescribeParametersWithContext(ctx aws.Context, input *DescribePara
 //
 // Note: This operation can generate multiple requests to a service.
 //
-//    // Example iterating over at most 3 pages of a DescribeParameters operation.
-//    pageNum := 0
-//    err := client.DescribeParametersPages(params,
-//        func(page *ssm.DescribeParametersOutput, lastPage bool) bool {
-//            pageNum++
-//            fmt.Println(page)
-//            return pageNum <= 3
-//        })
-//
+//	// Example iterating over at most 3 pages of a DescribeParameters operation.
+//	pageNum := 0
+//	err := client.DescribeParametersPages(params,
+//	    func(page *ssm.DescribeParametersOutput, lastPage bool) bool {
+//	        pageNum++
+//	        fmt.Println(page)
+//	        return pageNum <= 3
+//	    })
 func (c *SSM) DescribeParametersPages(input *DescribeParametersInput, fn func(*DescribeParametersOutput, bool) bool) error {
 	return c.DescribeParametersPagesWithContext(aws.BackgroundContext(), input, fn)
 }
@@ -6490,14 +6476,13 @@ const opDescribePatchBaselines = "DescribePatchBaselines"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DescribePatchBaselinesRequest method.
+//	req, resp := client.DescribePatchBaselinesRequest(params)
 //
-//    // Example sending a request using the DescribePatchBaselinesRequest method.
-//    req, resp := client.DescribePatchBaselinesRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribePatchBaselines
 func (c *SSM) DescribePatchBaselinesRequest(input *DescribePatchBaselinesInput) (req *request.Request, output *DescribePatchBaselinesOutput) {
@@ -6534,8 +6519,8 @@ func (c *SSM) DescribePatchBaselinesRequest(input *DescribePatchBaselinesInput) 
 // API operation DescribePatchBaselines for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
+//   - InternalServerError
+//     An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribePatchBaselines
 func (c *SSM) DescribePatchBaselines(input *DescribePatchBaselinesInput) (*DescribePatchBaselinesOutput, error) {
@@ -6567,15 +6552,14 @@ func (c *SSM) DescribePatchBaselinesWithContext(ctx aws.Context, input *Describe
 //
 // Note: This operation can generate multiple requests to a service.
 //
-//    // Example iterating over at most 3 pages of a DescribePatchBaselines operation.
-//    pageNum := 0
-//    err := client.DescribePatchBaselinesPages(params,
-//        func(page *ssm.DescribePatchBaselinesOutput, lastPage bool) bool {
-//            pageNum++
-//            fmt.Println(page)
-//            return pageNum <= 3
-//        })
-//
+//	// Example iterating over at most 3 pages of a DescribePatchBaselines operation.
+//	pageNum := 0
+//	err := client.DescribePatchBaselinesPages(params,
+//	    func(page *ssm.DescribePatchBaselinesOutput, lastPage bool) bool {
+//	        pageNum++
+//	        fmt.Println(page)
+//	        return pageNum <= 3
+//	    })
 func (c *SSM) DescribePatchBaselinesPages(input *DescribePatchBaselinesInput, fn func(*DescribePatchBaselinesOutput, bool) bool) error {
 	return c.DescribePatchBaselinesPagesWithContext(aws.BackgroundContext(), input, fn)
 }
@@ -6627,14 +6611,13 @@ const opDescribePatchGroupState = "DescribePatchGroupState"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DescribePatchGroupStateRequest method.
+//	req, resp := client.DescribePatchGroupStateRequest(params)
 //
-//    // Example sending a request using the DescribePatchGroupStateRequest method.
-//    req, resp := client.DescribePatchGroupStateRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribePatchGroupState
 func (c *SSM) DescribePatchGroupStateRequest(input *DescribePatchGroupStateInput) (req *request.Request, output *DescribePatchGroupStateOutput) {
@@ -6666,11 +6649,12 @@ func (c *SSM) DescribePatchGroupStateRequest(input *DescribePatchGroupStateInput
 // API operation DescribePatchGroupState for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
 //
-//   * InvalidNextToken
-//   The specified token isn't valid.
+//   - InternalServerError
+//     An error occurred on the server side.
+//
+//   - InvalidNextToken
+//     The specified token isn't valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribePatchGroupState
 func (c *SSM) DescribePatchGroupState(input *DescribePatchGroupStateInput) (*DescribePatchGroupStateOutput, error) {
@@ -6710,14 +6694,13 @@ const opDescribePatchGroups = "DescribePatchGroups"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DescribePatchGroupsRequest method.
+//	req, resp := client.DescribePatchGroupsRequest(params)
 //
-//    // Example sending a request using the DescribePatchGroupsRequest method.
-//    req, resp := client.DescribePatchGroupsRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribePatchGroups
 func (c *SSM) DescribePatchGroupsRequest(input *DescribePatchGroupsInput) (req *request.Request, output *DescribePatchGroupsOutput) {
@@ -6754,8 +6737,8 @@ func (c *SSM) DescribePatchGroupsRequest(input *DescribePatchGroupsInput) (req *
 // API operation DescribePatchGroups for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
+//   - InternalServerError
+//     An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribePatchGroups
 func (c *SSM) DescribePatchGroups(input *DescribePatchGroupsInput) (*DescribePatchGroupsOutput, error) {
@@ -6787,15 +6770,14 @@ func (c *SSM) DescribePatchGroupsWithContext(ctx aws.Context, input *DescribePat
 //
 // Note: This operation can generate multiple requests to a service.
 //
-//    // Example iterating over at most 3 pages of a DescribePatchGroups operation.
-//    pageNum := 0
-//    err := client.DescribePatchGroupsPages(params,
-//        func(page *ssm.DescribePatchGroupsOutput, lastPage bool) bool {
-//            pageNum++
-//            fmt.Println(page)
-//            return pageNum <= 3
-//        })
-//
+//	// Example iterating over at most 3 pages of a DescribePatchGroups operation.
+//	pageNum := 0
+//	err := client.DescribePatchGroupsPages(params,
+//	    func(page *ssm.DescribePatchGroupsOutput, lastPage bool) bool {
+//	        pageNum++
+//	        fmt.Println(page)
+//	        return pageNum <= 3
+//	    })
 func (c *SSM) DescribePatchGroupsPages(input *DescribePatchGroupsInput, fn func(*DescribePatchGroupsOutput, bool) bool) error {
 	return c.DescribePatchGroupsPagesWithContext(aws.BackgroundContext(), input, fn)
 }
@@ -6847,14 +6829,13 @@ const opDescribePatchProperties = "DescribePatchProperties"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DescribePatchPropertiesRequest method.
+//	req, resp := client.DescribePatchPropertiesRequest(params)
 //
-//    // Example sending a request using the DescribePatchPropertiesRequest method.
-//    req, resp := client.DescribePatchPropertiesRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribePatchProperties
 func (c *SSM) DescribePatchPropertiesRequest(input *DescribePatchPropertiesInput) (req *request.Request, output *DescribePatchPropertiesOutput) {
@@ -6898,15 +6879,15 @@ func (c *SSM) DescribePatchPropertiesRequest(input *DescribePatchPropertiesInput
 //
 // Valid properties: PRODUCT | CLASSIFICATION | SEVERITY
 //
-// CENTOS
+// # CENTOS
 //
 // Valid properties: PRODUCT | CLASSIFICATION | SEVERITY
 //
-// DEBIAN
+// # DEBIAN
 //
 // Valid properties: PRODUCT | PRIORITY
 //
-// MACOS
+// # MACOS
 //
 // Valid properties: PRODUCT | CLASSIFICATION
 //
@@ -6918,15 +6899,15 @@ func (c *SSM) DescribePatchPropertiesRequest(input *DescribePatchPropertiesInput
 //
 // Valid properties: PRODUCT | CLASSIFICATION | SEVERITY
 //
-// SUSE
+// # SUSE
 //
 // Valid properties: PRODUCT | CLASSIFICATION | SEVERITY
 //
-// UBUNTU
+// # UBUNTU
 //
 // Valid properties: PRODUCT | PRIORITY
 //
-// WINDOWS
+// # WINDOWS
 //
 // Valid properties: PRODUCT | PRODUCT_FAMILY | CLASSIFICATION | MSRC_SEVERITY
 //
@@ -6938,8 +6919,8 @@ func (c *SSM) DescribePatchPropertiesRequest(input *DescribePatchPropertiesInput
 // API operation DescribePatchProperties for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
+//   - InternalServerError
+//     An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribePatchProperties
 func (c *SSM) DescribePatchProperties(input *DescribePatchPropertiesInput) (*DescribePatchPropertiesOutput, error) {
@@ -6971,15 +6952,14 @@ func (c *SSM) DescribePatchPropertiesWithContext(ctx aws.Context, input *Describ
 //
 // Note: This operation can generate multiple requests to a service.
 //
-//    // Example iterating over at most 3 pages of a DescribePatchProperties operation.
-//    pageNum := 0
-//    err := client.DescribePatchPropertiesPages(params,
-//        func(page *ssm.DescribePatchPropertiesOutput, lastPage bool) bool {
-//            pageNum++
-//            fmt.Println(page)
-//            return pageNum <= 3
-//        })
-//
+//	// Example iterating over at most 3 pages of a DescribePatchProperties operation.
+//	pageNum := 0
+//	err := client.DescribePatchPropertiesPages(params,
+//	    func(page *ssm.DescribePatchPropertiesOutput, lastPage bool) bool {
+//	        pageNum++
+//	        fmt.Println(page)
+//	        return pageNum <= 3
+//	    })
 func (c *SSM) DescribePatchPropertiesPages(input *DescribePatchPropertiesInput, fn func(*DescribePatchPropertiesOutput, bool) bool) error {
 	return c.DescribePatchPropertiesPagesWithContext(aws.BackgroundContext(), input, fn)
 }
@@ -7031,14 +7011,13 @@ const opDescribeSessions = "DescribeSessions"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DescribeSessionsRequest method.
+//	req, resp := client.DescribeSessionsRequest(params)
 //
-//    // Example sending a request using the DescribeSessionsRequest method.
-//    req, resp := client.DescribeSessionsRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeSessions
 func (c *SSM) DescribeSessionsRequest(input *DescribeSessionsInput) (req *request.Request, output *DescribeSessionsOutput) {
@@ -7076,14 +7055,15 @@ func (c *SSM) DescribeSessionsRequest(input *DescribeSessionsInput) (req *reques
 // API operation DescribeSessions for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
 //
-//   * InvalidFilterKey
-//   The specified key isn't valid.
+//   - InternalServerError
+//     An error occurred on the server side.
 //
-//   * InvalidNextToken
-//   The specified token isn't valid.
+//   - InvalidFilterKey
+//     The specified key isn't valid.
+//
+//   - InvalidNextToken
+//     The specified token isn't valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeSessions
 func (c *SSM) DescribeSessions(input *DescribeSessionsInput) (*DescribeSessionsOutput, error) {
@@ -7115,15 +7095,14 @@ func (c *SSM) DescribeSessionsWithContext(ctx aws.Context, input *DescribeSessio
 //
 // Note: This operation can generate multiple requests to a service.
 //
-//    // Example iterating over at most 3 pages of a DescribeSessions operation.
-//    pageNum := 0
-//    err := client.DescribeSessionsPages(params,
-//        func(page *ssm.DescribeSessionsOutput, lastPage bool) bool {
-//            pageNum++
-//            fmt.Println(page)
-//            return pageNum <= 3
-//        })
-//
+//	// Example iterating over at most 3 pages of a DescribeSessions operation.
+//	pageNum := 0
+//	err := client.DescribeSessionsPages(params,
+//	    func(page *ssm.DescribeSessionsOutput, lastPage bool) bool {
+//	        pageNum++
+//	        fmt.Println(page)
+//	        return pageNum <= 3
+//	    })
 func (c *SSM) DescribeSessionsPages(input *DescribeSessionsInput, fn func(*DescribeSessionsOutput, bool) bool) error {
 	return c.DescribeSessionsPagesWithContext(aws.BackgroundContext(), input, fn)
 }
@@ -7175,14 +7154,13 @@ const opDisassociateOpsItemRelatedItem = "DisassociateOpsItemRelatedItem"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DisassociateOpsItemRelatedItemRequest method.
+//	req, resp := client.DisassociateOpsItemRelatedItemRequest(params)
 //
-//    // Example sending a request using the DisassociateOpsItemRelatedItemRequest method.
-//    req, resp := client.DisassociateOpsItemRelatedItemRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DisassociateOpsItemRelatedItem
 func (c *SSM) DisassociateOpsItemRelatedItemRequest(input *DisassociateOpsItemRelatedItemInput) (req *request.Request, output *DisassociateOpsItemRelatedItemOutput) {
@@ -7216,19 +7194,20 @@ func (c *SSM) DisassociateOpsItemRelatedItemRequest(input *DisassociateOpsItemRe
 // API operation DisassociateOpsItemRelatedItem for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
 //
-//   * OpsItemRelatedItemAssociationNotFoundException
-//   The association wasn't found using the parameters you specified in the call.
-//   Verify the information and try again.
+//   - InternalServerError
+//     An error occurred on the server side.
 //
-//   * OpsItemNotFoundException
-//   The specified OpsItem ID doesn't exist. Verify the ID and try again.
+//   - OpsItemRelatedItemAssociationNotFoundException
+//     The association wasn't found using the parameters you specified in the call.
+//     Verify the information and try again.
 //
-//   * OpsItemInvalidParameterException
-//   A specified parameter argument isn't valid. Verify the available arguments
-//   and try again.
+//   - OpsItemNotFoundException
+//     The specified OpsItem ID doesn't exist. Verify the ID and try again.
+//
+//   - OpsItemInvalidParameterException
+//     A specified parameter argument isn't valid. Verify the available arguments
+//     and try again.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DisassociateOpsItemRelatedItem
 func (c *SSM) DisassociateOpsItemRelatedItem(input *DisassociateOpsItemRelatedItemInput) (*DisassociateOpsItemRelatedItemOutput, error) {
@@ -7268,14 +7247,13 @@ const opGetAutomationExecution = "GetAutomationExecution"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the GetAutomationExecutionRequest method.
+//	req, resp := client.GetAutomationExecutionRequest(params)
 //
-//    // Example sending a request using the GetAutomationExecutionRequest method.
-//    req, resp := client.GetAutomationExecutionRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetAutomationExecution
 func (c *SSM) GetAutomationExecutionRequest(input *GetAutomationExecutionInput) (req *request.Request, output *GetAutomationExecutionOutput) {
@@ -7306,12 +7284,13 @@ func (c *SSM) GetAutomationExecutionRequest(input *GetAutomationExecutionInput) 
 // API operation GetAutomationExecution for usage and error information.
 //
 // Returned Error Types:
-//   * AutomationExecutionNotFoundException
-//   There is no automation execution information for the requested automation
-//   execution ID.
 //
-//   * InternalServerError
-//   An error occurred on the server side.
+//   - AutomationExecutionNotFoundException
+//     There is no automation execution information for the requested automation
+//     execution ID.
+//
+//   - InternalServerError
+//     An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetAutomationExecution
 func (c *SSM) GetAutomationExecution(input *GetAutomationExecutionInput) (*GetAutomationExecutionOutput, error) {
@@ -7351,14 +7330,13 @@ const opGetCalendarState = "GetCalendarState"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the GetCalendarStateRequest method.
+//	req, resp := client.GetCalendarStateRequest(params)
 //
-//    // Example sending a request using the GetCalendarStateRequest method.
-//    req, resp := client.GetCalendarStateRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetCalendarState
 func (c *SSM) GetCalendarStateRequest(input *GetCalendarStateInput) (req *request.Request, output *GetCalendarStateOutput) {
@@ -7403,18 +7381,19 @@ func (c *SSM) GetCalendarStateRequest(input *GetCalendarStateInput) (req *reques
 // API operation GetCalendarState for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
 //
-//   * InvalidDocument
-//   The specified SSM document doesn't exist.
+//   - InternalServerError
+//     An error occurred on the server side.
 //
-//   * InvalidDocumentType
-//   The SSM document type isn't valid. Valid document types are described in
-//   the DocumentType property.
+//   - InvalidDocument
+//     The specified SSM document doesn't exist.
 //
-//   * UnsupportedCalendarException
-//   The calendar entry contained in the specified SSM document isn't supported.
+//   - InvalidDocumentType
+//     The SSM document type isn't valid. Valid document types are described in
+//     the DocumentType property.
+//
+//   - UnsupportedCalendarException
+//     The calendar entry contained in the specified SSM document isn't supported.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetCalendarState
 func (c *SSM) GetCalendarState(input *GetCalendarStateInput) (*GetCalendarStateOutput, error) {
@@ -7454,14 +7433,13 @@ const opGetCommandInvocation = "GetCommandInvocation"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the GetCommandInvocationRequest method.
+//	req, resp := client.GetCommandInvocationRequest(params)
 //
-//    // Example sending a request using the GetCommandInvocationRequest method.
-//    req, resp := client.GetCommandInvocationRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetCommandInvocation
 func (c *SSM) GetCommandInvocationRequest(input *GetCommandInvocationInput) (req *request.Request, output *GetCommandInvocationOutput) {
@@ -7486,8 +7464,8 @@ func (c *SSM) GetCommandInvocationRequest(input *GetCommandInvocationInput) (req
 // plugin.
 //
 // GetCommandInvocation only gives the execution status of a plugin in a document.
-// To get the command execution status on a specific instance, use ListCommandInvocations.
-// To get the command execution status across instances, use ListCommands.
+// To get the command execution status on a specific managed node, use ListCommandInvocations.
+// To get the command execution status across managed nodes, use ListCommands.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -7497,32 +7475,33 @@ func (c *SSM) GetCommandInvocationRequest(input *GetCommandInvocationInput) (req
 // API operation GetCommandInvocation for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
 //
-//   * InvalidCommandId
-//   The specified command ID isn't valid. Verify the ID and try again.
+//   - InternalServerError
+//     An error occurred on the server side.
 //
-//   * InvalidInstanceId
-//   The following problems can cause this exception:
+//   - InvalidCommandId
+//     The specified command ID isn't valid. Verify the ID and try again.
 //
-//      * You don't have permission to access the instance.
+//   - InvalidInstanceId
+//     The following problems can cause this exception:
 //
-//      * Amazon Web Services Systems Manager Agent(SSM Agent) isn't running.
-//      Verify that SSM Agent is running.
+//   - You don't have permission to access the managed node.
 //
-//      * SSM Agent isn't registered with the SSM endpoint. Try reinstalling SSM
-//      Agent.
+//   - Amazon Web Services Systems Manager Agent(SSM Agent) isn't running.
+//     Verify that SSM Agent is running.
 //
-//      * The instance isn't in valid state. Valid states are: Running, Pending,
-//      Stopped, and Stopping. Invalid states are: Shutting-down and Terminated.
+//   - SSM Agent isn't registered with the SSM endpoint. Try reinstalling SSM
+//     Agent.
 //
-//   * InvalidPluginName
-//   The plugin name isn't valid.
+//   - The managed node isn't in valid state. Valid states are: Running, Pending,
+//     Stopped, and Stopping. Invalid states are: Shutting-down and Terminated.
 //
-//   * InvocationDoesNotExist
-//   The command ID and instance ID you specified didn't match any invocations.
-//   Verify the command ID and the instance ID and try again.
+//   - InvalidPluginName
+//     The plugin name isn't valid.
+//
+//   - InvocationDoesNotExist
+//     The command ID and managed node ID you specified didn't match any invocations.
+//     Verify the command ID and the managed node ID and try again.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetCommandInvocation
 func (c *SSM) GetCommandInvocation(input *GetCommandInvocationInput) (*GetCommandInvocationOutput, error) {
@@ -7562,14 +7541,13 @@ const opGetConnectionStatus = "GetConnectionStatus"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the GetConnectionStatusRequest method.
+//	req, resp := client.GetConnectionStatusRequest(params)
 //
-//    // Example sending a request using the GetConnectionStatusRequest method.
-//    req, resp := client.GetConnectionStatusRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetConnectionStatus
 func (c *SSM) GetConnectionStatusRequest(input *GetConnectionStatusInput) (req *request.Request, output *GetConnectionStatusOutput) {
@@ -7590,7 +7568,7 @@ func (c *SSM) GetConnectionStatusRequest(input *GetConnectionStatusInput) (req *
 
 // GetConnectionStatus API operation for Amazon Simple Systems Manager (SSM).
 //
-// Retrieves the Session Manager connection status for an instance to determine
+// Retrieves the Session Manager connection status for a managed node to determine
 // whether it is running and ready to receive Session Manager connections.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -7601,8 +7579,8 @@ func (c *SSM) GetConnectionStatusRequest(input *GetConnectionStatusInput) (req *
 // API operation GetConnectionStatus for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
+//   - InternalServerError
+//     An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetConnectionStatus
 func (c *SSM) GetConnectionStatus(input *GetConnectionStatusInput) (*GetConnectionStatusOutput, error) {
@@ -7642,14 +7620,13 @@ const opGetDefaultPatchBaseline = "GetDefaultPatchBaseline"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the GetDefaultPatchBaselineRequest method.
+//	req, resp := client.GetDefaultPatchBaselineRequest(params)
 //
-//    // Example sending a request using the GetDefaultPatchBaselineRequest method.
-//    req, resp := client.GetDefaultPatchBaselineRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetDefaultPatchBaseline
 func (c *SSM) GetDefaultPatchBaselineRequest(input *GetDefaultPatchBaselineInput) (req *request.Request, output *GetDefaultPatchBaselineOutput) {
@@ -7685,8 +7662,8 @@ func (c *SSM) GetDefaultPatchBaselineRequest(input *GetDefaultPatchBaselineInput
 // API operation GetDefaultPatchBaseline for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
+//   - InternalServerError
+//     An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetDefaultPatchBaseline
 func (c *SSM) GetDefaultPatchBaseline(input *GetDefaultPatchBaselineInput) (*GetDefaultPatchBaselineOutput, error) {
@@ -7726,14 +7703,13 @@ const opGetDeployablePatchSnapshotForInstance = "GetDeployablePatchSnapshotForIn
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the GetDeployablePatchSnapshotForInstanceRequest method.
+//	req, resp := client.GetDeployablePatchSnapshotForInstanceRequest(params)
 //
-//    // Example sending a request using the GetDeployablePatchSnapshotForInstanceRequest method.
-//    req, resp := client.GetDeployablePatchSnapshotForInstanceRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetDeployablePatchSnapshotForInstance
 func (c *SSM) GetDeployablePatchSnapshotForInstanceRequest(input *GetDeployablePatchSnapshotForInstanceInput) (req *request.Request, output *GetDeployablePatchSnapshotForInstanceOutput) {
@@ -7754,7 +7730,7 @@ func (c *SSM) GetDeployablePatchSnapshotForInstanceRequest(input *GetDeployableP
 
 // GetDeployablePatchSnapshotForInstance API operation for Amazon Simple Systems Manager (SSM).
 //
-// Retrieves the current snapshot for the patch baseline the instance uses.
+// Retrieves the current snapshot for the patch baseline the managed node uses.
 // This API is primarily used by the AWS-RunPatchBaseline Systems Manager document
 // (SSM document).
 //
@@ -7763,7 +7739,7 @@ func (c *SSM) GetDeployablePatchSnapshotForInstanceRequest(input *GetDeployableP
 // the operation fails. To avoid this, you can run the command in the Amazon
 // Web Services Systems Manager console. Use Run Command, a capability of Amazon
 // Web Services Systems Manager, with an SSM document that enables you to target
-// an instance with a script or command. For example, run the command using
+// a managed node with a script or command. For example, run the command using
 // the AWS-RunShellScript document or the AWS-RunPowerShellScript document.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -7774,19 +7750,20 @@ func (c *SSM) GetDeployablePatchSnapshotForInstanceRequest(input *GetDeployableP
 // API operation GetDeployablePatchSnapshotForInstance for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
 //
-//   * UnsupportedOperatingSystem
-//   The operating systems you specified isn't supported, or the operation isn't
-//   supported for the operating system.
+//   - InternalServerError
+//     An error occurred on the server side.
 //
-//   * UnsupportedFeatureRequiredException
-//   Patching for applications released by Microsoft is only available on EC2
-//   instances and advanced instances. To patch applications released by Microsoft
-//   on on-premises servers and VMs, you must enable advanced instances. For more
-//   information, see Enabling the advanced-instances tier (https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-managedinstances-advanced.html)
-//   in the Amazon Web Services Systems Manager User Guide.
+//   - UnsupportedOperatingSystem
+//     The operating systems you specified isn't supported, or the operation isn't
+//     supported for the operating system.
+//
+//   - UnsupportedFeatureRequiredException
+//     Patching for applications released by Microsoft is only available on EC2
+//     instances and advanced instances. To patch applications released by Microsoft
+//     on on-premises servers and VMs, you must enable advanced instances. For more
+//     information, see Enabling the advanced-instances tier (https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-managedinstances-advanced.html)
+//     in the Amazon Web Services Systems Manager User Guide.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetDeployablePatchSnapshotForInstance
 func (c *SSM) GetDeployablePatchSnapshotForInstance(input *GetDeployablePatchSnapshotForInstanceInput) (*GetDeployablePatchSnapshotForInstanceOutput, error) {
@@ -7826,14 +7803,13 @@ const opGetDocument = "GetDocument"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the GetDocumentRequest method.
+//	req, resp := client.GetDocumentRequest(params)
 //
-//    // Example sending a request using the GetDocumentRequest method.
-//    req, resp := client.GetDocumentRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetDocument
 func (c *SSM) GetDocumentRequest(input *GetDocumentInput) (req *request.Request, output *GetDocumentOutput) {
@@ -7865,14 +7841,15 @@ func (c *SSM) GetDocumentRequest(input *GetDocumentInput) (req *request.Request,
 // API operation GetDocument for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
 //
-//   * InvalidDocument
-//   The specified SSM document doesn't exist.
+//   - InternalServerError
+//     An error occurred on the server side.
 //
-//   * InvalidDocumentVersion
-//   The document version isn't valid or doesn't exist.
+//   - InvalidDocument
+//     The specified SSM document doesn't exist.
+//
+//   - InvalidDocumentVersion
+//     The document version isn't valid or doesn't exist.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetDocument
 func (c *SSM) GetDocument(input *GetDocumentInput) (*GetDocumentOutput, error) {
@@ -7912,14 +7889,13 @@ const opGetInventory = "GetInventory"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the GetInventoryRequest method.
+//	req, resp := client.GetInventoryRequest(params)
 //
-//    // Example sending a request using the GetInventoryRequest method.
-//    req, resp := client.GetInventoryRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetInventory
 func (c *SSM) GetInventoryRequest(input *GetInventoryInput) (req *request.Request, output *GetInventoryOutput) {
@@ -7946,7 +7922,7 @@ func (c *SSM) GetInventoryRequest(input *GetInventoryInput) (req *request.Reques
 
 // GetInventory API operation for Amazon Simple Systems Manager (SSM).
 //
-// Query inventory information. This includes instance status, such as Stopped
+// Query inventory information. This includes managed node status, such as Stopped
 // or Terminated.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -7957,28 +7933,29 @@ func (c *SSM) GetInventoryRequest(input *GetInventoryInput) (req *request.Reques
 // API operation GetInventory for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
 //
-//   * InvalidFilter
-//   The filter name isn't valid. Verify the you entered the correct name and
-//   try again.
+//   - InternalServerError
+//     An error occurred on the server side.
 //
-//   * InvalidInventoryGroupException
-//   The specified inventory group isn't valid.
+//   - InvalidFilter
+//     The filter name isn't valid. Verify the you entered the correct name and
+//     try again.
 //
-//   * InvalidNextToken
-//   The specified token isn't valid.
+//   - InvalidInventoryGroupException
+//     The specified inventory group isn't valid.
 //
-//   * InvalidTypeNameException
-//   The parameter type name isn't valid.
+//   - InvalidNextToken
+//     The specified token isn't valid.
 //
-//   * InvalidAggregatorException
-//   The specified aggregator isn't valid for inventory groups. Verify that the
-//   aggregator uses a valid inventory type such as AWS:Application or AWS:InstanceInformation.
+//   - InvalidTypeNameException
+//     The parameter type name isn't valid.
 //
-//   * InvalidResultAttributeException
-//   The specified inventory item result attribute isn't valid.
+//   - InvalidAggregatorException
+//     The specified aggregator isn't valid for inventory groups. Verify that the
+//     aggregator uses a valid inventory type such as AWS:Application or AWS:InstanceInformation.
+//
+//   - InvalidResultAttributeException
+//     The specified inventory item result attribute isn't valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetInventory
 func (c *SSM) GetInventory(input *GetInventoryInput) (*GetInventoryOutput, error) {
@@ -8010,15 +7987,14 @@ func (c *SSM) GetInventoryWithContext(ctx aws.Context, input *GetInventoryInput,
 //
 // Note: This operation can generate multiple requests to a service.
 //
-//    // Example iterating over at most 3 pages of a GetInventory operation.
-//    pageNum := 0
-//    err := client.GetInventoryPages(params,
-//        func(page *ssm.GetInventoryOutput, lastPage bool) bool {
-//            pageNum++
-//            fmt.Println(page)
-//            return pageNum <= 3
-//        })
-//
+//	// Example iterating over at most 3 pages of a GetInventory operation.
+//	pageNum := 0
+//	err := client.GetInventoryPages(params,
+//	    func(page *ssm.GetInventoryOutput, lastPage bool) bool {
+//	        pageNum++
+//	        fmt.Println(page)
+//	        return pageNum <= 3
+//	    })
 func (c *SSM) GetInventoryPages(input *GetInventoryInput, fn func(*GetInventoryOutput, bool) bool) error {
 	return c.GetInventoryPagesWithContext(aws.BackgroundContext(), input, fn)
 }
@@ -8070,14 +8046,13 @@ const opGetInventorySchema = "GetInventorySchema"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the GetInventorySchemaRequest method.
+//	req, resp := client.GetInventorySchemaRequest(params)
 //
-//    // Example sending a request using the GetInventorySchemaRequest method.
-//    req, resp := client.GetInventorySchemaRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetInventorySchema
 func (c *SSM) GetInventorySchemaRequest(input *GetInventorySchemaInput) (req *request.Request, output *GetInventorySchemaOutput) {
@@ -8115,14 +8090,15 @@ func (c *SSM) GetInventorySchemaRequest(input *GetInventorySchemaInput) (req *re
 // API operation GetInventorySchema for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
 //
-//   * InvalidTypeNameException
-//   The parameter type name isn't valid.
+//   - InternalServerError
+//     An error occurred on the server side.
 //
-//   * InvalidNextToken
-//   The specified token isn't valid.
+//   - InvalidTypeNameException
+//     The parameter type name isn't valid.
+//
+//   - InvalidNextToken
+//     The specified token isn't valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetInventorySchema
 func (c *SSM) GetInventorySchema(input *GetInventorySchemaInput) (*GetInventorySchemaOutput, error) {
@@ -8154,15 +8130,14 @@ func (c *SSM) GetInventorySchemaWithContext(ctx aws.Context, input *GetInventory
 //
 // Note: This operation can generate multiple requests to a service.
 //
-//    // Example iterating over at most 3 pages of a GetInventorySchema operation.
-//    pageNum := 0
-//    err := client.GetInventorySchemaPages(params,
-//        func(page *ssm.GetInventorySchemaOutput, lastPage bool) bool {
-//            pageNum++
-//            fmt.Println(page)
-//            return pageNum <= 3
-//        })
-//
+//	// Example iterating over at most 3 pages of a GetInventorySchema operation.
+//	pageNum := 0
+//	err := client.GetInventorySchemaPages(params,
+//	    func(page *ssm.GetInventorySchemaOutput, lastPage bool) bool {
+//	        pageNum++
+//	        fmt.Println(page)
+//	        return pageNum <= 3
+//	    })
 func (c *SSM) GetInventorySchemaPages(input *GetInventorySchemaInput, fn func(*GetInventorySchemaOutput, bool) bool) error {
 	return c.GetInventorySchemaPagesWithContext(aws.BackgroundContext(), input, fn)
 }
@@ -8214,14 +8189,13 @@ const opGetMaintenanceWindow = "GetMaintenanceWindow"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the GetMaintenanceWindowRequest method.
+//	req, resp := client.GetMaintenanceWindowRequest(params)
 //
-//    // Example sending a request using the GetMaintenanceWindowRequest method.
-//    req, resp := client.GetMaintenanceWindowRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetMaintenanceWindow
 func (c *SSM) GetMaintenanceWindowRequest(input *GetMaintenanceWindowInput) (req *request.Request, output *GetMaintenanceWindowOutput) {
@@ -8252,16 +8226,17 @@ func (c *SSM) GetMaintenanceWindowRequest(input *GetMaintenanceWindowInput) (req
 // API operation GetMaintenanceWindow for usage and error information.
 //
 // Returned Error Types:
-//   * DoesNotExistException
-//   Error returned when the ID specified for a resource, such as a maintenance
-//   window or patch baseline, doesn't exist.
 //
-//   For information about resource quotas in Amazon Web Services Systems Manager,
-//   see Systems Manager service quotas (https://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
-//   in the Amazon Web Services General Reference.
+//   - DoesNotExistException
+//     Error returned when the ID specified for a resource, such as a maintenance
+//     window or patch baseline, doesn't exist.
 //
-//   * InternalServerError
-//   An error occurred on the server side.
+//     For information about resource quotas in Amazon Web Services Systems Manager,
+//     see Systems Manager service quotas (https://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//     in the Amazon Web Services General Reference.
+//
+//   - InternalServerError
+//     An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetMaintenanceWindow
 func (c *SSM) GetMaintenanceWindow(input *GetMaintenanceWindowInput) (*GetMaintenanceWindowOutput, error) {
@@ -8301,14 +8276,13 @@ const opGetMaintenanceWindowExecution = "GetMaintenanceWindowExecution"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the GetMaintenanceWindowExecutionRequest method.
+//	req, resp := client.GetMaintenanceWindowExecutionRequest(params)
 //
-//    // Example sending a request using the GetMaintenanceWindowExecutionRequest method.
-//    req, resp := client.GetMaintenanceWindowExecutionRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetMaintenanceWindowExecution
 func (c *SSM) GetMaintenanceWindowExecutionRequest(input *GetMaintenanceWindowExecutionInput) (req *request.Request, output *GetMaintenanceWindowExecutionOutput) {
@@ -8339,16 +8313,17 @@ func (c *SSM) GetMaintenanceWindowExecutionRequest(input *GetMaintenanceWindowEx
 // API operation GetMaintenanceWindowExecution for usage and error information.
 //
 // Returned Error Types:
-//   * DoesNotExistException
-//   Error returned when the ID specified for a resource, such as a maintenance
-//   window or patch baseline, doesn't exist.
 //
-//   For information about resource quotas in Amazon Web Services Systems Manager,
-//   see Systems Manager service quotas (https://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
-//   in the Amazon Web Services General Reference.
+//   - DoesNotExistException
+//     Error returned when the ID specified for a resource, such as a maintenance
+//     window or patch baseline, doesn't exist.
 //
-//   * InternalServerError
-//   An error occurred on the server side.
+//     For information about resource quotas in Amazon Web Services Systems Manager,
+//     see Systems Manager service quotas (https://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//     in the Amazon Web Services General Reference.
+//
+//   - InternalServerError
+//     An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetMaintenanceWindowExecution
 func (c *SSM) GetMaintenanceWindowExecution(input *GetMaintenanceWindowExecutionInput) (*GetMaintenanceWindowExecutionOutput, error) {
@@ -8388,14 +8363,13 @@ const opGetMaintenanceWindowExecutionTask = "GetMaintenanceWindowExecutionTask"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the GetMaintenanceWindowExecutionTaskRequest method.
+//	req, resp := client.GetMaintenanceWindowExecutionTaskRequest(params)
 //
-//    // Example sending a request using the GetMaintenanceWindowExecutionTaskRequest method.
-//    req, resp := client.GetMaintenanceWindowExecutionTaskRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetMaintenanceWindowExecutionTask
 func (c *SSM) GetMaintenanceWindowExecutionTaskRequest(input *GetMaintenanceWindowExecutionTaskInput) (req *request.Request, output *GetMaintenanceWindowExecutionTaskOutput) {
@@ -8427,16 +8401,17 @@ func (c *SSM) GetMaintenanceWindowExecutionTaskRequest(input *GetMaintenanceWind
 // API operation GetMaintenanceWindowExecutionTask for usage and error information.
 //
 // Returned Error Types:
-//   * DoesNotExistException
-//   Error returned when the ID specified for a resource, such as a maintenance
-//   window or patch baseline, doesn't exist.
 //
-//   For information about resource quotas in Amazon Web Services Systems Manager,
-//   see Systems Manager service quotas (https://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
-//   in the Amazon Web Services General Reference.
+//   - DoesNotExistException
+//     Error returned when the ID specified for a resource, such as a maintenance
+//     window or patch baseline, doesn't exist.
 //
-//   * InternalServerError
-//   An error occurred on the server side.
+//     For information about resource quotas in Amazon Web Services Systems Manager,
+//     see Systems Manager service quotas (https://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//     in the Amazon Web Services General Reference.
+//
+//   - InternalServerError
+//     An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetMaintenanceWindowExecutionTask
 func (c *SSM) GetMaintenanceWindowExecutionTask(input *GetMaintenanceWindowExecutionTaskInput) (*GetMaintenanceWindowExecutionTaskOutput, error) {
@@ -8476,14 +8451,13 @@ const opGetMaintenanceWindowExecutionTaskInvocation = "GetMaintenanceWindowExecu
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the GetMaintenanceWindowExecutionTaskInvocationRequest method.
+//	req, resp := client.GetMaintenanceWindowExecutionTaskInvocationRequest(params)
 //
-//    // Example sending a request using the GetMaintenanceWindowExecutionTaskInvocationRequest method.
-//    req, resp := client.GetMaintenanceWindowExecutionTaskInvocationRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetMaintenanceWindowExecutionTaskInvocation
 func (c *SSM) GetMaintenanceWindowExecutionTaskInvocationRequest(input *GetMaintenanceWindowExecutionTaskInvocationInput) (req *request.Request, output *GetMaintenanceWindowExecutionTaskInvocationOutput) {
@@ -8514,16 +8488,17 @@ func (c *SSM) GetMaintenanceWindowExecutionTaskInvocationRequest(input *GetMaint
 // API operation GetMaintenanceWindowExecutionTaskInvocation for usage and error information.
 //
 // Returned Error Types:
-//   * DoesNotExistException
-//   Error returned when the ID specified for a resource, such as a maintenance
-//   window or patch baseline, doesn't exist.
 //
-//   For information about resource quotas in Amazon Web Services Systems Manager,
-//   see Systems Manager service quotas (https://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
-//   in the Amazon Web Services General Reference.
+//   - DoesNotExistException
+//     Error returned when the ID specified for a resource, such as a maintenance
+//     window or patch baseline, doesn't exist.
 //
-//   * InternalServerError
-//   An error occurred on the server side.
+//     For information about resource quotas in Amazon Web Services Systems Manager,
+//     see Systems Manager service quotas (https://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//     in the Amazon Web Services General Reference.
+//
+//   - InternalServerError
+//     An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetMaintenanceWindowExecutionTaskInvocation
 func (c *SSM) GetMaintenanceWindowExecutionTaskInvocation(input *GetMaintenanceWindowExecutionTaskInvocationInput) (*GetMaintenanceWindowExecutionTaskInvocationOutput, error) {
@@ -8563,14 +8538,13 @@ const opGetMaintenanceWindowTask = "GetMaintenanceWindowTask"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the GetMaintenanceWindowTaskRequest method.
+//	req, resp := client.GetMaintenanceWindowTaskRequest(params)
 //
-//    // Example sending a request using the GetMaintenanceWindowTaskRequest method.
-//    req, resp := client.GetMaintenanceWindowTaskRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetMaintenanceWindowTask
 func (c *SSM) GetMaintenanceWindowTaskRequest(input *GetMaintenanceWindowTaskInput) (req *request.Request, output *GetMaintenanceWindowTaskOutput) {
@@ -8591,12 +8565,15 @@ func (c *SSM) GetMaintenanceWindowTaskRequest(input *GetMaintenanceWindowTaskInp
 
 // GetMaintenanceWindowTask API operation for Amazon Simple Systems Manager (SSM).
 //
-// Lists the tasks in a maintenance window.
+// Retrieves the details of a maintenance window task.
 //
 // For maintenance window tasks without a specified target, you can't supply
 // values for --max-errors and --max-concurrency. Instead, the system inserts
 // a placeholder value of 1, which may be reported in the response to this command.
 // These values don't affect the running of your task and can be ignored.
+//
+// To retrieve a list of tasks in a maintenance window, instead use the DescribeMaintenanceWindowTasks
+// command.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -8606,16 +8583,17 @@ func (c *SSM) GetMaintenanceWindowTaskRequest(input *GetMaintenanceWindowTaskInp
 // API operation GetMaintenanceWindowTask for usage and error information.
 //
 // Returned Error Types:
-//   * DoesNotExistException
-//   Error returned when the ID specified for a resource, such as a maintenance
-//   window or patch baseline, doesn't exist.
 //
-//   For information about resource quotas in Amazon Web Services Systems Manager,
-//   see Systems Manager service quotas (https://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
-//   in the Amazon Web Services General Reference.
+//   - DoesNotExistException
+//     Error returned when the ID specified for a resource, such as a maintenance
+//     window or patch baseline, doesn't exist.
 //
-//   * InternalServerError
-//   An error occurred on the server side.
+//     For information about resource quotas in Amazon Web Services Systems Manager,
+//     see Systems Manager service quotas (https://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//     in the Amazon Web Services General Reference.
+//
+//   - InternalServerError
+//     An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetMaintenanceWindowTask
 func (c *SSM) GetMaintenanceWindowTask(input *GetMaintenanceWindowTaskInput) (*GetMaintenanceWindowTaskOutput, error) {
@@ -8655,14 +8633,13 @@ const opGetOpsItem = "GetOpsItem"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the GetOpsItemRequest method.
+//	req, resp := client.GetOpsItemRequest(params)
 //
-//    // Example sending a request using the GetOpsItemRequest method.
-//    req, resp := client.GetOpsItemRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetOpsItem
 func (c *SSM) GetOpsItemRequest(input *GetOpsItemInput) (req *request.Request, output *GetOpsItemOutput) {
@@ -8702,11 +8679,12 @@ func (c *SSM) GetOpsItemRequest(input *GetOpsItemInput) (req *request.Request, o
 // API operation GetOpsItem for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
 //
-//   * OpsItemNotFoundException
-//   The specified OpsItem ID doesn't exist. Verify the ID and try again.
+//   - InternalServerError
+//     An error occurred on the server side.
+//
+//   - OpsItemNotFoundException
+//     The specified OpsItem ID doesn't exist. Verify the ID and try again.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetOpsItem
 func (c *SSM) GetOpsItem(input *GetOpsItemInput) (*GetOpsItemOutput, error) {
@@ -8746,14 +8724,13 @@ const opGetOpsMetadata = "GetOpsMetadata"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the GetOpsMetadataRequest method.
+//	req, resp := client.GetOpsMetadataRequest(params)
 //
-//    // Example sending a request using the GetOpsMetadataRequest method.
-//    req, resp := client.GetOpsMetadataRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetOpsMetadata
 func (c *SSM) GetOpsMetadataRequest(input *GetOpsMetadataInput) (req *request.Request, output *GetOpsMetadataOutput) {
@@ -8784,14 +8761,15 @@ func (c *SSM) GetOpsMetadataRequest(input *GetOpsMetadataInput) (req *request.Re
 // API operation GetOpsMetadata for usage and error information.
 //
 // Returned Error Types:
-//   * OpsMetadataNotFoundException
-//   The OpsMetadata object doesn't exist.
 //
-//   * OpsMetadataInvalidArgumentException
-//   One of the arguments passed is invalid.
+//   - OpsMetadataNotFoundException
+//     The OpsMetadata object doesn't exist.
 //
-//   * InternalServerError
-//   An error occurred on the server side.
+//   - OpsMetadataInvalidArgumentException
+//     One of the arguments passed is invalid.
+//
+//   - InternalServerError
+//     An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetOpsMetadata
 func (c *SSM) GetOpsMetadata(input *GetOpsMetadataInput) (*GetOpsMetadataOutput, error) {
@@ -8831,14 +8809,13 @@ const opGetOpsSummary = "GetOpsSummary"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the GetOpsSummaryRequest method.
+//	req, resp := client.GetOpsSummaryRequest(params)
 //
-//    // Example sending a request using the GetOpsSummaryRequest method.
-//    req, resp := client.GetOpsSummaryRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetOpsSummary
 func (c *SSM) GetOpsSummaryRequest(input *GetOpsSummaryInput) (req *request.Request, output *GetOpsSummaryOutput) {
@@ -8879,25 +8856,26 @@ func (c *SSM) GetOpsSummaryRequest(input *GetOpsSummaryInput) (req *request.Requ
 // API operation GetOpsSummary for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
 //
-//   * ResourceDataSyncNotFoundException
-//   The specified sync name wasn't found.
+//   - InternalServerError
+//     An error occurred on the server side.
 //
-//   * InvalidFilter
-//   The filter name isn't valid. Verify the you entered the correct name and
-//   try again.
+//   - ResourceDataSyncNotFoundException
+//     The specified sync name wasn't found.
 //
-//   * InvalidNextToken
-//   The specified token isn't valid.
+//   - InvalidFilter
+//     The filter name isn't valid. Verify the you entered the correct name and
+//     try again.
 //
-//   * InvalidTypeNameException
-//   The parameter type name isn't valid.
+//   - InvalidNextToken
+//     The specified token isn't valid.
 //
-//   * InvalidAggregatorException
-//   The specified aggregator isn't valid for inventory groups. Verify that the
-//   aggregator uses a valid inventory type such as AWS:Application or AWS:InstanceInformation.
+//   - InvalidTypeNameException
+//     The parameter type name isn't valid.
+//
+//   - InvalidAggregatorException
+//     The specified aggregator isn't valid for inventory groups. Verify that the
+//     aggregator uses a valid inventory type such as AWS:Application or AWS:InstanceInformation.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetOpsSummary
 func (c *SSM) GetOpsSummary(input *GetOpsSummaryInput) (*GetOpsSummaryOutput, error) {
@@ -8929,15 +8907,14 @@ func (c *SSM) GetOpsSummaryWithContext(ctx aws.Context, input *GetOpsSummaryInpu
 //
 // Note: This operation can generate multiple requests to a service.
 //
-//    // Example iterating over at most 3 pages of a GetOpsSummary operation.
-//    pageNum := 0
-//    err := client.GetOpsSummaryPages(params,
-//        func(page *ssm.GetOpsSummaryOutput, lastPage bool) bool {
-//            pageNum++
-//            fmt.Println(page)
-//            return pageNum <= 3
-//        })
-//
+//	// Example iterating over at most 3 pages of a GetOpsSummary operation.
+//	pageNum := 0
+//	err := client.GetOpsSummaryPages(params,
+//	    func(page *ssm.GetOpsSummaryOutput, lastPage bool) bool {
+//	        pageNum++
+//	        fmt.Println(page)
+//	        return pageNum <= 3
+//	    })
 func (c *SSM) GetOpsSummaryPages(input *GetOpsSummaryInput, fn func(*GetOpsSummaryOutput, bool) bool) error {
 	return c.GetOpsSummaryPagesWithContext(aws.BackgroundContext(), input, fn)
 }
@@ -8989,14 +8966,13 @@ const opGetParameter = "GetParameter"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the GetParameterRequest method.
+//	req, resp := client.GetParameterRequest(params)
 //
-//    // Example sending a request using the GetParameterRequest method.
-//    req, resp := client.GetParameterRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetParameter
 func (c *SSM) GetParameterRequest(input *GetParameterInput) (req *request.Request, output *GetParameterOutput) {
@@ -9030,18 +9006,19 @@ func (c *SSM) GetParameterRequest(input *GetParameterInput) (req *request.Reques
 // API operation GetParameter for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
 //
-//   * InvalidKeyId
-//   The query key ID isn't valid.
+//   - InternalServerError
+//     An error occurred on the server side.
 //
-//   * ParameterNotFound
-//   The parameter couldn't be found. Verify the name and try again.
+//   - InvalidKeyId
+//     The query key ID isn't valid.
 //
-//   * ParameterVersionNotFound
-//   The specified parameter version wasn't found. Verify the parameter name and
-//   version, and try again.
+//   - ParameterNotFound
+//     The parameter couldn't be found. Verify the name and try again.
+//
+//   - ParameterVersionNotFound
+//     The specified parameter version wasn't found. Verify the parameter name and
+//     version, and try again.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetParameter
 func (c *SSM) GetParameter(input *GetParameterInput) (*GetParameterOutput, error) {
@@ -9081,14 +9058,13 @@ const opGetParameterHistory = "GetParameterHistory"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the GetParameterHistoryRequest method.
+//	req, resp := client.GetParameterHistoryRequest(params)
 //
-//    // Example sending a request using the GetParameterHistoryRequest method.
-//    req, resp := client.GetParameterHistoryRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetParameterHistory
 func (c *SSM) GetParameterHistoryRequest(input *GetParameterHistoryInput) (req *request.Request, output *GetParameterHistoryOutput) {
@@ -9130,17 +9106,18 @@ func (c *SSM) GetParameterHistoryRequest(input *GetParameterHistoryInput) (req *
 // API operation GetParameterHistory for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
 //
-//   * ParameterNotFound
-//   The parameter couldn't be found. Verify the name and try again.
+//   - InternalServerError
+//     An error occurred on the server side.
 //
-//   * InvalidNextToken
-//   The specified token isn't valid.
+//   - ParameterNotFound
+//     The parameter couldn't be found. Verify the name and try again.
 //
-//   * InvalidKeyId
-//   The query key ID isn't valid.
+//   - InvalidNextToken
+//     The specified token isn't valid.
+//
+//   - InvalidKeyId
+//     The query key ID isn't valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetParameterHistory
 func (c *SSM) GetParameterHistory(input *GetParameterHistoryInput) (*GetParameterHistoryOutput, error) {
@@ -9172,15 +9149,14 @@ func (c *SSM) GetParameterHistoryWithContext(ctx aws.Context, input *GetParamete
 //
 // Note: This operation can generate multiple requests to a service.
 //
-//    // Example iterating over at most 3 pages of a GetParameterHistory operation.
-//    pageNum := 0
-//    err := client.GetParameterHistoryPages(params,
-//        func(page *ssm.GetParameterHistoryOutput, lastPage bool) bool {
-//            pageNum++
-//            fmt.Println(page)
-//            return pageNum <= 3
-//        })
-//
+//	// Example iterating over at most 3 pages of a GetParameterHistory operation.
+//	pageNum := 0
+//	err := client.GetParameterHistoryPages(params,
+//	    func(page *ssm.GetParameterHistoryOutput, lastPage bool) bool {
+//	        pageNum++
+//	        fmt.Println(page)
+//	        return pageNum <= 3
+//	    })
 func (c *SSM) GetParameterHistoryPages(input *GetParameterHistoryInput, fn func(*GetParameterHistoryOutput, bool) bool) error {
 	return c.GetParameterHistoryPagesWithContext(aws.BackgroundContext(), input, fn)
 }
@@ -9232,14 +9208,13 @@ const opGetParameters = "GetParameters"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the GetParametersRequest method.
+//	req, resp := client.GetParametersRequest(params)
 //
-//    // Example sending a request using the GetParametersRequest method.
-//    req, resp := client.GetParametersRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetParameters
 func (c *SSM) GetParametersRequest(input *GetParametersInput) (req *request.Request, output *GetParametersOutput) {
@@ -9274,11 +9249,12 @@ func (c *SSM) GetParametersRequest(input *GetParametersInput) (req *request.Requ
 // API operation GetParameters for usage and error information.
 //
 // Returned Error Types:
-//   * InvalidKeyId
-//   The query key ID isn't valid.
 //
-//   * InternalServerError
-//   An error occurred on the server side.
+//   - InvalidKeyId
+//     The query key ID isn't valid.
+//
+//   - InternalServerError
+//     An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetParameters
 func (c *SSM) GetParameters(input *GetParametersInput) (*GetParametersOutput, error) {
@@ -9318,14 +9294,13 @@ const opGetParametersByPath = "GetParametersByPath"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the GetParametersByPathRequest method.
+//	req, resp := client.GetParametersByPathRequest(params)
 //
-//    // Example sending a request using the GetParametersByPathRequest method.
-//    req, resp := client.GetParametersByPathRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetParametersByPath
 func (c *SSM) GetParametersByPathRequest(input *GetParametersByPathInput) (req *request.Request, output *GetParametersByPathOutput) {
@@ -9370,24 +9345,25 @@ func (c *SSM) GetParametersByPathRequest(input *GetParametersByPathInput) (req *
 // API operation GetParametersByPath for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
 //
-//   * InvalidFilterKey
-//   The specified key isn't valid.
+//   - InternalServerError
+//     An error occurred on the server side.
 //
-//   * InvalidFilterOption
-//   The specified filter option isn't valid. Valid options are Equals and BeginsWith.
-//   For Path filter, valid options are Recursive and OneLevel.
+//   - InvalidFilterKey
+//     The specified key isn't valid.
 //
-//   * InvalidFilterValue
-//   The filter value isn't valid. Verify the value and try again.
+//   - InvalidFilterOption
+//     The specified filter option isn't valid. Valid options are Equals and BeginsWith.
+//     For Path filter, valid options are Recursive and OneLevel.
 //
-//   * InvalidKeyId
-//   The query key ID isn't valid.
+//   - InvalidFilterValue
+//     The filter value isn't valid. Verify the value and try again.
 //
-//   * InvalidNextToken
-//   The specified token isn't valid.
+//   - InvalidKeyId
+//     The query key ID isn't valid.
+//
+//   - InvalidNextToken
+//     The specified token isn't valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetParametersByPath
 func (c *SSM) GetParametersByPath(input *GetParametersByPathInput) (*GetParametersByPathOutput, error) {
@@ -9419,15 +9395,14 @@ func (c *SSM) GetParametersByPathWithContext(ctx aws.Context, input *GetParamete
 //
 // Note: This operation can generate multiple requests to a service.
 //
-//    // Example iterating over at most 3 pages of a GetParametersByPath operation.
-//    pageNum := 0
-//    err := client.GetParametersByPathPages(params,
-//        func(page *ssm.GetParametersByPathOutput, lastPage bool) bool {
-//            pageNum++
-//            fmt.Println(page)
-//            return pageNum <= 3
-//        })
-//
+//	// Example iterating over at most 3 pages of a GetParametersByPath operation.
+//	pageNum := 0
+//	err := client.GetParametersByPathPages(params,
+//	    func(page *ssm.GetParametersByPathOutput, lastPage bool) bool {
+//	        pageNum++
+//	        fmt.Println(page)
+//	        return pageNum <= 3
+//	    })
 func (c *SSM) GetParametersByPathPages(input *GetParametersByPathInput, fn func(*GetParametersByPathOutput, bool) bool) error {
 	return c.GetParametersByPathPagesWithContext(aws.BackgroundContext(), input, fn)
 }
@@ -9479,14 +9454,13 @@ const opGetPatchBaseline = "GetPatchBaseline"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the GetPatchBaselineRequest method.
+//	req, resp := client.GetPatchBaselineRequest(params)
 //
-//    // Example sending a request using the GetPatchBaselineRequest method.
-//    req, resp := client.GetPatchBaselineRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetPatchBaseline
 func (c *SSM) GetPatchBaselineRequest(input *GetPatchBaselineInput) (req *request.Request, output *GetPatchBaselineOutput) {
@@ -9517,20 +9491,21 @@ func (c *SSM) GetPatchBaselineRequest(input *GetPatchBaselineInput) (req *reques
 // API operation GetPatchBaseline for usage and error information.
 //
 // Returned Error Types:
-//   * DoesNotExistException
-//   Error returned when the ID specified for a resource, such as a maintenance
-//   window or patch baseline, doesn't exist.
 //
-//   For information about resource quotas in Amazon Web Services Systems Manager,
-//   see Systems Manager service quotas (https://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
-//   in the Amazon Web Services General Reference.
+//   - DoesNotExistException
+//     Error returned when the ID specified for a resource, such as a maintenance
+//     window or patch baseline, doesn't exist.
 //
-//   * InvalidResourceId
-//   The resource ID isn't valid. Verify that you entered the correct ID and try
-//   again.
+//     For information about resource quotas in Amazon Web Services Systems Manager,
+//     see Systems Manager service quotas (https://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//     in the Amazon Web Services General Reference.
 //
-//   * InternalServerError
-//   An error occurred on the server side.
+//   - InvalidResourceId
+//     The resource ID isn't valid. Verify that you entered the correct ID and try
+//     again.
+//
+//   - InternalServerError
+//     An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetPatchBaseline
 func (c *SSM) GetPatchBaseline(input *GetPatchBaselineInput) (*GetPatchBaselineOutput, error) {
@@ -9570,14 +9545,13 @@ const opGetPatchBaselineForPatchGroup = "GetPatchBaselineForPatchGroup"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the GetPatchBaselineForPatchGroupRequest method.
+//	req, resp := client.GetPatchBaselineForPatchGroupRequest(params)
 //
-//    // Example sending a request using the GetPatchBaselineForPatchGroupRequest method.
-//    req, resp := client.GetPatchBaselineForPatchGroupRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetPatchBaselineForPatchGroup
 func (c *SSM) GetPatchBaselineForPatchGroupRequest(input *GetPatchBaselineForPatchGroupInput) (req *request.Request, output *GetPatchBaselineForPatchGroupOutput) {
@@ -9609,8 +9583,8 @@ func (c *SSM) GetPatchBaselineForPatchGroupRequest(input *GetPatchBaselineForPat
 // API operation GetPatchBaselineForPatchGroup for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
+//   - InternalServerError
+//     An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetPatchBaselineForPatchGroup
 func (c *SSM) GetPatchBaselineForPatchGroup(input *GetPatchBaselineForPatchGroupInput) (*GetPatchBaselineForPatchGroupOutput, error) {
@@ -9650,14 +9624,13 @@ const opGetServiceSetting = "GetServiceSetting"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the GetServiceSettingRequest method.
+//	req, resp := client.GetServiceSettingRequest(params)
 //
-//    // Example sending a request using the GetServiceSettingRequest method.
-//    req, resp := client.GetServiceSettingRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetServiceSetting
 func (c *SSM) GetServiceSettingRequest(input *GetServiceSettingInput) (req *request.Request, output *GetServiceSettingOutput) {
@@ -9704,12 +9677,13 @@ func (c *SSM) GetServiceSettingRequest(input *GetServiceSettingInput) (req *requ
 // API operation GetServiceSetting for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
 //
-//   * ServiceSettingNotFound
-//   The specified service setting wasn't found. Either the service name or the
-//   setting hasn't been provisioned by the Amazon Web Services service team.
+//   - InternalServerError
+//     An error occurred on the server side.
+//
+//   - ServiceSettingNotFound
+//     The specified service setting wasn't found. Either the service name or the
+//     setting hasn't been provisioned by the Amazon Web Services service team.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetServiceSetting
 func (c *SSM) GetServiceSetting(input *GetServiceSettingInput) (*GetServiceSettingOutput, error) {
@@ -9749,14 +9723,13 @@ const opLabelParameterVersion = "LabelParameterVersion"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the LabelParameterVersionRequest method.
+//	req, resp := client.LabelParameterVersionRequest(params)
 //
-//    // Example sending a request using the LabelParameterVersionRequest method.
-//    req, resp := client.LabelParameterVersionRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/LabelParameterVersion
 func (c *SSM) LabelParameterVersionRequest(input *LabelParameterVersionInput) (req *request.Request, output *LabelParameterVersionOutput) {
@@ -9785,28 +9758,28 @@ func (c *SSM) LabelParameterVersionRequest(input *LabelParameterVersionInput) (r
 //
 // Parameter labels have the following requirements and restrictions.
 //
-//    * A version of a parameter can have a maximum of 10 labels.
+//   - A version of a parameter can have a maximum of 10 labels.
 //
-//    * You can't attach the same label to different versions of the same parameter.
-//    For example, if version 1 has the label Production, then you can't attach
-//    Production to version 2.
+//   - You can't attach the same label to different versions of the same parameter.
+//     For example, if version 1 has the label Production, then you can't attach
+//     Production to version 2.
 //
-//    * You can move a label from one version of a parameter to another.
+//   - You can move a label from one version of a parameter to another.
 //
-//    * You can't create a label when you create a new parameter. You must attach
-//    a label to a specific version of a parameter.
+//   - You can't create a label when you create a new parameter. You must attach
+//     a label to a specific version of a parameter.
 //
-//    * If you no longer want to use a parameter label, then you can either
-//    delete it or move it to a different version of a parameter.
+//   - If you no longer want to use a parameter label, then you can either
+//     delete it or move it to a different version of a parameter.
 //
-//    * A label can have a maximum of 100 characters.
+//   - A label can have a maximum of 100 characters.
 //
-//    * Labels can contain letters (case sensitive), numbers, periods (.), hyphens
-//    (-), or underscores (_).
+//   - Labels can contain letters (case sensitive), numbers, periods (.), hyphens
+//     (-), or underscores (_).
 //
-//    * Labels can't begin with a number, "aws" or "ssm" (not case sensitive).
-//    If a label fails to meet these requirements, then the label isn't associated
-//    with a parameter and the system displays it in the list of InvalidLabels.
+//   - Labels can't begin with a number, "aws" or "ssm" (not case sensitive).
+//     If a label fails to meet these requirements, then the label isn't associated
+//     with a parameter and the system displays it in the list of InvalidLabels.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -9816,22 +9789,23 @@ func (c *SSM) LabelParameterVersionRequest(input *LabelParameterVersionInput) (r
 // API operation LabelParameterVersion for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
 //
-//   * TooManyUpdates
-//   There are concurrent updates for a resource that supports one update at a
-//   time.
+//   - InternalServerError
+//     An error occurred on the server side.
 //
-//   * ParameterNotFound
-//   The parameter couldn't be found. Verify the name and try again.
+//   - TooManyUpdates
+//     There are concurrent updates for a resource that supports one update at a
+//     time.
 //
-//   * ParameterVersionNotFound
-//   The specified parameter version wasn't found. Verify the parameter name and
-//   version, and try again.
+//   - ParameterNotFound
+//     The parameter couldn't be found. Verify the name and try again.
 //
-//   * ParameterVersionLabelLimitExceeded
-//   A parameter version can have a maximum of ten labels.
+//   - ParameterVersionNotFound
+//     The specified parameter version wasn't found. Verify the parameter name and
+//     version, and try again.
+//
+//   - ParameterVersionLabelLimitExceeded
+//     A parameter version can have a maximum of ten labels.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/LabelParameterVersion
 func (c *SSM) LabelParameterVersion(input *LabelParameterVersionInput) (*LabelParameterVersionOutput, error) {
@@ -9871,14 +9845,13 @@ const opListAssociationVersions = "ListAssociationVersions"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the ListAssociationVersionsRequest method.
+//	req, resp := client.ListAssociationVersionsRequest(params)
 //
-//    // Example sending a request using the ListAssociationVersionsRequest method.
-//    req, resp := client.ListAssociationVersionsRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListAssociationVersions
 func (c *SSM) ListAssociationVersionsRequest(input *ListAssociationVersionsInput) (req *request.Request, output *ListAssociationVersionsOutput) {
@@ -9915,14 +9888,15 @@ func (c *SSM) ListAssociationVersionsRequest(input *ListAssociationVersionsInput
 // API operation ListAssociationVersions for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
 //
-//   * InvalidNextToken
-//   The specified token isn't valid.
+//   - InternalServerError
+//     An error occurred on the server side.
 //
-//   * AssociationDoesNotExist
-//   The specified association doesn't exist.
+//   - InvalidNextToken
+//     The specified token isn't valid.
+//
+//   - AssociationDoesNotExist
+//     The specified association doesn't exist.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListAssociationVersions
 func (c *SSM) ListAssociationVersions(input *ListAssociationVersionsInput) (*ListAssociationVersionsOutput, error) {
@@ -9954,15 +9928,14 @@ func (c *SSM) ListAssociationVersionsWithContext(ctx aws.Context, input *ListAss
 //
 // Note: This operation can generate multiple requests to a service.
 //
-//    // Example iterating over at most 3 pages of a ListAssociationVersions operation.
-//    pageNum := 0
-//    err := client.ListAssociationVersionsPages(params,
-//        func(page *ssm.ListAssociationVersionsOutput, lastPage bool) bool {
-//            pageNum++
-//            fmt.Println(page)
-//            return pageNum <= 3
-//        })
-//
+//	// Example iterating over at most 3 pages of a ListAssociationVersions operation.
+//	pageNum := 0
+//	err := client.ListAssociationVersionsPages(params,
+//	    func(page *ssm.ListAssociationVersionsOutput, lastPage bool) bool {
+//	        pageNum++
+//	        fmt.Println(page)
+//	        return pageNum <= 3
+//	    })
 func (c *SSM) ListAssociationVersionsPages(input *ListAssociationVersionsInput, fn func(*ListAssociationVersionsOutput, bool) bool) error {
 	return c.ListAssociationVersionsPagesWithContext(aws.BackgroundContext(), input, fn)
 }
@@ -10014,14 +9987,13 @@ const opListAssociations = "ListAssociations"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the ListAssociationsRequest method.
+//	req, resp := client.ListAssociationsRequest(params)
 //
-//    // Example sending a request using the ListAssociationsRequest method.
-//    req, resp := client.ListAssociationsRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListAssociations
 func (c *SSM) ListAssociationsRequest(input *ListAssociationsInput) (req *request.Request, output *ListAssociationsOutput) {
@@ -10050,8 +10022,8 @@ func (c *SSM) ListAssociationsRequest(input *ListAssociationsInput) (req *reques
 //
 // Returns all State Manager associations in the current Amazon Web Services
 // account and Amazon Web Services Region. You can limit the results to a specific
-// State Manager association document or instance by specifying a filter. State
-// Manager is a capability of Amazon Web Services Systems Manager.
+// State Manager association document or managed node by specifying a filter.
+// State Manager is a capability of Amazon Web Services Systems Manager.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -10061,11 +10033,12 @@ func (c *SSM) ListAssociationsRequest(input *ListAssociationsInput) (req *reques
 // API operation ListAssociations for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
 //
-//   * InvalidNextToken
-//   The specified token isn't valid.
+//   - InternalServerError
+//     An error occurred on the server side.
+//
+//   - InvalidNextToken
+//     The specified token isn't valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListAssociations
 func (c *SSM) ListAssociations(input *ListAssociationsInput) (*ListAssociationsOutput, error) {
@@ -10097,15 +10070,14 @@ func (c *SSM) ListAssociationsWithContext(ctx aws.Context, input *ListAssociatio
 //
 // Note: This operation can generate multiple requests to a service.
 //
-//    // Example iterating over at most 3 pages of a ListAssociations operation.
-//    pageNum := 0
-//    err := client.ListAssociationsPages(params,
-//        func(page *ssm.ListAssociationsOutput, lastPage bool) bool {
-//            pageNum++
-//            fmt.Println(page)
-//            return pageNum <= 3
-//        })
-//
+//	// Example iterating over at most 3 pages of a ListAssociations operation.
+//	pageNum := 0
+//	err := client.ListAssociationsPages(params,
+//	    func(page *ssm.ListAssociationsOutput, lastPage bool) bool {
+//	        pageNum++
+//	        fmt.Println(page)
+//	        return pageNum <= 3
+//	    })
 func (c *SSM) ListAssociationsPages(input *ListAssociationsInput, fn func(*ListAssociationsOutput, bool) bool) error {
 	return c.ListAssociationsPagesWithContext(aws.BackgroundContext(), input, fn)
 }
@@ -10157,14 +10129,13 @@ const opListCommandInvocations = "ListCommandInvocations"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the ListCommandInvocationsRequest method.
+//	req, resp := client.ListCommandInvocationsRequest(params)
 //
-//    // Example sending a request using the ListCommandInvocationsRequest method.
-//    req, resp := client.ListCommandInvocationsRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListCommandInvocations
 func (c *SSM) ListCommandInvocationsRequest(input *ListCommandInvocationsInput) (req *request.Request, output *ListCommandInvocationsOutput) {
@@ -10191,11 +10162,11 @@ func (c *SSM) ListCommandInvocationsRequest(input *ListCommandInvocationsInput) 
 
 // ListCommandInvocations API operation for Amazon Simple Systems Manager (SSM).
 //
-// An invocation is copy of a command sent to a specific instance. A command
-// can apply to one or more instances. A command invocation applies to one instance.
-// For example, if a user runs SendCommand against three instances, then a command
-// invocation is created for each requested instance ID. ListCommandInvocations
-// provide status about command execution.
+// An invocation is copy of a command sent to a specific managed node. A command
+// can apply to one or more managed nodes. A command invocation applies to one
+// managed node. For example, if a user runs SendCommand against three managed
+// nodes, then a command invocation is created for each requested managed node
+// ID. ListCommandInvocations provide status about command execution.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -10205,31 +10176,32 @@ func (c *SSM) ListCommandInvocationsRequest(input *ListCommandInvocationsInput) 
 // API operation ListCommandInvocations for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
 //
-//   * InvalidCommandId
-//   The specified command ID isn't valid. Verify the ID and try again.
+//   - InternalServerError
+//     An error occurred on the server side.
 //
-//   * InvalidInstanceId
-//   The following problems can cause this exception:
+//   - InvalidCommandId
+//     The specified command ID isn't valid. Verify the ID and try again.
 //
-//      * You don't have permission to access the instance.
+//   - InvalidInstanceId
+//     The following problems can cause this exception:
 //
-//      * Amazon Web Services Systems Manager Agent(SSM Agent) isn't running.
-//      Verify that SSM Agent is running.
+//   - You don't have permission to access the managed node.
 //
-//      * SSM Agent isn't registered with the SSM endpoint. Try reinstalling SSM
-//      Agent.
+//   - Amazon Web Services Systems Manager Agent(SSM Agent) isn't running.
+//     Verify that SSM Agent is running.
 //
-//      * The instance isn't in valid state. Valid states are: Running, Pending,
-//      Stopped, and Stopping. Invalid states are: Shutting-down and Terminated.
+//   - SSM Agent isn't registered with the SSM endpoint. Try reinstalling SSM
+//     Agent.
 //
-//   * InvalidFilterKey
-//   The specified key isn't valid.
+//   - The managed node isn't in valid state. Valid states are: Running, Pending,
+//     Stopped, and Stopping. Invalid states are: Shutting-down and Terminated.
 //
-//   * InvalidNextToken
-//   The specified token isn't valid.
+//   - InvalidFilterKey
+//     The specified key isn't valid.
+//
+//   - InvalidNextToken
+//     The specified token isn't valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListCommandInvocations
 func (c *SSM) ListCommandInvocations(input *ListCommandInvocationsInput) (*ListCommandInvocationsOutput, error) {
@@ -10261,15 +10233,14 @@ func (c *SSM) ListCommandInvocationsWithContext(ctx aws.Context, input *ListComm
 //
 // Note: This operation can generate multiple requests to a service.
 //
-//    // Example iterating over at most 3 pages of a ListCommandInvocations operation.
-//    pageNum := 0
-//    err := client.ListCommandInvocationsPages(params,
-//        func(page *ssm.ListCommandInvocationsOutput, lastPage bool) bool {
-//            pageNum++
-//            fmt.Println(page)
-//            return pageNum <= 3
-//        })
-//
+//	// Example iterating over at most 3 pages of a ListCommandInvocations operation.
+//	pageNum := 0
+//	err := client.ListCommandInvocationsPages(params,
+//	    func(page *ssm.ListCommandInvocationsOutput, lastPage bool) bool {
+//	        pageNum++
+//	        fmt.Println(page)
+//	        return pageNum <= 3
+//	    })
 func (c *SSM) ListCommandInvocationsPages(input *ListCommandInvocationsInput, fn func(*ListCommandInvocationsOutput, bool) bool) error {
 	return c.ListCommandInvocationsPagesWithContext(aws.BackgroundContext(), input, fn)
 }
@@ -10321,14 +10292,13 @@ const opListCommands = "ListCommands"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the ListCommandsRequest method.
+//	req, resp := client.ListCommandsRequest(params)
 //
-//    // Example sending a request using the ListCommandsRequest method.
-//    req, resp := client.ListCommandsRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListCommands
 func (c *SSM) ListCommandsRequest(input *ListCommandsInput) (req *request.Request, output *ListCommandsOutput) {
@@ -10365,31 +10335,32 @@ func (c *SSM) ListCommandsRequest(input *ListCommandsInput) (req *request.Reques
 // API operation ListCommands for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
 //
-//   * InvalidCommandId
-//   The specified command ID isn't valid. Verify the ID and try again.
+//   - InternalServerError
+//     An error occurred on the server side.
 //
-//   * InvalidInstanceId
-//   The following problems can cause this exception:
+//   - InvalidCommandId
+//     The specified command ID isn't valid. Verify the ID and try again.
 //
-//      * You don't have permission to access the instance.
+//   - InvalidInstanceId
+//     The following problems can cause this exception:
 //
-//      * Amazon Web Services Systems Manager Agent(SSM Agent) isn't running.
-//      Verify that SSM Agent is running.
+//   - You don't have permission to access the managed node.
 //
-//      * SSM Agent isn't registered with the SSM endpoint. Try reinstalling SSM
-//      Agent.
+//   - Amazon Web Services Systems Manager Agent(SSM Agent) isn't running.
+//     Verify that SSM Agent is running.
 //
-//      * The instance isn't in valid state. Valid states are: Running, Pending,
-//      Stopped, and Stopping. Invalid states are: Shutting-down and Terminated.
+//   - SSM Agent isn't registered with the SSM endpoint. Try reinstalling SSM
+//     Agent.
 //
-//   * InvalidFilterKey
-//   The specified key isn't valid.
+//   - The managed node isn't in valid state. Valid states are: Running, Pending,
+//     Stopped, and Stopping. Invalid states are: Shutting-down and Terminated.
 //
-//   * InvalidNextToken
-//   The specified token isn't valid.
+//   - InvalidFilterKey
+//     The specified key isn't valid.
+//
+//   - InvalidNextToken
+//     The specified token isn't valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListCommands
 func (c *SSM) ListCommands(input *ListCommandsInput) (*ListCommandsOutput, error) {
@@ -10421,15 +10392,14 @@ func (c *SSM) ListCommandsWithContext(ctx aws.Context, input *ListCommandsInput,
 //
 // Note: This operation can generate multiple requests to a service.
 //
-//    // Example iterating over at most 3 pages of a ListCommands operation.
-//    pageNum := 0
-//    err := client.ListCommandsPages(params,
-//        func(page *ssm.ListCommandsOutput, lastPage bool) bool {
-//            pageNum++
-//            fmt.Println(page)
-//            return pageNum <= 3
-//        })
-//
+//	// Example iterating over at most 3 pages of a ListCommands operation.
+//	pageNum := 0
+//	err := client.ListCommandsPages(params,
+//	    func(page *ssm.ListCommandsOutput, lastPage bool) bool {
+//	        pageNum++
+//	        fmt.Println(page)
+//	        return pageNum <= 3
+//	    })
 func (c *SSM) ListCommandsPages(input *ListCommandsInput, fn func(*ListCommandsOutput, bool) bool) error {
 	return c.ListCommandsPagesWithContext(aws.BackgroundContext(), input, fn)
 }
@@ -10481,14 +10451,13 @@ const opListComplianceItems = "ListComplianceItems"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the ListComplianceItemsRequest method.
+//	req, resp := client.ListComplianceItemsRequest(params)
 //
-//    // Example sending a request using the ListComplianceItemsRequest method.
-//    req, resp := client.ListComplianceItemsRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListComplianceItems
 func (c *SSM) ListComplianceItemsRequest(input *ListComplianceItemsInput) (req *request.Request, output *ListComplianceItemsOutput) {
@@ -10528,23 +10497,24 @@ func (c *SSM) ListComplianceItemsRequest(input *ListComplianceItemsInput) (req *
 // API operation ListComplianceItems for usage and error information.
 //
 // Returned Error Types:
-//   * InvalidResourceType
-//   The resource type isn't valid. For example, if you are attempting to tag
-//   an instance, the instance must be a registered, managed instance.
 //
-//   * InvalidResourceId
-//   The resource ID isn't valid. Verify that you entered the correct ID and try
-//   again.
+//   - InvalidResourceType
+//     The resource type isn't valid. For example, if you are attempting to tag
+//     an EC2 instance, the instance must be a registered managed node.
 //
-//   * InternalServerError
-//   An error occurred on the server side.
+//   - InvalidResourceId
+//     The resource ID isn't valid. Verify that you entered the correct ID and try
+//     again.
 //
-//   * InvalidFilter
-//   The filter name isn't valid. Verify the you entered the correct name and
-//   try again.
+//   - InternalServerError
+//     An error occurred on the server side.
 //
-//   * InvalidNextToken
-//   The specified token isn't valid.
+//   - InvalidFilter
+//     The filter name isn't valid. Verify the you entered the correct name and
+//     try again.
+//
+//   - InvalidNextToken
+//     The specified token isn't valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListComplianceItems
 func (c *SSM) ListComplianceItems(input *ListComplianceItemsInput) (*ListComplianceItemsOutput, error) {
@@ -10576,15 +10546,14 @@ func (c *SSM) ListComplianceItemsWithContext(ctx aws.Context, input *ListComplia
 //
 // Note: This operation can generate multiple requests to a service.
 //
-//    // Example iterating over at most 3 pages of a ListComplianceItems operation.
-//    pageNum := 0
-//    err := client.ListComplianceItemsPages(params,
-//        func(page *ssm.ListComplianceItemsOutput, lastPage bool) bool {
-//            pageNum++
-//            fmt.Println(page)
-//            return pageNum <= 3
-//        })
-//
+//	// Example iterating over at most 3 pages of a ListComplianceItems operation.
+//	pageNum := 0
+//	err := client.ListComplianceItemsPages(params,
+//	    func(page *ssm.ListComplianceItemsOutput, lastPage bool) bool {
+//	        pageNum++
+//	        fmt.Println(page)
+//	        return pageNum <= 3
+//	    })
 func (c *SSM) ListComplianceItemsPages(input *ListComplianceItemsInput, fn func(*ListComplianceItemsOutput, bool) bool) error {
 	return c.ListComplianceItemsPagesWithContext(aws.BackgroundContext(), input, fn)
 }
@@ -10636,14 +10605,13 @@ const opListComplianceSummaries = "ListComplianceSummaries"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the ListComplianceSummariesRequest method.
+//	req, resp := client.ListComplianceSummariesRequest(params)
 //
-//    // Example sending a request using the ListComplianceSummariesRequest method.
-//    req, resp := client.ListComplianceSummariesRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListComplianceSummaries
 func (c *SSM) ListComplianceSummariesRequest(input *ListComplianceSummariesInput) (req *request.Request, output *ListComplianceSummariesOutput) {
@@ -10682,15 +10650,16 @@ func (c *SSM) ListComplianceSummariesRequest(input *ListComplianceSummariesInput
 // API operation ListComplianceSummaries for usage and error information.
 //
 // Returned Error Types:
-//   * InvalidFilter
-//   The filter name isn't valid. Verify the you entered the correct name and
-//   try again.
 //
-//   * InvalidNextToken
-//   The specified token isn't valid.
+//   - InvalidFilter
+//     The filter name isn't valid. Verify the you entered the correct name and
+//     try again.
 //
-//   * InternalServerError
-//   An error occurred on the server side.
+//   - InvalidNextToken
+//     The specified token isn't valid.
+//
+//   - InternalServerError
+//     An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListComplianceSummaries
 func (c *SSM) ListComplianceSummaries(input *ListComplianceSummariesInput) (*ListComplianceSummariesOutput, error) {
@@ -10722,15 +10691,14 @@ func (c *SSM) ListComplianceSummariesWithContext(ctx aws.Context, input *ListCom
 //
 // Note: This operation can generate multiple requests to a service.
 //
-//    // Example iterating over at most 3 pages of a ListComplianceSummaries operation.
-//    pageNum := 0
-//    err := client.ListComplianceSummariesPages(params,
-//        func(page *ssm.ListComplianceSummariesOutput, lastPage bool) bool {
-//            pageNum++
-//            fmt.Println(page)
-//            return pageNum <= 3
-//        })
-//
+//	// Example iterating over at most 3 pages of a ListComplianceSummaries operation.
+//	pageNum := 0
+//	err := client.ListComplianceSummariesPages(params,
+//	    func(page *ssm.ListComplianceSummariesOutput, lastPage bool) bool {
+//	        pageNum++
+//	        fmt.Println(page)
+//	        return pageNum <= 3
+//	    })
 func (c *SSM) ListComplianceSummariesPages(input *ListComplianceSummariesInput, fn func(*ListComplianceSummariesOutput, bool) bool) error {
 	return c.ListComplianceSummariesPagesWithContext(aws.BackgroundContext(), input, fn)
 }
@@ -10782,14 +10750,13 @@ const opListDocumentMetadataHistory = "ListDocumentMetadataHistory"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the ListDocumentMetadataHistoryRequest method.
+//	req, resp := client.ListDocumentMetadataHistoryRequest(params)
 //
-//    // Example sending a request using the ListDocumentMetadataHistoryRequest method.
-//    req, resp := client.ListDocumentMetadataHistoryRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListDocumentMetadataHistory
 func (c *SSM) ListDocumentMetadataHistoryRequest(input *ListDocumentMetadataHistoryInput) (req *request.Request, output *ListDocumentMetadataHistoryOutput) {
@@ -10821,17 +10788,18 @@ func (c *SSM) ListDocumentMetadataHistoryRequest(input *ListDocumentMetadataHist
 // API operation ListDocumentMetadataHistory for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
 //
-//   * InvalidDocument
-//   The specified SSM document doesn't exist.
+//   - InternalServerError
+//     An error occurred on the server side.
 //
-//   * InvalidDocumentVersion
-//   The document version isn't valid or doesn't exist.
+//   - InvalidDocument
+//     The specified SSM document doesn't exist.
 //
-//   * InvalidNextToken
-//   The specified token isn't valid.
+//   - InvalidDocumentVersion
+//     The document version isn't valid or doesn't exist.
+//
+//   - InvalidNextToken
+//     The specified token isn't valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListDocumentMetadataHistory
 func (c *SSM) ListDocumentMetadataHistory(input *ListDocumentMetadataHistoryInput) (*ListDocumentMetadataHistoryOutput, error) {
@@ -10871,14 +10839,13 @@ const opListDocumentVersions = "ListDocumentVersions"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the ListDocumentVersionsRequest method.
+//	req, resp := client.ListDocumentVersionsRequest(params)
 //
-//    // Example sending a request using the ListDocumentVersionsRequest method.
-//    req, resp := client.ListDocumentVersionsRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListDocumentVersions
 func (c *SSM) ListDocumentVersionsRequest(input *ListDocumentVersionsInput) (req *request.Request, output *ListDocumentVersionsOutput) {
@@ -10915,14 +10882,15 @@ func (c *SSM) ListDocumentVersionsRequest(input *ListDocumentVersionsInput) (req
 // API operation ListDocumentVersions for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
 //
-//   * InvalidNextToken
-//   The specified token isn't valid.
+//   - InternalServerError
+//     An error occurred on the server side.
 //
-//   * InvalidDocument
-//   The specified SSM document doesn't exist.
+//   - InvalidNextToken
+//     The specified token isn't valid.
+//
+//   - InvalidDocument
+//     The specified SSM document doesn't exist.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListDocumentVersions
 func (c *SSM) ListDocumentVersions(input *ListDocumentVersionsInput) (*ListDocumentVersionsOutput, error) {
@@ -10954,15 +10922,14 @@ func (c *SSM) ListDocumentVersionsWithContext(ctx aws.Context, input *ListDocume
 //
 // Note: This operation can generate multiple requests to a service.
 //
-//    // Example iterating over at most 3 pages of a ListDocumentVersions operation.
-//    pageNum := 0
-//    err := client.ListDocumentVersionsPages(params,
-//        func(page *ssm.ListDocumentVersionsOutput, lastPage bool) bool {
-//            pageNum++
-//            fmt.Println(page)
-//            return pageNum <= 3
-//        })
-//
+//	// Example iterating over at most 3 pages of a ListDocumentVersions operation.
+//	pageNum := 0
+//	err := client.ListDocumentVersionsPages(params,
+//	    func(page *ssm.ListDocumentVersionsOutput, lastPage bool) bool {
+//	        pageNum++
+//	        fmt.Println(page)
+//	        return pageNum <= 3
+//	    })
 func (c *SSM) ListDocumentVersionsPages(input *ListDocumentVersionsInput, fn func(*ListDocumentVersionsOutput, bool) bool) error {
 	return c.ListDocumentVersionsPagesWithContext(aws.BackgroundContext(), input, fn)
 }
@@ -11014,14 +10981,13 @@ const opListDocuments = "ListDocuments"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the ListDocumentsRequest method.
+//	req, resp := client.ListDocumentsRequest(params)
 //
-//    // Example sending a request using the ListDocumentsRequest method.
-//    req, resp := client.ListDocumentsRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListDocuments
 func (c *SSM) ListDocumentsRequest(input *ListDocumentsInput) (req *request.Request, output *ListDocumentsOutput) {
@@ -11060,14 +11026,15 @@ func (c *SSM) ListDocumentsRequest(input *ListDocumentsInput) (req *request.Requ
 // API operation ListDocuments for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
 //
-//   * InvalidNextToken
-//   The specified token isn't valid.
+//   - InternalServerError
+//     An error occurred on the server side.
 //
-//   * InvalidFilterKey
-//   The specified key isn't valid.
+//   - InvalidNextToken
+//     The specified token isn't valid.
+//
+//   - InvalidFilterKey
+//     The specified key isn't valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListDocuments
 func (c *SSM) ListDocuments(input *ListDocumentsInput) (*ListDocumentsOutput, error) {
@@ -11099,15 +11066,14 @@ func (c *SSM) ListDocumentsWithContext(ctx aws.Context, input *ListDocumentsInpu
 //
 // Note: This operation can generate multiple requests to a service.
 //
-//    // Example iterating over at most 3 pages of a ListDocuments operation.
-//    pageNum := 0
-//    err := client.ListDocumentsPages(params,
-//        func(page *ssm.ListDocumentsOutput, lastPage bool) bool {
-//            pageNum++
-//            fmt.Println(page)
-//            return pageNum <= 3
-//        })
-//
+//	// Example iterating over at most 3 pages of a ListDocuments operation.
+//	pageNum := 0
+//	err := client.ListDocumentsPages(params,
+//	    func(page *ssm.ListDocumentsOutput, lastPage bool) bool {
+//	        pageNum++
+//	        fmt.Println(page)
+//	        return pageNum <= 3
+//	    })
 func (c *SSM) ListDocumentsPages(input *ListDocumentsInput, fn func(*ListDocumentsOutput, bool) bool) error {
 	return c.ListDocumentsPagesWithContext(aws.BackgroundContext(), input, fn)
 }
@@ -11159,14 +11125,13 @@ const opListInventoryEntries = "ListInventoryEntries"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the ListInventoryEntriesRequest method.
+//	req, resp := client.ListInventoryEntriesRequest(params)
 //
-//    // Example sending a request using the ListInventoryEntriesRequest method.
-//    req, resp := client.ListInventoryEntriesRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListInventoryEntries
 func (c *SSM) ListInventoryEntriesRequest(input *ListInventoryEntriesInput) (req *request.Request, output *ListInventoryEntriesOutput) {
@@ -11197,32 +11162,33 @@ func (c *SSM) ListInventoryEntriesRequest(input *ListInventoryEntriesInput) (req
 // API operation ListInventoryEntries for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
 //
-//   * InvalidInstanceId
-//   The following problems can cause this exception:
+//   - InternalServerError
+//     An error occurred on the server side.
 //
-//      * You don't have permission to access the instance.
+//   - InvalidInstanceId
+//     The following problems can cause this exception:
 //
-//      * Amazon Web Services Systems Manager Agent(SSM Agent) isn't running.
-//      Verify that SSM Agent is running.
+//   - You don't have permission to access the managed node.
 //
-//      * SSM Agent isn't registered with the SSM endpoint. Try reinstalling SSM
-//      Agent.
+//   - Amazon Web Services Systems Manager Agent(SSM Agent) isn't running.
+//     Verify that SSM Agent is running.
 //
-//      * The instance isn't in valid state. Valid states are: Running, Pending,
-//      Stopped, and Stopping. Invalid states are: Shutting-down and Terminated.
+//   - SSM Agent isn't registered with the SSM endpoint. Try reinstalling SSM
+//     Agent.
 //
-//   * InvalidTypeNameException
-//   The parameter type name isn't valid.
+//   - The managed node isn't in valid state. Valid states are: Running, Pending,
+//     Stopped, and Stopping. Invalid states are: Shutting-down and Terminated.
 //
-//   * InvalidFilter
-//   The filter name isn't valid. Verify the you entered the correct name and
-//   try again.
+//   - InvalidTypeNameException
+//     The parameter type name isn't valid.
 //
-//   * InvalidNextToken
-//   The specified token isn't valid.
+//   - InvalidFilter
+//     The filter name isn't valid. Verify the you entered the correct name and
+//     try again.
+//
+//   - InvalidNextToken
+//     The specified token isn't valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListInventoryEntries
 func (c *SSM) ListInventoryEntries(input *ListInventoryEntriesInput) (*ListInventoryEntriesOutput, error) {
@@ -11262,14 +11228,13 @@ const opListOpsItemEvents = "ListOpsItemEvents"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the ListOpsItemEventsRequest method.
+//	req, resp := client.ListOpsItemEventsRequest(params)
 //
-//    // Example sending a request using the ListOpsItemEventsRequest method.
-//    req, resp := client.ListOpsItemEventsRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListOpsItemEvents
 func (c *SSM) ListOpsItemEventsRequest(input *ListOpsItemEventsInput) (req *request.Request, output *ListOpsItemEventsOutput) {
@@ -11308,19 +11273,20 @@ func (c *SSM) ListOpsItemEventsRequest(input *ListOpsItemEventsInput) (req *requ
 // API operation ListOpsItemEvents for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
 //
-//   * OpsItemNotFoundException
-//   The specified OpsItem ID doesn't exist. Verify the ID and try again.
+//   - InternalServerError
+//     An error occurred on the server side.
 //
-//   * OpsItemLimitExceededException
-//   The request caused OpsItems to exceed one or more quotas. For information
-//   about OpsItem quotas, see What are the resource limits for OpsCenter? (https://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-learn-more.html#OpsCenter-learn-more-limits).
+//   - OpsItemNotFoundException
+//     The specified OpsItem ID doesn't exist. Verify the ID and try again.
 //
-//   * OpsItemInvalidParameterException
-//   A specified parameter argument isn't valid. Verify the available arguments
-//   and try again.
+//   - OpsItemLimitExceededException
+//     The request caused OpsItems to exceed one or more quotas. For information
+//     about OpsItem quotas, see What are the resource limits for OpsCenter? (https://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-learn-more.html#OpsCenter-learn-more-limits).
+//
+//   - OpsItemInvalidParameterException
+//     A specified parameter argument isn't valid. Verify the available arguments
+//     and try again.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListOpsItemEvents
 func (c *SSM) ListOpsItemEvents(input *ListOpsItemEventsInput) (*ListOpsItemEventsOutput, error) {
@@ -11352,15 +11318,14 @@ func (c *SSM) ListOpsItemEventsWithContext(ctx aws.Context, input *ListOpsItemEv
 //
 // Note: This operation can generate multiple requests to a service.
 //
-//    // Example iterating over at most 3 pages of a ListOpsItemEvents operation.
-//    pageNum := 0
-//    err := client.ListOpsItemEventsPages(params,
-//        func(page *ssm.ListOpsItemEventsOutput, lastPage bool) bool {
-//            pageNum++
-//            fmt.Println(page)
-//            return pageNum <= 3
-//        })
-//
+//	// Example iterating over at most 3 pages of a ListOpsItemEvents operation.
+//	pageNum := 0
+//	err := client.ListOpsItemEventsPages(params,
+//	    func(page *ssm.ListOpsItemEventsOutput, lastPage bool) bool {
+//	        pageNum++
+//	        fmt.Println(page)
+//	        return pageNum <= 3
+//	    })
 func (c *SSM) ListOpsItemEventsPages(input *ListOpsItemEventsInput, fn func(*ListOpsItemEventsOutput, bool) bool) error {
 	return c.ListOpsItemEventsPagesWithContext(aws.BackgroundContext(), input, fn)
 }
@@ -11412,14 +11377,13 @@ const opListOpsItemRelatedItems = "ListOpsItemRelatedItems"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the ListOpsItemRelatedItemsRequest method.
+//	req, resp := client.ListOpsItemRelatedItemsRequest(params)
 //
-//    // Example sending a request using the ListOpsItemRelatedItemsRequest method.
-//    req, resp := client.ListOpsItemRelatedItemsRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListOpsItemRelatedItems
 func (c *SSM) ListOpsItemRelatedItemsRequest(input *ListOpsItemRelatedItemsInput) (req *request.Request, output *ListOpsItemRelatedItemsOutput) {
@@ -11457,12 +11421,13 @@ func (c *SSM) ListOpsItemRelatedItemsRequest(input *ListOpsItemRelatedItemsInput
 // API operation ListOpsItemRelatedItems for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
 //
-//   * OpsItemInvalidParameterException
-//   A specified parameter argument isn't valid. Verify the available arguments
-//   and try again.
+//   - InternalServerError
+//     An error occurred on the server side.
+//
+//   - OpsItemInvalidParameterException
+//     A specified parameter argument isn't valid. Verify the available arguments
+//     and try again.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListOpsItemRelatedItems
 func (c *SSM) ListOpsItemRelatedItems(input *ListOpsItemRelatedItemsInput) (*ListOpsItemRelatedItemsOutput, error) {
@@ -11494,15 +11459,14 @@ func (c *SSM) ListOpsItemRelatedItemsWithContext(ctx aws.Context, input *ListOps
 //
 // Note: This operation can generate multiple requests to a service.
 //
-//    // Example iterating over at most 3 pages of a ListOpsItemRelatedItems operation.
-//    pageNum := 0
-//    err := client.ListOpsItemRelatedItemsPages(params,
-//        func(page *ssm.ListOpsItemRelatedItemsOutput, lastPage bool) bool {
-//            pageNum++
-//            fmt.Println(page)
-//            return pageNum <= 3
-//        })
-//
+//	// Example iterating over at most 3 pages of a ListOpsItemRelatedItems operation.
+//	pageNum := 0
+//	err := client.ListOpsItemRelatedItemsPages(params,
+//	    func(page *ssm.ListOpsItemRelatedItemsOutput, lastPage bool) bool {
+//	        pageNum++
+//	        fmt.Println(page)
+//	        return pageNum <= 3
+//	    })
 func (c *SSM) ListOpsItemRelatedItemsPages(input *ListOpsItemRelatedItemsInput, fn func(*ListOpsItemRelatedItemsOutput, bool) bool) error {
 	return c.ListOpsItemRelatedItemsPagesWithContext(aws.BackgroundContext(), input, fn)
 }
@@ -11554,14 +11518,13 @@ const opListOpsMetadata = "ListOpsMetadata"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the ListOpsMetadataRequest method.
+//	req, resp := client.ListOpsMetadataRequest(params)
 //
-//    // Example sending a request using the ListOpsMetadataRequest method.
-//    req, resp := client.ListOpsMetadataRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListOpsMetadata
 func (c *SSM) ListOpsMetadataRequest(input *ListOpsMetadataInput) (req *request.Request, output *ListOpsMetadataOutput) {
@@ -11599,11 +11562,12 @@ func (c *SSM) ListOpsMetadataRequest(input *ListOpsMetadataInput) (req *request.
 // API operation ListOpsMetadata for usage and error information.
 //
 // Returned Error Types:
-//   * OpsMetadataInvalidArgumentException
-//   One of the arguments passed is invalid.
 //
-//   * InternalServerError
-//   An error occurred on the server side.
+//   - OpsMetadataInvalidArgumentException
+//     One of the arguments passed is invalid.
+//
+//   - InternalServerError
+//     An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListOpsMetadata
 func (c *SSM) ListOpsMetadata(input *ListOpsMetadataInput) (*ListOpsMetadataOutput, error) {
@@ -11635,15 +11599,14 @@ func (c *SSM) ListOpsMetadataWithContext(ctx aws.Context, input *ListOpsMetadata
 //
 // Note: This operation can generate multiple requests to a service.
 //
-//    // Example iterating over at most 3 pages of a ListOpsMetadata operation.
-//    pageNum := 0
-//    err := client.ListOpsMetadataPages(params,
-//        func(page *ssm.ListOpsMetadataOutput, lastPage bool) bool {
-//            pageNum++
-//            fmt.Println(page)
-//            return pageNum <= 3
-//        })
-//
+//	// Example iterating over at most 3 pages of a ListOpsMetadata operation.
+//	pageNum := 0
+//	err := client.ListOpsMetadataPages(params,
+//	    func(page *ssm.ListOpsMetadataOutput, lastPage bool) bool {
+//	        pageNum++
+//	        fmt.Println(page)
+//	        return pageNum <= 3
+//	    })
 func (c *SSM) ListOpsMetadataPages(input *ListOpsMetadataInput, fn func(*ListOpsMetadataOutput, bool) bool) error {
 	return c.ListOpsMetadataPagesWithContext(aws.BackgroundContext(), input, fn)
 }
@@ -11695,14 +11658,13 @@ const opListResourceComplianceSummaries = "ListResourceComplianceSummaries"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the ListResourceComplianceSummariesRequest method.
+//	req, resp := client.ListResourceComplianceSummariesRequest(params)
 //
-//    // Example sending a request using the ListResourceComplianceSummariesRequest method.
-//    req, resp := client.ListResourceComplianceSummariesRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListResourceComplianceSummaries
 func (c *SSM) ListResourceComplianceSummariesRequest(input *ListResourceComplianceSummariesInput) (req *request.Request, output *ListResourceComplianceSummariesOutput) {
@@ -11741,15 +11703,16 @@ func (c *SSM) ListResourceComplianceSummariesRequest(input *ListResourceComplian
 // API operation ListResourceComplianceSummaries for usage and error information.
 //
 // Returned Error Types:
-//   * InvalidFilter
-//   The filter name isn't valid. Verify the you entered the correct name and
-//   try again.
 //
-//   * InvalidNextToken
-//   The specified token isn't valid.
+//   - InvalidFilter
+//     The filter name isn't valid. Verify the you entered the correct name and
+//     try again.
 //
-//   * InternalServerError
-//   An error occurred on the server side.
+//   - InvalidNextToken
+//     The specified token isn't valid.
+//
+//   - InternalServerError
+//     An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListResourceComplianceSummaries
 func (c *SSM) ListResourceComplianceSummaries(input *ListResourceComplianceSummariesInput) (*ListResourceComplianceSummariesOutput, error) {
@@ -11781,15 +11744,14 @@ func (c *SSM) ListResourceComplianceSummariesWithContext(ctx aws.Context, input 
 //
 // Note: This operation can generate multiple requests to a service.
 //
-//    // Example iterating over at most 3 pages of a ListResourceComplianceSummaries operation.
-//    pageNum := 0
-//    err := client.ListResourceComplianceSummariesPages(params,
-//        func(page *ssm.ListResourceComplianceSummariesOutput, lastPage bool) bool {
-//            pageNum++
-//            fmt.Println(page)
-//            return pageNum <= 3
-//        })
-//
+//	// Example iterating over at most 3 pages of a ListResourceComplianceSummaries operation.
+//	pageNum := 0
+//	err := client.ListResourceComplianceSummariesPages(params,
+//	    func(page *ssm.ListResourceComplianceSummariesOutput, lastPage bool) bool {
+//	        pageNum++
+//	        fmt.Println(page)
+//	        return pageNum <= 3
+//	    })
 func (c *SSM) ListResourceComplianceSummariesPages(input *ListResourceComplianceSummariesInput, fn func(*ListResourceComplianceSummariesOutput, bool) bool) error {
 	return c.ListResourceComplianceSummariesPagesWithContext(aws.BackgroundContext(), input, fn)
 }
@@ -11841,14 +11803,13 @@ const opListResourceDataSync = "ListResourceDataSync"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the ListResourceDataSyncRequest method.
+//	req, resp := client.ListResourceDataSyncRequest(params)
 //
-//    // Example sending a request using the ListResourceDataSyncRequest method.
-//    req, resp := client.ListResourceDataSyncRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListResourceDataSync
 func (c *SSM) ListResourceDataSyncRequest(input *ListResourceDataSyncInput) (req *request.Request, output *ListResourceDataSyncOutput) {
@@ -11894,14 +11855,15 @@ func (c *SSM) ListResourceDataSyncRequest(input *ListResourceDataSyncInput) (req
 // API operation ListResourceDataSync for usage and error information.
 //
 // Returned Error Types:
-//   * ResourceDataSyncInvalidConfigurationException
-//   The specified sync configuration is invalid.
 //
-//   * InternalServerError
-//   An error occurred on the server side.
+//   - ResourceDataSyncInvalidConfigurationException
+//     The specified sync configuration is invalid.
 //
-//   * InvalidNextToken
-//   The specified token isn't valid.
+//   - InternalServerError
+//     An error occurred on the server side.
+//
+//   - InvalidNextToken
+//     The specified token isn't valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListResourceDataSync
 func (c *SSM) ListResourceDataSync(input *ListResourceDataSyncInput) (*ListResourceDataSyncOutput, error) {
@@ -11933,15 +11895,14 @@ func (c *SSM) ListResourceDataSyncWithContext(ctx aws.Context, input *ListResour
 //
 // Note: This operation can generate multiple requests to a service.
 //
-//    // Example iterating over at most 3 pages of a ListResourceDataSync operation.
-//    pageNum := 0
-//    err := client.ListResourceDataSyncPages(params,
-//        func(page *ssm.ListResourceDataSyncOutput, lastPage bool) bool {
-//            pageNum++
-//            fmt.Println(page)
-//            return pageNum <= 3
-//        })
-//
+//	// Example iterating over at most 3 pages of a ListResourceDataSync operation.
+//	pageNum := 0
+//	err := client.ListResourceDataSyncPages(params,
+//	    func(page *ssm.ListResourceDataSyncOutput, lastPage bool) bool {
+//	        pageNum++
+//	        fmt.Println(page)
+//	        return pageNum <= 3
+//	    })
 func (c *SSM) ListResourceDataSyncPages(input *ListResourceDataSyncInput, fn func(*ListResourceDataSyncOutput, bool) bool) error {
 	return c.ListResourceDataSyncPagesWithContext(aws.BackgroundContext(), input, fn)
 }
@@ -11993,14 +11954,13 @@ const opListTagsForResource = "ListTagsForResource"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the ListTagsForResourceRequest method.
+//	req, resp := client.ListTagsForResourceRequest(params)
 //
-//    // Example sending a request using the ListTagsForResourceRequest method.
-//    req, resp := client.ListTagsForResourceRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListTagsForResource
 func (c *SSM) ListTagsForResourceRequest(input *ListTagsForResourceInput) (req *request.Request, output *ListTagsForResourceOutput) {
@@ -12034,16 +11994,17 @@ func (c *SSM) ListTagsForResourceRequest(input *ListTagsForResourceInput) (req *
 // API operation ListTagsForResource for usage and error information.
 //
 // Returned Error Types:
-//   * InvalidResourceType
-//   The resource type isn't valid. For example, if you are attempting to tag
-//   an instance, the instance must be a registered, managed instance.
 //
-//   * InvalidResourceId
-//   The resource ID isn't valid. Verify that you entered the correct ID and try
-//   again.
+//   - InvalidResourceType
+//     The resource type isn't valid. For example, if you are attempting to tag
+//     an EC2 instance, the instance must be a registered managed node.
 //
-//   * InternalServerError
-//   An error occurred on the server side.
+//   - InvalidResourceId
+//     The resource ID isn't valid. Verify that you entered the correct ID and try
+//     again.
+//
+//   - InternalServerError
+//     An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ListTagsForResource
 func (c *SSM) ListTagsForResource(input *ListTagsForResourceInput) (*ListTagsForResourceOutput, error) {
@@ -12083,14 +12044,13 @@ const opModifyDocumentPermission = "ModifyDocumentPermission"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the ModifyDocumentPermissionRequest method.
+//	req, resp := client.ModifyDocumentPermissionRequest(params)
 //
-//    // Example sending a request using the ModifyDocumentPermissionRequest method.
-//    req, resp := client.ModifyDocumentPermissionRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ModifyDocumentPermission
 func (c *SSM) ModifyDocumentPermissionRequest(input *ModifyDocumentPermissionInput) (req *request.Request, output *ModifyDocumentPermissionOutput) {
@@ -12125,24 +12085,30 @@ func (c *SSM) ModifyDocumentPermissionRequest(input *ModifyDocumentPermissionInp
 // API operation ModifyDocumentPermission for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
 //
-//   * InvalidDocument
-//   The specified SSM document doesn't exist.
+//   - InternalServerError
+//     An error occurred on the server side.
 //
-//   * InvalidPermissionType
-//   The permission type isn't supported. Share is the only supported permission
-//   type.
+//   - InvalidDocument
+//     The specified SSM document doesn't exist.
 //
-//   * DocumentPermissionLimit
-//   The document can't be shared with more Amazon Web Services user accounts.
-//   You can share a document with a maximum of 20 accounts. You can publicly
-//   share up to five documents. If you need to increase this limit, contact Amazon
-//   Web Services Support.
+//   - InvalidPermissionType
+//     The permission type isn't supported. Share is the only supported permission
+//     type.
 //
-//   * DocumentLimitExceeded
-//   You can have at most 500 active SSM documents.
+//   - DocumentPermissionLimit
+//     The document can't be shared with more Amazon Web Services user accounts.
+//     You can specify a maximum of 20 accounts per API operation to share a private
+//     document.
+//
+//     By default, you can share a private document with a maximum of 1,000 accounts
+//     and publicly share up to five documents.
+//
+//     If you need to increase the quota for privately or publicly shared Systems
+//     Manager documents, contact Amazon Web Services Support.
+//
+//   - DocumentLimitExceeded
+//     You can have at most 500 active SSM documents.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ModifyDocumentPermission
 func (c *SSM) ModifyDocumentPermission(input *ModifyDocumentPermissionInput) (*ModifyDocumentPermissionOutput, error) {
@@ -12182,14 +12148,13 @@ const opPutComplianceItems = "PutComplianceItems"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the PutComplianceItemsRequest method.
+//	req, resp := client.PutComplianceItemsRequest(params)
 //
-//    // Example sending a request using the PutComplianceItemsRequest method.
-//    req, resp := client.PutComplianceItemsRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/PutComplianceItems
 func (c *SSM) PutComplianceItemsRequest(input *PutComplianceItemsInput) (req *request.Request, output *PutComplianceItemsOutput) {
@@ -12219,40 +12184,40 @@ func (c *SSM) PutComplianceItemsRequest(input *PutComplianceItemsInput) (req *re
 //
 // ComplianceType can be one of the following:
 //
-//    * ExecutionId: The execution ID when the patch, association, or custom
-//    compliance item was applied.
+//   - ExecutionId: The execution ID when the patch, association, or custom
+//     compliance item was applied.
 //
-//    * ExecutionType: Specify patch, association, or Custom:string.
+//   - ExecutionType: Specify patch, association, or Custom:string.
 //
-//    * ExecutionTime. The time the patch, association, or custom compliance
-//    item was applied to the instance.
+//   - ExecutionTime. The time the patch, association, or custom compliance
+//     item was applied to the managed node.
 //
-//    * Id: The patch, association, or custom compliance ID.
+//   - Id: The patch, association, or custom compliance ID.
 //
-//    * Title: A title.
+//   - Title: A title.
 //
-//    * Status: The status of the compliance item. For example, approved for
-//    patches, or Failed for associations.
+//   - Status: The status of the compliance item. For example, approved for
+//     patches, or Failed for associations.
 //
-//    * Severity: A patch severity. For example, critical.
+//   - Severity: A patch severity. For example, Critical.
 //
-//    * DocumentName: An SSM document name. For example, AWS-RunPatchBaseline.
+//   - DocumentName: An SSM document name. For example, AWS-RunPatchBaseline.
 //
-//    * DocumentVersion: An SSM document version number. For example, 4.
+//   - DocumentVersion: An SSM document version number. For example, 4.
 //
-//    * Classification: A patch classification. For example, security updates.
+//   - Classification: A patch classification. For example, security updates.
 //
-//    * PatchBaselineId: A patch baseline ID.
+//   - PatchBaselineId: A patch baseline ID.
 //
-//    * PatchSeverity: A patch severity. For example, Critical.
+//   - PatchSeverity: A patch severity. For example, Critical.
 //
-//    * PatchState: A patch state. For example, InstancesWithFailedPatches.
+//   - PatchState: A patch state. For example, InstancesWithFailedPatches.
 //
-//    * PatchGroup: The name of a patch group.
+//   - PatchGroup: The name of a patch group.
 //
-//    * InstalledTime: The time the association, patch, or custom compliance
-//    item was applied to the resource. Specify the time by using the following
-//    format: yyyy-MM-dd'T'HH:mm:ss'Z'
+//   - InstalledTime: The time the association, patch, or custom compliance
+//     item was applied to the resource. Specify the time by using the following
+//     format: yyyy-MM-dd'T'HH:mm:ss'Z'
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -12262,29 +12227,30 @@ func (c *SSM) PutComplianceItemsRequest(input *PutComplianceItemsInput) (req *re
 // API operation PutComplianceItems for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
 //
-//   * InvalidItemContentException
-//   One or more content items isn't valid.
+//   - InternalServerError
+//     An error occurred on the server side.
 //
-//   * TotalSizeLimitExceededException
-//   The size of inventory data has exceeded the total size limit for the resource.
+//   - InvalidItemContentException
+//     One or more content items isn't valid.
 //
-//   * ItemSizeLimitExceededException
-//   The inventory item size has exceeded the size limit.
+//   - TotalSizeLimitExceededException
+//     The size of inventory data has exceeded the total size limit for the resource.
 //
-//   * ComplianceTypeCountLimitExceededException
-//   You specified too many custom compliance types. You can specify a maximum
-//   of 10 different types.
+//   - ItemSizeLimitExceededException
+//     The inventory item size has exceeded the size limit.
 //
-//   * InvalidResourceType
-//   The resource type isn't valid. For example, if you are attempting to tag
-//   an instance, the instance must be a registered, managed instance.
+//   - ComplianceTypeCountLimitExceededException
+//     You specified too many custom compliance types. You can specify a maximum
+//     of 10 different types.
 //
-//   * InvalidResourceId
-//   The resource ID isn't valid. Verify that you entered the correct ID and try
-//   again.
+//   - InvalidResourceType
+//     The resource type isn't valid. For example, if you are attempting to tag
+//     an EC2 instance, the instance must be a registered managed node.
+//
+//   - InvalidResourceId
+//     The resource ID isn't valid. Verify that you entered the correct ID and try
+//     again.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/PutComplianceItems
 func (c *SSM) PutComplianceItems(input *PutComplianceItemsInput) (*PutComplianceItemsOutput, error) {
@@ -12324,14 +12290,13 @@ const opPutInventory = "PutInventory"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the PutInventoryRequest method.
+//	req, resp := client.PutInventoryRequest(params)
 //
-//    // Example sending a request using the PutInventoryRequest method.
-//    req, resp := client.PutInventoryRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/PutInventory
 func (c *SSM) PutInventoryRequest(input *PutInventoryInput) (req *request.Request, output *PutInventoryOutput) {
@@ -12352,9 +12317,9 @@ func (c *SSM) PutInventoryRequest(input *PutInventoryInput) (req *request.Reques
 
 // PutInventory API operation for Amazon Simple Systems Manager (SSM).
 //
-// Bulk update custom inventory items on one more instance. The request adds
-// an inventory item, if it doesn't already exist, or updates an inventory item,
-// if it does exist.
+// Bulk update custom inventory items on one or more managed nodes. The request
+// adds an inventory item, if it doesn't already exist, or updates an inventory
+// item, if it does exist.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -12364,58 +12329,59 @@ func (c *SSM) PutInventoryRequest(input *PutInventoryInput) (req *request.Reques
 // API operation PutInventory for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
 //
-//   * InvalidInstanceId
-//   The following problems can cause this exception:
+//   - InternalServerError
+//     An error occurred on the server side.
 //
-//      * You don't have permission to access the instance.
+//   - InvalidInstanceId
+//     The following problems can cause this exception:
 //
-//      * Amazon Web Services Systems Manager Agent(SSM Agent) isn't running.
-//      Verify that SSM Agent is running.
+//   - You don't have permission to access the managed node.
 //
-//      * SSM Agent isn't registered with the SSM endpoint. Try reinstalling SSM
-//      Agent.
+//   - Amazon Web Services Systems Manager Agent(SSM Agent) isn't running.
+//     Verify that SSM Agent is running.
 //
-//      * The instance isn't in valid state. Valid states are: Running, Pending,
-//      Stopped, and Stopping. Invalid states are: Shutting-down and Terminated.
+//   - SSM Agent isn't registered with the SSM endpoint. Try reinstalling SSM
+//     Agent.
 //
-//   * InvalidTypeNameException
-//   The parameter type name isn't valid.
+//   - The managed node isn't in valid state. Valid states are: Running, Pending,
+//     Stopped, and Stopping. Invalid states are: Shutting-down and Terminated.
 //
-//   * InvalidItemContentException
-//   One or more content items isn't valid.
+//   - InvalidTypeNameException
+//     The parameter type name isn't valid.
 //
-//   * TotalSizeLimitExceededException
-//   The size of inventory data has exceeded the total size limit for the resource.
+//   - InvalidItemContentException
+//     One or more content items isn't valid.
 //
-//   * ItemSizeLimitExceededException
-//   The inventory item size has exceeded the size limit.
+//   - TotalSizeLimitExceededException
+//     The size of inventory data has exceeded the total size limit for the resource.
 //
-//   * ItemContentMismatchException
-//   The inventory item has invalid content.
+//   - ItemSizeLimitExceededException
+//     The inventory item size has exceeded the size limit.
 //
-//   * CustomSchemaCountLimitExceededException
-//   You have exceeded the limit for custom schemas. Delete one or more custom
-//   schemas and try again.
+//   - ItemContentMismatchException
+//     The inventory item has invalid content.
 //
-//   * UnsupportedInventorySchemaVersionException
-//   Inventory item type schema version has to match supported versions in the
-//   service. Check output of GetInventorySchema to see the available schema version
-//   for each type.
+//   - CustomSchemaCountLimitExceededException
+//     You have exceeded the limit for custom schemas. Delete one or more custom
+//     schemas and try again.
 //
-//   * UnsupportedInventoryItemContextException
-//   The Context attribute that you specified for the InventoryItem isn't allowed
-//   for this inventory type. You can only use the Context attribute with inventory
-//   types like AWS:ComplianceItem.
+//   - UnsupportedInventorySchemaVersionException
+//     Inventory item type schema version has to match supported versions in the
+//     service. Check output of GetInventorySchema to see the available schema version
+//     for each type.
 //
-//   * InvalidInventoryItemContextException
-//   You specified invalid keys or values in the Context attribute for InventoryItem.
-//   Verify the keys and values, and try again.
+//   - UnsupportedInventoryItemContextException
+//     The Context attribute that you specified for the InventoryItem isn't allowed
+//     for this inventory type. You can only use the Context attribute with inventory
+//     types like AWS:ComplianceItem.
 //
-//   * SubTypeCountLimitExceededException
-//   The sub-type count exceeded the limit for the inventory type.
+//   - InvalidInventoryItemContextException
+//     You specified invalid keys or values in the Context attribute for InventoryItem.
+//     Verify the keys and values, and try again.
+//
+//   - SubTypeCountLimitExceededException
+//     The sub-type count exceeded the limit for the inventory type.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/PutInventory
 func (c *SSM) PutInventory(input *PutInventoryInput) (*PutInventoryOutput, error) {
@@ -12455,14 +12421,13 @@ const opPutParameter = "PutParameter"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the PutParameterRequest method.
+//	req, resp := client.PutParameterRequest(params)
 //
-//    // Example sending a request using the PutParameterRequest method.
-//    req, resp := client.PutParameterRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/PutParameter
 func (c *SSM) PutParameterRequest(input *PutParameterInput) (req *request.Request, output *PutParameterOutput) {
@@ -12493,78 +12458,79 @@ func (c *SSM) PutParameterRequest(input *PutParameterInput) (req *request.Reques
 // API operation PutParameter for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
 //
-//   * InvalidKeyId
-//   The query key ID isn't valid.
+//   - InternalServerError
+//     An error occurred on the server side.
 //
-//   * ParameterLimitExceeded
-//   You have exceeded the number of parameters for this Amazon Web Services account.
-//   Delete one or more parameters and try again.
+//   - InvalidKeyId
+//     The query key ID isn't valid.
 //
-//   * TooManyUpdates
-//   There are concurrent updates for a resource that supports one update at a
-//   time.
+//   - ParameterLimitExceeded
+//     You have exceeded the number of parameters for this Amazon Web Services account.
+//     Delete one or more parameters and try again.
 //
-//   * ParameterAlreadyExists
-//   The parameter already exists. You can't create duplicate parameters.
+//   - TooManyUpdates
+//     There are concurrent updates for a resource that supports one update at a
+//     time.
 //
-//   * HierarchyLevelLimitExceededException
-//   A hierarchy can have a maximum of 15 levels. For more information, see Requirements
-//   and constraints for parameter names (https://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-parameter-name-constraints.html)
-//   in the Amazon Web Services Systems Manager User Guide.
+//   - ParameterAlreadyExists
+//     The parameter already exists. You can't create duplicate parameters.
 //
-//   * HierarchyTypeMismatchException
-//   Parameter Store doesn't support changing a parameter type in a hierarchy.
-//   For example, you can't change a parameter from a String type to a SecureString
-//   type. You must create a new, unique parameter.
+//   - HierarchyLevelLimitExceededException
+//     A hierarchy can have a maximum of 15 levels. For more information, see Requirements
+//     and constraints for parameter names (https://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-parameter-name-constraints.html)
+//     in the Amazon Web Services Systems Manager User Guide.
 //
-//   * InvalidAllowedPatternException
-//   The request doesn't meet the regular expression requirement.
+//   - HierarchyTypeMismatchException
+//     Parameter Store doesn't support changing a parameter type in a hierarchy.
+//     For example, you can't change a parameter from a String type to a SecureString
+//     type. You must create a new, unique parameter.
 //
-//   * ParameterMaxVersionLimitExceeded
-//   Parameter Store retains the 100 most recently created versions of a parameter.
-//   After this number of versions has been created, Parameter Store deletes the
-//   oldest version when a new one is created. However, if the oldest version
-//   has a label attached to it, Parameter Store won't delete the version and
-//   instead presents this error message:
+//   - InvalidAllowedPatternException
+//     The request doesn't meet the regular expression requirement.
 //
-//   An error occurred (ParameterMaxVersionLimitExceeded) when calling the PutParameter
-//   operation: You attempted to create a new version of parameter-name by calling
-//   the PutParameter API with the overwrite flag. Version version-number, the
-//   oldest version, can't be deleted because it has a label associated with it.
-//   Move the label to another version of the parameter, and try again.
+//   - ParameterMaxVersionLimitExceeded
+//     Parameter Store retains the 100 most recently created versions of a parameter.
+//     After this number of versions has been created, Parameter Store deletes the
+//     oldest version when a new one is created. However, if the oldest version
+//     has a label attached to it, Parameter Store won't delete the version and
+//     instead presents this error message:
 //
-//   This safeguard is to prevent parameter versions with mission critical labels
-//   assigned to them from being deleted. To continue creating new parameters,
-//   first move the label from the oldest version of the parameter to a newer
-//   one for use in your operations. For information about moving parameter labels,
-//   see Move a parameter label (console) (https://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-paramstore-labels.html#sysman-paramstore-labels-console-move)
-//   or Move a parameter label (CLI) (https://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-paramstore-labels.html#sysman-paramstore-labels-cli-move)
-//   in the Amazon Web Services Systems Manager User Guide.
+//     An error occurred (ParameterMaxVersionLimitExceeded) when calling the PutParameter
+//     operation: You attempted to create a new version of parameter-name by calling
+//     the PutParameter API with the overwrite flag. Version version-number, the
+//     oldest version, can't be deleted because it has a label associated with it.
+//     Move the label to another version of the parameter, and try again.
 //
-//   * ParameterPatternMismatchException
-//   The parameter name isn't valid.
+//     This safeguard is to prevent parameter versions with mission critical labels
+//     assigned to them from being deleted. To continue creating new parameters,
+//     first move the label from the oldest version of the parameter to a newer
+//     one for use in your operations. For information about moving parameter labels,
+//     see Move a parameter label (console) (https://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-paramstore-labels.html#sysman-paramstore-labels-console-move)
+//     or Move a parameter label (CLI) (https://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-paramstore-labels.html#sysman-paramstore-labels-cli-move)
+//     in the Amazon Web Services Systems Manager User Guide.
 //
-//   * UnsupportedParameterType
-//   The parameter type isn't supported.
+//   - ParameterPatternMismatchException
+//     The parameter name isn't valid.
 //
-//   * PoliciesLimitExceededException
-//   You specified more than the maximum number of allowed policies for the parameter.
-//   The maximum is 10.
+//   - UnsupportedParameterType
+//     The parameter type isn't supported.
 //
-//   * InvalidPolicyTypeException
-//   The policy type isn't supported. Parameter Store supports the following policy
-//   types: Expiration, ExpirationNotification, and NoChangeNotification.
+//   - PoliciesLimitExceededException
+//     You specified more than the maximum number of allowed policies for the parameter.
+//     The maximum is 10.
 //
-//   * InvalidPolicyAttributeException
-//   A policy attribute or its value is invalid.
+//   - InvalidPolicyTypeException
+//     The policy type isn't supported. Parameter Store supports the following policy
+//     types: Expiration, ExpirationNotification, and NoChangeNotification.
 //
-//   * IncompatiblePolicyException
-//   There is a conflict in the policies specified for this parameter. You can't,
-//   for example, specify two Expiration policies for a parameter. Review your
-//   policies, and try again.
+//   - InvalidPolicyAttributeException
+//     A policy attribute or its value is invalid.
+//
+//   - IncompatiblePolicyException
+//     There is a conflict in the policies specified for this parameter. You can't,
+//     for example, specify two Expiration policies for a parameter. Review your
+//     policies, and try again.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/PutParameter
 func (c *SSM) PutParameter(input *PutParameterInput) (*PutParameterOutput, error) {
@@ -12604,14 +12570,13 @@ const opRegisterDefaultPatchBaseline = "RegisterDefaultPatchBaseline"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the RegisterDefaultPatchBaselineRequest method.
+//	req, resp := client.RegisterDefaultPatchBaselineRequest(params)
 //
-//    // Example sending a request using the RegisterDefaultPatchBaselineRequest method.
-//    req, resp := client.RegisterDefaultPatchBaselineRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/RegisterDefaultPatchBaseline
 func (c *SSM) RegisterDefaultPatchBaselineRequest(input *RegisterDefaultPatchBaselineInput) (req *request.Request, output *RegisterDefaultPatchBaselineOutput) {
@@ -12647,20 +12612,21 @@ func (c *SSM) RegisterDefaultPatchBaselineRequest(input *RegisterDefaultPatchBas
 // API operation RegisterDefaultPatchBaseline for usage and error information.
 //
 // Returned Error Types:
-//   * InvalidResourceId
-//   The resource ID isn't valid. Verify that you entered the correct ID and try
-//   again.
 //
-//   * DoesNotExistException
-//   Error returned when the ID specified for a resource, such as a maintenance
-//   window or patch baseline, doesn't exist.
+//   - InvalidResourceId
+//     The resource ID isn't valid. Verify that you entered the correct ID and try
+//     again.
 //
-//   For information about resource quotas in Amazon Web Services Systems Manager,
-//   see Systems Manager service quotas (https://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
-//   in the Amazon Web Services General Reference.
+//   - DoesNotExistException
+//     Error returned when the ID specified for a resource, such as a maintenance
+//     window or patch baseline, doesn't exist.
 //
-//   * InternalServerError
-//   An error occurred on the server side.
+//     For information about resource quotas in Amazon Web Services Systems Manager,
+//     see Systems Manager service quotas (https://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//     in the Amazon Web Services General Reference.
+//
+//   - InternalServerError
+//     An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/RegisterDefaultPatchBaseline
 func (c *SSM) RegisterDefaultPatchBaseline(input *RegisterDefaultPatchBaselineInput) (*RegisterDefaultPatchBaselineOutput, error) {
@@ -12700,14 +12666,13 @@ const opRegisterPatchBaselineForPatchGroup = "RegisterPatchBaselineForPatchGroup
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the RegisterPatchBaselineForPatchGroupRequest method.
+//	req, resp := client.RegisterPatchBaselineForPatchGroupRequest(params)
 //
-//    // Example sending a request using the RegisterPatchBaselineForPatchGroupRequest method.
-//    req, resp := client.RegisterPatchBaselineForPatchGroupRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/RegisterPatchBaselineForPatchGroup
 func (c *SSM) RegisterPatchBaselineForPatchGroupRequest(input *RegisterPatchBaselineForPatchGroupInput) (req *request.Request, output *RegisterPatchBaselineForPatchGroupOutput) {
@@ -12738,32 +12703,33 @@ func (c *SSM) RegisterPatchBaselineForPatchGroupRequest(input *RegisterPatchBase
 // API operation RegisterPatchBaselineForPatchGroup for usage and error information.
 //
 // Returned Error Types:
-//   * AlreadyExistsException
-//   Error returned if an attempt is made to register a patch group with a patch
-//   baseline that is already registered with a different patch baseline.
 //
-//   * DoesNotExistException
-//   Error returned when the ID specified for a resource, such as a maintenance
-//   window or patch baseline, doesn't exist.
+//   - AlreadyExistsException
+//     Error returned if an attempt is made to register a patch group with a patch
+//     baseline that is already registered with a different patch baseline.
 //
-//   For information about resource quotas in Amazon Web Services Systems Manager,
-//   see Systems Manager service quotas (https://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
-//   in the Amazon Web Services General Reference.
+//   - DoesNotExistException
+//     Error returned when the ID specified for a resource, such as a maintenance
+//     window or patch baseline, doesn't exist.
 //
-//   * InvalidResourceId
-//   The resource ID isn't valid. Verify that you entered the correct ID and try
-//   again.
+//     For information about resource quotas in Amazon Web Services Systems Manager,
+//     see Systems Manager service quotas (https://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//     in the Amazon Web Services General Reference.
 //
-//   * ResourceLimitExceededException
-//   Error returned when the caller has exceeded the default resource quotas.
-//   For example, too many maintenance windows or patch baselines have been created.
+//   - InvalidResourceId
+//     The resource ID isn't valid. Verify that you entered the correct ID and try
+//     again.
 //
-//   For information about resource quotas in Systems Manager, see Systems Manager
-//   service quotas (https://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
-//   in the Amazon Web Services General Reference.
+//   - ResourceLimitExceededException
+//     Error returned when the caller has exceeded the default resource quotas.
+//     For example, too many maintenance windows or patch baselines have been created.
 //
-//   * InternalServerError
-//   An error occurred on the server side.
+//     For information about resource quotas in Systems Manager, see Systems Manager
+//     service quotas (https://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//     in the Amazon Web Services General Reference.
+//
+//   - InternalServerError
+//     An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/RegisterPatchBaselineForPatchGroup
 func (c *SSM) RegisterPatchBaselineForPatchGroup(input *RegisterPatchBaselineForPatchGroupInput) (*RegisterPatchBaselineForPatchGroupOutput, error) {
@@ -12803,14 +12769,13 @@ const opRegisterTargetWithMaintenanceWindow = "RegisterTargetWithMaintenanceWind
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the RegisterTargetWithMaintenanceWindowRequest method.
+//	req, resp := client.RegisterTargetWithMaintenanceWindowRequest(params)
 //
-//    // Example sending a request using the RegisterTargetWithMaintenanceWindowRequest method.
-//    req, resp := client.RegisterTargetWithMaintenanceWindowRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/RegisterTargetWithMaintenanceWindow
 func (c *SSM) RegisterTargetWithMaintenanceWindowRequest(input *RegisterTargetWithMaintenanceWindowInput) (req *request.Request, output *RegisterTargetWithMaintenanceWindowOutput) {
@@ -12841,28 +12806,29 @@ func (c *SSM) RegisterTargetWithMaintenanceWindowRequest(input *RegisterTargetWi
 // API operation RegisterTargetWithMaintenanceWindow for usage and error information.
 //
 // Returned Error Types:
-//   * IdempotentParameterMismatch
-//   Error returned when an idempotent operation is retried and the parameters
-//   don't match the original call to the API with the same idempotency token.
 //
-//   * DoesNotExistException
-//   Error returned when the ID specified for a resource, such as a maintenance
-//   window or patch baseline, doesn't exist.
+//   - IdempotentParameterMismatch
+//     Error returned when an idempotent operation is retried and the parameters
+//     don't match the original call to the API with the same idempotency token.
 //
-//   For information about resource quotas in Amazon Web Services Systems Manager,
-//   see Systems Manager service quotas (https://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
-//   in the Amazon Web Services General Reference.
+//   - DoesNotExistException
+//     Error returned when the ID specified for a resource, such as a maintenance
+//     window or patch baseline, doesn't exist.
 //
-//   * ResourceLimitExceededException
-//   Error returned when the caller has exceeded the default resource quotas.
-//   For example, too many maintenance windows or patch baselines have been created.
+//     For information about resource quotas in Amazon Web Services Systems Manager,
+//     see Systems Manager service quotas (https://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//     in the Amazon Web Services General Reference.
 //
-//   For information about resource quotas in Systems Manager, see Systems Manager
-//   service quotas (https://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
-//   in the Amazon Web Services General Reference.
+//   - ResourceLimitExceededException
+//     Error returned when the caller has exceeded the default resource quotas.
+//     For example, too many maintenance windows or patch baselines have been created.
 //
-//   * InternalServerError
-//   An error occurred on the server side.
+//     For information about resource quotas in Systems Manager, see Systems Manager
+//     service quotas (https://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//     in the Amazon Web Services General Reference.
+//
+//   - InternalServerError
+//     An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/RegisterTargetWithMaintenanceWindow
 func (c *SSM) RegisterTargetWithMaintenanceWindow(input *RegisterTargetWithMaintenanceWindowInput) (*RegisterTargetWithMaintenanceWindowOutput, error) {
@@ -12902,14 +12868,13 @@ const opRegisterTaskWithMaintenanceWindow = "RegisterTaskWithMaintenanceWindow"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the RegisterTaskWithMaintenanceWindowRequest method.
+//	req, resp := client.RegisterTaskWithMaintenanceWindowRequest(params)
 //
-//    // Example sending a request using the RegisterTaskWithMaintenanceWindowRequest method.
-//    req, resp := client.RegisterTaskWithMaintenanceWindowRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/RegisterTaskWithMaintenanceWindow
 func (c *SSM) RegisterTaskWithMaintenanceWindowRequest(input *RegisterTaskWithMaintenanceWindowInput) (req *request.Request, output *RegisterTaskWithMaintenanceWindowOutput) {
@@ -12940,32 +12905,33 @@ func (c *SSM) RegisterTaskWithMaintenanceWindowRequest(input *RegisterTaskWithMa
 // API operation RegisterTaskWithMaintenanceWindow for usage and error information.
 //
 // Returned Error Types:
-//   * IdempotentParameterMismatch
-//   Error returned when an idempotent operation is retried and the parameters
-//   don't match the original call to the API with the same idempotency token.
 //
-//   * DoesNotExistException
-//   Error returned when the ID specified for a resource, such as a maintenance
-//   window or patch baseline, doesn't exist.
+//   - IdempotentParameterMismatch
+//     Error returned when an idempotent operation is retried and the parameters
+//     don't match the original call to the API with the same idempotency token.
 //
-//   For information about resource quotas in Amazon Web Services Systems Manager,
-//   see Systems Manager service quotas (https://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
-//   in the Amazon Web Services General Reference.
+//   - DoesNotExistException
+//     Error returned when the ID specified for a resource, such as a maintenance
+//     window or patch baseline, doesn't exist.
 //
-//   * ResourceLimitExceededException
-//   Error returned when the caller has exceeded the default resource quotas.
-//   For example, too many maintenance windows or patch baselines have been created.
+//     For information about resource quotas in Amazon Web Services Systems Manager,
+//     see Systems Manager service quotas (https://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//     in the Amazon Web Services General Reference.
 //
-//   For information about resource quotas in Systems Manager, see Systems Manager
-//   service quotas (https://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
-//   in the Amazon Web Services General Reference.
+//   - ResourceLimitExceededException
+//     Error returned when the caller has exceeded the default resource quotas.
+//     For example, too many maintenance windows or patch baselines have been created.
 //
-//   * FeatureNotAvailableException
-//   You attempted to register a LAMBDA or STEP_FUNCTIONS task in a region where
-//   the corresponding service isn't available.
+//     For information about resource quotas in Systems Manager, see Systems Manager
+//     service quotas (https://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//     in the Amazon Web Services General Reference.
 //
-//   * InternalServerError
-//   An error occurred on the server side.
+//   - FeatureNotAvailableException
+//     You attempted to register a LAMBDA or STEP_FUNCTIONS task in a region where
+//     the corresponding service isn't available.
+//
+//   - InternalServerError
+//     An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/RegisterTaskWithMaintenanceWindow
 func (c *SSM) RegisterTaskWithMaintenanceWindow(input *RegisterTaskWithMaintenanceWindowInput) (*RegisterTaskWithMaintenanceWindowOutput, error) {
@@ -13005,14 +12971,13 @@ const opRemoveTagsFromResource = "RemoveTagsFromResource"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the RemoveTagsFromResourceRequest method.
+//	req, resp := client.RemoveTagsFromResourceRequest(params)
 //
-//    // Example sending a request using the RemoveTagsFromResourceRequest method.
-//    req, resp := client.RemoveTagsFromResourceRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/RemoveTagsFromResource
 func (c *SSM) RemoveTagsFromResourceRequest(input *RemoveTagsFromResourceInput) (req *request.Request, output *RemoveTagsFromResourceOutput) {
@@ -13044,20 +13009,21 @@ func (c *SSM) RemoveTagsFromResourceRequest(input *RemoveTagsFromResourceInput) 
 // API operation RemoveTagsFromResource for usage and error information.
 //
 // Returned Error Types:
-//   * InvalidResourceType
-//   The resource type isn't valid. For example, if you are attempting to tag
-//   an instance, the instance must be a registered, managed instance.
 //
-//   * InvalidResourceId
-//   The resource ID isn't valid. Verify that you entered the correct ID and try
-//   again.
+//   - InvalidResourceType
+//     The resource type isn't valid. For example, if you are attempting to tag
+//     an EC2 instance, the instance must be a registered managed node.
 //
-//   * InternalServerError
-//   An error occurred on the server side.
+//   - InvalidResourceId
+//     The resource ID isn't valid. Verify that you entered the correct ID and try
+//     again.
 //
-//   * TooManyUpdates
-//   There are concurrent updates for a resource that supports one update at a
-//   time.
+//   - InternalServerError
+//     An error occurred on the server side.
+//
+//   - TooManyUpdates
+//     There are concurrent updates for a resource that supports one update at a
+//     time.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/RemoveTagsFromResource
 func (c *SSM) RemoveTagsFromResource(input *RemoveTagsFromResourceInput) (*RemoveTagsFromResourceOutput, error) {
@@ -13097,14 +13063,13 @@ const opResetServiceSetting = "ResetServiceSetting"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the ResetServiceSettingRequest method.
+//	req, resp := client.ResetServiceSettingRequest(params)
 //
-//    // Example sending a request using the ResetServiceSettingRequest method.
-//    req, resp := client.ResetServiceSettingRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ResetServiceSetting
 func (c *SSM) ResetServiceSettingRequest(input *ResetServiceSettingInput) (req *request.Request, output *ResetServiceSettingOutput) {
@@ -13151,16 +13116,17 @@ func (c *SSM) ResetServiceSettingRequest(input *ResetServiceSettingInput) (req *
 // API operation ResetServiceSetting for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
 //
-//   * ServiceSettingNotFound
-//   The specified service setting wasn't found. Either the service name or the
-//   setting hasn't been provisioned by the Amazon Web Services service team.
+//   - InternalServerError
+//     An error occurred on the server side.
 //
-//   * TooManyUpdates
-//   There are concurrent updates for a resource that supports one update at a
-//   time.
+//   - ServiceSettingNotFound
+//     The specified service setting wasn't found. Either the service name or the
+//     setting hasn't been provisioned by the Amazon Web Services service team.
+//
+//   - TooManyUpdates
+//     There are concurrent updates for a resource that supports one update at a
+//     time.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ResetServiceSetting
 func (c *SSM) ResetServiceSetting(input *ResetServiceSettingInput) (*ResetServiceSettingOutput, error) {
@@ -13200,14 +13166,13 @@ const opResumeSession = "ResumeSession"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the ResumeSessionRequest method.
+//	req, resp := client.ResumeSessionRequest(params)
 //
-//    // Example sending a request using the ResumeSessionRequest method.
-//    req, resp := client.ResumeSessionRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ResumeSession
 func (c *SSM) ResumeSessionRequest(input *ResumeSessionInput) (req *request.Request, output *ResumeSessionOutput) {
@@ -13228,7 +13193,7 @@ func (c *SSM) ResumeSessionRequest(input *ResumeSessionInput) (req *request.Requ
 
 // ResumeSession API operation for Amazon Simple Systems Manager (SSM).
 //
-// Reconnects a session to an instance after it has been disconnected. Connections
+// Reconnects a session to a managed node after it has been disconnected. Connections
 // can be resumed for disconnected sessions, but not terminated sessions.
 //
 // This command is primarily for use by client machines to automatically reconnect
@@ -13242,16 +13207,17 @@ func (c *SSM) ResumeSessionRequest(input *ResumeSessionInput) (req *request.Requ
 // API operation ResumeSession for usage and error information.
 //
 // Returned Error Types:
-//   * DoesNotExistException
-//   Error returned when the ID specified for a resource, such as a maintenance
-//   window or patch baseline, doesn't exist.
 //
-//   For information about resource quotas in Amazon Web Services Systems Manager,
-//   see Systems Manager service quotas (https://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
-//   in the Amazon Web Services General Reference.
+//   - DoesNotExistException
+//     Error returned when the ID specified for a resource, such as a maintenance
+//     window or patch baseline, doesn't exist.
 //
-//   * InternalServerError
-//   An error occurred on the server side.
+//     For information about resource quotas in Amazon Web Services Systems Manager,
+//     see Systems Manager service quotas (https://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//     in the Amazon Web Services General Reference.
+//
+//   - InternalServerError
+//     An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ResumeSession
 func (c *SSM) ResumeSession(input *ResumeSessionInput) (*ResumeSessionOutput, error) {
@@ -13291,14 +13257,13 @@ const opSendAutomationSignal = "SendAutomationSignal"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the SendAutomationSignalRequest method.
+//	req, resp := client.SendAutomationSignalRequest(params)
 //
-//    // Example sending a request using the SendAutomationSignalRequest method.
-//    req, resp := client.SendAutomationSignalRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/SendAutomationSignal
 func (c *SSM) SendAutomationSignalRequest(input *SendAutomationSignalInput) (req *request.Request, output *SendAutomationSignalOutput) {
@@ -13331,19 +13296,20 @@ func (c *SSM) SendAutomationSignalRequest(input *SendAutomationSignalInput) (req
 // API operation SendAutomationSignal for usage and error information.
 //
 // Returned Error Types:
-//   * AutomationExecutionNotFoundException
-//   There is no automation execution information for the requested automation
-//   execution ID.
 //
-//   * AutomationStepNotFoundException
-//   The specified step name and execution ID don't exist. Verify the information
-//   and try again.
+//   - AutomationExecutionNotFoundException
+//     There is no automation execution information for the requested automation
+//     execution ID.
 //
-//   * InvalidAutomationSignalException
-//   The signal isn't valid for the current Automation execution.
+//   - AutomationStepNotFoundException
+//     The specified step name and execution ID don't exist. Verify the information
+//     and try again.
 //
-//   * InternalServerError
-//   An error occurred on the server side.
+//   - InvalidAutomationSignalException
+//     The signal isn't valid for the current Automation execution.
+//
+//   - InternalServerError
+//     An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/SendAutomationSignal
 func (c *SSM) SendAutomationSignal(input *SendAutomationSignalInput) (*SendAutomationSignalOutput, error) {
@@ -13383,14 +13349,13 @@ const opSendCommand = "SendCommand"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the SendCommandRequest method.
+//	req, resp := client.SendCommandRequest(params)
 //
-//    // Example sending a request using the SendCommandRequest method.
-//    req, resp := client.SendCommandRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/SendCommand
 func (c *SSM) SendCommandRequest(input *SendCommandInput) (req *request.Request, output *SendCommandOutput) {
@@ -13411,7 +13376,7 @@ func (c *SSM) SendCommandRequest(input *SendCommandInput) (req *request.Request,
 
 // SendCommand API operation for Amazon Simple Systems Manager (SSM).
 //
-// Runs commands on one or more managed instances.
+// Runs commands on one or more managed nodes.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -13421,57 +13386,59 @@ func (c *SSM) SendCommandRequest(input *SendCommandInput) (req *request.Request,
 // API operation SendCommand for usage and error information.
 //
 // Returned Error Types:
-//   * DuplicateInstanceId
-//   You can't specify an instance ID in more than one association.
 //
-//   * InternalServerError
-//   An error occurred on the server side.
+//   - DuplicateInstanceId
+//     You can't specify a managed node ID in more than one association.
 //
-//   * InvalidInstanceId
-//   The following problems can cause this exception:
+//   - InternalServerError
+//     An error occurred on the server side.
 //
-//      * You don't have permission to access the instance.
+//   - InvalidInstanceId
+//     The following problems can cause this exception:
 //
-//      * Amazon Web Services Systems Manager Agent(SSM Agent) isn't running.
-//      Verify that SSM Agent is running.
+//   - You don't have permission to access the managed node.
 //
-//      * SSM Agent isn't registered with the SSM endpoint. Try reinstalling SSM
-//      Agent.
+//   - Amazon Web Services Systems Manager Agent(SSM Agent) isn't running.
+//     Verify that SSM Agent is running.
 //
-//      * The instance isn't in valid state. Valid states are: Running, Pending,
-//      Stopped, and Stopping. Invalid states are: Shutting-down and Terminated.
+//   - SSM Agent isn't registered with the SSM endpoint. Try reinstalling SSM
+//     Agent.
 //
-//   * InvalidDocument
-//   The specified SSM document doesn't exist.
+//   - The managed node isn't in valid state. Valid states are: Running, Pending,
+//     Stopped, and Stopping. Invalid states are: Shutting-down and Terminated.
 //
-//   * InvalidDocumentVersion
-//   The document version isn't valid or doesn't exist.
+//   - InvalidDocument
+//     The specified SSM document doesn't exist.
 //
-//   * InvalidOutputFolder
-//   The S3 bucket doesn't exist.
+//   - InvalidDocumentVersion
+//     The document version isn't valid or doesn't exist.
 //
-//   * InvalidParameters
-//   You must specify values for all required parameters in the Amazon Web Services
-//   Systems Manager document (SSM document). You can only supply values to parameters
-//   defined in the SSM document.
+//   - InvalidOutputFolder
+//     The S3 bucket doesn't exist.
 //
-//   * UnsupportedPlatformType
-//   The document doesn't support the platform type of the given instance ID(s).
-//   For example, you sent an document for a Windows instance to a Linux instance.
+//   - InvalidParameters
+//     You must specify values for all required parameters in the Amazon Web Services
+//     Systems Manager document (SSM document). You can only supply values to parameters
+//     defined in the SSM document.
 //
-//   * MaxDocumentSizeExceeded
-//   The size limit of a document is 64 KB.
+//   - UnsupportedPlatformType
+//     The document doesn't support the platform type of the given managed node
+//     ID(s). For example, you sent an document for a Windows managed node to a
+//     Linux node.
 //
-//   * InvalidRole
-//   The role name can't contain invalid characters. Also verify that you specified
-//   an IAM role for notifications that includes the required trust policy. For
-//   information about configuring the IAM role for Run Command notifications,
-//   see Configuring Amazon SNS Notifications for Run Command (https://docs.aws.amazon.com/systems-manager/latest/userguide/rc-sns-notifications.html)
-//   in the Amazon Web Services Systems Manager User Guide.
+//   - MaxDocumentSizeExceeded
+//     The size limit of a document is 64 KB.
 //
-//   * InvalidNotificationConfig
-//   One or more configuration items isn't valid. Verify that a valid Amazon Resource
-//   Name (ARN) was provided for an Amazon Simple Notification Service topic.
+//   - InvalidRole
+//     The role name can't contain invalid characters. Also verify that you specified
+//     an IAM role for notifications that includes the required trust policy. For
+//     information about configuring the IAM role for Run Command notifications,
+//     see Configuring Amazon SNS Notifications for Run Command (https://docs.aws.amazon.com/systems-manager/latest/userguide/rc-sns-notifications.html)
+//     in the Amazon Web Services Systems Manager User Guide.
+//
+//   - InvalidNotificationConfig
+//     One or more configuration items isn't valid. Verify that a valid Amazon Resource
+//     Name (ARN) was provided for an Amazon Simple Notification Service topic.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/SendCommand
 func (c *SSM) SendCommand(input *SendCommandInput) (*SendCommandOutput, error) {
@@ -13511,14 +13478,13 @@ const opStartAssociationsOnce = "StartAssociationsOnce"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the StartAssociationsOnceRequest method.
+//	req, resp := client.StartAssociationsOnceRequest(params)
 //
-//    // Example sending a request using the StartAssociationsOnceRequest method.
-//    req, resp := client.StartAssociationsOnceRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/StartAssociationsOnce
 func (c *SSM) StartAssociationsOnceRequest(input *StartAssociationsOnceInput) (req *request.Request, output *StartAssociationsOnceOutput) {
@@ -13551,11 +13517,12 @@ func (c *SSM) StartAssociationsOnceRequest(input *StartAssociationsOnceInput) (r
 // API operation StartAssociationsOnce for usage and error information.
 //
 // Returned Error Types:
-//   * InvalidAssociation
-//   The association isn't valid or doesn't exist.
 //
-//   * AssociationDoesNotExist
-//   The specified association doesn't exist.
+//   - InvalidAssociation
+//     The association isn't valid or doesn't exist.
+//
+//   - AssociationDoesNotExist
+//     The specified association doesn't exist.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/StartAssociationsOnce
 func (c *SSM) StartAssociationsOnce(input *StartAssociationsOnceInput) (*StartAssociationsOnceOutput, error) {
@@ -13595,14 +13562,13 @@ const opStartAutomationExecution = "StartAutomationExecution"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the StartAutomationExecutionRequest method.
+//	req, resp := client.StartAutomationExecutionRequest(params)
 //
-//    // Example sending a request using the StartAutomationExecutionRequest method.
-//    req, resp := client.StartAutomationExecutionRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/StartAutomationExecution
 func (c *SSM) StartAutomationExecutionRequest(input *StartAutomationExecutionInput) (req *request.Request, output *StartAutomationExecutionOutput) {
@@ -13633,31 +13599,32 @@ func (c *SSM) StartAutomationExecutionRequest(input *StartAutomationExecutionInp
 // API operation StartAutomationExecution for usage and error information.
 //
 // Returned Error Types:
-//   * AutomationDefinitionNotFoundException
-//   An Automation runbook with the specified name couldn't be found.
 //
-//   * InvalidAutomationExecutionParametersException
-//   The supplied parameters for invoking the specified Automation runbook are
-//   incorrect. For example, they may not match the set of parameters permitted
-//   for the specified Automation document.
+//   - AutomationDefinitionNotFoundException
+//     An Automation runbook with the specified name couldn't be found.
 //
-//   * AutomationExecutionLimitExceededException
-//   The number of simultaneously running Automation executions exceeded the allowable
-//   limit.
+//   - InvalidAutomationExecutionParametersException
+//     The supplied parameters for invoking the specified Automation runbook are
+//     incorrect. For example, they may not match the set of parameters permitted
+//     for the specified Automation document.
 //
-//   * AutomationDefinitionVersionNotFoundException
-//   An Automation runbook with the specified name and version couldn't be found.
+//   - AutomationExecutionLimitExceededException
+//     The number of simultaneously running Automation executions exceeded the allowable
+//     limit.
 //
-//   * IdempotentParameterMismatch
-//   Error returned when an idempotent operation is retried and the parameters
-//   don't match the original call to the API with the same idempotency token.
+//   - AutomationDefinitionVersionNotFoundException
+//     An Automation runbook with the specified name and version couldn't be found.
 //
-//   * InvalidTarget
-//   The target isn't valid or doesn't exist. It might not be configured for Systems
-//   Manager or you might not have permission to perform the operation.
+//   - IdempotentParameterMismatch
+//     Error returned when an idempotent operation is retried and the parameters
+//     don't match the original call to the API with the same idempotency token.
 //
-//   * InternalServerError
-//   An error occurred on the server side.
+//   - InvalidTarget
+//     The target isn't valid or doesn't exist. It might not be configured for Systems
+//     Manager or you might not have permission to perform the operation.
+//
+//   - InternalServerError
+//     An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/StartAutomationExecution
 func (c *SSM) StartAutomationExecution(input *StartAutomationExecutionInput) (*StartAutomationExecutionOutput, error) {
@@ -13697,14 +13664,13 @@ const opStartChangeRequestExecution = "StartChangeRequestExecution"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the StartChangeRequestExecutionRequest method.
+//	req, resp := client.StartChangeRequestExecutionRequest(params)
 //
-//    // Example sending a request using the StartChangeRequestExecutionRequest method.
-//    req, resp := client.StartChangeRequestExecutionRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/StartChangeRequestExecution
 func (c *SSM) StartChangeRequestExecutionRequest(input *StartChangeRequestExecutionInput) (req *request.Request, output *StartChangeRequestExecutionOutput) {
@@ -13737,31 +13703,32 @@ func (c *SSM) StartChangeRequestExecutionRequest(input *StartChangeRequestExecut
 // API operation StartChangeRequestExecution for usage and error information.
 //
 // Returned Error Types:
-//   * AutomationDefinitionNotFoundException
-//   An Automation runbook with the specified name couldn't be found.
 //
-//   * InvalidAutomationExecutionParametersException
-//   The supplied parameters for invoking the specified Automation runbook are
-//   incorrect. For example, they may not match the set of parameters permitted
-//   for the specified Automation document.
+//   - AutomationDefinitionNotFoundException
+//     An Automation runbook with the specified name couldn't be found.
 //
-//   * AutomationExecutionLimitExceededException
-//   The number of simultaneously running Automation executions exceeded the allowable
-//   limit.
+//   - InvalidAutomationExecutionParametersException
+//     The supplied parameters for invoking the specified Automation runbook are
+//     incorrect. For example, they may not match the set of parameters permitted
+//     for the specified Automation document.
 //
-//   * AutomationDefinitionVersionNotFoundException
-//   An Automation runbook with the specified name and version couldn't be found.
+//   - AutomationExecutionLimitExceededException
+//     The number of simultaneously running Automation executions exceeded the allowable
+//     limit.
 //
-//   * IdempotentParameterMismatch
-//   Error returned when an idempotent operation is retried and the parameters
-//   don't match the original call to the API with the same idempotency token.
+//   - AutomationDefinitionVersionNotFoundException
+//     An Automation runbook with the specified name and version couldn't be found.
 //
-//   * InternalServerError
-//   An error occurred on the server side.
+//   - IdempotentParameterMismatch
+//     Error returned when an idempotent operation is retried and the parameters
+//     don't match the original call to the API with the same idempotency token.
 //
-//   * AutomationDefinitionNotApprovedException
-//   Indicates that the Change Manager change template used in the change request
-//   was rejected or is still in a pending state.
+//   - InternalServerError
+//     An error occurred on the server side.
+//
+//   - AutomationDefinitionNotApprovedException
+//     Indicates that the Change Manager change template used in the change request
+//     was rejected or is still in a pending state.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/StartChangeRequestExecution
 func (c *SSM) StartChangeRequestExecution(input *StartChangeRequestExecutionInput) (*StartChangeRequestExecutionOutput, error) {
@@ -13801,14 +13768,13 @@ const opStartSession = "StartSession"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the StartSessionRequest method.
+//	req, resp := client.StartSessionRequest(params)
 //
-//    // Example sending a request using the StartSessionRequest method.
-//    req, resp := client.StartSessionRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/StartSession
 func (c *SSM) StartSessionRequest(input *StartSessionInput) (req *request.Request, output *StartSessionOutput) {
@@ -13829,7 +13795,7 @@ func (c *SSM) StartSessionRequest(input *StartSessionInput) (req *request.Reques
 
 // StartSession API operation for Amazon Simple Systems Manager (SSM).
 //
-// Initiates a connection to a target (for example, an instance) for a Session
+// Initiates a connection to a target (for example, a managed node) for a Session
 // Manager session. Returns a URL and token that can be used to open a WebSocket
 // connection for sending input and receiving outputs.
 //
@@ -13850,19 +13816,20 @@ func (c *SSM) StartSessionRequest(input *StartSessionInput) (req *request.Reques
 // API operation StartSession for usage and error information.
 //
 // Returned Error Types:
-//   * InvalidDocument
-//   The specified SSM document doesn't exist.
 //
-//   * TargetNotConnected
-//   The specified target instance for the session isn't fully configured for
-//   use with Session Manager. For more information, see Getting started with
-//   Session Manager (https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-getting-started.html)
-//   in the Amazon Web Services Systems Manager User Guide. This error is also
-//   returned if you attempt to start a session on an instance that is located
-//   in a different account or Region
+//   - InvalidDocument
+//     The specified SSM document doesn't exist.
 //
-//   * InternalServerError
-//   An error occurred on the server side.
+//   - TargetNotConnected
+//     The specified target managed node for the session isn't fully configured
+//     for use with Session Manager. For more information, see Getting started with
+//     Session Manager (https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-getting-started.html)
+//     in the Amazon Web Services Systems Manager User Guide. This error is also
+//     returned if you attempt to start a session on a managed node that is located
+//     in a different account or Region
+//
+//   - InternalServerError
+//     An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/StartSession
 func (c *SSM) StartSession(input *StartSessionInput) (*StartSessionOutput, error) {
@@ -13902,14 +13869,13 @@ const opStopAutomationExecution = "StopAutomationExecution"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the StopAutomationExecutionRequest method.
+//	req, resp := client.StopAutomationExecutionRequest(params)
 //
-//    // Example sending a request using the StopAutomationExecutionRequest method.
-//    req, resp := client.StopAutomationExecutionRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/StopAutomationExecution
 func (c *SSM) StopAutomationExecutionRequest(input *StopAutomationExecutionInput) (req *request.Request, output *StopAutomationExecutionOutput) {
@@ -13941,15 +13907,16 @@ func (c *SSM) StopAutomationExecutionRequest(input *StopAutomationExecutionInput
 // API operation StopAutomationExecution for usage and error information.
 //
 // Returned Error Types:
-//   * AutomationExecutionNotFoundException
-//   There is no automation execution information for the requested automation
-//   execution ID.
 //
-//   * InvalidAutomationStatusUpdateException
-//   The specified update status operation isn't valid.
+//   - AutomationExecutionNotFoundException
+//     There is no automation execution information for the requested automation
+//     execution ID.
 //
-//   * InternalServerError
-//   An error occurred on the server side.
+//   - InvalidAutomationStatusUpdateException
+//     The specified update status operation isn't valid.
+//
+//   - InternalServerError
+//     An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/StopAutomationExecution
 func (c *SSM) StopAutomationExecution(input *StopAutomationExecutionInput) (*StopAutomationExecutionOutput, error) {
@@ -13989,14 +13956,13 @@ const opTerminateSession = "TerminateSession"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the TerminateSessionRequest method.
+//	req, resp := client.TerminateSessionRequest(params)
 //
-//    // Example sending a request using the TerminateSessionRequest method.
-//    req, resp := client.TerminateSessionRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/TerminateSession
 func (c *SSM) TerminateSessionRequest(input *TerminateSessionInput) (req *request.Request, output *TerminateSessionOutput) {
@@ -14018,7 +13984,7 @@ func (c *SSM) TerminateSessionRequest(input *TerminateSessionInput) (req *reques
 // TerminateSession API operation for Amazon Simple Systems Manager (SSM).
 //
 // Permanently ends a session and closes the data connection between the Session
-// Manager client and SSM Agent on the instance. A terminated session isn't
+// Manager client and SSM Agent on the managed node. A terminated session can't
 // be resumed.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -14029,16 +13995,8 @@ func (c *SSM) TerminateSessionRequest(input *TerminateSessionInput) (req *reques
 // API operation TerminateSession for usage and error information.
 //
 // Returned Error Types:
-//   * DoesNotExistException
-//   Error returned when the ID specified for a resource, such as a maintenance
-//   window or patch baseline, doesn't exist.
-//
-//   For information about resource quotas in Amazon Web Services Systems Manager,
-//   see Systems Manager service quotas (https://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
-//   in the Amazon Web Services General Reference.
-//
-//   * InternalServerError
-//   An error occurred on the server side.
+//   - InternalServerError
+//     An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/TerminateSession
 func (c *SSM) TerminateSession(input *TerminateSessionInput) (*TerminateSessionOutput, error) {
@@ -14078,14 +14036,13 @@ const opUnlabelParameterVersion = "UnlabelParameterVersion"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the UnlabelParameterVersionRequest method.
+//	req, resp := client.UnlabelParameterVersionRequest(params)
 //
-//    // Example sending a request using the UnlabelParameterVersionRequest method.
-//    req, resp := client.UnlabelParameterVersionRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UnlabelParameterVersion
 func (c *SSM) UnlabelParameterVersionRequest(input *UnlabelParameterVersionInput) (req *request.Request, output *UnlabelParameterVersionOutput) {
@@ -14116,19 +14073,20 @@ func (c *SSM) UnlabelParameterVersionRequest(input *UnlabelParameterVersionInput
 // API operation UnlabelParameterVersion for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
 //
-//   * TooManyUpdates
-//   There are concurrent updates for a resource that supports one update at a
-//   time.
+//   - InternalServerError
+//     An error occurred on the server side.
 //
-//   * ParameterNotFound
-//   The parameter couldn't be found. Verify the name and try again.
+//   - TooManyUpdates
+//     There are concurrent updates for a resource that supports one update at a
+//     time.
 //
-//   * ParameterVersionNotFound
-//   The specified parameter version wasn't found. Verify the parameter name and
-//   version, and try again.
+//   - ParameterNotFound
+//     The parameter couldn't be found. Verify the name and try again.
+//
+//   - ParameterVersionNotFound
+//     The specified parameter version wasn't found. Verify the parameter name and
+//     version, and try again.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UnlabelParameterVersion
 func (c *SSM) UnlabelParameterVersion(input *UnlabelParameterVersionInput) (*UnlabelParameterVersionOutput, error) {
@@ -14168,14 +14126,13 @@ const opUpdateAssociation = "UpdateAssociation"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the UpdateAssociationRequest method.
+//	req, resp := client.UpdateAssociationRequest(params)
 //
-//    // Example sending a request using the UpdateAssociationRequest method.
-//    req, resp := client.UpdateAssociationRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateAssociation
 func (c *SSM) UpdateAssociationRequest(input *UpdateAssociationInput) (req *request.Request, output *UpdateAssociationOutput) {
@@ -14198,7 +14155,13 @@ func (c *SSM) UpdateAssociationRequest(input *UpdateAssociationInput) (req *requ
 //
 // Updates an association. You can update the association name and version,
 // the document version, schedule, parameters, and Amazon Simple Storage Service
-// (Amazon S3) output.
+// (Amazon S3) output. When you call UpdateAssociation, the system removes all
+// optional parameters from the request and overwrites the association with
+// null values for those parameters. This is by design. You must specify all
+// optional parameters in the call, even if you are not changing the parameters.
+// This includes the Name parameter. Before calling this API action, we recommend
+// that you call the DescribeAssociation API operation and make a note of all
+// optional parameters required for your UpdateAssociation call.
 //
 // In order to call this API operation, your Identity and Access Management
 // (IAM) user account, group, or role must be configured with permission to
@@ -14209,7 +14172,8 @@ func (c *SSM) UpdateAssociationRequest(input *UpdateAssociationInput) (req *requ
 // resource: <resource_arn>
 //
 // When you update an association, the association immediately runs against
-// the specified targets.
+// the specified targets. You can add the ApplyOnlyAtCronInterval parameter
+// to run the association during the next schedule run.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -14219,48 +14183,52 @@ func (c *SSM) UpdateAssociationRequest(input *UpdateAssociationInput) (req *requ
 // API operation UpdateAssociation for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
 //
-//   * InvalidSchedule
-//   The schedule is invalid. Verify your cron or rate expression and try again.
+//   - InternalServerError
+//     An error occurred on the server side.
 //
-//   * InvalidParameters
-//   You must specify values for all required parameters in the Amazon Web Services
-//   Systems Manager document (SSM document). You can only supply values to parameters
-//   defined in the SSM document.
+//   - InvalidSchedule
+//     The schedule is invalid. Verify your cron or rate expression and try again.
 //
-//   * InvalidOutputLocation
-//   The output location isn't valid or doesn't exist.
+//   - InvalidParameters
+//     You must specify values for all required parameters in the Amazon Web Services
+//     Systems Manager document (SSM document). You can only supply values to parameters
+//     defined in the SSM document.
 //
-//   * InvalidDocumentVersion
-//   The document version isn't valid or doesn't exist.
+//   - InvalidOutputLocation
+//     The output location isn't valid or doesn't exist.
 //
-//   * AssociationDoesNotExist
-//   The specified association doesn't exist.
+//   - InvalidDocumentVersion
+//     The document version isn't valid or doesn't exist.
 //
-//   * InvalidUpdate
-//   The update isn't valid.
+//   - AssociationDoesNotExist
+//     The specified association doesn't exist.
 //
-//   * TooManyUpdates
-//   There are concurrent updates for a resource that supports one update at a
-//   time.
+//   - InvalidUpdate
+//     The update isn't valid.
 //
-//   * InvalidDocument
-//   The specified SSM document doesn't exist.
+//   - TooManyUpdates
+//     There are concurrent updates for a resource that supports one update at a
+//     time.
 //
-//   * InvalidTarget
-//   The target isn't valid or doesn't exist. It might not be configured for Systems
-//   Manager or you might not have permission to perform the operation.
+//   - InvalidDocument
+//     The specified SSM document doesn't exist.
 //
-//   * InvalidAssociationVersion
-//   The version you specified isn't valid. Use ListAssociationVersions to view
-//   all versions of an association according to the association ID. Or, use the
-//   $LATEST parameter to view the latest version of the association.
+//   - InvalidTarget
+//     The target isn't valid or doesn't exist. It might not be configured for Systems
+//     Manager or you might not have permission to perform the operation.
 //
-//   * AssociationVersionLimitExceeded
-//   You have reached the maximum number versions allowed for an association.
-//   Each association has a limit of 1,000 versions.
+//   - InvalidAssociationVersion
+//     The version you specified isn't valid. Use ListAssociationVersions to view
+//     all versions of an association according to the association ID. Or, use the
+//     $LATEST parameter to view the latest version of the association.
+//
+//   - AssociationVersionLimitExceeded
+//     You have reached the maximum number versions allowed for an association.
+//     Each association has a limit of 1,000 versions.
+//
+//   - InvalidTargetMaps
+//     TargetMap parameter isn't valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateAssociation
 func (c *SSM) UpdateAssociation(input *UpdateAssociationInput) (*UpdateAssociationOutput, error) {
@@ -14300,14 +14268,13 @@ const opUpdateAssociationStatus = "UpdateAssociationStatus"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the UpdateAssociationStatusRequest method.
+//	req, resp := client.UpdateAssociationStatusRequest(params)
 //
-//    // Example sending a request using the UpdateAssociationStatusRequest method.
-//    req, resp := client.UpdateAssociationStatusRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateAssociationStatus
 func (c *SSM) UpdateAssociationStatusRequest(input *UpdateAssociationStatusInput) (req *request.Request, output *UpdateAssociationStatusOutput) {
@@ -14329,7 +14296,7 @@ func (c *SSM) UpdateAssociationStatusRequest(input *UpdateAssociationStatusInput
 // UpdateAssociationStatus API operation for Amazon Simple Systems Manager (SSM).
 //
 // Updates the status of the Amazon Web Services Systems Manager document (SSM
-// document) associated with the specified instance.
+// document) associated with the specified managed node.
 //
 // UpdateAssociationStatus is primarily used by the Amazon Web Services Systems
 // Manager Agent (SSM Agent) to report status updates about your associations
@@ -14343,35 +14310,36 @@ func (c *SSM) UpdateAssociationStatusRequest(input *UpdateAssociationStatusInput
 // API operation UpdateAssociationStatus for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
 //
-//   * InvalidInstanceId
-//   The following problems can cause this exception:
+//   - InternalServerError
+//     An error occurred on the server side.
 //
-//      * You don't have permission to access the instance.
+//   - InvalidInstanceId
+//     The following problems can cause this exception:
 //
-//      * Amazon Web Services Systems Manager Agent(SSM Agent) isn't running.
-//      Verify that SSM Agent is running.
+//   - You don't have permission to access the managed node.
 //
-//      * SSM Agent isn't registered with the SSM endpoint. Try reinstalling SSM
-//      Agent.
+//   - Amazon Web Services Systems Manager Agent(SSM Agent) isn't running.
+//     Verify that SSM Agent is running.
 //
-//      * The instance isn't in valid state. Valid states are: Running, Pending,
-//      Stopped, and Stopping. Invalid states are: Shutting-down and Terminated.
+//   - SSM Agent isn't registered with the SSM endpoint. Try reinstalling SSM
+//     Agent.
 //
-//   * InvalidDocument
-//   The specified SSM document doesn't exist.
+//   - The managed node isn't in valid state. Valid states are: Running, Pending,
+//     Stopped, and Stopping. Invalid states are: Shutting-down and Terminated.
 //
-//   * AssociationDoesNotExist
-//   The specified association doesn't exist.
+//   - InvalidDocument
+//     The specified SSM document doesn't exist.
 //
-//   * StatusUnchanged
-//   The updated status is the same as the current status.
+//   - AssociationDoesNotExist
+//     The specified association doesn't exist.
 //
-//   * TooManyUpdates
-//   There are concurrent updates for a resource that supports one update at a
-//   time.
+//   - StatusUnchanged
+//     The updated status is the same as the current status.
+//
+//   - TooManyUpdates
+//     There are concurrent updates for a resource that supports one update at a
+//     time.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateAssociationStatus
 func (c *SSM) UpdateAssociationStatus(input *UpdateAssociationStatusInput) (*UpdateAssociationStatusOutput, error) {
@@ -14411,14 +14379,13 @@ const opUpdateDocument = "UpdateDocument"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the UpdateDocumentRequest method.
+//	req, resp := client.UpdateDocumentRequest(params)
 //
-//    // Example sending a request using the UpdateDocumentRequest method.
-//    req, resp := client.UpdateDocumentRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateDocument
 func (c *SSM) UpdateDocumentRequest(input *UpdateDocumentInput) (req *request.Request, output *UpdateDocumentOutput) {
@@ -14449,39 +14416,40 @@ func (c *SSM) UpdateDocumentRequest(input *UpdateDocumentInput) (req *request.Re
 // API operation UpdateDocument for usage and error information.
 //
 // Returned Error Types:
-//   * MaxDocumentSizeExceeded
-//   The size limit of a document is 64 KB.
 //
-//   * DocumentVersionLimitExceeded
-//   The document has too many versions. Delete one or more document versions
-//   and try again.
+//   - MaxDocumentSizeExceeded
+//     The size limit of a document is 64 KB.
 //
-//   * InternalServerError
-//   An error occurred on the server side.
+//   - DocumentVersionLimitExceeded
+//     The document has too many versions. Delete one or more document versions
+//     and try again.
 //
-//   * DuplicateDocumentContent
-//   The content of the association document matches another document. Change
-//   the content of the document and try again.
+//   - InternalServerError
+//     An error occurred on the server side.
 //
-//   * DuplicateDocumentVersionName
-//   The version name has already been used in this document. Specify a different
-//   version name, and then try again.
+//   - DuplicateDocumentContent
+//     The content of the association document matches another document. Change
+//     the content of the document and try again.
 //
-//   * InvalidDocumentContent
-//   The content for the document isn't valid.
+//   - DuplicateDocumentVersionName
+//     The version name has already been used in this document. Specify a different
+//     version name, and then try again.
 //
-//   * InvalidDocumentVersion
-//   The document version isn't valid or doesn't exist.
+//   - InvalidDocumentContent
+//     The content for the document isn't valid.
 //
-//   * InvalidDocumentSchemaVersion
-//   The version of the document schema isn't supported.
+//   - InvalidDocumentVersion
+//     The document version isn't valid or doesn't exist.
 //
-//   * InvalidDocument
-//   The specified SSM document doesn't exist.
+//   - InvalidDocumentSchemaVersion
+//     The version of the document schema isn't supported.
 //
-//   * InvalidDocumentOperation
-//   You attempted to delete a document while it is still shared. You must stop
-//   sharing the document before you can delete it.
+//   - InvalidDocument
+//     The specified SSM document doesn't exist.
+//
+//   - InvalidDocumentOperation
+//     You attempted to delete a document while it is still shared. You must stop
+//     sharing the document before you can delete it.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateDocument
 func (c *SSM) UpdateDocument(input *UpdateDocumentInput) (*UpdateDocumentOutput, error) {
@@ -14521,14 +14489,13 @@ const opUpdateDocumentDefaultVersion = "UpdateDocumentDefaultVersion"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the UpdateDocumentDefaultVersionRequest method.
+//	req, resp := client.UpdateDocumentDefaultVersionRequest(params)
 //
-//    // Example sending a request using the UpdateDocumentDefaultVersionRequest method.
-//    req, resp := client.UpdateDocumentDefaultVersionRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateDocumentDefaultVersion
 func (c *SSM) UpdateDocumentDefaultVersionRequest(input *UpdateDocumentDefaultVersionInput) (req *request.Request, output *UpdateDocumentDefaultVersionOutput) {
@@ -14551,6 +14518,10 @@ func (c *SSM) UpdateDocumentDefaultVersionRequest(input *UpdateDocumentDefaultVe
 //
 // Set the default version of a document.
 //
+// If you change a document version for a State Manager association, Systems
+// Manager immediately runs the association unless you previously specifed the
+// apply-only-at-cron-interval parameter.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -14559,17 +14530,18 @@ func (c *SSM) UpdateDocumentDefaultVersionRequest(input *UpdateDocumentDefaultVe
 // API operation UpdateDocumentDefaultVersion for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
 //
-//   * InvalidDocument
-//   The specified SSM document doesn't exist.
+//   - InternalServerError
+//     An error occurred on the server side.
 //
-//   * InvalidDocumentVersion
-//   The document version isn't valid or doesn't exist.
+//   - InvalidDocument
+//     The specified SSM document doesn't exist.
 //
-//   * InvalidDocumentSchemaVersion
-//   The version of the document schema isn't supported.
+//   - InvalidDocumentVersion
+//     The document version isn't valid or doesn't exist.
+//
+//   - InvalidDocumentSchemaVersion
+//     The version of the document schema isn't supported.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateDocumentDefaultVersion
 func (c *SSM) UpdateDocumentDefaultVersion(input *UpdateDocumentDefaultVersionInput) (*UpdateDocumentDefaultVersionOutput, error) {
@@ -14609,14 +14581,13 @@ const opUpdateDocumentMetadata = "UpdateDocumentMetadata"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the UpdateDocumentMetadataRequest method.
+//	req, resp := client.UpdateDocumentMetadataRequest(params)
 //
-//    // Example sending a request using the UpdateDocumentMetadataRequest method.
-//    req, resp := client.UpdateDocumentMetadataRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateDocumentMetadata
 func (c *SSM) UpdateDocumentMetadataRequest(input *UpdateDocumentMetadataInput) (req *request.Request, output *UpdateDocumentMetadataOutput) {
@@ -14649,18 +14620,19 @@ func (c *SSM) UpdateDocumentMetadataRequest(input *UpdateDocumentMetadataInput) 
 // API operation UpdateDocumentMetadata for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
 //
-//   * InvalidDocument
-//   The specified SSM document doesn't exist.
+//   - InternalServerError
+//     An error occurred on the server side.
 //
-//   * InvalidDocumentOperation
-//   You attempted to delete a document while it is still shared. You must stop
-//   sharing the document before you can delete it.
+//   - InvalidDocument
+//     The specified SSM document doesn't exist.
 //
-//   * InvalidDocumentVersion
-//   The document version isn't valid or doesn't exist.
+//   - InvalidDocumentOperation
+//     You attempted to delete a document while it is still shared. You must stop
+//     sharing the document before you can delete it.
+//
+//   - InvalidDocumentVersion
+//     The document version isn't valid or doesn't exist.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateDocumentMetadata
 func (c *SSM) UpdateDocumentMetadata(input *UpdateDocumentMetadataInput) (*UpdateDocumentMetadataOutput, error) {
@@ -14700,14 +14672,13 @@ const opUpdateMaintenanceWindow = "UpdateMaintenanceWindow"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the UpdateMaintenanceWindowRequest method.
+//	req, resp := client.UpdateMaintenanceWindowRequest(params)
 //
-//    // Example sending a request using the UpdateMaintenanceWindowRequest method.
-//    req, resp := client.UpdateMaintenanceWindowRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateMaintenanceWindow
 func (c *SSM) UpdateMaintenanceWindowRequest(input *UpdateMaintenanceWindowInput) (req *request.Request, output *UpdateMaintenanceWindowOutput) {
@@ -14745,16 +14716,17 @@ func (c *SSM) UpdateMaintenanceWindowRequest(input *UpdateMaintenanceWindowInput
 // API operation UpdateMaintenanceWindow for usage and error information.
 //
 // Returned Error Types:
-//   * DoesNotExistException
-//   Error returned when the ID specified for a resource, such as a maintenance
-//   window or patch baseline, doesn't exist.
 //
-//   For information about resource quotas in Amazon Web Services Systems Manager,
-//   see Systems Manager service quotas (https://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
-//   in the Amazon Web Services General Reference.
+//   - DoesNotExistException
+//     Error returned when the ID specified for a resource, such as a maintenance
+//     window or patch baseline, doesn't exist.
 //
-//   * InternalServerError
-//   An error occurred on the server side.
+//     For information about resource quotas in Amazon Web Services Systems Manager,
+//     see Systems Manager service quotas (https://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//     in the Amazon Web Services General Reference.
+//
+//   - InternalServerError
+//     An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateMaintenanceWindow
 func (c *SSM) UpdateMaintenanceWindow(input *UpdateMaintenanceWindowInput) (*UpdateMaintenanceWindowOutput, error) {
@@ -14794,14 +14766,13 @@ const opUpdateMaintenanceWindowTarget = "UpdateMaintenanceWindowTarget"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the UpdateMaintenanceWindowTargetRequest method.
+//	req, resp := client.UpdateMaintenanceWindowTargetRequest(params)
 //
-//    // Example sending a request using the UpdateMaintenanceWindowTargetRequest method.
-//    req, resp := client.UpdateMaintenanceWindowTargetRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateMaintenanceWindowTarget
 func (c *SSM) UpdateMaintenanceWindowTargetRequest(input *UpdateMaintenanceWindowTargetInput) (req *request.Request, output *UpdateMaintenanceWindowTargetOutput) {
@@ -14825,19 +14796,19 @@ func (c *SSM) UpdateMaintenanceWindowTargetRequest(input *UpdateMaintenanceWindo
 // Modifies the target of an existing maintenance window. You can change the
 // following:
 //
-//    * Name
+//   - Name
 //
-//    * Description
+//   - Description
 //
-//    * Owner
+//   - Owner
 //
-//    * IDs for an ID target
+//   - IDs for an ID target
 //
-//    * Tags for a Tag target
+//   - Tags for a Tag target
 //
-//    * From any supported tag type to another. The three supported tag types
-//    are ID target, Tag target, and resource group. For more information, see
-//    Target.
+//   - From any supported tag type to another. The three supported tag types
+//     are ID target, Tag target, and resource group. For more information, see
+//     Target.
 //
 // If a parameter is null, then the corresponding field isn't modified.
 //
@@ -14849,16 +14820,17 @@ func (c *SSM) UpdateMaintenanceWindowTargetRequest(input *UpdateMaintenanceWindo
 // API operation UpdateMaintenanceWindowTarget for usage and error information.
 //
 // Returned Error Types:
-//   * DoesNotExistException
-//   Error returned when the ID specified for a resource, such as a maintenance
-//   window or patch baseline, doesn't exist.
 //
-//   For information about resource quotas in Amazon Web Services Systems Manager,
-//   see Systems Manager service quotas (https://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
-//   in the Amazon Web Services General Reference.
+//   - DoesNotExistException
+//     Error returned when the ID specified for a resource, such as a maintenance
+//     window or patch baseline, doesn't exist.
 //
-//   * InternalServerError
-//   An error occurred on the server side.
+//     For information about resource quotas in Amazon Web Services Systems Manager,
+//     see Systems Manager service quotas (https://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//     in the Amazon Web Services General Reference.
+//
+//   - InternalServerError
+//     An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateMaintenanceWindowTarget
 func (c *SSM) UpdateMaintenanceWindowTarget(input *UpdateMaintenanceWindowTargetInput) (*UpdateMaintenanceWindowTargetOutput, error) {
@@ -14898,14 +14870,13 @@ const opUpdateMaintenanceWindowTask = "UpdateMaintenanceWindowTask"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the UpdateMaintenanceWindowTaskRequest method.
+//	req, resp := client.UpdateMaintenanceWindowTaskRequest(params)
 //
-//    // Example sending a request using the UpdateMaintenanceWindowTaskRequest method.
-//    req, resp := client.UpdateMaintenanceWindowTaskRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateMaintenanceWindowTask
 func (c *SSM) UpdateMaintenanceWindowTaskRequest(input *UpdateMaintenanceWindowTaskInput) (req *request.Request, output *UpdateMaintenanceWindowTaskOutput) {
@@ -14929,18 +14900,18 @@ func (c *SSM) UpdateMaintenanceWindowTaskRequest(input *UpdateMaintenanceWindowT
 // Modifies a task assigned to a maintenance window. You can't change the task
 // type, but you can change the following values:
 //
-//    * TaskARN. For example, you can change a RUN_COMMAND task from AWS-RunPowerShellScript
-//    to AWS-RunShellScript.
+//   - TaskARN. For example, you can change a RUN_COMMAND task from AWS-RunPowerShellScript
+//     to AWS-RunShellScript.
 //
-//    * ServiceRoleArn
+//   - ServiceRoleArn
 //
-//    * TaskInvocationParameters
+//   - TaskInvocationParameters
 //
-//    * Priority
+//   - Priority
 //
-//    * MaxConcurrency
+//   - MaxConcurrency
 //
-//    * MaxErrors
+//   - MaxErrors
 //
 // One or more targets must be specified for maintenance window Run Command-type
 // tasks. Depending on the task, targets are optional for other maintenance
@@ -14971,16 +14942,17 @@ func (c *SSM) UpdateMaintenanceWindowTaskRequest(input *UpdateMaintenanceWindowT
 // API operation UpdateMaintenanceWindowTask for usage and error information.
 //
 // Returned Error Types:
-//   * DoesNotExistException
-//   Error returned when the ID specified for a resource, such as a maintenance
-//   window or patch baseline, doesn't exist.
 //
-//   For information about resource quotas in Amazon Web Services Systems Manager,
-//   see Systems Manager service quotas (https://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
-//   in the Amazon Web Services General Reference.
+//   - DoesNotExistException
+//     Error returned when the ID specified for a resource, such as a maintenance
+//     window or patch baseline, doesn't exist.
 //
-//   * InternalServerError
-//   An error occurred on the server side.
+//     For information about resource quotas in Amazon Web Services Systems Manager,
+//     see Systems Manager service quotas (https://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//     in the Amazon Web Services General Reference.
+//
+//   - InternalServerError
+//     An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateMaintenanceWindowTask
 func (c *SSM) UpdateMaintenanceWindowTask(input *UpdateMaintenanceWindowTaskInput) (*UpdateMaintenanceWindowTaskOutput, error) {
@@ -15020,14 +14992,13 @@ const opUpdateManagedInstanceRole = "UpdateManagedInstanceRole"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the UpdateManagedInstanceRoleRequest method.
+//	req, resp := client.UpdateManagedInstanceRoleRequest(params)
 //
-//    // Example sending a request using the UpdateManagedInstanceRoleRequest method.
-//    req, resp := client.UpdateManagedInstanceRoleRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateManagedInstanceRole
 func (c *SSM) UpdateManagedInstanceRoleRequest(input *UpdateManagedInstanceRoleInput) (req *request.Request, output *UpdateManagedInstanceRoleOutput) {
@@ -15050,9 +15021,9 @@ func (c *SSM) UpdateManagedInstanceRoleRequest(input *UpdateManagedInstanceRoleI
 // UpdateManagedInstanceRole API operation for Amazon Simple Systems Manager (SSM).
 //
 // Changes the Identity and Access Management (IAM) role that is assigned to
-// the on-premises instance or virtual machines (VM). IAM roles are first assigned
-// to these hybrid instances during the activation process. For more information,
-// see CreateActivation.
+// the on-premises server, edge device, or virtual machines (VM). IAM roles
+// are first assigned to these hybrid nodes during the activation process. For
+// more information, see CreateActivation.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -15062,22 +15033,23 @@ func (c *SSM) UpdateManagedInstanceRoleRequest(input *UpdateManagedInstanceRoleI
 // API operation UpdateManagedInstanceRole for usage and error information.
 //
 // Returned Error Types:
-//   * InvalidInstanceId
-//   The following problems can cause this exception:
 //
-//      * You don't have permission to access the instance.
+//   - InvalidInstanceId
+//     The following problems can cause this exception:
 //
-//      * Amazon Web Services Systems Manager Agent(SSM Agent) isn't running.
-//      Verify that SSM Agent is running.
+//   - You don't have permission to access the managed node.
 //
-//      * SSM Agent isn't registered with the SSM endpoint. Try reinstalling SSM
-//      Agent.
+//   - Amazon Web Services Systems Manager Agent(SSM Agent) isn't running.
+//     Verify that SSM Agent is running.
 //
-//      * The instance isn't in valid state. Valid states are: Running, Pending,
-//      Stopped, and Stopping. Invalid states are: Shutting-down and Terminated.
+//   - SSM Agent isn't registered with the SSM endpoint. Try reinstalling SSM
+//     Agent.
 //
-//   * InternalServerError
-//   An error occurred on the server side.
+//   - The managed node isn't in valid state. Valid states are: Running, Pending,
+//     Stopped, and Stopping. Invalid states are: Shutting-down and Terminated.
+//
+//   - InternalServerError
+//     An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateManagedInstanceRole
 func (c *SSM) UpdateManagedInstanceRole(input *UpdateManagedInstanceRoleInput) (*UpdateManagedInstanceRoleOutput, error) {
@@ -15117,14 +15089,13 @@ const opUpdateOpsItem = "UpdateOpsItem"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the UpdateOpsItemRequest method.
+//	req, resp := client.UpdateOpsItemRequest(params)
 //
-//    // Example sending a request using the UpdateOpsItemRequest method.
-//    req, resp := client.UpdateOpsItemRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateOpsItem
 func (c *SSM) UpdateOpsItemRequest(input *UpdateOpsItemInput) (req *request.Request, output *UpdateOpsItemOutput) {
@@ -15165,22 +15136,23 @@ func (c *SSM) UpdateOpsItemRequest(input *UpdateOpsItemInput) (req *request.Requ
 // API operation UpdateOpsItem for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
 //
-//   * OpsItemNotFoundException
-//   The specified OpsItem ID doesn't exist. Verify the ID and try again.
+//   - InternalServerError
+//     An error occurred on the server side.
 //
-//   * OpsItemAlreadyExistsException
-//   The OpsItem already exists.
+//   - OpsItemNotFoundException
+//     The specified OpsItem ID doesn't exist. Verify the ID and try again.
 //
-//   * OpsItemLimitExceededException
-//   The request caused OpsItems to exceed one or more quotas. For information
-//   about OpsItem quotas, see What are the resource limits for OpsCenter? (https://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-learn-more.html#OpsCenter-learn-more-limits).
+//   - OpsItemAlreadyExistsException
+//     The OpsItem already exists.
 //
-//   * OpsItemInvalidParameterException
-//   A specified parameter argument isn't valid. Verify the available arguments
-//   and try again.
+//   - OpsItemLimitExceededException
+//     The request caused OpsItems to exceed one or more quotas. For information
+//     about OpsItem quotas, see What are the resource limits for OpsCenter? (https://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-learn-more.html#OpsCenter-learn-more-limits).
+//
+//   - OpsItemInvalidParameterException
+//     A specified parameter argument isn't valid. Verify the available arguments
+//     and try again.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateOpsItem
 func (c *SSM) UpdateOpsItem(input *UpdateOpsItemInput) (*UpdateOpsItemOutput, error) {
@@ -15220,14 +15192,13 @@ const opUpdateOpsMetadata = "UpdateOpsMetadata"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the UpdateOpsMetadataRequest method.
+//	req, resp := client.UpdateOpsMetadataRequest(params)
 //
-//    // Example sending a request using the UpdateOpsMetadataRequest method.
-//    req, resp := client.UpdateOpsMetadataRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateOpsMetadata
 func (c *SSM) UpdateOpsMetadataRequest(input *UpdateOpsMetadataInput) (req *request.Request, output *UpdateOpsMetadataOutput) {
@@ -15259,22 +15230,23 @@ func (c *SSM) UpdateOpsMetadataRequest(input *UpdateOpsMetadataInput) (req *requ
 // API operation UpdateOpsMetadata for usage and error information.
 //
 // Returned Error Types:
-//   * OpsMetadataNotFoundException
-//   The OpsMetadata object doesn't exist.
 //
-//   * OpsMetadataInvalidArgumentException
-//   One of the arguments passed is invalid.
+//   - OpsMetadataNotFoundException
+//     The OpsMetadata object doesn't exist.
 //
-//   * OpsMetadataKeyLimitExceededException
-//   The OpsMetadata object exceeds the maximum number of OpsMetadata keys that
-//   you can assign to an application in Application Manager.
+//   - OpsMetadataInvalidArgumentException
+//     One of the arguments passed is invalid.
 //
-//   * OpsMetadataTooManyUpdatesException
-//   The system is processing too many concurrent updates. Wait a few moments
-//   and try again.
+//   - OpsMetadataKeyLimitExceededException
+//     The OpsMetadata object exceeds the maximum number of OpsMetadata keys that
+//     you can assign to an application in Application Manager.
 //
-//   * InternalServerError
-//   An error occurred on the server side.
+//   - OpsMetadataTooManyUpdatesException
+//     The system is processing too many concurrent updates. Wait a few moments
+//     and try again.
+//
+//   - InternalServerError
+//     An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateOpsMetadata
 func (c *SSM) UpdateOpsMetadata(input *UpdateOpsMetadataInput) (*UpdateOpsMetadataOutput, error) {
@@ -15314,14 +15286,13 @@ const opUpdatePatchBaseline = "UpdatePatchBaseline"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the UpdatePatchBaselineRequest method.
+//	req, resp := client.UpdatePatchBaselineRequest(params)
 //
-//    // Example sending a request using the UpdatePatchBaselineRequest method.
-//    req, resp := client.UpdatePatchBaselineRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdatePatchBaseline
 func (c *SSM) UpdatePatchBaselineRequest(input *UpdatePatchBaselineInput) (req *request.Request, output *UpdatePatchBaselineOutput) {
@@ -15356,16 +15327,17 @@ func (c *SSM) UpdatePatchBaselineRequest(input *UpdatePatchBaselineInput) (req *
 // API operation UpdatePatchBaseline for usage and error information.
 //
 // Returned Error Types:
-//   * DoesNotExistException
-//   Error returned when the ID specified for a resource, such as a maintenance
-//   window or patch baseline, doesn't exist.
 //
-//   For information about resource quotas in Amazon Web Services Systems Manager,
-//   see Systems Manager service quotas (https://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
-//   in the Amazon Web Services General Reference.
+//   - DoesNotExistException
+//     Error returned when the ID specified for a resource, such as a maintenance
+//     window or patch baseline, doesn't exist.
 //
-//   * InternalServerError
-//   An error occurred on the server side.
+//     For information about resource quotas in Amazon Web Services Systems Manager,
+//     see Systems Manager service quotas (https://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//     in the Amazon Web Services General Reference.
+//
+//   - InternalServerError
+//     An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdatePatchBaseline
 func (c *SSM) UpdatePatchBaseline(input *UpdatePatchBaselineInput) (*UpdatePatchBaselineOutput, error) {
@@ -15405,14 +15377,13 @@ const opUpdateResourceDataSync = "UpdateResourceDataSync"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the UpdateResourceDataSyncRequest method.
+//	req, resp := client.UpdateResourceDataSyncRequest(params)
 //
-//    // Example sending a request using the UpdateResourceDataSyncRequest method.
-//    req, resp := client.UpdateResourceDataSyncRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateResourceDataSync
 func (c *SSM) UpdateResourceDataSyncRequest(input *UpdateResourceDataSyncInput) (req *request.Request, output *UpdateResourceDataSyncOutput) {
@@ -15452,18 +15423,19 @@ func (c *SSM) UpdateResourceDataSyncRequest(input *UpdateResourceDataSyncInput) 
 // API operation UpdateResourceDataSync for usage and error information.
 //
 // Returned Error Types:
-//   * ResourceDataSyncNotFoundException
-//   The specified sync name wasn't found.
 //
-//   * ResourceDataSyncInvalidConfigurationException
-//   The specified sync configuration is invalid.
+//   - ResourceDataSyncNotFoundException
+//     The specified sync name wasn't found.
 //
-//   * ResourceDataSyncConflictException
-//   Another UpdateResourceDataSync request is being processed. Wait a few minutes
-//   and try again.
+//   - ResourceDataSyncInvalidConfigurationException
+//     The specified sync configuration is invalid.
 //
-//   * InternalServerError
-//   An error occurred on the server side.
+//   - ResourceDataSyncConflictException
+//     Another UpdateResourceDataSync request is being processed. Wait a few minutes
+//     and try again.
+//
+//   - InternalServerError
+//     An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateResourceDataSync
 func (c *SSM) UpdateResourceDataSync(input *UpdateResourceDataSyncInput) (*UpdateResourceDataSyncOutput, error) {
@@ -15503,14 +15475,13 @@ const opUpdateServiceSetting = "UpdateServiceSetting"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the UpdateServiceSettingRequest method.
+//	req, resp := client.UpdateServiceSettingRequest(params)
 //
-//    // Example sending a request using the UpdateServiceSettingRequest method.
-//    req, resp := client.UpdateServiceSettingRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateServiceSetting
 func (c *SSM) UpdateServiceSettingRequest(input *UpdateServiceSettingInput) (req *request.Request, output *UpdateServiceSettingOutput) {
@@ -15557,16 +15528,17 @@ func (c *SSM) UpdateServiceSettingRequest(input *UpdateServiceSettingInput) (req
 // API operation UpdateServiceSetting for usage and error information.
 //
 // Returned Error Types:
-//   * InternalServerError
-//   An error occurred on the server side.
 //
-//   * ServiceSettingNotFound
-//   The specified service setting wasn't found. Either the service name or the
-//   setting hasn't been provisioned by the Amazon Web Services service team.
+//   - InternalServerError
+//     An error occurred on the server side.
 //
-//   * TooManyUpdates
-//   There are concurrent updates for a resource that supports one update at a
-//   time.
+//   - ServiceSettingNotFound
+//     The specified service setting wasn't found. Either the service name or the
+//     setting hasn't been provisioned by the Amazon Web Services service team.
+//
+//   - TooManyUpdates
+//     There are concurrent updates for a resource that supports one update at a
+//     time.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateServiceSetting
 func (c *SSM) UpdateServiceSetting(input *UpdateServiceSettingInput) (*UpdateServiceSettingOutput, error) {
@@ -15635,7 +15607,7 @@ func (s *AccountSharingInfo) SetSharedDocumentVersion(v string) *AccountSharingI
 // An activation registers one or more on-premises servers or virtual machines
 // (VMs) with Amazon Web Services so that you can configure those servers or
 // VMs using Run Command. A server or VM that has been registered with Amazon
-// Web Services Systems Manager is called a managed instance.
+// Web Services Systems Manager is called a managed node.
 type Activation struct {
 	_ struct{} `type:"structure"`
 
@@ -15645,26 +15617,25 @@ type Activation struct {
 	// The date the activation was created.
 	CreatedDate *time.Time `type:"timestamp"`
 
-	// A name for the managed instance when it is created.
+	// A name for the managed node when it is created.
 	DefaultInstanceName *string `type:"string"`
 
 	// A user defined description of the activation.
 	Description *string `type:"string"`
 
-	// The date when this activation can no longer be used to register managed instances.
+	// The date when this activation can no longer be used to register managed nodes.
 	ExpirationDate *time.Time `type:"timestamp"`
 
 	// Whether or not the activation is expired.
 	Expired *bool `type:"boolean"`
 
-	// The Identity and Access Management (IAM) role to assign to the managed instance.
+	// The Identity and Access Management (IAM) role to assign to the managed node.
 	IamRole *string `type:"string"`
 
-	// The maximum number of managed instances that can be registered using this
-	// activation.
+	// The maximum number of managed nodes that can be registered using this activation.
 	RegistrationLimit *int64 `min:"1" type:"integer"`
 
-	// The number of managed instances already registered with this activation.
+	// The number of managed nodes already registered with this activation.
 	RegistrationsCount *int64 `min:"1" type:"integer"`
 
 	// Tags assigned to the activation.
@@ -15760,6 +15731,8 @@ type AddTagsToResourceInput struct {
 	//
 	// PatchBaseline: pb-012345abcde
 	//
+	// Automation: example-c160-4567-8519-012345abcde
+	//
 	// OpsMetadata object: ResourceID for tagging is created from the Amazon Resource
 	// Name (ARN) for the object. Specifically, ResourceID is created from the strings
 	// that come after the word opsmetadata in the ARN. For example, an OpsMetadata
@@ -15771,8 +15744,8 @@ type AddTagsToResourceInput struct {
 	// ManagedInstance: mi-012345abcde
 	//
 	// The ManagedInstance type for this API operation is only for on-premises managed
-	// instances. You must specify the name of the managed instance in the following
-	// format: mi-ID_number . For example, mi-1a2b3c4d5e6f.
+	// nodes. You must specify the name of the managed node in the following format:
+	// mi-ID_number . For example, mi-1a2b3c4d5e6f.
 	//
 	// ResourceId is a required field
 	ResourceId *string `type:"string" required:"true"`
@@ -15780,8 +15753,8 @@ type AddTagsToResourceInput struct {
 	// Specifies the type of resource you are tagging.
 	//
 	// The ManagedInstance type for this API operation is for on-premises managed
-	// instances. You must specify the name of the managed instance in the following
-	// format: mi-ID_number . For example, mi-1a2b3c4d5e6f.
+	// nodes. You must specify the name of the managed node in the following format:
+	// mi-ID_number . For example, mi-1a2b3c4d5e6f.
 	//
 	// ResourceType is a required field
 	ResourceType *string `type:"string" required:"true" enum:"ResourceTypeForTagging"`
@@ -15879,6 +15852,173 @@ func (s AddTagsToResourceOutput) String() string {
 // value will be replaced with "sensitive".
 func (s AddTagsToResourceOutput) GoString() string {
 	return s.String()
+}
+
+// A CloudWatch alarm you apply to an automation or command.
+type Alarm struct {
+	_ struct{} `type:"structure"`
+
+	// The name of your CloudWatch alarm.
+	//
+	// Name is a required field
+	Name *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s Alarm) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s Alarm) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *Alarm) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "Alarm"}
+	if s.Name == nil {
+		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.Name != nil && len(*s.Name) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetName sets the Name field's value.
+func (s *Alarm) SetName(v string) *Alarm {
+	s.Name = &v
+	return s
+}
+
+// The details for the CloudWatch alarm you want to apply to an automation or
+// command.
+type AlarmConfiguration struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the CloudWatch alarm specified in the configuration.
+	//
+	// Alarms is a required field
+	Alarms []*Alarm `min:"1" type:"list" required:"true"`
+
+	// If you specify true for this value, your automation or command continue to
+	// run even if we can't gather information about the state of your CloudWatch
+	// alarm. The default value is false.
+	IgnorePollAlarmFailure *bool `type:"boolean"`
+}
+
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s AlarmConfiguration) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s AlarmConfiguration) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AlarmConfiguration) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AlarmConfiguration"}
+	if s.Alarms == nil {
+		invalidParams.Add(request.NewErrParamRequired("Alarms"))
+	}
+	if s.Alarms != nil && len(s.Alarms) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Alarms", 1))
+	}
+	if s.Alarms != nil {
+		for i, v := range s.Alarms {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Alarms", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAlarms sets the Alarms field's value.
+func (s *AlarmConfiguration) SetAlarms(v []*Alarm) *AlarmConfiguration {
+	s.Alarms = v
+	return s
+}
+
+// SetIgnorePollAlarmFailure sets the IgnorePollAlarmFailure field's value.
+func (s *AlarmConfiguration) SetIgnorePollAlarmFailure(v bool) *AlarmConfiguration {
+	s.IgnorePollAlarmFailure = &v
+	return s
+}
+
+// The details about the state of your CloudWatch alarm.
+type AlarmStateInformation struct {
+	_ struct{} `type:"structure"`
+
+	// The name of your CloudWatch alarm.
+	//
+	// Name is a required field
+	Name *string `min:"1" type:"string" required:"true"`
+
+	// The state of your CloudWatch alarm.
+	//
+	// State is a required field
+	State *string `type:"string" required:"true" enum:"ExternalAlarmState"`
+}
+
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s AlarmStateInformation) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s AlarmStateInformation) GoString() string {
+	return s.String()
+}
+
+// SetName sets the Name field's value.
+func (s *AlarmStateInformation) SetName(v string) *AlarmStateInformation {
+	s.Name = &v
+	return s
+}
+
+// SetState sets the State field's value.
+func (s *AlarmStateInformation) SetState(v string) *AlarmStateInformation {
+	s.State = &v
+	return s
 }
 
 // Error returned if an attempt is made to register a patch group with a patch
@@ -16073,7 +16213,7 @@ func (s *AssociateOpsItemRelatedItemOutput) SetAssociationId(v string) *Associat
 	return s
 }
 
-// You must disassociate a document from all instances before you can delete
+// You must disassociate a document from all managed nodes before you can delete
 // it.
 type AssociatedInstances struct {
 	_            struct{}                  `type:"structure"`
@@ -16139,7 +16279,7 @@ func (s *AssociatedInstances) RequestID() string {
 }
 
 // Describes an association of a Amazon Web Services Systems Manager document
-// (SSM document) and an instance.
+// (SSM document) and a managed node.
 type Association struct {
 	_ struct{} `type:"structure"`
 
@@ -16153,10 +16293,20 @@ type Association struct {
 	// The association version.
 	AssociationVersion *string `type:"string"`
 
-	// The version of the document used in the association.
+	// The version of the document used in the association. If you change a document
+	// version for a State Manager association, Systems Manager immediately runs
+	// the association unless you previously specifed the apply-only-at-cron-interval
+	// parameter.
+	//
+	// State Manager doesn't support running associations that use a new version
+	// of a document if that document is shared from another account. State Manager
+	// always runs the default version of a document if shared from another account,
+	// even though the Systems Manager console shows that a new version was processed.
+	// If you want to run an association using a new version of a document shared
+	// form another account, you must set the document version to default.
 	DocumentVersion *string `type:"string"`
 
-	// The instance ID.
+	// The managed node ID.
 	InstanceId *string `type:"string"`
 
 	// The date on which the association was last run.
@@ -16172,9 +16322,16 @@ type Association struct {
 	// schedule runs in Coordinated Universal Time (UTC).
 	ScheduleExpression *string `min:"1" type:"string"`
 
-	// The instances targeted by the request to create an association. You can target
-	// all instances in an Amazon Web Services account by specifying the InstanceIds
-	// key with a value of *.
+	// Number of days to wait after the scheduled day to run an association.
+	ScheduleOffset *int64 `min:"1" type:"integer"`
+
+	// A key-value mapping of document parameters to target resources. Both Targets
+	// and TargetMaps can't be specified together.
+	TargetMaps []map[string][]*string `type:"list"`
+
+	// The managed nodes targeted by the request to create an association. You can
+	// target all managed nodes in an Amazon Web Services account by specifying
+	// the InstanceIds key with a value of *.
 	Targets []*Target `type:"list"`
 }
 
@@ -16247,6 +16404,18 @@ func (s *Association) SetOverview(v *AssociationOverview) *Association {
 // SetScheduleExpression sets the ScheduleExpression field's value.
 func (s *Association) SetScheduleExpression(v string) *Association {
 	s.ScheduleExpression = &v
+	return s
+}
+
+// SetScheduleOffset sets the ScheduleOffset field's value.
+func (s *Association) SetScheduleOffset(v int64) *Association {
+	s.ScheduleOffset = &v
+	return s
+}
+
+// SetTargetMaps sets the TargetMaps field's value.
+func (s *Association) SetTargetMaps(v []map[string][]*string) *Association {
+	s.TargetMaps = v
 	return s
 }
 
@@ -16324,6 +16493,10 @@ func (s *AssociationAlreadyExists) RequestID() string {
 type AssociationDescription struct {
 	_ struct{} `type:"structure"`
 
+	// The details for the CloudWatch alarm you want to apply to an automation or
+	// command.
+	AlarmConfiguration *AlarmConfiguration `type:"structure"`
+
 	// By default, when you create a new associations, the system runs it immediately
 	// after it is created and then according to the schedule you specified. Specify
 	// this option if you don't want an association to run immediately after you
@@ -16339,9 +16512,10 @@ type AssociationDescription struct {
 	// The association version.
 	AssociationVersion *string `type:"string"`
 
-	// Specify the target for the association. This target is required for associations
-	// that use an Automation runbook and target resources by using rate controls.
-	// Automation is a capability of Amazon Web Services Systems Manager.
+	// Choose the parameter that will define how your automation will branch out.
+	// This target is required for associations that use an Automation runbook and
+	// target resources by using rate controls. Automation is a capability of Amazon
+	// Web Services Systems Manager.
 	AutomationTargetParameterName *string `min:"1" type:"string"`
 
 	// The names or Amazon Resource Names (ARNs) of the Change Calendar type documents
@@ -16359,7 +16533,7 @@ type AssociationDescription struct {
 	// The document version.
 	DocumentVersion *string `type:"string"`
 
-	// The instance ID.
+	// The managed node ID.
 	InstanceId *string `type:"string"`
 
 	// The date on which the association was last run.
@@ -16376,9 +16550,9 @@ type AssociationDescription struct {
 	// set, for example 10%. The default value is 100%, which means all targets
 	// run the association at the same time.
 	//
-	// If a new instance starts and attempts to run an association while Systems
+	// If a new managed node starts and attempts to run an association while Systems
 	// Manager is running MaxConcurrency associations, the association is allowed
-	// to run. During the next association interval, the new instance will process
+	// to run. During the next association interval, the new managed node will process
 	// its association within the limit specified for MaxConcurrency.
 	MaxConcurrency *string `min:"1" type:"string"`
 
@@ -16388,8 +16562,8 @@ type AssociationDescription struct {
 	// example 10%. If you specify 3, for example, the system stops sending requests
 	// when the fourth error is received. If you specify 0, then the system stops
 	// sending requests after the first error is returned. If you run an association
-	// on 50 instances and set MaxError to 10%, then the system stops sending the
-	// request when the sixth error is received.
+	// on 50 managed nodes and set MaxError to 10%, then the system stops sending
+	// the request when the sixth error is received.
 	//
 	// Executions that are already running an association when MaxErrors is reached
 	// are allowed to complete, but some of these executions may fail as well. If
@@ -16407,10 +16581,17 @@ type AssociationDescription struct {
 	Overview *AssociationOverview `type:"structure"`
 
 	// A description of the parameters for a document.
-	Parameters map[string][]*string `type:"map"`
+	//
+	// Parameters is a sensitive parameter and its value will be
+	// replaced with "sensitive" in string returned by AssociationDescription's
+	// String and GoString methods.
+	Parameters map[string][]*string `type:"map" sensitive:"true"`
 
 	// A cron expression that specifies a schedule when the association runs.
 	ScheduleExpression *string `min:"1" type:"string"`
+
+	// Number of days to wait after the scheduled day to run an association.
+	ScheduleOffset *int64 `min:"1" type:"integer"`
 
 	// The association status.
 	Status *AssociationStatus `type:"structure"`
@@ -16433,8 +16614,15 @@ type AssociationDescription struct {
 	// where you want to run the association.
 	TargetLocations []*TargetLocation `min:"1" type:"list"`
 
-	// The instances targeted by the request.
+	// A key-value mapping of document parameters to target resources. Both Targets
+	// and TargetMaps can't be specified together.
+	TargetMaps []map[string][]*string `type:"list"`
+
+	// The managed nodes targeted by the request.
 	Targets []*Target `type:"list"`
+
+	// The CloudWatch alarm that was invoked during the association.
+	TriggeredAlarms []*AlarmStateInformation `min:"1" type:"list"`
 }
 
 // String returns the string representation.
@@ -16453,6 +16641,12 @@ func (s AssociationDescription) String() string {
 // value will be replaced with "sensitive".
 func (s AssociationDescription) GoString() string {
 	return s.String()
+}
+
+// SetAlarmConfiguration sets the AlarmConfiguration field's value.
+func (s *AssociationDescription) SetAlarmConfiguration(v *AlarmConfiguration) *AssociationDescription {
+	s.AlarmConfiguration = v
+	return s
 }
 
 // SetApplyOnlyAtCronInterval sets the ApplyOnlyAtCronInterval field's value.
@@ -16575,6 +16769,12 @@ func (s *AssociationDescription) SetScheduleExpression(v string) *AssociationDes
 	return s
 }
 
+// SetScheduleOffset sets the ScheduleOffset field's value.
+func (s *AssociationDescription) SetScheduleOffset(v int64) *AssociationDescription {
+	s.ScheduleOffset = &v
+	return s
+}
+
 // SetStatus sets the Status field's value.
 func (s *AssociationDescription) SetStatus(v *AssociationStatus) *AssociationDescription {
 	s.Status = v
@@ -16593,9 +16793,21 @@ func (s *AssociationDescription) SetTargetLocations(v []*TargetLocation) *Associ
 	return s
 }
 
+// SetTargetMaps sets the TargetMaps field's value.
+func (s *AssociationDescription) SetTargetMaps(v []map[string][]*string) *AssociationDescription {
+	s.TargetMaps = v
+	return s
+}
+
 // SetTargets sets the Targets field's value.
 func (s *AssociationDescription) SetTargets(v []*Target) *AssociationDescription {
 	s.Targets = v
+	return s
+}
+
+// SetTriggeredAlarms sets the TriggeredAlarms field's value.
+func (s *AssociationDescription) SetTriggeredAlarms(v []*AlarmStateInformation) *AssociationDescription {
+	s.TriggeredAlarms = v
 	return s
 }
 
@@ -16667,6 +16879,10 @@ func (s *AssociationDoesNotExist) RequestID() string {
 type AssociationExecution struct {
 	_ struct{} `type:"structure"`
 
+	// The details for the CloudWatch alarm you want to apply to an automation or
+	// command.
+	AlarmConfiguration *AlarmConfiguration `type:"structure"`
+
 	// The association ID.
 	AssociationId *string `type:"string"`
 
@@ -16691,6 +16907,9 @@ type AssociationExecution struct {
 
 	// The status of the association execution.
 	Status *string `type:"string"`
+
+	// The CloudWatch alarms that were invoked by the association.
+	TriggeredAlarms []*AlarmStateInformation `min:"1" type:"list"`
 }
 
 // String returns the string representation.
@@ -16709,6 +16928,12 @@ func (s AssociationExecution) String() string {
 // value will be replaced with "sensitive".
 func (s AssociationExecution) GoString() string {
 	return s.String()
+}
+
+// SetAlarmConfiguration sets the AlarmConfiguration field's value.
+func (s *AssociationExecution) SetAlarmConfiguration(v *AlarmConfiguration) *AssociationExecution {
+	s.AlarmConfiguration = v
+	return s
 }
 
 // SetAssociationId sets the AssociationId field's value.
@@ -16756,6 +16981,12 @@ func (s *AssociationExecution) SetResourceCountByStatus(v string) *AssociationEx
 // SetStatus sets the Status field's value.
 func (s *AssociationExecution) SetStatus(v string) *AssociationExecution {
 	s.Status = &v
+	return s
+}
+
+// SetTriggeredAlarms sets the TriggeredAlarms field's value.
+func (s *AssociationExecution) SetTriggeredAlarms(v []*AlarmStateInformation) *AssociationExecution {
+	s.TriggeredAlarms = v
 	return s
 }
 
@@ -16923,10 +17154,10 @@ type AssociationExecutionTarget struct {
 	// The location where the association details are saved.
 	OutputSource *OutputSource `type:"structure"`
 
-	// The resource ID, for example, the instance ID where the association ran.
+	// The resource ID, for example, the managed node ID where the association ran.
 	ResourceId *string `min:"1" type:"string"`
 
-	// The resource type, for example, instance.
+	// The resource type, for example, EC2.
 	ResourceType *string `min:"1" type:"string"`
 
 	// The association execution status.
@@ -17204,8 +17435,8 @@ type AssociationOverview struct {
 	_ struct{} `type:"structure"`
 
 	// Returns the number of targets for the association status. For example, if
-	// you created an association with two instances, and one of them was successful,
-	// this would return the count of instances by status.
+	// you created an association with two managed nodes, and one of them was successful,
+	// this would return the count of managed nodes by status.
 	AssociationStatusAggregatedCount map[string]*int64 `type:"map"`
 
 	// A detailed status of the association.
@@ -17379,9 +17610,9 @@ type AssociationVersionInfo struct {
 	// set, for example 10%. The default value is 100%, which means all targets
 	// run the association at the same time.
 	//
-	// If a new instance starts and attempts to run an association while Systems
+	// If a new managed node starts and attempts to run an association while Systems
 	// Manager is running MaxConcurrency associations, the association is allowed
-	// to run. During the next association interval, the new instance will process
+	// to run. During the next association interval, the new managed node will process
 	// its association within the limit specified for MaxConcurrency.
 	MaxConcurrency *string `min:"1" type:"string"`
 
@@ -17391,8 +17622,8 @@ type AssociationVersionInfo struct {
 	// example 10%. If you specify 3, for example, the system stops sending requests
 	// when the fourth error is received. If you specify 0, then the system stops
 	// sending requests after the first error is returned. If you run an association
-	// on 50 instances and set MaxError to 10%, then the system stops sending the
-	// request when the sixth error is received.
+	// on 50 managed nodes and set MaxError to 10%, then the system stops sending
+	// the request when the sixth error is received.
 	//
 	// Executions that are already running an association when MaxErrors is reached
 	// are allowed to complete, but some of these executions may fail as well. If
@@ -17408,11 +17639,18 @@ type AssociationVersionInfo struct {
 	OutputLocation *InstanceAssociationOutputLocation `type:"structure"`
 
 	// Parameters specified when the association version was created.
-	Parameters map[string][]*string `type:"map"`
+	//
+	// Parameters is a sensitive parameter and its value will be
+	// replaced with "sensitive" in string returned by AssociationVersionInfo's
+	// String and GoString methods.
+	Parameters map[string][]*string `type:"map" sensitive:"true"`
 
 	// The cron or rate schedule specified for the association when the association
 	// version was created.
 	ScheduleExpression *string `min:"1" type:"string"`
+
+	// Number of days to wait after the scheduled day to run an association.
+	ScheduleOffset *int64 `min:"1" type:"integer"`
 
 	// The mode for generating association compliance. You can specify AUTO or MANUAL.
 	// In AUTO mode, the system uses the status of the association execution to
@@ -17432,6 +17670,10 @@ type AssociationVersionInfo struct {
 	// where you wanted to run the association when this association version was
 	// created.
 	TargetLocations []*TargetLocation `min:"1" type:"list"`
+
+	// A key-value mapping of document parameters to target resources. Both Targets
+	// and TargetMaps can't be specified together.
+	TargetMaps []map[string][]*string `type:"list"`
 
 	// The targets specified for the association when the association version was
 	// created.
@@ -17540,6 +17782,12 @@ func (s *AssociationVersionInfo) SetScheduleExpression(v string) *AssociationVer
 	return s
 }
 
+// SetScheduleOffset sets the ScheduleOffset field's value.
+func (s *AssociationVersionInfo) SetScheduleOffset(v int64) *AssociationVersionInfo {
+	s.ScheduleOffset = &v
+	return s
+}
+
 // SetSyncCompliance sets the SyncCompliance field's value.
 func (s *AssociationVersionInfo) SetSyncCompliance(v string) *AssociationVersionInfo {
 	s.SyncCompliance = &v
@@ -17549,6 +17797,12 @@ func (s *AssociationVersionInfo) SetSyncCompliance(v string) *AssociationVersion
 // SetTargetLocations sets the TargetLocations field's value.
 func (s *AssociationVersionInfo) SetTargetLocations(v []*TargetLocation) *AssociationVersionInfo {
 	s.TargetLocations = v
+	return s
+}
+
+// SetTargetMaps sets the TargetMaps field's value.
+func (s *AssociationVersionInfo) SetTargetMaps(v []map[string][]*string) *AssociationVersionInfo {
+	s.TargetMaps = v
 	return s
 }
 
@@ -18002,6 +18256,9 @@ func (s *AutomationDefinitionVersionNotFoundException) RequestID() string {
 type AutomationExecution struct {
 	_ struct{} `type:"structure"`
 
+	// The details for the CloudWatch alarm applied to your automation.
+	AlarmConfiguration *AlarmConfiguration `type:"structure"`
+
 	// The ID of a State Manager association used in the Automation operation.
 	AssociationId *string `type:"string"`
 
@@ -18107,6 +18364,9 @@ type AutomationExecution struct {
 
 	// The specified targets.
 	Targets []*Target `type:"list"`
+
+	// The CloudWatch alarm that was invoked by the automation.
+	TriggeredAlarms []*AlarmStateInformation `min:"1" type:"list"`
 }
 
 // String returns the string representation.
@@ -18125,6 +18385,12 @@ func (s AutomationExecution) String() string {
 // value will be replaced with "sensitive".
 func (s AutomationExecution) GoString() string {
 	return s.String()
+}
+
+// SetAlarmConfiguration sets the AlarmConfiguration field's value.
+func (s *AutomationExecution) SetAlarmConfiguration(v *AlarmConfiguration) *AutomationExecution {
+	s.AlarmConfiguration = v
+	return s
 }
 
 // SetAssociationId sets the AssociationId field's value.
@@ -18313,6 +18579,12 @@ func (s *AutomationExecution) SetTargets(v []*Target) *AutomationExecution {
 	return s
 }
 
+// SetTriggeredAlarms sets the TriggeredAlarms field's value.
+func (s *AutomationExecution) SetTriggeredAlarms(v []*AlarmStateInformation) *AutomationExecution {
+	s.TriggeredAlarms = v
+	return s
+}
+
 // A filter used to match specific automation executions. This is used to limit
 // the scope of Automation execution information returned.
 type AutomationExecutionFilter struct {
@@ -18448,6 +18720,9 @@ func (s *AutomationExecutionLimitExceededException) RequestID() string {
 type AutomationExecutionMetadata struct {
 	_ struct{} `type:"structure"`
 
+	// The details for the CloudWatch alarm applied to your automation.
+	AlarmConfiguration *AlarmConfiguration `type:"structure"`
+
 	// The ID of a State Manager association used in the Automation operation.
 	AssociationId *string `type:"string"`
 
@@ -18543,6 +18818,9 @@ type AutomationExecutionMetadata struct {
 
 	// The targets defined by the user when starting the automation.
 	Targets []*Target `type:"list"`
+
+	// The CloudWatch alarm that was invoked by the automation.
+	TriggeredAlarms []*AlarmStateInformation `min:"1" type:"list"`
 }
 
 // String returns the string representation.
@@ -18561,6 +18839,12 @@ func (s AutomationExecutionMetadata) String() string {
 // value will be replaced with "sensitive".
 func (s AutomationExecutionMetadata) GoString() string {
 	return s.String()
+}
+
+// SetAlarmConfiguration sets the AlarmConfiguration field's value.
+func (s *AutomationExecutionMetadata) SetAlarmConfiguration(v *AlarmConfiguration) *AutomationExecutionMetadata {
+	s.AlarmConfiguration = v
+	return s
 }
 
 // SetAssociationId sets the AssociationId field's value.
@@ -18731,6 +19015,12 @@ func (s *AutomationExecutionMetadata) SetTargets(v []*Target) *AutomationExecuti
 	return s
 }
 
+// SetTriggeredAlarms sets the TriggeredAlarms field's value.
+func (s *AutomationExecutionMetadata) SetTriggeredAlarms(v []*AlarmStateInformation) *AutomationExecutionMetadata {
+	s.TriggeredAlarms = v
+	return s
+}
+
 // There is no automation execution information for the requested automation
 // execution ID.
 type AutomationExecutionNotFoundException struct {
@@ -18882,8 +19172,8 @@ type BaselineOverride struct {
 	ApprovedPatchesComplianceLevel *string `type:"string" enum:"PatchComplianceLevel"`
 
 	// Indicates whether the list of approved patches includes non-security updates
-	// that should be applied to the instances. The default value is false. Applies
-	// to Linux instances only.
+	// that should be applied to the managed nodes. The default value is false.
+	// Applies to Linux managed nodes only.
 	ApprovedPatchesEnableNonSecurity *bool `type:"boolean"`
 
 	// A set of patch filters, typically used for approval rules.
@@ -18905,8 +19195,9 @@ type BaselineOverride struct {
 	// or blocked entirely along with packages that include it as a dependency.
 	RejectedPatchesAction *string `type:"string" enum:"PatchAction"`
 
-	// Information about the patches to use to update the instances, including target
-	// operating systems and source repositories. Applies to Linux instances only.
+	// Information about the patches to use to update the managed nodes, including
+	// target operating systems and source repositories. Applies to Linux managed
+	// nodes only.
 	Sources []*PatchSource `type:"list"`
 }
 
@@ -19020,9 +19311,8 @@ type CancelCommandInput struct {
 	// CommandId is a required field
 	CommandId *string `min:"36" type:"string" required:"true"`
 
-	// (Optional) A list of instance IDs on which you want to cancel the command.
-	// If not provided, the command is canceled on every instance on which it was
-	// requested.
+	// (Optional) A list of managed node IDs on which you want to cancel the command.
+	// If not provided, the command is canceled on every node on which it was requested.
 	InstanceIds []*string `type:"list"`
 }
 
@@ -19239,6 +19529,9 @@ func (s *CloudWatchOutputConfig) SetCloudWatchOutputEnabled(v bool) *CloudWatchO
 type Command struct {
 	_ struct{} `type:"structure"`
 
+	// The details for the CloudWatch alarm applied to your command.
+	AlarmConfiguration *AlarmConfiguration `type:"structure"`
+
 	// Amazon CloudWatch Logs information where you want Amazon Web Services Systems
 	// Manager to send the command output.
 	CloudWatchOutputConfig *CloudWatchOutputConfig `type:"structure"`
@@ -19252,7 +19545,7 @@ type Command struct {
 
 	// The number of targets for which the command invocation reached a terminal
 	// state. Terminal states include the following: Success, Failed, Execution
-	// Timed Out, Delivery Timed Out, Canceled, Terminated, or Undeliverable.
+	// Timed Out, Delivery Timed Out, Cancelled, Terminated, or Undeliverable.
 	CompletedCount *int64 `type:"integer"`
 
 	// The number of targets for which the status is Delivery Timed Out.
@@ -19267,17 +19560,19 @@ type Command struct {
 	// The number of targets for which the status is Failed or Execution Timed Out.
 	ErrorCount *int64 `type:"integer"`
 
-	// If this time is reached and the command hasn't already started running, it
-	// won't run. Calculated based on the ExpiresAfter user input provided as part
-	// of the SendCommand API operation.
+	// If a command expires, it changes status to DeliveryTimedOut for all invocations
+	// that have the status InProgress, Pending, or Delayed. ExpiresAfter is calculated
+	// based on the total timeout for the overall command. For more information,
+	// see Understanding command timeout values (https://docs.aws.amazon.com/systems-manager/latest/userguide/monitor-commands.html?icmpid=docs_ec2_console#monitor-about-status-timeouts)
+	// in the Amazon Web Services Systems Manager User Guide.
 	ExpiresAfter *time.Time `type:"timestamp"`
 
-	// The instance IDs against which this command was requested.
+	// The managed node IDs against which this command was requested.
 	InstanceIds []*string `type:"list"`
 
-	// The maximum number of instances that are allowed to run the command at the
-	// same time. You can specify a number of instances, such as 10, or a percentage
-	// of instances, such as 10%. The default value is 50. For more information
+	// The maximum number of managed nodes that are allowed to run the command at
+	// the same time. You can specify a number of managed nodes, such as 10, or
+	// a percentage of nodes, such as 10%. The default value is 50. For more information
 	// about how to use MaxConcurrency, see Running commands using Systems Manager
 	// Run Command (https://docs.aws.amazon.com/systems-manager/latest/userguide/run-command.html)
 	// in the Amazon Web Services Systems Manager User Guide.
@@ -19308,7 +19603,11 @@ type Command struct {
 	OutputS3Region *string `min:"3" type:"string"`
 
 	// The parameter values to be inserted in the document when running the command.
-	Parameters map[string][]*string `type:"map"`
+	//
+	// Parameters is a sensitive parameter and its value will be
+	// replaced with "sensitive" in string returned by Command's
+	// String and GoString methods.
+	Parameters map[string][]*string `type:"map" sensitive:"true"`
 
 	// The date and time the command was requested.
 	RequestedDateTime *time.Time `type:"timestamp"`
@@ -19329,10 +19628,10 @@ type Command struct {
 	// in the Amazon Web Services Systems Manager User Guide. StatusDetails can
 	// be one of the following values:
 	//
-	//    * Pending: The command hasn't been sent to any instances.
+	//    * Pending: The command hasn't been sent to any managed nodes.
 	//
-	//    * In Progress: The command has been sent to at least one instance but
-	//    hasn't reached a final state on all instances.
+	//    * In Progress: The command has been sent to at least one managed node
+	//    but hasn't reached a final state on all managed nodes.
 	//
 	//    * Success: The command successfully ran on all invocations. This is a
 	//    terminal state.
@@ -19346,28 +19645,34 @@ type Command struct {
 	//    * Failed: The value of MaxErrors or more command invocations shows a status
 	//    of Failed. This is a terminal state.
 	//
-	//    * Incomplete: The command was attempted on all instances and one or more
-	//    invocations doesn't have a value of Success but not enough invocations
+	//    * Incomplete: The command was attempted on all managed nodes and one or
+	//    more invocations doesn't have a value of Success but not enough invocations
 	//    failed for the status to be Failed. This is a terminal state.
 	//
-	//    * Canceled: The command was terminated before it was completed. This is
-	//    a terminal state.
+	//    * Cancelled: The command was terminated before it was completed. This
+	//    is a terminal state.
 	//
-	//    * Rate Exceeded: The number of instances targeted by the command exceeded
+	//    * Rate Exceeded: The number of managed nodes targeted by the command exceeded
 	//    the account limit for pending invocations. The system has canceled the
-	//    command before running it on any instance. This is a terminal state.
+	//    command before running it on any managed node. This is a terminal state.
+	//
+	//    * Delayed: The system attempted to send the command to the managed node
+	//    but wasn't successful. The system retries again.
 	StatusDetails *string `type:"string"`
 
 	// The number of targets for the command.
 	TargetCount *int64 `type:"integer"`
 
-	// An array of search criteria that targets instances using a Key,Value combination
-	// that you specify. Targets is required if you don't provide one or more instance
-	// IDs in the call.
+	// An array of search criteria that targets managed nodes using a Key,Value
+	// combination that you specify. Targets is required if you don't provide one
+	// or more managed node IDs in the call.
 	Targets []*Target `type:"list"`
 
 	// The TimeoutSeconds value specified for a command.
 	TimeoutSeconds *int64 `min:"30" type:"integer"`
+
+	// The CloudWatch alarm that was invoked by the command.
+	TriggeredAlarms []*AlarmStateInformation `min:"1" type:"list"`
 }
 
 // String returns the string representation.
@@ -19386,6 +19691,12 @@ func (s Command) String() string {
 // value will be replaced with "sensitive".
 func (s Command) GoString() string {
 	return s.String()
+}
+
+// SetAlarmConfiguration sets the AlarmConfiguration field's value.
+func (s *Command) SetAlarmConfiguration(v *AlarmConfiguration) *Command {
+	s.AlarmConfiguration = v
+	return s
 }
 
 // SetCloudWatchOutputConfig sets the CloudWatchOutputConfig field's value.
@@ -19532,14 +19843,23 @@ func (s *Command) SetTimeoutSeconds(v int64) *Command {
 	return s
 }
 
+// SetTriggeredAlarms sets the TriggeredAlarms field's value.
+func (s *Command) SetTriggeredAlarms(v []*AlarmStateInformation) *Command {
+	s.TriggeredAlarms = v
+	return s
+}
+
 // Describes a command filter.
 //
-// An instance ID can't be specified when a command status is Pending because
-// the command hasn't run on the instance yet.
+// A managed node ID can't be specified when a command status is Pending because
+// the command hasn't run on the node yet.
 type CommandFilter struct {
 	_ struct{} `type:"structure"`
 
 	// The name of the filter.
+	//
+	// The ExecutionStage filter can't be used with the ListCommandInvocations operation,
+	// only with ListCommands.
 	//
 	// Key is a required field
 	Key *string `locationName:"key" type:"string" required:"true" enum:"CommandFilterKey"`
@@ -19568,11 +19888,13 @@ type CommandFilter struct {
 	//    * DocumentName: Specify name of the Amazon Web Services Systems Manager
 	//    document (SSM document) for which you want to see command execution results.
 	//    For example, specify AWS-RunPatchBaseline to see command executions that
-	//    used this SSM document to perform security patching operations on instances.
+	//    used this SSM document to perform security patching operations on managed
+	//    nodes.
 	//
-	//    * ExecutionStage: Specify one of the following values: Executing: Returns
-	//    a list of command executions that are currently still running. Complete:
-	//    Returns a list of command executions that have already completed.
+	//    * ExecutionStage: Specify one of the following values (ListCommands operations
+	//    only): Executing: Returns a list of command executions that are currently
+	//    still running. Complete: Returns a list of command executions that have
+	//    already completed.
 	//
 	// Value is a required field
 	Value *string `locationName:"value" min:"1" type:"string" required:"true"`
@@ -19627,11 +19949,12 @@ func (s *CommandFilter) SetValue(v string) *CommandFilter {
 	return s
 }
 
-// An invocation is copy of a command sent to a specific instance. A command
-// can apply to one or more instances. A command invocation applies to one instance.
-// For example, if a user runs SendCommand against three instances, then a command
-// invocation is created for each requested instance ID. A command invocation
-// returns status and detail information about a command you ran.
+// An invocation is a copy of a command sent to a specific managed node. A command
+// can apply to one or more managed nodes. A command invocation applies to one
+// managed node. For example, if a user runs SendCommand against three managed
+// nodes, then a command invocation is created for each requested managed node
+// ID. A command invocation returns status and detail information about a command
+// you ran.
 type CommandInvocation struct {
 	_ struct{} `type:"structure"`
 
@@ -19655,23 +19978,23 @@ type CommandInvocation struct {
 	// The Systems Manager document (SSM document) version.
 	DocumentVersion *string `type:"string"`
 
-	// The instance ID in which this invocation was requested.
+	// The managed node ID in which this invocation was requested.
 	InstanceId *string `type:"string"`
 
-	// The fully qualified host name of the managed instance.
+	// The fully qualified host name of the managed node.
 	InstanceName *string `type:"string"`
 
 	// Configurations for sending notifications about command status changes on
-	// a per instance basis.
+	// a per managed node basis.
 	NotificationConfig *NotificationConfig `type:"structure"`
 
-	// The time and date the request was sent to this instance.
+	// The time and date the request was sent to this managed node.
 	RequestedDateTime *time.Time `type:"timestamp"`
 
 	// The Identity and Access Management (IAM) service role that Run Command, a
 	// capability of Amazon Web Services Systems Manager, uses to act on your behalf
-	// when sending notifications about command status changes on a per instance
-	// basis.
+	// when sending notifications about command status changes on a per managed
+	// node basis.
 	ServiceRole *string `type:"string"`
 
 	// The URL to the plugin's StdErr file in Amazon Simple Storage Service (Amazon
@@ -19689,49 +20012,53 @@ type CommandInvocation struct {
 	// Whether or not the invocation succeeded, failed, or is pending.
 	Status *string `type:"string" enum:"CommandInvocationStatus"`
 
-	// A detailed status of the command execution for each invocation (each instance
-	// targeted by the command). StatusDetails includes more information than Status
-	// because it includes states resulting from error and concurrency control parameters.
-	// StatusDetails can show different results than Status. For more information
-	// about these statuses, see Understanding command statuses (https://docs.aws.amazon.com/systems-manager/latest/userguide/monitor-commands.html)
+	// A detailed status of the command execution for each invocation (each managed
+	// node targeted by the command). StatusDetails includes more information than
+	// Status because it includes states resulting from error and concurrency control
+	// parameters. StatusDetails can show different results than Status. For more
+	// information about these statuses, see Understanding command statuses (https://docs.aws.amazon.com/systems-manager/latest/userguide/monitor-commands.html)
 	// in the Amazon Web Services Systems Manager User Guide. StatusDetails can
 	// be one of the following values:
 	//
-	//    * Pending: The command hasn't been sent to the instance.
+	//    * Pending: The command hasn't been sent to the managed node.
 	//
-	//    * In Progress: The command has been sent to the instance but hasn't reached
-	//    a terminal state.
+	//    * In Progress: The command has been sent to the managed node but hasn't
+	//    reached a terminal state.
 	//
 	//    * Success: The execution of the command or plugin was successfully completed.
 	//    This is a terminal state.
 	//
-	//    * Delivery Timed Out: The command wasn't delivered to the instance before
-	//    the delivery timeout expired. Delivery timeouts don't count against the
-	//    parent command's MaxErrors limit, but they do contribute to whether the
-	//    parent command status is Success or Incomplete. This is a terminal state.
+	//    * Delivery Timed Out: The command wasn't delivered to the managed node
+	//    before the delivery timeout expired. Delivery timeouts don't count against
+	//    the parent command's MaxErrors limit, but they do contribute to whether
+	//    the parent command status is Success or Incomplete. This is a terminal
+	//    state.
 	//
-	//    * Execution Timed Out: Command execution started on the instance, but
-	//    the execution wasn't complete before the execution timeout expired. Execution
-	//    timeouts count against the MaxErrors limit of the parent command. This
-	//    is a terminal state.
+	//    * Execution Timed Out: Command execution started on the managed node,
+	//    but the execution wasn't complete before the execution timeout expired.
+	//    Execution timeouts count against the MaxErrors limit of the parent command.
+	//    This is a terminal state.
 	//
-	//    * Failed: The command wasn't successful on the instance. For a plugin,
+	//    * Failed: The command wasn't successful on the managed node. For a plugin,
 	//    this indicates that the result code wasn't zero. For a command invocation,
 	//    this indicates that the result code for one or more plugins wasn't zero.
 	//    Invocation failures count against the MaxErrors limit of the parent command.
 	//    This is a terminal state.
 	//
-	//    * Canceled: The command was terminated before it was completed. This is
-	//    a terminal state.
+	//    * Cancelled: The command was terminated before it was completed. This
+	//    is a terminal state.
 	//
-	//    * Undeliverable: The command can't be delivered to the instance. The instance
-	//    might not exist or might not be responding. Undeliverable invocations
-	//    don't count against the parent command's MaxErrors limit and don't contribute
-	//    to whether the parent command status is Success or Incomplete. This is
-	//    a terminal state.
+	//    * Undeliverable: The command can't be delivered to the managed node. The
+	//    managed node might not exist or might not be responding. Undeliverable
+	//    invocations don't count against the parent command's MaxErrors limit and
+	//    don't contribute to whether the parent command status is Success or Incomplete.
+	//    This is a terminal state.
 	//
 	//    * Terminated: The parent command exceeded its MaxErrors limit and subsequent
 	//    command invocations were canceled by the system. This is a terminal state.
+	//
+	//    * Delayed: The system attempted to send the command to the managed node
+	//    but wasn't successful. The system retries again.
 	StatusDetails *string `type:"string"`
 
 	// Gets the trace output sent by the agent.
@@ -19874,7 +20201,7 @@ type CommandPlugin struct {
 	//
 	// ab19cb99-a030-46dd-9dfc-8eSAMPLEPre-Fix is the name of the S3 prefix;
 	//
-	// i-02573cafcfEXAMPLE is the instance ID;
+	// i-02573cafcfEXAMPLE is the managed node ID;
 	//
 	// awsrunShellScript is the name of the plugin.
 	OutputS3BucketName *string `min:"3" type:"string"`
@@ -19889,7 +20216,7 @@ type CommandPlugin struct {
 	//
 	// ab19cb99-a030-46dd-9dfc-8eSAMPLEPre-Fix is the name of the S3 prefix;
 	//
-	// i-02573cafcfEXAMPLE is the instance ID;
+	// i-02573cafcfEXAMPLE is the managed node ID;
 	//
 	// awsrunShellScript is the name of the plugin.
 	OutputS3KeyPrefix *string `type:"string"`
@@ -19928,38 +20255,39 @@ type CommandPlugin struct {
 	// in the Amazon Web Services Systems Manager User Guide. StatusDetails can
 	// be one of the following values:
 	//
-	//    * Pending: The command hasn't been sent to the instance.
+	//    * Pending: The command hasn't been sent to the managed node.
 	//
-	//    * In Progress: The command has been sent to the instance but hasn't reached
-	//    a terminal state.
+	//    * In Progress: The command has been sent to the managed node but hasn't
+	//    reached a terminal state.
 	//
 	//    * Success: The execution of the command or plugin was successfully completed.
 	//    This is a terminal state.
 	//
-	//    * Delivery Timed Out: The command wasn't delivered to the instance before
-	//    the delivery timeout expired. Delivery timeouts don't count against the
-	//    parent command's MaxErrors limit, but they do contribute to whether the
-	//    parent command status is Success or Incomplete. This is a terminal state.
+	//    * Delivery Timed Out: The command wasn't delivered to the managed node
+	//    before the delivery timeout expired. Delivery timeouts don't count against
+	//    the parent command's MaxErrors limit, but they do contribute to whether
+	//    the parent command status is Success or Incomplete. This is a terminal
+	//    state.
 	//
-	//    * Execution Timed Out: Command execution started on the instance, but
-	//    the execution wasn't complete before the execution timeout expired. Execution
-	//    timeouts count against the MaxErrors limit of the parent command. This
-	//    is a terminal state.
+	//    * Execution Timed Out: Command execution started on the managed node,
+	//    but the execution wasn't complete before the execution timeout expired.
+	//    Execution timeouts count against the MaxErrors limit of the parent command.
+	//    This is a terminal state.
 	//
-	//    * Failed: The command wasn't successful on the instance. For a plugin,
+	//    * Failed: The command wasn't successful on the managed node. For a plugin,
 	//    this indicates that the result code wasn't zero. For a command invocation,
 	//    this indicates that the result code for one or more plugins wasn't zero.
 	//    Invocation failures count against the MaxErrors limit of the parent command.
 	//    This is a terminal state.
 	//
-	//    * Canceled: The command was terminated before it was completed. This is
-	//    a terminal state.
+	//    * Cancelled: The command was terminated before it was completed. This
+	//    is a terminal state.
 	//
-	//    * Undeliverable: The command can't be delivered to the instance. The instance
-	//    might not exist, or it might not be responding. Undeliverable invocations
-	//    don't count against the parent command's MaxErrors limit, and they don't
-	//    contribute to whether the parent command status is Success or Incomplete.
-	//    This is a terminal state.
+	//    * Undeliverable: The command can't be delivered to the managed node. The
+	//    managed node might not exist, or it might not be responding. Undeliverable
+	//    invocations don't count against the parent command's MaxErrors limit,
+	//    and they don't contribute to whether the parent command status is Success
+	//    or Incomplete. This is a terminal state.
 	//
 	//    * Terminated: The parent command exceeded its MaxErrors limit and subsequent
 	//    command invocations were canceled by the system. This is a terminal state.
@@ -20146,7 +20474,7 @@ type ComplianceItem struct {
 	// patch, the ID could be the number of the KB article; for example: KB4010320.
 	Id *string `type:"string"`
 
-	// An ID for the resource. For a managed instance, this is the instance ID.
+	// An ID for the resource. For a managed node, this is the node ID.
 	ResourceId *string `min:"1" type:"string"`
 
 	// The type of resource. ManagedInstance is currently the only supported resource
@@ -20559,7 +20887,7 @@ func (s *CompliantSummary) SetSeveritySummary(v *SeveritySummary) *CompliantSumm
 type CreateActivationInput struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the registered, managed instance as it will appear in the Amazon
+	// The name of the registered, managed node as it will appear in the Amazon
 	// Web Services Systems Manager console or when you use the Amazon Web Services
 	// command line tools to list Systems Manager resources.
 	//
@@ -20579,7 +20907,7 @@ type CreateActivationInput struct {
 	ExpirationDate *time.Time `type:"timestamp"`
 
 	// The name of the Identity and Access Management (IAM) role that you want to
-	// assign to the managed instance. This IAM role must provide AssumeRole permissions
+	// assign to the managed node. This IAM role must provide AssumeRole permissions
 	// for the Amazon Web Services Systems Manager service principal ssm.amazonaws.com.
 	// For more information, see Create an IAM service role for a hybrid environment
 	// (https://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-service-role.html)
@@ -20588,9 +20916,12 @@ type CreateActivationInput struct {
 	// IamRole is a required field
 	IamRole *string `type:"string" required:"true"`
 
-	// Specify the maximum number of managed instances you want to register. The
-	// default value is 1.
+	// Specify the maximum number of managed nodes you want to register. The default
+	// value is 1.
 	RegistrationLimit *int64 `min:"1" type:"integer"`
+
+	// Reserved for internal use.
+	RegistrationMetadata []*RegistrationMetadataItem `type:"list"`
 
 	// Optional metadata that you assign to a resource. Tags enable you to categorize
 	// a resource in different ways, such as by purpose, owner, or environment.
@@ -20608,12 +20939,12 @@ type CreateActivationInput struct {
 	// or VMs.
 	//
 	// You can't add tags to or delete tags from an existing activation. You can
-	// tag your on-premises servers and VMs after they connect to Systems Manager
-	// for the first time and are assigned a managed instance ID. This means they
-	// are listed in the Amazon Web Services Systems Manager console with an ID
-	// that is prefixed with "mi-". For information about how to add tags to your
-	// managed instances, see AddTagsToResource. For information about how to remove
-	// tags from your managed instances, see RemoveTagsFromResource.
+	// tag your on-premises servers, edge devices, and VMs after they connect to
+	// Systems Manager for the first time and are assigned a managed node ID. This
+	// means they are listed in the Amazon Web Services Systems Manager console
+	// with an ID that is prefixed with "mi-". For information about how to add
+	// tags to your managed nodes, see AddTagsToResource. For information about
+	// how to remove tags from your managed nodes, see RemoveTagsFromResource.
 	Tags []*Tag `type:"list"`
 }
 
@@ -20643,6 +20974,16 @@ func (s *CreateActivationInput) Validate() error {
 	}
 	if s.RegistrationLimit != nil && *s.RegistrationLimit < 1 {
 		invalidParams.Add(request.NewErrParamMinValue("RegistrationLimit", 1))
+	}
+	if s.RegistrationMetadata != nil {
+		for i, v := range s.RegistrationMetadata {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "RegistrationMetadata", i), err.(request.ErrInvalidParams))
+			}
+		}
 	}
 	if s.Tags != nil {
 		for i, v := range s.Tags {
@@ -20688,6 +21029,12 @@ func (s *CreateActivationInput) SetIamRole(v string) *CreateActivationInput {
 // SetRegistrationLimit sets the RegistrationLimit field's value.
 func (s *CreateActivationInput) SetRegistrationLimit(v int64) *CreateActivationInput {
 	s.RegistrationLimit = &v
+	return s
+}
+
+// SetRegistrationMetadata sets the RegistrationMetadata field's value.
+func (s *CreateActivationInput) SetRegistrationMetadata(v []*RegistrationMetadataItem) *CreateActivationInput {
+	s.RegistrationMetadata = v
 	return s
 }
 
@@ -20839,9 +21186,13 @@ func (s *CreateAssociationBatchOutput) SetSuccessful(v []*AssociationDescription
 }
 
 // Describes the association of a Amazon Web Services Systems Manager document
-// (SSM document) and an instance.
+// (SSM document) and a managed node.
 type CreateAssociationBatchRequestEntry struct {
 	_ struct{} `type:"structure"`
+
+	// The details for the CloudWatch alarm you want to apply to an automation or
+	// command.
+	AlarmConfiguration *AlarmConfiguration `type:"structure"`
 
 	// By default, when you create a new associations, the system runs it immediately
 	// after it is created and then according to the schedule you specified. Specify
@@ -20869,9 +21220,9 @@ type CreateAssociationBatchRequestEntry struct {
 	// The document version.
 	DocumentVersion *string `type:"string"`
 
-	// The instance ID.
+	// The managed node ID.
 	//
-	// InstanceId has been deprecated. To specify an instance ID for an association,
+	// InstanceId has been deprecated. To specify a managed node ID for an association,
 	// use the Targets parameter. Requests that include the parameter InstanceID
 	// with Systems Manager documents (SSM documents) that use schema version 2.0
 	// or later will fail. In addition, if you use the parameter InstanceId, you
@@ -20885,9 +21236,9 @@ type CreateAssociationBatchRequestEntry struct {
 	// set, for example 10%. The default value is 100%, which means all targets
 	// run the association at the same time.
 	//
-	// If a new instance starts and attempts to run an association while Systems
+	// If a new managed node starts and attempts to run an association while Systems
 	// Manager is running MaxConcurrency associations, the association is allowed
-	// to run. During the next association interval, the new instance will process
+	// to run. During the next association interval, the new managed node will process
 	// its association within the limit specified for MaxConcurrency.
 	MaxConcurrency *string `min:"1" type:"string"`
 
@@ -20897,8 +21248,8 @@ type CreateAssociationBatchRequestEntry struct {
 	// example 10%. If you specify 3, for example, the system stops sending requests
 	// when the fourth error is received. If you specify 0, then the system stops
 	// sending requests after the first error is returned. If you run an association
-	// on 50 instances and set MaxError to 10%, then the system stops sending the
-	// request when the sixth error is received.
+	// on 50 managed nodes and set MaxError to 10%, then the system stops sending
+	// the request when the sixth error is received.
 	//
 	// Executions that are already running an association when MaxErrors is reached
 	// are allowed to complete, but some of these executions may fail as well. If
@@ -20907,7 +21258,7 @@ type CreateAssociationBatchRequestEntry struct {
 	MaxErrors *string `min:"1" type:"string"`
 
 	// The name of the SSM document that contains the configuration information
-	// for the instance. You can specify Command or Automation runbooks.
+	// for the managed node. You can specify Command or Automation runbooks.
 	//
 	// You can specify Amazon Web Services-predefined documents, documents you created,
 	// or a document that is shared with you from another account.
@@ -20933,10 +21284,17 @@ type CreateAssociationBatchRequestEntry struct {
 	OutputLocation *InstanceAssociationOutputLocation `type:"structure"`
 
 	// A description of the parameters for a document.
-	Parameters map[string][]*string `type:"map"`
+	//
+	// Parameters is a sensitive parameter and its value will be
+	// replaced with "sensitive" in string returned by CreateAssociationBatchRequestEntry's
+	// String and GoString methods.
+	Parameters map[string][]*string `type:"map" sensitive:"true"`
 
 	// A cron expression that specifies a schedule when the association runs.
 	ScheduleExpression *string `min:"1" type:"string"`
+
+	// Number of days to wait after the scheduled day to run an association.
+	ScheduleOffset *int64 `min:"1" type:"integer"`
 
 	// The mode for generating association compliance. You can specify AUTO or MANUAL.
 	// In AUTO mode, the system uses the status of the association execution to
@@ -20956,7 +21314,11 @@ type CreateAssociationBatchRequestEntry struct {
 	// accounts.
 	TargetLocations []*TargetLocation `min:"1" type:"list"`
 
-	// The instances targeted by the request.
+	// A key-value mapping of document parameters to target resources. Both Targets
+	// and TargetMaps can't be specified together.
+	TargetMaps []map[string][]*string `type:"list"`
+
+	// The managed nodes targeted by the request.
 	Targets []*Target `type:"list"`
 }
 
@@ -20996,8 +21358,16 @@ func (s *CreateAssociationBatchRequestEntry) Validate() error {
 	if s.ScheduleExpression != nil && len(*s.ScheduleExpression) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("ScheduleExpression", 1))
 	}
+	if s.ScheduleOffset != nil && *s.ScheduleOffset < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("ScheduleOffset", 1))
+	}
 	if s.TargetLocations != nil && len(s.TargetLocations) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("TargetLocations", 1))
+	}
+	if s.AlarmConfiguration != nil {
+		if err := s.AlarmConfiguration.Validate(); err != nil {
+			invalidParams.AddNested("AlarmConfiguration", err.(request.ErrInvalidParams))
+		}
 	}
 	if s.OutputLocation != nil {
 		if err := s.OutputLocation.Validate(); err != nil {
@@ -21029,6 +21399,12 @@ func (s *CreateAssociationBatchRequestEntry) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetAlarmConfiguration sets the AlarmConfiguration field's value.
+func (s *CreateAssociationBatchRequestEntry) SetAlarmConfiguration(v *AlarmConfiguration) *CreateAssociationBatchRequestEntry {
+	s.AlarmConfiguration = v
+	return s
 }
 
 // SetApplyOnlyAtCronInterval sets the ApplyOnlyAtCronInterval field's value.
@@ -21109,6 +21485,12 @@ func (s *CreateAssociationBatchRequestEntry) SetScheduleExpression(v string) *Cr
 	return s
 }
 
+// SetScheduleOffset sets the ScheduleOffset field's value.
+func (s *CreateAssociationBatchRequestEntry) SetScheduleOffset(v int64) *CreateAssociationBatchRequestEntry {
+	s.ScheduleOffset = &v
+	return s
+}
+
 // SetSyncCompliance sets the SyncCompliance field's value.
 func (s *CreateAssociationBatchRequestEntry) SetSyncCompliance(v string) *CreateAssociationBatchRequestEntry {
 	s.SyncCompliance = &v
@@ -21121,6 +21503,12 @@ func (s *CreateAssociationBatchRequestEntry) SetTargetLocations(v []*TargetLocat
 	return s
 }
 
+// SetTargetMaps sets the TargetMaps field's value.
+func (s *CreateAssociationBatchRequestEntry) SetTargetMaps(v []map[string][]*string) *CreateAssociationBatchRequestEntry {
+	s.TargetMaps = v
+	return s
+}
+
 // SetTargets sets the Targets field's value.
 func (s *CreateAssociationBatchRequestEntry) SetTargets(v []*Target) *CreateAssociationBatchRequestEntry {
 	s.Targets = v
@@ -21129,6 +21517,10 @@ func (s *CreateAssociationBatchRequestEntry) SetTargets(v []*Target) *CreateAsso
 
 type CreateAssociationInput struct {
 	_ struct{} `type:"structure"`
+
+	// The details for the CloudWatch alarm you want to apply to an automation or
+	// command.
+	AlarmConfiguration *AlarmConfiguration `type:"structure"`
 
 	// By default, when you create a new association, the system runs it immediately
 	// after it is created and then according to the schedule you specified. Specify
@@ -21139,9 +21531,10 @@ type CreateAssociationInput struct {
 	// Specify a descriptive name for the association.
 	AssociationName *string `type:"string"`
 
-	// Specify the target for the association. This target is required for associations
-	// that use an Automation runbook and target resources by using rate controls.
-	// Automation is a capability of Amazon Web Services Systems Manager.
+	// Choose the parameter that will define how your automation will branch out.
+	// This target is required for associations that use an Automation runbook and
+	// target resources by using rate controls. Automation is a capability of Amazon
+	// Web Services Systems Manager.
 	AutomationTargetParameterName *string `min:"1" type:"string"`
 
 	// The names or Amazon Resource Names (ARNs) of the Change Calendar type documents
@@ -21155,11 +21548,18 @@ type CreateAssociationInput struct {
 
 	// The document version you want to associate with the target(s). Can be a specific
 	// version or the default version.
+	//
+	// State Manager doesn't support running associations that use a new version
+	// of a document if that document is shared from another account. State Manager
+	// always runs the default version of a document if shared from another account,
+	// even though the Systems Manager console shows that a new version was processed.
+	// If you want to run an association using a new version of a document shared
+	// form another account, you must set the document version to default.
 	DocumentVersion *string `type:"string"`
 
-	// The instance ID.
+	// The managed node ID.
 	//
-	// InstanceId has been deprecated. To specify an instance ID for an association,
+	// InstanceId has been deprecated. To specify a managed node ID for an association,
 	// use the Targets parameter. Requests that include the parameter InstanceID
 	// with Systems Manager documents (SSM documents) that use schema version 2.0
 	// or later will fail. In addition, if you use the parameter InstanceId, you
@@ -21173,9 +21573,9 @@ type CreateAssociationInput struct {
 	// set, for example 10%. The default value is 100%, which means all targets
 	// run the association at the same time.
 	//
-	// If a new instance starts and attempts to run an association while Systems
+	// If a new managed node starts and attempts to run an association while Systems
 	// Manager is running MaxConcurrency associations, the association is allowed
-	// to run. During the next association interval, the new instance will process
+	// to run. During the next association interval, the new managed node will process
 	// its association within the limit specified for MaxConcurrency.
 	MaxConcurrency *string `min:"1" type:"string"`
 
@@ -21185,8 +21585,8 @@ type CreateAssociationInput struct {
 	// example 10%. If you specify 3, for example, the system stops sending requests
 	// when the fourth error is received. If you specify 0, then the system stops
 	// sending requests after the first error is returned. If you run an association
-	// on 50 instances and set MaxError to 10%, then the system stops sending the
-	// request when the sixth error is received.
+	// on 50 managed nodes and set MaxError to 10%, then the system stops sending
+	// the request when the sixth error is received.
 	//
 	// Executions that are already running an association when MaxErrors is reached
 	// are allowed to complete, but some of these executions may fail as well. If
@@ -21195,7 +21595,7 @@ type CreateAssociationInput struct {
 	MaxErrors *string `min:"1" type:"string"`
 
 	// The name of the SSM Command document or Automation runbook that contains
-	// the configuration information for the instance.
+	// the configuration information for the managed node.
 	//
 	// You can specify Amazon Web Services-predefined documents, documents you created,
 	// or a document that is shared with you from another account.
@@ -21222,10 +21622,26 @@ type CreateAssociationInput struct {
 	OutputLocation *InstanceAssociationOutputLocation `type:"structure"`
 
 	// The parameters for the runtime configuration of the document.
-	Parameters map[string][]*string `type:"map"`
+	//
+	// Parameters is a sensitive parameter and its value will be
+	// replaced with "sensitive" in string returned by CreateAssociationInput's
+	// String and GoString methods.
+	Parameters map[string][]*string `type:"map" sensitive:"true"`
 
 	// A cron expression when the association will be applied to the target(s).
 	ScheduleExpression *string `min:"1" type:"string"`
+
+	// Number of days to wait after the scheduled day to run an association. For
+	// example, if you specified a cron schedule of cron(0 0 ? * THU#2 *), you could
+	// specify an offset of 3 to run the association each Sunday after the second
+	// Thursday of the month. For more information about cron schedules for associations,
+	// see Reference: Cron and rate expressions for Systems Manager (https://docs.aws.amazon.com/systems-manager/latest/userguide/reference-cron-and-rate-expressions.html)
+	// in the Amazon Web Services Systems Manager User Guide.
+	//
+	// To use offsets, you must specify the ApplyOnlyAtCronInterval parameter. This
+	// option tells the system not to run an association immediately after you create
+	// it.
+	ScheduleOffset *int64 `min:"1" type:"integer"`
 
 	// The mode for generating association compliance. You can specify AUTO or MANUAL.
 	// In AUTO mode, the system uses the status of the association execution to
@@ -21241,17 +21657,28 @@ type CreateAssociationInput struct {
 	// By default, all associations use AUTO mode.
 	SyncCompliance *string `type:"string" enum:"AssociationSyncCompliance"`
 
+	// Adds or overwrites one or more tags for a State Manager association. Tags
+	// are metadata that you can assign to your Amazon Web Services resources. Tags
+	// enable you to categorize your resources in different ways, for example, by
+	// purpose, owner, or environment. Each tag consists of a key and an optional
+	// value, both of which you define.
+	Tags []*Tag `type:"list"`
+
 	// A location is a combination of Amazon Web Services Regions and Amazon Web
 	// Services accounts where you want to run the association. Use this action
 	// to create an association in multiple Regions and multiple accounts.
 	TargetLocations []*TargetLocation `min:"1" type:"list"`
 
-	// The targets for the association. You can target instances by using tags,
-	// Amazon Web Services resource groups, all instances in an Amazon Web Services
-	// account, or individual instance IDs. You can target all instances in an Amazon
-	// Web Services account by specifying the InstanceIds key with a value of *.
-	// For more information about choosing targets for an association, see Using
-	// targets and rate controls with State Manager associations (https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-state-manager-targets-and-rate-controls.html)
+	// A key-value mapping of document parameters to target resources. Both Targets
+	// and TargetMaps can't be specified together.
+	TargetMaps []map[string][]*string `type:"list"`
+
+	// The targets for the association. You can target managed nodes by using tags,
+	// Amazon Web Services resource groups, all managed nodes in an Amazon Web Services
+	// account, or individual managed node IDs. You can target all managed nodes
+	// in an Amazon Web Services account by specifying the InstanceIds key with
+	// a value of *. For more information about choosing targets for an association,
+	// see Using targets and rate controls with State Manager associations (https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-state-manager-targets-and-rate-controls.html)
 	// in the Amazon Web Services Systems Manager User Guide.
 	Targets []*Target `type:"list"`
 }
@@ -21292,12 +21719,30 @@ func (s *CreateAssociationInput) Validate() error {
 	if s.ScheduleExpression != nil && len(*s.ScheduleExpression) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("ScheduleExpression", 1))
 	}
+	if s.ScheduleOffset != nil && *s.ScheduleOffset < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("ScheduleOffset", 1))
+	}
 	if s.TargetLocations != nil && len(s.TargetLocations) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("TargetLocations", 1))
+	}
+	if s.AlarmConfiguration != nil {
+		if err := s.AlarmConfiguration.Validate(); err != nil {
+			invalidParams.AddNested("AlarmConfiguration", err.(request.ErrInvalidParams))
+		}
 	}
 	if s.OutputLocation != nil {
 		if err := s.OutputLocation.Validate(); err != nil {
 			invalidParams.AddNested("OutputLocation", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
 		}
 	}
 	if s.TargetLocations != nil {
@@ -21325,6 +21770,12 @@ func (s *CreateAssociationInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetAlarmConfiguration sets the AlarmConfiguration field's value.
+func (s *CreateAssociationInput) SetAlarmConfiguration(v *AlarmConfiguration) *CreateAssociationInput {
+	s.AlarmConfiguration = v
+	return s
 }
 
 // SetApplyOnlyAtCronInterval sets the ApplyOnlyAtCronInterval field's value.
@@ -21405,15 +21856,33 @@ func (s *CreateAssociationInput) SetScheduleExpression(v string) *CreateAssociat
 	return s
 }
 
+// SetScheduleOffset sets the ScheduleOffset field's value.
+func (s *CreateAssociationInput) SetScheduleOffset(v int64) *CreateAssociationInput {
+	s.ScheduleOffset = &v
+	return s
+}
+
 // SetSyncCompliance sets the SyncCompliance field's value.
 func (s *CreateAssociationInput) SetSyncCompliance(v string) *CreateAssociationInput {
 	s.SyncCompliance = &v
 	return s
 }
 
+// SetTags sets the Tags field's value.
+func (s *CreateAssociationInput) SetTags(v []*Tag) *CreateAssociationInput {
+	s.Tags = v
+	return s
+}
+
 // SetTargetLocations sets the TargetLocations field's value.
 func (s *CreateAssociationInput) SetTargetLocations(v []*TargetLocation) *CreateAssociationInput {
 	s.TargetLocations = v
+	return s
+}
+
+// SetTargetMaps sets the TargetMaps field's value.
+func (s *CreateAssociationInput) SetTargetMaps(v []map[string][]*string) *CreateAssociationInput {
+	s.TargetMaps = v
 	return s
 }
 
@@ -21486,6 +21955,9 @@ type CreateDocumentInput struct {
 	DocumentFormat *string `type:"string" enum:"DocumentFormat"`
 
 	// The type of document to create.
+	//
+	// The DeploymentStrategy document type is an internal-use-only document type
+	// reserved for AppConfig.
 	DocumentType *string `type:"string" enum:"DocumentType"`
 
 	// A name for the SSM document.
@@ -21493,7 +21965,7 @@ type CreateDocumentInput struct {
 	// You can't use the following strings as document name prefixes. These are
 	// reserved by Amazon Web Services for use as document name prefixes:
 	//
-	//    * aws-
+	//    * aws
 	//
 	//    * amazon
 	//
@@ -21534,8 +22006,8 @@ type CreateDocumentInput struct {
 	TargetType *string `type:"string"`
 
 	// An optional field specifying the version of the artifact you are creating
-	// with the document. For example, "Release 12, Update 6". This value is unique
-	// across all versions of a document, and can't be changed.
+	// with the document. For example, Release12.1. This value is unique across
+	// all versions of a document, and can't be changed.
 	VersionName *string `type:"string"`
 }
 
@@ -21703,10 +22175,10 @@ func (s *CreateDocumentOutput) SetDocumentDescription(v *DocumentDescription) *C
 type CreateMaintenanceWindowInput struct {
 	_ struct{} `type:"structure"`
 
-	// Enables a maintenance window task to run on managed instances, even if you
-	// haven't registered those instances as targets. If enabled, then you must
-	// specify the unregistered instances (by instance ID) when you register a task
-	// with the maintenance window.
+	// Enables a maintenance window task to run on managed nodes, even if you haven't
+	// registered those nodes as targets. If enabled, then you must specify the
+	// unregistered managed nodes (by node ID) when you register a task with the
+	// maintenance window.
 	//
 	// If you don't enable this option, then you must specify previously-registered
 	// targets when you register a task with the maintenance window.
@@ -22409,8 +22881,8 @@ type CreatePatchBaselineInput struct {
 	ApprovedPatchesComplianceLevel *string `type:"string" enum:"PatchComplianceLevel"`
 
 	// Indicates whether the list of approved patches includes non-security updates
-	// that should be applied to the instances. The default value is false. Applies
-	// to Linux instances only.
+	// that should be applied to the managed nodes. The default value is false.
+	// Applies to Linux managed nodes only.
 	ApprovedPatchesEnableNonSecurity *bool `type:"boolean"`
 
 	// User-provided idempotency token.
@@ -22454,8 +22926,9 @@ type CreatePatchBaselineInput struct {
 	//    as InstalledRejected.
 	RejectedPatchesAction *string `type:"string" enum:"PatchAction"`
 
-	// Information about the patches to use to update the instances, including target
-	// operating systems and source repositories. Applies to Linux instances only.
+	// Information about the patches to use to update the managed nodes, including
+	// target operating systems and source repositories. Applies to Linux managed
+	// nodes only.
 	Sources []*PatchSource `type:"list"`
 
 	// Optional metadata that you assign to a resource. Tags enable you to categorize
@@ -22909,9 +23382,9 @@ type DeleteAssociationInput struct {
 	// The association ID that you want to delete.
 	AssociationId *string `type:"string"`
 
-	// The instance ID.
+	// The managed node ID.
 	//
-	// InstanceId has been deprecated. To specify an instance ID for an association,
+	// InstanceId has been deprecated. To specify a managed node ID for an association,
 	// use the Targets parameter. Requests that include the parameter InstanceID
 	// with Systems Manager documents (SSM documents) that use schema version 2.0
 	// or later will fail. In addition, if you use the parameter InstanceId, you
@@ -23707,11 +24180,11 @@ func (s DeleteResourceDataSyncOutput) GoString() string {
 type DeregisterManagedInstanceInput struct {
 	_ struct{} `type:"structure"`
 
-	// The ID assigned to the managed instance when you registered it using the
-	// activation process.
+	// The ID assigned to the managed node when you registered it using the activation
+	// process.
 	//
 	// InstanceId is a required field
-	InstanceId *string `type:"string" required:"true"`
+	InstanceId *string `min:"20" type:"string" required:"true"`
 }
 
 // String returns the string representation.
@@ -23737,6 +24210,9 @@ func (s *DeregisterManagedInstanceInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "DeregisterManagedInstanceInput"}
 	if s.InstanceId == nil {
 		invalidParams.Add(request.NewErrParamRequired("InstanceId"))
+	}
+	if s.InstanceId != nil && len(*s.InstanceId) < 20 {
+		invalidParams.Add(request.NewErrParamMinLen("InstanceId", 20))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -24547,11 +25023,11 @@ type DescribeAssociationInput struct {
 
 	// Specify the association version to retrieve. To view the latest version,
 	// either specify $LATEST for this parameter, or omit this parameter. To view
-	// a list of all associations for an instance, use ListAssociations. To get
+	// a list of all associations for a managed node, use ListAssociations. To get
 	// a list of versions for a specific association, use ListAssociationVersions.
 	AssociationVersion *string `type:"string"`
 
-	// The instance ID.
+	// The managed node ID.
 	InstanceId *string `type:"string"`
 
 	// The name of the SSM document.
@@ -24905,7 +25381,7 @@ type DescribeAvailablePatchesInput struct {
 	//
 	// Windows Server
 	//
-	// Supported keys for Windows Server instance patches include the following:
+	// Supported keys for Windows Server managed node patches include the following:
 	//
 	//    * PATCH_SET Sample values: OS | APPLICATION
 	//
@@ -24932,7 +25408,7 @@ type DescribeAvailablePatchesInput struct {
 	// aws ssm describe-available-patches --filters Key=PRODUCT,Values=AmazonLinux2018.03
 	// Key=CVE_ID,Values=CVE-2018-3615
 	//
-	// Supported keys for Linux instance patches include the following:
+	// Supported keys for Linux managed node patches include the following:
 	//
 	//    * PRODUCT Sample values: AmazonLinux2018.03 | AmazonLinux2.0
 	//
@@ -25302,7 +25778,7 @@ func (s *DescribeDocumentPermissionOutput) SetNextToken(v string) *DescribeDocum
 type DescribeEffectiveInstanceAssociationsInput struct {
 	_ struct{} `type:"structure"`
 
-	// The instance ID for which you want to view all associations.
+	// The managed node ID for which you want to view all associations.
 	//
 	// InstanceId is a required field
 	InstanceId *string `type:"string" required:"true"`
@@ -25372,7 +25848,7 @@ func (s *DescribeEffectiveInstanceAssociationsInput) SetNextToken(v string) *Des
 type DescribeEffectiveInstanceAssociationsOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The associations for the requested instance.
+	// The associations for the requested managed node.
 	Associations []*InstanceAssociation `type:"list"`
 
 	// The token to use when requesting the next set of items. If there are no additional
@@ -25525,7 +26001,7 @@ func (s *DescribeEffectivePatchesForPatchBaselineOutput) SetNextToken(v string) 
 type DescribeInstanceAssociationsStatusInput struct {
 	_ struct{} `type:"structure"`
 
-	// The instance IDs for which you want association status information.
+	// The managed node IDs for which you want association status information.
 	//
 	// InstanceId is a required field
 	InstanceId *string `type:"string" required:"true"`
@@ -25636,14 +26112,14 @@ func (s *DescribeInstanceAssociationsStatusOutput) SetNextToken(v string) *Descr
 type DescribeInstanceInformationInput struct {
 	_ struct{} `type:"structure"`
 
-	// One or more filters. Use a filter to return a more specific list of instances.
-	// You can filter based on tags applied to EC2 instances. Use this Filters data
-	// type instead of InstanceInformationFilterList, which is deprecated.
+	// One or more filters. Use a filter to return a more specific list of managed
+	// nodes. You can filter based on tags applied to your managed nodes. Use this
+	// Filters data type instead of InstanceInformationFilterList, which is deprecated.
 	Filters []*InstanceInformationStringFilter `type:"list"`
 
 	// This is a legacy method. We recommend that you don't use this method. Instead,
-	// use the Filters data type. Filters enables you to return instance information
-	// by filtering based on tags applied to managed instances.
+	// use the Filters data type. Filters enables you to return node information
+	// by filtering based on tags applied to managed nodes.
 	//
 	// Attempting to use InstanceInformationFilterList and Filters leads to an exception
 	// error.
@@ -25737,7 +26213,7 @@ func (s *DescribeInstanceInformationInput) SetNextToken(v string) *DescribeInsta
 type DescribeInstanceInformationOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The instance information list.
+	// The managed node information list.
 	InstanceInformationList []*InstanceInformation `type:"list"`
 
 	// The token to use when requesting the next set of items. If there are no additional
@@ -25875,7 +26351,7 @@ func (s *DescribeInstancePatchStatesForPatchGroupInput) SetPatchGroup(v string) 
 type DescribeInstancePatchStatesForPatchGroupOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The high-level patch state for the requested instances.
+	// The high-level patch state for the requested managed nodes.
 	InstancePatchStates []*InstancePatchState `min:"1" type:"list"`
 
 	// The token to use when requesting the next set of items. If there are no additional
@@ -25916,12 +26392,12 @@ func (s *DescribeInstancePatchStatesForPatchGroupOutput) SetNextToken(v string) 
 type DescribeInstancePatchStatesInput struct {
 	_ struct{} `type:"structure"`
 
-	// The ID of the instance for which patch state information should be retrieved.
+	// The ID of the managed node for which patch state information should be retrieved.
 	//
 	// InstanceIds is a required field
 	InstanceIds []*string `type:"list" required:"true"`
 
-	// The maximum number of instances to return (per page).
+	// The maximum number of managed nodes to return (per page).
 	MaxResults *int64 `min:"10" type:"integer"`
 
 	// The token for the next set of items to return. (You received this token from
@@ -25984,7 +26460,7 @@ func (s *DescribeInstancePatchStatesInput) SetNextToken(v string) *DescribeInsta
 type DescribeInstancePatchStatesOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The high-level patch state for the requested instances.
+	// The high-level patch state for the requested managed nodes.
 	InstancePatchStates []*InstancePatchState `type:"list"`
 
 	// The token to use when requesting the next set of items. If there are no additional
@@ -26038,7 +26514,7 @@ type DescribeInstancePatchesInput struct {
 	//    * State Sample values: Installed | InstalledOther | InstalledPendingReboot
 	Filters []*PatchOrchestratorFilter `type:"list"`
 
-	// The ID of the instance whose patch state information should be retrieved.
+	// The ID of the managed node whose patch state information should be retrieved.
 	//
 	// InstanceId is a required field
 	InstanceId *string `type:"string" required:"true"`
@@ -26730,7 +27206,7 @@ type DescribeMaintenanceWindowScheduleInput struct {
 	// INSTANCE.
 	ResourceType *string `type:"string" enum:"MaintenanceWindowResourceType"`
 
-	// The instance ID or key-value pair to retrieve information about.
+	// The managed node ID or key-value pair to retrieve information about.
 	Targets []*Target `type:"list"`
 
 	// The ID of the maintenance window to retrieve information about.
@@ -27155,7 +27631,7 @@ type DescribeMaintenanceWindowsForTargetInput struct {
 	// ResourceType is a required field
 	ResourceType *string `type:"string" required:"true" enum:"MaintenanceWindowResourceType"`
 
-	// The instance ID or key-value pair to retrieve information about.
+	// The managed node ID or key-value pair to retrieve information about.
 	//
 	// Targets is a required field
 	Targets []*Target `type:"list" required:"true"`
@@ -27239,8 +27715,8 @@ type DescribeMaintenanceWindowsForTargetOutput struct {
 	// next call.)
 	NextToken *string `type:"string"`
 
-	// Information about the maintenance window targets and tasks an instance is
-	// associated with.
+	// Information about the maintenance window targets and tasks a managed node
+	// is associated with.
 	WindowIdentities []*MaintenanceWindowIdentityForTarget `type:"list"`
 }
 
@@ -27848,60 +28324,60 @@ func (s *DescribePatchGroupStateInput) SetPatchGroup(v string) *DescribePatchGro
 type DescribePatchGroupStateOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The number of instances in the patch group.
+	// The number of managed nodes in the patch group.
 	Instances *int64 `type:"integer"`
 
-	// The number of instances where patches that are specified as Critical for
-	// compliance reporting in the patch baseline aren't installed. These patches
+	// The number of managed nodes where patches that are specified as Critical
+	// for compliance reporting in the patch baseline aren't installed. These patches
 	// might be missing, have failed installation, were rejected, or were installed
-	// but awaiting a required instance reboot. The status of these instances is
-	// NON_COMPLIANT.
+	// but awaiting a required managed node reboot. The status of these managed
+	// nodes is NON_COMPLIANT.
 	InstancesWithCriticalNonCompliantPatches *int64 `type:"integer"`
 
-	// The number of instances with patches from the patch baseline that failed
+	// The number of managed nodes with patches from the patch baseline that failed
 	// to install.
 	InstancesWithFailedPatches *int64 `type:"integer"`
 
-	// The number of instances with patches installed that aren't defined in the
-	// patch baseline.
+	// The number of managed nodes with patches installed that aren't defined in
+	// the patch baseline.
 	InstancesWithInstalledOtherPatches *int64 `type:"integer"`
 
-	// The number of instances with installed patches.
+	// The number of managed nodes with installed patches.
 	InstancesWithInstalledPatches *int64 `type:"integer"`
 
-	// The number of instances with patches installed by Patch Manager that haven't
-	// been rebooted after the patch installation. The status of these instances
-	// is NON_COMPLIANT.
+	// The number of managed nodes with patches installed by Patch Manager that
+	// haven't been rebooted after the patch installation. The status of these managed
+	// nodes is NON_COMPLIANT.
 	InstancesWithInstalledPendingRebootPatches *int64 `type:"integer"`
 
-	// The number of instances with patches installed that are specified in a RejectedPatches
-	// list. Patches with a status of INSTALLED_REJECTED were typically installed
-	// before they were added to a RejectedPatches list.
+	// The number of managed nodes with patches installed that are specified in
+	// a RejectedPatches list. Patches with a status of INSTALLED_REJECTED were
+	// typically installed before they were added to a RejectedPatches list.
 	//
 	// If ALLOW_AS_DEPENDENCY is the specified option for RejectedPatchesAction,
 	// the value of InstancesWithInstalledRejectedPatches will always be 0 (zero).
 	InstancesWithInstalledRejectedPatches *int64 `type:"integer"`
 
-	// The number of instances with missing patches from the patch baseline.
+	// The number of managed nodes with missing patches from the patch baseline.
 	InstancesWithMissingPatches *int64 `type:"integer"`
 
-	// The number of instances with patches that aren't applicable.
+	// The number of managed nodes with patches that aren't applicable.
 	InstancesWithNotApplicablePatches *int64 `type:"integer"`
 
-	// The number of instances with patches installed that are specified as other
-	// than Critical or Security but aren't compliant with the patch baseline. The
-	// status of these instances is NON_COMPLIANT.
+	// The number of managed nodes with patches installed that are specified as
+	// other than Critical or Security but aren't compliant with the patch baseline.
+	// The status of these managed nodes is NON_COMPLIANT.
 	InstancesWithOtherNonCompliantPatches *int64 `type:"integer"`
 
-	// The number of instances where patches that are specified as Security in a
-	// patch advisory aren't installed. These patches might be missing, have failed
-	// installation, were rejected, or were installed but awaiting a required instance
-	// reboot. The status of these instances is NON_COMPLIANT.
+	// The number of managed nodes where patches that are specified as Security
+	// in a patch advisory aren't installed. These patches might be missing, have
+	// failed installation, were rejected, or were installed but awaiting a required
+	// managed node reboot. The status of these managed nodes is NON_COMPLIANT.
 	InstancesWithSecurityNonCompliantPatches *int64 `type:"integer"`
 
-	// The number of instances with NotApplicable patches beyond the supported limit,
-	// which aren't reported by name to Inventory. Inventory is a capability of
-	// Amazon Web Services Systems Manager.
+	// The number of managed nodes with NotApplicable patches beyond the supported
+	// limit, which aren't reported by name to Inventory. Inventory is a capability
+	// of Amazon Web Services Systems Manager.
 	InstancesWithUnreportedNotApplicablePatches *int64 `type:"integer"`
 }
 
@@ -28586,7 +29062,7 @@ func (s *DocumentDefaultVersionDescription) SetName(v string) *DocumentDefaultVe
 	return s
 }
 
-// Describes a Amazon Web Services Systems Manager document (SSM document).
+// Describes an Amazon Web Services Systems Manager document (SSM document).
 type DocumentDescription struct {
 	_ struct{} `type:"structure"`
 
@@ -28599,6 +29075,13 @@ type DocumentDescription struct {
 
 	// The user in your organization who created the document.
 	Author *string `type:"string"`
+
+	// The classification of a document to help you identify and categorize its
+	// use.
+	Category []*string `type:"list"`
+
+	// The value that identifies a document's category.
+	CategoryEnum []*string `type:"list"`
 
 	// The date when the document was created.
 	CreatedDate *time.Time `type:"timestamp"`
@@ -28647,8 +29130,8 @@ type DocumentDescription struct {
 	// The version of the document that is currently under review.
 	PendingReviewVersion *string `type:"string"`
 
-	// The list of OS platforms compatible with this SSM document.
-	PlatformTypes []*string `type:"list"`
+	// The list of operating system (OS) platforms compatible with this SSM document.
+	PlatformTypes []*string `type:"list" enum:"PlatformType"`
 
 	// A list of SSM documents required by a document. For example, an ApplicationConfiguration
 	// document requires an ApplicationConfigurationSchema document.
@@ -28721,6 +29204,18 @@ func (s *DocumentDescription) SetAttachmentsInformation(v []*AttachmentInformati
 // SetAuthor sets the Author field's value.
 func (s *DocumentDescription) SetAuthor(v string) *DocumentDescription {
 	s.Author = &v
+	return s
+}
+
+// SetCategory sets the Category field's value.
+func (s *DocumentDescription) SetCategory(v []*string) *DocumentDescription {
+	s.Category = v
+	return s
+}
+
+// SetCategoryEnum sets the CategoryEnum field's value.
+func (s *DocumentDescription) SetCategoryEnum(v []*string) *DocumentDescription {
+	s.CategoryEnum = v
 	return s
 }
 
@@ -28969,7 +29464,7 @@ type DocumentIdentifier struct {
 	Owner *string `type:"string"`
 
 	// The operating system platform.
-	PlatformTypes []*string `type:"list"`
+	PlatformTypes []*string `type:"list" enum:"PlatformType"`
 
 	// A list of SSM documents required by a document. For example, an ApplicationConfiguration
 	// document requires an ApplicationConfigurationSchema document.
@@ -29113,43 +29608,41 @@ func (s *DocumentIdentifier) SetVersionName(v string) *DocumentIdentifier {
 //
 // DocumentType
 //
-//    * ApplicationConfiguration
+//   - ApplicationConfiguration
 //
-//    * ApplicationConfigurationSchema
+//   - ApplicationConfigurationSchema
 //
-//    * Automation
+//   - Automation
 //
-//    * ChangeCalendar
+//   - ChangeCalendar
 //
-//    * Command
+//   - Command
 //
-//    * DeploymentStrategy
+//   - Package
 //
-//    * Package
+//   - Policy
 //
-//    * Policy
+//   - Session
 //
-//    * Session
-//
-// Owner
+// # Owner
 //
 // Note that only one Owner can be specified in a request. For example: Key=Owner,Values=Self.
 //
-//    * Amazon
+//   - Amazon
 //
-//    * Private
+//   - Private
 //
-//    * Public
+//   - Public
 //
-//    * Self
+//   - Self
 //
-//    * ThirdParty
+//   - ThirdParty
 //
 // PlatformTypes
 //
-//    * Linux
+//   - Linux
 //
-//    * Windows
+//   - Windows
 //
 // Name is another Amazon Web Services-provided key. If you use Name as a key,
 // you can use a name prefix to return a list of documents. For example, in
@@ -29386,9 +29879,14 @@ func (s *DocumentParameter) SetType(v string) *DocumentParameter {
 }
 
 // The document can't be shared with more Amazon Web Services user accounts.
-// You can share a document with a maximum of 20 accounts. You can publicly
-// share up to five documents. If you need to increase this limit, contact Amazon
-// Web Services Support.
+// You can specify a maximum of 20 accounts per API operation to share a private
+// document.
+//
+// By default, you can share a private document with a maximum of 1,000 accounts
+// and publicly share up to five documents.
+//
+// If you need to increase the quota for privately or publicly shared Systems
+// Manager documents, contact Amazon Web Services Support.
 type DocumentPermissionLimit struct {
 	_            struct{}                  `type:"structure"`
 	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
@@ -30092,7 +30590,7 @@ func (s *DuplicateDocumentVersionName) RequestID() string {
 	return s.RespMetadata.RequestID
 }
 
-// You can't specify an instance ID in more than one association.
+// You can't specify a managed node ID in more than one association.
 type DuplicateInstanceId struct {
 	_            struct{}                  `type:"structure"`
 	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
@@ -30577,26 +31075,24 @@ type GetCommandInvocationInput struct {
 	// CommandId is a required field
 	CommandId *string `min:"36" type:"string" required:"true"`
 
-	// (Required) The ID of the managed instance targeted by the command. A managed
-	// instance can be an Amazon Elastic Compute Cloud (Amazon EC2) instance or
-	// an instance in your hybrid environment that is configured for Amazon Web
-	// Services Systems Manager.
+	// (Required) The ID of the managed node targeted by the command. A managed
+	// node can be an Amazon Elastic Compute Cloud (Amazon EC2) instance, edge device,
+	// and on-premises server or VM in your hybrid environment that is configured
+	// for Amazon Web Services Systems Manager.
 	//
 	// InstanceId is a required field
 	InstanceId *string `type:"string" required:"true"`
 
-	// The name of the plugin for which you want detailed results. If the document
-	// contains only one plugin, you can omit the name and details for that plugin.
-	// If the document contains more than one plugin, you must specify the name
-	// of the plugin for which you want to view details.
-	//
-	// Plugin names are also referred to as step names in Systems Manager documents
-	// (SSM documents). For example, aws:RunShellScript is a plugin.
+	// The name of the step for which you want detailed results. If the document
+	// contains only one step, you can omit the name and details for that step.
+	// If the document contains more than one step, you must specify the name of
+	// the step for which you want to view details. Be sure to specify the name
+	// of the step, not the name of a plugin like aws:RunShellScript.
 	//
 	// To find the PluginName, check the document content and find the name of the
-	// plugin. Alternatively, use ListCommandInvocations with the CommandId and
-	// Details parameters. The PluginName is the Name attribute of the CommandPlugin
-	// object in the CommandPlugins list.
+	// step you want details for. Alternatively, use ListCommandInvocations with
+	// the CommandId and Details parameters. The PluginName is the Name attribute
+	// of the CommandPlugin object in the CommandPlugins list.
 	PluginName *string `min:"4" type:"string"`
 }
 
@@ -30699,9 +31195,10 @@ type GetCommandInvocationOutput struct {
 	// If the plugin hasn't started to run, the string is empty.
 	ExecutionStartDateTime *string `type:"string"`
 
-	// The ID of the managed instance targeted by the command. A managed instance
-	// can be an EC2 instance or an instance in your hybrid environment that is
-	// configured for Systems Manager.
+	// The ID of the managed node targeted by the command. A managed node can be
+	// an Amazon Elastic Compute Cloud (Amazon EC2) instance, edge device, or on-premises
+	// server or VM in your hybrid environment that is configured for Amazon Web
+	// Services Systems Manager.
 	InstanceId *string `type:"string"`
 
 	// The name of the plugin, or step name, for which details are reported. For
@@ -30709,8 +31206,8 @@ type GetCommandInvocationOutput struct {
 	PluginName *string `min:"4" type:"string"`
 
 	// The error level response code for the plugin script. If the response code
-	// is -1, then the command hasn't started running on the instance, or it wasn't
-	// received by the instance.
+	// is -1, then the command hasn't started running on the managed node, or it
+	// wasn't received by the node.
 	ResponseCode *int64 `type:"integer"`
 
 	// The first 8,000 characters written by the plugin to stderr. If the command
@@ -30742,40 +31239,41 @@ type GetCommandInvocationOutput struct {
 	// in the Amazon Web Services Systems Manager User Guide. StatusDetails can
 	// be one of the following values:
 	//
-	//    * Pending: The command hasn't been sent to the instance.
+	//    * Pending: The command hasn't been sent to the managed node.
 	//
-	//    * In Progress: The command has been sent to the instance but hasn't reached
-	//    a terminal state.
+	//    * In Progress: The command has been sent to the managed node but hasn't
+	//    reached a terminal state.
 	//
 	//    * Delayed: The system attempted to send the command to the target, but
-	//    the target wasn't available. The instance might not be available because
-	//    of network issues, because the instance was stopped, or for similar reasons.
+	//    the target wasn't available. The managed node might not be available because
+	//    of network issues, because the node was stopped, or for similar reasons.
 	//    The system will try to send the command again.
 	//
 	//    * Success: The command or plugin ran successfully. This is a terminal
 	//    state.
 	//
-	//    * Delivery Timed Out: The command wasn't delivered to the instance before
-	//    the delivery timeout expired. Delivery timeouts don't count against the
-	//    parent command's MaxErrors limit, but they do contribute to whether the
-	//    parent command status is Success or Incomplete. This is a terminal state.
-	//
-	//    * Execution Timed Out: The command started to run on the instance, but
-	//    the execution wasn't complete before the timeout expired. Execution timeouts
-	//    count against the MaxErrors limit of the parent command. This is a terminal
+	//    * Delivery Timed Out: The command wasn't delivered to the managed node
+	//    before the delivery timeout expired. Delivery timeouts don't count against
+	//    the parent command's MaxErrors limit, but they do contribute to whether
+	//    the parent command status is Success or Incomplete. This is a terminal
 	//    state.
 	//
-	//    * Failed: The command wasn't run successfully on the instance. For a plugin,
-	//    this indicates that the result code wasn't zero. For a command invocation,
-	//    this indicates that the result code for one or more plugins wasn't zero.
-	//    Invocation failures count against the MaxErrors limit of the parent command.
-	//    This is a terminal state.
+	//    * Execution Timed Out: The command started to run on the managed node,
+	//    but the execution wasn't complete before the timeout expired. Execution
+	//    timeouts count against the MaxErrors limit of the parent command. This
+	//    is a terminal state.
 	//
-	//    * Canceled: The command was terminated before it was completed. This is
-	//    a terminal state.
+	//    * Failed: The command wasn't run successfully on the managed node. For
+	//    a plugin, this indicates that the result code wasn't zero. For a command
+	//    invocation, this indicates that the result code for one or more plugins
+	//    wasn't zero. Invocation failures count against the MaxErrors limit of
+	//    the parent command. This is a terminal state.
 	//
-	//    * Undeliverable: The command can't be delivered to the instance. The instance
-	//    might not exist or might not be responding. Undeliverable invocations
+	//    * Cancelled: The command was terminated before it was completed. This
+	//    is a terminal state.
+	//
+	//    * Undeliverable: The command can't be delivered to the managed node. The
+	//    node might not exist or might not be responding. Undeliverable invocations
 	//    don't count against the parent command's MaxErrors limit and don't contribute
 	//    to whether the parent command status is Success or Incomplete. This is
 	//    a terminal state.
@@ -30908,7 +31406,7 @@ func (s *GetCommandInvocationOutput) SetStatusDetails(v string) *GetCommandInvoc
 type GetConnectionStatusInput struct {
 	_ struct{} `type:"structure"`
 
-	// The instance ID.
+	// The managed node ID.
 	//
 	// Target is a required field
 	Target *string `min:"1" type:"string" required:"true"`
@@ -30957,11 +31455,11 @@ func (s *GetConnectionStatusInput) SetTarget(v string) *GetConnectionStatusInput
 type GetConnectionStatusOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The status of the connection to the instance. For example, 'Connected' or
-	// 'Not Connected'.
+	// The status of the connection to the managed node. For example, 'Connected'
+	// or 'Not Connected'.
 	Status *string `type:"string" enum:"ConnectionStatus"`
 
-	// The ID of the instance to check connection status.
+	// The ID of the managed node to check connection status.
 	Target *string `min:"1" type:"string"`
 }
 
@@ -31072,8 +31570,8 @@ type GetDeployablePatchSnapshotForInstanceInput struct {
 	// Defines the basic information about a patch baseline override.
 	BaselineOverride *BaselineOverride `type:"structure"`
 
-	// The ID of the instance for which the appropriate patch snapshot should be
-	// retrieved.
+	// The ID of the managed node for which the appropriate patch snapshot should
+	// be retrieved.
 	//
 	// InstanceId is a required field
 	InstanceId *string `type:"string" required:"true"`
@@ -31147,11 +31645,11 @@ func (s *GetDeployablePatchSnapshotForInstanceInput) SetSnapshotId(v string) *Ge
 type GetDeployablePatchSnapshotForInstanceOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The instance ID.
+	// The managed node ID.
 	InstanceId *string `type:"string"`
 
 	// Returns the specific operating system (for example Windows Server 2012 or
-	// Amazon Linux 2015.09) on the instance for the specified patch snapshot.
+	// Amazon Linux 2015.09) on the managed node for the specified patch snapshot.
 	Product *string `type:"string"`
 
 	// A pre-signed Amazon Simple Storage Service (Amazon S3) URL that can be used
@@ -31441,8 +31939,8 @@ type GetInventoryInput struct {
 
 	// Returns counts of inventory types based on one or more expressions. For example,
 	// if you aggregate by using an expression that uses the AWS:InstanceInformation.PlatformType
-	// type, you can see a count of how many Windows and Linux instances exist in
-	// your inventoried fleet.
+	// type, you can see a count of how many Windows and Linux managed nodes exist
+	// in your inventoried fleet.
 	Aggregators []*InventoryAggregator `min:"1" type:"list"`
 
 	// One or more filters. Use a filter to return a more specific list of results.
@@ -31564,7 +32062,7 @@ func (s *GetInventoryInput) SetResultAttributes(v []*ResultAttribute) *GetInvent
 type GetInventoryOutput struct {
 	_ struct{} `type:"structure"`
 
-	// Collection of inventory entities such as a collection of instance inventory.
+	// Collection of inventory entities such as a collection of managed node inventory.
 	Entities []*InventoryResultEntity `type:"list"`
 
 	// The token to use when requesting the next set of items. If there are no additional
@@ -32148,6 +32646,10 @@ func (s *GetMaintenanceWindowExecutionTaskInvocationOutput) SetWindowTargetId(v 
 type GetMaintenanceWindowExecutionTaskOutput struct {
 	_ struct{} `type:"structure"`
 
+	// The details for the CloudWatch alarm you applied to your maintenance window
+	// task.
+	AlarmConfiguration *AlarmConfiguration `type:"structure"`
+
 	// The time the task execution completed.
 	EndTime *time.Time `type:"timestamp"`
 
@@ -32198,6 +32700,9 @@ type GetMaintenanceWindowExecutionTaskOutput struct {
 	// String and GoString methods.
 	TaskParameters []map[string]*MaintenanceWindowTaskParameterValueExpression `type:"list" sensitive:"true"`
 
+	// The CloudWatch alarms that were invoked by the maintenance window task.
+	TriggeredAlarms []*AlarmStateInformation `min:"1" type:"list"`
+
 	// The type of task that was run.
 	Type *string `type:"string" enum:"MaintenanceWindowTaskType"`
 
@@ -32221,6 +32726,12 @@ func (s GetMaintenanceWindowExecutionTaskOutput) String() string {
 // value will be replaced with "sensitive".
 func (s GetMaintenanceWindowExecutionTaskOutput) GoString() string {
 	return s.String()
+}
+
+// SetAlarmConfiguration sets the AlarmConfiguration field's value.
+func (s *GetMaintenanceWindowExecutionTaskOutput) SetAlarmConfiguration(v *AlarmConfiguration) *GetMaintenanceWindowExecutionTaskOutput {
+	s.AlarmConfiguration = v
+	return s
 }
 
 // SetEndTime sets the EndTime field's value.
@@ -32286,6 +32797,12 @@ func (s *GetMaintenanceWindowExecutionTaskOutput) SetTaskExecutionId(v string) *
 // SetTaskParameters sets the TaskParameters field's value.
 func (s *GetMaintenanceWindowExecutionTaskOutput) SetTaskParameters(v []map[string]*MaintenanceWindowTaskParameterValueExpression) *GetMaintenanceWindowExecutionTaskOutput {
 	s.TaskParameters = v
+	return s
+}
+
+// SetTriggeredAlarms sets the TriggeredAlarms field's value.
+func (s *GetMaintenanceWindowExecutionTaskOutput) SetTriggeredAlarms(v []*AlarmStateInformation) *GetMaintenanceWindowExecutionTaskOutput {
+	s.TriggeredAlarms = v
 	return s
 }
 
@@ -32591,6 +33108,10 @@ func (s *GetMaintenanceWindowTaskInput) SetWindowTaskId(v string) *GetMaintenanc
 type GetMaintenanceWindowTaskOutput struct {
 	_ struct{} `type:"structure"`
 
+	// The details for the CloudWatch alarm you applied to your maintenance window
+	// task.
+	AlarmConfiguration *AlarmConfiguration `type:"structure"`
+
 	// The action to take on tasks when the maintenance window cutoff time is reached.
 	// CONTINUE_TASK means that tasks continue to run. For Automation, Lambda, Step
 	// Functions tasks, CANCEL_TASK means that currently running task invocations
@@ -32694,6 +33215,12 @@ func (s GetMaintenanceWindowTaskOutput) String() string {
 // value will be replaced with "sensitive".
 func (s GetMaintenanceWindowTaskOutput) GoString() string {
 	return s.String()
+}
+
+// SetAlarmConfiguration sets the AlarmConfiguration field's value.
+func (s *GetMaintenanceWindowTaskOutput) SetAlarmConfiguration(v *AlarmConfiguration) *GetMaintenanceWindowTaskOutput {
+	s.AlarmConfiguration = v
+	return s
 }
 
 // SetCutoffBehavior sets the CutoffBehavior field's value.
@@ -33397,8 +33924,8 @@ type GetParametersByPathInput struct {
 	ParameterFilters []*ParameterStringFilter `type:"list"`
 
 	// The hierarchy for the parameter. Hierarchies start with a forward slash (/).
-	// The hierachy is the parameter name except the last part of the parameter.
-	// For the API call to succeeed, the last part of the parameter name can't be
+	// The hierarchy is the parameter name except the last part of the parameter.
+	// For the API call to succeed, the last part of the parameter name can't be
 	// in the path. A parameter name hierarchy can have a maximum of 15 levels.
 	// Here is an example of a hierarchy: /Finance/Prod/IAD/WinServ2016/license33
 	//
@@ -33649,7 +34176,7 @@ func (s *GetParametersOutput) SetParameters(v []*Parameter) *GetParametersOutput
 type GetPatchBaselineForPatchGroupInput struct {
 	_ struct{} `type:"structure"`
 
-	// Returns he operating system rule specified for patch groups using the patch
+	// Returns the operating system rule specified for patch groups using the patch
 	// baseline.
 	OperatingSystem *string `type:"string" enum:"OperatingSystem"`
 
@@ -33822,8 +34349,8 @@ type GetPatchBaselineOutput struct {
 	ApprovedPatchesComplianceLevel *string `type:"string" enum:"PatchComplianceLevel"`
 
 	// Indicates whether the list of approved patches includes non-security updates
-	// that should be applied to the instances. The default value is false. Applies
-	// to Linux instances only.
+	// that should be applied to the managed nodes. The default value is false.
+	// Applies to Linux managed nodes only.
 	ApprovedPatchesEnableNonSecurity *bool `type:"boolean"`
 
 	// The ID of the retrieved patch baseline.
@@ -33858,8 +34385,9 @@ type GetPatchBaselineOutput struct {
 	// blocked entirely along with packages that include it as a dependency.
 	RejectedPatchesAction *string `type:"string" enum:"PatchAction"`
 
-	// Information about the patches to use to update the instances, including target
-	// operating systems and source repositories. Applies to Linux instances only.
+	// Information about the patches to use to update the managed nodes, including
+	// target operating systems and source repositories. Applies to Linux managed
+	// nodes only.
 	Sources []*PatchSource `type:"list"`
 }
 
@@ -33983,11 +34511,13 @@ type GetServiceSettingInput struct {
 	//
 	//    * /ssm/documents/console/public-sharing-permission
 	//
+	//    * /ssm/managed-instance/activation-tier
+	//
+	//    * /ssm/opsinsights/opscenter
+	//
 	//    * /ssm/parameter-store/default-parameter-tier
 	//
 	//    * /ssm/parameter-store/high-throughput-enabled
-	//
-	//    * /ssm/managed-instance/activation-tier
 	//
 	// SettingId is a required field
 	SettingId *string `min:"1" type:"string" required:"true"`
@@ -34341,7 +34871,7 @@ type InstanceAggregatedAssociationOverview struct {
 	// Detailed status information about the aggregated associations.
 	DetailedStatus *string `type:"string"`
 
-	// The number of associations for the instance(s).
+	// The number of associations for the managed node(s).
 	InstanceAssociationStatusAggregatedCount map[string]*int64 `type:"map"`
 }
 
@@ -34375,20 +34905,20 @@ func (s *InstanceAggregatedAssociationOverview) SetInstanceAssociationStatusAggr
 	return s
 }
 
-// One or more association documents on the instance.
+// One or more association documents on the managed node.
 type InstanceAssociation struct {
 	_ struct{} `type:"structure"`
 
 	// The association ID.
 	AssociationId *string `type:"string"`
 
-	// Version information for the association on the instance.
+	// Version information for the association on the managed node.
 	AssociationVersion *string `type:"string"`
 
-	// The content of the association document for the instance(s).
+	// The content of the association document for the managed node(s).
 	Content *string `min:"1" type:"string"`
 
-	// The instance ID.
+	// The managed node ID.
 	InstanceId *string `type:"string"`
 }
 
@@ -34517,20 +35047,20 @@ func (s *InstanceAssociationOutputUrl) SetS3OutputUrl(v *S3OutputUrl) *InstanceA
 	return s
 }
 
-// Status information about the instance association.
+// Status information about the association.
 type InstanceAssociationStatusInfo struct {
 	_ struct{} `type:"structure"`
 
 	// The association ID.
 	AssociationId *string `type:"string"`
 
-	// The name of the association applied to the instance.
+	// The name of the association applied to the managed node.
 	AssociationName *string `type:"string"`
 
-	// The version of the association applied to the instance.
+	// The version of the association applied to the managed node.
 	AssociationVersion *string `type:"string"`
 
-	// Detailed status information about the instance association.
+	// Detailed status information about the association.
 	DetailedStatus *string `type:"string"`
 
 	// The association document versions.
@@ -34539,13 +35069,13 @@ type InstanceAssociationStatusInfo struct {
 	// An error code returned by the request to create the association.
 	ErrorCode *string `type:"string"`
 
-	// The date the instance association ran.
+	// The date the association ran.
 	ExecutionDate *time.Time `type:"timestamp"`
 
 	// Summary information about association execution.
 	ExecutionSummary *string `min:"1" type:"string"`
 
-	// The instance ID where the association was created.
+	// The managed node ID where the association was created.
 	InstanceId *string `type:"string"`
 
 	// The name of the association.
@@ -34554,7 +35084,7 @@ type InstanceAssociationStatusInfo struct {
 	// A URL for an S3 bucket where you want to store the results of this request.
 	OutputUrl *InstanceAssociationOutputUrl `type:"structure"`
 
-	// Status information about the instance association.
+	// Status information about the association.
 	Status *string `type:"string"`
 }
 
@@ -34648,7 +35178,7 @@ func (s *InstanceAssociationStatusInfo) SetStatus(v string) *InstanceAssociation
 	return s
 }
 
-// Describes a filter for a specific list of instances.
+// Describes a filter for a specific list of managed nodes.
 type InstanceInformation struct {
 	_ struct{} `type:"structure"`
 
@@ -34656,7 +35186,7 @@ type InstanceInformation struct {
 	// server or virtual machine (VM) was registered.
 	ActivationId *string `type:"string"`
 
-	// The version of SSM Agent running on your Linux instance.
+	// The version of SSM Agent running on your Linux managed node.
 	AgentVersion *string `type:"string"`
 
 	// Information about the association.
@@ -34665,28 +35195,28 @@ type InstanceInformation struct {
 	// The status of the association.
 	AssociationStatus *string `type:"string"`
 
-	// The fully qualified host name of the managed instance.
+	// The fully qualified host name of the managed node.
 	ComputerName *string `min:"1" type:"string"`
 
-	// The IP address of the managed instance.
+	// The IP address of the managed node.
 	IPAddress *string `min:"1" type:"string"`
 
 	// The Identity and Access Management (IAM) role assigned to the on-premises
-	// Systems Manager managed instance. This call doesn't return the IAM role for
-	// Amazon Elastic Compute Cloud (Amazon EC2) instances. To retrieve the IAM
-	// role for an EC2 instance, use the Amazon EC2 DescribeInstances operation.
-	// For information, see DescribeInstances (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeInstances.html)
+	// Systems Manager managed node. This call doesn't return the IAM role for Amazon
+	// Elastic Compute Cloud (Amazon EC2) instances. To retrieve the IAM role for
+	// an EC2 instance, use the Amazon EC2 DescribeInstances operation. For information,
+	// see DescribeInstances (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeInstances.html)
 	// in the Amazon EC2 API Reference or describe-instances (https://docs.aws.amazon.com/cli/latest/ec2/describe-instances.html)
 	// in the Amazon Web Services CLI Command Reference.
 	IamRole *string `type:"string"`
 
-	// The instance ID.
+	// The managed node ID.
 	InstanceId *string `type:"string"`
 
 	// Indicates whether the latest version of SSM Agent is running on your Linux
-	// Managed Instance. This field doesn't indicate whether or not the latest version
-	// is installed on Windows managed instances, because some older versions of
-	// Windows Server use the EC2Config service to process Systems Manager requests.
+	// managed node. This field doesn't indicate whether or not the latest version
+	// is installed on Windows managed nodes, because some older versions of Windows
+	// Server use the EC2Config service to process Systems Manager requests.
 	IsLatestVersion *bool `type:"boolean"`
 
 	// The date the association was last run.
@@ -34698,11 +35228,11 @@ type InstanceInformation struct {
 	// The last date the association was successfully run.
 	LastSuccessfulAssociationExecutionDate *time.Time `type:"timestamp"`
 
-	// The name assigned to an on-premises server or virtual machine (VM) when it
-	// is activated as a Systems Manager managed instance. The name is specified
-	// as the DefaultInstanceName property using the CreateActivation command. It
-	// is applied to the managed instance by specifying the Activation Code and
-	// Activation ID when you install SSM Agent on the instance, as explained in
+	// The name assigned to an on-premises server, edge device, or virtual machine
+	// (VM) when it is activated as a Systems Manager managed node. The name is
+	// specified as the DefaultInstanceName property using the CreateActivation
+	// command. It is applied to the managed node by specifying the Activation Code
+	// and Activation ID when you install SSM Agent on the node, as explained in
 	// Install SSM Agent for a hybrid environment (Linux) (https://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-install-managed-linux.html)
 	// and Install SSM Agent for a hybrid environment (Windows) (https://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-install-managed-win.html).
 	// To retrieve the Name tag of an EC2 instance, use the Amazon EC2 DescribeInstances
@@ -34716,21 +35246,29 @@ type InstanceInformation struct {
 	// The status Inactive has been deprecated and is no longer in use.
 	PingStatus *string `type:"string" enum:"PingStatus"`
 
-	// The name of the operating system platform running on your instance.
+	// The name of the operating system platform running on your managed node.
 	PlatformName *string `type:"string"`
 
 	// The operating system platform type.
 	PlatformType *string `type:"string" enum:"PlatformType"`
 
-	// The version of the OS platform running on your instance.
+	// The version of the OS platform running on your managed node.
 	PlatformVersion *string `type:"string"`
 
 	// The date the server or VM was registered with Amazon Web Services as a managed
-	// instance.
+	// node.
 	RegistrationDate *time.Time `type:"timestamp"`
 
 	// The type of instance. Instances are either EC2 instances or managed instances.
 	ResourceType *string `type:"string" enum:"ResourceType"`
+
+	// The ID of the source resource. For IoT Greengrass devices, SourceId is the
+	// Thing name.
+	SourceId *string `type:"string"`
+
+	// The type of the source resource. For IoT Greengrass devices, SourceType is
+	// AWS::IoT::Thing.
+	SourceType *string `type:"string" enum:"SourceType"`
 }
 
 // String returns the string representation.
@@ -34865,7 +35403,19 @@ func (s *InstanceInformation) SetResourceType(v string) *InstanceInformation {
 	return s
 }
 
-// Describes a filter for a specific list of instances. You can filter instances
+// SetSourceId sets the SourceId field's value.
+func (s *InstanceInformation) SetSourceId(v string) *InstanceInformation {
+	s.SourceId = &v
+	return s
+}
+
+// SetSourceType sets the SourceType field's value.
+func (s *InstanceInformation) SetSourceType(v string) *InstanceInformation {
+	s.SourceType = &v
+	return s
+}
+
+// Describes a filter for a specific list of managed nodes. You can filter node
 // information by using tags. You specify tags by using a key-value mapping.
 //
 // Use this operation instead of the DescribeInstanceInformationRequest$InstanceInformationFilterList
@@ -34934,18 +35484,30 @@ func (s *InstanceInformationFilter) SetValueSet(v []*string) *InstanceInformatio
 	return s
 }
 
-// The filters to describe or get information about your managed instances.
+// The filters to describe or get information about your managed nodes.
 type InstanceInformationStringFilter struct {
 	_ struct{} `type:"structure"`
 
-	// The filter key name to describe your instances. For example:
+	// The filter key name to describe your managed nodes.
 	//
-	// "InstanceIds"|"AgentVersion"|"PingStatus"|"PlatformTypes"|"ActivationIds"|"IamRole"|"ResourceType"|"AssociationStatus"|"Tag
-	// Key"
+	// Valid filter key values: ActivationIds | AgentVersion | AssociationStatus
+	// | IamRole | InstanceIds | PingStatus | PlatformTypes | ResourceType | SourceIds
+	// | SourceTypes | "tag-key" | "tag:{keyname}
 	//
-	// Tag key isn't a valid filter. You must specify either tag-key or tag:keyname
-	// and a string. Here are some valid examples: tag-key, tag:123, tag:al!, tag:Windows.
-	// Here are some invalid examples: tag-keys, Tag Key, tag:, tagKey, abc:keyname.
+	//    * Valid values for the AssociationStatus filter key: Success | Pending
+	//    | Failed
+	//
+	//    * Valid values for the PingStatus filter key: Online | ConnectionLost
+	//    | Inactive (deprecated)
+	//
+	//    * Valid values for the PlatformType filter key: Windows | Linux | MacOS
+	//
+	//    * Valid values for the ResourceType filter key: EC2Instance | ManagedInstance
+	//
+	//    * Valid values for the SourceType filter key: AWS::EC2::Instance | AWS::SSM::ManagedInstance
+	//    | AWS::IoT::Thing
+	//
+	//    * Valid tag examples: Key=tag-key,Values=Purpose | Key=tag:Purpose,Values=Test.
 	//
 	// Key is a required field
 	Key *string `min:"1" type:"string" required:"true"`
@@ -35008,23 +35570,22 @@ func (s *InstanceInformationStringFilter) SetValues(v []*string) *InstanceInform
 	return s
 }
 
-// Defines the high-level patch compliance state for a managed instance, providing
+// Defines the high-level patch compliance state for a managed node, providing
 // information about the number of installed, missing, not applicable, and failed
 // patches along with metadata about the operation when this information was
-// gathered for the instance.
+// gathered for the managed node.
 type InstancePatchState struct {
 	_ struct{} `type:"structure"`
 
-	// The ID of the patch baseline used to patch the instance.
+	// The ID of the patch baseline used to patch the managed node.
 	//
 	// BaselineId is a required field
 	BaselineId *string `min:"20" type:"string" required:"true"`
 
-	// The number of instances where patches that are specified as Critical for
-	// compliance reporting in the patch baseline aren't installed. These patches
-	// might be missing, have failed installation, were rejected, or were installed
-	// but awaiting a required instance reboot. The status of these instances is
-	// NON_COMPLIANT.
+	// The number of patches per node that are specified as Critical for compliance
+	// reporting in the patch baseline aren't installed. These patches might be
+	// missing, have failed installation, were rejected, or were installed but awaiting
+	// a required managed node reboot. The status of these managed nodes is NON_COMPLIANT.
 	CriticalNonCompliantCount *int64 `type:"integer"`
 
 	// The number of patches from the patch baseline that were attempted to be installed
@@ -35042,41 +35603,42 @@ type InstancePatchState struct {
 	// SSM document in the Amazon Web Services Systems Manager User Guide.
 	InstallOverrideList *string `min:"1" type:"string"`
 
-	// The number of patches from the patch baseline that are installed on the instance.
+	// The number of patches from the patch baseline that are installed on the managed
+	// node.
 	InstalledCount *int64 `type:"integer"`
 
 	// The number of patches not specified in the patch baseline that are installed
-	// on the instance.
+	// on the managed node.
 	InstalledOtherCount *int64 `type:"integer"`
 
 	// The number of patches installed by Patch Manager since the last time the
-	// instance was rebooted.
+	// managed node was rebooted.
 	InstalledPendingRebootCount *int64 `type:"integer"`
 
-	// The number of patches installed on an instance that are specified in a RejectedPatches
-	// list. Patches with a status of InstalledRejected were typically installed
-	// before they were added to a RejectedPatches list.
+	// The number of patches installed on a managed node that are specified in a
+	// RejectedPatches list. Patches with a status of InstalledRejected were typically
+	// installed before they were added to a RejectedPatches list.
 	//
 	// If ALLOW_AS_DEPENDENCY is the specified option for RejectedPatchesAction,
 	// the value of InstalledRejectedCount will always be 0 (zero).
 	InstalledRejectedCount *int64 `type:"integer"`
 
-	// The ID of the managed instance the high-level patch compliance information
-	// was collected for.
+	// The ID of the managed node the high-level patch compliance information was
+	// collected for.
 	//
 	// InstanceId is a required field
 	InstanceId *string `type:"string" required:"true"`
 
-	// The time of the last attempt to patch the instance with NoReboot specified
+	// The time of the last attempt to patch the managed node with NoReboot specified
 	// as the reboot option.
 	LastNoRebootInstallOperationTime *time.Time `type:"timestamp"`
 
 	// The number of patches from the patch baseline that are applicable for the
-	// instance but aren't currently installed.
+	// managed node but aren't currently installed.
 	MissingCount *int64 `type:"integer"`
 
 	// The number of patches from the patch baseline that aren't applicable for
-	// the instance and therefore aren't installed on the instance. This number
+	// the managed node and therefore aren't installed on the node. This number
 	// may be truncated if the list of patch names is very large. The number of
 	// patches beyond this limit are reported in UnreportedNotApplicableCount.
 	NotApplicableCount *int64 `type:"integer"`
@@ -35090,19 +35652,19 @@ type InstancePatchState struct {
 	// Operation is a required field
 	Operation *string `type:"string" required:"true" enum:"PatchOperationType"`
 
-	// The time the most recent patching operation completed on the instance.
+	// The time the most recent patching operation completed on the managed node.
 	//
 	// OperationEndTime is a required field
 	OperationEndTime *time.Time `type:"timestamp" required:"true"`
 
-	// The time the most recent patching operation was started on the instance.
+	// The time the most recent patching operation was started on the managed node.
 	//
 	// OperationStartTime is a required field
 	OperationStartTime *time.Time `type:"timestamp" required:"true"`
 
-	// The number of instances with patches installed that are specified as other
-	// than Critical or Security but aren't compliant with the patch baseline. The
-	// status of these instances is NON_COMPLIANT.
+	// The number of patches per node that are specified as other than Critical
+	// or Security but aren't compliant with the patch baseline. The status of these
+	// managed nodes is NON_COMPLIANT.
 	OtherNonCompliantCount *int64 `type:"integer"`
 
 	// Placeholder information. This field will always be empty in the current release
@@ -35113,7 +35675,7 @@ type InstancePatchState struct {
 	// String and GoString methods.
 	OwnerInformation *string `min:"1" type:"string" sensitive:"true"`
 
-	// The name of the patch group the managed instance belongs to.
+	// The name of the patch group the managed node belongs to.
 	//
 	// PatchGroup is a required field
 	PatchGroup *string `min:"1" type:"string" required:"true"`
@@ -35123,8 +35685,9 @@ type InstancePatchState struct {
 	// Reboot options apply to Install operations only. Reboots aren't attempted
 	// for Patch Manager Scan operations.
 	//
-	//    * RebootIfNeeded: Patch Manager tries to reboot the instance if it installed
-	//    any patches, or if any patches are detected with a status of InstalledPendingReboot.
+	//    * RebootIfNeeded: Patch Manager tries to reboot the managed node if it
+	//    installed any patches, or if any patches are detected with a status of
+	//    InstalledPendingReboot.
 	//
 	//    * NoReboot: Patch Manager attempts to install missing packages without
 	//    trying to reboot the system. Patches installed with this option are assigned
@@ -35132,10 +35695,10 @@ type InstancePatchState struct {
 	//    until a reboot is performed.
 	RebootOption *string `type:"string" enum:"RebootOption"`
 
-	// The number of instances where patches that are specified as Security in a
-	// patch advisory aren't installed. These patches might be missing, have failed
-	// installation, were rejected, or were installed but awaiting a required instance
-	// reboot. The status of these instances is NON_COMPLIANT.
+	// The number of patches per node that are specified as Security in a patch
+	// advisory aren't installed. These patches might be missing, have failed installation,
+	// were rejected, or were installed but awaiting a required managed node reboot.
+	// The status of these managed nodes is NON_COMPLIANT.
 	SecurityNonCompliantCount *int64 `type:"integer"`
 
 	// The ID of the patch baseline snapshot used during the patching operation
@@ -35301,14 +35864,14 @@ func (s *InstancePatchState) SetUnreportedNotApplicableCount(v int64) *InstanceP
 // Defines a filter used in DescribeInstancePatchStatesForPatchGroup to scope
 // down the information returned by the API.
 //
-// Example: To filter for all instances in a patch group having more than three
-// patches with a FailedCount status, use the following for the filter:
+// Example: To filter for all managed nodes in a patch group having more than
+// three patches with a FailedCount status, use the following for the filter:
 //
-//    * Value for Key: FailedCount
+//   - Value for Key: FailedCount
 //
-//    * Value for Type: GreaterThan
+//   - Value for Type: GreaterThan
 //
-//    * Value for Values: 3
+//   - Value for Values: 3
 type InstancePatchStateFilter struct {
 	_ struct{} `type:"structure"`
 
@@ -36898,16 +37461,16 @@ func (s *InvalidFilterValue) RequestID() string {
 
 // The following problems can cause this exception:
 //
-//    * You don't have permission to access the instance.
+//   - You don't have permission to access the managed node.
 //
-//    * Amazon Web Services Systems Manager Agent(SSM Agent) isn't running.
-//    Verify that SSM Agent is running.
+//   - Amazon Web Services Systems Manager Agent(SSM Agent) isn't running.
+//     Verify that SSM Agent is running.
 //
-//    * SSM Agent isn't registered with the SSM endpoint. Try reinstalling SSM
-//    Agent.
+//   - SSM Agent isn't registered with the SSM endpoint. Try reinstalling SSM
+//     Agent.
 //
-//    * The instance isn't in valid state. Valid states are: Running, Pending,
-//    Stopped, and Stopping. Invalid states are: Shutting-down and Terminated.
+//   - The managed node isn't in valid state. Valid states are: Running, Pending,
+//     Stopped, and Stopping. Invalid states are: Shutting-down and Terminated.
 type InvalidInstanceId struct {
 	_            struct{}                  `type:"structure"`
 	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
@@ -38070,7 +38633,7 @@ func (s *InvalidResourceId) RequestID() string {
 }
 
 // The resource type isn't valid. For example, if you are attempting to tag
-// an instance, the instance must be a registered, managed instance.
+// an EC2 instance, the instance must be a registered managed node.
 type InvalidResourceType struct {
 	_            struct{}                  `type:"structure"`
 	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
@@ -38330,6 +38893,70 @@ func (s *InvalidSchedule) RequestID() string {
 	return s.RespMetadata.RequestID
 }
 
+// The specified tag key or value isn't valid.
+type InvalidTag struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s InvalidTag) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s InvalidTag) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidTag(v protocol.ResponseMetadata) error {
+	return &InvalidTag{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *InvalidTag) Code() string {
+	return "InvalidTag"
+}
+
+// Message returns the exception's message.
+func (s *InvalidTag) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *InvalidTag) OrigErr() error {
+	return nil
+}
+
+func (s *InvalidTag) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *InvalidTag) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *InvalidTag) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
 // The target isn't valid or doesn't exist. It might not be configured for Systems
 // Manager or you might not have permission to perform the operation.
 type InvalidTarget struct {
@@ -38392,6 +39019,70 @@ func (s *InvalidTarget) StatusCode() int {
 
 // RequestID returns the service's response RequestID for request.
 func (s *InvalidTarget) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// TargetMap parameter isn't valid.
+type InvalidTargetMaps struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s InvalidTargetMaps) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s InvalidTargetMaps) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidTargetMaps(v protocol.ResponseMetadata) error {
+	return &InvalidTargetMaps{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *InvalidTargetMaps) Code() string {
+	return "InvalidTargetMaps"
+}
+
+// Message returns the exception's message.
+func (s *InvalidTargetMaps) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *InvalidTargetMaps) OrigErr() error {
+	return nil
+}
+
+func (s *InvalidTargetMaps) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *InvalidTargetMaps) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *InvalidTargetMaps) RequestID() string {
 	return s.RespMetadata.RequestID
 }
 
@@ -38820,8 +39511,8 @@ type InventoryFilter struct {
 	// in the Amazon Web Services Systems Manager User Guide.
 	Type *string `type:"string" enum:"InventoryQueryOperatorType"`
 
-	// Inventory filter values. Example: inventory filter where instance IDs are
-	// specified as values Key=AWS:InstanceInformation.InstanceId,Values= i-a12b3c4d5e6g,
+	// Inventory filter values. Example: inventory filter where managed node IDs
+	// are specified as values Key=AWS:InstanceInformation.InstanceId,Values= i-a12b3c4d5e6g,
 	// i-1a2b3c4d5e6,Type=Equal.
 	//
 	// Values is a required field
@@ -38967,8 +39658,7 @@ func (s *InventoryGroup) SetName(v string) *InventoryGroup {
 	return s
 }
 
-// Information collected from managed instances based on your inventory policy
-// document
+// Information collected from managed nodes based on your inventory policy document
 type InventoryItem struct {
 	_ struct{} `type:"structure"`
 
@@ -39203,9 +39893,9 @@ type InventoryResultEntity struct {
 	// The data section in the inventory result entity JSON.
 	Data map[string]*InventoryResultItem `type:"map"`
 
-	// ID of the inventory result entity. For example, for managed instance inventory
-	// the result will be the managed instance ID. For EC2 instance inventory, the
-	// result will be the instance ID.
+	// ID of the inventory result entity. For example, for managed node inventory
+	// the result will be the managed node ID. For EC2 instance inventory, the result
+	// will be the instance ID.
 	Id *string `type:"string"`
 }
 
@@ -39317,8 +40007,8 @@ func (s *InventoryResultItem) SetTypeName(v string) *InventoryResultItem {
 	return s
 }
 
-// The command ID and instance ID you specified didn't match any invocations.
-// Verify the command ID and the instance ID and try again.
+// The command ID and managed node ID you specified didn't match any invocations.
+// Verify the command ID and the managed node ID and try again.
 type InvocationDoesNotExist struct {
 	_            struct{}                  `type:"structure"`
 	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
@@ -39751,8 +40441,8 @@ type ListAssociationsInput struct {
 	//
 	// Filtering associations using the InstanceID attribute only returns legacy
 	// associations created using the InstanceID attribute. Associations targeting
-	// the instance that are part of the Target Attributes ResourceGroup or Tags
-	// aren't returned.
+	// the managed node that are part of the Target Attributes ResourceGroup or
+	// Tags aren't returned.
 	AssociationFilterList []*AssociationFilter `min:"1" type:"list"`
 
 	// The maximum number of items to return for this call. The call also returns
@@ -39882,7 +40572,7 @@ type ListCommandInvocationsInput struct {
 	// of results.
 	Filters []*CommandFilter `min:"1" type:"list"`
 
-	// (Optional) The command execution details for a specific instance ID.
+	// (Optional) The command execution details for a specific managed node ID.
 	InstanceId *string `type:"string"`
 
 	// (Optional) The maximum number of items to return for this call. The call
@@ -40029,10 +40719,11 @@ type ListCommandsInput struct {
 	// of results.
 	Filters []*CommandFilter `min:"1" type:"list"`
 
-	// (Optional) Lists commands issued against this instance ID.
+	// (Optional) Lists commands issued against this managed node ID.
 	//
-	// You can't specify an instance ID in the same command that you specify Status
-	// = Pending. This is because the command hasn't reached the instance yet.
+	// You can't specify a managed node ID in the same command that you specify
+	// Status = Pending. This is because the command hasn't reached the managed
+	// node yet.
 	InstanceId *string `type:"string"`
 
 	// (Optional) The maximum number of items to return for this call. The call
@@ -40850,7 +41541,7 @@ type ListInventoryEntriesInput struct {
 	// One or more filters. Use a filter to return a more specific list of results.
 	Filters []*InventoryFilter `min:"1" type:"list"`
 
-	// The instance ID for which you want inventory information.
+	// The managed node ID for which you want inventory information.
 	//
 	// InstanceId is a required field
 	InstanceId *string `type:"string" required:"true"`
@@ -40956,20 +41647,20 @@ func (s *ListInventoryEntriesInput) SetTypeName(v string) *ListInventoryEntriesI
 type ListInventoryEntriesOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The time that inventory information was collected for the instance(s).
+	// The time that inventory information was collected for the managed node(s).
 	CaptureTime *string `type:"string"`
 
-	// A list of inventory items on the instance(s).
+	// A list of inventory items on the managed node(s).
 	Entries []map[string]*string `type:"list"`
 
-	// The instance ID targeted by the request to query inventory information.
+	// The managed node ID targeted by the request to query inventory information.
 	InstanceId *string `type:"string"`
 
 	// The token to use when requesting the next set of items. If there are no additional
 	// items to return, the string is empty.
 	NextToken *string `type:"string"`
 
-	// The inventory schema version used by the instance(s).
+	// The inventory schema version used by the managed node(s).
 	SchemaVersion *string `type:"string"`
 
 	// The type of inventory item returned by the request.
@@ -41469,8 +42160,8 @@ type ListResourceComplianceSummariesOutput struct {
 	// next set of results.
 	NextToken *string `type:"string"`
 
-	// A summary count for specified or targeted managed instances. Summary count
-	// includes information about compliant and non-compliant State Manager associations,
+	// A summary count for specified or targeted managed nodes. Summary count includes
+	// information about compliant and non-compliant State Manager associations,
 	// patch status, or custom items according to the filter criteria that you specify.
 	ResourceComplianceSummaryItems []*ResourceComplianceSummaryItem `type:"list"`
 }
@@ -41708,7 +42399,7 @@ func (s *ListTagsForResourceOutput) SetTagList(v []*Tag) *ListTagsForResourceOut
 }
 
 // Information about an Amazon Simple Storage Service (Amazon S3) bucket to
-// write instance-level logs to.
+// write managed node-level logs to.
 //
 // LoggingInfo has been deprecated. To specify an Amazon Simple Storage Service
 // (Amazon S3) bucket to contain logs, instead use the OutputS3BucketName and
@@ -41718,7 +42409,7 @@ func (s *ListTagsForResourceOutput) SetTagList(v []*Tag) *ListTagsForResourceOut
 type LoggingInfo struct {
 	_ struct{} `type:"structure"`
 
-	// The name of an S3 bucket where execution logs are stored .
+	// The name of an S3 bucket where execution logs are stored.
 	//
 	// S3BucketName is a required field
 	S3BucketName *string `min:"3" type:"string" required:"true"`
@@ -41943,6 +42634,9 @@ func (s *MaintenanceWindowExecution) SetWindowId(v string) *MaintenanceWindowExe
 type MaintenanceWindowExecutionTaskIdentity struct {
 	_ struct{} `type:"structure"`
 
+	// The details for the CloudWatch alarm applied to your maintenance window task.
+	AlarmConfiguration *AlarmConfiguration `type:"structure"`
+
 	// The time the task execution finished.
 	EndTime *time.Time `type:"timestamp"`
 
@@ -41965,6 +42659,9 @@ type MaintenanceWindowExecutionTaskIdentity struct {
 	// The type of task that ran.
 	TaskType *string `type:"string" enum:"MaintenanceWindowTaskType"`
 
+	// The CloudWatch alarm that was invoked by the maintenance window task.
+	TriggeredAlarms []*AlarmStateInformation `min:"1" type:"list"`
+
 	// The ID of the maintenance window execution that ran the task.
 	WindowExecutionId *string `min:"36" type:"string"`
 }
@@ -41985,6 +42682,12 @@ func (s MaintenanceWindowExecutionTaskIdentity) String() string {
 // value will be replaced with "sensitive".
 func (s MaintenanceWindowExecutionTaskIdentity) GoString() string {
 	return s.String()
+}
+
+// SetAlarmConfiguration sets the AlarmConfiguration field's value.
+func (s *MaintenanceWindowExecutionTaskIdentity) SetAlarmConfiguration(v *AlarmConfiguration) *MaintenanceWindowExecutionTaskIdentity {
+	s.AlarmConfiguration = v
+	return s
 }
 
 // SetEndTime sets the EndTime field's value.
@@ -42026,6 +42729,12 @@ func (s *MaintenanceWindowExecutionTaskIdentity) SetTaskExecutionId(v string) *M
 // SetTaskType sets the TaskType field's value.
 func (s *MaintenanceWindowExecutionTaskIdentity) SetTaskType(v string) *MaintenanceWindowExecutionTaskIdentity {
 	s.TaskType = &v
+	return s
+}
+
+// SetTriggeredAlarms sets the TriggeredAlarms field's value.
+func (s *MaintenanceWindowExecutionTaskIdentity) SetTriggeredAlarms(v []*AlarmStateInformation) *MaintenanceWindowExecutionTaskIdentity {
+	s.TriggeredAlarms = v
 	return s
 }
 
@@ -42184,17 +42893,17 @@ func (s *MaintenanceWindowExecutionTaskInvocationIdentity) SetWindowTargetId(v s
 // that includes the filter. API operations that use MaintenanceWindowFilter>
 // include the following:
 //
-//    * DescribeMaintenanceWindowExecutions
+//   - DescribeMaintenanceWindowExecutions
 //
-//    * DescribeMaintenanceWindowExecutionTaskInvocations
+//   - DescribeMaintenanceWindowExecutionTaskInvocations
 //
-//    * DescribeMaintenanceWindowExecutionTasks
+//   - DescribeMaintenanceWindowExecutionTasks
 //
-//    * DescribeMaintenanceWindows
+//   - DescribeMaintenanceWindows
 //
-//    * DescribeMaintenanceWindowTargets
+//   - DescribeMaintenanceWindowTargets
 //
-//    * DescribeMaintenanceWindowTasks
+//   - DescribeMaintenanceWindowTasks
 type MaintenanceWindowFilter struct {
 	_ struct{} `type:"structure"`
 
@@ -42573,7 +43282,7 @@ type MaintenanceWindowRunCommandParameters struct {
 	DocumentVersion *string `type:"string"`
 
 	// Configurations for sending notifications about command status changes on
-	// a per-instance basis.
+	// a per-managed node basis.
 	NotificationConfig *NotificationConfig `type:"structure"`
 
 	// The name of the Amazon Simple Storage Service (Amazon S3) bucket.
@@ -42583,7 +43292,11 @@ type MaintenanceWindowRunCommandParameters struct {
 	OutputS3KeyPrefix *string `type:"string"`
 
 	// The parameters for the RUN_COMMAND task execution.
-	Parameters map[string][]*string `type:"map"`
+	//
+	// Parameters is a sensitive parameter and its value will be
+	// replaced with "sensitive" in string returned by MaintenanceWindowRunCommandParameters's
+	// String and GoString methods.
+	Parameters map[string][]*string `type:"map" sensitive:"true"`
 
 	// The Amazon Resource Name (ARN) of the Identity and Access Management (IAM)
 	// service role to use to publish Amazon Simple Notification Service (Amazon
@@ -42801,9 +43514,9 @@ type MaintenanceWindowTarget struct {
 	// The type of target that is being registered with the maintenance window.
 	ResourceType *string `type:"string" enum:"MaintenanceWindowResourceType"`
 
-	// The targets, either instances or tags.
+	// The targets, either managed nodes or tags.
 	//
-	// Specify instances using the following format:
+	// Specify managed nodes using the following format:
 	//
 	// Key=instanceids,Values=<instanceid1>,<instanceid2>
 	//
@@ -42883,6 +43596,9 @@ func (s *MaintenanceWindowTarget) SetWindowTargetId(v string) *MaintenanceWindow
 type MaintenanceWindowTask struct {
 	_ struct{} `type:"structure"`
 
+	// The details for the CloudWatch alarm applied to your maintenance window task.
+	AlarmConfiguration *AlarmConfiguration `type:"structure"`
+
 	// The specification for whether tasks should continue to run after the cutoff
 	// time specified in the maintenance windows is reached.
 	CutoffBehavior *string `type:"string" enum:"MaintenanceWindowTaskCutoffBehavior"`
@@ -42904,9 +43620,25 @@ type MaintenanceWindowTask struct {
 	LoggingInfo *LoggingInfo `type:"structure"`
 
 	// The maximum number of targets this task can be run for, in parallel.
+	//
+	// Although this element is listed as "Required: No", a value can be omitted
+	// only when you are registering or updating a targetless task (https://docs.aws.amazon.com/systems-manager/latest/userguide/maintenance-windows-targetless-tasks.html)
+	// You must provide a value in all other cases.
+	//
+	// For maintenance window tasks without a target specified, you can't supply
+	// a value for this option. Instead, the system inserts a placeholder value
+	// of 1. This value doesn't affect the running of your task.
 	MaxConcurrency *string `min:"1" type:"string"`
 
 	// The maximum number of errors allowed before this task stops being scheduled.
+	//
+	// Although this element is listed as "Required: No", a value can be omitted
+	// only when you are registering or updating a targetless task (https://docs.aws.amazon.com/systems-manager/latest/userguide/maintenance-windows-targetless-tasks.html)
+	// You must provide a value in all other cases.
+	//
+	// For maintenance window tasks without a target specified, you can't supply
+	// a value for this option. Instead, the system inserts a placeholder value
+	// of 1. This value doesn't affect the running of your task.
 	MaxErrors *string `min:"1" type:"string"`
 
 	// The task name.
@@ -42922,8 +43654,9 @@ type MaintenanceWindowTask struct {
 	// SNS) notifications for maintenance window Run Command tasks.
 	ServiceRoleArn *string `type:"string"`
 
-	// The targets (either instances or tags). Instances are specified using Key=instanceids,Values=<instanceid1>,<instanceid2>.
-	// Tags are specified using Key=<tag name>,Values=<tag value>.
+	// The targets (either managed nodes or tags). Managed nodes are specified using
+	// Key=instanceids,Values=<instanceid1>,<instanceid2>. Tags are specified using
+	// Key=<tag name>,Values=<tag value>.
 	Targets []*Target `type:"list"`
 
 	// The resource that the task uses during execution. For RUN_COMMAND and AUTOMATION
@@ -42970,6 +43703,12 @@ func (s MaintenanceWindowTask) String() string {
 // value will be replaced with "sensitive".
 func (s MaintenanceWindowTask) GoString() string {
 	return s.String()
+}
+
+// SetAlarmConfiguration sets the AlarmConfiguration field's value.
+func (s *MaintenanceWindowTask) SetAlarmConfiguration(v *AlarmConfiguration) *MaintenanceWindowTask {
+	s.AlarmConfiguration = v
+	return s
 }
 
 // SetCutoffBehavior sets the CutoffBehavior field's value.
@@ -43461,14 +44200,14 @@ type NotificationConfig struct {
 	// about these events, see Monitoring Systems Manager status changes using Amazon
 	// SNS notifications (https://docs.aws.amazon.com/systems-manager/latest/userguide/monitoring-sns-notifications.html)
 	// in the Amazon Web Services Systems Manager User Guide.
-	NotificationEvents []*string `type:"list"`
+	NotificationEvents []*string `type:"list" enum:"NotificationEvent"`
 
 	// The type of notification.
 	//
 	//    * Command: Receive notification when the status of a command changes.
 	//
-	//    * Invocation: For commands sent to multiple instances, receive notification
-	//    on a per-instance basis when the status of a command changes.
+	//    * Invocation: For commands sent to multiple managed nodes, receive notification
+	//    on a per-node basis when the status of a command changes.
 	NotificationType *string `type:"string" enum:"NotificationType"`
 }
 
@@ -45814,9 +46553,15 @@ type Parameter struct {
 
 	// The type of parameter. Valid values include the following: String, StringList,
 	// and SecureString.
+	//
+	// If type is StringList, the system returns a comma-separated string with no
+	// spaces between commas in the Value field.
 	Type *string `type:"string" enum:"ParameterType"`
 
 	// The parameter value.
+	//
+	// If type is StringList, the system returns a comma-separated string with no
+	// spaces between commas in the Value field.
 	//
 	// Value is a sensitive parameter and its value will be
 	// replaced with "sensitive" in string returned by Parameter's
@@ -46127,7 +46872,7 @@ type ParameterInlinePolicy struct {
 	// The JSON text of the policy.
 	PolicyText *string `type:"string"`
 
-	// The type of policy. Parameter Store, a capablility of Amazon Web Services
+	// The type of policy. Parameter Store, a capability of Amazon Web Services
 	// Systems Manager, supports the following policy types: Expiration, ExpirationNotification,
 	// and NoChangeNotification.
 	PolicyType *string `type:"string"`
@@ -46583,7 +47328,7 @@ type ParameterStringFilter struct {
 	// API operations. However, not all of the pattern values listed for Key can
 	// be used with both operations.
 	//
-	// For DescribeActions, all of the listed patterns are valid except Label.
+	// For DescribeParameters, all of the listed patterns are valid except Label.
 	//
 	// For GetParametersByPath, the following patterns listed for Key aren't valid:
 	// tag, DataType, Name, Path, and Tier.
@@ -46865,20 +47610,20 @@ type Patch struct {
 	_ struct{} `type:"structure"`
 
 	// The Advisory ID of the patch. For example, RHSA-2020:3779. Applies to Linux-based
-	// instances only.
+	// managed nodes only.
 	AdvisoryIds []*string `type:"list"`
 
 	// The architecture of the patch. For example, in example-pkg-0.710.10-2.7.abcd.x86_64,
-	// the architecture is indicated by x86_64. Applies to Linux-based instances
+	// the architecture is indicated by x86_64. Applies to Linux-based managed nodes
 	// only.
 	Arch *string `type:"string"`
 
 	// The Bugzilla ID of the patch. For example, 1600646. Applies to Linux-based
-	// instances only.
+	// managed nodes only.
 	BugzillaIds []*string `type:"list"`
 
 	// The Common Vulnerabilities and Exposures (CVE) ID of the patch. For example,
-	// CVE-2011-3192. Applies to Linux-based instances only.
+	// CVE-2011-3192. Applies to Linux-based managed nodes only.
 	CVEIds []*string `type:"list"`
 
 	// The classification of the patch. For example, SecurityUpdates, Updates, or
@@ -46892,7 +47637,7 @@ type Patch struct {
 	Description *string `type:"string"`
 
 	// The epoch of the patch. For example in pkg-example-EE-20180914-2.2.amzn1.noarch,
-	// the epoch value is 20180914-2. Applies to Linux-based instances only.
+	// the epoch value is 20180914-2. Applies to Linux-based managed nodes only.
 	Epoch *int64 `type:"integer"`
 
 	// The ID of the patch. Applies to Windows patches only.
@@ -46915,7 +47660,7 @@ type Patch struct {
 	// to Windows patches only.
 	MsrcSeverity *string `type:"string"`
 
-	// The name of the patch. Applies to Linux-based instances only.
+	// The name of the patch. Applies to Linux-based managed nodes only.
 	Name *string `type:"string"`
 
 	// The specific product the patch is applicable for. For example, WindowsServer2016
@@ -46927,7 +47672,7 @@ type Patch struct {
 	ProductFamily *string `type:"string"`
 
 	// The particular release of a patch. For example, in pkg-example-EE-20180914-2.2.amzn1.noarch,
-	// the release is 2.amaz1. Applies to Linux-based instances only.
+	// the release is 2.amaz1. Applies to Linux-based managed nodes only.
 	Release *string `type:"string"`
 
 	// The date the patch was released.
@@ -46935,7 +47680,7 @@ type Patch struct {
 
 	// The source patch repository for the operating system and version, such as
 	// trusty-security for Ubuntu Server 14.04 LTE and focal-security for Ubuntu
-	// Server 20.04 LTE. Applies to Linux-based instances only.
+	// Server 20.04 LTE. Applies to Linux-based managed nodes only.
 	Repository *string `type:"string"`
 
 	// The severity level of the patch. For example, CRITICAL or MODERATE.
@@ -46948,7 +47693,8 @@ type Patch struct {
 	Vendor *string `type:"string"`
 
 	// The version number of the patch. For example, in example-pkg-1.710.10-2.7.abcd.x86_64,
-	// the version number is indicated by -1. Applies to Linux-based instances only.
+	// the version number is indicated by -1. Applies to Linux-based managed nodes
+	// only.
 	Version *string `type:"string"`
 }
 
@@ -47179,8 +47925,8 @@ func (s *PatchBaselineIdentity) SetOperatingSystem(v string) *PatchBaselineIdent
 	return s
 }
 
-// Information about the state of a patch on a particular instance as it relates
-// to the patch baseline used to patch the instance.
+// Information about the state of a patch on a particular managed node as it
+// relates to the patch baseline used to patch the node.
 type PatchComplianceData struct {
 	_ struct{} `type:"structure"`
 
@@ -47193,7 +47939,7 @@ type PatchComplianceData struct {
 	// Classification is a required field
 	Classification *string `type:"string" required:"true"`
 
-	// The date/time the patch was installed on the instance. Not all operating
+	// The date/time the patch was installed on the managed node. Not all operating
 	// systems provide this level of information.
 	//
 	// InstalledTime is a required field
@@ -47204,12 +47950,12 @@ type PatchComplianceData struct {
 	// KBId is a required field
 	KBId *string `type:"string" required:"true"`
 
-	// The severity of the patchsuch as Critical, Important, and Moderate.
+	// The severity of the patch such as Critical, Important, and Moderate.
 	//
 	// Severity is a required field
 	Severity *string `type:"string" required:"true"`
 
-	// The state of the patch on the instance, such as INSTALLED or FAILED.
+	// The state of the patch on the managed node, such as INSTALLED or FAILED.
 	//
 	// For descriptions of each patch state, see About patch compliance (https://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-compliance-about.html#sysman-compliance-monitor-patch)
 	// in the Amazon Web Services Systems Manager User Guide.
@@ -47471,13 +48217,13 @@ func (s *PatchGroupPatchBaselineMapping) SetPatchGroup(v string) *PatchGroupPatc
 // on the API operation that includes the filter. Patch Manager API operations
 // that use PatchOrchestratorFilter include the following:
 //
-//    * DescribeAvailablePatches
+//   - DescribeAvailablePatches
 //
-//    * DescribeInstancePatches
+//   - DescribeInstancePatches
 //
-//    * DescribePatchBaselines
+//   - DescribePatchBaselines
 //
-//    * DescribePatchGroups
+//   - DescribePatchGroups
 type PatchOrchestratorFilter struct {
 	_ struct{} `type:"structure"`
 
@@ -47551,9 +48297,9 @@ type PatchRule struct {
 	// A compliance severity level for all approved patches in a patch baseline.
 	ComplianceLevel *string `type:"string" enum:"PatchComplianceLevel"`
 
-	// For instances identified by the approval rule filters, enables a patch baseline
-	// to apply non-security updates available in the specified repository. The
-	// default value is false. Applies to Linux instances only.
+	// For managed nodes identified by the approval rule filters, enables a patch
+	// baseline to apply non-security updates available in the specified repository.
+	// The default value is false. Applies to Linux managed nodes only.
 	EnableNonSecurity *bool `type:"boolean"`
 
 	// The patch filter group that defines the criteria for the rule.
@@ -47688,8 +48434,9 @@ func (s *PatchRuleGroup) SetPatchRules(v []*PatchRule) *PatchRuleGroup {
 	return s
 }
 
-// Information about the patches to use to update the instances, including target
-// operating systems and source repository. Applies to Linux instances only.
+// Information about the patches to use to update the managed nodes, including
+// target operating systems and source repository. Applies to Linux managed
+// nodes only.
 type PatchSource struct {
 	_ struct{} `type:"structure"`
 
@@ -48007,8 +48754,7 @@ type PutComplianceItemsInput struct {
 	// Items is a required field
 	Items []*ComplianceItemEntry `type:"list" required:"true"`
 
-	// Specify an ID for this resource. For a managed instance, this is the instance
-	// ID.
+	// Specify an ID for this resource. For a managed node, this is the node ID.
 	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
@@ -48166,12 +48912,12 @@ func (s PutComplianceItemsOutput) GoString() string {
 type PutInventoryInput struct {
 	_ struct{} `type:"structure"`
 
-	// An instance ID where you want to add or update inventory items.
+	// An managed node ID where you want to add or update inventory items.
 	//
 	// InstanceId is a required field
 	InstanceId *string `type:"string" required:"true"`
 
-	// The inventory items that you want to add or update on instances.
+	// The inventory items that you want to add or update on managed nodes.
 	//
 	// Items is a required field
 	Items []*InventoryItem `min:"1" type:"list" required:"true"`
@@ -48284,6 +49030,8 @@ type PutParameterInput struct {
 	//
 	//    * aws:ec2:image
 	//
+	//    * aws:ssm:integration
+	//
 	// When you create a String parameter and specify aws:ec2:image, Amazon Web
 	// Services Systems Manager validates the parameter value is in the required
 	// format, such as ami-12345abcdeEXAMPLE, and that the specified AMI is available
@@ -48340,13 +49088,10 @@ type PutParameterInput struct {
 	// Systems Manager parameters (https://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-paramstore-su-create.html)
 	// in the Amazon Web Services Systems Manager User Guide.
 	//
-	// The maximum length constraint listed below includes capacity for additional
-	// system attributes that aren't part of the name. The maximum length for a
-	// parameter name, including the full length of the parameter ARN, is 1011 characters.
-	// For example, the length of the following parameter name is 65 characters,
-	// not 20 characters:
-	//
-	// arn:aws:ssm:us-east-2:111122223333:parameter/ExampleParameterName
+	// The maximum length constraint of 2048 characters listed below includes 1037
+	// characters reserved for internal use by Systems Manager. The maximum length
+	// for a parameter name that you create is 1011 characters. This includes the
+	// characters in the ARN that precede the name you specify, such as arn:aws:ssm:us-east-2:111122223333:parameter/.
 	//
 	// Name is a required field
 	Name *string `min:"1" type:"string" required:"true"`
@@ -48364,13 +49109,13 @@ type PutParameterInput struct {
 	// the expiration date and time. When the expiration time is reached, Parameter
 	// Store deletes the parameter.
 	//
-	// ExpirationNotification: This policy triggers an event in Amazon CloudWatch
+	// ExpirationNotification: This policy initiates an event in Amazon CloudWatch
 	// Events that notifies you about the expiration. By using this policy, you
 	// can receive notification before or after the expiration time is reached,
 	// in units of days or hours.
 	//
-	// NoChangeNotification: This policy triggers a CloudWatch Events event if a
-	// parameter hasn't been modified for a specified period of time. This policy
+	// NoChangeNotification: This policy initiates a CloudWatch Events event if
+	// a parameter hasn't been modified for a specified period of time. This policy
 	// type is useful when, for example, a secret needs to be changed within a period
 	// of time, but it hasn't been changed.
 	//
@@ -48866,35 +49611,35 @@ type RegisterTargetWithMaintenanceWindowInput struct {
 	ResourceType *string `type:"string" required:"true" enum:"MaintenanceWindowResourceType"`
 
 	// The targets to register with the maintenance window. In other words, the
-	// instances to run commands on when the maintenance window runs.
+	// managed nodes to run commands on when the maintenance window runs.
 	//
 	// If a single maintenance window task is registered with multiple targets,
 	// its task invocations occur sequentially and not in parallel. If your task
 	// must run on multiple targets at the same time, register a task for each target
 	// individually and assign each task the same priority level.
 	//
-	// You can specify targets using instance IDs, resource group names, or tags
-	// that have been applied to instances.
+	// You can specify targets using managed node IDs, resource group names, or
+	// tags that have been applied to managed nodes.
 	//
-	// Example 1: Specify instance IDs
+	// Example 1: Specify managed node IDs
 	//
-	// Key=InstanceIds,Values=instance-id-1,instance-id-2,instance-id-3
+	// Key=InstanceIds,Values=<instance-id-1>,<instance-id-2>,<instance-id-3>
 	//
-	// Example 2: Use tag key-pairs applied to instances
+	// Example 2: Use tag key-pairs applied to managed nodes
 	//
-	// Key=tag:my-tag-key,Values=my-tag-value-1,my-tag-value-2
+	// Key=tag:<my-tag-key>,Values=<my-tag-value-1>,<my-tag-value-2>
 	//
-	// Example 3: Use tag-keys applied to instances
+	// Example 3: Use tag-keys applied to managed nodes
 	//
-	// Key=tag-key,Values=my-tag-key-1,my-tag-key-2
+	// Key=tag-key,Values=<my-tag-key-1>,<my-tag-key-2>
 	//
 	// Example 4: Use resource group names
 	//
-	// Key=resource-groups:Name,Values=resource-group-name
+	// Key=resource-groups:Name,Values=<resource-group-name>
 	//
 	// Example 5: Use filters for resource group types
 	//
-	// Key=resource-groups:ResourceTypeFilters,Values=resource-type-1,resource-type-2
+	// Key=resource-groups:ResourceTypeFilters,Values=<resource-type-1>,<resource-type-2>
 	//
 	// For Key=resource-groups:ResourceTypeFilters, specify resource types in the
 	// following format
@@ -49053,6 +49798,9 @@ func (s *RegisterTargetWithMaintenanceWindowOutput) SetWindowTargetId(v string) 
 type RegisterTaskWithMaintenanceWindowInput struct {
 	_ struct{} `type:"structure"`
 
+	// The CloudWatch alarm you want to apply to your maintenance window task.
+	AlarmConfiguration *AlarmConfiguration `type:"structure"`
+
 	// User-provided idempotency token.
 	ClientToken *string `min:"1" type:"string" idempotencyToken:"true"`
 
@@ -49079,7 +49827,7 @@ type RegisterTaskWithMaintenanceWindowInput struct {
 	Description *string `min:"1" type:"string" sensitive:"true"`
 
 	// A structure containing information about an Amazon Simple Storage Service
-	// (Amazon S3) bucket to write instance-level logs to.
+	// (Amazon S3) bucket to write managed node-level logs to.
 	//
 	// LoggingInfo has been deprecated. To specify an Amazon Simple Storage Service
 	// (Amazon S3) bucket to contain logs, instead use the OutputS3BucketName and
@@ -49088,7 +49836,11 @@ type RegisterTaskWithMaintenanceWindowInput struct {
 	// for the supported maintenance window task types, see MaintenanceWindowTaskInvocationParameters.
 	LoggingInfo *LoggingInfo `type:"structure"`
 
-	// The maximum number of targets this task can be run for in parallel.
+	// The maximum number of targets this task can be run for, in parallel.
+	//
+	// Although this element is listed as "Required: No", a value can be omitted
+	// only when you are registering or updating a targetless task (https://docs.aws.amazon.com/systems-manager/latest/userguide/maintenance-windows-targetless-tasks.html)
+	// You must provide a value in all other cases.
 	//
 	// For maintenance window tasks without a target specified, you can't supply
 	// a value for this option. Instead, the system inserts a placeholder value
@@ -49096,6 +49848,10 @@ type RegisterTaskWithMaintenanceWindowInput struct {
 	MaxConcurrency *string `min:"1" type:"string"`
 
 	// The maximum number of errors allowed before this task stops being scheduled.
+	//
+	// Although this element is listed as "Required: No", a value can be omitted
+	// only when you are registering or updating a targetless task (https://docs.aws.amazon.com/systems-manager/latest/userguide/maintenance-windows-targetless-tasks.html)
+	// You must provide a value in all other cases.
 	//
 	// For maintenance window tasks without a target specified, you can't supply
 	// a value for this option. Instead, the system inserts a placeholder value
@@ -49125,7 +49881,7 @@ type RegisterTaskWithMaintenanceWindowInput struct {
 	//    window tasks? (https://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-maintenance-permissions.html#maintenance-window-tasks-service-role)
 	ServiceRoleArn *string `type:"string"`
 
-	// The targets (either instances or maintenance window targets).
+	// The targets (either managed nodes or maintenance window targets).
 	//
 	// One or more targets must be specified for maintenance window Run Command-type
 	// tasks. Depending on the task, targets are optional for other maintenance
@@ -49134,7 +49890,7 @@ type RegisterTaskWithMaintenanceWindowInput struct {
 	// window tasks without targets (https://docs.aws.amazon.com/systems-manager/latest/userguide/maintenance-windows-targetless-tasks.html)
 	// in the Amazon Web Services Systems Manager User Guide.
 	//
-	// Specify instances using the following format:
+	// Specify managed nodes using the following format:
 	//
 	// Key=InstanceIds,Values=<instance-id-1>,<instance-id-2>
 	//
@@ -49226,6 +49982,11 @@ func (s *RegisterTaskWithMaintenanceWindowInput) Validate() error {
 	if s.WindowId != nil && len(*s.WindowId) < 20 {
 		invalidParams.Add(request.NewErrParamMinLen("WindowId", 20))
 	}
+	if s.AlarmConfiguration != nil {
+		if err := s.AlarmConfiguration.Validate(); err != nil {
+			invalidParams.AddNested("AlarmConfiguration", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.LoggingInfo != nil {
 		if err := s.LoggingInfo.Validate(); err != nil {
 			invalidParams.AddNested("LoggingInfo", err.(request.ErrInvalidParams))
@@ -49251,6 +50012,12 @@ func (s *RegisterTaskWithMaintenanceWindowInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetAlarmConfiguration sets the AlarmConfiguration field's value.
+func (s *RegisterTaskWithMaintenanceWindowInput) SetAlarmConfiguration(v *AlarmConfiguration) *RegisterTaskWithMaintenanceWindowInput {
+	s.AlarmConfiguration = v
+	return s
 }
 
 // SetClientToken sets the ClientToken field's value.
@@ -49374,6 +50141,73 @@ func (s *RegisterTaskWithMaintenanceWindowOutput) SetWindowTaskId(v string) *Reg
 	return s
 }
 
+// Reserved for internal use.
+type RegistrationMetadataItem struct {
+	_ struct{} `type:"structure"`
+
+	// Reserved for internal use.
+	//
+	// Key is a required field
+	Key *string `min:"1" type:"string" required:"true"`
+
+	// Reserved for internal use.
+	//
+	// Value is a required field
+	Value *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s RegistrationMetadataItem) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s RegistrationMetadataItem) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *RegistrationMetadataItem) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "RegistrationMetadataItem"}
+	if s.Key == nil {
+		invalidParams.Add(request.NewErrParamRequired("Key"))
+	}
+	if s.Key != nil && len(*s.Key) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Key", 1))
+	}
+	if s.Value == nil {
+		invalidParams.Add(request.NewErrParamRequired("Value"))
+	}
+	if s.Value != nil && len(*s.Value) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Value", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetKey sets the Key field's value.
+func (s *RegistrationMetadataItem) SetKey(v string) *RegistrationMetadataItem {
+	s.Key = &v
+	return s
+}
+
+// SetValue sets the Value field's value.
+func (s *RegistrationMetadataItem) SetValue(v string) *RegistrationMetadataItem {
+	s.Value = &v
+	return s
+}
+
 // An OpsItems that shares something in common with the current OpsItem. For
 // example, related OpsItems can include OpsItems with similar error messages,
 // impacted resources, or statuses for the impacted resource.
@@ -49432,6 +50266,8 @@ type RemoveTagsFromResourceInput struct {
 	//
 	// MaintenanceWindow: mw-012345abcde
 	//
+	// Automation: example-c160-4567-8519-012345abcde
+	//
 	// PatchBaseline: pb-012345abcde
 	//
 	// OpsMetadata object: ResourceID for tagging is created from the Amazon Resource
@@ -49443,8 +50279,8 @@ type RemoveTagsFromResourceInput struct {
 	// For the Document and Parameter values, use the name of the resource.
 	//
 	// The ManagedInstance type for this API operation is only for on-premises managed
-	// instances. Specify the name of the managed instance in the following format:
-	// mi-ID_number. For example, mi-1a2b3c4d5e6f.
+	// nodes. Specify the name of the managed node in the following format: mi-ID_number.
+	// For example, mi-1a2b3c4d5e6f.
 	//
 	// ResourceId is a required field
 	ResourceId *string `type:"string" required:"true"`
@@ -49452,8 +50288,8 @@ type RemoveTagsFromResourceInput struct {
 	// The type of resource from which you want to remove a tag.
 	//
 	// The ManagedInstance type for this API operation is only for on-premises managed
-	// instances. Specify the name of the managed instance in the following format:
-	// mi-ID_number . For example, mi-1a2b3c4d5e6f.
+	// nodes. Specify the name of the managed node in the following format: mi-ID_number
+	// . For example, mi-1a2b3c4d5e6f.
 	//
 	// ResourceType is a required field
 	ResourceType *string `type:"string" required:"true" enum:"ResourceTypeForTagging"`
@@ -49554,11 +50390,13 @@ type ResetServiceSettingInput struct {
 	//
 	//    * /ssm/documents/console/public-sharing-permission
 	//
+	//    * /ssm/managed-instance/activation-tier
+	//
+	//    * /ssm/opsinsights/opscenter
+	//
 	//    * /ssm/parameter-store/default-parameter-tier
 	//
 	//    * /ssm/parameter-store/high-throughput-enabled
-	//
-	//    * /ssm/managed-instance/activation-tier
 	//
 	// SettingId is a required field
 	SettingId *string `min:"1" type:"string" required:"true"`
@@ -50968,8 +51806,8 @@ type ResumeSessionOutput struct {
 	// The ID of the session.
 	SessionId *string `min:"1" type:"string"`
 
-	// A URL back to SSM Agent on the instance that the Session Manager client uses
-	// to send commands and receive output from the instance. Format: wss://ssmmessages.region.amazonaws.com/v1/data-channel/session-id?stream=(input|output).
+	// A URL back to SSM Agent on the managed node that the Session Manager client
+	// uses to send commands and receive output from the managed node. Format: wss://ssmmessages.region.amazonaws.com/v1/data-channel/session-id?stream=(input|output).
 	//
 	// region represents the Region identifier for an Amazon Web Services Region
 	// supported by Amazon Web Services Systems Manager, such as us-east-2 for the
@@ -50981,7 +51819,7 @@ type ResumeSessionOutput struct {
 	StreamUrl *string `type:"string"`
 
 	// An encrypted token value containing session and caller information. Used
-	// to authenticate the connection to the instance.
+	// to authenticate the connection to the managed node.
 	TokenValue *string `type:"string"`
 }
 
@@ -51105,6 +51943,10 @@ type Runbook struct {
 	// accounts targeted by the current Runbook operation.
 	TargetLocations []*TargetLocation `min:"1" type:"list"`
 
+	// A key-value mapping of runbook parameters to target resources. Both Targets
+	// and TargetMaps can't be specified together.
+	TargetMaps []map[string][]*string `type:"list"`
+
 	// The name of the parameter used as the target resource for the rate-controlled
 	// runbook workflow. Required if you specify Targets.
 	TargetParameterName *string `min:"1" type:"string"`
@@ -51213,6 +52055,12 @@ func (s *Runbook) SetParameters(v map[string][]*string) *Runbook {
 // SetTargetLocations sets the TargetLocations field's value.
 func (s *Runbook) SetTargetLocations(v []*TargetLocation) *Runbook {
 	s.TargetLocations = v
+	return s
+}
+
+// SetTargetMaps sets the TargetMaps field's value.
+func (s *Runbook) SetTargetMaps(v []map[string][]*string) *Runbook {
+	s.TargetMaps = v
 	return s
 }
 
@@ -51495,6 +52343,9 @@ func (s SendAutomationSignalOutput) GoString() string {
 type SendCommandInput struct {
 	_ struct{} `type:"structure"`
 
+	// The CloudWatch alarm you want to apply to your command.
+	AlarmConfiguration *AlarmConfiguration `type:"structure"`
+
 	// Enables Amazon Web Services Systems Manager to send Run Command output to
 	// Amazon CloudWatch Logs. Run Command is a capability of Amazon Web Services
 	// Systems Manager.
@@ -51540,25 +52391,25 @@ type SendCommandInput struct {
 	// --document-version "3"
 	DocumentVersion *string `type:"string"`
 
-	// The IDs of the instances where the command should run. Specifying instance
-	// IDs is most useful when you are targeting a limited number of instances,
-	// though you can specify up to 50 IDs.
+	// The IDs of the managed nodes where the command should run. Specifying managed
+	// node IDs is most useful when you are targeting a limited number of managed
+	// nodes, though you can specify up to 50 IDs.
 	//
-	// To target a larger number of instances, or if you prefer not to list individual
-	// instance IDs, we recommend using the Targets option instead. Using Targets,
-	// which accepts tag key-value pairs to identify the instances to send commands
-	// to, you can a send command to tens, hundreds, or thousands of instances at
-	// once.
+	// To target a larger number of managed nodes, or if you prefer not to list
+	// individual node IDs, we recommend using the Targets option instead. Using
+	// Targets, which accepts tag key-value pairs to identify the managed nodes
+	// to send commands to, you can a send command to tens, hundreds, or thousands
+	// of nodes at once.
 	//
 	// For more information about how to use targets, see Using targets and rate
 	// controls to send commands to a fleet (https://docs.aws.amazon.com/systems-manager/latest/userguide/send-commands-multiple.html)
 	// in the Amazon Web Services Systems Manager User Guide.
 	InstanceIds []*string `type:"list"`
 
-	// (Optional) The maximum number of instances that are allowed to run the command
-	// at the same time. You can specify a number such as 10 or a percentage such
-	// as 10%. The default value is 50. For more information about how to use MaxConcurrency,
-	// see Using concurrency controls (https://docs.aws.amazon.com/systems-manager/latest/userguide/send-commands-multiple.html#send-commands-velocity)
+	// (Optional) The maximum number of managed nodes that are allowed to run the
+	// command at the same time. You can specify a number such as 10 or a percentage
+	// such as 10%. The default value is 50. For more information about how to use
+	// MaxConcurrency, see Using concurrency controls (https://docs.aws.amazon.com/systems-manager/latest/userguide/send-commands-multiple.html#send-commands-velocity)
 	// in the Amazon Web Services Systems Manager User Guide.
 	MaxConcurrency *string `min:"1" type:"string"`
 
@@ -51586,20 +52437,29 @@ type SendCommandInput struct {
 	OutputS3Region *string `min:"3" type:"string"`
 
 	// The required and optional parameters specified in the document being run.
-	Parameters map[string][]*string `type:"map"`
+	//
+	// Parameters is a sensitive parameter and its value will be
+	// replaced with "sensitive" in string returned by SendCommandInput's
+	// String and GoString methods.
+	Parameters map[string][]*string `type:"map" sensitive:"true"`
 
 	// The ARN of the Identity and Access Management (IAM) service role to use to
 	// publish Amazon Simple Notification Service (Amazon SNS) notifications for
 	// Run Command commands.
+	//
+	// This role must provide the sns:Publish permission for your notification topic.
+	// For information about creating and using this service role, see Monitoring
+	// Systems Manager status changes using Amazon SNS notifications (https://docs.aws.amazon.com/systems-manager/latest/userguide/monitoring-sns-notifications.html)
+	// in the Amazon Web Services Systems Manager User Guide.
 	ServiceRoleArn *string `type:"string"`
 
-	// An array of search criteria that targets instances using a Key,Value combination
-	// that you specify. Specifying targets is most useful when you want to send
-	// a command to a large number of instances at once. Using Targets, which accepts
-	// tag key-value pairs to identify instances, you can send a command to tens,
-	// hundreds, or thousands of instances at once.
+	// An array of search criteria that targets managed nodes using a Key,Value
+	// combination that you specify. Specifying targets is most useful when you
+	// want to send a command to a large number of managed nodes at once. Using
+	// Targets, which accepts tag key-value pairs to identify managed nodes, you
+	// can send a command to tens, hundreds, or thousands of nodes at once.
 	//
-	// To send a command to a smaller number of instances, you can use the InstanceIds
+	// To send a command to a smaller number of managed nodes, you can use the InstanceIds
 	// option instead.
 	//
 	// For more information about how to use targets, see Sending commands to a
@@ -51651,6 +52511,11 @@ func (s *SendCommandInput) Validate() error {
 	if s.TimeoutSeconds != nil && *s.TimeoutSeconds < 30 {
 		invalidParams.Add(request.NewErrParamMinValue("TimeoutSeconds", 30))
 	}
+	if s.AlarmConfiguration != nil {
+		if err := s.AlarmConfiguration.Validate(); err != nil {
+			invalidParams.AddNested("AlarmConfiguration", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.CloudWatchOutputConfig != nil {
 		if err := s.CloudWatchOutputConfig.Validate(); err != nil {
 			invalidParams.AddNested("CloudWatchOutputConfig", err.(request.ErrInvalidParams))
@@ -51671,6 +52536,12 @@ func (s *SendCommandInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetAlarmConfiguration sets the AlarmConfiguration field's value.
+func (s *SendCommandInput) SetAlarmConfiguration(v *AlarmConfiguration) *SendCommandInput {
+	s.AlarmConfiguration = v
+	return s
 }
 
 // SetCloudWatchOutputConfig sets the CloudWatchOutputConfig field's value.
@@ -51976,7 +52847,7 @@ func (s *ServiceSettingNotFound) RequestID() string {
 	return s.RespMetadata.RequestID
 }
 
-// Information about a Session Manager connection to an instance.
+// Information about a Session Manager connection to a managed node.
 type Session struct {
 	_ struct{} `type:"structure"`
 
@@ -51990,11 +52861,17 @@ type Session struct {
 	// The date and time, in ISO-8601 Extended format, when the session was terminated.
 	EndDate *time.Time `type:"timestamp"`
 
+	// The maximum duration of a session before it terminates.
+	MaxSessionDuration *string `min:"1" type:"string"`
+
 	// Reserved for future use.
 	OutputUrl *SessionManagerOutputUrl `type:"structure"`
 
 	// The ID of the Amazon Web Services user account that started the session.
 	Owner *string `min:"1" type:"string"`
+
+	// The reason for connecting to the instance.
+	Reason *string `min:"1" type:"string"`
 
 	// The ID of the session.
 	SessionId *string `min:"1" type:"string"`
@@ -52005,7 +52882,7 @@ type Session struct {
 	// The status of the session. For example, "Connected" or "Terminated".
 	Status *string `type:"string" enum:"SessionStatus"`
 
-	// The instance that the Session Manager session connected to.
+	// The managed node that the Session Manager session connected to.
 	Target *string `min:"1" type:"string"`
 }
 
@@ -52045,6 +52922,12 @@ func (s *Session) SetEndDate(v time.Time) *Session {
 	return s
 }
 
+// SetMaxSessionDuration sets the MaxSessionDuration field's value.
+func (s *Session) SetMaxSessionDuration(v string) *Session {
+	s.MaxSessionDuration = &v
+	return s
+}
+
 // SetOutputUrl sets the OutputUrl field's value.
 func (s *Session) SetOutputUrl(v *SessionManagerOutputUrl) *Session {
 	s.OutputUrl = v
@@ -52054,6 +52937,12 @@ func (s *Session) SetOutputUrl(v *SessionManagerOutputUrl) *Session {
 // SetOwner sets the Owner field's value.
 func (s *Session) SetOwner(v string) *Session {
 	s.Owner = &v
+	return s
+}
+
+// SetReason sets the Reason field's value.
+func (s *Session) SetReason(v string) *Session {
+	s.Reason = &v
 	return s
 }
 
@@ -52100,7 +52989,8 @@ type SessionFilter struct {
 	//    specify 2018-08-29T00:00:00Z to see sessions that started before August
 	//    29, 2018.
 	//
-	//    * Target: Specify an instance to which session connections have been made.
+	//    * Target: Specify a managed node to which session connections have been
+	//    made.
 	//
 	//    * Owner: Specify an Amazon Web Services user account to see a list of
 	//    sessions started by that user.
@@ -52205,13 +53095,13 @@ func (s *SessionManagerOutputUrl) SetS3OutputUrl(v string) *SessionManagerOutput
 	return s
 }
 
-// The number of managed instances found for each patch severity level defined
-// in the request filter.
+// The number of managed nodes found for each patch severity level defined in
+// the request filter.
 type SeveritySummary struct {
 	_ struct{} `type:"structure"`
 
 	// The total number of resources or compliance items that have a severity level
-	// of critical. Critical severity is determined by the organization that published
+	// of Critical. Critical severity is determined by the organization that published
 	// the compliance items.
 	CriticalCount *int64 `type:"integer"`
 
@@ -52369,6 +53259,9 @@ func (s StartAssociationsOnceOutput) GoString() string {
 type StartAutomationExecutionInput struct {
 	_ struct{} `type:"structure"`
 
+	// The CloudWatch alarm you want to apply to your automation.
+	AlarmConfiguration *AlarmConfiguration `type:"structure"`
+
 	// User-provided idempotency token. The token must be unique, is case insensitive,
 	// enforces the UUID format, and can't be reused.
 	ClientToken *string `min:"36" type:"string"`
@@ -52424,7 +53317,7 @@ type StartAutomationExecutionInput struct {
 	//
 	//    * Key=OS,Value=Windows
 	//
-	// To add tags to an existing patch baseline, use the AddTagsToResource operation.
+	// To add tags to an existing automation, use the AddTagsToResource operation.
 	Tags []*Tag `type:"list"`
 
 	// A location is a combination of Amazon Web Services Regions and/or Amazon
@@ -52490,6 +53383,11 @@ func (s *StartAutomationExecutionInput) Validate() error {
 	if s.TargetParameterName != nil && len(*s.TargetParameterName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("TargetParameterName", 1))
 	}
+	if s.AlarmConfiguration != nil {
+		if err := s.AlarmConfiguration.Validate(); err != nil {
+			invalidParams.AddNested("AlarmConfiguration", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.Tags != nil {
 		for i, v := range s.Tags {
 			if v == nil {
@@ -52525,6 +53423,12 @@ func (s *StartAutomationExecutionInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetAlarmConfiguration sets the AlarmConfiguration field's value.
+func (s *StartAutomationExecutionInput) SetAlarmConfiguration(v *AlarmConfiguration) *StartAutomationExecutionInput {
+	s.AlarmConfiguration = v
+	return s
 }
 
 // SetClientToken sets the ClientToken field's value.
@@ -52874,17 +53778,24 @@ func (s *StartChangeRequestExecutionOutput) SetAutomationExecutionId(v string) *
 type StartSessionInput struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the SSM document to define the parameters and plugin settings
-	// for the session. For example, SSM-SessionManagerRunShell. You can call the
-	// GetDocument API to verify the document exists before attempting to start
-	// a session. If no document name is provided, a shell to the instance is launched
-	// by default.
+	// The name of the SSM document you want to use to define the type of session,
+	// input parameters, or preferences for the session. For example, SSM-SessionManagerRunShell.
+	// You can call the GetDocument API to verify the document exists before attempting
+	// to start a session. If no document name is provided, a shell to the managed
+	// node is launched by default. For more information, see Start a session (https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-sessions-start.html)
+	// in the Amazon Web Services Systems Manager User Guide.
 	DocumentName *string `type:"string"`
 
-	// Reserved for future use.
+	// The values you want to specify for the parameters defined in the Session
+	// document.
 	Parameters map[string][]*string `type:"map"`
 
-	// The instance to connect to for the session.
+	// The reason for connecting to the instance. This value is included in the
+	// details for the Amazon CloudWatch Events event created when you start the
+	// session.
+	Reason *string `min:"1" type:"string"`
+
+	// The managed node to connect to for the session.
 	//
 	// Target is a required field
 	Target *string `min:"1" type:"string" required:"true"`
@@ -52911,6 +53822,9 @@ func (s StartSessionInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *StartSessionInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "StartSessionInput"}
+	if s.Reason != nil && len(*s.Reason) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Reason", 1))
+	}
 	if s.Target == nil {
 		invalidParams.Add(request.NewErrParamRequired("Target"))
 	}
@@ -52936,6 +53850,12 @@ func (s *StartSessionInput) SetParameters(v map[string][]*string) *StartSessionI
 	return s
 }
 
+// SetReason sets the Reason field's value.
+func (s *StartSessionInput) SetReason(v string) *StartSessionInput {
+	s.Reason = &v
+	return s
+}
+
 // SetTarget sets the Target field's value.
 func (s *StartSessionInput) SetTarget(v string) *StartSessionInput {
 	s.Target = &v
@@ -52948,8 +53868,8 @@ type StartSessionOutput struct {
 	// The ID of the session.
 	SessionId *string `min:"1" type:"string"`
 
-	// A URL back to SSM Agent on the instance that the Session Manager client uses
-	// to send commands and receive output from the instance. Format: wss://ssmmessages.region.amazonaws.com/v1/data-channel/session-id?stream=(input|output)
+	// A URL back to SSM Agent on the managed node that the Session Manager client
+	// uses to send commands and receive output from the node. Format: wss://ssmmessages.region.amazonaws.com/v1/data-channel/session-id?stream=(input|output)
 	//
 	// region represents the Region identifier for an Amazon Web Services Region
 	// supported by Amazon Web Services Systems Manager, such as us-east-2 for the
@@ -52960,8 +53880,10 @@ type StartSessionOutput struct {
 	// session-id represents the ID of a Session Manager session, such as 1a2b3c4dEXAMPLE.
 	StreamUrl *string `type:"string"`
 
-	// An encrypted token value containing session and caller information. Used
-	// to authenticate the connection to the instance.
+	// An encrypted token value containing session and caller information. This
+	// token is used to authenticate the connection to the managed node, and is
+	// valid only long enough to ensure the connection is successful. Never share
+	// your session's token.
 	TokenValue *string `type:"string"`
 }
 
@@ -53512,7 +54434,7 @@ func (s *SubTypeCountLimitExceededException) RequestID() string {
 // Metadata that you assign to your Amazon Web Services resources. Tags enable
 // you to categorize your resources in different ways, for example, by purpose,
 // owner, or environment. In Amazon Web Services Systems Manager, you can apply
-// tags to Systems Manager documents (SSM documents), managed instances, maintenance
+// tags to Systems Manager documents (SSM documents), managed nodes, maintenance
 // windows, parameters, patch baselines, OpsItems, and OpsMetadata.
 type Tag struct {
 	_ struct{} `type:"structure"`
@@ -53580,8 +54502,8 @@ func (s *Tag) SetValue(v string) *Tag {
 	return s
 }
 
-// An array of search criteria that targets instances using a key-value pair
-// that you specify.
+// An array of search criteria that targets managed nodes using a key-value
+// pair that you specify.
 //
 // One or more targets must be specified for maintenance window Run Command-type
 // tasks. Depending on the task, targets are optional for other maintenance
@@ -53592,48 +54514,48 @@ func (s *Tag) SetValue(v string) *Tag {
 //
 // Supported formats include the following.
 //
-//    * Key=InstanceIds,Values=instance-id-1,instance-id-2,instance-id-3
+//   - Key=InstanceIds,Values=<instance-id-1>,<instance-id-2>,<instance-id-3>
 //
-//    * Key=tag:my-tag-key,Values=my-tag-value-1,my-tag-value-2
+//   - Key=tag:<my-tag-key>,Values=<my-tag-value-1>,<my-tag-value-2>
 //
-//    * Key=tag-key,Values=my-tag-key-1,my-tag-key-2
+//   - Key=tag-key,Values=<my-tag-key-1>,<my-tag-key-2>
 //
-//    * Run Command and Maintenance window targets only: Key=resource-groups:Name,Values=resource-group-name
+//   - Run Command and Maintenance window targets only: Key=resource-groups:Name,Values=<resource-group-name>
 //
-//    * Maintenance window targets only: Key=resource-groups:ResourceTypeFilters,Values=resource-type-1,resource-type-2
+//   - Maintenance window targets only: Key=resource-groups:ResourceTypeFilters,Values=<resource-type-1>,<resource-type-2>
 //
-//    * Automation targets only: Key=ResourceGroup;Values=resource-group-name
+//   - Automation targets only: Key=ResourceGroup;Values=<resource-group-name>
 //
 // For example:
 //
-//    * Key=InstanceIds,Values=i-02573cafcfEXAMPLE,i-0471e04240EXAMPLE,i-07782c72faEXAMPLE
+//   - Key=InstanceIds,Values=i-02573cafcfEXAMPLE,i-0471e04240EXAMPLE,i-07782c72faEXAMPLE
 //
-//    * Key=tag:CostCenter,Values=CostCenter1,CostCenter2,CostCenter3
+//   - Key=tag:CostCenter,Values=CostCenter1,CostCenter2,CostCenter3
 //
-//    * Key=tag-key,Values=Name,Instance-Type,CostCenter
+//   - Key=tag-key,Values=Name,Instance-Type,CostCenter
 //
-//    * Run Command and Maintenance window targets only: Key=resource-groups:Name,Values=ProductionResourceGroup
-//    This example demonstrates how to target all resources in the resource
-//    group ProductionResourceGroup in your maintenance window.
+//   - Run Command and Maintenance window targets only: Key=resource-groups:Name,Values=ProductionResourceGroup
+//     This example demonstrates how to target all resources in the resource
+//     group ProductionResourceGroup in your maintenance window.
 //
-//    * Maintenance window targets only: Key=resource-groups:ResourceTypeFilters,Values=AWS::EC2::INSTANCE,AWS::EC2::VPC
-//    This example demonstrates how to target only Amazon Elastic Compute Cloud
-//    (Amazon EC2) instances and VPCs in your maintenance window.
+//   - Maintenance window targets only: Key=resource-groups:ResourceTypeFilters,Values=AWS::EC2::INSTANCE,AWS::EC2::VPC
+//     This example demonstrates how to target only Amazon Elastic Compute Cloud
+//     (Amazon EC2) instances and VPCs in your maintenance window.
 //
-//    * Automation targets only: Key=ResourceGroup,Values=MyResourceGroup
+//   - Automation targets only: Key=ResourceGroup,Values=MyResourceGroup
 //
-//    * State Manager association targets only: Key=InstanceIds,Values=* This
-//    example demonstrates how to target all managed instances in the Amazon
-//    Web Services Region where the association was created.
+//   - State Manager association targets only: Key=InstanceIds,Values=* This
+//     example demonstrates how to target all managed instances in the Amazon
+//     Web Services Region where the association was created.
 //
-// For more information about how to send commands that target instances using
-// Key,Value parameters, see Targeting multiple instances (https://docs.aws.amazon.com/systems-manager/latest/userguide/send-commands-multiple.html#send-commands-targeting)
+// For more information about how to send commands that target managed nodes
+// using Key,Value parameters, see Targeting multiple instances (https://docs.aws.amazon.com/systems-manager/latest/userguide/send-commands-multiple.html#send-commands-targeting)
 // in the Amazon Web Services Systems Manager User Guide.
 type Target struct {
 	_ struct{} `type:"structure"`
 
-	// User-defined criteria for sending commands that target instances that meet
-	// the criteria.
+	// User-defined criteria for sending commands that target managed nodes that
+	// meet the criteria.
 	Key *string `min:"1" type:"string"`
 
 	// User-defined criteria that maps to Key. For example, if you specified tag:ServerRole,
@@ -53850,11 +54772,11 @@ func (s *TargetLocation) SetTargetLocationMaxErrors(v string) *TargetLocation {
 	return s
 }
 
-// The specified target instance for the session isn't fully configured for
-// use with Session Manager. For more information, see Getting started with
+// The specified target managed node for the session isn't fully configured
+// for use with Session Manager. For more information, see Getting started with
 // Session Manager (https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-getting-started.html)
 // in the Amazon Web Services Systems Manager User Guide. This error is also
-// returned if you attempt to start a session on an instance that is located
+// returned if you attempt to start a session on a managed node that is located
 // in a different account or Region
 type TargetNotConnected struct {
 	_            struct{}                  `type:"structure"`
@@ -54709,8 +55631,9 @@ func (s *UnsupportedParameterType) RequestID() string {
 	return s.RespMetadata.RequestID
 }
 
-// The document doesn't support the platform type of the given instance ID(s).
-// For example, you sent an document for a Windows instance to a Linux instance.
+// The document doesn't support the platform type of the given managed node
+// ID(s). For example, you sent an document for a Windows managed node to a
+// Linux node.
 type UnsupportedPlatformType struct {
 	_            struct{}                  `type:"structure"`
 	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
@@ -54777,16 +55700,29 @@ func (s *UnsupportedPlatformType) RequestID() string {
 type UpdateAssociationInput struct {
 	_ struct{} `type:"structure"`
 
+	// The details for the CloudWatch alarm you want to apply to an automation or
+	// command.
+	AlarmConfiguration *AlarmConfiguration `type:"structure"`
+
 	// By default, when you update an association, the system runs it immediately
 	// after it is updated and then according to the schedule you specified. Specify
 	// this option if you don't want an association to run immediately after you
 	// update it. This parameter isn't supported for rate expressions.
 	//
-	// Also, if you specified this option when you created the association, you
-	// can reset it. To do so, specify the no-apply-only-at-cron-interval parameter
-	// when you update the association from the command line. This parameter forces
-	// the association to run immediately after updating it and according to the
-	// interval specified.
+	// If you chose this option when you created an association and later you edit
+	// that association or you make changes to the SSM document on which that association
+	// is based (by using the Documents page in the console), State Manager applies
+	// the association at the next specified cron interval. For example, if you
+	// chose the Latest version of an SSM document when you created an association
+	// and you edit the association by choosing a different document version on
+	// the Documents page, State Manager applies the association at the next specified
+	// cron interval if you previously selected this option. If this option wasn't
+	// selected, State Manager immediately runs the association.
+	//
+	// You can reset this option. To do so, specify the no-apply-only-at-cron-interval
+	// parameter when you update the association from the command line. This parameter
+	// forces the association to run immediately after updating it and according
+	// to the interval specified.
 	ApplyOnlyAtCronInterval *bool `type:"boolean"`
 
 	// The ID of the association you want to update.
@@ -54802,9 +55738,10 @@ type UpdateAssociationInput struct {
 	// this request succeeds, either specify $LATEST, or omit this parameter.
 	AssociationVersion *string `type:"string"`
 
-	// Specify the target for the association. This target is required for associations
-	// that use an Automation runbook and target resources by using rate controls.
-	// Automation is a capability of Amazon Web Services Systems Manager.
+	// Choose the parameter that will define how your automation will branch out.
+	// This target is required for associations that use an Automation runbook and
+	// target resources by using rate controls. Automation is a capability of Amazon
+	// Web Services Systems Manager.
 	AutomationTargetParameterName *string `min:"1" type:"string"`
 
 	// The names or Amazon Resource Names (ARNs) of the Change Calendar type documents
@@ -54817,6 +55754,13 @@ type UpdateAssociationInput struct {
 	ComplianceSeverity *string `type:"string" enum:"AssociationComplianceSeverity"`
 
 	// The document version you want update for the association.
+	//
+	// State Manager doesn't support running associations that use a new version
+	// of a document if that document is shared from another account. State Manager
+	// always runs the default version of a document if shared from another account,
+	// even though the Systems Manager console shows that a new version was processed.
+	// If you want to run an association using a new version of a document shared
+	// form another account, you must set the document version to default.
 	DocumentVersion *string `type:"string"`
 
 	// The maximum number of targets allowed to run the association at the same
@@ -54824,9 +55768,9 @@ type UpdateAssociationInput struct {
 	// set, for example 10%. The default value is 100%, which means all targets
 	// run the association at the same time.
 	//
-	// If a new instance starts and attempts to run an association while Systems
+	// If a new managed node starts and attempts to run an association while Systems
 	// Manager is running MaxConcurrency associations, the association is allowed
-	// to run. During the next association interval, the new instance will process
+	// to run. During the next association interval, the new managed node will process
 	// its association within the limit specified for MaxConcurrency.
 	MaxConcurrency *string `min:"1" type:"string"`
 
@@ -54836,8 +55780,8 @@ type UpdateAssociationInput struct {
 	// example 10%. If you specify 3, for example, the system stops sending requests
 	// when the fourth error is received. If you specify 0, then the system stops
 	// sending requests after the first error is returned. If you run an association
-	// on 50 instances and set MaxError to 10%, then the system stops sending the
-	// request when the sixth error is received.
+	// on 50 managed nodes and set MaxError to 10%, then the system stops sending
+	// the request when the sixth error is received.
 	//
 	// Executions that are already running an association when MaxErrors is reached
 	// are allowed to complete, but some of these executions may fail as well. If
@@ -54846,7 +55790,7 @@ type UpdateAssociationInput struct {
 	MaxErrors *string `min:"1" type:"string"`
 
 	// The name of the SSM Command document or Automation runbook that contains
-	// the configuration information for the instance.
+	// the configuration information for the managed node.
 	//
 	// You can specify Amazon Web Services-predefined documents, documents you created,
 	// or a document that is shared with you from another account.
@@ -54872,10 +55816,26 @@ type UpdateAssociationInput struct {
 	// The parameters you want to update for the association. If you create a parameter
 	// using Parameter Store, a capability of Amazon Web Services Systems Manager,
 	// you can reference the parameter using {{ssm:parameter-name}}.
-	Parameters map[string][]*string `type:"map"`
+	//
+	// Parameters is a sensitive parameter and its value will be
+	// replaced with "sensitive" in string returned by UpdateAssociationInput's
+	// String and GoString methods.
+	Parameters map[string][]*string `type:"map" sensitive:"true"`
 
 	// The cron expression used to schedule the association that you want to update.
 	ScheduleExpression *string `min:"1" type:"string"`
+
+	// Number of days to wait after the scheduled day to run an association. For
+	// example, if you specified a cron schedule of cron(0 0 ? * THU#2 *), you could
+	// specify an offset of 3 to run the association each Sunday after the second
+	// Thursday of the month. For more information about cron schedules for associations,
+	// see Reference: Cron and rate expressions for Systems Manager (https://docs.aws.amazon.com/systems-manager/latest/userguide/reference-cron-and-rate-expressions.html)
+	// in the Amazon Web Services Systems Manager User Guide.
+	//
+	// To use offsets, you must specify the ApplyOnlyAtCronInterval parameter. This
+	// option tells the system not to run an association immediately after you create
+	// it.
+	ScheduleOffset *int64 `min:"1" type:"integer"`
 
 	// The mode for generating association compliance. You can specify AUTO or MANUAL.
 	// In AUTO mode, the system uses the status of the association execution to
@@ -54895,6 +55855,10 @@ type UpdateAssociationInput struct {
 	// Services accounts where you want to run the association. Use this action
 	// to update an association in multiple Regions and multiple accounts.
 	TargetLocations []*TargetLocation `min:"1" type:"list"`
+
+	// A key-value mapping of document parameters to target resources. Both Targets
+	// and TargetMaps can't be specified together.
+	TargetMaps []map[string][]*string `type:"list"`
 
 	// The targets of the association.
 	Targets []*Target `type:"list"`
@@ -54936,8 +55900,16 @@ func (s *UpdateAssociationInput) Validate() error {
 	if s.ScheduleExpression != nil && len(*s.ScheduleExpression) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("ScheduleExpression", 1))
 	}
+	if s.ScheduleOffset != nil && *s.ScheduleOffset < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("ScheduleOffset", 1))
+	}
 	if s.TargetLocations != nil && len(s.TargetLocations) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("TargetLocations", 1))
+	}
+	if s.AlarmConfiguration != nil {
+		if err := s.AlarmConfiguration.Validate(); err != nil {
+			invalidParams.AddNested("AlarmConfiguration", err.(request.ErrInvalidParams))
+		}
 	}
 	if s.OutputLocation != nil {
 		if err := s.OutputLocation.Validate(); err != nil {
@@ -54969,6 +55941,12 @@ func (s *UpdateAssociationInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetAlarmConfiguration sets the AlarmConfiguration field's value.
+func (s *UpdateAssociationInput) SetAlarmConfiguration(v *AlarmConfiguration) *UpdateAssociationInput {
+	s.AlarmConfiguration = v
+	return s
 }
 
 // SetApplyOnlyAtCronInterval sets the ApplyOnlyAtCronInterval field's value.
@@ -55055,6 +56033,12 @@ func (s *UpdateAssociationInput) SetScheduleExpression(v string) *UpdateAssociat
 	return s
 }
 
+// SetScheduleOffset sets the ScheduleOffset field's value.
+func (s *UpdateAssociationInput) SetScheduleOffset(v int64) *UpdateAssociationInput {
+	s.ScheduleOffset = &v
+	return s
+}
+
 // SetSyncCompliance sets the SyncCompliance field's value.
 func (s *UpdateAssociationInput) SetSyncCompliance(v string) *UpdateAssociationInput {
 	s.SyncCompliance = &v
@@ -55064,6 +56048,12 @@ func (s *UpdateAssociationInput) SetSyncCompliance(v string) *UpdateAssociationI
 // SetTargetLocations sets the TargetLocations field's value.
 func (s *UpdateAssociationInput) SetTargetLocations(v []*TargetLocation) *UpdateAssociationInput {
 	s.TargetLocations = v
+	return s
+}
+
+// SetTargetMaps sets the TargetMaps field's value.
+func (s *UpdateAssociationInput) SetTargetMaps(v []map[string][]*string) *UpdateAssociationInput {
+	s.TargetMaps = v
 	return s
 }
 
@@ -55112,7 +56102,7 @@ type UpdateAssociationStatusInput struct {
 	// AssociationStatus is a required field
 	AssociationStatus *AssociationStatus `type:"structure" required:"true"`
 
-	// The instance ID.
+	// The managed node ID.
 	//
 	// InstanceId is a required field
 	InstanceId *string `type:"string" required:"true"`
@@ -55330,6 +56320,10 @@ type UpdateDocumentInput struct {
 	// The version of the document that you want to update. Currently, Systems Manager
 	// supports updating only the latest version of the document. You can specify
 	// the version number of the latest version or use the $LATEST variable.
+	//
+	// If you change a document version for a State Manager association, Systems
+	// Manager immediately runs the association unless you previously specifed the
+	// apply-only-at-cron-interval parameter.
 	DocumentVersion *string `type:"string"`
 
 	// The name of the SSM document that you want to update.
@@ -55626,10 +56620,9 @@ type UpdateMaintenanceWindowInput struct {
 	// (https://www.iana.org/time-zones) on the IANA website.
 	ScheduleTimezone *string `type:"string"`
 
-	// The time zone that the scheduled maintenance window executions are based
-	// on, in Internet Assigned Numbers Authority (IANA) format. For example: "America/Los_Angeles",
-	// "UTC", or "Asia/Seoul". For more information, see the Time Zone Database
-	// (https://www.iana.org/time-zones) on the IANA website.
+	// The date and time, in ISO-8601 Extended format, for when you want the maintenance
+	// window to become active. StartDate allows you to delay activation of the
+	// maintenance window until the specified future date.
 	StartDate *string `type:"string"`
 
 	// The ID of the maintenance window to update.
@@ -56137,6 +57130,9 @@ func (s *UpdateMaintenanceWindowTargetOutput) SetWindowTargetId(v string) *Updat
 type UpdateMaintenanceWindowTaskInput struct {
 	_ struct{} `type:"structure"`
 
+	// The CloudWatch alarm you want to apply to your maintenance window task.
+	AlarmConfiguration *AlarmConfiguration `type:"structure"`
+
 	// Indicates whether tasks should continue to run after the cutoff time specified
 	// in the maintenance windows is reached.
 	//
@@ -56169,21 +57165,27 @@ type UpdateMaintenanceWindowTaskInput struct {
 	LoggingInfo *LoggingInfo `type:"structure"`
 
 	// The new MaxConcurrency value you want to specify. MaxConcurrency is the number
-	// of targets that are allowed to run this task in parallel.
+	// of targets that are allowed to run this task, in parallel.
+	//
+	// Although this element is listed as "Required: No", a value can be omitted
+	// only when you are registering or updating a targetless task (https://docs.aws.amazon.com/systems-manager/latest/userguide/maintenance-windows-targetless-tasks.html)
+	// You must provide a value in all other cases.
 	//
 	// For maintenance window tasks without a target specified, you can't supply
 	// a value for this option. Instead, the system inserts a placeholder value
-	// of 1, which may be reported in the response to this command. This value doesn't
-	// affect the running of your task and can be ignored.
+	// of 1. This value doesn't affect the running of your task.
 	MaxConcurrency *string `min:"1" type:"string"`
 
 	// The new MaxErrors value to specify. MaxErrors is the maximum number of errors
 	// that are allowed before the task stops being scheduled.
 	//
+	// Although this element is listed as "Required: No", a value can be omitted
+	// only when you are registering or updating a targetless task (https://docs.aws.amazon.com/systems-manager/latest/userguide/maintenance-windows-targetless-tasks.html)
+	// You must provide a value in all other cases.
+	//
 	// For maintenance window tasks without a target specified, you can't supply
 	// a value for this option. Instead, the system inserts a placeholder value
-	// of 1, which may be reported in the response to this command. This value doesn't
-	// affect the running of your task and can be ignored.
+	// of 1. This value doesn't affect the running of your task.
 	MaxErrors *string `min:"1" type:"string"`
 
 	// The new task name to specify.
@@ -56213,7 +57215,7 @@ type UpdateMaintenanceWindowTaskInput struct {
 	//    window tasks? (https://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-maintenance-permissions.html#maintenance-window-tasks-service-role)
 	ServiceRoleArn *string `type:"string"`
 
-	// The targets (either instances or tags) to modify. Instances are specified
+	// The targets (either managed nodes or tags) to modify. Managed nodes are specified
 	// using the format Key=instanceids,Values=instanceID_1,instanceID_2. Tags are
 	// specified using the format Key=tag_name,Values=tag_value.
 	//
@@ -56317,6 +57319,11 @@ func (s *UpdateMaintenanceWindowTaskInput) Validate() error {
 	if s.WindowTaskId != nil && len(*s.WindowTaskId) < 36 {
 		invalidParams.Add(request.NewErrParamMinLen("WindowTaskId", 36))
 	}
+	if s.AlarmConfiguration != nil {
+		if err := s.AlarmConfiguration.Validate(); err != nil {
+			invalidParams.AddNested("AlarmConfiguration", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.LoggingInfo != nil {
 		if err := s.LoggingInfo.Validate(); err != nil {
 			invalidParams.AddNested("LoggingInfo", err.(request.ErrInvalidParams))
@@ -56342,6 +57349,12 @@ func (s *UpdateMaintenanceWindowTaskInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetAlarmConfiguration sets the AlarmConfiguration field's value.
+func (s *UpdateMaintenanceWindowTaskInput) SetAlarmConfiguration(v *AlarmConfiguration) *UpdateMaintenanceWindowTaskInput {
+	s.AlarmConfiguration = v
+	return s
 }
 
 // SetCutoffBehavior sets the CutoffBehavior field's value.
@@ -56437,6 +57450,10 @@ func (s *UpdateMaintenanceWindowTaskInput) SetWindowTaskId(v string) *UpdateMain
 type UpdateMaintenanceWindowTaskOutput struct {
 	_ struct{} `type:"structure"`
 
+	// The details for the CloudWatch alarm you applied to your maintenance window
+	// task.
+	AlarmConfiguration *AlarmConfiguration `type:"structure"`
+
 	// The specification for whether tasks should continue to run after the cutoff
 	// time specified in the maintenance windows is reached.
 	CutoffBehavior *string `type:"string" enum:"MaintenanceWindowTaskCutoffBehavior"`
@@ -56518,6 +57535,12 @@ func (s UpdateMaintenanceWindowTaskOutput) String() string {
 // value will be replaced with "sensitive".
 func (s UpdateMaintenanceWindowTaskOutput) GoString() string {
 	return s.String()
+}
+
+// SetAlarmConfiguration sets the AlarmConfiguration field's value.
+func (s *UpdateMaintenanceWindowTaskOutput) SetAlarmConfiguration(v *AlarmConfiguration) *UpdateMaintenanceWindowTaskOutput {
+	s.AlarmConfiguration = v
+	return s
 }
 
 // SetCutoffBehavior sets the CutoffBehavior field's value.
@@ -56612,10 +57635,10 @@ type UpdateManagedInstanceRoleInput struct {
 	// IamRole is a required field
 	IamRole *string `type:"string" required:"true"`
 
-	// The ID of the managed instance where you want to update the role.
+	// The ID of the managed node where you want to update the role.
 	//
 	// InstanceId is a required field
-	InstanceId *string `type:"string" required:"true"`
+	InstanceId *string `min:"20" type:"string" required:"true"`
 }
 
 // String returns the string representation.
@@ -56644,6 +57667,9 @@ func (s *UpdateManagedInstanceRoleInput) Validate() error {
 	}
 	if s.InstanceId == nil {
 		invalidParams.Add(request.NewErrParamRequired("InstanceId"))
+	}
+	if s.InstanceId != nil && len(*s.InstanceId) < 20 {
+		invalidParams.Add(request.NewErrParamMinLen("InstanceId", 20))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -56948,7 +57974,7 @@ type UpdateOpsMetadataInput struct {
 	// Metadata to add to an OpsMetadata object.
 	MetadataToUpdate map[string]*MetadataValue `min:"1" type:"map"`
 
-	// The Amazon Resoure Name (ARN) of the OpsMetadata Object to update.
+	// The Amazon Resource Name (ARN) of the OpsMetadata Object to update.
 	//
 	// OpsMetadataArn is a required field
 	OpsMetadataArn *string `min:"1" type:"string" required:"true"`
@@ -57071,8 +58097,8 @@ type UpdatePatchBaselineInput struct {
 	ApprovedPatchesComplianceLevel *string `type:"string" enum:"PatchComplianceLevel"`
 
 	// Indicates whether the list of approved patches includes non-security updates
-	// that should be applied to the instances. The default value is false. Applies
-	// to Linux instances only.
+	// that should be applied to the managed nodes. The default value is false.
+	// Applies to Linux managed nodes only.
 	ApprovedPatchesEnableNonSecurity *bool `type:"boolean"`
 
 	// The ID of the patch baseline to update.
@@ -57117,8 +58143,9 @@ type UpdatePatchBaselineInput struct {
 	// are set to null.
 	Replace *bool `type:"boolean"`
 
-	// Information about the patches to use to update the instances, including target
-	// operating systems and source repositories. Applies to Linux instances only.
+	// Information about the patches to use to update the managed nodes, including
+	// target operating systems and source repositories. Applies to Linux managed
+	// nodes only.
 	Sources []*PatchSource `type:"list"`
 }
 
@@ -57268,8 +58295,8 @@ type UpdatePatchBaselineOutput struct {
 	ApprovedPatchesComplianceLevel *string `type:"string" enum:"PatchComplianceLevel"`
 
 	// Indicates whether the list of approved patches includes non-security updates
-	// that should be applied to the instances. The default value is false. Applies
-	// to Linux instances only.
+	// that should be applied to the managed nodes. The default value is false.
+	// Applies to Linux managed nodes only.
 	ApprovedPatchesEnableNonSecurity *bool `type:"boolean"`
 
 	// The ID of the deleted patch baseline.
@@ -57301,8 +58328,9 @@ type UpdatePatchBaselineOutput struct {
 	// blocked entirely along with packages that include it as a dependency.
 	RejectedPatchesAction *string `type:"string" enum:"PatchAction"`
 
-	// Information about the patches to use to update the instances, including target
-	// operating systems and source repositories. Applies to Linux instances only.
+	// Information about the patches to use to update the managed nodes, including
+	// target operating systems and source repositories. Applies to Linux managed
+	// nodes only.
 	Sources []*PatchSource `type:"list"`
 }
 
@@ -57529,23 +58557,19 @@ type UpdateServiceSettingInput struct {
 	//
 	//    * /ssm/documents/console/public-sharing-permission
 	//
+	//    * /ssm/managed-instance/activation-tier
+	//
+	//    * /ssm/opsinsights/opscenter
+	//
 	//    * /ssm/parameter-store/default-parameter-tier
 	//
 	//    * /ssm/parameter-store/high-throughput-enabled
-	//
-	//    * /ssm/managed-instance/activation-tier
 	//
 	// SettingId is a required field
 	SettingId *string `min:"1" type:"string" required:"true"`
 
 	// The new value to specify for the service setting. The following list specifies
 	// the available values for each setting.
-	//
-	//    * /ssm/parameter-store/default-parameter-tier: Standard, Advanced, Intelligent-Tiering
-	//
-	//    * /ssm/parameter-store/high-throughput-enabled: true or false
-	//
-	//    * /ssm/managed-instance/activation-tier: true or false
 	//
 	//    * /ssm/automation/customer-script-log-destination: CloudWatch
 	//
@@ -57555,6 +58579,12 @@ type UpdateServiceSettingInput struct {
 	//    * /ssm/documents/console/public-sharing-permission: Enable or Disable
 	//
 	//    * /ssm/managed-instance/activation-tier: standard or advanced
+	//
+	//    * /ssm/opsinsights/opscenter: Enabled or Disabled
+	//
+	//    * /ssm/parameter-store/default-parameter-tier: Standard, Advanced, Intelligent-Tiering
+	//
+	//    * /ssm/parameter-store/high-throughput-enabled: true or false
 	//
 	// SettingValue is a required field
 	SettingValue *string `min:"1" type:"string" required:"true"`
@@ -58476,6 +59506,12 @@ const (
 
 	// DocumentTypeProblemAnalysisTemplate is a DocumentType enum value
 	DocumentTypeProblemAnalysisTemplate = "ProblemAnalysisTemplate"
+
+	// DocumentTypeCloudFormation is a DocumentType enum value
+	DocumentTypeCloudFormation = "CloudFormation"
+
+	// DocumentTypeConformancePackTemplate is a DocumentType enum value
+	DocumentTypeConformancePackTemplate = "ConformancePackTemplate"
 )
 
 // DocumentType_Values returns all elements of the DocumentType enum
@@ -58493,6 +59529,8 @@ func DocumentType_Values() []string {
 		DocumentTypeAutomationChangeTemplate,
 		DocumentTypeProblemAnalysis,
 		DocumentTypeProblemAnalysisTemplate,
+		DocumentTypeCloudFormation,
+		DocumentTypeConformancePackTemplate,
 	}
 }
 
@@ -58509,6 +59547,22 @@ func ExecutionMode_Values() []string {
 	return []string{
 		ExecutionModeAuto,
 		ExecutionModeInteractive,
+	}
+}
+
+const (
+	// ExternalAlarmStateUnknown is a ExternalAlarmState enum value
+	ExternalAlarmStateUnknown = "UNKNOWN"
+
+	// ExternalAlarmStateAlarm is a ExternalAlarmState enum value
+	ExternalAlarmStateAlarm = "ALARM"
+)
+
+// ExternalAlarmState_Values returns all elements of the ExternalAlarmState enum
+func ExternalAlarmState_Values() []string {
+	return []string{
+		ExternalAlarmStateUnknown,
+		ExternalAlarmStateAlarm,
 	}
 }
 
@@ -58850,6 +59904,9 @@ const (
 	// OperatingSystemAmazonLinux2 is a OperatingSystem enum value
 	OperatingSystemAmazonLinux2 = "AMAZON_LINUX_2"
 
+	// OperatingSystemAmazonLinux2022 is a OperatingSystem enum value
+	OperatingSystemAmazonLinux2022 = "AMAZON_LINUX_2022"
+
 	// OperatingSystemUbuntu is a OperatingSystem enum value
 	OperatingSystemUbuntu = "UBUNTU"
 
@@ -58870,6 +59927,12 @@ const (
 
 	// OperatingSystemMacos is a OperatingSystem enum value
 	OperatingSystemMacos = "MACOS"
+
+	// OperatingSystemRaspbian is a OperatingSystem enum value
+	OperatingSystemRaspbian = "RASPBIAN"
+
+	// OperatingSystemRockyLinux is a OperatingSystem enum value
+	OperatingSystemRockyLinux = "ROCKY_LINUX"
 )
 
 // OperatingSystem_Values returns all elements of the OperatingSystem enum
@@ -58878,6 +59941,7 @@ func OperatingSystem_Values() []string {
 		OperatingSystemWindows,
 		OperatingSystemAmazonLinux,
 		OperatingSystemAmazonLinux2,
+		OperatingSystemAmazonLinux2022,
 		OperatingSystemUbuntu,
 		OperatingSystemRedhatEnterpriseLinux,
 		OperatingSystemSuse,
@@ -58885,6 +59949,8 @@ func OperatingSystem_Values() []string {
 		OperatingSystemOracleLinux,
 		OperatingSystemDebian,
 		OperatingSystemMacos,
+		OperatingSystemRaspbian,
+		OperatingSystemRockyLinux,
 	}
 }
 
@@ -59558,6 +60624,9 @@ const (
 
 	// PlatformTypeLinux is a PlatformType enum value
 	PlatformTypeLinux = "Linux"
+
+	// PlatformTypeMacOs is a PlatformType enum value
+	PlatformTypeMacOs = "MacOS"
 )
 
 // PlatformType_Values returns all elements of the PlatformType enum
@@ -59565,6 +60634,7 @@ func PlatformType_Values() []string {
 	return []string{
 		PlatformTypeWindows,
 		PlatformTypeLinux,
+		PlatformTypeMacOs,
 	}
 }
 
@@ -59637,6 +60707,12 @@ const (
 
 	// ResourceTypeForTaggingOpsMetadata is a ResourceTypeForTagging enum value
 	ResourceTypeForTaggingOpsMetadata = "OpsMetadata"
+
+	// ResourceTypeForTaggingAutomation is a ResourceTypeForTagging enum value
+	ResourceTypeForTaggingAutomation = "Automation"
+
+	// ResourceTypeForTaggingAssociation is a ResourceTypeForTagging enum value
+	ResourceTypeForTaggingAssociation = "Association"
 )
 
 // ResourceTypeForTagging_Values returns all elements of the ResourceTypeForTagging enum
@@ -59649,6 +60725,8 @@ func ResourceTypeForTagging_Values() []string {
 		ResourceTypeForTaggingPatchBaseline,
 		ResourceTypeForTaggingOpsItem,
 		ResourceTypeForTaggingOpsMetadata,
+		ResourceTypeForTaggingAutomation,
+		ResourceTypeForTaggingAssociation,
 	}
 }
 
@@ -59781,6 +60859,26 @@ func SignalType_Values() []string {
 		SignalTypeStartStep,
 		SignalTypeStopStep,
 		SignalTypeResume,
+	}
+}
+
+const (
+	// SourceTypeAwsEc2Instance is a SourceType enum value
+	SourceTypeAwsEc2Instance = "AWS::EC2::Instance"
+
+	// SourceTypeAwsIoTThing is a SourceType enum value
+	SourceTypeAwsIoTThing = "AWS::IoT::Thing"
+
+	// SourceTypeAwsSsmManagedInstance is a SourceType enum value
+	SourceTypeAwsSsmManagedInstance = "AWS::SSM::ManagedInstance"
+)
+
+// SourceType_Values returns all elements of the SourceType enum
+func SourceType_Values() []string {
+	return []string{
+		SourceTypeAwsEc2Instance,
+		SourceTypeAwsIoTThing,
+		SourceTypeAwsSsmManagedInstance,
 	}
 }
 

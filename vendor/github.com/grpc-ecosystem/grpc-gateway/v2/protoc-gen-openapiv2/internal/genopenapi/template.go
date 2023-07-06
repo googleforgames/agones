@@ -117,10 +117,15 @@ func listEnumNames(reg *descriptor.Registry, enum *descriptor.Enum) (names []str
 		}
 		names = append(names, value.GetName())
 	}
-	return names
+
+	if len(names) > 0 {
+		return names
+	}
+
+	return nil
 }
 
-func listEnumNumbers(reg *descriptor.Registry, enum *descriptor.Enum) (numbers []string) {
+func listEnumNumbers(reg *descriptor.Registry, enum *descriptor.Enum) (numbers []int) {
 	for _, value := range enum.GetValue() {
 		if reg.GetOmitEnumDefaultValue() && value.GetNumber() == 0 {
 			continue
@@ -128,12 +133,17 @@ func listEnumNumbers(reg *descriptor.Registry, enum *descriptor.Enum) (numbers [
 		if !isVisible(getEnumValueVisibilityOption(value), reg) {
 			continue
 		}
-		numbers = append(numbers, strconv.Itoa(int(value.GetNumber())))
+		numbers = append(numbers, int(value.GetNumber()))
 	}
-	return
+
+	if len(numbers) > 0 {
+		return numbers
+	}
+
+	return nil
 }
 
-func getEnumDefault(reg *descriptor.Registry, enum *descriptor.Enum) string {
+func getEnumDefault(reg *descriptor.Registry, enum *descriptor.Enum) interface{} {
 	if !reg.GetOmitEnumDefaultValue() {
 		for _, value := range enum.GetValue() {
 			if value.GetNumber() == 0 {
@@ -141,7 +151,18 @@ func getEnumDefault(reg *descriptor.Registry, enum *descriptor.Enum) string {
 			}
 		}
 	}
-	return ""
+	return nil
+}
+
+func getEnumDefaultNumber(reg *descriptor.Registry, enum *descriptor.Enum) interface{} {
+	if !reg.GetOmitEnumDefaultValue() {
+		for _, value := range enum.GetValue() {
+			if value.GetNumber() == 0 {
+				return int(value.GetNumber())
+			}
+		}
+	}
+	return nil
 }
 
 // messageToQueryParameters converts a message to a list of OpenAPI query parameters.
@@ -254,7 +275,24 @@ func nestedQueryParams(message *descriptor.Message, field *descriptor.Field, pre
 	items := schema.Items
 	if schema.Type != "" || isEnum {
 		if schema.Type == "object" {
-			return nil, nil // TODO: currently, mapping object in query parameter is not supported
+			location := ""
+			if ix := strings.LastIndex(field.Message.FQMN(), "."); ix > 0 {
+				location = field.Message.FQMN()[0:ix]
+			}
+			if m, err := reg.LookupMsg(location, field.GetTypeName()); err == nil {
+				if opt := m.GetOptions(); opt != nil && opt.MapEntry != nil && *opt.MapEntry {
+					k := m.GetField()[0]
+					kType, err := getMapParamKey(k.GetType())
+					if err != nil {
+						return nil, err
+					}
+					// This will generate a query in the format map_name[key_type]
+					fName := fmt.Sprintf("%s[%s]", *field.Name, kType)
+					field.Name = proto.String(fName)
+					schema.Type = schema.AdditionalProperties.schemaCore.Type
+					schema.Description = `This is a request variable of the map type. The query format is "map_name[key]=value", e.g. If the map name is Age, the key type is string, and the value type is integer, the query parameter is expressed as Age["bob"]=18`
+				}
+			}
 		}
 		if items != nil && (items.Type == "" || items.Type == "object") && !isEnum {
 			return nil, nil // TODO: currently, mapping object in query parameter is not supported
@@ -320,9 +358,7 @@ func nestedQueryParams(message *descriptor.Message, field *descriptor.Field, pre
 				if reg.GetEnumsAsInts() {
 					param.Type = "integer"
 					param.Enum = listEnumNumbers(reg, enum)
-					if !reg.GetOmitEnumDefaultValue() {
-						param.Default = "0"
-					}
+					param.Default = getEnumDefaultNumber(reg, enum)
 				}
 			}
 			valueComments := enumValueProtoComments(reg, enum)
@@ -362,6 +398,14 @@ func nestedQueryParams(message *descriptor.Message, field *descriptor.Field, pre
 		params = append(params, p...)
 	}
 	return params, nil
+}
+
+func getMapParamKey(t descriptorpb.FieldDescriptorProto_Type) (string, error) {
+	tType, f, ok := primitiveSchema(t)
+	if !ok || f == "byte" || f == "float" || f == "double" {
+		return "", fmt.Errorf("unsupported type: %q", f)
+	}
+	return tType, nil
 }
 
 // findServicesMessagesAndEnumerations discovers all messages and enums defined in the RPC methods of the service.
@@ -522,13 +566,16 @@ func renderMessageAsDefinition(msg *descriptor.Message, reg *descriptor.Registry
 			if fieldSchema.Ref != "" {
 				// Per the JSON Reference syntax: Any members other than "$ref" in a JSON Reference object SHALL be ignored.
 				// https://tools.ietf.org/html/draft-pbryan-zyp-json-ref-03#section-3
-				// However, use allOf to specify Title/Description/readOnly fields.
-				if fieldSchema.Title != "" || fieldSchema.Description != "" || fieldSchema.ReadOnly {
+				// However, use allOf to specify Title/Description/Example/readOnly fields.
+				if fieldSchema.Title != "" || fieldSchema.Description != "" || len(fieldSchema.Example) > 0 || fieldSchema.ReadOnly {
 					fieldSchema = openapiSchemaObject{
 						Title:       fieldSchema.Title,
 						Description: fieldSchema.Description,
-						ReadOnly:    fieldSchema.ReadOnly,
-						AllOf:       []allOfEntry{{Ref: fieldSchema.Ref}},
+						schemaCore: schemaCore{
+							Example: fieldSchema.Example,
+						},
+						ReadOnly: fieldSchema.ReadOnly,
+						AllOf:    []allOfEntry{{Ref: fieldSchema.Ref}},
 					}
 				} else {
 					fieldSchema = openapiSchemaObject{schemaCore: schemaCore{Ref: fieldSchema.Ref}}
@@ -846,7 +893,7 @@ func renderEnumerationsAsDefinition(enums enumMap, d openapiDefinitionsObject, r
 		if reg.GetEnumsAsInts() {
 			enumSchemaObject.Type = "integer"
 			enumSchemaObject.Format = "int32"
-			enumSchemaObject.Default = "0"
+			enumSchemaObject.Default = getEnumDefaultNumber(reg, enum)
 			enumSchemaObject.Enum = listEnumNumbers(reg, enum)
 		}
 		if err := updateOpenAPIDataFromComments(reg, &enumSchemaObject, enum, enumComments, false); err != nil {
@@ -1092,8 +1139,9 @@ func renderServices(services []*descriptor.Service, paths openapiPathsObject, re
 				var pathParamNames = make(map[string]string)
 				for _, parameter := range b.PathParams {
 
-					var paramType, paramFormat, desc, collectionFormat, defaultValue string
-					var enumNames []string
+					var paramType, paramFormat, desc, collectionFormat string
+					var defaultValue interface{}
+					var enumNames interface{}
 					var items *openapiItemsObject
 					var minItems *int
 					var extensions []extension
@@ -1125,6 +1173,7 @@ func renderServices(services []*descriptor.Service, paths openapiPathsObject, re
 							paramFormat = ""
 							enumNames = listEnumNumbers(reg, enum)
 						}
+
 						schema := schemaOfField(parameter.Target, reg, customRefs)
 						desc = schema.Description
 						defaultValue = schema.Default
@@ -1150,9 +1199,8 @@ func renderServices(services []*descriptor.Service, paths openapiPathsObject, re
 					if parameter.IsRepeated() {
 						core := schemaCore{Type: paramType, Format: paramFormat}
 						if parameter.IsEnum() {
-							var s []string
 							core.Enum = enumNames
-							enumNames = s
+							enumNames = nil
 						}
 						items = (*openapiItemsObject)(&openapiSchemaObject{schemaCore: core})
 						paramType = "array"
@@ -1380,16 +1428,29 @@ func renderServices(services []*descriptor.Service, paths openapiPathsObject, re
 							},
 						},
 					}
-					statusDef, hasStatus := fullyQualifiedNameToOpenAPIName(".google.rpc.Status", reg)
-					if hasStatus {
-						props = append(props, keyVal{
-							Key: "error",
-							Value: openapiSchemaObject{
-								schemaCore: schemaCore{
-									Ref: fmt.Sprintf("#/definitions/%s", statusDef)},
-							},
-						})
+					if !reg.GetDisableDefaultErrors() {
+						statusDef, hasStatus := fullyQualifiedNameToOpenAPIName(".google.rpc.Status", reg)
+						if hasStatus {
+							props = append(props, keyVal{
+								Key: "error",
+								Value: openapiSchemaObject{
+									schemaCore: schemaCore{
+										Ref: fmt.Sprintf("#/definitions/%s", statusDef)},
+								},
+							})
+						}
 					}
+
+					// Special case HttpBody responses, they will be unformatted bytes
+					if meth.ResponseType.FQMN() == ".google.api.HttpBody" {
+						responseSchema.Type = "string"
+						responseSchema.Format = "binary"
+						responseSchema.Title = "Free form byte stream"
+						// The error response is still JSON, but technically the full response
+						// is still unformatted, so don't include the error response structure.
+						props = nil
+					}
+
 					responseSchema.Properties = &props
 					responseSchema.Ref = ""
 				}
@@ -2128,6 +2189,11 @@ func updateOpenAPIDataFromComments(reg *descriptor.Registry, swaggerObject inter
 		return nil
 	}
 
+	// Checks whether the "ignore_comments" flag is set to true
+	if reg.GetIgnoreComments() {
+		return nil
+	}
+
 	// Checks whether the "use_go_templates" flag is set to true
 	if reg.GetUseGoTemplate() {
 		comment = goTemplateComments(comment, data, reg)
@@ -2694,6 +2760,13 @@ func updateswaggerObjectFromJSONSchema(s *openapiSchemaObject, j *openapi_option
 		s.Items.ExclusiveMaximum = j.GetExclusiveMaximum()
 		s.Items.ExclusiveMinimum = j.GetExclusiveMinimum()
 		s.Items.Enum = j.GetEnum()
+
+		if j.GetDefault() == "" {
+			s.Items.Default = nil
+		}
+		if len(j.GetEnum()) == 0 {
+			s.Items.Enum = nil
+		}
 	} else {
 		s.MaxLength = j.GetMaxLength()
 		s.MinLength = j.GetMinLength()
@@ -2710,11 +2783,17 @@ func updateswaggerObjectFromJSONSchema(s *openapiSchemaObject, j *openapi_option
 		s.ExclusiveMaximum = j.GetExclusiveMaximum()
 		s.ExclusiveMinimum = j.GetExclusiveMinimum()
 		s.Enum = j.GetEnum()
+
+		if j.GetDefault() == "" {
+			s.Default = nil
+		}
+		if len(j.GetEnum()) == 0 {
+			s.Enum = nil
+		}
 	}
 	s.MaxItems = j.GetMaxItems()
 	s.MinItems = j.GetMinItems()
 
-	s.Enum = j.GetEnum()
 	if j.GetExtensions() != nil {
 		exts, err := processExtensions(j.GetExtensions())
 		if err != nil {

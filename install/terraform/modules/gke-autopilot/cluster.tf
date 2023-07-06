@@ -28,7 +28,7 @@ locals {
   network           = lookup(var.cluster, "network", "default")
   subnetwork        = lookup(var.cluster, "subnetwork", "")
   releaseChannel    = lookup(var.cluster, "releaseChannel", "REGULAR")
-  kubernetesVersion = lookup(var.cluster, "kubernetesVersion", "1.25")
+  kubernetesVersion = lookup(var.cluster, "kubernetesVersion", "1.26")
 }
 
 # echo command used for debugging purpose
