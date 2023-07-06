@@ -282,7 +282,7 @@ func (c *Controller) syncFleetAutoscaler(ctx context.Context, key string) error 
 	}
 
 	if fas == nil {
-		return nil
+		return c.cleanFasThreads(key)
 	}
 
 	// Retrieve the fleet by spec name
