@@ -69,4 +69,4 @@ tags:
   - "started-by-${_PARENT_BUILD_ID}"
 timeout: 5400s # 1.5h
 queueTtl: 7200s # 2h // only one set of e2es should be running at once
-
+logsBucket: "gs://agones-build-logs"
