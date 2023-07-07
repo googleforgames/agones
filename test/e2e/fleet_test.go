@@ -42,7 +42,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/rand"
 	"k8s.io/apimachinery/pkg/util/validation"
-	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/util/retry"
 )
@@ -104,7 +103,7 @@ func TestFleetStrategyValidation(t *testing.T) {
 		statusErr, ok := err.(*k8serrors.StatusError)
 		assert.True(t, ok)
 		fmt.Println(statusErr)
-		CausesMessages := []string{"Strategy Type should be one of: RollingUpdate, Recreate."}
+		CausesMessages := []string{`supported values: "RollingUpdate", "Recreate"`}
 		assert.Len(t, statusErr.Status().Details.Causes, 1)
 		assert.Equal(t, metav1.CauseTypeFieldValueNotSupported, statusErr.Status().Details.Causes[0].Type)
 		assert.Contains(t, CausesMessages, statusErr.Status().Details.Causes[0].Message)
@@ -824,13 +823,12 @@ func TestFleetGSSpecValidation(t *testing.T) {
 	assert.NotNil(t, err)
 	statusErr, ok = err.(*k8serrors.StatusError)
 	assert.True(t, ok)
-	CausesMessages := []string{agonesv1.ErrContainerRequired, "Could not find a container named "}
 	if assert.Len(t, statusErr.Status().Details.Causes, 2) {
 		assert.Equal(t, metav1.CauseTypeFieldValueInvalid, statusErr.Status().Details.Causes[1].Type)
-		assert.Contains(t, CausesMessages, statusErr.Status().Details.Causes[1].Message)
+		assert.Contains(t, "Could not find a container named ", statusErr.Status().Details.Causes[1].Message)
 	}
 	assert.Equal(t, metav1.CauseTypeFieldValueRequired, statusErr.Status().Details.Causes[0].Type)
-	assert.Contains(t, CausesMessages, statusErr.Status().Details.Causes[0].Message)
+	assert.Contains(t, agonesv1.ErrContainerRequired, statusErr.Status().Details.Causes[0].Message)
 
 	// use valid name for a container, one of two defined above
 	flt.Spec.Template.Spec.Container = containerName
@@ -870,7 +868,7 @@ func TestFleetNameValidation(t *testing.T) {
 	require.NotNil(t, err)
 	statusErr := err.(*k8serrors.StatusError)
 	assert.True(t, len(statusErr.Status().Details.Causes) > 0)
-	assert.Equal(t, field.ErrorTypeTooMany, statusErr.Status().Details.Causes[0].Type)
+	assert.Equal(t, metav1.CauseType("FieldValueTooLong"), statusErr.Status().Details.Causes[0].Type)
 	goodFlt := defaultFleet(framework.Namespace)
 	goodFlt.Name = flt.Name[0 : nameLen-1]
 	goodFlt, err = client.Fleets(framework.Namespace).Create(ctx, goodFlt, metav1.CreateOptions{})

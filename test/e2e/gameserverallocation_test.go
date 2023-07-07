@@ -53,7 +53,7 @@ func TestCreateFleetAndGameServerAllocate(t *testing.T) {
 			flt, err := fleets.Create(ctx, fleet, metav1.CreateOptions{})
 			if strategy != apis.Packed && framework.CloudProduct == "gke-autopilot" {
 				// test that Autopilot rejects anything but Packed and skip the rest of the test
-				assert.ErrorContains(t, err, "configuration is invalid")
+				assert.ErrorContains(t, err, "Invalid value")
 				return
 			}
 			if assert.NoError(t, err) {
