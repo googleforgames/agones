@@ -106,7 +106,7 @@ func TestFleetStrategyValidation(t *testing.T) {
 		CausesMessages := []string{`supported values: "RollingUpdate", "Recreate"`}
 		assert.Len(t, statusErr.Status().Details.Causes, 1)
 		assert.Equal(t, metav1.CauseTypeFieldValueNotSupported, statusErr.Status().Details.Causes[0].Type)
-		assert.Contains(t, CausesMessages, statusErr.Status().Details.Causes[0].Message)
+		assert.Contains(t, statusErr.Status().Details.Causes[0].Message, CausesMessages)
 	}
 
 	// Change DeploymentStrategy Type, set it to empty string, which is forbidden
@@ -825,10 +825,10 @@ func TestFleetGSSpecValidation(t *testing.T) {
 	assert.True(t, ok)
 	if assert.Len(t, statusErr.Status().Details.Causes, 2) {
 		assert.Equal(t, metav1.CauseTypeFieldValueInvalid, statusErr.Status().Details.Causes[1].Type)
-		assert.Contains(t, "Could not find a container named ", statusErr.Status().Details.Causes[1].Message)
+		assert.Contains(t, statusErr.Status().Details.Causes[1].Message, "Could not find a container named ")
 	}
 	assert.Equal(t, metav1.CauseTypeFieldValueRequired, statusErr.Status().Details.Causes[0].Type)
-	assert.Contains(t, agonesv1.ErrContainerRequired, statusErr.Status().Details.Causes[0].Message)
+	assert.Contains(t, statusErr.Status().Details.Causes[0].Message, agonesv1.ErrContainerRequired)
 
 	// use valid name for a container, one of two defined above
 	flt.Spec.Template.Spec.Container = containerName
