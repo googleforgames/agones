@@ -927,7 +927,7 @@ func TestGameServerResourceValidation(t *testing.T) {
 	assert.True(t, ok)
 	assert.Len(t, statusErr.Status().Details.Causes, 1)
 	assert.Equal(t, metav1.CauseTypeFieldValueInvalid, statusErr.Status().Details.Causes[0].Type)
-	assert.Equal(t, "container", statusErr.Status().Details.Causes[0].Field)
+	assert.Equal(t, "spec.template.spec.containers[0].resources.requests.memory", statusErr.Status().Details.Causes[0].Field)
 
 	gs.Spec.Template.Spec.Containers[0].Resources.Requests[corev1.ResourceCPU] = resource.MustParse("-50m")
 	_, err = gsClient.Create(ctx, gs.DeepCopy(), metav1.CreateOptions{})
@@ -936,7 +936,7 @@ func TestGameServerResourceValidation(t *testing.T) {
 	assert.True(t, ok)
 	assert.Len(t, statusErr.Status().Details.Causes, 2)
 	assert.Equal(t, metav1.CauseTypeFieldValueInvalid, statusErr.Status().Details.Causes[0].Type)
-	assert.Equal(t, "container", statusErr.Status().Details.Causes[0].Field)
+	assert.Equal(t, "spec.template.spec.containers[0].resources.requests.cpu", statusErr.Status().Details.Causes[0].Field)
 
 	// test that values are still being set correctly
 	m50 := resource.MustParse("50m")

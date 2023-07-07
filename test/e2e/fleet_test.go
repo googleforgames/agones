@@ -1425,7 +1425,7 @@ func TestFleetResourceValidation(t *testing.T) {
 	assert.True(t, ok)
 	assert.Len(t, statusErr.Status().Details.Causes, 1)
 	assert.Equal(t, metav1.CauseTypeFieldValueInvalid, statusErr.Status().Details.Causes[0].Type)
-	assert.Equal(t, "container", statusErr.Status().Details.Causes[0].Field)
+	assert.Equal(t, "spec.template.spec.template.spec.containers[1].resources.requests.memory", statusErr.Status().Details.Causes[0].Field)
 
 	containers[0].Resources.Limits[corev1.ResourceCPU] = resource.MustParse("-50m")
 	_, err = client.Fleets(framework.Namespace).Create(ctx, flt.DeepCopy(), metav1.CreateOptions{})
@@ -1435,7 +1435,7 @@ func TestFleetResourceValidation(t *testing.T) {
 
 	assert.Len(t, statusErr.Status().Details.Causes, 3)
 	assert.Equal(t, metav1.CauseTypeFieldValueInvalid, statusErr.Status().Details.Causes[0].Type)
-	assert.Equal(t, "container", statusErr.Status().Details.Causes[0].Field)
+	assert.Equal(t, "spec.template.spec.template.spec.containers[0].resources.requests.cpu", statusErr.Status().Details.Causes[0].Field)
 	causes := statusErr.Status().Details.Causes
 	assertCausesContainsString(t, causes, "Request must be less than or equal to cpu limit")
 	assertCausesContainsString(t, causes, "Resource cpu limit value must be non negative")
@@ -1624,7 +1624,7 @@ func TestFleetAllocationOverflow(t *testing.T) {
 func assertCausesContainsString(t *testing.T, causes []metav1.StatusCause, expected string) {
 	found := false
 	for _, v := range causes {
-		if expected == v.Message {
+		if strings.Contains(v.Message, expected) {
 			found = true
 			break
 		}
