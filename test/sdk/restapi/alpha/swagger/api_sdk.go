@@ -40,6 +40,93 @@ var (
 
 type SDKApiService service
 /*
+SDKApiService Adds a value to a List and returns updated List. Returns NOT_FOUND if the List does not exist. Returns ALREADY_EXISTS if the value is already in the List. Returns OUT_OF_RANGE if the List is already at Capacity.
+ * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ * @param body
+ * @param name The name of the List to add a value to.
+@return AlphaList
+*/
+func (a *SDKApiService) AddListValue(ctx context.Context, body V1alpha1NameaddValueBody, name string) (AlphaList, *http.Response, error) {
+	var (
+		localVarHttpMethod = strings.ToUpper("Post")
+		localVarPostBody   interface{}
+		localVarFileName   string
+		localVarFileBytes  []byte
+		localVarReturnValue AlphaList
+	)
+
+	// create path and map variables
+	localVarPath := a.client.cfg.BasePath + "/v1alpha1/{name}:addValue"
+	localVarPath = strings.Replace(localVarPath, "{"+"name"+"}", fmt.Sprintf("%v", name), -1)
+
+	localVarHeaderParams := make(map[string]string)
+	localVarQueryParams := url.Values{}
+	localVarFormParams := url.Values{}
+
+	// to determine the Content-Type header
+	localVarHttpContentTypes := []string{"application/json"}
+
+	// set Content-Type header
+	localVarHttpContentType := selectHeaderContentType(localVarHttpContentTypes)
+	if localVarHttpContentType != "" {
+		localVarHeaderParams["Content-Type"] = localVarHttpContentType
+	}
+
+	// to determine the Accept header
+	localVarHttpHeaderAccepts := []string{"application/json"}
+
+	// set Accept header
+	localVarHttpHeaderAccept := selectHeaderAccept(localVarHttpHeaderAccepts)
+	if localVarHttpHeaderAccept != "" {
+		localVarHeaderParams["Accept"] = localVarHttpHeaderAccept
+	}
+	// body params
+	localVarPostBody = &body
+	r, err := a.client.prepareRequest(ctx, localVarPath, localVarHttpMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFileName, localVarFileBytes)
+	if err != nil {
+		return localVarReturnValue, nil, err
+	}
+
+	localVarHttpResponse, err := a.client.callAPI(r)
+	if err != nil || localVarHttpResponse == nil {
+		return localVarReturnValue, localVarHttpResponse, err
+	}
+
+	localVarBody, err := ioutil.ReadAll(localVarHttpResponse.Body)
+	localVarHttpResponse.Body.Close()
+	if err != nil {
+		return localVarReturnValue, localVarHttpResponse, err
+	}
+
+	if localVarHttpResponse.StatusCode < 300 {
+		// If we succeed, return the data, otherwise pass on to decode error.
+		err = a.client.decode(&localVarReturnValue, localVarBody, localVarHttpResponse.Header.Get("Content-Type"));
+		if err == nil { 
+			return localVarReturnValue, localVarHttpResponse, err
+		}
+	}
+
+	if localVarHttpResponse.StatusCode >= 300 {
+		newErr := GenericSwaggerError{
+			body: localVarBody,
+			error: localVarHttpResponse.Status,
+		}
+		if localVarHttpResponse.StatusCode == 200 {
+			var v AlphaList
+			err = a.client.decode(&v, localVarBody, localVarHttpResponse.Header.Get("Content-Type"));
+				if err != nil {
+					newErr.error = err.Error()
+					return localVarReturnValue, localVarHttpResponse, newErr
+				}
+				newErr.model = v
+				return localVarReturnValue, localVarHttpResponse, newErr
+		}
+		return localVarReturnValue, localVarHttpResponse, newErr
+	}
+
+	return localVarReturnValue, localVarHttpResponse, nil
+}
+/*
 SDKApiService Returns the list of the currently connected player ids. This is always accurate from what has been set through this SDK, even if the value has yet to be updated on the GameServer status resource.
 If GameServer.Status.Players.IDs is set manually through the Kubernetes API, use SDK.GameServer() or SDK.WatchGameServer() instead to view this value.
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
@@ -109,6 +196,174 @@ func (a *SDKApiService) GetConnectedPlayers(ctx context.Context) (AlphaPlayerIdL
 		}
 		if localVarHttpResponse.StatusCode == 200 {
 			var v AlphaPlayerIdList
+			err = a.client.decode(&v, localVarBody, localVarHttpResponse.Header.Get("Content-Type"));
+				if err != nil {
+					newErr.error = err.Error()
+					return localVarReturnValue, localVarHttpResponse, newErr
+				}
+				newErr.model = v
+				return localVarReturnValue, localVarHttpResponse, newErr
+		}
+		return localVarReturnValue, localVarHttpResponse, newErr
+	}
+
+	return localVarReturnValue, localVarHttpResponse, nil
+}
+/*
+SDKApiService Gets a Counter. Returns NOT_FOUND if the Counter does not exist.
+ * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ * @param name The name of the Counter to get
+@return AlphaCounter
+*/
+func (a *SDKApiService) GetCounter(ctx context.Context, name string) (AlphaCounter, *http.Response, error) {
+	var (
+		localVarHttpMethod = strings.ToUpper("Get")
+		localVarPostBody   interface{}
+		localVarFileName   string
+		localVarFileBytes  []byte
+		localVarReturnValue AlphaCounter
+	)
+
+	// create path and map variables
+	localVarPath := a.client.cfg.BasePath + "/v1alpha1/{name}"
+	localVarPath = strings.Replace(localVarPath, "{"+"name"+"}", fmt.Sprintf("%v", name), -1)
+
+	localVarHeaderParams := make(map[string]string)
+	localVarQueryParams := url.Values{}
+	localVarFormParams := url.Values{}
+
+	// to determine the Content-Type header
+	localVarHttpContentTypes := []string{}
+
+	// set Content-Type header
+	localVarHttpContentType := selectHeaderContentType(localVarHttpContentTypes)
+	if localVarHttpContentType != "" {
+		localVarHeaderParams["Content-Type"] = localVarHttpContentType
+	}
+
+	// to determine the Accept header
+	localVarHttpHeaderAccepts := []string{"application/json"}
+
+	// set Accept header
+	localVarHttpHeaderAccept := selectHeaderAccept(localVarHttpHeaderAccepts)
+	if localVarHttpHeaderAccept != "" {
+		localVarHeaderParams["Accept"] = localVarHttpHeaderAccept
+	}
+	r, err := a.client.prepareRequest(ctx, localVarPath, localVarHttpMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFileName, localVarFileBytes)
+	if err != nil {
+		return localVarReturnValue, nil, err
+	}
+
+	localVarHttpResponse, err := a.client.callAPI(r)
+	if err != nil || localVarHttpResponse == nil {
+		return localVarReturnValue, localVarHttpResponse, err
+	}
+
+	localVarBody, err := ioutil.ReadAll(localVarHttpResponse.Body)
+	localVarHttpResponse.Body.Close()
+	if err != nil {
+		return localVarReturnValue, localVarHttpResponse, err
+	}
+
+	if localVarHttpResponse.StatusCode < 300 {
+		// If we succeed, return the data, otherwise pass on to decode error.
+		err = a.client.decode(&localVarReturnValue, localVarBody, localVarHttpResponse.Header.Get("Content-Type"));
+		if err == nil { 
+			return localVarReturnValue, localVarHttpResponse, err
+		}
+	}
+
+	if localVarHttpResponse.StatusCode >= 300 {
+		newErr := GenericSwaggerError{
+			body: localVarBody,
+			error: localVarHttpResponse.Status,
+		}
+		if localVarHttpResponse.StatusCode == 200 {
+			var v AlphaCounter
+			err = a.client.decode(&v, localVarBody, localVarHttpResponse.Header.Get("Content-Type"));
+				if err != nil {
+					newErr.error = err.Error()
+					return localVarReturnValue, localVarHttpResponse, newErr
+				}
+				newErr.model = v
+				return localVarReturnValue, localVarHttpResponse, newErr
+		}
+		return localVarReturnValue, localVarHttpResponse, newErr
+	}
+
+	return localVarReturnValue, localVarHttpResponse, nil
+}
+/*
+SDKApiService Gets a List. Returns NOT_FOUND if the List does not exist.
+ * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ * @param name1 The name of the List to get
+@return AlphaList
+*/
+func (a *SDKApiService) GetList(ctx context.Context, name1 string) (AlphaList, *http.Response, error) {
+	var (
+		localVarHttpMethod = strings.ToUpper("Get")
+		localVarPostBody   interface{}
+		localVarFileName   string
+		localVarFileBytes  []byte
+		localVarReturnValue AlphaList
+	)
+
+	// create path and map variables
+	localVarPath := a.client.cfg.BasePath + "/v1alpha1/{name_1}"
+	localVarPath = strings.Replace(localVarPath, "{"+"name_1"+"}", fmt.Sprintf("%v", name1), -1)
+
+	localVarHeaderParams := make(map[string]string)
+	localVarQueryParams := url.Values{}
+	localVarFormParams := url.Values{}
+
+	// to determine the Content-Type header
+	localVarHttpContentTypes := []string{}
+
+	// set Content-Type header
+	localVarHttpContentType := selectHeaderContentType(localVarHttpContentTypes)
+	if localVarHttpContentType != "" {
+		localVarHeaderParams["Content-Type"] = localVarHttpContentType
+	}
+
+	// to determine the Accept header
+	localVarHttpHeaderAccepts := []string{"application/json"}
+
+	// set Accept header
+	localVarHttpHeaderAccept := selectHeaderAccept(localVarHttpHeaderAccepts)
+	if localVarHttpHeaderAccept != "" {
+		localVarHeaderParams["Accept"] = localVarHttpHeaderAccept
+	}
+	r, err := a.client.prepareRequest(ctx, localVarPath, localVarHttpMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFileName, localVarFileBytes)
+	if err != nil {
+		return localVarReturnValue, nil, err
+	}
+
+	localVarHttpResponse, err := a.client.callAPI(r)
+	if err != nil || localVarHttpResponse == nil {
+		return localVarReturnValue, localVarHttpResponse, err
+	}
+
+	localVarBody, err := ioutil.ReadAll(localVarHttpResponse.Body)
+	localVarHttpResponse.Body.Close()
+	if err != nil {
+		return localVarReturnValue, localVarHttpResponse, err
+	}
+
+	if localVarHttpResponse.StatusCode < 300 {
+		// If we succeed, return the data, otherwise pass on to decode error.
+		err = a.client.decode(&localVarReturnValue, localVarBody, localVarHttpResponse.Header.Get("Content-Type"));
+		if err == nil { 
+			return localVarReturnValue, localVarHttpResponse, err
+		}
+	}
+
+	if localVarHttpResponse.StatusCode >= 300 {
+		newErr := GenericSwaggerError{
+			body: localVarBody,
+			error: localVarHttpResponse.Status,
+		}
+		if localVarHttpResponse.StatusCode == 200 {
+			var v AlphaList
 			err = a.client.decode(&v, localVarBody, localVarHttpResponse.Header.Get("Content-Type"));
 				if err != nil {
 					newErr.error = err.Error()
@@ -546,18 +801,105 @@ func (a *SDKApiService) PlayerDisconnect(ctx context.Context, body AlphaPlayerId
 	return localVarReturnValue, localVarHttpResponse, nil
 }
 /*
+SDKApiService Removes a value from a List and returns updated List. Returns NOT_FOUND if the List does not exist. Returns NOT_FOUND if the value is not in the List.
+ * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ * @param body
+ * @param name The name of the List to remove a value from.
+@return AlphaList
+*/
+func (a *SDKApiService) RemoveListValue(ctx context.Context, body V1alpha1NameremoveValueBody, name string) (AlphaList, *http.Response, error) {
+	var (
+		localVarHttpMethod = strings.ToUpper("Post")
+		localVarPostBody   interface{}
+		localVarFileName   string
+		localVarFileBytes  []byte
+		localVarReturnValue AlphaList
+	)
+
+	// create path and map variables
+	localVarPath := a.client.cfg.BasePath + "/v1alpha1/{name}:removeValue"
+	localVarPath = strings.Replace(localVarPath, "{"+"name"+"}", fmt.Sprintf("%v", name), -1)
+
+	localVarHeaderParams := make(map[string]string)
+	localVarQueryParams := url.Values{}
+	localVarFormParams := url.Values{}
+
+	// to determine the Content-Type header
+	localVarHttpContentTypes := []string{"application/json"}
+
+	// set Content-Type header
+	localVarHttpContentType := selectHeaderContentType(localVarHttpContentTypes)
+	if localVarHttpContentType != "" {
+		localVarHeaderParams["Content-Type"] = localVarHttpContentType
+	}
+
+	// to determine the Accept header
+	localVarHttpHeaderAccepts := []string{"application/json"}
+
+	// set Accept header
+	localVarHttpHeaderAccept := selectHeaderAccept(localVarHttpHeaderAccepts)
+	if localVarHttpHeaderAccept != "" {
+		localVarHeaderParams["Accept"] = localVarHttpHeaderAccept
+	}
+	// body params
+	localVarPostBody = &body
+	r, err := a.client.prepareRequest(ctx, localVarPath, localVarHttpMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFileName, localVarFileBytes)
+	if err != nil {
+		return localVarReturnValue, nil, err
+	}
+
+	localVarHttpResponse, err := a.client.callAPI(r)
+	if err != nil || localVarHttpResponse == nil {
+		return localVarReturnValue, localVarHttpResponse, err
+	}
+
+	localVarBody, err := ioutil.ReadAll(localVarHttpResponse.Body)
+	localVarHttpResponse.Body.Close()
+	if err != nil {
+		return localVarReturnValue, localVarHttpResponse, err
+	}
+
+	if localVarHttpResponse.StatusCode < 300 {
+		// If we succeed, return the data, otherwise pass on to decode error.
+		err = a.client.decode(&localVarReturnValue, localVarBody, localVarHttpResponse.Header.Get("Content-Type"));
+		if err == nil { 
+			return localVarReturnValue, localVarHttpResponse, err
+		}
+	}
+
+	if localVarHttpResponse.StatusCode >= 300 {
+		newErr := GenericSwaggerError{
+			body: localVarBody,
+			error: localVarHttpResponse.Status,
+		}
+		if localVarHttpResponse.StatusCode == 200 {
+			var v AlphaList
+			err = a.client.decode(&v, localVarBody, localVarHttpResponse.Header.Get("Content-Type"));
+				if err != nil {
+					newErr.error = err.Error()
+					return localVarReturnValue, localVarHttpResponse, newErr
+				}
+				newErr.model = v
+				return localVarReturnValue, localVarHttpResponse, newErr
+		}
+		return localVarReturnValue, localVarHttpResponse, newErr
+	}
+
+	return localVarReturnValue, localVarHttpResponse, nil
+}
+/*
 SDKApiService Update the GameServer.Status.Players.Capacity value with a new capacity.
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @param body Store a count variable.
-@return AlphaEmpty
+@return SdkalphaEmpty
 */
-func (a *SDKApiService) SetPlayerCapacity(ctx context.Context, body AlphaCount) (AlphaEmpty, *http.Response, error) {
+func (a *SDKApiService) SetPlayerCapacity(ctx context.Context, body AlphaCount) (SdkalphaEmpty, *http.Response, error) {
 	var (
 		localVarHttpMethod = strings.ToUpper("Put")
 		localVarPostBody   interface{}
 		localVarFileName   string
 		localVarFileBytes  []byte
-		localVarReturnValue AlphaEmpty
+		localVarReturnValue SdkalphaEmpty
 	)
 
 	// create path and map variables
@@ -616,7 +958,181 @@ func (a *SDKApiService) SetPlayerCapacity(ctx context.Context, body AlphaCount) 
 			error: localVarHttpResponse.Status,
 		}
 		if localVarHttpResponse.StatusCode == 200 {
-			var v AlphaEmpty
+			var v SdkalphaEmpty
+			err = a.client.decode(&v, localVarBody, localVarHttpResponse.Header.Get("Content-Type"));
+				if err != nil {
+					newErr.error = err.Error()
+					return localVarReturnValue, localVarHttpResponse, newErr
+				}
+				newErr.model = v
+				return localVarReturnValue, localVarHttpResponse, newErr
+		}
+		return localVarReturnValue, localVarHttpResponse, newErr
+	}
+
+	return localVarReturnValue, localVarHttpResponse, nil
+}
+/*
+SDKApiService UpdateCounter returns the updated Counter. Returns NOT_FOUND if the Counter does not exist (name cannot be updated). Returns OUT_OF_RANGE if the Count is out of range [0,Capacity]. Returns INVALID_ARGUMENT if the field mask path(s) are not field(s) of the Counter. If a field mask path(s) is specified, but the value is not set in the request Counter object, then the default value for the variable will be set (i.e. 0 for \&quot;capacity\&quot; or \&quot;count\&quot;).
+ * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ * @param body The Counter to update
+ * @param counterName The name of the Counter
+@return AlphaCounter
+*/
+func (a *SDKApiService) UpdateCounter(ctx context.Context, body TheCounterToUpdate, counterName string) (AlphaCounter, *http.Response, error) {
+	var (
+		localVarHttpMethod = strings.ToUpper("Patch")
+		localVarPostBody   interface{}
+		localVarFileName   string
+		localVarFileBytes  []byte
+		localVarReturnValue AlphaCounter
+	)
+
+	// create path and map variables
+	localVarPath := a.client.cfg.BasePath + "/v1alpha1/{counter.name}"
+	localVarPath = strings.Replace(localVarPath, "{"+"counter.name"+"}", fmt.Sprintf("%v", counterName), -1)
+
+	localVarHeaderParams := make(map[string]string)
+	localVarQueryParams := url.Values{}
+	localVarFormParams := url.Values{}
+
+	// to determine the Content-Type header
+	localVarHttpContentTypes := []string{"application/json"}
+
+	// set Content-Type header
+	localVarHttpContentType := selectHeaderContentType(localVarHttpContentTypes)
+	if localVarHttpContentType != "" {
+		localVarHeaderParams["Content-Type"] = localVarHttpContentType
+	}
+
+	// to determine the Accept header
+	localVarHttpHeaderAccepts := []string{"application/json"}
+
+	// set Accept header
+	localVarHttpHeaderAccept := selectHeaderAccept(localVarHttpHeaderAccepts)
+	if localVarHttpHeaderAccept != "" {
+		localVarHeaderParams["Accept"] = localVarHttpHeaderAccept
+	}
+	// body params
+	localVarPostBody = &body
+	r, err := a.client.prepareRequest(ctx, localVarPath, localVarHttpMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFileName, localVarFileBytes)
+	if err != nil {
+		return localVarReturnValue, nil, err
+	}
+
+	localVarHttpResponse, err := a.client.callAPI(r)
+	if err != nil || localVarHttpResponse == nil {
+		return localVarReturnValue, localVarHttpResponse, err
+	}
+
+	localVarBody, err := ioutil.ReadAll(localVarHttpResponse.Body)
+	localVarHttpResponse.Body.Close()
+	if err != nil {
+		return localVarReturnValue, localVarHttpResponse, err
+	}
+
+	if localVarHttpResponse.StatusCode < 300 {
+		// If we succeed, return the data, otherwise pass on to decode error.
+		err = a.client.decode(&localVarReturnValue, localVarBody, localVarHttpResponse.Header.Get("Content-Type"));
+		if err == nil { 
+			return localVarReturnValue, localVarHttpResponse, err
+		}
+	}
+
+	if localVarHttpResponse.StatusCode >= 300 {
+		newErr := GenericSwaggerError{
+			body: localVarBody,
+			error: localVarHttpResponse.Status,
+		}
+		if localVarHttpResponse.StatusCode == 200 {
+			var v AlphaCounter
+			err = a.client.decode(&v, localVarBody, localVarHttpResponse.Header.Get("Content-Type"));
+				if err != nil {
+					newErr.error = err.Error()
+					return localVarReturnValue, localVarHttpResponse, newErr
+				}
+				newErr.model = v
+				return localVarReturnValue, localVarHttpResponse, newErr
+		}
+		return localVarReturnValue, localVarHttpResponse, newErr
+	}
+
+	return localVarReturnValue, localVarHttpResponse, nil
+}
+/*
+SDKApiService UpdateList returns the updated List. Returns NOT_FOUND if the List does not exist (name cannot be updated). **THIS WILL OVERWRITE ALL EXISTING LIST.VALUES WITH ANY REQUEST LIST.VALUES** Use AddListValue() or RemoveListValue() for modifying the List.Values field. Returns INVALID_ARGUMENT if the field mask path(s) are not field(s) of the List. If a field mask path(s) is specified, but the value is not set in the request List object, then the default value for the variable will be set (i.e. 0 for \&quot;capacity\&quot;, empty list for \&quot;values\&quot;).
+ * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ * @param body The List to update
+ * @param listName The name of the List
+@return AlphaList
+*/
+func (a *SDKApiService) UpdateList(ctx context.Context, body TheListToUpdate, listName string) (AlphaList, *http.Response, error) {
+	var (
+		localVarHttpMethod = strings.ToUpper("Patch")
+		localVarPostBody   interface{}
+		localVarFileName   string
+		localVarFileBytes  []byte
+		localVarReturnValue AlphaList
+	)
+
+	// create path and map variables
+	localVarPath := a.client.cfg.BasePath + "/v1alpha1/{list.name}"
+	localVarPath = strings.Replace(localVarPath, "{"+"list.name"+"}", fmt.Sprintf("%v", listName), -1)
+
+	localVarHeaderParams := make(map[string]string)
+	localVarQueryParams := url.Values{}
+	localVarFormParams := url.Values{}
+
+	// to determine the Content-Type header
+	localVarHttpContentTypes := []string{"application/json"}
+
+	// set Content-Type header
+	localVarHttpContentType := selectHeaderContentType(localVarHttpContentTypes)
+	if localVarHttpContentType != "" {
+		localVarHeaderParams["Content-Type"] = localVarHttpContentType
+	}
+
+	// to determine the Accept header
+	localVarHttpHeaderAccepts := []string{"application/json"}
+
+	// set Accept header
+	localVarHttpHeaderAccept := selectHeaderAccept(localVarHttpHeaderAccepts)
+	if localVarHttpHeaderAccept != "" {
+		localVarHeaderParams["Accept"] = localVarHttpHeaderAccept
+	}
+	// body params
+	localVarPostBody = &body
+	r, err := a.client.prepareRequest(ctx, localVarPath, localVarHttpMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFileName, localVarFileBytes)
+	if err != nil {
+		return localVarReturnValue, nil, err
+	}
+
+	localVarHttpResponse, err := a.client.callAPI(r)
+	if err != nil || localVarHttpResponse == nil {
+		return localVarReturnValue, localVarHttpResponse, err
+	}
+
+	localVarBody, err := ioutil.ReadAll(localVarHttpResponse.Body)
+	localVarHttpResponse.Body.Close()
+	if err != nil {
+		return localVarReturnValue, localVarHttpResponse, err
+	}
+
+	if localVarHttpResponse.StatusCode < 300 {
+		// If we succeed, return the data, otherwise pass on to decode error.
+		err = a.client.decode(&localVarReturnValue, localVarBody, localVarHttpResponse.Header.Get("Content-Type"));
+		if err == nil { 
+			return localVarReturnValue, localVarHttpResponse, err
+		}
+	}
+
+	if localVarHttpResponse.StatusCode >= 300 {
+		newErr := GenericSwaggerError{
+			body: localVarBody,
+			error: localVarHttpResponse.Status,
+		}
+		if localVarHttpResponse.StatusCode == 200 {
+			var v AlphaList
 			err = a.client.decode(&v, localVarBody, localVarHttpResponse.Header.Get("Content-Type"));
 				if err != nil {
 					newErr.error = err.Error()
