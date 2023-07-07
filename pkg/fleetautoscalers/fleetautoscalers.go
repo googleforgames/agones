@@ -386,12 +386,11 @@ func applyCounterOrListPolicy(c *autoscalingv1.CounterPolicy, l *autoscalingv1.L
 func getSortedGameServers(f *agonesv1.Fleet, gameServerLister listeragonesv1.GameServerLister,
 	nodeCounts map[string]gameservers.NodeCount) ([]*agonesv1.GameServer, error) {
 	// TODO: Should we handle this differently for strategy Distributed?
-	gss := f.GetGameServerSpec()
 	gsList, err := fleets.ListGameServersByFleetOwner(gameServerLister, f)
 	if err != nil {
 		return nil, err
 	}
-	gameServers := gssets.SortGameServersByStrategy(gss.Scheduling, gsList, nodeCounts, f.Spec.Priorities)
+	gameServers := gssets.SortGameServersByStrategy(f.Spec.Scheduling, gsList, nodeCounts, f.Spec.Priorities)
 	return gameServers, nil
 }
 

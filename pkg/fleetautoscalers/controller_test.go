@@ -1169,12 +1169,9 @@ func defaultFixtures() (*autoscalingv1.FleetAutoscaler, *agonesv1.Fleet) {
 			UID:       "1234",
 		},
 		Spec: agonesv1.FleetSpec{
-			Replicas: 8,
-			Template: agonesv1.GameServerTemplateSpec{
-				Spec: agonesv1.GameServerSpec{
-					Scheduling: apis.Packed,
-				},
-			},
+			Replicas:   8,
+			Scheduling: apis.Packed,
+			Template:   agonesv1.GameServerTemplateSpec{},
 		},
 		Status: agonesv1.FleetStatus{
 			Replicas:          5,
