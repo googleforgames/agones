@@ -485,7 +485,6 @@ func scaleUpByInteger(replicas int32, capacity, count, aggCapacity, availableCap
 
 	// Check if we've hit MaxCapacity
 	if (additionalReplicas*capacity)+aggCapacity > maxCapacity {
-		// TODO: This should do Floor division automatically, or should I switch the types to float64 then do Math.Floor to make it explicit?
 		additionalReplicas = (maxCapacity - aggCapacity) / capacity
 		return replicas + int32(additionalReplicas), true, nil
 	}

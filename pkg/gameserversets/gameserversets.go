@@ -67,8 +67,6 @@ func sortGameServersByLeastFullNodes(list []*agonesv1.GameServer, count map[stri
 			return false
 		}
 
-		// TODO: What if they're not on the same node -- do we want to delete the gameserver of "equal" Nodes where one Node has creating gameservers and the other has Ready gameservers?
-		// if both are in the same node, make sure to delete pre-Ready GameServers first
 		if a.Status.NodeName == b.Status.NodeName {
 			if a.IsBeforeReady() && b.Status.State == agonesv1.GameServerStateReady {
 				return true
