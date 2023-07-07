@@ -42,6 +42,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/rand"
 	"k8s.io/apimachinery/pkg/util/validation"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/util/retry"
 )
@@ -105,7 +106,7 @@ func TestFleetStrategyValidation(t *testing.T) {
 		fmt.Println(statusErr)
 		CausesMessages := []string{"Strategy Type should be one of: RollingUpdate, Recreate."}
 		assert.Len(t, statusErr.Status().Details.Causes, 1)
-		assert.Equal(t, metav1.CauseTypeFieldValueInvalid, statusErr.Status().Details.Causes[0].Type)
+		assert.Equal(t, metav1.CauseTypeFieldValueNotSupported, statusErr.Status().Details.Causes[0].Type)
 		assert.Contains(t, CausesMessages, statusErr.Status().Details.Causes[0].Message)
 	}
 
@@ -813,10 +814,10 @@ func TestFleetGSSpecValidation(t *testing.T) {
 	assert.True(t, ok)
 
 	assert.Len(t, statusErr.Status().Details.Causes, 2)
-	assert.Equal(t, "Container must be empty or the name of a container in the pod template", statusErr.Status().Details.Causes[1].Message)
+	assert.Contains(t, statusErr.Status().Details.Causes[1].Message, "Container must be empty or the name of a container in the pod template")
 
 	assert.Equal(t, metav1.CauseTypeFieldValueInvalid, statusErr.Status().Details.Causes[0].Type)
-	assert.Equal(t, "Could not find a container named testing", statusErr.Status().Details.Causes[0].Message)
+	assert.Contains(t, statusErr.Status().Details.Causes[0].Message, "Could not find a container named testing")
 
 	flt.Spec.Template.Spec.Container = ""
 	_, err = client.Fleets(framework.Namespace).Create(ctx, flt, metav1.CreateOptions{})
@@ -828,7 +829,7 @@ func TestFleetGSSpecValidation(t *testing.T) {
 		assert.Equal(t, metav1.CauseTypeFieldValueInvalid, statusErr.Status().Details.Causes[1].Type)
 		assert.Contains(t, CausesMessages, statusErr.Status().Details.Causes[1].Message)
 	}
-	assert.Equal(t, metav1.CauseTypeFieldValueInvalid, statusErr.Status().Details.Causes[0].Type)
+	assert.Equal(t, metav1.CauseTypeFieldValueRequired, statusErr.Status().Details.Causes[0].Type)
 	assert.Contains(t, CausesMessages, statusErr.Status().Details.Causes[0].Message)
 
 	// use valid name for a container, one of two defined above
@@ -847,7 +848,7 @@ func TestFleetGSSpecValidation(t *testing.T) {
 	statusErr, ok = err.(*k8serrors.StatusError)
 	assert.True(t, ok)
 	assert.Len(t, statusErr.Status().Details.Causes, 1)
-	assert.Equal(t, agonesv1.ErrHostPort, statusErr.Status().Details.Causes[0].Message)
+	assert.Contains(t, statusErr.Status().Details.Causes[0].Message, agonesv1.ErrHostPort)
 
 	fltPort.Spec.Template.Spec.Ports[0].HostPort = 0 // validation fails above because the HostPort is specified, make it good.
 	_, err = client.Fleets(framework.Namespace).Create(ctx, fltPort, metav1.CreateOptions{})
@@ -869,7 +870,7 @@ func TestFleetNameValidation(t *testing.T) {
 	require.NotNil(t, err)
 	statusErr := err.(*k8serrors.StatusError)
 	assert.True(t, len(statusErr.Status().Details.Causes) > 0)
-	assert.Equal(t, metav1.CauseTypeFieldValueInvalid, statusErr.Status().Details.Causes[0].Type)
+	assert.Equal(t, field.ErrorTypeTooMany, statusErr.Status().Details.Causes[0].Type)
 	goodFlt := defaultFleet(framework.Namespace)
 	goodFlt.Name = flt.Name[0 : nameLen-1]
 	goodFlt, err = client.Fleets(framework.Namespace).Create(ctx, goodFlt, metav1.CreateOptions{})
@@ -1230,7 +1231,7 @@ func TestFleetWithLongLabelsAnnotations(t *testing.T) {
 	assert.True(t, ok)
 	assert.Len(t, statusErr.Status().Details.Causes, 1)
 	assert.Equal(t, metav1.CauseTypeFieldValueInvalid, statusErr.Status().Details.Causes[0].Type)
-	assert.Equal(t, "labels", statusErr.Status().Details.Causes[0].Field)
+	assert.Equal(t, "spec.template.metadata.labels", statusErr.Status().Details.Causes[0].Field)
 
 	// Set Label to normal size and add Annotations with an error
 	flt.Spec.Template.ObjectMeta.Labels["label"] = normalLengthName
@@ -1241,7 +1242,7 @@ func TestFleetWithLongLabelsAnnotations(t *testing.T) {
 	statusErr, ok = err.(*k8serrors.StatusError)
 	assert.True(t, ok)
 	assert.Len(t, statusErr.Status().Details.Causes, 1)
-	assert.Equal(t, "annotations", statusErr.Status().Details.Causes[0].Field)
+	assert.Equal(t, "spec.template.metadata.annotations", statusErr.Status().Details.Causes[0].Field)
 	assert.Equal(t, metav1.CauseTypeFieldValueInvalid, statusErr.Status().Details.Causes[0].Type)
 
 	goodFlt := defaultFleet(framework.Namespace)
@@ -1264,7 +1265,7 @@ func TestFleetWithLongLabelsAnnotations(t *testing.T) {
 	statusErr, ok = err.(*k8serrors.StatusError)
 	assert.True(t, ok)
 	require.Len(t, statusErr.Status().Details.Causes, 1)
-	assert.Equal(t, "annotations", statusErr.Status().Details.Causes[0].Field)
+	assert.Equal(t, "spec.template.metadata.annotations", statusErr.Status().Details.Causes[0].Field)
 	assert.Equal(t, metav1.CauseTypeFieldValueInvalid, statusErr.Status().Details.Causes[0].Type)
 
 	// Make sure normal annotations path Validation on Update
