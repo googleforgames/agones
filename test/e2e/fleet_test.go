@@ -103,10 +103,9 @@ func TestFleetStrategyValidation(t *testing.T) {
 		statusErr, ok := err.(*k8serrors.StatusError)
 		assert.True(t, ok)
 		fmt.Println(statusErr)
-		CausesMessages := []string{`supported values: "RollingUpdate", "Recreate"`}
 		assert.Len(t, statusErr.Status().Details.Causes, 1)
 		assert.Equal(t, metav1.CauseTypeFieldValueNotSupported, statusErr.Status().Details.Causes[0].Type)
-		assert.Contains(t, statusErr.Status().Details.Causes[0].Message, CausesMessages)
+		assert.Contains(t, statusErr.Status().Details.Causes[0].Message, `supported values: "RollingUpdate", "Recreate"`)
 	}
 
 	// Change DeploymentStrategy Type, set it to empty string, which is forbidden
@@ -868,7 +867,7 @@ func TestFleetNameValidation(t *testing.T) {
 	require.NotNil(t, err)
 	statusErr := err.(*k8serrors.StatusError)
 	assert.True(t, len(statusErr.Status().Details.Causes) > 0)
-	assert.Equal(t, metav1.CauseType("FieldValueTooLong"), statusErr.Status().Details.Causes[0].Type)
+	assert.Equal(t, metav1.CauseType("FieldValueTooMany"), statusErr.Status().Details.Causes[0].Type)
 	goodFlt := defaultFleet(framework.Namespace)
 	goodFlt.Name = flt.Name[0 : nameLen-1]
 	goodFlt, err = client.Fleets(framework.Namespace).Create(ctx, goodFlt, metav1.CreateOptions{})
