@@ -587,7 +587,7 @@ func ValidateResource(request resource.Quantity, limit resource.Quantity, resour
 // validateResources validate CPU and Memory resources
 func validateResources(container corev1.Container, fldPath *field.Path) field.ErrorList {
 	var allErrs field.ErrorList
-	// TODO: ValidateResource using field.ErrorList
+	// TODO(#3239): ValidateResource using field.ErrorList
 	for _, err := range ValidateResource(container.Resources.Requests[corev1.ResourceCPU], container.Resources.Limits[corev1.ResourceCPU], corev1.ResourceCPU) {
 		allErrs = append(allErrs, field.Invalid(fldPath.Child("resources", "requests", string(corev1.ResourceCPU)), container.Resources.Requests[corev1.ResourceCPU], err.Error()))
 	}
