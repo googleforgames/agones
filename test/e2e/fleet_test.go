@@ -867,7 +867,7 @@ func TestFleetNameValidation(t *testing.T) {
 	require.NotNil(t, err)
 	statusErr := err.(*k8serrors.StatusError)
 	assert.True(t, len(statusErr.Status().Details.Causes) > 0)
-	assert.Equal(t, metav1.CauseType("FieldValueTooMany"), statusErr.Status().Details.Causes[0].Type)
+	assert.Equal(t, metav1.CauseType("FieldValueTooLong"), statusErr.Status().Details.Causes[0].Type)
 	goodFlt := defaultFleet(framework.Namespace)
 	goodFlt.Name = flt.Name[0 : nameLen-1]
 	goodFlt, err = client.Fleets(framework.Namespace).Create(ctx, goodFlt, metav1.CreateOptions{})

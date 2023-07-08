@@ -91,8 +91,7 @@ func validateGSSpec(apiHooks APIHooks, gs gsSpec, fldPath *field.Path) field.Err
 // validateObjectMeta Check ObjectMeta specification
 // Used by Fleet, GameServerSet and GameServer
 func validateObjectMeta(objMeta *metav1.ObjectMeta, fldPath *field.Path) field.ErrorList {
-	var allErrs field.ErrorList
-	allErrs = append(allErrs, metav1validation.ValidateLabels(objMeta.Labels, fldPath.Child("labels"))...)
+	allErrs := metav1validation.ValidateLabels(objMeta.Labels, fldPath.Child("labels"))
 	allErrs = append(allErrs, apivalidation.ValidateAnnotations(objMeta.Annotations, fldPath.Child("annotations"))...)
 	return allErrs
 }

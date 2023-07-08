@@ -554,7 +554,7 @@ func (gss *GameServerSpec) Validate(apiHooks APIHooks, devAddress string, fldPat
 			allErrs = append(allErrs, validateResources(c, path)...)
 		}
 		for _, cause := range apiHooks.ValidateGameServerSpec(gss) {
-			// TODO: Use field.ErrorList
+			// TODO(#3239): Use field.ErrorList
 			allErrs = append(allErrs, &field.Error{
 				Type:   field.ErrorType(cause.Type),
 				Field:  cause.Field,
