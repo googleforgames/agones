@@ -42,6 +42,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 const (
@@ -53,15 +54,17 @@ const (
 	podNamespaceEnv   = "POD_NAMESPACE"
 
 	// Flags (that can also be env vars)
-	localFlag       = "local"
-	fileFlag        = "file"
-	testFlag        = "test"
-	testSdkNameFlag = "sdk-name"
-	addressFlag     = "address"
-	delayFlag       = "delay"
-	timeoutFlag     = "timeout"
-	grpcPortFlag    = "grpc-port"
-	httpPortFlag    = "http-port"
+	localFlag                  = "local"
+	fileFlag                   = "file"
+	testFlag                   = "test"
+	testSdkNameFlag            = "sdk-name"
+	kubeconfigFlag             = "kubeconfig"
+	noGracefulTerminationFlag  = "no-graceful-termination"
+	addressFlag                = "address"
+	delayFlag                  = "delay"
+	timeoutFlag                = "timeout"
+	grpcPortFlag               = "grpc-port"
+	httpPortFlag               = "http-port"
 )
 
 var (
@@ -118,7 +121,8 @@ func main() {
 		}
 	default:
 		var config *rest.Config
-		config, err := rest.InClusterConfig()
+		// if the kubeconfig fails BuildConfigFromFlags will try in cluster config
+		config, err := clientcmd.BuildConfigFromFlags("", ctlConf.KubeConfig)
 		if err != nil {
 			logger.WithError(err).Fatal("Could not create in cluster config")
 		}
@@ -146,7 +150,9 @@ func main() {
 		if err := s.WaitForConnection(ctx); err != nil {
 			logger.WithError(err).Fatalf("Sidecar networking failure")
 		}
-		ctx = s.NewSDKServerContext(ctx)
+		if !ctlConf.NoGracefulTermination {
+			ctx = s.NewSDKServerContext(ctx)
+		}
 		go func() {
 			err := s.Run(ctx)
 			if err != nil {
@@ -277,6 +283,10 @@ func parseEnvFlags() config {
 	pflag.Int(timeoutFlag, viper.GetInt(timeoutFlag), "Time of execution (in seconds) before close. Useful for tests")
 	pflag.String(testFlag, viper.GetString(testFlag), "List functions which should be called during the SDK Conformance test run.")
 	pflag.String(testSdkNameFlag, viper.GetString(testSdkNameFlag), "SDK name which is tested by this SDK Conformance test.")
+	pflag.String(kubeconfigFlag, viper.GetString(kubeconfigFlag),
+		"Optional. kubeconfig to run the SDK server out of the cluster.")
+	pflag.Bool(noGracefulTerminationFlag, viper.GetBool(noGracefulTerminationFlag),
+		"Immediately quits when receiving interrupt instead of waiting for GameServer state to progress to \"Shutdown\".")
 	runtime.FeaturesBindFlags()
 	pflag.Parse()
 
@@ -286,6 +296,7 @@ func parseEnvFlags() config {
 	runtime.Must(viper.BindEnv(addressFlag))
 	runtime.Must(viper.BindEnv(testFlag))
 	runtime.Must(viper.BindEnv(testSdkNameFlag))
+	runtime.Must(viper.BindEnv(kubeconfigFlag))
 	runtime.Must(viper.BindEnv(gameServerNameEnv))
 	runtime.Must(viper.BindEnv(podNamespaceEnv))
 	runtime.Must(viper.BindEnv(delayFlag))
@@ -298,29 +309,33 @@ func parseEnvFlags() config {
 	runtime.Must(runtime.ParseFeaturesFromEnv())
 
 	return config{
-		IsLocal:     viper.GetBool(localFlag),
-		Address:     viper.GetString(addressFlag),
-		LocalFile:   viper.GetString(fileFlag),
-		Delay:       viper.GetInt(delayFlag),
-		Timeout:     viper.GetInt(timeoutFlag),
-		Test:        viper.GetString(testFlag),
-		TestSdkName: viper.GetString(testSdkNameFlag),
-		GRPCPort:    viper.GetInt(grpcPortFlag),
-		HTTPPort:    viper.GetInt(httpPortFlag),
+		IsLocal:               viper.GetBool(localFlag),
+		Address:               viper.GetString(addressFlag),
+		LocalFile:             viper.GetString(fileFlag),
+		Delay:                 viper.GetInt(delayFlag),
+		Timeout:               viper.GetInt(timeoutFlag),
+		Test:                  viper.GetString(testFlag),
+		TestSdkName:           viper.GetString(testSdkNameFlag),
+		KubeConfig:            viper.GetString(kubeconfigFlag),
+		NoGracefulTermination: viper.GetBool(noGracefulTerminationFlag),
+		GRPCPort:              viper.GetInt(grpcPortFlag),
+		HTTPPort:              viper.GetInt(httpPortFlag),
 	}
 }
 
 // config is all the configuration for this program
 type config struct {
-	Address     string
-	IsLocal     bool
-	LocalFile   string
-	Delay       int
-	Timeout     int
-	Test        string
-	TestSdkName string
-	GRPCPort    int
-	HTTPPort    int
+	Address               string
+	IsLocal               bool
+	LocalFile             string
+	Delay                 int
+	Timeout               int
+	Test                  string
+	TestSdkName           string
+	KubeConfig            string
+	NoGracefulTermination bool
+	GRPCPort              int
+	HTTPPort              int
 }
 
 // healthCheckWrapper ensures that an http 400 response is returned

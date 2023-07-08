@@ -13,25 +13,41 @@ namespace as it - usually referred to in Kubernetes terms as a "sidecar".
 
 Therefore, when developing locally, we also need a process for the SDK to connect to!
 
-To do this, we can run the same binary that runs inside Agones, but pass in a flag
+To do this, we can run the same binary that runs inside Agones (the SDK Server), but pass in a flag
 to run it in "local mode". Local mode means that the sidecar binary
 will not try to connect to anything, and will just send log messages to stdout and persist local state in memory so
 that you can see exactly what the SDK in your game server is doing, and can
 confirm everything works.
 
-To do this you will need to download {{% ghrelease file_prefix="agonessdk-server" %}}, and unzip it.
+For local development with integration into your cluster, the SDK Server can also be run in "out of cluster mode", discussed more [below](#running-locally-using-out-of-cluster-mode).
+
+## Running the SDK Server
+
+To run the SDK Server, you will need a copy of the binary.
+This can either be done by downloading a prebuilt binary or running from source code.
+
+### Getting the prebuilt binary
+
+To run the prebuilt binary, for the latest release, you will need to download {{% ghrelease file_prefix="agonessdk-server" %}}, and unzip it.
 You will find the executables for the SDK server, for each type of operating system.
+`sdk-server.darwin.amd64` and `sdk-server.darwin.arm64` are for <u>MacOS</u>, `sdk-server.linux.amd64` and `sdk-server.linux.arm64` are for <u>Linux</u>, and `sdk-server.windows.amd64.exe` is for <u>Windows</u>.
 
-macOS
-* sdk-server.darwin.amd64
-* sdk-server.darwin.arm64
+### Running from source code
 
-Linux
-* sdk-server.linux.amd64
-* sdk-server.linux.arm64
+Instead of downloading and running executable binaries from the internet, you can simply run from source code.
+First clone the [Agones GitHub repo](https://github.com/googleforgames/agones).
+You can switch to a specific release's branch/tag or run from main.
+Running from source code will require having golang installed, which can be done by following the instructions [here](https://go.dev/doc/install).
 
-Windows
-* sdk-server.windows.amd64.exe
+With golang installed and the Agones repository cloned, the SDK Server can easily be run with the following command (from the agones clone directory):
+```bash
+go run cmd/sdk-server/main.go
+```
+Note: This command does not contain any of the necessary command line flags used in the following sections.
+It simply serves as an example of how to run from source code instead of running the prebuilt binary.
+Passing commandline flags (e.g. `--local`) will work in the same way.
+
+### Running In "Local Mode"
 
 To run in local mode, pass the flag `--local` to the executable.
 
@@ -40,6 +56,11 @@ For example:
 ```bash
 ./sdk-server.linux.amd64 --local
 ```
+or
+```bash
+go run cmd/sdk-server/main.go --local
+```
+You should see output similar to the following:
 ```
 {"ctlConf":{"Address":"localhost","IsLocal":true,"LocalFile":"","Delay":0,"Timeout":0,"Test":"","GRPCPort":9357,"HTTPPort":9358},"message":"Starting sdk sidecar","severity":"info","source":"main","time":"2019-10-30T21:44:37.973139+03:00","version":"1.1.0"}
 {"grpcEndpoint":"localhost:9357","message":"Starting SDKServer grpc service...","severity":"info","source":"main","time":"2019-10-30T21:44:37.974585+03:00"}
@@ -49,6 +70,8 @@ For example:
 {"message":"Shutdown request has been received!","severity":"info","time":"2019-10-30T21:46:18.179341+03:00"}
 {"message":"gameserver update received","severity":"info","time":"2019-10-30T21:46:18.179459+03:00"}
 ```
+
+An alternative to "local mode" ("out of cluster mode", which uses an agones cluster) is discussed [below](#running-locally-using-%22out-of-cluster%22-mode).
 
 ## Providing your own `GameServer` configuration for local development
 
@@ -149,3 +172,52 @@ wget https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch 
 chmod o+r gameserver.yaml
 docker run --network=host --rm -v $(pwd)/gameserver.yaml:/tmp/gameserver.yaml us-docker.pkg.dev/agones-images/release/agones-sdk:{{<release-version>}} --local -f /tmp/gameserver.yaml
 ```
+
+## Running locally using "out of cluster" mode
+
+An alternative to running completely isolated from a cluster is to run in "out of cluster" mode.
+This allows you to run locally but interact with the controllers within a cluster.
+This workflow works well when running a [Local Game Server](https://agones.dev/site/docs/guides/local-game-server/) in your cluster and want to run the server locally.
+This means being able to allocate your game in its normal flow (much more prod-like environment) and be able to debug (e.g. breakpoint) your server code.
+This can also be done with [running Minikube locally](https://agones.dev/site/docs/installation/creating-cluster/minikube/), which is great for early prototyping.
+
+The name "out of cluster" mode is to contrast [InClusterConfig](https://pkg.go.dev/k8s.io/client-go/tools/clientcmd#InClusterConfig) which is used in the internal golang kubeconfig API.
+
+To run in "out of cluster" mode, instead of passing `--local` or `-f ./gameserver.yaml`, you'd use `--kubeconfig` to connect into your cluster.
+However, there are a number of commands that are necessary/useful to run when running in "out of cluster" mode.
+Here is a sample with each piece discussed after.
+```bash
+GAMESERVER_NAME='my-local-server' \
+POD_NAMESPACE='default' \
+  go run cmd/sdk-server/main.go \
+    --kubeconfig "$HOME/.kube/config" \
+    --address 0.0.0.0 \
+    --no-graceful-termination 
+```
+
+* `GAMESERVER_NAME` is a necessary enviroment variable.
+  * It is set to the name of the dev `GameServer` k8s resource.
+  * It tells the SDK Sever which resource to read/write to on the k8s cluster.
+  * This example value of `my-local-server` matches to the instructions for setting up a [Local Game Server](https://agones.dev/site/docs/guides/local-game-server/).
+* `POD_NAMESPACE` is a necessary enviroment variable.
+  * It is set set to the namespace which your `GameServer` resides in.
+  * It tells the SDK Sever which namespace to look under for the `GameServer` to read/write to on the k8s cluster.
+  * This example value of `default` is used as most instructions in this documentation assumes `GameServers` to be created in the `default` namespace.
+* `--kubeconfig` tells the SDK Server how to connect to your cluster.
+  * This actually does not trigger any special flow.
+  * The SDK Server will run just as it would when created as a Sidecar in a k8s cluster.
+  * Passing this argument simply provides where to connect along with the credentials to do so.
+  * This example value of `"$HOME/.kube/config"` is the default location for your k8s authentication information. This requires you be logged in via `kubectl` and have the desired cluster selected via [`kubectl config use-context`](https://jamesdefabia.github.io/docs/user-guide/kubectl/kubectl_config_use-context/).
+* `--address` specifies the binding IP address for the SDK Server.
+  * By default, the binding address is `localhost`. This may be difficult for some development setups.
+  * Overriding this value changes which IP address(es) the server will bind to for receiving gRPC/REST SDK API calls.
+  * This example value of `0.0.0.0` sets the SDK Server to receive API calls that are sent to any IP address (that reach your machine).
+* `--no-graceful-termination` disables some smooth state transitions when exiting.
+  * By default, the SDK Server will wait until the `GameServer` has reached the `Shutdown` state before exiting.
+  * This will cause the SDK Server to hang (waiting on state update) when attempting to terminate (e.g. with `^C`).
+  * When running binaries in a development context, quickly exiting and restarting the SDK Server is handy.
+
+Now that you have the SDK Server running locally with k8s credentials, you can run your game server binary in an integrated fashion.
+Your game server's SDK calls will reach the local SDK Server, which will then interact with the `GameServer` resource on your cluster.
+You can allocate this `GameServer` just as you would for a normal `GameServer` running completely on k8s.
+The state update to `Allocated` will show in your local game server binary.

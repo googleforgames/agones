@@ -543,23 +543,29 @@ func (c *Controller) syncDevelopmentGameServer(ctx context.Context, gs *agonesv1
 		return gs, nil
 	}
 
-	// Only move from Creating -> Ready. Other manual state changes are up to the end user.
-	// We also don't want to move from Allocated -> Ready every time someone allocates a GameServer.
-	if gs.Status.State != agonesv1.GameServerStateCreating {
+	// Only move from Creating -> Ready or RequestReady -> Ready.
+	// Shutdown -> Delete will still be handled normally by syncGameServerShutdownState.
+	// Other manual state changes are up to the end user.
+	if gs.Status.State != agonesv1.GameServerStateCreating && gs.Status.State != agonesv1.GameServerStateRequestReady {
 		return gs, nil
 	}
 
 	loggerForGameServer(gs, c.baseLogger).Debug("GS is a development game server and will not be managed by Agones.")
 	gsCopy := gs.DeepCopy()
-	var ports []agonesv1.GameServerStatusPort
-	for _, p := range gs.Spec.Ports {
-		ports = append(ports, p.Status())
-	}
 
 	gsCopy.Status.State = agonesv1.GameServerStateReady
-	gsCopy.Status.Ports = ports
-	gsCopy.Status.Address = devIPAddress
-	gsCopy.Status.NodeName = devIPAddress
+
+	if gs.Status.State == agonesv1.GameServerStateCreating {
+		var ports []agonesv1.GameServerStatusPort
+		for _, p := range gs.Spec.Ports {
+			ports = append(ports, p.Status())
+		}
+
+		gsCopy.Status.Ports = ports
+		gsCopy.Status.Address = devIPAddress
+		gsCopy.Status.NodeName = devIPAddress
+	}
+
 	gs, err := c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(ctx, gsCopy, metav1.UpdateOptions{})
 	if err != nil {
 		return gs, errors.Wrapf(err, "error updating GameServer %s to %v status", gs.Name, gs.Status)
