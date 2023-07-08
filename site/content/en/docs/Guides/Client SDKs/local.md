@@ -13,7 +13,7 @@ namespace as it - usually referred to in Kubernetes terms as a "sidecar".
 
 Therefore, when developing locally, we also need a process for the SDK to connect to!
 
-To do this, we can run the same binary that runs inside Agones (the SDK Server), but pass in a flag
+To do this, we can run the same binary (the SDK Server) that runs inside Agones, but pass in a flag
 to run it in "local mode". Local mode means that the sidecar binary
 will not try to connect to anything, and will just send log messages to stdout and persist local state in memory so
 that you can see exactly what the SDK in your game server is doing, and can
