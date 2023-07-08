@@ -54,17 +54,17 @@ const (
 	podNamespaceEnv   = "POD_NAMESPACE"
 
 	// Flags (that can also be env vars)
-	localFlag                  = "local"
-	fileFlag                   = "file"
-	testFlag                   = "test"
-	testSdkNameFlag            = "sdk-name"
-	kubeconfigFlag             = "kubeconfig"
-	noGracefulTerminationFlag  = "no-graceful-termination"
-	addressFlag                = "address"
-	delayFlag                  = "delay"
-	timeoutFlag                = "timeout"
-	grpcPortFlag               = "grpc-port"
-	httpPortFlag               = "http-port"
+	localFlag                 = "local"
+	fileFlag                  = "file"
+	testFlag                  = "test"
+	testSdkNameFlag           = "sdk-name"
+	kubeconfigFlag            = "kubeconfig"
+	noGracefulTerminationFlag = "no-graceful-termination"
+	addressFlag               = "address"
+	delayFlag                 = "delay"
+	timeoutFlag               = "timeout"
+	grpcPortFlag              = "grpc-port"
+	httpPortFlag              = "http-port"
 )
 
 var (
