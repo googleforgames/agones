@@ -71,7 +71,7 @@ You should see output similar to the following:
 {"message":"gameserver update received","severity":"info","time":"2019-10-30T21:46:18.179459+03:00"}
 ```
 
-An alternative to "local mode" ("out of cluster mode", which uses an agones cluster) is discussed [below](#running-locally-using-%22out-of-cluster%22-mode).
+An alternative to "local mode" ("out of cluster mode", which uses an agones cluster) is discussed [below](#running-locally-using-out-of-cluster-mode).
 
 ## Providing your own `GameServer` configuration for local development
 
