@@ -9,7 +9,7 @@ description: >
 
 You can register a local game server with Agones. This means you can run an experimental build of your game server in the Agones environment without the need of packaging and deploying it to a fleet. This allows you to quickly iterate on your game server code while still being able to plugin to your Agones environment.
 
-This can be used in combination with a [local SDK Server]({{< ref "../Client SDKs/local.md" >}}) in ["out of cluster" mode]({{< ref "../Client SDKs/local.md#running-locally-using-out-of-cluster-mode" >}}).
+This can be used in combination with a [local SDK Server]({{< ref "./Client SDKs/local.md" >}}) in ["out of cluster" mode]({{< ref "./Client SDKs/local.md#running-locally-using-out-of-cluster-mode" >}}).
 
 ## Register your server with Agones
 
