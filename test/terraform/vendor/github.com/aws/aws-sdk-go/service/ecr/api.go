@@ -29,14 +29,13 @@ const opBatchCheckLayerAvailability = "BatchCheckLayerAvailability"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the BatchCheckLayerAvailabilityRequest method.
+//	req, resp := client.BatchCheckLayerAvailabilityRequest(params)
 //
-//    // Example sending a request using the BatchCheckLayerAvailabilityRequest method.
-//    req, resp := client.BatchCheckLayerAvailabilityRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/BatchCheckLayerAvailability
 func (c *ECR) BatchCheckLayerAvailabilityRequest(input *BatchCheckLayerAvailabilityInput) (req *request.Request, output *BatchCheckLayerAvailabilityOutput) {
@@ -75,16 +74,17 @@ func (c *ECR) BatchCheckLayerAvailabilityRequest(input *BatchCheckLayerAvailabil
 // API operation BatchCheckLayerAvailability for usage and error information.
 //
 // Returned Error Types:
-//   * RepositoryNotFoundException
-//   The specified repository could not be found. Check the spelling of the specified
-//   repository and ensure that you are performing operations on the correct registry.
 //
-//   * InvalidParameterException
-//   The specified parameter is invalid. Review the available parameters for the
-//   API request.
+//   - RepositoryNotFoundException
+//     The specified repository could not be found. Check the spelling of the specified
+//     repository and ensure that you are performing operations on the correct registry.
 //
-//   * ServerException
-//   These errors are usually caused by a server-side issue.
+//   - InvalidParameterException
+//     The specified parameter is invalid. Review the available parameters for the
+//     API request.
+//
+//   - ServerException
+//     These errors are usually caused by a server-side issue.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/BatchCheckLayerAvailability
 func (c *ECR) BatchCheckLayerAvailability(input *BatchCheckLayerAvailabilityInput) (*BatchCheckLayerAvailabilityOutput, error) {
@@ -124,14 +124,13 @@ const opBatchDeleteImage = "BatchDeleteImage"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the BatchDeleteImageRequest method.
+//	req, resp := client.BatchDeleteImageRequest(params)
 //
-//    // Example sending a request using the BatchDeleteImageRequest method.
-//    req, resp := client.BatchDeleteImageRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/BatchDeleteImage
 func (c *ECR) BatchDeleteImageRequest(input *BatchDeleteImageInput) (req *request.Request, output *BatchDeleteImageOutput) {
@@ -170,16 +169,17 @@ func (c *ECR) BatchDeleteImageRequest(input *BatchDeleteImageInput) (req *reques
 // API operation BatchDeleteImage for usage and error information.
 //
 // Returned Error Types:
-//   * ServerException
-//   These errors are usually caused by a server-side issue.
 //
-//   * InvalidParameterException
-//   The specified parameter is invalid. Review the available parameters for the
-//   API request.
+//   - ServerException
+//     These errors are usually caused by a server-side issue.
 //
-//   * RepositoryNotFoundException
-//   The specified repository could not be found. Check the spelling of the specified
-//   repository and ensure that you are performing operations on the correct registry.
+//   - InvalidParameterException
+//     The specified parameter is invalid. Review the available parameters for the
+//     API request.
+//
+//   - RepositoryNotFoundException
+//     The specified repository could not be found. Check the spelling of the specified
+//     repository and ensure that you are performing operations on the correct registry.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/BatchDeleteImage
 func (c *ECR) BatchDeleteImage(input *BatchDeleteImageInput) (*BatchDeleteImageOutput, error) {
@@ -219,14 +219,13 @@ const opBatchGetImage = "BatchGetImage"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the BatchGetImageRequest method.
+//	req, resp := client.BatchGetImageRequest(params)
 //
-//    // Example sending a request using the BatchGetImageRequest method.
-//    req, resp := client.BatchGetImageRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/BatchGetImage
 func (c *ECR) BatchGetImageRequest(input *BatchGetImageInput) (req *request.Request, output *BatchGetImageOutput) {
@@ -261,16 +260,17 @@ func (c *ECR) BatchGetImageRequest(input *BatchGetImageInput) (req *request.Requ
 // API operation BatchGetImage for usage and error information.
 //
 // Returned Error Types:
-//   * ServerException
-//   These errors are usually caused by a server-side issue.
 //
-//   * InvalidParameterException
-//   The specified parameter is invalid. Review the available parameters for the
-//   API request.
+//   - ServerException
+//     These errors are usually caused by a server-side issue.
 //
-//   * RepositoryNotFoundException
-//   The specified repository could not be found. Check the spelling of the specified
-//   repository and ensure that you are performing operations on the correct registry.
+//   - InvalidParameterException
+//     The specified parameter is invalid. Review the available parameters for the
+//     API request.
+//
+//   - RepositoryNotFoundException
+//     The specified repository could not be found. Check the spelling of the specified
+//     repository and ensure that you are performing operations on the correct registry.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/BatchGetImage
 func (c *ECR) BatchGetImage(input *BatchGetImageInput) (*BatchGetImageOutput, error) {
@@ -294,6 +294,96 @@ func (c *ECR) BatchGetImageWithContext(ctx aws.Context, input *BatchGetImageInpu
 	return out, req.Send()
 }
 
+const opBatchGetRepositoryScanningConfiguration = "BatchGetRepositoryScanningConfiguration"
+
+// BatchGetRepositoryScanningConfigurationRequest generates a "aws/request.Request" representing the
+// client's request for the BatchGetRepositoryScanningConfiguration operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See BatchGetRepositoryScanningConfiguration for more information on using the BatchGetRepositoryScanningConfiguration
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//	// Example sending a request using the BatchGetRepositoryScanningConfigurationRequest method.
+//	req, resp := client.BatchGetRepositoryScanningConfigurationRequest(params)
+//
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/BatchGetRepositoryScanningConfiguration
+func (c *ECR) BatchGetRepositoryScanningConfigurationRequest(input *BatchGetRepositoryScanningConfigurationInput) (req *request.Request, output *BatchGetRepositoryScanningConfigurationOutput) {
+	op := &request.Operation{
+		Name:       opBatchGetRepositoryScanningConfiguration,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &BatchGetRepositoryScanningConfigurationInput{}
+	}
+
+	output = &BatchGetRepositoryScanningConfigurationOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// BatchGetRepositoryScanningConfiguration API operation for Amazon EC2 Container Registry.
+//
+// Gets the scanning configuration for one or more repositories.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon EC2 Container Registry's
+// API operation BatchGetRepositoryScanningConfiguration for usage and error information.
+//
+// Returned Error Types:
+//
+//   - ServerException
+//     These errors are usually caused by a server-side issue.
+//
+//   - InvalidParameterException
+//     The specified parameter is invalid. Review the available parameters for the
+//     API request.
+//
+//   - RepositoryNotFoundException
+//     The specified repository could not be found. Check the spelling of the specified
+//     repository and ensure that you are performing operations on the correct registry.
+//
+//   - ValidationException
+//     There was an exception validating this request.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/BatchGetRepositoryScanningConfiguration
+func (c *ECR) BatchGetRepositoryScanningConfiguration(input *BatchGetRepositoryScanningConfigurationInput) (*BatchGetRepositoryScanningConfigurationOutput, error) {
+	req, out := c.BatchGetRepositoryScanningConfigurationRequest(input)
+	return out, req.Send()
+}
+
+// BatchGetRepositoryScanningConfigurationWithContext is the same as BatchGetRepositoryScanningConfiguration with the addition of
+// the ability to pass a context and additional request options.
+//
+// See BatchGetRepositoryScanningConfiguration for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ECR) BatchGetRepositoryScanningConfigurationWithContext(ctx aws.Context, input *BatchGetRepositoryScanningConfigurationInput, opts ...request.Option) (*BatchGetRepositoryScanningConfigurationOutput, error) {
+	req, out := c.BatchGetRepositoryScanningConfigurationRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opCompleteLayerUpload = "CompleteLayerUpload"
 
 // CompleteLayerUploadRequest generates a "aws/request.Request" representing the
@@ -310,14 +400,13 @@ const opCompleteLayerUpload = "CompleteLayerUpload"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the CompleteLayerUploadRequest method.
+//	req, resp := client.CompleteLayerUploadRequest(params)
 //
-//    // Example sending a request using the CompleteLayerUploadRequest method.
-//    req, resp := client.CompleteLayerUploadRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/CompleteLayerUpload
 func (c *ECR) CompleteLayerUploadRequest(input *CompleteLayerUploadInput) (req *request.Request, output *CompleteLayerUploadOutput) {
@@ -357,36 +446,37 @@ func (c *ECR) CompleteLayerUploadRequest(input *CompleteLayerUploadInput) (req *
 // API operation CompleteLayerUpload for usage and error information.
 //
 // Returned Error Types:
-//   * ServerException
-//   These errors are usually caused by a server-side issue.
 //
-//   * InvalidParameterException
-//   The specified parameter is invalid. Review the available parameters for the
-//   API request.
+//   - ServerException
+//     These errors are usually caused by a server-side issue.
 //
-//   * RepositoryNotFoundException
-//   The specified repository could not be found. Check the spelling of the specified
-//   repository and ensure that you are performing operations on the correct registry.
+//   - InvalidParameterException
+//     The specified parameter is invalid. Review the available parameters for the
+//     API request.
 //
-//   * UploadNotFoundException
-//   The upload could not be found, or the specified upload ID is not valid for
-//   this repository.
+//   - RepositoryNotFoundException
+//     The specified repository could not be found. Check the spelling of the specified
+//     repository and ensure that you are performing operations on the correct registry.
 //
-//   * InvalidLayerException
-//   The layer digest calculation performed by Amazon ECR upon receipt of the
-//   image layer does not match the digest specified.
+//   - UploadNotFoundException
+//     The upload could not be found, or the specified upload ID is not valid for
+//     this repository.
 //
-//   * LayerPartTooSmallException
-//   Layer parts must be at least 5 MiB in size.
+//   - InvalidLayerException
+//     The layer digest calculation performed by Amazon ECR upon receipt of the
+//     image layer does not match the digest specified.
 //
-//   * LayerAlreadyExistsException
-//   The image layer already exists in the associated repository.
+//   - LayerPartTooSmallException
+//     Layer parts must be at least 5 MiB in size.
 //
-//   * EmptyUploadException
-//   The specified layer upload does not contain any layer parts.
+//   - LayerAlreadyExistsException
+//     The image layer already exists in the associated repository.
 //
-//   * KmsException
-//   The operation failed due to a KMS exception.
+//   - EmptyUploadException
+//     The specified layer upload does not contain any layer parts.
+//
+//   - KmsException
+//     The operation failed due to a KMS exception.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/CompleteLayerUpload
 func (c *ECR) CompleteLayerUpload(input *CompleteLayerUploadInput) (*CompleteLayerUploadOutput, error) {
@@ -410,6 +500,106 @@ func (c *ECR) CompleteLayerUploadWithContext(ctx aws.Context, input *CompleteLay
 	return out, req.Send()
 }
 
+const opCreatePullThroughCacheRule = "CreatePullThroughCacheRule"
+
+// CreatePullThroughCacheRuleRequest generates a "aws/request.Request" representing the
+// client's request for the CreatePullThroughCacheRule operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreatePullThroughCacheRule for more information on using the CreatePullThroughCacheRule
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//	// Example sending a request using the CreatePullThroughCacheRuleRequest method.
+//	req, resp := client.CreatePullThroughCacheRuleRequest(params)
+//
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/CreatePullThroughCacheRule
+func (c *ECR) CreatePullThroughCacheRuleRequest(input *CreatePullThroughCacheRuleInput) (req *request.Request, output *CreatePullThroughCacheRuleOutput) {
+	op := &request.Operation{
+		Name:       opCreatePullThroughCacheRule,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &CreatePullThroughCacheRuleInput{}
+	}
+
+	output = &CreatePullThroughCacheRuleOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreatePullThroughCacheRule API operation for Amazon EC2 Container Registry.
+//
+// Creates a pull through cache rule. A pull through cache rule provides a way
+// to cache images from an external public registry in your Amazon ECR private
+// registry.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon EC2 Container Registry's
+// API operation CreatePullThroughCacheRule for usage and error information.
+//
+// Returned Error Types:
+//
+//   - ServerException
+//     These errors are usually caused by a server-side issue.
+//
+//   - InvalidParameterException
+//     The specified parameter is invalid. Review the available parameters for the
+//     API request.
+//
+//   - ValidationException
+//     There was an exception validating this request.
+//
+//   - PullThroughCacheRuleAlreadyExistsException
+//     A pull through cache rule with these settings already exists for the private
+//     registry.
+//
+//   - UnsupportedUpstreamRegistryException
+//     The specified upstream registry isn't supported.
+//
+//   - LimitExceededException
+//     The operation did not succeed because it would have exceeded a service limit
+//     for your account. For more information, see Amazon ECR service quotas (https://docs.aws.amazon.com/AmazonECR/latest/userguide/service-quotas.html)
+//     in the Amazon Elastic Container Registry User Guide.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/CreatePullThroughCacheRule
+func (c *ECR) CreatePullThroughCacheRule(input *CreatePullThroughCacheRuleInput) (*CreatePullThroughCacheRuleOutput, error) {
+	req, out := c.CreatePullThroughCacheRuleRequest(input)
+	return out, req.Send()
+}
+
+// CreatePullThroughCacheRuleWithContext is the same as CreatePullThroughCacheRule with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreatePullThroughCacheRule for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ECR) CreatePullThroughCacheRuleWithContext(ctx aws.Context, input *CreatePullThroughCacheRuleInput, opts ...request.Option) (*CreatePullThroughCacheRuleOutput, error) {
+	req, out := c.CreatePullThroughCacheRuleRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opCreateRepository = "CreateRepository"
 
 // CreateRepositoryRequest generates a "aws/request.Request" representing the
@@ -426,14 +616,13 @@ const opCreateRepository = "CreateRepository"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the CreateRepositoryRequest method.
+//	req, resp := client.CreateRepositoryRequest(params)
 //
-//    // Example sending a request using the CreateRepositoryRequest method.
-//    req, resp := client.CreateRepositoryRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/CreateRepository
 func (c *ECR) CreateRepositoryRequest(input *CreateRepositoryInput) (req *request.Request, output *CreateRepositoryOutput) {
@@ -465,32 +654,33 @@ func (c *ECR) CreateRepositoryRequest(input *CreateRepositoryInput) (req *reques
 // API operation CreateRepository for usage and error information.
 //
 // Returned Error Types:
-//   * ServerException
-//   These errors are usually caused by a server-side issue.
 //
-//   * InvalidParameterException
-//   The specified parameter is invalid. Review the available parameters for the
-//   API request.
+//   - ServerException
+//     These errors are usually caused by a server-side issue.
 //
-//   * InvalidTagParameterException
-//   An invalid parameter has been specified. Tag keys can have a maximum character
-//   length of 128 characters, and tag values can have a maximum length of 256
-//   characters.
+//   - InvalidParameterException
+//     The specified parameter is invalid. Review the available parameters for the
+//     API request.
 //
-//   * TooManyTagsException
-//   The list of tags on the repository is over the limit. The maximum number
-//   of tags that can be applied to a repository is 50.
+//   - InvalidTagParameterException
+//     An invalid parameter has been specified. Tag keys can have a maximum character
+//     length of 128 characters, and tag values can have a maximum length of 256
+//     characters.
 //
-//   * RepositoryAlreadyExistsException
-//   The specified repository already exists in the specified registry.
+//   - TooManyTagsException
+//     The list of tags on the repository is over the limit. The maximum number
+//     of tags that can be applied to a repository is 50.
 //
-//   * LimitExceededException
-//   The operation did not succeed because it would have exceeded a service limit
-//   for your account. For more information, see Amazon ECR service quotas (https://docs.aws.amazon.com/AmazonECR/latest/userguide/service-quotas.html)
-//   in the Amazon Elastic Container Registry User Guide.
+//   - RepositoryAlreadyExistsException
+//     The specified repository already exists in the specified registry.
 //
-//   * KmsException
-//   The operation failed due to a KMS exception.
+//   - LimitExceededException
+//     The operation did not succeed because it would have exceeded a service limit
+//     for your account. For more information, see Amazon ECR service quotas (https://docs.aws.amazon.com/AmazonECR/latest/userguide/service-quotas.html)
+//     in the Amazon Elastic Container Registry User Guide.
+//
+//   - KmsException
+//     The operation failed due to a KMS exception.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/CreateRepository
 func (c *ECR) CreateRepository(input *CreateRepositoryInput) (*CreateRepositoryOutput, error) {
@@ -530,14 +720,13 @@ const opDeleteLifecyclePolicy = "DeleteLifecyclePolicy"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DeleteLifecyclePolicyRequest method.
+//	req, resp := client.DeleteLifecyclePolicyRequest(params)
 //
-//    // Example sending a request using the DeleteLifecyclePolicyRequest method.
-//    req, resp := client.DeleteLifecyclePolicyRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/DeleteLifecyclePolicy
 func (c *ECR) DeleteLifecyclePolicyRequest(input *DeleteLifecyclePolicyInput) (req *request.Request, output *DeleteLifecyclePolicyOutput) {
@@ -568,19 +757,20 @@ func (c *ECR) DeleteLifecyclePolicyRequest(input *DeleteLifecyclePolicyInput) (r
 // API operation DeleteLifecyclePolicy for usage and error information.
 //
 // Returned Error Types:
-//   * ServerException
-//   These errors are usually caused by a server-side issue.
 //
-//   * InvalidParameterException
-//   The specified parameter is invalid. Review the available parameters for the
-//   API request.
+//   - ServerException
+//     These errors are usually caused by a server-side issue.
 //
-//   * RepositoryNotFoundException
-//   The specified repository could not be found. Check the spelling of the specified
-//   repository and ensure that you are performing operations on the correct registry.
+//   - InvalidParameterException
+//     The specified parameter is invalid. Review the available parameters for the
+//     API request.
 //
-//   * LifecyclePolicyNotFoundException
-//   The lifecycle policy could not be found, and no policy is set to the repository.
+//   - RepositoryNotFoundException
+//     The specified repository could not be found. Check the spelling of the specified
+//     repository and ensure that you are performing operations on the correct registry.
+//
+//   - LifecyclePolicyNotFoundException
+//     The lifecycle policy could not be found, and no policy is set to the repository.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/DeleteLifecyclePolicy
 func (c *ECR) DeleteLifecyclePolicy(input *DeleteLifecyclePolicyInput) (*DeleteLifecyclePolicyOutput, error) {
@@ -604,6 +794,96 @@ func (c *ECR) DeleteLifecyclePolicyWithContext(ctx aws.Context, input *DeleteLif
 	return out, req.Send()
 }
 
+const opDeletePullThroughCacheRule = "DeletePullThroughCacheRule"
+
+// DeletePullThroughCacheRuleRequest generates a "aws/request.Request" representing the
+// client's request for the DeletePullThroughCacheRule operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeletePullThroughCacheRule for more information on using the DeletePullThroughCacheRule
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//	// Example sending a request using the DeletePullThroughCacheRuleRequest method.
+//	req, resp := client.DeletePullThroughCacheRuleRequest(params)
+//
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/DeletePullThroughCacheRule
+func (c *ECR) DeletePullThroughCacheRuleRequest(input *DeletePullThroughCacheRuleInput) (req *request.Request, output *DeletePullThroughCacheRuleOutput) {
+	op := &request.Operation{
+		Name:       opDeletePullThroughCacheRule,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DeletePullThroughCacheRuleInput{}
+	}
+
+	output = &DeletePullThroughCacheRuleOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DeletePullThroughCacheRule API operation for Amazon EC2 Container Registry.
+//
+// Deletes a pull through cache rule.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon EC2 Container Registry's
+// API operation DeletePullThroughCacheRule for usage and error information.
+//
+// Returned Error Types:
+//
+//   - ServerException
+//     These errors are usually caused by a server-side issue.
+//
+//   - InvalidParameterException
+//     The specified parameter is invalid. Review the available parameters for the
+//     API request.
+//
+//   - ValidationException
+//     There was an exception validating this request.
+//
+//   - PullThroughCacheRuleNotFoundException
+//     The pull through cache rule was not found. Specify a valid pull through cache
+//     rule and try again.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/DeletePullThroughCacheRule
+func (c *ECR) DeletePullThroughCacheRule(input *DeletePullThroughCacheRuleInput) (*DeletePullThroughCacheRuleOutput, error) {
+	req, out := c.DeletePullThroughCacheRuleRequest(input)
+	return out, req.Send()
+}
+
+// DeletePullThroughCacheRuleWithContext is the same as DeletePullThroughCacheRule with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeletePullThroughCacheRule for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ECR) DeletePullThroughCacheRuleWithContext(ctx aws.Context, input *DeletePullThroughCacheRuleInput, opts ...request.Option) (*DeletePullThroughCacheRuleOutput, error) {
+	req, out := c.DeletePullThroughCacheRuleRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDeleteRegistryPolicy = "DeleteRegistryPolicy"
 
 // DeleteRegistryPolicyRequest generates a "aws/request.Request" representing the
@@ -620,14 +900,13 @@ const opDeleteRegistryPolicy = "DeleteRegistryPolicy"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DeleteRegistryPolicyRequest method.
+//	req, resp := client.DeleteRegistryPolicyRequest(params)
 //
-//    // Example sending a request using the DeleteRegistryPolicyRequest method.
-//    req, resp := client.DeleteRegistryPolicyRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/DeleteRegistryPolicy
 func (c *ECR) DeleteRegistryPolicyRequest(input *DeleteRegistryPolicyInput) (req *request.Request, output *DeleteRegistryPolicyOutput) {
@@ -658,18 +937,19 @@ func (c *ECR) DeleteRegistryPolicyRequest(input *DeleteRegistryPolicyInput) (req
 // API operation DeleteRegistryPolicy for usage and error information.
 //
 // Returned Error Types:
-//   * ServerException
-//   These errors are usually caused by a server-side issue.
 //
-//   * InvalidParameterException
-//   The specified parameter is invalid. Review the available parameters for the
-//   API request.
+//   - ServerException
+//     These errors are usually caused by a server-side issue.
 //
-//   * RegistryPolicyNotFoundException
-//   The registry doesn't have an associated registry policy.
+//   - InvalidParameterException
+//     The specified parameter is invalid. Review the available parameters for the
+//     API request.
 //
-//   * ValidationException
-//   There was an exception validating this request.
+//   - RegistryPolicyNotFoundException
+//     The registry doesn't have an associated registry policy.
+//
+//   - ValidationException
+//     There was an exception validating this request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/DeleteRegistryPolicy
 func (c *ECR) DeleteRegistryPolicy(input *DeleteRegistryPolicyInput) (*DeleteRegistryPolicyOutput, error) {
@@ -709,14 +989,13 @@ const opDeleteRepository = "DeleteRepository"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DeleteRepositoryRequest method.
+//	req, resp := client.DeleteRepositoryRequest(params)
 //
-//    // Example sending a request using the DeleteRepositoryRequest method.
-//    req, resp := client.DeleteRepositoryRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/DeleteRepository
 func (c *ECR) DeleteRepositoryRequest(input *DeleteRepositoryInput) (req *request.Request, output *DeleteRepositoryOutput) {
@@ -749,23 +1028,24 @@ func (c *ECR) DeleteRepositoryRequest(input *DeleteRepositoryInput) (req *reques
 // API operation DeleteRepository for usage and error information.
 //
 // Returned Error Types:
-//   * ServerException
-//   These errors are usually caused by a server-side issue.
 //
-//   * InvalidParameterException
-//   The specified parameter is invalid. Review the available parameters for the
-//   API request.
+//   - ServerException
+//     These errors are usually caused by a server-side issue.
 //
-//   * RepositoryNotFoundException
-//   The specified repository could not be found. Check the spelling of the specified
-//   repository and ensure that you are performing operations on the correct registry.
+//   - InvalidParameterException
+//     The specified parameter is invalid. Review the available parameters for the
+//     API request.
 //
-//   * RepositoryNotEmptyException
-//   The specified repository contains images. To delete a repository that contains
-//   images, you must force the deletion with the force parameter.
+//   - RepositoryNotFoundException
+//     The specified repository could not be found. Check the spelling of the specified
+//     repository and ensure that you are performing operations on the correct registry.
 //
-//   * KmsException
-//   The operation failed due to a KMS exception.
+//   - RepositoryNotEmptyException
+//     The specified repository contains images. To delete a repository that contains
+//     images, you must force the deletion with the force parameter.
+//
+//   - KmsException
+//     The operation failed due to a KMS exception.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/DeleteRepository
 func (c *ECR) DeleteRepository(input *DeleteRepositoryInput) (*DeleteRepositoryOutput, error) {
@@ -805,14 +1085,13 @@ const opDeleteRepositoryPolicy = "DeleteRepositoryPolicy"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DeleteRepositoryPolicyRequest method.
+//	req, resp := client.DeleteRepositoryPolicyRequest(params)
 //
-//    // Example sending a request using the DeleteRepositoryPolicyRequest method.
-//    req, resp := client.DeleteRepositoryPolicyRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/DeleteRepositoryPolicy
 func (c *ECR) DeleteRepositoryPolicyRequest(input *DeleteRepositoryPolicyInput) (req *request.Request, output *DeleteRepositoryPolicyOutput) {
@@ -843,20 +1122,21 @@ func (c *ECR) DeleteRepositoryPolicyRequest(input *DeleteRepositoryPolicyInput) 
 // API operation DeleteRepositoryPolicy for usage and error information.
 //
 // Returned Error Types:
-//   * ServerException
-//   These errors are usually caused by a server-side issue.
 //
-//   * InvalidParameterException
-//   The specified parameter is invalid. Review the available parameters for the
-//   API request.
+//   - ServerException
+//     These errors are usually caused by a server-side issue.
 //
-//   * RepositoryNotFoundException
-//   The specified repository could not be found. Check the spelling of the specified
-//   repository and ensure that you are performing operations on the correct registry.
+//   - InvalidParameterException
+//     The specified parameter is invalid. Review the available parameters for the
+//     API request.
 //
-//   * RepositoryPolicyNotFoundException
-//   The specified repository and registry combination does not have an associated
-//   repository policy.
+//   - RepositoryNotFoundException
+//     The specified repository could not be found. Check the spelling of the specified
+//     repository and ensure that you are performing operations on the correct registry.
+//
+//   - RepositoryPolicyNotFoundException
+//     The specified repository and registry combination does not have an associated
+//     repository policy.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/DeleteRepositoryPolicy
 func (c *ECR) DeleteRepositoryPolicy(input *DeleteRepositoryPolicyInput) (*DeleteRepositoryPolicyOutput, error) {
@@ -896,14 +1176,13 @@ const opDescribeImageReplicationStatus = "DescribeImageReplicationStatus"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DescribeImageReplicationStatusRequest method.
+//	req, resp := client.DescribeImageReplicationStatusRequest(params)
 //
-//    // Example sending a request using the DescribeImageReplicationStatusRequest method.
-//    req, resp := client.DescribeImageReplicationStatusRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/DescribeImageReplicationStatus
 func (c *ECR) DescribeImageReplicationStatusRequest(input *DescribeImageReplicationStatusInput) (req *request.Request, output *DescribeImageReplicationStatusOutput) {
@@ -934,22 +1213,23 @@ func (c *ECR) DescribeImageReplicationStatusRequest(input *DescribeImageReplicat
 // API operation DescribeImageReplicationStatus for usage and error information.
 //
 // Returned Error Types:
-//   * ServerException
-//   These errors are usually caused by a server-side issue.
 //
-//   * InvalidParameterException
-//   The specified parameter is invalid. Review the available parameters for the
-//   API request.
+//   - ServerException
+//     These errors are usually caused by a server-side issue.
 //
-//   * ImageNotFoundException
-//   The image requested does not exist in the specified repository.
+//   - InvalidParameterException
+//     The specified parameter is invalid. Review the available parameters for the
+//     API request.
 //
-//   * RepositoryNotFoundException
-//   The specified repository could not be found. Check the spelling of the specified
-//   repository and ensure that you are performing operations on the correct registry.
+//   - ImageNotFoundException
+//     The image requested does not exist in the specified repository.
 //
-//   * ValidationException
-//   There was an exception validating this request.
+//   - RepositoryNotFoundException
+//     The specified repository could not be found. Check the spelling of the specified
+//     repository and ensure that you are performing operations on the correct registry.
+//
+//   - ValidationException
+//     There was an exception validating this request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/DescribeImageReplicationStatus
 func (c *ECR) DescribeImageReplicationStatus(input *DescribeImageReplicationStatusInput) (*DescribeImageReplicationStatusOutput, error) {
@@ -989,14 +1269,13 @@ const opDescribeImageScanFindings = "DescribeImageScanFindings"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DescribeImageScanFindingsRequest method.
+//	req, resp := client.DescribeImageScanFindingsRequest(params)
 //
-//    // Example sending a request using the DescribeImageScanFindingsRequest method.
-//    req, resp := client.DescribeImageScanFindingsRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/DescribeImageScanFindings
 func (c *ECR) DescribeImageScanFindingsRequest(input *DescribeImageScanFindingsInput) (req *request.Request, output *DescribeImageScanFindingsOutput) {
@@ -1033,23 +1312,27 @@ func (c *ECR) DescribeImageScanFindingsRequest(input *DescribeImageScanFindingsI
 // API operation DescribeImageScanFindings for usage and error information.
 //
 // Returned Error Types:
-//   * ServerException
-//   These errors are usually caused by a server-side issue.
 //
-//   * InvalidParameterException
-//   The specified parameter is invalid. Review the available parameters for the
-//   API request.
+//   - ServerException
+//     These errors are usually caused by a server-side issue.
 //
-//   * RepositoryNotFoundException
-//   The specified repository could not be found. Check the spelling of the specified
-//   repository and ensure that you are performing operations on the correct registry.
+//   - InvalidParameterException
+//     The specified parameter is invalid. Review the available parameters for the
+//     API request.
 //
-//   * ImageNotFoundException
-//   The image requested does not exist in the specified repository.
+//   - RepositoryNotFoundException
+//     The specified repository could not be found. Check the spelling of the specified
+//     repository and ensure that you are performing operations on the correct registry.
 //
-//   * ScanNotFoundException
-//   The specified image scan could not be found. Ensure that image scanning is
-//   enabled on the repository and try again.
+//   - ImageNotFoundException
+//     The image requested does not exist in the specified repository.
+//
+//   - ScanNotFoundException
+//     The specified image scan could not be found. Ensure that image scanning is
+//     enabled on the repository and try again.
+//
+//   - ValidationException
+//     There was an exception validating this request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/DescribeImageScanFindings
 func (c *ECR) DescribeImageScanFindings(input *DescribeImageScanFindingsInput) (*DescribeImageScanFindingsOutput, error) {
@@ -1081,15 +1364,14 @@ func (c *ECR) DescribeImageScanFindingsWithContext(ctx aws.Context, input *Descr
 //
 // Note: This operation can generate multiple requests to a service.
 //
-//    // Example iterating over at most 3 pages of a DescribeImageScanFindings operation.
-//    pageNum := 0
-//    err := client.DescribeImageScanFindingsPages(params,
-//        func(page *ecr.DescribeImageScanFindingsOutput, lastPage bool) bool {
-//            pageNum++
-//            fmt.Println(page)
-//            return pageNum <= 3
-//        })
-//
+//	// Example iterating over at most 3 pages of a DescribeImageScanFindings operation.
+//	pageNum := 0
+//	err := client.DescribeImageScanFindingsPages(params,
+//	    func(page *ecr.DescribeImageScanFindingsOutput, lastPage bool) bool {
+//	        pageNum++
+//	        fmt.Println(page)
+//	        return pageNum <= 3
+//	    })
 func (c *ECR) DescribeImageScanFindingsPages(input *DescribeImageScanFindingsInput, fn func(*DescribeImageScanFindingsOutput, bool) bool) error {
 	return c.DescribeImageScanFindingsPagesWithContext(aws.BackgroundContext(), input, fn)
 }
@@ -1141,14 +1423,13 @@ const opDescribeImages = "DescribeImages"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DescribeImagesRequest method.
+//	req, resp := client.DescribeImagesRequest(params)
 //
-//    // Example sending a request using the DescribeImagesRequest method.
-//    req, resp := client.DescribeImagesRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/DescribeImages
 func (c *ECR) DescribeImagesRequest(input *DescribeImagesInput) (req *request.Request, output *DescribeImagesOutput) {
@@ -1190,19 +1471,20 @@ func (c *ECR) DescribeImagesRequest(input *DescribeImagesInput) (req *request.Re
 // API operation DescribeImages for usage and error information.
 //
 // Returned Error Types:
-//   * ServerException
-//   These errors are usually caused by a server-side issue.
 //
-//   * InvalidParameterException
-//   The specified parameter is invalid. Review the available parameters for the
-//   API request.
+//   - ServerException
+//     These errors are usually caused by a server-side issue.
 //
-//   * RepositoryNotFoundException
-//   The specified repository could not be found. Check the spelling of the specified
-//   repository and ensure that you are performing operations on the correct registry.
+//   - InvalidParameterException
+//     The specified parameter is invalid. Review the available parameters for the
+//     API request.
 //
-//   * ImageNotFoundException
-//   The image requested does not exist in the specified repository.
+//   - RepositoryNotFoundException
+//     The specified repository could not be found. Check the spelling of the specified
+//     repository and ensure that you are performing operations on the correct registry.
+//
+//   - ImageNotFoundException
+//     The image requested does not exist in the specified repository.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/DescribeImages
 func (c *ECR) DescribeImages(input *DescribeImagesInput) (*DescribeImagesOutput, error) {
@@ -1234,15 +1516,14 @@ func (c *ECR) DescribeImagesWithContext(ctx aws.Context, input *DescribeImagesIn
 //
 // Note: This operation can generate multiple requests to a service.
 //
-//    // Example iterating over at most 3 pages of a DescribeImages operation.
-//    pageNum := 0
-//    err := client.DescribeImagesPages(params,
-//        func(page *ecr.DescribeImagesOutput, lastPage bool) bool {
-//            pageNum++
-//            fmt.Println(page)
-//            return pageNum <= 3
-//        })
-//
+//	// Example iterating over at most 3 pages of a DescribeImages operation.
+//	pageNum := 0
+//	err := client.DescribeImagesPages(params,
+//	    func(page *ecr.DescribeImagesOutput, lastPage bool) bool {
+//	        pageNum++
+//	        fmt.Println(page)
+//	        return pageNum <= 3
+//	    })
 func (c *ECR) DescribeImagesPages(input *DescribeImagesInput, fn func(*DescribeImagesOutput, bool) bool) error {
 	return c.DescribeImagesPagesWithContext(aws.BackgroundContext(), input, fn)
 }
@@ -1278,6 +1559,153 @@ func (c *ECR) DescribeImagesPagesWithContext(ctx aws.Context, input *DescribeIma
 	return p.Err()
 }
 
+const opDescribePullThroughCacheRules = "DescribePullThroughCacheRules"
+
+// DescribePullThroughCacheRulesRequest generates a "aws/request.Request" representing the
+// client's request for the DescribePullThroughCacheRules operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribePullThroughCacheRules for more information on using the DescribePullThroughCacheRules
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//	// Example sending a request using the DescribePullThroughCacheRulesRequest method.
+//	req, resp := client.DescribePullThroughCacheRulesRequest(params)
+//
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/DescribePullThroughCacheRules
+func (c *ECR) DescribePullThroughCacheRulesRequest(input *DescribePullThroughCacheRulesInput) (req *request.Request, output *DescribePullThroughCacheRulesOutput) {
+	op := &request.Operation{
+		Name:       opDescribePullThroughCacheRules,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"nextToken"},
+			OutputTokens:    []string{"nextToken"},
+			LimitToken:      "maxResults",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &DescribePullThroughCacheRulesInput{}
+	}
+
+	output = &DescribePullThroughCacheRulesOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribePullThroughCacheRules API operation for Amazon EC2 Container Registry.
+//
+// Returns the pull through cache rules for a registry.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon EC2 Container Registry's
+// API operation DescribePullThroughCacheRules for usage and error information.
+//
+// Returned Error Types:
+//
+//   - ServerException
+//     These errors are usually caused by a server-side issue.
+//
+//   - InvalidParameterException
+//     The specified parameter is invalid. Review the available parameters for the
+//     API request.
+//
+//   - ValidationException
+//     There was an exception validating this request.
+//
+//   - PullThroughCacheRuleNotFoundException
+//     The pull through cache rule was not found. Specify a valid pull through cache
+//     rule and try again.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/DescribePullThroughCacheRules
+func (c *ECR) DescribePullThroughCacheRules(input *DescribePullThroughCacheRulesInput) (*DescribePullThroughCacheRulesOutput, error) {
+	req, out := c.DescribePullThroughCacheRulesRequest(input)
+	return out, req.Send()
+}
+
+// DescribePullThroughCacheRulesWithContext is the same as DescribePullThroughCacheRules with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribePullThroughCacheRules for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ECR) DescribePullThroughCacheRulesWithContext(ctx aws.Context, input *DescribePullThroughCacheRulesInput, opts ...request.Option) (*DescribePullThroughCacheRulesOutput, error) {
+	req, out := c.DescribePullThroughCacheRulesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// DescribePullThroughCacheRulesPages iterates over the pages of a DescribePullThroughCacheRules operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See DescribePullThroughCacheRules method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//	// Example iterating over at most 3 pages of a DescribePullThroughCacheRules operation.
+//	pageNum := 0
+//	err := client.DescribePullThroughCacheRulesPages(params,
+//	    func(page *ecr.DescribePullThroughCacheRulesOutput, lastPage bool) bool {
+//	        pageNum++
+//	        fmt.Println(page)
+//	        return pageNum <= 3
+//	    })
+func (c *ECR) DescribePullThroughCacheRulesPages(input *DescribePullThroughCacheRulesInput, fn func(*DescribePullThroughCacheRulesOutput, bool) bool) error {
+	return c.DescribePullThroughCacheRulesPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribePullThroughCacheRulesPagesWithContext same as DescribePullThroughCacheRulesPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ECR) DescribePullThroughCacheRulesPagesWithContext(ctx aws.Context, input *DescribePullThroughCacheRulesInput, fn func(*DescribePullThroughCacheRulesOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *DescribePullThroughCacheRulesInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.DescribePullThroughCacheRulesRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*DescribePullThroughCacheRulesOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opDescribeRegistry = "DescribeRegistry"
 
 // DescribeRegistryRequest generates a "aws/request.Request" representing the
@@ -1294,14 +1722,13 @@ const opDescribeRegistry = "DescribeRegistry"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DescribeRegistryRequest method.
+//	req, resp := client.DescribeRegistryRequest(params)
 //
-//    // Example sending a request using the DescribeRegistryRequest method.
-//    req, resp := client.DescribeRegistryRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/DescribeRegistry
 func (c *ECR) DescribeRegistryRequest(input *DescribeRegistryInput) (req *request.Request, output *DescribeRegistryOutput) {
@@ -1334,15 +1761,16 @@ func (c *ECR) DescribeRegistryRequest(input *DescribeRegistryInput) (req *reques
 // API operation DescribeRegistry for usage and error information.
 //
 // Returned Error Types:
-//   * ServerException
-//   These errors are usually caused by a server-side issue.
 //
-//   * InvalidParameterException
-//   The specified parameter is invalid. Review the available parameters for the
-//   API request.
+//   - ServerException
+//     These errors are usually caused by a server-side issue.
 //
-//   * ValidationException
-//   There was an exception validating this request.
+//   - InvalidParameterException
+//     The specified parameter is invalid. Review the available parameters for the
+//     API request.
+//
+//   - ValidationException
+//     There was an exception validating this request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/DescribeRegistry
 func (c *ECR) DescribeRegistry(input *DescribeRegistryInput) (*DescribeRegistryOutput, error) {
@@ -1382,14 +1810,13 @@ const opDescribeRepositories = "DescribeRepositories"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DescribeRepositoriesRequest method.
+//	req, resp := client.DescribeRepositoriesRequest(params)
 //
-//    // Example sending a request using the DescribeRepositoriesRequest method.
-//    req, resp := client.DescribeRepositoriesRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/DescribeRepositories
 func (c *ECR) DescribeRepositoriesRequest(input *DescribeRepositoriesInput) (req *request.Request, output *DescribeRepositoriesOutput) {
@@ -1426,16 +1853,17 @@ func (c *ECR) DescribeRepositoriesRequest(input *DescribeRepositoriesInput) (req
 // API operation DescribeRepositories for usage and error information.
 //
 // Returned Error Types:
-//   * ServerException
-//   These errors are usually caused by a server-side issue.
 //
-//   * InvalidParameterException
-//   The specified parameter is invalid. Review the available parameters for the
-//   API request.
+//   - ServerException
+//     These errors are usually caused by a server-side issue.
 //
-//   * RepositoryNotFoundException
-//   The specified repository could not be found. Check the spelling of the specified
-//   repository and ensure that you are performing operations on the correct registry.
+//   - InvalidParameterException
+//     The specified parameter is invalid. Review the available parameters for the
+//     API request.
+//
+//   - RepositoryNotFoundException
+//     The specified repository could not be found. Check the spelling of the specified
+//     repository and ensure that you are performing operations on the correct registry.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/DescribeRepositories
 func (c *ECR) DescribeRepositories(input *DescribeRepositoriesInput) (*DescribeRepositoriesOutput, error) {
@@ -1467,15 +1895,14 @@ func (c *ECR) DescribeRepositoriesWithContext(ctx aws.Context, input *DescribeRe
 //
 // Note: This operation can generate multiple requests to a service.
 //
-//    // Example iterating over at most 3 pages of a DescribeRepositories operation.
-//    pageNum := 0
-//    err := client.DescribeRepositoriesPages(params,
-//        func(page *ecr.DescribeRepositoriesOutput, lastPage bool) bool {
-//            pageNum++
-//            fmt.Println(page)
-//            return pageNum <= 3
-//        })
-//
+//	// Example iterating over at most 3 pages of a DescribeRepositories operation.
+//	pageNum := 0
+//	err := client.DescribeRepositoriesPages(params,
+//	    func(page *ecr.DescribeRepositoriesOutput, lastPage bool) bool {
+//	        pageNum++
+//	        fmt.Println(page)
+//	        return pageNum <= 3
+//	    })
 func (c *ECR) DescribeRepositoriesPages(input *DescribeRepositoriesInput, fn func(*DescribeRepositoriesOutput, bool) bool) error {
 	return c.DescribeRepositoriesPagesWithContext(aws.BackgroundContext(), input, fn)
 }
@@ -1527,14 +1954,13 @@ const opGetAuthorizationToken = "GetAuthorizationToken"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the GetAuthorizationTokenRequest method.
+//	req, resp := client.GetAuthorizationTokenRequest(params)
 //
-//    // Example sending a request using the GetAuthorizationTokenRequest method.
-//    req, resp := client.GetAuthorizationTokenRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/GetAuthorizationToken
 func (c *ECR) GetAuthorizationTokenRequest(input *GetAuthorizationTokenInput) (req *request.Request, output *GetAuthorizationTokenOutput) {
@@ -1574,12 +2000,13 @@ func (c *ECR) GetAuthorizationTokenRequest(input *GetAuthorizationTokenInput) (r
 // API operation GetAuthorizationToken for usage and error information.
 //
 // Returned Error Types:
-//   * ServerException
-//   These errors are usually caused by a server-side issue.
 //
-//   * InvalidParameterException
-//   The specified parameter is invalid. Review the available parameters for the
-//   API request.
+//   - ServerException
+//     These errors are usually caused by a server-side issue.
+//
+//   - InvalidParameterException
+//     The specified parameter is invalid. Review the available parameters for the
+//     API request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/GetAuthorizationToken
 func (c *ECR) GetAuthorizationToken(input *GetAuthorizationTokenInput) (*GetAuthorizationTokenOutput, error) {
@@ -1619,14 +2046,13 @@ const opGetDownloadUrlForLayer = "GetDownloadUrlForLayer"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the GetDownloadUrlForLayerRequest method.
+//	req, resp := client.GetDownloadUrlForLayerRequest(params)
 //
-//    // Example sending a request using the GetDownloadUrlForLayerRequest method.
-//    req, resp := client.GetDownloadUrlForLayerRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/GetDownloadUrlForLayer
 func (c *ECR) GetDownloadUrlForLayerRequest(input *GetDownloadUrlForLayerInput) (req *request.Request, output *GetDownloadUrlForLayerOutput) {
@@ -1665,24 +2091,25 @@ func (c *ECR) GetDownloadUrlForLayerRequest(input *GetDownloadUrlForLayerInput) 
 // API operation GetDownloadUrlForLayer for usage and error information.
 //
 // Returned Error Types:
-//   * ServerException
-//   These errors are usually caused by a server-side issue.
 //
-//   * InvalidParameterException
-//   The specified parameter is invalid. Review the available parameters for the
-//   API request.
+//   - ServerException
+//     These errors are usually caused by a server-side issue.
 //
-//   * LayersNotFoundException
-//   The specified layers could not be found, or the specified layer is not valid
-//   for this repository.
+//   - InvalidParameterException
+//     The specified parameter is invalid. Review the available parameters for the
+//     API request.
 //
-//   * LayerInaccessibleException
-//   The specified layer is not available because it is not associated with an
-//   image. Unassociated image layers may be cleaned up at any time.
+//   - LayersNotFoundException
+//     The specified layers could not be found, or the specified layer is not valid
+//     for this repository.
 //
-//   * RepositoryNotFoundException
-//   The specified repository could not be found. Check the spelling of the specified
-//   repository and ensure that you are performing operations on the correct registry.
+//   - LayerInaccessibleException
+//     The specified layer is not available because it is not associated with an
+//     image. Unassociated image layers may be cleaned up at any time.
+//
+//   - RepositoryNotFoundException
+//     The specified repository could not be found. Check the spelling of the specified
+//     repository and ensure that you are performing operations on the correct registry.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/GetDownloadUrlForLayer
 func (c *ECR) GetDownloadUrlForLayer(input *GetDownloadUrlForLayerInput) (*GetDownloadUrlForLayerOutput, error) {
@@ -1722,14 +2149,13 @@ const opGetLifecyclePolicy = "GetLifecyclePolicy"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the GetLifecyclePolicyRequest method.
+//	req, resp := client.GetLifecyclePolicyRequest(params)
 //
-//    // Example sending a request using the GetLifecyclePolicyRequest method.
-//    req, resp := client.GetLifecyclePolicyRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/GetLifecyclePolicy
 func (c *ECR) GetLifecyclePolicyRequest(input *GetLifecyclePolicyInput) (req *request.Request, output *GetLifecyclePolicyOutput) {
@@ -1760,19 +2186,20 @@ func (c *ECR) GetLifecyclePolicyRequest(input *GetLifecyclePolicyInput) (req *re
 // API operation GetLifecyclePolicy for usage and error information.
 //
 // Returned Error Types:
-//   * ServerException
-//   These errors are usually caused by a server-side issue.
 //
-//   * InvalidParameterException
-//   The specified parameter is invalid. Review the available parameters for the
-//   API request.
+//   - ServerException
+//     These errors are usually caused by a server-side issue.
 //
-//   * RepositoryNotFoundException
-//   The specified repository could not be found. Check the spelling of the specified
-//   repository and ensure that you are performing operations on the correct registry.
+//   - InvalidParameterException
+//     The specified parameter is invalid. Review the available parameters for the
+//     API request.
 //
-//   * LifecyclePolicyNotFoundException
-//   The lifecycle policy could not be found, and no policy is set to the repository.
+//   - RepositoryNotFoundException
+//     The specified repository could not be found. Check the spelling of the specified
+//     repository and ensure that you are performing operations on the correct registry.
+//
+//   - LifecyclePolicyNotFoundException
+//     The lifecycle policy could not be found, and no policy is set to the repository.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/GetLifecyclePolicy
 func (c *ECR) GetLifecyclePolicy(input *GetLifecyclePolicyInput) (*GetLifecyclePolicyOutput, error) {
@@ -1812,14 +2239,13 @@ const opGetLifecyclePolicyPreview = "GetLifecyclePolicyPreview"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the GetLifecyclePolicyPreviewRequest method.
+//	req, resp := client.GetLifecyclePolicyPreviewRequest(params)
 //
-//    // Example sending a request using the GetLifecyclePolicyPreviewRequest method.
-//    req, resp := client.GetLifecyclePolicyPreviewRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/GetLifecyclePolicyPreview
 func (c *ECR) GetLifecyclePolicyPreviewRequest(input *GetLifecyclePolicyPreviewInput) (req *request.Request, output *GetLifecyclePolicyPreviewOutput) {
@@ -1857,19 +2283,20 @@ func (c *ECR) GetLifecyclePolicyPreviewRequest(input *GetLifecyclePolicyPreviewI
 // API operation GetLifecyclePolicyPreview for usage and error information.
 //
 // Returned Error Types:
-//   * ServerException
-//   These errors are usually caused by a server-side issue.
 //
-//   * InvalidParameterException
-//   The specified parameter is invalid. Review the available parameters for the
-//   API request.
+//   - ServerException
+//     These errors are usually caused by a server-side issue.
 //
-//   * RepositoryNotFoundException
-//   The specified repository could not be found. Check the spelling of the specified
-//   repository and ensure that you are performing operations on the correct registry.
+//   - InvalidParameterException
+//     The specified parameter is invalid. Review the available parameters for the
+//     API request.
 //
-//   * LifecyclePolicyPreviewNotFoundException
-//   There is no dry run for this repository.
+//   - RepositoryNotFoundException
+//     The specified repository could not be found. Check the spelling of the specified
+//     repository and ensure that you are performing operations on the correct registry.
+//
+//   - LifecyclePolicyPreviewNotFoundException
+//     There is no dry run for this repository.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/GetLifecyclePolicyPreview
 func (c *ECR) GetLifecyclePolicyPreview(input *GetLifecyclePolicyPreviewInput) (*GetLifecyclePolicyPreviewOutput, error) {
@@ -1901,15 +2328,14 @@ func (c *ECR) GetLifecyclePolicyPreviewWithContext(ctx aws.Context, input *GetLi
 //
 // Note: This operation can generate multiple requests to a service.
 //
-//    // Example iterating over at most 3 pages of a GetLifecyclePolicyPreview operation.
-//    pageNum := 0
-//    err := client.GetLifecyclePolicyPreviewPages(params,
-//        func(page *ecr.GetLifecyclePolicyPreviewOutput, lastPage bool) bool {
-//            pageNum++
-//            fmt.Println(page)
-//            return pageNum <= 3
-//        })
-//
+//	// Example iterating over at most 3 pages of a GetLifecyclePolicyPreview operation.
+//	pageNum := 0
+//	err := client.GetLifecyclePolicyPreviewPages(params,
+//	    func(page *ecr.GetLifecyclePolicyPreviewOutput, lastPage bool) bool {
+//	        pageNum++
+//	        fmt.Println(page)
+//	        return pageNum <= 3
+//	    })
 func (c *ECR) GetLifecyclePolicyPreviewPages(input *GetLifecyclePolicyPreviewInput, fn func(*GetLifecyclePolicyPreviewOutput, bool) bool) error {
 	return c.GetLifecyclePolicyPreviewPagesWithContext(aws.BackgroundContext(), input, fn)
 }
@@ -1961,14 +2387,13 @@ const opGetRegistryPolicy = "GetRegistryPolicy"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the GetRegistryPolicyRequest method.
+//	req, resp := client.GetRegistryPolicyRequest(params)
 //
-//    // Example sending a request using the GetRegistryPolicyRequest method.
-//    req, resp := client.GetRegistryPolicyRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/GetRegistryPolicy
 func (c *ECR) GetRegistryPolicyRequest(input *GetRegistryPolicyInput) (req *request.Request, output *GetRegistryPolicyOutput) {
@@ -1999,18 +2424,19 @@ func (c *ECR) GetRegistryPolicyRequest(input *GetRegistryPolicyInput) (req *requ
 // API operation GetRegistryPolicy for usage and error information.
 //
 // Returned Error Types:
-//   * ServerException
-//   These errors are usually caused by a server-side issue.
 //
-//   * InvalidParameterException
-//   The specified parameter is invalid. Review the available parameters for the
-//   API request.
+//   - ServerException
+//     These errors are usually caused by a server-side issue.
 //
-//   * RegistryPolicyNotFoundException
-//   The registry doesn't have an associated registry policy.
+//   - InvalidParameterException
+//     The specified parameter is invalid. Review the available parameters for the
+//     API request.
 //
-//   * ValidationException
-//   There was an exception validating this request.
+//   - RegistryPolicyNotFoundException
+//     The registry doesn't have an associated registry policy.
+//
+//   - ValidationException
+//     There was an exception validating this request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/GetRegistryPolicy
 func (c *ECR) GetRegistryPolicy(input *GetRegistryPolicyInput) (*GetRegistryPolicyOutput, error) {
@@ -2034,6 +2460,92 @@ func (c *ECR) GetRegistryPolicyWithContext(ctx aws.Context, input *GetRegistryPo
 	return out, req.Send()
 }
 
+const opGetRegistryScanningConfiguration = "GetRegistryScanningConfiguration"
+
+// GetRegistryScanningConfigurationRequest generates a "aws/request.Request" representing the
+// client's request for the GetRegistryScanningConfiguration operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetRegistryScanningConfiguration for more information on using the GetRegistryScanningConfiguration
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//	// Example sending a request using the GetRegistryScanningConfigurationRequest method.
+//	req, resp := client.GetRegistryScanningConfigurationRequest(params)
+//
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/GetRegistryScanningConfiguration
+func (c *ECR) GetRegistryScanningConfigurationRequest(input *GetRegistryScanningConfigurationInput) (req *request.Request, output *GetRegistryScanningConfigurationOutput) {
+	op := &request.Operation{
+		Name:       opGetRegistryScanningConfiguration,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &GetRegistryScanningConfigurationInput{}
+	}
+
+	output = &GetRegistryScanningConfigurationOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetRegistryScanningConfiguration API operation for Amazon EC2 Container Registry.
+//
+// Retrieves the scanning configuration for a registry.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon EC2 Container Registry's
+// API operation GetRegistryScanningConfiguration for usage and error information.
+//
+// Returned Error Types:
+//
+//   - ServerException
+//     These errors are usually caused by a server-side issue.
+//
+//   - InvalidParameterException
+//     The specified parameter is invalid. Review the available parameters for the
+//     API request.
+//
+//   - ValidationException
+//     There was an exception validating this request.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/GetRegistryScanningConfiguration
+func (c *ECR) GetRegistryScanningConfiguration(input *GetRegistryScanningConfigurationInput) (*GetRegistryScanningConfigurationOutput, error) {
+	req, out := c.GetRegistryScanningConfigurationRequest(input)
+	return out, req.Send()
+}
+
+// GetRegistryScanningConfigurationWithContext is the same as GetRegistryScanningConfiguration with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetRegistryScanningConfiguration for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ECR) GetRegistryScanningConfigurationWithContext(ctx aws.Context, input *GetRegistryScanningConfigurationInput, opts ...request.Option) (*GetRegistryScanningConfigurationOutput, error) {
+	req, out := c.GetRegistryScanningConfigurationRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opGetRepositoryPolicy = "GetRepositoryPolicy"
 
 // GetRepositoryPolicyRequest generates a "aws/request.Request" representing the
@@ -2050,14 +2562,13 @@ const opGetRepositoryPolicy = "GetRepositoryPolicy"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the GetRepositoryPolicyRequest method.
+//	req, resp := client.GetRepositoryPolicyRequest(params)
 //
-//    // Example sending a request using the GetRepositoryPolicyRequest method.
-//    req, resp := client.GetRepositoryPolicyRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/GetRepositoryPolicy
 func (c *ECR) GetRepositoryPolicyRequest(input *GetRepositoryPolicyInput) (req *request.Request, output *GetRepositoryPolicyOutput) {
@@ -2088,20 +2599,21 @@ func (c *ECR) GetRepositoryPolicyRequest(input *GetRepositoryPolicyInput) (req *
 // API operation GetRepositoryPolicy for usage and error information.
 //
 // Returned Error Types:
-//   * ServerException
-//   These errors are usually caused by a server-side issue.
 //
-//   * InvalidParameterException
-//   The specified parameter is invalid. Review the available parameters for the
-//   API request.
+//   - ServerException
+//     These errors are usually caused by a server-side issue.
 //
-//   * RepositoryNotFoundException
-//   The specified repository could not be found. Check the spelling of the specified
-//   repository and ensure that you are performing operations on the correct registry.
+//   - InvalidParameterException
+//     The specified parameter is invalid. Review the available parameters for the
+//     API request.
 //
-//   * RepositoryPolicyNotFoundException
-//   The specified repository and registry combination does not have an associated
-//   repository policy.
+//   - RepositoryNotFoundException
+//     The specified repository could not be found. Check the spelling of the specified
+//     repository and ensure that you are performing operations on the correct registry.
+//
+//   - RepositoryPolicyNotFoundException
+//     The specified repository and registry combination does not have an associated
+//     repository policy.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/GetRepositoryPolicy
 func (c *ECR) GetRepositoryPolicy(input *GetRepositoryPolicyInput) (*GetRepositoryPolicyOutput, error) {
@@ -2141,14 +2653,13 @@ const opInitiateLayerUpload = "InitiateLayerUpload"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the InitiateLayerUploadRequest method.
+//	req, resp := client.InitiateLayerUploadRequest(params)
 //
-//    // Example sending a request using the InitiateLayerUploadRequest method.
-//    req, resp := client.InitiateLayerUploadRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/InitiateLayerUpload
 func (c *ECR) InitiateLayerUploadRequest(input *InitiateLayerUploadInput) (req *request.Request, output *InitiateLayerUploadOutput) {
@@ -2187,19 +2698,20 @@ func (c *ECR) InitiateLayerUploadRequest(input *InitiateLayerUploadInput) (req *
 // API operation InitiateLayerUpload for usage and error information.
 //
 // Returned Error Types:
-//   * ServerException
-//   These errors are usually caused by a server-side issue.
 //
-//   * InvalidParameterException
-//   The specified parameter is invalid. Review the available parameters for the
-//   API request.
+//   - ServerException
+//     These errors are usually caused by a server-side issue.
 //
-//   * RepositoryNotFoundException
-//   The specified repository could not be found. Check the spelling of the specified
-//   repository and ensure that you are performing operations on the correct registry.
+//   - InvalidParameterException
+//     The specified parameter is invalid. Review the available parameters for the
+//     API request.
 //
-//   * KmsException
-//   The operation failed due to a KMS exception.
+//   - RepositoryNotFoundException
+//     The specified repository could not be found. Check the spelling of the specified
+//     repository and ensure that you are performing operations on the correct registry.
+//
+//   - KmsException
+//     The operation failed due to a KMS exception.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/InitiateLayerUpload
 func (c *ECR) InitiateLayerUpload(input *InitiateLayerUploadInput) (*InitiateLayerUploadOutput, error) {
@@ -2239,14 +2751,13 @@ const opListImages = "ListImages"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the ListImagesRequest method.
+//	req, resp := client.ListImagesRequest(params)
 //
-//    // Example sending a request using the ListImagesRequest method.
-//    req, resp := client.ListImagesRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/ListImages
 func (c *ECR) ListImagesRequest(input *ListImagesInput) (req *request.Request, output *ListImagesOutput) {
@@ -2290,16 +2801,17 @@ func (c *ECR) ListImagesRequest(input *ListImagesInput) (req *request.Request, o
 // API operation ListImages for usage and error information.
 //
 // Returned Error Types:
-//   * ServerException
-//   These errors are usually caused by a server-side issue.
 //
-//   * InvalidParameterException
-//   The specified parameter is invalid. Review the available parameters for the
-//   API request.
+//   - ServerException
+//     These errors are usually caused by a server-side issue.
 //
-//   * RepositoryNotFoundException
-//   The specified repository could not be found. Check the spelling of the specified
-//   repository and ensure that you are performing operations on the correct registry.
+//   - InvalidParameterException
+//     The specified parameter is invalid. Review the available parameters for the
+//     API request.
+//
+//   - RepositoryNotFoundException
+//     The specified repository could not be found. Check the spelling of the specified
+//     repository and ensure that you are performing operations on the correct registry.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/ListImages
 func (c *ECR) ListImages(input *ListImagesInput) (*ListImagesOutput, error) {
@@ -2331,15 +2843,14 @@ func (c *ECR) ListImagesWithContext(ctx aws.Context, input *ListImagesInput, opt
 //
 // Note: This operation can generate multiple requests to a service.
 //
-//    // Example iterating over at most 3 pages of a ListImages operation.
-//    pageNum := 0
-//    err := client.ListImagesPages(params,
-//        func(page *ecr.ListImagesOutput, lastPage bool) bool {
-//            pageNum++
-//            fmt.Println(page)
-//            return pageNum <= 3
-//        })
-//
+//	// Example iterating over at most 3 pages of a ListImages operation.
+//	pageNum := 0
+//	err := client.ListImagesPages(params,
+//	    func(page *ecr.ListImagesOutput, lastPage bool) bool {
+//	        pageNum++
+//	        fmt.Println(page)
+//	        return pageNum <= 3
+//	    })
 func (c *ECR) ListImagesPages(input *ListImagesInput, fn func(*ListImagesOutput, bool) bool) error {
 	return c.ListImagesPagesWithContext(aws.BackgroundContext(), input, fn)
 }
@@ -2391,14 +2902,13 @@ const opListTagsForResource = "ListTagsForResource"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the ListTagsForResourceRequest method.
+//	req, resp := client.ListTagsForResourceRequest(params)
 //
-//    // Example sending a request using the ListTagsForResourceRequest method.
-//    req, resp := client.ListTagsForResourceRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/ListTagsForResource
 func (c *ECR) ListTagsForResourceRequest(input *ListTagsForResourceInput) (req *request.Request, output *ListTagsForResourceOutput) {
@@ -2429,16 +2939,17 @@ func (c *ECR) ListTagsForResourceRequest(input *ListTagsForResourceInput) (req *
 // API operation ListTagsForResource for usage and error information.
 //
 // Returned Error Types:
-//   * InvalidParameterException
-//   The specified parameter is invalid. Review the available parameters for the
-//   API request.
 //
-//   * RepositoryNotFoundException
-//   The specified repository could not be found. Check the spelling of the specified
-//   repository and ensure that you are performing operations on the correct registry.
+//   - InvalidParameterException
+//     The specified parameter is invalid. Review the available parameters for the
+//     API request.
 //
-//   * ServerException
-//   These errors are usually caused by a server-side issue.
+//   - RepositoryNotFoundException
+//     The specified repository could not be found. Check the spelling of the specified
+//     repository and ensure that you are performing operations on the correct registry.
+//
+//   - ServerException
+//     These errors are usually caused by a server-side issue.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/ListTagsForResource
 func (c *ECR) ListTagsForResource(input *ListTagsForResourceInput) (*ListTagsForResourceOutput, error) {
@@ -2478,14 +2989,13 @@ const opPutImage = "PutImage"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the PutImageRequest method.
+//	req, resp := client.PutImageRequest(params)
 //
-//    // Example sending a request using the PutImageRequest method.
-//    req, resp := client.PutImageRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/PutImage
 func (c *ECR) PutImageRequest(input *PutImageInput) (req *request.Request, output *PutImageOutput) {
@@ -2524,43 +3034,44 @@ func (c *ECR) PutImageRequest(input *PutImageInput) (req *request.Request, outpu
 // API operation PutImage for usage and error information.
 //
 // Returned Error Types:
-//   * ServerException
-//   These errors are usually caused by a server-side issue.
 //
-//   * InvalidParameterException
-//   The specified parameter is invalid. Review the available parameters for the
-//   API request.
+//   - ServerException
+//     These errors are usually caused by a server-side issue.
 //
-//   * RepositoryNotFoundException
-//   The specified repository could not be found. Check the spelling of the specified
-//   repository and ensure that you are performing operations on the correct registry.
+//   - InvalidParameterException
+//     The specified parameter is invalid. Review the available parameters for the
+//     API request.
 //
-//   * ImageAlreadyExistsException
-//   The specified image has already been pushed, and there were no changes to
-//   the manifest or image tag after the last push.
+//   - RepositoryNotFoundException
+//     The specified repository could not be found. Check the spelling of the specified
+//     repository and ensure that you are performing operations on the correct registry.
 //
-//   * LayersNotFoundException
-//   The specified layers could not be found, or the specified layer is not valid
-//   for this repository.
+//   - ImageAlreadyExistsException
+//     The specified image has already been pushed, and there were no changes to
+//     the manifest or image tag after the last push.
 //
-//   * ReferencedImagesNotFoundException
-//   The manifest list is referencing an image that does not exist.
+//   - LayersNotFoundException
+//     The specified layers could not be found, or the specified layer is not valid
+//     for this repository.
 //
-//   * LimitExceededException
-//   The operation did not succeed because it would have exceeded a service limit
-//   for your account. For more information, see Amazon ECR service quotas (https://docs.aws.amazon.com/AmazonECR/latest/userguide/service-quotas.html)
-//   in the Amazon Elastic Container Registry User Guide.
+//   - ReferencedImagesNotFoundException
+//     The manifest list is referencing an image that does not exist.
 //
-//   * ImageTagAlreadyExistsException
-//   The specified image is tagged with a tag that already exists. The repository
-//   is configured for tag immutability.
+//   - LimitExceededException
+//     The operation did not succeed because it would have exceeded a service limit
+//     for your account. For more information, see Amazon ECR service quotas (https://docs.aws.amazon.com/AmazonECR/latest/userguide/service-quotas.html)
+//     in the Amazon Elastic Container Registry User Guide.
 //
-//   * ImageDigestDoesNotMatchException
-//   The specified image digest does not match the digest that Amazon ECR calculated
-//   for the image.
+//   - ImageTagAlreadyExistsException
+//     The specified image is tagged with a tag that already exists. The repository
+//     is configured for tag immutability.
 //
-//   * KmsException
-//   The operation failed due to a KMS exception.
+//   - ImageDigestDoesNotMatchException
+//     The specified image digest does not match the digest that Amazon ECR calculated
+//     for the image.
+//
+//   - KmsException
+//     The operation failed due to a KMS exception.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/PutImage
 func (c *ECR) PutImage(input *PutImageInput) (*PutImageOutput, error) {
@@ -2600,14 +3111,13 @@ const opPutImageScanningConfiguration = "PutImageScanningConfiguration"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the PutImageScanningConfigurationRequest method.
+//	req, resp := client.PutImageScanningConfigurationRequest(params)
 //
-//    // Example sending a request using the PutImageScanningConfigurationRequest method.
-//    req, resp := client.PutImageScanningConfigurationRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/PutImageScanningConfiguration
 func (c *ECR) PutImageScanningConfigurationRequest(input *PutImageScanningConfigurationInput) (req *request.Request, output *PutImageScanningConfigurationOutput) {
@@ -2628,6 +3138,10 @@ func (c *ECR) PutImageScanningConfigurationRequest(input *PutImageScanningConfig
 
 // PutImageScanningConfiguration API operation for Amazon EC2 Container Registry.
 //
+// The PutImageScanningConfiguration API is being deprecated, in favor of specifying
+// the image scanning configuration at the registry level. For more information,
+// see PutRegistryScanningConfiguration.
+//
 // Updates the image scanning configuration for the specified repository.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -2638,16 +3152,20 @@ func (c *ECR) PutImageScanningConfigurationRequest(input *PutImageScanningConfig
 // API operation PutImageScanningConfiguration for usage and error information.
 //
 // Returned Error Types:
-//   * ServerException
-//   These errors are usually caused by a server-side issue.
 //
-//   * InvalidParameterException
-//   The specified parameter is invalid. Review the available parameters for the
-//   API request.
+//   - ServerException
+//     These errors are usually caused by a server-side issue.
 //
-//   * RepositoryNotFoundException
-//   The specified repository could not be found. Check the spelling of the specified
-//   repository and ensure that you are performing operations on the correct registry.
+//   - InvalidParameterException
+//     The specified parameter is invalid. Review the available parameters for the
+//     API request.
+//
+//   - RepositoryNotFoundException
+//     The specified repository could not be found. Check the spelling of the specified
+//     repository and ensure that you are performing operations on the correct registry.
+//
+//   - ValidationException
+//     There was an exception validating this request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/PutImageScanningConfiguration
 func (c *ECR) PutImageScanningConfiguration(input *PutImageScanningConfigurationInput) (*PutImageScanningConfigurationOutput, error) {
@@ -2687,14 +3205,13 @@ const opPutImageTagMutability = "PutImageTagMutability"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the PutImageTagMutabilityRequest method.
+//	req, resp := client.PutImageTagMutabilityRequest(params)
 //
-//    // Example sending a request using the PutImageTagMutabilityRequest method.
-//    req, resp := client.PutImageTagMutabilityRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/PutImageTagMutability
 func (c *ECR) PutImageTagMutabilityRequest(input *PutImageTagMutabilityInput) (req *request.Request, output *PutImageTagMutabilityOutput) {
@@ -2727,16 +3244,17 @@ func (c *ECR) PutImageTagMutabilityRequest(input *PutImageTagMutabilityInput) (r
 // API operation PutImageTagMutability for usage and error information.
 //
 // Returned Error Types:
-//   * ServerException
-//   These errors are usually caused by a server-side issue.
 //
-//   * InvalidParameterException
-//   The specified parameter is invalid. Review the available parameters for the
-//   API request.
+//   - ServerException
+//     These errors are usually caused by a server-side issue.
 //
-//   * RepositoryNotFoundException
-//   The specified repository could not be found. Check the spelling of the specified
-//   repository and ensure that you are performing operations on the correct registry.
+//   - InvalidParameterException
+//     The specified parameter is invalid. Review the available parameters for the
+//     API request.
+//
+//   - RepositoryNotFoundException
+//     The specified repository could not be found. Check the spelling of the specified
+//     repository and ensure that you are performing operations on the correct registry.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/PutImageTagMutability
 func (c *ECR) PutImageTagMutability(input *PutImageTagMutabilityInput) (*PutImageTagMutabilityOutput, error) {
@@ -2776,14 +3294,13 @@ const opPutLifecyclePolicy = "PutLifecyclePolicy"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the PutLifecyclePolicyRequest method.
+//	req, resp := client.PutLifecyclePolicyRequest(params)
 //
-//    // Example sending a request using the PutLifecyclePolicyRequest method.
-//    req, resp := client.PutLifecyclePolicyRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/PutLifecyclePolicy
 func (c *ECR) PutLifecyclePolicyRequest(input *PutLifecyclePolicyInput) (req *request.Request, output *PutLifecyclePolicyOutput) {
@@ -2815,16 +3332,17 @@ func (c *ECR) PutLifecyclePolicyRequest(input *PutLifecyclePolicyInput) (req *re
 // API operation PutLifecyclePolicy for usage and error information.
 //
 // Returned Error Types:
-//   * ServerException
-//   These errors are usually caused by a server-side issue.
 //
-//   * InvalidParameterException
-//   The specified parameter is invalid. Review the available parameters for the
-//   API request.
+//   - ServerException
+//     These errors are usually caused by a server-side issue.
 //
-//   * RepositoryNotFoundException
-//   The specified repository could not be found. Check the spelling of the specified
-//   repository and ensure that you are performing operations on the correct registry.
+//   - InvalidParameterException
+//     The specified parameter is invalid. Review the available parameters for the
+//     API request.
+//
+//   - RepositoryNotFoundException
+//     The specified repository could not be found. Check the spelling of the specified
+//     repository and ensure that you are performing operations on the correct registry.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/PutLifecyclePolicy
 func (c *ECR) PutLifecyclePolicy(input *PutLifecyclePolicyInput) (*PutLifecyclePolicyOutput, error) {
@@ -2864,14 +3382,13 @@ const opPutRegistryPolicy = "PutRegistryPolicy"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the PutRegistryPolicyRequest method.
+//	req, resp := client.PutRegistryPolicyRequest(params)
 //
-//    // Example sending a request using the PutRegistryPolicyRequest method.
-//    req, resp := client.PutRegistryPolicyRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/PutRegistryPolicy
 func (c *ECR) PutRegistryPolicyRequest(input *PutRegistryPolicyInput) (req *request.Request, output *PutRegistryPolicyOutput) {
@@ -2907,15 +3424,16 @@ func (c *ECR) PutRegistryPolicyRequest(input *PutRegistryPolicyInput) (req *requ
 // API operation PutRegistryPolicy for usage and error information.
 //
 // Returned Error Types:
-//   * ServerException
-//   These errors are usually caused by a server-side issue.
 //
-//   * InvalidParameterException
-//   The specified parameter is invalid. Review the available parameters for the
-//   API request.
+//   - ServerException
+//     These errors are usually caused by a server-side issue.
 //
-//   * ValidationException
-//   There was an exception validating this request.
+//   - InvalidParameterException
+//     The specified parameter is invalid. Review the available parameters for the
+//     API request.
+//
+//   - ValidationException
+//     There was an exception validating this request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/PutRegistryPolicy
 func (c *ECR) PutRegistryPolicy(input *PutRegistryPolicyInput) (*PutRegistryPolicyOutput, error) {
@@ -2939,6 +3457,92 @@ func (c *ECR) PutRegistryPolicyWithContext(ctx aws.Context, input *PutRegistryPo
 	return out, req.Send()
 }
 
+const opPutRegistryScanningConfiguration = "PutRegistryScanningConfiguration"
+
+// PutRegistryScanningConfigurationRequest generates a "aws/request.Request" representing the
+// client's request for the PutRegistryScanningConfiguration operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See PutRegistryScanningConfiguration for more information on using the PutRegistryScanningConfiguration
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//	// Example sending a request using the PutRegistryScanningConfigurationRequest method.
+//	req, resp := client.PutRegistryScanningConfigurationRequest(params)
+//
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/PutRegistryScanningConfiguration
+func (c *ECR) PutRegistryScanningConfigurationRequest(input *PutRegistryScanningConfigurationInput) (req *request.Request, output *PutRegistryScanningConfigurationOutput) {
+	op := &request.Operation{
+		Name:       opPutRegistryScanningConfiguration,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &PutRegistryScanningConfigurationInput{}
+	}
+
+	output = &PutRegistryScanningConfigurationOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// PutRegistryScanningConfiguration API operation for Amazon EC2 Container Registry.
+//
+// Creates or updates the scanning configuration for your private registry.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon EC2 Container Registry's
+// API operation PutRegistryScanningConfiguration for usage and error information.
+//
+// Returned Error Types:
+//
+//   - ServerException
+//     These errors are usually caused by a server-side issue.
+//
+//   - InvalidParameterException
+//     The specified parameter is invalid. Review the available parameters for the
+//     API request.
+//
+//   - ValidationException
+//     There was an exception validating this request.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/PutRegistryScanningConfiguration
+func (c *ECR) PutRegistryScanningConfiguration(input *PutRegistryScanningConfigurationInput) (*PutRegistryScanningConfigurationOutput, error) {
+	req, out := c.PutRegistryScanningConfigurationRequest(input)
+	return out, req.Send()
+}
+
+// PutRegistryScanningConfigurationWithContext is the same as PutRegistryScanningConfiguration with the addition of
+// the ability to pass a context and additional request options.
+//
+// See PutRegistryScanningConfiguration for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ECR) PutRegistryScanningConfigurationWithContext(ctx aws.Context, input *PutRegistryScanningConfigurationInput, opts ...request.Option) (*PutRegistryScanningConfigurationOutput, error) {
+	req, out := c.PutRegistryScanningConfigurationRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opPutReplicationConfiguration = "PutReplicationConfiguration"
 
 // PutReplicationConfigurationRequest generates a "aws/request.Request" representing the
@@ -2955,14 +3559,13 @@ const opPutReplicationConfiguration = "PutReplicationConfiguration"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the PutReplicationConfigurationRequest method.
+//	req, resp := client.PutReplicationConfigurationRequest(params)
 //
-//    // Example sending a request using the PutReplicationConfigurationRequest method.
-//    req, resp := client.PutReplicationConfigurationRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/PutReplicationConfiguration
 func (c *ECR) PutReplicationConfigurationRequest(input *PutReplicationConfigurationInput) (req *request.Request, output *PutReplicationConfigurationOutput) {
@@ -3003,15 +3606,16 @@ func (c *ECR) PutReplicationConfigurationRequest(input *PutReplicationConfigurat
 // API operation PutReplicationConfiguration for usage and error information.
 //
 // Returned Error Types:
-//   * ServerException
-//   These errors are usually caused by a server-side issue.
 //
-//   * InvalidParameterException
-//   The specified parameter is invalid. Review the available parameters for the
-//   API request.
+//   - ServerException
+//     These errors are usually caused by a server-side issue.
 //
-//   * ValidationException
-//   There was an exception validating this request.
+//   - InvalidParameterException
+//     The specified parameter is invalid. Review the available parameters for the
+//     API request.
+//
+//   - ValidationException
+//     There was an exception validating this request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/PutReplicationConfiguration
 func (c *ECR) PutReplicationConfiguration(input *PutReplicationConfigurationInput) (*PutReplicationConfigurationOutput, error) {
@@ -3051,14 +3655,13 @@ const opSetRepositoryPolicy = "SetRepositoryPolicy"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the SetRepositoryPolicyRequest method.
+//	req, resp := client.SetRepositoryPolicyRequest(params)
 //
-//    // Example sending a request using the SetRepositoryPolicyRequest method.
-//    req, resp := client.SetRepositoryPolicyRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/SetRepositoryPolicy
 func (c *ECR) SetRepositoryPolicyRequest(input *SetRepositoryPolicyInput) (req *request.Request, output *SetRepositoryPolicyOutput) {
@@ -3091,16 +3694,17 @@ func (c *ECR) SetRepositoryPolicyRequest(input *SetRepositoryPolicyInput) (req *
 // API operation SetRepositoryPolicy for usage and error information.
 //
 // Returned Error Types:
-//   * ServerException
-//   These errors are usually caused by a server-side issue.
 //
-//   * InvalidParameterException
-//   The specified parameter is invalid. Review the available parameters for the
-//   API request.
+//   - ServerException
+//     These errors are usually caused by a server-side issue.
 //
-//   * RepositoryNotFoundException
-//   The specified repository could not be found. Check the spelling of the specified
-//   repository and ensure that you are performing operations on the correct registry.
+//   - InvalidParameterException
+//     The specified parameter is invalid. Review the available parameters for the
+//     API request.
+//
+//   - RepositoryNotFoundException
+//     The specified repository could not be found. Check the spelling of the specified
+//     repository and ensure that you are performing operations on the correct registry.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/SetRepositoryPolicy
 func (c *ECR) SetRepositoryPolicy(input *SetRepositoryPolicyInput) (*SetRepositoryPolicyOutput, error) {
@@ -3140,14 +3744,13 @@ const opStartImageScan = "StartImageScan"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the StartImageScanRequest method.
+//	req, resp := client.StartImageScanRequest(params)
 //
-//    // Example sending a request using the StartImageScanRequest method.
-//    req, resp := client.StartImageScanRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/StartImageScan
 func (c *ECR) StartImageScanRequest(input *StartImageScanInput) (req *request.Request, output *StartImageScanOutput) {
@@ -3181,27 +3784,31 @@ func (c *ECR) StartImageScanRequest(input *StartImageScanInput) (req *request.Re
 // API operation StartImageScan for usage and error information.
 //
 // Returned Error Types:
-//   * ServerException
-//   These errors are usually caused by a server-side issue.
 //
-//   * InvalidParameterException
-//   The specified parameter is invalid. Review the available parameters for the
-//   API request.
+//   - ServerException
+//     These errors are usually caused by a server-side issue.
 //
-//   * UnsupportedImageTypeException
-//   The image is of a type that cannot be scanned.
+//   - InvalidParameterException
+//     The specified parameter is invalid. Review the available parameters for the
+//     API request.
 //
-//   * LimitExceededException
-//   The operation did not succeed because it would have exceeded a service limit
-//   for your account. For more information, see Amazon ECR service quotas (https://docs.aws.amazon.com/AmazonECR/latest/userguide/service-quotas.html)
-//   in the Amazon Elastic Container Registry User Guide.
+//   - UnsupportedImageTypeException
+//     The image is of a type that cannot be scanned.
 //
-//   * RepositoryNotFoundException
-//   The specified repository could not be found. Check the spelling of the specified
-//   repository and ensure that you are performing operations on the correct registry.
+//   - LimitExceededException
+//     The operation did not succeed because it would have exceeded a service limit
+//     for your account. For more information, see Amazon ECR service quotas (https://docs.aws.amazon.com/AmazonECR/latest/userguide/service-quotas.html)
+//     in the Amazon Elastic Container Registry User Guide.
 //
-//   * ImageNotFoundException
-//   The image requested does not exist in the specified repository.
+//   - RepositoryNotFoundException
+//     The specified repository could not be found. Check the spelling of the specified
+//     repository and ensure that you are performing operations on the correct registry.
+//
+//   - ImageNotFoundException
+//     The image requested does not exist in the specified repository.
+//
+//   - ValidationException
+//     There was an exception validating this request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/StartImageScan
 func (c *ECR) StartImageScan(input *StartImageScanInput) (*StartImageScanOutput, error) {
@@ -3241,14 +3848,13 @@ const opStartLifecyclePolicyPreview = "StartLifecyclePolicyPreview"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the StartLifecyclePolicyPreviewRequest method.
+//	req, resp := client.StartLifecyclePolicyPreviewRequest(params)
 //
-//    // Example sending a request using the StartLifecyclePolicyPreviewRequest method.
-//    req, resp := client.StartLifecyclePolicyPreviewRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/StartLifecyclePolicyPreview
 func (c *ECR) StartLifecyclePolicyPreviewRequest(input *StartLifecyclePolicyPreviewInput) (req *request.Request, output *StartLifecyclePolicyPreviewOutput) {
@@ -3281,23 +3887,24 @@ func (c *ECR) StartLifecyclePolicyPreviewRequest(input *StartLifecyclePolicyPrev
 // API operation StartLifecyclePolicyPreview for usage and error information.
 //
 // Returned Error Types:
-//   * ServerException
-//   These errors are usually caused by a server-side issue.
 //
-//   * InvalidParameterException
-//   The specified parameter is invalid. Review the available parameters for the
-//   API request.
+//   - ServerException
+//     These errors are usually caused by a server-side issue.
 //
-//   * RepositoryNotFoundException
-//   The specified repository could not be found. Check the spelling of the specified
-//   repository and ensure that you are performing operations on the correct registry.
+//   - InvalidParameterException
+//     The specified parameter is invalid. Review the available parameters for the
+//     API request.
 //
-//   * LifecyclePolicyNotFoundException
-//   The lifecycle policy could not be found, and no policy is set to the repository.
+//   - RepositoryNotFoundException
+//     The specified repository could not be found. Check the spelling of the specified
+//     repository and ensure that you are performing operations on the correct registry.
 //
-//   * LifecyclePolicyPreviewInProgressException
-//   The previous lifecycle policy preview request has not completed. Wait and
-//   try again.
+//   - LifecyclePolicyNotFoundException
+//     The lifecycle policy could not be found, and no policy is set to the repository.
+//
+//   - LifecyclePolicyPreviewInProgressException
+//     The previous lifecycle policy preview request has not completed. Wait and
+//     try again.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/StartLifecyclePolicyPreview
 func (c *ECR) StartLifecyclePolicyPreview(input *StartLifecyclePolicyPreviewInput) (*StartLifecyclePolicyPreviewOutput, error) {
@@ -3337,14 +3944,13 @@ const opTagResource = "TagResource"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the TagResourceRequest method.
+//	req, resp := client.TagResourceRequest(params)
 //
-//    // Example sending a request using the TagResourceRequest method.
-//    req, resp := client.TagResourceRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/TagResource
 func (c *ECR) TagResourceRequest(input *TagResourceInput) (req *request.Request, output *TagResourceOutput) {
@@ -3377,25 +3983,26 @@ func (c *ECR) TagResourceRequest(input *TagResourceInput) (req *request.Request,
 // API operation TagResource for usage and error information.
 //
 // Returned Error Types:
-//   * InvalidParameterException
-//   The specified parameter is invalid. Review the available parameters for the
-//   API request.
 //
-//   * InvalidTagParameterException
-//   An invalid parameter has been specified. Tag keys can have a maximum character
-//   length of 128 characters, and tag values can have a maximum length of 256
-//   characters.
+//   - InvalidParameterException
+//     The specified parameter is invalid. Review the available parameters for the
+//     API request.
 //
-//   * TooManyTagsException
-//   The list of tags on the repository is over the limit. The maximum number
-//   of tags that can be applied to a repository is 50.
+//   - InvalidTagParameterException
+//     An invalid parameter has been specified. Tag keys can have a maximum character
+//     length of 128 characters, and tag values can have a maximum length of 256
+//     characters.
 //
-//   * RepositoryNotFoundException
-//   The specified repository could not be found. Check the spelling of the specified
-//   repository and ensure that you are performing operations on the correct registry.
+//   - TooManyTagsException
+//     The list of tags on the repository is over the limit. The maximum number
+//     of tags that can be applied to a repository is 50.
 //
-//   * ServerException
-//   These errors are usually caused by a server-side issue.
+//   - RepositoryNotFoundException
+//     The specified repository could not be found. Check the spelling of the specified
+//     repository and ensure that you are performing operations on the correct registry.
+//
+//   - ServerException
+//     These errors are usually caused by a server-side issue.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/TagResource
 func (c *ECR) TagResource(input *TagResourceInput) (*TagResourceOutput, error) {
@@ -3435,14 +4042,13 @@ const opUntagResource = "UntagResource"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the UntagResourceRequest method.
+//	req, resp := client.UntagResourceRequest(params)
 //
-//    // Example sending a request using the UntagResourceRequest method.
-//    req, resp := client.UntagResourceRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/UntagResource
 func (c *ECR) UntagResourceRequest(input *UntagResourceInput) (req *request.Request, output *UntagResourceOutput) {
@@ -3474,25 +4080,26 @@ func (c *ECR) UntagResourceRequest(input *UntagResourceInput) (req *request.Requ
 // API operation UntagResource for usage and error information.
 //
 // Returned Error Types:
-//   * InvalidParameterException
-//   The specified parameter is invalid. Review the available parameters for the
-//   API request.
 //
-//   * InvalidTagParameterException
-//   An invalid parameter has been specified. Tag keys can have a maximum character
-//   length of 128 characters, and tag values can have a maximum length of 256
-//   characters.
+//   - InvalidParameterException
+//     The specified parameter is invalid. Review the available parameters for the
+//     API request.
 //
-//   * TooManyTagsException
-//   The list of tags on the repository is over the limit. The maximum number
-//   of tags that can be applied to a repository is 50.
+//   - InvalidTagParameterException
+//     An invalid parameter has been specified. Tag keys can have a maximum character
+//     length of 128 characters, and tag values can have a maximum length of 256
+//     characters.
 //
-//   * RepositoryNotFoundException
-//   The specified repository could not be found. Check the spelling of the specified
-//   repository and ensure that you are performing operations on the correct registry.
+//   - TooManyTagsException
+//     The list of tags on the repository is over the limit. The maximum number
+//     of tags that can be applied to a repository is 50.
 //
-//   * ServerException
-//   These errors are usually caused by a server-side issue.
+//   - RepositoryNotFoundException
+//     The specified repository could not be found. Check the spelling of the specified
+//     repository and ensure that you are performing operations on the correct registry.
+//
+//   - ServerException
+//     These errors are usually caused by a server-side issue.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/UntagResource
 func (c *ECR) UntagResource(input *UntagResourceInput) (*UntagResourceOutput, error) {
@@ -3532,14 +4139,13 @@ const opUploadLayerPart = "UploadLayerPart"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the UploadLayerPartRequest method.
+//	req, resp := client.UploadLayerPartRequest(params)
 //
-//    // Example sending a request using the UploadLayerPartRequest method.
-//    req, resp := client.UploadLayerPartRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/UploadLayerPart
 func (c *ECR) UploadLayerPartRequest(input *UploadLayerPartInput) (req *request.Request, output *UploadLayerPartOutput) {
@@ -3578,32 +4184,33 @@ func (c *ECR) UploadLayerPartRequest(input *UploadLayerPartInput) (req *request.
 // API operation UploadLayerPart for usage and error information.
 //
 // Returned Error Types:
-//   * ServerException
-//   These errors are usually caused by a server-side issue.
 //
-//   * InvalidParameterException
-//   The specified parameter is invalid. Review the available parameters for the
-//   API request.
+//   - ServerException
+//     These errors are usually caused by a server-side issue.
 //
-//   * InvalidLayerPartException
-//   The layer part size is not valid, or the first byte specified is not consecutive
-//   to the last byte of a previous layer part upload.
+//   - InvalidParameterException
+//     The specified parameter is invalid. Review the available parameters for the
+//     API request.
 //
-//   * RepositoryNotFoundException
-//   The specified repository could not be found. Check the spelling of the specified
-//   repository and ensure that you are performing operations on the correct registry.
+//   - InvalidLayerPartException
+//     The layer part size is not valid, or the first byte specified is not consecutive
+//     to the last byte of a previous layer part upload.
 //
-//   * UploadNotFoundException
-//   The upload could not be found, or the specified upload ID is not valid for
-//   this repository.
+//   - RepositoryNotFoundException
+//     The specified repository could not be found. Check the spelling of the specified
+//     repository and ensure that you are performing operations on the correct registry.
 //
-//   * LimitExceededException
-//   The operation did not succeed because it would have exceeded a service limit
-//   for your account. For more information, see Amazon ECR service quotas (https://docs.aws.amazon.com/AmazonECR/latest/userguide/service-quotas.html)
-//   in the Amazon Elastic Container Registry User Guide.
+//   - UploadNotFoundException
+//     The upload could not be found, or the specified upload ID is not valid for
+//     this repository.
 //
-//   * KmsException
-//   The operation failed due to a KMS exception.
+//   - LimitExceededException
+//     The operation did not succeed because it would have exceeded a service limit
+//     for your account. For more information, see Amazon ECR service quotas (https://docs.aws.amazon.com/AmazonECR/latest/userguide/service-quotas.html)
+//     in the Amazon Elastic Container Registry User Guide.
+//
+//   - KmsException
+//     The operation failed due to a KMS exception.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/UploadLayerPart
 func (c *ECR) UploadLayerPart(input *UploadLayerPartInput) (*UploadLayerPartOutput, error) {
@@ -3722,6 +4329,101 @@ func (s *AuthorizationData) SetExpiresAt(v time.Time) *AuthorizationData {
 // SetProxyEndpoint sets the ProxyEndpoint field's value.
 func (s *AuthorizationData) SetProxyEndpoint(v string) *AuthorizationData {
 	s.ProxyEndpoint = &v
+	return s
+}
+
+// The image details of the Amazon ECR container image.
+type AwsEcrContainerImageDetails struct {
+	_ struct{} `type:"structure"`
+
+	// The architecture of the Amazon ECR container image.
+	Architecture *string `locationName:"architecture" type:"string"`
+
+	// The image author of the Amazon ECR container image.
+	Author *string `locationName:"author" type:"string"`
+
+	// The image hash of the Amazon ECR container image.
+	ImageHash *string `locationName:"imageHash" type:"string"`
+
+	// The image tags attached to the Amazon ECR container image.
+	ImageTags []*string `locationName:"imageTags" type:"list"`
+
+	// The platform of the Amazon ECR container image.
+	Platform *string `locationName:"platform" type:"string"`
+
+	// The date and time the Amazon ECR container image was pushed.
+	PushedAt *time.Time `locationName:"pushedAt" type:"timestamp"`
+
+	// The registry the Amazon ECR container image belongs to.
+	Registry *string `locationName:"registry" type:"string"`
+
+	// The name of the repository the Amazon ECR container image resides in.
+	RepositoryName *string `locationName:"repositoryName" min:"2" type:"string"`
+}
+
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s AwsEcrContainerImageDetails) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s AwsEcrContainerImageDetails) GoString() string {
+	return s.String()
+}
+
+// SetArchitecture sets the Architecture field's value.
+func (s *AwsEcrContainerImageDetails) SetArchitecture(v string) *AwsEcrContainerImageDetails {
+	s.Architecture = &v
+	return s
+}
+
+// SetAuthor sets the Author field's value.
+func (s *AwsEcrContainerImageDetails) SetAuthor(v string) *AwsEcrContainerImageDetails {
+	s.Author = &v
+	return s
+}
+
+// SetImageHash sets the ImageHash field's value.
+func (s *AwsEcrContainerImageDetails) SetImageHash(v string) *AwsEcrContainerImageDetails {
+	s.ImageHash = &v
+	return s
+}
+
+// SetImageTags sets the ImageTags field's value.
+func (s *AwsEcrContainerImageDetails) SetImageTags(v []*string) *AwsEcrContainerImageDetails {
+	s.ImageTags = v
+	return s
+}
+
+// SetPlatform sets the Platform field's value.
+func (s *AwsEcrContainerImageDetails) SetPlatform(v string) *AwsEcrContainerImageDetails {
+	s.Platform = &v
+	return s
+}
+
+// SetPushedAt sets the PushedAt field's value.
+func (s *AwsEcrContainerImageDetails) SetPushedAt(v time.Time) *AwsEcrContainerImageDetails {
+	s.PushedAt = &v
+	return s
+}
+
+// SetRegistry sets the Registry field's value.
+func (s *AwsEcrContainerImageDetails) SetRegistry(v string) *AwsEcrContainerImageDetails {
+	s.Registry = &v
+	return s
+}
+
+// SetRepositoryName sets the RepositoryName field's value.
+func (s *AwsEcrContainerImageDetails) SetRepositoryName(v string) *AwsEcrContainerImageDetails {
+	s.RepositoryName = &v
 	return s
 }
 
@@ -4116,6 +4818,95 @@ func (s *BatchGetImageOutput) SetImages(v []*Image) *BatchGetImageOutput {
 	return s
 }
 
+type BatchGetRepositoryScanningConfigurationInput struct {
+	_ struct{} `type:"structure"`
+
+	// One or more repository names to get the scanning configuration for.
+	//
+	// RepositoryNames is a required field
+	RepositoryNames []*string `locationName:"repositoryNames" min:"1" type:"list" required:"true"`
+}
+
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s BatchGetRepositoryScanningConfigurationInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s BatchGetRepositoryScanningConfigurationInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *BatchGetRepositoryScanningConfigurationInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "BatchGetRepositoryScanningConfigurationInput"}
+	if s.RepositoryNames == nil {
+		invalidParams.Add(request.NewErrParamRequired("RepositoryNames"))
+	}
+	if s.RepositoryNames != nil && len(s.RepositoryNames) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RepositoryNames", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetRepositoryNames sets the RepositoryNames field's value.
+func (s *BatchGetRepositoryScanningConfigurationInput) SetRepositoryNames(v []*string) *BatchGetRepositoryScanningConfigurationInput {
+	s.RepositoryNames = v
+	return s
+}
+
+type BatchGetRepositoryScanningConfigurationOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Any failures associated with the call.
+	Failures []*RepositoryScanningConfigurationFailure `locationName:"failures" type:"list"`
+
+	// The scanning configuration for the requested repositories.
+	ScanningConfigurations []*RepositoryScanningConfiguration `locationName:"scanningConfigurations" type:"list"`
+}
+
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s BatchGetRepositoryScanningConfigurationOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s BatchGetRepositoryScanningConfigurationOutput) GoString() string {
+	return s.String()
+}
+
+// SetFailures sets the Failures field's value.
+func (s *BatchGetRepositoryScanningConfigurationOutput) SetFailures(v []*RepositoryScanningConfigurationFailure) *BatchGetRepositoryScanningConfigurationOutput {
+	s.Failures = v
+	return s
+}
+
+// SetScanningConfigurations sets the ScanningConfigurations field's value.
+func (s *BatchGetRepositoryScanningConfigurationOutput) SetScanningConfigurations(v []*RepositoryScanningConfiguration) *BatchGetRepositoryScanningConfigurationOutput {
+	s.ScanningConfigurations = v
+	return s
+}
+
 type CompleteLayerUploadInput struct {
 	_ struct{} `type:"structure"`
 
@@ -4266,6 +5057,140 @@ func (s *CompleteLayerUploadOutput) SetUploadId(v string) *CompleteLayerUploadOu
 	return s
 }
 
+type CreatePullThroughCacheRuleInput struct {
+	_ struct{} `type:"structure"`
+
+	// The repository name prefix to use when caching images from the source registry.
+	//
+	// EcrRepositoryPrefix is a required field
+	EcrRepositoryPrefix *string `locationName:"ecrRepositoryPrefix" min:"2" type:"string" required:"true"`
+
+	// The Amazon Web Services account ID associated with the registry to create
+	// the pull through cache rule for. If you do not specify a registry, the default
+	// registry is assumed.
+	RegistryId *string `locationName:"registryId" type:"string"`
+
+	// The registry URL of the upstream public registry to use as the source for
+	// the pull through cache rule.
+	//
+	// UpstreamRegistryUrl is a required field
+	UpstreamRegistryUrl *string `locationName:"upstreamRegistryUrl" type:"string" required:"true"`
+}
+
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s CreatePullThroughCacheRuleInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s CreatePullThroughCacheRuleInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreatePullThroughCacheRuleInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreatePullThroughCacheRuleInput"}
+	if s.EcrRepositoryPrefix == nil {
+		invalidParams.Add(request.NewErrParamRequired("EcrRepositoryPrefix"))
+	}
+	if s.EcrRepositoryPrefix != nil && len(*s.EcrRepositoryPrefix) < 2 {
+		invalidParams.Add(request.NewErrParamMinLen("EcrRepositoryPrefix", 2))
+	}
+	if s.UpstreamRegistryUrl == nil {
+		invalidParams.Add(request.NewErrParamRequired("UpstreamRegistryUrl"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetEcrRepositoryPrefix sets the EcrRepositoryPrefix field's value.
+func (s *CreatePullThroughCacheRuleInput) SetEcrRepositoryPrefix(v string) *CreatePullThroughCacheRuleInput {
+	s.EcrRepositoryPrefix = &v
+	return s
+}
+
+// SetRegistryId sets the RegistryId field's value.
+func (s *CreatePullThroughCacheRuleInput) SetRegistryId(v string) *CreatePullThroughCacheRuleInput {
+	s.RegistryId = &v
+	return s
+}
+
+// SetUpstreamRegistryUrl sets the UpstreamRegistryUrl field's value.
+func (s *CreatePullThroughCacheRuleInput) SetUpstreamRegistryUrl(v string) *CreatePullThroughCacheRuleInput {
+	s.UpstreamRegistryUrl = &v
+	return s
+}
+
+type CreatePullThroughCacheRuleOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The date and time, in JavaScript date format, when the pull through cache
+	// rule was created.
+	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp"`
+
+	// The Amazon ECR repository prefix associated with the pull through cache rule.
+	EcrRepositoryPrefix *string `locationName:"ecrRepositoryPrefix" min:"2" type:"string"`
+
+	// The registry ID associated with the request.
+	RegistryId *string `locationName:"registryId" type:"string"`
+
+	// The upstream registry URL associated with the pull through cache rule.
+	UpstreamRegistryUrl *string `locationName:"upstreamRegistryUrl" type:"string"`
+}
+
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s CreatePullThroughCacheRuleOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s CreatePullThroughCacheRuleOutput) GoString() string {
+	return s.String()
+}
+
+// SetCreatedAt sets the CreatedAt field's value.
+func (s *CreatePullThroughCacheRuleOutput) SetCreatedAt(v time.Time) *CreatePullThroughCacheRuleOutput {
+	s.CreatedAt = &v
+	return s
+}
+
+// SetEcrRepositoryPrefix sets the EcrRepositoryPrefix field's value.
+func (s *CreatePullThroughCacheRuleOutput) SetEcrRepositoryPrefix(v string) *CreatePullThroughCacheRuleOutput {
+	s.EcrRepositoryPrefix = &v
+	return s
+}
+
+// SetRegistryId sets the RegistryId field's value.
+func (s *CreatePullThroughCacheRuleOutput) SetRegistryId(v string) *CreatePullThroughCacheRuleOutput {
+	s.RegistryId = &v
+	return s
+}
+
+// SetUpstreamRegistryUrl sets the UpstreamRegistryUrl field's value.
+func (s *CreatePullThroughCacheRuleOutput) SetUpstreamRegistryUrl(v string) *CreatePullThroughCacheRuleOutput {
+	s.UpstreamRegistryUrl = &v
+	return s
+}
+
 type CreateRepositoryInput struct {
 	_ struct{} `type:"structure"`
 
@@ -4283,8 +5208,9 @@ type CreateRepositoryInput struct {
 	// will be immutable which will prevent them from being overwritten.
 	ImageTagMutability *string `locationName:"imageTagMutability" type:"string" enum:"ImageTagMutability"`
 
-	// The AWS account ID associated with the registry to create the repository.
-	// If you do not specify a registry, the default registry is assumed.
+	// The Amazon Web Services account ID associated with the registry to create
+	// the repository. If you do not specify a registry, the default registry is
+	// assumed.
 	RegistryId *string `locationName:"registryId" type:"string"`
 
 	// The name to use for the repository. The repository name may be specified
@@ -4407,6 +5333,175 @@ func (s *CreateRepositoryOutput) SetRepository(v *Repository) *CreateRepositoryO
 	return s
 }
 
+// The CVSS score for a finding.
+type CvssScore struct {
+	_ struct{} `type:"structure"`
+
+	// The base CVSS score used for the finding.
+	BaseScore *float64 `locationName:"baseScore" type:"double"`
+
+	// The vector string of the CVSS score.
+	ScoringVector *string `locationName:"scoringVector" type:"string"`
+
+	// The source of the CVSS score.
+	Source *string `locationName:"source" type:"string"`
+
+	// The version of CVSS used for the score.
+	Version *string `locationName:"version" type:"string"`
+}
+
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s CvssScore) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s CvssScore) GoString() string {
+	return s.String()
+}
+
+// SetBaseScore sets the BaseScore field's value.
+func (s *CvssScore) SetBaseScore(v float64) *CvssScore {
+	s.BaseScore = &v
+	return s
+}
+
+// SetScoringVector sets the ScoringVector field's value.
+func (s *CvssScore) SetScoringVector(v string) *CvssScore {
+	s.ScoringVector = &v
+	return s
+}
+
+// SetSource sets the Source field's value.
+func (s *CvssScore) SetSource(v string) *CvssScore {
+	s.Source = &v
+	return s
+}
+
+// SetVersion sets the Version field's value.
+func (s *CvssScore) SetVersion(v string) *CvssScore {
+	s.Version = &v
+	return s
+}
+
+// Details on adjustments Amazon Inspector made to the CVSS score for a finding.
+type CvssScoreAdjustment struct {
+	_ struct{} `type:"structure"`
+
+	// The metric used to adjust the CVSS score.
+	Metric *string `locationName:"metric" type:"string"`
+
+	// The reason the CVSS score has been adjustment.
+	Reason *string `locationName:"reason" type:"string"`
+}
+
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s CvssScoreAdjustment) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s CvssScoreAdjustment) GoString() string {
+	return s.String()
+}
+
+// SetMetric sets the Metric field's value.
+func (s *CvssScoreAdjustment) SetMetric(v string) *CvssScoreAdjustment {
+	s.Metric = &v
+	return s
+}
+
+// SetReason sets the Reason field's value.
+func (s *CvssScoreAdjustment) SetReason(v string) *CvssScoreAdjustment {
+	s.Reason = &v
+	return s
+}
+
+// Information about the CVSS score.
+type CvssScoreDetails struct {
+	_ struct{} `type:"structure"`
+
+	// An object that contains details about adjustment Amazon Inspector made to
+	// the CVSS score.
+	Adjustments []*CvssScoreAdjustment `locationName:"adjustments" type:"list"`
+
+	// The CVSS score.
+	Score *float64 `locationName:"score" type:"double"`
+
+	// The source for the CVSS score.
+	ScoreSource *string `locationName:"scoreSource" type:"string"`
+
+	// The vector for the CVSS score.
+	ScoringVector *string `locationName:"scoringVector" type:"string"`
+
+	// The CVSS version used in scoring.
+	Version *string `locationName:"version" type:"string"`
+}
+
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s CvssScoreDetails) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s CvssScoreDetails) GoString() string {
+	return s.String()
+}
+
+// SetAdjustments sets the Adjustments field's value.
+func (s *CvssScoreDetails) SetAdjustments(v []*CvssScoreAdjustment) *CvssScoreDetails {
+	s.Adjustments = v
+	return s
+}
+
+// SetScore sets the Score field's value.
+func (s *CvssScoreDetails) SetScore(v float64) *CvssScoreDetails {
+	s.Score = &v
+	return s
+}
+
+// SetScoreSource sets the ScoreSource field's value.
+func (s *CvssScoreDetails) SetScoreSource(v string) *CvssScoreDetails {
+	s.ScoreSource = &v
+	return s
+}
+
+// SetScoringVector sets the ScoringVector field's value.
+func (s *CvssScoreDetails) SetScoringVector(v string) *CvssScoreDetails {
+	s.ScoringVector = &v
+	return s
+}
+
+// SetVersion sets the Version field's value.
+func (s *CvssScoreDetails) SetVersion(v string) *CvssScoreDetails {
+	s.Version = &v
+	return s
+}
+
 type DeleteLifecyclePolicyInput struct {
 	_ struct{} `type:"structure"`
 
@@ -4522,6 +5617,125 @@ func (s *DeleteLifecyclePolicyOutput) SetRegistryId(v string) *DeleteLifecyclePo
 // SetRepositoryName sets the RepositoryName field's value.
 func (s *DeleteLifecyclePolicyOutput) SetRepositoryName(v string) *DeleteLifecyclePolicyOutput {
 	s.RepositoryName = &v
+	return s
+}
+
+type DeletePullThroughCacheRuleInput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon ECR repository prefix associated with the pull through cache rule
+	// to delete.
+	//
+	// EcrRepositoryPrefix is a required field
+	EcrRepositoryPrefix *string `locationName:"ecrRepositoryPrefix" min:"2" type:"string" required:"true"`
+
+	// The Amazon Web Services account ID associated with the registry that contains
+	// the pull through cache rule. If you do not specify a registry, the default
+	// registry is assumed.
+	RegistryId *string `locationName:"registryId" type:"string"`
+}
+
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s DeletePullThroughCacheRuleInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s DeletePullThroughCacheRuleInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeletePullThroughCacheRuleInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeletePullThroughCacheRuleInput"}
+	if s.EcrRepositoryPrefix == nil {
+		invalidParams.Add(request.NewErrParamRequired("EcrRepositoryPrefix"))
+	}
+	if s.EcrRepositoryPrefix != nil && len(*s.EcrRepositoryPrefix) < 2 {
+		invalidParams.Add(request.NewErrParamMinLen("EcrRepositoryPrefix", 2))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetEcrRepositoryPrefix sets the EcrRepositoryPrefix field's value.
+func (s *DeletePullThroughCacheRuleInput) SetEcrRepositoryPrefix(v string) *DeletePullThroughCacheRuleInput {
+	s.EcrRepositoryPrefix = &v
+	return s
+}
+
+// SetRegistryId sets the RegistryId field's value.
+func (s *DeletePullThroughCacheRuleInput) SetRegistryId(v string) *DeletePullThroughCacheRuleInput {
+	s.RegistryId = &v
+	return s
+}
+
+type DeletePullThroughCacheRuleOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The timestamp associated with the pull through cache rule.
+	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp"`
+
+	// The Amazon ECR repository prefix associated with the request.
+	EcrRepositoryPrefix *string `locationName:"ecrRepositoryPrefix" min:"2" type:"string"`
+
+	// The registry ID associated with the request.
+	RegistryId *string `locationName:"registryId" type:"string"`
+
+	// The upstream registry URL associated with the pull through cache rule.
+	UpstreamRegistryUrl *string `locationName:"upstreamRegistryUrl" type:"string"`
+}
+
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s DeletePullThroughCacheRuleOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s DeletePullThroughCacheRuleOutput) GoString() string {
+	return s.String()
+}
+
+// SetCreatedAt sets the CreatedAt field's value.
+func (s *DeletePullThroughCacheRuleOutput) SetCreatedAt(v time.Time) *DeletePullThroughCacheRuleOutput {
+	s.CreatedAt = &v
+	return s
+}
+
+// SetEcrRepositoryPrefix sets the EcrRepositoryPrefix field's value.
+func (s *DeletePullThroughCacheRuleOutput) SetEcrRepositoryPrefix(v string) *DeletePullThroughCacheRuleOutput {
+	s.EcrRepositoryPrefix = &v
+	return s
+}
+
+// SetRegistryId sets the RegistryId field's value.
+func (s *DeletePullThroughCacheRuleOutput) SetRegistryId(v string) *DeletePullThroughCacheRuleOutput {
+	s.RegistryId = &v
+	return s
+}
+
+// SetUpstreamRegistryUrl sets the UpstreamRegistryUrl field's value.
+func (s *DeletePullThroughCacheRuleOutput) SetUpstreamRegistryUrl(v string) *DeletePullThroughCacheRuleOutput {
+	s.UpstreamRegistryUrl = &v
 	return s
 }
 
@@ -5313,6 +6527,138 @@ func (s *DescribeImagesOutput) SetNextToken(v string) *DescribeImagesOutput {
 	return s
 }
 
+type DescribePullThroughCacheRulesInput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon ECR repository prefixes associated with the pull through cache
+	// rules to return. If no repository prefix value is specified, all pull through
+	// cache rules are returned.
+	EcrRepositoryPrefixes []*string `locationName:"ecrRepositoryPrefixes" min:"1" type:"list"`
+
+	// The maximum number of pull through cache rules returned by DescribePullThroughCacheRulesRequest
+	// in paginated output. When this parameter is used, DescribePullThroughCacheRulesRequest
+	// only returns maxResults results in a single page along with a nextToken response
+	// element. The remaining results of the initial request can be seen by sending
+	// another DescribePullThroughCacheRulesRequest request with the returned nextToken
+	// value. This value can be between 1 and 1000. If this parameter is not used,
+	// then DescribePullThroughCacheRulesRequest returns up to 100 results and a
+	// nextToken value, if applicable.
+	MaxResults *int64 `locationName:"maxResults" min:"1" type:"integer"`
+
+	// The nextToken value returned from a previous paginated DescribePullThroughCacheRulesRequest
+	// request where maxResults was used and the results exceeded the value of that
+	// parameter. Pagination continues from the end of the previous results that
+	// returned the nextToken value. This value is null when there are no more results
+	// to return.
+	NextToken *string `locationName:"nextToken" type:"string"`
+
+	// The Amazon Web Services account ID associated with the registry to return
+	// the pull through cache rules for. If you do not specify a registry, the default
+	// registry is assumed.
+	RegistryId *string `locationName:"registryId" type:"string"`
+}
+
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s DescribePullThroughCacheRulesInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s DescribePullThroughCacheRulesInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribePullThroughCacheRulesInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribePullThroughCacheRulesInput"}
+	if s.EcrRepositoryPrefixes != nil && len(s.EcrRepositoryPrefixes) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("EcrRepositoryPrefixes", 1))
+	}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetEcrRepositoryPrefixes sets the EcrRepositoryPrefixes field's value.
+func (s *DescribePullThroughCacheRulesInput) SetEcrRepositoryPrefixes(v []*string) *DescribePullThroughCacheRulesInput {
+	s.EcrRepositoryPrefixes = v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *DescribePullThroughCacheRulesInput) SetMaxResults(v int64) *DescribePullThroughCacheRulesInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribePullThroughCacheRulesInput) SetNextToken(v string) *DescribePullThroughCacheRulesInput {
+	s.NextToken = &v
+	return s
+}
+
+// SetRegistryId sets the RegistryId field's value.
+func (s *DescribePullThroughCacheRulesInput) SetRegistryId(v string) *DescribePullThroughCacheRulesInput {
+	s.RegistryId = &v
+	return s
+}
+
+type DescribePullThroughCacheRulesOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The nextToken value to include in a future DescribePullThroughCacheRulesRequest
+	// request. When the results of a DescribePullThroughCacheRulesRequest request
+	// exceed maxResults, this value can be used to retrieve the next page of results.
+	// This value is null when there are no more results to return.
+	NextToken *string `locationName:"nextToken" type:"string"`
+
+	// The details of the pull through cache rules.
+	PullThroughCacheRules []*PullThroughCacheRule `locationName:"pullThroughCacheRules" type:"list"`
+}
+
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s DescribePullThroughCacheRulesOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s DescribePullThroughCacheRulesOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribePullThroughCacheRulesOutput) SetNextToken(v string) *DescribePullThroughCacheRulesOutput {
+	s.NextToken = &v
+	return s
+}
+
+// SetPullThroughCacheRules sets the PullThroughCacheRules field's value.
+func (s *DescribePullThroughCacheRulesOutput) SetPullThroughCacheRules(v []*PullThroughCacheRule) *DescribePullThroughCacheRulesOutput {
+	s.PullThroughCacheRules = v
+	return s
+}
+
 type DescribeRegistryInput struct {
 	_ struct{} `type:"structure"`
 }
@@ -5600,14 +6946,14 @@ type EncryptionConfiguration struct {
 	// key, which you already created. For more information, see Protecting data
 	// using server-side encryption with an KMS key stored in Key Management Service
 	// (SSE-KMS) (https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingKMSEncryption.html)
-	// in the Amazon Simple Storage Service Console Developer Guide..
+	// in the Amazon Simple Storage Service Console Developer Guide.
 	//
 	// If you use the AES256 encryption type, Amazon ECR uses server-side encryption
 	// with Amazon S3-managed encryption keys which encrypts the images in the repository
 	// using an AES-256 encryption algorithm. For more information, see Protecting
 	// data using server-side encryption with Amazon S3-managed encryption keys
 	// (SSE-S3) (https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingServerSideEncryption.html)
-	// in the Amazon Simple Storage Service Console Developer Guide..
+	// in the Amazon Simple Storage Service Console Developer Guide.
 	//
 	// EncryptionType is a required field
 	EncryptionType *string `locationName:"encryptionType" type:"string" required:"true" enum:"EncryptionType"`
@@ -5662,6 +7008,165 @@ func (s *EncryptionConfiguration) SetEncryptionType(v string) *EncryptionConfigu
 // SetKmsKey sets the KmsKey field's value.
 func (s *EncryptionConfiguration) SetKmsKey(v string) *EncryptionConfiguration {
 	s.KmsKey = &v
+	return s
+}
+
+// The details of an enhanced image scan. This is returned when enhanced scanning
+// is enabled for your private registry.
+type EnhancedImageScanFinding struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Web Services account ID associated with the image.
+	AwsAccountId *string `locationName:"awsAccountId" type:"string"`
+
+	// The description of the finding.
+	Description *string `locationName:"description" type:"string"`
+
+	// The Amazon Resource Number (ARN) of the finding.
+	FindingArn *string `locationName:"findingArn" type:"string"`
+
+	// The date and time that the finding was first observed.
+	FirstObservedAt *time.Time `locationName:"firstObservedAt" type:"timestamp"`
+
+	// The date and time that the finding was last observed.
+	LastObservedAt *time.Time `locationName:"lastObservedAt" type:"timestamp"`
+
+	// An object that contains the details of a package vulnerability finding.
+	PackageVulnerabilityDetails *PackageVulnerabilityDetails `locationName:"packageVulnerabilityDetails" type:"structure"`
+
+	// An object that contains the details about how to remediate a finding.
+	Remediation *Remediation `locationName:"remediation" type:"structure"`
+
+	// Contains information on the resources involved in a finding.
+	Resources []*Resource `locationName:"resources" type:"list"`
+
+	// The Amazon Inspector score given to the finding.
+	Score *float64 `locationName:"score" type:"double"`
+
+	// An object that contains details of the Amazon Inspector score.
+	ScoreDetails *ScoreDetails `locationName:"scoreDetails" type:"structure"`
+
+	// The severity of the finding.
+	Severity *string `locationName:"severity" type:"string"`
+
+	// The status of the finding.
+	Status *string `locationName:"status" type:"string"`
+
+	// The title of the finding.
+	Title *string `locationName:"title" type:"string"`
+
+	// The type of the finding.
+	Type *string `locationName:"type" type:"string"`
+
+	// The date and time the finding was last updated at.
+	UpdatedAt *time.Time `locationName:"updatedAt" type:"timestamp"`
+}
+
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s EnhancedImageScanFinding) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s EnhancedImageScanFinding) GoString() string {
+	return s.String()
+}
+
+// SetAwsAccountId sets the AwsAccountId field's value.
+func (s *EnhancedImageScanFinding) SetAwsAccountId(v string) *EnhancedImageScanFinding {
+	s.AwsAccountId = &v
+	return s
+}
+
+// SetDescription sets the Description field's value.
+func (s *EnhancedImageScanFinding) SetDescription(v string) *EnhancedImageScanFinding {
+	s.Description = &v
+	return s
+}
+
+// SetFindingArn sets the FindingArn field's value.
+func (s *EnhancedImageScanFinding) SetFindingArn(v string) *EnhancedImageScanFinding {
+	s.FindingArn = &v
+	return s
+}
+
+// SetFirstObservedAt sets the FirstObservedAt field's value.
+func (s *EnhancedImageScanFinding) SetFirstObservedAt(v time.Time) *EnhancedImageScanFinding {
+	s.FirstObservedAt = &v
+	return s
+}
+
+// SetLastObservedAt sets the LastObservedAt field's value.
+func (s *EnhancedImageScanFinding) SetLastObservedAt(v time.Time) *EnhancedImageScanFinding {
+	s.LastObservedAt = &v
+	return s
+}
+
+// SetPackageVulnerabilityDetails sets the PackageVulnerabilityDetails field's value.
+func (s *EnhancedImageScanFinding) SetPackageVulnerabilityDetails(v *PackageVulnerabilityDetails) *EnhancedImageScanFinding {
+	s.PackageVulnerabilityDetails = v
+	return s
+}
+
+// SetRemediation sets the Remediation field's value.
+func (s *EnhancedImageScanFinding) SetRemediation(v *Remediation) *EnhancedImageScanFinding {
+	s.Remediation = v
+	return s
+}
+
+// SetResources sets the Resources field's value.
+func (s *EnhancedImageScanFinding) SetResources(v []*Resource) *EnhancedImageScanFinding {
+	s.Resources = v
+	return s
+}
+
+// SetScore sets the Score field's value.
+func (s *EnhancedImageScanFinding) SetScore(v float64) *EnhancedImageScanFinding {
+	s.Score = &v
+	return s
+}
+
+// SetScoreDetails sets the ScoreDetails field's value.
+func (s *EnhancedImageScanFinding) SetScoreDetails(v *ScoreDetails) *EnhancedImageScanFinding {
+	s.ScoreDetails = v
+	return s
+}
+
+// SetSeverity sets the Severity field's value.
+func (s *EnhancedImageScanFinding) SetSeverity(v string) *EnhancedImageScanFinding {
+	s.Severity = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *EnhancedImageScanFinding) SetStatus(v string) *EnhancedImageScanFinding {
+	s.Status = &v
+	return s
+}
+
+// SetTitle sets the Title field's value.
+func (s *EnhancedImageScanFinding) SetTitle(v string) *EnhancedImageScanFinding {
+	s.Title = &v
+	return s
+}
+
+// SetType sets the Type field's value.
+func (s *EnhancedImageScanFinding) SetType(v string) *EnhancedImageScanFinding {
+	s.Type = &v
+	return s
+}
+
+// SetUpdatedAt sets the UpdatedAt field's value.
+func (s *EnhancedImageScanFinding) SetUpdatedAt(v time.Time) *EnhancedImageScanFinding {
+	s.UpdatedAt = &v
 	return s
 }
 
@@ -6252,6 +7757,68 @@ func (s *GetRegistryPolicyOutput) SetRegistryId(v string) *GetRegistryPolicyOutp
 	return s
 }
 
+type GetRegistryScanningConfigurationInput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s GetRegistryScanningConfigurationInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s GetRegistryScanningConfigurationInput) GoString() string {
+	return s.String()
+}
+
+type GetRegistryScanningConfigurationOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the registry.
+	RegistryId *string `locationName:"registryId" type:"string"`
+
+	// The scanning configuration for the registry.
+	ScanningConfiguration *RegistryScanningConfiguration `locationName:"scanningConfiguration" type:"structure"`
+}
+
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s GetRegistryScanningConfigurationOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s GetRegistryScanningConfigurationOutput) GoString() string {
+	return s.String()
+}
+
+// SetRegistryId sets the RegistryId field's value.
+func (s *GetRegistryScanningConfigurationOutput) SetRegistryId(v string) *GetRegistryScanningConfigurationOutput {
+	s.RegistryId = &v
+	return s
+}
+
+// SetScanningConfiguration sets the ScanningConfiguration field's value.
+func (s *GetRegistryScanningConfigurationOutput) SetScanningConfiguration(v *RegistryScanningConfiguration) *GetRegistryScanningConfigurationOutput {
+	s.ScanningConfiguration = v
+	return s
+}
+
 type GetRepositoryPolicyInput struct {
 	_ struct{} `type:"structure"`
 
@@ -6533,6 +8100,17 @@ type ImageDetail struct {
 	// The list of tags associated with this image.
 	ImageTags []*string `locationName:"imageTags" type:"list"`
 
+	// The date and time, expressed in standard JavaScript date format, when Amazon
+	// ECR recorded the last image pull.
+	//
+	// Amazon ECR refreshes the last image pull timestamp at least once every 24
+	// hours. For example, if you pull an image once a day then the lastRecordedPullTime
+	// timestamp will indicate the exact time that the image was last pulled. However,
+	// if you pull an image once an hour, because Amazon ECR refreshes the lastRecordedPullTime
+	// timestamp at least once every 24 hours, the result may not be the exact time
+	// that the image was last pulled.
+	LastRecordedPullTime *time.Time `locationName:"lastRecordedPullTime" type:"timestamp"`
+
 	// The Amazon Web Services account ID associated with the registry to which
 	// this image belongs.
 	RegistryId *string `locationName:"registryId" type:"string"`
@@ -6604,6 +8182,12 @@ func (s *ImageDetail) SetImageSizeInBytes(v int64) *ImageDetail {
 // SetImageTags sets the ImageTags field's value.
 func (s *ImageDetail) SetImageTags(v []*string) *ImageDetail {
 	s.ImageTags = v
+	return s
+}
+
+// SetLastRecordedPullTime sets the LastRecordedPullTime field's value.
+func (s *ImageDetail) SetLastRecordedPullTime(v time.Time) *ImageDetail {
+	s.LastRecordedPullTime = &v
 	return s
 }
 
@@ -6862,7 +8446,8 @@ type ImageReplicationStatus struct {
 	// The destination Region for the image replication.
 	Region *string `locationName:"region" min:"2" type:"string"`
 
-	// The AWS account ID associated with the registry to which the image belongs.
+	// The Amazon Web Services account ID associated with the registry to which
+	// the image belongs.
 	RegistryId *string `locationName:"registryId" type:"string"`
 
 	// The image replication status.
@@ -6983,6 +8568,9 @@ func (s *ImageScanFinding) SetUri(v string) *ImageScanFinding {
 type ImageScanFindings struct {
 	_ struct{} `type:"structure"`
 
+	// Details about the enhanced scan findings from Amazon Inspector.
+	EnhancedFindings []*EnhancedImageScanFinding `locationName:"enhancedFindings" type:"list"`
+
 	// The image vulnerability counts, sorted by severity.
 	FindingSeverityCounts map[string]*int64 `locationName:"findingSeverityCounts" type:"map"`
 
@@ -7012,6 +8600,12 @@ func (s ImageScanFindings) String() string {
 // value will be replaced with "sensitive".
 func (s ImageScanFindings) GoString() string {
 	return s.String()
+}
+
+// SetEnhancedFindings sets the EnhancedFindings field's value.
+func (s *ImageScanFindings) SetEnhancedFindings(v []*EnhancedImageScanFinding) *ImageScanFindings {
+	s.EnhancedFindings = v
+	return s
 }
 
 // SetFindingSeverityCounts sets the FindingSeverityCounts field's value.
@@ -8730,6 +10324,310 @@ func (s *ListTagsForResourceOutput) SetTags(v []*Tag) *ListTagsForResourceOutput
 	return s
 }
 
+// Information about a package vulnerability finding.
+type PackageVulnerabilityDetails struct {
+	_ struct{} `type:"structure"`
+
+	// An object that contains details about the CVSS score of a finding.
+	Cvss []*CvssScore `locationName:"cvss" type:"list"`
+
+	// One or more URLs that contain details about this vulnerability type.
+	ReferenceUrls []*string `locationName:"referenceUrls" type:"list"`
+
+	// One or more vulnerabilities related to the one identified in this finding.
+	RelatedVulnerabilities []*string `locationName:"relatedVulnerabilities" type:"list"`
+
+	// The source of the vulnerability information.
+	Source *string `locationName:"source" type:"string"`
+
+	// A URL to the source of the vulnerability information.
+	SourceUrl *string `locationName:"sourceUrl" type:"string"`
+
+	// The date and time that this vulnerability was first added to the vendor's
+	// database.
+	VendorCreatedAt *time.Time `locationName:"vendorCreatedAt" type:"timestamp"`
+
+	// The severity the vendor has given to this vulnerability type.
+	VendorSeverity *string `locationName:"vendorSeverity" type:"string"`
+
+	// The date and time the vendor last updated this vulnerability in their database.
+	VendorUpdatedAt *time.Time `locationName:"vendorUpdatedAt" type:"timestamp"`
+
+	// The ID given to this vulnerability.
+	VulnerabilityId *string `locationName:"vulnerabilityId" type:"string"`
+
+	// The packages impacted by this vulnerability.
+	VulnerablePackages []*VulnerablePackage `locationName:"vulnerablePackages" type:"list"`
+}
+
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s PackageVulnerabilityDetails) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s PackageVulnerabilityDetails) GoString() string {
+	return s.String()
+}
+
+// SetCvss sets the Cvss field's value.
+func (s *PackageVulnerabilityDetails) SetCvss(v []*CvssScore) *PackageVulnerabilityDetails {
+	s.Cvss = v
+	return s
+}
+
+// SetReferenceUrls sets the ReferenceUrls field's value.
+func (s *PackageVulnerabilityDetails) SetReferenceUrls(v []*string) *PackageVulnerabilityDetails {
+	s.ReferenceUrls = v
+	return s
+}
+
+// SetRelatedVulnerabilities sets the RelatedVulnerabilities field's value.
+func (s *PackageVulnerabilityDetails) SetRelatedVulnerabilities(v []*string) *PackageVulnerabilityDetails {
+	s.RelatedVulnerabilities = v
+	return s
+}
+
+// SetSource sets the Source field's value.
+func (s *PackageVulnerabilityDetails) SetSource(v string) *PackageVulnerabilityDetails {
+	s.Source = &v
+	return s
+}
+
+// SetSourceUrl sets the SourceUrl field's value.
+func (s *PackageVulnerabilityDetails) SetSourceUrl(v string) *PackageVulnerabilityDetails {
+	s.SourceUrl = &v
+	return s
+}
+
+// SetVendorCreatedAt sets the VendorCreatedAt field's value.
+func (s *PackageVulnerabilityDetails) SetVendorCreatedAt(v time.Time) *PackageVulnerabilityDetails {
+	s.VendorCreatedAt = &v
+	return s
+}
+
+// SetVendorSeverity sets the VendorSeverity field's value.
+func (s *PackageVulnerabilityDetails) SetVendorSeverity(v string) *PackageVulnerabilityDetails {
+	s.VendorSeverity = &v
+	return s
+}
+
+// SetVendorUpdatedAt sets the VendorUpdatedAt field's value.
+func (s *PackageVulnerabilityDetails) SetVendorUpdatedAt(v time.Time) *PackageVulnerabilityDetails {
+	s.VendorUpdatedAt = &v
+	return s
+}
+
+// SetVulnerabilityId sets the VulnerabilityId field's value.
+func (s *PackageVulnerabilityDetails) SetVulnerabilityId(v string) *PackageVulnerabilityDetails {
+	s.VulnerabilityId = &v
+	return s
+}
+
+// SetVulnerablePackages sets the VulnerablePackages field's value.
+func (s *PackageVulnerabilityDetails) SetVulnerablePackages(v []*VulnerablePackage) *PackageVulnerabilityDetails {
+	s.VulnerablePackages = v
+	return s
+}
+
+// The details of a pull through cache rule.
+type PullThroughCacheRule struct {
+	_ struct{} `type:"structure"`
+
+	// The date and time the pull through cache was created.
+	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp"`
+
+	// The Amazon ECR repository prefix associated with the pull through cache rule.
+	EcrRepositoryPrefix *string `locationName:"ecrRepositoryPrefix" min:"2" type:"string"`
+
+	// The Amazon Web Services account ID associated with the registry the pull
+	// through cache rule is associated with.
+	RegistryId *string `locationName:"registryId" type:"string"`
+
+	// The upstream registry URL associated with the pull through cache rule.
+	UpstreamRegistryUrl *string `locationName:"upstreamRegistryUrl" type:"string"`
+}
+
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s PullThroughCacheRule) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s PullThroughCacheRule) GoString() string {
+	return s.String()
+}
+
+// SetCreatedAt sets the CreatedAt field's value.
+func (s *PullThroughCacheRule) SetCreatedAt(v time.Time) *PullThroughCacheRule {
+	s.CreatedAt = &v
+	return s
+}
+
+// SetEcrRepositoryPrefix sets the EcrRepositoryPrefix field's value.
+func (s *PullThroughCacheRule) SetEcrRepositoryPrefix(v string) *PullThroughCacheRule {
+	s.EcrRepositoryPrefix = &v
+	return s
+}
+
+// SetRegistryId sets the RegistryId field's value.
+func (s *PullThroughCacheRule) SetRegistryId(v string) *PullThroughCacheRule {
+	s.RegistryId = &v
+	return s
+}
+
+// SetUpstreamRegistryUrl sets the UpstreamRegistryUrl field's value.
+func (s *PullThroughCacheRule) SetUpstreamRegistryUrl(v string) *PullThroughCacheRule {
+	s.UpstreamRegistryUrl = &v
+	return s
+}
+
+// A pull through cache rule with these settings already exists for the private
+// registry.
+type PullThroughCacheRuleAlreadyExistsException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s PullThroughCacheRuleAlreadyExistsException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s PullThroughCacheRuleAlreadyExistsException) GoString() string {
+	return s.String()
+}
+
+func newErrorPullThroughCacheRuleAlreadyExistsException(v protocol.ResponseMetadata) error {
+	return &PullThroughCacheRuleAlreadyExistsException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *PullThroughCacheRuleAlreadyExistsException) Code() string {
+	return "PullThroughCacheRuleAlreadyExistsException"
+}
+
+// Message returns the exception's message.
+func (s *PullThroughCacheRuleAlreadyExistsException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *PullThroughCacheRuleAlreadyExistsException) OrigErr() error {
+	return nil
+}
+
+func (s *PullThroughCacheRuleAlreadyExistsException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *PullThroughCacheRuleAlreadyExistsException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *PullThroughCacheRuleAlreadyExistsException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// The pull through cache rule was not found. Specify a valid pull through cache
+// rule and try again.
+type PullThroughCacheRuleNotFoundException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s PullThroughCacheRuleNotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s PullThroughCacheRuleNotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorPullThroughCacheRuleNotFoundException(v protocol.ResponseMetadata) error {
+	return &PullThroughCacheRuleNotFoundException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *PullThroughCacheRuleNotFoundException) Code() string {
+	return "PullThroughCacheRuleNotFoundException"
+}
+
+// Message returns the exception's message.
+func (s *PullThroughCacheRuleNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *PullThroughCacheRuleNotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s *PullThroughCacheRuleNotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *PullThroughCacheRuleNotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *PullThroughCacheRuleNotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
 type PutImageInput struct {
 	_ struct{} `type:"structure"`
 
@@ -9338,6 +11236,109 @@ func (s *PutRegistryPolicyOutput) SetRegistryId(v string) *PutRegistryPolicyOutp
 	return s
 }
 
+type PutRegistryScanningConfigurationInput struct {
+	_ struct{} `type:"structure"`
+
+	// The scanning rules to use for the registry. A scanning rule is used to determine
+	// which repository filters are used and at what frequency scanning will occur.
+	Rules []*RegistryScanningRule `locationName:"rules" type:"list"`
+
+	// The scanning type to set for the registry.
+	//
+	// When a registry scanning configuration is not defined, by default the BASIC
+	// scan type is used. When basic scanning is used, you may specify filters to
+	// determine which individual repositories, or all repositories, are scanned
+	// when new images are pushed to those repositories. Alternatively, you can
+	// do manual scans of images with basic scanning.
+	//
+	// When the ENHANCED scan type is set, Amazon Inspector provides automated vulnerability
+	// scanning. You may choose between continuous scanning or scan on push and
+	// you may specify filters to determine which individual repositories, or all
+	// repositories, are scanned.
+	ScanType *string `locationName:"scanType" type:"string" enum:"ScanType"`
+}
+
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s PutRegistryScanningConfigurationInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s PutRegistryScanningConfigurationInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *PutRegistryScanningConfigurationInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "PutRegistryScanningConfigurationInput"}
+	if s.Rules != nil {
+		for i, v := range s.Rules {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Rules", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetRules sets the Rules field's value.
+func (s *PutRegistryScanningConfigurationInput) SetRules(v []*RegistryScanningRule) *PutRegistryScanningConfigurationInput {
+	s.Rules = v
+	return s
+}
+
+// SetScanType sets the ScanType field's value.
+func (s *PutRegistryScanningConfigurationInput) SetScanType(v string) *PutRegistryScanningConfigurationInput {
+	s.ScanType = &v
+	return s
+}
+
+type PutRegistryScanningConfigurationOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The scanning configuration for your registry.
+	RegistryScanningConfiguration *RegistryScanningConfiguration `locationName:"registryScanningConfiguration" type:"structure"`
+}
+
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s PutRegistryScanningConfigurationOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s PutRegistryScanningConfigurationOutput) GoString() string {
+	return s.String()
+}
+
+// SetRegistryScanningConfiguration sets the RegistryScanningConfiguration field's value.
+func (s *PutRegistryScanningConfigurationOutput) SetRegistryScanningConfiguration(v *RegistryScanningConfiguration) *PutRegistryScanningConfigurationOutput {
+	s.RegistryScanningConfiguration = v
+	return s
+}
+
 type PutReplicationConfigurationInput struct {
 	_ struct{} `type:"structure"`
 
@@ -9417,6 +11418,47 @@ func (s PutReplicationConfigurationOutput) GoString() string {
 // SetReplicationConfiguration sets the ReplicationConfiguration field's value.
 func (s *PutReplicationConfigurationOutput) SetReplicationConfiguration(v *ReplicationConfiguration) *PutReplicationConfigurationOutput {
 	s.ReplicationConfiguration = v
+	return s
+}
+
+// Details about the recommended course of action to remediate the finding.
+type Recommendation struct {
+	_ struct{} `type:"structure"`
+
+	// The recommended course of action to remediate the finding.
+	Text *string `locationName:"text" type:"string"`
+
+	// The URL address to the CVE remediation recommendations.
+	Url *string `locationName:"url" type:"string"`
+}
+
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s Recommendation) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s Recommendation) GoString() string {
+	return s.String()
+}
+
+// SetText sets the Text field's value.
+func (s *Recommendation) SetText(v string) *Recommendation {
+	s.Text = &v
+	return s
+}
+
+// SetUrl sets the Url field's value.
+func (s *Recommendation) SetUrl(v string) *Recommendation {
+	s.Url = &v
 	return s
 }
 
@@ -9546,6 +11588,155 @@ func (s *RegistryPolicyNotFoundException) StatusCode() int {
 // RequestID returns the service's response RequestID for request.
 func (s *RegistryPolicyNotFoundException) RequestID() string {
 	return s.RespMetadata.RequestID
+}
+
+// The scanning configuration for a private registry.
+type RegistryScanningConfiguration struct {
+	_ struct{} `type:"structure"`
+
+	// The scanning rules associated with the registry.
+	Rules []*RegistryScanningRule `locationName:"rules" type:"list"`
+
+	// The type of scanning configured for the registry.
+	ScanType *string `locationName:"scanType" type:"string" enum:"ScanType"`
+}
+
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s RegistryScanningConfiguration) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s RegistryScanningConfiguration) GoString() string {
+	return s.String()
+}
+
+// SetRules sets the Rules field's value.
+func (s *RegistryScanningConfiguration) SetRules(v []*RegistryScanningRule) *RegistryScanningConfiguration {
+	s.Rules = v
+	return s
+}
+
+// SetScanType sets the ScanType field's value.
+func (s *RegistryScanningConfiguration) SetScanType(v string) *RegistryScanningConfiguration {
+	s.ScanType = &v
+	return s
+}
+
+// The details of a scanning rule for a private registry.
+type RegistryScanningRule struct {
+	_ struct{} `type:"structure"`
+
+	// The repository filters associated with the scanning configuration for a private
+	// registry.
+	//
+	// RepositoryFilters is a required field
+	RepositoryFilters []*ScanningRepositoryFilter `locationName:"repositoryFilters" type:"list" required:"true"`
+
+	// The frequency that scans are performed at for a private registry. When the
+	// ENHANCED scan type is specified, the supported scan frequencies are CONTINUOUS_SCAN
+	// and SCAN_ON_PUSH. When the BASIC scan type is specified, the SCAN_ON_PUSH
+	// and MANUAL scan frequencies are supported.
+	//
+	// ScanFrequency is a required field
+	ScanFrequency *string `locationName:"scanFrequency" type:"string" required:"true" enum:"ScanFrequency"`
+}
+
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s RegistryScanningRule) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s RegistryScanningRule) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *RegistryScanningRule) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "RegistryScanningRule"}
+	if s.RepositoryFilters == nil {
+		invalidParams.Add(request.NewErrParamRequired("RepositoryFilters"))
+	}
+	if s.ScanFrequency == nil {
+		invalidParams.Add(request.NewErrParamRequired("ScanFrequency"))
+	}
+	if s.RepositoryFilters != nil {
+		for i, v := range s.RepositoryFilters {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "RepositoryFilters", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetRepositoryFilters sets the RepositoryFilters field's value.
+func (s *RegistryScanningRule) SetRepositoryFilters(v []*ScanningRepositoryFilter) *RegistryScanningRule {
+	s.RepositoryFilters = v
+	return s
+}
+
+// SetScanFrequency sets the ScanFrequency field's value.
+func (s *RegistryScanningRule) SetScanFrequency(v string) *RegistryScanningRule {
+	s.ScanFrequency = &v
+	return s
+}
+
+// Information on how to remediate a finding.
+type Remediation struct {
+	_ struct{} `type:"structure"`
+
+	// An object that contains information about the recommended course of action
+	// to remediate the finding.
+	Recommendation *Recommendation `locationName:"recommendation" type:"structure"`
+}
+
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s Remediation) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s Remediation) GoString() string {
+	return s.String()
+}
+
+// SetRecommendation sets the Recommendation field's value.
+func (s *Remediation) SetRecommendation(v *Recommendation) *Remediation {
+	s.Recommendation = v
+	return s
 }
 
 // The replication configuration for a registry.
@@ -10188,6 +12379,217 @@ func (s *RepositoryPolicyNotFoundException) RequestID() string {
 	return s.RespMetadata.RequestID
 }
 
+// The details of the scanning configuration for a repository.
+type RepositoryScanningConfiguration struct {
+	_ struct{} `type:"structure"`
+
+	// The scan filters applied to the repository.
+	AppliedScanFilters []*ScanningRepositoryFilter `locationName:"appliedScanFilters" type:"list"`
+
+	// The ARN of the repository.
+	RepositoryArn *string `locationName:"repositoryArn" type:"string"`
+
+	// The name of the repository.
+	RepositoryName *string `locationName:"repositoryName" min:"2" type:"string"`
+
+	// The scan frequency for the repository.
+	ScanFrequency *string `locationName:"scanFrequency" type:"string" enum:"ScanFrequency"`
+
+	// Whether or not scan on push is configured for the repository.
+	ScanOnPush *bool `locationName:"scanOnPush" type:"boolean"`
+}
+
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s RepositoryScanningConfiguration) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s RepositoryScanningConfiguration) GoString() string {
+	return s.String()
+}
+
+// SetAppliedScanFilters sets the AppliedScanFilters field's value.
+func (s *RepositoryScanningConfiguration) SetAppliedScanFilters(v []*ScanningRepositoryFilter) *RepositoryScanningConfiguration {
+	s.AppliedScanFilters = v
+	return s
+}
+
+// SetRepositoryArn sets the RepositoryArn field's value.
+func (s *RepositoryScanningConfiguration) SetRepositoryArn(v string) *RepositoryScanningConfiguration {
+	s.RepositoryArn = &v
+	return s
+}
+
+// SetRepositoryName sets the RepositoryName field's value.
+func (s *RepositoryScanningConfiguration) SetRepositoryName(v string) *RepositoryScanningConfiguration {
+	s.RepositoryName = &v
+	return s
+}
+
+// SetScanFrequency sets the ScanFrequency field's value.
+func (s *RepositoryScanningConfiguration) SetScanFrequency(v string) *RepositoryScanningConfiguration {
+	s.ScanFrequency = &v
+	return s
+}
+
+// SetScanOnPush sets the ScanOnPush field's value.
+func (s *RepositoryScanningConfiguration) SetScanOnPush(v bool) *RepositoryScanningConfiguration {
+	s.ScanOnPush = &v
+	return s
+}
+
+// The details about any failures associated with the scanning configuration
+// of a repository.
+type RepositoryScanningConfigurationFailure struct {
+	_ struct{} `type:"structure"`
+
+	// The failure code.
+	FailureCode *string `locationName:"failureCode" type:"string" enum:"ScanningConfigurationFailureCode"`
+
+	// The reason for the failure.
+	FailureReason *string `locationName:"failureReason" type:"string"`
+
+	// The name of the repository.
+	RepositoryName *string `locationName:"repositoryName" min:"2" type:"string"`
+}
+
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s RepositoryScanningConfigurationFailure) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s RepositoryScanningConfigurationFailure) GoString() string {
+	return s.String()
+}
+
+// SetFailureCode sets the FailureCode field's value.
+func (s *RepositoryScanningConfigurationFailure) SetFailureCode(v string) *RepositoryScanningConfigurationFailure {
+	s.FailureCode = &v
+	return s
+}
+
+// SetFailureReason sets the FailureReason field's value.
+func (s *RepositoryScanningConfigurationFailure) SetFailureReason(v string) *RepositoryScanningConfigurationFailure {
+	s.FailureReason = &v
+	return s
+}
+
+// SetRepositoryName sets the RepositoryName field's value.
+func (s *RepositoryScanningConfigurationFailure) SetRepositoryName(v string) *RepositoryScanningConfigurationFailure {
+	s.RepositoryName = &v
+	return s
+}
+
+// Details about the resource involved in a finding.
+type Resource struct {
+	_ struct{} `type:"structure"`
+
+	// An object that contains details about the resource involved in a finding.
+	Details *ResourceDetails `locationName:"details" type:"structure"`
+
+	// The ID of the resource.
+	Id *string `locationName:"id" type:"string"`
+
+	// The tags attached to the resource.
+	Tags map[string]*string `locationName:"tags" type:"map"`
+
+	// The type of resource.
+	Type *string `locationName:"type" type:"string"`
+}
+
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s Resource) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s Resource) GoString() string {
+	return s.String()
+}
+
+// SetDetails sets the Details field's value.
+func (s *Resource) SetDetails(v *ResourceDetails) *Resource {
+	s.Details = v
+	return s
+}
+
+// SetId sets the Id field's value.
+func (s *Resource) SetId(v string) *Resource {
+	s.Id = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *Resource) SetTags(v map[string]*string) *Resource {
+	s.Tags = v
+	return s
+}
+
+// SetType sets the Type field's value.
+func (s *Resource) SetType(v string) *Resource {
+	s.Type = &v
+	return s
+}
+
+// Contains details about the resource involved in the finding.
+type ResourceDetails struct {
+	_ struct{} `type:"structure"`
+
+	// An object that contains details about the Amazon ECR container image involved
+	// in the finding.
+	AwsEcrContainerImage *AwsEcrContainerImageDetails `locationName:"awsEcrContainerImage" type:"structure"`
+}
+
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s ResourceDetails) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s ResourceDetails) GoString() string {
+	return s.String()
+}
+
+// SetAwsEcrContainerImage sets the AwsEcrContainerImage field's value.
+func (s *ResourceDetails) SetAwsEcrContainerImage(v *AwsEcrContainerImageDetails) *ResourceDetails {
+	s.AwsEcrContainerImage = v
+	return s
+}
+
 // The specified image scan could not be found. Ensure that image scanning is
 // enabled on the repository and try again.
 type ScanNotFoundException struct {
@@ -10251,6 +12653,104 @@ func (s *ScanNotFoundException) StatusCode() int {
 // RequestID returns the service's response RequestID for request.
 func (s *ScanNotFoundException) RequestID() string {
 	return s.RespMetadata.RequestID
+}
+
+// The details of a scanning repository filter. For more information on how
+// to use filters, see Using filters (https://docs.aws.amazon.com/AmazonECR/latest/userguide/image-scanning.html#image-scanning-filters)
+// in the Amazon Elastic Container Registry User Guide.
+type ScanningRepositoryFilter struct {
+	_ struct{} `type:"structure"`
+
+	// The filter to use when scanning.
+	//
+	// Filter is a required field
+	Filter *string `locationName:"filter" min:"1" type:"string" required:"true"`
+
+	// The type associated with the filter.
+	//
+	// FilterType is a required field
+	FilterType *string `locationName:"filterType" type:"string" required:"true" enum:"ScanningRepositoryFilterType"`
+}
+
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s ScanningRepositoryFilter) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s ScanningRepositoryFilter) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ScanningRepositoryFilter) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ScanningRepositoryFilter"}
+	if s.Filter == nil {
+		invalidParams.Add(request.NewErrParamRequired("Filter"))
+	}
+	if s.Filter != nil && len(*s.Filter) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Filter", 1))
+	}
+	if s.FilterType == nil {
+		invalidParams.Add(request.NewErrParamRequired("FilterType"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetFilter sets the Filter field's value.
+func (s *ScanningRepositoryFilter) SetFilter(v string) *ScanningRepositoryFilter {
+	s.Filter = &v
+	return s
+}
+
+// SetFilterType sets the FilterType field's value.
+func (s *ScanningRepositoryFilter) SetFilterType(v string) *ScanningRepositoryFilter {
+	s.FilterType = &v
+	return s
+}
+
+// Information about the Amazon Inspector score given to a finding.
+type ScoreDetails struct {
+	_ struct{} `type:"structure"`
+
+	// An object that contains details about the CVSS score given to a finding.
+	Cvss *CvssScoreDetails `locationName:"cvss" type:"structure"`
+}
+
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s ScoreDetails) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s ScoreDetails) GoString() string {
+	return s.String()
+}
+
+// SetCvss sets the Cvss field's value.
+func (s *ScoreDetails) SetCvss(v *CvssScoreDetails) *ScoreDetails {
+	s.Cvss = v
+	return s
 }
 
 // These errors are usually caused by a server-side issue.
@@ -10722,10 +13222,10 @@ func (s *StartLifecyclePolicyPreviewOutput) SetStatus(v string) *StartLifecycleP
 	return s
 }
 
-// The metadata that you apply to a resource to help you categorize and organize
-// them. Each tag consists of a key and an optional value, both of which you
-// define. Tag keys can have a maximum character length of 128 characters, and
-// tag values can have a maximum length of 256 characters.
+// The metadata to apply to a resource to help you categorize and organize them.
+// Each tag consists of a key and a value, both of which you define. Tag keys
+// can have a maximum character length of 128 characters, and tag values can
+// have a maximum length of 256 characters.
 type Tag struct {
 	_ struct{} `type:"structure"`
 
@@ -10733,8 +13233,7 @@ type Tag struct {
 	// that acts like a category for more specific tag values.
 	Key *string `type:"string"`
 
-	// The optional part of a key-value pair that make up a tag. A value acts as
-	// a descriptor within a tag category (key).
+	// A value acts as a descriptor within a tag category (key).
 	Value *string `type:"string"`
 }
 
@@ -10979,6 +13478,70 @@ func (s *UnsupportedImageTypeException) StatusCode() int {
 
 // RequestID returns the service's response RequestID for request.
 func (s *UnsupportedImageTypeException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// The specified upstream registry isn't supported.
+type UnsupportedUpstreamRegistryException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s UnsupportedUpstreamRegistryException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s UnsupportedUpstreamRegistryException) GoString() string {
+	return s.String()
+}
+
+func newErrorUnsupportedUpstreamRegistryException(v protocol.ResponseMetadata) error {
+	return &UnsupportedUpstreamRegistryException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *UnsupportedUpstreamRegistryException) Code() string {
+	return "UnsupportedUpstreamRegistryException"
+}
+
+// Message returns the exception's message.
+func (s *UnsupportedUpstreamRegistryException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *UnsupportedUpstreamRegistryException) OrigErr() error {
+	return nil
+}
+
+func (s *UnsupportedUpstreamRegistryException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *UnsupportedUpstreamRegistryException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *UnsupportedUpstreamRegistryException) RequestID() string {
 	return s.RespMetadata.RequestID
 }
 
@@ -11373,6 +13936,101 @@ func (s *ValidationException) RequestID() string {
 	return s.RespMetadata.RequestID
 }
 
+// Information on the vulnerable package identified by a finding.
+type VulnerablePackage struct {
+	_ struct{} `type:"structure"`
+
+	// The architecture of the vulnerable package.
+	Arch *string `locationName:"arch" type:"string"`
+
+	// The epoch of the vulnerable package.
+	Epoch *int64 `locationName:"epoch" type:"integer"`
+
+	// The file path of the vulnerable package.
+	FilePath *string `locationName:"filePath" type:"string"`
+
+	// The name of the vulnerable package.
+	Name *string `locationName:"name" type:"string"`
+
+	// The package manager of the vulnerable package.
+	PackageManager *string `locationName:"packageManager" type:"string"`
+
+	// The release of the vulnerable package.
+	Release *string `locationName:"release" type:"string"`
+
+	// The source layer hash of the vulnerable package.
+	SourceLayerHash *string `locationName:"sourceLayerHash" type:"string"`
+
+	// The version of the vulnerable package.
+	Version *string `locationName:"version" type:"string"`
+}
+
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s VulnerablePackage) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s VulnerablePackage) GoString() string {
+	return s.String()
+}
+
+// SetArch sets the Arch field's value.
+func (s *VulnerablePackage) SetArch(v string) *VulnerablePackage {
+	s.Arch = &v
+	return s
+}
+
+// SetEpoch sets the Epoch field's value.
+func (s *VulnerablePackage) SetEpoch(v int64) *VulnerablePackage {
+	s.Epoch = &v
+	return s
+}
+
+// SetFilePath sets the FilePath field's value.
+func (s *VulnerablePackage) SetFilePath(v string) *VulnerablePackage {
+	s.FilePath = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *VulnerablePackage) SetName(v string) *VulnerablePackage {
+	s.Name = &v
+	return s
+}
+
+// SetPackageManager sets the PackageManager field's value.
+func (s *VulnerablePackage) SetPackageManager(v string) *VulnerablePackage {
+	s.PackageManager = &v
+	return s
+}
+
+// SetRelease sets the Release field's value.
+func (s *VulnerablePackage) SetRelease(v string) *VulnerablePackage {
+	s.Release = &v
+	return s
+}
+
+// SetSourceLayerHash sets the SourceLayerHash field's value.
+func (s *VulnerablePackage) SetSourceLayerHash(v string) *VulnerablePackage {
+	s.SourceLayerHash = &v
+	return s
+}
+
+// SetVersion sets the Version field's value.
+func (s *VulnerablePackage) SetVersion(v string) *VulnerablePackage {
+	s.Version = &v
+	return s
+}
+
 const (
 	// EncryptionTypeAes256 is a EncryptionType enum value
 	EncryptionTypeAes256 = "AES256"
@@ -11574,6 +14232,26 @@ func RepositoryFilterType_Values() []string {
 }
 
 const (
+	// ScanFrequencyScanOnPush is a ScanFrequency enum value
+	ScanFrequencyScanOnPush = "SCAN_ON_PUSH"
+
+	// ScanFrequencyContinuousScan is a ScanFrequency enum value
+	ScanFrequencyContinuousScan = "CONTINUOUS_SCAN"
+
+	// ScanFrequencyManual is a ScanFrequency enum value
+	ScanFrequencyManual = "MANUAL"
+)
+
+// ScanFrequency_Values returns all elements of the ScanFrequency enum
+func ScanFrequency_Values() []string {
+	return []string{
+		ScanFrequencyScanOnPush,
+		ScanFrequencyContinuousScan,
+		ScanFrequencyManual,
+	}
+}
+
+const (
 	// ScanStatusInProgress is a ScanStatus enum value
 	ScanStatusInProgress = "IN_PROGRESS"
 
@@ -11582,6 +14260,21 @@ const (
 
 	// ScanStatusFailed is a ScanStatus enum value
 	ScanStatusFailed = "FAILED"
+
+	// ScanStatusUnsupportedImage is a ScanStatus enum value
+	ScanStatusUnsupportedImage = "UNSUPPORTED_IMAGE"
+
+	// ScanStatusActive is a ScanStatus enum value
+	ScanStatusActive = "ACTIVE"
+
+	// ScanStatusPending is a ScanStatus enum value
+	ScanStatusPending = "PENDING"
+
+	// ScanStatusScanEligibilityExpired is a ScanStatus enum value
+	ScanStatusScanEligibilityExpired = "SCAN_ELIGIBILITY_EXPIRED"
+
+	// ScanStatusFindingsUnavailable is a ScanStatus enum value
+	ScanStatusFindingsUnavailable = "FINDINGS_UNAVAILABLE"
 )
 
 // ScanStatus_Values returns all elements of the ScanStatus enum
@@ -11590,6 +14283,51 @@ func ScanStatus_Values() []string {
 		ScanStatusInProgress,
 		ScanStatusComplete,
 		ScanStatusFailed,
+		ScanStatusUnsupportedImage,
+		ScanStatusActive,
+		ScanStatusPending,
+		ScanStatusScanEligibilityExpired,
+		ScanStatusFindingsUnavailable,
+	}
+}
+
+const (
+	// ScanTypeBasic is a ScanType enum value
+	ScanTypeBasic = "BASIC"
+
+	// ScanTypeEnhanced is a ScanType enum value
+	ScanTypeEnhanced = "ENHANCED"
+)
+
+// ScanType_Values returns all elements of the ScanType enum
+func ScanType_Values() []string {
+	return []string{
+		ScanTypeBasic,
+		ScanTypeEnhanced,
+	}
+}
+
+const (
+	// ScanningConfigurationFailureCodeRepositoryNotFound is a ScanningConfigurationFailureCode enum value
+	ScanningConfigurationFailureCodeRepositoryNotFound = "REPOSITORY_NOT_FOUND"
+)
+
+// ScanningConfigurationFailureCode_Values returns all elements of the ScanningConfigurationFailureCode enum
+func ScanningConfigurationFailureCode_Values() []string {
+	return []string{
+		ScanningConfigurationFailureCodeRepositoryNotFound,
+	}
+}
+
+const (
+	// ScanningRepositoryFilterTypeWildcard is a ScanningRepositoryFilterType enum value
+	ScanningRepositoryFilterTypeWildcard = "WILDCARD"
+)
+
+// ScanningRepositoryFilterType_Values returns all elements of the ScanningRepositoryFilterType enum
+func ScanningRepositoryFilterType_Values() []string {
+	return []string{
+		ScanningRepositoryFilterTypeWildcard,
 	}
 }
 
