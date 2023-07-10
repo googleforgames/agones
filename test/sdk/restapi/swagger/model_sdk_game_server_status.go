@@ -28,4 +28,6 @@ type SdkGameServerStatus struct {
 	Address string `json:"address,omitempty"`
 	Ports []StatusPort `json:"ports,omitempty"`
 	Players *StatusPlayerStatus `json:"players,omitempty"`
+	Counters map[string]StatusCounterStatus `json:"counters,omitempty"`
+	Lists map[string]StatusListStatus `json:"lists,omitempty"`
 }

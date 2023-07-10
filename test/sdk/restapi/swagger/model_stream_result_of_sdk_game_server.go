@@ -25,5 +25,4 @@ package swagger
 
 type StreamResultOfSdkGameServer struct {
 	Result *SdkGameServer `json:"result,omitempty"`
-	Error_ *GooglerpcStatus `json:"error,omitempty"`
 }
