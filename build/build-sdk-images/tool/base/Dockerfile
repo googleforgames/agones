@@ -25,7 +25,7 @@ RUN groupadd -g ${GROUP_ID:-1338} agones-dev && \
     useradd -l -u ${USER_ID:-1337} -g agones-dev agones-dev && \
     install -d -m 0755 -o agones-dev -g agones-dev /home/agones-dev && \
     mkdir /home/agones-dev/.cache && mkdir /home/agones-dev/.config && \
-    mkdir /go/pkg
+    mkdir -p /go/pkg
 
 RUN apt-get update && apt-get install -y \
   build-essential autoconf libtool git pkg-config curl \

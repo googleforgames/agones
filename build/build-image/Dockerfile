@@ -21,8 +21,7 @@ ARG GROUP_ID
 RUN groupadd -g ${GROUP_ID:-1338} agones-dev && \
     useradd -l -u ${USER_ID:-1337} -g agones-dev -s /bin/bash agones-dev && \
     install -d -m 0755 -o agones-dev -g agones-dev /home/agones-dev && \
-    mkdir /home/agones-dev/.cache && mkdir /home/agones-dev/.config && \
-    mkdir /go/pkg
+    mkdir /home/agones-dev/.cache && mkdir /home/agones-dev/.config
 
 RUN apt-get update && \
     apt-get install -y build-essential gnupg curl git wget psmisc rsync make python bash-completion \

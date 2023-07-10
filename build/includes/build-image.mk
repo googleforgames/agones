@@ -24,9 +24,7 @@ build_remote_tag = $(REGISTRY)/$(build_tag)
 # Creates the build docker image
 build-build-image:
 	docker build --tag=$(build_tag) $(build_path)/build-image \
-		--build-arg USER_ID="$(shell id -u ${USER})" \
-		--build-arg GROUP_ID="$(shell id -g ${USER})" \
-		$(DOCKER_BUILD_ARGS)
+		${docker_build_user} $(DOCKER_BUILD_ARGS)
 
 # Deletes the local build docker image
 clean-build-image:

@@ -36,6 +36,7 @@ VERSION ?= $(base_version)-dev-$(shell git rev-parse --short=7 HEAD)
 
 # kubectl configuration to use
 KUBECONFIG ?= ~/.kube/config
+
 # The (gcloud) test cluster that is being worked against
 GCP_CLUSTER_NAME ?= test-cluster
 GCP_CLUSTER_ZONE ?= us-west1-c
@@ -91,6 +92,10 @@ common_mounts = -v $(build_path)/.config/gcloud:/home/agones-dev/.config/gcloud 
 				-v $(helm_cache):/home/agones-dev/.cache/helm \
 				-v $(agones_path):$(mount_path) \
 				-v $(build_path)/.gomod:/go/pkg/mod
+
+ifneq ($(shell id -u ${USER}), 0)
+  docker_build_user := --build-arg USER_ID="$(shell id -u ${USER})" --build-arg GROUP_ID="$(shell id -g ${USER})"
+endif
 
 # Its possible for this to change in the future, so it gets its own variable.
 workdir_path = $(mount_path)
