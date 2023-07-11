@@ -347,3 +347,4 @@ enum ClientLibraryDestination {
   // Publish the library to package managers like nuget.org and npmjs.com.
   PACKAGE_MANAGER = 20;
 }
+

@@ -70,3 +70,4 @@ enum LaunchStage {
   // Policy](https://cloud.google.com/terms/deprecation) documentation.
   DEPRECATED = 5;
 }
+

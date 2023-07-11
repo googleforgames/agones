@@ -88,3 +88,4 @@ enum FieldBehavior {
   // non-empty value to expect.
   NON_EMPTY_DEFAULT = 7;
 }
+
