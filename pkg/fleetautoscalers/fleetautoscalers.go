@@ -385,7 +385,6 @@ func applyCounterOrListPolicy(c *autoscalingv1.CounterPolicy, l *autoscalingv1.L
 // Game Servers would be deleted.
 func getSortedGameServers(f *agonesv1.Fleet, gameServerLister listeragonesv1.GameServerLister,
 	nodeCounts map[string]gameservers.NodeCount) ([]*agonesv1.GameServer, error) {
-	// TODO: Should we handle this differently for strategy Distributed?
 	gsList, err := fleets.ListGameServersByFleetOwner(gameServerLister, f)
 	if err != nil {
 		return nil, err

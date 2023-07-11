@@ -126,6 +126,8 @@ func sortGameServersByNewFirst(list []*agonesv1.GameServer) []*agonesv1.GameServ
 		a := list[i]
 		b := list[j]
 
+		// TODO: Sort by Priority First, then tie break with NewFirst
+
 		return a.ObjectMeta.CreationTimestamp.Before(&b.ObjectMeta.CreationTimestamp)
 	})
 
