@@ -47,8 +47,6 @@ spec:
       # maximum fleet size that can be set by this FleetAutoscaler
       # required
       maxReplicas: 20
-  # [Stage:Beta]
-  # [FeatureFlag:CustomFasSyncInterval]
   # The autoscaling sync strategy
   sync:
     # type of the sync. for now, only FixedInterval is available
