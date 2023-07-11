@@ -498,7 +498,7 @@ func (gss *GameServerSpec) validateFeatureGates(fldPath *field.Path) field.Error
 // If a GameServer Spec is invalid there will be > 0 values in the returned array
 func (gss *GameServerSpec) Validate(apiHooks APIHooks, devAddress string, fldPath *field.Path) field.ErrorList {
 	allErrs := gss.validateFeatureGates(fldPath)
-	if devAddress != "" {
+	if len(devAddress) > 0 {
 		// verify that the value is a valid IP address.
 		if net.ParseIP(devAddress) == nil {
 			// Authentication is only required if the gameserver is created directly.
@@ -513,55 +513,52 @@ func (gss *GameServerSpec) Validate(apiHooks APIHooks, devAddress string, fldPat
 				allErrs = append(allErrs, field.Required(fldPath.Child("ports").Index(i).Child("portPolicy"), ErrPortPolicyStatic))
 			}
 		}
-	} else {
-		// make sure a name is specified when there is multiple containers in the pod.
-		if gss.Container == "" && len(gss.Template.Spec.Containers) > 1 {
-			allErrs = append(allErrs, field.Required(fldPath.Child("container"), ErrContainerRequired))
-		}
 
-		// make sure the container value points to a valid container
-		_, _, err := gss.FindContainer(gss.Container)
-		if err != nil {
-			allErrs = append(allErrs, field.Invalid(fldPath.Child("container"), gss.Container, err.Error()))
-		}
+		allErrs = append(allErrs, validateObjectMeta(&gss.Template.ObjectMeta, fldPath.Child("template", "metadata"))...)
+		return allErrs
+	}
 
-		// no host port when using dynamic PortPolicy
-		for i, p := range gss.Ports {
-			path := fldPath.Child("ports").Index(i)
-			if p.PortPolicy == Dynamic || p.PortPolicy == Static {
-				if p.ContainerPort <= 0 {
-					allErrs = append(allErrs, field.Required(path.Child("containerPort"), ErrContainerPortRequired))
-				}
-			}
+	// make sure a name is specified when there is multiple containers in the pod.
+	if gss.Container == "" && len(gss.Template.Spec.Containers) > 1 {
+		allErrs = append(allErrs, field.Required(fldPath.Child("container"), ErrContainerRequired))
+	}
 
-			if p.PortPolicy == Passthrough && p.ContainerPort > 0 {
-				allErrs = append(allErrs, field.Required(path.Child("containerPort"), ErrContainerPortPassthrough))
-			}
+	// make sure the container value points to a valid container
+	_, _, err := gss.FindContainer(gss.Container)
+	if err != nil {
+		allErrs = append(allErrs, field.Invalid(fldPath.Child("container"), gss.Container, err.Error()))
+	}
 
-			if p.HostPort > 0 && (p.PortPolicy == Dynamic || p.PortPolicy == Passthrough) {
-				allErrs = append(allErrs, field.Forbidden(path.Child("hostPort"), ErrHostPort))
-			}
-
-			if p.Container != nil && gss.Container != "" {
-				_, _, err := gss.FindContainer(*p.Container)
-				if err != nil {
-					allErrs = append(allErrs, field.Invalid(path.Child("container"), *p.Container, ErrContainerNameInvalid))
-				}
+	// no host port when using dynamic PortPolicy
+	for i, p := range gss.Ports {
+		path := fldPath.Child("ports").Index(i)
+		if p.PortPolicy == Dynamic || p.PortPolicy == Static {
+			if p.ContainerPort <= 0 {
+				allErrs = append(allErrs, field.Required(path.Child("containerPort"), ErrContainerPortRequired))
 			}
 		}
-		for i, c := range gss.Template.Spec.Containers {
-			path := fldPath.Child("template", "spec", "containers").Index(i)
-			allErrs = append(allErrs, validateResources(c, path)...)
+
+		if p.PortPolicy == Passthrough && p.ContainerPort > 0 {
+			allErrs = append(allErrs, field.Required(path.Child("containerPort"), ErrContainerPortPassthrough))
 		}
-		for _, cause := range apiHooks.ValidateGameServerSpec(gss) {
-			// TODO(#3239): Use field.ErrorList
-			allErrs = append(allErrs, &field.Error{
-				Type:   field.ErrorType(cause.Type),
-				Field:  cause.Field,
-				Detail: cause.Message,
-			})
+
+		if p.HostPort > 0 && (p.PortPolicy == Dynamic || p.PortPolicy == Passthrough) {
+			allErrs = append(allErrs, field.Forbidden(path.Child("hostPort"), ErrHostPort))
+		}
+
+		if p.Container != nil && gss.Container != "" {
+			_, _, err := gss.FindContainer(*p.Container)
+			if err != nil {
+				allErrs = append(allErrs, field.Invalid(path.Child("container"), *p.Container, ErrContainerNameInvalid))
+			}
 		}
 	}
+	for i, c := range gss.Template.Spec.Containers {
+		path := fldPath.Child("template", "spec", "containers").Index(i)
+		allErrs = append(allErrs, validateResources(c, path)...)
+	}
+
+	allErrs = append(allErrs, apiHooks.ValidateGameServerSpec(gss, fldPath)...)
 	allErrs = append(allErrs, validateObjectMeta(&gss.Template.ObjectMeta, fldPath.Child("template", "metadata"))...)
 	return allErrs
 }

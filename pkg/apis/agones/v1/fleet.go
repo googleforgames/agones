@@ -197,10 +197,7 @@ func (f *Fleet) Validate(apiHooks APIHooks) field.ErrorList {
 
 	// check Gameserver specification in a Fleet
 	allErrs = append(allErrs, validateGSSpec(apiHooks, f, field.NewPath("spec", "template", "spec"))...)
-	for _, cause := range apiHooks.ValidateScheduling(f.Spec.Scheduling) {
-		allErrs = append(allErrs, field.Invalid(field.NewPath("spec", "scheduling"), f.Spec.Scheduling, cause.Message))
-	}
-
+	allErrs = append(allErrs, apiHooks.ValidateScheduling(f.Spec.Scheduling, field.NewPath("spec", "scheduling"))...)
 	allErrs = append(allErrs, validateObjectMeta(&f.Spec.Template.ObjectMeta, field.NewPath("spec", "template", "metadata"))...)
 
 	if f.Spec.AllocationOverflow != nil {

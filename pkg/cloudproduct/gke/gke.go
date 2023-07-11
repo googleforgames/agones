@@ -16,19 +16,19 @@
 package gke
 
 import (
-	"context"
-	"encoding/json"
-	"fmt"
-
 	"agones.dev/agones/pkg/apis"
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	"agones.dev/agones/pkg/client/informers/externalversions"
 	"agones.dev/agones/pkg/portallocator"
 	"agones.dev/agones/pkg/util/runtime"
 	"cloud.google.com/go/compute/metadata"
+	"context"
+	"encoding/json"
+	"fmt"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
 )
@@ -125,35 +125,25 @@ func (*gkeAutopilot) NewPortAllocator(minPort, maxPort int32,
 
 func (*gkeAutopilot) WaitOnFreePorts() bool { return true }
 
-func (g *gkeAutopilot) ValidateGameServerSpec(gss *agonesv1.GameServerSpec) []metav1.StatusCause {
-	causes := g.ValidateScheduling(gss.Scheduling)
-	for _, p := range gss.Ports {
+func (g *gkeAutopilot) ValidateGameServerSpec(gss *agonesv1.GameServerSpec, fldPath *field.Path) field.ErrorList {
+	allErrs := g.ValidateScheduling(gss.Scheduling, fldPath.Child("scheduling"))
+	for i, p := range gss.Ports {
 		if p.PortPolicy != agonesv1.Dynamic {
-			causes = append(causes, metav1.StatusCause{
-				Type:    metav1.CauseTypeFieldValueInvalid,
-				Field:   fmt.Sprintf("%s.portPolicy", p.Name),
-				Message: errPortPolicyMustBeDynamic,
-			})
+			allErrs = append(allErrs, field.Invalid(fldPath.Child("ports").Index(i).Child("portPolicy"), string(p.PortPolicy), errPortPolicyMustBeDynamic))
 		}
 	}
 	// See SetEviction comment below for why we block EvictionSafeOnUpgrade.
 	if gss.Eviction.Safe == agonesv1.EvictionSafeOnUpgrade {
-		causes = append(causes, metav1.StatusCause{
-			Type:    metav1.CauseTypeFieldValueInvalid,
-			Field:   "eviction.safe",
-			Message: errEvictionSafeOnUpgradeInvalid,
-		})
+		allErrs = append(allErrs, field.Invalid(fldPath.Child("eviction").Child("safe"), string(gss.Eviction.Safe), errEvictionSafeOnUpgradeInvalid))
 	}
-	return causes
+	return allErrs
 }
 
-func (*gkeAutopilot) ValidateScheduling(ss apis.SchedulingStrategy) []metav1.StatusCause {
+func (*gkeAutopilot) ValidateScheduling(ss apis.SchedulingStrategy, fldPath *field.Path) field.ErrorList {
 	if ss != apis.Packed {
-		return []metav1.StatusCause{{
-			Type:    metav1.CauseTypeFieldValueInvalid,
-			Field:   "scheduling",
-			Message: errSchedulingMustBePacked,
-		}}
+		return field.ErrorList{
+			field.Invalid(fldPath, string(ss), errSchedulingMustBePacked),
+		}
 	}
 	return nil
 }
