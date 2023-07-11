@@ -1433,7 +1433,7 @@ func TestFleetResourceValidation(t *testing.T) {
 
 	assert.Len(t, statusErr.Status().Details.Causes, 3)
 	assert.Equal(t, metav1.CauseTypeFieldValueInvalid, statusErr.Status().Details.Causes[0].Type)
-	assert.Equal(t, "spec.template.spec.template.spec.containers[0].resources.requests.cpu", statusErr.Status().Details.Causes[0].Field)
+	assert.Equal(t, "spec.template.spec.template.spec.containers[0].resources.limits[cpu]", statusErr.Status().Details.Causes[0].Field)
 	causes := statusErr.Status().Details.Causes
 	assertCausesContainsString(t, causes, "Request must be less than or equal to cpu limit")
 	assertCausesContainsString(t, causes, "Resource cpu limit value must be non negative")
@@ -1620,14 +1620,11 @@ func TestFleetAllocationOverflow(t *testing.T) {
 }
 
 func assertCausesContainsString(t *testing.T, causes []metav1.StatusCause, expected string) {
-	found := false
+	strs := make([]string, 0, len(causes))
 	for _, v := range causes {
-		if strings.Contains(v.Message, expected) {
-			found = true
-			break
-		}
+		strs = append(strs, v.Message)
 	}
-	assert.True(t, found, "Was not able to find '%s'", expected)
+	assert.Contains(t, strs, expected)
 }
 
 func listGameServers(ctx context.Context, flt *agonesv1.Fleet, getter typedagonesv1.GameServersGetter) (*agonesv1.GameServerList, error) {
