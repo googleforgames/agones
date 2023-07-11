@@ -604,10 +604,10 @@ func computeStatus(list []*agonesv1.GameServer) agonesv1.GameServerSetStatus {
 			status.ReservedReplicas++
 		}
 
-		// Aggregates all Counters and Lists only for GameServer states Ready, Reserved, or Allocated.
-		if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) && gs.IsActive() {
-			status.Counters = aggregateCounters(status.Counters, gs.Status.Counters)
-			status.Lists = aggregateLists(status.Lists, gs.Status.Lists)
+		// Aggregates all Counters and Lists only for GameServer all states (except IsBeingDeleted)
+		if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
+			status.Counters = aggregateCounters(status.Counters, gs.Status.Counters, gs.Status.State)
+			status.Lists = aggregateLists(status.Lists, gs.Status.Lists, gs.Status.State)
 		}
 	}
 
@@ -633,7 +633,10 @@ func computeStatus(list []*agonesv1.GameServer) agonesv1.GameServerSetStatus {
 }
 
 // aggregateCounters adds the contents of a CounterStatus map to an AggregatedCounterStatus map.
-func aggregateCounters(aggCounterStatus map[string]agonesv1.AggregatedCounterStatus, counterStatus map[string]agonesv1.CounterStatus) map[string]agonesv1.AggregatedCounterStatus {
+func aggregateCounters(aggCounterStatus map[string]agonesv1.AggregatedCounterStatus,
+	counterStatus map[string]agonesv1.CounterStatus,
+	gsState agonesv1.GameServerState) map[string]agonesv1.AggregatedCounterStatus {
+
 	if aggCounterStatus == nil {
 		aggCounterStatus = make(map[string]agonesv1.AggregatedCounterStatus)
 	}
@@ -641,11 +644,29 @@ func aggregateCounters(aggCounterStatus map[string]agonesv1.AggregatedCounterSta
 	for key, val := range counterStatus {
 		// If the Counter exists in both maps, aggregate the values.
 		if counter, ok := aggCounterStatus[key]; ok {
+			// Aggregate for all game server statuses (expected IsBeingDeleted)
 			counter.Count += val.Count
 			counter.Capacity += val.Capacity
+			// Aggregate for Allocated game servers only
+			if gsState == agonesv1.GameServerStateAllocated {
+				counter.AllocatedCount += val.Count
+				counter.AllocatedCapacity += val.Capacity
+			}
 			aggCounterStatus[key] = counter
 		} else {
-			aggCounterStatus[key] = agonesv1.AggregatedCounterStatus(*val.DeepCopy())
+			tmp := val.DeepCopy()
+			allocatedCount := int64(0)
+			allocatedCapacity := int64(0)
+			if gsState == agonesv1.GameServerStateAllocated {
+				allocatedCount = tmp.Count
+				allocatedCapacity = tmp.Capacity
+			}
+			aggCounterStatus[key] = agonesv1.AggregatedCounterStatus{
+				AllocatedCount:    allocatedCount,
+				AllocatedCapacity: allocatedCapacity,
+				Capacity:          tmp.Capacity,
+				Count:             tmp.Count,
+			}
 		}
 	}
 
@@ -653,7 +674,10 @@ func aggregateCounters(aggCounterStatus map[string]agonesv1.AggregatedCounterSta
 }
 
 // aggregateLists adds the contents of a ListStatus map to an AggregatedListStatus map.
-func aggregateLists(aggListStatus map[string]agonesv1.AggregatedListStatus, listStatus map[string]agonesv1.ListStatus) map[string]agonesv1.AggregatedListStatus {
+func aggregateLists(aggListStatus map[string]agonesv1.AggregatedListStatus,
+	listStatus map[string]agonesv1.ListStatus,
+	gsState agonesv1.GameServerState) map[string]agonesv1.AggregatedListStatus {
+
 	if aggListStatus == nil {
 		aggListStatus = make(map[string]agonesv1.AggregatedListStatus)
 	}
@@ -664,12 +688,24 @@ func aggregateLists(aggListStatus map[string]agonesv1.AggregatedListStatus, list
 			list.Capacity += val.Capacity
 			// We do include duplicates in the Count.
 			list.Count += int64(len(val.Values))
+			if gsState == agonesv1.GameServerStateAllocated {
+				list.AllocatedCount += int64(len(val.Values))
+				list.AllocatedCapacity += val.Capacity
+			}
 			aggListStatus[key] = list
 		} else {
 			tmp := val.DeepCopy()
+			allocatedCount := int64(0)
+			allocatedCapacity := int64(0)
+			if gsState == agonesv1.GameServerStateAllocated {
+				allocatedCount = int64(len(tmp.Values))
+				allocatedCapacity = tmp.Capacity
+			}
 			aggListStatus[key] = agonesv1.AggregatedListStatus{
-				Capacity: tmp.Capacity,
-				Count:    int64(len(tmp.Values)),
+				AllocatedCount:    allocatedCount,
+				AllocatedCapacity: allocatedCapacity,
+				Capacity:          tmp.Capacity,
+				Count:             int64(len(tmp.Values)),
 			}
 		}
 	}

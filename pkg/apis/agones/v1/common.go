@@ -52,16 +52,20 @@ type AggregatedPlayerStatus struct {
 	Capacity int64 `json:"capacity"`
 }
 
-// AggregatedCounterStatus stores total Counter tracking values
+// AggregatedCounterStatus stores total and allocated Counter tracking values
 type AggregatedCounterStatus struct {
-	Count    int64 `json:"count"`
-	Capacity int64 `json:"capacity"`
+	AllocatedCount    int64 `json:"allocatedCount"`
+	AllocatedCapacity int64 `json:"allocatedCapacity"`
+	Count             int64 `json:"count"`
+	Capacity          int64 `json:"capacity"`
 }
 
-// AggregatedListStatus stores total List tracking values
+// AggregatedListStatus stores total and allocated List tracking values
 type AggregatedListStatus struct {
-	Count    int64 `json:"count"`
-	Capacity int64 `json:"capacity"`
+	AllocatedCount    int64 `json:"allocatedCount"`
+	AllocatedCapacity int64 `json:"allocatedCapacity"`
+	Count             int64 `json:"count"`
+	Capacity          int64 `json:"capacity"`
 }
 
 // crd is an interface to get Name and Kind of CRD

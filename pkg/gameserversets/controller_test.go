@@ -380,12 +380,16 @@ func TestComputeStatus(t *testing.T) {
 			AllocatedReplicas: 1,
 			Counters: map[string]agonesv1.AggregatedCounterStatus{
 				"firstCounter": {
-					Count:    30,
-					Capacity: 55,
+					AllocatedCount:    5,
+					AllocatedCapacity: 10,
+					Count:             50,
+					Capacity:          85,
 				},
 				"secondCounter": {
-					Count:    120,
-					Capacity: 1200,
+					AllocatedCount:    100,
+					AllocatedCapacity: 1000,
+					Count:             220,
+					Capacity:          2200,
 				},
 			},
 			Lists: map[string]agonesv1.AggregatedListStatus{},
@@ -430,12 +434,16 @@ func TestComputeStatus(t *testing.T) {
 			Counters:          map[string]agonesv1.AggregatedCounterStatus{},
 			Lists: map[string]agonesv1.AggregatedListStatus{
 				"firstList": {
-					Capacity: 55,
-					Count:    3,
+					AllocatedCount:    2,
+					AllocatedCapacity: 10,
+					Capacity:          85,
+					Count:             4,
 				},
 				"secondList": {
-					Capacity: 1100,
-					Count:    5,
+					AllocatedCount:    2,
+					AllocatedCapacity: 1000,
+					Capacity:          2100,
+					Count:             6,
 				},
 			},
 		}
