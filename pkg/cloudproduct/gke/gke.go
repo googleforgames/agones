@@ -16,15 +16,16 @@
 package gke
 
 import (
+	"context"
+	"encoding/json"
+	"fmt"
+
 	"agones.dev/agones/pkg/apis"
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	"agones.dev/agones/pkg/client/informers/externalversions"
 	"agones.dev/agones/pkg/portallocator"
 	"agones.dev/agones/pkg/util/runtime"
 	"cloud.google.com/go/compute/metadata"
-	"context"
-	"encoding/json"
-	"fmt"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
