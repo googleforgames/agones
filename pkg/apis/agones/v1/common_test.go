@@ -20,12 +20,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
 func TestAllocationOverflowValidate(t *testing.T) {
 	// valid
 	type expected struct {
-		valid  bool
 		fields []string
 	}
 
@@ -36,7 +36,6 @@ func TestAllocationOverflowValidate(t *testing.T) {
 		"empty": {
 			ao: AllocationOverflow{},
 			expected: expected{
-				valid:  true,
 				fields: nil,
 			},
 		},
@@ -46,8 +45,7 @@ func TestAllocationOverflowValidate(t *testing.T) {
 				Annotations: nil,
 			},
 			expected: expected{
-				valid:  false,
-				fields: []string{"labels"},
+				fields: []string{"spec.allocationOverflow.labels"},
 			},
 		},
 		"bad label value": {
@@ -56,18 +54,15 @@ func TestAllocationOverflowValidate(t *testing.T) {
 				Annotations: nil,
 			},
 			expected: expected{
-				valid:  false,
-				fields: []string{"labels"},
+				fields: []string{"spec.allocationOverflow.labels"},
 			},
 		},
 		"bad annotation name": {
 			ao: AllocationOverflow{
-				Labels:      nil,
 				Annotations: map[string]string{"$$$foobar": "stuff"},
 			},
 			expected: expected{
-				valid:  false,
-				fields: []string{"annotations"},
+				fields: []string{"spec.allocationOverflow.annotations"},
 			},
 		},
 		"valid full": {
@@ -76,7 +71,6 @@ func TestAllocationOverflowValidate(t *testing.T) {
 				Annotations: map[string]string{"icando-this": "yes, I can do all kinds of things here $$$"},
 			},
 			expected: expected{
-				valid:  true,
 				fields: nil,
 			},
 		},
@@ -84,17 +78,11 @@ func TestAllocationOverflowValidate(t *testing.T) {
 
 	for k, v := range fixtures {
 		t.Run(k, func(t *testing.T) {
-			causes, valid := v.ao.Validate()
-			assert.Equal(t, v.expected.valid, valid, "valid")
-			if v.expected.fields == nil {
-				assert.Empty(t, causes)
-			} else {
-				for i, cause := range causes {
-					assert.Equal(t, metav1.CauseTypeFieldValueInvalid, cause.Type)
-					// messages come from K8s validation libraries, so testing exact matches would be brittle.
-					assert.Contains(t, cause.Message, "Invalid value:")
-					assert.Equal(t, v.expected.fields[i], cause.Field)
-				}
+			errs := v.ao.Validate(field.NewPath("spec", "allocationOverflow"))
+			assert.Len(t, errs, len(v.fields))
+			for i, err := range errs {
+				assert.Equal(t, field.ErrorTypeInvalid, err.Type)
+				assert.Equal(t, v.expected.fields[i], err.Field)
 			}
 		})
 	}
