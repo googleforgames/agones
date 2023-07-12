@@ -22,13 +22,15 @@ data "google_client_config" "default" {}
 # A list of all parameters used in interpolation var.cluster
 # Set values to default if not key was not set in original map
 locals {
-  name              = lookup(var.cluster, "name", "test-cluster")
-  project           = lookup(var.cluster, "project", "agones")
-  location          = lookup(var.cluster, "location", "us-west1")
-  network           = lookup(var.cluster, "network", "default")
-  subnetwork        = lookup(var.cluster, "subnetwork", "")
-  releaseChannel    = lookup(var.cluster, "releaseChannel", "REGULAR")
-  kubernetesVersion = lookup(var.cluster, "kubernetesVersion", "1.25")
+  name                               = lookup(var.cluster, "name", "test-cluster")
+  project                            = lookup(var.cluster, "project", "agones")
+  location                           = lookup(var.cluster, "location", "us-west1")
+  network                            = lookup(var.cluster, "network", "default")
+  subnetwork                         = lookup(var.cluster, "subnetwork", "")
+  releaseChannel                     = lookup(var.cluster, "releaseChannel", "REGULAR")
+  kubernetesVersion                  = lookup(var.cluster, "kubernetesVersion", "1.25")
+  maintenanceExclusionStartTime      = lookup(var.cluster, "maintenanceExclusionStartTime", timestamp())
+  maintenanceExclusionEndTime        = lookup(var.cluster, "maintenanceExclusionEndTime", timeadd(timestamp(), "4080h")) # 170 days
 }
 
 # echo command used for debugging purpose
@@ -62,6 +64,21 @@ resource "google_container_cluster" "primary" {
     channel = local.releaseChannel != "" ? local.releaseChannel : "UNSPECIFIED"
   }
   min_master_version = local.kubernetesVersion
+
+  maintenance_policy {
+    # When exclusions and maintenance windows overlap, exclusions have precedence.
+    daily_maintenance_window {
+      start_time = "03:00"
+    } 
+    maintenance_exclusion{
+      exclusion_name = format("%s-%s", local.name, "exclusion")
+      start_time = local.maintenanceExclusionStartTime
+      end_time = local.maintenanceExclusionEndTime
+      exclusion_options {
+        scope = "NO_MINOR_OR_NODE_UPGRADES"
+      }
+    }
+  }
 
   enable_autopilot = true
   ip_allocation_policy {} # https://github.com/hashicorp/terraform-provider-google/issues/10782#issuecomment-1024488630
