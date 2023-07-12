@@ -756,13 +756,13 @@ func TestControllerSyncFleetAutoscaler(t *testing.T) {
 		t.Parallel()
 
 		c, m := newFakeController()
-		ctx, cancel := agtesting.StartInformers(m, c.fleetSynced, c.fleetAutoscalerSynced)
-		defer cancel()
-
 		m.AgonesClient.AddReactor("get", "fleetautoscalers", func(action k8stesting.Action) (bool, runtime.Object, error) {
 			ga := action.(k8stesting.GetAction)
 			return true, nil, k8serrors.NewNotFound(corev1.Resource("gameserver"), ga.GetName())
 		})
+
+		ctx, cancel := agtesting.StartInformers(m, c.fleetSynced, c.fleetAutoscalerSynced)
+		defer cancel()
 
 		require.NoError(t, c.syncFleetAutoscaler(ctx, "default/fas-1"))
 	})
