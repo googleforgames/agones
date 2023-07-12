@@ -29,14 +29,13 @@ const opAddPermission = "AddPermission"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the AddPermissionRequest method.
+//	req, resp := client.AddPermissionRequest(params)
 //
-//    // Example sending a request using the AddPermissionRequest method.
-//    req, resp := client.AddPermissionRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/AddPermission
 func (c *SNS) AddPermissionRequest(input *AddPermissionInput) (req *request.Request, output *AddPermissionOutput) {
@@ -59,7 +58,7 @@ func (c *SNS) AddPermissionRequest(input *AddPermissionInput) (req *request.Requ
 // AddPermission API operation for Amazon Simple Notification Service.
 //
 // Adds a statement to a topic's access control policy, granting access for
-// the specified accounts to the specified actions.
+// the specified Amazon Web Services accounts to the specified actions.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -69,17 +68,18 @@ func (c *SNS) AddPermissionRequest(input *AddPermissionInput) (req *request.Requ
 // API operation AddPermission for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeInvalidParameterException "InvalidParameter"
-//   Indicates that a request parameter does not comply with the associated constraints.
 //
-//   * ErrCodeInternalErrorException "InternalError"
-//   Indicates an internal service error.
+//   - ErrCodeInvalidParameterException "InvalidParameter"
+//     Indicates that a request parameter does not comply with the associated constraints.
 //
-//   * ErrCodeAuthorizationErrorException "AuthorizationError"
-//   Indicates that the user has been denied access to the requested resource.
+//   - ErrCodeInternalErrorException "InternalError"
+//     Indicates an internal service error.
 //
-//   * ErrCodeNotFoundException "NotFound"
-//   Indicates that the requested resource does not exist.
+//   - ErrCodeAuthorizationErrorException "AuthorizationError"
+//     Indicates that the user has been denied access to the requested resource.
+//
+//   - ErrCodeNotFoundException "NotFound"
+//     Indicates that the requested resource does not exist.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/AddPermission
 func (c *SNS) AddPermission(input *AddPermissionInput) (*AddPermissionOutput, error) {
@@ -119,14 +119,13 @@ const opCheckIfPhoneNumberIsOptedOut = "CheckIfPhoneNumberIsOptedOut"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the CheckIfPhoneNumberIsOptedOutRequest method.
+//	req, resp := client.CheckIfPhoneNumberIsOptedOutRequest(params)
 //
-//    // Example sending a request using the CheckIfPhoneNumberIsOptedOutRequest method.
-//    req, resp := client.CheckIfPhoneNumberIsOptedOutRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/CheckIfPhoneNumberIsOptedOut
 func (c *SNS) CheckIfPhoneNumberIsOptedOutRequest(input *CheckIfPhoneNumberIsOptedOutInput) (req *request.Request, output *CheckIfPhoneNumberIsOptedOutOutput) {
@@ -148,8 +147,8 @@ func (c *SNS) CheckIfPhoneNumberIsOptedOutRequest(input *CheckIfPhoneNumberIsOpt
 // CheckIfPhoneNumberIsOptedOut API operation for Amazon Simple Notification Service.
 //
 // Accepts a phone number and indicates whether the phone holder has opted out
-// of receiving SMS messages from your account. You cannot send SMS messages
-// to a number that is opted out.
+// of receiving SMS messages from your Amazon Web Services account. You cannot
+// send SMS messages to a number that is opted out.
 //
 // To resume sending messages, you can opt in the number by using the OptInPhoneNumber
 // action.
@@ -162,18 +161,19 @@ func (c *SNS) CheckIfPhoneNumberIsOptedOutRequest(input *CheckIfPhoneNumberIsOpt
 // API operation CheckIfPhoneNumberIsOptedOut for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeThrottledException "Throttled"
-//   Indicates that the rate at which requests have been submitted for this action
-//   exceeds the limit for your account.
 //
-//   * ErrCodeInternalErrorException "InternalError"
-//   Indicates an internal service error.
+//   - ErrCodeThrottledException "Throttled"
+//     Indicates that the rate at which requests have been submitted for this action
+//     exceeds the limit for your Amazon Web Services account.
 //
-//   * ErrCodeAuthorizationErrorException "AuthorizationError"
-//   Indicates that the user has been denied access to the requested resource.
+//   - ErrCodeInternalErrorException "InternalError"
+//     Indicates an internal service error.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameter"
-//   Indicates that a request parameter does not comply with the associated constraints.
+//   - ErrCodeAuthorizationErrorException "AuthorizationError"
+//     Indicates that the user has been denied access to the requested resource.
+//
+//   - ErrCodeInvalidParameterException "InvalidParameter"
+//     Indicates that a request parameter does not comply with the associated constraints.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/CheckIfPhoneNumberIsOptedOut
 func (c *SNS) CheckIfPhoneNumberIsOptedOut(input *CheckIfPhoneNumberIsOptedOutInput) (*CheckIfPhoneNumberIsOptedOutOutput, error) {
@@ -213,14 +213,13 @@ const opConfirmSubscription = "ConfirmSubscription"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the ConfirmSubscriptionRequest method.
+//	req, resp := client.ConfirmSubscriptionRequest(params)
 //
-//    // Example sending a request using the ConfirmSubscriptionRequest method.
-//    req, resp := client.ConfirmSubscriptionRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/ConfirmSubscription
 func (c *SNS) ConfirmSubscriptionRequest(input *ConfirmSubscriptionInput) (req *request.Request, output *ConfirmSubscriptionOutput) {
@@ -255,25 +254,26 @@ func (c *SNS) ConfirmSubscriptionRequest(input *ConfirmSubscriptionInput) (req *
 // API operation ConfirmSubscription for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeSubscriptionLimitExceededException "SubscriptionLimitExceeded"
-//   Indicates that the customer already owns the maximum allowed number of subscriptions.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameter"
-//   Indicates that a request parameter does not comply with the associated constraints.
+//   - ErrCodeSubscriptionLimitExceededException "SubscriptionLimitExceeded"
+//     Indicates that the customer already owns the maximum allowed number of subscriptions.
 //
-//   * ErrCodeNotFoundException "NotFound"
-//   Indicates that the requested resource does not exist.
+//   - ErrCodeInvalidParameterException "InvalidParameter"
+//     Indicates that a request parameter does not comply with the associated constraints.
 //
-//   * ErrCodeInternalErrorException "InternalError"
-//   Indicates an internal service error.
+//   - ErrCodeNotFoundException "NotFound"
+//     Indicates that the requested resource does not exist.
 //
-//   * ErrCodeAuthorizationErrorException "AuthorizationError"
-//   Indicates that the user has been denied access to the requested resource.
+//   - ErrCodeInternalErrorException "InternalError"
+//     Indicates an internal service error.
 //
-//   * ErrCodeFilterPolicyLimitExceededException "FilterPolicyLimitExceeded"
-//   Indicates that the number of filter polices in your account exceeds the limit.
-//   To add more filter polices, submit an SNS Limit Increase case in the Amazon
-//   Web Services Support Center.
+//   - ErrCodeAuthorizationErrorException "AuthorizationError"
+//     Indicates that the user has been denied access to the requested resource.
+//
+//   - ErrCodeFilterPolicyLimitExceededException "FilterPolicyLimitExceeded"
+//     Indicates that the number of filter polices in your Amazon Web Services account
+//     exceeds the limit. To add more filter polices, submit an Amazon SNS Limit
+//     Increase case in the Amazon Web Services Support Center.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/ConfirmSubscription
 func (c *SNS) ConfirmSubscription(input *ConfirmSubscriptionInput) (*ConfirmSubscriptionOutput, error) {
@@ -313,14 +313,13 @@ const opCreatePlatformApplication = "CreatePlatformApplication"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the CreatePlatformApplicationRequest method.
+//	req, resp := client.CreatePlatformApplicationRequest(params)
 //
-//    // Example sending a request using the CreatePlatformApplicationRequest method.
-//    req, resp := client.CreatePlatformApplicationRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/CreatePlatformApplication
 func (c *SNS) CreatePlatformApplicationRequest(input *CreatePlatformApplicationInput) (req *request.Request, output *CreatePlatformApplicationOutput) {
@@ -349,23 +348,26 @@ func (c *SNS) CreatePlatformApplicationRequest(input *CreatePlatformApplicationI
 // PlatformPrincipal and PlatformCredential are received from the notification
 // service.
 //
-//    * For ADM, PlatformPrincipal is client id and PlatformCredential is client
-//    secret.
+//   - For ADM, PlatformPrincipal is client id and PlatformCredential is client
+//     secret.
 //
-//    * For Baidu, PlatformPrincipal is API key and PlatformCredential is secret
-//    key.
+//   - For Baidu, PlatformPrincipal is API key and PlatformCredential is secret
+//     key.
 //
-//    * For APNS and APNS_SANDBOX, PlatformPrincipal is SSL certificate and
-//    PlatformCredential is private key.
+//   - For APNS and APNS_SANDBOX using certificate credentials, PlatformPrincipal
+//     is SSL certificate and PlatformCredential is private key.
 //
-//    * For GCM (Firebase Cloud Messaging), there is no PlatformPrincipal and
-//    the PlatformCredential is API key.
+//   - For APNS and APNS_SANDBOX using token credentials, PlatformPrincipal
+//     is signing key ID and PlatformCredential is signing key.
 //
-//    * For MPNS, PlatformPrincipal is TLS certificate and PlatformCredential
-//    is private key.
+//   - For GCM (Firebase Cloud Messaging), there is no PlatformPrincipal and
+//     the PlatformCredential is API key.
 //
-//    * For WNS, PlatformPrincipal is Package Security Identifier and PlatformCredential
-//    is secret key.
+//   - For MPNS, PlatformPrincipal is TLS certificate and PlatformCredential
+//     is private key.
+//
+//   - For WNS, PlatformPrincipal is Package Security Identifier and PlatformCredential
+//     is secret key.
 //
 // You can use the returned PlatformApplicationArn as an attribute for the CreatePlatformEndpoint
 // action.
@@ -378,14 +380,15 @@ func (c *SNS) CreatePlatformApplicationRequest(input *CreatePlatformApplicationI
 // API operation CreatePlatformApplication for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeInvalidParameterException "InvalidParameter"
-//   Indicates that a request parameter does not comply with the associated constraints.
 //
-//   * ErrCodeInternalErrorException "InternalError"
-//   Indicates an internal service error.
+//   - ErrCodeInvalidParameterException "InvalidParameter"
+//     Indicates that a request parameter does not comply with the associated constraints.
 //
-//   * ErrCodeAuthorizationErrorException "AuthorizationError"
-//   Indicates that the user has been denied access to the requested resource.
+//   - ErrCodeInternalErrorException "InternalError"
+//     Indicates an internal service error.
+//
+//   - ErrCodeAuthorizationErrorException "AuthorizationError"
+//     Indicates that the user has been denied access to the requested resource.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/CreatePlatformApplication
 func (c *SNS) CreatePlatformApplication(input *CreatePlatformApplicationInput) (*CreatePlatformApplicationOutput, error) {
@@ -425,14 +428,13 @@ const opCreatePlatformEndpoint = "CreatePlatformEndpoint"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the CreatePlatformEndpointRequest method.
+//	req, resp := client.CreatePlatformEndpointRequest(params)
 //
-//    // Example sending a request using the CreatePlatformEndpointRequest method.
-//    req, resp := client.CreatePlatformEndpointRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/CreatePlatformEndpoint
 func (c *SNS) CreatePlatformEndpointRequest(input *CreatePlatformEndpointInput) (req *request.Request, output *CreatePlatformEndpointOutput) {
@@ -475,17 +477,18 @@ func (c *SNS) CreatePlatformEndpointRequest(input *CreatePlatformEndpointInput) 
 // API operation CreatePlatformEndpoint for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeInvalidParameterException "InvalidParameter"
-//   Indicates that a request parameter does not comply with the associated constraints.
 //
-//   * ErrCodeInternalErrorException "InternalError"
-//   Indicates an internal service error.
+//   - ErrCodeInvalidParameterException "InvalidParameter"
+//     Indicates that a request parameter does not comply with the associated constraints.
 //
-//   * ErrCodeAuthorizationErrorException "AuthorizationError"
-//   Indicates that the user has been denied access to the requested resource.
+//   - ErrCodeInternalErrorException "InternalError"
+//     Indicates an internal service error.
 //
-//   * ErrCodeNotFoundException "NotFound"
-//   Indicates that the requested resource does not exist.
+//   - ErrCodeAuthorizationErrorException "AuthorizationError"
+//     Indicates that the user has been denied access to the requested resource.
+//
+//   - ErrCodeNotFoundException "NotFound"
+//     Indicates that the requested resource does not exist.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/CreatePlatformEndpoint
 func (c *SNS) CreatePlatformEndpoint(input *CreatePlatformEndpointInput) (*CreatePlatformEndpointOutput, error) {
@@ -525,14 +528,13 @@ const opCreateSMSSandboxPhoneNumber = "CreateSMSSandboxPhoneNumber"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the CreateSMSSandboxPhoneNumberRequest method.
+//	req, resp := client.CreateSMSSandboxPhoneNumberRequest(params)
 //
-//    // Example sending a request using the CreateSMSSandboxPhoneNumberRequest method.
-//    req, resp := client.CreateSMSSandboxPhoneNumberRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/CreateSMSSandboxPhoneNumber
 func (c *SNS) CreateSMSSandboxPhoneNumberRequest(input *CreateSMSSandboxPhoneNumberInput) (req *request.Request, output *CreateSMSSandboxPhoneNumberOutput) {
@@ -554,16 +556,17 @@ func (c *SNS) CreateSMSSandboxPhoneNumberRequest(input *CreateSMSSandboxPhoneNum
 
 // CreateSMSSandboxPhoneNumber API operation for Amazon Simple Notification Service.
 //
-// Adds a destination phone number to an account in the SMS sandbox and sends
-// a one-time password (OTP) to that phone number.
+// Adds a destination phone number to an Amazon Web Services account in the
+// SMS sandbox and sends a one-time password (OTP) to that phone number.
 //
-// When you start using Amazon SNS to send SMS messages, your account is in
-// the SMS sandbox. The SMS sandbox provides a safe environment for you to try
-// Amazon SNS features without risking your reputation as an SMS sender. While
-// your account is in the SMS sandbox, you can use all of the features of Amazon
-// SNS. However, you can send SMS messages only to verified destination phone
-// numbers. For more information, including how to move out of the sandbox to
-// send messages without restrictions, see SMS sandbox (https://docs.aws.amazon.com/sns/latest/dg/sns-sms-sandbox.html)
+// When you start using Amazon SNS to send SMS messages, your Amazon Web Services
+// account is in the SMS sandbox. The SMS sandbox provides a safe environment
+// for you to try Amazon SNS features without risking your reputation as an
+// SMS sender. While your Amazon Web Services account is in the SMS sandbox,
+// you can use all of the features of Amazon SNS. However, you can send SMS
+// messages only to verified destination phone numbers. For more information,
+// including how to move out of the sandbox to send messages without restrictions,
+// see SMS sandbox (https://docs.aws.amazon.com/sns/latest/dg/sns-sms-sandbox.html)
 // in the Amazon SNS Developer Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -574,26 +577,27 @@ func (c *SNS) CreateSMSSandboxPhoneNumberRequest(input *CreateSMSSandboxPhoneNum
 // API operation CreateSMSSandboxPhoneNumber for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeAuthorizationErrorException "AuthorizationError"
-//   Indicates that the user has been denied access to the requested resource.
 //
-//   * ErrCodeInternalErrorException "InternalError"
-//   Indicates an internal service error.
+//   - ErrCodeAuthorizationErrorException "AuthorizationError"
+//     Indicates that the user has been denied access to the requested resource.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameter"
-//   Indicates that a request parameter does not comply with the associated constraints.
+//   - ErrCodeInternalErrorException "InternalError"
+//     Indicates an internal service error.
 //
-//   * ErrCodeOptedOutException "OptedOut"
-//   Indicates that the specified phone number opted out of receiving SMS messages
-//   from your account. You can't send SMS messages to phone numbers that opt
-//   out.
+//   - ErrCodeInvalidParameterException "InvalidParameter"
+//     Indicates that a request parameter does not comply with the associated constraints.
 //
-//   * ErrCodeUserErrorException "UserError"
-//   Indicates that a request parameter does not comply with the associated constraints.
+//   - ErrCodeOptedOutException "OptedOut"
+//     Indicates that the specified phone number opted out of receiving SMS messages
+//     from your Amazon Web Services account. You can't send SMS messages to phone
+//     numbers that opt out.
 //
-//   * ErrCodeThrottledException "Throttled"
-//   Indicates that the rate at which requests have been submitted for this action
-//   exceeds the limit for your account.
+//   - ErrCodeUserErrorException "UserError"
+//     Indicates that a request parameter does not comply with the associated constraints.
+//
+//   - ErrCodeThrottledException "Throttled"
+//     Indicates that the rate at which requests have been submitted for this action
+//     exceeds the limit for your Amazon Web Services account.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/CreateSMSSandboxPhoneNumber
 func (c *SNS) CreateSMSSandboxPhoneNumber(input *CreateSMSSandboxPhoneNumberInput) (*CreateSMSSandboxPhoneNumberOutput, error) {
@@ -633,14 +637,13 @@ const opCreateTopic = "CreateTopic"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the CreateTopicRequest method.
+//	req, resp := client.CreateTopicRequest(params)
 //
-//    // Example sending a request using the CreateTopicRequest method.
-//    req, resp := client.CreateTopicRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/CreateTopic
 func (c *SNS) CreateTopicRequest(input *CreateTopicInput) (req *request.Request, output *CreateTopicOutput) {
@@ -676,36 +679,37 @@ func (c *SNS) CreateTopicRequest(input *CreateTopicInput) (req *request.Request,
 // API operation CreateTopic for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeInvalidParameterException "InvalidParameter"
-//   Indicates that a request parameter does not comply with the associated constraints.
 //
-//   * ErrCodeTopicLimitExceededException "TopicLimitExceeded"
-//   Indicates that the customer already owns the maximum allowed number of topics.
+//   - ErrCodeInvalidParameterException "InvalidParameter"
+//     Indicates that a request parameter does not comply with the associated constraints.
 //
-//   * ErrCodeInternalErrorException "InternalError"
-//   Indicates an internal service error.
+//   - ErrCodeTopicLimitExceededException "TopicLimitExceeded"
+//     Indicates that the customer already owns the maximum allowed number of topics.
 //
-//   * ErrCodeAuthorizationErrorException "AuthorizationError"
-//   Indicates that the user has been denied access to the requested resource.
+//   - ErrCodeInternalErrorException "InternalError"
+//     Indicates an internal service error.
 //
-//   * ErrCodeInvalidSecurityException "InvalidSecurity"
-//   The credential signature isn't valid. You must use an HTTPS endpoint and
-//   sign your request using Signature Version 4.
+//   - ErrCodeAuthorizationErrorException "AuthorizationError"
+//     Indicates that the user has been denied access to the requested resource.
 //
-//   * ErrCodeTagLimitExceededException "TagLimitExceeded"
-//   Can't add more than 50 tags to a topic.
+//   - ErrCodeInvalidSecurityException "InvalidSecurity"
+//     The credential signature isn't valid. You must use an HTTPS endpoint and
+//     sign your request using Signature Version 4.
 //
-//   * ErrCodeStaleTagException "StaleTag"
-//   A tag has been added to a resource with the same ARN as a deleted resource.
-//   Wait a short while and then retry the operation.
+//   - ErrCodeTagLimitExceededException "TagLimitExceeded"
+//     Can't add more than 50 tags to a topic.
 //
-//   * ErrCodeTagPolicyException "TagPolicy"
-//   The request doesn't comply with the IAM tag policy. Correct your request
-//   and then retry it.
+//   - ErrCodeStaleTagException "StaleTag"
+//     A tag has been added to a resource with the same ARN as a deleted resource.
+//     Wait a short while and then retry the operation.
 //
-//   * ErrCodeConcurrentAccessException "ConcurrentAccess"
-//   Can't perform multiple operations on a tag simultaneously. Perform the operations
-//   sequentially.
+//   - ErrCodeTagPolicyException "TagPolicy"
+//     The request doesn't comply with the IAM tag policy. Correct your request
+//     and then retry it.
+//
+//   - ErrCodeConcurrentAccessException "ConcurrentAccess"
+//     Can't perform multiple operations on a tag simultaneously. Perform the operations
+//     sequentially.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/CreateTopic
 func (c *SNS) CreateTopic(input *CreateTopicInput) (*CreateTopicOutput, error) {
@@ -745,14 +749,13 @@ const opDeleteEndpoint = "DeleteEndpoint"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DeleteEndpointRequest method.
+//	req, resp := client.DeleteEndpointRequest(params)
 //
-//    // Example sending a request using the DeleteEndpointRequest method.
-//    req, resp := client.DeleteEndpointRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/DeleteEndpoint
 func (c *SNS) DeleteEndpointRequest(input *DeleteEndpointInput) (req *request.Request, output *DeleteEndpointOutput) {
@@ -789,14 +792,15 @@ func (c *SNS) DeleteEndpointRequest(input *DeleteEndpointInput) (req *request.Re
 // API operation DeleteEndpoint for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeInvalidParameterException "InvalidParameter"
-//   Indicates that a request parameter does not comply with the associated constraints.
 //
-//   * ErrCodeInternalErrorException "InternalError"
-//   Indicates an internal service error.
+//   - ErrCodeInvalidParameterException "InvalidParameter"
+//     Indicates that a request parameter does not comply with the associated constraints.
 //
-//   * ErrCodeAuthorizationErrorException "AuthorizationError"
-//   Indicates that the user has been denied access to the requested resource.
+//   - ErrCodeInternalErrorException "InternalError"
+//     Indicates an internal service error.
+//
+//   - ErrCodeAuthorizationErrorException "AuthorizationError"
+//     Indicates that the user has been denied access to the requested resource.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/DeleteEndpoint
 func (c *SNS) DeleteEndpoint(input *DeleteEndpointInput) (*DeleteEndpointOutput, error) {
@@ -836,14 +840,13 @@ const opDeletePlatformApplication = "DeletePlatformApplication"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DeletePlatformApplicationRequest method.
+//	req, resp := client.DeletePlatformApplicationRequest(params)
 //
-//    // Example sending a request using the DeletePlatformApplicationRequest method.
-//    req, resp := client.DeletePlatformApplicationRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/DeletePlatformApplication
 func (c *SNS) DeletePlatformApplicationRequest(input *DeletePlatformApplicationInput) (req *request.Request, output *DeletePlatformApplicationOutput) {
@@ -877,14 +880,15 @@ func (c *SNS) DeletePlatformApplicationRequest(input *DeletePlatformApplicationI
 // API operation DeletePlatformApplication for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeInvalidParameterException "InvalidParameter"
-//   Indicates that a request parameter does not comply with the associated constraints.
 //
-//   * ErrCodeInternalErrorException "InternalError"
-//   Indicates an internal service error.
+//   - ErrCodeInvalidParameterException "InvalidParameter"
+//     Indicates that a request parameter does not comply with the associated constraints.
 //
-//   * ErrCodeAuthorizationErrorException "AuthorizationError"
-//   Indicates that the user has been denied access to the requested resource.
+//   - ErrCodeInternalErrorException "InternalError"
+//     Indicates an internal service error.
+//
+//   - ErrCodeAuthorizationErrorException "AuthorizationError"
+//     Indicates that the user has been denied access to the requested resource.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/DeletePlatformApplication
 func (c *SNS) DeletePlatformApplication(input *DeletePlatformApplicationInput) (*DeletePlatformApplicationOutput, error) {
@@ -924,14 +928,13 @@ const opDeleteSMSSandboxPhoneNumber = "DeleteSMSSandboxPhoneNumber"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DeleteSMSSandboxPhoneNumberRequest method.
+//	req, resp := client.DeleteSMSSandboxPhoneNumberRequest(params)
 //
-//    // Example sending a request using the DeleteSMSSandboxPhoneNumberRequest method.
-//    req, resp := client.DeleteSMSSandboxPhoneNumberRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/DeleteSMSSandboxPhoneNumber
 func (c *SNS) DeleteSMSSandboxPhoneNumberRequest(input *DeleteSMSSandboxPhoneNumberInput) (req *request.Request, output *DeleteSMSSandboxPhoneNumberOutput) {
@@ -953,15 +956,17 @@ func (c *SNS) DeleteSMSSandboxPhoneNumberRequest(input *DeleteSMSSandboxPhoneNum
 
 // DeleteSMSSandboxPhoneNumber API operation for Amazon Simple Notification Service.
 //
-// Deletes an account's verified or pending phone number from the SMS sandbox.
+// Deletes an Amazon Web Services account's verified or pending phone number
+// from the SMS sandbox.
 //
-// When you start using Amazon SNS to send SMS messages, your account is in
-// the SMS sandbox. The SMS sandbox provides a safe environment for you to try
-// Amazon SNS features without risking your reputation as an SMS sender. While
-// your account is in the SMS sandbox, you can use all of the features of Amazon
-// SNS. However, you can send SMS messages only to verified destination phone
-// numbers. For more information, including how to move out of the sandbox to
-// send messages without restrictions, see SMS sandbox (https://docs.aws.amazon.com/sns/latest/dg/sns-sms-sandbox.html)
+// When you start using Amazon SNS to send SMS messages, your Amazon Web Services
+// account is in the SMS sandbox. The SMS sandbox provides a safe environment
+// for you to try Amazon SNS features without risking your reputation as an
+// SMS sender. While your Amazon Web Services account is in the SMS sandbox,
+// you can use all of the features of Amazon SNS. However, you can send SMS
+// messages only to verified destination phone numbers. For more information,
+// including how to move out of the sandbox to send messages without restrictions,
+// see SMS sandbox (https://docs.aws.amazon.com/sns/latest/dg/sns-sms-sandbox.html)
 // in the Amazon SNS Developer Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -972,25 +977,26 @@ func (c *SNS) DeleteSMSSandboxPhoneNumberRequest(input *DeleteSMSSandboxPhoneNum
 // API operation DeleteSMSSandboxPhoneNumber for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeAuthorizationErrorException "AuthorizationError"
-//   Indicates that the user has been denied access to the requested resource.
 //
-//   * ErrCodeInternalErrorException "InternalError"
-//   Indicates an internal service error.
+//   - ErrCodeAuthorizationErrorException "AuthorizationError"
+//     Indicates that the user has been denied access to the requested resource.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameter"
-//   Indicates that a request parameter does not comply with the associated constraints.
+//   - ErrCodeInternalErrorException "InternalError"
+//     Indicates an internal service error.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFound"
-//   Can’t perform the action on the specified resource. Make sure that the
-//   resource exists.
+//   - ErrCodeInvalidParameterException "InvalidParameter"
+//     Indicates that a request parameter does not comply with the associated constraints.
 //
-//   * ErrCodeUserErrorException "UserError"
-//   Indicates that a request parameter does not comply with the associated constraints.
+//   - ErrCodeResourceNotFoundException "ResourceNotFound"
+//     Can’t perform the action on the specified resource. Make sure that the
+//     resource exists.
 //
-//   * ErrCodeThrottledException "Throttled"
-//   Indicates that the rate at which requests have been submitted for this action
-//   exceeds the limit for your account.
+//   - ErrCodeUserErrorException "UserError"
+//     Indicates that a request parameter does not comply with the associated constraints.
+//
+//   - ErrCodeThrottledException "Throttled"
+//     Indicates that the rate at which requests have been submitted for this action
+//     exceeds the limit for your Amazon Web Services account.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/DeleteSMSSandboxPhoneNumber
 func (c *SNS) DeleteSMSSandboxPhoneNumber(input *DeleteSMSSandboxPhoneNumberInput) (*DeleteSMSSandboxPhoneNumberOutput, error) {
@@ -1030,14 +1036,13 @@ const opDeleteTopic = "DeleteTopic"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DeleteTopicRequest method.
+//	req, resp := client.DeleteTopicRequest(params)
 //
-//    // Example sending a request using the DeleteTopicRequest method.
-//    req, resp := client.DeleteTopicRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/DeleteTopic
 func (c *SNS) DeleteTopicRequest(input *DeleteTopicInput) (req *request.Request, output *DeleteTopicOutput) {
@@ -1072,29 +1077,30 @@ func (c *SNS) DeleteTopicRequest(input *DeleteTopicInput) (req *request.Request,
 // API operation DeleteTopic for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeInvalidParameterException "InvalidParameter"
-//   Indicates that a request parameter does not comply with the associated constraints.
 //
-//   * ErrCodeInternalErrorException "InternalError"
-//   Indicates an internal service error.
+//   - ErrCodeInvalidParameterException "InvalidParameter"
+//     Indicates that a request parameter does not comply with the associated constraints.
 //
-//   * ErrCodeAuthorizationErrorException "AuthorizationError"
-//   Indicates that the user has been denied access to the requested resource.
+//   - ErrCodeInternalErrorException "InternalError"
+//     Indicates an internal service error.
 //
-//   * ErrCodeNotFoundException "NotFound"
-//   Indicates that the requested resource does not exist.
+//   - ErrCodeAuthorizationErrorException "AuthorizationError"
+//     Indicates that the user has been denied access to the requested resource.
 //
-//   * ErrCodeStaleTagException "StaleTag"
-//   A tag has been added to a resource with the same ARN as a deleted resource.
-//   Wait a short while and then retry the operation.
+//   - ErrCodeNotFoundException "NotFound"
+//     Indicates that the requested resource does not exist.
 //
-//   * ErrCodeTagPolicyException "TagPolicy"
-//   The request doesn't comply with the IAM tag policy. Correct your request
-//   and then retry it.
+//   - ErrCodeStaleTagException "StaleTag"
+//     A tag has been added to a resource with the same ARN as a deleted resource.
+//     Wait a short while and then retry the operation.
 //
-//   * ErrCodeConcurrentAccessException "ConcurrentAccess"
-//   Can't perform multiple operations on a tag simultaneously. Perform the operations
-//   sequentially.
+//   - ErrCodeTagPolicyException "TagPolicy"
+//     The request doesn't comply with the IAM tag policy. Correct your request
+//     and then retry it.
+//
+//   - ErrCodeConcurrentAccessException "ConcurrentAccess"
+//     Can't perform multiple operations on a tag simultaneously. Perform the operations
+//     sequentially.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/DeleteTopic
 func (c *SNS) DeleteTopic(input *DeleteTopicInput) (*DeleteTopicOutput, error) {
@@ -1118,6 +1124,99 @@ func (c *SNS) DeleteTopicWithContext(ctx aws.Context, input *DeleteTopicInput, o
 	return out, req.Send()
 }
 
+const opGetDataProtectionPolicy = "GetDataProtectionPolicy"
+
+// GetDataProtectionPolicyRequest generates a "aws/request.Request" representing the
+// client's request for the GetDataProtectionPolicy operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetDataProtectionPolicy for more information on using the GetDataProtectionPolicy
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//	// Example sending a request using the GetDataProtectionPolicyRequest method.
+//	req, resp := client.GetDataProtectionPolicyRequest(params)
+//
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/GetDataProtectionPolicy
+func (c *SNS) GetDataProtectionPolicyRequest(input *GetDataProtectionPolicyInput) (req *request.Request, output *GetDataProtectionPolicyOutput) {
+	op := &request.Operation{
+		Name:       opGetDataProtectionPolicy,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &GetDataProtectionPolicyInput{}
+	}
+
+	output = &GetDataProtectionPolicyOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetDataProtectionPolicy API operation for Amazon Simple Notification Service.
+//
+// Retrieves the specified inline DataProtectionPolicy document that is stored
+// in the specified Amazon SNS topic.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Simple Notification Service's
+// API operation GetDataProtectionPolicy for usage and error information.
+//
+// Returned Error Codes:
+//
+//   - ErrCodeInvalidParameterException "InvalidParameter"
+//     Indicates that a request parameter does not comply with the associated constraints.
+//
+//   - ErrCodeInternalErrorException "InternalError"
+//     Indicates an internal service error.
+//
+//   - ErrCodeNotFoundException "NotFound"
+//     Indicates that the requested resource does not exist.
+//
+//   - ErrCodeAuthorizationErrorException "AuthorizationError"
+//     Indicates that the user has been denied access to the requested resource.
+//
+//   - ErrCodeInvalidSecurityException "InvalidSecurity"
+//     The credential signature isn't valid. You must use an HTTPS endpoint and
+//     sign your request using Signature Version 4.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/GetDataProtectionPolicy
+func (c *SNS) GetDataProtectionPolicy(input *GetDataProtectionPolicyInput) (*GetDataProtectionPolicyOutput, error) {
+	req, out := c.GetDataProtectionPolicyRequest(input)
+	return out, req.Send()
+}
+
+// GetDataProtectionPolicyWithContext is the same as GetDataProtectionPolicy with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetDataProtectionPolicy for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SNS) GetDataProtectionPolicyWithContext(ctx aws.Context, input *GetDataProtectionPolicyInput, opts ...request.Option) (*GetDataProtectionPolicyOutput, error) {
+	req, out := c.GetDataProtectionPolicyRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opGetEndpointAttributes = "GetEndpointAttributes"
 
 // GetEndpointAttributesRequest generates a "aws/request.Request" representing the
@@ -1134,14 +1233,13 @@ const opGetEndpointAttributes = "GetEndpointAttributes"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the GetEndpointAttributesRequest method.
+//	req, resp := client.GetEndpointAttributesRequest(params)
 //
-//    // Example sending a request using the GetEndpointAttributesRequest method.
-//    req, resp := client.GetEndpointAttributesRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/GetEndpointAttributes
 func (c *SNS) GetEndpointAttributesRequest(input *GetEndpointAttributesInput) (req *request.Request, output *GetEndpointAttributesOutput) {
@@ -1174,17 +1272,18 @@ func (c *SNS) GetEndpointAttributesRequest(input *GetEndpointAttributesInput) (r
 // API operation GetEndpointAttributes for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeInvalidParameterException "InvalidParameter"
-//   Indicates that a request parameter does not comply with the associated constraints.
 //
-//   * ErrCodeInternalErrorException "InternalError"
-//   Indicates an internal service error.
+//   - ErrCodeInvalidParameterException "InvalidParameter"
+//     Indicates that a request parameter does not comply with the associated constraints.
 //
-//   * ErrCodeAuthorizationErrorException "AuthorizationError"
-//   Indicates that the user has been denied access to the requested resource.
+//   - ErrCodeInternalErrorException "InternalError"
+//     Indicates an internal service error.
 //
-//   * ErrCodeNotFoundException "NotFound"
-//   Indicates that the requested resource does not exist.
+//   - ErrCodeAuthorizationErrorException "AuthorizationError"
+//     Indicates that the user has been denied access to the requested resource.
+//
+//   - ErrCodeNotFoundException "NotFound"
+//     Indicates that the requested resource does not exist.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/GetEndpointAttributes
 func (c *SNS) GetEndpointAttributes(input *GetEndpointAttributesInput) (*GetEndpointAttributesOutput, error) {
@@ -1224,14 +1323,13 @@ const opGetPlatformApplicationAttributes = "GetPlatformApplicationAttributes"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the GetPlatformApplicationAttributesRequest method.
+//	req, resp := client.GetPlatformApplicationAttributesRequest(params)
 //
-//    // Example sending a request using the GetPlatformApplicationAttributesRequest method.
-//    req, resp := client.GetPlatformApplicationAttributesRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/GetPlatformApplicationAttributes
 func (c *SNS) GetPlatformApplicationAttributesRequest(input *GetPlatformApplicationAttributesInput) (req *request.Request, output *GetPlatformApplicationAttributesOutput) {
@@ -1264,17 +1362,18 @@ func (c *SNS) GetPlatformApplicationAttributesRequest(input *GetPlatformApplicat
 // API operation GetPlatformApplicationAttributes for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeInvalidParameterException "InvalidParameter"
-//   Indicates that a request parameter does not comply with the associated constraints.
 //
-//   * ErrCodeInternalErrorException "InternalError"
-//   Indicates an internal service error.
+//   - ErrCodeInvalidParameterException "InvalidParameter"
+//     Indicates that a request parameter does not comply with the associated constraints.
 //
-//   * ErrCodeAuthorizationErrorException "AuthorizationError"
-//   Indicates that the user has been denied access to the requested resource.
+//   - ErrCodeInternalErrorException "InternalError"
+//     Indicates an internal service error.
 //
-//   * ErrCodeNotFoundException "NotFound"
-//   Indicates that the requested resource does not exist.
+//   - ErrCodeAuthorizationErrorException "AuthorizationError"
+//     Indicates that the user has been denied access to the requested resource.
+//
+//   - ErrCodeNotFoundException "NotFound"
+//     Indicates that the requested resource does not exist.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/GetPlatformApplicationAttributes
 func (c *SNS) GetPlatformApplicationAttributes(input *GetPlatformApplicationAttributesInput) (*GetPlatformApplicationAttributesOutput, error) {
@@ -1314,14 +1413,13 @@ const opGetSMSAttributes = "GetSMSAttributes"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the GetSMSAttributesRequest method.
+//	req, resp := client.GetSMSAttributesRequest(params)
 //
-//    // Example sending a request using the GetSMSAttributesRequest method.
-//    req, resp := client.GetSMSAttributesRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/GetSMSAttributes
 func (c *SNS) GetSMSAttributesRequest(input *GetSMSAttributesInput) (req *request.Request, output *GetSMSAttributesOutput) {
@@ -1342,7 +1440,8 @@ func (c *SNS) GetSMSAttributesRequest(input *GetSMSAttributesInput) (req *reques
 
 // GetSMSAttributes API operation for Amazon Simple Notification Service.
 //
-// Returns the settings for sending SMS messages from your account.
+// Returns the settings for sending SMS messages from your Amazon Web Services
+// account.
 //
 // These settings are set with the SetSMSAttributes action.
 //
@@ -1354,18 +1453,19 @@ func (c *SNS) GetSMSAttributesRequest(input *GetSMSAttributesInput) (req *reques
 // API operation GetSMSAttributes for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeThrottledException "Throttled"
-//   Indicates that the rate at which requests have been submitted for this action
-//   exceeds the limit for your account.
 //
-//   * ErrCodeInternalErrorException "InternalError"
-//   Indicates an internal service error.
+//   - ErrCodeThrottledException "Throttled"
+//     Indicates that the rate at which requests have been submitted for this action
+//     exceeds the limit for your Amazon Web Services account.
 //
-//   * ErrCodeAuthorizationErrorException "AuthorizationError"
-//   Indicates that the user has been denied access to the requested resource.
+//   - ErrCodeInternalErrorException "InternalError"
+//     Indicates an internal service error.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameter"
-//   Indicates that a request parameter does not comply with the associated constraints.
+//   - ErrCodeAuthorizationErrorException "AuthorizationError"
+//     Indicates that the user has been denied access to the requested resource.
+//
+//   - ErrCodeInvalidParameterException "InvalidParameter"
+//     Indicates that a request parameter does not comply with the associated constraints.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/GetSMSAttributes
 func (c *SNS) GetSMSAttributes(input *GetSMSAttributesInput) (*GetSMSAttributesOutput, error) {
@@ -1405,14 +1505,13 @@ const opGetSMSSandboxAccountStatus = "GetSMSSandboxAccountStatus"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the GetSMSSandboxAccountStatusRequest method.
+//	req, resp := client.GetSMSSandboxAccountStatusRequest(params)
 //
-//    // Example sending a request using the GetSMSSandboxAccountStatusRequest method.
-//    req, resp := client.GetSMSSandboxAccountStatusRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/GetSMSSandboxAccountStatus
 func (c *SNS) GetSMSSandboxAccountStatusRequest(input *GetSMSSandboxAccountStatusInput) (req *request.Request, output *GetSMSSandboxAccountStatusOutput) {
@@ -1433,15 +1532,17 @@ func (c *SNS) GetSMSSandboxAccountStatusRequest(input *GetSMSSandboxAccountStatu
 
 // GetSMSSandboxAccountStatus API operation for Amazon Simple Notification Service.
 //
-// Retrieves the SMS sandbox status for the calling account in the target Region.
+// Retrieves the SMS sandbox status for the calling Amazon Web Services account
+// in the target Amazon Web Services Region.
 //
-// When you start using Amazon SNS to send SMS messages, your account is in
-// the SMS sandbox. The SMS sandbox provides a safe environment for you to try
-// Amazon SNS features without risking your reputation as an SMS sender. While
-// your account is in the SMS sandbox, you can use all of the features of Amazon
-// SNS. However, you can send SMS messages only to verified destination phone
-// numbers. For more information, including how to move out of the sandbox to
-// send messages without restrictions, see SMS sandbox (https://docs.aws.amazon.com/sns/latest/dg/sns-sms-sandbox.html)
+// When you start using Amazon SNS to send SMS messages, your Amazon Web Services
+// account is in the SMS sandbox. The SMS sandbox provides a safe environment
+// for you to try Amazon SNS features without risking your reputation as an
+// SMS sender. While your Amazon Web Services account is in the SMS sandbox,
+// you can use all of the features of Amazon SNS. However, you can send SMS
+// messages only to verified destination phone numbers. For more information,
+// including how to move out of the sandbox to send messages without restrictions,
+// see SMS sandbox (https://docs.aws.amazon.com/sns/latest/dg/sns-sms-sandbox.html)
 // in the Amazon SNS Developer Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -1452,15 +1553,16 @@ func (c *SNS) GetSMSSandboxAccountStatusRequest(input *GetSMSSandboxAccountStatu
 // API operation GetSMSSandboxAccountStatus for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeAuthorizationErrorException "AuthorizationError"
-//   Indicates that the user has been denied access to the requested resource.
 //
-//   * ErrCodeInternalErrorException "InternalError"
-//   Indicates an internal service error.
+//   - ErrCodeAuthorizationErrorException "AuthorizationError"
+//     Indicates that the user has been denied access to the requested resource.
 //
-//   * ErrCodeThrottledException "Throttled"
-//   Indicates that the rate at which requests have been submitted for this action
-//   exceeds the limit for your account.
+//   - ErrCodeInternalErrorException "InternalError"
+//     Indicates an internal service error.
+//
+//   - ErrCodeThrottledException "Throttled"
+//     Indicates that the rate at which requests have been submitted for this action
+//     exceeds the limit for your Amazon Web Services account.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/GetSMSSandboxAccountStatus
 func (c *SNS) GetSMSSandboxAccountStatus(input *GetSMSSandboxAccountStatusInput) (*GetSMSSandboxAccountStatusOutput, error) {
@@ -1500,14 +1602,13 @@ const opGetSubscriptionAttributes = "GetSubscriptionAttributes"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the GetSubscriptionAttributesRequest method.
+//	req, resp := client.GetSubscriptionAttributesRequest(params)
 //
-//    // Example sending a request using the GetSubscriptionAttributesRequest method.
-//    req, resp := client.GetSubscriptionAttributesRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/GetSubscriptionAttributes
 func (c *SNS) GetSubscriptionAttributesRequest(input *GetSubscriptionAttributesInput) (req *request.Request, output *GetSubscriptionAttributesOutput) {
@@ -1538,17 +1639,18 @@ func (c *SNS) GetSubscriptionAttributesRequest(input *GetSubscriptionAttributesI
 // API operation GetSubscriptionAttributes for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeInvalidParameterException "InvalidParameter"
-//   Indicates that a request parameter does not comply with the associated constraints.
 //
-//   * ErrCodeInternalErrorException "InternalError"
-//   Indicates an internal service error.
+//   - ErrCodeInvalidParameterException "InvalidParameter"
+//     Indicates that a request parameter does not comply with the associated constraints.
 //
-//   * ErrCodeNotFoundException "NotFound"
-//   Indicates that the requested resource does not exist.
+//   - ErrCodeInternalErrorException "InternalError"
+//     Indicates an internal service error.
 //
-//   * ErrCodeAuthorizationErrorException "AuthorizationError"
-//   Indicates that the user has been denied access to the requested resource.
+//   - ErrCodeNotFoundException "NotFound"
+//     Indicates that the requested resource does not exist.
+//
+//   - ErrCodeAuthorizationErrorException "AuthorizationError"
+//     Indicates that the user has been denied access to the requested resource.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/GetSubscriptionAttributes
 func (c *SNS) GetSubscriptionAttributes(input *GetSubscriptionAttributesInput) (*GetSubscriptionAttributesOutput, error) {
@@ -1588,14 +1690,13 @@ const opGetTopicAttributes = "GetTopicAttributes"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the GetTopicAttributesRequest method.
+//	req, resp := client.GetTopicAttributesRequest(params)
 //
-//    // Example sending a request using the GetTopicAttributesRequest method.
-//    req, resp := client.GetTopicAttributesRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/GetTopicAttributes
 func (c *SNS) GetTopicAttributesRequest(input *GetTopicAttributesInput) (req *request.Request, output *GetTopicAttributesOutput) {
@@ -1627,21 +1728,22 @@ func (c *SNS) GetTopicAttributesRequest(input *GetTopicAttributesInput) (req *re
 // API operation GetTopicAttributes for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeInvalidParameterException "InvalidParameter"
-//   Indicates that a request parameter does not comply with the associated constraints.
 //
-//   * ErrCodeInternalErrorException "InternalError"
-//   Indicates an internal service error.
+//   - ErrCodeInvalidParameterException "InvalidParameter"
+//     Indicates that a request parameter does not comply with the associated constraints.
 //
-//   * ErrCodeNotFoundException "NotFound"
-//   Indicates that the requested resource does not exist.
+//   - ErrCodeInternalErrorException "InternalError"
+//     Indicates an internal service error.
 //
-//   * ErrCodeAuthorizationErrorException "AuthorizationError"
-//   Indicates that the user has been denied access to the requested resource.
+//   - ErrCodeNotFoundException "NotFound"
+//     Indicates that the requested resource does not exist.
 //
-//   * ErrCodeInvalidSecurityException "InvalidSecurity"
-//   The credential signature isn't valid. You must use an HTTPS endpoint and
-//   sign your request using Signature Version 4.
+//   - ErrCodeAuthorizationErrorException "AuthorizationError"
+//     Indicates that the user has been denied access to the requested resource.
+//
+//   - ErrCodeInvalidSecurityException "InvalidSecurity"
+//     The credential signature isn't valid. You must use an HTTPS endpoint and
+//     sign your request using Signature Version 4.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/GetTopicAttributes
 func (c *SNS) GetTopicAttributes(input *GetTopicAttributesInput) (*GetTopicAttributesOutput, error) {
@@ -1681,14 +1783,13 @@ const opListEndpointsByPlatformApplication = "ListEndpointsByPlatformApplication
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the ListEndpointsByPlatformApplicationRequest method.
+//	req, resp := client.ListEndpointsByPlatformApplicationRequest(params)
 //
-//    // Example sending a request using the ListEndpointsByPlatformApplicationRequest method.
-//    req, resp := client.ListEndpointsByPlatformApplicationRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/ListEndpointsByPlatformApplication
 func (c *SNS) ListEndpointsByPlatformApplicationRequest(input *ListEndpointsByPlatformApplicationInput) (req *request.Request, output *ListEndpointsByPlatformApplicationOutput) {
@@ -1735,17 +1836,18 @@ func (c *SNS) ListEndpointsByPlatformApplicationRequest(input *ListEndpointsByPl
 // API operation ListEndpointsByPlatformApplication for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeInvalidParameterException "InvalidParameter"
-//   Indicates that a request parameter does not comply with the associated constraints.
 //
-//   * ErrCodeInternalErrorException "InternalError"
-//   Indicates an internal service error.
+//   - ErrCodeInvalidParameterException "InvalidParameter"
+//     Indicates that a request parameter does not comply with the associated constraints.
 //
-//   * ErrCodeAuthorizationErrorException "AuthorizationError"
-//   Indicates that the user has been denied access to the requested resource.
+//   - ErrCodeInternalErrorException "InternalError"
+//     Indicates an internal service error.
 //
-//   * ErrCodeNotFoundException "NotFound"
-//   Indicates that the requested resource does not exist.
+//   - ErrCodeAuthorizationErrorException "AuthorizationError"
+//     Indicates that the user has been denied access to the requested resource.
+//
+//   - ErrCodeNotFoundException "NotFound"
+//     Indicates that the requested resource does not exist.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/ListEndpointsByPlatformApplication
 func (c *SNS) ListEndpointsByPlatformApplication(input *ListEndpointsByPlatformApplicationInput) (*ListEndpointsByPlatformApplicationOutput, error) {
@@ -1777,15 +1879,14 @@ func (c *SNS) ListEndpointsByPlatformApplicationWithContext(ctx aws.Context, inp
 //
 // Note: This operation can generate multiple requests to a service.
 //
-//    // Example iterating over at most 3 pages of a ListEndpointsByPlatformApplication operation.
-//    pageNum := 0
-//    err := client.ListEndpointsByPlatformApplicationPages(params,
-//        func(page *sns.ListEndpointsByPlatformApplicationOutput, lastPage bool) bool {
-//            pageNum++
-//            fmt.Println(page)
-//            return pageNum <= 3
-//        })
-//
+//	// Example iterating over at most 3 pages of a ListEndpointsByPlatformApplication operation.
+//	pageNum := 0
+//	err := client.ListEndpointsByPlatformApplicationPages(params,
+//	    func(page *sns.ListEndpointsByPlatformApplicationOutput, lastPage bool) bool {
+//	        pageNum++
+//	        fmt.Println(page)
+//	        return pageNum <= 3
+//	    })
 func (c *SNS) ListEndpointsByPlatformApplicationPages(input *ListEndpointsByPlatformApplicationInput, fn func(*ListEndpointsByPlatformApplicationOutput, bool) bool) error {
 	return c.ListEndpointsByPlatformApplicationPagesWithContext(aws.BackgroundContext(), input, fn)
 }
@@ -1837,14 +1938,13 @@ const opListOriginationNumbers = "ListOriginationNumbers"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the ListOriginationNumbersRequest method.
+//	req, resp := client.ListOriginationNumbersRequest(params)
 //
-//    // Example sending a request using the ListOriginationNumbersRequest method.
-//    req, resp := client.ListOriginationNumbersRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/ListOriginationNumbers
 func (c *SNS) ListOriginationNumbersRequest(input *ListOriginationNumbersInput) (req *request.Request, output *ListOriginationNumbersOutput) {
@@ -1871,8 +1971,9 @@ func (c *SNS) ListOriginationNumbersRequest(input *ListOriginationNumbersInput) 
 
 // ListOriginationNumbers API operation for Amazon Simple Notification Service.
 //
-// Lists the calling account's dedicated origination numbers and their metadata.
-// For more information about origination numbers, see Origination numbers (https://docs.aws.amazon.com/sns/latest/dg/channels-sms-originating-identities-origination-numbers.html)
+// Lists the calling Amazon Web Services account's dedicated origination numbers
+// and their metadata. For more information about origination numbers, see Origination
+// numbers (https://docs.aws.amazon.com/sns/latest/dg/channels-sms-originating-identities-origination-numbers.html)
 // in the Amazon SNS Developer Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -1883,21 +1984,22 @@ func (c *SNS) ListOriginationNumbersRequest(input *ListOriginationNumbersInput) 
 // API operation ListOriginationNumbers for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeInternalErrorException "InternalError"
-//   Indicates an internal service error.
 //
-//   * ErrCodeAuthorizationErrorException "AuthorizationError"
-//   Indicates that the user has been denied access to the requested resource.
+//   - ErrCodeInternalErrorException "InternalError"
+//     Indicates an internal service error.
 //
-//   * ErrCodeThrottledException "Throttled"
-//   Indicates that the rate at which requests have been submitted for this action
-//   exceeds the limit for your account.
+//   - ErrCodeAuthorizationErrorException "AuthorizationError"
+//     Indicates that the user has been denied access to the requested resource.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameter"
-//   Indicates that a request parameter does not comply with the associated constraints.
+//   - ErrCodeThrottledException "Throttled"
+//     Indicates that the rate at which requests have been submitted for this action
+//     exceeds the limit for your Amazon Web Services account.
 //
-//   * ErrCodeValidationException "ValidationException"
-//   Indicates that a parameter in the request is invalid.
+//   - ErrCodeInvalidParameterException "InvalidParameter"
+//     Indicates that a request parameter does not comply with the associated constraints.
+//
+//   - ErrCodeValidationException "ValidationException"
+//     Indicates that a parameter in the request is invalid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/ListOriginationNumbers
 func (c *SNS) ListOriginationNumbers(input *ListOriginationNumbersInput) (*ListOriginationNumbersOutput, error) {
@@ -1929,15 +2031,14 @@ func (c *SNS) ListOriginationNumbersWithContext(ctx aws.Context, input *ListOrig
 //
 // Note: This operation can generate multiple requests to a service.
 //
-//    // Example iterating over at most 3 pages of a ListOriginationNumbers operation.
-//    pageNum := 0
-//    err := client.ListOriginationNumbersPages(params,
-//        func(page *sns.ListOriginationNumbersOutput, lastPage bool) bool {
-//            pageNum++
-//            fmt.Println(page)
-//            return pageNum <= 3
-//        })
-//
+//	// Example iterating over at most 3 pages of a ListOriginationNumbers operation.
+//	pageNum := 0
+//	err := client.ListOriginationNumbersPages(params,
+//	    func(page *sns.ListOriginationNumbersOutput, lastPage bool) bool {
+//	        pageNum++
+//	        fmt.Println(page)
+//	        return pageNum <= 3
+//	    })
 func (c *SNS) ListOriginationNumbersPages(input *ListOriginationNumbersInput, fn func(*ListOriginationNumbersOutput, bool) bool) error {
 	return c.ListOriginationNumbersPagesWithContext(aws.BackgroundContext(), input, fn)
 }
@@ -1989,14 +2090,13 @@ const opListPhoneNumbersOptedOut = "ListPhoneNumbersOptedOut"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the ListPhoneNumbersOptedOutRequest method.
+//	req, resp := client.ListPhoneNumbersOptedOutRequest(params)
 //
-//    // Example sending a request using the ListPhoneNumbersOptedOutRequest method.
-//    req, resp := client.ListPhoneNumbersOptedOutRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/ListPhoneNumbersOptedOut
 func (c *SNS) ListPhoneNumbersOptedOutRequest(input *ListPhoneNumbersOptedOutInput) (req *request.Request, output *ListPhoneNumbersOptedOutOutput) {
@@ -2041,18 +2141,19 @@ func (c *SNS) ListPhoneNumbersOptedOutRequest(input *ListPhoneNumbersOptedOutInp
 // API operation ListPhoneNumbersOptedOut for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeThrottledException "Throttled"
-//   Indicates that the rate at which requests have been submitted for this action
-//   exceeds the limit for your account.
 //
-//   * ErrCodeInternalErrorException "InternalError"
-//   Indicates an internal service error.
+//   - ErrCodeThrottledException "Throttled"
+//     Indicates that the rate at which requests have been submitted for this action
+//     exceeds the limit for your Amazon Web Services account.
 //
-//   * ErrCodeAuthorizationErrorException "AuthorizationError"
-//   Indicates that the user has been denied access to the requested resource.
+//   - ErrCodeInternalErrorException "InternalError"
+//     Indicates an internal service error.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameter"
-//   Indicates that a request parameter does not comply with the associated constraints.
+//   - ErrCodeAuthorizationErrorException "AuthorizationError"
+//     Indicates that the user has been denied access to the requested resource.
+//
+//   - ErrCodeInvalidParameterException "InvalidParameter"
+//     Indicates that a request parameter does not comply with the associated constraints.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/ListPhoneNumbersOptedOut
 func (c *SNS) ListPhoneNumbersOptedOut(input *ListPhoneNumbersOptedOutInput) (*ListPhoneNumbersOptedOutOutput, error) {
@@ -2084,15 +2185,14 @@ func (c *SNS) ListPhoneNumbersOptedOutWithContext(ctx aws.Context, input *ListPh
 //
 // Note: This operation can generate multiple requests to a service.
 //
-//    // Example iterating over at most 3 pages of a ListPhoneNumbersOptedOut operation.
-//    pageNum := 0
-//    err := client.ListPhoneNumbersOptedOutPages(params,
-//        func(page *sns.ListPhoneNumbersOptedOutOutput, lastPage bool) bool {
-//            pageNum++
-//            fmt.Println(page)
-//            return pageNum <= 3
-//        })
-//
+//	// Example iterating over at most 3 pages of a ListPhoneNumbersOptedOut operation.
+//	pageNum := 0
+//	err := client.ListPhoneNumbersOptedOutPages(params,
+//	    func(page *sns.ListPhoneNumbersOptedOutOutput, lastPage bool) bool {
+//	        pageNum++
+//	        fmt.Println(page)
+//	        return pageNum <= 3
+//	    })
 func (c *SNS) ListPhoneNumbersOptedOutPages(input *ListPhoneNumbersOptedOutInput, fn func(*ListPhoneNumbersOptedOutOutput, bool) bool) error {
 	return c.ListPhoneNumbersOptedOutPagesWithContext(aws.BackgroundContext(), input, fn)
 }
@@ -2144,14 +2244,13 @@ const opListPlatformApplications = "ListPlatformApplications"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the ListPlatformApplicationsRequest method.
+//	req, resp := client.ListPlatformApplicationsRequest(params)
 //
-//    // Example sending a request using the ListPlatformApplicationsRequest method.
-//    req, resp := client.ListPlatformApplicationsRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/ListPlatformApplications
 func (c *SNS) ListPlatformApplicationsRequest(input *ListPlatformApplicationsInput) (req *request.Request, output *ListPlatformApplicationsOutput) {
@@ -2197,14 +2296,15 @@ func (c *SNS) ListPlatformApplicationsRequest(input *ListPlatformApplicationsInp
 // API operation ListPlatformApplications for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeInvalidParameterException "InvalidParameter"
-//   Indicates that a request parameter does not comply with the associated constraints.
 //
-//   * ErrCodeInternalErrorException "InternalError"
-//   Indicates an internal service error.
+//   - ErrCodeInvalidParameterException "InvalidParameter"
+//     Indicates that a request parameter does not comply with the associated constraints.
 //
-//   * ErrCodeAuthorizationErrorException "AuthorizationError"
-//   Indicates that the user has been denied access to the requested resource.
+//   - ErrCodeInternalErrorException "InternalError"
+//     Indicates an internal service error.
+//
+//   - ErrCodeAuthorizationErrorException "AuthorizationError"
+//     Indicates that the user has been denied access to the requested resource.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/ListPlatformApplications
 func (c *SNS) ListPlatformApplications(input *ListPlatformApplicationsInput) (*ListPlatformApplicationsOutput, error) {
@@ -2236,15 +2336,14 @@ func (c *SNS) ListPlatformApplicationsWithContext(ctx aws.Context, input *ListPl
 //
 // Note: This operation can generate multiple requests to a service.
 //
-//    // Example iterating over at most 3 pages of a ListPlatformApplications operation.
-//    pageNum := 0
-//    err := client.ListPlatformApplicationsPages(params,
-//        func(page *sns.ListPlatformApplicationsOutput, lastPage bool) bool {
-//            pageNum++
-//            fmt.Println(page)
-//            return pageNum <= 3
-//        })
-//
+//	// Example iterating over at most 3 pages of a ListPlatformApplications operation.
+//	pageNum := 0
+//	err := client.ListPlatformApplicationsPages(params,
+//	    func(page *sns.ListPlatformApplicationsOutput, lastPage bool) bool {
+//	        pageNum++
+//	        fmt.Println(page)
+//	        return pageNum <= 3
+//	    })
 func (c *SNS) ListPlatformApplicationsPages(input *ListPlatformApplicationsInput, fn func(*ListPlatformApplicationsOutput, bool) bool) error {
 	return c.ListPlatformApplicationsPagesWithContext(aws.BackgroundContext(), input, fn)
 }
@@ -2296,14 +2395,13 @@ const opListSMSSandboxPhoneNumbers = "ListSMSSandboxPhoneNumbers"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the ListSMSSandboxPhoneNumbersRequest method.
+//	req, resp := client.ListSMSSandboxPhoneNumbersRequest(params)
 //
-//    // Example sending a request using the ListSMSSandboxPhoneNumbersRequest method.
-//    req, resp := client.ListSMSSandboxPhoneNumbersRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/ListSMSSandboxPhoneNumbers
 func (c *SNS) ListSMSSandboxPhoneNumbersRequest(input *ListSMSSandboxPhoneNumbersInput) (req *request.Request, output *ListSMSSandboxPhoneNumbersOutput) {
@@ -2330,16 +2428,17 @@ func (c *SNS) ListSMSSandboxPhoneNumbersRequest(input *ListSMSSandboxPhoneNumber
 
 // ListSMSSandboxPhoneNumbers API operation for Amazon Simple Notification Service.
 //
-// Lists the calling account's current verified and pending destination phone
-// numbers in the SMS sandbox.
+// Lists the calling Amazon Web Services account's current verified and pending
+// destination phone numbers in the SMS sandbox.
 //
-// When you start using Amazon SNS to send SMS messages, your account is in
-// the SMS sandbox. The SMS sandbox provides a safe environment for you to try
-// Amazon SNS features without risking your reputation as an SMS sender. While
-// your account is in the SMS sandbox, you can use all of the features of Amazon
-// SNS. However, you can send SMS messages only to verified destination phone
-// numbers. For more information, including how to move out of the sandbox to
-// send messages without restrictions, see SMS sandbox (https://docs.aws.amazon.com/sns/latest/dg/sns-sms-sandbox.html)
+// When you start using Amazon SNS to send SMS messages, your Amazon Web Services
+// account is in the SMS sandbox. The SMS sandbox provides a safe environment
+// for you to try Amazon SNS features without risking your reputation as an
+// SMS sender. While your Amazon Web Services account is in the SMS sandbox,
+// you can use all of the features of Amazon SNS. However, you can send SMS
+// messages only to verified destination phone numbers. For more information,
+// including how to move out of the sandbox to send messages without restrictions,
+// see SMS sandbox (https://docs.aws.amazon.com/sns/latest/dg/sns-sms-sandbox.html)
 // in the Amazon SNS Developer Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -2350,22 +2449,23 @@ func (c *SNS) ListSMSSandboxPhoneNumbersRequest(input *ListSMSSandboxPhoneNumber
 // API operation ListSMSSandboxPhoneNumbers for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeAuthorizationErrorException "AuthorizationError"
-//   Indicates that the user has been denied access to the requested resource.
 //
-//   * ErrCodeInternalErrorException "InternalError"
-//   Indicates an internal service error.
+//   - ErrCodeAuthorizationErrorException "AuthorizationError"
+//     Indicates that the user has been denied access to the requested resource.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameter"
-//   Indicates that a request parameter does not comply with the associated constraints.
+//   - ErrCodeInternalErrorException "InternalError"
+//     Indicates an internal service error.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFound"
-//   Can’t perform the action on the specified resource. Make sure that the
-//   resource exists.
+//   - ErrCodeInvalidParameterException "InvalidParameter"
+//     Indicates that a request parameter does not comply with the associated constraints.
 //
-//   * ErrCodeThrottledException "Throttled"
-//   Indicates that the rate at which requests have been submitted for this action
-//   exceeds the limit for your account.
+//   - ErrCodeResourceNotFoundException "ResourceNotFound"
+//     Can’t perform the action on the specified resource. Make sure that the
+//     resource exists.
+//
+//   - ErrCodeThrottledException "Throttled"
+//     Indicates that the rate at which requests have been submitted for this action
+//     exceeds the limit for your Amazon Web Services account.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/ListSMSSandboxPhoneNumbers
 func (c *SNS) ListSMSSandboxPhoneNumbers(input *ListSMSSandboxPhoneNumbersInput) (*ListSMSSandboxPhoneNumbersOutput, error) {
@@ -2397,15 +2497,14 @@ func (c *SNS) ListSMSSandboxPhoneNumbersWithContext(ctx aws.Context, input *List
 //
 // Note: This operation can generate multiple requests to a service.
 //
-//    // Example iterating over at most 3 pages of a ListSMSSandboxPhoneNumbers operation.
-//    pageNum := 0
-//    err := client.ListSMSSandboxPhoneNumbersPages(params,
-//        func(page *sns.ListSMSSandboxPhoneNumbersOutput, lastPage bool) bool {
-//            pageNum++
-//            fmt.Println(page)
-//            return pageNum <= 3
-//        })
-//
+//	// Example iterating over at most 3 pages of a ListSMSSandboxPhoneNumbers operation.
+//	pageNum := 0
+//	err := client.ListSMSSandboxPhoneNumbersPages(params,
+//	    func(page *sns.ListSMSSandboxPhoneNumbersOutput, lastPage bool) bool {
+//	        pageNum++
+//	        fmt.Println(page)
+//	        return pageNum <= 3
+//	    })
 func (c *SNS) ListSMSSandboxPhoneNumbersPages(input *ListSMSSandboxPhoneNumbersInput, fn func(*ListSMSSandboxPhoneNumbersOutput, bool) bool) error {
 	return c.ListSMSSandboxPhoneNumbersPagesWithContext(aws.BackgroundContext(), input, fn)
 }
@@ -2457,14 +2556,13 @@ const opListSubscriptions = "ListSubscriptions"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the ListSubscriptionsRequest method.
+//	req, resp := client.ListSubscriptionsRequest(params)
 //
-//    // Example sending a request using the ListSubscriptionsRequest method.
-//    req, resp := client.ListSubscriptionsRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/ListSubscriptions
 func (c *SNS) ListSubscriptionsRequest(input *ListSubscriptionsInput) (req *request.Request, output *ListSubscriptionsOutput) {
@@ -2506,14 +2604,15 @@ func (c *SNS) ListSubscriptionsRequest(input *ListSubscriptionsInput) (req *requ
 // API operation ListSubscriptions for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeInvalidParameterException "InvalidParameter"
-//   Indicates that a request parameter does not comply with the associated constraints.
 //
-//   * ErrCodeInternalErrorException "InternalError"
-//   Indicates an internal service error.
+//   - ErrCodeInvalidParameterException "InvalidParameter"
+//     Indicates that a request parameter does not comply with the associated constraints.
 //
-//   * ErrCodeAuthorizationErrorException "AuthorizationError"
-//   Indicates that the user has been denied access to the requested resource.
+//   - ErrCodeInternalErrorException "InternalError"
+//     Indicates an internal service error.
+//
+//   - ErrCodeAuthorizationErrorException "AuthorizationError"
+//     Indicates that the user has been denied access to the requested resource.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/ListSubscriptions
 func (c *SNS) ListSubscriptions(input *ListSubscriptionsInput) (*ListSubscriptionsOutput, error) {
@@ -2545,15 +2644,14 @@ func (c *SNS) ListSubscriptionsWithContext(ctx aws.Context, input *ListSubscript
 //
 // Note: This operation can generate multiple requests to a service.
 //
-//    // Example iterating over at most 3 pages of a ListSubscriptions operation.
-//    pageNum := 0
-//    err := client.ListSubscriptionsPages(params,
-//        func(page *sns.ListSubscriptionsOutput, lastPage bool) bool {
-//            pageNum++
-//            fmt.Println(page)
-//            return pageNum <= 3
-//        })
-//
+//	// Example iterating over at most 3 pages of a ListSubscriptions operation.
+//	pageNum := 0
+//	err := client.ListSubscriptionsPages(params,
+//	    func(page *sns.ListSubscriptionsOutput, lastPage bool) bool {
+//	        pageNum++
+//	        fmt.Println(page)
+//	        return pageNum <= 3
+//	    })
 func (c *SNS) ListSubscriptionsPages(input *ListSubscriptionsInput, fn func(*ListSubscriptionsOutput, bool) bool) error {
 	return c.ListSubscriptionsPagesWithContext(aws.BackgroundContext(), input, fn)
 }
@@ -2605,14 +2703,13 @@ const opListSubscriptionsByTopic = "ListSubscriptionsByTopic"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the ListSubscriptionsByTopicRequest method.
+//	req, resp := client.ListSubscriptionsByTopicRequest(params)
 //
-//    // Example sending a request using the ListSubscriptionsByTopicRequest method.
-//    req, resp := client.ListSubscriptionsByTopicRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/ListSubscriptionsByTopic
 func (c *SNS) ListSubscriptionsByTopicRequest(input *ListSubscriptionsByTopicInput) (req *request.Request, output *ListSubscriptionsByTopicOutput) {
@@ -2654,17 +2751,18 @@ func (c *SNS) ListSubscriptionsByTopicRequest(input *ListSubscriptionsByTopicInp
 // API operation ListSubscriptionsByTopic for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeInvalidParameterException "InvalidParameter"
-//   Indicates that a request parameter does not comply with the associated constraints.
 //
-//   * ErrCodeInternalErrorException "InternalError"
-//   Indicates an internal service error.
+//   - ErrCodeInvalidParameterException "InvalidParameter"
+//     Indicates that a request parameter does not comply with the associated constraints.
 //
-//   * ErrCodeNotFoundException "NotFound"
-//   Indicates that the requested resource does not exist.
+//   - ErrCodeInternalErrorException "InternalError"
+//     Indicates an internal service error.
 //
-//   * ErrCodeAuthorizationErrorException "AuthorizationError"
-//   Indicates that the user has been denied access to the requested resource.
+//   - ErrCodeNotFoundException "NotFound"
+//     Indicates that the requested resource does not exist.
+//
+//   - ErrCodeAuthorizationErrorException "AuthorizationError"
+//     Indicates that the user has been denied access to the requested resource.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/ListSubscriptionsByTopic
 func (c *SNS) ListSubscriptionsByTopic(input *ListSubscriptionsByTopicInput) (*ListSubscriptionsByTopicOutput, error) {
@@ -2696,15 +2794,14 @@ func (c *SNS) ListSubscriptionsByTopicWithContext(ctx aws.Context, input *ListSu
 //
 // Note: This operation can generate multiple requests to a service.
 //
-//    // Example iterating over at most 3 pages of a ListSubscriptionsByTopic operation.
-//    pageNum := 0
-//    err := client.ListSubscriptionsByTopicPages(params,
-//        func(page *sns.ListSubscriptionsByTopicOutput, lastPage bool) bool {
-//            pageNum++
-//            fmt.Println(page)
-//            return pageNum <= 3
-//        })
-//
+//	// Example iterating over at most 3 pages of a ListSubscriptionsByTopic operation.
+//	pageNum := 0
+//	err := client.ListSubscriptionsByTopicPages(params,
+//	    func(page *sns.ListSubscriptionsByTopicOutput, lastPage bool) bool {
+//	        pageNum++
+//	        fmt.Println(page)
+//	        return pageNum <= 3
+//	    })
 func (c *SNS) ListSubscriptionsByTopicPages(input *ListSubscriptionsByTopicInput, fn func(*ListSubscriptionsByTopicOutput, bool) bool) error {
 	return c.ListSubscriptionsByTopicPagesWithContext(aws.BackgroundContext(), input, fn)
 }
@@ -2756,14 +2853,13 @@ const opListTagsForResource = "ListTagsForResource"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the ListTagsForResourceRequest method.
+//	req, resp := client.ListTagsForResourceRequest(params)
 //
-//    // Example sending a request using the ListTagsForResourceRequest method.
-//    req, resp := client.ListTagsForResourceRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/ListTagsForResource
 func (c *SNS) ListTagsForResourceRequest(input *ListTagsForResourceInput) (req *request.Request, output *ListTagsForResourceOutput) {
@@ -2796,23 +2892,24 @@ func (c *SNS) ListTagsForResourceRequest(input *ListTagsForResourceInput) (req *
 // API operation ListTagsForResource for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFound"
-//   Can’t perform the action on the specified resource. Make sure that the
-//   resource exists.
 //
-//   * ErrCodeTagPolicyException "TagPolicy"
-//   The request doesn't comply with the IAM tag policy. Correct your request
-//   and then retry it.
+//   - ErrCodeResourceNotFoundException "ResourceNotFound"
+//     Can’t perform the action on the specified resource. Make sure that the
+//     resource exists.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameter"
-//   Indicates that a request parameter does not comply with the associated constraints.
+//   - ErrCodeTagPolicyException "TagPolicy"
+//     The request doesn't comply with the IAM tag policy. Correct your request
+//     and then retry it.
 //
-//   * ErrCodeAuthorizationErrorException "AuthorizationError"
-//   Indicates that the user has been denied access to the requested resource.
+//   - ErrCodeInvalidParameterException "InvalidParameter"
+//     Indicates that a request parameter does not comply with the associated constraints.
 //
-//   * ErrCodeConcurrentAccessException "ConcurrentAccess"
-//   Can't perform multiple operations on a tag simultaneously. Perform the operations
-//   sequentially.
+//   - ErrCodeAuthorizationErrorException "AuthorizationError"
+//     Indicates that the user has been denied access to the requested resource.
+//
+//   - ErrCodeConcurrentAccessException "ConcurrentAccess"
+//     Can't perform multiple operations on a tag simultaneously. Perform the operations
+//     sequentially.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/ListTagsForResource
 func (c *SNS) ListTagsForResource(input *ListTagsForResourceInput) (*ListTagsForResourceOutput, error) {
@@ -2852,14 +2949,13 @@ const opListTopics = "ListTopics"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the ListTopicsRequest method.
+//	req, resp := client.ListTopicsRequest(params)
 //
-//    // Example sending a request using the ListTopicsRequest method.
-//    req, resp := client.ListTopicsRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/ListTopics
 func (c *SNS) ListTopicsRequest(input *ListTopicsInput) (req *request.Request, output *ListTopicsOutput) {
@@ -2900,14 +2996,15 @@ func (c *SNS) ListTopicsRequest(input *ListTopicsInput) (req *request.Request, o
 // API operation ListTopics for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeInvalidParameterException "InvalidParameter"
-//   Indicates that a request parameter does not comply with the associated constraints.
 //
-//   * ErrCodeInternalErrorException "InternalError"
-//   Indicates an internal service error.
+//   - ErrCodeInvalidParameterException "InvalidParameter"
+//     Indicates that a request parameter does not comply with the associated constraints.
 //
-//   * ErrCodeAuthorizationErrorException "AuthorizationError"
-//   Indicates that the user has been denied access to the requested resource.
+//   - ErrCodeInternalErrorException "InternalError"
+//     Indicates an internal service error.
+//
+//   - ErrCodeAuthorizationErrorException "AuthorizationError"
+//     Indicates that the user has been denied access to the requested resource.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/ListTopics
 func (c *SNS) ListTopics(input *ListTopicsInput) (*ListTopicsOutput, error) {
@@ -2939,15 +3036,14 @@ func (c *SNS) ListTopicsWithContext(ctx aws.Context, input *ListTopicsInput, opt
 //
 // Note: This operation can generate multiple requests to a service.
 //
-//    // Example iterating over at most 3 pages of a ListTopics operation.
-//    pageNum := 0
-//    err := client.ListTopicsPages(params,
-//        func(page *sns.ListTopicsOutput, lastPage bool) bool {
-//            pageNum++
-//            fmt.Println(page)
-//            return pageNum <= 3
-//        })
-//
+//	// Example iterating over at most 3 pages of a ListTopics operation.
+//	pageNum := 0
+//	err := client.ListTopicsPages(params,
+//	    func(page *sns.ListTopicsOutput, lastPage bool) bool {
+//	        pageNum++
+//	        fmt.Println(page)
+//	        return pageNum <= 3
+//	    })
 func (c *SNS) ListTopicsPages(input *ListTopicsInput, fn func(*ListTopicsOutput, bool) bool) error {
 	return c.ListTopicsPagesWithContext(aws.BackgroundContext(), input, fn)
 }
@@ -2999,14 +3095,13 @@ const opOptInPhoneNumber = "OptInPhoneNumber"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the OptInPhoneNumberRequest method.
+//	req, resp := client.OptInPhoneNumberRequest(params)
 //
-//    // Example sending a request using the OptInPhoneNumberRequest method.
-//    req, resp := client.OptInPhoneNumberRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/OptInPhoneNumber
 func (c *SNS) OptInPhoneNumberRequest(input *OptInPhoneNumberInput) (req *request.Request, output *OptInPhoneNumberOutput) {
@@ -3041,18 +3136,19 @@ func (c *SNS) OptInPhoneNumberRequest(input *OptInPhoneNumberInput) (req *reques
 // API operation OptInPhoneNumber for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeThrottledException "Throttled"
-//   Indicates that the rate at which requests have been submitted for this action
-//   exceeds the limit for your account.
 //
-//   * ErrCodeInternalErrorException "InternalError"
-//   Indicates an internal service error.
+//   - ErrCodeThrottledException "Throttled"
+//     Indicates that the rate at which requests have been submitted for this action
+//     exceeds the limit for your Amazon Web Services account.
 //
-//   * ErrCodeAuthorizationErrorException "AuthorizationError"
-//   Indicates that the user has been denied access to the requested resource.
+//   - ErrCodeInternalErrorException "InternalError"
+//     Indicates an internal service error.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameter"
-//   Indicates that a request parameter does not comply with the associated constraints.
+//   - ErrCodeAuthorizationErrorException "AuthorizationError"
+//     Indicates that the user has been denied access to the requested resource.
+//
+//   - ErrCodeInvalidParameterException "InvalidParameter"
+//     Indicates that a request parameter does not comply with the associated constraints.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/OptInPhoneNumber
 func (c *SNS) OptInPhoneNumber(input *OptInPhoneNumberInput) (*OptInPhoneNumberOutput, error) {
@@ -3092,14 +3188,13 @@ const opPublish = "Publish"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the PublishRequest method.
+//	req, resp := client.PublishRequest(params)
 //
-//    // Example sending a request using the PublishRequest method.
-//    req, resp := client.PublishRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/Publish
 func (c *SNS) PublishRequest(input *PublishInput) (req *request.Request, output *PublishOutput) {
@@ -3128,18 +3223,19 @@ func (c *SNS) PublishRequest(input *PublishInput) (req *request.Request, output 
 // endpoint that is subscribed to the topic. The format of the message depends
 // on the notification protocol for each subscribed endpoint.
 //
-// When a messageId is returned, the message has been saved and Amazon SNS will
-// attempt to deliver it shortly.
+// When a messageId is returned, the message is saved and Amazon SNS immediately
+// delivers it to subscribers.
 //
-// To use the Publish action for sending a message to a mobile endpoint, such
-// as an app on a Kindle device or mobile phone, you must specify the EndpointArn
+// To use the Publish action for publishing a message to a mobile endpoint,
+// such as an app on a Kindle device or mobile phone, you must specify the EndpointArn
 // for the TargetArn parameter. The EndpointArn is returned when making a call
 // with the CreatePlatformEndpoint action.
 //
 // For more information about formatting messages, see Send Custom Platform-Specific
 // Payloads in Messages to Mobile Devices (https://docs.aws.amazon.com/sns/latest/dg/mobile-push-send-custommessage.html).
 //
-// You can publish messages only to topics and endpoints in the same Region.
+// You can publish messages only to topics and endpoints in the same Amazon
+// Web Services Region.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -3149,56 +3245,60 @@ func (c *SNS) PublishRequest(input *PublishInput) (req *request.Request, output 
 // API operation Publish for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeInvalidParameterException "InvalidParameter"
-//   Indicates that a request parameter does not comply with the associated constraints.
 //
-//   * ErrCodeInvalidParameterValueException "ParameterValueInvalid"
-//   Indicates that a request parameter does not comply with the associated constraints.
+//   - ErrCodeInvalidParameterException "InvalidParameter"
+//     Indicates that a request parameter does not comply with the associated constraints.
 //
-//   * ErrCodeInternalErrorException "InternalError"
-//   Indicates an internal service error.
+//   - ErrCodeInvalidParameterValueException "ParameterValueInvalid"
+//     Indicates that a request parameter does not comply with the associated constraints.
 //
-//   * ErrCodeNotFoundException "NotFound"
-//   Indicates that the requested resource does not exist.
+//   - ErrCodeInternalErrorException "InternalError"
+//     Indicates an internal service error.
 //
-//   * ErrCodeEndpointDisabledException "EndpointDisabled"
-//   Exception error indicating endpoint disabled.
+//   - ErrCodeNotFoundException "NotFound"
+//     Indicates that the requested resource does not exist.
 //
-//   * ErrCodePlatformApplicationDisabledException "PlatformApplicationDisabled"
-//   Exception error indicating platform application disabled.
+//   - ErrCodeEndpointDisabledException "EndpointDisabled"
+//     Exception error indicating endpoint disabled.
 //
-//   * ErrCodeAuthorizationErrorException "AuthorizationError"
-//   Indicates that the user has been denied access to the requested resource.
+//   - ErrCodePlatformApplicationDisabledException "PlatformApplicationDisabled"
+//     Exception error indicating platform application disabled.
 //
-//   * ErrCodeKMSDisabledException "KMSDisabled"
-//   The request was rejected because the specified customer master key (CMK)
-//   isn't enabled.
+//   - ErrCodeAuthorizationErrorException "AuthorizationError"
+//     Indicates that the user has been denied access to the requested resource.
 //
-//   * ErrCodeKMSInvalidStateException "KMSInvalidState"
-//   The request was rejected because the state of the specified resource isn't
-//   valid for this request. For more information, see How Key State Affects Use
-//   of a Customer Master Key (https://docs.aws.amazon.com/kms/latest/developerguide/key-state.html)
-//   in the Key Management Service Developer Guide.
+//   - ErrCodeKMSDisabledException "KMSDisabled"
+//     The request was rejected because the specified customer master key (CMK)
+//     isn't enabled.
 //
-//   * ErrCodeKMSNotFoundException "KMSNotFound"
-//   The request was rejected because the specified entity or resource can't be
-//   found.
+//   - ErrCodeKMSInvalidStateException "KMSInvalidState"
+//     The request was rejected because the state of the specified resource isn't
+//     valid for this request. For more information, see How Key State Affects Use
+//     of a Customer Master Key (https://docs.aws.amazon.com/kms/latest/developerguide/key-state.html)
+//     in the Key Management Service Developer Guide.
 //
-//   * ErrCodeKMSOptInRequired "KMSOptInRequired"
-//   The Amazon Web Services access key ID needs a subscription for the service.
+//   - ErrCodeKMSNotFoundException "KMSNotFound"
+//     The request was rejected because the specified entity or resource can't be
+//     found.
 //
-//   * ErrCodeKMSThrottlingException "KMSThrottling"
-//   The request was denied due to request throttling. For more information about
-//   throttling, see Limits (https://docs.aws.amazon.com/kms/latest/developerguide/limits.html#requests-per-second)
-//   in the Key Management Service Developer Guide.
+//   - ErrCodeKMSOptInRequired "KMSOptInRequired"
+//     The Amazon Web Services access key ID needs a subscription for the service.
 //
-//   * ErrCodeKMSAccessDeniedException "KMSAccessDenied"
-//   The ciphertext references a key that doesn't exist or that you don't have
-//   access to.
+//   - ErrCodeKMSThrottlingException "KMSThrottling"
+//     The request was denied due to request throttling. For more information about
+//     throttling, see Limits (https://docs.aws.amazon.com/kms/latest/developerguide/limits.html#requests-per-second)
+//     in the Key Management Service Developer Guide.
 //
-//   * ErrCodeInvalidSecurityException "InvalidSecurity"
-//   The credential signature isn't valid. You must use an HTTPS endpoint and
-//   sign your request using Signature Version 4.
+//   - ErrCodeKMSAccessDeniedException "KMSAccessDenied"
+//     The ciphertext references a key that doesn't exist or that you don't have
+//     access to.
+//
+//   - ErrCodeInvalidSecurityException "InvalidSecurity"
+//     The credential signature isn't valid. You must use an HTTPS endpoint and
+//     sign your request using Signature Version 4.
+//
+//   - ErrCodeValidationException "ValidationException"
+//     Indicates that a parameter in the request is invalid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/Publish
 func (c *SNS) Publish(input *PublishInput) (*PublishOutput, error) {
@@ -3222,6 +3322,272 @@ func (c *SNS) PublishWithContext(ctx aws.Context, input *PublishInput, opts ...r
 	return out, req.Send()
 }
 
+const opPublishBatch = "PublishBatch"
+
+// PublishBatchRequest generates a "aws/request.Request" representing the
+// client's request for the PublishBatch operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See PublishBatch for more information on using the PublishBatch
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//	// Example sending a request using the PublishBatchRequest method.
+//	req, resp := client.PublishBatchRequest(params)
+//
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/PublishBatch
+func (c *SNS) PublishBatchRequest(input *PublishBatchInput) (req *request.Request, output *PublishBatchOutput) {
+	op := &request.Operation{
+		Name:       opPublishBatch,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &PublishBatchInput{}
+	}
+
+	output = &PublishBatchOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// PublishBatch API operation for Amazon Simple Notification Service.
+//
+// Publishes up to ten messages to the specified topic. This is a batch version
+// of Publish. For FIFO topics, multiple messages within a single batch are
+// published in the order they are sent, and messages are deduplicated within
+// the batch and across batches for 5 minutes.
+//
+// The result of publishing each message is reported individually in the response.
+// Because the batch request can result in a combination of successful and unsuccessful
+// actions, you should check for batch errors even when the call returns an
+// HTTP status code of 200.
+//
+// The maximum allowed individual message size and the maximum total payload
+// size (the sum of the individual lengths of all of the batched messages) are
+// both 256 KB (262,144 bytes).
+//
+// Some actions take lists of parameters. These lists are specified using the
+// param.n notation. Values of n are integers starting from 1. For example,
+// a parameter list with two elements looks like this:
+//
+// &AttributeName.1=first
+//
+// &AttributeName.2=second
+//
+// If you send a batch message to a topic, Amazon SNS publishes the batch message
+// to each endpoint that is subscribed to the topic. The format of the batch
+// message depends on the notification protocol for each subscribed endpoint.
+//
+// When a messageId is returned, the batch message is saved and Amazon SNS immediately
+// delivers the message to subscribers.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Simple Notification Service's
+// API operation PublishBatch for usage and error information.
+//
+// Returned Error Codes:
+//
+//   - ErrCodeInvalidParameterException "InvalidParameter"
+//     Indicates that a request parameter does not comply with the associated constraints.
+//
+//   - ErrCodeInvalidParameterValueException "ParameterValueInvalid"
+//     Indicates that a request parameter does not comply with the associated constraints.
+//
+//   - ErrCodeInternalErrorException "InternalError"
+//     Indicates an internal service error.
+//
+//   - ErrCodeNotFoundException "NotFound"
+//     Indicates that the requested resource does not exist.
+//
+//   - ErrCodeEndpointDisabledException "EndpointDisabled"
+//     Exception error indicating endpoint disabled.
+//
+//   - ErrCodePlatformApplicationDisabledException "PlatformApplicationDisabled"
+//     Exception error indicating platform application disabled.
+//
+//   - ErrCodeAuthorizationErrorException "AuthorizationError"
+//     Indicates that the user has been denied access to the requested resource.
+//
+//   - ErrCodeBatchEntryIdsNotDistinctException "BatchEntryIdsNotDistinct"
+//     Two or more batch entries in the request have the same Id.
+//
+//   - ErrCodeBatchRequestTooLongException "BatchRequestTooLong"
+//     The length of all the batch messages put together is more than the limit.
+//
+//   - ErrCodeEmptyBatchRequestException "EmptyBatchRequest"
+//     The batch request doesn't contain any entries.
+//
+//   - ErrCodeInvalidBatchEntryIdException "InvalidBatchEntryId"
+//     The Id of a batch entry in a batch request doesn't abide by the specification.
+//
+//   - ErrCodeTooManyEntriesInBatchRequestException "TooManyEntriesInBatchRequest"
+//     The batch request contains more entries than permissible.
+//
+//   - ErrCodeKMSDisabledException "KMSDisabled"
+//     The request was rejected because the specified customer master key (CMK)
+//     isn't enabled.
+//
+//   - ErrCodeKMSInvalidStateException "KMSInvalidState"
+//     The request was rejected because the state of the specified resource isn't
+//     valid for this request. For more information, see How Key State Affects Use
+//     of a Customer Master Key (https://docs.aws.amazon.com/kms/latest/developerguide/key-state.html)
+//     in the Key Management Service Developer Guide.
+//
+//   - ErrCodeKMSNotFoundException "KMSNotFound"
+//     The request was rejected because the specified entity or resource can't be
+//     found.
+//
+//   - ErrCodeKMSOptInRequired "KMSOptInRequired"
+//     The Amazon Web Services access key ID needs a subscription for the service.
+//
+//   - ErrCodeKMSThrottlingException "KMSThrottling"
+//     The request was denied due to request throttling. For more information about
+//     throttling, see Limits (https://docs.aws.amazon.com/kms/latest/developerguide/limits.html#requests-per-second)
+//     in the Key Management Service Developer Guide.
+//
+//   - ErrCodeKMSAccessDeniedException "KMSAccessDenied"
+//     The ciphertext references a key that doesn't exist or that you don't have
+//     access to.
+//
+//   - ErrCodeInvalidSecurityException "InvalidSecurity"
+//     The credential signature isn't valid. You must use an HTTPS endpoint and
+//     sign your request using Signature Version 4.
+//
+//   - ErrCodeValidationException "ValidationException"
+//     Indicates that a parameter in the request is invalid.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/PublishBatch
+func (c *SNS) PublishBatch(input *PublishBatchInput) (*PublishBatchOutput, error) {
+	req, out := c.PublishBatchRequest(input)
+	return out, req.Send()
+}
+
+// PublishBatchWithContext is the same as PublishBatch with the addition of
+// the ability to pass a context and additional request options.
+//
+// See PublishBatch for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SNS) PublishBatchWithContext(ctx aws.Context, input *PublishBatchInput, opts ...request.Option) (*PublishBatchOutput, error) {
+	req, out := c.PublishBatchRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opPutDataProtectionPolicy = "PutDataProtectionPolicy"
+
+// PutDataProtectionPolicyRequest generates a "aws/request.Request" representing the
+// client's request for the PutDataProtectionPolicy operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See PutDataProtectionPolicy for more information on using the PutDataProtectionPolicy
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//	// Example sending a request using the PutDataProtectionPolicyRequest method.
+//	req, resp := client.PutDataProtectionPolicyRequest(params)
+//
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/PutDataProtectionPolicy
+func (c *SNS) PutDataProtectionPolicyRequest(input *PutDataProtectionPolicyInput) (req *request.Request, output *PutDataProtectionPolicyOutput) {
+	op := &request.Operation{
+		Name:       opPutDataProtectionPolicy,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &PutDataProtectionPolicyInput{}
+	}
+
+	output = &PutDataProtectionPolicyOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(query.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// PutDataProtectionPolicy API operation for Amazon Simple Notification Service.
+//
+// Adds or updates an inline policy document that is stored in the specified
+// Amazon SNS topic.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Simple Notification Service's
+// API operation PutDataProtectionPolicy for usage and error information.
+//
+// Returned Error Codes:
+//
+//   - ErrCodeInvalidParameterException "InvalidParameter"
+//     Indicates that a request parameter does not comply with the associated constraints.
+//
+//   - ErrCodeInternalErrorException "InternalError"
+//     Indicates an internal service error.
+//
+//   - ErrCodeNotFoundException "NotFound"
+//     Indicates that the requested resource does not exist.
+//
+//   - ErrCodeAuthorizationErrorException "AuthorizationError"
+//     Indicates that the user has been denied access to the requested resource.
+//
+//   - ErrCodeInvalidSecurityException "InvalidSecurity"
+//     The credential signature isn't valid. You must use an HTTPS endpoint and
+//     sign your request using Signature Version 4.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/PutDataProtectionPolicy
+func (c *SNS) PutDataProtectionPolicy(input *PutDataProtectionPolicyInput) (*PutDataProtectionPolicyOutput, error) {
+	req, out := c.PutDataProtectionPolicyRequest(input)
+	return out, req.Send()
+}
+
+// PutDataProtectionPolicyWithContext is the same as PutDataProtectionPolicy with the addition of
+// the ability to pass a context and additional request options.
+//
+// See PutDataProtectionPolicy for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SNS) PutDataProtectionPolicyWithContext(ctx aws.Context, input *PutDataProtectionPolicyInput, opts ...request.Option) (*PutDataProtectionPolicyOutput, error) {
+	req, out := c.PutDataProtectionPolicyRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opRemovePermission = "RemovePermission"
 
 // RemovePermissionRequest generates a "aws/request.Request" representing the
@@ -3238,14 +3604,13 @@ const opRemovePermission = "RemovePermission"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the RemovePermissionRequest method.
+//	req, resp := client.RemovePermissionRequest(params)
 //
-//    // Example sending a request using the RemovePermissionRequest method.
-//    req, resp := client.RemovePermissionRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/RemovePermission
 func (c *SNS) RemovePermissionRequest(input *RemovePermissionInput) (req *request.Request, output *RemovePermissionOutput) {
@@ -3277,17 +3642,18 @@ func (c *SNS) RemovePermissionRequest(input *RemovePermissionInput) (req *reques
 // API operation RemovePermission for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeInvalidParameterException "InvalidParameter"
-//   Indicates that a request parameter does not comply with the associated constraints.
 //
-//   * ErrCodeInternalErrorException "InternalError"
-//   Indicates an internal service error.
+//   - ErrCodeInvalidParameterException "InvalidParameter"
+//     Indicates that a request parameter does not comply with the associated constraints.
 //
-//   * ErrCodeAuthorizationErrorException "AuthorizationError"
-//   Indicates that the user has been denied access to the requested resource.
+//   - ErrCodeInternalErrorException "InternalError"
+//     Indicates an internal service error.
 //
-//   * ErrCodeNotFoundException "NotFound"
-//   Indicates that the requested resource does not exist.
+//   - ErrCodeAuthorizationErrorException "AuthorizationError"
+//     Indicates that the user has been denied access to the requested resource.
+//
+//   - ErrCodeNotFoundException "NotFound"
+//     Indicates that the requested resource does not exist.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/RemovePermission
 func (c *SNS) RemovePermission(input *RemovePermissionInput) (*RemovePermissionOutput, error) {
@@ -3327,14 +3693,13 @@ const opSetEndpointAttributes = "SetEndpointAttributes"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the SetEndpointAttributesRequest method.
+//	req, resp := client.SetEndpointAttributesRequest(params)
 //
-//    // Example sending a request using the SetEndpointAttributesRequest method.
-//    req, resp := client.SetEndpointAttributesRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/SetEndpointAttributes
 func (c *SNS) SetEndpointAttributesRequest(input *SetEndpointAttributesInput) (req *request.Request, output *SetEndpointAttributesOutput) {
@@ -3368,17 +3733,18 @@ func (c *SNS) SetEndpointAttributesRequest(input *SetEndpointAttributesInput) (r
 // API operation SetEndpointAttributes for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeInvalidParameterException "InvalidParameter"
-//   Indicates that a request parameter does not comply with the associated constraints.
 //
-//   * ErrCodeInternalErrorException "InternalError"
-//   Indicates an internal service error.
+//   - ErrCodeInvalidParameterException "InvalidParameter"
+//     Indicates that a request parameter does not comply with the associated constraints.
 //
-//   * ErrCodeAuthorizationErrorException "AuthorizationError"
-//   Indicates that the user has been denied access to the requested resource.
+//   - ErrCodeInternalErrorException "InternalError"
+//     Indicates an internal service error.
 //
-//   * ErrCodeNotFoundException "NotFound"
-//   Indicates that the requested resource does not exist.
+//   - ErrCodeAuthorizationErrorException "AuthorizationError"
+//     Indicates that the user has been denied access to the requested resource.
+//
+//   - ErrCodeNotFoundException "NotFound"
+//     Indicates that the requested resource does not exist.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/SetEndpointAttributes
 func (c *SNS) SetEndpointAttributes(input *SetEndpointAttributesInput) (*SetEndpointAttributesOutput, error) {
@@ -3418,14 +3784,13 @@ const opSetPlatformApplicationAttributes = "SetPlatformApplicationAttributes"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the SetPlatformApplicationAttributesRequest method.
+//	req, resp := client.SetPlatformApplicationAttributesRequest(params)
 //
-//    // Example sending a request using the SetPlatformApplicationAttributesRequest method.
-//    req, resp := client.SetPlatformApplicationAttributesRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/SetPlatformApplicationAttributes
 func (c *SNS) SetPlatformApplicationAttributesRequest(input *SetPlatformApplicationAttributesInput) (req *request.Request, output *SetPlatformApplicationAttributesOutput) {
@@ -3461,17 +3826,18 @@ func (c *SNS) SetPlatformApplicationAttributesRequest(input *SetPlatformApplicat
 // API operation SetPlatformApplicationAttributes for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeInvalidParameterException "InvalidParameter"
-//   Indicates that a request parameter does not comply with the associated constraints.
 //
-//   * ErrCodeInternalErrorException "InternalError"
-//   Indicates an internal service error.
+//   - ErrCodeInvalidParameterException "InvalidParameter"
+//     Indicates that a request parameter does not comply with the associated constraints.
 //
-//   * ErrCodeAuthorizationErrorException "AuthorizationError"
-//   Indicates that the user has been denied access to the requested resource.
+//   - ErrCodeInternalErrorException "InternalError"
+//     Indicates an internal service error.
 //
-//   * ErrCodeNotFoundException "NotFound"
-//   Indicates that the requested resource does not exist.
+//   - ErrCodeAuthorizationErrorException "AuthorizationError"
+//     Indicates that the user has been denied access to the requested resource.
+//
+//   - ErrCodeNotFoundException "NotFound"
+//     Indicates that the requested resource does not exist.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/SetPlatformApplicationAttributes
 func (c *SNS) SetPlatformApplicationAttributes(input *SetPlatformApplicationAttributesInput) (*SetPlatformApplicationAttributesOutput, error) {
@@ -3511,14 +3877,13 @@ const opSetSMSAttributes = "SetSMSAttributes"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the SetSMSAttributesRequest method.
+//	req, resp := client.SetSMSAttributesRequest(params)
 //
-//    // Example sending a request using the SetSMSAttributesRequest method.
-//    req, resp := client.SetSMSAttributesRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/SetSMSAttributes
 func (c *SNS) SetSMSAttributesRequest(input *SetSMSAttributesInput) (req *request.Request, output *SetSMSAttributesOutput) {
@@ -3559,18 +3924,19 @@ func (c *SNS) SetSMSAttributesRequest(input *SetSMSAttributesInput) (req *reques
 // API operation SetSMSAttributes for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeInvalidParameterException "InvalidParameter"
-//   Indicates that a request parameter does not comply with the associated constraints.
 //
-//   * ErrCodeThrottledException "Throttled"
-//   Indicates that the rate at which requests have been submitted for this action
-//   exceeds the limit for your account.
+//   - ErrCodeInvalidParameterException "InvalidParameter"
+//     Indicates that a request parameter does not comply with the associated constraints.
 //
-//   * ErrCodeInternalErrorException "InternalError"
-//   Indicates an internal service error.
+//   - ErrCodeThrottledException "Throttled"
+//     Indicates that the rate at which requests have been submitted for this action
+//     exceeds the limit for your Amazon Web Services account.
 //
-//   * ErrCodeAuthorizationErrorException "AuthorizationError"
-//   Indicates that the user has been denied access to the requested resource.
+//   - ErrCodeInternalErrorException "InternalError"
+//     Indicates an internal service error.
+//
+//   - ErrCodeAuthorizationErrorException "AuthorizationError"
+//     Indicates that the user has been denied access to the requested resource.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/SetSMSAttributes
 func (c *SNS) SetSMSAttributes(input *SetSMSAttributesInput) (*SetSMSAttributesOutput, error) {
@@ -3610,14 +3976,13 @@ const opSetSubscriptionAttributes = "SetSubscriptionAttributes"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the SetSubscriptionAttributesRequest method.
+//	req, resp := client.SetSubscriptionAttributesRequest(params)
 //
-//    // Example sending a request using the SetSubscriptionAttributesRequest method.
-//    req, resp := client.SetSubscriptionAttributesRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/SetSubscriptionAttributes
 func (c *SNS) SetSubscriptionAttributesRequest(input *SetSubscriptionAttributesInput) (req *request.Request, output *SetSubscriptionAttributesOutput) {
@@ -3650,22 +4015,23 @@ func (c *SNS) SetSubscriptionAttributesRequest(input *SetSubscriptionAttributesI
 // API operation SetSubscriptionAttributes for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeInvalidParameterException "InvalidParameter"
-//   Indicates that a request parameter does not comply with the associated constraints.
 //
-//   * ErrCodeFilterPolicyLimitExceededException "FilterPolicyLimitExceeded"
-//   Indicates that the number of filter polices in your account exceeds the limit.
-//   To add more filter polices, submit an SNS Limit Increase case in the Amazon
-//   Web Services Support Center.
+//   - ErrCodeInvalidParameterException "InvalidParameter"
+//     Indicates that a request parameter does not comply with the associated constraints.
 //
-//   * ErrCodeInternalErrorException "InternalError"
-//   Indicates an internal service error.
+//   - ErrCodeFilterPolicyLimitExceededException "FilterPolicyLimitExceeded"
+//     Indicates that the number of filter polices in your Amazon Web Services account
+//     exceeds the limit. To add more filter polices, submit an Amazon SNS Limit
+//     Increase case in the Amazon Web Services Support Center.
 //
-//   * ErrCodeNotFoundException "NotFound"
-//   Indicates that the requested resource does not exist.
+//   - ErrCodeInternalErrorException "InternalError"
+//     Indicates an internal service error.
 //
-//   * ErrCodeAuthorizationErrorException "AuthorizationError"
-//   Indicates that the user has been denied access to the requested resource.
+//   - ErrCodeNotFoundException "NotFound"
+//     Indicates that the requested resource does not exist.
+//
+//   - ErrCodeAuthorizationErrorException "AuthorizationError"
+//     Indicates that the user has been denied access to the requested resource.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/SetSubscriptionAttributes
 func (c *SNS) SetSubscriptionAttributes(input *SetSubscriptionAttributesInput) (*SetSubscriptionAttributesOutput, error) {
@@ -3705,14 +4071,13 @@ const opSetTopicAttributes = "SetTopicAttributes"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the SetTopicAttributesRequest method.
+//	req, resp := client.SetTopicAttributesRequest(params)
 //
-//    // Example sending a request using the SetTopicAttributesRequest method.
-//    req, resp := client.SetTopicAttributesRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/SetTopicAttributes
 func (c *SNS) SetTopicAttributesRequest(input *SetTopicAttributesInput) (req *request.Request, output *SetTopicAttributesOutput) {
@@ -3744,21 +4109,22 @@ func (c *SNS) SetTopicAttributesRequest(input *SetTopicAttributesInput) (req *re
 // API operation SetTopicAttributes for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeInvalidParameterException "InvalidParameter"
-//   Indicates that a request parameter does not comply with the associated constraints.
 //
-//   * ErrCodeInternalErrorException "InternalError"
-//   Indicates an internal service error.
+//   - ErrCodeInvalidParameterException "InvalidParameter"
+//     Indicates that a request parameter does not comply with the associated constraints.
 //
-//   * ErrCodeNotFoundException "NotFound"
-//   Indicates that the requested resource does not exist.
+//   - ErrCodeInternalErrorException "InternalError"
+//     Indicates an internal service error.
 //
-//   * ErrCodeAuthorizationErrorException "AuthorizationError"
-//   Indicates that the user has been denied access to the requested resource.
+//   - ErrCodeNotFoundException "NotFound"
+//     Indicates that the requested resource does not exist.
 //
-//   * ErrCodeInvalidSecurityException "InvalidSecurity"
-//   The credential signature isn't valid. You must use an HTTPS endpoint and
-//   sign your request using Signature Version 4.
+//   - ErrCodeAuthorizationErrorException "AuthorizationError"
+//     Indicates that the user has been denied access to the requested resource.
+//
+//   - ErrCodeInvalidSecurityException "InvalidSecurity"
+//     The credential signature isn't valid. You must use an HTTPS endpoint and
+//     sign your request using Signature Version 4.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/SetTopicAttributes
 func (c *SNS) SetTopicAttributes(input *SetTopicAttributesInput) (*SetTopicAttributesOutput, error) {
@@ -3798,14 +4164,13 @@ const opSubscribe = "Subscribe"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the SubscribeRequest method.
+//	req, resp := client.SubscribeRequest(params)
 //
-//    // Example sending a request using the SubscribeRequest method.
-//    req, resp := client.SubscribeRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/Subscribe
 func (c *SNS) SubscribeRequest(input *SubscribeInput) (req *request.Request, output *SubscribeOutput) {
@@ -3827,8 +4192,9 @@ func (c *SNS) SubscribeRequest(input *SubscribeInput) (req *request.Request, out
 // Subscribe API operation for Amazon Simple Notification Service.
 //
 // Subscribes an endpoint to an Amazon SNS topic. If the endpoint type is HTTP/S
-// or email, or if the endpoint and the topic are not in the same account, the
-// endpoint owner must run the ConfirmSubscription action to confirm the subscription.
+// or email, or if the endpoint and the topic are not in the same Amazon Web
+// Services account, the endpoint owner must run the ConfirmSubscription action
+// to confirm the subscription.
 //
 // You call the ConfirmSubscription action with the token from the subscription
 // response. Confirmation tokens are valid for three days.
@@ -3843,29 +4209,30 @@ func (c *SNS) SubscribeRequest(input *SubscribeInput) (req *request.Request, out
 // API operation Subscribe for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeSubscriptionLimitExceededException "SubscriptionLimitExceeded"
-//   Indicates that the customer already owns the maximum allowed number of subscriptions.
 //
-//   * ErrCodeFilterPolicyLimitExceededException "FilterPolicyLimitExceeded"
-//   Indicates that the number of filter polices in your account exceeds the limit.
-//   To add more filter polices, submit an SNS Limit Increase case in the Amazon
-//   Web Services Support Center.
+//   - ErrCodeSubscriptionLimitExceededException "SubscriptionLimitExceeded"
+//     Indicates that the customer already owns the maximum allowed number of subscriptions.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameter"
-//   Indicates that a request parameter does not comply with the associated constraints.
+//   - ErrCodeFilterPolicyLimitExceededException "FilterPolicyLimitExceeded"
+//     Indicates that the number of filter polices in your Amazon Web Services account
+//     exceeds the limit. To add more filter polices, submit an Amazon SNS Limit
+//     Increase case in the Amazon Web Services Support Center.
 //
-//   * ErrCodeInternalErrorException "InternalError"
-//   Indicates an internal service error.
+//   - ErrCodeInvalidParameterException "InvalidParameter"
+//     Indicates that a request parameter does not comply with the associated constraints.
 //
-//   * ErrCodeNotFoundException "NotFound"
-//   Indicates that the requested resource does not exist.
+//   - ErrCodeInternalErrorException "InternalError"
+//     Indicates an internal service error.
 //
-//   * ErrCodeAuthorizationErrorException "AuthorizationError"
-//   Indicates that the user has been denied access to the requested resource.
+//   - ErrCodeNotFoundException "NotFound"
+//     Indicates that the requested resource does not exist.
 //
-//   * ErrCodeInvalidSecurityException "InvalidSecurity"
-//   The credential signature isn't valid. You must use an HTTPS endpoint and
-//   sign your request using Signature Version 4.
+//   - ErrCodeAuthorizationErrorException "AuthorizationError"
+//     Indicates that the user has been denied access to the requested resource.
+//
+//   - ErrCodeInvalidSecurityException "InvalidSecurity"
+//     The credential signature isn't valid. You must use an HTTPS endpoint and
+//     sign your request using Signature Version 4.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/Subscribe
 func (c *SNS) Subscribe(input *SubscribeInput) (*SubscribeOutput, error) {
@@ -3905,14 +4272,13 @@ const opTagResource = "TagResource"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the TagResourceRequest method.
+//	req, resp := client.TagResourceRequest(params)
 //
-//    // Example sending a request using the TagResourceRequest method.
-//    req, resp := client.TagResourceRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/TagResource
 func (c *SNS) TagResourceRequest(input *TagResourceInput) (req *request.Request, output *TagResourceOutput) {
@@ -3940,19 +4306,19 @@ func (c *SNS) TagResourceRequest(input *TagResourceInput) (req *request.Request,
 //
 // When you use topic tags, keep the following guidelines in mind:
 //
-//    * Adding more than 50 tags to a topic isn't recommended.
+//   - Adding more than 50 tags to a topic isn't recommended.
 //
-//    * Tags don't have any semantic meaning. Amazon SNS interprets tags as
-//    character strings.
+//   - Tags don't have any semantic meaning. Amazon SNS interprets tags as
+//     character strings.
 //
-//    * Tags are case-sensitive.
+//   - Tags are case-sensitive.
 //
-//    * A new tag with a key identical to that of an existing tag overwrites
-//    the existing tag.
+//   - A new tag with a key identical to that of an existing tag overwrites
+//     the existing tag.
 //
-//    * Tagging actions are limited to 10 TPS per account, per Region. If your
-//    application requires a higher throughput, file a technical support request
-//    (https://console.aws.amazon.com/support/home#/case/create?issueType=technical).
+//   - Tagging actions are limited to 10 TPS per Amazon Web Services account,
+//     per Amazon Web Services Region. If your application requires a higher
+//     throughput, file a technical support request (https://console.aws.amazon.com/support/home#/case/create?issueType=technical).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -3962,30 +4328,31 @@ func (c *SNS) TagResourceRequest(input *TagResourceInput) (req *request.Request,
 // API operation TagResource for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFound"
-//   Can’t perform the action on the specified resource. Make sure that the
-//   resource exists.
 //
-//   * ErrCodeTagLimitExceededException "TagLimitExceeded"
-//   Can't add more than 50 tags to a topic.
+//   - ErrCodeResourceNotFoundException "ResourceNotFound"
+//     Can’t perform the action on the specified resource. Make sure that the
+//     resource exists.
 //
-//   * ErrCodeStaleTagException "StaleTag"
-//   A tag has been added to a resource with the same ARN as a deleted resource.
-//   Wait a short while and then retry the operation.
+//   - ErrCodeTagLimitExceededException "TagLimitExceeded"
+//     Can't add more than 50 tags to a topic.
 //
-//   * ErrCodeTagPolicyException "TagPolicy"
-//   The request doesn't comply with the IAM tag policy. Correct your request
-//   and then retry it.
+//   - ErrCodeStaleTagException "StaleTag"
+//     A tag has been added to a resource with the same ARN as a deleted resource.
+//     Wait a short while and then retry the operation.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameter"
-//   Indicates that a request parameter does not comply with the associated constraints.
+//   - ErrCodeTagPolicyException "TagPolicy"
+//     The request doesn't comply with the IAM tag policy. Correct your request
+//     and then retry it.
 //
-//   * ErrCodeAuthorizationErrorException "AuthorizationError"
-//   Indicates that the user has been denied access to the requested resource.
+//   - ErrCodeInvalidParameterException "InvalidParameter"
+//     Indicates that a request parameter does not comply with the associated constraints.
 //
-//   * ErrCodeConcurrentAccessException "ConcurrentAccess"
-//   Can't perform multiple operations on a tag simultaneously. Perform the operations
-//   sequentially.
+//   - ErrCodeAuthorizationErrorException "AuthorizationError"
+//     Indicates that the user has been denied access to the requested resource.
+//
+//   - ErrCodeConcurrentAccessException "ConcurrentAccess"
+//     Can't perform multiple operations on a tag simultaneously. Perform the operations
+//     sequentially.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/TagResource
 func (c *SNS) TagResource(input *TagResourceInput) (*TagResourceOutput, error) {
@@ -4025,14 +4392,13 @@ const opUnsubscribe = "Unsubscribe"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the UnsubscribeRequest method.
+//	req, resp := client.UnsubscribeRequest(params)
 //
-//    // Example sending a request using the UnsubscribeRequest method.
-//    req, resp := client.UnsubscribeRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/Unsubscribe
 func (c *SNS) UnsubscribeRequest(input *UnsubscribeInput) (req *request.Request, output *UnsubscribeOutput) {
@@ -4072,21 +4438,22 @@ func (c *SNS) UnsubscribeRequest(input *UnsubscribeInput) (req *request.Request,
 // API operation Unsubscribe for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeInvalidParameterException "InvalidParameter"
-//   Indicates that a request parameter does not comply with the associated constraints.
 //
-//   * ErrCodeInternalErrorException "InternalError"
-//   Indicates an internal service error.
+//   - ErrCodeInvalidParameterException "InvalidParameter"
+//     Indicates that a request parameter does not comply with the associated constraints.
 //
-//   * ErrCodeAuthorizationErrorException "AuthorizationError"
-//   Indicates that the user has been denied access to the requested resource.
+//   - ErrCodeInternalErrorException "InternalError"
+//     Indicates an internal service error.
 //
-//   * ErrCodeNotFoundException "NotFound"
-//   Indicates that the requested resource does not exist.
+//   - ErrCodeAuthorizationErrorException "AuthorizationError"
+//     Indicates that the user has been denied access to the requested resource.
 //
-//   * ErrCodeInvalidSecurityException "InvalidSecurity"
-//   The credential signature isn't valid. You must use an HTTPS endpoint and
-//   sign your request using Signature Version 4.
+//   - ErrCodeNotFoundException "NotFound"
+//     Indicates that the requested resource does not exist.
+//
+//   - ErrCodeInvalidSecurityException "InvalidSecurity"
+//     The credential signature isn't valid. You must use an HTTPS endpoint and
+//     sign your request using Signature Version 4.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/Unsubscribe
 func (c *SNS) Unsubscribe(input *UnsubscribeInput) (*UnsubscribeOutput, error) {
@@ -4126,14 +4493,13 @@ const opUntagResource = "UntagResource"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the UntagResourceRequest method.
+//	req, resp := client.UntagResourceRequest(params)
 //
-//    // Example sending a request using the UntagResourceRequest method.
-//    req, resp := client.UntagResourceRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/UntagResource
 func (c *SNS) UntagResourceRequest(input *UntagResourceInput) (req *request.Request, output *UntagResourceOutput) {
@@ -4167,30 +4533,31 @@ func (c *SNS) UntagResourceRequest(input *UntagResourceInput) (req *request.Requ
 // API operation UntagResource for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFound"
-//   Can’t perform the action on the specified resource. Make sure that the
-//   resource exists.
 //
-//   * ErrCodeTagLimitExceededException "TagLimitExceeded"
-//   Can't add more than 50 tags to a topic.
+//   - ErrCodeResourceNotFoundException "ResourceNotFound"
+//     Can’t perform the action on the specified resource. Make sure that the
+//     resource exists.
 //
-//   * ErrCodeStaleTagException "StaleTag"
-//   A tag has been added to a resource with the same ARN as a deleted resource.
-//   Wait a short while and then retry the operation.
+//   - ErrCodeTagLimitExceededException "TagLimitExceeded"
+//     Can't add more than 50 tags to a topic.
 //
-//   * ErrCodeTagPolicyException "TagPolicy"
-//   The request doesn't comply with the IAM tag policy. Correct your request
-//   and then retry it.
+//   - ErrCodeStaleTagException "StaleTag"
+//     A tag has been added to a resource with the same ARN as a deleted resource.
+//     Wait a short while and then retry the operation.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameter"
-//   Indicates that a request parameter does not comply with the associated constraints.
+//   - ErrCodeTagPolicyException "TagPolicy"
+//     The request doesn't comply with the IAM tag policy. Correct your request
+//     and then retry it.
 //
-//   * ErrCodeAuthorizationErrorException "AuthorizationError"
-//   Indicates that the user has been denied access to the requested resource.
+//   - ErrCodeInvalidParameterException "InvalidParameter"
+//     Indicates that a request parameter does not comply with the associated constraints.
 //
-//   * ErrCodeConcurrentAccessException "ConcurrentAccess"
-//   Can't perform multiple operations on a tag simultaneously. Perform the operations
-//   sequentially.
+//   - ErrCodeAuthorizationErrorException "AuthorizationError"
+//     Indicates that the user has been denied access to the requested resource.
+//
+//   - ErrCodeConcurrentAccessException "ConcurrentAccess"
+//     Can't perform multiple operations on a tag simultaneously. Perform the operations
+//     sequentially.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/UntagResource
 func (c *SNS) UntagResource(input *UntagResourceInput) (*UntagResourceOutput, error) {
@@ -4230,14 +4597,13 @@ const opVerifySMSSandboxPhoneNumber = "VerifySMSSandboxPhoneNumber"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the VerifySMSSandboxPhoneNumberRequest method.
+//	req, resp := client.VerifySMSSandboxPhoneNumberRequest(params)
 //
-//    // Example sending a request using the VerifySMSSandboxPhoneNumberRequest method.
-//    req, resp := client.VerifySMSSandboxPhoneNumberRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/VerifySMSSandboxPhoneNumber
 func (c *SNS) VerifySMSSandboxPhoneNumberRequest(input *VerifySMSSandboxPhoneNumberInput) (req *request.Request, output *VerifySMSSandboxPhoneNumberOutput) {
@@ -4260,15 +4626,16 @@ func (c *SNS) VerifySMSSandboxPhoneNumberRequest(input *VerifySMSSandboxPhoneNum
 // VerifySMSSandboxPhoneNumber API operation for Amazon Simple Notification Service.
 //
 // Verifies a destination phone number with a one-time password (OTP) for the
-// calling account.
+// calling Amazon Web Services account.
 //
-// When you start using Amazon SNS to send SMS messages, your account is in
-// the SMS sandbox. The SMS sandbox provides a safe environment for you to try
-// Amazon SNS features without risking your reputation as an SMS sender. While
-// your account is in the SMS sandbox, you can use all of the features of Amazon
-// SNS. However, you can send SMS messages only to verified destination phone
-// numbers. For more information, including how to move out of the sandbox to
-// send messages without restrictions, see SMS sandbox (https://docs.aws.amazon.com/sns/latest/dg/sns-sms-sandbox.html)
+// When you start using Amazon SNS to send SMS messages, your Amazon Web Services
+// account is in the SMS sandbox. The SMS sandbox provides a safe environment
+// for you to try Amazon SNS features without risking your reputation as an
+// SMS sender. While your Amazon Web Services account is in the SMS sandbox,
+// you can use all of the features of Amazon SNS. However, you can send SMS
+// messages only to verified destination phone numbers. For more information,
+// including how to move out of the sandbox to send messages without restrictions,
+// see SMS sandbox (https://docs.aws.amazon.com/sns/latest/dg/sns-sms-sandbox.html)
 // in the Amazon SNS Developer Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -4279,25 +4646,26 @@ func (c *SNS) VerifySMSSandboxPhoneNumberRequest(input *VerifySMSSandboxPhoneNum
 // API operation VerifySMSSandboxPhoneNumber for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeAuthorizationErrorException "AuthorizationError"
-//   Indicates that the user has been denied access to the requested resource.
 //
-//   * ErrCodeInternalErrorException "InternalError"
-//   Indicates an internal service error.
+//   - ErrCodeAuthorizationErrorException "AuthorizationError"
+//     Indicates that the user has been denied access to the requested resource.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameter"
-//   Indicates that a request parameter does not comply with the associated constraints.
+//   - ErrCodeInternalErrorException "InternalError"
+//     Indicates an internal service error.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFound"
-//   Can’t perform the action on the specified resource. Make sure that the
-//   resource exists.
+//   - ErrCodeInvalidParameterException "InvalidParameter"
+//     Indicates that a request parameter does not comply with the associated constraints.
 //
-//   * ErrCodeVerificationException "VerificationException"
-//   Indicates that the one-time password (OTP) used for verification is invalid.
+//   - ErrCodeResourceNotFoundException "ResourceNotFound"
+//     Can’t perform the action on the specified resource. Make sure that the
+//     resource exists.
 //
-//   * ErrCodeThrottledException "Throttled"
-//   Indicates that the rate at which requests have been submitted for this action
-//   exceeds the limit for your account.
+//   - ErrCodeVerificationException "VerificationException"
+//     Indicates that the one-time password (OTP) used for verification is invalid.
+//
+//   - ErrCodeThrottledException "Throttled"
+//     Indicates that the rate at which requests have been submitted for this action
+//     exceeds the limit for your Amazon Web Services account.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/VerifySMSSandboxPhoneNumber
 func (c *SNS) VerifySMSSandboxPhoneNumber(input *VerifySMSSandboxPhoneNumberInput) (*VerifySMSSandboxPhoneNumberOutput, error) {
@@ -4324,9 +4692,9 @@ func (c *SNS) VerifySMSSandboxPhoneNumberWithContext(ctx aws.Context, input *Ver
 type AddPermissionInput struct {
 	_ struct{} `type:"structure"`
 
-	// The account IDs of the users (principals) who will be given access to the
-	// specified actions. The users must have account, but do not need to be signed
-	// up for this service.
+	// The Amazon Web Services account IDs of the users (principals) who will be
+	// given access to the specified actions. The users must have Amazon Web Services
+	// account, but do not need to be signed up for this service.
 	//
 	// AWSAccountId is a required field
 	AWSAccountId []*string `type:"list" required:"true"`
@@ -4433,6 +4801,71 @@ func (s AddPermissionOutput) String() string {
 // value will be replaced with "sensitive".
 func (s AddPermissionOutput) GoString() string {
 	return s.String()
+}
+
+// Gives a detailed description of failed messages in the batch.
+type BatchResultErrorEntry struct {
+	_ struct{} `type:"structure"`
+
+	// An error code representing why the action failed on this entry.
+	//
+	// Code is a required field
+	Code *string `type:"string" required:"true"`
+
+	// The Id of an entry in a batch request
+	//
+	// Id is a required field
+	Id *string `type:"string" required:"true"`
+
+	// A message explaining why the action failed on this entry.
+	Message *string `type:"string"`
+
+	// Specifies whether the error happened due to the caller of the batch API action.
+	//
+	// SenderFault is a required field
+	SenderFault *bool `type:"boolean" required:"true"`
+}
+
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s BatchResultErrorEntry) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s BatchResultErrorEntry) GoString() string {
+	return s.String()
+}
+
+// SetCode sets the Code field's value.
+func (s *BatchResultErrorEntry) SetCode(v string) *BatchResultErrorEntry {
+	s.Code = &v
+	return s
+}
+
+// SetId sets the Id field's value.
+func (s *BatchResultErrorEntry) SetId(v string) *BatchResultErrorEntry {
+	s.Id = &v
+	return s
+}
+
+// SetMessage sets the Message field's value.
+func (s *BatchResultErrorEntry) SetMessage(v string) *BatchResultErrorEntry {
+	s.Message = &v
+	return s
+}
+
+// SetSenderFault sets the SenderFault field's value.
+func (s *BatchResultErrorEntry) SetSenderFault(v bool) *BatchResultErrorEntry {
+	s.SenderFault = &v
+	return s
 }
 
 // The input for the CheckIfPhoneNumberIsOptedOut action.
@@ -4975,6 +5408,15 @@ type CreateTopicInput struct {
 	//    parameter for the Publish action.
 	Attributes map[string]*string `type:"map"`
 
+	// The body of the policy document you want to use for this topic.
+	//
+	// You can only add one policy per topic.
+	//
+	// The policy must be in JSON string format.
+	//
+	// Length Constraints: Maximum length of 30,720.
+	DataProtectionPolicy *string `type:"string"`
+
 	// The name of the topic you want to create.
 	//
 	// Constraints: Topic names must be made up of only uppercase and lowercase
@@ -5037,6 +5479,12 @@ func (s *CreateTopicInput) Validate() error {
 // SetAttributes sets the Attributes field's value.
 func (s *CreateTopicInput) SetAttributes(v map[string]*string) *CreateTopicInput {
 	s.Attributes = v
+	return s
+}
+
+// SetDataProtectionPolicy sets the DataProtectionPolicy field's value.
+func (s *CreateTopicInput) SetDataProtectionPolicy(v string) *CreateTopicInput {
+	s.DataProtectionPolicy = &v
 	return s
 }
 
@@ -5358,14 +5806,14 @@ func (s DeleteTopicOutput) GoString() string {
 	return s.String()
 }
 
-// Endpoint for mobile app and device.
+// The endpoint for mobile app and device.
 type Endpoint struct {
 	_ struct{} `type:"structure"`
 
 	// Attributes for endpoint.
 	Attributes map[string]*string `type:"map"`
 
-	// EndpointArn for mobile app and device.
+	// The EndpointArn for mobile app and device.
 	EndpointArn *string `type:"string"`
 }
 
@@ -5396,6 +5844,86 @@ func (s *Endpoint) SetAttributes(v map[string]*string) *Endpoint {
 // SetEndpointArn sets the EndpointArn field's value.
 func (s *Endpoint) SetEndpointArn(v string) *Endpoint {
 	s.EndpointArn = &v
+	return s
+}
+
+type GetDataProtectionPolicyInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN of the topic whose DataProtectionPolicy you want to get.
+	//
+	// For more information about ARNs, see Amazon Resource Names (ARNs) (https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html)
+	// in the Amazon Web Services General Reference.
+	//
+	// ResourceArn is a required field
+	ResourceArn *string `type:"string" required:"true"`
+}
+
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s GetDataProtectionPolicyInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s GetDataProtectionPolicyInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetDataProtectionPolicyInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetDataProtectionPolicyInput"}
+	if s.ResourceArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceArn"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetResourceArn sets the ResourceArn field's value.
+func (s *GetDataProtectionPolicyInput) SetResourceArn(v string) *GetDataProtectionPolicyInput {
+	s.ResourceArn = &v
+	return s
+}
+
+type GetDataProtectionPolicyOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Retrieves the DataProtectionPolicy in JSON string format.
+	DataProtectionPolicy *string `type:"string"`
+}
+
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s GetDataProtectionPolicyOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s GetDataProtectionPolicyOutput) GoString() string {
+	return s.String()
+}
+
+// SetDataProtectionPolicy sets the DataProtectionPolicy field's value.
+func (s *GetDataProtectionPolicyOutput) SetDataProtectionPolicy(v string) *GetDataProtectionPolicyOutput {
+	s.DataProtectionPolicy = &v
 	return s
 }
 
@@ -5545,6 +6073,15 @@ type GetPlatformApplicationAttributesOutput struct {
 
 	// Attributes include the following:
 	//
+	//    * AppleCertificateExpiryDate – The expiry date of the SSL certificate
+	//    used to configure certificate-based authentication.
+	//
+	//    * ApplePlatformTeamID – The Apple developer account ID used to configure
+	//    token-based authentication.
+	//
+	//    * ApplePlatformBundleID – The app identifier used to configure token-based
+	//    authentication.
+	//
 	//    * EventEndpointCreated – Topic ARN to which EndpointCreated event notifications
 	//    should be sent.
 	//
@@ -5678,7 +6215,7 @@ func (s GetSMSSandboxAccountStatusInput) GoString() string {
 type GetSMSSandboxAccountStatusOutput struct {
 	_ struct{} `type:"structure"`
 
-	// Indicates whether the calling account is in the SMS sandbox.
+	// Indicates whether the calling Amazon Web Services account is in the SMS sandbox.
 	//
 	// IsInSandbox is a required field
 	IsInSandbox *bool `type:"boolean" required:"true"`
@@ -5776,7 +6313,7 @@ type GetSubscriptionAttributesOutput struct {
 	//    For more information, see Amazon SNS Message Filtering (https://docs.aws.amazon.com/sns/latest/dg/sns-message-filtering.html)
 	//    in the Amazon SNS Developer Guide.
 	//
-	//    * Owner – The account ID of the subscription's owner.
+	//    * Owner – The Amazon Web Services account ID of the subscription's owner.
 	//
 	//    * PendingConfirmation – true if the subscription hasn't been confirmed.
 	//    To confirm a pending subscription, call the ConfirmSubscription action
@@ -5892,7 +6429,7 @@ type GetTopicAttributesOutput struct {
 	//    * DisplayName – The human-readable name used in the From field for notifications
 	//    to email and email-json endpoints.
 	//
-	//    * Owner – The account ID of the topic's owner.
+	//    * Owner – The Amazon Web Services account ID of the topic's owner.
 	//
 	//    * Policy – The JSON serialization of the topic's access control policy.
 	//
@@ -6886,7 +7423,7 @@ type PhoneNumberInformation struct {
 	Iso2CountryCode *string `type:"string"`
 
 	// The capabilities of each phone number.
-	NumberCapabilities []*string `type:"list"`
+	NumberCapabilities []*string `type:"list" enum:"NumberCapability"`
 
 	// The phone number.
 	PhoneNumber *string `type:"string"`
@@ -6990,6 +7527,363 @@ func (s *PlatformApplication) SetAttributes(v map[string]*string) *PlatformAppli
 // SetPlatformApplicationArn sets the PlatformApplicationArn field's value.
 func (s *PlatformApplication) SetPlatformApplicationArn(v string) *PlatformApplication {
 	s.PlatformApplicationArn = &v
+	return s
+}
+
+type PublishBatchInput struct {
+	_ struct{} `type:"structure"`
+
+	// A list of PublishBatch request entries to be sent to the SNS topic.
+	//
+	// PublishBatchRequestEntries is a required field
+	PublishBatchRequestEntries []*PublishBatchRequestEntry `type:"list" required:"true"`
+
+	// The Amazon resource name (ARN) of the topic you want to batch publish to.
+	//
+	// TopicArn is a required field
+	TopicArn *string `type:"string" required:"true"`
+}
+
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s PublishBatchInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s PublishBatchInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *PublishBatchInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "PublishBatchInput"}
+	if s.PublishBatchRequestEntries == nil {
+		invalidParams.Add(request.NewErrParamRequired("PublishBatchRequestEntries"))
+	}
+	if s.TopicArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("TopicArn"))
+	}
+	if s.PublishBatchRequestEntries != nil {
+		for i, v := range s.PublishBatchRequestEntries {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "PublishBatchRequestEntries", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetPublishBatchRequestEntries sets the PublishBatchRequestEntries field's value.
+func (s *PublishBatchInput) SetPublishBatchRequestEntries(v []*PublishBatchRequestEntry) *PublishBatchInput {
+	s.PublishBatchRequestEntries = v
+	return s
+}
+
+// SetTopicArn sets the TopicArn field's value.
+func (s *PublishBatchInput) SetTopicArn(v string) *PublishBatchInput {
+	s.TopicArn = &v
+	return s
+}
+
+type PublishBatchOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A list of failed PublishBatch responses.
+	Failed []*BatchResultErrorEntry `type:"list"`
+
+	// A list of successful PublishBatch responses.
+	Successful []*PublishBatchResultEntry `type:"list"`
+}
+
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s PublishBatchOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s PublishBatchOutput) GoString() string {
+	return s.String()
+}
+
+// SetFailed sets the Failed field's value.
+func (s *PublishBatchOutput) SetFailed(v []*BatchResultErrorEntry) *PublishBatchOutput {
+	s.Failed = v
+	return s
+}
+
+// SetSuccessful sets the Successful field's value.
+func (s *PublishBatchOutput) SetSuccessful(v []*PublishBatchResultEntry) *PublishBatchOutput {
+	s.Successful = v
+	return s
+}
+
+// Contains the details of a single Amazon SNS message along with an Id that
+// identifies a message within the batch.
+type PublishBatchRequestEntry struct {
+	_ struct{} `type:"structure"`
+
+	// An identifier for the message in this batch.
+	//
+	// The Ids of a batch request must be unique within a request.
+	//
+	// This identifier can have up to 80 characters. The following characters are
+	// accepted: alphanumeric characters, hyphens(-), and underscores (_).
+	//
+	// Id is a required field
+	Id *string `type:"string" required:"true"`
+
+	// The body of the message.
+	//
+	// Message is a required field
+	Message *string `type:"string" required:"true"`
+
+	// Each message attribute consists of a Name, Type, and Value. For more information,
+	// see Amazon SNS message attributes (https://docs.aws.amazon.com/sns/latest/dg/sns-message-attributes.html)
+	// in the Amazon SNS Developer Guide.
+	MessageAttributes map[string]*MessageAttributeValue `locationNameKey:"Name" locationNameValue:"Value" type:"map"`
+
+	// This parameter applies only to FIFO (first-in-first-out) topics.
+	//
+	// The token used for deduplication of messages within a 5-minute minimum deduplication
+	// interval. If a message with a particular MessageDeduplicationId is sent successfully,
+	// subsequent messages with the same MessageDeduplicationId are accepted successfully
+	// but aren't delivered.
+	//
+	//    * Every message must have a unique MessageDeduplicationId. You may provide
+	//    a MessageDeduplicationId explicitly. If you aren't able to provide a MessageDeduplicationId
+	//    and you enable ContentBasedDeduplication for your topic, Amazon SNS uses
+	//    a SHA-256 hash to generate the MessageDeduplicationId using the body of
+	//    the message (but not the attributes of the message). If you don't provide
+	//    a MessageDeduplicationId and the topic doesn't have ContentBasedDeduplication
+	//    set, the action fails with an error. If the topic has a ContentBasedDeduplication
+	//    set, your MessageDeduplicationId overrides the generated one.
+	//
+	//    * When ContentBasedDeduplication is in effect, messages with identical
+	//    content sent within the deduplication interval are treated as duplicates
+	//    and only one copy of the message is delivered.
+	//
+	//    * If you send one message with ContentBasedDeduplication enabled, and
+	//    then another message with a MessageDeduplicationId that is the same as
+	//    the one generated for the first MessageDeduplicationId, the two messages
+	//    are treated as duplicates and only one copy of the message is delivered.
+	//
+	// The MessageDeduplicationId is available to the consumer of the message (this
+	// can be useful for troubleshooting delivery issues).
+	//
+	// If a message is sent successfully but the acknowledgement is lost and the
+	// message is resent with the same MessageDeduplicationId after the deduplication
+	// interval, Amazon SNS can't detect duplicate messages.
+	//
+	// Amazon SNS continues to keep track of the message deduplication ID even after
+	// the message is received and deleted.
+	//
+	// The length of MessageDeduplicationId is 128 characters.
+	//
+	// MessageDeduplicationId can contain alphanumeric characters (a-z, A-Z, 0-9)
+	// and punctuation (!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~).
+	MessageDeduplicationId *string `type:"string"`
+
+	// This parameter applies only to FIFO (first-in-first-out) topics.
+	//
+	// The tag that specifies that a message belongs to a specific message group.
+	// Messages that belong to the same message group are processed in a FIFO manner
+	// (however, messages in different message groups might be processed out of
+	// order). To interleave multiple ordered streams within a single topic, use
+	// MessageGroupId values (for example, session data for multiple users). In
+	// this scenario, multiple consumers can process the topic, but the session
+	// data of each user is processed in a FIFO fashion.
+	//
+	// You must associate a non-empty MessageGroupId with a message. If you don't
+	// provide a MessageGroupId, the action fails.
+	//
+	// The length of MessageGroupId is 128 characters.
+	//
+	// MessageGroupId can contain alphanumeric characters (a-z, A-Z, 0-9) and punctuation
+	// (!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~).
+	//
+	// MessageGroupId is required for FIFO topics. You can't use it for standard
+	// topics.
+	MessageGroupId *string `type:"string"`
+
+	// Set MessageStructure to json if you want to send a different message for
+	// each protocol. For example, using one publish action, you can send a short
+	// message to your SMS subscribers and a longer message to your email subscribers.
+	// If you set MessageStructure to json, the value of the Message parameter must:
+	//
+	//    * be a syntactically valid JSON object; and
+	//
+	//    * contain at least a top-level JSON key of "default" with a value that
+	//    is a string.
+	//
+	// You can define other top-level keys that define the message you want to send
+	// to a specific transport protocol (e.g. http).
+	MessageStructure *string `type:"string"`
+
+	// The subject of the batch message.
+	Subject *string `type:"string"`
+}
+
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s PublishBatchRequestEntry) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s PublishBatchRequestEntry) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *PublishBatchRequestEntry) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "PublishBatchRequestEntry"}
+	if s.Id == nil {
+		invalidParams.Add(request.NewErrParamRequired("Id"))
+	}
+	if s.Message == nil {
+		invalidParams.Add(request.NewErrParamRequired("Message"))
+	}
+	if s.MessageAttributes != nil {
+		for i, v := range s.MessageAttributes {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "MessageAttributes", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetId sets the Id field's value.
+func (s *PublishBatchRequestEntry) SetId(v string) *PublishBatchRequestEntry {
+	s.Id = &v
+	return s
+}
+
+// SetMessage sets the Message field's value.
+func (s *PublishBatchRequestEntry) SetMessage(v string) *PublishBatchRequestEntry {
+	s.Message = &v
+	return s
+}
+
+// SetMessageAttributes sets the MessageAttributes field's value.
+func (s *PublishBatchRequestEntry) SetMessageAttributes(v map[string]*MessageAttributeValue) *PublishBatchRequestEntry {
+	s.MessageAttributes = v
+	return s
+}
+
+// SetMessageDeduplicationId sets the MessageDeduplicationId field's value.
+func (s *PublishBatchRequestEntry) SetMessageDeduplicationId(v string) *PublishBatchRequestEntry {
+	s.MessageDeduplicationId = &v
+	return s
+}
+
+// SetMessageGroupId sets the MessageGroupId field's value.
+func (s *PublishBatchRequestEntry) SetMessageGroupId(v string) *PublishBatchRequestEntry {
+	s.MessageGroupId = &v
+	return s
+}
+
+// SetMessageStructure sets the MessageStructure field's value.
+func (s *PublishBatchRequestEntry) SetMessageStructure(v string) *PublishBatchRequestEntry {
+	s.MessageStructure = &v
+	return s
+}
+
+// SetSubject sets the Subject field's value.
+func (s *PublishBatchRequestEntry) SetSubject(v string) *PublishBatchRequestEntry {
+	s.Subject = &v
+	return s
+}
+
+// Encloses data related to a successful message in a batch request for topic.
+type PublishBatchResultEntry struct {
+	_ struct{} `type:"structure"`
+
+	// The Id of an entry in a batch request.
+	Id *string `type:"string"`
+
+	// An identifier for the message.
+	MessageId *string `type:"string"`
+
+	// This parameter applies only to FIFO (first-in-first-out) topics.
+	//
+	// The large, non-consecutive number that Amazon SNS assigns to each message.
+	//
+	// The length of SequenceNumber is 128 bits. SequenceNumber continues to increase
+	// for a particular MessageGroupId.
+	SequenceNumber *string `type:"string"`
+}
+
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s PublishBatchResultEntry) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s PublishBatchResultEntry) GoString() string {
+	return s.String()
+}
+
+// SetId sets the Id field's value.
+func (s *PublishBatchResultEntry) SetId(v string) *PublishBatchResultEntry {
+	s.Id = &v
+	return s
+}
+
+// SetMessageId sets the MessageId field's value.
+func (s *PublishBatchResultEntry) SetMessageId(v string) *PublishBatchResultEntry {
+	s.MessageId = &v
+	return s
+}
+
+// SetSequenceNumber sets the SequenceNumber field's value.
+func (s *PublishBatchResultEntry) SetSequenceNumber(v string) *PublishBatchResultEntry {
+	s.SequenceNumber = &v
 	return s
 }
 
@@ -7257,6 +8151,95 @@ func (s *PublishOutput) SetSequenceNumber(v string) *PublishOutput {
 	return s
 }
 
+type PutDataProtectionPolicyInput struct {
+	_ struct{} `type:"structure"`
+
+	// The JSON serialization of the topic's DataProtectionPolicy.
+	//
+	// The DataProtectionPolicy must be in JSON string format.
+	//
+	// Length Constraints: Maximum length of 30,720.
+	//
+	// DataProtectionPolicy is a required field
+	DataProtectionPolicy *string `type:"string" required:"true"`
+
+	// The ARN of the topic whose DataProtectionPolicy you want to add or update.
+	//
+	// For more information about ARNs, see Amazon Resource Names (ARNs) (https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html)
+	// in the Amazon Web Services General Reference.
+	//
+	// ResourceArn is a required field
+	ResourceArn *string `type:"string" required:"true"`
+}
+
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s PutDataProtectionPolicyInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s PutDataProtectionPolicyInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *PutDataProtectionPolicyInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "PutDataProtectionPolicyInput"}
+	if s.DataProtectionPolicy == nil {
+		invalidParams.Add(request.NewErrParamRequired("DataProtectionPolicy"))
+	}
+	if s.ResourceArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceArn"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDataProtectionPolicy sets the DataProtectionPolicy field's value.
+func (s *PutDataProtectionPolicyInput) SetDataProtectionPolicy(v string) *PutDataProtectionPolicyInput {
+	s.DataProtectionPolicy = &v
+	return s
+}
+
+// SetResourceArn sets the ResourceArn field's value.
+func (s *PutDataProtectionPolicyInput) SetResourceArn(v string) *PutDataProtectionPolicyInput {
+	s.ResourceArn = &v
+	return s
+}
+
+type PutDataProtectionPolicyOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s PutDataProtectionPolicyOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s PutDataProtectionPolicyOutput) GoString() string {
+	return s.String()
+}
+
 // Input for RemovePermission action.
 type RemovePermissionInput struct {
 	_ struct{} `type:"structure"`
@@ -7342,13 +8325,14 @@ func (s RemovePermissionOutput) GoString() string {
 
 // A verified or pending destination phone number in the SMS sandbox.
 //
-// When you start using Amazon SNS to send SMS messages, your account is in
-// the SMS sandbox. The SMS sandbox provides a safe environment for you to try
-// Amazon SNS features without risking your reputation as an SMS sender. While
-// your account is in the SMS sandbox, you can use all of the features of Amazon
-// SNS. However, you can send SMS messages only to verified destination phone
-// numbers. For more information, including how to move out of the sandbox to
-// send messages without restrictions, see SMS sandbox (https://docs.aws.amazon.com/sns/latest/dg/sns-sms-sandbox.html)
+// When you start using Amazon SNS to send SMS messages, your Amazon Web Services
+// account is in the SMS sandbox. The SMS sandbox provides a safe environment
+// for you to try Amazon SNS features without risking your reputation as an
+// SMS sender. While your Amazon Web Services account is in the SMS sandbox,
+// you can use all of the features of Amazon SNS. However, you can send SMS
+// messages only to verified destination phone numbers. For more information,
+// including how to move out of the sandbox to send messages without restrictions,
+// see SMS sandbox (https://docs.aws.amazon.com/sns/latest/dg/sns-sms-sandbox.html)
 // in the Amazon SNS Developer Guide.
 type SMSSandboxPhoneNumber struct {
 	_ struct{} `type:"structure"`
@@ -7494,14 +8478,16 @@ type SetPlatformApplicationAttributesInput struct {
 	// the following:
 	//
 	//    * PlatformCredential – The credential received from the notification
-	//    service. For APNS and APNS_SANDBOX, PlatformCredential is private key.
-	//    For GCM (Firebase Cloud Messaging), PlatformCredential is API key. For
-	//    ADM, PlatformCredential is client secret.
+	//    service. For ADM, PlatformCredentialis client secret. For Apple Services
+	//    using certificate credentials, PlatformCredential is private key. For
+	//    Apple Services using token credentials, PlatformCredential is signing
+	//    key. For GCM (Firebase Cloud Messaging), PlatformCredential is API key.
 	//
 	//    * PlatformPrincipal – The principal received from the notification service.
-	//    For APNS and APNS_SANDBOX, PlatformPrincipal is SSL certificate. For GCM
-	//    (Firebase Cloud Messaging), there is no PlatformPrincipal. For ADM, PlatformPrincipal
-	//    is client id.
+	//    For ADM, PlatformPrincipalis client id. For Apple Services using certificate
+	//    credentials, PlatformPrincipal is SSL certificate. For Apple Services
+	//    using token credentials, PlatformPrincipal is signing key ID. For GCM
+	//    (Firebase Cloud Messaging), there is no PlatformPrincipal.
 	//
 	//    * EventEndpointCreated – Topic ARN to which EndpointCreated event notifications
 	//    are sent.
@@ -7524,6 +8510,14 @@ type SetPlatformApplicationAttributesInput struct {
 	//
 	//    * SuccessFeedbackSampleRate – Sample rate percentage (0-100) of successfully
 	//    delivered messages.
+	//
+	// The following attributes only apply to APNs token-based authentication:
+	//
+	//    * ApplePlatformTeamID – The identifier that's assigned to your Apple
+	//    developer account team.
+	//
+	//    * ApplePlatformBundleID – The bundle identifier that's assigned to your
+	//    iOS app.
 	//
 	// Attributes is a required field
 	Attributes map[string]*string `type:"map" required:"true"`
@@ -7606,8 +8600,8 @@ func (s SetPlatformApplicationAttributesOutput) GoString() string {
 type SetSMSAttributesInput struct {
 	_ struct{} `type:"structure"`
 
-	// The default settings for sending SMS messages from your account. You can
-	// set values for the following attribute names:
+	// The default settings for sending SMS messages from your Amazon Web Services
+	// account. You can set values for the following attribute names:
 	//
 	// MonthlySpendLimit – The maximum amount in USD that you are willing to spend
 	// each month to send SMS messages. When Amazon SNS determines that sending
@@ -7654,7 +8648,8 @@ type SetSMSAttributesInput struct {
 	// UsageReportS3Bucket – The name of the Amazon S3 bucket to receive daily
 	// SMS usage reports from Amazon SNS. Each day, Amazon SNS will deliver a usage
 	// report as a CSV file to the bucket. The report includes the following information
-	// for each SMS message that was successfully delivered by your account:
+	// for each SMS message that was successfully delivered by your Amazon Web Services
+	// account:
 	//
 	//    * Time that the message was published (in UTC)
 	//
