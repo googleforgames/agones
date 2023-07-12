@@ -435,6 +435,7 @@ timeout: 18000s # 5h: 3h (e2e-wait-to-become-leader) + 1.5h (e2e timeout) + 0.5h
 queueTtl: 259200s # 72h
 images:
   - '${_REGISTRY}/agones-controller'
+  - '${_REGISTRY}/agones-extensions'
   - '${_REGISTRY}/agones-sdk'
   - '${_REGISTRY}/agones-ping'
   - '${_REGISTRY}/agones-allocator'
