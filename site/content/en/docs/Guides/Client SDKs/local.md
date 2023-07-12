@@ -187,7 +187,7 @@ To run in "out of cluster" mode, instead of passing `--local` or `-f ./gameserve
 However, there are a number of commands that are necessary/useful to run when running in "out of cluster" mode.
 Here is a sample with each piece discussed after.
 ```bash
-go run cmd/sdk-server/main.go \
+./sdk-server.linux.amd64 \
   --gameserver-name my-local-server \
   --pod-namespace default \
   --kubeconfig "$HOME/.kube/config" \
