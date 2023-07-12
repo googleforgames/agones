@@ -22,7 +22,7 @@ import (
 	"agones.dev/agones/pkg/portallocator"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/client-go/informers"
 )
 
@@ -33,9 +33,11 @@ func New() *generic { return &generic{} }
 
 type generic struct{}
 
-func (*generic) ValidateGameServerSpec(*agonesv1.GameServerSpec) []metav1.StatusCause { return nil }
-func (*generic) ValidateScheduling(apis.SchedulingStrategy) []metav1.StatusCause      { return nil }
-func (*generic) MutateGameServerPod(*agonesv1.GameServerSpec, *corev1.Pod) error      { return nil }
+func (*generic) ValidateGameServerSpec(*agonesv1.GameServerSpec, *field.Path) field.ErrorList {
+	return nil
+}
+func (*generic) ValidateScheduling(apis.SchedulingStrategy, *field.Path) field.ErrorList { return nil }
+func (*generic) MutateGameServerPod(*agonesv1.GameServerSpec, *corev1.Pod) error         { return nil }
 
 // SetEviction sets disruptions controls based on GameServer.Status.Eviction.
 func (*generic) SetEviction(eviction *agonesv1.Eviction, pod *corev1.Pod) error {
