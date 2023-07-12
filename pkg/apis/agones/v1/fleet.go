@@ -15,8 +15,6 @@
 package v1
 
 import (
-	"fmt"
-
 	"agones.dev/agones/pkg"
 	"agones.dev/agones/pkg/apis"
 	"agones.dev/agones/pkg/apis/agones"
@@ -24,6 +22,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
 const (
@@ -169,73 +168,47 @@ func (f *Fleet) GetGameServerSpec() *GameServerSpec {
 	return &f.Spec.Template.Spec
 }
 
-func (f *Fleet) validateRollingUpdate(value *intstr.IntOrString, causes *[]metav1.StatusCause, parameter string) {
+func (f *Fleet) validateRollingUpdate(value *intstr.IntOrString, fldPath *field.Path) field.ErrorList {
+	allErrs := field.ErrorList{}
 	r, err := intstr.GetValueFromIntOrPercent(value, 100, true)
 	if value.Type == intstr.String {
 		if err != nil || r < 1 || r > 99 {
-			*causes = append(*causes, metav1.StatusCause{
-				Type:    metav1.CauseTypeFieldValueInvalid,
-				Field:   parameter,
-				Message: parameter + " does not have a valid percentage value (1%-99%)",
-			})
+			allErrs = append(allErrs, field.Invalid(fldPath, value, "must be between 1% and 99%"))
 		}
-	} else {
-		if r < 1 {
-			*causes = append(*causes, metav1.StatusCause{
-				Type:    metav1.CauseTypeFieldValueInvalid,
-				Field:   parameter,
-				Message: parameter + " does not have a valid integer value (>1)",
-			})
-		}
+	} else if r < 1 {
+		allErrs = append(allErrs, field.Invalid(fldPath, value, "must be at least 1"))
 	}
+	return allErrs
 }
 
 // Validate validates the Fleet configuration.
 // If a Fleet is invalid there will be > 0 values in
 // the returned array
-func (f *Fleet) Validate(apiHooks APIHooks) ([]metav1.StatusCause, bool) {
-	causes := validateName(f)
+func (f *Fleet) Validate(apiHooks APIHooks) field.ErrorList {
+	allErrs := validateName(f, field.NewPath("metadata"))
 
+	strategyPath := field.NewPath("spec", "strategy")
 	if f.Spec.Strategy.Type == appsv1.RollingUpdateDeploymentStrategyType {
-		f.validateRollingUpdate(f.Spec.Strategy.RollingUpdate.MaxUnavailable, &causes, "MaxUnavailable")
-		f.validateRollingUpdate(f.Spec.Strategy.RollingUpdate.MaxSurge, &causes, "MaxSurge")
+		allErrs = append(allErrs, f.validateRollingUpdate(f.Spec.Strategy.RollingUpdate.MaxUnavailable, strategyPath.Child("rollingUpdate", "maxUnavailable"))...)
+		allErrs = append(allErrs, f.validateRollingUpdate(f.Spec.Strategy.RollingUpdate.MaxSurge, strategyPath.Child("rollingUpdate", "maxSurge"))...)
 	} else if f.Spec.Strategy.Type != appsv1.RecreateDeploymentStrategyType {
-		causes = append(causes, metav1.StatusCause{
-			Type:    metav1.CauseTypeFieldValueInvalid,
-			Field:   "Type",
-			Message: "Strategy Type should be one of: RollingUpdate, Recreate.",
-		})
+		allErrs = append(allErrs, field.NotSupported(strategyPath.Child("type"), f.Spec.Strategy.Type, []string{"RollingUpdate", "Recreate"}))
 	}
 
 	// check Gameserver specification in a Fleet
-	gsCauses := validateGSSpec(apiHooks, f)
-	if len(gsCauses) > 0 {
-		causes = append(causes, gsCauses...)
-	}
-	if productCauses := apiHooks.ValidateScheduling(f.Spec.Scheduling); len(productCauses) > 0 {
-		causes = append(causes, productCauses...)
-	}
-	objMetaCauses := validateObjectMeta(&f.Spec.Template.ObjectMeta)
-	if len(objMetaCauses) > 0 {
-		causes = append(causes, objMetaCauses...)
-	}
+	allErrs = append(allErrs, validateGSSpec(apiHooks, f, field.NewPath("spec", "template", "spec"))...)
+	allErrs = append(allErrs, apiHooks.ValidateScheduling(f.Spec.Scheduling, field.NewPath("spec", "scheduling"))...)
+	allErrs = append(allErrs, validateObjectMeta(&f.Spec.Template.ObjectMeta, field.NewPath("spec", "template", "metadata"))...)
 
 	if f.Spec.AllocationOverflow != nil {
 		if runtime.FeatureEnabled(runtime.FeatureFleetAllocateOverflow) {
-			aoCauses, valid := f.Spec.AllocationOverflow.Validate()
-			if !valid {
-				causes = append(causes, aoCauses...)
-			}
+			allErrs = append(allErrs, f.Spec.AllocationOverflow.Validate(field.NewPath("spec", "allocationOverflow"))...)
 		} else {
-			causes = append(causes, metav1.StatusCause{
-				Type:    metav1.CauseTypeFieldValueNotSupported,
-				Field:   "allocationOverflow",
-				Message: fmt.Sprintf("Value cannot be set unless feature flag %s is enabled", runtime.FeatureFleetAllocateOverflow),
-			})
+			allErrs = append(allErrs, field.Forbidden(field.NewPath("spec", "allocationOverflow"), "Allocation Overflow is not enabled"))
 		}
 	}
 
-	return causes, len(causes) == 0
+	return allErrs
 }
 
 // UpperBoundReplicas returns whichever is smaller,

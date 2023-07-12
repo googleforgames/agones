@@ -115,10 +115,6 @@ func TestFleetAutoscalerValidateUpdate(t *testing.T) {
 	})
 
 	t.Run("bad sync interval seconds", func(t *testing.T) {
-		if !runtime.FeatureEnabled(runtime.FeatureCustomFasSyncInterval) {
-			// Do not run test if FeatureCustomFasSyncInterval is not enabled
-			t.Skip()
-		}
 
 		fas := defaultFixture()
 		fas.Spec.Sync.FixedInterval.Seconds = 0

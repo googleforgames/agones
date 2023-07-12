@@ -30,6 +30,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
 const (
@@ -450,11 +451,10 @@ func TestGameServerValidate(t *testing.T) {
 	longNameLen64 := strings.Repeat("f", validation.LabelValueMaxLength+1)
 
 	var testCases = []struct {
-		description    string
-		gs             GameServer
-		applyDefaults  bool
-		isValid        bool
-		causesExpected []metav1.StatusCause
+		description   string
+		gs            GameServer
+		applyDefaults bool
+		want          field.ErrorList
 	}{
 		{
 			description: "Valid game server",
@@ -464,7 +464,6 @@ func TestGameServerValidate(t *testing.T) {
 						Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "testing", Image: "testing/image"}}}}},
 			},
 			applyDefaults: true,
-			isValid:       true,
 		},
 		{
 			description: "Invalid gs: container, containerPort, hostPort",
@@ -488,12 +487,11 @@ func TestGameServerValidate(t *testing.T) {
 						}}}},
 			},
 			applyDefaults: false,
-			isValid:       false,
-			causesExpected: []metav1.StatusCause{
-				{Type: metav1.CauseTypeFieldValueInvalid, Message: "Container is required when using multiple containers in the pod template", Field: "container"},
-				{Type: metav1.CauseTypeFieldValueInvalid, Message: "Could not find a container named ", Field: "container"},
-				{Type: metav1.CauseTypeFieldValueInvalid, Message: "ContainerPort must be defined for Dynamic and Static PortPolicies", Field: "main.containerPort"},
-				{Type: metav1.CauseTypeFieldValueInvalid, Message: "HostPort cannot be specified with a Dynamic or Passthrough PortPolicy", Field: "main.hostPort"},
+			want: field.ErrorList{
+				field.Required(field.NewPath("spec", "container"), "Container is required when using multiple containers in the pod template"),
+				field.Invalid(field.NewPath("spec", "container"), "", "Could not find a container named "),
+				field.Required(field.NewPath("spec", "ports").Index(0).Child("containerPort"), "ContainerPort must be defined for Dynamic and Static PortPolicies"),
+				field.Forbidden(field.NewPath("spec", "ports").Index(0).Child("hostPort"), "HostPort cannot be specified with a Dynamic or Passthrough PortPolicy"),
 			},
 		},
 		{
@@ -509,10 +507,9 @@ func TestGameServerValidate(t *testing.T) {
 				},
 			},
 			applyDefaults: false,
-			isValid:       false,
-			causesExpected: []metav1.StatusCause{
-				{Type: metav1.CauseTypeFieldValueInvalid, Message: "Value 'invalid-ip' of annotation 'agones.dev/dev-address' must be a valid IP address", Field: "annotations.agones.dev/dev-address"},
-				{Type: metav1.CauseTypeFieldValueRequired, Message: "HostPort is required if GameServer is annotated with 'agones.dev/dev-address'", Field: "main.hostPort"},
+			want: field.ErrorList{
+				field.Invalid(field.NewPath("metadata").Child("annotations", "agones.dev/dev-address"), "invalid-ip", "must be a valid IP address"),
+				field.Required(field.NewPath("spec").Child("ports").Index(0).Child("hostPort"), "agones.dev/dev-address"),
 			},
 		},
 		{
@@ -536,11 +533,8 @@ func TestGameServerValidate(t *testing.T) {
 				},
 			},
 			applyDefaults: false,
-			isValid:       false,
-			causesExpected: []metav1.StatusCause{
-				{
-					Type: metav1.CauseTypeFieldValueInvalid, Message: fmt.Sprintf("Length of test-kind '%s' name should be no more than 63 characters.", longNameLen64), Field: "Name",
-				},
+			want: field.ErrorList{
+				field.TooLongMaxLength(field.NewPath("metadata", "name"), longNameLen64, 63),
 			},
 		},
 		{
@@ -563,9 +557,7 @@ func TestGameServerValidate(t *testing.T) {
 					},
 				},
 			},
-			applyDefaults:  false,
-			isValid:        true,
-			causesExpected: []metav1.StatusCause{},
+			applyDefaults: false,
 		},
 		{
 			description: "Long label key is invalid",
@@ -591,12 +583,8 @@ func TestGameServerValidate(t *testing.T) {
 				},
 			},
 			applyDefaults: false,
-			isValid:       false,
-			causesExpected: []metav1.StatusCause{
-				{
-					// error message is coming from k8s.io/apimachinery/pkg/apis/meta/v1/validation
-					Type: metav1.CauseTypeFieldValueInvalid, Message: fmt.Sprintf("labels: Invalid value: %q: name part must be no more than 63 characters", longNameLen64), Field: "labels",
-				},
+			want: field.ErrorList{
+				field.Invalid(field.NewPath("spec", "template", "metadata", "labels"), longNameLen64, "name part must be no more than 63 characters"),
 			},
 		},
 		{
@@ -623,12 +611,8 @@ func TestGameServerValidate(t *testing.T) {
 				},
 			},
 			applyDefaults: false,
-			isValid:       false,
-			causesExpected: []metav1.StatusCause{
-				{
-					// error message is coming from k8s.io/apimachinery/pkg/apis/meta/v1/validation
-					Type: metav1.CauseTypeFieldValueInvalid, Message: fmt.Sprintf("labels: Invalid value: %q: must be no more than 63 characters", longNameLen64), Field: "labels",
-				},
+			want: field.ErrorList{
+				field.Invalid(field.NewPath("spec", "template", "metadata", "labels"), longNameLen64, "must be no more than 63 characters"),
 			},
 		},
 		{
@@ -655,12 +639,8 @@ func TestGameServerValidate(t *testing.T) {
 				},
 			},
 			applyDefaults: false,
-			isValid:       false,
-			causesExpected: []metav1.StatusCause{
-				{
-					// error message is coming from k8s.io/apimachinery/pkg/apis/meta/v1/validation
-					Type: metav1.CauseTypeFieldValueInvalid, Message: fmt.Sprintf("annotations: Invalid value: %q: name part must be no more than 63 characters", longNameLen64), Field: "annotations",
-				},
+			want: field.ErrorList{
+				field.Invalid(field.NewPath("spec", "template", "metadata", "annotations"), longNameLen64, "name part must be no more than 63 characters"),
 			},
 		},
 		{
@@ -687,12 +667,8 @@ func TestGameServerValidate(t *testing.T) {
 				},
 			},
 			applyDefaults: false,
-			isValid:       false,
-			causesExpected: []metav1.StatusCause{
-				{
-					// error message is coming from k8s.io/apimachinery/pkg/apis/meta/v1/validation
-					Type: metav1.CauseTypeFieldValueInvalid, Message: fmt.Sprintf("annotations: Invalid value: %q: name part must consist of alphanumeric characters, '-', '_' or '.', and must start and end with an alphanumeric character (e.g. 'MyName',  or 'my.name',  or '123-abc', regex used for validation is '([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9]')", "agones.dev/short±Name"), Field: "annotations",
-				},
+			want: field.ErrorList{
+				field.Invalid(field.NewPath("spec", "template", "metadata", "annotations"), "agones.dev/short±Name", "name part must consist of alphanumeric characters, '-', '_' or '.', and must start and end with an alphanumeric character (e.g. 'MyName',  or 'my.name',  or '123-abc', regex used for validation is '([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9]')"),
 			},
 		},
 		{
@@ -718,9 +694,7 @@ func TestGameServerValidate(t *testing.T) {
 					},
 				},
 			},
-			applyDefaults:  false,
-			isValid:        true,
-			causesExpected: []metav1.StatusCause{},
+			applyDefaults: false,
 		},
 		{
 			description: "Check ContainerPort and HostPort with different policies",
@@ -748,11 +722,10 @@ func TestGameServerValidate(t *testing.T) {
 				},
 			},
 			applyDefaults: true,
-			isValid:       false,
-			causesExpected: []metav1.StatusCause{
-				{Type: metav1.CauseTypeFieldValueInvalid, Message: "ContainerPort cannot be specified with Passthrough PortPolicy", Field: "one.containerPort"},
-				{Type: metav1.CauseTypeFieldValueInvalid, Message: "HostPort cannot be specified with a Dynamic or Passthrough PortPolicy", Field: "two.hostPort"},
-				{Type: metav1.CauseTypeFieldValueInvalid, Message: "HostPort cannot be specified with a Dynamic or Passthrough PortPolicy", Field: "three.hostPort"},
+			want: field.ErrorList{
+				field.Required(field.NewPath("spec", "ports").Index(0).Child("containerPort"), "ContainerPort cannot be specified with Passthrough PortPolicy"),
+				field.Forbidden(field.NewPath("spec", "ports").Index(1).Child("hostPort"), "HostPort cannot be specified with a Dynamic or Passthrough PortPolicy"),
+				field.Forbidden(field.NewPath("spec", "ports").Index(2).Child("hostPort"), "HostPort cannot be specified with a Dynamic or Passthrough PortPolicy"),
 			},
 		},
 		{
@@ -778,9 +751,10 @@ func TestGameServerValidate(t *testing.T) {
 				},
 			},
 			applyDefaults: true,
-			isValid:       false,
-			causesExpected: []metav1.StatusCause{
-				{Type: metav1.CauseTypeFieldValueRequired, Message: "PortPolicy must be Static", Field: "main.portPolicy"},
+			want: field.ErrorList{
+				field.Required(
+					field.NewPath("spec", "ports").Index(0).Child("portPolicy"),
+					"PortPolicy must be Static"),
 			},
 		},
 		{
@@ -802,9 +776,11 @@ func TestGameServerValidate(t *testing.T) {
 				},
 			},
 			applyDefaults: false,
-			isValid:       false,
-			causesExpected: []metav1.StatusCause{
-				{Type: metav1.CauseTypeFieldValueInvalid, Message: "ContainerPort must be defined for Dynamic and Static PortPolicies", Field: "main.containerPort"},
+			want: field.ErrorList{
+				field.Required(
+					field.NewPath("spec", "ports").Index(0).Child("containerPort"),
+					"ContainerPort must be defined for Dynamic and Static PortPolicies",
+				),
 			},
 		},
 		{
@@ -840,9 +816,12 @@ func TestGameServerValidate(t *testing.T) {
 				},
 			},
 			applyDefaults: false,
-			isValid:       false,
-			causesExpected: []metav1.StatusCause{
-				{Type: metav1.CauseTypeFieldValueInvalid, Message: "Request must be less than or equal to cpu limit", Field: "container"},
+			want: field.ErrorList{
+				field.Invalid(
+					field.NewPath("spec", "template", "spec", "containers").Index(0).Child("resources", "requests"),
+					"50m",
+					"must be less than or equal to cpu limit of 30m",
+				),
 			},
 		},
 		{
@@ -878,9 +857,12 @@ func TestGameServerValidate(t *testing.T) {
 				},
 			},
 			applyDefaults: false,
-			isValid:       false,
-			causesExpected: []metav1.StatusCause{
-				{Type: metav1.CauseTypeFieldValueInvalid, Message: "Resource cpu request value must be non negative", Field: "container"},
+			want: field.ErrorList{
+				field.Invalid(
+					field.NewPath("spec", "template", "spec", "containers").Index(0).Child("resources", "requests").Key("cpu"),
+					"-30m",
+					"must be greater than or equal to 0",
+				),
 			},
 		},
 		{
@@ -916,10 +898,17 @@ func TestGameServerValidate(t *testing.T) {
 				},
 			},
 			applyDefaults: false,
-			isValid:       false,
-			causesExpected: []metav1.StatusCause{
-				{Type: metav1.CauseTypeFieldValueInvalid, Message: "Request must be less than or equal to cpu limit", Field: "container"},
-				{Type: metav1.CauseTypeFieldValueInvalid, Message: "Resource cpu limit value must be non negative", Field: "container"},
+			want: field.ErrorList{
+				field.Invalid(
+					field.NewPath("spec", "template", "spec", "containers").Index(0).Child("resources", "limits").Key("cpu"),
+					"-30m",
+					"must be greater than or equal to 0",
+				),
+				field.Invalid(
+					field.NewPath("spec", "template", "spec", "containers").Index(0).Child("resources", "requests"),
+					"30m",
+					"must be less than or equal to cpu limit of -30m",
+				),
 			},
 		},
 		{
@@ -955,9 +944,12 @@ func TestGameServerValidate(t *testing.T) {
 				},
 			},
 			applyDefaults: false,
-			isValid:       false,
-			causesExpected: []metav1.StatusCause{
-				{Type: metav1.CauseTypeFieldValueInvalid, Message: "Request must be less than or equal to memory limit", Field: "container"},
+			want: field.ErrorList{
+				field.Invalid(
+					field.NewPath("spec", "template", "spec", "containers").Index(0).Child("resources", "requests"),
+					"55Mi",
+					"must be less than or equal to memory limit of 32Mi",
+				),
 			},
 		},
 		{
@@ -993,9 +985,12 @@ func TestGameServerValidate(t *testing.T) {
 				},
 			},
 			applyDefaults: false,
-			isValid:       false,
-			causesExpected: []metav1.StatusCause{
-				{Type: metav1.CauseTypeFieldValueInvalid, Message: "Resource memory request value must be non negative", Field: "container"},
+			want: field.ErrorList{
+				field.Invalid(
+					field.NewPath("spec", "template", "spec", "containers").Index(0).Child("resources", "requests").Key("memory"),
+					"-32Mi",
+					"must be greater than or equal to 0",
+				),
 			},
 		},
 		{
@@ -1031,10 +1026,17 @@ func TestGameServerValidate(t *testing.T) {
 				},
 			},
 			applyDefaults: false,
-			isValid:       false,
-			causesExpected: []metav1.StatusCause{
-				{Type: metav1.CauseTypeFieldValueInvalid, Message: "Request must be less than or equal to memory limit", Field: "container"},
-				{Type: metav1.CauseTypeFieldValueInvalid, Message: "Resource memory limit value must be non negative", Field: "container"},
+			want: field.ErrorList{
+				field.Invalid(
+					field.NewPath("spec", "template", "spec", "containers").Index(0).Child("resources", "limits").Key("memory"),
+					"-32Mi",
+					"must be greater than or equal to 0",
+				),
+				field.Invalid(
+					field.NewPath("spec", "template", "spec", "containers").Index(0).Child("resources", "requests"),
+					"32Mi",
+					"must be less than or equal to memory limit of -32Mi",
+				),
 			},
 		},
 	}
@@ -1045,10 +1047,8 @@ func TestGameServerValidate(t *testing.T) {
 				tc.gs.ApplyDefaults()
 			}
 
-			causes, ok := tc.gs.Validate(fakeAPIHooks{})
-
-			assert.Equal(t, tc.isValid, ok)
-			assert.ElementsMatch(t, tc.causesExpected, causes, "causes check")
+			errs := tc.gs.Validate(fakeAPIHooks{})
+			assert.ElementsMatch(t, tc.want, errs, "ErrorList check")
 		})
 	}
 }
@@ -1061,11 +1061,10 @@ func TestGameServerValidateFeatures(t *testing.T) {
 	portContainerName := "another-container"
 
 	var testCases = []struct {
-		description    string
-		feature        string
-		gs             GameServer
-		isValid        bool
-		causesExpected []metav1.StatusCause
+		description string
+		feature     string
+		gs          GameServer
+		want        field.ErrorList
 	}{
 		{
 			description: "Invalid container name, container was not found",
@@ -1090,9 +1089,12 @@ func TestGameServerValidateFeatures(t *testing.T) {
 						}}},
 				},
 			},
-			isValid: false,
-			causesExpected: []metav1.StatusCause{
-				{Type: metav1.CauseTypeFieldValueInvalid, Message: "Container must be empty or the name of a container in the pod template", Field: "main.container"},
+			want: field.ErrorList{
+				field.Invalid(
+					field.NewPath("spec", "ports").Index(0).Child("container"),
+					"another-container",
+					"Container must be empty or the name of a container in the pod template",
+				),
 			},
 		},
 		{
@@ -1117,8 +1119,6 @@ func TestGameServerValidateFeatures(t *testing.T) {
 						}}},
 				},
 			},
-			isValid:        true,
-			causesExpected: []metav1.StatusCause{},
 		},
 		{
 			description: "PlayerTracking is disabled, Players field specified",
@@ -1130,9 +1130,11 @@ func TestGameServerValidateFeatures(t *testing.T) {
 					Template: corev1.PodTemplateSpec{
 						Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "testing", Image: "testing/image"}}}}},
 			},
-			isValid: false,
-			causesExpected: []metav1.StatusCause{
-				{Type: metav1.CauseTypeFieldValueNotSupported, Message: "Value cannot be set unless feature flag PlayerTracking is enabled", Field: "players"},
+			want: field.ErrorList{
+				field.Forbidden(
+					field.NewPath("spec", "players"),
+					"Value cannot be set unless feature flag PlayerTracking is enabled",
+				),
 			},
 		},
 		{
@@ -1145,8 +1147,6 @@ func TestGameServerValidateFeatures(t *testing.T) {
 					Template: corev1.PodTemplateSpec{
 						Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "testing", Image: "testing/image"}}}}},
 			},
-			isValid:        true,
-			causesExpected: []metav1.StatusCause{},
 		},
 		{
 			description: "CountsAndLists is disabled, Counters field specified",
@@ -1158,9 +1158,11 @@ func TestGameServerValidateFeatures(t *testing.T) {
 					Template: corev1.PodTemplateSpec{
 						Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "testing", Image: "testing/image"}}}}},
 			},
-			isValid: false,
-			causesExpected: []metav1.StatusCause{
-				{Type: metav1.CauseTypeFieldValueNotSupported, Message: "Value cannot be set unless feature flag CountsAndLists is enabled", Field: "counters"},
+			want: field.ErrorList{
+				field.Forbidden(
+					field.NewPath("spec", "counters"),
+					"Value cannot be set unless feature flag CountsAndLists is enabled",
+				),
 			},
 		},
 		{
@@ -1173,9 +1175,11 @@ func TestGameServerValidateFeatures(t *testing.T) {
 					Template: corev1.PodTemplateSpec{
 						Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "testing", Image: "testing/image"}}}}},
 			},
-			isValid: false,
-			causesExpected: []metav1.StatusCause{
-				{Type: metav1.CauseTypeFieldValueNotSupported, Message: "Value cannot be set unless feature flag CountsAndLists is enabled", Field: "lists"},
+			want: field.ErrorList{
+				field.Forbidden(
+					field.NewPath("spec", "lists"),
+					"Value cannot be set unless feature flag CountsAndLists is enabled",
+				),
 			},
 		},
 		{
@@ -1188,8 +1192,6 @@ func TestGameServerValidateFeatures(t *testing.T) {
 					Template: corev1.PodTemplateSpec{
 						Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "testing", Image: "testing/image"}}}}},
 			},
-			isValid:        true,
-			causesExpected: []metav1.StatusCause{},
 		},
 		{
 			description: "CountsAndLists is enabled, Lists field specified",
@@ -1201,8 +1203,6 @@ func TestGameServerValidateFeatures(t *testing.T) {
 					Template: corev1.PodTemplateSpec{
 						Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "testing", Image: "testing/image"}}}}},
 			},
-			isValid:        true,
-			causesExpected: []metav1.StatusCause{},
 		},
 	}
 
@@ -1211,10 +1211,8 @@ func TestGameServerValidateFeatures(t *testing.T) {
 			err := runtime.ParseFeatures(tc.feature)
 			assert.NoError(t, err)
 
-			causes, ok := tc.gs.Validate(fakeAPIHooks{})
-
-			assert.Equal(t, tc.isValid, ok)
-			assert.ElementsMatch(t, tc.causesExpected, causes, "causes check")
+			errs := tc.gs.Validate(fakeAPIHooks{})
+			assert.ElementsMatch(t, tc.want, errs, "ErrorList check")
 		})
 	}
 }
