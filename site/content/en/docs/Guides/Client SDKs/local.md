@@ -192,7 +192,7 @@ go run cmd/sdk-server/main.go \
   --pod-namespace default \
   --kubeconfig "$HOME/.kube/config" \
   --address 0.0.0.0 \
-  --no-graceful-termination
+  --graceful-termination false
 ```
 
 * `--gameserver-name` is a necessary arg, passed instead of the `GAMESERVER_NAME` enviroment variable.
@@ -212,8 +212,8 @@ go run cmd/sdk-server/main.go \
   * By default, the binding address is `localhost`. This may be difficult for some development setups.
   * Overriding this value changes which IP address(es) the server will bind to for receiving gRPC/REST SDK API calls.
   * This example value of `0.0.0.0` sets the SDK Server to receive API calls that are sent to any IP address (that reach your machine).
-* `--no-graceful-termination` disables some smooth state transitions when exiting.
-  * By default, the SDK Server will wait until the `GameServer` has reached the `Shutdown` state before exiting.
+* `--graceful-termination` set to false will disable some smooth state transitions when exiting.
+  * By default, the SDK Server will wait until the `GameServer` has reached the `Shutdown` state before exiting ("graceful termination").
   * This will cause the SDK Server to hang (waiting on state update) when attempting to terminate (e.g. with `^C`).
   * When running binaries in a development context, quickly exiting and restarting the SDK Server is handy.
 

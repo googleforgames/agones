@@ -50,19 +50,19 @@ const (
 	defaultHTTPPort = 9358
 
 	// Flags (that can also be env vars)
-	gameServerNameFlag        = "gameserver-name"
-	podNamespaceFlag          = "pod-namespace"
-	localFlag                 = "local"
-	fileFlag                  = "file"
-	testFlag                  = "test"
-	testSdkNameFlag           = "sdk-name"
-	kubeconfigFlag            = "kubeconfig"
-	noGracefulTerminationFlag = "no-graceful-termination"
-	addressFlag               = "address"
-	delayFlag                 = "delay"
-	timeoutFlag               = "timeout"
-	grpcPortFlag              = "grpc-port"
-	httpPortFlag              = "http-port"
+	gameServerNameFlag      = "gameserver-name"
+	podNamespaceFlag        = "pod-namespace"
+	localFlag               = "local"
+	fileFlag                = "file"
+	testFlag                = "test"
+	testSdkNameFlag         = "sdk-name"
+	kubeconfigFlag          = "kubeconfig"
+	gracefulTerminationFlag = "graceful-termination"
+	addressFlag             = "address"
+	delayFlag               = "delay"
+	timeoutFlag             = "timeout"
+	grpcPortFlag            = "grpc-port"
+	httpPortFlag            = "http-port"
 )
 
 var (
@@ -148,7 +148,7 @@ func main() {
 		if err := s.WaitForConnection(ctx); err != nil {
 			logger.WithError(err).Fatalf("Sidecar networking failure")
 		}
-		if !ctlConf.NoGracefulTermination {
+		if ctlConf.GracefulTermination {
 			ctx = s.NewSDKServerContext(ctx)
 		}
 		go func() {
@@ -269,6 +269,7 @@ func parseEnvFlags() config {
 	viper.SetDefault(addressFlag, "localhost")
 	viper.SetDefault(delayFlag, 0)
 	viper.SetDefault(timeoutFlag, 0)
+	viper.SetDefault(gracefulTerminationFlag, true)
 	viper.SetDefault(grpcPortFlag, defaultGRPCPort)
 	viper.SetDefault(httpPortFlag, defaultHTTPPort)
 	pflag.String(gameServerNameFlag, viper.GetString(gameServerNameFlag),
@@ -287,7 +288,7 @@ func parseEnvFlags() config {
 	pflag.String(testSdkNameFlag, viper.GetString(testSdkNameFlag), "SDK name which is tested by this SDK Conformance test.")
 	pflag.String(kubeconfigFlag, viper.GetString(kubeconfigFlag),
 		"Optional. kubeconfig to run the SDK server out of the cluster.")
-	pflag.Bool(noGracefulTerminationFlag, viper.GetBool(noGracefulTerminationFlag),
+	pflag.Bool(gracefulTerminationFlag, viper.GetBool(gracefulTerminationFlag),
 		"Immediately quits when receiving interrupt instead of waiting for GameServer state to progress to \"Shutdown\".")
 	runtime.FeaturesBindFlags()
 	pflag.Parse()
@@ -311,37 +312,37 @@ func parseEnvFlags() config {
 	runtime.Must(runtime.ParseFeaturesFromEnv())
 
 	return config{
-		GameServerName:        viper.GetString(gameServerNameFlag),
-		PodNamespace:          viper.GetString(podNamespaceFlag),
-		IsLocal:               viper.GetBool(localFlag),
-		Address:               viper.GetString(addressFlag),
-		LocalFile:             viper.GetString(fileFlag),
-		Delay:                 viper.GetInt(delayFlag),
-		Timeout:               viper.GetInt(timeoutFlag),
-		Test:                  viper.GetString(testFlag),
-		TestSdkName:           viper.GetString(testSdkNameFlag),
-		KubeConfig:            viper.GetString(kubeconfigFlag),
-		NoGracefulTermination: viper.GetBool(noGracefulTerminationFlag),
-		GRPCPort:              viper.GetInt(grpcPortFlag),
-		HTTPPort:              viper.GetInt(httpPortFlag),
+		GameServerName:      viper.GetString(gameServerNameFlag),
+		PodNamespace:        viper.GetString(podNamespaceFlag),
+		IsLocal:             viper.GetBool(localFlag),
+		Address:             viper.GetString(addressFlag),
+		LocalFile:           viper.GetString(fileFlag),
+		Delay:               viper.GetInt(delayFlag),
+		Timeout:             viper.GetInt(timeoutFlag),
+		Test:                viper.GetString(testFlag),
+		TestSdkName:         viper.GetString(testSdkNameFlag),
+		KubeConfig:          viper.GetString(kubeconfigFlag),
+		GracefulTermination: viper.GetBool(gracefulTerminationFlag),
+		GRPCPort:            viper.GetInt(grpcPortFlag),
+		HTTPPort:            viper.GetInt(httpPortFlag),
 	}
 }
 
 // config is all the configuration for this program
 type config struct {
-	GameServerName        string
-	PodNamespace          string
-	Address               string
-	IsLocal               bool
-	LocalFile             string
-	Delay                 int
-	Timeout               int
-	Test                  string
-	TestSdkName           string
-	KubeConfig            string
-	NoGracefulTermination bool
-	GRPCPort              int
-	HTTPPort              int
+	GameServerName      string
+	PodNamespace        string
+	Address             string
+	IsLocal             bool
+	LocalFile           string
+	Delay               int
+	Timeout             int
+	Test                string
+	TestSdkName         string
+	KubeConfig          string
+	GracefulTermination bool
+	GRPCPort            int
+	HTTPPort            int
 }
 
 // healthCheckWrapper ensures that an http 400 response is returned
