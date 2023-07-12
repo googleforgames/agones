@@ -18,17 +18,14 @@
 name: Label PR
 
 on:
-  pull_request_target:
-    types: [opened]
+  - pull_request_target
 
 jobs:
   label:
     runs-on: ubuntu-latest
     permissions:
-      id-token: write
       contents: read
       pull-requests: write
-      issues: write
 
     steps:
       - name: Label PR
@@ -41,7 +38,8 @@ jobs:
               "feature": "kind/feature",
               "cleanup": "kind/cleanup",
               "documentation": "kind/documentation",
-              "hotfix": "kind/hotfix"
+              "hotfix": "kind/hotfix",
+              "release": "kind/release"
             };
             const prBody = context.payload.pull_request.body;
             const prLabels = [];
