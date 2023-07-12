@@ -177,9 +177,9 @@ docker run --network=host --rm -v $(pwd)/gameserver.yaml:/tmp/gameserver.yaml us
 
 An alternative to running completely isolated from a cluster is to run in "out of cluster" mode.
 This allows you to run locally but interact with the controllers within a cluster.
-This workflow works well when running a [Local Game Server](https://agones.dev/site/docs/guides/local-game-server/) in your cluster and want to run the server locally.
+This workflow works well when running a [Local Game Server]({{% ref "/docs/Guides/local-game-server.md" %}}) in your cluster and want to run the server locally.
 This means being able to allocate your game in its normal flow (much more prod-like environment) and be able to debug (e.g. breakpoint) your server code.
-This can also be done with [running Minikube locally](https://agones.dev/site/docs/installation/creating-cluster/minikube/), which is great for early prototyping.
+This can also be done with [running Minikube locally]({{< ref "/docs/Installation/Creating Cluster/minikube.md" >}}), which is great for early prototyping.
 
 The name "out of cluster" mode is to contrast [InClusterConfig](https://pkg.go.dev/k8s.io/client-go/tools/clientcmd#InClusterConfig) which is used in the internal golang kubeconfig API.
 
