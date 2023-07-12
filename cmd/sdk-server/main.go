@@ -49,11 +49,9 @@ const (
 	defaultGRPCPort = 9357
 	defaultHTTPPort = 9358
 
-	// specifically env vars
-	gameServerNameEnv = "GAMESERVER_NAME"
-	podNamespaceEnv   = "POD_NAMESPACE"
-
 	// Flags (that can also be env vars)
+	gameServerNameFlag        = "gameserver-name"
+	podNamespaceFlag          = "pod-namespace"
 	localFlag                 = "local"
 	fileFlag                  = "file"
 	testFlag                  = "test"
@@ -140,8 +138,8 @@ func main() {
 		}
 
 		var s *sdkserver.SDKServer
-		s, err = sdkserver.NewSDKServer(viper.GetString(gameServerNameEnv),
-			viper.GetString(podNamespaceEnv), kubeClient, agonesClient)
+		s, err = sdkserver.NewSDKServer(ctlConf.GameServerName, ctlConf.PodNamespace,
+			kubeClient, agonesClient)
 		if err != nil {
 			logger.WithError(err).Fatalf("Could not start sidecar")
 		}
@@ -273,6 +271,10 @@ func parseEnvFlags() config {
 	viper.SetDefault(timeoutFlag, 0)
 	viper.SetDefault(grpcPortFlag, defaultGRPCPort)
 	viper.SetDefault(httpPortFlag, defaultHTTPPort)
+	pflag.String(gameServerNameFlag, viper.GetString(gameServerNameFlag),
+		"Optional flag to set GameServer name. Overrides value given from `GAMESERVER_NAME` environment variable.")
+	pflag.String(podNamespaceFlag, viper.GetString(gameServerNameFlag),
+		"Optional flag to set Kubernetes namespace which the GameServer/pod is in. Overrides value given from `POD_NAMESPACE` environment variable.")
 	pflag.Bool(localFlag, viper.GetBool(localFlag),
 		"Set this, or LOCAL env, to 'true' to run this binary in local development mode. Defaults to 'false'")
 	pflag.StringP(fileFlag, "f", viper.GetString(fileFlag), "Set this, or FILE env var to the path of a local yaml or json file that contains your GameServer resoure configuration")
@@ -291,14 +293,14 @@ func parseEnvFlags() config {
 	pflag.Parse()
 
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
+	runtime.Must(viper.BindEnv(gameServerNameFlag))
+	runtime.Must(viper.BindEnv(podNamespaceFlag))
 	runtime.Must(viper.BindEnv(localFlag))
 	runtime.Must(viper.BindEnv(fileFlag))
 	runtime.Must(viper.BindEnv(addressFlag))
 	runtime.Must(viper.BindEnv(testFlag))
 	runtime.Must(viper.BindEnv(testSdkNameFlag))
 	runtime.Must(viper.BindEnv(kubeconfigFlag))
-	runtime.Must(viper.BindEnv(gameServerNameEnv))
-	runtime.Must(viper.BindEnv(podNamespaceEnv))
 	runtime.Must(viper.BindEnv(delayFlag))
 	runtime.Must(viper.BindEnv(timeoutFlag))
 	runtime.Must(viper.BindEnv(grpcPortFlag))
@@ -309,6 +311,8 @@ func parseEnvFlags() config {
 	runtime.Must(runtime.ParseFeaturesFromEnv())
 
 	return config{
+		GameServerName:        viper.GetString(gameServerNameFlag),
+		PodNamespace:          viper.GetString(podNamespaceFlag),
 		IsLocal:               viper.GetBool(localFlag),
 		Address:               viper.GetString(addressFlag),
 		LocalFile:             viper.GetString(fileFlag),
@@ -325,6 +329,8 @@ func parseEnvFlags() config {
 
 // config is all the configuration for this program
 type config struct {
+	GameServerName        string
+	PodNamespace          string
 	Address               string
 	IsLocal               bool
 	LocalFile             string

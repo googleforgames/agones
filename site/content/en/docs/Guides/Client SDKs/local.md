@@ -187,19 +187,19 @@ To run in "out of cluster" mode, instead of passing `--local` or `-f ./gameserve
 However, there are a number of commands that are necessary/useful to run when running in "out of cluster" mode.
 Here is a sample with each piece discussed after.
 ```bash
-GAMESERVER_NAME='my-local-server' \
-POD_NAMESPACE='default' \
-  go run cmd/sdk-server/main.go \
-    --kubeconfig "$HOME/.kube/config" \
-    --address 0.0.0.0 \
-    --no-graceful-termination 
+go run cmd/sdk-server/main.go \
+  --gameserver-name my-local-server \
+  --pod-namespace default \
+  --kubeconfig "$HOME/.kube/config" \
+  --address 0.0.0.0 \
+  --no-graceful-termination
 ```
 
-* `GAMESERVER_NAME` is a necessary enviroment variable.
+* `--gameserver-name` is a necessary arg, passed instead of the `GAMESERVER_NAME` enviroment variable.
   * It is set to the name of the dev `GameServer` k8s resource.
   * It tells the SDK Sever which resource to read/write to on the k8s cluster.
   * This example value of `my-local-server` matches to the instructions for setting up a [Local Game Server](https://agones.dev/site/docs/guides/local-game-server/).
-* `POD_NAMESPACE` is a necessary enviroment variable.
+* `--pod-namespacee` is a necessary arg, passed instead of the `POD_NAMESPACE` enviroment variable.
   * It is set set to the namespace which your `GameServer` resides in.
   * It tells the SDK Sever which namespace to look under for the `GameServer` to read/write to on the k8s cluster.
   * This example value of `default` is used as most instructions in this documentation assumes `GameServers` to be created in the `default` namespace.
