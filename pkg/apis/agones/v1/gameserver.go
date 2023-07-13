@@ -28,8 +28,10 @@ import (
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
+	apimachineryvalidation "k8s.io/apimachinery/pkg/api/validation"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
 // GameServerState is the state for the GameServer
@@ -472,192 +474,142 @@ func (gs *GameServer) applyCountsListsStatus() {
 }
 
 // validateFeatureGates checks if fields are set when the associated feature gate is not set.
-func (gss *GameServerSpec) validateFeatureGates() []metav1.StatusCause {
-	var causes []metav1.StatusCause
-
+func (gss *GameServerSpec) validateFeatureGates(fldPath *field.Path) field.ErrorList {
+	var allErrs field.ErrorList
 	if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
 		if gss.Players != nil {
-			causes = append(causes, metav1.StatusCause{
-				Type:    metav1.CauseTypeFieldValueNotSupported,
-				Field:   "players",
-				Message: fmt.Sprintf("Value cannot be set unless feature flag %s is enabled", runtime.FeaturePlayerTracking),
-			})
+			allErrs = append(allErrs, field.Forbidden(fldPath.Child("players"), fmt.Sprintf("Value cannot be set unless feature flag %s is enabled", runtime.FeaturePlayerTracking)))
 		}
 	}
 
 	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
 		if gss.Counters != nil {
-			causes = append(causes, metav1.StatusCause{
-				Type:    metav1.CauseTypeFieldValueNotSupported,
-				Field:   "counters",
-				Message: fmt.Sprintf("Value cannot be set unless feature flag %s is enabled", runtime.FeatureCountsAndLists),
-			})
+			allErrs = append(allErrs, field.Forbidden(fldPath.Child("counters"), fmt.Sprintf("Value cannot be set unless feature flag %s is enabled", runtime.FeatureCountsAndLists)))
 		}
 		if gss.Lists != nil {
-			causes = append(causes, metav1.StatusCause{
-				Type:    metav1.CauseTypeFieldValueNotSupported,
-				Field:   "lists",
-				Message: fmt.Sprintf("Value cannot be set unless feature flag %s is enabled", runtime.FeatureCountsAndLists),
-			})
+			allErrs = append(allErrs, field.Forbidden(fldPath.Child("lists"), fmt.Sprintf("Value cannot be set unless feature flag %s is enabled", runtime.FeatureCountsAndLists)))
 		}
 	}
 
-	return causes
+	return allErrs
 }
 
 // Validate validates the GameServerSpec configuration.
 // devAddress is a specific IP address used for local Gameservers, for fleets "" is used
 // If a GameServer Spec is invalid there will be > 0 values in the returned array
-func (gss *GameServerSpec) Validate(apiHooks APIHooks, devAddress string) ([]metav1.StatusCause, bool) {
-	var causes []metav1.StatusCause
-
-	causes = append(causes, gss.validateFeatureGates()...)
-
-	if devAddress != "" {
+func (gss *GameServerSpec) Validate(apiHooks APIHooks, devAddress string, fldPath *field.Path) field.ErrorList {
+	allErrs := gss.validateFeatureGates(fldPath)
+	if len(devAddress) > 0 {
 		// verify that the value is a valid IP address.
 		if net.ParseIP(devAddress) == nil {
-			causes = append(causes, metav1.StatusCause{
-				Type:    metav1.CauseTypeFieldValueInvalid,
-				Field:   fmt.Sprintf("annotations.%s", DevAddressAnnotation),
-				Message: fmt.Sprintf("Value '%s' of annotation '%s' must be a valid IP address", devAddress, DevAddressAnnotation),
-			})
+			// Authentication is only required if the gameserver is created directly.
+			allErrs = append(allErrs, field.Invalid(field.NewPath("metadata", "annotations", DevAddressAnnotation), devAddress, "must be a valid IP address"))
 		}
 
-		for _, p := range gss.Ports {
+		for i, p := range gss.Ports {
 			if p.HostPort == 0 {
-				causes = append(causes, metav1.StatusCause{
-					Type:    metav1.CauseTypeFieldValueRequired,
-					Field:   fmt.Sprintf("%s.hostPort", p.Name),
-					Message: fmt.Sprintf("HostPort is required if GameServer is annotated with '%s'", DevAddressAnnotation),
-				})
+				allErrs = append(allErrs, field.Required(fldPath.Child("ports").Index(i).Child("hostPort"), DevAddressAnnotation))
 			}
 			if p.PortPolicy != Static {
-				causes = append(causes, metav1.StatusCause{
-					Type:    metav1.CauseTypeFieldValueRequired,
-					Field:   fmt.Sprintf("%s.portPolicy", p.Name),
-					Message: fmt.Sprint(ErrPortPolicyStatic),
-				})
+				allErrs = append(allErrs, field.Required(fldPath.Child("ports").Index(i).Child("portPolicy"), ErrPortPolicyStatic))
 			}
 		}
-	} else {
-		// make sure a name is specified when there is multiple containers in the pod.
-		if gss.Container == "" && len(gss.Template.Spec.Containers) > 1 {
-			causes = append(causes, metav1.StatusCause{
-				Type:    metav1.CauseTypeFieldValueInvalid,
-				Field:   "container",
-				Message: ErrContainerRequired,
-			})
-		}
 
-		// make sure the container value points to a valid container
-		_, _, err := gss.FindContainer(gss.Container)
-		if err != nil {
-			causes = append(causes, metav1.StatusCause{
-				Type:    metav1.CauseTypeFieldValueInvalid,
-				Field:   "container",
-				Message: err.Error(),
-			})
-		}
+		allErrs = append(allErrs, validateObjectMeta(&gss.Template.ObjectMeta, fldPath.Child("template", "metadata"))...)
+		return allErrs
+	}
 
-		// no host port when using dynamic PortPolicy
-		for _, p := range gss.Ports {
-			if p.PortPolicy == Dynamic || p.PortPolicy == Static {
-				if p.ContainerPort <= 0 {
-					causes = append(causes, metav1.StatusCause{
-						Type:    metav1.CauseTypeFieldValueInvalid,
-						Field:   fmt.Sprintf("%s.containerPort", p.Name),
-						Message: ErrContainerPortRequired,
-					})
-				}
-			}
+	// make sure a name is specified when there is multiple containers in the pod.
+	if gss.Container == "" && len(gss.Template.Spec.Containers) > 1 {
+		allErrs = append(allErrs, field.Required(fldPath.Child("container"), ErrContainerRequired))
+	}
 
-			if p.PortPolicy == Passthrough && p.ContainerPort > 0 {
-				causes = append(causes, metav1.StatusCause{
-					Type:    metav1.CauseTypeFieldValueInvalid,
-					Field:   fmt.Sprintf("%s.containerPort", p.Name),
-					Message: ErrContainerPortPassthrough,
-				})
-			}
+	// make sure the container value points to a valid container
+	_, _, err := gss.FindContainer(gss.Container)
+	if err != nil {
+		allErrs = append(allErrs, field.Invalid(fldPath.Child("container"), gss.Container, err.Error()))
+	}
 
-			if p.HostPort > 0 && (p.PortPolicy == Dynamic || p.PortPolicy == Passthrough) {
-				causes = append(causes, metav1.StatusCause{
-					Type:    metav1.CauseTypeFieldValueInvalid,
-					Field:   fmt.Sprintf("%s.hostPort", p.Name),
-					Message: ErrHostPort,
-				})
-			}
-
-			if p.Container != nil && gss.Container != "" {
-				_, _, err := gss.FindContainer(*p.Container)
-				if err != nil {
-					causes = append(causes, metav1.StatusCause{
-						Type:    metav1.CauseTypeFieldValueInvalid,
-						Field:   fmt.Sprintf("%s.container", p.Name),
-						Message: ErrContainerNameInvalid,
-					})
-				}
+	// no host port when using dynamic PortPolicy
+	for i, p := range gss.Ports {
+		path := fldPath.Child("ports").Index(i)
+		if p.PortPolicy == Dynamic || p.PortPolicy == Static {
+			if p.ContainerPort <= 0 {
+				allErrs = append(allErrs, field.Required(path.Child("containerPort"), ErrContainerPortRequired))
 			}
 		}
-		for _, c := range gss.Template.Spec.Containers {
-			validationErrors := validateResources(c)
-			for _, err := range validationErrors {
-				causes = append(causes, metav1.StatusCause{
-					Type:    metav1.CauseTypeFieldValueInvalid,
-					Field:   "container",
-					Message: err.Error(),
-				})
-			}
+
+		if p.PortPolicy == Passthrough && p.ContainerPort > 0 {
+			allErrs = append(allErrs, field.Required(path.Child("containerPort"), ErrContainerPortPassthrough))
 		}
-		if productCauses := apiHooks.ValidateGameServerSpec(gss); len(productCauses) > 0 {
-			causes = append(causes, productCauses...)
+
+		if p.HostPort > 0 && (p.PortPolicy == Dynamic || p.PortPolicy == Passthrough) {
+			allErrs = append(allErrs, field.Forbidden(path.Child("hostPort"), ErrHostPort))
+		}
+
+		if p.Container != nil && gss.Container != "" {
+			_, _, err := gss.FindContainer(*p.Container)
+			if err != nil {
+				allErrs = append(allErrs, field.Invalid(path.Child("container"), *p.Container, ErrContainerNameInvalid))
+			}
 		}
 	}
-	objMetaCauses := validateObjectMeta(&gss.Template.ObjectMeta)
-	if len(objMetaCauses) > 0 {
-		causes = append(causes, objMetaCauses...)
+	for i, c := range gss.Template.Spec.Containers {
+		path := fldPath.Child("template", "spec", "containers").Index(i)
+		allErrs = append(allErrs, ValidateResourceRequirements(&c.Resources, path.Child("resources"))...)
 	}
-	return causes, len(causes) == 0
+
+	allErrs = append(allErrs, apiHooks.ValidateGameServerSpec(gss, fldPath)...)
+	allErrs = append(allErrs, validateObjectMeta(&gss.Template.ObjectMeta, fldPath.Child("template", "metadata"))...)
+	return allErrs
 }
 
-// ValidateResource validates limit or Memory CPU resources used for containers in pods
-// If a GameServer is invalid there will be > 0 values in
-// the returned array
-func ValidateResource(request resource.Quantity, limit resource.Quantity, resourceName corev1.ResourceName) []error {
-	validationErrors := make([]error, 0)
-	if !limit.IsZero() && request.Cmp(limit) > 0 {
-		validationErrors = append(validationErrors, errors.Errorf("Request must be less than or equal to %s limit", resourceName))
-	}
-	if request.Cmp(resource.Quantity{}) < 0 {
-		validationErrors = append(validationErrors, errors.Errorf("Resource %s request value must be non negative", resourceName))
-	}
-	if limit.Cmp(resource.Quantity{}) < 0 {
-		validationErrors = append(validationErrors, errors.Errorf("Resource %s limit value must be non negative", resourceName))
+// ValidateResourceRequirements Validates resource requirement spec.
+func ValidateResourceRequirements(requirements *corev1.ResourceRequirements, fldPath *field.Path) field.ErrorList {
+	allErrs := field.ErrorList{}
+	limPath := fldPath.Child("limits")
+	reqPath := fldPath.Child("requests")
+
+	for resourceName, quantity := range requirements.Limits {
+		fldPath := limPath.Key(string(resourceName))
+		// Validate resource quantity.
+		allErrs = append(allErrs, ValidateNonnegativeQuantity(quantity, fldPath)...)
+
 	}
 
-	return validationErrors
+	for resourceName, quantity := range requirements.Requests {
+		fldPath := reqPath.Key(string(resourceName))
+		// Validate resource quantity.
+		allErrs = append(allErrs, ValidateNonnegativeQuantity(quantity, fldPath)...)
+
+		// Check that request <= limit.
+		limitQuantity, exists := requirements.Limits[resourceName]
+		if exists && quantity.Cmp(limitQuantity) > 0 {
+			allErrs = append(allErrs, field.Invalid(reqPath, quantity.String(), fmt.Sprintf("must be less than or equal to %s limit of %s", resourceName, limitQuantity.String())))
+		}
+	}
+	return allErrs
 }
 
-// validateResources validate CPU and Memory resources
-func validateResources(container corev1.Container) []error {
-	validationErrors := make([]error, 0)
-	resourceErrors := ValidateResource(container.Resources.Requests[corev1.ResourceCPU], container.Resources.Limits[corev1.ResourceCPU], corev1.ResourceCPU)
-	validationErrors = append(validationErrors, resourceErrors...)
-	resourceErrors = ValidateResource(container.Resources.Requests[corev1.ResourceMemory], container.Resources.Limits[corev1.ResourceMemory], corev1.ResourceMemory)
-	validationErrors = append(validationErrors, resourceErrors...)
-	return validationErrors
+// ValidateNonnegativeQuantity Validates that a Quantity is not negative
+func ValidateNonnegativeQuantity(value resource.Quantity, fldPath *field.Path) field.ErrorList {
+	allErrs := field.ErrorList{}
+	if value.Cmp(resource.Quantity{}) < 0 {
+		allErrs = append(allErrs, field.Invalid(fldPath, value.String(), apimachineryvalidation.IsNegativeErrorMsg))
+	}
+	return allErrs
 }
 
 // Validate validates the GameServer configuration.
 // If a GameServer is invalid there will be > 0 values in
 // the returned array
-func (gs *GameServer) Validate(apiHooks APIHooks) ([]metav1.StatusCause, bool) {
-	causes := validateName(gs)
+func (gs *GameServer) Validate(apiHooks APIHooks) field.ErrorList {
+	allErrs := validateName(gs, field.NewPath("metadata"))
 
 	// make sure the host port is specified if this is a development server
 	devAddress, _ := gs.GetDevAddress()
-	gssCauses, _ := gs.Spec.Validate(apiHooks, devAddress)
-	causes = append(causes, gssCauses...)
-	return causes, len(causes) == 0
+	allErrs = append(allErrs, gs.Spec.Validate(apiHooks, devAddress, field.NewPath("spec"))...)
+	return allErrs
 }
 
 // GetDevAddress returns the address for game server.

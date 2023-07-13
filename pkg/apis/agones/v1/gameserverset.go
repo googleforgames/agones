@@ -19,6 +19,7 @@ import (
 	"agones.dev/agones/pkg/apis/agones"
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
 const (
@@ -98,37 +99,24 @@ type GameServerSetStatus struct {
 
 // ValidateUpdate validates when updates occur. The argument
 // is the new GameServerSet, being passed into the old GameServerSet
-func (gsSet *GameServerSet) ValidateUpdate(newGSS *GameServerSet) ([]metav1.StatusCause, bool) {
-	causes := validateName(newGSS)
+func (gsSet *GameServerSet) ValidateUpdate(newGSS *GameServerSet) field.ErrorList {
+	allErrs := validateName(newGSS, field.NewPath("metadata"))
 	if !apiequality.Semantic.DeepEqual(gsSet.Spec.Template, newGSS.Spec.Template) {
-		causes = append(causes, metav1.StatusCause{
-			Type:    metav1.CauseTypeFieldValueInvalid,
-			Field:   "template",
-			Message: "template values cannot be updated after creation",
-		})
+		allErrs = append(allErrs, field.Invalid(field.NewPath("spec", "template"), gsSet.Spec.Template, "GameServerSet template cannot be updated"))
 	}
 
-	return causes, len(causes) == 0
+	return allErrs
 }
 
 // Validate validates when Create occurs. Check the name size
-func (gsSet *GameServerSet) Validate(apiHooks APIHooks) ([]metav1.StatusCause, bool) {
-	causes := validateName(gsSet)
+func (gsSet *GameServerSet) Validate(apiHooks APIHooks) field.ErrorList {
+	allErrs := validateName(gsSet, field.NewPath("metadata"))
 
 	// check GameServer specification in a GameServerSet
-	gsCauses := validateGSSpec(apiHooks, gsSet)
-	if len(gsCauses) > 0 {
-		causes = append(causes, gsCauses...)
-	}
-	if productCauses := apiHooks.ValidateScheduling(gsSet.Spec.Scheduling); len(productCauses) > 0 {
-		causes = append(causes, productCauses...)
-	}
-	objMetaCauses := validateObjectMeta(&gsSet.Spec.Template.ObjectMeta)
-	if len(objMetaCauses) > 0 {
-		causes = append(causes, objMetaCauses...)
-	}
-
-	return causes, len(causes) == 0
+	allErrs = append(allErrs, validateGSSpec(apiHooks, gsSet, field.NewPath("spec", "template", "spec"))...)
+	allErrs = append(allErrs, apiHooks.ValidateScheduling(gsSet.Spec.Scheduling, field.NewPath("spec", "scheduling"))...)
+	allErrs = append(allErrs, validateObjectMeta(&gsSet.Spec.Template.ObjectMeta, field.NewPath("spec", "template", "metadata"))...)
+	return allErrs
 }
 
 // GetGameServerSpec get underlying GameServer specification

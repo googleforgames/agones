@@ -960,7 +960,7 @@ func TestControllerUpdateValidationHandler(t *testing.T) {
 		assert.NotEmpty(t, result.Response.Result.Details.Causes)
 		assert.Equal(t, metav1.StatusFailure, result.Response.Result.Status)
 		assert.Equal(t, metav1.StatusReasonInvalid, result.Response.Result.Reason)
-		assert.Equal(t, "GameServerSet update is invalid", result.Response.Result.Message)
+		assert.Contains(t, result.Response.Result.Message, "GameServerSet.agones.dev \"\" is invalid")
 	})
 }
 
@@ -1063,7 +1063,7 @@ func TestCreationValidationHandler(t *testing.T) {
 		assert.NotEmpty(t, result.Response.Result.Details.Causes)
 		assert.Equal(t, metav1.StatusFailure, result.Response.Result.Status)
 		assert.Equal(t, metav1.StatusReasonInvalid, result.Response.Result.Reason)
-		assert.Equal(t, "GameServerSet create is invalid", result.Response.Result.Message)
+		assert.Contains(t, result.Response.Result.Message, "GameServerSet.agones.dev \"\" is invalid")
 	})
 }
 

@@ -325,10 +325,10 @@ steps:
           region=${versionsAndRegions[$version]}
           if [ $cloudProduct = generic ]
           then
-            featureWithGate="CustomFasSyncInterval=false&StateAllocationFilter=false&PlayerAllocationFilter=true&PlayerTracking=true&ResetMetricsOnDelete=false&PodHostname=false&SplitControllerAndExtensions=false&FleetAllocationOverflow=true&Example=true"
+            featureWithGate="StateAllocationFilter=false&PlayerAllocationFilter=true&PlayerTracking=true&ResetMetricsOnDelete=false&PodHostname=false&SplitControllerAndExtensions=false&FleetAllocationOverflow=true&Example=true"
             testCluster="standard-e2e-test-cluster-${version//./-}"
           else
-            featureWithGate="CustomFasSyncInterval=false&StateAllocationFilter=false&PlayerAllocationFilter=true&PlayerTracking=true&ResetMetricsOnDelete=false&PodHostname=false&SplitControllerAndExtensions=true&FleetAllocationOverflow=true&Example=true"
+            featureWithGate="StateAllocationFilter=false&PlayerAllocationFilter=true&PlayerTracking=true&ResetMetricsOnDelete=false&PodHostname=false&SplitControllerAndExtensions=true&FleetAllocationOverflow=true&Example=true"
             testCluster="gke-autopilot-e2e-test-cluster-${version//./-}"
           fi
           featureWithoutGate=""
@@ -435,6 +435,7 @@ timeout: 18000s # 5h: 3h (e2e-wait-to-become-leader) + 1.5h (e2e timeout) + 0.5h
 queueTtl: 259200s # 72h
 images:
   - '${_REGISTRY}/agones-controller'
+  - '${_REGISTRY}/agones-extensions'
   - '${_REGISTRY}/agones-sdk'
   - '${_REGISTRY}/agones-ping'
   - '${_REGISTRY}/agones-allocator'

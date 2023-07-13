@@ -1,4 +1,4 @@
-# Copyright 2022 Google LLC All Rights Reserved.
+# Copyright 2023 Google LLC All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,23 +11,21 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-# Default values for feature gates. Keep in sync with pkg/util/runtime/features.go:featureDefaults
-
-# Beta features
-PodHostname: true
-ResetMetricsOnDelete: true
-SplitControllerAndExtensions: true
-StateAllocationFilter: true
-
-# Alpha features
-PlayerAllocationFilter: false
-PlayerTracking: false
-FleetAllocationOverflow: false
-
-# Pre-Alpha features
-CountsAndLists: false
-
-# Example feature
-Example: false
-
+apiVersion: v1
+kind: Service
+metadata:
+  name: agones-controller-metrics-service
+  namespace: {{ .Release.Namespace }}
+  labels:
+    agones.dev/role: controller
+    app: {{ template "agones.name" . }}
+    chart: {{ template "agones.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  selector:
+    agones.dev/role: controller
+  ports:
+    - name: metrics
+      port: {{ .Values.agones.controller.http.port }}
+      targetPort: http

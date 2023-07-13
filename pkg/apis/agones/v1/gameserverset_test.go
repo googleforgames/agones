@@ -73,77 +73,67 @@ func TestGameServerSetValidateUpdate(t *testing.T) {
 		},
 	}
 
-	causes, ok := gsSet.ValidateUpdate(gsSet.DeepCopy())
-	assert.True(t, ok)
-	assert.Empty(t, causes)
+	errs := gsSet.ValidateUpdate(gsSet.DeepCopy())
+	assert.Empty(t, errs)
 
 	newGSS := gsSet.DeepCopy()
 	newGSS.Spec.Replicas = 5
-	causes, ok = gsSet.ValidateUpdate(newGSS)
-	assert.True(t, ok)
-	assert.Empty(t, causes)
+	errs = gsSet.ValidateUpdate(newGSS)
+	assert.Empty(t, errs)
 
 	newGSS.Spec.Template.Spec.Ports[0].ContainerPort = 321
-	causes, ok = gsSet.ValidateUpdate(newGSS)
-	assert.False(t, ok)
-	assert.Len(t, causes, 1)
-	assert.Equal(t, "template", causes[0].Field)
+	errs = gsSet.ValidateUpdate(newGSS)
+	assert.Len(t, errs, 1)
+	assert.Equal(t, "spec.template", errs[0].Field)
 
 	newGSS = gsSet.DeepCopy()
 	longName := strings.Repeat("f", validation.LabelValueMaxLength+1)
 	newGSS.Name = longName
-	causes, ok = newGSS.Validate(fakeAPIHooks{})
-	assert.False(t, ok)
-	assert.Len(t, causes, 1)
-	assert.Equal(t, "Name", causes[0].Field)
+	errs = newGSS.Validate(fakeAPIHooks{})
+	assert.Len(t, errs, 1)
+	assert.Equal(t, "metadata.name", errs[0].Field)
 
 	newGSS.Name = ""
 	newGSS.GenerateName = longName
-	causes, ok = newGSS.Validate(fakeAPIHooks{})
-	assert.True(t, ok)
-	assert.Len(t, causes, 0)
+	errs = newGSS.Validate(fakeAPIHooks{})
+	assert.Len(t, errs, 0)
 
 	newGSS = gsSet.DeepCopy()
 	newGSS.Name = longName
-	causes, ok = gsSet.ValidateUpdate(newGSS)
-	assert.False(t, ok)
-	assert.Len(t, causes, 1)
-	assert.Equal(t, "Name", causes[0].Field)
+	errs = gsSet.ValidateUpdate(newGSS)
+	assert.Len(t, errs, 1)
+	assert.Equal(t, "metadata.name", errs[0].Field)
 
 	newGSS = gsSet.DeepCopy()
 	newGSS.Spec.Template.ObjectMeta.Labels = make(map[string]string)
 	newGSS.Spec.Template.ObjectMeta.Labels[longName] = ""
-	causes, ok = newGSS.Validate(fakeAPIHooks{})
-	assert.False(t, ok)
-	assert.Len(t, causes, 1)
-	assert.Equal(t, "labels", causes[0].Field)
+	errs = newGSS.Validate(fakeAPIHooks{})
+	assert.Len(t, errs, 1)
+	assert.Equal(t, "spec.template.metadata.labels", errs[0].Field)
 
 	// Same validation applies to nested Labels which applies to GameServer pod
 	newGSS = gsSet.DeepCopy()
 	newGSS.Spec.Template.Spec.Template.ObjectMeta.Labels = make(map[string]string)
 	newGSS.Spec.Template.Spec.Template.ObjectMeta.Labels[longName] = ""
-	causes, ok = newGSS.Validate(fakeAPIHooks{})
-	assert.False(t, ok)
-	assert.Len(t, causes, 1)
-	assert.Equal(t, "labels", causes[0].Field)
+	errs = newGSS.Validate(fakeAPIHooks{})
+	assert.Len(t, errs, 1)
+	assert.Equal(t, "spec.template.spec.template.metadata.labels", errs[0].Field)
 
 	// Similar Annotations validation check
 	newGSS = gsSet.DeepCopy()
 	newGSS.Spec.Template.ObjectMeta.Annotations = make(map[string]string)
 	newGSS.Spec.Template.ObjectMeta.Annotations[longName] = ""
-	causes, ok = newGSS.Validate(fakeAPIHooks{})
-	assert.False(t, ok)
-	assert.Len(t, causes, 1)
-	assert.Equal(t, "annotations", causes[0].Field)
+	errs = newGSS.Validate(fakeAPIHooks{})
+	assert.Len(t, errs, 1)
+	assert.Equal(t, "spec.template.metadata.annotations", errs[0].Field)
 
 	// Nested GS Spec Annotations
 	newGSS = gsSet.DeepCopy()
 	newGSS.Spec.Template.Spec.Template.ObjectMeta.Annotations = make(map[string]string)
 	newGSS.Spec.Template.Spec.Template.ObjectMeta.Annotations[longName] = ""
-	causes, ok = newGSS.Validate(fakeAPIHooks{})
-	assert.False(t, ok)
-	assert.Len(t, causes, 1)
-	assert.Equal(t, "annotations", causes[0].Field)
+	errs = newGSS.Validate(fakeAPIHooks{})
+	assert.Len(t, errs, 1)
+	assert.Equal(t, "spec.template.spec.template.metadata.annotations", errs[0].Field)
 
 	gsSet.Spec.Template.Spec.Template =
 		corev1.PodTemplateSpec{
@@ -151,9 +141,8 @@ func TestGameServerSetValidateUpdate(t *testing.T) {
 				Containers: []corev1.Container{{Name: "container", Image: "myimage"}, {Name: "container2", Image: "myimage"}},
 			},
 		}
-	causes, ok = gsSet.Validate(fakeAPIHooks{})
 
-	assert.False(t, ok)
-	assert.Len(t, causes, 2)
-	assert.Equal(t, "container", causes[0].Field)
+	errs = gsSet.Validate(fakeAPIHooks{})
+	assert.Len(t, errs, 2)
+	assert.Equal(t, "spec.template.spec.container", errs[0].Field)
 }
