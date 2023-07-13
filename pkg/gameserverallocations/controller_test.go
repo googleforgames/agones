@@ -81,7 +81,7 @@ func TestControllerAllocator(t *testing.T) {
 			return true, gs, nil
 		})
 
-		ctx, cancel := agtesting.StartInformers(m)
+		ctx, cancel := agtesting.StartInformers(m, c.allocator.allocationPolicySynced, c.allocator.secretSynced, c.allocator.allocationCache.gameServerSynced)
 		defer cancel()
 
 		if err := c.Run(ctx, 1); err != nil {
@@ -219,7 +219,7 @@ func TestMultiClusterAllocationFromLocal(t *testing.T) {
 			}, nil
 		})
 
-		ctx, cancel := agtesting.StartInformers(m)
+		ctx, cancel := agtesting.StartInformers(m, c.allocator.allocationPolicySynced, c.allocator.secretSynced, c.allocator.allocationCache.gameServerSynced)
 		defer cancel()
 
 		if err := c.Run(ctx, 1); err != nil {
@@ -267,7 +267,7 @@ func TestMultiClusterAllocationFromLocal(t *testing.T) {
 			}, nil
 		})
 
-		ctx, cancel := agtesting.StartInformers(m)
+		ctx, cancel := agtesting.StartInformers(m, c.allocator.allocationPolicySynced, c.allocator.secretSynced, c.allocator.allocationCache.gameServerSynced)
 		defer cancel()
 
 		if err := c.Run(ctx, 1); err != nil {
@@ -327,7 +327,7 @@ func TestMultiClusterAllocationFromLocal(t *testing.T) {
 			}, nil
 		})
 
-		ctx, cancel := agtesting.StartInformers(m)
+		ctx, cancel := agtesting.StartInformers(m, c.allocator.allocationPolicySynced, c.allocator.secretSynced, c.allocator.allocationCache.gameServerSynced)
 		defer cancel()
 
 		if err := c.Run(ctx, 1); err != nil {
