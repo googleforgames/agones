@@ -120,7 +120,7 @@ func NewController(
 	eventBroadcaster.StartRecordingToSink(&typedcorev1.EventSinkImpl{Interface: kubeClient.CoreV1().Events("")})
 	c.recorder = eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: "fleetautoscaler-controller"})
 
-	autoscaler.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
+	_, _ = autoscaler.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
 			c.addFasThread(obj.(*autoscalingv1.FleetAutoscaler), true)
 		},
