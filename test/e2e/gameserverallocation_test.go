@@ -513,7 +513,7 @@ func TestGameServerAllocationMetaDataPatch(t *testing.T) {
 	result, err = framework.AgonesClient.AllocationV1().GameServerAllocations(framework.Namespace).Create(ctx, gsa.DeepCopy(), metav1.CreateOptions{})
 	log.WithField("result", result).WithError(err).Info("Failed allocation")
 	require.Error(t, err)
-	require.Contains(t, err.Error(), "GameServerAllocation is invalid")
+	require.Contains(t, err.Error(), `GameServerAllocation.allocation.agones.dev "" is invalid`)
 }
 
 func TestGameServerAllocationPreferredSelection(t *testing.T) {

@@ -72,8 +72,8 @@ func TestFindGameServerForAllocationPacked(t *testing.T) {
 				}
 				emptyGSA.ApplyDefaults()
 				emptyGSA.Converter()
-				_, ok := emptyGSA.Validate()
-				require.True(t, ok)
+				allErrs := emptyGSA.Validate()
+				require.Len(t, allErrs, 0)
 				require.Len(t, emptyGSA.Spec.Selectors, 1)
 
 				gs, index, err := findGameServerForAllocation(emptyGSA, list)
@@ -290,12 +290,12 @@ func TestFindGameServerForAllocationPacked(t *testing.T) {
 			require.NoError(t, runtime.ParseFeatures(v.features))
 
 			gsa.ApplyDefaults()
-			_, ok := gsa.Validate()
-			require.True(t, ok)
+			allErrs := gsa.Validate()
+			require.Len(t, allErrs, 0)
 
 			twoLabelsGsa.ApplyDefaults()
-			_, ok = twoLabelsGsa.Validate()
-			require.True(t, ok)
+			allErrs = twoLabelsGsa.Validate()
+			require.Len(t, allErrs, 0)
 
 			controller, m := newFakeController()
 			c := controller.allocator.allocationCache
@@ -337,8 +337,8 @@ func TestFindGameServerForAllocationDistributed(t *testing.T) {
 		},
 	}
 	gsa.ApplyDefaults()
-	_, ok := gsa.Validate()
-	require.True(t, ok)
+	allErrs := gsa.Validate()
+	require.Len(t, allErrs, 0)
 
 	gsList := []agonesv1.GameServer{
 		{ObjectMeta: metav1.ObjectMeta{Name: "gs1", Namespace: defaultNs, Labels: labels},

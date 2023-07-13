@@ -87,8 +87,8 @@ func TestAllocatorAllocate(t *testing.T) {
 			MetaPatch: fam,
 		}}
 	gsa.ApplyDefaults()
-	_, ok := gsa.Validate()
-	require.True(t, ok)
+	errs := gsa.Validate()
+	require.Len(t, errs, 0)
 
 	gs, err := a.allocate(ctx, &gsa)
 	require.NoError(t, err)
@@ -165,8 +165,8 @@ func TestAllocatorAllocatePriority(t *testing.T) {
 				Selectors: []allocationv1.GameServerSelector{{LabelSelector: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: f.ObjectMeta.Name}}}},
 			}}
 		gsa.ApplyDefaults()
-		_, ok := gsa.Validate()
-		require.True(t, ok)
+		errs := gsa.Validate()
+		require.Len(t, errs, 0)
 
 		t.Run(name, func(t *testing.T) {
 			test(t, a, gsa.DeepCopy())
@@ -468,8 +468,8 @@ func TestAllocatorAllocateOnGameServerUpdateError(t *testing.T) {
 	gsa.ApplyDefaults()
 	// without converter we don't end up with at least one selector
 	gsa.Converter()
-	_, ok := gsa.Validate()
-	require.True(t, ok)
+	errs := gsa.Validate()
+	require.Len(t, errs, 0)
 	require.Len(t, gsa.Spec.Selectors, 1)
 
 	// try the private method
@@ -524,8 +524,8 @@ func TestAllocatorRunLocalAllocations(t *testing.T) {
 				Selectors: []allocationv1.GameServerSelector{{LabelSelector: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: f.ObjectMeta.Name}}}},
 			}}
 		gsa.ApplyDefaults()
-		_, ok := gsa.Validate()
-		require.True(t, ok)
+		errs := gsa.Validate()
+		require.Len(t, errs, 0)
 
 		// line up 3 in a batch
 		j1 := request{gsa: gsa.DeepCopy(), response: make(chan response)}
@@ -581,8 +581,8 @@ func TestAllocatorRunLocalAllocations(t *testing.T) {
 				Selectors: []allocationv1.GameServerSelector{{LabelSelector: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: "thereisnofleet"}}}},
 			}}
 		gsa.ApplyDefaults()
-		_, ok := gsa.Validate()
-		require.True(t, ok)
+		errs := gsa.Validate()
+		require.Len(t, errs, 0)
 
 		j1 := request{gsa: gsa.DeepCopy(), response: make(chan response)}
 		a.pendingRequests <- j1
