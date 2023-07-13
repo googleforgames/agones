@@ -14,6 +14,7 @@
 package gke
 
 import (
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	"testing"
 
 	"agones.dev/agones/pkg/apis"
@@ -79,7 +80,7 @@ func TestValidateGameServer(t *testing.T) {
 		ports       []agonesv1.GameServerPort
 		scheduling  apis.SchedulingStrategy
 		safeToEvict agonesv1.EvictionSafe
-		want        []metav1.StatusCause
+		want        field.ErrorList
 	}{
 		"no ports => validated": {scheduling: apis.Packed},
 		"good ports => validated": {
@@ -129,27 +130,11 @@ func TestValidateGameServer(t *testing.T) {
 			},
 			safeToEvict: agonesv1.EvictionSafeOnUpgrade,
 			scheduling:  apis.Distributed,
-			want: []metav1.StatusCause{
-				{
-					Type:    "FieldValueInvalid",
-					Message: "scheduling strategy must be Packed on GKE Autopilot",
-					Field:   "scheduling",
-				},
-				{
-					Type:    "FieldValueInvalid",
-					Message: "portPolicy must be Dynamic on GKE Autopilot",
-					Field:   "bad-udp.portPolicy",
-				},
-				{
-					Type:    "FieldValueInvalid",
-					Message: "portPolicy must be Dynamic on GKE Autopilot",
-					Field:   "another-bad-udp.portPolicy",
-				},
-				{
-					Type:    "FieldValueInvalid",
-					Message: "eviction.safe OnUpgrade not supported on GKE Autopilot",
-					Field:   "eviction.safe",
-				},
+			want: field.ErrorList{
+				field.Invalid(field.NewPath("spec", "scheduling"), "Distributed", "scheduling strategy must be Packed on GKE Autopilot"),
+				field.Invalid(field.NewPath("spec", "ports").Index(1).Child("portPolicy"), "Static", "portPolicy must be Dynamic on GKE Autopilot"),
+				field.Invalid(field.NewPath("spec", "ports").Index(2).Child("portPolicy"), "Static", "portPolicy must be Dynamic on GKE Autopilot"),
+				field.Invalid(field.NewPath("spec", "eviction", "safe"), "OnUpgrade", "eviction.safe OnUpgrade not supported on GKE Autopilot"),
 			},
 		},
 	} {
@@ -158,7 +143,7 @@ func TestValidateGameServer(t *testing.T) {
 				Ports:      tc.ports,
 				Scheduling: tc.scheduling,
 				Eviction:   &agonesv1.Eviction{Safe: tc.safeToEvict},
-			})
+			}, field.NewPath("spec"))
 			require.Equal(t, tc.want, causes)
 		})
 	}

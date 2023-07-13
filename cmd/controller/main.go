@@ -25,7 +25,6 @@ import (
 	"time"
 
 	"agones.dev/agones/pkg"
-	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	"agones.dev/agones/pkg/client/clientset/versioned"
 	"agones.dev/agones/pkg/client/informers/externalversions"
 	"agones.dev/agones/pkg/cloudproduct"
@@ -442,10 +441,30 @@ func (c *config) validate() []error {
 	if c.MaxPort < c.MinPort {
 		validationErrors = append(validationErrors, errors.New("max Port cannot be set less that the Min Port"))
 	}
-	resourceErrors := agonesv1.ValidateResource(c.SidecarCPURequest, c.SidecarCPULimit, corev1.ResourceCPU)
+	resourceErrors := validateResource(c.SidecarCPURequest, c.SidecarCPULimit, corev1.ResourceCPU)
 	validationErrors = append(validationErrors, resourceErrors...)
-	resourceErrors = agonesv1.ValidateResource(c.SidecarMemoryRequest, c.SidecarMemoryLimit, corev1.ResourceMemory)
+	resourceErrors = validateResource(c.SidecarMemoryRequest, c.SidecarMemoryLimit, corev1.ResourceMemory)
 	validationErrors = append(validationErrors, resourceErrors...)
+	return validationErrors
+}
+
+// validateResource validates limit or Memory CPU resources used for containers in pods
+// If a GameServer is invalid there will be > 0 values in
+// the returned array
+//
+// Moved from agones.dev/agones/pkg/apis/agones/v1 (#3255)
+func validateResource(request resource.Quantity, limit resource.Quantity, resourceName corev1.ResourceName) []error {
+	validationErrors := make([]error, 0)
+	if !limit.IsZero() && request.Cmp(limit) > 0 {
+		validationErrors = append(validationErrors, errors.Errorf("Request must be less than or equal to %s limit", resourceName))
+	}
+	if request.Cmp(resource.Quantity{}) < 0 {
+		validationErrors = append(validationErrors, errors.Errorf("Resource %s request value must be non negative", resourceName))
+	}
+	if limit.Cmp(resource.Quantity{}) < 0 {
+		validationErrors = append(validationErrors, errors.Errorf("Resource %s limit value must be non negative", resourceName))
+	}
+
 	return validationErrors
 }
 

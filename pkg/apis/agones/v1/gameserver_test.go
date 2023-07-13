@@ -818,9 +818,9 @@ func TestGameServerValidate(t *testing.T) {
 			applyDefaults: false,
 			want: field.ErrorList{
 				field.Invalid(
-					field.NewPath("spec", "template", "spec", "containers").Index(0).Child("resources", "requests", "cpu"),
-					resource.MustParse("50m"),
-					"Request must be less than or equal to cpu limit",
+					field.NewPath("spec", "template", "spec", "containers").Index(0).Child("resources", "requests"),
+					"50m",
+					"must be less than or equal to cpu limit of 30m",
 				),
 			},
 		},
@@ -859,9 +859,9 @@ func TestGameServerValidate(t *testing.T) {
 			applyDefaults: false,
 			want: field.ErrorList{
 				field.Invalid(
-					field.NewPath("spec", "template", "spec", "containers").Index(0).Child("resources", "requests", "cpu"),
-					resource.MustParse("-30m"),
-					"Resource cpu request value must be non negative",
+					field.NewPath("spec", "template", "spec", "containers").Index(0).Child("resources", "requests").Key("cpu"),
+					"-30m",
+					"must be greater than or equal to 0",
 				),
 			},
 		},
@@ -900,14 +900,14 @@ func TestGameServerValidate(t *testing.T) {
 			applyDefaults: false,
 			want: field.ErrorList{
 				field.Invalid(
-					field.NewPath("spec", "template", "spec", "containers").Index(0).Child("resources", "requests", "cpu"),
-					resource.MustParse("30m"),
-					"Request must be less than or equal to cpu limit",
+					field.NewPath("spec", "template", "spec", "containers").Index(0).Child("resources", "limits").Key("cpu"),
+					"-30m",
+					"must be greater than or equal to 0",
 				),
 				field.Invalid(
-					field.NewPath("spec", "template", "spec", "containers").Index(0).Child("resources", "requests", "cpu"),
-					resource.MustParse("30m"),
-					"Resource cpu limit value must be non negative",
+					field.NewPath("spec", "template", "spec", "containers").Index(0).Child("resources", "requests"),
+					"30m",
+					"must be less than or equal to cpu limit of -30m",
 				),
 			},
 		},
@@ -946,9 +946,9 @@ func TestGameServerValidate(t *testing.T) {
 			applyDefaults: false,
 			want: field.ErrorList{
 				field.Invalid(
-					field.NewPath("spec", "template", "spec", "containers").Index(0).Child("resources", "requests", "memory"),
-					resource.MustParse("55Mi"),
-					"Request must be less than or equal to memory limit",
+					field.NewPath("spec", "template", "spec", "containers").Index(0).Child("resources", "requests"),
+					"55Mi",
+					"must be less than or equal to memory limit of 32Mi",
 				),
 			},
 		},
@@ -987,9 +987,9 @@ func TestGameServerValidate(t *testing.T) {
 			applyDefaults: false,
 			want: field.ErrorList{
 				field.Invalid(
-					field.NewPath("spec", "template", "spec", "containers").Index(0).Child("resources", "requests", "memory"),
-					resource.MustParse("-32Mi"),
-					"Resource memory request value must be non negative",
+					field.NewPath("spec", "template", "spec", "containers").Index(0).Child("resources", "requests").Key("memory"),
+					"-32Mi",
+					"must be greater than or equal to 0",
 				),
 			},
 		},
@@ -1028,14 +1028,14 @@ func TestGameServerValidate(t *testing.T) {
 			applyDefaults: false,
 			want: field.ErrorList{
 				field.Invalid(
-					field.NewPath("spec", "template", "spec", "containers").Index(0).Child("resources", "requests", "memory"),
-					resource.MustParse("32Mi"),
-					"Resource memory limit value must be non negative",
+					field.NewPath("spec", "template", "spec", "containers").Index(0).Child("resources", "limits").Key("memory"),
+					"-32Mi",
+					"must be greater than or equal to 0",
 				),
 				field.Invalid(
-					field.NewPath("spec", "template", "spec", "containers").Index(0).Child("resources", "requests", "memory"),
-					resource.MustParse("32Mi"),
-					"Request must be less than or equal to memory limit",
+					field.NewPath("spec", "template", "spec", "containers").Index(0).Child("resources", "requests"),
+					"32Mi",
+					"must be less than or equal to memory limit of -32Mi",
 				),
 			},
 		},

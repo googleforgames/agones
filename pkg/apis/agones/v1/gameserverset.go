@@ -114,9 +114,7 @@ func (gsSet *GameServerSet) Validate(apiHooks APIHooks) field.ErrorList {
 
 	// check GameServer specification in a GameServerSet
 	allErrs = append(allErrs, validateGSSpec(apiHooks, gsSet, field.NewPath("spec", "template", "spec"))...)
-	for _, cause := range apiHooks.ValidateScheduling(gsSet.Spec.Scheduling) {
-		allErrs = append(allErrs, field.Invalid(field.NewPath("spec", "scheduling"), gsSet.Spec.Scheduling, cause.Message))
-	}
+	allErrs = append(allErrs, apiHooks.ValidateScheduling(gsSet.Spec.Scheduling, field.NewPath("spec", "scheduling"))...)
 	allErrs = append(allErrs, validateObjectMeta(&gsSet.Spec.Template.ObjectMeta, field.NewPath("spec", "template", "metadata"))...)
 	return allErrs
 }
