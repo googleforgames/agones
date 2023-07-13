@@ -28,14 +28,13 @@ const opAssociateKmsKey = "AssociateKmsKey"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the AssociateKmsKeyRequest method.
+//	req, resp := client.AssociateKmsKeyRequest(params)
 //
-//    // Example sending a request using the AssociateKmsKeyRequest method.
-//    req, resp := client.AssociateKmsKeyRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/AssociateKmsKey
 func (c *CloudWatchLogs) AssociateKmsKeyRequest(input *AssociateKmsKeyInput) (req *request.Request, output *AssociateKmsKeyOutput) {
@@ -84,17 +83,18 @@ func (c *CloudWatchLogs) AssociateKmsKeyRequest(input *AssociateKmsKeyInput) (re
 // API operation AssociateKmsKey for usage and error information.
 //
 // Returned Error Types:
-//   * InvalidParameterException
-//   A parameter is specified incorrectly.
 //
-//   * ResourceNotFoundException
-//   The specified resource does not exist.
+//   - InvalidParameterException
+//     A parameter is specified incorrectly.
 //
-//   * OperationAbortedException
-//   Multiple requests to update the same resource were in conflict.
+//   - ResourceNotFoundException
+//     The specified resource does not exist.
 //
-//   * ServiceUnavailableException
-//   The service cannot complete the request.
+//   - OperationAbortedException
+//     Multiple concurrent requests to update the same resource were in conflict.
+//
+//   - ServiceUnavailableException
+//     The service cannot complete the request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/AssociateKmsKey
 func (c *CloudWatchLogs) AssociateKmsKey(input *AssociateKmsKeyInput) (*AssociateKmsKeyOutput, error) {
@@ -134,14 +134,13 @@ const opCancelExportTask = "CancelExportTask"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the CancelExportTaskRequest method.
+//	req, resp := client.CancelExportTaskRequest(params)
 //
-//    // Example sending a request using the CancelExportTaskRequest method.
-//    req, resp := client.CancelExportTaskRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/CancelExportTask
 func (c *CloudWatchLogs) CancelExportTaskRequest(input *CancelExportTaskInput) (req *request.Request, output *CancelExportTaskOutput) {
@@ -175,17 +174,18 @@ func (c *CloudWatchLogs) CancelExportTaskRequest(input *CancelExportTaskInput) (
 // API operation CancelExportTask for usage and error information.
 //
 // Returned Error Types:
-//   * InvalidParameterException
-//   A parameter is specified incorrectly.
 //
-//   * ResourceNotFoundException
-//   The specified resource does not exist.
+//   - InvalidParameterException
+//     A parameter is specified incorrectly.
 //
-//   * InvalidOperationException
-//   The operation is not valid on the specified resource.
+//   - ResourceNotFoundException
+//     The specified resource does not exist.
 //
-//   * ServiceUnavailableException
-//   The service cannot complete the request.
+//   - InvalidOperationException
+//     The operation is not valid on the specified resource.
+//
+//   - ServiceUnavailableException
+//     The service cannot complete the request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/CancelExportTask
 func (c *CloudWatchLogs) CancelExportTask(input *CancelExportTaskInput) (*CancelExportTaskOutput, error) {
@@ -225,14 +225,13 @@ const opCreateExportTask = "CreateExportTask"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the CreateExportTaskRequest method.
+//	req, resp := client.CreateExportTaskRequest(params)
 //
-//    // Example sending a request using the CreateExportTaskRequest method.
-//    req, resp := client.CreateExportTaskRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/CreateExportTask
 func (c *CloudWatchLogs) CreateExportTaskRequest(input *CreateExportTaskInput) (req *request.Request, output *CreateExportTaskOutput) {
@@ -258,6 +257,12 @@ func (c *CloudWatchLogs) CreateExportTaskRequest(input *CreateExportTaskInput) (
 // you must use credentials that have permission to write to the S3 bucket that
 // you specify as the destination.
 //
+// Exporting log data to Amazon S3 buckets that are encrypted by KMS is not
+// supported. Exporting log data to Amazon S3 buckets that have S3 Object Lock
+// enabled with a retention period is not supported.
+//
+// Exporting to S3 buckets that are encrypted with AES-256 is supported.
+//
 // This is an asynchronous call. If all the required information is provided,
 // this operation initiates an export task and responds with the ID of the task.
 // After the task has started, you can use DescribeExportTasks (https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_DescribeExportTasks.html)
@@ -269,8 +274,8 @@ func (c *CloudWatchLogs) CreateExportTaskRequest(input *CreateExportTaskInput) (
 // same S3 bucket. To separate out log data for each export task, you can specify
 // a prefix to be used as the Amazon S3 key prefix for all exported objects.
 //
-// Exporting to S3 buckets that are encrypted with AES-256 is supported. Exporting
-// to S3 buckets encrypted with SSE-KMS is not supported.
+// Time-based sorting on chunks of log data inside an exported file is not guaranteed.
+// You can sort the exported log fild data by using Linux utilities.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -280,23 +285,24 @@ func (c *CloudWatchLogs) CreateExportTaskRequest(input *CreateExportTaskInput) (
 // API operation CreateExportTask for usage and error information.
 //
 // Returned Error Types:
-//   * InvalidParameterException
-//   A parameter is specified incorrectly.
 //
-//   * LimitExceededException
-//   You have reached the maximum number of resources that can be created.
+//   - InvalidParameterException
+//     A parameter is specified incorrectly.
 //
-//   * OperationAbortedException
-//   Multiple requests to update the same resource were in conflict.
+//   - LimitExceededException
+//     You have reached the maximum number of resources that can be created.
 //
-//   * ServiceUnavailableException
-//   The service cannot complete the request.
+//   - OperationAbortedException
+//     Multiple concurrent requests to update the same resource were in conflict.
 //
-//   * ResourceNotFoundException
-//   The specified resource does not exist.
+//   - ServiceUnavailableException
+//     The service cannot complete the request.
 //
-//   * ResourceAlreadyExistsException
-//   The specified resource already exists.
+//   - ResourceNotFoundException
+//     The specified resource does not exist.
+//
+//   - ResourceAlreadyExistsException
+//     The specified resource already exists.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/CreateExportTask
 func (c *CloudWatchLogs) CreateExportTask(input *CreateExportTaskInput) (*CreateExportTaskOutput, error) {
@@ -336,14 +342,13 @@ const opCreateLogGroup = "CreateLogGroup"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the CreateLogGroupRequest method.
+//	req, resp := client.CreateLogGroupRequest(params)
 //
-//    // Example sending a request using the CreateLogGroupRequest method.
-//    req, resp := client.CreateLogGroupRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/CreateLogGroup
 func (c *CloudWatchLogs) CreateLogGroupRequest(input *CreateLogGroupInput) (req *request.Request, output *CreateLogGroupOutput) {
@@ -370,14 +375,14 @@ func (c *CloudWatchLogs) CreateLogGroupRequest(input *CreateLogGroupInput) (req 
 //
 // You must use the following guidelines when naming a log group:
 //
-//    * Log group names must be unique within a region for an Amazon Web Services
-//    account.
+//   - Log group names must be unique within a region for an Amazon Web Services
+//     account.
 //
-//    * Log group names can be between 1 and 512 characters long.
+//   - Log group names can be between 1 and 512 characters long.
 //
-//    * Log group names consist of the following characters: a-z, A-Z, 0-9,
-//    '_' (underscore), '-' (hyphen), '/' (forward slash), '.' (period), and
-//    '#' (number sign)
+//   - Log group names consist of the following characters: a-z, A-Z, 0-9,
+//     '_' (underscore), '-' (hyphen), '/' (forward slash), '.' (period), and
+//     '#' (number sign)
 //
 // When you create a log group, by default the log events in the log group never
 // expire. To set a retention policy so that events expire and are deleted after
@@ -403,20 +408,21 @@ func (c *CloudWatchLogs) CreateLogGroupRequest(input *CreateLogGroupInput) (req 
 // API operation CreateLogGroup for usage and error information.
 //
 // Returned Error Types:
-//   * InvalidParameterException
-//   A parameter is specified incorrectly.
 //
-//   * ResourceAlreadyExistsException
-//   The specified resource already exists.
+//   - InvalidParameterException
+//     A parameter is specified incorrectly.
 //
-//   * LimitExceededException
-//   You have reached the maximum number of resources that can be created.
+//   - ResourceAlreadyExistsException
+//     The specified resource already exists.
 //
-//   * OperationAbortedException
-//   Multiple requests to update the same resource were in conflict.
+//   - LimitExceededException
+//     You have reached the maximum number of resources that can be created.
 //
-//   * ServiceUnavailableException
-//   The service cannot complete the request.
+//   - OperationAbortedException
+//     Multiple concurrent requests to update the same resource were in conflict.
+//
+//   - ServiceUnavailableException
+//     The service cannot complete the request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/CreateLogGroup
 func (c *CloudWatchLogs) CreateLogGroup(input *CreateLogGroupInput) (*CreateLogGroupOutput, error) {
@@ -456,14 +462,13 @@ const opCreateLogStream = "CreateLogStream"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the CreateLogStreamRequest method.
+//	req, resp := client.CreateLogStreamRequest(params)
 //
-//    // Example sending a request using the CreateLogStreamRequest method.
-//    req, resp := client.CreateLogStreamRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/CreateLogStream
 func (c *CloudWatchLogs) CreateLogStreamRequest(input *CreateLogStreamInput) (req *request.Request, output *CreateLogStreamOutput) {
@@ -495,11 +500,11 @@ func (c *CloudWatchLogs) CreateLogStreamRequest(input *CreateLogStreamInput) (re
 //
 // You must use the following guidelines when naming a log stream:
 //
-//    * Log stream names must be unique within the log group.
+//   - Log stream names must be unique within the log group.
 //
-//    * Log stream names can be between 1 and 512 characters long.
+//   - Log stream names can be between 1 and 512 characters long.
 //
-//    * The ':' (colon) and '*' (asterisk) characters are not allowed.
+//   - The ':' (colon) and '*' (asterisk) characters are not allowed.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -509,17 +514,18 @@ func (c *CloudWatchLogs) CreateLogStreamRequest(input *CreateLogStreamInput) (re
 // API operation CreateLogStream for usage and error information.
 //
 // Returned Error Types:
-//   * InvalidParameterException
-//   A parameter is specified incorrectly.
 //
-//   * ResourceAlreadyExistsException
-//   The specified resource already exists.
+//   - InvalidParameterException
+//     A parameter is specified incorrectly.
 //
-//   * ResourceNotFoundException
-//   The specified resource does not exist.
+//   - ResourceAlreadyExistsException
+//     The specified resource already exists.
 //
-//   * ServiceUnavailableException
-//   The service cannot complete the request.
+//   - ResourceNotFoundException
+//     The specified resource does not exist.
+//
+//   - ServiceUnavailableException
+//     The service cannot complete the request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/CreateLogStream
 func (c *CloudWatchLogs) CreateLogStream(input *CreateLogStreamInput) (*CreateLogStreamOutput, error) {
@@ -559,14 +565,13 @@ const opDeleteDestination = "DeleteDestination"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DeleteDestinationRequest method.
+//	req, resp := client.DeleteDestinationRequest(params)
 //
-//    // Example sending a request using the DeleteDestinationRequest method.
-//    req, resp := client.DeleteDestinationRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/DeleteDestination
 func (c *CloudWatchLogs) DeleteDestinationRequest(input *DeleteDestinationInput) (req *request.Request, output *DeleteDestinationOutput) {
@@ -600,17 +605,18 @@ func (c *CloudWatchLogs) DeleteDestinationRequest(input *DeleteDestinationInput)
 // API operation DeleteDestination for usage and error information.
 //
 // Returned Error Types:
-//   * InvalidParameterException
-//   A parameter is specified incorrectly.
 //
-//   * ResourceNotFoundException
-//   The specified resource does not exist.
+//   - InvalidParameterException
+//     A parameter is specified incorrectly.
 //
-//   * OperationAbortedException
-//   Multiple requests to update the same resource were in conflict.
+//   - ResourceNotFoundException
+//     The specified resource does not exist.
 //
-//   * ServiceUnavailableException
-//   The service cannot complete the request.
+//   - OperationAbortedException
+//     Multiple concurrent requests to update the same resource were in conflict.
+//
+//   - ServiceUnavailableException
+//     The service cannot complete the request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/DeleteDestination
 func (c *CloudWatchLogs) DeleteDestination(input *DeleteDestinationInput) (*DeleteDestinationOutput, error) {
@@ -650,14 +656,13 @@ const opDeleteLogGroup = "DeleteLogGroup"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DeleteLogGroupRequest method.
+//	req, resp := client.DeleteLogGroupRequest(params)
 //
-//    // Example sending a request using the DeleteLogGroupRequest method.
-//    req, resp := client.DeleteLogGroupRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/DeleteLogGroup
 func (c *CloudWatchLogs) DeleteLogGroupRequest(input *DeleteLogGroupInput) (req *request.Request, output *DeleteLogGroupOutput) {
@@ -690,17 +695,18 @@ func (c *CloudWatchLogs) DeleteLogGroupRequest(input *DeleteLogGroupInput) (req 
 // API operation DeleteLogGroup for usage and error information.
 //
 // Returned Error Types:
-//   * InvalidParameterException
-//   A parameter is specified incorrectly.
 //
-//   * ResourceNotFoundException
-//   The specified resource does not exist.
+//   - InvalidParameterException
+//     A parameter is specified incorrectly.
 //
-//   * OperationAbortedException
-//   Multiple requests to update the same resource were in conflict.
+//   - ResourceNotFoundException
+//     The specified resource does not exist.
 //
-//   * ServiceUnavailableException
-//   The service cannot complete the request.
+//   - OperationAbortedException
+//     Multiple concurrent requests to update the same resource were in conflict.
+//
+//   - ServiceUnavailableException
+//     The service cannot complete the request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/DeleteLogGroup
 func (c *CloudWatchLogs) DeleteLogGroup(input *DeleteLogGroupInput) (*DeleteLogGroupOutput, error) {
@@ -740,14 +746,13 @@ const opDeleteLogStream = "DeleteLogStream"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DeleteLogStreamRequest method.
+//	req, resp := client.DeleteLogStreamRequest(params)
 //
-//    // Example sending a request using the DeleteLogStreamRequest method.
-//    req, resp := client.DeleteLogStreamRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/DeleteLogStream
 func (c *CloudWatchLogs) DeleteLogStreamRequest(input *DeleteLogStreamInput) (req *request.Request, output *DeleteLogStreamOutput) {
@@ -780,17 +785,18 @@ func (c *CloudWatchLogs) DeleteLogStreamRequest(input *DeleteLogStreamInput) (re
 // API operation DeleteLogStream for usage and error information.
 //
 // Returned Error Types:
-//   * InvalidParameterException
-//   A parameter is specified incorrectly.
 //
-//   * ResourceNotFoundException
-//   The specified resource does not exist.
+//   - InvalidParameterException
+//     A parameter is specified incorrectly.
 //
-//   * OperationAbortedException
-//   Multiple requests to update the same resource were in conflict.
+//   - ResourceNotFoundException
+//     The specified resource does not exist.
 //
-//   * ServiceUnavailableException
-//   The service cannot complete the request.
+//   - OperationAbortedException
+//     Multiple concurrent requests to update the same resource were in conflict.
+//
+//   - ServiceUnavailableException
+//     The service cannot complete the request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/DeleteLogStream
 func (c *CloudWatchLogs) DeleteLogStream(input *DeleteLogStreamInput) (*DeleteLogStreamOutput, error) {
@@ -830,14 +836,13 @@ const opDeleteMetricFilter = "DeleteMetricFilter"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DeleteMetricFilterRequest method.
+//	req, resp := client.DeleteMetricFilterRequest(params)
 //
-//    // Example sending a request using the DeleteMetricFilterRequest method.
-//    req, resp := client.DeleteMetricFilterRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/DeleteMetricFilter
 func (c *CloudWatchLogs) DeleteMetricFilterRequest(input *DeleteMetricFilterInput) (req *request.Request, output *DeleteMetricFilterOutput) {
@@ -869,17 +874,18 @@ func (c *CloudWatchLogs) DeleteMetricFilterRequest(input *DeleteMetricFilterInpu
 // API operation DeleteMetricFilter for usage and error information.
 //
 // Returned Error Types:
-//   * InvalidParameterException
-//   A parameter is specified incorrectly.
 //
-//   * ResourceNotFoundException
-//   The specified resource does not exist.
+//   - InvalidParameterException
+//     A parameter is specified incorrectly.
 //
-//   * OperationAbortedException
-//   Multiple requests to update the same resource were in conflict.
+//   - ResourceNotFoundException
+//     The specified resource does not exist.
 //
-//   * ServiceUnavailableException
-//   The service cannot complete the request.
+//   - OperationAbortedException
+//     Multiple concurrent requests to update the same resource were in conflict.
+//
+//   - ServiceUnavailableException
+//     The service cannot complete the request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/DeleteMetricFilter
 func (c *CloudWatchLogs) DeleteMetricFilter(input *DeleteMetricFilterInput) (*DeleteMetricFilterOutput, error) {
@@ -919,14 +925,13 @@ const opDeleteQueryDefinition = "DeleteQueryDefinition"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DeleteQueryDefinitionRequest method.
+//	req, resp := client.DeleteQueryDefinitionRequest(params)
 //
-//    // Example sending a request using the DeleteQueryDefinitionRequest method.
-//    req, resp := client.DeleteQueryDefinitionRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/DeleteQueryDefinition
 func (c *CloudWatchLogs) DeleteQueryDefinitionRequest(input *DeleteQueryDefinitionInput) (req *request.Request, output *DeleteQueryDefinitionOutput) {
@@ -963,14 +968,15 @@ func (c *CloudWatchLogs) DeleteQueryDefinitionRequest(input *DeleteQueryDefiniti
 // API operation DeleteQueryDefinition for usage and error information.
 //
 // Returned Error Types:
-//   * InvalidParameterException
-//   A parameter is specified incorrectly.
 //
-//   * ResourceNotFoundException
-//   The specified resource does not exist.
+//   - InvalidParameterException
+//     A parameter is specified incorrectly.
 //
-//   * ServiceUnavailableException
-//   The service cannot complete the request.
+//   - ResourceNotFoundException
+//     The specified resource does not exist.
+//
+//   - ServiceUnavailableException
+//     The service cannot complete the request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/DeleteQueryDefinition
 func (c *CloudWatchLogs) DeleteQueryDefinition(input *DeleteQueryDefinitionInput) (*DeleteQueryDefinitionOutput, error) {
@@ -1010,14 +1016,13 @@ const opDeleteResourcePolicy = "DeleteResourcePolicy"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DeleteResourcePolicyRequest method.
+//	req, resp := client.DeleteResourcePolicyRequest(params)
 //
-//    // Example sending a request using the DeleteResourcePolicyRequest method.
-//    req, resp := client.DeleteResourcePolicyRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/DeleteResourcePolicy
 func (c *CloudWatchLogs) DeleteResourcePolicyRequest(input *DeleteResourcePolicyInput) (req *request.Request, output *DeleteResourcePolicyOutput) {
@@ -1050,14 +1055,15 @@ func (c *CloudWatchLogs) DeleteResourcePolicyRequest(input *DeleteResourcePolicy
 // API operation DeleteResourcePolicy for usage and error information.
 //
 // Returned Error Types:
-//   * InvalidParameterException
-//   A parameter is specified incorrectly.
 //
-//   * ResourceNotFoundException
-//   The specified resource does not exist.
+//   - InvalidParameterException
+//     A parameter is specified incorrectly.
 //
-//   * ServiceUnavailableException
-//   The service cannot complete the request.
+//   - ResourceNotFoundException
+//     The specified resource does not exist.
+//
+//   - ServiceUnavailableException
+//     The service cannot complete the request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/DeleteResourcePolicy
 func (c *CloudWatchLogs) DeleteResourcePolicy(input *DeleteResourcePolicyInput) (*DeleteResourcePolicyOutput, error) {
@@ -1097,14 +1103,13 @@ const opDeleteRetentionPolicy = "DeleteRetentionPolicy"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DeleteRetentionPolicyRequest method.
+//	req, resp := client.DeleteRetentionPolicyRequest(params)
 //
-//    // Example sending a request using the DeleteRetentionPolicyRequest method.
-//    req, resp := client.DeleteRetentionPolicyRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/DeleteRetentionPolicy
 func (c *CloudWatchLogs) DeleteRetentionPolicyRequest(input *DeleteRetentionPolicyInput) (req *request.Request, output *DeleteRetentionPolicyOutput) {
@@ -1139,17 +1144,18 @@ func (c *CloudWatchLogs) DeleteRetentionPolicyRequest(input *DeleteRetentionPoli
 // API operation DeleteRetentionPolicy for usage and error information.
 //
 // Returned Error Types:
-//   * InvalidParameterException
-//   A parameter is specified incorrectly.
 //
-//   * ResourceNotFoundException
-//   The specified resource does not exist.
+//   - InvalidParameterException
+//     A parameter is specified incorrectly.
 //
-//   * OperationAbortedException
-//   Multiple requests to update the same resource were in conflict.
+//   - ResourceNotFoundException
+//     The specified resource does not exist.
 //
-//   * ServiceUnavailableException
-//   The service cannot complete the request.
+//   - OperationAbortedException
+//     Multiple concurrent requests to update the same resource were in conflict.
+//
+//   - ServiceUnavailableException
+//     The service cannot complete the request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/DeleteRetentionPolicy
 func (c *CloudWatchLogs) DeleteRetentionPolicy(input *DeleteRetentionPolicyInput) (*DeleteRetentionPolicyOutput, error) {
@@ -1189,14 +1195,13 @@ const opDeleteSubscriptionFilter = "DeleteSubscriptionFilter"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DeleteSubscriptionFilterRequest method.
+//	req, resp := client.DeleteSubscriptionFilterRequest(params)
 //
-//    // Example sending a request using the DeleteSubscriptionFilterRequest method.
-//    req, resp := client.DeleteSubscriptionFilterRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/DeleteSubscriptionFilter
 func (c *CloudWatchLogs) DeleteSubscriptionFilterRequest(input *DeleteSubscriptionFilterInput) (req *request.Request, output *DeleteSubscriptionFilterOutput) {
@@ -1228,17 +1233,18 @@ func (c *CloudWatchLogs) DeleteSubscriptionFilterRequest(input *DeleteSubscripti
 // API operation DeleteSubscriptionFilter for usage and error information.
 //
 // Returned Error Types:
-//   * InvalidParameterException
-//   A parameter is specified incorrectly.
 //
-//   * ResourceNotFoundException
-//   The specified resource does not exist.
+//   - InvalidParameterException
+//     A parameter is specified incorrectly.
 //
-//   * OperationAbortedException
-//   Multiple requests to update the same resource were in conflict.
+//   - ResourceNotFoundException
+//     The specified resource does not exist.
 //
-//   * ServiceUnavailableException
-//   The service cannot complete the request.
+//   - OperationAbortedException
+//     Multiple concurrent requests to update the same resource were in conflict.
+//
+//   - ServiceUnavailableException
+//     The service cannot complete the request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/DeleteSubscriptionFilter
 func (c *CloudWatchLogs) DeleteSubscriptionFilter(input *DeleteSubscriptionFilterInput) (*DeleteSubscriptionFilterOutput, error) {
@@ -1278,14 +1284,13 @@ const opDescribeDestinations = "DescribeDestinations"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DescribeDestinationsRequest method.
+//	req, resp := client.DescribeDestinationsRequest(params)
 //
-//    // Example sending a request using the DescribeDestinationsRequest method.
-//    req, resp := client.DescribeDestinationsRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/DescribeDestinations
 func (c *CloudWatchLogs) DescribeDestinationsRequest(input *DescribeDestinationsInput) (req *request.Request, output *DescribeDestinationsOutput) {
@@ -1323,11 +1328,12 @@ func (c *CloudWatchLogs) DescribeDestinationsRequest(input *DescribeDestinations
 // API operation DescribeDestinations for usage and error information.
 //
 // Returned Error Types:
-//   * InvalidParameterException
-//   A parameter is specified incorrectly.
 //
-//   * ServiceUnavailableException
-//   The service cannot complete the request.
+//   - InvalidParameterException
+//     A parameter is specified incorrectly.
+//
+//   - ServiceUnavailableException
+//     The service cannot complete the request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/DescribeDestinations
 func (c *CloudWatchLogs) DescribeDestinations(input *DescribeDestinationsInput) (*DescribeDestinationsOutput, error) {
@@ -1359,15 +1365,14 @@ func (c *CloudWatchLogs) DescribeDestinationsWithContext(ctx aws.Context, input 
 //
 // Note: This operation can generate multiple requests to a service.
 //
-//    // Example iterating over at most 3 pages of a DescribeDestinations operation.
-//    pageNum := 0
-//    err := client.DescribeDestinationsPages(params,
-//        func(page *cloudwatchlogs.DescribeDestinationsOutput, lastPage bool) bool {
-//            pageNum++
-//            fmt.Println(page)
-//            return pageNum <= 3
-//        })
-//
+//	// Example iterating over at most 3 pages of a DescribeDestinations operation.
+//	pageNum := 0
+//	err := client.DescribeDestinationsPages(params,
+//	    func(page *cloudwatchlogs.DescribeDestinationsOutput, lastPage bool) bool {
+//	        pageNum++
+//	        fmt.Println(page)
+//	        return pageNum <= 3
+//	    })
 func (c *CloudWatchLogs) DescribeDestinationsPages(input *DescribeDestinationsInput, fn func(*DescribeDestinationsOutput, bool) bool) error {
 	return c.DescribeDestinationsPagesWithContext(aws.BackgroundContext(), input, fn)
 }
@@ -1420,14 +1425,13 @@ const opDescribeExportTasks = "DescribeExportTasks"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DescribeExportTasksRequest method.
+//	req, resp := client.DescribeExportTasksRequest(params)
 //
-//    // Example sending a request using the DescribeExportTasksRequest method.
-//    req, resp := client.DescribeExportTasksRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/DescribeExportTasks
 func (c *CloudWatchLogs) DescribeExportTasksRequest(input *DescribeExportTasksInput) (req *request.Request, output *DescribeExportTasksOutput) {
@@ -1459,11 +1463,12 @@ func (c *CloudWatchLogs) DescribeExportTasksRequest(input *DescribeExportTasksIn
 // API operation DescribeExportTasks for usage and error information.
 //
 // Returned Error Types:
-//   * InvalidParameterException
-//   A parameter is specified incorrectly.
 //
-//   * ServiceUnavailableException
-//   The service cannot complete the request.
+//   - InvalidParameterException
+//     A parameter is specified incorrectly.
+//
+//   - ServiceUnavailableException
+//     The service cannot complete the request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/DescribeExportTasks
 func (c *CloudWatchLogs) DescribeExportTasks(input *DescribeExportTasksInput) (*DescribeExportTasksOutput, error) {
@@ -1503,14 +1508,13 @@ const opDescribeLogGroups = "DescribeLogGroups"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DescribeLogGroupsRequest method.
+//	req, resp := client.DescribeLogGroupsRequest(params)
 //
-//    // Example sending a request using the DescribeLogGroupsRequest method.
-//    req, resp := client.DescribeLogGroupsRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/DescribeLogGroups
 func (c *CloudWatchLogs) DescribeLogGroupsRequest(input *DescribeLogGroupsInput) (req *request.Request, output *DescribeLogGroupsOutput) {
@@ -1555,11 +1559,12 @@ func (c *CloudWatchLogs) DescribeLogGroupsRequest(input *DescribeLogGroupsInput)
 // API operation DescribeLogGroups for usage and error information.
 //
 // Returned Error Types:
-//   * InvalidParameterException
-//   A parameter is specified incorrectly.
 //
-//   * ServiceUnavailableException
-//   The service cannot complete the request.
+//   - InvalidParameterException
+//     A parameter is specified incorrectly.
+//
+//   - ServiceUnavailableException
+//     The service cannot complete the request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/DescribeLogGroups
 func (c *CloudWatchLogs) DescribeLogGroups(input *DescribeLogGroupsInput) (*DescribeLogGroupsOutput, error) {
@@ -1591,15 +1596,14 @@ func (c *CloudWatchLogs) DescribeLogGroupsWithContext(ctx aws.Context, input *De
 //
 // Note: This operation can generate multiple requests to a service.
 //
-//    // Example iterating over at most 3 pages of a DescribeLogGroups operation.
-//    pageNum := 0
-//    err := client.DescribeLogGroupsPages(params,
-//        func(page *cloudwatchlogs.DescribeLogGroupsOutput, lastPage bool) bool {
-//            pageNum++
-//            fmt.Println(page)
-//            return pageNum <= 3
-//        })
-//
+//	// Example iterating over at most 3 pages of a DescribeLogGroups operation.
+//	pageNum := 0
+//	err := client.DescribeLogGroupsPages(params,
+//	    func(page *cloudwatchlogs.DescribeLogGroupsOutput, lastPage bool) bool {
+//	        pageNum++
+//	        fmt.Println(page)
+//	        return pageNum <= 3
+//	    })
 func (c *CloudWatchLogs) DescribeLogGroupsPages(input *DescribeLogGroupsInput, fn func(*DescribeLogGroupsOutput, bool) bool) error {
 	return c.DescribeLogGroupsPagesWithContext(aws.BackgroundContext(), input, fn)
 }
@@ -1652,14 +1656,13 @@ const opDescribeLogStreams = "DescribeLogStreams"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DescribeLogStreamsRequest method.
+//	req, resp := client.DescribeLogStreamsRequest(params)
 //
-//    // Example sending a request using the DescribeLogStreamsRequest method.
-//    req, resp := client.DescribeLogStreamsRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/DescribeLogStreams
 func (c *CloudWatchLogs) DescribeLogStreamsRequest(input *DescribeLogStreamsInput) (req *request.Request, output *DescribeLogStreamsOutput) {
@@ -1701,14 +1704,15 @@ func (c *CloudWatchLogs) DescribeLogStreamsRequest(input *DescribeLogStreamsInpu
 // API operation DescribeLogStreams for usage and error information.
 //
 // Returned Error Types:
-//   * InvalidParameterException
-//   A parameter is specified incorrectly.
 //
-//   * ResourceNotFoundException
-//   The specified resource does not exist.
+//   - InvalidParameterException
+//     A parameter is specified incorrectly.
 //
-//   * ServiceUnavailableException
-//   The service cannot complete the request.
+//   - ResourceNotFoundException
+//     The specified resource does not exist.
+//
+//   - ServiceUnavailableException
+//     The service cannot complete the request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/DescribeLogStreams
 func (c *CloudWatchLogs) DescribeLogStreams(input *DescribeLogStreamsInput) (*DescribeLogStreamsOutput, error) {
@@ -1740,15 +1744,14 @@ func (c *CloudWatchLogs) DescribeLogStreamsWithContext(ctx aws.Context, input *D
 //
 // Note: This operation can generate multiple requests to a service.
 //
-//    // Example iterating over at most 3 pages of a DescribeLogStreams operation.
-//    pageNum := 0
-//    err := client.DescribeLogStreamsPages(params,
-//        func(page *cloudwatchlogs.DescribeLogStreamsOutput, lastPage bool) bool {
-//            pageNum++
-//            fmt.Println(page)
-//            return pageNum <= 3
-//        })
-//
+//	// Example iterating over at most 3 pages of a DescribeLogStreams operation.
+//	pageNum := 0
+//	err := client.DescribeLogStreamsPages(params,
+//	    func(page *cloudwatchlogs.DescribeLogStreamsOutput, lastPage bool) bool {
+//	        pageNum++
+//	        fmt.Println(page)
+//	        return pageNum <= 3
+//	    })
 func (c *CloudWatchLogs) DescribeLogStreamsPages(input *DescribeLogStreamsInput, fn func(*DescribeLogStreamsOutput, bool) bool) error {
 	return c.DescribeLogStreamsPagesWithContext(aws.BackgroundContext(), input, fn)
 }
@@ -1801,14 +1804,13 @@ const opDescribeMetricFilters = "DescribeMetricFilters"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DescribeMetricFiltersRequest method.
+//	req, resp := client.DescribeMetricFiltersRequest(params)
 //
-//    // Example sending a request using the DescribeMetricFiltersRequest method.
-//    req, resp := client.DescribeMetricFiltersRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/DescribeMetricFilters
 func (c *CloudWatchLogs) DescribeMetricFiltersRequest(input *DescribeMetricFiltersInput) (req *request.Request, output *DescribeMetricFiltersOutput) {
@@ -1847,14 +1849,15 @@ func (c *CloudWatchLogs) DescribeMetricFiltersRequest(input *DescribeMetricFilte
 // API operation DescribeMetricFilters for usage and error information.
 //
 // Returned Error Types:
-//   * InvalidParameterException
-//   A parameter is specified incorrectly.
 //
-//   * ResourceNotFoundException
-//   The specified resource does not exist.
+//   - InvalidParameterException
+//     A parameter is specified incorrectly.
 //
-//   * ServiceUnavailableException
-//   The service cannot complete the request.
+//   - ResourceNotFoundException
+//     The specified resource does not exist.
+//
+//   - ServiceUnavailableException
+//     The service cannot complete the request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/DescribeMetricFilters
 func (c *CloudWatchLogs) DescribeMetricFilters(input *DescribeMetricFiltersInput) (*DescribeMetricFiltersOutput, error) {
@@ -1886,15 +1889,14 @@ func (c *CloudWatchLogs) DescribeMetricFiltersWithContext(ctx aws.Context, input
 //
 // Note: This operation can generate multiple requests to a service.
 //
-//    // Example iterating over at most 3 pages of a DescribeMetricFilters operation.
-//    pageNum := 0
-//    err := client.DescribeMetricFiltersPages(params,
-//        func(page *cloudwatchlogs.DescribeMetricFiltersOutput, lastPage bool) bool {
-//            pageNum++
-//            fmt.Println(page)
-//            return pageNum <= 3
-//        })
-//
+//	// Example iterating over at most 3 pages of a DescribeMetricFilters operation.
+//	pageNum := 0
+//	err := client.DescribeMetricFiltersPages(params,
+//	    func(page *cloudwatchlogs.DescribeMetricFiltersOutput, lastPage bool) bool {
+//	        pageNum++
+//	        fmt.Println(page)
+//	        return pageNum <= 3
+//	    })
 func (c *CloudWatchLogs) DescribeMetricFiltersPages(input *DescribeMetricFiltersInput, fn func(*DescribeMetricFiltersOutput, bool) bool) error {
 	return c.DescribeMetricFiltersPagesWithContext(aws.BackgroundContext(), input, fn)
 }
@@ -1947,14 +1949,13 @@ const opDescribeQueries = "DescribeQueries"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DescribeQueriesRequest method.
+//	req, resp := client.DescribeQueriesRequest(params)
 //
-//    // Example sending a request using the DescribeQueriesRequest method.
-//    req, resp := client.DescribeQueriesRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/DescribeQueries
 func (c *CloudWatchLogs) DescribeQueriesRequest(input *DescribeQueriesInput) (req *request.Request, output *DescribeQueriesOutput) {
@@ -1988,14 +1989,15 @@ func (c *CloudWatchLogs) DescribeQueriesRequest(input *DescribeQueriesInput) (re
 // API operation DescribeQueries for usage and error information.
 //
 // Returned Error Types:
-//   * InvalidParameterException
-//   A parameter is specified incorrectly.
 //
-//   * ResourceNotFoundException
-//   The specified resource does not exist.
+//   - InvalidParameterException
+//     A parameter is specified incorrectly.
 //
-//   * ServiceUnavailableException
-//   The service cannot complete the request.
+//   - ResourceNotFoundException
+//     The specified resource does not exist.
+//
+//   - ServiceUnavailableException
+//     The service cannot complete the request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/DescribeQueries
 func (c *CloudWatchLogs) DescribeQueries(input *DescribeQueriesInput) (*DescribeQueriesOutput, error) {
@@ -2035,14 +2037,13 @@ const opDescribeQueryDefinitions = "DescribeQueryDefinitions"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DescribeQueryDefinitionsRequest method.
+//	req, resp := client.DescribeQueryDefinitionsRequest(params)
 //
-//    // Example sending a request using the DescribeQueryDefinitionsRequest method.
-//    req, resp := client.DescribeQueryDefinitionsRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/DescribeQueryDefinitions
 func (c *CloudWatchLogs) DescribeQueryDefinitionsRequest(input *DescribeQueryDefinitionsInput) (req *request.Request, output *DescribeQueryDefinitionsOutput) {
@@ -2077,11 +2078,12 @@ func (c *CloudWatchLogs) DescribeQueryDefinitionsRequest(input *DescribeQueryDef
 // API operation DescribeQueryDefinitions for usage and error information.
 //
 // Returned Error Types:
-//   * InvalidParameterException
-//   A parameter is specified incorrectly.
 //
-//   * ServiceUnavailableException
-//   The service cannot complete the request.
+//   - InvalidParameterException
+//     A parameter is specified incorrectly.
+//
+//   - ServiceUnavailableException
+//     The service cannot complete the request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/DescribeQueryDefinitions
 func (c *CloudWatchLogs) DescribeQueryDefinitions(input *DescribeQueryDefinitionsInput) (*DescribeQueryDefinitionsOutput, error) {
@@ -2121,14 +2123,13 @@ const opDescribeResourcePolicies = "DescribeResourcePolicies"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DescribeResourcePoliciesRequest method.
+//	req, resp := client.DescribeResourcePoliciesRequest(params)
 //
-//    // Example sending a request using the DescribeResourcePoliciesRequest method.
-//    req, resp := client.DescribeResourcePoliciesRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/DescribeResourcePolicies
 func (c *CloudWatchLogs) DescribeResourcePoliciesRequest(input *DescribeResourcePoliciesInput) (req *request.Request, output *DescribeResourcePoliciesOutput) {
@@ -2159,11 +2160,12 @@ func (c *CloudWatchLogs) DescribeResourcePoliciesRequest(input *DescribeResource
 // API operation DescribeResourcePolicies for usage and error information.
 //
 // Returned Error Types:
-//   * InvalidParameterException
-//   A parameter is specified incorrectly.
 //
-//   * ServiceUnavailableException
-//   The service cannot complete the request.
+//   - InvalidParameterException
+//     A parameter is specified incorrectly.
+//
+//   - ServiceUnavailableException
+//     The service cannot complete the request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/DescribeResourcePolicies
 func (c *CloudWatchLogs) DescribeResourcePolicies(input *DescribeResourcePoliciesInput) (*DescribeResourcePoliciesOutput, error) {
@@ -2203,14 +2205,13 @@ const opDescribeSubscriptionFilters = "DescribeSubscriptionFilters"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DescribeSubscriptionFiltersRequest method.
+//	req, resp := client.DescribeSubscriptionFiltersRequest(params)
 //
-//    // Example sending a request using the DescribeSubscriptionFiltersRequest method.
-//    req, resp := client.DescribeSubscriptionFiltersRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/DescribeSubscriptionFilters
 func (c *CloudWatchLogs) DescribeSubscriptionFiltersRequest(input *DescribeSubscriptionFiltersInput) (req *request.Request, output *DescribeSubscriptionFiltersOutput) {
@@ -2249,14 +2250,15 @@ func (c *CloudWatchLogs) DescribeSubscriptionFiltersRequest(input *DescribeSubsc
 // API operation DescribeSubscriptionFilters for usage and error information.
 //
 // Returned Error Types:
-//   * InvalidParameterException
-//   A parameter is specified incorrectly.
 //
-//   * ResourceNotFoundException
-//   The specified resource does not exist.
+//   - InvalidParameterException
+//     A parameter is specified incorrectly.
 //
-//   * ServiceUnavailableException
-//   The service cannot complete the request.
+//   - ResourceNotFoundException
+//     The specified resource does not exist.
+//
+//   - ServiceUnavailableException
+//     The service cannot complete the request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/DescribeSubscriptionFilters
 func (c *CloudWatchLogs) DescribeSubscriptionFilters(input *DescribeSubscriptionFiltersInput) (*DescribeSubscriptionFiltersOutput, error) {
@@ -2288,15 +2290,14 @@ func (c *CloudWatchLogs) DescribeSubscriptionFiltersWithContext(ctx aws.Context,
 //
 // Note: This operation can generate multiple requests to a service.
 //
-//    // Example iterating over at most 3 pages of a DescribeSubscriptionFilters operation.
-//    pageNum := 0
-//    err := client.DescribeSubscriptionFiltersPages(params,
-//        func(page *cloudwatchlogs.DescribeSubscriptionFiltersOutput, lastPage bool) bool {
-//            pageNum++
-//            fmt.Println(page)
-//            return pageNum <= 3
-//        })
-//
+//	// Example iterating over at most 3 pages of a DescribeSubscriptionFilters operation.
+//	pageNum := 0
+//	err := client.DescribeSubscriptionFiltersPages(params,
+//	    func(page *cloudwatchlogs.DescribeSubscriptionFiltersOutput, lastPage bool) bool {
+//	        pageNum++
+//	        fmt.Println(page)
+//	        return pageNum <= 3
+//	    })
 func (c *CloudWatchLogs) DescribeSubscriptionFiltersPages(input *DescribeSubscriptionFiltersInput, fn func(*DescribeSubscriptionFiltersOutput, bool) bool) error {
 	return c.DescribeSubscriptionFiltersPagesWithContext(aws.BackgroundContext(), input, fn)
 }
@@ -2349,14 +2350,13 @@ const opDisassociateKmsKey = "DisassociateKmsKey"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the DisassociateKmsKeyRequest method.
+//	req, resp := client.DisassociateKmsKeyRequest(params)
 //
-//    // Example sending a request using the DisassociateKmsKeyRequest method.
-//    req, resp := client.DisassociateKmsKeyRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/DisassociateKmsKey
 func (c *CloudWatchLogs) DisassociateKmsKeyRequest(input *DisassociateKmsKeyInput) (req *request.Request, output *DisassociateKmsKeyOutput) {
@@ -2396,17 +2396,18 @@ func (c *CloudWatchLogs) DisassociateKmsKeyRequest(input *DisassociateKmsKeyInpu
 // API operation DisassociateKmsKey for usage and error information.
 //
 // Returned Error Types:
-//   * InvalidParameterException
-//   A parameter is specified incorrectly.
 //
-//   * ResourceNotFoundException
-//   The specified resource does not exist.
+//   - InvalidParameterException
+//     A parameter is specified incorrectly.
 //
-//   * OperationAbortedException
-//   Multiple requests to update the same resource were in conflict.
+//   - ResourceNotFoundException
+//     The specified resource does not exist.
 //
-//   * ServiceUnavailableException
-//   The service cannot complete the request.
+//   - OperationAbortedException
+//     Multiple concurrent requests to update the same resource were in conflict.
+//
+//   - ServiceUnavailableException
+//     The service cannot complete the request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/DisassociateKmsKey
 func (c *CloudWatchLogs) DisassociateKmsKey(input *DisassociateKmsKeyInput) (*DisassociateKmsKeyOutput, error) {
@@ -2446,14 +2447,13 @@ const opFilterLogEvents = "FilterLogEvents"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the FilterLogEventsRequest method.
+//	req, resp := client.FilterLogEventsRequest(params)
 //
-//    // Example sending a request using the FilterLogEventsRequest method.
-//    req, resp := client.FilterLogEventsRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/FilterLogEvents
 func (c *CloudWatchLogs) FilterLogEventsRequest(input *FilterLogEventsInput) (req *request.Request, output *FilterLogEventsOutput) {
@@ -2503,14 +2503,15 @@ func (c *CloudWatchLogs) FilterLogEventsRequest(input *FilterLogEventsInput) (re
 // API operation FilterLogEvents for usage and error information.
 //
 // Returned Error Types:
-//   * InvalidParameterException
-//   A parameter is specified incorrectly.
 //
-//   * ResourceNotFoundException
-//   The specified resource does not exist.
+//   - InvalidParameterException
+//     A parameter is specified incorrectly.
 //
-//   * ServiceUnavailableException
-//   The service cannot complete the request.
+//   - ResourceNotFoundException
+//     The specified resource does not exist.
+//
+//   - ServiceUnavailableException
+//     The service cannot complete the request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/FilterLogEvents
 func (c *CloudWatchLogs) FilterLogEvents(input *FilterLogEventsInput) (*FilterLogEventsOutput, error) {
@@ -2542,15 +2543,14 @@ func (c *CloudWatchLogs) FilterLogEventsWithContext(ctx aws.Context, input *Filt
 //
 // Note: This operation can generate multiple requests to a service.
 //
-//    // Example iterating over at most 3 pages of a FilterLogEvents operation.
-//    pageNum := 0
-//    err := client.FilterLogEventsPages(params,
-//        func(page *cloudwatchlogs.FilterLogEventsOutput, lastPage bool) bool {
-//            pageNum++
-//            fmt.Println(page)
-//            return pageNum <= 3
-//        })
-//
+//	// Example iterating over at most 3 pages of a FilterLogEvents operation.
+//	pageNum := 0
+//	err := client.FilterLogEventsPages(params,
+//	    func(page *cloudwatchlogs.FilterLogEventsOutput, lastPage bool) bool {
+//	        pageNum++
+//	        fmt.Println(page)
+//	        return pageNum <= 3
+//	    })
 func (c *CloudWatchLogs) FilterLogEventsPages(input *FilterLogEventsInput, fn func(*FilterLogEventsOutput, bool) bool) error {
 	return c.FilterLogEventsPagesWithContext(aws.BackgroundContext(), input, fn)
 }
@@ -2603,14 +2603,13 @@ const opGetLogEvents = "GetLogEvents"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the GetLogEventsRequest method.
+//	req, resp := client.GetLogEventsRequest(params)
 //
-//    // Example sending a request using the GetLogEventsRequest method.
-//    req, resp := client.GetLogEventsRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/GetLogEvents
 func (c *CloudWatchLogs) GetLogEventsRequest(input *GetLogEventsInput) (req *request.Request, output *GetLogEventsOutput) {
@@ -2654,14 +2653,15 @@ func (c *CloudWatchLogs) GetLogEventsRequest(input *GetLogEventsInput) (req *req
 // API operation GetLogEvents for usage and error information.
 //
 // Returned Error Types:
-//   * InvalidParameterException
-//   A parameter is specified incorrectly.
 //
-//   * ResourceNotFoundException
-//   The specified resource does not exist.
+//   - InvalidParameterException
+//     A parameter is specified incorrectly.
 //
-//   * ServiceUnavailableException
-//   The service cannot complete the request.
+//   - ResourceNotFoundException
+//     The specified resource does not exist.
+//
+//   - ServiceUnavailableException
+//     The service cannot complete the request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/GetLogEvents
 func (c *CloudWatchLogs) GetLogEvents(input *GetLogEventsInput) (*GetLogEventsOutput, error) {
@@ -2693,15 +2693,14 @@ func (c *CloudWatchLogs) GetLogEventsWithContext(ctx aws.Context, input *GetLogE
 //
 // Note: This operation can generate multiple requests to a service.
 //
-//    // Example iterating over at most 3 pages of a GetLogEvents operation.
-//    pageNum := 0
-//    err := client.GetLogEventsPages(params,
-//        func(page *cloudwatchlogs.GetLogEventsOutput, lastPage bool) bool {
-//            pageNum++
-//            fmt.Println(page)
-//            return pageNum <= 3
-//        })
-//
+//	// Example iterating over at most 3 pages of a GetLogEvents operation.
+//	pageNum := 0
+//	err := client.GetLogEventsPages(params,
+//	    func(page *cloudwatchlogs.GetLogEventsOutput, lastPage bool) bool {
+//	        pageNum++
+//	        fmt.Println(page)
+//	        return pageNum <= 3
+//	    })
 func (c *CloudWatchLogs) GetLogEventsPages(input *GetLogEventsInput, fn func(*GetLogEventsOutput, bool) bool) error {
 	return c.GetLogEventsPagesWithContext(aws.BackgroundContext(), input, fn)
 }
@@ -2754,14 +2753,13 @@ const opGetLogGroupFields = "GetLogGroupFields"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the GetLogGroupFieldsRequest method.
+//	req, resp := client.GetLogGroupFieldsRequest(params)
 //
-//    // Example sending a request using the GetLogGroupFieldsRequest method.
-//    req, resp := client.GetLogGroupFieldsRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/GetLogGroupFields
 func (c *CloudWatchLogs) GetLogGroupFieldsRequest(input *GetLogGroupFieldsInput) (req *request.Request, output *GetLogGroupFieldsOutput) {
@@ -2802,17 +2800,18 @@ func (c *CloudWatchLogs) GetLogGroupFieldsRequest(input *GetLogGroupFieldsInput)
 // API operation GetLogGroupFields for usage and error information.
 //
 // Returned Error Types:
-//   * InvalidParameterException
-//   A parameter is specified incorrectly.
 //
-//   * LimitExceededException
-//   You have reached the maximum number of resources that can be created.
+//   - InvalidParameterException
+//     A parameter is specified incorrectly.
 //
-//   * ResourceNotFoundException
-//   The specified resource does not exist.
+//   - LimitExceededException
+//     You have reached the maximum number of resources that can be created.
 //
-//   * ServiceUnavailableException
-//   The service cannot complete the request.
+//   - ResourceNotFoundException
+//     The specified resource does not exist.
+//
+//   - ServiceUnavailableException
+//     The service cannot complete the request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/GetLogGroupFields
 func (c *CloudWatchLogs) GetLogGroupFields(input *GetLogGroupFieldsInput) (*GetLogGroupFieldsOutput, error) {
@@ -2852,14 +2851,13 @@ const opGetLogRecord = "GetLogRecord"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the GetLogRecordRequest method.
+//	req, resp := client.GetLogRecordRequest(params)
 //
-//    // Example sending a request using the GetLogRecordRequest method.
-//    req, resp := client.GetLogRecordRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/GetLogRecord
 func (c *CloudWatchLogs) GetLogRecordRequest(input *GetLogRecordInput) (req *request.Request, output *GetLogRecordOutput) {
@@ -2895,17 +2893,18 @@ func (c *CloudWatchLogs) GetLogRecordRequest(input *GetLogRecordInput) (req *req
 // API operation GetLogRecord for usage and error information.
 //
 // Returned Error Types:
-//   * InvalidParameterException
-//   A parameter is specified incorrectly.
 //
-//   * LimitExceededException
-//   You have reached the maximum number of resources that can be created.
+//   - InvalidParameterException
+//     A parameter is specified incorrectly.
 //
-//   * ResourceNotFoundException
-//   The specified resource does not exist.
+//   - LimitExceededException
+//     You have reached the maximum number of resources that can be created.
 //
-//   * ServiceUnavailableException
-//   The service cannot complete the request.
+//   - ResourceNotFoundException
+//     The specified resource does not exist.
+//
+//   - ServiceUnavailableException
+//     The service cannot complete the request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/GetLogRecord
 func (c *CloudWatchLogs) GetLogRecord(input *GetLogRecordInput) (*GetLogRecordOutput, error) {
@@ -2945,14 +2944,13 @@ const opGetQueryResults = "GetQueryResults"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the GetQueryResultsRequest method.
+//	req, resp := client.GetQueryResultsRequest(params)
 //
-//    // Example sending a request using the GetQueryResultsRequest method.
-//    req, resp := client.GetQueryResultsRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/GetQueryResults
 func (c *CloudWatchLogs) GetQueryResultsRequest(input *GetQueryResultsInput) (req *request.Request, output *GetQueryResultsOutput) {
@@ -2995,14 +2993,15 @@ func (c *CloudWatchLogs) GetQueryResultsRequest(input *GetQueryResultsInput) (re
 // API operation GetQueryResults for usage and error information.
 //
 // Returned Error Types:
-//   * InvalidParameterException
-//   A parameter is specified incorrectly.
 //
-//   * ResourceNotFoundException
-//   The specified resource does not exist.
+//   - InvalidParameterException
+//     A parameter is specified incorrectly.
 //
-//   * ServiceUnavailableException
-//   The service cannot complete the request.
+//   - ResourceNotFoundException
+//     The specified resource does not exist.
+//
+//   - ServiceUnavailableException
+//     The service cannot complete the request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/GetQueryResults
 func (c *CloudWatchLogs) GetQueryResults(input *GetQueryResultsInput) (*GetQueryResultsOutput, error) {
@@ -3042,14 +3041,13 @@ const opListTagsLogGroup = "ListTagsLogGroup"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the ListTagsLogGroupRequest method.
+//	req, resp := client.ListTagsLogGroupRequest(params)
 //
-//    // Example sending a request using the ListTagsLogGroupRequest method.
-//    req, resp := client.ListTagsLogGroupRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/ListTagsLogGroup
 func (c *CloudWatchLogs) ListTagsLogGroupRequest(input *ListTagsLogGroupInput) (req *request.Request, output *ListTagsLogGroupOutput) {
@@ -3080,11 +3078,12 @@ func (c *CloudWatchLogs) ListTagsLogGroupRequest(input *ListTagsLogGroupInput) (
 // API operation ListTagsLogGroup for usage and error information.
 //
 // Returned Error Types:
-//   * ResourceNotFoundException
-//   The specified resource does not exist.
 //
-//   * ServiceUnavailableException
-//   The service cannot complete the request.
+//   - ResourceNotFoundException
+//     The specified resource does not exist.
+//
+//   - ServiceUnavailableException
+//     The service cannot complete the request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/ListTagsLogGroup
 func (c *CloudWatchLogs) ListTagsLogGroup(input *ListTagsLogGroupInput) (*ListTagsLogGroupOutput, error) {
@@ -3124,14 +3123,13 @@ const opPutDestination = "PutDestination"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the PutDestinationRequest method.
+//	req, resp := client.PutDestinationRequest(params)
 //
-//    // Example sending a request using the PutDestinationRequest method.
-//    req, resp := client.PutDestinationRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/PutDestination
 func (c *CloudWatchLogs) PutDestinationRequest(input *PutDestinationInput) (req *request.Request, output *PutDestinationOutput) {
@@ -3177,14 +3175,15 @@ func (c *CloudWatchLogs) PutDestinationRequest(input *PutDestinationInput) (req 
 // API operation PutDestination for usage and error information.
 //
 // Returned Error Types:
-//   * InvalidParameterException
-//   A parameter is specified incorrectly.
 //
-//   * OperationAbortedException
-//   Multiple requests to update the same resource were in conflict.
+//   - InvalidParameterException
+//     A parameter is specified incorrectly.
 //
-//   * ServiceUnavailableException
-//   The service cannot complete the request.
+//   - OperationAbortedException
+//     Multiple concurrent requests to update the same resource were in conflict.
+//
+//   - ServiceUnavailableException
+//     The service cannot complete the request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/PutDestination
 func (c *CloudWatchLogs) PutDestination(input *PutDestinationInput) (*PutDestinationOutput, error) {
@@ -3224,14 +3223,13 @@ const opPutDestinationPolicy = "PutDestinationPolicy"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the PutDestinationPolicyRequest method.
+//	req, resp := client.PutDestinationPolicyRequest(params)
 //
-//    // Example sending a request using the PutDestinationPolicyRequest method.
-//    req, resp := client.PutDestinationPolicyRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/PutDestinationPolicy
 func (c *CloudWatchLogs) PutDestinationPolicyRequest(input *PutDestinationPolicyInput) (req *request.Request, output *PutDestinationPolicyOutput) {
@@ -3271,14 +3269,15 @@ func (c *CloudWatchLogs) PutDestinationPolicyRequest(input *PutDestinationPolicy
 // API operation PutDestinationPolicy for usage and error information.
 //
 // Returned Error Types:
-//   * InvalidParameterException
-//   A parameter is specified incorrectly.
 //
-//   * OperationAbortedException
-//   Multiple requests to update the same resource were in conflict.
+//   - InvalidParameterException
+//     A parameter is specified incorrectly.
 //
-//   * ServiceUnavailableException
-//   The service cannot complete the request.
+//   - OperationAbortedException
+//     Multiple concurrent requests to update the same resource were in conflict.
+//
+//   - ServiceUnavailableException
+//     The service cannot complete the request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/PutDestinationPolicy
 func (c *CloudWatchLogs) PutDestinationPolicy(input *PutDestinationPolicyInput) (*PutDestinationPolicyOutput, error) {
@@ -3318,14 +3317,13 @@ const opPutLogEvents = "PutLogEvents"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the PutLogEventsRequest method.
+//	req, resp := client.PutLogEventsRequest(params)
 //
-//    // Example sending a request using the PutLogEventsRequest method.
-//    req, resp := client.PutLogEventsRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/PutLogEvents
 func (c *CloudWatchLogs) PutLogEventsRequest(input *PutLogEventsInput) (req *request.Request, output *PutLogEventsOutput) {
@@ -3357,29 +3355,29 @@ func (c *CloudWatchLogs) PutLogEventsRequest(input *PutLogEventsInput) (req *req
 //
 // The batch of events must satisfy the following constraints:
 //
-//    * The maximum batch size is 1,048,576 bytes. This size is calculated as
-//    the sum of all event messages in UTF-8, plus 26 bytes for each log event.
+//   - The maximum batch size is 1,048,576 bytes. This size is calculated as
+//     the sum of all event messages in UTF-8, plus 26 bytes for each log event.
 //
-//    * None of the log events in the batch can be more than 2 hours in the
-//    future.
+//   - None of the log events in the batch can be more than 2 hours in the
+//     future.
 //
-//    * None of the log events in the batch can be older than 14 days or older
-//    than the retention period of the log group.
+//   - None of the log events in the batch can be older than 14 days or older
+//     than the retention period of the log group.
 //
-//    * The log events in the batch must be in chronological order by their
-//    timestamp. The timestamp is the time the event occurred, expressed as
-//    the number of milliseconds after Jan 1, 1970 00:00:00 UTC. (In Amazon
-//    Web Services Tools for PowerShell and the Amazon Web Services SDK for
-//    .NET, the timestamp is specified in .NET format: yyyy-mm-ddThh:mm:ss.
-//    For example, 2017-09-15T13:45:30.)
+//   - The log events in the batch must be in chronological order by their
+//     timestamp. The timestamp is the time the event occurred, expressed as
+//     the number of milliseconds after Jan 1, 1970 00:00:00 UTC. (In Amazon
+//     Web Services Tools for PowerShell and the Amazon Web Services SDK for
+//     .NET, the timestamp is specified in .NET format: yyyy-mm-ddThh:mm:ss.
+//     For example, 2017-09-15T13:45:30.)
 //
-//    * A batch of log events in a single request cannot span more than 24 hours.
-//    Otherwise, the operation fails.
+//   - A batch of log events in a single request cannot span more than 24 hours.
+//     Otherwise, the operation fails.
 //
-//    * The maximum number of log events in a batch is 10,000.
+//   - The maximum number of log events in a batch is 10,000.
 //
-//    * There is a quota of 5 requests per second per log stream. Additional
-//    requests are throttled. This quota can't be changed.
+//   - There is a quota of 5 requests per second per log stream. Additional
+//     requests are throttled. This quota can't be changed.
 //
 // If a call to PutLogEvents returns "UnrecognizedClientException" the most
 // likely cause is an invalid Amazon Web Services access key ID or secret key.
@@ -3392,25 +3390,26 @@ func (c *CloudWatchLogs) PutLogEventsRequest(input *PutLogEventsInput) (req *req
 // API operation PutLogEvents for usage and error information.
 //
 // Returned Error Types:
-//   * InvalidParameterException
-//   A parameter is specified incorrectly.
 //
-//   * InvalidSequenceTokenException
-//   The sequence token is not valid. You can get the correct sequence token in
-//   the expectedSequenceToken field in the InvalidSequenceTokenException message.
+//   - InvalidParameterException
+//     A parameter is specified incorrectly.
 //
-//   * DataAlreadyAcceptedException
-//   The event was already logged.
+//   - InvalidSequenceTokenException
+//     The sequence token is not valid. You can get the correct sequence token in
+//     the expectedSequenceToken field in the InvalidSequenceTokenException message.
 //
-//   * ResourceNotFoundException
-//   The specified resource does not exist.
+//   - DataAlreadyAcceptedException
+//     The event was already logged.
 //
-//   * ServiceUnavailableException
-//   The service cannot complete the request.
+//   - ResourceNotFoundException
+//     The specified resource does not exist.
 //
-//   * UnrecognizedClientException
-//   The most likely cause is an invalid Amazon Web Services access key ID or
-//   secret key.
+//   - ServiceUnavailableException
+//     The service cannot complete the request.
+//
+//   - UnrecognizedClientException
+//     The most likely cause is an invalid Amazon Web Services access key ID or
+//     secret key.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/PutLogEvents
 func (c *CloudWatchLogs) PutLogEvents(input *PutLogEventsInput) (*PutLogEventsOutput, error) {
@@ -3450,14 +3449,13 @@ const opPutMetricFilter = "PutMetricFilter"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the PutMetricFilterRequest method.
+//	req, resp := client.PutMetricFilterRequest(params)
 //
-//    // Example sending a request using the PutMetricFilterRequest method.
-//    req, resp := client.PutMetricFilterRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/PutMetricFilter
 func (c *CloudWatchLogs) PutMetricFilterRequest(input *PutMetricFilterInput) (req *request.Request, output *PutMetricFilterOutput) {
@@ -3510,20 +3508,21 @@ func (c *CloudWatchLogs) PutMetricFilterRequest(input *PutMetricFilterInput) (re
 // API operation PutMetricFilter for usage and error information.
 //
 // Returned Error Types:
-//   * InvalidParameterException
-//   A parameter is specified incorrectly.
 //
-//   * ResourceNotFoundException
-//   The specified resource does not exist.
+//   - InvalidParameterException
+//     A parameter is specified incorrectly.
 //
-//   * OperationAbortedException
-//   Multiple requests to update the same resource were in conflict.
+//   - ResourceNotFoundException
+//     The specified resource does not exist.
 //
-//   * LimitExceededException
-//   You have reached the maximum number of resources that can be created.
+//   - OperationAbortedException
+//     Multiple concurrent requests to update the same resource were in conflict.
 //
-//   * ServiceUnavailableException
-//   The service cannot complete the request.
+//   - LimitExceededException
+//     You have reached the maximum number of resources that can be created.
+//
+//   - ServiceUnavailableException
+//     The service cannot complete the request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/PutMetricFilter
 func (c *CloudWatchLogs) PutMetricFilter(input *PutMetricFilterInput) (*PutMetricFilterOutput, error) {
@@ -3563,14 +3562,13 @@ const opPutQueryDefinition = "PutQueryDefinition"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the PutQueryDefinitionRequest method.
+//	req, resp := client.PutQueryDefinitionRequest(params)
 //
-//    // Example sending a request using the PutQueryDefinitionRequest method.
-//    req, resp := client.PutQueryDefinitionRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/PutQueryDefinition
 func (c *CloudWatchLogs) PutQueryDefinitionRequest(input *PutQueryDefinitionInput) (req *request.Request, output *PutQueryDefinitionOutput) {
@@ -3613,14 +3611,18 @@ func (c *CloudWatchLogs) PutQueryDefinitionRequest(input *PutQueryDefinitionInpu
 // API operation PutQueryDefinition for usage and error information.
 //
 // Returned Error Types:
-//   * InvalidParameterException
-//   A parameter is specified incorrectly.
 //
-//   * ResourceNotFoundException
-//   The specified resource does not exist.
+//   - InvalidParameterException
+//     A parameter is specified incorrectly.
 //
-//   * ServiceUnavailableException
-//   The service cannot complete the request.
+//   - LimitExceededException
+//     You have reached the maximum number of resources that can be created.
+//
+//   - ResourceNotFoundException
+//     The specified resource does not exist.
+//
+//   - ServiceUnavailableException
+//     The service cannot complete the request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/PutQueryDefinition
 func (c *CloudWatchLogs) PutQueryDefinition(input *PutQueryDefinitionInput) (*PutQueryDefinitionOutput, error) {
@@ -3660,14 +3662,13 @@ const opPutResourcePolicy = "PutResourcePolicy"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the PutResourcePolicyRequest method.
+//	req, resp := client.PutResourcePolicyRequest(params)
 //
-//    // Example sending a request using the PutResourcePolicyRequest method.
-//    req, resp := client.PutResourcePolicyRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/PutResourcePolicy
 func (c *CloudWatchLogs) PutResourcePolicyRequest(input *PutResourcePolicyInput) (req *request.Request, output *PutResourcePolicyOutput) {
@@ -3700,14 +3701,15 @@ func (c *CloudWatchLogs) PutResourcePolicyRequest(input *PutResourcePolicyInput)
 // API operation PutResourcePolicy for usage and error information.
 //
 // Returned Error Types:
-//   * InvalidParameterException
-//   A parameter is specified incorrectly.
 //
-//   * LimitExceededException
-//   You have reached the maximum number of resources that can be created.
+//   - InvalidParameterException
+//     A parameter is specified incorrectly.
 //
-//   * ServiceUnavailableException
-//   The service cannot complete the request.
+//   - LimitExceededException
+//     You have reached the maximum number of resources that can be created.
+//
+//   - ServiceUnavailableException
+//     The service cannot complete the request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/PutResourcePolicy
 func (c *CloudWatchLogs) PutResourcePolicy(input *PutResourcePolicyInput) (*PutResourcePolicyOutput, error) {
@@ -3747,14 +3749,13 @@ const opPutRetentionPolicy = "PutRetentionPolicy"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the PutRetentionPolicyRequest method.
+//	req, resp := client.PutRetentionPolicyRequest(params)
 //
-//    // Example sending a request using the PutRetentionPolicyRequest method.
-//    req, resp := client.PutRetentionPolicyRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/PutRetentionPolicy
 func (c *CloudWatchLogs) PutRetentionPolicyRequest(input *PutRetentionPolicyInput) (req *request.Request, output *PutRetentionPolicyOutput) {
@@ -3788,17 +3789,18 @@ func (c *CloudWatchLogs) PutRetentionPolicyRequest(input *PutRetentionPolicyInpu
 // API operation PutRetentionPolicy for usage and error information.
 //
 // Returned Error Types:
-//   * InvalidParameterException
-//   A parameter is specified incorrectly.
 //
-//   * ResourceNotFoundException
-//   The specified resource does not exist.
+//   - InvalidParameterException
+//     A parameter is specified incorrectly.
 //
-//   * OperationAbortedException
-//   Multiple requests to update the same resource were in conflict.
+//   - ResourceNotFoundException
+//     The specified resource does not exist.
 //
-//   * ServiceUnavailableException
-//   The service cannot complete the request.
+//   - OperationAbortedException
+//     Multiple concurrent requests to update the same resource were in conflict.
+//
+//   - ServiceUnavailableException
+//     The service cannot complete the request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/PutRetentionPolicy
 func (c *CloudWatchLogs) PutRetentionPolicy(input *PutRetentionPolicyInput) (*PutRetentionPolicyOutput, error) {
@@ -3838,14 +3840,13 @@ const opPutSubscriptionFilter = "PutSubscriptionFilter"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the PutSubscriptionFilterRequest method.
+//	req, resp := client.PutSubscriptionFilterRequest(params)
 //
-//    // Example sending a request using the PutSubscriptionFilterRequest method.
-//    req, resp := client.PutSubscriptionFilterRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/PutSubscriptionFilter
 func (c *CloudWatchLogs) PutSubscriptionFilterRequest(input *PutSubscriptionFilterInput) (req *request.Request, output *PutSubscriptionFilterOutput) {
@@ -3876,17 +3877,17 @@ func (c *CloudWatchLogs) PutSubscriptionFilterRequest(input *PutSubscriptionFilt
 //
 // The following destinations are supported for subscription filters:
 //
-//    * An Amazon Kinesis stream belonging to the same account as the subscription
-//    filter, for same-account delivery.
+//   - An Amazon Kinesis stream belonging to the same account as the subscription
+//     filter, for same-account delivery.
 //
-//    * A logical destination that belongs to a different account, for cross-account
-//    delivery.
+//   - A logical destination that belongs to a different account, for cross-account
+//     delivery.
 //
-//    * An Amazon Kinesis Firehose delivery stream that belongs to the same
-//    account as the subscription filter, for same-account delivery.
+//   - An Amazon Kinesis Firehose delivery stream that belongs to the same
+//     account as the subscription filter, for same-account delivery.
 //
-//    * An Lambda function that belongs to the same account as the subscription
-//    filter, for same-account delivery.
+//   - An Lambda function that belongs to the same account as the subscription
+//     filter, for same-account delivery.
 //
 // Each log group can have up to two subscription filters associated with it.
 // If you are updating an existing filter, you must specify the correct name
@@ -3903,20 +3904,21 @@ func (c *CloudWatchLogs) PutSubscriptionFilterRequest(input *PutSubscriptionFilt
 // API operation PutSubscriptionFilter for usage and error information.
 //
 // Returned Error Types:
-//   * InvalidParameterException
-//   A parameter is specified incorrectly.
 //
-//   * ResourceNotFoundException
-//   The specified resource does not exist.
+//   - InvalidParameterException
+//     A parameter is specified incorrectly.
 //
-//   * OperationAbortedException
-//   Multiple requests to update the same resource were in conflict.
+//   - ResourceNotFoundException
+//     The specified resource does not exist.
 //
-//   * LimitExceededException
-//   You have reached the maximum number of resources that can be created.
+//   - OperationAbortedException
+//     Multiple concurrent requests to update the same resource were in conflict.
 //
-//   * ServiceUnavailableException
-//   The service cannot complete the request.
+//   - LimitExceededException
+//     You have reached the maximum number of resources that can be created.
+//
+//   - ServiceUnavailableException
+//     The service cannot complete the request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/PutSubscriptionFilter
 func (c *CloudWatchLogs) PutSubscriptionFilter(input *PutSubscriptionFilterInput) (*PutSubscriptionFilterOutput, error) {
@@ -3956,14 +3958,13 @@ const opStartQuery = "StartQuery"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the StartQueryRequest method.
+//	req, resp := client.StartQueryRequest(params)
 //
-//    // Example sending a request using the StartQueryRequest method.
-//    req, resp := client.StartQueryRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/StartQuery
 func (c *CloudWatchLogs) StartQueryRequest(input *StartQueryInput) (req *request.Request, output *StartQueryOutput) {
@@ -4001,24 +4002,25 @@ func (c *CloudWatchLogs) StartQueryRequest(input *StartQueryInput) (req *request
 // API operation StartQuery for usage and error information.
 //
 // Returned Error Types:
-//   * MalformedQueryException
-//   The query string is not valid. Details about this error are displayed in
-//   a QueryCompileError object. For more information, see QueryCompileError (https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_QueryCompileError.html).
 //
-//   For more information about valid query syntax, see CloudWatch Logs Insights
-//   Query Syntax (https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/CWL_QuerySyntax.html).
+//   - MalformedQueryException
+//     The query string is not valid. Details about this error are displayed in
+//     a QueryCompileError object. For more information, see QueryCompileError (https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_QueryCompileError.html).
 //
-//   * InvalidParameterException
-//   A parameter is specified incorrectly.
+//     For more information about valid query syntax, see CloudWatch Logs Insights
+//     Query Syntax (https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/CWL_QuerySyntax.html).
 //
-//   * LimitExceededException
-//   You have reached the maximum number of resources that can be created.
+//   - InvalidParameterException
+//     A parameter is specified incorrectly.
 //
-//   * ResourceNotFoundException
-//   The specified resource does not exist.
+//   - LimitExceededException
+//     You have reached the maximum number of resources that can be created.
 //
-//   * ServiceUnavailableException
-//   The service cannot complete the request.
+//   - ResourceNotFoundException
+//     The specified resource does not exist.
+//
+//   - ServiceUnavailableException
+//     The service cannot complete the request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/StartQuery
 func (c *CloudWatchLogs) StartQuery(input *StartQueryInput) (*StartQueryOutput, error) {
@@ -4058,14 +4060,13 @@ const opStopQuery = "StopQuery"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the StopQueryRequest method.
+//	req, resp := client.StopQueryRequest(params)
 //
-//    // Example sending a request using the StopQueryRequest method.
-//    req, resp := client.StopQueryRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/StopQuery
 func (c *CloudWatchLogs) StopQueryRequest(input *StopQueryInput) (req *request.Request, output *StopQueryOutput) {
@@ -4098,14 +4099,15 @@ func (c *CloudWatchLogs) StopQueryRequest(input *StopQueryInput) (req *request.R
 // API operation StopQuery for usage and error information.
 //
 // Returned Error Types:
-//   * InvalidParameterException
-//   A parameter is specified incorrectly.
 //
-//   * ResourceNotFoundException
-//   The specified resource does not exist.
+//   - InvalidParameterException
+//     A parameter is specified incorrectly.
 //
-//   * ServiceUnavailableException
-//   The service cannot complete the request.
+//   - ResourceNotFoundException
+//     The specified resource does not exist.
+//
+//   - ServiceUnavailableException
+//     The service cannot complete the request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/StopQuery
 func (c *CloudWatchLogs) StopQuery(input *StopQueryInput) (*StopQueryOutput, error) {
@@ -4145,14 +4147,13 @@ const opTagLogGroup = "TagLogGroup"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the TagLogGroupRequest method.
+//	req, resp := client.TagLogGroupRequest(params)
 //
-//    // Example sending a request using the TagLogGroupRequest method.
-//    req, resp := client.TagLogGroupRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/TagLogGroup
 func (c *CloudWatchLogs) TagLogGroupRequest(input *TagLogGroupInput) (req *request.Request, output *TagLogGroupOutput) {
@@ -4196,11 +4197,12 @@ func (c *CloudWatchLogs) TagLogGroupRequest(input *TagLogGroupInput) (req *reque
 // API operation TagLogGroup for usage and error information.
 //
 // Returned Error Types:
-//   * ResourceNotFoundException
-//   The specified resource does not exist.
 //
-//   * InvalidParameterException
-//   A parameter is specified incorrectly.
+//   - ResourceNotFoundException
+//     The specified resource does not exist.
+//
+//   - InvalidParameterException
+//     A parameter is specified incorrectly.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/TagLogGroup
 func (c *CloudWatchLogs) TagLogGroup(input *TagLogGroupInput) (*TagLogGroupOutput, error) {
@@ -4240,14 +4242,13 @@ const opTestMetricFilter = "TestMetricFilter"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the TestMetricFilterRequest method.
+//	req, resp := client.TestMetricFilterRequest(params)
 //
-//    // Example sending a request using the TestMetricFilterRequest method.
-//    req, resp := client.TestMetricFilterRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/TestMetricFilter
 func (c *CloudWatchLogs) TestMetricFilterRequest(input *TestMetricFilterInput) (req *request.Request, output *TestMetricFilterOutput) {
@@ -4280,11 +4281,12 @@ func (c *CloudWatchLogs) TestMetricFilterRequest(input *TestMetricFilterInput) (
 // API operation TestMetricFilter for usage and error information.
 //
 // Returned Error Types:
-//   * InvalidParameterException
-//   A parameter is specified incorrectly.
 //
-//   * ServiceUnavailableException
-//   The service cannot complete the request.
+//   - InvalidParameterException
+//     A parameter is specified incorrectly.
+//
+//   - ServiceUnavailableException
+//     The service cannot complete the request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/TestMetricFilter
 func (c *CloudWatchLogs) TestMetricFilter(input *TestMetricFilterInput) (*TestMetricFilterOutput, error) {
@@ -4324,14 +4326,13 @@ const opUntagLogGroup = "UntagLogGroup"
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
+//	// Example sending a request using the UntagLogGroupRequest method.
+//	req, resp := client.UntagLogGroupRequest(params)
 //
-//    // Example sending a request using the UntagLogGroupRequest method.
-//    req, resp := client.UntagLogGroupRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
+//	err := req.Send()
+//	if err == nil { // resp is now filled
+//	    fmt.Println(resp)
+//	}
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/UntagLogGroup
 func (c *CloudWatchLogs) UntagLogGroupRequest(input *UntagLogGroupInput) (req *request.Request, output *UntagLogGroupOutput) {
@@ -4370,8 +4371,8 @@ func (c *CloudWatchLogs) UntagLogGroupRequest(input *UntagLogGroupInput) (req *r
 // API operation UntagLogGroup for usage and error information.
 //
 // Returned Error Types:
-//   * ResourceNotFoundException
-//   The specified resource does not exist.
+//   - ResourceNotFoundException
+//     The specified resource does not exist.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/UntagLogGroup
 func (c *CloudWatchLogs) UntagLogGroup(input *UntagLogGroupInput) (*UntagLogGroupOutput, error) {
@@ -4586,9 +4587,9 @@ type CreateExportTaskInput struct {
 	// The name of the export task.
 	TaskName *string `locationName:"taskName" min:"1" type:"string"`
 
-	// The end time of the range for the request, expreswatchlogsdocused as the
-	// number of milliseconds after Jan 1, 1970 00:00:00 UTC. Events with a timestamp
-	// later than this time are not exported.
+	// The end time of the range for the request, expressed as the number of milliseconds
+	// after Jan 1, 1970 00:00:00 UTC. Events with a timestamp later than this time
+	// are not exported.
 	//
 	// To is a required field
 	To *int64 `locationName:"to" type:"long" required:"true"`
@@ -5890,7 +5891,7 @@ type DescribeLogGroupsOutput struct {
 
 	// The log groups.
 	//
-	// If the retentionInDays value if not included for a log group, then that log
+	// If the retentionInDays value is not included for a log group, then that log
 	// group is set to have its events never expire.
 	LogGroups []*LogGroup `locationName:"logGroups" type:"list"`
 
@@ -8212,7 +8213,7 @@ type LogGroup struct {
 
 	// The number of days to retain the log events in the specified log group. Possible
 	// values are: 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731,
-	// 1827, and 3653.
+	// 1827, 2192, 2557, 2922, 3288, and 3653.
 	//
 	// To set a log group to never have log events expire, use DeleteRetentionPolicy
 	// (https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_DeleteRetentionPolicy.html).
@@ -8749,7 +8750,7 @@ func (s *MetricTransformation) SetUnit(v string) *MetricTransformation {
 	return s
 }
 
-// Multiple requests to update the same resource were in conflict.
+// Multiple concurrent requests to update the same resource were in conflict.
 type OperationAbortedException struct {
 	_            struct{}                  `type:"structure"`
 	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
@@ -8993,6 +8994,18 @@ type PutDestinationPolicyInput struct {
 	//
 	// DestinationName is a required field
 	DestinationName *string `locationName:"destinationName" min:"1" type:"string" required:"true"`
+
+	// Specify true if you are updating an existing destination policy to grant
+	// permission to an organization ID instead of granting permission to individual
+	// AWS accounts. Before you update a destination policy this way, you must first
+	// update the subscription filters in the accounts that send logs to this destination.
+	// If you do not, the subscription filters might stop working. By specifying
+	// true for forceUpdate, you are affirming that you have already updated the
+	// subscription filters. For more information, see Updating an existing cross-account
+	// subscription (https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/Cross-Account-Log_Subscription-Update.html)
+	//
+	// If you omit this parameter, the default of false is used.
+	ForceUpdate *bool `locationName:"forceUpdate" type:"boolean"`
 }
 
 // String returns the string representation.
@@ -9044,6 +9057,12 @@ func (s *PutDestinationPolicyInput) SetAccessPolicy(v string) *PutDestinationPol
 // SetDestinationName sets the DestinationName field's value.
 func (s *PutDestinationPolicyInput) SetDestinationName(v string) *PutDestinationPolicyInput {
 	s.DestinationName = &v
+	return s
+}
+
+// SetForceUpdate sets the ForceUpdate field's value.
+func (s *PutDestinationPolicyInput) SetForceUpdate(v bool) *PutDestinationPolicyInput {
+	s.ForceUpdate = &v
 	return s
 }
 
@@ -9591,7 +9610,7 @@ type PutRetentionPolicyInput struct {
 
 	// The number of days to retain the log events in the specified log group. Possible
 	// values are: 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731,
-	// 1827, and 3653.
+	// 1827, 2192, 2557, 2922, 3288, and 3653.
 	//
 	// To set a log group to never have log events expire, use DeleteRetentionPolicy
 	// (https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_DeleteRetentionPolicy.html).
