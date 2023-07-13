@@ -70,7 +70,7 @@ func NewPerNodeCounter(
 
 	ac.logger = runtime.NewLoggerWithType(ac)
 
-	gsInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
+	_, _ = gsInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
 			gs := obj.(*agonesv1.GameServer)
 
@@ -118,7 +118,7 @@ func NewPerNodeCounter(
 	})
 
 	// remove the record when the node is deleted
-	kubeInformerFactory.Core().V1().Nodes().Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
+	_, _ = kubeInformerFactory.Core().V1().Nodes().Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
 		DeleteFunc: func(obj interface{}) {
 			node, ok := obj.(*corev1.Node)
 			if !ok {

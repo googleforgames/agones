@@ -14,8 +14,9 @@
 package gke
 
 import (
-	"k8s.io/apimachinery/pkg/util/validation/field"
 	"testing"
+
+	"k8s.io/apimachinery/pkg/util/validation/field"
 
 	"agones.dev/agones/pkg/apis"
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"

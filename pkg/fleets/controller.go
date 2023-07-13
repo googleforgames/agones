@@ -106,14 +106,14 @@ func NewController(
 	eventBroadcaster.StartRecordingToSink(&typedcorev1.EventSinkImpl{Interface: kubeClient.CoreV1().Events("")})
 	c.recorder = eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: "fleet-controller"})
 
-	fInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
+	_, _ = fInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: c.workerqueue.Enqueue,
 		UpdateFunc: func(_, newObj interface{}) {
 			c.workerqueue.Enqueue(newObj)
 		},
 	})
 
-	gsSetInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
+	_, _ = gsSetInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: c.gameServerSetEventHandler,
 		UpdateFunc: func(_, newObj interface{}) {
 			gsSet := newObj.(*agonesv1.GameServerSet)

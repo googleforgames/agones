@@ -146,7 +146,7 @@ func NewSDKServer(gameServerName, namespace string, kubeClient kubernetes.Interf
 	s.informerFactory = factory
 	s.logger = runtime.NewLoggerWithType(s).WithField("gsKey", namespace+"/"+gameServerName)
 
-	gameServers.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
+	_, _ = gameServers.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
 		UpdateFunc: func(_, newObj interface{}) {
 			gs := newObj.(*agonesv1.GameServer)
 			s.sendGameServerUpdate(gs)

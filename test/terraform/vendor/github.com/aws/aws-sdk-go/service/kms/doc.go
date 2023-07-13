@@ -24,13 +24,19 @@
 // We recommend that you use the Amazon Web Services SDKs to make programmatic
 // API calls to KMS.
 //
-// Clients must support TLS (Transport Layer Security) 1.0. We recommend TLS
-// 1.2. Clients must also support cipher suites with Perfect Forward Secrecy
-// (PFS) such as Ephemeral Diffie-Hellman (DHE) or Elliptic Curve Ephemeral
-// Diffie-Hellman (ECDHE). Most modern systems such as Java 7 and later support
-// these modes.
+// If you need to use FIPS 140-2 validated cryptographic modules when communicating
+// with Amazon Web Services, use the FIPS endpoint in your preferred Amazon
+// Web Services Region. For more information about the available FIPS endpoints,
+// see Service endpoints (https://docs.aws.amazon.com/general/latest/gr/kms.html#kms_region)
+// in the Key Management Service topic of the Amazon Web Services General Reference.
 //
-// Signing Requests
+// All KMS API calls must be signed and be transmitted using Transport Layer
+// Security (TLS). KMS recommends you always use the latest supported TLS version.
+// Clients must also support cipher suites with Perfect Forward Secrecy (PFS)
+// such as Ephemeral Diffie-Hellman (DHE) or Elliptic Curve Ephemeral Diffie-Hellman
+// (ECDHE). Most modern systems such as Java 7 and later support these modes.
+//
+// # Signing Requests
 //
 // Requests must be signed by using an access key ID and a secret access key.
 // We strongly recommend that you do not use your Amazon Web Services account
@@ -41,7 +47,7 @@
 //
 // All KMS operations require Signature Version 4 (https://docs.aws.amazon.com/general/latest/gr/signature-version-4.html).
 //
-// Logging API Requests
+// # Logging API Requests
 //
 // KMS supports CloudTrail, a service that logs Amazon Web Services API calls
 // and related events for your Amazon Web Services account and delivers them
@@ -51,42 +57,45 @@
 // including how to turn it on and find your log files, see the CloudTrail User
 // Guide (https://docs.aws.amazon.com/awscloudtrail/latest/userguide/).
 //
-// Additional Resources
+// # Additional Resources
 //
 // For more information about credentials and request signing, see the following:
 //
-//    * Amazon Web Services Security Credentials (https://docs.aws.amazon.com/general/latest/gr/aws-security-credentials.html)
-//    - This topic provides general information about the types of credentials
-//    used to access Amazon Web Services.
+//   - Amazon Web Services Security Credentials (https://docs.aws.amazon.com/general/latest/gr/aws-security-credentials.html)
 //
-//    * Temporary Security Credentials (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp.html)
-//    - This section of the IAM User Guide describes how to create and use temporary
-//    security credentials.
+//   - This topic provides general information about the types of credentials
+//     used to access Amazon Web Services.
 //
-//    * Signature Version 4 Signing Process (https://docs.aws.amazon.com/general/latest/gr/signature-version-4.html)
-//    - This set of topics walks you through the process of signing a request
-//    using an access key ID and a secret access key.
+//   - Temporary Security Credentials (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp.html)
 //
-// Commonly Used API Operations
+//   - This section of the IAM User Guide describes how to create and use temporary
+//     security credentials.
+//
+//   - Signature Version 4 Signing Process (https://docs.aws.amazon.com/general/latest/gr/signature-version-4.html)
+//
+//   - This set of topics walks you through the process of signing a request
+//     using an access key ID and a secret access key.
+//
+// # Commonly Used API Operations
 //
 // Of the API operations discussed in this guide, the following will prove the
 // most useful for most applications. You will likely perform operations other
 // than these, such as creating keys and assigning policies, by using the console.
 //
-//    * Encrypt
+//   - Encrypt
 //
-//    * Decrypt
+//   - Decrypt
 //
-//    * GenerateDataKey
+//   - GenerateDataKey
 //
-//    * GenerateDataKeyWithoutPlaintext
+//   - GenerateDataKeyWithoutPlaintext
 //
 // See https://docs.aws.amazon.com/goto/WebAPI/kms-2014-11-01 for more information on this service.
 //
 // See kms package documentation for more information.
 // https://docs.aws.amazon.com/sdk-for-go/api/service/kms/
 //
-// Using the Client
+// # Using the Client
 //
 // To contact AWS Key Management Service with the SDK use the New function to create
 // a new service client. With that client you can make API requests to the service.

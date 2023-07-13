@@ -37,13 +37,6 @@ const (
 	// CertificateIdentifier doesn't refer to an existing certificate.
 	ErrCodeCertificateNotFoundFault = "CertificateNotFound"
 
-	// ErrCodeCustomAvailabilityZoneAlreadyExistsFault for service response error code
-	// "CustomAvailabilityZoneAlreadyExists".
-	//
-	// CustomAvailabilityZoneName is already used by an existing custom Availability
-	// Zone.
-	ErrCodeCustomAvailabilityZoneAlreadyExistsFault = "CustomAvailabilityZoneAlreadyExists"
-
 	// ErrCodeCustomAvailabilityZoneNotFoundFault for service response error code
 	// "CustomAvailabilityZoneNotFound".
 	//
@@ -51,11 +44,23 @@ const (
 	// Zone identifier.
 	ErrCodeCustomAvailabilityZoneNotFoundFault = "CustomAvailabilityZoneNotFound"
 
-	// ErrCodeCustomAvailabilityZoneQuotaExceededFault for service response error code
-	// "CustomAvailabilityZoneQuotaExceeded".
+	// ErrCodeCustomDBEngineVersionAlreadyExistsFault for service response error code
+	// "CustomDBEngineVersionAlreadyExistsFault".
 	//
-	// You have exceeded the maximum number of custom Availability Zones.
-	ErrCodeCustomAvailabilityZoneQuotaExceededFault = "CustomAvailabilityZoneQuotaExceeded"
+	// A CEV with the specified name already exists.
+	ErrCodeCustomDBEngineVersionAlreadyExistsFault = "CustomDBEngineVersionAlreadyExistsFault"
+
+	// ErrCodeCustomDBEngineVersionNotFoundFault for service response error code
+	// "CustomDBEngineVersionNotFoundFault".
+	//
+	// The specified CEV was not found.
+	ErrCodeCustomDBEngineVersionNotFoundFault = "CustomDBEngineVersionNotFoundFault"
+
+	// ErrCodeCustomDBEngineVersionQuotaExceededFault for service response error code
+	// "CustomDBEngineVersionQuotaExceededFault".
+	//
+	// You have exceeded your CEV quota.
+	ErrCodeCustomDBEngineVersionQuotaExceededFault = "CustomDBEngineVersionQuotaExceededFault"
 
 	// ErrCodeDBClusterAlreadyExistsFault for service response error code
 	// "DBClusterAlreadyExistsFault".
@@ -416,18 +421,6 @@ const (
 	// The IAM role is missing for exporting to an Amazon S3 bucket.
 	ErrCodeIamRoleNotFoundFault = "IamRoleNotFound"
 
-	// ErrCodeInstallationMediaAlreadyExistsFault for service response error code
-	// "InstallationMediaAlreadyExists".
-	//
-	// The specified installation medium has already been imported.
-	ErrCodeInstallationMediaAlreadyExistsFault = "InstallationMediaAlreadyExists"
-
-	// ErrCodeInstallationMediaNotFoundFault for service response error code
-	// "InstallationMediaNotFound".
-	//
-	// InstallationMediaID doesn't refer to an existing installation medium.
-	ErrCodeInstallationMediaNotFoundFault = "InstallationMediaNotFound"
-
 	// ErrCodeInstanceQuotaExceededFault for service response error code
 	// "InstanceQuotaExceeded".
 	//
@@ -462,6 +455,12 @@ const (
 	// be able to resolve this error by updating your subnet group to use different
 	// Availability Zones that have more storage available.
 	ErrCodeInsufficientStorageClusterCapacityFault = "InsufficientStorageClusterCapacity"
+
+	// ErrCodeInvalidCustomDBEngineVersionStateFault for service response error code
+	// "InvalidCustomDBEngineVersionStateFault".
+	//
+	// You can't delete the CEV.
+	ErrCodeInvalidCustomDBEngineVersionStateFault = "InvalidCustomDBEngineVersionStateFault"
 
 	// ErrCodeInvalidDBClusterCapacityFault for service response error code
 	// "InvalidDBClusterCapacityFault".
@@ -627,6 +626,13 @@ const (
 	// An error occurred accessing an Amazon Web Services KMS key.
 	ErrCodeKMSKeyNotAccessibleFault = "KMSKeyNotAccessibleFault"
 
+	// ErrCodeNetworkTypeNotSupported for service response error code
+	// "NetworkTypeNotSupported".
+	//
+	// The network type is invalid for the DB instance. Valid nework type values
+	// are IPV4 and DUAL.
+	ErrCodeNetworkTypeNotSupported = "NetworkTypeNotSupported"
+
 	// ErrCodeOptionGroupAlreadyExistsFault for service response error code
 	// "OptionGroupAlreadyExistsFault".
 	//
@@ -691,7 +697,7 @@ const (
 	// ErrCodeSNSInvalidTopicFault for service response error code
 	// "SNSInvalidTopic".
 	//
-	// SNS has responded that there is a problem with the SND topic specified.
+	// SNS has responded that there is a problem with the SNS topic specified.
 	ErrCodeSNSInvalidTopicFault = "SNSInvalidTopic"
 
 	// ErrCodeSNSNoAuthorizationFault for service response error code
