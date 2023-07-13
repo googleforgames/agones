@@ -190,10 +190,18 @@ func writeLinesToFile(filePath string, lines []string) error {
 	writer := bufio.NewWriter(file)
 
 	// Write the lines to the file
-	for _, line := range lines {
-		_, err := writer.WriteString(line + "\n")
-		if err != nil {
-			return err
+	for i, line := range lines {
+		// Avoid adding a new line at the end of the file
+		if i < len(lines)-1 {
+			_, err := writer.WriteString(line + "\n")
+			if err != nil {
+				return err
+			}
+		} else {
+			_, err := writer.WriteString(line)
+			if err != nil {
+				return err
+			}
 		}
 	}
 

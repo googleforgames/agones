@@ -44,6 +44,7 @@ func main() {
 	log.Printf("Version: %s", version)
 
 	files := []string{
+		"build/Makefile",
 		"install/helm/agones/Chart.yaml",
 		"install/yaml/install.yaml",
 		"install/helm/agones/values.yaml",
@@ -87,14 +88,18 @@ func UpdateFile(filename string, version string) error {
 			content = re.ReplaceAllString(content, "${1}")
 		}
 	case "after":
-		if ext == ".json" {
+		if ext != ".json" {
+			re := regexp.MustCompile(regexp.QuoteMeta(version))
+			newVersion := incrementVersionAfterRelease(version)
+			if filename == "build/Makefile" {
+				content = re.ReplaceAllString(content, newVersion)
+			} else {
+				content = re.ReplaceAllString(content, newVersion+"-dev")
+			}
+		} else {
 			re := regexp.MustCompile(`"` + regexp.QuoteMeta(version) + `"`)
 			newVersion := incrementVersionAfterRelease(version) + "-dev"
 			content = re.ReplaceAllString(content, `"`+newVersion+`"`)
-		} else {
-			re := regexp.MustCompile(regexp.QuoteMeta(version))
-			newVersion := incrementVersionAfterRelease(version)
-			content = re.ReplaceAllString(content, newVersion+"-dev")
 		}
 	default:
 		log.Fatalf("Invalid release stage. Please specify 'before' or 'after'.")
