@@ -75,7 +75,7 @@ resource "google_container_cluster" "primary" {
       start_time = local.maintenanceExclusionStartTime
       end_time = local.maintenanceExclusionEndTime
       exclusion_options {
-        scope = "NO_MINOR_OR_NODE_UPGRADES"
+        scope = "NO_MINOR_UPGRADES"
       }
     }
   }
