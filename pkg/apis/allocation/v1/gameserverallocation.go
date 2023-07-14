@@ -21,11 +21,12 @@ import (
 	"agones.dev/agones/pkg/apis"
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	"agones.dev/agones/pkg/util/runtime"
+	apimachineryvalidation "k8s.io/apimachinery/pkg/api/validation"
 	apivalidation "k8s.io/apimachinery/pkg/api/validation"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	metav1validation "k8s.io/apimachinery/pkg/apis/meta/v1/validation"
 	"k8s.io/apimachinery/pkg/labels"
-	validationfield "k8s.io/apimachinery/pkg/util/validation/field"
+	field "k8s.io/apimachinery/pkg/util/validation/field"
 )
 
 const (
@@ -369,155 +370,98 @@ func (s *GameServerSelector) matchLists(gs *agonesv1.GameServer) bool {
 }
 
 // Validate validates that the selection fields have valid values
-func (s *GameServerSelector) Validate(field string) ([]metav1.StatusCause, bool) {
-	var causes []metav1.StatusCause
+func (s *GameServerSelector) Validate(fldPath *field.Path) field.ErrorList {
+	var allErrs field.ErrorList
 
 	_, err := metav1.LabelSelectorAsSelector(&s.LabelSelector)
 	if err != nil {
-		causes = append(causes, metav1.StatusCause{
-			Type:    metav1.CauseTypeFieldValueInvalid,
-			Message: fmt.Sprintf("Error converting label selector: %s", err),
-			Field:   field,
-		})
+		allErrs = append(allErrs, field.Invalid(fldPath.Child("labelSelector"), s.LabelSelector, fmt.Sprintf("Error converting label selector: %s", err)))
 	}
 
 	if runtime.FeatureEnabled(runtime.FeatureStateAllocationFilter) {
 		if s.GameServerState != nil && !(*s.GameServerState == agonesv1.GameServerStateAllocated || *s.GameServerState == agonesv1.GameServerStateReady) {
-			causes = append(causes, metav1.StatusCause{
-				Type:    metav1.CauseTypeFieldValueInvalid,
-				Message: "GameServerState value can only be Allocated or Ready",
-				Field:   field,
-			})
+			allErrs = append(allErrs, field.Invalid(fldPath.Child("gameServerState"), *s.GameServerState, "GameServerState must be either Allocated or Ready"))
 		}
 	}
 
 	if runtime.FeatureEnabled(runtime.FeaturePlayerAllocationFilter) && s.Players != nil {
 		if s.Players.MinAvailable < 0 {
-			causes = append(causes, metav1.StatusCause{
-				Type:    metav1.CauseTypeFieldValueInvalid,
-				Message: "Players.MinAvailable must be greater than zero",
-				Field:   field,
-			})
+			allErrs = append(allErrs, field.Invalid(fldPath.Child("players").Child("minAvailable"), s.Players.MinAvailable, apimachineryvalidation.IsNegativeErrorMsg))
 		}
 
 		if s.Players.MaxAvailable < 0 {
-			causes = append(causes, metav1.StatusCause{
-				Type:    metav1.CauseTypeFieldValueInvalid,
-				Message: "Players.MaxAvailable must be greater than zero",
-				Field:   field,
-			})
+			allErrs = append(allErrs, field.Invalid(fldPath.Child("players").Child("maxAvailable"), s.Players.MaxAvailable, apimachineryvalidation.IsNegativeErrorMsg))
 		}
 
 		if s.Players.MinAvailable > s.Players.MaxAvailable {
-			causes = append(causes, metav1.StatusCause{
-				Type:    metav1.CauseTypeFieldValueInvalid,
-				Message: "Players.MinAvailable must be less than Players.MaxAvailable",
-				Field:   field,
-			})
+			allErrs = append(allErrs, field.Invalid(fldPath.Child("players").Child("minAvailable"), s.Players.MinAvailable, "minAvailable cannot be greater than maxAvailable"))
 		}
-	}
-
-	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) && (s.Counters != nil || s.Lists != nil) {
-		causes = append(causes, metav1.StatusCause{
-			Type:    metav1.CauseTypeFieldValueInvalid,
-			Message: "Feature CountsAndLists must be enabled if Counters or Lists are specified",
-			Field:   field,
-		})
 	}
 
 	if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
 		if s.Counters != nil {
-			causes = append(causes, s.validateCounters(field)...)
+			allErrs = append(allErrs, validateCounters(s.Counters, fldPath.Child("counters"))...)
 		}
 		if s.Lists != nil {
-			causes = append(causes, s.validateLists(field)...)
+			allErrs = append(allErrs, validateLists(s.Lists, fldPath.Child("lists"))...)
+		}
+	} else {
+		if s.Counters != nil {
+			allErrs = append(allErrs, field.Forbidden(fldPath.Child("counters"), "Feature CountsAndLists must be enabled"))
+		}
+		if s.Lists != nil {
+			allErrs = append(allErrs, field.Forbidden(fldPath.Child("lists"), "Feature CountsAndLists must be enabled"))
 		}
 	}
 
-	return causes, len(causes) == 0
+	return allErrs
 }
 
 // validateCounters validates that the selection field has valid values for CounterSelectors
-func (s *GameServerSelector) validateCounters(field string) []metav1.StatusCause {
-	var causes []metav1.StatusCause
-
-	for _, counterSelector := range s.Counters {
+func validateCounters(counters map[string]CounterSelector, fldPath *field.Path) field.ErrorList {
+	var allErrs field.ErrorList
+	for key, counterSelector := range counters {
+		keyPath := fldPath.Key(key)
 		if counterSelector.MinCount < 0 {
-			causes = append(causes, metav1.StatusCause{
-				Type:    metav1.CauseTypeFieldValueInvalid,
-				Message: "CounterSelector.MinCount must be greater than zero",
-				Field:   field,
-			})
+			allErrs = append(allErrs, field.Invalid(keyPath.Child("minCount"), counterSelector.MinCount, apimachineryvalidation.IsNegativeErrorMsg))
 		}
 		if counterSelector.MaxCount < 0 {
-			causes = append(causes, metav1.StatusCause{
-				Type:    metav1.CauseTypeFieldValueInvalid,
-				Message: "CounterSelector.MaxCount must be greater than zero",
-				Field:   field,
-			})
+			allErrs = append(allErrs, field.Invalid(keyPath.Child("maxCount"), counterSelector.MaxCount, apimachineryvalidation.IsNegativeErrorMsg))
 		}
 		if (counterSelector.MaxCount < counterSelector.MinCount) && (counterSelector.MaxCount != 0) {
-			causes = append(causes, metav1.StatusCause{
-				Type:    metav1.CauseTypeFieldValueInvalid,
-				Message: "CounterSelector.MaxCount must zero or greater than counterSelector.MinCount",
-				Field:   field,
-			})
+			allErrs = append(allErrs, field.Invalid(keyPath, counterSelector.MaxCount, fmt.Sprintf("maxCount must zero or greater than minCount %d", counterSelector.MinCount)))
 		}
 		if counterSelector.MinAvailable < 0 {
-			causes = append(causes, metav1.StatusCause{
-				Type:    metav1.CauseTypeFieldValueInvalid,
-				Message: "CounterSelector.MinAvailable must be greater than zero",
-				Field:   field,
-			})
+			allErrs = append(allErrs, field.Invalid(keyPath.Child("minAvailable"), counterSelector.MinAvailable, apimachineryvalidation.IsNegativeErrorMsg))
 		}
 		if counterSelector.MaxAvailable < 0 {
-			causes = append(causes, metav1.StatusCause{
-				Type:    metav1.CauseTypeFieldValueInvalid,
-				Message: "CounterSelector.MaxAvailable must be greater than zero",
-				Field:   field,
-			})
+			allErrs = append(allErrs, field.Invalid(keyPath.Child("maxAvailable"), counterSelector.MaxAvailable, apimachineryvalidation.IsNegativeErrorMsg))
 		}
 		if (counterSelector.MaxAvailable < counterSelector.MinAvailable) && (counterSelector.MaxAvailable != 0) {
-			causes = append(causes, metav1.StatusCause{
-				Type:    metav1.CauseTypeFieldValueInvalid,
-				Message: "CounterSelector.MaxAvailable must zero or greater than counterSelector.MinAvailable",
-				Field:   field,
-			})
+			allErrs = append(allErrs, field.Invalid(keyPath, counterSelector.MaxAvailable, fmt.Sprintf("maxAvailable must zero or greater than minAvailable %d", counterSelector.MinAvailable)))
 		}
 	}
 
-	return causes
+	return allErrs
 }
 
 // validateLists validates that the selection field has valid values for ListSelectors
-func (s *GameServerSelector) validateLists(field string) []metav1.StatusCause {
-	var causes []metav1.StatusCause
-
-	for _, listSelector := range s.Lists {
+func validateLists(lists map[string]ListSelector, fldPath *field.Path) field.ErrorList {
+	var allErrs field.ErrorList
+	for key, listSelector := range lists {
+		keyPath := fldPath.Key(key)
 		if listSelector.MinAvailable < 0 {
-			causes = append(causes, metav1.StatusCause{
-				Type:    metav1.CauseTypeFieldValueInvalid,
-				Message: "ListSelector.MinAvailable must be greater than zero",
-				Field:   field,
-			})
+			allErrs = append(allErrs, field.Invalid(keyPath.Child("minAvailable"), listSelector.MinAvailable, apimachineryvalidation.IsNegativeErrorMsg))
 		}
 		if listSelector.MaxAvailable < 0 {
-			causes = append(causes, metav1.StatusCause{
-				Type:    metav1.CauseTypeFieldValueInvalid,
-				Message: "ListSelector.MaxAvailable must be greater than zero",
-				Field:   field,
-			})
+			allErrs = append(allErrs, field.Invalid(keyPath.Child("maxAvailable"), listSelector.MaxAvailable, apimachineryvalidation.IsNegativeErrorMsg))
 		}
 		if (listSelector.MaxAvailable < listSelector.MinAvailable) && (listSelector.MaxAvailable != 0) {
-			causes = append(causes, metav1.StatusCause{
-				Type:    metav1.CauseTypeFieldValueInvalid,
-				Message: "ListSelector.MaxAvailable must zero or greater than ListSelector.MinAvailable",
-				Field:   field,
-			})
+			allErrs = append(allErrs, field.Invalid(keyPath, listSelector.MaxAvailable, fmt.Sprintf("maxAvailable must zero or greater than minAvailable %d", listSelector.MinAvailable)))
 		}
 	}
 
-	return causes
+	return allErrs
 }
 
 // MultiClusterSetting specifies settings for multi-cluster allocation.
@@ -534,32 +478,10 @@ type MetaPatch struct {
 
 // Validate returns if the labels and/or annotations that are to be applied to a `GameServer` post
 // allocation are valid.
-func (mp *MetaPatch) Validate() ([]metav1.StatusCause, bool) {
-	var causes []metav1.StatusCause
-
-	errs := metav1validation.ValidateLabels(mp.Labels, validationfield.NewPath("labels"))
-	if len(errs) != 0 {
-		for _, v := range errs {
-			causes = append(causes, metav1.StatusCause{
-				Type:    metav1.CauseTypeFieldValueInvalid,
-				Field:   "metadata.labels",
-				Message: v.Error(),
-			})
-		}
-	}
-
-	errs = apivalidation.ValidateAnnotations(mp.Annotations, validationfield.NewPath("annotations"))
-	if len(errs) != 0 {
-		for _, v := range errs {
-			causes = append(causes, metav1.StatusCause{
-				Type:    metav1.CauseTypeFieldValueInvalid,
-				Field:   "metadata.annotations",
-				Message: v.Error(),
-			})
-		}
-	}
-
-	return causes, len(causes) == 0
+func (mp *MetaPatch) Validate(fldPath *field.Path) field.ErrorList {
+	allErrs := metav1validation.ValidateLabels(mp.Labels, fldPath.Child("labels"))
+	allErrs = append(allErrs, apivalidation.ValidateAnnotations(mp.Annotations, fldPath.Child("annotations"))...)
+	return allErrs
 }
 
 // Priority is a sorting option for GameServers with Counters or Lists based on the count or
@@ -575,26 +497,17 @@ type Priority struct {
 }
 
 // Validate returns if the Priority is valid.
-func (p *Priority) validate(field string) ([]metav1.StatusCause, bool) {
-	var causes []metav1.StatusCause
-
+func (p *Priority) validate(fldPath *field.Path) field.ErrorList {
+	var allErrs field.ErrorList
 	if !(p.PriorityType == GameServerAllocationPriorityCounter || p.PriorityType == GameServerAllocationPriorityList) {
-		causes = append(causes, metav1.StatusCause{
-			Type:    metav1.CauseTypeFieldValueInvalid,
-			Message: "Priority.Sort must be either `Counter` or `List`",
-			Field:   field,
-		})
+		allErrs = append(allErrs, field.NotSupported(fldPath.Child("priorityType"), p.PriorityType, []string{GameServerAllocationPriorityCounter, GameServerAllocationPriorityList}))
 	}
 
 	if !(p.Order == GameServerAllocationAscending || p.Order == GameServerAllocationDescending || p.Order == "") {
-		causes = append(causes, metav1.StatusCause{
-			Type:    metav1.CauseTypeFieldValueInvalid,
-			Message: "Priority.Order must be either `Ascending` or `Descending`",
-			Field:   field,
-		})
+		allErrs = append(allErrs, field.NotSupported(fldPath.Child("order"), p.Order, []string{GameServerAllocationAscending, GameServerAllocationDescending}))
 	}
 
-	return causes, len(causes) == 0
+	return allErrs
 }
 
 // GameServerAllocationStatus is the status for an GameServerAllocation resource
@@ -638,56 +551,34 @@ func (gsa *GameServerAllocation) ApplyDefaults() {
 
 // Validate validation for the GameServerAllocation
 // Validate should be called before attempting to Match any of the GameServer selectors.
-func (gsa *GameServerAllocation) Validate() ([]metav1.StatusCause, bool) {
-	var causes []metav1.StatusCause
-
-	valid := false
-	for _, v := range []apis.SchedulingStrategy{apis.Packed, apis.Distributed} {
-		if gsa.Spec.Scheduling == v {
-			valid = true
-		}
-	}
-	if !valid {
-		causes = append(causes, metav1.StatusCause{Type: metav1.CauseTypeFieldValueInvalid,
-			Field:   "spec.scheduling",
-			Message: fmt.Sprintf("Invalid value: %s, value must be either Packed or Distributed", gsa.Spec.Scheduling)})
+func (gsa *GameServerAllocation) Validate() field.ErrorList {
+	var allErrs field.ErrorList
+	specPath := field.NewPath("spec")
+	if gsa.Spec.Scheduling != apis.Packed && gsa.Spec.Scheduling != apis.Distributed {
+		allErrs = append(allErrs, field.NotSupported(specPath.Child("scheduling"), string(gsa.Spec.Scheduling), []string{string(apis.Packed), string(apis.Distributed)}))
 	}
 
-	if c, ok := gsa.Spec.Required.Validate("spec.required"); !ok {
-		causes = append(causes, c...)
-	}
+	allErrs = append(allErrs, gsa.Spec.Required.Validate(specPath.Child("required"))...)
 	for i := range gsa.Spec.Preferred {
-		if c, ok := gsa.Spec.Preferred[i].Validate(fmt.Sprintf("spec.preferred[%d]", i)); !ok {
-			causes = append(causes, c...)
-		}
+		allErrs = append(allErrs, gsa.Spec.Preferred[i].Validate(specPath.Child("preferred").Index(i))...)
 	}
 	for i := range gsa.Spec.Selectors {
-		if c, ok := gsa.Spec.Selectors[i].Validate(fmt.Sprintf("spec.selectors[%d]", i)); !ok {
-			causes = append(causes, c...)
-		}
+		allErrs = append(allErrs, gsa.Spec.Selectors[i].Validate(specPath.Child("selectors").Index(i))...)
 	}
 
 	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) && (gsa.Spec.Priorities != nil) {
-		causes = append(causes, metav1.StatusCause{
-			Type:    metav1.CauseTypeFieldValueInvalid,
-			Message: "Feature CountsAndLists must be enabled if Priorities is specified",
-			Field:   "spec.priorities",
-		})
+		allErrs = append(allErrs, field.Forbidden(specPath.Child("priorities"), "Feature CountsAndLists must be enabled if Priorities is specified"))
 	}
 
 	if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) && (gsa.Spec.Priorities != nil) {
+		pPath := specPath.Child("priorities")
 		for i := range gsa.Spec.Priorities {
-			if c, ok := gsa.Spec.Priorities[i].validate(fmt.Sprintf("spec.priorities[%d]", i)); !ok {
-				causes = append(causes, c...)
-			}
+			allErrs = append(allErrs, gsa.Spec.Priorities[i].validate(pPath.Index(i))...)
 		}
 	}
 
-	if c, ok := gsa.Spec.MetaPatch.Validate(); !ok {
-		causes = append(causes, c...)
-	}
-
-	return causes, len(causes) == 0
+	allErrs = append(allErrs, gsa.Spec.MetaPatch.Validate(specPath.Child("metadata"))...)
+	return allErrs
 }
 
 // Converter converts game server allocation required and preferred fields to selectors field.
