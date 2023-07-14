@@ -23,7 +23,6 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 
 - [ ] Run `make shell` and run `gcloud config configurations activate agones-images`.
 - [ ] Review merged PRs in the current milestone to ensure that they have appropriate tags.
-- [ ] Ensure the next stable releases in the Google Calendar have the correct version number.
 - [ ] `git checkout main && git pull --rebase upstream main`
 - [ ] Run `make pre-build-release` to ensure all example images exist on agones-images/examples repository and to deploy the {version}-1 service on GCP/App Engine/Services.
 - [ ] Run `make sdk-update-version release_stage=before version={version}` file. This command will update the version number in the sdks/install files to {version}.
@@ -63,7 +62,6 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 - [ ] Paste the announcement blog post to the #users Slack group.
 - [ ] Post to the [agonesdev](https://twitter.com/agonesdev) Twitter account.
 - [ ] Run `git checkout main`.
-- [ ] Then increment the `base_version` in [`build/Makefile`][build-makefile]
 - [ ] Run `make sdk-update-version release_stage=after version={version}` file. This command will update the version number in the sdks/install files to {version}+1-dev.
 - [ ] Create PR with these changes, and merge them with approval
 - [ ] Close this issue. _Congratulations!_ - the release is now complete! :tada: :clap: :smile: :+1:
