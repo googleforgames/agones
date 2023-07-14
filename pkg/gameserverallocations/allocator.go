@@ -20,7 +20,6 @@ import (
 	"crypto/x509"
 	goErrors "errors"
 	"fmt"
-	"net/http"
 	"strings"
 	"time"
 
@@ -48,6 +47,7 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	k8sruntime "k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	runtimeschema "k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/wait"
 	informercorev1 "k8s.io/client-go/informers/core/v1"
 	"k8s.io/client-go/kubernetes"
@@ -199,26 +199,20 @@ func (c *Allocator) Allocate(ctx context.Context, gsa *allocationv1.GameServerAl
 	latency.setRequest(gsa)
 
 	// server side validation
-	if causes, ok := gsa.Validate(); !ok {
-		s := &metav1.Status{
-			Status:  metav1.StatusFailure,
-			Message: fmt.Sprintf("GameServerAllocation is invalid: Invalid value: %#v", gsa),
-			Reason:  metav1.StatusReasonInvalid,
-			Details: &metav1.StatusDetails{
-				Kind:   "GameServerAllocation",
-				Group:  allocationv1.SchemeGroupVersion.Group,
-				Causes: causes,
-			},
-			Code: http.StatusUnprocessableEntity,
+	if errs := gsa.Validate(); len(errs) > 0 {
+		kind := runtimeschema.GroupKind{
+			Group: allocationv1.SchemeGroupVersion.Group,
+			Kind:  "GameServerAllocation",
 		}
-
+		statusErr := k8serrors.NewInvalid(kind, gsa.Name, errs)
+		s := &statusErr.ErrStatus
 		var gvks []schema.GroupVersionKind
 		gvks, _, err := apiserver.Scheme.ObjectKinds(s)
 		if err != nil {
 			return nil, errors.Wrap(err, "could not find objectkinds for status")
 		}
-		c.loggerForGameServerAllocation(gsa).Debug("GameServerAllocation is invalid")
 
+		c.loggerForGameServerAllocation(gsa).Debug("GameServerAllocation is invalid")
 		s.TypeMeta = metav1.TypeMeta{Kind: gvks[0].Kind, APIVersion: gvks[0].Version}
 		return s, nil
 	}

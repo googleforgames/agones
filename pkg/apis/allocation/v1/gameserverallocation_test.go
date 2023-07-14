@@ -24,6 +24,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
 func TestGameServerAllocationApplyDefaults(t *testing.T) {
@@ -157,44 +158,28 @@ func TestGameServerSelectorValidate(t *testing.T) {
 
 	assert.NoError(t, runtime.ParseFeatures(fmt.Sprintf("%s=true&%s=true&%s=true", runtime.FeaturePlayerAllocationFilter, runtime.FeatureStateAllocationFilter, runtime.FeatureCountsAndLists)))
 
-	type expected struct {
-		valid    bool
-		causeLen int
-		fields   []string
-	}
-
 	allocated := agonesv1.GameServerStateAllocated
 	starting := agonesv1.GameServerStateStarting
 
 	fixtures := map[string]struct {
 		selector *GameServerSelector
-		expected expected
+		want     field.ErrorList
 	}{
 		"valid": {
 			selector: &GameServerSelector{GameServerState: &allocated, Players: &PlayerSelector{
 				MinAvailable: 0,
 				MaxAvailable: 10,
 			}},
-			expected: expected{
-				valid:    true,
-				causeLen: 0,
-			},
 		},
 		"nil values": {
 			selector: &GameServerSelector{},
-			expected: expected{
-				valid:    true,
-				causeLen: 0,
-			},
 		},
 		"invalid state": {
 			selector: &GameServerSelector{
 				GameServerState: &starting,
 			},
-			expected: expected{
-				valid:    false,
-				causeLen: 1,
-				fields:   []string{"fieldName"},
+			want: field.ErrorList{
+				field.Invalid(field.NewPath("fieldName.gameServerState"), starting, "GameServerState must be either Allocated or Ready"),
 			},
 		},
 		"invalid min value": {
@@ -203,10 +188,8 @@ func TestGameServerSelectorValidate(t *testing.T) {
 					MinAvailable: -10,
 				},
 			},
-			expected: expected{
-				valid:    false,
-				causeLen: 1,
-				fields:   []string{"fieldName"},
+			want: field.ErrorList{
+				field.Invalid(field.NewPath("fieldName", "players", "minAvailable"), int64(-10), "must be greater than or equal to 0"),
 			},
 		},
 		"invalid max value": {
@@ -216,10 +199,9 @@ func TestGameServerSelectorValidate(t *testing.T) {
 					MaxAvailable: -20,
 				},
 			},
-			expected: expected{
-				valid:    false,
-				causeLen: 2,
-				fields:   []string{"fieldName", "fieldName"},
+			want: field.ErrorList{
+				field.Invalid(field.NewPath("fieldName", "players", "minAvailable"), int64(-30), "must be greater than or equal to 0"),
+				field.Invalid(field.NewPath("fieldName", "players", "maxAvailable"), int64(-20), "must be greater than or equal to 0"),
 			},
 		},
 		"invalid min/max value": {
@@ -229,10 +211,8 @@ func TestGameServerSelectorValidate(t *testing.T) {
 					MaxAvailable: 5,
 				},
 			},
-			expected: expected{
-				valid:    false,
-				causeLen: 1,
-				fields:   []string{"fieldName"},
+			want: field.ErrorList{
+				field.Invalid(field.NewPath("fieldName", "players", "minAvailable"), int64(10), "minAvailable cannot be greater than maxAvailable"),
 			},
 		},
 		"invalid label keys": {
@@ -241,10 +221,12 @@ func TestGameServerSelectorValidate(t *testing.T) {
 					MatchLabels: map[string]string{"$$$$": "true"},
 				},
 			},
-			expected: expected{
-				valid:    false,
-				causeLen: 1,
-				fields:   []string{"fieldName"},
+			want: field.ErrorList{
+				field.Invalid(
+					field.NewPath("fieldName", "labelSelector"),
+					metav1.LabelSelector{MatchLabels: map[string]string{"$$$$": "true"}},
+					`Error converting label selector: key: Invalid value: "$$$$": name part must consist of alphanumeric characters, '-', '_' or '.', and must start and end with an alphanumeric character (e.g. 'MyName',  or 'my.name',  or '123-abc', regex used for validation is '([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9]')`,
+				),
 			},
 		},
 		"invalid min/max Counter available value": {
@@ -256,10 +238,9 @@ func TestGameServerSelectorValidate(t *testing.T) {
 					},
 				},
 			},
-			expected: expected{
-				valid:    false,
-				causeLen: 2,
-				fields:   []string{"fieldName", "fieldName"},
+			want: field.ErrorList{
+				field.Invalid(field.NewPath("fieldName", "counters[counter]", "minAvailable"), int64(-1), "must be greater than or equal to 0"),
+				field.Invalid(field.NewPath("fieldName", "counters[counter]", "maxAvailable"), int64(-1), "must be greater than or equal to 0"),
 			},
 		},
 		"invalid max less than min Counter available value": {
@@ -271,10 +252,8 @@ func TestGameServerSelectorValidate(t *testing.T) {
 					},
 				},
 			},
-			expected: expected{
-				valid:    false,
-				causeLen: 1,
-				fields:   []string{"fieldName"},
+			want: field.ErrorList{
+				field.Invalid(field.NewPath("fieldName", "counters[foo]"), int64(1), "maxAvailable must zero or greater than minAvailable 10"),
 			},
 		},
 		"invalid min/max Counter count value": {
@@ -286,10 +265,9 @@ func TestGameServerSelectorValidate(t *testing.T) {
 					},
 				},
 			},
-			expected: expected{
-				valid:    false,
-				causeLen: 2,
-				fields:   []string{"fieldName", "fieldName"},
+			want: field.ErrorList{
+				field.Invalid(field.NewPath("fieldName", "counters[counter]", "minCount"), int64(-1), "must be greater than or equal to 0"),
+				field.Invalid(field.NewPath("fieldName", "counters[counter]", "maxCount"), int64(-1), "must be greater than or equal to 0"),
 			},
 		},
 		"invalid max less than min Counter count value": {
@@ -301,10 +279,8 @@ func TestGameServerSelectorValidate(t *testing.T) {
 					},
 				},
 			},
-			expected: expected{
-				valid:    false,
-				causeLen: 1,
-				fields:   []string{"fieldName"},
+			want: field.ErrorList{
+				field.Invalid(field.NewPath("fieldName", "counters[foo]"), int64(1), "maxCount must zero or greater than minCount 10"),
 			},
 		},
 		"invalid min/max List value": {
@@ -316,10 +292,9 @@ func TestGameServerSelectorValidate(t *testing.T) {
 					},
 				},
 			},
-			expected: expected{
-				valid:    false,
-				causeLen: 2,
-				fields:   []string{"fieldName", "fieldName"},
+			want: field.ErrorList{
+				field.Invalid(field.NewPath("fieldName", "lists[list]", "minAvailable"), int64(-11), "must be greater than or equal to 0"),
+				field.Invalid(field.NewPath("fieldName", "lists[list]", "maxAvailable"), int64(-11), "must be greater than or equal to 0"),
 			},
 		},
 		"invalid max less than min List value": {
@@ -331,10 +306,8 @@ func TestGameServerSelectorValidate(t *testing.T) {
 					},
 				},
 			},
-			expected: expected{
-				valid:    false,
-				causeLen: 1,
-				fields:   []string{"fieldName"},
+			want: field.ErrorList{
+				field.Invalid(field.NewPath("fieldName", "lists[list]"), int64(2), "maxAvailable must zero or greater than minAvailable 11"),
 			},
 		},
 	}
@@ -342,13 +315,8 @@ func TestGameServerSelectorValidate(t *testing.T) {
 	for k, v := range fixtures {
 		t.Run(k, func(t *testing.T) {
 			v.selector.ApplyDefaults()
-			causes, valid := v.selector.Validate("fieldName")
-			assert.Equal(t, v.expected.valid, valid)
-			assert.Len(t, causes, v.expected.causeLen)
-
-			for i := range v.expected.fields {
-				assert.Equal(t, v.expected.fields[i], causes[i].Field)
-			}
+			allErrs := v.selector.Validate(field.NewPath("fieldName"))
+			assert.ElementsMatch(t, v.want, allErrs)
 		})
 	}
 }
@@ -360,15 +328,9 @@ func TestGameServerPriorityValidate(t *testing.T) {
 	defer runtime.FeatureTestMutex.Unlock()
 	assert.NoError(t, runtime.ParseFeatures(fmt.Sprintf("%s=true", runtime.FeatureCountsAndLists)))
 
-	type expected struct {
-		valid    bool
-		causeLen int
-		fields   []string
-	}
-
 	fixtures := map[string]struct {
-		gsa      *GameServerAllocation
-		expected expected
+		gsa  *GameServerAllocation
+		want field.ErrorList
 	}{
 		"valid Counter Ascending": {
 			gsa: &GameServerAllocation{
@@ -380,10 +342,6 @@ func TestGameServerPriorityValidate(t *testing.T) {
 					},
 				},
 				},
-			},
-			expected: expected{
-				valid:    true,
-				causeLen: 0,
 			},
 		},
 		"valid Counter Descending": {
@@ -397,10 +355,6 @@ func TestGameServerPriorityValidate(t *testing.T) {
 				},
 				},
 			},
-			expected: expected{
-				valid:    true,
-				causeLen: 0,
-			},
 		},
 		"valid Counter empty Order": {
 			gsa: &GameServerAllocation{
@@ -412,10 +366,6 @@ func TestGameServerPriorityValidate(t *testing.T) {
 					},
 				},
 				},
-			},
-			expected: expected{
-				valid:    true,
-				causeLen: 0,
 			},
 		},
 		"invalid counter type and order": {
@@ -429,9 +379,9 @@ func TestGameServerPriorityValidate(t *testing.T) {
 				},
 				},
 			},
-			expected: expected{
-				valid:    false,
-				causeLen: 2,
+			want: field.ErrorList{
+				field.NotSupported(field.NewPath("spec", "priorities[0]", "priorityType"), "counter", []string{"Counter", "List"}),
+				field.NotSupported(field.NewPath("spec", "priorities[0]", "order"), "descending", []string{"Ascending", "Descending"}),
 			},
 		},
 		"valid List Ascending": {
@@ -445,10 +395,6 @@ func TestGameServerPriorityValidate(t *testing.T) {
 				},
 				},
 			},
-			expected: expected{
-				valid:    true,
-				causeLen: 0,
-			},
 		},
 		"valid List Descending": {
 			gsa: &GameServerAllocation{
@@ -460,10 +406,6 @@ func TestGameServerPriorityValidate(t *testing.T) {
 					},
 				},
 				},
-			},
-			expected: expected{
-				valid:    true,
-				causeLen: 0,
 			},
 		},
 		"valid List empty Order": {
@@ -477,10 +419,6 @@ func TestGameServerPriorityValidate(t *testing.T) {
 				},
 				},
 			},
-			expected: expected{
-				valid:    true,
-				causeLen: 0,
-			},
 		},
 		"invalid list type and order": {
 			gsa: &GameServerAllocation{
@@ -493,9 +431,9 @@ func TestGameServerPriorityValidate(t *testing.T) {
 				},
 				},
 			},
-			expected: expected{
-				valid:    false,
-				causeLen: 2,
+			want: field.ErrorList{
+				field.NotSupported(field.NewPath("spec", "priorities[0]", "priorityType"), "list", []string{"Counter", "List"}),
+				field.NotSupported(field.NewPath("spec", "priorities[0]", "order"), "ascending", []string{"Ascending", "Descending"}),
 			},
 		},
 	}
@@ -503,13 +441,8 @@ func TestGameServerPriorityValidate(t *testing.T) {
 	for k, v := range fixtures {
 		t.Run(k, func(t *testing.T) {
 			v.gsa.ApplyDefaults()
-			causes, valid := v.gsa.Validate()
-			assert.Equal(t, v.expected.valid, valid)
-			assert.Len(t, causes, v.expected.causeLen)
-
-			for i := range v.expected.fields {
-				assert.Equal(t, v.expected.fields[i], causes[i].Field)
-			}
+			allErrs := v.gsa.Validate()
+			assert.ElementsMatch(t, v.want, allErrs)
 		})
 	}
 }
@@ -522,48 +455,41 @@ func TestMetaPatchValidate(t *testing.T) {
 		Labels:      nil,
 		Annotations: nil,
 	}
-	causes, valid := mp.Validate()
-	assert.True(t, valid)
-	assert.Empty(t, causes)
+	path := field.NewPath("spec", "metadata")
+	allErrs := mp.Validate(path)
+	assert.Len(t, allErrs, 0)
 
 	mp.Labels = map[string]string{}
 	mp.Annotations = map[string]string{}
-	causes, valid = mp.Validate()
-	assert.True(t, valid)
-	assert.Empty(t, causes)
+	allErrs = mp.Validate(path)
+	assert.Len(t, allErrs, 0)
 
 	mp.Labels["foo"] = "bar"
 	mp.Annotations["bar"] = "foo"
-	causes, valid = mp.Validate()
-	assert.True(t, valid)
-	assert.Empty(t, causes)
+	allErrs = mp.Validate(path)
+	assert.Len(t, allErrs, 0)
 
 	// invalid label
 	invalid := mp.DeepCopy()
 	invalid.Labels["$$$$"] = "no"
-
-	causes, valid = invalid.Validate()
-	assert.False(t, valid)
-	require.Len(t, causes, 1)
-	assert.Equal(t, "metadata.labels", causes[0].Field)
+	allErrs = invalid.Validate(path)
+	assert.Len(t, allErrs, 1)
+	assert.Equal(t, "spec.metadata.labels", allErrs[0].Field)
 
 	// invalid annotation
 	invalid = mp.DeepCopy()
 	invalid.Annotations["$$$$"] = "no"
 
-	causes, valid = invalid.Validate()
-	assert.False(t, valid)
-	require.Len(t, causes, 1)
-	assert.Equal(t, "metadata.annotations", causes[0].Field)
+	allErrs = invalid.Validate(path)
+	require.Len(t, allErrs, 1)
+	assert.Equal(t, "spec.metadata.annotations", allErrs[0].Field)
 
 	// invalid both
 	invalid.Labels["$$$$"] = "no"
-	causes, valid = invalid.Validate()
-
-	assert.False(t, valid)
-	require.Len(t, causes, 2)
-	assert.Equal(t, "metadata.labels", causes[0].Field)
-	assert.Equal(t, "metadata.annotations", causes[1].Field)
+	allErrs = invalid.Validate(path)
+	require.Len(t, allErrs, 2)
+	assert.Equal(t, "spec.metadata.labels", allErrs[0].Field)
+	assert.Equal(t, "spec.metadata.annotations", allErrs[1].Field)
 }
 
 func TestGameServerSelectorMatches(t *testing.T) {
@@ -1247,18 +1173,16 @@ func TestGameServerAllocationValidate(t *testing.T) {
 	gsa := &GameServerAllocation{}
 	gsa.ApplyDefaults()
 
-	causes, ok := gsa.Validate()
-	assert.True(t, ok)
-	assert.Empty(t, causes)
+	allErrs := gsa.Validate()
+	assert.Len(t, allErrs, 0)
 
 	gsa.Spec.Scheduling = "FLERG"
 
-	causes, ok = gsa.Validate()
-	assert.False(t, ok)
-	assert.Len(t, causes, 1)
+	allErrs = gsa.Validate()
+	assert.Len(t, allErrs, 1)
 
-	assert.Equal(t, metav1.CauseTypeFieldValueInvalid, causes[0].Type)
-	assert.Equal(t, "spec.scheduling", causes[0].Field)
+	assert.Equal(t, field.ErrorTypeNotSupported, allErrs[0].Type)
+	assert.Equal(t, "spec.scheduling", allErrs[0].Field)
 
 	runtime.FeatureTestMutex.Lock()
 	defer runtime.FeatureTestMutex.Unlock()
@@ -1282,13 +1206,12 @@ func TestGameServerAllocationValidate(t *testing.T) {
 	}
 	gsa.ApplyDefaults()
 
-	causes, ok = gsa.Validate()
-	assert.False(t, ok)
-	assert.Len(t, causes, 4)
-	assert.Equal(t, "spec.required", causes[0].Field)
-	assert.Equal(t, "spec.preferred[0]", causes[1].Field)
-	assert.Equal(t, "spec.preferred[0]", causes[2].Field)
-	assert.Equal(t, "metadata.labels", causes[3].Field)
+	allErrs = gsa.Validate()
+	assert.Len(t, allErrs, 4)
+	assert.Equal(t, "spec.required.players.minAvailable", allErrs[0].Field)
+	assert.Equal(t, "spec.preferred[0].players.maxAvailable", allErrs[1].Field)
+	assert.Equal(t, "spec.preferred[0].players.minAvailable", allErrs[2].Field)
+	assert.Equal(t, "spec.metadata.labels", allErrs[3].Field)
 }
 
 func TestGameServerAllocationConverter(t *testing.T) {
