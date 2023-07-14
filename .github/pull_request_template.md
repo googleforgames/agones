@@ -14,6 +14,7 @@
 > /kind documentation
 > /kind feature
 > /kind hotfix
+> /kind release
 
 **What this PR does / Why we need it**:
 
