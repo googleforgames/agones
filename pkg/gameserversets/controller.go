@@ -130,7 +130,7 @@ func NewController(
 		c.allocationController = NewAllocatorOverflowController(health, counter, agonesClient, agonesInformerFactory)
 	}
 
-	gsSetInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
+	_, _ = gsSetInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: c.workerqueue.Enqueue,
 		UpdateFunc: func(oldObj, newObj interface{}) {
 			oldGss := oldObj.(*agonesv1.GameServerSet)
@@ -144,7 +144,7 @@ func NewController(
 		},
 	})
 
-	gsInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
+	_, _ = gsInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: c.gameServerEventHandler,
 		UpdateFunc: func(oldObj, newObj interface{}) {
 			gs := newObj.(*agonesv1.GameServer)
