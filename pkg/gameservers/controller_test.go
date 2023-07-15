@@ -224,6 +224,41 @@ func TestControllerSyncGameServerWithDevIP(t *testing.T) {
 		assert.Equal(t, 1, updateCount, "update reactor should fire once")
 	})
 
+	t.Run("GameServer with ReadyRequest State", func(t *testing.T) {
+		c, mocks := newFakeController()
+
+		updateCount := 0
+
+		gsFixture := templateDevGs.DeepCopy()
+		gsFixture.ApplyDefaults()
+		gsFixture.Status.State = agonesv1.GameServerStateRequestReady
+
+
+		mocks.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			gameServers := &agonesv1.GameServerList{Items: []agonesv1.GameServer{*gsFixture}}
+			return true, gameServers, nil
+		})
+		mocks.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			ua := action.(k8stesting.UpdateAction)
+			gs := ua.GetObject().(*agonesv1.GameServer)
+			updateCount++
+
+			assert.Equal(t, agonesv1.GameServerStateReady, gs.Status.State)
+
+			return true, gs, nil
+		})
+
+		ctx, cancel := agtesting.StartInformers(mocks, c.podSynced)
+		defer cancel()
+
+		err := c.portAllocator.Run(ctx)
+		assert.NoError(t, err, "should not error")
+
+		err = c.syncGameServer(ctx, "default/test")
+		assert.NoError(t, err, "should not error")
+		assert.Equal(t, 1, updateCount, "update reactor should fire once")
+	})
+
 	t.Run("Allocated GameServer", func(t *testing.T) {
 		c, mocks := newFakeController()
 
