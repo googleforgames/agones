@@ -747,9 +747,9 @@ func TestApplyCounterPolicy(t *testing.T) {
 				f.Spec.Template.Spec.Counters["rooms"] = agonesv1.CounterStatus{
 					Count:    0,
 					Capacity: 7}
-				f.Status.Replicas = 10 // This should always be status.Counters.Capacity / spec.Spec.Counters.Capacity
+				f.Status.Replicas = 10
 				f.Status.ReadyReplicas = 5
-				f.Status.AllocatedReplicas = 5 // This should be at least status.Counters.Count / spec.Spec.Counters.Capacity
+				f.Status.AllocatedReplicas = 5
 				f.Status.Counters = make(map[string]agonesv1.AggregatedCounterStatus)
 				f.Status.Counters["rooms"] = agonesv1.AggregatedCounterStatus{
 					Count:    31,
@@ -1225,8 +1225,10 @@ func TestApplyCounterPolicy(t *testing.T) {
 				f.Status.AllocatedReplicas = 8
 				f.Status.Counters = make(map[string]agonesv1.AggregatedCounterStatus)
 				f.Status.Counters["players"] = agonesv1.AggregatedCounterStatus{
-					Count:    8,
-					Capacity: 10,
+					AllocatedCount:    8,
+					AllocatedCapacity: 10,
+					Count:             8,
+					Capacity:          10,
 				}
 			}),
 			featureFlags: string(utilruntime.FeatureCountsAndLists) + "=true",
@@ -1253,8 +1255,10 @@ func TestApplyCounterPolicy(t *testing.T) {
 				f.Status.AllocatedReplicas = 3
 				f.Status.Counters = make(map[string]agonesv1.AggregatedCounterStatus)
 				f.Status.Counters["players"] = agonesv1.AggregatedCounterStatus{
-					Count:    20,
-					Capacity: 30,
+					AllocatedCount:    20,
+					AllocatedCapacity: 30,
+					Count:             20,
+					Capacity:          30,
 				}
 			}),
 			featureFlags: string(utilruntime.FeatureCountsAndLists) + "=true",
@@ -1265,7 +1269,7 @@ func TestApplyCounterPolicy(t *testing.T) {
 				BufferSize:  intstr.FromString("50%"),
 			},
 			want: expected{
-				replicas: 6,
+				replicas: 5,
 				limited:  false,
 				wantErr:  false,
 			},
@@ -1309,6 +1313,7 @@ func TestApplyListPolicy(t *testing.T) {
 
 	nc := map[string]gameservers.NodeCount{
 		"n1": {Ready: 0, Allocated: 2},
+		"n2": {Ready: 1},
 	}
 
 	modifiedFleet := func(f func(*agonesv1.Fleet)) *agonesv1.Fleet {
@@ -1662,8 +1667,10 @@ func TestApplyListPolicy(t *testing.T) {
 				f.Status.AllocatedReplicas = 3
 				f.Status.Lists = make(map[string]agonesv1.AggregatedListStatus)
 				f.Status.Lists["gamers"] = agonesv1.AggregatedListStatus{
-					Count:    20,
-					Capacity: 30,
+					AllocatedCount:    20,
+					AllocatedCapacity: 30,
+					Count:             20,
+					Capacity:          30,
 				}
 			}),
 			featureFlags: string(utilruntime.FeatureCountsAndLists) + "=true",
@@ -1685,13 +1692,15 @@ func TestApplyListPolicy(t *testing.T) {
 				f.Spec.Template.Spec.Lists["gamers"] = agonesv1.ListStatus{
 					Values:   []string{"default"},
 					Capacity: 3}
-				f.Status.Replicas = 10
-				f.Status.ReadyReplicas = 0
+				f.Status.Replicas = 11
+				f.Status.ReadyReplicas = 1
 				f.Status.AllocatedReplicas = 10
 				f.Status.Lists = make(map[string]agonesv1.AggregatedListStatus)
 				f.Status.Lists["gamers"] = agonesv1.AggregatedListStatus{
-					Count:    29,
-					Capacity: 30,
+					AllocatedCount:    29,
+					AllocatedCapacity: 30,
+					Count:             30,
+					Capacity:          30,
 				}
 			}),
 			featureFlags: string(utilruntime.FeatureCountsAndLists) + "=true",
@@ -1699,10 +1708,10 @@ func TestApplyListPolicy(t *testing.T) {
 				Key:         "gamers",
 				MaxCapacity: 50,
 				MinCapacity: 10,
-				BufferSize:  intstr.FromString("5%"),
+				BufferSize:  intstr.FromString("10%"),
 			},
 			want: expected{
-				replicas: 11,
+				replicas: 13,
 				limited:  false,
 				wantErr:  false,
 			},
@@ -1719,8 +1728,10 @@ func TestApplyListPolicy(t *testing.T) {
 				f.Status.AllocatedReplicas = 0
 				f.Status.Lists = make(map[string]agonesv1.AggregatedListStatus)
 				f.Status.Lists["gamers"] = agonesv1.AggregatedListStatus{
-					Count:    15,
-					Capacity: 30,
+					AllocatedCount:    0,
+					AllocatedCapacity: 0,
+					Count:             15,
+					Capacity:          30,
 				}
 			}),
 			featureFlags: string(utilruntime.FeatureCountsAndLists) + "=true",
@@ -1764,7 +1775,90 @@ func TestApplyListPolicy(t *testing.T) {
 			},
 			want: expected{
 				replicas: 0,
-				limited:  true,
+				limited:  false,
+				wantErr:  false,
+			},
+		},
+		"scale down by percent": {
+			fleet: modifiedFleet(func(f *agonesv1.Fleet) {
+				f.Spec.Template.Spec.Lists = make(map[string]agonesv1.ListStatus)
+				f.Spec.Template.Spec.Lists["gamers"] = agonesv1.ListStatus{
+					Values:   []string{"default", "default2"},
+					Capacity: 10}
+				f.Spec.Priorities = []agonesv1.Priority{{Type: "List", Key: "gamers", Order: "Descending"}}
+				f.Status.Replicas = 5
+				f.Status.ReadyReplicas = 2
+				f.Status.AllocatedReplicas = 3
+				f.Status.Lists = make(map[string]agonesv1.AggregatedListStatus)
+				f.Status.Lists["gamers"] = agonesv1.AggregatedListStatus{
+					AllocatedCount:    15,
+					AllocatedCapacity: 30,
+					Count:             18,
+					Capacity:          50,
+				}
+			}),
+			featureFlags: string(utilruntime.FeatureCountsAndLists) + "=true",
+			lp: &autoscalingv1.ListPolicy{
+				Key:         "gamers",
+				MaxCapacity: 50,
+				MinCapacity: 0,
+				BufferSize:  intstr.FromString("50%"),
+			},
+			gsList: []agonesv1.GameServer{
+				{ObjectMeta: metav1.ObjectMeta{
+					Name:   "gs1",
+					Labels: map[string]string{"agones.dev/fleet": "fleet-1"}},
+					Status: agonesv1.GameServerStatus{
+						NodeName: "n1",
+						Lists: map[string]agonesv1.ListStatus{
+							"gamers": {
+								Values:   []string{"1", "2", "3", "4", "5"},
+								Capacity: 15,
+							}}}},
+				{ObjectMeta: metav1.ObjectMeta{
+					Name:   "gs2",
+					Labels: map[string]string{"agones.dev/fleet": "fleet-1"}},
+					Status: agonesv1.GameServerStatus{
+						NodeName: "n1",
+						Lists: map[string]agonesv1.ListStatus{
+							"gamers": {
+								Values:   []string{"1", "2", "3", "4", "5", "6", "7"},
+								Capacity: 10,
+							}}}},
+				{ObjectMeta: metav1.ObjectMeta{
+					Name:   "gs3",
+					Labels: map[string]string{"agones.dev/fleet": "fleet-1"}},
+					Status: agonesv1.GameServerStatus{
+						NodeName: "n1",
+						Lists: map[string]agonesv1.ListStatus{
+							"gamers": {
+								Values:   []string{"1", "2", "3"},
+								Capacity: 5,
+							}}}},
+				{ObjectMeta: metav1.ObjectMeta{
+					Name:   "gs4",
+					Labels: map[string]string{"agones.dev/fleet": "fleet-1"}},
+					Status: agonesv1.GameServerStatus{
+						NodeName: "n2",
+						Lists: map[string]agonesv1.ListStatus{
+							"gamers": {
+								Values:   []string{"1", "2", "3"},
+								Capacity: 5,
+							}}}},
+				{ObjectMeta: metav1.ObjectMeta{
+					Name:   "gs5",
+					Labels: map[string]string{"agones.dev/fleet": "fleet-1"}},
+					Status: agonesv1.GameServerStatus{
+						NodeName: "n2",
+						Lists: map[string]agonesv1.ListStatus{
+							"gamers": {
+								Values:   []string{},
+								Capacity: 15,
+							}}}},
+			},
+			want: expected{
+				replicas: 3,
+				limited:  false,
 				wantErr:  false,
 			},
 		},
@@ -1780,8 +1874,10 @@ func TestApplyListPolicy(t *testing.T) {
 				f.Status.AllocatedReplicas = 0
 				f.Status.Lists = make(map[string]agonesv1.AggregatedListStatus)
 				f.Status.Lists["gamers"] = agonesv1.AggregatedListStatus{
-					Count:    15,
-					Capacity: 30,
+					AllocatedCount:    0,
+					AllocatedCapacity: 0,
+					Count:             15,
+					Capacity:          30,
 				}
 			}),
 			featureFlags: string(utilruntime.FeatureCountsAndLists) + "=true",

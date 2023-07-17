@@ -243,21 +243,16 @@ func applyCounterOrListPolicy(c *autoscalingv1.CounterPolicy, l *autoscalingv1.L
 		return 0, false, errors.Errorf("cannot apply CounterPolicy unless feature flag %s is enabled", runtime.FeatureCountsAndLists)
 	}
 
-	var isCounter bool    // True if a CounterPolicy False if a ListPolicy
-	var key string        // The specified Counter or List
-	var count int64       // The Count or number of Values in the template Game Server
-	var capacity int64    // The Capacity in the template Game Server
-	var aggCount int64    // The Aggregate Count of the specified Counter or List of all GameServers across the GameServerSet in the Fleet
-	var aggCapacity int64 // The Aggregate Capacity of the specified Counter or List of all GameServers across the GameServerSet in the Fleet
-	var minCapacity int64 // The Minimum Aggregate Capacity
-	var maxCapacity int64 // The Maximum Aggregate Capacity
-
+	var isCounter bool          // True if a CounterPolicy False if a ListPolicy
+	var key string              // The specified Counter or List
+	var count int64             // The Count or number of Values in the template Game Server
+	var capacity int64          // The Capacity in the template Game Server
+	var aggCount int64          // The Aggregate Count of the specified Counter or List of all GameServers across the GameServerSet in the Fleet
+	var aggCapacity int64       // The Aggregate Capacity of the specified Counter or List of all GameServers across the GameServerSet in the Fleet
+	var aggAllocatedCount int64 // The Aggregate Count of the specified Counter or List of GameServers in an Allocated state across the GameServerSet in the Fleet
+	var minCapacity int64       // The Minimum Aggregate Capacity
+	var maxCapacity int64       // The Maximum Aggregate Capacity
 	var bufferSize intstr.IntOrString
-	// TODO: Our aggregate counts in include Allocated, Ready, and Reserved replicas, however
-	// I'm not 100% sure if f.Status.Replicas includes all three states or just Allocated and Ready?
-	// If it's the latter, then we would need to add in f.Status.ReservedReplicas.
-	// There may be some additional nuance here since "Reserved instances won't be deleted on scale down, but won't cause an autoscaler to scale up"
-	replicas := f.Status.Replicas
 
 	if c != nil {
 		isCounter = true
@@ -276,6 +271,7 @@ func applyCounterOrListPolicy(c *autoscalingv1.CounterPolicy, l *autoscalingv1.L
 		capacity = counter.Capacity
 		aggCount = aggCounter.Count
 		aggCapacity = aggCounter.Capacity
+		aggAllocatedCount = aggCounter.AllocatedCount
 		minCapacity = c.MinCapacity
 		maxCapacity = c.MaxCapacity
 		bufferSize = c.BufferSize
@@ -297,82 +293,59 @@ func applyCounterOrListPolicy(c *autoscalingv1.CounterPolicy, l *autoscalingv1.L
 		capacity = list.Capacity
 		aggCount = aggList.Count
 		aggCapacity = aggList.Capacity
+		aggAllocatedCount = aggList.AllocatedCount
 		minCapacity = l.MinCapacity
 		maxCapacity = l.MaxCapacity
 		bufferSize = l.BufferSize
 	}
 
-	// CASES:
-	// No Scaling Integer (at desired Buffer) -- Check if below/above min/max capacity (Limited) and return current number of replicas if not Limited
-	// Scale Up Integer -- May be Limited before or after Scaling
-	// Scale Down Integer -- May be Limited before or after Scaling
-	// No Scaling Percent -- Check if Limited and return current number of replicas if not Limited
-	// Scale Up Percent -- May be Limited before or after Scaling
-	// Scale Down Percent -- May be Limited before or after Scaling
-	// If none of the above return error Unable to Apply Counter or List Policy
-
+	// Checks if we've limited by TOTAL capacity
 	limited, scale := isLimited(aggCapacity, minCapacity, maxCapacity)
 
+	// Total current number of Replicas
+	replicas := f.Status.Replicas
+
+	// The buffer is the desired available capacity
+	var buffer int64
+
+	switch {
 	// Desired replicas based on BufferSize specified as an absolute value (i.e. 5)
-	if bufferSize.Type == intstr.Int {
-		buffer := int64(bufferSize.IntValue())
-
-		// Current available capacity across the fleet
-		switch availableCapacity := aggCapacity - aggCount; {
-		case availableCapacity == buffer:
-			if limited {
-				return scaleLimited(scale, f, gameServerLister, nodeCounts, key, isCounter, replicas,
-					capacity, aggCapacity, minCapacity, maxCapacity)
-			}
-			return replicas, false, nil
-		case availableCapacity < buffer: // Scale Up
-			if limited && scale == -1 { // Case where we want to scale up but we're already limited by MaxCapacity
-				return scaleLimited(scale, f, gameServerLister, nodeCounts, key, isCounter, replicas,
-					capacity, aggCapacity, minCapacity, maxCapacity)
-			}
-			return scaleUpByInteger(replicas, capacity, count,
-				aggCapacity, availableCapacity, maxCapacity, buffer)
-		case availableCapacity > buffer: // Scale Down
-			if limited && scale == 1 { // Case where we want to scale down but we're already limited by MinCapacity
-				return scaleLimited(scale, f, gameServerLister, nodeCounts, key, isCounter, replicas,
-					capacity, aggCapacity, minCapacity, maxCapacity)
-			}
-			return scaleDownByInteger(f, gameServerLister, nodeCounts, key, isCounter, replicas,
-				availableCapacity, aggCount, aggCapacity, minCapacity, buffer)
-		}
-	}
-
+	case bufferSize.Type == intstr.Int:
+		buffer = int64(bufferSize.IntValue())
 	// Desired replicas based on BufferSize specified as a percent (i.e. 5%)
-	bufferPercent, err := intstr.GetValueFromIntOrPercent(&bufferSize, 100, isCounter)
-	if err != nil {
-		return 0, false, err
+	case bufferSize.Type == intstr.String:
+		bufferPercent, err := intstr.GetValueFromIntOrPercent(&bufferSize, 100, isCounter)
+		if err != nil {
+			return 0, false, err
+		}
+		// The desired TOTAL capacity based on the Aggregated Allocated Counts (see applyBufferPolicy for explanation)
+		desiredCapacity := int64(math.Ceil(float64(aggAllocatedCount*100) / float64(100-bufferPercent)))
+		// Convert into a desired AVAILABLE capacity aka the buffer
+		buffer = desiredCapacity - aggAllocatedCount
 	}
-	// The desired total capacity across the fleet (see applyBufferPolicy for explanation)
-	desiredCapacity := float64(aggCount*100) / float64(100-bufferPercent)
 
-	switch roundedDesiredCapacity := int64(math.Ceil(desiredCapacity)); {
-	case roundedDesiredCapacity == aggCapacity:
+	// Current available capacity across the TOTAL fleet
+	switch availableCapacity := aggCapacity - aggCount; {
+	case availableCapacity == buffer:
 		if limited {
 			return scaleLimited(scale, f, gameServerLister, nodeCounts, key, isCounter, replicas,
 				capacity, aggCapacity, minCapacity, maxCapacity)
 		}
 		return replicas, false, nil
-
-	case roundedDesiredCapacity > aggCapacity: // Scale up
+	case availableCapacity < buffer: // Scale Up
 		if limited && scale == -1 { // Case where we want to scale up but we're already limited by MaxCapacity
 			return scaleLimited(scale, f, gameServerLister, nodeCounts, key, isCounter, replicas,
 				capacity, aggCapacity, minCapacity, maxCapacity)
 		}
-		return scaleUpByPercent(replicas, count, aggCount, capacity, aggCapacity, maxCapacity,
-			desiredCapacity, float64(bufferPercent))
-
-	case roundedDesiredCapacity < aggCapacity: // Scale down
+		return scaleUp(replicas, capacity, count, aggCapacity, availableCapacity, maxCapacity,
+			minCapacity, buffer)
+	case availableCapacity > buffer: // Scale Down
 		if limited && scale == 1 { // Case where we want to scale down but we're already limited by MinCapacity
 			return scaleLimited(scale, f, gameServerLister, nodeCounts, key, isCounter, replicas,
 				capacity, aggCapacity, minCapacity, maxCapacity)
 		}
-		return scaleDownByPercent(f, gameServerLister, nodeCounts, key, isCounter, replicas,
-			aggCount, aggCapacity, minCapacity, float64(bufferPercent))
+		return scaleDown(f, gameServerLister, nodeCounts, key, isCounter, replicas,
+			availableCapacity, aggCount, aggCapacity, minCapacity, buffer)
 	}
 
 	if isCounter {
@@ -469,31 +442,33 @@ func scaleLimited(scale int, f *agonesv1.Fleet, gameServerLister listeragonesv1.
 	return 0, false, errors.Errorf("cannot scale due to error in scaleLimited function")
 }
 
-// scaleUpByInteger
-func scaleUpByInteger(replicas int32, capacity, count, aggCapacity, availableCapacity, maxCapacity,
-	buffer int64) (int32, bool, error) {
+// scaleUp scales up for either Integer or Percentage Buffer.
+func scaleUp(replicas int32, capacity, count, aggCapacity, availableCapacity, maxCapacity,
+	minCapacity, buffer int64) (int32, bool, error) {
 
 	// How much capacity is gained by adding one more replica to the fleet.
 	replicaCapacity := capacity - count
-	if replicaCapacity == 0 {
-		return 0, false, errors.Errorf("cannot scale up as adding additional replicas does not increase Capacity")
+	if replicaCapacity <= 0 {
+		return 0, false, errors.Errorf("cannot scale up as adding additional replicas does not increase available Capacity")
 	}
 
-	additionalReplicas := int64(math.Ceil((float64(buffer) - float64(availableCapacity)) / float64(replicaCapacity)))
+	additionalReplicas := int32(math.Ceil((float64(buffer) - float64(availableCapacity)) / float64(replicaCapacity)))
 
-	// Check if we've hit MaxCapacity
-	if (additionalReplicas*capacity)+aggCapacity > maxCapacity {
-		additionalReplicas = (maxCapacity - aggCapacity) / capacity
-		return replicas + int32(additionalReplicas), true, nil
+	// Check to make sure we're not limited (over Max Capacity)
+	limited, _ := isLimited(aggCapacity+(int64(additionalReplicas)*capacity), minCapacity, maxCapacity)
+	if limited {
+		additionalReplicas = int32((maxCapacity - aggCapacity) / capacity)
 	}
 
-	return replicas + int32(additionalReplicas), false, nil
+	return replicas + additionalReplicas, limited, nil
 }
 
-func scaleDownByInteger(f *agonesv1.Fleet, gameServerLister listeragonesv1.GameServerLister,
+// scaleDown scales down for either Integer or Percentage Buffer.
+func scaleDown(f *agonesv1.Fleet, gameServerLister listeragonesv1.GameServerLister,
 	nodeCounts map[string]gameservers.NodeCount, key string, isCounter bool, replicas int32,
 	availableCapacity, aggCount, aggCapacity, minCapacity, buffer int64) (int32, bool, error) {
-
+	// Exit early if we're already at MinCapacity or DesiredCapacity to avoid calling
+	// getSortedGameServers if unnecessary
 	if aggCapacity == minCapacity {
 		return replicas, true, nil
 	}
@@ -502,11 +477,15 @@ func scaleDownByInteger(f *agonesv1.Fleet, gameServerLister listeragonesv1.GameS
 		return replicas, false, nil
 	}
 
+	// We first need to get the individual game servers in order of deletion on scale down, as any
+	// game server may have a unique value for counts and / or capacity.
 	gameServers, err := getSortedGameServers(f, gameServerLister, nodeCounts)
 	if err != nil {
 		return 0, false, err
 	}
 
+	// "Remove" one game server at a time in order of potential deletion. (Not actually removed here,
+	// that's done later, if possible, by the fleetautoscaler controller.)
 	for _, gs := range gameServers {
 		replicas--
 		switch isCounter {
@@ -514,18 +493,19 @@ func scaleDownByInteger(f *agonesv1.Fleet, gameServerLister listeragonesv1.GameS
 			if counter, ok := gs.Status.Counters[key]; ok {
 				aggCount -= counter.Count
 				aggCapacity -= counter.Capacity
+			} else {
+				continue
 			}
 		case false:
 			if list, ok := gs.Status.Lists[key]; ok {
 				aggCount -= int64(len(list.Values))
 				aggCapacity -= list.Capacity
+			} else {
+				continue
 			}
 		}
 		availableCapacity = aggCapacity - aggCount
-		// Check if we've hit MinCapacity
-		if aggCapacity == minCapacity {
-			return replicas, true, nil
-		}
+		// Check if we're Limited (Below MinCapacity)
 		if aggCapacity < minCapacity {
 			return replicas + 1, true, nil
 		}
@@ -533,6 +513,11 @@ func scaleDownByInteger(f *agonesv1.Fleet, gameServerLister listeragonesv1.GameS
 		if availableCapacity == buffer {
 			return replicas, false, nil
 		}
+		// Check if we're at Limited
+		if aggCapacity == minCapacity {
+			return replicas, true, nil
+		}
+		// Check if we've overshot our buffer
 		if availableCapacity < buffer {
 			return replicas + 1, false, nil
 		}
@@ -543,113 +528,4 @@ func scaleDownByInteger(f *agonesv1.Fleet, gameServerLister listeragonesv1.GameS
 	}
 
 	return replicas, false, nil
-}
-
-// scaleUpByPercent
-func scaleUpByPercent(currReplicas int32, count, aggCount, capacity, aggCapacity,
-	maxCapacity int64, desiredCapacity, bufferPercent float64) (int32, bool, error) {
-
-	if capacity == 0 {
-		return 0, false, errors.Errorf("cannot scale up as Capacity is equal to 0")
-	}
-
-	additionalReplicas := int64(math.Ceil((desiredCapacity - float64(aggCapacity)) / (float64(capacity) - float64(count))))
-	replicas := currReplicas + int32(additionalReplicas)
-	// Case where adding a List or Counter does not change the Count (and thus does not change our desiredCapacity)
-	if count == 0 {
-		return replicas, false, nil
-	}
-
-	// In case where len(list.Values) or counter.Count != 0 then we need to update desiredCapacity
-	// each time we add a List or Counter. Start at point where desired replicas was determined based
-	// on case where len(list.Values) or counter.Count == 0.
-	aggCount += count * additionalReplicas
-	aggCapacity += capacity * additionalReplicas
-	limited := false
-	for {
-		// Check if we've reached MaxCapacity
-		if aggCapacity == maxCapacity {
-			limited = true
-			break
-		}
-		if aggCapacity > maxCapacity {
-			limited = true
-			replicas--
-			break
-		}
-		// Check if we've reached desiredCapacity
-		desiredCapacity = (float64(aggCount) * 100) / (100 - bufferPercent)
-		desiredReplicas := math.Ceil(desiredCapacity / float64(capacity))
-		if replicas >= int32(desiredReplicas) {
-			break
-		}
-		// Keep checking if adding one List or Counter will reach our desiredCapacity
-		aggCount += count
-		aggCapacity += capacity
-		replicas++
-	}
-
-	return replicas, limited, nil
-}
-
-// scaleDownByPercent
-// TODO: This death-spirals down to min capacity, so the customer would need to have something
-// in place to prevent gameservers from being evicted elsewhere if they have Count / Values on
-// them. I'm assuming this is the behavior we intend, and it just needs good documentation?
-func scaleDownByPercent(f *agonesv1.Fleet, gameServerLister listeragonesv1.GameServerLister,
-	nodeCounts map[string]gameservers.NodeCount, key string, isCounter bool, replicas int32,
-	aggCount, aggCapacity, minCapacity int64, bufferPercent float64) (int32, bool, error) {
-	// Exit early if we're already at MinCapacity to avoid calling getSortedGameServers if unnecessary
-	if aggCapacity == minCapacity {
-		return replicas, true, nil
-	}
-
-	// We first need to get the individual game servers in order of deletion on scale down, as both
-	// the Count and Capacity can change, so we do not know from the aggregate counts how much
-	// removing x game servers will affect the aggregate count and capacity.
-	gameServers, err := getSortedGameServers(f, gameServerLister, nodeCounts)
-	if err != nil {
-		return 0, false, err
-	}
-
-	// Determine the desiredCapacity based on removing one gameserver at a time
-	limited := false
-	var desiredCapacity int64
-	for _, gs := range gameServers {
-		// Check if we've reached desiredCapacity
-		desiredCapacity = int64(math.Ceil((float64(aggCount) * 100) / (100 - bufferPercent)))
-		if desiredCapacity >= aggCapacity {
-			break
-		}
-		// Keep checking if adding removing one Counter or List will reach our desiredCapacity
-		switch isCounter {
-		case true:
-			if counter, ok := gs.Status.Counters[key]; ok {
-				aggCount -= counter.Count
-				aggCapacity -= counter.Capacity
-			}
-		case false:
-			if list, ok := gs.Status.Lists[key]; ok {
-				aggCount -= int64(len(list.Values))
-				aggCapacity -= list.Capacity
-			}
-		}
-		replicas--
-		// Check if we've reached MinCapacity
-		if aggCapacity == minCapacity {
-			limited = true // TODO: Should we have this return true or false when scaling down to 0 (MinCapacity == 0)?
-			break
-		}
-		if aggCapacity < minCapacity {
-			limited = true
-			replicas++
-			break
-		}
-	}
-
-	if replicas < 0 {
-		replicas = 0
-	}
-
-	return replicas, limited, nil
 }
