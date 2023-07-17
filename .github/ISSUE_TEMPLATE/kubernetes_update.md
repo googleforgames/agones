@@ -22,7 +22,7 @@ List of items to do for upgrading to {version_1} {version_2} {version_3}
     - [ ] Minikube in `build/includes/minikube.mk` (Get the patch version [here](https://kubernetes.io/releases/) since minikube supports the latest Kubernetes release)
     - [ ] Kind in `build/includes/kind.mk` (Confirm {version_2} is supported and get the patch version [here](https://github.com/kubernetes-sigs/kind/releases))
 - [ ] Update the k8s image used in the helm [pre-delete-hook](https://github.com/googleforgames/agones/blob/main/install/helm/agones/templates/hooks/pre_delete_hook.yaml) to {version_2} (Get the patch version [here](https://hub.docker.com/r/lachlanevenson/k8s-kubectl))
-- [ ] Update client-go in `go.mod` and `test/terraform/go.mod` to {version_2} by running `go get -u k8s.io/client-go@{CORRESPONDING_VERSION}` and `go get -u k8s.io/apiextensions-apiserver@{CORRESPONDING_VERSION}`, then re-run `go mod tidy` and `go mod vendor`
+- [ ] Update client-go in `go.mod` and `test/terraform/go.mod` to {version_2} by running `go get k8s.io/client-go@{CORRESPONDING_VERSION}` and `go get k8s.io/apiextensions-apiserver@{CORRESPONDING_VERSION}`, then re-run `go mod tidy` and `go mod vendor`
 - [ ] Update CRD API reference to {version_2}
     - [ ] Update links to k8s documentation in `site/assets/templates/crd-doc-config.json`
     - [ ] Regenerate crd api reference docs - `make gen-api-docs`
@@ -44,11 +44,12 @@ List of items to do for upgrading to {version_1} {version_2} {version_3}
     - [ ] Update the version number in C++ Cmake scripts [here](https://github.com/googleforgames/agones/blob/main/sdks/cpp/CMakeLists.txt#L100) and [here](https://github.com/googleforgames/agones/blob/main/sdks/cpp/cmake/prerequisites.cmake#L34)
 - [ ] Confirm the update works as expected by running e2e tests
     - [ ] Add the new supported Kubernetes versions to the e2e clusters creation
-        - [ ] In `terraform/e2e/module.tf`, add the new supported version to the map `kubernetes_versions_standard` and `kubernetes_versions_autopilot`. Noted the location of the new clusters should have enough quota (CPU, In-use IP addresses) to create the cluster. And the new supported version is usually only available in RAPID channel.
+        - [ ] In `terraform/e2e/module.tf`, add the new supported version to the map `kubernetes_versions`. Noted the location of the new clusters should have enough quota (CPU, In-use IP addresses) to create the cluster. And the new supported version is usually only available in RAPID channel.
         - [ ] Recreate clusters with new scripts: `cd build; make GCP_PROJECT=agones-images gcloud-e2e-test-cluster`
     - [ ] Update the Cloud Build configuration to run e2e test on the new created clusters, and disable the e2e test on the cluster with the oldest supported K8s version
         - [ ] Update the `versionsAndRegions` variable to add the new supported version and remove the oldest supported K8s version in `cloudbuild.yaml` `submit-e2e-test-cloud-build` step
+        - [ ] Run `make lint` for code quality check.
         - [ ] Submit a PR to trigger the e2e tests and verfiy they all pass
     - [ ] After the PR that includes the above Cloud Build configuration change has been merged and all the existing pending PRs in the Cloud Build queue have picked up the new configuration, submit a separate PR to update the e2e clusters terraform module to remove the e2e cluster with the oldest supported K8s version.
-        - [ ] In `terraform/e2e/module.tf`, remove the oldest supported version from the map `kubernetes_versions_standard` and `kubernetes_versions_autopilot`.
+        - [ ] In `terraform/e2e/module.tf`, remove the oldest supported version from the map `kubernetes_versions`.
         - [ ] Destroy the old clusters with new scripts: `cd build; make GCP_PROJECT=agones-images gcloud-e2e-test-cluster`
