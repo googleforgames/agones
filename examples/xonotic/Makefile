@@ -28,7 +28,7 @@ REPOSITORY = us-docker.pkg.dev/agones-images/examples
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_path := $(dir $(mkfile_path))
 root_path := $(realpath $(project_path)/../..)
-image_tag = $(REPOSITORY)/xonotic-example:1.1
+image_tag = $(REPOSITORY)/xonotic-example:1.2
 
 #   _____                    _
 #  |_   _|_ _ _ __ __ _  ___| |_ ___
