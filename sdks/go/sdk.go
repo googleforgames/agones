@@ -19,8 +19,8 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"log"
 	"os"
+	"reflect"
 	"time"
 
 	"github.com/pkg/errors"
@@ -41,6 +41,14 @@ type SDK struct {
 	ctx    context.Context
 	health sdk.SDK_HealthClient
 	alpha  *Alpha
+}
+
+// ErrorLog is a function to log the error.
+type ErrorLog func(error, string)
+
+// Logger is a pluggable function that outputs the error message to standard error.
+var Logger ErrorLog = func(err error, msg string) {
+	fmt.Fprintf(os.Stderr, "msg: %s\n", err)
 }
 
 // NewSDK starts a new SDK instance, and connects to localhost
@@ -137,19 +145,19 @@ func (s *SDK) WatchGameServer(f GameServerCallback) error {
 	go func() {
 		for {
 			var gs *sdk.GameServer
+			// Receive the next GameServer event from the stream.
 			gs, err = stream.Recv()
 			if err != nil {
 				if err == io.EOF {
-					log.Println("gameserver event stream EOF received")
 					return
 				}
-				log.Printf("error watching GameServer: %s\n", err.Error())
 				// This is to wait for the reconnection, and not peg the CPU at 100%.
 				time.Sleep(time.Second)
 				continue
 			}
 
-			if gs.ObjectMeta.DeletionTimestamp != 0 {
+			if reflect.ValueOf(gs.ObjectMeta.DeletionTimestamp).IsZero() {
+				Logger(nil, "Skipping GameServer with non-zero DeletionTimestamp")
 				continue
 			}
 			f(gs)
