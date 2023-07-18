@@ -19,6 +19,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"time"
 
@@ -139,12 +140,16 @@ func (s *SDK) WatchGameServer(f GameServerCallback) error {
 			gs, err = stream.Recv()
 			if err != nil {
 				if err == io.EOF {
-					_, _ = fmt.Fprintln(os.Stderr, "gameserver event stream EOF received")
+					log.Println("gameserver event stream EOF received")
 					return
 				}
-				_, _ = fmt.Fprintf(os.Stderr, "error watching GameServer: %s\n", err.Error())
-				// This is to wait for the reconnection, and not peg the CPU at 100%.
+				log.Printf("error watching GameServer: %s\n", err.Error())
+				// This is to wait for reconnection and prevent CPU usage at 100%.
 				time.Sleep(time.Second)
+				continue
+			}
+
+			if gs.ObjectMeta.DeletionTimestamp != 0 {
 				continue
 			}
 			f(gs)
