@@ -144,7 +144,7 @@ func (s *SDK) WatchGameServer(f GameServerCallback) error {
 					return
 				}
 				log.Printf("error watching GameServer: %s\n", err.Error())
-				// This is to wait for reconnection and prevent CPU usage at 100%.
+				// This is to wait for the reconnection, and not peg the CPU at 100%.
 				time.Sleep(time.Second)
 				continue
 			}
