@@ -156,7 +156,7 @@ func (s *SDK) WatchGameServer(f GameServerCallback) error {
 				continue
 			}
 
-			if reflect.ValueOf(gs.ObjectMeta.DeletionTimestamp).IsZero() {
+			if !reflect.ValueOf(gs.ObjectMeta.DeletionTimestamp).IsZero() {
 				Logger(nil, "Skipping GameServer with non-zero DeletionTimestamp")
 				continue
 			}
