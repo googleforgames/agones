@@ -324,10 +324,10 @@ func (b *BufferPolicy) ValidateBufferPolicy(fldPath *field.Path) field.ErrorList
 			allErrs = append(allErrs, field.Invalid(fldPath.Child("bufferSize"), b.BufferSize.IntValue(), apimachineryvalidation.IsNegativeErrorMsg))
 		}
 		if b.MaxReplicas < int32(b.BufferSize.IntValue()) {
-			allErrs = append(allErrs, field.Invalid(fldPath.Child("maxReplicas"), b.MaxReplicas, "maxReplicas should be bigger than bufferSize"))
+			allErrs = append(allErrs, field.Invalid(fldPath.Child("maxReplicas"), b.MaxReplicas, "maxReplicas should be bigger than or equal to bufferSize"))
 		}
 		if b.MinReplicas != 0 && b.MinReplicas < int32(b.BufferSize.IntValue()) {
-			allErrs = append(allErrs, field.Invalid(fldPath.Child("minReplicas"), b.MinReplicas, "minReplicas should be bigger than bufferSize"))
+			allErrs = append(allErrs, field.Invalid(fldPath.Child("minReplicas"), b.MinReplicas, "minReplicas should be bigger than or equal to bufferSize"))
 		}
 	} else {
 		r, err := intstr.GetScaledValueFromIntOrPercent(&b.BufferSize, 100, true)
