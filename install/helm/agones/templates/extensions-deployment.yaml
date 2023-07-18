@@ -120,7 +120,7 @@ spec:
           value: {{ .Values.agones.cloudProduct | quote }}
 {{- if .Values.agones.extensions.persistentLogs }}
         - name: LOG_DIR
-          value: "/home/agones/logs"
+          value: "/logs"
         - name: LOG_SIZE_LIMIT_MB
           value: {{ .Values.agones.extensions.persistentLogsSizeLimitMB | quote }}
 {{- end }}
@@ -167,11 +167,11 @@ spec:
 {{- end }}
         volumeMounts:
         - name: certs
-          mountPath: /home/agones/certs
+          mountPath: /certs
           readOnly: true
 {{- if .Values.agones.extensions.persistentLogs }}
         - name: logs
-          mountPath: /home/agones/logs
+          mountPath: /logs
           readOnly: false
 {{- end }}
       volumes:
