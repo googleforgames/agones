@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
@@ -38,6 +39,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	corev1 "k8s.io/api/core/v1"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8sruntime "k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -74,14 +76,22 @@ func TestControllerAllocator(t *testing.T) {
 		m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
 			return true, &agonesv1.GameServerList{Items: gsList}, nil
 		})
+
+		updated := map[string]bool{}
 		m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
 			ua := action.(k8stesting.UpdateAction)
 			gs := ua.GetObject().(*agonesv1.GameServer)
+
+			if _, ok := updated[gs.ObjectMeta.Name]; ok {
+				return true, nil, k8serrors.NewConflict(agonesv1.Resource("gameservers"), gs.ObjectMeta.Name, fmt.Errorf("already updated"))
+			}
+
+			updated[gs.ObjectMeta.Name] = true
 			gsWatch.Modify(gs)
 			return true, gs, nil
 		})
 
-		ctx, cancel := agtesting.StartInformers(m)
+		ctx, cancel := agtesting.StartInformers(m, c.allocator.allocationPolicySynced, c.allocator.secretSynced, c.allocator.allocationCache.gameServerSynced)
 		defer cancel()
 
 		if err := c.Run(ctx, 1); err != nil {
@@ -219,7 +229,7 @@ func TestMultiClusterAllocationFromLocal(t *testing.T) {
 			}, nil
 		})
 
-		ctx, cancel := agtesting.StartInformers(m)
+		ctx, cancel := agtesting.StartInformers(m, c.allocator.allocationPolicySynced, c.allocator.secretSynced, c.allocator.allocationCache.gameServerSynced)
 		defer cancel()
 
 		if err := c.Run(ctx, 1); err != nil {
@@ -267,7 +277,7 @@ func TestMultiClusterAllocationFromLocal(t *testing.T) {
 			}, nil
 		})
 
-		ctx, cancel := agtesting.StartInformers(m)
+		ctx, cancel := agtesting.StartInformers(m, c.allocator.allocationPolicySynced, c.allocator.secretSynced, c.allocator.allocationCache.gameServerSynced)
 		defer cancel()
 
 		if err := c.Run(ctx, 1); err != nil {
@@ -327,7 +337,7 @@ func TestMultiClusterAllocationFromLocal(t *testing.T) {
 			}, nil
 		})
 
-		ctx, cancel := agtesting.StartInformers(m)
+		ctx, cancel := agtesting.StartInformers(m, c.allocator.allocationPolicySynced, c.allocator.secretSynced, c.allocator.allocationCache.gameServerSynced)
 		defer cancel()
 
 		if err := c.Run(ctx, 1); err != nil {

@@ -12,13 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM alpine:3.14
+FROM gcr.io/distroless/static-debian11:nonroot
+
 ARG ARCH=amd64
-RUN apk --update add ca-certificates && \
-    adduser -D -u 1000 agones
+WORKDIR /
 
-COPY --chown=agones:agones ./bin/sdk-server.linux.$ARCH /home/agones/sdk-server
-COPY --chown=agones:agones ./bin/LICENSES ./bin/dependencies-src.tgz /home/agones/
+COPY ./bin/sdk-server.linux.$ARCH /sdk-server
+COPY ./bin/LICENSES .
+COPY ./bin/dependencies-src.tgz .
 
-USER 1000
-ENTRYPOINT ["/home/agones/sdk-server"]
+USER nonroot:nonroot
+ENTRYPOINT ["/sdk-server"]
