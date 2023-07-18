@@ -12,14 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM alpine:3.14
+FROM gcr.io/distroless/static-debian11:nonroot
 
 ARG ARCH=amd64
-RUN apk --update add ca-certificates && \
-    adduser -D -u 1000 agones
+WORKDIR /
 
-COPY --chown=agones:agones ./bin/ping.linux.$ARCH /home/agones/ping
-COPY --chown=agones:agones ./bin/LICENSES ./bin/dependencies-src.tgz /home/agones/
+COPY ./bin/ping.linux.$ARCH /ping
+COPY ./bin/LICENSES .
+COPY ./bin/dependencies-src.tgz .
 
-USER 1000
-ENTRYPOINT ["/home/agones/ping"]
+USER nonroot:nonroot
+ENTRYPOINT ["/ping"]

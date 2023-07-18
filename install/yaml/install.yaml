@@ -16448,7 +16448,7 @@ spec:
         - name: CLOUD_PRODUCT
           value: "auto"
         - name: LOG_DIR
-          value: "/home/agones/logs"
+          value: "/logs"
         - name: LOG_SIZE_LIMIT_MB
           value: "10000"
         - name: POD_NAME
@@ -16483,10 +16483,10 @@ spec:
             ephemeral-storage: 10100Mi
         volumeMounts:
         - name: certs
-          mountPath: /home/agones/certs
+          mountPath: /certs
           readOnly: true
         - name: logs
-          mountPath: /home/agones/logs
+          mountPath: /logs
           readOnly: false
       volumes:
       - name: certs
@@ -16587,7 +16587,7 @@ spec:
         - name: CLOUD_PRODUCT
           value: "auto"
         - name: LOG_DIR
-          value: "/home/agones/logs"
+          value: "/logs"
         - name: LOG_SIZE_LIMIT_MB
           value: "10000"
         - name: POD_NAME
@@ -16629,10 +16629,10 @@ spec:
             ephemeral-storage: 10100Mi
         volumeMounts:
         - name: certs
-          mountPath: /home/agones/certs
+          mountPath: /certs
           readOnly: true
         - name: logs
-          mountPath: /home/agones/logs
+          mountPath: /logs
           readOnly: false
       volumes:
       - name: certs

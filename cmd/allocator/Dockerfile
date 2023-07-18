@@ -12,14 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM alpine:3.14
+FROM gcr.io/distroless/static-debian11:nonroot
 
 ARG ARCH=amd64
-RUN apk --update add ca-certificates && \
-    adduser -D -u 1000 agones
+WORKDIR /
 
-COPY --chown=agones:agones ./bin/allocator.linux.$ARCH /home/agones/allocator
-COPY --chown=agones:agones ./bin/LICENSES ./bin/dependencies-src.tgz /home/agones/
+COPY ./bin/allocator.linux.$ARCH /allocator
+COPY ./bin/LICENSES .
+COPY ./bin/dependencies-src.tgz .
 
-USER 1000
-ENTRYPOINT ["/home/agones/allocator"]
+USER nonroot:nonroot
+ENTRYPOINT ["/allocator"]
