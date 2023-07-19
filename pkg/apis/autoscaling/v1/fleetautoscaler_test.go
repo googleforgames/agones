@@ -30,46 +30,45 @@ func TestFleetAutoscalerValidateUpdate(t *testing.T) {
 	t.Run("bad buffer size", func(t *testing.T) {
 		fas := defaultFixture()
 		fas.Spec.Policy.Buffer.BufferSize = intstr.FromInt(0)
-		causes := fas.Validate(nil)
+		causes := fas.Validate()
 
 		assert.Len(t, causes, 1)
-		assert.Equal(t, "bufferSize", causes[0].Field)
+		assert.Equal(t, "spec.policy.buffer.bufferSize", causes[0].Field)
 	})
 
 	t.Run("bad min replicas", func(t *testing.T) {
-
 		fas := defaultFixture()
 		fas.Spec.Policy.Buffer.MinReplicas = 2
 
-		causes := fas.Validate(nil)
+		causes := fas.Validate()
 
 		assert.Len(t, causes, 1)
-		assert.Equal(t, "minReplicas", causes[0].Field)
+		assert.Equal(t, "spec.policy.buffer.minReplicas", causes[0].Field)
 	})
 
 	t.Run("bad max replicas", func(t *testing.T) {
 		fas := defaultFixture()
 		fas.Spec.Policy.Buffer.MaxReplicas = 2
-		causes := fas.Validate(nil)
+		causes := fas.Validate()
 
 		assert.Len(t, causes, 1)
-		assert.Equal(t, "maxReplicas", causes[0].Field)
+		assert.Equal(t, "spec.policy.buffer.maxReplicas", causes[0].Field)
 	})
 
 	t.Run("minReplicas > maxReplicas", func(t *testing.T) {
 		fas := defaultFixture()
 		fas.Spec.Policy.Buffer.MinReplicas = 20
-		causes := fas.Validate(nil)
+		causes := fas.Validate()
 
 		assert.Len(t, causes, 1)
-		assert.Equal(t, "minReplicas", causes[0].Field)
+		assert.Equal(t, "spec.policy.buffer.minReplicas", causes[0].Field)
 	})
 
 	t.Run("bufferSize good percent", func(t *testing.T) {
 		fas := defaultFixture()
 		fas.Spec.Policy.Buffer.MinReplicas = 1
 		fas.Spec.Policy.Buffer.BufferSize = intstr.FromString("20%")
-		causes := fas.Validate(nil)
+		causes := fas.Validate()
 
 		assert.Len(t, causes, 0)
 	})
@@ -80,27 +79,27 @@ func TestFleetAutoscalerValidateUpdate(t *testing.T) {
 
 		fasCopy := fas.DeepCopy()
 		fasCopy.Spec.Policy.Buffer.BufferSize = intstr.FromString("120%")
-		causes := fasCopy.Validate(nil)
+		causes := fasCopy.Validate()
 		assert.Len(t, causes, 1)
-		assert.Equal(t, "bufferSize", causes[0].Field)
+		assert.Equal(t, "spec.policy.buffer.bufferSize", causes[0].Field)
 
 		fasCopy = fas.DeepCopy()
 		fasCopy.Spec.Policy.Buffer.BufferSize = intstr.FromString("0%")
-		causes = fasCopy.Validate(nil)
+		causes = fasCopy.Validate()
 		assert.Len(t, causes, 1)
-		assert.Equal(t, "bufferSize", causes[0].Field)
+		assert.Equal(t, "spec.policy.buffer.bufferSize", causes[0].Field)
 
 		fasCopy = fas.DeepCopy()
 		fasCopy.Spec.Policy.Buffer.BufferSize = intstr.FromString("-10%")
-		causes = fasCopy.Validate(nil)
+		causes = fasCopy.Validate()
 		assert.Len(t, causes, 1)
-		assert.Equal(t, "bufferSize", causes[0].Field)
+		assert.Equal(t, "spec.policy.buffer.bufferSize", causes[0].Field)
 		fasCopy = fas.DeepCopy()
 
 		fasCopy.Spec.Policy.Buffer.BufferSize = intstr.FromString("notgood")
-		causes = fasCopy.Validate(nil)
+		causes = fasCopy.Validate()
 		assert.Len(t, causes, 1)
-		assert.Equal(t, "bufferSize", causes[0].Field)
+		assert.Equal(t, "spec.policy.buffer.bufferSize", causes[0].Field)
 	})
 
 	t.Run("bad min replicas with percentage value of bufferSize", func(t *testing.T) {
@@ -108,10 +107,10 @@ func TestFleetAutoscalerValidateUpdate(t *testing.T) {
 		fas.Spec.Policy.Buffer.BufferSize = intstr.FromString("10%")
 		fas.Spec.Policy.Buffer.MinReplicas = 0
 
-		causes := fas.Validate(nil)
+		causes := fas.Validate()
 
 		assert.Len(t, causes, 1)
-		assert.Equal(t, "minReplicas", causes[0].Field)
+		assert.Equal(t, "spec.policy.buffer.minReplicas", causes[0].Field)
 	})
 
 	t.Run("bad sync interval seconds", func(t *testing.T) {
@@ -119,10 +118,10 @@ func TestFleetAutoscalerValidateUpdate(t *testing.T) {
 		fas := defaultFixture()
 		fas.Spec.Sync.FixedInterval.Seconds = 0
 
-		causes := fas.Validate(nil)
+		causes := fas.Validate()
 
 		assert.Len(t, causes, 1)
-		assert.Equal(t, "seconds", causes[0].Field)
+		assert.Equal(t, "spec.sync.fixedInterval.seconds", causes[0].Field)
 	})
 }
 func TestFleetAutoscalerWebhookValidateUpdate(t *testing.T) {
@@ -130,7 +129,7 @@ func TestFleetAutoscalerWebhookValidateUpdate(t *testing.T) {
 
 	t.Run("good service value", func(t *testing.T) {
 		fas := webhookFixture()
-		causes := fas.Validate(nil)
+		causes := fas.Validate()
 
 		assert.Len(t, causes, 0)
 	})
@@ -140,7 +139,7 @@ func TestFleetAutoscalerWebhookValidateUpdate(t *testing.T) {
 		url := "http://good.example.com"
 		fas.Spec.Policy.Webhook.URL = &url
 		fas.Spec.Policy.Webhook.Service = nil
-		causes := fas.Validate(nil)
+		causes := fas.Validate()
 
 		assert.Len(t, causes, 0)
 	})
@@ -149,10 +148,10 @@ func TestFleetAutoscalerWebhookValidateUpdate(t *testing.T) {
 		fas := webhookFixture()
 		fas.Spec.Policy.Webhook.URL = nil
 		fas.Spec.Policy.Webhook.Service = nil
-		causes := fas.Validate(nil)
+		causes := fas.Validate()
 
 		assert.Len(t, causes, 1)
-		assert.Equal(t, "url", causes[0].Field)
+		assert.Equal(t, "spec.policy.webhook", causes[0].Field)
 	})
 
 	t.Run("both URL and service value are used - fail", func(t *testing.T) {
@@ -161,10 +160,10 @@ func TestFleetAutoscalerWebhookValidateUpdate(t *testing.T) {
 		url := "123"
 		fas.Spec.Policy.Webhook.URL = &url
 
-		causes := fas.Validate(nil)
+		causes := fas.Validate()
 
 		assert.Len(t, causes, 1)
-		assert.Equal(t, "url", causes[0].Field)
+		assert.Equal(t, "spec.policy.webhook.url", causes[0].Field)
 	})
 
 	goodCaBundle := "\n-----BEGIN CERTIFICATE-----\nMIIDXjCCAkYCCQDvT9MAXwnuqDANBgkqhkiG9w0BAQsFADBxMQswCQYDVQQGEwJV\nUzETMBEGA1UECAwKQ2FsaWZvcm5pYTEWMBQGA1UEBwwNTW91bnRhaW4gVmlldzEP\nMA0GA1UECgwGQWdvbmVzMQ8wDQYDVQQLDAZBZ29uZXMxEzARBgNVBAMMCmFnb25l\ncy5kZXYwHhcNMTkwMTAzMTEwNTA0WhcNMjExMDIzMTEwNTA0WjBxMQswCQYDVQQG\nEwJVUzETMBEGA1UECAwKQ2FsaWZvcm5pYTEWMBQGA1UEBwwNTW91bnRhaW4gVmll\ndzEPMA0GA1UECgwGQWdvbmVzMQ8wDQYDVQQLDAZBZ29uZXMxEzARBgNVBAMMCmFn\nb25lcy5kZXYwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDFwohJp3xK\n4iORkJXNO2KEkdrVYK7xpXTrPvZqLzoyMBOXi9b+lOKILUPaKtZ33GIwola31bHp\ni7V97vh3irIQVpap6uncesRTX0qk5Y70f7T6lByMKDsxi5ddea3ztAftH+PMYSLn\nE7H9276R1lvX8HZ0E2T4ea63PcVcTldw74ueEQr7HFMVucO+hHjgNJXDsWFUNppv\nxqWOvlIEDRdQzB1UYd13orqX0t514Ikp5Y3oNigXftDH+lZPlrWGsknMIDWr4DKP\n7NB1BZMfLFu/HXTGI9dK5Zc4T4GG4DBZqlgDPdzAXSBUT9cRQvbLrZ5+tUjOZK5E\nzEEIqyUo1+QdAgMBAAEwDQYJKoZIhvcNAQELBQADggEBABgtnWaWIDFCbKvhD8cF\nd5fvARFJcRl4dcChoqANeUXK4iNiCEPiDJb4xDGrLSVOeQ2IMbghqCwJfH93aqTr\n9kFQPvYbCt10TPQpmmh2//QjWGc7lxniFWR8pAVYdCGHqIAMvW2V2177quHsqc2I\nNTXyEUus0SDHLK8swLQxoCVw4fSq+kjMFW/3zOvMfh13rZH7Lo0gQyAUcuHM5U7g\nbhCZ3yVkDYpPxVv2vL0eyWUdLrQjYXyY7MWHPXvDozi3CtuBZlp6ulgeubi6jhHE\nIzuOM3qiLMJ/KG8MlIgGCwSX/x0vfO0/LtkZM7P1+yptSr/Se5QiZMtmpxC+DDWJ\n2xw=\n-----END CERTIFICATE-----"
@@ -175,7 +174,7 @@ func TestFleetAutoscalerWebhookValidateUpdate(t *testing.T) {
 		fas.Spec.Policy.Webhook.Service = nil
 		fas.Spec.Policy.Webhook.CABundle = []byte(goodCaBundle)
 
-		causes := fas.Validate(nil)
+		causes := fas.Validate()
 		assert.Len(t, causes, 0)
 	})
 
@@ -186,9 +185,9 @@ func TestFleetAutoscalerWebhookValidateUpdate(t *testing.T) {
 		fas.Spec.Policy.Webhook.Service = nil
 		fas.Spec.Policy.Webhook.CABundle = []byte("SomeInvalidCABundle")
 
-		causes := fas.Validate(nil)
+		causes := fas.Validate()
 		assert.Len(t, causes, 1)
-		assert.Equal(t, "caBundle", causes[0].Field)
+		assert.Equal(t, "spec.policy.webhook.caBundle", causes[0].Field)
 	})
 
 	t.Run("https url and missing CABundle value", func(t *testing.T) {
@@ -198,9 +197,9 @@ func TestFleetAutoscalerWebhookValidateUpdate(t *testing.T) {
 		fas.Spec.Policy.Webhook.Service = nil
 		fas.Spec.Policy.Webhook.CABundle = nil
 
-		causes := fas.Validate(nil)
+		causes := fas.Validate()
 		assert.Len(t, causes, 1)
-		assert.Equal(t, "caBundle", causes[0].Field)
+		assert.Equal(t, "spec.policy.webhook.caBundle", causes[0].Field)
 	})
 
 	t.Run("bad url value", func(t *testing.T) {
@@ -210,9 +209,9 @@ func TestFleetAutoscalerWebhookValidateUpdate(t *testing.T) {
 		fas.Spec.Policy.Webhook.Service = nil
 		fas.Spec.Policy.Webhook.CABundle = []byte(goodCaBundle)
 
-		causes := fas.Validate(nil)
+		causes := fas.Validate()
 		assert.Len(t, causes, 1)
-		assert.Equal(t, "url", causes[0].Field)
+		assert.Equal(t, "spec.policy.webhook.url", causes[0].Field)
 	})
 
 }
@@ -237,7 +236,7 @@ func TestFleetAutoscalerCounterValidateUpdate(t *testing.T) {
 			fas:          counterFixture(),
 			featureFlags: string(runtime.FeatureCountsAndLists) + "=false",
 			wantLength:   1,
-			wantField:    "counter",
+			wantField:    "spec.policy.counter",
 		},
 		"nil parameters": {
 			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
@@ -245,7 +244,7 @@ func TestFleetAutoscalerCounterValidateUpdate(t *testing.T) {
 			}),
 			featureFlags: string(runtime.FeatureCountsAndLists) + "=true",
 			wantLength:   1,
-			wantField:    "counter",
+			wantField:    "spec.policy.counter",
 		},
 		"minCapacity size too large": {
 			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
@@ -253,7 +252,7 @@ func TestFleetAutoscalerCounterValidateUpdate(t *testing.T) {
 			}),
 			featureFlags: string(runtime.FeatureCountsAndLists) + "=true",
 			wantLength:   1,
-			wantField:    "minCapacity",
+			wantField:    "spec.policy.counter.minCapacity",
 		},
 		"bufferSize size too small": {
 			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
@@ -261,7 +260,7 @@ func TestFleetAutoscalerCounterValidateUpdate(t *testing.T) {
 			}),
 			featureFlags: string(runtime.FeatureCountsAndLists) + "=true",
 			wantLength:   1,
-			wantField:    "bufferSize",
+			wantField:    "spec.policy.counter.bufferSize",
 		},
 		"maxCapacity size too small": {
 			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
@@ -269,7 +268,7 @@ func TestFleetAutoscalerCounterValidateUpdate(t *testing.T) {
 			}),
 			featureFlags: string(runtime.FeatureCountsAndLists) + "=true",
 			wantLength:   1,
-			wantField:    "maxCapacity",
+			wantField:    "spec.policy.counter.maxCapacity",
 		},
 		"minCapacity size too small": {
 			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
@@ -277,7 +276,7 @@ func TestFleetAutoscalerCounterValidateUpdate(t *testing.T) {
 			}),
 			featureFlags: string(runtime.FeatureCountsAndLists) + "=true",
 			wantLength:   1,
-			wantField:    "minCapacity",
+			wantField:    "spec.policy.counter.minCapacity",
 		},
 		"bufferSize percentage OK": {
 			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
@@ -294,7 +293,7 @@ func TestFleetAutoscalerCounterValidateUpdate(t *testing.T) {
 			}),
 			featureFlags: string(runtime.FeatureCountsAndLists) + "=true",
 			wantLength:   1,
-			wantField:    "bufferSize",
+			wantField:    "spec.policy.counter.bufferSize",
 		},
 		"bufferSize percentage too small": {
 			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
@@ -303,7 +302,7 @@ func TestFleetAutoscalerCounterValidateUpdate(t *testing.T) {
 			}),
 			featureFlags: string(runtime.FeatureCountsAndLists) + "=true",
 			wantLength:   1,
-			wantField:    "bufferSize",
+			wantField:    "spec.policy.counter.bufferSize",
 		},
 		"bufferSize percentage too large": {
 			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
@@ -312,7 +311,7 @@ func TestFleetAutoscalerCounterValidateUpdate(t *testing.T) {
 			}),
 			featureFlags: string(runtime.FeatureCountsAndLists) + "=true",
 			wantLength:   1,
-			wantField:    "bufferSize",
+			wantField:    "spec.policy.counter.bufferSize",
 		},
 	}
 
@@ -324,7 +323,7 @@ func TestFleetAutoscalerCounterValidateUpdate(t *testing.T) {
 			err := runtime.ParseFeatures(tc.featureFlags)
 			assert.NoError(t, err)
 
-			causes := tc.fas.Validate(nil)
+			causes := tc.fas.Validate()
 
 			assert.Len(t, causes, tc.wantLength)
 			if tc.wantLength > 0 {
@@ -354,7 +353,7 @@ func TestFleetAutoscalerListValidateUpdate(t *testing.T) {
 			fas:          listFixture(),
 			featureFlags: string(runtime.FeatureCountsAndLists) + "=false",
 			wantLength:   1,
-			wantField:    "list",
+			wantField:    "spec.policy.list",
 		},
 		"nil parameters": {
 			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
@@ -362,7 +361,7 @@ func TestFleetAutoscalerListValidateUpdate(t *testing.T) {
 			}),
 			featureFlags: string(runtime.FeatureCountsAndLists) + "=true",
 			wantLength:   1,
-			wantField:    "list",
+			wantField:    "spec.policy.list",
 		},
 		"minCapacity size too large": {
 			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
@@ -370,7 +369,7 @@ func TestFleetAutoscalerListValidateUpdate(t *testing.T) {
 			}),
 			featureFlags: string(runtime.FeatureCountsAndLists) + "=true",
 			wantLength:   1,
-			wantField:    "minCapacity",
+			wantField:    "spec.policy.list.minCapacity",
 		},
 		"bufferSize size too small": {
 			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
@@ -378,7 +377,7 @@ func TestFleetAutoscalerListValidateUpdate(t *testing.T) {
 			}),
 			featureFlags: string(runtime.FeatureCountsAndLists) + "=true",
 			wantLength:   1,
-			wantField:    "bufferSize",
+			wantField:    "spec.policy.list.bufferSize",
 		},
 		"maxCapacity size too small": {
 			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
@@ -386,7 +385,7 @@ func TestFleetAutoscalerListValidateUpdate(t *testing.T) {
 			}),
 			featureFlags: string(runtime.FeatureCountsAndLists) + "=true",
 			wantLength:   1,
-			wantField:    "maxCapacity",
+			wantField:    "spec.policy.list.maxCapacity",
 		},
 		"minCapacity size too small": {
 			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
@@ -394,7 +393,7 @@ func TestFleetAutoscalerListValidateUpdate(t *testing.T) {
 			}),
 			featureFlags: string(runtime.FeatureCountsAndLists) + "=true",
 			wantLength:   1,
-			wantField:    "minCapacity",
+			wantField:    "spec.policy.list.minCapacity",
 		},
 		"bufferSize percentage OK": {
 			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
@@ -411,7 +410,7 @@ func TestFleetAutoscalerListValidateUpdate(t *testing.T) {
 			}),
 			featureFlags: string(runtime.FeatureCountsAndLists) + "=true",
 			wantLength:   1,
-			wantField:    "bufferSize",
+			wantField:    "spec.policy.list.bufferSize",
 		},
 		"bufferSize percentage too small": {
 			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
@@ -420,7 +419,7 @@ func TestFleetAutoscalerListValidateUpdate(t *testing.T) {
 			}),
 			featureFlags: string(runtime.FeatureCountsAndLists) + "=true",
 			wantLength:   1,
-			wantField:    "bufferSize",
+			wantField:    "spec.policy.list.bufferSize",
 		},
 		"bufferSize percentage too large": {
 			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
@@ -429,7 +428,7 @@ func TestFleetAutoscalerListValidateUpdate(t *testing.T) {
 			}),
 			featureFlags: string(runtime.FeatureCountsAndLists) + "=true",
 			wantLength:   1,
-			wantField:    "bufferSize",
+			wantField:    "spec.policy.list.bufferSize",
 		},
 	}
 
@@ -441,7 +440,7 @@ func TestFleetAutoscalerListValidateUpdate(t *testing.T) {
 			err := runtime.ParseFeatures(tc.featureFlags)
 			assert.NoError(t, err)
 
-			causes := tc.fas.Validate(nil)
+			causes := tc.fas.Validate()
 
 			assert.Len(t, causes, tc.wantLength)
 			if tc.wantLength > 0 {
