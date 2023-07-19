@@ -14,7 +14,7 @@
 
 # Gather dependencies and build the executable
 FROM golang:1.20.4 as builder
-WORKDIR /go/src/autoscaler-webhook
+WORKDIR /
 
 COPY examples/autoscaler-webhook/main.go .
 COPY . /go/src/agones.dev/agones
@@ -23,13 +23,10 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o server .
 
 # Create the final image that will run the webhook server for FleetAutoscaler webhook policy
 FROM gcr.io/distroless/static-debian11:nonroot
-RUN adduser -D -u 1000 server
 
-COPY --from=builder /go/src/autoscaler-webhook \
-                    /home/server
-
-RUN chown -R server /home/server && \
-    chmod o+x /home/server/server
-
+COPY --from=builder /server /
+    
+RUN chmod o+x /server
+    
 USER nonroot:nonroot
-ENTRYPOINT ["/home/server/server"]
+ENTRYPOINT ["/server"]
