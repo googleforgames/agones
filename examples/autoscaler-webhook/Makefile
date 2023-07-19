@@ -27,7 +27,7 @@ REPOSITORY = us-docker.pkg.dev/agones-images/examples
 
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_path := $(dir $(mkfile_path))
-autoscaler_webhook_tag = $(REPOSITORY)/autoscaler-webhook:0.6
+autoscaler_webhook_tag = $(REPOSITORY)/autoscaler-webhook:0.7
 root_path = $(realpath $(project_path)/../..)
 
 #   _____                    _
