@@ -35,7 +35,7 @@ spec:
                 - args:
                   # We setup the simple-game-server server to shutdown 10 mins after allocation
                   - -automaticShutdownDelaySec=600
-                  image: us-docker.pkg.dev/agones-images/examples/simple-game-server:0.16
+                  image: us-docker.pkg.dev/agones-images/examples/simple-game-server:0.17
                   name: simple-game-server
                   resources:
                     limits:
