@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"reflect"
 	"time"
 
 	"github.com/pkg/errors"
@@ -44,11 +43,11 @@ type SDK struct {
 }
 
 // ErrorLog is a function to log the error.
-type ErrorLog func(error, string)
+type ErrorLog func(string, error)
 
 // Logger is a pluggable function that outputs the error message to standard error.
-var Logger ErrorLog = func(err error, msg string) {
-	fmt.Fprintf(os.Stderr, "msg: %s\n", err)
+var Logger ErrorLog = func(msg string, err error) {
+	fmt.Fprintf(os.Stderr, "%s: %s\n", msg, err)
 }
 
 // NewSDK starts a new SDK instance, and connects to localhost
@@ -141,23 +140,24 @@ func (s *SDK) WatchGameServer(f GameServerCallback) error {
 	if err != nil {
 		return errors.Wrap(err, "could not watch gameserver")
 	}
-
+	log := func(gs *sdk.GameServer, msg string, err error) {
+		if time.Unix(gs.ObjectMeta.DeletionTimestamp, 0).IsZero() {
+			return
+		}
+		Logger(msg, err)
+	}
 	go func() {
 		for {
 			var gs *sdk.GameServer
-			// Receive the next GameServer event from the stream.
 			gs, err = stream.Recv()
 			if err != nil {
 				if err == io.EOF {
+					log(gs, "gameserver event stream EOF received", nil)
 					return
 				}
+				log(gs, "error watching GameServer", err)
 				// This is to wait for the reconnection, and not peg the CPU at 100%.
 				time.Sleep(time.Second)
-				continue
-			}
-
-			if !reflect.ValueOf(gs.ObjectMeta.DeletionTimestamp).IsZero() {
-				Logger(nil, "Skipping GameServer with non-zero DeletionTimestamp")
 				continue
 			}
 			f(gs)
