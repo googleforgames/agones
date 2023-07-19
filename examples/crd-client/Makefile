@@ -25,7 +25,7 @@
 
 REPOSITORY ?= us-docker.pkg.dev/agones-images/examples
 
-server_tag = $(REPOSITORY)/crd-client:0.9
+server_tag = $(REPOSITORY)/crd-client:1.0
 
 #   _____                    _
 #  |_   _|_ _ _ __ __ _  ___| |_ ___
