@@ -47,6 +47,7 @@ import (
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	runtimeschema "k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
@@ -250,22 +251,15 @@ func (ext *Extensions) validationHandler(review admissionv1.AdmissionReview) (ad
 		return review, errors.Wrapf(err, "error unmarshalling FleetAutoscaler json after schema validation: %s", obj.Raw)
 	}
 	fas.ApplyDefaults()
-	var causes []metav1.StatusCause
-	causes = fas.Validate(causes)
-	if len(causes) != 0 {
+
+	if errs := fas.Validate(); len(errs) > 0 {
+		kind := runtimeschema.GroupKind{
+			Group: review.Request.Kind.Group,
+			Kind:  review.Request.Kind.Kind,
+		}
+		statusErr := k8serrors.NewInvalid(kind, review.Request.Name, errs)
 		review.Response.Allowed = false
-		details := metav1.StatusDetails{
-			Name:   review.Request.Name,
-			Group:  review.Request.Kind.Group,
-			Kind:   review.Request.Kind.Kind,
-			Causes: causes,
-		}
-		review.Response.Result = &metav1.Status{
-			Status:  metav1.StatusFailure,
-			Message: "FleetAutoscaler is invalid",
-			Reason:  metav1.StatusReasonInvalid,
-			Details: &details,
-		}
+		review.Response.Result = &statusErr.ErrStatus
 		loggerForFleetAutoscaler(fas, ext.baseLogger).WithField("review", review).Debug("Invalid FleetAutoscaler")
 	}
 
