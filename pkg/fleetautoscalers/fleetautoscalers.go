@@ -344,8 +344,8 @@ func applyCounterOrListPolicy(c *autoscalingv1.CounterPolicy, l *autoscalingv1.L
 			return scaleLimited(scale, f, gameServerLister, nodeCounts, key, isCounter, replicas,
 				capacity, aggCapacity, minCapacity, maxCapacity)
 		}
-		return scaleDown(f, gameServerLister, nodeCounts, key, isCounter, replicas,
-			availableCapacity, aggCount, aggCapacity, minCapacity, buffer)
+		return scaleDown(f, gameServerLister, nodeCounts, key, isCounter, replicas, aggCount,
+			aggCapacity, minCapacity, buffer)
 	}
 
 	if isCounter {
@@ -466,15 +466,10 @@ func scaleUp(replicas int32, capacity, count, aggCapacity, availableCapacity, ma
 // scaleDown scales down for either Integer or Percentage Buffer.
 func scaleDown(f *agonesv1.Fleet, gameServerLister listeragonesv1.GameServerLister,
 	nodeCounts map[string]gameservers.NodeCount, key string, isCounter bool, replicas int32,
-	availableCapacity, aggCount, aggCapacity, minCapacity, buffer int64) (int32, bool, error) {
-	// Exit early if we're already at MinCapacity or DesiredCapacity to avoid calling
-	// getSortedGameServers if unnecessary
+	aggCount, aggCapacity, minCapacity, buffer int64) (int32, bool, error) {
+	// Exit early if we're already at MinCapacity to avoid calling getSortedGameServers if unnecessary
 	if aggCapacity == minCapacity {
 		return replicas, true, nil
-	}
-
-	if availableCapacity == buffer {
-		return replicas, false, nil
 	}
 
 	// We first need to get the individual game servers in order of deletion on scale down, as any
@@ -483,6 +478,8 @@ func scaleDown(f *agonesv1.Fleet, gameServerLister listeragonesv1.GameServerList
 	if err != nil {
 		return 0, false, err
 	}
+
+	var availableCapacity int64
 
 	// "Remove" one game server at a time in order of potential deletion. (Not actually removed here,
 	// that's done later, if possible, by the fleetautoscaler controller.)
