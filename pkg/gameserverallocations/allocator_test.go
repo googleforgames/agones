@@ -465,7 +465,7 @@ func TestAllocatorAllocateOnGameServerUpdateError(t *testing.T) {
 		return true, gs, errors.New("failed to update")
 	})
 
-	ctx, cancel := agtesting.StartInformers(m)
+	ctx, cancel := agtesting.StartInformers(m, a.allocationCache.gameServerSynced)
 	defer cancel()
 
 	require.NoError(t, a.Run(ctx))
