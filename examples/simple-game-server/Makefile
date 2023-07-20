@@ -75,7 +75,6 @@ endif
 
 # Builds all image artifacts and create a docker manifest that is used to inform the CRI (Docker or containerd usually)
 # which image is the best fit for the host. See https://www.docker.com/blog/multi-arch-images/ for details.
-
 push: push-linux-image-amd64
 ifeq ($(WITH_WINDOWS), 1)
 push: push-windows-images
@@ -83,8 +82,13 @@ endif
 ifeq ($(WITH_ARM64), 1)
 push: push-linux-image-arm64
 endif
-	docker buildx imagetools create --tag $(server_tag) \
-		$(push_server_manifest)
+	-docker manifest rm $(server_tag)
+	docker manifest create $(server_tag) $(push_server_manifest)
+	docker manifest push $(server_tag) --purge
+	# TODO: Update to replace `docker manifest` commands if/when the above commands fail (~Docker 24.x)
+    # Fails with Docker <=20.10.21
+	#docker buildx imagetools create --tag $(server_tag) \
+    	#$(push_server_manifest)
 
 # Pushes all variants of the Windows images to the container image registry.
 push-linux-image-amd64: build
