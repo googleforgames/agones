@@ -44,6 +44,10 @@ import (
 func TestAllocatorAllocate(t *testing.T) {
 	t.Parallel()
 
+	// TODO: remove when `CountsAndLists` feature flag is moved to stable.
+	runtime.FeatureTestMutex.Lock()
+	defer runtime.FeatureTestMutex.Unlock()
+
 	f, gsList := defaultFixtures(4)
 	a, m := newFakeAllocator()
 	n := metav1.Now()
