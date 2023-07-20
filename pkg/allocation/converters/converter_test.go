@@ -105,14 +105,14 @@ func TestConvertAllocationRequestToGameServerAllocation(t *testing.T) {
 				},
 				Priorities: []*pb.Priority{
 					{
-						PriorityType: "Counter",
-						Key:          "o",
-						Order:        "Descending",
+						Type:  pb.Priority_Counter,
+						Key:   "o",
+						Order: pb.Priority_Descending,
 					},
 					{
-						PriorityType: "List",
-						Key:          "p",
-						Order:        "Ascending",
+						Type:  pb.Priority_List,
+						Key:   "p",
+						Order: pb.Priority_Ascending,
 					},
 				},
 				Scheduling: pb.AllocationRequest_Packed,
@@ -168,16 +168,16 @@ func TestConvertAllocationRequestToGameServerAllocation(t *testing.T) {
 							GameServerState: &ready,
 						},
 					},
-					Priorities: []allocationv1.Priority{
+					Priorities: []agonesv1.Priority{
 						{
-							PriorityType: "Counter",
-							Key:          "o",
-							Order:        "Descending",
+							Type:  "Counter",
+							Key:   "o",
+							Order: "Descending",
 						},
 						{
-							PriorityType: "List",
-							Key:          "p",
-							Order:        "Ascending",
+							Type:  "List",
+							Key:   "p",
+							Order: "Ascending",
 						},
 					},
 					Selectors: []allocationv1.GameServerSelector{
@@ -646,16 +646,16 @@ func TestConvertGSAToAllocationRequest(t *testing.T) {
 							},
 						},
 					},
-					Priorities: []allocationv1.Priority{
+					Priorities: []agonesv1.Priority{
 						{
-							PriorityType: "Counter",
-							Key:          "a",
-							Order:        "Ascending",
+							Type:  "Counter",
+							Key:   "a",
+							Order: "Ascending",
 						},
 						{
-							PriorityType: "List",
-							Key:          "b",
-							Order:        "Descending",
+							Type:  "List",
+							Key:   "b",
+							Order: "Descending",
 						},
 					},
 					Scheduling: apis.Distributed,
@@ -708,14 +708,14 @@ func TestConvertGSAToAllocationRequest(t *testing.T) {
 				MetaPatch:  &pb.MetaPatch{},
 				Priorities: []*pb.Priority{
 					{
-						PriorityType: "Counter",
-						Key:          "a",
-						Order:        "Ascending",
+						Type:  pb.Priority_Counter,
+						Key:   "a",
+						Order: pb.Priority_Ascending,
 					},
 					{
-						PriorityType: "List",
-						Key:          "b",
-						Order:        "Descending",
+						Type:  pb.Priority_List,
+						Key:   "b",
+						Order: pb.Priority_Descending,
 					},
 				},
 			},

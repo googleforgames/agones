@@ -389,13 +389,27 @@ func convertStateV1ToError(in allocationv1.GameServerAllocationState) error {
 
 // convertAllocationPrioritiesToGSAPriorities converts a list of AllocationRequest_Priorities to a
 // list of GameServerAllocationSpec (GSA.Spec) Priorities
-func convertAllocationPrioritiesToGSAPriorities(in []*pb.Priority) []allocationv1.Priority {
-	var out []allocationv1.Priority
+func convertAllocationPrioritiesToGSAPriorities(in []*pb.Priority) []agonesv1.Priority {
+	var out []agonesv1.Priority
 	for _, p := range in {
-		priority := allocationv1.Priority{
-			PriorityType: p.PriorityType,
-			Key:          p.Key,
-			Order:        p.Order,
+		var t string
+		var o string
+		switch p.Type {
+		case pb.Priority_List:
+			t = agonesv1.GameServerPriorityList
+		default: // case pb.Priority_Counter and case nil
+			t = agonesv1.GameServerPriorityCounter
+		}
+		switch p.Order {
+		case pb.Priority_Descending:
+			o = agonesv1.GameServerPriorityDescending
+		default: // case pb.Priority_Ascending and case nil
+			o = agonesv1.GameServerPriorityAscending
+		}
+		priority := agonesv1.Priority{
+			Type:  t,
+			Key:   p.Key,
+			Order: o,
 		}
 		out = append(out, priority)
 	}
@@ -404,13 +418,27 @@ func convertAllocationPrioritiesToGSAPriorities(in []*pb.Priority) []allocationv
 
 // convertAllocationPrioritiesToGSAPriorities converts a list of GameServerAllocationSpec (GSA.Spec)
 // Priorities to a list of AllocationRequest_Priorities
-func convertGSAPrioritiesToAllocationPriorities(in []allocationv1.Priority) []*pb.Priority {
+func convertGSAPrioritiesToAllocationPriorities(in []agonesv1.Priority) []*pb.Priority {
 	var out []*pb.Priority
 	for _, p := range in {
+		var pt pb.Priority_Type
+		var po pb.Priority_Order
+		switch p.Type {
+		case agonesv1.GameServerPriorityList:
+			pt = pb.Priority_List
+		default: // case agonesv1.GameServerPriorityCounter and case nil
+			pt = pb.Priority_Counter
+		}
+		switch p.Order {
+		case agonesv1.GameServerPriorityDescending:
+			po = pb.Priority_Descending
+		default: // case agonesv1.GameServerPriorityAscending and case nil
+			po = pb.Priority_Ascending
+		}
 		priority := pb.Priority{
-			PriorityType: p.PriorityType,
-			Key:          p.Key,
-			Order:        p.Order,
+			Type:  pt,
+			Key:   p.Key,
+			Order: po,
 		}
 		out = append(out, &priority)
 	}
