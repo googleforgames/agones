@@ -131,6 +131,10 @@ func TestAllocatorAllocate(t *testing.T) {
 func TestAllocatorAllocatePriority(t *testing.T) {
 	t.Parallel()
 
+	// TODO: remove when `CountsAndLists` feature flag is moved to stable.
+	runtime.FeatureTestMutex.Lock()
+	defer runtime.FeatureTestMutex.Unlock()
+
 	run := func(t *testing.T, name string, test func(t *testing.T, a *Allocator, gas *allocationv1.GameServerAllocation)) {
 		f, gsList := defaultFixtures(4)
 		a, m := newFakeAllocator()
@@ -442,6 +446,12 @@ func TestAllocationApplyAllocationError(t *testing.T) {
 }
 
 func TestAllocatorAllocateOnGameServerUpdateError(t *testing.T) {
+	t.Parallel()
+
+	// TODO: remove when `CountsAndLists` feature flag is moved to stable.
+	runtime.FeatureTestMutex.Lock()
+	defer runtime.FeatureTestMutex.Unlock()
+
 	a, m := newFakeAllocator()
 
 	_, gsList := defaultFixtures(4)
@@ -491,6 +501,10 @@ func TestAllocatorAllocateOnGameServerUpdateError(t *testing.T) {
 
 func TestAllocatorRunLocalAllocations(t *testing.T) {
 	t.Parallel()
+
+	// TODO: remove when `CountsAndLists` feature flag is moved to stable.
+	runtime.FeatureTestMutex.Lock()
+	defer runtime.FeatureTestMutex.Unlock()
 
 	t.Run("no problems", func(t *testing.T) {
 		f, gsList := defaultFixtures(5)
