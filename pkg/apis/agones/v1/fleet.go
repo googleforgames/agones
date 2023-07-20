@@ -69,6 +69,12 @@ type FleetSpec struct {
 	Strategy appsv1.DeploymentStrategy `json:"strategy"`
 	// Scheduling strategy. Defaults to "Packed".
 	Scheduling apis.SchedulingStrategy `json:"scheduling"`
+	// (Alpha, CountsAndLists feature flag) The first Priority on the array of Priorities is the most
+	// important for sorting. The Fleetautoscaler will use the first priority for sorting GameServers
+	// by total Capacity in the Fleet and acts as a tie-breaker after sorting the game servers by
+	// State and Strategy. Impacts scale down logic.
+	// +optional
+	Priorities []Priority `json:"priorities,omitempty"`
 	// Template the GameServer template to apply for this Fleet
 	Template GameServerTemplateSpec `json:"template"`
 }
@@ -130,6 +136,12 @@ func (f *Fleet) GameServerSet() *GameServerSet {
 		gsSet.Spec.AllocationOverflow = f.Spec.AllocationOverflow.DeepCopy()
 	}
 
+	if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) && f.Spec.Priorities != nil {
+		// DeepCopy done manually here as f.Spec.Priorities does not have a DeepCopy() method.
+		gsSet.Spec.Priorities = make([]Priority, len(f.Spec.Priorities))
+		copy(gsSet.Spec.Priorities, f.Spec.Priorities)
+	}
+
 	return gsSet
 }
 
@@ -161,6 +173,7 @@ func (f *Fleet) ApplyDefaults() {
 		f.ObjectMeta.Annotations = make(map[string]string, 1)
 	}
 	f.ObjectMeta.Annotations[VersionAnnotation] = pkg.Version
+
 }
 
 // GetGameServerSpec get underlying Gameserver specification
@@ -206,6 +219,10 @@ func (f *Fleet) Validate(apiHooks APIHooks) field.ErrorList {
 		} else {
 			allErrs = append(allErrs, field.Forbidden(field.NewPath("spec", "allocationOverflow"), "Allocation Overflow is not enabled"))
 		}
+	}
+
+	if f.Spec.Priorities != nil && !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
+		allErrs = append(allErrs, field.Forbidden(field.NewPath("spec", "priorities"), "FeatureCountsAndLists is not enabled"))
 	}
 
 	return allErrs

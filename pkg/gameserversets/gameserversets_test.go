@@ -22,6 +22,7 @@ import (
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	"agones.dev/agones/pkg/gameservers"
 	agtesting "agones.dev/agones/pkg/testing"
+	utilruntime "agones.dev/agones/pkg/util/runtime"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -32,11 +33,16 @@ import (
 func TestSortGameServersByLeastFullNodes(t *testing.T) {
 	t.Parallel()
 
+	utilruntime.FeatureTestMutex.Lock()
+	defer utilruntime.FeatureTestMutex.Unlock()
+
+	require.NoError(t, utilruntime.ParseFeatures(string(utilruntime.FeatureCountsAndLists)+"=true"))
+
 	nc := map[string]gameservers.NodeCount{
 		"n1": {Ready: 1, Allocated: 0},
 		"n2": {Ready: 0, Allocated: 2},
-		"n3": {Ready: 2, Allocated: 0},
-		"n4": {Ready: 2, Allocated: 0},
+		"n3": {Ready: 2, Allocated: 2},
+		"n4": {Ready: 2, Allocated: 2},
 	}
 
 	list := []*agonesv1.GameServer{
@@ -48,21 +54,83 @@ func TestSortGameServersByLeastFullNodes(t *testing.T) {
 		{ObjectMeta: metav1.ObjectMeta{Name: "g6"}, Status: agonesv1.GameServerStatus{NodeName: "n4", State: agonesv1.GameServerStateReady}},
 		{ObjectMeta: metav1.ObjectMeta{Name: "g7"}, Status: agonesv1.GameServerStatus{NodeName: "n3", State: agonesv1.GameServerStateReady}},
 		{ObjectMeta: metav1.ObjectMeta{Name: "g8"}, Status: agonesv1.GameServerStatus{NodeName: "n4", State: agonesv1.GameServerStateReady}},
+		{ObjectMeta: metav1.ObjectMeta{Name: "g9"}, Status: agonesv1.GameServerStatus{
+			NodeName: "n3",
+			State:    agonesv1.GameServerStateAllocated,
+			Counters: map[string]agonesv1.CounterStatus{
+				"foo": {
+					Count:    0,
+					Capacity: 100,
+				}}}},
+		{ObjectMeta: metav1.ObjectMeta{Name: "g10"}, Status: agonesv1.GameServerStatus{
+			NodeName: "n3",
+			State:    agonesv1.GameServerStateAllocated,
+			Counters: map[string]agonesv1.CounterStatus{
+				"foo": {
+					Count:    99,
+					Capacity: 100,
+				}}}},
+		{ObjectMeta: metav1.ObjectMeta{Name: "g11"}, Status: agonesv1.GameServerStatus{
+			NodeName: "n4",
+			State:    agonesv1.GameServerStateAllocated,
+			Counters: map[string]agonesv1.CounterStatus{
+				"foo": {
+					Count:    0,
+					Capacity: 90,
+				}}}},
+		{ObjectMeta: metav1.ObjectMeta{Name: "g12"}, Status: agonesv1.GameServerStatus{
+			NodeName: "n4",
+			State:    agonesv1.GameServerStateAllocated,
+			Counters: map[string]agonesv1.CounterStatus{
+				"foo": {
+					Count:    89,
+					Capacity: 90,
+				}}}},
 	}
 
-	result := sortGameServersByLeastFullNodes(list, nc)
+	priorities := []agonesv1.Priority{{
+		Type:  "Counter",
+		Key:   "foo",
+		Order: "Descending",
+	}}
+
+	result := sortGameServersByLeastFullNodes(list, nc, priorities)
 
 	require.Len(t, result, len(list))
 	assert.Equal(t, "g2", result[0].ObjectMeta.Name)
 	assert.Equal(t, "g3", result[1].ObjectMeta.Name)
 	assert.Equal(t, "g4", result[2].ObjectMeta.Name)
 	assert.Equal(t, "g1", result[3].ObjectMeta.Name)
-	// gs on the same node are adjacent (g5 and g7, g6 and g8).
-	// The order among the two is not stable, since sort.Slice is.
-	assert.Equal(t, "n3", result[4].Status.NodeName)
-	assert.Equal(t, "n3", result[5].Status.NodeName)
-	assert.Equal(t, "n4", result[6].Status.NodeName)
-	assert.Equal(t, "n4", result[7].Status.NodeName)
+	assert.Equal(t, "g10", result[4].ObjectMeta.Name)
+	assert.Equal(t, "g9", result[5].ObjectMeta.Name)
+	assert.Equal(t, "g12", result[6].ObjectMeta.Name)
+	assert.Equal(t, "g11", result[7].ObjectMeta.Name)
+	assert.Equal(t, "g5", result[8].ObjectMeta.Name)
+	assert.Equal(t, "g7", result[9].ObjectMeta.Name)
+	assert.Equal(t, "g6", result[10].ObjectMeta.Name)
+	assert.Equal(t, "g8", result[11].ObjectMeta.Name)
+
+	priorities = []agonesv1.Priority{{
+		Type:  "Counter",
+		Key:   "foo",
+		Order: "Ascending",
+	}}
+
+	result = sortGameServersByLeastFullNodes(list, nc, priorities)
+
+	require.Len(t, result, len(list))
+	assert.Equal(t, "g2", result[0].ObjectMeta.Name)
+	assert.Equal(t, "g3", result[1].ObjectMeta.Name)
+	assert.Equal(t, "g4", result[2].ObjectMeta.Name)
+	assert.Equal(t, "g1", result[3].ObjectMeta.Name)
+	assert.Equal(t, "g11", result[4].ObjectMeta.Name)
+	assert.Equal(t, "g12", result[5].ObjectMeta.Name)
+	assert.Equal(t, "g9", result[6].ObjectMeta.Name)
+	assert.Equal(t, "g10", result[7].ObjectMeta.Name)
+	assert.Equal(t, "g5", result[8].ObjectMeta.Name)
+	assert.Equal(t, "g7", result[9].ObjectMeta.Name)
+	assert.Equal(t, "g6", result[10].ObjectMeta.Name)
+	assert.Equal(t, "g8", result[11].ObjectMeta.Name)
 }
 
 func TestSortGameServersByNewFirst(t *testing.T) {

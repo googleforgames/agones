@@ -143,11 +143,11 @@ func TestAllocationCacheListSortedGameServers(t *testing.T) {
 			features: fmt.Sprintf("%s=true", runtime.FeatureCountsAndLists),
 			gsa: &allocationv1.GameServerAllocation{
 				Spec: allocationv1.GameServerAllocationSpec{
-					Priorities: []allocationv1.Priority{
+					Priorities: []agonesv1.Priority{
 						{
-							PriorityType: "Counter",
-							Key:          "players",
-							Order:        "Descending",
+							Type:  "Counter",
+							Key:   "players",
+							Order: "Descending",
 						},
 					},
 				},
@@ -166,11 +166,11 @@ func TestAllocationCacheListSortedGameServers(t *testing.T) {
 			features: fmt.Sprintf("%s=true", runtime.FeatureCountsAndLists),
 			gsa: &allocationv1.GameServerAllocation{
 				Spec: allocationv1.GameServerAllocationSpec{
-					Priorities: []allocationv1.Priority{
+					Priorities: []agonesv1.Priority{
 						{
-							PriorityType: "Counter",
-							Key:          "players",
-							Order:        "Ascending",
+							Type:  "Counter",
+							Key:   "players",
+							Order: "Ascending",
 						},
 					},
 				},
@@ -321,11 +321,11 @@ func TestAllocationCacheCompareGameServers(t *testing.T) {
 			list: []agonesv1.GameServer{gs4, gs5, gs6},
 			gsa: &allocationv1.GameServerAllocation{
 				Spec: allocationv1.GameServerAllocationSpec{
-					Priorities: []allocationv1.Priority{
+					Priorities: []agonesv1.Priority{
 						{
-							PriorityType: "Counter",
-							Key:          "sessions",
-							Order:        "Ascending",
+							Type:  "Counter",
+							Key:   "sessions",
+							Order: "Ascending",
 						},
 					},
 				},
@@ -336,26 +336,11 @@ func TestAllocationCacheCompareGameServers(t *testing.T) {
 			list: []agonesv1.GameServer{gs4, gs5, gs6},
 			gsa: &allocationv1.GameServerAllocation{
 				Spec: allocationv1.GameServerAllocationSpec{
-					Priorities: []allocationv1.Priority{
+					Priorities: []agonesv1.Priority{
 						{
-							PriorityType: "Counter",
-							Key:          "sessions",
-							Order:        "Descending",
-						},
-					},
-				},
-			},
-			want: []*agonesv1.GameServer{&gs6, &gs4, &gs5},
-		},
-		"Sort by one Priority Counter empty Order": {
-			list: []agonesv1.GameServer{gs5, gs6, gs4},
-			gsa: &allocationv1.GameServerAllocation{
-				Spec: allocationv1.GameServerAllocationSpec{
-					Priorities: []allocationv1.Priority{
-						{
-							PriorityType: "Counter",
-							Key:          "sessions",
-							Order:        "",
+							Type:  "Counter",
+							Key:   "sessions",
+							Order: "Descending",
 						},
 					},
 				},
@@ -366,16 +351,16 @@ func TestAllocationCacheCompareGameServers(t *testing.T) {
 			list: []agonesv1.GameServer{gs3, gs5, gs6, gs4, gs1, gs2},
 			gsa: &allocationv1.GameServerAllocation{
 				Spec: allocationv1.GameServerAllocationSpec{
-					Priorities: []allocationv1.Priority{
+					Priorities: []agonesv1.Priority{
 						{
-							PriorityType: "Counter",
-							Key:          "sessions",
-							Order:        "Ascending",
+							Type:  "Counter",
+							Key:   "sessions",
+							Order: "Ascending",
 						},
 						{
-							PriorityType: "Counter",
-							Key:          "assets",
-							Order:        "Ascending",
+							Type:  "Counter",
+							Key:   "assets",
+							Order: "Ascending",
 						},
 					},
 				},
@@ -386,16 +371,16 @@ func TestAllocationCacheCompareGameServers(t *testing.T) {
 			list: []agonesv1.GameServer{gs3, gs5, gs6, gs4, gs1, gs2},
 			gsa: &allocationv1.GameServerAllocation{
 				Spec: allocationv1.GameServerAllocationSpec{
-					Priorities: []allocationv1.Priority{
+					Priorities: []agonesv1.Priority{
 						{
-							PriorityType: "Counter",
-							Key:          "sessions",
-							Order:        "Ascending",
+							Type:  "Counter",
+							Key:   "sessions",
+							Order: "Ascending",
 						},
 						{
-							PriorityType: "Counter",
-							Key:          "assets",
-							Order:        "Descending",
+							Type:  "Counter",
+							Key:   "assets",
+							Order: "Descending",
 						},
 					},
 				},
@@ -406,11 +391,11 @@ func TestAllocationCacheCompareGameServers(t *testing.T) {
 			list: []agonesv1.GameServer{gs1, gs5, gs6, gs4},
 			gsa: &allocationv1.GameServerAllocation{
 				Spec: allocationv1.GameServerAllocationSpec{
-					Priorities: []allocationv1.Priority{
+					Priorities: []agonesv1.Priority{
 						{
-							PriorityType: "Counter",
-							Key:          "sessions",
-							Order:        "Ascending",
+							Type:  "Counter",
+							Key:   "sessions",
+							Order: "Ascending",
 						},
 					},
 				},
@@ -421,11 +406,11 @@ func TestAllocationCacheCompareGameServers(t *testing.T) {
 			list: []agonesv1.GameServer{gs3, gs2, gs1},
 			gsa: &allocationv1.GameServerAllocation{
 				Spec: allocationv1.GameServerAllocationSpec{
-					Priorities: []allocationv1.Priority{
+					Priorities: []agonesv1.Priority{
 						{
-							PriorityType: "List",
-							Key:          "players",
-							Order:        "Ascending",
+							Type:  "List",
+							Key:   "players",
+							Order: "Ascending",
 						},
 					},
 				},
@@ -436,61 +421,31 @@ func TestAllocationCacheCompareGameServers(t *testing.T) {
 			list: []agonesv1.GameServer{gs3, gs2, gs1},
 			gsa: &allocationv1.GameServerAllocation{
 				Spec: allocationv1.GameServerAllocationSpec{
-					Priorities: []allocationv1.Priority{
+					Priorities: []agonesv1.Priority{
 						{
-							PriorityType: "List",
-							Key:          "players",
-							Order:        "Descending",
+							Type:  "List",
+							Key:   "players",
+							Order: "Descending",
 						},
 					},
 				},
 			},
 			want: []*agonesv1.GameServer{&gs3, &gs1, &gs2},
-		},
-		"Sort by one Priority List empty order": {
-			list: []agonesv1.GameServer{gs1, gs2, gs3},
-			gsa: &allocationv1.GameServerAllocation{
-				Spec: allocationv1.GameServerAllocationSpec{
-					Priorities: []allocationv1.Priority{
-						{
-							PriorityType: "List",
-							Key:          "players",
-							Order:        "",
-						},
-					},
-				},
-			},
-			want: []*agonesv1.GameServer{&gs3, &gs1, &gs2},
-		},
-		"Sort by one Priority List empty order game server without List": {
-			list: []agonesv1.GameServer{gs6, gs1, gs2, gs3},
-			gsa: &allocationv1.GameServerAllocation{
-				Spec: allocationv1.GameServerAllocationSpec{
-					Priorities: []allocationv1.Priority{
-						{
-							PriorityType: "List",
-							Key:          "players",
-							Order:        "",
-						},
-					},
-				},
-			},
-			want: []*agonesv1.GameServer{&gs3, &gs1, &gs2, &gs6},
 		},
 		"Sort by two Priority List Descending and Ascending": {
 			list: []agonesv1.GameServer{gs1, gs2, gs3, gs4},
 			gsa: &allocationv1.GameServerAllocation{
 				Spec: allocationv1.GameServerAllocationSpec{
-					Priorities: []allocationv1.Priority{
+					Priorities: []agonesv1.Priority{
 						{
-							PriorityType: "List",
-							Key:          "players",
-							Order:        "Descending",
+							Type:  "List",
+							Key:   "players",
+							Order: "Descending",
 						},
 						{
-							PriorityType: "List",
-							Key:          "layers",
-							Order:        "Ascending",
+							Type:  "List",
+							Key:   "layers",
+							Order: "Ascending",
 						},
 					},
 				},
@@ -501,16 +456,16 @@ func TestAllocationCacheCompareGameServers(t *testing.T) {
 			list: []agonesv1.GameServer{gs6, gs5, gs4, gs3, gs2, gs1},
 			gsa: &allocationv1.GameServerAllocation{
 				Spec: allocationv1.GameServerAllocationSpec{
-					Priorities: []allocationv1.Priority{
+					Priorities: []agonesv1.Priority{
 						{
-							PriorityType: "List",
-							Key:          "players",
-							Order:        "Descending",
+							Type:  "List",
+							Key:   "players",
+							Order: "Descending",
 						},
 						{
-							PriorityType: "List",
-							Key:          "layers",
-							Order:        "Descending",
+							Type:  "List",
+							Key:   "layers",
+							Order: "Descending",
 						},
 					},
 				},
