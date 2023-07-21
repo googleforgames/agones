@@ -491,6 +491,11 @@ func TestAllocatorAllocateOnGameServerUpdateError(t *testing.T) {
 	require.NotEqual(t, ErrNoGameServer, err)
 	require.EqualError(t, err, "error updating allocated gameserver: failed to update")
 
+	// triple check there is still a gameserver in the cache
+	require.Eventuallyf(t, func() bool {
+		return a.allocationCache.cache.Len() >= 1
+	}, 10*time.Second, time.Second, "should have a single item in the cache (still)")
+
 	// try the public method
 	_, err = a.Allocate(ctx, gsa.DeepCopy())
 	logrus.WithField("test", t.Name()).WithError(err).Info("Allocate (public): failed allocation")
