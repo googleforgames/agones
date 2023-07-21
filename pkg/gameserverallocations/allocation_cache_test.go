@@ -57,7 +57,7 @@ func TestAllocationCacheListSortedGameServers(t *testing.T) {
 			Counters: map[string]agonesv1.CounterStatus{
 				"players": {
 					Count:    4,
-					Capacity: 40,
+					Capacity: 40, // Available Capacity == 36
 				},
 			}},
 	}
@@ -69,7 +69,7 @@ func TestAllocationCacheListSortedGameServers(t *testing.T) {
 			Counters: map[string]agonesv1.CounterStatus{
 				"players": {
 					Count:    14,
-					Capacity: 40,
+					Capacity: 40, // Available Capacity == 26
 				},
 			}},
 	}
@@ -154,7 +154,7 @@ func TestAllocationCacheListSortedGameServers(t *testing.T) {
 			},
 			test: func(t *testing.T, list []*agonesv1.GameServer) {
 				assert.Len(t, list, 6)
-				if !assert.Equal(t, []*agonesv1.GameServer{&gs3, &gs6, &gs5, &gs1, &gs2, &gs4}, list) {
+				if !assert.Equal(t, []*agonesv1.GameServer{&gs3, &gs5, &gs6, &gs1, &gs2, &gs4}, list) {
 					for _, gs := range list {
 						logrus.WithField("game", gs.Name).Info("game server")
 					}
@@ -177,7 +177,7 @@ func TestAllocationCacheListSortedGameServers(t *testing.T) {
 			},
 			test: func(t *testing.T, list []*agonesv1.GameServer) {
 				assert.Len(t, list, 6)
-				if !assert.Equal(t, []*agonesv1.GameServer{&gs3, &gs5, &gs6, &gs1, &gs2, &gs4}, list) {
+				if !assert.Equal(t, []*agonesv1.GameServer{&gs3, &gs6, &gs5, &gs1, &gs2, &gs4}, list) {
 					for _, gs := range list {
 						logrus.WithField("game", gs.Name).Info("game server")
 					}
@@ -232,24 +232,24 @@ func TestAllocationCacheCompareGameServers(t *testing.T) {
 			Lists: map[string]agonesv1.ListStatus{
 				"players": {
 					Values:   []string{"player1"},
-					Capacity: 100,
+					Capacity: 100, // Available Capacity == 99
 				},
 				"layers": {
 					Values:   []string{"layer1", "layer2", "layer3"},
-					Capacity: 100,
+					Capacity: 100, // Available Capacity == 97
 				}}}}
 	gs2 := agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs2", Namespace: defaultNs, UID: "2"},
 		Status: agonesv1.GameServerStatus{NodeName: "node1", State: agonesv1.GameServerStateReady,
 			Lists: map[string]agonesv1.ListStatus{
 				"players": {
 					Values:   []string{},
-					Capacity: 100,
+					Capacity: 100, // Available Capacity == 100
 				},
 			},
 			Counters: map[string]agonesv1.CounterStatus{
 				"assets": {
 					Count:    101,
-					Capacity: 1000,
+					Capacity: 1000, // Available Capacity = 899
 				},
 			}}}
 	gs3 := agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs3", Namespace: defaultNs, UID: "3"},
@@ -257,16 +257,16 @@ func TestAllocationCacheCompareGameServers(t *testing.T) {
 			Lists: map[string]agonesv1.ListStatus{
 				"players": {
 					Values:   []string{"player2", "player3"},
-					Capacity: 100,
+					Capacity: 100, // Available Capacity == 98
 				}},
 			Counters: map[string]agonesv1.CounterStatus{
 				"sessions": {
 					Count:    9,
-					Capacity: 1000,
+					Capacity: 1000, // Available Capacity == 991
 				},
 				"assets": {
 					Count:    100,
-					Capacity: 1000,
+					Capacity: 1000, // Available Capacity == 900
 				},
 			}}}
 	gs4 := agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs4", Namespace: defaultNs, UID: "4"},
@@ -274,41 +274,41 @@ func TestAllocationCacheCompareGameServers(t *testing.T) {
 			Counters: map[string]agonesv1.CounterStatus{
 				"sessions": {
 					Count:    99,
-					Capacity: 1000,
+					Capacity: 1000, // Available Capacity == 901
 				},
 			},
 			Lists: map[string]agonesv1.ListStatus{
 				"players": {
 					Values:   []string{"player4"},
-					Capacity: 100,
+					Capacity: 100, // Available Capacity == 99
 				},
 				"layers": {
 					Values:   []string{"layer4, layer5"},
-					Capacity: 100,
+					Capacity: 100, // Available Capacity == 98
 				}}}}
 	gs5 := agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs5", Namespace: defaultNs, UID: "5"},
 		Status: agonesv1.GameServerStatus{NodeName: "node1", State: agonesv1.GameServerStateReady,
 			Counters: map[string]agonesv1.CounterStatus{
 				"sessions": {
 					Count:    9,
-					Capacity: 1000,
+					Capacity: 1000, // Available Capacity == 991
 				},
 				"assets": {
 					Count:    99,
-					Capacity: 1000,
+					Capacity: 1000, // Available Capacity == 901
 				},
 			},
 			Lists: map[string]agonesv1.ListStatus{
 				"layers": {
 					Values:   []string{},
-					Capacity: 100,
+					Capacity: 100, // Available Capacity == 100
 				}}}}
 	gs6 := agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs6", Namespace: defaultNs, UID: "6"},
 		Status: agonesv1.GameServerStatus{NodeName: "node1", State: agonesv1.GameServerStateReady,
 			Counters: map[string]agonesv1.CounterStatus{
 				"sessions": {
 					Count:    999,
-					Capacity: 1000,
+					Capacity: 1000, // Available Capacity == 1
 				},
 			}}}
 
@@ -330,7 +330,7 @@ func TestAllocationCacheCompareGameServers(t *testing.T) {
 					},
 				},
 			},
-			want: []*agonesv1.GameServer{&gs5, &gs4, &gs6},
+			want: []*agonesv1.GameServer{&gs6, &gs4, &gs5},
 		},
 		"Sort by one Priority Counter Descending": {
 			list: []agonesv1.GameServer{gs4, gs5, gs6},
@@ -345,7 +345,7 @@ func TestAllocationCacheCompareGameServers(t *testing.T) {
 					},
 				},
 			},
-			want: []*agonesv1.GameServer{&gs6, &gs4, &gs5},
+			want: []*agonesv1.GameServer{&gs5, &gs4, &gs6},
 		},
 		"Sort by two Priority Counter Ascending and Ascending": {
 			list: []agonesv1.GameServer{gs3, gs5, gs6, gs4, gs1, gs2},
@@ -365,7 +365,7 @@ func TestAllocationCacheCompareGameServers(t *testing.T) {
 					},
 				},
 			},
-			want: []*agonesv1.GameServer{&gs5, &gs3, &gs4, &gs6, &gs2, &gs1},
+			want: []*agonesv1.GameServer{&gs6, &gs4, &gs3, &gs5, &gs2, &gs1},
 		},
 		"Sort by two Priority Counter Ascending and Descending": {
 			list: []agonesv1.GameServer{gs3, gs5, gs6, gs4, gs1, gs2},
@@ -385,7 +385,7 @@ func TestAllocationCacheCompareGameServers(t *testing.T) {
 					},
 				},
 			},
-			want: []*agonesv1.GameServer{&gs3, &gs5, &gs4, &gs6, &gs2, &gs1},
+			want: []*agonesv1.GameServer{&gs6, &gs4, &gs5, &gs3, &gs2, &gs1},
 		},
 		"Sort by one Priority Counter game server without Counter": {
 			list: []agonesv1.GameServer{gs1, gs5, gs6, gs4},
@@ -400,7 +400,7 @@ func TestAllocationCacheCompareGameServers(t *testing.T) {
 					},
 				},
 			},
-			want: []*agonesv1.GameServer{&gs5, &gs4, &gs6, &gs1},
+			want: []*agonesv1.GameServer{&gs6, &gs4, &gs5, &gs1},
 		},
 		"Sort by one Priority List Ascending": {
 			list: []agonesv1.GameServer{gs3, gs2, gs1},
@@ -415,7 +415,7 @@ func TestAllocationCacheCompareGameServers(t *testing.T) {
 					},
 				},
 			},
-			want: []*agonesv1.GameServer{&gs2, &gs1, &gs3},
+			want: []*agonesv1.GameServer{&gs3, &gs1, &gs2},
 		},
 		"Sort by one Priority List Descending": {
 			list: []agonesv1.GameServer{gs3, gs2, gs1},
@@ -430,7 +430,7 @@ func TestAllocationCacheCompareGameServers(t *testing.T) {
 					},
 				},
 			},
-			want: []*agonesv1.GameServer{&gs3, &gs1, &gs2},
+			want: []*agonesv1.GameServer{&gs2, &gs1, &gs3},
 		},
 		"Sort by two Priority List Descending and Ascending": {
 			list: []agonesv1.GameServer{gs1, gs2, gs3, gs4},
@@ -450,7 +450,7 @@ func TestAllocationCacheCompareGameServers(t *testing.T) {
 					},
 				},
 			},
-			want: []*agonesv1.GameServer{&gs3, &gs4, &gs1, &gs2},
+			want: []*agonesv1.GameServer{&gs2, &gs1, &gs4, &gs3},
 		},
 		"Sort by two Priority List Descending and Descending": {
 			list: []agonesv1.GameServer{gs6, gs5, gs4, gs3, gs2, gs1},
@@ -470,7 +470,7 @@ func TestAllocationCacheCompareGameServers(t *testing.T) {
 					},
 				},
 			},
-			want: []*agonesv1.GameServer{&gs3, &gs1, &gs4, &gs2, &gs5, &gs6},
+			want: []*agonesv1.GameServer{&gs2, &gs4, &gs1, &gs3, &gs5, &gs6},
 		},
 	}
 
