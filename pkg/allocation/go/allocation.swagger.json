@@ -93,6 +93,14 @@
       ],
       "default": "READY"
     },
+    "PriorityOrder": {
+      "type": "string",
+      "enum": [
+        "Ascending",
+        "Descending"
+      ],
+      "default": "Ascending"
+    },
     "allocationAllocationRequest": {
       "type": "object",
       "properties": {
@@ -306,17 +314,25 @@
     "allocationPriority": {
       "type": "object",
       "properties": {
-        "priorityType": {
-          "type": "string"
+        "type": {
+          "$ref": "#/definitions/allocationPriorityType"
         },
         "key": {
           "type": "string"
         },
         "order": {
-          "type": "string"
+          "$ref": "#/definitions/PriorityOrder"
         }
       },
-      "description": "Priority is a sorting option for GameServers with Counters or Lists based on the count or\nnumber of items in a List.\nPriorityType: Sort by a \"Counter\" or a \"List\".\nKey: The name of the Counter or List. If not found on the GameServer, has no impact.\nOrder: Sort by \"Ascending\" or \"Descending\". Default is \"Descending\" so bigger count is preferred.\n\"Ascending\" would be smaller count is preferred."
+      "description": "Priority is a sorting option for GameServers with Counters or Lists based on the Capacity.\nType: Sort by a \"Counter\" or a \"List\".\nKey: The name of the Counter or List. If not found on the GameServer, has no impact.\nOrder: Sort by \"Ascending\" or \"Descending\". \"Descending\" a bigger Capacity is preferred.\n\"Ascending\" would be smaller Capacity is preferred."
+    },
+    "allocationPriorityType": {
+      "type": "string",
+      "enum": [
+        "Counter",
+        "List"
+      ],
+      "default": "Counter"
     }
   }
 }

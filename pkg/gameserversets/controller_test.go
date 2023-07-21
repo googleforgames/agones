@@ -18,6 +18,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"math/rand"
 	"net/http"
 	"strconv"
@@ -73,6 +74,7 @@ func TestComputeReconciliationAction(t *testing.T) {
 		wantNumServersToAdd    int
 		wantNumServersToDelete int
 		wantIsPartial          bool
+		priorities             []agonesv1.Priority
 	}{
 		{
 			desc: "Empty",
@@ -219,7 +221,7 @@ func TestComputeReconciliationAction(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			toAdd, toDelete, isPartial := computeReconciliationAction(apis.Distributed, tc.list, map[string]gameservers.NodeCount{},
-				tc.targetReplicaCount, maxTestCreationsPerBatch, maxTestDeletionsPerBatch, maxTestPendingPerBatch)
+				tc.targetReplicaCount, maxTestCreationsPerBatch, maxTestDeletionsPerBatch, maxTestPendingPerBatch, tc.priorities)
 
 			assert.Equal(t, tc.wantNumServersToAdd, toAdd, "# of GameServers to add")
 			assert.Len(t, toDelete, tc.wantNumServersToDelete, "# of GameServers to delete")
@@ -237,7 +239,7 @@ func TestComputeReconciliationAction(t *testing.T) {
 
 		counts := map[string]gameservers.NodeCount{"node1": {Ready: 1}, "node3": {Ready: 2}}
 		toAdd, toDelete, isPartial := computeReconciliationAction(apis.Packed, list, counts, 2,
-			1000, 1000, 1000)
+			1000, 1000, 1000, nil)
 
 		assert.Empty(t, toAdd)
 		assert.False(t, isPartial, "shouldn't be partial")
@@ -262,7 +264,7 @@ func TestComputeReconciliationAction(t *testing.T) {
 		}
 
 		toAdd, toDelete, isPartial := computeReconciliationAction(apis.Distributed, list, map[string]gameservers.NodeCount{},
-			2, 1000, 1000, 1000)
+			2, 1000, 1000, 1000, nil)
 
 		assert.Empty(t, toAdd)
 		assert.False(t, isPartial, "shouldn't be partial")
@@ -276,40 +278,47 @@ func TestComputeReconciliationAction(t *testing.T) {
 func TestComputeStatus(t *testing.T) {
 	t.Parallel()
 
-	cases := []struct {
-		list       []*agonesv1.GameServer
-		wantStatus agonesv1.GameServerSetStatus
-	}{
-		{[]*agonesv1.GameServer{}, agonesv1.GameServerSetStatus{}},
-		{[]*agonesv1.GameServer{
-			gsWithState(agonesv1.GameServerStateCreating),
-			gsWithState(agonesv1.GameServerStateReady),
-		}, agonesv1.GameServerSetStatus{ReadyReplicas: 1, Replicas: 2}},
-		{[]*agonesv1.GameServer{
-			gsWithState(agonesv1.GameServerStateAllocated),
-			gsWithState(agonesv1.GameServerStateAllocated),
-			gsWithState(agonesv1.GameServerStateCreating),
-			gsWithState(agonesv1.GameServerStateReady),
-		}, agonesv1.GameServerSetStatus{ReadyReplicas: 1, AllocatedReplicas: 2, Replicas: 4}},
-		{
-			list: []*agonesv1.GameServer{
-				gsWithState(agonesv1.GameServerStateReserved),
-				gsWithState(agonesv1.GameServerStateReserved),
-				gsWithState(agonesv1.GameServerStateReady),
-			},
-			wantStatus: agonesv1.GameServerSetStatus{Replicas: 3, ReadyReplicas: 1, ReservedReplicas: 2},
-		},
-	}
+	t.Run("compute status", func(t *testing.T) {
+		utilruntime.FeatureTestMutex.Lock()
+		defer utilruntime.FeatureTestMutex.Unlock()
 
-	for _, tc := range cases {
-		assert.Equal(t, tc.wantStatus, computeStatus(tc.list))
-	}
+		require.NoError(t, utilruntime.ParseFeatures(fmt.Sprintf("%s=false", utilruntime.FeatureCountsAndLists)))
+
+		cases := []struct {
+			list       []*agonesv1.GameServer
+			wantStatus agonesv1.GameServerSetStatus
+		}{
+			{[]*agonesv1.GameServer{}, agonesv1.GameServerSetStatus{}},
+			{[]*agonesv1.GameServer{
+				gsWithState(agonesv1.GameServerStateCreating),
+				gsWithState(agonesv1.GameServerStateReady),
+			}, agonesv1.GameServerSetStatus{ReadyReplicas: 1, Replicas: 2}},
+			{[]*agonesv1.GameServer{
+				gsWithState(agonesv1.GameServerStateAllocated),
+				gsWithState(agonesv1.GameServerStateAllocated),
+				gsWithState(agonesv1.GameServerStateCreating),
+				gsWithState(agonesv1.GameServerStateReady),
+			}, agonesv1.GameServerSetStatus{ReadyReplicas: 1, AllocatedReplicas: 2, Replicas: 4}},
+			{
+				list: []*agonesv1.GameServer{
+					gsWithState(agonesv1.GameServerStateReserved),
+					gsWithState(agonesv1.GameServerStateReserved),
+					gsWithState(agonesv1.GameServerStateReady),
+				},
+				wantStatus: agonesv1.GameServerSetStatus{Replicas: 3, ReadyReplicas: 1, ReservedReplicas: 2},
+			},
+		}
+
+		for _, tc := range cases {
+			assert.Equal(t, tc.wantStatus, computeStatus(tc.list))
+		}
+	})
 
 	t.Run("player tracking", func(t *testing.T) {
 		utilruntime.FeatureTestMutex.Lock()
 		defer utilruntime.FeatureTestMutex.Unlock()
 
-		require.NoError(t, utilruntime.ParseFeatures(string(utilruntime.FeaturePlayerTracking)+"=true"))
+		require.NoError(t, utilruntime.ParseFeatures(fmt.Sprintf("%s=true", utilruntime.FeaturePlayerTracking)))
 
 		var list []*agonesv1.GameServer
 		gs1 := gsWithState(agonesv1.GameServerStateAllocated)
@@ -340,7 +349,7 @@ func TestComputeStatus(t *testing.T) {
 		utilruntime.FeatureTestMutex.Lock()
 		defer utilruntime.FeatureTestMutex.Unlock()
 
-		require.NoError(t, utilruntime.ParseFeatures(string(utilruntime.FeatureCountsAndLists)+"=true"))
+		require.NoError(t, utilruntime.ParseFeatures(fmt.Sprintf("%s=true", utilruntime.FeatureCountsAndLists)))
 
 		var list []*agonesv1.GameServer
 		gs1 := gsWithState(agonesv1.GameServerStateAllocated)
@@ -371,12 +380,16 @@ func TestComputeStatus(t *testing.T) {
 			AllocatedReplicas: 1,
 			Counters: map[string]agonesv1.AggregatedCounterStatus{
 				"firstCounter": {
-					Count:    30,
-					Capacity: 55,
+					AllocatedCount:    5,
+					AllocatedCapacity: 10,
+					Count:             50,
+					Capacity:          85,
 				},
 				"secondCounter": {
-					Count:    120,
-					Capacity: 1200,
+					AllocatedCount:    100,
+					AllocatedCapacity: 1000,
+					Count:             220,
+					Capacity:          2200,
 				},
 			},
 			Lists: map[string]agonesv1.AggregatedListStatus{},
@@ -389,7 +402,7 @@ func TestComputeStatus(t *testing.T) {
 		utilruntime.FeatureTestMutex.Lock()
 		defer utilruntime.FeatureTestMutex.Unlock()
 
-		require.NoError(t, utilruntime.ParseFeatures(string(utilruntime.FeatureCountsAndLists)+"=true"))
+		require.NoError(t, utilruntime.ParseFeatures(fmt.Sprintf("%s=true", utilruntime.FeatureCountsAndLists)))
 
 		var list []*agonesv1.GameServer
 		gs1 := gsWithState(agonesv1.GameServerStateAllocated)
@@ -421,12 +434,16 @@ func TestComputeStatus(t *testing.T) {
 			Counters:          map[string]agonesv1.AggregatedCounterStatus{},
 			Lists: map[string]agonesv1.AggregatedListStatus{
 				"firstList": {
-					Capacity: 55,
-					Count:    3,
+					AllocatedCount:    2,
+					AllocatedCapacity: 10,
+					Capacity:          85,
+					Count:             4,
 				},
 				"secondList": {
-					Capacity: 1100,
-					Count:    5,
+					AllocatedCount:    2,
+					AllocatedCapacity: 1000,
+					Capacity:          2100,
+					Count:             6,
 				},
 			},
 		}

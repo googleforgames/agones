@@ -69,7 +69,7 @@ func TestFleetGameServerSetGameServer(t *testing.T) {
 	runtime.FeatureTestMutex.Lock()
 	defer runtime.FeatureTestMutex.Unlock()
 
-	runtime.Must(runtime.ParseFeatures(fmt.Sprintf("%s=true", runtime.FeatureFleetAllocateOverflow)))
+	runtime.Must(runtime.ParseFeatures(fmt.Sprintf("%s=true&%s=true", runtime.FeatureFleetAllocateOverflow, runtime.FeatureCountsAndLists)))
 	gsSet = f.GameServerSet()
 	assert.Nil(t, gsSet.Spec.AllocationOverflow)
 
@@ -78,9 +78,19 @@ func TestFleetGameServerSetGameServer(t *testing.T) {
 		Annotations: nil,
 	}
 
+	assert.Nil(t, f.Spec.Priorities)
+	f.Spec.Priorities = []Priority{
+		{Type: "Counter",
+			Key:   "Foo",
+			Order: "Ascending"}}
+	assert.NotNil(t, f.Spec.Priorities)
+	assert.Equal(t, f.Spec.Priorities[0], Priority{Type: "Counter", Key: "Foo", Order: "Ascending"})
+
 	gsSet = f.GameServerSet()
 	assert.NotNil(t, gsSet.Spec.AllocationOverflow)
 	assert.Equal(t, "things", gsSet.Spec.AllocationOverflow.Labels["stuff"])
+
+	assert.Equal(t, gsSet.Spec.Priorities[0], Priority{Type: "Counter", Key: "Foo", Order: "Ascending"})
 }
 
 func TestFleetApplyDefaults(t *testing.T) {
