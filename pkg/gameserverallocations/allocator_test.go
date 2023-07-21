@@ -469,34 +469,33 @@ func TestAllocatorAllocateOnGameServerUpdateError(t *testing.T) {
 	defer cancel()
 
 	require.NoError(t, a.Run(ctx))
-	// wait for it to be up and running
-	err := wait.PollImmediate(time.Second, 10*time.Second, func() (done bool, err error) {
-		return a.allocationCache.workerqueue.RunCount() == 1, nil
-	})
-	assert.NoError(t, err)
+	// wait for the single gameserver to be in the cache.
+	require.Eventuallyf(t, func() bool {
+		return a.allocationCache.cache.Len() >= 1
+	}, 10*time.Second, time.Second, "should have a single item in the cache")
 
 	gsa := allocationv1.GameServerAllocation{ObjectMeta: metav1.ObjectMeta{Name: "gsa-1", Namespace: defaultNs},
 		Spec: allocationv1.GameServerAllocationSpec{},
 	}
 
 	gsa.ApplyDefaults()
-	// without converter we don't end up with at least one selector
+	// without converter, we don't end up with at least one selector
 	gsa.Converter()
 	errs := gsa.Validate()
 	require.Len(t, errs, 0)
 	require.Len(t, gsa.Spec.Selectors, 1)
 
 	// try the private method
-	_, err = a.allocate(ctx, gsa.DeepCopy())
+	_, err := a.allocate(ctx, gsa.DeepCopy())
 	logrus.WithField("test", t.Name()).WithError(err).Info("allocate (private): failed allocation")
 	require.NotEqual(t, ErrNoGameServer, err)
-	assert.EqualError(t, err, "error updating allocated gameserver: failed to update")
+	require.EqualError(t, err, "error updating allocated gameserver: failed to update")
 
 	// try the public method
 	_, err = a.Allocate(ctx, gsa.DeepCopy())
 	logrus.WithField("test", t.Name()).WithError(err).Info("Allocate (public): failed allocation")
 	require.NotEqual(t, ErrNoGameServer, err)
-	assert.EqualError(t, err, "error updating allocated gameserver: failed to update")
+	require.EqualError(t, err, "error updating allocated gameserver: failed to update")
 }
 
 func TestAllocatorRunLocalAllocations(t *testing.T) {
