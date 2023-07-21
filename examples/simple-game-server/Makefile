@@ -23,7 +23,7 @@
 #     \_/ \__,_|_|  |_|\__,_|_.__/|_|\___|___/
 #
 
-REGISTRY = us-docker.pkg.dev/agones-images/examples
+REGISTRY ?= us-docker.pkg.dev/agones-images/examples
 BUILDX_WINDOWS_BUILDER = windows-builder
 # Versions of Windows Server to support, default is Windows Server 2019.
 # For the full list of tags see https://hub.docker.com/_/microsoft-windows-servercore.
@@ -31,13 +31,13 @@ BUILDX_WINDOWS_BUILDER = windows-builder
 WINDOWS_VERSIONS = ltsc2019 ltsc2022
 WINDOWS_DOCKER_PUSH_ARGS = # When pushing set to --push.
 # Build with Windows support
-WITH_WINDOWS=1
+WITH_WINDOWS ?= 1
 # Build with ARM64 support
-WITH_ARM64=1
+WITH_ARM64 ?= 1
 
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_path := $(dir $(mkfile_path))
-server_tag = $(REGISTRY)/simple-game-server:0.16
+server_tag = $(REGISTRY)/simple-game-server:0.17
 
 ifeq ($(WITH_WINDOWS), 1)
 server_tag_linux_amd64 = $(server_tag)-linux-amd64
@@ -82,9 +82,13 @@ endif
 ifeq ($(WITH_ARM64), 1)
 push: push-linux-image-arm64
 endif
-	-DOCKER_CLI_EXPERIMENTAL=enabled docker manifest rm $(server_tag)
-	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest create $(server_tag) $(push_server_manifest)
-	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest push $(server_tag) --purge
+	-docker manifest rm $(server_tag)
+	docker manifest create $(server_tag) $(push_server_manifest)
+	docker manifest push $(server_tag) --purge
+	# TODO: Update to replace `docker manifest` commands if/when the above commands fail (~Docker 24.x)
+    # Fails with Docker <=20.10.21
+	#docker buildx imagetools create --tag $(server_tag) \
+    	#$(push_server_manifest)
 
 # Pushes all variants of the Windows images to the container image registry.
 push-linux-image-amd64: build

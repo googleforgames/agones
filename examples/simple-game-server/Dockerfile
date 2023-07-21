@@ -21,12 +21,10 @@ WORKDIR /go/src/agones.dev/agones/examples/simple-game-server
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o server .
 
 # final image
-FROM alpine:3.14
+FROM gcr.io/distroless/static-debian11:nonroot
+WORKDIR /
 
-RUN adduser -D -u 1000 server
-COPY --from=builder /go/src/agones.dev/agones/examples/simple-game-server/server /home/server/server
-RUN chown -R server /home/server && \
-    chmod o+x /home/server/server
+COPY --from=builder /go/src/agones.dev/agones/examples/simple-game-server/server /server
 
-USER 1000
-ENTRYPOINT ["/home/server/server"]
+USER nonroot:nonroot
+ENTRYPOINT ["/server"]

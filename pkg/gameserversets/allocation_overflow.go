@@ -145,7 +145,7 @@ func (c *AllocationOverflowController) syncGameServerSet(ctx context.Context, ke
 		return nil
 	}
 
-	rest = sortGameServersByStrategy(gsSet.Spec.Scheduling, rest, c.counter.Counts())
+	rest = SortGameServersByStrategy(gsSet.Spec.Scheduling, rest, c.counter.Counts(), gsSet.Spec.Priorities)
 	rest = rest[:(overflow - matches)]
 
 	opts := v1.UpdateOptions{}

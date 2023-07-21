@@ -110,6 +110,28 @@ spec:
                           anyOf:
                             - type: integer
                             - type: string
+                priorities:
+                  type: array
+                  description: Configuration of Counters and Lists scale down logic -- which gameservers in the Fleet are most important to keep around.
+                  nullable: true
+                  items:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                        description: Whether a Counter or a List.
+                        enum:
+                          - Counter
+                          - List
+                      key:
+                        type: string
+                        description: The name of the Counter or List. If not found on the GameServer, those GameServer with the key will have priority over those that do not.
+                      order:
+                        type: string
+                        description: Ascending or Descending sort order. Default is "Ascending" so remove smaller total capacity first. "Descending" would remove larger total capacity first.
+                        enum:
+                          - Ascending
+                          - Descending
                 template:
                   {{- $data := dict "metadata" true "podPreserveUnknownFields" .Values.gameservers.podPreserveUnknownFields }}
                   {{- include "gameserver.schema" $data | indent 17 }}
