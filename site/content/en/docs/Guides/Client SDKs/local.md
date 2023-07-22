@@ -25,27 +25,11 @@ For local development with integration into your cluster, the SDK Server can als
 
 To run the SDK Server, you will need a copy of the binary.
 This can either be done by downloading a prebuilt binary or running from source code.
-
-### Getting the prebuilt binary
+This guide will focus on running from the prebuilt binary, but details about running from source code can be found [below](#running-from-source-code-instead-of-prebuilt-binary).
 
 To run the prebuilt binary, for the latest release, you will need to download {{% ghrelease file_prefix="agonessdk-server" %}}, and unzip it.
 You will find the executables for the SDK server, for each type of operating system.
 `sdk-server.darwin.amd64` and `sdk-server.darwin.arm64` are for <u>MacOS</u>, `sdk-server.linux.amd64` and `sdk-server.linux.arm64` are for <u>Linux</u>, and `sdk-server.windows.amd64.exe` is for <u>Windows</u>.
-
-### Running from source code
-
-Instead of downloading and running executable binaries from the internet, you can simply run from source code.
-First clone the [Agones GitHub repo](https://github.com/googleforgames/agones).
-You can switch to a specific release's branch/tag or run from main.
-Running from source code will require having golang installed, which can be done by following the instructions [here](https://go.dev/doc/install).
-
-With golang installed and the Agones repository cloned, the SDK Server can easily be run with the following command (from the agones clone directory):
-```bash
-go run cmd/sdk-server/main.go
-```
-Note: This command does not contain any of the necessary command line flags used in the following sections.
-It simply serves as an example of how to run from source code instead of running the prebuilt binary.
-Passing commandline flags (e.g. `--local`) will work in the same way.
 
 ### Running In "Local Mode"
 
@@ -56,10 +40,7 @@ For example:
 ```bash
 ./sdk-server.linux.amd64 --local
 ```
-or
-```bash
-go run cmd/sdk-server/main.go --local
-```
+
 You should see output similar to the following:
 ```
 {"ctlConf":{"Address":"localhost","IsLocal":true,"LocalFile":"","Delay":0,"Timeout":0,"Test":"","GRPCPort":9357,"HTTPPort":9358},"message":"Starting sdk sidecar","severity":"info","source":"main","time":"2019-10-30T21:44:37.973139+03:00","version":"1.1.0"}
@@ -221,3 +202,24 @@ Now that you have the SDK Server running locally with k8s credentials, you can r
 Your game server's SDK calls will reach the local SDK Server, which will then interact with the `GameServer` resource on your cluster.
 You can allocate this `GameServer` just as you would for a normal `GameServer` running completely on k8s.
 The state update to `Allocated` will show in your local game server binary.
+
+## Running from source code instead of prebuilt binary
+
+If you wish to run from source rather than pre-built binaries, that is an available alternative.
+You will need [Go installed](https://go.dev/doc/install) and will need to clone the [Agones GitHub repo](https://github.com/googleforgames/agones).
+
+**Disclaimer:** Agones is run and tested with the version of Go specified by the `GO_VERSION` variable in the project's [build Dockerfile](https://github.com/googleforgames/agones/blob/main/build/build-image/Dockerfile). Other versions are not supported, but may still work.
+
+Your cloned repository is best switched to the latest specific release's branch/tag. For example:
+```bash
+git clone https://github.com/googleforgames/agones.git
+cd agones
+git checkout release-{{< release-version >}}
+```
+
+With Go installed and the Agones repository cloned, the SDK Server can be run with the following command (from the Agones clone directory):
+```bash
+go run cmd/sdk-server/main.go --local
+```
+
+Commandline flags (e.g. `--local`) are exactly the same as command line flags when utilising a pre-built binary.
