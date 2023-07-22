@@ -248,7 +248,7 @@ func TestControllerSyncGameServerWithDevIP(t *testing.T) {
 			return true, gs, nil
 		})
 
-		ctx, cancel := agtesting.StartInformers(mocks, c.podSynced)
+		ctx, cancel := agtesting.StartInformers(mocks, c.gameServerSynced)
 		defer cancel()
 
 		err := c.portAllocator.Run(ctx)
