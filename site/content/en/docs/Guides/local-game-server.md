@@ -45,3 +45,11 @@ Local Game Servers has a few limitations:
  * The game server is not managed by Agones. Features like autoscaling, replication, etc are not available.
 
 When you are finished working with your server, you can remove the registration with `kubectl delete -f dev-gameserver.yaml`
+
+## Next Steps:
+
+- Review the specification of [GameServer]({{< ref "/docs/Reference/gameserver.md" >}}).
+- Read about `GameServer` allocation.
+  - Review the flow of how [allocation]({{< ref "/docs/Integration Patterns/allocation-from-fleet.md" >}}) is done.
+  - Review the specification of [GameServerAllocation]({{< ref "/docs/Reference/gameserverallocation.md" >}}).
+  - Check out the [Allocator Service]({{< ref "/docs/Advanced/allocator-service.md" >}}) as a richer alternative to `GameServerAllocation`.
