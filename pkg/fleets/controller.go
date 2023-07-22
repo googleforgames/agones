@@ -31,6 +31,7 @@ import (
 	"agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/webhooks"
 	"agones.dev/agones/pkg/util/workerqueue"
+	"github.com/google/go-cmp/cmp"
 	"github.com/heptiolabs/healthcheck"
 	"github.com/mattbaird/jsonpatch"
 	"github.com/pkg/errors"
@@ -106,14 +107,14 @@ func NewController(
 	eventBroadcaster.StartRecordingToSink(&typedcorev1.EventSinkImpl{Interface: kubeClient.CoreV1().Events("")})
 	c.recorder = eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: "fleet-controller"})
 
-	fInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
+	_, _ = fInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: c.workerqueue.Enqueue,
 		UpdateFunc: func(_, newObj interface{}) {
 			c.workerqueue.Enqueue(newObj)
 		},
 	})
 
-	gsSetInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
+	_, _ = gsSetInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: c.gameServerSetEventHandler,
 		UpdateFunc: func(_, newObj interface{}) {
 			gsSet := newObj.(*agonesv1.GameServerSet)
@@ -355,6 +356,20 @@ func (c *Controller) upsertGameServerSet(ctx context.Context, fleet *agonesv1.Fl
 		}
 		c.recorder.Eventf(fleet, corev1.EventTypeNormal, "ScalingGameServerSet",
 			"Scaling active GameServerSet %s from %d to %d", gsSetCopy.ObjectMeta.Name, active.Spec.Replicas, gsSetCopy.Spec.Replicas)
+	}
+
+	// Update GameServerSet Counts and Lists Priorities if not equal to the Priorities on the Fleet
+	if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
+		if !cmp.Equal(active.Spec.Priorities, fleet.Spec.Priorities) {
+			gsSetCopy := active.DeepCopy()
+			gsSetCopy.Spec.Priorities = fleet.Spec.Priorities
+			_, err := c.gameServerSetGetter.GameServerSets(fleet.ObjectMeta.Namespace).Update(ctx, gsSetCopy, metav1.UpdateOptions{})
+			if err != nil {
+				return errors.Wrapf(err, "error updating priorities for gameserverset for fleet %s", fleet.ObjectMeta.Name)
+			}
+			c.recorder.Eventf(fleet, corev1.EventTypeNormal, "UpdatingGameServerSet",
+				"Updated GameServerSet %s Priorities", gsSetCopy.ObjectMeta.Name)
+		}
 	}
 
 	return nil

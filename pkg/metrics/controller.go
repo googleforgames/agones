@@ -127,7 +127,7 @@ func NewController(
 
 	c.logger = runtime.NewLoggerWithType(c)
 
-	fInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
+	_, _ = fInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: c.recordFleetChanges,
 		UpdateFunc: func(old, next interface{}) {
 			c.recordFleetChanges(next)
@@ -135,7 +135,7 @@ func NewController(
 		DeleteFunc: c.recordFleetDeletion,
 	})
 
-	fasInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
+	_, _ = fasInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: func(added interface{}) {
 			c.recordFleetAutoScalerChanges(nil, added)
 		},
@@ -143,7 +143,7 @@ func NewController(
 		DeleteFunc: c.recordFleetAutoScalerDeletion,
 	})
 
-	gsInformer.AddEventHandlerWithResyncPeriod(cache.ResourceEventHandlerFuncs{
+	_, _ = gsInformer.AddEventHandlerWithResyncPeriod(cache.ResourceEventHandlerFuncs{
 		UpdateFunc: c.recordGameServerStatusChanges,
 	}, 0)
 

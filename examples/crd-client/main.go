@@ -112,7 +112,7 @@ func main() {
 	ctx := context.Background()
 	newGS, err := agonesClient.AgonesV1().GameServers(gs.Namespace).Create(ctx, gs, metav1.CreateOptions{})
 	if err != nil {
-		logrus.Fatal("Unable to create GameServer: %v", err)
+		logrus.Fatalf("Unable to create GameServer: %v", err)
 	}
 	logrus.Infof("New GameServer name is: %s", newGS.ObjectMeta.Name)
 

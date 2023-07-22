@@ -14,7 +14,6 @@
 package gke
 
 import (
-	"k8s.io/apimachinery/pkg/util/validation/field"
 	"testing"
 
 	"agones.dev/agones/pkg/apis"
@@ -23,6 +22,7 @@ import (
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
 func TestSyncPodPortsToGameServer(t *testing.T) {

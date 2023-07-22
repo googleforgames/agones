@@ -74,7 +74,7 @@ func NewAllocatorOverflowController(
 	c.workerqueue = workerqueue.NewWorkerQueueWithRateLimiter(c.syncGameServerSet, c.baseLogger, logfields.GameServerSetKey, agones.GroupName+".GameServerSetController", workerqueue.FastRateLimiter(3*time.Second))
 	health.AddLivenessCheck("gameserverset-allocationoverflow-workerqueue", c.workerqueue.Healthy)
 
-	gsSetInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
+	_, _ = gsSetInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		UpdateFunc: func(oldObj, newObj interface{}) {
 			newGss := newObj.(*agonesv1.GameServerSet)
 
@@ -145,7 +145,7 @@ func (c *AllocationOverflowController) syncGameServerSet(ctx context.Context, ke
 		return nil
 	}
 
-	rest = sortGameServersByStrategy(gsSet.Spec.Scheduling, rest, c.counter.Counts())
+	rest = SortGameServersByStrategy(gsSet.Spec.Scheduling, rest, c.counter.Counts(), gsSet.Spec.Priorities)
 	rest = rest[:(overflow - matches)]
 
 	opts := v1.UpdateOptions{}

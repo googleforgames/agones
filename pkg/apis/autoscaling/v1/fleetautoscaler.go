@@ -21,9 +21,11 @@ import (
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	"agones.dev/agones/pkg/util/runtime"
 	admregv1 "k8s.io/api/admissionregistration/v1"
+	apimachineryvalidation "k8s.io/apimachinery/pkg/api/validation"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
 // +genclient
@@ -162,7 +164,7 @@ type CounterPolicy struct {
 
 	// MinCapacity is the minimum aggregate Counter total capacity across the fleet.
 	// If zero, MinCapacity is ignored.
-	// If non zero, MinCapacity must be smaller than MaxCapacity and bigger than BufferSize
+	// If non zero, MinCapacity must be smaller than MaxCapacity and bigger than BufferSize.
 	MinCapacity int64 `json:"minCapacity"`
 
 	// BufferSize is the size of a buffer of counted items that are available in the Fleet (available
@@ -172,7 +174,7 @@ type CounterPolicy struct {
 	BufferSize intstr.IntOrString `json:"bufferSize"`
 }
 
-// ListPolicy controls the desired behavior of the list autoscaler policy.
+// ListPolicy controls the desired behavior of the List autoscaler policy.
 type ListPolicy struct {
 	// Key is the name of the List. Required field.
 	Key string `json:"key"`
@@ -183,11 +185,11 @@ type ListPolicy struct {
 
 	// MinCapacity is the minimum aggregate List total capacity across the fleet.
 	// If zero, it is ignored.
-	// If non zero, it must be smaller than MaxCapacity and bigger than BufferSize
+	// If non zero, it must be smaller than MaxCapacity and bigger than BufferSize.
 	MinCapacity int64 `json:"minCapacity"`
 
-	// BufferSize is the size of a buffer based on the list capacity that is available over the
-	// current aggregate list length in the Fleet (available capacity). It can be specified either
+	// BufferSize is the size of a buffer based on the List capacity that is available over the
+	// current aggregate List length in the Fleet (available capacity). It can be specified either
 	// as an absolute value (i.e. 5) or percentage format (i.e. 5%).
 	// Must be bigger than 0. Required field.
 	BufferSize intstr.IntOrString `json:"bufferSize"`
@@ -255,286 +257,174 @@ type FleetAutoscaleReview struct {
 }
 
 // Validate validates the FleetAutoscaler scaling settings
-func (fas *FleetAutoscaler) Validate(causes []metav1.StatusCause) []metav1.StatusCause {
+func (fas *FleetAutoscaler) Validate() field.ErrorList {
+	var allErrs field.ErrorList
 	switch fas.Spec.Policy.Type {
 	case BufferPolicyType:
-		causes = fas.Spec.Policy.Buffer.ValidateBufferPolicy(causes)
+		allErrs = fas.Spec.Policy.Buffer.ValidateBufferPolicy(field.NewPath("spec", "policy", "buffer"))
 
 	case WebhookPolicyType:
-		causes = fas.Spec.Policy.Webhook.ValidateWebhookPolicy(causes)
+		allErrs = fas.Spec.Policy.Webhook.ValidateWebhookPolicy(field.NewPath("spec", "policy", "webhook"))
 
 	case CounterPolicyType:
-		causes = fas.Spec.Policy.Counter.ValidateCounterPolicy(causes)
+		allErrs = fas.Spec.Policy.Counter.ValidateCounterPolicy(field.NewPath("spec", "policy", "counter"))
 
 	case ListPolicyType:
-		causes = fas.Spec.Policy.List.ValidateListPolicy(causes)
+		allErrs = fas.Spec.Policy.List.ValidateListPolicy(field.NewPath("spec", "policy", "list"))
 	}
 
 	if fas.Spec.Sync != nil {
-		causes = fas.Spec.Sync.FixedInterval.ValidateFixedIntervalSync(causes)
+		allErrs = append(allErrs, fas.Spec.Sync.FixedInterval.ValidateFixedIntervalSync(field.NewPath("spec", "sync", "fixedInterval"))...)
 	}
-	return causes
+	return allErrs
 }
 
 // ValidateWebhookPolicy validates the FleetAutoscaler Webhook policy settings
-func (w *WebhookPolicy) ValidateWebhookPolicy(causes []metav1.StatusCause) []metav1.StatusCause {
+func (w *WebhookPolicy) ValidateWebhookPolicy(fldPath *field.Path) field.ErrorList {
+	var allErrs field.ErrorList
 	if w == nil {
-		return append(causes, metav1.StatusCause{
-			Type:    metav1.CauseTypeFieldValueInvalid,
-			Field:   "webhook",
-			Message: "webhook policy config params are missing",
-		})
+		return append(allErrs, field.Required(fldPath, "webhook policy config params are missing"))
 	}
 	if w.Service == nil && w.URL == nil {
-		causes = append(causes, metav1.StatusCause{
-			Type:    metav1.CauseTypeFieldValueNotFound,
-			Field:   "url",
-			Message: "url should be provided",
-		})
+		allErrs = append(allErrs, field.Required(fldPath, "url should be provided"))
 	}
 	if w.Service != nil && w.URL != nil {
-		causes = append(causes, metav1.StatusCause{
-			Type:    metav1.CauseTypeFieldValueNotFound,
-			Field:   "url",
-			Message: "service and url cannot be used simultaneously",
-		})
+		allErrs = append(allErrs, field.Duplicate(fldPath.Child("url"), "service and url cannot be used simultaneously"))
 	}
 	if w.CABundle != nil {
 		rootCAs := x509.NewCertPool()
 		// Check that CABundle provided is correctly encoded certificate
 		if ok := rootCAs.AppendCertsFromPEM(w.CABundle); !ok {
-			causes = append(causes, metav1.StatusCause{
-				Type:    metav1.CauseTypeFieldValueInvalid,
-				Field:   "caBundle",
-				Message: "CA Bundle is not valid",
-			})
+			allErrs = append(allErrs, field.Invalid(fldPath.Child("caBundle"), w.CABundle, "CA Bundle is not valid"))
 		}
 	}
 	if w.URL != nil {
 		u, err := url.Parse(*w.URL)
 		if err != nil {
-			causes = append(causes, metav1.StatusCause{
-				Type:    metav1.CauseTypeFieldValueInvalid,
-				Field:   "url",
-				Message: "url is not valid",
-			})
-		} else if u.Scheme == "https" {
-			if w.CABundle == nil {
-				causes = append(causes, metav1.StatusCause{
-					Type:    metav1.CauseTypeFieldValueNotFound,
-					Field:   "caBundle",
-					Message: "CABundle should be provided if HTTPS webhook is used",
-				})
-			}
+			allErrs = append(allErrs, field.Invalid(fldPath.Child("url"), *w.URL, "url is not valid"))
+		} else if u.Scheme == "https" && w.CABundle == nil {
+			allErrs = append(allErrs, field.Invalid(fldPath.Child("caBundle"), w.CABundle, "CABundle should be provided if HTTPS webhook is used"))
 		}
 
 	}
-	return causes
+	return allErrs
 }
 
 // ValidateBufferPolicy validates the FleetAutoscaler Buffer policy settings
-func (b *BufferPolicy) ValidateBufferPolicy(causes []metav1.StatusCause) []metav1.StatusCause {
+func (b *BufferPolicy) ValidateBufferPolicy(fldPath *field.Path) field.ErrorList {
+	var allErrs field.ErrorList
 	if b == nil {
-		return append(causes, metav1.StatusCause{
-			Type:    metav1.CauseTypeFieldValueInvalid,
-			Field:   "buffer",
-			Message: "Buffer policy config params are missing",
-		})
+		return append(allErrs, field.Required(fldPath, "buffer policy config params are missing"))
 	}
 	if b.MinReplicas > b.MaxReplicas {
-		causes = append(causes, metav1.StatusCause{
-			Type:    metav1.CauseTypeFieldValueInvalid,
-			Field:   "minReplicas",
-			Message: "minReplicas is bigger than maxReplicas",
-		})
+		allErrs = append(allErrs, field.Invalid(fldPath.Child("minReplicas"), b.MinReplicas, "minReplicas should be smaller than maxReplicas"))
 	}
 	if b.BufferSize.Type == intstr.Int {
 		if b.BufferSize.IntValue() <= 0 {
-			causes = append(causes, metav1.StatusCause{
-				Type:    metav1.CauseTypeFieldValueInvalid,
-				Field:   "bufferSize",
-				Message: "bufferSize must be bigger than 0",
-			})
+			allErrs = append(allErrs, field.Invalid(fldPath.Child("bufferSize"), b.BufferSize.IntValue(), apimachineryvalidation.IsNegativeErrorMsg))
 		}
 		if b.MaxReplicas < int32(b.BufferSize.IntValue()) {
-			causes = append(causes, metav1.StatusCause{
-				Type:    metav1.CauseTypeFieldValueInvalid,
-				Field:   "maxReplicas",
-				Message: "maxReplicas must be bigger than bufferSize",
-			})
+			allErrs = append(allErrs, field.Invalid(fldPath.Child("maxReplicas"), b.MaxReplicas, "maxReplicas should be bigger than or equal to bufferSize"))
 		}
 		if b.MinReplicas != 0 && b.MinReplicas < int32(b.BufferSize.IntValue()) {
-			causes = append(causes, metav1.StatusCause{
-				Type:    metav1.CauseTypeFieldValueInvalid,
-				Field:   "minReplicas",
-				Message: "minReplicas is smaller than bufferSize",
-			})
+			allErrs = append(allErrs, field.Invalid(fldPath.Child("minReplicas"), b.MinReplicas, "minReplicas should be bigger than or equal to bufferSize"))
 		}
 	} else {
-		r, err := intstr.GetValueFromIntOrPercent(&b.BufferSize, 100, true)
+		r, err := intstr.GetScaledValueFromIntOrPercent(&b.BufferSize, 100, true)
 		if err != nil || r < 1 || r > 99 {
-			causes = append(causes, metav1.StatusCause{
-				Type:    metav1.CauseTypeFieldValueInvalid,
-				Field:   "bufferSize",
-				Message: "bufferSize does not have a valid percentage value (1%-99%)",
-			})
+			allErrs = append(allErrs, field.Invalid(fldPath.Child("bufferSize"), b.BufferSize.String(), "bufferSize should be between 1% and 99%"))
 		}
 		// When there is no allocated gameservers in a fleet,
 		// Fleetautoscaler would reduce size of a fleet to MinReplicas.
 		// If we have 0 MinReplicas and 0 Allocated then Fleetautoscaler would set Ready Replicas to 0
 		// and we will not be able to raise the number of GS in a Fleet above zero
 		if b.MinReplicas < 1 {
-			causes = append(causes, metav1.StatusCause{
-				Type:    metav1.CauseTypeFieldValueInvalid,
-				Field:   "minReplicas",
-				Message: "minReplicas should be above 0 when used with percentage value bufferSize",
-			})
+			allErrs = append(allErrs, field.Invalid(fldPath.Child("minReplicas"), b.MinReplicas, apimachineryvalidation.IsNegativeErrorMsg))
 		}
 	}
-	return causes
+	return allErrs
 }
 
 // ValidateCounterPolicy validates the FleetAutoscaler Counter policy settings.
 // Does not validate if a Counter with name CounterPolicy.Key is present in the fleet.
 // nolint:dupl  // Linter errors on lines are duplicate of ValidateListPolicy
-func (c *CounterPolicy) ValidateCounterPolicy(causes []metav1.StatusCause) []metav1.StatusCause {
+func (c *CounterPolicy) ValidateCounterPolicy(fldPath *field.Path) field.ErrorList {
+	var allErrs field.ErrorList
 	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
-		return append(causes, metav1.StatusCause{
-			Type:    metav1.CauseTypeFieldValueInvalid,
-			Field:   "counter",
-			Message: "feature CountsAndLists must be enabled",
-		})
+		return append(allErrs, field.Forbidden(fldPath, "feature CountsAndLists must be enabled"))
 	}
 
 	if c == nil {
-		return append(causes, metav1.StatusCause{
-			Type:    metav1.CauseTypeFieldValueInvalid,
-			Field:   "counter",
-			Message: "counter policy config params are missing",
-		})
+		return append(allErrs, field.Required(fldPath, "counter policy config params are missing"))
 	}
 
 	if c.MinCapacity > c.MaxCapacity {
-		causes = append(causes, metav1.StatusCause{
-			Type:    metav1.CauseTypeFieldValueInvalid,
-			Field:   "minCapacity",
-			Message: "minCapacity is bigger than maxCapacity",
-		})
+		allErrs = append(allErrs, field.Invalid(fldPath.Child("minCapacity"), c.MinCapacity, "minCapacity should be smaller than maxCapacity"))
 	}
 
 	if c.BufferSize.Type == intstr.Int {
 		if c.BufferSize.IntValue() <= 0 {
-			causes = append(causes, metav1.StatusCause{
-				Type:    metav1.CauseTypeFieldValueInvalid,
-				Field:   "bufferSize",
-				Message: "bufferSize must be bigger than 0",
-			})
+			allErrs = append(allErrs, field.Invalid(fldPath.Child("bufferSize"), c.BufferSize.IntValue(), apimachineryvalidation.IsNegativeErrorMsg))
 		}
 		if c.MaxCapacity < int64(c.BufferSize.IntValue()) {
-			causes = append(causes, metav1.StatusCause{
-				Type:    metav1.CauseTypeFieldValueInvalid,
-				Field:   "maxCapacity",
-				Message: "maxCapacity must be bigger than bufferSize",
-			})
+			allErrs = append(allErrs, field.Invalid(fldPath.Child("maxCapacity"), c.MaxCapacity, "maxCapacity should be bigger than or equal to bufferSize"))
 		}
 		if c.MinCapacity != 0 && c.MinCapacity < int64(c.BufferSize.IntValue()) {
-			causes = append(causes, metav1.StatusCause{
-				Type:    metav1.CauseTypeFieldValueInvalid,
-				Field:   "minCapacity",
-				Message: "minCapacity is smaller than bufferSize",
-			})
+			allErrs = append(allErrs, field.Invalid(fldPath.Child("minCapacity"), c.MinCapacity, "minCapacity should be bigger than or equal to bufferSize"))
 		}
 	} else {
-		r, err := intstr.GetValueFromIntOrPercent(&c.BufferSize, 100, true)
+		r, err := intstr.GetScaledValueFromIntOrPercent(&c.BufferSize, 100, true)
 		if err != nil || r < 1 || r > 99 {
-			causes = append(causes, metav1.StatusCause{
-				Type:    metav1.CauseTypeFieldValueInvalid,
-				Field:   "bufferSize",
-				Message: "bufferSize does not have a valid percentage value (1%-99%)",
-			})
+			allErrs = append(allErrs, field.Invalid(fldPath.Child("bufferSize"), c.BufferSize.String(), "bufferSize should be between 1% and 99%"))
 		}
 	}
 
-	return causes
+	return allErrs
 }
 
 // ValidateListPolicy validates the FleetAutoscaler List policy settings.
 // Does not validate if a List with name ListPolicy.Key is present in the fleet.
 // nolint:dupl  // Linter errors on lines are duplicate of ValidateCounterPolicy
-func (l *ListPolicy) ValidateListPolicy(causes []metav1.StatusCause) []metav1.StatusCause {
+func (l *ListPolicy) ValidateListPolicy(fldPath *field.Path) field.ErrorList {
+	var allErrs field.ErrorList
 	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
-		return append(causes, metav1.StatusCause{
-			Type:    metav1.CauseTypeFieldValueInvalid,
-			Field:   "list",
-			Message: "feature CountsAndLists must be enabled",
-		})
+		return append(allErrs, field.Forbidden(fldPath, "feature CountsAndLists must be enabled"))
 	}
 	if l == nil {
-		return append(causes, metav1.StatusCause{
-			Type:    metav1.CauseTypeFieldValueInvalid,
-			Field:   "list",
-			Message: "list policy config params are missing",
-		})
+		return append(allErrs, field.Required(fldPath, "list policy config params are missing"))
 	}
 	if l.MinCapacity > l.MaxCapacity {
-		causes = append(causes, metav1.StatusCause{
-			Type:    metav1.CauseTypeFieldValueInvalid,
-			Field:   "minCapacity",
-			Message: "minCapacity is bigger than maxCapacity",
-		})
+		allErrs = append(allErrs, field.Invalid(fldPath.Child("minCapacity"), l.MinCapacity, "minCapacity should be smaller than maxCapacity"))
 	}
 	if l.BufferSize.Type == intstr.Int {
 		if l.BufferSize.IntValue() <= 0 {
-			causes = append(causes, metav1.StatusCause{
-				Type:    metav1.CauseTypeFieldValueInvalid,
-				Field:   "bufferSize",
-				Message: "bufferSize must be bigger than 0",
-			})
+			allErrs = append(allErrs, field.Invalid(fldPath.Child("bufferSize"), l.BufferSize.IntValue(), apimachineryvalidation.IsNegativeErrorMsg))
 		}
 		if l.MaxCapacity < int64(l.BufferSize.IntValue()) {
-			causes = append(causes, metav1.StatusCause{
-				Type:    metav1.CauseTypeFieldValueInvalid,
-				Field:   "maxCapacity",
-				Message: "maxCapacity must be bigger than bufferSize",
-			})
+			allErrs = append(allErrs, field.Invalid(fldPath.Child("maxCapacity"), l.MaxCapacity, "maxCapacity should be bigger than or equal to bufferSize"))
 		}
 		if l.MinCapacity != 0 && l.MinCapacity < int64(l.BufferSize.IntValue()) {
-			causes = append(causes, metav1.StatusCause{
-				Type:    metav1.CauseTypeFieldValueInvalid,
-				Field:   "minCapacity",
-				Message: "minCapacity is smaller than bufferSize",
-			})
+			allErrs = append(allErrs, field.Invalid(fldPath.Child("minCapacity"), l.MinCapacity, "minCapacity should be bigger than or equal to bufferSize"))
 		}
 	} else {
-		r, err := intstr.GetValueFromIntOrPercent(&l.BufferSize, 100, true)
+		r, err := intstr.GetScaledValueFromIntOrPercent(&l.BufferSize, 100, true)
 		if err != nil || r < 1 || r > 99 {
-			causes = append(causes, metav1.StatusCause{
-				Type:    metav1.CauseTypeFieldValueInvalid,
-				Field:   "bufferSize",
-				Message: "bufferSize does not have a valid percentage value (1%-99%)",
-			})
+			allErrs = append(allErrs, field.Invalid(fldPath.Child("bufferSize"), l.BufferSize.String(), "bufferSize should be between 1% and 99%"))
 		}
 	}
-	return causes
+	return allErrs
 }
 
 // ValidateFixedIntervalSync validates the FixedIntervalSync settings
-func (i *FixedIntervalSync) ValidateFixedIntervalSync(causes []metav1.StatusCause) []metav1.StatusCause {
+func (i *FixedIntervalSync) ValidateFixedIntervalSync(fldPath *field.Path) field.ErrorList {
+	var allErrs field.ErrorList
 	if i == nil {
-		return append(causes, metav1.StatusCause{
-			Type:    metav1.CauseTypeFieldValueInvalid,
-			Field:   "fixedInterval",
-			Message: "fixedInterval config params are missing",
-		})
+		return append(allErrs, field.Required(fldPath, "fixedInterval sync config params are missing"))
 	}
 	if i.Seconds <= 0 {
-		return append(causes, metav1.StatusCause{
-			Type:    metav1.CauseTypeFieldValueInvalid,
-			Field:   "seconds",
-			Message: "seconds should be bigger than 0",
-		})
+		allErrs = append(allErrs, field.Invalid(fldPath.Child("seconds"), i.Seconds, apimachineryvalidation.IsNegativeErrorMsg))
 	}
-	return causes
+	return allErrs
 }
 
 // ApplyDefaults applies default values to the FleetAutoscaler

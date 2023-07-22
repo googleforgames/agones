@@ -30,6 +30,7 @@ import (
 	"agones.dev/agones/pkg/client/informers/externalversions"
 	listeragonesv1 "agones.dev/agones/pkg/client/listers/agones/v1"
 	listerautoscalingv1 "agones.dev/agones/pkg/client/listers/autoscaling/v1"
+	"agones.dev/agones/pkg/gameservers"
 	"agones.dev/agones/pkg/util/crd"
 	"agones.dev/agones/pkg/util/logfields"
 	"agones.dev/agones/pkg/util/runtime"
@@ -47,6 +48,7 @@ import (
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	runtimeschema "k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
@@ -76,6 +78,7 @@ type Extensions struct {
 type Controller struct {
 	baseLogger            *logrus.Entry
 	clock                 clock.WithTickerAndDelayedExecution
+	counter               *gameservers.PerNodeCounter
 	crdGetter             apiextclientv1.CustomResourceDefinitionInterface
 	fasThreads            map[types.UID]fasThread
 	fasThreadMutex        sync.Mutex
@@ -87,6 +90,7 @@ type Controller struct {
 	fleetAutoscalerSynced cache.InformerSynced
 	workerqueue           *workerqueue.WorkerQueue
 	recorder              record.EventRecorder
+	gameServerLister      listeragonesv1.GameServerLister
 }
 
 // NewController returns a controller for a FleetAutoscaler
@@ -95,12 +99,16 @@ func NewController(
 	kubeClient kubernetes.Interface,
 	extClient extclientset.Interface,
 	agonesClient versioned.Interface,
-	agonesInformerFactory externalversions.SharedInformerFactory) *Controller {
+	agonesInformerFactory externalversions.SharedInformerFactory,
+	counter *gameservers.PerNodeCounter) *Controller {
 
 	autoscaler := agonesInformerFactory.Autoscaling().V1().FleetAutoscalers()
 	fleetInformer := agonesInformerFactory.Agones().V1().Fleets()
+	gameServers := agonesInformerFactory.Agones().V1().GameServers()
+
 	c := &Controller{
 		clock:                 clock.RealClock{},
+		counter:               counter,
 		crdGetter:             extClient.ApiextensionsV1().CustomResourceDefinitions(),
 		fasThreads:            map[types.UID]fasThread{},
 		fasThreadMutex:        sync.Mutex{},
@@ -110,6 +118,7 @@ func NewController(
 		fleetAutoscalerGetter: agonesClient.AutoscalingV1(),
 		fleetAutoscalerLister: autoscaler.Lister(),
 		fleetAutoscalerSynced: autoscaler.Informer().HasSynced,
+		gameServerLister:      gameServers.Lister(),
 	}
 	c.baseLogger = runtime.NewLoggerWithType(c)
 	c.workerqueue = workerqueue.NewWorkerQueueWithRateLimiter(c.syncFleetAutoscaler, c.baseLogger, logfields.FleetAutoscalerKey, autoscaling.GroupName+".FleetAutoscalerController", workerqueue.FastRateLimiter(3*time.Second))
@@ -120,7 +129,7 @@ func NewController(
 	eventBroadcaster.StartRecordingToSink(&typedcorev1.EventSinkImpl{Interface: kubeClient.CoreV1().Events("")})
 	c.recorder = eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: "fleetautoscaler-controller"})
 
-	autoscaler.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
+	_, _ = autoscaler.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
 			c.addFasThread(obj.(*autoscalingv1.FleetAutoscaler), true)
 		},
@@ -250,22 +259,15 @@ func (ext *Extensions) validationHandler(review admissionv1.AdmissionReview) (ad
 		return review, errors.Wrapf(err, "error unmarshalling FleetAutoscaler json after schema validation: %s", obj.Raw)
 	}
 	fas.ApplyDefaults()
-	var causes []metav1.StatusCause
-	causes = fas.Validate(causes)
-	if len(causes) != 0 {
+
+	if errs := fas.Validate(); len(errs) > 0 {
+		kind := runtimeschema.GroupKind{
+			Group: review.Request.Kind.Group,
+			Kind:  review.Request.Kind.Kind,
+		}
+		statusErr := k8serrors.NewInvalid(kind, review.Request.Name, errs)
 		review.Response.Allowed = false
-		details := metav1.StatusDetails{
-			Name:   review.Request.Name,
-			Group:  review.Request.Kind.Group,
-			Kind:   review.Request.Kind.Kind,
-			Causes: causes,
-		}
-		review.Response.Result = &metav1.Status{
-			Status:  metav1.StatusFailure,
-			Message: "FleetAutoscaler is invalid",
-			Reason:  metav1.StatusReasonInvalid,
-			Details: &details,
-		}
+		review.Response.Result = &statusErr.ErrStatus
 		loggerForFleetAutoscaler(fas, ext.baseLogger).WithField("review", review).Debug("Invalid FleetAutoscaler")
 	}
 
@@ -311,7 +313,7 @@ func (c *Controller) syncFleetAutoscaler(ctx context.Context, key string) error 
 	}
 
 	currentReplicas := fleet.Status.Replicas
-	desiredReplicas, scalingLimited, err := computeDesiredFleetSize(fas, fleet)
+	desiredReplicas, scalingLimited, err := computeDesiredFleetSize(fas, fleet, c.gameServerLister, c.counter.Counts())
 	if err != nil {
 		c.recorder.Eventf(fas, corev1.EventTypeWarning, "FleetAutoscaler",
 			"Error calculating desired fleet size on FleetAutoscaler %s. Error: %s", fas.ObjectMeta.Name, err.Error())

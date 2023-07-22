@@ -166,14 +166,21 @@ message ListSelector {
 	int64 maxAvailable = 3;
 }
 
-// Priority is a sorting option for GameServers with Counters or Lists based on the count or
-// number of items in a List.
-// PriorityType: Sort by a "Counter" or a "List".
+// Priority is a sorting option for GameServers with Counters or Lists based on the Capacity.
+// Type: Sort by a "Counter" or a "List".
 // Key: The name of the Counter or List. If not found on the GameServer, has no impact.
-// Order: Sort by "Ascending" or "Descending". Default is "Descending" so bigger count is preferred.
-// "Ascending" would be smaller count is preferred.
+// Order: Sort by "Ascending" or "Descending". "Descending" a bigger Capacity is preferred.
+// "Ascending" would be smaller Capacity is preferred.
 message Priority {
-  string priorityType = 1;
+  enum Type {
+    Counter = 0;
+    List = 1;
+  }
+  Type type = 1;
   string key = 2;
-  string order = 3;
+  enum Order {
+    Ascending = 0;
+    Descending = 1;
+  }
+  Order order = 3;
 }

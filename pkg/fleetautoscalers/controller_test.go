@@ -24,8 +24,10 @@ import (
 	"testing"
 	"time"
 
+	"agones.dev/agones/pkg/apis"
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	autoscalingv1 "agones.dev/agones/pkg/apis/autoscaling/v1"
+	"agones.dev/agones/pkg/gameservers"
 	agtesting "agones.dev/agones/pkg/testing"
 	"agones.dev/agones/pkg/util/webhooks"
 	"github.com/heptiolabs/healthcheck"
@@ -686,7 +688,7 @@ func TestControllerSyncFleetAutoscaler(t *testing.T) {
 
 		err := c.syncFleetAutoscaler(ctx, "default/fas-1")
 		if assert.NotNil(t, err) {
-			assert.Equal(t, "error calculating autoscaling fleet: fleet-1: wrong policy type, should be one of: Buffer, Webhook", err.Error())
+			assert.Equal(t, "error calculating autoscaling fleet: fleet-1: wrong policy type, should be one of: Buffer, Webhook, Counter, List", err.Error())
 		}
 	})
 
@@ -756,13 +758,13 @@ func TestControllerSyncFleetAutoscaler(t *testing.T) {
 		t.Parallel()
 
 		c, m := newFakeController()
-		ctx, cancel := agtesting.StartInformers(m, c.fleetSynced, c.fleetAutoscalerSynced)
-		defer cancel()
-
 		m.AgonesClient.AddReactor("get", "fleetautoscalers", func(action k8stesting.Action) (bool, runtime.Object, error) {
 			ga := action.(k8stesting.GetAction)
 			return true, nil, k8serrors.NewNotFound(corev1.Resource("gameserver"), ga.GetName())
 		})
+
+		ctx, cancel := agtesting.StartInformers(m, c.fleetSynced, c.fleetAutoscalerSynced)
+		defer cancel()
 
 		require.NoError(t, c.syncFleetAutoscaler(ctx, "default/fas-1"))
 	})
@@ -1167,8 +1169,9 @@ func defaultFixtures() (*autoscalingv1.FleetAutoscaler, *agonesv1.Fleet) {
 			UID:       "1234",
 		},
 		Spec: agonesv1.FleetSpec{
-			Replicas: 8,
-			Template: agonesv1.GameServerTemplateSpec{},
+			Replicas:   8,
+			Scheduling: apis.Packed,
+			Template:   agonesv1.GameServerTemplateSpec{},
 		},
 		Status: agonesv1.FleetStatus{
 			Replicas:          5,
@@ -1224,7 +1227,8 @@ func defaultWebhookFixtures() (*autoscalingv1.FleetAutoscaler, *agonesv1.Fleet) 
 // newFakeController returns a controller, backed by the fake Clientset
 func newFakeController() (*Controller, agtesting.Mocks) {
 	m := agtesting.NewMocks()
-	c := NewController(healthcheck.NewHandler(), m.KubeClient, m.ExtClient, m.AgonesClient, m.AgonesInformerFactory)
+	counter := gameservers.NewPerNodeCounter(m.KubeInformerFactory, m.AgonesInformerFactory)
+	c := NewController(healthcheck.NewHandler(), m.KubeClient, m.ExtClient, m.AgonesClient, m.AgonesInformerFactory, counter)
 	c.recorder = m.FakeRecorder
 	return c, m
 }

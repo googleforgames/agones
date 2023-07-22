@@ -280,6 +280,28 @@ spec:
                           anyOf:
                             - type: integer
                             - type: string
+                priorities:
+                  type: array
+                  description: Configuration of Counters and Lists scale down logic -- which gameservers in the Fleet are most important to keep around.
+                  nullable: true
+                  items:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                        description: Whether a Counter or a List.
+                        enum:
+                          - Counter
+                          - List
+                      key:
+                        type: string
+                        description: The name of the Counter or List. If not found on the GameServer, those GameServer with the key will have priority over those that do not.
+                      order:
+                        type: string
+                        description: Ascending or Descending sort order. Default is "Ascending" so remove smaller total capacity first. "Descending" would remove larger total capacity first.
+                        enum:
+                          - Ascending
+                          - Descending
                 template:                 
                  description: 'GameServer is the data structure for a GameServer resource.'
                  type: object
@@ -1270,7 +1292,7 @@ spec:
                                                        - value
                                                      properties:
                                                        name:
-                                                         description: The header field name
+                                                         description: The header field name. This will be canonicalized upon output, so case-variant names will be understood as the same header.
                                                          type: string
                                                        value:
                                                          description: The header field value
@@ -1338,7 +1360,7 @@ spec:
                                                        - value
                                                      properties:
                                                        name:
-                                                         description: The header field name
+                                                         description: The header field name. This will be canonicalized upon output, so case-variant names will be understood as the same header.
                                                          type: string
                                                        value:
                                                          description: The header field value
@@ -1426,7 +1448,7 @@ spec:
                                                    - value
                                                  properties:
                                                    name:
-                                                     description: The header field name
+                                                     description: The header field name. This will be canonicalized upon output, so case-variant names will be understood as the same header.
                                                      type: string
                                                    value:
                                                      description: The header field value
@@ -1572,7 +1594,7 @@ spec:
                                                    - value
                                                  properties:
                                                    name:
-                                                     description: The header field name
+                                                     description: The header field name. This will be canonicalized upon output, so case-variant names will be understood as the same header.
                                                      type: string
                                                    value:
                                                      description: The header field value
@@ -1632,6 +1654,22 @@ spec:
                                        description: 'Compute Resources required by this container. Cannot be updated. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                                        type: object
                                        properties:
+                                         claims:
+                                           description: |-
+                                             Claims lists the names of resources, defined in spec.resourceClaims, that are used by this container.
+                         
+                                             This is an alpha field and requires enabling the DynamicResourceAllocation feature gate.
+                         
+                                             This field is immutable. It can only be set for containers.
+                                           type: array
+                                           items:
+                                             type: object
+                                             required:
+                                               - name
+                                             properties:
+                                               name:
+                                                 description: Name must match the name of one entry in pod.spec.resourceClaims of the Pod where this field is used. It makes that resource available inside a container.
+                                                 type: string
                                          limits:
                                            description: 'Limits describes the maximum amount of compute resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                                            type: object
@@ -1791,7 +1829,7 @@ spec:
                                                    - value
                                                  properties:
                                                    name:
-                                                     description: The header field name
+                                                     description: The header field name. This will be canonicalized upon output, so case-variant names will be understood as the same header.
                                                      type: string
                                                    value:
                                                      description: The header field value
@@ -2136,7 +2174,7 @@ spec:
                                                        - value
                                                      properties:
                                                        name:
-                                                         description: The header field name
+                                                         description: The header field name. This will be canonicalized upon output, so case-variant names will be understood as the same header.
                                                          type: string
                                                        value:
                                                          description: The header field value
@@ -2204,7 +2242,7 @@ spec:
                                                        - value
                                                      properties:
                                                        name:
-                                                         description: The header field name
+                                                         description: The header field name. This will be canonicalized upon output, so case-variant names will be understood as the same header.
                                                          type: string
                                                        value:
                                                          description: The header field value
@@ -2292,7 +2330,7 @@ spec:
                                                    - value
                                                  properties:
                                                    name:
-                                                     description: The header field name
+                                                     description: The header field name. This will be canonicalized upon output, so case-variant names will be understood as the same header.
                                                      type: string
                                                    value:
                                                      description: The header field value
@@ -2438,7 +2476,7 @@ spec:
                                                    - value
                                                  properties:
                                                    name:
-                                                     description: The header field name
+                                                     description: The header field name. This will be canonicalized upon output, so case-variant names will be understood as the same header.
                                                      type: string
                                                    value:
                                                      description: The header field value
@@ -2498,6 +2536,22 @@ spec:
                                        description: Resources are not allowed for ephemeral containers. Ephemeral containers use spare resources already allocated to the pod.
                                        type: object
                                        properties:
+                                         claims:
+                                           description: |-
+                                             Claims lists the names of resources, defined in spec.resourceClaims, that are used by this container.
+                         
+                                             This is an alpha field and requires enabling the DynamicResourceAllocation feature gate.
+                         
+                                             This field is immutable. It can only be set for containers.
+                                           type: array
+                                           items:
+                                             type: object
+                                             required:
+                                               - name
+                                             properties:
+                                               name:
+                                                 description: Name must match the name of one entry in pod.spec.resourceClaims of the Pod where this field is used. It makes that resource available inside a container.
+                                                 type: string
                                          limits:
                                            description: 'Limits describes the maximum amount of compute resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                                            type: object
@@ -2657,7 +2711,7 @@ spec:
                                                    - value
                                                  properties:
                                                    name:
-                                                     description: The header field name
+                                                     description: The header field name. This will be canonicalized upon output, so case-variant names will be understood as the same header.
                                                      type: string
                                                    value:
                                                      description: The header field value
@@ -3004,7 +3058,7 @@ spec:
                                                        - value
                                                      properties:
                                                        name:
-                                                         description: The header field name
+                                                         description: The header field name. This will be canonicalized upon output, so case-variant names will be understood as the same header.
                                                          type: string
                                                        value:
                                                          description: The header field value
@@ -3072,7 +3126,7 @@ spec:
                                                        - value
                                                      properties:
                                                        name:
-                                                         description: The header field name
+                                                         description: The header field name. This will be canonicalized upon output, so case-variant names will be understood as the same header.
                                                          type: string
                                                        value:
                                                          description: The header field value
@@ -3160,7 +3214,7 @@ spec:
                                                    - value
                                                  properties:
                                                    name:
-                                                     description: The header field name
+                                                     description: The header field name. This will be canonicalized upon output, so case-variant names will be understood as the same header.
                                                      type: string
                                                    value:
                                                      description: The header field value
@@ -3306,7 +3360,7 @@ spec:
                                                    - value
                                                  properties:
                                                    name:
-                                                     description: The header field name
+                                                     description: The header field name. This will be canonicalized upon output, so case-variant names will be understood as the same header.
                                                      type: string
                                                    value:
                                                      description: The header field value
@@ -3366,6 +3420,22 @@ spec:
                                        description: 'Compute Resources required by this container. Cannot be updated. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                                        type: object
                                        properties:
+                                         claims:
+                                           description: |-
+                                             Claims lists the names of resources, defined in spec.resourceClaims, that are used by this container.
+                         
+                                             This is an alpha field and requires enabling the DynamicResourceAllocation feature gate.
+                         
+                                             This field is immutable. It can only be set for containers.
+                                           type: array
+                                           items:
+                                             type: object
+                                             required:
+                                               - name
+                                             properties:
+                                               name:
+                                                 description: Name must match the name of one entry in pod.spec.resourceClaims of the Pod where this field is used. It makes that resource available inside a container.
+                                                 type: string
                                          limits:
                                            description: 'Limits describes the maximum amount of compute resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                                            type: object
@@ -3525,7 +3595,7 @@ spec:
                                                    - value
                                                  properties:
                                                    name:
-                                                     description: The header field name
+                                                     description: The header field name. This will be canonicalized upon output, so case-variant names will be understood as the same header.
                                                      type: string
                                                    value:
                                                      description: The header field value
@@ -3698,6 +3768,39 @@ spec:
                                      conditionType:
                                        description: ConditionType refers to a condition in the pod's condition list with matching type.
                                        type: string
+                               resourceClaims:
+                                 description: |-
+                                   ResourceClaims defines which ResourceClaims must be allocated and reserved before the Pod is allowed to start. The resources will be made available to those containers which consume them by name.
+                         
+                                   This is an alpha field and requires enabling the DynamicResourceAllocation feature gate.
+                         
+                                   This field is immutable.
+                                 type: array
+                                 items:
+                                   type: object
+                                   required:
+                                     - name
+                                   properties:
+                                     name:
+                                       description: Name uniquely identifies this resource claim inside the pod. This must be a DNS_LABEL.
+                                       type: string
+                                     source:
+                                       description: Source describes where to find the ResourceClaim.
+                                       type: object
+                                       properties:
+                                         resourceClaimName:
+                                           description: ResourceClaimName is the name of a ResourceClaim object in the same namespace as this pod.
+                                           type: string
+                                         resourceClaimTemplateName:
+                                           description: |-
+                                             ResourceClaimTemplateName is the name of a ResourceClaimTemplate object in the same namespace as this pod.
+                         
+                                             The template will be used to create a new ResourceClaim, which will be bound to this pod. When this pod is deleted, the ResourceClaim will also be deleted. The name of the ResourceClaim will be <pod name>-<resource name>, where <resource name> is the PodResourceClaim.Name. Pod validation will reject the pod if the concatenated name is not valid for a ResourceClaim (e.g. too long).
+                         
+                                             An existing ResourceClaim with that name that is not owned by the pod will not be used for the pod to avoid using an unrelated resource by mistake. Scheduling and pod startup are then blocked until the unrelated ResourceClaim is removed.
+                         
+                                             This field is immutable and no changes will be made to the corresponding ResourceClaim by the control plane after creating the ResourceClaim.
+                                           type: string
                                restartPolicy:
                                  description: |-
                                    Restart policy for all containers within the pod. One of Always, OnFailure, Never. Default to Always. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#restart-policy
@@ -3717,6 +3820,20 @@ spec:
                                schedulerName:
                                  description: If specified, the pod will be dispatched by specified scheduler. If not specified, the pod will be dispatched by default scheduler.
                                  type: string
+                               schedulingGates:
+                                 description: |-
+                                   SchedulingGates is an opaque list of values that if specified will block scheduling the pod. More info:  https://git.k8s.io/enhancements/keps/sig-scheduling/3521-pod-scheduling-readiness.
+                         
+                                   This is an alpha-level feature enabled by PodSchedulingReadiness feature gate.
+                                 type: array
+                                 items:
+                                   type: object
+                                   required:
+                                     - name
+                                   properties:
+                                     name:
+                                       description: Name of the scheduling gate. Each scheduling gate must have a unique name field.
+                                       type: string
                                securityContext:
                                  description: 'SecurityContext holds pod-level security attributes and common container settings. Optional: Defaults to empty.  See type description for default values of each field.'
                                  type: object
@@ -3785,7 +3902,7 @@ spec:
                                            - RuntimeDefault
                                            - Unconfined
                                    supplementalGroups:
-                                     description: A list of groups applied to the first process run in each container, in addition to the container's primary GID.  If unspecified, no groups will be added to any container. Note that this field cannot be set when spec.os.name is windows.
+                                     description: A list of groups applied to the first process run in each container, in addition to the container's primary GID, the fsGroup (if specified), and group memberships defined in the container image for the uid of the container process. If unspecified, no additional groups are added to any container. Note that group memberships defined in the container image for the uid of the container process are still effective, even if they are not included in this list. Note that this field cannot be set when spec.os.name is windows.
                                      type: array
                                      items:
                                        type: integer
@@ -3942,13 +4059,13 @@ spec:
                                        description: |-
                                          NodeAffinityPolicy indicates how we will treat Pod's nodeAffinity/nodeSelector when calculating pod topology spread skew. Options are: - Honor: only nodes matching nodeAffinity/nodeSelector are included in the calculations. - Ignore: nodeAffinity/nodeSelector are ignored. All nodes are included in the calculations.
                          
-                                         If this value is nil, the behavior is equivalent to the Honor policy. This is a alpha-level feature enabled by the NodeInclusionPolicyInPodTopologySpread feature flag.
+                                         If this value is nil, the behavior is equivalent to the Honor policy. This is a beta-level feature default enabled by the NodeInclusionPolicyInPodTopologySpread feature flag.
                                        type: string
                                      nodeTaintsPolicy:
                                        description: |-
                                          NodeTaintsPolicy indicates how we will treat node taints when calculating pod topology spread skew. Options are: - Honor: nodes without taints, along with tainted nodes for which the incoming pod has a toleration, are included. - Ignore: node taints are ignored. All nodes are included.
                          
-                                         If this value is nil, the behavior is equivalent to the Ignore policy. This is a alpha-level feature enabled by the NodeInclusionPolicyInPodTopologySpread feature flag.
+                                         If this value is nil, the behavior is equivalent to the Ignore policy. This is a beta-level feature default enabled by the NodeInclusionPolicyInPodTopologySpread feature flag.
                                        type: string
                                      topologyKey:
                                        description: TopologyKey is the key of node labels. Nodes that have a label with this key and identical values are considered to be in the same topology. We consider each <key, value> as a "bucket", and try to put balanced number of pods into each bucket. We define a domain as a particular instance of a topology. Also, we define an eligible domain as a domain whose nodes meet the requirements of nodeAffinityPolicy and nodeTaintsPolicy. e.g. If TopologyKey is "kubernetes.io/hostname", each Node is a domain of that topology. And, if TopologyKey is "topology.kubernetes.io/zone", each zone is a domain of that topology. It's a required field.
@@ -4385,7 +4502,7 @@ spec:
                                                    items:
                                                      type: string
                                                  dataSource:
-                                                   description: 'dataSource field can be used to specify either: * An existing VolumeSnapshot object (snapshot.storage.k8s.io/VolumeSnapshot) * An existing PVC (PersistentVolumeClaim) If the provisioner or an external controller can support the specified data source, it will create a new volume based on the contents of the specified data source. If the AnyVolumeDataSource feature gate is enabled, this field will always have the same contents as the DataSourceRef field.'
+                                                   description: 'dataSource field can be used to specify either: * An existing VolumeSnapshot object (snapshot.storage.k8s.io/VolumeSnapshot) * An existing PVC (PersistentVolumeClaim) If the provisioner or an external controller can support the specified data source, it will create a new volume based on the contents of the specified data source. When the AnyVolumeDataSource feature gate is enabled, dataSource contents will be copied to dataSourceRef, and dataSourceRef contents will be copied to dataSource when dataSourceRef.namespace is not specified. If the namespace is specified, then dataSourceRef will not be copied to dataSource.'
                                                    type: object
                                                    required:
                                                      - kind
@@ -4403,12 +4520,14 @@ spec:
                                                    x-kubernetes-map-type: atomic
                                                  dataSourceRef:
                                                    description: |-
-                                                     dataSourceRef specifies the object from which to populate the volume with data, if a non-empty volume is desired. This may be any local object from a non-empty API group (non core object) or a PersistentVolumeClaim object. When this field is specified, volume binding will only succeed if the type of the specified object matches some installed volume populator or dynamic provisioner. This field will replace the functionality of the DataSource field and as such if both fields are non-empty, they must have the same value. For backwards compatibility, both fields (DataSource and DataSourceRef) will be set to the same value automatically if one of them is empty and the other is non-empty. There are two important differences between DataSource and DataSourceRef: * While DataSource only allows two specific types of objects, DataSourceRef
+                                                     dataSourceRef specifies the object from which to populate the volume with data, if a non-empty volume is desired. This may be any object from a non-empty API group (non core object) or a PersistentVolumeClaim object. When this field is specified, volume binding will only succeed if the type of the specified object matches some installed volume populator or dynamic provisioner. This field will replace the functionality of the dataSource field and as such if both fields are non-empty, they must have the same value. For backwards compatibility, when namespace isn't specified in dataSourceRef, both fields (dataSource and dataSourceRef) will be set to the same value automatically if one of them is empty and the other is non-empty. When namespace is specified in dataSourceRef, dataSource isn't set to the same value and must be empty. There are three important differences between dataSource and dataSourceRef: * While dataSource only allows two specific types of objects, dataSourceRef
                                                        allows any non-core object, as well as PersistentVolumeClaim objects.
-                                                     * While DataSource ignores disallowed values (dropping them), DataSourceRef
+                                                     * While dataSource ignores disallowed values (dropping them), dataSourceRef
                                                        preserves all values, and generates an error if a disallowed value is
                                                        specified.
-                                                     (Beta) Using this field requires the AnyVolumeDataSource feature gate to be enabled.
+                                                     * While dataSource only allows local objects, dataSourceRef allows objects
+                                                       in any namespaces.
+                                                     (Beta) Using this field requires the AnyVolumeDataSource feature gate to be enabled. (Alpha) Using the namespace field of dataSourceRef requires the CrossNamespaceVolumeDataSource feature gate to be enabled.
                                                    type: object
                                                    required:
                                                      - kind
@@ -4423,11 +4542,29 @@ spec:
                                                      name:
                                                        description: Name is the name of resource being referenced
                                                        type: string
-                                                   x-kubernetes-map-type: atomic
+                                                     namespace:
+                                                       description: Namespace is the namespace of resource being referenced Note that when a namespace is specified, a gateway.networking.k8s.io/ReferenceGrant object is required in the referent namespace to allow that namespace's owner to accept the reference. See the ReferenceGrant documentation for details. (Alpha) This field requires the CrossNamespaceVolumeDataSource feature gate to be enabled.
+                                                       type: string
                                                  resources:
                                                    description: 'resources represents the minimum resources the volume should have. If RecoverVolumeExpansionFailure feature is enabled users are allowed to specify resource requirements that are lower than previous value but must still be higher than capacity recorded in the status field of the claim. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources'
                                                    type: object
                                                    properties:
+                                                     claims:
+                                                       description: |-
+                                                         Claims lists the names of resources, defined in spec.resourceClaims, that are used by this container.
+                         
+                                                         This is an alpha field and requires enabling the DynamicResourceAllocation feature gate.
+                         
+                                                         This field is immutable. It can only be set for containers.
+                                                       type: array
+                                                       items:
+                                                         type: object
+                                                         required:
+                                                           - name
+                                                         properties:
+                                                           name:
+                                                             description: Name must match the name of one entry in pod.spec.resourceClaims of the Pod where this field is used. It makes that resource available inside a container.
+                                                             type: string
                                                      limits:
                                                        description: 'Limits describes the maximum amount of compute resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                                                        type: object
@@ -6382,7 +6519,7 @@ spec:
                                                - value
                                              properties:
                                                name:
-                                                 description: The header field name
+                                                 description: The header field name. This will be canonicalized upon output, so case-variant names will be understood as the same header.
                                                  type: string
                                                value:
                                                  description: The header field value
@@ -6450,7 +6587,7 @@ spec:
                                                - value
                                              properties:
                                                name:
-                                                 description: The header field name
+                                                 description: The header field name. This will be canonicalized upon output, so case-variant names will be understood as the same header.
                                                  type: string
                                                value:
                                                  description: The header field value
@@ -6538,7 +6675,7 @@ spec:
                                            - value
                                          properties:
                                            name:
-                                             description: The header field name
+                                             description: The header field name. This will be canonicalized upon output, so case-variant names will be understood as the same header.
                                              type: string
                                            value:
                                              description: The header field value
@@ -6684,7 +6821,7 @@ spec:
                                            - value
                                          properties:
                                            name:
-                                             description: The header field name
+                                             description: The header field name. This will be canonicalized upon output, so case-variant names will be understood as the same header.
                                              type: string
                                            value:
                                              description: The header field value
@@ -6744,6 +6881,22 @@ spec:
                                description: 'Compute Resources required by this container. Cannot be updated. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                                type: object
                                properties:
+                                 claims:
+                                   description: |-
+                                     Claims lists the names of resources, defined in spec.resourceClaims, that are used by this container.
+                 
+                                     This is an alpha field and requires enabling the DynamicResourceAllocation feature gate.
+                 
+                                     This field is immutable. It can only be set for containers.
+                                   type: array
+                                   items:
+                                     type: object
+                                     required:
+                                       - name
+                                     properties:
+                                       name:
+                                         description: Name must match the name of one entry in pod.spec.resourceClaims of the Pod where this field is used. It makes that resource available inside a container.
+                                         type: string
                                  limits:
                                    description: 'Limits describes the maximum amount of compute resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                                    type: object
@@ -6903,7 +7056,7 @@ spec:
                                            - value
                                          properties:
                                            name:
-                                             description: The header field name
+                                             description: The header field name. This will be canonicalized upon output, so case-variant names will be understood as the same header.
                                              type: string
                                            value:
                                              description: The header field value
@@ -7248,7 +7401,7 @@ spec:
                                                - value
                                              properties:
                                                name:
-                                                 description: The header field name
+                                                 description: The header field name. This will be canonicalized upon output, so case-variant names will be understood as the same header.
                                                  type: string
                                                value:
                                                  description: The header field value
@@ -7316,7 +7469,7 @@ spec:
                                                - value
                                              properties:
                                                name:
-                                                 description: The header field name
+                                                 description: The header field name. This will be canonicalized upon output, so case-variant names will be understood as the same header.
                                                  type: string
                                                value:
                                                  description: The header field value
@@ -7404,7 +7557,7 @@ spec:
                                            - value
                                          properties:
                                            name:
-                                             description: The header field name
+                                             description: The header field name. This will be canonicalized upon output, so case-variant names will be understood as the same header.
                                              type: string
                                            value:
                                              description: The header field value
@@ -7550,7 +7703,7 @@ spec:
                                            - value
                                          properties:
                                            name:
-                                             description: The header field name
+                                             description: The header field name. This will be canonicalized upon output, so case-variant names will be understood as the same header.
                                              type: string
                                            value:
                                              description: The header field value
@@ -7610,6 +7763,22 @@ spec:
                                description: Resources are not allowed for ephemeral containers. Ephemeral containers use spare resources already allocated to the pod.
                                type: object
                                properties:
+                                 claims:
+                                   description: |-
+                                     Claims lists the names of resources, defined in spec.resourceClaims, that are used by this container.
+                 
+                                     This is an alpha field and requires enabling the DynamicResourceAllocation feature gate.
+                 
+                                     This field is immutable. It can only be set for containers.
+                                   type: array
+                                   items:
+                                     type: object
+                                     required:
+                                       - name
+                                     properties:
+                                       name:
+                                         description: Name must match the name of one entry in pod.spec.resourceClaims of the Pod where this field is used. It makes that resource available inside a container.
+                                         type: string
                                  limits:
                                    description: 'Limits describes the maximum amount of compute resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                                    type: object
@@ -7769,7 +7938,7 @@ spec:
                                            - value
                                          properties:
                                            name:
-                                             description: The header field name
+                                             description: The header field name. This will be canonicalized upon output, so case-variant names will be understood as the same header.
                                              type: string
                                            value:
                                              description: The header field value
@@ -8116,7 +8285,7 @@ spec:
                                                - value
                                              properties:
                                                name:
-                                                 description: The header field name
+                                                 description: The header field name. This will be canonicalized upon output, so case-variant names will be understood as the same header.
                                                  type: string
                                                value:
                                                  description: The header field value
@@ -8184,7 +8353,7 @@ spec:
                                                - value
                                              properties:
                                                name:
-                                                 description: The header field name
+                                                 description: The header field name. This will be canonicalized upon output, so case-variant names will be understood as the same header.
                                                  type: string
                                                value:
                                                  description: The header field value
@@ -8272,7 +8441,7 @@ spec:
                                            - value
                                          properties:
                                            name:
-                                             description: The header field name
+                                             description: The header field name. This will be canonicalized upon output, so case-variant names will be understood as the same header.
                                              type: string
                                            value:
                                              description: The header field value
@@ -8418,7 +8587,7 @@ spec:
                                            - value
                                          properties:
                                            name:
-                                             description: The header field name
+                                             description: The header field name. This will be canonicalized upon output, so case-variant names will be understood as the same header.
                                              type: string
                                            value:
                                              description: The header field value
@@ -8478,6 +8647,22 @@ spec:
                                description: 'Compute Resources required by this container. Cannot be updated. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                                type: object
                                properties:
+                                 claims:
+                                   description: |-
+                                     Claims lists the names of resources, defined in spec.resourceClaims, that are used by this container.
+                 
+                                     This is an alpha field and requires enabling the DynamicResourceAllocation feature gate.
+                 
+                                     This field is immutable. It can only be set for containers.
+                                   type: array
+                                   items:
+                                     type: object
+                                     required:
+                                       - name
+                                     properties:
+                                       name:
+                                         description: Name must match the name of one entry in pod.spec.resourceClaims of the Pod where this field is used. It makes that resource available inside a container.
+                                         type: string
                                  limits:
                                    description: 'Limits describes the maximum amount of compute resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                                    type: object
@@ -8637,7 +8822,7 @@ spec:
                                            - value
                                          properties:
                                            name:
-                                             description: The header field name
+                                             description: The header field name. This will be canonicalized upon output, so case-variant names will be understood as the same header.
                                              type: string
                                            value:
                                              description: The header field value
@@ -8810,6 +8995,39 @@ spec:
                              conditionType:
                                description: ConditionType refers to a condition in the pod's condition list with matching type.
                                type: string
+                       resourceClaims:
+                         description: |-
+                           ResourceClaims defines which ResourceClaims must be allocated and reserved before the Pod is allowed to start. The resources will be made available to those containers which consume them by name.
+                 
+                           This is an alpha field and requires enabling the DynamicResourceAllocation feature gate.
+                 
+                           This field is immutable.
+                         type: array
+                         items:
+                           type: object
+                           required:
+                             - name
+                           properties:
+                             name:
+                               description: Name uniquely identifies this resource claim inside the pod. This must be a DNS_LABEL.
+                               type: string
+                             source:
+                               description: Source describes where to find the ResourceClaim.
+                               type: object
+                               properties:
+                                 resourceClaimName:
+                                   description: ResourceClaimName is the name of a ResourceClaim object in the same namespace as this pod.
+                                   type: string
+                                 resourceClaimTemplateName:
+                                   description: |-
+                                     ResourceClaimTemplateName is the name of a ResourceClaimTemplate object in the same namespace as this pod.
+                 
+                                     The template will be used to create a new ResourceClaim, which will be bound to this pod. When this pod is deleted, the ResourceClaim will also be deleted. The name of the ResourceClaim will be <pod name>-<resource name>, where <resource name> is the PodResourceClaim.Name. Pod validation will reject the pod if the concatenated name is not valid for a ResourceClaim (e.g. too long).
+                 
+                                     An existing ResourceClaim with that name that is not owned by the pod will not be used for the pod to avoid using an unrelated resource by mistake. Scheduling and pod startup are then blocked until the unrelated ResourceClaim is removed.
+                 
+                                     This field is immutable and no changes will be made to the corresponding ResourceClaim by the control plane after creating the ResourceClaim.
+                                   type: string
                        restartPolicy:
                          description: |-
                            Restart policy for all containers within the pod. One of Always, OnFailure, Never. Default to Always. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#restart-policy
@@ -8829,6 +9047,20 @@ spec:
                        schedulerName:
                          description: If specified, the pod will be dispatched by specified scheduler. If not specified, the pod will be dispatched by default scheduler.
                          type: string
+                       schedulingGates:
+                         description: |-
+                           SchedulingGates is an opaque list of values that if specified will block scheduling the pod. More info:  https://git.k8s.io/enhancements/keps/sig-scheduling/3521-pod-scheduling-readiness.
+                 
+                           This is an alpha-level feature enabled by PodSchedulingReadiness feature gate.
+                         type: array
+                         items:
+                           type: object
+                           required:
+                             - name
+                           properties:
+                             name:
+                               description: Name of the scheduling gate. Each scheduling gate must have a unique name field.
+                               type: string
                        securityContext:
                          description: 'SecurityContext holds pod-level security attributes and common container settings. Optional: Defaults to empty.  See type description for default values of each field.'
                          type: object
@@ -8897,7 +9129,7 @@ spec:
                                    - RuntimeDefault
                                    - Unconfined
                            supplementalGroups:
-                             description: A list of groups applied to the first process run in each container, in addition to the container's primary GID.  If unspecified, no groups will be added to any container. Note that this field cannot be set when spec.os.name is windows.
+                             description: A list of groups applied to the first process run in each container, in addition to the container's primary GID, the fsGroup (if specified), and group memberships defined in the container image for the uid of the container process. If unspecified, no additional groups are added to any container. Note that group memberships defined in the container image for the uid of the container process are still effective, even if they are not included in this list. Note that this field cannot be set when spec.os.name is windows.
                              type: array
                              items:
                                type: integer
@@ -9054,13 +9286,13 @@ spec:
                                description: |-
                                  NodeAffinityPolicy indicates how we will treat Pod's nodeAffinity/nodeSelector when calculating pod topology spread skew. Options are: - Honor: only nodes matching nodeAffinity/nodeSelector are included in the calculations. - Ignore: nodeAffinity/nodeSelector are ignored. All nodes are included in the calculations.
                  
-                                 If this value is nil, the behavior is equivalent to the Honor policy. This is a alpha-level feature enabled by the NodeInclusionPolicyInPodTopologySpread feature flag.
+                                 If this value is nil, the behavior is equivalent to the Honor policy. This is a beta-level feature default enabled by the NodeInclusionPolicyInPodTopologySpread feature flag.
                                type: string
                              nodeTaintsPolicy:
                                description: |-
                                  NodeTaintsPolicy indicates how we will treat node taints when calculating pod topology spread skew. Options are: - Honor: nodes without taints, along with tainted nodes for which the incoming pod has a toleration, are included. - Ignore: node taints are ignored. All nodes are included.
                  
-                                 If this value is nil, the behavior is equivalent to the Ignore policy. This is a alpha-level feature enabled by the NodeInclusionPolicyInPodTopologySpread feature flag.
+                                 If this value is nil, the behavior is equivalent to the Ignore policy. This is a beta-level feature default enabled by the NodeInclusionPolicyInPodTopologySpread feature flag.
                                type: string
                              topologyKey:
                                description: TopologyKey is the key of node labels. Nodes that have a label with this key and identical values are considered to be in the same topology. We consider each <key, value> as a "bucket", and try to put balanced number of pods into each bucket. We define a domain as a particular instance of a topology. Also, we define an eligible domain as a domain whose nodes meet the requirements of nodeAffinityPolicy and nodeTaintsPolicy. e.g. If TopologyKey is "kubernetes.io/hostname", each Node is a domain of that topology. And, if TopologyKey is "topology.kubernetes.io/zone", each zone is a domain of that topology. It's a required field.
@@ -9497,7 +9729,7 @@ spec:
                                            items:
                                              type: string
                                          dataSource:
-                                           description: 'dataSource field can be used to specify either: * An existing VolumeSnapshot object (snapshot.storage.k8s.io/VolumeSnapshot) * An existing PVC (PersistentVolumeClaim) If the provisioner or an external controller can support the specified data source, it will create a new volume based on the contents of the specified data source. If the AnyVolumeDataSource feature gate is enabled, this field will always have the same contents as the DataSourceRef field.'
+                                           description: 'dataSource field can be used to specify either: * An existing VolumeSnapshot object (snapshot.storage.k8s.io/VolumeSnapshot) * An existing PVC (PersistentVolumeClaim) If the provisioner or an external controller can support the specified data source, it will create a new volume based on the contents of the specified data source. When the AnyVolumeDataSource feature gate is enabled, dataSource contents will be copied to dataSourceRef, and dataSourceRef contents will be copied to dataSource when dataSourceRef.namespace is not specified. If the namespace is specified, then dataSourceRef will not be copied to dataSource.'
                                            type: object
                                            required:
                                              - kind
@@ -9515,12 +9747,14 @@ spec:
                                            x-kubernetes-map-type: atomic
                                          dataSourceRef:
                                            description: |-
-                                             dataSourceRef specifies the object from which to populate the volume with data, if a non-empty volume is desired. This may be any local object from a non-empty API group (non core object) or a PersistentVolumeClaim object. When this field is specified, volume binding will only succeed if the type of the specified object matches some installed volume populator or dynamic provisioner. This field will replace the functionality of the DataSource field and as such if both fields are non-empty, they must have the same value. For backwards compatibility, both fields (DataSource and DataSourceRef) will be set to the same value automatically if one of them is empty and the other is non-empty. There are two important differences between DataSource and DataSourceRef: * While DataSource only allows two specific types of objects, DataSourceRef
+                                             dataSourceRef specifies the object from which to populate the volume with data, if a non-empty volume is desired. This may be any object from a non-empty API group (non core object) or a PersistentVolumeClaim object. When this field is specified, volume binding will only succeed if the type of the specified object matches some installed volume populator or dynamic provisioner. This field will replace the functionality of the dataSource field and as such if both fields are non-empty, they must have the same value. For backwards compatibility, when namespace isn't specified in dataSourceRef, both fields (dataSource and dataSourceRef) will be set to the same value automatically if one of them is empty and the other is non-empty. When namespace is specified in dataSourceRef, dataSource isn't set to the same value and must be empty. There are three important differences between dataSource and dataSourceRef: * While dataSource only allows two specific types of objects, dataSourceRef
                                                allows any non-core object, as well as PersistentVolumeClaim objects.
-                                             * While DataSource ignores disallowed values (dropping them), DataSourceRef
+                                             * While dataSource ignores disallowed values (dropping them), dataSourceRef
                                                preserves all values, and generates an error if a disallowed value is
                                                specified.
-                                             (Beta) Using this field requires the AnyVolumeDataSource feature gate to be enabled.
+                                             * While dataSource only allows local objects, dataSourceRef allows objects
+                                               in any namespaces.
+                                             (Beta) Using this field requires the AnyVolumeDataSource feature gate to be enabled. (Alpha) Using the namespace field of dataSourceRef requires the CrossNamespaceVolumeDataSource feature gate to be enabled.
                                            type: object
                                            required:
                                              - kind
@@ -9535,11 +9769,29 @@ spec:
                                              name:
                                                description: Name is the name of resource being referenced
                                                type: string
-                                           x-kubernetes-map-type: atomic
+                                             namespace:
+                                               description: Namespace is the namespace of resource being referenced Note that when a namespace is specified, a gateway.networking.k8s.io/ReferenceGrant object is required in the referent namespace to allow that namespace's owner to accept the reference. See the ReferenceGrant documentation for details. (Alpha) This field requires the CrossNamespaceVolumeDataSource feature gate to be enabled.
+                                               type: string
                                          resources:
                                            description: 'resources represents the minimum resources the volume should have. If RecoverVolumeExpansionFailure feature is enabled users are allowed to specify resource requirements that are lower than previous value but must still be higher than capacity recorded in the status field of the claim. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources'
                                            type: object
                                            properties:
+                                             claims:
+                                               description: |-
+                                                 Claims lists the names of resources, defined in spec.resourceClaims, that are used by this container.
+                 
+                                                 This is an alpha field and requires enabling the DynamicResourceAllocation feature gate.
+                 
+                                                 This field is immutable. It can only be set for containers.
+                                               type: array
+                                               items:
+                                                 type: object
+                                                 required:
+                                                   - name
+                                                 properties:
+                                                   name:
+                                                     description: Name must match the name of one entry in pod.spec.resourceClaims of the Pod where this field is used. It makes that resource available inside a container.
+                                                     type: string
                                              limits:
                                                description: 'Limits describes the maximum amount of compute resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                                                type: object
@@ -10599,6 +10851,28 @@ spec:
                   enum:
                     - Packed
                     - Distributed
+                priorities:
+                  type: array
+                  description: Configuration of Counters and Lists scale down logic. Priorities in the gameserverset.yaml file must be identical to the structure of priorities in fleet.yaml.
+                  nullable: true
+                  items:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                        description: Whether a Counter or a List.
+                        enum:
+                          - Counter
+                          - List
+                      key:
+                        type: string
+                        description: The name of the Counter or List
+                      order:
+                        type: string
+                        description: Ascending or Descending sort order
+                        enum:
+                          - Ascending
+                          - Descending
                 template:                  
                   description: 'GameServer is the data structure for a GameServer resource.'
                   type: object
@@ -11589,7 +11863,7 @@ spec:
                                                         - value
                                                       properties:
                                                         name:
-                                                          description: The header field name
+                                                          description: The header field name. This will be canonicalized upon output, so case-variant names will be understood as the same header.
                                                           type: string
                                                         value:
                                                           description: The header field value
@@ -11657,7 +11931,7 @@ spec:
                                                         - value
                                                       properties:
                                                         name:
-                                                          description: The header field name
+                                                          description: The header field name. This will be canonicalized upon output, so case-variant names will be understood as the same header.
                                                           type: string
                                                         value:
                                                           description: The header field value
@@ -11745,7 +12019,7 @@ spec:
                                                     - value
                                                   properties:
                                                     name:
-                                                      description: The header field name
+                                                      description: The header field name. This will be canonicalized upon output, so case-variant names will be understood as the same header.
                                                       type: string
                                                     value:
                                                       description: The header field value
@@ -11891,7 +12165,7 @@ spec:
                                                     - value
                                                   properties:
                                                     name:
-                                                      description: The header field name
+                                                      description: The header field name. This will be canonicalized upon output, so case-variant names will be understood as the same header.
                                                       type: string
                                                     value:
                                                       description: The header field value
@@ -11951,6 +12225,22 @@ spec:
                                         description: 'Compute Resources required by this container. Cannot be updated. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                                         type: object
                                         properties:
+                                          claims:
+                                            description: |-
+                                              Claims lists the names of resources, defined in spec.resourceClaims, that are used by this container.
+                          
+                                              This is an alpha field and requires enabling the DynamicResourceAllocation feature gate.
+                          
+                                              This field is immutable. It can only be set for containers.
+                                            type: array
+                                            items:
+                                              type: object
+                                              required:
+                                                - name
+                                              properties:
+                                                name:
+                                                  description: Name must match the name of one entry in pod.spec.resourceClaims of the Pod where this field is used. It makes that resource available inside a container.
+                                                  type: string
                                           limits:
                                             description: 'Limits describes the maximum amount of compute resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                                             type: object
@@ -12110,7 +12400,7 @@ spec:
                                                     - value
                                                   properties:
                                                     name:
-                                                      description: The header field name
+                                                      description: The header field name. This will be canonicalized upon output, so case-variant names will be understood as the same header.
                                                       type: string
                                                     value:
                                                       description: The header field value
@@ -12455,7 +12745,7 @@ spec:
                                                         - value
                                                       properties:
                                                         name:
-                                                          description: The header field name
+                                                          description: The header field name. This will be canonicalized upon output, so case-variant names will be understood as the same header.
                                                           type: string
                                                         value:
                                                           description: The header field value
@@ -12523,7 +12813,7 @@ spec:
                                                         - value
                                                       properties:
                                                         name:
-                                                          description: The header field name
+                                                          description: The header field name. This will be canonicalized upon output, so case-variant names will be understood as the same header.
                                                           type: string
                                                         value:
                                                           description: The header field value
@@ -12611,7 +12901,7 @@ spec:
                                                     - value
                                                   properties:
                                                     name:
-                                                      description: The header field name
+                                                      description: The header field name. This will be canonicalized upon output, so case-variant names will be understood as the same header.
                                                       type: string
                                                     value:
                                                       description: The header field value
@@ -12757,7 +13047,7 @@ spec:
                                                     - value
                                                   properties:
                                                     name:
-                                                      description: The header field name
+                                                      description: The header field name. This will be canonicalized upon output, so case-variant names will be understood as the same header.
                                                       type: string
                                                     value:
                                                       description: The header field value
@@ -12817,6 +13107,22 @@ spec:
                                         description: Resources are not allowed for ephemeral containers. Ephemeral containers use spare resources already allocated to the pod.
                                         type: object
                                         properties:
+                                          claims:
+                                            description: |-
+                                              Claims lists the names of resources, defined in spec.resourceClaims, that are used by this container.
+                          
+                                              This is an alpha field and requires enabling the DynamicResourceAllocation feature gate.
+                          
+                                              This field is immutable. It can only be set for containers.
+                                            type: array
+                                            items:
+                                              type: object
+                                              required:
+                                                - name
+                                              properties:
+                                                name:
+                                                  description: Name must match the name of one entry in pod.spec.resourceClaims of the Pod where this field is used. It makes that resource available inside a container.
+                                                  type: string
                                           limits:
                                             description: 'Limits describes the maximum amount of compute resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                                             type: object
@@ -12976,7 +13282,7 @@ spec:
                                                     - value
                                                   properties:
                                                     name:
-                                                      description: The header field name
+                                                      description: The header field name. This will be canonicalized upon output, so case-variant names will be understood as the same header.
                                                       type: string
                                                     value:
                                                       description: The header field value
@@ -13323,7 +13629,7 @@ spec:
                                                         - value
                                                       properties:
                                                         name:
-                                                          description: The header field name
+                                                          description: The header field name. This will be canonicalized upon output, so case-variant names will be understood as the same header.
                                                           type: string
                                                         value:
                                                           description: The header field value
@@ -13391,7 +13697,7 @@ spec:
                                                         - value
                                                       properties:
                                                         name:
-                                                          description: The header field name
+                                                          description: The header field name. This will be canonicalized upon output, so case-variant names will be understood as the same header.
                                                           type: string
                                                         value:
                                                           description: The header field value
@@ -13479,7 +13785,7 @@ spec:
                                                     - value
                                                   properties:
                                                     name:
-                                                      description: The header field name
+                                                      description: The header field name. This will be canonicalized upon output, so case-variant names will be understood as the same header.
                                                       type: string
                                                     value:
                                                       description: The header field value
@@ -13625,7 +13931,7 @@ spec:
                                                     - value
                                                   properties:
                                                     name:
-                                                      description: The header field name
+                                                      description: The header field name. This will be canonicalized upon output, so case-variant names will be understood as the same header.
                                                       type: string
                                                     value:
                                                       description: The header field value
@@ -13685,6 +13991,22 @@ spec:
                                         description: 'Compute Resources required by this container. Cannot be updated. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                                         type: object
                                         properties:
+                                          claims:
+                                            description: |-
+                                              Claims lists the names of resources, defined in spec.resourceClaims, that are used by this container.
+                          
+                                              This is an alpha field and requires enabling the DynamicResourceAllocation feature gate.
+                          
+                                              This field is immutable. It can only be set for containers.
+                                            type: array
+                                            items:
+                                              type: object
+                                              required:
+                                                - name
+                                              properties:
+                                                name:
+                                                  description: Name must match the name of one entry in pod.spec.resourceClaims of the Pod where this field is used. It makes that resource available inside a container.
+                                                  type: string
                                           limits:
                                             description: 'Limits describes the maximum amount of compute resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                                             type: object
@@ -13844,7 +14166,7 @@ spec:
                                                     - value
                                                   properties:
                                                     name:
-                                                      description: The header field name
+                                                      description: The header field name. This will be canonicalized upon output, so case-variant names will be understood as the same header.
                                                       type: string
                                                     value:
                                                       description: The header field value
@@ -14017,6 +14339,39 @@ spec:
                                       conditionType:
                                         description: ConditionType refers to a condition in the pod's condition list with matching type.
                                         type: string
+                                resourceClaims:
+                                  description: |-
+                                    ResourceClaims defines which ResourceClaims must be allocated and reserved before the Pod is allowed to start. The resources will be made available to those containers which consume them by name.
+                          
+                                    This is an alpha field and requires enabling the DynamicResourceAllocation feature gate.
+                          
+                                    This field is immutable.
+                                  type: array
+                                  items:
+                                    type: object
+                                    required:
+                                      - name
+                                    properties:
+                                      name:
+                                        description: Name uniquely identifies this resource claim inside the pod. This must be a DNS_LABEL.
+                                        type: string
+                                      source:
+                                        description: Source describes where to find the ResourceClaim.
+                                        type: object
+                                        properties:
+                                          resourceClaimName:
+                                            description: ResourceClaimName is the name of a ResourceClaim object in the same namespace as this pod.
+                                            type: string
+                                          resourceClaimTemplateName:
+                                            description: |-
+                                              ResourceClaimTemplateName is the name of a ResourceClaimTemplate object in the same namespace as this pod.
+                          
+                                              The template will be used to create a new ResourceClaim, which will be bound to this pod. When this pod is deleted, the ResourceClaim will also be deleted. The name of the ResourceClaim will be <pod name>-<resource name>, where <resource name> is the PodResourceClaim.Name. Pod validation will reject the pod if the concatenated name is not valid for a ResourceClaim (e.g. too long).
+                          
+                                              An existing ResourceClaim with that name that is not owned by the pod will not be used for the pod to avoid using an unrelated resource by mistake. Scheduling and pod startup are then blocked until the unrelated ResourceClaim is removed.
+                          
+                                              This field is immutable and no changes will be made to the corresponding ResourceClaim by the control plane after creating the ResourceClaim.
+                                            type: string
                                 restartPolicy:
                                   description: |-
                                     Restart policy for all containers within the pod. One of Always, OnFailure, Never. Default to Always. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#restart-policy
@@ -14036,6 +14391,20 @@ spec:
                                 schedulerName:
                                   description: If specified, the pod will be dispatched by specified scheduler. If not specified, the pod will be dispatched by default scheduler.
                                   type: string
+                                schedulingGates:
+                                  description: |-
+                                    SchedulingGates is an opaque list of values that if specified will block scheduling the pod. More info:  https://git.k8s.io/enhancements/keps/sig-scheduling/3521-pod-scheduling-readiness.
+                          
+                                    This is an alpha-level feature enabled by PodSchedulingReadiness feature gate.
+                                  type: array
+                                  items:
+                                    type: object
+                                    required:
+                                      - name
+                                    properties:
+                                      name:
+                                        description: Name of the scheduling gate. Each scheduling gate must have a unique name field.
+                                        type: string
                                 securityContext:
                                   description: 'SecurityContext holds pod-level security attributes and common container settings. Optional: Defaults to empty.  See type description for default values of each field.'
                                   type: object
@@ -14104,7 +14473,7 @@ spec:
                                             - RuntimeDefault
                                             - Unconfined
                                     supplementalGroups:
-                                      description: A list of groups applied to the first process run in each container, in addition to the container's primary GID.  If unspecified, no groups will be added to any container. Note that this field cannot be set when spec.os.name is windows.
+                                      description: A list of groups applied to the first process run in each container, in addition to the container's primary GID, the fsGroup (if specified), and group memberships defined in the container image for the uid of the container process. If unspecified, no additional groups are added to any container. Note that group memberships defined in the container image for the uid of the container process are still effective, even if they are not included in this list. Note that this field cannot be set when spec.os.name is windows.
                                       type: array
                                       items:
                                         type: integer
@@ -14261,13 +14630,13 @@ spec:
                                         description: |-
                                           NodeAffinityPolicy indicates how we will treat Pod's nodeAffinity/nodeSelector when calculating pod topology spread skew. Options are: - Honor: only nodes matching nodeAffinity/nodeSelector are included in the calculations. - Ignore: nodeAffinity/nodeSelector are ignored. All nodes are included in the calculations.
                           
-                                          If this value is nil, the behavior is equivalent to the Honor policy. This is a alpha-level feature enabled by the NodeInclusionPolicyInPodTopologySpread feature flag.
+                                          If this value is nil, the behavior is equivalent to the Honor policy. This is a beta-level feature default enabled by the NodeInclusionPolicyInPodTopologySpread feature flag.
                                         type: string
                                       nodeTaintsPolicy:
                                         description: |-
                                           NodeTaintsPolicy indicates how we will treat node taints when calculating pod topology spread skew. Options are: - Honor: nodes without taints, along with tainted nodes for which the incoming pod has a toleration, are included. - Ignore: node taints are ignored. All nodes are included.
                           
-                                          If this value is nil, the behavior is equivalent to the Ignore policy. This is a alpha-level feature enabled by the NodeInclusionPolicyInPodTopologySpread feature flag.
+                                          If this value is nil, the behavior is equivalent to the Ignore policy. This is a beta-level feature default enabled by the NodeInclusionPolicyInPodTopologySpread feature flag.
                                         type: string
                                       topologyKey:
                                         description: TopologyKey is the key of node labels. Nodes that have a label with this key and identical values are considered to be in the same topology. We consider each <key, value> as a "bucket", and try to put balanced number of pods into each bucket. We define a domain as a particular instance of a topology. Also, we define an eligible domain as a domain whose nodes meet the requirements of nodeAffinityPolicy and nodeTaintsPolicy. e.g. If TopologyKey is "kubernetes.io/hostname", each Node is a domain of that topology. And, if TopologyKey is "topology.kubernetes.io/zone", each zone is a domain of that topology. It's a required field.
@@ -14704,7 +15073,7 @@ spec:
                                                     items:
                                                       type: string
                                                   dataSource:
-                                                    description: 'dataSource field can be used to specify either: * An existing VolumeSnapshot object (snapshot.storage.k8s.io/VolumeSnapshot) * An existing PVC (PersistentVolumeClaim) If the provisioner or an external controller can support the specified data source, it will create a new volume based on the contents of the specified data source. If the AnyVolumeDataSource feature gate is enabled, this field will always have the same contents as the DataSourceRef field.'
+                                                    description: 'dataSource field can be used to specify either: * An existing VolumeSnapshot object (snapshot.storage.k8s.io/VolumeSnapshot) * An existing PVC (PersistentVolumeClaim) If the provisioner or an external controller can support the specified data source, it will create a new volume based on the contents of the specified data source. When the AnyVolumeDataSource feature gate is enabled, dataSource contents will be copied to dataSourceRef, and dataSourceRef contents will be copied to dataSource when dataSourceRef.namespace is not specified. If the namespace is specified, then dataSourceRef will not be copied to dataSource.'
                                                     type: object
                                                     required:
                                                       - kind
@@ -14722,12 +15091,14 @@ spec:
                                                     x-kubernetes-map-type: atomic
                                                   dataSourceRef:
                                                     description: |-
-                                                      dataSourceRef specifies the object from which to populate the volume with data, if a non-empty volume is desired. This may be any local object from a non-empty API group (non core object) or a PersistentVolumeClaim object. When this field is specified, volume binding will only succeed if the type of the specified object matches some installed volume populator or dynamic provisioner. This field will replace the functionality of the DataSource field and as such if both fields are non-empty, they must have the same value. For backwards compatibility, both fields (DataSource and DataSourceRef) will be set to the same value automatically if one of them is empty and the other is non-empty. There are two important differences between DataSource and DataSourceRef: * While DataSource only allows two specific types of objects, DataSourceRef
+                                                      dataSourceRef specifies the object from which to populate the volume with data, if a non-empty volume is desired. This may be any object from a non-empty API group (non core object) or a PersistentVolumeClaim object. When this field is specified, volume binding will only succeed if the type of the specified object matches some installed volume populator or dynamic provisioner. This field will replace the functionality of the dataSource field and as such if both fields are non-empty, they must have the same value. For backwards compatibility, when namespace isn't specified in dataSourceRef, both fields (dataSource and dataSourceRef) will be set to the same value automatically if one of them is empty and the other is non-empty. When namespace is specified in dataSourceRef, dataSource isn't set to the same value and must be empty. There are three important differences between dataSource and dataSourceRef: * While dataSource only allows two specific types of objects, dataSourceRef
                                                         allows any non-core object, as well as PersistentVolumeClaim objects.
-                                                      * While DataSource ignores disallowed values (dropping them), DataSourceRef
+                                                      * While dataSource ignores disallowed values (dropping them), dataSourceRef
                                                         preserves all values, and generates an error if a disallowed value is
                                                         specified.
-                                                      (Beta) Using this field requires the AnyVolumeDataSource feature gate to be enabled.
+                                                      * While dataSource only allows local objects, dataSourceRef allows objects
+                                                        in any namespaces.
+                                                      (Beta) Using this field requires the AnyVolumeDataSource feature gate to be enabled. (Alpha) Using the namespace field of dataSourceRef requires the CrossNamespaceVolumeDataSource feature gate to be enabled.
                                                     type: object
                                                     required:
                                                       - kind
@@ -14742,11 +15113,29 @@ spec:
                                                       name:
                                                         description: Name is the name of resource being referenced
                                                         type: string
-                                                    x-kubernetes-map-type: atomic
+                                                      namespace:
+                                                        description: Namespace is the namespace of resource being referenced Note that when a namespace is specified, a gateway.networking.k8s.io/ReferenceGrant object is required in the referent namespace to allow that namespace's owner to accept the reference. See the ReferenceGrant documentation for details. (Alpha) This field requires the CrossNamespaceVolumeDataSource feature gate to be enabled.
+                                                        type: string
                                                   resources:
                                                     description: 'resources represents the minimum resources the volume should have. If RecoverVolumeExpansionFailure feature is enabled users are allowed to specify resource requirements that are lower than previous value but must still be higher than capacity recorded in the status field of the claim. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources'
                                                     type: object
                                                     properties:
+                                                      claims:
+                                                        description: |-
+                                                          Claims lists the names of resources, defined in spec.resourceClaims, that are used by this container.
+                          
+                                                          This is an alpha field and requires enabling the DynamicResourceAllocation feature gate.
+                          
+                                                          This field is immutable. It can only be set for containers.
+                                                        type: array
+                                                        items:
+                                                          type: object
+                                                          required:
+                                                            - name
+                                                          properties:
+                                                            name:
+                                                              description: Name must match the name of one entry in pod.spec.resourceClaims of the Pod where this field is used. It makes that resource available inside a container.
+                                                              type: string
                                                       limits:
                                                         description: 'Limits describes the maximum amount of compute resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                                                         type: object
@@ -16103,7 +16492,7 @@ spec:
         - name: CLOUD_PRODUCT
           value: "auto"
         - name: LOG_DIR
-          value: "/home/agones/logs"
+          value: "/logs"
         - name: LOG_SIZE_LIMIT_MB
           value: "10000"
         - name: POD_NAME
@@ -16138,10 +16527,10 @@ spec:
             ephemeral-storage: 10100Mi
         volumeMounts:
         - name: certs
-          mountPath: /home/agones/certs
+          mountPath: /certs
           readOnly: true
         - name: logs
-          mountPath: /home/agones/logs
+          mountPath: /logs
           readOnly: false
       volumes:
       - name: certs
@@ -16242,7 +16631,7 @@ spec:
         - name: CLOUD_PRODUCT
           value: "auto"
         - name: LOG_DIR
-          value: "/home/agones/logs"
+          value: "/logs"
         - name: LOG_SIZE_LIMIT_MB
           value: "10000"
         - name: POD_NAME
@@ -16284,10 +16673,10 @@ spec:
             ephemeral-storage: 10100Mi
         volumeMounts:
         - name: certs
-          mountPath: /home/agones/certs
+          mountPath: /certs
           readOnly: true
         - name: logs
-          mountPath: /home/agones/logs
+          mountPath: /logs
           readOnly: false
       volumes:
       - name: certs

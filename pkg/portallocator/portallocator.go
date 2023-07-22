@@ -98,7 +98,7 @@ func newAllocator(minPort, maxPort int32,
 	}
 	pa.logger = runtime.NewLoggerWithType(pa)
 
-	pa.gameServerInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
+	_, _ = pa.gameServerInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		DeleteFunc: pa.syncDeleteGameServer,
 	})
 

@@ -18,7 +18,7 @@ const (
 	// ErrCodeAssociatedInstances for service response error code
 	// "AssociatedInstances".
 	//
-	// You must disassociate a document from all instances before you can delete
+	// You must disassociate a document from all managed nodes before you can delete
 	// it.
 	ErrCodeAssociatedInstances = "AssociatedInstances"
 
@@ -123,9 +123,14 @@ const (
 	// "DocumentPermissionLimit".
 	//
 	// The document can't be shared with more Amazon Web Services user accounts.
-	// You can share a document with a maximum of 20 accounts. You can publicly
-	// share up to five documents. If you need to increase this limit, contact Amazon
-	// Web Services Support.
+	// You can specify a maximum of 20 accounts per API operation to share a private
+	// document.
+	//
+	// By default, you can share a private document with a maximum of 1,000 accounts
+	// and publicly share up to five documents.
+	//
+	// If you need to increase the quota for privately or publicly shared Systems
+	// Manager documents, contact Amazon Web Services Support.
 	ErrCodeDocumentPermissionLimit = "DocumentPermissionLimit"
 
 	// ErrCodeDocumentVersionLimitExceeded for service response error code
@@ -163,7 +168,7 @@ const (
 	// ErrCodeDuplicateInstanceId for service response error code
 	// "DuplicateInstanceId".
 	//
-	// You can't specify an instance ID in more than one association.
+	// You can't specify a managed node ID in more than one association.
 	ErrCodeDuplicateInstanceId = "DuplicateInstanceId"
 
 	// ErrCodeFeatureNotAvailableException for service response error code
@@ -360,7 +365,7 @@ const (
 	//
 	// The following problems can cause this exception:
 	//
-	//    * You don't have permission to access the instance.
+	//    * You don't have permission to access the managed node.
 	//
 	//    * Amazon Web Services Systems Manager Agent(SSM Agent) isn't running.
 	//    Verify that SSM Agent is running.
@@ -368,7 +373,7 @@ const (
 	//    * SSM Agent isn't registered with the SSM endpoint. Try reinstalling SSM
 	//    Agent.
 	//
-	//    * The instance isn't in valid state. Valid states are: Running, Pending,
+	//    * The managed node isn't in valid state. Valid states are: Running, Pending,
 	//    Stopped, and Stopping. Invalid states are: Shutting-down and Terminated.
 	ErrCodeInvalidInstanceId = "InvalidInstanceId"
 
@@ -486,7 +491,7 @@ const (
 	// "InvalidResourceType".
 	//
 	// The resource type isn't valid. For example, if you are attempting to tag
-	// an instance, the instance must be a registered, managed instance.
+	// an EC2 instance, the instance must be a registered managed node.
 	ErrCodeInvalidResourceType = "InvalidResourceType"
 
 	// ErrCodeInvalidResultAttributeException for service response error code
@@ -511,12 +516,24 @@ const (
 	// The schedule is invalid. Verify your cron or rate expression and try again.
 	ErrCodeInvalidSchedule = "InvalidSchedule"
 
+	// ErrCodeInvalidTag for service response error code
+	// "InvalidTag".
+	//
+	// The specified tag key or value isn't valid.
+	ErrCodeInvalidTag = "InvalidTag"
+
 	// ErrCodeInvalidTarget for service response error code
 	// "InvalidTarget".
 	//
 	// The target isn't valid or doesn't exist. It might not be configured for Systems
 	// Manager or you might not have permission to perform the operation.
 	ErrCodeInvalidTarget = "InvalidTarget"
+
+	// ErrCodeInvalidTargetMaps for service response error code
+	// "InvalidTargetMaps".
+	//
+	// TargetMap parameter isn't valid.
+	ErrCodeInvalidTargetMaps = "InvalidTargetMaps"
 
 	// ErrCodeInvalidTypeNameException for service response error code
 	// "InvalidTypeNameException".
@@ -533,8 +550,8 @@ const (
 	// ErrCodeInvocationDoesNotExist for service response error code
 	// "InvocationDoesNotExist".
 	//
-	// The command ID and instance ID you specified didn't match any invocations.
-	// Verify the command ID and the instance ID and try again.
+	// The command ID and managed node ID you specified didn't match any invocations.
+	// Verify the command ID and the managed node ID and try again.
 	ErrCodeInvocationDoesNotExist = "InvocationDoesNotExist"
 
 	// ErrCodeItemContentMismatchException for service response error code
@@ -781,11 +798,11 @@ const (
 	// ErrCodeTargetNotConnected for service response error code
 	// "TargetNotConnected".
 	//
-	// The specified target instance for the session isn't fully configured for
-	// use with Session Manager. For more information, see Getting started with
+	// The specified target managed node for the session isn't fully configured
+	// for use with Session Manager. For more information, see Getting started with
 	// Session Manager (https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-getting-started.html)
 	// in the Amazon Web Services Systems Manager User Guide. This error is also
-	// returned if you attempt to start a session on an instance that is located
+	// returned if you attempt to start a session on a managed node that is located
 	// in a different account or Region
 	ErrCodeTargetNotConnected = "TargetNotConnected"
 
@@ -857,8 +874,9 @@ const (
 	// ErrCodeUnsupportedPlatformType for service response error code
 	// "UnsupportedPlatformType".
 	//
-	// The document doesn't support the platform type of the given instance ID(s).
-	// For example, you sent an document for a Windows instance to a Linux instance.
+	// The document doesn't support the platform type of the given managed node
+	// ID(s). For example, you sent an document for a Windows managed node to a
+	// Linux node.
 	ErrCodeUnsupportedPlatformType = "UnsupportedPlatformType"
 )
 
@@ -936,7 +954,9 @@ var exceptionFromCode = map[string]func(protocol.ResponseMetadata) error{
 	"InvalidResultAttributeException":                newErrorInvalidResultAttributeException,
 	"InvalidRole":                                    newErrorInvalidRole,
 	"InvalidSchedule":                                newErrorInvalidSchedule,
+	"InvalidTag":                                     newErrorInvalidTag,
 	"InvalidTarget":                                  newErrorInvalidTarget,
+	"InvalidTargetMaps":                              newErrorInvalidTargetMaps,
 	"InvalidTypeNameException":                       newErrorInvalidTypeNameException,
 	"InvalidUpdate":                                  newErrorInvalidUpdate,
 	"InvocationDoesNotExist":                         newErrorInvocationDoesNotExist,

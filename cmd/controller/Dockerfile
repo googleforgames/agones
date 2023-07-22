@@ -12,14 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM alpine:3.14
+FROM gcr.io/distroless/static-debian11:nonroot
 
 ARG ARCH=amd64
-RUN apk --update add ca-certificates && \
-    adduser -D -u 1000 agones
+WORKDIR /
 
-COPY --chown=agones:agones ./bin/controller.linux.$ARCH /home/agones/controller
-COPY --chown=agones:agones ./bin/LICENSES ./bin/dependencies-src.tgz /home/agones/
+COPY ./bin/controller.linux.$ARCH /controller
+COPY ./bin/LICENSES .
+COPY ./bin/dependencies-src.tgz .
 
-USER 1000
-ENTRYPOINT ["/home/agones/controller"]
+USER nonroot:nonroot
+ENTRYPOINT ["/controller"]

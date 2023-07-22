@@ -32,10 +32,18 @@ const (
 	ErrContainerPortRequired    = "ContainerPort must be defined for Dynamic and Static PortPolicies"
 	ErrContainerPortPassthrough = "ContainerPort cannot be specified with Passthrough PortPolicy"
 	ErrContainerNameInvalid     = "Container must be empty or the name of a container in the pod template"
-	// GameServerAllocationIncrement is a Counter Action that indiciates the Counter's Count should be incremented at Allocation.
-	GameServerAllocationIncrement string = "Increment"
-	// GameServerAllocationDecrement is a Counter Action that indiciates the Counter's Count should be decremented at Allocation.
-	GameServerAllocationDecrement string = "Decrement"
+	// GameServerPriorityIncrement is a Counter Action that indiciates the Counter's Count should be incremented at Allocation.
+	GameServerPriorityIncrement string = "Increment"
+	// GameServerPriorityDecrement is a Counter Action that indiciates the Counter's Count should be decremented at Allocation.
+	GameServerPriorityDecrement string = "Decrement"
+	// GameServerPriorityCounter is a Type for sorting Game Servers by Counter
+	GameServerPriorityCounter string = "Counter"
+	// GameServerPriorityList is a Type for sorting Game Servers by List
+	GameServerPriorityList string = "List"
+	// GameServerPriorityAscending is a Priority Order where the smaller count is preferred in sorting.
+	GameServerPriorityAscending string = "Ascending"
+	// GameServerPriorityDescending is a Priority Order where the larger count is preferred in sorting.
+	GameServerPriorityDescending string = "Descending"
 )
 
 // AggregatedPlayerStatus stores total player tracking values
@@ -44,16 +52,20 @@ type AggregatedPlayerStatus struct {
 	Capacity int64 `json:"capacity"`
 }
 
-// AggregatedCounterStatus stores total Counter tracking values
+// AggregatedCounterStatus stores total and allocated Counter tracking values
 type AggregatedCounterStatus struct {
-	Count    int64 `json:"count"`
-	Capacity int64 `json:"capacity"`
+	AllocatedCount    int64 `json:"allocatedCount"`
+	AllocatedCapacity int64 `json:"allocatedCapacity"`
+	Count             int64 `json:"count"`
+	Capacity          int64 `json:"capacity"`
 }
 
-// AggregatedListStatus stores total List tracking values
+// AggregatedListStatus stores total and allocated List tracking values
 type AggregatedListStatus struct {
-	Count    int64 `json:"count"`
-	Capacity int64 `json:"capacity"`
+	AllocatedCount    int64 `json:"allocatedCount"`
+	AllocatedCapacity int64 `json:"allocatedCapacity"`
+	Count             int64 `json:"count"`
+	Capacity          int64 `json:"capacity"`
 }
 
 // crd is an interface to get Name and Kind of CRD
@@ -159,4 +171,15 @@ func (ao *AllocationOverflow) Apply(gs *GameServer) {
 			gs.ObjectMeta.Labels[k] = v
 		}
 	}
+}
+
+// Priority is a sorting option for GameServers with Counters or Lists based on the Capacity.
+// Type: Sort by a "Counter" or a "List".
+// Key: The name of the Counter or List. If not found on the GameServer, has no impact.
+// Order: Sort by "Ascending" or "Descending". "Descending" a bigger Capacity is preferred.
+// "Ascending" would be smaller Capacity is preferred.
+type Priority struct {
+	Type  string `json:"type"`
+	Key   string `json:"key"`
+	Order string `json:"order"`
 }
