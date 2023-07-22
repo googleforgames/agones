@@ -52,8 +52,6 @@ You should see output similar to the following:
 {"message":"gameserver update received","severity":"info","time":"2019-10-30T21:46:18.179459+03:00"}
 ```
 
-An alternative to "local mode" ("out of cluster mode", which uses an agones cluster) is discussed [below](#running-locally-using-out-of-cluster-mode).
-
 ## Providing your own `GameServer` configuration for local development
 
 By default, the local sdk-server will create a default `GameServer` configuration that is used for `GameServer()`
@@ -154,55 +152,6 @@ chmod o+r gameserver.yaml
 docker run --network=host --rm -v $(pwd)/gameserver.yaml:/tmp/gameserver.yaml us-docker.pkg.dev/agones-images/release/agones-sdk:{{<release-version>}} --local -f /tmp/gameserver.yaml
 ```
 
-## Running locally using "out of cluster" mode
-
-An alternative to running completely isolated from a cluster is to run in "out of cluster" mode.
-This allows you to run locally but interact with the controllers within a cluster.
-This workflow works well when running a [Local Game Server]({{% ref "/docs/Guides/local-game-server.md" %}}) in your cluster and want to run the server locally.
-This means being able to allocate your game in its normal flow (much more prod-like environment) and be able to debug (e.g. breakpoint) your server code.
-This can also be done with [running Minikube locally]({{< ref "/docs/Installation/Creating Cluster/minikube.md" >}}), which is great for early prototyping.
-
-The name "out of cluster" mode is to contrast [InClusterConfig](https://pkg.go.dev/k8s.io/client-go/tools/clientcmd#InClusterConfig) which is used in the internal golang kubeconfig API.
-
-To run in "out of cluster" mode, instead of passing `--local` or `-f ./gameserver.yaml`, you'd use `--kubeconfig` to connect into your cluster.
-However, there are a number of commands that are necessary/useful to run when running in "out of cluster" mode.
-Here is a sample with each piece discussed after.
-```bash
-./sdk-server.linux.amd64 \
-  --gameserver-name my-local-server \
-  --pod-namespace default \
-  --kubeconfig "$HOME/.kube/config" \
-  --address 0.0.0.0 \
-  --graceful-termination false
-```
-
-* `--gameserver-name` is a necessary arg, passed instead of the `GAMESERVER_NAME` enviroment variable.
-  * It is set to the name of the dev `GameServer` k8s resource.
-  * It tells the SDK Sever which resource to read/write to on the k8s cluster.
-  * This example value of `my-local-server` matches to the instructions for setting up a [Local Game Server](https://agones.dev/site/docs/guides/local-game-server/).
-* `--pod-namespacee` is a necessary arg, passed instead of the `POD_NAMESPACE` enviroment variable.
-  * It is set set to the namespace which your `GameServer` resides in.
-  * It tells the SDK Sever which namespace to look under for the `GameServer` to read/write to on the k8s cluster.
-  * This example value of `default` is used as most instructions in this documentation assumes `GameServers` to be created in the `default` namespace.
-* `--kubeconfig` tells the SDK Server how to connect to your cluster.
-  * This actually does not trigger any special flow.
-  * The SDK Server will run just as it would when created as a Sidecar in a k8s cluster.
-  * Passing this argument simply provides where to connect along with the credentials to do so.
-  * This example value of `"$HOME/.kube/config"` is the default location for your k8s authentication information. This requires you be logged in via `kubectl` and have the desired cluster selected via [`kubectl config use-context`](https://jamesdefabia.github.io/docs/user-guide/kubectl/kubectl_config_use-context/).
-* `--address` specifies the binding IP address for the SDK Server.
-  * By default, the binding address is `localhost`. This may be difficult for some development setups.
-  * Overriding this value changes which IP address(es) the server will bind to for receiving gRPC/REST SDK API calls.
-  * This example value of `0.0.0.0` sets the SDK Server to receive API calls that are sent to any IP address (that reach your machine).
-* `--graceful-termination` set to false will disable some smooth state transitions when exiting.
-  * By default, the SDK Server will wait until the `GameServer` has reached the `Shutdown` state before exiting ("graceful termination").
-  * This will cause the SDK Server to hang (waiting on state update) when attempting to terminate (e.g. with `^C`).
-  * When running binaries in a development context, quickly exiting and restarting the SDK Server is handy.
-
-Now that you have the SDK Server running locally with k8s credentials, you can run your game server binary in an integrated fashion.
-Your game server's SDK calls will reach the local SDK Server, which will then interact with the `GameServer` resource on your cluster.
-You can allocate this `GameServer` just as you would for a normal `GameServer` running completely on k8s.
-The state update to `Allocated` will show in your local game server binary.
-
 ## Running from source code instead of prebuilt binary
 
 If you wish to run from source rather than pre-built binaries, that is an available alternative.
@@ -223,3 +172,9 @@ go run cmd/sdk-server/main.go --local
 ```
 
 Commandline flags (e.g. `--local`) are exactly the same as command line flags when utilising a pre-built binary.
+
+{{% feature publishVersion="1.34.0" %}}
+## Next Steps:
+
+- Learn how to connect your local development game server binary into a running Agones Kubernetes cluster for even more live development options with an [out of cluster dev server]({{< ref "/docs/Advanced/out-of-cluster-dev-server.md" >}}).
+{{% /feature %}}

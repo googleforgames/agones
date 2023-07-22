@@ -9,8 +9,6 @@ description: >
 
 You can register a local game server with Agones. This means you can run an experimental build of your game server in the Agones environment without the need of packaging and deploying it to a fleet. This allows you to quickly iterate on your game server code while still being able to plugin to your Agones environment.
 
-This can be used in combination with a [local SDK Server]({{< ref "./Client SDKs/local.md" >}}) in ["out of cluster" mode]({{< ref "./Client SDKs/local.md#running-locally-using-out-of-cluster-mode" >}}).
-
 ## Register your server with Agones
 
 To register your local game server you'll need to know the IP address of the machine running it and the port. With that you'll create a game server config like the one below.
@@ -53,3 +51,6 @@ When you are finished working with your server, you can remove the registration 
   - Review the flow of how [allocation]({{< ref "/docs/Integration Patterns/allocation-from-fleet.md" >}}) is done.
   - Review the specification of [GameServerAllocation]({{< ref "/docs/Reference/gameserverallocation.md" >}}).
   - Check out the [Allocator Service]({{< ref "/docs/Advanced/allocator-service.md" >}}) as a richer alternative to `GameServerAllocation`.
+{{% feature publishVersion="1.34.0" %}}
+- Learn how to connect your local development game server binary into a running Agones Kubernetes cluster for even more live development options with an [out of cluster dev server]({{< ref "/docs/Advanced/out-of-cluster-dev-server.md" >}}).
+{{% /feature %}}
