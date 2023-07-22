@@ -29,7 +29,15 @@ This guide will focus on running from the prebuilt binary, but details about run
 
 To run the prebuilt binary, for the latest release, you will need to download {{% ghrelease file_prefix="agonessdk-server" %}}, and unzip it.
 You will find the executables for the SDK server, for each type of operating system.
-`sdk-server.darwin.amd64` and `sdk-server.darwin.arm64` are for <u>MacOS</u>, `sdk-server.linux.amd64` and `sdk-server.linux.arm64` are for <u>Linux</u>, and `sdk-server.windows.amd64.exe` is for <u>Windows</u>.
+
+* MacOS
+  * sdk-server.darwin.amd64
+  * sdk-server.darwin.arm64
+* Linux
+  * sdk-server.linux.amd64
+  * sdk-server.linux.arm64
+* Windows
+  * sdk-server.windows.amd64.exe
 
 ### Running In "Local Mode"
 
