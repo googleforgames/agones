@@ -19,8 +19,6 @@ will not try to connect to anything, and will just send log messages to stdout a
 that you can see exactly what the SDK in your game server is doing, and can
 confirm everything works.
 
-For local development with integration into your cluster, the SDK Server can also be run in "out of cluster mode", discussed more [below](#running-locally-using-out-of-cluster-mode).
-
 ## Running the SDK Server
 
 To run the SDK Server, you will need a copy of the binary.
