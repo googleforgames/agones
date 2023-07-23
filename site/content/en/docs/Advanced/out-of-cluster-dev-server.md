@@ -5,7 +5,7 @@ date: 2023-07-22T17:21:25Z
 publishDate: 2023-08-15T07:00:00Z
 weight: 1000
 description: >
-  Running and debugging binary locally while connected to a full kubernetes stack
+  Running and debugging server binary locally while connected to a full kubernetes stack
 ---
 
 This section builds upon the topics discussed in [local SDK Server]({{< ref "/docs/Guides/Client SDKs/local.md" >}}), [Local Game Server]({{< ref "/docs/Guides/local-game-server.md" >}}), and `GameServer` allocation (discussed [here]({{< ref "/docs/Integration Patterns/allocation-from-fleet.md" >}}), [here]({{< ref "/docs/Reference/gameserverallocation.md" >}}), and [here]({{< ref "/docs/Advanced/allocator-service.md" >}})).
@@ -14,12 +14,13 @@ Having a firm understanding of those concepts will be necessary for running an "
 Running an "out of cluster" dev server combines the best parts of local debugging and being a part of a cluster.
 A developer will be able to run a custom server binary on their local machine, even within an IDE with breakpoints.
 The server would also be allocatable within a cluster, allowing integration with the project's full stack for handling game server lifetime.
+
 For each run, the only manual steps required by the developer is to manually run the local SDK Server and to run their custom gameplay binary (each can easily be reused/restarted).
-All other state progression will be automatically handled by the custom gameplay server (calling the SDK API), the SDK Server (handling the SDK calls), the cluster `GameServer` Controller (progressing specific states and checking health), and the cluster's allocation system (whether be through `GameServerAllocation` or via the Allocator Service) -- just as it would when running in a pod in a cluster!
+All other state progression will be automatically handled by the custom gameplay server (calling the SDK API), the SDK Server (handling the SDK calls), the cluster `GameServer` Controller (progressing specific [states]({{< ref "/docs/Reference/gameserver.md#gameserver-state-diagram" >}})), and the cluster's allocation system (whether be through `GameServerAllocation` or via the Allocator Service) -- just as it would when running in a pod in a cluster!
 
 Out of cluster development is a fantastic option during early prototyping, as it can (optionally) all be run on a single machine with tools such as [Minikube]({{< ref "/docs/Installation/Creating Cluster/minikube.md" >}}).
 
-The name "out of cluster" mode is to contrast [InClusterConfig](https://pkg.go.dev/k8s.io/client-go/tools/clientcmd#InClusterConfig) which is used in the internal golang kubeconfig API.
+The name "out of cluster" is to contrast [InClusterConfig](https://pkg.go.dev/k8s.io/client-go/tools/clientcmd#InClusterConfig) which is used in the internal golang kubeconfig API.
 
 ## Prerequisite steps
 
@@ -31,7 +32,7 @@ First, a cluster must have been created that the developer has access to through
 This cluster could be running on a provider or locally (e.g. on Minikube).
 See [Create Kubernetes Cluster]({{< ref "/docs/Installation/Creating Cluster/_index.md" >}}) for more details on how to create a cluster, if not already done so.
 
-### `GameServer` Agones resource created
+### Agones `GameServer` resource created
 
 Out of cluster dev servers make use of [local dev servers]({{< ref "/docs/Guides/local-game-server.md" >}}).
 Follow the instructions there to create a `GameServer` resource for use with a local game server.
@@ -41,9 +42,9 @@ Note that the `metadata:annotations:agones.dev/dev-address` should be updated to
 
 An "out of cluster" dev server requires the need to also run the SDK Server locally.
 
-When a `GameServer` runs normally in a prod-like environment, the Agones cluster controller will handle initializing the container which contain the SDK Server and the game server binary.
+When a `GameServer` runs normally in a prod-like environment, the Agones cluster controller will handle initializing the containers which contain the SDK Server and the game server binary.
 The game server binary will be able to connect over gRPC to the SDK Server running in the sidecar container.
-When the game server binary makes SDK calls (e.g. `SDK.Read()`), those get sent to the SDK Server via gRPC and the SDK Server as able to modify the `GameServer` resource in the cluster.
+When the game server binary makes SDK calls (e.g. `SDK.Ready()`), those get sent to the SDK Server via gRPC and the SDK Server as able to modify the `GameServer` resource in the cluster.
 When the `GameServer` resource gets modified (either by the Agones cluster controller, by the Agones Allocation Service, or by the K8s API), the SDK Server is monitoring and sends update events over gRPC to the SDK API, resulting in a callback in the game server binary logic.
 
 The goal of an "out of cluster" dev server is to keep all this prod-like functionality, even in a debuggable context.
@@ -70,6 +71,7 @@ A custom game server can be similarly run within a docker container, run directl
 ### Forwarded Ports
 
 As the game server binary will be run on the developer's machine and a requesting client will attempt to connect to the game server via the `GameServer`'s `metadata:annotations:agones.dev/dev-address` and `spec:ports:hostPort` fields, the developer needs to ensure that connection can take place.
+
 If the game server binary and the arbitrary connecting client logic are both on the same network, then connecting should work without any extra steps.
 However, if the developer has a more complicated network configuration or if they are attempting to connect over the public internet, extra steps may be required.
 
@@ -78,6 +80,7 @@ The developer will need to figure out which steps are necessary for their specif
 
 If attempting to connect via the internet, the developer needs to set the `GameServer`'s `metadata:annotations:agones.dev/dev-address` field to their public IP.
 This can be found by going to [whatsmyip.org](https://www.whatsmyip.org/) or [whatismyip.com](https://www.whatismyip.com/) in a web browser.
+
 The  `GameServer`'s `spec:ports:hostPort`/`spec:ports:containerPort` should be set to whichever port the game server binary's logic will bind to -- the port used by `simple-game-server` is 7654 (by default).
 The local network's router must also be configured to forward this port to the desired machine; allowing inbound external requests (from the internet) to be directed to the machine on the network that is running the game server.
 
@@ -86,17 +89,26 @@ By default, the SDK API (in the game server binary) will attempt to gRPC connect
 If the SDK Server is run on another machine, or if the SDK Server is set to use different ports (e.g. via commandline arguments), the developer will need to also take appropriate steps to ensure that the game server can connect to the SDK Server.
 As discussed [further below](#running-sdk-server-locally) running the SDK Server with `--address 0.0.0.0` can be quite helpful with various setups.
 
+If the developer is running the SDK Server or the game server binary within docker container(s), then publishing ports and/or connecting to a docker network may be necessary.
+Again, these configurations can vary quite dramatically and the developer will need to find the necessary steps for their specific setup.
+
 ## Running "out of cluster" local game server
 
 Now that all prerequisite steps have been completed, the developer should have:
-  * a cluster with a configured `GameServer` resource.
-  * the SDK Server ready to run.
-  * a game server binary ready to run.
+  * a [cluster](#cluster-created) with a configured [`GameServer` resource](#agones-gameserver-resource-created).
+  * the [SDK Server](#sdk-server-available) ready to run.
+  * a [game server binary](#game-server-binary-available) ready to run.
 
 ### Optional `GameServer` state monitoring
 
 A helpful (optional) step to see progress when running is to watch the `GameServer` resource.
-This can be done with the command `kubectl get --watch -n default gs my-local-server` (replacing `default` and `my-local-server` with whichever namespace/name values are used by the dev `GameServer` created [above](#gameserver-agones-resource-created)).
+
+This can be done with the command:
+```bash
+kubectl get --watch -n default gs my-local-server
+```
+It may be necessary to replace `default` and `my-local-server` with whichever namespace/name values are used by the dev `GameServer` created [above](#agones-gameserver-resource-created)).
+
 With this command running, the terminal will automatically show updates to the `GameServer`'s state -- however, this is not necessary to proceed.
 
 ### Running SDK Server locally
@@ -121,11 +133,11 @@ Here is a sample command to run the SDK Server, with each argument discussed aft
   * It tells the SDK Sever which namespace to look under for the `GameServer` to read/write to on the k8s cluster.
   * This example value of `default` is used as most instructions in this documentation assumes `GameServers` to be created in the `default` namespace.
 * `--kubeconfig` tells the SDK Server how to connect to the k8s cluster.
-  * This actually does not trigger any special flow.
-  * The SDK Server will run just as it would when created as a Sidecar in a k8s cluster.
+  * This actually does not trigger any special flow (unlike `--local` or `--file`).
+  The SDK Server will run just as it would when created in a sidecar container in a k8s cluster.
   * Passing this argument simply provides where to connect along with the credentials to do so.
   * This example value of `"$HOME/.kube/config"` is the default location for k8s authentication information. This requires the developer be logged in via `kubectl` and have the desired cluster selected via [`kubectl config use-context`](https://jamesdefabia.github.io/docs/user-guide/kubectl/kubectl_config_use-context/).
-* `--address` specifies the binding IP address for the SDK Server.
+* `--address` specifies the binding IP address for the SDK Server's SDK API.
   * By default, the binding address is `localhost`. This may be difficult for some development setups.
   * Overriding this value changes which IP address(es) the server will bind to for receiving gRPC/REST SDK API calls.
   * This example value of `0.0.0.0` sets the SDK Server to receive API calls that are sent to any IP address (that reach the machine).
@@ -154,7 +166,7 @@ The commands and flags used will likely differ if running a custom game server b
 
 If the earlier `kubectl get --watch` command was run, it will now show the `GameServer` progressed to the `RequestReady` state, which will automatically be progressed to the `Ready` state by the Agones controller on the cluster.
 
-The `GameServer` state can further be modified by SDK calls, gRPC/REST calls, allocation via either [`GameServerAllocation`]({{< ref "/docs/Reference/gameserverallocation.md" >}}) or [Allocator Service]({{< ref "/docs/Advanced/allocator-service.md" >}}), etc.
+The `GameServer` state can further be modified by SDK calls, gRPC/REST calls, allocation via either [`GameServerAllocation`]({{< ref "/docs/Reference/gameserverallocation.md" >}}) or [Allocator Service]({{< ref "/docs/Advanced/allocator-service.md" >}}), K8s API calls, etc.
 These changes will be shown by the `kubectl get --watch` command.
 These changes will also be picked up by the game server binary, if there is a listener registered through the SDK API.
 This means that this `GameServer` can be allocated just as it would be when running completely on k8s, but it can be locally debugged.
