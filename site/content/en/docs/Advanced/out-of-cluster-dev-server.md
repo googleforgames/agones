@@ -134,6 +134,9 @@ Here is a sample command to run the SDK Server, with each argument discussed aft
   * This will cause the SDK Server to hang (waiting on state update) when attempting to terminate (e.g. with `^C`).
   * When running binaries in a development context, quickly exiting and restarting the SDK Server is handy.
 
+This can easily be terminated with `^C` and restarted as necessary.
+Note that terminating the SDK Server while the game server binary (discussed in the [next section](#running-game-server-binary-locally)) is using it may result in failure to update/watch `GameServer` state and may result in a runtime error in the game server binary.
+
 ### Running game server binary locally
 
 Now that the SDK Server is running locally with k8s credentials, the game server binary can run in an integrated fashion.
@@ -155,3 +158,7 @@ The `GameServer` state can further be modified by SDK calls, gRPC/REST calls, al
 These changes will be shown by the `kubectl get --watch` command.
 These changes will also be picked up by the game server binary, if there is a listener registered through the SDK API.
 This means that this `GameServer` can be allocated just as it would be when running completely on k8s, but it can be locally debugged.
+
+If the server crashes or is killed by the developer, it can easily be restarted.
+This can be done without restarting the SDK Server or any other manual intevention with the `GameServer` resource.
+Naturally, this may have implications on any connected clients, but that is project specific and left to the developer to handle.
