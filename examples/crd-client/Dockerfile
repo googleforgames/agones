@@ -14,18 +14,15 @@
 
 # Gather dependencies and build the executable
 FROM golang:1.20.4 as builder
-WORKDIR /
+WORKDIR /go/src/crd-client
+COPY . .
 
-COPY ./main.go .
-RUN go mod init && go mod tidy
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o client .
 
 # Create the final image that will run the webhook server for FleetAutoscaler webhook policy
 FROM gcr.io/distroless/static-debian11:nonroot
 
-COPY --from=builder /client /
-
-RUN chmod o+x /client
+COPY --from=builder /go/src/crd-client/client /
 
 USER nonroot:nonroot
-ENTRYPOINT /client
+ENTRYPOINT ["/client"]
