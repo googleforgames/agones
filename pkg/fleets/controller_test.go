@@ -1063,6 +1063,40 @@ func TestControllerUpsertGameServerSet(t *testing.T) {
 		assert.Nil(t, err)
 		agtesting.AssertNoEvent(t, m.FakeRecorder.Events)
 	})
+
+	t.Run("update Priorities", func(t *testing.T) {
+		utilruntime.FeatureTestMutex.Lock()
+		defer utilruntime.FeatureTestMutex.Unlock()
+		require.NoError(t, utilruntime.ParseFeatures(string(utilruntime.FeatureCountsAndLists)+"=true"))
+
+		c, m := newFakeController()
+		// Default GameServerSet has no Priorities
+		gsSet := f.GameServerSet()
+		gsSet.ObjectMeta.UID = "1234"
+		// Add Priorities to the Fleet
+		f.Spec.Priorities = []agonesv1.Priority{
+			{
+				Type:  "List",
+				Key:   "Baz",
+				Order: "Ascending",
+			}}
+		update := false
+
+		m.AgonesClient.AddReactor("update", "gameserversets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			update = true
+			ca := action.(k8stesting.UpdateAction)
+			gsSet := ca.GetObject().(*agonesv1.GameServerSet)
+			assert.Equal(t, agonesv1.Priority{Type: "List", Key: "Baz", Order: "Ascending"}, gsSet.Spec.Priorities[0])
+			return true, gsSet, nil
+		})
+
+		// Update Priorities on the GameServerSet to match the Fleet
+		err := c.upsertGameServerSet(context.Background(), f, gsSet, gsSet.Spec.Replicas)
+		assert.Nil(t, err)
+
+		assert.True(t, update, "Should be updated")
+		agtesting.AssertEventContains(t, m.FakeRecorder.Events, "UpdatingGameServerSet")
+	})
 }
 
 func TestResourcesRequestsAndLimits(t *testing.T) {

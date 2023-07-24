@@ -90,6 +90,28 @@ spec:
                   enum:
                     - Packed
                     - Distributed
+                priorities:
+                  type: array
+                  description: Configuration of Counters and Lists scale down logic. Priorities in the gameserverset.yaml file must be identical to the structure of priorities in fleet.yaml.
+                  nullable: true
+                  items:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                        description: Whether a Counter or a List.
+                        enum:
+                          - Counter
+                          - List
+                      key:
+                        type: string
+                        description: The name of the Counter or List
+                      order:
+                        type: string
+                        description: Ascending or Descending sort order
+                        enum:
+                          - Ascending
+                          - Descending
                 template:
                   {{- $data := dict "metadata" true "podPreserveUnknownFields" .Values.gameservers.podPreserveUnknownFields }}
                   {{- include "gameserver.schema" $data | indent 18 }}

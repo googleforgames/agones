@@ -49,7 +49,7 @@ func TestGameServerAllocationApplyDefaults(t *testing.T) {
 	assert.Equal(t, agonesv1.GameServerStateReady, *gsa.Spec.Required.GameServerState)
 	assert.Equal(t, int64(0), gsa.Spec.Required.Players.MaxAvailable)
 	assert.Equal(t, int64(0), gsa.Spec.Required.Players.MinAvailable)
-	assert.Equal(t, []Priority(nil), gsa.Spec.Priorities)
+	assert.Equal(t, []agonesv1.Priority(nil), gsa.Spec.Priorities)
 	assert.Nil(t, gsa.Spec.Priorities)
 }
 
@@ -316,132 +316,6 @@ func TestGameServerSelectorValidate(t *testing.T) {
 		t.Run(k, func(t *testing.T) {
 			v.selector.ApplyDefaults()
 			allErrs := v.selector.Validate(field.NewPath("fieldName"))
-			assert.ElementsMatch(t, v.want, allErrs)
-		})
-	}
-}
-
-func TestGameServerPriorityValidate(t *testing.T) {
-	t.Parallel()
-
-	runtime.FeatureTestMutex.Lock()
-	defer runtime.FeatureTestMutex.Unlock()
-	assert.NoError(t, runtime.ParseFeatures(fmt.Sprintf("%s=true", runtime.FeatureCountsAndLists)))
-
-	fixtures := map[string]struct {
-		gsa  *GameServerAllocation
-		want field.ErrorList
-	}{
-		"valid Counter Ascending": {
-			gsa: &GameServerAllocation{
-				Spec: GameServerAllocationSpec{Priorities: []Priority{
-					{
-						PriorityType: "Counter",
-						Key:          "Foo",
-						Order:        "Ascending",
-					},
-				},
-				},
-			},
-		},
-		"valid Counter Descending": {
-			gsa: &GameServerAllocation{
-				Spec: GameServerAllocationSpec{Priorities: []Priority{
-					{
-						PriorityType: "Counter",
-						Key:          "Bar",
-						Order:        "Descending",
-					},
-				},
-				},
-			},
-		},
-		"valid Counter empty Order": {
-			gsa: &GameServerAllocation{
-				Spec: GameServerAllocationSpec{Priorities: []Priority{
-					{
-						PriorityType: "Counter",
-						Key:          "Bar",
-						Order:        "",
-					},
-				},
-				},
-			},
-		},
-		"invalid counter type and order": {
-			gsa: &GameServerAllocation{
-				Spec: GameServerAllocationSpec{Priorities: []Priority{
-					{
-						PriorityType: "counter",
-						Key:          "Babar",
-						Order:        "descending",
-					},
-				},
-				},
-			},
-			want: field.ErrorList{
-				field.NotSupported(field.NewPath("spec", "priorities[0]", "priorityType"), "counter", []string{"Counter", "List"}),
-				field.NotSupported(field.NewPath("spec", "priorities[0]", "order"), "descending", []string{"Ascending", "Descending"}),
-			},
-		},
-		"valid List Ascending": {
-			gsa: &GameServerAllocation{
-				Spec: GameServerAllocationSpec{Priorities: []Priority{
-					{
-						PriorityType: "List",
-						Key:          "Baz",
-						Order:        "Ascending",
-					},
-				},
-				},
-			},
-		},
-		"valid List Descending": {
-			gsa: &GameServerAllocation{
-				Spec: GameServerAllocationSpec{Priorities: []Priority{
-					{
-						PriorityType: "List",
-						Key:          "Blerg",
-						Order:        "Descending",
-					},
-				},
-				},
-			},
-		},
-		"valid List empty Order": {
-			gsa: &GameServerAllocation{
-				Spec: GameServerAllocationSpec{Priorities: []Priority{
-					{
-						PriorityType: "List",
-						Key:          "Blerg",
-						Order:        "Ascending",
-					},
-				},
-				},
-			},
-		},
-		"invalid list type and order": {
-			gsa: &GameServerAllocation{
-				Spec: GameServerAllocationSpec{Priorities: []Priority{
-					{
-						PriorityType: "list",
-						Key:          "Schmorg",
-						Order:        "ascending",
-					},
-				},
-				},
-			},
-			want: field.ErrorList{
-				field.NotSupported(field.NewPath("spec", "priorities[0]", "priorityType"), "list", []string{"Counter", "List"}),
-				field.NotSupported(field.NewPath("spec", "priorities[0]", "order"), "ascending", []string{"Ascending", "Descending"}),
-			},
-		},
-	}
-
-	for k, v := range fixtures {
-		t.Run(k, func(t *testing.T) {
-			v.gsa.ApplyDefaults()
-			allErrs := v.gsa.Validate()
 			assert.ElementsMatch(t, v.want, allErrs)
 		})
 	}

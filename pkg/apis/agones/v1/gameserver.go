@@ -866,15 +866,15 @@ func (gs *GameServer) Patch(delta *GameServer) ([]byte, error) {
 
 // UpdateCount increments or decrements a CounterStatus on a Game Server by the given amount.
 func (gs *GameServer) UpdateCount(name string, action string, amount int64) error {
-	if !(action == GameServerAllocationIncrement || action == GameServerAllocationDecrement) {
-		return errors.Errorf("unable to UpdateCount with Name %s, Action %s, Amount %d. Allocation action must be one of %s or %s", name, action, amount, GameServerAllocationIncrement, GameServerAllocationDecrement)
+	if !(action == GameServerPriorityIncrement || action == GameServerPriorityDecrement) {
+		return errors.Errorf("unable to UpdateCount with Name %s, Action %s, Amount %d. Allocation action must be one of %s or %s", name, action, amount, GameServerPriorityIncrement, GameServerPriorityDecrement)
 	}
 	if amount < 0 {
 		return errors.Errorf("unable to UpdateCount with Name %s, Action %s, Amount %d. Amount must be greater than 0", name, action, amount)
 	}
 	if counter, ok := gs.Status.Counters[name]; ok {
 		cnt := counter.Count
-		if action == GameServerAllocationIncrement {
+		if action == GameServerPriorityIncrement {
 			cnt += amount
 			// only check for Count > Capacity when incrementing
 			if cnt > counter.Capacity {

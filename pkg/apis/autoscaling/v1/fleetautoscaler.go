@@ -164,7 +164,7 @@ type CounterPolicy struct {
 
 	// MinCapacity is the minimum aggregate Counter total capacity across the fleet.
 	// If zero, MinCapacity is ignored.
-	// If non zero, MinCapacity must be smaller than MaxCapacity and bigger than BufferSize
+	// If non zero, MinCapacity must be smaller than MaxCapacity and bigger than BufferSize.
 	MinCapacity int64 `json:"minCapacity"`
 
 	// BufferSize is the size of a buffer of counted items that are available in the Fleet (available
@@ -174,7 +174,7 @@ type CounterPolicy struct {
 	BufferSize intstr.IntOrString `json:"bufferSize"`
 }
 
-// ListPolicy controls the desired behavior of the list autoscaler policy.
+// ListPolicy controls the desired behavior of the List autoscaler policy.
 type ListPolicy struct {
 	// Key is the name of the List. Required field.
 	Key string `json:"key"`
@@ -185,11 +185,11 @@ type ListPolicy struct {
 
 	// MinCapacity is the minimum aggregate List total capacity across the fleet.
 	// If zero, it is ignored.
-	// If non zero, it must be smaller than MaxCapacity and bigger than BufferSize
+	// If non zero, it must be smaller than MaxCapacity and bigger than BufferSize.
 	MinCapacity int64 `json:"minCapacity"`
 
-	// BufferSize is the size of a buffer based on the list capacity that is available over the
-	// current aggregate list length in the Fleet (available capacity). It can be specified either
+	// BufferSize is the size of a buffer based on the List capacity that is available over the
+	// current aggregate List length in the Fleet (available capacity). It can be specified either
 	// as an absolute value (i.e. 5) or percentage format (i.e. 5%).
 	// Must be bigger than 0. Required field.
 	BufferSize intstr.IntOrString `json:"bufferSize"`
