@@ -23,12 +23,12 @@
 #     \_/ \__,_|_|  |_|\__,_|_.__/|_|\___|___/
 #
 
-REPOSITORY = us-docker.pkg.dev/agones-images/examples
+REPOSITORY ?=
 
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_path := $(dir $(mkfile_path))
 root_path := $(realpath $(project_path)/../..)
-image_tag = $(REPOSITORY)/xonotic-example:1.1
+image_tag = xonotic-example:1.1
 
 #   _____                    _
 #  |_   _|_ _ _ __ __ _  ___| |_ ___
@@ -39,16 +39,20 @@ image_tag = $(REPOSITORY)/xonotic-example:1.1
 
 # Build a docker image for the server, and tag it
 build:
-	docker build -f $(project_path)/Dockerfile --tag=$(image_tag) .
+	docker build -f $(project_path)/Dockerfile --tag=$(REPOSITORY)/$(image_tag) .
 
 # Push a docker image to the repository, and save it
 push: build
-	docker push $(image_tag)
+	docker push $(REPOSITORY)/$(image_tag)
 
 # check if hosted on Google Artifact Registry
 gar-check:
-	gcloud container images describe $(image_tag)
+	gcloud container images describe $(REPOSITORY)/$(image_tag)
 
 #output the tag for this image
 echo-image-tag:
-	@echo $(image_tag)
+	@echo $(REPOSITORY)/$(image_tag)
+
+# build and push the xonotic image with specified tag
+cloud-build:
+	gcloud builds submit --config=cloudbuild.yaml --substitutions=_IMAGE_TAG=$(image_tag)
