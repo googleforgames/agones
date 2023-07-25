@@ -42,6 +42,14 @@ type SDK struct {
 	alpha  *Alpha
 }
 
+// ErrorLog is a function to log the error.
+type ErrorLog func(string, error)
+
+// Logger is a pluggable function that outputs the error message to standard error.
+var Logger ErrorLog = func(msg string, err error) {
+	fmt.Fprintf(os.Stderr, "%s: %s\n", msg, err)
+}
+
 // NewSDK starts a new SDK instance, and connects to localhost
 // on port "AGONES_SDK_GRPC_PORT" which by default is 9357.
 // Blocks until connection and handshake are made.
@@ -132,17 +140,22 @@ func (s *SDK) WatchGameServer(f GameServerCallback) error {
 	if err != nil {
 		return errors.Wrap(err, "could not watch gameserver")
 	}
-
+	log := func(gs *sdk.GameServer, msg string, err error) {
+		if gs == nil || gs.ObjectMeta.DeletionTimestamp == 0 {
+			return
+		}
+		Logger(msg, err)
+	}
 	go func() {
 		for {
 			var gs *sdk.GameServer
 			gs, err = stream.Recv()
 			if err != nil {
 				if err == io.EOF {
-					_, _ = fmt.Fprintln(os.Stderr, "gameserver event stream EOF received")
+					log(gs, "gameserver event stream EOF received", nil)
 					return
 				}
-				_, _ = fmt.Fprintf(os.Stderr, "error watching GameServer: %s\n", err.Error())
+				log(gs, "error watching GameServer", err)
 				// This is to wait for the reconnection, and not peg the CPU at 100%.
 				time.Sleep(time.Second)
 				continue
