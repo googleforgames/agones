@@ -35,6 +35,7 @@ spec:
       path: /metrics
       interval: {{ .Values.agones.metrics.serviceMonitor.interval }}
       relabelings:
+{{- if and (.Values.agones.metrics.prometheusServiceDiscovery) (.Values.agones.metrics.prometheusEnabled) }}
         - sourceLabels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
           action: keep
           regex: "true"
@@ -47,6 +48,7 @@ spec:
           regex: ([^:]+)(?::\d+)?;(\d+)
           replacement: $1:$2
           targetLabel: __address__
+{{- end }}
         - action: labelmap
           regex: __meta_kubernetes_pod_label_(.+)
         - sourceLabels: [__meta_kubernetes_namespace]
