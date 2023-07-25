@@ -285,7 +285,7 @@ func compareGameServers(p *agonesv1.Priority, gs1, gs2 *agonesv1.GameServer) int
 				return 1
 			}
 			if availCapacity1 == availCapacity2 {
-				return 0 // TODO: Should we tie-break on Capacity and/or Count?
+				return 0
 			}
 		}
 		gs1ok = ok1

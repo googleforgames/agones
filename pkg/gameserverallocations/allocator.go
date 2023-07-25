@@ -496,14 +496,13 @@ func (c *Allocator) ListenAndAllocate(ctx context.Context, updateWorkerCount int
 	// continued.
 
 	var list []*agonesv1.GameServer
-	var sortKey *uint64 // Pointer so that we can check for nil (and set this value on the first req)
+	var sortKey uint64
 	requestCount := 0
 
 	for {
 		select {
 		case req := <-c.pendingRequests:
 			// refresh the list after every 100 allocations made in a single batch
-			requestCount++
 			if requestCount >= maxBatchBeforeRefresh {
 				list = nil
 				requestCount = 0
@@ -515,19 +514,21 @@ func (c *Allocator) ListenAndAllocate(ctx context.Context, updateWorkerCount int
 				// In case of error this will return 0 for the sortKey.
 				newSortKey, err := req.gsa.SortKey()
 				if err != nil {
-					c.baseLogger.Warn("error getting sortKey for GameServerAllocationSpecPriorities", err)
+					c.baseLogger.WithError(err).Warn("error getting sortKey for GameServerAllocationSpec", err)
+				}
+				// Set sortKey if this is the first request, or the previous request errored on creating a sortKey.
+				if sortKey == uint64(0) {
+					sortKey = newSortKey
 				}
 
-				if sortKey == nil {
-					sortKey = &newSortKey
-				}
-
-				if newSortKey != *sortKey {
-					sortKey = &newSortKey
+				if newSortKey != sortKey {
+					sortKey = newSortKey
 					list = nil
 					requestCount = 0
 				}
 			}
+
+			requestCount++
 
 			if list == nil {
 				list = c.allocationCache.ListSortedGameServers(req.gsa)
