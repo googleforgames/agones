@@ -246,6 +246,21 @@ func (f *Fleet) LowerBoundReplicas(i int32) int32 {
 	return i
 }
 
+// SumGameServerSets calculates a total from the value returned from the passed in function.
+// Useful for calculating totals based on status value(s), such as gsSet.Status.Replicas
+// This should eventually replace the variety of `Sum*` and `GetReadyReplicaCountForGameServerSets` functions as this is
+// a higher and more flexible abstraction.
+func SumGameServerSets(list []*GameServerSet, f func(gsSet *GameServerSet) int32) int32 {
+	var total int32
+	for _, gsSet := range list {
+		if gsSet != nil {
+			total += f(gsSet)
+		}
+	}
+
+	return total
+}
+
 // SumStatusAllocatedReplicas returns the total number of
 // Status.AllocatedReplicas in the list of GameServerSets
 func SumStatusAllocatedReplicas(list []*GameServerSet) int32 {

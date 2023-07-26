@@ -233,7 +233,6 @@ func TestControllerSyncGameServerWithDevIP(t *testing.T) {
 		gsFixture.ApplyDefaults()
 		gsFixture.Status.State = agonesv1.GameServerStateRequestReady
 
-
 		mocks.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
 			gameServers := &agonesv1.GameServerList{Items: []agonesv1.GameServer{*gsFixture}}
 			return true, gameServers, nil
