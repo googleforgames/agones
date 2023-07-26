@@ -35,7 +35,7 @@ spec:
       path: /metrics
       interval: {{ .Values.agones.metrics.serviceMonitor.interval }}
       relabelings:
-{{- if and (.Values.agones.metrics.prometheusServiceDiscovery) (.Values.agones.metrics.prometheusEnabled) }}
+{{- if (.Values.agones.metrics.prometheusServiceDiscovery) }}
         - sourceLabels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
           action: keep
           regex: "true"
