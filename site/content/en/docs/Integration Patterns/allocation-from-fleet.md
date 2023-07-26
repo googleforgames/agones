@@ -27,11 +27,11 @@ spec:
 
 ## Next Steps:
 
-- Read the various references, including the
-  [GameServer]({{< ref "/docs/Reference/gameserver.md" >}}) and [Fleet]({{< ref "/docs/Reference/fleet.md" >}}) 
-  reference materials.
+- Read the various specification references.
+  - Review the [GameServer]({{< ref "/docs/Reference/gameserver.md" >}}) spec.
+  - Review the [Fleet]({{< ref "/docs/Reference/fleet.md" >}}) spec.
+  - Review the [GameServerAllocation]({{< ref "/docs/Reference/gameserverallocation.md" >}}) spec.
 - Review the specifics of [Health Checking]({{< ref "/docs/Guides/health-checking.md" >}}).
-- See all the commands the [Client SDK]({{< ref "/docs/Guides/Client SDKs/_index.md" >}}) provides - we only show a 
-  few here!
-- If you aren't familiar with the term [Pod](https://kubernetes.io/docs/concepts/workloads/pods/pod/), this should
-  provide a reference.
+- See all the commands the [Client SDK]({{< ref "/docs/Guides/Client SDKs/_index.md" >}}) provides - we only show a few here!
+- Check out the [Allocator Service]({{< ref "/docs/Advanced/allocator-service.md" >}}) as a richer alternative to `GameServerAllocation`.
+- If you aren't familiar with the term [Pod](https://kubernetes.io/docs/concepts/workloads/pods/pod/), this should provide a reference.
