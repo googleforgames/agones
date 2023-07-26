@@ -42,26 +42,27 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 const (
 	defaultGRPCPort = 9357
 	defaultHTTPPort = 9358
 
-	// specifically env vars
-	gameServerNameEnv = "GAMESERVER_NAME"
-	podNamespaceEnv   = "POD_NAMESPACE"
-
 	// Flags (that can also be env vars)
-	localFlag       = "local"
-	fileFlag        = "file"
-	testFlag        = "test"
-	testSdkNameFlag = "sdk-name"
-	addressFlag     = "address"
-	delayFlag       = "delay"
-	timeoutFlag     = "timeout"
-	grpcPortFlag    = "grpc-port"
-	httpPortFlag    = "http-port"
+	gameServerNameFlag      = "gameserver-name"
+	podNamespaceFlag        = "pod-namespace"
+	localFlag               = "local"
+	fileFlag                = "file"
+	testFlag                = "test"
+	testSdkNameFlag         = "sdk-name"
+	kubeconfigFlag          = "kubeconfig"
+	gracefulTerminationFlag = "graceful-termination"
+	addressFlag             = "address"
+	delayFlag               = "delay"
+	timeoutFlag             = "timeout"
+	grpcPortFlag            = "grpc-port"
+	httpPortFlag            = "http-port"
 )
 
 var (
@@ -118,7 +119,8 @@ func main() {
 		}
 	default:
 		var config *rest.Config
-		config, err := rest.InClusterConfig()
+		// if the kubeconfig fails BuildConfigFromFlags will try in cluster config
+		config, err := clientcmd.BuildConfigFromFlags("", ctlConf.KubeConfig)
 		if err != nil {
 			logger.WithError(err).Fatal("Could not create in cluster config")
 		}
@@ -136,8 +138,8 @@ func main() {
 		}
 
 		var s *sdkserver.SDKServer
-		s, err = sdkserver.NewSDKServer(viper.GetString(gameServerNameEnv),
-			viper.GetString(podNamespaceEnv), kubeClient, agonesClient)
+		s, err = sdkserver.NewSDKServer(ctlConf.GameServerName, ctlConf.PodNamespace,
+			kubeClient, agonesClient)
 		if err != nil {
 			logger.WithError(err).Fatalf("Could not start sidecar")
 		}
@@ -146,7 +148,9 @@ func main() {
 		if err := s.WaitForConnection(ctx); err != nil {
 			logger.WithError(err).Fatalf("Sidecar networking failure")
 		}
-		ctx = s.NewSDKServerContext(ctx)
+		if ctlConf.GracefulTermination {
+			ctx = s.NewSDKServerContext(ctx)
+		}
 		go func() {
 			err := s.Run(ctx)
 			if err != nil {
@@ -265,8 +269,13 @@ func parseEnvFlags() config {
 	viper.SetDefault(addressFlag, "localhost")
 	viper.SetDefault(delayFlag, 0)
 	viper.SetDefault(timeoutFlag, 0)
+	viper.SetDefault(gracefulTerminationFlag, true)
 	viper.SetDefault(grpcPortFlag, defaultGRPCPort)
 	viper.SetDefault(httpPortFlag, defaultHTTPPort)
+	pflag.String(gameServerNameFlag, viper.GetString(gameServerNameFlag),
+		"Optional flag to set GameServer name. Overrides value given from `GAMESERVER_NAME` environment variable.")
+	pflag.String(podNamespaceFlag, viper.GetString(gameServerNameFlag),
+		"Optional flag to set Kubernetes namespace which the GameServer/pod is in. Overrides value given from `POD_NAMESPACE` environment variable.")
 	pflag.Bool(localFlag, viper.GetBool(localFlag),
 		"Set this, or LOCAL env, to 'true' to run this binary in local development mode. Defaults to 'false'")
 	pflag.StringP(fileFlag, "f", viper.GetString(fileFlag), "Set this, or FILE env var to the path of a local yaml or json file that contains your GameServer resoure configuration")
@@ -277,17 +286,22 @@ func parseEnvFlags() config {
 	pflag.Int(timeoutFlag, viper.GetInt(timeoutFlag), "Time of execution (in seconds) before close. Useful for tests")
 	pflag.String(testFlag, viper.GetString(testFlag), "List functions which should be called during the SDK Conformance test run.")
 	pflag.String(testSdkNameFlag, viper.GetString(testSdkNameFlag), "SDK name which is tested by this SDK Conformance test.")
+	pflag.String(kubeconfigFlag, viper.GetString(kubeconfigFlag),
+		"Optional. kubeconfig to run the SDK server out of the cluster.")
+	pflag.Bool(gracefulTerminationFlag, viper.GetBool(gracefulTerminationFlag),
+		"Immediately quits when receiving interrupt instead of waiting for GameServer state to progress to \"Shutdown\".")
 	runtime.FeaturesBindFlags()
 	pflag.Parse()
 
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
+	runtime.Must(viper.BindEnv(gameServerNameFlag))
+	runtime.Must(viper.BindEnv(podNamespaceFlag))
 	runtime.Must(viper.BindEnv(localFlag))
 	runtime.Must(viper.BindEnv(fileFlag))
 	runtime.Must(viper.BindEnv(addressFlag))
 	runtime.Must(viper.BindEnv(testFlag))
 	runtime.Must(viper.BindEnv(testSdkNameFlag))
-	runtime.Must(viper.BindEnv(gameServerNameEnv))
-	runtime.Must(viper.BindEnv(podNamespaceEnv))
+	runtime.Must(viper.BindEnv(kubeconfigFlag))
 	runtime.Must(viper.BindEnv(delayFlag))
 	runtime.Must(viper.BindEnv(timeoutFlag))
 	runtime.Must(viper.BindEnv(grpcPortFlag))
@@ -298,29 +312,37 @@ func parseEnvFlags() config {
 	runtime.Must(runtime.ParseFeaturesFromEnv())
 
 	return config{
-		IsLocal:     viper.GetBool(localFlag),
-		Address:     viper.GetString(addressFlag),
-		LocalFile:   viper.GetString(fileFlag),
-		Delay:       viper.GetInt(delayFlag),
-		Timeout:     viper.GetInt(timeoutFlag),
-		Test:        viper.GetString(testFlag),
-		TestSdkName: viper.GetString(testSdkNameFlag),
-		GRPCPort:    viper.GetInt(grpcPortFlag),
-		HTTPPort:    viper.GetInt(httpPortFlag),
+		GameServerName:      viper.GetString(gameServerNameFlag),
+		PodNamespace:        viper.GetString(podNamespaceFlag),
+		IsLocal:             viper.GetBool(localFlag),
+		Address:             viper.GetString(addressFlag),
+		LocalFile:           viper.GetString(fileFlag),
+		Delay:               viper.GetInt(delayFlag),
+		Timeout:             viper.GetInt(timeoutFlag),
+		Test:                viper.GetString(testFlag),
+		TestSdkName:         viper.GetString(testSdkNameFlag),
+		KubeConfig:          viper.GetString(kubeconfigFlag),
+		GracefulTermination: viper.GetBool(gracefulTerminationFlag),
+		GRPCPort:            viper.GetInt(grpcPortFlag),
+		HTTPPort:            viper.GetInt(httpPortFlag),
 	}
 }
 
 // config is all the configuration for this program
 type config struct {
-	Address     string
-	IsLocal     bool
-	LocalFile   string
-	Delay       int
-	Timeout     int
-	Test        string
-	TestSdkName string
-	GRPCPort    int
-	HTTPPort    int
+	GameServerName      string
+	PodNamespace        string
+	Address             string
+	IsLocal             bool
+	LocalFile           string
+	Delay               int
+	Timeout             int
+	Test                string
+	TestSdkName         string
+	KubeConfig          string
+	GracefulTermination bool
+	GRPCPort            int
+	HTTPPort            int
 }
 
 // healthCheckWrapper ensures that an http 400 response is returned
