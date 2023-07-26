@@ -32,7 +32,7 @@ root_path := $(realpath $(project_path)/../..)
 ifeq ($(REPOSITORY),)
 	image_tag := xonotic-example:1.1
 else
-	image_tag := $(PROD_REPO)/xonotic-example:1.1
+	image_tag := $(REPOSITORY)/xonotic-example:1.1
 endif
 
 #   _____                    _
@@ -52,11 +52,11 @@ push: build
 
 # check if hosted on Google Artifact Registry
 gar-check:
-	gcloud container images describe $(image_tag)
+	gcloud container images describe $(PROD_REPO)/$(image_tag)
 
 #output the tag for this image
 echo-image-tag:
-	@echo $(image_tag)
+	@echo $(PROD_REPO)/$(image_tag)
 
 # build and push the xonotic image with specified tag
 cloud-build:
