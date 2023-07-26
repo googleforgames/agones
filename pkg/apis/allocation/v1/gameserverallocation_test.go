@@ -1132,3 +1132,117 @@ func TestGameServerAllocationConverter(t *testing.T) {
 	gsa.Converter()
 	assert.Equal(t, gsaExpected, gsa)
 }
+
+func TestSortKey(t *testing.T) {
+	t.Parallel()
+
+	runtime.FeatureTestMutex.Lock()
+	defer runtime.FeatureTestMutex.Unlock()
+	assert.NoError(t, runtime.ParseFeatures(fmt.Sprintf("%s=true", runtime.FeatureCountsAndLists)))
+
+	gameServerAllocation1 := &GameServerAllocation{
+		Spec: GameServerAllocationSpec{
+			Scheduling: "Packed",
+			Priorities: []agonesv1.Priority{
+				{
+					Type:  "List",
+					Key:   "foo",
+					Order: "Descending",
+				},
+			},
+		},
+	}
+
+	gameServerAllocation2 := &GameServerAllocation{
+		Spec: GameServerAllocationSpec{
+			Selectors: []GameServerSelector{
+				{LabelSelector: metav1.LabelSelector{MatchLabels: map[string]string{"foo": "bar"}}},
+			},
+			Scheduling: "Packed",
+			Priorities: []agonesv1.Priority{
+				{
+					Type:  "List",
+					Key:   "foo",
+					Order: "Descending",
+				},
+			},
+		},
+	}
+
+	gameServerAllocation3 := &GameServerAllocation{
+		Spec: GameServerAllocationSpec{
+			Scheduling: "Packed",
+			Priorities: []agonesv1.Priority{
+				{
+					Type:  "Counter",
+					Key:   "foo",
+					Order: "Descending",
+				},
+			},
+		},
+	}
+
+	gameServerAllocation4 := &GameServerAllocation{
+		Spec: GameServerAllocationSpec{
+			Scheduling: "Distributed",
+			Priorities: []agonesv1.Priority{
+				{
+					Type:  "List",
+					Key:   "foo",
+					Order: "Descending",
+				},
+			},
+		},
+	}
+
+	gameServerAllocation5 := &GameServerAllocation{}
+
+	gameServerAllocation6 := &GameServerAllocation{
+		Spec: GameServerAllocationSpec{
+			Priorities: []agonesv1.Priority{},
+		},
+	}
+
+	testScenarios := map[string]struct {
+		gsa1      *GameServerAllocation
+		gsa2      *GameServerAllocation
+		wantEqual bool
+	}{
+		"equivalent GameServerAllocation": {
+			gsa1:      gameServerAllocation1,
+			gsa2:      gameServerAllocation2,
+			wantEqual: true,
+		},
+		"different Scheduling GameServerAllocation": {
+			gsa1:      gameServerAllocation1,
+			gsa2:      gameServerAllocation4,
+			wantEqual: false,
+		},
+		"equivalent empty GameServerAllocation": {
+			gsa1:      gameServerAllocation5,
+			gsa2:      gameServerAllocation6,
+			wantEqual: true,
+		},
+		"different Priorities GameServerAllocation": {
+			gsa1:      gameServerAllocation1,
+			gsa2:      gameServerAllocation3,
+			wantEqual: false,
+		},
+	}
+
+	for test, testScenario := range testScenarios {
+		t.Run(test, func(t *testing.T) {
+			key1, err := testScenario.gsa1.SortKey()
+			assert.NoError(t, err)
+			key2, err := testScenario.gsa2.SortKey()
+			assert.NoError(t, err)
+
+			if testScenario.wantEqual {
+				assert.Equal(t, key1, key2)
+			} else {
+				assert.NotEqual(t, key1, key2)
+			}
+		})
+	}
+
+}

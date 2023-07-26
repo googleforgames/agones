@@ -20,6 +20,7 @@ require (
 	github.com/joonix/log v0.0.0-20180502111528-d2d3f2f4a806
 	github.com/mattbaird/jsonpatch v0.0.0-20171005235357-81af80346b1a
 	github.com/mennanov/fmutils v0.2.0
+	github.com/mitchellh/hashstructure/v2 v2.0.2
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.14.0
