@@ -34,8 +34,6 @@ steps:
     dir: "."
     env:
       - REPOSITORY=${_REPOSITORY}
-      - IMAGE_TAG=${_IMAGE_TAG}
-      - DOCKER_RUN_ARGS=--network=cloudbuild
     args: ["-j", "1", "build"]
   
   # push xonotic image to GCR
@@ -46,9 +44,8 @@ steps:
     dir: "."
     env:
       - REPOSITORY=${_REPOSITORY}
-      - IMAGE_TAG=${_IMAGE_TAG}
     args: ["-j", "1", "push"]
 
 substitutions:
-  _REPOSITORY: 'us-docker.pkg.dev/agones-images/examples'
+  _REPOSITORY: us-docker.pkg.dev/${PROJECT_ID}/examples
 timeout: 1800s
