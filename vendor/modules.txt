@@ -243,6 +243,9 @@ github.com/matttproud/golang_protobuf_extensions/pbutil
 # github.com/mennanov/fmutils v0.2.0
 ## explicit; go 1.15
 github.com/mennanov/fmutils
+# github.com/mitchellh/hashstructure/v2 v2.0.2
+## explicit; go 1.14
+github.com/mitchellh/hashstructure/v2
 # github.com/mitchellh/mapstructure v1.4.1
 ## explicit; go 1.14
 github.com/mitchellh/mapstructure
