@@ -25,20 +25,9 @@ steps:
     entrypoint: "docker"
     args: ["build", "-f", "Dockerfile.build", "-t", "make-docker", "."]
 
-  # build xonotic image to GCR
-  - name: "make-docker"
-    id: build
-    dir: "."
-    env:
-      - REPOSITORY=${_REPOSITORY}
-    script: |
-      make -j 1 build
-
-  # push xonotic image to GCR
+  # build and push xonotic image to GCR
   - name: "make-docker"
     id: push
-    waitFor:
-      - build
     dir: "."
     env:
       - REPOSITORY=${_REPOSITORY}
