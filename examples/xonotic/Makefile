@@ -60,4 +60,4 @@ echo-image-tag:
 
 # build and push the xonotic image with specified tag
 cloud-build:
-	gcloud builds submit --config=cloudbuild.yaml
+	gcloud builds submit --config=../cloudbuild.yaml

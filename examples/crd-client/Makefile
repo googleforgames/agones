@@ -23,9 +23,14 @@
 #     \_/ \__,_|_|  |_|\__,_|_.__/|_|\___|___/
 #
 
-REPOSITORY ?= us-docker.pkg.dev/agones-images/examples
+REPOSITORY ?=
+PROD_REPO ?= us-docker.pkg.dev/agones-images/examples
 
-server_tag = $(REPOSITORY)/crd-client:0.10
+ifeq ($(REPOSITORY),)
+	server_tag := crd-client:0.10
+else
+	server_tag = $(REPOSITORY)/crd-client:0.10
+endif
 
 #   _____                    _
 #  |_   _|_ _ _ __ __ _  ___| |_ ___
@@ -43,8 +48,13 @@ push: build
 
 # check if hosted on Google Artifact Registry
 gar-check:
-	gcloud container images describe $(server_tag)
+	gcloud container images describe $(PROD_REPO)/$(server_tag)
 
 #output the tag for this image
 echo-image-tag:
-	@echo $(server_tag)
+	@echo $(PROD_REPO)/$(server_tag)
+
+# build and push the autoscaler-webhook image with specified tag
+cloud-build:
+	gcloud builds submit --config=../cloudbuild.yaml
+

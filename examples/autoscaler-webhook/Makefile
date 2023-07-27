@@ -23,12 +23,17 @@
 #     \_/ \__,_|_|  |_|\__,_|_.__/|_|\___|___/
 #
 
-REPOSITORY = us-docker.pkg.dev/agones-images/examples
+REPOSITORY ?=
+PROD_REPO ?= us-docker.pkg.dev/agones-images/examples
 
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_path := $(dir $(mkfile_path))
-autoscaler_webhook_tag = $(REPOSITORY)/autoscaler-webhook:0.7
 root_path = $(realpath $(project_path)/../..)
+ifeq ($(REPOSITORY),)
+	autoscaler_webhook_tag := autoscaler-webhook:0.7
+else
+	autoscaler_webhook_tag = $(REPOSITORY)/autoscaler-webhook:0.7
+endif
 
 #   _____                    _
 #  |_   _|_ _ _ __ __ _  ___| |_ ___
@@ -47,8 +52,12 @@ push: build
 
 # check if hosted on Google Artifact Registry
 gar-check:
-	gcloud container images describe $(autoscaler_webhook_tag)
+	gcloud container images describe $(PROD_REPO)/$(autoscaler_webhook_tag)
 
 #output the tag for this image
 echo-image-tag:
-	@echo $(autoscaler_webhook_tag)
+	@echo $(PROD_REPO)/$(autoscaler_webhook_tag)
+
+# build and push the autoscaler-webhook image with specified tag
+cloud-build:
+	gcloud builds submit --config=../cloudbuild.yaml
