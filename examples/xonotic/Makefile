@@ -25,10 +25,26 @@
 
 REPOSITORY = us-docker.pkg.dev/agones-images/examples
 
+WINDOWS_VERSIONS = ltsc2019 ltsc2022
+BUILDX_WINDOWS_BUILDER = windows-builder
+
+# Build with Windows support
+WITH_WINDOWS ?= 1
+
+# When pushing set to --push
+WINDOWS_DOCKER_PUSH_ARGS = --push
+
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_path := $(dir $(mkfile_path))
 root_path := $(realpath $(project_path)/../..)
 image_tag = $(REPOSITORY)/xonotic-example:1.2
+
+image_tag_linux_amd64 = $(image_tag)-linux-amd64
+
+push_server_manifest = $(image_tag_linux_amd64)
+ifeq ($(WITH_WINDOWS), 1)
+push_server_manifest += $(foreach windows_version, $(WINDOWS_VERSIONS), $(image_tag)-windows_amd64-$(windows_version))
+endif
 
 #   _____                    _
 #  |_   _|_ _ _ __ __ _  ___| |_ ___
@@ -37,9 +53,23 @@ image_tag = $(REPOSITORY)/xonotic-example:1.2
 #    |_|\__,_|_|  \__, |\___|\__|___/
 #                 |___/
 
-# Build a docker image for the server, and tag it
-build:
-	docker build -f $(project_path)/Dockerfile --tag=$(image_tag) .
+build: build-linux-image-amd64
+ifeq ($(WITH_WINDOWS), 1)
+build: $(foreach winver, $(WINDOWS_VERSIONS), build-windows-image-$(winver))
+endif
+
+
+build-linux-image-amd64:
+	docker build -f $(project_path)/Dockerfile --tag=$(image_tag_linux_amd64) .
+
+build-windows-image-%: ensure-windows-buildx
+	docker buildx build --platform windows/amd64 --builder $(BUILDX_WINDOWS_BUILDER) -f $(project_path)Dockerfile.windows \
+	--tag=$(image_tag)-windows_amd64-$* --build-arg WINDOWS_VERSION=$* . $(WINDOWS_DOCKER_PUSH_ARGS)
+
+ensure-windows-buildx:
+# Windows image builds must be directed to a specific buildx context.
+# The default context does not support building cross platform images.
+	-DOCKER_CLI_EXPERIMENTAL=enabled docker buildx create --name=$(BUILDX_WINDOWS_BUILDER) --use
 
 # Push a docker image to the repository, and save it
 push: build
