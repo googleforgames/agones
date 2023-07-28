@@ -323,6 +323,12 @@ func TestFindGameServerForAllocationPacked(t *testing.T) {
 func TestFindGameServerForAllocationDistributed(t *testing.T) {
 	t.Parallel()
 
+	// TODO: remove when `CountsAndLists` feature flag is moved to stable.
+	// NOTE: CountsAndLists has different behavior for Distributed, and the game server list is not random.
+	runtime.FeatureTestMutex.Lock()
+	defer runtime.FeatureTestMutex.Unlock()
+	assert.NoError(t, runtime.ParseFeatures(string(runtime.FeatureCountsAndLists)+"=false"))
+
 	controller, m := newFakeController()
 	c := controller.allocator.allocationCache
 	labels := map[string]string{"role": "gameserver"}

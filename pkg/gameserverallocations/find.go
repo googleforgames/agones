@@ -20,6 +20,7 @@ import (
 	"agones.dev/agones/pkg/apis"
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
+	"agones.dev/agones/pkg/util/runtime"
 	"github.com/pkg/errors"
 )
 
@@ -50,18 +51,29 @@ func findGameServerForAllocation(gsa *allocationv1.GameServerAllocation, list []
 	case apis.Distributed:
 		// randomised looping - make a list of indices, and then randomise them
 		// as we don't want to change the order of the gameserver slice
-		l := len(list)
-		indices := make([]int, l)
-		for i := 0; i < l; i++ {
-			indices[i] = i
-		}
-		rand.Shuffle(l, func(i, j int) {
-			indices[i], indices[j] = indices[j], indices[i]
-		})
+		if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
+			l := len(list)
+			indices := make([]int, l)
+			for i := 0; i < l; i++ {
+				indices[i] = i
+			}
+			rand.Shuffle(l, func(i, j int) {
+				indices[i], indices[j] = indices[j], indices[i]
+			})
 
-		loop = func(list []*agonesv1.GameServer, f func(i int, gs *agonesv1.GameServer)) {
-			for _, i := range indices {
-				f(i, list[i])
+			loop = func(list []*agonesv1.GameServer, f func(i int, gs *agonesv1.GameServer)) {
+				for _, i := range indices {
+					f(i, list[i])
+				}
+			}
+		} else {
+			// For FeatureCountsAndLists we do not do randomized looping -- instead choose the game
+			// server based on the list of Priorities. (The order in which the game servers were sorted
+			// in ListSortedGameServersPriorities.)
+			loop = func(list []*agonesv1.GameServer, f func(i int, gs *agonesv1.GameServer)) {
+				for i, gs := range list {
+					f(i, gs)
+				}
 			}
 		}
 	default:

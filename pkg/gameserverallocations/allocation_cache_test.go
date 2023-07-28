@@ -221,7 +221,7 @@ func TestAllocationCacheListSortedGameServers(t *testing.T) {
 	}
 }
 
-func TestAllocationCacheCompareGameServers(t *testing.T) {
+func TestListSortedGameServersPriorities(t *testing.T) {
 	t.Parallel()
 	runtime.FeatureTestMutex.Lock()
 	defer runtime.FeatureTestMutex.Unlock()
@@ -472,6 +472,21 @@ func TestAllocationCacheCompareGameServers(t *testing.T) {
 			},
 			want: []*agonesv1.GameServer{&gs2, &gs4, &gs1, &gs3, &gs5, &gs6},
 		},
+		"Sort lexigraphically as no game server has the priority": {
+			list: []agonesv1.GameServer{gs6, gs5, gs4, gs3, gs2, gs1},
+			gsa: &allocationv1.GameServerAllocation{
+				Spec: allocationv1.GameServerAllocationSpec{
+					Priorities: []agonesv1.Priority{
+						{
+							Type:  "Counter",
+							Key:   "sayers",
+							Order: "Ascending",
+						},
+					},
+				},
+			},
+			want: []*agonesv1.GameServer{&gs1, &gs2, &gs3, &gs4, &gs5, &gs6},
+		},
 	}
 
 	for testName, testScenario := range testScenarios {
@@ -493,7 +508,7 @@ func TestAllocationCacheCompareGameServers(t *testing.T) {
 			err = cache.counter.Run(ctx, 0)
 			assert.Nil(t, err)
 
-			got := cache.ListSortedGameServers(testScenario.gsa)
+			got := cache.ListSortedGameServersPriorities(testScenario.gsa)
 
 			assert.Equal(t, testScenario.want, got)
 		})

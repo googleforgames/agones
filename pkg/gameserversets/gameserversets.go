@@ -46,7 +46,7 @@ func SortGameServersByStrategy(strategy apis.SchedulingStrategy, list []*agonesv
 	if strategy == apis.Packed {
 		return sortGameServersByLeastFullNodes(list, counts, priorities)
 	}
-	return sortGameServersByNewFirst(list)
+	return sortGameServersByNewFirst(list, priorities)
 }
 
 // SortGameServersByLeastFullNodes sorts the list of gameservers by which gameservers reside on the least full nodes
@@ -87,7 +87,7 @@ func sortGameServersByLeastFullNodes(list []*agonesv1.GameServer, count map[stri
 		}
 
 		// if the Nodes have the same count and CountsAndLists flag is enabled, sort based on CountsAndLists Priorities.
-		if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) && (priorities != nil) {
+		if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
 			for _, priority := range priorities {
 				res := compareGameServerCapacity(&priority, a, b)
 				switch priority.Order {
@@ -120,14 +120,35 @@ func sortGameServersByLeastFullNodes(list []*agonesv1.GameServer, count map[stri
 	return list
 }
 
-// sortGameServersByNewFirst sorts by newest gameservers first, and returns them
-func sortGameServersByNewFirst(list []*agonesv1.GameServer) []*agonesv1.GameServer {
+// sortGameServersByNewFirst sorts by newest gameservers first.
+// If FeatureCountsAndLists is enabled, sort by Priority first, then tie break with newest gameservers.
+func sortGameServersByNewFirst(list []*agonesv1.GameServer, priorities []agonesv1.Priority) []*agonesv1.GameServer {
 	sort.Slice(list, func(i, j int) bool {
 		a := list[i]
 		b := list[j]
 
-		// TODO: Sort by Priority First, then tie break with NewFirst
-
+		if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
+			for _, priority := range priorities {
+				res := compareGameServerCapacity(&priority, a, b)
+				switch priority.Order {
+				case agonesv1.GameServerPriorityAscending:
+					if res == -1 {
+						return true
+					}
+					if res == 1 {
+						return false
+					}
+				case agonesv1.GameServerPriorityDescending:
+					if res == -1 {
+						return false
+					}
+					if res == 1 {
+						return true
+					}
+				}
+			}
+		}
+		// TODO: Do we still want to keep this as the tie-breaker?
 		return a.ObjectMeta.CreationTimestamp.Before(&b.ObjectMeta.CreationTimestamp)
 	})
 
