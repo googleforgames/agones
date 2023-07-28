@@ -23,7 +23,6 @@ import (
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	helper "agones.dev/agones/test/e2e/allochelper"
 	e2e "agones.dev/agones/test/e2e/framework"
-	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	v1 "k8s.io/api/core/v1"
@@ -39,13 +38,13 @@ const (
 
 func TestAllocatorAfterDeleteReplica(t *testing.T) {
 	ctx := context.Background()
-
+	var log = e2e.TestLogger(t)
 	var list *v1.PodList
 
 	dep, err := framework.KubeClient.AppsV1().Deployments("agones-system").Get(ctx, "agones-allocator", metav1.GetOptions{})
 	require.NoError(t, err, "Failed to get replicas")
 	replicaCnt := int(*(dep.Spec.Replicas))
-	logrus.Infof("Replica count config is %d", replicaCnt)
+	log.WithField("count", replicaCnt).Infof("Replica count config")
 
 	// poll and wait until all allocator pods are running
 	_ = wait.PollImmediate(retryInterval, retryTimeout, func() (done bool, err error) {
@@ -60,7 +59,7 @@ func TestAllocatorAfterDeleteReplica(t *testing.T) {
 
 		for _, allocpod := range list.Items {
 			podstatus := string(allocpod.Status.Phase)
-			logrus.Infof("Allocator Pod %s, has status of %s", allocpod.ObjectMeta.Name, podstatus)
+			log.Infof("Allocator Pod %s, has status of %s", allocpod.ObjectMeta.Name, podstatus)
 			if podstatus != "Running" {
 				return false, nil
 			}
@@ -94,13 +93,14 @@ func TestAllocatorAfterDeleteReplica(t *testing.T) {
 	require.NoError(t, err, "Could not initialize rpc client")
 
 	// Wait and keep making calls till we know the draining time has passed
-	_ = wait.PollImmediate(retryInterval, retryTimeout, func() (bool, error) {
+	for i := time.Duration(0); i < retryTimeout; i += retryInterval {
 		response, err = grpcClient.Allocate(context.Background(), request)
-		logrus.Info(response)
+		log.WithField("response", response).Info("response recieved")
 		helper.ValidateAllocatorResponse(t, response)
 		require.NoError(t, err, "Failed grpc allocation request")
 		err = helper.DeleteAgonesPod(ctx, response.GameServerName, framework.Namespace, framework)
 		require.NoError(t, err, "Failed to delete game server pod %s", response.GameServerName)
-		return false, nil
-	})
+
+		time.Sleep(retryInterval)
+	}
 }
