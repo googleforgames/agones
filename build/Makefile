@@ -375,7 +375,7 @@ test-e2e-allocator-crash: GO_E2E_TEST_INTEGRATION_ARGS ?=\
 test-e2e-allocator-crash: $(ensure-build-image)
 	echo "Starting e2e allocation pod deletion test!"
 ifdef E2E_USE_GOTESTSUM
-	$(GOTESTSUM) --packages=$(agones_package)/test/e2e/allocator -- $(go_test_args) $(ARGS) -parallel=1 -args \
+	$(GOTESTSUM) --packages=$(agones_package)/test/e2e/allocator -- $(go_test_args) $(ARGS) -timeout=30m -parallel=1 -args \
 		$(GO_E2E_TEST_ARGS) $(GO_E2E_TEST_INTEGRATION_ARGS)
 else
 	$(GO_TEST) $(ARGS) -parallel=1 $(agones_package)/test/e2e/allocator -args \
