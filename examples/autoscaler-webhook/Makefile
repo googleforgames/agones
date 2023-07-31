@@ -24,7 +24,7 @@
 #
 
 REPOSITORY ?=
-PROD_REPO ?= us-docker.pkg.dev/agones-mangalpalli/examples
+PROD_REPO ?= us-docker.pkg.dev/agones-images/examples
 
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_path := $(dir $(mkfile_path))
