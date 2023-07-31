@@ -28,6 +28,7 @@ import (
 	"agones.dev/agones/pkg/gameservers"
 	agtesting "agones.dev/agones/pkg/testing"
 	"agones.dev/agones/pkg/util/runtime"
+	"agones.dev/agones/test/e2e/framework"
 	"github.com/heptiolabs/healthcheck"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
@@ -280,6 +281,7 @@ func TestAllocatorApplyAllocationToGameServer(t *testing.T) {
 
 func TestAllocatorApplyAllocationToGameServerCountsListsActions(t *testing.T) {
 	t.Parallel()
+
 	m := agtesting.NewMocks()
 	ctx := context.Background()
 	mp := allocationv1.MetaPatch{}
@@ -453,6 +455,7 @@ func TestAllocatorAllocateOnGameServerUpdateError(t *testing.T) {
 	defer runtime.FeatureTestMutex.Unlock()
 
 	a, m := newFakeAllocator()
+	log := framework.TestLogger(t)
 
 	_, gsList := defaultFixtures(4)
 	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
@@ -487,9 +490,12 @@ func TestAllocatorAllocateOnGameServerUpdateError(t *testing.T) {
 
 	// try the private method
 	_, err := a.allocate(ctx, gsa.DeepCopy())
-	logrus.WithField("test", t.Name()).WithError(err).Info("allocate (private): failed allocation")
+	log.WithError(err).Info("allocate (private): failed allocation")
 	require.NotEqual(t, ErrNoGameServer, err)
 	require.EqualError(t, err, "error updating allocated gameserver: failed to update")
+
+	// make sure we aren't in the same batch!
+	time.Sleep(2 * a.batchWaitTime)
 
 	// triple check there is still a gameserver in the cache
 	require.Eventuallyf(t, func() bool {
@@ -497,8 +503,9 @@ func TestAllocatorAllocateOnGameServerUpdateError(t *testing.T) {
 	}, 10*time.Second, time.Second, "should have a single item in the cache (still)")
 
 	// try the public method
-	_, err = a.Allocate(ctx, gsa.DeepCopy())
-	logrus.WithField("test", t.Name()).WithError(err).Info("Allocate (public): failed allocation")
+	result, err := a.Allocate(ctx, gsa.DeepCopy())
+	log.WithField("result", result).WithError(err).Info("Allocate (public): failed allocation")
+	require.Nil(t, result)
 	require.NotEqual(t, ErrNoGameServer, err)
 	require.EqualError(t, err, "error updating allocated gameserver: failed to update")
 }
@@ -616,6 +623,117 @@ func TestAllocatorRunLocalAllocations(t *testing.T) {
 		assert.Error(t, res1.err)
 		assert.Equal(t, ErrNoGameServer, res1.err)
 	})
+}
+
+func TestAllocatorRunLocalAllocationsCountsAndLists(t *testing.T) {
+	t.Parallel()
+
+	runtime.FeatureTestMutex.Lock()
+	defer runtime.FeatureTestMutex.Unlock()
+	assert.NoError(t, runtime.ParseFeatures(string(runtime.FeatureCountsAndLists)+"=true"))
+
+	a, m := newFakeAllocator()
+
+	gs1 := agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs1", Namespace: defaultNs, UID: "1"},
+		Status: agonesv1.GameServerStatus{NodeName: "node1", State: agonesv1.GameServerStateReady,
+			Counters: map[string]agonesv1.CounterStatus{
+				"foo": { // Available Capacity == 1000
+					Count:    0,
+					Capacity: 1000,
+				}}}}
+	gs2 := agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs2", Namespace: defaultNs, UID: "2"},
+		Status: agonesv1.GameServerStatus{NodeName: "node1", State: agonesv1.GameServerStateReady,
+			Counters: map[string]agonesv1.CounterStatus{
+				"foo": { // Available Capacity == 900
+					Count:    100,
+					Capacity: 1000,
+				}}}}
+	gs3 := agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs3", Namespace: defaultNs, UID: "3"},
+		Status: agonesv1.GameServerStatus{NodeName: "node1", State: agonesv1.GameServerStateReady,
+			Counters: map[string]agonesv1.CounterStatus{
+				"foo": { // Available Capacity == 1
+					Count:    999,
+					Capacity: 1000,
+				}}}}
+
+	gsList := []agonesv1.GameServer{gs1, gs2, gs3}
+
+	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
+		return true, &agonesv1.GameServerList{Items: gsList}, nil
+	})
+
+	m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
+		uo := action.(k8stesting.UpdateAction)
+		gs := uo.GetObject().(*agonesv1.GameServer)
+		return true, gs, nil
+	})
+
+	ctx, cancel := agtesting.StartInformers(m, a.allocationCache.gameServerSynced)
+	defer cancel()
+
+	// This call initializes the cache
+	err := a.allocationCache.syncCache()
+	assert.Nil(t, err)
+
+	err = a.allocationCache.counter.Run(ctx, 0)
+	assert.Nil(t, err)
+
+	READY := agonesv1.GameServerStateReady
+
+	gsa1 := &allocationv1.GameServerAllocation{
+		ObjectMeta: metav1.ObjectMeta{Namespace: defaultNs},
+		Spec: allocationv1.GameServerAllocationSpec{
+			Scheduling: apis.Packed,
+			Selectors: []allocationv1.GameServerSelector{{
+				GameServerState: &READY,
+			}},
+			Priorities: []agonesv1.Priority{
+				{Type: agonesv1.GameServerPriorityCounter,
+					Key:   "foo",
+					Order: agonesv1.GameServerPriorityAscending},
+			},
+		}}
+	gsa2 := &allocationv1.GameServerAllocation{
+		ObjectMeta: metav1.ObjectMeta{Namespace: defaultNs},
+		Spec: allocationv1.GameServerAllocationSpec{
+			Scheduling: apis.Packed,
+			Selectors: []allocationv1.GameServerSelector{{
+				GameServerState: &READY,
+			}},
+			Priorities: []agonesv1.Priority{
+				{Type: agonesv1.GameServerPriorityCounter,
+					Key:   "foo",
+					Order: agonesv1.GameServerPriorityDescending},
+			},
+		}}
+
+	// line up 3 in a batch (first sort by Ascending then Descending then Ascending)
+	j1 := request{gsa: gsa1.DeepCopy(), response: make(chan response)}
+	a.pendingRequests <- j1
+	j2 := request{gsa: gsa2.DeepCopy(), response: make(chan response)}
+	a.pendingRequests <- j2
+	j3 := request{gsa: gsa1.DeepCopy(), response: make(chan response)}
+	a.pendingRequests <- j3
+
+	go a.ListenAndAllocate(ctx, 3)
+
+	res1 := <-j1.response
+	assert.NoError(t, res1.err)
+	assert.NotNil(t, res1.gs)
+	assert.Equal(t, agonesv1.GameServerStateAllocated, res1.gs.Status.State)
+	assert.Equal(t, gs3.ObjectMeta.Name, res1.gs.ObjectMeta.Name)
+
+	res2 := <-j2.response
+	assert.NoError(t, res2.err)
+	assert.NotNil(t, res2.gs)
+	assert.Equal(t, agonesv1.GameServerStateAllocated, res2.gs.Status.State)
+	assert.Equal(t, gs1.ObjectMeta.Name, res2.gs.ObjectMeta.Name)
+
+	res3 := <-j3.response
+	assert.NoError(t, res3.err)
+	assert.NotNil(t, res3.gs)
+	assert.Equal(t, agonesv1.GameServerStateAllocated, res3.gs.Status.State)
+	assert.Equal(t, gs2.ObjectMeta.Name, res3.gs.ObjectMeta.Name)
 }
 
 func TestControllerAllocationUpdateWorkers(t *testing.T) {

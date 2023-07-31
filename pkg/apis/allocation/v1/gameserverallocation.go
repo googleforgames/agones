@@ -21,7 +21,7 @@ import (
 	"agones.dev/agones/pkg/apis"
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	"agones.dev/agones/pkg/util/runtime"
-	apimachineryvalidation "k8s.io/apimachinery/pkg/api/validation"
+	hashstructure "github.com/mitchellh/hashstructure/v2"
 	apivalidation "k8s.io/apimachinery/pkg/api/validation"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	metav1validation "k8s.io/apimachinery/pkg/apis/meta/v1/validation"
@@ -69,12 +69,12 @@ type GameServerAllocationList struct {
 type GameServerAllocationSpec struct {
 	// MultiClusterPolicySelector if specified, multi-cluster policies are applied.
 	// Otherwise, allocation will happen locally.
-	MultiClusterSetting MultiClusterSetting `json:"multiClusterSetting,omitempty"`
+	MultiClusterSetting MultiClusterSetting `json:"multiClusterSetting,omitempty" hash:"ignore"`
 
 	// Deprecated: use field Selectors instead. If Selectors is set, this field is ignored.
 	// Required is the GameServer selector from which to choose GameServers from.
 	// Defaults to all GameServers.
-	Required GameServerSelector `json:"required,omitempty"`
+	Required GameServerSelector `json:"required,omitempty" hash:"ignore"`
 
 	// Deprecated: use field Selectors instead. If Selectors is set, this field is ignored.
 	// Preferred is an ordered list of preferred GameServer selectors
@@ -82,12 +82,12 @@ type GameServerAllocationSpec struct {
 	// If the first selector is not matched, the selection attempts the second selector, and so on.
 	// If any of the preferred selectors are matched, the required selector is not considered.
 	// This is useful for things like smoke testing of new game servers.
-	Preferred []GameServerSelector `json:"preferred,omitempty"`
+	Preferred []GameServerSelector `json:"preferred,omitempty" hash:"ignore"`
 
 	// (Alpha, CountsAndLists feature flag) The first Priority on the array of Priorities is the most
 	// important for sorting. The allocator will use the first priority for sorting GameServers by
-	// available Capacity in the Selector set and acts as a tie-breaker after sorting the game servers
-	// by State and Strategy. Impacts which GameServer is checked first.
+	// available Capacity in the Selector set. Acts as a tie-breaker after sorting the game servers
+	// by State and Strategy Packed. Impacts which GameServer is checked first.
 	// +optional
 	Priorities []agonesv1.Priority `json:"priorities,omitempty"`
 
@@ -95,20 +95,20 @@ type GameServerAllocationSpec struct {
 	// If the first selector is not matched, the selection attempts the second selector, and so on.
 	// This is useful for things like smoke testing of new game servers.
 	// Note: This field can only be set if neither Required or Preferred is set.
-	Selectors []GameServerSelector `json:"selectors,omitempty"`
+	Selectors []GameServerSelector `json:"selectors,omitempty" hash:"ignore"`
 
 	// Scheduling strategy. Defaults to "Packed".
 	Scheduling apis.SchedulingStrategy `json:"scheduling"`
 
 	// MetaPatch is optional custom metadata that is added to the game server at allocation
 	// You can use this to tell the server necessary session data
-	MetaPatch MetaPatch `json:"metadata,omitempty"`
+	MetaPatch MetaPatch `json:"metadata,omitempty" hash:"ignore"`
 
 	// (Alpha, CountsAndLists feature flag) Counters and Lists provide a set of actions to perform
 	// on Counters and Lists during allocation.
 	// +optional
-	Counters map[string]CounterAction `json:"counters,omitempty"`
-	Lists    map[string]ListAction    `json:"lists,omitempty"`
+	Counters map[string]CounterAction `json:"counters,omitempty" hash:"ignore"`
+	Lists    map[string]ListAction    `json:"lists,omitempty" hash:"ignore"`
 }
 
 // GameServerSelector contains all the filter options for selecting
@@ -378,11 +378,11 @@ func (s *GameServerSelector) Validate(fldPath *field.Path) field.ErrorList {
 
 	if runtime.FeatureEnabled(runtime.FeaturePlayerAllocationFilter) && s.Players != nil {
 		if s.Players.MinAvailable < 0 {
-			allErrs = append(allErrs, field.Invalid(fldPath.Child("players").Child("minAvailable"), s.Players.MinAvailable, apimachineryvalidation.IsNegativeErrorMsg))
+			allErrs = append(allErrs, field.Invalid(fldPath.Child("players").Child("minAvailable"), s.Players.MinAvailable, apivalidation.IsNegativeErrorMsg))
 		}
 
 		if s.Players.MaxAvailable < 0 {
-			allErrs = append(allErrs, field.Invalid(fldPath.Child("players").Child("maxAvailable"), s.Players.MaxAvailable, apimachineryvalidation.IsNegativeErrorMsg))
+			allErrs = append(allErrs, field.Invalid(fldPath.Child("players").Child("maxAvailable"), s.Players.MaxAvailable, apivalidation.IsNegativeErrorMsg))
 		}
 
 		if s.Players.MinAvailable > s.Players.MaxAvailable {
@@ -415,19 +415,19 @@ func validateCounters(counters map[string]CounterSelector, fldPath *field.Path) 
 	for key, counterSelector := range counters {
 		keyPath := fldPath.Key(key)
 		if counterSelector.MinCount < 0 {
-			allErrs = append(allErrs, field.Invalid(keyPath.Child("minCount"), counterSelector.MinCount, apimachineryvalidation.IsNegativeErrorMsg))
+			allErrs = append(allErrs, field.Invalid(keyPath.Child("minCount"), counterSelector.MinCount, apivalidation.IsNegativeErrorMsg))
 		}
 		if counterSelector.MaxCount < 0 {
-			allErrs = append(allErrs, field.Invalid(keyPath.Child("maxCount"), counterSelector.MaxCount, apimachineryvalidation.IsNegativeErrorMsg))
+			allErrs = append(allErrs, field.Invalid(keyPath.Child("maxCount"), counterSelector.MaxCount, apivalidation.IsNegativeErrorMsg))
 		}
 		if (counterSelector.MaxCount < counterSelector.MinCount) && (counterSelector.MaxCount != 0) {
 			allErrs = append(allErrs, field.Invalid(keyPath, counterSelector.MaxCount, fmt.Sprintf("maxCount must zero or greater than minCount %d", counterSelector.MinCount)))
 		}
 		if counterSelector.MinAvailable < 0 {
-			allErrs = append(allErrs, field.Invalid(keyPath.Child("minAvailable"), counterSelector.MinAvailable, apimachineryvalidation.IsNegativeErrorMsg))
+			allErrs = append(allErrs, field.Invalid(keyPath.Child("minAvailable"), counterSelector.MinAvailable, apivalidation.IsNegativeErrorMsg))
 		}
 		if counterSelector.MaxAvailable < 0 {
-			allErrs = append(allErrs, field.Invalid(keyPath.Child("maxAvailable"), counterSelector.MaxAvailable, apimachineryvalidation.IsNegativeErrorMsg))
+			allErrs = append(allErrs, field.Invalid(keyPath.Child("maxAvailable"), counterSelector.MaxAvailable, apivalidation.IsNegativeErrorMsg))
 		}
 		if (counterSelector.MaxAvailable < counterSelector.MinAvailable) && (counterSelector.MaxAvailable != 0) {
 			allErrs = append(allErrs, field.Invalid(keyPath, counterSelector.MaxAvailable, fmt.Sprintf("maxAvailable must zero or greater than minAvailable %d", counterSelector.MinAvailable)))
@@ -443,10 +443,10 @@ func validateLists(lists map[string]ListSelector, fldPath *field.Path) field.Err
 	for key, listSelector := range lists {
 		keyPath := fldPath.Key(key)
 		if listSelector.MinAvailable < 0 {
-			allErrs = append(allErrs, field.Invalid(keyPath.Child("minAvailable"), listSelector.MinAvailable, apimachineryvalidation.IsNegativeErrorMsg))
+			allErrs = append(allErrs, field.Invalid(keyPath.Child("minAvailable"), listSelector.MinAvailable, apivalidation.IsNegativeErrorMsg))
 		}
 		if listSelector.MaxAvailable < 0 {
-			allErrs = append(allErrs, field.Invalid(keyPath.Child("maxAvailable"), listSelector.MaxAvailable, apimachineryvalidation.IsNegativeErrorMsg))
+			allErrs = append(allErrs, field.Invalid(keyPath.Child("maxAvailable"), listSelector.MaxAvailable, apivalidation.IsNegativeErrorMsg))
 		}
 		if (listSelector.MaxAvailable < listSelector.MinAvailable) && (listSelector.MaxAvailable != 0) {
 			allErrs = append(allErrs, field.Invalid(keyPath, listSelector.MaxAvailable, fmt.Sprintf("maxAvailable must zero or greater than minAvailable %d", listSelector.MinAvailable)))
@@ -548,4 +548,16 @@ func (gsa *GameServerAllocation) Converter() {
 		selectors = append(selectors, gsa.Spec.Required)
 		gsa.Spec.Selectors = selectors
 	}
+}
+
+// SortKey generates and returns the hash of the GameServerAllocationSpec []Priority and Scheduling.
+// Note: The hash:"ignore" in GameServerAllocationSpec means that these fields will not be considered
+// in hashing. The hash is used for determining when GameServerAllocations have equal or different
+// []Priority and Scheduling.
+func (gsa *GameServerAllocation) SortKey() (uint64, error) {
+	hash, err := hashstructure.Hash(gsa.Spec, hashstructure.FormatV2, nil)
+	if err != nil {
+		return 0, err
+	}
+	return hash, nil
 }
