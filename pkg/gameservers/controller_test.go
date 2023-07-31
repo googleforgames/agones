@@ -120,6 +120,7 @@ func TestControllerSyncGameServer(t *testing.T) {
 			assert.Equal(t, expectedState, gs.Status.State)
 			if expectedState == agonesv1.GameServerStateScheduled {
 				assert.Equal(t, ipFixture, gs.Status.Address)
+				assert.Equal(t, []corev1.NodeAddress{{Address: ipFixture, Type: "ExternalIP"}}, gs.Status.Addresses)
 				assert.NotEmpty(t, gs.Status.Ports[0].Port)
 			}
 
@@ -208,6 +209,7 @@ func TestControllerSyncGameServerWithDevIP(t *testing.T) {
 
 			assert.Equal(t, expectedState, gs.Status.State)
 			assert.Equal(t, ipFixture, gs.Status.Address)
+			assert.Equal(t, []corev1.NodeAddress{{Address: ipFixture, Type: "InternalIP"}}, gs.Status.Addresses)
 			assert.NotEmpty(t, gs.Status.Ports[0].Port)
 
 			return true, gs, nil
@@ -986,6 +988,7 @@ func TestControllerSyncGameServerStartingState(t *testing.T) {
 		assert.True(t, gsUpdated)
 		assert.Equal(t, gs.Status.NodeName, node.ObjectMeta.Name)
 		assert.Equal(t, gs.Status.Address, ipFixture)
+		assert.Equal(t, []corev1.NodeAddress{{Address: ipFixture, Type: "ExternalIP"}}, gs.Status.Addresses)
 
 		agtesting.AssertEventContains(t, m.FakeRecorder.Events, "Address and port populated")
 		assert.NotEmpty(t, gs.Status.Ports)
@@ -1425,6 +1428,7 @@ func TestControllerSyncGameServerRequestReadyState(t *testing.T) {
 
 		assert.Equal(t, gs.Status.NodeName, nodeFixture.ObjectMeta.Name)
 		assert.Equal(t, gs.Status.Address, ipFixture)
+		assert.Equal(t, []corev1.NodeAddress{{Address: ipFixture, Type: "ExternalIP"}}, gs.Status.Addresses)
 
 		agtesting.AssertEventContains(t, m.FakeRecorder.Events, "Address and port populated")
 		agtesting.AssertEventContains(t, m.FakeRecorder.Events, "SDK.Ready() complete")
