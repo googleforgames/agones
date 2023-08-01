@@ -472,10 +472,10 @@ func TestAllocatorAllocateOnGameServerUpdateError(t *testing.T) {
 	defer cancel()
 
 	require.NoError(t, a.Run(ctx))
-	// wait for the single gameserver to be in the cache.
+	// wait for 4 gameservers in the cache
 	require.Eventuallyf(t, func() bool {
-		return a.allocationCache.cache.Len() >= 1
-	}, 10*time.Second, time.Second, "should have a single item in the cache")
+		return a.allocationCache.cache.Len() == 4
+	}, 10*time.Second, time.Second, "should be four items in the cache")
 
 	gsa := allocationv1.GameServerAllocation{ObjectMeta: metav1.ObjectMeta{Name: "gsa-1", Namespace: defaultNs},
 		Spec: allocationv1.GameServerAllocationSpec{},
@@ -497,10 +497,10 @@ func TestAllocatorAllocateOnGameServerUpdateError(t *testing.T) {
 	// make sure we aren't in the same batch!
 	time.Sleep(2 * a.batchWaitTime)
 
-	// triple check there is still a gameserver in the cache
+	// Make sure there are 4 still.
 	require.Eventuallyf(t, func() bool {
-		return a.allocationCache.cache.Len() >= 1
-	}, 10*time.Second, time.Second, "should have a single item in the cache (still)")
+		return a.allocationCache.cache.Len() == 4
+	}, 10*time.Second, time.Second, "should be four items in the cache")
 
 	// try the public method
 	result, err := a.Allocate(ctx, gsa.DeepCopy())
