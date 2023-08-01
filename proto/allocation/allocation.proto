@@ -88,7 +88,13 @@ message AllocationRequest {
 message AllocationResponse {
   string gameServerName = 2;
   repeated GameServerStatusPort ports = 3;
+
+  // Primary address at which game server can be reached
   string address = 4;
+
+  // All addresses at which game server can be reached; copy of Node.Status.addresses
+  repeated GameServerStatusAddress addresses = 8;
+
   string nodeName = 5;
   string source = 6;
   optional GameServerMetadata metadata = 7;
@@ -97,6 +103,12 @@ message AllocationResponse {
   message GameServerStatusPort {
     string name = 1;
     int32 port = 2;
+  }
+
+  // A single address; identical to corev1.NodeAddress
+  message GameServerStatusAddress {
+    string type = 1;
+    string address = 2;
   }
 
   message GameServerMetadata {
