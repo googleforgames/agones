@@ -25,6 +25,7 @@ homepage = "https://agones.dev/site/"
 async-stream = "0.3"
 http = "0.2"
 prost = "0.8"
+prost-types = "0.8"
 thiserror = "1.0"
 
 [dependencies.tokio]
