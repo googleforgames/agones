@@ -21,9 +21,12 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/go-openapi/spec"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8sruntime "k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/kube-openapi/pkg/handler3"
 )
 
 var (
@@ -39,6 +42,37 @@ var (
 		ShortNames: []string{"gsa"},
 	}
 )
+
+func TestApiServerStubs(t *testing.T) {
+	t.Parallel()
+	// testing API endpoints that don't do a whole lot, but are needed for APIService endpoints.
+	mux := http.NewServeMux()
+	ts := httptest.NewUnstartedServer(mux)
+	_ = NewAPIServer(mux)
+
+	ts.Start()
+	defer ts.Close()
+	client := ts.Client()
+
+	resp, err := client.Get(ts.URL + "/openapi/v2")
+	require.NoError(t, err)
+	assert.Equal(t, k8sruntime.ContentTypeJSON, resp.Header.Get(ContentTypeHeader))
+	v2data := spec.Swagger{}
+	require.NoError(t, json.NewDecoder(resp.Body).Decode(&v2data))
+	require.NoError(t, resp.Body.Close())
+
+	resp, err = client.Get(ts.URL + "/openapi/v3")
+	require.NoError(t, err)
+	assert.Equal(t, k8sruntime.ContentTypeJSON, resp.Header.Get(ContentTypeHeader))
+	v3data := handler3.OpenAPIV3Discovery{}
+	require.NoError(t, json.NewDecoder(resp.Body).Decode(&v3data))
+	require.NoError(t, resp.Body.Close())
+
+	resp, err = client.Get(ts.URL + "/apis")
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusNotAcceptable, resp.StatusCode)
+	require.NoError(t, resp.Body.Close())
+}
 
 func TestAPIServerAddAPIResourceCRDHandler(t *testing.T) {
 	t.Parallel()

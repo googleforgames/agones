@@ -35,18 +35,6 @@ spec:
       path: /metrics
       interval: {{ .Values.agones.metrics.serviceMonitor.interval }}
       relabelings:
-        - sourceLabels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
-          action: keep
-          regex: "true"
-        - sourceLabels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
-          action: replace
-          targetLabel: __metrics_path__
-          regex: (.+)
-        - sourceLabels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
-          action: replace
-          regex: ([^:]+)(?::\d+)?;(\d+)
-          replacement: $1:$2
-          targetLabel: __address__
         - action: labelmap
           regex: __meta_kubernetes_pod_label_(.+)
         - sourceLabels: [__meta_kubernetes_namespace]
