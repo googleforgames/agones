@@ -32,6 +32,7 @@ import (
 	k8sruntime "k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
+	"k8s.io/kube-openapi/pkg/handler3"
 )
 
 var (
@@ -69,37 +70,57 @@ type CRDHandler func(http.ResponseWriter, *http.Request, string) error
 // APIServer is a lightweight library for registering, and providing handlers
 // for Kubernetes APIServer extensions.
 type APIServer struct {
-	logger       *logrus.Entry
-	mux          *http.ServeMux
-	resourceList map[string]*metav1.APIResourceList
-	swagger      *spec.Swagger
-	delegates    map[string]CRDHandler
+	logger             *logrus.Entry
+	mux                *http.ServeMux
+	resourceList       map[string]*metav1.APIResourceList
+	openapiv2          *spec.Swagger
+	openapiv3Discovery *handler3.OpenAPIV3Discovery
+	delegates          map[string]CRDHandler
 }
 
 // NewAPIServer returns a new API Server from the given Mux.
 // creates a empty Swagger definition and sets up the endpoint.
 func NewAPIServer(mux *http.ServeMux) *APIServer {
 	s := &APIServer{
-		mux:          mux,
-		resourceList: map[string]*metav1.APIResourceList{},
-		swagger:      &spec.Swagger{SwaggerProps: spec.SwaggerProps{}},
-		delegates:    map[string]CRDHandler{},
+		mux:                mux,
+		resourceList:       map[string]*metav1.APIResourceList{},
+		openapiv2:          &spec.Swagger{SwaggerProps: spec.SwaggerProps{}},
+		openapiv3Discovery: &handler3.OpenAPIV3Discovery{Paths: map[string]handler3.OpenAPIV3DiscoveryGroupVersion{}},
+		delegates:          map[string]CRDHandler{},
 	}
 	s.logger = runtime.NewLoggerWithType(s)
+	s.logger.Debug("API Server Started")
 
-	// we don't *have* to have a swagger api, so just do an empty one for now, and we can expand as needed.
+	// We don't *have* to have a v3 openapi api, so just do an empty one for now, and we can expand as needed.
+	// If we implement /v3/ we can likely omit the /v2/ handler since only one is needed.
+	// This at least stops the K8s api pinging us for the spec all the time.
+	mux.HandleFunc("/openapi/v3", https.ErrorHTTPHandler(s.logger, func(w http.ResponseWriter, r *http.Request) error {
+		w.Header().Set(ContentTypeHeader, k8sruntime.ContentTypeJSON)
+		err := json.NewEncoder(w).Encode(s.openapiv3Discovery)
+		if err != nil {
+			return errors.Wrap(err, "error encoding openapi/v3")
+		}
+		return nil
+	}))
+
+	// We don't *have* to have a v2 openapi api, so just do an empty one for now, and we can expand as needed.
 	// kube-openapi could be a potential library to look at for future if we want to be more specific.
 	// This at least stops the K8s api pinging us for every iteration of a api descriptor that may exist
-	s.swagger.SwaggerProps.Info = &spec.Info{InfoProps: spec.InfoProps{Title: "allocation.agones.dev"}}
-
-	mux.HandleFunc("/openapi/v2", func(w http.ResponseWriter, r *http.Request) {
+	s.openapiv2.SwaggerProps.Info = &spec.Info{InfoProps: spec.InfoProps{Title: "allocation.agones.dev"}}
+	mux.HandleFunc("/openapi/v2", https.ErrorHTTPHandler(s.logger, func(w http.ResponseWriter, r *http.Request) error {
 		w.Header().Set(ContentTypeHeader, k8sruntime.ContentTypeJSON)
-		err := json.NewEncoder(w).Encode(s.swagger)
+		err := json.NewEncoder(w).Encode(s.openapiv2)
 		if err != nil {
-			s.logger.WithError(errors.WithStack(err)).Error("error return openapi")
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
+			return errors.Wrap(err, "error encoding openapi/v2")
 		}
+		return nil
+	}))
+
+	// We don't currently support a root /apis, but since Aggregate Discovery expects
+	// a 406, let's give it what it wants, otherwise namespaces don't successfully terminate on <= 1.27.2
+	mux.HandleFunc("/apis", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotAcceptable)
+		w.Header().Set(ContentTypeHeader, k8sruntime.ContentTypeJSON)
 	})
 
 	return s
