@@ -23,6 +23,7 @@ package v1
 
 import (
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
+	corev1 "k8s.io/api/core/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -192,6 +193,11 @@ func (in *GameServerAllocationStatus) DeepCopyInto(out *GameServerAllocationStat
 	if in.Ports != nil {
 		in, out := &in.Ports, &out.Ports
 		*out = make([]agonesv1.GameServerStatusPort, len(*in))
+		copy(*out, *in)
+	}
+	if in.Addresses != nil {
+		in, out := &in.Addresses, &out.Addresses
+		*out = make([]corev1.NodeAddress, len(*in))
 		copy(*out, *in)
 	}
 	if in.Metadata != nil {
