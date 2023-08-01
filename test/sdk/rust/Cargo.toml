@@ -22,6 +22,8 @@ edition = "2018"
 
 [dependencies]
 agones = { path = "../../../sdks/rust" }
+prost = "0.8"
+prost-types = "0.8"
 
 [dependencies.tokio]
 version = "1.6"
