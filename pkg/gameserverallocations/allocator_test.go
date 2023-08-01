@@ -475,7 +475,7 @@ func TestAllocatorAllocateOnGameServerUpdateError(t *testing.T) {
 	defer cancel()
 
 	require.NoError(t, a.Run(ctx))
-	// wait for 4 gameservers in the cache
+	// wait for all the gameservers to be in the cache
 	require.Eventuallyf(t, func() bool {
 		return a.allocationCache.cache.Len() == gsLen
 	}, 10*time.Second, time.Second, fmt.Sprintf("should be %d items in the cache", gsLen))
@@ -500,7 +500,7 @@ func TestAllocatorAllocateOnGameServerUpdateError(t *testing.T) {
 	// make sure we aren't in the same batch!
 	time.Sleep(2 * a.batchWaitTime)
 
-	// Make sure there are 4 still.
+	// wait for all the gameservers to be in the cache
 	require.Eventuallyf(t, func() bool {
 		return a.allocationCache.cache.Len() == gsLen
 	}, 10*time.Second, time.Second, fmt.Sprintf("should be %d items in the cache", gsLen))
