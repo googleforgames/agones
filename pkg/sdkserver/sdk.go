@@ -59,6 +59,13 @@ func convert(gs *agonesv1.GameServer) *sdk.GameServer {
 		result.ObjectMeta.DeletionTimestamp = meta.DeletionTimestamp.Unix()
 	}
 
+	// look around and add all the addresses
+	for _, a := range status.Addresses {
+		result.Status.Addresses = append(result.Status.Addresses, &sdk.GameServer_Status_Address{
+			Type:    string(a.Type),
+			Address: a.Address,
+		})
+	}
 	// loop around and add all the ports
 	for _, p := range status.Ports {
 		grpcPort := &sdk.GameServer_Status_Port{

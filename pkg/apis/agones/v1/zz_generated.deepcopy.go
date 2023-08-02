@@ -22,6 +22,7 @@
 package v1
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -520,6 +521,11 @@ func (in *GameServerStatus) DeepCopyInto(out *GameServerStatus) {
 	if in.Ports != nil {
 		in, out := &in.Ports, &out.Ports
 		*out = make([]GameServerStatusPort, len(*in))
+		copy(*out, *in)
+	}
+	if in.Addresses != nil {
+		in, out := &in.Addresses, &out.Addresses
+		*out = make([]corev1.NodeAddress, len(*in))
 		copy(*out, *in)
 	}
 	if in.ReservedUntil != nil {

@@ -12,8 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM rust:1.53.0 as builder
+FROM rust:1.71.0 as builder
 RUN useradd -m build
+RUN apt update && apt install -y protobuf-compiler
 
 # SDK
 COPY sdk /home/builder/agones/sdks/rust

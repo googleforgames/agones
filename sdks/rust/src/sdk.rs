@@ -100,7 +100,7 @@ impl Sdk {
             .keep_alive_timeout(keep_alive.unwrap_or_else(|| Duration::from_secs(30)));
 
         // will only attempt to connect on first invocation, so won't exit straight away.
-        let channel = builder.connect_lazy()?;
+        let channel = builder.connect_lazy();
         let mut client = SdkClient::new(channel.clone());
         let alpha = Alpha::new(channel);
 
