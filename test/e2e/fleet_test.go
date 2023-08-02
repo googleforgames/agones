@@ -17,6 +17,7 @@ package e2e
 import (
 	"context"
 	"fmt"
+	"sort"
 	"strings"
 	"sync"
 	"testing"
@@ -119,6 +120,87 @@ func TestFleetStrategyValidation(t *testing.T) {
 				{ "op": "replace", "path": "/spec/replicas", "value": 3}]`
 	_, err = framework.AgonesClient.AgonesV1().Fleets(framework.Namespace).Patch(ctx, flt.ObjectMeta.Name, types.JSONPatchType, []byte(patch), metav1.PatchOptions{})
 	verifyErr(err)
+}
+
+func TestFleetScaleWithDualAllocations(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+
+	client := framework.AgonesClient.AgonesV1()
+	flt := defaultFleet(framework.Namespace)
+	flt.Spec.Replicas = 5
+	flt, err := client.Fleets(framework.Namespace).Create(ctx, flt, metav1.CreateOptions{})
+	require.NoError(t, err)
+	defer client.Fleets(framework.Namespace).Delete(ctx, flt.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
+
+	log := e2e.TestLogger(t).WithField("fleet", flt.Name)
+
+	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
+	_ = framework.CreateAndApplyAllocation(t, flt)
+
+	framework.AssertFleetCondition(t, flt, func(log *logrus.Entry, fleet *agonesv1.Fleet) bool {
+		return fleet.Status.AllocatedReplicas == 1
+	})
+
+	err = wait.PollImmediate(time.Second, time.Minute, func() (done bool, err error) {
+		flt, err = client.Fleets(framework.Namespace).Get(ctx, flt.ObjectMeta.GetName(), metav1.GetOptions{})
+		if err != nil {
+			return false, err
+		}
+
+		fltCopy := flt.DeepCopy()
+		fltCopy.Spec.Template.ObjectMeta.Labels = map[string]string{"version": "new"}
+		_, err = client.Fleets(framework.Namespace).Update(ctx, fltCopy, metav1.UpdateOptions{})
+		return true, err
+	})
+	require.NoError(t, err)
+
+	selector := labels.SelectorFromSet(labels.Set{agonesv1.FleetNameLabel: flt.ObjectMeta.Name})
+	require.Eventually(t, func() bool {
+		gssList, err := framework.AgonesClient.AgonesV1().GameServerSets(framework.Namespace).List(ctx,
+			metav1.ListOptions{LabelSelector: selector.String()})
+		if err != nil {
+			log.WithError(err).Error("Should be able to list")
+			return false
+		}
+
+		// wait until there are two of them
+		if len(gssList.Items) < 2 {
+			return false
+		}
+
+		// sort by timestamp, so we have a consistent order.
+		sort.Slice(gssList.Items, func(i, j int) bool {
+			return gssList.Items[i].ObjectMeta.CreationTimestamp.Compare(gssList.Items[j].ObjectMeta.CreationTimestamp.Time) == -1
+		})
+
+		// First one will have 1 with one allocated, second one should have 9 ready.
+		if gssList.Items[0].Status.AllocatedReplicas != 1 || gssList.Items[1].Status.ReadyReplicas != 4 {
+			log.WithField("gss0", fmt.Sprintf("%+v", gssList.Items[0].Status)).WithField("gss1", fmt.Sprintf("%+v", gssList.Items[1].Status)).Info("Checking GameServerSet")
+			return false
+		}
+		return true
+	}, 5*time.Minute, time.Second)
+
+	// Allocate 2 game servers.
+	_ = framework.CreateAndApplyAllocation(t, flt)
+	_ = framework.CreateAndApplyAllocation(t, flt)
+
+	// Scale the fleet down to 2 replicas.
+	framework.ScaleFleet(t, log, flt, 2)
+	framework.AssertFleetCondition(t, flt, func(entry *logrus.Entry, fleet *agonesv1.Fleet) bool {
+		log.WithField("fleet", fmt.Sprintf("%+v", fleet.Status)).Info("Checking after 2 more allocations, and scaling to 2")
+		return fleet.Status.AllocatedReplicas == 3 && fleet.Status.ReadyReplicas == 0
+	})
+	require.NoError(t, err)
+
+	// Then scale the fleet back to 10 replicas.
+	framework.ScaleFleet(t, log, flt, 5)
+	require.NoError(t, err)
+	framework.AssertFleetCondition(t, flt, func(entry *logrus.Entry, fleet *agonesv1.Fleet) bool {
+		log.WithField("fleet", fmt.Sprintf("%+v", fleet.Status)).Info("Checking after scaling back to 5")
+		return fleet.Status.AllocatedReplicas == 3 && fleet.Status.ReadyReplicas == 2
+	})
 }
 
 func TestFleetScaleUpAllocateEditAndScaleDownToZero(t *testing.T) {

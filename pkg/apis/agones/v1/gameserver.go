@@ -280,11 +280,14 @@ type SdkServer struct {
 // GameServerStatus is the status for a GameServer resource
 type GameServerStatus struct {
 	// GameServerState is the current state of a GameServer, e.g. Creating, Starting, Ready, etc
-	State         GameServerState        `json:"state"`
-	Ports         []GameServerStatusPort `json:"ports"`
-	Address       string                 `json:"address"`
-	NodeName      string                 `json:"nodeName"`
-	ReservedUntil *metav1.Time           `json:"reservedUntil"`
+	State   GameServerState        `json:"state"`
+	Ports   []GameServerStatusPort `json:"ports"`
+	Address string                 `json:"address"`
+	// Addresses is the array of addresses at which the GameServer can be reached; copy of Node.Status.addresses.
+	// +optional
+	Addresses     []corev1.NodeAddress `json:"addresses"`
+	NodeName      string               `json:"nodeName"`
+	ReservedUntil *metav1.Time         `json:"reservedUntil"`
 	// [Stage:Alpha]
 	// [FeatureFlag:PlayerTracking]
 	// +optional
