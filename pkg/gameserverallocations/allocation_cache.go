@@ -36,11 +36,6 @@ import (
 
 type matcher func(*agonesv1.GameServer) bool
 
-// readyGameServerMatcher return true when a GameServer is in a Ready state.
-func readyGameServerMatcher(gs *agonesv1.GameServer) bool {
-	return gs.Status.State == agonesv1.GameServerStateReady
-}
-
 // readyOrAllocatedGameServerMatcher returns true when a GameServer is in a Ready or Allocated state.
 func readyOrAllocatedGameServerMatcher(gs *agonesv1.GameServer) bool {
 	return gs.Status.State == agonesv1.GameServerStateReady || gs.Status.State == agonesv1.GameServerStateAllocated
