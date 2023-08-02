@@ -80,26 +80,6 @@ func TestAllocationCacheListSortedGameServers(t *testing.T) {
 		features string
 		gsa      *allocationv1.GameServerAllocation
 	}{
-		"most allocated": {
-			// node1: 1 ready, 1 allocated, node2: 1 ready
-			list: []agonesv1.GameServer{gs1, gs2, gs3},
-			test: func(t *testing.T, list []*agonesv1.GameServer) {
-				assert.Len(t, list, 2)
-				if !assert.Equal(t, []*agonesv1.GameServer{&gs1, &gs2}, list) {
-					for _, gs := range list {
-						logrus.WithField("name", gs.Name).Info("game server")
-					}
-				}
-			},
-			features: fmt.Sprintf("%s=false", runtime.FeatureStateAllocationFilter),
-		},
-		"allocated first (StateAllocationFilter)": {
-			list:     []agonesv1.GameServer{gs1, gs2, gs3},
-			features: fmt.Sprintf("%s=true", runtime.FeatureStateAllocationFilter),
-			test: func(t *testing.T, list []*agonesv1.GameServer) {
-				assert.Equal(t, []*agonesv1.GameServer{&gs3, &gs1, &gs2}, list)
-			},
-		},
 		"nil player status (PlayerAllocationFilter)": {
 			list:     []agonesv1.GameServer{gs1, gs2, gs4},
 			features: fmt.Sprintf("%s=true", runtime.FeaturePlayerAllocationFilter),
@@ -500,13 +480,10 @@ func TestAllocationCacheCompareGameServers(t *testing.T) {
 	}
 }
 
-func TestAllocatorRunCacheSyncFeatureStateAllocationFilter(t *testing.T) {
+func TestAllocatorRunCacheSync(t *testing.T) {
 	t.Parallel()
 
 	// TODO(markmandel): When this feature gets promoted to stable, replace test TestAllocatorRunCacheSync below with this test.
-	runtime.FeatureTestMutex.Lock()
-	defer runtime.FeatureTestMutex.Unlock()
-	require.NoError(t, runtime.ParseFeatures(string(runtime.FeatureStateAllocationFilter)+"=true"))
 
 	cache, m := newFakeAllocationCache()
 	gsWatch := watch.NewFake()
@@ -570,86 +547,6 @@ func TestAllocatorRunCacheSyncFeatureStateAllocationFilter(t *testing.T) {
 	// now move it to Shutdown
 	gs.Status.State = agonesv1.GameServerStateShutdown
 	gsWatch.Modify(gs.DeepCopy())
-	assertCacheEntries(0)
-
-	// add back in ready gameserver
-	gs.Status.State = agonesv1.GameServerStateReady
-	gsWatch.Modify(gs.DeepCopy())
-	assertCacheEntries(1)
-
-	// update with deletion timestamp
-	n := metav1.Now()
-	deletedCopy := gs.DeepCopy()
-	deletedCopy.ObjectMeta.DeletionTimestamp = &n
-	gsWatch.Modify(deletedCopy)
-	assertCacheEntries(0)
-
-	// add back in ready gameserver
-	gs.Status.State = agonesv1.GameServerStateReady
-	gsWatch.Modify(gs.DeepCopy())
-	assertCacheEntries(1)
-
-	// now actually delete it
-	gsWatch.Delete(gs.DeepCopy())
-	assertCacheEntries(0)
-}
-
-func TestAllocatorRunCacheSync(t *testing.T) {
-	t.Parallel()
-
-	cache, m := newFakeAllocationCache()
-	gsWatch := watch.NewFake()
-
-	m.AgonesClient.AddWatchReactor("gameservers", k8stesting.DefaultWatchReactor(gsWatch, nil))
-
-	ctx, cancel := agtesting.StartInformers(m, cache.gameServerSynced)
-	defer cancel()
-
-	assertCacheEntries := func(expected int) {
-		count := 0
-		err := wait.PollImmediate(time.Second, 5*time.Second, func() (done bool, err error) {
-			count = 0
-			cache.cache.Range(func(key string, gs *agonesv1.GameServer) bool {
-				count++
-				return true
-			})
-
-			return count == expected, nil
-		})
-
-		assert.NoError(t, err, fmt.Sprintf("Should be %d values", expected))
-	}
-
-	go func() {
-		err := cache.Run(ctx)
-		assert.Nil(t, err)
-	}()
-
-	gs := agonesv1.GameServer{
-		ObjectMeta: metav1.ObjectMeta{Name: "gs1", Namespace: "default"},
-		Status:     agonesv1.GameServerStatus{State: agonesv1.GameServerStateStarting},
-	}
-
-	logrus.Info("adding ready game server")
-	gsWatch.Add(gs.DeepCopy())
-
-	assertCacheEntries(0)
-
-	gs.Status.State = agonesv1.GameServerStateReady
-	gsWatch.Modify(gs.DeepCopy())
-
-	assertCacheEntries(1)
-
-	// try again, should be no change
-	gs.Status.State = agonesv1.GameServerStateReady
-	gsWatch.Modify(gs.DeepCopy())
-
-	assertCacheEntries(1)
-
-	// now move it to Shutdown
-	gs.Status.State = agonesv1.GameServerStateShutdown
-	gsWatch.Modify(gs.DeepCopy())
-
 	assertCacheEntries(0)
 
 	// add back in ready gameserver

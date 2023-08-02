@@ -34,9 +34,6 @@ const (
 	// FeatureSplitControllerAndExtensions is a feature flag that will split agones-controller into two deployments
 	FeatureSplitControllerAndExtensions Feature = "SplitControllerAndExtensions"
 
-	// FeatureStateAllocationFilter is a feature flag that enables state filtering on Allocation.
-	FeatureStateAllocationFilter Feature = "StateAllocationFilter"
-
 	////////////////
 	// Alpha features
 
@@ -104,7 +101,6 @@ var (
 		FeaturePodHostname:                  true,
 		FeatureResetMetricsOnDelete:         true,
 		FeatureSplitControllerAndExtensions: true,
-		FeatureStateAllocationFilter:        true,
 
 		// Alpha features
 		FeaturePlayerAllocationFilter: false,
