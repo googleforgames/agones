@@ -28,8 +28,8 @@ mkdir -p ./sdks/nodejs/lib/alpha
 
 cd /go/src/agones.dev/agones
 
-grpc_tools_node_protoc -I ${googleapis} -I ${gatewaygrpc} -I ${sdk} --js_out=import_style=commonjs,binary:./sdks/nodejs/lib google/api/annotations.proto google/api/http.proto protoc-gen-openapiv2/options/annotations.proto protoc-gen-openapiv2/options/openapiv2.proto
-grpc_tools_node_protoc -I ${googleapis} -I ${gatewaygrpc} -I ${sdk}/alpha --js_out=import_style=commonjs,binary:./sdks/nodejs/lib/alpha google/api/annotations.proto google/api/http.proto protoc-gen-openapiv2/options/annotations.proto protoc-gen-openapiv2/options/openapiv2.proto
+grpc_tools_node_protoc -I ${googleapis} -I ${gatewaygrpc} -I ${sdk} --js_out=import_style=commonjs,binary:./sdks/nodejs/lib google/api/annotations.proto google/api/client.proto google/api/field_behavior.proto google/api/http.proto google/api/launch_stage.proto google/api/resource.proto protoc-gen-openapiv2/options/annotations.proto protoc-gen-openapiv2/options/openapiv2.proto
+grpc_tools_node_protoc -I ${googleapis} -I ${gatewaygrpc} -I ${sdk}/alpha --js_out=import_style=commonjs,binary:./sdks/nodejs/lib/alpha google/api/annotations.proto google/api/client.proto google/api/field_behavior.proto google/api/http.proto google/api/launch_stage.proto google/api/resource.proto protoc-gen-openapiv2/options/annotations.proto protoc-gen-openapiv2/options/openapiv2.proto
 
 grpc_tools_node_protoc -I ${googleapis} -I ${gatewaygrpc} -I ${sdk} --grpc_out=generate_package_definition:./sdks/nodejs/lib --js_out=import_style=commonjs,binary:./sdks/nodejs/lib sdk.proto
 grpc_tools_node_protoc -I ${googleapis} -I ${gatewaygrpc} -I ${sdk}/alpha --grpc_out=generate_package_definition:./sdks/nodejs/lib/alpha --js_out=import_style=commonjs,binary:./sdks/nodejs/lib/alpha alpha.proto

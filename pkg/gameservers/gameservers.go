@@ -34,51 +34,58 @@ func isGameServerPod(pod *corev1.Pod) bool {
 	return false
 }
 
-// address returns the network address that the given Pod is run on.
-// This will default to the ExternalDNS, but if the ExternalDNS is
+// address returns the "primary" network address that the given Pod is run on,
+// and a slice of all network addresses.
+//
+// The primary address will default to the ExternalDNS, but if the ExternalDNS is
 // not set, it will fall back to the ExternalIP then InternalDNS then InternalIP,
 // If externalDNS is false, skip ExternalDNS and InternalDNS.
 // since we can have clusters that are private, and/or tools like minikube
 // that only report an InternalIP.
-func address(node *corev1.Node) (string, error) {
-
+func address(node *corev1.Node) (string, []corev1.NodeAddress, error) {
+	addresses := make([]corev1.NodeAddress, 0, len(node.Status.Addresses))
 	for _, a := range node.Status.Addresses {
+		addresses = append(addresses, *a.DeepCopy())
+	}
+
+	for _, a := range addresses {
 		if a.Type == corev1.NodeExternalDNS {
-			return a.Address, nil
+			return a.Address, addresses, nil
 		}
 	}
 
-	for _, a := range node.Status.Addresses {
+	for _, a := range addresses {
 		if a.Type == corev1.NodeExternalIP && net.ParseIP(a.Address) != nil {
-			return a.Address, nil
+			return a.Address, addresses, nil
 		}
 	}
 
 	// There might not be a public DNS/IP, so fall back to the private DNS/IP
-	for _, a := range node.Status.Addresses {
+	for _, a := range addresses {
 		if a.Type == corev1.NodeInternalDNS {
-			return a.Address, nil
+			return a.Address, addresses, nil
 		}
 	}
 
-	for _, a := range node.Status.Addresses {
+	for _, a := range addresses {
 		if a.Type == corev1.NodeInternalIP && net.ParseIP(a.Address) != nil {
-			return a.Address, nil
+			return a.Address, addresses, nil
 		}
 	}
 
-	return "", errors.Errorf("Could not find an address for Node: %s", node.ObjectMeta.Name)
+	return "", nil, errors.Errorf("Could not find an address for Node: %s", node.ObjectMeta.Name)
 }
 
 // applyGameServerAddressAndPort gathers the address and port details from the node and pod
 // and applies them to the GameServer that is passed in, and returns it.
 func applyGameServerAddressAndPort(gs *agonesv1.GameServer, node *corev1.Node, pod *corev1.Pod, syncPodPortsToGameServer func(*agonesv1.GameServer, *corev1.Pod) error) (*agonesv1.GameServer, error) {
-	addr, err := address(node)
+	addr, addrs, err := address(node)
 	if err != nil {
 		return gs, errors.Wrapf(err, "error getting external address for GameServer %s", gs.ObjectMeta.Name)
 	}
 
 	gs.Status.Address = addr
+	gs.Status.Addresses = addrs
 	gs.Status.NodeName = pod.Spec.NodeName
 
 	if err := syncPodPortsToGameServer(gs, pod); err != nil {
