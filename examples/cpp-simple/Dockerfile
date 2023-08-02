@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM gcc:9 as builder
+FROM gcc:10 as builder
 
 WORKDIR /project
 

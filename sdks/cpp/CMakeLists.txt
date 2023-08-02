@@ -74,6 +74,7 @@ include(./cmake/prerequisites.cmake)
 find_package(Threads REQUIRED)
 find_package(ZLIB REQUIRED)
 find_package(Protobuf REQUIRED CONFIG)
+find_package(absl CONFIG REQUIRED)
 find_package(gRPC ${AGONES_GRPC_VERSION} ${AGONES_GRPC_VERSION_MATCH} REQUIRED CONFIG)
 
 if (AGONES_BUILD_ONLY_PREREQUISITIES)
