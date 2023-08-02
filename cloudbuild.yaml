@@ -116,6 +116,16 @@ steps:
   args: ["ensure-build-sdk-image-base"]
 
 #
+# Preventing SDKs failure in CI
+#
+- name: "make-docker"
+  id: test-gen-all-sdk-grpc
+  waitFor:
+    - ensure-build-sdk-image-base
+  dir: "build"
+  args: ["test-gen-all-sdk-grpc"]
+
+#
 # Preventing Broken PR Merges in CI
 #
 - name: "make-docker"
