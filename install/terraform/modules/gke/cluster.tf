@@ -22,32 +22,33 @@ data "google_client_config" "default" {}
 # A list of all parameters used in interpolation var.cluster
 # Set values to default if not key was not set in original map
 locals {
-  project                            = lookup(var.cluster, "project", "agones")
-  location                           = lookup(var.cluster, "location", "us-west1-c")
-  zone                               = lookup(var.cluster, "zone", "")
-  name                               = lookup(var.cluster, "name", "test-cluster")
-  machineType                        = lookup(var.cluster, "machineType", "e2-standard-4")
-  initialNodeCount                   = lookup(var.cluster, "initialNodeCount", "4")
-  enableImageStreaming               = lookup(var.cluster, "enableImageStreaming", true)
-  network                            = lookup(var.cluster, "network", "default")
-  subnetwork                         = lookup(var.cluster, "subnetwork", "")
-  releaseChannel                     = lookup(var.cluster, "releaseChannel", "UNSPECIFIED")
-  kubernetesVersion                  = lookup(var.cluster, "kubernetesVersion", "1.26")
-  windowsInitialNodeCount            = lookup(var.cluster, "windowsInitialNodeCount", "0")
-  windowsMachineType                 = lookup(var.cluster, "windowsMachineType", "e2-standard-4")
-  autoscale                          = lookup(var.cluster, "autoscale", false)
-  workloadIdentity                   = lookup(var.cluster, "workloadIdentity", false)
-  minNodeCount                       = lookup(var.cluster, "minNodeCount", "1")
-  maxNodeCount                       = lookup(var.cluster, "maxNodeCount", "5")
-  maintenanceExclusionStartTime      = lookup(var.cluster, "maintenanceExclusionStartTime", timestamp())
-  maintenanceExclusionEndTime        = lookup(var.cluster, "maintenanceExclusionEndTime", timeadd(timestamp(), "4080h")) # 170 days
+  project                       = lookup(var.cluster, "project", "agones")
+  location                      = lookup(var.cluster, "location", "us-west1-c")
+  zone                          = lookup(var.cluster, "zone", "")
+  name                          = lookup(var.cluster, "name", "test-cluster")
+  machineType                   = lookup(var.cluster, "machineType", "e2-standard-4")
+  initialNodeCount              = lookup(var.cluster, "initialNodeCount", "4")
+  enableImageStreaming          = lookup(var.cluster, "enableImageStreaming", true)
+  network                       = lookup(var.cluster, "network", "default")
+  subnetwork                    = lookup(var.cluster, "subnetwork", "")
+  releaseChannel                = lookup(var.cluster, "releaseChannel", "UNSPECIFIED")
+  kubernetesVersion             = lookup(var.cluster, "kubernetesVersion", "1.26")
+  windowsInitialNodeCount       = lookup(var.cluster, "windowsInitialNodeCount", "0")
+  windowsMachineType            = lookup(var.cluster, "windowsMachineType", "e2-standard-4")
+  autoscale                     = lookup(var.cluster, "autoscale", false)
+  workloadIdentity              = lookup(var.cluster, "workloadIdentity", false)
+  minNodeCount                  = lookup(var.cluster, "minNodeCount", "1")
+  maxNodeCount                  = lookup(var.cluster, "maxNodeCount", "5")
+  maintenanceExclusionStartTime = lookup(var.cluster, "maintenanceExclusionStartTime", timestamp())
+  maintenanceExclusionEndTime   = lookup(var.cluster, "maintenanceExclusionEndTime", timeadd(timestamp(), "4080h"))
+  # 170 days
 }
 
 data "google_container_engine_versions" "version" {
   project        = local.project
   provider       = google-beta
   location       = local.location
-  version_prefix = format("%s.",local.kubernetesVersion)
+  version_prefix = format("%s.", local.kubernetesVersion)
 }
 
 # echo command used for debugging purpose
@@ -85,17 +86,20 @@ resource "google_container_cluster" "primary" {
 
   min_master_version = local.kubernetesVersion
 
-  maintenance_policy {
-    # When exclusions and maintenance windows overlap, exclusions have precedence.
-    daily_maintenance_window {
-      start_time = "03:00"
-    }
-    maintenance_exclusion{
-      exclusion_name = format("%s-%s", local.name, "exclusion")
-      start_time = local.maintenanceExclusionStartTime
-      end_time = local.maintenanceExclusionEndTime
-      exclusion_options {
-        scope = "NO_MINOR_UPGRADES"
+  dynamic "maintenance_policy" {
+    for_each = local.releaseChannel != "UNSPECIFIED" ? [1] : []
+    content {
+      # When exclusions and maintenance windows overlap, exclusions have precedence.
+      daily_maintenance_window {
+        start_time = "03:00"
+      }
+      maintenance_exclusion {
+        exclusion_name = format("%s-%s", local.name, "exclusion")
+        start_time     = local.maintenanceExclusionStartTime
+        end_time       = local.maintenanceExclusionEndTime
+        exclusion_options {
+          scope = "NO_MINOR_UPGRADES"
+        }
       }
     }
   }
@@ -245,7 +249,7 @@ resource "google_container_cluster" "primary" {
     }
   }
   dynamic "workload_identity_config" {
-    for_each = local.workloadIdentity? [1] : []
+    for_each = local.workloadIdentity ? [1] : []
     content {
       workload_pool = "${local.project}.svc.id.goog"
     }

@@ -327,6 +327,17 @@
         }
       }
     },
+    "StatusAddress": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "address": {
+          "type": "string"
+        }
+      }
+    },
     "StatusCounterStatus": {
       "type": "object",
       "properties": {
@@ -426,6 +437,13 @@
         },
         "address": {
           "type": "string"
+        },
+        "addresses": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/StatusAddress"
+          }
         },
         "ports": {
           "type": "array",

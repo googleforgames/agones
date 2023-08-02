@@ -23,12 +23,7 @@
  */
 package swagger
 
-type SdkGameServerStatus struct {
-	State string `json:"state,omitempty"`
+type StatusAddress struct {
+	Type_ string `json:"type,omitempty"`
 	Address string `json:"address,omitempty"`
-	Addresses []StatusAddress `json:"addresses,omitempty"`
-	Ports []StatusPort `json:"ports,omitempty"`
-	Players *StatusPlayerStatus `json:"players,omitempty"`
-	Counters map[string]StatusCounterStatus `json:"counters,omitempty"`
-	Lists map[string]StatusListStatus `json:"lists,omitempty"`
 }
