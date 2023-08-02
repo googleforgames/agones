@@ -31,9 +31,8 @@ steps:
     env:
       - REPOSITORY=${_REPOSITORY}
     script: |
-      make -j 1 push
+      make push
 options:
-  machineType: E2_HIGHCPU_32
   dynamic_substitutions: true
 
 substitutions:
