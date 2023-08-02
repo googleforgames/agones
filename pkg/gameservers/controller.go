@@ -554,6 +554,7 @@ func (c *Controller) syncDevelopmentGameServer(ctx context.Context, gs *agonesv1
 
 		gsCopy.Status.Ports = ports
 		gsCopy.Status.Address = devIPAddress
+		gsCopy.Status.Addresses = []corev1.NodeAddress{{Address: devIPAddress, Type: "InternalIP"}}
 		gsCopy.Status.NodeName = devIPAddress
 	}
 

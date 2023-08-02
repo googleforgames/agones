@@ -150,6 +150,11 @@ message GameServer {
     }
 
     message Status {
+        message Address {
+            string type = 1;
+            string address = 2;
+        }
+
         message Port {
             string name = 1;
             int32 port = 2;
@@ -178,6 +183,7 @@ message GameServer {
 
         string state = 1;
         string address = 2;
+        repeated Address addresses = 7;
         repeated Port ports = 3;
 
         // [Stage:Alpha]
