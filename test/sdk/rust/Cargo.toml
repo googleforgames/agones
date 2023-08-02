@@ -18,7 +18,7 @@
 [package]
 name = "rust-simple"
 version = "0.2.0"
-edition = "2018"
+edition = "2021"
 
 [dependencies]
 agones = { path = "../../../sdks/rust" }

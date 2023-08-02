@@ -150,6 +150,11 @@ message GameServer {
     }
 
     message Status {
+        message Address {
+            string type = 1;
+            string address = 2;
+        }
+
         message Port {
             string name = 1;
             int32 port = 2;
@@ -162,12 +167,35 @@ message GameServer {
             repeated string ids = 3;
         }
 
+        // [Stage:Alpha]
+        // [FeatureFlag:CountsAndLists]
+        message CounterStatus {
+          int64 count = 1;
+          int64 capacity = 2;
+        }
+
+        // [Stage:Alpha]
+        // [FeatureFlag:CountsAndLists]
+        message ListStatus {
+          int64 capacity = 1;
+          repeated string values = 2;
+        }
+
         string state = 1;
         string address = 2;
+        repeated Address addresses = 7;
         repeated Port ports = 3;
 
         // [Stage:Alpha]
         // [FeatureFlag:PlayerTracking]
         PlayerStatus players = 4;
+
+        // [Stage:Alpha]
+        // [FeatureFlag:CountsAndLists]
+        map<string, CounterStatus> counters = 5;
+
+        // [Stage:Alpha]
+        // [FeatureFlag:CountsAndLists]
+        map<string, ListStatus> lists = 6;
     }
 }

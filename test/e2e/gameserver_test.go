@@ -57,6 +57,7 @@ func TestCreateConnect(t *testing.T) {
 	assert.Equal(t, len(readyGs.Status.Ports), 1)
 	assert.NotEmpty(t, readyGs.Status.Ports[0].Port)
 	assert.NotEmpty(t, readyGs.Status.Address)
+	assert.NotEmpty(t, readyGs.Status.Addresses)
 	assert.NotEmpty(t, readyGs.Status.NodeName)
 	assert.Equal(t, readyGs.Status.State, agonesv1.GameServerStateReady)
 

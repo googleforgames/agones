@@ -98,9 +98,10 @@ func TestAddress(t *testing.T) {
 			err := runtime.ParseFeatures(fixture.featureFlags)
 			assert.NoError(t, err)
 
-			addr, err := address(fixture.node)
+			addr, addrs, err := address(fixture.node)
 			require.NoError(t, err)
 			assert.Equal(t, fixture.expectedAddress, addr)
+			assert.Equal(t, fixture.node.Status.Addresses, addrs)
 		})
 	}
 }

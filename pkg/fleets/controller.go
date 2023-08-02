@@ -378,11 +378,22 @@ func (c *Controller) upsertGameServerSet(ctx context.Context, fleet *agonesv1.Fl
 // applyDeploymentStrategy applies the Fleet > Spec > Deployment strategy to all the non-active
 // GameServerSets that are passed in
 func (c *Controller) applyDeploymentStrategy(ctx context.Context, fleet *agonesv1.Fleet, active *agonesv1.GameServerSet, rest []*agonesv1.GameServerSet) (int32, error) {
-	// if there is nothing `rest`, then it's either brand Fleet, or we can just jump to the fleet value,
+	// if there is nothing `rest`, then it's either a brand-new Fleet, or we can just jump to the fleet value,
 	// since there is nothing else scaling down at this point
-
 	if len(rest) == 0 {
 		return fleet.Spec.Replicas, nil
+	}
+
+	// if we do have `rest` but all their spec.replicas is zero, we can just do subtraction against whatever is allocated in `rest`.
+	if agonesv1.SumSpecReplicas(rest) == 0 {
+		blocked := agonesv1.SumGameServerSets(rest, func(gsSet *agonesv1.GameServerSet) int32 {
+			return gsSet.Status.ReservedReplicas + gsSet.Status.AllocatedReplicas
+		})
+		replicas := fleet.Spec.Replicas - blocked
+		if replicas < 0 {
+			replicas = 0
+		}
+		return replicas, nil
 	}
 
 	switch fleet.Spec.Strategy.Type {
