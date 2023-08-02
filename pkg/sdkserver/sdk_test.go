@@ -21,6 +21,7 @@ import (
 	"agones.dev/agones/pkg/sdk"
 	"agones.dev/agones/pkg/util/runtime"
 	"github.com/stretchr/testify/assert"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -48,9 +49,10 @@ func TestConvert(t *testing.T) {
 			},
 		},
 		Status: agonesv1.GameServerStatus{
-			NodeName: "george",
-			Address:  "127.0.0.1",
-			State:    "Ready",
+			NodeName:  "george",
+			Address:   "127.0.0.1",
+			Addresses: []corev1.NodeAddress{{Type: "SomeAddressType", Address: "127.0.0.1"}},
+			State:     "Ready",
 			Ports: []agonesv1.GameServerStatusPort{
 				{Name: "default", Port: 12345},
 				{Name: "beacon", Port: 123123},
@@ -70,6 +72,7 @@ func TestConvert(t *testing.T) {
 		assert.Equal(t, fixture.Spec.Health.FailureThreshold, sdkGs.Spec.Health.FailureThreshold)
 		assert.Equal(t, fixture.Spec.Health.PeriodSeconds, sdkGs.Spec.Health.PeriodSeconds)
 		assert.Equal(t, fixture.Status.Address, sdkGs.Status.Address)
+		assert.Equal(t, []*sdk.GameServer_Status_Address{{Type: "SomeAddressType", Address: "127.0.0.1"}}, sdkGs.Status.Addresses)
 		assert.Equal(t, string(fixture.Status.State), sdkGs.Status.State)
 		assert.Len(t, sdkGs.Status.Ports, len(fixture.Status.Ports))
 		for i, fp := range fixture.Status.Ports {

@@ -148,6 +148,20 @@ struct GameServer_SpecDefaultTypeInternal {
   };
 };
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 GameServer_SpecDefaultTypeInternal _GameServer_Spec_default_instance_;
+PROTOBUF_CONSTEXPR GameServer_Status_Address::GameServer_Status_Address(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_.type_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+  , /*decltype(_impl_.address_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+  , /*decltype(_impl_._cached_size_)*/{}} {}
+struct GameServer_Status_AddressDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR GameServer_Status_AddressDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~GameServer_Status_AddressDefaultTypeInternal() {}
+  union {
+    GameServer_Status_Address _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 GameServer_Status_AddressDefaultTypeInternal _GameServer_Status_Address_default_instance_;
 PROTOBUF_CONSTEXPR GameServer_Status_Port::GameServer_Status_Port(
     ::_pbi::ConstantInitialized): _impl_{
     /*decltype(_impl_.name_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
@@ -177,9 +191,62 @@ struct GameServer_Status_PlayerStatusDefaultTypeInternal {
   };
 };
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 GameServer_Status_PlayerStatusDefaultTypeInternal _GameServer_Status_PlayerStatus_default_instance_;
+PROTOBUF_CONSTEXPR GameServer_Status_CounterStatus::GameServer_Status_CounterStatus(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_.count_)*/int64_t{0}
+  , /*decltype(_impl_.capacity_)*/int64_t{0}
+  , /*decltype(_impl_._cached_size_)*/{}} {}
+struct GameServer_Status_CounterStatusDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR GameServer_Status_CounterStatusDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~GameServer_Status_CounterStatusDefaultTypeInternal() {}
+  union {
+    GameServer_Status_CounterStatus _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 GameServer_Status_CounterStatusDefaultTypeInternal _GameServer_Status_CounterStatus_default_instance_;
+PROTOBUF_CONSTEXPR GameServer_Status_ListStatus::GameServer_Status_ListStatus(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_.values_)*/{}
+  , /*decltype(_impl_.capacity_)*/int64_t{0}
+  , /*decltype(_impl_._cached_size_)*/{}} {}
+struct GameServer_Status_ListStatusDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR GameServer_Status_ListStatusDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~GameServer_Status_ListStatusDefaultTypeInternal() {}
+  union {
+    GameServer_Status_ListStatus _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 GameServer_Status_ListStatusDefaultTypeInternal _GameServer_Status_ListStatus_default_instance_;
+PROTOBUF_CONSTEXPR GameServer_Status_CountersEntry_DoNotUse::GameServer_Status_CountersEntry_DoNotUse(
+    ::_pbi::ConstantInitialized) {}
+struct GameServer_Status_CountersEntry_DoNotUseDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR GameServer_Status_CountersEntry_DoNotUseDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~GameServer_Status_CountersEntry_DoNotUseDefaultTypeInternal() {}
+  union {
+    GameServer_Status_CountersEntry_DoNotUse _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 GameServer_Status_CountersEntry_DoNotUseDefaultTypeInternal _GameServer_Status_CountersEntry_DoNotUse_default_instance_;
+PROTOBUF_CONSTEXPR GameServer_Status_ListsEntry_DoNotUse::GameServer_Status_ListsEntry_DoNotUse(
+    ::_pbi::ConstantInitialized) {}
+struct GameServer_Status_ListsEntry_DoNotUseDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR GameServer_Status_ListsEntry_DoNotUseDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~GameServer_Status_ListsEntry_DoNotUseDefaultTypeInternal() {}
+  union {
+    GameServer_Status_ListsEntry_DoNotUse _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 GameServer_Status_ListsEntry_DoNotUseDefaultTypeInternal _GameServer_Status_ListsEntry_DoNotUse_default_instance_;
 PROTOBUF_CONSTEXPR GameServer_Status::GameServer_Status(
     ::_pbi::ConstantInitialized): _impl_{
     /*decltype(_impl_.ports_)*/{}
+  , /*decltype(_impl_.counters_)*/{::_pbi::ConstantInitialized()}
+  , /*decltype(_impl_.lists_)*/{::_pbi::ConstantInitialized()}
+  , /*decltype(_impl_.addresses_)*/{}
   , /*decltype(_impl_.state_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
   , /*decltype(_impl_.address_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
   , /*decltype(_impl_.players_)*/nullptr
@@ -211,7 +278,7 @@ PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORIT
 }  // namespace sdk
 }  // namespace dev
 }  // namespace agones
-static ::_pb::Metadata file_level_metadata_sdk_2eproto[12];
+static ::_pb::Metadata file_level_metadata_sdk_2eproto[17];
 static constexpr ::_pb::EnumDescriptor const** file_level_enum_descriptors_sdk_2eproto = nullptr;
 static constexpr ::_pb::ServiceDescriptor const** file_level_service_descriptors_sdk_2eproto = nullptr;
 
@@ -290,6 +357,14 @@ const uint32_t TableStruct_sdk_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE(prot
   ~0u,  // no _inlined_string_donated_
   PROTOBUF_FIELD_OFFSET(::agones::dev::sdk::GameServer_Spec, _impl_.health_),
   ~0u,  // no _has_bits_
+  PROTOBUF_FIELD_OFFSET(::agones::dev::sdk::GameServer_Status_Address, _internal_metadata_),
+  ~0u,  // no _extensions_
+  ~0u,  // no _oneof_case_
+  ~0u,  // no _weak_field_map_
+  ~0u,  // no _inlined_string_donated_
+  PROTOBUF_FIELD_OFFSET(::agones::dev::sdk::GameServer_Status_Address, _impl_.type_),
+  PROTOBUF_FIELD_OFFSET(::agones::dev::sdk::GameServer_Status_Address, _impl_.address_),
+  ~0u,  // no _has_bits_
   PROTOBUF_FIELD_OFFSET(::agones::dev::sdk::GameServer_Status_Port, _internal_metadata_),
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
@@ -307,6 +382,42 @@ const uint32_t TableStruct_sdk_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE(prot
   PROTOBUF_FIELD_OFFSET(::agones::dev::sdk::GameServer_Status_PlayerStatus, _impl_.capacity_),
   PROTOBUF_FIELD_OFFSET(::agones::dev::sdk::GameServer_Status_PlayerStatus, _impl_.ids_),
   ~0u,  // no _has_bits_
+  PROTOBUF_FIELD_OFFSET(::agones::dev::sdk::GameServer_Status_CounterStatus, _internal_metadata_),
+  ~0u,  // no _extensions_
+  ~0u,  // no _oneof_case_
+  ~0u,  // no _weak_field_map_
+  ~0u,  // no _inlined_string_donated_
+  PROTOBUF_FIELD_OFFSET(::agones::dev::sdk::GameServer_Status_CounterStatus, _impl_.count_),
+  PROTOBUF_FIELD_OFFSET(::agones::dev::sdk::GameServer_Status_CounterStatus, _impl_.capacity_),
+  ~0u,  // no _has_bits_
+  PROTOBUF_FIELD_OFFSET(::agones::dev::sdk::GameServer_Status_ListStatus, _internal_metadata_),
+  ~0u,  // no _extensions_
+  ~0u,  // no _oneof_case_
+  ~0u,  // no _weak_field_map_
+  ~0u,  // no _inlined_string_donated_
+  PROTOBUF_FIELD_OFFSET(::agones::dev::sdk::GameServer_Status_ListStatus, _impl_.capacity_),
+  PROTOBUF_FIELD_OFFSET(::agones::dev::sdk::GameServer_Status_ListStatus, _impl_.values_),
+  PROTOBUF_FIELD_OFFSET(::agones::dev::sdk::GameServer_Status_CountersEntry_DoNotUse, _has_bits_),
+  PROTOBUF_FIELD_OFFSET(::agones::dev::sdk::GameServer_Status_CountersEntry_DoNotUse, _internal_metadata_),
+  ~0u,  // no _extensions_
+  ~0u,  // no _oneof_case_
+  ~0u,  // no _weak_field_map_
+  ~0u,  // no _inlined_string_donated_
+  PROTOBUF_FIELD_OFFSET(::agones::dev::sdk::GameServer_Status_CountersEntry_DoNotUse, key_),
+  PROTOBUF_FIELD_OFFSET(::agones::dev::sdk::GameServer_Status_CountersEntry_DoNotUse, value_),
+  0,
+  1,
+  PROTOBUF_FIELD_OFFSET(::agones::dev::sdk::GameServer_Status_ListsEntry_DoNotUse, _has_bits_),
+  PROTOBUF_FIELD_OFFSET(::agones::dev::sdk::GameServer_Status_ListsEntry_DoNotUse, _internal_metadata_),
+  ~0u,  // no _extensions_
+  ~0u,  // no _oneof_case_
+  ~0u,  // no _weak_field_map_
+  ~0u,  // no _inlined_string_donated_
+  PROTOBUF_FIELD_OFFSET(::agones::dev::sdk::GameServer_Status_ListsEntry_DoNotUse, key_),
+  PROTOBUF_FIELD_OFFSET(::agones::dev::sdk::GameServer_Status_ListsEntry_DoNotUse, value_),
+  0,
+  1,
+  ~0u,  // no _has_bits_
   PROTOBUF_FIELD_OFFSET(::agones::dev::sdk::GameServer_Status, _internal_metadata_),
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
@@ -314,8 +425,11 @@ const uint32_t TableStruct_sdk_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE(prot
   ~0u,  // no _inlined_string_donated_
   PROTOBUF_FIELD_OFFSET(::agones::dev::sdk::GameServer_Status, _impl_.state_),
   PROTOBUF_FIELD_OFFSET(::agones::dev::sdk::GameServer_Status, _impl_.address_),
+  PROTOBUF_FIELD_OFFSET(::agones::dev::sdk::GameServer_Status, _impl_.addresses_),
   PROTOBUF_FIELD_OFFSET(::agones::dev::sdk::GameServer_Status, _impl_.ports_),
   PROTOBUF_FIELD_OFFSET(::agones::dev::sdk::GameServer_Status, _impl_.players_),
+  PROTOBUF_FIELD_OFFSET(::agones::dev::sdk::GameServer_Status, _impl_.counters_),
+  PROTOBUF_FIELD_OFFSET(::agones::dev::sdk::GameServer_Status, _impl_.lists_),
   ~0u,  // no _has_bits_
   PROTOBUF_FIELD_OFFSET(::agones::dev::sdk::GameServer, _internal_metadata_),
   ~0u,  // no _extensions_
@@ -335,10 +449,15 @@ static const ::_pbi::MigrationSchema schemas[] PROTOBUF_SECTION_VARIABLE(protode
   { 41, -1, -1, sizeof(::agones::dev::sdk::GameServer_ObjectMeta)},
   { 56, -1, -1, sizeof(::agones::dev::sdk::GameServer_Spec_Health)},
   { 66, -1, -1, sizeof(::agones::dev::sdk::GameServer_Spec)},
-  { 73, -1, -1, sizeof(::agones::dev::sdk::GameServer_Status_Port)},
-  { 81, -1, -1, sizeof(::agones::dev::sdk::GameServer_Status_PlayerStatus)},
-  { 90, -1, -1, sizeof(::agones::dev::sdk::GameServer_Status)},
-  { 100, -1, -1, sizeof(::agones::dev::sdk::GameServer)},
+  { 73, -1, -1, sizeof(::agones::dev::sdk::GameServer_Status_Address)},
+  { 81, -1, -1, sizeof(::agones::dev::sdk::GameServer_Status_Port)},
+  { 89, -1, -1, sizeof(::agones::dev::sdk::GameServer_Status_PlayerStatus)},
+  { 98, -1, -1, sizeof(::agones::dev::sdk::GameServer_Status_CounterStatus)},
+  { 106, -1, -1, sizeof(::agones::dev::sdk::GameServer_Status_ListStatus)},
+  { 114, 122, -1, sizeof(::agones::dev::sdk::GameServer_Status_CountersEntry_DoNotUse)},
+  { 124, 132, -1, sizeof(::agones::dev::sdk::GameServer_Status_ListsEntry_DoNotUse)},
+  { 134, -1, -1, sizeof(::agones::dev::sdk::GameServer_Status)},
+  { 147, -1, -1, sizeof(::agones::dev::sdk::GameServer)},
 };
 
 static const ::_pb::Message* const file_default_instances[] = {
@@ -350,8 +469,13 @@ static const ::_pb::Message* const file_default_instances[] = {
   &::agones::dev::sdk::_GameServer_ObjectMeta_default_instance_._instance,
   &::agones::dev::sdk::_GameServer_Spec_Health_default_instance_._instance,
   &::agones::dev::sdk::_GameServer_Spec_default_instance_._instance,
+  &::agones::dev::sdk::_GameServer_Status_Address_default_instance_._instance,
   &::agones::dev::sdk::_GameServer_Status_Port_default_instance_._instance,
   &::agones::dev::sdk::_GameServer_Status_PlayerStatus_default_instance_._instance,
+  &::agones::dev::sdk::_GameServer_Status_CounterStatus_default_instance_._instance,
+  &::agones::dev::sdk::_GameServer_Status_ListStatus_default_instance_._instance,
+  &::agones::dev::sdk::_GameServer_Status_CountersEntry_DoNotUse_default_instance_._instance,
+  &::agones::dev::sdk::_GameServer_Status_ListsEntry_DoNotUse_default_instance_._instance,
   &::agones::dev::sdk::_GameServer_Status_default_instance_._instance,
   &::agones::dev::sdk::_GameServer_default_instance_._instance,
 };
@@ -361,7 +485,7 @@ const char descriptor_table_protodef_sdk_2eproto[] PROTOBUF_SECTION_VARIABLE(pro
   "annotations.proto\032.protoc-gen-openapiv2/"
   "options/annotations.proto\"\007\n\005Empty\"&\n\010Ke"
   "yValue\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t\"\033\n\010Du"
-  "ration\022\017\n\007seconds\030\001 \001(\003\"\203\010\n\nGameServer\022:"
+  "ration\022\017\n\007seconds\030\001 \001(\003\"\213\014\n\nGameServer\022:"
   "\n\013object_meta\030\001 \001(\0132%.agones.dev.sdk.Gam"
   "eServer.ObjectMeta\022-\n\004spec\030\002 \001(\0132\037.agone"
   "s.dev.sdk.GameServer.Spec\0221\n\006status\030\003 \001("
@@ -380,14 +504,27 @@ const char descriptor_table_protodef_sdk_2eproto[] PROTOBUF_SECTION_VARIABLE(pro
   ".sdk.GameServer.Spec.Health\032{\n\006Health\022\037\n"
   "\010disabled\030\001 \001(\010B\r\222A\n\242\002\007boolean\022\026\n\016period"
   "_seconds\030\002 \001(\005\022\031\n\021failure_threshold\030\003 \001("
-  "\005\022\035\n\025initial_delay_seconds\030\004 \001(\005\032\202\002\n\006Sta"
-  "tus\022\r\n\005state\030\001 \001(\t\022\017\n\007address\030\002 \001(\t\0225\n\005p"
-  "orts\030\003 \003(\0132&.agones.dev.sdk.GameServer.S"
-  "tatus.Port\022\?\n\007players\030\004 \001(\0132..agones.dev"
-  ".sdk.GameServer.Status.PlayerStatus\032\"\n\004P"
-  "ort\022\014\n\004name\030\001 \001(\t\022\014\n\004port\030\002 \001(\005\032<\n\014Playe"
-  "rStatus\022\r\n\005count\030\001 \001(\003\022\020\n\010capacity\030\002 \001(\003"
-  "\022\013\n\003ids\030\003 \003(\t2\206\006\n\003SDK\022H\n\005Ready\022\025.agones."
+  "\005\022\035\n\025initial_delay_seconds\030\004 \001(\005\032\212\006\n\006Sta"
+  "tus\022\r\n\005state\030\001 \001(\t\022\017\n\007address\030\002 \001(\t\022<\n\ta"
+  "ddresses\030\007 \003(\0132).agones.dev.sdk.GameServ"
+  "er.Status.Address\0225\n\005ports\030\003 \003(\0132&.agone"
+  "s.dev.sdk.GameServer.Status.Port\022\?\n\007play"
+  "ers\030\004 \001(\0132..agones.dev.sdk.GameServer.St"
+  "atus.PlayerStatus\022A\n\010counters\030\005 \003(\0132/.ag"
+  "ones.dev.sdk.GameServer.Status.CountersE"
+  "ntry\022;\n\005lists\030\006 \003(\0132,.agones.dev.sdk.Gam"
+  "eServer.Status.ListsEntry\032(\n\007Address\022\014\n\004"
+  "type\030\001 \001(\t\022\017\n\007address\030\002 \001(\t\032\"\n\004Port\022\014\n\004n"
+  "ame\030\001 \001(\t\022\014\n\004port\030\002 \001(\005\032<\n\014PlayerStatus\022"
+  "\r\n\005count\030\001 \001(\003\022\020\n\010capacity\030\002 \001(\003\022\013\n\003ids\030"
+  "\003 \003(\t\0320\n\rCounterStatus\022\r\n\005count\030\001 \001(\003\022\020\n"
+  "\010capacity\030\002 \001(\003\032.\n\nListStatus\022\020\n\010capacit"
+  "y\030\001 \001(\003\022\016\n\006values\030\002 \003(\t\032`\n\rCountersEntry"
+  "\022\013\n\003key\030\001 \001(\t\022>\n\005value\030\002 \001(\0132/.agones.de"
+  "v.sdk.GameServer.Status.CounterStatus:\0028"
+  "\001\032Z\n\nListsEntry\022\013\n\003key\030\001 \001(\t\022;\n\005value\030\002 "
+  "\001(\0132,.agones.dev.sdk.GameServer.Status.L"
+  "istStatus:\0028\0012\206\006\n\003SDK\022H\n\005Ready\022\025.agones."
   "dev.sdk.Empty\032\025.agones.dev.sdk.Empty\"\021\202\323"
   "\344\223\002\013\"\006/ready:\001*\022N\n\010Allocate\022\025.agones.dev"
   ".sdk.Empty\032\025.agones.dev.sdk.Empty\"\024\202\323\344\223\002"
@@ -416,9 +553,9 @@ static const ::_pbi::DescriptorTable* const descriptor_table_sdk_2eproto_deps[2]
 };
 static ::_pbi::once_flag descriptor_table_sdk_2eproto_once;
 const ::_pbi::DescriptorTable descriptor_table_sdk_2eproto = {
-    false, false, 2079, descriptor_table_protodef_sdk_2eproto,
+    false, false, 2599, descriptor_table_protodef_sdk_2eproto,
     "sdk.proto",
-    &descriptor_table_sdk_2eproto_once, descriptor_table_sdk_2eproto_deps, 2, 12,
+    &descriptor_table_sdk_2eproto_once, descriptor_table_sdk_2eproto_deps, 2, 17,
     schemas, file_default_instances, TableStruct_sdk_2eproto::offsets,
     file_level_metadata_sdk_2eproto, file_level_enum_descriptors_sdk_2eproto,
     file_level_service_descriptors_sdk_2eproto,
@@ -1952,6 +2089,259 @@ void GameServer_Spec::InternalSwap(GameServer_Spec* other) {
 
 // ===================================================================
 
+class GameServer_Status_Address::_Internal {
+ public:
+};
+
+GameServer_Status_Address::GameServer_Status_Address(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:agones.dev.sdk.GameServer.Status.Address)
+}
+GameServer_Status_Address::GameServer_Status_Address(const GameServer_Status_Address& from)
+  : ::PROTOBUF_NAMESPACE_ID::Message() {
+  GameServer_Status_Address* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_.type_){}
+    , decltype(_impl_.address_){}
+    , /*decltype(_impl_._cached_size_)*/{}};
+
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+  _impl_.type_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.type_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (!from._internal_type().empty()) {
+    _this->_impl_.type_.Set(from._internal_type(), 
+      _this->GetArenaForAllocation());
+  }
+  _impl_.address_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.address_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (!from._internal_address().empty()) {
+    _this->_impl_.address_.Set(from._internal_address(), 
+      _this->GetArenaForAllocation());
+  }
+  // @@protoc_insertion_point(copy_constructor:agones.dev.sdk.GameServer.Status.Address)
+}
+
+inline void GameServer_Status_Address::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_.type_){}
+    , decltype(_impl_.address_){}
+    , /*decltype(_impl_._cached_size_)*/{}
+  };
+  _impl_.type_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.type_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  _impl_.address_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.address_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+}
+
+GameServer_Status_Address::~GameServer_Status_Address() {
+  // @@protoc_insertion_point(destructor:agones.dev.sdk.GameServer.Status.Address)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>()) {
+  (void)arena;
+    return;
+  }
+  SharedDtor();
+}
+
+inline void GameServer_Status_Address::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+  _impl_.type_.Destroy();
+  _impl_.address_.Destroy();
+}
+
+void GameServer_Status_Address::SetCachedSize(int size) const {
+  _impl_._cached_size_.Set(size);
+}
+
+void GameServer_Status_Address::Clear() {
+// @@protoc_insertion_point(message_clear_start:agones.dev.sdk.GameServer.Status.Address)
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  _impl_.type_.ClearToEmpty();
+  _impl_.address_.ClearToEmpty();
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
+}
+
+const char* GameServer_Status_Address::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  while (!ctx->Done(&ptr)) {
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
+    switch (tag >> 3) {
+      // string type = 1;
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 10)) {
+          auto str = _internal_mutable_type();
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(ptr);
+          CHK_(::_pbi::VerifyUTF8(str, "agones.dev.sdk.GameServer.Status.Address.type"));
+        } else
+          goto handle_unusual;
+        continue;
+      // string address = 2;
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 18)) {
+          auto str = _internal_mutable_address();
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(ptr);
+          CHK_(::_pbi::VerifyUTF8(str, "agones.dev.sdk.GameServer.Status.Address.address"));
+        } else
+          goto handle_unusual;
+        continue;
+      default:
+        goto handle_unusual;
+    }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
+  }  // while
+message_done:
+  return ptr;
+failure:
+  ptr = nullptr;
+  goto message_done;
+#undef CHK_
+}
+
+uint8_t* GameServer_Status_Address::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+  // @@protoc_insertion_point(serialize_to_array_start:agones.dev.sdk.GameServer.Status.Address)
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // string type = 1;
+  if (!this->_internal_type().empty()) {
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_type().data(), static_cast<int>(this->_internal_type().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
+      "agones.dev.sdk.GameServer.Status.Address.type");
+    target = stream->WriteStringMaybeAliased(
+        1, this->_internal_type(), target);
+  }
+
+  // string address = 2;
+  if (!this->_internal_address().empty()) {
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_address().data(), static_cast<int>(this->_internal_address().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
+      "agones.dev.sdk.GameServer.Status.Address.address");
+    target = stream->WriteStringMaybeAliased(
+        2, this->_internal_address(), target);
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
+  }
+  // @@protoc_insertion_point(serialize_to_array_end:agones.dev.sdk.GameServer.Status.Address)
+  return target;
+}
+
+size_t GameServer_Status_Address::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:agones.dev.sdk.GameServer.Status.Address)
+  size_t total_size = 0;
+
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  // string type = 1;
+  if (!this->_internal_type().empty()) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_type());
+  }
+
+  // string address = 2;
+  if (!this->_internal_address().empty()) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_address());
+  }
+
+  return MaybeComputeUnknownFieldsSize(total_size, &_impl_._cached_size_);
+}
+
+const ::PROTOBUF_NAMESPACE_ID::Message::ClassData GameServer_Status_Address::_class_data_ = {
+    ::PROTOBUF_NAMESPACE_ID::Message::CopyWithSourceCheck,
+    GameServer_Status_Address::MergeImpl
+};
+const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GameServer_Status_Address::GetClassData() const { return &_class_data_; }
+
+
+void GameServer_Status_Address::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg) {
+  auto* const _this = static_cast<GameServer_Status_Address*>(&to_msg);
+  auto& from = static_cast<const GameServer_Status_Address&>(from_msg);
+  // @@protoc_insertion_point(class_specific_merge_from_start:agones.dev.sdk.GameServer.Status.Address)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  if (!from._internal_type().empty()) {
+    _this->_internal_set_type(from._internal_type());
+  }
+  if (!from._internal_address().empty()) {
+    _this->_internal_set_address(from._internal_address());
+  }
+  _this->_internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+}
+
+void GameServer_Status_Address::CopyFrom(const GameServer_Status_Address& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:agones.dev.sdk.GameServer.Status.Address)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool GameServer_Status_Address::IsInitialized() const {
+  return true;
+}
+
+void GameServer_Status_Address::InternalSwap(GameServer_Status_Address* other) {
+  using std::swap;
+  auto* lhs_arena = GetArenaForAllocation();
+  auto* rhs_arena = other->GetArenaForAllocation();
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
+      &_impl_.type_, lhs_arena,
+      &other->_impl_.type_, rhs_arena
+  );
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
+      &_impl_.address_, lhs_arena,
+      &other->_impl_.address_, rhs_arena
+  );
+}
+
+::PROTOBUF_NAMESPACE_ID::Metadata GameServer_Status_Address::GetMetadata() const {
+  return ::_pbi::AssignDescriptors(
+      &descriptor_table_sdk_2eproto_getter, &descriptor_table_sdk_2eproto_once,
+      file_level_metadata_sdk_2eproto[8]);
+}
+
+// ===================================================================
+
 class GameServer_Status_Port::_Internal {
  public:
 };
@@ -2177,7 +2567,7 @@ void GameServer_Status_Port::InternalSwap(GameServer_Status_Port* other) {
 ::PROTOBUF_NAMESPACE_ID::Metadata GameServer_Status_Port::GetMetadata() const {
   return ::_pbi::AssignDescriptors(
       &descriptor_table_sdk_2eproto_getter, &descriptor_table_sdk_2eproto_once,
-      file_level_metadata_sdk_2eproto[8]);
+      file_level_metadata_sdk_2eproto[9]);
 }
 
 // ===================================================================
@@ -2427,7 +2817,463 @@ void GameServer_Status_PlayerStatus::InternalSwap(GameServer_Status_PlayerStatus
 ::PROTOBUF_NAMESPACE_ID::Metadata GameServer_Status_PlayerStatus::GetMetadata() const {
   return ::_pbi::AssignDescriptors(
       &descriptor_table_sdk_2eproto_getter, &descriptor_table_sdk_2eproto_once,
-      file_level_metadata_sdk_2eproto[9]);
+      file_level_metadata_sdk_2eproto[10]);
+}
+
+// ===================================================================
+
+class GameServer_Status_CounterStatus::_Internal {
+ public:
+};
+
+GameServer_Status_CounterStatus::GameServer_Status_CounterStatus(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:agones.dev.sdk.GameServer.Status.CounterStatus)
+}
+GameServer_Status_CounterStatus::GameServer_Status_CounterStatus(const GameServer_Status_CounterStatus& from)
+  : ::PROTOBUF_NAMESPACE_ID::Message() {
+  GameServer_Status_CounterStatus* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_.count_){}
+    , decltype(_impl_.capacity_){}
+    , /*decltype(_impl_._cached_size_)*/{}};
+
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+  ::memcpy(&_impl_.count_, &from._impl_.count_,
+    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.capacity_) -
+    reinterpret_cast<char*>(&_impl_.count_)) + sizeof(_impl_.capacity_));
+  // @@protoc_insertion_point(copy_constructor:agones.dev.sdk.GameServer.Status.CounterStatus)
+}
+
+inline void GameServer_Status_CounterStatus::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_.count_){int64_t{0}}
+    , decltype(_impl_.capacity_){int64_t{0}}
+    , /*decltype(_impl_._cached_size_)*/{}
+  };
+}
+
+GameServer_Status_CounterStatus::~GameServer_Status_CounterStatus() {
+  // @@protoc_insertion_point(destructor:agones.dev.sdk.GameServer.Status.CounterStatus)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>()) {
+  (void)arena;
+    return;
+  }
+  SharedDtor();
+}
+
+inline void GameServer_Status_CounterStatus::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+}
+
+void GameServer_Status_CounterStatus::SetCachedSize(int size) const {
+  _impl_._cached_size_.Set(size);
+}
+
+void GameServer_Status_CounterStatus::Clear() {
+// @@protoc_insertion_point(message_clear_start:agones.dev.sdk.GameServer.Status.CounterStatus)
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  ::memset(&_impl_.count_, 0, static_cast<size_t>(
+      reinterpret_cast<char*>(&_impl_.capacity_) -
+      reinterpret_cast<char*>(&_impl_.count_)) + sizeof(_impl_.capacity_));
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
+}
+
+const char* GameServer_Status_CounterStatus::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  while (!ctx->Done(&ptr)) {
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
+    switch (tag >> 3) {
+      // int64 count = 1;
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 8)) {
+          _impl_.count_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // int64 capacity = 2;
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 16)) {
+          _impl_.capacity_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      default:
+        goto handle_unusual;
+    }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
+  }  // while
+message_done:
+  return ptr;
+failure:
+  ptr = nullptr;
+  goto message_done;
+#undef CHK_
+}
+
+uint8_t* GameServer_Status_CounterStatus::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+  // @@protoc_insertion_point(serialize_to_array_start:agones.dev.sdk.GameServer.Status.CounterStatus)
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // int64 count = 1;
+  if (this->_internal_count() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt64ToArray(1, this->_internal_count(), target);
+  }
+
+  // int64 capacity = 2;
+  if (this->_internal_capacity() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt64ToArray(2, this->_internal_capacity(), target);
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
+  }
+  // @@protoc_insertion_point(serialize_to_array_end:agones.dev.sdk.GameServer.Status.CounterStatus)
+  return target;
+}
+
+size_t GameServer_Status_CounterStatus::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:agones.dev.sdk.GameServer.Status.CounterStatus)
+  size_t total_size = 0;
+
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  // int64 count = 1;
+  if (this->_internal_count() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int64SizePlusOne(this->_internal_count());
+  }
+
+  // int64 capacity = 2;
+  if (this->_internal_capacity() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int64SizePlusOne(this->_internal_capacity());
+  }
+
+  return MaybeComputeUnknownFieldsSize(total_size, &_impl_._cached_size_);
+}
+
+const ::PROTOBUF_NAMESPACE_ID::Message::ClassData GameServer_Status_CounterStatus::_class_data_ = {
+    ::PROTOBUF_NAMESPACE_ID::Message::CopyWithSourceCheck,
+    GameServer_Status_CounterStatus::MergeImpl
+};
+const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GameServer_Status_CounterStatus::GetClassData() const { return &_class_data_; }
+
+
+void GameServer_Status_CounterStatus::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg) {
+  auto* const _this = static_cast<GameServer_Status_CounterStatus*>(&to_msg);
+  auto& from = static_cast<const GameServer_Status_CounterStatus&>(from_msg);
+  // @@protoc_insertion_point(class_specific_merge_from_start:agones.dev.sdk.GameServer.Status.CounterStatus)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  if (from._internal_count() != 0) {
+    _this->_internal_set_count(from._internal_count());
+  }
+  if (from._internal_capacity() != 0) {
+    _this->_internal_set_capacity(from._internal_capacity());
+  }
+  _this->_internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+}
+
+void GameServer_Status_CounterStatus::CopyFrom(const GameServer_Status_CounterStatus& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:agones.dev.sdk.GameServer.Status.CounterStatus)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool GameServer_Status_CounterStatus::IsInitialized() const {
+  return true;
+}
+
+void GameServer_Status_CounterStatus::InternalSwap(GameServer_Status_CounterStatus* other) {
+  using std::swap;
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(GameServer_Status_CounterStatus, _impl_.capacity_)
+      + sizeof(GameServer_Status_CounterStatus::_impl_.capacity_)
+      - PROTOBUF_FIELD_OFFSET(GameServer_Status_CounterStatus, _impl_.count_)>(
+          reinterpret_cast<char*>(&_impl_.count_),
+          reinterpret_cast<char*>(&other->_impl_.count_));
+}
+
+::PROTOBUF_NAMESPACE_ID::Metadata GameServer_Status_CounterStatus::GetMetadata() const {
+  return ::_pbi::AssignDescriptors(
+      &descriptor_table_sdk_2eproto_getter, &descriptor_table_sdk_2eproto_once,
+      file_level_metadata_sdk_2eproto[11]);
+}
+
+// ===================================================================
+
+class GameServer_Status_ListStatus::_Internal {
+ public:
+};
+
+GameServer_Status_ListStatus::GameServer_Status_ListStatus(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:agones.dev.sdk.GameServer.Status.ListStatus)
+}
+GameServer_Status_ListStatus::GameServer_Status_ListStatus(const GameServer_Status_ListStatus& from)
+  : ::PROTOBUF_NAMESPACE_ID::Message() {
+  GameServer_Status_ListStatus* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_.values_){from._impl_.values_}
+    , decltype(_impl_.capacity_){}
+    , /*decltype(_impl_._cached_size_)*/{}};
+
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+  _this->_impl_.capacity_ = from._impl_.capacity_;
+  // @@protoc_insertion_point(copy_constructor:agones.dev.sdk.GameServer.Status.ListStatus)
+}
+
+inline void GameServer_Status_ListStatus::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_.values_){arena}
+    , decltype(_impl_.capacity_){int64_t{0}}
+    , /*decltype(_impl_._cached_size_)*/{}
+  };
+}
+
+GameServer_Status_ListStatus::~GameServer_Status_ListStatus() {
+  // @@protoc_insertion_point(destructor:agones.dev.sdk.GameServer.Status.ListStatus)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>()) {
+  (void)arena;
+    return;
+  }
+  SharedDtor();
+}
+
+inline void GameServer_Status_ListStatus::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+  _impl_.values_.~RepeatedPtrField();
+}
+
+void GameServer_Status_ListStatus::SetCachedSize(int size) const {
+  _impl_._cached_size_.Set(size);
+}
+
+void GameServer_Status_ListStatus::Clear() {
+// @@protoc_insertion_point(message_clear_start:agones.dev.sdk.GameServer.Status.ListStatus)
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  _impl_.values_.Clear();
+  _impl_.capacity_ = int64_t{0};
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
+}
+
+const char* GameServer_Status_ListStatus::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  while (!ctx->Done(&ptr)) {
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
+    switch (tag >> 3) {
+      // int64 capacity = 1;
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 8)) {
+          _impl_.capacity_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // repeated string values = 2;
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 18)) {
+          ptr -= 1;
+          do {
+            ptr += 1;
+            auto str = _internal_add_values();
+            ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
+            CHK_(ptr);
+            CHK_(::_pbi::VerifyUTF8(str, "agones.dev.sdk.GameServer.Status.ListStatus.values"));
+            if (!ctx->DataAvailable(ptr)) break;
+          } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<18>(ptr));
+        } else
+          goto handle_unusual;
+        continue;
+      default:
+        goto handle_unusual;
+    }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
+  }  // while
+message_done:
+  return ptr;
+failure:
+  ptr = nullptr;
+  goto message_done;
+#undef CHK_
+}
+
+uint8_t* GameServer_Status_ListStatus::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+  // @@protoc_insertion_point(serialize_to_array_start:agones.dev.sdk.GameServer.Status.ListStatus)
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // int64 capacity = 1;
+  if (this->_internal_capacity() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt64ToArray(1, this->_internal_capacity(), target);
+  }
+
+  // repeated string values = 2;
+  for (int i = 0, n = this->_internal_values_size(); i < n; i++) {
+    const auto& s = this->_internal_values(i);
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      s.data(), static_cast<int>(s.length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
+      "agones.dev.sdk.GameServer.Status.ListStatus.values");
+    target = stream->WriteString(2, s, target);
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
+  }
+  // @@protoc_insertion_point(serialize_to_array_end:agones.dev.sdk.GameServer.Status.ListStatus)
+  return target;
+}
+
+size_t GameServer_Status_ListStatus::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:agones.dev.sdk.GameServer.Status.ListStatus)
+  size_t total_size = 0;
+
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  // repeated string values = 2;
+  total_size += 1 *
+      ::PROTOBUF_NAMESPACE_ID::internal::FromIntSize(_impl_.values_.size());
+  for (int i = 0, n = _impl_.values_.size(); i < n; i++) {
+    total_size += ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+      _impl_.values_.Get(i));
+  }
+
+  // int64 capacity = 1;
+  if (this->_internal_capacity() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int64SizePlusOne(this->_internal_capacity());
+  }
+
+  return MaybeComputeUnknownFieldsSize(total_size, &_impl_._cached_size_);
+}
+
+const ::PROTOBUF_NAMESPACE_ID::Message::ClassData GameServer_Status_ListStatus::_class_data_ = {
+    ::PROTOBUF_NAMESPACE_ID::Message::CopyWithSourceCheck,
+    GameServer_Status_ListStatus::MergeImpl
+};
+const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GameServer_Status_ListStatus::GetClassData() const { return &_class_data_; }
+
+
+void GameServer_Status_ListStatus::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg) {
+  auto* const _this = static_cast<GameServer_Status_ListStatus*>(&to_msg);
+  auto& from = static_cast<const GameServer_Status_ListStatus&>(from_msg);
+  // @@protoc_insertion_point(class_specific_merge_from_start:agones.dev.sdk.GameServer.Status.ListStatus)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  _this->_impl_.values_.MergeFrom(from._impl_.values_);
+  if (from._internal_capacity() != 0) {
+    _this->_internal_set_capacity(from._internal_capacity());
+  }
+  _this->_internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+}
+
+void GameServer_Status_ListStatus::CopyFrom(const GameServer_Status_ListStatus& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:agones.dev.sdk.GameServer.Status.ListStatus)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool GameServer_Status_ListStatus::IsInitialized() const {
+  return true;
+}
+
+void GameServer_Status_ListStatus::InternalSwap(GameServer_Status_ListStatus* other) {
+  using std::swap;
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  _impl_.values_.InternalSwap(&other->_impl_.values_);
+  swap(_impl_.capacity_, other->_impl_.capacity_);
+}
+
+::PROTOBUF_NAMESPACE_ID::Metadata GameServer_Status_ListStatus::GetMetadata() const {
+  return ::_pbi::AssignDescriptors(
+      &descriptor_table_sdk_2eproto_getter, &descriptor_table_sdk_2eproto_once,
+      file_level_metadata_sdk_2eproto[12]);
+}
+
+// ===================================================================
+
+GameServer_Status_CountersEntry_DoNotUse::GameServer_Status_CountersEntry_DoNotUse() {}
+GameServer_Status_CountersEntry_DoNotUse::GameServer_Status_CountersEntry_DoNotUse(::PROTOBUF_NAMESPACE_ID::Arena* arena)
+    : SuperType(arena) {}
+void GameServer_Status_CountersEntry_DoNotUse::MergeFrom(const GameServer_Status_CountersEntry_DoNotUse& other) {
+  MergeFromInternal(other);
+}
+::PROTOBUF_NAMESPACE_ID::Metadata GameServer_Status_CountersEntry_DoNotUse::GetMetadata() const {
+  return ::_pbi::AssignDescriptors(
+      &descriptor_table_sdk_2eproto_getter, &descriptor_table_sdk_2eproto_once,
+      file_level_metadata_sdk_2eproto[13]);
+}
+
+// ===================================================================
+
+GameServer_Status_ListsEntry_DoNotUse::GameServer_Status_ListsEntry_DoNotUse() {}
+GameServer_Status_ListsEntry_DoNotUse::GameServer_Status_ListsEntry_DoNotUse(::PROTOBUF_NAMESPACE_ID::Arena* arena)
+    : SuperType(arena) {}
+void GameServer_Status_ListsEntry_DoNotUse::MergeFrom(const GameServer_Status_ListsEntry_DoNotUse& other) {
+  MergeFromInternal(other);
+}
+::PROTOBUF_NAMESPACE_ID::Metadata GameServer_Status_ListsEntry_DoNotUse::GetMetadata() const {
+  return ::_pbi::AssignDescriptors(
+      &descriptor_table_sdk_2eproto_getter, &descriptor_table_sdk_2eproto_once,
+      file_level_metadata_sdk_2eproto[14]);
 }
 
 // ===================================================================
@@ -2445,6 +3291,9 @@ GameServer_Status::GameServer_Status(::PROTOBUF_NAMESPACE_ID::Arena* arena,
                          bool is_message_owned)
   : ::PROTOBUF_NAMESPACE_ID::Message(arena, is_message_owned) {
   SharedCtor(arena, is_message_owned);
+  if (arena != nullptr && !is_message_owned) {
+    arena->OwnCustomDestructor(this, &GameServer_Status::ArenaDtor);
+  }
   // @@protoc_insertion_point(arena_constructor:agones.dev.sdk.GameServer.Status)
 }
 GameServer_Status::GameServer_Status(const GameServer_Status& from)
@@ -2452,12 +3301,17 @@ GameServer_Status::GameServer_Status(const GameServer_Status& from)
   GameServer_Status* const _this = this; (void)_this;
   new (&_impl_) Impl_{
       decltype(_impl_.ports_){from._impl_.ports_}
+    , /*decltype(_impl_.counters_)*/{}
+    , /*decltype(_impl_.lists_)*/{}
+    , decltype(_impl_.addresses_){from._impl_.addresses_}
     , decltype(_impl_.state_){}
     , decltype(_impl_.address_){}
     , decltype(_impl_.players_){nullptr}
     , /*decltype(_impl_._cached_size_)*/{}};
 
   _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+  _this->_impl_.counters_.MergeFrom(from._impl_.counters_);
+  _this->_impl_.lists_.MergeFrom(from._impl_.lists_);
   _impl_.state_.InitDefault();
   #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
     _impl_.state_.Set("", GetArenaForAllocation());
@@ -2486,6 +3340,9 @@ inline void GameServer_Status::SharedCtor(
   (void)is_message_owned;
   new (&_impl_) Impl_{
       decltype(_impl_.ports_){arena}
+    , /*decltype(_impl_.counters_)*/{::_pbi::ArenaInitialized(), arena}
+    , /*decltype(_impl_.lists_)*/{::_pbi::ArenaInitialized(), arena}
+    , decltype(_impl_.addresses_){arena}
     , decltype(_impl_.state_){}
     , decltype(_impl_.address_){}
     , decltype(_impl_.players_){nullptr}
@@ -2505,6 +3362,7 @@ GameServer_Status::~GameServer_Status() {
   // @@protoc_insertion_point(destructor:agones.dev.sdk.GameServer.Status)
   if (auto *arena = _internal_metadata_.DeleteReturnArena<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>()) {
   (void)arena;
+    ArenaDtor(this);
     return;
   }
   SharedDtor();
@@ -2513,11 +3371,21 @@ GameServer_Status::~GameServer_Status() {
 inline void GameServer_Status::SharedDtor() {
   GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
   _impl_.ports_.~RepeatedPtrField();
+  _impl_.counters_.Destruct();
+  _impl_.counters_.~MapField();
+  _impl_.lists_.Destruct();
+  _impl_.lists_.~MapField();
+  _impl_.addresses_.~RepeatedPtrField();
   _impl_.state_.Destroy();
   _impl_.address_.Destroy();
   if (this != internal_default_instance()) delete _impl_.players_;
 }
 
+void GameServer_Status::ArenaDtor(void* object) {
+  GameServer_Status* _this = reinterpret_cast< GameServer_Status* >(object);
+  _this->_impl_.counters_.Destruct();
+  _this->_impl_.lists_.Destruct();
+}
 void GameServer_Status::SetCachedSize(int size) const {
   _impl_._cached_size_.Set(size);
 }
@@ -2529,6 +3397,9 @@ void GameServer_Status::Clear() {
   (void) cached_has_bits;
 
   _impl_.ports_.Clear();
+  _impl_.counters_.Clear();
+  _impl_.lists_.Clear();
+  _impl_.addresses_.Clear();
   _impl_.state_.ClearToEmpty();
   _impl_.address_.ClearToEmpty();
   if (GetArenaForAllocation() == nullptr && _impl_.players_ != nullptr) {
@@ -2582,6 +3453,45 @@ const char* GameServer_Status::_InternalParse(const char* ptr, ::_pbi::ParseCont
         if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 34)) {
           ptr = ctx->ParseMessage(_internal_mutable_players(), ptr);
           CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // map<string, .agones.dev.sdk.GameServer.Status.CounterStatus> counters = 5;
+      case 5:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 42)) {
+          ptr -= 1;
+          do {
+            ptr += 1;
+            ptr = ctx->ParseMessage(&_impl_.counters_, ptr);
+            CHK_(ptr);
+            if (!ctx->DataAvailable(ptr)) break;
+          } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<42>(ptr));
+        } else
+          goto handle_unusual;
+        continue;
+      // map<string, .agones.dev.sdk.GameServer.Status.ListStatus> lists = 6;
+      case 6:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 50)) {
+          ptr -= 1;
+          do {
+            ptr += 1;
+            ptr = ctx->ParseMessage(&_impl_.lists_, ptr);
+            CHK_(ptr);
+            if (!ctx->DataAvailable(ptr)) break;
+          } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<50>(ptr));
+        } else
+          goto handle_unusual;
+        continue;
+      // repeated .agones.dev.sdk.GameServer.Status.Address addresses = 7;
+      case 7:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 58)) {
+          ptr -= 1;
+          do {
+            ptr += 1;
+            ptr = ctx->ParseMessage(_internal_add_addresses(), ptr);
+            CHK_(ptr);
+            if (!ctx->DataAvailable(ptr)) break;
+          } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<58>(ptr));
         } else
           goto handle_unusual;
         continue;
@@ -2649,6 +3559,66 @@ uint8_t* GameServer_Status::_InternalSerialize(
         _Internal::players(this).GetCachedSize(), target, stream);
   }
 
+  // map<string, .agones.dev.sdk.GameServer.Status.CounterStatus> counters = 5;
+  if (!this->_internal_counters().empty()) {
+    using MapType = ::_pb::Map<std::string, ::agones::dev::sdk::GameServer_Status_CounterStatus>;
+    using WireHelper = GameServer_Status_CountersEntry_DoNotUse::Funcs;
+    const auto& map_field = this->_internal_counters();
+    auto check_utf8 = [](const MapType::value_type& entry) {
+      (void)entry;
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+        entry.first.data(), static_cast<int>(entry.first.length()),
+        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
+        "agones.dev.sdk.GameServer.Status.CountersEntry.key");
+    };
+
+    if (stream->IsSerializationDeterministic() && map_field.size() > 1) {
+      for (const auto& entry : ::_pbi::MapSorterPtr<MapType>(map_field)) {
+        target = WireHelper::InternalSerialize(5, entry.first, entry.second, target, stream);
+        check_utf8(entry);
+      }
+    } else {
+      for (const auto& entry : map_field) {
+        target = WireHelper::InternalSerialize(5, entry.first, entry.second, target, stream);
+        check_utf8(entry);
+      }
+    }
+  }
+
+  // map<string, .agones.dev.sdk.GameServer.Status.ListStatus> lists = 6;
+  if (!this->_internal_lists().empty()) {
+    using MapType = ::_pb::Map<std::string, ::agones::dev::sdk::GameServer_Status_ListStatus>;
+    using WireHelper = GameServer_Status_ListsEntry_DoNotUse::Funcs;
+    const auto& map_field = this->_internal_lists();
+    auto check_utf8 = [](const MapType::value_type& entry) {
+      (void)entry;
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+        entry.first.data(), static_cast<int>(entry.first.length()),
+        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
+        "agones.dev.sdk.GameServer.Status.ListsEntry.key");
+    };
+
+    if (stream->IsSerializationDeterministic() && map_field.size() > 1) {
+      for (const auto& entry : ::_pbi::MapSorterPtr<MapType>(map_field)) {
+        target = WireHelper::InternalSerialize(6, entry.first, entry.second, target, stream);
+        check_utf8(entry);
+      }
+    } else {
+      for (const auto& entry : map_field) {
+        target = WireHelper::InternalSerialize(6, entry.first, entry.second, target, stream);
+        check_utf8(entry);
+      }
+    }
+  }
+
+  // repeated .agones.dev.sdk.GameServer.Status.Address addresses = 7;
+  for (unsigned i = 0,
+      n = static_cast<unsigned>(this->_internal_addresses_size()); i < n; i++) {
+    const auto& repfield = this->_internal_addresses(i);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
+        InternalWriteMessage(7, repfield, repfield.GetCachedSize(), target, stream);
+  }
+
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
         _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
@@ -2668,6 +3638,31 @@ size_t GameServer_Status::ByteSizeLong() const {
   // repeated .agones.dev.sdk.GameServer.Status.Port ports = 3;
   total_size += 1UL * this->_internal_ports_size();
   for (const auto& msg : this->_impl_.ports_) {
+    total_size +=
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(msg);
+  }
+
+  // map<string, .agones.dev.sdk.GameServer.Status.CounterStatus> counters = 5;
+  total_size += 1 *
+      ::PROTOBUF_NAMESPACE_ID::internal::FromIntSize(this->_internal_counters_size());
+  for (::PROTOBUF_NAMESPACE_ID::Map< std::string, ::agones::dev::sdk::GameServer_Status_CounterStatus >::const_iterator
+      it = this->_internal_counters().begin();
+      it != this->_internal_counters().end(); ++it) {
+    total_size += GameServer_Status_CountersEntry_DoNotUse::Funcs::ByteSizeLong(it->first, it->second);
+  }
+
+  // map<string, .agones.dev.sdk.GameServer.Status.ListStatus> lists = 6;
+  total_size += 1 *
+      ::PROTOBUF_NAMESPACE_ID::internal::FromIntSize(this->_internal_lists_size());
+  for (::PROTOBUF_NAMESPACE_ID::Map< std::string, ::agones::dev::sdk::GameServer_Status_ListStatus >::const_iterator
+      it = this->_internal_lists().begin();
+      it != this->_internal_lists().end(); ++it) {
+    total_size += GameServer_Status_ListsEntry_DoNotUse::Funcs::ByteSizeLong(it->first, it->second);
+  }
+
+  // repeated .agones.dev.sdk.GameServer.Status.Address addresses = 7;
+  total_size += 1UL * this->_internal_addresses_size();
+  for (const auto& msg : this->_impl_.addresses_) {
     total_size +=
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(msg);
   }
@@ -2712,6 +3707,9 @@ void GameServer_Status::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, cons
   (void) cached_has_bits;
 
   _this->_impl_.ports_.MergeFrom(from._impl_.ports_);
+  _this->_impl_.counters_.MergeFrom(from._impl_.counters_);
+  _this->_impl_.lists_.MergeFrom(from._impl_.lists_);
+  _this->_impl_.addresses_.MergeFrom(from._impl_.addresses_);
   if (!from._internal_state().empty()) {
     _this->_internal_set_state(from._internal_state());
   }
@@ -2742,6 +3740,9 @@ void GameServer_Status::InternalSwap(GameServer_Status* other) {
   auto* rhs_arena = other->GetArenaForAllocation();
   _internal_metadata_.InternalSwap(&other->_internal_metadata_);
   _impl_.ports_.InternalSwap(&other->_impl_.ports_);
+  _impl_.counters_.InternalSwap(&other->_impl_.counters_);
+  _impl_.lists_.InternalSwap(&other->_impl_.lists_);
+  _impl_.addresses_.InternalSwap(&other->_impl_.addresses_);
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
       &_impl_.state_, lhs_arena,
       &other->_impl_.state_, rhs_arena
@@ -2756,7 +3757,7 @@ void GameServer_Status::InternalSwap(GameServer_Status* other) {
 ::PROTOBUF_NAMESPACE_ID::Metadata GameServer_Status::GetMetadata() const {
   return ::_pbi::AssignDescriptors(
       &descriptor_table_sdk_2eproto_getter, &descriptor_table_sdk_2eproto_once,
-      file_level_metadata_sdk_2eproto[10]);
+      file_level_metadata_sdk_2eproto[15]);
 }
 
 // ===================================================================
@@ -3036,7 +4037,7 @@ void GameServer::InternalSwap(GameServer* other) {
 ::PROTOBUF_NAMESPACE_ID::Metadata GameServer::GetMetadata() const {
   return ::_pbi::AssignDescriptors(
       &descriptor_table_sdk_2eproto_getter, &descriptor_table_sdk_2eproto_once,
-      file_level_metadata_sdk_2eproto[11]);
+      file_level_metadata_sdk_2eproto[16]);
 }
 
 // @@protoc_insertion_point(namespace_scope)
@@ -3076,6 +4077,10 @@ template<> PROTOBUF_NOINLINE ::agones::dev::sdk::GameServer_Spec*
 Arena::CreateMaybeMessage< ::agones::dev::sdk::GameServer_Spec >(Arena* arena) {
   return Arena::CreateMessageInternal< ::agones::dev::sdk::GameServer_Spec >(arena);
 }
+template<> PROTOBUF_NOINLINE ::agones::dev::sdk::GameServer_Status_Address*
+Arena::CreateMaybeMessage< ::agones::dev::sdk::GameServer_Status_Address >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::agones::dev::sdk::GameServer_Status_Address >(arena);
+}
 template<> PROTOBUF_NOINLINE ::agones::dev::sdk::GameServer_Status_Port*
 Arena::CreateMaybeMessage< ::agones::dev::sdk::GameServer_Status_Port >(Arena* arena) {
   return Arena::CreateMessageInternal< ::agones::dev::sdk::GameServer_Status_Port >(arena);
@@ -3083,6 +4088,22 @@ Arena::CreateMaybeMessage< ::agones::dev::sdk::GameServer_Status_Port >(Arena* a
 template<> PROTOBUF_NOINLINE ::agones::dev::sdk::GameServer_Status_PlayerStatus*
 Arena::CreateMaybeMessage< ::agones::dev::sdk::GameServer_Status_PlayerStatus >(Arena* arena) {
   return Arena::CreateMessageInternal< ::agones::dev::sdk::GameServer_Status_PlayerStatus >(arena);
+}
+template<> PROTOBUF_NOINLINE ::agones::dev::sdk::GameServer_Status_CounterStatus*
+Arena::CreateMaybeMessage< ::agones::dev::sdk::GameServer_Status_CounterStatus >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::agones::dev::sdk::GameServer_Status_CounterStatus >(arena);
+}
+template<> PROTOBUF_NOINLINE ::agones::dev::sdk::GameServer_Status_ListStatus*
+Arena::CreateMaybeMessage< ::agones::dev::sdk::GameServer_Status_ListStatus >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::agones::dev::sdk::GameServer_Status_ListStatus >(arena);
+}
+template<> PROTOBUF_NOINLINE ::agones::dev::sdk::GameServer_Status_CountersEntry_DoNotUse*
+Arena::CreateMaybeMessage< ::agones::dev::sdk::GameServer_Status_CountersEntry_DoNotUse >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::agones::dev::sdk::GameServer_Status_CountersEntry_DoNotUse >(arena);
+}
+template<> PROTOBUF_NOINLINE ::agones::dev::sdk::GameServer_Status_ListsEntry_DoNotUse*
+Arena::CreateMaybeMessage< ::agones::dev::sdk::GameServer_Status_ListsEntry_DoNotUse >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::agones::dev::sdk::GameServer_Status_ListsEntry_DoNotUse >(arena);
 }
 template<> PROTOBUF_NOINLINE ::agones::dev::sdk::GameServer_Status*
 Arena::CreateMaybeMessage< ::agones::dev::sdk::GameServer_Status >(Arena* arena) {
