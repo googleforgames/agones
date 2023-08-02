@@ -46,6 +46,17 @@ status:
             type: integer
     address:
       type: string
+    addresses:
+      type: array
+      title: Array of addresses at which the GameServer can be reached; copy of Node.Status.addresses
+      nullable: true
+      items:
+        type: object
+        properties:
+          address:
+            type: string
+          type:
+            type: string
     nodeName:
       type: string
     reservedUntil:
