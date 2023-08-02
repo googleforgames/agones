@@ -28,6 +28,7 @@ import (
 	"agones.dev/agones/pkg/gameservers"
 	agtesting "agones.dev/agones/pkg/testing"
 	"agones.dev/agones/pkg/util/runtime"
+	"agones.dev/agones/test/e2e/framework"
 	"github.com/heptiolabs/healthcheck"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
@@ -454,6 +455,7 @@ func TestAllocatorAllocateOnGameServerUpdateError(t *testing.T) {
 	defer runtime.FeatureTestMutex.Unlock()
 
 	a, m := newFakeAllocator()
+	log := framework.TestLogger(t)
 
 	_, gsList := defaultFixtures(4)
 	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
@@ -470,10 +472,10 @@ func TestAllocatorAllocateOnGameServerUpdateError(t *testing.T) {
 	defer cancel()
 
 	require.NoError(t, a.Run(ctx))
-	// wait for the single gameserver to be in the cache.
+	// wait for 4 gameservers in the cache
 	require.Eventuallyf(t, func() bool {
-		return a.allocationCache.cache.Len() >= 1
-	}, 10*time.Second, time.Second, "should have a single item in the cache")
+		return a.allocationCache.cache.Len() == 4
+	}, 10*time.Second, time.Second, "should be four items in the cache")
 
 	gsa := allocationv1.GameServerAllocation{ObjectMeta: metav1.ObjectMeta{Name: "gsa-1", Namespace: defaultNs},
 		Spec: allocationv1.GameServerAllocationSpec{},
@@ -488,18 +490,22 @@ func TestAllocatorAllocateOnGameServerUpdateError(t *testing.T) {
 
 	// try the private method
 	_, err := a.allocate(ctx, gsa.DeepCopy())
-	logrus.WithField("test", t.Name()).WithError(err).Info("allocate (private): failed allocation")
+	log.WithError(err).Info("allocate (private): failed allocation")
 	require.NotEqual(t, ErrNoGameServer, err)
 	require.EqualError(t, err, "error updating allocated gameserver: failed to update")
 
-	// triple check there is still a gameserver in the cache
+	// make sure we aren't in the same batch!
+	time.Sleep(2 * a.batchWaitTime)
+
+	// Make sure there are 4 still.
 	require.Eventuallyf(t, func() bool {
-		return a.allocationCache.cache.Len() >= 1
-	}, 10*time.Second, time.Second, "should have a single item in the cache (still)")
+		return a.allocationCache.cache.Len() == 4
+	}, 10*time.Second, time.Second, "should be four items in the cache")
 
 	// try the public method
-	_, err = a.Allocate(ctx, gsa.DeepCopy())
-	logrus.WithField("test", t.Name()).WithError(err).Info("Allocate (public): failed allocation")
+	result, err := a.Allocate(ctx, gsa.DeepCopy())
+	log.WithField("result", result).WithError(err).Info("Allocate (public): failed allocation")
+	require.Nil(t, result)
 	require.NotEqual(t, ErrNoGameServer, err)
 	require.EqualError(t, err, "error updating allocated gameserver: failed to update")
 }
