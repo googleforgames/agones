@@ -144,6 +144,7 @@ steps:
   waitFor:
     - pull-build-image
     - test-gen-crd-client
+    - test-gen-all-sdk-grpc
   dir: "build"
   args: ["lint"] # pull the build image if it exists
 
