@@ -72,6 +72,18 @@
         }
       }
     },
+    "AllocationResponseGameServerStatusAddress": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "address": {
+          "type": "string"
+        }
+      },
+      "title": "A single address; identical to corev1.NodeAddress"
+    },
     "AllocationResponseGameServerStatusPort": {
       "type": "object",
       "properties": {
@@ -168,7 +180,16 @@
           }
         },
         "address": {
-          "type": "string"
+          "type": "string",
+          "title": "Primary address at which game server can be reached"
+        },
+        "addresses": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/AllocationResponseGameServerStatusAddress"
+          },
+          "title": "All addresses at which game server can be reached; copy of Node.Status.addresses"
         },
         "nodeName": {
           "type": "string"
