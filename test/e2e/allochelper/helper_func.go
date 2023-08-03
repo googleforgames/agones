@@ -254,6 +254,7 @@ func ValidateAllocatorResponse(t *testing.T, resp *pb.AllocationResponse) {
 	assert.Greater(t, len(resp.Ports), 0)
 	assert.NotEmpty(t, resp.GameServerName)
 	assert.NotEmpty(t, resp.Address)
+	assert.NotEmpty(t, resp.Addresses)
 	assert.NotEmpty(t, resp.NodeName)
 	assert.NotEmpty(t, resp.Metadata.Labels)
 	assert.NotEmpty(t, resp.Metadata.Annotations)

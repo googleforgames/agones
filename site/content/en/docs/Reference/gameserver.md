@@ -163,3 +163,27 @@ Game Servers are created through Kubernetes API (either directly or through a [F
 - SDK, which manages health checking and shutdown of a game server session
 
 ![GameServer State Diagram](../../../diagrams/gameserver-states.dot.png)
+
+{{% feature publishVersion="1.34.0" %}}
+## Primary Address vs Addresses
+
+[`GameServer.Status`][gss] has two fields which reflect the network address of the `GameServer`: `address` and `addresses`.
+The `address` field is a policy-based choice of "primary address" that will work for many use cases,
+and will always be one of the `addresses`. The `addresses` field contains every address in the [`Node.Status.addresses`][addresses],
+representing all known ways to reach the `GameServer` over the network.
+
+To choose `address` from `addresses`, [Agones looks for the following address types][addressFunc], in highest to lowest priorty:
+* `ExternalDNS`
+* `ExternalIP`
+* `InternalDNS`
+* `InternalIP`
+
+e.g. if any `ExternalDNS` address is found in the respective `Node`, it is used as the `address`.
+
+The policy for `address` will work for many use-cases, but for some advanced cases, such as IPv6 enablement, you may need
+to evaluate all `addresses` and pick the addresses that best suits your needs.
+
+[addresses]: https://v1-26.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#nodeaddress-v1-core
+[addressFunc]: https://github.com/googleforgames/agones/blob/a59c5394c7f5bac66e530d21446302581c10c225/pkg/gameservers/gameservers.go#L37-L71
+[gss]: {{% ref "/docs/Reference/agones_crd_api_reference.html#agones.dev/v1.GameServerStatus"  %}}
+{{% /feature %}}
