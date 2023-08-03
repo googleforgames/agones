@@ -136,6 +136,31 @@ whether these constraints impact your workloads:
    not supported. If your game sessions exceed one hour, refer to
    [Considerations for long sessions]({{<ref "/docs/Advanced/controlling-disruption#considerations-for-long-sessions">}}).
 
+{{% feature publishVersion="1.34.0" %}}
+### Choosing a GCP network
+
+By default, `gcloud` and the Cloud Console use the VPC named `default` for all new resources. If you
+plan to create a [dual-stack IPv4/IPv6 cluster][dual-stack] cluster, special considerations need to
+be made. Dual-stack clusters require a [dual-stack subnet][subnet-types], which are only supported in
+[_custom mode_][vpc-mode] VPC networks. For a new dual-stack cluster, you can either:
+
+* create a new _custom mode_ VPC,
+
+* or if you wish to continue using the `default` network, you must [switch it to _custom mode_][switch-mode].
+After switching a network to custom mode, you will need to manually manage subnets within the `default` VPC.
+
+Once you have a _custom mode_ VPC, you will need to choose whether to use an existing subnet or create a
+new one - read [VPC-native guide on creating a dual-stack cluster][dual-stack], but don't create the cluster
+just yet - we'll create the cluster later in this guide. To use the network and/or subnetwork you just created,
+you'll need to add `--network` and `--subnetwork`, and for GKE Standard, possibly `--stack-type` and
+`--ipv6-access-type`, depending on whether you created the subnet simultaneously with the cluster.
+
+[dual-stack]: https://cloud.google.com/kubernetes-engine/docs/how-to/alias-ips#dual-stack
+[subnet-types]: https://cloud.google.com/vpc/docs/subnets#subnet-types
+[vpc-mode]: https://cloud.google.com/vpc/docs/vpc#subnet-ranges
+[switch-mode]: https://cloud.google.com/vpc/docs/create-modify-vpc-networks#switch-network-mode
+{{% /feature %}}
+
 ## Creating the firewall
 
 We need a firewall to allow UDP traffic to nodes tagged as `game-server` via ports 7000-8000. These firewall rules apply to cluster nodes you will create in the
