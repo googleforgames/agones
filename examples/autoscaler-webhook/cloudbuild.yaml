@@ -27,7 +27,7 @@ steps:
   # build and push allocation-endpoint image to GCR
   - name: "make-docker"
     id: push
-    dir: "."
+    dir: "/workspace/examples/autoscaler-webhook/"
     env:
       - REPOSITORY=${_REPOSITORY}
     script: |

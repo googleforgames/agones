@@ -45,7 +45,7 @@ endif
 
 # Build a docker image for the server, and tag it
 build:
-	cd $(project_path) && docker build -f $(project_path)/Dockerfile --tag=$(autoscaler_webhook_tag) .
+	cd $(root_path) && docker build -f $(project_path)/Dockerfile --tag=$(autoscaler_webhook_tag) .
 
 # Push the docker image
 push: build
@@ -61,4 +61,4 @@ echo-image-tag:
 
 # build and push the autoscaler-webhook image with specified tag
 cloud-build:
-	gcloud builds submit --config=cloudbuild.yaml
+	cd $(root_path) && gcloud builds submit --config=./examples/autoscaler-webhook/cloudbuild.yaml
