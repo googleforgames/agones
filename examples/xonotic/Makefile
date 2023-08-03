@@ -23,27 +23,40 @@
 #     \_/ \__,_|_|  |_|\__,_|_.__/|_|\___|___/
 #
 
-REPOSITORY = us-docker.pkg.dev/agones-images/examples
+REPOSITORY ?= us-docker.pkg.dev/agones-images/examples
 
 WINDOWS_VERSIONS = ltsc2019 ltsc2022
 BUILDX_WINDOWS_BUILDER = windows-builder
 
 # Build with Windows support
 WITH_WINDOWS ?= 1
+# Build with ARM64 support
+WITH_ARM64 ?= 1
 
 # When pushing set to --push
 WINDOWS_DOCKER_PUSH_ARGS = --push
 
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_path := $(dir $(mkfile_path))
-root_path := $(realpath $(project_path)/../..)
-image_tag = $(REPOSITORY)/xonotic-example:1.2
+server_tag = $(REPOSITORY)/xonotic-example:1.2
 
-image_tag_linux_amd64 = $(image_tag)-linux-amd64
-
-push_server_manifest = $(image_tag_linux_amd64)
 ifeq ($(WITH_WINDOWS), 1)
-push_server_manifest += $(foreach windows_version, $(WINDOWS_VERSIONS), $(image_tag)-windows_amd64-$(windows_version))
+server_tag_linux_amd64 = $(server_tag)-linux-amd64
+server_tag_linux_arm64 = $(server_tag)-linux-arm64
+else
+server_tag_linux_amd64 = $(server_tag)-amd64
+server_tag_linux_arm64 = $(server_tag)-arm64
+endif
+
+push_server_manifest = $(server_tag_linux_amd64)
+root_path := $(realpath $(project_path)/../..)
+
+
+ifeq ($(WITH_WINDOWS), 1)
+push_server_manifest += $(foreach windows_version, $(WINDOWS_VERSIONS), $(server_tag)-windows_amd64-$(windows_version))
+endif
+ifeq ($(WITH_ARM64), 1)
+push_server_manifest += $(server_tag_linux_arm64)
 endif
 
 #   _____                    _
@@ -54,31 +67,59 @@ endif
 #                 |___/
 
 build: build-linux-image-amd64
+
 ifeq ($(WITH_WINDOWS), 1)
 build: $(foreach winver, $(WINDOWS_VERSIONS), build-windows-image-$(winver))
 endif
+ifeq ($(WITH_ARM64), 1)
+build: build-linux-image-arm64
+endif
+
+push: push-linux-image-amd64
+ifeq ($(WITH_WINDOWS), 1)
+push: push-windows-images
+endif
+ifeq ($(WITH_ARM64), 1)
+push: push-linux-image-arm64
+endif
+	-docker manifest rm $(server_tag)
+	docker manifest create $(server_tag) $(push_server_manifest)
+	docker manifest push $(server_tag) --purge
 
 
-build-linux-image-amd64:
-	docker build -f $(project_path)/Dockerfile --tag=$(image_tag_linux_amd64) .
+# Pushes all variants of the Windows images to the container image registry.
+push-linux-image-amd64: build
+	docker push $(server_tag_linux_amd64)
+push-linux-image-arm64: build
+	$(MAKE) DOCKER_BUILD_ARGS=--push build-linux-image-arm64
+
+# Pushes all variants of the Windows images to the container image registry.
+push-windows-images: $(foreach winver, $(WINDOWS_VERSIONS), push-windows-image-$(winver))
+
+# Pushes a specific version of Windows to a container image registry.
+push-windows-image-%:
+	$(MAKE) WINDOWS_DOCKER_PUSH_ARGS=--push build-windows-image-$*
 
 build-windows-image-%: ensure-windows-buildx
 	docker buildx build --platform windows/amd64 --builder $(BUILDX_WINDOWS_BUILDER) -f $(project_path)Dockerfile.windows \
-	--tag=$(image_tag)-windows_amd64-$* --build-arg WINDOWS_VERSION=$* . $(WINDOWS_DOCKER_PUSH_ARGS)
+	--tag=$(server_tag)-windows_amd64-$* --build-arg WINDOWS_VERSION=$* . $(WINDOWS_DOCKER_PUSH_ARGS)
 
 ensure-windows-buildx:
 # Windows image builds must be directed to a specific buildx context.
 # The default context does not support building cross platform images.
 	-DOCKER_CLI_EXPERIMENTAL=enabled docker buildx create --name=$(BUILDX_WINDOWS_BUILDER) --use
 
-# Push a docker image to the repository, and save it
-push: build
-	docker push $(image_tag)
+build-linux-image-amd64:
+	docker build -f $(project_path)/Dockerfile --tag=$(server_tag_linux_amd64) .
+
+build-linux-image-arm64:
+	docker buildx build --platform linux/arm64 -f $(project_path)Dockerfile $(DOCKER_BUILD_ARGS) --tag=$(server_tag_linux_arm64) .
+
 
 # check if hosted on Google Artifact Registry
 gar-check:
-	gcloud container images describe $(image_tag)
+	gcloud container images describe $(server_tag)
 
 #output the tag for this image
 echo-image-tag:
-	@echo $(image_tag)
+	@echo $(server_tag)
