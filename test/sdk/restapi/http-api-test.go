@@ -79,7 +79,7 @@ func main() {
 		log.Fatalf("Could not send health check: %v\n", err)
 	}
 
-	_, _, err = cli.SDKApi.Reserve(ctx, swagger.SdkDuration{"5"})
+	_, _, err = cli.SDKApi.Reserve(ctx, swagger.SdkDuration{Seconds: "5"})
 	if err != nil {
 		log.Fatalf("Could not send Reserve: %v\n", err)
 	}
@@ -96,7 +96,7 @@ func main() {
 
 	creationTS := gs.ObjectMeta.CreationTimestamp
 
-	_, _, err = cli.SDKApi.SetLabel(ctx, swagger.SdkKeyValue{"creationTimestamp", creationTS})
+	_, _, err = cli.SDKApi.SetLabel(ctx, swagger.SdkKeyValue{Key: "creationTimestamp", Value: creationTS})
 	if err != nil {
 		log.Fatalf("Could not SetLabel: %v\n", err)
 	}
@@ -107,7 +107,7 @@ func main() {
 	}()
 
 	uid := <-c
-	_, _, err = cli.SDKApi.SetAnnotation(ctx, swagger.SdkKeyValue{"UID", uid})
+	_, _, err = cli.SDKApi.SetAnnotation(ctx, swagger.SdkKeyValue{Key: "UID", Value: uid})
 	if err != nil {
 		log.Fatalf("Could not SetAnnotation: %v\n", err)
 	}
