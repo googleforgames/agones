@@ -276,6 +276,7 @@ func (c *Allocator) allocateFromLocalCluster(ctx context.Context, gsa *allocatio
 		gsa.Status.GameServerName = gs.ObjectMeta.Name
 		gsa.Status.Ports = gs.Status.Ports
 		gsa.Status.Address = gs.Status.Address
+		gsa.Status.Addresses = append(gsa.Status.Addresses, gs.Status.Addresses...)
 		gsa.Status.NodeName = gs.Status.NodeName
 		gsa.Status.Source = localAllocationSource
 		gsa.Status.Metadata = &allocationv1.GameServerMetadata{
