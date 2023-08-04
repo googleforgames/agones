@@ -26,6 +26,7 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set(CMAKE_DEBUG_POSTFIX "d")
 
 find_package(Threads REQUIRED)
+find_package(absl CONFIG REQUIRED)
 find_package(agones CONFIG REQUIRED)
 
 if(WIN32)
