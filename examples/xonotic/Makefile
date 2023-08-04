@@ -30,8 +30,6 @@ BUILDX_WINDOWS_BUILDER = windows-builder
 
 # Build with Windows support
 WITH_WINDOWS ?= 1
-# Build with ARM64 support
-WITH_ARM64 ?= 1
 
 # When pushing set to --push
 WINDOWS_DOCKER_PUSH_ARGS = --push
@@ -40,23 +38,13 @@ mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_path := $(dir $(mkfile_path))
 server_tag = $(REPOSITORY)/xonotic-example:1.2
 
-ifeq ($(WITH_WINDOWS), 1)
 server_tag_linux_amd64 = $(server_tag)-linux-amd64
-server_tag_linux_arm64 = $(server_tag)-linux-arm64
-else
-server_tag_linux_amd64 = $(server_tag)-amd64
-server_tag_linux_arm64 = $(server_tag)-arm64
-endif
-
 push_server_manifest = $(server_tag_linux_amd64)
 root_path := $(realpath $(project_path)/../..)
 
 
 ifeq ($(WITH_WINDOWS), 1)
 push_server_manifest += $(foreach windows_version, $(WINDOWS_VERSIONS), $(server_tag)-windows_amd64-$(windows_version))
-endif
-ifeq ($(WITH_ARM64), 1)
-push_server_manifest += $(server_tag_linux_arm64)
 endif
 
 #   _____                    _
@@ -67,20 +55,13 @@ endif
 #                 |___/
 
 build: build-linux-image-amd64
-
 ifeq ($(WITH_WINDOWS), 1)
 build: $(foreach winver, $(WINDOWS_VERSIONS), build-windows-image-$(winver))
-endif
-ifeq ($(WITH_ARM64), 1)
-build: build-linux-image-arm64
 endif
 
 push: push-linux-image-amd64
 ifeq ($(WITH_WINDOWS), 1)
 push: push-windows-images
-endif
-ifeq ($(WITH_ARM64), 1)
-push: push-linux-image-arm64
 endif
 	-docker manifest rm $(server_tag)
 	docker manifest create $(server_tag) $(push_server_manifest)
@@ -90,8 +71,6 @@ endif
 # Pushes all variants of the Windows images to the container image registry.
 push-linux-image-amd64: build
 	docker push $(server_tag_linux_amd64)
-push-linux-image-arm64: build
-	$(MAKE) DOCKER_BUILD_ARGS=--push build-linux-image-arm64
 
 # Pushes all variants of the Windows images to the container image registry.
 push-windows-images: $(foreach winver, $(WINDOWS_VERSIONS), push-windows-image-$(winver))
@@ -111,9 +90,6 @@ ensure-windows-buildx:
 
 build-linux-image-amd64:
 	docker build -f $(project_path)/Dockerfile --tag=$(server_tag_linux_amd64) .
-
-build-linux-image-arm64:
-	docker buildx build --platform linux/arm64 -f $(project_path)Dockerfile $(DOCKER_BUILD_ARGS) --tag=$(server_tag_linux_arm64) .
 
 
 # check if hosted on Google Artifact Registry
