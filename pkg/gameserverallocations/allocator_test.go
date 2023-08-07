@@ -453,11 +453,14 @@ func TestAllocatorAllocateOnGameServerUpdateError(t *testing.T) {
 	// TODO: remove when `CountsAndLists` feature flag is moved to stable.
 	runtime.FeatureTestMutex.Lock()
 	defer runtime.FeatureTestMutex.Unlock()
+	require.NoError(t, runtime.ParseFeatures(fmt.Sprintf("%s=false&%s=false&%s=false", runtime.FeaturePlayerAllocationFilter, runtime.FeatureStateAllocationFilter, runtime.FeatureCountsAndLists)))
 
 	a, m := newFakeAllocator()
 	log := framework.TestLogger(t)
 
-	_, gsList := defaultFixtures(4)
+	// make sure there is more than can be retried, so there is always at least some.
+	gsLen := allocationRetry.Steps * 2
+	_, gsList := defaultFixtures(gsLen)
 	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
 		return true, &agonesv1.GameServerList{Items: gsList}, nil
 	})
@@ -472,10 +475,10 @@ func TestAllocatorAllocateOnGameServerUpdateError(t *testing.T) {
 	defer cancel()
 
 	require.NoError(t, a.Run(ctx))
-	// wait for 4 gameservers in the cache
+	// wait for all the gameservers to be in the cache
 	require.Eventuallyf(t, func() bool {
-		return a.allocationCache.cache.Len() == 4
-	}, 10*time.Second, time.Second, "should be four items in the cache")
+		return a.allocationCache.cache.Len() == gsLen
+	}, 10*time.Second, time.Second, fmt.Sprintf("should be %d items in the cache", gsLen))
 
 	gsa := allocationv1.GameServerAllocation{ObjectMeta: metav1.ObjectMeta{Name: "gsa-1", Namespace: defaultNs},
 		Spec: allocationv1.GameServerAllocationSpec{},
@@ -497,10 +500,10 @@ func TestAllocatorAllocateOnGameServerUpdateError(t *testing.T) {
 	// make sure we aren't in the same batch!
 	time.Sleep(2 * a.batchWaitTime)
 
-	// Make sure there are 4 still.
+	// wait for all the gameservers to be in the cache
 	require.Eventuallyf(t, func() bool {
-		return a.allocationCache.cache.Len() == 4
-	}, 10*time.Second, time.Second, "should be four items in the cache")
+		return a.allocationCache.cache.Len() == gsLen
+	}, 10*time.Second, time.Second, fmt.Sprintf("should be %d items in the cache", gsLen))
 
 	// try the public method
 	result, err := a.Allocate(ctx, gsa.DeepCopy())
