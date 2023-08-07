@@ -23,13 +23,18 @@
 #     \_/ \__,_|_|  |_|\__,_|_.__/|_|\___|___/
 #
 
-REPOSITORY = us-docker.pkg.dev/agones-images/examples
+REPOSITORY ?=
+PROD_REPO ?= us-docker.pkg.dev/agones-images/examples
 
 # Directory that this Makefile is in.
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_path := $(dir $(mkfile_path))
-server_tag = $(REPOSITORY)/allocation-endpoint-proxy:0.5
 root_path = $(realpath $(project_path)/../..)
+ifeq ($(REPOSITORY),)
+	server_tag := allocation-endpoint-proxy:0.5
+else
+	server_tag := $(REPOSITORY)/allocation-endpoint-proxy:0.5
+endif
 
 #   _____                    _
 #  |_   _|_ _ _ __ __ _  ___| |_ ___
@@ -43,16 +48,20 @@ build:
 	cd $(project_path)/server/ && docker build --tag=$(server_tag) .
 
 run:
-	docker run --network=host $(server_tag) $(args)
+	docker run --network=host $(PROD_REPO)/$(server_tag) $(args)
 
 # check if hosted on Google Artifact Registry
 gar-check:
-	gcloud container images describe $(server_tag)
+	gcloud container images describe $(PROD_REPO)/$(server_tag)
 
 #output the tag for this image
 echo-image-tag:
-	@echo $(server_tag)
+	@echo $(PROD_REPO)/$(server_tag)
 
 # Push the docker image
 push: build
 	docker push $(server_tag)
+
+# build and push the allocation-endpoint image with specified tag
+cloud-build:
+	gcloud builds submit --config=cloudbuild.yaml
