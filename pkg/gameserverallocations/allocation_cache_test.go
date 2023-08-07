@@ -80,6 +80,12 @@ func TestAllocationCacheListSortedGameServers(t *testing.T) {
 		features string
 		gsa      *allocationv1.GameServerAllocation
 	}{
+		"allocated first (StateAllocationFilter)": {
+			list: []agonesv1.GameServer{gs1, gs2, gs3},
+			test: func(t *testing.T, list []*agonesv1.GameServer) {
+				assert.Equal(t, []*agonesv1.GameServer{&gs3, &gs1, &gs2}, list)
+			},
+		},
 		"nil player status (PlayerAllocationFilter)": {
 			list:     []agonesv1.GameServer{gs1, gs2, gs4},
 			features: fmt.Sprintf("%s=true", runtime.FeaturePlayerAllocationFilter),
@@ -482,9 +488,6 @@ func TestAllocationCacheCompareGameServers(t *testing.T) {
 
 func TestAllocatorRunCacheSync(t *testing.T) {
 	t.Parallel()
-
-	// TODO(markmandel): When this feature gets promoted to stable, replace test TestAllocatorRunCacheSync below with this test.
-
 	cache, m := newFakeAllocationCache()
 	gsWatch := watch.NewFake()
 

@@ -116,7 +116,10 @@ type GameServerAllocationSpec struct {
 type GameServerSelector struct {
 	// See: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
 	metav1.LabelSelector `json:",inline"`
-	GameServerState      *agonesv1.GameServerState `json:"gameServerState,omitempty"`
+	// GameServerState specifies which State is the filter to be used when attempting to retrieve a GameServer
+	// via Allocation. Defaults to "Ready". The only other option is "Allocated", which can be used in conjunction with
+	// label/annotation/player selectors to retrieve an already Allocated GameServer.
+	GameServerState *agonesv1.GameServerState `json:"gameServerState,omitempty"`
 	// [Stage:Alpha]
 	// [FeatureFlag:PlayerAllocationFilter]
 	// +optional
