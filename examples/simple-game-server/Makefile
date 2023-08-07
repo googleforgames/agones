@@ -23,7 +23,8 @@
 #     \_/ \__,_|_|  |_|\__,_|_.__/|_|\___|___/
 #
 
-REGISTRY ?= us-docker.pkg.dev/agones-images/examples
+REPOSITORY ?=
+PROD_REPO ?= us-docker.pkg.dev/agones-images/examples
 BUILDX_WINDOWS_BUILDER = windows-builder
 # Versions of Windows Server to support, default is Windows Server 2019.
 # For the full list of tags see https://hub.docker.com/_/microsoft-windows-servercore.
@@ -37,7 +38,11 @@ WITH_ARM64 ?= 1
 
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_path := $(dir $(mkfile_path))
-server_tag = $(REGISTRY)/simple-game-server:0.17
+ifeq ($(REPOSITORY),)
+	server_tag := simple-game-server:0.17
+else
+	server_tag := $(REGISTRY)/simple-game-server:0.17
+endif
 
 ifeq ($(WITH_WINDOWS), 1)
 server_tag_linux_amd64 = $(server_tag)-linux-amd64
