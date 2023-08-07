@@ -103,14 +103,10 @@ push-windows-images: $(foreach winver, $(WINDOWS_VERSIONS), push-windows-image-$
 push-windows-image-%:
 	$(MAKE) WINDOWS_DOCKER_PUSH_ARGS=--push build-windows-image-$*
 
-build-windows-image-%: build-windows-binary ensure-windows-buildx
+build-windows-image-%: ensure-windows-buildx
 	cd $(root_path) && DOCKER_CLI_EXPERIMENTAL=enabled \
 		docker buildx build --platform windows/amd64 --builder $(BUILDX_WINDOWS_BUILDER) -f $(project_path)Dockerfile.windows \
 	 	--tag=$(server_tag)-windows_amd64-$* --build-arg WINDOWS_VERSION=$* examples/simple-game-server/ $(WINDOWS_DOCKER_PUSH_ARGS)
-
-# Builds the server binary for Windows (amd64).
-build-windows-binary:
-	GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -o bin/simple-game-server.exe main.go
 
 ensure-windows-buildx:
 	# TODO: Remove `--use` and specify `--builder` for each buildx command once Docker 19.03.13 is available.
@@ -133,3 +129,7 @@ gar-check:
 #output the tag for this image
 echo-image-tag:
 	@echo $(server_tag)
+
+# build and push the simple-game-server image with specified tag
+cloud-build:
+	cd $(root_path) && gcloud builds submit --config=./examples/simple-game-server/cloudbuild.yaml

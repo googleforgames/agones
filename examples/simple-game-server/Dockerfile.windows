@@ -16,16 +16,21 @@
 # Use `--build-arg WINDOWS_VERSION=` to select the correct base image
 # See https://docs.microsoft.com/en-us/virtualization/windowscontainers/deploy-containers/version-compatibility
 # for details.
-ARG WINDOWS_VERSION=ltsc2019
 
-FROM mcr.microsoft.com/windows/servercore:${WINDOWS_VERSION}
+# Build Stage
+FROM --platform=linux/amd64 golang:1.20.4 as base
 
-# Unlike the Linux image the binary is built on the host since buildx cannot
-# invoke RUN commands for Windows Containers and multi-stage images
-# cannot copy data between OSes.
-COPY ["bin/simple-game-server.exe", "/server/simple-game-server.exe"]
+WORKDIR /app
+COPY go.mod go.sum ./
+COPY main.go ./
 
+RUN GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -o bin/simple-game-server.exe main.go
+
+FROM mcr.microsoft.com/windows/servercore:ltsc2019
 WORKDIR /server
+
+COPY --from=base /app/bin/simple-game-server.exe /server/simple-game-server.exe
+
 EXPOSE 7654
 USER ContainerUser
 ENTRYPOINT ["C:\\server\\simple-game-server.exe"]
