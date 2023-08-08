@@ -23,13 +23,18 @@
 #     \_/ \__,_|_|  |_|\__,_|_.__/|_|\___|___/
 #
 
-REPOSITORY = us-docker.pkg.dev/agones-images/examples
+REPOSITORY ?=
+PROD_REPO ?= us-docker.pkg.dev/agones-images/examples
 
 # Directory that this Makefile is in.
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_path := $(dir $(mkfile_path))
-server_tag = $(REPOSITORY)/nodejs-simple-server:0.8
 root_path = $(realpath $(project_path)/../..)
+ifeq ($(REPOSITORY),)
+	server_tag := nodejs-simple-server:0.8
+else
+	server_tag := $(REPOSITORY)/nodejs-simple-server:0.8
+endif
 
 #   _____                    _
 #  |_   _|_ _ _ __ __ _  ___| |_ ___
@@ -43,12 +48,20 @@ build:
 	cd $(root_path) && docker build -f $(project_path)/Dockerfile --tag=$(server_tag) .
 
 run:
-	docker run --network=host $(server_tag) $(args)
+	docker run --network=host $(PROD_REPO)/$(server_tag) $(args)
 
 # check if hosted on Google Artifact Registry
 gar-check:
-	gcloud container images describe $(server_tag)
+	gcloud container images describe $(PROD_REPO)/$(server_tag)
 
 #output the tag for this image
 echo-image-tag:
-	@echo $(server_tag)
+	@echo $(PROD_REPO)/$(server_tag)
+
+# Push the docker image
+push: build
+	docker push $(server_tag)
+
+# build and push the nodejs-simple image with specified tag
+cloud-build:
+	cd $(root_path) && gcloud builds submit --config=./examples/nodejs-simple/cloudbuild.yaml
