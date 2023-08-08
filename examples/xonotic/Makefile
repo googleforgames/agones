@@ -23,7 +23,8 @@
 #     \_/ \__,_|_|  |_|\__,_|_.__/|_|\___|___/
 #
 
-REPOSITORY ?= us-docker.pkg.dev/agones-images/examples
+REPOSITORY ?=
+PROD_REPO ?= us-docker.pkg.dev/agones-images/examples
 
 WINDOWS_VERSIONS = ltsc2019 ltsc2022
 BUILDX_WINDOWS_BUILDER = windows-builder
@@ -36,7 +37,11 @@ WINDOWS_DOCKER_PUSH_ARGS = --push
 
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_path := $(dir $(mkfile_path))
-server_tag = $(REPOSITORY)/xonotic-example:1.2
+ifeq ($(REPOSITORY),)
+	server_tag := xonotic-example:1.2
+else
+	server_tag := $(REPOSITORY)/xonotic-example:1.2
+endif
 
 server_tag_linux_amd64 = $(server_tag)-linux-amd64
 push_server_manifest = $(server_tag_linux_amd64)
@@ -94,8 +99,12 @@ build-linux-image-amd64:
 
 # check if hosted on Google Artifact Registry
 gar-check:
-	gcloud container images describe $(server_tag)
+	gcloud container images describe $(PROD_REPO)/$(server_tag)
 
 #output the tag for this image
 echo-image-tag:
-	@echo $(server_tag)
+	@echo $(PROD_REPO)/$(server_tag)
+
+# build and push the xonotic image with specified tag
+cloud-build:
+	gcloud builds submit --config=cloudbuild.yaml
