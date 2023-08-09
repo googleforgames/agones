@@ -18,4 +18,4 @@ cd ..
 mkdir -p .build
 cd .build
 cmake .. -DCMAKE_BUILD_TYPE=Release -G "Unix Makefiles" -Wno-dev -DCMAKE_INSTALL_PREFIX=./install
-cmake --build . --target install
+cmake --build . --target install -j$(nproc)

@@ -31,7 +31,7 @@ endif()
 
 # gRPC repo and version
 set(gRPC_GIT_REPO "https://github.com/gRPC/gRPC.git")
-set(gRPC_GIT_TAG "v1.50.1")
+set(gRPC_GIT_TAG "v1.53.0")
 
 # OpenSSL required only for successful build gRPC
 set(OPENSSL_GIT_REPO "https://github.com/openssl/openssl.git")
@@ -177,6 +177,9 @@ if (NOT ${gRPC_FOUND})
         "-Dprotobuf_MSVC_STATIC_RUNTIME=OFF"
         "-Dprotobuf_BUILD_TESTS=OFF"
     )
+    invoke_cmake_build(absl ${gRPC_SOURCE_DIR}/third_party/abseil-cpp
+        "-DABSL_BUILD_TESTING=OFF"
+    )
 
     # Build gRPC as cmake package
     set(OPENSSL_PARAM "")
@@ -205,6 +208,7 @@ if (NOT ${gRPC_FOUND})
         "-DgRPC_ZLIB_PROVIDER=package"
         "-DgRPC_CARES_PROVIDER=package"
         "-DgRPC_SSL_PROVIDER=package"
+        "-DgRPC_ABSL_PROVIDER=package"
         ${GRPC_EXTRA_FLAGS}
     )
     set(AGONES_OWN_GRPC TRUE CACHE BOOL "Third party is built by Agones" FORCE)
