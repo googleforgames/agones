@@ -111,7 +111,7 @@ push-windows-image-%:
 build-windows-image-%: ensure-windows-buildx
 	cd $(root_path) && DOCKER_CLI_EXPERIMENTAL=enabled \
 		docker buildx build --platform windows/amd64 --builder $(BUILDX_WINDOWS_BUILDER) -f $(project_path)Dockerfile.windows \
-	 	--tag=$(server_tag)-windows_amd64-$* --build-arg WINDOWS_VERSION=$* examples/simple-game-server/ $(WINDOWS_DOCKER_PUSH_ARGS)
+	 	--tag=$(REPOSITORY)$(server_tag)-windows_amd64-$* --build-arg WINDOWS_VERSION=$* examples/simple-game-server/ $(WINDOWS_DOCKER_PUSH_ARGS)
 
 ensure-windows-buildx:
 	# TODO: Remove `--use` and specify `--builder` for each buildx command once Docker 19.03.13 is available.
@@ -123,17 +123,17 @@ ensure-windows-buildx:
 
 # Build a docker image for the server, and tag it
 build-linux-image-amd64:
-	cd $(root_path) && docker build -f $(project_path)Dockerfile --tag=$(server_tag_linux_amd64) .
+	cd $(root_path) && docker build -f $(project_path)Dockerfile --tag=$(REPOSITORY)$(server_tag_linux_amd64) .
 build-linux-image-arm64:
 	cd $(root_path) && docker buildx build --platform linux/arm64 -f $(project_path)Dockerfile $(DOCKER_BUILD_ARGS) --tag=$(server_tag_linux_arm64) .
 
 # check if hosted on Google Artifact Registry
 gar-check:
-	gcloud container images describe $(server_tag)
+	gcloud container images describe $(PROD_REPO)/$(server_tag)
 
 #output the tag for this image
 echo-image-tag:
-	@echo $(server_tag)
+	@echo $(PROD_REPO)/$(server_tag)
 
 # build and push the simple-game-server image with specified tag
 cloud-build:
