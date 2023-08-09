@@ -280,7 +280,9 @@ func TestConvertAllocationRequestToGameServerAllocation(t *testing.T) {
 						MatchLabels: map[string]string{
 							"c": "d",
 						},
-					}},
+					},
+						GameServerState: &ready,
+					},
 					Preferred: []allocationv1.GameServerSelector{
 						{
 							LabelSelector: metav1.LabelSelector{
@@ -288,6 +290,7 @@ func TestConvertAllocationRequestToGameServerAllocation(t *testing.T) {
 									"e": "f",
 								},
 							},
+							GameServerState: &ready,
 						},
 						{
 							LabelSelector: metav1.LabelSelector{
@@ -295,6 +298,7 @@ func TestConvertAllocationRequestToGameServerAllocation(t *testing.T) {
 									"g": "h",
 								},
 							},
+							GameServerState: &ready,
 						},
 					},
 					Selectors: []allocationv1.GameServerSelector{
@@ -304,6 +308,7 @@ func TestConvertAllocationRequestToGameServerAllocation(t *testing.T) {
 									"m": "n",
 								},
 							},
+							GameServerState: &ready,
 						},
 					},
 					Scheduling: apis.Packed,
@@ -335,6 +340,9 @@ func TestConvertAllocationRequestToGameServerAllocation(t *testing.T) {
 						Enabled: false,
 					},
 					Scheduling: apis.Distributed,
+					Required: allocationv1.GameServerSelector{
+						GameServerState: &ready,
+					},
 				},
 			},
 		},
@@ -382,7 +390,9 @@ func TestConvertAllocationRequestToGameServerAllocation(t *testing.T) {
 					MultiClusterSetting: allocationv1.MultiClusterSetting{
 						Enabled: false,
 					},
-					Selectors:  []allocationv1.GameServerSelector{{}},
+					Selectors: []allocationv1.GameServerSelector{{
+						GameServerState: &ready,
+					}},
 					Scheduling: apis.Distributed,
 				},
 			},
