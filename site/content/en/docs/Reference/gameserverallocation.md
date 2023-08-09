@@ -65,62 +65,6 @@ spec:
     annotations:
       map:  garden22
   {{< /tab >}}
-{{% /feature %}}
-{{% feature publishVersion="1.34.0" %}}
-{{< tabpane >}}
-  {{< tab header="selectors" lang="yaml" >}}
-apiVersion: "allocation.agones.dev/v1"
-kind: GameServerAllocation
-spec:
-  # GameServer selector from which to choose GameServers from.
-  # Defaults to all GameServers.
-  # matchLabels, matchExpressions, gameServerState and player filters can be used for filtering.
-  # See: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/ for more details on label selectors.
-  # An ordered list of GameServer label selectors.
-  # If the first selector is not matched, the selection attempts the second selector, and so on.
-  # This is useful for things like smoke testing of new game servers.
-  selectors:
-    - matchLabels:
-        agones.dev/fleet: green-fleet
-        # [Stage:Alpha]
-        # [FeatureFlag:PlayerAllocationFilter]
-      players:
-        minAvailable: 0
-        maxAvailable: 99
-    - matchLabels:
-        agones.dev/fleet: blue-fleet
-    - matchLabels:
-        game: my-game
-      matchExpressions:
-        - {key: tier, operator: In, values: [cache]}
-      # Specifies which State is the filter to be used when attempting to retrieve a GameServer
-      # via Allocation. Defaults to "Ready". The only other option is "Allocated", which can be used in conjunction with
-      # label/annotation/player selectors to retrieve an already Allocated GameServer.
-      gameServerState: Ready
-      # [Stage:Alpha]
-      # [FeatureFlag:PlayerAllocationFilter]
-      # Provides a filter on minimum and maximum values for player capacity when retrieving a GameServer
-      # through Allocation. Defaults to no limits.
-      players:
-        minAvailable: 0
-        maxAvailable: 99
-  # defines how GameServers are organised across the cluster.
-  # Options include:
-  # "Packed" (default) is aimed at dynamic Kubernetes clusters, such as cloud providers, wherein we want to bin pack
-  # resources
-  # "Distributed" is aimed at static Kubernetes clusters, wherein we want to distribute resources across the entire
-  # cluster
-  scheduling: Packed
-  # Optional custom metadata that is added to the game server at allocation
-  # You can use this to tell the server necessary session data
-  metadata:
-    labels:
-      mode: deathmatch
-    annotations:
-      map:  garden22
-  {{< /tab >}}
-{{% /feature %}}
-{{% feature expiryVersion="1.34.0" %}}
   {{< tab header="required & preferred (deprecated)" lang="yaml" >}}
 apiVersion: "allocation.agones.dev/v1"
 kind: GameServerAllocation
@@ -184,6 +128,58 @@ spec:
 {{< /tabpane >}}
 {{% /feature %}}
 {{% feature publishVersion="1.34.0" %}}
+{{< tabpane >}}
+  {{< tab header="selectors" lang="yaml" >}}
+apiVersion: "allocation.agones.dev/v1"
+kind: GameServerAllocation
+spec:
+  # GameServer selector from which to choose GameServers from.
+  # Defaults to all GameServers.
+  # matchLabels, matchExpressions, gameServerState and player filters can be used for filtering.
+  # See: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/ for more details on label selectors.
+  # An ordered list of GameServer label selectors.
+  # If the first selector is not matched, the selection attempts the second selector, and so on.
+  # This is useful for things like smoke testing of new game servers.
+  selectors:
+    - matchLabels:
+        agones.dev/fleet: green-fleet
+        # [Stage:Alpha]
+        # [FeatureFlag:PlayerAllocationFilter]
+      players:
+        minAvailable: 0
+        maxAvailable: 99
+    - matchLabels:
+        agones.dev/fleet: blue-fleet
+    - matchLabels:
+        game: my-game
+      matchExpressions:
+        - {key: tier, operator: In, values: [cache]}
+      # Specifies which State is the filter to be used when attempting to retrieve a GameServer
+      # via Allocation. Defaults to "Ready". The only other option is "Allocated", which can be used in conjunction with
+      # label/annotation/player selectors to retrieve an already Allocated GameServer.
+      gameServerState: Ready
+      # [Stage:Alpha]
+      # [FeatureFlag:PlayerAllocationFilter]
+      # Provides a filter on minimum and maximum values for player capacity when retrieving a GameServer
+      # through Allocation. Defaults to no limits.
+      players:
+        minAvailable: 0
+        maxAvailable: 99
+  # defines how GameServers are organised across the cluster.
+  # Options include:
+  # "Packed" (default) is aimed at dynamic Kubernetes clusters, such as cloud providers, wherein we want to bin pack
+  # resources
+  # "Distributed" is aimed at static Kubernetes clusters, wherein we want to distribute resources across the entire
+  # cluster
+  scheduling: Packed
+  # Optional custom metadata that is added to the game server at allocation
+  # You can use this to tell the server necessary session data
+  metadata:
+    labels:
+      mode: deathmatch
+    annotations:
+      map:  garden22
+  {{< /tab >}}
   {{< tab header="required & preferred (deprecated)" lang="yaml" >}}
 apiVersion: "allocation.agones.dev/v1"
 kind: GameServerAllocation
@@ -199,6 +195,10 @@ spec:
       game: my-game
     matchExpressions:
       - {key: tier, operator: In, values: [cache]}
+    # Specifies which State is the filter to be used when attempting to retrieve a GameServer
+    # via Allocation. Defaults to "Ready". The only other option is "Allocated", which can be used in conjunction with
+    # label/annotation/player selectors to retrieve an already Allocated GameServer.
+    gameServerState: Ready
     # [Stage:Alpha]
     # [FeatureFlag:PlayerAllocationFilter]
     # Provides a filter on minimum and maximum values for player capacity when retrieving a GameServer
@@ -238,8 +238,9 @@ spec:
     annotations:
       map:  garden22
   {{< /tab >}}
-{{< /tabpane >}}
+{{< /tabpane >}}  
 {{% /feature %}}
+
 The `spec` field is the actual `GameServerAllocation` specification, and it is composed as follows:
 
 - Deprecated, use `selectors` instead. If `selectors` is set, this field will be ignored.
