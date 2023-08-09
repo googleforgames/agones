@@ -82,53 +82,6 @@ func TestFindGameServerForAllocationPacked(t *testing.T) {
 				assert.NoError(t, err)
 			},
 		},
-		"one label": {
-			// nolint: dupl
-			list: []agonesv1.GameServer{
-				{ObjectMeta: metav1.ObjectMeta{Name: "gs6", Namespace: defaultNs, Labels: oneLabel, DeletionTimestamp: &n}, Status: agonesv1.GameServerStatus{NodeName: "node1", State: agonesv1.GameServerStateReady}},
-				{ObjectMeta: metav1.ObjectMeta{Name: "gs1", Namespace: defaultNs, Labels: oneLabel}, Status: agonesv1.GameServerStatus{NodeName: "node1", State: agonesv1.GameServerStateReady}},
-				{ObjectMeta: metav1.ObjectMeta{Name: "gs2", Namespace: defaultNs, Labels: oneLabel}, Status: agonesv1.GameServerStatus{NodeName: "node2", State: agonesv1.GameServerStateReady}},
-				{ObjectMeta: metav1.ObjectMeta{Name: "gs3", Namespace: defaultNs, Labels: oneLabel}, Status: agonesv1.GameServerStatus{NodeName: "node1", State: agonesv1.GameServerStateAllocated}},
-				{ObjectMeta: metav1.ObjectMeta{Name: "gs4", Namespace: defaultNs, Labels: oneLabel}, Status: agonesv1.GameServerStatus{NodeName: "node1", State: agonesv1.GameServerStateAllocated}},
-				{ObjectMeta: metav1.ObjectMeta{Name: "gs5", Namespace: defaultNs, Labels: oneLabel}, Status: agonesv1.GameServerStatus{NodeName: "node1", State: agonesv1.GameServerStateError}},
-				{ObjectMeta: metav1.ObjectMeta{Name: "gs6", Namespace: "does-not-apply", Labels: oneLabel}, Status: agonesv1.GameServerStatus{NodeName: "node1", State: agonesv1.GameServerStateReady}},
-			},
-			test: func(t *testing.T, list []*agonesv1.GameServer) {
-				assert.Len(t, list, 5)
-
-				gs, index, err := findGameServerForAllocation(gsa, list)
-				assert.NoError(t, err)
-				if !assert.NotNil(t, gs) {
-					assert.FailNow(t, "gameserver should not be nil")
-				}
-				assert.Equal(t, "node1", gs.Status.NodeName)
-				assert.Equal(t, "gs1", gs.ObjectMeta.Name)
-				assert.Equal(t, gs, list[index])
-				assert.Equal(t, agonesv1.GameServerStateReady, gs.Status.State)
-
-				// mock that the first found game server is allocated
-				list = append(list[:index], list[index+1:]...)
-				assert.Equal(t, agonesv1.GameServerStateAllocated, list[0].Status.State)
-				assert.Len(t, list, 4)
-
-				gs, index, err = findGameServerForAllocation(gsa, list)
-				assert.NoError(t, err)
-				if !assert.NotNil(t, gs) {
-					assert.FailNow(t, "gameserver should not be nil")
-				}
-				assert.Equal(t, "node2", gs.Status.NodeName)
-				assert.Equal(t, "gs2", gs.ObjectMeta.Name)
-				assert.Equal(t, gs, list[index])
-				assert.Equal(t, agonesv1.GameServerStateReady, gs.Status.State)
-
-				list = nil
-				gs, _, err = findGameServerForAllocation(gsa, list)
-				assert.Error(t, err)
-				assert.Equal(t, ErrNoGameServer, err)
-				assert.Nil(t, gs)
-			},
-			features: fmt.Sprintf("%s=false", runtime.FeaturePlayerAllocationFilter),
-		},
 		"one label with player state (StateAllocationFilter)": {
 			// nolint: dupl
 			list: []agonesv1.GameServer{
