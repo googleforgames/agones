@@ -23,12 +23,34 @@
 #     \_/ \__,_|_|  |_|\__,_|_.__/|_|\___|___/
 #
 
-REPOSITORY = us-docker.pkg.dev/agones-images/examples
+REPOSITORY ?=
+PROD_REPO ?= us-docker.pkg.dev/agones-images/examples
+
+WINDOWS_VERSIONS = ltsc2019 ltsc2022
+BUILDX_WINDOWS_BUILDER = windows-builder
+
+# Build with Windows support
+WITH_WINDOWS ?= 1
+
+# When pushing set to --push
+WINDOWS_DOCKER_PUSH_ARGS = --push
 
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_path := $(dir $(mkfile_path))
+ifeq ($(REPOSITORY),)
+	server_tag := xonotic-example:1.2
+else
+	server_tag := $(REPOSITORY)/xonotic-example:1.2
+endif
+
+server_tag_linux_amd64 = $(server_tag)-linux-amd64
+push_server_manifest = $(server_tag_linux_amd64)
 root_path := $(realpath $(project_path)/../..)
-image_tag = $(REPOSITORY)/xonotic-example:1.1
+
+
+ifeq ($(WITH_WINDOWS), 1)
+push_server_manifest += $(foreach windows_version, $(WINDOWS_VERSIONS), $(server_tag)-windows_amd64-$(windows_version))
+endif
 
 #   _____                    _
 #  |_   _|_ _ _ __ __ _  ___| |_ ___
@@ -37,18 +59,52 @@ image_tag = $(REPOSITORY)/xonotic-example:1.1
 #    |_|\__,_|_|  \__, |\___|\__|___/
 #                 |___/
 
-# Build a docker image for the server, and tag it
-build:
-	docker build -f $(project_path)/Dockerfile --tag=$(image_tag) .
+build: build-linux-image-amd64
+ifeq ($(WITH_WINDOWS), 1)
+build: $(foreach winver, $(WINDOWS_VERSIONS), build-windows-image-$(winver))
+endif
 
-# Push a docker image to the repository, and save it
-push: build
-	docker push $(image_tag)
+push: push-linux-image-amd64
+ifeq ($(WITH_WINDOWS), 1)
+push: push-windows-images
+endif
+	-docker manifest rm $(server_tag)
+	docker manifest create $(server_tag) $(push_server_manifest)
+	docker manifest push $(server_tag) --purge
+
+
+# Pushes all variants of the Windows images to the container image registry.
+push-linux-image-amd64: build
+	docker push $(server_tag_linux_amd64)
+
+# Pushes all variants of the Windows images to the container image registry.
+push-windows-images: $(foreach winver, $(WINDOWS_VERSIONS), push-windows-image-$(winver))
+
+# Pushes a specific version of Windows to a container image registry.
+push-windows-image-%:
+	$(MAKE) WINDOWS_DOCKER_PUSH_ARGS=--push build-windows-image-$*
+
+build-windows-image-%: ensure-windows-buildx
+	docker buildx build --platform windows/amd64 --builder $(BUILDX_WINDOWS_BUILDER) -f $(project_path)Dockerfile.windows \
+	--tag=$(server_tag)-windows_amd64-$* --build-arg WINDOWS_VERSION=$* . $(WINDOWS_DOCKER_PUSH_ARGS)
+
+ensure-windows-buildx:
+# Windows image builds must be directed to a specific buildx context.
+# The default context does not support building cross platform images.
+	-DOCKER_CLI_EXPERIMENTAL=enabled docker buildx create --name=$(BUILDX_WINDOWS_BUILDER) --use
+
+build-linux-image-amd64:
+	docker build -f $(project_path)/Dockerfile --tag=$(server_tag_linux_amd64) .
+
 
 # check if hosted on Google Artifact Registry
 gar-check:
-	gcloud container images describe $(image_tag)
+	gcloud container images describe $(PROD_REPO)/$(server_tag)
 
 #output the tag for this image
 echo-image-tag:
-	@echo $(image_tag)
+	@echo $(PROD_REPO)/$(server_tag)
+
+# build and push the xonotic image with specified tag
+cloud-build:
+	gcloud builds submit --config=cloudbuild.yaml

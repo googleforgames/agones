@@ -22,6 +22,7 @@ import (
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	"agones.dev/agones/pkg/util/runtime"
 	hashstructure "github.com/mitchellh/hashstructure/v2"
+	corev1 "k8s.io/api/core/v1"
 	apivalidation "k8s.io/apimachinery/pkg/api/validation"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	metav1validation "k8s.io/apimachinery/pkg/apis/meta/v1/validation"
@@ -474,6 +475,7 @@ type GameServerAllocationStatus struct {
 	GameServerName string                          `json:"gameServerName"`
 	Ports          []agonesv1.GameServerStatusPort `json:"ports,omitempty"`
 	Address        string                          `json:"address,omitempty"`
+	Addresses      []corev1.NodeAddress            `json:"addresses,omitempty"`
 	NodeName       string                          `json:"nodeName,omitempty"`
 	// If the allocation is from a remote cluster, Source is the endpoint of the remote agones-allocator.
 	// Otherwise, Source is "local"

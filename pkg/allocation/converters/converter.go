@@ -23,6 +23,7 @@ import (
 	"agones.dev/agones/pkg/util/runtime"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -297,6 +298,7 @@ func ConvertGSAToAllocationResponse(in *allocationv1.GameServerAllocation) (*pb.
 	return &pb.AllocationResponse{
 		GameServerName: in.Status.GameServerName,
 		Address:        in.Status.Address,
+		Addresses:      convertGSAAddressesToAllocationAddresses(in.Status.Addresses),
 		NodeName:       in.Status.NodeName,
 		Ports:          convertGSAAgonesPortsToAllocationPorts(in.Status.Ports),
 		Source:         in.Status.Source,
@@ -315,6 +317,7 @@ func ConvertAllocationResponseToGSA(in *pb.AllocationResponse, rs string) *alloc
 			State:          allocationv1.GameServerAllocationAllocated,
 			GameServerName: in.GameServerName,
 			Address:        in.Address,
+			Addresses:      convertAllocationAddressesToGSAAddresses(in.Addresses),
 			NodeName:       in.NodeName,
 			Ports:          convertAllocationPortsToGSAAgonesPorts(in.Ports),
 			Source:         rs,
@@ -324,6 +327,30 @@ func ConvertAllocationResponseToGSA(in *pb.AllocationResponse, rs string) *alloc
 	out.SetGroupVersionKind(allocationv1.SchemeGroupVersion.WithKind("GameServerAllocation"))
 
 	return out
+}
+
+// convertGSAAddressesToAllocationAddresses converts corev1.NodeAddress to AllocationResponse_GameServerStatusAddress
+func convertGSAAddressesToAllocationAddresses(in []corev1.NodeAddress) []*pb.AllocationResponse_GameServerStatusAddress {
+	var addresses []*pb.AllocationResponse_GameServerStatusAddress
+	for _, addr := range in {
+		addresses = append(addresses, &pb.AllocationResponse_GameServerStatusAddress{
+			Type:    string(addr.Type),
+			Address: addr.Address,
+		})
+	}
+	return addresses
+}
+
+// convertAllocationAddressesToGSAAddresses converts AllocationResponse_GameServerStatusAddress to corev1.NodeAddress
+func convertAllocationAddressesToGSAAddresses(in []*pb.AllocationResponse_GameServerStatusAddress) []corev1.NodeAddress {
+	var addresses []corev1.NodeAddress
+	for _, addr := range in {
+		addresses = append(addresses, corev1.NodeAddress{
+			Type:    corev1.NodeAddressType(addr.Type),
+			Address: addr.Address,
+		})
+	}
+	return addresses
 }
 
 // convertGSAAgonesPortsToAllocationPorts converts GameServerStatusPort V1 (GSA) to AllocationResponse_GameServerStatusPort
