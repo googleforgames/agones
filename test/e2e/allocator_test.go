@@ -107,7 +107,6 @@ func TestAllocatorWithDeprecatedRequired(t *testing.T) {
 
 		// let's do a re-allocation
 		if runtime.FeatureEnabled(runtime.FeaturePlayerAllocationFilter) {
-			logrus.Info("testing state allocation filter")
 			// nolint:staticcheck
 			request.PreferredGameServerSelectors[0].GameServerState = pb.GameServerSelector_ALLOCATED
 			allocatedResponse, err := grpcClient.Allocate(context.Background(), request)
@@ -202,7 +201,6 @@ func TestAllocatorWithSelectors(t *testing.T) {
 
 		// let's do a re-allocation
 		if runtime.FeatureEnabled(runtime.FeaturePlayerAllocationFilter) {
-			logrus.Info("testing state allocation filter")
 			request.GameServerSelectors[0].GameServerState = pb.GameServerSelector_ALLOCATED
 			allocatedResponse, err := grpcClient.Allocate(context.Background(), request)
 			require.NoError(t, err)
