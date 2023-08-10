@@ -30,7 +30,7 @@ import (
 	k8stesting "k8s.io/client-go/testing"
 )
 
-func TestSortGameServersByLeastFullNodes(t *testing.T) {
+func TestSortGameServersByPackedStrategy(t *testing.T) {
 	t.Parallel()
 
 	utilruntime.FeatureTestMutex.Lock()
@@ -94,7 +94,7 @@ func TestSortGameServersByLeastFullNodes(t *testing.T) {
 		Order: "Descending",
 	}}
 
-	result := sortGameServersByLeastFullNodes(list, nc, priorities)
+	result := sortGameServersByPackedStrategy(list, nc, priorities)
 
 	require.Len(t, result, len(list))
 	assert.Equal(t, "g2", result[0].ObjectMeta.Name)
@@ -116,7 +116,7 @@ func TestSortGameServersByLeastFullNodes(t *testing.T) {
 		Order: "Ascending",
 	}}
 
-	result = sortGameServersByLeastFullNodes(list, nc, priorities)
+	result = sortGameServersByPackedStrategy(list, nc, priorities)
 
 	require.Len(t, result, len(list))
 	assert.Equal(t, "g2", result[0].ObjectMeta.Name)
@@ -133,7 +133,7 @@ func TestSortGameServersByLeastFullNodes(t *testing.T) {
 	assert.Equal(t, "g8", result[11].ObjectMeta.Name)
 }
 
-func TestSortGameServersByNewFirst(t *testing.T) {
+func TestSortGameServersByDistributedStrategy(t *testing.T) {
 	t.Parallel()
 
 	utilruntime.FeatureTestMutex.Lock()
@@ -201,7 +201,7 @@ func TestSortGameServersByNewFirst(t *testing.T) {
 	for testName, testScenario := range testScenarios {
 		t.Run(testName, func(t *testing.T) {
 
-			result := sortGameServersByNewFirst(testScenario.list, testScenario.priorities)
+			result := sortGameServersByDistributedStrategy(testScenario.list, testScenario.priorities)
 			assert.Equal(t, testScenario.want, result)
 		})
 	}

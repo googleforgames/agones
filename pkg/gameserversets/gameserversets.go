@@ -44,14 +44,14 @@ func loggerForGameServerSet(log *logrus.Entry, gsSet *agonesv1.GameServerSet) *l
 // SortGameServersByStrategy will sort by least full nodes when Packed, and newest first when Distributed
 func SortGameServersByStrategy(strategy apis.SchedulingStrategy, list []*agonesv1.GameServer, counts map[string]gameservers.NodeCount, priorities []agonesv1.Priority) []*agonesv1.GameServer {
 	if strategy == apis.Packed {
-		return sortGameServersByLeastFullNodes(list, counts, priorities)
+		return sortGameServersByPackedStrategy(list, counts, priorities)
 	}
-	return sortGameServersByNewFirst(list, priorities)
+	return sortGameServersByDistributedStrategy(list, priorities)
 }
 
-// SortGameServersByLeastFullNodes sorts the list of gameservers by which gameservers reside on the least full nodes
+// sortGameServersByPackedStrategy sorts the list of gameservers by which gameservers reside on the least full nodes
 // Performs a tie-breaking sort if nodes are equally full on CountsAndLists Priorities.
-func sortGameServersByLeastFullNodes(list []*agonesv1.GameServer, count map[string]gameservers.NodeCount, priorities []agonesv1.Priority) []*agonesv1.GameServer {
+func sortGameServersByPackedStrategy(list []*agonesv1.GameServer, count map[string]gameservers.NodeCount, priorities []agonesv1.Priority) []*agonesv1.GameServer {
 	sort.Slice(list, func(i, j int) bool {
 		a := list[i]
 		b := list[j]
@@ -120,9 +120,9 @@ func sortGameServersByLeastFullNodes(list []*agonesv1.GameServer, count map[stri
 	return list
 }
 
-// sortGameServersByNewFirst sorts by newest gameservers first.
+// sortGameServersByDistributedStrategy sorts by newest gameservers first.
 // If FeatureCountsAndLists is enabled, sort by Priority first, then tie break with newest gameservers.
-func sortGameServersByNewFirst(list []*agonesv1.GameServer, priorities []agonesv1.Priority) []*agonesv1.GameServer {
+func sortGameServersByDistributedStrategy(list []*agonesv1.GameServer, priorities []agonesv1.Priority) []*agonesv1.GameServer {
 	sort.Slice(list, func(i, j int) bool {
 		a := list[i]
 		b := list[j]
@@ -148,7 +148,7 @@ func sortGameServersByNewFirst(list []*agonesv1.GameServer, priorities []agonesv
 				}
 			}
 		}
-		// TODO: Do we still want to keep this as the tie-breaker?
+
 		return a.ObjectMeta.CreationTimestamp.Before(&b.ObjectMeta.CreationTimestamp)
 	})
 
