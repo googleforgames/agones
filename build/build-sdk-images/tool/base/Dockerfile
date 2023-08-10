@@ -14,7 +14,7 @@
 
 
 #
-# Base images for SDKs Bump: 2
+# Base images for SDKs Bump: 3
 #
 
 FROM debian:bullseye
