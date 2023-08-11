@@ -42,8 +42,8 @@ func TestConvertAllocationRequestToGameServerAllocation(t *testing.T) {
 		want     *allocationv1.GameServerAllocation
 	}{
 		{
-			name:     "all fields are set (StateAllocationFilter, PlayerAllocationFilter, CountsAndListsFilter)",
-			features: fmt.Sprintf("%s=true&%s=true&%s=true", runtime.FeaturePlayerAllocationFilter, runtime.FeatureStateAllocationFilter, runtime.FeatureCountsAndLists),
+			name:     "all fields are set (PlayerAllocationFilter, CountsAndListsFilter)",
+			features: fmt.Sprintf("%s=true&%s=true", runtime.FeaturePlayerAllocationFilter, runtime.FeatureCountsAndLists),
 			in: &pb.AllocationRequest{
 				Namespace: "ns",
 				MultiClusterSetting: &pb.MultiClusterSetting{
@@ -217,7 +217,7 @@ func TestConvertAllocationRequestToGameServerAllocation(t *testing.T) {
 		},
 		{
 			name:     "all fields are set",
-			features: fmt.Sprintf("%s=false&%s=false&%s=false", runtime.FeaturePlayerAllocationFilter, runtime.FeatureStateAllocationFilter, runtime.FeatureCountsAndLists),
+			features: fmt.Sprintf("%s=false&%s=false", runtime.FeaturePlayerAllocationFilter, runtime.FeatureCountsAndLists),
 			in: &pb.AllocationRequest{
 				Namespace: "ns",
 				MultiClusterSetting: &pb.MultiClusterSetting{
@@ -281,7 +281,9 @@ func TestConvertAllocationRequestToGameServerAllocation(t *testing.T) {
 						MatchLabels: map[string]string{
 							"c": "d",
 						},
-					}},
+					},
+						GameServerState: &ready,
+					},
 					Preferred: []allocationv1.GameServerSelector{
 						{
 							LabelSelector: metav1.LabelSelector{
@@ -289,6 +291,7 @@ func TestConvertAllocationRequestToGameServerAllocation(t *testing.T) {
 									"e": "f",
 								},
 							},
+							GameServerState: &ready,
 						},
 						{
 							LabelSelector: metav1.LabelSelector{
@@ -296,6 +299,7 @@ func TestConvertAllocationRequestToGameServerAllocation(t *testing.T) {
 									"g": "h",
 								},
 							},
+							GameServerState: &ready,
 						},
 					},
 					Selectors: []allocationv1.GameServerSelector{
@@ -305,6 +309,7 @@ func TestConvertAllocationRequestToGameServerAllocation(t *testing.T) {
 									"m": "n",
 								},
 							},
+							GameServerState: &ready,
 						},
 					},
 					Scheduling: apis.Packed,
@@ -318,7 +323,7 @@ func TestConvertAllocationRequestToGameServerAllocation(t *testing.T) {
 		},
 		{
 			name:     "empty fields to GSA",
-			features: fmt.Sprintf("%s=false&%s=false&%s=false", runtime.FeaturePlayerAllocationFilter, runtime.FeatureStateAllocationFilter, runtime.FeatureCountsAndLists),
+			features: fmt.Sprintf("%s=false&%s=false", runtime.FeaturePlayerAllocationFilter, runtime.FeatureCountsAndLists),
 			in: &pb.AllocationRequest{
 				Namespace:                    "",
 				MultiClusterSetting:          &pb.MultiClusterSetting{},
@@ -336,12 +341,15 @@ func TestConvertAllocationRequestToGameServerAllocation(t *testing.T) {
 						Enabled: false,
 					},
 					Scheduling: apis.Distributed,
+					Required: allocationv1.GameServerSelector{
+						GameServerState: &ready,
+					},
 				},
 			},
 		},
 		{
-			name:     "empty fields to GSA (StateAllocationFilter, PlayerAllocationFilter, CountsAndListsFilter)",
-			features: fmt.Sprintf("%s=true&%s=true&%s=true", runtime.FeaturePlayerAllocationFilter, runtime.FeatureStateAllocationFilter, runtime.FeatureCountsAndLists),
+			name:     "empty fields to GSA (PlayerAllocationFilter, CountsAndListsFilter)",
+			features: fmt.Sprintf("%s=true&%s=true", runtime.FeaturePlayerAllocationFilter, runtime.FeatureCountsAndLists),
 			in: &pb.AllocationRequest{
 				Namespace:                    "",
 				MultiClusterSetting:          &pb.MultiClusterSetting{},
@@ -367,7 +375,7 @@ func TestConvertAllocationRequestToGameServerAllocation(t *testing.T) {
 		},
 		{
 			name:     "empty fields to GSA with selectors fields",
-			features: fmt.Sprintf("%s=false&%s=false&%s=false", runtime.FeaturePlayerAllocationFilter, runtime.FeatureStateAllocationFilter, runtime.FeatureCountsAndLists),
+			features: fmt.Sprintf("%s=false&%s=false", runtime.FeaturePlayerAllocationFilter, runtime.FeatureCountsAndLists),
 			in: &pb.AllocationRequest{
 				Namespace:           "",
 				MultiClusterSetting: &pb.MultiClusterSetting{},
@@ -383,14 +391,16 @@ func TestConvertAllocationRequestToGameServerAllocation(t *testing.T) {
 					MultiClusterSetting: allocationv1.MultiClusterSetting{
 						Enabled: false,
 					},
-					Selectors:  []allocationv1.GameServerSelector{{}},
+					Selectors: []allocationv1.GameServerSelector{{
+						GameServerState: &ready,
+					}},
 					Scheduling: apis.Distributed,
 				},
 			},
 		},
 		{
-			name:     "empty fields to GSA (StateAllocationFilter, PlayerAllocationFilter, CountsAndListsFilter) with selectors fields",
-			features: fmt.Sprintf("%s=true&%s=true&%s=true", runtime.FeaturePlayerAllocationFilter, runtime.FeatureStateAllocationFilter, runtime.FeatureCountsAndLists),
+			name:     "empty fields to GSA (PlayerAllocationFilter, CountsAndListsFilter) with selectors fields",
+			features: fmt.Sprintf("%s=true&%s=true", runtime.FeaturePlayerAllocationFilter, runtime.FeatureCountsAndLists),
 			in: &pb.AllocationRequest{
 				Namespace:           "",
 				MultiClusterSetting: &pb.MultiClusterSetting{},
@@ -501,8 +511,8 @@ func TestConvertAllocationRequestToGameServerAllocation(t *testing.T) {
 			},
 		},
 		{
-			name:     "partially empty Counters and Lists fields to GSA (StateAllocationFilter, PlayerAllocationFilter, CountsAndListsFilter)",
-			features: fmt.Sprintf("%s=true&%s=true&%s=true", runtime.FeaturePlayerAllocationFilter, runtime.FeatureStateAllocationFilter, runtime.FeatureCountsAndLists),
+			name:     "partially empty Counters and Lists fields to GSA (PlayerAllocationFilter, CountsAndListsFilter)",
+			features: fmt.Sprintf("%s=true&%s=true", runtime.FeaturePlayerAllocationFilter, runtime.FeatureCountsAndLists),
 			in: &pb.AllocationRequest{
 				Namespace:                    "",
 				MultiClusterSetting:          &pb.MultiClusterSetting{},
