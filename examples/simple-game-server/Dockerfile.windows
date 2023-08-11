@@ -20,19 +20,19 @@
 # Build Stage
 ARG WINDOWS_VERSION=ltsc2019
 
-FROM golang:1.20.4-windowsservercore as builder
-SHELL ["powershell", "-command"]
+FROM --platform=linux/amd64 golang:1.20.4 as base
 
 WORKDIR /gopath/src
-COPY . agones.dev/agones
+COPY . /gopath/src/
+RUN dir
 
-WORKDIR /gopath/src/agones.dev/agones/examples/simple-game-server
 RUN GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -o bin/simple-game-server.exe main.go
 
 FROM mcr.microsoft.com/windows/servercore:${WINDOWS_VERSION}
 WORKDIR /
+RUN dir
 
-COPY --from=builder /gopath/src/examples/simple-game-server/bin/simple-game-server.exe /server
+COPY --from=base /gopath/src/agones.dev/agones/bin/simple-game-server.exe /server
 
 EXPOSE 7654
 USER ContainerUser
