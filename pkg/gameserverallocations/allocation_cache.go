@@ -262,8 +262,6 @@ func (c *AllocationCache) ListSortedGameServersPriorities(gsa *allocationv1.Game
 		gs1 := list[i]
 		gs2 := list[j]
 
-		// TODO: Should we add FeatureStateAllocationFilter here too?
-
 		if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) && (gsa != nil) {
 			for _, priority := range gsa.Spec.Priorities {
 				res := compareGameServers(&priority, gs1, gs2)
