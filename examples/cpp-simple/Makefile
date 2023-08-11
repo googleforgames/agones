@@ -28,7 +28,7 @@ REPOSITORY = us-docker.pkg.dev/agones-images/examples
 # Directory that this Makefile is in.
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_path := $(dir $(mkfile_path))
-server_tag = $(REPOSITORY)/cpp-simple-server:0.15
+server_tag = $(REPOSITORY)/cpp-simple-server:0.16
 root_path = $(realpath $(project_path)/../..)
 
 #   _____                    _
