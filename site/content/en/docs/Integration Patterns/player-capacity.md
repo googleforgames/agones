@@ -7,10 +7,17 @@ description: >
   Find a `GameServer` that has room for a specific number of players.
 ---
 
+{{% feature expiryVersion="1.34.0" %}}
 {{< alpha
 title="Player Tracking and Allocation Player Filter"
 gate="PlayerTracking,PlayerAllocationFilter" >}}
 {{< beta title="Allocation State Filter" gate="StateAllocationFilter" >}}
+{{% /feature %}}
+{{% feature publishVersion="1.34.0" %}}
+{{< alpha
+title="Player Tracking and Allocation Player Filter"
+gate="PlayerTracking,PlayerAllocationFilter" >}}
+{{% /feature %}}
 
 Using this approach, we are able to be able to make a request that is akin to: "Find me a `GameServer` that is already
 allocated, with room for _n_ number of players, and if one is not available, allocate me a `Ready` `GameServer`".

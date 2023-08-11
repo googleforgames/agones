@@ -18,7 +18,6 @@
 PodHostname: true
 ResetMetricsOnDelete: true
 SplitControllerAndExtensions: true
-StateAllocationFilter: true
 
 # Alpha features
 PlayerAllocationFilter: false
