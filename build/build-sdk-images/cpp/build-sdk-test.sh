@@ -32,10 +32,10 @@ has already built - using cached version. \
 Use make clean-sdk-conformance-tests if you want to start from scratch"
 fi
 cd $DIR/sdk/.build
-cmake --build .  --target install
+cmake --build .  --target install -j$(nproc)
 cd $DIR && mkdir -p .build && cd .build
 cmake .. -G "Unix Makefiles" \
    -DCMAKE_PREFIX_PATH=$DIR/sdk/.build \
    -Dagones_DIR=$DIR/sdk/.build/agones/cmake \
    -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=.bin
-cmake --build . --target install
+cmake --build . --target install -j$(nproc)
