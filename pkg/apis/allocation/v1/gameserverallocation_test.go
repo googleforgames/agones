@@ -41,7 +41,7 @@ func TestGameServerAllocationApplyDefaults(t *testing.T) {
 
 	runtime.FeatureTestMutex.Lock()
 	defer runtime.FeatureTestMutex.Unlock()
-	assert.NoError(t, runtime.ParseFeatures(fmt.Sprintf("%s=true&%s=true&%s=true", runtime.FeaturePlayerAllocationFilter, runtime.FeatureStateAllocationFilter, runtime.FeatureCountsAndLists)))
+	assert.NoError(t, runtime.ParseFeatures(fmt.Sprintf("%s=true&%s=true", runtime.FeaturePlayerAllocationFilter, runtime.FeatureCountsAndLists)))
 
 	gsa = &GameServerAllocation{}
 	gsa.ApplyDefaults()
@@ -114,9 +114,8 @@ func TestGameServerSelectorApplyDefaults(t *testing.T) {
 	runtime.FeatureTestMutex.Lock()
 	defer runtime.FeatureTestMutex.Unlock()
 
-	assert.NoError(t, runtime.ParseFeatures(fmt.Sprintf("%s=true&%s=true&%s=true",
+	assert.NoError(t, runtime.ParseFeatures(fmt.Sprintf("%s=true&%s=true",
 		runtime.FeaturePlayerAllocationFilter,
-		runtime.FeatureStateAllocationFilter,
 		runtime.FeatureCountsAndLists)))
 
 	s := &GameServerSelector{}
@@ -156,7 +155,7 @@ func TestGameServerSelectorValidate(t *testing.T) {
 	runtime.FeatureTestMutex.Lock()
 	defer runtime.FeatureTestMutex.Unlock()
 
-	assert.NoError(t, runtime.ParseFeatures(fmt.Sprintf("%s=true&%s=true&%s=true", runtime.FeaturePlayerAllocationFilter, runtime.FeatureStateAllocationFilter, runtime.FeatureCountsAndLists)))
+	assert.NoError(t, runtime.ParseFeatures(fmt.Sprintf("%s=true&%s=true", runtime.FeaturePlayerAllocationFilter, runtime.FeatureCountsAndLists)))
 
 	allocated := agonesv1.GameServerStateAllocated
 	starting := agonesv1.GameServerStateStarting
@@ -441,7 +440,6 @@ func TestGameServerSelectorMatches(t *testing.T) {
 			matches: false,
 		},
 		"state filter, pass": {
-			features: string(runtime.FeatureStateAllocationFilter) + "=true",
 			selector: &GameServerSelector{
 				GameServerState: &allocatedState,
 			},
@@ -449,7 +447,6 @@ func TestGameServerSelectorMatches(t *testing.T) {
 			matches:    true,
 		},
 		"state filter, fail": {
-			features: string(runtime.FeatureStateAllocationFilter) + "=true",
 			selector: &GameServerSelector{
 				GameServerState: &allocatedState,
 			},
@@ -511,7 +508,7 @@ func TestGameServerSelectorMatches(t *testing.T) {
 			matches: true,
 		},
 		"combo": {
-			features: string(runtime.FeaturePlayerAllocationFilter) + "=true&" + string(runtime.FeatureStateAllocationFilter) + "=true",
+			features: string(runtime.FeaturePlayerAllocationFilter) + "=true&",
 			selector: &GameServerSelector{
 				LabelSelector: metav1.LabelSelector{
 					MatchLabels: map[string]string{"colour": "blue"},
@@ -1060,7 +1057,7 @@ func TestGameServerAllocationValidate(t *testing.T) {
 
 	runtime.FeatureTestMutex.Lock()
 	defer runtime.FeatureTestMutex.Unlock()
-	assert.NoError(t, runtime.ParseFeatures(fmt.Sprintf("%s=true&%s=true", runtime.FeaturePlayerAllocationFilter, runtime.FeatureStateAllocationFilter)))
+	assert.NoError(t, runtime.ParseFeatures(fmt.Sprintf("%s=true", runtime.FeaturePlayerAllocationFilter)))
 
 	// invalid player selection
 	gsa = &GameServerAllocation{
