@@ -25,6 +25,7 @@ import (
 
 	"agones.dev/agones/pkg/allocation/converters"
 	pb "agones.dev/agones/pkg/allocation/go"
+	"agones.dev/agones/pkg/apis"
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
 	multiclusterv1 "agones.dev/agones/pkg/apis/multicluster/v1"
@@ -532,7 +533,12 @@ func (c *Allocator) ListenAndAllocate(ctx context.Context, updateWorkerCount int
 			requestCount++
 
 			if list == nil {
-				list = c.allocationCache.ListSortedGameServers(req.gsa)
+				if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) || req.gsa.Spec.Scheduling == apis.Packed {
+					list = c.allocationCache.ListSortedGameServers(req.gsa)
+				} else {
+					// If FeatureCountsAndLists and Scheduling == Distributed, sort game servers by Priorities
+					list = c.allocationCache.ListSortedGameServersPriorities(req.gsa)
+				}
 			}
 
 			gs, index, err := findGameServerForAllocation(req.gsa, list)

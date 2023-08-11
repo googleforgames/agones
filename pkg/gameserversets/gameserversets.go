@@ -44,14 +44,14 @@ func loggerForGameServerSet(log *logrus.Entry, gsSet *agonesv1.GameServerSet) *l
 // SortGameServersByStrategy will sort by least full nodes when Packed, and newest first when Distributed
 func SortGameServersByStrategy(strategy apis.SchedulingStrategy, list []*agonesv1.GameServer, counts map[string]gameservers.NodeCount, priorities []agonesv1.Priority) []*agonesv1.GameServer {
 	if strategy == apis.Packed {
-		return sortGameServersByLeastFullNodes(list, counts, priorities)
+		return sortGameServersByPackedStrategy(list, counts, priorities)
 	}
-	return sortGameServersByNewFirst(list)
+	return sortGameServersByDistributedStrategy(list, priorities)
 }
 
-// SortGameServersByLeastFullNodes sorts the list of gameservers by which gameservers reside on the least full nodes
+// sortGameServersByPackedStrategy sorts the list of gameservers by which gameservers reside on the least full nodes
 // Performs a tie-breaking sort if nodes are equally full on CountsAndLists Priorities.
-func sortGameServersByLeastFullNodes(list []*agonesv1.GameServer, count map[string]gameservers.NodeCount, priorities []agonesv1.Priority) []*agonesv1.GameServer {
+func sortGameServersByPackedStrategy(list []*agonesv1.GameServer, count map[string]gameservers.NodeCount, priorities []agonesv1.Priority) []*agonesv1.GameServer {
 	sort.Slice(list, func(i, j int) bool {
 		a := list[i]
 		b := list[j]
@@ -87,7 +87,7 @@ func sortGameServersByLeastFullNodes(list []*agonesv1.GameServer, count map[stri
 		}
 
 		// if the Nodes have the same count and CountsAndLists flag is enabled, sort based on CountsAndLists Priorities.
-		if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) && (priorities != nil) {
+		if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
 			for _, priority := range priorities {
 				res := compareGameServerCapacity(&priority, a, b)
 				switch priority.Order {
@@ -120,13 +120,34 @@ func sortGameServersByLeastFullNodes(list []*agonesv1.GameServer, count map[stri
 	return list
 }
 
-// sortGameServersByNewFirst sorts by newest gameservers first, and returns them
-func sortGameServersByNewFirst(list []*agonesv1.GameServer) []*agonesv1.GameServer {
+// sortGameServersByDistributedStrategy sorts by newest gameservers first.
+// If FeatureCountsAndLists is enabled, sort by Priority first, then tie break with newest gameservers.
+func sortGameServersByDistributedStrategy(list []*agonesv1.GameServer, priorities []agonesv1.Priority) []*agonesv1.GameServer {
 	sort.Slice(list, func(i, j int) bool {
 		a := list[i]
 		b := list[j]
 
-		// TODO: Sort by Priority First, then tie break with NewFirst
+		if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
+			for _, priority := range priorities {
+				res := compareGameServerCapacity(&priority, a, b)
+				switch priority.Order {
+				case agonesv1.GameServerPriorityAscending:
+					if res == -1 {
+						return true
+					}
+					if res == 1 {
+						return false
+					}
+				case agonesv1.GameServerPriorityDescending:
+					if res == -1 {
+						return false
+					}
+					if res == 1 {
+						return true
+					}
+				}
+			}
+		}
 
 		return a.ObjectMeta.CreationTimestamp.Before(&b.ObjectMeta.CreationTimestamp)
 	})
