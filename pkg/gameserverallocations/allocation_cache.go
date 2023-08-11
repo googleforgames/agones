@@ -250,6 +250,47 @@ func (c *AllocationCache) ListSortedGameServers(gsa *allocationv1.GameServerAllo
 	return list
 }
 
+// ListSortedGameServersPriorities sorts and returns a list of game servers based on the
+// list of Priorities.
+func (c *AllocationCache) ListSortedGameServersPriorities(gsa *allocationv1.GameServerAllocation) []*agonesv1.GameServer {
+	list := c.getGameServers()
+	if list == nil {
+		return []*agonesv1.GameServer{}
+	}
+
+	sort.Slice(list, func(i, j int) bool {
+		gs1 := list[i]
+		gs2 := list[j]
+
+		if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) && (gsa != nil) {
+			for _, priority := range gsa.Spec.Priorities {
+				res := compareGameServers(&priority, gs1, gs2)
+				switch priority.Order {
+				case agonesv1.GameServerPriorityAscending:
+					if res == -1 {
+						return true
+					}
+					if res == 1 {
+						return false
+					}
+				case agonesv1.GameServerPriorityDescending:
+					if res == -1 {
+						return false
+					}
+					if res == 1 {
+						return true
+					}
+				}
+			}
+		}
+
+		// finally sort lexicographically, so we have a stable order
+		return gs1.GetObjectMeta().GetName() < gs2.GetObjectMeta().GetName()
+	})
+
+	return list
+}
+
 // compareGameServers compares two game servers based on a CountsAndLists Priority using available
 // capacity (Capacity - Count for Counters, and Capacity - len(Values) for Lists) as the comparison.
 // Returns -1 if gs1 < gs2; 1 if gs1 > gs2; 0 if gs1 == gs2; 0 if neither gamer server has the Priority.
