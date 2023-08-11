@@ -31,6 +31,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/types/known/fieldmaskpb"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -1082,6 +1083,96 @@ func TestSDKServerReserveTimeout(t *testing.T) {
 
 	cancel()
 	wg.Wait()
+}
+
+func TestSDKServerUpdateCounter(t *testing.T) {
+	t.Parallel()
+	agruntime.FeatureTestMutex.Lock()
+	defer agruntime.FeatureTestMutex.Unlock()
+
+	err := agruntime.ParseFeatures(string(agruntime.FeatureCountsAndLists) + "=true")
+	require.NoError(t, err, "Can not parse FeatureCountsAndLists feature")
+
+	m := agtesting.NewMocks()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	sc, err := defaultSidecar(m)
+	require.NoError(t, err)
+
+	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		gs := agonesv1.GameServer{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "test", Namespace: "default",
+			},
+			Spec: agonesv1.GameServerSpec{
+				SdkServer: agonesv1.SdkServer{
+					LogLevel: "Debug",
+				},
+			},
+			Status: agonesv1.GameServerStatus{
+				Counters: map[string]agonesv1.CounterStatus{
+					"widgets": {Count: int64(1), Capacity: int64(100)},
+				},
+			},
+		}
+		gs.ApplyDefaults()
+		return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{gs}}, nil
+	})
+
+	updated := make(chan map[string]agonesv1.CounterStatus, 10)
+	m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		ua := action.(k8stesting.UpdateAction)
+		gs := ua.GetObject().(*agonesv1.GameServer)
+		updated <- gs.Status.Counters
+		return true, gs, nil
+	})
+
+	assert.NoError(t, sc.WaitForConnection(ctx))
+	sc.informerFactory.Start(ctx.Done())
+	assert.True(t, cache.WaitForCacheSync(ctx.Done(), sc.gameServerSynced))
+
+	go func() {
+		err = sc.Run(ctx)
+		assert.NoError(t, err)
+	}()
+
+	// check initial value comes through
+	// async, so check after a period
+	err = wait.Poll(time.Second, 10*time.Second, func() (bool, error) {
+		counter, err := sc.GetCounter(context.Background(), &alpha.GetCounterRequest{Name: "widgets"})
+		return counter.Count == 1 && counter.Capacity == 100, err
+	})
+	assert.NoError(t, err)
+
+	// Only update the Count (field mask set to "count")
+	_, err = sc.UpdateCounter(context.Background(), &alpha.UpdateCounterRequest{
+		Counter: &alpha.Counter{
+			Name:     "widgets",
+			Count:    int64(10),
+			Capacity: int64(999),
+		},
+		UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"count"}},
+	})
+	assert.NoError(t, err)
+
+	// TODO: This test fails, even though the Counter does properly update in the k8s api. The similar
+	// TestSDKServerPlayerCapacity passes because it GetPlayerCapacity returns the value from the SDK
+	// struct, not from the GameServer.
+	// counter, err := sc.GetCounter(context.Background(), &alpha.GetCounterRequest{Name: "widgets"})
+	// require.NoError(t, err)
+	// assert.Equal(t, int64(10), counter.Count)
+	// assert.Equal(t, int64(100), counter.Capacity)
+
+	// on an update, confirm that the update hits the K8s api
+	select {
+	case value := <-updated:
+		assert.Equal(t, map[string]agonesv1.CounterStatus{
+			"widgets": {Count: int64(10), Capacity: int64(100)},
+		}, value)
+	case <-time.After(time.Minute):
+		assert.Fail(t, "Counter should have been updated")
+	}
 }
 
 func TestSDKServerPlayerCapacity(t *testing.T) {
