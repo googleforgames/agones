@@ -18,12 +18,6 @@ RUN apt-get --allow-releaseinfo-change update && \
     apt-get install -y zip wget clang-format && \
     apt-get clean
 
-RUN wget -q https://cmake.org/files/v3.14/cmake-3.14.1-Linux-x86_64.sh -O /cmake-3.14.1-Linux-x86_64.sh
-RUN mkdir /opt/cmake
-RUN sh /cmake-3.14.1-Linux-x86_64.sh --prefix=/opt/cmake --skip-license
-RUN ln -s /opt/cmake/bin/cmake /usr/local/bin/cmake
-RUN cmake --version
-
 WORKDIR /go/src/agones.dev/agones
 
 # code generation scripts

@@ -12,27 +12,31 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM gcc:9 as builder
+FROM debian:bullseye as builder
+
+RUN apt-get update && apt-get install -y \
+  build-essential autoconf libtool git pkg-config \
+  automake libtool curl make g++ unzip moreutils cmake \
+  && apt-get clean
 
 WORKDIR /project
 
-RUN wget -q https://cmake.org/files/v3.14/cmake-3.14.1-Linux-x86_64.sh -O /cmake-3.14.1-Linux-x86_64.sh
-RUN mkdir /opt/cmake
-RUN sh /cmake-3.14.1-Linux-x86_64.sh --prefix=/opt/cmake --skip-license
-RUN ln -s /opt/cmake/bin/cmake /usr/local/bin/cmake
-RUN cmake --version
-
 COPY ./sdks/cpp sdk
-RUN cd sdk && mkdir -p .build && \
+RUN cd sdk &&  \
+    mkdir -p .build && \
     cd .build && \
-    cmake .. -DCMAKE_BUILD_TYPE=Release -DAGONES_SILENT_OUTPUT=ON -G "Unix Makefiles" -Wno-dev && \
-    cmake --build . --target install
+    cmake .. -DCMAKE_BUILD_TYPE=Release -DAGONES_SILENT_OUTPUT=OFF -DCMAKE_INSTALL_PREFIX=/project/sdk/.build \
+             -DAGONES_THIRDPARTY_INSTALL_PATH=/project/sdk/.build -G "Unix Makefiles" -Wno-dev && \
+    cmake --build . --target install -j$(nproc)
 
 COPY ./examples/cpp-simple cpp-simple
-RUN cd cpp-simple && mkdir -p .build && \
-    cd .build && \
-    cmake .. -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=.bin && \
-    cmake --build . --target install
+RUN cd cpp-simple && mkdir -p .build && cd .build && \
+    cmake .. -G "Unix Makefiles" \
+       -DCMAKE_BUILD_TYPE=Release \
+       -DCMAKE_PREFIX_PATH=/project/sdk/.build \
+       -Dagones_DIR=/project/sdk/.build/agones/cmake \
+       -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=.bin && \
+    cmake --build . --target install -j$(nproc)
 
 FROM debian:bullseye
 RUN useradd -u 1000 -m server

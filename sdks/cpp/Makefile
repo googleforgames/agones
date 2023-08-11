@@ -27,7 +27,7 @@ build:
 	-mkdir $(build_path)
 	-mkdir $(archive_path)
 	cd $(build_path) && cmake .. -DCMAKE_BUILD_TYPE=Release -DAGONES_SILENT_OUTPUT=ON -G "Unix Makefiles" -Wno-dev -DCMAKE_INSTALL_PREFIX=.install
-	cd $(build_path) && cmake --build . --target install -- -s
+	cd $(build_path) && cmake --build . --target install -j$$(nproc) -- -s
     
 verify:
 	cd $(build_path)/clang-format && cmake . -DAGONES_SILENT_OUTPUT=ON
