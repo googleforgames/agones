@@ -36,8 +36,10 @@ import (
 	"agones.dev/agones/pkg/util/logfields"
 	"agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/workerqueue"
+	"github.com/mennanov/fmutils"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"google.golang.org/protobuf/proto"
 	corev1 "k8s.io/api/core/v1"
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -55,12 +57,13 @@ import (
 type Operation string
 
 const (
-	updateState             Operation     = "updateState"
-	updateLabel             Operation     = "updateLabel"
-	updateAnnotation        Operation     = "updateAnnotation"
-	updatePlayerCapacity    Operation     = "updatePlayerCapacity"
-	updateConnectedPlayers  Operation     = "updateConnectedPlayers"
-	playerCountUpdatePeriod time.Duration = time.Second
+	updateState            Operation     = "updateState"
+	updateLabel            Operation     = "updateLabel"
+	updateAnnotation       Operation     = "updateAnnotation"
+	updatePlayerCapacity   Operation     = "updatePlayerCapacity"
+	updateConnectedPlayers Operation     = "updateConnectedPlayers"
+	updateCounters         Operation     = "updateCounters"
+	updatePeriod           time.Duration = time.Second
 )
 
 var (
@@ -105,6 +108,7 @@ type SDKServer struct {
 	gsReserveDuration   *time.Duration
 	gsPlayerCapacity    int64
 	gsConnectedPlayers  []string
+	gsCounterUpdates    map[string]agonesv1.CounterStatus
 }
 
 // NewSDKServer creates a SDKServer that sets up an
@@ -311,6 +315,8 @@ func (s *SDKServer) syncGameServer(ctx context.Context, key string) error {
 		return s.updatePlayerCapacity(ctx)
 	case updateConnectedPlayers:
 		return s.updateConnectedPlayers(ctx)
+	case updateCounters:
+		return s.updateCounter(ctx)
 	}
 
 	return errors.Errorf("could not sync game server key: %s", key)
@@ -644,7 +650,7 @@ func (s *SDKServer) PlayerConnect(ctx context.Context, id *alpha.PlayerID) (*alp
 
 	// let's retain the original order, as it should be a smaller patch on data change
 	s.gsConnectedPlayers = append(s.gsConnectedPlayers, id.PlayerID)
-	s.workerqueue.EnqueueAfter(cache.ExplicitKey(string(updateConnectedPlayers)), playerCountUpdatePeriod)
+	s.workerqueue.EnqueueAfter(cache.ExplicitKey(string(updateConnectedPlayers)), updatePeriod)
 
 	return &alpha.Bool{Bool: true}, nil
 }
@@ -674,7 +680,7 @@ func (s *SDKServer) PlayerDisconnect(ctx context.Context, id *alpha.PlayerID) (*
 
 	// let's retain the original order, as it should be a smaller patch on data change
 	s.gsConnectedPlayers = append(s.gsConnectedPlayers[:found], s.gsConnectedPlayers[found+1:]...)
-	s.workerqueue.EnqueueAfter(cache.ExplicitKey(string(updateConnectedPlayers)), playerCountUpdatePeriod)
+	s.workerqueue.EnqueueAfter(cache.ExplicitKey(string(updateConnectedPlayers)), updatePeriod)
 
 	return &alpha.Bool{Bool: true}, nil
 }
@@ -762,20 +768,134 @@ func (s *SDKServer) GetCounter(ctx context.Context, in *alpha.GetCounterRequest)
 	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
 		return nil, errors.Errorf("%s not enabled", runtime.FeatureCountsAndLists)
 	}
-	// TODO(#2716): Implement me
-	return nil, errors.Errorf("Unimplemented -- GetCounter coming soon")
+
+	s.logger.WithField("name", in.Name).Info("Getting Counter")
+	s.gsUpdateMutex.RLock()
+	defer s.gsUpdateMutex.RUnlock()
+
+	gs, err := s.gameServer()
+	if err != nil {
+		return nil, err
+	}
+
+	if counter, ok := gs.Status.Counters[in.Name]; ok {
+		s.logger.WithField("Counter", counter).Debugf("Got Counter %s", in.Name)
+		return &alpha.Counter{Name: in.Name, Count: counter.Count, Capacity: counter.Capacity}, nil
+	}
+	return nil, errors.Errorf("NOT_FOUND. %s Counter not found", in.Name)
 }
 
-// UpdateCounter returns the updated Counter. Returns NOT_FOUND if the Counter does not exist.
-// Returns INVALID_ARGUMENT if the FieldMask paths are invalid.
+// UpdateCounter batches UpdateCounterRequests.
+// Returns NOT_FOUND if the Counter does not exist (name cannot be updated).
+// Returns OUT_OF_RANGE if the Count is out of range [0,Capacity].
+// Returns INVALID_ARGUMENT if the field mask path(s) are not field(s) of the Counter.
+// If a field mask path(s) is specified, but the value is not set in the request Counter object,
+// then the default value for the variable will be set (i.e. 0 for "capacity" or "count").
 // [Stage:Alpha]
 // [FeatureFlag:CountsAndLists]
 func (s *SDKServer) UpdateCounter(ctx context.Context, in *alpha.UpdateCounterRequest) (*alpha.Counter, error) {
 	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
 		return nil, errors.Errorf("%s not enabled", runtime.FeatureCountsAndLists)
 	}
-	// TODO(#2716): Implement Me
-	return nil, errors.Errorf("Unimplemented -- UpdateCounter coming soon")
+
+	if in.Counter == nil || in.UpdateMask == nil {
+		return nil, errors.Errorf("INVALID_ARGUMENT. Counter: %v and UpdateMask %v cannot be nil", in.Counter, in.UpdateMask)
+	}
+
+	s.logger.WithField("name", in.Counter.Name).Info("Update Counter Request")
+	s.gsUpdateMutex.Lock()
+	defer s.gsUpdateMutex.Unlock()
+
+	// Check if we already have a batch request started for this Counter. If not, add new request to
+	// the gsCounterUpdates map.
+	name := in.Counter.Name
+	batchCounter, batchOk := s.gsCounterUpdates[name]
+	switch batchOk {
+	case true:
+		tmpCounter := &alpha.Counter{Name: name, Count: batchCounter.Count, Capacity: batchCounter.Capacity}
+		fmutils.Filter(in.Counter, in.UpdateMask.Paths)
+		fmutils.Prune(tmpCounter, in.UpdateMask.Paths)
+		proto.Merge(tmpCounter, in.Counter)
+		if tmpCounter.Count < 0 || tmpCounter.Count > tmpCounter.Capacity {
+			return nil, errors.Errorf("OUT_OF_RANGE. Count must be within range [0,Capacity]. Found Count: %d, Capacity: %d", tmpCounter.Count, tmpCounter.Capacity)
+		}
+		batchCounter.Count = tmpCounter.Count
+		batchCounter.Capacity = tmpCounter.Capacity
+		s.gsCounterUpdates[name] = batchCounter
+	case false:
+		gs, err := s.gameServer()
+		if err != nil {
+			return nil, err
+		}
+		counter, ok := gs.Status.Counters[name]
+		if ok {
+			// Create *alpha.Counter from *sdk.GameServer_Status_CounterStatus for merging.
+			tmpCounter := &alpha.Counter{Name: name, Count: counter.Count, Capacity: counter.Capacity}
+			// Removes any fields from the request object that are not included in the FieldMask Paths.
+			fmutils.Filter(in.Counter, in.UpdateMask.Paths)
+			// Removes any fields from the existing gameserver object that are included in the FieldMask Paths.
+			fmutils.Prune(tmpCounter, in.UpdateMask.Paths)
+			// Due due filtering and pruning all gameserver object field(s) contained in the FieldMask are overwritten by the request object field(s).
+			proto.Merge(tmpCounter, in.Counter)
+			// Verify that 0 <= Count >= Capacity
+			if tmpCounter.Count < 0 || tmpCounter.Count > tmpCounter.Capacity {
+				return nil, errors.Errorf("OUT_OF_RANGE. Count must be within range [0,Capacity]. Found Count: %d, Capacity: %d", tmpCounter.Count, tmpCounter.Capacity)
+			}
+			// Write updated Counter to gsCounterUpdates map.
+			if s.gsCounterUpdates == nil {
+				s.gsCounterUpdates = map[string]agonesv1.CounterStatus{}
+			}
+			s.gsCounterUpdates[name] = agonesv1.CounterStatus{
+				Count:    tmpCounter.Count,
+				Capacity: tmpCounter.Capacity,
+			}
+		}
+		// We didn't find the Counter named key in the gameserver.
+		if !ok {
+			return nil, errors.Errorf("NOT_FOUND. %s Counter not found", name)
+		}
+	}
+
+	// Queue up the Update for later batch processing by updateCounters.
+	s.workerqueue.Enqueue(cache.ExplicitKey(string(updateCounters)))
+	return &alpha.Counter{}, nil
+}
+
+// updateCounter updates the Counters in the GameServer's Status with the batched update requests.
+func (s *SDKServer) updateCounter(ctx context.Context) error {
+	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
+		return errors.Errorf("%s not enabled", runtime.FeatureCountsAndLists)
+	}
+
+	gs, err := s.gameServer()
+	if err != nil {
+		return err
+	}
+	gsCopy := gs.DeepCopy()
+
+	s.logger.WithField("batchCounterUpdates", s.gsCounterUpdates).Debug("Batch updating Counter(s)")
+	s.gsUpdateMutex.Lock()
+	defer s.gsUpdateMutex.Unlock()
+
+	for name, ctrReq := range s.gsCounterUpdates {
+		counter, ok := gsCopy.Status.Counters[name]
+		if !ok {
+			continue
+		}
+		// Write newly updated Counter to gameserverstatus.
+		counter.Count = ctrReq.Count
+		counter.Capacity = ctrReq.Capacity
+		gsCopy.Status.Counters[name] = counter
+		gs, err = s.gameServerGetter.GameServers(s.namespace).Update(ctx, gsCopy, metav1.UpdateOptions{})
+		if err != nil {
+			return err
+		}
+		s.recorder.Event(gs, corev1.EventTypeNormal, "UpdateCounterBatchRequest",
+			fmt.Sprintf("Counter %s updated to Count:%d Capacity:%d",
+				name, gs.Status.Counters[name].Count, gs.Status.Counters[name].Capacity))
+	}
+
+	return nil
 }
 
 // GetList returns a List. Returns NOT_FOUND if the List does not exist.
