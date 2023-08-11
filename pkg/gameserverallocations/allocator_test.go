@@ -683,7 +683,7 @@ func TestAllocatorRunLocalAllocationsCountsAndLists(t *testing.T) {
 
 	READY := agonesv1.GameServerStateReady
 
-	gsa1 := &allocationv1.GameServerAllocation{
+	gsaAscending := &allocationv1.GameServerAllocation{
 		ObjectMeta: metav1.ObjectMeta{Namespace: defaultNs},
 		Spec: allocationv1.GameServerAllocationSpec{
 			Scheduling: apis.Packed,
@@ -696,7 +696,7 @@ func TestAllocatorRunLocalAllocationsCountsAndLists(t *testing.T) {
 					Order: agonesv1.GameServerPriorityAscending},
 			},
 		}}
-	gsa2 := &allocationv1.GameServerAllocation{
+	gsaDescending := &allocationv1.GameServerAllocation{
 		ObjectMeta: metav1.ObjectMeta{Namespace: defaultNs},
 		Spec: allocationv1.GameServerAllocationSpec{
 			Scheduling: apis.Packed,
@@ -709,28 +709,40 @@ func TestAllocatorRunLocalAllocationsCountsAndLists(t *testing.T) {
 					Order: agonesv1.GameServerPriorityDescending},
 			},
 		}}
+	gsaDistributed := &allocationv1.GameServerAllocation{
+		ObjectMeta: metav1.ObjectMeta{Namespace: defaultNs},
+		Spec: allocationv1.GameServerAllocationSpec{
+			Scheduling: apis.Distributed,
+			Selectors: []allocationv1.GameServerSelector{{
+				GameServerState: &READY,
+			}},
+			Priorities: []agonesv1.Priority{
+				{Type: agonesv1.GameServerPriorityCounter,
+					Key:   "foo",
+					Order: agonesv1.GameServerPriorityDescending},
+			},
+		}}
 
-	// line up 3 in a batch (first sort by Ascending then Descending then Ascending)
-	j1 := request{gsa: gsa1.DeepCopy(), response: make(chan response)}
+	j1 := request{gsa: gsaDescending.DeepCopy(), response: make(chan response)}
 	a.pendingRequests <- j1
-	j2 := request{gsa: gsa2.DeepCopy(), response: make(chan response)}
+	j2 := request{gsa: gsaAscending.DeepCopy(), response: make(chan response)}
 	a.pendingRequests <- j2
-	j3 := request{gsa: gsa1.DeepCopy(), response: make(chan response)}
+	j3 := request{gsa: gsaDistributed.DeepCopy(), response: make(chan response)}
 	a.pendingRequests <- j3
 
-	go a.ListenAndAllocate(ctx, 3)
+	go a.ListenAndAllocate(ctx, 5)
 
 	res1 := <-j1.response
 	assert.NoError(t, res1.err)
 	assert.NotNil(t, res1.gs)
 	assert.Equal(t, agonesv1.GameServerStateAllocated, res1.gs.Status.State)
-	assert.Equal(t, gs3.ObjectMeta.Name, res1.gs.ObjectMeta.Name)
+	assert.Equal(t, gs1.ObjectMeta.Name, res1.gs.ObjectMeta.Name)
 
 	res2 := <-j2.response
 	assert.NoError(t, res2.err)
 	assert.NotNil(t, res2.gs)
 	assert.Equal(t, agonesv1.GameServerStateAllocated, res2.gs.Status.State)
-	assert.Equal(t, gs1.ObjectMeta.Name, res2.gs.ObjectMeta.Name)
+	assert.Equal(t, gs3.ObjectMeta.Name, res2.gs.ObjectMeta.Name)
 
 	res3 := <-j3.response
 	assert.NoError(t, res3.err)
