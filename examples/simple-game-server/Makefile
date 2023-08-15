@@ -41,7 +41,7 @@ project_path := $(dir $(mkfile_path))
 ifeq ($(REPOSITORY),)
 	server_tag := simple-game-server:0.17
 else
-	server_tag := $(REGISTRY)/simple-game-server:0.17
+	server_tag := $(REPOSITORY)/simple-game-server:0.17
 endif
 
 ifeq ($(WITH_WINDOWS), 1)
@@ -111,7 +111,7 @@ push-windows-image-%:
 build-windows-image-%: ensure-windows-buildx
 	cd $(root_path) && DOCKER_CLI_EXPERIMENTAL=enabled \
 		docker buildx build --platform windows/amd64 --builder $(BUILDX_WINDOWS_BUILDER) -f $(project_path)Dockerfile.windows \
-	 	--tag=$(REPOSITORY)$(server_tag)-windows_amd64-$* --build-arg WINDOWS_VERSION=$* examples/simple-game-server/ $(WINDOWS_DOCKER_PUSH_ARGS)
+	 	--tag=$(server_tag)-windows_amd64-$* --build-arg WINDOWS_VERSION=$* . $(WINDOWS_DOCKER_PUSH_ARGS)
 
 ensure-windows-buildx:
 	# TODO: Remove `--use` and specify `--builder` for each buildx command once Docker 19.03.13 is available.
@@ -123,7 +123,7 @@ ensure-windows-buildx:
 
 # Build a docker image for the server, and tag it
 build-linux-image-amd64:
-	cd $(root_path) && docker build -f $(project_path)Dockerfile --tag=$(REPOSITORY)$(server_tag_linux_amd64) .
+	cd $(root_path) && docker build -f $(project_path)Dockerfile --tag=$(server_tag_linux_amd64) .
 build-linux-image-arm64:
 	cd $(root_path) && docker buildx build --platform linux/arm64 -f $(project_path)Dockerfile $(DOCKER_BUILD_ARGS) --tag=$(server_tag_linux_arm64) .
 
