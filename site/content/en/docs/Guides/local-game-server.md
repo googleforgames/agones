@@ -51,6 +51,4 @@ When you are finished working with your server, you can remove the registration 
   - Review the flow of how [allocation]({{< ref "/docs/Integration Patterns/allocation-from-fleet.md" >}}) is done.
   - Review the specification of [GameServerAllocation]({{< ref "/docs/Reference/gameserverallocation.md" >}}).
   - Check out the [Allocator Service]({{< ref "/docs/Advanced/allocator-service.md" >}}) as a richer alternative to `GameServerAllocation`.
-{{% feature publishVersion="1.34.0" %}}
 - Learn how to connect your local development game server binary into a running Agones Kubernetes cluster for even more live development options with an [out of cluster dev server]({{< ref "/docs/Advanced/out-of-cluster-dev-server.md" >}}).
-{{% /feature %}}
