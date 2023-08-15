@@ -1,5 +1,83 @@
 # Changelog
 
+## [v1.34.0](https://github.com/googleforgames/agones/tree/v1.34.0) (2023-08-15)
+
+[Full Changelog](https://github.com/googleforgames/agones/compare/v1.33.0...v1.34.0)
+
+**Breaking changes:**
+- refactor: Throwing error messages with field. by @aimuz in https://github.com/googleforgames/agones/pull/3239
+- refactor: apihook ValidateGameServerSpec and ValidateScheduling use field.ErrorList by @aimuz in https://github.com/googleforgames/agones/pull/3255
+- Update Supported Kubernetes to 1.25, 1.26, 1.27 by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3261
+- refactor(allocation): Reimplement the Validate method using "field.ErrorList" by @aimuz in https://github.com/googleforgames/agones/pull/3259
+- refactor: FleetAutoscaler Validate use field.ErrorList by @aimuz in https://github.com/googleforgames/agones/pull/3272
+
+**Implemented enhancements:**
+- Graduate CustomFasSyncInterval To Stable by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3235
+- Alpine ➡️ Distroless as Agones base image by @markmandel in https://github.com/googleforgames/agones/pull/3270
+- Adds Counts and Lists AutoScale Policies by @igooch in https://github.com/googleforgames/agones/pull/3211
+- More Local Dev Server Support by @CauhxMilloy in https://github.com/googleforgames/agones/pull/3252
+- GameServerAllocation to sort Priorities by Allocated Capacity by @igooch in https://github.com/googleforgames/agones/pull/3282
+- Add Node.Status.Address to GameServer.Status in CRD and SDK by @zmerlynn in https://github.com/googleforgames/agones/pull/3299
+- Add GameServer addresses to the allocation APIs by @zmerlynn in https://github.com/googleforgames/agones/pull/3307
+- Cloud Build Script for supertuxkart by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3291
+- Add "Choosing a GCP network" to GKE Cluster Creation by @zmerlynn in https://github.com/googleforgames/agones/pull/3311
+- Cloud Build script for crd-client by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3290
+- Cloud build script for rust-simple by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3313
+- Cloudbuild script for autoscaler-webhook by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3298
+- update xonotic example to 0.8.6 by @ashutosji in https://github.com/googleforgames/agones/pull/3273
+- Cloud Build script for allocation-endpoint by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3289
+- Cloud build script for nodejs-simple by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3312
+- Cloud build script for Xonotic image by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3317
+- Graduate StateAllocationFilter to Stable by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3308
+- Sort by Priority for strategy Distributed by @igooch in https://github.com/googleforgames/agones/pull/3296
+- Build Script for cpp-simple by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3320
+
+**Fixed bugs:**
+- fix: Enabling SplitControllerAndExtensions leads to incomplete metrics availability by @aimuz in https://github.com/googleforgames/agones/pull/3242
+- Race Flake in TestControllerSyncFleetAutoscaler() by @markmandel in https://github.com/googleforgames/agones/pull/3260
+- Use maintenance exclusion to prevent auto-upgrade, add 1.27 test clusters by @gongmax in https://github.com/googleforgames/agones/pull/3253
+- SDK WatchGameServer logs error on shutdown by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3271
+- APIService: Updates to handlers for 1.27.x by @markmandel in https://github.com/googleforgames/agones/pull/3297
+- [Helm Chart] Only enable service monitor relabelings for prometheus scrape when prometheusServiceDiscovery is enabled by @ufou in https://github.com/googleforgames/agones/pull/3285
+- Flaky: TestAllocatorAllocateOnGameServerUpdateError by @markmandel in https://github.com/googleforgames/agones/pull/3300
+- Run `make gen-all-sdk-grpc` by @zmerlynn in https://github.com/googleforgames/agones/pull/3301
+- Fix for scaling split allocated GameServerSets by @markmandel in https://github.com/googleforgames/agones/pull/3292
+- Flaky: TestAllocatorAllocateOnGameServerUpdateError by @markmandel in https://github.com/googleforgames/agones/pull/3306
+- Bugs and Improvements for CPP SDK and Example by @markmandel in https://github.com/googleforgames/agones/pull/3318
+
+**Other:**
+- Preparation for 1.34.0 by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3248
+- fix: Label PR Warning by @aimuz in https://github.com/googleforgames/agones/pull/3241
+- Put e2e Cloud Build logs in public bucket by @markmandel in https://github.com/googleforgames/agones/pull/3250
+- cleanup: Add agones-extensions Image by @aimuz in https://github.com/googleforgames/agones/pull/3256
+- Release Checklist Cleanup by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3258
+- Cleanup Labeler by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3257
+- fix: info to debug level by @aimuz in https://github.com/googleforgames/agones/pull/3265
+- refactor: Switch Helm Cleanup job to use bitnami/kubectl image by @aimuz in https://github.com/googleforgames/agones/pull/3263
+- Remove e2e cluster with oldest supported K8s version by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3267
+- Flake: TestControllerAllocator by @markmandel in https://github.com/googleforgames/agones/pull/3264
+- Upgrade Version of Rust by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3268
+- Some copy edits to the most recent release blog post. by @roberthbailey in https://github.com/googleforgames/agones/pull/3275
+- Fix Dependabot Vulnerability by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3269
+- Upgrade site to Google Analytics 4 by @markmandel in https://github.com/googleforgames/agones/pull/3278
+- Flaky: TestAllocatorAllocatePriority by @markmandel in https://github.com/googleforgames/agones/pull/3280
+- Move simple-game-server to Distroless base by @markmandel in https://github.com/googleforgames/agones/pull/3279
+- TestAllocatorAllocateOnGameServerUpdateError by @markmandel in https://github.com/googleforgames/agones/pull/3283
+- Switching autoscaler-webhook to utilize distroless as base Image by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3276
+- Distroless base image for crd-client by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3277
+- Flake TestAllocatorAllocateOnGameServerUpdateError by @markmandel in https://github.com/googleforgames/agones/pull/3295
+- Updates for Terraform by @markmandel in https://github.com/googleforgames/agones/pull/3293
+- Bring Rust SDK dependencies up to date by @markmandel in https://github.com/googleforgames/agones/pull/3305
+- Add note about which namespace is used for game serves deployed from fleets by @mikeseese in https://github.com/googleforgames/agones/pull/3288
+- Condition check for no content in PR by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3304
+- Update close.yaml by @geetachavan1 in https://github.com/googleforgames/agones/pull/3316
+- Fix inaccurate parameter description by @gongmax in https://github.com/googleforgames/agones/pull/3321
+
+**New Contributors:**
+- @CauhxMilloy made their first contribution in https://github.com/googleforgames/agones/pull/3252
+- @ufou made their first contribution in https://github.com/googleforgames/agones/pull/3285
+- @mikeseese made their first contribution in https://github.com/googleforgames/agones/pull/3288
+
 ## [v1.33.0](https://github.com/googleforgames/agones/tree/v1.33.0) (2023-07-05)
 
 [Full Changelog](https://github.com/googleforgames/agones/compare/v1.32.0...v1.33.0)
