@@ -98,12 +98,14 @@ func (m *emptyMockStream) RecvMsg(msg interface{}) error {
 }
 
 type gameServerMockStream struct {
+	ctx  context.Context
 	msgs chan *sdk.GameServer
 }
 
 // newGameServerMockStream implements SDK_WatchGameServerServer for testing
 func newGameServerMockStream() *gameServerMockStream {
 	return &gameServerMockStream{
+		ctx:  context.Background(),
 		msgs: make(chan *sdk.GameServer, 10),
 	}
 }
@@ -125,8 +127,8 @@ func (*gameServerMockStream) SetTrailer(metadata.MD) {
 	panic("implement me")
 }
 
-func (*gameServerMockStream) Context() netcontext.Context {
-	panic("implement me")
+func (m *gameServerMockStream) Context() netcontext.Context {
+	return m.ctx
 }
 
 func (*gameServerMockStream) SendMsg(m interface{}) error {
