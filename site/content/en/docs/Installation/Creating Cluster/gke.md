@@ -136,7 +136,6 @@ whether these constraints impact your workloads:
    not supported. If your game sessions exceed one hour, refer to
    [Considerations for long sessions]({{<ref "/docs/Advanced/controlling-disruption#considerations-for-long-sessions">}}).
 
-{{% feature publishVersion="1.34.0" %}}
 ### Choosing a GCP network
 
 By default, `gcloud` and the Cloud Console use the VPC named `default` for all new resources. If you
@@ -159,7 +158,6 @@ you'll need to add `--network` and `--subnetwork`, and for GKE Standard, possibl
 [subnet-types]: https://cloud.google.com/vpc/docs/subnets#subnet-types
 [vpc-mode]: https://cloud.google.com/vpc/docs/vpc#subnet-ranges
 [switch-mode]: https://cloud.google.com/vpc/docs/create-modify-vpc-networks#switch-network-mode
-{{% /feature %}}
 
 ## Creating the firewall
 

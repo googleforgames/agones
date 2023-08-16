@@ -179,8 +179,6 @@ go run cmd/sdk-server/main.go --local
 
 Commandline flags (e.g. `--local`) are exactly the same as command line flags when utilising a pre-built binary.
 
-{{% feature publishVersion="1.34.0" %}}
 ## Next Steps:
 
 - Learn how to connect your local development game server binary into a running Agones Kubernetes cluster for even more live development options with an [out of cluster dev server]({{< ref "/docs/Advanced/out-of-cluster-dev-server.md" >}}).
-{{% /feature %}}
