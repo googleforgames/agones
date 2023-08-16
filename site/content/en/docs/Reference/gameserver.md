@@ -164,7 +164,6 @@ Game Servers are created through Kubernetes API (either directly or through a [F
 
 ![GameServer State Diagram](../../../diagrams/gameserver-states.dot.png)
 
-{{% feature publishVersion="1.34.0" %}}
 ## Primary Address vs Addresses
 
 [`GameServer.Status`][gss] has two fields which reflect the network address of the `GameServer`: `address` and `addresses`.
@@ -186,4 +185,3 @@ to evaluate all `addresses` and pick the addresses that best suits your needs.
 [addresses]: https://v1-26.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#nodeaddress-v1-core
 [addressFunc]: https://github.com/googleforgames/agones/blob/a59c5394c7f5bac66e530d21446302581c10c225/pkg/gameservers/gameservers.go#L37-L71
 [gss]: {{% ref "/docs/Reference/agones_crd_api_reference.html#agones.dev/v1.GameServerStatus"  %}}
-{{% /feature %}}
