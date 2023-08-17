@@ -795,6 +795,65 @@ func TestSDKServerSendGameServerUpdate(t *testing.T) {
 	assert.Equal(t, fixture.ObjectMeta.Name, sdkGS.ObjectMeta.Name)
 }
 
+func TestSDKServer_SendGameServerUpdateRemovesDisconnectedStream(t *testing.T) {
+	t.Parallel()
+
+	fixture := &agonesv1.GameServer{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test",
+			Namespace: "default",
+		},
+		Status: agonesv1.GameServerStatus{
+			State: agonesv1.GameServerStateReady,
+		},
+	}
+
+	m := agtesting.NewMocks()
+	fakeWatch := watch.NewFake()
+	m.AgonesClient.AddWatchReactor("gameservers", k8stesting.DefaultWatchReactor(fakeWatch, nil))
+	sc, err := defaultSidecar(m)
+	require.NoError(t, err)
+	assert.Empty(t, sc.connectedStreams)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+	sc.ctx = ctx
+	sc.informerFactory.Start(ctx.Done())
+
+	fakeWatch.Add(fixture.DeepCopy())
+	assert.True(t, cache.WaitForCacheSync(ctx.Done(), sc.gameServerSynced))
+	sc.gsWaitForSync.Done()
+
+	// Wait for the GameServer to be populated, as we can't rely on WaitForCacheSync.
+	require.Eventually(t, func() bool {
+		_, err := sc.gameServer()
+		return err == nil
+	}, time.Minute, time.Second, "Could not find the GameServer")
+
+	streamCtx, streamCancel := context.WithCancel(context.Background())
+	t.Cleanup(streamCancel)
+
+	// Trigger stream removal by sending an update on a cancelled stream.
+
+	stream := newGameServerMockStream()
+	stream.ctx = streamCtx
+
+	asyncWatchGameServer(t, sc, stream)
+	assert.Nil(t, waitConnectedStreamCount(sc, 1))
+
+	<-stream.msgs // Initial msg when WatchGameServer() is called.
+
+	streamCancel()
+
+	sc.sendGameServerUpdate(fixture)
+
+	select {
+	case <-stream.msgs:
+		assert.Fail(t, "Event stream should have been removed.")
+	case <-time.After(1 * time.Second):
+	}
+}
+
 func TestSDKServerUpdateEventHandler(t *testing.T) {
 	t.Parallel()
 	fixture := &agonesv1.GameServer{
@@ -1545,7 +1604,7 @@ func waitForMessage(sc *SDKServer) error {
 	})
 }
 
-func waitConnectedStreamCount(sc *SDKServer, count int) error {
+func waitConnectedStreamCount(sc *SDKServer, count int) error { //nolint:unparam // Keep flexibility.
 	return wait.PollImmediate(1*time.Second, 10*time.Second, func() (bool, error) {
 		sc.streamMutex.RLock()
 		defer sc.streamMutex.RUnlock()
