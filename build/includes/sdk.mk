@@ -150,6 +150,7 @@ run-sdk-conformance-no-build: ensure-build-sdk-image
 run-sdk-conformance-test: TRIES=5
 run-sdk-conformance-test: ensure-agones-sdk-image
 run-sdk-conformance-test: ensure-build-sdk-image
+	@echo "\n\n^^^ Building: $(SDK_FOLDER)\n\n"
 	$(MAKE) run-sdk-command COMMAND=build-sdk-test
 	@for try in `seq 1 $(TRIES)`; do \
 	  echo "\n\n>>> Starting: ($$try/$(TRIES)) $(SDK_FOLDER)\n\n" && \
