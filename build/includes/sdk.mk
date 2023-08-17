@@ -151,9 +151,9 @@ run-sdk-conformance-test: TRIES=5
 run-sdk-conformance-test: ensure-agones-sdk-image
 run-sdk-conformance-test: ensure-build-sdk-image
 	$(MAKE) run-sdk-command COMMAND=build-sdk-test
-	for try in `seq 1 $(TRIES)`; do \
-	  $(MAKE) run-sdk-conformance-no-build && echo "+++ Success: $(SDK_FOLDER)" && break || \
-	    status=$$? && echo "*** Failure: $(SDK_FOLDER), try $$try/$(TRIES)"; \
+	@for try in `seq 1 $(TRIES)`; do \
+	  $(MAKE) run-sdk-conformance-no-build && echo "\n\n+++ Success: $(SDK_FOLDER)\n\n" && break || \
+	    status=$$? && echo "\n\n*** Failure: $(SDK_FOLDER), try $$try/$(TRIES)\n\n"; \
 	done; (exit $$status)
 
 run-sdk-conformance-test-cpp:
