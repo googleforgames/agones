@@ -1604,7 +1604,7 @@ func waitForMessage(sc *SDKServer) error {
 	})
 }
 
-func waitConnectedStreamCount(sc *SDKServer, count int) error {
+func waitConnectedStreamCount(sc *SDKServer, count int) error { //nolint:unparam // Keep flexibility.
 	return wait.PollImmediate(1*time.Second, 10*time.Second, func() (bool, error) {
 		sc.streamMutex.RLock()
 		defer sc.streamMutex.RUnlock()
