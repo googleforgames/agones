@@ -216,17 +216,14 @@ sdk-publish-csharp:
 
 # difference in sdks before and after gen-all-sdk-grpc target
 test-gen-all-sdk-grpc:
-	mkdir -p includes/tmp
-	cp -r ../sdks includes/tmp
-	cp -r ../test/sdk includes/tmp
 	make gen-all-sdk-grpc
-	diff_output=$$(diff -bBr includes/tmp/sdks ../sdks); \
-	diff_output_test_sdk=$$(diff -bBr includes/tmp/sdk ../test/sdk); \
+	diff_output=$$(git diff --name-status HEAD -- ../sdks); \
+	diff_output_test_sdk=$$(git diff --name-status HEAD -- ../test/sdk); \
 	if [ -z "$$diff_output" ] && [ -z "$$diff_output_test_sdk" ]; then \
 		echo "No differences found."; \
 	else \
 		echo "Differences found."; \
 		echo "$$diff_output"; \
 		echo "$$diff_output_test_sdk"; \
+		exit 1; \
 	fi
-	rm -r includes/tmp;
