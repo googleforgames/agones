@@ -425,12 +425,12 @@ cat <<EOF | kubectl apply -f -
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: my-release-cert
+  name: my-release-agones-cert
   namespace: agones-system
 spec:
   dnsNames:
     - agones-controller-service.agones-system.svc
-  secretName: my-release-cert
+  secretName: my-release-agones-cert
   issuerRef:
     name: selfsigned
     kind: ClusterIssuer
@@ -442,17 +442,86 @@ After the certificates are generated, we will want to [inject caBundle](https://
 ```bash
 helm install my-release \
   --set agones.controller.disableSecret=true \
-  --set agones.controller.customCertSecretPath[0].key='ca.crt',customCertSecretPath[0].path='ca.crt'
-  --set agones.controller.customCertSecretPath[1].key='tls.crt',customCertSecretPath[1].path='server.crt'
-  --set agones.controller.customCertSecretPath[2].key='tls.key',customCertSecretPath[2].path='server.key'
-  --set agones.controller.allocationApiService.annotations={'cert-manager.io/inject-ca-from': 'agones-system/my-release-cert'} \
+  --set-string "agones.controller.customCertSecretPath[0].key=ca.crt" \
+  --set-string "agones.controller.customCertSecretPath[0].path=ca.crt" \
+  --set-string "agones.controller.customCertSecretPath[1].key=tls.crt" \
+  --set-string "agones.controller.customCertSecretPath[1].path=server.crt" \
+  --set-string "agones.controller.customCertSecretPath[2].key=tls.key" \
+  --set-string "agones.controller.customCertSecretPath[2].path=server.key" \
+  --set-json 'agones.controller.allocationApiService.annotations={"cert-manager.io/inject-ca-from": "agones-system/my-release-agones-cert"}' \
   --set agones.controller.allocationApiService.disableCaBundle=true \
-  --set agones.controller.validatingWebhook.annotations={'cert-manager.io/inject-ca-from': 'agones-system/my-release-cert'} \
+  --set-json 'agones.controller.validatingWebhook.annotations={"cert-manager.io/inject-ca-from": "agones-system/my-release-agones-cert"}' \
   --set agones.controller.validatingWebhook.disableCaBundle=true \
-  --set agones.controller.mutatingWebhook.annotations={'cert-manager.io/inject-ca-from': 'agones-system/my-release-cert'} \
+  --set-json 'agones.controller.mutatingWebhook.annotations={"cert-manager.io/inject-ca-from": "agones-system/my-release-agones-cert"}' \
   --set agones.controller.mutatingWebhook.disableCaBundle=true \
+  --set agones.extensions.disableSecret=true \
+  --set-string "agones.extensions.customCertSecretPath[0].key=ca.crt" \
+  --set-string "agones.extensions.customCertSecretPath[0].path=ca.crt" \
+  --set-string "agones.extensions.customCertSecretPath[1].key=tls.crt" \
+  --set-string "agones.extensions.customCertSecretPath[1].path=server.crt" \
+  --set-string "agones.extensions.customCertSecretPath[2].key=tls.key" \
+  --set-string "agones.extensions.customCertSecretPath[2].path=server.key" \
+  --set-json 'agones.extensions.allocationApiService.annotations={"cert-manager.io/inject-ca-from": "agones-system/my-release-agones-cert"}' \
+  --set agones.extensions.allocationApiService.disableCaBundle=true \
+  --set-json 'agones.extensions.validatingWebhook.annotations={"cert-manager.io/inject-ca-from": "agones-system/my-release-agones-cert"}' \
+  --set agones.extensions.validatingWebhook.disableCaBundle=true \
+  --set-json 'agones.extensions.mutatingWebhook.annotations={"cert-manager.io/inject-ca-from": "agones-system/my-release-agones-cert"}' \
+  --set agones.extensions.mutatingWebhook.disableCaBundle=true \
   --namespace agones-system --create-namespace  \
   agones/agones
+```
+
+Or, other way of installing Agones through helm is by using yaml file. This process avoids the cluter of passing too many parameters to helm install command. Please refer below file_name.yaml file. 
+
+```
+agones:
+  controller:
+    disableSecret: true
+    customCertSecretPath:
+    - key: ca.crt
+      path: ca.crt
+    - key: tls.crt
+      path: server.crt
+    - key: tls.key
+      path: server.key
+    allocationApiService:
+      annotations:
+        cert-manager.io/inject-ca-from: agones-system/my-release-agones-cert
+      disableCaBundle: true
+    validatingWebhook:
+      annotations:
+        cert-manager.io/inject-ca-from: agones-system/my-release-agones-cert
+      disableCaBundle: true
+    mutatingWebhook:
+      annotations:
+        cert-manager.io/inject-ca-from: agones-system/my-release-agones-cert
+      disableCaBundle: true
+  extensions:
+    disableSecret: true
+    customCertSecretPath:
+    - key: ca.crt
+      path: ca.crt
+    - key: tls.crt
+      path: server.crt
+    - key: tls.key
+      path: server.key
+    allocationApiService:
+      annotations:
+        cert-manager.io/inject-ca-from: agones-system/my-release-agones-cert
+      disableCaBundle: true
+    validatingWebhook:
+      annotations:
+        cert-manager.io/inject-ca-from: agones-system/my-release-agones-cert
+      disableCaBundle: true
+    mutatingWebhook:
+      annotations:
+        cert-manager.io/inject-ca-from: agones-system/my-release-agones-cert
+      disableCaBundle: true
+```
+
+After, creating yaml file use below command to install Agones:
+```bash
+helm install my-release --namespace agones-system --create-namespace --values /path/file_name.yaml agones/agones
 ```
 
 ## Reserved Allocator Load Balancer IP
