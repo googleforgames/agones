@@ -63,6 +63,7 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 - [ ] Post to the [agonesdev](https://twitter.com/agonesdev) Twitter account.
 - [ ] Run `git checkout main`.
 - [ ] Run `make sdk-update-version release_stage=after version={version}` file. This command will update the version number in the sdks/install files to {version}+1-dev.
+- [ ] Update the `agones` crate version in `sdks/rust/Cargo.toml` to {version}, then run `cargo publish --dry-run` and, if successful, proceed with `cargo publish`
 - [ ] Create PR with these changes, and merge them with approval
 - [ ] Close this issue. _Congratulations!_ - the release is now complete! :tada: :clap: :smile: :+1:
 
