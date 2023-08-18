@@ -826,15 +826,26 @@ func (s *SDKServer) RemoveListValue(ctx context.Context, in *alpha.RemoveListVal
 func (s *SDKServer) sendGameServerUpdate(gs *agonesv1.GameServer) {
 	s.logger.Debug("Sending GameServer Event to connectedStreams")
 
-	s.streamMutex.RLock()
-	defer s.streamMutex.RUnlock()
+	s.streamMutex.Lock()
+	defer s.streamMutex.Unlock()
 
-	for _, stream := range s.connectedStreams {
-		err := stream.Send(convert(gs))
-		// We essentially ignoring any disconnected streams.
-		// I think this is fine, as disconnections shouldn't actually happen.
-		// but we should log them, just in case they do happen, and we can track it
-		if err != nil {
+	for i, stream := range s.connectedStreams {
+		select {
+		case <-stream.Context().Done():
+			s.connectedStreams = append(s.connectedStreams[:i], s.connectedStreams[i+1:]...)
+
+			err := stream.Context().Err()
+			switch {
+			case err != nil:
+				s.logger.WithError(errors.WithStack(err)).Error("stream closed with error")
+			default:
+				s.logger.Debug("stream closed")
+			}
+			continue
+		default:
+		}
+
+		if err := stream.Send(convert(gs)); err != nil {
 			s.logger.WithError(errors.WithStack(err)).
 				Error("error sending game server update event")
 		}
