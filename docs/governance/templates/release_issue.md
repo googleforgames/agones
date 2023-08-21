@@ -51,9 +51,14 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 - [ ] Run `make post-build-release` to build the artifacts in GCS(These files will be attached in the release notes) and to push the latest images in the release repository and push chart on agones-chart.
 - [ ] Run `make shell` and run `gcloud config configurations activate <your development project>` to switch Agones
       development tooling off of the `agones-images` project.
+- [ ] Smoke Test:
+      - To view the Helm releases within the `agones-system` namespace, execute: `helm ls -n agones-system`. This will display the older version of Agones.
+      - To remove the Agones deployment from the `agones-system` namespace, use: `helm uninstall -n agones-system agones`.
+      - If you encounter problems during the uninstallation of `agones-system`, it's recommended to delete the current cluster and set up a new one. Refer to the [Agones Cluster Creation Guide](https://agones.dev/site/docs/installation/creating-cluster/gke/#create-a-standard-mode-cluster-for-agones).      
 - [ ] Do a `helm repo add agones https://agones.dev/chart/stable` / `helm repo update` and verify that the new
       version is available via the command `helm search repo agones --versions --devel`.
 - [ ] Do a `helm install --namespace=agones-system agones agones/agones` or `helm install --create-namespace --namespace=agones-system agones agones/agones` if the namespace was deleted and a smoke test to confirm everything is working.
+      - use `kubectl get pods --namespace agones-system` to list all the pods that are running in the agones-system namespace. After verifying the pods, execute any of the test functions located in the `test/e2e` directory.
 - [ ] Attach all assets found in the cloud storage with {version} to the draft GitHub Release.
 - [ ] Copy any review changes from the release blog post into the draft GitHub release.
 - [ ] Publish the draft GitHub Release.
