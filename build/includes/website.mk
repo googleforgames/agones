@@ -26,8 +26,7 @@
 UID := $(shell id -u)
 GID := $(shell id -g)
 
-# site-server: UID=$(shell id -u)
-# site-server: GID=$(shell id -g)
+# generate the latest website
 site-server: ARGS ?=-F
 site-server: ENV ?= RELEASE_VERSION="$(base_version)" RELEASE_BRANCH=main
 site-server: ensure-build-image
