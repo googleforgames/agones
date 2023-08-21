@@ -222,7 +222,7 @@ test-gen-all-sdk-grpc:
 	make gen-all-sdk-grpc
 	diff_output=$$(diff -bBr includes/tmp/sdks ../sdks); \
 	diff_output_test_sdk=$$(diff -bBr includes/tmp/sdk ../test/sdk); \
-	if [ -z "$$diff_output" ] && [ -z "$$diff_output_test_sdk" ]; then \
+	@if [ -z "$$diff_output" ] && [ -z "$$diff_output_test_sdk" ]; then \
 		echo "No differences found."; \
 	else \
 		echo "FAILURE: Differences found."; \
