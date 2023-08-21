@@ -89,6 +89,12 @@ resource "google_container_cluster" "primary" {
     }
   }
 
+  dns_config {
+    cluster_dns        = "CLOUD_DNS"
+    cluster_dns_domain = "cluster.local"
+    cluster_dns_scope  = "CLUSTER_SCOPE"
+  }
+
   timeouts {
     create = "40m"
     update = "60m"

@@ -193,7 +193,7 @@ steps:
     - cpp-sdk-build-restore-cache
     - ensure-build-sdk-image-base
   dir: "build"
-  args: [ "-j", "4", "--output-sync=target", "build-sdks"]
+  args: [ "-j", "4", "--output-sync=recurse", "build-sdks"]
 
 #
 # Cache the cpp sdk build directory, to speed up subsequent builds (considerably)
