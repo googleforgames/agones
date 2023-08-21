@@ -150,11 +150,13 @@ run-sdk-conformance-no-build: ensure-build-sdk-image
 run-sdk-conformance-test: TRIES=5
 run-sdk-conformance-test: ensure-agones-sdk-image
 run-sdk-conformance-test: ensure-build-sdk-image
+	@echo "\n\n^^^ Building: $(SDK_FOLDER)\n\n"
 	$(MAKE) run-sdk-command COMMAND=build-sdk-test
-	for try in `seq 1 $(TRIES)`; do \
-	  $(MAKE) run-sdk-conformance-no-build && echo "+++ Success: $(SDK_FOLDER)" && break || \
-	    status=$$? && echo "*** Failure: $(SDK_FOLDER), try $$try/$(TRIES)"; \
-	done; (exit $$status)
+	@for try in `seq 1 $(TRIES)`; do \
+	  echo "\n\n>>> Starting: ($$try/$(TRIES)) $(SDK_FOLDER)\n\n" && \
+	  $(MAKE) run-sdk-conformance-no-build && echo "\n\n+++ Success: ($$try/$(TRIES)) $(SDK_FOLDER)\n\n" && break || \
+	    echo "\n\n*** Failure: ($$try/$(TRIES)) $(SDK_FOLDER)\n\n" && false; \
+	done
 
 run-sdk-conformance-test-cpp:
 	$(MAKE) run-sdk-conformance-test SDK_FOLDER=cpp GRPC_PORT=9003 HTTP_PORT=9103
