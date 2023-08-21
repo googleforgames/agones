@@ -70,3 +70,4 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 [release-template]: https://github.com/googleforgames/agones/blob/main/docs/governance/templates/release.md
 [release-draft]: https://github.com/googleforgames/agones/releases
 [build-makefile]: https://github.com/googleforgames/agones/blob/main/build/Makefile
+[Internal Mailing list posting guide]: https://docs.google.com/document/d/1qYR9ccVURgujqFAIpjpSN2GRcCeQ29ow5H_V4sm4RGs/edit#heading=h.zge9gjrt8ws8
