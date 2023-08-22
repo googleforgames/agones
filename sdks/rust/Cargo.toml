@@ -1,4 +1,4 @@
-# Copyright 2018 Google LLC All Rights Reserved.
+# Copyright 2023 Google LLC All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,8 +14,9 @@
 
 [package]
 name = "agones"
-version = "0.2.1"
+version = "1.34.0"
 edition = "2021"
+description = "The Rust SDK for Agones."
 license = "Apache-2.0"
 repository = "https://github.com/googleforgames/agones"
 documentation = "https://docs.rs/agones"
@@ -29,7 +30,7 @@ prost-types = "0.11.9"
 thiserror = "1.0"
 
 [dependencies.tokio]
-version = "1.6"
+version = "1.32"
 default-features = false
 features = ["sync", "time"]
 
