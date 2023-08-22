@@ -31,7 +31,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/types/known/fieldmaskpb"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -1145,24 +1144,19 @@ func TestSDKServerUpdateCounter(t *testing.T) {
 	})
 	assert.NoError(t, err)
 
-	// Only update the Count (field mask set to "count")
+	// Increment the Count
 	_, err = sc.UpdateCounter(context.Background(), &alpha.UpdateCounterRequest{
-		Counter: &alpha.Counter{
-			Name:     "widgets",
-			Count:    int64(10),
-			Capacity: int64(999),
+		CounterUpdateRequest: &alpha.CounterUpdateRequest{
+			Name:      "widgets",
+			CountDiff: 9,
 		},
-		UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"count"}},
 	})
 	assert.NoError(t, err)
 
-	// TODO: This test fails, even though the Counter does properly update in the k8s api. The similar
-	// TestSDKServerPlayerCapacity passes because it GetPlayerCapacity returns the value from the SDK
-	// struct, not from the GameServer.
-	// counter, err := sc.GetCounter(context.Background(), &alpha.GetCounterRequest{Name: "widgets"})
-	// require.NoError(t, err)
-	// assert.Equal(t, int64(10), counter.Count)
-	// assert.Equal(t, int64(100), counter.Capacity)
+	counter, err := sc.GetCounter(context.Background(), &alpha.GetCounterRequest{Name: "widgets"})
+	require.NoError(t, err)
+	assert.Equal(t, int64(10), counter.Count)
+	assert.Equal(t, int64(100), counter.Capacity)
 
 	// on an update, confirm that the update hits the K8s api
 	select {

@@ -138,15 +138,12 @@ service SDK {
 
     // UpdateCounter returns the updated Counter. Returns NOT_FOUND if the Counter does not exist (name cannot be updated).
     // Returns OUT_OF_RANGE if the Count is out of range [0,Capacity].
-    // Returns INVALID_ARGUMENT if the field mask path(s) are not field(s) of the Counter.
-    // If a field mask path(s) is specified, but the value is not set in the request Counter object,
-    // then the default value for the variable will be set (i.e. 0 for "capacity" or "count").
     rpc UpdateCounter(UpdateCounterRequest) returns (Counter) {
       option (google.api.http) = {
-        patch: "/v1alpha1/{counter.name=counters/*}"
-        body: "counter"
+        patch: "/v1alpha1/{counterUpdateRequest.name=counterUpdateRequests/*}"
+        body: "counterUpdateRequest"
       };
-      option (google.api.method_signature) = "counter,update_mask";
+      option (google.api.method_signature) = "counterUpdateRequest";
     }
 
     // Gets a List. Returns NOT_FOUND if the List does not exist.
@@ -229,6 +226,27 @@ message Counter {
   int64 capacity = 3;
 }
 
+// A representation of a Counter Update Request.
+message CounterUpdateRequest {
+  option (google.api.resource) = {
+      type: "agones.dev/CounterUpdateRequest"
+      pattern: "counterUpdateRequests/{counterUpdateRequest}"
+  };
+  // The name of the Counter to update
+  string name = 1;
+  // The value to set the Counter Count to (Must also set countSet to "true" if this field is used)
+  int64 count = 2;
+  // If the request is a CountSet
+  bool countSet = 3;
+  // The value to set the Counter Capacity to (Must also set CapacitySet to "true" if this field is used)
+  int64 capacity = 4;
+  // If the request is a CapacitySet
+  bool capacitySet = 5;
+  // countDiff tracks if a Counter Update Request is CountIncrement (positive), CountDecrement
+  // (negative), 0 if a CountSet or CapacitySet request
+  int64 countDiff = 6;
+}
+
 message GetCounterRequest {
   // The name of the Counter to get
   string name = 1 [
@@ -239,17 +257,12 @@ message GetCounterRequest {
 }
 
 message UpdateCounterRequest {
-  // The Counter to update
-  Counter counter = 1 [
+  // The requested update to make to the Counter
+  CounterUpdateRequest counterUpdateRequest = 1 [
                   (google.api.field_behavior) = REQUIRED,
                   (google.api.resource_reference) = {
-    type: "agones.dev/Counter"
+    type: "agones.dev/CounterUpdateRequest"
   }];
-
-  // Required. Mask (list) of fields to update.
-  // Fields are specified relative to the Counter
-  // (e.g. `count`, `capacity`; *not* `Counter.count` or `Counter.capacity`).
-  google.protobuf.FieldMask update_mask = 2 [(google.api.field_behavior) = REQUIRED];
 }
 
 // A representation of a List.

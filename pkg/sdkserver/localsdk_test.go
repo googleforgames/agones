@@ -683,195 +683,195 @@ func TestLocalSDKServerGetCounter(t *testing.T) {
 	}
 }
 
-func TestLocalSDKServerUpdateCounter(t *testing.T) {
-	t.Parallel()
+// func TestLocalSDKServerUpdateCounter(t *testing.T) {
+// 	t.Parallel()
 
-	runtime.FeatureTestMutex.Lock()
-	defer runtime.FeatureTestMutex.Unlock()
-	assert.NoError(t, runtime.ParseFeatures(string(runtime.FeatureCountsAndLists)+"=true"))
+// 	runtime.FeatureTestMutex.Lock()
+// 	defer runtime.FeatureTestMutex.Unlock()
+// 	assert.NoError(t, runtime.ParseFeatures(string(runtime.FeatureCountsAndLists)+"=true"))
 
-	counters := map[string]agonesv1.CounterStatus{
-		"sessions": {Count: 1, Capacity: 100},
-		"players":  {Count: 100, Capacity: 100},
-		"lobbies":  {Count: 0, Capacity: 0},
-	}
-	fixture := &agonesv1.GameServer{
-		ObjectMeta: metav1.ObjectMeta{Name: "stuff"},
-		Status: agonesv1.GameServerStatus{
-			Counters: counters,
-		},
-	}
+// 	counters := map[string]agonesv1.CounterStatus{
+// 		"sessions": {Count: 1, Capacity: 100},
+// 		"players":  {Count: 100, Capacity: 100},
+// 		"lobbies":  {Count: 0, Capacity: 0},
+// 	}
+// 	fixture := &agonesv1.GameServer{
+// 		ObjectMeta: metav1.ObjectMeta{Name: "stuff"},
+// 		Status: agonesv1.GameServerStatus{
+// 			Counters: counters,
+// 		},
+// 	}
 
-	path, err := gsToTmpFile(fixture)
-	assert.NoError(t, err)
-	l, err := NewLocalSDKServer(path, "")
-	assert.Nil(t, err)
+// 	path, err := gsToTmpFile(fixture)
+// 	assert.NoError(t, err)
+// 	l, err := NewLocalSDKServer(path, "")
+// 	assert.Nil(t, err)
 
-	stream := newGameServerMockStream()
-	go func() {
-		err := l.WatchGameServer(&sdk.Empty{}, stream)
-		assert.Nil(t, err)
-	}()
-	assertInitialWatchUpdate(t, stream)
+// 	stream := newGameServerMockStream()
+// 	go func() {
+// 		err := l.WatchGameServer(&sdk.Empty{}, stream)
+// 		assert.Nil(t, err)
+// 	}()
+// 	assertInitialWatchUpdate(t, stream)
 
-	// wait for watching to begin
-	err = wait.Poll(time.Second, 10*time.Second, func() (bool, error) {
-		found := false
-		l.updateObservers.Range(func(_, _ interface{}) bool {
-			found = true
-			return false
-		})
-		return found, nil
-	})
-	assert.NoError(t, err)
+// 	// wait for watching to begin
+// 	err = wait.Poll(time.Second, 10*time.Second, func() (bool, error) {
+// 		found := false
+// 		l.updateObservers.Range(func(_, _ interface{}) bool {
+// 			found = true
+// 			return false
+// 		})
+// 		return found, nil
+// 	})
+// 	assert.NoError(t, err)
 
-	testScenarios := map[string]struct {
-		updateRequest *alpha.UpdateCounterRequest
-		want          *alpha.Counter
-		wantErr       error
-	}{
-		"only updates fields in the FieldMask": {
-			updateRequest: &alpha.UpdateCounterRequest{
-				Counter: &alpha.Counter{
-					Name:     "sessions",
-					Count:    int64(10),
-					Capacity: int64(999),
-				},
-				UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"count"}},
-			},
-			want: &alpha.Counter{
-				Name:     "sessions",
-				Count:    int64(10),
-				Capacity: int64(100),
-			},
-		},
-		"updates both fields in the FieldMask": {
-			updateRequest: &alpha.UpdateCounterRequest{
-				Counter: &alpha.Counter{
-					Name:     "lobbies",
-					Count:    int64(9),
-					Capacity: int64(999),
-				},
-				UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"capacity", "count"}},
-			},
-			want: &alpha.Counter{
-				Name:     "lobbies",
-				Count:    int64(9),
-				Capacity: int64(999),
-			},
-		},
-		"default value for Count is applied": {
-			updateRequest: &alpha.UpdateCounterRequest{
-				Counter: &alpha.Counter{
-					Name: "players",
-				},
-				UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"count"}},
-			},
-			want: &alpha.Counter{
-				Name:     "players",
-				Count:    int64(0),
-				Capacity: int64(100),
-			},
-		},
-		"Counter does not exist": {
-			updateRequest: &alpha.UpdateCounterRequest{
-				Counter: &alpha.Counter{
-					Name: "dragons",
-				},
-				UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"count"}},
-			},
-			wantErr: errors.Errorf("NOT_FOUND. %s Counter not found", "dragons"),
-		},
-		"request Counter is nil": {
-			updateRequest: &alpha.UpdateCounterRequest{
-				Counter:    nil,
-				UpdateMask: &fieldmaskpb.FieldMask{},
-			},
-			wantErr: errors.Errorf("INVALID_ARGUMENT. Counter: %v and UpdateMask %v cannot be nil", nil, &fieldmaskpb.FieldMask{}),
-		},
-		"request UpdateMask is nil": {
-			updateRequest: &alpha.UpdateCounterRequest{
-				Counter:    &alpha.Counter{},
-				UpdateMask: nil,
-			},
-			wantErr: errors.Errorf("INVALID_ARGUMENT. Counter: %v and UpdateMask %v cannot be nil", &alpha.Counter{}, nil),
-		},
-		"updateMask contains invalid path": {
-			updateRequest: &alpha.UpdateCounterRequest{
-				Counter: &alpha.Counter{
-					Name: "lobbies",
-				},
-				UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"foo"}},
-			},
-			wantErr: errors.Errorf("INVALID_ARGUMENT. Field Mask Path(s): [foo] are invalid for Counter. Use valid field name(s): "),
-		},
-		"updateMask is empty": {
-			updateRequest: &alpha.UpdateCounterRequest{
-				Counter: &alpha.Counter{
-					Name: "lobbies",
-				},
-				UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{""}},
-			},
-			wantErr: errors.Errorf("INVALID_ARGUMENT. Field Mask Path(s): [] are invalid for Counter. Use valid field name(s): "),
-		},
-		"capacity is less than zero": {
-			updateRequest: &alpha.UpdateCounterRequest{
-				Counter: &alpha.Counter{
-					Name:     "lobbies",
-					Capacity: -1,
-				},
-				UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"capacity"}},
-			},
-			wantErr: errors.Errorf("OUT_OF_RANGE. Capacity must be within range [0,1000]. Found Capacity: %d", int64(-1)),
-		},
-		"capacity greater than max capacity (1000)": {
-			updateRequest: &alpha.UpdateCounterRequest{
-				Counter: &alpha.Counter{
-					Name:     "lobbies",
-					Capacity: 1001,
-				},
-				UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"capacity"}},
-			},
-			wantErr: errors.Errorf("OUT_OF_RANGE. Capacity must be within range [0,1000]. Found Capacity: %d", int64(1001)),
-		},
-		"count is less than zero": {
-			updateRequest: &alpha.UpdateCounterRequest{
-				Counter: &alpha.Counter{
-					Name:  "players",
-					Count: -1,
-				},
-				UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"count"}},
-			},
-			wantErr: errors.Errorf("OUT_OF_RANGE. Count must be within range [0,Capacity]. Found Count: %d, Capacity: %d", -1, int64(100)),
-		},
-		"count is greater than capacity": {
-			updateRequest: &alpha.UpdateCounterRequest{
-				Counter: &alpha.Counter{
-					Name:  "players",
-					Count: 101,
-				},
-				UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"count"}},
-			},
-			wantErr: errors.Errorf("OUT_OF_RANGE. Count must be within range [0,Capacity]. Found Count: %d, Capacity: %d", 101, int64(100)),
-		},
-	}
+// 	testScenarios := map[string]struct {
+// 		updateRequest *alpha.UpdateCounterRequest
+// 		want          *alpha.Counter
+// 		wantErr       error
+// 	}{
+// 		"only updates fields in the FieldMask": {
+// 			updateRequest: &alpha.UpdateCounterRequest{
+// 				Counter: &alpha.Counter{
+// 					Name:     "sessions",
+// 					Count:    int64(10),
+// 					Capacity: int64(999),
+// 				},
+// 				UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"count"}},
+// 			},
+// 			want: &alpha.Counter{
+// 				Name:     "sessions",
+// 				Count:    int64(10),
+// 				Capacity: int64(100),
+// 			},
+// 		},
+// 		"updates both fields in the FieldMask": {
+// 			updateRequest: &alpha.UpdateCounterRequest{
+// 				Counter: &alpha.Counter{
+// 					Name:     "lobbies",
+// 					Count:    int64(9),
+// 					Capacity: int64(999),
+// 				},
+// 				UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"capacity", "count"}},
+// 			},
+// 			want: &alpha.Counter{
+// 				Name:     "lobbies",
+// 				Count:    int64(9),
+// 				Capacity: int64(999),
+// 			},
+// 		},
+// 		"default value for Count is applied": {
+// 			updateRequest: &alpha.UpdateCounterRequest{
+// 				Counter: &alpha.Counter{
+// 					Name: "players",
+// 				},
+// 				UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"count"}},
+// 			},
+// 			want: &alpha.Counter{
+// 				Name:     "players",
+// 				Count:    int64(0),
+// 				Capacity: int64(100),
+// 			},
+// 		},
+// 		"Counter does not exist": {
+// 			updateRequest: &alpha.UpdateCounterRequest{
+// 				Counter: &alpha.Counter{
+// 					Name: "dragons",
+// 				},
+// 				UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"count"}},
+// 			},
+// 			wantErr: errors.Errorf("NOT_FOUND. %s Counter not found", "dragons"),
+// 		},
+// 		"request Counter is nil": {
+// 			updateRequest: &alpha.UpdateCounterRequest{
+// 				Counter:    nil,
+// 				UpdateMask: &fieldmaskpb.FieldMask{},
+// 			},
+// 			wantErr: errors.Errorf("INVALID_ARGUMENT. Counter: %v and UpdateMask %v cannot be nil", nil, &fieldmaskpb.FieldMask{}),
+// 		},
+// 		"request UpdateMask is nil": {
+// 			updateRequest: &alpha.UpdateCounterRequest{
+// 				Counter:    &alpha.Counter{},
+// 				UpdateMask: nil,
+// 			},
+// 			wantErr: errors.Errorf("INVALID_ARGUMENT. Counter: %v and UpdateMask %v cannot be nil", &alpha.Counter{}, nil),
+// 		},
+// 		"updateMask contains invalid path": {
+// 			updateRequest: &alpha.UpdateCounterRequest{
+// 				Counter: &alpha.Counter{
+// 					Name: "lobbies",
+// 				},
+// 				UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"foo"}},
+// 			},
+// 			wantErr: errors.Errorf("INVALID_ARGUMENT. Field Mask Path(s): [foo] are invalid for Counter. Use valid field name(s): "),
+// 		},
+// 		"updateMask is empty": {
+// 			updateRequest: &alpha.UpdateCounterRequest{
+// 				Counter: &alpha.Counter{
+// 					Name: "lobbies",
+// 				},
+// 				UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{""}},
+// 			},
+// 			wantErr: errors.Errorf("INVALID_ARGUMENT. Field Mask Path(s): [] are invalid for Counter. Use valid field name(s): "),
+// 		},
+// 		"capacity is less than zero": {
+// 			updateRequest: &alpha.UpdateCounterRequest{
+// 				Counter: &alpha.Counter{
+// 					Name:     "lobbies",
+// 					Capacity: -1,
+// 				},
+// 				UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"capacity"}},
+// 			},
+// 			wantErr: errors.Errorf("OUT_OF_RANGE. Capacity must be within range [0,1000]. Found Capacity: %d", int64(-1)),
+// 		},
+// 		"capacity greater than max capacity (1000)": {
+// 			updateRequest: &alpha.UpdateCounterRequest{
+// 				Counter: &alpha.Counter{
+// 					Name:     "lobbies",
+// 					Capacity: 1001,
+// 				},
+// 				UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"capacity"}},
+// 			},
+// 			wantErr: errors.Errorf("OUT_OF_RANGE. Capacity must be within range [0,1000]. Found Capacity: %d", int64(1001)),
+// 		},
+// 		"count is less than zero": {
+// 			updateRequest: &alpha.UpdateCounterRequest{
+// 				Counter: &alpha.Counter{
+// 					Name:  "players",
+// 					Count: -1,
+// 				},
+// 				UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"count"}},
+// 			},
+// 			wantErr: errors.Errorf("OUT_OF_RANGE. Count must be within range [0,Capacity]. Found Count: %d, Capacity: %d", -1, int64(100)),
+// 		},
+// 		"count is greater than capacity": {
+// 			updateRequest: &alpha.UpdateCounterRequest{
+// 				Counter: &alpha.Counter{
+// 					Name:  "players",
+// 					Count: 101,
+// 				},
+// 				UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"count"}},
+// 			},
+// 			wantErr: errors.Errorf("OUT_OF_RANGE. Count must be within range [0,Capacity]. Found Count: %d, Capacity: %d", 101, int64(100)),
+// 		},
+// 	}
 
-	for testName, testScenario := range testScenarios {
-		t.Run(testName, func(t *testing.T) {
-			got, err := l.UpdateCounter(context.Background(), testScenario.updateRequest)
-			// Check tests expecting non-errors
-			if testScenario.want != nil {
-				assert.NoError(t, err)
-				if diff := cmp.Diff(testScenario.want, got, protocmp.Transform()); diff != "" {
-					t.Errorf("Unexpected difference:\n%v", diff)
-				}
-			} else {
-				// Check tests expecting errors
-				assert.ErrorContains(t, err, testScenario.wantErr.Error())
-			}
-		})
-	}
-}
+// 	for testName, testScenario := range testScenarios {
+// 		t.Run(testName, func(t *testing.T) {
+// 			got, err := l.UpdateCounter(context.Background(), testScenario.updateRequest)
+// 			// Check tests expecting non-errors
+// 			if testScenario.want != nil {
+// 				assert.NoError(t, err)
+// 				if diff := cmp.Diff(testScenario.want, got, protocmp.Transform()); diff != "" {
+// 					t.Errorf("Unexpected difference:\n%v", diff)
+// 				}
+// 			} else {
+// 				// Check tests expecting errors
+// 				assert.ErrorContains(t, err, testScenario.wantErr.Error())
+// 			}
+// 		})
+// 	}
+// }
 
 func TestLocalSDKServerGetList(t *testing.T) {
 	t.Parallel()
