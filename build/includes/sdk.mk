@@ -215,3 +215,18 @@ sdk-shell-csharp:
 sdk-publish-csharp: RELEASE_VERSION ?= $(base_version)
 sdk-publish-csharp:
 	$(MAKE) run-sdk-command-csharp COMMAND=publish VERSION=$(RELEASE_VERSION) DOCKER_RUN_ARGS="$(DOCKER_RUN_ARGS) -it"
+
+# SDK shell for rust 
+sdk-shell-rust: 
+	$(MAKE) sdk-shell SDK_FOLDER=rust 
+
+# Publish the Rust SDK to crates.io
+sdk-publish-rust:
+	$(MAKE) sdk-shell-rust DOCKER_RUN_ARGS="$(DOCKER_RUN_ARGS) -it" COMMAND=publish-rust
+
+publish-rust:
+    # Authenticate with crates.io
+    cargo login
+
+    # Check with a dry-run first and publish
+    cargo publish --dry-run && cargo publish
