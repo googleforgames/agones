@@ -23,12 +23,14 @@
 #
 # Website targets
 #
+UID := $(shell id -u)
+GID := $(shell id -g)
 
 # generate the latest website
 site-server: ARGS ?=-F
 site-server: ENV ?= RELEASE_VERSION="$(base_version)" RELEASE_BRANCH=main
 site-server: ensure-build-image
-	docker run --rm $(common_mounts) --workdir=$(mount_path)/site $(DOCKER_RUN_ARGS) -p 1313:1313 $(build_tag) bash -c \
+	docker run --user $(UID):$(GID) --rm $(common_mounts) --workdir=$(mount_path)/site $(DOCKER_RUN_ARGS) -p 1313:1313 $(build_tag) bash -c \
 	"$(ENV) hugo server --watch --baseURL=http://localhost:1313/ --bind=0.0.0.0 $(ARGS)"
 
 site-static: ensure-build-image
