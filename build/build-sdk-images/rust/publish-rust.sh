@@ -25,4 +25,4 @@ cargo login $TOKEN
 cargo publish --dry-run
 
 # If dry-run succeeds, proceed to actual publishing
-# cargo publish
+cargo publish
