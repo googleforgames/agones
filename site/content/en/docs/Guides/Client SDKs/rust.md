@@ -35,7 +35,7 @@ Check the [Client SDK Documentation]({{< relref "_index.md" >}}) for more detail
 
 ## Usage
 
-Add [`this crate`](https://crates.io/crates/agones) to `dependencies` section in your Cargo.toml. 
+Add <a href="https://crates.io/crates/agones" data-proofer-ignore>this crate</a> to `dependencies` section in your Cargo.toml.
 
 Also note that the SDK is [`async`](https://doc.rust-lang.org/std/keyword.async.html) only, so you will need an async runtime to execute the futures exposed by the SDK. It is recommended to use [tokio](https://docs.rs/tokio) as the SDK already depends on tokio due to its choice of gRPC library, [tonic](https://docs.rs/tonic).
 
