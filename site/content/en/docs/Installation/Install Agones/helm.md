@@ -437,41 +437,7 @@ spec:
 EOF
 ```
 
-After the certificates are generated, we will want to [inject caBundle](https://cert-manager.io/docs/concepts/ca-injector/) into controller webhook and disable controller secret creation by setting the following:
-
-```bash
-helm install my-release \
-  --set agones.controller.disableSecret=true \
-  --set-string "agones.controller.customCertSecretPath[0].key=ca.crt" \
-  --set-string "agones.controller.customCertSecretPath[0].path=ca.crt" \
-  --set-string "agones.controller.customCertSecretPath[1].key=tls.crt" \
-  --set-string "agones.controller.customCertSecretPath[1].path=server.crt" \
-  --set-string "agones.controller.customCertSecretPath[2].key=tls.key" \
-  --set-string "agones.controller.customCertSecretPath[2].path=server.key" \
-  --set-json 'agones.controller.allocationApiService.annotations={"cert-manager.io/inject-ca-from": "agones-system/my-release-agones-cert"}' \
-  --set agones.controller.allocationApiService.disableCaBundle=true \
-  --set-json 'agones.controller.validatingWebhook.annotations={"cert-manager.io/inject-ca-from": "agones-system/my-release-agones-cert"}' \
-  --set agones.controller.validatingWebhook.disableCaBundle=true \
-  --set-json 'agones.controller.mutatingWebhook.annotations={"cert-manager.io/inject-ca-from": "agones-system/my-release-agones-cert"}' \
-  --set agones.controller.mutatingWebhook.disableCaBundle=true \
-  --set agones.extensions.disableSecret=true \
-  --set-string "agones.extensions.customCertSecretPath[0].key=ca.crt" \
-  --set-string "agones.extensions.customCertSecretPath[0].path=ca.crt" \
-  --set-string "agones.extensions.customCertSecretPath[1].key=tls.crt" \
-  --set-string "agones.extensions.customCertSecretPath[1].path=server.crt" \
-  --set-string "agones.extensions.customCertSecretPath[2].key=tls.key" \
-  --set-string "agones.extensions.customCertSecretPath[2].path=server.key" \
-  --set-json 'agones.extensions.allocationApiService.annotations={"cert-manager.io/inject-ca-from": "agones-system/my-release-agones-cert"}' \
-  --set agones.extensions.allocationApiService.disableCaBundle=true \
-  --set-json 'agones.extensions.validatingWebhook.annotations={"cert-manager.io/inject-ca-from": "agones-system/my-release-agones-cert"}' \
-  --set agones.extensions.validatingWebhook.disableCaBundle=true \
-  --set-json 'agones.extensions.mutatingWebhook.annotations={"cert-manager.io/inject-ca-from": "agones-system/my-release-agones-cert"}' \
-  --set agones.extensions.mutatingWebhook.disableCaBundle=true \
-  --namespace agones-system --create-namespace  \
-  agones/agones
-```
-
-Or, other way of installing Agones through helm is by using yaml file. This process avoids the cluter of passing too many parameters to helm install command. Please refer below file_name.yaml file. 
+After the certificates are generated, we will want to [inject caBundle](https://cert-manager.io/docs/concepts/ca-injector/) into controller and extensions webhook and disable controller and extensions secret creation by using yaml file. This process avoids the cluter of passing too many parameters to helm install command. Please refer below `file_name.yaml` file:
 
 ```
 agones:
