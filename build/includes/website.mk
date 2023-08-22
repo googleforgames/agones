@@ -130,3 +130,9 @@ del-data-proofer-ignore: ensure-build-image
 site-config-update-version: ensure-build-image
 	docker run --rm $(common_mounts) --workdir=$(mount_path) $(DOCKER_RUN_ARGS) $(build_tag) \
 		go run build/scripts/site-config-update-version/main.go
+
+# Delete old release version in site/layouts/partials/navbar.html.
+update-navbar-version: FILENAME ?= ""
+update-navbar-version: ensure-build-image
+	docker run --rm $(common_mounts) --workdir=$(mount_path) $(DOCKER_RUN_ARGS) $(build_tag) \
+		go run build/scripts/update-navbar-version/main.go -file=$(FILENAME)
