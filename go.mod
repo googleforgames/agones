@@ -17,14 +17,14 @@ require (
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.15.2
 	github.com/hashicorp/golang-lru v0.5.1
 	github.com/heptiolabs/healthcheck v0.0.0-20171201210846-da5fdee475fb
-	github.com/joonix/log v0.0.0-20180502111528-d2d3f2f4a806
+	github.com/joonix/log v0.0.0-20230221083239-7988383bab32
 	github.com/mattbaird/jsonpatch v0.0.0-20171005235357-81af80346b1a
 	github.com/mennanov/fmutils v0.2.0
 	github.com/mitchellh/hashstructure/v2 v2.0.2
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.14.0
-	github.com/sirupsen/logrus v1.8.1
+	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.7.0
 	github.com/stretchr/testify v1.8.1
@@ -32,7 +32,7 @@ require (
 	go.opencensus.io v0.24.0
 	golang.org/x/net v0.8.0
 	golang.org/x/oauth2 v0.5.0
-	golang.org/x/time v0.0.0-20220210224613-90d013bbcef8
+	golang.org/x/time v0.1.0
 	golang.org/x/tools v0.6.0
 	google.golang.org/api v0.110.0
 	google.golang.org/genproto v0.0.0-20230301171018-9ab4bdc49ad5
@@ -44,6 +44,7 @@ require (
 	k8s.io/apiextensions-apiserver v0.26.6
 	k8s.io/apimachinery v0.26.6
 	k8s.io/client-go v0.26.6
+	k8s.io/kube-openapi v0.0.0-20221012153701-172d655c2280
 	k8s.io/utils v0.0.0-20221107191617-1a15be271d1d
 )
 
@@ -88,7 +89,7 @@ require (
 	github.com/prometheus/common v0.37.0 // indirect
 	github.com/prometheus/procfs v0.8.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
-	github.com/spf13/afero v1.2.2 // indirect
+	github.com/spf13/afero v1.9.2 // indirect
 	github.com/spf13/cast v1.3.0 // indirect
 	github.com/spf13/jwalterweatherman v1.0.0 // indirect
 	github.com/subosito/gotenv v1.2.0 // indirect
@@ -106,7 +107,6 @@ require (
 	k8s.io/gengo v0.0.0-20221011193443-fad74ee6edd9 // indirect
 	k8s.io/klog v1.0.0 // indirect
 	k8s.io/klog/v2 v2.90.1 // indirect
-	k8s.io/kube-openapi v0.0.0-20221012153701-172d655c2280 // indirect
 	sigs.k8s.io/json v0.0.0-20220713155537-f223a00ba0e2 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.3 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
