@@ -221,7 +221,7 @@ test-gen-all-sdk-grpc:
 	make gen-all-sdk-grpc
 	diff_output=$$(git diff --name-status HEAD -- ../sdks); \
 	diff_output_test_sdk=$$(git diff --name-status HEAD -- ../test/sdk); \
-	@if [ -z "$$diff_output" ] && [ -z "$$diff_output_test_sdk" ]; then \
+	if [ -z "$$diff_output" ] && [ -z "$$diff_output_test_sdk" ]; then \
 		echo "No differences found."; \
 	else \
 		echo "FAILURE: Differences found."; \
