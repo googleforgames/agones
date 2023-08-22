@@ -226,7 +226,7 @@ sdk-publish-rust:
 
 publish-rust:
     # Authenticate with crates.io
-    cargo login
+	cargo login
 
     # Check with a dry-run first and publish
-    cargo publish --dry-run && cargo publish
+	cargo publish --dry-run && cargo publish
