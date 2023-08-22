@@ -222,11 +222,4 @@ sdk-shell-rust:
 
 # Publish the Rust SDK to crates.io
 sdk-publish-rust:
-	$(MAKE) sdk-shell-rust DOCKER_RUN_ARGS="$(DOCKER_RUN_ARGS) -it" COMMAND=publish-rust
-
-publish-rust:
-    # Authenticate with crates.io
-	cargo login
-
-    # Check with a dry-run first and publish
-	cargo publish --dry-run && cargo publish
+	$(MAKE) run-sdk-command-rust DOCKER_RUN_ARGS="$(DOCKER_RUN_ARGS) -it" COMMAND=./build-sdk-images/rust/publish-rust.sh
