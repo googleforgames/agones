@@ -17,7 +17,6 @@ require (
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.15.2
 	github.com/hashicorp/golang-lru v0.5.1
 	github.com/heptiolabs/healthcheck v0.0.0-20171201210846-da5fdee475fb
-	github.com/joonix/log v0.0.0-20230221083239-7988383bab32
 	github.com/mattbaird/jsonpatch v0.0.0-20171005235357-81af80346b1a
 	github.com/mennanov/fmutils v0.2.0
 	github.com/mitchellh/hashstructure/v2 v2.0.2

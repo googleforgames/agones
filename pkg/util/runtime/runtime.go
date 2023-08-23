@@ -20,7 +20,6 @@ import (
 	"fmt"
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
-	joonix "github.com/joonix/log"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -36,7 +35,13 @@ type stackTracer interface {
 
 // replace the standard glog error logger, with a logrus one
 func init() {
-	logrus.SetFormatter(joonix.NewFormatter())
+	logrus.SetFormatter(&logrus.JSONFormatter{
+		FieldMap: logrus.FieldMap{
+			logrus.FieldKeyTime:  "time",
+			logrus.FieldKeyLevel: "severity",
+			logrus.FieldKeyMsg:   "message",
+		},
+	})
 
 	runtime.ErrorHandlers[0] = func(err error) {
 		if stackTrace, ok := err.(stackTracer); ok {
