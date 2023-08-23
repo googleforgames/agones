@@ -32,9 +32,7 @@ func main() {
 	}
 
 	var lines []string
-	for _, line := range strings.Split(string(content), "\n") {
-		lines = append(lines, line)
-	}
+	lines = append(lines, strings.Split(string(content), "\n")...)
 
 	updatedLines := updateReleaseValues(lines)
 
