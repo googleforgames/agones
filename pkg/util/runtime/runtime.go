@@ -18,6 +18,7 @@ package runtime
 
 import (
 	"fmt"
+	"time"
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/pkg/errors"
@@ -36,6 +37,7 @@ type stackTracer interface {
 // replace the standard glog error logger, with a logrus one
 func init() {
 	logrus.SetFormatter(&logrus.JSONFormatter{
+		TimestampFormat: time.RFC3339Nano,
 		FieldMap: logrus.FieldMap{
 			logrus.FieldKeyTime:  "time",
 			logrus.FieldKeyLevel: "severity",
