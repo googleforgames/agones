@@ -22,7 +22,14 @@ cd ./sdks/rust/proto/sdk
 read -p 'Crates.io API Token: ' TOKEN
 cargo login $TOKEN
 
-cargo publish --dry-run
+# Perform a dry run of cargo publish
+dry_run_output=$(cargo publish --dry-run 2>&1)
 
-# If dry-run succeeds, proceed to actual publishing
-cargo publish
+# Check if the dry run output contains the warning about aborting upload
+if echo "$dry_run_output" | grep -q "warning: aborting upload due to dry run"; then
+    echo "Actual Cargo Publish begins.."
+    # Dry run succeeded, proceed to actual publishing
+    cargo publish
+else
+    echo "Dry run failed. Aborting actual publishing."
+fi
