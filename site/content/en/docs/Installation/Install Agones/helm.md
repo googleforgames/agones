@@ -437,9 +437,9 @@ spec:
 EOF
 ```
 
-After the certificates are generated, we will want to [inject caBundle](https://cert-manager.io/docs/concepts/ca-injector/) into controller and extensions webhook and disable controller and extensions secret creation by using yaml file. This process avoids the cluter of passing too many parameters to helm install command. Please refer below `file_name.yaml` file:
+After the certificates are generated, we will want to [inject caBundle](https://cert-manager.io/docs/concepts/ca-injector/) into the controller and extensions webhook and disable the controller and extensions secret creation through the following values.yaml file.:
 
-```
+```yaml
 agones:
   controller:
     disableSecret: true
@@ -485,9 +485,9 @@ agones:
       disableCaBundle: true
 ```
 
-After, creating yaml file use below command to install Agones:
+After copying the above yaml into a `values.yaml` file, use below command to install Agones:
 ```bash
-helm install my-release --namespace agones-system --create-namespace --values /path/file_name.yaml agones/agones
+helm install my-release --namespace agones-system --create-namespace --values values.yaml agones/agones
 ```
 
 ## Reserved Allocator Load Balancer IP
