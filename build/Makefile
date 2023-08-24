@@ -856,10 +856,8 @@ test-gen-crd-client:
 		echo "$$diff_output"; \
 	fi
 
-update-agones: $(ensure-build-image)
+install-release: $(ensure-build-image)
 	docker run -it --rm \
 		$(common_mounts) \
-		-w $(workdir_path) \
-		-e "KUBECONFIG=/root/.kube/$(kubeconfig_file)" \
 		$(DOCKER_RUN_ARGS) \
-		$(build_tag) /go/src/agones.dev/agones/build/update-agones.sh
+		$(build_tag) /go/src/agones.dev/agones/build/install-release.sh
