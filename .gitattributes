@@ -17,3 +17,4 @@
 
 vendor/** linguist-generated
 vendor/ linguist-generated
+vendor/** linguist-generated=true
