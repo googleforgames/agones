@@ -224,7 +224,7 @@ test-gen-all-sdk-grpc:
 	if [ -z "$$diff_output" ] && [ -z "$$diff_output_test_sdk" ]; then \
 		echo "No differences found."; \
 		git clean -xdf ../sdks ../test/sdk; \
-		rm -r build/.gocache; \
+		rm -rf build/.gocache; \
 	else \
 		echo "FAILURE: Differences found."; \
 		echo "$$diff_output"; \
