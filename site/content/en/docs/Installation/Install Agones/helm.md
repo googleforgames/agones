@@ -425,34 +425,69 @@ cat <<EOF | kubectl apply -f -
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: my-release-cert
+  name: my-release-agones-cert
   namespace: agones-system
 spec:
   dnsNames:
     - agones-controller-service.agones-system.svc
-  secretName: my-release-cert
+  secretName: my-release-agones-cert
   issuerRef:
     name: selfsigned
     kind: ClusterIssuer
 EOF
 ```
 
-After the certificates are generated, we will want to [inject caBundle](https://cert-manager.io/docs/concepts/ca-injector/) into controller webhook and disable controller secret creation by setting the following:
+After the certificates are generated, we will want to [inject caBundle](https://cert-manager.io/docs/concepts/ca-injector/) into the controller and extensions webhook and disable the controller and extensions secret creation through the following values.yaml file.:
 
+```yaml
+agones:
+  controller:
+    disableSecret: true
+    customCertSecretPath:
+    - key: ca.crt
+      path: ca.crt
+    - key: tls.crt
+      path: server.crt
+    - key: tls.key
+      path: server.key
+    allocationApiService:
+      annotations:
+        cert-manager.io/inject-ca-from: agones-system/my-release-agones-cert
+      disableCaBundle: true
+    validatingWebhook:
+      annotations:
+        cert-manager.io/inject-ca-from: agones-system/my-release-agones-cert
+      disableCaBundle: true
+    mutatingWebhook:
+      annotations:
+        cert-manager.io/inject-ca-from: agones-system/my-release-agones-cert
+      disableCaBundle: true
+  extensions:
+    disableSecret: true
+    customCertSecretPath:
+    - key: ca.crt
+      path: ca.crt
+    - key: tls.crt
+      path: server.crt
+    - key: tls.key
+      path: server.key
+    allocationApiService:
+      annotations:
+        cert-manager.io/inject-ca-from: agones-system/my-release-agones-cert
+      disableCaBundle: true
+    validatingWebhook:
+      annotations:
+        cert-manager.io/inject-ca-from: agones-system/my-release-agones-cert
+      disableCaBundle: true
+    mutatingWebhook:
+      annotations:
+        cert-manager.io/inject-ca-from: agones-system/my-release-agones-cert
+      disableCaBundle: true
+```
+
+After copying the above yaml into a `values.yaml` file, use below command to install Agones:
 ```bash
-helm install my-release \
-  --set agones.controller.disableSecret=true \
-  --set agones.controller.customCertSecretPath[0].key='ca.crt',customCertSecretPath[0].path='ca.crt'
-  --set agones.controller.customCertSecretPath[1].key='tls.crt',customCertSecretPath[1].path='server.crt'
-  --set agones.controller.customCertSecretPath[2].key='tls.key',customCertSecretPath[2].path='server.key'
-  --set agones.controller.allocationApiService.annotations={'cert-manager.io/inject-ca-from': 'agones-system/my-release-cert'} \
-  --set agones.controller.allocationApiService.disableCaBundle=true \
-  --set agones.controller.validatingWebhook.annotations={'cert-manager.io/inject-ca-from': 'agones-system/my-release-cert'} \
-  --set agones.controller.validatingWebhook.disableCaBundle=true \
-  --set agones.controller.mutatingWebhook.annotations={'cert-manager.io/inject-ca-from': 'agones-system/my-release-cert'} \
-  --set agones.controller.mutatingWebhook.disableCaBundle=true \
-  --namespace agones-system --create-namespace  \
-  agones/agones
+helm install my-release --namespace agones-system --create-namespace --values values.yaml agones/agones
 ```
 
 ## Reserved Allocator Load Balancer IP
