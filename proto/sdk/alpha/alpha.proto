@@ -23,6 +23,7 @@ import "google/api/field_behavior.proto";
 import "google/api/resource.proto";
 import "google/protobuf/empty.proto";
 import "google/protobuf/field_mask.proto";
+import "google/protobuf/wrappers.proto";
 import "protoc-gen-openapiv2/options/annotations.proto";
 
 option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
@@ -234,17 +235,13 @@ message CounterUpdateRequest {
   };
   // The name of the Counter to update
   string name = 1;
-  // The value to set the Counter Count to (Must also set countSet to "true" if this field is used)
-  int64 count = 2;
-  // If the request is a CountSet
-  bool countSet = 3;
-  // The value to set the Counter Capacity to (Must also set CapacitySet to "true" if this field is used)
-  int64 capacity = 4;
-  // If the request is a CapacitySet
-  bool capacitySet = 5;
+  // The value to set the Counter Count
+  google.protobuf.Int64Value count = 2;
+  // The value to set the Counter Capacity
+  google.protobuf.Int64Value capacity = 3;
   // countDiff tracks if a Counter Update Request is CountIncrement (positive), CountDecrement
   // (negative), 0 if a CountSet or CapacitySet request
-  int64 countDiff = 6;
+  int64 countDiff = 4;
 }
 
 message GetCounterRequest {

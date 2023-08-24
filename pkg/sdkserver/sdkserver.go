@@ -72,18 +72,14 @@ var (
 )
 
 type counterUpdateRequest struct {
-	// Tracks CountIncrement and / or CountDecrement Requests
+	// Tracks CountSet and / or CountIncrement and / or CountDecrement Requests
 	diffList []int64
 	// Counter (as retreived during first request)
 	counter agonesv1.CounterStatus
-	// Tracks if there have been any CountSet requests
-	countSet bool
-	// Tracks if there have been any CapacitySet requests
-	capacitySet bool
-	// Capacity of the Counter (as retreived during first request) or overwritten by capacitySet.
-	capacity int64
-	// Count of the Counter (as retreived during first request) or overwritten by countSet.
-	count int64
+	// Capacity of the Counter as set by capacitySet.
+	capacitySet *int64
+	// Count of the Counter as set by countSet.
+	countSet *int64
 	// Tracks the sum of CountIncrement, CountDecrement, and/or CountSet requests from the client SDK.
 	diff int64
 }
@@ -161,6 +157,11 @@ func NewSDKServer(gameServerName, namespace string, kubeClient kubernetes.Interf
 		gsWaitForSync:      sync.WaitGroup{},
 		gsConnectedPlayers: []string{},
 		gsStateChannel:     make(chan agonesv1.GameServerState, 2),
+	}
+
+	if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
+		// Once FeatureCountsAndLists is in GA, move this into SDKServer creation above.
+		s.gsCounterUpdates = map[string]counterUpdateRequest{}
 	}
 
 	s.informerFactory = factory
@@ -786,14 +787,6 @@ func (s *SDKServer) GetCounter(ctx context.Context, in *alpha.GetCounterRequest)
 	}
 
 	s.logger.WithField("name", in.Name).Info("Getting Counter")
-	s.gsUpdateMutex.RLock()
-	defer s.gsUpdateMutex.RUnlock()
-
-	// If we have made updates then return the SDK view of the Counter, otherwise get the counter from the gameserver
-	if counterUpdated, ok := s.gsCounterUpdates[in.Name]; ok {
-		s.logger.WithField("Get Counter from SDK Server", counterUpdated).Debugf("Got Counter %s", in.Name)
-		return &alpha.Counter{Name: in.Name, Count: counterUpdated.count, Capacity: counterUpdated.capacity}, nil
-	}
 
 	gs, err := s.gameServer()
 	if err != nil {
@@ -838,77 +831,56 @@ func (s *SDKServer) UpdateCounter(ctx context.Context, in *alpha.UpdateCounterRe
 		}
 
 		counter, ok := gs.Status.Counters[name]
-		if ok {
-			tmpReq := counterUpdateRequest{counter: *counter.DeepCopy(), capacity: counter.Capacity, count: counter.Count}
-			switch {
-			case in.CounterUpdateRequest.CountDiff != 0: // Update based on if Client call is CountIncrement or CountDecrement
-				counter.Count += in.CounterUpdateRequest.CountDiff
-				// Verify that 0 <= Count >= Capacity
-				if counter.Count < 0 || counter.Count > counter.Capacity {
-					return nil, errors.Errorf("OUT_OF_RANGE. Count must be within range [0,Capacity]. Found Count: %d, Capacity: %d", counter.Count, counter.Capacity)
-				}
-				tmpReq.count = counter.Count
-				tmpReq.diff = in.CounterUpdateRequest.CountDiff
-				tmpReq.diffList = append(tmpReq.diffList, in.CounterUpdateRequest.CountDiff)
-			case in.CounterUpdateRequest.CountSet: // Update based on if Client call is CountSet
-				// Verify that 0 <= Count >= Capacity
-				if in.CounterUpdateRequest.Count > counter.Capacity {
-					return nil, errors.Errorf("OUT_OF_RANGE. Count must be within range [0,Capacity]. Found Count: %d, Capacity: %d", counter.Count, counter.Capacity)
-				}
-				tmpReq.countSet = in.CounterUpdateRequest.CountSet
-				tmpReq.count = in.CounterUpdateRequest.Count
-				// On first pass of the counterUpdateRequest make sure CapacitySet does not default to a meanful value (0)
-				tmpReq.capacitySet = in.CounterUpdateRequest.CapacitySet
-				// Clear any previous CountIncrement or CountDecrement requests, and add the CountSet as the first item.
-				tmpReq.diffList = []int64{tmpReq.count}
-			case in.CounterUpdateRequest.CapacitySet: // Updated based on if client call is CapacitySet
-				tmpReq.capacitySet = in.CounterUpdateRequest.CapacitySet
-				tmpReq.capacity = in.CounterUpdateRequest.Capacity
-			default:
-				return nil, errors.Errorf("INVALID_ARGUMENT. Malformed CounterUpdateRequest: %v", in.CounterUpdateRequest)
-			}
-			// Create counterUpdateRequest in gsCounterUpdates map.
-			if s.gsCounterUpdates == nil {
-				s.gsCounterUpdates = map[string]counterUpdateRequest{}
-			}
-			s.gsCounterUpdates[name] = tmpReq
-		}
-
 		// We didn't find the Counter named key in the gameserver.
 		if !ok {
 			return nil, errors.Errorf("NOT_FOUND. %s Counter not found", name)
 		}
+
+		batchCounter.counter = *counter.DeepCopy()
 	}
 
-	if batchOk {
-		tmpReq := batchCounter
-		switch {
-		case in.CounterUpdateRequest.CountDiff != 0: // Update based on if Client call is CountIncrement or CountDecrement
-			tmpReq.diff += in.CounterUpdateRequest.CountDiff
-			tmpReq.count += tmpReq.diff
-			if tmpReq.count < 0 || tmpReq.count > tmpReq.capacity {
-				return nil, errors.Errorf("OUT_OF_RANGE. Count must be within range [0,Capacity]. Found Count: %d, Capacity: %d", tmpReq.count, tmpReq.capacity)
-			}
-			tmpReq.diffList = append(tmpReq.diffList, in.CounterUpdateRequest.CountDiff)
-		case in.CounterUpdateRequest.CountSet: // Update based on if Client call is CountSet
-			if in.CounterUpdateRequest.Count > tmpReq.capacity {
-				return nil, errors.Errorf("OUT_OF_RANGE. Count must be within range [0,Capacity]. Found Count: %d, Capacity: %d", in.CounterUpdateRequest.Count, tmpReq.capacity)
-			}
-			tmpReq.countSet = in.CounterUpdateRequest.CountSet
-			tmpReq.count = in.CounterUpdateRequest.Count
-			tmpReq.diffList = []int64{tmpReq.count}
-		case in.CounterUpdateRequest.CapacitySet: // Updated based on if client call is CapacitySet
-			tmpReq.capacitySet = in.CounterUpdateRequest.CapacitySet
-			tmpReq.capacity = in.CounterUpdateRequest.Capacity
-			// TODO: Do we need to check here that any previous changes to Count are still < Capacity?
-		default:
-			return nil, errors.Errorf("INVALID_ARGUMENT. Malformed CounterUpdateRequest: %v", in.CounterUpdateRequest)
+	switch {
+	case in.CounterUpdateRequest.CountDiff != 0: // Update based on if Client call is CountIncrement or CountDecrement
+		count := batchCounter.counter.Count
+		if batchCounter.countSet != nil {
+			count = *batchCounter.countSet
 		}
-		s.gsCounterUpdates[name] = tmpReq
+		count += batchCounter.diff + in.CounterUpdateRequest.CountDiff
+		// Verify that 0 <= Count >= Capacity
+		capacity := batchCounter.counter.Capacity
+		if batchCounter.capacitySet != nil {
+			capacity = *batchCounter.capacitySet
+		}
+		if count < 0 || count > capacity {
+			return nil, errors.Errorf("OUT_OF_RANGE. Count must be within range [0,Capacity]. Found Count: %d, Capacity: %d", count, capacity)
+		}
+		batchCounter.diff += in.CounterUpdateRequest.CountDiff
+		batchCounter.diffList = append(batchCounter.diffList, in.CounterUpdateRequest.CountDiff)
+	case in.CounterUpdateRequest.Count != nil: // Update based on if Client call is CountSet
+		// Verify that 0 <= Count >= Capacity
+		countSet := in.CounterUpdateRequest.Count.GetValue()
+		capacity := batchCounter.counter.Capacity
+		if batchCounter.capacitySet != nil {
+			capacity = *batchCounter.capacitySet
+		}
+		if countSet < 0 || countSet > capacity {
+			return nil, errors.Errorf("OUT_OF_RANGE. Count must be within range [0,Capacity]. Found Count: %d, Capacity: %d", countSet, capacity)
+		}
+		batchCounter.countSet = &countSet
+		// Clear any previous CountIncrement or CountDecrement requests, and add the CountSet as the first item.
+		batchCounter.diff = 0
+		batchCounter.diffList = []int64{countSet}
+	case in.CounterUpdateRequest.Capacity != nil: // Updated based on if client call is CapacitySet
+		capacitySet := in.CounterUpdateRequest.Capacity.GetValue()
+		batchCounter.capacitySet = &capacitySet
+	default:
+		return nil, errors.Errorf("INVALID_ARGUMENT. Malformed CounterUpdateRequest: %v", in.CounterUpdateRequest)
 	}
+
+	s.gsCounterUpdates[name] = batchCounter
 
 	// Queue up the Update for later batch processing by updateCounters.
-	s.workerqueue.Enqueue(cache.ExplicitKey(string(updateCounters)))
+	s.workerqueue.Enqueue(cache.ExplicitKey(updateCounters))
 	return &alpha.Counter{}, nil
 }
 
@@ -936,17 +908,24 @@ func (s *SDKServer) updateCounter(ctx context.Context) error {
 		// If the Counter is the same as the original Counter stored in the counterUpdateRequest
 		// then no other changes have been made to this Counter, and we can overwrite the values.
 		if cmp.Equal(counter, ctrReq.counter) {
-			counter.Count = ctrReq.count
-			counter.Capacity = ctrReq.capacity
+			count := counter.Count
+			if ctrReq.countSet != nil {
+				count = *ctrReq.countSet
+			}
+			count += ctrReq.diff
+			counter.Count = count
+			if ctrReq.capacitySet != nil {
+				counter.Capacity = *ctrReq.capacitySet
+			}
 		} else {
 			// If the Counter is NOT the same as the original Counter stored in the counterUpdateRequest
 			// then changes have been made to the Counter since we validated the incoming changes in
 			// UpdateCounter, and we need to verify if the batched changes can be fully applied, partially
 			// applied, or cannot be applied.
-			if ctrReq.capacitySet {
-				counter.Capacity = ctrReq.capacity
+			if ctrReq.capacitySet != nil {
+				counter.Capacity = *ctrReq.capacitySet
 			}
-			if ctrReq.countSet {
+			if ctrReq.countSet != nil {
 				counter.Count, ctrReq.diffList = ctrReq.diffList[0], ctrReq.diffList[1:]
 			}
 			// If the diff can be applied, apply it. Otherwise loop through the requests.
@@ -967,7 +946,7 @@ func (s *SDKServer) updateCounter(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		s.recorder.Event(gs, corev1.EventTypeNormal, "UpdateCounterBatchRequest",
+		s.recorder.Event(gs, corev1.EventTypeNormal, "UpdateCounter",
 			fmt.Sprintf("Counter %s updated to Count:%d Capacity:%d",
 				name, gs.Status.Counters[name].Count, gs.Status.Counters[name].Capacity))
 		delete(s.gsCounterUpdates, name)

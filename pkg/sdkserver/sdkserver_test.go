@@ -1153,11 +1153,6 @@ func TestSDKServerUpdateCounter(t *testing.T) {
 	})
 	assert.NoError(t, err)
 
-	counter, err := sc.GetCounter(context.Background(), &alpha.GetCounterRequest{Name: "widgets"})
-	require.NoError(t, err)
-	assert.Equal(t, int64(10), counter.Count)
-	assert.Equal(t, int64(100), counter.Capacity)
-
 	// on an update, confirm that the update hits the K8s api
 	select {
 	case value := <-updated:
