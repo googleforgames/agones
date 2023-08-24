@@ -14,3 +14,5 @@
 
 # See https://github.com/golang/go/issues/9281
 * -text
+
+vendor/* linguist-generated=true
