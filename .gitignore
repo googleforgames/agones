@@ -23,6 +23,7 @@
 !.nycrc
 !.clang-format
 !.github
+!.generated_files
 *.iml
 bin
 *.o
