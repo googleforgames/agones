@@ -16,3 +16,4 @@
 * -text
 
 vendor/** linguist-generated=true
+vendor/ linguist-generated=true
