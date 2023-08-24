@@ -222,4 +222,4 @@ sdk-shell-rust:
 
 # Publish the Rust SDK to crates.io
 sdk-publish-rust:
-	$(MAKE) run-sdk-command-rust VERSION=$(RELEASE_VERSION) DOCKER_RUN_ARGS="$(DOCKER_RUN_ARGS) -it" COMMAND=./publish-rust
+	$(MAKE) run-sdk-command-rust VERSION=$(RELEASE_VERSION) DOCKER_RUN_ARGS="$(DOCKER_RUN_ARGS) -it" COMMAND=publish
