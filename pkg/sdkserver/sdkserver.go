@@ -72,16 +72,16 @@ var (
 )
 
 type counterUpdateRequest struct {
-	// Tracks CountSet and / or CountIncrement and / or CountDecrement Requests
-	diffList []int64
-	// Counter (as retreived during first request)
-	counter agonesv1.CounterStatus
 	// Capacity of the Counter as set by capacitySet.
 	capacitySet *int64
 	// Count of the Counter as set by countSet.
 	countSet *int64
+	// Tracks CountSet and / or CountIncrement and / or CountDecrement Requests
+	diffList []int64
 	// Tracks the sum of CountIncrement, CountDecrement, and/or CountSet requests from the client SDK.
 	diff int64
+	// Counter (as retreived during first request)
+	counter agonesv1.CounterStatus
 }
 
 // SDKServer is a gRPC server, that is meant to be a sidecar
@@ -121,6 +121,7 @@ type SDKServer struct {
 	gsPlayerCapacity    int64
 	gsConnectedPlayers  []string
 	gsCounterUpdates    map[string]counterUpdateRequest
+	gsCopy              *agonesv1.GameServer
 }
 
 // NewSDKServer creates a SDKServer that sets up an
@@ -432,7 +433,13 @@ func (s *SDKServer) gameServer() (*agonesv1.GameServer, error) {
 	// they will block here until it's ready
 	s.gsWaitForSync.Wait()
 	gs, err := s.gameServerLister.GameServers(s.namespace).Get(s.gameServerName)
-	return gs, errors.Wrapf(err, "could not retrieve GameServer %s/%s", s.namespace, s.gameServerName)
+	if err != nil {
+		return gs, errors.Wrapf(err, "could not retrieve GameServer %s/%s", s.namespace, s.gameServerName)
+	}
+	if s.gsCopy != nil && gs.ObjectMeta.Generation < s.gsCopy.Generation {
+		return s.gsCopy, nil
+	}
+	return gs, nil
 }
 
 // updateLabels updates the labels on this GameServer to the ones persisted in SDKServer,
@@ -793,12 +800,26 @@ func (s *SDKServer) GetCounter(ctx context.Context, in *alpha.GetCounterRequest)
 		return nil, err
 	}
 
-	if counter, ok := gs.Status.Counters[in.Name]; ok {
-		s.logger.WithField("Get Counter", counter).Debugf("Got Counter %s", in.Name)
-		return &alpha.Counter{Name: in.Name, Count: counter.Count, Capacity: counter.Capacity}, nil
+	counter, ok := gs.Status.Counters[in.Name]
+	if !ok {
+		return nil, errors.Errorf("NOT_FOUND. %s Counter not found", in.Name)
+	}
+	s.logger.WithField("Get Counter", counter).Debugf("Got Counter %s", in.Name)
+	protoCounter := alpha.Counter{Name: in.Name, Count: counter.Count, Capacity: counter.Capacity}
+	// If there are batched changes that have not yet been applied, apply them to the Counter.
+	// This does NOT validate batched the changes.
+	if counterUpdate, ok := s.gsCounterUpdates[in.Name]; ok {
+		if counterUpdate.capacitySet != nil {
+			protoCounter.Capacity = *counterUpdate.capacitySet
+		}
+		if counterUpdate.countSet != nil {
+			protoCounter.Count = *counterUpdate.countSet
+		}
+		protoCounter.Count += counterUpdate.diff
+		s.logger.WithField("Get Counter", counter).Debugf("Applied Batched Counter Updates %v", counterUpdate)
 	}
 
-	return nil, errors.Errorf("NOT_FOUND. %s Counter not found", in.Name)
+	return &protoCounter, nil
 }
 
 // UpdateCounter collapses all UpdateCounterRequests for a given Counter into a single request.
@@ -949,6 +970,8 @@ func (s *SDKServer) updateCounter(ctx context.Context) error {
 		s.recorder.Event(gs, corev1.EventTypeNormal, "UpdateCounter",
 			fmt.Sprintf("Counter %s updated to Count:%d Capacity:%d",
 				name, gs.Status.Counters[name].Count, gs.Status.Counters[name].Capacity))
+		// Cache a copy of the successfully updated gameserver
+		s.gsCopy = gs
 		delete(s.gsCounterUpdates, name)
 	}
 
