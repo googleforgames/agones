@@ -15,8 +15,15 @@
 package e2e
 
 import (
+	"bytes"
 	"context"
+	cryptorand "crypto/rand"
+	"crypto/rsa"
+	"crypto/x509"
+	"crypto/x509/pkix"
+	"encoding/pem"
 	"fmt"
+	"math/big"
 	"math/rand"
 	"strings"
 	"testing"
@@ -507,90 +514,17 @@ func TestAutoscalerWebhook(t *testing.T) {
 	assert.True(t, found, "Expected error was not received")
 }
 
-// Instructions: https://agones.dev/site/docs/getting-started/create-webhook-fleetautoscaler/#chapter-2-configuring-https-fleetautoscaler-webhook-with-ca-bundle
-// Validity
-// 	Not Before: Apr 12 01:37:57 2022 GMT
-//	Not After : Aug 25 01:37:57 2023 GMT
-
-var webhookKey = `
------BEGIN RSA PRIVATE KEY-----
-MIIEpgIBAAKCAQEAwMPoSpFJan9iW/W+hbdh8BmMrCmJLGBVFx/4T2l63b5Iz/pb
-dg6+++mByDNa1SxzM9JfKkK9Sc+xwYwF3u88NniWlx69NfBpQpnHApgTTMsysQFK
-RrvtOmvfon9FXL8B1i1u0e9/sOXobQn2yZfxrQIADl5VDYTIoARPwkf/V71TlEsX
-Z8Q9K4zrWU+KiIluf/krGqLObhg9nnkNvOB7eHYHtdJPfUJfduegQoJ6ZCPD/6eP
-368Wr6Vp3qLuW9hQFWJOb+8WShMpNBD7V5BQULYYxm/v65wpz/YRx2SXGD+Im00V
-FpZt5+SZzQm9d3dfb8Glzt1KaXqWlO0OlkuKqwIDAQABAoIBAQCPSI+/7aKOoMUx
-6caGijsoRzWDOxSVgb1+BOuDy7niXXCt90BIzskzYuxvLY0U64duO681MIqW9OUC
-ItyyS02Mh7IX/mdSUrNLKBb/XJ7r9BZn77eQQFwjks+Wb9fVCr2IwBihv85AZYSQ
-mFlym5iuqs/z3jaGZ+7g0pOeq/mm8u5e1W8r3Ncizqwe9g4yz3+4WXH7TGzXJIb5
-BjGbJ7IJJLZBSOpjxnbej5n/lezxwZ/WSqfy7q37g9eleWgtY9qnCXJ4v+x8xVHa
-Y9P06MliPiXCwUCuYf4AOb7zBIjY9hvAct7KCY5Vqn2vefeXesRpZruXX0uHvNxE
-s8CdVl5RAoGBAPHX9+PvTMz/kQVmItkFjtj8iaDTF8qxSBz5WcDcGpe9bZ0Sjb3N
-m+BJnnuRvGL+7DXNmua+nr3O+WcPEINZkaTzDo0IlY7zta9J+cLQCGWjcH6bDFu1
-0ZJglJ82reyCPsgfcYFi2LZgsFiFc5u3WkGdqI9dyBnmusMTknWGy48XAoGBAMwM
-f7D1ANr9d15hDyHcyoneaC5iP2RfK1iVVGJ4Ov/3qbtw8DGjn0B01mjgEha5cZsq
-apcVyHD0rIp4n//J83fxsgPBHcgOaZdjC5LUi/N9VjVhmI3PrhXk6I/lRZYisGrv
-9kb2IgvovFCHwPoQ/SJW2RBl0lFsdHIz91zs3P2NAoGBAK7Ox5yXHTFUTXPUlr29
-mbpYF/cKfjkBmblvtyODNSmXP8L4ZUHbe59MN2TkO4Jm90AQpLXC9SUHlRicN/hp
-ZrAPC+Z/XPNeT2Yrl3/sNRWaZLbuxakIrDoc23CV6nN41X570+SNGU4CZ5UkqSLW
-DkQ9fFhclkW6lCZrYELZMwvzAoGBALMNwLtis0Z3p1jdaO75FY4X6WnScvg7/whz
-uaHTCUr2ZC4Ec/HLOALSxBcxkQ352vQjK3e6+LIOMp4sLZLC/2/gWqqqutyDsSrU
-EiLdepXHBXBAXSML/CJgRaeHtCGD/TVJrt4kPEohB6bPCYsmf0qz1TRrdTxYJHLW
-oRkdDOs9AoGBAOm+mMrA+twhaS+ggU37UHvUQGVTra33sQVd008dnzaK5wRuIxSu
-J3MH0y8KjS+UKBn8PjsEXMQO/t9LIBqo8A4HuZIZqowoGR6GzrOfnE7lnwf3BKvY
-kgmVel9Ssrf7VeJPsb/w2TgL3IIZDR+VXtC1czlwNaQLPxBfmOQa4VyP
------END RSA PRIVATE KEY-----`
-
-var caPem = `
------BEGIN CERTIFICATE-----
-MIIDRzCCAi+gAwIBAgIUY3Cpf8jTCBaoNZ++5gyZiRq27hMwDQYJKoZIhvcNAQEL
-BQAwMzELMAkGA1UEBhMCQVUxEzARBgNVBAgMClNvbWUtU3RhdGUxDzANBgNVBAoM
-BkFnb25lczAeFw0yMjA0MTIwMTM1NTNaFw0yNTAxMzAwMTM1NTNaMDMxCzAJBgNV
-BAYTAkFVMRMwEQYDVQQIDApTb21lLVN0YXRlMQ8wDQYDVQQKDAZBZ29uZXMwggEi
-MA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCq1uP65QAXdFCYUC+JiH71pxFy
-8AA7KwzkFGEIqObE5JpJwnuahkWy29QZzKJ1RKneN34+WtrHVoRhjUiFXYtBOzTb
-twd//EJkvYe/5uhV4K4FxMI5+VE81W/66FDc4q0YD6whyT5qyjrLyu8tb2jqbXgY
-UaPiiGsbhCwDpq/FdOT71N2V5kBKu+z8PhqDrMUiDsAnKgwIuk6s8D947jv44Q7e
-bxandSXnYqAUwqAFhT2YyZnfsqQGuOdD83A62Day1eUQnsv3dKL6H7F25jN5/G42
-7GT34Wex/JC7VqfC5RfcrUsr4UOSn4ZyzlCLN8mIM1kU5nMtrYBHZZWxH8ghAgMB
-AAGjUzBRMB0GA1UdDgQWBBRWt1C5GFuIdXqmQA8uhqqwUPmjtDAfBgNVHSMEGDAW
-gBRWt1C5GFuIdXqmQA8uhqqwUPmjtDAPBgNVHRMBAf8EBTADAQH/MA0GCSqGSIb3
-DQEBCwUAA4IBAQApFN9bzBYBWZp4sTyglIjQZzeRdZ/S8WyjhbFeHoqA42izAGGB
-rLiKHKym43U/qDxp93Y0Si0K2dv4fyJWqlRZ+gtmVPLwjqkFCQEs/K3+BUHTWE5+
-Tx4EStkIJs8M2PipnUMCAICEO9JCp5bw5lloTI4fpIvxOXHiCC6pRmDW9GyyUywT
-MoWF7VO43V+aKjMdYxqSK1928Foql4QltnOtPtwySAQujr4kTAdhPuOdnMOdXIS5
-6r3Qftfyui85HzhimrAaQ3ZulbNvw7lCWl1BIiidn6VgpXZM4GNFxL5RWIixAyWK
-V3FOACAGS/XJ2IirQ0+Ed5B7GCGXx58CqBN5
------END CERTIFICATE-----`
-
-var webhookCrt = `
------BEGIN CERTIFICATE-----
-MIIDQTCCAimgAwIBAgIUA9ADz3wPH/XvuIei9mWSLOvnzXswDQYJKoZIhvcNAQEL
-BQAwMzELMAkGA1UEBhMCQVUxEzARBgNVBAgMClNvbWUtU3RhdGUxDzANBgNVBAoM
-BkFnb25lczAeFw0yMjA0MTIwMTM3NTdaFw0yMzA4MjUwMTM3NTdaMC0xKzApBgNV
-BAMMImF1dG9zY2FsZXItdGxzLXNlcnZpY2UuZGVmYXVsdC5zdmMwggEiMA0GCSqG
-SIb3DQEBAQUAA4IBDwAwggEKAoIBAQDAw+hKkUlqf2Jb9b6Ft2HwGYysKYksYFUX
-H/hPaXrdvkjP+lt2Dr776YHIM1rVLHMz0l8qQr1Jz7HBjAXe7zw2eJaXHr018GlC
-mccCmBNMyzKxAUpGu+06a9+if0VcvwHWLW7R73+w5ehtCfbJl/GtAgAOXlUNhMig
-BE/CR/9XvVOUSxdnxD0rjOtZT4qIiW5/+Ssaos5uGD2eeQ284Ht4dge10k99Ql92
-56BCgnpkI8P/p4/frxavpWneou5b2FAVYk5v7xZKEyk0EPtXkFBQthjGb+/rnCnP
-9hHHZJcYP4ibTRUWlm3n5JnNCb13d19vwaXO3UppepaU7Q6WS4qrAgMBAAGjUzBR
-MAsGA1UdDwQEAwIHgDATBgNVHSUEDDAKBggrBgEFBQcDATAtBgNVHREEJjAkgiJh
-dXRvc2NhbGVyLXRscy1zZXJ2aWNlLmRlZmF1bHQuc3ZjMA0GCSqGSIb3DQEBCwUA
-A4IBAQBO8MVRJVeaCg80XxnIgcYFXqwgPVqmugYure8cPwsD/tMaISeSavYT/X7L
-YIRUnvOgZtjXpX2+43PZjmoxCtKJUa9Q8qWO4MU/6aD1j6wSasjygaOiW5UEKV4j
-AWt5U8Jbzf5NZLV0udYErSNE1PqbI8zkELxZ5Usf11C2Nu892lrpJrg6CZjiG82w
-PZEUAxKzv6X3w9nF+3fqHkBgRzSwZF9jEAZUkqgqVGAeh2Pzp5O7ciFCL4jAwX9y
-DjTCc3SwhWOqeVVnwjmrpPb14t74boH4TijTuK+umGI6U9g0WVmZA8heYil0x7iP
-xgD9ZcK4JyVWRkFtu1UFbMuR/M1P
------END CERTIFICATE-----`
-
 func TestFleetAutoscalerTLSWebhook(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
-
 	// we hardcode 'default' namespace here because certificates above are generated to use this one
 	defaultNS := "default"
+
+	// certs
+	caPem, _, caCert, caPrivKey, err := generateRootCA()
+	require.NoError(t, err)
+	clientCertPEM, clientCertPrivKeyPEM, err := generateLocalCert(caCert, caPrivKey)
+	require.NoError(t, err)
 
 	secr := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
@@ -600,11 +534,11 @@ func TestFleetAutoscalerTLSWebhook(t *testing.T) {
 		Data: make(map[string][]byte),
 	}
 
-	secr.Data[corev1.TLSCertKey] = []byte(webhookCrt)
-	secr.Data[corev1.TLSPrivateKeyKey] = []byte(webhookKey)
+	secr.Data[corev1.TLSCertKey] = clientCertPEM
+	secr.Data[corev1.TLSPrivateKeyKey] = clientCertPrivKeyPEM
 
 	secrets := framework.KubeClient.CoreV1().Secrets(defaultNS)
-	secr, err := secrets.Create(ctx, secr.DeepCopy(), metav1.CreateOptions{})
+	secr, err = secrets.Create(ctx, secr.DeepCopy(), metav1.CreateOptions{})
 	if assert.Nil(t, err) {
 		defer secrets.Delete(ctx, secr.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
 	}
@@ -676,7 +610,7 @@ func TestFleetAutoscalerTLSWebhook(t *testing.T) {
 			Namespace: defaultNS,
 			Path:      &path,
 		},
-		CABundle: []byte(caPem),
+		CABundle: caPem,
 	}
 	fas, err = fleetautoscalers.Create(ctx, fas.DeepCopy(), metav1.CreateOptions{})
 	if assert.Nil(t, err) {
@@ -735,4 +669,116 @@ func defaultAutoscalerWebhook(namespace string) (*corev1.Pod, *corev1.Service) {
 	}
 
 	return pod, service
+}
+
+// Instructions: https://agones.dev/site/docs/getting-started/create-webhook-fleetautoscaler/#chapter-2-configuring-https-fleetautoscaler-webhook-with-ca-bundle
+// but also, credits/inspiration to https://github.com/kubernetes/autoscaler/blob/master/cluster-autoscaler/cloudprovider/aws/aws-sdk-go/awstesting/certificate_utils.go
+
+func generateRootCA() (
+	caPEM, caPrivKeyPEM []byte, caCert *x509.Certificate, caPrivKey *rsa.PrivateKey, err error,
+) {
+	caCert = &x509.Certificate{
+		SerialNumber: big.NewInt(42),
+		Subject: pkix.Name{
+			Country:      []string{"US"},
+			Organization: []string{"Agones"},
+			CommonName:   "Test Root CA",
+		},
+		NotBefore: time.Now().Add(-time.Minute),
+		NotAfter:  time.Now().AddDate(1, 0, 0),
+		KeyUsage:  x509.KeyUsageCertSign | x509.KeyUsageCRLSign | x509.KeyUsageDigitalSignature,
+		ExtKeyUsage: []x509.ExtKeyUsage{
+			x509.ExtKeyUsageClientAuth,
+			x509.ExtKeyUsageServerAuth,
+		},
+		BasicConstraintsValid: true,
+		IsCA:                  true,
+	}
+
+	// Create CA private and public key
+	caPrivKey, err = rsa.GenerateKey(cryptorand.Reader, 4096)
+	if err != nil {
+		return nil, nil, nil, nil, fmt.Errorf("failed generate CA RSA key, %w", err)
+	}
+
+	// Create CA certificate
+	caBytes, err := x509.CreateCertificate(cryptorand.Reader, caCert, caCert, &caPrivKey.PublicKey, caPrivKey)
+	if err != nil {
+		return nil, nil, nil, nil, fmt.Errorf("failed generate CA certificate, %w", err)
+	}
+
+	// PEM encode CA certificate and private key
+	var caPEMBuf bytes.Buffer
+	err = pem.Encode(&caPEMBuf, &pem.Block{
+		Type:  "CERTIFICATE",
+		Bytes: caBytes,
+	})
+	if err != nil {
+		return nil, nil, nil, nil, fmt.Errorf("failed to endcode root PEM, %w", err)
+	}
+
+	var caPrivKeyPEMBuf bytes.Buffer
+	err = pem.Encode(&caPrivKeyPEMBuf, &pem.Block{
+		Type:  "RSA PRIVATE KEY",
+		Bytes: x509.MarshalPKCS1PrivateKey(caPrivKey),
+	})
+	if err != nil {
+		return nil, nil, nil, nil, fmt.Errorf("failed to endcode private root PEM, %w", err)
+	}
+
+	return caPEMBuf.Bytes(), caPrivKeyPEMBuf.Bytes(), caCert, caPrivKey, nil
+}
+
+func generateLocalCert(parentCert *x509.Certificate, parentPrivKey *rsa.PrivateKey) (
+	certPEM, certPrivKeyPEM []byte, err error,
+) {
+	cert := &x509.Certificate{
+		SerialNumber: big.NewInt(42),
+		Subject: pkix.Name{
+			Country:      []string{"US"},
+			Organization: []string{"Agones"},
+			CommonName:   "autoscaler-tls-service.default.svc",
+		},
+		NotBefore: time.Now().Add(-time.Minute),
+		NotAfter:  time.Now().AddDate(1, 0, 0),
+		ExtKeyUsage: []x509.ExtKeyUsage{
+			x509.ExtKeyUsageClientAuth,
+			x509.ExtKeyUsageServerAuth,
+		},
+		KeyUsage: x509.KeyUsageDigitalSignature,
+		DNSNames: []string{"autoscaler-tls-service.default.svc"},
+	}
+
+	// Create server private and public key
+	certPrivKey, err := rsa.GenerateKey(cryptorand.Reader, 4096)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to generate server RSA private key, %w", err)
+	}
+
+	// Create server certificate
+	certBytes, err := x509.CreateCertificate(cryptorand.Reader, cert, parentCert, &certPrivKey.PublicKey, parentPrivKey)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to generate server certificate, %w", err)
+	}
+
+	// PEM encode certificate and private key
+	var certPEMBuf bytes.Buffer
+	err = pem.Encode(&certPEMBuf, &pem.Block{
+		Type:  "CERTIFICATE",
+		Bytes: certBytes,
+	})
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to endcode certificate pem, %w", err)
+	}
+
+	var certPrivKeyPEMBuf bytes.Buffer
+	err = pem.Encode(&certPrivKeyPEMBuf, &pem.Block{
+		Type:  "RSA PRIVATE KEY",
+		Bytes: x509.MarshalPKCS1PrivateKey(certPrivKey),
+	})
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to endcode private pem, %w", err)
+	}
+
+	return certPEMBuf.Bytes(), certPrivKeyPEMBuf.Bytes(), nil
 }
