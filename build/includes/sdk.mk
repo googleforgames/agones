@@ -181,10 +181,11 @@ run-sdk-conformance-test-rust:
 	DOCKER_RUN_ARGS="$(DOCKER_RUN_ARGS) -e RUN_ASYNC=true" $(MAKE) run-sdk-conformance-test SDK_FOLDER=rust GRPC_PORT=9004 HTTP_PORT=9104 FEATURE_GATES=PlayerTracking=true TESTS=$(DEFAULT_CONFORMANCE_TESTS),$(ALPHA_CONFORMANCE_TESTS)
 
 run-sdk-conformance-test-rest:
+	# (note: the restapi folder doesn't use GRPC_PORT but run-sdk-conformance-no-build defaults it, so we supply a unique value here)
 	# run without feature flags
-	$(MAKE) run-sdk-conformance-test SDK_FOLDER=restapi HTTP_PORT=9050
+	$(MAKE) run-sdk-conformance-test SDK_FOLDER=restapi GRPC_PORT=9050 HTTP_PORT=9150
 	# run with feature flags enabled
-	$(MAKE) run-sdk-conformance-test SDK_FOLDER=restapi GRPC_PORT=9001 HTTP_PORT=9101 FEATURE_GATES=PlayerTracking=true TESTS=$(DEFAULT_CONFORMANCE_TESTS),$(ALPHA_CONFORMANCE_TESTS)
+	$(MAKE) run-sdk-conformance-test SDK_FOLDER=restapi GRPC_PORT=9050 HTTP_PORT=9150 FEATURE_GATES=PlayerTracking=true TESTS=$(DEFAULT_CONFORMANCE_TESTS),$(ALPHA_CONFORMANCE_TESTS)
 
 	$(MAKE) run-sdk-command COMMAND=clean SDK_FOLDER=restapi
 
@@ -223,3 +224,19 @@ sdk-shell-rust:
 # Publish the Rust SDK to crates.io
 sdk-publish-rust:
 	$(MAKE) run-sdk-command-rust VERSION=$(RELEASE_VERSION) DOCKER_RUN_ARGS="$(DOCKER_RUN_ARGS) -it" COMMAND=publish
+
+# difference in sdks before and after gen-all-sdk-grpc target
+test-gen-all-sdk-grpc:
+	make gen-all-sdk-grpc
+	@echo; \
+	echo "=== Diffing workspace after 'make gen-all-sdk-grpc'"; \
+	diff_output=$$(git diff --name-status HEAD -- ../sdks); \
+	diff_output_test_sdk=$$(git diff --name-status HEAD -- ../test/sdk); \
+	if [ -z "$$diff_output" ] && [ -z "$$diff_output_test_sdk" ]; then \
+		echo "+++ Success: No differences found."; \
+	else \
+		echo "*** Failure: Differences found:"; \
+		echo "$$diff_output"; \
+		echo "$$diff_output_test_sdk"; \
+		exit 1; \
+	fi

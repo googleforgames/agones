@@ -532,7 +532,7 @@ func TestAllocatorRunCacheSync(t *testing.T) {
 	}()
 
 	gs := agonesv1.GameServer{
-		ObjectMeta: metav1.ObjectMeta{Name: "gs1", Namespace: "default"},
+		ObjectMeta: metav1.ObjectMeta{Name: "gs1", Namespace: "default", ResourceVersion: "1"},
 		Status:     agonesv1.GameServerStatus{State: agonesv1.GameServerStateStarting},
 	}
 
@@ -542,33 +542,45 @@ func TestAllocatorRunCacheSync(t *testing.T) {
 	assertCacheEntries(0)
 
 	gs.Status.State = agonesv1.GameServerStateReady
+	gs.ObjectMeta.ResourceVersion = "2"
 	gsWatch.Modify(gs.DeepCopy())
 
 	assertCacheEntries(1)
 
 	// try again, should be no change
 	gs.Status.State = agonesv1.GameServerStateReady
+	gs.ObjectMeta.ResourceVersion = "3"
 	gsWatch.Modify(gs.DeepCopy())
 
 	assertCacheEntries(1)
 
 	// now move it to Shutdown
 	gs.Status.State = agonesv1.GameServerStateShutdown
+	gs.ObjectMeta.ResourceVersion = "4"
 	gsWatch.Modify(gs.DeepCopy())
 	assertCacheEntries(0)
 
 	// add it back in as Allocated
 	gs.Status.State = agonesv1.GameServerStateAllocated
+	gs.ObjectMeta.ResourceVersion = "5"
 	gsWatch.Modify(gs.DeepCopy())
 	assertCacheEntries(1)
 
 	// now move it to Shutdown
 	gs.Status.State = agonesv1.GameServerStateShutdown
+	gs.ObjectMeta.ResourceVersion = "6"
+	gsWatch.Modify(gs.DeepCopy())
+	assertCacheEntries(0)
+
+	// do not add back in with stale resource version
+	gs.Status.State = agonesv1.GameServerStateAllocated
+	gs.ObjectMeta.ResourceVersion = "6"
 	gsWatch.Modify(gs.DeepCopy())
 	assertCacheEntries(0)
 
 	// add back in ready gameserver
 	gs.Status.State = agonesv1.GameServerStateReady
+	gs.ObjectMeta.ResourceVersion = "7"
 	gsWatch.Modify(gs.DeepCopy())
 	assertCacheEntries(1)
 
@@ -576,11 +588,13 @@ func TestAllocatorRunCacheSync(t *testing.T) {
 	n := metav1.Now()
 	deletedCopy := gs.DeepCopy()
 	deletedCopy.ObjectMeta.DeletionTimestamp = &n
+	deletedCopy.ObjectMeta.ResourceVersion = "8"
 	gsWatch.Modify(deletedCopy)
 	assertCacheEntries(0)
 
 	// add back in ready gameserver
 	gs.Status.State = agonesv1.GameServerStateReady
+	deletedCopy.ObjectMeta.ResourceVersion = "9"
 	gsWatch.Modify(gs.DeepCopy())
 	assertCacheEntries(1)
 

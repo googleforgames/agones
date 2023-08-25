@@ -70,6 +70,9 @@ func NewAllocationCache(informer informerv1.GameServerInformer, counter *gameser
 			if !ok {
 				return
 			}
+			if oldGs.ObjectMeta.ResourceVersion == newGs.ObjectMeta.ResourceVersion {
+				return
+			}
 			switch {
 			case newGs.IsBeingDeleted():
 				c.cache.Delete(key)
