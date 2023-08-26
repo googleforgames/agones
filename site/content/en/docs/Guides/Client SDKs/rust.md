@@ -29,24 +29,20 @@ Check the [Client SDK Documentation]({{< relref "_index.md" >}}) for more detail
 | Player Tracking | PlayerDisconnect    | ✔️          |
 | Player Tracking | SetPlayerCapacity   | ✔️          |
 
-## Download
-
-Download the source {{< ghlink href="sdks/rust" >}}directly from GitHub{{< /ghlink >}}.
-
 ## Prerequisites
 
 - [Rust >= 1.50](https://www.rust-lang.org/tools/install)
 
 ## Usage
 
-Add this crate to `dependencies` section in your Cargo.toml. Specify a directory where this README.md is located to the `path`.
+Add <a href="https://crates.io/crates/agones" data-proofer-ignore>this crate</a> to `dependencies` section in your Cargo.toml.
 
 Also note that the SDK is [`async`](https://doc.rust-lang.org/std/keyword.async.html) only, so you will need an async runtime to execute the futures exposed by the SDK. It is recommended to use [tokio](https://docs.rs/tokio) as the SDK already depends on tokio due to its choice of gRPC library, [tonic](https://docs.rs/tonic).
 
 ```toml
 [dependencies]
-agones = { path = "../agones/sdks/rust" }
-tokio = { version = "1.7", features = ["macros", "sync"] }
+agones = "1.34.0"
+tokio = { version = "1.32.0", features = ["macros", "sync"] }
 ```
 
 To begin working with the SDK, create an instance of it.
