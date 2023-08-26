@@ -76,8 +76,6 @@ type counterUpdateRequest struct {
 	capacitySet *int64
 	// Count of the Counter as set by countSet.
 	countSet *int64
-	// Tracks CountSet and / or CountIncrement and / or CountDecrement Requests
-	diffList []int64
 	// Tracks the sum of CountIncrement, CountDecrement, and/or CountSet requests from the client SDK.
 	diff int64
 	// Counter (as retreived during first request)
@@ -816,6 +814,12 @@ func (s *SDKServer) GetCounter(ctx context.Context, in *alpha.GetCounterRequest)
 			protoCounter.Count = *counterUpdate.countSet
 		}
 		protoCounter.Count += counterUpdate.diff
+		if protoCounter.Count < 0 {
+			protoCounter.Count = 0
+		}
+		if protoCounter.Count > protoCounter.Capacity {
+			protoCounter.Count = protoCounter.Capacity
+		}
 		s.logger.WithField("Get Counter", counter).Debugf("Applied Batched Counter Updates %v", counterUpdate)
 	}
 
@@ -876,7 +880,6 @@ func (s *SDKServer) UpdateCounter(ctx context.Context, in *alpha.UpdateCounterRe
 			return nil, errors.Errorf("OUT_OF_RANGE. Count must be within range [0,Capacity]. Found Count: %d, Capacity: %d", count, capacity)
 		}
 		batchCounter.diff += in.CounterUpdateRequest.CountDiff
-		batchCounter.diffList = append(batchCounter.diffList, in.CounterUpdateRequest.CountDiff)
 	case in.CounterUpdateRequest.Count != nil: // Update based on if Client call is CountSet
 		// Verify that 0 <= Count >= Capacity
 		countSet := in.CounterUpdateRequest.Count.GetValue()
@@ -890,7 +893,6 @@ func (s *SDKServer) UpdateCounter(ctx context.Context, in *alpha.UpdateCounterRe
 		batchCounter.countSet = &countSet
 		// Clear any previous CountIncrement or CountDecrement requests, and add the CountSet as the first item.
 		batchCounter.diff = 0
-		batchCounter.diffList = []int64{countSet}
 	case in.CounterUpdateRequest.Capacity != nil: // Updated based on if client call is CapacitySet
 		capacitySet := in.CounterUpdateRequest.Capacity.GetValue()
 		batchCounter.capacitySet = &capacitySet
@@ -947,20 +949,18 @@ func (s *SDKServer) updateCounter(ctx context.Context) error {
 				counter.Capacity = *ctrReq.capacitySet
 			}
 			if ctrReq.countSet != nil {
-				counter.Count, ctrReq.diffList = ctrReq.diffList[0], ctrReq.diffList[1:]
+				counter.Count = *ctrReq.countSet
 			}
 			// If the diff can be applied, apply it. Otherwise loop through the requests.
 			newCnt := counter.Count + ctrReq.diff
-			if newCnt >= 0 && newCnt <= counter.Capacity {
-				counter.Count = newCnt
-			} else {
-				for _, req := range ctrReq.diffList {
-					newCnt = counter.Count + req
-					if newCnt >= 0 && newCnt <= counter.Capacity {
-						counter.Count = newCnt
-					}
-				}
+			if newCnt < 0 {
+				newCnt = 0
 			}
+			// TODO: Case where Capacity has been reduced, but Count has not.
+			if newCnt > counter.Capacity {
+				newCnt = counter.Capacity
+			}
+			counter.Count = newCnt
 		}
 		gsCopy.Status.Counters[name] = counter
 		gs, err = s.gameServerGetter.GameServers(s.namespace).Update(ctx, gsCopy, metav1.UpdateOptions{})
