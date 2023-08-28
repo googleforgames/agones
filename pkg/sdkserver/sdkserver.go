@@ -817,7 +817,7 @@ func (s *SDKServer) GetCounter(ctx context.Context, in *alpha.GetCounterRequest)
 		if protoCounter.Count < 0 {
 			protoCounter.Count = 0
 		}
-		if protoCounter.Count > protoCounter.Capacity {
+		if (counterUpdate.capacitySet == nil) && (protoCounter.Count > protoCounter.Capacity) {
 			protoCounter.Count = protoCounter.Capacity
 		}
 		s.logger.WithField("Get Counter", counter).Debugf("Applied Batched Counter Updates %v", counterUpdate)
@@ -876,7 +876,8 @@ func (s *SDKServer) UpdateCounter(ctx context.Context, in *alpha.UpdateCounterRe
 		if batchCounter.capacitySet != nil {
 			capacity = *batchCounter.capacitySet
 		}
-		if count < 0 || count > capacity {
+		// Case where Count > Capacity we want to allow decrementation but not incrementation
+		if count < 0 || (in.CounterUpdateRequest.CountDiff > 0 && count > capacity) {
 			return nil, errors.Errorf("OUT_OF_RANGE. Count must be within range [0,Capacity]. Found Count: %d, Capacity: %d", count, capacity)
 		}
 		batchCounter.diff += in.CounterUpdateRequest.CountDiff
@@ -894,6 +895,9 @@ func (s *SDKServer) UpdateCounter(ctx context.Context, in *alpha.UpdateCounterRe
 		// Clear any previous CountIncrement or CountDecrement requests, and add the CountSet as the first item.
 		batchCounter.diff = 0
 	case in.CounterUpdateRequest.Capacity != nil: // Updated based on if client call is CapacitySet
+		if in.CounterUpdateRequest.Capacity.GetValue() < 0 {
+			return nil, errors.Errorf("OUT_OF_RANGE. Capacity must be greater than or equal to 0. Found Capacity: %d", in.CounterUpdateRequest.Capacity.GetValue())
+		}
 		capacitySet := in.CounterUpdateRequest.Capacity.GetValue()
 		batchCounter.capacitySet = &capacitySet
 	default:
@@ -951,13 +955,15 @@ func (s *SDKServer) updateCounter(ctx context.Context) error {
 			if ctrReq.countSet != nil {
 				counter.Count = *ctrReq.countSet
 			}
-			// If the diff can be applied, apply it. Otherwise loop through the requests.
 			newCnt := counter.Count + ctrReq.diff
 			if newCnt < 0 {
+				// If Count < 0 truncate requests by setting the Count to 0.
 				newCnt = 0
 			}
-			// TODO: Case where Capacity has been reduced, but Count has not.
-			if newCnt > counter.Capacity {
+			// TODO: This means there may be increment requests in the collapsed Diff that shouldn't have gone through. We may want a diffList for this case?
+			// If Count > Capacity and the Diff is decreasing the Count, reduce the Count by the Diff.
+			// Otherwise if Count > Capacity and the Diff is increasing the Count, truncate at Capacity.
+			if newCnt > counter.Capacity && ctrReq.diff > 0 {
 				newCnt = counter.Capacity
 			}
 			counter.Count = newCnt

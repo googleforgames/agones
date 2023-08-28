@@ -31,6 +31,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/types/known/wrapperspb"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -1085,6 +1086,7 @@ func TestSDKServerReserveTimeout(t *testing.T) {
 }
 
 func TestSDKServerUpdateCounter(t *testing.T) {
+	// TODO: Speed up tests
 	t.Parallel()
 	agruntime.FeatureTestMutex.Lock()
 	defer agruntime.FeatureTestMutex.Unlock()
@@ -1092,80 +1094,216 @@ func TestSDKServerUpdateCounter(t *testing.T) {
 	err := agruntime.ParseFeatures(string(agruntime.FeatureCountsAndLists) + "=true")
 	require.NoError(t, err, "Can not parse FeatureCountsAndLists feature")
 
-	m := agtesting.NewMocks()
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	sc, err := defaultSidecar(m)
-	require.NoError(t, err)
-
-	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-		gs := agonesv1.GameServer{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: "test", Namespace: "default",
-			},
-			Spec: agonesv1.GameServerSpec{
-				SdkServer: agonesv1.SdkServer{
-					LogLevel: "Debug",
-				},
-			},
-			Status: agonesv1.GameServerStatus{
-				Counters: map[string]agonesv1.CounterStatus{
-					"widgets": {Count: int64(1), Capacity: int64(100)},
-				},
-			},
-		}
-		gs.ApplyDefaults()
-		return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{gs}}, nil
-	})
-
-	updated := make(chan map[string]agonesv1.CounterStatus, 10)
-	m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-		ua := action.(k8stesting.UpdateAction)
-		gs := ua.GetObject().(*agonesv1.GameServer)
-		updated <- gs.Status.Counters
-		return true, gs, nil
-	})
-
-	assert.NoError(t, sc.WaitForConnection(ctx))
-	sc.informerFactory.Start(ctx.Done())
-	assert.True(t, cache.WaitForCacheSync(ctx.Done(), sc.gameServerSynced))
-
-	go func() {
-		err = sc.Run(ctx)
-		assert.NoError(t, err)
-	}()
-
-	// check initial value comes through
-	// async, so check after a period
-	err = wait.Poll(time.Second, 10*time.Second, func() (bool, error) {
-		counter, err := sc.GetCounter(context.Background(), &alpha.GetCounterRequest{Name: "widgets"})
-		return counter.Count == 1 && counter.Capacity == 100, err
-	})
-	assert.NoError(t, err)
-
-	// Increment the Count
-	_, err = sc.UpdateCounter(context.Background(), &alpha.UpdateCounterRequest{
-		CounterUpdateRequest: &alpha.CounterUpdateRequest{
-			Name:      "widgets",
-			CountDiff: 9,
+	fixtures := map[string]struct {
+		counterName string
+		requests    []*alpha.UpdateCounterRequest
+		want        agonesv1.CounterStatus
+		updateErrs  []bool
+		updated     bool
+	}{
+		"increment": {
+			counterName: "widgets",
+			requests: []*alpha.UpdateCounterRequest{{
+				CounterUpdateRequest: &alpha.CounterUpdateRequest{
+					Name:      "widgets",
+					CountDiff: 9,
+				}}},
+			want:       agonesv1.CounterStatus{Count: int64(19), Capacity: int64(100)},
+			updateErrs: []bool{false},
+			updated:    true,
 		},
-	})
-	assert.NoError(t, err)
+		"increment illegal": {
+			counterName: "widgets",
+			requests: []*alpha.UpdateCounterRequest{{
+				CounterUpdateRequest: &alpha.CounterUpdateRequest{
+					Name:      "widgets",
+					CountDiff: 100,
+				}}},
+			want:       agonesv1.CounterStatus{Count: int64(10), Capacity: int64(100)},
+			updateErrs: []bool{true},
+			updated:    false,
+		},
+		"decrement": {
+			counterName: "widgets",
+			requests: []*alpha.UpdateCounterRequest{{
+				CounterUpdateRequest: &alpha.CounterUpdateRequest{
+					Name:      "widgets",
+					CountDiff: -1,
+				}}},
+			want:       agonesv1.CounterStatus{Count: int64(9), Capacity: int64(100)},
+			updateErrs: []bool{false},
+			updated:    true,
+		},
+		"decrement illegal": {
+			counterName: "widgets",
+			requests: []*alpha.UpdateCounterRequest{{
+				CounterUpdateRequest: &alpha.CounterUpdateRequest{
+					Name:      "widgets",
+					CountDiff: -11,
+				}}},
+			want:       agonesv1.CounterStatus{Count: int64(10), Capacity: int64(100)},
+			updateErrs: []bool{true},
+			updated:    false,
+		},
+		"set capacity": {
+			counterName: "widgets",
+			requests: []*alpha.UpdateCounterRequest{{
+				CounterUpdateRequest: &alpha.CounterUpdateRequest{
+					Name:     "widgets",
+					Capacity: wrapperspb.Int64(0),
+				}}},
+			want:       agonesv1.CounterStatus{Count: int64(10), Capacity: int64(0)},
+			updateErrs: []bool{false},
+			updated:    true,
+		},
+		"set capacity illegal": {
+			counterName: "widgets",
+			requests: []*alpha.UpdateCounterRequest{{
+				CounterUpdateRequest: &alpha.CounterUpdateRequest{
+					Name:     "widgets",
+					Capacity: wrapperspb.Int64(-1),
+				}}},
+			want:       agonesv1.CounterStatus{Count: int64(10), Capacity: int64(100)},
+			updateErrs: []bool{true},
+			updated:    false,
+		},
+		"set count": {
+			counterName: "widgets",
+			requests: []*alpha.UpdateCounterRequest{{
+				CounterUpdateRequest: &alpha.CounterUpdateRequest{
+					Name:  "widgets",
+					Count: wrapperspb.Int64(42),
+				}}},
+			want:       agonesv1.CounterStatus{Count: int64(42), Capacity: int64(100)},
+			updateErrs: []bool{false},
+			updated:    true,
+		},
+		"set count illegal": {
+			counterName: "widgets",
+			requests: []*alpha.UpdateCounterRequest{{
+				CounterUpdateRequest: &alpha.CounterUpdateRequest{
+					Name:  "widgets",
+					Count: wrapperspb.Int64(101),
+				}}},
+			want:       agonesv1.CounterStatus{Count: int64(10), Capacity: int64(100)},
+			updateErrs: []bool{true},
+			updated:    false,
+		},
+		"increment past set capacity illegal": {
+			counterName: "widgets",
+			requests: []*alpha.UpdateCounterRequest{{
+				CounterUpdateRequest: &alpha.CounterUpdateRequest{
+					Name:     "widgets",
+					Capacity: wrapperspb.Int64(0),
+				}},
+				{CounterUpdateRequest: &alpha.CounterUpdateRequest{
+					Name:      "widgets",
+					CountDiff: 1,
+				}}},
+			want:       agonesv1.CounterStatus{Count: int64(10), Capacity: int64(0)},
+			updateErrs: []bool{false, true},
+			updated:    true,
+		},
+		"decrement past set capacity OK": {
+			counterName: "widgets",
+			requests: []*alpha.UpdateCounterRequest{{
+				CounterUpdateRequest: &alpha.CounterUpdateRequest{
+					Name:     "widgets",
+					Capacity: wrapperspb.Int64(0),
+				}},
+				{CounterUpdateRequest: &alpha.CounterUpdateRequest{
+					Name:      "widgets",
+					CountDiff: -1,
+				}}},
+			want:       agonesv1.CounterStatus{Count: int64(9), Capacity: int64(0)},
+			updateErrs: []bool{false, false},
+			updated:    true,
+		},
+	}
 
-	counter, err := sc.GetCounter(context.Background(), &alpha.GetCounterRequest{Name: "widgets"})
-	assert.NoError(t, err)
-	assert.Equal(t, int64(10), counter.Count)
-	assert.Equal(t, int64(100), counter.Capacity)
+	for test, testCase := range fixtures {
+		t.Run(test, func(t *testing.T) {
+			m := agtesting.NewMocks()
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
 
-	// on an update, confirm that the update hits the K8s api
-	select {
-	case value := <-updated:
-		assert.Equal(t, map[string]agonesv1.CounterStatus{
-			"widgets": {Count: int64(10), Capacity: int64(100)},
-		}, value)
-	case <-time.After(time.Minute):
-		assert.Fail(t, "Counter should have been updated")
+			sc, err := defaultSidecar(m)
+			require.NoError(t, err)
+
+			m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+				gs := agonesv1.GameServer{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: "test", Namespace: "default",
+					},
+					Spec: agonesv1.GameServerSpec{
+						SdkServer: agonesv1.SdkServer{
+							LogLevel: "Debug",
+						},
+					},
+					Status: agonesv1.GameServerStatus{
+						Counters: map[string]agonesv1.CounterStatus{
+							"widgets": {Count: int64(10), Capacity: int64(100)},
+						},
+					},
+				}
+				gs.ApplyDefaults()
+				return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{gs}}, nil
+			})
+
+			updated := make(chan map[string]agonesv1.CounterStatus, 10)
+			m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+				ua := action.(k8stesting.UpdateAction)
+				gs := ua.GetObject().(*agonesv1.GameServer)
+				updated <- gs.Status.Counters
+				return true, gs, nil
+			})
+
+			assert.NoError(t, sc.WaitForConnection(ctx))
+			sc.informerFactory.Start(ctx.Done())
+			assert.True(t, cache.WaitForCacheSync(ctx.Done(), sc.gameServerSynced))
+
+			go func() {
+				err = sc.Run(ctx)
+				assert.NoError(t, err)
+			}()
+
+			// check initial value comes through
+			// async, so check after a period
+			err = wait.Poll(time.Second, 10*time.Second, func() (bool, error) {
+				counter, err := sc.GetCounter(context.Background(), &alpha.GetCounterRequest{Name: "widgets"})
+				return counter.Count == 10 && counter.Capacity == 100, err
+			})
+			assert.NoError(t, err)
+
+			// Update the Counter
+			for i, req := range testCase.requests {
+				_, err = sc.UpdateCounter(context.Background(), req)
+				if testCase.updateErrs[i] {
+					assert.Error(t, err)
+				} else {
+					assert.NoError(t, err)
+				}
+			}
+
+			got, err := sc.GetCounter(context.Background(), &alpha.GetCounterRequest{Name: testCase.counterName})
+			assert.NoError(t, err)
+			assert.Equal(t, testCase.want.Count, got.Count)
+			assert.Equal(t, testCase.want.Capacity, got.Capacity)
+
+			// on an update, confirm that the update hits the K8s api
+			if testCase.updated {
+				select {
+				case value := <-updated:
+					assert.Equal(t, map[string]agonesv1.CounterStatus{
+						"widgets": {Count: testCase.want.Count, Capacity: testCase.want.Capacity},
+					}, value)
+				case <-time.After(10 * time.Second):
+					assert.Fail(t, "Counter should have been updated")
+				}
+			}
+
+			cancel()
+		})
 	}
 }
 
