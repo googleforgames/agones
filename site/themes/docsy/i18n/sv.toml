@@ -1,0 +1,81 @@
+# UI strings. Buttons and similar.
+
+[ui_pager_prev]
+other = "Tidigare"
+
+[ui_pager_next]
+other = "Nästa"
+
+[ui_read_more]
+other = "Läs mer"
+
+[ui_search]
+other = "Sök denna sida…"
+
+# Used in sentences such as "Posted in News"
+[ui_in]
+other = "i"
+
+# Used in sentences such as "All Tags"
+[ui_all]
+other = "alla"
+
+# Footer text
+[footer_all_rights_reserved]
+other = "Alla rättigheter förbehållna"
+
+[footer_privacy_policy]
+other = "Integritetspolicy"
+
+
+# Post (blog, articles etc.)
+[post_byline_by]
+other = "Av"
+[post_created]
+other = "Skapat"
+[post_last_mod]
+other = "Senast ändrad"
+[post_edit_this]
+other = "Redigera sida"
+[post_view_this]
+other = "Visa sidans källa"
+[post_create_child_page]
+other = "Skapa barnsida"
+[post_create_issue]
+other = "Skapa dokumentationsfråga"
+[post_create_project_issue]
+other = "Skapa projektfråga"
+[post_posts_in]
+other = "Inlägg i"
+[post_reading_time]
+other = "minuter läst"
+[post_less_than_a_minute_read]
+other = "mindre än en minut"
+
+# Print support
+[print_printable_section]
+other = "Detta är den flersidiga utskrivbara vyn av detta avsnitt."
+[print_click_to_print]
+other = "Klicka här för att skriva ut"
+[print_show_regular]
+other = "Återgå till den vanliga vyn på denna sida"
+[print_entire_section]
+other = "Skriv ut hela avsnittet"
+
+# Community
+[community_join]
+other = "Gå med i {{ .Site.Title }} samhället"
+[community_introduce]
+other = "{{ .Site.Title }} är ett projekt med öppen källkod som alla i samhället kan använda, förbättra och njuta av. Vi vill gärna att du är med! Här är några sätt att ta reda på vad som händer och engagera dig."
+[community_learn]
+other = "Lär dig och Anslut"
+[community_using]
+other = "Använder eller vill använda {{ .Site.Title }}? Ta reda på mer här:"
+[community_develop]
+other = "Utveckla och Medverka"
+[community_contribute]
+other = "Om du vill engagera dig mer genom att medverka till {{ .Site.Title }}, gå med oss här:"
+[community_how_to]
+other = "Du kan ta reda på hur du medverkar till {{ .Site.Title }} i våra"
+[community_guideline]
+other = "Riktlinjer för att Medverka"

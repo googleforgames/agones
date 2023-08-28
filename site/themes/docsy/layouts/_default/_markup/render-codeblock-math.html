@@ -1,0 +1,18 @@
+{{ .Page.Store.Set "hasKaTeX" true -}}
+
+{{/* set default delimiters */ -}}
+{{ $delimiter_left := "$$" -}}
+{{ $delimiter_right := "$$" -}}
+
+{{/* override delimiters if set in config file */ -}}
+{{ with $.Page.Site.Params.katex.options.delimiters -}}
+  {{ range first 1 ( where . "display" true ) -}}
+    {{ $delimiter_left = index . "left" -}}
+    {{ $delimiter_right = index . "right" -}}
+  {{ end -}}
+{{ end -}}
+
+{{/* output of equation */}}
+<div class="math">{{ $delimiter_left -}}
+{{ .Inner | safeHTML -}}
+{{ $delimiter_right }}</div>{{ "" -}}

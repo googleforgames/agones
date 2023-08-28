@@ -1,28 +1,55 @@
-<!-- Make sure that we are enclosed within a tabpane shortcode block -->
-{{ with $.Parent }}
-{{- if ne $.Parent.Name "tabpane" -}}
-{{- errorf "tab must be used within a tabpane block" -}}
-{{- end -}}
-{{- end -}}
+{{- /* Make sure that we are enclosed within a tabpane shortcode block */ -}}
 
-<!-- Prefill header if not given as parameter -->
-{{ $header := default (printf "Tab %v" ( add $.Ordinal 1)) (.Get "header") }}
+{{ with $.Parent -}}
+  {{ if ne $.Parent.Name "tabpane" -}}
+    {{ errorf "Found shortcode %q enclosed inside a %q block, must be enclosed inside a %q block. Error position: %s" $.Name $.Parent.Name "tabpane" $.Position  -}}
+  {{ end -}}
+{{ else -}}
+  {{ errorf "shortcode %q must be enclosed inside a %q block, but no parent block was found. Error position: %s" $.Name "tabpane" $.Position  -}}
+{{ end -}}
 
-<!-- store all tab info in dict tab -->
-{{ $tab := dict "header" $header }}
-{{ with $.Get "lang" }}
-{{ $tab = merge $tab (dict "language" ($.Get "lang")) }}
-{{ end }}
-{{ with $.Get "highlight" }}
-{{ $tab = merge $tab (dict "highlight" ($.Get "highlight")) }}
-{{ end }}
-{{ with $.Inner }}
-<!-- Trim any leading and trailing newlines from .Inner, this avoids
-     spurious lines during syntax highlighting -->
-{{ $tab = merge $tab (dict "content" (trim $.Inner "\n")) }}
-{{ end }}
+{{ $header := "Tab" -}}
+{{ if and (not .IsNamedParams) (.Get 0) -}}
+  {{ $header = (.Get 0) -}}
+{{ else -}}
+  {{/* Prefill header if not given as named or unnamed parameter */ -}}
+  {{ $header = default (printf "Tab %v" ( add $.Ordinal 1)) (.Get "header") -}}
+{{ end -}}
 
-<!-- add dict tab to parent's scratchpad -->
-{{ with .Parent }}
-{{- $.Parent.Scratch.SetInMap "tabs" (printf "%v" $.Ordinal) $tab -}}
-{{ end }}
+{{/* store all tab info in dict tab */ -}}
+{{ $tab := dict "header" $header -}}
+{{ with $.Get "lang" -}}
+  {{ $tab = merge $tab (dict "language" ($.Get "lang")) -}}
+{{ end -}}
+{{ with $.Get "highlight" -}}
+  {{ $tab = merge $tab (dict "highlight" ($.Get "highlight")) -}}
+{{ end -}}
+{{ with $.Get "text" -}}
+  {{ if ne ( printf "%T" . ) "bool" -}}
+    {{ errorf "Shortcode %q: boolean value expected for parameter %q, but got %s. Error position: %s" $.Name "text" (printf "%T" .) $.Position  -}}
+  {{ end -}}
+  {{ $tab = merge $tab (dict "text" ($.Get "text")) -}}
+{{ end -}}
+{{ with $.Get "right" -}}
+  {{ if ne ( printf "%T" . ) "bool" -}}
+    {{ errorf "Shortcode %q: boolean value expected for parameter %q, but got %s. Error position: %s" $.Name "right" (printf "%T" .) $.Position  -}}
+  {{ end -}}
+  {{ $tab = merge $tab (dict "rightpush" ($.Get "right")) -}}
+{{ end -}}
+{{ with $.Get "disabled" -}}
+  {{ if ne ( printf "%T" . ) "bool" -}}
+    {{ errorf "Shortcode %q: boolean value expected for parameter %q, but got %s. Error position: %s" $.Name "disabled" (printf "%T" .) $.Position  -}}
+  {{ end -}}
+  {{ $tab = merge $tab (dict "disabled" ($.Get "disabled")) -}}
+{{ end -}}
+
+{{ with $.Inner -}}
+  {{/* Trim any leading and trailing newlines from .Inner, this avoids
+       spurious lines during syntax highlighting */ -}}
+  {{ $tab = merge $tab (dict "content" $.Inner) -}}
+{{ end -}}
+
+{{/* add dict tab to parent's scratchpad */ -}}
+{{ with .Parent -}}
+  {{ $.Parent.Scratch.SetInMap "tabs" (printf "%02v" $.Ordinal) $tab -}}
+{{ end -}}

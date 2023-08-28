@@ -1,0 +1,44 @@
+# Docsy config
+#
+# cSpell:ignore docsy fortawesome fontawesome webfonts
+
+params:
+  time_format_blog: Monday, January 02, 2006
+  time_format_default: January 2, 2006
+  rss_sections: [blog]
+
+outputFormats:
+  PRINT:
+    baseName: index
+    isHTML: true
+    mediaType: text/html
+    path: _print
+    permalinkable: false
+
+module:
+  hugoVersion:
+    extended: true
+    min: 0.110.0
+  mounts:
+    - source: assets
+      target: assets
+    - source: node_modules/bootstrap
+      target: assets/vendor/bootstrap
+    - source: node_modules/@fortawesome/fontawesome-free
+      target: assets/vendor/Font-Awesome
+    - source: i18n
+      target: i18n
+    - source: layouts
+      target: layouts
+    - source: static
+      target: static
+    - source: node_modules/@fortawesome/fontawesome-free/webfonts
+      target: static/webfonts
+    # Mounts for projects using Docsy as an NPM package. The source path prefix
+    # "../.." moves out of themes/docsy so that Docsy can find its dependencies.
+    - source: ../../node_modules/bootstrap
+      target: assets/vendor/bootstrap
+    - source: ../../node_modules/@fortawesome/fontawesome-free
+      target: assets/vendor/Font-Awesome
+    - source: ../../node_modules/@fortawesome/fontawesome-free/webfonts
+      target: static/webfonts

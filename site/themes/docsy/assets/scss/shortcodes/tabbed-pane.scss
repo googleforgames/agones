@@ -1,0 +1,38 @@
+.tab-content {
+  .tab-pane {
+    pre {
+      margin: 0rem 0 0rem 0;
+    }
+  }
+}
+
+.tab-content {
+  .tab-pane {
+    .highlight {
+      margin: 0rem 0 0rem 0;
+      border: none;
+      max-width: 100%;
+    }
+    margin-top: 0rem;
+    margin-bottom: 1.5rem;
+    max-width: 80%;
+    border-left: 1px solid rgba(0, 0, 0, 0.125);
+    border-right: 1px solid rgba(0, 0, 0, 0.125);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+  }
+}
+
+.tab-body {
+  font-weight: $font-weight-medium;
+  background: $gray-100;
+  color: inherit;
+  border-radius: 0;
+  padding: 1.5rem;
+
+  @each $color, $value in $theme-colors {
+    &-#{$color} {
+      border-style: solid;
+      border-color: $value;
+    }
+  }
+}

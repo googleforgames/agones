@@ -1,0 +1,36 @@
+<!-- Get the current buildcondition from the config and lowercase it -->
+{{- $condition := lower $.Site.Params.buildCondition -}}
+
+{{- if ne $condition "" -}}
+    
+    <!-- Get the parameters from the shortcode invocation and lowercase them.
+    TODO: to enable multiple conditions, we could accept comma-separated lists and split them -->
+    {{- $include_if := lower (.Get "include-if") -}}
+    {{- $exclude_if := lower (.Get "exclude-if") -}}
+
+    {{- if and (in $include_if $condition) (in $exclude_if $condition) -}}
+        <!-- condition appears in both parameters -->
+        {{- errorf "Build condition %q appears in both include-if and exclude-if parameters of conditional-txt shortcode on page %s" $condition .Position -}}
+    {{- end -}}
+
+    {{- if isset $.Params "include-if" -}}
+        <!-- WARNING substring matches are matches as well! That means, if include-if="foobar", and buildcondition is "foo", you have a match!-->
+        {{- if in $include_if $condition -}}
+<!-- Do not indent the next Inner line, because the inner becomes a blockquote if the conditional-text is nested in another shortcode  -->
+{{- .Inner -}}
+        {{- else -}}
+        {{- end -}}
+    {{- else -}}
+
+        {{- if isset $.Params "exclude-if" -}}
+            <!-- WARNING substring matches are matches as well! That means, if exclude-if="foobar", and buildcondition is "foo", you have a match!-->
+            {{- if in $exclude_if $condition -}}
+            {{- else -}}
+<!-- Do not indent the next Inner line, because the inner becomes a blockquote if the conditional-text is nested in another shortcode  -->
+{{- .Inner -}}
+            {{- end -}}
+        {{- end -}}
+
+    {{- end -}}
+
+{{- end -}}

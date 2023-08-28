@@ -1,0 +1,42 @@
+{{/*
+
+  This is a modified copy of
+
+  https://github.com/gohugoio/hugo/blob/master/tpl/tplimpl/embedded/templates/google_analytics.html,
+
+  specifically this version:
+
+  https://github.com/gohugoio/hugo/blob/f7e00c039ff3cea5f991b05c1e325666004cf129/tpl/tplimpl/embedded/templates/google_analytics.html
+
+  The only differences between this copy and the original are that we've dropped:
+
+  - The `{{ if hasPrefix . "G-"}}` condition
+  - The `{{ else }}` block
+  - The `anonymize_ip` argument to the `gtag()` call, since it is superfluous.
+    For details, see https://github.com/gohugoio/hugo/issues/10093.
+
+*/}}
+
+{{- $pc := .Site.Config.Privacy.GoogleAnalytics -}}
+{{- if not $pc.Disable }}{{ with .Site.GoogleAnalytics -}}
+<script async src="https://www.googletagmanager.com/gtag/js?id={{ . }}"></script>
+<script>
+{{ template "__ga_js_set_doNotTrack" $ }}
+if (!doNotTrack) {
+	window.dataLayer = window.dataLayer || [];
+	function gtag(){dataLayer.push(arguments);}
+	gtag('js', new Date());
+	gtag('config', '{{ . }}');
+}
+</script>
+{{- end }}{{ end -}}
+
+{{- define "__ga_js_set_doNotTrack" -}}{{/* This is also used in the async version. */}}
+{{- $pc := .Site.Config.Privacy.GoogleAnalytics -}}
+{{- if not $pc.RespectDoNotTrack -}}
+var doNotTrack = false;
+{{- else -}}
+var dnt = (navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack);
+var doNotTrack = (dnt == "1" || dnt == "yes");
+{{- end -}}
+{{- end -}}

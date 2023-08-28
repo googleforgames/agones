@@ -1,0 +1,81 @@
+# UI strings. Buttons and similar.
+
+[ui_pager_prev]
+other = "上一页"
+
+[ui_pager_next]
+other = "下一页"
+
+[ui_read_more]
+other = "更多"
+
+[ui_search]
+other = "站内搜索…"
+
+# Used in sentences such as "Posted in News"
+[ui_in]
+other = "在"
+
+# Used in sentences such as "All Tags"
+[ui_all]
+other = "所有"
+
+# Footer text
+[footer_all_rights_reserved]
+other = "保留所有权利"
+
+[footer_privacy_policy]
+other = "隐私政策"
+
+
+# Post (blog, articles etc.)
+[post_byline_by]
+other = "借由"
+[post_created]
+other = "创建"
+[post_last_mod]
+other = "最后修改"
+[post_edit_this]
+other = "编辑此页"
+[post_view_this]
+other = "查看页面源码"
+[post_create_child_page]
+other = "添加子页面"
+[post_create_issue]
+other = "提交文档问题"
+[post_create_project_issue]
+other = "提交项目问题"
+[post_posts_in]
+other = "张贴在"
+[post_reading_time]
+other = "分钟阅读"
+[post_less_than_a_minute_read]
+other = "少于1分钟"
+
+# Print support
+[print_printable_section]
+other = "这是本节的多页打印视图。"
+[print_click_to_print]
+other = "点击此处打印"
+[print_show_regular]
+other = "返回本页常规视图"
+[print_entire_section]
+other = "整节打印"
+
+# Community
+[community_join]
+other = "加入 {{ .Site.Title }} 社区"
+[community_introduce]
+other = "{{ .Site.Title }} 是一个开源项目，社区中的任何人都可以使用、改善和尽情使用它。我们很期待你能加入我们！下面是如何查看最近更新以及参与我们的一些方式。"
+[community_learn]
+other = "学习和沟通"
+[community_using]
+other = "正在或打算使用 {{ .Site.Title }} ？获取更多信息："
+[community_develop]
+other = "开发和贡献"
+[community_contribute]
+other = "如果你想通过为 {{ .Site.Title }} 贡献更多参与，请在此处加入我们："
+[community_how_to]
+other = "你可以了解如何为 {{ .Site.Title }} 做出贡献，请参考我们的"
+[community_guideline]
+other = "贡献指南"

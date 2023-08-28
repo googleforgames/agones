@@ -1,50 +1,47 @@
-<!-- Make sure that we are enclosed within a tabpane shortcode block -->
-<div class="card mb-4">
-  {{ with $.Get "header" }}
-    <div class="card-header">
-      {{ if eq $.Page.File.Ext "md" }}
-        {{ $.Get "header" | markdownify }}
-      {{ else }}
-        {{ $.Get "header" | htmlUnescape | safeHTML }}
-      {{ end }}
+{{/* Check parameter type */ -}}
+{{ $code := false -}}
+{{ with .Get "code" -}}
+  {{ $type := printf "%T" . -}}
+  {{ if ne $type "bool" -}}
+    {{ errorf `shortcode 'card': boolean value expected for parameter 'code', but got %s` $type -}}
+  {{ else }}
+    {{ $code = . -}}
+  {{ end -}}
+{{ end -}}
+
+{{ $lang := default "" (.Get "lang") -}}
+{{ $highlight := default "" (.Get "highlight") -}}
+
+<div class="td-card card border me-4">
+{{ with $.Get "header" -}}
+    <div class="card-header{{- cond $code " bg-white" "" -}}">
+      {{ . | markdownify }}
     </div>
-  {{ end }}
-  <div class="card-body">
-    {{ with $.Get "title" }}
+{{ end -}}
+  <div class="card-body{{- cond $code " code p-0 m-0" "" -}}">
+    {{ with $.Get "title" -}}
       <h5 class="card-title">
-        {{ if eq $.Page.File.Ext "md" }}
-          {{ $.Get "title" | markdownify }}
-        {{ else }}
-          {{ $.Get "title" | htmlUnescape | safeHTML }}
-        {{ end }}
+        {{ . | markdownify -}}
       </h5>
-    {{ end }}
-    {{ with $.Get "subtitle" }}
-      <h6 class="card-title mb-2 text-muted">
-        {{ if eq $.Page.File.Ext "md" }}
-          {{ $.Get "subtitle" | markdownify }}
-        {{ else }}
-          {{ $.Get "subtitle" | htmlUnescape | safeHTML }}
-        {{ end }}
+    {{ end -}}
+    {{ with $.Get "subtitle" -}}
+      <h6 class="card-title ms-2 text-muted">
+        {{ . | markdownify -}}
       </h6>
-    {{ end }}
-    {{ with $.Inner }}
+    {{ end -}}
+    {{ with $.Inner -}}
+      {{ if $code -}}
+        {{ highlight . $lang $highlight -}}
+      {{ else -}}
       <p class="card-text">
-        {{ if eq $.Page.File.Ext "md" }}
-          {{ $.Inner | markdownify }}
-        {{ else }}
-          {{ $.Inner | htmlUnescape | safeHTML }}
-        {{ end }}
+        {{ . -}}
       </p>
-    {{ end }}
+      {{ end -}}
+    {{ end -}}
   </div>
-  {{ with $.Get "footer" }}
+  {{ with $.Get "footer" -}}
     <div class="card-footer">
-      {{ if eq $.Page.File.Ext "md" }}
-        {{ $.Get "footer" | markdownify }}
-      {{ else }}
-        {{ $.Get "footer" | htmlUnescape | safeHTML }}
-      {{ end }}
+      {{ . | markdownify -}}
     </div>
-  {{ end }}
+  {{ end -}}
 </div>

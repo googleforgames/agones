@@ -1,0 +1,16 @@
+{{ $context := . -}}
+{{ if .Site.Params.Taxonomy -}}
+  {{ if .Site.Params.Taxonomy.taxonomyPageHeader -}}
+    {{ range $index, $taxo := .Site.Params.Taxonomy.taxonomyPageHeader -}}
+      {{ partial "taxonomy_terms_article.html" (dict "context" $context "taxo" $taxo) -}}
+    {{ end }}
+  {{ else -}}
+    {{ range $taxo, $taxo_map := .Site.Taxonomies -}}
+      {{ partial "taxonomy_terms_article.html" (dict "context" $context "taxo" $taxo) -}}
+    {{ end }}
+  {{ end -}}
+{{ else -}}
+  {{ range $taxo, $taxo_map := .Site.Taxonomies -}}
+    {{ partial "taxonomy_terms_article.html" (dict "context" $context "taxo" $taxo) -}}
+  {{ end }}
+{{ end -}}

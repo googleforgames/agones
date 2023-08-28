@@ -43,6 +43,10 @@ other = "Създаване на издаване на документ"
 other = "Създаване на издаване на проект"
 [post_posts_in]
 other = "Публикувано в"
+[post_reading_time]
+other = "minute read"
+[post_less_than_a_minute_read]
+other = "less than a minute"
 
 # Print support
 [print_printable_section]
@@ -53,3 +57,21 @@ other = "Натисни тук за отпечатване"
 other = "Върнете се към обичайния изглед на тази страница"
 [print_entire_section]
 other = "Отпечатайте цялата секция"
+
+# Community
+[community_join]
+other = "Join the {{ .Site.Title }} community"
+[community_introduce]
+other = "{{ .Site.Title }} is an open source project that anyone in the community can use, improve, and enjoy. We'd love you to join us! Here's a few ways to find out what's happening and get involved."
+[community_learn]
+other = "Learn and Connect"
+[community_using]
+other = "Using or want to use {{ .Site.Title }}? Find out more here:"
+[community_develop]
+other = "Develop and Contribute"
+[community_contribute]
+other = "If you want to get more involved by contributing to {{ .Site.Title }}, join us here:"
+[community_how_to]
+other = "You can find out how to contribute to {{ .Site.Title }} in our"
+[community_guideline]
+other = "Contribution Guidelines"

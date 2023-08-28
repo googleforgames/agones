@@ -1,7 +1,7 @@
 {{ $w := .w | default 480 }}
 {{ $h := .h | default 180 }}
 {{ $p := .p }}
-{{ $class := .class | default "ml-3" }}
+{{ $class := .class | default "ms-3" }}
 {{ $image := ($p.Resources.ByType "image").GetMatch "**featured*" }}
 {{ with $image }}
 {{ $image := .Fill (printf "%dx%d" $w $h ) }}

@@ -1,8 +1,14 @@
-<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-	{{ .Site.Params.version_menu }}
-</a>
-<div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-	{{ range .Site.Params.versions }}
-	<a class="dropdown-item" href="{{ .url }}">{{ .version }}</a>
-	{{ end }}
+<div class="dropdown">
+  <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+    {{- .Site.Params.version_menu -}}
+  </a>
+  <ul class="dropdown-menu">
+    {{ $path := "" -}}
+    {{ if .Site.Params.version_menu_pagelinks -}}
+      {{ $path = .Page.RelPermalink -}}
+    {{ end -}}
+    {{ range .Site.Params.versions -}}
+    <li><a class="dropdown-item" href="{{ .url }}{{ $path }}">{{ .version }}</a></li>
+    {{ end -}}
+  </ul>
 </div>

@@ -1,20 +1,16 @@
-<div class="card">
-  {{ $lang := "" }}
-  {{ with $.Get "lang" }}
-    {{ $lang = $.Get "lang" }}
-  {{ end }}
-  {{ $highlight := "" }}
-  {{ with $.Get "highlight" }}
-    {{ $highlight = $.Get "highlight" }}
-  {{ end }}
-  {{- with $.Get "header" -}}
+{{ warnf `shortcode 'card-code' is deprecated: use shortcode 'card' with named parameter 'code=true' instead.` -}}
+{{ $lang := default "" ($.Get "lang") -}}
+{{ $highlight := default "" ($.Get "highlight") -}}
+
+<div class="td-card card border me-4">
+  {{ with $.Get "header" -}}
     <div class="card-header bg-white">
-      {{- $.Get "header" | markdownify -}}
+      {{ . | markdownify -}}
     </div>
-  {{end}}
-  <div class="card-body code p-l0 m-0">
-      {{ with $.Inner }}
-        {{- highlight $.Inner $lang $highlight -}}
-      {{ end }}
+  {{ end -}}
+  <div class="card-body code p-0 m-0">
+    {{ with $.Inner -}}
+      {{ highlight . $lang $highlight -}}
+    {{ end -}}
   </div>
 </div>

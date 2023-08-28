@@ -1,9 +1,13 @@
+@import "../vendor/bootstrap/scss/functions";
+
 @import "support/functions";
+@import "_variables_forward";
 @import "variables_project";
 @import "variables";
 @import "support/mixins";
 
 @import "../vendor/bootstrap/scss/bootstrap";
+@import "support/bootstrap_vers_test";
 
 @import "../vendor/Font-Awesome/scss/fontawesome.scss";
 @import "../vendor/Font-Awesome/scss/solid.scss";
@@ -11,6 +15,7 @@
 
 @import "support/utilities";
 @import "colors";
+@import "table";
 @import "boxes";
 @import "blog";
 @import "code";
@@ -26,39 +31,68 @@
 @import "blocks/blocks";
 @import "section-index";
 @import "pageinfo";
+@import "taxonomy";
+@import "drawio";
+@import "shortcodes";
 
 @if $td-enable-google-fonts {
-    @import url($web-font-path);
+  @import url($web-font-path);
 }
 
-footer {
-    min-height: 150px;
+.td-footer {
+  @extend .td-box--dark;
 
-    @include media-breakpoint-down(md) {
-        min-height: 200px;
+  min-height: 150px;
+  padding-top: map-get($spacers, 5);
+
+  @include media-breakpoint-down(lg) {
+    min-height: 200px;
+  }
+
+  &__copyright-etc {
+    @extend .small;
+  }
+  &__about {
+    font-size: initial;
+  }
+
+  &__links {
+    &-list {
+      @extend .list-inline;
+      margin-bottom: 0;
     }
+
+    &-item {
+      @extend .list-inline-item;
+      @extend .h3;
+
+      a {
+        color: inherit !important;
+      }
+    }
+  }
+
 }
 
 // Adjust anchors vs the fixed menu.
 @include media-breakpoint-up(md) {
-    .td-offset-anchor:target {
-        display: block;
-        position: relative;
-        top: -4rem;
-        visibility: hidden;
-    }
+  .td-offset-anchor:target {
+    display: block;
+    position: relative;
+    top: -4rem;
+    visibility: hidden;
+  }
 
-    h2[id]:before,
-    h3[id]:before,
-    h4[id]:before,
-    h5[id]:before {
-        display: block;
-        content: " ";
-        margin-top: -5rem;
-        height: 5rem;
-        visibility: hidden;
-    }
+  h2[id]:before,
+  h3[id]:before,
+  h4[id]:before,
+  h5[id]:before {
+    display: block;
+    content: " ";
+    margin-top: -5rem;
+    height: 5rem;
+    visibility: hidden;
+  }
 }
 
-@import "rtl/main";
 @import "styles_project";

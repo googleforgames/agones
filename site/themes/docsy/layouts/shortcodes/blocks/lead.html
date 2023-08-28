@@ -1,16 +1,20 @@
-{{ $_hugo_config := `{ "version": 1 }` }}
-{{ $col_id := .Get "color" | default .Ordinal }}
-{{ $height := .Get "height" | default "auto"  }}
-{{/* Height can be one of: auto, min, med, max, full. */}}
-<a id="td-block-{{ .Ordinal }}" class="td-offset-anchor"></a>
-<section class="row td-box td-box--{{ $col_id }} position-relative td-box--gradient td-box--height-{{ $height }}">
-	<div class="container text-center td-arrow-down">
-		<span class="h4 mb-0">
-			{{ if eq .Page.File.Ext "md" }}
-				{{ .Inner | markdownify }}
-			{{ else }}
-				{{ .Inner | htmlUnescape | safeHTML }}
-			{{ end }}
-		</span>
-	</div>
+{{ $col_id := .Get "color" | default .Ordinal -}}
+{{ $height := .Get "height" | default "auto" -}}
+{{ with .Get "height" -}}
+  {{ if not ( or ( eq . "auto" ) ( eq . "min" ) ( eq . "med" ) ( eq . "max" ) ( eq . "full" ) ) -}}
+    {{ errorf "shortcode 'lead': parameter height is %q, must be one of 'auto', 'min', 'med', 'max' or 'full'." . -}}
+  {{ end -}}
+{{ end -}}
+
+<div><a id="td-block-{{ .Ordinal }}" class="td-offset-anchor"></a></div>
+<section class="row td-box td-box--{{ $col_id }} position-relative td-box--height-{{ $height }}">
+<div class="col-12">
+<div class="container text-center td-arrow-down">
+<div class="h4 mb-0">
+{{/* Do NOT remove this comment! It ends the HTML block above. See https://spec.commonmark.org/0.30/#html-blocks, 7. */}}
+{{ .Inner }}
+</div>
+</div>
+</div>
 </section>
+{{/**/ -}}

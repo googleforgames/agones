@@ -5,15 +5,18 @@
 		{{ with .Params.author }}{{ T "post_byline_by" }} <b>{{ . | markdownify }}</b> |{{ end}}
 		<time datetime="{{  $.Date.Format "2006-01-02" }}" class="text-muted">{{ $.Date.Format $.Site.Params.time_format_blog  }}</time>
 	</div>
-	{{ if (and (not .Params.hide_readingtime) (.Site.Params.ui.readingtime.enable)) }}
-	    {{ partial "reading-time.html" . }}
-	{{ end }}
+	<header class="article-meta">
+		{{ partial "taxonomy_terms_article_wrapper.html" . -}}
+		{{ if (and (not .Params.hide_readingtime) (.Site.Params.ui.readingtime.enable)) -}}
+			{{ partial "reading-time.html" . -}}
+		{{ end -}}
+	</header>
 	{{ .Content }}
-	{{ if (.Site.Params.DisqusShortname) }}
+	{{ if (.Site.Params.DisqusShortname) -}}
 		<br />
-		{{ partial "disqus-comment.html" . }}
+		{{- partial "disqus-comment.html" . -}}
 		<br />
-	{{ end }}
+	{{ end -}}
 
 	{{ partial "pager.html" . }}
 </div>

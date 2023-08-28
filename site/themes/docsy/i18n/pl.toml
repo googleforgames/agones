@@ -43,6 +43,11 @@ other = "Zgłoś błąd w dokumencie"
 other = "Zgłoś błąd na stronie"
 [post_posts_in]
 other = "Posty"
+[post_reading_time]
+other = "min."
+[post_less_than_a_minute_read]
+other = "mniej niż minutę"
+
 
 # Print support
 [print_printable_section]
@@ -53,3 +58,21 @@ other = "Kliknij aby wydrukować"
 other = "Wróć do zwykłego widoku tej strony"
 [print_entire_section]
 other = "Wydrukuj całą sekcję"
+
+# Community
+[community_join]
+other = "Join the {{ .Site.Title }} community"
+[community_introduce]
+other = "{{ .Site.Title }} is an open source project that anyone in the community can use, improve, and enjoy. We'd love you to join us! Here's a few ways to find out what's happening and get involved."
+[community_learn]
+other = "Learn and Connect"
+[community_using]
+other = "Using or want to use {{ .Site.Title }}? Find out more here:"
+[community_develop]
+other = "Develop and Contribute"
+[community_contribute]
+other = "If you want to get more involved by contributing to {{ .Site.Title }}, join us here:"
+[community_how_to]
+other = "You can find out how to contribute to {{ .Site.Title }} in our"
+[community_guideline]
+other = "Contribution Guidelines"

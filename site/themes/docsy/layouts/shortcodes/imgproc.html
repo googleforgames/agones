@@ -1,21 +1,27 @@
-{{ $original := .Page.Resources.GetMatch (printf "**%s*" (.Get 0)) }}
-{{ $command := .Get 1 }}
-{{ $options := .Get 2 }}
-{{ if eq $command "Fit"}}
-{{ .Scratch.Set "image" ($original.Fit $options) }}
-{{ else if eq $command "Resize"}}
-{{ .Scratch.Set "image" ($original.Resize $options) }}
-{{ else if eq $command "Fill"}}
-{{ .Scratch.Set "image" ($original.Fill $options) }}
-{{ else }}
-{{ errorf "Invalid image processing command: Must be one of Fit, Fill or Resize."}}
-{{ end }}
-{{ $image := .Scratch.Get "image" }}
-<div class="card rounded p-2 td-post-card mb-4 mt-4" style="max-width: {{ add $image.Width 10 }}px">
-	<img class="card-img-top" src="{{ $image.RelPermalink }}" width="{{ $image.Width }}" height="{{ $image.Height }}">
-	{{ with .Inner }}
-	<div class="card-body px-0 pt-2 pb-0">
-		<p class="card-text">{{ . }}{{ with $image.Params.byline }}<small class="text-muted"><br/>{{ . | html }}</small>{{ end }}</p>
-	</div>
-	{{ end }}
-</div>
+{{ $original := .Page.Resources.GetMatch (printf "**%s*" (.Get 0)) -}}
+{{ $command := .Get 1 -}}
+{{ $options := .Get 2 -}}
+{{ if eq $command "Fit" -}}
+    {{ .Scratch.Set "image" ($original.Fit $options) -}}
+{{ else if eq $command "Resize" -}}
+    {{ .Scratch.Set "image" ($original.Resize $options) -}}
+{{ else if eq $command "Fill" -}}
+    {{ .Scratch.Set "image" ($original.Fill $options) -}}
+{{ else if eq $command "Crop" -}}
+    {{ .Scratch.Set "image" ($original.Crop $options) -}}
+{{ else -}}
+    {{ errorf "Invalid image processing command: Must be one of Fit, Fill, Crop or Resize." -}}
+{{ end -}}
+{{ $image := .Scratch.Get "image" -}}
+
+<figure class="card rounded p-2 td-post-card mb-4 mt-4" style="max-width: {{ add $image.Width 10 -}}px">
+<img class="card-img-top" src="{{- $image.RelPermalink -}}" width="{{- $image.Width -}}" height="{{- $image.Height -}}">
+{{ with .Inner -}}
+<figcaption class="card-body px-0 pt-2 pb-0">
+<p class="card-text">
+{{/* Do **not** remove this comment! It ends above html block! See https://spec.commonmark.org/0.30/#html-blocks, 7. */}}
+{{ . }}{{ with $image.Params.byline }}<small class="text-muted"><br/>{{ . }}</small>{{ end }}
+</p>
+</figcaption>
+{{ end -}}
+</figure>

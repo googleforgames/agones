@@ -1,5 +1,3 @@
-
-
 # UI strings. Buttons and similar.
 
 [ui_pager_prev]
@@ -18,6 +16,10 @@ other = "Diese Seite durchsuchen…"
 [ui_in]
 other = "in"
 
+# Used in sentences such as "All Tags"
+[ui_all]
+other = "alle"
+
 # Footer text
 [footer_all_rights_reserved]
 other = "Alle Rechte vorbehalten"
@@ -35,6 +37,8 @@ other = "Erstellt"
 other = "Zuletzt geändert"
 [post_edit_this]
 other = "Diese Seite bearbeiten"
+[post_view_this]
+other = "Quellcode dieser Seite ansehen"
 [post_create_child_page]
 other = "Unterseite anlegen"
 [post_create_issue]
@@ -43,6 +47,10 @@ other = "Problem zu dieser Seite melden"
 other = "Problem melden"
 [post_posts_in]
 other = "Einträge in"
+[post_reading_time]
+other = "Minuten Lesezeit"
+[post_less_than_a_minute_read]
+other = "weniger als eine Minute"
 
 # Print support
 [print_printable_section]
@@ -53,3 +61,21 @@ other = "Druckvorgang starten"
 other = "Zur Standardansicht zurückkehren"
 [print_entire_section]
 other = "Kapitel inkl. Unterseiten drucken"
+
+# Community
+[community_join]
+other = "Werde Teil der {{ .Site.Title }} Community"
+[community_introduce]
+other = "{{ .Site.Title }} ist ein Open Source Projekt das jedes Mitglied der Community nutzen, verbessern und genießen kann. Wir würden uns freuen, wenn Du Dich an unserem Projekt beteiligst! Nachfolgend werden einige Wege beschrieben um herauszufinden, was gerade in unserem Projekt los ist und wie Du dich aktiv beteiligen kannst."
+[community_learn]
+other = "Lerne und verbinde"
+[community_using]
+other = "Anwenden oder Anwendung eruieren {{ .Site.Title }}, Weitere Infos findest Du hier:"
+[community_develop]
+other = "Entwickeln und einen Beitrag leisten"
+[community_contribute]
+other = "Wenn Du aktiv beteiligen und einen Beitrag zu {{ .Site.Title }} leisten möchtest, kannst Du hier mitmachen:"
+[community_how_to]
+other = "Wie Du selbst zu {{ .Site.Title }} beitragen kannst, kannst Du nachlesen in unseren"
+[community_guideline]
+other = "Richtlinien für Beiträge"

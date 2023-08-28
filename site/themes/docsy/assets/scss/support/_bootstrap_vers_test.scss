@@ -1,0 +1,8 @@
+$enable-important-utilities: null !default;
+@if $enable-important-utilities == null {
+  @error "
+  Docsy requires Bootstrap v5, but the v5 variable
+  $enable-important-utilities isn't defined.
+  Did you forget to update Docsy dependencies?
+  ";
+}

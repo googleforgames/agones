@@ -1,16 +1,14 @@
-{{ $_hugo_config := `{ "version": 1 }` }}
-{{ $col_id := .Get "color" | default .Ordinal }}
-{{ $height := .Get "height" | default "auto"  }}
-{{ $type   := .Get "type" | default "" }} 
-<a id="td-block-{{ .Ordinal }}" class="td-offset-anchor"></a>
-<section class="row td-box td-box--{{ $col_id }} td-box--gradient td-box--height-{{ $height }}">
-	<div class="col">
-		<div class="row {{ $type }}">
-			{{ if eq .Page.File.Ext "md" }}
-				{{ .Inner | markdownify }}
-			{{ else }}
-				{{ .Inner | htmlUnescape | safeHTML }}
-			{{ end }}
-		</div>
-	</div>
+{{ $col_id := .Get "color" | default .Ordinal -}}
+{{ $height := .Get "height" | default "auto"  -}}
+{{ $type   := .Get "type" | default "container" -}}
+
+<div><a id="td-block-{{ .Ordinal }}" class="td-offset-anchor"></a></div>
+<section class="row td-box td-box--{{ $col_id }} td-box--height-{{ $height }}">
+<div class="col">
+<div class="{{ $type }}">
+{{/* Do NOT remove this comment! It ends the HTML block above. See https://spec.commonmark.org/0.30/#html-blocks, 7. */}}
+{{ .Inner -}}
+</div>
+</div>
 </section>
+{{/**/ -}}

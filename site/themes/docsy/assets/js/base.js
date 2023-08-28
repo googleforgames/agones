@@ -19,8 +19,8 @@ limitations under the License.
     'use strict';
 
     $(function() {
-        $('[data-toggle="tooltip"]').tooltip();
-        $('[data-toggle="popover"]').popover();
+        $('[data-bs-toggle="tooltip"]').tooltip();
+        $('[data-bs-toggle="popover"]').popover();
 
         $('.popover-dismiss').popover({
             trigger: 'focus'

@@ -1,7 +1,13 @@
 // Breadcrumb
 
-.breadcrumb {
-	background: none;
-	padding-left: 0;
-	padding-top: 0;
+.td-breadcrumbs {
+  @media print {
+    display: none !important;
+  }
+
+  .breadcrumb {
+    background: inherit;
+    padding-left: 0;
+    padding-top: 0;
+  }
 }

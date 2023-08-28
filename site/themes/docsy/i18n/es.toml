@@ -1,5 +1,3 @@
-
-
 # UI strings. Botones y similares.
 
 [ui_pager_prev]
@@ -18,6 +16,10 @@ other = "Buscar"
 [ui_in]
 other = "en"
 
+# Used in sentences such as "All Tags"
+[ui_all]
+other = "todos"
+
 # Footer text
 [footer_all_rights_reserved]
 other = "Derechos reservados"
@@ -35,21 +37,45 @@ other = "Creado"
 other = "Última modificación"
 [post_edit_this]
 other = "Editar esta página"
+[post_view_this]
+other = "Ver código de la página"
 [post_create_child_page]
-other = "Create child page"
+other = "Crear página nueva"
 [post_create_issue]
 other = "Notificar una incidencia con la documentanción"
 [post_create_project_issue]
 other = "Notificar una incidencia en un proyecto"
 [post_posts_in]
-other = "Añadir entrada"
+other = "Publicaciones en"
+[post_reading_time]
+other = "minutos de lectura"
+[post_less_than_a_minute_read]
+other = "menos de un minuto"
 
 # Print support
 [print_printable_section]
-other = "This the multi-page printable view of this section."
+other = "Versión imprimible multipagina."
 [print_click_to_print]
-other = "Click here to print"
+other = "Haga click aquí para imprimir"
 [print_show_regular]
-other = "Return to the regular view of this page"
+other = "Volver a la vista normal de esta página"
 [print_entire_section]
-other = "Print entire section"
+other = "Imprimir la sección entera"
+
+# Community
+[community_join]
+other = "Únete a la comunidad {{ .Site.Title }}"
+[community_introduce]
+other = "{{ .Site.Title }} es un proyecto de código abierto que cualquiera en la comunidad puede usar, mejorar y disfrutar. ¡Nos encantaría que te unas a nosotros! Aquí hay algunas maneras de averiguar lo que está sucediendo y participar."
+[community_learn]
+other = "Aprende y Conéctate"
+[community_using]
+other = "¿Usas o quieres usar {{ .Site.Title }}? Encuentra más información aquí:"
+[community_develop]
+other = "Desarrollar y Contribuir"
+[community_contribute]
+other = "Si deseas involucrarte más contribuyendo a {{ .Site.Title }}, únete a nosotros aquí:"
+[community_how_to]
+other = "Puedes averiguar cómo contribuir a {{ .Site.Title }} en nuestras"
+[community_guideline]
+other = "Guias de Contribución"

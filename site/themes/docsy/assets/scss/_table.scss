@@ -1,0 +1,9 @@
+.td-table:not(.td-initial) {
+  @extend .table;
+  @extend .table-striped;
+  @extend .table-responsive;
+
+  // The following is needed for tables to be responsive.
+  // For details, see the https://docsy.dev/docs/adding-content/lookandfeel/#tables
+  display: block;
+}

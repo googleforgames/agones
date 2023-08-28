@@ -1,0 +1,91 @@
+{{- $file := .Get 0 -}}
+{{- $url := "" -}}
+{{- $otheroptions := .Get 1 -}}
+
+{{ if hasPrefix $file "http"}}
+    {{- $url = $file -}}
+{{ else }}
+    {{ if (fileExists (print .Page.File.Dir $file)) -}}
+        <!-- First try as relative path -->
+        {{- $url = (print .Page.Site.BaseURL .Page.File.Dir $file) -}}
+    {{ else }}
+        <!-- Then as project-relative path-->
+        {{- $url = (print .Page.Site.BaseURL $file) -}}
+    {{- end }}
+{{- end -}}
+
+        <!-- CSS style overrides for Redoc API docs -->
+        <style>
+          #redoc input { height: 64px; }
+          #redoc span[type="put"], span[type="get"], span[type="delete"], span[type="post"], span[type="options"], span[type="patch"], span[type="basic"], span[type="link"], span[type="head"] {
+              border-radius: 4px;
+            }
+          #redoc h2 { margin-top: 0px;}
+      </style>
+  
+    <!-- Back to top button start -->
+    <style>
+      #myBtn {
+        display: none;
+        position: fixed;
+        bottom: 20px;
+        right: 30px;
+        z-index: 99;
+        font-size: 18px;
+        border: none;
+        outline: none;
+        background-color: #30638E;
+        color: white;
+        cursor: pointer;
+        padding: 15px;
+        border-radius: 4px;
+      }
+      
+      #myBtn:hover {
+        background-color: #555;
+      }
+  </style>
+  <button onclick="topFunction()" id="myBtn" title="Go to top">Top</button>
+  <script>
+      //Get the button
+      var mybutton = document.getElementById("myBtn");
+      
+      // When the user scrolls down 20px from the top of the document, show the button
+      window.onscroll = function() {scrollFunction()};
+      
+      function scrollFunction() {
+        if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+          mybutton.style.display = "block";
+        } else {
+          mybutton.style.display = "none";
+        }
+      }
+      
+      // When the user clicks on the button, scroll to the top of the document
+      function topFunction() {
+        document.body.scrollTop = 0;
+        document.documentElement.scrollTop = 0;
+      }
+  </script>
+    <!-- Back to top button end -->
+
+    <!--
+    Redoc doesn't change outer page styles
+    -->
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+
+    <!--
+    Redoc element with link to your OpenAPI definition
+    -->
+   <div id="redoc-container">
+   <redoc spec-url='{{ $url }}' hide-hostname="true" suppress-warnings="true" lazy-rendering  native-scrollbars scroll-y-offset=".js-navbar-scroll" {{ $otheroptions }}></redoc>
+   </div>
+    <!--
+    Link to Redoc JavaScript on CDN for rendering standalone element
+    -->
+    <script src="https://cdn.jsdelivr.net/npm/redoc@latest/bundles/redoc.standalone.js"></script>

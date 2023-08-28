@@ -1,55 +1,85 @@
 // Code formatting.
 
 .td-content {
-	// Highlighted code.
-    .highlight {
-        @extend .card;
-	
-        margin: 2rem 0;
-        padding: 0;
-	    
-        pre {
-            margin: 0;
-            padding: 1rem;
-        }
+  // Highlighted code.
+  .highlight {
+    @extend .card;
+
+    margin: 2rem 0;
+    padding: 0;
+    position: relative;
+
+    .click-to-copy {
+      display: block;
+      text-align: right;
     }
 
-    // Inline code
-    p code, li > code, table code {
-        color: inherit;
-        padding: 0.2em 0.4em;
-        margin: 0;
-        font-size: 85%;
-        word-break: normal;
-        background-color: rgba($black, 0.05);
-        border-radius: $border-radius;
-
-        br {
-            display: none;
-        }
-    }
-
-
-    // Code blocks
     pre {
-        word-wrap: normal;
-        background-color: $gray-100;
-        padding: $spacer;
-     
+      margin: 0;
+      padding: 1rem;
 
-        > code {
-	    background-color: inherit !important;
-            padding: 0;
-            margin: 0;
-            font-size: 100%;
-            word-break: normal;
-            white-space: pre;
-            border: 0;
-        }
-    }
+      // Default click-to-copy button
 
-    pre.mermaid {
+      button.td-click-to-copy {
+        position: absolute;
+        color: $gray-400;
+        border-radius: 3px;
+        border-width: 0;
         background-color: inherit;
-        font-size: 0;
+        box-shadow: 1px 1px $gray-400;
+        right: 4px;
+        top: 2px;
+
+        &:hover {
+          color: $dark;
+          background-color: $gray-400;
+        }
+        &:active {
+          color: $dark;
+          background-color: $gray-400;
+          transform: translateY(2px);
+        }
+      }
     }
+  }
+
+  // Inline code
+  p code,
+  li > code,
+  table code {
+    color: inherit;
+    padding: 0.2em 0.4em;
+    margin: 0;
+    font-size: 85%;
+    word-break: normal;
+    background-color: rgba($black, 0.05);
+    border-radius: $border-radius;
+
+    br {
+      display: none;
+    }
+  }
+
+  // Code blocks
+  pre {
+    word-wrap: normal;
+    background-color: $gray-100;
+    padding: $spacer;
+
+    > code {
+      background-color: inherit !important;
+      padding: 0;
+      margin: 0;
+      font-size: 100%;
+      word-break: normal;
+      white-space: pre;
+      border: 0;
+    }
+  }
+
+  pre.mermaid {
+    background-color: inherit;
+    font-size: 0;
+    padding: 0;
+  }
 }

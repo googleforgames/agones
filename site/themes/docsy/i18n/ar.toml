@@ -15,6 +15,9 @@ other = "ابحث في هذا الموقع"
 # Used in sentences such as "Posted in News"
 [ui_in]
 other = "في"
+# Used in sentences such as "All Tags"
+[ui_all]
+other = "كل"
 
 # Footer text
 [footer_all_rights_reserved]
@@ -33,6 +36,8 @@ other = "منشئة"
 other = "اخر تعديل"
 [post_edit_this]
 other = "عدل هذه الصفحة"
+[post_view_this]
+other = "أنظر مصدر الصفحة"
 [post_create_child_page]
 other = " أنشئ صفحة فرعية"
 [post_create_issue]
@@ -41,6 +46,10 @@ other = "أنشئ مسألة حول الوثائق"
 other = "أنشئ مسألة حول المشروع"
 [post_posts_in]
 other = "منشور في"
+[post_reading_time]
+other = "دقيقة للقراءة"
+[post_less_than_a_minute_read]
+other = "أقل من دقيقة"
 
 # Print support
 [print_printable_section]
@@ -51,3 +60,21 @@ other = "اضغط هنا للطباعة"
 other = "العودة للعرض العادي"
 [print_entire_section]
 other = "اطبع القسم كاملا"
+
+# Community
+[community_join]
+other = "انضم الي مجتمع {{ .Site.Title }}"
+[community_introduce]
+other = "{{ .Site.Title }} هو مشروع مفتوح المصدر يمكن لأي شخص في المجتمع استخدامه وتحسينه والاستمتاع به. يسعدنا أن تنضم إلينا! إليك بعض الطرق للمشاركة و معرفة ما يحدث."
+[community_learn]
+other = "تعلم وتواصل"
+[community_using]
+other = "تستخدام أو تريد استخدام {{ .Site.Title }}؟ اكتشف المزيد هنا:"
+[community_develop]
+other = "طور و ساهم"
+[community_contribute]
+other = "إذا كنت ترغب في المشاركة بشكل أكبر من خلال المساهمة في {{ .Site.Title }}, انضم إلينا هنا:"
+[community_how_to]
+other = "يمكنك معرفة كيفية المساهمة في {{ .Site.Title }} من خلال"
+[community_guideline]
+other = "إرشادات المساهمة"

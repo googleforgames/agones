@@ -1,19 +1,24 @@
-{{ define "main" }}
+{{ define "main" -}}
 
-<a class="td-offset-anchor"></a>
-<section class="row td-box td-box--1 position-relative td-box--gradient td-box--height-auto">
-	<div class="container text-center td-arrow-down">
-		<span class="h4 mb-0">
-<h1>Join the {{ .Site.Title }} community</h1>
-
-<p>{{ .Site.Title }} is an open source project that anyone in the community can use, improve, and enjoy. We'd love you to join us! Here's a few ways to find out what's happening and get involved.
-</span>
-	</div>
+<div><a class="td-offset-anchor"></a></div>
+<section
+  class="row td-box td-box--primary position-relative td-box--height-auto"
+>
+  <div class="col-12">
+    <div class="container text-center td-arrow-down">
+      <span class="h4 mb-0">
+        <h1>{{ T "community_join" . }}</h1>
+        <p>{{ T "community_introduce" . }}</p>
+      </span>
+    </div>
+  </div>
 </section>
-{{ partial "community_links.html" . }}
+{{ partial "community_links.html" . -}}
 
+{{ with .Content -}}
 <div class="td-content">
-{{ .Content }}
+{{ . }}
 </div>
+{{- end -}}
 
 {{ end }}

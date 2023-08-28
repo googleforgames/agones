@@ -1,18 +1,23 @@
-{{ with .Site.Params.mermaid }}
-{{ if .enable }}
 (function($) {
     var needMermaid = false;
+
+{{ if ge hugo.Version "0.93.0" -}}
+    if ($('.mermaid').length > 0) {
+        needMermaid = true;
+    };
+{{ else -}}
     $('.language-mermaid').parent().replaceWith(function() {
         needMermaid = true;
         return $('<pre class="mermaid">').text($(this).text());
     });
+{{ end -}}
 
     if (!needMermaid)  {
         mermaid.initialize({startOnLoad: false});
         return;
     }
 
-    var params = {{ . | jsonify | safeJS }};
+    var params = {{ .Site.Params.mermaid | jsonify | safeJS }};
 
     // site params are stored with lowercase keys; lookup correct casing
     // from Mermaid default config.
@@ -34,5 +39,3 @@
     settings.startOnLoad = true;
     mermaid.initialize(settings);
 })(jQuery);
-{{ end }}
-{{ end }}

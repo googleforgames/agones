@@ -1,0 +1,81 @@
+# UI strings. Buttons and similar.
+
+[ui_pager_prev]
+other = "Edellinen"
+
+[ui_pager_next]
+other = "Seuraava"
+
+[ui_read_more]
+other = "Lue lisää"
+
+[ui_search]
+other = "Hae sivustolta..."
+
+# Used in sentences such as "Posted in News"
+[ui_in]
+other = ""
+
+# Used in sentences such as "All Tags"
+[ui_all]
+other = "kaikki"
+
+# Footer text
+[footer_all_rights_reserved]
+other = "(C)"
+
+[footer_privacy_policy]
+other = "Tietosuojalauseke"
+
+
+# Post (blog, articles etc.)
+[post_byline_by]
+other = "Kirjoittanut"
+[post_created]
+other = "Luonut"
+[post_last_mod]
+other = "Viimeksi muokattu"
+[post_edit_this]
+other = "Muokkaa sivua"
+[post_view_this]
+other = "Katso lähdekoodi"
+[post_create_child_page]
+other = "Luo alisivu"
+[post_create_issue]
+other = "Luo dokumentaation vikailmoitus"
+[post_create_project_issue]
+other = "Luo projektin vikailmoitus"
+[post_posts_in]
+other = "Kirjoituksia"
+[post_reading_time]
+other = "minuutin teksti"
+[post_less_than_a_minute_read]
+other = "alle minuutin"
+
+# Print support
+[print_printable_section]
+other = "Tämä on monen sivun tulostettava näkymä osiosta"
+[print_click_to_print]
+other = "Paina tulostaaksesi"
+[print_show_regular]
+other = "Palaa tavalliseen näkymään"
+[print_entire_section]
+other = "Tulosta koko osio"
+
+# Community
+[community_join]
+other = "Liity {{ .Site.Title }}-yhteisöön"
+[community_introduce]
+other = "{{ .Site.Title }} on avoimen lähdekoodin projekti, josta jokainen saa nauttia käyttämällä ja kehittämällä sitä. Olisi mahtavaa jos tulisit mukaan! Tässä pari tapaa osallistua."
+[community_learn]
+other = "Opi ja kohtaa muita"
+[community_using]
+other = "Käytätkö tai haluatko käyttää {{ .Site.Title }}:a? Lisätietoa täällä:"
+[community_develop]
+other = "Kehitä ja osallistu"
+[community_contribute]
+other = "Jos haluat auttaa kehittämään {{ .Site.Title }}:a, liity tänne:"
+[community_how_to]
+other = "Voit oppia kehittämään {{ .Site.Title }}:a meidän"
+[community_guideline]
+other = "osallistumisohjeissamme"

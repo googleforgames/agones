@@ -1,6 +1,6 @@
 
 {{ $scssMain := "scss/main.scss"}}
-{{ if .Site.IsServer }}
+{{ if not hugo.IsProduction }}
 {{/* Note the missing postCSS. This makes it snappier to develop in Chrome, but makes it look sub-optimal in other browsers. */}}
 {{ $css := resources.Get $scssMain | toCSS (dict "enableSourceMap" true) }}
 <link href="{{ $css.RelPermalink }}" rel="stylesheet">

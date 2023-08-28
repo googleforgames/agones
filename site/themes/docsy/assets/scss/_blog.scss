@@ -1,10 +1,28 @@
-// Blog related styles.
-
 .td-blog {
-    .td-rss-button {
-        position: absolute;
-        top: 5.5rem;
-        right: 1rem;
-        z-index: 22;
+  .td-rss-button {
+    @extend .btn;
+    @extend .btn-info;
+    @extend .btn-lg;
+
+    float: right;
+
+    display: none;
+    @extend .d-lg-block;
+  }
+
+  &-posts-list {
+    @extend .list-unstyled;
+    margin-top: map-get($spacers, 4) !important;
+
+    &__item {
+      display: flex;
+      align-items: flex-start;
+      margin-bottom: map-get($spacers, 4) !important;
+
+      &__body {
+        flex: 1;
+      }
     }
+
+  }
 }

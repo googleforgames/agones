@@ -18,23 +18,27 @@ other = "Doorzoek deze site"
 [ui_in]
 other = "in"
 
+[ui_all]
+other = "alle"
+
 # Footer text
 [footer_all_rights_reserved]
-other = "All Rights Reserved"
+other = "Alle rechten voorbehouden"
 
 [footer_privacy_policy]
 other = "Privacy Policy"
-
 
 # Post (blog, articles etc.)
 [post_byline_by]
 other = "Door"
 [post_created]
-other = "Created"
+other = "Aangemaakt"
 [post_last_mod]
 other = "Laatst gewijzigd"
 [post_edit_this]
 other = "Bewerk deze pagina"
+[post_view_this]
+other = "Bekijk paginabron"
 [post_create_child_page]
 other = "Maak sub pagina"
 [post_create_issue]
@@ -43,13 +47,35 @@ other = "Maak documentatie issue"
 other = "Maak project issue"
 [post_posts_in]
 other = "Posts in"
+[post_reading_time]
+other = "minuten leestijd"
+[post_less_than_a_minute_read]
+other = "minder dan een minuut"
 
 # Print support
 [print_printable_section]
 other = "Dit is de multi-page printable view van deze sectie."
 [print_click_to_print]
-other = "Click hier om te printen"
+other = "Klik hier om te printen"
 [print_show_regular]
 other = "Terug naar normale view van deze pagina"
 [print_entire_section]
-other = "Print complete sectie"
+other = "Print volledige sectie"
+
+# Community
+[community_join]
+other = "Wordt lid van de {{ .Site.Title }} community"
+[community_introduce]
+other = "{{ .Site.Title }} is een open source project welke iedereen kan gebruiken, verbeteren en van kan genieten. We zouden het fijn vinden als je betrokken wordt! Hier zijn een aantal manieren om erachter te komen wat er speelt en hoe je betrokken kunt worden."
+[community_learn]
+other = "Leren en aansluiten"
+[community_using]
+other = "Gebruik je {{ .Site.Title }} of wil je dit gebruiken? Meer informatie hier:"
+[community_develop]
+other = "Ontwikkel en draag bij"
+[community_contribute]
+other = "Als je meer betrokken wil zijn door bij te dragen aan {{ .Site.Title }}, meldt je hier aan:"
+[community_how_to]
+other = "Je kunt meer informatie vinden over hoe bij te dragen aan {{ .Site.Title }} in onze"
+[community_guideline]
+other = "Richtlijnen voor bijdrage"

@@ -1,18 +1,17 @@
 .section-index {
+  .entry {
+    padding: 0.75rem;
+  }
 
-    .entry {
-        padding: .75rem;
+  h5 {
+    margin-bottom: 0;
+
+    a {
+      font-weight: 700;
     }
+  }
 
-    h5 {
-        margin-bottom: 0;
-
-        a {
-            font-weight: 700;
-        }
-    }
-
-    p {
-        margin-top: 0;
-    }
+  p {
+    margin-top: 0;
+  }
 }

@@ -12,7 +12,7 @@ other = "Suivant"
 other = "Lire plus"
 
 [ui_search]
-other = "Rechercher ce site…"
+other = "Rechercher"
 
 # Used in sentences such as "Posted in News"
 [ui_in]
@@ -20,7 +20,7 @@ other = "dans"
 
 # Footer text
 [footer_all_rights_reserved]
-other = "Tous droits résérvés"
+other = "Tous droits réservés"
 
 [footer_privacy_policy]
 other = "Politique de confidentialité"
@@ -30,26 +30,50 @@ other = "Politique de confidentialité"
 [post_byline_by]
 other = "Par"
 [post_created]
-other = "Crée"
+other = "Créé"
 [post_last_mod]
 other = "Dernière modification"
 [post_edit_this]
 other = "Modifier cette page"
+[post_view_this]
+other = "Afficher la source de la page"
 [post_create_child_page]
-other = "Create child page"
+other = "Créer une page dans cette section"
 [post_create_issue]
-other = "Créer un problème dans la documentation"
+other = "Signaler un problème dans la documentation"
 [post_create_project_issue]
-other = "Créer un problème dans le projet"
+other = "Signaler un problème dans le projet"
 [post_posts_in]
-other = "Messages dans"
+other = "Articles dans"
+[post_reading_time]
+other = "minutes à lire"
+[post_less_than_a_minute_read]
+other = "Moins d'une minute à lire"
 
 # Print support
 [print_printable_section]
-other = "This the multi-page printable view of this section."
+other = "Version imprimable multipages."
 [print_click_to_print]
-other = "Click here to print"
+other = "Cliquer ici pour imprimer"
 [print_show_regular]
-other = "Return to the regular view of this page"
+other = "Retour à la version par défaut"
 [print_entire_section]
-other = "Print entire section"
+other = "Imprimer la section entière"
+
+# Community
+[community_join]
+other = "Rejoindre la communauté {{ .Site.Title }}"
+[community_introduce]
+other = "{{ .Site.Title }} est un projet en source ouverte. Toute la communauté peut l'utiliser, l'améliorer et en bénéficier. Rejoignez nous ! Voilà quelques moyens d'être au courant de ce qui se passe et de contribuer."
+[community_learn]
+other = "Apprendre et se connecter"
+[community_using]
+other = "Vous utilisez ou voulez utiliser {{ .Site.Title }} ? En savoir plus:"
+[community_develop]
+other = "Développer et Contribuer"
+[community_contribute]
+other = "Si vous voulez vous impliquer davantage en contribuant à {{ .Site.Title }}, joignez-nous sur:"
+[community_how_to]
+other = "Vous pouvez trouver comment contribuer à {{ .Site.Title }} dans nos"
+[community_guideline]
+other = "Règles de contribution"
