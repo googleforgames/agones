@@ -217,6 +217,14 @@ sdk-publish-csharp: RELEASE_VERSION ?= $(base_version)
 sdk-publish-csharp:
 	$(MAKE) run-sdk-command-csharp COMMAND=publish VERSION=$(RELEASE_VERSION) DOCKER_RUN_ARGS="$(DOCKER_RUN_ARGS) -it"
 
+# SDK shell for rust 
+sdk-shell-rust: 
+	$(MAKE) sdk-shell SDK_FOLDER=rust 
+
+# Publish the Rust SDK to crates.io
+sdk-publish-rust:
+	$(MAKE) run-sdk-command-rust VERSION=$(RELEASE_VERSION) DOCKER_RUN_ARGS="$(DOCKER_RUN_ARGS) -it" COMMAND=publish
+
 # difference in sdks before and after gen-all-sdk-grpc target
 test-gen-all-sdk-grpc:
 	make gen-all-sdk-grpc
