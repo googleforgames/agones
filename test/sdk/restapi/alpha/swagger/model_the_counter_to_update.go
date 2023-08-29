@@ -42,3 +42,4 @@ type TheCounterToUpdate struct {
 	Count string `json:"count,omitempty"`
 	Capacity string `json:"capacity,omitempty"`
 }
+
