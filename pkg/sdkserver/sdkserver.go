@@ -816,9 +816,11 @@ func (s *SDKServer) GetCounter(ctx context.Context, in *alpha.GetCounterRequest)
 		protoCounter.Count += counterUpdate.diff
 		if protoCounter.Count < 0 {
 			protoCounter.Count = 0
+			s.logger.Debug("truncating Count in Get Counter request to 0")
 		}
 		if (counterUpdate.capacitySet == nil) && (protoCounter.Count > protoCounter.Capacity) {
 			protoCounter.Count = protoCounter.Capacity
+			s.logger.Debug("truncating Count in Get Counter request to Capacity")
 		}
 		s.logger.WithField("Get Counter", counter).Debugf("Applied Batched Counter Updates %v", counterUpdate)
 	}
@@ -959,12 +961,14 @@ func (s *SDKServer) updateCounter(ctx context.Context) error {
 			if newCnt < 0 {
 				// If Count < 0 truncate requests by setting the Count to 0.
 				newCnt = 0
+				s.logger.Debug("truncating Count in Update Counter request to 0")
 			}
 			// TODO: This means there may be increment requests in the collapsed Diff that shouldn't have gone through. We may want a diffList for this case?
 			// If Count > Capacity and the Diff is decreasing the Count, reduce the Count by the Diff.
 			// Otherwise if Count > Capacity and the Diff is increasing the Count, truncate at Capacity.
 			if newCnt > counter.Capacity && ctrReq.diff > 0 {
 				newCnt = counter.Capacity
+				s.logger.Debug("truncating Count in Update Counter request to Capacity")
 			}
 			counter.Count = newCnt
 		}
