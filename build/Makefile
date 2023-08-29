@@ -861,3 +861,4 @@ install-release: $(ensure-build-image)
 		$(common_mounts) \
 		$(DOCKER_RUN_ARGS) \
 		$(build_tag) /go/src/agones.dev/agones/build/install-release.sh
+
