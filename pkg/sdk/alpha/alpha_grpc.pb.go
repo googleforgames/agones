@@ -95,9 +95,6 @@ type SDKClient interface {
 	GetCounter(ctx context.Context, in *GetCounterRequest, opts ...grpc.CallOption) (*Counter, error)
 	// UpdateCounter returns the updated Counter. Returns NOT_FOUND if the Counter does not exist (name cannot be updated).
 	// Returns OUT_OF_RANGE if the Count is out of range [0,Capacity].
-	// Returns INVALID_ARGUMENT if the field mask path(s) are not field(s) of the Counter.
-	// If a field mask path(s) is specified, but the value is not set in the request Counter object,
-	// then the default value for the variable will be set (i.e. 0 for "capacity" or "count").
 	UpdateCounter(ctx context.Context, in *UpdateCounterRequest, opts ...grpc.CallOption) (*Counter, error)
 	// Gets a List. Returns NOT_FOUND if the List does not exist.
 	GetList(ctx context.Context, in *GetListRequest, opts ...grpc.CallOption) (*List, error)
@@ -303,9 +300,6 @@ type SDKServer interface {
 	GetCounter(context.Context, *GetCounterRequest) (*Counter, error)
 	// UpdateCounter returns the updated Counter. Returns NOT_FOUND if the Counter does not exist (name cannot be updated).
 	// Returns OUT_OF_RANGE if the Count is out of range [0,Capacity].
-	// Returns INVALID_ARGUMENT if the field mask path(s) are not field(s) of the Counter.
-	// If a field mask path(s) is specified, but the value is not set in the request Counter object,
-	// then the default value for the variable will be set (i.e. 0 for "capacity" or "count").
 	UpdateCounter(context.Context, *UpdateCounterRequest) (*Counter, error)
 	// Gets a List. Returns NOT_FOUND if the List does not exist.
 	GetList(context.Context, *GetListRequest) (*List, error)

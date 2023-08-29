@@ -43,66 +43,73 @@ namespace Agones.Dev.Sdk.Alpha {
             "cGkvYW5ub3RhdGlvbnMucHJvdG8aF2dvb2dsZS9hcGkvY2xpZW50LnByb3Rv",
             "Gh9nb29nbGUvYXBpL2ZpZWxkX2JlaGF2aW9yLnByb3RvGhlnb29nbGUvYXBp",
             "L3Jlc291cmNlLnByb3RvGhtnb29nbGUvcHJvdG9idWYvZW1wdHkucHJvdG8a",
-            "IGdvb2dsZS9wcm90b2J1Zi9maWVsZF9tYXNrLnByb3RvIgcKBUVtcHR5IhYK",
-            "BUNvdW50Eg0KBWNvdW50GAEgASgDIhQKBEJvb2wSDAoEYm9vbBgBIAEoCCIc",
-            "CghQbGF5ZXJJRBIQCghwbGF5ZXJJRBgBIAEoCSIcCgxQbGF5ZXJJRExpc3QS",
-            "DAoEbGlzdBgBIAMoCSJlCgdDb3VudGVyEgwKBG5hbWUYASABKAkSDQoFY291",
-            "bnQYAiABKAMSEAoIY2FwYWNpdHkYAyABKAM6K+pBKAoSYWdvbmVzLmRldi9D",
-            "b3VudGVyEhJjb3VudGVycy97Y291bnRlcn0iPQoRR2V0Q291bnRlclJlcXVl",
-            "c3QSKAoEbmFtZRgBIAEoCUIa4EEC+kEUChJhZ29uZXMuZGV2L0NvdW50ZXIi",
-            "mAEKFFVwZGF0ZUNvdW50ZXJSZXF1ZXN0EkoKB2NvdW50ZXIYASABKAsyHS5h",
-            "Z29uZXMuZGV2LnNkay5hbHBoYS5Db3VudGVyQhrgQQL6QRQKEmFnb25lcy5k",
-            "ZXYvQ291bnRlchI0Cgt1cGRhdGVfbWFzaxgCIAEoCzIaLmdvb2dsZS5wcm90",
-            "b2J1Zi5GaWVsZE1hc2tCA+BBAiJaCgRMaXN0EgwKBG5hbWUYASABKAkSEAoI",
-            "Y2FwYWNpdHkYAiABKAMSDgoGdmFsdWVzGAMgAygJOiLqQR8KD2Fnb25lcy5k",
-            "ZXYvTGlzdBIMbGlzdHMve2xpc3R9IjcKDkdldExpc3RSZXF1ZXN0EiUKBG5h",
-            "bWUYASABKAlCF+BBAvpBEQoPYWdvbmVzLmRldi9MaXN0IowBChFVcGRhdGVM",
-            "aXN0UmVxdWVzdBJBCgRsaXN0GAEgASgLMhouYWdvbmVzLmRldi5zZGsuYWxw",
-            "aGEuTGlzdEIX4EEC+kERCg9hZ29uZXMuZGV2L0xpc3QSNAoLdXBkYXRlX21h",
-            "c2sYAiABKAsyGi5nb29nbGUucHJvdG9idWYuRmllbGRNYXNrQgPgQQIiUAoT",
-            "QWRkTGlzdFZhbHVlUmVxdWVzdBIlCgRuYW1lGAEgASgJQhfgQQL6QREKD2Fn",
-            "b25lcy5kZXYvTGlzdBISCgV2YWx1ZRgCIAEoCUID4EECIlMKFlJlbW92ZUxp",
-            "c3RWYWx1ZVJlcXVlc3QSJQoEbmFtZRgBIAEoCUIX4EEC+kERCg9hZ29uZXMu",
-            "ZGV2L0xpc3QSEgoFdmFsdWUYAiABKAlCA+BBAjL0DAoDU0RLEm0KDVBsYXll",
-            "ckNvbm5lY3QSHi5hZ29uZXMuZGV2LnNkay5hbHBoYS5QbGF5ZXJJRBoaLmFn",
-            "b25lcy5kZXYuc2RrLmFscGhhLkJvb2wiIILT5JMCGiIVL2FscGhhL3BsYXll",
-            "ci9jb25uZWN0OgEqEnMKEFBsYXllckRpc2Nvbm5lY3QSHi5hZ29uZXMuZGV2",
-            "LnNkay5hbHBoYS5QbGF5ZXJJRBoaLmFnb25lcy5kZXYuc2RrLmFscGhhLkJv",
-            "b2wiI4LT5JMCHSIYL2FscGhhL3BsYXllci9kaXNjb25uZWN0OgEqEnAKEVNl",
-            "dFBsYXllckNhcGFjaXR5EhsuYWdvbmVzLmRldi5zZGsuYWxwaGEuQ291bnQa",
-            "Gy5hZ29uZXMuZGV2LnNkay5hbHBoYS5FbXB0eSIhgtPkkwIbGhYvYWxwaGEv",
-            "cGxheWVyL2NhcGFjaXR5OgEqEm0KEUdldFBsYXllckNhcGFjaXR5EhsuYWdv",
-            "bmVzLmRldi5zZGsuYWxwaGEuRW1wdHkaGy5hZ29uZXMuZGV2LnNkay5hbHBo",
-            "YS5Db3VudCIegtPkkwIYEhYvYWxwaGEvcGxheWVyL2NhcGFjaXR5EmcKDkdl",
-            "dFBsYXllckNvdW50EhsuYWdvbmVzLmRldi5zZGsuYWxwaGEuRW1wdHkaGy5h",
-            "Z29uZXMuZGV2LnNkay5hbHBoYS5Db3VudCIbgtPkkwIVEhMvYWxwaGEvcGxh",
-            "eWVyL2NvdW50EnsKEUlzUGxheWVyQ29ubmVjdGVkEh4uYWdvbmVzLmRldi5z",
-            "ZGsuYWxwaGEuUGxheWVySUQaGi5hZ29uZXMuZGV2LnNkay5hbHBoYS5Cb29s",
-            "IiqC0+STAiQSIi9hbHBoYS9wbGF5ZXIvY29ubmVjdGVkL3twbGF5ZXJJRH0S",
-            "dwoTR2V0Q29ubmVjdGVkUGxheWVycxIbLmFnb25lcy5kZXYuc2RrLmFscGhh",
-            "LkVtcHR5GiIuYWdvbmVzLmRldi5zZGsuYWxwaGEuUGxheWVySURMaXN0Ih+C",
-            "0+STAhkSFy9hbHBoYS9wbGF5ZXIvY29ubmVjdGVkEoABCgpHZXRDb3VudGVy",
-            "EicuYWdvbmVzLmRldi5zZGsuYWxwaGEuR2V0Q291bnRlclJlcXVlc3QaHS5h",
-            "Z29uZXMuZGV2LnNkay5hbHBoYS5Db3VudGVyIiqC0+STAh0SGy92MWFscGhh",
-            "MS97bmFtZT1jb3VudGVycy8qfdpBBG5hbWUSpgEKDVVwZGF0ZUNvdW50ZXIS",
-            "Ki5hZ29uZXMuZGV2LnNkay5hbHBoYS5VcGRhdGVDb3VudGVyUmVxdWVzdBod",
-            "LmFnb25lcy5kZXYuc2RrLmFscGhhLkNvdW50ZXIiSoLT5JMCLjIjL3YxYWxw",
-            "aGExL3tjb3VudGVyLm5hbWU9Y291bnRlcnMvKn06B2NvdW50ZXLaQRNjb3Vu",
-            "dGVyLHVwZGF0ZV9tYXNrEnQKB0dldExpc3QSJC5hZ29uZXMuZGV2LnNkay5h",
-            "bHBoYS5HZXRMaXN0UmVxdWVzdBoaLmFnb25lcy5kZXYuc2RrLmFscGhhLkxp",
-            "c3QiJ4LT5JMCGhIYL3YxYWxwaGExL3tuYW1lPWxpc3RzLyp92kEEbmFtZRKR",
-            "AQoKVXBkYXRlTGlzdBInLmFnb25lcy5kZXYuc2RrLmFscGhhLlVwZGF0ZUxp",
-            "c3RSZXF1ZXN0GhouYWdvbmVzLmRldi5zZGsuYWxwaGEuTGlzdCI+gtPkkwIl",
-            "Mh0vdjFhbHBoYTEve2xpc3QubmFtZT1saXN0cy8qfToEbGlzdNpBEGxpc3Qs",
-            "dXBkYXRlX21hc2sSgwEKDEFkZExpc3RWYWx1ZRIpLmFnb25lcy5kZXYuc2Rr",
-            "LmFscGhhLkFkZExpc3RWYWx1ZVJlcXVlc3QaGi5hZ29uZXMuZGV2LnNkay5h",
-            "bHBoYS5MaXN0IiyC0+STAiYiIS92MWFscGhhMS97bmFtZT1saXN0cy8qfTph",
-            "ZGRWYWx1ZToBKhKMAQoPUmVtb3ZlTGlzdFZhbHVlEiwuYWdvbmVzLmRldi5z",
-            "ZGsuYWxwaGEuUmVtb3ZlTGlzdFZhbHVlUmVxdWVzdBoaLmFnb25lcy5kZXYu",
-            "c2RrLmFscGhhLkxpc3QiL4LT5JMCKSIkL3YxYWxwaGExL3tuYW1lPWxpc3Rz",
-            "Lyp9OnJlbW92ZVZhbHVlOgEqQglaBy4vYWxwaGFiBnByb3RvMw=="));
+            "IGdvb2dsZS9wcm90b2J1Zi9maWVsZF9tYXNrLnByb3RvGh5nb29nbGUvcHJv",
+            "dG9idWYvd3JhcHBlcnMucHJvdG8iBwoFRW1wdHkiFgoFQ291bnQSDQoFY291",
+            "bnQYASABKAMiFAoEQm9vbBIMCgRib29sGAEgASgIIhwKCFBsYXllcklEEhAK",
+            "CHBsYXllcklEGAEgASgJIhwKDFBsYXllcklETGlzdBIMCgRsaXN0GAEgAygJ",
+            "ImUKB0NvdW50ZXISDAoEbmFtZRgBIAEoCRINCgVjb3VudBgCIAEoAxIQCghj",
+            "YXBhY2l0eRgDIAEoAzor6kEoChJhZ29uZXMuZGV2L0NvdW50ZXISEmNvdW50",
+            "ZXJzL3tjb3VudGVyfSLmAQoUQ291bnRlclVwZGF0ZVJlcXVlc3QSDAoEbmFt",
+            "ZRgBIAEoCRIqCgVjb3VudBgCIAEoCzIbLmdvb2dsZS5wcm90b2J1Zi5JbnQ2",
+            "NFZhbHVlEi0KCGNhcGFjaXR5GAMgASgLMhsuZ29vZ2xlLnByb3RvYnVmLklu",
+            "dDY0VmFsdWUSEQoJY291bnREaWZmGAQgASgDOlLqQU8KH2Fnb25lcy5kZXYv",
+            "Q291bnRlclVwZGF0ZVJlcXVlc3QSLGNvdW50ZXJVcGRhdGVSZXF1ZXN0cy97",
+            "Y291bnRlclVwZGF0ZVJlcXVlc3R9Ij0KEUdldENvdW50ZXJSZXF1ZXN0EigK",
+            "BG5hbWUYASABKAlCGuBBAvpBFAoSYWdvbmVzLmRldi9Db3VudGVyIokBChRV",
+            "cGRhdGVDb3VudGVyUmVxdWVzdBJxChRjb3VudGVyVXBkYXRlUmVxdWVzdBgB",
+            "IAEoCzIqLmFnb25lcy5kZXYuc2RrLmFscGhhLkNvdW50ZXJVcGRhdGVSZXF1",
+            "ZXN0QifgQQL6QSEKH2Fnb25lcy5kZXYvQ291bnRlclVwZGF0ZVJlcXVlc3Qi",
+            "WgoETGlzdBIMCgRuYW1lGAEgASgJEhAKCGNhcGFjaXR5GAIgASgDEg4KBnZh",
+            "bHVlcxgDIAMoCToi6kEfCg9hZ29uZXMuZGV2L0xpc3QSDGxpc3RzL3tsaXN0",
+            "fSI3Cg5HZXRMaXN0UmVxdWVzdBIlCgRuYW1lGAEgASgJQhfgQQL6QREKD2Fn",
+            "b25lcy5kZXYvTGlzdCKMAQoRVXBkYXRlTGlzdFJlcXVlc3QSQQoEbGlzdBgB",
+            "IAEoCzIaLmFnb25lcy5kZXYuc2RrLmFscGhhLkxpc3RCF+BBAvpBEQoPYWdv",
+            "bmVzLmRldi9MaXN0EjQKC3VwZGF0ZV9tYXNrGAIgASgLMhouZ29vZ2xlLnBy",
+            "b3RvYnVmLkZpZWxkTWFza0ID4EECIlAKE0FkZExpc3RWYWx1ZVJlcXVlc3QS",
+            "JQoEbmFtZRgBIAEoCUIX4EEC+kERCg9hZ29uZXMuZGV2L0xpc3QSEgoFdmFs",
+            "dWUYAiABKAlCA+BBAiJTChZSZW1vdmVMaXN0VmFsdWVSZXF1ZXN0EiUKBG5h",
+            "bWUYASABKAlCF+BBAvpBEQoPYWdvbmVzLmRldi9MaXN0EhIKBXZhbHVlGAIg",
+            "ASgJQgPgQQIynA0KA1NESxJtCg1QbGF5ZXJDb25uZWN0Eh4uYWdvbmVzLmRl",
+            "di5zZGsuYWxwaGEuUGxheWVySUQaGi5hZ29uZXMuZGV2LnNkay5hbHBoYS5C",
+            "b29sIiCC0+STAhoiFS9hbHBoYS9wbGF5ZXIvY29ubmVjdDoBKhJzChBQbGF5",
+            "ZXJEaXNjb25uZWN0Eh4uYWdvbmVzLmRldi5zZGsuYWxwaGEuUGxheWVySUQa",
+            "Gi5hZ29uZXMuZGV2LnNkay5hbHBoYS5Cb29sIiOC0+STAh0iGC9hbHBoYS9w",
+            "bGF5ZXIvZGlzY29ubmVjdDoBKhJwChFTZXRQbGF5ZXJDYXBhY2l0eRIbLmFn",
+            "b25lcy5kZXYuc2RrLmFscGhhLkNvdW50GhsuYWdvbmVzLmRldi5zZGsuYWxw",
+            "aGEuRW1wdHkiIYLT5JMCGxoWL2FscGhhL3BsYXllci9jYXBhY2l0eToBKhJt",
+            "ChFHZXRQbGF5ZXJDYXBhY2l0eRIbLmFnb25lcy5kZXYuc2RrLmFscGhhLkVt",
+            "cHR5GhsuYWdvbmVzLmRldi5zZGsuYWxwaGEuQ291bnQiHoLT5JMCGBIWL2Fs",
+            "cGhhL3BsYXllci9jYXBhY2l0eRJnCg5HZXRQbGF5ZXJDb3VudBIbLmFnb25l",
+            "cy5kZXYuc2RrLmFscGhhLkVtcHR5GhsuYWdvbmVzLmRldi5zZGsuYWxwaGEu",
+            "Q291bnQiG4LT5JMCFRITL2FscGhhL3BsYXllci9jb3VudBJ7ChFJc1BsYXll",
+            "ckNvbm5lY3RlZBIeLmFnb25lcy5kZXYuc2RrLmFscGhhLlBsYXllcklEGhou",
+            "YWdvbmVzLmRldi5zZGsuYWxwaGEuQm9vbCIqgtPkkwIkEiIvYWxwaGEvcGxh",
+            "eWVyL2Nvbm5lY3RlZC97cGxheWVySUR9EncKE0dldENvbm5lY3RlZFBsYXll",
+            "cnMSGy5hZ29uZXMuZGV2LnNkay5hbHBoYS5FbXB0eRoiLmFnb25lcy5kZXYu",
+            "c2RrLmFscGhhLlBsYXllcklETGlzdCIfgtPkkwIZEhcvYWxwaGEvcGxheWVy",
+            "L2Nvbm5lY3RlZBKAAQoKR2V0Q291bnRlchInLmFnb25lcy5kZXYuc2RrLmFs",
+            "cGhhLkdldENvdW50ZXJSZXF1ZXN0Gh0uYWdvbmVzLmRldi5zZGsuYWxwaGEu",
+            "Q291bnRlciIqgtPkkwIdEhsvdjFhbHBoYTEve25hbWU9Y291bnRlcnMvKn3a",
+            "QQRuYW1lEs4BCg1VcGRhdGVDb3VudGVyEiouYWdvbmVzLmRldi5zZGsuYWxw",
+            "aGEuVXBkYXRlQ291bnRlclJlcXVlc3QaHS5hZ29uZXMuZGV2LnNkay5hbHBo",
+            "YS5Db3VudGVyInKC0+STAlUyPS92MWFscGhhMS97Y291bnRlclVwZGF0ZVJl",
+            "cXVlc3QubmFtZT1jb3VudGVyVXBkYXRlUmVxdWVzdHMvKn06FGNvdW50ZXJV",
+            "cGRhdGVSZXF1ZXN02kEUY291bnRlclVwZGF0ZVJlcXVlc3QSdAoHR2V0TGlz",
+            "dBIkLmFnb25lcy5kZXYuc2RrLmFscGhhLkdldExpc3RSZXF1ZXN0GhouYWdv",
+            "bmVzLmRldi5zZGsuYWxwaGEuTGlzdCIngtPkkwIaEhgvdjFhbHBoYTEve25h",
+            "bWU9bGlzdHMvKn3aQQRuYW1lEpEBCgpVcGRhdGVMaXN0EicuYWdvbmVzLmRl",
+            "di5zZGsuYWxwaGEuVXBkYXRlTGlzdFJlcXVlc3QaGi5hZ29uZXMuZGV2LnNk",
+            "ay5hbHBoYS5MaXN0Ij6C0+STAiUyHS92MWFscGhhMS97bGlzdC5uYW1lPWxp",
+            "c3RzLyp9OgRsaXN02kEQbGlzdCx1cGRhdGVfbWFzaxKDAQoMQWRkTGlzdFZh",
+            "bHVlEikuYWdvbmVzLmRldi5zZGsuYWxwaGEuQWRkTGlzdFZhbHVlUmVxdWVz",
+            "dBoaLmFnb25lcy5kZXYuc2RrLmFscGhhLkxpc3QiLILT5JMCJiIhL3YxYWxw",
+            "aGExL3tuYW1lPWxpc3RzLyp9OmFkZFZhbHVlOgEqEowBCg9SZW1vdmVMaXN0",
+            "VmFsdWUSLC5hZ29uZXMuZGV2LnNkay5hbHBoYS5SZW1vdmVMaXN0VmFsdWVS",
+            "ZXF1ZXN0GhouYWdvbmVzLmRldi5zZGsuYWxwaGEuTGlzdCIvgtPkkwIpIiQv",
+            "djFhbHBoYTEve25hbWU9bGlzdHMvKn06cmVtb3ZlVmFsdWU6ASpCCVoHLi9h",
+            "bHBoYWIGcHJvdG8z"));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
-          new pbr::FileDescriptor[] { global::Google.Api.AnnotationsReflection.Descriptor, global::Google.Api.ClientReflection.Descriptor, global::Google.Api.FieldBehaviorReflection.Descriptor, global::Google.Api.ResourceReflection.Descriptor, global::Google.Protobuf.WellKnownTypes.EmptyReflection.Descriptor, global::Google.Protobuf.WellKnownTypes.FieldMaskReflection.Descriptor, },
+          new pbr::FileDescriptor[] { global::Google.Api.AnnotationsReflection.Descriptor, global::Google.Api.ClientReflection.Descriptor, global::Google.Api.FieldBehaviorReflection.Descriptor, global::Google.Api.ResourceReflection.Descriptor, global::Google.Protobuf.WellKnownTypes.EmptyReflection.Descriptor, global::Google.Protobuf.WellKnownTypes.FieldMaskReflection.Descriptor, global::Google.Protobuf.WellKnownTypes.WrappersReflection.Descriptor, },
           new pbr::GeneratedClrTypeInfo(null, null, new pbr::GeneratedClrTypeInfo[] {
             new pbr::GeneratedClrTypeInfo(typeof(global::Agones.Dev.Sdk.Alpha.Empty), global::Agones.Dev.Sdk.Alpha.Empty.Parser, null, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Agones.Dev.Sdk.Alpha.Count), global::Agones.Dev.Sdk.Alpha.Count.Parser, new[]{ "Count_" }, null, null, null, null),
@@ -110,8 +117,9 @@ namespace Agones.Dev.Sdk.Alpha {
             new pbr::GeneratedClrTypeInfo(typeof(global::Agones.Dev.Sdk.Alpha.PlayerID), global::Agones.Dev.Sdk.Alpha.PlayerID.Parser, new[]{ "PlayerID_" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Agones.Dev.Sdk.Alpha.PlayerIDList), global::Agones.Dev.Sdk.Alpha.PlayerIDList.Parser, new[]{ "List" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Agones.Dev.Sdk.Alpha.Counter), global::Agones.Dev.Sdk.Alpha.Counter.Parser, new[]{ "Name", "Count", "Capacity" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Agones.Dev.Sdk.Alpha.CounterUpdateRequest), global::Agones.Dev.Sdk.Alpha.CounterUpdateRequest.Parser, new[]{ "Name", "Count", "Capacity", "CountDiff" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Agones.Dev.Sdk.Alpha.GetCounterRequest), global::Agones.Dev.Sdk.Alpha.GetCounterRequest.Parser, new[]{ "Name" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Agones.Dev.Sdk.Alpha.UpdateCounterRequest), global::Agones.Dev.Sdk.Alpha.UpdateCounterRequest.Parser, new[]{ "Counter", "UpdateMask" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Agones.Dev.Sdk.Alpha.UpdateCounterRequest), global::Agones.Dev.Sdk.Alpha.UpdateCounterRequest.Parser, new[]{ "CounterUpdateRequest" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Agones.Dev.Sdk.Alpha.List), global::Agones.Dev.Sdk.Alpha.List.Parser, new[]{ "Name", "Capacity", "Values" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Agones.Dev.Sdk.Alpha.GetListRequest), global::Agones.Dev.Sdk.Alpha.GetListRequest.Parser, new[]{ "Name" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Agones.Dev.Sdk.Alpha.UpdateListRequest), global::Agones.Dev.Sdk.Alpha.UpdateListRequest.Parser, new[]{ "List", "UpdateMask" }, null, null, null, null),
@@ -1310,6 +1318,338 @@ namespace Agones.Dev.Sdk.Alpha {
 
   }
 
+  /// <summary>
+  /// A representation of a Counter Update Request.
+  /// </summary>
+  public sealed partial class CounterUpdateRequest : pb::IMessage<CounterUpdateRequest>
+  #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      , pb::IBufferMessage
+  #endif
+  {
+    private static readonly pb::MessageParser<CounterUpdateRequest> _parser = new pb::MessageParser<CounterUpdateRequest>(() => new CounterUpdateRequest());
+    private pb::UnknownFieldSet _unknownFields;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pb::MessageParser<CounterUpdateRequest> Parser { get { return _parser; } }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pbr::MessageDescriptor Descriptor {
+      get { return global::Agones.Dev.Sdk.Alpha.AlphaReflection.Descriptor.MessageTypes[6]; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    pbr::MessageDescriptor pb::IMessage.Descriptor {
+      get { return Descriptor; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public CounterUpdateRequest() {
+      OnConstruction();
+    }
+
+    partial void OnConstruction();
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public CounterUpdateRequest(CounterUpdateRequest other) : this() {
+      name_ = other.name_;
+      Count = other.Count;
+      Capacity = other.Capacity;
+      countDiff_ = other.countDiff_;
+      _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public CounterUpdateRequest Clone() {
+      return new CounterUpdateRequest(this);
+    }
+
+    /// <summary>Field number for the "name" field.</summary>
+    public const int NameFieldNumber = 1;
+    private string name_ = "";
+    /// <summary>
+    /// The name of the Counter to update
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public string Name {
+      get { return name_; }
+      set {
+        name_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+      }
+    }
+
+    /// <summary>Field number for the "count" field.</summary>
+    public const int CountFieldNumber = 2;
+    private static readonly pb::FieldCodec<long?> _single_count_codec = pb::FieldCodec.ForStructWrapper<long>(18);
+    private long? count_;
+    /// <summary>
+    /// The value to set the Counter Count
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public long? Count {
+      get { return count_; }
+      set {
+        count_ = value;
+      }
+    }
+
+
+    /// <summary>Field number for the "capacity" field.</summary>
+    public const int CapacityFieldNumber = 3;
+    private static readonly pb::FieldCodec<long?> _single_capacity_codec = pb::FieldCodec.ForStructWrapper<long>(26);
+    private long? capacity_;
+    /// <summary>
+    /// The value to set the Counter Capacity
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public long? Capacity {
+      get { return capacity_; }
+      set {
+        capacity_ = value;
+      }
+    }
+
+
+    /// <summary>Field number for the "countDiff" field.</summary>
+    public const int CountDiffFieldNumber = 4;
+    private long countDiff_;
+    /// <summary>
+    /// countDiff tracks if a Counter Update Request is CountIncrement (positive), CountDecrement
+    /// (negative), 0 if a CountSet or CapacitySet request
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public long CountDiff {
+      get { return countDiff_; }
+      set {
+        countDiff_ = value;
+      }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override bool Equals(object other) {
+      return Equals(other as CounterUpdateRequest);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public bool Equals(CounterUpdateRequest other) {
+      if (ReferenceEquals(other, null)) {
+        return false;
+      }
+      if (ReferenceEquals(other, this)) {
+        return true;
+      }
+      if (Name != other.Name) return false;
+      if (Count != other.Count) return false;
+      if (Capacity != other.Capacity) return false;
+      if (CountDiff != other.CountDiff) return false;
+      return Equals(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override int GetHashCode() {
+      int hash = 1;
+      if (Name.Length != 0) hash ^= Name.GetHashCode();
+      if (count_ != null) hash ^= Count.GetHashCode();
+      if (capacity_ != null) hash ^= Capacity.GetHashCode();
+      if (CountDiff != 0L) hash ^= CountDiff.GetHashCode();
+      if (_unknownFields != null) {
+        hash ^= _unknownFields.GetHashCode();
+      }
+      return hash;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override string ToString() {
+      return pb::JsonFormatter.ToDiagnosticString(this);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void WriteTo(pb::CodedOutputStream output) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      output.WriteRawMessage(this);
+    #else
+      if (Name.Length != 0) {
+        output.WriteRawTag(10);
+        output.WriteString(Name);
+      }
+      if (count_ != null) {
+        _single_count_codec.WriteTagAndValue(output, Count);
+      }
+      if (capacity_ != null) {
+        _single_capacity_codec.WriteTagAndValue(output, Capacity);
+      }
+      if (CountDiff != 0L) {
+        output.WriteRawTag(32);
+        output.WriteInt64(CountDiff);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(output);
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
+      if (Name.Length != 0) {
+        output.WriteRawTag(10);
+        output.WriteString(Name);
+      }
+      if (count_ != null) {
+        _single_count_codec.WriteTagAndValue(ref output, Count);
+      }
+      if (capacity_ != null) {
+        _single_capacity_codec.WriteTagAndValue(ref output, Capacity);
+      }
+      if (CountDiff != 0L) {
+        output.WriteRawTag(32);
+        output.WriteInt64(CountDiff);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(ref output);
+      }
+    }
+    #endif
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public int CalculateSize() {
+      int size = 0;
+      if (Name.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(Name);
+      }
+      if (count_ != null) {
+        size += _single_count_codec.CalculateSizeWithTag(Count);
+      }
+      if (capacity_ != null) {
+        size += _single_capacity_codec.CalculateSizeWithTag(Capacity);
+      }
+      if (CountDiff != 0L) {
+        size += 1 + pb::CodedOutputStream.ComputeInt64Size(CountDiff);
+      }
+      if (_unknownFields != null) {
+        size += _unknownFields.CalculateSize();
+      }
+      return size;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(CounterUpdateRequest other) {
+      if (other == null) {
+        return;
+      }
+      if (other.Name.Length != 0) {
+        Name = other.Name;
+      }
+      if (other.count_ != null) {
+        if (count_ == null || other.Count != 0L) {
+          Count = other.Count;
+        }
+      }
+      if (other.capacity_ != null) {
+        if (capacity_ == null || other.Capacity != 0L) {
+          Capacity = other.Capacity;
+        }
+      }
+      if (other.CountDiff != 0L) {
+        CountDiff = other.CountDiff;
+      }
+      _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(pb::CodedInputStream input) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      input.ReadRawMessage(this);
+    #else
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+        switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
+            break;
+          case 10: {
+            Name = input.ReadString();
+            break;
+          }
+          case 18: {
+            long? value = _single_count_codec.Read(input);
+            if (count_ == null || value != 0L) {
+              Count = value;
+            }
+            break;
+          }
+          case 26: {
+            long? value = _single_capacity_codec.Read(input);
+            if (capacity_ == null || value != 0L) {
+              Capacity = value;
+            }
+            break;
+          }
+          case 32: {
+            CountDiff = input.ReadInt64();
+            break;
+          }
+        }
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalMergeFrom(ref pb::ParseContext input) {
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+        switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
+            break;
+          case 10: {
+            Name = input.ReadString();
+            break;
+          }
+          case 18: {
+            long? value = _single_count_codec.Read(ref input);
+            if (count_ == null || value != 0L) {
+              Count = value;
+            }
+            break;
+          }
+          case 26: {
+            long? value = _single_capacity_codec.Read(ref input);
+            if (capacity_ == null || value != 0L) {
+              Capacity = value;
+            }
+            break;
+          }
+          case 32: {
+            CountDiff = input.ReadInt64();
+            break;
+          }
+        }
+      }
+    }
+    #endif
+
+  }
+
   public sealed partial class GetCounterRequest : pb::IMessage<GetCounterRequest>
   #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       , pb::IBufferMessage
@@ -1324,7 +1664,7 @@ namespace Agones.Dev.Sdk.Alpha {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Agones.Dev.Sdk.Alpha.AlphaReflection.Descriptor.MessageTypes[6]; }
+      get { return global::Agones.Dev.Sdk.Alpha.AlphaReflection.Descriptor.MessageTypes[7]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -1516,7 +1856,7 @@ namespace Agones.Dev.Sdk.Alpha {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Agones.Dev.Sdk.Alpha.AlphaReflection.Descriptor.MessageTypes[7]; }
+      get { return global::Agones.Dev.Sdk.Alpha.AlphaReflection.Descriptor.MessageTypes[8]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -1536,8 +1876,7 @@ namespace Agones.Dev.Sdk.Alpha {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public UpdateCounterRequest(UpdateCounterRequest other) : this() {
-      counter_ = other.counter_ != null ? other.counter_.Clone() : null;
-      updateMask_ = other.updateMask_ != null ? other.updateMask_.Clone() : null;
+      counterUpdateRequest_ = other.counterUpdateRequest_ != null ? other.counterUpdateRequest_.Clone() : null;
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
 
@@ -1547,35 +1886,18 @@ namespace Agones.Dev.Sdk.Alpha {
       return new UpdateCounterRequest(this);
     }
 
-    /// <summary>Field number for the "counter" field.</summary>
-    public const int CounterFieldNumber = 1;
-    private global::Agones.Dev.Sdk.Alpha.Counter counter_;
+    /// <summary>Field number for the "counterUpdateRequest" field.</summary>
+    public const int CounterUpdateRequestFieldNumber = 1;
+    private global::Agones.Dev.Sdk.Alpha.CounterUpdateRequest counterUpdateRequest_;
     /// <summary>
-    /// The Counter to update
+    /// The requested update to make to the Counter
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public global::Agones.Dev.Sdk.Alpha.Counter Counter {
-      get { return counter_; }
+    public global::Agones.Dev.Sdk.Alpha.CounterUpdateRequest CounterUpdateRequest {
+      get { return counterUpdateRequest_; }
       set {
-        counter_ = value;
-      }
-    }
-
-    /// <summary>Field number for the "update_mask" field.</summary>
-    public const int UpdateMaskFieldNumber = 2;
-    private global::Google.Protobuf.WellKnownTypes.FieldMask updateMask_;
-    /// <summary>
-    /// Required. Mask (list) of fields to update.
-    /// Fields are specified relative to the Counter
-    /// (e.g. `count`, `capacity`; *not* `Counter.count` or `Counter.capacity`).
-    /// </summary>
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public global::Google.Protobuf.WellKnownTypes.FieldMask UpdateMask {
-      get { return updateMask_; }
-      set {
-        updateMask_ = value;
+        counterUpdateRequest_ = value;
       }
     }
 
@@ -1594,8 +1916,7 @@ namespace Agones.Dev.Sdk.Alpha {
       if (ReferenceEquals(other, this)) {
         return true;
       }
-      if (!object.Equals(Counter, other.Counter)) return false;
-      if (!object.Equals(UpdateMask, other.UpdateMask)) return false;
+      if (!object.Equals(CounterUpdateRequest, other.CounterUpdateRequest)) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
 
@@ -1603,8 +1924,7 @@ namespace Agones.Dev.Sdk.Alpha {
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public override int GetHashCode() {
       int hash = 1;
-      if (counter_ != null) hash ^= Counter.GetHashCode();
-      if (updateMask_ != null) hash ^= UpdateMask.GetHashCode();
+      if (counterUpdateRequest_ != null) hash ^= CounterUpdateRequest.GetHashCode();
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
       }
@@ -1623,13 +1943,9 @@ namespace Agones.Dev.Sdk.Alpha {
     #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       output.WriteRawMessage(this);
     #else
-      if (counter_ != null) {
+      if (counterUpdateRequest_ != null) {
         output.WriteRawTag(10);
-        output.WriteMessage(Counter);
-      }
-      if (updateMask_ != null) {
-        output.WriteRawTag(18);
-        output.WriteMessage(UpdateMask);
+        output.WriteMessage(CounterUpdateRequest);
       }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
@@ -1641,13 +1957,9 @@ namespace Agones.Dev.Sdk.Alpha {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
-      if (counter_ != null) {
+      if (counterUpdateRequest_ != null) {
         output.WriteRawTag(10);
-        output.WriteMessage(Counter);
-      }
-      if (updateMask_ != null) {
-        output.WriteRawTag(18);
-        output.WriteMessage(UpdateMask);
+        output.WriteMessage(CounterUpdateRequest);
       }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(ref output);
@@ -1659,11 +1971,8 @@ namespace Agones.Dev.Sdk.Alpha {
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public int CalculateSize() {
       int size = 0;
-      if (counter_ != null) {
-        size += 1 + pb::CodedOutputStream.ComputeMessageSize(Counter);
-      }
-      if (updateMask_ != null) {
-        size += 1 + pb::CodedOutputStream.ComputeMessageSize(UpdateMask);
+      if (counterUpdateRequest_ != null) {
+        size += 1 + pb::CodedOutputStream.ComputeMessageSize(CounterUpdateRequest);
       }
       if (_unknownFields != null) {
         size += _unknownFields.CalculateSize();
@@ -1677,17 +1986,11 @@ namespace Agones.Dev.Sdk.Alpha {
       if (other == null) {
         return;
       }
-      if (other.counter_ != null) {
-        if (counter_ == null) {
-          Counter = new global::Agones.Dev.Sdk.Alpha.Counter();
+      if (other.counterUpdateRequest_ != null) {
+        if (counterUpdateRequest_ == null) {
+          CounterUpdateRequest = new global::Agones.Dev.Sdk.Alpha.CounterUpdateRequest();
         }
-        Counter.MergeFrom(other.Counter);
-      }
-      if (other.updateMask_ != null) {
-        if (updateMask_ == null) {
-          UpdateMask = new global::Google.Protobuf.WellKnownTypes.FieldMask();
-        }
-        UpdateMask.MergeFrom(other.UpdateMask);
+        CounterUpdateRequest.MergeFrom(other.CounterUpdateRequest);
       }
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
     }
@@ -1705,17 +2008,10 @@ namespace Agones.Dev.Sdk.Alpha {
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
             break;
           case 10: {
-            if (counter_ == null) {
-              Counter = new global::Agones.Dev.Sdk.Alpha.Counter();
+            if (counterUpdateRequest_ == null) {
+              CounterUpdateRequest = new global::Agones.Dev.Sdk.Alpha.CounterUpdateRequest();
             }
-            input.ReadMessage(Counter);
-            break;
-          }
-          case 18: {
-            if (updateMask_ == null) {
-              UpdateMask = new global::Google.Protobuf.WellKnownTypes.FieldMask();
-            }
-            input.ReadMessage(UpdateMask);
+            input.ReadMessage(CounterUpdateRequest);
             break;
           }
         }
@@ -1734,17 +2030,10 @@ namespace Agones.Dev.Sdk.Alpha {
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
             break;
           case 10: {
-            if (counter_ == null) {
-              Counter = new global::Agones.Dev.Sdk.Alpha.Counter();
+            if (counterUpdateRequest_ == null) {
+              CounterUpdateRequest = new global::Agones.Dev.Sdk.Alpha.CounterUpdateRequest();
             }
-            input.ReadMessage(Counter);
-            break;
-          }
-          case 18: {
-            if (updateMask_ == null) {
-              UpdateMask = new global::Google.Protobuf.WellKnownTypes.FieldMask();
-            }
-            input.ReadMessage(UpdateMask);
+            input.ReadMessage(CounterUpdateRequest);
             break;
           }
         }
@@ -1771,7 +2060,7 @@ namespace Agones.Dev.Sdk.Alpha {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Agones.Dev.Sdk.Alpha.AlphaReflection.Descriptor.MessageTypes[8]; }
+      get { return global::Agones.Dev.Sdk.Alpha.AlphaReflection.Descriptor.MessageTypes[9]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -2032,7 +2321,7 @@ namespace Agones.Dev.Sdk.Alpha {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Agones.Dev.Sdk.Alpha.AlphaReflection.Descriptor.MessageTypes[9]; }
+      get { return global::Agones.Dev.Sdk.Alpha.AlphaReflection.Descriptor.MessageTypes[10]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -2224,7 +2513,7 @@ namespace Agones.Dev.Sdk.Alpha {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Agones.Dev.Sdk.Alpha.AlphaReflection.Descriptor.MessageTypes[10]; }
+      get { return global::Agones.Dev.Sdk.Alpha.AlphaReflection.Descriptor.MessageTypes[11]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -2476,7 +2765,7 @@ namespace Agones.Dev.Sdk.Alpha {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Agones.Dev.Sdk.Alpha.AlphaReflection.Descriptor.MessageTypes[11]; }
+      get { return global::Agones.Dev.Sdk.Alpha.AlphaReflection.Descriptor.MessageTypes[12]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -2705,7 +2994,7 @@ namespace Agones.Dev.Sdk.Alpha {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Agones.Dev.Sdk.Alpha.AlphaReflection.Descriptor.MessageTypes[12]; }
+      get { return global::Agones.Dev.Sdk.Alpha.AlphaReflection.Descriptor.MessageTypes[13]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]

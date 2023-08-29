@@ -973,13 +973,13 @@ func (a *SDKApiService) SetPlayerCapacity(ctx context.Context, body AlphaCount) 
 	return localVarReturnValue, localVarHttpResponse, nil
 }
 /*
-SDKApiService UpdateCounter returns the updated Counter. Returns NOT_FOUND if the Counter does not exist (name cannot be updated). Returns OUT_OF_RANGE if the Count is out of range [0,Capacity]. Returns INVALID_ARGUMENT if the field mask path(s) are not field(s) of the Counter. If a field mask path(s) is specified, but the value is not set in the request Counter object, then the default value for the variable will be set (i.e. 0 for \&quot;capacity\&quot; or \&quot;count\&quot;).
+SDKApiService UpdateCounter returns the updated Counter. Returns NOT_FOUND if the Counter does not exist (name cannot be updated). Returns OUT_OF_RANGE if the Count is out of range [0,Capacity].
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @param body The Counter to update
- * @param counterName The name of the Counter
+ * @param body The requested update to make to the Counter
+ * @param counterUpdateRequestName The name of the Counter to update
 @return AlphaCounter
 */
-func (a *SDKApiService) UpdateCounter(ctx context.Context, body TheCounterToUpdate, counterName string) (AlphaCounter, *http.Response, error) {
+func (a *SDKApiService) UpdateCounter(ctx context.Context, body TheRequestedUpdateToMakeToTheCounter, counterUpdateRequestName string) (AlphaCounter, *http.Response, error) {
 	var (
 		localVarHttpMethod = strings.ToUpper("Patch")
 		localVarPostBody   interface{}
@@ -989,8 +989,8 @@ func (a *SDKApiService) UpdateCounter(ctx context.Context, body TheCounterToUpda
 	)
 
 	// create path and map variables
-	localVarPath := a.client.cfg.BasePath + "/v1alpha1/{counter.name}"
-	localVarPath = strings.Replace(localVarPath, "{"+"counter.name"+"}", fmt.Sprintf("%v", counterName), -1)
+	localVarPath := a.client.cfg.BasePath + "/v1alpha1/{counterUpdateRequest.name}"
+	localVarPath = strings.Replace(localVarPath, "{"+"counterUpdateRequest.name"+"}", fmt.Sprintf("%v", counterUpdateRequestName), -1)
 
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}

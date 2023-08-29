@@ -357,9 +357,6 @@ namespace Agones.Dev.Sdk.Alpha {
       /// <summary>
       /// UpdateCounter returns the updated Counter. Returns NOT_FOUND if the Counter does not exist (name cannot be updated).
       /// Returns OUT_OF_RANGE if the Count is out of range [0,Capacity].
-      /// Returns INVALID_ARGUMENT if the field mask path(s) are not field(s) of the Counter.
-      /// If a field mask path(s) is specified, but the value is not set in the request Counter object,
-      /// then the default value for the variable will be set (i.e. 0 for "capacity" or "count").
       /// </summary>
       /// <param name="request">The request received from the client.</param>
       /// <param name="context">The context of the server-side call handler being invoked.</param>
@@ -998,9 +995,6 @@ namespace Agones.Dev.Sdk.Alpha {
       /// <summary>
       /// UpdateCounter returns the updated Counter. Returns NOT_FOUND if the Counter does not exist (name cannot be updated).
       /// Returns OUT_OF_RANGE if the Count is out of range [0,Capacity].
-      /// Returns INVALID_ARGUMENT if the field mask path(s) are not field(s) of the Counter.
-      /// If a field mask path(s) is specified, but the value is not set in the request Counter object,
-      /// then the default value for the variable will be set (i.e. 0 for "capacity" or "count").
       /// </summary>
       /// <param name="request">The request to send to the server.</param>
       /// <param name="headers">The initial metadata to send with the call. This parameter is optional.</param>
@@ -1015,9 +1009,6 @@ namespace Agones.Dev.Sdk.Alpha {
       /// <summary>
       /// UpdateCounter returns the updated Counter. Returns NOT_FOUND if the Counter does not exist (name cannot be updated).
       /// Returns OUT_OF_RANGE if the Count is out of range [0,Capacity].
-      /// Returns INVALID_ARGUMENT if the field mask path(s) are not field(s) of the Counter.
-      /// If a field mask path(s) is specified, but the value is not set in the request Counter object,
-      /// then the default value for the variable will be set (i.e. 0 for "capacity" or "count").
       /// </summary>
       /// <param name="request">The request to send to the server.</param>
       /// <param name="options">The options for the call.</param>
@@ -1030,9 +1021,6 @@ namespace Agones.Dev.Sdk.Alpha {
       /// <summary>
       /// UpdateCounter returns the updated Counter. Returns NOT_FOUND if the Counter does not exist (name cannot be updated).
       /// Returns OUT_OF_RANGE if the Count is out of range [0,Capacity].
-      /// Returns INVALID_ARGUMENT if the field mask path(s) are not field(s) of the Counter.
-      /// If a field mask path(s) is specified, but the value is not set in the request Counter object,
-      /// then the default value for the variable will be set (i.e. 0 for "capacity" or "count").
       /// </summary>
       /// <param name="request">The request to send to the server.</param>
       /// <param name="headers">The initial metadata to send with the call. This parameter is optional.</param>
@@ -1047,9 +1035,6 @@ namespace Agones.Dev.Sdk.Alpha {
       /// <summary>
       /// UpdateCounter returns the updated Counter. Returns NOT_FOUND if the Counter does not exist (name cannot be updated).
       /// Returns OUT_OF_RANGE if the Count is out of range [0,Capacity].
-      /// Returns INVALID_ARGUMENT if the field mask path(s) are not field(s) of the Counter.
-      /// If a field mask path(s) is specified, but the value is not set in the request Counter object,
-      /// then the default value for the variable will be set (i.e. 0 for "capacity" or "count").
       /// </summary>
       /// <param name="request">The request to send to the server.</param>
       /// <param name="options">The options for the call.</param>
