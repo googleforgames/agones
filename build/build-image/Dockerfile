@@ -23,7 +23,7 @@ RUN apt-get update && \
 
 # install go
 WORKDIR /usr/local
-ENV GO_VERSION=1.20.4
+ENV GO_VERSION=1.20.7
 ENV GOPATH /go
 ENV GO111MODULE=on
 RUN wget -q https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz && \
@@ -79,7 +79,7 @@ RUN go install gotest.tools/gotestsum@latest
 #     \_/\_/ \___|_.__/|___/_|\__\___|
 #
 
-ENV HUGO_VER 0.82.1
+ENV HUGO_VER 0.117.0
 RUN mkdir /tmp/hugo && \
     wget -q -O /tmp/hugo/hugo.tar.gz https://github.com/gohugoio/hugo/releases/download/v${HUGO_VER}/hugo_extended_${HUGO_VER}_Linux-64bit.tar.gz && \
     tar -zxvf /tmp/hugo/hugo.tar.gz -C /tmp/hugo/ && \
@@ -120,7 +120,7 @@ RUN echo "export PATH=/usr/local/go/bin:/go/bin/:\$PATH" >> /root/.bashrc
 RUN echo "export EDITOR=nano" >> /root/.bashrc
 
 # install terraform
-RUN wget -nv -O terraform.zip https://releases.hashicorp.com/terraform/1.5.4/terraform_1.5.4_linux_amd64.zip && unzip ./terraform.zip && mv terraform /usr/local/bin/
+RUN wget -nv -O terraform.zip https://releases.hashicorp.com/terraform/1.5.6/terraform_1.5.6_linux_amd64.zip && unzip ./terraform.zip && mv terraform /usr/local/bin/
 
 # code generation scripts
 COPY *.sh /root/

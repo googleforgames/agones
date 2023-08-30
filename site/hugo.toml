@@ -26,7 +26,7 @@ defaultContentLanguageInSubdir = false
 # Useful when translating.
 enableMissingTranslationPlaceholders = true
 
-disableKinds = ["taxonomy", "taxonomyTerm"]
+disableKinds = ["taxonomy", "term"]
 
 # Highlighting config
 pygmentsCodeFences = true
@@ -63,10 +63,11 @@ id = "G-TK6J08ZNYX"
 [languages]
 [languages.en]
 title = "Agones"
-description = "Agones is a library for hosting, running and scaling dedicated game servers on Kubernetes."
 languageName ="English"
 # Weight used for sorting.
 weight = 1
+[languages.en.params]
+description = "Agones is a library for hosting, running and scaling dedicated game servers on Kubernetes."
 
 # Everything below this are Site Params
 
