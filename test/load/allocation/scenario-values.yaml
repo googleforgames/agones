@@ -1,3 +1,4 @@
+---
 # Copyright 2022 Google LLC All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,7 +12,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 agones:
   controller:
     resources:
@@ -20,21 +20,21 @@ agones:
         memory: 4000Mi
     affinity:
       nodeAffinity:
-        preferredDuringSchedulingIgnoredDuringExecution: null
+        preferredDuringSchedulingIgnoredDuringExecution:
         requiredDuringSchedulingIgnoredDuringExecution:
           nodeSelectorTerms:
-          - matchExpressions:
-            - key: agones.dev/agones-system
-              operator: Exists
+            - matchExpressions:
+                - key: agones.dev/agones-system
+                  operator: Exists
   ping:
     affinity:
       nodeAffinity:
-        preferredDuringSchedulingIgnoredDuringExecution: null
+        preferredDuringSchedulingIgnoredDuringExecution:
         requiredDuringSchedulingIgnoredDuringExecution:
           nodeSelectorTerms:
-          - matchExpressions:
-            - key: agones.dev/agones-system
-              operator: Exists
+            - matchExpressions:
+                - key: agones.dev/agones-system
+                  operator: Exists
   allocator:
     resources:
       requests:
@@ -42,9 +42,9 @@ agones:
         memory: 4000Mi
     affinity:
       nodeAffinity:
-        preferredDuringSchedulingIgnoredDuringExecution: null
+        preferredDuringSchedulingIgnoredDuringExecution:
         requiredDuringSchedulingIgnoredDuringExecution:
           nodeSelectorTerms:
-          - matchExpressions:
-            - key: agones.dev/agones-system
-              operator: Exists
+            - matchExpressions:
+                - key: agones.dev/agones-system
+                  operator: Exists

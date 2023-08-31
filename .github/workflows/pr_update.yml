@@ -1,3 +1,4 @@
+---
 # Copyright 2023 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,13 +17,10 @@
 # `main`. `update-pr-branch` will pick the oldest PR (by creation date) that is approved
 # with auto-merge enabled and update it to the latest `main`, forming a best-effort queue
 # of approved PRs.
-
 name: PR update
-
 on:
   push:
-    branches:
-      - "main"
+    branches: [main]
 jobs:
   autoupdate:
     runs-on: ubuntu-latest
@@ -31,8 +29,8 @@ jobs:
         uses: adRise/update-pr-branch@v0.6.0
         with:
           token: ${{ secrets.AGONES_BOT }}
-          base: "main"
+          base: main
           required_approval_count: 1
           require_passed_checks: true
-          sort: "created"
-          direction: "asc"
+          sort: created
+          direction: asc

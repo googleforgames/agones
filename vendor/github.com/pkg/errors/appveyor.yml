@@ -1,14 +1,11 @@
+---
 version: build-{build}.{branch}
-
 clone_folder: C:\gopath\src\github.com\pkg\errors
-shallow_clone: true # for startup speed
-
+shallow_clone: true  # for startup speed
 environment:
   GOPATH: C:\gopath
-
 platform:
   - x64
-
 # http://www.appveyor.com/docs/installed-software
 install:
   # some helpful output for debugging builds
@@ -19,14 +16,10 @@ install:
   - set PATH=C:\msys64\mingw64\bin;%PATH%
   - gcc --version
   - g++ --version
-
-build_script:
-  - go install -v ./...
-
+build_script: [go install -v ./...]
 test_script:
   - set PATH=C:\gopath\bin;%PATH%
   - go test -v ./...
-
-#artifacts:
+# artifacts:
 #  - path: '%GOPATH%\bin\*.exe'
-deploy: off
+deploy: false

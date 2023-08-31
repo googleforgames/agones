@@ -1,3 +1,4 @@
+---
 # Copyright 2018 Google LLC All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,8 +21,7 @@
 #
 # For a full reference and details: https://agones.dev/site/docs/reference/fleetautoscaler/
 #
-
-apiVersion: "autoscaling.agones.dev/v1"
+apiVersion: autoscaling.agones.dev/v1
 kind: FleetAutoscaler
 metadata:
   name: fleet-autoscaler-example
@@ -36,12 +36,12 @@ spec:
     # parameters of the buffer policy
     buffer:
       # Size of a buffer of "ready" and "reserved" game server instances.
-      # The FleetAutoscaler will scale the fleet up and down trying to maintain this buffer, 
+      # The FleetAutoscaler will scale the fleet up and down trying to maintain this buffer,
       # as instances are being allocated or terminated.
       # Note that "reserved" game servers could not be scaled down.
       # It can be specified either in absolute (i.e. 5) or percentage format (i.e. 5%)
       bufferSize: 5
-      # minimum fleet size to be set by this FleetAutoscaler. 
+      # minimum fleet size to be set by this FleetAutoscaler.
       # if not specified, the actual minimum fleet size will be bufferSize
       minReplicas: 10
       # maximum fleet size that can be set by this FleetAutoscaler

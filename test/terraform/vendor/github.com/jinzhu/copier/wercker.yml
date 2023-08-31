@@ -1,5 +1,5 @@
+---
 box: golang
-
 build:
   steps:
     - setup-go-workspace
@@ -19,5 +19,5 @@ build:
     # Test the project
     - script:
         name: go test
-        code: |
+        code: |-
           go test ./...

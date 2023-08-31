@@ -1,3 +1,4 @@
+---
 # Copyright 2018 Google LLC All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,8 +21,7 @@
 #
 # For a full reference and details: https://agones.dev/site/docs/reference/fleetautoscaler/
 #
-
-apiVersion: "autoscaling.agones.dev/v1"
+apiVersion: autoscaling.agones.dev/v1
 kind: FleetAutoscaler
 metadata:
   name: webhook-fleet-autoscaler
@@ -37,6 +37,6 @@ spec:
         name: autoscaler-webhook-service
         namespace: default
         path: scale
-      # optional for URL defined webhooks
-      # url: ""
-      # caBundle:  optional, used for HTTPS webhook type
+        # optional for URL defined webhooks
+        # url: ""
+        # caBundle:  optional, used for HTTPS webhook type

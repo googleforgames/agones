@@ -1,3 +1,4 @@
+---
 # Copyright 2020 Google LLC All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,8 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-apiVersion: "agones.dev/v1"
+apiVersion: agones.dev/v1
 kind: Fleet
 metadata:
   name: simple-game-server
@@ -21,17 +21,17 @@ spec:
   template:
     spec:
       ports:
-      - name: default
-        containerPort: 7654
+        - name: default
+          containerPort: 7654
       template:
         spec:
           containers:
-          - name: simple-game-server
-            image: us-docker.pkg.dev/agones-images/examples/simple-game-server:0.17
-            resources:
-              requests:
-                memory: "64Mi"
-                cpu: "20m"
-              limits:
-                memory: "64Mi"
-                cpu: "20m"
+            - name: simple-game-server
+              image: us-docker.pkg.dev/agones-images/examples/simple-game-server:0.17
+              resources:
+                requests:
+                  memory: 64Mi
+                  cpu: 20m
+                limits:
+                  memory: 64Mi
+                  cpu: 20m

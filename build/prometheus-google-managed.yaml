@@ -1,3 +1,4 @@
+---
 # Copyright 2023 Google LLC All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,7 +12,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 apiVersion: monitoring.googleapis.com/v1
 kind: PodMonitoring
 metadata:
@@ -22,19 +22,19 @@ spec:
       app: agones
   targetLabels:
     fromPod:
-    - from: app
-      to: app
-    - from: agones.dev/role
-      to: agones_dev_role
-    - from: multicluster.agones.dev/role
-      to: multicluster_agones_dev_role
+      - from: app
+        to: app
+      - from: agones.dev/role
+        to: agones_dev_role
+      - from: multicluster.agones.dev/role
+        to: multicluster_agones_dev_role
   endpoints:
-  - port: http
-    interval: 30s
-    metricRelabeling:
-    - sourceLabels: [namespace]
-      targetLabel: kubernetes_namespace
-      action: replace
-    - sourceLabels: [pod]
-      targetLabel: kubernetes_pod_name
-      action: replace
+    - port: http
+      interval: 30s
+      metricRelabeling:
+        - sourceLabels: [namespace]
+          targetLabel: kubernetes_namespace
+          action: replace
+        - sourceLabels: [pod]
+          targetLabel: kubernetes_pod_name
+          action: replace

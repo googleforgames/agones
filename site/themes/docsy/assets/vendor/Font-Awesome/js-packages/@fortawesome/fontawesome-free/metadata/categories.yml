@@ -1,3 +1,4 @@
+---
 accessibility:
   icons:
     - accessible-icon
@@ -952,13 +953,7 @@ food:
     - stroopwafel
   label: Food
 fruit-vegetable:
-  icons:
-    - apple-alt
-    - carrot
-    - leaf
-    - lemon
-    - pepper-hot
-    - seedling
+  icons: [apple-alt, carrot, leaf, lemon, pepper-hot, seedling]
   label: Fruits & Vegetables
 games:
   icons:

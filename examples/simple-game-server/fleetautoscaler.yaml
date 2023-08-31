@@ -1,3 +1,4 @@
+---
 # Copyright 2020 Google LLC All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,8 +17,7 @@
 # A FleetAutoscaler is used to scale the fleet automatically
 # up and down depending on usage
 #
-
-apiVersion: "autoscaling.agones.dev/v1"
+apiVersion: autoscaling.agones.dev/v1
 kind: FleetAutoscaler
 metadata:
   name: simple-game-server-autoscaler

@@ -1,3 +1,4 @@
+---
 # Copyright 2018 Google LLC All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,8 +22,7 @@
 #
 # For a full reference and details: https://agones.dev/site/docs/reference/fleet/
 #
-
-apiVersion: "agones.dev/v1"
+apiVersion: agones.dev/v1
 kind: Fleet
 metadata:
   name: fleet-example
@@ -58,7 +58,7 @@ spec:
   # allocationOverflow:
   #   labels:
   #     mykey: myvalue
-  #     version: "" # empty an existing label value
+  #     version: ""  # empty an existing label value
   #   annotations:
   #     otherkey: setthisvalue
   #
@@ -66,9 +66,9 @@ spec:
   # [FeatureFlag:CountsAndLists]
   # Which gameservers in the Fleet are most important to keep around - impacts scale down logic.
   # priorities:
-  # - type: List # Whether a Counter or a List.
-  #   key: rooms # The name of the Counter or List.
-  #   order: Ascending # Default is "Ascending" so smaller capacity will be removed first on down scaling.
+  # - type: List  # Whether a Counter or a List.
+  #   key: rooms  # The name of the Counter or List.
+  #   order: Ascending  # Default is "Ascending" so smaller capacity will be removed first on down scaling.
   #
   template:
     # GameServer metadata
@@ -78,9 +78,9 @@ spec:
     # GameServer specification
     spec:
       ports:
-      - name: default
-        portPolicy: Dynamic
-        containerPort: 26000
+        - name: default
+          portPolicy: Dynamic
+          containerPort: 26000
       health:
         initialDelaySeconds: 30
         periodSeconds: 60
@@ -101,10 +101,10 @@ spec:
       #     count: 9
       #     capacity: 10
       #   sessions:
-      #     count: # Count and/or capacity must be listed (but may be nil) otherwise the counter will by dropped by the CRD schema.
+      #     count:  # Count and/or capacity must be listed (but may be nil) otherwise the counter will by dropped by the CRD schema.
       # lists:
       #   players:
-      #     capacity: # Capacity and/or values must be listed (but may be nil) otherwise the list will be dropped by the CRD schema.
+      #     capacity:  # Capacity and/or values must be listed (but may be nil) otherwise the list will be dropped by the CRD schema.
       #   rooms:
       #     capacity: 5
       #     values:
@@ -116,5 +116,5 @@ spec:
       template:
         spec:
           containers:
-          - name: simple-game-server
-            image: us-docker.pkg.dev/agones-images/examples/simple-game-server:0.17
+            - name: simple-game-server
+              image: us-docker.pkg.dev/agones-images/examples/simple-game-server:0.17

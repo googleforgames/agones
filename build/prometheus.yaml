@@ -1,3 +1,4 @@
+---
 alertmanager:
   enabled: false
 nodeExporter:
@@ -12,29 +13,26 @@ server:
       memory: 4Gi
       cpu: 2
   tolerations:
-  - key: "agones.dev/agones-metrics"
-    operator: "Equal"
-    value: "true"
-    effect: "NoExecute"
+    - key: agones.dev/agones-metrics
+      operator: Equal
+      value: 'true'
+      effect: NoExecute
   affinity:
     nodeAffinity:
       preferredDuringSchedulingIgnoredDuringExecution:
-      - weight: 1
-        preference:
-          matchExpressions:
-            - key: agones.dev/agones-metrics
-              operator: Exists
+        - weight: 1
+          preference:
+            matchExpressions:
+              - key: agones.dev/agones-metrics
+                operator: Exists
 serverFiles:
- prometheus.yml:
-    rule_files:
-      - /etc/config/rules
-      - /etc/config/alerts
-
+  prometheus.yml:
+    rule_files: [/etc/config/rules, /etc/config/alerts]
     scrape_configs:
       - job_name: prometheus
         static_configs:
           - targets:
-            - localhost:9090
+              - localhost:9090
 
       # A scrape configuration for running Prometheus on a Kubernetes cluster.
       # This uses separate scrape configs for cluster components (i.e. API server, node)
@@ -50,8 +48,7 @@ serverFiles:
       # the endpoints associated with the default/kubernetes service using the
       # default named port `https`. This works for single API server deployments as
       # well as HA API server deployments.
-      - job_name: 'kubernetes-apiservers'
-
+      - job_name: kubernetes-apiservers
         kubernetes_sd_configs:
           - role: endpoints
 
@@ -80,7 +77,10 @@ serverFiles:
         # will add targets for each API server which Kubernetes adds an endpoint to
         # the default/kubernetes service.
         relabel_configs:
-          - source_labels: [__meta_kubernetes_namespace, __meta_kubernetes_service_name, __meta_kubernetes_endpoint_port_name]
+          - source_labels:
+              - __meta_kubernetes_namespace
+              - __meta_kubernetes_service_name
+              - __meta_kubernetes_endpoint_port_name
             action: keep
             regex: default;kubernetes;https
 
@@ -92,11 +92,9 @@ serverFiles:
       # * `prometheus.io/scrape`: Only scrape pods that have a value of `true`
       # * `prometheus.io/path`: If the metrics path is not `/metrics` override this.
       # * `prometheus.io/port`: Scrape the pod on the indicated port instead of the default of `9102`.
-      - job_name: 'kubernetes-pods'
-
+      - job_name: kubernetes-pods
         kubernetes_sd_configs:
           - role: pod
-
         relabel_configs:
           - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
             action: keep
@@ -105,7 +103,9 @@ serverFiles:
             action: replace
             target_label: __metrics_path__
             regex: (.+)
-          - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+          - source_labels:
+              - __address__
+              - __meta_kubernetes_pod_annotation_prometheus_io_port
             action: replace
             regex: ([^:]+)(?::\d+)?;(\d+)
             replacement: $1:$2

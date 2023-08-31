@@ -1,3 +1,4 @@
+---
 # Copyright 2017 Google LLC All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,8 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-apiVersion: "agones.dev/v1"
+apiVersion: agones.dev/v1
 kind: GameServer
 metadata:
   # generate a unique name
@@ -26,6 +26,6 @@ spec:
   template:
     spec:
       containers:
-      - name: cpp-simple
-        image: us-docker.pkg.dev/agones-images/examples/cpp-simple-server:0.15
-        imagePullPolicy: Always # add for development
+        - name: cpp-simple
+          image: us-docker.pkg.dev/agones-images/examples/cpp-simple-server:0.15
+          imagePullPolicy: Always  # add for development

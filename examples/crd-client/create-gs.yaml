@@ -1,3 +1,4 @@
+---
 # Copyright 2020 Google LLC All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,7 +12,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -24,19 +24,19 @@ spec:
     spec:
       serviceAccountName: agones-controller
       containers:
-      - name: create-gameserver
-        resources:
-          limits:
-            cpu: 500m
-            ephemeral-storage: 1Gi
-            memory: 2Gi
-          requests:
-            cpu: 500m
-            ephemeral-storage: 1Gi
-            memory: 2Gi
-        image: us-docker.pkg.dev/agones-images/examples/crd-client:0.10
-        imagePullPolicy: Always
-        env:
-        - name: GAMESERVER_IMAGE
-          value: "us-docker.pkg.dev/agones-images/examples/simple-game-server:0.17"
+        - name: create-gameserver
+          resources:
+            limits:
+              cpu: 500m
+              ephemeral-storage: 1Gi
+              memory: 2Gi
+            requests:
+              cpu: 500m
+              ephemeral-storage: 1Gi
+              memory: 2Gi
+          image: us-docker.pkg.dev/agones-images/examples/crd-client:0.10
+          imagePullPolicy: Always
+          env:
+            - name: GAMESERVER_IMAGE
+              value: us-docker.pkg.dev/agones-images/examples/simple-game-server:0.17
       restartPolicy: Never
