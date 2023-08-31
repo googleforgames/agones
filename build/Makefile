@@ -491,7 +491,7 @@ lint: $(ensure-build-image)
 	docker run -t -e "TERM=xterm-256color" -e "$(gomod_on)" --rm $(common_mounts) -w $(workdir_path) $(DOCKER_RUN_ARGS) $(build_tag) bash -c \
 		"golangci-lint run ./examples/... && \
 		golangci-lint run --timeout $(LINT_TIMEOUT) ./... && \
-		find ../ -name '*.yml' -o -name '*.yaml' | grep -v -e './install/' -e './sdks' -e './test/sdks' -e './vendor' -e './site/themes/docsy/assets/vendor' -e './build/.gomod' | xargs yamllint"
+		find ../ -name '*.yml' -o -name '*.yaml' | grep -v -e './install/' -e './sdks' -e './test/sdk' -e './vendor' -e './site/themes/docsy/assets/vendor' -e './build/.gomod' | xargs yamllint"
 
 # Extract licenses from source tree
 build-licenses:
