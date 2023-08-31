@@ -489,7 +489,16 @@ build-extensions-binary-linux-arm64: $(ensure-build-image)
 lint: LINT_TIMEOUT ?= 15m
 lint: $(ensure-build-image)
 	docker run -t -e "TERM=xterm-256color" -e "$(gomod_on)" --rm $(common_mounts) -w $(workdir_path) $(DOCKER_RUN_ARGS) $(build_tag) bash -c \
-		"golangci-lint run ./examples/... && golangci-lint run --timeout $(LINT_TIMEOUT) ./... && find ../ -name '*.yml' -o -name '*.yaml' | grep -v './install/' | xargs yamllint"
+		"golangci-lint run ./examples/... && \
+		golangci-lint run --timeout 15m ./... && \
+		EXCLUDED_DIRS=(./install/ ./sdks/ ./test/sdks/ ./vendor/ ./site/themes/docsy/assets/vendor/ ./build/.gomod/); \
+		EXCLUDE_CMD="find ../ -name \*.yml -o -name \*.yaml"; \
+		for index in \${!EXCLUDED_DIRS[*]}; do \
+			DIR=$${EXCLUDED_DIRS[$$index]}; \
+			EXCLUDE_CMD +=\" | grep -v $$DIR\"; \
+		done; \
+		eval $$EXCLUDE_CMD | xargs yamllint \
+		"
 
 # Extract licenses from source tree
 build-licenses:
