@@ -1,4 +1,3 @@
----
 linters-settings:
   govet:
     check-shadowing: true
@@ -13,6 +12,7 @@ linters-settings:
   goconst:
     min-len: 2
     min-occurrences: 2
+
 linters:
   enable-all: true
   disable:
