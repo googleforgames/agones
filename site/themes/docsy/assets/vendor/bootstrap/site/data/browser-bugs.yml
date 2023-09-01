@@ -1,5 +1,5 @@
----
-- browser: >
+-
+  browser: >
     Edge
   summary: >
     Visual artifacts in scrollable modal dialogs
@@ -7,16 +7,19 @@
     Edge#9011176
   origin: >
     Bootstrap#20755
-- browser: >
+
+-
+  browser: >
     Edge
   summary: >
-    Native browser tooltip for `title` shows on first keyboard focus (in addition
-    to custom tooltip component)
+    Native browser tooltip for `title` shows on first keyboard focus (in addition to custom tooltip component)
   upstream_bug: >
     Edge#6793560
   origin: >
     Bootstrap#18692
-- browser: >
+
+-
+  browser: >
     Edge
   summary: >
     Hovered element still remains in `:hover` state after scrolling away.
@@ -24,34 +27,39 @@
     Edge#5381673
   origin: >
     Bootstrap#14211
-- browser: >
+
+-
+  browser: >
     Edge
   summary: >
-    CSS `border-radius` sometimes causes lines of bleed-through of the `background-color`
-    of the parent element.
+    CSS `border-radius` sometimes causes lines of bleed-through of the `background-color` of the parent element.
   upstream_bug: >
     Edge#3342037
   origin: >
     Bootstrap#16671
-- browser: >
+
+-
+  browser: >
     Edge
   summary: >
-    `background` of `<tr>` is only applied to first child cell instead of all cells
-    in the row
+    `background` of `<tr>` is only applied to first child cell instead of all cells in the row
   upstream_bug: >
     Edge#5865620
   origin: >
     Bootstrap#18504
-- browser: >
+
+-
+  browser: >
     Edge
   summary: >
-    Background color from lower layer bleeds through transparent border in some
-    cases
+    Background color from lower layer bleeds through transparent border in some cases
   upstream_bug: >
     Edge#6274505
   origin: >
     Bootstrap#18228
-- browser: >
+
+-
+  browser: >
     Edge
   summary: >
     Hovering over descendant SVG element fires `mouseleave` event at ancestor
@@ -59,7 +67,9 @@
     Edge#7787318
   origin: >
     Bootstrap#19670
-- browser: >
+
+-
+  browser: >
     Edge
   summary: >
     Active `position: fixed;` `<button>` flickers when scrolling
@@ -67,7 +77,9 @@
     Edge#8770398
   origin: >
     Bootstrap#20507
-- browser: >
+
+-
+  browser: >
     Firefox
   summary: >
     `.table-bordered` with an empty `<tbody>` is missing borders.
@@ -75,16 +87,19 @@
     Mozilla#1023761
   origin: >
     Bootstrap#13453
-- browser: >
+
+-
+  browser: >
     Firefox
   summary: >
-    If the disabled state of a form control is changed via JavaScript, the normal
-    state doesn't return after refreshing the page.
+    If the disabled state of a form control is changed via JavaScript, the normal state doesn't return after refreshing the page.
   upstream_bug: >
     Mozilla#654072
   origin: >
     Bootstrap#793
-- browser: >
+
+-
+  browser: >
     Firefox
   summary: >
     `focus` events should not be fired at the `document` object
@@ -92,7 +107,9 @@
     Mozilla#1228802
   origin: >
     Bootstrap#18365
-- browser: >
+
+-
+  browser: >
     Firefox
   summary: >
     Wide floated table doesn't wrap onto new line
@@ -100,16 +117,19 @@
     Mozilla#1277782
   origin: >
     Bootstrap#19839
-- browser: >
+
+-
+  browser: >
     Firefox
   summary: >
-    Mouse sometimes not within element for purposes of `mouseenter`/`mouseleave`
-    when it's within SVG elements
+    Mouse sometimes not within element for purposes of `mouseenter`/`mouseleave` when it's within SVG elements
   upstream_bug: >
     Mozilla#577785
   origin: >
     Bootstrap#19670
-- browser: >
+
+-
+  browser: >
     Firefox
   summary: >
     Layout with floated columns breaks when printing
@@ -117,16 +137,19 @@
     Mozilla#1315994
   origin: >
     Bootstrap#21092
-- browser: >
+
+-
+  browser: >
     Firefox (Windows)
   summary: >
-    Right border of `<select>` menu is sometimes missing when screen is set to uncommon
-    resolution
+    Right border of `<select>` menu is sometimes missing when screen is set to uncommon resolution
   upstream_bug: >
     Mozilla#545685
   origin: >
     Bootstrap#15990
-- browser: >
+
+-
+  browser: >
     Firefox (macOS & Linux)
   summary: >
     Badge widget causes bottom border of Tabs widget to unexpectedly not overlap
@@ -134,16 +157,19 @@
     Mozilla#1259972
   origin: >
     Bootstrap#19626
-- browser: >
+
+-
+  browser: >
     Chrome (macOS)
   summary: >
-    Clicking above `<input type="number">` increment button flashes the decrement
-    button.
+    Clicking above `<input type="number">` increment button flashes the decrement button.
   upstream_bug: >
     Chromium#419108
   origin: >
     Bootstrap#8350, Chromium#337668
-- browser: >
+
+-
+  browser: >
     Chrome
   summary: >
     CSS infinite linear animation with alpha transparency leaks memory.
@@ -151,7 +177,9 @@
     Chromium#429375
   origin: >
     Bootstrap#14409
-- browser: >
+
+-
+  browser: >
     Chrome
   summary: >
     `table-cell` borders not overlapping despite `margin-right: -1px`
@@ -159,7 +187,9 @@
     Chromium#749848
   origin: >
     Bootstrap#17438, Bootstrap#14237
-- browser: >
+
+-
+  browser: >
     Chrome
   summary: >
     Don't make `:hover` sticky on touch-friendly webpages
@@ -167,43 +197,49 @@
     Chromium#370155
   origin: >
     Bootstrap#12832
-- browser: >
+
+-
+  browser: >
     Chrome
   summary: >
-    `position: absolute` element that's wider than its column is incorrectly clipped
-    to column boundary
+    `position: absolute` element that's wider than its column is incorrectly clipped to column boundary
   upstream_bug: >
     Chromium#269061
   origin: >
     Bootstrap#20161
-- browser: >
+
+-
+  browser: >
     Chrome
   summary: >
-    Significant performance hit for dynamic SVGs with text depending on the number
-    of fonts in `font-family`.
+    Significant performance hit for dynamic SVGs with text depending on the number of fonts in `font-family`.
   upstream_bug: >
     Chromium#781344
   origin: >
     Bootstrap#24673
-- browser: >
+
+-
+  browser: >
     Safari
   summary: >
-    `rem` units in media queries should be calculated using `font-size: initial`,
-    not the root element's `font-size`
+    `rem` units in media queries should be calculated using `font-size: initial`, not the root element's `font-size`
   upstream_bug: >
     WebKit#156684
   origin: >
     Bootstrap#17403
-- browser: >
+
+-
+  browser: >
     Safari
   summary: >
-    Link to container with id and tabindex results in container being ignored by
-    VoiceOver (affects skip links)
+    Link to container with id and tabindex results in container being ignored by VoiceOver (affects skip links)
   upstream_bug: >
     WebKit#163658
   origin: >
     Bootstrap#20732
-- browser: >
+
+-
+  browser: >
     Safari
   summary: >
     CSS `min-width` and `max-width` media features should not round fractional pixel
@@ -211,16 +247,19 @@
     WebKit#178261
   origin: >
     Bootstrap#25166
-- browser: >
+
+-
+  browser: >
     Safari (macOS)
   summary: >
-    `px`, `em`, and `rem` should all behave the same in media queries when page
-    zoom is applied
+    `px`, `em`, and `rem` should all behave the same in media queries when page zoom is applied
   upstream_bug: >
     WebKit#156687
   origin: >
     Bootstrap#17403
-- browser: >
+
+-
+  browser: >
     Safari (macOS)
   summary: >
     Weird button behavior with some `<input type="number">` elements.
@@ -230,7 +269,9 @@
     Bootstrap#8350,
     Normalize#283,
     Chromium#337668
-- browser: >
+
+-
+  browser: >
     Safari (macOS)
   summary: >
     Small font size when printing webpage with fixed-width `.container`.
@@ -238,7 +279,9 @@
     WebKit#138192, Safari#19435018
   origin: >
     Bootstrap#14868
-- browser: >
+
+-
+  browser: >
     Safari (iOS)
   summary: >
     `transform: translate3d(0,0,0);` rendering bug.
@@ -246,7 +289,9 @@
     WebKit#138162, Safari#18804973
   origin: >
     Bootstrap#14603
-- browser: >
+
+-
+  browser: >
     Safari (iOS)
   summary: >
     Text input's cursor doesn't move while scrolling the page.
@@ -254,16 +299,19 @@
     WebKit#138201, Safari#18819624
   origin: >
     Bootstrap#14708
-- browser: >
+
+-
+  browser: >
     Safari (iOS)
   summary: >
-    Can't move cursor to start of text after entering long string of text into `<input
-    type="text">`
+    Can't move cursor to start of text after entering long string of text into `<input type="text">`
   upstream_bug: >
     WebKit#148061, Safari#22299624
   origin: >
     Bootstrap#16988
-- browser: >
+
+-
+  browser: >
     Safari (iOS)
   summary: >
     `display: block` causes text of temporal `<input>`s to become vertically misaligned
@@ -271,7 +319,9 @@
     WebKit#139848, Safari#19434878
   origin: >
     Bootstrap#11266, Bootstrap#13098
-- browser: >
+
+-
+  browser: >
     Safari (iOS)
   summary: >
     Tapping on `<body>` doesn't fire `click` events
@@ -279,25 +329,29 @@
     WebKit#151933
   origin: >
     Bootstrap#16028
-- browser: >
+
+-
+  browser: >
     Safari (iOS)
   summary: >
-    `position:fixed` is incorrectly positioned when tab bar is visible on iPhone
-    6S+ Safari
+    `position:fixed` is incorrectly positioned when tab bar is visible on iPhone 6S+ Safari
   upstream_bug: >
     WebKit#153056
   origin: >
     Bootstrap#18859
-- browser: >
+
+-
+  browser: >
     Safari (iOS)
   summary: >
-    Tapping into an `<input>` within a `position:fixed` element scrolls to the top
-    of the page
+    Tapping into an `<input>` within a `position:fixed` element scrolls to the top of the page
   upstream_bug: >
     WebKit#153224, Safari#24235301
   origin: >
     Bootstrap#17497
-- browser: >
+
+-
+  browser: >
     Safari (iOS)
   summary: >
     `<body>` with `overflow:hidden` CSS is scrollable on iOS
@@ -305,25 +359,29 @@
     WebKit#153852
   origin: >
     Bootstrap#14839
-- browser: >
+
+-
+  browser: >
     Safari (iOS)
   summary: >
-    Scroll gesture in text field in `position:fixed` element sometimes scrolls `<body>`
-    instead of scrollable ancestor
+    Scroll gesture in text field in `position:fixed` element sometimes scrolls `<body>` instead of scrollable ancestor
   upstream_bug: >
     WebKit#153856
   origin: >
     Bootstrap#14839
-- browser: >
+
+-
+  browser: >
     Safari (iOS)
   summary: >
-    Modal with `-webkit-overflow-scrolling: touch` doesn't become scrollable after
-    added text makes it taller
+    Modal with `-webkit-overflow-scrolling: touch` doesn't become scrollable after added text makes it taller
   upstream_bug: >
     WebKit#158342
   origin: >
     Bootstrap#17695
-- browser: >
+
+-
+  browser: >
     Safari (iOS)
   summary: >
     Don't make `:hover` sticky on touch-friendly webpages
@@ -331,7 +389,9 @@
     WebKit#158517
   origin: >
     Bootstrap#12832
-- browser: >
+
+-
+  browser: >
     Safari (iOS)
   summary: >
     Element which is `position:fixed` disappears after opening a `<select>` menu
@@ -339,12 +399,13 @@
     WebKit#162362
   origin: >
     Bootstrap#20759
-- browser: >
+
+-
+  browser: >
     Safari (iPad Pro)
   summary: >
-    Rendering of descendants of `position: fixed` element gets clipped on iPad Pro
-    in Landscape orientation
+    Rendering of descendants of `position: fixed` element gets clipped on iPad Pro in Landscape orientation
   upstream_bug: >
     WebKit#152637, Safari#24030853
-  origin: >-
+  origin: >
     Bootstrap#18738

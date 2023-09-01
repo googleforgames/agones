@@ -1,4 +1,3 @@
----
 - title: Getting started
   pages:
     - title: Introduction
@@ -8,14 +7,16 @@
     - title: JavaScript
     - title: Theming
     - title: Build tools
-    # - title: Best practices  # TODO: Write this content
+    # - title: Best practices # TODO: Write this content
     - title: Webpack
     - title: Accessibility
+
 - title: Layout
   pages:
     - title: Overview
     - title: Grid
     - title: Utilities for layout
+
 - title: Content
   pages:
     - title: Reboot
@@ -24,6 +25,7 @@
     - title: Images
     - title: Tables
     - title: Figures
+
 - title: Components
   pages:
     - title: Alerts
@@ -50,6 +52,7 @@
     - title: Spinners
     - title: Toasts
     - title: Tooltips
+
 - title: Utilities
   pages:
     - title: Borders
@@ -72,11 +75,14 @@
     - title: Text
     - title: Vertical align
     - title: Visibility
+
 - title: Extend
   pages:
     - title: Approach
     - title: Icons
+
 - title: Migration
+
 - title: About
   pages:
     - title: Overview
