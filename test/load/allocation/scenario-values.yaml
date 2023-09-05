@@ -20,7 +20,7 @@ agones:
         memory: 4000Mi
     affinity:
       nodeAffinity:
-        preferredDuringSchedulingIgnoredDuringExecution:
+        preferredDuringSchedulingIgnoredDuringExecution: null
         requiredDuringSchedulingIgnoredDuringExecution:
           nodeSelectorTerms:
             - matchExpressions:
@@ -29,7 +29,7 @@ agones:
   ping:
     affinity:
       nodeAffinity:
-        preferredDuringSchedulingIgnoredDuringExecution:
+        preferredDuringSchedulingIgnoredDuringExecution: null
         requiredDuringSchedulingIgnoredDuringExecution:
           nodeSelectorTerms:
             - matchExpressions:
@@ -42,7 +42,7 @@ agones:
         memory: 4000Mi
     affinity:
       nodeAffinity:
-        preferredDuringSchedulingIgnoredDuringExecution:
+        preferredDuringSchedulingIgnoredDuringExecution: null
         requiredDuringSchedulingIgnoredDuringExecution:
           nodeSelectorTerms:
             - matchExpressions:
