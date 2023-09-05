@@ -18,7 +18,7 @@ OutputDir: /go/src/agones.dev/agones/site/tmp
 OutputLogFile: .htmltest.log
 CheckExternal: true
 ExternalTimeout: 60
-IgnoreURLs: 
+IgnoreURLs:
   - http://localhost
   - https://twitter.com/agonesdev
 HTTPHeaders:
