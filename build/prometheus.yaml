@@ -27,7 +27,9 @@ server:
                 operator: Exists
 serverFiles:
   prometheus.yml:
-    rule_files: [/etc/config/rules, /etc/config/alerts]
+    rule_files:
+      - /etc/config/rules
+      - /etc/config/alerts
     scrape_configs:
       - job_name: prometheus
         static_configs:
