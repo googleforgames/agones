@@ -1,5 +1,5 @@
+---
 host: agones.dev
-
 paths:
   /agones:
     repo: https://github.com/googleforgames/agones

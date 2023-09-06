@@ -1,3 +1,4 @@
+---
 # Copyright 2019 Google LLC All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,9 +20,9 @@ metadata:
   name: agones-goclient-caches
   namespace: metrics
   labels:
-     grafana_dashboard: "1"
+    grafana_dashboard: '1'
 data:
-  dashboard-agones-goclient-caches.json: |
+  dashboard-agones-goclient-caches.json: |-
     {
       "annotations": {
         "list": [

@@ -69,6 +69,11 @@ RUN echo "source <(helm completion bash)" >> /root/.bashrc
 # install golang-ci linter
 RUN go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.51.2
 
+# Install Python, pip, and yamllint
+RUN apt-get update && \
+    apt-get install -y python3-pip && \
+    pip3 install yamllint==1.32.0
+
 # install gotestsum test runner
 RUN go install gotest.tools/gotestsum@latest
 

@@ -484,12 +484,14 @@ build-extensions-binary-linux-arm64: $(ensure-build-image)
 	-tags $(GO_BUILD_TAGS) -o $(go_build_base_path)/cmd/extensions/bin/extensions.linux.arm64 \
 	$(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/extensions
 
-# Lint the go source code.
+# Lint the go source code and yaml files.
 # use LINT_TIMEOUT to manipulate the linter timeout
 lint: LINT_TIMEOUT ?= 15m
 lint: $(ensure-build-image)
 	docker run -t -e "TERM=xterm-256color" -e "$(gomod_on)" --rm $(common_mounts) -w $(workdir_path) $(DOCKER_RUN_ARGS) $(build_tag) bash -c \
-		"golangci-lint run ./examples/... && golangci-lint run --timeout $(LINT_TIMEOUT) ./..."
+		"golangci-lint run ./examples/... && \
+		golangci-lint run --timeout $(LINT_TIMEOUT) ./... && \
+		yamllint ."
 
 # Extract licenses from source tree
 build-licenses:

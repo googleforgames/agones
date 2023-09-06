@@ -1,3 +1,4 @@
+---
 # Copyright 2023 Google LLC All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,28 +12,22 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 #
 # Google Cloud Builder -- Generate report on recently flaky builds
-
 steps:
-- name: 'gcr.io/cloud-builders/gcloud'
-  id: build-report
-  script: |
-    #!/usr/bin/env bash
-
-    export GO_VERSION=1.20.4
-    cd /usr/local
-    curl -SsL https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz | tar -xzf-
-
-    export PATH=/usr/local/go/bin:${PATH}
-    export GOPATH=/go
-    mkdir ${GOPATH}
-    export GO111MODULE=on
-
-    cd /workspace
-    go run build/report/report.go
-    gcloud storage cp tmp/report/* gs://agones-build-reports/
-
-tags: ["build-report"]
-logsBucket: "gs://agones-build-logs"
+  - name: gcr.io/cloud-builders/gcloud
+    id: build-report
+    script: |
+      #!/usr/bin/env bash
+      export GO_VERSION=1.20.4
+      cd /usr/local
+      curl -SsL https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz | tar -xzf-
+      export PATH=/usr/local/go/bin:${PATH}
+      export GOPATH=/go
+      mkdir ${GOPATH}
+      export GO111MODULE=on
+      cd /workspace
+      go run build/report/report.go
+      gcloud storage cp tmp/report/* gs://agones-build-reports/
+tags: [build-report]
+logsBucket: gs://agones-build-logs

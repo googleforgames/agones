@@ -1,3 +1,4 @@
+---
 # Copyright 2020 Google LLC All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,8 +16,7 @@
 # special fleet for load testing where we scale the fleet up/and down
 # it uses artificially low resource requests to be able to put as many
 # pods on a node as possible.
-
-apiVersion: "agones.dev/v1"
+apiVersion: agones.dev/v1
 kind: Fleet
 metadata:
   name: simple-game-server-distributed
@@ -26,17 +26,17 @@ spec:
   template:
     spec:
       ports:
-      - name: default
-        containerPort: 7654
+        - name: default
+          containerPort: 7654
       template:
         spec:
           containers:
-          - name: simple-game-server
-            image: us-docker.pkg.dev/agones-images/examples/simple-game-server:0.17
-            resources:
-              requests:
-                memory: "64Mi"
-                cpu: "20m"
-              limits:
-                memory: "64Mi"
-                cpu: "20m"
+            - name: simple-game-server
+              image: us-docker.pkg.dev/agones-images/examples/simple-game-server:0.17
+              resources:
+                requests:
+                  memory: 64Mi
+                  cpu: 20m
+                limits:
+                  memory: 64Mi
+                  cpu: 20m

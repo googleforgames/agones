@@ -1,3 +1,4 @@
+---
 # Copyright 2023 Google LLC All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,62 +12,54 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 #
 # Google Cloud Builder CI configuration
 #
-
 steps:
+  #
+  # build the e2e test runner
+  #
+  - name: gcr.io/cloud-builders/docker
+    args: [build, -f, Dockerfile, -t, e2e-runner, .]
+    dir: build/e2e-image
+    id: build-e2e
+    waitFor: ['-']
 
-#
-# build the e2e test runner
-#
+  #
+  # Run the e2e tests with FeatureGates inverted compared to Stable
+  #
+  # Keep in sync with (the inverse of) pkg/util/runtime/features.go:featureDefaults
+  - name: e2e-runner
+    args:
+      - ${_FEATURE_WITH_GATE}
+      - ${_CLOUD_PRODUCT}
+      - ${_TEST_CLUSTER_NAME}
+      - ${_TEST_CLUSTER_LOCATION}
+      - ${_REGISTRY}
+    id: e2e-feature-gates
+    waitFor:
+      - build-e2e
 
-- name: gcr.io/cloud-builders/docker
-  args: ['build', '-f', 'Dockerfile', '-t', 'e2e-runner', '.']
-  dir: 'build/e2e-image'
-  id: build-e2e
-  waitFor: ['-']
-
-#
-# Run the e2e tests with FeatureGates inverted compared to Stable
-#
-# Keep in sync with (the inverse of) pkg/util/runtime/features.go:featureDefaults
-
-- name: 'e2e-runner'
-  args:
-    - "${_FEATURE_WITH_GATE}"
-    - "${_CLOUD_PRODUCT}"
-    - "${_TEST_CLUSTER_NAME}"
-    - "${_TEST_CLUSTER_LOCATION}"
-    - "${_REGISTRY}"
-  id: e2e-feature-gates
-  waitFor:
-    - build-e2e
-
-#
-# Run the e2e tests without FeatureGates
-#
-
-- name: 'e2e-runner'
-  args:
-    - "${_FEATURE_WITHOUT_GATE}"
-    - "${_CLOUD_PRODUCT}"
-    - "${_TEST_CLUSTER_NAME}"
-    - "${_TEST_CLUSTER_LOCATION}"
-    - "${_REGISTRY}"
-    - "${_PARENT_COMMIT_SHA}"
-    - "${_PARENT_BUILD_ID}"
-  id: e2e-stable
-  waitFor:
-    - e2e-feature-gates
-
+  #
+  # Run the e2e tests without FeatureGates
+  #
+  - name: e2e-runner
+    args:
+      - ${_FEATURE_WITHOUT_GATE}
+      - ${_CLOUD_PRODUCT}
+      - ${_TEST_CLUSTER_NAME}
+      - ${_TEST_CLUSTER_LOCATION}
+      - ${_REGISTRY}
+      - ${_PARENT_COMMIT_SHA}
+      - ${_PARENT_BUILD_ID}
+    id: e2e-stable
+    waitFor: [e2e-feature-gates]
 tags:
-  - "e2e-test"
-  - "cluster-${_TEST_CLUSTER_NAME}"
-  - "location-${_TEST_CLUSTER_LOCATION}"
-  - "commit-${_PARENT_COMMIT_SHA}"
-  - "started-by-${_PARENT_BUILD_ID}"
-timeout: 5400s # 1.5h
-queueTtl: 7200s # 2h // only one set of e2es should be running at once
-logsBucket: "gs://agones-build-logs"
+  - e2e-test
+  - cluster-${_TEST_CLUSTER_NAME}
+  - location-${_TEST_CLUSTER_LOCATION}
+  - commit-${_PARENT_COMMIT_SHA}
+  - started-by-${_PARENT_BUILD_ID}
+timeout: 5400s  # 1.5h
+queueTtl: 7200s  # 2h // only one set of e2es should be running at once
+logsBucket: gs://agones-build-logs

@@ -1,3 +1,4 @@
+---
 # Copyright 2020 Google LLC All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,8 +16,7 @@
 #
 # A GameServerAllocation against a Fleet named 'simple-game-server'
 #
-
-apiVersion: "allocation.agones.dev/v1"
+apiVersion: allocation.agones.dev/v1
 kind: GameServerAllocation
 spec:
   # GameServer selector from which to choose GameServers from.
