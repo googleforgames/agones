@@ -169,4 +169,5 @@ no = 'Sorry to hear that. Please <a href="https://github.com/googleforgames/agon
 #         desc = "Discuss development issues around the project"
 
 
-
+[security.funcs]
+getenv = ['^HUGO_', '^CI$', '^RELEASE_BRANCH$', '^RELEASE_VERSION$']
