@@ -1,3 +1,4 @@
+---
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -15,32 +16,29 @@
 # You can adjust the behavior by modifying this file.
 # For more information, see:
 # https://github.com/actions/stale
-name: Mark stale 
-
+name: Mark stale
 on:
   workflow_dispatch:
   schedule:
-  - cron: '0 10 1,15 * *'
-
+    - cron: 0 10 1,15 * *
 jobs:
   stale:
-
     runs-on: ubuntu-latest
     permissions:
       issues: write
     name: stale issues
-
     steps:
-    - name: Stale issues
-      uses: actions/stale@v5
-      with:
-        repo-token: ${{ secrets.GITHUB_TOKEN }}
-        days-before-issue-stale: 30
-        days-before-issue-close: 60
-        stale-issue-message: >
-          'This issue is marked as Stale due to inactivity for more than 30 days. 
-          To avoid being marked as 'stale' please add 'awaiting-maintainer' label or add a comment. Thank you for your contributions '
-        stale-issue-label: 'stale'
-        exempt-issue-labels: 'awaiting-maintainer, obsolete'
-        ascending: true
-        enable-statistics: true
+      - name: Stale issues
+        uses: actions/stale@v5
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          days-before-issue-stale: 30
+          days-before-issue-close: 60
+          stale-issue-message: >
+            'This issue is marked as Stale due to inactivity for more than 30 days.  To
+            avoid being marked as 'stale' please add 'awaiting-maintainer' label or
+            add a comment. Thank you for your contributions '
+          stale-issue-label: stale
+          exempt-issue-labels: awaiting-maintainer, obsolete
+          ascending: true
+          enable-statistics: true

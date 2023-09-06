@@ -1,3 +1,4 @@
+---
 # Copyright 2023 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,31 +19,27 @@
 # For more information, see:
 # https://github.com/actions/stale
 name: Close Old
-
 on:
   workflow_dispatch:
   schedule:
-  - cron: '0 1 1,15 * *'
-
+    - cron: 0 1 1,15 * *
 jobs:
   stale:
-
     runs-on: ubuntu-latest
     permissions:
       issues: write
-      
-
     steps:
-    - uses: actions/stale@v5
-      with:
-        repo-token: ${{ secrets.GITHUB_TOKEN }}
-        days-before-issue-stale: 30
-        close-issue-message: >
-          We are closing this as there was no activity in this issue for last 90 days. Please reopen if you’d like to discuss anything further.
-        only-labels: 'obsolete'
-        exempt-issue-labels: awaiting-maintainer
-        ascending: true
-        days-before-close: 0
-        close-issue-reason: "not_planned"
-        stale-issue-label: 'wontfix'
-        enable-statistics: true
+      - uses: actions/stale@v5
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          days-before-issue-stale: 30
+          close-issue-message: >
+            We are closing this as there was no activity in this issue for last 90
+            days. Please reopen if you’d like to discuss anything further.
+          only-labels: obsolete
+          exempt-issue-labels: awaiting-maintainer
+          ascending: true
+          days-before-close: 0
+          close-issue-reason: not_planned
+          stale-issue-label: wontfix
+          enable-statistics: true

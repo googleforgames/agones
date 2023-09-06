@@ -1,3 +1,4 @@
+---
 # Copyright 2023 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,12 +15,8 @@
 #
 # This workflow utilizes https://github.com/actions/github-script in GitHub Actions to apply labels to pull requests.
 #
-
 name: Label PR
-
-on:
-  - pull_request_target
-
+on: [pull_request_target]
 jobs:
   label:
     runs-on: ubuntu-latest
@@ -30,7 +27,7 @@ jobs:
       - name: Label PR
         uses: actions/github-script@v4
         with:
-          script: |
+          script: |-
             const keywords = {
               "breaking": "kind/breaking",
               "bug": "kind/bug",

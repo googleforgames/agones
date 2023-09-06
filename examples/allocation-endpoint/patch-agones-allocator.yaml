@@ -1,3 +1,4 @@
+---
 # Copyright 2022 Google LLC All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,20 +12,18 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 spec:
   template:
     spec:
       containers:
-      - name: esp
-        image: gcr.io/endpoints-release/endpoints-runtime:2
-        imagePullPolicy: IfNotPresent
-        args: [
-        "--listener_port=9443",
-        "--generate_self_signed_cert",
-        "--backend=grpc://127.0.0.1:8443",
-        "--service=agones-allocation.endpoints.[GKE-PROJECT-ID].cloud.goog",
-        "--rollout_strategy=managed",
-        ]
-        ports:
-        - containerPort: 9443
+        - name: esp
+          image: gcr.io/endpoints-release/endpoints-runtime:2
+          imagePullPolicy: IfNotPresent
+          args:
+            - --listener_port=9443
+            - --generate_self_signed_cert
+            - --backend=grpc://127.0.0.1:8443
+            - --service=agones-allocation.endpoints.[GKE-PROJECT-ID].cloud.goog
+            - --rollout_strategy=managed
+          ports:
+            - containerPort: 9443

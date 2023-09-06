@@ -19,6 +19,8 @@ header() {
 }
 
 wget -q https://repo1.maven.org/maven2/io/swagger/codegen/v3/swagger-codegen-cli/3.0.35/swagger-codegen-cli-3.0.35.jar -O /tmp/swagger-codegen-cli.jar
+
+rm -rf /go/src/agones.dev/agones/test/sdk/restapi/swagger /go/src/agones.dev/agones/test/sdk/restapi/alpha/swagger
 java -jar /tmp/swagger-codegen-cli.jar generate -i /go/src/agones.dev/agones/sdks/swagger/sdk.swagger.json  -l go -o /go/src/agones.dev/agones/test/sdk/restapi/swagger
 java -jar /tmp/swagger-codegen-cli.jar generate -i /go/src/agones.dev/agones/sdks/swagger/alpha.swagger.json  -l go -o /go/src/agones.dev/agones/test/sdk/restapi/alpha/swagger
 

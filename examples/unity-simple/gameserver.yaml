@@ -1,3 +1,4 @@
+---
 # Copyright 2019 Google LLC
 # All Rights Reserved.
 #
@@ -12,25 +13,24 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-apiVersion: "agones.dev/v1"
+apiVersion: agones.dev/v1
 kind: GameServer
 metadata:
-  generateName: "unity-simple-server-"
+  generateName: unity-simple-server-
 spec:
   ports:
-  - name: default
-    portPolicy: Dynamic
-    containerPort: 7777
+    - name: default
+      portPolicy: Dynamic
+      containerPort: 7777
   template:
     spec:
       containers:
-      - name: unity-simple-server
-        image: us-docker.pkg.dev/agones-images/examples/unity-simple-server:0.3
+        - name: unity-simple-server
+          image: us-docker.pkg.dev/agones-images/examples/unity-simple-server:0.3
       resources:
         requests:
-          memory: "128Mi"
-          cpu: "128m"
+          memory: 128Mi
+          cpu: 128m
         limits:
-          memory: "128Mi"
-          cpu: "128m"
+          memory: 128Mi
+          cpu: 128m

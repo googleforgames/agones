@@ -1,3 +1,4 @@
+---
 # Copyright 2018 Google LLC All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,8 +22,7 @@
 #
 # For a full reference and details: https://agones.dev/site/docs/reference/gameserverallocation/
 #
-
-apiVersion: "allocation.agones.dev/v1"
+apiVersion: allocation.agones.dev/v1
 kind: GameServerAllocation
 metadata:
   name: allocation-example
@@ -45,7 +45,7 @@ spec:
     - matchLabels:
         game: my-game
       matchExpressions:
-      - {key: tier, operator: In, values: [cache]}
+        - {key: tier, operator: In, values: [cache]}
       # Specifies which State is the filter to be used when attempting to retrieve a GameServer
       # via Allocation. Defaults to "Ready". The only other option is "Allocated", which can be used in conjunction with
       # label/annotation/player selectors to retrieve an already Allocated GameServer.
@@ -70,4 +70,4 @@ spec:
     labels:
       mode: deathmatch
     annotations:
-      map:  garden22
+      map: garden22

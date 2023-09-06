@@ -1,3 +1,4 @@
+---
 # Copyright 2023 Google LLC All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,33 +12,26 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 # Always Be Building
 #
 # A build that checks to see if there are any CI builds running, and if there
 # are not, starts a build of `main`.
 #
 # Triggered by Cloud Scheduler at some arbitrary interval, e.g. 2h
-
 steps:
-- name: 'gcr.io/cloud-builders/gcloud'
-  id: always-be-building
-  script: |
-    #!/usr/bin/env bash
-
-    set -e
-    set -o pipefail
-
-    echo "== Checking for active builds =="
-    gcloud builds list --filter "status=WORKING AND tags='ci'" --format="value(id,startTime)" |& tee /tmp/active_builds
-    if [[ `wc -l < /tmp/active_builds` != 0 ]]; then
-      echo "== Builds already running, doing nothing =="
-      exit 0
-    fi
-
-    echo "== Build queue empty, starting `main` build =="
-    gcloud builds triggers run da003bb8-e9bb-4983-a556-e77fb92f17ca --branch=main
-
-tags:
-  - "always-be-building"
-timeout: 300s # generous time in case builds take a while to list
+  - name: gcr.io/cloud-builders/gcloud
+    id: always-be-building
+    script: |
+      #!/usr/bin/env bash
+      set -e
+      set -o pipefail
+      echo "== Checking for active builds =="
+      gcloud builds list --filter "status=WORKING AND tags='ci'" --format="value(id,startTime)" |& tee /tmp/active_builds
+      if [[ `wc -l < /tmp/active_builds` != 0 ]]; then
+        echo "== Builds already running, doing nothing =="
+        exit 0
+      fi
+      echo "== Build queue empty, starting `main` build =="
+      gcloud builds triggers run da003bb8-e9bb-4983-a556-e77fb92f17ca --branch=main
+tags: [always-be-building]
+timeout: 300s  # generous time in case builds take a while to list

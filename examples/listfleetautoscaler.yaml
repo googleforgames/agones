@@ -1,3 +1,4 @@
+---
 # Copyright 2023 Google LLC All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,15 +23,14 @@
 #
 # For a full reference and details: https://agones.dev/site/docs/reference/fleetautoscaler/
 #
-
-apiVersion: "autoscaling.agones.dev/v1"
+apiVersion: autoscaling.agones.dev/v1
 kind: FleetAutoscaler
 metadata:
   name: fleet-autoscaler-list
 spec:
   fleetName: fleet-example
   policy:
-    type: List # List based autoscaling.
+    type: List  # List based autoscaling.
     list:
       # The name of the List.
       # Required.
