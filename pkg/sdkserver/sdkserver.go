@@ -36,7 +36,6 @@ import (
 	"agones.dev/agones/pkg/util/logfields"
 	"agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/workerqueue"
-	"github.com/google/go-cmp/cmp"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
@@ -791,12 +790,15 @@ func (s *SDKServer) GetCounter(ctx context.Context, in *alpha.GetCounterRequest)
 		return nil, errors.Errorf("%s not enabled", runtime.FeatureCountsAndLists)
 	}
 
-	s.logger.WithField("name", in.Name).Info("Getting Counter")
+	s.logger.WithField("name", in.Name).Debug("Getting Counter")
 
 	gs, err := s.gameServer()
 	if err != nil {
 		return nil, err
 	}
+
+	s.gsUpdateMutex.RLock()
+	defer s.gsUpdateMutex.RUnlock()
 
 	counter, ok := gs.Status.Counters[in.Name]
 	if !ok {
@@ -818,7 +820,7 @@ func (s *SDKServer) GetCounter(ctx context.Context, in *alpha.GetCounterRequest)
 			protoCounter.Count = 0
 			s.logger.Debug("truncating Count in Get Counter request to 0")
 		}
-		if (counterUpdate.capacitySet == nil) && (protoCounter.Count > protoCounter.Capacity) {
+		if protoCounter.Count > protoCounter.Capacity {
 			protoCounter.Count = protoCounter.Capacity
 			s.logger.Debug("truncating Count in Get Counter request to Capacity")
 		}
@@ -842,7 +844,7 @@ func (s *SDKServer) UpdateCounter(ctx context.Context, in *alpha.UpdateCounterRe
 		return nil, errors.Errorf("INVALID_ARGUMENT. CounterUpdateRequest: %v cannot be nil", in.CounterUpdateRequest)
 	}
 
-	s.logger.WithField("name", in.CounterUpdateRequest.Name).Info("Update Counter Request")
+	s.logger.WithField("name", in.CounterUpdateRequest.Name).Debug("Update Counter Request")
 	s.gsUpdateMutex.Lock()
 	defer s.gsUpdateMutex.Unlock()
 
@@ -878,8 +880,7 @@ func (s *SDKServer) UpdateCounter(ctx context.Context, in *alpha.UpdateCounterRe
 		if batchCounter.capacitySet != nil {
 			capacity = *batchCounter.capacitySet
 		}
-		// Case where Count > Capacity we want to allow decrementation but not incrementation
-		if count < 0 || (in.CounterUpdateRequest.CountDiff > 0 && count > capacity) {
+		if count < 0 || count > capacity {
 			return nil, errors.Errorf("OUT_OF_RANGE. Count must be within range [0,Capacity]. Found Count: %d, Capacity: %d", count, capacity)
 		}
 		batchCounter.diff += in.CounterUpdateRequest.CountDiff
@@ -915,10 +916,6 @@ func (s *SDKServer) UpdateCounter(ctx context.Context, in *alpha.UpdateCounterRe
 
 // updateCounter updates the Counters in the GameServer's Status with the batched update requests.
 func (s *SDKServer) updateCounter(ctx context.Context) error {
-	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
-		return errors.Errorf("%s not enabled", runtime.FeatureCountsAndLists)
-	}
-
 	gs, err := s.gameServer()
 	if err != nil {
 		return err
@@ -929,61 +926,51 @@ func (s *SDKServer) updateCounter(ctx context.Context) error {
 	s.gsUpdateMutex.Lock()
 	defer s.gsUpdateMutex.Unlock()
 
+	names := []string{}
+
 	for name, ctrReq := range s.gsCounterUpdates {
 		counter, ok := gsCopy.Status.Counters[name]
 		if !ok {
 			continue
 		}
-		// If the Counter is the same as the original Counter stored in the counterUpdateRequest
-		// then no other changes have been made to this Counter, and we can overwrite the values.
-		if cmp.Equal(counter, ctrReq.counter) {
-			count := counter.Count
-			if ctrReq.countSet != nil {
-				count = *ctrReq.countSet
-			}
-			count += ctrReq.diff
-			counter.Count = count
-			if ctrReq.capacitySet != nil {
-				counter.Capacity = *ctrReq.capacitySet
-			}
-		} else {
-			// If the Counter is NOT the same as the original Counter stored in the counterUpdateRequest
-			// then changes have been made to the Counter since we validated the incoming changes in
-			// UpdateCounter, and we need to verify if the batched changes can be fully applied, partially
-			// applied, or cannot be applied.
-			if ctrReq.capacitySet != nil {
-				counter.Capacity = *ctrReq.capacitySet
-			}
-			if ctrReq.countSet != nil {
-				counter.Count = *ctrReq.countSet
-			}
-			newCnt := counter.Count + ctrReq.diff
-			if newCnt < 0 {
-				// If Count < 0 truncate requests by setting the Count to 0.
-				newCnt = 0
-				s.logger.Debug("truncating Count in Update Counter request to 0")
-			}
-			// TODO: This means there may be increment requests in the collapsed Diff that shouldn't have gone through. We may want a diffList for this case?
-			// If Count > Capacity and the Diff is decreasing the Count, reduce the Count by the Diff.
-			// Otherwise if Count > Capacity and the Diff is increasing the Count, truncate at Capacity.
-			if newCnt > counter.Capacity && ctrReq.diff > 0 {
-				newCnt = counter.Capacity
-				s.logger.Debug("truncating Count in Update Counter request to Capacity")
-			}
-			counter.Count = newCnt
+		// Changes may have been made to the Counter since we validated the incoming changes in
+		// UpdateCounter, and we need to verify if the batched changes can be fully applied, partially
+		// applied, or cannot be applied.
+		if ctrReq.capacitySet != nil {
+			counter.Capacity = *ctrReq.capacitySet
 		}
+		if ctrReq.countSet != nil {
+			counter.Count = *ctrReq.countSet
+		}
+		newCnt := counter.Count + ctrReq.diff
+		if newCnt < 0 {
+			newCnt = 0
+			s.logger.Debug("truncating Count in Update Counter request to 0")
+		}
+		if newCnt > counter.Capacity {
+			newCnt = counter.Capacity
+			s.logger.Debug("truncating Count in Update Counter request to Capacity")
+		}
+		counter.Count = newCnt
 		gsCopy.Status.Counters[name] = counter
-		gs, err = s.gameServerGetter.GameServers(s.namespace).Update(ctx, gsCopy, metav1.UpdateOptions{})
-		if err != nil {
-			return err
-		}
-		s.recorder.Event(gs, corev1.EventTypeNormal, "UpdateCounter",
-			fmt.Sprintf("Counter %s updated to Count:%d Capacity:%d",
-				name, gs.Status.Counters[name].Count, gs.Status.Counters[name].Capacity))
-		// Cache a copy of the successfully updated gameserver
-		s.gsCopy = gs
-		delete(s.gsCounterUpdates, name)
+		names = append(names, name)
 	}
+
+	gs, err = s.gameServerGetter.GameServers(s.namespace).Update(ctx, gsCopy, metav1.UpdateOptions{})
+	if err != nil {
+		return err
+	}
+
+	// Record an event per update Counter
+	for _, name := range names {
+		s.recorder.Event(gs, corev1.EventTypeNormal, "UpdateCounter",
+			fmt.Sprintf("Counter %s updated", name))
+	}
+
+	// Cache a copy of the successfully updated gameserver
+	s.gsCopy = gs
+	// Clear the gsCounterUpdates
+	s.gsCounterUpdates = map[string]counterUpdateRequest{}
 
 	return nil
 }

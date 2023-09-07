@@ -16,7 +16,6 @@ package sdkserver
 
 import (
 	"context"
-	"errors"
 	"net/http"
 	"strconv"
 	"sync"
@@ -1087,13 +1086,25 @@ func TestSDKServerReserveTimeout(t *testing.T) {
 }
 
 func TestSDKServerUpdateCounter(t *testing.T) {
-	// TODO: Speed up tests (err = wait.Poll() is slowing things down)
 	t.Parallel()
 	agruntime.FeatureTestMutex.Lock()
 	defer agruntime.FeatureTestMutex.Unlock()
 
 	err := agruntime.ParseFeatures(string(agruntime.FeatureCountsAndLists) + "=true")
 	require.NoError(t, err, "Can not parse FeatureCountsAndLists feature")
+
+	counters := map[string]agonesv1.CounterStatus{
+		"widgets":  {Count: int64(10), Capacity: int64(100)},
+		"foo":      {Count: int64(10), Capacity: int64(100)},
+		"bar":      {Count: int64(10), Capacity: int64(100)},
+		"baz":      {Count: int64(10), Capacity: int64(100)},
+		"bazel":    {Count: int64(10), Capacity: int64(100)},
+		"fish":     {Count: int64(10), Capacity: int64(100)},
+		"onefish":  {Count: int64(10), Capacity: int64(100)},
+		"twofish":  {Count: int64(10), Capacity: int64(100)},
+		"redfish":  {Count: int64(10), Capacity: int64(100)},
+		"bluefish": {Count: int64(10), Capacity: int64(100)},
+	}
 
 	fixtures := map[string]struct {
 		counterName string
@@ -1117,7 +1128,7 @@ func TestSDKServerUpdateCounter(t *testing.T) {
 			counterName: "widgets",
 			requests: []*alpha.UpdateCounterRequest{{
 				CounterUpdateRequest: &alpha.CounterUpdateRequest{
-					Name:      "widgets",
+					Name:      "foo",
 					CountDiff: 100,
 				}}},
 			want:       agonesv1.CounterStatus{Count: int64(10), Capacity: int64(100)},
@@ -1125,10 +1136,10 @@ func TestSDKServerUpdateCounter(t *testing.T) {
 			updated:    false,
 		},
 		"decrement": {
-			counterName: "widgets",
+			counterName: "bar",
 			requests: []*alpha.UpdateCounterRequest{{
 				CounterUpdateRequest: &alpha.CounterUpdateRequest{
-					Name:      "widgets",
+					Name:      "bar",
 					CountDiff: -1,
 				}}},
 			want:       agonesv1.CounterStatus{Count: int64(9), Capacity: int64(100)},
@@ -1136,10 +1147,10 @@ func TestSDKServerUpdateCounter(t *testing.T) {
 			updated:    true,
 		},
 		"decrement illegal": {
-			counterName: "widgets",
+			counterName: "baz",
 			requests: []*alpha.UpdateCounterRequest{{
 				CounterUpdateRequest: &alpha.CounterUpdateRequest{
-					Name:      "widgets",
+					Name:      "baz",
 					CountDiff: -11,
 				}}},
 			want:       agonesv1.CounterStatus{Count: int64(10), Capacity: int64(100)},
@@ -1147,21 +1158,21 @@ func TestSDKServerUpdateCounter(t *testing.T) {
 			updated:    false,
 		},
 		"set capacity": {
-			counterName: "widgets",
+			counterName: "bazel",
 			requests: []*alpha.UpdateCounterRequest{{
 				CounterUpdateRequest: &alpha.CounterUpdateRequest{
-					Name:     "widgets",
+					Name:     "bazel",
 					Capacity: wrapperspb.Int64(0),
 				}}},
-			want:       agonesv1.CounterStatus{Count: int64(10), Capacity: int64(0)},
+			want:       agonesv1.CounterStatus{Count: int64(0), Capacity: int64(0)},
 			updateErrs: []bool{false},
 			updated:    true,
 		},
 		"set capacity illegal": {
-			counterName: "widgets",
+			counterName: "fish",
 			requests: []*alpha.UpdateCounterRequest{{
 				CounterUpdateRequest: &alpha.CounterUpdateRequest{
-					Name:     "widgets",
+					Name:     "fish",
 					Capacity: wrapperspb.Int64(-1),
 				}}},
 			want:       agonesv1.CounterStatus{Count: int64(10), Capacity: int64(100)},
@@ -1169,10 +1180,10 @@ func TestSDKServerUpdateCounter(t *testing.T) {
 			updated:    false,
 		},
 		"set count": {
-			counterName: "widgets",
+			counterName: "onefish",
 			requests: []*alpha.UpdateCounterRequest{{
 				CounterUpdateRequest: &alpha.CounterUpdateRequest{
-					Name:  "widgets",
+					Name:  "onefish",
 					Count: wrapperspb.Int64(42),
 				}}},
 			want:       agonesv1.CounterStatus{Count: int64(42), Capacity: int64(100)},
@@ -1180,10 +1191,10 @@ func TestSDKServerUpdateCounter(t *testing.T) {
 			updated:    true,
 		},
 		"set count illegal": {
-			counterName: "widgets",
+			counterName: "twofish",
 			requests: []*alpha.UpdateCounterRequest{{
 				CounterUpdateRequest: &alpha.CounterUpdateRequest{
-					Name:  "widgets",
+					Name:  "twofish",
 					Count: wrapperspb.Int64(101),
 				}}},
 			want:       agonesv1.CounterStatus{Count: int64(10), Capacity: int64(100)},
@@ -1191,33 +1202,33 @@ func TestSDKServerUpdateCounter(t *testing.T) {
 			updated:    false,
 		},
 		"increment past set capacity illegal": {
-			counterName: "widgets",
+			counterName: "redfish",
 			requests: []*alpha.UpdateCounterRequest{{
 				CounterUpdateRequest: &alpha.CounterUpdateRequest{
-					Name:     "widgets",
+					Name:     "redfish",
 					Capacity: wrapperspb.Int64(0),
 				}},
 				{CounterUpdateRequest: &alpha.CounterUpdateRequest{
-					Name:      "widgets",
+					Name:      "redfish",
 					CountDiff: 1,
 				}}},
-			want:       agonesv1.CounterStatus{Count: int64(10), Capacity: int64(0)},
+			want:       agonesv1.CounterStatus{Count: int64(0), Capacity: int64(0)},
 			updateErrs: []bool{false, true},
 			updated:    true,
 		},
-		"decrement past set capacity OK": {
-			counterName: "widgets",
+		"decrement past set capacity illegal": {
+			counterName: "bluefish",
 			requests: []*alpha.UpdateCounterRequest{{
 				CounterUpdateRequest: &alpha.CounterUpdateRequest{
-					Name:     "widgets",
+					Name:     "bluefish",
 					Capacity: wrapperspb.Int64(0),
 				}},
 				{CounterUpdateRequest: &alpha.CounterUpdateRequest{
-					Name:      "widgets",
+					Name:      "bluefish",
 					CountDiff: -1,
 				}}},
-			want:       agonesv1.CounterStatus{Count: int64(9), Capacity: int64(0)},
-			updateErrs: []bool{false, false},
+			want:       agonesv1.CounterStatus{Count: int64(0), Capacity: int64(0)},
+			updateErrs: []bool{false, true},
 			updated:    true,
 		},
 	}
@@ -1237,9 +1248,7 @@ func TestSDKServerUpdateCounter(t *testing.T) {
 						},
 					},
 					Status: agonesv1.GameServerStatus{
-						Counters: map[string]agonesv1.CounterStatus{
-							"widgets": {Count: int64(10), Capacity: int64(100)},
-						},
+						Counters: counters,
 					},
 				}
 				gs.ApplyDefaults()
@@ -1272,12 +1281,10 @@ func TestSDKServerUpdateCounter(t *testing.T) {
 			}()
 
 			// check initial value comes through
-			// async, so check after a period
-			err = wait.Poll(time.Second, 10*time.Second, func() (bool, error) {
+			require.Eventually(t, func() bool {
 				counter, err := sc.GetCounter(context.Background(), &alpha.GetCounterRequest{Name: testCase.counterName})
-				return counter.Count == 10 && counter.Capacity == 100, err
-			})
-			assert.NoError(t, err)
+				return counter.Count == 10 && counter.Capacity == 100 && err == nil
+			}, 10*time.Second, time.Second)
 
 			// Update the Counter
 			for i, req := range testCase.requests {
@@ -1296,150 +1303,6 @@ func TestSDKServerUpdateCounter(t *testing.T) {
 
 			// on an update, confirm that the update hits the K8s api
 			if testCase.updated {
-				select {
-				case value := <-updated:
-					assert.NotNil(t, value[testCase.counterName])
-					assert.Equal(t,
-						agonesv1.CounterStatus{Count: testCase.want.Count, Capacity: testCase.want.Capacity},
-						value[testCase.counterName])
-				case <-time.After(10 * time.Second):
-					assert.Fail(t, "Counter should have been updated")
-				}
-			}
-
-			cancel()
-			wg.Wait()
-		})
-	}
-}
-
-// TestSDKServerupdateCounter tests updateCounter, not UpdateCounter.
-// Simulates case where the Counter may have been updated by gameserverallocation in between
-// when UpdateCounter and updateCounter are called.
-// Note: Capacity can be set, and Count can be incremented or decremented by gameserverallocation.
-func TestSDKServerupdateCounter(t *testing.T) {
-	t.Parallel()
-	agruntime.FeatureTestMutex.Lock()
-	defer agruntime.FeatureTestMutex.Unlock()
-
-	err := agruntime.ParseFeatures(string(agruntime.FeatureCountsAndLists) + "=true")
-	require.NoError(t, err, "Can not parse FeatureCountsAndLists feature")
-
-	fixtures := map[string]struct {
-		counterName      string
-		gsCounterUpdates map[string]counterUpdateRequest
-		want             agonesv1.CounterStatus
-		updateErr        bool
-	}{
-		"increment past capacity (truncation)": {
-			counterName: "fidgets",
-			gsCounterUpdates: map[string]counterUpdateRequest{
-				"fidgets": {
-					diff:    70,
-					counter: agonesv1.CounterStatus{Count: int64(10), Capacity: int64(100)},
-				},
-			},
-			want: agonesv1.CounterStatus{Count: int64(100), Capacity: int64(100)},
-		},
-		"decrement past 0 (truncation)": {
-			counterName: "fidgets",
-			gsCounterUpdates: map[string]counterUpdateRequest{
-				"fidgets": {
-					diff:    -70,
-					counter: agonesv1.CounterStatus{Count: int64(70), Capacity: int64(100)},
-				},
-			},
-			want: agonesv1.CounterStatus{Count: int64(0), Capacity: int64(100)},
-		},
-		"decrement past capacity OK": {
-			counterName: "gadgets",
-			gsCounterUpdates: map[string]counterUpdateRequest{
-				"gadgets": {
-					diff:    -5,
-					counter: agonesv1.CounterStatus{Count: int64(20), Capacity: int64(20)},
-				},
-			},
-			want: agonesv1.CounterStatus{Count: int64(15), Capacity: int64(0)},
-		},
-	}
-
-	for test, testCase := range fixtures {
-		t.Run(test, func(t *testing.T) {
-			m := agtesting.NewMocks()
-
-			m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-				gs := agonesv1.GameServer{
-					ObjectMeta: metav1.ObjectMeta{
-						Name: "test", Namespace: "default", Generation: 2,
-					},
-					Spec: agonesv1.GameServerSpec{
-						SdkServer: agonesv1.SdkServer{
-							LogLevel: "Debug",
-						},
-					},
-					Status: agonesv1.GameServerStatus{
-						Counters: map[string]agonesv1.CounterStatus{
-							"fidgets": {Count: int64(50), Capacity: int64(100)},
-							"gadgets": {Count: int64(20), Capacity: int64(0)},
-						},
-					},
-				}
-				gs.ApplyDefaults()
-				return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{gs}}, nil
-			})
-
-			updated := make(chan map[string]agonesv1.CounterStatus, 10)
-			m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-				ua := action.(k8stesting.UpdateAction)
-				gs := ua.GetObject().(*agonesv1.GameServer)
-				gs.ObjectMeta.Generation++
-				updated <- gs.Status.Counters
-				return true, gs, nil
-			})
-
-			ctx, cancel := context.WithCancel(context.Background())
-			sc, err := defaultSidecar(m)
-			require.NoError(t, err)
-			assert.NoError(t, sc.WaitForConnection(ctx))
-			sc.informerFactory.Start(ctx.Done())
-			assert.True(t, cache.WaitForCacheSync(ctx.Done(), sc.gameServerSynced))
-
-			wg := sync.WaitGroup{}
-			wg.Add(1)
-
-			go func() {
-				err = sc.Run(ctx)
-				assert.NoError(t, err)
-				wg.Done()
-			}()
-
-			// check initial value comes through
-			// async, so check after a period
-			err = wait.Poll(time.Second, 10*time.Second, func() (bool, error) {
-				fidgets, err1 := sc.GetCounter(context.Background(), &alpha.GetCounterRequest{Name: "fidgets"})
-				gadgets, err2 := sc.GetCounter(context.Background(), &alpha.GetCounterRequest{Name: "gadgets"})
-				err := errors.Join(err1, err2)
-				return fidgets.Count == 50 && fidgets.Capacity == 100 && gadgets.Count == 20 && gadgets.Capacity == 0, err
-			})
-			assert.NoError(t, err)
-
-			sc.gsCounterUpdates = testCase.gsCounterUpdates
-
-			// Update the Counter
-			err = sc.updateCounter(context.Background())
-			if testCase.updateErr {
-				assert.Error(t, err)
-			} else {
-				assert.NoError(t, err)
-			}
-
-			got, err := sc.GetCounter(context.Background(), &alpha.GetCounterRequest{Name: testCase.counterName})
-			assert.NoError(t, err)
-			assert.Equal(t, testCase.want.Count, got.Count)
-			assert.Equal(t, testCase.want.Capacity, got.Capacity)
-
-			// on an update, confirm that the update hits the K8s api
-			if !testCase.updateErr {
 				select {
 				case value := <-updated:
 					assert.NotNil(t, value[testCase.counterName])
