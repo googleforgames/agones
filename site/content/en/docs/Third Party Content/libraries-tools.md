@@ -23,6 +23,7 @@ Libraries or applications that implement messaging systems.
 ## Controllers
 - [Octops/Game Server Ingress Controller](https://github.com/Octops/gameserver-ingress-controller) - Automatic Ingress configuration for Game Servers managed by Agones
 - [Octops/Image Syncer](https://github.com/Octops/octops-image-syncer) - Watch Fleets and pre-pull images of game servers on every node running in the cluster
+- [Octops/Fleet Garbage Collector](https://github.com/Octops/octops-fleet-gc) - Delete Fleets based on its TTL
 
 ## Allocation
 

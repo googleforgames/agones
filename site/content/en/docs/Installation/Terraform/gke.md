@@ -96,7 +96,7 @@ Configurable parameters:
 - gameserver_maxPort - the upper bound of the port range which gameservers will listen on (default is "8000")
 - gameserver_namespaces - a list of namespaces which will be used to run gameservers (default is `["default"]`). For example `["default", "xbox-gameservers", "mobile-gameservers"]`
 - force_update - whether or not to force the replacement/update of resource (default is true, false may be required to prevent immutability errors when updating the configuration)
-- location - the name of the [location](https://cloud.google.com/compute/docs/regions-zones) you want your cluster  to eb created in (default is "us-west1-c")
+- location - the name of the [location](https://cloud.google.com/compute/docs/regions-zones) you want your cluster  to be created in (default is "us-west1-c")
 - autoscale - whether you want to enable autoscale for the gameserver nodepool (default is false)
 - min_node_count - the minimum number of nodes for a nodepool when autoscale is enabled (default is "1")
 - max_node_count - the maximum number of nodes for a nodepool when autoscale is enabled (default is "5")
@@ -118,8 +118,8 @@ In the directory where you created `module.tf`, run:
 terraform init
 ```
 
-This will cause terraform to clone the Agones repository and use the `./install/terraform` folder as a starting point of
-Agones submodule, which contains all necessary Terraform configuration files.
+This will cause terraform to clone the Agones repository and use the `./install/terraform` folder as the starting point of
+the Agones submodule, which contains all necessary Terraform configuration files.
 
 Next, make sure that you can authenticate using gcloud:
 ```bash
