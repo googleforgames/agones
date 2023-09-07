@@ -785,7 +785,7 @@ func (s *SDKServer) GetPlayerCapacity(ctx context.Context, _ *alpha.Empty) (*alp
 	return &alpha.Count{Count: s.gsPlayerCapacity}, nil
 }
 
-// GetCounter returns a Counter. Returns NOT_FOUND if the counter does not exist.
+// GetCounter returns a Counter. Returns error if the counter does not exist.
 // [Stage:Alpha]
 // [FeatureFlag:CountsAndLists]
 func (s *SDKServer) GetCounter(ctx context.Context, in *alpha.GetCounterRequest) (*alpha.Counter, error) {
@@ -805,7 +805,7 @@ func (s *SDKServer) GetCounter(ctx context.Context, in *alpha.GetCounterRequest)
 
 	counter, ok := gs.Status.Counters[in.Name]
 	if !ok {
-		return nil, errors.Errorf("NOT_FOUND. %s Counter not found", in.Name)
+		return nil, errors.Errorf("counter not found: %s", in.Name)
 	}
 	s.logger.WithField("Get Counter", counter).Debugf("Got Counter %s", in.Name)
 	protoCounter := alpha.Counter{Name: in.Name, Count: counter.Count, Capacity: counter.Capacity}
@@ -834,8 +834,8 @@ func (s *SDKServer) GetCounter(ctx context.Context, in *alpha.GetCounterRequest)
 }
 
 // UpdateCounter collapses all UpdateCounterRequests for a given Counter into a single request.
-// Returns NOT_FOUND if the Counter does not exist (name cannot be updated).
-// Returns OUT_OF_RANGE if the Count is out of range [0,Capacity].
+// Returns error if the Counter does not exist (name cannot be updated).
+// Returns error if the Count is out of range [0,Capacity].
 // [Stage:Alpha]
 // [FeatureFlag:CountsAndLists]
 func (s *SDKServer) UpdateCounter(ctx context.Context, in *alpha.UpdateCounterRequest) (*alpha.Counter, error) {
@@ -844,7 +844,7 @@ func (s *SDKServer) UpdateCounter(ctx context.Context, in *alpha.UpdateCounterRe
 	}
 
 	if in.CounterUpdateRequest == nil {
-		return nil, errors.Errorf("INVALID_ARGUMENT. CounterUpdateRequest: %v cannot be nil", in.CounterUpdateRequest)
+		return nil, errors.Errorf("invalid argument. CounterUpdateRequest: %v cannot be nil", in.CounterUpdateRequest)
 	}
 
 	s.logger.WithField("name", in.CounterUpdateRequest.Name).Debug("Update Counter Request")
@@ -865,7 +865,7 @@ func (s *SDKServer) UpdateCounter(ctx context.Context, in *alpha.UpdateCounterRe
 	counter, ok := gs.Status.Counters[name]
 	// We didn't find the Counter named key in the gameserver.
 	if !ok {
-		return nil, errors.Errorf("NOT_FOUND. %s Counter not found", name)
+		return nil, errors.Errorf("counter not found: %s", name)
 	}
 
 	batchCounter.counter = *counter.DeepCopy()
@@ -883,7 +883,7 @@ func (s *SDKServer) UpdateCounter(ctx context.Context, in *alpha.UpdateCounterRe
 			capacity = *batchCounter.capacitySet
 		}
 		if count < 0 || count > capacity {
-			return nil, errors.Errorf("OUT_OF_RANGE. Count must be within range [0,Capacity]. Found Count: %d, Capacity: %d", count, capacity)
+			return nil, errors.Errorf("out of range. Count must be within range [0,Capacity]. Found Count: %d, Capacity: %d", count, capacity)
 		}
 		batchCounter.diff += in.CounterUpdateRequest.CountDiff
 	case in.CounterUpdateRequest.Count != nil: // Update based on if Client call is CountSet
@@ -894,19 +894,19 @@ func (s *SDKServer) UpdateCounter(ctx context.Context, in *alpha.UpdateCounterRe
 			capacity = *batchCounter.capacitySet
 		}
 		if countSet < 0 || countSet > capacity {
-			return nil, errors.Errorf("OUT_OF_RANGE. Count must be within range [0,Capacity]. Found Count: %d, Capacity: %d", countSet, capacity)
+			return nil, errors.Errorf("out of range. Count must be within range [0,Capacity]. Found Count: %d, Capacity: %d", countSet, capacity)
 		}
 		batchCounter.countSet = &countSet
 		// Clear any previous CountIncrement or CountDecrement requests, and add the CountSet as the first item.
 		batchCounter.diff = 0
 	case in.CounterUpdateRequest.Capacity != nil: // Updated based on if client call is CapacitySet
 		if in.CounterUpdateRequest.Capacity.GetValue() < 0 {
-			return nil, errors.Errorf("OUT_OF_RANGE. Capacity must be greater than or equal to 0. Found Capacity: %d", in.CounterUpdateRequest.Capacity.GetValue())
+			return nil, errors.Errorf("out of range. Capacity must be greater than or equal to 0. Found Capacity: %d", in.CounterUpdateRequest.Capacity.GetValue())
 		}
 		capacitySet := in.CounterUpdateRequest.Capacity.GetValue()
 		batchCounter.capacitySet = &capacitySet
 	default:
-		return nil, errors.Errorf("INVALID_ARGUMENT. Malformed CounterUpdateRequest: %v", in.CounterUpdateRequest)
+		return nil, errors.Errorf("invalid argument. Malformed CounterUpdateRequest: %v", in.CounterUpdateRequest)
 	}
 
 	s.gsCounterUpdates[name] = batchCounter
