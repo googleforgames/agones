@@ -57,4 +57,4 @@ We expect the aggregate memory consumption of the pods will be slightly higher t
 
 ## Feature Design
 
-`SplitControllerAndExtensions` represents phase 1 of [HA Agones](https://github.com/googleforgames/agones/issues/2797). The remaining phases are not yet implemented.
+Please see [HA Agones](https://github.com/googleforgames/agones/issues/2797).
