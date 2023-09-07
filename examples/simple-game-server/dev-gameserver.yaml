@@ -1,3 +1,4 @@
+---
 # Copyright 2020 Google LLC All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,24 +12,23 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-apiVersion: "agones.dev/v1"
+apiVersion: agones.dev/v1
 kind: GameServer
 metadata:
   name: local-simple-game-server
-  generateName: "simple-game-server-"
+  generateName: simple-game-server-
   annotations:
     # Causes Agones to register your local game server at 192.1.1.2, replace with your server's IP address.
-    agones.dev/dev-address: "192.1.1.2"
+    agones.dev/dev-address: 192.1.1.2
 spec:
   ports:
-  - name: default
-    portPolicy: Static
-    hostPort: 17654
-    containerPort: 17654
+    - name: default
+      portPolicy: Static
+      hostPort: 17654
+      containerPort: 17654
   # The following is ignored but required due to validation.
   template:
     spec:
       containers:
-      - name: simple-game-server
-        image: us-docker.pkg.dev/agones-images/examples/simple-game-server:0.17
+        - name: simple-game-server
+          image: us-docker.pkg.dev/agones-images/examples/simple-game-server:0.17

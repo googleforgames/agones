@@ -1,3 +1,4 @@
+---
 # Copyright 2019 Google LLC All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,57 +12,50 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 #
 # Google Cloud Builder -- Push site to production
 # on merge with main
 #
-
 steps:
+  #
+  # Creates the initial make + docker build platform
+  #
+  - name: ubuntu
+    args:
+      - bash
+      - -c
+      - "echo 'FROM gcr.io/cloud-builders/docker\nRUN apt-get install make\nENTRYPOINT\
+        \ [\"/usr/bin/make\"]' > Dockerfile.build"
+  - name: gcr.io/cloud-builders/docker
+    args: [build, -f, Dockerfile.build, -t, make-docker, .]  # we need docker and make to run everything.
+  - name: make-docker
+    dir: build
+    env: ['REGISTRY=${_REGISTRY}']
+    args: [pull-build-image]  # since we are past CI build, we can assume that the build image exists.
 
-#
-# Creates the initial make + docker build platform
-#
+  #
+  # Build production site and deploy
+  #
+  - name: make-docker  # build production version of the site
+    dir: build
+    args: [site-static, site-gen-app-yaml, ENV=HUGO_ENV=production]
+  - name: gcr.io/cloud-builders/gcloud  # deploy the website
+    dir: site
+    args: [app, deploy, .app.yaml, --promote, --version=$SHORT_SHA]
+    env:
+      - GOPATH=/workspace/go
+      - GO111MODULE=on
 
-- name: "ubuntu"
-  args: ["bash", "-c", "echo 'FROM gcr.io/cloud-builders/docker\nRUN apt-get install make\nENTRYPOINT [\"/usr/bin/make\"]' > Dockerfile.build"]
-- name: "gcr.io/cloud-builders/docker"
-  args: ['build', '-f', 'Dockerfile.build', '-t', 'make-docker', '.'] # we need docker and make to run everything.
-- name: "make-docker"
-  dir: "build"
-  env:
-    - "REGISTRY=${_REGISTRY}"
-  args: ["pull-build-image"] # since we are past CI build, we can assume that the build image exists.
-
-#
-# Build production site and deploy
-#
-
-- name: "make-docker" # build production version of the site
-  dir: "build"
-  args: ["site-static", "site-gen-app-yaml", "ENV=HUGO_ENV=production"]
-- name: "gcr.io/cloud-builders/gcloud" # deploy the website
-  dir: "site"
-  args: ["app", "deploy", ".app.yaml", "--promote", "--version=$SHORT_SHA"]
-  env:
-    - GOPATH=/workspace/go
-    - GO111MODULE=on
-
-#
-# Build development site and deploy
-#
-
-
-- name: "make-docker" # build a preview of the website
-  dir: "build"
-  args: ["site-static-preview", "site-gen-app-yaml", "SERVICE=development"]
-- name: "gcr.io/cloud-builders/gcloud" # deploy the preview of the website
-  dir: "site"
-  args: ["app", "deploy", ".app.yaml", "--promote", "--version=$SHORT_SHA"]
-  env:
-    - GOPATH=/workspace/go
-    - GO111MODULE=on
-
+  #
+  # Build development site and deploy
+  #
+  - name: make-docker  # build a preview of the website
+    dir: build
+    args: [site-static-preview, site-gen-app-yaml, SERVICE=development]
+  - name: gcr.io/cloud-builders/gcloud  # deploy the preview of the website
+    dir: site
+    args: [app, deploy, .app.yaml, --promote, --version=$SHORT_SHA]
+    env: [GOPATH=/workspace/go, GO111MODULE=on]
 substitutions:
   _REGISTRY: us-docker.pkg.dev/${PROJECT_ID}/ci
-tags: ["site"]
+tags: [site]

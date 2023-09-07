@@ -1,3 +1,4 @@
+---
 # Copyright 2023 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,30 +12,27 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 steps:
   #
   # Creates the initial make + docker build platform
   #
-  - name: "ubuntu"
+  - name: ubuntu
     script: |
       echo 'FROM gcr.io/cloud-builders/docker\nRUN apt-get install make\nENTRYPOINT [\"/usr/bin/make\"]' > Dockerfile.build
   - name: gcr.io/cloud-builders/docker
     id: build-make-docker
-    entrypoint: "docker"
-    args: ["build", "-f", "Dockerfile.build", "-t", "make-docker", "."]
+    entrypoint: docker
+    args: [build, -f, Dockerfile.build, -t, make-docker, .]
 
   # build and push xonotic image to GCR
-  - name: "make-docker"
+  - name: make-docker
     id: push
-    dir: "."
-    env:
-      - REPOSITORY=${_REPOSITORY}
+    dir: .
+    env: ['REPOSITORY=${_REPOSITORY}']
     script: |
       make push
 options:
   dynamic_substitutions: true
-
 substitutions:
   _REPOSITORY: us-docker.pkg.dev/${PROJECT_ID}/examples
 timeout: 1800s

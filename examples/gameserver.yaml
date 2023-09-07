@@ -1,3 +1,4 @@
+---
 # Copyright 2017 Google LLC All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,34 +25,33 @@
 #
 # For a full reference and details: https://agones.dev/site/docs/reference/gameserver/
 #
-
-apiVersion: "agones.dev/v1"
+apiVersion: agones.dev/v1
 kind: GameServer
 metadata:
-  # generateName: "gds-example" # generate a unique name, with the given prefix
-  name: "gds-example" # set a fixed name
+  # generateName: "gds-example"  # generate a unique name, with the given prefix
+  name: gds-example  # set a fixed name
 spec:
   # if there is more than one container, specify which one is the game server
   container: example-server
   # Array of ports that can be exposed as direct connections to the game server container
   ports:
     # name is a descriptive name for the port
-  - name: default
-    # portPolicy has three options:
-    # - "Dynamic" (default) the system allocates a free hostPort for the gameserver, for game clients to connect to
-    # - "Static", user defines the hostPort that the game client will connect to. Then onus is on the user to ensure that the
-    # port is available. When static is the policy specified, `hostPort` is required to be populated
-    # - "Passthrough" dynamically sets the `containerPort` to the same value as the dynamically selected hostPort.
-    #      This will mean that users will need to lookup what port has been opened through the server side SDK.
-    portPolicy: Dynamic
-    # The name of the container to open the port on. Defaults to the game server container if omitted or empty.
-    container: simple-game-server
-    # the port that is being opened on the game server process
-    containerPort: 7654
-    # the port exposed on the host, only required when `portPolicy` is "Static". Overwritten when portPolicy is "Dynamic".
-    # hostPort: 7777
-    # protocol being used. Defaults to UDP. TCP and TCPUDP are other options
-    protocol: UDP
+    - name: default
+      # portPolicy has three options:
+      # - "Dynamic" (default) the system allocates a free hostPort for the gameserver, for game clients to connect to
+      # - "Static", user defines the hostPort that the game client will connect to. Then onus is on the user to ensure that the
+      # port is available. When static is the policy specified, `hostPort` is required to be populated
+      # - "Passthrough" dynamically sets the `containerPort` to the same value as the dynamically selected hostPort.
+      #      This will mean that users will need to lookup what port has been opened through the server side SDK.
+      portPolicy: Dynamic
+      # The name of the container to open the port on. Defaults to the game server container if omitted or empty.
+      container: simple-game-server
+      # the port that is being opened on the game server process
+      containerPort: 7654
+      # the port exposed on the host, only required when `portPolicy` is "Static". Overwritten when portPolicy is "Dynamic".
+      # hostPort: 7777
+      # protocol being used. Defaults to UDP. TCP and TCPUDP are other options
+      protocol: UDP
   # Health checking for the running game server
   health:
     # Disable health checking. defaults to false, but can be set to true
@@ -83,7 +83,7 @@ spec:
   # Players provides the configuration for player tracking features.
   # Commented out since Alpha, and disabled by default
   # players:
-  #   # set this GameServer's initial player capacity
+  #  # set this GameServer's initial player capacity
   #   initialCapacity: 10
   #
   # [Stage:Alpha]
@@ -95,10 +95,10 @@ spec:
   #     count: 1
   #     capacity: 100
   #   sessions:
-  #     count: # Count and/or capacity must be listed (but may be nil) otherwise the counter will by dropped by the CRD schema.
+  #     count:  # Count and/or capacity must be listed (but may be nil) otherwise the counter will by dropped by the CRD schema.
   # lists:
   #   players:
-  #     capacity: # Capacity and/or values must be listed (but may be nil) otherwise the list will be dropped by the CRD schema.
+  #     capacity:  # Capacity and/or values must be listed (but may be nil) otherwise the list will be dropped by the CRD schema.
   #   rooms:
   #     capacity: 333
   #     values:
@@ -115,12 +115,12 @@ spec:
     # Pod Specification
     spec:
       containers:
-      - name: simple-game-server
-        image:  us-docker.pkg.dev/agones-images/examples/simple-game-server:0.17
-        imagePullPolicy: Always
-      # nodeSelector is a label that can be used to tell Kubernetes which host
-      # OS to use. For Windows game servers uncomment the nodeSelector
-      # definition below.
-      # Details: https://kubernetes.io/docs/setup/production-environment/windows/user-guide-windows-containers/#ensuring-os-specific-workloads-land-on-the-appropriate-container-host
-      # nodeSelector:
-      #   kubernetes.io/os: windows
+        - name: simple-game-server
+          image: us-docker.pkg.dev/agones-images/examples/simple-game-server:0.17
+          imagePullPolicy: Always
+          # nodeSelector is a label that can be used to tell Kubernetes which host
+          # OS to use. For Windows game servers uncomment the nodeSelector
+          # definition below.
+          # Details: https://kubernetes.io/docs/setup/production-environment/windows/user-guide-windows-containers/#ensuring-os-specific-workloads-land-on-the-appropriate-container-host
+          # nodeSelector:
+          #   kubernetes.io/os: windows

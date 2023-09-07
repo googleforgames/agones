@@ -1,3 +1,4 @@
+---
 # Copyright 2020 Google LLC All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,32 +12,31 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 service:
   port: 3000
 tolerations:
-- key: "agones.dev/agones-metrics"
-  operator: "Equal"
-  value: "true"
-  effect: "NoExecute"
+  - key: agones.dev/agones-metrics
+    operator: Equal
+    value: 'true'
+    effect: NoExecute
 affinity:
   nodeAffinity:
     preferredDuringSchedulingIgnoredDuringExecution:
-    - weight: 1
-      preference:
-        matchExpressions:
-          - key: agones.dev/agones-metrics
-            operator: Exists
+      - weight: 1
+        preference:
+          matchExpressions:
+            - key: agones.dev/agones-metrics
+              operator: Exists
 sidecar:
-    dashboards:
-        enabled: true
+  dashboards:
+    enabled: true
 plugins: grafana-piechart-panel
 datasources:
   datasources.yaml:
     apiVersion: 1
     datasources:
-    - name: Prometheus
-      type: prometheus
-      url: http://prom-prometheus-server.metrics.svc.cluster.local:80/
-      access: proxy
-      isDefault: true
+      - name: Prometheus
+        type: prometheus
+        url: http://prom-prometheus-server.metrics.svc.cluster.local:80/
+        access: proxy
+        isDefault: true

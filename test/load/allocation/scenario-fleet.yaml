@@ -1,3 +1,4 @@
+---
 # Copyright 2023 Google LLC All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,8 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-apiVersion: "agones.dev/v1"
+apiVersion: agones.dev/v1
 kind: Fleet
 metadata:
   name: scenario-test
@@ -24,28 +24,26 @@ spec:
         gameName: simple-game-server
     spec:
       ports:
-      - containerPort: 7654
-        name: default
+        - containerPort: 7654
+          name: default
       health:
         initialDelaySeconds: 30
         periodSeconds: 60
       template:
         spec:
           tolerations:
-          - effect: NoExecute
-            key: scenario-test.io/game-servers
-            operator: Equal
-            value: 'true'
+            - effect: NoExecute
+              key: scenario-test.io/game-servers
+              operator: Equal
+              value: 'true'
           containers:
-          - name: simple-game-server
-            image: us-docker.pkg.dev/agones-images/examples/simple-game-server:0.17
-            args:
-            - -automaticShutdownDelaySec=60
-            - -readyIterations=10
-            resources:
-              limits:
-                cpu: 20m
-                memory: 24Mi
-              requests:
-                cpu: 20m
-                memory: 24Mi
+            - name: simple-game-server
+              image: us-docker.pkg.dev/agones-images/examples/simple-game-server:0.17
+              args: [-automaticShutdownDelaySec=60, -readyIterations=10]
+              resources:
+                limits:
+                  cpu: 20m
+                  memory: 24Mi
+                requests:
+                  cpu: 20m
+                  memory: 24Mi
