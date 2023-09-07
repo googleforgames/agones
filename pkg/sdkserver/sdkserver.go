@@ -77,7 +77,7 @@ type counterUpdateRequest struct {
 	countSet *int64
 	// Tracks the sum of CountIncrement, CountDecrement, and/or CountSet requests from the client SDK.
 	diff int64
-	// Counter (as retreived during first request)
+	// Counter as retreived from the GameServer
 	counter agonesv1.CounterStatus
 }
 
@@ -425,6 +425,7 @@ func (s *SDKServer) updateState(ctx context.Context) error {
 	return nil
 }
 
+// Gets the GameServer from the cache, or from the local SDKServer if that version is more recent.
 func (s *SDKServer) gameServer() (*agonesv1.GameServer, error) {
 	// this ensure that if we get requests for the gameserver before the cache has been synced,
 	// they will block here until it's ready
@@ -433,6 +434,8 @@ func (s *SDKServer) gameServer() (*agonesv1.GameServer, error) {
 	if err != nil {
 		return gs, errors.Wrapf(err, "could not retrieve GameServer %s/%s", s.namespace, s.gameServerName)
 	}
+	s.gsUpdateMutex.RLock()
+	defer s.gsUpdateMutex.RUnlock()
 	if s.gsCopy != nil && gs.ObjectMeta.Generation < s.gsCopy.Generation {
 		return s.gsCopy, nil
 	}
@@ -845,28 +848,27 @@ func (s *SDKServer) UpdateCounter(ctx context.Context, in *alpha.UpdateCounterRe
 	}
 
 	s.logger.WithField("name", in.CounterUpdateRequest.Name).Debug("Update Counter Request")
+
+	gs, err := s.gameServer()
+	if err != nil {
+		return nil, err
+	}
+
 	s.gsUpdateMutex.Lock()
 	defer s.gsUpdateMutex.Unlock()
 
 	// Check if we already have a batch request started for this Counter. If not, add new request to
 	// the gsCounterUpdates map.
 	name := in.CounterUpdateRequest.Name
-	batchCounter, batchOk := s.gsCounterUpdates[name]
+	batchCounter := s.gsCounterUpdates[name]
 
-	if !batchOk {
-		gs, err := s.gameServer()
-		if err != nil {
-			return nil, err
-		}
-
-		counter, ok := gs.Status.Counters[name]
-		// We didn't find the Counter named key in the gameserver.
-		if !ok {
-			return nil, errors.Errorf("NOT_FOUND. %s Counter not found", name)
-		}
-
-		batchCounter.counter = *counter.DeepCopy()
+	counter, ok := gs.Status.Counters[name]
+	// We didn't find the Counter named key in the gameserver.
+	if !ok {
+		return nil, errors.Errorf("NOT_FOUND. %s Counter not found", name)
 	}
+
+	batchCounter.counter = *counter.DeepCopy()
 
 	switch {
 	case in.CounterUpdateRequest.CountDiff != 0: // Update based on if Client call is CountIncrement or CountDecrement
@@ -964,7 +966,8 @@ func (s *SDKServer) updateCounter(ctx context.Context) error {
 	// Record an event per update Counter
 	for _, name := range names {
 		s.recorder.Event(gs, corev1.EventTypeNormal, "UpdateCounter",
-			fmt.Sprintf("Counter %s updated", name))
+			fmt.Sprintf("Counter %s updated to Count:%d Capacity:%d",
+				name, gs.Status.Counters[name].Count, gs.Status.Counters[name].Capacity))
 	}
 
 	// Cache a copy of the successfully updated gameserver
