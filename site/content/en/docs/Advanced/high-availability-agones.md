@@ -54,7 +54,3 @@ agones-ping-5b9647874-rksgg          1/1     Running   0          27h
 The number of replicas for `agones-extensions` can be set using helm variable [`agones.extensions.replicas`]({{< relref "/docs/Installation/Install Agones/helm.md#configuration" >}}), but the default is `2`. 
 
 We expect the aggregate memory consumption of the pods will be slightly higher than the previous singleton pod, but as the responsibilities are now split across the pods, the aggregate CPU consumption should also be similar.
-
-## Feature Design
-
-`SplitControllerAndExtensions` represents phase 1 of [HA Agones](https://github.com/googleforgames/agones/issues/2797). The remaining phases are not yet implemented.
