@@ -78,6 +78,9 @@ type Registry struct {
 	// in your protofile comments
 	useGoTemplate bool
 
+	// ignoreComments determines whether all protofile comments should be excluded from output
+	ignoreComments bool
+
 	// enumsAsInts render enum as integer, as opposed to string
 	enumsAsInts bool
 
@@ -143,6 +146,10 @@ type Registry struct {
 
 	// allowPatchFeature determines whether to use PATCH feature involving update masks (using google.protobuf.FieldMask).
 	allowPatchFeature bool
+
+	// preserveRPCOrder, if true, will ensure the order of paths emitted in openapi swagger files mirror
+	// the order of RPC methods found in proto files. If false, emitted paths will be ordered alphabetically.
+	preserveRPCOrder bool
 }
 
 type repeatedFieldSeparator struct {
@@ -564,6 +571,16 @@ func (r *Registry) GetUseGoTemplate() bool {
 	return r.useGoTemplate
 }
 
+// SetIgnoreComments sets ignoreComments
+func (r *Registry) SetIgnoreComments(ignore bool) {
+	r.ignoreComments = ignore
+}
+
+// GetIgnoreComments returns ignoreComments
+func (r *Registry) GetIgnoreComments() bool {
+	return r.ignoreComments
+}
+
 // SetEnumsAsInts set enumsAsInts
 func (r *Registry) SetEnumsAsInts(enumsAsInts bool) {
 	r.enumsAsInts = enumsAsInts
@@ -797,4 +814,14 @@ func (r *Registry) SetAllowPatchFeature(allow bool) {
 // GetAllowPatchFeature returns allowPatchFeature
 func (r *Registry) GetAllowPatchFeature() bool {
 	return r.allowPatchFeature
+}
+
+// SetPreserveRPCOrder sets preserveRPCOrder
+func (r *Registry) SetPreserveRPCOrder(preserve bool) {
+	r.preserveRPCOrder = preserve
+}
+
+// IsPreserveRPCOrder returns preserveRPCOrder
+func (r *Registry) IsPreserveRPCOrder() bool {
+	return r.preserveRPCOrder
 }
