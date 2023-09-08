@@ -109,10 +109,13 @@ The `spec` field is the actual `Fleet` specification and it is composed as follo
     - `maxSurge` is the amount to increment the new GameServers by. Defaults to 25%
     - `maxUnavailable` is the amount to decrements GameServers by. Defaults to 25%
 - `allocationOverflow` (Alpha, requires `FleetAllocationOverflow` flag) The labels and/or Annotations to apply to 
-  GameServers when the number of Allocated GameServers drops below the desired replicas on the underlying 
+  GameServers when the number of Allocated GameServers exceeds the desired replicas in the underlying 
   `GameServerSet`.
   - `labels` the map of labels to be applied
   - `annotations` the map of annotations to be applied
+  - `Fleet's Scheduling Strategy`: The GameServers associated with the GameServerSet are sorted based on either `Packed` or `Distributed` strategy.
+      - `Packed`: Agones maximizes resource utilization by trying to populate nodes that are already in use before allocating GameServers to other nodes.
+      - `Distributed`: Agones employs this strategy to spread out GameServer allocations, ensuring an even distribution of GameServers across the available nodes.
 - `template` a full `GameServer` configuration template.
    See the [GameServer]({{< relref "gameserver.md" >}}) reference for all available fields.
 
