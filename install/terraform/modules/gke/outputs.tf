@@ -20,6 +20,10 @@ output "host" {
   value = "https://${google_container_cluster.primary.endpoint}"
 }
 
+output "private_host" {
+  value = "https://${google_container_cluster.primary.private_endpoint}"
+}
+
 output "token" {
   value = data.google_client_config.default.access_token
 }
