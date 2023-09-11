@@ -38,6 +38,7 @@ var google_api_field_behavior_pb = require('./google/api/field_behavior_pb.js');
 var google_api_resource_pb = require('./google/api/resource_pb.js');
 var google_protobuf_empty_pb = require('google-protobuf/google/protobuf/empty_pb.js');
 var google_protobuf_field_mask_pb = require('google-protobuf/google/protobuf/field_mask_pb.js');
+var google_protobuf_wrappers_pb = require('google-protobuf/google/protobuf/wrappers_pb.js');
 var protoc$gen$openapiv2_options_annotations_pb = require('./protoc-gen-openapiv2/options/annotations_pb.js');
 
 function serialize_agones_dev_sdk_alpha_AddListValueRequest(arg) {
@@ -323,9 +324,6 @@ getCounter: {
   },
   // UpdateCounter returns the updated Counter. Returns NOT_FOUND if the Counter does not exist (name cannot be updated).
 // Returns OUT_OF_RANGE if the Count is out of range [0,Capacity].
-// Returns INVALID_ARGUMENT if the field mask path(s) are not field(s) of the Counter.
-// If a field mask path(s) is specified, but the value is not set in the request Counter object,
-// then the default value for the variable will be set (i.e. 0 for "capacity" or "count").
 updateCounter: {
     path: '/agones.dev.sdk.alpha.SDK/UpdateCounter',
     requestStream: false,

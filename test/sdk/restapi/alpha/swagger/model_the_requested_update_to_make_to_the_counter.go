@@ -23,7 +23,8 @@
  */
 package swagger
 
-type TheCounterToUpdate struct {
+type TheRequestedUpdateToMakeToTheCounter struct {
 	Count string `json:"count,omitempty"`
 	Capacity string `json:"capacity,omitempty"`
+	CountDiff string `json:"countDiff,omitempty"`
 }
