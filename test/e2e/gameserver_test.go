@@ -925,6 +925,7 @@ func TestGameServerWithoutPort(t *testing.T) {
 func TestGameServerResourceValidation(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
+	logger := e2eframework.TestLogger(t)
 	gs := framework.DefaultGameServer(framework.Namespace)
 	mi64 := resource.MustParse("64Mi")
 	gs.Spec.Template.Spec.Containers[0].Resources.Limits[corev1.ResourceMemory] = mi64
@@ -948,6 +949,7 @@ func TestGameServerResourceValidation(t *testing.T) {
 	assert.NotNil(t, err)
 	statusErr, ok = err.(*k8serrors.StatusError)
 	assert.True(t, ok)
+	logger.Debug("TestGameServerResourceValidation gsClient.Create with negative resource status errors: ", statusErr)
 	assert.Len(t, statusErr.Status().Details.Causes, 2)
 	assert.Equal(t, metav1.CauseTypeFieldValueInvalid, statusErr.Status().Details.Causes[0].Type)
 	assert.Equal(t, "spec.template.spec.containers[0].resources.requests[cpu]", statusErr.Status().Details.Causes[0].Field)
