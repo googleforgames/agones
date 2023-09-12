@@ -84,21 +84,14 @@ func (a *Alpha) GetConnectedPlayers() ([]string, error) {
 	return list.GetList(), errors.Wrap(err, "could not list connected players")
 }
 
-// GetCounter returns a copy of a Counter, given the Counter's key (name).
-// Will error if the key was not predefined in the GameServer resource on creation.
-func (a *Alpha) GetCounter(key string) (alpha.Counter, error) {
-	counter, err := a.client.GetCounter(context.Background(), &alpha.GetCounterRequest{Name: key})
-	if err == nil {
-		return alpha.Counter{Name: counter.Name, Count: counter.Count, Capacity: counter.Capacity}, nil
-	}
-	return alpha.Counter{}, errors.Wrapf(err, "could not get Counter %s", key)
-}
-
 // GetCounterCount returns the Count for a Counter, given the Counter's key (name).
 // Will error if the key was not predefined in the GameServer resource on creation.
 func (a *Alpha) GetCounterCount(key string) (int64, error) {
 	counter, err := a.client.GetCounter(context.Background(), &alpha.GetCounterRequest{Name: key})
-	return counter.Count, errors.Wrapf(err, "could not get Counter %s count", key)
+	if err != nil {
+		return -1, errors.Wrapf(err, "could not get Counter %s count", key)
+	}
+	return counter.Count, nil
 }
 
 // IncrementCounter increases a counter by the given nonnegative integer amount.
@@ -161,7 +154,10 @@ func (a *Alpha) SetCounterCount(key string, amount int64) (bool, error) {
 // Will error if the key was not predefined in the GameServer resource on creation.
 func (a *Alpha) GetCounterCapacity(key string) (int64, error) {
 	counter, err := a.client.GetCounter(context.Background(), &alpha.GetCounterRequest{Name: key})
-	return counter.Capacity, errors.Wrapf(err, "could not get Counter %s capacity", key)
+	if err != nil {
+		return -1, errors.Wrapf(err, "could not get Counter %s capacity", key)
+	}
+	return counter.Capacity, nil
 }
 
 // SetCounterCapacity sets the capacity for a given count. A capacity of 0 is no capacity.
