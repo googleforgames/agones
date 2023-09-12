@@ -303,8 +303,61 @@ func handleResponse(txt string, s *sdk.SDK, cancel context.CancelFunc) (response
 	case "PLAYER_COUNT":
 		response = getPlayerCount(s)
 		addACK = false
-	}
 
+	case "GET_COUNTER_COUNT":
+		if len(parts) < 2 {
+			response = "Invalid GET_COUNTER_COUNT, should have 1 arguments"
+			responseError = fmt.Errorf("Invalid GET_COUNTER_COUNT, should have 1 arguments")
+			return
+		}
+		response, responseError = getCounterCount(s, parts[1])
+		addACK = false
+
+	case "INCREMENT_COUNTER":
+		if len(parts) < 3 {
+			response = "Invalid INCREMENT_COUNTER, should have 2 arguments"
+			responseError = fmt.Errorf("Invalid INCREMENT_COUNTER, should have 2 arguments")
+			return
+		}
+		response, responseError = incrementCounter(s, parts[1], parts[2])
+		addACK = false
+
+	case "DECREMENT_COUNTER":
+		if len(parts) < 3 {
+			response = "Invalid DECREMENT_COUNTER, should have 2 arguments"
+			responseError = fmt.Errorf("Invalid DECREMENT_COUNTER, should have 2 arguments")
+			return
+		}
+		response, responseError = decrementCounter(s, parts[1], parts[2])
+		addACK = false
+
+	case "SET_COUNTER_COUNT":
+		if len(parts) < 3 {
+			response = "Invalid SET_COUNTER_COUNT, should have 2 arguments"
+			responseError = fmt.Errorf("Invalid SET_COUNTER_COUNT, should have 2 arguments")
+			return
+		}
+		response, responseError = setCounterCount(s, parts[1], parts[2])
+		addACK = false
+
+	case "GET_COUNTER_CAPACITY":
+		if len(parts) < 2 {
+			response = "Invalid GET_COUNTER_CAPACITY, should have 1 arguments"
+			responseError = fmt.Errorf("Invalid GET_COUNTER_CAPACITY, should have 1 arguments")
+			return
+		}
+		response, responseError = getCounterCapacity(s, parts[1])
+		addACK = false
+
+	case "SET_COUNTER_CAPACITY":
+		if len(parts) < 3 {
+			response = "Invalid SET_COUNTER_CAPACITY, should have 2 arguments"
+			responseError = fmt.Errorf("Invalid SET_COUNTER_CAPACITY, should have 2 arguments")
+			return
+		}
+		response, responseError = setCounterCapacity(s, parts[1], parts[2])
+		addACK = false
+	}
 	return
 }
 
@@ -560,6 +613,82 @@ func getPlayerCount(s *sdk.SDK) string {
 		log.Fatalf("could not retrieve player count: %s", err)
 	}
 	return strconv.FormatInt(count, 10) + "\n"
+}
+
+// getCounterCount returns the Count of the given Counter as a string
+func getCounterCount(s *sdk.SDK, counterName string) (string, error) {
+	log.Printf("Retrieving Counter %s Count", counterName)
+	count, err := s.Alpha().GetCounterCount(counterName)
+	if err != nil {
+		log.Printf("Error getting Counter %s Count: %s", counterName, err)
+	}
+	return strconv.FormatInt(count, 10), err
+}
+
+// incrementCounter returns the if the Counter Count was incremented successfully (true) or not (false)
+func incrementCounter(s *sdk.SDK, counterName string, amount string) (string, error) {
+	amountInt, err := strconv.ParseInt(amount, 10, 64)
+	if err != nil {
+		return "false", fmt.Errorf("could not increment Counter %s by unparseable amount %s: %s", counterName, amount, err)
+	}
+	log.Printf("Incrementing Counter %s Count by amount %d", counterName, amountInt)
+	ok, err := s.Alpha().IncrementCounter(counterName, amountInt)
+	if err != nil {
+		log.Printf("Error incrementing Counter %s Count by amount %d: %s", counterName, amountInt, err)
+	}
+	return strconv.FormatBool(ok), err
+}
+
+// decrementCounter returns the if the Counter Count was decremented successfully (true) or not (false)
+func decrementCounter(s *sdk.SDK, counterName string, amount string) (string, error) {
+	amountInt, err := strconv.ParseInt(amount, 10, 64)
+	if err != nil {
+		return "false", fmt.Errorf("could not decrement Counter %s by unparseable amount %s: %s", counterName, amount, err)
+	}
+	log.Printf("Decrementing Counter %s Count by amount %d", counterName, amountInt)
+	ok, err := s.Alpha().DecrementCounter(counterName, amountInt)
+	if err != nil {
+		log.Printf("Error decrementing Counter %s Count by amount %d: %s", counterName, amountInt, err)
+	}
+	return strconv.FormatBool(ok), err
+}
+
+// setCounterCount returns the if the Counter was set to a new Count successfully (true) or not (false)
+func setCounterCount(s *sdk.SDK, counterName string, amount string) (string, error) {
+	amountInt, err := strconv.ParseInt(amount, 10, 64)
+	if err != nil {
+		return "false", fmt.Errorf("could not set Counter %s to unparseable amount %s: %s", counterName, amount, err)
+	}
+	log.Printf("Setting Counter %s Count to amount %d", counterName, amountInt)
+	ok, err := s.Alpha().SetCounterCount(counterName, amountInt)
+	if err != nil {
+		log.Printf("Error setting Counter %s Count by amount %d: %s", counterName, amountInt, err)
+	}
+	return strconv.FormatBool(ok), err
+}
+
+// getCounterCapacity returns the Capacity of the given Counter as a string
+func getCounterCapacity(s *sdk.SDK, counterName string) (string, error) {
+	log.Printf("Retrieving Counter %s Capacity", counterName)
+	count, err := s.Alpha().GetCounterCapacity(counterName)
+	if err != nil {
+		log.Printf("Error getting Counter %s Capacity: %s", counterName, err)
+	}
+	return strconv.FormatInt(count, 10), err
+}
+
+// setCounterCapacity returns the if the Counter was set to a new Capacity successfully (true) or not (false)
+func setCounterCapacity(s *sdk.SDK, counterName string, amount string) (string, error) {
+	amountInt, err := strconv.ParseInt(amount, 10, 64)
+	if err != nil {
+		return "false", fmt.Errorf("could not set Counter %s to unparseable amount %s: %s", counterName, amount, err)
+	}
+	log.Printf("Setting Counter %s Capacity to amount %d", counterName, amountInt)
+	ok, err := s.Alpha().SetCounterCapacity(counterName, amountInt)
+	if err != nil {
+		log.Printf("Error setting Counter %s Capacity to amount %d: %s", counterName, amountInt, err)
+	}
+	return strconv.FormatBool(ok), err
 }
 
 // doHealth sends the regular Health Pings

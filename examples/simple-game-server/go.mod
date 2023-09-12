@@ -2,7 +2,7 @@ module agones.dev/agones/examples/simple-game-server
 
 go 1.20
 
-require agones.dev/agones v1.33.0
+require agones.dev/agones v1.34.0
 
 require (
 	github.com/golang/protobuf v1.5.3 // indirect
