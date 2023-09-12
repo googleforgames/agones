@@ -37,8 +37,8 @@ VERSION ?= $(base_version)-dev-$(shell git rev-parse --short=7 HEAD)
 # kubectl configuration to use
 KUBECONFIG ?= ~/.kube/config
 # The (gcloud) test cluster that is being worked against
-GCP_CLUSTER_NAME ?= test-cluster
-GCP_CLUSTER_ZONE ?= us-west1-c
+GCP_CLUSTER_NAME ?= gke-autopilot-e2e-test-cluster-1-27
+GCP_CLUSTER_ZONE ?= us-east1
 GCP_CLUSTER_LOCATION ?= $(GCP_CLUSTER_ZONE)
 GCP_BUCKET_CHARTS ?= agones-chart
 # the profile to use when developing on minikube
@@ -61,7 +61,7 @@ KIND_PROFILE ?= agones
 KIND_CONTAINER_NAME=$(KIND_PROFILE)-control-plane
 
 # Game Server image to use while doing end-to-end tests
-GS_TEST_IMAGE ?= us-docker.pkg.dev/agones-images/examples/simple-game-server:0.17
+GS_TEST_IMAGE ?= us-docker.pkg.dev/igooch-gke-dev/agonesrepo/simple-game-server:0.17
 
 # Enable all alpha feature gates. Keep in sync with `false` (alpha) entries in pkg/util/runtime/features.go:featureDefaults
 ALPHA_FEATURE_GATES ?= "PlayerAllocationFilter=true&PlayerTracking=true&CountsAndLists=true&FleetAllocationOverflow=true&Example=true"

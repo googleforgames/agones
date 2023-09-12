@@ -303,8 +303,25 @@ func handleResponse(txt string, s *sdk.SDK, cancel context.CancelFunc) (response
 	case "PLAYER_COUNT":
 		response = getPlayerCount(s)
 		addACK = false
-	}
 
+	case "COUNTER_COUNT":
+		if len(parts) < 2 {
+			response = "Invalid COUNTER_COUNT, should have 1 arguments"
+			responseError = fmt.Errorf("Invalid COUNTER_COUNT, should have 1 arguments")
+			return
+		}
+		response = getCounterCount(s, parts[1])
+		addACK = false
+
+	case "COUNTER_CAPACITY":
+		if len(parts) < 2 {
+			response = "Invalid COUNTER_CAPACITY, should have 1 arguments"
+			responseError = fmt.Errorf("Invalid COUNTER_CAPACITY, should have 1 arguments")
+			return
+		}
+		response = getCounterCapacity(s, parts[1])
+		addACK = false
+	}
 	return
 }
 
@@ -558,6 +575,26 @@ func getPlayerCount(s *sdk.SDK) string {
 	count, err := s.Alpha().GetPlayerCount()
 	if err != nil {
 		log.Fatalf("could not retrieve player count: %s", err)
+	}
+	return strconv.FormatInt(count, 10) + "\n"
+}
+
+// getCounterCount returns the Count of the given Counter as a string
+func getCounterCount(s *sdk.SDK, counterName string) string {
+	log.Printf("Retrieving connected Counter %s Count", counterName)
+	count, err := s.Alpha().GetCounterCount(counterName)
+	if err != nil {
+		log.Fatalf("could not retrieve Counter %s Count: %s", counterName, err)
+	}
+	return strconv.FormatInt(count, 10) + "\n"
+}
+
+// getCounterCapacity returns the Capacity of the given Counter as a string
+func getCounterCapacity(s *sdk.SDK, counterName string) string {
+	log.Printf("Retrieving connected Counter %s Capacity", counterName)
+	count, err := s.Alpha().GetCounterCapacity(counterName)
+	if err != nil {
+		log.Fatalf("could not retrieve Counter %s Capacity: %s", counterName, err)
 	}
 	return strconv.FormatInt(count, 10) + "\n"
 }

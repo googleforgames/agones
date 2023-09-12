@@ -24,7 +24,7 @@
 #
 
 REPOSITORY ?=
-PROD_REPO ?= us-docker.pkg.dev/agones-images/examples
+PROD_REPO ?= us-docker.pkg.dev/igooch-gke-dev/agonesrepo
 BUILDX_WINDOWS_BUILDER = windows-builder
 # Versions of Windows Server to support, default is Windows Server 2019.
 # For the full list of tags see https://hub.docker.com/_/microsoft-windows-servercore.

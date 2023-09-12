@@ -34,5 +34,5 @@ steps:
 options:
   dynamic_substitutions: true
 substitutions:
-  _REPOSITORY: us-docker.pkg.dev/${PROJECT_ID}/examples
+  _REPOSITORY: us-docker.pkg.dev/${PROJECT_ID}/agonesrepo
 timeout: 1800s

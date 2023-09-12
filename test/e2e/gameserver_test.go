@@ -1000,7 +1000,7 @@ spec:
           preferredDuringSchedulingIgnoredDuringExecution: ERROR
       containers:
         - name: simple-game-server
-          image: us-docker.pkg.dev/agones-images/examples/simple-game-server:0.17
+          image: us-docker.pkg.dev/igooch-gke-dev/agonesrepo/simple-game-server:0.17
 `
 	err := os.WriteFile("/tmp/invalid.yaml", []byte(gsYaml), 0o644)
 	require.NoError(t, err)
@@ -1219,6 +1219,69 @@ func TestPlayerConnectAndDisconnect(t *testing.T) {
 	})
 	assert.NoError(t, err)
 	assert.ElementsMatch(t, []string{"1", "3"}, gs.Status.Players.IDs)
+}
+
+func TestCountsAndLists(t *testing.T) {
+	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
+		t.SkipNow()
+	}
+	t.Parallel()
+
+	log := e2eframework.TestLogger(t)
+	gs := framework.DefaultGameServer(framework.Namespace)
+
+	gamesCounter := agonesv1.CounterStatus{
+		Count:    1,
+		Capacity: 50,
+	}
+	gs.Spec.Counters = make(map[string]agonesv1.CounterStatus)
+	gs.Spec.Counters["games"] = gamesCounter
+
+	gs, err := framework.CreateGameServerAndWaitUntilReady(t, framework.Namespace, gs)
+	if err != nil {
+		t.Fatalf("Could not get a GameServer ready: %v", err)
+	}
+
+	log.Print("CreateGameServerAndWaitUntilReady COUNTERS SPEC: ", gs.Spec.Counters)
+	log.Print("CreateGameServerAndWaitUntilReady COUNTERS STATUS: ", gs.Status.Counters)
+
+	assert.Equal(t, agonesv1.GameServerStateReady, gs.Status.State)
+	assert.Equal(t, gamesCounter, gs.Status.Counters["games"])
+
+	// GetCounterCount
+	msg := "COUNTER_COUNT games"
+	logrus.WithField("msg", msg).Info("Sending Get Counter Count")
+	reply, err := framework.SendGameServerUDP(t, gs, msg)
+	if err != nil {
+		t.Fatalf("Could not message GameServer: %v", err)
+	}
+	fmt.Println("REPLY: ", reply)
+	assert.Equal(t, "1\n", reply)
+
+	// GetCounter (Counter does not exist)
+	// Other errors
+	// IncrementCounter (happy path)
+	// IncrementCounter (negative)
+	// IncrementCounter (Counter does not exist)
+	// Other errors
+	// DecrementCounter (happy path)
+	// DecrementCounter (negative)
+	// DecrementCounter (Counter does not exist)
+	// Other errors
+	// SetCounterCount (happy path)
+	// Other errors
+
+	// GetCounterCapacity
+	// msg = "COUNTER_CAPACITY games"
+	// logrus.WithField("msg", msg).Info("Sending Get Counter Capacity")
+	reply, err = framework.SendGameServerUDP(t, gs, "COUNTER_CAPACITY")
+	if err != nil {
+		t.Fatalf("Could not message GameServer: %v", err)
+	}
+	fmt.Println("REPLY: ", reply)
+	assert.Equal(t, "50\n", reply)
+
+	// SetCounterCapacity
 }
 
 func TestGracefulShutdown(t *testing.T) {
