@@ -238,9 +238,6 @@
               "properties": {
                 "result": {
                   "$ref": "#/definitions/sdkGameServer"
-                },
-                "error": {
-                  "$ref": "#/definitions/googlerpcStatus"
                 }
               },
               "title": "Stream result of sdkGameServer"

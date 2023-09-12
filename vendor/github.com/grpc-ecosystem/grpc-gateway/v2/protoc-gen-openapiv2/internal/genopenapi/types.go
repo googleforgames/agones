@@ -103,7 +103,12 @@ type openapiScopesObject map[string]string
 type openapiSecurityRequirementObject map[string][]string
 
 // http://swagger.io/specification/#pathsObject
-type openapiPathsObject map[string]openapiPathItemObject
+type openapiPathsObject []pathData
+
+type pathData struct {
+	Path           string
+	PathItemObject openapiPathItemObject
+}
 
 // http://swagger.io/specification/#pathItemObject
 type openapiPathItemObject struct {
@@ -147,9 +152,9 @@ type openapiParameterObject struct {
 	Type             string              `json:"type,omitempty" yaml:"type,omitempty"`
 	Format           string              `json:"format,omitempty" yaml:"format,omitempty"`
 	Items            *openapiItemsObject `json:"items,omitempty" yaml:"items,omitempty"`
-	Enum             []string            `json:"enum,omitempty" yaml:"enum,omitempty"`
+	Enum             interface{}         `json:"enum,omitempty" yaml:"enum,omitempty"`
 	CollectionFormat string              `json:"collectionFormat,omitempty" yaml:"collectionFormat,omitempty"`
-	Default          string              `json:"default,omitempty" yaml:"default,omitempty"`
+	Default          interface{}         `json:"default,omitempty" yaml:"default,omitempty"`
 	MinItems         *int                `json:"minItems,omitempty" yaml:"minItems,omitempty"`
 	Pattern          string              `json:"pattern,omitempty" yaml:"pattern,omitempty"`
 
@@ -179,8 +184,8 @@ type schemaCore struct {
 	// If the item is an enumeration include a list of all the *NAMES* of the
 	// enum values.  I'm not sure how well this will work but assuming all enums
 	// start from 0 index it will be great. I don't think that is a good assumption.
-	Enum    []string `json:"enum,omitempty" yaml:"enum,omitempty"`
-	Default string   `json:"default,omitempty" yaml:"default,omitempty"`
+	Enum    interface{} `json:"enum,omitempty" yaml:"enum,omitempty"`
+	Default interface{} `json:"default,omitempty" yaml:"default,omitempty"`
 }
 
 type allOfEntry struct {
