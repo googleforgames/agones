@@ -147,6 +147,7 @@ This provides two useful capabilities:
 2. This can also be used to proactively update `GameServer` labels, to effect change in allocation strategy - such as 
    preferring the newer `GameServers` when allocating, but falling back to the older version if there aren't enough 
    of the new ones yet spun up.
+   
 The labels and/or annotations are applied to `GameServers` in a `Fleet` in the order designated by their configured [Fleet scheduling]({{< ref "/docs/Advanced/scheduling-and-autoscaling#fleet-scheduling">}})
 
 Example yaml configuration:
