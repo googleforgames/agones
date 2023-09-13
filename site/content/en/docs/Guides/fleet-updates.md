@@ -129,25 +129,25 @@ the rate that you deem fit for your specific rollout.
 
 {{< alpha title="Allocated GameSever Overflow Notification" gate="FleetAllocationOverflow" >}}
 
-When `Allocated` `GameServers` are utilised for a long time, such as a Lobby `GameServer`, 
-or a `GameServer` that is being reused multiple times in a row, it can be useful 
-to notify an `Allocated` `GameServer` process when its backing Fleet has been updated. 
-When an update occurs, the `Allocated` `GameServer`, may want to actively perform a graceful shutdown and release its 
+When `Allocated` `GameServers` are utilised for a long time, such as a Lobby `GameServer`,
+or a `GameServer` that is being reused multiple times in a row, it can be useful
+to notify an `Allocated` `GameServer` process when its backing Fleet has been updated.
+When an update occurs, the `Allocated` `GameServer`, may want to actively perform a graceful shutdown and release its
 resources such that it can be replaced by a new version, or similar actions.
 
-To do this, we provide the ability to apply a user-provided set of labels and/or annotations to the `Allocated` 
+To do this, we provide the ability to apply a user-provided set of labels and/or annotations to the `Allocated`
 `GameServers` when a `Fleet` update occurs that updates its `GameServer` template, or generally
-causes the `Fleet` replica count to drop below the number of currently `Allocated` `GameServers`. 
+causes the `Fleet` replica count to drop below the number of currently `Allocated` `GameServers`.
 
 This provides two useful capabilities:
 
 1. The `GameServer` [`SDK.WatchGameServer()`]({{% relref "./Client SDKs/_index.md#watchgameserverfunctiongameserver" %}})
-   command can be utilised to react to this annotation and/or label change to 
+   command can be utilised to react to this annotation and/or label change to
    indicate the Fleet system change, and the game server binary could execute code accordingly.
-2. This can also be used to proactively update `GameServer` labels, to effect change in allocation strategy - such as 
-   preferring the newer `GameServers` when allocating, but falling back to the older version if there aren't enough 
+2. This can also be used to proactively update `GameServer` labels, to effect change in allocation strategy - such as
+   preferring the newer `GameServers` when allocating, but falling back to the older version if there aren't enough
    of the new ones yet spun up.
-   
+
 The labels and/or annotations are applied to `GameServers` in a `Fleet` in the order designated by their configured [Fleet scheduling]({{< ref "/docs/Advanced/scheduling-and-autoscaling#fleet-scheduling">}}).
 
 Example yaml configuration:
@@ -174,7 +174,7 @@ spec:
         spec:
           containers:
             - name: simple-game-server
-              image: gcr.io/agones-images/simple-game-server:0.13
+              image: us-docker.pkg.dev/agones-images/examples/simple-game-server:0.18
 ```
 
 See the [Fleet reference]({{% relref "../Reference/fleet.md" %}}) for more details.
