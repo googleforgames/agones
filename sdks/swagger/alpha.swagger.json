@@ -183,9 +183,9 @@
         ]
       }
     },
-    "/v1alpha1/{counter.name}": {
+    "/v1alpha1/{counterUpdateRequest.name}": {
       "patch": {
-        "summary": "UpdateCounter returns the updated Counter. Returns NOT_FOUND if the Counter does not exist (name cannot be updated).\nReturns OUT_OF_RANGE if the Count is out of range [0,Capacity].\nReturns INVALID_ARGUMENT if the field mask path(s) are not field(s) of the Counter.\nIf a field mask path(s) is specified, but the value is not set in the request Counter object,\nthen the default value for the variable will be set (i.e. 0 for \"capacity\" or \"count\").",
+        "summary": "UpdateCounter returns the updated Counter. Returns NOT_FOUND if the Counter does not exist (name cannot be updated).\nReturns OUT_OF_RANGE if the Count is out of range [0,Capacity].",
         "operationId": "UpdateCounter",
         "responses": {
           "200": {
@@ -197,16 +197,16 @@
         },
         "parameters": [
           {
-            "name": "counter.name",
-            "description": "The name of the Counter",
+            "name": "counterUpdateRequest.name",
+            "description": "The name of the Counter to update",
             "in": "path",
             "required": true,
             "type": "string",
-            "pattern": "counters/[^/]+"
+            "pattern": "counterUpdateRequests/[^/]+"
           },
           {
-            "name": "counter",
-            "description": "The Counter to update",
+            "name": "counterUpdateRequest",
+            "description": "The requested update to make to the Counter",
             "in": "body",
             "required": true,
             "schema": {
@@ -215,15 +215,20 @@
                 "count": {
                   "type": "string",
                   "format": "int64",
-                  "title": "The current count of the Counter"
+                  "title": "The value to set the Counter Count"
                 },
                 "capacity": {
                   "type": "string",
                   "format": "int64",
-                  "title": "The maximum capacity of the Counter"
+                  "title": "The value to set the Counter Capacity"
+                },
+                "countDiff": {
+                  "type": "string",
+                  "format": "int64",
+                  "title": "countDiff tracks if a Counter Update Request is CountIncrement (positive), CountDecrement\n(negative), 0 if a CountSet or CapacitySet request"
                 }
               },
-              "title": "The Counter to update"
+              "title": "The requested update to make to the Counter"
             }
           }
         ],
@@ -464,6 +469,31 @@
         }
       },
       "description": "A representation of a Counter."
+    },
+    "alphaCounterUpdateRequest": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "title": "The name of the Counter to update"
+        },
+        "count": {
+          "type": "string",
+          "format": "int64",
+          "title": "The value to set the Counter Count"
+        },
+        "capacity": {
+          "type": "string",
+          "format": "int64",
+          "title": "The value to set the Counter Capacity"
+        },
+        "countDiff": {
+          "type": "string",
+          "format": "int64",
+          "title": "countDiff tracks if a Counter Update Request is CountIncrement (positive), CountDecrement\n(negative), 0 if a CountSet or CapacitySet request"
+        }
+      },
+      "description": "A representation of a Counter Update Request."
     },
     "alphaList": {
       "type": "object",

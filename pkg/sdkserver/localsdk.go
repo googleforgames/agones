@@ -606,58 +606,12 @@ func (l *LocalSDKServer) GetCounter(ctx context.Context, in *alpha.GetCounterReq
 	return nil, errors.Errorf("NOT_FOUND. %s Counter not found", in.Name)
 }
 
-// UpdateCounter returns the updated Counter. Returns NOT_FOUND if the Counter does not exist (name cannot be updated).
-// Returns OUT_OF_RANGE if the Count is out of range [0,Capacity].
-// Returns INVALID_ARGUMENT if the field mask path(s) are not field(s) of the Counter.
-// If a field mask path(s) is specified, but the value is not set in the request Counter object,
-// then the default value for the variable will be set (i.e. 0 for "capacity" or "count").
+// UpdateCounter returns the updated Counter.
 // [Stage:Alpha]
 // [FeatureFlag:CountsAndLists]
 func (l *LocalSDKServer) UpdateCounter(ctx context.Context, in *alpha.UpdateCounterRequest) (*alpha.Counter, error) {
-	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
-		return nil, errors.Errorf("%s not enabled", runtime.FeatureCountsAndLists)
-	}
-
-	if in.Counter == nil || in.UpdateMask == nil {
-		return nil, errors.Errorf("INVALID_ARGUMENT. Counter: %v and UpdateMask %v cannot be nil", in.Counter, in.UpdateMask)
-	}
-
-	l.logger.WithField("name", in.Counter.Name).Info("Updating Counter")
-	l.recordRequest("updatecounter")
-	l.gsMutex.Lock()
-	defer l.gsMutex.Unlock()
-
-	// TODO: https://google.aip.dev/134, "Update masks must support a special value *, meaning full replacement."
-	// Check if the UpdateMask paths are valid, return INVALID_ARGUMENT if not.
-	if !in.UpdateMask.IsValid(in.Counter.ProtoReflect().Interface()) {
-		return nil, errors.Errorf("INVALID_ARGUMENT. Field Mask Path(s): %v are invalid for Counter. Use valid field name(s): %v", in.UpdateMask.GetPaths(), in.Counter.ProtoReflect().Descriptor().Fields())
-	}
-
-	// TODO: Pull in variable Max Capacity from CRD instead of hard-coded number here.
-	if in.Counter.Capacity < 0 || in.Counter.Capacity > 1000 {
-		return nil, errors.Errorf("OUT_OF_RANGE. Capacity must be within range [0,1000]. Found Capacity: %d", in.Counter.Capacity)
-	}
-
-	name := in.Counter.Name
-	if counter, ok := l.gs.Status.Counters[name]; ok {
-		// Create *alpha.Counter from *sdk.GameServer_Status_CounterStatus for merging.
-		tmpCounter := &alpha.Counter{Name: name, Count: counter.Count, Capacity: counter.Capacity}
-		// Removes any fields from the request object that are not included in the FieldMask Paths.
-		fmutils.Filter(in.Counter, in.UpdateMask.Paths)
-		// Removes any fields from the existing gameserver object that are included in the FieldMask Paths.
-		fmutils.Prune(tmpCounter, in.UpdateMask.Paths)
-		// Due due filtering and pruning all gameserver object field(s) contained in the FieldMask are overwritten by the request object field(s).
-		proto.Merge(tmpCounter, in.Counter)
-		// Verify that 0 <= Count >= Capacity
-		if tmpCounter.Count < 0 || tmpCounter.Count > tmpCounter.Capacity {
-			return nil, errors.Errorf("OUT_OF_RANGE. Count must be within range [0,Capacity]. Found Count: %d, Capacity: %d", tmpCounter.Count, tmpCounter.Capacity)
-		}
-		// Write newly updated Counter to gameserverstatus.
-		l.gs.Status.Counters[name].Count = tmpCounter.Count
-		l.gs.Status.Counters[name].Capacity = tmpCounter.Capacity
-		return &alpha.Counter{Name: name, Count: l.gs.Status.Counters[name].Count, Capacity: l.gs.Status.Counters[name].Capacity}, nil
-	}
-	return nil, errors.Errorf("NOT_FOUND. %s Counter not found", name)
+	// TODO(#2716): Implement me
+	return nil, errors.Errorf("Unimplemented -- UpdateCounter coming soon")
 }
 
 // GetList returns a List. Returns NOT_FOUND if the List does not exist.

@@ -21,6 +21,7 @@ import (
 	"net"
 	"os"
 	"os/exec"
+	"sort"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -949,6 +950,9 @@ func TestGameServerResourceValidation(t *testing.T) {
 	statusErr, ok = err.(*k8serrors.StatusError)
 	assert.True(t, ok)
 	assert.Len(t, statusErr.Status().Details.Causes, 2)
+	sort.Slice(statusErr.Status().Details.Causes, func(i, j int) bool {
+		return statusErr.Status().Details.Causes[i].Field > statusErr.Status().Details.Causes[j].Field
+	})
 	assert.Equal(t, metav1.CauseTypeFieldValueInvalid, statusErr.Status().Details.Causes[0].Type)
 	assert.Equal(t, "spec.template.spec.containers[0].resources.requests[cpu]", statusErr.Status().Details.Causes[0].Field)
 
