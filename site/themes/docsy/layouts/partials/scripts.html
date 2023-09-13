@@ -41,6 +41,6 @@
 {{ end }}
 {{ if .Site.Params.prism_syntax_highlighting }}
 <!-- scripts for prism -->
-<script src='{{ "/site/prism.js" | absURL }}'></script>
+<script src='{{ "js/prism.js" | relURL }}'></script>
 {{ end }}
 {{ partial "hooks/body-end.html" . }}
