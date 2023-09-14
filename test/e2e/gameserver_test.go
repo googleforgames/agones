@@ -1252,9 +1252,7 @@ func TestCountsAndLists(t *testing.T) {
 	}
 
 	gs, err := framework.CreateGameServerAndWaitUntilReady(t, framework.Namespace, gs)
-	if err != nil {
-		t.Fatalf("Could not get a GameServer ready: %v", err)
-	}
+	require.NoError(t, err)
 
 	assert.Equal(t, agonesv1.GameServerStateReady, gs.Status.State)
 
@@ -1361,18 +1359,14 @@ func TestCountsAndLists(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			logrus.WithField("msg", testCase.msg).Info(name)
 			reply, err := framework.SendGameServerUDP(t, gs, testCase.msg)
-			if err != nil {
-				t.Fatalf("Could not message GameServer: %v", err)
-			}
+			require.NoError(t, err)
 			assert.Equal(t, testCase.want, reply)
 
 			if testCase.wantCount != "" {
 				msg := "GET_COUNTER_COUNT " + testCase.counterName
 				logrus.WithField("msg", msg).Info("Sending GetCounterCount")
 				reply, err = framework.SendGameServerUDP(t, gs, msg)
-				if err != nil {
-					t.Fatalf("Could not message GameServer: %v", err)
-				}
+				require.NoError(t, err)
 				assert.Equal(t, testCase.wantCount, reply)
 			}
 
@@ -1380,9 +1374,7 @@ func TestCountsAndLists(t *testing.T) {
 				msg := "GET_COUNTER_CAPACITY " + testCase.counterName
 				logrus.WithField("msg", msg).Info("Sending GetCounterCapacity")
 				reply, err = framework.SendGameServerUDP(t, gs, msg)
-				if err != nil {
-					t.Fatalf("Could not message GameServer: %v", err)
-				}
+				require.NoError(t, err)
 				assert.Equal(t, testCase.wantCapacity, reply)
 			}
 		})
