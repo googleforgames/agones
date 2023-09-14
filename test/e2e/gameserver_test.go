@@ -1221,6 +1221,174 @@ func TestPlayerConnectAndDisconnect(t *testing.T) {
 	assert.ElementsMatch(t, []string{"1", "3"}, gs.Status.Players.IDs)
 }
 
+func TestCountsAndLists(t *testing.T) {
+	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
+		t.SkipNow()
+	}
+	t.Parallel()
+
+	gs := framework.DefaultGameServer(framework.Namespace)
+
+	gs.Spec.Counters = make(map[string]agonesv1.CounterStatus)
+	gs.Spec.Counters["games"] = agonesv1.CounterStatus{
+		Count:    1,
+		Capacity: 50,
+	}
+	gs.Spec.Counters["foo"] = agonesv1.CounterStatus{
+		Count:    10,
+		Capacity: 100,
+	}
+	gs.Spec.Counters["bar"] = agonesv1.CounterStatus{
+		Count:    10,
+		Capacity: 10,
+	}
+	gs.Spec.Counters["baz"] = agonesv1.CounterStatus{
+		Count:    1000,
+		Capacity: 1000,
+	}
+	gs.Spec.Counters["qux"] = agonesv1.CounterStatus{
+		Count:    42,
+		Capacity: 50,
+	}
+
+	gs, err := framework.CreateGameServerAndWaitUntilReady(t, framework.Namespace, gs)
+	if err != nil {
+		t.Fatalf("Could not get a GameServer ready: %v", err)
+	}
+
+	assert.Equal(t, agonesv1.GameServerStateReady, gs.Status.State)
+
+	testCases := map[string]struct {
+		msg          string
+		want         string
+		counterName  string
+		wantCount    string
+		wantCapacity string
+	}{
+		"GetCounterCount": {
+			msg:  "GET_COUNTER_COUNT games",
+			want: "1",
+		},
+		"GetCounterCount Counter Does Not Exist": {
+			msg:  "GET_COUNTER_COUNT fame",
+			want: "ERROR: -1\n",
+		},
+		"IncrementCounter": {
+			msg:         "INCREMENT_COUNTER foo 10",
+			want:        "true",
+			counterName: "foo",
+			wantCount:   "20",
+		},
+		"IncrementCounter Past Capacity": {
+			msg:         "INCREMENT_COUNTER games 50",
+			want:        "ERROR: false\n",
+			counterName: "games",
+			wantCount:   "1",
+		},
+		"IncrementCounter Negative": {
+			msg:         "INCREMENT_COUNTER games -1",
+			want:        "ERROR: false\n",
+			counterName: "games",
+			wantCount:   "1",
+		},
+		"IncrementCounter Counter Does Not Exist": {
+			msg:  "INCREMENT_COUNTER same 1",
+			want: "ERROR: false\n",
+		},
+		"DecrementCounter": {
+			msg:         "DECREMENT_COUNTER bar 10",
+			want:        "true",
+			counterName: "bar",
+			wantCount:   "0",
+		},
+		"DecrementCounter Past Capacity": {
+			msg:         "DECREMENT_COUNTER games 2",
+			want:        "ERROR: false\n",
+			counterName: "games",
+			wantCount:   "1",
+		},
+		"DecrementCounter Negative": {
+			msg:         "DECREMENT_COUNTER games -1",
+			want:        "ERROR: false\n",
+			counterName: "games",
+			wantCount:   "1",
+		},
+		"DecrementCounter Counter Does Not Exist": {
+			msg:  "DECREMENT_COUNTER lame 1",
+			want: "ERROR: false\n",
+		},
+		"SetCounterCount": {
+			msg:         "SET_COUNTER_COUNT baz 0",
+			want:        "true",
+			counterName: "baz",
+			wantCount:   "0",
+		},
+		"SetCounterCount Past Capacity": {
+			msg:         "SET_COUNTER_COUNT games 51",
+			want:        "ERROR: false\n",
+			counterName: "games",
+			wantCount:   "1",
+		},
+		"SetCounterCount Past Zero": {
+			msg:         "SET_COUNTER_COUNT games -1",
+			want:        "ERROR: false\n",
+			counterName: "games",
+			wantCount:   "1",
+		},
+		"GetCounterCapacity": {
+			msg:  "GET_COUNTER_CAPACITY games",
+			want: "50",
+		},
+		"GetCounterCapacity Counter Does Not Exist": {
+			msg:  "GET_COUNTER_CAPACITY dame",
+			want: "ERROR: -1\n",
+		},
+		"SetCounterCapacity": {
+			msg:          "SET_COUNTER_CAPACITY qux 0",
+			want:         "true",
+			counterName:  "qux",
+			wantCapacity: "0",
+		},
+		"SetCounterCapacity Past Zero": {
+			msg:         "SET_COUNTER_CAPACITY games -42",
+			want:        "ERROR: false\n",
+			counterName: "games",
+			wantCount:   "1",
+		},
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			logrus.WithField("msg", testCase.msg).Info(name)
+			reply, err := framework.SendGameServerUDP(t, gs, testCase.msg)
+			if err != nil {
+				t.Fatalf("Could not message GameServer: %v", err)
+			}
+			assert.Equal(t, testCase.want, reply)
+
+			if testCase.wantCount != "" {
+				msg := "GET_COUNTER_COUNT " + testCase.counterName
+				logrus.WithField("msg", msg).Info("Sending GetCounterCount")
+				reply, err = framework.SendGameServerUDP(t, gs, msg)
+				if err != nil {
+					t.Fatalf("Could not message GameServer: %v", err)
+				}
+				assert.Equal(t, testCase.wantCount, reply)
+			}
+
+			if testCase.wantCapacity != "" {
+				msg := "GET_COUNTER_CAPACITY " + testCase.counterName
+				logrus.WithField("msg", msg).Info("Sending GetCounterCapacity")
+				reply, err = framework.SendGameServerUDP(t, gs, msg)
+				if err != nil {
+					t.Fatalf("Could not message GameServer: %v", err)
+				}
+				assert.Equal(t, testCase.wantCapacity, reply)
+			}
+		})
+	}
+}
+
 func TestGracefulShutdown(t *testing.T) {
 	t.Parallel()
 
