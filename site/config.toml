@@ -29,7 +29,7 @@ defaultContentLanguageInSubdir = false
 # Useful when translating.
 enableMissingTranslationPlaceholders = true
 
-disableKinds = ["taxonomy", "taxonomyTerm"]
+disableKinds = ["taxonomy"]
 
 # Highlighting config
 pygmentsCodeFences = true
@@ -66,10 +66,11 @@ id = "G-TK6J08ZNYX"
 [languages]
 [languages.en]
 title = "Agones"
-description = "Agones is a library for hosting, running and scaling dedicated game servers on Kubernetes."
 languageName ="English"
 # Weight used for sorting.
 weight = 1
+[languages.en.params]
+description = "Agones is a library for hosting, running and scaling dedicated game servers on Kubernetes."
 
 # Everything below this are Site Params
 
@@ -168,5 +169,5 @@ no = 'Sorry to hear that. Please <a href="https://github.com/googleforgames/agon
 # 	icon = "fa fa-envelope"
 #         desc = "Discuss development issues around the project"
 
-
-
+[security.funcs]
+  getenv = ['^HUGO_', '^CI$', 'RELEASE_BRANCH', 'HUGO_ENV', 'RELEASE_VERSION']
