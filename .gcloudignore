@@ -11,9 +11,19 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-.gcloudignore
-.gitignore
-cpp*tgz
-rust*tgz
+
 #!include:.gitignore
 !.git
+.cargo
+.cargo-targets
+.config
+.gcloudignore
+.gitignore
+.gocache
+.gomod
+.terraform
+bin
+cpp*tgz
+rust*tgz
+target
+tmp
