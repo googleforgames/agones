@@ -45,7 +45,7 @@ candidate release date - or whichever release is most relevant.
 ### Within a Page
 
 We have a `feature` shortcode that can be used to show, or hide sections of pages based on the current semantic version
-(set in config.toml, and overwritable by env variable).
+(set in hugo.toml, and overwritable by env variable).
 
 For example, to show a section only from 1.24.0 forwards:
 

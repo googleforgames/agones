@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package main implements a program that updates the release version and sync data between dev and prod in site/config.toml file.
+// Package main implements a program that updates the release version and sync data between dev and prod in site/hugo.toml file.
 package main
 
 import (
@@ -48,8 +48,8 @@ type Config struct {
 }
 
 func main() {
-	// Read the content of the config.toml file
-	configFile := "site/config.toml"
+	// Read the content of the hugo.toml file
+	configFile := "site/hugo.toml"
 	content, err := os.ReadFile(configFile)
 	if err != nil {
 		log.Println("Read File: ", err)
@@ -93,7 +93,7 @@ func main() {
 	// Update release_branch and release_version values
 	updatedLines := updateReleaseValues(lines)
 
-	// Write the updated lines back to the config.toml file
+	// Write the updated lines back to the hugo.toml file
 	err = writeLinesToFile(configFile, updatedLines)
 	if err != nil {
 		log.Println("Write File: ", err)

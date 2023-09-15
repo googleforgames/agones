@@ -17,7 +17,7 @@ title = "Agones"
 enableRobotsTXT = true
 
 # Hugo allows theme composition (and inheritance). The precedence is from left to right.
-theme = ["docsy"]
+theme = ["github.com/google/docsy", "github.com/google/docsy/dependencies"]
 
 # Will give values to .Lastmod etc.
 enableGitInfo = true

@@ -37,7 +37,7 @@ and copy it into a release issue. Fill in relevant values, found inside {}
   - [ ] Run `make del-data-proofer-ignore FILENAME={version}-1.md` to remove `data-proofer-ignore` attribute from previous release blog. Review all occurrences of the link_test and data-proofer-ignore attributes globally. Exclude html and release files.
   - [ ] Run `make feature-shortcode-update version={version}` to remove all instances of the `feature expiryVersion` shortcode, including the associated content, while preserving the rest of the content within the .md files located in site/content/en/docs. Additionally, ensure that only the block of `feature publishVersion` is removed without affecting the content.
   - [ ] Add a link to previous version's documentation to nav dropdown in `site/layouts/partials/navbar.html` on top and Run `make update-navbar-version FILENAME=site/layouts/partials/navbar.html` to remove the older version from the dropdown list.
-  - [ ] config.toml updates:
+  - [ ] hugo.toml updates:
     - [ ] Run `make site-config-update-version` to update the release version and sync data between dev and prod.
     - [ ] Update documentation with updated example images tags.
 - [ ] Create PR with these changes, and merge them with an approval.

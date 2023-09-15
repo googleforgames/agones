@@ -30,7 +30,7 @@ List of items to do for upgrading to {version_1} {version_2} {version_3}
 - [ ] Regenerate Kubernetes resource includes (e.g. ObjectMeta, PodTemplateSpec)
     - [ ] Start a cluster with `make gcloud-test-cluster` (this cluster will use Kubernetes {version_2}), uninstall agones using `helm uninstall agones -n agones-system`, and then run  `make gen-embedded-openapi` and `make gen-install`
 - [ ] Update documentation for creating clusters and k8s API references to align with the above clusters versions and the k8s API version
-    - [ ] `site/config.toml`
+    - [ ] `site/hugo.toml`
         - [ ] `dev_supported_k8s`, which are {version_1} {version_2} {version_3}
         - [ ] `dev_k8s_api_version`, which is {version_2}
         - [ ] `dev_gke_example_cluster_version`, which is {version_2}
