@@ -23,6 +23,7 @@ import (
 	"agones.dev/agones/pkg/apis"
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	"agones.dev/agones/pkg/client/informers/externalversions"
+	"agones.dev/agones/pkg/cloudproduct/eviction"
 	"agones.dev/agones/pkg/portallocator"
 	"agones.dev/agones/pkg/util/runtime"
 	"cloud.google.com/go/compute/metadata"
@@ -53,7 +54,9 @@ var (
 	logger = runtime.NewLoggerWithSource("gke")
 )
 
-type gkeAutopilot struct{}
+type gkeAutopilot struct {
+	useExtendedDurationPods bool
+}
 
 // hostPortAssignment is the JSON structure of the `host-port-assignment` annotation
 //
@@ -93,7 +96,9 @@ func Detect(ctx context.Context, kc *kubernetes.Clientset) string {
 // Autopilot returns a GKE Autopilot cloud product
 //
 //nolint:revive // ignore the unexported return; implements ControllerHooksInterface
-func Autopilot() *gkeAutopilot { return &gkeAutopilot{} }
+func Autopilot() *gkeAutopilot {
+	return &gkeAutopilot{useExtendedDurationPods: runtime.FeatureEnabled(runtime.FeatureGKEAutopilotExtendedDurationPods)}
+}
 
 func (*gkeAutopilot) SyncPodPortsToGameServer(gs *agonesv1.GameServer, pod *corev1.Pod) error {
 	// If applyGameServerAddressAndPort has already filled in Status, SyncPodPortsToGameServer
@@ -133,8 +138,8 @@ func (g *gkeAutopilot) ValidateGameServerSpec(gss *agonesv1.GameServerSpec, fldP
 			allErrs = append(allErrs, field.Invalid(fldPath.Child("ports").Index(i).Child("portPolicy"), string(p.PortPolicy), errPortPolicyMustBeDynamic))
 		}
 	}
-	// See SetEviction comment below for why we block EvictionSafeOnUpgrade.
-	if gss.Eviction.Safe == agonesv1.EvictionSafeOnUpgrade {
+	// See SetEviction comment below for why we block EvictionSafeOnUpgrade, if Extended Duration pods aren't supported.
+	if !g.useExtendedDurationPods && gss.Eviction.Safe == agonesv1.EvictionSafeOnUpgrade {
 		allErrs = append(allErrs, field.Invalid(fldPath.Child("eviction").Child("safe"), string(gss.Eviction.Safe), errEvictionSafeOnUpgradeInvalid))
 	}
 	return allErrs
@@ -180,22 +185,29 @@ func podSpecSeccompUnconfined(podSpec *corev1.PodSpec) {
 	podSpec.SecurityContext.SeccompProfile = &corev1.SeccompProfile{Type: corev1.SeccompProfileTypeUnconfined}
 }
 
-// SetEviction sets disruption controls based on GameServer.Status.Eviction. For Autopilot:
+func (g *gkeAutopilot) SetEviction(ev *agonesv1.Eviction, pod *corev1.Pod) error {
+	if g.useExtendedDurationPods {
+		return eviction.SetEviction(ev, pod)
+	}
+	return setEvictionNoExtended(ev, pod)
+}
+
+// setEvictionNoExtended sets disruption controls based on GameServer.Status.Eviction. For Autopilot:
 //   - Since the safe-to-evict pod annotation is not supported if "false", we delete it (if it's set
 //     to anything else, we allow it - Autopilot only rejects "false").
 //   - OnUpgrade is not supported and rejected by validation above. Since we can't support
 //     safe-to-evict=false but can support a restrictive PDB, we can support Never and Always, but
 //     OnUpgrade doesn't make sense on Autopilot today. - an overly restrictive PDB prevents
 //     any sort of graceful eviction.
-func (*gkeAutopilot) SetEviction(eviction *agonesv1.Eviction, pod *corev1.Pod) error {
+func setEvictionNoExtended(ev *agonesv1.Eviction, pod *corev1.Pod) error {
 	if safeAnnotation := pod.ObjectMeta.Annotations[agonesv1.PodSafeToEvictAnnotation]; safeAnnotation == agonesv1.False {
 		delete(pod.ObjectMeta.Annotations, agonesv1.PodSafeToEvictAnnotation)
 	}
-	if eviction == nil {
+	if ev == nil {
 		return errors.New("No eviction value set. Should be the default value")
 	}
 	if _, exists := pod.ObjectMeta.Labels[agonesv1.SafeToEvictLabel]; !exists {
-		switch eviction.Safe {
+		switch ev.Safe {
 		case agonesv1.EvictionSafeAlways:
 			// For EvictionSafeAlways, we use a label value that does not match the
 			// agones-gameserver-safe-to-evict-false PDB. But we go ahead and label
@@ -205,7 +217,7 @@ func (*gkeAutopilot) SetEviction(eviction *agonesv1.Eviction, pod *corev1.Pod) e
 		case agonesv1.EvictionSafeNever:
 			pod.ObjectMeta.Labels[agonesv1.SafeToEvictLabel] = agonesv1.False
 		default:
-			return errors.Errorf("eviction.safe == %s, which webhook should have rejected on Autopilot", eviction.Safe)
+			return errors.Errorf("eviction.safe == %s, which webhook should have rejected on Autopilot", ev.Safe)
 		}
 	}
 	return nil
