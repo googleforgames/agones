@@ -1,0 +1,47 @@
+# Copyright 2023 Google LLC All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+steps:
+- id: 'repoBuildConfirmation'
+  name: 'alpine'
+  entrypoint: 'sh'
+  dir: /workspace
+  args:
+  - '-c'
+  - |
+      echo "***********************"
+      echo "$PROJECT_ID"
+      echo "$REPO_NAME"
+      echo "$BRANCH_NAME"
+      echo "$SHORT_SHA"
+      echo "$TAG_NAME"
+      echo "$LOCATION"
+      echo "***********************"
+
+- id: 'dockerBuild'
+  name: 'gcr.io/cloud-builders/docker'
+  dir: /workspace
+  args: [ 'build', '-t', 'us-docker.pkg.dev/${PROJECT_ID}/${_ARTIFACT_REPO_NAME}/${_IMAGE_NAME}:${_IMAGE_VERSION}', '.' ]
+
+images:
+- 'us-docker.pkg.dev/${PROJECT_ID}/${_ARTIFACT_REPO_NAME}/${_IMAGE_NAME}:${_IMAGE_VERSION}'
+
+substitutions:
+  _ARTIFACT_REPO_NAME: 'unity-agones-example'
+  _IMAGE_NAME: 'unity-netcode'
+  _IMAGE_VERSION: 'latest'
+
+options:
+  # This allows for missing ENV variables.
+  substitution_option: 'ALLOW_LOOSE'
