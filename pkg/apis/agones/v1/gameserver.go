@@ -27,7 +27,6 @@ import (
 	"agones.dev/agones/pkg/util/runtime"
 	"github.com/mattbaird/jsonpatch"
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	apimachineryvalidation "k8s.io/apimachinery/pkg/api/validation"
@@ -721,68 +720,21 @@ func (gs *GameServer) Pod(apiHooks APIHooks, sidecars ...corev1.Container) (*cor
 	gs.podObjectMeta(pod)
 	for _, p := range gs.Spec.Ports {
 
-		if p.PortPolicy == Static {
-			logrus.WithField("IfCondition", gs.Spec.Ports).Debug("Enter in if condition of Pod")
-
-			if p.Protocol == corev1.ProtocolTCP {
-				logrus.WithField("TCP Protocol", pod.Spec.Containers[0].Ports).Debug("Enter in TCP Protocol")
-				// Handle static port policy with TCP protocol
-				cp := corev1.ContainerPort{
-					ContainerPort: p.ContainerPort,
-					HostPort:      p.HostPort,
-					Protocol:      corev1.ProtocolTCP,
-				}
-				err := gs.ApplyToPodContainer(pod, *p.Container, func(c corev1.Container) corev1.Container {
-					c.Ports = append(c.Ports, cp)
-					return c
-				})
-				if err != nil {
-					return nil, err
-				}
-				logrus.WithField("TCP Protocol", cp).Debug("Leaving TCP Protocol")
-
+		if p.PortPolicy == Static && p.Protocol == ProtocolTCPUDP {
+			// Handle static port policy with TCPUDP protocol
+			cpTCP := corev1.ContainerPort{
+				ContainerPort: p.ContainerPort,
+				HostPort:      p.HostPort,
+				Protocol:      corev1.ProtocolTCP,
+			}
+			cpUDP := corev1.ContainerPort{
+				ContainerPort: p.ContainerPort,
+				HostPort:      p.HostPort,
+				Protocol:      corev1.ProtocolUDP,
 			}
 
-			if p.Protocol == corev1.ProtocolUDP {
-				logrus.WithField("UDP Protocol", pod.Spec.Containers[0].Ports).Debug("Enter in UDP Protocol")
-				// Handle static port policy with UDP protocol
-				cp := corev1.ContainerPort{
-					ContainerPort: p.ContainerPort,
-					HostPort:      p.HostPort,
-					Protocol:      corev1.ProtocolUDP,
-				}
-				err := gs.ApplyToPodContainer(pod, *p.Container, func(c corev1.Container) corev1.Container {
-					c.Ports = append(c.Ports, cp)
-					return c
-				})
-				if err != nil {
-					return nil, err
-				}
-				logrus.WithField("UDP Protocol", cp).Debug("Leaving UDP Protocol")
-
-			}
-
-			if p.Protocol == ProtocolTCPUDP {
-				logrus.WithField("TCPUDP Protocol", pod.Spec.Containers[0].Ports).Debug("Enter in TCPUDP Protocol")
-				// Handle static port policy with TCPUDP protocol
-				cpTCP := corev1.ContainerPort{
-					ContainerPort: p.ContainerPort,
-					HostPort:      p.HostPort,
-					Protocol:      corev1.ProtocolTCP,
-				}
-				cpUDP := corev1.ContainerPort{
-					ContainerPort: p.ContainerPort,
-					HostPort:      p.HostPort,
-					Protocol:      corev1.ProtocolUDP,
-				}
-
-				pod.Spec.Containers[0].Ports = append(pod.Spec.Containers[0].Ports, cpTCP, cpUDP)
-				logrus.WithField("TCPUDP Protocol", pod.Spec.Containers[0].Ports).Debug("Leaving TCPUDP Protocol")
-
-			}
-
+			pod.Spec.Containers[0].Ports = append(pod.Spec.Containers[0].Ports, cpTCP, cpUDP)
 		} else {
-			logrus.WithField("ElseCondition", gs.Spec.Ports).Debug("Enter in else condition of Pod")
 			cp := corev1.ContainerPort{
 				ContainerPort: p.ContainerPort,
 				HostPort:      p.HostPort,
@@ -796,7 +748,6 @@ func (gs *GameServer) Pod(apiHooks APIHooks, sidecars ...corev1.Container) (*cor
 			if err != nil {
 				return nil, err
 			}
-			logrus.WithField("ElseCondition", gs.Spec.Ports).Debug("Leaving else condition of Pod")
 		}
 	}
 	// Put the sidecars at the start of the list of containers so that the kubelet starts them first.
