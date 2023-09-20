@@ -82,7 +82,7 @@ Configurable parameters:
 
 - project - your Google Cloud Project ID (required)
 - name - the name of the GKE cluster (default is "agones-terraform-example")
-- agones_version - the version of agones to install (an empty string, which is the default, is the latest version from the [Helm repository](https://agones.dev/chart/stable))
+- agones_version - the version of agones to install (an empty string, which is the default, is the latest version from the [Helm repository](https://console.cloud.google.com/storage/browser/agones-chart))
 - machine_type - machine type for hosting game servers (default is "e2-standard-4")
 - node_count - count of game server nodes for the default node pool (default is "4") 
 - enable_image_streaming - whether or not to enable image streaming for the `"default"` node pool (default is true) 

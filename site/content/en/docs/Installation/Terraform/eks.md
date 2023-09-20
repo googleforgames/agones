@@ -33,7 +33,7 @@ By editing `modules.tf` you can change the parameters that you need to. For inst
 Configurable parameters:
 
 - cluster_name - the name of the EKS cluster (default is "agones-terraform-example")
-- agones_version - the version of agones to install (an empty string, which is the default, is the latest version from the [Helm repository](https://agones.dev/chart/stable))
+- agones_version - the version of agones to install (an empty string, which is the default, is the latest version from the [Helm repository](https://console.cloud.google.com/storage/browser/agones-chart))
 - machine_type - EC2 instance type for hosting game servers (default is "t2.large")
 - region - the location of the cluster (default is "us-west-2")
 - node_count - count of game server nodes for the default node pool (default is "4")
