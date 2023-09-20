@@ -131,7 +131,7 @@ Once you have your game server process in a container, you may also want to test
 Since the production agones-sdk binary has the `--local` mode built in, you can also use the production container image
 locally as well!
 
-Since the SDK and your game server container need to share a port on `localhost`, one of the easiest ways to do that 
+Since the SDK and your game server container need to share a port on `localhost`, one of the easiest ways to do that
 is to have them both run using the host network, like so:
 
 In one shell run:
@@ -148,14 +148,42 @@ Then in another shell, start your game server container:
 docker run --network=host --rm <your image here>
 ```
 
-If you want to [mount a custom `gameserver.yaml`](#providing-your-own-gameserver-configuration-for-local-development), 
-this is also possible:  
+If you want to [mount a custom `gameserver.yaml`](#providing-your-own-gameserver-configuration-for-local-development),
+this is also possible:
 
 ```bash
 wget https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-game-server/gameserver.yaml
 # required so that the `agones` user in the container can read the file
 chmod o+r gameserver.yaml
 docker run --network=host --rm -v $(pwd)/gameserver.yaml:/tmp/gameserver.yaml us-docker.pkg.dev/agones-images/release/agones-sdk:{{<release-version>}} --local -f /tmp/gameserver.yaml
+```
+
+If you would like to run the ClientSDK and your game server container together with Docker Compose create a `docker-compose.yaml` file.
+
+```yaml
+version: '3'
+services:
+  gameserver:
+    build: . # <location to your image here>
+    ports:
+      - "127.0.0.1:7777:7777/udp"
+
+  sdk-server:
+    image: "us-docker.pkg.dev/agones-images/release/agones-sdk:1.34.0"
+    command: --local -f /gs_config
+    network_mode: service:gameserver
+    configs:
+      - gs_config
+
+configs:
+  gs_config:
+    file: ./gameserver.yaml
+```
+
+Run `docker-compose`
+
+```shell
+docker-compose up --build
 ```
 
 ## Running from source code instead of prebuilt binary
