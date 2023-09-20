@@ -10,8 +10,7 @@ Unity's [Netcode for GameObjects](https://docs-multiplayer.unity3d.com/netcode/c
 >networking frameworks.
 
 The example creates a seperate build both for the client and dedicated game
-server. And builds off of the [example](https://docs-multiplayer.unity3d.com/netcode/current/tutorials/get-started-ngo/)
-from Unity but with Agones integration
+server. And builds off of the [example](https://docs-multiplayer.unity3d.com/netcode/current/tutorials/get-started-ngo/) from Unity but with Agones integration
 
 ## Prerequisites
 
