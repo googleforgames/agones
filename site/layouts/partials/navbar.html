@@ -5,7 +5,7 @@
 		{{ with resources.Get "icons/logo.svg" }}{{ ( . | minify).Content | safeHTML }} {{ end }}<span class="text-uppercase font-weight-bold">{{ .Site.Title }}</span>
 	</a>
 
-	<div class="td-navbar-nav-scroll ml-md-auto" id="main_navbar">
+	<div class="td-navbar-nav-scroll ms-md-auto" id="main_navbar">
 		<ul class="navbar-nav mt-2 mt-lg-0">
 			{{ $p := . }}
 			{{ range .Site.Menus.main }}
