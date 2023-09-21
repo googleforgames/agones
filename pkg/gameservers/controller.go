@@ -336,21 +336,21 @@ func (c *Controller) Run(ctx context.Context, workers int) error {
 
 	// Run the Health Controller
 	go func() {
-		if err := c.healthController.Run(ctx); err != nil {
+		if err := c.healthController.Run(ctx, workers); err != nil {
 			c.baseLogger.WithError(err).Error("error running health controller")
 		}
 	}()
 
 	// Run the Migration Controller
 	go func() {
-		if err := c.migrationController.Run(ctx); err != nil {
+		if err := c.migrationController.Run(ctx, workers); err != nil {
 			c.baseLogger.WithError(err).Error("error running migration controller")
 		}
 	}()
 
 	// Run the Missing Pod Controller
 	go func() {
-		if err := c.missingPodController.Run(ctx); err != nil {
+		if err := c.missingPodController.Run(ctx, workers); err != nil {
 			c.baseLogger.WithError(err).Error("error running missing pod controller")
 		}
 	}()

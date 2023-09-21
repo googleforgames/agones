@@ -157,13 +157,13 @@ func (hc *HealthController) failedContainer(pod *corev1.Pod) bool {
 
 // Run processes the rate limited queue.
 // Will block until stop is closed
-func (hc *HealthController) Run(ctx context.Context) error {
+func (hc *HealthController) Run(ctx context.Context, workers int) error {
 	hc.baseLogger.Debug("Wait for cache sync")
 	if !cache.WaitForCacheSync(ctx.Done(), hc.gameServerSynced, hc.podSynced) {
 		return errors.New("failed to wait for caches to sync")
 	}
 
-	hc.workerqueue.Run(ctx, 1)
+	hc.workerqueue.Run(ctx, workers)
 
 	return nil
 }
@@ -202,7 +202,7 @@ func (hc *HealthController) syncGameServer(ctx context.Context, key string) erro
 	}
 
 	// at this point we don't care, we're already Unhealthy / deleting
-	if gs.IsBeingDeleted() || gs.Status.State == agonesv1.GameServerStateUnhealthy {
+	if gs.IsBeingDeleted() || gs.Status.State == agonesv1.GameServerStateUnhealthy || gs.Status.State == agonesv1.GameServerStateError {
 		return nil
 	}
 
@@ -222,7 +222,7 @@ func (hc *HealthController) syncGameServer(ctx context.Context, key string) erro
 			return err
 		}
 
-		// If the pod is not unhealthy anymore, go back in the queue
+		// If the pod is not unhealthy any more, go back in the queue
 		if !hc.isUnhealthy(pod) {
 			hc.baseLogger.WithField("gs", gs.ObjectMeta.Name).WithField("podStatus", pod.Status).Debug("GameServer is not unhealthy anymore")
 			return nil
