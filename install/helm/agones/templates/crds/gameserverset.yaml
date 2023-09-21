@@ -153,6 +153,12 @@ spec:
                   additionalProperties:
                     type: object
                     properties:
+                      allocatedCount: # Aggregated count of the Counter across allocated GameServers in the GameServerSet
+                        type: integer
+                        minimum: 0
+                      allocatedCapacity: # Aggregated maximum capacity of the Counter across allocated GameServers in the GameServerSet
+                        type: integer
+                        minimum: 0
                       count: # Aggregated count of the Counter across the GameServerSet
                         type: integer
                         default: 0
@@ -168,13 +174,19 @@ spec:
                   additionalProperties:
                     type: object
                     properties:
-                      capacity: # Aggregated maximum capacity of the List across the GameServerSet
+                      allocatedCount: # Aggregated number of items in the List across allocated GameServers in the GameServerSet
+                        type: integer
+                        minimum: 0
+                      allocatedCapacity: # Aggregated maximum capacity of the List across allocated GameServers in the GameServerSet
                         type: integer
                         minimum: 0
                       count: # Aggregated number of items in the List across the GameServerSet
                         type: integer
-                        minimum: 0
                         default: 0
+                        minimum: 0
+                      capacity: # Aggregated maximum capacity of the List across the GameServerSet
+                        type: integer
+                        minimum: 0
       subresources:
         # status enables the status subresource.
         status: { }
