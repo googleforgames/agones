@@ -56,25 +56,24 @@ using var sdk = new AgonesSDK();
     var gameServer = await sdk.GetGameServerAsync();
     Console.WriteLine("Successfully GameServer");
     Console.WriteLine(gameServer);
-}
-
-{
-    var status = await sdk.SetLabelAsync("labelKey1", "labelValue1");
-    if (status.StatusCode != StatusCode.OK)
     {
-        Console.Error.WriteLine(
-            $"Could not set label. StatusCode={status.StatusCode}, Detail={status.Detail}");
-        Environment.Exit(1);
+        var status = await sdk.SetLabelAsync("creationTimestamp",
+            TimeSpan.FromSeconds(gameServer.ObjectMeta.CreationTimestamp).ToString());
+        if (status.StatusCode != StatusCode.OK)
+        {
+            Console.Error.WriteLine(
+                $"Could not set label. StatusCode={status.StatusCode}, Detail={status.Detail}");
+            Environment.Exit(1);
+        }
     }
-}
-
-{
-    var status = await sdk.SetAnnotationAsync("annotationKey1", "annotationValue1");
-    if (status.StatusCode != StatusCode.OK)
     {
-        Console.Error.WriteLine(
-            $"Could not set annotation. StatusCode={status.StatusCode}, Detail={status.Detail}");
-        Environment.Exit(1);
+        var status = await sdk.SetAnnotationAsync("UID", gameServer.ObjectMeta.Uid);
+        if (status.StatusCode != StatusCode.OK)
+        {
+            Console.Error.WriteLine(
+                $"Could not set annotation. StatusCode={status.StatusCode}, Detail={status.Detail}");
+            Environment.Exit(1);
+        }
     }
 }
 
