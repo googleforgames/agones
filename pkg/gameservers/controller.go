@@ -609,7 +609,6 @@ func (c *Controller) createGameServerPod(ctx context.Context, gs *agonesv1.GameS
 			gs, err = c.moveToErrorState(ctx, gs, err.Error())
 			return gs, err
 		default:
-			loggerForGameServer(gs, c.baseLogger).WithField("pod", pod).WithError(err)
 			c.recorder.Eventf(gs, corev1.EventTypeWarning, string(gs.Status.State), "error creating Pod for GameServer %s", gs.Name)
 			return gs, errors.Wrapf(err, "error creating Pod for GameServer %s", gs.Name)
 		}
@@ -787,6 +786,12 @@ func (c *Controller) syncGameServerStartingState(ctx context.Context, gs *agones
 	// so if there is an error of any kind, then move this to queue backoff
 	pod, err := c.gameServerPod(gs)
 	if err != nil {
+		// expected to happen, so don't log it.
+		if k8serrors.IsNotFound(err) {
+			return nil, workerqueue.NewDebugError(err)
+		}
+
+		// do log if it's something other than NotFound, since that's weird.
 		return nil, err
 	}
 	if pod.Spec.NodeName == "" {
