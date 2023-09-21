@@ -703,8 +703,16 @@ func TestControllerUpdateFleetCounterStatus(t *testing.T) {
 	gsSet1.ObjectMeta.Name = "gsSet1"
 	gsSet1.Status.Counters = map[string]agonesv1.AggregatedCounterStatus{
 		"fullCounter": {
-			Capacity: 1000,
-			Count:    1000,
+			AllocatedCount:    1000,
+			AllocatedCapacity: 1000,
+			Capacity:          1000,
+			Count:             1000,
+		},
+		"anotherCounter": {
+			AllocatedCount:    11,
+			AllocatedCapacity: 20,
+			Capacity:          100,
+			Count:             42,
 		},
 	}
 
@@ -712,12 +720,22 @@ func TestControllerUpdateFleetCounterStatus(t *testing.T) {
 	gsSet2.ObjectMeta.Name = "gsSet2"
 	gsSet2.Status.Counters = map[string]agonesv1.AggregatedCounterStatus{
 		"fullCounter": {
-			Capacity: 1000,
-			Count:    1000,
+			AllocatedCount:    100,
+			AllocatedCapacity: 100,
+			Capacity:          100,
+			Count:             100,
 		},
 		"anotherCounter": {
-			Capacity: 10,
-			Count:    0,
+			AllocatedCount:    0,
+			AllocatedCapacity: 0,
+			Capacity:          100,
+			Count:             0,
+		},
+		"thirdCounter": {
+			AllocatedCount:    21,
+			AllocatedCapacity: 30,
+			Capacity:          400,
+			Count:             21,
 		},
 	}
 
@@ -733,10 +751,20 @@ func TestControllerUpdateFleetCounterStatus(t *testing.T) {
 			ua := action.(k8stesting.UpdateAction)
 			fleet := ua.GetObject().(*agonesv1.Fleet)
 
-			assert.Equal(t, int64(2000), fleet.Status.Counters["fullCounter"].Capacity)
-			assert.Equal(t, int64(2000), fleet.Status.Counters["fullCounter"].Count)
-			assert.Equal(t, int64(10), fleet.Status.Counters["anotherCounter"].Capacity)
-			assert.Equal(t, int64(0), fleet.Status.Counters["anotherCounter"].Count)
+			assert.Equal(t, int64(1100), fleet.Status.Counters["fullCounter"].AllocatedCount)
+			assert.Equal(t, int64(1100), fleet.Status.Counters["fullCounter"].AllocatedCapacity)
+			assert.Equal(t, int64(1100), fleet.Status.Counters["fullCounter"].Capacity)
+			assert.Equal(t, int64(1100), fleet.Status.Counters["fullCounter"].Count)
+
+			assert.Equal(t, int64(11), fleet.Status.Counters["anotherCounter"].AllocatedCount)
+			assert.Equal(t, int64(20), fleet.Status.Counters["anotherCounter"].AllocatedCapacity)
+			assert.Equal(t, int64(200), fleet.Status.Counters["anotherCounter"].Capacity)
+			assert.Equal(t, int64(42), fleet.Status.Counters["anotherCounter"].Count)
+
+			assert.Equal(t, int64(21), fleet.Status.Counters["thirdCounter"].AllocatedCount)
+			assert.Equal(t, int64(30), fleet.Status.Counters["thirdCounter"].AllocatedCapacity)
+			assert.Equal(t, int64(400), fleet.Status.Counters["thirdCounter"].Capacity)
+			assert.Equal(t, int64(21), fleet.Status.Counters["thirdCounter"].Count)
 
 			return true, fleet, nil
 		})
@@ -765,8 +793,22 @@ func TestControllerUpdateFleetListStatus(t *testing.T) {
 	gsSet1.ObjectMeta.Name = "gsSet1"
 	gsSet1.Status.Lists = map[string]agonesv1.AggregatedListStatus{
 		"fullList": {
-			Capacity: 1000,
-			Count:    1000,
+			AllocatedCount:    1000,
+			AllocatedCapacity: 1000,
+			Capacity:          1000,
+			Count:             1000,
+		},
+		"anotherList": {
+			AllocatedCount:    11,
+			AllocatedCapacity: 100,
+			Capacity:          100,
+			Count:             11,
+		},
+		"thirdList": {
+			AllocatedCount:    1,
+			AllocatedCapacity: 20,
+			Capacity:          30,
+			Count:             4,
 		},
 	}
 
@@ -774,12 +816,16 @@ func TestControllerUpdateFleetListStatus(t *testing.T) {
 	gsSet2.ObjectMeta.Name = "gsSet2"
 	gsSet2.Status.Lists = map[string]agonesv1.AggregatedListStatus{
 		"fullList": {
-			Capacity: 200,
-			Count:    200,
+			AllocatedCount:    200,
+			AllocatedCapacity: 200,
+			Capacity:          200,
+			Count:             200,
 		},
 		"anotherList": {
-			Capacity: 10,
-			Count:    1,
+			AllocatedCount:    1,
+			AllocatedCapacity: 10,
+			Capacity:          100,
+			Count:             11,
 		},
 	}
 
@@ -795,10 +841,20 @@ func TestControllerUpdateFleetListStatus(t *testing.T) {
 			ua := action.(k8stesting.UpdateAction)
 			fleet := ua.GetObject().(*agonesv1.Fleet)
 
+			assert.Equal(t, int64(1200), fleet.Status.Lists["fullList"].AllocatedCount)
+			assert.Equal(t, int64(1200), fleet.Status.Lists["fullList"].AllocatedCapacity)
 			assert.Equal(t, int64(1200), fleet.Status.Lists["fullList"].Capacity)
 			assert.Equal(t, int64(1200), fleet.Status.Lists["fullList"].Count)
-			assert.Equal(t, int64(10), fleet.Status.Lists["anotherList"].Capacity)
-			assert.Equal(t, int64(1), fleet.Status.Lists["anotherList"].Count)
+
+			assert.Equal(t, int64(12), fleet.Status.Lists["anotherList"].AllocatedCount)
+			assert.Equal(t, int64(110), fleet.Status.Lists["anotherList"].AllocatedCapacity)
+			assert.Equal(t, int64(200), fleet.Status.Lists["anotherList"].Capacity)
+			assert.Equal(t, int64(22), fleet.Status.Lists["anotherList"].Count)
+
+			assert.Equal(t, int64(1), fleet.Status.Lists["thirdList"].AllocatedCount)
+			assert.Equal(t, int64(20), fleet.Status.Lists["thirdList"].AllocatedCapacity)
+			assert.Equal(t, int64(30), fleet.Status.Lists["thirdList"].Capacity)
+			assert.Equal(t, int64(4), fleet.Status.Lists["thirdList"].Count)
 
 			return true, fleet, nil
 		})
