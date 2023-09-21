@@ -14,7 +14,7 @@
 				{{ with .Page }}
 				{{ $active = or $active ( $.IsDescendant .)  }}
 				{{ end }}
-				<a class="nav-link{{if $active }} active{{end}}" href="{{ with .Page }}{{ .RelPermalink }}{{ else }}{{ .URL | relLangURL }}{{ end }}"><span{{if $active }} class="active"{{end}}>{{ .Name }}</span></a>
+				<a class="nav-link{{if $active }} active{{end}}" href="{{ with .Page }}{{ .RelPermalink }}{{ else }}{{ .URL | relLangURL }}{{ end }}" style="margin-right: 15px;"><span{{if $active }} class="active"{{end}}>{{ .Name }}</span></a>
 			</li>
 			{{ end }}
 			<li class="nav-item mr-4 mb-2 mb-lg-0">
