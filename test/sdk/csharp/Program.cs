@@ -163,3 +163,5 @@ if (shutDownStatus.StatusCode != StatusCode.OK)
         $"Could not shutdown GameServer. StatusCode={shutDownStatus.StatusCode}, Detail={shutDownStatus.Detail}");
     Environment.Exit(1);
 }
+
+Console.WriteLine("All successful");
