@@ -56,7 +56,7 @@ using var sdk = new AgonesSDK();
     Console.WriteLine(gameServer);
     {
         var status = await sdk.SetLabelAsync("creationTimestamp",
-            TimeSpan.FromSeconds(gameServer.ObjectMeta.CreationTimestamp).ToString());
+            gameServer.ObjectMeta.CreationTimestamp.ToString());
         if (status.StatusCode != StatusCode.OK)
         {
             Console.Error.WriteLine(
@@ -161,4 +161,4 @@ if (shutDownStatus.StatusCode != StatusCode.OK)
     Environment.Exit(1);
 }
 
-Console.WriteLine("All successful");
+Console.WriteLine("Finish all tests");
