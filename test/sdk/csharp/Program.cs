@@ -1,8 +1,6 @@
 ﻿using Agones;
 using Grpc.Core;
 
-Console.WriteLine("Hello, World!");
-
 using var sdk = new AgonesSDK();
 {
     sdk.WatchGameServer((gameServer) =>
