@@ -14,7 +14,6 @@
 
 using Agones.Dev.Sdk.Alpha;
 using Grpc.Core;
-using Grpc.Core.Testing;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;

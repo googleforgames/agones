@@ -14,7 +14,6 @@
 
 using Agones.Dev.Sdk;
 using Grpc.Core;
-using Grpc.Core.Testing;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
