@@ -19,7 +19,7 @@ set -ex
 proto=/go/src/agones.dev/agones/proto
 sdk=${proto}/sdk
 googleapis=${proto}/googleapis
-csharp_proto_file_output_dir=/go/src/agones.dev/agones/sdks/csharp/sdk/proto
+csharp_proto_file_output_dir=/go/src/agones.dev/agones/sdks/csharp/proto
 
 echo "Copying protobuffers to csharp sdk"
 mkdir -p ${csharp_proto_file_output_dir}
