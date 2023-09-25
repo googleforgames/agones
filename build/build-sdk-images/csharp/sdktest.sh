@@ -1,4 +1,6 @@
-# Copyright 2023 Google LLC All Rights Reserved.
+#!/usr/bin/env bash
+
+# Copyright 2019 Google LLC All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,18 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#!include:.gitignore
-!.git
-.cargo
-.cargo-targets
-.config
-.gcloudignore
-.gitignore
-.gocache
-.gomod
-.terraform
-bin
-cpp*tgz
-rust*tgz
-target
-tmp
+set -ex
+
+cd /go/src/agones.dev/agones/test/sdk/csharp
+
+dotnet run

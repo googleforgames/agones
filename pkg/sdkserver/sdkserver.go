@@ -401,7 +401,7 @@ func (s *SDKServer) updateState(ctx context.Context) error {
 
 	gs, err = gameServers.Update(ctx, gsCopy, metav1.UpdateOptions{})
 	if err != nil {
-		return errors.Wrapf(err, "could not update GameServer %s/%s to state %s", s.namespace, s.gameServerName, gs.Status.State)
+		return errors.Wrapf(err, "could not update GameServer %s/%s to state %s", s.namespace, s.gameServerName, gsCopy.Status.State)
 	}
 
 	message := "SDK state change"

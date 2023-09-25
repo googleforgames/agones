@@ -91,7 +91,7 @@ func NewMissingPodController(health healthcheck.Handler,
 		UpdateFunc: func(_, newObj interface{}) {
 			gs := newObj.(*agonesv1.GameServer)
 			if _, isDev := gs.GetDevAddress(); !isDev && !isBeforePodCreated(gs) && !gs.IsBeingDeleted() &&
-				!(gs.Status.State == agonesv1.GameServerStateUnhealthy) {
+				!(gs.Status.State == agonesv1.GameServerStateUnhealthy) && !(gs.Status.State == agonesv1.GameServerStateError) {
 				c.workerqueue.Enqueue(gs)
 			}
 		},
@@ -102,13 +102,13 @@ func NewMissingPodController(health healthcheck.Handler,
 
 // Run processes the rate limited queue.
 // Will block until stop is closed
-func (c *MissingPodController) Run(ctx context.Context) error {
+func (c *MissingPodController) Run(ctx context.Context, workers int) error {
 	c.baseLogger.Debug("Wait for cache sync")
 	if !cache.WaitForCacheSync(ctx.Done(), c.gameServerSynced, c.podSynced) {
 		return errors.New("failed to wait for caches to sync")
 	}
 
-	c.workerqueue.Run(ctx, 1)
+	c.workerqueue.Run(ctx, workers)
 	return nil
 }
 

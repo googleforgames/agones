@@ -730,6 +730,8 @@ func mergeCounters(c1, c2 map[string]agonesv1.AggregatedCounterStatus) map[strin
 	for key, val := range c2 {
 		// If the Counter exists in both maps, aggregate the values.
 		if counter, ok := c1[key]; ok {
+			counter.AllocatedCapacity += val.AllocatedCapacity
+			counter.AllocatedCount += val.AllocatedCount
 			counter.Capacity += val.Capacity
 			counter.Count += val.Count
 			c1[key] = counter
@@ -750,6 +752,8 @@ func mergeLists(l1, l2 map[string]agonesv1.AggregatedListStatus) map[string]agon
 	for key, val := range l2 {
 		// If the List exists in both maps, aggregate the values.
 		if list, ok := l1[key]; ok {
+			list.AllocatedCapacity += val.AllocatedCapacity
+			list.AllocatedCount += val.AllocatedCount
 			list.Capacity += val.Capacity
 			list.Count += val.Count
 			l1[key] = list
