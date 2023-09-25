@@ -4,14 +4,14 @@
 <section class="row td-cover-block td-cover-block--height-{{ $height }} js-td-cover td-overlay td-overlay--light -bg-{{ $col_id }}">
   <div class="container td-overlay__inner">
     <div class="row align-items-end">
-      <div class="col-lg-4 mb-5 mb-lg-0 ms-md-auto">
+      <div class="col-lg-4 mt-1 mb-2 mb-lg-0 ms-md-auto" style="padding-left: 1px; width: 500px;">
         <div class="mb-4 h1">
             <img alt="agones" width="98" src="images/logo.svg" />
             <strong style="font-weight: 500; font-size: 48px;">Agones</strong>
         </div>
         <h2 class="h2"><strong style="font-weight: 300; font-size: 38px;">Host, Run and Scale dedicated game servers on Kubernetes</strong></h2>
       </div>
-      <div class="col-lg-6 mt-5 mt-lg-3 d-sm-block" style="display: none">
+      <div class="col-lg-6 mt-1 mt-lg-3 d-sm-block" style="display: none">
           <asciinema-player 
           loop autoplay font-size="12px" rows=12 cols=60
           src="agones.cast"></asciinema-player>
@@ -19,7 +19,7 @@
       <div class="col-12 pt-3">
           <div class="pt-3 lead text-center">
               {{ .Inner }}
-            </div>  
+          </div>
       </div>
     </div>
   </div>
