@@ -57,6 +57,14 @@ spec:
       players:
         minAvailable: 0
         maxAvailable: 99
+      # [Stage:Alpha]
+      # [FeatureFlag:CountsAndLists]
+      # Counts and Lists provides the configuration for generic (player, room, session, etc.) tracking features.
+      # Commented out since Alpha, and disabled by default
+      # counters:
+      #   players:
+      #     minAvailable: 1
+      #     maxAvailable: 10
   # defines how GameServers are organised across the cluster.
   # Options include:
   # "Packed" (default) is aimed at dynamic Kubernetes clusters, such as cloud providers, wherein we want to bin pack
