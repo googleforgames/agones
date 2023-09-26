@@ -44,7 +44,7 @@ site-static: ensure-build-image
 	docker run --rm $(common_mounts) --workdir=$(mount_path)/site $(DOCKER_RUN_ARGS) $(build_tag) \
 		bash -c "npm list autoprefixer || npm install -g autoprefixer@9.8.6"
 	docker run --rm $(common_mounts) --workdir=$(mount_path)/site $(DOCKER_RUN_ARGS) $(build_tag) \
-		bash -c "npm audit fix"
+		bash -c "npm i --package-lock-only && npm audit fix"
 	docker run --rm $(common_mounts) --workdir=$(mount_path)/site $(DOCKER_RUN_ARGS) $(build_tag) bash -c \
         "git config --global --add safe.directory /go/src/agones.dev/agones &&  $(ENV) hugo --config=config.toml $(ARGS)"
 
