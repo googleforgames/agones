@@ -36,15 +36,15 @@ site-server: ensure-build-image
 site-static: ensure-build-image
 	-docker run --rm $(common_mounts) --workdir=$(mount_path)/site $(DOCKER_RUN_ARGS) $(build_tag) rm -r ./public
 	-mkdir $(agones_path)/site/public
+	docker run --rm $(common_mounts) --workdir=$(mount_path)/site $(DOCKER_RUN_ARGS) $(build_tag) \
+		bash -c "npx --version"
 	# for some reason, this only work locally
 	# postcss-cli@8.3.1 broke things, so pinning the version
 	docker run --rm $(common_mounts) --workdir=$(mount_path)/site $(DOCKER_RUN_ARGS) $(build_tag) \
-		bash -c "npm list postcss-cli || npm install -g postcss-cli@8.3.0"
+		bash -c "npm list postcss-cli || npm install postcss-cli@8.3.0"
 	# autoprefixer 10.0.0 broke things, so pinning the version
 	docker run --rm $(common_mounts) --workdir=$(mount_path)/site $(DOCKER_RUN_ARGS) $(build_tag) \
-		bash -c "npm list autoprefixer || npm install -g autoprefixer@9.8.6"
-	docker run --rm $(common_mounts) --workdir=$(mount_path)/site $(DOCKER_RUN_ARGS) $(build_tag) \
-		bash -c "npm i --package-lock-only && npm audit fix"
+		bash -c "npm list autoprefixer || npm install autoprefixer@9.8.6"
 	docker run --rm $(common_mounts) --workdir=$(mount_path)/site $(DOCKER_RUN_ARGS) $(build_tag) bash -c \
         "git config --global --add safe.directory /go/src/agones.dev/agones &&  $(ENV) hugo --config=config.toml $(ARGS)"
 
