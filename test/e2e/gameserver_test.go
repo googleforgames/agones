@@ -909,6 +909,7 @@ func TestGameServerTcpUdpProtocol(t *testing.T) {
 
 // TestGameServerStaticTcpUdpProtocol checks UDP and TCP connection for TCPUDP Protocol of Static Portpolicy
 func TestGameServerStaticTcpUdpProtocol(t *testing.T) {
+	framework.SkipOnCloudProduct(t, "gke-autopilot", "does not support Static PortPolicy")
 	t.Parallel()
 	gs := framework.DefaultGameServer(framework.Namespace)
 	gs.Spec.Ports[0].PortPolicy = agonesv1.Static
