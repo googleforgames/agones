@@ -12,11 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 using Agones.Dev.Sdk;
-using Grpc.Core;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Grpc.Core;
+using Grpc.Net.Client;
 
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Agones.Test")]
 namespace Agones
@@ -33,8 +34,8 @@ namespace Agones
 
 		internal SDK.SDKClient client;
 		internal readonly Alpha alpha;
-		internal readonly Channel channel;
-		internal AsyncClientStreamingCall<Empty, Empty> healthStream;
+		internal readonly GrpcChannel channel;
+		internal AsyncClientStreamingCall<Empty,Empty> healthStream;
 		internal readonly CancellationTokenSource cts;
 		internal readonly bool ownsCts;
 		internal CancellationToken ctoken;
@@ -74,7 +75,10 @@ namespace Agones
 			}
 			
 			ctoken = cts.Token;
-			channel = new Channel(Host, Port, ChannelCredentials.Insecure);
+			channel = GrpcChannel.ForAddress(
+				$"http://{Host}:{Port}"
+			);
+
 			client = sdkClient ?? new SDK.SDKClient(channel);
 			alpha = new Alpha(channel, requestTimeoutSec, cancellationTokenSource, logger);
 		}
@@ -91,16 +95,11 @@ namespace Agones
 		/// <summary>
 		/// Connect the underlying gRPC channel.
 		/// </summary>
-		/// <returns>True if successful</returns>
+		/// <returns>Always return true</returns>
+		[Obsolete("No need to call ConnectAsync anymore")]
 		public async Task<bool> ConnectAsync()
 		{
-			await channel.ConnectAsync(DateTime.UtcNow.AddSeconds(RequestTimeoutSec));
-			if (channel.State == ChannelState.Ready)
-			{
-				return true;
-			}
-			LogError($"Could not connect to the sidecar at {Host}:{Port}. Exited with connection state: {channel.State}.");
-			return false;
+			return true;
 		}
 
 		/// <summary>
@@ -386,6 +385,8 @@ namespace Agones
 			{
 				cts.Dispose();
 			}
+
+			channel.Dispose();
 
 			// Since we don't provide any facility to unregister a WatchGameServer callback, set the event to null to
 			// clear its underlying invocation list, so we don't keep holding references to objects that would prevent

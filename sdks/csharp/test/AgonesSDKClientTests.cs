@@ -14,7 +14,6 @@
 
 using Agones.Dev.Sdk;
 using Grpc.Core;
-using Grpc.Core.Testing;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -33,9 +32,8 @@ namespace Agones.Tests
 			var mockClient = new Mock<SDK.SDKClient>();
 			var mockSdk = new AgonesSDK();
 			var expected = StatusCode.OK;
-			var fakeCall = TestCalls.AsyncUnaryCall(Task.FromResult(new Empty()), Task.FromResult(new Metadata()), () => Status.DefaultSuccess, () => new Metadata(), () => { });
-
-			mockClient.Setup(m => m.ReadyAsync(It.IsAny<Empty>(), It.IsAny<Metadata>() , It.IsAny<DateTime?>(),  It.IsAny<CancellationToken>())).Returns(fakeCall);
+			mockClient.Setup(m => m.ReadyAsync(It.IsAny<Empty>(), It.IsAny<Metadata>() , It.IsAny<DateTime?>(),  It.IsAny<CancellationToken>())).Returns(
+				(Empty _, Metadata _, DateTime? _, CancellationToken _) => new AsyncUnaryCall<Empty>(Task.FromResult(new Empty()), Task.FromResult(new Metadata()), () => new Status(expected, ""), () => new Metadata(), () => { }));
 			mockSdk.client = mockClient.Object;
 
 			var result = await mockSdk.ReadyAsync();
@@ -48,9 +46,8 @@ namespace Agones.Tests
 			var mockClient = new Mock<SDK.SDKClient>();
 			var mockSdk = new AgonesSDK();
 			var expected = StatusCode.OK;
-			var fakeCall = TestCalls.AsyncUnaryCall(Task.FromResult(new Empty()), Task.FromResult(new Metadata()), () => Status.DefaultSuccess, () => new Metadata(), () => { });
-
-			mockClient.Setup(m => m.AllocateAsync(It.IsAny<Empty>(), It.IsAny<Metadata>(), It.IsAny<DateTime?>(), It.IsAny<CancellationToken>())).Returns(fakeCall);
+			mockClient.Setup(m => m.AllocateAsync(It.IsAny<Empty>(), It.IsAny<Metadata>(), It.IsAny<DateTime?>(), It.IsAny<CancellationToken>())).Returns(
+				(Empty _, Metadata _, DateTime? _, CancellationToken _) => new AsyncUnaryCall<Empty>(Task.FromResult(new Empty()), Task.FromResult(new Metadata()), () => new Status(expected, ""), () => new Metadata(), () => { }));
 			mockSdk.client = mockClient.Object;
 
 			var result = await mockSdk.AllocateAsync();
@@ -63,9 +60,8 @@ namespace Agones.Tests
 			var mockClient = new Mock<SDK.SDKClient>();
 			var mockSdk = new AgonesSDK();
 			var expected = StatusCode.OK;
-			var fakeCall = TestCalls.AsyncUnaryCall(Task.FromResult(new Empty()), Task.FromResult(new Metadata()), () => Status.DefaultSuccess, () => new Metadata(), () => { });
-
-			mockClient.Setup(m => m.ReserveAsync(It.IsAny<Duration>(), It.IsAny<Metadata>(), It.IsAny<DateTime?>(), It.IsAny<CancellationToken>())).Returns(fakeCall);
+			mockClient.Setup(m => m.ReserveAsync(It.IsAny<Duration>(), It.IsAny<Metadata>(), It.IsAny<DateTime?>(), It.IsAny<CancellationToken>())).Returns(
+				(Duration _, Metadata _, DateTime? _, CancellationToken _) => new AsyncUnaryCall<Empty>(Task.FromResult(new Empty()), Task.FromResult(new Metadata()), () => new Status(expected, ""), () => new Metadata(), () => { }));
 			mockSdk.client = mockClient.Object;
 
 			var result = await mockSdk.ReserveAsync(30);
@@ -77,12 +73,12 @@ namespace Agones.Tests
 		{
 			var mockClient = new Mock<SDK.SDKClient>();
 			var mockSdk = new AgonesSDK();
-			var fakeCall = TestCalls.AsyncUnaryCall(Task.FromResult(new Empty()), Task.FromResult(new Metadata()), () => Status.DefaultSuccess, () => new Metadata(), () => { });
 			var expectedDuration = new Duration();
 			expectedDuration.Seconds = 30;
 			Duration actualDuration = null;
 
-			mockClient.Setup(m => m.ReserveAsync(It.IsAny<Duration>(), It.IsAny<Metadata>(), It.IsAny<DateTime?>(), It.IsAny<CancellationToken>())).Returns(fakeCall)
+			mockClient.Setup(m => m.ReserveAsync(It.IsAny<Duration>(), It.IsAny<Metadata>(), It.IsAny<DateTime?>(), It.IsAny<CancellationToken>())).Returns(
+					(Duration _, Metadata _, DateTime? _, CancellationToken _) => new AsyncUnaryCall<Empty>(Task.FromResult(new Empty()), Task.FromResult(new Metadata()), () => Status.DefaultSuccess, () => new Metadata(), () => { }))
 				.Callback(
 				(Duration dur, Metadata md, DateTime? dt, CancellationToken ct) => {
 					actualDuration = dur;
@@ -99,9 +95,9 @@ namespace Agones.Tests
 			var mockClient = new Mock<SDK.SDKClient>();
 			var mockSdk = new AgonesSDK();
 			var expected = new GameServer();
-			var fakeCall = TestCalls.AsyncUnaryCall(Task.FromResult(expected), Task.FromResult(new Metadata()), () => Status.DefaultSuccess, () => new Metadata(), () => { });
 
-			mockClient.Setup(m => m.GetGameServerAsync(It.IsAny<Empty>(), It.IsAny<Metadata>(), It.IsAny<DateTime?>(), It.IsAny<CancellationToken>())).Returns(fakeCall);
+			mockClient.Setup(m => m.GetGameServerAsync(It.IsAny<Empty>(), It.IsAny<Metadata>(), It.IsAny<DateTime?>(), It.IsAny<CancellationToken>())).Returns(
+				(Empty _, Metadata _, DateTime? _, CancellationToken _) => new AsyncUnaryCall<GameServer>(Task.FromResult(expected), Task.FromResult(new Metadata()), () => Status.DefaultSuccess, () => new Metadata(), () => { }));
 			mockSdk.client = mockClient.Object;
 
 			var result = await mockSdk.GetGameServerAsync();
@@ -129,10 +125,11 @@ namespace Agones.Tests
 			var mockSdk = new AgonesSDK();
 			var expectedWatchReturn = new GameServer();
 			GameServer actualWatchReturn = null;
-			var serverStream = TestCalls.AsyncServerStreamingCall<GameServer>(mockResponseStream.Object, Task.FromResult(new Metadata()), () => Status.DefaultSuccess, () => new Metadata(), () => { });
 
-			mockClient.Setup(m => m.WatchGameServer(It.IsAny<Empty>(), It.IsAny<Metadata>(), It.IsAny<DateTime?>(), It.IsAny<CancellationToken>())).Returns(serverStream);
-			mockResponseStream.Setup(m => m.Current).Returns(expectedWatchReturn);
+			mockClient.Setup(m => m.WatchGameServer(It.IsAny<Empty>(), It.IsAny<Metadata>(), It.IsAny<DateTime?>(), It.IsAny<CancellationToken>())).Returns(
+				(Empty _, Metadata _, DateTime? _, CancellationToken _) => new AsyncServerStreamingCall<GameServer>(mockResponseStream.Object, Task.FromResult(new Metadata()), () => Status.DefaultSuccess, () => new Metadata(), () => { }));
+			mockResponseStream.Setup(m => m.Current).Returns(
+				() => expectedWatchReturn);
 			mockResponseStream.SetupSequence(m => m.MoveNext(It.IsAny<CancellationToken>()))
 				.Returns(Task.FromResult(true))
 				.Returns(Task.FromResult(false));
@@ -160,9 +157,8 @@ namespace Agones.Tests
 			var mockClient = new Mock<SDK.SDKClient>();
 			var mockSdk = new AgonesSDK();
 			var expected = StatusCode.OK;
-			var fakeCall = TestCalls.AsyncUnaryCall(Task.FromResult(new Empty()), Task.FromResult(new Metadata()), () => Status.DefaultSuccess, () => new Metadata(), () => { });
-
-			mockClient.Setup(m => m.ShutdownAsync(It.IsAny<Empty>(), It.IsAny<Metadata>(), It.IsAny<DateTime?>(), It.IsAny<CancellationToken>())).Returns(fakeCall);
+			mockClient.Setup(m => m.ShutdownAsync(It.IsAny<Empty>(), It.IsAny<Metadata>(), It.IsAny<DateTime?>(), It.IsAny<CancellationToken>())).Returns(
+				(Empty _, Metadata _, DateTime? _, CancellationToken _) => new AsyncUnaryCall<Empty>(Task.FromResult(new Empty()), Task.FromResult(new Metadata()), () => Status.DefaultSuccess, () => new Metadata(), () => { }));
 			mockSdk.client = mockClient.Object;
 
 			var result = await mockSdk.ShutDownAsync();
@@ -175,9 +171,8 @@ namespace Agones.Tests
 			var mockClient = new Mock<SDK.SDKClient>();
 			var mockSdk = new AgonesSDK();
 			var expected = StatusCode.OK;
-			var fakeCall = TestCalls.AsyncUnaryCall(Task.FromResult(new Empty()), Task.FromResult(new Metadata()), () => Status.DefaultSuccess, () => new Metadata(), () => { });
-
-			mockClient.Setup(m => m.SetLabelAsync(It.IsAny<KeyValue>(), It.IsAny<Metadata>(), It.IsAny<DateTime?>(), It.IsAny<CancellationToken>())).Returns(fakeCall);
+			mockClient.Setup(m => m.SetLabelAsync(It.IsAny<KeyValue>(), It.IsAny<Metadata>(), It.IsAny<DateTime?>(), It.IsAny<CancellationToken>())).Returns(
+				(KeyValue _, Metadata _, DateTime? _, CancellationToken _) => new AsyncUnaryCall<Empty>(Task.FromResult(new Empty()), Task.FromResult(new Metadata()), () => Status.DefaultSuccess, () => new Metadata(), () => { }));
 			mockSdk.client = mockClient.Object;
 
 			var result = await mockSdk.SetLabelAsync("","");
@@ -189,13 +184,12 @@ namespace Agones.Tests
 		{
 			var mockClient = new Mock<SDK.SDKClient>();
 			var mockSdk = new AgonesSDK();
-			var fakeCall = TestCalls.AsyncUnaryCall(Task.FromResult(new Empty()), Task.FromResult(new Metadata()), () => Status.DefaultSuccess, () => new Metadata(), () => { });
 			KeyValue expectedKeyValue = new KeyValue();
 			expectedKeyValue.Key = "Test";
 			expectedKeyValue.Value = "Test";
 			KeyValue actualKeyValue = null;
-
-			mockClient.Setup(m => m.SetLabelAsync(It.IsAny<KeyValue>(), It.IsAny<Metadata>(), It.IsAny<DateTime?>(), It.IsAny<CancellationToken>())).Returns(fakeCall)
+			mockClient.Setup(m => m.SetLabelAsync(It.IsAny<KeyValue>(), It.IsAny<Metadata>(), It.IsAny<DateTime?>(), It.IsAny<CancellationToken>())).Returns(
+					(KeyValue _, Metadata _, DateTime? _, CancellationToken _) => new AsyncUnaryCall<Empty>(Task.FromResult(new Empty()), Task.FromResult(new Metadata()), () => Status.DefaultSuccess, () => new Metadata(), () => { }))
 				.Callback(
 				(KeyValue kv, Metadata md,DateTime? dt, CancellationToken ct) => { actualKeyValue = kv;
 				});
@@ -211,9 +205,8 @@ namespace Agones.Tests
 			var mockClient = new Mock<SDK.SDKClient>();
 			var mockSdk = new AgonesSDK();
 			var expected = StatusCode.OK;
-			var fakeCall = TestCalls.AsyncUnaryCall(Task.FromResult(new Empty()), Task.FromResult(new Metadata()), () => Status.DefaultSuccess, () => new Metadata(), () => { });
-
-			mockClient.Setup(m => m.SetAnnotationAsync(It.IsAny<KeyValue>(), It.IsAny<Metadata>(), It.IsAny<DateTime?>(), It.IsAny<CancellationToken>())).Returns(fakeCall);
+			mockClient.Setup(m => m.SetAnnotationAsync(It.IsAny<KeyValue>(), It.IsAny<Metadata>(), It.IsAny<DateTime?>(), It.IsAny<CancellationToken>())).Returns(
+				(KeyValue _, Metadata _, DateTime? _, CancellationToken _) => new AsyncUnaryCall<Empty>(Task.FromResult(new Empty()), Task.FromResult(new Metadata()), () => Status.DefaultSuccess, () => new Metadata(), () => { }));
 			mockSdk.client = mockClient.Object;
 
 			var result = await mockSdk.SetAnnotationAsync("", "");
@@ -225,13 +218,13 @@ namespace Agones.Tests
 		{
 			var mockClient = new Mock<SDK.SDKClient>();
 			var mockSdk = new AgonesSDK();
-			var fakeCall = TestCalls.AsyncUnaryCall(Task.FromResult(new Empty()), Task.FromResult(new Metadata()), () => Status.DefaultSuccess, () => new Metadata(), () => { });
 			KeyValue expectedKeyValue = new KeyValue();
 			expectedKeyValue.Key = "Test";
 			expectedKeyValue.Value = "Test";
 			KeyValue actualKeyValue = null;
 
-			mockClient.Setup(m => m.SetAnnotationAsync(It.IsAny<KeyValue>(), It.IsAny<Metadata>(), It.IsAny<DateTime?>(), It.IsAny<CancellationToken>())).Returns(fakeCall)
+			mockClient.Setup(m => m.SetAnnotationAsync(It.IsAny<KeyValue>(), It.IsAny<Metadata>(), It.IsAny<DateTime?>(), It.IsAny<CancellationToken>())).Returns(
+					(KeyValue _, Metadata _, DateTime? _, CancellationToken _) => new AsyncUnaryCall<Empty>(Task.FromResult(new Empty()), Task.FromResult(new Metadata()), () => Status.DefaultSuccess, () => new Metadata(), () => { }))
 				.Callback(
 				(KeyValue kv, Metadata md, DateTime? dt, CancellationToken ct) => {
 					actualKeyValue = kv;

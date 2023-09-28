@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Grpc.Net.Client;
 
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Agones.Test")]
 namespace Agones
@@ -32,7 +33,6 @@ namespace Agones
         public double RequestTimeoutSec { get; set; }
 
         internal SDK.SDKClient client;
-        internal readonly Channel channel;
         internal readonly IClientStreamWriter<Empty> healthStream;
         internal readonly CancellationTokenSource cts;
         internal readonly bool ownsCts;
@@ -42,7 +42,7 @@ namespace Agones
         private bool _disposed;
 
         public Alpha(
-            Channel channel,
+            GrpcChannel channel,
             double requestTimeoutSec = 15,
             CancellationTokenSource cancellationTokenSource = null,
             ILogger logger = null)
@@ -62,7 +62,6 @@ namespace Agones
             }
             
             ctoken = cts.Token;
-            this.channel = channel;
             client = new SDK.SDKClient(channel);
         }
 
