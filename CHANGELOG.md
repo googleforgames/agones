@@ -1,5 +1,61 @@
 # Changelog
 
+## [v1.35.0](https://github.com/googleforgames/agones/tree/v1.35.0) (2023-09-26)
+
+[Full Changelog](https://github.com/googleforgames/agones/compare/v1.34.0...v1.35.0)
+
+**Implemented enhancements:**
+- Cloud build script for simple-game-server by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3314
+- feat: discard disconnected game server streams by @antiphp in https://github.com/googleforgames/agones/pull/3328
+- Rust SDK on crates.io by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3332
+- restapi generation: clean before generation so we don't leak files by @zmerlynn in https://github.com/googleforgames/agones/pull/3353
+- Implements GetCounter and UpdateCounter on the SDK Server by @igooch in https://github.com/googleforgames/agones/pull/3322
+- Adds Go SDK client Counter functions by @igooch in https://github.com/googleforgames/agones/pull/3372
+- Update Go simple-game-server to have commands for Counter SDK methods by @igooch in https://github.com/googleforgames/agones/pull/3378
+- Adds GameServer e2e tests for Counters by @igooch in https://github.com/googleforgames/agones/pull/3381
+- Updates Fleet and GameServerSet CRDs by @igooch in https://github.com/googleforgames/agones/pull/3396
+- Add conformance test implementation for C# SDK by @yoshd in https://github.com/googleforgames/agones/pull/3392
+- Adds fleet e2e test for Counter by @igooch in https://github.com/googleforgames/agones/pull/3399
+
+**Fixed bugs:**
+- Added TF DNS config options to prevent Autopilot destroy / create on existing cluster by @abmarcum in https://github.com/googleforgames/agones/pull/3330
+- Fix site-server target by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3335
+- Do not refresh cache if no update by @gongmax in https://github.com/googleforgames/agones/pull/3343
+- bump: joonix/log to NewFormater() by @jonsch318 in https://github.com/googleforgames/agones/pull/3342
+- Fixes TestGameServerResourceValidation flake by @igooch in https://github.com/googleforgames/agones/pull/3373
+- Get the gs state correctly in error message by @gongmax in https://github.com/googleforgames/agones/pull/3385
+- Reduce controller memory footprint considerably by @markmandel in https://github.com/googleforgames/agones/pull/3394
+
+**Other:**
+- Preparation for v1.35.0 by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3326
+- Update Agones release guide url by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3329
+- Improve SDK Conformance error reporting by @markmandel in https://github.com/googleforgames/agones/pull/3331
+- Catch up C++ SDK to `make gen-all-sdk-grpc` by @zmerlynn in https://github.com/googleforgames/agones/pull/3337
+- SDK Conformance: Use -test consistently instead of -no-build by @zmerlynn in https://github.com/googleforgames/agones/pull/3340
+- fix of helm installation command in doc by @ashutosji in https://github.com/googleforgames/agones/pull/3333
+- Update release version on Agones website by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3338
+- Generate certs on TestFleetAutoscalerTLSWebhook by @markmandel in https://github.com/googleforgames/agones/pull/3350
+- Verify gen-all-sdk-grpc has run by @zmerlynn in https://github.com/googleforgames/agones/pull/3349
+- Update Rust document by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3336
+- Yaml linter by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3358
+- Update release checklist by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3334
+- Add Octops Fleet Garbage Collector project to third party docs by @danieloliveira079 in https://github.com/googleforgames/agones/pull/3359
+- Updates to GKE Terraform docs by @joeholley in https://github.com/googleforgames/agones/pull/3360
+- Fix unaccurate progress description of HA Agones by @gongmax in https://github.com/googleforgames/agones/pull/3364
+- Bump GitHub workflow actions to latest versions by @deining in https://github.com/googleforgames/agones/pull/3355
+- dependency: bump github.com/grpc-ecosystem/grpc-gateway/v2 from v2.15.0 to v2.17.1 by @aimuz in https://github.com/googleforgames/agones/pull/3366
+- Update: Allocation Overflow Documentation by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3368
+- Bumps simple-game-server version to 0.18 by @igooch in https://github.com/googleforgames/agones/pull/3379
+- Upgrade Hugo by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3369
+- Add more items to .gcloudignore by @markmandel in https://github.com/googleforgames/agones/pull/3383
+- Don't log when a pod can't be found on startup by @markmandel in https://github.com/googleforgames/agones/pull/3393
+- Fix typo in examples/simple-game-server/README.md by @markmandel in https://github.com/googleforgames/agones/pull/3398
+
+**New Contributors:**
+- @antiphp made their first contribution in https://github.com/googleforgames/agones/pull/3328
+- @jonsch318 made their first contribution in https://github.com/googleforgames/agones/pull/3342
+- @deining made their first contribution in https://github.com/googleforgames/agones/pull/3355
+
 ## [v1.34.0](https://github.com/googleforgames/agones/tree/v1.34.0) (2023-08-15)
 
 [Full Changelog](https://github.com/googleforgames/agones/compare/v1.33.0...v1.34.0)
