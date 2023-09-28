@@ -960,6 +960,7 @@ func TestGameServerStaticTcpUdpProtocol(t *testing.T) {
 
 // TestGameServerStaticTcpProtocol checks TCP connection for TCP Protocol of Static Portpolicy
 func TestGameServerStaticTcpProtocol(t *testing.T) {
+	framework.SkipOnCloudProduct(t, "gke-autopilot", "does not support Static PortPolicy")
 	t.Parallel()
 	gs := framework.DefaultGameServer(framework.Namespace)
 
@@ -985,6 +986,7 @@ func TestGameServerStaticTcpProtocol(t *testing.T) {
 
 // TestGameServerStaticUdpProtocol checks default(UDP) connection of Static Portpolicy
 func TestGameServerStaticUdpProtocol(t *testing.T) {
+	framework.SkipOnCloudProduct(t, "gke-autopilot", "does not support Static PortPolicy")
 	t.Parallel()
 	gs := framework.DefaultGameServer(framework.Namespace)
 
