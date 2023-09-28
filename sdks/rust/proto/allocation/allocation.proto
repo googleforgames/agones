@@ -18,6 +18,7 @@ package allocation;
 option go_package = "./allocation";
 
 import "google/api/annotations.proto";
+import "google/protobuf/wrappers.proto";
 import "protoc-gen-openapiv2/options/annotations.proto";
 
 option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
@@ -83,6 +84,11 @@ message AllocationRequest {
 	// Selector set, and will only use any following priority for tie-breaking during sort.
 	// Impacts which GameServer is checked first.
 	repeated Priority priorities = 9;
+
+  // (Alpha, CountsAndLists feature flag) Counters and Lists provide a set of actions to perform
+	// on Counters and Lists during allocation.
+  map<string, CounterAction> counters = 10;
+  map<string, ListAction> lists = 11;
 }
 
 message AllocationResponse {
@@ -195,4 +201,22 @@ message Priority {
     Descending = 1;
   }
   Order order = 3;
+}
+
+// CounterAction is an optional action that can be performed on a Counter at allocation.
+// Action: "Increment" or "Decrement" the Counter's Count (optional). Must also define the Amount.
+// Amount: The amount to increment or decrement the Count (optional). Must be a positive integer.
+// Capacity: Update the maximum capacity of the Counter to this number (optional). Min 0, Max int64.
+message CounterAction {
+  google.protobuf.StringValue action = 1;
+	google.protobuf.Int64Value amount = 2;
+	google.protobuf.Int64Value capacity = 3;
+}
+
+// ListAction is an optional action that can be performed on a List at allocation.
+// AddValues: Append values to a List's Values array (optional). Any duplicate values will be ignored.
+// Capacity: Update the maximum capacity of the Counter to this number (optional). Min 0, Max 1000.
+message ListAction {
+	repeated string addValues = 1;
+	google.protobuf.Int64Value capacity = 2;
 }
