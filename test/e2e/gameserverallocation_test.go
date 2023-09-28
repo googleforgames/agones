@@ -648,7 +648,7 @@ func TestCounterGameServerAllocationActions(t *testing.T) {
 	one := int64(1)
 	five := int64(5)
 	six := int64(6)
-	// negativeOne := int64(-1)
+	negativeOne := int64(-1)
 
 	testCases := map[string]struct {
 		gsa          allocationv1.GameServerAllocation
@@ -692,65 +692,65 @@ func TestCounterGameServerAllocationActions(t *testing.T) {
 		},
 		// TODO: These allocated a gameserver (although the Counter action is not performed) Is this what we want?
 		// Do we want to validate negative CounterActions in the GSA?
-		// "decrement past zero": {
-		// 	gsa: allocationv1.GameServerAllocation{
-		// 		Spec: allocationv1.GameServerAllocationSpec{
-		// 			Counters: map[string]allocationv1.CounterAction{
-		// 				"games": {
-		// 					Action: &decrement,
-		// 					Amount: &six,
-		// 				}}}},
-		// },
-		// "decrement negative": {
-		// 	gsa: allocationv1.GameServerAllocation{
-		// 		Spec: allocationv1.GameServerAllocationSpec{
-		// 			Counters: map[string]allocationv1.CounterAction{
-		// 				"games": {
-		// 					Action: &decrement,
-		// 					Amount: &negativeOne,
-		// 				}}}},
-		// 	wantGsaErr: true,
-		// },
-		// "increment past capacity": {
-		// 	gsa: allocationv1.GameServerAllocation{
-		// 		Spec: allocationv1.GameServerAllocationSpec{
-		// 			Counters: map[string]allocationv1.CounterAction{
-		// 				"games": {
-		// 					Action: &increment,
-		// 					Amount: &six,
-		// 				}}}},
-		// },
-		// "increment negative": {
-		// 	gsa: allocationv1.GameServerAllocation{
-		// 		Spec: allocationv1.GameServerAllocationSpec{
-		// 			Counters: map[string]allocationv1.CounterAction{
-		// 				"games": {
-		// 					Action: &increment,
-		// 					Amount: &negativeOne,
-		// 				}}}},
-		// 	wantGsaErr: true,
-		// },
-		// "change capacity negative": {
-		// 	gsa: allocationv1.GameServerAllocation{
-		// 		Spec: allocationv1.GameServerAllocationSpec{
-		// 			Counters: map[string]allocationv1.CounterAction{
-		// 				"games": {
-		// 					Capacity: &negativeOne,
-		// 				}}}},
-		// 	wantGsaErr: true,
-		// },
+		"decrement past zero": {
+			gsa: allocationv1.GameServerAllocation{
+				Spec: allocationv1.GameServerAllocationSpec{
+					Counters: map[string]allocationv1.CounterAction{
+						"games": {
+							Action: &decrement,
+							Amount: &six,
+						}}}},
+		},
+		"decrement negative": {
+			gsa: allocationv1.GameServerAllocation{
+				Spec: allocationv1.GameServerAllocationSpec{
+					Counters: map[string]allocationv1.CounterAction{
+						"games": {
+							Action: &decrement,
+							Amount: &negativeOne,
+						}}}},
+			// wantGsaErr: true,
+		},
+		"increment past capacity": {
+			gsa: allocationv1.GameServerAllocation{
+				Spec: allocationv1.GameServerAllocationSpec{
+					Counters: map[string]allocationv1.CounterAction{
+						"games": {
+							Action: &increment,
+							Amount: &six,
+						}}}},
+		},
+		"increment negative": {
+			gsa: allocationv1.GameServerAllocation{
+				Spec: allocationv1.GameServerAllocationSpec{
+					Counters: map[string]allocationv1.CounterAction{
+						"games": {
+							Action: &increment,
+							Amount: &negativeOne,
+						}}}},
+			// wantGsaErr: true,
+		},
+		"change capacity negative": {
+			gsa: allocationv1.GameServerAllocation{
+				Spec: allocationv1.GameServerAllocationSpec{
+					Counters: map[string]allocationv1.CounterAction{
+						"games": {
+							Capacity: &negativeOne,
+						}}}},
+			// wantGsaErr: true,
+		},
 		// Same issue with this test as above with increment/decrement/capacity, the GS is still allocated.
 		// (If we want different behavior will need to change test to not check for "games" and to
 		// instead check for counter action Counter name.)
-		// "Counter does not exist": {
-		// 	gsa: allocationv1.GameServerAllocation{
-		// 		Spec: allocationv1.GameServerAllocationSpec{
-		// 			Counters: map[string]allocationv1.CounterAction{
-		// 				"lames": {
-		// 					Action: &increment,
-		// 					Amount: &one,
-		// 				}}}},
-		// },
+		"Counter does not exist": {
+			gsa: allocationv1.GameServerAllocation{
+				Spec: allocationv1.GameServerAllocationSpec{
+					Counters: map[string]allocationv1.CounterAction{
+						"lames": {
+							Action: &increment,
+							Amount: &one,
+						}}}},
+		},
 	}
 
 	for name, testCase := range testCases {
