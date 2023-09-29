@@ -507,8 +507,6 @@ func convertAllocationCountersToGSACounterActions(in map[string]*pb.CounterActio
 			ca.Capacity = &capacity
 		}
 
-		// TODO: Action and Amount must be used together. Do we want to check that both Action & Amount are not nil,
-		// or both of Action & Amount are nil? Or add an error in CounterActions in pkg/apis/allocation/v1/gameserverallocation.go?
 		out[k] = ca
 	}
 	return out
