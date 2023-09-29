@@ -158,7 +158,7 @@ chmod o+r gameserver.yaml
 docker run --network=host --rm -v $(pwd)/gameserver.yaml:/tmp/gameserver.yaml us-docker.pkg.dev/agones-images/release/agones-sdk:{{<release-version>}} --local -f /tmp/gameserver.yaml
 ```
 
-If you run Docker on a OS that doesn't run Docker natively or in a VM, such as on Windows or macOS, you may want to to run the ClientSDK and your game server container together with Docker Compose. To do so, create a `docker-compose.yaml` file setup with a network overlay shared between them:
+If you run Docker on a OS that doesn't run Docker natively or in a VM, such as on Windows or macOS, you may want to to run the ClientSDK and your game server container together with [Docker Compose](https://docs.docker.com/compose/). To do so, create a `docker-compose.yaml` file setup with a network overlay shared between them:
 
 ```yaml
 version: '3'
