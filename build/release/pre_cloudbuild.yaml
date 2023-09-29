@@ -13,16 +13,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 steps:
+
+  #
+  # Clean out the working dir, so we can replace it.
+  #
+  - name: ubuntu
+    script: rm *
+
   #
   # Shallow clone of Agones/main branch from the main repository
   #
   - name: gcr.io/cloud-builders/git
-    dir: /workspace
+    id: clone
     args:
       - clone
       - --depth=1
       - --branch=main
       - https://github.com/googleforgames/agones.git
+      - .
 
   #
   # Creates the initial make + docker build platform
@@ -33,7 +41,6 @@ steps:
       - -c
       - "echo 'FROM gcr.io/cloud-builders/docker\nRUN apt-get install make\nENTRYPOINT\
         \ [\"/usr/bin/make\"]' > Dockerfile.build"
-    waitFor: ['-']
   - name: gcr.io/cloud-builders/docker
     id: build-make-docker
     args: [build, -f, Dockerfile.build, -t, make-docker, .]
@@ -46,8 +53,6 @@ steps:
     dir: build
     env: ['REGISTRY=us-docker.pkg.dev/${PROJECT_ID}/ci']
     args: [pull-build-image]
-    waitFor:
-      - build-make-docker
 
   #
   # Ensure example images exists

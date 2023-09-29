@@ -31,7 +31,7 @@ RUN wget -q https://packages.microsoft.com/config/ubuntu/19.04/packages-microsof
 
 
 RUN apt-get update \
-    && apt-get install -y dotnet-sdk-7.0 dotnet-sdk-3.1
+    && apt-get install -y dotnet-sdk-7.0
 
 # code generation scripts
 COPY *.sh /root/
