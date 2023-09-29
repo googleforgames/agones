@@ -15,9 +15,9 @@ for UDP as an echo or "ACK TCP:<text content>" for TCP.
 There are some text commands you can send the server to affect its behavior:
 
 | Command             | Behavior                                                                                 |
-| ------------------- | ---------------------------------------------------------------------------------------- |
+|---------------------|------------------------------------------------------------------------------------------|
 | "EXIT"              | Causes the game server to exit cleanly calling `os.Exit(0)`                              |
-| "UNHEATHY"          | Stopping sending health checks                                                           |
+| "UNHEALTHY"         | Stopping sending health checks                                                           |
 | "GAMESERVER"        | Sends back the game server name                                                          |
 | "READY"             | Marks the server as Ready                                                                |
 | "ALLOCATE"          | Allocates the game server                                                                |
@@ -40,7 +40,7 @@ The server has a few configuration options that can be set via command line
 flags. Some can also be set using environment variables.
 
 | Flag                                   | Environment Variable | Default |
-| -------------------------------------- | -------------------- | ------- |
+|----------------------------------------|----------------------|---------|
 | port                                   | PORT                 | 7654    |
 | passthrough                            | PASSTHROUGH          | false   |
 | ready                                  | READY                | true    |

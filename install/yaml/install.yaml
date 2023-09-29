@@ -50,7 +50,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: agones-1.35.0-dev
+    chart: agones-1.36.0-dev
     release: agones-manual
     heritage: Helm
 ---
@@ -75,7 +75,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: agones-1.35.0-dev
+    chart: agones-1.36.0-dev
     release: agones-manual
     heritage: Helm
 ---
@@ -100,7 +100,7 @@ metadata:
   namespace: default
   labels:
     app: agones
-    chart: agones-1.35.0-dev
+    chart: agones-1.36.0-dev
     release: agones-manual
     heritage: Helm
 ---
@@ -112,7 +112,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: "agones-1.35.0-dev"
+    chart: "agones-1.36.0-dev"
     release: "agones-manual"
     heritage: "Helm"
 type: Opaque
@@ -129,7 +129,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: "agones-1.35.0-dev"
+    chart: "agones-1.36.0-dev"
     release: "agones-manual"
     heritage: "Helm"
 data:
@@ -145,7 +145,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: "agones-1.35.0-dev"
+    chart: "agones-1.36.0-dev"
     release: "agones-manual"
     heritage: "Helm"
 data:
@@ -161,7 +161,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: "agones-1.35.0-dev"
+    chart: "agones-1.36.0-dev"
     release: "agones-manual"
     heritage: "Helm"
 data:
@@ -191,7 +191,7 @@ metadata:
   labels:
     component: crd
     app: agones
-    chart: agones-1.35.0-dev
+    chart: agones-1.36.0-dev
     release: agones-manual
     heritage: Helm
 spec:
@@ -5376,13 +5376,18 @@ spec:
                   additionalProperties:
                     type: object
                     properties:
-                      count: # initial count
+                      allocatedCount: # Aggregated count of the Counter across allocated GameServers in the Fleet
+                        type: integer
+                        minimum: 0
+                      allocatedCapacity: # Aggregated maximum capacity of the Counter across allocated GameServers in the Fleet
+                        type: integer
+                        minimum: 0
+                      count: # Aggregated count of the Counter across the Fleet
                         type: integer
                         default: 0
                         minimum: 0
-                      capacity: # max capacity of the counter
+                      capacity: # Aggregated maximum capacity of the Counter across the Fleet
                         type: integer
-                        default: 1000
                         minimum: 0
                 lists:
                   type: object
@@ -5392,18 +5397,19 @@ spec:
                   additionalProperties:
                     type: object
                     properties:
-                      capacity: # max capacity of the array (can be less than or equal to value of maxItems)
+                      allocatedCount: # Aggregated number of items in the List across allocated GameServers in the Fleet
                         type: integer
                         minimum: 0
-                        default: 1000
-                        maximum: 1000 # must be equal to values.maxItems
-                      values:
-                        type: array
-                        x-kubernetes-list-type: set # Requires items in the array to be unique
-                        maxItems: 1000 # max possible size of the value array (cannot be updated)
-                        items: # name of the item (player1, session1, room1, etc.)
-                          type: string
-                        default: []
+                      allocatedCapacity: # Aggregated maximum capacity of the List across allocated GameServers in the Fleet
+                        type: integer
+                        minimum: 0
+                      count: # Aggregated number of items in the List across the Fleet
+                        type: integer
+                        default: 0
+                        minimum: 0
+                      capacity: # Aggregated maximum capacity of the List across the Fleet
+                        type: integer
+                        minimum: 0
       subresources:
         # status enables the status subresource.
         status: { }
@@ -5438,7 +5444,7 @@ metadata:
   labels:
     component: crd
     app: agones
-    chart: agones-1.35.0-dev
+    chart: agones-1.36.0-dev
     release: agones-manual
     heritage: Helm
 spec:
@@ -5628,7 +5634,7 @@ metadata:
   labels:
     component: crd
     app: agones
-    chart: agones-1.35.0-dev
+    chart: agones-1.36.0-dev
     release: agones-manual
     heritage: Helm
 spec:
@@ -10714,7 +10720,7 @@ metadata:
   labels:
     component: crd
     app: agones
-    chart: agones-1.35.0-dev
+    chart: agones-1.36.0-dev
     release: agones-manual
     heritage: Helm
   name: gameserverallocationpolicies.multicluster.agones.dev
@@ -10793,7 +10799,7 @@ metadata:
   labels:
     component: crd
     app: agones
-    chart: agones-1.35.0-dev
+    chart: agones-1.36.0-dev
     release: agones-manual
     heritage: Helm
 spec:
@@ -15961,6 +15967,12 @@ spec:
                   additionalProperties:
                     type: object
                     properties:
+                      allocatedCount: # Aggregated count of the Counter across allocated GameServers in the GameServerSet
+                        type: integer
+                        minimum: 0
+                      allocatedCapacity: # Aggregated maximum capacity of the Counter across allocated GameServers in the GameServerSet
+                        type: integer
+                        minimum: 0
                       count: # Aggregated count of the Counter across the GameServerSet
                         type: integer
                         default: 0
@@ -15976,13 +15988,19 @@ spec:
                   additionalProperties:
                     type: object
                     properties:
-                      capacity: # Aggregated maximum capacity of the List across the GameServerSet
+                      allocatedCount: # Aggregated number of items in the List across allocated GameServers in the GameServerSet
+                        type: integer
+                        minimum: 0
+                      allocatedCapacity: # Aggregated maximum capacity of the List across allocated GameServers in the GameServerSet
                         type: integer
                         minimum: 0
                       count: # Aggregated number of items in the List across the GameServerSet
                         type: integer
-                        minimum: 0
                         default: 0
+                        minimum: 0
+                      capacity: # Aggregated maximum capacity of the List across the GameServerSet
+                        type: integer
+                        minimum: 0
       subresources:
         # status enables the status subresource.
         status: { }
@@ -16003,7 +16021,7 @@ metadata:
   name: agones-allocator
   labels:
     app: agones
-    chart: agones-1.35.0-dev
+    chart: agones-1.36.0-dev
     release: agones-manual
     heritage: Helm
 rules:
@@ -16033,7 +16051,7 @@ metadata:
   name: agones-controller
   labels:
     app: agones
-    chart: agones-1.35.0-dev
+    chart: agones-1.36.0-dev
     release: agones-manual
     heritage: Helm
 rules:
@@ -16087,7 +16105,7 @@ metadata:
   name: agones-sdk
   labels:
     app: agones
-    chart: agones-1.35.0-dev
+    chart: agones-1.36.0-dev
     release: agones-manual
     heritage: Helm
 rules:
@@ -16106,7 +16124,7 @@ metadata:
   name: agones-allocator
   labels:
     app: agones
-    chart: agones-1.35.0-dev
+    chart: agones-1.36.0-dev
     release: agones-manual
     heritage: Helm
 subjects:
@@ -16125,7 +16143,7 @@ metadata:
   name: agones-controller-access
   labels:
     app: agones
-    chart: agones-1.35.0-dev
+    chart: agones-1.36.0-dev
     release: agones-manual
     heritage: Helm
 subjects:
@@ -16177,7 +16195,7 @@ metadata:
   namespace: default
   labels:
     app: agones
-    chart: agones-1.35.0-dev
+    chart: agones-1.36.0-dev
     release: agones-manual
     heritage: Helm
 subjects:
@@ -16211,7 +16229,7 @@ metadata:
   labels:
     agones.dev/role: controller
     app: agones
-    chart: agones-1.35.0-dev
+    chart: agones-1.36.0-dev
     release: agones-manual
     heritage: Helm
 spec:
@@ -16244,7 +16262,7 @@ metadata:
   labels:
     agones.dev/role: extensions
     app: agones
-    chart: agones-1.35.0-dev
+    chart: agones-1.36.0-dev
     release: agones-manual
     heritage: Helm
 spec:
@@ -16264,7 +16282,7 @@ metadata:
   labels:
     component: ping
     app: agones
-    chart: agones-1.35.0-dev
+    chart: agones-1.36.0-dev
     release: agones-manual
     heritage: Helm
 spec:
@@ -16286,7 +16304,7 @@ metadata:
   labels:
     component: ping
     app: agones
-    chart: agones-1.35.0-dev
+    chart: agones-1.36.0-dev
     release: agones-manual
     heritage: Helm
 spec:
@@ -16322,7 +16340,7 @@ metadata:
   labels:
     agones.dev/role: extensions
     app: agones
-    chart: agones-1.35.0-dev
+    chart: agones-1.36.0-dev
     release: agones-manual
     heritage: Helm
 spec:
@@ -16359,7 +16377,7 @@ metadata:
   labels:
     component: allocator
     app: agones
-    chart: agones-1.35.0-dev
+    chart: agones-1.36.0-dev
     release: agones-manual
     heritage: Helm
 spec:
@@ -16381,7 +16399,7 @@ metadata:
   labels:
     multicluster.agones.dev/role: allocator
     app: agones
-    chart: agones-1.35.0-dev
+    chart: agones-1.36.0-dev
     release: agones-manual
     heritage: Helm
 spec:
@@ -16415,7 +16433,7 @@ metadata:
   labels:
     component: controller
     app: agones
-    chart: agones-1.35.0-dev
+    chart: agones-1.36.0-dev
     release: agones-manual
     heritage: Helm
 spec:
@@ -16457,7 +16475,7 @@ spec:
       serviceAccountName: agones-controller
       containers:
       - name: agones-controller
-        image: "us-docker.pkg.dev/agones-images/release/agones-controller:1.35.0-dev"
+        image: "us-docker.pkg.dev/agones-images/release/agones-controller:1.36.0-dev"
         imagePullPolicy: IfNotPresent
         env:
         # minimum port that can be exposed to GameServer traffic
@@ -16467,7 +16485,7 @@ spec:
         - name: MAX_PORT
           value: "8000"
         - name: SIDECAR_IMAGE # overwrite the GameServer sidecar image that is used
-          value: "us-docker.pkg.dev/agones-images/release/agones-sdk:1.35.0-dev"
+          value: "us-docker.pkg.dev/agones-images/release/agones-sdk:1.36.0-dev"
         - name: ALWAYS_PULL_SIDECAR # set the sidecar imagePullPolicy to Always
           value: "false"
         - name: SIDECAR_CPU_REQUEST
@@ -16572,7 +16590,7 @@ metadata:
   labels:
     component: extensions
     app: agones
-    chart: agones-1.35.0-dev
+    chart: agones-1.36.0-dev
     release: agones-manual
     heritage: Helm
 spec:
@@ -16616,7 +16634,7 @@ spec:
       terminationGracePeriodSeconds: 27
       containers:
       - name: agones-extensions
-        image: "us-docker.pkg.dev/agones-images/release/agones-extensions:1.35.0-dev"
+        image: "us-docker.pkg.dev/agones-images/release/agones-extensions:1.36.0-dev"
         imagePullPolicy: IfNotPresent
         env:
         - name: PROMETHEUS_EXPORTER
@@ -16718,7 +16736,7 @@ metadata:
   labels:
     component: ping
     app: agones
-    chart: agones-1.35.0-dev
+    chart: agones-1.36.0-dev
     release: agones-manual
     heritage: Helm
 spec:
@@ -16753,7 +16771,7 @@ spec:
       priorityClassName: agones-system
       containers:
         - name: agones-ping
-          image: "us-docker.pkg.dev/agones-images/release/agones-ping:1.35.0-dev"
+          image: "us-docker.pkg.dev/agones-images/release/agones-ping:1.36.0-dev"
           imagePullPolicy: IfNotPresent
           livenessProbe:
             httpGet:
@@ -16827,7 +16845,7 @@ spec:
           secretName: allocator-client-ca
       containers:
       - name: agones-allocator
-        image: "us-docker.pkg.dev/agones-images/release/agones-allocator:1.35.0-dev"
+        image: "us-docker.pkg.dev/agones-images/release/agones-allocator:1.36.0-dev"
         imagePullPolicy: IfNotPresent
         livenessProbe:
           httpGet:
@@ -16908,7 +16926,7 @@ metadata:
   labels:
     component: controller
     app: agones
-    chart: agones-1.35.0-dev
+    chart: agones-1.36.0-dev
     release: agones-manual
     heritage: Helm
 spec:
@@ -16959,7 +16977,7 @@ metadata:
   labels:
     component: controller
     app: agones
-    chart: agones-1.35.0-dev
+    chart: agones-1.36.0-dev
     release: agones-manual
     heritage: Helm
 webhooks:
@@ -17011,7 +17029,7 @@ metadata:
   labels:
     component: controller
     app: agones
-    chart: agones-1.35.0-dev
+    chart: agones-1.36.0-dev
     release: agones-manual
     heritage: Helm
 webhooks:
