@@ -1,0 +1,7 @@
+<div class="text-muted mt-5 pt-3 border-top">
+{{ if and (.GitInfo) (.Site.Params.github_repo) }}
+    {{ T "post_last_mod"}}
+    {{ .Lastmod.Format .Site.Params.time_format_default }}
+    {{ with .GitInfo }}: <a  href="{{ $.Site.Params.github_repo }}/commit/{{ .Hash }}">{{ .Subject }} ({{ .AbbreviatedHash }})</a>{{ end }}
+{{ end }}
+</div>
