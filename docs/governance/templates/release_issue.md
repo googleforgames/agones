@@ -60,7 +60,6 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 - [ ] Paste the announcement blog post to the #users Slack group.
 - [ ] Post to the [agonesdev](https://twitter.com/agonesdev) Twitter account.
 - [ ] Run `git checkout main`.
-- [ ] Run `make sdks-rust-cargo-version-update` to update {version} in `sdks/rust/Cargo.toml`.
 - [ ] Run `make sdk-publish-rust`. This command executes `cargo login` for authentication, performs a dry-run publish, and if that succeeds, does the actual publish. Will need [crate's API TOKEN](https://crates.io/settings/tokens) from your crate's account.
 - [ ] Run `make sdk-update-version release_stage=after version={version}` file. This command will update the SDKs and install directories files with `{version}+1-dev` and will also set `{version}+1` in `build/Makefile`.
 - [ ] Create PR with these changes, and merge them with approval
