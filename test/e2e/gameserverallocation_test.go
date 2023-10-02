@@ -280,7 +280,7 @@ func TestCounterGameServerAllocation(t *testing.T) {
 	}
 
 	flt, err := client.Fleets(framework.Namespace).Create(ctx, flt.DeepCopy(), metav1.CreateOptions{})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	defer client.Fleets(framework.Namespace).Delete(ctx, flt.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
 	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 
@@ -525,7 +525,7 @@ func TestCounterGameServerAllocationSorting(t *testing.T) {
 	}
 
 	flt, err := client.Fleets(framework.Namespace).Create(ctx, flt.DeepCopy(), metav1.CreateOptions{})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	defer client.Fleets(framework.Namespace).Delete(ctx, flt.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
 	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 
@@ -636,7 +636,7 @@ func TestCounterGameServerAllocationActions(t *testing.T) {
 	flt.Spec.Template.Spec.Counters = counters
 
 	flt, err := client.Fleets(framework.Namespace).Create(ctx, flt.DeepCopy(), metav1.CreateOptions{})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	defer client.Fleets(framework.Namespace).Delete(ctx, flt.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
 	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 
@@ -648,6 +648,7 @@ func TestCounterGameServerAllocationActions(t *testing.T) {
 	one := int64(1)
 	five := int64(5)
 	six := int64(6)
+	ten := int64(10)
 	negativeOne := int64(-1)
 
 	testCases := map[string]struct {
@@ -664,8 +665,9 @@ func TestCounterGameServerAllocationActions(t *testing.T) {
 							Action: &increment,
 							Amount: &one,
 						}}}},
-			wantGsaErr: false,
-			wantCount:  &six,
+			wantGsaErr:   false,
+			wantCount:    &six,
+			wantCapacity: &ten,
 		},
 		"decrement": {
 			gsa: allocationv1.GameServerAllocation{
@@ -675,8 +677,9 @@ func TestCounterGameServerAllocationActions(t *testing.T) {
 							Action: &decrement,
 							Amount: &five,
 						}}}},
-			wantGsaErr: false,
-			wantCount:  &zero,
+			wantGsaErr:   false,
+			wantCount:    &zero,
+			wantCapacity: &ten,
 		},
 		// TODO: IIRC the SDK with zero out Count if Capacity is set to zero. Do we want this same behavior for GameServerAllocation?
 		"change capacity": {
@@ -690,8 +693,7 @@ func TestCounterGameServerAllocationActions(t *testing.T) {
 			wantCount:    &five,
 			wantCapacity: &zero,
 		},
-		// TODO: These allocated a gameserver (although the Counter action is not performed) Is this what we want?
-		// Do we want to validate negative CounterActions in the GSA?
+		// Note: These allocate a gameserver (although the Counter action is not performed)
 		"decrement past zero": {
 			gsa: allocationv1.GameServerAllocation{
 				Spec: allocationv1.GameServerAllocationSpec{
@@ -700,6 +702,9 @@ func TestCounterGameServerAllocationActions(t *testing.T) {
 							Action: &decrement,
 							Amount: &six,
 						}}}},
+			wantGsaErr:   false,
+			wantCount:    &five,
+			wantCapacity: &ten,
 		},
 		"decrement negative": {
 			gsa: allocationv1.GameServerAllocation{
@@ -709,7 +714,7 @@ func TestCounterGameServerAllocationActions(t *testing.T) {
 							Action: &decrement,
 							Amount: &negativeOne,
 						}}}},
-			// wantGsaErr: true,
+			wantGsaErr: true,
 		},
 		"increment past capacity": {
 			gsa: allocationv1.GameServerAllocation{
@@ -719,6 +724,9 @@ func TestCounterGameServerAllocationActions(t *testing.T) {
 							Action: &increment,
 							Amount: &six,
 						}}}},
+			wantGsaErr:   false,
+			wantCount:    &five,
+			wantCapacity: &ten,
 		},
 		"increment negative": {
 			gsa: allocationv1.GameServerAllocation{
@@ -728,7 +736,7 @@ func TestCounterGameServerAllocationActions(t *testing.T) {
 							Action: &increment,
 							Amount: &negativeOne,
 						}}}},
-			// wantGsaErr: true,
+			wantGsaErr: true,
 		},
 		"change capacity negative": {
 			gsa: allocationv1.GameServerAllocation{
@@ -737,11 +745,10 @@ func TestCounterGameServerAllocationActions(t *testing.T) {
 						"games": {
 							Capacity: &negativeOne,
 						}}}},
-			// wantGsaErr: true,
+			wantGsaErr: true,
 		},
-		// Same issue with this test as above with increment/decrement/capacity, the GS is still allocated.
-		// (If we want different behavior will need to change test to not check for "games" and to
-		// instead check for counter action Counter name.)
+		// gsa.Validate() is not able to see the state of Counters in the fleet, so the GSA is not able
+		// to validate the existence of a Counter. Use with GameServerSelector to filter the Counters.
 		"Counter does not exist": {
 			gsa: allocationv1.GameServerAllocation{
 				Spec: allocationv1.GameServerAllocationSpec{
@@ -750,6 +757,7 @@ func TestCounterGameServerAllocationActions(t *testing.T) {
 							Action: &increment,
 							Amount: &one,
 						}}}},
+			wantGsaErr: false,
 		},
 	}
 
