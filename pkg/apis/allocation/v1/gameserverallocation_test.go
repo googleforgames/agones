@@ -16,6 +16,7 @@ package v1
 
 import (
 	"fmt"
+	"sort"
 	"testing"
 
 	"agones.dev/agones/pkg/apis"
@@ -1038,6 +1039,135 @@ func TestGameServerListActions(t *testing.T) {
 	}
 }
 
+func TestValidateCounterActions(t *testing.T) {
+	t.Parallel()
+
+	runtime.FeatureTestMutex.Lock()
+	defer runtime.FeatureTestMutex.Unlock()
+	assert.NoError(t, runtime.ParseFeatures(fmt.Sprintf("%s=true", runtime.FeatureCountsAndLists)))
+
+	fieldPath := field.NewPath("spec.Counters")
+	decrement := agonesv1.GameServerPriorityDecrement
+	increment := agonesv1.GameServerPriorityIncrement
+
+	testScenarios := map[string]struct {
+		counterActions map[string]CounterAction
+		wantErr        bool
+	}{
+		"Valid CounterActions": {
+			counterActions: map[string]CounterAction{
+				"foo": {
+					Action: &increment,
+					Amount: int64Pointer(10),
+				},
+				"bar": {
+					Capacity: int64Pointer(100),
+				},
+				"baz": {
+					Action:   &decrement,
+					Amount:   int64Pointer(1000),
+					Capacity: int64Pointer(0),
+				},
+			},
+			wantErr: false,
+		},
+		"Negative Amount": {
+			counterActions: map[string]CounterAction{
+				"foo": {
+					Action: &increment,
+					Amount: int64Pointer(-1),
+				},
+			},
+			wantErr: true,
+		},
+		"Negative Capacity": {
+			counterActions: map[string]CounterAction{
+				"foo": {
+					Capacity: int64Pointer(-20),
+				},
+			},
+			wantErr: true,
+		},
+		"Amount but no Action": {
+			counterActions: map[string]CounterAction{
+				"foo": {
+					Amount: int64Pointer(10),
+				},
+			},
+			wantErr: true,
+		},
+		"Action but no Amount": {
+			counterActions: map[string]CounterAction{
+				"foo": {
+					Action: &decrement,
+				},
+			},
+			wantErr: true,
+		},
+	}
+
+	for test, testScenario := range testScenarios {
+		t.Run(test, func(t *testing.T) {
+			allErrs := validateCounterActions(testScenario.counterActions, fieldPath)
+			if testScenario.wantErr {
+				assert.NotNil(t, allErrs)
+			} else {
+				assert.Nil(t, allErrs)
+			}
+		})
+	}
+}
+
+func TestValidateListActions(t *testing.T) {
+	t.Parallel()
+
+	runtime.FeatureTestMutex.Lock()
+	defer runtime.FeatureTestMutex.Unlock()
+	assert.NoError(t, runtime.ParseFeatures(fmt.Sprintf("%s=true", runtime.FeatureCountsAndLists)))
+
+	fieldPath := field.NewPath("spec.Lists")
+
+	testScenarios := map[string]struct {
+		listActions map[string]ListAction
+		wantErr     bool
+	}{
+		"Valid ListActions": {
+			listActions: map[string]ListAction{
+				"foo": {
+					AddValues: []string{"hello", "world"},
+					Capacity:  int64Pointer(10),
+				},
+				"bar": {
+					Capacity: int64Pointer(0),
+				},
+				"baz": {
+					AddValues: []string{},
+				},
+			},
+			wantErr: false,
+		},
+		"Negative Capacity": {
+			listActions: map[string]ListAction{
+				"foo": {
+					Capacity: int64Pointer(-20),
+				},
+			},
+			wantErr: true,
+		},
+	}
+
+	for test, testScenario := range testScenarios {
+		t.Run(test, func(t *testing.T) {
+			allErrs := validateListActions(testScenario.listActions, fieldPath)
+			if testScenario.wantErr {
+				assert.NotNil(t, allErrs)
+			} else {
+				assert.Nil(t, allErrs)
+			}
+		})
+	}
+}
+
 func TestGameServerAllocationValidate(t *testing.T) {
 	t.Parallel()
 
@@ -1057,7 +1187,9 @@ func TestGameServerAllocationValidate(t *testing.T) {
 
 	runtime.FeatureTestMutex.Lock()
 	defer runtime.FeatureTestMutex.Unlock()
-	assert.NoError(t, runtime.ParseFeatures(fmt.Sprintf("%s=true", runtime.FeaturePlayerAllocationFilter)))
+	assert.NoError(t, runtime.ParseFeatures(fmt.Sprintf("%s=true&%s=false",
+		runtime.FeaturePlayerAllocationFilter,
+		runtime.FeatureCountsAndLists)))
 
 	// invalid player selection
 	gsa = &GameServerAllocation{
@@ -1073,16 +1205,25 @@ func TestGameServerAllocationValidate(t *testing.T) {
 			MetaPatch: MetaPatch{
 				Labels: map[string]string{"$$$": "foo"},
 			},
+			Priorities: []agonesv1.Priority{},
+			Counters:   map[string]CounterAction{},
+			Lists:      map[string]ListAction{},
 		},
 	}
 	gsa.ApplyDefaults()
 
 	allErrs = gsa.Validate()
-	assert.Len(t, allErrs, 4)
+	sort.Slice(allErrs, func(i, j int) bool {
+		return allErrs[i].Field > allErrs[j].Field
+	})
+	assert.Len(t, allErrs, 7)
 	assert.Equal(t, "spec.required.players.minAvailable", allErrs[0].Field)
-	assert.Equal(t, "spec.preferred[0].players.maxAvailable", allErrs[1].Field)
+	assert.Equal(t, "spec.priorities", allErrs[1].Field)
 	assert.Equal(t, "spec.preferred[0].players.minAvailable", allErrs[2].Field)
-	assert.Equal(t, "spec.metadata.labels", allErrs[3].Field)
+	assert.Equal(t, "spec.preferred[0].players.maxAvailable", allErrs[3].Field)
+	assert.Equal(t, "spec.metadata.labels", allErrs[4].Field)
+	assert.Equal(t, "spec.lists", allErrs[5].Field)
+	assert.Equal(t, "spec.counters", allErrs[6].Field)
 }
 
 func TestGameServerAllocationConverter(t *testing.T) {

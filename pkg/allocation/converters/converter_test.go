@@ -27,6 +27,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/wrapperspb"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -34,6 +35,10 @@ import (
 func TestConvertAllocationRequestToGameServerAllocation(t *testing.T) {
 	allocated := agonesv1.GameServerStateAllocated
 	ready := agonesv1.GameServerStateReady
+	increment := agonesv1.GameServerPriorityIncrement
+	decrement := agonesv1.GameServerPriorityDecrement
+	one := int64(1)
+	ten := int64(10)
 
 	tests := []struct {
 		name     string
@@ -116,6 +121,23 @@ func TestConvertAllocationRequestToGameServerAllocation(t *testing.T) {
 						Order: pb.Priority_Ascending,
 					},
 				},
+				Counters: map[string]*pb.CounterAction{
+					"o": {
+						Action: wrapperspb.String("Increment"),
+						Amount: wrapperspb.Int64(1),
+					},
+					"q": {
+						Action:   wrapperspb.String("Decrement"),
+						Amount:   wrapperspb.Int64(1),
+						Capacity: wrapperspb.Int64(10),
+					},
+				},
+				Lists: map[string]*pb.ListAction{
+					"p": {
+						AddValues: []string{"foo", "bar", "baz"},
+						Capacity:  wrapperspb.Int64(10),
+					},
+				},
 				Scheduling: pb.AllocationRequest_Packed,
 				Metadata: &pb.MetaPatch{
 					Labels: map[string]string{
@@ -179,6 +201,23 @@ func TestConvertAllocationRequestToGameServerAllocation(t *testing.T) {
 							Type:  "List",
 							Key:   "p",
 							Order: "Ascending",
+						},
+					},
+					Counters: map[string]allocationv1.CounterAction{
+						"o": {
+							Action: &increment,
+							Amount: &one,
+						},
+						"q": {
+							Action:   &decrement,
+							Amount:   &one,
+							Capacity: &ten,
+						},
+					},
+					Lists: map[string]allocationv1.ListAction{
+						"p": {
+							AddValues: []string{"foo", "bar", "baz"},
+							Capacity:  &ten,
 						},
 					},
 					Selectors: []allocationv1.GameServerSelector{
@@ -534,6 +573,11 @@ func TestConvertAllocationRequestToGameServerAllocation(t *testing.T) {
 						},
 					},
 				},
+				Lists: map[string]*pb.ListAction{
+					"d": {
+						Capacity: wrapperspb.Int64(one),
+					},
+				},
 				Scheduling: pb.AllocationRequest_Distributed,
 				Metadata:   &pb.MetaPatch{},
 			},
@@ -568,6 +612,11 @@ func TestConvertAllocationRequestToGameServerAllocation(t *testing.T) {
 							},
 						},
 					},
+					Lists: map[string]allocationv1.ListAction{
+						"d": {
+							Capacity: &one,
+						},
+					},
 					Scheduling: apis.Distributed,
 				},
 			},
@@ -589,6 +638,11 @@ func TestConvertAllocationRequestToGameServerAllocation(t *testing.T) {
 }
 
 func TestConvertGSAToAllocationRequest(t *testing.T) {
+	increment := agonesv1.GameServerPriorityIncrement
+	decrement := agonesv1.GameServerPriorityDecrement
+	two := int64(2)
+	twenty := int64(20)
+
 	tests := []struct {
 		name     string
 		features string
@@ -669,6 +723,25 @@ func TestConvertGSAToAllocationRequest(t *testing.T) {
 							Order: "Descending",
 						},
 					},
+					Counters: map[string]allocationv1.CounterAction{
+						"a": {
+							Action:   &decrement,
+							Amount:   &two,
+							Capacity: &twenty,
+						},
+						"c": {
+							Action: &increment,
+							Amount: &two,
+						},
+					},
+					Lists: map[string]allocationv1.ListAction{
+						"b": {
+							AddValues: []string{"hello", "world"},
+						},
+						"d": {
+							Capacity: &two,
+						},
+					},
 					Scheduling: apis.Distributed,
 				},
 			},
@@ -727,6 +800,25 @@ func TestConvertGSAToAllocationRequest(t *testing.T) {
 						Type:  pb.Priority_List,
 						Key:   "b",
 						Order: pb.Priority_Descending,
+					},
+				},
+				Counters: map[string]*pb.CounterAction{
+					"a": {
+						Action:   wrapperspb.String(decrement),
+						Amount:   wrapperspb.Int64(two),
+						Capacity: wrapperspb.Int64(twenty),
+					},
+					"c": {
+						Action: wrapperspb.String(increment),
+						Amount: wrapperspb.Int64(two),
+					},
+				},
+				Lists: map[string]*pb.ListAction{
+					"b": {
+						AddValues: []string{"hello", "world"},
+					},
+					"d": {
+						Capacity: wrapperspb.Int64(two),
 					},
 				},
 			},

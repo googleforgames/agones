@@ -23,6 +23,7 @@ import (
 	"agones.dev/agones/pkg/util/runtime"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/wrapperspb"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -73,8 +74,16 @@ func ConvertAllocationRequestToGSA(in *pb.AllocationRequest) *allocationv1.GameS
 		gsa.Spec.Required = *selector
 	}
 
-	if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) && in.Priorities != nil {
-		gsa.Spec.Priorities = convertAllocationPrioritiesToGSAPriorities(in.GetPriorities())
+	if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
+		if in.Priorities != nil {
+			gsa.Spec.Priorities = convertAllocationPrioritiesToGSAPriorities(in.GetPriorities())
+		}
+		if in.Counters != nil {
+			gsa.Spec.Counters = convertAllocationCountersToGSACounterActions(in.GetCounters())
+		}
+		if in.Lists != nil {
+			gsa.Spec.Lists = convertAllocationListsToGSAListActions(in.GetLists())
+		}
 	}
 
 	return gsa
@@ -120,8 +129,16 @@ func ConvertGSAToAllocationRequest(in *allocationv1.GameServerAllocation) *pb.Al
 		out.MultiClusterSetting.PolicySelector = convertInternalLabelSelectorToLabelSelector(&in.Spec.MultiClusterSetting.PolicySelector)
 	}
 
-	if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) && in.Spec.Priorities != nil {
-		out.Priorities = convertGSAPrioritiesToAllocationPriorities(in.Spec.Priorities)
+	if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
+		if in.Spec.Priorities != nil {
+			out.Priorities = convertGSAPrioritiesToAllocationPriorities(in.Spec.Priorities)
+		}
+		if in.Spec.Counters != nil {
+			out.Counters = convertGSACounterActionsToAllocationCounters(in.Spec.Counters)
+		}
+		if in.Spec.Lists != nil {
+			out.Lists = convertGSAListActionsToAllocationLists(in.Spec.Lists)
+		}
 	}
 
 	return out
@@ -466,6 +483,101 @@ func convertGSAPrioritiesToAllocationPriorities(in []agonesv1.Priority) []*pb.Pr
 			Order: po,
 		}
 		out = append(out, &priority)
+	}
+	return out
+}
+
+// convertAllocationCountersToGSACounterActions converts a map of AllocationRequest_Counters to a
+// map of GameServerAllocationSpec CounterActions
+func convertAllocationCountersToGSACounterActions(in map[string]*pb.CounterAction) map[string]allocationv1.CounterAction {
+	out := map[string]allocationv1.CounterAction{}
+	for k, v := range in {
+		ca := allocationv1.CounterAction{}
+
+		if v.Action != nil {
+			action := v.Action.GetValue()
+			ca.Action = &action
+		}
+		if v.Amount != nil {
+			amount := v.Amount.GetValue()
+			ca.Amount = &amount
+		}
+		if v.Capacity != nil {
+			capacity := v.Capacity.GetValue()
+			ca.Capacity = &capacity
+		}
+
+		out[k] = ca
+	}
+	return out
+}
+
+// convertGSACounterActionsToAllocationCounters converts a map of GameServerAllocationSpec CounterActions
+// to a map of AllocationRequest_Counters
+func convertGSACounterActionsToAllocationCounters(in map[string]allocationv1.CounterAction) map[string]*pb.CounterAction {
+	out := map[string]*pb.CounterAction{}
+
+	for k, v := range in {
+		ca := pb.CounterAction{}
+
+		if v.Action != nil {
+			ca.Action = wrapperspb.String(*v.Action)
+		}
+		if v.Amount != nil {
+			ca.Amount = wrapperspb.Int64(*v.Amount)
+		}
+		if v.Capacity != nil {
+			ca.Capacity = wrapperspb.Int64(*v.Capacity)
+		}
+
+		out[k] = &ca
+	}
+	return out
+}
+
+// convertAllocationListsToGSAListActions converts a map of AllocationRequest_Lists to a
+// map of GameServerAllocationSpec ListActions
+func convertAllocationListsToGSAListActions(in map[string]*pb.ListAction) map[string]allocationv1.ListAction {
+	out := map[string]allocationv1.ListAction{}
+
+	for k, v := range in {
+		la := allocationv1.ListAction{}
+
+		if v.AddValues != nil {
+			addValues := v.GetAddValues()
+			copyValues := make([]string, len(addValues))
+			copy(copyValues, addValues)
+			la.AddValues = copyValues
+		}
+		if v.Capacity != nil {
+			capacity := v.Capacity.GetValue()
+			la.Capacity = &capacity
+		}
+
+		out[k] = la
+	}
+
+	return out
+}
+
+// convertGSAListActionsToAllocationLists converts a map of GameServerAllocationSpec ListActions
+// to a map of AllocationRequest_Lists
+func convertGSAListActionsToAllocationLists(in map[string]allocationv1.ListAction) map[string]*pb.ListAction {
+	out := map[string]*pb.ListAction{}
+
+	for k, v := range in {
+		la := pb.ListAction{}
+
+		if v.AddValues != nil {
+			copyValues := make([]string, len(v.AddValues))
+			copy(copyValues, v.AddValues)
+			la.AddValues = copyValues
+		}
+		if v.Capacity != nil {
+			la.Capacity = wrapperspb.Int64(*v.Capacity)
+		}
+
+		out[k] = &la
 	}
 	return out
 }
