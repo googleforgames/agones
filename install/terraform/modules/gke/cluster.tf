@@ -32,7 +32,7 @@ locals {
   network                       = lookup(var.cluster, "network", "default")
   subnetwork                    = lookup(var.cluster, "subnetwork", "")
   releaseChannel                = lookup(var.cluster, "releaseChannel", "UNSPECIFIED")
-  kubernetesVersion             = lookup(var.cluster, "kubernetesVersion", "1.26")
+  kubernetesVersion             = lookup(var.cluster, "kubernetesVersion", "1.27")
   windowsInitialNodeCount       = lookup(var.cluster, "windowsInitialNodeCount", "0")
   windowsMachineType            = lookup(var.cluster, "windowsMachineType", "e2-standard-4")
   autoscale                     = lookup(var.cluster, "autoscale", false)
