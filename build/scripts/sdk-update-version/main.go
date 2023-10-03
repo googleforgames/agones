@@ -53,6 +53,7 @@ func main() {
 		"sdks/unity/package.json",
 		"sdks/csharp/sdk/AgonesSDK.nuspec",
 		"sdks/csharp/sdk/csharp-sdk.csproj",
+		"sdks/rust/Cargo.toml",
 	}
 
 	for _, filename := range files {

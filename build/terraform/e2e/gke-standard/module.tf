@@ -35,6 +35,14 @@ variable "kubernetesVersion" {}
 variable "location" {}
 variable "releaseChannel" {}
 
+variable "machineType" {
+  default = "e2-standard-4"
+}
+
+variable "initialNodeCount" {
+  default = 10
+}
+
 variable "overrideName" {
   default = ""
 }
@@ -46,8 +54,8 @@ module "gke_cluster" {
     "name"                 = var.overrideName != "" ? var.overrideName : format("standard-e2e-test-cluster-%s", replace(var.kubernetesVersion, ".", "-"))
     "location"             = var.location
     "releaseChannel"       = var.releaseChannel
-    "machineType"          = "e2-standard-4"
-    "initialNodeCount"     = 10
+    "machineType"          = var.machineType
+    "initialNodeCount"     = var.initialNodeCount
     "enableImageStreaming" = true
     "project"              = var.project
     "kubernetesVersion"    = var.kubernetesVersion

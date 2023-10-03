@@ -60,9 +60,8 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 - [ ] Paste the announcement blog post to the #users Slack group.
 - [ ] Post to the [agonesdev](https://twitter.com/agonesdev) Twitter account.
 - [ ] Run `git checkout main`.
-- [ ] Run `make sdk-update-version release_stage=after version={version}` file. This command will update the version number in the sdks/install files to {version}+1-dev.
-- [ ] Run `make sdks-rust-cargo-version-update`. Commit the changes in a feature branch called `prep/{version}+1`. 
 - [ ] Run `make sdk-publish-rust`. This command executes `cargo login` for authentication, performs a dry-run publish, and if that succeeds, does the actual publish. Will need [crate's API TOKEN](https://crates.io/settings/tokens) from your crate's account.
+- [ ] Run `make sdk-update-version release_stage=after version={version}` file. This command will update the SDKs and install directories files with `{version}+1-dev` and will also set `{version}+1` in `build/Makefile`.
 - [ ] Create PR with these changes, and merge them with approval
 - [ ] Close this issue. _Congratulations!_ - the release is now complete! :tada: :clap: :smile: :+1:
 

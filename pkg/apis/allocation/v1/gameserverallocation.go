@@ -448,6 +448,41 @@ func validateLists(lists map[string]ListSelector, fldPath *field.Path) field.Err
 	return allErrs
 }
 
+// validateCounterActions validates that the Counters field has valid values for CounterActions
+func validateCounterActions(counters map[string]CounterAction, fldPath *field.Path) field.ErrorList {
+	var allErrs field.ErrorList
+	for key, counterAction := range counters {
+		keyPath := fldPath.Key(key)
+		if counterAction.Amount != nil && *counterAction.Amount < 0 {
+			allErrs = append(allErrs, field.Invalid(keyPath.Child("amount"), counterAction.Amount, apivalidation.IsNegativeErrorMsg))
+		}
+		if counterAction.Capacity != nil && *counterAction.Capacity < 0 {
+			allErrs = append(allErrs, field.Invalid(keyPath.Child("capacity"), counterAction.Capacity, apivalidation.IsNegativeErrorMsg))
+		}
+		if counterAction.Amount != nil && counterAction.Action == nil {
+			allErrs = append(allErrs, field.Invalid(keyPath, counterAction.Action, "action must be \"Increment\" or \"Decrement\" if the amount is not nil"))
+		}
+		if counterAction.Amount == nil && counterAction.Action != nil {
+			allErrs = append(allErrs, field.Invalid(keyPath, counterAction.Amount, "amount must not be nil if action is not nil"))
+		}
+	}
+
+	return allErrs
+}
+
+// validateListActions validates that the Lists field has valid values for ListActions
+func validateListActions(lists map[string]ListAction, fldPath *field.Path) field.ErrorList {
+	var allErrs field.ErrorList
+	for key, listAction := range lists {
+		keyPath := fldPath.Key(key)
+		if listAction.Capacity != nil && *listAction.Capacity < 0 {
+			allErrs = append(allErrs, field.Invalid(keyPath.Child("capacity"), listAction.Capacity, apivalidation.IsNegativeErrorMsg))
+		}
+	}
+
+	return allErrs
+}
+
 // MultiClusterSetting specifies settings for multi-cluster allocation.
 type MultiClusterSetting struct {
 	Enabled        bool                 `json:"enabled,omitempty"`
@@ -525,8 +560,25 @@ func (gsa *GameServerAllocation) Validate() field.ErrorList {
 		allErrs = append(allErrs, gsa.Spec.Selectors[i].Validate(specPath.Child("selectors").Index(i))...)
 	}
 
-	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) && (gsa.Spec.Priorities != nil) {
-		allErrs = append(allErrs, field.Forbidden(specPath.Child("priorities"), "Feature CountsAndLists must be enabled if Priorities is specified"))
+	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
+		if gsa.Spec.Priorities != nil {
+			allErrs = append(allErrs, field.Forbidden(specPath.Child("priorities"), "Feature CountsAndLists must be enabled if Priorities is specified"))
+		}
+		if gsa.Spec.Counters != nil {
+			allErrs = append(allErrs, field.Forbidden(specPath.Child("counters"), "Feature CountsAndLists must be enabled if Counters is specified"))
+		}
+		if gsa.Spec.Lists != nil {
+			allErrs = append(allErrs, field.Forbidden(specPath.Child("lists"), "Feature CountsAndLists must be enabled if Lists is specified"))
+		}
+	}
+
+	if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
+		if gsa.Spec.Counters != nil {
+			allErrs = append(allErrs, validateCounterActions(gsa.Spec.Counters, specPath.Child("counters"))...)
+		}
+		if gsa.Spec.Lists != nil {
+			allErrs = append(allErrs, validateListActions(gsa.Spec.Lists, specPath.Child("lists"))...)
+		}
 	}
 
 	allErrs = append(allErrs, gsa.Spec.MetaPatch.Validate(specPath.Child("metadata"))...)

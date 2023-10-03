@@ -80,6 +80,9 @@ resource "google_container_cluster" "primary" {
   network    = local.network
   subnetwork = local.subnetwork
 
+  networking_mode = "VPC_NATIVE"
+  ip_allocation_policy {}
+  
   release_channel {
     channel = local.releaseChannel
   }
