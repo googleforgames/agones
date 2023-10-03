@@ -855,7 +855,7 @@ func TestGameServerCounterActions(t *testing.T) {
 					}}}},
 			wantErr: false,
 		},
-		"fail update counter capacity and count": {
+		"fail update counter capacity and truncate update count": {
 			ca: CounterAction{
 				Action:   &INCREMENT,
 				Amount:   int64Pointer(10),
@@ -871,7 +871,7 @@ func TestGameServerCounterActions(t *testing.T) {
 			want: &agonesv1.GameServer{Status: agonesv1.GameServerStatus{
 				Counters: map[string]agonesv1.CounterStatus{
 					"sages": {
-						Count:    99,
+						Count:    100,
 						Capacity: 100,
 					}}}},
 			wantErr: true,

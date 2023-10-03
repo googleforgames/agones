@@ -879,16 +879,16 @@ func (gs *GameServer) UpdateCount(name string, action string, amount int64) erro
 		cnt := counter.Count
 		if action == GameServerPriorityIncrement {
 			cnt += amount
-			// only check for Count > Capacity when incrementing
-			if cnt > counter.Capacity {
-				return errors.Errorf("unable to UpdateCount with Name %s, Action %s, Amount %d. Incremented Count %d is greater than available capacity %d", name, action, amount, cnt, counter.Capacity)
-			}
 		} else {
 			cnt -= amount
-			// only check for Count < 0 when decrementing
-			if cnt < 0 {
-				return errors.Errorf("unable to UpdateCount with Name %s, Action %s, Amount %d. Decremented Count %d is less than 0", name, action, amount, cnt)
-			}
+		}
+		// Truncate to Capacity if Count > Capacity
+		if cnt > counter.Capacity {
+			cnt = counter.Capacity
+		}
+		// Truncate to Zero if Count is negative
+		if cnt < 0 {
+			cnt = 0
 		}
 		counter.Count = cnt
 		gs.Status.Counters[name] = counter
@@ -904,6 +904,7 @@ func (gs *GameServer) UpdateCounterCapacity(name string, capacity int64) error {
 	}
 	if counter, ok := gs.Status.Counters[name]; ok {
 		counter.Capacity = capacity
+		// TODO: If Capacity is now less than Count, do we want to reset Count here to equal Capacity?
 		gs.Status.Counters[name] = counter
 		return nil
 	}
@@ -930,6 +931,7 @@ func (gs *GameServer) AppendListValues(name string, values []string) error {
 	}
 	if list, ok := gs.Status.Lists[name]; ok {
 		mergedList := mergeRemoveDuplicates(list.Values, values)
+		// TODO: Truncate and apply up to cutoff
 		if len(mergedList) > int(list.Capacity) {
 			return errors.Errorf("unable to AppendListValues: Name %s, Values %s. Appended list length %d exceeds list capacity %d", name, values, len(mergedList), list.Capacity)
 		}

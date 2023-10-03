@@ -296,7 +296,6 @@ func TestCounterGameServerAllocation(t *testing.T) {
 		wantAllocated allocationv1.GameServerAllocationState // For a valid GSA: "allocated" if you expect the GSA to succed in allocating a GameServer, "unallocated" if not
 		wantState     agonesv1.GameServerState
 	}{
-		// TODO: These tests assume packed strategy. Should I also test for distributed? Or is that behavior already sufficiently tested elsewhere in this e2e?
 		"Allocate to same GameServer MinAvailable (available capacity)": {
 			gsa: allocationv1.GameServerAllocation{
 				Spec: allocationv1.GameServerAllocationSpec{
@@ -681,7 +680,6 @@ func TestCounterGameServerAllocationActions(t *testing.T) {
 			wantCount:    &zero,
 			wantCapacity: &ten,
 		},
-		// TODO: IIRC the SDK with zero out Count if Capacity is set to zero. Do we want this same behavior for GameServerAllocation?
 		"change capacity": {
 			gsa: allocationv1.GameServerAllocation{
 				Spec: allocationv1.GameServerAllocationSpec{
@@ -693,8 +691,7 @@ func TestCounterGameServerAllocationActions(t *testing.T) {
 			wantCount:    &five,
 			wantCapacity: &zero,
 		},
-		// Note: These allocate a gameserver (although the Counter action is not performed)
-		"decrement past zero": {
+		"decrement past zero truncated": {
 			gsa: allocationv1.GameServerAllocation{
 				Spec: allocationv1.GameServerAllocationSpec{
 					Counters: map[string]allocationv1.CounterAction{
@@ -703,7 +700,7 @@ func TestCounterGameServerAllocationActions(t *testing.T) {
 							Amount: &six,
 						}}}},
 			wantGsaErr:   false,
-			wantCount:    &five,
+			wantCount:    &zero,
 			wantCapacity: &ten,
 		},
 		"decrement negative": {
@@ -716,7 +713,7 @@ func TestCounterGameServerAllocationActions(t *testing.T) {
 						}}}},
 			wantGsaErr: true,
 		},
-		"increment past capacity": {
+		"increment past capacity truncated": {
 			gsa: allocationv1.GameServerAllocation{
 				Spec: allocationv1.GameServerAllocationSpec{
 					Counters: map[string]allocationv1.CounterAction{
@@ -725,7 +722,7 @@ func TestCounterGameServerAllocationActions(t *testing.T) {
 							Amount: &six,
 						}}}},
 			wantGsaErr:   false,
-			wantCount:    &five,
+			wantCount:    &ten,
 			wantCapacity: &ten,
 		},
 		"increment negative": {
@@ -747,8 +744,10 @@ func TestCounterGameServerAllocationActions(t *testing.T) {
 						}}}},
 			wantGsaErr: true,
 		},
-		// gsa.Validate() is not able to see the state of Counters in the fleet, so the GSA is not able
-		// to validate the existence of a Counter. Use with GameServerSelector to filter the Counters.
+		// Note: a gameserver is still allocated even though the counter does not exist (and thus the
+		// action cannot be performed). gsa.Validate() is not able to see the state of Counters in the
+		// fleet, so the GSA is not able to validate the existence of a Counter. Use the
+		// GameServerSelector to filter the Counters.
 		"Counter does not exist": {
 			gsa: allocationv1.GameServerAllocation{
 				Spec: allocationv1.GameServerAllocationSpec{
@@ -773,9 +772,6 @@ func TestCounterGameServerAllocationActions(t *testing.T) {
 			assert.Equal(t, string(allocated), string(gsa.Status.State))
 
 			gs1, err := framework.AgonesClient.AgonesV1().GameServers(flt.ObjectMeta.Namespace).Get(ctx, gsa.Status.GameServerName, metav1.GetOptions{})
-			// TODO: Remove debug printing
-			fmt.Println("GS1 Counters", gs1.Status.Counters)
-			fmt.Println("GS1 State", gs1.Status.State)
 			require.NoError(t, err)
 			assert.Equal(t, allocated, gs1.Status.State)
 			assert.NotNil(t, gs1.ObjectMeta.Annotations["agones.dev/last-allocated"])
