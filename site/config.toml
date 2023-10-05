@@ -16,8 +16,6 @@ baseURL = "/site/"
 title = "Agones"
 enableRobotsTXT = true
 
-# Hugo allows theme composition (and inheritance). The precedence is from left to right.
-theme = ["docsy"]
 
 # Will give values to .Lastmod etc.
 enableGitInfo = true
@@ -171,3 +169,9 @@ no = 'Sorry to hear that. Please <a href="https://github.com/googleforgames/agon
 
 [security.funcs]
   getenv = ['^HUGO_', '^CI$', 'RELEASE_BRANCH', 'HUGO_ENV', 'RELEASE_VERSION']
+[module]
+proxy = "direct"
+[[module.imports]]
+path = "github.com/google/docsy"
+[[module.imports]]
+path = "github.com/google/docsy/dependencies"

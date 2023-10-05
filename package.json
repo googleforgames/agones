@@ -1,0 +1,28 @@
+{
+  "name": "agones",
+  "version": "1.0.0",
+  "description": "<img src=\"./docs/agones.png\" alt=\"Agones logo\" width=\"250px\" height=\"250px\" />",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "example": "examples",
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Kalaiselvi84/agones.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Kalaiselvi84/agones/issues"
+  },
+  "homepage": "https://github.com/Kalaiselvi84/agones#readme",
+  "dependencies": {
+    "bootstrap": "^5.3.2"
+  }
+}
