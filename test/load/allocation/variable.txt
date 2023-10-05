@@ -14,35 +14,35 @@
 #
 ### Varying allocations
 #Duration,Number_of_clients/allocations
-# run for 20 mins with 10 clients
-10m,10
-10m,10
-# run for 30 mins with 30 clients
-10m,30
-10m,30
-10m,30
-# run for 30 mins with 20 clients
-10m,20
-10m,20
-10m,20
-# run for 30 mins with 30 clients
-10m,30
-10m,30
-10m,30
-# run for 30 mins with 20 clients
-10m,20
-10m,20
-10m,20
-# run for 30 mins with 5 clients
-10m,5
-10m,5
-10m,5
-# run for 40 mins with 30 clients
-10m,30
-10m,30
-10m,30
-10m,30
-# run for 30 mins with 15 clients
-10m,15
-10m,15
-10m,15
+# run for 20 mins with 10 clients and 500ms interval
+10m,10,500
+10m,10,500
+# run for 30 mins with 30 clients and 500ms interval
+10m,30,500
+10m,30,500
+10m,30,500
+# run for 30 mins with 20 clients and 500ms interval
+10m,20,500
+10m,20,500
+10m,20,500
+# run for 30 mins with 30 clients and 500ms interval
+10m,30,500
+10m,30,500
+10m,30,500
+# run for 30 mins with 20 clients and 500ms interval
+10m,20,500
+10m,20,500
+10m,20,500
+# run for 30 mins with 5 clients and 500ms interval
+10m,5,500
+10m,5,500
+10m,5,500
+# run for 40 mins with 30 clients and 500ms interval
+10m,30,500
+10m,30,500
+10m,30,500
+10m,30,500
+# run for 30 mins with 15 clients and 500ms interval
+10m,15,500
+10m,15,500
+10m,15,500
