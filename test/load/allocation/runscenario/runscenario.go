@@ -42,6 +42,11 @@ const (
 	objectHasBeenModified     allocErrorCode = "ObjectHasBeenModified"
 	tooManyConcurrentRequests allocErrorCode = "TooManyConcurrentRequests"
 	noAvailableGameServer     allocErrorCode = "NoAvailableGameServer"
+	storageError	          allocErrorCode = "StorageError"
+	deadLineExceeded          allocErrorCode = "DeadLineExceeded"
+	connectionTimedOut        allocErrorCode = "ConnectionTimedOut"
+	connectionRefused         allocErrorCode = "ConnectionRefused"
+	errReadingFromServer      allocErrorCode = "ErrReadingFromServer"
 )
 
 var (
@@ -50,6 +55,11 @@ var (
 		objectHasBeenModified:     "the object has been modified",
 		tooManyConcurrentRequests: "too many concurrent requests",
 		noAvailableGameServer:     "no available GameServer to allocate",
+		storageError:	           "storage error",
+		deadLineExceeded:          "context deadline exceeded",
+		connectionTimedOut:        "connection timed out",
+		connectionRefused:         "connection refused",
+		errReadingFromServer:      "allocator seems crashed and restarted",
 	}
 )
 
@@ -67,8 +77,9 @@ var (
 )
 
 type scenario struct {
-	duration     time.Duration
-	numOfClients int
+	duration     		 time.Duration
+	numOfClients 		 int
+	intervalMillisecond	 int
 }
 
 func main() {
@@ -83,10 +94,11 @@ func main() {
 	scenarios := readScenarios(*scenariosFile)
 	var totalAllocCnt uint64
 	var totalFailureCnt uint64
+	var totalDuration float64
 
 	totalFailureDtls := allocErrorCodeCntMap()
 	for i, sc := range *scenarios {
-		logger.Printf("\n\n%v :Running Scenario %v with %v clients for %v\n===================\n", time.Now(), i+1, sc.numOfClients, sc.duration)
+		logger.Printf("\n\n%v :Running Scenario %v with %v clients submitting requests every %vms for %v\n===================\n", time.Now(), i+1, sc.numOfClients, sc.intervalMillisecond, sc.duration)
 
 		var wg sync.WaitGroup
 		failureCnts := make([]uint64, sc.numOfClients)
@@ -105,13 +117,20 @@ func main() {
 					return
 				}
 				client := pb.NewAllocationServiceClient(conn)
+				var wgc sync.WaitGroup
 				for durCtx.Err() == nil {
-					if err := allocate(client); err != noerror {
-						failureDtls[clientID][err]++
-						failureCnts[clientID]++
-					}
+					wgc.Add(1)
+					go func() {
+						defer wgc.Done()
+						if err := allocate(client); err != noerror {
+							failureDtls[clientID][err]++
+							failureCnts[clientID]++
+						}
+					}()
 					allocCnts[clientID]++
+					time.Sleep(time.Duration(sc.intervalMillisecond) * time.Millisecond)
 				}
+				wgc.Wait()
 				_ = conn.Close() // Ignore error handling because the connection will be closed when the main func exits anyway.
 			}(k)
 		}
@@ -131,13 +150,13 @@ func main() {
 		}
 		totalAllocCnt += scnAllocCnt
 		totalFailureCnt += scnFailureCnt
+		totalDuration += sc.duration.Seconds()
 		for k, v := range scnErrDtls {
 			if k != noerror {
 				logger.Printf("Count: %v\t\tError: %v", v, k)
 			}
 		}
-		logger.Printf("\nScenario Failure Count: %v, Allocation Count: %v", scnFailureCnt, scnAllocCnt)
-		logger.Printf("\nTotal Failure Count: %v, Total Allocation Count: %v", totalFailureCnt, totalAllocCnt)
+		logger.Printf("\n\n%v\nnScenario Failure Count: %v, Allocation Count: %v, Failure rate: %v, allocation rate: %v", time.Now(), scnFailureCnt, scnAllocCnt, (float64) (scnFailureCnt) / (float64) (scnAllocCnt), (float64) (scnAllocCnt - scnFailureCnt) / sc.duration.Seconds())
 	}
 
 	logger.Print("\nFinal Error Totals\n")
@@ -146,7 +165,7 @@ func main() {
 			logger.Printf("Count: %v\t\tError: %v", v, k)
 		}
 	}
-	logger.Printf("\n\n%v\nFinal Total Failure Count: %v, Total Allocation Count: %v", time.Now(), totalFailureCnt, totalAllocCnt)
+	logger.Printf("\n\n%v\nFinal Total Failure Count: %v, Total Allocation Count: %v, Failure rate: %v, allocation rate: %v", time.Now(), totalFailureCnt, totalAllocCnt, (float64) (totalFailureCnt) / (float64) (totalAllocCnt), (float64) (totalAllocCnt - totalFailureCnt) / totalDuration)
 }
 
 func dialOptions(certFile, keyFile, cacertFile string) (grpc.DialOption, error) {
@@ -224,8 +243,8 @@ func readScenarios(file string) *[]scenario {
 			continue
 		}
 		lineParts := strings.Split(line, ",")
-		if len(lineParts) != 2 {
-			logger.Fatalf("There should be 2 parts for each scenario but there is %d for %q", len(lineParts), line)
+		if len(lineParts) != 3 {
+			logger.Fatalf("There should be 3 parts for each scenario but there is %d for %q", len(lineParts), line)
 		}
 		duration, err := time.ParseDuration(lineParts[0])
 		if err != nil {
@@ -235,7 +254,11 @@ func readScenarios(file string) *[]scenario {
 		if err != nil {
 			logger.Fatalf("Failed parsing number of clients %s: %v", lineParts[1], err)
 		}
-		scenarios = append(scenarios, scenario{duration, numClients})
+		intervalMillisecond, err := strconv.Atoi(lineParts[2])
+		if err != nil {
+			logger.Fatalf("Failed parsing intervalMillisecond %s: %v", lineParts[2], err)
+		}
+		scenarios = append(scenarios, scenario{duration, numClients, intervalMillisecond})
 	}
 
 	return &scenarios
@@ -257,5 +280,10 @@ func allocErrorCodeCntMap() map[allocErrorCode]uint64 {
 		objectHasBeenModified:     0,
 		tooManyConcurrentRequests: 0,
 		noAvailableGameServer:     0,
+		storageError:	           0,
+		deadLineExceeded:          0,
+		connectionTimedOut:        0,
+		connectionRefused:         0,
+		errReadingFromServer:      0,
 	}
 }
