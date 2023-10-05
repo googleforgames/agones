@@ -84,7 +84,8 @@ for f in *.json; do
   contents=$(cat "$f" | jq 'del(.description)' | sed 's/\\n/\\\\n/g' | sed '$d' | sed '1d' | sed ':a;N;$!ba;s/\n/\\n/g' | sed 's/\$/\\$/g' | sed 's/\&/\\&/g' | sed 's@\"@\\"@g')
   ref=$(basename "$f" .json)
 
-  find -maxdepth 1 -name '*.json' | awk -F, -v contents="$contents" '{ gsub("\"\\$ref\": \"#/definitions/" ref "\"", contents, $0)} {print}'
+  find -maxdepth 1 -name '*.json' | awk -v contents="$contents" '{ gsub("\"\\$ref\": \"#/definitions/" ref "\"", contents, $0)}'
+
 done
 
 # convert the ones you want to include via helm to yaml
