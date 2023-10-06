@@ -169,44 +169,16 @@ last for 1 minute, representing a short game.
 You can use the provided runScenario.sh script by providing one parameter (a
 scenario file). The scenario file is a simple text file where each line
 represents a "scenario" that the program will execute before moving to the next
-scenario. A scenario is a duration and the number of concurrent clients to use,
+scenario. A scenario is a duration, the number of concurrent clients to use, and
+the interval of the allocation requests submitted by each client in milliseconds
 separated by a comma. The program will create the desired number of clients and
 those clients send allocation requests to the allocator service for the scenario
-duration. At the end of each scenario the program will print out some statistics
-for the scenario.
+duration in the defined cadence. At the end of each scenario the program will print
+out some statistics for the scenario.
 
 Two sample scenario files are included in this directory, one which sends a
 constant rate of allocations for the duration of the test and another that sends
 a variable number of allocations.
-
-Upon concluding, the program will print out the overall statistics from the test.
-
-```
-./runScenario.sh variable.txt
-...
-2022-02-24 10:57:44.985216321 +0000 UTC m=+13814.879251454 :Running Scenario 24 with 15 clients for 10m0s
-===================
-
-Finished Scenario 24
-Count: 100              Error: ObjectHasBeenModified
-Count: 113              Error: TooManyConcurrentRequests
-Count: 0                Error: NoAvailableGameServer
-Count: 0                Error: Unknown
-
-Scenario Failure Count: 213, Allocation Count: 15497
-
-Total Failure Count: 6841, Total Allocation Count: 523204
-
-Final Error Totals
-Count: 0                Error: NoAvailableGameServer
-Count: 0                Error: Unknown
-Count: 3950             Error: ObjectHasBeenModified
-Count: 2891             Error: TooManyConcurrentRequests
-
-
-2022-02-24 11:07:45.677220867 +0000 UTC m=+14415.571255996
-Final Total Failure Count: 6841, Total Allocation Count: 523204
-```
 
 Since error counts are gathered per scenario, it's recommended to keep each
 scenario short (e.g. 10 minutes) to narrow down the window when errors
