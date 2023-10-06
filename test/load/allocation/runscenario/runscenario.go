@@ -42,7 +42,7 @@ const (
 	objectHasBeenModified     allocErrorCode = "ObjectHasBeenModified"
 	tooManyConcurrentRequests allocErrorCode = "TooManyConcurrentRequests"
 	noAvailableGameServer     allocErrorCode = "NoAvailableGameServer"
-	storageError	          allocErrorCode = "StorageError"
+	storageError              allocErrorCode = "StorageError"
 	deadLineExceeded          allocErrorCode = "DeadLineExceeded"
 	connectionTimedOut        allocErrorCode = "ConnectionTimedOut"
 	connectionRefused         allocErrorCode = "ConnectionRefused"
@@ -55,7 +55,7 @@ var (
 		objectHasBeenModified:     "the object has been modified",
 		tooManyConcurrentRequests: "too many concurrent requests",
 		noAvailableGameServer:     "no available GameServer to allocate",
-		storageError:	           "storage error",
+		storageError:              "storage error",
 		deadLineExceeded:          "context deadline exceeded",
 		connectionTimedOut:        "connection timed out",
 		connectionRefused:         "connection refused",
@@ -77,9 +77,9 @@ var (
 )
 
 type scenario struct {
-	duration     		 time.Duration
-	numOfClients 		 int
-	intervalMillisecond	 int
+	duration            time.Duration
+	numOfClients        int
+	intervalMillisecond int
 }
 
 func main() {
@@ -156,7 +156,7 @@ func main() {
 				logger.Printf("Count: %v\t\tError: %v", v, k)
 			}
 		}
-		logger.Printf("\n\n%v\nnScenario Failure Count: %v, Allocation Count: %v, Failure rate: %v, allocation rate: %v", time.Now(), scnFailureCnt, scnAllocCnt, (float64) (scnFailureCnt) / (float64) (scnAllocCnt), (float64) (scnAllocCnt - scnFailureCnt) / sc.duration.Seconds())
+		logger.Printf("\n\n%v\nnScenario Failure Count: %v, Allocation Count: %v, Failure rate: %v, allocation rate: %v", time.Now(), scnFailureCnt, scnAllocCnt, float64(scnFailureCnt)/float64(scnAllocCnt), float64(scnAllocCnt-scnFailureCnt)/sc.duration.Seconds())
 	}
 
 	logger.Print("\nFinal Error Totals\n")
@@ -165,7 +165,7 @@ func main() {
 			logger.Printf("Count: %v\t\tError: %v", v, k)
 		}
 	}
-	logger.Printf("\n\n%v\nFinal Total Failure Count: %v, Total Allocation Count: %v, Failure rate: %v, allocation rate: %v", time.Now(), totalFailureCnt, totalAllocCnt, (float64) (totalFailureCnt) / (float64) (totalAllocCnt), (float64) (totalAllocCnt - totalFailureCnt) / totalDuration)
+	logger.Printf("\n\n%v\nFinal Total Failure Count: %v, Total Allocation Count: %v, Failure rate: %v, allocation rate: %v", time.Now(), totalFailureCnt, totalAllocCnt, float64(totalFailureCnt)/float64(totalAllocCnt), float64(totalAllocCnt-totalFailureCnt)/totalDuration)
 }
 
 func dialOptions(certFile, keyFile, cacertFile string) (grpc.DialOption, error) {
@@ -280,7 +280,7 @@ func allocErrorCodeCntMap() map[allocErrorCode]uint64 {
 		objectHasBeenModified:     0,
 		tooManyConcurrentRequests: 0,
 		noAvailableGameServer:     0,
-		storageError:	           0,
+		storageError:              0,
 		deadLineExceeded:          0,
 		connectionTimedOut:        0,
 		connectionRefused:         0,
