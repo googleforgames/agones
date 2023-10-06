@@ -13,11 +13,11 @@
 # limitations under the License.
 
 ### Fixed rate of allocations
-#Duration,Number_of_clients/allocations
-10m,10
-10m,10
-10m,10
-10m,10
-10m,10
-10m,10
-10m,10
+#Duration,Number_of_clients/allocations,interval
+10m,10,500
+10m,10,500
+10m,10,500
+10m,10,500
+10m,10,500
+10m,10,500
+10m,10,500
