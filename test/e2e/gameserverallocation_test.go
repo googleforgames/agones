@@ -692,7 +692,7 @@ func TestCounterGameServerAllocationActions(t *testing.T) {
 			wantCount:    &zero,
 			wantCapacity: &ten,
 		},
-		"change capacity": {
+		"change capacity to less than count also updates count": {
 			gsa: allocationv1.GameServerAllocation{
 				Spec: allocationv1.GameServerAllocationSpec{
 					Selectors: []allocationv1.GameServerSelector{
@@ -703,7 +703,7 @@ func TestCounterGameServerAllocationActions(t *testing.T) {
 							Capacity: &zero,
 						}}}},
 			wantGsaErr:   false,
-			wantCount:    &five,
+			wantCount:    &zero,
 			wantCapacity: &zero,
 		},
 		"decrement past zero truncated": {

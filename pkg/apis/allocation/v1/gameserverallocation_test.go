@@ -836,7 +836,7 @@ func TestGameServerCounterActions(t *testing.T) {
 		want    *agonesv1.GameServer
 		wantErr bool
 	}{
-		"update counter capacity": {
+		"update counter capacity and count is set to capacity": {
 			ca: CounterAction{
 				Capacity: int64Pointer(0),
 			},
@@ -850,7 +850,7 @@ func TestGameServerCounterActions(t *testing.T) {
 			want: &agonesv1.GameServer{Status: agonesv1.GameServerStatus{
 				Counters: map[string]agonesv1.CounterStatus{
 					"mages": {
-						Count:    1,
+						Count:    0,
 						Capacity: 0,
 					}}}},
 			wantErr: false,
@@ -912,7 +912,9 @@ func TestGameServerCounterActions(t *testing.T) {
 			want: &agonesv1.GameServer{Status: agonesv1.GameServerStatus{
 				Counters: map[string]agonesv1.CounterStatus{
 					"heroes": {
-						Count:    1,
+						// Note: The Capacity is set first, and Count updated to not be greater than Capacity.
+						// Then the Count is decremented. See: gameserver.go/UpdateCounterCapacity
+						Count:    0,
 						Capacity: 10,
 					}}}},
 			wantErr: false,

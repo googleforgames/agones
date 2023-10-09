@@ -904,7 +904,10 @@ func (gs *GameServer) UpdateCounterCapacity(name string, capacity int64) error {
 	}
 	if counter, ok := gs.Status.Counters[name]; ok {
 		counter.Capacity = capacity
-		// TODO: If Capacity is now less than Count, do we want to reset Count here to equal Capacity?
+		// If Capacity is now less than Count, reset Count here to equal Capacity
+		if counter.Count > counter.Capacity {
+			counter.Count = counter.Capacity
+		}
 		gs.Status.Counters[name] = counter
 		return nil
 	}
