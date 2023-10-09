@@ -284,6 +284,7 @@ func TestCounterGameServerAllocation(t *testing.T) {
 	defer client.Fleets(framework.Namespace).Delete(ctx, flt.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
 	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 
+	// Need fleetSelector to get the correct fleet, otherwise GSA will return game servers from any fleet in the namespace.
 	fleetSelector := metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}}
 	stateAllocated := agonesv1.GameServerStateAllocated
 	ready := agonesv1.GameServerStateReady
@@ -536,19 +537,16 @@ func TestCounterGameServerAllocationSorting(t *testing.T) {
 	for _, gs := range list {
 		count := rand.IntnRange(0, 99) // Available Capacity will be at least 1
 		capacity := rand.IntnRange(count, 100)
-
-		msg := fmt.Sprintf("SET_COUNTER_CAPACITY games %d", capacity)
-		reply, err := framework.SendGameServerUDP(t, &gs, msg)
-		require.NoError(t, err)
-		assert.Equal(t, "true", reply)
-
-		msg = fmt.Sprintf("SET_COUNTER_COUNT games %d", count)
-		reply, err = framework.SendGameServerUDP(t, &gs, msg)
-		require.NoError(t, err)
-		assert.Equal(t, "true", reply)
-
 		availableCapacity := capacity - count
-		gameServers[gs.GetName()] = availableCapacity
+		gameServers[gs.ObjectMeta.Name] = availableCapacity
+
+		gsCopy := gs.DeepCopy()
+		gsCopy.Status.Counters["games"] = agonesv1.CounterStatus{
+			Count:    int64(count),
+			Capacity: int64(capacity),
+		}
+		_, err := framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Update(ctx, gsCopy, metav1.UpdateOptions{})
+		require.NoError(t, err)
 	}
 	// GameServers names sorted by available capacity, ascending.
 	sortedGs := make([]string, 0, len(gameServers))
@@ -557,6 +555,7 @@ func TestCounterGameServerAllocationSorting(t *testing.T) {
 	}
 	sort.Slice(sortedGs, func(i, j int) bool { return gameServers[sortedGs[i]] < gameServers[sortedGs[j]] })
 
+	fleetSelector := metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}}
 	ready := agonesv1.GameServerStateReady
 	allocated := agonesv1.GameServerStateAllocated
 
@@ -567,6 +566,9 @@ func TestCounterGameServerAllocationSorting(t *testing.T) {
 		"Allocation sorting by count value, ascending": {
 			gsa: allocationv1.GameServerAllocation{
 				Spec: allocationv1.GameServerAllocationSpec{
+					Selectors: []allocationv1.GameServerSelector{
+						{LabelSelector: fleetSelector},
+					},
 					Priorities: []agonesv1.Priority{
 						{Type: agonesv1.GameServerPriorityCounter,
 							Key:   "games",
@@ -577,6 +579,9 @@ func TestCounterGameServerAllocationSorting(t *testing.T) {
 		"Allocation sorting by count value, descending": {
 			gsa: allocationv1.GameServerAllocation{
 				Spec: allocationv1.GameServerAllocationSpec{
+					Selectors: []allocationv1.GameServerSelector{
+						{LabelSelector: fleetSelector},
+					},
 					Priorities: []agonesv1.Priority{
 						{Type: agonesv1.GameServerPriorityCounter,
 							Key:   "games",
@@ -598,7 +603,7 @@ func TestCounterGameServerAllocationSorting(t *testing.T) {
 			require.NoError(t, err)
 			assert.Equal(t, allocated, gs1.Status.State)
 			assert.NotNil(t, gs1.ObjectMeta.Annotations["agones.dev/last-allocated"])
-			require.Equal(t, testCase.wantGameServer, gs1.ObjectMeta.Name)
+			assert.Equal(t, testCase.wantGameServer, gs1.ObjectMeta.Name)
 
 			// Reset any GameServers in state Allocated -> Ready. Note: This does not reset any changes to Counters.
 			list, err := framework.ListGameServersFromFleet(flt)
@@ -639,6 +644,7 @@ func TestCounterGameServerAllocationActions(t *testing.T) {
 	defer client.Fleets(framework.Namespace).Delete(ctx, flt.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
 	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 
+	fleetSelector := metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}}
 	allocated := agonesv1.GameServerStateAllocated
 	ready := agonesv1.GameServerStateReady
 	increment := agonesv1.GameServerPriorityIncrement
@@ -659,6 +665,9 @@ func TestCounterGameServerAllocationActions(t *testing.T) {
 		"increment": {
 			gsa: allocationv1.GameServerAllocation{
 				Spec: allocationv1.GameServerAllocationSpec{
+					Selectors: []allocationv1.GameServerSelector{
+						{LabelSelector: fleetSelector},
+					},
 					Counters: map[string]allocationv1.CounterAction{
 						"games": {
 							Action: &increment,
@@ -671,6 +680,9 @@ func TestCounterGameServerAllocationActions(t *testing.T) {
 		"decrement": {
 			gsa: allocationv1.GameServerAllocation{
 				Spec: allocationv1.GameServerAllocationSpec{
+					Selectors: []allocationv1.GameServerSelector{
+						{LabelSelector: fleetSelector},
+					},
 					Counters: map[string]allocationv1.CounterAction{
 						"games": {
 							Action: &decrement,
@@ -683,6 +695,9 @@ func TestCounterGameServerAllocationActions(t *testing.T) {
 		"change capacity": {
 			gsa: allocationv1.GameServerAllocation{
 				Spec: allocationv1.GameServerAllocationSpec{
+					Selectors: []allocationv1.GameServerSelector{
+						{LabelSelector: fleetSelector},
+					},
 					Counters: map[string]allocationv1.CounterAction{
 						"games": {
 							Capacity: &zero,
@@ -694,6 +709,9 @@ func TestCounterGameServerAllocationActions(t *testing.T) {
 		"decrement past zero truncated": {
 			gsa: allocationv1.GameServerAllocation{
 				Spec: allocationv1.GameServerAllocationSpec{
+					Selectors: []allocationv1.GameServerSelector{
+						{LabelSelector: fleetSelector},
+					},
 					Counters: map[string]allocationv1.CounterAction{
 						"games": {
 							Action: &decrement,
@@ -706,6 +724,9 @@ func TestCounterGameServerAllocationActions(t *testing.T) {
 		"decrement negative": {
 			gsa: allocationv1.GameServerAllocation{
 				Spec: allocationv1.GameServerAllocationSpec{
+					Selectors: []allocationv1.GameServerSelector{
+						{LabelSelector: fleetSelector},
+					},
 					Counters: map[string]allocationv1.CounterAction{
 						"games": {
 							Action: &decrement,
@@ -716,6 +737,9 @@ func TestCounterGameServerAllocationActions(t *testing.T) {
 		"increment past capacity truncated": {
 			gsa: allocationv1.GameServerAllocation{
 				Spec: allocationv1.GameServerAllocationSpec{
+					Selectors: []allocationv1.GameServerSelector{
+						{LabelSelector: fleetSelector},
+					},
 					Counters: map[string]allocationv1.CounterAction{
 						"games": {
 							Action: &increment,
@@ -728,6 +752,9 @@ func TestCounterGameServerAllocationActions(t *testing.T) {
 		"increment negative": {
 			gsa: allocationv1.GameServerAllocation{
 				Spec: allocationv1.GameServerAllocationSpec{
+					Selectors: []allocationv1.GameServerSelector{
+						{LabelSelector: fleetSelector},
+					},
 					Counters: map[string]allocationv1.CounterAction{
 						"games": {
 							Action: &increment,
@@ -738,6 +765,9 @@ func TestCounterGameServerAllocationActions(t *testing.T) {
 		"change capacity negative": {
 			gsa: allocationv1.GameServerAllocation{
 				Spec: allocationv1.GameServerAllocationSpec{
+					Selectors: []allocationv1.GameServerSelector{
+						{LabelSelector: fleetSelector},
+					},
 					Counters: map[string]allocationv1.CounterAction{
 						"games": {
 							Capacity: &negativeOne,
@@ -751,6 +781,9 @@ func TestCounterGameServerAllocationActions(t *testing.T) {
 		"Counter does not exist": {
 			gsa: allocationv1.GameServerAllocation{
 				Spec: allocationv1.GameServerAllocationSpec{
+					Selectors: []allocationv1.GameServerSelector{
+						{LabelSelector: fleetSelector},
+					},
 					Counters: map[string]allocationv1.CounterAction{
 						"lames": {
 							Action: &increment,
