@@ -4,9 +4,6 @@ Add styles or override variables from the theme here.
 
 */
 
-$display1-weight: 500 !default;
-$display2-weight: 100 !default;
-
 
 $primary: rgb(255, 255,255)  !default;
 $primary-light: lighten($primary, 75%) !default;
@@ -35,6 +32,8 @@ $td-sidebar-tree-root-color: #222 !default;
     display: none;
 }
 
+// Front page items
+
 .asciinema-theme-asciinema .asciinema-terminal {
     color: #cccccc;
     background-color: #121314;
@@ -45,6 +44,16 @@ $td-sidebar-tree-root-color: #222 !default;
 .asciinema-theme-asciinema .bg-fg {
     background-color:black !important;
 }
+
+.showcase img {
+    margin: 0 30px;
+}
+
+#cover-title {
+    max-width: 800px;
+}
+
+// End Front page items
 
 #agones-search {
     background: rgba(190, 185, 185, 0.3);
@@ -61,6 +70,28 @@ input[type="search"]::placeholder {
     color: #121314 !important;
 }
 
-.showcase img {
-    margin: 0 30px;
+.td-search__icon {
+    color: #9B9595 !important;
+}
+
+.search-bar {
+    width: 300px;
+    height: 40px;
+}
+
+.nav-link {
+    margin-right: 20px !important;
+}
+
+// Bring this over from older Bootstrap.
+h1.display-1 {
+    font-size: 3rem;
+    font-weight: 500;
+    line-height: 1.2;
+}
+
+p.display-2 {
+    font-size: 2.5rem;
+    font-weight: 100;
+    line-height: 1.2;
 }

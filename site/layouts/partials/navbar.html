@@ -2,10 +2,10 @@
 <nav class="js-navbar-scroll navbar navbar-expand navbar-light {{ if not $cover }} nav-shadow {{ end }}flex-column flex-md-row td-navbar">
 
 	<a id="agones-top" {{ if $cover }} style="display: none;" {{end}} class="navbar-brand" href="{{ .Site.Home.RelPermalink }}">
-		{{ with resources.Get "icons/logo.svg" }}{{ ( . | minify).Content | safeHTML }} {{ end }}<span class="text-uppercase font-weight-bold">{{ .Site.Title }}</span>
+		{{ with resources.Get "icons/logo.svg" }}{{ ( . | minify).Content | safeHTML }} {{ end }}<span class="text-uppercase fw-bold">{{ .Site.Title }}</span>
 	</a>
 
-	<div class="td-navbar-nav-scroll ml-md-auto" id="main_navbar">
+	<div class="td-navbar-nav-scroll ms-md-auto" id="main_navbar">
 		<ul class="navbar-nav mt-2 mt-lg-0">
 			{{ $p := . }}
 			{{ range .Site.Menus.main }}
@@ -21,7 +21,7 @@
 				<a class="nav-link" href="{{ .Site.Params.github_repo }}">GitHub</a>
 			</li>
 			<li class="nav-item dropdown d-none d-lg-block">
-				<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+				<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 					Release
 				</a>
 				<div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
