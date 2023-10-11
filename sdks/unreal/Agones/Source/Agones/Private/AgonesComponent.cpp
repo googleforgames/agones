@@ -17,10 +17,10 @@
 #include "Engine/World.h"
 #include "HttpModule.h"
 #include "Interfaces/IHttpResponse.h"
-#include "JsonUtilities/Public/JsonObjectConverter.h"
+#include "JsonObjectConverter.h"
 #include "TimerManager.h"
-#include "WebSockets/Public/IWebSocket.h"
-#include "WebSockets/Public/WebSocketsModule.h"
+#include "IWebSocket.h"
+#include "WebSocketsModule.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogAgones, Log, Log);
 
