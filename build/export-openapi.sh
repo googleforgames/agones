@@ -73,6 +73,12 @@ mkdir orig
 cp *.json orig
 rm openapi.json
 
+echo "Compiling replaceRef.go..."
+go build -o /go/src/agones.dev/agones/build/replaceRef /go/src/agones.dev/agones/build/replaceRef.go
+if [[ ! -x "/go/src/agones.dev/agones/build/replaceRef" ]]; then
+    echo "Failed to compile replaceRef.go"
+    exit 1
+fi
 for f in *.json; do
   echo "Expanding $f"
   # remove description, because there is usually another description when at its replacement point
@@ -84,7 +90,11 @@ for f in *.json; do
   contents=$(cat "$f" | jq 'del(.description)' | sed 's/\\n/\\\\n/g' | sed '$d' | sed '1d' | sed ':a;N;$!ba;s/\n/\\n/g' | sed 's/\$/\\$/g' | sed 's/\&/\\&/g' | sed 's@\"@\\"@g')
   ref=$(basename "$f" .json)
 
-  find -maxdepth 1 -name '*.json' | xargs -I {} bash -c 'sed -i "s@\"$1\": \"#/definitions/$1\"@$2@g" {}' _ "$ref" "$contents"
+  echo "Ref: $ref"
+  echo "Contents: $contents"
+
+  echo "Processing file: $f"
+  /go/src/agones.dev/agones/build/replaceRef "$f" "$ref" "$contents"
 
 done
 
