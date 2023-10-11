@@ -1226,7 +1226,7 @@ func TestCountsAndLists(t *testing.T) {
 		t.SkipNow()
 	}
 	t.Parallel()
-
+	ctx := context.Background()
 	gs := framework.DefaultGameServer(framework.Namespace)
 
 	gs.Spec.Counters = make(map[string]agonesv1.CounterStatus)
@@ -1253,7 +1253,7 @@ func TestCountsAndLists(t *testing.T) {
 
 	gs, err := framework.CreateGameServerAndWaitUntilReady(t, framework.Namespace, gs)
 	require.NoError(t, err)
-
+	defer framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Delete(ctx, gs.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint: errcheck
 	assert.Equal(t, agonesv1.GameServerStateReady, gs.Status.State)
 
 	testCases := map[string]struct {
