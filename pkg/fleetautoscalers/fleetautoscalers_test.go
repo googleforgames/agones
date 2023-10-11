@@ -969,6 +969,33 @@ func TestApplyCounterPolicy(t *testing.T) {
 				wantErr:  false,
 			},
 		},
+		"scale up integer": {
+			fleet: modifiedFleet(func(f *agonesv1.Fleet) {
+				f.Spec.Template.Spec.Counters = make(map[string]agonesv1.CounterStatus)
+				f.Spec.Template.Spec.Counters["rooms"] = agonesv1.CounterStatus{
+					Count:    7,
+					Capacity: 10}
+				f.Status.Replicas = 3
+				f.Status.ReadyReplicas = 3
+				f.Status.AllocatedReplicas = 0
+				f.Status.Counters = make(map[string]agonesv1.AggregatedCounterStatus)
+				f.Status.Counters["rooms"] = agonesv1.AggregatedCounterStatus{
+					Count:    21,
+					Capacity: 30}
+			}),
+			featureFlags: string(utilruntime.FeatureCountsAndLists) + "=true",
+			cp: &autoscalingv1.CounterPolicy{
+				Key:         "rooms",
+				MaxCapacity: 100,
+				MinCapacity: 10,
+				BufferSize:  intstr.FromInt(25),
+			},
+			want: expected{
+				replicas: 9,
+				limited:  false,
+				wantErr:  false,
+			},
+		},
 		"scale same": {
 			fleet: modifiedFleet(func(f *agonesv1.Fleet) {
 				f.Spec.Template.Spec.Counters = make(map[string]agonesv1.CounterStatus)
@@ -1162,6 +1189,7 @@ func TestApplyCounterPolicy(t *testing.T) {
 					Capacity: 7}
 			}),
 			featureFlags: string(utilruntime.FeatureCountsAndLists) + "=true",
+			// TODO: Is this what we want (replica = 0 if MaxCapcity < per Counter Capacity)? If buffer = 1 then must be at least replica = 1? Or Max Capacity takes precedence?
 			cp: &autoscalingv1.CounterPolicy{
 				Key:         "rooms",
 				MaxCapacity: 2,
@@ -1182,6 +1210,66 @@ func TestApplyCounterPolicy(t *testing.T) {
 			want: expected{
 				replicas: 0,
 				limited:  true,
+				wantErr:  false,
+			},
+		},
+		"scale down to max capacity": {
+			fleet: modifiedFleet(func(f *agonesv1.Fleet) {
+				f.Spec.Template.Spec.Counters = make(map[string]agonesv1.CounterStatus)
+				f.Spec.Template.Spec.Counters["rooms"] = agonesv1.CounterStatus{
+					Count:    0,
+					Capacity: 5}
+				f.Spec.Priorities = []agonesv1.Priority{{Type: "Counter", Key: "rooms", Order: "Descending"}}
+				f.Status.Replicas = 3
+				f.Status.ReadyReplicas = 3
+				f.Status.AllocatedReplicas = 0
+				f.Status.Counters = make(map[string]agonesv1.AggregatedCounterStatus)
+				f.Status.Counters["rooms"] = agonesv1.AggregatedCounterStatus{
+					Count:    0,
+					Capacity: 15}
+			}),
+			featureFlags: string(utilruntime.FeatureCountsAndLists) + "=true",
+			cp: &autoscalingv1.CounterPolicy{
+				Key:         "rooms",
+				MaxCapacity: 5,
+				MinCapacity: 1,
+				BufferSize:  intstr.FromInt(5),
+			},
+			gsList: []agonesv1.GameServer{
+				{ObjectMeta: metav1.ObjectMeta{
+					Name:   "gs1",
+					Labels: map[string]string{"agones.dev/fleet": "fleet-1"}},
+					Status: agonesv1.GameServerStatus{
+						NodeName: "n1",
+						Counters: map[string]agonesv1.CounterStatus{
+							"rooms": {
+								Count:    0,
+								Capacity: 5,
+							}}}},
+				{ObjectMeta: metav1.ObjectMeta{
+					Name:   "gs2",
+					Labels: map[string]string{"agones.dev/fleet": "fleet-1"}},
+					Status: agonesv1.GameServerStatus{
+						NodeName: "n1",
+						Counters: map[string]agonesv1.CounterStatus{
+							"rooms": {
+								Count:    0,
+								Capacity: 5,
+							}}}},
+				{ObjectMeta: metav1.ObjectMeta{
+					Name:   "gs3",
+					Labels: map[string]string{"agones.dev/fleet": "fleet-1"}},
+					Status: agonesv1.GameServerStatus{
+						NodeName: "n1",
+						Counters: map[string]agonesv1.CounterStatus{
+							"rooms": {
+								Count:    0,
+								Capacity: 5,
+							}}}},
+			},
+			want: expected{
+				replicas: 1,
+				limited:  false,
 				wantErr:  false,
 			},
 		},
@@ -1270,6 +1358,66 @@ func TestApplyCounterPolicy(t *testing.T) {
 			},
 			want: expected{
 				replicas: 5,
+				limited:  false,
+				wantErr:  false,
+			},
+		},
+		"scale down by integer buffer": {
+			fleet: modifiedFleet(func(f *agonesv1.Fleet) {
+				f.Spec.Template.Spec.Counters = make(map[string]agonesv1.CounterStatus)
+				f.Spec.Template.Spec.Counters["players"] = agonesv1.CounterStatus{
+					Count:    7,
+					Capacity: 10}
+				f.Status.Replicas = 3
+				f.Status.ReadyReplicas = 0
+				f.Status.AllocatedReplicas = 3
+				f.Status.Counters = make(map[string]agonesv1.AggregatedCounterStatus)
+				f.Status.Counters["players"] = agonesv1.AggregatedCounterStatus{
+					Count:    21,
+					Capacity: 30,
+				}
+			}),
+			featureFlags: string(utilruntime.FeatureCountsAndLists) + "=true",
+			cp: &autoscalingv1.CounterPolicy{
+				Key:         "players",
+				MaxCapacity: 100,
+				MinCapacity: 10,
+				BufferSize:  intstr.FromInt(5),
+			},
+			gsList: []agonesv1.GameServer{
+				{ObjectMeta: metav1.ObjectMeta{
+					Name:   "gs1",
+					Labels: map[string]string{"agones.dev/fleet": "fleet-1"}},
+					Status: agonesv1.GameServerStatus{
+						NodeName: "n1",
+						Counters: map[string]agonesv1.CounterStatus{
+							"players": {
+								Count:    7,
+								Capacity: 10,
+							}}}},
+				{ObjectMeta: metav1.ObjectMeta{
+					Name:   "gs2",
+					Labels: map[string]string{"agones.dev/fleet": "fleet-1"}},
+					Status: agonesv1.GameServerStatus{
+						NodeName: "n1",
+						Counters: map[string]agonesv1.CounterStatus{
+							"players": {
+								Count:    7,
+								Capacity: 10,
+							}}}},
+				{ObjectMeta: metav1.ObjectMeta{
+					Name:   "gs3",
+					Labels: map[string]string{"agones.dev/fleet": "fleet-1"}},
+					Status: agonesv1.GameServerStatus{
+						NodeName: "n1",
+						Counters: map[string]agonesv1.CounterStatus{
+							"players": {
+								Count:    7,
+								Capacity: 10,
+							}}}},
+			},
+			want: expected{
+				replicas: 2,
 				limited:  false,
 				wantErr:  false,
 			},

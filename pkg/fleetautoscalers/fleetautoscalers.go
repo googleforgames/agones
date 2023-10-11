@@ -502,6 +502,10 @@ func scaleDown(f *agonesv1.Fleet, gameServerLister listeragonesv1.GameServerList
 			}
 		}
 		availableCapacity = aggCapacity - aggCount
+		// Check if we've overshot our buffer
+		if availableCapacity < buffer {
+			return replicas + 1, false, nil
+		}
 		// Check if we're Limited (Below MinCapacity)
 		if aggCapacity < minCapacity {
 			return replicas + 1, true, nil
@@ -513,10 +517,6 @@ func scaleDown(f *agonesv1.Fleet, gameServerLister listeragonesv1.GameServerList
 		// Check if we're at Limited
 		if aggCapacity == minCapacity {
 			return replicas, true, nil
-		}
-		// Check if we've overshot our buffer
-		if availableCapacity < buffer {
-			return replicas + 1, false, nil
 		}
 	}
 

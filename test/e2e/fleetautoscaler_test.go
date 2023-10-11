@@ -31,6 +31,7 @@ import (
 
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	autoscalingv1 "agones.dev/agones/pkg/apis/autoscaling/v1"
+	"agones.dev/agones/pkg/util/runtime"
 	e2e "agones.dev/agones/test/e2e/framework"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -781,4 +782,146 @@ func generateLocalCert(parentCert *x509.Certificate, parentPrivKey *rsa.PrivateK
 	}
 
 	return certPEMBuf.Bytes(), certPrivKeyPEMBuf.Bytes(), nil
+}
+
+// TODO: Test Counter Autoscaler
+// Test ValidateCounterPolicy?
+// Scale up %
+// Cannot scale up (MaxCapacity)
+// Scale down %
+// Cannot scale down (MinCapacity)
+
+func TestCounterAutoscaler(t *testing.T) {
+	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
+		t.SkipNow()
+	}
+	t.Parallel()
+
+	ctx := context.Background()
+	client := framework.AgonesClient.AgonesV1()
+	log := e2e.TestLogger(t)
+
+	flt := defaultFleet(framework.Namespace)
+	flt.Spec.Template.Spec.Counters = map[string]agonesv1.CounterStatus{
+		"players": {
+			Count:    7,  // AggregateCount 21
+			Capacity: 10, // AggregateCapacity 30
+		},
+		"sessions": {
+			Count:    0, // AggregateCount 0
+			Capacity: 5, // AggregateCapacity 15
+		},
+	}
+
+	flt, err := client.Fleets(framework.Namespace).Create(ctx, flt.DeepCopy(), metav1.CreateOptions{})
+	require.NoError(t, err)
+	defer client.Fleets(framework.Namespace).Delete(ctx, flt.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
+	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
+
+	fleetautoscalers := framework.AgonesClient.AutoscalingV1().FleetAutoscalers(framework.Namespace)
+
+	counterFas := func(f func(fap *autoscalingv1.FleetAutoscalerPolicy)) *autoscalingv1.FleetAutoscaler {
+		fas := autoscalingv1.FleetAutoscaler{
+			ObjectMeta: metav1.ObjectMeta{Name: flt.ObjectMeta.Name + "-autoscaler", Namespace: framework.Namespace},
+			Spec: autoscalingv1.FleetAutoscalerSpec{
+				FleetName: flt.ObjectMeta.Name,
+				Policy: autoscalingv1.FleetAutoscalerPolicy{
+					Type: autoscalingv1.CounterPolicyType,
+				},
+				Sync: &autoscalingv1.FleetAutoscalerSync{
+					Type: autoscalingv1.FixedIntervalSyncType,
+					FixedInterval: autoscalingv1.FixedIntervalSync{
+						Seconds: 30,
+					},
+				},
+			},
+		}
+		f(&fas.Spec.Policy)
+		return &fas
+	}
+
+	testCases := map[string]struct {
+		fas          *autoscalingv1.FleetAutoscaler
+		wantFasErr   bool
+		wantReplicas int32
+	}{
+		"Scale Down Buffer Int": {
+			fas: counterFas(func(fap *autoscalingv1.FleetAutoscalerPolicy) {
+				fap.Counter = &autoscalingv1.CounterPolicy{
+					Key:         "players",
+					BufferSize:  intstr.FromInt(5), // Buffer refers to the available capacity (AggregateCapacity - AggregateCount)
+					MinCapacity: 10,                // Min and MaxCapacity refer to the total capacity aggregated across the fleet, NOT the available capacity
+					MaxCapacity: 100,
+				}
+			}),
+			wantFasErr:   false,
+			wantReplicas: 2,
+		},
+		"Scale Up Buffer Int": {
+			fas: counterFas(func(fap *autoscalingv1.FleetAutoscalerPolicy) {
+				fap.Counter = &autoscalingv1.CounterPolicy{
+					Key:         "players",
+					BufferSize:  intstr.FromInt(25),
+					MinCapacity: 25,
+					MaxCapacity: 100,
+				}
+			}),
+			wantFasErr:   false,
+			wantReplicas: 9,
+		},
+		"Scale Down to MaxCapacity": { // TODO: Not working here (but works in pkg/fleetautoscalers/fleetautoscalers_test.go)
+			fas: counterFas(func(fap *autoscalingv1.FleetAutoscalerPolicy) {
+				fap.Counter = &autoscalingv1.CounterPolicy{
+					Key:         "sessions",
+					BufferSize:  intstr.FromInt(5),
+					MinCapacity: 0,
+					MaxCapacity: 5,
+				}
+			}),
+			wantFasErr:   false,
+			wantReplicas: 1,
+		},
+		"Scale Up to MinCapacity": {
+			fas: counterFas(func(fap *autoscalingv1.FleetAutoscalerPolicy) {
+				fap.Counter = &autoscalingv1.CounterPolicy{
+					Key:         "sessions",
+					BufferSize:  intstr.FromInt(1),
+					MinCapacity: 30,
+					MaxCapacity: 100,
+				}
+			}),
+			wantFasErr:   false,
+			wantReplicas: 6,
+		},
+		"Buffer Greater than MinCapacity invalid FAS": {
+			fas: counterFas(func(fap *autoscalingv1.FleetAutoscalerPolicy) {
+				fap.Counter = &autoscalingv1.CounterPolicy{
+					Key:         "players",
+					BufferSize:  intstr.FromInt(25),
+					MinCapacity: 10,
+					MaxCapacity: 100,
+				}
+			}),
+			wantFasErr: true,
+		},
+	}
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+
+			fas, err := fleetautoscalers.Create(ctx, testCase.fas, metav1.CreateOptions{})
+			log.WithField("fas", fas.Spec.Policy.Counter).WithField("testcase", name).Info("PRINTING FAS")
+			if testCase.wantFasErr {
+				assert.Error(t, err)
+				return
+			}
+			assert.NoError(t, err)
+			defer fleetautoscalers.Delete(ctx, fas.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
+
+			framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(testCase.wantReplicas))
+
+			// Return to starting 3 replicas
+			framework.ScaleFleet(t, log, flt, flt.Spec.Replicas)
+			framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
+		})
+	}
 }
