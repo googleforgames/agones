@@ -418,8 +418,9 @@ func scaleDownLimited(f *agonesv1.Fleet, gameServerLister listeragonesv1.GameSer
 		replicas--
 	}
 
-	if replicas < 0 { // This shouldn't ever happen, but putting it here just in case.
-		replicas = 0
+	// We are not currently able to scale down to zero replicas, so one replica is the minimum allowed
+	if replicas < 1 {
+		replicas = 1
 	}
 
 	return replicas, true, nil
@@ -520,8 +521,9 @@ func scaleDown(f *agonesv1.Fleet, gameServerLister listeragonesv1.GameServerList
 		}
 	}
 
-	if replicas < 0 { // This shouldn't ever happen, but putting it here just in case.
-		replicas = 0
+	// We are not currently able to scale down to zero replicas, so one replica is the minimum allowed.
+	if replicas < 1 {
+		replicas = 1
 	}
 
 	return replicas, false, nil

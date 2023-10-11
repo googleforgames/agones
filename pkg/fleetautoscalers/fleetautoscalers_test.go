@@ -1189,7 +1189,6 @@ func TestApplyCounterPolicy(t *testing.T) {
 					Capacity: 7}
 			}),
 			featureFlags: string(utilruntime.FeatureCountsAndLists) + "=true",
-			// TODO: Is this what we want (replica = 0 if MaxCapcity < per Counter Capacity)? If buffer = 1 then must be at least replica = 1? Or Max Capacity takes precedence?
 			cp: &autoscalingv1.CounterPolicy{
 				Key:         "rooms",
 				MaxCapacity: 2,
@@ -1208,7 +1207,7 @@ func TestApplyCounterPolicy(t *testing.T) {
 								Capacity: 7,
 							}}}}},
 			want: expected{
-				replicas: 0,
+				replicas: 1,
 				limited:  true,
 				wantErr:  false,
 			},

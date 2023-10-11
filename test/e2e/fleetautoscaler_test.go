@@ -869,7 +869,7 @@ func TestCounterAutoscaler(t *testing.T) {
 			wantFasErr:   false,
 			wantReplicas: 9,
 		},
-		"Scale Down to MaxCapacity": { // TODO: Not working here (but works in pkg/fleetautoscalers/fleetautoscalers_test.go)
+		"Scale Down to MaxCapacity": {
 			fas: counterFas(func(fap *autoscalingv1.FleetAutoscalerPolicy) {
 				fap.Counter = &autoscalingv1.CounterPolicy{
 					Key:         "sessions",
@@ -915,6 +915,10 @@ func TestCounterAutoscaler(t *testing.T) {
 				return
 			}
 			assert.NoError(t, err)
+			list, err := framework.ListGameServersFromFleet(flt)
+			for _, gs := range list {
+				log.WithField("Counter", gs.Status.Counters).Info("GAME SERVER COUNTERS")
+			}
 			defer fleetautoscalers.Delete(ctx, fas.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
 
 			framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(testCase.wantReplicas))
