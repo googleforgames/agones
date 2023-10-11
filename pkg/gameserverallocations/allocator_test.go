@@ -370,7 +370,7 @@ func TestAllocatorApplyAllocationToGameServerCountsListsActions(t *testing.T) {
 					Capacity: 40,
 				}},
 		},
-		"CounterActions and ListActions only update list capacity": {
+		"CounterActions and ListActions truncate counter Count and update list capacity": {
 			features: fmt.Sprintf("%s=true", runtime.FeatureCountsAndLists),
 			gs:       &gs2,
 			gsa: &allocationv1.GameServerAllocation{
@@ -392,7 +392,7 @@ func TestAllocatorApplyAllocationToGameServerCountsListsActions(t *testing.T) {
 						}}}},
 			wantCounters: map[string]agonesv1.CounterStatus{
 				"rooms": {
-					Count:    101,
+					Count:    1000,
 					Capacity: 1000,
 				}},
 			wantLists: map[string]agonesv1.ListStatus{
