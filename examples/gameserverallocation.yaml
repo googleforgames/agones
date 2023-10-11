@@ -51,6 +51,14 @@ spec:
       # label/annotation/player selectors to retrieve an already Allocated GameServer.
       gameServerState: Ready
       # [Stage:Alpha]
+      # [FeatureFlag:CountsAndLists]
+      # Counts and Lists provides the configuration for generic (player, room, session, etc.) tracking features.
+      # Commented out since Alpha, and disabled by default
+      # counters:
+      #   players:
+      #     minAvailable: 1
+      #     maxAvailable: 10
+      # [Stage:Alpha]
       # [FeatureFlag:PlayerAllocationFilter]
       # Provides a filter on minimum and maximum values for player capacity when retrieving a GameServer
       # through Allocation. Defaults to no limits.
