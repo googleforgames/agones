@@ -18,7 +18,7 @@ metadata:
   name: load-test-fleet
 spec:
   # the number of GameServers to keep Ready or Allocated in this Fleet
-  replicas: 4000
+  replicas: 1000
   template:
     metadata:
       labels:
@@ -32,7 +32,7 @@ spec:
       template:
         spec:
           containers:
-            - args: [-automaticShutdownDelaySec=600]
+            - args: [-automaticShutdownDelaySec=60]
               image: us-docker.pkg.dev/agones-images/examples/simple-game-server:0.18
               name: simple-game-server
               resources:
