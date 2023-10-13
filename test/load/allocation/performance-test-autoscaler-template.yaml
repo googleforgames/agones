@@ -21,6 +21,6 @@ spec:
   policy:
     type: Buffer
     buffer:
-      bufferSize: {bufferSize}
-      minReplicas: {minReplicas}
-      maxReplicas: {maxReplicas}
+      bufferSize: BUFFER_SIZE_REPLACEMENT
+      minReplicas: MIN_REPLICAS_REPLACEMENT
+      maxReplicas: MAX_REPLICAS_REPLACEMENT

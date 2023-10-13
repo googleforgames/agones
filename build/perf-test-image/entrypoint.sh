@@ -44,16 +44,16 @@ cp performance-test-fleet-template.yaml performance-test-fleet.yaml
 cp performance-test-autoscaler-template.yaml performance-test-autoscaler.yaml
 cp performance-test-variable-template.txt performance-test-variable.txt
 
-sed -i 's/{replicas}/'$REPLICAS'/g' performance-test-fleet.yaml
-sed -i 's/{automaticShutdownDelaySec}/'$AUTO_SHUTDOWN_DELAY'/g' performance-test-fleet.yaml
+sed -i 's/REPLICAS_REPLACEMENT/'$REPLICAS'/g' performance-test-fleet.yaml
+sed -i 's/AUTOMATIC_SHUTDOWN_DELAY_SEC_REPLACEMENT/'$AUTO_SHUTDOWN_DELAY'/g' performance-test-fleet.yaml
 
-sed -i 's/{bufferSize}/'$BUFFER_SIZE'/g' performance-test-autoscaler.yaml
-sed -i 's/{minReplicas}/'$REPLICAS'/g' performance-test-autoscaler.yaml
-sed -i 's/{maxReplicas}/'$MAX_REPLICAS'/g' performance-test-autoscaler.yaml
+sed -i 's/BUFFER_SIZE_REPLACEMENT/'$BUFFER_SIZE'/g' performance-test-autoscaler.yaml
+sed -i 's/MIN_REPLICAS_REPLACEMENT/'$REPLICAS'/g' performance-test-autoscaler.yaml
+sed -i 's/MAX_REPLICAS_REPLACEMENT/'$MAX_REPLICAS'/g' performance-test-autoscaler.yaml
 
-sed -i 's/{duration}/'$DURATION'/g' performance-test-variable.txt
-sed -i 's/{clients}/'$CLIENTS'/g' performance-test-variable.txt
-sed -i 's/{interval}/'$INTERVAL'/g' performance-test-variable.txt
+sed -i 's/DURATION_REPLACEMENT/'$DURATION'/g' performance-test-variable.txt
+sed -i 's/CLIENTS_REPLACEMENT/'$CLIENTS'/g' performance-test-variable.txt
+sed -i 's/INTERVAL_REPLACEMENT/'$INTERVAL'/g' performance-test-variable.txt
 
 kubectl apply -f performance-test-fleet.yaml
 kubectl apply -f performance-test-autoscaler.yaml
