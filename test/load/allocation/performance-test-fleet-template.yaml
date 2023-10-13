@@ -15,10 +15,10 @@
 apiVersion: agones.dev/v1
 kind: Fleet
 metadata:
-  name: load-test-fleet
+  name: performance-test-fleet
 spec:
   # the number of GameServers to keep Ready or Allocated in this Fleet
-  replicas: 1000
+  replicas: {replicas}
   template:
     metadata:
       labels:
@@ -32,7 +32,7 @@ spec:
       template:
         spec:
           containers:
-            - args: [-automaticShutdownDelaySec=60]
+            - args: [-automaticShutdownDelaySec={automaticShutdownDelaySec}]
               image: us-docker.pkg.dev/agones-images/examples/simple-game-server:0.18
               name: simple-game-server
               resources:

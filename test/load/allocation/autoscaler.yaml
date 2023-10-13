@@ -17,10 +17,10 @@ kind: FleetAutoscaler
 metadata:
   name: fleet-autoscaler-scenario-test
 spec:
-  fleetName: load-test-fleet
+  fleetName: scenario-test
   policy:
     type: Buffer
     buffer:
-      bufferSize: 1000
-      minReplicas: 1000
-      maxReplicas: 6000
+      bufferSize: 2000
+      minReplicas: 10000
+      maxReplicas: 20000

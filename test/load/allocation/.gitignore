@@ -3,3 +3,4 @@
 *.txt
 !fixed.txt
 !variable.txt
+!performance-test-variable-template.txt

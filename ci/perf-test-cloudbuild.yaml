@@ -33,19 +33,31 @@ steps:
       - ${_TEST_CLUSTER_LOCATION}
       - ${_REGISTRY}
       - ${_TEST_PROJECT_ID}
-      - ${_TEST_VARIABLE_FILE}
+      - ${_TEST_FLEET_REPLICAS}
+      - ${_TEST_AUTOMATIC_SHUTDOWN_DELAY_SEC}
+      - ${_TEST_BUFFER_SIZE}
+      - ${_TEST_MAX_REPLICAS}
+      - ${_TEST_DURATION}
+      - ${_TEST_CLIENTS}
+      - ${_TEST_INTERVAL}
     id: perf-test
     waitFor:
       - build-perf
 
 substitutions:
   _TEST_CLUSTER_NAME: standard-performance-test-cluster-1-27
-  _TEST_CLUSTER_LOCATION: us-west2
+  _TEST_CLUSTER_LOCATION: us-central1
   _REGISTRY: us-docker.pkg.dev/agones-images/ci
   _TEST_PROJECT_ID: agones-images
-  _TEST_VARIABLE_FILE: 
+  _TEST_FLEET_REPLICAS: "20"
+  _TEST_AUTOMATIC_SHUTDOWN_DELAY_SEC: "60"
+  _TEST_BUFFER_SIZE: "20"
+  _TEST_MAX_REPLICAS: "6000"
+  _TEST_DURATION: "10m"
+  _TEST_CLIENTS: "50"
+  _TEST_INTERVAL: "1000"
 tags: [ci, 'commit-${COMMIT_SHA}']
-timeout: 3600s # 1h
+timeout: 3600s  # 1h
 queueTtl: 10800s  # 3h
 options:
   machineType: E2_HIGHCPU_32

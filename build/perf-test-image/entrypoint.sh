@@ -18,7 +18,13 @@ TEST_CLUSTER_NAME=$1
 TEST_CLUSTER_LOCATION=$2
 REGISTRY=$3
 PROJECT=$4
-TEST_VARIABLE_FILE=$5
+REPLICAS=$5
+AUTO_SHUTDOWN_DELAY=$6
+BUFFER_SIZE=$7
+MAX_REPLICAS=$8
+DURATION=$9
+CLIENTS=${10}
+INTERVAL=${11}
 
 export SHELL="/bin/bash"
 mkdir -p /go/src/agones.dev/
@@ -32,14 +38,38 @@ gcloud container clusters get-credentials $TEST_CLUSTER_NAME \
 DOCKER_RUN= make install REGISTRY='"'$REGISTRY'"' 
 
 cd /go/src/agones.dev/agones/test/load/allocation
-kubectl apply -f fleet.yaml
-kubectl apply -f autoscaler.yaml
 
-# Wait for fleet to be ready
-while [ $(kubectl get -f fleet.yaml -o=jsonpath='{.spec.replicas}') != $(kubectl get -f fleet.yaml -o=jsonpath='{.status.readyReplicas}') ]
+# use the input values to populate the yaml files for fleet and autoscaler, and then apply them
+cp performance-test-fleet-template.yaml performance-test-fleet.yaml
+cp performance-test-autoscaler-template.yaml performance-test-autoscaler.yaml
+cp performance-test-variable-template.txt performance-test-variable.txt
+
+sed -i 's/{replicas}/'$REPLICAS'/g' performance-test-fleet.yaml
+sed -i 's/{automaticShutdownDelaySec}/'$AUTO_SHUTDOWN_DELAY'/g' performance-test-fleet.yaml
+
+sed -i 's/{bufferSize}/'$BUFFER_SIZE'/g' performance-test-autoscaler.yaml
+sed -i 's/{minReplicas}/'$REPLICAS'/g' performance-test-autoscaler.yaml
+sed -i 's/{maxReplicas}/'$MAX_REPLICAS'/g' performance-test-autoscaler.yaml
+
+sed -i 's/{duration}/'$DURATION'/g' performance-test-variable.txt
+sed -i 's/{clients}/'$CLIENTS'/g' performance-test-variable.txt
+sed -i 's/{interval}/'$INTERVAL'/g' performance-test-variable.txt
+
+kubectl apply -f performance-test-fleet.yaml
+kubectl apply -f performance-test-autoscaler.yaml
+
+# wait for the fleet to be ready
+while [ $(kubectl get -f performance-test-fleet.yaml -o=jsonpath='{.spec.replicas}') != $(kubectl get -f performance-test-fleet.yaml -o=jsonpath='{.status.readyReplicas}') ]
 do
     sleep 1
 done
 
-./runScenario.sh $TEST_VARIABLE_FILE
-echo "Finish performance testing."
+cat performance-test-fleet.yaml
+cat performance-test-autoscaler.yaml
+cat performance-test-variable.txt
+
+printf "\nStart testing."
+./runScenario.sh performance-test-variable.txt
+printf "\nFinish testing."
+
+rm performance-test-fleet.yaml performance-test-autoscaler.yaml performance-test-variable.txt
