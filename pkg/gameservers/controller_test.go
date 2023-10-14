@@ -897,7 +897,6 @@ func TestControllerSyncGameServerCreatingState(t *testing.T) {
 			Spec: newSingleContainerSpec(), Status: agonesv1.GameServerStatus{State: agonesv1.GameServerStateCreating}}
 		fixture.Spec.Ports[0].Name = "udp-port"
 		fixture.Spec.Ports[0].HostPort = 7000
-		// fixture.Spec.Ports[0].Protocol = corev1.ProtocolTCP
 		fixture.ApplyDefaults()
 		podCreated := false
 		gsUpdated := false
