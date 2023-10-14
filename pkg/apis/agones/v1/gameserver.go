@@ -719,35 +719,18 @@ func (gs *GameServer) Pod(apiHooks APIHooks, sidecars ...corev1.Container) (*cor
 
 	gs.podObjectMeta(pod)
 	for _, p := range gs.Spec.Ports {
+		cp := corev1.ContainerPort{
+			ContainerPort: p.ContainerPort,
+			HostPort:      p.HostPort,
+			Protocol:      p.Protocol,
+		}
+		err := gs.ApplyToPodContainer(pod, *p.Container, func(c corev1.Container) corev1.Container {
+			c.Ports = append(c.Ports, cp)
 
-		if p.PortPolicy == Static && p.Protocol == ProtocolTCPUDP {
-			// Handle static port policy with TCPUDP protocol
-			cpTCP := corev1.ContainerPort{
-				ContainerPort: p.ContainerPort,
-				HostPort:      p.HostPort,
-				Protocol:      corev1.ProtocolTCP,
-			}
-			cpUDP := corev1.ContainerPort{
-				ContainerPort: p.ContainerPort,
-				HostPort:      p.HostPort,
-				Protocol:      corev1.ProtocolUDP,
-			}
-
-			pod.Spec.Containers[0].Ports = append(pod.Spec.Containers[0].Ports, cpTCP, cpUDP)
-		} else {
-			cp := corev1.ContainerPort{
-				ContainerPort: p.ContainerPort,
-				HostPort:      p.HostPort,
-				Protocol:      p.Protocol,
-			}
-			err := gs.ApplyToPodContainer(pod, *p.Container, func(c corev1.Container) corev1.Container {
-				c.Ports = append(c.Ports, cp)
-
-				return c
-			})
-			if err != nil {
-				return nil, err
-			}
+			return c
+		})
+		if err != nil {
+			return nil, err
 		}
 	}
 	// Put the sidecars at the start of the list of containers so that the kubelet starts them first.
