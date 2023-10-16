@@ -42,3 +42,4 @@ jobs:
           exempt-issue-labels: awaiting-maintainer, obsolete
           ascending: true
           enable-statistics: true
+          labels-to-remove-when-unstale: stale,obsolete
