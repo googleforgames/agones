@@ -535,8 +535,8 @@ func TestCounterGameServerAllocationSorting(t *testing.T) {
 	gameServers := map[string]int{}
 	// Set random counts and capacities for each gameserver
 	for _, gs := range list {
-		count := rand.IntnRange(0, 99) // Available Capacity will be at least 1
-		capacity := rand.IntnRange(count, 100)
+		count := rand.IntnRange(0, 99)
+		capacity := rand.IntnRange(count+1, 100) // Available Capacity will be at least 1
 		availableCapacity := capacity - count
 		gameServers[gs.ObjectMeta.Name] = availableCapacity
 
@@ -548,12 +548,18 @@ func TestCounterGameServerAllocationSorting(t *testing.T) {
 		_, err := framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Update(ctx, gsCopy, metav1.UpdateOptions{})
 		require.NoError(t, err)
 	}
-	// GameServers names sorted by available capacity, ascending.
+	// GameServers names sorted by available capacity, ascending. If available capacity is equal sort
+	// by name (as in pkg/gameserverallocations/allocation_cache.go)
 	sortedGs := make([]string, 0, len(gameServers))
 	for gsName := range gameServers {
 		sortedGs = append(sortedGs, gsName)
 	}
-	sort.Slice(sortedGs, func(i, j int) bool { return gameServers[sortedGs[i]] < gameServers[sortedGs[j]] })
+	sort.Slice(sortedGs, func(i, j int) bool {
+		if gameServers[sortedGs[i]] != gameServers[sortedGs[j]] {
+			return gameServers[sortedGs[i]] < gameServers[sortedGs[j]]
+		}
+		return sortedGs[i] < sortedGs[j]
+	})
 
 	fleetSelector := metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}}
 	ready := agonesv1.GameServerStateReady
