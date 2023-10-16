@@ -822,12 +822,6 @@ func TestCounterAutoscaler(t *testing.T) {
 				Policy: autoscalingv1.FleetAutoscalerPolicy{
 					Type: autoscalingv1.CounterPolicyType,
 				},
-				Sync: &autoscalingv1.FleetAutoscalerSync{
-					Type: autoscalingv1.FixedIntervalSyncType,
-					FixedInterval: autoscalingv1.FixedIntervalSync{
-						Seconds: 30,
-					},
-				},
 			},
 		}
 		f(&fas.Spec.Policy)
@@ -977,12 +971,6 @@ func TestCounterAutoscalerAllocated(t *testing.T) {
 				Policy: autoscalingv1.FleetAutoscalerPolicy{
 					Type: autoscalingv1.CounterPolicyType,
 				},
-				Sync: &autoscalingv1.FleetAutoscalerSync{
-					Type: autoscalingv1.FixedIntervalSyncType,
-					FixedInterval: autoscalingv1.FixedIntervalSync{
-						Seconds: 30,
-					},
-				},
 			},
 		}
 		f(&fas.Spec.Policy)
@@ -997,9 +985,9 @@ func TestCounterAutoscalerAllocated(t *testing.T) {
 			}}}
 
 	testCases := map[string]struct {
-		fas          *autoscalingv1.FleetAutoscaler
-		wantAllocatedGs  int32 // Must be >= 0 && <= 3
-		wantReadyGs int32
+		fas             *autoscalingv1.FleetAutoscaler
+		wantAllocatedGs int32 // Must be >= 0 && <= 3
+		wantReadyGs     int32
 	}{
 		"Scale Down Buffer Percent": {
 			fas: counterFas(func(fap *autoscalingv1.FleetAutoscalerPolicy) {
@@ -1010,8 +998,8 @@ func TestCounterAutoscalerAllocated(t *testing.T) {
 					MaxCapacity: 100,
 				}
 			}),
-			wantAllocatedGs:  0,
-			wantReadyGs: 1,
+			wantAllocatedGs: 0,
+			wantReadyGs:     1,
 		},
 		"Scale Up Buffer Percent": {
 			fas: counterFas(func(fap *autoscalingv1.FleetAutoscalerPolicy) {
@@ -1022,15 +1010,16 @@ func TestCounterAutoscalerAllocated(t *testing.T) {
 					MaxCapacity: 100,
 				}
 			}),
-			wantAllocatedGs:  3,
-			wantReadyGs: 2,
+			wantAllocatedGs: 3,
+			wantReadyGs:     2,
 		},
 	}
 	for name, testCase := range testCases {
 		t.Run(name, func(t *testing.T) {
 			// Allocate game servers, as Buffer Percent scales up (or down) based on allocated aggregate capacity
 			for i := int32(0); i < testCase.wantAllocatedGs; i++ {
-				framework.AgonesClient.AllocationV1().GameServerAllocations(flt.ObjectMeta.Namespace).Create(ctx, gsa.DeepCopy(), metav1.CreateOptions{})
+				_, err := framework.AgonesClient.AllocationV1().GameServerAllocations(flt.ObjectMeta.Namespace).Create(ctx, gsa.DeepCopy(), metav1.CreateOptions{})
+				require.NoError(t, err)
 			}
 			framework.AssertFleetCondition(t, flt, func(entry *logrus.Entry, fleet *agonesv1.Fleet) bool {
 				log.WithField("fleet", fmt.Sprintf("%+v", fleet.Status)).Info("Checking for game server allocations")
@@ -1052,16 +1041,17 @@ func TestCounterAutoscalerAllocated(t *testing.T) {
 				if gs.Status.State == ready {
 					continue
 				}
-				gsCopy := gs.DeepCopy()
-				gsCopy.Status.State = ready
-				reqReadyGs, err := framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Update(ctx, gsCopy, metav1.UpdateOptions{})
+				// delete the allocated GameServer
+				gp := int64(1)
+				err = client.GameServers(framework.Namespace).Delete(ctx, gs.Name, metav1.DeleteOptions{GracePeriodSeconds: &gp})
 				require.NoError(t, err)
-				require.Equal(t, ready, reqReadyGs.Status.State)
 			}
 
 			// Return to starting 3 ready replicas
 			framework.ScaleFleet(t, log, flt, flt.Spec.Replicas)
-			framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
+			framework.AssertFleetCondition(t, flt, func(log *logrus.Entry, fleet *agonesv1.Fleet) bool {
+				return fleet.Status.AllocatedReplicas == 0 && fleet.Status.ReadyReplicas == flt.Spec.Replicas
+			})
 		})
 	}
 }
