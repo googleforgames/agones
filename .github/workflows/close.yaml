@@ -43,3 +43,4 @@ jobs:
           close-issue-reason: not_planned
           stale-issue-label: wontfix
           enable-statistics: true
+          labels-to-remove-when-unstale: stale,obsolete
