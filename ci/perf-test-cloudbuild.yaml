@@ -1,4 +1,20 @@
 ---
+# Copyright 2023 Google LLC All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# Google Cloud Builder CI configuration
+#
 steps:
   #
   # Creates the initial make + docker build platform
@@ -15,45 +31,69 @@ steps:
     id: build-make-docker
     args: [build, -f, Dockerfile.build, -t, make-docker, .]  # we need docker and make to run everything.
 
-  #
-  # build the performance test runner
-  #
-  - name: gcr.io/cloud-builders/docker
-    args: [build, -f, Dockerfile, -t, perf-runner, .]
-    dir: build/perf-test-image
-    id: build-perf
-    waitFor:
-      - build-make-docker
+  # 
+  # pull the main build image if it exists 
+  # 
+  - name: make-docker 
+    id: pull-build-image 
+    dir: build 
+    env: ['REGISTRY=${_REGISTRY}', 'CUSTOM_LOCAL_TAG=performance-test']
+    args: [pull-build-image-with-tag]
 
   #
   # Run the performance tests with default feature gates setting
   #
-  - name: perf-runner
-    args:
-      - ${_TEST_CLUSTER_NAME}
-      - ${_TEST_CLUSTER_LOCATION}
-      - ${_REGISTRY}
-      - ${_TEST_PROJECT_ID}
-      - ${_TEST_FLEET_REPLICAS}
-      - ${_TEST_AUTOMATIC_SHUTDOWN_DELAY_SEC}
-      - ${_TEST_BUFFER_SIZE}
-      - ${_TEST_MAX_REPLICAS}
-      - ${_TEST_DURATION}
-      - ${_TEST_CLIENTS}
-      - ${_TEST_INTERVAL}
-    id: perf-test
+  - name: performance-test
+    script: |
+        #!/usr/bin/env bash
+        mkdir -p /go/src/agones.dev/
+        ln -s /workspace /go/src/agones.dev/agones
+        cd /go/src/agones.dev/agones/build
+        gcloud config set project ${_TEST_PROJECT_ID}
+        gcloud container clusters get-credentials ${_TEST_CLUSTER_NAME} \
+                --zone=${_TEST_CLUSTER_LOCATION} --project=${_TEST_PROJECT_ID}
+        DOCKER_RUN= make install REGISTRY='"'${_REGISTRY}'"' 
+        cd /go/src/agones.dev/agones/test/load/allocation
+        # use the input values to populate the yaml files for fleet and autoscaler, and then apply them
+        cp performance-test-fleet-template.yaml performance-test-fleet.yaml
+        cp performance-test-autoscaler-template.yaml performance-test-autoscaler.yaml
+        cp performance-test-variable-template.txt performance-test-variable.txt
+        sed -i 's/REPLICAS_REPLACEMENT/'${_TEST_FLEET_REPLICAS}'/g' performance-test-fleet.yaml
+        sed -i 's/AUTOMATIC_SHUTDOWN_DELAY_SEC_REPLACEMENT/'${_TEST_AUTOMATIC_SHUTDOWN_DELAY_SEC}'/g' performance-test-fleet.yaml
+        sed -i 's/BUFFER_SIZE_REPLACEMENT/'${_TEST_BUFFER_SIZE}'/g' performance-test-autoscaler.yaml
+        sed -i 's/MIN_REPLICAS_REPLACEMENT/'${_TEST_FLEET_REPLICAS}'/g' performance-test-autoscaler.yaml
+        sed -i 's/MAX_REPLICAS_REPLACEMENT/'${_TEST_MAX_REPLICAS}'/g' performance-test-autoscaler.yaml
+        sed -i 's/DURATION_REPLACEMENT/'${_TEST_DURATION}'/g' performance-test-variable.txt
+        sed -i 's/CLIENTS_REPLACEMENT/'${_TEST_CLIENTS}'/g' performance-test-variable.txt
+        sed -i 's/INTERVAL_REPLACEMENT/'${_TEST_INTERVAL}'/g' performance-test-variable.txt
+        kubectl apply -f performance-test-fleet.yaml
+        kubectl apply -f performance-test-autoscaler.yaml
+        # wait for the fleet to be ready
+        while [ $(kubectl get -f performance-test-fleet.yaml -o=jsonpath='{.spec.replicas}') != $(kubectl get -f performance-test-fleet.yaml -o=jsonpath='{.status.readyReplicas}') ]
+        do
+            sleep 1
+        done
+        cat performance-test-fleet.yaml
+        cat performance-test-autoscaler.yaml
+        cat performance-test-variable.txt
+        printf "\nStart testing."
+        ./runScenario.sh performance-test-variable.txt
+        printf "\nFinish testing."
+        rm performance-test-fleet.yaml performance-test-autoscaler.yaml performance-test-variable.txt
+    automapSubstitutions: true
+    id: performance-test
     waitFor:
-      - build-perf
+      - pull-build-image 
 
 substitutions:
   _TEST_CLUSTER_NAME: standard-performance-test-cluster-1-27
   _TEST_CLUSTER_LOCATION: us-central1
   _REGISTRY: us-docker.pkg.dev/agones-images/ci
   _TEST_PROJECT_ID: agones-images
-  _TEST_FLEET_REPLICAS: "20"
+  _TEST_FLEET_REPLICAS: "10000"
   _TEST_AUTOMATIC_SHUTDOWN_DELAY_SEC: "60"
-  _TEST_BUFFER_SIZE: "20"
-  _TEST_MAX_REPLICAS: "6000"
+  _TEST_BUFFER_SIZE: "9900"
+  _TEST_MAX_REPLICAS: "20000"
   _TEST_DURATION: "10m"
   _TEST_CLIENTS: "50"
   _TEST_INTERVAL: "1000"
