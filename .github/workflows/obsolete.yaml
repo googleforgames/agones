@@ -39,6 +39,7 @@ jobs:
             'awaiting-maintainer' label. Thank you for your contributions
           stale-issue-label: obsolete
           only-labels: stale
+          labels-to-remove-when-unstale: stale,obsolete
           exempt-issue-labels: awaiting-maintainer
           remove-stale-when-updated: true
           ascending: true
