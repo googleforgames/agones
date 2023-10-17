@@ -91,10 +91,6 @@ RUN mkdir /tmp/hugo && \
     mv /tmp/hugo/hugo /usr/local/bin/ && \
     rm -r /tmp/hugo
 
-RUN add-apt-repository -y -r ppa:chris-lea/node.js
-RUN rm -f /etc/apt/sources.list.d/chris-lea-node_js-*.list
-RUN rm -f /etc/apt/sources.list.d/chris-lea-node_js-*.list.save
-
 # Import the Nodesource GPG key
 RUN apt-get update && \
     apt-get install -y ca-certificates curl gnupg && \
