@@ -926,6 +926,10 @@ func (c *Controller) syncGameServerShutdownState(ctx context.Context, gs *agones
 // moveToErrorState moves the GameServer to the error state
 func (c *Controller) moveToErrorState(ctx context.Context, gs *agonesv1.GameServer, msg string) (*agonesv1.GameServer, error) {
 	gsCopy := gs.DeepCopy()
+	if gsCopy.Annotations == nil {
+		gsCopy.Annotations = make(map[string]string, 1)
+	}
+	gsCopy.Annotations[agonesv1.GameServerErroredAtAnnotation] = time.Now().Format(time.RFC3339)
 	gsCopy.Status.State = agonesv1.GameServerStateError
 
 	gs, err := c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(ctx, gsCopy, metav1.UpdateOptions{})

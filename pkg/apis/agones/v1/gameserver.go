@@ -138,6 +138,9 @@ const (
 	PodSafeToEvictAnnotation = "cluster-autoscaler.kubernetes.io/safe-to-evict"
 	// SafeToEvictLabel is a label that, when "false", matches the restrictive PDB agones-gameserver-safe-to-evict-false.
 	SafeToEvictLabel = agones.GroupName + "/safe-to-evict"
+	// GameServerErroredAtAnnotation is an annotation that records the timestamp the GameServer entered the
+	// error state. The timestamp is encoded in RFC3339 format.
+	GameServerErroredAtAnnotation = agones.GroupName + "/errored-at"
 
 	// True is the string "true" to appease the goconst lint.
 	True = "true"
