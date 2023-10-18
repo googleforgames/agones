@@ -30,8 +30,8 @@ import (
 )
 
 // Borrowed from https://stackoverflow.com/questions/62803041/how-to-evict-or-delete-pods-from-kubernetes-using-golang-client
-func evictPod(client *kubernetes.Clientset, name, namespace string) error {
-	return client.PolicyV1().Evictions(namespace).Evict(context.TODO(), &policy.Eviction{
+func evictPod(ctx context.Context, client *kubernetes.Clientset, name, namespace string) error {
+	return client.PolicyV1().Evictions(namespace).Evict(ctx, &policy.Eviction{
 		ObjectMeta: meta_v1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
@@ -39,6 +39,8 @@ func evictPod(client *kubernetes.Clientset, name, namespace string) error {
 }
 
 func main() {
+	ctx := context.Background()
+
 	kubeconfig := flag.String("kubeconfig", filepath.Join(homedir.HomeDir(), ".kube", "config"), "(optional) absolute path to the kubeconfig file")
 	namespace := flag.String("namespace", "default", "Namespace (defaults to `default`)")
 	pod := flag.String("pod", "", "Pod name (required)")
@@ -58,7 +60,7 @@ func main() {
 		log.Fatalf("Could not create the kubernetes clientset: %v", err)
 	}
 
-	if err = evictPod(kubeClient, *pod, *namespace); err != nil {
+	if err := evictPod(ctx, kubeClient, *pod, *namespace); err != nil {
 		log.Fatalf("Pod eviction failed: %v", err)
 	}
 }
