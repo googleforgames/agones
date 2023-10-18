@@ -44,42 +44,45 @@ steps:
   # Run the performance tests with default feature gates setting
   #
   - name: performance-test
-    script: |
-        #!/usr/bin/env bash
-        mkdir -p /go/src/agones.dev/
-        ln -s /workspace /go/src/agones.dev/agones
-        cd /go/src/agones.dev/agones/build
-        gcloud config set project ${_TEST_PROJECT_ID}
-        gcloud container clusters get-credentials ${_TEST_CLUSTER_NAME} \
-                --zone=${_TEST_CLUSTER_LOCATION} --project=${_TEST_PROJECT_ID}
-        DOCKER_RUN= make install REGISTRY='"'${_REGISTRY}'"'
-        cd /go/src/agones.dev/agones/test/load/allocation
-        # use the input values to populate the yaml files for fleet and autoscaler, and then apply them
-        cp performance-test-fleet-template.yaml performance-test-fleet.yaml
-        cp performance-test-autoscaler-template.yaml performance-test-autoscaler.yaml
-        cp performance-test-variable-template.txt performance-test-variable.txt
-        sed -i 's/REPLICAS_REPLACEMENT/'${_TEST_FLEET_REPLICAS}'/g' performance-test-fleet.yaml
-        sed -i 's/AUTOMATIC_SHUTDOWN_DELAY_SEC_REPLACEMENT/'${_TEST_AUTOMATIC_SHUTDOWN_DELAY_SEC}'/g' performance-test-fleet.yaml
-        sed -i 's/BUFFER_SIZE_REPLACEMENT/'${_TEST_BUFFER_SIZE}'/g' performance-test-autoscaler.yaml
-        sed -i 's/MIN_REPLICAS_REPLACEMENT/'${_TEST_FLEET_REPLICAS}'/g' performance-test-autoscaler.yaml
-        sed -i 's/MAX_REPLICAS_REPLACEMENT/'${_TEST_MAX_REPLICAS}'/g' performance-test-autoscaler.yaml
-        sed -i 's/DURATION_REPLACEMENT/'${_TEST_DURATION}'/g' performance-test-variable.txt
-        sed -i 's/CLIENTS_REPLACEMENT/'${_TEST_CLIENTS}'/g' performance-test-variable.txt
-        sed -i 's/INTERVAL_REPLACEMENT/'${_TEST_INTERVAL}'/g' performance-test-variable.txt
-        kubectl apply -f performance-test-fleet.yaml
-        kubectl apply -f performance-test-autoscaler.yaml
-        # wait for the fleet to be ready
-        while [ $(kubectl get -f performance-test-fleet.yaml -o=jsonpath='{.spec.replicas}') != $(kubectl get -f performance-test-fleet.yaml -o=jsonpath='{.status.readyReplicas}') ]
-        do
-            sleep 1
-        done
-        cat performance-test-fleet.yaml
-        cat performance-test-autoscaler.yaml
-        cat performance-test-variable.txt
-        printf "\nStart testing."
-        ./runScenario.sh performance-test-variable.txt
-        printf "\nFinish testing."
-        rm performance-test-fleet.yaml performance-test-autoscaler.yaml performance-test-variable.txt
+    dir: build
+    args: [./performance-test.sh]
+    # entrypoint: 
+    # script: |
+    #     #!/usr/bin/env bash
+    #     mkdir -p /go/src/agones.dev/
+    #     ln -s /workspace /go/src/agones.dev/agones
+    #     cd /go/src/agones.dev/agones/build
+    #     gcloud config set project ${_TEST_PROJECT_ID}
+    #     gcloud container clusters get-credentials ${_TEST_CLUSTER_NAME} \
+    #             --zone=${_TEST_CLUSTER_LOCATION} --project=${_TEST_PROJECT_ID}
+    #     DOCKER_RUN= make install REGISTRY='"'${_REGISTRY}'"'
+    #     cd /go/src/agones.dev/agones/test/load/allocation
+    #     # use the input values to populate the yaml files for fleet and autoscaler, and then apply them
+    #     cp performance-test-fleet-template.yaml performance-test-fleet.yaml
+    #     cp performance-test-autoscaler-template.yaml performance-test-autoscaler.yaml
+    #     cp performance-test-variable-template.txt performance-test-variable.txt
+    #     sed -i 's/REPLICAS_REPLACEMENT/'${_TEST_FLEET_REPLICAS}'/g' performance-test-fleet.yaml
+    #     sed -i 's/AUTOMATIC_SHUTDOWN_DELAY_SEC_REPLACEMENT/'${_TEST_AUTOMATIC_SHUTDOWN_DELAY_SEC}'/g' performance-test-fleet.yaml
+    #     sed -i 's/BUFFER_SIZE_REPLACEMENT/'${_TEST_BUFFER_SIZE}'/g' performance-test-autoscaler.yaml
+    #     sed -i 's/MIN_REPLICAS_REPLACEMENT/'${_TEST_FLEET_REPLICAS}'/g' performance-test-autoscaler.yaml
+    #     sed -i 's/MAX_REPLICAS_REPLACEMENT/'${_TEST_MAX_REPLICAS}'/g' performance-test-autoscaler.yaml
+    #     sed -i 's/DURATION_REPLACEMENT/'${_TEST_DURATION}'/g' performance-test-variable.txt
+    #     sed -i 's/CLIENTS_REPLACEMENT/'${_TEST_CLIENTS}'/g' performance-test-variable.txt
+    #     sed -i 's/INTERVAL_REPLACEMENT/'${_TEST_INTERVAL}'/g' performance-test-variable.txt
+    #     kubectl apply -f performance-test-fleet.yaml
+    #     kubectl apply -f performance-test-autoscaler.yaml
+    #     # wait for the fleet to be ready
+    #     while [ $(kubectl get -f performance-test-fleet.yaml -o=jsonpath='{.spec.replicas}') != $(kubectl get -f performance-test-fleet.yaml -o=jsonpath='{.status.readyReplicas}') ]
+    #     do
+    #         sleep 1
+    #     done
+    #     cat performance-test-fleet.yaml
+    #     cat performance-test-autoscaler.yaml
+    #     cat performance-test-variable.txt
+    #     printf "\nStart testing."
+    #     ./runScenario.sh performance-test-variable.txt
+    #     printf "\nFinish testing."
+    #     rm performance-test-fleet.yaml performance-test-autoscaler.yaml performance-test-variable.txt
     automapSubstitutions: true
     id: performance-test
     waitFor:
