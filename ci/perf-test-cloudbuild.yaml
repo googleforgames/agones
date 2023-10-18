@@ -45,19 +45,19 @@ steps:
   #
   - name: performance-test
     dir: build
-    args: 
-    - ./performance-test.sh
-    - ${_TEST_CLUSTER_NAME}
-    - ${_TEST_CLUSTER_LOCATION}
-    - ${_REGISTRY}
-    - ${_TEST_PROJECT_ID}
-    - ${_TEST_FLEET_REPLICAS}
-    - ${_TEST_AUTOMATIC_SHUTDOWN_DELAY_SEC}
-    - ${_TEST_BUFFER_SIZE}
-    - ${_TEST_MAX_REPLICAS}
-    - ${_TEST_DURATION}
-    - ${_TEST_CLIENTS}
-    - ${_TEST_INTERVAL}    
+    args:
+      - ./performance-test.sh
+      - ${_TEST_CLUSTER_NAME}
+      - ${_TEST_CLUSTER_LOCATION}
+      - ${_REGISTRY}
+      - ${_TEST_PROJECT_ID}
+      - ${_TEST_FLEET_REPLICAS}
+      - ${_TEST_AUTOMATIC_SHUTDOWN_DELAY_SEC}
+      - ${_TEST_BUFFER_SIZE}
+      - ${_TEST_MAX_REPLICAS}
+      - ${_TEST_DURATION}
+      - ${_TEST_CLIENTS}
+      - ${_TEST_INTERVAL}
     id: performance-test
     waitFor:
       - pull-build-image
