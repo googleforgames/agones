@@ -45,6 +45,7 @@ func main() {
 	shutdownDelaySec := flag.Int("automaticShutdownDelaySec", 0, "If greater than zero, automatically shut down the server this many seconds after the server becomes allocated (cannot be used if automaticShutdownDelayMin is set)")
 	readyDelaySec := flag.Int("readyDelaySec", 0, "If greater than zero, wait this many seconds each time before marking the game server as ready")
 	readyIterations := flag.Int("readyIterations", 0, "If greater than zero, return to a ready state this number of times before shutting down")
+	gracefulTerminationDelaySec := flag.Int("gracefulTerminationDelaySec", 0, "Delay after we've been asked to terminate (by SIGKILL or automaticShutdownDelaySec)")
 	udp := flag.Bool("udp", true, "Server will listen on UDP")
 	tcp := flag.Bool("tcp", false, "Server will listen on TCP")
 
@@ -122,6 +123,8 @@ func main() {
 	}
 
 	<-sigCtx.Done()
+	log.Printf("Waiting %d seconds before exiting", *gracefulTerminationDelaySec)
+	time.Sleep(time.Duration(*gracefulTerminationDelaySec) * time.Second)
 	os.Exit(0)
 }
 
