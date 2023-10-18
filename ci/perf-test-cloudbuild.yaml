@@ -31,12 +31,12 @@ steps:
     id: build-make-docker
     args: [build, -f, Dockerfile.build, -t, make-docker, .]  # we need docker and make to run everything.
 
-  # 
-  # pull the main build image if it exists 
-  # 
-  - name: make-docker 
-    id: pull-build-image 
-    dir: build 
+  #
+  # pull the main build image if it exists
+  #
+  - name: make-docker
+    id: pull-build-image
+    dir: build
     env: ['REGISTRY=${_REGISTRY}', 'CUSTOM_LOCAL_TAG=performance-test']
     args: [pull-build-image-with-tag]
 
@@ -52,7 +52,7 @@ steps:
         gcloud config set project ${_TEST_PROJECT_ID}
         gcloud container clusters get-credentials ${_TEST_CLUSTER_NAME} \
                 --zone=${_TEST_CLUSTER_LOCATION} --project=${_TEST_PROJECT_ID}
-        DOCKER_RUN= make install REGISTRY='"'${_REGISTRY}'"' 
+        DOCKER_RUN= make install REGISTRY='"'${_REGISTRY}'"'
         cd /go/src/agones.dev/agones/test/load/allocation
         # use the input values to populate the yaml files for fleet and autoscaler, and then apply them
         cp performance-test-fleet-template.yaml performance-test-fleet.yaml
@@ -83,7 +83,7 @@ steps:
     automapSubstitutions: true
     id: performance-test
     waitFor:
-      - pull-build-image 
+      - pull-build-image
 
 substitutions:
   _TEST_CLUSTER_NAME: standard-performance-test-cluster-1-27
