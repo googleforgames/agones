@@ -31,9 +31,9 @@ mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_path := $(dir $(mkfile_path))
 root_path = $(realpath $(project_path)/../..)
 ifeq ($(REPOSITORY),)
-	server_tag := nodejs-simple-server:0.8
+	server_tag := nodejs-simple-server:0.9
 else
-	server_tag := $(REPOSITORY)/nodejs-simple-server:0.8
+	server_tag := $(REPOSITORY)/nodejs-simple-server:0.9
 endif
 
 #   _____                    _
