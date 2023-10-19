@@ -30,7 +30,7 @@ import (
 )
 
 func main() {
-	tmpDir := "./tmp"
+	tmpDir := "../../tmp"
 
 	if _, err := os.Stat(tmpDir); err == nil {
 		err = os.RemoveAll(tmpDir)
@@ -359,20 +359,19 @@ func jsonToHelmYaml(tmpDir, filename string) {
 	yamlContent := yamlBuffer.String()
 
 	// Read boilerplate
-	boilerplateContent, err := os.ReadFile("./boilerplate.yaml.txt")
+	boilerplateContent, err := os.ReadFile("../../boilerplate.yaml.txt")
 	if err != nil {
 		log.Fatalf("Failed to read boilerplate.yaml.txt: %s", err)
 	}
 
 	// Concatenate content to form the final YAML
 	finalContent := `---
-` + string(boilerplateContent) + `
-{{- define "` + filename + `" }}
+` + string(boilerplateContent) + `{{- define "` + filename + `" }}
 ` + yamlContent + `
 {{- end }}
 `
 
-	outputPath := filepath.Join("../install/helm/agones/templates/crds/k8s/", "_"+filename+".yaml")
+	outputPath := filepath.Join("../../../install/helm/agones/templates/crds/k8s", "_"+filename+".yaml")
 	if err := os.WriteFile(outputPath, []byte(finalContent), 0o644); err != nil {
 		log.Fatalf("Failed to write to file %s: %s", outputPath, err)
 	}

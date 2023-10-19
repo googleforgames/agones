@@ -38,5 +38,5 @@ build/allocation
 debug.test
 obj
 test/sdk/cpp/sdk/
-build/export-openapi
+build/scripts/k8s-export-openapi/export-openapi
 
