@@ -366,8 +366,8 @@ func jsonToHelmYaml(tmpDir, filename string) {
 
 	// Concatenate content to form the final YAML
 	finalContent := `---
-` + `{{- define "` + filename + `" }} 
 ` + string(boilerplateContent) + `
+{{- define "` + filename + `" }}
 ` + yamlContent + `
 {{- end }}
 `
