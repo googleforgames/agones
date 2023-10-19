@@ -26,6 +26,9 @@ metadata:
     "helm.sh/hook": pre-delete
     "helm.sh/hook-delete-policy": before-hook-creation
 spec:
+  {{- if gt (int .Values.agones.crds.cleanupJobTTL) 0 }}
+  ttlSecondsAfterFinished: {{ .Values.agones.crds.cleanupJobTTL }}
+  {{- end}}
   template:
     metadata:
       name: "{{.Release.Name}}-delete-agones-resources"
