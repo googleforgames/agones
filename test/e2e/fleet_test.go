@@ -1621,7 +1621,8 @@ func TestFleetAggregatedCounterStatus(t *testing.T) {
 	}
 
 	flt, err := client.Fleets(framework.Namespace).Create(ctx, flt.DeepCopy(), metav1.CreateOptions{})
-	assert.NoError(t, err)
+	require.NoError(t, err)
+	defer client.Fleets(framework.Namespace).Delete(ctx, flt.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
 	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 
 	// allocate two of them.
@@ -1650,21 +1651,19 @@ func TestFleetAggregatedCounterStatus(t *testing.T) {
 	allocatedCapacity := 0
 	allocatedCount := 0
 	// set random counts and capacities for each gameserver
-	for i := range list {
-		// Do this, otherwise scopelint complains about "using a reference for the variable on range scope"
-		gs := &list[i]
+	for _, gs := range list {
 		count := rand.IntnRange(2, 9)
 		capacity := rand.IntnRange(count, 100)
 
 		totalCapacity += capacity
 		msg := fmt.Sprintf("SET_COUNTER_CAPACITY games %d", capacity)
-		reply, err := framework.SendGameServerUDP(t, gs, msg)
+		reply, err := framework.SendGameServerUDP(t, &gs, msg)
 		require.NoError(t, err)
 		assert.Equal(t, "true", reply)
 
 		totalCount += count
 		msg = fmt.Sprintf("SET_COUNTER_COUNT games %d", count)
-		reply, err = framework.SendGameServerUDP(t, gs, msg)
+		reply, err = framework.SendGameServerUDP(t, &gs, msg)
 		require.NoError(t, err)
 		assert.Equal(t, "true", reply)
 

@@ -66,6 +66,10 @@ const (
 
 	// maxPodPendingCount is the maximum number of pending pods per game server set
 	maxPodPendingCount = 5000
+
+	// gameServerErrorDeletionDelay is the minimum amount of time to delay the deletion
+	// of a GameServer in Error state.
+	gameServerErrorDeletionDelay = 30 * time.Second
 )
 
 // Extensions struct contains what is needed to bind webhook handlers
@@ -430,7 +434,19 @@ func computeReconciliationAction(strategy apis.SchedulingStrategy, list []*agone
 
 		// GameServerStateShutdown - already handled above
 		// GameServerStateAllocated - already handled above
-		case agonesv1.GameServerStateError, agonesv1.GameServerStateUnhealthy:
+		case agonesv1.GameServerStateError:
+			if !shouldDeleteErroredGameServer(gs) {
+				// The GameServer is in an Error state and should not be deleted yet.
+				// To stop an ever-increasing number of GameServers from being created,
+				// consider the Error state GameServers as up and pending. This stops high
+				// churn rate that can negatively impact Kubernetes.
+				podPendingCount++
+				handleGameServerUp(gs)
+			} else {
+				scheduleDeletion(gs)
+			}
+
+		case agonesv1.GameServerStateUnhealthy:
 			scheduleDeletion(gs)
 		default:
 			// unrecognized state, assume it's up.
@@ -472,6 +488,24 @@ func computeReconciliationAction(strategy apis.SchedulingStrategy, list []*agone
 	}
 
 	return numServersToAdd, toDelete, partialReconciliation
+}
+
+func shouldDeleteErroredGameServer(gs *agonesv1.GameServer) bool {
+	erroredAtStr := gs.Annotations[agonesv1.GameServerErroredAtAnnotation]
+	if erroredAtStr == "" {
+		return true
+	}
+
+	erroredAt, err := time.Parse(time.RFC3339, erroredAtStr)
+	if err != nil {
+		// The annotation is in the wrong format, delete the GameServer.
+		return true
+	}
+
+	if time.Since(erroredAt) >= gameServerErrorDeletionDelay {
+		return true
+	}
+	return false
 }
 
 // addMoreGameServers adds diff more GameServers to the set

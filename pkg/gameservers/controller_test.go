@@ -1152,6 +1152,11 @@ func TestControllerCreateGameServerPod(t *testing.T) {
 
 		assert.True(t, podCreated, "attempt should have been made to create a pod")
 		assert.True(t, gsUpdated, "GameServer should be updated")
+		if assert.NotEmpty(t, gs.Annotations[agonesv1.GameServerErroredAtAnnotation]) {
+			gotTime, err := time.Parse(time.RFC3339, gs.Annotations[agonesv1.GameServerErroredAtAnnotation])
+			require.NoError(t, err)
+			assert.WithinDuration(t, time.Now(), gotTime, time.Second)
+		}
 		assert.Equal(t, agonesv1.GameServerStateError, gs.Status.State)
 	})
 
@@ -1178,6 +1183,11 @@ func TestControllerCreateGameServerPod(t *testing.T) {
 
 		assert.True(t, podCreated, "attempt should have been made to create a pod")
 		assert.True(t, gsUpdated, "GameServer should be updated")
+		if assert.NotEmpty(t, gs.Annotations[agonesv1.GameServerErroredAtAnnotation]) {
+			gotTime, err := time.Parse(time.RFC3339, gs.Annotations[agonesv1.GameServerErroredAtAnnotation])
+			require.NoError(t, err)
+			assert.WithinDuration(t, time.Now(), gotTime, time.Second)
+		}
 		assert.Equal(t, agonesv1.GameServerStateError, gs.Status.State)
 	})
 }

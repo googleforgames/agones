@@ -40,7 +40,8 @@ spec:
       # Required.
       bufferSize: 5
       # Minimum aggregate counter capacity that can be provided by this FleetAutoscaler.
-      # If minCapacity is not specified, the actual minimum capacity will be bufferSize.
+      # If minCapacity is not specified, the effective minimum capacity will be bufferSize.
+      # When bufferSize in percentage format is used, minCapacity should be set and more than 0.
       minCapacity: 10
       # Maximum aggregate counter capacity that can be provided by this FleetAutoscaler.
       # Required.

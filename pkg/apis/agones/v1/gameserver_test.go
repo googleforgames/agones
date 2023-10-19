@@ -1631,7 +1631,7 @@ func TestGameServerUpdateCount(t *testing.T) {
 			amount:  1,
 			wantErr: true,
 		},
-		"amount less than zero no-op and error": {
+		"negative amount no-op and error": {
 			gs: GameServer{Status: GameServerStatus{
 				Counters: map[string]CounterStatus{
 					"foos": {
@@ -1695,7 +1695,7 @@ func TestGameServerUpdateCount(t *testing.T) {
 			},
 			wantErr: true,
 		},
-		"decrement beyond count no-op and error": {
+		"decrement beyond zero truncated": {
 			gs: GameServer{Status: GameServerStatus{
 				Counters: map[string]CounterStatus{
 					"baz": {
@@ -1706,12 +1706,12 @@ func TestGameServerUpdateCount(t *testing.T) {
 			action: "Decrement",
 			amount: 100,
 			want: CounterStatus{
-				Count:    99,
+				Count:    0,
 				Capacity: 100,
 			},
-			wantErr: true,
+			wantErr: false,
 		},
-		"increment beyond capacity no-op and error": {
+		"increment beyond capacity truncated": {
 			gs: GameServer{Status: GameServerStatus{
 				Counters: map[string]CounterStatus{
 					"splayers": {
@@ -1722,10 +1722,10 @@ func TestGameServerUpdateCount(t *testing.T) {
 			action: "Increment",
 			amount: 2,
 			want: CounterStatus{
-				Count:    99,
+				Count:    100,
 				Capacity: 100,
 			},
-			wantErr: true,
+			wantErr: false,
 		},
 	}
 
