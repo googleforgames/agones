@@ -61,6 +61,7 @@ const (
 	updatePlayerCapacity   Operation     = "updatePlayerCapacity"
 	updateConnectedPlayers Operation     = "updateConnectedPlayers"
 	updateCounters         Operation     = "updateCounters"
+	updateLists            Operation     = "updateLists"
 	updatePeriod           time.Duration = time.Second
 )
 
@@ -79,6 +80,15 @@ type counterUpdateRequest struct {
 	diff int64
 	// Counter as retreived from the GameServer
 	counter agonesv1.CounterStatus
+}
+
+type listUpdateRequest struct {
+	// Capacity of the List as set by capacitySet.
+	capacitySet *int64
+	// String keys are the Values to remove from the List
+	valuesToDelete map[string]bool
+	// Values to add to the List
+	valuesToAppend []string
 }
 
 // SDKServer is a gRPC server, that is meant to be a sidecar
@@ -118,6 +128,7 @@ type SDKServer struct {
 	gsPlayerCapacity    int64
 	gsConnectedPlayers  []string
 	gsCounterUpdates    map[string]counterUpdateRequest
+	gsListUpdates       map[string]listUpdateRequest
 	gsCopy              *agonesv1.GameServer
 }
 
@@ -160,6 +171,7 @@ func NewSDKServer(gameServerName, namespace string, kubeClient kubernetes.Interf
 	if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
 		// Once FeatureCountsAndLists is in GA, move this into SDKServer creation above.
 		s.gsCounterUpdates = map[string]counterUpdateRequest{}
+		s.gsListUpdates = map[string]listUpdateRequest{}
 	}
 
 	s.informerFactory = factory
@@ -332,6 +344,8 @@ func (s *SDKServer) syncGameServer(ctx context.Context, key string) error {
 		return s.updateConnectedPlayers(ctx)
 	case updateCounters:
 		return s.updateCounter(ctx)
+	case updateLists:
+		return s.updateList(ctx)
 	}
 
 	return errors.Errorf("could not sync game server key: %s", key)
@@ -978,48 +992,255 @@ func (s *SDKServer) updateCounter(ctx context.Context) error {
 	return nil
 }
 
-// GetList returns a List. Returns NOT_FOUND if the List does not exist.
+// GetList returns a List. Returns not found if the List does not exist.
 // [Stage:Alpha]
 // [FeatureFlag:CountsAndLists]
 func (s *SDKServer) GetList(ctx context.Context, in *alpha.GetListRequest) (*alpha.List, error) {
 	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
 		return nil, errors.Errorf("%s not enabled", runtime.FeatureCountsAndLists)
 	}
-	// TODO(#2716): Implement me
-	return nil, errors.Errorf("Unimplemented -- GetList coming soon")
+	s.logger.WithField("name", in.Name).Debug("Getting List")
+
+	gs, err := s.gameServer()
+	if err != nil {
+		return nil, err
+	}
+
+	s.gsUpdateMutex.RLock()
+	defer s.gsUpdateMutex.RUnlock()
+
+	list, ok := gs.Status.Lists[in.Name]
+	if !ok {
+		return nil, errors.Errorf("list not found: %s", in.Name)
+	}
+
+	s.logger.WithField("Get List", list).Debugf("Got List %s", in.Name)
+	protoList := alpha.List{Name: in.Name, Values: list.Values, Capacity: list.Capacity}
+	// If there are batched changes that have not yet been applied, apply them to the List.
+	// This does NOT validate batched the changes, and does NOT modify the List.
+	if listUpdate, ok := s.gsListUpdates[in.Name]; ok {
+		if listUpdate.capacitySet != nil {
+			protoList.Capacity = *listUpdate.capacitySet
+		}
+		if len(listUpdate.valuesToDelete) != 0 {
+			protoList.Values = deleteValues(protoList.Values, listUpdate.valuesToDelete)
+		}
+		if len(listUpdate.valuesToAppend) != 0 {
+			protoList.Values = agonesv1.MergeRemoveDuplicates(protoList.Values, listUpdate.valuesToAppend)
+		}
+		if len(protoList.Values) > int(protoList.Capacity) {
+			protoList.Values = append([]string{}, protoList.Values[:protoList.Capacity]...)
+		}
+		s.logger.WithField("Get List", list).Debugf("Applied Batched List Updates %v", listUpdate)
+	}
+
+	return &protoList, nil
 }
 
-// UpdateList returns the updated List.
+// UpdateList collapses all update capacity requests for a given List into a single UpdateList request.
+// This function currently only updates the Capacity of a List.
+// Returns error if the List does not exist (name cannot be updated).
+// Returns error if the List update capacity is out of range [0,1000].
 // [Stage:Alpha]
 // [FeatureFlag:CountsAndLists]
 func (s *SDKServer) UpdateList(ctx context.Context, in *alpha.UpdateListRequest) (*alpha.List, error) {
 	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
 		return nil, errors.Errorf("%s not enabled", runtime.FeatureCountsAndLists)
 	}
-	// TODO(#2716): Implement Me
-	return nil, errors.Errorf("Unimplemented -- UpdateList coming soon")
+
+	if in.List == nil || in.UpdateMask == nil {
+		return nil, errors.Errorf("invalid argument. List: %v and UpdateMask %v cannot be nil", in.List, in.UpdateMask)
+	}
+
+	name := in.List.Name
+	s.logger.WithField("name", name).Debug("Update List -- Currently only used for Updating Capacity")
+
+	s.gsUpdateMutex.Lock()
+	defer s.gsUpdateMutex.Unlock()
+
+	gs, err := s.gameServer()
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO: Pull in variable Max Capacity from CRD instead of hard-coded number here.
+	if in.List.Capacity < 0 || in.List.Capacity > 1000 {
+		return nil, errors.Errorf("out of range. Capacity must be within range [0,1000]. Found Capacity: %d", in.List.Capacity)
+	}
+
+	if _, ok := gs.Status.Lists[name]; ok {
+		batchList := s.gsListUpdates[name]
+		batchList.capacitySet = &in.List.Capacity
+		s.gsListUpdates[name] = batchList
+		// Queue up the Update for later batch processing by updateLists.
+		s.workerqueue.Enqueue(cache.ExplicitKey(updateLists))
+		return &alpha.List{}, nil
+	}
+	return nil, errors.Errorf("not found. %s List not found", name)
 }
 
-// AddListValue returns the updated List.
+// AddListValue collapses all append a value to the end of a List requests into a single UpdateList request.
+// Returns not found if the List does not exist.
+// Returns already exists if the value is already in the List.
+// Returns out of range if the List is already at Capacity.
 // [Stage:Alpha]
 // [FeatureFlag:CountsAndLists]
 func (s *SDKServer) AddListValue(ctx context.Context, in *alpha.AddListValueRequest) (*alpha.List, error) {
 	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
 		return nil, errors.Errorf("%s not enabled", runtime.FeatureCountsAndLists)
 	}
-	// TODO(#2716): Implement Me
-	return nil, errors.Errorf("Unimplemented -- AddListValue coming soon")
+	s.logger.WithField("name", in.Name).Debug("Add List Value")
+
+	s.gsUpdateMutex.Lock()
+	defer s.gsUpdateMutex.Unlock()
+
+	gs, err := s.gameServer()
+	if err != nil {
+		return nil, err
+	}
+
+	if list, ok := gs.Status.Lists[in.Name]; ok {
+		batchList := s.gsListUpdates[in.Name]
+		// Verify room to add another value
+		var capacity int64
+		if batchList.capacitySet != nil {
+			capacity = *batchList.capacitySet
+		} else {
+			capacity = int64(len(list.Values) + len(batchList.valuesToAppend) - len(batchList.valuesToDelete))
+		}
+		if list.Capacity <= capacity {
+			return nil, errors.Errorf("out of range. No available capacity. Current Capacity: %d, List Size: %d", list.Capacity, len(list.Values))
+		}
+		// Verify value does not already exist in the list
+		// TODO: This does not check batched but not yet applied append / remove values. Should we do this?
+		// (Easy to check not yet applied values, hard to check removed and re-added values.) I'm
+		// thinking this would be better / easier to do as part of the batch apply update to list, and
+		// not verify here.
+		for _, val := range list.Values {
+			if in.Value == val {
+				return nil, errors.Errorf("already exists. Value: %s already in List: %s", in.Value, in.Name)
+			}
+		}
+		for _, val := range batchList.valuesToAppend {
+			if in.Value == val {
+				return nil, errors.Errorf("already exists. Already received request to remove Value: %s from the List: %s", in.Value, in.Name)
+			}
+		}
+		batchList.valuesToAppend = append(batchList.valuesToAppend, in.Value)
+		s.gsListUpdates[in.Name] = batchList
+		// Queue up the Update for later batch processing by updateLists.
+		s.workerqueue.Enqueue(cache.ExplicitKey(updateLists))
+		return &alpha.List{}, nil
+	}
+	return nil, errors.Errorf("not found. %s List not found", in.Name)
 }
 
-// RemoveListValue returns the updated List.
+// RemoveListValue collapses all remove a value from a List requests into a single UpdateList request.
+// Returns not found if the List does not exist.
+// Returns not found if the value is not in the List.
 // [Stage:Alpha]
 // [FeatureFlag:CountsAndLists]
 func (s *SDKServer) RemoveListValue(ctx context.Context, in *alpha.RemoveListValueRequest) (*alpha.List, error) {
 	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
 		return nil, errors.Errorf("%s not enabled", runtime.FeatureCountsAndLists)
 	}
-	// TODO(#2716): Implement Me
-	return nil, errors.Errorf("Unimplemented -- RemoveListValue coming soon")
+
+	s.logger.WithField("name", in.Name).Debug("Remove List Value")
+
+	s.gsUpdateMutex.Lock()
+	defer s.gsUpdateMutex.Unlock()
+
+	gs, err := s.gameServer()
+	if err != nil {
+		return nil, err
+	}
+
+	if list, ok := gs.Status.Lists[in.Name]; ok {
+		// Verify value exists in the list
+		for _, val := range list.Values {
+			if in.Value != val {
+				continue
+			}
+			// Add value to remove to gsListUpdates map.
+			batchList := s.gsListUpdates[in.Name]
+			batchList.valuesToDelete[in.Value] = true
+			s.gsListUpdates[in.Name] = batchList
+			// Queue up the Update for later batch processing by updateLists.
+			s.workerqueue.Enqueue(cache.ExplicitKey(updateLists))
+			return &alpha.List{}, nil
+		}
+		return nil, errors.Errorf("not found. Value: %s not found in List: %s", in.Value, in.Name)
+	}
+	return nil, errors.Errorf("not found. %s List not found", in.Name)
+}
+
+// updateList updates the Lists in the GameServer's Status with the batched update list requests.
+// Includes all SetCapacity, AddValue, and RemoveValue requests in the batched request.
+func (s *SDKServer) updateList(ctx context.Context) error {
+	gs, err := s.gameServer()
+	if err != nil {
+		return err
+	}
+	gsCopy := gs.DeepCopy()
+
+	s.logger.WithField("batchListUpdates", s.gsListUpdates).Debug("Batch updating List(s)")
+	s.gsUpdateMutex.Lock()
+	defer s.gsUpdateMutex.Unlock()
+
+	names := []string{}
+
+	for name, listReq := range s.gsListUpdates {
+		list, ok := gsCopy.Status.Lists[name]
+		if !ok {
+			continue
+		}
+		if listReq.capacitySet != nil {
+			list.Capacity = *listReq.capacitySet
+		}
+		if len(listReq.valuesToDelete) != 0 {
+			list.Values = deleteValues(list.Values, listReq.valuesToDelete)
+		}
+		if len(listReq.valuesToAppend) != 0 {
+			list.Values = agonesv1.MergeRemoveDuplicates(list.Values, listReq.valuesToAppend)
+		}
+
+		if int64(len(list.Values)) > list.Capacity {
+			s.logger.Debugf("truncating Values in Update List request to List Capacity %d", list.Capacity)
+			list.Values = append([]string{}, list.Values[:list.Capacity]...)
+		}
+		gsCopy.Status.Lists[name] = list
+		names = append(names, name)
+	}
+
+	gs, err = s.gameServerGetter.GameServers(s.namespace).Update(ctx, gsCopy, metav1.UpdateOptions{})
+	if err != nil {
+		return err
+	}
+
+	// Record an event per List update
+	for _, name := range names {
+		s.recorder.Event(gs, corev1.EventTypeNormal, "UpdateList", fmt.Sprintf("List %s updated", name))
+		s.logger.Debugf("List %s updated to List Capacity: %d, Values: %v",
+			name, gs.Status.Lists[name].Capacity, gs.Status.Lists[name].Values)
+	}
+
+	// Cache a copy of the successfully updated gameserver
+	s.gsCopy = gs
+	// Clear the gsCounterUpdates
+	s.gsCounterUpdates = map[string]counterUpdateRequest{}
+
+	return nil
+}
+
+// Returns a new string list with the string keys in toDeleteValues removed from valuesList.
+func deleteValues(valuesList []string, toDeleteValues map[string]bool) []string {
+	newList := make([]string, 0, len(valuesList)-len(toDeleteValues))
+	for i, val := range valuesList {
+		if _, ok := toDeleteValues[val]; !ok {
+			newList = append(newList, valuesList[i])
+		}
+	}
+	return newList
 }
 
 // sendGameServerUpdate sends a watch game server event

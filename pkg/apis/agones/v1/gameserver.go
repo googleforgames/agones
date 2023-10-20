@@ -936,8 +936,7 @@ func (gs *GameServer) AppendListValues(name string, values []string) error {
 		return errors.Errorf("unable to AppendListValues: Name %s, Values %s. No values to append", name, values)
 	}
 	if list, ok := gs.Status.Lists[name]; ok {
-		mergedList := mergeRemoveDuplicates(list.Values, values)
-		// TODO: Truncate and apply up to cutoff
+		mergedList := MergeRemoveDuplicates(list.Values, values)
 		if len(mergedList) > int(list.Capacity) {
 			return errors.Errorf("unable to AppendListValues: Name %s, Values %s. Appended list length %d exceeds list capacity %d", name, values, len(mergedList), list.Capacity)
 		}
@@ -947,16 +946,20 @@ func (gs *GameServer) AppendListValues(name string, values []string) error {
 		}
 		// If only some values are duplicates, those duplicate values are silently dropped.
 		list.Values = mergedList
+		// Truncate values if more than capacity
+		if len(list.Values) > int(list.Capacity) {
+			list.Values = append([]string{}, list.Values[:list.Capacity]...)
+		}
 		gs.Status.Lists[name] = list
 		return nil
 	}
 	return errors.Errorf("unable to AppendListValues: Name %s, Values %s. List not found in GameServer %s", name, values, gs.ObjectMeta.GetName())
 }
 
-// mergeRemoveDuplicates merges two lists and removes any duplicate values.
+// MergeRemoveDuplicates merges two lists and removes any duplicate values.
 // Maintains ordering, so new values from list2 are appended to the end of list1.
 // Returns a new list with unique values only.
-func mergeRemoveDuplicates(list1 []string, list2 []string) []string {
+func MergeRemoveDuplicates(list1 []string, list2 []string) []string {
 	uniqueList := []string{}
 	listMap := make(map[string]bool)
 	for _, v1 := range list1 {

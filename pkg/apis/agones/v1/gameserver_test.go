@@ -2054,7 +2054,7 @@ func TestMergeRemoveDuplicates(t *testing.T) {
 
 	for test, testCase := range testCases {
 		t.Run(test, func(t *testing.T) {
-			got := mergeRemoveDuplicates(testCase.str1, testCase.str2)
+			got := MergeRemoveDuplicates(testCase.str1, testCase.str2)
 			assert.Equal(t, testCase.want, got)
 		})
 	}
