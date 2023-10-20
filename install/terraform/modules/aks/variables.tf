@@ -34,7 +34,7 @@ variable "enable_node_public_ip" {
 }
 
 variable "kubernetes_version" {
-  default = "1.27.1"
+  default = "1.28.0"
 }
 
 variable "machine_type" {
