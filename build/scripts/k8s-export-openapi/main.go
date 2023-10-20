@@ -25,12 +25,14 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"syscall"
+	"time"
 
 	"github.com/itchyny/json2yaml"
 )
 
 func main() {
-	tmpDir := "../../tmp"
+	tmpDir := "build/scripts/k8s-export-openapi/tmp"
 
 	if _, err := os.Stat(tmpDir); err == nil {
 		err = os.RemoveAll(tmpDir)
@@ -44,12 +46,15 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// Check if kubectl proxy is already running
-	_, err := exec.Command("pgrep", "-f", "kubectl proxy").Output()
+	// Check if kubectl proxy is running
+	_, err = exec.Command("pgrep", "-f", "kubectl proxy").Output()
 	if err == nil {
 		// If running, terminate it
-		_ = exec.Command("pkill", "-f", "kubectl proxy").Run()
-		log.Println("Existing kubectl proxy instance terminated")
+		errTerminate := exec.Command("pkill", "-f", "kubectl proxy").Run()
+		if errTerminate != nil {
+			log.Fatalf("Failed to terminate existing kubectl proxy: %v", errTerminate)
+		}
+		time.Sleep(3 * time.Second)
 	}
 
 	// Start the kubectl proxy.
@@ -57,12 +62,24 @@ func main() {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
-	// Start command in a go routine to avoid blocking
-	go func() {
-		if err := cmd.Run(); err != nil {
-			log.Fatalf("Failed to start kubectl proxy: %v", err)
+	if err := cmd.Start(); err != nil {
+		log.Fatalf("Failed to start kubectl proxy: %v", err)
+	}
+
+	maxRetries := 10
+	retryCount := 0
+	for retryCount < maxRetries {
+		time.Sleep(1 * time.Second)
+		resp, err := http.Get("http://127.0.0.1:8001/")
+		if err == nil && resp.StatusCode == 200 {
+			break
 		}
-	}()
+		retryCount++
+	}
+
+	if retryCount == maxRetries {
+		log.Fatalf("kubectl proxy not ready after waiting for %d seconds", maxRetries)
+	}
 
 	// Sleep for 5 seconds to ensure proxy is ready
 	time.Sleep(5 * time.Second)
@@ -170,14 +187,22 @@ func main() {
 		jsonToHelmYaml(tmpDir, filename)
 	}
 
-	// Stop the kubectl proxy gracefully
 	cmd.Process.Signal(os.Interrupt)
+	time.Sleep(1 * time.Second)
 	err = cmd.Wait()
 	if err != nil {
+		// Check if the error is due to the process being interrupted
+		if exitError, ok := err.(*exec.ExitError); ok {
+			if status, ok := exitError.Sys().(syscall.WaitStatus); ok {
+				if status.Signaled() && status.Signal() == syscall.SIGINT {
+					log.Println("kubectl proxy has been gracefully shutdown")
+					return
+				}
+			}
+		}
 		log.Fatalf("Failed to gracefully shutdown kubectl proxy: %v", err)
 	}
 
-	log.Println("kubectl proxy has been gracefully shutdown")
 }
 
 func removeFields(filename string) error {
@@ -383,7 +408,7 @@ func jsonToHelmYaml(tmpDir, filename string) {
 	yamlContent := yamlBuffer.String()
 
 	// Read boilerplate
-	boilerplateContent, err := os.ReadFile("../../boilerplate.yaml.txt")
+	boilerplateContent, err := os.ReadFile("build/boilerplate.yaml.txt")
 	if err != nil {
 		log.Fatalf("Failed to read boilerplate.yaml.txt: %s", err)
 	}
@@ -395,7 +420,7 @@ func jsonToHelmYaml(tmpDir, filename string) {
 {{- end }}
 `
 
-	outputPath := filepath.Join("../../../install/helm/agones/templates/crds/k8s", "_"+filename+".yaml")
+	outputPath := filepath.Join("install/helm/agones/templates/crds/k8s", "_"+filename+".yaml")
 	if err := os.WriteFile(outputPath, []byte(finalContent), 0o644); err != nil {
 		log.Fatalf("Failed to write to file %s: %s", outputPath, err)
 	}
