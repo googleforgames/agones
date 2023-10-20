@@ -44,12 +44,28 @@ func main() {
 		log.Fatal(err)
 	}
 
+	// Check if kubectl proxy is already running
+	_, err := exec.Command("pgrep", "-f", "kubectl proxy").Output()
+	if err == nil {
+		// If running, terminate it
+		_ = exec.Command("pkill", "-f", "kubectl proxy").Run()
+		log.Println("Existing kubectl proxy instance terminated")
+	}
+
 	// Start the kubectl proxy.
 	cmd := exec.Command("kubectl", "proxy")
-	err = cmd.Start()
-	if err != nil {
-		log.Fatal(err)
-	}
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	// Start command in a go routine to avoid blocking
+	go func() {
+		if err := cmd.Run(); err != nil {
+			log.Fatalf("Failed to start kubectl proxy: %v", err)
+		}
+	}()
+
+	// Sleep for 5 seconds to ensure proxy is ready
+	time.Sleep(5 * time.Second)
 
 	// Make an HTTP request to fetch the OpenAPI JSON.
 	resp, err := http.Get("http://127.0.0.1:8001/openapi/v2")
@@ -154,6 +170,14 @@ func main() {
 		jsonToHelmYaml(tmpDir, filename)
 	}
 
+	// Stop the kubectl proxy gracefully
+	cmd.Process.Signal(os.Interrupt)
+	err = cmd.Wait()
+	if err != nil {
+		log.Fatalf("Failed to gracefully shutdown kubectl proxy: %v", err)
+	}
+
+	log.Println("kubectl proxy has been gracefully shutdown")
 }
 
 func removeFields(filename string) error {
