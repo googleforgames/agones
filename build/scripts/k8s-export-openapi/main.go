@@ -453,7 +453,7 @@ func modifyJSONFiles(tmpDir string) error {
 		// Recursive function to resolve references.
 		var resolveRef func(data map[string]interface{}) error
 		resolveRef = func(data map[string]interface{}) error {
-			for key, value := range data {
+			for _, value := range data {
 				switch v := value.(type) {
 				case map[string]interface{}:
 					ref, ok := v["$ref"].(string)
@@ -480,7 +480,13 @@ func modifyJSONFiles(tmpDir string) error {
 						}
 
 						delete(refData, "description")
-						data[key] = refData
+
+						// Merge refData into v rather than replacing v.
+						for refKey, refValue := range refData {
+							v[refKey] = refValue
+						}
+
+						delete(v, "$ref") // remove $ref key after merging
 
 						// Recursive call to resolve references within this reference.
 						err = resolveRef(refData)
