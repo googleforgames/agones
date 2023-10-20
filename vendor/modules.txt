@@ -239,8 +239,6 @@ github.com/heptiolabs/healthcheck
 # github.com/imdario/mergo v0.3.6
 ## explicit
 github.com/imdario/mergo
-# github.com/itchyny/json2yaml v0.1.4
-## explicit; go 1.18
 # github.com/jmespath/go-jmespath v0.4.0
 ## explicit; go 1.14
 github.com/jmespath/go-jmespath
