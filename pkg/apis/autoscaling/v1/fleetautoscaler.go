@@ -377,6 +377,10 @@ func (c *CounterPolicy) ValidateCounterPolicy(fldPath *field.Path) field.ErrorLi
 		if err != nil || r < 1 || r > 99 {
 			allErrs = append(allErrs, field.Invalid(fldPath.Child("bufferSize"), c.BufferSize.String(), "bufferSize should be between 1% and 99%"))
 		}
+		// When bufferSize in percentage format is used, minCapacity should be more than 0.
+		if c.MinCapacity < 1 {
+			allErrs = append(allErrs, field.Invalid(fldPath.Child("minCapacity"), c.BufferSize.String(), " when bufferSize in percentage format is used, minCapacity should be more than 0"))
+		}
 	}
 
 	return allErrs
@@ -410,6 +414,10 @@ func (l *ListPolicy) ValidateListPolicy(fldPath *field.Path) field.ErrorList {
 		r, err := intstr.GetScaledValueFromIntOrPercent(&l.BufferSize, 100, true)
 		if err != nil || r < 1 || r > 99 {
 			allErrs = append(allErrs, field.Invalid(fldPath.Child("bufferSize"), l.BufferSize.String(), "bufferSize should be between 1% and 99%"))
+		}
+		// When bufferSize in percentage format is used, minCapacity should be more than 0.
+		if l.MinCapacity < 1 {
+			allErrs = append(allErrs, field.Invalid(fldPath.Child("minCapacity"), l.BufferSize.String(), " when bufferSize in percentage format is used, minCapacity should be more than 0"))
 		}
 	}
 	return allErrs

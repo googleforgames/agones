@@ -622,6 +622,98 @@ func TestSyncGameServerSet(t *testing.T) {
 		assert.True(t, updated, "A game servers should have been updated")
 	})
 
+	t.Run("adding and deleting errored gameservers", func(t *testing.T) {
+		gsSet := defaultFixture()
+		list := createGameServers(gsSet, 5)
+
+		// make some as unhealthy
+		list[0].Annotations = map[string]string{agonesv1.GameServerErroredAtAnnotation: time.Now().Add(-30 * time.Second).UTC().Format(time.RFC3339)}
+		list[0].Status.State = agonesv1.GameServerStateError
+
+		updated := false
+		count := 0
+
+		c, m := newFakeController()
+		m.AgonesClient.AddReactor("list", "gameserversets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			return true, &agonesv1.GameServerSetList{Items: []agonesv1.GameServerSet{*gsSet}}, nil
+		})
+		m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			return true, &agonesv1.GameServerList{Items: list}, nil
+		})
+
+		m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			ua := action.(k8stesting.UpdateAction)
+			gs := ua.GetObject().(*agonesv1.GameServer)
+			assert.Equal(t, gs.Status.State, agonesv1.GameServerStateShutdown)
+
+			updated = true
+			assert.Equal(t, "test-0", gs.GetName())
+			return true, nil, nil
+		})
+		m.AgonesClient.AddReactor("create", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			ca := action.(k8stesting.CreateAction)
+			gs := ca.GetObject().(*agonesv1.GameServer)
+
+			assert.True(t, metav1.IsControlledBy(gs, gsSet))
+			count++
+			return true, gs, nil
+		})
+
+		ctx, cancel := agtesting.StartInformers(m, c.gameServerSetSynced, c.gameServerSynced)
+		defer cancel()
+
+		c.syncGameServerSet(ctx, gsSet.ObjectMeta.Namespace+"/"+gsSet.ObjectMeta.Name) // nolint: errcheck
+
+		assert.Equal(t, 6, count)
+		assert.True(t, updated, "A game servers should have been updated")
+	})
+
+	t.Run("adding and delay deleting errored gameservers", func(t *testing.T) {
+		gsSet := defaultFixture()
+		list := createGameServers(gsSet, 5)
+
+		// make some as unhealthy
+		list[0].Annotations = map[string]string{agonesv1.GameServerErroredAtAnnotation: time.Now().UTC().Format(time.RFC3339)}
+		list[0].Status.State = agonesv1.GameServerStateError
+
+		updated := false
+		count := 0
+
+		c, m := newFakeController()
+		m.AgonesClient.AddReactor("list", "gameserversets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			return true, &agonesv1.GameServerSetList{Items: []agonesv1.GameServerSet{*gsSet}}, nil
+		})
+		m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			return true, &agonesv1.GameServerList{Items: list}, nil
+		})
+
+		m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			ua := action.(k8stesting.UpdateAction)
+			gs := ua.GetObject().(*agonesv1.GameServer)
+			assert.Equal(t, gs.Status.State, agonesv1.GameServerStateShutdown)
+
+			updated = true
+			assert.Equal(t, "test-0", gs.GetName())
+			return true, nil, nil
+		})
+		m.AgonesClient.AddReactor("create", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			ca := action.(k8stesting.CreateAction)
+			gs := ca.GetObject().(*agonesv1.GameServer)
+
+			assert.True(t, metav1.IsControlledBy(gs, gsSet))
+			count++
+			return true, gs, nil
+		})
+
+		ctx, cancel := agtesting.StartInformers(m, c.gameServerSetSynced, c.gameServerSynced)
+		defer cancel()
+
+		c.syncGameServerSet(ctx, gsSet.ObjectMeta.Namespace+"/"+gsSet.ObjectMeta.Name) // nolint: errcheck
+
+		assert.Equal(t, 5, count)
+		assert.False(t, updated, "A game servers should not have been updated")
+	})
+
 	t.Run("removing gamservers", func(t *testing.T) {
 		gsSet := defaultFixture()
 		list := createGameServers(gsSet, 15)
