@@ -32,7 +32,7 @@ import (
 )
 
 func main() {
-	tmpDir := "build/scripts/k8s-export-openapi/tmp"
+	tmpDir := "build/tmp"
 
 	if _, err := os.Stat(tmpDir); err == nil {
 		err = os.RemoveAll(tmpDir)
