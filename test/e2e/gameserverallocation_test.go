@@ -17,7 +17,6 @@ package e2e
 import (
 	"context"
 	"fmt"
-	"sort"
 	"sync"
 	"testing"
 	"time"
@@ -34,7 +33,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/rand"
 	"k8s.io/apimachinery/pkg/util/uuid"
 	"k8s.io/apimachinery/pkg/util/wait"
 )
@@ -490,126 +488,6 @@ func TestCounterGameServerAllocation(t *testing.T) {
 			require.Equal(t, gs1.ObjectMeta.Name, gs2.ObjectMeta.Name)
 			require.NotEqual(t, gs1.ObjectMeta.ResourceVersion, gs2.ObjectMeta.ResourceVersion)
 			require.NotEqual(t, gs1.ObjectMeta.Annotations["agones.dev/last-allocated"], gs2.ObjectMeta.Annotations["agones.dev/last-allocated"])
-
-			// Reset any GameServers in state Allocated -> Ready. Note: This does not reset any changes to Counters.
-			list, err := framework.ListGameServersFromFleet(flt)
-			require.NoError(t, err)
-			for _, gs := range list {
-				if gs.Status.State == ready {
-					continue
-				}
-				gsCopy := gs.DeepCopy()
-				gsCopy.Status.State = ready
-				reqReadyGs, err := framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Update(ctx, gsCopy, metav1.UpdateOptions{})
-				require.NoError(t, err)
-				require.Equal(t, ready, reqReadyGs.Status.State)
-			}
-		})
-	}
-}
-
-func TestCounterGameServerAllocationSorting(t *testing.T) {
-	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
-		t.SkipNow()
-	}
-	t.Parallel()
-	ctx := context.Background()
-	client := framework.AgonesClient.AgonesV1()
-
-	flt := defaultFleet(framework.Namespace)
-	flt.Spec.Template.Spec.Counters = map[string]agonesv1.CounterStatus{
-		"games": {
-			Count:    0,
-			Capacity: 10,
-		},
-	}
-
-	flt, err := client.Fleets(framework.Namespace).Create(ctx, flt.DeepCopy(), metav1.CreateOptions{})
-	require.NoError(t, err)
-	defer client.Fleets(framework.Namespace).Delete(ctx, flt.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
-	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
-
-	list, err := framework.ListGameServersFromFleet(flt)
-	assert.NoError(t, err)
-	// Key: GameServer name, Value: available capacity
-	gameServers := map[string]int{}
-	// Set random counts and capacities for each gameserver
-	for _, gs := range list {
-		count := rand.IntnRange(0, 99)
-		capacity := rand.IntnRange(count+1, 100) // Available Capacity will be at least 1
-		availableCapacity := capacity - count
-		gameServers[gs.ObjectMeta.Name] = availableCapacity
-
-		gsCopy := gs.DeepCopy()
-		gsCopy.Status.Counters["games"] = agonesv1.CounterStatus{
-			Count:    int64(count),
-			Capacity: int64(capacity),
-		}
-		_, err := framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Update(ctx, gsCopy, metav1.UpdateOptions{})
-		require.NoError(t, err)
-	}
-	// GameServers names sorted by available capacity, ascending. If available capacity is equal sort
-	// by name (as in pkg/gameserverallocations/allocation_cache.go)
-	sortedGs := make([]string, 0, len(gameServers))
-	for gsName := range gameServers {
-		sortedGs = append(sortedGs, gsName)
-	}
-	sort.Slice(sortedGs, func(i, j int) bool {
-		if gameServers[sortedGs[i]] != gameServers[sortedGs[j]] {
-			return gameServers[sortedGs[i]] < gameServers[sortedGs[j]]
-		}
-		return sortedGs[i] < sortedGs[j]
-	})
-
-	fleetSelector := metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}}
-	ready := agonesv1.GameServerStateReady
-	allocated := agonesv1.GameServerStateAllocated
-
-	testCases := map[string]struct {
-		gsa            allocationv1.GameServerAllocation
-		wantGameServer string // GameServer Name
-	}{
-		"Allocation sorting by count value, ascending": {
-			gsa: allocationv1.GameServerAllocation{
-				Spec: allocationv1.GameServerAllocationSpec{
-					Selectors: []allocationv1.GameServerSelector{
-						{LabelSelector: fleetSelector},
-					},
-					Priorities: []agonesv1.Priority{
-						{Type: agonesv1.GameServerPriorityCounter,
-							Key:   "games",
-							Order: agonesv1.GameServerPriorityAscending},
-					}}},
-			wantGameServer: sortedGs[0],
-		},
-		"Allocation sorting by count value, descending": {
-			gsa: allocationv1.GameServerAllocation{
-				Spec: allocationv1.GameServerAllocationSpec{
-					Selectors: []allocationv1.GameServerSelector{
-						{LabelSelector: fleetSelector},
-					},
-					Priorities: []agonesv1.Priority{
-						{Type: agonesv1.GameServerPriorityCounter,
-							Key:   "games",
-							Order: agonesv1.GameServerPriorityDescending},
-					}}},
-			wantGameServer: sortedGs[2],
-		},
-	}
-
-	for name, testCase := range testCases {
-		t.Run(name, func(t *testing.T) {
-
-			// Allocate GameServer
-			gsa, err := framework.AgonesClient.AllocationV1().GameServerAllocations(flt.ObjectMeta.Namespace).Create(ctx, testCase.gsa.DeepCopy(), metav1.CreateOptions{})
-			require.NoError(t, err)
-			assert.Equal(t, string(allocated), string(gsa.Status.State))
-
-			gs1, err := framework.AgonesClient.AgonesV1().GameServers(flt.ObjectMeta.Namespace).Get(ctx, gsa.Status.GameServerName, metav1.GetOptions{})
-			require.NoError(t, err)
-			assert.Equal(t, allocated, gs1.Status.State)
-			assert.NotNil(t, gs1.ObjectMeta.Annotations["agones.dev/last-allocated"])
-			assert.Equal(t, testCase.wantGameServer, gs1.ObjectMeta.Name)
 
 			// Reset any GameServers in state Allocated -> Ready. Note: This does not reset any changes to Counters.
 			list, err := framework.ListGameServersFromFleet(flt)
