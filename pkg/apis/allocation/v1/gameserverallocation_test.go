@@ -1173,6 +1173,12 @@ func TestValidateListActions(t *testing.T) {
 func TestGameServerAllocationValidate(t *testing.T) {
 	t.Parallel()
 
+	runtime.FeatureTestMutex.Lock()
+	defer runtime.FeatureTestMutex.Unlock()
+	assert.NoError(t, runtime.ParseFeatures(fmt.Sprintf("%s=true&%s=false",
+		runtime.FeaturePlayerAllocationFilter,
+		runtime.FeatureCountsAndLists)))
+
 	gsa := &GameServerAllocation{}
 	gsa.ApplyDefaults()
 
@@ -1186,12 +1192,6 @@ func TestGameServerAllocationValidate(t *testing.T) {
 
 	assert.Equal(t, field.ErrorTypeNotSupported, allErrs[0].Type)
 	assert.Equal(t, "spec.scheduling", allErrs[0].Field)
-
-	runtime.FeatureTestMutex.Lock()
-	defer runtime.FeatureTestMutex.Unlock()
-	assert.NoError(t, runtime.ParseFeatures(fmt.Sprintf("%s=true&%s=false",
-		runtime.FeaturePlayerAllocationFilter,
-		runtime.FeatureCountsAndLists)))
 
 	// invalid player selection
 	gsa = &GameServerAllocation{
