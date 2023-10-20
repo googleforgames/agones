@@ -726,8 +726,8 @@ push-agones-sdk-linux-image-amd64: build-agones-sdk-image-amd64
 
 # Generate the Embedded CRD openapi
 gen-embedded-openapi: ensure-build-image
-	docker run --rm $(common_mounts) --workdir=$(mount_path) $(DOCKER_RUN_ARGS) $(build_tag) \
-		go run -mod=mod build/scripts/k8s-export-openapi/main.go
+	docker run --rm $(common_mounts) --workdir=$(mount_path)/build/scripts/k8s-export-openapi $(DOCKER_RUN_ARGS) $(build_tag) \
+		go run -mod=mod ./main.go
 
 # Generate the static install script
 gen-install: $(ensure-build-image)
