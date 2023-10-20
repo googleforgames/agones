@@ -8,6 +8,7 @@ rules:
 
 ignore:
   - /build/.gomod/
+  - /build/.config/
   - /install/
   - /sdks/
   - /test/sdk/
