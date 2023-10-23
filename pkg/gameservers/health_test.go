@@ -413,6 +413,7 @@ func TestHealthControllerRun(t *testing.T) {
 	podWatch.Add(pod.DeepCopy())
 
 	go hc.Run(stop, 1) // nolint: errcheck
+	// nolint:staticcheck
 	err = wait.PollImmediate(time.Second, 10*time.Second, func() (bool, error) {
 		return hc.workerqueue.RunCount() == 1, nil
 	})

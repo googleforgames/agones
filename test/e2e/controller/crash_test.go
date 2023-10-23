@@ -118,6 +118,7 @@ func deleteAgonesControllerPods(ctx context.Context) error {
 }
 
 func waitForAgonesControllerRunning(ctx context.Context, wantReplicas int) error {
+	// nolint:staticcheck
 	return wait.PollImmediate(time.Second, 5*time.Minute, func() (bool, error) {
 		list, err := getAgonesControllerPods(ctx)
 		if err != nil {

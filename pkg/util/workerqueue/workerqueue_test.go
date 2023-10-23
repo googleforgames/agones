@@ -79,6 +79,7 @@ func TestWorkerQueueHealthy(t *testing.T) {
 	go wq.Run(ctx, 1)
 
 	// Yield to the scheduler to ensure the worker queue goroutine can run.
+	// nolint:staticcheck
 	err := wait.Poll(100*time.Millisecond, 3*time.Second, func() (done bool, err error) {
 		if (wq.RunCount() == 1) && wq.Healthy() == nil {
 			return true, nil
@@ -93,6 +94,7 @@ func TestWorkerQueueHealthy(t *testing.T) {
 
 	// Yield to the scheduler again to ensure the worker queue goroutine can
 	// finish.
+	// nolint:staticcheck
 	err = wait.Poll(100*time.Millisecond, 3*time.Second, func() (done bool, err error) {
 		if (wq.RunCount() == 0) && wq.Healthy() != nil {
 			return true, nil
@@ -121,6 +123,7 @@ func TestWorkQueueHealthCheck(t *testing.T) {
 	go wq.Run(ctx, workersCount)
 
 	// Wait for worker to actually start
+	// nolint:staticcheck
 	err := wait.PollImmediate(100*time.Millisecond, 5*time.Second, func() (bool, error) {
 		rc := wq.RunCount()
 		logrus.WithField("runcount", rc).Info("Checking run count before liveness check")
@@ -130,6 +133,7 @@ func TestWorkQueueHealthCheck(t *testing.T) {
 
 	f := func(t *testing.T, url string, status int) {
 		// sometimes the http server takes a bit to start up
+		// nolint:staticcheck
 		err := wait.PollImmediate(time.Second, 5*time.Second, func() (bool, error) {
 			resp, err := http.Get(url)
 			assert.Nil(t, err)
@@ -155,6 +159,7 @@ func TestWorkQueueHealthCheck(t *testing.T) {
 
 	cancel()
 	// closing can take a short while
+	// nolint:staticcheck
 	err = wait.PollImmediate(time.Second, 5*time.Second, func() (bool, error) {
 		rc := wq.RunCount()
 		logrus.WithField("runcount", rc).Info("Checking run count")

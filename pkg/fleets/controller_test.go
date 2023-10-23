@@ -25,6 +25,7 @@ import (
 	"agones.dev/agones/pkg/apis"
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	v1 "agones.dev/agones/pkg/apis/agones/v1"
+	applyconfigurations "agones.dev/agones/pkg/client/applyconfiguration/agones/v1"
 	agonesv1clientset "agones.dev/agones/pkg/client/clientset/versioned/typed/agones/v1"
 	agonesv1client "agones.dev/agones/pkg/client/listers/agones/v1"
 	"agones.dev/agones/pkg/cloudproduct/generic"
@@ -1762,6 +1763,14 @@ func (ffg *fakeFleetsGetterWithErr) Watch(ctx context.Context, opts metav1.ListO
 }
 
 func (ffg *fakeFleetsGetterWithErr) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *v1.Fleet, err error) {
+	panic("not implemented")
+}
+
+func (ffg *fakeFleetsGetterWithErr) Apply(ctx context.Context, fleet *applyconfigurations.FleetApplyConfiguration, opts metav1.ApplyOptions) (*v1.Fleet, error) {
+	panic("not implemented")
+}
+
+func (ffg *fakeFleetsGetterWithErr) ApplyStatus(ctx context.Context, fleet *applyconfigurations.FleetApplyConfiguration, opts metav1.ApplyOptions) (*v1.Fleet, error) {
 	panic("not implemented")
 }
 

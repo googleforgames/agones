@@ -81,6 +81,7 @@ func TestAllocatorAllocate(t *testing.T) {
 
 	require.NoError(t, a.Run(ctx))
 	// wait for it to be up and running
+	// nolint:staticcheck
 	err := wait.PollImmediate(time.Second, 10*time.Second, func() (done bool, err error) {
 		return a.allocationCache.workerqueue.RunCount() == 1, nil
 	})
@@ -164,6 +165,7 @@ func TestAllocatorAllocatePriority(t *testing.T) {
 
 		require.NoError(t, a.Run(ctx))
 		// wait for it to be up and running
+		// nolint:staticcheck
 		err := wait.PollImmediate(time.Second, 10*time.Second, func() (done bool, err error) {
 			return a.allocationCache.workerqueue.RunCount() == 1, nil
 		})

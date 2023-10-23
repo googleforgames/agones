@@ -841,6 +841,7 @@ func TestMultiClusterAllocationOnLocalCluster(t *testing.T) {
 			}
 
 			// wait for the allocation policies to be added.
+			// nolint:staticcheck
 			err = wait.PollImmediate(2*time.Second, 2*time.Minute, func() (bool, error) {
 				gsa, err = framework.AgonesClient.AllocationV1().GameServerAllocations(fleet.ObjectMeta.Namespace).Create(ctx, gsa, metav1.CreateOptions{})
 				if err != nil {
@@ -923,6 +924,7 @@ func TestGameServerAllocationMetaDataPatch(t *testing.T) {
 		log.WithField("gs", gs.ObjectMeta.Name).Info("👍 created and ready")
 
 		// poll, as it may take a moment for the allocation cache to be populated
+		// nolint:staticcheck
 		err = wait.PollImmediate(time.Second, 30*time.Second, func() (bool, error) {
 			input, err = framework.AgonesClient.AllocationV1().GameServerAllocations(framework.Namespace).Create(ctx, input, metav1.CreateOptions{})
 			if err != nil {
@@ -1039,6 +1041,7 @@ func TestGameServerAllocationPreferredSelection(t *testing.T) {
 	}
 
 	// wait until the game server is deleted
+	// nolint:staticcheck
 	err = wait.PollImmediate(time.Second, 5*time.Minute, func() (bool, error) {
 		_, err = gameServers.Get(ctx, gsa1.Status.GameServerName, metav1.GetOptions{})
 

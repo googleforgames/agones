@@ -513,6 +513,7 @@ func TestAllocatorRunCacheSync(t *testing.T) {
 
 	assertCacheEntries := func(expected int) {
 		count := 0
+		// nolint:staticcheck
 		err := wait.PollImmediate(time.Second, 5*time.Second, func() (done bool, err error) {
 			count = 0
 			cache.cache.Range(func(key string, gs *agonesv1.GameServer) bool {

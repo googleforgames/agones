@@ -30,6 +30,7 @@ import (
 // WaitForEstablishedCRD blocks until CRD comes to an Established state.
 // Has a deadline of 60 seconds for this to occur.
 func WaitForEstablishedCRD(ctx context.Context, crdGetter apiextclientv1.CustomResourceDefinitionInterface, name string, logger *logrus.Entry) error {
+	// nolint:staticcheck
 	return wait.PollImmediate(time.Second, 60*time.Second, func() (done bool, err error) {
 		crd, err := crdGetter.Get(ctx, name, metav1.GetOptions{})
 		if err != nil {

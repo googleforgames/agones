@@ -1373,6 +1373,7 @@ func TestSDKServerPlayerCapacity(t *testing.T) {
 	// check initial value comes through
 
 	// async, so check after a period
+	// nolint:staticcheck
 	err = wait.Poll(time.Second, 10*time.Second, func() (bool, error) {
 		count, err := sc.GetPlayerCapacity(context.Background(), &alpha.Empty{})
 		return count.Count == 10, err
@@ -1439,6 +1440,7 @@ func TestSDKServerPlayerConnectAndDisconnectWithoutPlayerTracking(t *testing.T) 
 	// check initial value comes through
 	// async, so check after a period
 	e := &alpha.Empty{}
+	// nolint:staticcheck
 	err = wait.Poll(time.Second, 10*time.Second, func() (bool, error) {
 		count, err := sc.GetPlayerCapacity(context.Background(), e)
 
@@ -1524,6 +1526,7 @@ func TestSDKServerPlayerConnectAndDisconnect(t *testing.T) {
 	// check initial value comes through
 	// async, so check after a period
 	e := &alpha.Empty{}
+	// nolint:staticcheck
 	err = wait.Poll(time.Second, 10*time.Second, func() (bool, error) {
 		count, err := sc.GetPlayerCapacity(context.Background(), e)
 		return count.Count == capacity, err
@@ -1833,6 +1836,7 @@ func defaultSidecar(m agtesting.Mocks) (*SDKServer, error) {
 }
 
 func waitForMessage(sc *SDKServer) error {
+	// nolint:staticcheck
 	return wait.PollImmediate(time.Second, 5*time.Second, func() (done bool, err error) {
 		sc.healthMutex.RLock()
 		defer sc.healthMutex.RUnlock()
@@ -1841,6 +1845,7 @@ func waitForMessage(sc *SDKServer) error {
 }
 
 func waitConnectedStreamCount(sc *SDKServer, count int) error { //nolint:unparam // Keep flexibility.
+	// nolint:staticcheck
 	return wait.PollImmediate(1*time.Second, 10*time.Second, func() (bool, error) {
 		sc.streamMutex.RLock()
 		defer sc.streamMutex.RUnlock()

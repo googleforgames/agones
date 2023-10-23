@@ -254,6 +254,7 @@ func TestFleetAutoScalerRollingUpdate(t *testing.T) {
 
 	selector := labels.SelectorFromSet(labels.Set{agonesv1.FleetNameLabel: flt.ObjectMeta.Name})
 	// Wait till new GSS is created
+	// nolint:staticcheck
 	err = wait.PollImmediate(1*time.Second, 30*time.Second, func() (bool, error) {
 		gssList, err := framework.AgonesClient.AgonesV1().GameServerSets(framework.Namespace).List(ctx,
 			metav1.ListOptions{LabelSelector: selector.String()})
@@ -267,6 +268,7 @@ func TestFleetAutoScalerRollingUpdate(t *testing.T) {
 	// Check that total number of gameservers in the system does not goes lower than RollingUpdate
 	// parameters (deleting no more than maxUnavailable servers at a time)
 	// Wait for old GSSet to be deleted
+	// nolint:staticcheck
 	err = wait.PollImmediate(1*time.Second, 5*time.Minute, func() (bool, error) {
 		list, err := framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).List(ctx,
 			metav1.ListOptions{LabelSelector: selector.String()})
@@ -474,6 +476,7 @@ func TestAutoscalerWebhook(t *testing.T) {
 
 	// Cause an error in Webhook config
 	// Use wrong service Path
+	// nolint:staticcheck
 	err = wait.PollImmediate(time.Second, time.Minute, func() (bool, error) {
 		fas, err = fleetautoscalers.Get(ctx, fas.ObjectMeta.Name, metav1.GetOptions{})
 		if err != nil {
@@ -499,6 +502,7 @@ func TestAutoscalerWebhook(t *testing.T) {
 
 	// Error - net/http: request canceled while waiting for connection (Client.Timeout exceeded
 	// while awaiting headers)
+	// nolint:staticcheck
 	err = wait.PollImmediate(time.Second, time.Minute, func() (bool, error) {
 		events := framework.KubeClient.CoreV1().Events(framework.Namespace)
 		l, err = events.List(ctx, metav1.ListOptions{FieldSelector: fields.AndSelectors(fields.OneTermEqualSelector("involvedObject.name", fas.ObjectMeta.Name), fields.OneTermEqualSelector("type", "Warning")).String()})
@@ -574,6 +578,7 @@ func TestFleetAutoscalerTLSWebhook(t *testing.T) {
 	}
 
 	// making sure the service is really gone.
+	// nolint:staticcheck
 	err = wait.PollImmediate(2*time.Second, time.Minute, func() (bool, error) {
 		_, err := framework.KubeClient.CoreV1().Services(defaultNS).Get(ctx, svc.ObjectMeta.Name, metav1.GetOptions{})
 		return k8serrors.IsNotFound(err), nil

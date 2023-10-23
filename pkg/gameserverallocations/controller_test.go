@@ -98,6 +98,7 @@ func TestControllerAllocator(t *testing.T) {
 			assert.FailNow(t, err.Error())
 		}
 		// wait for it to be up and running
+		// nolint:staticcheck
 		err := wait.PollImmediate(time.Second, 10*time.Second, func() (done bool, err error) {
 			return c.allocator.allocationCache.workerqueue.RunCount() == 1, nil
 		})
@@ -236,6 +237,7 @@ func TestMultiClusterAllocationFromLocal(t *testing.T) {
 			assert.FailNow(t, err.Error())
 		}
 		// wait for it to be up and running
+		// nolint:staticcheck
 		err := wait.PollImmediate(time.Second, 10*time.Second, func() (done bool, err error) {
 			return c.allocator.allocationCache.workerqueue.RunCount() == 1, nil
 		})
@@ -284,6 +286,7 @@ func TestMultiClusterAllocationFromLocal(t *testing.T) {
 			assert.FailNow(t, err.Error())
 		}
 		// wait for it to be up and running
+		// nolint:staticcheck
 		err := wait.PollImmediate(time.Second, 10*time.Second, func() (done bool, err error) {
 			return c.allocator.allocationCache.workerqueue.RunCount() == 1, nil
 		})
@@ -344,6 +347,7 @@ func TestMultiClusterAllocationFromLocal(t *testing.T) {
 			assert.FailNow(t, err.Error())
 		}
 		// wait for it to be up and running
+		// nolint:staticcheck
 		err := wait.PollImmediate(time.Second, 10*time.Second, func() (done bool, err error) {
 			return c.allocator.allocationCache.workerqueue.RunCount() == 1, nil
 		})

@@ -181,6 +181,7 @@ func TestLocalSDKServerSetLabel(t *testing.T) {
 			assertInitialWatchUpdate(t, stream)
 
 			// make sure length of l.updateObservers is at least 1
+			// nolint:staticcheck
 			err = wait.PollImmediate(time.Second, 10*time.Second, func() (bool, error) {
 				ret := false
 				l.updateObservers.Range(func(_, _ interface{}) bool {
@@ -250,6 +251,7 @@ func TestLocalSDKServerSetAnnotation(t *testing.T) {
 			assertInitialWatchUpdate(t, stream)
 
 			// make sure length of l.updateObservers is at least 1
+			// nolint:staticcheck
 			err = wait.PollImmediate(time.Second, 10*time.Second, func() (bool, error) {
 				ret := false
 				l.updateObservers.Range(func(_, _ interface{}) bool {
@@ -297,6 +299,7 @@ func TestLocalSDKServerWatchGameServer(t *testing.T) {
 	assertInitialWatchUpdate(t, stream)
 
 	// wait for watching to begin
+	// nolint:staticcheck
 	err = wait.Poll(time.Second, 10*time.Second, func() (bool, error) {
 		found := false
 		l.updateObservers.Range(func(_, _ interface{}) bool {
@@ -343,6 +346,7 @@ func TestLocalSDKServerPlayerCapacity(t *testing.T) {
 	assertInitialWatchUpdate(t, stream)
 
 	// wait for watching to begin
+	// nolint:staticcheck
 	err = wait.Poll(time.Second, 10*time.Second, func() (bool, error) {
 		found := false
 		l.updateObservers.Range(func(_, _ interface{}) bool {
@@ -491,6 +495,7 @@ func TestLocalSDKServerPlayerConnectAndDisconnect(t *testing.T) {
 			assertInitialWatchUpdate(t, stream)
 
 			// wait for watching to begin
+			// nolint:staticcheck
 			err = wait.Poll(time.Second, 10*time.Second, func() (bool, error) {
 				found := false
 				l.updateObservers.Range(func(_, _ interface{}) bool {
@@ -641,6 +646,7 @@ func TestLocalSDKServerGetCounter(t *testing.T) {
 	assertInitialWatchUpdate(t, stream)
 
 	// wait for watching to begin
+	// nolint:staticcheck
 	err = wait.Poll(time.Second, 10*time.Second, func() (bool, error) {
 		found := false
 		l.updateObservers.Range(func(_, _ interface{}) bool {
@@ -713,6 +719,7 @@ func TestLocalSDKServerGetList(t *testing.T) {
 	assertInitialWatchUpdate(t, stream)
 
 	// wait for watching to begin
+	// nolint:staticcheck
 	err = wait.Poll(time.Second, 10*time.Second, func() (bool, error) {
 		found := false
 		l.updateObservers.Range(func(_, _ interface{}) bool {
@@ -789,6 +796,7 @@ func TestLocalSDKServerUpdateList(t *testing.T) {
 	assertInitialWatchUpdate(t, stream)
 
 	// wait for watching to begin
+	// nolint:staticcheck
 	err = wait.Poll(time.Second, 10*time.Second, func() (bool, error) {
 		found := false
 		l.updateObservers.Range(func(_, _ interface{}) bool {
@@ -981,6 +989,7 @@ func TestLocalSDKServerAddListValue(t *testing.T) {
 	assertInitialWatchUpdate(t, stream)
 
 	// wait for watching to begin
+	// nolint:staticcheck
 	err = wait.Poll(time.Second, 10*time.Second, func() (bool, error) {
 		found := false
 		l.updateObservers.Range(func(_, _ interface{}) bool {
@@ -1073,6 +1082,7 @@ func TestLocalSDKServerRemoveListValue(t *testing.T) {
 	assertInitialWatchUpdate(t, stream)
 
 	// wait for watching to begin
+	// nolint:staticcheck
 	err = wait.Poll(time.Second, 10*time.Second, func() (bool, error) {
 		found := false
 		l.updateObservers.Range(func(_, _ interface{}) bool {

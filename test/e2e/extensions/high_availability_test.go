@@ -114,6 +114,7 @@ func deleteAgonesExtensionsPod(ctx context.Context, t *testing.T, waitForExtensi
 }
 
 func waitForAgonesExtensionsRunning(ctx context.Context) error {
+	// nolint:staticcheck
 	return wait.PollImmediate(time.Second, 5*time.Minute, func() (bool, error) {
 		list, err := getAgoneseExtensionsPods(ctx)
 		if err != nil {
