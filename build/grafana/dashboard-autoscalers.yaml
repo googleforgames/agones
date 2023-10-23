@@ -1084,7 +1084,7 @@ data:
             }
           ],
           "thresholds": "",
-          "title": "Scaling Limited",
+          "title": "Scaling Down or Up Limited",
           "type": "singlestat",
           "valueFontSize": "80%",
           "valueMaps": [
