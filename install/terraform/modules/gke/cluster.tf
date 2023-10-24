@@ -32,7 +32,7 @@ locals {
   network                       = lookup(var.cluster, "network", "default")
   subnetwork                    = lookup(var.cluster, "subnetwork", "")
   releaseChannel                = lookup(var.cluster, "releaseChannel", "UNSPECIFIED")
-  kubernetesVersion             = lookup(var.cluster, "kubernetesVersion", "1.26")
+  kubernetesVersion             = lookup(var.cluster, "kubernetesVersion", "1.27")
   windowsInitialNodeCount       = lookup(var.cluster, "windowsInitialNodeCount", "0")
   windowsMachineType            = lookup(var.cluster, "windowsMachineType", "e2-standard-4")
   autoscale                     = lookup(var.cluster, "autoscale", false)
@@ -40,8 +40,8 @@ locals {
   minNodeCount                  = lookup(var.cluster, "minNodeCount", "1")
   maxNodeCount                  = lookup(var.cluster, "maxNodeCount", "5")
   maintenanceExclusionStartTime = lookup(var.cluster, "maintenanceExclusionStartTime", timestamp())
-  maintenanceExclusionEndTime   = lookup(var.cluster, "maintenanceExclusionEndTime", timeadd(timestamp(), "4080h"))
-  # 170 days
+  maintenanceExclusionEndTime   = lookup(var.cluster, "maintenanceExclusionEndTime", timeadd(timestamp(), "2640h"))
+  # 110 days
 }
 
 data "google_container_engine_versions" "version" {

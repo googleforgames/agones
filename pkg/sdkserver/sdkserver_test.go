@@ -1373,7 +1373,7 @@ func TestSDKServerPlayerCapacity(t *testing.T) {
 	// check initial value comes through
 
 	// async, so check after a period
-	err = wait.Poll(time.Second, 10*time.Second, func() (bool, error) {
+	err = wait.PollUntilContextTimeout(context.Background(), time.Second, 10*time.Second, true, func(ctx context.Context) (bool, error) {
 		count, err := sc.GetPlayerCapacity(context.Background(), &alpha.Empty{})
 		return count.Count == 10, err
 	})
@@ -1439,7 +1439,7 @@ func TestSDKServerPlayerConnectAndDisconnectWithoutPlayerTracking(t *testing.T) 
 	// check initial value comes through
 	// async, so check after a period
 	e := &alpha.Empty{}
-	err = wait.Poll(time.Second, 10*time.Second, func() (bool, error) {
+	err = wait.PollUntilContextTimeout(context.Background(), time.Second, 10*time.Second, true, func(ctx context.Context) (bool, error) {
 		count, err := sc.GetPlayerCapacity(context.Background(), e)
 
 		assert.Nil(t, count)
@@ -1524,7 +1524,7 @@ func TestSDKServerPlayerConnectAndDisconnect(t *testing.T) {
 	// check initial value comes through
 	// async, so check after a period
 	e := &alpha.Empty{}
-	err = wait.Poll(time.Second, 10*time.Second, func() (bool, error) {
+	err = wait.PollUntilContextTimeout(context.Background(), time.Second, 10*time.Second, true, func(ctx context.Context) (bool, error) {
 		count, err := sc.GetPlayerCapacity(context.Background(), e)
 		return count.Count == capacity, err
 	})
@@ -1833,7 +1833,7 @@ func defaultSidecar(m agtesting.Mocks) (*SDKServer, error) {
 }
 
 func waitForMessage(sc *SDKServer) error {
-	return wait.PollImmediate(time.Second, 5*time.Second, func() (done bool, err error) {
+	return wait.PollUntilContextTimeout(context.Background(), time.Second, 5*time.Second, true, func(ctx context.Context) (done bool, err error) {
 		sc.healthMutex.RLock()
 		defer sc.healthMutex.RUnlock()
 		return sc.clock.Now().UTC() == sc.healthLastUpdated, nil
@@ -1841,7 +1841,7 @@ func waitForMessage(sc *SDKServer) error {
 }
 
 func waitConnectedStreamCount(sc *SDKServer, count int) error { //nolint:unparam // Keep flexibility.
-	return wait.PollImmediate(1*time.Second, 10*time.Second, func() (bool, error) {
+	return wait.PollUntilContextTimeout(context.Background(), 1*time.Second, 10*time.Second, true, func(ctx context.Context) (bool, error) {
 		sc.streamMutex.RLock()
 		defer sc.streamMutex.RUnlock()
 		return len(sc.connectedStreams) == count, nil

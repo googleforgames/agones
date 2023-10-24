@@ -255,7 +255,7 @@ func (f *Framework) WaitForGameServerState(t *testing.T, gs *agonesv1.GameServer
 
 	var checkGs *agonesv1.GameServer
 
-	err := wait.PollImmediate(1*time.Second, timeout, func() (bool, error) {
+	err := wait.PollUntilContextTimeout(context.Background(), 1*time.Second, timeout, true, func(ctx context.Context) (bool, error) {
 		var err error
 		checkGs, err = f.AgonesClient.AgonesV1().GameServers(gs.Namespace).Get(context.Background(), gs.Name, metav1.GetOptions{})
 
@@ -292,6 +292,7 @@ func (f *Framework) WaitForGameServerState(t *testing.T, gs *agonesv1.GameServer
 // Each Allocated GameServer gets deleted allocDuration after it was Allocated.
 // GameServers will continue to be Allocated until a message is passed to the done channel.
 func (f *Framework) CycleAllocations(ctx context.Context, t *testing.T, flt *agonesv1.Fleet, period time.Duration, allocDuration time.Duration) {
+	// nolint:staticcheck
 	err := wait.PollImmediateUntil(period, func() (bool, error) {
 		gsa := GetAllocation(flt)
 		gsa, err := f.AgonesClient.AllocationV1().GameServerAllocations(flt.Namespace).Create(context.Background(), gsa, metav1.CreateOptions{})
@@ -310,6 +311,7 @@ func (f *Framework) CycleAllocations(ctx context.Context, t *testing.T, flt *ago
 		return false, nil
 	}, ctx.Done())
 	// Ignore wait timeout error, will always be returned when the context is cancelled at the end of the test.
+	// nolint:staticcheck
 	if err != wait.ErrWaitTimeout {
 		require.NoError(t, err)
 	}
@@ -349,7 +351,7 @@ func (f *Framework) AssertFleetCondition(t *testing.T, flt *agonesv1.Fleet, cond
 func (f *Framework) WaitForFleetCondition(t *testing.T, flt *agonesv1.Fleet, condition func(*logrus.Entry, *agonesv1.Fleet) bool) error {
 	log := TestLogger(t).WithField("fleet", flt.Name)
 	log.Info("waiting for fleet condition")
-	err := wait.PollImmediate(2*time.Second, f.WaitForState, func() (bool, error) {
+	err := wait.PollUntilContextTimeout(context.Background(), 2*time.Second, f.WaitForState, true, func(ctx context.Context) (bool, error) {
 		fleet, err := f.AgonesClient.AgonesV1().Fleets(flt.ObjectMeta.Namespace).Get(context.Background(), flt.ObjectMeta.Name, metav1.GetOptions{})
 		if err != nil {
 			return true, err
@@ -385,7 +387,7 @@ func (f *Framework) WaitForFleetCondition(t *testing.T, flt *agonesv1.Fleet, con
 func (f *Framework) WaitForFleetAutoScalerCondition(t *testing.T, fas *autoscaling.FleetAutoscaler, condition func(log *logrus.Entry, fas *autoscaling.FleetAutoscaler) bool) {
 	log := TestLogger(t).WithField("fleetautoscaler", fas.Name)
 	log.Info("waiting for fleetautoscaler condition")
-	err := wait.PollImmediate(2*time.Second, 2*time.Minute, func() (bool, error) {
+	err := wait.PollUntilContextTimeout(context.Background(), 2*time.Second, 2*time.Minute, true, func(ctx context.Context) (bool, error) {
 		fleetautoscaler, err := f.AgonesClient.AutoscalingV1().FleetAutoscalers(fas.ObjectMeta.Namespace).Get(context.Background(), fas.ObjectMeta.Name, metav1.GetOptions{})
 		if err != nil {
 			return true, err
@@ -448,7 +450,7 @@ func (f *Framework) WaitForFleetGameServersCondition(flt *agonesv1.Fleet,
 // specified by a callback and the size of GameServers to match fleet's Spec.Replicas.
 func (f *Framework) WaitForFleetGameServerListCondition(flt *agonesv1.Fleet,
 	cond func(servers []agonesv1.GameServer) bool) error {
-	return wait.Poll(2*time.Second, f.WaitForState, func() (done bool, err error) {
+	return wait.PollUntilContextTimeout(context.Background(), 2*time.Second, f.WaitForState, true, func(ctx context.Context) (done bool, err error) {
 		gsList, err := f.ListGameServersFromFleet(flt)
 		if err != nil {
 			return false, err
@@ -565,8 +567,7 @@ func (f *Framework) SendUDP(t *testing.T, address, msg string) (string, error) {
 	b := make([]byte, 1024)
 	var n int
 	// sometimes we get I/O timeout, so let's do a retry
-	err := wait.PollImmediate(2*time.Second, time.Minute, func() (bool, error) {
-
+	err := wait.PollUntilContextTimeout(context.Background(), 2*time.Second, time.Minute, true, func(ctx context.Context) (bool, error) {
 		conn, err := net.Dial("udp", address)
 		if err != nil {
 			log.WithError(err).Info("could not dial address")

@@ -114,7 +114,7 @@ func deleteAgonesExtensionsPod(ctx context.Context, t *testing.T, waitForExtensi
 }
 
 func waitForAgonesExtensionsRunning(ctx context.Context) error {
-	return wait.PollImmediate(time.Second, 5*time.Minute, func() (bool, error) {
+	return wait.PollUntilContextTimeout(ctx, time.Second, 5*time.Minute, true, func(ctx context.Context) (bool, error) {
 		list, err := getAgoneseExtensionsPods(ctx)
 		if err != nil {
 			return true, err

@@ -142,7 +142,7 @@ func TestSDKSetLabel(t *testing.T) {
 	assert.Equal(t, "ACK: LABEL\n", reply)
 
 	// the label is set in a queue, so it may take a moment
-	err = wait.PollImmediate(time.Second, 10*time.Second, func() (bool, error) {
+	err = wait.PollUntilContextTimeout(ctx, time.Second, 10*time.Second, true, func(ctx context.Context) (bool, error) {
 		gs, err = framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Get(ctx, readyGs.ObjectMeta.Name, metav1.GetOptions{})
 		if err != nil {
 			return true, err
@@ -209,7 +209,7 @@ func TestSDKSetAnnotation(t *testing.T) {
 	assert.Equal(t, "ACK: ANNOTATION\n", reply)
 
 	// the label is set in a queue, so it may take a moment
-	err = wait.PollImmediate(time.Second, time.Minute, func() (bool, error) {
+	err = wait.PollUntilContextTimeout(context.Background(), time.Second, time.Minute, true, func(ctx context.Context) (bool, error) {
 		gs, err = framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Get(ctx, readyGs.ObjectMeta.Name, metav1.GetOptions{})
 		if err != nil {
 			return true, err
@@ -341,7 +341,7 @@ func TestGameServerRestartBeforeReadyCrash(t *testing.T) {
 	logger.WithField("address", address).Info("Dialing UDP message to address")
 
 	messageAndWait := func(gs *agonesv1.GameServer, msg string, check func(gs *agonesv1.GameServer, pod *corev1.Pod) bool) error {
-		return wait.PollImmediate(200*time.Millisecond, 3*time.Minute, func() (bool, error) {
+		return wait.PollUntilContextTimeout(context.Background(), 200*time.Millisecond, 3*time.Minute, true, func(ctx context.Context) (bool, error) {
 			gs, err := gsClient.Get(ctx, gs.ObjectMeta.Name, metav1.GetOptions{})
 			if err != nil {
 				logger.WithError(err).Warn("could not get gameserver")
@@ -528,7 +528,7 @@ func TestDevelopmentGameServerLifecycle(t *testing.T) {
 	err = framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Delete(ctx, readyGs.ObjectMeta.Name, metav1.DeleteOptions{})
 	require.NoError(t, err)
 
-	err = wait.PollImmediate(time.Second, time.Minute, func() (bool, error) {
+	err = wait.PollUntilContextTimeout(context.Background(), time.Second, time.Minute, true, func(ctx context.Context) (bool, error) {
 		_, err = framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Get(ctx, readyGs.ObjectMeta.Name, metav1.GetOptions{})
 		if k8serrors.IsNotFound(err) {
 			return true, nil
@@ -561,7 +561,7 @@ func TestDevelopmentGameServerLifecycle(t *testing.T) {
 	err = framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Delete(ctx, readyGs.ObjectMeta.Name, metav1.DeleteOptions{})
 	require.NoError(t, err)
 
-	err = wait.PollImmediate(time.Second, time.Minute, func() (bool, error) {
+	err = wait.PollUntilContextTimeout(context.Background(), time.Second, time.Minute, true, func(ctx context.Context) (bool, error) {
 		_, err = framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Get(ctx, readyGs.ObjectMeta.Name, metav1.GetOptions{})
 		if k8serrors.IsNotFound(err) {
 			return true, nil
@@ -683,7 +683,7 @@ func TestGameServerWithPortsMappedToMultipleContainers(t *testing.T) {
 	timeOut := 60 * time.Second
 
 	expectedMsg1 := "Ping 1"
-	errPoll := wait.PollImmediate(interval, timeOut, func() (done bool, err error) {
+	errPoll := wait.PollUntilContextTimeout(context.Background(), interval, timeOut, true, func(ctx context.Context) (done bool, err error) {
 		res, err := framework.SendGameServerUDPToPort(t, readyGs, firstPort, expectedMsg1)
 		if err != nil {
 			t.Logf("Could not message GameServer on %s: %v. Will try again...", firstPort, err)
@@ -695,7 +695,7 @@ func TestGameServerWithPortsMappedToMultipleContainers(t *testing.T) {
 	}
 
 	expectedMsg2 := "Ping 2"
-	errPoll = wait.PollImmediate(interval, timeOut, func() (done bool, err error) {
+	errPoll = wait.PollUntilContextTimeout(context.Background(), interval, timeOut, true, func(ctx context.Context) (done bool, err error) {
 		res, err := framework.SendGameServerUDPToPort(t, readyGs, secondPort, expectedMsg2)
 		if err != nil {
 			t.Logf("Could not message GameServer on %s: %v. Will try again...", secondPort, err)
@@ -779,7 +779,7 @@ func TestGameServerShutdown(t *testing.T) {
 
 	assert.Equal(t, "ACK: EXIT\n", reply)
 
-	err = wait.PollImmediate(time.Second, 3*time.Minute, func() (bool, error) {
+	err = wait.PollUntilContextTimeout(ctx, time.Second, 3*time.Minute, true, func(ctx context.Context) (bool, error) {
 		gs, err = framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Get(ctx, readyGs.ObjectMeta.Name, metav1.GetOptions{})
 
 		if k8serrors.IsNotFound(err) {
@@ -1050,7 +1050,7 @@ func TestGameServerSetPlayerCapacity(t *testing.T) {
 		}
 		assert.Equal(t, "20\n", reply)
 
-		err = wait.PollImmediate(time.Second, time.Minute, func() (bool, error) {
+		err = wait.PollUntilContextTimeout(ctx, time.Second, time.Minute, true, func(ctx context.Context) (bool, error) {
 			gs, err := framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Get(ctx, gs.ObjectMeta.Name, metav1.GetOptions{})
 			if err != nil {
 				return false, err
@@ -1088,7 +1088,7 @@ func TestGameServerSetPlayerCapacity(t *testing.T) {
 		}
 		assert.Equal(t, "20\n", reply)
 
-		err = wait.PollImmediate(time.Second, time.Minute, func() (bool, error) {
+		err = wait.PollUntilContextTimeout(context.Background(), time.Second, time.Minute, true, func(ctx context.Context) (bool, error) {
 			gs, err := framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Get(ctx, gs.ObjectMeta.Name, metav1.GetOptions{})
 			if err != nil {
 				return false, err
@@ -1174,7 +1174,7 @@ func TestPlayerConnectAndDisconnect(t *testing.T) {
 	}
 	assert.Equal(t, "3\n", reply)
 
-	err = wait.Poll(time.Second, time.Minute, func() (bool, error) {
+	err = wait.PollUntilContextTimeout(ctx, time.Second, time.Minute, true, func(ctx context.Context) (bool, error) {
 		gs, err = framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Get(ctx, gs.ObjectMeta.Name, metav1.GetOptions{})
 		if err != nil {
 			return false, err
@@ -1210,7 +1210,7 @@ func TestPlayerConnectAndDisconnect(t *testing.T) {
 	}
 	assert.Equal(t, "2\n", reply)
 
-	err = wait.Poll(time.Second, time.Minute, func() (bool, error) {
+	err = wait.PollUntilContextTimeout(ctx, time.Second, time.Minute, true, func(ctx context.Context) (bool, error) {
 		gs, err = framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Get(ctx, gs.ObjectMeta.Name, metav1.GetOptions{})
 		if err != nil {
 			return false, err

@@ -15,6 +15,7 @@
 package gameserverallocations
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
@@ -513,7 +514,7 @@ func TestAllocatorRunCacheSync(t *testing.T) {
 
 	assertCacheEntries := func(expected int) {
 		count := 0
-		err := wait.PollImmediate(time.Second, 5*time.Second, func() (done bool, err error) {
+		err := wait.PollUntilContextTimeout(context.Background(), time.Second, 5*time.Second, true, func(ctx context.Context) (done bool, err error) {
 			count = 0
 			cache.cache.Range(func(key string, gs *agonesv1.GameServer) bool {
 				count++
