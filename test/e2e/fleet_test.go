@@ -1591,8 +1591,7 @@ func TestFleetAggregatedPlayerStatus(t *testing.T) {
 			msg := "PLAYER_CONNECT " + fmt.Sprintf("%d", i)
 			logrus.WithField("msg", msg).WithField("gs", gs.ObjectMeta.Name).Info("Sending Player Connect")
 			// retry on failure. Will stop flakiness of UDP packets being sent/received.
-			// nolint:staticcheck
-			err := wait.PollImmediate(time.Second, 5*time.Minute, func() (bool, error) {
+			err := wait.PollUntilContextTimeout(context.Background(), time.Second, 5*time.Minute, true, func(ctx context.Context) (done bool, err error) {
 				reply, err := framework.SendGameServerUDP(t, gs, msg)
 				if err != nil {
 					logrus.WithError(err).Warn("error with udp packet")

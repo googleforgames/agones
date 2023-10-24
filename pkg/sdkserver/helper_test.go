@@ -31,8 +31,7 @@ import (
 
 func testHTTPHealth(t *testing.T, url string, expectedResponse string, expectedStatus int) {
 	// do a poll, because this code could run before the health check becomes live
-	// nolint:staticcheck
-	err := wait.PollImmediate(time.Second, 20*time.Second, func() (done bool, err error) {
+	err := wait.PollUntilContextTimeout(context.Background(), time.Second, 20*time.Second, true, func(ctx context.Context) (done bool, err error) {
 		resp, err := http.Get(url)
 		if err != nil {
 			logrus.WithError(err).Error("Error connecting to ", url)

@@ -133,8 +133,7 @@ func TestWorkQueueHealthCheck(t *testing.T) {
 
 	f := func(t *testing.T, url string, status int) {
 		// sometimes the http server takes a bit to start up
-		// nolint:staticcheck
-		err := wait.PollImmediate(time.Second, 5*time.Second, func() (bool, error) {
+		err := wait.PollUntilContextTimeout(context.Background(), time.Second, 5*time.Second, true, func(ctx context.Context) (done bool, err error) {
 			resp, err := http.Get(url)
 			assert.Nil(t, err)
 			defer resp.Body.Close() // nolint: errcheck
