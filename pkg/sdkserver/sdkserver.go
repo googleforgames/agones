@@ -1055,13 +1055,13 @@ func (s *SDKServer) UpdateList(ctx context.Context, in *alpha.UpdateListRequest)
 	name := in.List.Name
 	s.logger.WithField("name", name).Debug("Update List -- Currently only used for Updating Capacity")
 
-	s.gsUpdateMutex.Lock()
-	defer s.gsUpdateMutex.Unlock()
-
 	gs, err := s.gameServer()
 	if err != nil {
 		return nil, err
 	}
+
+	s.gsUpdateMutex.Lock()
+	defer s.gsUpdateMutex.Unlock()
 
 	// TODO: Pull in variable Max Capacity from CRD instead of hard-coded number here.
 	if in.List.Capacity < 0 || in.List.Capacity > 1000 {
@@ -1091,13 +1091,13 @@ func (s *SDKServer) AddListValue(ctx context.Context, in *alpha.AddListValueRequ
 	}
 	s.logger.WithField("name", in.Name).Debug("Add List Value")
 
-	s.gsUpdateMutex.Lock()
-	defer s.gsUpdateMutex.Unlock()
-
 	gs, err := s.gameServer()
 	if err != nil {
 		return nil, err
 	}
+
+	s.gsUpdateMutex.Lock()
+	defer s.gsUpdateMutex.Unlock()
 
 	if list, ok := gs.Status.Lists[in.Name]; ok {
 		batchList := s.gsListUpdates[in.Name]
@@ -1147,13 +1147,13 @@ func (s *SDKServer) RemoveListValue(ctx context.Context, in *alpha.RemoveListVal
 
 	s.logger.WithField("name", in.Name).Debug("Remove List Value")
 
-	s.gsUpdateMutex.Lock()
-	defer s.gsUpdateMutex.Unlock()
-
 	gs, err := s.gameServer()
 	if err != nil {
 		return nil, err
 	}
+
+	s.gsUpdateMutex.Lock()
+	defer s.gsUpdateMutex.Unlock()
 
 	if list, ok := gs.Status.Lists[in.Name]; ok {
 		// Verify value exists in the list
@@ -1163,6 +1163,9 @@ func (s *SDKServer) RemoveListValue(ctx context.Context, in *alpha.RemoveListVal
 			}
 			// Add value to remove to gsListUpdates map.
 			batchList := s.gsListUpdates[in.Name]
+			if batchList.valuesToDelete == nil {
+				batchList.valuesToDelete = map[string]bool{}
+			}
 			batchList.valuesToDelete[in.Value] = true
 			s.gsListUpdates[in.Name] = batchList
 			// Queue up the Update for later batch processing by updateLists.
