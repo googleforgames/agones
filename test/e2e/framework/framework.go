@@ -450,8 +450,7 @@ func (f *Framework) WaitForFleetGameServersCondition(flt *agonesv1.Fleet,
 // specified by a callback and the size of GameServers to match fleet's Spec.Replicas.
 func (f *Framework) WaitForFleetGameServerListCondition(flt *agonesv1.Fleet,
 	cond func(servers []agonesv1.GameServer) bool) error {
-	// nolint:staticcheck
-	return wait.Poll(2*time.Second, f.WaitForState, func() (done bool, err error) {
+	return wait.PollUntilContextTimeout(context.Background(), 2*time.Second, f.WaitForState, true, func(ctx context.Context) (done bool, err error) {
 		gsList, err := f.ListGameServersFromFleet(flt)
 		if err != nil {
 			return false, err

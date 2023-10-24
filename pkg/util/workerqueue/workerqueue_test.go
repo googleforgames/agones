@@ -79,8 +79,7 @@ func TestWorkerQueueHealthy(t *testing.T) {
 	go wq.Run(ctx, 1)
 
 	// Yield to the scheduler to ensure the worker queue goroutine can run.
-	// nolint:staticcheck
-	err := wait.Poll(100*time.Millisecond, 3*time.Second, func() (done bool, err error) {
+	err := wait.PollUntilContextTimeout(context.Background(), 100*time.Millisecond, 3*time.Second, true, func(ctx context.Context) (done bool, err error) {
 		if (wq.RunCount() == 1) && wq.Healthy() == nil {
 			return true, nil
 		}
@@ -94,8 +93,7 @@ func TestWorkerQueueHealthy(t *testing.T) {
 
 	// Yield to the scheduler again to ensure the worker queue goroutine can
 	// finish.
-	// nolint:staticcheck
-	err = wait.Poll(100*time.Millisecond, 3*time.Second, func() (done bool, err error) {
+	err = wait.PollUntilContextTimeout(context.Background(), 100*time.Millisecond, 3*time.Second, true, func(ctx context.Context) (done bool, err error) {
 		if (wq.RunCount() == 0) && wq.Healthy() != nil {
 			return true, nil
 		}

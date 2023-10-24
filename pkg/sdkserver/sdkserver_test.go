@@ -1373,8 +1373,7 @@ func TestSDKServerPlayerCapacity(t *testing.T) {
 	// check initial value comes through
 
 	// async, so check after a period
-	// nolint:staticcheck
-	err = wait.Poll(time.Second, 10*time.Second, func() (bool, error) {
+	err = wait.PollUntilContextTimeout(context.Background(), time.Second, 10*time.Second, true, func(ctx context.Context) (bool, error) {
 		count, err := sc.GetPlayerCapacity(context.Background(), &alpha.Empty{})
 		return count.Count == 10, err
 	})
@@ -1440,8 +1439,7 @@ func TestSDKServerPlayerConnectAndDisconnectWithoutPlayerTracking(t *testing.T) 
 	// check initial value comes through
 	// async, so check after a period
 	e := &alpha.Empty{}
-	// nolint:staticcheck
-	err = wait.Poll(time.Second, 10*time.Second, func() (bool, error) {
+	err = wait.PollUntilContextTimeout(context.Background(), time.Second, 10*time.Second, true, func(ctx context.Context) (bool, error) {
 		count, err := sc.GetPlayerCapacity(context.Background(), e)
 
 		assert.Nil(t, count)
@@ -1526,8 +1524,7 @@ func TestSDKServerPlayerConnectAndDisconnect(t *testing.T) {
 	// check initial value comes through
 	// async, so check after a period
 	e := &alpha.Empty{}
-	// nolint:staticcheck
-	err = wait.Poll(time.Second, 10*time.Second, func() (bool, error) {
+	err = wait.PollUntilContextTimeout(context.Background(), time.Second, 10*time.Second, true, func(ctx context.Context) (bool, error) {
 		count, err := sc.GetPlayerCapacity(context.Background(), e)
 		return count.Count == capacity, err
 	})

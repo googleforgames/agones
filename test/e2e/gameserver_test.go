@@ -1174,8 +1174,7 @@ func TestPlayerConnectAndDisconnect(t *testing.T) {
 	}
 	assert.Equal(t, "3\n", reply)
 
-	// nolint:staticcheck
-	err = wait.Poll(time.Second, time.Minute, func() (bool, error) {
+	err = wait.PollUntilContextTimeout(ctx, time.Second, time.Minute, true, func(ctx context.Context) (bool, error) {
 		gs, err = framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Get(ctx, gs.ObjectMeta.Name, metav1.GetOptions{})
 		if err != nil {
 			return false, err
@@ -1211,8 +1210,7 @@ func TestPlayerConnectAndDisconnect(t *testing.T) {
 	}
 	assert.Equal(t, "2\n", reply)
 
-	// nolint:staticcheck
-	err = wait.Poll(time.Second, time.Minute, func() (bool, error) {
+	err = wait.PollUntilContextTimeout(ctx, time.Second, time.Minute, true, func(ctx context.Context) (bool, error) {
 		gs, err = framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Get(ctx, gs.ObjectMeta.Name, metav1.GetOptions{})
 		if err != nil {
 			return false, err

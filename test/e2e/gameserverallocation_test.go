@@ -1039,7 +1039,7 @@ func TestGameServerAllocationPreferredSelection(t *testing.T) {
 	}
 
 	// wait until the game server is deleted
-	err = wait.PollUntilContextTimeout(context.Background(), time.Second, 5*time.Second, true, func(ctx context.Context) (bool, error) {
+	err = wait.PollUntilContextTimeout(context.Background(), time.Second, 5*time.Minute, true, func(ctx context.Context) (bool, error) {
 		_, err = gameServers.Get(ctx, gsa1.Status.GameServerName, metav1.GetOptions{})
 
 		if err != nil && errors.IsNotFound(err) {

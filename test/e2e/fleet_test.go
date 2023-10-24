@@ -1443,8 +1443,7 @@ func TestFleetRecreateGameServers(t *testing.T) {
 			v.f(t, list)
 
 			for i, gs := range gameservers {
-				// nolint:staticcheck
-				err = wait.Poll(time.Second, 5*time.Minute, func() (done bool, err error) {
+				err = wait.PollUntilContextTimeout(context.Background(), time.Second, 5*time.Minute, true, func(ctx context.Context) (done bool, err error) {
 					_, err = client.GameServers(framework.Namespace).Get(ctx, gs.ObjectMeta.Name, metav1.GetOptions{})
 
 					if err != nil && k8serrors.IsNotFound(err) {
