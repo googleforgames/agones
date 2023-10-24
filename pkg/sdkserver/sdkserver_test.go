@@ -1841,7 +1841,7 @@ func waitForMessage(sc *SDKServer) error {
 }
 
 func waitConnectedStreamCount(sc *SDKServer, count int) error { //nolint:unparam // Keep flexibility.
-	return wait.PollUntilContextTimeout(context.Background(), time.Second, 10*time.Second, true, func(ctx context.Context) (bool, error) {
+	return wait.PollUntilContextTimeout(context.Background(), 1*time.Second, 10*time.Second, true, func(ctx context.Context) (bool, error) {
 		sc.streamMutex.RLock()
 		defer sc.streamMutex.RUnlock()
 		return len(sc.connectedStreams) == count, nil
