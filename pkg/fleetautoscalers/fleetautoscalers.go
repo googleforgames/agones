@@ -221,19 +221,19 @@ func applyBufferPolicy(b *autoscalingv1.BufferPolicy, f *agonesv1.Fleet) (int32,
 		replicas = int32(math.Ceil(float64(f.Status.AllocatedReplicas*100) / float64(100-bufferPercent)))
 	}
 
-	scalingDownLimited := false
-	scalingUpLimited := false
+	scalingInLimited := false
+	scalingOutLimited := false
 
 	if replicas < b.MinReplicas {
 		replicas = b.MinReplicas
-		scalingDownLimited = true
+		scalingInLimited = true
 	}
 	if replicas > b.MaxReplicas {
 		replicas = b.MaxReplicas
-		scalingUpLimited = true
+		scalingOutLimited = true
 	}
 
-	return replicas, scalingDownLimited || scalingUpLimited, nil
+	return replicas, scalingInLimited || scalingOutLimited, nil
 }
 
 func applyCounterOrListPolicy(c *autoscalingv1.CounterPolicy, l *autoscalingv1.ListPolicy,
