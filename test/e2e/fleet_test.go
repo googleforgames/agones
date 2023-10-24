@@ -142,8 +142,7 @@ func TestFleetScaleWithDualAllocations(t *testing.T) {
 		return fleet.Status.AllocatedReplicas == 1
 	})
 
-	// nolint:staticcheck
-	err = wait.PollImmediate(time.Second, time.Minute, func() (done bool, err error) {
+	err = wait.PollUntilContextTimeout(context.Background(), time.Second, time.Minute, true, func(ctx context.Context) (done bool, err error) {
 		flt, err = client.Fleets(framework.Namespace).Get(ctx, flt.ObjectMeta.GetName(), metav1.GetOptions{})
 		if err != nil {
 			return false, err
@@ -251,8 +250,7 @@ func TestFleetScaleUpAllocateEditAndScaleDownToZero(t *testing.T) {
 	assert.Equal(t, int32(6000), flt.Spec.Template.Spec.Ports[0].ContainerPort)
 
 	// Wait for one more GSSet to be created
-	// nolint:staticcheck
-	err = wait.PollImmediate(2*time.Second, 2*time.Minute, func() (bool, error) {
+	err = wait.PollUntilContextTimeout(context.Background(), 2*time.Second, 2*time.Minute, true, func(ctx context.Context) (bool, error) {
 		selector := labels.SelectorFromSet(labels.Set{agonesv1.FleetNameLabel: flt.ObjectMeta.Name})
 		list, err := framework.AgonesClient.AgonesV1().GameServerSets(framework.Namespace).List(ctx,
 			metav1.ListOptions{LabelSelector: selector.String()})
@@ -347,8 +345,7 @@ func TestFleetScaleUpEditAndScaleDown(t *testing.T) {
 			require.NoError(t, err)
 
 			// Wait for one more GSSet to be created and ReadyReplicas created in new GSS
-			// nolint:staticcheck
-			err = wait.PollImmediate(1*time.Second, time.Minute, func() (bool, error) {
+			err = wait.PollUntilContextTimeout(context.Background(), 1*time.Second, time.Minute, true, func(ctx context.Context) (bool, error) {
 				selector := labels.SelectorFromSet(labels.Set{agonesv1.FleetNameLabel: flt.ObjectMeta.Name})
 				list, err := framework.AgonesClient.AgonesV1().GameServerSets(framework.Namespace).List(ctx,
 					metav1.ListOptions{LabelSelector: selector.String()})
@@ -504,8 +501,7 @@ func TestFleetRollingUpdate(t *testing.T) {
 
 			selector := labels.SelectorFromSet(labels.Set{agonesv1.FleetNameLabel: flt.ObjectMeta.Name})
 			// New GSS was created
-			// nolint:staticcheck
-			err = wait.PollImmediate(1*time.Second, 30*time.Second, func() (bool, error) {
+			err = wait.PollUntilContextTimeout(context.Background(), 1*time.Second, 30*time.Second, true, func(ctx context.Context) (bool, error) {
 				gssList, err := framework.AgonesClient.AgonesV1().GameServerSets(framework.Namespace).List(ctx,
 					metav1.ListOptions{LabelSelector: selector.String()})
 				if err != nil {
@@ -517,8 +513,7 @@ func TestFleetRollingUpdate(t *testing.T) {
 			// Check that total number of gameservers in the system does not exceed the RollingUpdate
 			// parameters (creating no more than maxSurge, deleting maxUnavailable servers at a time)
 			// Wait for old GSSet to be deleted
-			// nolint:staticcheck
-			err = wait.PollImmediate(1*time.Second, 5*time.Minute, func() (bool, error) {
+			err = wait.PollUntilContextTimeout(context.Background(), 1*time.Second, 5*time.Minute, true, func(ctx context.Context) (bool, error) {
 				list, err := framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).List(ctx,
 					metav1.ListOptions{LabelSelector: selector.String()})
 				if err != nil {
@@ -736,8 +731,7 @@ func TestFleetUpdates(t *testing.T) {
 			require.NoError(t, err)
 
 			// if the generation has been updated, it's time to try again.
-			// nolint:staticcheck
-			err = wait.PollImmediate(time.Second, 10*time.Second, func() (bool, error) {
+			err = wait.PollUntilContextTimeout(context.Background(), time.Second, 10*time.Second, true, func(ctx context.Context) (bool, error) {
 				flt, err = framework.AgonesClient.AgonesV1().Fleets(framework.Namespace).Get(ctx, flt.ObjectMeta.Name, metav1.GetOptions{})
 				if err != nil {
 					return false, err
@@ -861,8 +855,7 @@ func TestReservedGameServerInFleet(t *testing.T) {
 	})
 
 	// check against gameservers directly too, just to be extra sure
-	// nolint:staticcheck
-	err = wait.PollImmediate(2*time.Second, 5*time.Minute, func() (done bool, err error) {
+	err = wait.PollUntilContextTimeout(context.Background(), 2*time.Second, 5*time.Minute, true, func(ctx context.Context) (done bool, err error) {
 		list, err := framework.ListGameServersFromFleet(flt)
 		if err != nil {
 			return true, err

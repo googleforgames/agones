@@ -83,8 +83,7 @@ func TestAllocatorWithDeprecatedRequired(t *testing.T) {
 
 	var response *pb.AllocationResponse
 	// wait for the allocation system to come online
-	// nolint:staticcheck
-	err = wait.PollImmediate(2*time.Second, 5*time.Minute, func() (bool, error) {
+	err = wait.PollUntilContextTimeout(context.Background(), 2*time.Second, 5*time.Minute, true, func(ctx context.Context) (bool, error) {
 		// create the grpc client each time, as we may end up looking at an old cert
 		dialOpts, err := helper.CreateRemoteClusterDialOption(ctx, allocatorClientSecretNamespace, allocatorClientSecretName, tlsCA, framework)
 		if err != nil {
@@ -178,8 +177,7 @@ func TestAllocatorWithSelectors(t *testing.T) {
 
 	var response *pb.AllocationResponse
 	// wait for the allocation system to come online
-	// nolint:staticcheck
-	err = wait.PollImmediate(2*time.Second, 5*time.Minute, func() (bool, error) {
+	err = wait.PollUntilContextTimeout(context.Background(), 2*time.Second, 5*time.Minute, true, func(ctx context.Context) (bool, error) {
 		// create the grpc client each time, as we may end up looking at an old cert
 		dialOpts, err := helper.CreateRemoteClusterDialOption(ctx, allocatorClientSecretNamespace, allocatorClientSecretName, tlsCA, framework)
 		if err != nil {
@@ -277,8 +275,7 @@ func TestRestAllocatorWithDeprecatedRequired(t *testing.T) {
 	}
 
 	// wait for the allocation system to come online
-	// nolint:staticcheck
-	err = wait.PollImmediate(2*time.Second, 5*time.Minute, func() (bool, error) {
+	err = wait.PollUntilContextTimeout(context.Background(), 2*time.Second, 5*time.Minute, true, func(ctx context.Context) (bool, error) {
 		resp, err := client.Do(req)
 		if err != nil {
 			logrus.WithError(err).Info("failed Allocate rest request")
@@ -342,8 +339,7 @@ func TestRestAllocatorWithSelectors(t *testing.T) {
 
 	// wait for the allocation system to come online
 	var response pb.AllocationResponse
-	// nolint:staticcheck
-	err = wait.PollImmediate(2*time.Second, 5*time.Minute, func() (bool, error) {
+	err = wait.PollUntilContextTimeout(context.Background(), 2*time.Second, 5*time.Minute, true, func(ctx context.Context) (bool, error) {
 		resp, err := client.Do(req)
 		if err != nil {
 			logrus.WithError(err).Info("failed Allocate rest request")
@@ -430,8 +426,7 @@ func TestAllocatorCrossNamespace(t *testing.T) {
 	}
 
 	// wait for the allocation system to come online
-	// nolint:staticcheck
-	err = wait.PollImmediate(2*time.Second, 5*time.Minute, func() (bool, error) {
+	err = wait.PollUntilContextTimeout(context.Background(), 2*time.Second, 5*time.Minute, true, func(ctx context.Context) (bool, error) {
 		// create the grpc client each time, as we may end up looking at an old cert
 		dialOpts, err := helper.CreateRemoteClusterDialOption(ctx, namespaceA, allocatorClientSecretName, tlsCA, framework)
 		if err != nil {

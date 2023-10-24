@@ -123,8 +123,7 @@ func TestWorkQueueHealthCheck(t *testing.T) {
 	go wq.Run(ctx, workersCount)
 
 	// Wait for worker to actually start
-	// nolint:staticcheck
-	err := wait.PollImmediate(100*time.Millisecond, 5*time.Second, func() (bool, error) {
+	err := wait.PollUntilContextTimeout(context.Background(), 100*time.Millisecond, 5*time.Second, true, func(ctx context.Context) (bool, error) {
 		rc := wq.RunCount()
 		logrus.WithField("runcount", rc).Info("Checking run count before liveness check")
 		return rc == workersCount, nil
@@ -158,8 +157,7 @@ func TestWorkQueueHealthCheck(t *testing.T) {
 
 	cancel()
 	// closing can take a short while
-	// nolint:staticcheck
-	err = wait.PollImmediate(time.Second, 5*time.Second, func() (bool, error) {
+	err = wait.PollUntilContextTimeout(context.Background(), time.Second, 5*time.Second, true, func(ctx context.Context) (bool, error) {
 		rc := wq.RunCount()
 		logrus.WithField("runcount", rc).Info("Checking run count")
 		return rc == 0, nil

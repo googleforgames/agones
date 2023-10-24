@@ -15,6 +15,7 @@
 package gameservers
 
 import (
+	"context"
 	"errors"
 	"testing"
 	"time"
@@ -413,8 +414,7 @@ func TestHealthControllerRun(t *testing.T) {
 	podWatch.Add(pod.DeepCopy())
 
 	go hc.Run(stop, 1) // nolint: errcheck
-	// nolint:staticcheck
-	err = wait.PollImmediate(time.Second, 10*time.Second, func() (bool, error) {
+	err = wait.PollUntilContextTimeout(context.Background(), time.Second, 10*time.Second, true, func(ctx context.Context) (bool, error) {
 		return hc.workerqueue.RunCount() == 1, nil
 	})
 	assert.NoError(t, err)
