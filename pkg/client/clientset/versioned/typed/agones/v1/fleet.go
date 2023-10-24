@@ -20,9 +20,12 @@ package v1
 
 import (
 	"context"
+	json "encoding/json"
+	"fmt"
 	"time"
 
 	v1 "agones.dev/agones/pkg/apis/agones/v1"
+	agonesv1 "agones.dev/agones/pkg/client/applyconfiguration/agones/v1"
 	scheme "agones.dev/agones/pkg/client/clientset/versioned/scheme"
 	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -48,6 +51,8 @@ type FleetInterface interface {
 	List(ctx context.Context, opts metav1.ListOptions) (*v1.FleetList, error)
 	Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error)
 	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *v1.Fleet, err error)
+	Apply(ctx context.Context, fleet *agonesv1.FleetApplyConfiguration, opts metav1.ApplyOptions) (result *v1.Fleet, err error)
+	ApplyStatus(ctx context.Context, fleet *agonesv1.FleetApplyConfiguration, opts metav1.ApplyOptions) (result *v1.Fleet, err error)
 	GetScale(ctx context.Context, fleetName string, options metav1.GetOptions) (*autoscalingv1.Scale, error)
 	UpdateScale(ctx context.Context, fleetName string, scale *autoscalingv1.Scale, opts metav1.UpdateOptions) (*autoscalingv1.Scale, error)
 
@@ -192,6 +197,62 @@ func (c *fleets) Patch(ctx context.Context, name string, pt types.PatchType, dat
 		Name(name).
 		SubResource(subresources...).
 		VersionedParams(&opts, scheme.ParameterCodec).
+		Body(data).
+		Do(ctx).
+		Into(result)
+	return
+}
+
+// Apply takes the given apply declarative configuration, applies it and returns the applied fleet.
+func (c *fleets) Apply(ctx context.Context, fleet *agonesv1.FleetApplyConfiguration, opts metav1.ApplyOptions) (result *v1.Fleet, err error) {
+	if fleet == nil {
+		return nil, fmt.Errorf("fleet provided to Apply must not be nil")
+	}
+	patchOpts := opts.ToPatchOptions()
+	data, err := json.Marshal(fleet)
+	if err != nil {
+		return nil, err
+	}
+	name := fleet.Name
+	if name == nil {
+		return nil, fmt.Errorf("fleet.Name must be provided to Apply")
+	}
+	result = &v1.Fleet{}
+	err = c.client.Patch(types.ApplyPatchType).
+		Namespace(c.ns).
+		Resource("fleets").
+		Name(*name).
+		VersionedParams(&patchOpts, scheme.ParameterCodec).
+		Body(data).
+		Do(ctx).
+		Into(result)
+	return
+}
+
+// ApplyStatus was generated because the type contains a Status member.
+// Add a +genclient:noStatus comment above the type to avoid generating ApplyStatus().
+func (c *fleets) ApplyStatus(ctx context.Context, fleet *agonesv1.FleetApplyConfiguration, opts metav1.ApplyOptions) (result *v1.Fleet, err error) {
+	if fleet == nil {
+		return nil, fmt.Errorf("fleet provided to Apply must not be nil")
+	}
+	patchOpts := opts.ToPatchOptions()
+	data, err := json.Marshal(fleet)
+	if err != nil {
+		return nil, err
+	}
+
+	name := fleet.Name
+	if name == nil {
+		return nil, fmt.Errorf("fleet.Name must be provided to Apply")
+	}
+
+	result = &v1.Fleet{}
+	err = c.client.Patch(types.ApplyPatchType).
+		Namespace(c.ns).
+		Resource("fleets").
+		Name(*name).
+		SubResource("status").
+		VersionedParams(&patchOpts, scheme.ParameterCodec).
 		Body(data).
 		Do(ctx).
 		Into(result)

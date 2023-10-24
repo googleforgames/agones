@@ -313,7 +313,7 @@ func GetAllocatorClient(ctx context.Context, t *testing.T, framework *e2e.Framew
 	}
 
 	var response *pb.AllocationResponse
-	err = wait.PollImmediate(2*time.Second, 5*time.Minute, func() (bool, error) {
+	err = wait.PollUntilContextTimeout(context.Background(), 2*time.Second, 5*time.Minute, true, func(ctx context.Context) (bool, error) {
 		response, err = grpcClient.Allocate(context.Background(), request)
 		if err != nil {
 			logrus.WithError(err).Info("failing Allocate request")

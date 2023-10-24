@@ -79,7 +79,7 @@ func TestWorkerQueueHealthy(t *testing.T) {
 	go wq.Run(ctx, 1)
 
 	// Yield to the scheduler to ensure the worker queue goroutine can run.
-	err := wait.Poll(100*time.Millisecond, 3*time.Second, func() (done bool, err error) {
+	err := wait.PollUntilContextTimeout(context.Background(), 100*time.Millisecond, 3*time.Second, true, func(ctx context.Context) (done bool, err error) {
 		if (wq.RunCount() == 1) && wq.Healthy() == nil {
 			return true, nil
 		}
@@ -93,7 +93,7 @@ func TestWorkerQueueHealthy(t *testing.T) {
 
 	// Yield to the scheduler again to ensure the worker queue goroutine can
 	// finish.
-	err = wait.Poll(100*time.Millisecond, 3*time.Second, func() (done bool, err error) {
+	err = wait.PollUntilContextTimeout(context.Background(), 100*time.Millisecond, 3*time.Second, true, func(ctx context.Context) (done bool, err error) {
 		if (wq.RunCount() == 0) && wq.Healthy() != nil {
 			return true, nil
 		}
@@ -121,7 +121,7 @@ func TestWorkQueueHealthCheck(t *testing.T) {
 	go wq.Run(ctx, workersCount)
 
 	// Wait for worker to actually start
-	err := wait.PollImmediate(100*time.Millisecond, 5*time.Second, func() (bool, error) {
+	err := wait.PollUntilContextTimeout(context.Background(), 100*time.Millisecond, 5*time.Second, true, func(ctx context.Context) (bool, error) {
 		rc := wq.RunCount()
 		logrus.WithField("runcount", rc).Info("Checking run count before liveness check")
 		return rc == workersCount, nil
@@ -130,7 +130,7 @@ func TestWorkQueueHealthCheck(t *testing.T) {
 
 	f := func(t *testing.T, url string, status int) {
 		// sometimes the http server takes a bit to start up
-		err := wait.PollImmediate(time.Second, 5*time.Second, func() (bool, error) {
+		err := wait.PollUntilContextTimeout(context.Background(), time.Second, 5*time.Second, true, func(ctx context.Context) (done bool, err error) {
 			resp, err := http.Get(url)
 			assert.Nil(t, err)
 			defer resp.Body.Close() // nolint: errcheck
@@ -155,7 +155,7 @@ func TestWorkQueueHealthCheck(t *testing.T) {
 
 	cancel()
 	// closing can take a short while
-	err = wait.PollImmediate(time.Second, 5*time.Second, func() (bool, error) {
+	err = wait.PollUntilContextTimeout(context.Background(), time.Second, 5*time.Second, true, func(ctx context.Context) (bool, error) {
 		rc := wq.RunCount()
 		logrus.WithField("runcount", rc).Info("Checking run count")
 		return rc == 0, nil

@@ -48,7 +48,7 @@ func TestAllocatorAfterDeleteReplica(t *testing.T) {
 	logrus.Infof("Replica count config is %d", replicaCnt)
 
 	// poll and wait until all allocator pods are running
-	_ = wait.PollImmediate(retryInterval, retryTimeout, func() (done bool, err error) {
+	_ = wait.PollUntilContextTimeout(context.Background(), retryInterval, retryTimeout, true, func(ctx context.Context) (done bool, err error) {
 		list, err = helper.GetAgonesAllocatorPods(ctx, framework)
 		if err != nil {
 			return true, err
@@ -94,7 +94,7 @@ func TestAllocatorAfterDeleteReplica(t *testing.T) {
 	require.NoError(t, err, "Could not initialize rpc client")
 
 	// Wait and keep making calls till we know the draining time has passed
-	_ = wait.PollImmediate(retryInterval, retryTimeout, func() (bool, error) {
+	_ = wait.PollUntilContextTimeout(context.Background(), retryInterval, retryTimeout, true, func(ctx context.Context) (bool, error) {
 		response, err = grpcClient.Allocate(context.Background(), request)
 		logrus.Info(response)
 		helper.ValidateAllocatorResponse(t, response)

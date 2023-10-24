@@ -98,7 +98,7 @@ func TestControllerAllocator(t *testing.T) {
 			assert.FailNow(t, err.Error())
 		}
 		// wait for it to be up and running
-		err := wait.PollImmediate(time.Second, 10*time.Second, func() (done bool, err error) {
+		err := wait.PollUntilContextTimeout(context.Background(), time.Second, 10*time.Second, true, func(ctx context.Context) (done bool, err error) {
 			return c.allocator.allocationCache.workerqueue.RunCount() == 1, nil
 		})
 		assert.NoError(t, err)
@@ -236,7 +236,7 @@ func TestMultiClusterAllocationFromLocal(t *testing.T) {
 			assert.FailNow(t, err.Error())
 		}
 		// wait for it to be up and running
-		err := wait.PollImmediate(time.Second, 10*time.Second, func() (done bool, err error) {
+		err := wait.PollUntilContextTimeout(context.Background(), time.Second, 10*time.Second, true, func(ctx context.Context) (done bool, err error) {
 			return c.allocator.allocationCache.workerqueue.RunCount() == 1, nil
 		})
 		assert.NoError(t, err)
@@ -284,7 +284,7 @@ func TestMultiClusterAllocationFromLocal(t *testing.T) {
 			assert.FailNow(t, err.Error())
 		}
 		// wait for it to be up and running
-		err := wait.PollImmediate(time.Second, 10*time.Second, func() (done bool, err error) {
+		err := wait.PollUntilContextTimeout(context.Background(), time.Second, 10*time.Second, true, func(ctx context.Context) (done bool, err error) {
 			return c.allocator.allocationCache.workerqueue.RunCount() == 1, nil
 		})
 		assert.NoError(t, err)
@@ -344,7 +344,7 @@ func TestMultiClusterAllocationFromLocal(t *testing.T) {
 			assert.FailNow(t, err.Error())
 		}
 		// wait for it to be up and running
-		err := wait.PollImmediate(time.Second, 10*time.Second, func() (done bool, err error) {
+		err := wait.PollUntilContextTimeout(context.Background(), time.Second, 10*time.Second, true, func(ctx context.Context) (done bool, err error) {
 			return c.allocator.allocationCache.workerqueue.RunCount() == 1, nil
 		})
 		assert.NoError(t, err)
