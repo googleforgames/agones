@@ -311,8 +311,7 @@ func (f *Framework) CycleAllocations(ctx context.Context, t *testing.T, flt *ago
 		return false, nil
 	}, ctx.Done())
 	// Ignore wait timeout error, will always be returned when the context is cancelled at the end of the test.
-	// nolint:staticcheck
-	if err != wait.ErrWaitTimeout {
+	if wait.Interrupted(err) {
 		require.NoError(t, err)
 	}
 }
