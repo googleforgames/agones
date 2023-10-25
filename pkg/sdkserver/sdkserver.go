@@ -295,8 +295,7 @@ func (s *SDKServer) WaitForConnection(ctx context.Context) error {
 	}
 
 	try := 0
-	// nolint:staticcheck
-	return wait.PollImmediateInfiniteWithContext(ctx, 4*time.Second, func(ctx context.Context) (bool, error) {
+	return wait.PollUntilContextCancel(ctx, 4*time.Second, true, func(ctx context.Context) (bool, error) {
 		ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 		defer cancel()
 
