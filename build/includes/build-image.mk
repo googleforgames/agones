@@ -51,6 +51,9 @@ endif
 pull-build-image:
 	$(MAKE) pull-remote-build-image REMOTE_TAG=$(build_remote_tag) LOCAL_TAG=$(build_tag)
 
+pull-build-image-with-tag:
+	$(MAKE) pull-remote-build-image REMOTE_TAG=$(build_remote_tag) LOCAL_TAG=$(CUSTOM_LOCAL_TAG)
+
 # push the local build image up to your repository
 push-build-image:
 	$(MAKE) push-remote-build-image REMOTE_TAG=$(build_remote_tag) LOCAL_TAG=$(build_tag)
