@@ -26,6 +26,9 @@ metadata:
     "helm.sh/hook": pre-delete
     "helm.sh/hook-delete-policy": before-hook-creation
 spec:
+  {{- if gt (int .Values.agones.crds.cleanupJobTTL) 0 }}
+  ttlSecondsAfterFinished: {{ .Values.agones.crds.cleanupJobTTL }}
+  {{- end}}
   template:
     metadata:
       name: "{{.Release.Name}}-delete-agones-resources"
@@ -38,7 +41,7 @@ spec:
       restartPolicy: Never
       containers:
       - name: pre-delete-delete-agones-resources
-        image: "bitnami/kubectl:1.26.6"
+        image: "bitnami/kubectl:1.27.7"
         command:
         - "/bin/sh"
         - "/scripts/delete_agones_resources.sh"

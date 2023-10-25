@@ -92,15 +92,15 @@ aks_example_cluster_version = "1.27.1"
 eks_example_cluster_version = "1.27"
 minikube_example_cluster_version = "1.26.6"
 # shown in development (or the next versions that will be supported)
-dev_supported_k8s = ["1.25", "1.26", "1.27"]
-dev_k8s_api_version = "1.26"
-dev_gke_example_cluster_version = "1.26"
-dev_aks_example_cluster_version = "1.27.1"
-dev_eks_example_cluster_version = "1.27"
-dev_minikube_example_cluster_version = "1.26.6"
+dev_supported_k8s = ["1.26", "1.27", "1.28"]
+dev_k8s_api_version = "1.27"
+dev_gke_example_cluster_version = "1.27"
+dev_aks_example_cluster_version = "1.28.0"
+dev_eks_example_cluster_version = "1.28"
+dev_minikube_example_cluster_version = "1.27.6"
 
 # example tag
-example_image_tag = "us-docker.pkg.dev/agones-images/examples/simple-game-server:0.18"
+example_image_tag = "us-docker.pkg.dev/agones-images/examples/simple-game-server:0.19"
 
 # Enable syntax highlighting and copy buttons on code blocks with Prism
 prism_syntax_highlighting = true

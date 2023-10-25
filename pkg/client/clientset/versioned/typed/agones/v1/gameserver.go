@@ -20,9 +20,12 @@ package v1
 
 import (
 	"context"
+	json "encoding/json"
+	"fmt"
 	"time"
 
 	v1 "agones.dev/agones/pkg/apis/agones/v1"
+	agonesv1 "agones.dev/agones/pkg/client/applyconfiguration/agones/v1"
 	scheme "agones.dev/agones/pkg/client/clientset/versioned/scheme"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
@@ -46,6 +49,7 @@ type GameServerInterface interface {
 	List(ctx context.Context, opts metav1.ListOptions) (*v1.GameServerList, error)
 	Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error)
 	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *v1.GameServer, err error)
+	Apply(ctx context.Context, gameServer *agonesv1.GameServerApplyConfiguration, opts metav1.ApplyOptions) (result *v1.GameServer, err error)
 	GameServerExpansion
 }
 
@@ -171,6 +175,32 @@ func (c *gameServers) Patch(ctx context.Context, name string, pt types.PatchType
 		Name(name).
 		SubResource(subresources...).
 		VersionedParams(&opts, scheme.ParameterCodec).
+		Body(data).
+		Do(ctx).
+		Into(result)
+	return
+}
+
+// Apply takes the given apply declarative configuration, applies it and returns the applied gameServer.
+func (c *gameServers) Apply(ctx context.Context, gameServer *agonesv1.GameServerApplyConfiguration, opts metav1.ApplyOptions) (result *v1.GameServer, err error) {
+	if gameServer == nil {
+		return nil, fmt.Errorf("gameServer provided to Apply must not be nil")
+	}
+	patchOpts := opts.ToPatchOptions()
+	data, err := json.Marshal(gameServer)
+	if err != nil {
+		return nil, err
+	}
+	name := gameServer.Name
+	if name == nil {
+		return nil, fmt.Errorf("gameServer.Name must be provided to Apply")
+	}
+	result = &v1.GameServer{}
+	err = c.client.Patch(types.ApplyPatchType).
+		Namespace(c.ns).
+		Resource("gameservers").
+		Name(*name).
+		VersionedParams(&patchOpts, scheme.ParameterCodec).
 		Body(data).
 		Do(ctx).
 		Into(result)

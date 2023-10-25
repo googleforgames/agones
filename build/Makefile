@@ -61,7 +61,7 @@ KIND_PROFILE ?= agones
 KIND_CONTAINER_NAME=$(KIND_PROFILE)-control-plane
 
 # Game Server image to use while doing end-to-end tests
-GS_TEST_IMAGE ?= us-docker.pkg.dev/agones-images/examples/simple-game-server:0.18
+GS_TEST_IMAGE ?= us-docker.pkg.dev/agones-images/examples/simple-game-server:0.19
 
 # Enable all alpha feature gates. Keep in sync with `false` (alpha) entries in pkg/util/runtime/features.go:featureDefaults
 ALPHA_FEATURE_GATES ?= "PlayerAllocationFilter=true&PlayerTracking=true&CountsAndLists=true&FleetAllocationOverflow=true&Example=true"
@@ -725,8 +725,9 @@ push-agones-sdk-linux-image-amd64: build-agones-sdk-image-amd64
 	docker push $(sidecar_linux_amd64_tag)
 
 # Generate the Embedded CRD openapi
-gen-embedded-openapi:
-	docker run --rm $(common_mounts) -w $(workdir_path)/build $(build_tag) ./export-openapi.sh
+gen-embedded-openapi: ensure-build-image
+	docker run --rm $(common_mounts) --workdir=$(mount_path)/build/scripts/k8s-export-openapi $(DOCKER_RUN_ARGS) $(build_tag) \
+		go run -mod=mod ./main.go
 
 # Generate the static install script
 gen-install: $(ensure-build-image)

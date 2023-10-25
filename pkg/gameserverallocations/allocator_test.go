@@ -81,7 +81,7 @@ func TestAllocatorAllocate(t *testing.T) {
 
 	require.NoError(t, a.Run(ctx))
 	// wait for it to be up and running
-	err := wait.PollImmediate(time.Second, 10*time.Second, func() (done bool, err error) {
+	err := wait.PollUntilContextTimeout(context.Background(), time.Second, 10*time.Second, true, func(ctx context.Context) (done bool, err error) {
 		return a.allocationCache.workerqueue.RunCount() == 1, nil
 	})
 	require.NoError(t, err)
@@ -164,7 +164,7 @@ func TestAllocatorAllocatePriority(t *testing.T) {
 
 		require.NoError(t, a.Run(ctx))
 		// wait for it to be up and running
-		err := wait.PollImmediate(time.Second, 10*time.Second, func() (done bool, err error) {
+		err := wait.PollUntilContextTimeout(context.Background(), time.Second, 10*time.Second, true, func(ctx context.Context) (done bool, err error) {
 			return a.allocationCache.workerqueue.RunCount() == 1, nil
 		})
 		require.NoError(t, err)

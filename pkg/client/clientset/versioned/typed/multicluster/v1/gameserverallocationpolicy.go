@@ -20,9 +20,12 @@ package v1
 
 import (
 	"context"
+	json "encoding/json"
+	"fmt"
 	"time"
 
 	v1 "agones.dev/agones/pkg/apis/multicluster/v1"
+	multiclusterv1 "agones.dev/agones/pkg/client/applyconfiguration/multicluster/v1"
 	scheme "agones.dev/agones/pkg/client/clientset/versioned/scheme"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
@@ -46,6 +49,7 @@ type GameServerAllocationPolicyInterface interface {
 	List(ctx context.Context, opts metav1.ListOptions) (*v1.GameServerAllocationPolicyList, error)
 	Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error)
 	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *v1.GameServerAllocationPolicy, err error)
+	Apply(ctx context.Context, gameServerAllocationPolicy *multiclusterv1.GameServerAllocationPolicyApplyConfiguration, opts metav1.ApplyOptions) (result *v1.GameServerAllocationPolicy, err error)
 	GameServerAllocationPolicyExpansion
 }
 
@@ -171,6 +175,32 @@ func (c *gameServerAllocationPolicies) Patch(ctx context.Context, name string, p
 		Name(name).
 		SubResource(subresources...).
 		VersionedParams(&opts, scheme.ParameterCodec).
+		Body(data).
+		Do(ctx).
+		Into(result)
+	return
+}
+
+// Apply takes the given apply declarative configuration, applies it and returns the applied gameServerAllocationPolicy.
+func (c *gameServerAllocationPolicies) Apply(ctx context.Context, gameServerAllocationPolicy *multiclusterv1.GameServerAllocationPolicyApplyConfiguration, opts metav1.ApplyOptions) (result *v1.GameServerAllocationPolicy, err error) {
+	if gameServerAllocationPolicy == nil {
+		return nil, fmt.Errorf("gameServerAllocationPolicy provided to Apply must not be nil")
+	}
+	patchOpts := opts.ToPatchOptions()
+	data, err := json.Marshal(gameServerAllocationPolicy)
+	if err != nil {
+		return nil, err
+	}
+	name := gameServerAllocationPolicy.Name
+	if name == nil {
+		return nil, fmt.Errorf("gameServerAllocationPolicy.Name must be provided to Apply")
+	}
+	result = &v1.GameServerAllocationPolicy{}
+	err = c.client.Patch(types.ApplyPatchType).
+		Namespace(c.ns).
+		Resource("gameserverallocationpolicies").
+		Name(*name).
+		VersionedParams(&patchOpts, scheme.ParameterCodec).
 		Body(data).
 		Do(ctx).
 		Into(result)
