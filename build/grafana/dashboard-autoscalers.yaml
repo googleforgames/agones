@@ -1084,7 +1084,7 @@ data:
             }
           ],
           "thresholds": "",
-          "title": "Scaling Limited",
+          "title": "Scaling out/in Limited",
           "type": "singlestat",
           "valueFontSize": "80%",
           "valueMaps": [
