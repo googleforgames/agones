@@ -78,6 +78,7 @@ steps:
   # Run the performance tests with default feature gates setting
   #
   - name: performance-test
+    dir: build
     args:
       - ./performance-test.sh
       - ${_TEST_CLUSTER_NAME}
