@@ -292,10 +292,9 @@ func (f *Framework) WaitForGameServerState(t *testing.T, gs *agonesv1.GameServer
 // Each Allocated GameServer gets deleted allocDuration after it was Allocated.
 // GameServers will continue to be Allocated until a message is passed to the done channel.
 func (f *Framework) CycleAllocations(ctx context.Context, t *testing.T, flt *agonesv1.Fleet, period time.Duration, allocDuration time.Duration) {
-	// nolint:staticcheck
-	err := wait.PollImmediateUntil(period, func() (bool, error) {
+	err := wait.PollUntilContextCancel(ctx, period, true, func(ctx context.Context) (bool, error) {
 		gsa := GetAllocation(flt)
-		gsa, err := f.AgonesClient.AllocationV1().GameServerAllocations(flt.Namespace).Create(context.Background(), gsa, metav1.CreateOptions{})
+		gsa, err := f.AgonesClient.AllocationV1().GameServerAllocations(flt.Namespace).Create(ctx, gsa, metav1.CreateOptions{})
 		if err != nil || gsa.Status.State != allocationv1.GameServerAllocationAllocated {
 			// Ignore error. Could be that the buffer was empty, will try again next cycle.
 			return false, nil
@@ -304,14 +303,13 @@ func (f *Framework) CycleAllocations(ctx context.Context, t *testing.T, flt *ago
 		// Deallocate after allocDuration.
 		go func(gsa *allocationv1.GameServerAllocation) {
 			time.Sleep(allocDuration)
-			err := f.AgonesClient.AgonesV1().GameServers(gsa.Namespace).Delete(context.Background(), gsa.Status.GameServerName, metav1.DeleteOptions{})
+			err := f.AgonesClient.AgonesV1().GameServers(gsa.Namespace).Delete(ctx, gsa.Status.GameServerName, metav1.DeleteOptions{})
 			require.NoError(t, err)
 		}(gsa)
 
 		return false, nil
-	}, ctx.Done())
-	// Ignore wait timeout error, will always be returned when the context is cancelled at the end of the test.
-	if wait.Interrupted(err) {
+	})
+	if err != nil {
 		require.NoError(t, err)
 	}
 }
