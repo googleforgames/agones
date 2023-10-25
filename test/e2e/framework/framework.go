@@ -292,7 +292,8 @@ func (f *Framework) WaitForGameServerState(t *testing.T, gs *agonesv1.GameServer
 // Each Allocated GameServer gets deleted allocDuration after it was Allocated.
 // GameServers will continue to be Allocated until a message is passed to the done channel.
 func (f *Framework) CycleAllocations(ctx context.Context, t *testing.T, flt *agonesv1.Fleet, period time.Duration, allocDuration time.Duration) {
-	err := wait.PollUntilContextCancel(ctx, period, true, func(ctx context.Context) (bool, error) {
+	// nolint:staticcheck
+	err := wait.PollImmediateUntil(period, func() (bool, error) {
 		gsa := GetAllocation(flt)
 		gsa, err := f.AgonesClient.AllocationV1().GameServerAllocations(flt.Namespace).Create(context.Background(), gsa, metav1.CreateOptions{})
 		if err != nil || gsa.Status.State != allocationv1.GameServerAllocationAllocated {
@@ -308,7 +309,7 @@ func (f *Framework) CycleAllocations(ctx context.Context, t *testing.T, flt *ago
 		}(gsa)
 
 		return false, nil
-	})
+	}, ctx.Done())
 	// Ignore wait timeout error, will always be returned when the context is cancelled at the end of the test.
 	// nolint:staticcheck
 	if err != wait.ErrWaitTimeout {
