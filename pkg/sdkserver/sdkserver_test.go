@@ -1331,22 +1331,54 @@ func TestSDKServerAddListValue(t *testing.T) {
 	require.NoError(t, err, "Can not parse FeatureCountsAndLists feature")
 
 	lists := map[string]agonesv1.ListStatus{
-		"foo": {Values: []string{"one", "two", "three", "four"}, Capacity: int64(100)},
+		"foo": {Values: []string{"one", "two", "three", "four"}, Capacity: int64(10)},
+		"bar": {Values: []string{"one", "two", "three", "four"}, Capacity: int64(10)},
+		"baz": {Values: []string{"one", "two", "three", "four"}, Capacity: int64(10)},
 	}
 
 	fixtures := map[string]struct {
-		listName  string
-		request   *alpha.AddListValueRequest
-		want      agonesv1.ListStatus
-		updateErr bool
-		updated   bool
+		listName   string
+		requests   []*alpha.AddListValueRequest
+		want       agonesv1.ListStatus
+		updateErrs []bool
+		updated    bool
 	}{
 		"Add value": {
-			listName:  "foo",
-			request:   &alpha.AddListValueRequest{Name: "foo", Value: "five"},
-			want:      agonesv1.ListStatus{Values: []string{"one", "two", "three", "four", "five"}, Capacity: int64(100)},
-			updateErr: false,
-			updated:   true,
+			listName:   "foo",
+			requests:   []*alpha.AddListValueRequest{{Name: "foo", Value: "five"}},
+			want:       agonesv1.ListStatus{Values: []string{"one", "two", "three", "four", "five"}, Capacity: int64(10)},
+			updateErrs: []bool{false},
+			updated:    true,
+		},
+		"Add multiple values including duplicates": {
+			listName: "bar",
+			requests: []*alpha.AddListValueRequest{
+				{Name: "bar", Value: "five"},
+				{Name: "bar", Value: "one"},
+				{Name: "bar", Value: "five"},
+				{Name: "bar", Value: "zero"},
+			},
+			want:       agonesv1.ListStatus{Values: []string{"one", "two", "three", "four", "five", "zero"}, Capacity: int64(10)},
+			updateErrs: []bool{false, true, true, false},
+			updated:    true,
+		},
+		"Add multiple values past capacity": {
+			listName: "baz",
+			requests: []*alpha.AddListValueRequest{
+				{Name: "baz", Value: "five"},
+				{Name: "baz", Value: "six"},
+				{Name: "baz", Value: "seven"},
+				{Name: "baz", Value: "eight"},
+				{Name: "baz", Value: "nine"},
+				{Name: "baz", Value: "ten"},
+				{Name: "baz", Value: "eleven"},
+			},
+			want: agonesv1.ListStatus{
+				Values:   []string{"one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"},
+				Capacity: int64(10),
+			},
+			updateErrs: []bool{false, false, false, false, false, false, true},
+			updated:    true,
 		},
 	}
 
@@ -1401,15 +1433,17 @@ func TestSDKServerAddListValue(t *testing.T) {
 			// check initial value comes through
 			require.Eventually(t, func() bool {
 				list, err := sc.GetList(context.Background(), &alpha.GetListRequest{Name: testCase.listName})
-				return cmp.Equal(list.Values, []string{"one", "two", "three", "four"}) && list.Capacity == 100 && err == nil
+				return cmp.Equal(list.Values, []string{"one", "two", "three", "four"}) && list.Capacity == 10 && err == nil
 			}, 10*time.Second, time.Second)
 
 			// Update the List
-			_, err = sc.AddListValue(context.Background(), testCase.request)
-			if testCase.updateErr {
-				assert.Error(t, err)
-			} else {
-				assert.NoError(t, err)
+			for i, req := range testCase.requests {
+				_, err = sc.AddListValue(context.Background(), req)
+				if testCase.updateErrs[i] {
+					assert.Error(t, err)
+				} else {
+					assert.NoError(t, err)
+				}
 			}
 
 			got, err := sc.GetList(context.Background(), &alpha.GetListRequest{Name: testCase.listName})
@@ -1446,21 +1480,46 @@ func TestSDKServerRemoveListValue(t *testing.T) {
 
 	lists := map[string]agonesv1.ListStatus{
 		"foo": {Values: []string{"one", "two", "three", "four"}, Capacity: int64(100)},
+		"bar": {Values: []string{"one", "two", "three", "four"}, Capacity: int64(100)},
+		"baz": {Values: []string{"one", "two", "three", "four"}, Capacity: int64(100)},
 	}
 
 	fixtures := map[string]struct {
-		listName  string
-		request   *alpha.RemoveListValueRequest
-		want      agonesv1.ListStatus
-		updateErr bool
-		updated   bool
+		listName   string
+		requests   []*alpha.RemoveListValueRequest
+		want       agonesv1.ListStatus
+		updateErrs []bool
+		updated    bool
 	}{
 		"Remove value": {
-			listName:  "foo",
-			request:   &alpha.RemoveListValueRequest{Name: "foo", Value: "two"},
-			want:      agonesv1.ListStatus{Values: []string{"one", "three", "four"}, Capacity: int64(100)},
-			updateErr: false,
-			updated:   true,
+			listName:   "foo",
+			requests:   []*alpha.RemoveListValueRequest{{Name: "foo", Value: "two"}},
+			want:       agonesv1.ListStatus{Values: []string{"one", "three", "four"}, Capacity: int64(100)},
+			updateErrs: []bool{false},
+			updated:    true,
+		},
+		"Remove multiple values including duplicates": {
+			listName: "bar",
+			requests: []*alpha.RemoveListValueRequest{
+				{Name: "bar", Value: "two"},
+				{Name: "bar", Value: "three"},
+				{Name: "bar", Value: "two"},
+			},
+			want:       agonesv1.ListStatus{Values: []string{"one", "four"}, Capacity: int64(100)},
+			updateErrs: []bool{false, false, true},
+			updated:    true,
+		},
+		"Remove all values": {
+			listName: "baz",
+			requests: []*alpha.RemoveListValueRequest{
+				{Name: "baz", Value: "three"},
+				{Name: "baz", Value: "two"},
+				{Name: "baz", Value: "four"},
+				{Name: "baz", Value: "one"},
+			},
+			want:       agonesv1.ListStatus{Values: []string{}, Capacity: int64(100)},
+			updateErrs: []bool{false, false, false, false},
+			updated:    true,
 		},
 	}
 
@@ -1519,11 +1578,13 @@ func TestSDKServerRemoveListValue(t *testing.T) {
 			}, 10*time.Second, time.Second)
 
 			// Update the List
-			_, err = sc.RemoveListValue(context.Background(), testCase.request)
-			if testCase.updateErr {
-				assert.Error(t, err)
-			} else {
-				assert.NoError(t, err)
+			for i, req := range testCase.requests {
+				_, err = sc.RemoveListValue(context.Background(), req)
+				if testCase.updateErrs[i] {
+					assert.Error(t, err)
+				} else {
+					assert.NoError(t, err)
+				}
 			}
 
 			got, err := sc.GetList(context.Background(), &alpha.GetListRequest{Name: testCase.listName})
