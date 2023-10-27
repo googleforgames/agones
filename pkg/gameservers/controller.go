@@ -505,7 +505,7 @@ func (c *Controller) syncGameServerCreatingState(ctx context.Context, gs *agones
 	if k8serrors.IsNotFound(err) {
 
 		for i := range gs.Spec.Ports {
-			if gs.Spec.Ports[0].PortPolicy == agonesv1.Static && gs.Spec.Ports[0].Protocol == agonesv1.ProtocolTCPUDP {
+			if gs.Spec.Ports[i].PortPolicy == agonesv1.Static && gs.Spec.Ports[i].Protocol == agonesv1.ProtocolTCPUDP {
 				name := gs.Spec.Ports[i].Name
 				gs.Spec.Ports[i].Name = name + "-tcp"
 				gs.Spec.Ports[i].Protocol = corev1.ProtocolTCP
