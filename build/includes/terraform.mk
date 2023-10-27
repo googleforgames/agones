@@ -114,17 +114,3 @@ gcloud-terraform-destroy-cluster:
 	$(MAKE) terraform-init DIRECTORY=gke
 	$(DOCKER_RUN) bash -c 'cd $(mount_path)/build/terraform/gke && terraform destroy -var project=$(GCP_PROJECT) -auto-approve'
 
-terraform-test: $(ensure-build-image)
-terraform-test: GCP_PROJECT ?= $(shell $(current_project))
-terraform-test:
-	$(MAKE) terraform-init TERRAFORM_BUILD_DIR=$(mount_path)/test/terraform
-	$(MAKE) run-terraform-test GCP_PROJECT=$(GCP_PROJECT)
-	$(MAKE) terraform-test-clean
-
-terraform-test-clean: $(ensure-build-image)
-	$(MAKE) terraform-clean TERRAFORM_BUILD_DIR=$(mount_path)/test/terraform
-
-# run terratest which verifies GKE and Helm Terraform modules
-run-terraform-test:
-	$(DOCKER_RUN) bash -c 'cd $(mount_path)/test/terraform && go test -v -run TestTerraformGKEInstallConfig \
-	-timeout 1h -project $(GCP_PROJECT) $(ARGS)'
