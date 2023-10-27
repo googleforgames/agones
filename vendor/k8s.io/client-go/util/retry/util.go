@@ -59,7 +59,6 @@ func OnError(backoff wait.Backoff, retriable func(error) bool, fn func() error) 
 			return false, err
 		}
 	})
-	// nolint:staticcheck
 	if err == wait.ErrWaitTimeout {
 		err = lastErr
 	}
