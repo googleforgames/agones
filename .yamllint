@@ -12,7 +12,6 @@ ignore:
   - /install/
   - /sdks/
   - /test/sdk/
-  - /test/terraform/vendor/
   - /site/node_modules/
   - /site/themes/docsy/
   - /site/vendor/
