@@ -37,8 +37,42 @@ steps:
   - name: make-docker
     id: pull-build-image
     dir: build
-    env: ['REGISTRY=${_REGISTRY}', 'CUSTOM_LOCAL_TAG=performance-test']
-    args: [pull-build-image-with-tag]
+    env: ['REGISTRY=${_REGISTRY}']
+    args: [pull-build-image]
+    waitFor:
+      - build-make-docker
+
+  #
+  # add tag to build image
+  #
+  - name: make-docker
+    id: tag-build-image
+    dir: build
+    env: ['CUSTOM_LOCAL_TAG=performance-test']
+    args: [tag-build-image]
+    waitFor:
+      - pull-build-image
+
+  #
+  # Build all the images and sdks, and push them up to the repository
+  #
+
+  - name: "make-docker"
+    id: build-images
+    waitFor:
+      - pull-build-image
+    dir: "build"
+    env:
+      - "REGISTRY=${_REGISTRY}"
+    args: ["-j", "4", "build-images"]
+  - name: "make-docker"
+    id: push-images
+    waitFor:
+      - build-images
+    dir: "build"
+    env:
+      - "REGISTRY=${_REGISTRY}"
+    args: ["-j", "4", "push"]
 
   #
   # Run the performance tests with default feature gates setting
@@ -60,7 +94,7 @@ steps:
       - ${_TEST_INTERVAL}
     id: performance-test
     waitFor:
-      - pull-build-image
+      - tag-build-image
 
 substitutions:
   _TEST_CLUSTER_NAME: standard-performance-test-cluster-1-27
