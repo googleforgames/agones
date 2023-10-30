@@ -174,7 +174,7 @@ spec:
         spec:
           containers:
             - name: simple-game-server
-              image: us-docker.pkg.dev/agones-images/examples/simple-game-server:0.20
+              image: us-docker.pkg.dev/agones-images/examples/simple-game-server:0.21
 ```
 
 See the [Fleet reference]({{% relref "../Reference/fleet.md" %}}) for more details.
