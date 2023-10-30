@@ -1897,6 +1897,8 @@ func TestGameServerUpdateListCapacity(t *testing.T) {
 func TestGameServerAppendListValues(t *testing.T) {
 	t.Parallel()
 
+	var nilSlice []string
+
 	testCases := map[string]struct {
 		gs      GameServer
 		name    string
@@ -1960,7 +1962,7 @@ func TestGameServerAppendListValues(t *testing.T) {
 			},
 			wantErr: false,
 		},
-		"append no values no-op with error": {
+		"append nil values": {
 			gs: GameServer{Status: GameServerStatus{
 				Lists: map[string]ListStatus{
 					"blings": {
@@ -1968,29 +1970,14 @@ func TestGameServerAppendListValues(t *testing.T) {
 						Capacity: 10,
 					}}}},
 			name:   "blings",
-			values: []string{},
+			values: nilSlice,
 			want: ListStatus{
 				Values:   []string{"bling1"},
 				Capacity: 10,
 			},
 			wantErr: true,
 		},
-		"append only duplicates no-op with error": {
-			gs: GameServer{Status: GameServerStatus{
-				Lists: map[string]ListStatus{
-					"slings": {
-						Values:   []string{"slings1", "sling2"},
-						Capacity: 4,
-					}}}},
-			name:   "blings",
-			values: []string{},
-			want: ListStatus{
-				Values:   []string{"slings1", "sling2"},
-				Capacity: 4,
-			},
-			wantErr: true,
-		},
-		"append too many values no-op with error": {
+		"append too many values truncates list": {
 			gs: GameServer{Status: GameServerStatus{
 				Lists: map[string]ListStatus{
 					"bananaslugs": {
@@ -2000,10 +1987,10 @@ func TestGameServerAppendListValues(t *testing.T) {
 			name:   "bananaslugs",
 			values: []string{"bananaslug4", "bananaslug5", "bananaslug6"},
 			want: ListStatus{
-				Values:   []string{"bananaslugs1", "bananaslug2", "bananaslug3"},
+				Values:   []string{"bananaslugs1", "bananaslug2", "bananaslug3", "bananaslug4", "bananaslug5"},
 				Capacity: 5,
 			},
-			wantErr: true,
+			wantErr: false,
 		},
 	}
 

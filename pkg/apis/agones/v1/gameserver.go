@@ -23,6 +23,7 @@ import (
 	"agones.dev/agones/pkg"
 	"agones.dev/agones/pkg/apis"
 	"agones.dev/agones/pkg/apis/agones"
+	"agones.dev/agones/pkg/util/apiserver"
 	"agones.dev/agones/pkg/util/runtime"
 	"github.com/mattbaird/jsonpatch"
 	"github.com/pkg/errors"
@@ -919,7 +920,7 @@ func (gs *GameServer) UpdateCounterCapacity(name string, capacity int64) error {
 
 // UpdateListCapacity updates the ListStatus Capacity to the given capacity.
 func (gs *GameServer) UpdateListCapacity(name string, capacity int64) error {
-	if capacity < 0 || capacity > 1000 {
+	if capacity < 0 || capacity > apiserver.ListMaxCapacity {
 		return errors.Errorf("unable to UpdateListCapacity: Name %s, Capacity %d. Capacity must be between 0 and 1000, inclusive", name, capacity)
 	}
 	if list, ok := gs.Status.Lists[name]; ok {
@@ -932,19 +933,12 @@ func (gs *GameServer) UpdateListCapacity(name string, capacity int64) error {
 
 // AppendListValues adds unique values to the ListStatus Values list.
 func (gs *GameServer) AppendListValues(name string, values []string) error {
-	if len(values) == 0 {
-		return errors.Errorf("unable to AppendListValues: Name %s, Values %s. No values to append", name, values)
+	if values == nil {
+		return errors.Errorf("unable to AppendListValues: Name %s, Values %s. Values must not be nil", name, values)
 	}
 	if list, ok := gs.Status.Lists[name]; ok {
 		mergedList := MergeRemoveDuplicates(list.Values, values)
-		if len(mergedList) > int(list.Capacity) {
-			return errors.Errorf("unable to AppendListValues: Name %s, Values %s. Appended list length %d exceeds list capacity %d", name, values, len(mergedList), list.Capacity)
-		}
-		// If all given values are duplicates we give an error warning.
-		if len(mergedList) == len(list.Values) {
-			return errors.Errorf("unable to AppendListValues: Name %s, Values %s. All appended values are duplicates of the existing list", name, values)
-		}
-		// If only some values are duplicates, those duplicate values are silently dropped.
+		// Any duplicate values are silently dropped.
 		list.Values = mergedList
 		// Truncate values if more than capacity
 		if len(list.Values) > int(list.Capacity) {

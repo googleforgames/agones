@@ -33,6 +33,7 @@ import (
 	"agones.dev/agones/pkg/sdk"
 	"agones.dev/agones/pkg/sdk/alpha"
 	"agones.dev/agones/pkg/sdk/beta"
+	"agones.dev/agones/pkg/util/apiserver"
 	"agones.dev/agones/pkg/util/logfields"
 	"agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/workerqueue"
@@ -1066,8 +1067,7 @@ func (s *SDKServer) UpdateList(ctx context.Context, in *alpha.UpdateListRequest)
 	s.gsUpdateMutex.Lock()
 	defer s.gsUpdateMutex.Unlock()
 
-	// TODO: Pull in variable Max Capacity from CRD instead of hard-coded number here.
-	if in.List.Capacity < 0 || in.List.Capacity > 1000 {
+	if in.List.Capacity < 0 || in.List.Capacity > apiserver.ListMaxCapacity {
 		return nil, errors.Errorf("out of range. Capacity must be within range [0,1000]. Found Capacity: %d", in.List.Capacity)
 	}
 
