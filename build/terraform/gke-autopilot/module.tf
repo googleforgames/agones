@@ -99,10 +99,11 @@ module "gke_autopilot_cluster" {
   source = "../../../install/terraform/modules/gke-autopilot"
 
   cluster = {
-    "name"     = var.name
-    "project"  = var.project
-    "location" = var.location
-    "network"  = var.network
+    "name"             = var.name
+    "project"          = var.project
+    "location"         = var.location
+    "network"          = var.network
+    "deleteProtection" = false
   }
 }
 

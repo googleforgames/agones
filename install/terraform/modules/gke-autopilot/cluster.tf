@@ -31,6 +31,7 @@ locals {
   kubernetesVersion             = lookup(var.cluster, "kubernetesVersion", "1.27")
   maintenanceExclusionStartTime = lookup(var.cluster, "maintenanceExclusionStartTime", timestamp())
   maintenanceExclusionEndTime   = lookup(var.cluster, "maintenanceExclusionEndTime", timeadd(timestamp(), "4080h")) # 170 days
+  deletionProtection            = lookup(var.cluster, "deletionProtection", true)
 }
 
 # echo command used for debugging purpose
@@ -59,7 +60,7 @@ resource "google_container_cluster" "primary" {
   location            = local.location
   network             = local.network
   subnetwork          = local.subnetwork
-  deletion_protection = false
+  deletion_protection = local.deletionProtection
 
   release_channel {
     channel = local.releaseChannel != "" ? local.releaseChannel : "UNSPECIFIED"

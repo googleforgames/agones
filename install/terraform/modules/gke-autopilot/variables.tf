@@ -27,6 +27,7 @@ variable "cluster" {
     "subnetwork"        = ""
     "releaseChannel"    = "REGULAR"
     "kubernetesVersion" = "1.27"
+    "deleteProtection"  = true
   }
 }
 
