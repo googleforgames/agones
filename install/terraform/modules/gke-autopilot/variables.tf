@@ -20,14 +20,14 @@ variable "cluster" {
   type        = map(any)
 
   default = {
-    "name"              = "test-cluster"
-    "project"           = "agones"
-    "location"          = "us-west1"
-    "network"           = "default"
-    "subnetwork"        = ""
-    "releaseChannel"    = "REGULAR"
-    "kubernetesVersion" = "1.27"
-    "deleteProtection"  = true
+    "name"                = "test-cluster"
+    "project"             = "agones"
+    "location"            = "us-west1"
+    "network"             = "default"
+    "subnetwork"          = ""
+    "releaseChannel"      = "REGULAR"
+    "kubernetesVersion"   = "1.27"
+    "deletionProtection"  = true
   }
 }
 
