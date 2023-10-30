@@ -171,7 +171,7 @@ if (NOT ${gRPC_FOUND})
         "-DCARES_STATIC=ON"
         "-DCARES_SHARED=OFF"
     )
-    invoke_cmake_build(Protobuf ${gRPC_SOURCE_DIR}/third_party/protobuf/cmake
+    invoke_cmake_build(Protobuf ${gRPC_SOURCE_DIR}/third_party/protobuf
         "-DZLIB_ROOT=${zlib_DIR}"
         "${ZLIB_PARAM}"
         "-Dprotobuf_MSVC_STATIC_RUNTIME=OFF"
