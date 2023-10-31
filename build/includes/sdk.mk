@@ -236,13 +236,15 @@ test-gen-all-sdk-grpc:
 	make gen-all-sdk-grpc
 	@echo; \
 	echo "=== Diffing workspace after 'make gen-all-sdk-grpc'"; \
-	diff_output=$$(git diff --name-status HEAD -- ../sdks); \
-	diff_output_test_sdk=$$(git diff --name-status HEAD -- ../test/sdk); \
+	diff_output=$$(git diff HEAD -- ../sdks); \
+	diff_output_test_sdk=$$(git diff HEAD -- ../test/sdk); \
 	if [ -z "$$diff_output" ] && [ -z "$$diff_output_test_sdk" ]; then \
 		echo "+++ Success: No differences found."; \
 	else \
 		echo "*** Failure: Differences found:"; \
+		echo "Changes in ../sdks:"; \
 		echo "$$diff_output"; \
+		echo "Changes in ../test/sdk:"; \
 		echo "$$diff_output_test_sdk"; \
 		exit 1; \
 	fi
