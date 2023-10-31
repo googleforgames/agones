@@ -692,8 +692,7 @@ func Retry(backoff wait.Backoff, fn func() error) error {
 			return false, nil
 		}
 	})
-	// nolint:staticcheck
-	if err == wait.ErrWaitTimeout {
+	if wait.Interrupted(err) {
 		err = lastConflictErr
 	}
 	return err
