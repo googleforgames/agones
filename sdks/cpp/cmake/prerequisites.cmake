@@ -31,7 +31,7 @@ endif()
 
 # gRPC repo and version
 set(gRPC_GIT_REPO "https://github.com/gRPC/gRPC.git")
-set(gRPC_GIT_TAG "v1.53.0")
+set(gRPC_GIT_TAG "v1.57.0")
 
 # OpenSSL required only for successful build gRPC
 set(OPENSSL_GIT_REPO "https://github.com/openssl/openssl.git")
@@ -171,7 +171,7 @@ if (NOT ${gRPC_FOUND})
         "-DCARES_STATIC=ON"
         "-DCARES_SHARED=OFF"
     )
-    invoke_cmake_build(Protobuf ${gRPC_SOURCE_DIR}/third_party/protobuf/cmake
+    invoke_cmake_build(Protobuf ${gRPC_SOURCE_DIR}/third_party/protobuf
         "-DZLIB_ROOT=${zlib_DIR}"
         "${ZLIB_PARAM}"
         "-Dprotobuf_MSVC_STATIC_RUNTIME=OFF"
