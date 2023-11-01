@@ -20,14 +20,15 @@
 #   \__, |_| \_\_|    \____|   |_|\___/ \___/|_|_|_| |_|\__, |
 #   |___/                                               |___/
 
-build_sdk_base_version = $(call sha,$(build_path)/build-sdk-images/tool/base/Dockerfile)
+grpc_release_tag = v1.57.0
+
+build_sdk_base_version = $(call sha,$(build_path)/build-sdk-images/tool/base/Dockerfile)_$(grpc_release_tag)
 build_sdk_base_tag = agones-build-sdk-base:$(build_sdk_base_version)
 
 # Calculate sha hash of sha hashes of all files in a specified SDK_FOLDER
 build_sdk_version = $(call sha_dir,$(build_path)/build-sdk-images/$(SDK_FOLDER)/*)
 build_sdk_base_remote_tag = $(REGISTRY)/$(build_sdk_base_tag)
 build_sdk_prefix = agones-build-sdk-
-grpc_release_tag = v1.53.0
 sdk_build_folder = build-sdk-images/
 examples_folder = ../examples/
 SDK_FOLDER ?= go
@@ -236,13 +237,15 @@ test-gen-all-sdk-grpc:
 	make gen-all-sdk-grpc
 	@echo; \
 	echo "=== Diffing workspace after 'make gen-all-sdk-grpc'"; \
-	diff_output=$$(git diff --name-status HEAD -- ../sdks); \
-	diff_output_test_sdk=$$(git diff --name-status HEAD -- ../test/sdk); \
+	diff_output=$$(git diff HEAD -- ../sdks); \
+	diff_output_test_sdk=$$(git diff HEAD -- ../test/sdk); \
 	if [ -z "$$diff_output" ] && [ -z "$$diff_output_test_sdk" ]; then \
 		echo "+++ Success: No differences found."; \
 	else \
 		echo "*** Failure: Differences found:"; \
+		echo "Changes in ../sdks:"; \
 		echo "$$diff_output"; \
+		echo "Changes in ../test/sdk:"; \
 		echo "$$diff_output_test_sdk"; \
 		exit 1; \
 	fi
