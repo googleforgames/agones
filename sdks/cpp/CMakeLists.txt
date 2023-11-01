@@ -70,6 +70,9 @@ set(AGONES_THIRDPARTY_INSTALL_PATH "${CMAKE_INSTALL_PREFIX}" CACHE STRING "Path 
 set(AGONES_OPENSSL_CONFIG_STRING "VC-WIN64A" CACHE STRING "See https://github.com/openssl/openssl/blob/OpenSSL_1_1_1-stable/INSTALL for details")
 
 # Prerequisities
+# [markmandel] - not 100% sure what include(CMakeFindDependencyMacro) does, but it solves the building issue.
+# https://cmake.org/cmake/help/latest/manual/cmake-packages.7.html#creating-a-package-configuration-file
+include(CMakeFindDependencyMacro)
 include(./cmake/prerequisites.cmake)
 find_package(Threads REQUIRED)
 find_package(ZLIB REQUIRED)
