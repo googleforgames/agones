@@ -29,6 +29,7 @@ import (
 	"agones.dev/agones/pkg/sdk"
 	"agones.dev/agones/pkg/sdk/alpha"
 	"agones.dev/agones/pkg/sdk/beta"
+	"agones.dev/agones/pkg/util/apiserver"
 	"agones.dev/agones/pkg/util/runtime"
 	"github.com/fsnotify/fsnotify"
 	"github.com/mennanov/fmutils"
@@ -661,8 +662,7 @@ func (l *LocalSDKServer) UpdateList(ctx context.Context, in *alpha.UpdateListReq
 		return nil, errors.Errorf("INVALID_ARGUMENT. Field Mask Path(s): %v are invalid for List. Use valid field name(s): %v", in.UpdateMask.GetPaths(), in.List.ProtoReflect().Descriptor().Fields())
 	}
 
-	// TODO: Pull in variable Max Capacity from CRD instead of hard-coded number here.
-	if in.List.Capacity < 0 || in.List.Capacity > 1000 {
+	if in.List.Capacity < 0 || in.List.Capacity > apiserver.ListMaxCapacity {
 		return nil, errors.Errorf("OUT_OF_RANGE. Capacity must be within range [0,1000]. Found Capacity: %d", in.List.Capacity)
 	}
 

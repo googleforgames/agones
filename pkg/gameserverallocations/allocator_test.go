@@ -397,7 +397,7 @@ func TestAllocatorApplyAllocationToGameServerCountsListsActions(t *testing.T) {
 				}},
 			wantLists: map[string]agonesv1.ListStatus{
 				"players": {
-					Values:   []string{},
+					Values:   []string{"x7un"},
 					Capacity: 1,
 				}},
 		},
