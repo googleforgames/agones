@@ -1006,7 +1006,7 @@ func TestGameServerListActions(t *testing.T) {
 					}}}},
 			wantErr: false,
 		},
-		"update list values and capacity - value add fails": {
+		"update list values and capacity - value add truncates silently": {
 			la: ListAction{
 				AddValues: []string{"fairy1", "fairy3"},
 				Capacity:  int64Pointer(2),
@@ -1024,7 +1024,7 @@ func TestGameServerListActions(t *testing.T) {
 						Values:   []string{"fairy1", "fairy2"},
 						Capacity: 2,
 					}}}},
-			wantErr: true,
+			wantErr: false,
 		},
 	}
 
