@@ -20,9 +20,6 @@
 #   \__, |_| \_\_|    \____|   |_|\___/ \___/|_|_|_| |_|\__, |	
 #   |___/                                               |___/ 
 
-build_base_version = $(call sha,$(build_path)/build-sdk-images/tool/base/Dockerfile)
-build_base_tag = agones-build-allocation-base:$(build_base_version)
-
 # Calculate sha hash of sha hashes of all files in a specified ALLOCATION_FOLDER
 allocation_build_folder = build-allocation-images/
 sdk_build_folder = build-sdk-images
@@ -33,23 +30,14 @@ ALLOCATION_IMAGE_TAG=$(build_allocation_prefix)$(ALLOCATION_FOLDER):$(build_allo
 
 .PHONY: gen-allocation-grpc 
 
-# Builds the base GRPC docker image.
-build-build-image-base: DOCKER_BUILD_ARGS= --build-arg GRPC_RELEASE_TAG=$(grpc_release_tag)
-build-build-image-base: 
-	docker build --tag=$(build_base_tag) $(build_path)$(sdk_build_folder)/tool/base $(DOCKER_BUILD_ARGS)
-
-# create the GRPC base build image if it doesn't exist
-ensure-build-image-base:
-	$(MAKE) ensure-image IMAGE_TAG=$(build_base_tag) BUILD_TARGET=build-build-image-base
-
 # create the build image allocation if it doesn't exist
 ensure-build-allocation-image:
 	$(MAKE) ensure-image IMAGE_TAG=$(ALLOCATION_IMAGE_TAG) BUILD_TARGET=build-build-allocation-image ALLOCATION_FOLDER=$(ALLOCATION_FOLDER)
 
 # Builds the docker image
 # Note: allocation and sdk use the same dockerfile
-build-build-allocation-image: ensure-build-image-base
-	docker build --tag=$(ALLOCATION_IMAGE_TAG) --build-arg BASE_IMAGE=$(build_base_tag) -f $(build_path)$(sdk_build_folder)/$(ALLOCATION_FOLDER)/Dockerfile $(build_path)$(allocation_build_folder)$(ALLOCATION_FOLDER)
+build-build-allocation-image: ensure-build-sdk-image-base
+	docker build --tag=$(ALLOCATION_IMAGE_TAG) --build-arg BASE_IMAGE=$(build_sdk_base_tag) -f $(build_path)$(sdk_build_folder)/$(ALLOCATION_FOLDER)/Dockerfile $(build_path)$(allocation_build_folder)$(ALLOCATION_FOLDER)
 
 # Generates grpc server and client for a single allocation, use ALLOCATION_FOLDER variable to specify the allocation folder.
 gen-allocation-grpc:

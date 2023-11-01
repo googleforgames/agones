@@ -38,10 +38,12 @@ List of items to do for upgrading to {version_1} {version_2} {version_3}
         - [ ] `dev_eks_example_cluster_version`, which is the newest EKS supported version in {version_1} {version_2} {version_3}
         - [ ] `dev_minikube_example_cluster_version`, which is {version_2} with the supported patch version
 - [ ] If client-go pulled in a new version of gRPC, then also
-    - [ ] Update the SDK [base image grpc version](https://github.com/googleforgames/agones/blob/main/build/includes/sdk.mk#L30) and rebuild the image. Note that this can take a while and in the past we have had to manually push it to gcr because cloud build doesn't like how long it takes.
-    - [ ] Regenerate allocated API endpoints: [make gen-allocation-grpc](https://github.com/googleforgames/agones/blob/main/build/includes/allocation.mk#L55)
-    - [ ] Regenerate all client sdks: [make gen-all-sdk-grpc](https://github.com/googleforgames/agones/blob/main/build/README.md#make-gen-all-sdk-grpc)
-    - [ ] Update the version number in C++ Cmake scripts [here](https://github.com/googleforgames/agones/blob/main/sdks/cpp/CMakeLists.txt#L100) and [here](https://github.com/googleforgames/agones/blob/main/sdks/cpp/cmake/prerequisites.cmake#L34)
+    - [ ] Update the `grpc_release_tag` in the SDK [base image grpc version](https://github.com/googleforgames/agones/blob/main/build/includes/sdk.mk).
+    - [ ] Update the gRPC version number in C++ CMake scripts, `AGONES_GRPC_VERSION` [here](https://github.com/googleforgames/agones/blob/main/sdks/cpp/CMakeLists.txt)
+          and `gRPC_GIT_TAG` [here](https://github.com/googleforgames/agones/blob/main/sdks/cpp/cmake/prerequisites.cmake)
+    - [ ] Regenerate all client sdks: [make gen-all-sdk-grpc](https://github.com/googleforgames/agones/blob/main/build/README.md#make-gen-all-sdk-grpc) 
+          This can take an hour or so, as the above changes force a rebuild. Plan your day accordingly 😃.
+    - [ ] Regenerate allocated API endpoints: [make gen-allocation-grpc](https://github.com/googleforgames/agones/blob/main/build/README.md#make-gen-allocation-grpc)
 - [ ] Confirm the update works as expected by running e2e tests
     - [ ] Add the new supported Kubernetes versions to the e2e clusters creation
         - [ ] In `terraform/e2e/module.tf`, add the new supported version to the map `kubernetes_versions`. Noted the location of the new clusters should have enough quota (CPU, In-use IP addresses) to create the cluster. And the new supported version is usually only available in RAPID channel.
