@@ -849,6 +849,7 @@ func (s *SDKServer) GetCounter(ctx context.Context, in *alpha.GetCounterRequest)
 }
 
 // UpdateCounter collapses all UpdateCounterRequests for a given Counter into a single request.
+// UpdateCounterRequest must be one and only one of Capacity, Count, or CountDiff.
 // Returns error if the Counter does not exist (name cannot be updated).
 // Returns error if the Count is out of range [0,Capacity].
 // [Stage:Alpha]
