@@ -588,12 +588,16 @@ func (l *LocalSDKServer) GetPlayerCapacity(_ context.Context, _ *alpha.Empty) (*
 	return result, nil
 }
 
-// GetCounter returns a Counter. Returns NOT_FOUND if the counter does not exist.
+// GetCounter returns a Counter. Returns not found if the counter does not exist.
 // [Stage:Alpha]
 // [FeatureFlag:CountsAndLists]
 func (l *LocalSDKServer) GetCounter(ctx context.Context, in *alpha.GetCounterRequest) (*alpha.Counter, error) {
 	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
 		return nil, errors.Errorf("%s not enabled", runtime.FeatureCountsAndLists)
+	}
+
+	if in == nil {
+		return nil, errors.Errorf("invalid argument. GetCounterRequest cannot be nil")
 	}
 
 	l.logger.WithField("name", in.Name).Info("Getting Counter")
@@ -604,18 +608,69 @@ func (l *LocalSDKServer) GetCounter(ctx context.Context, in *alpha.GetCounterReq
 	if counter, ok := l.gs.Status.Counters[in.Name]; ok {
 		return &alpha.Counter{Name: in.Name, Count: counter.Count, Capacity: counter.Capacity}, nil
 	}
-	return nil, errors.Errorf("NOT_FOUND. %s Counter not found", in.Name)
+	return nil, errors.Errorf("not found. %s Counter not found", in.Name)
 }
 
-// UpdateCounter returns the updated Counter.
+// UpdateCounter updates the given Counter. Unlike the SDKServer, this LocalSDKServer UpdateCounter
+// does not batch requests, and directly updates the localsdk gameserver.
+// Returns error if the Counter does not exist (name cannot be updated).
+// Returns error if the Count is out of range [0,Capacity].
 // [Stage:Alpha]
 // [FeatureFlag:CountsAndLists]
 func (l *LocalSDKServer) UpdateCounter(ctx context.Context, in *alpha.UpdateCounterRequest) (*alpha.Counter, error) {
-	// TODO(#2716): Implement me
-	return nil, errors.Errorf("Unimplemented -- UpdateCounter coming soon")
+	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
+		return nil, errors.Errorf("%s not enabled", runtime.FeatureCountsAndLists)
+	}
+
+	if in.CounterUpdateRequest == nil {
+		return nil, errors.Errorf("invalid argument. CounterUpdateRequest cannot be nil")
+	}
+
+	name := in.CounterUpdateRequest.Name
+
+	l.logger.WithField("name", name).Info("Updating Counter")
+	l.recordRequest("updateCounter")
+	l.gsMutex.Lock()
+	defer l.gsMutex.Unlock()
+
+	counter, ok := l.gs.Status.Counters[name]
+	if !ok {
+		return nil, errors.Errorf("not found. %s Counter not found", name)
+	}
+
+	tmpCounter := alpha.Counter{Name: name, Count: counter.Count, Capacity: counter.Capacity}
+	// Set Capacity
+	if in.CounterUpdateRequest.Capacity != nil {
+		if in.CounterUpdateRequest.Capacity.GetValue() < 0 {
+			return nil, errors.Errorf("out of range. Capacity must be greater than or equal to 0. Found Capacity: %d",
+				in.CounterUpdateRequest.Capacity.GetValue())
+		}
+		tmpCounter.Capacity = in.CounterUpdateRequest.Capacity.GetValue()
+	}
+	// Set Count
+	if in.CounterUpdateRequest.Count != nil {
+		if in.CounterUpdateRequest.Count.GetValue() < 0 || in.CounterUpdateRequest.Count.GetValue() > tmpCounter.Capacity {
+			return nil, errors.Errorf("out of range. Count must be within range [0,Capacity]. Found Count: %d, Capacity: %d",
+				in.CounterUpdateRequest.Count.GetValue(), tmpCounter.Capacity)
+		}
+	}
+	// Increment or Decrement Count
+	if in.CounterUpdateRequest.CountDiff != 0 {
+		tmpCounter.Count += in.CounterUpdateRequest.CountDiff
+		if tmpCounter.Count < 0 || tmpCounter.Count > tmpCounter.Capacity {
+			return nil, errors.Errorf("out of range. Count must be within range [0,Capacity]. Found Count: %d, Capacity: %d",
+				tmpCounter.Count, tmpCounter.Capacity)
+		}
+	}
+
+	// Write newly updated List to gameserverstatus.
+	counter.Capacity = tmpCounter.Capacity
+	counter.Count = tmpCounter.Count
+	l.gs.Status.Counters[name] = counter
+	return &tmpCounter, nil
 }
 
-// GetList returns a List. Returns NOT_FOUND if the List does not exist.
+// GetList returns a List. Returns not found if the List does not exist.
 // [Stage:Alpha]
 // [FeatureFlag:CountsAndLists]
 func (l *LocalSDKServer) GetList(ctx context.Context, in *alpha.GetListRequest) (*alpha.List, error) {
@@ -631,13 +686,13 @@ func (l *LocalSDKServer) GetList(ctx context.Context, in *alpha.GetListRequest) 
 	if list, ok := l.gs.Status.Lists[in.Name]; ok {
 		return &alpha.List{Name: in.Name, Capacity: list.Capacity, Values: list.Values}, nil
 	}
-	return nil, errors.Errorf("NOT_FOUND. %s List not found", in.Name)
+	return nil, errors.Errorf("not found. %s List not found", in.Name)
 }
 
-// UpdateList returns the updated List. Returns NOT_FOUND if the List does not exist (name cannot be updated).
+// UpdateList returns the updated List. Returns not found if the List does not exist (name cannot be updated).
 // **THIS WILL OVERWRITE ALL EXISTING LIST.VALUES WITH ANY REQUEST LIST.VALUES**
 // Use AddListValue() or RemoveListValue() for modifying the List.Values field.
-// Returns INVALID_ARGUMENT if the field mask path(s) are not field(s) of the List.
+// Returns invalid argument if the field mask path(s) are not field(s) of the List.
 // If a field mask path(s) is specified, but the value is not set in the request List object,
 // then the default value for the variable will be set (i.e. 0 for "capacity", empty list for "values").
 // [Stage:Alpha]
@@ -648,7 +703,7 @@ func (l *LocalSDKServer) UpdateList(ctx context.Context, in *alpha.UpdateListReq
 	}
 
 	if in.List == nil || in.UpdateMask == nil {
-		return nil, errors.Errorf("INVALID_ARGUMENT. List: %v and UpdateMask %v cannot be nil", in.List, in.UpdateMask)
+		return nil, errors.Errorf("invalid argument. List: %v and UpdateMask %v cannot be nil", in.List, in.UpdateMask)
 	}
 
 	l.logger.WithField("name", in.List.Name).Info("Updating List")
@@ -657,13 +712,13 @@ func (l *LocalSDKServer) UpdateList(ctx context.Context, in *alpha.UpdateListReq
 	defer l.gsMutex.Unlock()
 
 	// TODO: https://google.aip.dev/134, "Update masks must support a special value *, meaning full replacement."
-	// Check if the UpdateMask paths are valid, return INVALID_ARGUMENT if not.
+	// Check if the UpdateMask paths are valid, return invalid argument if not.
 	if !in.UpdateMask.IsValid(in.List.ProtoReflect().Interface()) {
-		return nil, errors.Errorf("INVALID_ARGUMENT. Field Mask Path(s): %v are invalid for List. Use valid field name(s): %v", in.UpdateMask.GetPaths(), in.List.ProtoReflect().Descriptor().Fields())
+		return nil, errors.Errorf("invalid argument. Field Mask Path(s): %v are invalid for List. Use valid field name(s): %v", in.UpdateMask.GetPaths(), in.List.ProtoReflect().Descriptor().Fields())
 	}
 
 	if in.List.Capacity < 0 || in.List.Capacity > apiserver.ListMaxCapacity {
-		return nil, errors.Errorf("OUT_OF_RANGE. Capacity must be within range [0,1000]. Found Capacity: %d", in.List.Capacity)
+		return nil, errors.Errorf("out of range. Capacity must be within range [0,1000]. Found Capacity: %d", in.List.Capacity)
 	}
 
 	name := in.List.Name
@@ -678,20 +733,20 @@ func (l *LocalSDKServer) UpdateList(ctx context.Context, in *alpha.UpdateListReq
 		proto.Merge(tmpList, in.List)
 		// Verify that Capacity >= len(tmpList.values)
 		if tmpList.Capacity < int64(len(tmpList.Values)) {
-			return nil, errors.Errorf("OUT_OF_RANGE. Capacity must be great than or equal to the size of the List of values. Found Capacity: %d, List Size: %d", tmpList.Capacity, len(tmpList.Values))
+			return nil, errors.Errorf("out of range. Capacity must be great than or equal to the size of the List of values. Found Capacity: %d, List Size: %d", tmpList.Capacity, len(tmpList.Values))
 		}
 		// Write newly updated List to gameserverstatus.
 		l.gs.Status.Lists[name].Capacity = tmpList.Capacity
 		l.gs.Status.Lists[name].Values = tmpList.Values
 		return &alpha.List{Name: name, Capacity: l.gs.Status.Lists[name].Capacity, Values: l.gs.Status.Lists[name].Values}, nil
 	}
-	return nil, errors.Errorf("NOT_FOUND. %s List not found", name)
+	return nil, errors.Errorf("not found. %s List not found", name)
 }
 
 // AddListValue appends a value to the end of a List and returns updated List.
-// Returns NOT_FOUND if the List does not exist.
-// Returns ALREADY_EXISTS if the value is already in the List.
-// Returns OUT_OF_RANGE if the List is already at Capacity.
+// Returns not found if the List does not exist.
+// Returns already exists if the value is already in the List.
+// Returns out of range if the List is already at Capacity.
 // [Stage:Alpha]
 // [FeatureFlag:CountsAndLists]
 func (l *LocalSDKServer) AddListValue(ctx context.Context, in *alpha.AddListValueRequest) (*alpha.List, error) {
@@ -707,24 +762,24 @@ func (l *LocalSDKServer) AddListValue(ctx context.Context, in *alpha.AddListValu
 	if list, ok := l.gs.Status.Lists[in.Name]; ok {
 		// Verify room to add another value
 		if list.Capacity <= int64(len(list.Values)) {
-			return nil, errors.Errorf("OUT_OF_RANGE. No available capacity. Current Capacity: %d, List Size: %d", list.Capacity, len(list.Values))
+			return nil, errors.Errorf("out of range. No available capacity. Current Capacity: %d, List Size: %d", list.Capacity, len(list.Values))
 		}
 		// Verify value does not already exist in the list
 		for _, val := range l.gs.Status.Lists[in.Name].Values {
 			if in.Value == val {
-				return nil, errors.Errorf("ALREADY_EXISTS. Value: %s already in List: %s", in.Value, in.Name)
+				return nil, errors.Errorf("already exists. Value: %s already in List: %s", in.Value, in.Name)
 			}
 		}
 		// Add new value to gameserverstatus.
 		l.gs.Status.Lists[in.Name].Values = append(l.gs.Status.Lists[in.Name].Values, in.Value)
 		return &alpha.List{Name: in.Name, Capacity: l.gs.Status.Lists[in.Name].Capacity, Values: l.gs.Status.Lists[in.Name].Values}, nil
 	}
-	return nil, errors.Errorf("NOT_FOUND. %s List not found", in.Name)
+	return nil, errors.Errorf("not found. %s List not found", in.Name)
 }
 
 // RemoveListValue removes a value from a List and returns updated List.
-// Returns NOT_FOUND if the List does not exist.
-// Returns NOT_FOUND if the value is not in the List.
+// Returns not found if the List does not exist.
+// Returns not found if the value is not in the List.
 // [Stage:Alpha]
 // [FeatureFlag:CountsAndLists]
 func (l *LocalSDKServer) RemoveListValue(ctx context.Context, in *alpha.RemoveListValueRequest) (*alpha.List, error) {
@@ -746,9 +801,9 @@ func (l *LocalSDKServer) RemoveListValue(ctx context.Context, in *alpha.RemoveLi
 				return &alpha.List{Name: in.Name, Capacity: l.gs.Status.Lists[in.Name].Capacity, Values: l.gs.Status.Lists[in.Name].Values}, nil
 			}
 		}
-		return nil, errors.Errorf("NOT_FOUND. Value: %s not found in List: %s", in.Value, in.Name)
+		return nil, errors.Errorf("not found. Value: %s not found in List: %s", in.Value, in.Name)
 	}
-	return nil, errors.Errorf("NOT_FOUND. %s List not found", in.Name)
+	return nil, errors.Errorf("not found. %s List not found", in.Name)
 }
 
 // Close tears down all the things
