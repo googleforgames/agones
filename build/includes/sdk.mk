@@ -36,6 +36,8 @@ COMMAND ?= gen
 SDK_IMAGE_TAG=$(build_sdk_prefix)$(SDK_FOLDER):$(build_sdk_version)
 DEFAULT_CONFORMANCE_TESTS = ready,allocate,setlabel,setannotation,gameserver,health,shutdown,watch,reserve
 ALPHA_CONFORMANCE_TESTS = getplayercapacity,setplayercapacity,playerconnect,playerdisconnect,getplayercount,isplayerconnected,getconnectedplayers
+# TODO: Move Counter and List tests into ALPHA_CONFORMANCE_TESTS once the they are written for all SDKs
+COUNTS_AND_LISTS_TESTS = getcounter,updatecounter
 
 .PHONY: test-sdks test-sdk build-sdks build-sdk gen-all-sdk-grpc gen-sdk-grpc run-all-sdk-command run-sdk-command build-example
 
@@ -143,7 +145,7 @@ run-sdk-conformance-no-build: HTTP_PORT ?= 9358
 run-sdk-conformance-no-build: FEATURE_GATES ?=
 run-sdk-conformance-no-build: ensure-agones-sdk-image
 run-sdk-conformance-no-build: ensure-build-sdk-image
-	DOCKER_RUN_ARGS="--net host -e AGONES_SDK_GRPC_PORT=$(GRPC_PORT) -e AGONES_SDK_HTTP_PORT=$(HTTP_PORT) -e FEATURE_GATES=$(FEATURE_GATES) $(DOCKER_RUN_ARGS)" COMMAND=sdktest $(MAKE) run-sdk-command & \
+	DOCKER_RUN_ARGS="--net host -e AGONES_SDK_GRPC_PORT=$(GRPC_PORT) -e AGONES_SDK_HTTP_PORT=$(HTTP_PORT) -e FEATURE_GATES='$(FEATURE_GATES)' $(DOCKER_RUN_ARGS)" COMMAND=sdktest $(MAKE) run-sdk-command & \
 	docker run -p $(GRPC_PORT):$(GRPC_PORT) -p $(HTTP_PORT):$(HTTP_PORT) -e "FEATURE_GATES=$(FEATURE_GATES)" -e "ADDRESS=" -e "TEST=$(TESTS)" -e "SDK_NAME=$(SDK_FOLDER)" -e "TIMEOUT=$(TIMEOUT)" -e "DELAY=$(DELAY)" \
 	--net=host $(sidecar_linux_amd64_tag) --grpc-port $(GRPC_PORT) --http-port $(HTTP_PORT)
 
@@ -169,7 +171,7 @@ run-sdk-conformance-test-go:
 	# run without feature flags
 	$(MAKE) run-sdk-conformance-test SDK_FOLDER=go GRPC_PORT=9001 HTTP_PORT=9101
 	# run with feature flags enabled
-	$(MAKE) run-sdk-conformance-test SDK_FOLDER=go GRPC_PORT=9001 HTTP_PORT=9101 FEATURE_GATES=PlayerTracking=true TESTS=$(DEFAULT_CONFORMANCE_TESTS),$(ALPHA_CONFORMANCE_TESTS)
+	$(MAKE) run-sdk-conformance-test SDK_FOLDER=go GRPC_PORT=9001 HTTP_PORT=9101 FEATURE_GATES=$(ALPHA_FEATURE_GATES) TESTS=$(DEFAULT_CONFORMANCE_TESTS),$(ALPHA_CONFORMANCE_TESTS),$(COUNTS_AND_LISTS_TESTS)
 
 run-sdk-conformance-test-rust:
 	# run without feature flags
@@ -224,9 +226,9 @@ sdk-publish-csharp: RELEASE_VERSION ?= $(base_version)
 sdk-publish-csharp:
 	$(MAKE) run-sdk-command-csharp COMMAND=publish VERSION=$(RELEASE_VERSION) DOCKER_RUN_ARGS="$(DOCKER_RUN_ARGS) -it"
 
-# SDK shell for rust 
-sdk-shell-rust: 
-	$(MAKE) sdk-shell SDK_FOLDER=rust 
+# SDK shell for rust
+sdk-shell-rust:
+	$(MAKE) sdk-shell SDK_FOLDER=rust
 
 # Publish the Rust SDK to crates.io
 sdk-publish-rust:

@@ -144,6 +144,12 @@ func NewLocalSDKServer(filePath string, testSdkName string) (*LocalSDKServer, er
 	if runtime.FeatureEnabled(runtime.FeaturePlayerTracking) && l.gs.Status.Players == nil {
 		l.gs.Status.Players = &sdk.GameServer_Status_PlayerStatus{}
 	}
+	if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
+		// Adding test Counter for the conformance test (Counters is not nil for LocalSDKServer tests)
+		if l.gs.Status.Counters == nil {
+			l.gs.Status.Counters = map[string]*sdk.GameServer_Status_CounterStatus{"conformanceTestCounter": {Count: 1, Capacity: 10}}
+		}
+	}
 
 	go func() {
 		for value := range l.update {
@@ -629,7 +635,7 @@ func (l *LocalSDKServer) UpdateCounter(ctx context.Context, in *alpha.UpdateCoun
 	name := in.CounterUpdateRequest.Name
 
 	l.logger.WithField("name", name).Info("Updating Counter")
-	l.recordRequest("updateCounter")
+	l.recordRequest("updatecounter")
 	l.gsMutex.Lock()
 	defer l.gsMutex.Unlock()
 

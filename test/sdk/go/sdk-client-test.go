@@ -140,6 +140,43 @@ func main() {
 		}
 	}
 
+	if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
+		// LocalSDKServer starting "conformanceTestCounter": {Count: 1, Capacity: 10}
+		count, err := sdk.Alpha().GetCounterCount("conformanceTestCounter")
+		if err != nil {
+			log.Fatalf("Error getting Counter count: %s", err)
+		} else if count != int64(1) {
+			log.Fatalf("Counter count should be 1, but is %d", count)
+		}
+
+		inc, _ := sdk.Alpha().IncrementCounter("conformanceTestCounter", 9)
+		if !inc {
+			log.Fatalf("Error incrementing Counter: %s", err)
+		}
+
+		dec, _ := sdk.Alpha().DecrementCounter("conformanceTestCounter", 10)
+		if !dec {
+			log.Fatalf("Error decrementing Counter: %s", err)
+		}
+
+		setCount, _ := sdk.Alpha().SetCounterCount("conformanceTestCounter", 10)
+		if !setCount {
+			log.Fatalf("Error setting Counter count: %s", err)
+		}
+
+		capacity, err := sdk.Alpha().GetCounterCapacity("conformanceTestCounter")
+		if err != nil {
+			log.Fatalf("Error getting Counter capacity: %s", err)
+		} else if capacity != int64(10) {
+			log.Fatalf("Counter capacity should be 10, but is %d", count)
+		}
+
+		setCapacity, _ := sdk.Alpha().SetCounterCapacity("conformanceTestCounter", 1)
+		if !setCapacity {
+			log.Fatalf("Error setting Counter capacity: %s", err)
+		}
+	}
+
 	err = sdk.Shutdown()
 	if err != nil {
 		log.Fatalf("Could not shutdown GameServer: %s", err)
