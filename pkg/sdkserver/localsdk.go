@@ -635,7 +635,6 @@ func (l *LocalSDKServer) UpdateCounter(ctx context.Context, in *alpha.UpdateCoun
 	name := in.CounterUpdateRequest.Name
 
 	l.logger.WithField("name", name).Info("Updating Counter")
-	l.recordRequest("updatecounter")
 	l.gsMutex.Lock()
 	defer l.gsMutex.Unlock()
 
@@ -647,6 +646,7 @@ func (l *LocalSDKServer) UpdateCounter(ctx context.Context, in *alpha.UpdateCoun
 	tmpCounter := alpha.Counter{Name: name, Count: counter.Count, Capacity: counter.Capacity}
 	// Set Capacity
 	if in.CounterUpdateRequest.Capacity != nil {
+		l.recordRequest("setcapacitycounter")
 		if in.CounterUpdateRequest.Capacity.GetValue() < 0 {
 			return nil, errors.Errorf("out of range. Capacity must be greater than or equal to 0. Found Capacity: %d",
 				in.CounterUpdateRequest.Capacity.GetValue())
@@ -655,6 +655,7 @@ func (l *LocalSDKServer) UpdateCounter(ctx context.Context, in *alpha.UpdateCoun
 	}
 	// Set Count
 	if in.CounterUpdateRequest.Count != nil {
+		l.recordRequest("setcountcounter")
 		if in.CounterUpdateRequest.Count.GetValue() < 0 || in.CounterUpdateRequest.Count.GetValue() > tmpCounter.Capacity {
 			return nil, errors.Errorf("out of range. Count must be within range [0,Capacity]. Found Count: %d, Capacity: %d",
 				in.CounterUpdateRequest.Count.GetValue(), tmpCounter.Capacity)
@@ -662,6 +663,7 @@ func (l *LocalSDKServer) UpdateCounter(ctx context.Context, in *alpha.UpdateCoun
 	}
 	// Increment or Decrement Count
 	if in.CounterUpdateRequest.CountDiff != 0 {
+		l.recordRequest("updatecounter")
 		tmpCounter.Count += in.CounterUpdateRequest.CountDiff
 		if tmpCounter.Count < 0 || tmpCounter.Count > tmpCounter.Capacity {
 			return nil, errors.Errorf("out of range. Count must be within range [0,Capacity]. Found Count: %d, Capacity: %d",
