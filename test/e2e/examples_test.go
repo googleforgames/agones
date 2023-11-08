@@ -20,11 +20,16 @@ import (
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func TestXonoticGameServerReady(t *testing.T) {
 	t.Parallel()
 	gs := &agonesv1.GameServer{
+		ObjectMeta: metav1.ObjectMeta{
+			GenerateName: "xonotic-",
+		},
+
 		Spec: agonesv1.GameServerSpec{
 			Container: "xonotic",
 			Ports: []agonesv1.GameServerPort{{
