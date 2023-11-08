@@ -19,6 +19,7 @@ import (
 
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -53,9 +54,7 @@ func TestXonoticGameServerReady(t *testing.T) {
 
 	// Use the e2e framework's function to create the GameServer and wait until it's ready
 	readyGs, err := framework.CreateGameServerAndWaitUntilReady(t, framework.Namespace, gs)
-	if err != nil {
-		t.Fatalf("Could not get a GameServer ready: %v", err)
-	}
+	require.NoError(t, err)
 
 	// Assert that the GameServer is in the expected state
 	assert.Equal(t, agonesv1.GameServerStateReady, readyGs.Status.State)
