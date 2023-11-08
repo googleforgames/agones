@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
+	e2eframework "agones.dev/agones/test/e2e/framework"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
@@ -12,6 +13,7 @@ import (
 
 func TestXonoticGameServerReady(t *testing.T) {
 	t.Parallel()
+	var framework *e2eframework.Framework
 
 	// Create a xonotic GameServer
 	gs := &agonesv1.GameServer{
@@ -47,5 +49,5 @@ func TestXonoticGameServerReady(t *testing.T) {
 	}
 
 	// Assert that the GameServer is in the expected state
-	assert.Equal(t, agonesv1.GameServerStateReady, readyGs.Status.State, "GameServer in Ready state")
+	assert.Equal(t, agonesv1.GameServerStateReady, readyGs.Status.State)
 }
