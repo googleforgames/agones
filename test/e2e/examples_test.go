@@ -18,39 +18,35 @@ import (
 	"testing"
 
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
-	e2eframework "agones.dev/agones/test/e2e/framework"
-	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func TestXonoticGameServerReady(t *testing.T) {
 	t.Parallel()
-	var framework *e2eframework.Framework
+	namespace := "agones-system"
+	if namespace == "" {
+		t.Fatal("gameserversNamespace must be set")
+	}
+	t.Logf("Using namespace: %s", namespace)
 
-	// Create a xonotic GameServer
-	gs := &agonesv1.GameServer{
-		ObjectMeta: metav1.ObjectMeta{
-			GenerateName: "xonotic-",
-			Namespace:    viper.GetString("gameserversNamespace"),
-		},
-		Spec: agonesv1.GameServerSpec{
-			Container: "xonotic",
-			Ports: []agonesv1.GameServerPort{{
-				ContainerPort: 26000,
-				Name:          "default",
-				PortPolicy:    agonesv1.Dynamic,
-				Protocol:      corev1.ProtocolUDP,
-			}},
-			Template: corev1.PodTemplateSpec{
-				Spec: corev1.PodSpec{
-					Containers: []corev1.Container{
-						{
-							Name:  "xonotic",
-							Image: "us-docker.pkg.dev/agones-images/examples/xonotic-example:1.4",
-						},
-					},
+	gs := framework.DefaultGameServer(framework.Namespace)
+
+	gs.ObjectMeta.GenerateName = "xonotic-"
+	gs.ObjectMeta.Namespace = namespace
+	gs.Spec.Container = "xonotic"
+	gs.Spec.Ports = []agonesv1.GameServerPort{{
+		ContainerPort: 26000,
+		Name:          "default",
+		PortPolicy:    agonesv1.Dynamic,
+		Protocol:      corev1.ProtocolUDP,
+	}}
+	gs.Spec.Template = corev1.PodTemplateSpec{
+		Spec: corev1.PodSpec{
+			Containers: []corev1.Container{
+				{
+					Name:  "xonotic",
+					Image: "us-docker.pkg.dev/agones-images/examples/xonotic-example:1.4",
 				},
 			},
 		},
