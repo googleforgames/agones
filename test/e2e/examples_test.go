@@ -24,36 +24,30 @@ import (
 
 func TestXonoticGameServerReady(t *testing.T) {
 	t.Parallel()
-	namespace := "agones-system"
-	if namespace == "" {
-		t.Fatal("gameserversNamespace must be set")
-	}
-	t.Logf("Using namespace: %s", namespace)
-
-	gs := framework.DefaultGameServer(framework.Namespace)
-
-	gs.ObjectMeta.GenerateName = "xonotic-"
-	gs.ObjectMeta.Namespace = namespace
-	gs.Spec.Container = "xonotic"
-	gs.Spec.Ports = []agonesv1.GameServerPort{{
-		ContainerPort: 26000,
-		Name:          "default",
-		PortPolicy:    agonesv1.Dynamic,
-		Protocol:      corev1.ProtocolUDP,
-	}}
-	gs.Spec.Template = corev1.PodTemplateSpec{
-		Spec: corev1.PodSpec{
-			Containers: []corev1.Container{
-				{
-					Name:  "xonotic",
-					Image: "us-docker.pkg.dev/agones-images/examples/xonotic-example:1.4",
+	gs := &agonesv1.GameServer{
+		Spec: agonesv1.GameServerSpec{
+			Container: "xonotic",
+			Ports: []agonesv1.GameServerPort{{
+				ContainerPort: 26000,
+				Name:          "default",
+				PortPolicy:    agonesv1.Dynamic,
+				Protocol:      corev1.ProtocolUDP,
+			}},
+			Template: corev1.PodTemplateSpec{
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
+						{
+							Name:  "xonotic",
+							Image: "us-docker.pkg.dev/agones-images/examples/xonotic-example:1.4",
+						},
+					},
 				},
 			},
 		},
 	}
 
 	// Use the e2e framework's function to create the GameServer and wait until it's ready
-	readyGs, err := framework.CreateGameServerAndWaitUntilReady(t, gs.Namespace, gs)
+	readyGs, err := framework.CreateGameServerAndWaitUntilReady(t, framework.Namespace, gs)
 	if err != nil {
 		t.Fatalf("Could not get a GameServer ready: %v", err)
 	}
