@@ -82,9 +82,8 @@ func TestRustGameServerReady(t *testing.T) {
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{
 						{
-							Name:            "rust-simple",
-							Image:           "us-docker.pkg.dev/agones-images/examples/rust-simple-server:0.11",
-							ImagePullPolicy: corev1.PullAlways,
+							Name:  "rust-simple",
+							Image: "us-docker.pkg.dev/agones-images/examples/rust-simple-server:0.11",
 						},
 					},
 				},
