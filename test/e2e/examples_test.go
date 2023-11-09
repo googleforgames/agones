@@ -44,7 +44,7 @@ func TestXonoticGameServerReady(t *testing.T) {
 					Containers: []corev1.Container{
 						{
 							Name:  "xonotic",
-							Image: "us-docker.pkg.dev/agones-images/examples/xonotic-example:1.4",
+							Image: "us-docker.pkg.dev/agones-images/examples/xonotic-example:1.5",
 						},
 					},
 				},
