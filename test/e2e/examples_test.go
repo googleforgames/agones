@@ -24,6 +24,47 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+func TestSuperTuxKartGameServerReady(t *testing.T) {
+	t.Parallel()
+	gs := &agonesv1.GameServer{
+		ObjectMeta: metav1.ObjectMeta{
+			GenerateName: "supertuxkart-",
+		},
+		Spec: agonesv1.GameServerSpec{
+			Container: "supertuxkart",
+			Ports: []agonesv1.GameServerPort{{
+				ContainerPort: 8080,
+				Name:          "default",
+				PortPolicy:    agonesv1.Dynamic,
+				Protocol:      corev1.ProtocolUDP,
+			}},
+			Template: corev1.PodTemplateSpec{
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
+						{
+							Name:  "supertuxkart",
+							Image: "us-docker.pkg.dev/agones-images/examples/supertuxkart-example:0.10",
+							Env: []corev1.EnvVar{
+								{
+									Name:  "ENABLE_PLAYER_TRACKING",
+									Value: "false",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	// Use the e2e framework's function to create the GameServer and wait until it's ready
+	readyGs, err := framework.CreateGameServerAndWaitUntilReady(t, framework.Namespace, gs)
+	require.NoError(t, err)
+
+	// Assert that the GameServer is in the expected state
+	assert.Equal(t, agonesv1.GameServerStateReady, readyGs.Status.State)
+}
+
 func TestCppSimpleGameServerReady(t *testing.T) {
 	t.Parallel()
 	gs := &agonesv1.GameServer{
