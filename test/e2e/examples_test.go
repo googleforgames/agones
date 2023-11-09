@@ -82,9 +82,8 @@ func TestCppSimpleGameServerReady(t *testing.T) {
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{
 						{
-							Name:            "cpp-simple",
-							Image:           "us-docker.pkg.dev/agones-images/examples/cpp-simple-server:0.15",
-							ImagePullPolicy: corev1.PullAlways,
+							Name:  "cpp-simple",
+							Image: "us-docker.pkg.dev/agones-images/examples/cpp-simple-server:0.15",
 						},
 					},
 				},
