@@ -76,6 +76,7 @@ func TestAlphaGetAndUpdateCounter(t *testing.T) {
 	mock := &alphaMock{}
 	// Counters must be predefined in the GameServer resource on creation.
 	mock.counters = make(map[string]*alpha.Counter)
+
 	sessions := alpha.Counter{
 		Name:     "sessions",
 		Count:    21,
@@ -91,6 +92,7 @@ func TestAlphaGetAndUpdateCounter(t *testing.T) {
 		Count:    263,
 		Capacity: 500,
 	}
+
 	mock.counters["sessions"] = &alpha.Counter{
 		Name:     "sessions",
 		Count:    21,
@@ -106,6 +108,7 @@ func TestAlphaGetAndUpdateCounter(t *testing.T) {
 		Count:    263,
 		Capacity: 500,
 	}
+
 	a := Alpha{
 		client: mock,
 	}
@@ -220,12 +223,127 @@ func TestAlphaGetAndUpdateCounter(t *testing.T) {
 
 }
 
+func TestAlphaGetAndUpdateList(t *testing.T) {
+	mock := &alphaMock{}
+	// Lists must be predefined in the GameServer resource on creation.
+	mock.lists = make(map[string]*alpha.List)
+
+	foo := alpha.List{
+		Name:     "foo",
+		Values:   []string{},
+		Capacity: 2,
+	}
+	bar := alpha.List{
+		Name:     "bar",
+		Values:   []string{"abc", "def"},
+		Capacity: 5,
+	}
+	baz := alpha.List{
+		Name:     "baz",
+		Values:   []string{"123", "456", "789"},
+		Capacity: 5,
+	}
+
+	mock.lists["foo"] = &alpha.List{
+		Name:     "foo",
+		Values:   []string{},
+		Capacity: 2,
+	}
+	mock.lists["bar"] = &alpha.List{
+		Name:     "bar",
+		Values:   []string{"abc", "def"},
+		Capacity: 5,
+	}
+	mock.lists["baz"] = &alpha.List{
+		Name:     "baz",
+		Values:   []string{"123", "456", "789"},
+		Capacity: 5,
+	}
+
+	a := Alpha{
+		client: mock,
+	}
+
+	t.Parallel()
+
+	t.Run("Get and Set List Capacity", func(t *testing.T) {
+		capacity, err := a.GetListCapacity("foo")
+		assert.NoError(t, err)
+		assert.Equal(t, foo.Capacity, capacity)
+
+		wantCapacity := int64(5)
+		ok, err := a.SetListCapacity("foo", wantCapacity)
+		assert.NoError(t, err)
+		assert.True(t, ok)
+
+		capacity, err = a.GetListCapacity("foo")
+		assert.NoError(t, err)
+		assert.Equal(t, wantCapacity, capacity)
+	})
+
+	t.Run("Get List Length, Get List Values, ListContains, and Append List Value", func(t *testing.T) {
+		length, err := a.GetListLength("bar")
+		assert.NoError(t, err)
+		assert.Equal(t, len(bar.Values), length)
+
+		values, err := a.GetListValues("bar")
+		assert.NoError(t, err)
+		assert.Equal(t, bar.Values, values)
+
+		ok, err := a.AppendListValue("bar", "ghi")
+		assert.NoError(t, err)
+		assert.True(t, ok)
+
+		length, err = a.GetListLength("bar")
+		assert.NoError(t, err)
+		assert.Equal(t, len(bar.Values)+1, length)
+
+		wantValues := []string{"abc", "def", "ghi"}
+		values, err = a.GetListValues("bar")
+		assert.NoError(t, err)
+		assert.Equal(t, wantValues, values)
+
+		contains, err := a.ListContains("bar", "ghi")
+		assert.NoError(t, err)
+		assert.True(t, contains)
+	})
+
+	t.Run("Get List Length, Get List Values, ListContains, and Delete List Value", func(t *testing.T) {
+		length, err := a.GetListLength("baz")
+		assert.NoError(t, err)
+		assert.Equal(t, len(baz.Values), length)
+
+		values, err := a.GetListValues("baz")
+		assert.NoError(t, err)
+		assert.Equal(t, baz.Values, values)
+
+		ok, err := a.DeleteListValue("baz", "456")
+		assert.NoError(t, err)
+		assert.True(t, ok)
+
+		length, err = a.GetListLength("baz")
+		assert.NoError(t, err)
+		assert.Equal(t, len(baz.Values)-1, length)
+
+		wantValues := []string{"123", "789"}
+		values, err = a.GetListValues("baz")
+		assert.NoError(t, err)
+		assert.Equal(t, wantValues, values)
+
+		contains, err := a.ListContains("baz", "456")
+		assert.NoError(t, err)
+		assert.False(t, contains)
+	})
+
+}
+
 type alphaMock struct {
 	capacity           int64
 	playerCount        int64
 	playerConnected    string
 	playerDisconnected string
 	counters           map[string]*alpha.Counter
+	lists              map[string]*alpha.List
 }
 
 func (a *alphaMock) PlayerConnect(ctx context.Context, id *alpha.PlayerID, opts ...grpc.CallOption) (*alpha.Bool, error) {
@@ -265,7 +383,7 @@ func (a *alphaMock) GetCounter(ctx context.Context, in *alpha.GetCounterRequest,
 	if counter, ok := a.counters[in.Name]; ok {
 		return counter, nil
 	}
-	return nil, errors.Errorf("NOT_FOUND. %s Counter not found", in.Name)
+	return nil, errors.Errorf("counter not found: %s", in.Name)
 }
 
 func (a *alphaMock) UpdateCounter(ctx context.Context, in *alpha.UpdateCounterRequest, opts ...grpc.CallOption) (*alpha.Counter, error) {
@@ -278,23 +396,23 @@ func (a *alphaMock) UpdateCounter(ctx context.Context, in *alpha.UpdateCounterRe
 	case in.CounterUpdateRequest.CountDiff != 0:
 		count := counter.Count + in.CounterUpdateRequest.CountDiff
 		if count < 0 || count > counter.Capacity {
-			return nil, errors.Errorf("OUT_OF_RANGE. Count must be within range [0,Capacity]. Found Count: %d, Capacity: %d", count, counter.Capacity)
+			return nil, errors.Errorf("out of range. Count must be within range [0,Capacity]. Found Count: %d, Capacity: %d", count, counter.Capacity)
 		}
 		counter.Count = count
 	case in.CounterUpdateRequest.Count != nil:
 		countSet := in.CounterUpdateRequest.Count.GetValue()
 		if countSet < 0 || countSet > counter.Capacity {
-			return nil, errors.Errorf("OUT_OF_RANGE. Count must be within range [0,Capacity]. Found Count: %d, Capacity: %d", countSet, counter.Capacity)
+			return nil, errors.Errorf("out of range. Count must be within range [0,Capacity]. Found Count: %d, Capacity: %d", countSet, counter.Capacity)
 		}
 		counter.Count = countSet
 	case in.CounterUpdateRequest.Capacity != nil:
 		capacity := in.CounterUpdateRequest.Capacity.GetValue()
 		if capacity < 0 {
-			return nil, errors.Errorf("OUT_OF_RANGE. Capacity must be greater than or equal to 0. Found Capacity: %d", capacity)
+			return nil, errors.Errorf("out of range. Capacity must be greater than or equal to 0. Found Capacity: %d", capacity)
 		}
 		counter.Capacity = capacity
 	default:
-		return nil, errors.Errorf("INVALID_ARGUMENT. Malformed CounterUpdateRequest: %v",
+		return nil, errors.Errorf("invalid argument. Malformed CounterUpdateRequest: %v",
 			in.CounterUpdateRequest)
 	}
 
@@ -302,26 +420,79 @@ func (a *alphaMock) UpdateCounter(ctx context.Context, in *alpha.UpdateCounterRe
 	return a.counters[in.CounterUpdateRequest.Name], nil
 }
 
-// GetList to be implemented
+// GetList returns the list of alphaMock. Note: unlike the SDK Server, this does not return
+// a list with any pending batched changes applied.
 func (a *alphaMock) GetList(ctx context.Context, in *alpha.GetListRequest, opts ...grpc.CallOption) (*alpha.List, error) {
-	// TODO(#2716): Implement me!
-	return nil, errors.Errorf("Unimplemented -- GetList coming soon")
+	if in == nil {
+		return nil, errors.Errorf("GetListRequest cannot be nil")
+	}
+	if list, ok := a.lists[in.Name]; ok {
+		return list, nil
+	}
+	return nil, errors.Errorf("list not found: %s", in.Name)
 }
 
-// UpdateList to be implemented
+// Note: unlike the SDK Server, UpdateList does not batch changes and instead updates the list
+// directly.
 func (a *alphaMock) UpdateList(ctx context.Context, in *alpha.UpdateListRequest, opts ...grpc.CallOption) (*alpha.List, error) {
-	// TODO(#2716): Implement me!
-	return nil, errors.Errorf("Unimplemented -- UpdateList coming soon")
+	if in == nil {
+		return nil, errors.Errorf("UpdateListRequest cannot be nil")
+	}
+	list, ok := a.lists[in.List.Name]
+	if !ok {
+		return nil, errors.Errorf("list not found: %s", in.List.Name)
+	}
+	if in.List.Capacity < 0 || in.List.Capacity > 1000 {
+		return nil, errors.Errorf("out of range. Capacity must be within range [0,1000]. Found Capacity: %d", in.List.Capacity)
+	}
+	list.Capacity = in.List.Capacity
+	if len(list.Values) > int(list.Capacity) {
+		list.Values = append([]string{}, list.Values[:list.Capacity]...)
+	}
+	a.lists[in.List.Name] = list
+	return &alpha.List{}, nil
 }
 
-// AddListValue to be implemented
+// Note: unlike the SDK Server, AddListValue does not batch changes and instead updates the list
+// directly.
 func (a *alphaMock) AddListValue(ctx context.Context, in *alpha.AddListValueRequest, opts ...grpc.CallOption) (*alpha.List, error) {
-	// TODO(#2716): Implement me!
-	return nil, errors.Errorf("Unimplemented -- AddListValue coming soon")
+	if in == nil {
+		return nil, errors.Errorf("AddListValueRequest cannot be nil")
+	}
+	list, ok := a.lists[in.Name]
+	if !ok {
+		return nil, errors.Errorf("list not found: %s", in.Name)
+	}
+	if int(list.Capacity) <= len(list.Values) {
+		return nil, errors.Errorf("out of range. No available capacity. Current Capacity: %d, List Size: %d", list.Capacity, len(list.Values))
+	}
+	for _, val := range list.Values {
+		if in.Value == val {
+			return nil, errors.Errorf("already exists. Value: %s already in List: %s", in.Value, in.Name)
+		}
+	}
+	list.Values = append(list.Values, in.Value)
+	a.lists[in.Name] = list
+	return &alpha.List{}, nil
 }
 
-// RemoveListValue to be implemented
+// Note: unlike the SDK Server, RemoveListValue does not batch changes and instead updates the list
+// directly.
 func (a *alphaMock) RemoveListValue(ctx context.Context, in *alpha.RemoveListValueRequest, opts ...grpc.CallOption) (*alpha.List, error) {
-	// TODO(#2716): Implement me!
-	return nil, errors.Errorf("Unimplemented -- RemoveListValue coming soon")
+	if in == nil {
+		return nil, errors.Errorf("RemoveListValueRequest cannot be nil")
+	}
+	list, ok := a.lists[in.Name]
+	if !ok {
+		return nil, errors.Errorf("list not found: %s", in.Name)
+	}
+	for i, val := range list.Values {
+		if in.Value != val {
+			continue
+		}
+		list.Values = append(list.Values[:i], list.Values[i+1:]...)
+		a.lists[in.Name] = list
+		return &alpha.List{}, nil
+	}
+	return nil, errors.Errorf("not found. Value: %s not found in List: %s", in.Value, in.Name)
 }

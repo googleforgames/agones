@@ -28,9 +28,11 @@ import (
 	"agones.dev/agones/pkg/sdk/alpha"
 	agtesting "agones.dev/agones/pkg/testing"
 	agruntime "agones.dev/agones/pkg/util/runtime"
+	"github.com/google/go-cmp/cmp"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/types/known/fieldmaskpb"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -1318,6 +1320,470 @@ func TestSDKServerUpdateCounter(t *testing.T) {
 			wg.Wait()
 		})
 	}
+}
+
+func TestSDKServerAddListValue(t *testing.T) {
+	t.Parallel()
+	agruntime.FeatureTestMutex.Lock()
+	defer agruntime.FeatureTestMutex.Unlock()
+
+	err := agruntime.ParseFeatures(string(agruntime.FeatureCountsAndLists) + "=true")
+	require.NoError(t, err, "Can not parse FeatureCountsAndLists feature")
+
+	lists := map[string]agonesv1.ListStatus{
+		"foo": {Values: []string{"one", "two", "three", "four"}, Capacity: int64(10)},
+		"bar": {Values: []string{"one", "two", "three", "four"}, Capacity: int64(10)},
+		"baz": {Values: []string{"one", "two", "three", "four"}, Capacity: int64(10)},
+	}
+
+	fixtures := map[string]struct {
+		listName   string
+		requests   []*alpha.AddListValueRequest
+		want       agonesv1.ListStatus
+		updateErrs []bool
+		updated    bool
+	}{
+		"Add value": {
+			listName:   "foo",
+			requests:   []*alpha.AddListValueRequest{{Name: "foo", Value: "five"}},
+			want:       agonesv1.ListStatus{Values: []string{"one", "two", "three", "four", "five"}, Capacity: int64(10)},
+			updateErrs: []bool{false},
+			updated:    true,
+		},
+		"Add multiple values including duplicates": {
+			listName: "bar",
+			requests: []*alpha.AddListValueRequest{
+				{Name: "bar", Value: "five"},
+				{Name: "bar", Value: "one"},
+				{Name: "bar", Value: "five"},
+				{Name: "bar", Value: "zero"},
+			},
+			want:       agonesv1.ListStatus{Values: []string{"one", "two", "three", "four", "five", "zero"}, Capacity: int64(10)},
+			updateErrs: []bool{false, true, true, false},
+			updated:    true,
+		},
+		"Add multiple values past capacity": {
+			listName: "baz",
+			requests: []*alpha.AddListValueRequest{
+				{Name: "baz", Value: "five"},
+				{Name: "baz", Value: "six"},
+				{Name: "baz", Value: "seven"},
+				{Name: "baz", Value: "eight"},
+				{Name: "baz", Value: "nine"},
+				{Name: "baz", Value: "ten"},
+				{Name: "baz", Value: "eleven"},
+			},
+			want: agonesv1.ListStatus{
+				Values:   []string{"one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"},
+				Capacity: int64(10),
+			},
+			updateErrs: []bool{false, false, false, false, false, false, true},
+			updated:    true,
+		},
+	}
+
+	// nolint:dupl  // Linter errors on lines are duplicate of TestSDKServerUpdateList, TestSDKServerRemoveListValue
+	for test, testCase := range fixtures {
+		t.Run(test, func(t *testing.T) {
+			m := agtesting.NewMocks()
+
+			m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+				gs := agonesv1.GameServer{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: "test", Namespace: "default", Generation: 1,
+					},
+					Spec: agonesv1.GameServerSpec{
+						SdkServer: agonesv1.SdkServer{
+							LogLevel: "Debug",
+						},
+					},
+					Status: agonesv1.GameServerStatus{
+						Lists: lists,
+					},
+				}
+				gs.ApplyDefaults()
+				return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{gs}}, nil
+			})
+
+			updated := make(chan map[string]agonesv1.ListStatus, 10)
+			m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+				ua := action.(k8stesting.UpdateAction)
+				gs := ua.GetObject().(*agonesv1.GameServer)
+				gs.ObjectMeta.Generation++
+				updated <- gs.Status.Lists
+				return true, gs, nil
+			})
+
+			ctx, cancel := context.WithCancel(context.Background())
+			sc, err := defaultSidecar(m)
+			require.NoError(t, err)
+			assert.NoError(t, sc.WaitForConnection(ctx))
+			sc.informerFactory.Start(ctx.Done())
+			assert.True(t, cache.WaitForCacheSync(ctx.Done(), sc.gameServerSynced))
+
+			wg := sync.WaitGroup{}
+			wg.Add(1)
+
+			go func() {
+				err = sc.Run(ctx)
+				assert.NoError(t, err)
+				wg.Done()
+			}()
+
+			// check initial value comes through
+			require.Eventually(t, func() bool {
+				list, err := sc.GetList(context.Background(), &alpha.GetListRequest{Name: testCase.listName})
+				return cmp.Equal(list.Values, []string{"one", "two", "three", "four"}) && list.Capacity == 10 && err == nil
+			}, 10*time.Second, time.Second)
+
+			// Update the List
+			for i, req := range testCase.requests {
+				_, err = sc.AddListValue(context.Background(), req)
+				if testCase.updateErrs[i] {
+					assert.Error(t, err)
+				} else {
+					assert.NoError(t, err)
+				}
+			}
+
+			got, err := sc.GetList(context.Background(), &alpha.GetListRequest{Name: testCase.listName})
+			assert.NoError(t, err)
+			assert.Equal(t, testCase.want.Values, got.Values)
+			assert.Equal(t, testCase.want.Capacity, got.Capacity)
+
+			// on an update, confirm that the update hits the K8s api
+			if testCase.updated {
+				select {
+				case value := <-updated:
+					assert.NotNil(t, value[testCase.listName])
+					assert.Equal(t,
+						agonesv1.ListStatus{Values: testCase.want.Values, Capacity: testCase.want.Capacity},
+						value[testCase.listName])
+				case <-time.After(10 * time.Second):
+					assert.Fail(t, "List should have been updated")
+				}
+			}
+
+			cancel()
+			wg.Wait()
+		})
+	}
+}
+
+func TestSDKServerRemoveListValue(t *testing.T) {
+	t.Parallel()
+	agruntime.FeatureTestMutex.Lock()
+	defer agruntime.FeatureTestMutex.Unlock()
+
+	err := agruntime.ParseFeatures(string(agruntime.FeatureCountsAndLists) + "=true")
+	require.NoError(t, err, "Can not parse FeatureCountsAndLists feature")
+
+	lists := map[string]agonesv1.ListStatus{
+		"foo": {Values: []string{"one", "two", "three", "four"}, Capacity: int64(100)},
+		"bar": {Values: []string{"one", "two", "three", "four"}, Capacity: int64(100)},
+		"baz": {Values: []string{"one", "two", "three", "four"}, Capacity: int64(100)},
+	}
+
+	fixtures := map[string]struct {
+		listName   string
+		requests   []*alpha.RemoveListValueRequest
+		want       agonesv1.ListStatus
+		updateErrs []bool
+		updated    bool
+	}{
+		"Remove value": {
+			listName:   "foo",
+			requests:   []*alpha.RemoveListValueRequest{{Name: "foo", Value: "two"}},
+			want:       agonesv1.ListStatus{Values: []string{"one", "three", "four"}, Capacity: int64(100)},
+			updateErrs: []bool{false},
+			updated:    true,
+		},
+		"Remove multiple values including duplicates": {
+			listName: "bar",
+			requests: []*alpha.RemoveListValueRequest{
+				{Name: "bar", Value: "two"},
+				{Name: "bar", Value: "three"},
+				{Name: "bar", Value: "two"},
+			},
+			want:       agonesv1.ListStatus{Values: []string{"one", "four"}, Capacity: int64(100)},
+			updateErrs: []bool{false, false, true},
+			updated:    true,
+		},
+		"Remove all values": {
+			listName: "baz",
+			requests: []*alpha.RemoveListValueRequest{
+				{Name: "baz", Value: "three"},
+				{Name: "baz", Value: "two"},
+				{Name: "baz", Value: "four"},
+				{Name: "baz", Value: "one"},
+			},
+			want:       agonesv1.ListStatus{Values: []string{}, Capacity: int64(100)},
+			updateErrs: []bool{false, false, false, false},
+			updated:    true,
+		},
+	}
+
+	// nolint:dupl  // Linter errors on lines are duplicate of TestSDKServerUpdateList, TestSDKServerAddListValue
+	for test, testCase := range fixtures {
+		t.Run(test, func(t *testing.T) {
+			m := agtesting.NewMocks()
+
+			m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+				gs := agonesv1.GameServer{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: "test", Namespace: "default", Generation: 1,
+					},
+					Spec: agonesv1.GameServerSpec{
+						SdkServer: agonesv1.SdkServer{
+							LogLevel: "Debug",
+						},
+					},
+					Status: agonesv1.GameServerStatus{
+						Lists: lists,
+					},
+				}
+				gs.ApplyDefaults()
+				return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{gs}}, nil
+			})
+
+			updated := make(chan map[string]agonesv1.ListStatus, 10)
+			m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+				ua := action.(k8stesting.UpdateAction)
+				gs := ua.GetObject().(*agonesv1.GameServer)
+				gs.ObjectMeta.Generation++
+				updated <- gs.Status.Lists
+				return true, gs, nil
+			})
+
+			ctx, cancel := context.WithCancel(context.Background())
+			sc, err := defaultSidecar(m)
+			require.NoError(t, err)
+			assert.NoError(t, sc.WaitForConnection(ctx))
+			sc.informerFactory.Start(ctx.Done())
+			assert.True(t, cache.WaitForCacheSync(ctx.Done(), sc.gameServerSynced))
+
+			wg := sync.WaitGroup{}
+			wg.Add(1)
+
+			go func() {
+				err = sc.Run(ctx)
+				assert.NoError(t, err)
+				wg.Done()
+			}()
+
+			// check initial value comes through
+			require.Eventually(t, func() bool {
+				list, err := sc.GetList(context.Background(), &alpha.GetListRequest{Name: testCase.listName})
+				return cmp.Equal(list.Values, []string{"one", "two", "three", "four"}) && list.Capacity == 100 && err == nil
+			}, 10*time.Second, time.Second)
+
+			// Update the List
+			for i, req := range testCase.requests {
+				_, err = sc.RemoveListValue(context.Background(), req)
+				if testCase.updateErrs[i] {
+					assert.Error(t, err)
+				} else {
+					assert.NoError(t, err)
+				}
+			}
+
+			got, err := sc.GetList(context.Background(), &alpha.GetListRequest{Name: testCase.listName})
+			assert.NoError(t, err)
+			assert.Equal(t, testCase.want.Values, got.Values)
+			assert.Equal(t, testCase.want.Capacity, got.Capacity)
+
+			// on an update, confirm that the update hits the K8s api
+			if testCase.updated {
+				select {
+				case value := <-updated:
+					assert.NotNil(t, value[testCase.listName])
+					assert.Equal(t,
+						agonesv1.ListStatus{Values: testCase.want.Values, Capacity: testCase.want.Capacity},
+						value[testCase.listName])
+				case <-time.After(10 * time.Second):
+					assert.Fail(t, "List should have been updated")
+				}
+			}
+
+			cancel()
+			wg.Wait()
+		})
+	}
+}
+
+func TestSDKServerUpdateList(t *testing.T) {
+	t.Parallel()
+	agruntime.FeatureTestMutex.Lock()
+	defer agruntime.FeatureTestMutex.Unlock()
+
+	err := agruntime.ParseFeatures(string(agruntime.FeatureCountsAndLists) + "=true")
+	require.NoError(t, err, "Can not parse FeatureCountsAndLists feature")
+
+	lists := map[string]agonesv1.ListStatus{
+		"foo": {Values: []string{"one", "two", "three", "four"}, Capacity: int64(100)},
+		"bar": {Values: []string{"one", "two", "three", "four"}, Capacity: int64(100)},
+		"baz": {Values: []string{"one", "two", "three", "four"}, Capacity: int64(100)},
+	}
+
+	fixtures := map[string]struct {
+		listName  string
+		request   *alpha.UpdateListRequest
+		want      agonesv1.ListStatus
+		updateErr bool
+		updated   bool
+	}{
+		"set capacity to max": {
+			listName: "foo",
+			request: &alpha.UpdateListRequest{
+				List: &alpha.List{
+					Name:     "foo",
+					Capacity: int64(1000),
+				},
+				UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"capacity"}},
+			},
+			want:      agonesv1.ListStatus{Values: []string{"one", "two", "three", "four"}, Capacity: int64(1000)},
+			updateErr: false,
+			updated:   true,
+		},
+		"set capacity to min values are truncated": {
+			listName: "bar",
+			request: &alpha.UpdateListRequest{
+				List: &alpha.List{
+					Name:     "bar",
+					Capacity: int64(0),
+				},
+				UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"capacity"}},
+			},
+			want:      agonesv1.ListStatus{Values: []string{}, Capacity: int64(0)},
+			updateErr: false,
+			updated:   true,
+		},
+		"set capacity past max": {
+			listName: "baz",
+			request: &alpha.UpdateListRequest{
+				List: &alpha.List{
+					Name:     "baz",
+					Capacity: int64(1001),
+				},
+				UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"capacity"}},
+			},
+			want:      agonesv1.ListStatus{Values: []string{"one", "two", "three", "four"}, Capacity: int64(100)},
+			updateErr: true,
+			updated:   false,
+		},
+	}
+
+	// nolint:dupl  // Linter errors on lines are duplicate of TestSDKServerAddListValue, TestSDKServerRemoveListValue
+	for test, testCase := range fixtures {
+		t.Run(test, func(t *testing.T) {
+			m := agtesting.NewMocks()
+
+			m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+				gs := agonesv1.GameServer{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: "test", Namespace: "default", Generation: 1,
+					},
+					Spec: agonesv1.GameServerSpec{
+						SdkServer: agonesv1.SdkServer{
+							LogLevel: "Debug",
+						},
+					},
+					Status: agonesv1.GameServerStatus{
+						Lists: lists,
+					},
+				}
+				gs.ApplyDefaults()
+				return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{gs}}, nil
+			})
+
+			updated := make(chan map[string]agonesv1.ListStatus, 10)
+			m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+				ua := action.(k8stesting.UpdateAction)
+				gs := ua.GetObject().(*agonesv1.GameServer)
+				gs.ObjectMeta.Generation++
+				updated <- gs.Status.Lists
+				return true, gs, nil
+			})
+
+			ctx, cancel := context.WithCancel(context.Background())
+			sc, err := defaultSidecar(m)
+			require.NoError(t, err)
+			assert.NoError(t, sc.WaitForConnection(ctx))
+			sc.informerFactory.Start(ctx.Done())
+			assert.True(t, cache.WaitForCacheSync(ctx.Done(), sc.gameServerSynced))
+
+			wg := sync.WaitGroup{}
+			wg.Add(1)
+
+			go func() {
+				err = sc.Run(ctx)
+				assert.NoError(t, err)
+				wg.Done()
+			}()
+
+			// check initial value comes through
+			require.Eventually(t, func() bool {
+				list, err := sc.GetList(context.Background(), &alpha.GetListRequest{Name: testCase.listName})
+				return cmp.Equal(list.Values, []string{"one", "two", "three", "four"}) && list.Capacity == 100 && err == nil
+			}, 10*time.Second, time.Second)
+
+			// Update the List
+			_, err = sc.UpdateList(context.Background(), testCase.request)
+			if testCase.updateErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+
+			got, err := sc.GetList(context.Background(), &alpha.GetListRequest{Name: testCase.listName})
+			assert.NoError(t, err)
+			assert.Equal(t, testCase.want.Values, got.Values)
+			assert.Equal(t, testCase.want.Capacity, got.Capacity)
+
+			// on an update, confirm that the update hits the K8s api
+			if testCase.updated {
+				select {
+				case value := <-updated:
+					assert.NotNil(t, value[testCase.listName])
+					assert.Equal(t,
+						agonesv1.ListStatus{Values: testCase.want.Values, Capacity: testCase.want.Capacity},
+						value[testCase.listName])
+				case <-time.After(10 * time.Second):
+					assert.Fail(t, "List should have been updated")
+				}
+			}
+
+			cancel()
+			wg.Wait()
+		})
+	}
+}
+
+func TestDeleteValues(t *testing.T) {
+	t.Parallel()
+
+	list := []string{"pDtUOSwMys", "MIaQYdeONT", "ZTwRNgZfxk", "ybtlfzfJau", "JwoYseCCyU", "JQJXhknLeG",
+		"KDmxroeFvi", "fguLESWvmr", "xRUFzgrtuE", "UwElufBLtA", "jAySktznPe", "JZZRLkAtpQ", "BzHLffHxLd",
+		"KWOyTiXsGP", "CtHFOMotCK", "SBOFIJBoBu", "gjYoIQLbAk", "krWVhxssxR", "ZTqRMKAqSx", "oDalBXZckY",
+		"ZxATCXhBHk", "MTwgrrHePq", "KNGxlixHYt", "taZswVczZU", "beoXmuxAHE", "VbiLLJrRVs", "GrIEuiUlkB",
+		"IPJhGxiKWY", "gYXZtGeFyd", "GYvKpRRsfj", "jRldDqcuEd", "ffPeeHOtMW", "AoEMlXWXVI", "HIjLrcvIqx",
+		"GztXdbnxqg", "zSyNSIyQbp", "lntxdkIjVt", "jOgkkkaytV", "uHMvVtWKoc", "hetOAzBePn", "KqqkCbGLjS",
+		"OQHRRtqIlq", "KFyHqLSACF", "nMZTcGlgAz", "iriNEjRLmh", "PRdGOtnyIo", "JDNDFYCIGi", "acalItODHz",
+		"HJjxJnZWEu", "dmFWypNcDY", "fokGntWpON", "tQLmmXfDNW", "ZvyARYuebj", "ipHGcRmfWt", "MpTXveRDRg",
+		"xPMoVLWeyj", "tXWeapJxkh", "KCMSWWiPMq", "fwsVKiWLuv", "AkKUUqwaOB", "DDlrgoWHGq", "DHScNuprJo",
+		"PRMEGliSBU", "kqwktsjCNb", "vDuQZIhUHp", "YoazMkShki", "IwmXsZvlcp", "CJdrVMsjiD", "xNLnNvLRMN",
+		"nKxDYSOkKx", "MWnrxVVOgK", "YnTHFAunKs", "DzUpkUxpuV", "kNVqCzjRxS", "IzqYWHDloX", "LvlVEniBqp",
+		"CmdFcgTgzM", "qmORqLRaKv", "MxMnLiGOsY", "vAiAorAIdu", "pfhhTRFcpp", "ByqwQcKJYQ", "mKaeTCghbC",
+		"eJssFVxVSI", "PGFMEopXax", "pYKCWZzGMf", "wIeRbiOdkf", "EKlxOXvqdF", "qOOorODUsn", "rcVUwlHOME",
+		"etoDkduCkv", "iqUxYYUfpz", "ALyMkpYnbY", "TwfhVKGaIE", "zWsXruOeOn", "gNEmlDWmnj", "gEvodaSjIJ",
+		"kOjWgLKjKE", "ATxBnODCKg", "liMbkiUTAs"}
+
+	toDeleteMap := map[string]bool{"pDtUOSwMys": true, "beoXmuxAHE": true, "IPJhGxiKWY": true,
+		"gYXZtGeFyd": true, "PRMEGliSBU": true, "kqwktsjCNb": true, "mKaeTCghbC": true,
+		"PGFMEopXax": true, "qOOorODUsn": true, "rcVUwlHOME": true}
+
+	newList := deleteValues(list, toDeleteMap)
+	assert.Equal(t, len(list)-len(toDeleteMap), len(newList))
 }
 
 func TestSDKServerPlayerCapacity(t *testing.T) {

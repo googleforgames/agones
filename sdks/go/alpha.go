@@ -20,6 +20,7 @@ import (
 	"agones.dev/agones/pkg/sdk/alpha"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/types/known/fieldmaskpb"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
@@ -171,4 +172,88 @@ func (a *Alpha) SetCounterCapacity(key string, amount int64) (bool, error) {
 		return false, errors.Wrapf(err, "could not set Counter %s capacity to amount %d", key, amount)
 	}
 	return true, err
+}
+
+// GetListCapacity returns the Capacity for a List, given the List's key (name).
+// Will error if the key was not predefined in the GameServer resource on creation.
+func (a *Alpha) GetListCapacity(key string) (int64, error) {
+	list, err := a.client.GetList(context.Background(), &alpha.GetListRequest{Name: key})
+	if err != nil {
+		return -1, errors.Wrapf(err, "could not get List %s", key)
+	}
+	return list.Capacity, nil
+}
+
+// SetListCapacity sets the capacity for a given list. Capacity must be between 0 and 1000.
+// Will error if the key was not predefined in the GameServer resource on creation.
+func (a *Alpha) SetListCapacity(key string, amount int64) (bool, error) {
+	_, err := a.client.UpdateList(context.Background(), &alpha.UpdateListRequest{
+		List: &alpha.List{
+			Name:     key,
+			Capacity: amount,
+		},
+		UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"capacity"}},
+	})
+	if err != nil {
+		return false, errors.Wrapf(err, "could not set List %s capacity to amount %d", key, amount)
+	}
+	return true, err
+}
+
+// ListContains returns if a string exists in a List's values list, given the List's key (name)
+// and the string value. Search is case-sensitive.
+// Will error if the key was not predefined in the GameServer resource on creation.
+func (a *Alpha) ListContains(key, value string) (bool, error) {
+	list, err := a.client.GetList(context.Background(), &alpha.GetListRequest{Name: key})
+	if err != nil {
+		return false, errors.Wrapf(err, "could not get List %s", key)
+	}
+	for _, val := range list.Values {
+		if val == value {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+// GetListLength returns the length of the Values list for a List, given the List's key (name).
+// Will error if the key was not predefined in the GameServer resource on creation.
+func (a *Alpha) GetListLength(key string) (int, error) {
+	list, err := a.client.GetList(context.Background(), &alpha.GetListRequest{Name: key})
+	if err != nil {
+		return -1, errors.Wrapf(err, "could not get List %s", key)
+	}
+	return len(list.Values), nil
+}
+
+// GetListValues returns the Values for a List, given the List's key (name).
+// Will error if the key was not predefined in the GameServer resource on creation.
+func (a *Alpha) GetListValues(key string) ([]string, error) {
+	list, err := a.client.GetList(context.Background(), &alpha.GetListRequest{Name: key})
+	if err != nil {
+		return nil, errors.Wrapf(err, "could not get List %s", key)
+	}
+	return list.Values, nil
+}
+
+// AppendListValue appends a string to a List's values list, given the List's key (name)
+// and the string value. Will error if the string already exists in the list.
+// Will error if the key was not predefined in the GameServer resource on creation.
+func (a *Alpha) AppendListValue(key, value string) (bool, error) {
+	_, err := a.client.AddListValue(context.Background(), &alpha.AddListValueRequest{Name: key, Value: value})
+	if err != nil {
+		return false, errors.Wrapf(err, "could not get List %s", key)
+	}
+	return true, nil
+}
+
+// DeleteListValue removes a string from a List's values list, given the List's key (name)
+// and the string value. Will error if the string does not exist in the list.
+// Will error if the key was not predefined in the GameServer resource on creation.
+func (a *Alpha) DeleteListValue(key, value string) (bool, error) {
+	_, err := a.client.RemoveListValue(context.Background(), &alpha.RemoveListValueRequest{Name: key, Value: value})
+	if err != nil {
+		return false, errors.Wrapf(err, "could not get List %s", key)
+	}
+	return true, nil
 }

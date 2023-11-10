@@ -1,5 +1,68 @@
 # Changelog
 
+## [v1.36.0](https://github.com/googleforgames/agones/tree/v1.36.0) (2023-11-07)
+
+[Full Changelog](https://github.com/googleforgames/agones/compare/v1.35.0...v1.36.0)
+
+**Breaking changes:**
+- Update Supported Kubernetes to 1.26, 1.27, 1.28 by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3450
+- Remove 1.25 supported K8s version from e2e cluster by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3451
+
+**Implemented enhancements:**
+- Adds CounterActions and ListActions to Allocation.proto by @igooch in https://github.com/googleforgames/agones/pull/3407
+- Terraform template file for the performance test cluster by @gongmax in https://github.com/googleforgames/agones/pull/3409
+- In the scenario test, submitting request in a fixed interval, exposing more error type by @gongmax in https://github.com/googleforgames/agones/pull/3414
+- Adds GameServerAllocation e2e tests for Counters by @igooch in https://github.com/googleforgames/agones/pull/3400
+- Adds Counter FleetAutoScaler e2e Test by @igooch in https://github.com/googleforgames/agones/pull/3418
+- simple-game-server: Adds a graceful termination delay by @zmerlynn in https://github.com/googleforgames/agones/pull/3436
+- add opt-out ttlSecondsAfterFinished setting for the pre-delete hook by @mikeseese in https://github.com/googleforgames/agones/pull/3442
+- Add Cloudbuild step to run performance test by using the scenario test framework.  by @gongmax in https://github.com/googleforgames/agones/pull/3429
+- Implements UpdateList, AddListValue, and RemoveListValue in the SDK Server by @igooch in https://github.com/googleforgames/agones/pull/3445
+- Adds Go SDK Client List Functions by @igooch in https://github.com/googleforgames/agones/pull/3484
+- Updates LocalSDK UpdateCounter method by @igooch in https://github.com/googleforgames/agones/pull/3487
+
+**Fixed bugs:**
+- Post release: use clone source and update release process by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3408
+- Remove `stale` and `obsolete` from PR's on update by @markmandel in https://github.com/googleforgames/agones/pull/3431
+- fix: delay deleting GameServers in Error state by @nrwiersma in https://github.com/googleforgames/agones/pull/3428
+- Cmake: Ensure find_dependency is on rebuild by @markmandel in https://github.com/googleforgames/agones/pull/3477
+
+**Security fixes:**
+- Bump @babel/traverse from 7.20.1 to 7.23.2 in /sdks/nodejs by @dependabot in https://github.com/googleforgames/agones/pull/3433
+
+**Other:**
+- Prep for release v1.36.0 by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3406
+- Change to use grpc-dotnet instead of Grpc.Core in C# SDK by @yoshd in https://github.com/googleforgames/agones/pull/3397
+- Docs for running docker-compose locally with SDK and server by @mbychkowski in https://github.com/googleforgames/agones/pull/3390
+- fix: Fixed broken include paths in Unreal Engine plugin. by @KiaArmani in https://github.com/googleforgames/agones/pull/3416
+- Docsy Upgrade by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3417
+- Bump golang.org/x/net from 0.15.0 to 0.17.0 by @dependabot in https://github.com/googleforgames/agones/pull/3422
+- Update Nodejs Apt Repository to latest by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3434
+- Update Nodejs Apt Repository to latest by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3435
+- Remove NodeJs dependency from RestApi Dockerfile by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3437
+- Bump simple-game-server references to 0.19 by @zmerlynn in https://github.com/googleforgames/agones/pull/3439
+- Removes flaky TestCounterGameServerAllocationSorting by @igooch in https://github.com/googleforgames/agones/pull/3440
+- Flake: TestGameServerAllocationValidate by @markmandel in https://github.com/googleforgames/agones/pull/3443
+- Remove Terraform Tests by @markmandel in https://github.com/googleforgames/agones/pull/3441
+- Convert shell script to Go by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3413
+- Ignore build gcloud config in yamllint by @markmandel in https://github.com/googleforgames/agones/pull/3446
+- Update fleet autoscaling limited signification(#2828) by @atgane in https://github.com/googleforgames/agones/pull/3448
+- Build and push system image before performance tests by @gongmax in https://github.com/googleforgames/agones/pull/3454
+- Update examples/autoscaler-webook dependencies by @markmandel in https://github.com/googleforgames/agones/pull/3447
+- Bump examples/allocation-endpoint by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3465
+- More cleanup of Terraform Tests by @markmandel in https://github.com/googleforgames/agones/pull/3444
+- Fix Various Deprecation Warnings by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3453
+- Bump Examples: supertuxkart and xonotic by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3463
+- Bump examples/crd-client by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3464
+- Bump examples/simple-game-server by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3466
+- Golang Version to go1.20.10 by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3475
+- Upgrade gRPC version by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3472
+- Updates to gRPC generation by @markmandel in https://github.com/googleforgames/agones/pull/3483
+
+**New Contributors:**
+- @nrwiersma made their first contribution in https://github.com/googleforgames/agones/pull/3428
+- @atgane made their first contribution in https://github.com/googleforgames/agones/pull/3448
+
 ## [v1.35.0](https://github.com/googleforgames/agones/tree/v1.35.0) (2023-09-26)
 
 [Full Changelog](https://github.com/googleforgames/agones/compare/v1.34.0...v1.35.0)
