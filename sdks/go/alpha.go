@@ -161,7 +161,7 @@ func (a *Alpha) GetCounterCapacity(key string) (int64, error) {
 	return counter.Capacity, nil
 }
 
-// SetCounterCapacity sets the capacity for a given count. A capacity of 0 is no capacity.
+// SetCounterCapacity sets the capacity for the given Counter. A capacity of 0 is no capacity.
 func (a *Alpha) SetCounterCapacity(key string, amount int64) (bool, error) {
 	_, err := a.client.UpdateCounter(context.Background(), &alpha.UpdateCounterRequest{
 		CounterUpdateRequest: &alpha.CounterUpdateRequest{
