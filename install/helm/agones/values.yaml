@@ -223,6 +223,7 @@ agones:
         nodePort: 0 # nodePort will be used if the serviceType is set to NodePort
       grpc:
         enabled: true
+        appProtocol: ""
         port: 443
         portName: grpc
         targetPort: 8443
