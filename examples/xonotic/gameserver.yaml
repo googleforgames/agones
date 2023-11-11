@@ -25,4 +25,8 @@ spec:
       containers:
         - name: xonotic
           image: us-docker.pkg.dev/agones-images/examples/xonotic-example:1.5
+          resources:
+            requests:
+              memory: 700Mi
+              cpu: 200m          
           # imagePullPolicy: Always  # add for development
