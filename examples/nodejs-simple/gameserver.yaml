@@ -32,10 +32,9 @@ spec:
     spec:
       containers:
         - name: nodejs-simple
-          image: us-docker.pkg.dev/agones-images/examples/nodejs-simple-server:0.9          
+          image: us-docker.pkg.dev/agones-images/examples/nodejs-simple-server:0.9
           resources:
             requests:
               memory: 100Mi
               cpu: 100m
-
           # args: ["--timeout=0"]  # Change the timeout here, if you like the nodejs server to run longer.
