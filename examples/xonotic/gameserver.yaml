@@ -28,5 +28,5 @@ spec:
           resources:
             requests:
               memory: 700Mi
-              cpu: 200m          
+              cpu: 200m
           # imagePullPolicy: Always  # add for development
