@@ -113,10 +113,6 @@ func TestNodeJSGameServerReady(t *testing.T) {
 				ContainerPort: 7654,
 				Protocol:      corev1.ProtocolUDP,
 			}},
-			Health: agonesv1.Health{
-				InitialDelaySeconds: 300,
-				PeriodSeconds:       25,
-			},
 			Template: corev1.PodTemplateSpec{
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{
