@@ -38,6 +38,9 @@ spec:
     - port: {{ .Values.agones.allocator.service.http.port }}
       name: {{ .Values.agones.allocator.service.http.portName }}
       targetPort: {{ .Values.agones.allocator.service.http.targetPort }}
+      {{- if .Values.agones.allocator.service.http.appProtocol }}
+      appProtocol: {{.Values.agones.allocator.service.http.appProtocol}}
+      {{- end}}
       {{- if eq .Values.agones.allocator.service.serviceType "NodePort" }}
       nodePort: {{ .Values.agones.allocator.service.http.nodePort }}
       {{- end }}
