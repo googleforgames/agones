@@ -41,8 +41,8 @@ func TestXonoticGameServerReady(t *testing.T) {
 				Protocol:      corev1.ProtocolUDP,
 			}},
 			Health: agonesv1.Health{
-				InitialDelaySeconds: 300,
-				PeriodSeconds:       60,
+				InitialDelaySeconds: 60,
+				PeriodSeconds:       5,
 			},
 			Template: corev1.PodTemplateSpec{
 				Spec: corev1.PodSpec{
