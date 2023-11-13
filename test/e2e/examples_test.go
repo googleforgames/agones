@@ -25,52 +25,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func TestXonoticGameServerReady(t *testing.T) {
-	t.Parallel()
-	gs := &agonesv1.GameServer{
-		ObjectMeta: metav1.ObjectMeta{
-			GenerateName: "xonotic-",
-		},
-
-		Spec: agonesv1.GameServerSpec{
-			Container: "xonotic",
-			Ports: []agonesv1.GameServerPort{{
-				ContainerPort: 26000,
-				Name:          "default",
-				PortPolicy:    agonesv1.Dynamic,
-				Protocol:      corev1.ProtocolUDP,
-			}},
-			Health: agonesv1.Health{
-				InitialDelaySeconds: 60,
-				PeriodSeconds:       5,
-			},
-			Template: corev1.PodTemplateSpec{
-				Spec: corev1.PodSpec{
-					Containers: []corev1.Container{
-						{
-							Name:  "xonotic",
-							Image: "us-docker.pkg.dev/agones-images/examples/xonotic-example:1.5",
-							Resources: corev1.ResourceRequirements{
-								Requests: corev1.ResourceList{
-									corev1.ResourceMemory: resource.MustParse("700Mi"),
-									corev1.ResourceCPU:    resource.MustParse("200m"),
-								},
-							},
-						},
-					},
-				},
-			},
-		},
-	}
-
-	// Use the e2e framework's function to create the GameServer and wait until it's ready
-	readyGs, err := framework.CreateGameServerAndWaitUntilReady(t, framework.Namespace, gs)
-	require.NoError(t, err)
-
-	// Assert that the GameServer is in the expected state
-	assert.Equal(t, agonesv1.GameServerStateReady, readyGs.Status.State)
-}
-
 func TestSuperTuxKartGameServerReady(t *testing.T) {
 	t.Parallel()
 	gs := &agonesv1.GameServer{
@@ -97,6 +51,40 @@ func TestSuperTuxKartGameServerReady(t *testing.T) {
 									Value: "false",
 								},
 							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	// Use the e2e framework's function to create the GameServer and wait until it's ready
+	readyGs, err := framework.CreateGameServerAndWaitUntilReady(t, framework.Namespace, gs)
+	require.NoError(t, err)
+
+	// Assert that the GameServer is in the expected state
+	assert.Equal(t, agonesv1.GameServerStateReady, readyGs.Status.State)
+}
+
+func TestRustGameServerReady(t *testing.T) {
+	t.Parallel()
+	gs := &agonesv1.GameServer{
+		ObjectMeta: metav1.ObjectMeta{
+			GenerateName: "rust-simple-",
+		},
+		Spec: agonesv1.GameServerSpec{
+			Ports: []agonesv1.GameServerPort{{
+				Name:          "default",
+				PortPolicy:    agonesv1.Dynamic,
+				ContainerPort: 7654,
+				Protocol:      corev1.ProtocolUDP,
+			}},
+			Template: corev1.PodTemplateSpec{
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
+						{
+							Name:  "rust-simple",
+							Image: "us-docker.pkg.dev/agones-images/examples/rust-simple-server:0.11",
 						},
 					},
 				},
@@ -146,25 +134,37 @@ func TestCppSimpleGameServerReady(t *testing.T) {
 	assert.Equal(t, agonesv1.GameServerStateReady, readyGs.Status.State)
 }
 
-func TestRustGameServerReady(t *testing.T) {
+func TestXonoticGameServerReady(t *testing.T) {
 	t.Parallel()
 	gs := &agonesv1.GameServer{
 		ObjectMeta: metav1.ObjectMeta{
-			GenerateName: "rust-simple-",
+			GenerateName: "xonotic-",
 		},
+
 		Spec: agonesv1.GameServerSpec{
+			Container: "xonotic",
 			Ports: []agonesv1.GameServerPort{{
+				ContainerPort: 26000,
 				Name:          "default",
 				PortPolicy:    agonesv1.Dynamic,
-				ContainerPort: 7654,
 				Protocol:      corev1.ProtocolUDP,
 			}},
+			Health: agonesv1.Health{
+				InitialDelaySeconds: 60,
+				PeriodSeconds:       5,
+			},
 			Template: corev1.PodTemplateSpec{
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{
 						{
-							Name:  "rust-simple",
-							Image: "us-docker.pkg.dev/agones-images/examples/rust-simple-server:0.11",
+							Name:  "xonotic",
+							Image: "us-docker.pkg.dev/agones-images/examples/xonotic-example:1.5",
+							Resources: corev1.ResourceRequirements{
+								Requests: corev1.ResourceList{
+									corev1.ResourceMemory: resource.MustParse("700Mi"),
+									corev1.ResourceCPU:    resource.MustParse("200m"),
+								},
+							},
 						},
 					},
 				},
