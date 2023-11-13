@@ -14,25 +14,37 @@ for UDP as an echo or "ACK TCP:<text content>" for TCP.
 
 There are some text commands you can send the server to affect its behavior:
 
-| Command             | Behavior                                                                                 |
-|---------------------|------------------------------------------------------------------------------------------|
-| "EXIT"              | Causes the game server to exit cleanly calling `os.Exit(0)`                              |
-| "UNHEALTHY"         | Stopping sending health checks                                                           |
-| "GAMESERVER"        | Sends back the game server name                                                          |
-| "READY"             | Marks the server as Ready                                                                |
-| "ALLOCATE"          | Allocates the game server                                                                |
-| "RESERVE"           | Reserves the game server after the specified duration                                    |
-| "WATCH"             | Instructs the game server to log changes to the resource                                 |
-| "LABEL"             | Sets the specified label on the game server resource                                     |
-| "CRASH"             | Causes the game server to exit / crash immediately                                       |
-| "ANNOTATION"        | Sets the specified annotation on the game server resource                                |
-| "PLAYER_CAPACITY"   | With one argument, gets the player capacity; with two arguments sets the player capacity |
-| "PLAYER_CONNECT"    | Connects the specified player to the game server                                         |
-| "PLAYER_DISCONNECT" | Disconnects the specified player from the game server                                    |
-| "PLAYER_CONNECTED"  | Returns true/false depending on whether the specified player is connected                |
-| "GET_PLAYERS"       | Returns a list of the connected players                                                  |
-| "PLAYER_COUNT"      | Returns a count of the connected players                                                 |
-
+| Command                | Behavior                                                                                 |
+|------------------------|------------------------------------------------------------------------------------------|
+| "EXIT"                 | Causes the game server to exit cleanly calling `os.Exit(0)`                              |
+| "UNHEALTHY"            | Stopping sending health checks                                                           |
+| "GAMESERVER"           | Sends back the game server name                                                          |
+| "READY"                | Marks the server as Ready                                                                |
+| "ALLOCATE"             | Allocates the game server                                                                |
+| "RESERVE"              | Reserves the game server after the specified duration                                    |
+| "WATCH"                | Instructs the game server to log changes to the resource                                 |
+| "LABEL"                | Sets the specified label on the game server resource                                     |
+| "CRASH"                | Causes the game server to exit / crash immediately                                       |
+| "ANNOTATION"           | Sets the specified annotation on the game server resource                                |
+| "PLAYER_CAPACITY"      | With one argument, gets the player capacity; with two arguments sets the player capacity |
+| "PLAYER_CONNECT"       | Connects the specified player to the game server                                         |
+| "PLAYER_DISCONNECT"    | Disconnects the specified player from the game server                                    |
+| "PLAYER_CONNECTED"     | Returns true/false depending on whether the specified player is connected                |
+| "GET_PLAYERS"          | Returns a list of the connected players                                                  |
+| "PLAYER_COUNT"         | Returns a count of the connected players                                                 |
+| "GET_COUNTER_COUNT"    | Returns a count of a given Counter                                                       |
+| "INCREMENT_COUNTER"    | Increases the count of the given Counter by the given nonnegative integer amount         |
+| "DECREMENT_COUNTER"    | Decreases the count of the given Counter by the given nonnegative integer amount         |
+| "SET_COUNTER_COUNT"    | Sets a count of the given Counter to the given amount                                    |
+| "GET_COUNTER_CAPACITY" | Returns the Capacity of the given Counter                                                |
+| "SET_COUNTER_CAPACITY" | Sets the Capacity of the given Counter to the given amount                               |
+| "GET_LIST_CAPACITY"    | Returns the Capacity of the given List                                                   |
+| "SET_LIST_CAPACITY     | Returns if the List was set to a new Capacity successfully (true) or not (false)         |
+| "LIST_CONTAINS         | Returns true if the given value is in the given List, false otherwise                    |
+| "GET_LIST_LENGTH       | Returns the length (number of values) of the given List as a string                      |
+| "GET_LIST_VALUES       | Return the values in the given List as a comma delineated string                         |
+| "APPEND_LIST_VALUE     | Returns if the given value was successfuly added to the List (true) or not (false)       |
+| "DELETE_LIST_VALUE     | Rreturns if the given value was successfuly deleted from the List (true) or not (false)  |
 
 ## Configuration
 
