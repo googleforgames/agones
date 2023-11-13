@@ -66,6 +66,40 @@ func TestSuperTuxKartGameServerReady(t *testing.T) {
 	assert.Equal(t, agonesv1.GameServerStateReady, readyGs.Status.State)
 }
 
+func TestRustGameServerReady(t *testing.T) {
+	t.Parallel()
+	gs := &agonesv1.GameServer{
+		ObjectMeta: metav1.ObjectMeta{
+			GenerateName: "rust-simple-",
+		},
+		Spec: agonesv1.GameServerSpec{
+			Ports: []agonesv1.GameServerPort{{
+				Name:          "default",
+				PortPolicy:    agonesv1.Dynamic,
+				ContainerPort: 7654,
+				Protocol:      corev1.ProtocolUDP,
+			}},
+			Template: corev1.PodTemplateSpec{
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
+						{
+							Name:  "rust-simple",
+							Image: "us-docker.pkg.dev/agones-images/examples/rust-simple-server:0.11",
+						},
+					},
+				},
+			},
+		},
+	}
+
+	// Use the e2e framework's function to create the GameServer and wait until it's ready
+	readyGs, err := framework.CreateGameServerAndWaitUntilReady(t, framework.Namespace, gs)
+	require.NoError(t, err)
+
+	// Assert that the GameServer is in the expected state
+	assert.Equal(t, agonesv1.GameServerStateReady, readyGs.Status.State)
+}
+
 func TestCppSimpleGameServerReady(t *testing.T) {
 	t.Parallel()
 	gs := &agonesv1.GameServer{
@@ -113,6 +147,10 @@ func TestNodeJSGameServerReady(t *testing.T) {
 				ContainerPort: 7654,
 				Protocol:      corev1.ProtocolUDP,
 			}},
+			Health: agonesv1.Health{
+				InitialDelaySeconds: 30,
+				PeriodSeconds:       30,
+			},
 			Template: corev1.PodTemplateSpec{
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{
@@ -125,40 +163,6 @@ func TestNodeJSGameServerReady(t *testing.T) {
 									corev1.ResourceCPU:    resource.MustParse("100m"),
 								},
 							},
-						},
-					},
-				},
-			},
-		},
-	}
-
-	// Use the e2e framework's function to create the GameServer and wait until it's ready
-	readyGs, err := framework.CreateGameServerAndWaitUntilReady(t, framework.Namespace, gs)
-	require.NoError(t, err)
-
-	// Assert that the GameServer is in the expected state
-	assert.Equal(t, agonesv1.GameServerStateReady, readyGs.Status.State)
-}
-
-func TestRustGameServerReady(t *testing.T) {
-	t.Parallel()
-	gs := &agonesv1.GameServer{
-		ObjectMeta: metav1.ObjectMeta{
-			GenerateName: "rust-simple-",
-		},
-		Spec: agonesv1.GameServerSpec{
-			Ports: []agonesv1.GameServerPort{{
-				Name:          "default",
-				PortPolicy:    agonesv1.Dynamic,
-				ContainerPort: 7654,
-				Protocol:      corev1.ProtocolUDP,
-			}},
-			Template: corev1.PodTemplateSpec{
-				Spec: corev1.PodSpec{
-					Containers: []corev1.Container{
-						{
-							Name:  "rust-simple",
-							Image: "us-docker.pkg.dev/agones-images/examples/rust-simple-server:0.11",
 						},
 					},
 				},
