@@ -922,9 +922,7 @@ func TestGameServerStaticTcpUdpProtocol(t *testing.T) {
 	require.Len(t, errs, 0)
 
 	readyGs, err := framework.CreateGameServerAndWaitUntilReady(t, framework.Namespace, gs)
-	if err != nil {
-		assert.FailNow(t, "Could not get a GameServer ready", err.Error())
-	}
+	require.NoError(t, err)
 
 	tcpPort := readyGs.Spec.Ports[0]
 	assert.Equal(t, corev1.ProtocolTCP, tcpPort.Protocol)
