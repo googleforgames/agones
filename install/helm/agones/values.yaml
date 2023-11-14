@@ -217,6 +217,7 @@ agones:
       annotations: {}
       http:
         enabled: true
+        appProtocol: ""
         port: 443
         portName: https
         targetPort: 8443
