@@ -424,7 +424,7 @@ install: HELM_ARGS ?=
 install: $(ensure-build-image) install-custom-pull-secret
 	-$(DOCKER_RUN) bash -c '[[ $$(helm status agones -n agones-system --output json | jq -r ".info.status") =~ (failed|pending-.*) ]] && helm uninstall agones --namespace=agones-system || true'
 	$(DOCKER_RUN) \
-		helm upgrade --install --atomic --wait --namespace=agones-system \
+		helm upgrade --install --atomic --wait --timeout 10m --namespace=agones-system \
 		--create-namespace \
 		--set agones.image.tag=$(VERSION),agones.image.registry=$(REGISTRY) \
 		--set agones.image.controller.pullPolicy=$(IMAGE_PULL_POLICY),agones.image.controller.pullSecret=$(IMAGE_PULL_SECRET) \
