@@ -1320,7 +1320,7 @@ func TestPlayerConnectAndDisconnect(t *testing.T) {
 	assert.ElementsMatch(t, []string{"1", "3"}, gs.Status.Players.IDs)
 }
 
-func TestCountsAndLists(t *testing.T) {
+func TestCounters(t *testing.T) {
 	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
 		t.SkipNow()
 	}
@@ -1453,7 +1453,7 @@ func TestCountsAndLists(t *testing.T) {
 			wantCount:   "1",
 		},
 	}
-
+	// nolint:dupl  // Linter errors on lines are duplicate of TestLists
 	for name, testCase := range testCases {
 		t.Run(name, func(t *testing.T) {
 			logrus.WithField("msg", testCase.msg).Info(name)
@@ -1472,6 +1472,142 @@ func TestCountsAndLists(t *testing.T) {
 			if testCase.wantCapacity != "" {
 				msg := "GET_COUNTER_CAPACITY " + testCase.counterName
 				logrus.WithField("msg", msg).Info("Sending GetCounterCapacity")
+				reply, err = framework.SendGameServerUDP(t, gs, msg)
+				require.NoError(t, err)
+				assert.Equal(t, testCase.wantCapacity, reply)
+			}
+		})
+	}
+}
+
+func TestLists(t *testing.T) {
+	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
+		t.SkipNow()
+	}
+	t.Parallel()
+	ctx := context.Background()
+	gs := framework.DefaultGameServer(framework.Namespace)
+
+	gs.Spec.Lists = make(map[string]agonesv1.ListStatus)
+	gs.Spec.Lists["games"] = agonesv1.ListStatus{
+		Values:   []string{"game1", "game2"},
+		Capacity: 50,
+	}
+	gs.Spec.Lists["foo"] = agonesv1.ListStatus{
+		Values:   []string{},
+		Capacity: 1,
+	}
+	gs.Spec.Lists["bar"] = agonesv1.ListStatus{
+		Values:   []string{"bar1", "bar2"},
+		Capacity: 10,
+	}
+	gs.Spec.Lists["baz"] = agonesv1.ListStatus{
+		Values:   []string{"baz1"},
+		Capacity: 1,
+	}
+	gs.Spec.Lists["qux"] = agonesv1.ListStatus{
+		Values:   []string{"qux1", "qux2", "qux3", "qux4"},
+		Capacity: 5,
+	}
+
+	gs, err := framework.CreateGameServerAndWaitUntilReady(t, framework.Namespace, gs)
+	require.NoError(t, err)
+	defer framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Delete(ctx, gs.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint: errcheck
+	assert.Equal(t, agonesv1.GameServerStateReady, gs.Status.State)
+
+	testCases := map[string]struct {
+		msg          string
+		want         string
+		listName     string
+		wantLength   string
+		wantCapacity string
+	}{
+		"GetListCapacity": {
+			msg:  "GET_LIST_CAPACITY games",
+			want: "50",
+		},
+		"SetListCapacity": {
+			msg:          "SET_LIST_CAPACITY foo 1000",
+			want:         "true",
+			listName:     "foo",
+			wantCapacity: "1000",
+		},
+		"SetListCapacity past 1000": {
+			msg:          "SET_LIST_CAPACITY games 1001",
+			want:         "ERROR: false\n",
+			listName:     "games",
+			wantCapacity: "50",
+		},
+		"SetListCapacity negative": {
+			msg:          "SET_LIST_CAPACITY games -1",
+			want:         "ERROR: false\n",
+			listName:     "games",
+			wantCapacity: "50",
+		},
+		"ListContains": {
+			msg:  "LIST_CONTAINS games game2",
+			want: "true",
+		},
+		"ListContains false": {
+			msg:  "LIST_CONTAINS games game0",
+			want: "false",
+		},
+		"GetListLength": {
+			msg:  "GET_LIST_LENGTH games",
+			want: "2",
+		},
+		"GetListValues": {
+			msg:  "GET_LIST_VALUES games",
+			want: "game1,game2\n",
+		},
+		"GetListValues empty": {
+			msg:  "GET_LIST_VALUES foo",
+			want: "\n",
+		},
+		"AppendListValue": {
+			msg:        "APPEND_LIST_VALUE bar bar3",
+			want:       "true",
+			listName:   "bar",
+			wantLength: "3",
+		},
+		"AppendListValue past capacity": {
+			msg:        "APPEND_LIST_VALUE baz baz2",
+			want:       "ERROR: false\n",
+			listName:   "baz",
+			wantLength: "1",
+		},
+		"DeleteListValue": {
+			msg:        "DELETE_LIST_VALUE qux qux3",
+			want:       "true",
+			listName:   "qux",
+			wantLength: "3",
+		},
+		"DeleteListValue value does not exist": {
+			msg:        "DELETE_LIST_VALUE games game4",
+			want:       "ERROR: false\n",
+			listName:   "games",
+			wantLength: "2",
+		},
+	}
+	// nolint:dupl  // Linter errors on lines are duplicate of TestCounters
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			logrus.WithField("msg", testCase.msg).Info(name)
+			reply, err := framework.SendGameServerUDP(t, gs, testCase.msg)
+			require.NoError(t, err)
+			assert.Equal(t, testCase.want, reply)
+
+			if testCase.wantLength != "" {
+				msg := "GET_LIST_LENGTH " + testCase.listName
+				logrus.WithField("msg", msg).Info("Sending GetListLength")
+				reply, err = framework.SendGameServerUDP(t, gs, msg)
+				require.NoError(t, err)
+				assert.Equal(t, testCase.wantLength, reply)
+			}
+
+			if testCase.wantCapacity != "" {
+				msg := "GET_LIST_CAPACITY " + testCase.listName
+				logrus.WithField("msg", msg).Info("Sending GetListCapacity")
 				reply, err = framework.SendGameServerUDP(t, gs, msg)
 				require.NoError(t, err)
 				assert.Equal(t, testCase.wantCapacity, reply)
