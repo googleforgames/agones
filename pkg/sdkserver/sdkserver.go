@@ -144,7 +144,7 @@ func NewSDKServer(gameServerName, namespace string, kubeClient kubernetes.Interf
 		s1 := fields.OneTermEqualSelector("metadata.name", gameServerName)
 		opts.FieldSelector = s1.String()
 	}
-	factory := externalversions.NewSharedInformerFactoryWithOptions(agonesClient, 30*time.Second, externalversions.WithNamespace(namespace), externalversions.WithTweakListOptions(tweakListOptions))
+	factory := externalversions.NewSharedInformerFactoryWithOptions(agonesClient, 1*time.Hour, externalversions.WithNamespace(namespace), externalversions.WithTweakListOptions(tweakListOptions))
 	gameServers := factory.Agones().V1().GameServers()
 
 	s := &SDKServer{
