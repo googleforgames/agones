@@ -16,7 +16,9 @@ package https
 
 import (
 	"context"
+	"crypto/tls"
 	"net/http"
+	"sync"
 
 	"agones.dev/agones/pkg/util/runtime"
 	"github.com/pkg/errors"
@@ -24,7 +26,7 @@ import (
 )
 
 // tls is a http server interface to enable easier testing
-type tls interface {
+type testTLS interface {
 	Close() error
 	ListenAndServeTLS(certFile, keyFile string) error
 }
@@ -35,7 +37,9 @@ type tls interface {
 type Server struct {
 	logger   *logrus.Entry
 	Mux      *http.ServeMux
-	tls      tls
+	tls      testTLS
+	certMu   sync.RWMutex
+	cert     *tls.Certificate
 	certFile string
 	keyFile  string
 }
@@ -53,11 +57,18 @@ func NewServer(certFile, keyFile string) *Server {
 		tls:      tls,
 		certFile: certFile,
 		keyFile:  keyFile,
+		cert:     nil,
 	}
 	wh.Mux.HandleFunc("/", wh.defaultHandler)
 	wh.logger = runtime.NewLoggerWithType(wh)
 
 	return wh
+}
+
+func (s *Server) SetCertificate(cert *tls.Certificate) {
+	s.certMu.Lock()
+	defer s.certMu.Unlock()
+	s.cert = cert
 }
 
 // Run runs the webhook server, starting a https listener.
