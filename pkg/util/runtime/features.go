@@ -67,6 +67,9 @@ const (
 
 	// FeatureExample is an example feature gate flag, used for testing and demonstrative purposes
 	FeatureExample Feature = "Example"
+
+	// FeatureDisableResyncOnSDKServer is a feature flag to enable/disable resync on SDK server.
+	FeatureDisableResyncOnSDKServer Feature = "DisableResyncOnSDKServer"
 )
 
 var (
@@ -103,9 +106,10 @@ var (
 		FeatureSplitControllerAndExtensions: true,
 
 		// Alpha features
-		FeaturePlayerAllocationFilter: false,
-		FeaturePlayerTracking:         false,
-		FeatureFleetAllocateOverflow:  false,
+		FeatureDisableResyncOnSDKServer: false,
+		FeatureFleetAllocateOverflow:    false,
+		FeaturePlayerAllocationFilter:   false,
+		FeaturePlayerTracking:           false,
 
 		// Pre-Alpha features
 		FeatureCountsAndLists: false,
