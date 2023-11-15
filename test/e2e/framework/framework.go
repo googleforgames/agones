@@ -617,7 +617,7 @@ func SendGameServerTCP(gs *agonesv1.GameServer, msg string) (string, error) {
 			return SendGameServerTCPToPort(gs, p.Name, msg)
 		}
 	}
-	return "", errors.New("No UDP ports")
+	return "", errors.New("No TCP ports")
 }
 
 // SendGameServerTCPToPort sends a message to a gameserver at the named port and returns its reply

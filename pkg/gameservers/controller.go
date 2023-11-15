@@ -503,6 +503,24 @@ func (c *Controller) syncGameServerCreatingState(ctx context.Context, gs *agones
 	// Maybe something went wrong, and the pod was created, but the state was never moved to Starting, so let's check
 	_, err := c.gameServerPod(gs)
 	if k8serrors.IsNotFound(err) {
+
+		for i := range gs.Spec.Ports {
+			if gs.Spec.Ports[i].PortPolicy == agonesv1.Static && gs.Spec.Ports[i].Protocol == agonesv1.ProtocolTCPUDP {
+				name := gs.Spec.Ports[i].Name
+				gs.Spec.Ports[i].Name = name + "-tcp"
+				gs.Spec.Ports[i].Protocol = corev1.ProtocolTCP
+
+				// Add separate UDP port configuration
+				gs.Spec.Ports = append(gs.Spec.Ports, agonesv1.GameServerPort{
+					PortPolicy:    agonesv1.Static,
+					Name:          name + "-udp",
+					ContainerPort: gs.Spec.Ports[i].ContainerPort,
+					HostPort:      gs.Spec.Ports[i].HostPort,
+					Protocol:      corev1.ProtocolUDP,
+					Container:     gs.Spec.Ports[i].Container,
+				})
+			}
+		}
 		gs, err = c.createGameServerPod(ctx, gs)
 		if err != nil || gs.Status.State == agonesv1.GameServerStateError {
 			return gs, err

@@ -907,6 +907,105 @@ func TestGameServerTcpUdpProtocol(t *testing.T) {
 	assert.Equal(t, "ACK TCP: Hello World !\n", replyTCP)
 }
 
+// TestGameServerStaticTcpUdpProtocol checks UDP and TCP connection for TCPUDP Protocol of Static Portpolicy
+func TestGameServerStaticTcpUdpProtocol(t *testing.T) {
+	framework.SkipOnCloudProduct(t, "gke-autopilot", "does not support Static PortPolicy")
+	t.Parallel()
+	gs := framework.DefaultGameServer(framework.Namespace)
+	gs.Spec.Ports[0].PortPolicy = agonesv1.Static
+	gs.Spec.Ports[0].Protocol = agonesv1.ProtocolTCPUDP
+	gs.Spec.Ports[0].HostPort = 7000
+	gs.Spec.Ports[0].Name = "gameserver"
+	gs.Spec.Template.Spec.Containers[0].Env = []corev1.EnvVar{{Name: "TCP", Value: "TRUE"}}
+
+	errs := gs.Validate(agtesting.FakeAPIHooks{})
+	require.Len(t, errs, 0)
+
+	readyGs, err := framework.CreateGameServerAndWaitUntilReady(t, framework.Namespace, gs)
+	require.NoError(t, err)
+
+	tcpPort := readyGs.Spec.Ports[0]
+	assert.Equal(t, corev1.ProtocolTCP, tcpPort.Protocol)
+	assert.NotEmpty(t, tcpPort.HostPort)
+	assert.Equal(t, "gameserver-tcp", tcpPort.Name)
+
+	udpPort := readyGs.Spec.Ports[1]
+	assert.Equal(t, corev1.ProtocolUDP, udpPort.Protocol)
+	assert.NotEmpty(t, udpPort.HostPort)
+	assert.Equal(t, "gameserver-udp", udpPort.Name)
+
+	assert.Equal(t, tcpPort.HostPort, udpPort.HostPort)
+
+	logrus.WithField("name", readyGs.ObjectMeta.Name).Info("GameServer created, sending UDP ping")
+
+	replyUDP, err := framework.SendGameServerUDPToPort(t, readyGs, udpPort.Name, "Hello World !")
+	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Could not ping UDP GameServer: %v", err)
+	}
+
+	assert.Equal(t, "ACK: Hello World !\n", replyUDP)
+
+	logrus.WithField("name", readyGs.ObjectMeta.Name).Info("UDP ping passed, sending TCP ping")
+
+	replyTCP, err := e2eframework.SendGameServerTCPToPort(readyGs, tcpPort.Name, "Hello World !")
+	if err != nil {
+		t.Fatalf("Could not ping TCP GameServer: %v", err)
+	}
+
+	assert.Equal(t, "ACK TCP: Hello World !\n", replyTCP)
+}
+
+// TestGameServerStaticTcpProtocol checks TCP connection for TCP Protocol of Static Portpolicy
+func TestGameServerStaticTcpProtocol(t *testing.T) {
+	framework.SkipOnCloudProduct(t, "gke-autopilot", "does not support Static PortPolicy")
+	t.Parallel()
+	gs := framework.DefaultGameServer(framework.Namespace)
+
+	gs.Spec.Ports[0].PortPolicy = agonesv1.Static
+	gs.Spec.Ports[0].Protocol = corev1.ProtocolTCP
+	gs.Spec.Ports[0].HostPort = 7000
+	gs.Spec.Template.Spec.Containers[0].Env = []corev1.EnvVar{{Name: "TCP", Value: "TRUE"}}
+
+	errs := gs.Validate(agtesting.FakeAPIHooks{})
+	require.Len(t, errs, 0)
+
+	readyGs, err := framework.CreateGameServerAndWaitUntilReady(t, framework.Namespace, gs)
+	require.NoError(t, err)
+
+	logrus.WithField("name", readyGs.ObjectMeta.Name).Info("sending TCP ping")
+
+	replyTCP, err := e2eframework.SendGameServerTCP(readyGs, "Hello World !")
+	require.NoError(t, err)
+	assert.Equal(t, "ACK TCP: Hello World !\n", replyTCP)
+
+	logrus.WithField("name", readyGs.ObjectMeta.Name).Info("TCP ping Passed")
+}
+
+// TestGameServerStaticUdpProtocol checks default(UDP) connection of Static Portpolicy
+func TestGameServerStaticUdpProtocol(t *testing.T) {
+	framework.SkipOnCloudProduct(t, "gke-autopilot", "does not support Static PortPolicy")
+	t.Parallel()
+	gs := framework.DefaultGameServer(framework.Namespace)
+
+	gs.Spec.Ports[0].PortPolicy = agonesv1.Static
+	gs.Spec.Ports[0].HostPort = 7000
+
+	errs := gs.Validate(agtesting.FakeAPIHooks{})
+	require.Len(t, errs, 0)
+
+	readyGs, err := framework.CreateGameServerAndWaitUntilReady(t, framework.Namespace, gs)
+	require.NoError(t, err)
+
+	logrus.WithField("name", readyGs.ObjectMeta.Name).Info("sending UDP ping")
+
+	replyTCP, err := framework.SendGameServerUDP(t, readyGs, "Default UDP connection check")
+	require.NoError(t, err)
+	assert.Equal(t, "ACK: Default UDP connection check\n", replyTCP)
+
+	logrus.WithField("name", readyGs.ObjectMeta.Name).Info("UDP ping Passed")
+}
+
 func TestGameServerWithoutPort(t *testing.T) {
 	t.Parallel()
 	gs := framework.DefaultGameServer(framework.Namespace)

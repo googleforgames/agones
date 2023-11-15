@@ -1175,9 +1175,10 @@ func (s *SDKServer) updateList(ctx context.Context) error {
 	}
 	gsCopy := gs.DeepCopy()
 
-	s.logger.WithField("batchListUpdates", s.gsListUpdates).Debug("Batch updating List(s)")
 	s.gsUpdateMutex.Lock()
 	defer s.gsUpdateMutex.Unlock()
+
+	s.logger.WithField("batchListUpdates", s.gsListUpdates).Debug("Batch updating List(s)")
 
 	names := []string{}
 
