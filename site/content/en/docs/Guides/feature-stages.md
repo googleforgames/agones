@@ -37,7 +37,7 @@ The current set of `alpha` and `beta` feature gates:
 | Example Gate (not in use)                                                                                             | `Example`                      | Disabled | None    | 0.13.0 |
 {{% /feature %}}
 
-{{% feature expiryVersion="1.37.0" %}}
+{{% feature publishVersion="1.37.0" %}}
 | Feature Name                                                                                                          | Gate                           | Default  | Stage   | Since  |
 |-----------------------------------------------------------------------------------------------------------------------|--------------------------------|----------|---------|--------|
 | [Allocated GameServers are notified on relevant Fleet Updates][fleet-updates]                                         | `FleetAllocationOverflow`      | Enabled | `Beta`  | 1.37.0 |
