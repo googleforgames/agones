@@ -138,13 +138,17 @@ type SDKServer struct {
 func NewSDKServer(gameServerName, namespace string, kubeClient kubernetes.Interface,
 	agonesClient versioned.Interface) (*SDKServer, error) {
 	mux := http.NewServeMux()
+	resync := 30 * time.Second
+	if runtime.FeatureEnabled(runtime.FeatureDisableResyncOnSDKServer) {
+		resync = 0
+	}
 
 	// limit the informer to only working with the gameserver that the sdk is attached to
 	tweakListOptions := func(opts *metav1.ListOptions) {
 		s1 := fields.OneTermEqualSelector("metadata.name", gameServerName)
 		opts.FieldSelector = s1.String()
 	}
-	factory := externalversions.NewSharedInformerFactoryWithOptions(agonesClient, 0, externalversions.WithNamespace(namespace), externalversions.WithTweakListOptions(tweakListOptions))
+	factory := externalversions.NewSharedInformerFactoryWithOptions(agonesClient, resync, externalversions.WithNamespace(namespace), externalversions.WithTweakListOptions(tweakListOptions))
 	gameServers := factory.Agones().V1().GameServers()
 
 	s := &SDKServer{

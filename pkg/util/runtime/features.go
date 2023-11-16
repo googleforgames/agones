@@ -106,10 +106,10 @@ var (
 		FeatureSplitControllerAndExtensions: true,
 
 		// Alpha features
-		FeatureDisableResyncOnSDKServer: false,
 		FeatureFleetAllocateOverflow:    false,
 		FeaturePlayerAllocationFilter:   false,
 		FeaturePlayerTracking:           false,
+		FeatureDisableResyncOnSDKServer: false,
 
 		// Pre-Alpha features
 		FeatureCountsAndLists: false,

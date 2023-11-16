@@ -20,10 +20,10 @@ ResetMetricsOnDelete: true
 SplitControllerAndExtensions: true
 
 # Alpha features
-DisableResyncOnSDKServer: false
-FleetAllocationOverflow: false
 PlayerAllocationFilter: false
 PlayerTracking: false
+FleetAllocationOverflow: false
+DisableResyncOnSDKServer: false
 
 # Pre-Alpha features
 CountsAndLists: false
