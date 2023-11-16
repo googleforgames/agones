@@ -98,6 +98,7 @@ var (
 	// In each of these, keep the feature sorted by descending maturity then alphabetical
 	featureDefaults = map[Feature]bool{
 		// Beta features
+		FeatureFleetAllocateOverflow:        true,
 		FeaturePodHostname:                  true,
 		FeatureResetMetricsOnDelete:         true,
 		FeatureSplitControllerAndExtensions: true,
@@ -105,7 +106,6 @@ var (
 		// Alpha features
 		FeaturePlayerAllocationFilter: false,
 		FeaturePlayerTracking:         false,
-		FeatureFleetAllocateOverflow:  false,
 
 		// Pre-Alpha features
 		FeatureCountsAndLists: false,

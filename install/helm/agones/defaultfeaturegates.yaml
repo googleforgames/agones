@@ -15,6 +15,7 @@
 # Default values for feature gates. Keep in sync with pkg/util/runtime/features.go:featureDefaults
 
 # Beta features
+FleetAllocationOverflow: true
 PodHostname: true
 ResetMetricsOnDelete: true
 SplitControllerAndExtensions: true
@@ -22,7 +23,6 @@ SplitControllerAndExtensions: true
 # Alpha features
 PlayerAllocationFilter: false
 PlayerTracking: false
-FleetAllocationOverflow: false
 
 # Pre-Alpha features
 CountsAndLists: false
