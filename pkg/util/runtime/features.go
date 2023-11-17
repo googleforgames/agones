@@ -44,10 +44,6 @@ const (
 	// FeaturePlayerTracking is a feature flag to enable/disable player tracking features.
 	FeaturePlayerTracking Feature = "PlayerTracking"
 
-	// FeatureResetMetricsOnDelete is a feature flag that tells the metrics service to unregister and register
-	// relevant metric views to reset their state immediately when an Agones resource is deleted.
-	FeatureResetMetricsOnDelete Feature = "ResetMetricsOnDelete"
-
 	// FeaturePodHostname enables the Pod Hostname being assigned the name of the GameServer
 	FeaturePodHostname = "PodHostname"
 
@@ -99,7 +95,6 @@ var (
 	featureDefaults = map[Feature]bool{
 		// Beta features
 		FeaturePodHostname:                  true,
-		FeatureResetMetricsOnDelete:         true,
 		FeatureSplitControllerAndExtensions: true,
 
 		// Alpha features

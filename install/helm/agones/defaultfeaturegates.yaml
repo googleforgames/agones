@@ -16,7 +16,6 @@
 
 # Beta features
 PodHostname: true
-ResetMetricsOnDelete: true
 SplitControllerAndExtensions: true
 
 # Alpha features
