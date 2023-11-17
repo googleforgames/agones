@@ -1680,10 +1680,96 @@ func TestFleetAggregatedCounterStatus(t *testing.T) {
 			return false
 		}
 
-		log.WithField("status", fleet.Status).Info("Checking Count and Capacity")
+		log.WithField("status", fleet.Status).Info("Checking Aggregated Count and Capacity")
 		log.WithField("AggregatedCounterStatus", counter).Debug("AggregatedCounterStatus")
 		return counter.AllocatedCount == int64(allocatedCount) && counter.AllocatedCapacity == int64(allocatedCapacity) &&
 			counter.Count == int64(totalCount) && counter.Capacity == int64(totalCapacity)
+	})
+}
+
+func TestFleetAggregatedListStatus(t *testing.T) {
+	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
+		t.SkipNow()
+	}
+	t.Parallel()
+	ctx := context.Background()
+	client := framework.AgonesClient.AgonesV1()
+
+	flt := defaultFleet(framework.Namespace)
+	flt.Spec.Template.Spec.Lists = map[string]agonesv1.ListStatus{
+		"gamers": {
+			Values:   []string{"gamer0", "gamer1"},
+			Capacity: 10,
+		},
+	}
+
+	flt, err := client.Fleets(framework.Namespace).Create(ctx, flt.DeepCopy(), metav1.CreateOptions{})
+	require.NoError(t, err)
+	defer client.Fleets(framework.Namespace).Delete(ctx, flt.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
+	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
+
+	// allocate two of them.
+	framework.CreateAndApplyAllocation(t, flt)
+	framework.CreateAndApplyAllocation(t, flt)
+	framework.AssertFleetCondition(t, flt, func(entry *logrus.Entry, fleet *agonesv1.Fleet) bool {
+		return fleet.Status.AllocatedReplicas == 2
+	})
+
+	framework.AssertFleetCondition(t, flt, func(log *logrus.Entry, fleet *agonesv1.Fleet) bool {
+		list, ok := fleet.Status.Lists["gamers"]
+		if !ok {
+			log.WithField("status", fleet.Status).Info("No gamers List")
+			return false
+		}
+
+		log.WithField("status", fleet.Status).Info("Checking Count and Capacity")
+		log.WithField("AggregatedListStatus", list).Debug("AggregatedListStatus")
+		return list.AllocatedCount == 4 && list.AllocatedCapacity == 20 && list.Count == 6 && list.Capacity == 30
+	})
+
+	list, err := framework.ListGameServersFromFleet(flt)
+	assert.NoError(t, err)
+	totalCapacity := 0
+	totalCount := 0
+	allocatedCapacity := 0
+	allocatedCount := 0
+	// set random counts and capacities for each gameserver
+	for _, gs := range list {
+		count := rand.IntnRange(2, 9)
+		capacity := rand.IntnRange(count, 100)
+
+		totalCapacity += capacity
+		msg := fmt.Sprintf("SET_LIST_CAPACITY gamers %d", capacity)
+		reply, err := framework.SendGameServerUDP(t, &gs, msg)
+		require.NoError(t, err)
+		assert.Equal(t, "true", reply)
+
+		totalCount += count
+		// Each list starts with a count of 2 (Values: []string{"gamer0", "gamer1"})
+		for i := 2; i < count; i++ {
+			msg = fmt.Sprintf("APPEND_LIST_VALUE gamers gamer%d", i)
+			reply, err = framework.SendGameServerUDP(t, &gs, msg)
+			require.NoError(t, err)
+			assert.Equal(t, "true", reply)
+		}
+
+		if gs.Status.State == agonesv1.GameServerStateAllocated {
+			allocatedCapacity += capacity
+			allocatedCount += count
+		}
+	}
+
+	framework.AssertFleetCondition(t, flt, func(log *logrus.Entry, fleet *agonesv1.Fleet) bool {
+		list, ok := fleet.Status.Lists["gamers"]
+		if !ok {
+			log.WithField("status", fleet.Status).Info("No gamers List")
+			return false
+		}
+
+		log.WithField("status", fleet.Status).Info("Checking Aggregated Count and Capacity")
+		log.WithField("AggregatedListStatus", list).Debug("AggregatedListStatus")
+		return list.AllocatedCount == int64(allocatedCount) && list.AllocatedCapacity == int64(allocatedCapacity) &&
+			list.Count == int64(totalCount) && list.Capacity == int64(totalCapacity)
 	})
 }
 
