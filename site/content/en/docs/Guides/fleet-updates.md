@@ -127,7 +127,13 @@ the rate that you deem fit for your specific rollout.
 
 ## Notifying GameServers on Fleet Update/Downscale
 
+{{% feature expiryVersion="1.37.0" %}}
 {{< alpha title="Allocated GameSever Overflow Notification" gate="FleetAllocationOverflow" >}}
+{{% /feature %}}
+
+{{% feature publishVersion="1.37.0" %}}
+{{< beta title="Allocated GameSever Overflow Notification" gate="FleetAllocationOverflow" >}}
+{{% /feature %}}
 
 When `Allocated` `GameServers` are utilised for a long time, such as a Lobby `GameServer`,
 or a `GameServer` that is being reused multiple times in a row, it can be useful

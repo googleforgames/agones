@@ -50,17 +50,17 @@ spec:
       maxSurge: 25%
       # the amount to decrements GameServers by. Defaults to 25%
       maxUnavailable: 25%
-  # [Stage:Alpha]
+  # [Stage:Beta]
   # [FeatureFlag:FleetAllocationOverflow]
   # Labels and/or Annotations to apply to overflowing GameServers when the number of Allocated GameServers exceeds
   # the desired replicas in the underlying `GameServerSet`
-  # Commented out since Alpha, and disabled by default
-  # allocationOverflow:
-  #   labels:
-  #     mykey: myvalue
-  #     version: ""  # empty an existing label value
-  #   annotations:
-  #     otherkey: setthisvalue
+  # Now in Beta, and can be enabled
+  allocationOverflow:
+    labels:
+      mykey: myvalue
+      version: ""  # empty an existing label value
+    annotations:
+      otherkey: setthisvalue
   #
   # [Stage:Alpha]
   # [FeatureFlag:CountsAndLists]
