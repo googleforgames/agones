@@ -925,6 +925,7 @@ func (gs *GameServer) UpdateListCapacity(name string, capacity int64) error {
 	}
 	if list, ok := gs.Status.Lists[name]; ok {
 		list.Capacity = capacity
+		list.Values = truncateList(list.Capacity, list.Values)
 		gs.Status.Lists[name] = list
 		return nil
 	}
@@ -940,14 +941,20 @@ func (gs *GameServer) AppendListValues(name string, values []string) error {
 		mergedList := MergeRemoveDuplicates(list.Values, values)
 		// Any duplicate values are silently dropped.
 		list.Values = mergedList
-		// Truncate values if more than capacity
-		if len(list.Values) > int(list.Capacity) {
-			list.Values = append([]string{}, list.Values[:list.Capacity]...)
-		}
+		list.Values = truncateList(list.Capacity, list.Values)
 		gs.Status.Lists[name] = list
 		return nil
 	}
 	return errors.Errorf("unable to AppendListValues: Name %s, Values %s. List not found in GameServer %s", name, values, gs.ObjectMeta.GetName())
+}
+
+// truncateList truncates the list to the given capacity
+func truncateList(capacity int64, list []string) []string {
+	if list == nil || len(list) <= int(capacity) {
+		return list
+	}
+	list = append([]string{}, list[:capacity]...)
+	return list
 }
 
 // MergeRemoveDuplicates merges two lists and removes any duplicate values.
