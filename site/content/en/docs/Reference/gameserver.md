@@ -140,7 +140,7 @@ If you want to connect to a `GameServer` from within your Kubernetes cluster via
 DNS entry, each Pod attached to a `GameServer` automatically derives its hostname from the name of the `GameServer`.
 {{% /feature %}}
 
-{{% feature expiryVersion="1.37.0" %}}
+{{% feature publishVersion="1.37.0" %}}
 If you want to connect to a `GameServer` from within your Kubernetes cluster via a convention based
 DNS entry, each Pod attached to a `GameServer` automatically derives its hostname from the name of the `GameServer`.
 {{% /feature %}}
