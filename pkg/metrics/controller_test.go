@@ -289,9 +289,8 @@ func TestControllerGameServersTotal(t *testing.T) {
 }
 
 func TestControllerFleetReplicasCount(t *testing.T) {
-	// runtime.FeatureTestMutex.Lock()
-	// defer runtime.FeatureTestMutex.Unlock()
-	// require.NoError(t, runtime.ParseFeatures(""))
+	runtime.FeatureTestMutex.Lock()
+	defer runtime.FeatureTestMutex.Unlock()
 
 	resetMetrics()
 	exporter := &metricExporter{}
