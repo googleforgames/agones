@@ -289,8 +289,9 @@ func TestControllerGameServersTotal(t *testing.T) {
 }
 
 func TestControllerFleetReplicasCount(t *testing.T) {
-	runtime.FeatureTestMutex.Lock()
-	defer runtime.FeatureTestMutex.Unlock()
+	// runtime.FeatureTestMutex.Lock()
+	// defer runtime.FeatureTestMutex.Unlock()
+	// require.NoError(t, runtime.ParseFeatures(""))
 
 	resetMetrics()
 	exporter := &metricExporter{}
@@ -326,7 +327,7 @@ func TestControllerFleetReplicasCount(t *testing.T) {
 		}
 
 		return false
-	}, 50*time.Second, time.Second)
+	}, 5*time.Second, time.Second)
 
 	reader.ReadAndExport(exporter)
 	assertMetricData(t, exporter, fleetReplicaCountName, []expectedMetricData{
@@ -344,9 +345,8 @@ func TestControllerFleetReplicasCount(t *testing.T) {
 }
 
 func TestControllerFleetReplicasCount_ResetMetricsOnDelete(t *testing.T) {
-	// runtime.FeatureTestMutex.Lock()
-	// defer runtime.FeatureTestMutex.Unlock()
-	// require.NoError(t, runtime.ParseFeatures(fmt.Sprintf("%s=true", runtime.FeatureResetMetricsOnDelete)))
+	runtime.FeatureTestMutex.Lock()
+	defer runtime.FeatureTestMutex.Unlock()
 
 	resetMetrics()
 	exporter := &metricExporter{}
@@ -395,9 +395,8 @@ func TestControllerFleetReplicasCount_ResetMetricsOnDelete(t *testing.T) {
 }
 
 func TestControllerFleetAutoScalerState(t *testing.T) {
-	// runtime.FeatureTestMutex.Lock()
-	// defer runtime.FeatureTestMutex.Unlock()
-	// require.NoError(t, runtime.ParseFeatures(fmt.Sprintf("%s=false", runtime.FeatureResetMetricsOnDelete)))
+	runtime.FeatureTestMutex.Lock()
+	defer runtime.FeatureTestMutex.Unlock()
 
 	resetMetrics()
 	exporter := &metricExporter{}
@@ -485,9 +484,8 @@ func TestControllerFleetAutoScalerState(t *testing.T) {
 }
 
 func TestControllerFleetAutoScalerState_ResetMetricsOnDelete(t *testing.T) {
-	// runtime.FeatureTestMutex.Lock()
-	// defer runtime.FeatureTestMutex.Unlock()
-	// require.NoError(t, runtime.ParseFeatures(fmt.Sprintf("%s=true", runtime.FeatureResetMetricsOnDelete)))
+	runtime.FeatureTestMutex.Lock()
+	defer runtime.FeatureTestMutex.Unlock()
 
 	resetMetrics()
 	exporter := &metricExporter{}
