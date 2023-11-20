@@ -133,10 +133,17 @@ The GameServer resource does not support updates. If you need to make regular up
 
 ## Stable Network ID
 
+{{% feature expiryVersion="1.37.0" %}}
 {{< beta title="Stable Network ID" gate="PodHostname" >}}
 
 If you want to connect to a `GameServer` from within your Kubernetes cluster via a convention based
 DNS entry, each Pod attached to a `GameServer` automatically derives its hostname from the name of the `GameServer`.
+{{% /feature %}}
+
+{{% feature expiryVersion="1.37.0" %}}
+If you want to connect to a `GameServer` from within your Kubernetes cluster via a convention based
+DNS entry, each Pod attached to a `GameServer` automatically derives its hostname from the name of the `GameServer`.
+{{% /feature %}}
 
 To create internal DNS entries within the cluster, a group of `Pods` attached to `GameServers` can use a 
 [Headless Service](https://kubernetes.io/docs/concepts/services-networking/service/#headless-services) to control 

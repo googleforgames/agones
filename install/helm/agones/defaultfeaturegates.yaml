@@ -15,7 +15,6 @@
 # Default values for feature gates. Keep in sync with pkg/util/runtime/features.go:featureDefaults
 
 # Beta features
-PodHostname: true
 ResetMetricsOnDelete: true
 SplitControllerAndExtensions: true
 
