@@ -22,6 +22,7 @@ SplitControllerAndExtensions: true
 PlayerAllocationFilter: false
 PlayerTracking: false
 FleetAllocationOverflow: false
+DisableResyncOnSDKServer: false
 
 # Pre-Alpha features
 CountsAndLists: false
