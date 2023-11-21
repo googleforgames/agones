@@ -15,13 +15,13 @@
 # Default values for feature gates. Keep in sync with pkg/util/runtime/features.go:featureDefaults
 
 # Beta features
+FleetAllocationOverflow: true
 ResetMetricsOnDelete: true
 SplitControllerAndExtensions: true
 
 # Alpha features
 PlayerAllocationFilter: false
 PlayerTracking: false
-FleetAllocationOverflow: false
 DisableResyncOnSDKServer: false
 
 # Pre-Alpha features

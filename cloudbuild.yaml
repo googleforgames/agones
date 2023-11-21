@@ -296,10 +296,10 @@ steps:
             region=${versionsAndRegions[$version]}
             if [ $cloudProduct = generic ]
             then
-              featureWithGate="PlayerAllocationFilter=true&PlayerTracking=true&ResetMetricsOnDelete=false&SplitControllerAndExtensions=false&FleetAllocationOverflow=true&CountsAndLists=true&DisableResyncOnSDKServer=true&Example=true"
+              featureWithGate="PlayerAllocationFilter=true&PlayerTracking=true&ResetMetricsOnDelete=false&SplitControllerAndExtensions=false&FleetAllocationOverflow=false&CountsAndLists=true&DisableResyncOnSDKServer=true&Example=true"
               testCluster="standard-e2e-test-cluster-${version//./-}"
             else
-              featureWithGate="PlayerAllocationFilter=true&PlayerTracking=true&ResetMetricsOnDelete=false&SplitControllerAndExtensions=true&FleetAllocationOverflow=true&CountsAndLists=true&DisableResyncOnSDKServer=true&Example=true"
+              featureWithGate="PlayerAllocationFilter=true&PlayerTracking=true&ResetMetricsOnDelete=false&SplitControllerAndExtensions=true&FleetAllocationOverflow=false&CountsAndLists=true&DisableResyncOnSDKServer=true&Example=true"
               testCluster="gke-autopilot-e2e-test-cluster-${version//./-}"
             fi
             featureWithoutGate=""
