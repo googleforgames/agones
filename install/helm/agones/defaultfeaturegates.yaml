@@ -16,7 +16,6 @@
 
 # Beta features
 FleetAllocationOverflow: true
-PodHostname: true
 ResetMetricsOnDelete: true
 SplitControllerAndExtensions: true
 
