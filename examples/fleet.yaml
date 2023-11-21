@@ -54,7 +54,7 @@ spec:
   # [FeatureFlag:FleetAllocationOverflow]
   # Labels and/or Annotations to apply to overflowing GameServers when the number of Allocated GameServers exceeds
   # the desired replicas in the underlying `GameServerSet`
-  # Now in Beta, and can be enabled
+  # Now in Beta, and enabled by default
   allocationOverflow:
     labels:
       mykey: myvalue
