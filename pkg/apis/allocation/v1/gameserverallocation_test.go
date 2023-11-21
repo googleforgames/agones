@@ -948,7 +948,7 @@ func TestGameServerListActions(t *testing.T) {
 		want    *agonesv1.GameServer
 		wantErr bool
 	}{
-		"update list capacity": {
+		"update list capacity truncates list": {
 			la: ListAction{
 				Capacity: int64Pointer(0),
 			},
@@ -962,7 +962,7 @@ func TestGameServerListActions(t *testing.T) {
 			want: &agonesv1.GameServer{Status: agonesv1.GameServerStatus{
 				Lists: map[string]agonesv1.ListStatus{
 					"pages": {
-						Values:   []string{"page1", "page2"},
+						Values:   []string{},
 						Capacity: 0,
 					}}}},
 			wantErr: false,
