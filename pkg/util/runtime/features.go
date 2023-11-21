@@ -48,9 +48,6 @@ const (
 	// relevant metric views to reset their state immediately when an Agones resource is deleted.
 	FeatureResetMetricsOnDelete Feature = "ResetMetricsOnDelete"
 
-	// FeaturePodHostname enables the Pod Hostname being assigned the name of the GameServer
-	FeaturePodHostname = "PodHostname"
-
 	// FeatureFleetAllocateOverflow enables setting labels and/or annotations on Allocated GameServers
 	// if the desired number of the underlying GameServerSet drops below the number of Allocated GameServers.
 	FeatureFleetAllocateOverflow = "FleetAllocationOverflow"
@@ -101,7 +98,6 @@ var (
 	// In each of these, keep the feature sorted by descending maturity then alphabetical
 	featureDefaults = map[Feature]bool{
 		// Beta features
-		FeaturePodHostname:                  true,
 		FeatureResetMetricsOnDelete:         true,
 		FeatureSplitControllerAndExtensions: true,
 
