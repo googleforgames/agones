@@ -17,7 +17,6 @@ package main
 
 import (
 	"context"
-	"crypto/tls"
 	"io"
 	"net/http"
 	"os"
@@ -36,7 +35,6 @@ import (
 	"agones.dev/agones/pkg/gameserversets"
 	"agones.dev/agones/pkg/metrics"
 	"agones.dev/agones/pkg/util/apiserver"
-	"agones.dev/agones/pkg/util/fswatch"
 	"agones.dev/agones/pkg/util/https"
 	"agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/signals"
@@ -51,10 +49,6 @@ import (
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
-)
-
-const (
-	tlsDir = "/home/agones/certs/"
 )
 
 const (
@@ -144,22 +138,7 @@ func main() {
 		logger.WithError(err).Fatal("Could not initialize cloud product")
 	}
 	// https server and the items that share the Mux for routing
-	httpsServer := https.NewServer(ctlConf.CertFile, ctlConf.KeyFile)
-
-	cancelTLS, err := fswatch.Watch(logger, tlsDir, time.Second, func() {
-		tlsCert, err := readTLSCert()
-		if err != nil {
-			logger.WithError(err).Error("could not load TLS certs; keeping old one")
-			return
-		}
-		httpsServer.SetCertificate(tlsCert)
-		logger.Info("TLS certs updated")
-	})
-	if err != nil {
-		logger.WithError(err).Fatal("could not create watcher for TLS certs")
-	}
-	defer cancelTLS()
-
+	httpsServer := https.NewServer(ctlConf.CertFile, ctlConf.KeyFile, logger)
 	wh := webhooks.NewWebHook(httpsServer.Mux)
 	api := apiserver.NewAPIServer(httpsServer.Mux)
 
@@ -240,14 +219,6 @@ func main() {
 
 	<-ctx.Done()
 	logger.Info("Shut down agones extensions")
-}
-
-func readTLSCert() (*tls.Certificate, error) {
-	tlsCert, err := tls.LoadX509KeyPair(tlsDir+"server.crt", tlsDir+"server.key")
-	if err != nil {
-		return nil, err
-	}
-	return &tlsCert, nil
 }
 
 func parseEnvFlags() config {

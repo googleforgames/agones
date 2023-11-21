@@ -19,11 +19,19 @@ import (
 	"crypto/tls"
 	"net/http"
 	"sync"
+	"time"
 
+	"agones.dev/agones/pkg/util/fswatch"
 	"agones.dev/agones/pkg/util/runtime"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
+
+const (
+	tlsDir = "/certs/"
+)
+
+var tlsMutex sync.Mutex
 
 // tls is a http server interface to enable easier testing
 type testTLS interface {
@@ -38,37 +46,51 @@ type Server struct {
 	logger   *logrus.Entry
 	Mux      *http.ServeMux
 	tls      testTLS
-	certMu   sync.RWMutex
-	cert     *tls.Certificate
 	certFile string
 	keyFile  string
 }
 
 // NewServer returns a Server instance.
-func NewServer(certFile, keyFile string) *Server {
+func NewServer(certFile, keyFile string, logger *logrus.Entry) *Server {
 	mux := http.NewServeMux()
-	tls := &http.Server{
+	tls_server := &http.Server{
 		Addr:    ":8081",
 		Handler: mux,
 	}
 
+	go func() {
+		cancelTLS, err := fswatch.Watch(logger, tlsDir, time.Second, func() {
+			tlsCert, err := readTLSCert()
+			if err != nil {
+				logger.WithError(err).Error("could not load TLS certs; keeping old one")
+				return
+			}
+			tlsMutex.Lock()
+			defer tlsMutex.Unlock()
+			tls_server.TLSConfig = &tls.Config{
+				GetCertificate: func(*tls.ClientHelloInfo) (*tls.Certificate, error) {
+					return tlsCert, nil
+				},
+			}
+			logger.Info("TLS certs updated")
+		})
+		if err != nil {
+			logger.WithError(err).Fatal("could not create watcher for TLS certs")
+		}
+		defer cancelTLS()
+
+	}()
+
 	wh := &Server{
 		Mux:      mux,
-		tls:      tls,
+		tls:      tls_server,
 		certFile: certFile,
 		keyFile:  keyFile,
-		cert:     nil,
 	}
 	wh.Mux.HandleFunc("/", wh.defaultHandler)
 	wh.logger = runtime.NewLoggerWithType(wh)
 
 	return wh
-}
-
-func (s *Server) SetCertificate(cert *tls.Certificate) {
-	s.certMu.Lock()
-	defer s.certMu.Unlock()
-	s.cert = cert
 }
 
 // Run runs the webhook server, starting a https listener.
@@ -100,4 +122,12 @@ func (s *Server) defaultHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	FourZeroFour(s.logger, w, r)
+}
+
+func readTLSCert() (*tls.Certificate, error) {
+	tlsCert, err := tls.LoadX509KeyPair(tlsDir+"server.crt", tlsDir+"server.key")
+	if err != nil {
+		return nil, err
+	}
+	return &tlsCert, nil
 }
