@@ -44,10 +44,6 @@ const (
 	// FeaturePlayerTracking is a feature flag to enable/disable player tracking features.
 	FeaturePlayerTracking Feature = "PlayerTracking"
 
-	// FeatureResetMetricsOnDelete is a feature flag that tells the metrics service to unregister and register
-	// relevant metric views to reset their state immediately when an Agones resource is deleted.
-	FeatureResetMetricsOnDelete Feature = "ResetMetricsOnDelete"
-
 	// FeatureFleetAllocateOverflow enables setting labels and/or annotations on Allocated GameServers
 	// if the desired number of the underlying GameServerSet drops below the number of Allocated GameServers.
 	FeatureFleetAllocateOverflow = "FleetAllocationOverflow"
@@ -99,7 +95,6 @@ var (
 	featureDefaults = map[Feature]bool{
 		// Beta features
 		FeatureFleetAllocateOverflow:        true,
-		FeatureResetMetricsOnDelete:         true,
 		FeatureSplitControllerAndExtensions: true,
 
 		// Alpha features

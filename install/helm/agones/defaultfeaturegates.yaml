@@ -16,7 +16,6 @@
 
 # Beta features
 FleetAllocationOverflow: true
-ResetMetricsOnDelete: true
 SplitControllerAndExtensions: true
 
 # Alpha features

@@ -217,25 +217,13 @@ func (c *Controller) recordFleetAutoScalerChanges(old, next interface{}) {
 }
 
 func (c *Controller) recordFleetAutoScalerDeletion(obj interface{}) {
-	fas, ok := obj.(*autoscalingv1.FleetAutoscaler)
+	_, ok := obj.(*autoscalingv1.FleetAutoscaler)
 	if !ok {
 		return
 	}
 
-	if runtime.FeatureEnabled(runtime.FeatureResetMetricsOnDelete) {
-		if err := c.resyncFleetAutoScaler(); err != nil {
-			c.logger.WithError(err).Warn("Could not resync Fleet Autoscaler metrics")
-		}
-	} else {
-		ctx, _ := tag.New(context.Background(), tag.Upsert(keyName, fas.Name),
-			tag.Upsert(keyFleetName, fas.Spec.FleetName), tag.Upsert(keyNamespace, fas.Namespace))
-
-		// recording status
-		stats.Record(ctx,
-			fasCurrentReplicasStats.M(int64(0)),
-			fasDesiredReplicasStats.M(int64(0)),
-			fasAbleToScaleStats.M(int64(0)),
-			fasLimitedStats.M(int64(0)))
+	if err := c.resyncFleetAutoScaler(); err != nil {
+		c.logger.WithError(err).Warn("Could not resync Fleet Autoscaler metrics")
 	}
 }
 
@@ -256,20 +244,16 @@ func (c *Controller) recordFleetChanges(obj interface{}) {
 }
 
 func (c *Controller) recordFleetDeletion(obj interface{}) {
-	f, ok := obj.(*agonesv1.Fleet)
+	_, ok := obj.(*agonesv1.Fleet)
 	if !ok {
 		return
 	}
 
-	if runtime.FeatureEnabled(runtime.FeatureResetMetricsOnDelete) {
-		if err := c.resyncFleets(); err != nil {
-			// If for some reason resync fails, the entire metric state for fleets
-			// will be reset whenever the next Fleet gets deleted, in which case
-			// we end up back in a healthy state - so we aren't going to actively retry.
-			c.logger.WithError(err).Warn("Could not resync Fleet Metrics")
-		}
-	} else {
-		c.recordFleetReplicas(f.Name, f.Namespace, 0, 0, 0, 0, 0)
+	if err := c.resyncFleets(); err != nil {
+		// If for some reason resync fails, the entire metric state for fleets
+		// will be reset whenever the next Fleet gets deleted, in which case
+		// we end up back in a healthy state - so we aren't going to actively retry.
+		c.logger.WithError(err).Warn("Could not resync Fleet Metrics")
 	}
 }
 
