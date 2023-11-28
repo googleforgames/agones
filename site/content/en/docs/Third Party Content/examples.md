@@ -34,5 +34,5 @@ You will need to download the Xonotic client to interact with the demo.
 - It builds on top Agones `GameServer` and `Fleet` primitives to provide simplified abstractions specifically tailored
   to orchestrating Minecraft workloads. 
 
-Shulker requires you to have a genuine Minecraft account. You'll need to [purchase the game](https://www.minecraft.net/en-us/article/how-create-minecraft-account)
+Shulker requires you to have a genuine Minecraft account. You'll need to <a href="https://www.minecraft.net/en-us/article/how-create-minecraft-account" data-proofer-ignore>purchase the game</a>
 to test the "Getting Started" example.
