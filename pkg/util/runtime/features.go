@@ -31,8 +31,9 @@ const (
 	////////////////
 	// Beta features
 
-	// FeatureSplitControllerAndExtensions is a feature flag that will split agones-controller into two deployments
-	FeatureSplitControllerAndExtensions Feature = "SplitControllerAndExtensions"
+	// FeatureFleetAllocateOverflow enables setting labels and/or annotations on Allocated GameServers
+	// if the desired number of the underlying GameServerSet drops below the number of Allocated GameServers.
+	FeatureFleetAllocateOverflow Feature = "FleetAllocationOverflow"
 
 	////////////////
 	// Alpha features
@@ -43,10 +44,6 @@ const (
 
 	// FeaturePlayerTracking is a feature flag to enable/disable player tracking features.
 	FeaturePlayerTracking Feature = "PlayerTracking"
-
-	// FeatureFleetAllocateOverflow enables setting labels and/or annotations on Allocated GameServers
-	// if the desired number of the underlying GameServerSet drops below the number of Allocated GameServers.
-	FeatureFleetAllocateOverflow = "FleetAllocationOverflow"
 
 	////////////////
 	// "Pre"-Alpha features
@@ -94,8 +91,7 @@ var (
 	// In each of these, keep the feature sorted by descending maturity then alphabetical
 	featureDefaults = map[Feature]bool{
 		// Beta features
-		FeatureFleetAllocateOverflow:        true,
-		FeatureSplitControllerAndExtensions: true,
+		FeatureFleetAllocateOverflow: true,
 
 		// Alpha features
 		FeaturePlayerAllocationFilter:   false,

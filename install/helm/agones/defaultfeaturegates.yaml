@@ -16,7 +16,6 @@
 
 # Beta features
 FleetAllocationOverflow: true
-SplitControllerAndExtensions: true
 
 # Alpha features
 PlayerAllocationFilter: false

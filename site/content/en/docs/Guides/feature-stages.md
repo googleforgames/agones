@@ -40,7 +40,6 @@ The current set of `alpha` and `beta` feature gates:
 | Feature Name                                                                                                          | Gate                           | Default  | Stage   | Since  |
 |-----------------------------------------------------------------------------------------------------------------------|--------------------------------|----------|---------|--------|
 | [Allocated GameServers are notified on relevant Fleet Updates][fleet-updates]                                         | `FleetAllocationOverflow`      | Enabled  | `Beta`  | 1.37.0 |
-| [Split `agones-controller` ](https://github.com/googleforgames/agones/issues/2797)                                    | `SplitControllerAndExtensions` | Enabled  | `Beta`  | 1.32.0 |
 | [GameServer player capacity filtering on GameServerAllocations](https://github.com/googleforgames/agones/issues/1239) | `PlayerAllocationFilter`       | Disabled | `Alpha` | 1.14.0 |
 | [Player Tracking]({{< ref "/docs/Guides/player-tracking.md" >}})                                                      | `PlayerTracking`               | Disabled | `Alpha` | 1.6.0  |
 | [DisableResyncOnSDKServer](https://github.com/googleforgames/agones/issues/3377)                                      | `DisableResyncOnSDKServer`     | Disabled | `Alpha` | 1.37.0 |
