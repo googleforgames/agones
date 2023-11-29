@@ -1,0 +1,108 @@
+#!/usr/bin/env bash
+
+BUCKET=""
+SRC_DIR="."
+KEY="cache"
+KEY_FALLBACK_PATTERN=""
+PATHS=()
+
+function print_usage {
+  echo "Usage: $0 --bucket=gs://my-cache-bucket --key=cache-key"
+  echo
+  echo "Saves the specified paths to a cache file located in the out directory."
+  echo
+  echo "  -b,  --bucket       The cloud storage bucket to download the cache from. [optional]"
+  echo "  -s,  --src          The local directory in which the cache is stored. [optional]"
+  echo "  -k,  --key          The cache key used for this cache file. [optional]"
+  echo "  -kf, --key_fallback The cache key fallback pattern to be used if exact cache key is not found. It will try to find a file based on the pattern specified and will retrieve the most recent one. [optional]"
+  echo 
+}
+
+for i in "$@"; do
+  case $i in
+    -b=*|--bucket=*)
+      BUCKET="${i#*=}"
+      shift
+      ;;
+    -s=*|--src=* )
+      SRC_DIR="${i#*=}"
+      shift
+      ;;
+    -k=*|--key=* )
+      KEY="${i#*=}"
+      shift
+      ;;
+    -kf=*|--key_fallback=* )
+      KEY_FALLBACK_PATTERN="${i#*=}"
+      shift
+      ;;
+    -h|--help )
+      print_usage
+      exit 0
+      ;;
+    *)
+      echo "Unknown option: ${i}"
+      print_usage
+      exit 1
+      ;;
+  esac
+done
+
+if [ -z "${BUCKET}" ] && [ -z "${SRC_DIR}" ];then
+  echo "Require one of [--bucket, --src]"
+  print_usage
+  exit 1
+fi
+
+# Evaluate the key string so that bash variables work
+eval "KEY=\"$KEY\""
+eval "KEY_FALLBACK_PATTERN=\"$KEY_FALLBACK_PATTERN\""
+
+if [ -n "${BUCKET}" ];then
+  REMOTE_CACHE_FILE="${BUCKET}/${KEY}.tgz"
+
+  echo "Checking cache file existence for: ${REMOTE_CACHE_FILE}"
+  REMOTE_CACHE_FILE_EXISTENCE=$(gsutil -q stat ${REMOTE_CACHE_FILE}; echo $?)
+
+  # If cache file exists download and decompress it
+  if [ $REMOTE_CACHE_FILE_EXISTENCE -eq 0 ];then
+    echo "Downloading cache file: ${REMOTE_CACHE_FILE}..."
+    gsutil -q cp "${REMOTE_CACHE_FILE}" "${SRC_DIR}"
+
+    CACHE_FILE="${SRC_DIR}/${KEY}.tgz"
+
+    echo "Restoring cache from file ${CACHE_FILE}..."
+    tar xpzf "$CACHE_FILE" -P
+    rm "$CACHE_FILE"
+  else
+    # Check if fallback key pattern has been specified
+    if [ -z "${KEY_FALLBACK_PATTERN}" ]; then
+      echo "No fallback key pattern specified. Can not restore cache!"
+      exit 0
+    fi
+
+    # Try to find a fallback file
+    FALLBACK_CACHE_FILE=$(gsutil ls -l $BUCKET/$KEY_FALLBACK_PATTERN** | sort -k 2,2r | grep -m 1 -i "$KEY_FALLBACK_PATTERN" | awk '{print $3}')
+
+    # Check if fallback cache file has been found
+    if [ -z "${FALLBACK_CACHE_FILE}" ]; then
+      echo "No fallback cache file found! Can not restore cache!"
+      exit 0
+    fi
+
+    # Download found fallback cache file
+    echo "Downloading fallback cache file: ${FALLBACK_CACHE_FILE}..."
+    gsutil -q cp "${FALLBACK_CACHE_FILE}" "${SRC_DIR}"
+
+    FALLBACK_CACHE_FILE_NAME=$(echo ${FALLBACK_CACHE_FILE} | awk '{n=split($0,parts,"/"); print parts[n]}')
+
+    echo "Restoring cache from fallback file ${FALLBACK_CACHE_FILE}..."
+    tar xpzf "$FALLBACK_CACHE_FILE_NAME" -P
+    rm "$FALLBACK_CACHE_FILE_NAME"
+  fi
+# If SRC_DIR is specified, restore cache from local file
+elif [ -n "${SRC_DIR}" ]; then
+  LOCAL_CACHE_FILE="${SRC_DIR}/${KEY}.tgz"
+  echo "Restoring from local cache file ${LOCAL_CACHE_FILE}..."
+  tar xpzf "$LOCAL_CACHE_FILE" -P
+fi

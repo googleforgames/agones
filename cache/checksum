@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+echo $(cksum $@ | cut -d' ' -f1) | tr ' ' -

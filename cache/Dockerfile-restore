@@ -1,0 +1,4 @@
+ARG project_id
+FROM us-docker.pkg.dev/${project_id}/ci/cache
+
+ENTRYPOINT ["restore_cache"]

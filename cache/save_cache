@@ -1,0 +1,92 @@
+#!/usr/bin/env bash
+
+BUCKET=""
+OUT_DIR="."
+KEY="cache"
+THRESHOLD="50M"
+PATHS=()
+
+function print_usage {
+  echo "Usage: $0 --out=/cache_dir --key=cache-key --path=/path/to/files/1 --path=/path/to/files/2"
+  echo
+  echo "Saves the specified paths to a cache file located in the out directory."
+  echo
+  echo "  -b, --bucket      The cloud storage bucket to upload the cache to. [optional]"
+  echo "  -o, --out         The output directory to write the cache to. [optional]"
+  echo "  -k, --key         The cache key used for this cache file."
+  echo "  -p, --path        The files to store in the cache. Can be repeated."
+  echo "  -t, --threshold   The parallel composite upload threshold [default: 50M]"
+  echo "  -n, --no-clobber  Skips the save if the cache file already exists in GCS."
+  echo
+}
+
+for i in "$@"; do
+  case $i in
+    -b=*|--bucket=*)
+      BUCKET="${i#*=}"
+      shift
+      ;;
+    -o=*|--out=*)
+      OUT_DIR="${i#*=}"
+      shift
+      ;;
+    -k=*|--key=*)
+      KEY="${i#*=}"
+      shift
+      ;;
+    -p=*|--path=*)
+      PATHS+="${i#*=} "
+      shift
+      ;;
+    -t=*|--threshold=*)
+      THRESHOLD="${i#*=} "
+      shift
+      ;;
+    -n|--no-clobber)
+      NO_CLOBBER=true
+      shift
+      ;;
+    -h|--help )
+      print_usage
+      exit 0
+      ;;
+    *)
+      echo "Unknown option: ${i}"
+      print_usage
+      exit 1
+      ;;
+  esac
+done
+
+if [ -z "$KEY" ] || [ -z "$PATHS" ];then
+  print_usage
+  exit 1
+fi
+
+if [ "$NO_CLOBBER" = true ] && [ -z "$BUCKET" ];then
+  echo "--bucket must be specified if --no-clobber is used"
+  echo
+  print_usage
+  exit 1
+fi
+
+eval "KEY=$KEY"
+
+CACHE_FILE="${OUT_DIR}/${KEY}.tgz"
+
+if [ "$NO_CLOBBER" = true ];then
+  BUCKET_FILE="$BUCKET/$KEY.tgz"
+  FILE_LS=$(gsutil ls "$BUCKET_FILE")
+  if [ "$FILE_LS" == "$BUCKET_FILE" ];then
+    echo "Cache file exists, exiting save_cache without over-writing cache file."
+    exit 0
+  fi
+fi
+
+echo "Compressing cache to ${CACHE_FILE}..."
+tar cpzf "$CACHE_FILE" ${PATHS[@]} -P
+
+if [ -n "$BUCKET" ];then
+  echo "Uploading cache to Google Cloud Storage..."
+  gsutil -o GSUtil:parallel_composite_upload_threshold=${THRESHOLD} cp -R "$CACHE_FILE" "$BUCKET"
+fi
