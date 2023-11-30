@@ -1082,7 +1082,11 @@ func TestLocalSDKServerUpdateList(t *testing.T) {
 				},
 				UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"capacity"}},
 			},
-			wantErr: errors.Errorf("out of range. Capacity must be great than or equal to the size of the List of values. Found Capacity: %d, List Size: %d", 1, 2),
+			want: &alpha.List{
+				Name:     "models",
+				Capacity: int64(1),
+				Values:   []string{"model1"},
+			},
 		},
 	}
 
