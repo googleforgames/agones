@@ -101,9 +101,7 @@ var (
 		FeaturePlayerAllocationFilter:   false,
 		FeaturePlayerTracking:           false,
 		FeatureDisableResyncOnSDKServer: false,
-
-		// Pre-Alpha features
-		FeatureCountsAndLists: false,
+		FeatureCountsAndLists:           false,
 
 		// Example feature
 		FeatureExample: false,
