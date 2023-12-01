@@ -44,13 +44,6 @@ const (
 	// FeaturePlayerTracking is a feature flag to enable/disable player tracking features.
 	FeaturePlayerTracking Feature = "PlayerTracking"
 
-	// FeatureResetMetricsOnDelete is a feature flag that tells the metrics service to unregister and register
-	// relevant metric views to reset their state immediately when an Agones resource is deleted.
-	FeatureResetMetricsOnDelete Feature = "ResetMetricsOnDelete"
-
-	// FeaturePodHostname enables the Pod Hostname being assigned the name of the GameServer
-	FeaturePodHostname = "PodHostname"
-
 	// FeatureFleetAllocateOverflow enables setting labels and/or annotations on Allocated GameServers
 	// if the desired number of the underlying GameServerSet drops below the number of Allocated GameServers.
 	FeatureFleetAllocateOverflow = "FleetAllocationOverflow"
@@ -67,6 +60,9 @@ const (
 
 	// FeatureExample is an example feature gate flag, used for testing and demonstrative purposes
 	FeatureExample Feature = "Example"
+
+	// FeatureDisableResyncOnSDKServer is a feature flag to enable/disable resync on SDK server.
+	FeatureDisableResyncOnSDKServer Feature = "DisableResyncOnSDKServer"
 )
 
 var (
@@ -98,14 +94,13 @@ var (
 	// In each of these, keep the feature sorted by descending maturity then alphabetical
 	featureDefaults = map[Feature]bool{
 		// Beta features
-		FeaturePodHostname:                  true,
-		FeatureResetMetricsOnDelete:         true,
+		FeatureFleetAllocateOverflow:        true,
 		FeatureSplitControllerAndExtensions: true,
 
 		// Alpha features
-		FeaturePlayerAllocationFilter: false,
-		FeaturePlayerTracking:         false,
-		FeatureFleetAllocateOverflow:  false,
+		FeaturePlayerAllocationFilter:   false,
+		FeaturePlayerTracking:           false,
+		FeatureDisableResyncOnSDKServer: false,
 
 		// Pre-Alpha features
 		FeatureCountsAndLists: false,

@@ -261,7 +261,7 @@ func TestCreateFleetAndGameServerPlayerCapacityAllocation(t *testing.T) {
 	require.NotEqual(t, gs1.ObjectMeta.Annotations["agones.dev/last-allocated"], gs2.ObjectMeta.Annotations["agones.dev/last-allocated"])
 }
 
-func TestCounterGameServerAllocation(t *testing.T) {
+func TestCounterAndListGameServerAllocation(t *testing.T) {
 	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
 		t.SkipNow()
 	}
@@ -273,6 +273,12 @@ func TestCounterGameServerAllocation(t *testing.T) {
 	flt.Spec.Template.Spec.Counters = map[string]agonesv1.CounterStatus{
 		"games": {
 			Count:    2,
+			Capacity: 10,
+		},
+	}
+	flt.Spec.Template.Spec.Lists = map[string]agonesv1.ListStatus{
+		"players": {
+			Values:   []string{"player0"},
 			Capacity: 10,
 		},
 	}
@@ -295,7 +301,7 @@ func TestCounterGameServerAllocation(t *testing.T) {
 		wantAllocated allocationv1.GameServerAllocationState // For a valid GSA: "allocated" if you expect the GSA to succed in allocating a GameServer, "unallocated" if not
 		wantState     agonesv1.GameServerState
 	}{
-		"Allocate to same GameServer MinAvailable (available capacity)": {
+		"Counter Allocate to same GameServer MinAvailable (available capacity)": {
 			gsa: allocationv1.GameServerAllocation{
 				Spec: allocationv1.GameServerAllocationSpec{
 					Selectors: []allocationv1.GameServerSelector{
@@ -316,7 +322,28 @@ func TestCounterGameServerAllocation(t *testing.T) {
 			wantAllocated: allocated,
 			wantState:     stateAllocated,
 		},
-		"Allocate to same GameServer MaxAvailable": {
+		"List Allocate to same GameServer MinAvailable (available capacity)": {
+			gsa: allocationv1.GameServerAllocation{
+				Spec: allocationv1.GameServerAllocationSpec{
+					Selectors: []allocationv1.GameServerSelector{
+						{
+							LabelSelector:   fleetSelector,
+							GameServerState: &stateAllocated,
+							Lists: map[string]allocationv1.ListSelector{
+								"players": {
+									MinAvailable: 9,
+								}}}, {
+							LabelSelector:   fleetSelector,
+							GameServerState: &ready,
+							Lists: map[string]allocationv1.ListSelector{
+								"players": {
+									MinAvailable: 9,
+								}}}}}},
+			wantGsaErr:    false,
+			wantAllocated: allocated,
+			wantState:     stateAllocated,
+		},
+		"Counter Allocate to same GameServer MaxAvailable": {
 			gsa: allocationv1.GameServerAllocation{
 				Spec: allocationv1.GameServerAllocationSpec{
 					Selectors: []allocationv1.GameServerSelector{
@@ -332,6 +359,27 @@ func TestCounterGameServerAllocation(t *testing.T) {
 							Counters: map[string]allocationv1.CounterSelector{
 								"games": {
 									MaxAvailable: 10,
+								}}}}}},
+			wantGsaErr:    false,
+			wantAllocated: allocated,
+			wantState:     stateAllocated,
+		},
+		"List Allocate to same GameServer MaxAvailable": {
+			gsa: allocationv1.GameServerAllocation{
+				Spec: allocationv1.GameServerAllocationSpec{
+					Selectors: []allocationv1.GameServerSelector{
+						{
+							LabelSelector:   fleetSelector,
+							GameServerState: &stateAllocated,
+							Lists: map[string]allocationv1.ListSelector{
+								"players": {
+									MaxAvailable: 9,
+								}}}, {
+							LabelSelector:   fleetSelector,
+							GameServerState: &ready,
+							Lists: map[string]allocationv1.ListSelector{
+								"players": {
+									MaxAvailable: 9,
 								}}}}}},
 			wantGsaErr:    false,
 			wantAllocated: allocated,
@@ -379,8 +427,29 @@ func TestCounterGameServerAllocation(t *testing.T) {
 			wantAllocated: allocated,
 			wantState:     stateAllocated,
 		},
+		"List Allocate to same GameServer Contains Value": {
+			gsa: allocationv1.GameServerAllocation{
+				Spec: allocationv1.GameServerAllocationSpec{
+					Selectors: []allocationv1.GameServerSelector{
+						{
+							LabelSelector:   fleetSelector,
+							GameServerState: &stateAllocated,
+							Lists: map[string]allocationv1.ListSelector{
+								"players": {
+									ContainsValue: "player0",
+								}}}, {
+							LabelSelector:   fleetSelector,
+							GameServerState: &ready,
+							Lists: map[string]allocationv1.ListSelector{
+								"players": {
+									ContainsValue: "player0",
+								}}}}}},
+			wantGsaErr:    false,
+			wantAllocated: allocated,
+			wantState:     stateAllocated,
+		},
 		// 0 for MaxCount or MaxAvailable means unlimited maximum. Default for all fields: 0
-		"Allocate to same GameServer no values": {
+		"Allocate to same GameServer no Counter values": {
 			gsa: allocationv1.GameServerAllocation{
 				Spec: allocationv1.GameServerAllocationSpec{
 					Selectors: []allocationv1.GameServerSelector{
@@ -397,6 +466,23 @@ func TestCounterGameServerAllocation(t *testing.T) {
 			wantAllocated: allocated,
 			wantState:     stateAllocated,
 		},
+		"Allocate to same GameServer no List values": {
+			gsa: allocationv1.GameServerAllocation{
+				Spec: allocationv1.GameServerAllocationSpec{
+					Selectors: []allocationv1.GameServerSelector{
+						{
+							LabelSelector:   fleetSelector,
+							GameServerState: &stateAllocated,
+							Lists: map[string]allocationv1.ListSelector{
+								"players": {}}}, {
+							LabelSelector:   fleetSelector,
+							GameServerState: &ready,
+							Lists: map[string]allocationv1.ListSelector{
+								"players": {}}}}}},
+			wantGsaErr:    false,
+			wantAllocated: allocated,
+			wantState:     stateAllocated,
+		},
 		"Counter does not exist": {
 			gsa: allocationv1.GameServerAllocation{
 				Spec: allocationv1.GameServerAllocationSpec{
@@ -404,13 +490,26 @@ func TestCounterGameServerAllocation(t *testing.T) {
 						LabelSelector:   fleetSelector,
 						GameServerState: &ready,
 						Counters: map[string]allocationv1.CounterSelector{
-							"lames": {
+							"players": {
 								MinAvailable: 1,
 							}}}}}},
 			wantGsaErr:    false,
 			wantAllocated: unallocated,
 		},
-		"MaxAvailable < MinAvailable": {
+		"List does not exist": {
+			gsa: allocationv1.GameServerAllocation{
+				Spec: allocationv1.GameServerAllocationSpec{
+					Selectors: []allocationv1.GameServerSelector{{
+						LabelSelector:   fleetSelector,
+						GameServerState: &ready,
+						Lists: map[string]allocationv1.ListSelector{
+							"games": {
+								MinAvailable: 1,
+							}}}}}},
+			wantGsaErr:    false,
+			wantAllocated: unallocated,
+		},
+		"Counter MaxAvailable < MinAvailable": {
 			gsa: allocationv1.GameServerAllocation{
 				Spec: allocationv1.GameServerAllocationSpec{
 					Selectors: []allocationv1.GameServerSelector{{
@@ -423,7 +522,20 @@ func TestCounterGameServerAllocation(t *testing.T) {
 							}}}}}},
 			wantGsaErr: true,
 		},
-		"Maxcount < MinCount": {
+		"List MaxAvailable < MinAvailable": {
+			gsa: allocationv1.GameServerAllocation{
+				Spec: allocationv1.GameServerAllocationSpec{
+					Selectors: []allocationv1.GameServerSelector{{
+						LabelSelector:   fleetSelector,
+						GameServerState: &ready,
+						Lists: map[string]allocationv1.ListSelector{
+							"players": {
+								MaxAvailable: 8,
+								MinAvailable: 9,
+							}}}}}},
+			wantGsaErr: true,
+		},
+		"Counter Maxcount < MinCount": {
 			gsa: allocationv1.GameServerAllocation{
 				Spec: allocationv1.GameServerAllocationSpec{
 					Selectors: []allocationv1.GameServerSelector{{
@@ -435,6 +547,19 @@ func TestCounterGameServerAllocation(t *testing.T) {
 								MinCount: 2,
 							}}}}}},
 			wantGsaErr: true,
+		},
+		"List Value does not exist": {
+			gsa: allocationv1.GameServerAllocation{
+				Spec: allocationv1.GameServerAllocationSpec{
+					Selectors: []allocationv1.GameServerSelector{{
+						LabelSelector:   fleetSelector,
+						GameServerState: &ready,
+						Lists: map[string]allocationv1.ListSelector{
+							"players": {
+								ContainsValue: "player1",
+							}}}}}},
+			wantGsaErr:    false,
+			wantAllocated: unallocated,
 		},
 		"Negative values for MinCount, MaxCount, MaxAvailable, MinAvailable": {
 			gsa: allocationv1.GameServerAllocation{
@@ -489,7 +614,7 @@ func TestCounterGameServerAllocation(t *testing.T) {
 			require.NotEqual(t, gs1.ObjectMeta.ResourceVersion, gs2.ObjectMeta.ResourceVersion)
 			require.NotEqual(t, gs1.ObjectMeta.Annotations["agones.dev/last-allocated"], gs2.ObjectMeta.Annotations["agones.dev/last-allocated"])
 
-			// Reset any GameServers in state Allocated -> Ready. Note: This does not reset any changes to Counters.
+			// Reset any GameServers in state Allocated -> Ready. Note: This does not reset any changes to Counters or Lists.
 			list, err := framework.ListGameServersFromFleet(flt)
 			require.NoError(t, err)
 			for _, gs := range list {
@@ -703,15 +828,117 @@ func TestCounterGameServerAllocationActions(t *testing.T) {
 			}
 
 			// Reset any GameServers in state Allocated -> Ready, and reset any changes to Counters.
-			list, err := framework.ListGameServersFromFleet(flt)
+			gsList, err := framework.ListGameServersFromFleet(flt)
 			require.NoError(t, err)
-			for _, gs := range list {
+			for _, gs := range gsList {
 				if gs.Status.State == ready && cmp.Equal(gs.Status.Counters, counters) {
 					continue
 				}
 				gsCopy := gs.DeepCopy()
 				gsCopy.Status.State = ready
 				gsCopy.Status.Counters = counters
+				reqReadyGs, err := framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Update(ctx, gsCopy, metav1.UpdateOptions{})
+				require.NoError(t, err)
+				require.Equal(t, ready, reqReadyGs.Status.State)
+			}
+		})
+	}
+}
+
+func TestListGameServerAllocationActions(t *testing.T) {
+	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
+		t.SkipNow()
+	}
+	t.Parallel()
+	ctx := context.Background()
+	client := framework.AgonesClient.AgonesV1()
+
+	lists := map[string]agonesv1.ListStatus{}
+	lists["players"] = agonesv1.ListStatus{
+		Values:   []string{"player0", "player1", "player2"},
+		Capacity: 8,
+	}
+
+	flt := defaultFleet(framework.Namespace)
+	flt.Spec.Template.Spec.Lists = lists
+
+	flt, err := client.Fleets(framework.Namespace).Create(ctx, flt.DeepCopy(), metav1.CreateOptions{})
+	require.NoError(t, err)
+	defer client.Fleets(framework.Namespace).Delete(ctx, flt.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
+	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
+
+	fleetSelector := metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}}
+	allocated := agonesv1.GameServerStateAllocated
+	ready := agonesv1.GameServerStateReady
+	one := int64(1)
+
+	testCases := map[string]struct {
+		gsa          allocationv1.GameServerAllocation
+		wantGsaErr   bool
+		wantCapacity *int64
+		wantValues   []string
+	}{
+		"add List values": {
+			gsa: allocationv1.GameServerAllocation{
+				Spec: allocationv1.GameServerAllocationSpec{
+					Selectors: []allocationv1.GameServerSelector{
+						{LabelSelector: fleetSelector},
+					},
+					Lists: map[string]allocationv1.ListAction{
+						"players": {
+							AddValues: []string{"player3", "player4", "player5"},
+						}}}},
+			wantGsaErr: false,
+			wantValues: []string{"player0", "player1", "player2", "player3", "player4", "player5"},
+		},
+		"change List capacity truncates": {
+			gsa: allocationv1.GameServerAllocation{
+				Spec: allocationv1.GameServerAllocationSpec{
+					Selectors: []allocationv1.GameServerSelector{
+						{LabelSelector: fleetSelector},
+					},
+					Lists: map[string]allocationv1.ListAction{
+						"players": {
+							Capacity: &one,
+						}}}},
+			wantGsaErr: false,
+			wantValues: []string{"player0"},
+		},
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+
+			gsa, err := framework.AgonesClient.AllocationV1().GameServerAllocations(flt.ObjectMeta.Namespace).Create(ctx, testCase.gsa.DeepCopy(), metav1.CreateOptions{})
+			if testCase.wantGsaErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+			assert.Equal(t, string(allocated), string(gsa.Status.State))
+
+			gs1, err := framework.AgonesClient.AgonesV1().GameServers(flt.ObjectMeta.Namespace).Get(ctx, gsa.Status.GameServerName, metav1.GetOptions{})
+			require.NoError(t, err)
+			assert.Equal(t, allocated, gs1.Status.State)
+			assert.NotNil(t, gs1.ObjectMeta.Annotations["agones.dev/last-allocated"])
+
+			list, ok := gs1.Status.Lists["players"]
+			assert.True(t, ok)
+			if testCase.wantCapacity != nil {
+				assert.Equal(t, *testCase.wantCapacity, list.Capacity)
+			}
+			assert.Equal(t, testCase.wantValues, list.Values)
+
+			// Reset any GameServers in state Allocated -> Ready, and reset any changes to Lists.
+			gsList, err := framework.ListGameServersFromFleet(flt)
+			require.NoError(t, err)
+			for _, gs := range gsList {
+				if gs.Status.State == ready && cmp.Equal(gs.Status.Lists, lists) {
+					continue
+				}
+				gsCopy := gs.DeepCopy()
+				gsCopy.Status.State = ready
+				gsCopy.Status.Lists = lists
 				reqReadyGs, err := framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Update(ctx, gsCopy, metav1.UpdateOptions{})
 				require.NoError(t, err)
 				require.Equal(t, ready, reqReadyGs.Status.State)

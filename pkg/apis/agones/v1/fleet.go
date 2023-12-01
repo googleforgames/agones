@@ -59,7 +59,7 @@ type FleetList struct {
 type FleetSpec struct {
 	// Replicas are the number of GameServers that should be in this set. Defaults to 0.
 	Replicas int32 `json:"replicas"`
-	// [Stage: Alpha]
+	// [Stage: Beta]
 	// [FeatureFlag:FleetAllocationOverflow]
 	// Labels and/or Annotations to apply to overflowing GameServers when the number of Allocated GameServers is more
 	// than the desired replicas on the underlying `GameServerSet`
