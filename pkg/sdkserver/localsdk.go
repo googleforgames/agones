@@ -145,9 +145,14 @@ func NewLocalSDKServer(filePath string, testSdkName string) (*LocalSDKServer, er
 		l.gs.Status.Players = &sdk.GameServer_Status_PlayerStatus{}
 	}
 	if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
-		// Adding test Counter for the conformance test (Counters is not nil for LocalSDKServer tests)
+		// Adding test Counter and List for the conformance tests (not nil for LocalSDKServer tests)
 		if l.gs.Status.Counters == nil {
-			l.gs.Status.Counters = map[string]*sdk.GameServer_Status_CounterStatus{"conformanceTestCounter": {Count: 1, Capacity: 10}}
+			l.gs.Status.Counters = map[string]*sdk.GameServer_Status_CounterStatus{
+				"conformanceTestCounter": {Count: 1, Capacity: 10}}
+		}
+		if l.gs.Status.Lists == nil {
+			l.gs.Status.Lists = map[string]*sdk.GameServer_Status_ListStatus{
+				"conformanceTestList": {Values: []string{"test0", "test1", "test2"}, Capacity: 100}}
 		}
 	}
 
@@ -739,9 +744,9 @@ func (l *LocalSDKServer) UpdateList(ctx context.Context, in *alpha.UpdateListReq
 		fmutils.Prune(tmpList, in.UpdateMask.Paths)
 		// Due due filtering and pruning all gameserver object field(s) contained in the FieldMask are overwritten by the request object field(s).
 		proto.Merge(tmpList, in.List)
-		// Verify that Capacity >= len(tmpList.values)
+		// Silently truncate list values if Capacity < len(Values)
 		if tmpList.Capacity < int64(len(tmpList.Values)) {
-			return nil, errors.Errorf("out of range. Capacity must be great than or equal to the size of the List of values. Found Capacity: %d, List Size: %d", tmpList.Capacity, len(tmpList.Values))
+			tmpList.Values = append([]string{}, tmpList.Values[:tmpList.Capacity]...)
 		}
 		// Write newly updated List to gameserverstatus.
 		l.gs.Status.Lists[name].Capacity = tmpList.Capacity
