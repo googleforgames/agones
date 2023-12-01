@@ -48,9 +48,6 @@ const (
 	// if the desired number of the underlying GameServerSet drops below the number of Allocated GameServers.
 	FeatureFleetAllocateOverflow = "FleetAllocationOverflow"
 
-	////////////////
-	// "Pre"-Alpha features
-
 	// FeatureCountsAndLists is a feature flag that enables/disables counts and lists feature
 	// (a generic implenetation of the player tracking feature).
 	FeatureCountsAndLists Feature = "CountsAndLists"
