@@ -1198,8 +1198,6 @@ func TestListAutoscaler(t *testing.T) {
 			}
 			assert.NoError(t, err)
 
-			log.Print("FAS: ", fas)
-
 			framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(testCase.wantReplicas))
 			fleetautoscalers.Delete(ctx, fas.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
 
@@ -1341,6 +1339,107 @@ func TestListAutoscalerAllocated(t *testing.T) {
 					fleet.Status.ReadyReplicas == testCase.wantSecondReady
 			})
 
+		})
+	}
+}
+
+func TestListAutoscalerWithSDKMethods(t *testing.T) {
+	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
+		t.SkipNow()
+	}
+	t.Parallel()
+
+	ctx := context.Background()
+	client := framework.AgonesClient.AgonesV1()
+
+	defaultFlt := defaultFleet(framework.Namespace)
+	defaultFlt.Spec.Template.Spec.Lists = map[string]agonesv1.ListStatus{
+		"sessions": {
+			Values:   []string{"session1", "session2"}, // AggregateCount 6
+			Capacity: 4,                                // AggregateCapacity 12
+		},
+	}
+
+	fleetautoscalers := framework.AgonesClient.AutoscalingV1().FleetAutoscalers(framework.Namespace)
+
+	testCases := map[string]struct {
+		fas           autoscalingv1.ListPolicy
+		order         string // Priority order Ascending or Descending for fleet ready replica deletion
+		msg           string // See agones/examples/simple-game-server/README for list of commands
+		startReplicas int32  // After applying autoscaler policy but before sending update message
+		wantReplicas  int32  // After applying autoscaler policy and sending update message
+	}{
+		"Scale Up to Buffer": {
+			fas: autoscalingv1.ListPolicy{
+				Key:         "sessions",
+				BufferSize:  intstr.FromInt(10),
+				MinCapacity: 12,
+				MaxCapacity: 400,
+			},
+			order:         agonesv1.GameServerPriorityAscending,
+			msg:           "APPEND_LIST_VALUE sessions session0",
+			startReplicas: 5,
+			wantReplicas:  6,
+		},
+		"Scale Down to Buffer": {
+			fas: autoscalingv1.ListPolicy{
+				Key:         "sessions",
+				BufferSize:  intstr.FromInt(3),
+				MinCapacity: 3,
+				MaxCapacity: 400,
+			},
+			msg:           "DELETE_LIST_VALUE sessions session1",
+			order:         agonesv1.GameServerPriorityDescending,
+			startReplicas: 2,
+			wantReplicas:  1,
+		},
+	}
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			defaultFlt.Spec.Priorities = []agonesv1.Priority{
+				{
+					Type:  agonesv1.GameServerPriorityList,
+					Key:   "sessions",
+					Order: testCase.order,
+				},
+			}
+			flt, err := client.Fleets(framework.Namespace).Create(ctx, defaultFlt.DeepCopy(), metav1.CreateOptions{})
+			require.NoError(t, err)
+			defer client.Fleets(framework.Namespace).Delete(ctx, flt.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
+			framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
+
+			listFas := &autoscalingv1.FleetAutoscaler{
+				ObjectMeta: metav1.ObjectMeta{Name: flt.ObjectMeta.Name + "-list-autoscaler", Namespace: framework.Namespace},
+				Spec: autoscalingv1.FleetAutoscalerSpec{
+					FleetName: flt.ObjectMeta.Name,
+					Policy: autoscalingv1.FleetAutoscalerPolicy{
+						Type: autoscalingv1.ListPolicyType,
+						List: &testCase.fas,
+					},
+					Sync: &autoscalingv1.FleetAutoscalerSync{
+						Type: autoscalingv1.FixedIntervalSyncType,
+						FixedInterval: autoscalingv1.FixedIntervalSync{
+							Seconds: 1,
+						},
+					},
+				},
+			}
+
+			fas, err := fleetautoscalers.Create(ctx, listFas, metav1.CreateOptions{})
+			assert.NoError(t, err)
+			defer fleetautoscalers.Delete(ctx, fas.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
+
+			// Wait until autoscaler has first re-sized before getting the list of gameservers
+			framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(testCase.startReplicas))
+
+			gameservers, err := framework.ListGameServersFromFleet(flt)
+			assert.NoError(t, err)
+
+			logrus.WithField("msg", testCase.msg).Info(name)
+			_, err = framework.SendGameServerUDP(t, &gameservers[1], testCase.msg)
+			require.NoError(t, err)
+
+			framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(testCase.wantReplicas))
 		})
 	}
 }
