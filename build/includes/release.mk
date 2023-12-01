@@ -87,3 +87,8 @@ pre-build-release:
 post-build-release:
 	docker run --rm $(common_mounts) -w $(workdir_path)/build/release $(build_tag) \
 		gcloud builds submit . --substitutions _VERSION=$(base_version) --config=./post_cloudbuild.yaml $(ARGS)
+
+# Ensure that ci/save_cache and ci/restore_cache are not deleted by the cleanup policy
+cache-save-restore:
+	docker run --rm $(common_mounts) -w $(workdir_path)/build/build-image/cache $(build_tag) \
+		gcloud builds submit . --substitutions _VERSION=$(base_version) --config=./cloudbuild.yaml $(ARGS)

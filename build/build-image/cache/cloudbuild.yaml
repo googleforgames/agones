@@ -24,7 +24,7 @@ steps:
       - '--file=Dockerfile-base'
       - '.'
 
-  - name: 'us-docker.pkg.dev/$PROJECT_ID/ci/save_cache'
+  - name: 'gcr.io/cloud-builders/docker'
     id: build_save_cache
     args:
       - 'build'
@@ -35,7 +35,7 @@ steps:
       - '--cache-from=us-docker.pkg.dev/$PROJECT_ID/ci/cache:latest'
       - '.'
 
-  - name: 'us-docker.pkg.dev/$PROJECT_ID/ci/restore_cache'
+  - name: 'gcr.io/cloud-builders/docker'
     id: build_restore_cache
     args:
       - 'build'
