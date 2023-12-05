@@ -19,22 +19,14 @@ metadata:
   name: agones-controller-service
   namespace: {{ .Release.Namespace }}
   labels:
-{{- if $featureGates.SplitControllerAndExtensions }}
     agones.dev/role: extensions
-{{- else}}
-    agones.dev/role: controller
-{{- end}}
     app: {{ template "agones.name" . }}
     chart: {{ template "agones.chart" . }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
 spec:
   selector:
-{{- if $featureGates.SplitControllerAndExtensions }}
     agones.dev/role: extensions
-{{- else}}
-    agones.dev/role: controller
-{{- end}}
   ports:
     - name: webhooks
       port: 443

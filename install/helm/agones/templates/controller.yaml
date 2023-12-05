@@ -12,11 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-{{- $featureGates := include "agones.featureGates" . | fromYaml }}
 {{- $replicas := (int .Values.agones.controller.replicas) }}
-{{- if not $featureGates.SplitControllerAndExtensions }}
-{{- $replicas = 1 }}
-{{- end }}
 {{- if lt $replicas 1 }}
 {{- fail "agones.controller.replica field has an invalid value!" }}
 {{- end }}
