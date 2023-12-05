@@ -47,6 +47,63 @@ spec:
       seconds: 30
 ```
 
+Counter-based `FleetAutoscaler` specification below and in the {{< ghlink href="examples/counterfleetautoscaler.yaml" >}}example folder{{< /ghlink >}}:
+
+```yaml
+apiVersion: autoscaling.agones.dev/v1
+kind: FleetAutoscaler
+metadata:
+  name: fleet-autoscaler-counter
+spec:
+  fleetName: fleet-example
+  policy:
+    type: Counter  # Counter based autoscaling
+    counter:
+      # The name of the Counter.
+      # Required.
+      key: players
+      # Size of a buffer of counted items that are available in the Fleet (available capacity).
+      # bufferSize can be specified either in absolute (i.e. 5) or percentage format (i.e. 5%).
+      # Required.
+      bufferSize: 5
+      # Minimum aggregate counter capacity that can be provided by this FleetAutoscaler.
+      # If minCapacity is not specified, the effective minimum capacity will be bufferSize.
+      # When bufferSize in percentage format is used, minCapacity should be set and more than 0.
+      minCapacity: 10
+      # Maximum aggregate counter capacity that can be provided by this FleetAutoscaler.
+      # Required.
+      maxCapacity: 100
+```
+
+List-based `FleetAutoscaler` specification below and in the {{< ghlink href="examples/listfleetautoscaler.yaml" >}}example folder{{< /ghlink >}}:
+
+```yaml
+apiVersion: autoscaling.agones.dev/v1
+kind: FleetAutoscaler
+metadata:
+  name: fleet-autoscaler-list
+spec:
+  fleetName: fleet-example
+  policy:
+    type: List  # List based autoscaling.
+    list:
+      # The name of the List.
+      # Required.
+      key: rooms
+      # Size of a buffer based on the list capacity that is available over the current aggregate
+      # list length in the Fleet (available capacity).
+      # bufferSize can be specified either in absolute (i.e. 5) or percentage format (i.e. 5%)
+      # Required.
+      bufferSize: 5
+      # Minimum aggregate list capacity that can be provided by this FleetAutoscaler.
+      # If minCapacity is not specified, the effective minimum capacity will be bufferSize.
+      # When bufferSize in percentage format is used, minCapacity should be set and more than 0.
+      minCapacity: 10
+      # Maximum aggregate list capacity that can be provided by this FleetAutoscaler.
+      # Required.
+      maxCapacity: 100
+```
+
 Or for Webhook FleetAutoscaler below and in {{< ghlink href="examples/webhookfleetautoscaler.yaml" >}}example folder{{< /ghlink >}}:
 
 ```yaml
