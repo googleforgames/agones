@@ -21,8 +21,6 @@ FleetAllocationOverflow: true
 PlayerAllocationFilter: false
 PlayerTracking: false
 DisableResyncOnSDKServer: false
-
-# Pre-Alpha features
 CountsAndLists: false
 
 # Example feature
