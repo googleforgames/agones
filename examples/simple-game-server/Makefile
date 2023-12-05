@@ -119,7 +119,7 @@ ensure-windows-buildx:
 	#
 	# Windows image builds must be directed to a specific buildx context.
 	# The default context does not support building cross platform images.
-	-DOCKER_CLI_EXPERIMENTAL=enabled docker buildx create --name=$(BUILDX_WINDOWS_BUILDER)
+	-DOCKER_CLI_EXPERIMENTAL=enabled docker buildx create --name=$(BUILDX_WINDOWS_BUILDER) --use
 
 # Build a docker image for the server, and tag it
 build-linux-image-amd64:
