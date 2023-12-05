@@ -87,13 +87,13 @@ endif
 ifeq ($(WITH_ARM64), 1)
 push: push-linux-image-arm64
 endif
-	-docker manifest rm $(server_tag)
-	docker manifest create $(server_tag) $(push_server_manifest)
-	docker manifest push $(server_tag) --purge
+	# -docker manifest rm $(server_tag)
+	# docker manifest create $(server_tag) $(push_server_manifest)
+	# docker manifest push $(server_tag) --purge
 	# TODO: Update to replace `docker manifest` commands if/when the above commands fail (~Docker 24.x)
     # Fails with Docker <=20.10.21
-	#docker buildx imagetools create --tag $(server_tag) \
-    	#$(push_server_manifest)
+	docker buildx imagetools create --tag $(server_tag) \
+    	$(push_server_manifest)
 
 # Pushes all variants of the Windows images to the container image registry.
 push-linux-image-amd64: build
@@ -119,7 +119,7 @@ ensure-windows-buildx:
 	#
 	# Windows image builds must be directed to a specific buildx context.
 	# The default context does not support building cross platform images.
-	-DOCKER_CLI_EXPERIMENTAL=enabled docker buildx create --name=$(BUILDX_WINDOWS_BUILDER) --use
+	-DOCKER_CLI_EXPERIMENTAL=enabled docker buildx create --name=$(BUILDX_WINDOWS_BUILDER)
 
 # Build a docker image for the server, and tag it
 build-linux-image-amd64:
