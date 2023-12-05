@@ -87,11 +87,7 @@ endif
 ifeq ($(WITH_ARM64), 1)
 push: push-linux-image-arm64
 endif
-	# -docker manifest rm $(server_tag)
-	# docker manifest create $(server_tag) $(push_server_manifest)
-	# docker manifest push $(server_tag) --purge
-	# TODO: Update to replace `docker manifest` commands if/when the above commands fail (~Docker 24.x)
-    # Fails with Docker <=20.10.21
+    # Docker >=24.0.6
 	docker buildx imagetools create --tag $(server_tag) \
     	$(push_server_manifest)
 
@@ -109,17 +105,15 @@ push-windows-image-%:
 	$(MAKE) WINDOWS_DOCKER_PUSH_ARGS=--push build-windows-image-$*
 
 build-windows-image-%: ensure-windows-buildx
-	cd $(root_path) && DOCKER_CLI_EXPERIMENTAL=enabled \
+	cd $(root_path) \
 		docker buildx build --platform windows/amd64 --builder $(BUILDX_WINDOWS_BUILDER) -f $(project_path)Dockerfile.windows \
 	 	--tag=$(server_tag)-windows_amd64-$* --build-arg WINDOWS_VERSION=$* . $(WINDOWS_DOCKER_PUSH_ARGS)
 
 ensure-windows-buildx:
-	# TODO: Remove `--use` and specify `--builder` for each buildx command once Docker 19.03.13 is available.
 	# `--use` sets the global default buildx context to $(BUILDX_WINDOWS_BUILDER).
-	#
 	# Windows image builds must be directed to a specific buildx context.
 	# The default context does not support building cross platform images.
-	-DOCKER_CLI_EXPERIMENTAL=enabled docker buildx create --name=$(BUILDX_WINDOWS_BUILDER) --use
+	docker buildx create --name=$(BUILDX_WINDOWS_BUILDER)
 
 # Build a docker image for the server, and tag it
 build-linux-image-amd64:
