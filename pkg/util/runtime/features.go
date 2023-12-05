@@ -45,10 +45,6 @@ const (
 	// FeaturePlayerTracking is a feature flag to enable/disable player tracking features.
 	FeaturePlayerTracking Feature = "PlayerTracking"
 
-	// FeatureFleetAllocateOverflow enables setting labels and/or annotations on Allocated GameServers
-	// if the desired number of the underlying GameServerSet drops below the number of Allocated GameServers.
-	FeatureFleetAllocateOverflow = "FleetAllocationOverflow"
-
 	// FeatureCountsAndLists is a feature flag that enables/disables counts and lists feature
 	// (a generic implenetation of the player tracking feature).
 	FeatureCountsAndLists Feature = "CountsAndLists"
