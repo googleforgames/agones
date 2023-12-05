@@ -11,8 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-{{- $featureGates := include "agones.featureGates" . | fromYaml }}
-{{- if $featureGates.SplitControllerAndExtensions }}
+
 apiVersion: v1
 kind: Service
 metadata:
@@ -31,4 +30,3 @@ spec:
     - name: metrics
       port: {{ .Values.agones.controller.http.port }}
       targetPort: http
-{{- end}}
