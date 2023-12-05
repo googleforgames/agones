@@ -713,10 +713,8 @@ endif
 	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest create $(sidecar_tag) $(push_sidecar_manifest)
 	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest push $(sidecar_tag)
 
-push-agones-sdk-windows:
-	# Using docker buildx with foreign OSes is a bit awkward. Since the layers but not the tag
-	# was cached we have to rebuild the image (which should be fast since it's cached).
-	$(MAKE) WINDOWS_DOCKER_PUSH_ARGS=--push build-agones-sdk-image-windows
+push-agones-sdk-windows: WINDOWS_DOCKER_PUSH_ARGS=--push
+push-agones-sdk-windows: build-agones-sdk-image-windows
 
 push-agones-sdk-linux-image-arm64: $(ensure-build-image)
 	$(MAKE) DOCKER_BUILD_ARGS=--push build-agones-sdk-image-arm64
