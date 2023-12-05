@@ -1455,6 +1455,7 @@ func TestApplyCounterPolicy(t *testing.T) {
 }
 
 // nolint:dupl  // Linter errors on lines are duplicate of TestApplyCounterPolicy
+// NOTE: Does not test for the validity of a fleet autoscaler policy (ValidateListPolicy)
 func TestApplyListPolicy(t *testing.T) {
 	t.Parallel()
 
@@ -1591,6 +1592,34 @@ func TestApplyListPolicy(t *testing.T) {
 			want: expected{
 				replicas: 14,
 				limited:  false,
+				wantErr:  false,
+			},
+		},
+		"scale up to maxcapacity": {
+			fleet: modifiedFleet(func(f *agonesv1.Fleet) {
+				f.Spec.Template.Spec.Lists = make(map[string]agonesv1.ListStatus)
+				f.Spec.Template.Spec.Lists["gamers"] = agonesv1.ListStatus{
+					Values:   []string{"default", "default2", "default3"},
+					Capacity: 5}
+				f.Status.Replicas = 3
+				f.Status.ReadyReplicas = 3
+				f.Status.AllocatedReplicas = 0
+				f.Status.Lists = make(map[string]agonesv1.AggregatedListStatus)
+				f.Status.Lists["gamers"] = agonesv1.AggregatedListStatus{
+					Count:    9,
+					Capacity: 15,
+				}
+			}),
+			featureFlags: string(utilruntime.FeatureCountsAndLists) + "=true",
+			lp: &autoscalingv1.ListPolicy{
+				Key:         "gamers",
+				MaxCapacity: 25,
+				MinCapacity: 15,
+				BufferSize:  intstr.FromInt(15),
+			},
+			want: expected{
+				replicas: 5,
+				limited:  true,
 				wantErr:  false,
 			},
 		},

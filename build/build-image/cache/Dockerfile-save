@@ -1,4 +1,4 @@
-# Copyright 2022 Google LLC All Rights Reserved.
+# Copyright 2023 Google LLC All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,18 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Default values for feature gates. Keep in sync with pkg/util/runtime/features.go:featureDefaults
+ARG project_id
+FROM us-docker.pkg.dev/${project_id}/ci/cache
 
-# Beta features
-FleetAllocationOverflow: true
-SplitControllerAndExtensions: true
-
-# Alpha features
-PlayerAllocationFilter: false
-PlayerTracking: false
-DisableResyncOnSDKServer: false
-CountsAndLists: false
-
-# Example feature
-Example: false
-
+ENTRYPOINT ["save_cache"]
