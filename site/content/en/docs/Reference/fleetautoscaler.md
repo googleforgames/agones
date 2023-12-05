@@ -47,6 +47,7 @@ spec:
       seconds: 30
 ```
 
+{{% feature publishVersion="1.37.0" %}}
 Counter-based `FleetAutoscaler` specification below and in the {{< ghlink href="examples/counterfleetautoscaler.yaml" >}}example folder{{< /ghlink >}}:
 
 ```yaml
@@ -103,6 +104,7 @@ spec:
       # Required.
       maxCapacity: 100
 ```
+{{% /feature %}}
 
 Or for Webhook FleetAutoscaler below and in {{< ghlink href="examples/webhookfleetautoscaler.yaml" >}}example folder{{< /ghlink >}}:
 
