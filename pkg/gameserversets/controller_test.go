@@ -454,6 +454,8 @@ func TestComputeStatus(t *testing.T) {
 
 func TestControllerWatchGameServers(t *testing.T) {
 	t.Parallel()
+	utilruntime.FeatureTestMutex.Lock()
+	defer utilruntime.FeatureTestMutex.Unlock()
 
 	gsSet := defaultFixture()
 
