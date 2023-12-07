@@ -137,6 +137,9 @@ steps:
       - name: original
         path: /original
 
+substitutions:
+  _VERSION: '1.2'
+
 images:
   - 'us-docker.pkg.dev/$PROJECT_ID/ci/cache:${_VERSION}'
   - 'us-docker.pkg.dev/$PROJECT_ID/ci/cache:latest'
