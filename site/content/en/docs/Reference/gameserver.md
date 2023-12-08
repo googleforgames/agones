@@ -170,23 +170,26 @@ spec:
   #
   # [Stage:Alpha]
   # [FeatureFlag:CountsAndLists]
-  # Counts and Lists provides the configuration for generic (player, room, session, etc.) tracking features.
+  # The spec field defines the specifications for the Fleet, including Counts and Lists,
+  # which provides the configuration for generic (player, room, session, etc.) tracking features.
   # Commented out since Alpha, and disabled by default
-  # counters:
-  #   games:
-  #     count: 1
-  #     capacity: 100
-  #   sessions:
-  #     count:  # Count and/or capacity must be listed (but may be nil) otherwise the counter will by dropped by the CRD schema.
-  # lists:
-  #   players:
-  #     capacity:  # Capacity and/or values must be listed (but may be nil) otherwise the list will be dropped by the CRD schema.
-  #   rooms:
-  #     capacity: 333
-  #     values:
-  #       - room1
-  #       - room2
-  #       - room3
+  # spec:
+  #   CountsAndLists:
+  #     counters:
+  #       games:
+  #         count: 1
+  #         capacity: 100
+  #       sessions:
+  #         count:  # Count and/or capacity must be listed (but may be nil) otherwise the counter will by dropped by the CRD schema.
+  #     lists:
+  #       players:
+  #         capacity:  # Capacity and/or values must be listed (but may be nil) otherwise the list will be dropped by the CRD schema.
+  #     rooms:
+  #       capacity: 333
+  #       values:
+  #         - room1
+  #         - room2
+  #         - room3
   #  
   # Pod template configuration
   # {{< k8s-api-version href="#podtemplate-v1-core" >}}

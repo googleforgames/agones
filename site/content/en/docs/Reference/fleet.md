@@ -166,11 +166,14 @@ spec:
   #
   # [Stage:Alpha]
   # [FeatureFlag:CountsAndLists]
-  # Which gameservers in the Fleet are most important to keep around - impacts scale down logic.
-  # priorities:
-  # - type: List  # Whether a Counter or a List.
-  #   key: rooms  # The name of the Counter or List.
-  #   order: Ascending  # Default is "Ascending" so smaller capacity will be removed first on down scaling.
+  # The spec field is the actual Fleet specification and it is composed as follows:
+  # It defines priorities for game servers in the Fleet, impacting the scale down logic.
+  # spec:
+  #   CountsAndLists:
+  #     priorities:
+  #     - type: List  # Whether a Counter or a List.
+  #       key: rooms  # The name of the Counter or List.
+  #       order: Ascending  # Default is "Ascending" so smaller capacity will be removed first on down scaling.
   #      
   template:
     # GameServer metadata

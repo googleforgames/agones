@@ -157,12 +157,15 @@ spec:
       gameServerState: Ready
       # [Stage:Alpha]
       # [FeatureFlag:CountsAndLists]
-      # Counts and Lists provides the configuration for generic (player, room, session, etc.) tracking features.
+      # The spec field defines the specifications for the Fleet, including Counts and Lists,
+      # Which provides the configuration for generic (player, room, session, etc.) tracking features.
       # Commented out since Alpha, and disabled by default
-      # counters:
-      #   players:
-      #     minAvailable: 1
-      #     maxAvailable: 10
+      # spec:
+      #   CountsAndLists:
+      #     counters:
+      #       players:
+      #         minAvailable: 1
+      #         maxAvailable: 10
       # [Stage:Alpha]      
       # [FeatureFlag:PlayerAllocationFilter]
       # Provides a filter on minimum and maximum values for player capacity when retrieving a GameServer
