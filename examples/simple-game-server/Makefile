@@ -105,14 +105,14 @@ push-windows-image-%:
 	$(MAKE) WINDOWS_DOCKER_PUSH_ARGS=--push build-windows-image-$*
 
 build-windows-image-%: ensure-windows-buildx
-	cd $(root_path) && \
+	cd $(root_path) && DOCKER_CLI_EXPERIMENTAL=enabled \
 		docker buildx build --platform windows/amd64 --builder $(BUILDX_WINDOWS_BUILDER) -f $(project_path)Dockerfile.windows \
 	 	--tag=$(server_tag)-windows_amd64-$* --build-arg WINDOWS_VERSION=$* . $(WINDOWS_DOCKER_PUSH_ARGS)
 
 ensure-windows-buildx:
 # Windows image builds must be directed to a specific buildx context.
 # The default context does not support building cross platform images.
-	-docker buildx create --name=$(BUILDX_WINDOWS_BUILDER)
+	-docker buildx create --name=$(BUILDX_WINDOWS_BUILDER) --use
 
 # Build a docker image for the server, and tag it
 build-linux-image-amd64:
