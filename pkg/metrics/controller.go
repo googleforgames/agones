@@ -329,7 +329,7 @@ func (c *Controller) recordFleetReplicas(fleetName, fleetNamespace string, total
 // nolint:dupl // Linter errors on lines are duplicate of recordLists
 func (c *Controller) recordCounters(fleetName, fleetNamespace string, counters map[string]agonesv1.AggregatedCounterStatus) {
 
-	ctx, _ := tag.New(context.Background(), tag.Upsert(keyFleetName, fleetName), tag.Upsert(keyNamespace, fleetNamespace))
+	ctx, _ := tag.New(context.Background(), tag.Upsert(keyName, fleetName), tag.Upsert(keyNamespace, fleetNamespace))
 
 	for counter, counterStatus := range counters {
 		recordWithTags(ctx, []tag.Mutator{tag.Upsert(keyType, "allocated_count"), tag.Upsert(keyCounter, counter)},
@@ -346,7 +346,7 @@ func (c *Controller) recordCounters(fleetName, fleetNamespace string, counters m
 // nolint:dupl // Linter errors on lines are duplicate of recordCounters
 func (c *Controller) recordLists(fleetName, fleetNamespace string, lists map[string]agonesv1.AggregatedListStatus) {
 
-	ctx, _ := tag.New(context.Background(), tag.Upsert(keyFleetName, fleetName), tag.Upsert(keyNamespace, fleetNamespace))
+	ctx, _ := tag.New(context.Background(), tag.Upsert(keyName, fleetName), tag.Upsert(keyNamespace, fleetNamespace))
 
 	for list, listStatus := range lists {
 		recordWithTags(ctx, []tag.Mutator{tag.Upsert(keyType, "allocated_count"), tag.Upsert(keyList, list)},

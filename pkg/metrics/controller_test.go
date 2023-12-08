@@ -520,18 +520,18 @@ func TestFleetCountersAndListsMetrics(t *testing.T) {
 
 	reader.ReadAndExport(exporter)
 	assertMetricData(t, exporter, fleetCountersName, []expectedMetricData{
-		// keyCounter, keyFleetName, keyNamespace, keyType
+		// keyCounter, keyName, keyNamespace, keyType
 		{labels: []string{counterName, fleetName, defaultNs, "allocated_count"}, val: int64(24)},
 		{labels: []string{counterName, fleetName, defaultNs, "allocated_capacity"}, val: int64(30)},
 		{labels: []string{counterName, fleetName, defaultNs, "total_count"}, val: int64(28)},
 		{labels: []string{counterName, fleetName, defaultNs, "total_capacity"}, val: int64(50)},
 	})
 	assertMetricData(t, exporter, fleetListsName, []expectedMetricData{
-		// keyList, keyFleetName, keyNamespace, keyType
-		{labels: []string{fleetName, listName, defaultNs, "allocated_count"}, val: int64(4)},
-		{labels: []string{fleetName, listName, defaultNs, "allocated_capacity"}, val: int64(6)},
-		{labels: []string{fleetName, listName, defaultNs, "total_count"}, val: int64(1)},
-		{labels: []string{fleetName, listName, defaultNs, "total_capacity"}, val: int64(100)},
+		// keyList, keyName, keyNamespace, keyType
+		{labels: []string{listName, fleetName, defaultNs, "allocated_count"}, val: int64(4)},
+		{labels: []string{listName, fleetName, defaultNs, "allocated_capacity"}, val: int64(6)},
+		{labels: []string{listName, fleetName, defaultNs, "total_count"}, val: int64(1)},
+		{labels: []string{listName, fleetName, defaultNs, "total_capacity"}, val: int64(100)},
 	})
 }
 

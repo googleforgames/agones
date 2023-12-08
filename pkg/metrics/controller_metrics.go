@@ -119,14 +119,14 @@ var (
 			Measure:     fleetCountersStats,
 			Description: "Aggregated Counters counts and capacity across GameServers in the Fleet",
 			Aggregation: view.LastValue(),
-			TagKeys:     []tag.Key{keyFleetName, keyNamespace, keyType, keyCounter},
+			TagKeys:     []tag.Key{keyName, keyNamespace, keyType, keyCounter},
 		},
 		{
 			Name:        fleetListsName,
 			Measure:     fleetListsStats,
 			Description: "Aggregated Lists counts and capacity across GameServers in the Fleet",
 			Aggregation: view.LastValue(),
-			TagKeys:     []tag.Key{keyFleetName, keyNamespace, keyType, keyList},
+			TagKeys:     []tag.Key{keyName, keyNamespace, keyType, keyList},
 		},
 		{
 			Name:        gameServersCountName,
