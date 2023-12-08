@@ -72,6 +72,9 @@ spec:
       protocol: TCP
 {{- end }}
   type: {{ .Values.agones.allocator.service.serviceType }}
+{{- if (ne .Values.agones.allocator.service.clusterIP "") }}
+  clusterIP: {{ .Values.agones.allocator.service.clusterIP }}
+{{- end }}
 {{- if $useLoadBalancerIP }}
   loadBalancerIP: {{ .Values.agones.allocator.service.loadBalancerIP }}
 {{- end }}
