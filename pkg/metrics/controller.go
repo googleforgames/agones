@@ -241,6 +241,15 @@ func (c *Controller) recordFleetChanges(obj interface{}) {
 
 	c.recordFleetReplicas(f.Name, f.Namespace, f.Status.Replicas, f.Status.AllocatedReplicas,
 		f.Status.ReadyReplicas, f.Spec.Replicas, f.Status.ReservedReplicas)
+
+	if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
+		if f.Status.Counters != nil {
+			c.recordCounters(f.Name, f.Namespace, f.Status.Counters)
+		}
+		if f.Status.Lists != nil {
+			c.recordLists(f.Name, f.Namespace, f.Status.Lists)
+		}
+	}
 }
 
 func (c *Controller) recordFleetDeletion(obj interface{}) {
@@ -315,6 +324,40 @@ func (c *Controller) recordFleetReplicas(fleetName, fleetNamespace string, total
 		fleetsReplicasCountStats.M(int64(desired)))
 	recordWithTags(ctx, []tag.Mutator{tag.Upsert(keyType, "reserved")},
 		fleetsReplicasCountStats.M(int64(reserved)))
+}
+
+// nolint:dupl // Linter errors on lines are duplicate of recordLists
+func (c *Controller) recordCounters(fleetName, fleetNamespace string, counters map[string]agonesv1.AggregatedCounterStatus) {
+
+	ctx, _ := tag.New(context.Background(), tag.Upsert(keyName, fleetName), tag.Upsert(keyNamespace, fleetNamespace))
+
+	for counter, counterStatus := range counters {
+		recordWithTags(ctx, []tag.Mutator{tag.Upsert(keyType, "allocated_count"), tag.Upsert(keyCounter, counter)},
+			fleetCountersStats.M(counterStatus.AllocatedCount))
+		recordWithTags(ctx, []tag.Mutator{tag.Upsert(keyType, "allocated_capacity"), tag.Upsert(keyCounter, counter)},
+			fleetCountersStats.M(counterStatus.AllocatedCapacity))
+		recordWithTags(ctx, []tag.Mutator{tag.Upsert(keyType, "total_count"), tag.Upsert(keyCounter, counter)},
+			fleetCountersStats.M(counterStatus.Count))
+		recordWithTags(ctx, []tag.Mutator{tag.Upsert(keyType, "total_capacity"), tag.Upsert(keyCounter, counter)},
+			fleetCountersStats.M(counterStatus.Capacity))
+	}
+}
+
+// nolint:dupl // Linter errors on lines are duplicate of recordCounters
+func (c *Controller) recordLists(fleetName, fleetNamespace string, lists map[string]agonesv1.AggregatedListStatus) {
+
+	ctx, _ := tag.New(context.Background(), tag.Upsert(keyName, fleetName), tag.Upsert(keyNamespace, fleetNamespace))
+
+	for list, listStatus := range lists {
+		recordWithTags(ctx, []tag.Mutator{tag.Upsert(keyType, "allocated_count"), tag.Upsert(keyList, list)},
+			fleetListsStats.M(listStatus.AllocatedCount))
+		recordWithTags(ctx, []tag.Mutator{tag.Upsert(keyType, "allocated_capacity"), tag.Upsert(keyList, list)},
+			fleetListsStats.M(listStatus.AllocatedCapacity))
+		recordWithTags(ctx, []tag.Mutator{tag.Upsert(keyType, "total_count"), tag.Upsert(keyList, list)},
+			fleetListsStats.M(listStatus.Count))
+		recordWithTags(ctx, []tag.Mutator{tag.Upsert(keyType, "total_capacity"), tag.Upsert(keyList, list)},
+			fleetListsStats.M(listStatus.Capacity))
+	}
 }
 
 // recordGameServerStatusChanged records gameserver status changes, however since it's based
