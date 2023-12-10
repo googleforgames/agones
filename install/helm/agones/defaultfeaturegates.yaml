@@ -23,6 +23,9 @@ PlayerTracking: false
 DisableResyncOnSDKServer: false
 CountsAndLists: false
 
+# Dev features
+FeatureGKEAutopilotExtendedDurationPods: false
+
 # Example feature
 Example: false
 

@@ -212,6 +212,7 @@ agones:
     service:
       name: agones-allocator
       serviceType: LoadBalancer
+      clusterIP: ""
       loadBalancerIP: ""
       loadBalancerSourceRanges: []
       annotations: {}

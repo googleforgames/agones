@@ -49,28 +49,39 @@ const (
 	// (a generic implenetation of the player tracking feature).
 	FeatureCountsAndLists Feature = "CountsAndLists"
 
+	// FeatureDisableResyncOnSDKServer is a feature flag to enable/disable resync on SDK server.
+	FeatureDisableResyncOnSDKServer Feature = "DisableResyncOnSDKServer"
+
+	////////////////
+	// Dev features
+
+	// FeatureGKEAutopilotExtendedDurationPods enables the use of Extended Duration pods
+	// when Agones is running on Autopilot.
+	FeatureGKEAutopilotExtendedDurationPods = "GKEAutopilotExtendedDurationPods"
+
 	////////////////
 	// Example feature
 
 	// FeatureExample is an example feature gate flag, used for testing and demonstrative purposes
 	FeatureExample Feature = "Example"
-
-	// FeatureDisableResyncOnSDKServer is a feature flag to enable/disable resync on SDK server.
-	FeatureDisableResyncOnSDKServer Feature = "DisableResyncOnSDKServer"
 )
 
 var (
 	// featureDefaults is a map of all Feature Gates that are
 	// operational in Agones, and what their default configuration is.
-	// alpha features are disabled by default; beta features are enabled.
+	// dev & alpha features are disabled by default; beta features are enabled.
 	//
-	// To add a new alpha feature:
+	// To add a new dev feature (an in progress feature, not tested in CI and not publicly documented):
 	// * add a const above
 	// * add it to `featureDefaults`
 	// * add it to install/helm/agones/defaultfeaturegates.yaml
+	// * note: you can add a new feature as an alpha feature if you're ready to test it in CI
+	//
+	// To promote a feature from dev->alpha:
 	// * add it to `ALPHA_FEATURE_GATES` in build/Makefile
 	// * add the inverse to the e2e-runner config in cloudbuild.yaml
 	// * add it to site/content/en/docs/Guides/feature-stages.md
+	// * Ensure that the features in each file are organized categorically and alphabetically.
 	//
 	// To promote a feature from alpha->beta:
 	// * move from `false` to `true` in `featureDefaults`.
@@ -78,7 +89,7 @@ var (
 	// * remove from `ALPHA_FEATURE_GATES` in build/Makefile
 	// * invert in the e2e-runner config in cloudbuild.yaml
 	// * change the value in site/content/en/docs/Guides/feature-stages.md.
-	// * Ensure that the features in each file are organized alphabetically.
+	// * Ensure that the features in each file are organized categorically and alphabetically.
 	//
 	// To promote a feature from beta->GA:
 	// * remove all places consuming the feature gate and fold logic to true
@@ -95,6 +106,9 @@ var (
 		FeaturePlayerTracking:           false,
 		FeatureDisableResyncOnSDKServer: false,
 		FeatureCountsAndLists:           false,
+
+		// Dev features
+		FeatureGKEAutopilotExtendedDurationPods: false,
 
 		// Example feature
 		FeatureExample: false,
