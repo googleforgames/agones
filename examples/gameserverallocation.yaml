@@ -52,12 +52,18 @@ spec:
       gameServerState: Ready
       # [Stage:Alpha]
       # [FeatureFlag:CountsAndLists]
-      # Counts and Lists provides the configuration for generic (player, room, session, etc.) tracking features.
-      # Commented out since Alpha, and disabled by default
-      # counters:
+      # counters: # selector for counter current values of a GameServer count
+      #   rooms:
+      #     minCount: 1 # minimum value. Defaults to 0.
+      #     maxCount: 5 # maximum value. Defaults to max(int64)
+      #     minAvailable: 1 # minimum available (current capacity - current count). Defaults to 0.
+      #     maxAvailable: 10 # maximum available (current capacity - current count) Defaults to max(int64)
+      # lists:
       #   players:
-      #     minAvailable: 1
-      #     maxAvailable: 10
+      #     countainsValue: "x6k8z" # only match GameServers who has this value in the list. Defaults to "", which is all.
+      #     minAvailable: 1 # minimum available (current capacity - current count). Defaults to 0.
+      #     maxAvailable: 10 # maximum available (current capacity - current count) Defaults to 0, which translates to max(int64)
+      #
       # [Stage:Alpha]
       # [FeatureFlag:PlayerAllocationFilter]
       # Provides a filter on minimum and maximum values for player capacity when retrieving a GameServer
