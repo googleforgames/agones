@@ -174,12 +174,12 @@ func (ao *AllocationOverflow) Apply(gs *GameServer) {
 }
 
 // Priority is a sorting option for GameServers with Counters or Lists based on the Capacity.
-// Type: Sort by a "Counter" or a "List".
-// Key: The name of the Counter or List. If not found on the GameServer, has no impact.
-// Order: Sort by "Ascending" or "Descending". "Descending" a bigger Capacity is preferred.
-// "Ascending" would be smaller Capacity is preferred.
 type Priority struct {
-	Type  string `json:"type"`
-	Key   string `json:"key"`
+	// Type: Sort by a "Counter" or a "List".
+	Type string `json:"type"`
+	// Key: The name of the Counter or List. If not found on the GameServer, has no impact.
+	Key string `json:"key"`
+	// Order: Sort by "Ascending" or "Descending". "Descending" a bigger Capacity is preferred.
+	// "Ascending" would be smaller Capacity is preferred.
 	Order string `json:"order"`
 }

@@ -21,13 +21,13 @@ import (
 	"agones.dev/agones/pkg/apis"
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	"agones.dev/agones/pkg/util/runtime"
-	hashstructure "github.com/mitchellh/hashstructure/v2"
+	"github.com/mitchellh/hashstructure/v2"
 	corev1 "k8s.io/api/core/v1"
 	apivalidation "k8s.io/apimachinery/pkg/api/validation"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	metav1validation "k8s.io/apimachinery/pkg/apis/meta/v1/validation"
 	"k8s.io/apimachinery/pkg/labels"
-	field "k8s.io/apimachinery/pkg/util/validation/field"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
 const (
@@ -105,11 +105,12 @@ type GameServerAllocationSpec struct {
 	// You can use this to tell the server necessary session data
 	MetaPatch MetaPatch `json:"metadata,omitempty" hash:"ignore"`
 
-	// (Alpha, CountsAndLists feature flag) Counters and Lists provide a set of actions to perform
-	// on Counters and Lists during allocation.
+	// (Alpha, CountsAndLists feature flag) Counter actions to perform during allocation.
 	// +optional
 	Counters map[string]CounterAction `json:"counters,omitempty" hash:"ignore"`
-	Lists    map[string]ListAction    `json:"lists,omitempty" hash:"ignore"`
+	// (Alpha, CountsAndLists feature flag) List actions to perform during allocation.
+	// +optional
+	Lists map[string]ListAction `json:"lists,omitempty" hash:"ignore"`
 }
 
 // GameServerSelector contains all the filter options for selecting
@@ -146,40 +147,56 @@ type PlayerSelector struct {
 }
 
 // CounterSelector is the filter options for a GameServer based on the count and/or available capacity.
-// 0 for MaxCount or MaxAvailable means unlimited maximum. Default for all fields: 0
 type CounterSelector struct {
-	MinCount     int64 `json:"minCount"`
-	MaxCount     int64 `json:"maxCount"`
+	// MinCount is the minimum current value. Defaults to 0.
+	// +optional
+	MinCount int64 `json:"minCount"`
+	// MaxCount is the maximum current value. Defaults to 0, which translates as max(in64).
+	// +optional
+	MaxCount int64 `json:"maxCount"`
+	// MinAvailable specifies the minimum capacity (current capacity - current count) available on a GameServer. Defaults to 0.
+	// +optional
 	MinAvailable int64 `json:"minAvailable"`
+	// MaxAvailable specifies the maximum capacity (current capacity - current count) available on a GameServer. Defaults to 0, which translates to max(int64).
+	// +optional
 	MaxAvailable int64 `json:"maxAvailable"`
 }
 
 // ListSelector is the filter options for a GameServer based on List available capacity and/or the
 // existence of a value in a List.
-// 0 for MaxAvailable means unlimited maximum. Default for integer fields: 0
-// "" for ContainsValue means ignore field. Default for string field: ""
 type ListSelector struct {
+	// ContainsValue says to only match GameServers who has this value in the list. Defaults to "", which is all.
+	// +optional
 	ContainsValue string `json:"containsValue"`
-	MinAvailable  int64  `json:"minAvailable"`
-	MaxAvailable  int64  `json:"maxAvailable"`
+	// MinAvailable specifies the minimum capacity (current capacity - current count) available on a GameServer. Defaults to 0.
+	// +optional
+	MinAvailable int64 `json:"minAvailable"`
+	// MaxAvailable specifies the maximum capacity (current capacity - current count) available on a GameServer. Defaults to 0, which is translated as max(int64).
+	// +optional
+	MaxAvailable int64 `json:"maxAvailable"`
 }
 
 // CounterAction is an optional action that can be performed on a Counter at allocation.
-// Action: "Increment" or "Decrement" the Counter's Count (optional). Must also define the Amount.
-// Amount: The amount to increment or decrement the Count (optional). Must be a positive integer.
-// Capacity: Update the maximum capacity of the Counter to this number (optional). Min 0, Max int64.
 type CounterAction struct {
-	Action   *string `json:"action,omitempty"`
-	Amount   *int64  `json:"amount,omitempty"`
-	Capacity *int64  `json:"capacity,omitempty"`
+	// Action must to either "Increment" or "Decrement" the Counter's Count. Must also define the Amount.
+	// +optional
+	Action *string `json:"action,omitempty"`
+	// Amount is the amount to increment or decrement the Count. Must be a positive integer.
+	// +optional
+	Amount *int64 `json:"amount,omitempty"`
+	// Capacity is the amount to update the maximum capacity of the Counter to this number. Min 0, Max int64.
+	// +optional
+	Capacity *int64 `json:"capacity,omitempty"`
 }
 
 // ListAction is an optional action that can be performed on a List at allocation.
-// AddValues: Append values to a List's Values array (optional). Any duplicate values will be ignored.
-// Capacity: Update the maximum capacity of the Counter to this number (optional). Min 0, Max 1000.
 type ListAction struct {
+	// AddValues appends values to a List's Values array. Any duplicate values will be ignored.
+	// +optional
 	AddValues []string `json:"addValues,omitempty"`
-	Capacity  *int64   `json:"capacity,omitempty"`
+	// Capacity updates the maximum capacity of the Counter to this number. Min 0, Max 1000.
+	// +optional
+	Capacity *int64 `json:"capacity,omitempty"`
 }
 
 // ApplyDefaults applies default values
