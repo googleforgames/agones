@@ -23,6 +23,7 @@ import (
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	agtesting "agones.dev/agones/pkg/testing"
 	"agones.dev/agones/pkg/util/runtime"
+	"github.com/google/go-cmp/cmp"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
@@ -467,6 +468,70 @@ func TestControllerGameServersNodeState(t *testing.T) {
 	assertMetricData(t, exporter, nodeCountName, []expectedMetricData{
 		{labels: []string{"true"}, val: int64(1)},
 		{labels: []string{"false"}, val: int64(2)},
+	})
+}
+
+func TestFleetCountersAndListsMetrics(t *testing.T) {
+	runtime.FeatureTestMutex.Lock()
+	defer runtime.FeatureTestMutex.Unlock()
+	assert.NoError(t, runtime.ParseFeatures(string(runtime.FeatureCountsAndLists)+"=true"))
+
+	resetMetrics()
+	exporter := &metricExporter{}
+	reader := metricexport.NewReader()
+	c := newFakeController()
+	defer c.close()
+
+	fleetName := "cl-fleet-test"
+	counterName := "players"
+	counters := map[string]agonesv1.AggregatedCounterStatus{
+		counterName: {
+			AllocatedCount:    24,
+			AllocatedCapacity: 30,
+			Count:             28,
+			Capacity:          50,
+		},
+	}
+	listName := "rooms"
+	lists := map[string]agonesv1.AggregatedListStatus{
+		listName: {
+			AllocatedCount:    4,
+			AllocatedCapacity: 6,
+			Count:             1,
+			Capacity:          100,
+		},
+	}
+
+	f := fleet(fleetName, 8, 3, 5, 8, 0)
+	c.fleetWatch.Add(f)
+	f = f.DeepCopy()
+	f.Status.Lists = lists
+	f.Status.Counters = counters
+	c.fleetWatch.Modify(f)
+
+	c.run(t)
+	require.True(t, c.sync())
+	require.Eventually(t, func() bool {
+		fl, err := c.fleetLister.Fleets(f.GetObjectMeta().GetNamespace()).Get(fleetName)
+		assert.NoError(t, err)
+		return cmp.Equal(counters, fl.Status.Counters) && cmp.Equal(lists, fl.Status.Lists)
+	}, 5*time.Second, time.Second)
+	c.collect()
+
+	reader.ReadAndExport(exporter)
+	assertMetricData(t, exporter, fleetCountersName, []expectedMetricData{
+		// keyCounter, keyName, keyNamespace, keyType
+		{labels: []string{counterName, fleetName, defaultNs, "allocated_count"}, val: int64(24)},
+		{labels: []string{counterName, fleetName, defaultNs, "allocated_capacity"}, val: int64(30)},
+		{labels: []string{counterName, fleetName, defaultNs, "total_count"}, val: int64(28)},
+		{labels: []string{counterName, fleetName, defaultNs, "total_capacity"}, val: int64(50)},
+	})
+	assertMetricData(t, exporter, fleetListsName, []expectedMetricData{
+		// keyList, keyName, keyNamespace, keyType
+		{labels: []string{listName, fleetName, defaultNs, "allocated_count"}, val: int64(4)},
+		{labels: []string{listName, fleetName, defaultNs, "allocated_capacity"}, val: int64(6)},
+		{labels: []string{listName, fleetName, defaultNs, "total_count"}, val: int64(1)},
+		{labels: []string{listName, fleetName, defaultNs, "total_capacity"}, val: int64(100)},
 	})
 }
 

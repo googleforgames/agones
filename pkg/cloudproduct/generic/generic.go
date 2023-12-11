@@ -19,8 +19,8 @@ import (
 	"agones.dev/agones/pkg/apis"
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	"agones.dev/agones/pkg/client/informers/externalversions"
+	"agones.dev/agones/pkg/cloudproduct/eviction"
 	"agones.dev/agones/pkg/portallocator"
-	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/client-go/informers"
@@ -40,37 +40,8 @@ func (*generic) ValidateScheduling(apis.SchedulingStrategy, *field.Path) field.E
 func (*generic) MutateGameServerPod(*agonesv1.GameServerSpec, *corev1.Pod) error         { return nil }
 
 // SetEviction sets disruptions controls based on GameServer.Status.Eviction.
-func (*generic) SetEviction(eviction *agonesv1.Eviction, pod *corev1.Pod) error {
-	if eviction == nil {
-		return errors.New("No eviction value set. Should be the default value")
-	}
-	if _, exists := pod.ObjectMeta.Annotations[agonesv1.PodSafeToEvictAnnotation]; !exists {
-		switch eviction.Safe {
-		case agonesv1.EvictionSafeAlways:
-			pod.ObjectMeta.Annotations[agonesv1.PodSafeToEvictAnnotation] = agonesv1.True
-		case agonesv1.EvictionSafeOnUpgrade, agonesv1.EvictionSafeNever:
-			// For EvictionSafeOnUpgrade and EvictionSafeNever, we block Cluster Autoscaler.
-			pod.ObjectMeta.Annotations[agonesv1.PodSafeToEvictAnnotation] = agonesv1.False
-		default:
-			return errors.Errorf("unknown eviction.safe value %q", string(eviction.Safe))
-		}
-	}
-	if _, exists := pod.ObjectMeta.Labels[agonesv1.SafeToEvictLabel]; !exists {
-		switch eviction.Safe {
-		case agonesv1.EvictionSafeAlways, agonesv1.EvictionSafeOnUpgrade:
-			// For EvictionSafeAlways and EvictionSafeOnUpgrade, we use a label value
-			// that does not match the agones-gameserver-safe-to-evict-false PDB. But
-			// we go ahead and label it, in case someone wants to adopt custom logic
-			// for this group of game servers.
-			pod.ObjectMeta.Labels[agonesv1.SafeToEvictLabel] = agonesv1.True
-		case agonesv1.EvictionSafeNever:
-			// For EvictionSafeNever, match gones-gameserver-safe-to-evict-false PDB.
-			pod.ObjectMeta.Labels[agonesv1.SafeToEvictLabel] = agonesv1.False
-		default:
-			return errors.Errorf("unknown eviction.safe value %q", string(eviction.Safe))
-		}
-	}
-	return nil
+func (*generic) SetEviction(ev *agonesv1.Eviction, pod *corev1.Pod) error {
+	return eviction.SetEviction(ev, pod)
 }
 
 func (*generic) SyncPodPortsToGameServer(*agonesv1.GameServer, *corev1.Pod) error { return nil }
