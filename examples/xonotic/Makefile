@@ -38,9 +38,9 @@ WINDOWS_DOCKER_PUSH_ARGS = --push
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_path := $(dir $(mkfile_path))
 ifeq ($(REPOSITORY),)
-	server_tag := xonotic-example:1.5
+	server_tag := xonotic-example:1.6
 else
-	server_tag := $(REPOSITORY)/xonotic-example:1.5
+	server_tag := $(REPOSITORY)/xonotic-example:1.6
 endif
 
 server_tag_linux_amd64 = $(server_tag)-linux-amd64
@@ -67,9 +67,9 @@ push: push-linux-image-amd64
 ifeq ($(WITH_WINDOWS), 1)
 push: push-windows-images
 endif
-	-docker manifest rm $(server_tag)
-	docker manifest create $(server_tag) $(push_server_manifest)
-	docker manifest push $(server_tag) --purge
+	# Docker >=24.0.6
+	docker buildx imagetools create --tag $(server_tag) \
+		$(push_server_manifest)
 
 
 # Pushes all variants of the Windows images to the container image registry.
@@ -84,13 +84,13 @@ push-windows-image-%:
 	$(MAKE) WINDOWS_DOCKER_PUSH_ARGS=--push build-windows-image-$*
 
 build-windows-image-%: ensure-windows-buildx
-	docker buildx build --platform windows/amd64 --builder $(BUILDX_WINDOWS_BUILDER) -f $(project_path)Dockerfile.windows \
-	--tag=$(server_tag)-windows_amd64-$* --build-arg WINDOWS_VERSION=$* . $(WINDOWS_DOCKER_PUSH_ARGS)
+		DOCKER_CLI_EXPERIMENTAL=enabled docker buildx build --platform windows/amd64 --builder $(BUILDX_WINDOWS_BUILDER) -f $(project_path)Dockerfile.windows \
+		--tag=$(server_tag)-windows_amd64-$* --build-arg WINDOWS_VERSION=$* . $(WINDOWS_DOCKER_PUSH_ARGS)
 
 ensure-windows-buildx:
 # Windows image builds must be directed to a specific buildx context.
 # The default context does not support building cross platform images.
-	-DOCKER_CLI_EXPERIMENTAL=enabled docker buildx create --name=$(BUILDX_WINDOWS_BUILDER) --use
+	-docker buildx create --name=$(BUILDX_WINDOWS_BUILDER) --use
 
 build-linux-image-amd64:
 	docker build -f $(project_path)/Dockerfile --tag=$(server_tag_linux_amd64) .
