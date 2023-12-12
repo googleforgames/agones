@@ -324,43 +324,51 @@ The `Counters` and `Lists` features in the SDK offer a flexible configuration fo
 players, rooms, and sessions. However, it's important to note that this feature has been in Alpha stage and disabled
 by default.
 
+{{< alert title="Note" color="info">}}
+There is a potential race condition when count values are set from both the SDK and through the K8s API(Allocation or otherwise),
+since the SDK update operation back to the CRD value is batched asynchronous any value incremented past the capacity will be
+silently truncated to capacity.
+{{< /alert >}}
+
 ### Counters
 
 #### Alpha().GetCounterCount(key)
 
-This function retrieves the current count for a specified Counter in the game server. It ensures the count is accurate
-based on the predefined keys in the GameServer resource, and returns an error if the key is not predefined.
+This function retrieves the current count for a specified Counter in the game server. This returns `-1` an `error` if 
+the key is not predefined.
+
+{{< alert title="Note" color="info">}}
+The retrieved count may not always represent the most up-to-date value. Changes to Counters can occur through Game Server
+Allocation Actions as well as the SDK, so this count may not always be accurate as it could be reading cached data. However,
+count will be eventually consistent when coming back to the SDK.
+{{< /alert >}}
 
 #### Alpha().SetCounterCount(key, amount)
 
 This function sets the count to a given value. This operation overwrites any previous values and the new value cannot
-exceed the Counter's capacity. The function returns `true` if successful, along with an `error` if the operation fails.
+exceed the Counter's capacity. The function returns `true` if successful, or `false` along with an `error` if the operation fails.
 
 #### Alpha().IncrementCounter(key, amount)
 
-This function increments the count of a specified Counter by a given nonnegative amount. It updates the current CRD 
-value and maxes out at the maximum value of `int64`. The function returns an `error` if the key wasn't predefined in 
-the GameServer resource and returns `false` if the Counter is already at capacity, indicating no increment will occur.
-There is a potential race condition when count values are set from both the SDK and through the K8s API(Allocation or otherwise),
-since the SDK append operation back to the CRD value is batched asynchronous any value incremented past the capacity will be
-silently truncated.
+This function increments the count of a specified Counter by a given nonnegative value amount. The function returns `false`
+and an `error` if the key wasn't predefined in the GameServer resource and returns or if the Counter is already at capacity,
+indicating no increment will occur. If the update is successful this returns `true`.
 
 #### Alpha().DecrementCounter(key, amount)
 
 This function decreases the count of a specified Counter by a given nonnegative amount. It ensures the Counter's count does
-not go below zero and operates against the current CRD value. It returns `false` if the Counter's count is already at zero,
-indicating no decrement will occur. An `error` is returned if the decrement amount is negative.
+not go below zero and operates against the current CRD value. It returns `false` and an `error` if the Counter's count is
+already at zero, if the decrement amount is negative, or if there is another error, indicating no decrement will occur.
 
 #### Alpha().SetCounterCapacity(key, amount)
 
 This function sets the maximum capacity for a specified Counter. A capacity value of 0 indicates no capacity limit.
-The function returns `true` if the capacity is successfully set, and an `error` if the operation fails.
-
+The function returns `true` if the capacity is successfully set, and `false` and an `error` if the operation fails.
 #### Alpha().GetCounterCapacity(key)
 
-This function retrieves the maximum capacity of a specified Counter using its key(name). It returns an error if the key
+This function retrieves the maximum capacity of a specified Counter using its key (name). It returns an `error` if the key
 wasn't predefined in the GameServer resource. The function provides the Counter's capacity value if successful, or `-1`
-along with an error in case of failure.
+along with an `error` in case of failure.
 
 ### Lists
 
@@ -368,36 +376,35 @@ along with an error in case of failure.
 
 This function appends a string value to a List's values, identified by the List's key(name) and the string value.
 It returns an `error` if the string already exists in the list or if the key wasn't predefined in the GameServer resource.
-The function returns `true` if the operation is successful, and an error if it fails.
+The function returns `true` if the operation is successful, and `false` and an `error` if it fails.
 
 #### Alpha().DeleteListValue(key, value)
 
-This function removes a string from a List's values using its key(name) and the specific string value. It returns an 
-`error` if the string does not exist in the list or if the key wasn't predefined in the GameServer resource. The function
-returns `true` if the deletion is successful, and an error if it fails.
+This function removes a string from a List's values using its key(name) and the specific string value. It returns an
+`false` and an `error` if the string does not exist in the list or if the key wasn't predefined in the GameServer resource. The function
+returns `true` if the deletion is successful, or `false` and an `error` if it fails.
 
 #### Alpha().SetListCapacity(key, amount)
 
-This function sets the capacity for a specified List, identified by its key(name), with the capacity value required to be
+This function sets the capacity for a specified List, identified by its key (name), with the capacity value required to be
 between 0 and 1000. It returns an error if the key wasn't predefined in the GameServer resource. The function returns `true`
-if the capacity is successfully set, and an error if the operation fails.
+if the capacity is successfully set, or `false` and an error if the operation fails.
 
 #### Alpha().GetListCapacity(key)
 
-This function retrieves the capacity of a specified List using its key(name). It returns an error if the key wasn't 
+This function retrieves the capacity of a specified List using its key(name). It returns `-1` and an `error` if the key wasn't
 predefined in the GameServer resource. The function provides the List's capacity value if successful, or `-1` along with
-an error in case of failure.
+an `error` in case of failure.
 
 #### Alpha().ListContains(key, value)
 
 This function checks if a specific string value exists in a List's values, identified by the List's key(name).
-The search is case-sensitive. It returns `true` if the string is found in the list, and `false` otherwise.
-An error is returned if the key wasn't predefined in the GameServer resource or if there's an issue in fetching the List.
-
+The search is case-sensitive. It returns `true` if the string is found in the list, and `false` otherwise.`false` and an error
+are returned if the key wasn't predefined in the GameServer resource or if there's an issue in fetching the List.
 #### Alpha().GetListLength(key)
 
 This function retrieves the number of items (length) in the Values list of a specified List, identified by the List's key(name).
-It returns the length of the list if successful, or `-1` along with an error in case of failure, such as if the key wasn't
+It returns the length of the list if successful, or `-1` along with an `error` in case of failure, such as if the key wasn't
 predefined in the GameServer resource.
 
 #### Alpha().GetListValues(key)
