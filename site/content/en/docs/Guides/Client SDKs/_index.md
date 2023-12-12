@@ -330,8 +330,8 @@ since the SDK update operation back to the CRD value is batched asynchronous any
 silently truncated to capacity.
 
 When retrieving count values through `get` operations, it's important to note that the values may not always represent
-the most up-to-date value. Changes to Counters can occur through Game Server Allocation Actions as well as the SDK, 
-so this count may not always be accurate as it could be reading cached data. However, count will be
+the most up-to-date value. Changes to Counters and Lists can occur through Game Server Allocation Actions as well as the SDK, 
+so this value may not always be accurate as it could be reading cached data. However, value will be
 eventually consistent when coming back to the SDK.
 {{< /alert >}}
 
