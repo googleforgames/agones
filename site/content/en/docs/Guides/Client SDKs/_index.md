@@ -328,6 +328,11 @@ by default.
 There is a potential race condition when count values are set from both the SDK and through the K8s API(Allocation or otherwise),
 since the SDK update operation back to the CRD value is batched asynchronous any value incremented past the capacity will be
 silently truncated to capacity.
+
+When retrieving count values through `get` operations, it's important to note that the values may not always represent
+the most up-to-date value. Changes to Counters can occur through Game Server Allocation Actions as well as the SDK, 
+so this count may not always be accurate as it could be reading cached data. However, count will be
+eventually consistent when coming back to the SDK.
 {{< /alert >}}
 
 ### Counters
@@ -336,12 +341,6 @@ silently truncated to capacity.
 
 This function retrieves the current count for a specified Counter in the game server. This returns `-1` an `error` if 
 the key is not predefined.
-
-{{< alert title="Note" color="info">}}
-The retrieved count may not always represent the most up-to-date value. Changes to Counters can occur through Game Server
-Allocation Actions as well as the SDK, so this count may not always be accurate as it could be reading cached data. However,
-count will be eventually consistent when coming back to the SDK.
-{{< /alert >}}
 
 #### Alpha().SetCounterCount(key, amount)
 
@@ -364,6 +363,7 @@ already at zero, if the decrement amount is negative, or if there is another err
 
 This function sets the maximum capacity for a specified Counter. A capacity value of 0 indicates no capacity limit.
 The function returns `true` if the capacity is successfully set, and `false` and an `error` if the operation fails.
+
 #### Alpha().GetCounterCapacity(key)
 
 This function retrieves the maximum capacity of a specified Counter using its key (name). It returns an `error` if the key
