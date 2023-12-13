@@ -69,7 +69,7 @@ push: push-windows-images
 endif
 	# Docker >=24.0.6
 	docker buildx imagetools create --tag $(server_tag) \
-		$(push_server_manifest)
+	$(push_server_manifest)
 
 
 # Pushes all variants of the Windows images to the container image registry.
