@@ -84,8 +84,8 @@ push-windows-image-%:
 	$(MAKE) WINDOWS_DOCKER_PUSH_ARGS=--push build-windows-image-$*
 
 build-windows-image-%: ensure-windows-buildx
-		DOCKER_CLI_EXPERIMENTAL=enabled docker buildx build --platform windows/amd64 --builder $(BUILDX_WINDOWS_BUILDER) -f $(project_path)Dockerfile.windows \
-		--tag=$(server_tag)-windows_amd64-$* --build-arg WINDOWS_VERSION=$* . $(WINDOWS_DOCKER_PUSH_ARGS)
+	docker buildx build --platform windows/amd64 --builder $(BUILDX_WINDOWS_BUILDER) -f $(project_path)Dockerfile.windows \
+	--tag=$(server_tag)-windows_amd64-$* --build-arg WINDOWS_VERSION=$* . $(WINDOWS_DOCKER_PUSH_ARGS)
 
 ensure-windows-buildx:
 # Windows image builds must be directed to a specific buildx context.
