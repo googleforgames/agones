@@ -325,7 +325,7 @@ players, rooms, and sessions. However, it's important to note that this feature 
 by default.
 
 {{< alert title="Note" color="info">}}
-There is a potential race condition when count values are set from both the SDK and through the K8s API(Allocation or otherwise),
+There is a potential race condition when count values are set from both the SDK and through the K8s API (Allocation or otherwise),
 since the SDK update operation back to the CRD value is batched asynchronous any value incremented past the capacity will be
 silently truncated to capacity.
 
@@ -350,8 +350,8 @@ exceed the Counter's capacity. The function returns `true` if successful, or `fa
 #### Alpha().IncrementCounter(key, amount)
 
 This function increments the count of a specified Counter by a given nonnegative value amount. The function returns `false`
-and an `error` if the key wasn't predefined in the GameServer resource and returns or if the Counter is already at capacity,
-indicating no increment will occur. If the update is successful this returns `true`.
+and an `error` if the key wasn't predefined in the GameServer resource or if the Counter is already at capacity, indicating
+no increment will occur. If the update is successful this returns `true`.
 
 #### Alpha().DecrementCounter(key, amount)
 
@@ -374,13 +374,13 @@ along with an `error` in case of failure.
 
 #### Alpha().AppendListValue(key, value)
 
-This function appends a string value to a List's values, identified by the List's key(name) and the string value.
+This function appends a string value to a List's values, identified by the List's key (name) and the string value.
 It returns an `error` if the string already exists in the list or if the key wasn't predefined in the GameServer resource.
 The function returns `true` if the operation is successful, and `false` and an `error` if it fails.
 
 #### Alpha().DeleteListValue(key, value)
 
-This function removes a string from a List's values using its key(name) and the specific string value. It returns an
+This function removes a string from a List's values using its key (name) and the specific string value. It returns an
 `false` and an `error` if the string does not exist in the list or if the key wasn't predefined in the GameServer resource. The function
 returns `true` if the deletion is successful, or `false` and an `error` if it fails.
 
@@ -388,28 +388,29 @@ returns `true` if the deletion is successful, or `false` and an `error` if it fa
 
 This function sets the capacity for a specified List, identified by its key (name), with the capacity value required to be
 between 0 and 1000. It returns an error if the key wasn't predefined in the GameServer resource. The function returns `true`
-if the capacity is successfully set, or `false` and an error if the operation fails.
+if the capacity is successfully set, or `false` and an `error` if the operation fails.
 
 #### Alpha().GetListCapacity(key)
 
-This function retrieves the capacity of a specified List using its key(name). It returns `-1` and an `error` if the key wasn't
+This function retrieves the capacity of a specified List using its key (name). It returns `-1` and an `error` if the key wasn't
 predefined in the GameServer resource. The function provides the List's capacity value if successful, or `-1` along with
 an `error` in case of failure.
 
 #### Alpha().ListContains(key, value)
 
-This function checks if a specific string value exists in a List's values, identified by the List's key(name).
-The search is case-sensitive. It returns `true` if the string is found in the list, and `false` otherwise.`false` and an error
+This function checks if a specific string value exists in a List's values, identified by the List's key (name).
+The search is case-sensitive. It returns `true` if the string is found in the list, and `false` otherwise. `false` and an `error`
 are returned if the key wasn't predefined in the GameServer resource or if there's an issue in fetching the List.
+
 #### Alpha().GetListLength(key)
 
-This function retrieves the number of items (length) in the Values list of a specified List, identified by the List's key(name).
+This function retrieves the number of items (length) in the Values list of a specified List, identified by the List's key (name).
 It returns the length of the list if successful, or `-1` along with an `error` in case of failure, such as if the key wasn't
 predefined in the GameServer resource.
 
 #### Alpha().GetListValues(key)
 
-This function returns all the string values from a specified List, identified by the List's key(name). It returns 
+This function returns all the string values from a specified List, identified by the List's key (name). It returns 
 an array of strings if successful, and an `error` if the key wasn't predefined in the GameServer resource or if there's
 an issue in fetching the List.
 
