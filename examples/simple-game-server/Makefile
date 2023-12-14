@@ -39,9 +39,9 @@ WITH_ARM64 ?= 1
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_path := $(dir $(mkfile_path))
 ifeq ($(REPOSITORY),)
-	server_tag := simple-game-server:0.22
+	server_tag := simple-game-server:0.23
 else
-	server_tag := $(REPOSITORY)/simple-game-server:0.22
+	server_tag := $(REPOSITORY)/simple-game-server:0.23
 endif
 
 ifeq ($(WITH_WINDOWS), 1)
@@ -87,13 +87,9 @@ endif
 ifeq ($(WITH_ARM64), 1)
 push: push-linux-image-arm64
 endif
-	-docker manifest rm $(server_tag)
-	docker manifest create $(server_tag) $(push_server_manifest)
-	docker manifest push $(server_tag) --purge
-	# TODO: Update to replace `docker manifest` commands if/when the above commands fail (~Docker 24.x)
-    # Fails with Docker <=20.10.21
-	#docker buildx imagetools create --tag $(server_tag) \
-    	#$(push_server_manifest)
+    # Docker >=24.0.6
+	docker buildx imagetools create --tag $(server_tag) \
+    	$(push_server_manifest)
 
 # Pushes all variants of the Windows images to the container image registry.
 push-linux-image-amd64: build
@@ -114,12 +110,9 @@ build-windows-image-%: ensure-windows-buildx
 	 	--tag=$(server_tag)-windows_amd64-$* --build-arg WINDOWS_VERSION=$* . $(WINDOWS_DOCKER_PUSH_ARGS)
 
 ensure-windows-buildx:
-	# TODO: Remove `--use` and specify `--builder` for each buildx command once Docker 19.03.13 is available.
-	# `--use` sets the global default buildx context to $(BUILDX_WINDOWS_BUILDER).
-	#
-	# Windows image builds must be directed to a specific buildx context.
-	# The default context does not support building cross platform images.
-	-DOCKER_CLI_EXPERIMENTAL=enabled docker buildx create --name=$(BUILDX_WINDOWS_BUILDER) --use
+# Windows image builds must be directed to a specific buildx context.
+# The default context does not support building cross platform images.
+	-docker buildx create --name=$(BUILDX_WINDOWS_BUILDER) --use
 
 # Build a docker image for the server, and tag it
 build-linux-image-amd64:
