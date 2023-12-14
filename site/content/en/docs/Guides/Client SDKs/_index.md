@@ -221,13 +221,109 @@ in [SetLabel(...)](#setlabelkey-value) above. The isolation is also important as
 Setting `GameServer` annotations can be useful if you want information from your running game server process to be 
 observable through the Kubernetes API.
 
+### Counters And Lists
+
+{{< alpha title="Counters And Lists" gate="CountersAndLists" >}}
+
+The `Counters` and `Lists` features in the SDK offer a flexible configuration for tracking various entities like 
+players, rooms, and sessions.
+
+{{< alert title="Note" color="info">}}
+The SDK batches mutation operations every 1 second for performance reasons. However, changes made and subsequently 
+retrieved through the SDK will be atomically accurate through the SDK, as those values are tracked within the 
+SDK Server sidecar process.
+
+However, changes made through Allocation or the Kubernetes API to `GameServer` List and Counter values will be 
+eventually consistent when being retrieved through the SDK.
+
+Since the SDK update operations back to the `GameServer.status` values is batched asynchronous, it is worth noting that
+any value incremented past a counter or list capacity may be silently truncated to the currently set capacity if 
+modified concurrently through the SDK and Allocation/Kubernetes API.
+{{< /alert >}}
+
+#### Counters
+
+All functions will return an error if the specified `key` is not predefined in the `GameServer.spec.counters` resource
+configuration.
+
+##### Alpha().GetCounterCount(key)
+
+This function retrieves the current count for a counter in the game server.
+
+##### Alpha().SetCounterCount(key, amount)
+
+This function sets the count to a given value. This operation overwrites any previous values and the new value cannot
+exceed the Counter's capacity.
+
+##### Alpha().IncrementCounter(key, amount)
+
+This function increments the count of a counter by a given non-negative value amount. The function returns an
+error if the Counter is already at capacity (at time of operation), indicating no increment will occur.
+
+##### Alpha().DecrementCounter(key, amount)
+
+This function decreases the count of a counter by a given non-negative amount. It returns an error if the
+Counter's count is already at zero.
+
+##### Alpha().SetCounterCapacity(key, amount)
+
+This function sets the maximum capacity for a counter. A capacity value of 0 indicates no capacity limit.
+
+##### Alpha().GetCounterCapacity(key)
+
+This function retrieves the maximum capacity of a counter.
+
+#### Lists
+
+All functions will return an error if the specified `key` is not predefined in the `GameServer.spec.lists` resource
+configuration.
+
+##### Alpha().AppendListValue(key, value)
+
+This function appends the specified string value to a List's values.
+
+An error is returned if the string already exists in the list or if the list is at capacity.
+
+##### Alpha().DeleteListValue(key, value)
+
+This function removes the specific string value string from a List's values. 
+
+An error is returned if the string does not exist in the list.
+
+##### Alpha().SetListCapacity(key, amount)
+
+This function sets the capacity for a specified List with the capacity value required to be
+between 0 and 1000.
+
+##### Alpha().GetListCapacity(key)
+
+This function retrieves the capacity of a specified list.
+
+##### Alpha().ListContains(key, value)
+
+This function returns a boolean value on if a specific string value exists in a list's values. 
+
+##### Alpha().GetListLength(key)
+
+This function retrieves the number of items (length) in a  specified List.
+
+##### Alpha().GetListValues(key)
+
+This function returns an array of all the string values from a specified list.
+
 ### Player Tracking
 
 {{< alpha title="Player Tracking" gate="PlayerTracking" >}}
 
+{{< alert title="Warning" color="warning">}}
+[Counters and Lists](#counters-and-lists) will eventually replace the Alpha functionality of Player Tracking, which will subsequently be
+removed from Agones. If you are currently using this Alpha feature, we would love for you to test (and ideally migrate
+to!) this new functionality to ensure it will meet all your needs.
+{{< /alert >}}
+
 #### Alpha().PlayerConnect(playerID)
 
-This function increases the SDK’s stored player count by one, and appends this playerID to 
+This function increases the SDK’s stored player count by one, and appends this playerID to
 `GameServer.Status.Players.IDs`.
 
 [`GameServer.Status.Players.Count` and `GameServer.Status.Players.IDs`][playerstatus]
@@ -247,13 +343,13 @@ the server has been reached. The playerID will not be added to the list of playe
 Do not use this method if you are manually managing `GameServer.Status.Players.IDs` and `GameServer.Status.Players.Count`
 through the Kubernetes API, as indeterminate results will occur.  
 {{< /alert >}}
-    
+
 #### Alpha().PlayerDisconnect(playerID)
 
-This function decreases the SDK’s stored player count by one, and removes the playerID from 
+This function decreases the SDK’s stored player count by one, and removes the playerID from
 [`GameServer.Status.Players.IDs`][playerstatus].
 
-`GameServer.Status.Players.Count` and `GameServer.Status.Players.IDs` are then set to 
+`GameServer.Status.Players.Count` and `GameServer.Status.Players.IDs` are then set to
 update the player count and id list a second from now,
 unless there is already an update pending, in which case the update joins that batch operation.
 
@@ -278,18 +374,18 @@ This function retrieves the current player capacity. This is always accurate fro
 even if the value has yet to be updated on the GameServer status resource.
 
 {{< alert title="Note" color="info">}}
-If `GameServer.Status.Players.Capacity` is set manually through the Kubernetes API, use `SDK.GameServer()` or 
+If `GameServer.Status.Players.Capacity` is set manually through the Kubernetes API, use `SDK.GameServer()` or
 `SDK.WatchGameServer()` instead to view this value.
 {{< /alert >}}
 
 #### Alpha().GetPlayerCount()
 
-This function retrieves the current player count. 
-This is always accurate from what has been set through this SDK, even if the value has yet to be updated on the 
+This function retrieves the current player count.
+This is always accurate from what has been set through this SDK, even if the value has yet to be updated on the
 GameServer status resource.
 
 {{< alert title="Note" color="info">}}
-If `GameServer.Status.Players.IDs` is set manually through the Kubernetes API, use SDK.GameServer() 
+If `GameServer.Status.Players.IDs` is set manually through the Kubernetes API, use SDK.GameServer()
 or SDK.WatchGameServer() instead to retrieve the current player count.
 {{< /alert >}}
 
@@ -300,7 +396,7 @@ been set through this SDK,
 even if the value has yet to be updated on the GameServer status resource.
 
 {{< alert title="Note" color="info">}}
-If `GameServer.Status.Players.IDs` is set manually through the Kubernetes API, use SDK.GameServer() 
+If `GameServer.Status.Players.IDs` is set manually through the Kubernetes API, use SDK.GameServer()
 or SDK.WatchGameServer() instead to determine connected status.
 {{< /alert >}}
 
@@ -310,109 +406,11 @@ This function returns the list of the currently connected player ids. This is al
 through this SDK, even if the value has yet to be updated on the GameServer status resource.
 
 {{< alert title="Note" color="info">}}
-If `GameServer.Status.Players.IDs` is set manually through the Kubernetes API, use SDK.GameServer() 
+If `GameServer.Status.Players.IDs` is set manually through the Kubernetes API, use SDK.GameServer()
 or SDK.WatchGameServer() instead to list the connected players.
 {{< /alert >}}
 
 [playerstatus]: {{< ref "/docs/Reference/agones_crd_api_reference.html#agones.dev/v1.PlayerStatus" >}}
-
-### Counters And Lists
-
-{{< alpha title="Counters And Lists" gate="CountersAndLists" >}}
-
-The `Counters` and `Lists` features in the SDK offer a flexible configuration for tracking various entities like 
-players, rooms, and sessions. However, it's important to note that this feature has been in Alpha stage and disabled
-by default.
-
-{{< alert title="Note" color="info">}}
-There is a potential race condition when count values are set from both the SDK and through the K8s API (Allocation or otherwise),
-since the SDK update operation back to the CRD value is batched asynchronous any value incremented past the capacity will be
-silently truncated to capacity.
-
-When retrieving count values through `get` operations, it's important to note that the values may not always represent
-the most up-to-date value. Changes to Counters and Lists can occur through Game Server Allocation Actions as well as the SDK, 
-so this value may not always be accurate as it could be reading cached data. However, value will be
-eventually consistent when coming back to the SDK.
-{{< /alert >}}
-
-### Counters
-
-#### Alpha().GetCounterCount(key)
-
-This function retrieves the current count for a specified Counter in the game server. This returns `-1` an `error` if 
-the key is not predefined.
-
-#### Alpha().SetCounterCount(key, amount)
-
-This function sets the count to a given value. This operation overwrites any previous values and the new value cannot
-exceed the Counter's capacity. The function returns `true` if successful, or `false` along with an `error` if the operation fails.
-
-#### Alpha().IncrementCounter(key, amount)
-
-This function increments the count of a specified Counter by a given nonnegative value amount. The function returns `false`
-and an `error` if the key wasn't predefined in the GameServer resource or if the Counter is already at capacity, indicating
-no increment will occur. If the update is successful this returns `true`.
-
-#### Alpha().DecrementCounter(key, amount)
-
-This function decreases the count of a specified Counter by a given nonnegative amount. It ensures the Counter's count does
-not go below zero and operates against the current CRD value. It returns `false` and an `error` if the Counter's count is
-already at zero, if the decrement amount is negative, or if there is another error, indicating no decrement will occur.
-
-#### Alpha().SetCounterCapacity(key, amount)
-
-This function sets the maximum capacity for a specified Counter. A capacity value of 0 indicates no capacity limit.
-The function returns `true` if the capacity is successfully set, and `false` and an `error` if the operation fails.
-
-#### Alpha().GetCounterCapacity(key)
-
-This function retrieves the maximum capacity of a specified Counter using its key (name). It returns an `error` if the key
-wasn't predefined in the GameServer resource. The function provides the Counter's capacity value if successful, or `-1`
-along with an `error` in case of failure.
-
-### Lists
-
-#### Alpha().AppendListValue(key, value)
-
-This function appends a string value to a List's values, identified by the List's key (name) and the string value.
-It returns an `error` if the string already exists in the list or if the key wasn't predefined in the GameServer resource.
-The function returns `true` if the operation is successful, and `false` and an `error` if it fails.
-
-#### Alpha().DeleteListValue(key, value)
-
-This function removes a string from a List's values using its key (name) and the specific string value. It returns an
-`false` and an `error` if the string does not exist in the list or if the key wasn't predefined in the GameServer resource. The function
-returns `true` if the deletion is successful, or `false` and an `error` if it fails.
-
-#### Alpha().SetListCapacity(key, amount)
-
-This function sets the capacity for a specified List, identified by its key (name), with the capacity value required to be
-between 0 and 1000. It returns an error if the key wasn't predefined in the GameServer resource. The function returns `true`
-if the capacity is successfully set, or `false` and an `error` if the operation fails.
-
-#### Alpha().GetListCapacity(key)
-
-This function retrieves the capacity of a specified List using its key (name). It returns `-1` and an `error` if the key wasn't
-predefined in the GameServer resource. The function provides the List's capacity value if successful, or `-1` along with
-an `error` in case of failure.
-
-#### Alpha().ListContains(key, value)
-
-This function checks if a specific string value exists in a List's values, identified by the List's key (name).
-The search is case-sensitive. It returns `true` if the string is found in the list, and `false` otherwise. `false` and an `error`
-are returned if the key wasn't predefined in the GameServer resource or if there's an issue in fetching the List.
-
-#### Alpha().GetListLength(key)
-
-This function retrieves the number of items (length) in the Values list of a specified List, identified by the List's key (name).
-It returns the length of the list if successful, or `-1` along with an `error` in case of failure, such as if the key wasn't
-predefined in the GameServer resource.
-
-#### Alpha().GetListValues(key)
-
-This function returns all the string values from a specified List, identified by the List's key (name). It returns 
-an array of strings if successful, and an `error` if the key wasn't predefined in the GameServer resource or if there's
-an issue in fetching the List.
 
 ## Writing your own SDK
 
