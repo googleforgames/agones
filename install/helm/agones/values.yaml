@@ -212,6 +212,7 @@ agones:
     service:
       name: agones-allocator
       serviceType: LoadBalancer
+      clusterIP: ""
       loadBalancerIP: ""
       loadBalancerSourceRanges: []
       annotations: {}
@@ -253,7 +254,6 @@ agones:
     controller:
       name: agones-controller
       pullPolicy: IfNotPresent
-    # extensions settings ignored unless `SplitControllerAndExtensions` feature gate is enabled
     extensions:
       name: agones-extensions
       pullPolicy: IfNotPresent

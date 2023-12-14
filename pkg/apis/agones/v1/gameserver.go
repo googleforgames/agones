@@ -213,10 +213,14 @@ type GameServerSpec struct {
 	// (Alpha, PlayerTracking feature flag) Players provides the configuration for player tracking features.
 	// +optional
 	Players *PlayersSpec `json:"players,omitempty"`
-	// (Alpha, CountsAndLists feature flag) Counters and Lists provides the configuration for generic tracking features.
+	// (Alpha, CountsAndLists feature flag) Counters provides the configuration for tracking of int64 values against a GameServer.
+	// Keys must be declared at GameServer creation time.
 	// +optional
 	Counters map[string]CounterStatus `json:"counters,omitempty"`
-	Lists    map[string]ListStatus    `json:"lists,omitempty"`
+	// (Alpha, CountsAndLists feature flag) Lists provides the configuration for tracking of lists of up to 1000 values against a GameServer.
+	// Keys must be declared at GameServer creation time.
+	// +optional
+	Lists map[string]ListStatus `json:"lists,omitempty"`
 	// Eviction specifies the eviction tolerance of the GameServer. Defaults to "Never".
 	// +optional
 	Eviction *Eviction `json:"eviction,omitempty"`
@@ -321,13 +325,13 @@ type PlayerStatus struct {
 	IDs      []string `json:"ids"`
 }
 
-// CounterStatus stores the current counter values
+// CounterStatus stores the current counter values and maximum capacity
 type CounterStatus struct {
 	Count    int64 `json:"count"`
 	Capacity int64 `json:"capacity"`
 }
 
-// ListStatus stores the current list values
+// ListStatus stores the current list values and maximum capacity
 type ListStatus struct {
 	Capacity int64    `json:"capacity"`
 	Values   []string `json:"values"`

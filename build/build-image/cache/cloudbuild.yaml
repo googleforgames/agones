@@ -1,0 +1,149 @@
+---
+# Copyright 2023 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+steps:
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: build_base_image
+    args:
+      - 'build'
+      - '--tag=us-docker.pkg.dev/$PROJECT_ID/ci/cache:${_VERSION}'
+      - '--tag=us-docker.pkg.dev/$PROJECT_ID/ci/cache:latest'
+      - '--file=Dockerfile-base'
+      - '.'
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: build_save_cache
+    args:
+      - 'build'
+      - '--tag=us-docker.pkg.dev/$PROJECT_ID/ci/save_cache:${_VERSION}'
+      - '--tag=us-docker.pkg.dev/$PROJECT_ID/ci/save_cache:latest'
+      - '--file=Dockerfile-save'
+      - '--build-arg=project_id=$PROJECT_ID'
+      - '--cache-from=us-docker.pkg.dev/$PROJECT_ID/ci/cache:latest'
+      - '.'
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: build_restore_cache
+    args:
+      - 'build'
+      - '--tag=us-docker.pkg.dev/$PROJECT_ID/ci/restore_cache:${_VERSION}'
+      - '--tag=us-docker.pkg.dev/$PROJECT_ID/ci/restore_cache:latest'
+      - '--file=Dockerfile-restore'
+      - '--build-arg=project_id=$PROJECT_ID'
+      - '--cache-from=us-docker.pkg.dev/$PROJECT_ID/ci/cache:latest'
+      - '.'
+
+  # Test the script
+  - name: 'gcr.io/cloud-builders/gsutil'
+    id: setup_test
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "Creating test cache file structure."
+        mkdir -p /original/folder1 /original/folder2/subfolder3 rel_folder
+        touch /original/folder1/file1.txt
+        touch /original/folder1/file2.txt
+        touch /original/folder2/ignore.txt
+        touch /original/folder2/subfolder3/file1.txt
+        touch rel_folder/file3.txt
+    volumes:
+      - name: original
+        path: /original
+
+  - name: 'us-docker.pkg.dev/$PROJECT_ID/ci/save_cache'
+    id: save_cache
+    args:
+      - '--out=/cached'
+      - '--key=simple-key-$( checksum cloudbuild.yaml )'
+      - '--path=/original/folder1'
+      - '--path=/original/folder2/subfolder3'
+      - '--path=rel_folder'
+    volumes:
+      - name: original
+        path: /original
+      - name: cached
+        path: /cached
+
+  - name: 'us-docker.pkg.dev/$PROJECT_ID/ci/save_cache'
+    id: verify_cache
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "Verifying cache file exists."
+        cache_file="/cached/simple-key-$( checksum cloudbuild.yaml ).tgz"
+        if [[ ! -f "${cache_file}" ]];then
+          echo "Missing cache file at ${cache_file}"
+          echo "Contents:"
+          echo "$(ls -al /cached)"
+          exit 1
+        fi
+        echo "Cache tests passed."
+    volumes:
+      - name: cached
+        path: /cached
+
+  - name: 'gcr.io/cloud-builders/gsutil'
+    id: clean_cache
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        echo "Clearing original files..."
+        rm -rf /original/*
+        rm -rf rel_folder/
+    volumes:
+      - name: original
+        path: /original
+
+  - name: 'us-docker.pkg.dev/$PROJECT_ID/ci/restore_cache'
+    id: restore_cache
+    args:
+      - '--src=/cached'
+      - '--key=simple-key-$( checksum cloudbuild.yaml )'
+    volumes:
+      - name: original
+        path: /original
+      - name: cached
+        path: /cached
+
+  - name: 'gcr.io/cloud-builders/gsutil'
+    id: verify_restore
+    entrypoint: bash
+    args:
+      - '-c'
+      - |
+        test -f /original/folder1/file1.txt
+        test -f /original/folder1/file2.txt
+        test -f /original/folder2/ignore.txt
+        test -f /original/folder2/subfolder3/file1.txt
+        test -f rel_folder/file3.txt
+        test -f /workspace/rel_folder/file3.txt
+    volumes:
+      - name: original
+        path: /original
+
+substitutions:
+  _VERSION: '1.2'
+
+images:
+  - 'us-docker.pkg.dev/$PROJECT_ID/ci/cache:${_VERSION}'
+  - 'us-docker.pkg.dev/$PROJECT_ID/ci/cache:latest'
+  - 'us-docker.pkg.dev/$PROJECT_ID/ci/save_cache:${_VERSION}'
+  - 'us-docker.pkg.dev/$PROJECT_ID/ci/save_cache:latest'
+  - 'us-docker.pkg.dev/$PROJECT_ID/ci/restore_cache:${_VERSION}'
+  - 'us-docker.pkg.dev/$PROJECT_ID/ci/restore_cache:latest'

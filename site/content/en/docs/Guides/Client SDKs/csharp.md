@@ -7,10 +7,6 @@ description: "This is the C# version of the Agones Game Server Client SDK."
 publishDate: 2020-05-28
 ---
 
-{{< alert title="Note" color="info" >}}
-The C# SDK will also be available as a NuGet package in a future release.
-{{< /alert >}}
-
 Check the [Client SDK Documentation]({{< relref "_index.md" >}}) for more details on each of the SDK functions and how to run the SDK locally.
 
 ## Download

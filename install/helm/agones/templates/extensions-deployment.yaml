@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-{{- $featureGates := include "agones.featureGates" . | fromYaml }}
-{{- if $featureGates.SplitControllerAndExtensions }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -209,4 +207,3 @@ spec:
       app: {{ template "agones.name" . }}
       release: {{ .Release.Name }}
       heritage: {{ .Release.Service }}
-{{- end }}

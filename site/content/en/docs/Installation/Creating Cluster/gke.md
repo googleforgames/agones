@@ -319,11 +319,14 @@ Flag explanations:
 * `--release-channel`: The release channel [you chose above](#choosing-a-release-channel-and-optional-version).
 * `--autoprovisioning-network-tags`: Defines the tags that will be attached to new nodes in the cluster. This is to grant access through ports via the [firewall created above](#creating-the-firewall).
 
+{{% feature expiryVersion="1.37.0" %}}
 {{<alert title="Warning" color="warning">}}
 To install Agones on version 1.30-1.31, you must enable the `SplitControllerAndExtensions`
 [feature gate]({{% ref "/docs/Guides/feature-stages.md#feature-gates" %}}).
 This feature is enabled by default starting in Agones 1.32.0.
 {{</alert>}}
+{{% /feature %}}
+
 
 ## Setting up cluster credentials
 
