@@ -65,14 +65,21 @@ Calling any of state changing functions mentioned below does not guarantee that 
 Functions which changes GameServer state or settings are:
 
 1. Ready()
-1. Shutdown()
-1. SetLabel()
-1. SetAnnotation()
-1. Allocate()
-1. Reserve() 
-1. Alpha().SetCapacity()
-1. Alpha().PlayerConnect()
-1. Alpha().PlayerDisconnect()
+2. Shutdown()
+3. SetLabel()
+4. SetAnnotation()
+5. Allocate()
+6. Reserve()
+7. Alpha().SetCapacity()
+8. Alpha().PlayerConnect()
+9. Alpha().PlayerDisconnect()
+10. Alpha().SetCounterCount()
+11. Alpha().IncrementCounter()
+12. Alpha().DecrementCounter()
+13. Alpha().SetCounterCapacity()
+14. Alpha().AppendListValue()
+15. Alpha().DeleteListValue()
+16. Alpha().SetListCapacity()
 
 ### Lifecycle Management
 
