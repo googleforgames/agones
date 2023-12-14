@@ -39,11 +39,14 @@ module "gke_cluster" {
   source = "../../../../install/terraform/modules/gke-autopilot"
 
   cluster = {
-    "name"              = format("gke-autopilot-e2e-test-cluster-%s", replace(var.kubernetesVersion, ".", "-"))
-    "project"           = var.project
-    "location"          = var.location
-    "releaseChannel"    = var.releaseChannel
-    "kubernetesVersion" = var.kubernetesVersion
+    "name"                          = format("gke-autopilot-e2e-test-cluster-%s", replace(var.kubernetesVersion, ".", "-"))
+    "project"                       = var.project
+    "location"                      = var.location
+    "releaseChannel"                = var.releaseChannel
+    "kubernetesVersion"             = var.kubernetesVersion
+    "deletionProtection"            = false
+    "maintenanceExclusionStartTime" = timestamp()
+    "maintenanceExclusionEndTime"   = timeadd(timestamp(), "2640h") # 110 days
   }
 
   udpFirewall = false // firewall is created at the project module level

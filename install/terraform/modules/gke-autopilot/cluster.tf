@@ -29,8 +29,8 @@ locals {
   subnetwork                    = lookup(var.cluster, "subnetwork", "")
   releaseChannel                = lookup(var.cluster, "releaseChannel", "REGULAR")
   kubernetesVersion             = lookup(var.cluster, "kubernetesVersion", "1.27")
-  maintenanceExclusionStartTime = lookup(var.cluster, "maintenanceExclusionStartTime", timestamp())
-  maintenanceExclusionEndTime   = lookup(var.cluster, "maintenanceExclusionEndTime", timeadd(timestamp(), "4080h")) # 170 days
+  maintenanceExclusionStartTime = lookup(var.cluster, "maintenanceExclusionStartTime", null)
+  maintenanceExclusionEndTime   = lookup(var.cluster, "maintenanceExclusionEndTime", null)
   deletionProtection            = lookup(var.cluster, "deletionProtection", true)
 }
 
@@ -67,17 +67,20 @@ resource "google_container_cluster" "primary" {
   }
   min_master_version = local.kubernetesVersion
 
-  maintenance_policy {
-    # When exclusions and maintenance windows overlap, exclusions have precedence.
-    daily_maintenance_window {
-      start_time = "03:00"
-    }
-    maintenance_exclusion {
-      exclusion_name = format("%s-%s", local.name, "exclusion")
-      start_time     = local.maintenanceExclusionStartTime
-      end_time       = local.maintenanceExclusionEndTime
-      exclusion_options {
-        scope = "NO_MINOR_UPGRADES"
+  dynamic "maintenance_policy" {
+    for_each = (local.releaseChannel != "UNSPECIFIED" && local.maintenanceExclusionStartTime != null && local.maintenanceExclusionEndTime != null) ? [1] : []
+    content {
+      # When exclusions and maintenance windows overlap, exclusions have precedence.
+      daily_maintenance_window {
+        start_time = "03:00"
+      }
+      maintenance_exclusion {
+        exclusion_name = format("%s-%s", local.name, "exclusion")
+        start_time     = local.maintenanceExclusionStartTime
+        end_time       = local.maintenanceExclusionEndTime
+        exclusion_options {
+          scope = "NO_MINOR_UPGRADES"
+        }
       }
     }
   }

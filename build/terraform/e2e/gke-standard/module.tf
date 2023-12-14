@@ -51,14 +51,16 @@ module "gke_cluster" {
   source = "../../../../install/terraform/modules/gke"
 
   cluster = {
-    "name"                 = var.overrideName != "" ? var.overrideName : format("standard-e2e-test-cluster-%s", replace(var.kubernetesVersion, ".", "-"))
-    "location"             = var.location
-    "releaseChannel"       = var.releaseChannel
-    "machineType"          = var.machineType
-    "initialNodeCount"     = var.initialNodeCount
-    "enableImageStreaming" = true
-    "project"              = var.project
-    "kubernetesVersion"    = var.kubernetesVersion
+    "name"                          = var.overrideName != "" ? var.overrideName : format("standard-e2e-test-cluster-%s", replace(var.kubernetesVersion, ".", "-"))
+    "location"                      = var.location
+    "releaseChannel"                = var.releaseChannel
+    "machineType"                   = var.machineType
+    "initialNodeCount"              = var.initialNodeCount
+    "enableImageStreaming"          = true
+    "project"                       = var.project
+    "kubernetesVersion"             = var.kubernetesVersion
+    "maintenanceExclusionStartTime" = timestamp()
+    "maintenanceExclusionEndTime"   = timeadd(timestamp(), "2640h") # 110 days
   }
 
   udpFirewall = false // firewall is created at the project module level
