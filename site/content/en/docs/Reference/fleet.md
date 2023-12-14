@@ -238,6 +238,13 @@ The `spec` field is the actual `Fleet` specification and it is composed as follo
   - `Fleet's Scheduling Strategy`: The GameServers associated with the GameServerSet are sorted based on either `Packed` or `Distributed` strategy.
       - `Packed`: Agones maximizes resource utilization by trying to populate nodes that are already in use before allocating GameServers to other nodes.
       - `Distributed`: Agones employs this strategy to spread out GameServer allocations, ensuring an even distribution of GameServers across the available nodes.
+- `priorities` (Alpha, requires `CountsAndLists` feature flag): Defines which gameservers in the Fleet are most important to keep around - impacts scale down logic.
+  - `type: Counter`: Sorts GameServers by a "counter".
+    - `key`: The name of the Counter. No impact if no GameServer found.
+    - `order`: The sort order, default is "Ascending" so smaller capacity will be removed first on down scaling.
+  - `type: List`: Sorts GameServers based on a list metric.
+    - `key`: The name of the List. No impact if no GameServer found.
+    - `order`: The sort order, default is "Ascending" so smaller capacity will be removed first on downscaling.
 - `template` a full `GameServer` configuration template.
    See the [GameServer]({{< relref "gameserver.md" >}}) reference for all available fields.
 {{% /feature %}}

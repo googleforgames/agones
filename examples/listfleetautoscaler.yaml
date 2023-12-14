@@ -32,18 +32,17 @@ spec:
   policy:
     type: List  # List based autoscaling.
     list:
-      # The name of the List.
-      # Required.
+      # Key is the name of the List. Required field.
       key: rooms
-      # Size of a buffer based on the list capacity that is available over the current aggregate
-      # list length in the Fleet (available capacity).
-      # bufferSize can be specified either in absolute (i.e. 5) or percentage format (i.e. 5%)
-      # Required.
+      # BufferSize is the size of a buffer based on the List capacity that is available over the current
+      # aggregate List length in the Fleet (available capacity).
+      # It can be specified either as an absolute value (i.e. 5) or percentage format (i.e. 5%).
+      # Must be bigger than 0. Required field.
       bufferSize: 5
-      # Minimum aggregate list capacity that can be provided by this FleetAutoscaler.
-      # If minCapacity is not specified, the effective minimum capacity will be bufferSize.
-      # When bufferSize in percentage format is used, minCapacity should be set and more than 0.
+      # MinCapacity is the minimum aggregate List total capacity across the fleet.
+      # If zero, it is ignored.
+      # If non zero, it must be smaller than MaxCapacity and bigger than BufferSize.
       minCapacity: 10
-      # Maximum aggregate list capacity that can be provided by this FleetAutoscaler.
-      # Required.
+      # MaxCapacity is the maximum aggregate List total capacity across the fleet.
+      # MaxCapacity must be bigger than both MinCapacity and BufferSize. Required field.
       maxCapacity: 100

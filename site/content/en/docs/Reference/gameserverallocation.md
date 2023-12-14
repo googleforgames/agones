@@ -157,17 +157,18 @@ spec:
       gameServerState: Ready
       # [Stage:Alpha]
       # [FeatureFlag:CountsAndLists]
-      # counters: # selector for counter current values of a GameServer count
-      #   rooms:
-      #     minCount: 1 # minimum value. Defaults to 0.
-      #     maxCount: 5 # maximum value. Defaults to max(int64)
-      #     minAvailable: 1 # minimum available (current capacity - current count). Defaults to 0.
-      #     maxAvailable: 10 # maximum available (current capacity - current count) Defaults to max(int64)
-      # lists:
-      #   players:
-      #     containsValue: "x6k8z" # only match GameServers who has this value in the list. Defaults to "", which is all.
-      #     minAvailable: 1 # minimum available (current capacity - current count). Defaults to 0.
-      #     maxAvailable: 10 # maximum available (current capacity - current count) Defaults to 0, which translates to max(int64)
+      # priorities:
+      #   counters: # selector for counter current values of a GameServer count
+      #     rooms:
+      #       minCount: 1 # minimum value. Defaults to 0.
+      #       maxCount: 5 # maximum value. Defaults to max(int64)
+      #       minAvailable: 1 # minimum available (current capacity - current count). Defaults to 0.
+      #       maxAvailable: 10 # maximum available (current capacity - current count) Defaults to max(int64)
+      #   lists:
+      #     players:
+      #       containsValue: "x6k8z" # only match GameServers who has this value in the list. Defaults to "", which is all.
+      #       minAvailable: 1 # minimum available (current capacity - current count). Defaults to 0.
+      #       maxAvailable: 10 # maximum available (current capacity - current count) Defaults to 0, which translates to max(int64)
       #
       # [Stage:Alpha]      
       # [FeatureFlag:PlayerAllocationFilter]
@@ -273,6 +274,9 @@ The `spec` field is the actual `GameServerAllocation` specification, and it is c
   cluster. See [Scheduling and Autoscaling]({{< ref "/docs/Advanced/scheduling-and-autoscaling.md" >}}) for more details.
 - `metadata` is an optional list of custom labels and/or annotations that will be used to patch
   the game server's metadata in the moment of allocation. This can be used to tell the server necessary session data
+- `CountsAndLists` has two key elements for game server allocation process.
+  - `counters` allows setting limits on game server, such as the minimum and maximum number of active rooms. This helps in selecting game servers based on their current activity or capacity.
+  - `lists` enables game server allocation based on specific player lists, allowing for inclusion or exclusion of specific players.
 
 Once created the `GameServerAllocation` will have a `status` field consisting of the following:
 
