@@ -128,17 +128,17 @@ no = 'Sorry to hear that. Please <a href="https://github.com/googleforgames/agon
 	name = "Slack"
 	url = "https://join.slack.com/t/agones/shared_invite/enQtMzE5NTE0NzkyOTk1LWU3ODAyZjdjMjNlYWIxZTAwODkxMGY3YWEyZjNjMjc4YWM1Zjk0OThlMGU2ZmUyMzRlMDljNDJiNmZlMGQ1M2U"
 	icon = "fab fa-slack"
-        desc = "Chat with other project users in #users"
+desc = "Chat with other project users in #users"
 [[params.links.user]]
 	name = "User mailing list"
 	url = "https://groups.google.com/forum/#!forum/agones-discuss"
 	icon = "fa fa-envelope"
-        desc = "Discussion and help from your fellow users"
+	desc = "Discussion and help from your fellow users"
 [[params.links.user]]
 	name ="Twitter"
 	url = "https://twitter.com/agonesdev"
 	icon = "fab fa-twitter"
-        desc = "Follow us on Twitter to get the latest news!"
+	desc = "Follow us on Twitter to get the latest news!"
 [[params.links.user]]
 	name ="Community Meetings"
 	url = "https://www.youtube.com/playlist?list=PLhkWKwFGACw2dFpdmwxOyUCzlGP2-n7uF"
@@ -149,12 +149,12 @@ no = 'Sorry to hear that. Please <a href="https://github.com/googleforgames/agon
 	name = "GitHub"
 	url = "https://github.com/googleforgames/agones"
 	icon = "fab fa-github"
-        desc = "Development takes place here!"
+	desc = "Development takes place here!"
 [[params.links.developer]]
 	name = "Slack"
 	url = "https://join.slack.com/t/agones/shared_invite/enQtMzE5NTE0NzkyOTk1LWU3ODAyZjdjMjNlYWIxZTAwODkxMGY3YWEyZjNjMjc4YWM1Zjk0OThlMGU2ZmUyMzRlMDljNDJiNmZlMGQ1M2U"
 	icon = "fab fa-slack"
-        desc = "Chat with other project developers in #developers"
+	desc = "Chat with other project developers in #developers"
 [[params.links.developer]]
 	name ="Community Meetings"
 	url = "https://www.youtube.com/playlist?list=PLhkWKwFGACw2dFpdmwxOyUCzlGP2-n7uF"
