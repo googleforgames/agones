@@ -115,50 +115,7 @@ func main() {
 
 	// easy feature flag check
 	if strings.Contains(os.Getenv("FEATURE_GATES"), "PlayerTracking=true") {
-		capacity := "10"
-		if _, _, err := alphaCli.SDKApi.SetPlayerCapacity(ctx, alpha.AlphaCount{Count: capacity}); err != nil {
-			log.Fatalf("Could not set Capacity: %v\n", err)
-		}
-
-		count, _, err := alphaCli.SDKApi.GetPlayerCapacity(ctx)
-		if err != nil {
-			log.Fatalf("Could not get Capacity: %v\n", err)
-		}
-		if count.Count != capacity {
-			log.Fatalf("Player Capacity should be %s, but is %s", capacity, count.Count)
-		}
-
-		playerID := "1234"
-		if ok, _, err := alphaCli.SDKApi.PlayerConnect(ctx, alpha.AlphaPlayerId{PlayerID: playerID}); err != nil {
-			log.Fatalf("Error registering player as connected: %s", err)
-		} else if !ok.Bool_ {
-			log.Fatalf("PlayerConnect returned false")
-		}
-
-		if ok, _, err := alphaCli.SDKApi.IsPlayerConnected(ctx, playerID); err != nil {
-			log.Fatalf("Error checking if player is connected: %s", err)
-		} else if !ok.Bool_ {
-			log.Fatalf("IsPlayerConnected returned false")
-		}
-
-		if list, _, err := alphaCli.SDKApi.GetConnectedPlayers(ctx); err != nil {
-			log.Fatalf("Error getting connected player: %s", err)
-		} else if len(list.List) == 0 {
-			log.Fatalf("No connected players returned")
-		}
-
-		if ok, _, err := alphaCli.SDKApi.PlayerDisconnect(ctx, alpha.AlphaPlayerId{PlayerID: playerID}); err != nil {
-			log.Fatalf("Error registering player as disconnected: %s", err)
-		} else if !ok.Bool_ {
-			log.Fatalf("PlayerDisconnect returned false")
-		}
-
-		if count, _, err := alphaCli.SDKApi.GetPlayerCount(ctx); err != nil {
-			log.Fatalf("Error retrieving player count: %s", err)
-		} else if count.Count != "0" {
-			log.Fatalf("Player Count should be 0, but is %v", count)
-		}
-
+		testPlayers(ctx, alphaCli)
 	} else {
 		log.Print("Player Tracking not enabled, skipping.")
 	}
@@ -175,6 +132,52 @@ func main() {
 		log.Fatalf("Could not GetGameserver: %v\n", err)
 	}
 	log.Println("REST API test finished, all queries were performed")
+}
+
+func testPlayers(ctx context.Context, alphaCli *alpha.APIClient) {
+	capacity := "10"
+	if _, _, err := alphaCli.SDKApi.SetPlayerCapacity(ctx, alpha.AlphaCount{Count: capacity}); err != nil {
+		log.Fatalf("Could not set Capacity: %v\n", err)
+	}
+
+	count, _, err := alphaCli.SDKApi.GetPlayerCapacity(ctx)
+	if err != nil {
+		log.Fatalf("Could not get Capacity: %v\n", err)
+	}
+	if count.Count != capacity {
+		log.Fatalf("Player Capacity should be %s, but is %s", capacity, count.Count)
+	}
+
+	playerID := "1234"
+	if ok, _, err := alphaCli.SDKApi.PlayerConnect(ctx, alpha.AlphaPlayerId{PlayerID: playerID}); err != nil {
+		log.Fatalf("Error registering player as connected: %s", err)
+	} else if !ok.Bool_ {
+		log.Fatalf("PlayerConnect returned false")
+	}
+
+	if ok, _, err := alphaCli.SDKApi.IsPlayerConnected(ctx, playerID); err != nil {
+		log.Fatalf("Error checking if player is connected: %s", err)
+	} else if !ok.Bool_ {
+		log.Fatalf("IsPlayerConnected returned false")
+	}
+
+	if list, _, err := alphaCli.SDKApi.GetConnectedPlayers(ctx); err != nil {
+		log.Fatalf("Error getting connected player: %s", err)
+	} else if len(list.List) == 0 {
+		log.Fatalf("No connected players returned")
+	}
+
+	if ok, _, err := alphaCli.SDKApi.PlayerDisconnect(ctx, alpha.AlphaPlayerId{PlayerID: playerID}); err != nil {
+		log.Fatalf("Error registering player as disconnected: %s", err)
+	} else if !ok.Bool_ {
+		log.Fatalf("PlayerDisconnect returned false")
+	}
+
+	if count, _, err := alphaCli.SDKApi.GetPlayerCount(ctx); err != nil {
+		log.Fatalf("Error retrieving player count: %s", err)
+	} else if count.Count != "0" {
+		log.Fatalf("Player Count should be 0, but is %v", count)
+	}
 }
 
 func testCounters(ctx context.Context, alphaCli *alpha.APIClient) {
