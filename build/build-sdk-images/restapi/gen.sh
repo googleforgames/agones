@@ -18,7 +18,7 @@ header() {
     cat /go/src/agones.dev/agones/build/boilerplate.go.txt "$1" | sponge "$1"
 }
 
-wget -q https://repo1.maven.org/maven2/io/swagger/codegen/v3/swagger-codegen-cli/3.0.35/swagger-codegen-cli-3.0.35.jar -O /tmp/swagger-codegen-cli.jar
+wget -q https://repo1.maven.org/maven2/io/swagger/codegen/v3/swagger-codegen-cli/3.0.51/swagger-codegen-cli-3.0.51.jar -O /tmp/swagger-codegen-cli.jar
 
 rm -rf /go/src/agones.dev/agones/test/sdk/restapi/swagger /go/src/agones.dev/agones/test/sdk/restapi/alpha/swagger
 java -jar /tmp/swagger-codegen-cli.jar generate -i /go/src/agones.dev/agones/sdks/swagger/sdk.swagger.json  -l go -o /go/src/agones.dev/agones/test/sdk/restapi/swagger
