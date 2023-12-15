@@ -866,6 +866,9 @@ func (s *SDKServer) UpdateCounter(ctx context.Context, in *alpha.UpdateCounterRe
 	if in.CounterUpdateRequest == nil {
 		return nil, errors.Errorf("invalid argument. CounterUpdateRequest: %v cannot be nil", in.CounterUpdateRequest)
 	}
+	if in.CounterUpdateRequest.CountDiff == 0 && in.CounterUpdateRequest.Count == nil && in.CounterUpdateRequest.Capacity == nil {
+		return nil, errors.Errorf("invalid argument. Malformed CounterUpdateRequest: %v", in.CounterUpdateRequest)
+	}
 
 	s.logger.WithField("name", in.CounterUpdateRequest.Name).Debug("Update Counter Request")
 
@@ -890,8 +893,33 @@ func (s *SDKServer) UpdateCounter(ctx context.Context, in *alpha.UpdateCounterRe
 
 	batchCounter.counter = *counter.DeepCopy()
 
-	switch {
-	case in.CounterUpdateRequest.CountDiff != 0: // Update based on if Client call is CountIncrement or CountDecrement
+	// Updated based on if client call is CapacitySet
+	if in.CounterUpdateRequest.Capacity != nil {
+		if in.CounterUpdateRequest.Capacity.GetValue() < 0 {
+			return nil, errors.Errorf("out of range. Capacity must be greater than or equal to 0. Found Capacity: %d", in.CounterUpdateRequest.Capacity.GetValue())
+		}
+		capacitySet := in.CounterUpdateRequest.Capacity.GetValue()
+		batchCounter.capacitySet = &capacitySet
+	}
+
+	// Update based on if Client call is CountSet
+	if in.CounterUpdateRequest.Count != nil {
+		// Verify that 0 <= Count >= Capacity
+		countSet := in.CounterUpdateRequest.Count.GetValue()
+		capacity := batchCounter.counter.Capacity
+		if batchCounter.capacitySet != nil {
+			capacity = *batchCounter.capacitySet
+		}
+		if countSet < 0 || countSet > capacity {
+			return nil, errors.Errorf("out of range. Count must be within range [0,Capacity]. Found Count: %d, Capacity: %d", countSet, capacity)
+		}
+		batchCounter.countSet = &countSet
+		// Clear any previous CountIncrement or CountDecrement requests, and add the CountSet as the first item.
+		batchCounter.diff = 0
+	}
+
+	// Update based on if Client call is CountIncrement or CountDecrement
+	if in.CounterUpdateRequest.CountDiff != 0 {
 		count := batchCounter.counter.Count
 		if batchCounter.countSet != nil {
 			count = *batchCounter.countSet
@@ -906,27 +934,6 @@ func (s *SDKServer) UpdateCounter(ctx context.Context, in *alpha.UpdateCounterRe
 			return nil, errors.Errorf("out of range. Count must be within range [0,Capacity]. Found Count: %d, Capacity: %d", count, capacity)
 		}
 		batchCounter.diff += in.CounterUpdateRequest.CountDiff
-	case in.CounterUpdateRequest.Count != nil: // Update based on if Client call is CountSet
-		// Verify that 0 <= Count >= Capacity
-		countSet := in.CounterUpdateRequest.Count.GetValue()
-		capacity := batchCounter.counter.Capacity
-		if batchCounter.capacitySet != nil {
-			capacity = *batchCounter.capacitySet
-		}
-		if countSet < 0 || countSet > capacity {
-			return nil, errors.Errorf("out of range. Count must be within range [0,Capacity]. Found Count: %d, Capacity: %d", countSet, capacity)
-		}
-		batchCounter.countSet = &countSet
-		// Clear any previous CountIncrement or CountDecrement requests, and add the CountSet as the first item.
-		batchCounter.diff = 0
-	case in.CounterUpdateRequest.Capacity != nil: // Updated based on if client call is CapacitySet
-		if in.CounterUpdateRequest.Capacity.GetValue() < 0 {
-			return nil, errors.Errorf("out of range. Capacity must be greater than or equal to 0. Found Capacity: %d", in.CounterUpdateRequest.Capacity.GetValue())
-		}
-		capacitySet := in.CounterUpdateRequest.Capacity.GetValue()
-		batchCounter.capacitySet = &capacitySet
-	default:
-		return nil, errors.Errorf("invalid argument. Malformed CounterUpdateRequest: %v", in.CounterUpdateRequest)
 	}
 
 	s.gsCounterUpdates[name] = batchCounter
