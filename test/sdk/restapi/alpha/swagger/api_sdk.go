@@ -46,7 +46,7 @@ SDKApiService Adds a value to a List and returns updated List. Returns NOT_FOUND
  * @param name The name of the List to add a value to.
 @return AlphaList
 */
-func (a *SDKApiService) AddListValue(ctx context.Context, body V1alpha1NameaddValueBody, name string) (AlphaList, *http.Response, error) {
+func (a *SDKApiService) AddListValue(ctx context.Context, body ListsNameaddValueBody, name string) (AlphaList, *http.Response, error) {
 	var (
 		localVarHttpMethod = strings.ToUpper("Post")
 		localVarPostBody   interface{}
@@ -56,7 +56,7 @@ func (a *SDKApiService) AddListValue(ctx context.Context, body V1alpha1NameaddVa
 	)
 
 	// create path and map variables
-	localVarPath := a.client.cfg.BasePath + "/v1alpha1/{name}:addValue"
+	localVarPath := a.client.cfg.BasePath + "/v1alpha1/lists/{name}:addValue"
 	localVarPath = strings.Replace(localVarPath, "{"+"name"+"}", fmt.Sprintf("%v", name), -1)
 
 	localVarHeaderParams := make(map[string]string)
@@ -225,7 +225,7 @@ func (a *SDKApiService) GetCounter(ctx context.Context, name string) (AlphaCount
 	)
 
 	// create path and map variables
-	localVarPath := a.client.cfg.BasePath + "/v1alpha1/{name}"
+	localVarPath := a.client.cfg.BasePath + "/v1alpha1/counters/{name}"
 	localVarPath = strings.Replace(localVarPath, "{"+"name"+"}", fmt.Sprintf("%v", name), -1)
 
 	localVarHeaderParams := make(map[string]string)
@@ -296,10 +296,10 @@ func (a *SDKApiService) GetCounter(ctx context.Context, name string) (AlphaCount
 /*
 SDKApiService Gets a List. Returns NOT_FOUND if the List does not exist.
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @param name1 The name of the List to get
+ * @param name The name of the List to get
 @return AlphaList
 */
-func (a *SDKApiService) GetList(ctx context.Context, name1 string) (AlphaList, *http.Response, error) {
+func (a *SDKApiService) GetList(ctx context.Context, name string) (AlphaList, *http.Response, error) {
 	var (
 		localVarHttpMethod = strings.ToUpper("Get")
 		localVarPostBody   interface{}
@@ -309,8 +309,8 @@ func (a *SDKApiService) GetList(ctx context.Context, name1 string) (AlphaList, *
 	)
 
 	// create path and map variables
-	localVarPath := a.client.cfg.BasePath + "/v1alpha1/{name_1}"
-	localVarPath = strings.Replace(localVarPath, "{"+"name_1"+"}", fmt.Sprintf("%v", name1), -1)
+	localVarPath := a.client.cfg.BasePath + "/v1alpha1/lists/{name}"
+	localVarPath = strings.Replace(localVarPath, "{"+"name"+"}", fmt.Sprintf("%v", name), -1)
 
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
@@ -807,7 +807,7 @@ SDKApiService Removes a value from a List and returns updated List. Returns NOT_
  * @param name The name of the List to remove a value from.
 @return AlphaList
 */
-func (a *SDKApiService) RemoveListValue(ctx context.Context, body V1alpha1NameremoveValueBody, name string) (AlphaList, *http.Response, error) {
+func (a *SDKApiService) RemoveListValue(ctx context.Context, body ListsNameremoveValueBody, name string) (AlphaList, *http.Response, error) {
 	var (
 		localVarHttpMethod = strings.ToUpper("Post")
 		localVarPostBody   interface{}
@@ -817,7 +817,7 @@ func (a *SDKApiService) RemoveListValue(ctx context.Context, body V1alpha1Namere
 	)
 
 	// create path and map variables
-	localVarPath := a.client.cfg.BasePath + "/v1alpha1/{name}:removeValue"
+	localVarPath := a.client.cfg.BasePath + "/v1alpha1/lists/{name}:removeValue"
 	localVarPath = strings.Replace(localVarPath, "{"+"name"+"}", fmt.Sprintf("%v", name), -1)
 
 	localVarHeaderParams := make(map[string]string)
@@ -989,7 +989,7 @@ func (a *SDKApiService) UpdateCounter(ctx context.Context, body TheRequestedUpda
 	)
 
 	// create path and map variables
-	localVarPath := a.client.cfg.BasePath + "/v1alpha1/{counterUpdateRequest.name}"
+	localVarPath := a.client.cfg.BasePath + "/v1alpha1/counters/{counterUpdateRequest.name}"
 	localVarPath = strings.Replace(localVarPath, "{"+"counterUpdateRequest.name"+"}", fmt.Sprintf("%v", counterUpdateRequestName), -1)
 
 	localVarHeaderParams := make(map[string]string)
@@ -1076,7 +1076,7 @@ func (a *SDKApiService) UpdateList(ctx context.Context, body TheListToUpdate, li
 	)
 
 	// create path and map variables
-	localVarPath := a.client.cfg.BasePath + "/v1alpha1/{list.name}"
+	localVarPath := a.client.cfg.BasePath + "/v1alpha1/lists/{list.name}"
 	localVarPath = strings.Replace(localVarPath, "{"+"list.name"+"}", fmt.Sprintf("%v", listName), -1)
 
 	localVarHeaderParams := make(map[string]string)

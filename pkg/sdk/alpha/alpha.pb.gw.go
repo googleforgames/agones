@@ -851,7 +851,7 @@ func RegisterSDKHandlerServer(ctx context.Context, mux *runtime.ServeMux, server
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/agones.dev.sdk.alpha.SDK/GetCounter", runtime.WithHTTPPathPattern("/v1alpha1/{name=counters/*}"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/agones.dev.sdk.alpha.SDK/GetCounter", runtime.WithHTTPPathPattern("/v1alpha1/counters/{name}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -876,7 +876,7 @@ func RegisterSDKHandlerServer(ctx context.Context, mux *runtime.ServeMux, server
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/agones.dev.sdk.alpha.SDK/UpdateCounter", runtime.WithHTTPPathPattern("/v1alpha1/{counterUpdateRequest.name=counterUpdateRequests/*}"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/agones.dev.sdk.alpha.SDK/UpdateCounter", runtime.WithHTTPPathPattern("/v1alpha1/counters/{counterUpdateRequest.name}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -901,7 +901,7 @@ func RegisterSDKHandlerServer(ctx context.Context, mux *runtime.ServeMux, server
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/agones.dev.sdk.alpha.SDK/GetList", runtime.WithHTTPPathPattern("/v1alpha1/{name=lists/*}"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/agones.dev.sdk.alpha.SDK/GetList", runtime.WithHTTPPathPattern("/v1alpha1/lists/{name}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -926,7 +926,7 @@ func RegisterSDKHandlerServer(ctx context.Context, mux *runtime.ServeMux, server
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/agones.dev.sdk.alpha.SDK/UpdateList", runtime.WithHTTPPathPattern("/v1alpha1/{list.name=lists/*}"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/agones.dev.sdk.alpha.SDK/UpdateList", runtime.WithHTTPPathPattern("/v1alpha1/lists/{list.name}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -951,7 +951,7 @@ func RegisterSDKHandlerServer(ctx context.Context, mux *runtime.ServeMux, server
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/agones.dev.sdk.alpha.SDK/AddListValue", runtime.WithHTTPPathPattern("/v1alpha1/{name=lists/*}:addValue"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/agones.dev.sdk.alpha.SDK/AddListValue", runtime.WithHTTPPathPattern("/v1alpha1/lists/{name}:addValue"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -976,7 +976,7 @@ func RegisterSDKHandlerServer(ctx context.Context, mux *runtime.ServeMux, server
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/agones.dev.sdk.alpha.SDK/RemoveListValue", runtime.WithHTTPPathPattern("/v1alpha1/{name=lists/*}:removeValue"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/agones.dev.sdk.alpha.SDK/RemoveListValue", runtime.WithHTTPPathPattern("/v1alpha1/lists/{name}:removeValue"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1194,7 +1194,7 @@ func RegisterSDKHandlerClient(ctx context.Context, mux *runtime.ServeMux, client
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/agones.dev.sdk.alpha.SDK/GetCounter", runtime.WithHTTPPathPattern("/v1alpha1/{name=counters/*}"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/agones.dev.sdk.alpha.SDK/GetCounter", runtime.WithHTTPPathPattern("/v1alpha1/counters/{name}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1216,7 +1216,7 @@ func RegisterSDKHandlerClient(ctx context.Context, mux *runtime.ServeMux, client
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/agones.dev.sdk.alpha.SDK/UpdateCounter", runtime.WithHTTPPathPattern("/v1alpha1/{counterUpdateRequest.name=counterUpdateRequests/*}"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/agones.dev.sdk.alpha.SDK/UpdateCounter", runtime.WithHTTPPathPattern("/v1alpha1/counters/{counterUpdateRequest.name}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1238,7 +1238,7 @@ func RegisterSDKHandlerClient(ctx context.Context, mux *runtime.ServeMux, client
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/agones.dev.sdk.alpha.SDK/GetList", runtime.WithHTTPPathPattern("/v1alpha1/{name=lists/*}"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/agones.dev.sdk.alpha.SDK/GetList", runtime.WithHTTPPathPattern("/v1alpha1/lists/{name}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1260,7 +1260,7 @@ func RegisterSDKHandlerClient(ctx context.Context, mux *runtime.ServeMux, client
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/agones.dev.sdk.alpha.SDK/UpdateList", runtime.WithHTTPPathPattern("/v1alpha1/{list.name=lists/*}"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/agones.dev.sdk.alpha.SDK/UpdateList", runtime.WithHTTPPathPattern("/v1alpha1/lists/{list.name}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1282,7 +1282,7 @@ func RegisterSDKHandlerClient(ctx context.Context, mux *runtime.ServeMux, client
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/agones.dev.sdk.alpha.SDK/AddListValue", runtime.WithHTTPPathPattern("/v1alpha1/{name=lists/*}:addValue"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/agones.dev.sdk.alpha.SDK/AddListValue", runtime.WithHTTPPathPattern("/v1alpha1/lists/{name}:addValue"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1304,7 +1304,7 @@ func RegisterSDKHandlerClient(ctx context.Context, mux *runtime.ServeMux, client
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/agones.dev.sdk.alpha.SDK/RemoveListValue", runtime.WithHTTPPathPattern("/v1alpha1/{name=lists/*}:removeValue"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/agones.dev.sdk.alpha.SDK/RemoveListValue", runtime.WithHTTPPathPattern("/v1alpha1/lists/{name}:removeValue"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1338,17 +1338,17 @@ var (
 
 	pattern_SDK_GetConnectedPlayers_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"alpha", "player", "connected"}, ""))
 
-	pattern_SDK_GetCounter_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 2, 5, 2}, []string{"v1alpha1", "counters", "name"}, ""))
+	pattern_SDK_GetCounter_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1alpha1", "counters", "name"}, ""))
 
-	pattern_SDK_UpdateCounter_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 2, 5, 2}, []string{"v1alpha1", "counterUpdateRequests", "counterUpdateRequest.name"}, ""))
+	pattern_SDK_UpdateCounter_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1alpha1", "counters", "counterUpdateRequest.name"}, ""))
 
-	pattern_SDK_GetList_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 2, 5, 2}, []string{"v1alpha1", "lists", "name"}, ""))
+	pattern_SDK_GetList_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1alpha1", "lists", "name"}, ""))
 
-	pattern_SDK_UpdateList_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 2, 5, 2}, []string{"v1alpha1", "lists", "list.name"}, ""))
+	pattern_SDK_UpdateList_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1alpha1", "lists", "list.name"}, ""))
 
-	pattern_SDK_AddListValue_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 2, 5, 2}, []string{"v1alpha1", "lists", "name"}, "addValue"))
+	pattern_SDK_AddListValue_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1alpha1", "lists", "name"}, "addValue"))
 
-	pattern_SDK_RemoveListValue_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 2, 5, 2}, []string{"v1alpha1", "lists", "name"}, "removeValue"))
+	pattern_SDK_RemoveListValue_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1alpha1", "lists", "name"}, "removeValue"))
 )
 
 var (
