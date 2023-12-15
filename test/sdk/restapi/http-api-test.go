@@ -22,6 +22,7 @@ import (
 
 	alpha "agones.dev/agones/test/sdk/restapi/alpha/swagger"
 	"agones.dev/agones/test/sdk/restapi/swagger"
+	"github.com/google/go-cmp/cmp"
 	"golang.org/x/net/context"
 )
 
@@ -162,9 +163,91 @@ func main() {
 		log.Print("Player Tracking not enabled, skipping.")
 	}
 
+	if strings.Contains(os.Getenv("FEATURE_GATES"), "CountsAndLists=true") {
+		testCounters(ctx, alphaCli)
+		testLists(ctx, alphaCli)
+	} else {
+		log.Print("Counts and Lists not enabled, skipping.")
+	}
+
 	_, _, err = cli.SDKApi.Shutdown(ctx, swagger.SdkEmpty{})
 	if err != nil {
 		log.Fatalf("Could not GetGameserver: %v\n", err)
 	}
 	log.Println("REST API test finished, all queries were performed")
+}
+
+func testCounters(ctx context.Context, alphaCli *alpha.APIClient) {
+	// Tests are expected to run sequentially on the same pre-defined Counter in the localsdk server
+	counterName := "conformanceTestCounter"
+
+	expectedCounter := alpha.AlphaCounter{Name: counterName, Count: "1", Capacity: "10"}
+	if counter, _, err := alphaCli.SDKApi.GetCounter(ctx, counterName); err != nil {
+		log.Fatalf("Error getting Counter: %s", err)
+	} else {
+		if !cmp.Equal(expectedCounter, counter) {
+			log.Fatalf("GetCounter expected Counter: %v, got Counter: %v", expectedCounter, counter)
+		}
+	}
+
+	// Test updatecounter, setcapacitycounter
+	expectedCounter = alpha.AlphaCounter{Name: counterName, Count: "0", Capacity: "42"}
+	if counter, _, err := alphaCli.SDKApi.UpdateCounter(ctx, alpha.TheRequestedUpdateToMakeToTheCounter{CountDiff: "-1", Capacity: "42"}, counterName); err != nil {
+		log.Fatalf("Error getting Counter: %s", err)
+	} else {
+		if !cmp.Equal(expectedCounter, counter) {
+			log.Fatalf("UpdateCounter expected Counter: %v, got Counter: %v", expectedCounter, counter)
+		}
+	}
+
+	// Test setcountcounter
+	expectedCounter = alpha.AlphaCounter{Name: counterName, Count: "40", Capacity: "42"}
+	if counter, _, err := alphaCli.SDKApi.UpdateCounter(ctx, alpha.TheRequestedUpdateToMakeToTheCounter{Count: "40", Capacity: "42"}, counterName); err != nil {
+		log.Fatalf("Error getting Counter: %s", err)
+	} else {
+		if !cmp.Equal(expectedCounter, counter) {
+			log.Fatalf("UpdateCounter expected Counter: %v, got Counter: %v", expectedCounter, counter)
+		}
+	}
+}
+
+func testLists(ctx context.Context, alphaCli *alpha.APIClient) {
+	// Tests are expected to run sequentially on the same pre-defined List in the localsdk server
+	listName := "conformanceTestList"
+
+	expectedList := alpha.AlphaList{Name: listName, Values: []string{"test0", "test1", "test2"}, Capacity: "100"}
+	if list, _, err := alphaCli.SDKApi.GetList(ctx, listName); err != nil {
+		log.Fatalf("Error getting List: %s", err)
+	} else {
+		if !cmp.Equal(expectedList, list) {
+			log.Fatalf("GetList expected List: %v, got List: %v", expectedList, list)
+		}
+	}
+
+	expectedList = alpha.AlphaList{Name: listName, Values: []string{"test123", "test456"}, Capacity: "10"}
+	if list, _, err := alphaCli.SDKApi.UpdateList(ctx, alpha.TheListToUpdate{Values: []string{"test123", "test456"}, Capacity: "10"}, listName); err != nil {
+		log.Fatalf("Error getting List: %s", err)
+	} else {
+		if !cmp.Equal(expectedList, list) {
+			log.Fatalf("UpdateList expected List: %v, got List: %v", expectedList, list)
+		}
+	}
+
+	expectedList = alpha.AlphaList{Name: listName, Values: []string{"test123", "test456", "test789"}, Capacity: "10"}
+	if list, _, err := alphaCli.SDKApi.AddListValue(ctx, alpha.ListsNameaddValueBody{Value: "test789"}, listName); err != nil {
+		log.Fatalf("Error getting List: %s", err)
+	} else {
+		if !cmp.Equal(expectedList, list) {
+			log.Fatalf("AddListValue expected List: %v, got List: %v", expectedList, list)
+		}
+	}
+
+	expectedList = alpha.AlphaList{Name: listName, Values: []string{"test123", "test789"}, Capacity: "10"}
+	if list, _, err := alphaCli.SDKApi.RemoveListValue(ctx, alpha.ListsNameremoveValueBody{Value: "test456"}, listName); err != nil {
+		log.Fatalf("Error getting List: %s", err)
+	} else {
+		if !cmp.Equal(expectedList, list) {
+			log.Fatalf("RemoveListValue expected List: %v, got List: %v", expectedList, list)
+		}
+	}
 }
