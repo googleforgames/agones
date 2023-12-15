@@ -130,7 +130,7 @@ service SDK {
     // Gets a Counter. Returns NOT_FOUND if the Counter does not exist.
     rpc GetCounter(GetCounterRequest) returns (Counter) {
       option (google.api.http) = {
-        get: "/v1alpha1/{name=counters/*}"
+        get: "/v1alpha1/counters/{name}"
       };
       option (google.api.method_signature) = "name";
     }
@@ -139,7 +139,7 @@ service SDK {
     // Returns OUT_OF_RANGE if the Count is out of range [0,Capacity].
     rpc UpdateCounter(UpdateCounterRequest) returns (Counter) {
       option (google.api.http) = {
-        patch: "/v1alpha1/{counterUpdateRequest.name=counterUpdateRequests/*}"
+        patch: "/v1alpha1/counters/{counterUpdateRequest.name}"
         body: "counterUpdateRequest"
       };
       option (google.api.method_signature) = "counterUpdateRequest";
@@ -148,7 +148,7 @@ service SDK {
     // Gets a List. Returns NOT_FOUND if the List does not exist.
     rpc GetList(GetListRequest) returns (List) {
       option (google.api.http) = {
-        get: "/v1alpha1/{name=lists/*}"
+        get: "/v1alpha1/lists/{name}"
       };
       option (google.api.method_signature) = "name";
     }
@@ -161,7 +161,7 @@ service SDK {
     // then the default value for the variable will be set (i.e. 0 for "capacity", empty list for "values").
     rpc UpdateList(UpdateListRequest) returns (List) {
       option (google.api.http) = {
-        patch: "/v1alpha1/{list.name=lists/*}"
+        patch: "/v1alpha1/lists/{list.name}"
         body: "list"
       };
       option (google.api.method_signature) = "list,update_mask";
@@ -172,7 +172,7 @@ service SDK {
     // Returns OUT_OF_RANGE if the List is already at Capacity.
     rpc AddListValue(AddListValueRequest) returns (List) {
       option (google.api.http) = {
-        post: "/v1alpha1/{name=lists/*}:addValue"
+        post: "/v1alpha1/lists/{name}:addValue"
         body: "*"
       };
     }
@@ -181,7 +181,7 @@ service SDK {
     // Returns NOT_FOUND if the value is not in the List.
     rpc RemoveListValue(RemoveListValueRequest) returns (List) {
       option (google.api.http) = {
-        post: "/v1alpha1/{name=lists/*}:removeValue"
+        post: "/v1alpha1/lists/{name}:removeValue"
         body: "*"
       };
     }
