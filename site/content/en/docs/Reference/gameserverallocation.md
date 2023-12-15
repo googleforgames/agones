@@ -122,6 +122,41 @@ spec:
       map:  garden22
   {{< /tab >}}
 {{< /tabpane >}}  
+
+The `spec` field is the actual `GameServerAllocation` specification, and it is composed as follows:
+
+- Deprecated, use `selectors` instead. If `selectors` is set, this field will be ignored.
+  `required` is a [GameServerSelector][gameserverselector]
+  (matchLabels. matchExpressions, gameServerState and player filters) from which to choose GameServers from.
+- Deprecated, use `selectors` instead. If `selectors` is set, this field will be ignored.
+  `preferred` is an ordered list of preferred [GameServerSelector][gameserverselector]
+  that are _optional_ to be fulfilled, but will be searched before the `required` selector.
+  If the first selector is not matched, the selection attempts the second selector, and so on.
+  If any of the `preferred` selectors are matched, the `required` selector is not considered.
+  This is useful for things like smoke testing of new game servers.
+- `selectors` is an ordered list of [GameServerSelector][gameserverselector].
+  If the first selector is not matched, the selection attempts the second selector, and so on.
+  This is useful for things like smoke testing of new game servers.
+- `scheduling` defines how GameServers are organised across the cluster, in this case specifically when allocating
+  `GameServers` for usage.
+  "Packed" (default) is aimed at dynamic Kubernetes clusters, such as cloud providers, wherein we want to bin pack
+  resources. "Distributed" is aimed at static Kubernetes clusters, wherein we want to distribute resources across the entire
+  cluster. See [Scheduling and Autoscaling]({{< ref "/docs/Advanced/scheduling-and-autoscaling.md" >}}) for more details.
+- `metadata` is an optional list of custom labels and/or annotations that will be used to patch
+  the game server's metadata in the moment of allocation. This can be used to tell the server necessary session data
+
+Once created the `GameServerAllocation` will have a `status` field consisting of the following:
+
+- `State` is the current state of a GameServerAllocation, e.g. `Allocated`, or `UnAllocated`
+- `GameServerName` is the name of the game server attached to this allocation, once the `state` is `Allocated`
+- `Ports` is a list of the ports that the game server makes available. See [the GameServer Reference]({{< ref "/docs/Reference/gameserver.md" >}}) for more details.
+- `Address` is the primary network address where the game server can be reached.
+- `Addresses` is an array of all network addresses where the game server can be reached. It is a copy of the [`Node.Status.addresses`][addresses] field for the node the `GameServer` is scheduled on.
+- `NodeName` is the name of the node that the gameserver is running on.
+- `Source` is "local" unless this allocation is from a remote cluster, in which case `Source` is the endpoint of the remote agones-allocator. See [Multi-cluster Allocation]({{< ref "/docs/Advanced/multi-cluster-allocation.md" >}}) for more details.
+- `Metadata` conststs of:
+  - `Labels` containing the labels of the game server at allocation time.
+  - `Annotations` containing the annotations of the underlying game server at allocation time.
 {{% /feature %}}
 
 {{% feature publishVersion="1.37.0" %}}
@@ -169,7 +204,18 @@ spec:
       #       containsValue: "x6k8z" # only match GameServers who has this value in the list. Defaults to "", which is all.
       #       minAvailable: 1 # minimum available (current capacity - current count). Defaults to 0.
       #       maxAvailable: 10 # maximum available (current capacity - current count) Defaults to 0, which translates to max(int64)
-      #
+      #   counters: # (Alpha, CountsAndLists feature flag) Counter actions to perform during allocation.
+      #     rooms:
+      #       action: increment # Either "Increment" or "Decrement" the Counter’s Count.
+      #       amount: 1 # Amount is the amount to increment or decrement the Count. Must be a positive integer.
+      #       capacity: 5 # Amount to update the maximum capacity of the Counter to this number. Min 0, Max int64.
+      #   lists: # (Alpha, CountsAndLists feature flag) List actions to perform during allocation.
+      #     players:
+      #       addValues: # appends values to a List’s Values array. Any duplicate values will be ignored
+      #         - x7un
+      #         - 8inz
+      #       capacity: 40 # Updates the maximum capacity of the Counter to this number. Min 0, Max 1000.
+      # 
       # [Stage:Alpha]      
       # [FeatureFlag:PlayerAllocationFilter]
       # Provides a filter on minimum and maximum values for player capacity when retrieving a GameServer
@@ -251,7 +297,6 @@ spec:
       map:  garden22
   {{< /tab >}}
 {{< /tabpane >}}  
-{{% /feature %}}
 
 The `spec` field is the actual `GameServerAllocation` specification, and it is composed as follows:
 
@@ -274,9 +319,8 @@ The `spec` field is the actual `GameServerAllocation` specification, and it is c
   cluster. See [Scheduling and Autoscaling]({{< ref "/docs/Advanced/scheduling-and-autoscaling.md" >}}) for more details.
 - `metadata` is an optional list of custom labels and/or annotations that will be used to patch
   the game server's metadata in the moment of allocation. This can be used to tell the server necessary session data
-- `CountsAndLists` has two key elements for game server allocation process.
-  - `counters` allows setting limits on game server, such as the minimum and maximum number of active rooms. This helps in selecting game servers based on their current activity or capacity.
-  - `lists` enables game server allocation based on specific player lists, allowing for inclusion or exclusion of specific players.
+  - `counters` (Alpha, "CountsAndLists" feature flag) allows setting limits on game server, such as the minimum and maximum number of active rooms. This helps in selecting game servers based on their current activity or capacity.
+  - `lists` (Alpha, "CountsAndLists" feature flag) enables game server allocation based on specific player lists, allowing for inclusion or exclusion of specific players.
 
 Once created the `GameServerAllocation` will have a `status` field consisting of the following:
 
@@ -290,6 +334,7 @@ Once created the `GameServerAllocation` will have a `status` field consisting of
 - `Metadata` conststs of:
   - `Labels` containing the labels of the game server at allocation time.
   - `Annotations` containing the annotations of the underlying game server at allocation time.
+{{% /feature %}}
 
 {{< alert title="Info" color="info" >}}
 

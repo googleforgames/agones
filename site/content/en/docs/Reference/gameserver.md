@@ -97,6 +97,35 @@ spec:
       # nodeSelector:
       #   kubernetes.io/os: windows
 ```
+Since Agones defines a new [Custom Resources Definition (CRD)](https://kubernetes.io/docs/concepts/api-extension/custom-resources/) we can define a new resource using the kind `GameServer` with the custom group `agones.dev` and API version `v1`.
+
+You can use the metadata field to target a specific [namespaces](https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/)
+but also attach specific [annotations](https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/) and [labels](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/) to your resource. This is a very common pattern in the Kubernetes ecosystem.
+
+The length of the `name` field of the Gameserver should not exceed 63 characters.
+
+The `spec` field is the actual GameServer specification and it is composed as follow:
+
+- `container` is the name of container running the GameServer in case you have more than one container defined in the [pod](https://kubernetes.io/docs/concepts/workloads/pods/pod-overview/). If you do,  this is a mandatory field. For instance this is useful if you want to run a sidecar to ship logs.
+- `ports` are an array of ports that can be exposed as direct connections to the game server container
+  - `name` is an optional descriptive name for a port
+  - `portPolicy` has three options:
+        - `Dynamic` (default) the system allocates a random free hostPort for the gameserver, for game clients to connect to.
+        - `Static`, user defines the hostPort that the game client will connect to. Then onus is on the user to ensure that the port is available. When static is the policy specified, `hostPort` is required to be populated.
+        - `Passthrough` dynamically sets the `containerPort`  to the same value as the dynamically selected hostPort. This will mean that users will need to lookup what port to open through the server side SDK before starting communications.
+  - `container` (Alpha) the name of the container to open the port on. Defaults to the game server container if omitted or empty.
+  - `containerPort` the port that is being opened on the game server process, this is a required field for `Dynamic` and `Static` port policies, and should not be included in <code>Passthrough</code> configuration.
+  - `protocol` the protocol being used. Defaults to UDP. TCP and TCPUDP are other options.
+- `health` to track the overall healthy state of the GameServer, more information available in the [health check documentation]({{< relref "../Guides/health-checking.md" >}}).
+- `sdkServer` defines parameters for the game server sidecar
+  - `logging` field defines log level for SDK server. Defaults to "Info". It has three options:
+    - "Info" (default) The SDK server will output all messages except for debug messages
+    - "Debug" The SDK server will output all messages including debug messages
+    - "Error" The SDK server will only output error messages
+  - `grpcPort` the port that the SDK Server binds to for gRPC connections
+  - `httpPort` the port that the SDK Server binds to for HTTP gRPC gateway connections
+- `players` (Alpha, behind "PlayerTracking" feature gate), sets this GameServer's initial player capacity
+- `template` the [pod spec template]({{% k8s-api-version href="#podtemplatespec-v1-core" %}}) to run your GameServer containers, [see](https://kubernetes.io/docs/concepts/workloads/pods/pod-overview/#pod-templates) for more information.
 {{% /feature %}}
 
 {{% feature publishVersion="1.37.0" %}}
@@ -208,7 +237,6 @@ spec:
       # nodeSelector:
       #   kubernetes.io/os: windows
 ```
-{{% /feature %}}
 Since Agones defines a new [Custom Resources Definition (CRD)](https://kubernetes.io/docs/concepts/api-extension/custom-resources/) we can define a new resource using the kind `GameServer` with the custom group `agones.dev` and API version `v1`.
 
 You can use the metadata field to target a specific [namespaces](https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/)
@@ -237,7 +265,10 @@ The `spec` field is the actual GameServer specification and it is composed as fo
   - `grpcPort` the port that the SDK Server binds to for gRPC connections
   - `httpPort` the port that the SDK Server binds to for HTTP gRPC gateway connections
 - `players` (Alpha, behind "PlayerTracking" feature gate), sets this GameServer's initial player capacity
+- `counters` (Alpha, requires "CountsAndLists" feature flag) are int64 counters that can be incremented and decremented by set amounts. Keys must be declared at GameServer creation time.
+- `lists` (Alpha, requires "CountsAndLists" feature flag) are lists of values stored against this GameServer that can be added and deleted from. Key must be declared at GameServer creation time.
 - `template` the [pod spec template]({{% k8s-api-version href="#podtemplatespec-v1-core" %}}) to run your GameServer containers, [see](https://kubernetes.io/docs/concepts/workloads/pods/pod-overview/#pod-templates) for more information.
+{{% /feature %}}
 
 {{< alert title="Note" color="info">}}
 The GameServer resource does not support updates. If you need to make regular updates to the GameServer spec, consider using a [Fleet]({{< ref "/docs/Reference/fleet.md" >}}).
