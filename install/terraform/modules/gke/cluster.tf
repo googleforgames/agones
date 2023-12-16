@@ -39,9 +39,8 @@ locals {
   workloadIdentity              = lookup(var.cluster, "workloadIdentity", false)
   minNodeCount                  = lookup(var.cluster, "minNodeCount", "1")
   maxNodeCount                  = lookup(var.cluster, "maxNodeCount", "5")
-  maintenanceExclusionStartTime = lookup(var.cluster, "maintenanceExclusionStartTime", timestamp())
-  maintenanceExclusionEndTime   = lookup(var.cluster, "maintenanceExclusionEndTime", timeadd(timestamp(), "2640h"))
-  # 110 days
+  maintenanceExclusionStartTime = lookup(var.cluster, "maintenanceExclusionStartTime", null)
+  maintenanceExclusionEndTime   = lookup(var.cluster, "maintenanceExclusionEndTime", null)
 }
 
 data "google_container_engine_versions" "version" {
@@ -82,7 +81,7 @@ resource "google_container_cluster" "primary" {
 
   networking_mode = "VPC_NATIVE"
   ip_allocation_policy {}
-  
+
   release_channel {
     channel = local.releaseChannel
   }
@@ -90,7 +89,7 @@ resource "google_container_cluster" "primary" {
   min_master_version = local.kubernetesVersion
 
   dynamic "maintenance_policy" {
-    for_each = local.releaseChannel != "UNSPECIFIED" ? [1] : []
+    for_each = (local.releaseChannel != "UNSPECIFIED" && local.maintenanceExclusionStartTime != null && local.maintenanceExclusionEndTime != null) ? [1] : []
     content {
       # When exclusions and maintenance windows overlap, exclusions have precedence.
       daily_maintenance_window {
