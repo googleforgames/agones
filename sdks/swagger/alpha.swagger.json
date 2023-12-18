@@ -183,7 +183,7 @@
         ]
       }
     },
-    "/v1alpha1/{counterUpdateRequest.name}": {
+    "/v1alpha1/counters/{counterUpdateRequest.name}": {
       "patch": {
         "summary": "UpdateCounter returns the updated Counter. Returns NOT_FOUND if the Counter does not exist (name cannot be updated).\nReturns OUT_OF_RANGE if the Count is out of range [0,Capacity].",
         "operationId": "UpdateCounter",
@@ -201,8 +201,7 @@
             "description": "The name of the Counter to update",
             "in": "path",
             "required": true,
-            "type": "string",
-            "pattern": "counterUpdateRequests/[^/]+"
+            "type": "string"
           },
           {
             "name": "counterUpdateRequest",
@@ -237,7 +236,33 @@
         ]
       }
     },
-    "/v1alpha1/{list.name}": {
+    "/v1alpha1/counters/{name}": {
+      "get": {
+        "summary": "Gets a Counter. Returns NOT_FOUND if the Counter does not exist.",
+        "operationId": "GetCounter",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/alphaCounter"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "name",
+            "description": "The name of the Counter to get",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "SDK"
+        ]
+      }
+    },
+    "/v1alpha1/lists/{list.name}": {
       "patch": {
         "summary": "UpdateList returns the updated List. Returns NOT_FOUND if the List does not exist (name cannot be updated).\n**THIS WILL OVERWRITE ALL EXISTING LIST.VALUES WITH ANY REQUEST LIST.VALUES**\nUse AddListValue() or RemoveListValue() for modifying the List.Values field.\nReturns INVALID_ARGUMENT if the field mask path(s) are not field(s) of the List.\nIf a field mask path(s) is specified, but the value is not set in the request List object,\nthen the default value for the variable will be set (i.e. 0 for \"capacity\", empty list for \"values\").",
         "operationId": "UpdateList",
@@ -255,8 +280,7 @@
             "description": "The name of the List",
             "in": "path",
             "required": true,
-            "type": "string",
-            "pattern": "lists/[^/]+"
+            "type": "string"
           },
           {
             "name": "list",
@@ -288,7 +312,7 @@
         ]
       }
     },
-    "/v1alpha1/{name_1}": {
+    "/v1alpha1/lists/{name}": {
       "get": {
         "summary": "Gets a List. Returns NOT_FOUND if the List does not exist.",
         "operationId": "GetList",
@@ -302,12 +326,11 @@
         },
         "parameters": [
           {
-            "name": "name_1",
+            "name": "name",
             "description": "The name of the List to get",
             "in": "path",
             "required": true,
-            "type": "string",
-            "pattern": "lists/[^/]+"
+            "type": "string"
           }
         ],
         "tags": [
@@ -315,34 +338,7 @@
         ]
       }
     },
-    "/v1alpha1/{name}": {
-      "get": {
-        "summary": "Gets a Counter. Returns NOT_FOUND if the Counter does not exist.",
-        "operationId": "GetCounter",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/alphaCounter"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "name",
-            "description": "The name of the Counter to get",
-            "in": "path",
-            "required": true,
-            "type": "string",
-            "pattern": "counters/[^/]+"
-          }
-        ],
-        "tags": [
-          "SDK"
-        ]
-      }
-    },
-    "/v1alpha1/{name}:addValue": {
+    "/v1alpha1/lists/{name}:addValue": {
       "post": {
         "summary": "Adds a value to a List and returns updated List. Returns NOT_FOUND if the List does not exist.\nReturns ALREADY_EXISTS if the value is already in the List.\nReturns OUT_OF_RANGE if the List is already at Capacity.",
         "operationId": "AddListValue",
@@ -360,8 +356,7 @@
             "description": "The name of the List to add a value to.",
             "in": "path",
             "required": true,
-            "type": "string",
-            "pattern": "lists/[^/]+"
+            "type": "string"
           },
           {
             "name": "body",
@@ -385,7 +380,7 @@
         ]
       }
     },
-    "/v1alpha1/{name}:removeValue": {
+    "/v1alpha1/lists/{name}:removeValue": {
       "post": {
         "summary": "Removes a value from a List and returns updated List. Returns NOT_FOUND if the List does not exist.\nReturns NOT_FOUND if the value is not in the List.",
         "operationId": "RemoveListValue",
@@ -403,8 +398,7 @@
             "description": "The name of the List to remove a value from.",
             "in": "path",
             "required": true,
-            "type": "string",
-            "pattern": "lists/[^/]+"
+            "type": "string"
           },
           {
             "name": "body",

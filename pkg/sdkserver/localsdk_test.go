@@ -696,7 +696,7 @@ func TestLocalSDKServerUpdateCounter(t *testing.T) {
 		"players":  {Count: 100, Capacity: 100},
 		"lobbies":  {Count: 0, Capacity: 0},
 		"games":    {Count: 5, Capacity: 10},
-		"npcs":     {Count: 0, Capacity: 10},
+		"npcs":     {Count: 6, Capacity: 10},
 	}
 	fixture := &agonesv1.GameServer{
 		ObjectMeta: metav1.ObjectMeta{Name: "stuff"},
@@ -746,8 +746,8 @@ func TestLocalSDKServerUpdateCounter(t *testing.T) {
 		"Set Counter Count": {
 			updateRequest: &alpha.UpdateCounterRequest{
 				CounterUpdateRequest: &alpha.CounterUpdateRequest{
-					Name:      "npcs",
-					CountDiff: 10,
+					Name:  "npcs",
+					Count: wrapperspb.Int64(10),
 				}},
 			want: &alpha.Counter{
 				Name: "npcs", Count: 10, Capacity: 10,

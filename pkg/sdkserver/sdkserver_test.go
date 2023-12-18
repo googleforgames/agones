@@ -1106,6 +1106,7 @@ func TestSDKServerUpdateCounter(t *testing.T) {
 		"twofish":  {Count: int64(10), Capacity: int64(100)},
 		"redfish":  {Count: int64(10), Capacity: int64(100)},
 		"bluefish": {Count: int64(10), Capacity: int64(100)},
+		"fivefish": {Count: int64(10), Capacity: int64(100)},
 	}
 
 	fixtures := map[string]struct {
@@ -1231,6 +1232,19 @@ func TestSDKServerUpdateCounter(t *testing.T) {
 				}}},
 			want:       agonesv1.CounterStatus{Count: int64(0), Capacity: int64(0)},
 			updateErrs: []bool{false, true},
+			updated:    true,
+		},
+		"setcapacity, setcount, and diffcount": {
+			counterName: "fivefish",
+			requests: []*alpha.UpdateCounterRequest{{
+				CounterUpdateRequest: &alpha.CounterUpdateRequest{
+					Name:      "fivefish",
+					Capacity:  wrapperspb.Int64(25),
+					Count:     wrapperspb.Int64(0),
+					CountDiff: 25,
+				}}},
+			want:       agonesv1.CounterStatus{Count: int64(25), Capacity: int64(25)},
+			updateErrs: []bool{false},
 			updated:    true,
 		},
 	}
