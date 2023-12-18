@@ -319,8 +319,9 @@ The `spec` field is the actual `GameServerAllocation` specification, and it is c
   cluster. See [Scheduling and Autoscaling]({{< ref "/docs/Advanced/scheduling-and-autoscaling.md" >}}) for more details.
 - `metadata` is an optional list of custom labels and/or annotations that will be used to patch
   the game server's metadata in the moment of allocation. This can be used to tell the server necessary session data
-  - `counters` (Alpha, "CountsAndLists" feature flag) allows setting limits on game server, such as the minimum and maximum number of active rooms. This helps in selecting game servers based on their current activity or capacity.
-  - `lists` (Alpha, "CountsAndLists" feature flag) enables game server allocation based on specific player lists, allowing for inclusion or exclusion of specific players.
+  - `priorities` (Alpha, requires `CountsAndLists` feature flag) manages counters and lists for game servers, setting limits on room counts and player inclusion/exclusion.
+    - `counters` (Alpha, "CountsAndLists" feature flag) allows setting limits on game server, such as the minimum and maximum number of active rooms. This helps in selecting game servers based on their current activity or capacity.
+    - `lists` (Alpha, "CountsAndLists" feature flag) enables game server allocation based on specific player lists, allowing for inclusion or exclusion of specific players.
 
 Once created the `GameServerAllocation` will have a `status` field consisting of the following:
 
