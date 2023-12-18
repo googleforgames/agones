@@ -35,7 +35,7 @@ spec:
       # Key is the name of the Counter. Required field.
       key: players
       # BufferSize is the size of a buffer of counted items that are available in the Fleet (available capacity).
-      # Value can be an absolute number (ex: 5) or a percentage of desired gs instances (ex: 5%).
+      # Value can be an absolute number (ex: 5) or a percentage of the Counter available capacity (ex: 5%).
       # An absolute number is calculated from percentage by rounding up. Must be bigger than 0. Required field.
       bufferSize: 5
       # MinCapacity is the minimum aggregate Counter total capacity across the fleet.
