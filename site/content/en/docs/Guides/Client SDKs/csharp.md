@@ -170,6 +170,15 @@ bool isConnected = await agones.Alpha().IsPlayerConnectedAsync(playerId);
 
 | Area            | Action              | Implemented |
 |-----------------|---------------------|-------------|
+| Lifecycle       | Ready               | ✔️          |
+| Lifecycle       | Health              | ✔️          |
+| Lifecycle       | Reserve             | ✔️          |
+| Lifecycle       | Allocate            | ✔️          |
+| Lifecycle       | Shutdown            | ✔️          |
+| Configuration   | GameServer          | ✔️          |
+| Configuration   | Watch               | ✔️          |
+| Metadata        | SetAnnotation       | ✔️          |
+| Metadata        | SetLabel            | ✔️          |
 | Counters        | GetCounterCount     | ❌         |
 | Counters        | SetCounterCount     | ❌         |
 | Counters        | IncrementCounter    | ❌         |
@@ -183,6 +192,13 @@ bool isConnected = await agones.Alpha().IsPlayerConnectedAsync(playerId);
 | Lists           | ListContains        | ❌         |
 | Lists           | GetListLength       | ❌         |
 | Lists           | GetListValues       | ❌         |
+| Player Tracking | GetConnectedPlayers | ✔️          |
+| Player Tracking | GetPlayerCapacity   | ✔️          |
+| Player Tracking | GetPlayerCount      | ✔️          |
+| Player Tracking | IsPlayerConnected   | ✔️          |
+| Player Tracking | PlayerConnect       | ✔️          |
+| Player Tracking | PlayerDisconnect    | ✔️          |
+| Player Tracking | SetPlayerCapacity   | ✔️          |
 
 
 ## Remarks

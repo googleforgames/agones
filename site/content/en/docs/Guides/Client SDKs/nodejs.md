@@ -79,6 +79,15 @@ To mark the game server as [reserved]({{< relref "_index.md#reserveseconds" >}})
 
 | Area            | Action              | Implemented |
 |-----------------|---------------------|-------------|
+| Lifecycle       | Ready               | ✔️          |
+| Lifecycle       | Health              | ✔️          |
+| Lifecycle       | Reserve             | ✔️          |
+| Lifecycle       | Allocate            | ✔️          |
+| Lifecycle       | Shutdown            | ✔️          |
+| Configuration   | GameServer          | ✔️          |
+| Configuration   | Watch               | ✔️          |
+| Metadata        | SetAnnotation       | ✔️          |
+| Metadata        | SetLabel            | ✔️          |
 | Counters        | GetCounterCount     | ❌         |
 | Counters        | SetCounterCount     | ❌         |
 | Counters        | IncrementCounter    | ❌         |
@@ -92,6 +101,13 @@ To mark the game server as [reserved]({{< relref "_index.md#reserveseconds" >}})
 | Lists           | ListContains        | ❌         |
 | Lists           | GetListLength       | ❌         |
 | Lists           | GetListValues       | ❌         |
+| Player Tracking | GetConnectedPlayers | ✔️          |
+| Player Tracking | GetPlayerCapacity   | ✔️          |
+| Player Tracking | GetPlayerCount      | ✔️          |
+| Player Tracking | IsPlayerConnected   | ✔️          |
+| Player Tracking | PlayerConnect       | ✔️          |
+| Player Tracking | PlayerDisconnect    | ✔️          |
+| Player Tracking | SetPlayerCapacity   | ✔️          |
 
 
 For more information, please read the [SDK Overview]({{< relref "_index.md" >}}), check out {{< ghlink href="sdks/nodejs/src/agonesSDK.js" >}}agonesSDK.js{{< /ghlink >}} and also look at the {{< ghlink href="examples/nodejs-simple" >}}Node.js example{{< / >}}.

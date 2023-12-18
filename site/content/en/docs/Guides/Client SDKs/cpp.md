@@ -142,6 +142,15 @@ sdk->WatchGameServer([](const agones::dev::sdk::GameServer& gameserver){
 
 | Area            | Action              | Implemented |
 |-----------------|---------------------|-------------|
+| Lifecycle       | Ready               | ✔️          |
+| Lifecycle       | Health              | ✔️          |
+| Lifecycle       | Reserve             | ✔️          |
+| Lifecycle       | Allocate            | ✔️          |
+| Lifecycle       | Shutdown            | ✔️          |
+| Configuration   | GameServer          | ✔️          |
+| Configuration   | Watch               | ✔️          |
+| Metadata        | SetAnnotation       | ✔️          |
+| Metadata        | SetLabel            | ✔️          |
 | Counters        | GetCounterCount     | ❌         |
 | Counters        | SetCounterCount     | ❌         |
 | Counters        | IncrementCounter    | ❌         |
@@ -155,6 +164,13 @@ sdk->WatchGameServer([](const agones::dev::sdk::GameServer& gameserver){
 | Lists           | ListContains        | ❌         |
 | Lists           | GetListLength       | ❌         |
 | Lists           | GetListValues       | ❌         |
+| Player Tracking | GetConnectedPlayers | ✔️          |
+| Player Tracking | GetPlayerCapacity   | ✔️          |
+| Player Tracking | GetPlayerCount      | ✔️          |
+| Player Tracking | IsPlayerConnected   | ✔️          |
+| Player Tracking | PlayerConnect       | ✔️          |
+| Player Tracking | PlayerDisconnect    | ✔️          |
+| Player Tracking | SetPlayerCapacity   | ✔️          |
 
 
 For more information, you can also read the [SDK Overview]({{< relref "_index.md" >}}), check out
