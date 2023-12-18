@@ -138,6 +138,25 @@ sdk->WatchGameServer([](const agones::dev::sdk::GameServer& gameserver){
 });
 ```
 
+## SDK Functionality
+
+| Area            | Action              | Implemented |
+|-----------------|---------------------|-------------|
+| Counters        | GetCounterCount     | ❌         |
+| Counters        | SetCounterCount     | ❌         |
+| Counters        | IncrementCounter    | ❌         |
+| Counters        | DecrementCounter    | ❌         |
+| Counters        | SetCounterCapacity  | ❌         |
+| Counters        | GetCounterCapacity  | ❌         |
+| Lists           | AppendListValue     | ❌         |
+| Lists           | DeleteListValue     | ❌         |
+| Lists           | SetListCapacity     | ❌         |
+| Lists           | GetListCapacity     | ❌         |
+| Lists           | ListContains        | ❌         |
+| Lists           | GetListLength       | ❌         |
+| Lists           | GetListValues       | ❌         |
+
+
 For more information, you can also read the [SDK Overview]({{< relref "_index.md" >}}), check out
 {{< ghlink href="sdks/cpp/include/agones/sdk.h" >}}sdk.h{{< /ghlink >}} and also look at the
 {{< ghlink href="examples/cpp-simple" >}}C++ example{{< / >}}.

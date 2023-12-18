@@ -75,4 +75,23 @@ agonesSDK.watchGameServer((result) => {
 
 To mark the game server as [reserved]({{< relref "_index.md#reserveseconds" >}}) for a period of time, call the async method `reserve(seconds)`. The result will be an empty object.
 
+## SDK Functionality
+
+| Area            | Action              | Implemented |
+|-----------------|---------------------|-------------|
+| Counters        | GetCounterCount     | ❌         |
+| Counters        | SetCounterCount     | ❌         |
+| Counters        | IncrementCounter    | ❌         |
+| Counters        | DecrementCounter    | ❌         |
+| Counters        | SetCounterCapacity  | ❌         |
+| Counters        | GetCounterCapacity  | ❌         |
+| Lists           | AppendListValue     | ❌         |
+| Lists           | DeleteListValue     | ❌         |
+| Lists           | SetListCapacity     | ❌         |
+| Lists           | GetListCapacity     | ❌         |
+| Lists           | ListContains        | ❌         |
+| Lists           | GetListLength       | ❌         |
+| Lists           | GetListValues       | ❌         |
+
+
 For more information, please read the [SDK Overview]({{< relref "_index.md" >}}), check out {{< ghlink href="sdks/nodejs/src/agonesSDK.js" >}}agonesSDK.js{{< /ghlink >}} and also look at the {{< ghlink href="examples/nodejs-simple" >}}Node.js example{{< / >}}.

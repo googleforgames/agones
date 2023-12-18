@@ -166,6 +166,25 @@ var playerId = "player1";
 bool isConnected = await agones.Alpha().IsPlayerConnectedAsync(playerId);
 ```
 
+## SDK Functionality
+
+| Area            | Action              | Implemented |
+|-----------------|---------------------|-------------|
+| Counters        | GetCounterCount     | ❌         |
+| Counters        | SetCounterCount     | ❌         |
+| Counters        | IncrementCounter    | ❌         |
+| Counters        | DecrementCounter    | ❌         |
+| Counters        | SetCounterCapacity  | ❌         |
+| Counters        | GetCounterCapacity  | ❌         |
+| Lists           | AppendListValue     | ❌         |
+| Lists           | DeleteListValue     | ❌         |
+| Lists           | SetListCapacity     | ❌         |
+| Lists           | GetListCapacity     | ❌         |
+| Lists           | ListContains        | ❌         |
+| Lists           | GetListLength       | ❌         |
+| Lists           | GetListValues       | ❌         |
+
+
 ## Remarks
 - All requests other than `ConnectAsync` will wait for up to 15 seconds before giving up, time to wait can also be set in the constructor.
 - Default host & port are `localhost:9357`

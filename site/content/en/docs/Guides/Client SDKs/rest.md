@@ -36,6 +36,18 @@ The same could be run for `alpha.swagger.json` and `beta.swagger.json` as requir
 
 You can read more about OpenAPI/Swagger code generation in their [Command Line Tool Documentation](https://swagger.io/docs/open-source-tools/swagger-codegen/)
 
+## SDK Functionality
+
+| Area      | Action                                                 | Implemented |
+|-----------|--------------------------------------------------------|-------------|
+| Counters  | GET /v1alpha1/counters/{name}                          | ✔️          |
+| Counters  | PATCH /v1alpha1/counters/{counterUpdateRequest.name}   | ✔️          |
+| Lists     | PATCH /v1alpha1/lists/{list.name}                      | ✔️          |
+| Lists     | GET /v1alpha1/lists/{name}                             | ✔️          |
+| Lists     | POST /v1alpha1/lists/{name}:addValue                   | ✔️          |
+| Lists     | POST /v1alpha1/lists/{name}:removeValue                | ✔️          |
+
+
 ## Reference 
 
 ### Lifecycle Management
