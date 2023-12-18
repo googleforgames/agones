@@ -41,8 +41,8 @@ spec:
       bufferSize: 5
       # MinCapacity is the minimum aggregate List total capacity across the fleet.
       # If zero, it is ignored.
-      # If non zero, it must be smaller than MaxCapacity and bigger than BufferSize.
+      # If non zero, it must be smaller than MaxCapacity and can be greater than or equal to BufferSize.
       minCapacity: 10
       # MaxCapacity is the maximum aggregate List total capacity across the fleet.
-      # MaxCapacity must be bigger than both MinCapacity and BufferSize. Required field.
+      # MaxCapacity must be greater than or equal to both MinCapacity and BufferSize. Required field.
       maxCapacity: 100

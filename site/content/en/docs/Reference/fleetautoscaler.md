@@ -95,15 +95,15 @@ spec:
       # Key is the name of the Counter. Required field.
       key: players
       # BufferSize is the size of a buffer of counted items that are available in the Fleet (available capacity).
-      # Value can be an absolute number (ex: 5) or a percentage of the Counter available capacity (ex: 5%). 
+      # Value can be an absolute number (ex: 5) or a percentage of the Counter available capacity (ex: 5%).
       # An absolute number is calculated from percentage by rounding up. Must be bigger than 0. Required field.
       bufferSize: 5
       # MinCapacity is the minimum aggregate Counter total capacity across the fleet.
-      # If zero, MinCapacity is ignored. 
-      # If non zero, MinCapacity must be smaller than MaxCapacity and bigger than BufferSize.
+      # If BufferSize is specified as a percentage, MinCapacity is required and cannot be 0.
+      # If non zero, MinCapacity must be smaller than MaxCapacity and it can be greater than or equal to BufferSize.
       minCapacity: 10
       # MaxCapacity is the maximum aggregate Counter total capacity across the fleet.
-      # MaxCapacity must be bigger than both MinCapacity and BufferSize. Required field.
+      # MaxCapacity must be greater than or equal to both MinCapacity and BufferSize. Required field.
       maxCapacity: 100
 ```
 
@@ -128,10 +128,10 @@ spec:
       bufferSize: 5
       # MinCapacity is the minimum aggregate List total capacity across the fleet.
       # If zero, it is ignored.
-      # If non zero, it must be smaller than MaxCapacity and bigger than BufferSize.
+      # If non zero, it must be smaller than MaxCapacity and can be greater than or equal to BufferSize.
       minCapacity: 10
       # MaxCapacity is the maximum aggregate List total capacity across the fleet.
-      # MaxCapacity must be bigger than both MinCapacity and BufferSize. Required field.
+      # MaxCapacity must be greater than or equal to both MinCapacity and BufferSize. Required field.
       maxCapacity: 100
 ```
 {{% /feature %}}

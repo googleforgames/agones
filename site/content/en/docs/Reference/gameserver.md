@@ -201,22 +201,21 @@ spec:
   # [FeatureFlag:CountsAndLists]
   # Counts and Lists provides the configuration for generic (player, room, session, etc.) tracking features.
   # Commented out since Alpha, and disabled by default
-  # priorities:
-  #   counters: # counters are int64 counters that can be incremented and decremented by set amounts. Keys must be declared at GameServer creation ti me.
-  #     games: # arbitrary key.
-  #       count: 1 # initial value.
-  #       capacity: 100 # (Optional) Maximum value for the counter. 0 is max(int64).
-  #     sessions:
-  #       count: 1
-  #   lists: # lists are lists of values stored against this GameServer that can be added and deleted from. Keys must be declared at GameServer cr  eation time.
-  #     players: # an empty list, with a capacity set to 10.
-  #       capacity: 10 # capacity value, defaults to 1000.
-  #     rooms:
-  #       capacity: 333
-  #       values: # initial set of values in a list.
-  #         - room1
-  #         - room2
-  #         - room3
+  # counters: # counters are int64 counters that can be incremented and decremented by set amounts. Keys must be declared at GameServer creation time.
+  #   games: # arbitrary key.
+  #     count: 1 # initial value.
+  #     capacity: 100 # (Optional) Maximum value for the counter. 0 is max(int64).
+  #   sessions:
+  #     count: 1
+  # lists: # lists are lists of values stored against this GameServer that can be added and deleted from. Keys must be declared at GameServer creation time.
+  #   players: # an empty list, with a capacity set to 10.
+  #     capacity: 10 # capacity value, defaults to 1000.
+  #   rooms:
+  #     capacity: 333
+  #     values: # initial set of values in a list.
+  #       - room1
+  #       - room2
+  #       - room3
   #  
   # Pod template configuration
   # {{< k8s-api-version href="#podtemplate-v1-core" >}}
@@ -266,9 +265,8 @@ The `spec` field is the actual GameServer specification and it is composed as fo
   - `grpcPort` the port that the SDK Server binds to for gRPC connections
   - `httpPort` the port that the SDK Server binds to for HTTP gRPC gateway connections
 - `players` (Alpha, behind "PlayerTracking" feature gate), sets this GameServer's initial player capacity
-- `priorities`: (Alpha, requires `CountsAndLists` feature flag): Counters and Lists provides the configuration for generic (player, room, session, etc.) tracking features, disabled by default.
-  - `counters` (Alpha, requires "CountsAndLists" feature flag) are int64 counters that can be incremented and decremented by set amounts. Keys must be declared at GameServer creation time.
-  - `lists` (Alpha, requires "CountsAndLists" feature flag) are lists of values stored against this GameServer that can be added and deleted from. Key must be declared at GameServer creation time.
+- `counters` (Alpha, requires "CountsAndLists" feature flag) are int64 counters that can be incremented and decremented by set amounts. Keys must be declared at GameServer creation time.
+- `lists` (Alpha, requires "CountsAndLists" feature flag) are lists of values stored against this GameServer that can be added and deleted from. Key must be declared at GameServer creation time.
 - `template` the [pod spec template]({{% k8s-api-version href="#podtemplatespec-v1-core" %}}) to run your GameServer containers, [see](https://kubernetes.io/docs/concepts/workloads/pods/pod-overview/#pod-templates) for more information.
 {{% /feature %}}
 
