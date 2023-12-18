@@ -437,6 +437,7 @@ install: $(ensure-build-image) install-custom-pull-secret
 		--set agones.featureGates=$(FEATURE_GATES) \
 		--set agones.allocator.service.loadBalancerIP=$(EXTERNAL_IP) \
 		--set agones.metrics.serviceMonitor.enabled=$(SERVICE_MONITOR) \
+		--set agones.requireDedicatedNodes=true \
 		$(HELM_ARGS) \
 		agones $(mount_path)/install/helm/agones/
 
