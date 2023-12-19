@@ -38,23 +38,30 @@ You can read more about OpenAPI/Swagger code generation in their [Command Line T
 
 ## SDK Functionality
 
-| Area            | Action              | Implemented |
-|-----------------|---------------------|-------------|
-| Lifecycle       | Ready               | ✔️          |
-| Lifecycle       | Health              | ✔️          |
-| Lifecycle       | Reserve             | ✔️          |
-| Lifecycle       | Allocate            | ✔️          |
-| Lifecycle       | Shutdown            | ✔️          |
-| Configuration   | GetGameServer       | ✔️          |
-| Configuration   | WatchGameServer     | ✔️          |
-| Metadata        | SetAnnotation       | ✔️          |
-| Metadata        | SetLabel            | ✔️          |
-| Counters        | GetCounter          | ✔️          |
-| Counters        | UpdateCounter       | ✔️          |
-| Lists           | GetList             | ✔️          |
-| Lists           | UpdateList          | ✔️          |
-| Lists           | AddListValue        | ✔️          |
-| Lists           | RemoveListValue     | ✔️          |
+| Area                | Action                | Implemented |
+|---------------------|-----------------------|-------------|
+| Lifecycle           | Ready                 | ✔️          |
+| Lifecycle           | Health                | ✔️          |
+| Lifecycle           | Reserve               | ✔️          |
+| Lifecycle           | Allocate              | ✔️          |
+| Lifecycle           | Shutdown              | ✔️          |
+| Configuration       | GetGameServer         | ✔️          |
+| Configuration       | WatchGameServer       | ✔️          |
+| Metadata            | SetAnnotation         | ✔️          |
+| Metadata            | SetLabel              | ✔️          |
+| Counters            | GetCounter            | ✔️          |
+| Counters            | UpdateCounter         | ✔️          |
+| Lists               | GetList               | ✔️          |
+| Lists               | UpdateList            | ✔️          |
+| Lists               | AddListValue          | ✔️          |
+| Lists               | RemoveListValue       | ✔️          |
+| Player Tracking     | GetPlayerCapacity     | ✔️          |
+| Player Tracking     | SetPlayerCapacity     | ✔️          |
+| Player Tracking     | PlayerConnect         | ✔️          |
+| Player Tracking     | GetConnectedPlayers   | ✔️          |
+| Player Tracking     | IsPlayerConnected     | ✔️          |
+| Player Tracking     | GetPlayerCount        | ✔️          |
+| Player Tracking     | PlayerDisconnect      | ✔️          |
 
 
 ## Reference 
