@@ -8,6 +8,34 @@ description: "This is the C++ version of the Agones Game Server Client SDK. "
 
 Check the [Client SDK Documentation]({{< relref "_index.md" >}}) for more details on each of the SDK functions and how to run the SDK locally.
 
+
+## SDK Functionality
+
+| Area            | Action              | Implemented |
+|-----------------|---------------------|-------------|
+| Lifecycle       | Ready               | ✔️          |
+| Lifecycle       | Health              | ✔️          |
+| Lifecycle       | Reserve             | ✔️          |
+| Lifecycle       | Allocate            | ✔️          |
+| Lifecycle       | Shutdown            | ✔️          |
+| Configuration   | GameServer          | ✔️          |
+| Configuration   | WatchGameServer     | ✔️          |
+| Metadata        | SetAnnotation       | ✔️          |
+| Metadata        | SetLabel            | ✔️          |
+| Counters        | GetCounterCount     | ❌         |
+| Counters        | SetCounterCount     | ❌         |
+| Counters        | IncrementCounter    | ❌         |
+| Counters        | DecrementCounter    | ❌         |
+| Counters        | SetCounterCapacity  | ❌         |
+| Counters        | GetCounterCapacity  | ❌         |
+| Lists           | AppendListValue     | ❌         |
+| Lists           | DeleteListValue     | ❌         |
+| Lists           | SetListCapacity     | ❌         |
+| Lists           | GetListCapacity     | ❌         |
+| Lists           | ListContains        | ❌         |
+| Lists           | GetListLength       | ❌         |
+| Lists           | GetListValues       | ❌         |
+
 ## Download
 
 Download the source from the [Releases Page](https://github.com/googleforgames/agones/releases)
