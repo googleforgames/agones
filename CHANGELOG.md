@@ -1,5 +1,67 @@
 # Changelog
 
+## [v1.37.0](https://github.com/googleforgames/agones/tree/v1.37.0) (2023-12-19)
+
+[Full Changelog](https://github.com/googleforgames/agones/compare/v1.36.0...v1.37.0)
+
+**Implemented enhancements:**
+- Adds Counter conformance test by @igooch in https://github.com/googleforgames/agones/pull/3488
+- Adds List SDK methods to simple-game-server by @igooch in https://github.com/googleforgames/agones/pull/3500
+- Support appProtocol by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3502
+- Adds gameserver e2e test for Lists by @igooch in https://github.com/googleforgames/agones/pull/3507
+- Adds fleet e2e test for lists by @igooch in https://github.com/googleforgames/agones/pull/3510
+- Disable resync on SDK Server by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3508
+- Move PodHostName to Stable by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3517
+- Adds gameserverallocation e2e tests for Lists by @igooch in https://github.com/googleforgames/agones/pull/3516
+- Move FleetAllocationOverflow to Beta by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3515
+- Move ResetMetricsOnDelete to Stable by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3518
+- Adds fleetauotscaler e2e test for Lists by @igooch in https://github.com/googleforgames/agones/pull/3519
+- Another List fleet autoscaler e2e test by @igooch in https://github.com/googleforgames/agones/pull/3521
+- Adds Go Conformance Tests for Lists by @igooch in https://github.com/googleforgames/agones/pull/3524
+- Move CountsAndLists to Alpha by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3527
+- Move SplitControllerAndExtensions to Stable by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3523
+- Add clusterIP for agones-allocator in helm chart by @govargo in https://github.com/googleforgames/agones/pull/3526
+- GKE Autopilot: Add support for Extended Duration pods by @zmerlynn in https://github.com/googleforgames/agones/pull/3387
+- Counter and List Aggregate Fleet Metrics by @igooch in https://github.com/googleforgames/agones/pull/3528
+- CountsAndLists: SDK Reference by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3537
+- Adds Counters and Lists REST API Conformance Tests by @igooch in https://github.com/googleforgames/agones/pull/3546
+- CountsAndLists: Yaml Examples And References by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3552
+
+**Fixed bugs:**
+- Xonotic: gLibc incompatibility by @markmandel in https://github.com/googleforgames/agones/pull/3495
+- Fixes occasional data race flake with TestSDKServerAddListValue by @igooch in https://github.com/googleforgames/agones/pull/3505
+- handle static port policy by @ashutosji in https://github.com/googleforgames/agones/pull/3375
+- Prevent Redundant Windows SDK Builds by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3520
+- CloudBuild: Fix for cache image rebuild by @markmandel in https://github.com/googleforgames/agones/pull/3535
+
+**Other:**
+- Prep for release v1.37.0 by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3493
+- Test SuperTuxKart Image by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3496
+- Test Rust Image by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3499
+- Test cpp-simple image by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3497
+- Add steps to update performance test clusters when upgrading k8s version by @gongmax in https://github.com/googleforgames/agones/pull/3501
+- Test NodeJS image by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3498
+- Bumps simple-game-server version to 0.22 by @igooch in https://github.com/googleforgames/agones/pull/3504
+- xonotic image test by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3494
+- Bump helm install timeout to 10m by @zmerlynn in https://github.com/googleforgames/agones/pull/3506
+- Add Shulker to the Agones adopters list by @jeremylvln in https://github.com/googleforgames/agones/pull/3503
+- Remove warning on C# SDK Docs by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3525
+- Ensure ci/save_cache and ci/restore_cache images don't get deleted by cleanup policy by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3522
+- GH Action: Size label for PRs by @markmandel in https://github.com/googleforgames/agones/pull/3532
+- Flake: TestControllerWatchGameServers by @markmandel in https://github.com/googleforgames/agones/pull/3534
+- Go CRD Comment Updates for Counters and Lists by @markmandel in https://github.com/googleforgames/agones/pull/3536
+- Simple Game Server Example: Upgrade Docker to 24.0.6 by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3531
+- CI: Fix 404 on CI link testing by @markmandel in https://github.com/googleforgames/agones/pull/3542
+- Xonotic Example: Docker 24.0.6 by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3538
+- Bumps simple-game-server to 0.23 by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3543
+- Tweaks to Client SDK reference by @markmandel in https://github.com/googleforgames/agones/pull/3541
+- Updates to Counter and List Alpha.proto Methods by @igooch in https://github.com/googleforgames/agones/pull/3544
+- Docs: SDK implementation matrixes by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3545
+- Disable deletion protection for Autopilot test clusters by @gongmax in https://github.com/googleforgames/agones/pull/3468
+
+**New Contributors:**
+- @jeremylvln made their first contribution in https://github.com/googleforgames/agones/pull/3503
+
 ## [v1.36.0](https://github.com/googleforgames/agones/tree/v1.36.0) (2023-11-07)
 
 [Full Changelog](https://github.com/googleforgames/agones/compare/v1.35.0...v1.36.0)
