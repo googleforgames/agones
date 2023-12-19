@@ -8,33 +8,6 @@ description: "This is the REST version of the Agones Game Server Client SDK. "
 
 Check the [Client SDK Documentation]({{< relref "_index.md" >}}) for more details on each of the SDK functions and how to run the SDK locally.
 
-The REST API can be accessed from `http://localhost:${AGONES_SDK_HTTP_PORT}/` from the game server process.
-`AGONES_SDK_HTTP_PORT` is an environment variable automatically set for the game server process by Agones to
-support binding the REST API to a dynamic port. It is advised to use the environment variable rather than a
-hard coded port; otherwise your game server will not be able to contact the SDK server if it is configured to
-use a non-default port.
-
-Generally the REST interface gets used if gRPC isn't well supported for a given language or platform.
-
-{{< alert title="Warning" color="warning">}}
-The SDK Server sidecar process may startup after your game server binary. So your REST SDK API calls should
-contain some retry logic to take this into account. 
-{{< /alert >}}
-
-## Generating clients
-
-While you can hand write REST integrations, we also have a set
-of {{< ghlink href="sdks/swagger" >}}generated OpenAPI/Swagger definitions{{< /ghlink >}} available.
-This means you can use OpenAPI/Swagger tooling to generate clients as well, if you need them.
-
-For example, to create a cpp client for the stable sdk endpoints (to be run in the `agones` home directory):
-```bash
-docker run --rm -v ${PWD}:/local swaggerapi/swagger-codegen-cli generate -i /local/sdks/swagger/sdk.swagger.json  -l cpprest -o /local/out/cpp
-```
-
-The same could be run for `alpha.swagger.json` and `beta.swagger.json` as required.
-
-You can read more about OpenAPI/Swagger code generation in their [Command Line Tool Documentation](https://swagger.io/docs/open-source-tools/swagger-codegen/)
 
 ## SDK Functionality
 
@@ -63,6 +36,33 @@ You can read more about OpenAPI/Swagger code generation in their [Command Line T
 | Player Tracking     | GetPlayerCount        | ✔️          |
 | Player Tracking     | PlayerDisconnect      | ✔️          |
 
+The REST API can be accessed from `http://localhost:${AGONES_SDK_HTTP_PORT}/` from the game server process.
+`AGONES_SDK_HTTP_PORT` is an environment variable automatically set for the game server process by Agones to
+support binding the REST API to a dynamic port. It is advised to use the environment variable rather than a
+hard coded port; otherwise your game server will not be able to contact the SDK server if it is configured to
+use a non-default port.
+
+Generally the REST interface gets used if gRPC isn't well supported for a given language or platform.
+
+{{< alert title="Warning" color="warning">}}
+The SDK Server sidecar process may startup after your game server binary. So your REST SDK API calls should
+contain some retry logic to take this into account. 
+{{< /alert >}}
+
+## Generating clients
+
+While you can hand write REST integrations, we also have a set
+of {{< ghlink href="sdks/swagger" >}}generated OpenAPI/Swagger definitions{{< /ghlink >}} available.
+This means you can use OpenAPI/Swagger tooling to generate clients as well, if you need them.
+
+For example, to create a cpp client for the stable sdk endpoints (to be run in the `agones` home directory):
+```bash
+docker run --rm -v ${PWD}:/local swaggerapi/swagger-codegen-cli generate -i /local/sdks/swagger/sdk.swagger.json  -l cpprest -o /local/out/cpp
+```
+
+The same could be run for `alpha.swagger.json` and `beta.swagger.json` as required.
+
+You can read more about OpenAPI/Swagger code generation in their [Command Line Tool Documentation](https://swagger.io/docs/open-source-tools/swagger-codegen/)
 
 ## Reference 
 

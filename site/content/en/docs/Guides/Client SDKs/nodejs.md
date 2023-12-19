@@ -9,6 +9,41 @@ description: "This is the Node.js version of the Agones Game Server Client SDK."
 
 Check the [Client SDK Documentation]({{< relref "_index.md" >}}) for more details on each of the SDK functions and how to run the SDK locally.
 
+
+## SDK Functionality
+
+| Area            | Action              | Implemented |
+|-----------------|---------------------|-------------|
+| Lifecycle       | Ready               | ✔️          |
+| Lifecycle       | Health              | ✔️          |
+| Lifecycle       | Reserve             | ✔️          |
+| Lifecycle       | Allocate            | ✔️          |
+| Lifecycle       | Shutdown            | ✔️          |
+| Configuration   | GetGameServer       | ✔️          |
+| Configuration   | WatchGameServer     | ✔️          |
+| Metadata        | SetAnnotation       | ✔️          |
+| Metadata        | SetLabel            | ✔️          |
+| Counters        | GetCounterCount     | ❌         |
+| Counters        | SetCounterCount     | ❌         |
+| Counters        | IncrementCounter    | ❌         |
+| Counters        | DecrementCounter    | ❌         |
+| Counters        | SetCounterCapacity  | ❌         |
+| Counters        | GetCounterCapacity  | ❌         |
+| Lists           | AppendListValue     | ❌         |
+| Lists           | DeleteListValue     | ❌         |
+| Lists           | SetListCapacity     | ❌         |
+| Lists           | GetListCapacity     | ❌         |
+| Lists           | ListContains        | ❌         |
+| Lists           | GetListLength       | ❌         |
+| Lists           | GetListValues       | ❌         |
+| Player Tracking | GetConnectedPlayers | ✔️          |
+| Player Tracking | GetPlayerCapacity   | ✔️          |
+| Player Tracking | GetPlayerCount      | ✔️          |
+| Player Tracking | IsPlayerConnected   | ✔️          |
+| Player Tracking | PlayerConnect       | ✔️          |
+| Player Tracking | PlayerDisconnect    | ✔️          |
+| Player Tracking | SetPlayerCapacity   | ✔️          |
+
 ## Prerequisites
 
 - Node.js >= 10.13.0
@@ -74,40 +109,5 @@ agonesSDK.watchGameServer((result) => {
 ```
 
 To mark the game server as [reserved]({{< relref "_index.md#reserveseconds" >}}) for a period of time, call the async method `reserve(seconds)`. The result will be an empty object.
-
-## SDK Functionality
-
-| Area            | Action              | Implemented |
-|-----------------|---------------------|-------------|
-| Lifecycle       | Ready               | ✔️          |
-| Lifecycle       | Health              | ✔️          |
-| Lifecycle       | Reserve             | ✔️          |
-| Lifecycle       | Allocate            | ✔️          |
-| Lifecycle       | Shutdown            | ✔️          |
-| Configuration   | GetGameServer       | ✔️          |
-| Configuration   | WatchGameServer     | ✔️          |
-| Metadata        | SetAnnotation       | ✔️          |
-| Metadata        | SetLabel            | ✔️          |
-| Counters        | GetCounterCount     | ❌         |
-| Counters        | SetCounterCount     | ❌         |
-| Counters        | IncrementCounter    | ❌         |
-| Counters        | DecrementCounter    | ❌         |
-| Counters        | SetCounterCapacity  | ❌         |
-| Counters        | GetCounterCapacity  | ❌         |
-| Lists           | AppendListValue     | ❌         |
-| Lists           | DeleteListValue     | ❌         |
-| Lists           | SetListCapacity     | ❌         |
-| Lists           | GetListCapacity     | ❌         |
-| Lists           | ListContains        | ❌         |
-| Lists           | GetListLength       | ❌         |
-| Lists           | GetListValues       | ❌         |
-| Player Tracking | GetConnectedPlayers | ✔️          |
-| Player Tracking | GetPlayerCapacity   | ✔️          |
-| Player Tracking | GetPlayerCount      | ✔️          |
-| Player Tracking | IsPlayerConnected   | ✔️          |
-| Player Tracking | PlayerConnect       | ✔️          |
-| Player Tracking | PlayerDisconnect    | ✔️          |
-| Player Tracking | SetPlayerCapacity   | ✔️          |
-
 
 For more information, please read the [SDK Overview]({{< relref "_index.md" >}}), check out {{< ghlink href="sdks/nodejs/src/agonesSDK.js" >}}agonesSDK.js{{< /ghlink >}} and also look at the {{< ghlink href="examples/nodejs-simple" >}}Node.js example{{< / >}}.
