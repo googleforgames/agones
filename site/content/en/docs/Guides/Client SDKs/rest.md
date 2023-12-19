@@ -45,6 +45,7 @@ You can read more about OpenAPI/Swagger code generation in their [Command Line T
 | Lifecycle       | Reserve             | ✔️          |
 | Lifecycle       | Allocate            | ✔️          |
 | Lifecycle       | Shutdown            | ✔️          |
+| Configuration   | GetGameServer       | ✔️          |
 | Configuration   | WatchGameServer     | ✔️          |
 | Metadata        | SetAnnotation       | ✔️          |
 | Metadata        | SetLabel            | ✔️          |
