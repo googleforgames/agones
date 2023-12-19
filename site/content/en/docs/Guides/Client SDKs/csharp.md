@@ -175,8 +175,8 @@ bool isConnected = await agones.Alpha().IsPlayerConnectedAsync(playerId);
 | Lifecycle       | Reserve             | ✔️          |
 | Lifecycle       | Allocate            | ✔️          |
 | Lifecycle       | Shutdown            | ✔️          |
-| Configuration   | GameServer          | ✔️          |
-| Configuration   | Watch               | ✔️          |
+| Configuration   | GetGameServer       | ✔️          |
+| Configuration   | WatchGameServer     | ✔️          |
 | Metadata        | SetAnnotation       | ✔️          |
 | Metadata        | SetLabel            | ✔️          |
 | Counters        | GetCounterCount     | ❌         |

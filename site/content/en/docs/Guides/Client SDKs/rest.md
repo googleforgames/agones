@@ -38,14 +38,22 @@ You can read more about OpenAPI/Swagger code generation in their [Command Line T
 
 ## SDK Functionality
 
-| Area      | Action                                                 | Implemented |
-|-----------|--------------------------------------------------------|-------------|
-| Counters  | GET /v1alpha1/counters/{name}                          | ✔️          |
-| Counters  | PATCH /v1alpha1/counters/{counterUpdateRequest.name}   | ✔️          |
-| Lists     | PATCH /v1alpha1/lists/{list.name}                      | ✔️          |
-| Lists     | GET /v1alpha1/lists/{name}                             | ✔️          |
-| Lists     | POST /v1alpha1/lists/{name}:addValue                   | ✔️          |
-| Lists     | POST /v1alpha1/lists/{name}:removeValue                | ✔️          |
+| Area            | Action              | Implemented |
+|-----------------|---------------------|-------------|
+| Lifecycle       | Ready               | ✔️          |
+| Lifecycle       | Health              | ✔️          |
+| Lifecycle       | Reserve             | ✔️          |
+| Lifecycle       | Allocate            | ✔️          |
+| Lifecycle       | Shutdown            | ✔️          |
+| Configuration   | WatchGameServer     | ✔️          |
+| Metadata        | SetAnnotation       | ✔️          |
+| Metadata        | SetLabel            | ✔️          |
+| Counters        | GetCounter          | ✔️          |
+| Counters        | UpdateCounter       | ✔️          |
+| Lists           | GetList             | ✔️          |
+| Lists           | UpdateList          | ✔️          |
+| Lists           | AddListValue        | ✔️          |
+| Lists           | RemoveListValue     | ✔️          |
 
 
 ## Reference 

@@ -84,8 +84,8 @@ To mark the game server as [reserved]({{< relref "_index.md#reserveseconds" >}})
 | Lifecycle       | Reserve             | ✔️          |
 | Lifecycle       | Allocate            | ✔️          |
 | Lifecycle       | Shutdown            | ✔️          |
-| Configuration   | GameServer          | ✔️          |
-| Configuration   | Watch               | ✔️          |
+| Configuration   | GetGameServer       | ✔️          |
+| Configuration   | WatchGameServer     | ✔️          |
 | Metadata        | SetAnnotation       | ✔️          |
 | Metadata        | SetLabel            | ✔️          |
 | Counters        | GetCounterCount     | ❌         |
