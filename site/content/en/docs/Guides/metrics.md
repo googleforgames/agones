@@ -77,19 +77,10 @@ Follow the [Google Cloud Monitoring installation steps](#google-cloud-monitoring
 
 ### Dropping Metric Labels
 
-{{% feature expiryVersion="1.37.0" %}}
-{{% beta title="Reset Metric Export on Fleet / Autoscaler deletion" gate="ResetMetricsOnDelete" %}}
 
 When a Fleet or FleetAutoscaler is deleted from the system, Agones will automatically clear metrics that utilise
 their name as a label from the exported metrics, so the metrics exported do not continuously grow in size over the
 lifecycle of the Agones installation.
-{{% /feature %}}
-
-{{% feature publishVersion="1.37.0" %}}
-When a Fleet or FleetAutoscaler is deleted from the system, Agones will automatically clear metrics that utilise
-their name as a label from the exported metrics, so the metrics exported do not continuously grow in size over the
-lifecycle of the Agones installation.
-{{% /feature %}}
 
 ## Dashboard
 
