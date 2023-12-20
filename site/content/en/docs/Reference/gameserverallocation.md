@@ -10,6 +10,7 @@ weight: 30
 A full `GameServerAllocation` specification is available below and in the
 {{< ghlink href="/examples/gameserverallocation.yaml" >}}example folder{{< /ghlink >}} for reference:
 
+
 {{< tabpane >}}
   {{< tab header="selectors" lang="yaml" >}}
 apiVersion: "allocation.agones.dev/v1"
@@ -41,6 +42,19 @@ spec:
       # label/annotation/player selectors to retrieve an already Allocated GameServer.
       gameServerState: Ready
       # [Stage:Alpha]
+      # [FeatureFlag:CountsAndLists]
+      # counters: # selector for counter current values of a GameServer count
+      #   rooms:
+      #     minCount: 1 # minimum value. Defaults to 0.
+      #     maxCount: 5 # maximum value. Defaults to max(int64)
+      #     minAvailable: 1 # minimum available (current capacity - current count). Defaults to 0.
+      #     maxAvailable: 10 # maximum available (current capacity - current count) Defaults to max(int64)
+      # lists:
+      #   players:
+      #     containsValue: "x6k8z" # only match GameServers who has this value in the list. Defaults to "", which is all.
+      #     minAvailable: 1 # minimum available (current capacity - current count). Defaults to 0.
+      #     maxAvailable: 10 # maximum available (current capacity - current count) Defaults to 0, which translates to max(int64)
+      # [Stage:Alpha]      
       # [FeatureFlag:PlayerAllocationFilter]
       # Provides a filter on minimum and maximum values for player capacity when retrieving a GameServer
       # through Allocation. Defaults to no limits.
@@ -61,6 +75,31 @@ spec:
       mode: deathmatch
     annotations:
       map:  garden22
+    # [Stage:Alpha]
+    # [FeatureFlag:CountsAndLists]
+    # The first Priority on the array of Priorities is the most important for sorting. The allocator will
+    # use the first priority for sorting GameServers by available Capacity in the Selector set. Acts as a
+    # tie-breaker after sorting the game servers by State and Strategy Packed. Impacts which GameServer
+    # is checked first. Optional.
+    # priorities:
+    # - type: List  # Whether a Counter or a List.
+    #   key: rooms  # The name of the Counter or List.
+    #   order: Ascending  # "Ascending" lists smaller available capacity first.
+    # [Stage:Alpha]
+    # [FeatureFlag:CountsAndLists]
+    # Counter actions to perform during allocation. Optional.
+    # counters:
+    #   rooms:
+    #     action: increment # Either "Increment" or "Decrement" the Counter’s Count.
+    #     amount: 1 # Amount is the amount to increment or decrement the Count. Must be a positive integer.
+    #     capacity: 5 # Amount to update the maximum capacity of the Counter to this number. Min 0, Max int64.
+    # List actions to perform during allocation. Optional.
+    # lists:
+    #   players:
+    #     addValues: # appends values to a List’s Values array. Any duplicate values will be ignored
+    #       - x7un
+    #       - 8inz
+    #     capacity: 40 # Updates the maximum capacity of the Counter to this number. Min 0, Max 1000.
   {{< /tab >}}
   {{< tab header="required & preferred (deprecated)" lang="yaml" >}}
 apiVersion: "allocation.agones.dev/v1"
@@ -136,6 +175,18 @@ The `spec` field is the actual `GameServerAllocation` specification, and it is c
 - `selectors` is an ordered list of [GameServerSelector][gameserverselector].
   If the first selector is not matched, the selection attempts the second selector, and so on.
   This is useful for things like smoke testing of new game servers.
+- `matchLabels` is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element
+  of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value".
+  The requirements are ANDed. Optional.
+- `matchExpressions` is a list of label selector requirements. The requirements are ANDed. Optional.
+- `gameServerState` GameServerState specifies which State is the filter to be used when attempting to retrieve a
+  GameServer via Allocation. Defaults to "Ready". The only other option is "Allocated", which can be used in
+  conjunction with label/annotation/player selectors to retrieve an already Allocated GameServer.
+- `counters` (Alpha, "CountsAndLists" feature flag) enables filtering based on game server Counter status, such as
+  the minimum and maximum number of active rooms. This helps in selecting game servers based on their current activity
+  or capacity. Optional.
+- `lists` (Alpha, "CountsAndLists" feature flag) enables filtering based on game server List status, such as allowing
+    for inclusion or exclusion of specific players. Optional.
 - `scheduling` defines how GameServers are organised across the cluster, in this case specifically when allocating
   `GameServers` for usage.
   "Packed" (default) is aimed at dynamic Kubernetes clusters, such as cloud providers, wherein we want to bin pack
@@ -143,6 +194,10 @@ The `spec` field is the actual `GameServerAllocation` specification, and it is c
   cluster. See [Scheduling and Autoscaling]({{< ref "/docs/Advanced/scheduling-and-autoscaling.md" >}}) for more details.
 - `metadata` is an optional list of custom labels and/or annotations that will be used to patch
   the game server's metadata in the moment of allocation. This can be used to tell the server necessary session data
+- `priorities` (Alpha, requires `CountsAndLists` feature flag) manages counters and lists for game servers, setting limits on
+  room counts and player inclusion/exclusion.
+- `counters` (Alpha, "CountsAndLists" feature flag) Counter actions to perform during allocation.
+- `lists` (Alpha, "CountsAndLists" feature flag) List actions to perform during allocation.
 
 Once created the `GameServerAllocation` will have a `status` field consisting of the following:
 

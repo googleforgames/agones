@@ -70,6 +70,9 @@ cat performance-test-variable.txt
 
 printf "\nStart testing."
 ./runScenario.sh performance-test-variable.txt
+
+kubectl delete -f performance-test-fleet.yaml
+kubectl delete -f performance-test-autoscaler.yaml
 printf "\nFinish testing."
 
 rm performance-test-fleet.yaml performance-test-autoscaler.yaml performance-test-variable.txt

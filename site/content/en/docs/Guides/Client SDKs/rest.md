@@ -8,6 +8,34 @@ description: "This is the REST version of the Agones Game Server Client SDK. "
 
 Check the [Client SDK Documentation]({{< relref "_index.md" >}}) for more details on each of the SDK functions and how to run the SDK locally.
 
+
+## SDK Functionality
+
+| Area                | Action                | Implemented |
+|---------------------|-----------------------|-------------|
+| Lifecycle           | Ready                 | ✔️          |
+| Lifecycle           | Health                | ✔️          |
+| Lifecycle           | Reserve               | ✔️          |
+| Lifecycle           | Allocate              | ✔️          |
+| Lifecycle           | Shutdown              | ✔️          |
+| Configuration       | GetGameServer         | ✔️          |
+| Configuration       | WatchGameServer       | ✔️          |
+| Metadata            | SetAnnotation         | ✔️          |
+| Metadata            | SetLabel              | ✔️          |
+| Counters            | GetCounter            | ✔️          |
+| Counters            | UpdateCounter         | ✔️          |
+| Lists               | GetList               | ✔️          |
+| Lists               | UpdateList            | ✔️          |
+| Lists               | AddListValue          | ✔️          |
+| Lists               | RemoveListValue       | ✔️          |
+| Player Tracking     | GetPlayerCapacity     | ✔️          |
+| Player Tracking     | SetPlayerCapacity     | ✔️          |
+| Player Tracking     | PlayerConnect         | ✔️          |
+| Player Tracking     | GetConnectedPlayers   | ✔️          |
+| Player Tracking     | IsPlayerConnected     | ✔️          |
+| Player Tracking     | GetPlayerCount        | ✔️          |
+| Player Tracking     | PlayerDisconnect      | ✔️          |
+
 The REST API can be accessed from `http://localhost:${AGONES_SDK_HTTP_PORT}/` from the game server process.
 `AGONES_SDK_HTTP_PORT` is an environment variable automatically set for the game server process by Agones to
 support binding the REST API to a dynamic port. It is advised to use the environment variable rather than a
