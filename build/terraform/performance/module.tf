@@ -53,8 +53,8 @@ module "gke_standard_cluster" {
   location = each.value[0]
   overrideName = format("standard-performance-test-cluster-%s", replace(each.key, ".", "-"))
   releaseChannel = each.value[1]
-  machineType = "n2-standard-2"
-  initialNodeCount = 300
+  machineType = "e2-standard-4"
+  initialNodeCount = 310
 }
 
 resource "google_compute_firewall" "udp" {
