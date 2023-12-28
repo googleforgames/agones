@@ -238,6 +238,97 @@ Apply an Annotation with the prefix "agones.dev/sdk-" to the backing `GameServer
 curl -d '{"key": "foo", "value": "bar"}' -H "Content-Type: application/json" -X PUT http://localhost:${AGONES_SDK_HTTP_PORT}/metadata/annotation
 ```
 
+### Counters
+
+{{< alpha title="Counters" gate="Counters" >}}
+
+#### Alpha: GetCounter
+This function retrieves a specified counter by its name and returns its information.
+
+##### Example
+
+```bash
+curl -H "Content-Type: application/json" -X GET http://localhost:${AGONES_SDK_HTTP_PORT}/v1alpha1/counters/conformanceTestCounter
+```
+
+Response:
+```json
+{"name":"conformanceTestCounter", "count":"1", "capacity":"10"}
+```
+
+#### Alpha: UpdateCounter
+This function updates the specified counter's properties, such as its count and capacity, and returns the updated counter details.
+
+##### Example
+
+```bash
+curl -d '{"count": "5", "capacity": "11"}' -H "Content-Type: application/json" -X PATCH http://localhost:${AGONES_SDK_HTTP_PORT}/v1alpha1/counters/conformanceTestCounter
+```
+
+Response:
+```json
+{"name":"conformanceTestCounter", "count":"5", "capacity":"11"}
+```
+
+### Lists
+
+{{< alpha title="Lists" gate="Lists" >}}
+
+#### Alpha: GetList
+This function retrieves a specific list identified by its name, returns the list's information.
+
+##### Example
+```bash
+curl -H "Content-Type: application/json" -X GET http://localhost:${AGONES_SDK_HTTP_PORT}/v1alpha1/lists/conformanceTestList
+```
+
+Response:
+```json
+{"name":"conformanceTestList", "capacity":"100", "values":["test0", "test1", "test2"]     
+```
+
+#### Alpha: UpdateList
+This function updates the specified list's properties, such as its capacity and values, returns the updated list details.
+
+##### Example
+
+```bash
+curl -d '{"capacity": "120", "values": ["test3", "test4"]}' -H "Content-Type: application/json" -X PATCH http://localhost:${AGONES_SDK_HTTP_PORT}/v1alpha1/lists/conformanceTestList
+```
+
+Response:
+```json
+{"name":"conformanceTestList", "capacity":"120", "values":["test3", "test4"]}
+```
+
+#### Alpha: AddListValue
+This function adds a new value to a specified list and returns the list with this addition.
+
+##### Example     
+
+```bash
+curl -d '{"value": "test9"}' -H "Content-Type: application/json" -X POST http://localhost:${AGONES_SDK_HTTP_PORT}/v1alpha1/lists/conformanceTestList:addValue
+```
+
+Response:
+```json
+{"name":"conformanceTestList", "capacity":"120", "values":["test3", "test4", "test9"]}
+```
+
+#### Alpha: RemoveListValue
+This function removes a value from a given list and returns updated list.
+     
+##### Example  
+
+```bash
+curl -d '{"value": "test3"}' -H "Content-Type: application/json" -X POST http://localhost:${AGONES_SDK_HTTP_PORT}/v1alpha1/lists/conformanceTestList:removeValue
+```
+
+Response:
+```json
+{"name":"conformanceTestList", "capacity":"120", "values":["test4", "test9"]}
+```
+
 ### Player Tracking
 
 {{< alpha title="Player Tracking" gate="PlayerTracking" >}}
@@ -305,6 +396,8 @@ Response:
 This function retrieves the current player count. 
 This is always accurate from what has been set through this SDK, even if the value has yet to be updated on the GameServer status resource.
 
+##### Example
+
 ```bash
 curl -H "Content-Type: application/json" -X GET http://localhost:${AGONES_SDK_HTTP_PORT}/alpha/player/count
 ```
@@ -313,8 +406,6 @@ Response:
 ```json
 {"count":"2"}
 ```
-
-##### Example
 
 #### Alpha: IsPlayerConnected
 
