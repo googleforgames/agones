@@ -16,12 +16,9 @@ package https
 
 import (
 	"context"
-	"crypto/tls"
+	cryptotls "crypto/tls"
 	"net/http"
-	"sync"
-	"time"
 
-	"agones.dev/agones/pkg/util/fswatch"
 	"agones.dev/agones/pkg/util/runtime"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -31,10 +28,8 @@ const (
 	tlsDir = "/certs/"
 )
 
-var tlsMutex sync.Mutex
-
 // tls is a http server interface to enable easier testing
-type testTLS interface {
+type tls interface {
 	Close() error
 	ListenAndServeTLS(certFile, keyFile string) error
 }
@@ -45,52 +40,46 @@ type testTLS interface {
 type Server struct {
 	logger   *logrus.Entry
 	Mux      *http.ServeMux
-	tls      testTLS
+	tls      tls
 	certFile string
 	keyFile  string
 }
 
 // NewServer returns a Server instance.
-func NewServer(certFile, keyFile string, logger *logrus.Entry) *Server {
+func NewServer(certFile, keyFile string) *Server {
 	mux := http.NewServeMux()
-	tls_server := &http.Server{
-		Addr:    ":8081",
-		Handler: mux,
-	}
-
-	go func() {
-		cancelTLS, err := fswatch.Watch(logger, tlsDir, time.Second, func() {
-			tlsCert, err := readTLSCert()
-			if err != nil {
-				logger.WithError(err).Error("could not load TLS certs; keeping old one")
-				return
-			}
-			tlsMutex.Lock()
-			defer tlsMutex.Unlock()
-			tls_server.TLSConfig = &tls.Config{
-				GetCertificate: func(*tls.ClientHelloInfo) (*tls.Certificate, error) {
-					return tlsCert, nil
-				},
-			}
-			logger.Info("TLS certs updated")
-		})
-		if err != nil {
-			logger.WithError(err).Fatal("could not create watcher for TLS certs")
-		}
-		defer cancelTLS()
-
-	}()
 
 	wh := &Server{
 		Mux:      mux,
-		tls:      tls_server,
 		certFile: certFile,
 		keyFile:  keyFile,
 	}
+	wh.setupServer()
+
 	wh.Mux.HandleFunc("/", wh.defaultHandler)
 	wh.logger = runtime.NewLoggerWithType(wh)
 
 	return wh
+}
+
+func (s *Server) setupServer() {
+	s.tls = &http.Server{
+		Addr:    ":8081",
+		Handler: s.Mux,
+		TLSConfig: &cryptotls.Config{
+			GetCertificate: func(hello *cryptotls.ClientHelloInfo) (*cryptotls.Certificate, error) {
+				return s.loadTLSCert()
+			},
+		},
+	}
+}
+
+func (s *Server) loadTLSCert() (*cryptotls.Certificate, error) {
+	tlsCert, err := cryptotls.LoadX509KeyPair(tlsDir+"server.crt", tlsDir+"server.key")
+	if err != nil {
+		return nil, err
+	}
+	return &tlsCert, nil
 }
 
 // Run runs the webhook server, starting a https listener.
@@ -122,12 +111,4 @@ func (s *Server) defaultHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	FourZeroFour(s.logger, w, r)
-}
-
-func readTLSCert() (*tls.Certificate, error) {
-	tlsCert, err := tls.LoadX509KeyPair(tlsDir+"server.crt", tlsDir+"server.key")
-	if err != nil {
-		return nil, err
-	}
-	return &tlsCert, nil
 }

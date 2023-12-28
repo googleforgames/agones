@@ -138,7 +138,7 @@ func main() {
 		logger.WithError(err).Fatal("Could not initialize cloud product")
 	}
 	// https server and the items that share the Mux for routing
-	httpsServer := https.NewServer(ctlConf.CertFile, ctlConf.KeyFile, logger)
+	httpsServer := https.NewServer(ctlConf.CertFile, ctlConf.KeyFile)
 	wh := webhooks.NewWebHook(httpsServer.Mux)
 	api := apiserver.NewAPIServer(httpsServer.Mux)
 
