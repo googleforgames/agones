@@ -10,8 +10,26 @@
 {{ if $gh_repo }}
 <div class="td-page-meta ml-2 pb-1 pt-2 mb-0">
 {{ $editURL := printf "%s/edit/main/site/content/%s/%s" $gh_repo ($.Site.Language.Lang) $path }}
-{{ $issuesBody := "%0A%2A%2AIs+your+feature+request+related+to+a+problem%3F+Please+describe.%2A%2A%0AA+clear+and+concise+description+of+what+the+problem+is.+Ex.+I%27m+always+frustrated+when+%5B...%5D%0A%0A%2A%2ADescribe+the+solution+you%27d+like%2A%2A%0AA+clear+and+concise+description+of+what+you+want+to+happen.%0A%0A%2A%2ADescribe+alternatives+you%27ve+considered%2A%2A%0AA+clear+and+concise+description+of+any+alternative+solutions+or+features+you%27ve+considered.%0A%0A%2A%2AAdditional+context%2A%2A%0AAdd+any+other+context+or+screenshots+about+the+feature+request+here.%0A" }}
+
+{{ $issuesBodyTemplate := `
+**Is your feature request related to a problem? Please describe.**
+A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
+
+**Describe the solution you'd like**
+A clear and concise description of what you want to happen.
+
+**Describe alternatives you've considered**
+A clear and concise description of any alternative solutions or features you've considered.
+
+**Additional context**
+Add any other context or screenshots about the feature request here.
+
+`}}
+
+{{ $pageURL := .Page.Permalink }}
+{{ $issuesBody := printf "%s%s" $issuesBodyTemplate $pageURL }}
 {{ $issuesURL := printf "%s/issues/new?title=%s&body=%s" $gh_repo (htmlEscape $.Title) $issuesBody }}
+
 <a href="{{ $editURL }}" data-proofer-ignore target="_blank"><i class="fa fa-edit fa-fw"></i> {{ T "post_edit_this" }}</a>
 <a href="{{ $issuesURL }}" target="_blank"><i class="fab fa-github fa-fw"></i> {{ T "post_create_issue" }}</a>
 </div>
