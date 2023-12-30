@@ -238,6 +238,21 @@ Apply an Annotation with the prefix "agones.dev/sdk-" to the backing `GameServer
 curl -d '{"key": "foo", "value": "bar"}' -H "Content-Type: application/json" -X PUT http://localhost:${AGONES_SDK_HTTP_PORT}/metadata/annotation
 ```
 
+### Local Development Setup: Counters and Lists
+Before using the examples provided in this document for Counters and Lists, please ensure that you have set up the local development version with `CountsAndLists` enabled. You can do this by running the following command:
+
+```bash
+FEATURE_GATES="CountsAndLists=true" go run cmd/sdk-server/main.go --local
+```
+
+This command starts the local development server, which includes a Counter named `conformanceTestCounter` and a List named `conformanceTestList`.
+
+Additionally, please make sure to set the HTTP port to 9358 as the local server uses it. You can do this by running the following command in a different terminal:
+
+```bash
+export AGONES_SDK_HTTP_PORT=9358
+```
+
 ### Counters
 
 {{< alpha title="Counters" gate="Counters" >}}
@@ -284,11 +299,11 @@ curl -H "Content-Type: application/json" -X GET http://localhost:${AGONES_SDK_HT
 
 Response:
 ```json
-{"name":"conformanceTestList", "capacity":"100", "values":["test0", "test1", "test2"]     
+{"name":"conformanceTestList", "capacity":"100", "values":["test0", "test1", "test2"]}     
 ```
 
 #### Alpha: UpdateList
-This function updates the specified list's properties, such as its capacity and values, returns the updated list details.
+This function updates the specified list's properties, such as its capacity and values, returns the updated list details. This will overwrite all existing List.Values with the update list request values. Use addValue or removeValue for modifying the List.Values field.
 
 ##### Example
 
