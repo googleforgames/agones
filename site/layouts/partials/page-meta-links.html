@@ -28,7 +28,7 @@ Add any other context or screenshots about the feature request here.
 
 {{ $pageURL := .Page.Permalink }}
 {{ $issuesBody := printf "%s%s" $issuesBodyTemplate $pageURL }}
-{{ $issuesURL := printf "%s/issues/new?title=%s&body=%s" $gh_repo (htmlEscape $.Title) $issuesBody }}
+{{ $issuesURL := printf "%s/issues/new?title=%s&body=%s&labels=kind/documentation" $gh_repo (htmlEscape $.Title) $issuesBody }}
 
 <a href="{{ $editURL }}" data-proofer-ignore target="_blank"><i class="fa fa-edit fa-fw"></i> {{ T "post_edit_this" }}</a>
 <a href="{{ $issuesURL }}" target="_blank"><i class="fab fa-github fa-fw"></i> {{ T "post_create_issue" }}</a>
