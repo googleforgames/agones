@@ -16,7 +16,9 @@
 # This workflow utilizes https://github.com/actions/github-script in GitHub Actions to apply labels to pull requests.
 #
 name: Label PR
-on: [pull_request_target]
+on:
+  pull_request_target:
+    types: [opened, edited]
 jobs:
   label:
     runs-on: ubuntu-latest
