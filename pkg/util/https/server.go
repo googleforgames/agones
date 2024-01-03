@@ -18,7 +18,10 @@ import (
 	"context"
 	cryptotls "crypto/tls"
 	"net/http"
+	"sync"
+	"time"
 
+	"agones.dev/agones/pkg/util/fswatch"
 	"agones.dev/agones/pkg/util/runtime"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -43,6 +46,8 @@ type Server struct {
 	tls      tls
 	certFile string
 	keyFile  string
+	CertMu   sync.Mutex
+	Certs    *cryptotls.Certificate
 }
 
 // NewServer returns a Server instance.
@@ -67,19 +72,42 @@ func (s *Server) setupServer() {
 		Addr:    ":8081",
 		Handler: s.Mux,
 		TLSConfig: &cryptotls.Config{
-			GetCertificate: func(hello *cryptotls.ClientHelloInfo) (*cryptotls.Certificate, error) {
-				return s.loadTLSCert()
-			},
+			GetCertificate: s.getCertificate,
 		},
 	}
+
+	// Start a goroutine to watch for certificate changes
+	go s.watchForCertificateChanges()
 }
 
-func (s *Server) loadTLSCert() (*cryptotls.Certificate, error) {
-	tlsCert, err := cryptotls.LoadX509KeyPair(tlsDir+"server.crt", tlsDir+"server.key")
+// getCertificate returns the current TLS certificate
+func (s *Server) getCertificate(hello *cryptotls.ClientHelloInfo) (*cryptotls.Certificate, error) {
+	s.CertMu.Lock()
+	defer s.CertMu.Unlock()
+	return s.Certs, nil
+}
+
+// watchForCertificateChanges watches for changes in the certificate files
+func (s *Server) watchForCertificateChanges() {
+	// Watch for changes in the tlsDir
+	cancelTLS, err := fswatch.Watch(s.logger, tlsDir, time.Second, func() {
+		// Load the new TLS certificate
+		tlsCert, err := cryptotls.LoadX509KeyPair(tlsDir+"server.crt", tlsDir+"server.key")
+		if err != nil {
+			s.logger.WithError(err).Error("could not load TLS certs; keeping old one")
+			return
+		}
+		s.CertMu.Lock()
+		defer s.CertMu.Unlock()
+		// Update the Certs structure with the new certificate
+		s.Certs = &tlsCert
+		s.logger.Info("TLS certs updated")
+	})
 	if err != nil {
-		return nil, err
+		s.logger.WithError(err).Fatal("could not create watcher for TLS certs")
 	}
-	return &tlsCert, nil
+
+	defer cancelTLS()
 }
 
 // Run runs the webhook server, starting a https listener.
