@@ -43,11 +43,11 @@ type tls interface {
 type Server struct {
 	logger   *logrus.Entry
 	Mux      *http.ServeMux
+	Certs    *cryptotls.Certificate
+	CertMu   sync.Mutex
 	tls      tls
 	certFile string
 	keyFile  string
-	CertMu   sync.Mutex
-	Certs    *cryptotls.Certificate
 }
 
 // NewServer returns a Server instance.
