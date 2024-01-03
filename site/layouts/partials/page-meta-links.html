@@ -25,7 +25,7 @@
 ` $pageURL}}
 
 {{ $issuesBody := printf "%s" $issuesBodyTemplate}}
-{{ $issuesURL := printf "%s/issues/new?title=%s&body=%s&labels=kind/documentation" $gh_repo (htmlEscape $.Title) $issuesBody }}
+{{ $issuesURL := printf "%s/issues/new?title=%s&body=%s&labels=kind/documentation,area/site" $gh_repo (htmlEscape $.Title) $issuesBody }}
 
 <a href="{{ $editURL }}" data-proofer-ignore target="_blank"><i class="fa fa-edit fa-fw"></i> {{ T "post_edit_this" }}</a>
 <a href="{{ $issuesURL }}" target="_blank"><i class="fab fa-github fa-fw"></i> {{ T "post_create_issue" }}</a>
