@@ -10,7 +10,23 @@
 {{ if $gh_repo }}
 <div class="td-page-meta ml-2 pb-1 pt-2 mb-0">
 {{ $editURL := printf "%s/edit/main/site/content/%s/%s" $gh_repo ($.Site.Language.Lang) $path }}
-{{ $issuesURL := printf "%s/issues/new?title=%s" $gh_repo (htmlEscape $.Title )}}
+{{ $pageURL := .Page.Permalink }}
+
+{{ $issuesBodyTemplate := printf `
+  **Link to page**: 
+  %s
+  
+  **Description of documentation issue**:
+  A clear and concise description of what the problem is with this documentation - e.g. "I find it hard to understand...."
+  
+  **What improvements to documentation would you like to see?**:
+  A clear and concise description of what modifications or additions to documentation you would like to see.
+
+` $pageURL}}
+
+{{ $issuesBody := printf "%s" $issuesBodyTemplate}}
+{{ $issuesURL := printf "%s/issues/new?title=%s&body=%s&labels=kind/documentation,area/site" $gh_repo (htmlEscape $.Title) $issuesBody }}
+
 <a href="{{ $editURL }}" data-proofer-ignore target="_blank"><i class="fa fa-edit fa-fw"></i> {{ T "post_edit_this" }}</a>
 <a href="{{ $issuesURL }}" target="_blank"><i class="fab fa-github fa-fw"></i> {{ T "post_create_issue" }}</a>
 </div>
