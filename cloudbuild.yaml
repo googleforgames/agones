@@ -69,7 +69,7 @@ steps:
       - "echo 'FROM gcr.io/cloud-builders/docker:24.0.6\nRUN apt-get install make\nENTRYPOINT\
         \ [\"/usr/bin/make\"]' > Dockerfile.build"
     waitFor: ['-']
-  - name: gcr.io/cloud-builders/docker
+  - name: gcr.io/cloud-builders/docker:24.0.6
     id: build-make-docker
     args: [build, -f, Dockerfile.build, -t, make-docker, .]  # we need docker and make to run everything.
 
