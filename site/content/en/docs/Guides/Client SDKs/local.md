@@ -207,6 +207,18 @@ go run cmd/sdk-server/main.go --local
 
 Commandline flags (e.g. `--local`) are exactly the same as command line flags when utilising a pre-built binary.
 
+**Enabling Specific Features:**
+For development and testing purposes, you might want to enable specific features in the SDK Server. To do this, set the FEATURE_GATES environment variable before running the server. For instance:
+```bash
+FEATURE_GATES="FeatureName=true" go run cmd/sdk-server/main.go --local
+```
+
+Replace `FeatureName` with the name of the feature you want to enable. This command starts the local SDK Server with the specified feature activated.
+
+**Setting the HTTP port:**
+To customize the SDK Server, set the HTTP port to 9358, as used by the local server, by running this command in your terminal: `export AGONES_SDK_HTTP_PORT=9358`
+
+
 ## Next Steps:
 
 - Learn how to connect your local development game server binary into a running Agones Kubernetes cluster for even more live development options with an [out of cluster dev server]({{< ref "/docs/Advanced/out-of-cluster-dev-server.md" >}}).

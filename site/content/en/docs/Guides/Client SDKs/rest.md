@@ -238,24 +238,11 @@ Apply an Annotation with the prefix "agones.dev/sdk-" to the backing `GameServer
 curl -d '{"key": "foo", "value": "bar"}' -H "Content-Type: application/json" -X PUT http://localhost:${AGONES_SDK_HTTP_PORT}/metadata/annotation
 ```
 
-### Local Development Setup: Counters and Lists
-Before using the examples provided in this document for Counters and Lists, please ensure that you have set up the local development version with `CountsAndLists` enabled. You can do this by running the following command:
-
-```bash
-FEATURE_GATES="CountsAndLists=true" go run cmd/sdk-server/main.go --local
-```
-
-This command starts the local development server, which includes a Counter named `conformanceTestCounter` and a List named `conformanceTestList`.
-
-Additionally, please make sure to set the HTTP port to 9358 as the local server uses it. You can do this by running the following command in a different terminal:
-
-```bash
-export AGONES_SDK_HTTP_PORT=9358
-```
-
 ### Counters
 
 {{< alpha title="Counters" gate="Counters" >}}
+
+**Note:** In the Counters examples, we retrieve the counter under the key "conformanceTestCounter" to make it extra clear.
 
 #### Alpha: GetCounter
 This function retrieves a specified counter by its name and returns its information.
@@ -288,6 +275,8 @@ Response:
 ### Lists
 
 {{< alpha title="Lists" gate="Lists" >}}
+
+**Note:** In the Lists examples, we retrieve the List under the key "conformanceTestList" to make it extra clear.
 
 #### Alpha: GetList
 This function retrieves a specific list identified by its name, returns the list's information.
