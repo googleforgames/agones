@@ -238,11 +238,16 @@ Apply an Annotation with the prefix "agones.dev/sdk-" to the backing `GameServer
 curl -d '{"key": "foo", "value": "bar"}' -H "Content-Type: application/json" -X PUT http://localhost:${AGONES_SDK_HTTP_PORT}/metadata/annotation
 ```
 
+### Counters and Lists
+
+{{< alpha title="Counters and Lists" gate="CountsAndLists" >}}
+
+
 ### Counters
 
-{{< alpha title="Counters" gate="Counters" >}}
+In all the  Counter examples, we retrieve the counter under the key `rooms` as if it was previously defined in [`GameServer.Spec.counters[room]`]({{< ref "/docs/Reference/agones_crd_api_reference.html#agones.dev/v1.GameServerSpec" >}}).
 
-**Note:** In the Counters examples, we retrieve the counter under the key "conformanceTestCounter" to make it extra clear.
+For your own Counter REST requests, replace the value `rooms` with your own key in the path.
 
 #### Alpha: GetCounter
 This function retrieves a specified counter by its name and returns its information.
@@ -250,12 +255,12 @@ This function retrieves a specified counter by its name and returns its informat
 ##### Example
 
 ```bash
-curl -H "Content-Type: application/json" -X GET http://localhost:${AGONES_SDK_HTTP_PORT}/v1alpha1/counters/conformanceTestCounter
+curl -H "Content-Type: application/json" -X GET http://localhost:${AGONES_SDK_HTTP_PORT}/v1alpha1/counters/rooms
 ```
 
 Response:
 ```json
-{"name":"conformanceTestCounter", "count":"1", "capacity":"10"}
+{"name":"rooms", "count":"1", "capacity":"10"}
 ```
 
 #### Alpha: UpdateCounter
@@ -264,31 +269,31 @@ This function updates the specified counter's properties, such as its count and 
 ##### Example
 
 ```bash
-curl -d '{"count": "5", "capacity": "11"}' -H "Content-Type: application/json" -X PATCH http://localhost:${AGONES_SDK_HTTP_PORT}/v1alpha1/counters/conformanceTestCounter
+curl -d '{"count": "5", "capacity": "11"}' -H "Content-Type: application/json" -X PATCH http://localhost:${AGONES_SDK_HTTP_PORT}/v1alpha1/counters/rooms
 ```
 
 Response:
 ```json
-{"name":"conformanceTestCounter", "count":"5", "capacity":"11"}
+{"name":"rooms", "count":"5", "capacity":"11"}
 ```
 
 ### Lists
 
-{{< alpha title="Lists" gate="Lists" >}}
+In all the List examples, we retrieve the list under the key `players` as if it was previously defined in [`GameServer.Spec.lists[players]`]({{< ref "/docs/Reference/agones_crd_api_reference.html#agones.dev/v1.GameServerSpec" >}}).
 
-**Note:** In the Lists examples, we retrieve the List under the key "conformanceTestList" to make it extra clear.
+For your own List REST based requests, replace the value `players` with your own key in the path.
 
 #### Alpha: GetList
 This function retrieves a specific list identified by its name, returns the list's information.
 
 ##### Example
 ```bash
-curl -H "Content-Type: application/json" -X GET http://localhost:${AGONES_SDK_HTTP_PORT}/v1alpha1/lists/conformanceTestList
+curl -H "Content-Type: application/json" -X GET http://localhost:${AGONES_SDK_HTTP_PORT}/v1alpha1/lists/players
 ```
 
 Response:
 ```json
-{"name":"conformanceTestList", "capacity":"100", "values":["test0", "test1", "test2"]}     
+{"name":"players", "capacity":"100", "values":["player0", "player1", "player2"]}     
 ```
 
 #### Alpha: UpdateList
@@ -297,12 +302,12 @@ This function updates the specified list's properties, such as its capacity and 
 ##### Example
 
 ```bash
-curl -d '{"capacity": "120", "values": ["test3", "test4"]}' -H "Content-Type: application/json" -X PATCH http://localhost:${AGONES_SDK_HTTP_PORT}/v1alpha1/lists/conformanceTestList
+curl -d '{"capacity": "120", "values": ["player3", "player4"]}' -H "Content-Type: application/json" -X PATCH http://localhost:${AGONES_SDK_HTTP_PORT}/v1alpha1/lists/players
 ```
 
 Response:
 ```json
-{"name":"conformanceTestList", "capacity":"120", "values":["test3", "test4"]}
+{"name":"players", "capacity":"120", "values":["player3", "player4"]}
 ```
 
 #### Alpha: AddListValue
@@ -311,12 +316,12 @@ This function adds a new value to a specified list and returns the list with thi
 ##### Example     
 
 ```bash
-curl -d '{"value": "test9"}' -H "Content-Type: application/json" -X POST http://localhost:${AGONES_SDK_HTTP_PORT}/v1alpha1/lists/conformanceTestList:addValue
+curl -d '{"value": "player9"}' -H "Content-Type: application/json" -X POST http://localhost:${AGONES_SDK_HTTP_PORT}/v1alpha1/lists/players:addValue
 ```
 
 Response:
 ```json
-{"name":"conformanceTestList", "capacity":"120", "values":["test3", "test4", "test9"]}
+{"name":"players", "capacity":"120", "values":["player3", "player4", "player9"]}
 ```
 
 #### Alpha: RemoveListValue
@@ -325,12 +330,12 @@ This function removes a value from a given list and returns updated list.
 ##### Example  
 
 ```bash
-curl -d '{"value": "test3"}' -H "Content-Type: application/json" -X POST http://localhost:${AGONES_SDK_HTTP_PORT}/v1alpha1/lists/conformanceTestList:removeValue
+curl -d '{"value": "player3"}' -H "Content-Type: application/json" -X POST http://localhost:${AGONES_SDK_HTTP_PORT}/v1alpha1/lists/players:removeValue
 ```
 
 Response:
 ```json
-{"name":"conformanceTestList", "capacity":"120", "values":["test4", "test9"]}
+{"name":"players", "capacity":"120", "values":["player4", "player9"]}
 ```
 
 ### Player Tracking

@@ -58,6 +58,22 @@ You should see output similar to the following:
 {"message":"gameserver update received","severity":"info","time":"2019-10-30T21:46:18.179459+03:00"}
 ```
 
+### Enabling Feature Gates
+
+For development and testing purposes, you might want to enable specific [features gates]({{% ref "/docs/Guides/feature-stages.md#feature-gates" %}}) in the local SDK Server. 
+
+To do this, you can either set the `FEATURE_GATES` environment variable or use the `--feature-gates` command line parameter like so, with the same format as utilised when [configuring it on a Helm install]({{< ref "/docs/Installation/Install Agones/helm.md#configuration" >}}).
+
+For example:
+
+```bash
+./sdk-server.linux.amd64 --local --feature-gates Example=true
+```
+or 
+```bash
+FEATURE_GATES=Example=true ./sdk-server.linux.amd64 --local
+```
+
 ## Providing your own `GameServer` configuration for local development
 
 By default, the local sdk-server will create a default `GameServer` configuration that is used for `GameServer()`
@@ -206,17 +222,6 @@ go run cmd/sdk-server/main.go --local
 ```
 
 Commandline flags (e.g. `--local`) are exactly the same as command line flags when utilising a pre-built binary.
-
-**Enabling Specific Features:**
-For development and testing purposes, you might want to enable specific features in the SDK Server. To do this, set the FEATURE_GATES environment variable before running the server. For instance:
-```bash
-FEATURE_GATES="FeatureName=true" go run cmd/sdk-server/main.go --local
-```
-
-Replace `FeatureName` with the name of the feature you want to enable. This command starts the local SDK Server with the specified feature activated.
-
-**Setting the HTTP port:**
-To customize the SDK Server, set the HTTP port to 9358, as used by the local server, by running this command in your terminal: `export AGONES_SDK_HTTP_PORT=9358`
 
 
 ## Next Steps:
