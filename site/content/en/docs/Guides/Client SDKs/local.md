@@ -58,6 +58,7 @@ You should see output similar to the following:
 {"message":"gameserver update received","severity":"info","time":"2019-10-30T21:46:18.179459+03:00"}
 ```
 
+{{% feature publishVersion="1.38.0" %}}
 ### Enabling Feature Gates
 
 For development and testing purposes, you might want to enable specific [features gates]({{% ref "/docs/Guides/feature-stages.md#feature-gates" %}}) in the local SDK Server. 
@@ -73,6 +74,7 @@ or
 ```bash
 FEATURE_GATES=Example=true ./sdk-server.linux.amd64 --local
 ```
+{{% /feature %}}
 
 ## Providing your own `GameServer` configuration for local development
 

@@ -238,10 +238,10 @@ Apply an Annotation with the prefix "agones.dev/sdk-" to the backing `GameServer
 curl -d '{"key": "foo", "value": "bar"}' -H "Content-Type: application/json" -X PUT http://localhost:${AGONES_SDK_HTTP_PORT}/metadata/annotation
 ```
 
+{{% feature publishVersion="1.38.0" %}}
 ### Counters and Lists
 
 {{< alpha title="Counters and Lists" gate="CountsAndLists" >}}
-
 
 ### Counters
 
@@ -337,6 +337,7 @@ Response:
 ```json
 {"name":"players", "capacity":"120", "values":["player4", "player9"]}
 ```
+{{% /feature %}}
 
 ### Player Tracking
 
