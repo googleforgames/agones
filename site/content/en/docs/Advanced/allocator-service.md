@@ -59,7 +59,7 @@ helm upgrade my-release agones/agones -n agones-system --wait \
 ```
 
 {{< alert title="Warning" color="warning">}} The parameter used to automatically
-replace the certifate changed in Agones 1.18.0. If you are using an older
+replace the certificate changed in Agones 1.18.0. If you are using an older
 version of Agones you should pass the parameter
 `agones.allocator.http.loadBalancerIP` instead. If you need your script to work
 with both older and newer versions of Agones, you can pass both parameters as
