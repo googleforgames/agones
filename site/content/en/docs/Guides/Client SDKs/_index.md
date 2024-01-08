@@ -249,9 +249,10 @@ SDK Server sidecar process.
 However, changes made through Allocation or the Kubernetes API to `GameServer` List and Counter values will be 
 eventually consistent when being retrieved through the SDK.
 
-Since the SDK update operations back to the `GameServer.status` values is batched asynchronous, it is worth noting that
-any value incremented past a counter or list capacity may be silently truncated to the currently set capacity if 
-modified concurrently through the SDK and Allocation/Kubernetes API.
+Since the SDK update operations back to the 
+[`GameServer.status`]({{< ref "/docs/Reference/agones_crd_api_reference.html#agones.dev/v1.GameServerStatus" >}}) values
+is batched asynchronously, it is worth noting that any value incremented past a counter or list capacity may be silently
+truncated to the currently set capacity if modified concurrently through the SDK and Allocation/Kubernetes API.
 {{< /alert >}}
 
 #### Counters
@@ -261,7 +262,8 @@ All functions will return an error if the specified `key` is not predefined in t
 
 ##### Alpha().GetCounterCount(key)
 
-This function retrieves the most up-to-date count value for a counter in the game server for a given key.
+This function retrieves either the [`GameServer.Status.Counts[key].Count`][gameserverstatus] or the SDK awaiting-batch
+value for a given key, whichever is most up to date.
 
 ##### Alpha().SetCounterCount(key, amount)
 
@@ -286,7 +288,8 @@ passed in non-negative amount. A capacity value of 0 indicates no capacity limit
 
 ##### Alpha().GetCounterCapacity(key)
 
-This function retrieves the most up-to-date maximum capacity of a Counter for the given key.
+This function retrieves either the [`GameServer.Status.Counts[key].Capacity`][gameserverstatus] or the SDK
+awaiting-batch value for the given key, whichever is most up to date.
 
 #### Lists
 
@@ -315,19 +318,22 @@ The capacity value is required to be between 0 and 1000.
 
 ##### Alpha().GetListCapacity(key)
 
-This function retrieves the most up-to-date capacity of a List for a given key.
-
-##### Alpha().ListContains(key, value)
-
-This function returns the most up-to-date result of if a specific string value exists in a List for a given key.
-
-##### Alpha().GetListLength(key)
-
-This function retrieves the most up-to-date number of items (length) in a List for a given key.
+This function retrieves either the [`GameServer.Status.Lists[key].Capacity`][gameserverstatus] or the SDK
+awaiting-batch value for the given key, whichever is most up to date.
 
 ##### Alpha().GetListValues(key)
 
-This function returns the most up-to-date array of string values from a List for a given key.
+This function retrieves either the [`GameServer.Status.Lists[key].Values`][gameserverstatus] or the SDK
+awaiting-batch value for the given key, whichever is most up to date.
+
+##### Alpha().ListContains(key, value)
+
+Convenience function, which returns if the specific string value exists in the results
+of [`Alpha().GetListValues(key)`](#alphagetlistvalueskey).
+
+##### Alpha().GetListLength(key)
+
+Convenience function, which retrieves the length the results of [`Alpha().GetListValues(key)`](#alphagetlistvalueskey).
 
 [gameserverspec]: {{< ref "/docs/Reference/agones_crd_api_reference.html#agones.dev/v1.GameServerSpec" >}}
 [gameserverstatus]: {{< ref "/docs/Reference/agones_crd_api_reference.html#agones.dev/v1.GameServerStatus" >}}
