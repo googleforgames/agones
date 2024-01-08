@@ -17,7 +17,7 @@
 # Base images for SDKs Bump: 3
 #
 
-FROM debian:bullseye
+FROM debian:bookworm
 
 RUN apt-get update && apt-get install -y \
   build-essential autoconf libtool git pkg-config curl \
