@@ -15,6 +15,18 @@
 
 steps:
 
+    #
+    # Move everything to the /workspace as this is what the canonical
+    # build script uses, and we want to be as close to that as possible.
+    #
+  - name: bash
+    id: setup-cache-files
+    script: |
+      mkdir /tmp/workspace && \
+      mv /workspace/* /tmp/workspace && \
+      mv /tmp/workspace/build/build-image/cache/* . && \
+      ls -l
+
   - name: 'gcr.io/cloud-builders/docker'
     id: build_base_image
     args:
