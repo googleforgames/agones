@@ -28,5 +28,11 @@ namespace Agones
         Task<long> GetPlayerCountAsync();
         Task<bool> IsPlayerConnectedAsync(string id);
         Task<List<string>> GetConnectedPlayersAsync();
+        Task<long> GetCounterCountAsync(string key);
+        Task<bool> IncrementCounterAsync(string key, long amount);
+        Task<bool> DecrementCounterAsync(string key, long amount);
+        Task<bool> SetCounterCountAsync(string key, long amount);
+        Task<long> GetCounterCapacityAsync(string key);
+        Task<bool> SetCounterCapacityAsync(string key, long amount);
     }
 }

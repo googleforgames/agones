@@ -166,6 +166,120 @@ if (featureGates.Contains("PlayerTracking"))
     }
 }
 
+if (featureGates.Contains("CountsAndLists"))
+// Tests are expected to run sequentially on the same pre-defined Counter in the localsdk server
+{
+    var alpha = sdk.Alpha();
+    var key = "rooms";
+
+    {
+        var wantCount = 1;
+        var task = alpha.GetCounterCountAsync(key);
+        task.Wait();
+        var gotCount = task.Result;
+        if (wantCount != gotCount)
+        {
+            Console.Error.WriteLine($"Counter count should be {wantCount}, but is {gotCount}");
+            Environment.Exit(1);
+        }
+    }
+
+    {
+        var wantCount = 10;
+        var increment = 9;
+        var task = alpha.IncrementCounterAsync(key, increment);
+        task.Wait();
+        var incremented = task.Result;
+        if (incremented != true)
+        {
+            Console.Error.WriteLine($"IncrementCounterAsync for Counter {key} did not increment");
+            Environment.Exit(1);
+        }
+        var getTask = alpha.GetCounterCountAsync(key);
+        getTask.Wait();
+        var gotCount = getTask.Result;
+        if (wantCount != gotCount)
+        {
+            Console.Error.WriteLine($"Counter count should be {wantCount}, but is {gotCount}");
+            Environment.Exit(1);
+        }
+    }
+
+    {
+        var wantCount = 5;
+        var decrement = 5;
+        var task = alpha.DecrementCounterAsync(key, decrement);
+        task.Wait();
+        var decremented = task.Result;
+        if (decremented != true)
+        {
+            Console.Error.WriteLine($"DecrementCounterAsync for Counter {key} did not decrement");
+            Environment.Exit(1);
+        }
+        var getTask = alpha.GetCounterCountAsync(key);
+        getTask.Wait();
+        var gotCount = getTask.Result;
+        if (wantCount != gotCount)
+        {
+            Console.Error.WriteLine($"Counter count should be {wantCount}, but is {gotCount}");
+            Environment.Exit(1);
+        }
+    }
+
+    {
+        var wantCount = 3;
+        var task = alpha.SetCounterCountAsync(key, wantCount);
+        task.Wait();
+        var setCount = task.Result;
+        if (setCount != true)
+        {
+            Console.Error.WriteLine($"SetCounterCountAsync for Counter {key} did not set");
+            Environment.Exit(1);
+        }
+        var getTask = alpha.GetCounterCountAsync(key);
+        getTask.Wait();
+        var gotCount = getTask.Result;
+        if (wantCount != gotCount)
+        {
+            Console.Error.WriteLine($"Counter count should be {wantCount}, but is {gotCount}");
+            Environment.Exit(1);
+        }
+    }
+
+    {
+        var wantCapacity = 10;
+        var task = alpha.GetCounterCapacityAsync(key);
+        task.Wait();
+        var gotCapacity = task.Result;
+        if (wantCapacity != gotCapacity)
+        {
+            Console.Error.WriteLine($"Counter capacity should be {wantCapacity}, but is {gotCapacity}");
+            Environment.Exit(1);
+        }
+    }
+
+
+    {
+        var wantCapacity = 0;
+        var task = alpha.SetCounterCapacityAsync(key, wantCapacity);
+        task.Wait();
+        var setCapacity = task.Result;
+        if (setCapacity != true)
+        {
+            Console.Error.WriteLine($"SetCounterCapacityAsync for Counter {key} did not set");
+            Environment.Exit(1);
+        }
+        var getTask = alpha.GetCounterCapacityAsync(key);
+        getTask.Wait();
+        var gotCapacity = getTask.Result;
+        if (wantCapacity != gotCapacity)
+        {
+            Console.Error.WriteLine($"Counter capacity should be {wantCapacity}, but is {gotCapacity}");
+            Environment.Exit(1);
+        }
+    }
+}
+
 var shutDownStatus = await sdk.ShutDownAsync();
 if (shutDownStatus.StatusCode != StatusCode.OK)
 {

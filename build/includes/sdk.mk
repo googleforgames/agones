@@ -38,6 +38,8 @@ DEFAULT_CONFORMANCE_TESTS = ready,allocate,setlabel,setannotation,gameserver,hea
 ALPHA_CONFORMANCE_TESTS = getplayercapacity,setplayercapacity,playerconnect,playerdisconnect,getplayercount,isplayerconnected,getconnectedplayers
 # TODO: Move Counter and List tests into ALPHA_CONFORMANCE_TESTS once the they are written for all SDKs
 COUNTS_AND_LISTS_TESTS = getcounter,updatecounter,setcountcounter,setcapacitycounter,getlist,updatelist,addlistvalue,removelistvalue
+# TODO: Remove once Lists are implemented for csharp and use COUNTS_AND_LISTS_TESTS instead
+COUNTERS_TESTS = getcounter,updatecounter,setcountcounter,setcapacitycounter
 
 .PHONY: test-sdks test-sdk build-sdks build-sdk gen-all-sdk-grpc gen-sdk-grpc run-all-sdk-command run-sdk-command build-example
 
@@ -187,7 +189,7 @@ run-sdk-conformance-test-csharp:
 	# run without feature flags
 	$(MAKE) run-sdk-conformance-test SDK_FOLDER=csharp GRPC_PORT=9005 HTTP_PORT=9105
 	# run with feature flags enabled
-	$(MAKE) run-sdk-conformance-test SDK_FOLDER=csharp GRPC_PORT=9005 HTTP_PORT=9105 FEATURE_GATES=PlayerTracking=true TESTS=$(DEFAULT_CONFORMANCE_TESTS),$(ALPHA_CONFORMANCE_TESTS)
+	$(MAKE) run-sdk-conformance-test SDK_FOLDER=csharp GRPC_PORT=9005 HTTP_PORT=9105 FEATURE_GATES=$(ALPHA_FEATURE_GATES) TESTS=$(DEFAULT_CONFORMANCE_TESTS),$(ALPHA_CONFORMANCE_TESTS),$(COUNTERS_TESTS)
 
 run-sdk-conformance-test-rest:
 	# (note: the restapi folder doesn't use GRPC_PORT but run-sdk-conformance-no-build defaults it, so we supply a unique value here)

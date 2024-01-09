@@ -49,7 +49,7 @@ namespace Agones
         {
             _logger = logger;
             RequestTimeoutSec = requestTimeoutSec;
-            
+
             if (cancellationTokenSource == null)
             {
                 cts = new CancellationTokenSource();
@@ -60,7 +60,7 @@ namespace Agones
                 cts = cancellationTokenSource;
                 ownsCts = false;
             }
-            
+
             ctoken = cts.Token;
             client = new SDK.SDKClient(channel);
         }
@@ -210,6 +210,187 @@ namespace Agones
             }
         }
 
+        /// <summary>
+        /// GetCounterCountAsync returns the Count for a Counter, given the Counter's key (name).
+        /// Will error if the key was not predefined in the GameServer resource on creation.
+        /// </summary>
+        /// <returns>The Counter's Count</returns>
+        public async Task<long> GetCounterCountAsync(string key)
+        {
+          try
+          {
+                var request = new GetCounterRequest()
+                {
+                    Name = key,
+                };
+                var counter = await client.GetCounterAsync(request,
+              deadline: DateTime.UtcNow.AddSeconds(RequestTimeoutSec), cancellationToken: ctoken);
+            return counter.Count;
+          }
+          catch (RpcException ex)
+          {
+                LogError(ex, $"Unable to invoke GetCounterCount({key}).");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// IncrementCounterAsync increases a counter by the given nonnegative integer amount.
+        /// Will execute the increment operation against the current CRD value. Will max at max(int64).
+        /// Will error if the key was not predefined in the GameServer resource on creation.
+        /// Returns false if the count is at the current capacity (to the latest knowledge of the SDK),
+        /// and no increment will occur.
+        ///
+        /// Note: A potential race condition here is that if count values are set from both the SDK and
+        /// through the K8s API (Allocation or otherwise), since the SDK append operation back to the CRD
+        /// value is batched asynchronous any value incremented past the capacity will be silently truncated.
+        /// </summary>
+        /// <returns>True if the increment counter request was successful.</returns>
+        public async Task<bool> IncrementCounterAsync(string key, long amount)
+        {
+            if (amount < 0)
+            {
+                throw new ArgumentOutOfRangeException($"CountIncrement amount must be a positive number, found {amount}");
+            }
+            try
+            {
+                var request = new CounterUpdateRequest()
+                {
+                    Name = key,
+                    CountDiff = amount,
+                };
+                var updateRequest = new UpdateCounterRequest()
+                {
+                    CounterUpdateRequest = request,
+                };
+                var response = await client.UpdateCounterAsync(updateRequest,
+                  deadline: DateTime.UtcNow.AddSeconds(RequestTimeoutSec), cancellationToken: ctoken);
+                // If we get a response (Counter) without an error, then the request was successful.
+                return true;
+            }
+            catch (RpcException ex)
+            {
+                LogError(ex, $"Unable to invoke IncrementCounter({key}, {amount}).");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// DecrementCounterAsync decreases the current count by the given nonnegative integer amount.
+        /// The Counter Will not go below 0. Will execute the decrement operation against the current CRD value.
+        /// Returns false if the count is at 0 (to the latest knowledge of the SDK), and no decrement will occur.
+        /// </summary>
+        /// <returns>True if the decrement counter request was successful.</returns>
+        public async Task<bool> DecrementCounterAsync(string key, long amount)
+        {
+            if (amount < 0)
+            {
+                throw new ArgumentOutOfRangeException($"DecrementCounter amount must be a positive number, found {amount}");
+            }
+            try
+            {
+                var request = new CounterUpdateRequest()
+                {
+                    Name = key,
+                    CountDiff = amount * -1,
+                };
+                var updateRequest = new UpdateCounterRequest()
+                {
+                    CounterUpdateRequest = request,
+                };
+                var response = await client.UpdateCounterAsync(updateRequest,
+                  deadline: DateTime.UtcNow.AddSeconds(RequestTimeoutSec), cancellationToken: ctoken);
+                return true;
+            }
+            catch (RpcException ex)
+            {
+                LogError(ex, $"Unable to invoke DecrementCounter({key}, {amount}).");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// SetCounterCountAsync sets a count to the given value. Use with care, as this will
+        /// overwrite any previous invocations’ value. Cannot be greater than Capacity.
+        /// </summary>
+        /// <returns>True if the set Counter count request was successful.</returns>
+        public async Task<bool> SetCounterCountAsync(string key, long amount)
+        {
+            try
+            {
+                var request = new CounterUpdateRequest()
+                {
+                    Name = key,
+                    Count = amount,
+                };
+                var updateRequest = new UpdateCounterRequest()
+                {
+                    CounterUpdateRequest = request,
+                };
+                var response = await client.UpdateCounterAsync(updateRequest,
+                  deadline: DateTime.UtcNow.AddSeconds(RequestTimeoutSec), cancellationToken: ctoken);
+                return true;
+            }
+            catch (RpcException ex)
+            {
+                LogError(ex, $"Unable to invoke SetCounterCount({key}, {amount}).");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// GetCounterCapacityAsync returns the Capacity for a Counter, given the Counter's key (name).
+        /// Will error if the key was not predefined in the GameServer resource on creation.
+        /// </summary>
+        /// <returns>The Counter's capacity</returns>
+        public async Task<long> GetCounterCapacityAsync(string key)
+        {
+            try
+            {
+                var request = new GetCounterRequest()
+                {
+                    Name = key,
+                };
+                var counter = await client.GetCounterAsync(request,
+                  deadline: DateTime.UtcNow.AddSeconds(RequestTimeoutSec), cancellationToken: ctoken);
+                return counter.Capacity;
+            }
+            catch (RpcException ex)
+            {
+                LogError(ex, $"Unable to invoke GetCounterCapacity({key}).");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// SetCounterCapacityAsync sets the capacity for the given Counter.
+        /// A capacity of 0 is no capacity.
+        /// </summary>
+        /// <returns>True if the set Counter capacity request was successful.</returns>
+        public async Task<bool> SetCounterCapacityAsync(string key, long amount)
+        {
+            try
+            {
+                var request = new CounterUpdateRequest()
+                {
+                    Name = key,
+                    Capacity = amount,
+                };
+                var updateRequest = new UpdateCounterRequest()
+                {
+                    CounterUpdateRequest = request,
+                };
+                var response = await client.UpdateCounterAsync(updateRequest,
+                  deadline: DateTime.UtcNow.AddSeconds(RequestTimeoutSec), cancellationToken: ctoken);
+                return true;
+            }
+            catch (RpcException ex)
+            {
+                LogError(ex, $"Unable to invoke SetCounterCapacity({key}, {amount}).");
+                throw;
+            }
+        }
+
         public void Dispose()
         {
             if (_disposed)
@@ -218,12 +399,12 @@ namespace Agones
             }
 
             cts.Cancel();
-            
+
             if (ownsCts)
             {
                 cts.Dispose();
             }
-            
+
             _disposed = true;
             GC.SuppressFinalize(this);
         }
