@@ -119,8 +119,8 @@ func main() {
 		}
 	default:
 		var config *rest.Config
-		// if the kubeconfig fails BuildConfigFromFlags will try in cluster config
-		config, err := clientcmd.BuildConfigFromFlags("", ctlConf.KubeConfig)
+		// if the kubeconfig fails InClusterBuildConfig will try in cluster config
+		config, err := clientcmd.InClusterBuildConfig("", ctlConf.KubeConfig)
 		if err != nil {
 			logger.WithError(err).Fatal("Could not create in cluster config")
 		}

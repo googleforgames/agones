@@ -114,8 +114,8 @@ func main() {
 	logger.WithField("version", pkg.Version).WithField("featureGates", runtime.EncodeFeatures()).
 		WithField("ctlConf", ctlConf).Info("starting extensions operator...")
 
-	// if the kubeconfig fails BuildConfigFromFlags will try in cluster config
-	clientConf, err := clientcmd.BuildConfigFromFlags("", ctlConf.KubeConfig)
+	// if the kubeconfig fails InClusterBuildConfig will try in cluster config
+	clientConf, err := clientcmd.InClusterBuildConfig("", ctlConf.KubeConfig)
 	if err != nil {
 		logger.WithError(err).Fatal("Could not create in cluster config")
 	}

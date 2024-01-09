@@ -81,7 +81,7 @@ type Framework struct {
 }
 
 func newFramework(kubeconfig string, qps float32, burst int) (*Framework, error) {
-	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
+	config, err := clientcmd.InClusterBuildConfig("", kubeconfig)
 	if err != nil {
 		return nil, errors.Wrap(err, "build config from flags failed")
 	}

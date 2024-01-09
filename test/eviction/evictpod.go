@@ -50,7 +50,7 @@ func main() {
 		log.Fatal("--pod must be non-empty")
 	}
 
-	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
+	config, err := clientcmd.InClusterBuildConfig("", *kubeconfig)
 	if err != nil {
 		log.Fatalf("Could not build config: %v", err)
 	}
