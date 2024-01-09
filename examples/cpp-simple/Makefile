@@ -31,9 +31,9 @@ mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_path := $(dir $(mkfile_path))
 root_path = $(realpath $(project_path)/../..)
 ifeq ($(REPOSITORY),)
-	server_tag := cpp-simple-server:0.16
+	server_tag := cpp-simple-server:0.17
 else
-	server_tag := $(REPOSITORY)/cpp-simple-server:0.16
+	server_tag := $(REPOSITORY)/cpp-simple-server:0.17
 endif
 
 #   _____                    _

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM debian:bullseye as builder
+FROM debian:bookworm as builder
 
 RUN apt-get update && apt-get install -y \
   build-essential autoconf libtool git pkg-config \
@@ -38,7 +38,7 @@ RUN cd cpp-simple && mkdir -p .build && cd .build && \
        -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=.bin && \
     cmake --build . --target install -j$(nproc)
 
-FROM debian:bullseye
+FROM debian:bookworm
 RUN useradd -u 1000 -m server
 
 COPY --from=builder --chown=server:server /project/cpp-simple/.build/.bin/cpp-simple /home/server/cpp-simple
