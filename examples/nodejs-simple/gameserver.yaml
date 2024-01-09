@@ -32,7 +32,7 @@ spec:
     spec:
       containers:
         - name: nodejs-simple
-          image: us-docker.pkg.dev/agones-images/examples/nodejs-simple-server:0.9
+          image: us-docker.pkg.dev/agones-images/examples/nodejs-simple-server:0.10
           resources:
             requests:
               memory: 100Mi
