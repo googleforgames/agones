@@ -136,6 +136,182 @@ namespace Agones.Tests
         }
 
         [TestMethod]
+        public async Task GetCounterCountAsync_Sends_OK()
+        {
+            var mockClient = new Mock<SDK.SDKClient>();
+            var mockSdk = new AgonesSDK();
+            var key = "counterKey";
+            long wantCount = 1;
+            var counter = new Counter()
+            {
+                Name = key,
+                Count = wantCount,
+            };
+            var expected = new GetCounterRequest()
+            {
+                Name = key,
+            };
+            // TODO: Remove comments
+            // https://github.com/devlooped/moq/wiki/Quickstart#async-methods
+            // Task<bool> DoSomethingAsync();
+            // mock.Setup(foo => foo.DoSomethingAsync().Result).Returns(true);
+            // https://grpc.github.io/grpc/csharp/api/Grpc.Core.AsyncUnaryCall-1.html
+            // public AsyncUnaryCall(Task<TResponse> responseAsync, Task<Metadata> responseHeadersAsync, Func<Status> getStatusFunc, Func<Metadata> getTrailersFunc, Action disposeAction)
+            mockClient.Setup(m => m.GetCounterAsync(expected, It.IsAny<Metadata>(),
+            It.IsAny<DateTime?>(), It.IsAny<CancellationToken>())).Returns(
+                (GetCounterRequest _, Metadata _, DateTime? _, CancellationToken _) =>
+                new AsyncUnaryCall<Counter>(Task.FromResult(counter), Task.FromResult(new Metadata()),
+                () => Status.DefaultSuccess, () => new Metadata(), () => { }));
+            mockSdk.alpha.client = mockClient.Object;
+
+            var response = await mockSdk.Alpha().GetCounterCountAsync(key);
+            Assert.AreEqual(wantCount, response);
+        }
+
+        [TestMethod]
+        public async Task IncrementCounterAsync_Sends_OK()
+        {
+            var mockClient = new Mock<SDK.SDKClient>();
+            var mockSdk = new AgonesSDK();
+            var key = "counterKey";
+            var amount = 9;
+            var counter = new Counter();
+            var updateReq = new CounterUpdateRequest()
+            {
+                Name = key,
+                CountDiff = amount,
+            };
+            var expected = new UpdateCounterRequest()
+            {
+                CounterUpdateRequest = updateReq,
+            };
+
+            mockClient.Setup(m => m.UpdateCounterAsync(expected, It.IsAny<Metadata>(),
+                It.IsAny<DateTime?>(), It.IsAny<CancellationToken>())).Returns(
+                (UpdateCounterRequest _, Metadata _, DateTime? _, CancellationToken _) =>
+                new AsyncUnaryCall<Counter>(Task.FromResult(counter), Task.FromResult(new Metadata()),
+              () => Status.DefaultSuccess, () => new Metadata(), () => { }));
+            mockSdk.alpha.client = mockClient.Object;
+
+            var response = await mockSdk.Alpha().IncrementCounterAsync(key, amount);
+            Assert.AreEqual(true, response);
+        }
+
+        [TestMethod]
+        public async Task DecrementCounterAsync_Sends_OK()
+        {
+            var mockClient = new Mock<SDK.SDKClient>();
+            var mockSdk = new AgonesSDK();
+            var key = "counterKey";
+            var counter = new Counter();
+            var updateReq = new CounterUpdateRequest()
+            {
+                Name = key,
+                CountDiff = -9,
+            };
+            var expected = new UpdateCounterRequest()
+            {
+                CounterUpdateRequest = updateReq,
+            };
+
+            mockClient.Setup(m => m.UpdateCounterAsync(expected, It.IsAny<Metadata>(),
+                It.IsAny<DateTime?>(), It.IsAny<CancellationToken>())).Returns(
+                (UpdateCounterRequest _, Metadata _, DateTime? _, CancellationToken _) =>
+                new AsyncUnaryCall<Counter>(Task.FromResult(counter), Task.FromResult(new Metadata()),
+              () => Status.DefaultSuccess, () => new Metadata(), () => { }));
+            mockSdk.alpha.client = mockClient.Object;
+
+            var response = await mockSdk.Alpha().DecrementCounterAsync(key, 9);
+            Assert.AreEqual(true, response);
+        }
+
+        [TestMethod]
+        public async Task SetCounterCountAsync_Sends_OK()
+        {
+            var mockClient = new Mock<SDK.SDKClient>();
+            var mockSdk = new AgonesSDK();
+            var key = "counterKey";
+            var amount = 99;
+            var counter = new Counter();
+            var updateReq = new CounterUpdateRequest()
+            {
+                Name = key,
+                Count = amount,
+            };
+            var expected = new UpdateCounterRequest()
+            {
+                CounterUpdateRequest = updateReq,
+            };
+
+            mockClient.Setup(m => m.UpdateCounterAsync(expected, It.IsAny<Metadata>(),
+                It.IsAny<DateTime?>(), It.IsAny<CancellationToken>())).Returns(
+                (UpdateCounterRequest _, Metadata _, DateTime? _, CancellationToken _) =>
+                new AsyncUnaryCall<Counter>(Task.FromResult(counter), Task.FromResult(new Metadata()),
+              () => Status.DefaultSuccess, () => new Metadata(), () => { }));
+            mockSdk.alpha.client = mockClient.Object;
+
+            var response = await mockSdk.Alpha().SetCounterCountAsync(key, amount);
+            Assert.AreEqual(true, response);
+        }
+
+        [TestMethod]
+        public async Task GetCounterCapacityAsync_Sends_OK()
+        {
+            var mockClient = new Mock<SDK.SDKClient>();
+            var mockSdk = new AgonesSDK();
+            var key = "counterKey";
+            long wantCapacity = 11;
+            var counter = new Counter()
+            {
+                Name = key,
+                Capacity = wantCapacity,
+            };
+            var expected = new GetCounterRequest()
+            {
+                Name = key,
+            };
+
+            mockClient.Setup(m => m.GetCounterAsync(expected, It.IsAny<Metadata>(),
+            It.IsAny<DateTime?>(), It.IsAny<CancellationToken>())).Returns(
+                (GetCounterRequest _, Metadata _, DateTime? _, CancellationToken _) =>
+                new AsyncUnaryCall<Counter>(Task.FromResult(counter), Task.FromResult(new Metadata()),
+                () => Status.DefaultSuccess, () => new Metadata(), () => { }));
+            mockSdk.alpha.client = mockClient.Object;
+
+            var response = await mockSdk.Alpha().GetCounterCapacityAsync(key);
+            Assert.AreEqual(wantCapacity, response);
+        }
+
+        [TestMethod]
+        public async Task SetCounterCapacityAsync_Sends_OK()
+        {
+            var mockClient = new Mock<SDK.SDKClient>();
+            var mockSdk = new AgonesSDK();
+            var key = "counterKey";
+            var amount = 99;
+            var counter = new Counter();
+            var updateReq = new CounterUpdateRequest()
+            {
+                Name = key,
+                Capacity = amount,
+            };
+            var expected = new UpdateCounterRequest()
+            {
+                CounterUpdateRequest = updateReq,
+            };
+
+            mockClient.Setup(m => m.UpdateCounterAsync(expected, It.IsAny<Metadata>(),
+                It.IsAny<DateTime?>(), It.IsAny<CancellationToken>())).Returns(
+                (UpdateCounterRequest _, Metadata _, DateTime? _, CancellationToken _) =>
+                new AsyncUnaryCall<Counter>(Task.FromResult(counter), Task.FromResult(new Metadata()),
+              () => Status.DefaultSuccess, () => new Metadata(), () => { }));
+            mockSdk.alpha.client = mockClient.Object;
+
+            var response = await mockSdk.Alpha().SetCounterCapacityAsync(key, amount);
+            Assert.AreEqual(true, response);
+        }
+
+        [TestMethod]
         public void InstantiateWithParameters_OK()
         {
             var mockSdk = new AgonesSDK();
