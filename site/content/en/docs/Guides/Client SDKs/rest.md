@@ -249,7 +249,7 @@ In all the  Counter examples, we retrieve the counter under the key `rooms` as i
 For your own Counter REST requests, replace the value `rooms` with your own key in the path.
 
 ##### Alpha: GetCounter
-This function retrieves a specified counter by its name and returns its information.
+This function retrieves a specified counter by its key, `rooms`, and returns its information.
 
 ###### Example
 
@@ -263,7 +263,7 @@ Response:
 ```
 
 ##### Alpha: UpdateCounter
-This function updates the specified counter's properties, such as its count and capacity, and returns the updated counter details.
+This function updates the properties of the counter with the key `rooms`, such as its count and capacity, and returns the updated counter details.
 
 ###### Example
 
