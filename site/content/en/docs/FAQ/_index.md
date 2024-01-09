@@ -7,6 +7,9 @@ date: 2020-04-06
 
 ## Architecture
 
+### What is allocation?
+Allocation on the Agones refers to the process of assigning a GameServer instance to a game session, protecting it from being scaled down for the duration of the allocation.
+
 ### What is the relationship between a Kubernetes Pod and an Agones GameServer?
 
 Agones creates a backing Pod with the appropriate configuration parameters for each GameServer that is configured in
