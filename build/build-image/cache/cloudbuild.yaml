@@ -15,10 +15,10 @@
 
 steps:
 
-    #
-    # Move everything to the /workspace as this is what the canonical
-    # build script uses, and we want to be as close to that as possible.
-    #
+  #
+  # Move everything to the /workspace as this is what the canonical
+  # build script uses, and we want to be as close to that as possible.
+  #
   - name: bash
     id: setup-cache-files
     script: |
