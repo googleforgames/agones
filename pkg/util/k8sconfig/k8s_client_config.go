@@ -23,11 +23,11 @@ import (
 
 // InClusterBuildConfig is a helper function that builds configs by trying the InClusterConfig().
 // If InClusterConfig is unsuccessful, it falls back to BuildConfigFromFlags.
-func InClusterBuildConfig(masterUrl, kubeconfigPath string) (*restclient.Config, error) {
+func InClusterBuildConfig(masterURL, kubeconfigPath string) (*restclient.Config, error) {
 	kubeconfig, err := restclient.InClusterConfig()
 	if err == nil {
 		return kubeconfig, nil
 	}
 	klog.Warning("error creating inClusterConfig, trying BuildConfigFromFlags()", err)
-	return clientcmd.BuildConfigFromFlags(masterUrl, kubeconfigPath)
+	return clientcmd.BuildConfigFromFlags(masterURL, kubeconfigPath)
 }
