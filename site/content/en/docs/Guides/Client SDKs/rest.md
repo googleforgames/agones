@@ -283,7 +283,7 @@ In all the List examples, we retrieve the list under the key `players` as if it 
 For your own List REST based requests, replace the value `players` with your own key in the path.
 
 ##### Alpha: GetList
-This function retrieves a specific list identified by its name, returns the list's information.
+This function retrieves the list's properties with the key `players`, returns the list's information.
 
 ###### Example
 ```bash
@@ -296,7 +296,7 @@ Response:
 ```
 
 ##### Alpha: UpdateList
-This function updates the specified list's properties, such as its capacity and values, returns the updated list details. This will overwrite all existing List.Values with the update list request values. Use addValue or removeValue for modifying the List.Values field.
+This function updates the list's properties with the key `players`, such as its capacity and values, returns the updated list details. This will overwrite all existing List.Values with the update list request values. Use addValue or removeValue for modifying the List.Values field.
 
 ###### Example
 
@@ -310,7 +310,7 @@ Response:
 ```
 
 ##### Alpha: AddListValue
-This function adds a new value to a specified list and returns the list with this addition.
+This function adds a new value to a list with the key `players` and returns the list with this addition.
 
 ###### Example     
 
@@ -324,7 +324,7 @@ Response:
 ```
 
 ##### Alpha: RemoveListValue
-This function removes a value from a given list and returns updated list.
+This function removes a value from the list with the key `players` and returns updated list.
      
 ###### Example  
 
