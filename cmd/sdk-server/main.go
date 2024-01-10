@@ -31,6 +31,7 @@ import (
 	sdkalpha "agones.dev/agones/pkg/sdk/alpha"
 	sdkbeta "agones.dev/agones/pkg/sdk/beta"
 	"agones.dev/agones/pkg/sdkserver"
+	k8sconfig "agones.dev/agones/pkg/util/k8sconfig"
 	"agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/signals"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
@@ -42,7 +43,6 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
 )
 
 const (
@@ -120,7 +120,7 @@ func main() {
 	default:
 		var config *rest.Config
 		// if the kubeconfig fails InClusterBuildConfig will try in cluster config
-		config, err := clientcmd.InClusterBuildConfig("", ctlConf.KubeConfig)
+		config, err := k8sconfig.InClusterBuildConfig("", ctlConf.KubeConfig)
 		if err != nil {
 			logger.WithError(err).Fatal("Could not create in cluster config")
 		}

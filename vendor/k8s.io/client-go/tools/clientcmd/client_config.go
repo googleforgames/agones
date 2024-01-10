@@ -608,16 +608,6 @@ func (config *inClusterClientConfig) Possible() bool {
 		err == nil && !fi.IsDir()
 }
 
-// InClusterBuildConfig is a helper function that builds configs by trying the InClusterConfig().
-// If InClusterConfig is unsuccessful, it falls back to BuildConfigFromFlags. 
-fucn InClusterBuildConfig(masterUrl, kubeconfigPath string) (*restclient.Config, error) {
-	kubeconfig, err := restclient.InClusterConfig()
-	if err == nil {
-		return kubeconfig, nil
-	}
-	klog.Warning("error creating inClusterConfig, trying BuildConfigFromFlags()", err)
-	return BuildConfigFromFlags(masterUrl, kubeconfigPath)
-}
 
 // BuildConfigFromFlags is a helper function that builds configs from a masterUrl 
 // or a kubeconfigPath. These parameters are passed in as command line flags for cluster

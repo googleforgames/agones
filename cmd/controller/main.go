@@ -33,6 +33,7 @@ import (
 	"agones.dev/agones/pkg/gameservers"
 	"agones.dev/agones/pkg/gameserversets"
 	"agones.dev/agones/pkg/metrics"
+	k8sconfig "agones.dev/agones/pkg/util/k8sconfig"
 	"agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/signals"
 	"github.com/google/uuid"
@@ -49,7 +50,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/leaderelection"
 	"k8s.io/client-go/tools/leaderelection/resourcelock"
 )
@@ -134,7 +134,7 @@ func main() {
 	}
 
 	// if the kubeconfig fails InClusterBuildConfig will try in cluster config
-	clientConf, err := clientcmd.InClusterBuildConfig("", ctlConf.KubeConfig)
+	clientConf, err := k8sconfig.InClusterBuildConfig("", ctlConf.KubeConfig)
 	if err != nil {
 		logger.WithError(err).Fatal("Could not create in cluster config")
 	}

@@ -36,6 +36,7 @@ import (
 	"agones.dev/agones/pkg/metrics"
 	"agones.dev/agones/pkg/util/apiserver"
 	"agones.dev/agones/pkg/util/https"
+	"agones.dev/agones/pkg/util/k8sconfig"
 	"agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/signals"
 	"agones.dev/agones/pkg/util/webhooks"
@@ -48,7 +49,6 @@ import (
 	"gopkg.in/natefinch/lumberjack.v2"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
 )
 
 const (
@@ -115,7 +115,7 @@ func main() {
 		WithField("ctlConf", ctlConf).Info("starting extensions operator...")
 
 	// if the kubeconfig fails InClusterBuildConfig will try in cluster config
-	clientConf, err := clientcmd.InClusterBuildConfig("", ctlConf.KubeConfig)
+	clientConf, err := k8sconfig.InClusterBuildConfig("", ctlConf.KubeConfig)
 	if err != nil {
 		logger.WithError(err).Fatal("Could not create in cluster config")
 	}

@@ -22,10 +22,10 @@ import (
 	"log"
 	"path/filepath"
 
+	k8sconfig "agones.dev/agones/pkg/util/k8sconfig"
 	policy "k8s.io/api/policy/v1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/homedir"
 )
 
@@ -50,7 +50,7 @@ func main() {
 		log.Fatal("--pod must be non-empty")
 	}
 
-	config, err := clientcmd.InClusterBuildConfig("", *kubeconfig)
+	config, err := k8sconfig.InClusterBuildConfig("", *kubeconfig)
 	if err != nil {
 		log.Fatalf("Could not build config: %v", err)
 	}
