@@ -7,8 +7,9 @@ description: "A `GameServerAllocation` is used to atomically allocate a GameServ
 weight: 30
 ---
 
+{{% feature publishVersion="1.38.0" %}}
 When we have a fleet of game servers ready, allocation is the process of selecting a one of these servers for use. This is achieved using a `GameServerAllocation`. The allocation process marks the chosen game server for gameplay and marks it as `Allocated`. This ensures that the server is reserved for active players and not considered `ready` for other allocations until `SDK.Shutdown()` is called, or it is manually deleted.
-
+{{% /feature %}}
 
 A full `GameServerAllocation` specification is available below and in the
 {{< ghlink href="/examples/gameserverallocation.yaml" >}}example folder{{< /ghlink >}} for reference:
