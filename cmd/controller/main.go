@@ -33,7 +33,6 @@ import (
 	"agones.dev/agones/pkg/gameservers"
 	"agones.dev/agones/pkg/gameserversets"
 	"agones.dev/agones/pkg/metrics"
-	k8sconfig "agones.dev/agones/pkg/util/k8sconfig"
 	"agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/signals"
 	"github.com/google/uuid"
@@ -134,7 +133,7 @@ func main() {
 	}
 
 	// if the kubeconfig fails InClusterBuildConfig will try in cluster config
-	clientConf, err := k8sconfig.InClusterBuildConfig("", ctlConf.KubeConfig)
+	clientConf, err := runtime.InClusterBuildConfig(ctlConf.KubeConfig)
 	if err != nil {
 		logger.WithError(err).Fatal("Could not create in cluster config")
 	}

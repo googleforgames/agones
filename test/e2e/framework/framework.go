@@ -34,7 +34,6 @@ import (
 	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
 	autoscaling "agones.dev/agones/pkg/apis/autoscaling/v1"
 	"agones.dev/agones/pkg/client/clientset/versioned"
-	k8sconfig "agones.dev/agones/pkg/util/k8sconfig"
 	"agones.dev/agones/pkg/util/runtime"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -81,7 +80,7 @@ type Framework struct {
 }
 
 func newFramework(kubeconfig string, qps float32, burst int) (*Framework, error) {
-	config, err := k8sconfig.InClusterBuildConfig("", kubeconfig)
+	config, err := runtime.InClusterBuildConfig(kubeconfig)
 	if err != nil {
 		return nil, errors.Wrap(err, "build config from flags failed")
 	}

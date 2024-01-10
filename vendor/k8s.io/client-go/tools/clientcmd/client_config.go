@@ -608,14 +608,19 @@ func (config *inClusterClientConfig) Possible() bool {
 		err == nil && !fi.IsDir()
 }
 
-
-// BuildConfigFromFlags is a helper function that builds configs from a masterUrl 
-// or a kubeconfigPath. These parameters are passed in as command line flags for cluster
-// components. If neither masterUrl or kubeconfigPath are passed, 
-// the function logs a warning and falls back to a default configuration 
+// BuildConfigFromFlags is a helper function that builds configs from a master
+// url or a kubeconfig filepath. These are passed in as command line flags for cluster
+// components. Warnings should reflect this usage. If neither masterUrl or kubeconfigPath
+// are passed in we fallback to inClusterConfig. If inClusterConfig fails, we fallback
+// to the default config.
 func BuildConfigFromFlags(masterUrl, kubeconfigPath string) (*restclient.Config, error) {
 	if kubeconfigPath == "" && masterUrl == "" {
 		klog.Warning("Neither --kubeconfig nor --master was specified.  Using the inClusterConfig.  This might not work.")
+		kubeconfig, err := restclient.InClusterConfig()
+		if err == nil {
+			return kubeconfig, nil
+		}
+		klog.Warning("error creating inClusterConfig, falling back to default config: ", err)
 	}
 	return NewNonInteractiveDeferredLoadingClientConfig(
 		&ClientConfigLoadingRules{ExplicitPath: kubeconfigPath},

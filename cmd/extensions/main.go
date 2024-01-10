@@ -36,7 +36,6 @@ import (
 	"agones.dev/agones/pkg/metrics"
 	"agones.dev/agones/pkg/util/apiserver"
 	"agones.dev/agones/pkg/util/https"
-	"agones.dev/agones/pkg/util/k8sconfig"
 	"agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/signals"
 	"agones.dev/agones/pkg/util/webhooks"
@@ -115,7 +114,7 @@ func main() {
 		WithField("ctlConf", ctlConf).Info("starting extensions operator...")
 
 	// if the kubeconfig fails InClusterBuildConfig will try in cluster config
-	clientConf, err := k8sconfig.InClusterBuildConfig("", ctlConf.KubeConfig)
+	clientConf, err := runtime.InClusterBuildConfig(ctlConf.KubeConfig)
 	if err != nil {
 		logger.WithError(err).Fatal("Could not create in cluster config")
 	}
