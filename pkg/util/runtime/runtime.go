@@ -126,7 +126,7 @@ func InClusterBuildConfig(kubeconfigPath string) (*restclient.Config, error) {
 	return BuildCustomConfigFromFlags("", kubeconfigPath)
 }
 
-// BuildCustomConfigFromFlags is a helper function that builds configs from a masterUrl
+// BuildCustomConfigFromFlags is a helper function that builds configs from a masterURL
 // or a kubeconfigPath. These parameters are passed in as command line flags for cluster
 // components. If neither masterUrl or kubeconfigPath are passed,
 // the function logs a warning and falls back to a default configuration
