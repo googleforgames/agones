@@ -92,6 +92,14 @@ agones:
     replicas: 2
     pdb:
         minAvailable: 1
+    topologySpreadConstraints:
+      enabled: false
+      maxSkew: 1
+      topologyKey: kubernetes.io/hostname
+      whenUnsatisfiable: ScheduleAnyway
+      labelSelector:
+        matchLabels:
+          app: agones-controller
   extensions:
     resources: {}
       # requests:
@@ -139,6 +147,14 @@ agones:
       initialDelaySeconds: 3
       periodSeconds: 3
       failureThreshold: 3
+    topologySpreadConstraints:
+      enabled: false
+      maxSkew: 1
+      topologyKey: kubernetes.io/hostname
+      whenUnsatisfiable: ScheduleAnyway
+      labelSelector:
+        matchLabels:
+          app: agones-extensions
   ping:
     install: true
     pdb:
@@ -180,6 +196,14 @@ agones:
       periodSeconds: 3
       failureThreshold: 3
       timeoutSeconds: 1
+    topologySpreadConstraints:
+      enabled: false
+      maxSkew: 1
+      topologyKey: kubernetes.io/hostname
+      whenUnsatisfiable: ScheduleAnyway
+      labelSelector:
+        matchLabels:
+          app: agones-ping
   allocator:
     install: true
     pdb:
