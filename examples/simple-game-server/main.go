@@ -313,7 +313,14 @@ func handleResponse(txt string, s *sdk.SDK, cancel context.CancelFunc) (response
 			responseError = fmt.Errorf("Invalid GET_COUNTER_COUNT, should have 1 arguments")
 			return
 		}
-		response, responseError = getCounterCount(s, parts[1])
+		count, err := getCounterCount(s, parts[1])
+        if err != nil {
+            responseError = fmt.Errorf("ERROR: %s\n", err.Error())
+            return
+        } else {
+            response = "COUNTER: " + count + "\n"
+        }
+		
 		addACK = false
 
 	case "INCREMENT_COUNTER":

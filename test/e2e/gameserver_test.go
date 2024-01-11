@@ -1364,10 +1364,10 @@ func TestCounters(t *testing.T) {
 	}{
 		"GetCounterCount": {
 			msg:  "GET_COUNTER_COUNT games",
-			want: "1",
+			want: "COUNTER: 1\n",
 		},
 		"GetCounterCount Counter Does Not Exist": {
-			msg:  "GET_COUNTER_COUNT fame",
+			msg:  "GET_COUNTER_COUNT game",
 			want: "ERROR: -1\n",
 		},
 		"IncrementCounter": {
