@@ -196,14 +196,6 @@ agones:
       periodSeconds: 3
       failureThreshold: 3
       timeoutSeconds: 1
-    topologySpreadConstraints:
-      enabled: false
-      maxSkew: 1
-      topologyKey: kubernetes.io/hostname
-      whenUnsatisfiable: ScheduleAnyway
-      labelSelector:
-        matchLabels:
-          app: agones-ping
   allocator:
     install: true
     pdb:
@@ -272,6 +264,14 @@ agones:
     remoteAllocationTimeout: 10s
     totalRemoteAllocationTimeout: 30s
     allocationBatchWaitTime: 500ms
+    topologySpreadConstraints:
+      enabled: false
+      maxSkew: 1
+      topologyKey: kubernetes.io/hostname
+      whenUnsatisfiable: ScheduleAnyway
+      labelSelector:
+        matchLabels:
+          app: agones-allocator    
   image:
     registry: us-docker.pkg.dev/agones-images/release
     tag: 1.38.0-dev
