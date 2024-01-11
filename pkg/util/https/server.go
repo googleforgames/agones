@@ -31,6 +31,8 @@ const (
 	tlsDir = "/certs/"
 )
 
+var closeCh = make(chan struct{})
+
 // tls is a http server interface to enable easier testing
 type tls interface {
 	Close() error
@@ -59,7 +61,22 @@ func NewServer(certFile, keyFile string) *Server {
 		certFile: certFile,
 		keyFile:  keyFile,
 	}
-	wh.setupServer()
+
+	tlsCert, err := readTLSCert()
+	if err != nil {
+		logrus.WithError(err).Fatal("could not load TLS certs.")
+	}
+	wh.CertMu.Lock()
+	wh.Certs = tlsCert
+	wh.CertMu.Unlock()
+
+	wh.tls = &http.Server{
+		Addr:    ":8081",
+		Handler: wh.Mux,
+	}
+
+	// Start a goroutine to watch for certificate changes
+	go watchForCertificateChanges(wh)
 
 	wh.Mux.HandleFunc("/", wh.defaultHandler)
 	wh.logger = runtime.NewLoggerWithType(wh)
@@ -67,28 +84,17 @@ func NewServer(certFile, keyFile string) *Server {
 	return wh
 }
 
-func (s *Server) setupServer() {
-	s.tls = &http.Server{
-		Addr:    ":8081",
-		Handler: s.Mux,
-		TLSConfig: &cryptotls.Config{
-			GetCertificate: s.getCertificate,
-		},
+// It will load the key pair certificate
+func readTLSCert() (*cryptotls.Certificate, error) {
+	tlsCert, err := cryptotls.LoadX509KeyPair(tlsDir+"server.crt", tlsDir+"server.key")
+	if err != nil {
+		return nil, err
 	}
-
-	// Start a goroutine to watch for certificate changes
-	go s.watchForCertificateChanges()
-}
-
-// getCertificate returns the current TLS certificate
-func (s *Server) getCertificate(hello *cryptotls.ClientHelloInfo) (*cryptotls.Certificate, error) {
-	s.CertMu.Lock()
-	defer s.CertMu.Unlock()
-	return s.Certs, nil
+	return &tlsCert, nil
 }
 
 // watchForCertificateChanges watches for changes in the certificate files
-func (s *Server) watchForCertificateChanges() {
+func watchForCertificateChanges(s *Server) {
 	// Watch for changes in the tlsDir
 	cancelTLS, err := fswatch.Watch(s.logger, tlsDir, time.Second, func() {
 		// Load the new TLS certificate
@@ -107,7 +113,9 @@ func (s *Server) watchForCertificateChanges() {
 		s.logger.WithError(err).Fatal("could not create watcher for TLS certs")
 	}
 
-	defer cancelTLS()
+	// Wait for the signal to close
+	<-closeCh
+	cancelTLS()
 }
 
 // Run runs the webhook server, starting a https listener.
@@ -116,6 +124,7 @@ func (s *Server) Run(ctx context.Context, _ int) error {
 	go func() {
 		<-ctx.Done()
 		s.tls.Close() // nolint: errcheck,gosec
+		close(closeCh)
 	}()
 
 	s.logger.WithField("server", s).Infof("https server started")
