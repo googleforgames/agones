@@ -314,13 +314,13 @@ func handleResponse(txt string, s *sdk.SDK, cancel context.CancelFunc) (response
 			return
 		}
 		count, err := getCounterCount(s, parts[1])
-        if err != nil {
-            responseError = fmt.Errorf("ERROR: %s\n", err.Error())
-            return
-        } else {
-            response = "COUNTER: " + count + "\n"
-        }
-		
+		if err != nil {
+			responseError = fmt.Errorf("ERROR: %s\n", err.Error())
+			return
+		} else {
+			response = "COUNTER: " + count + "\n"
+		}
+
 		addACK = false
 
 	case "INCREMENT_COUNTER":
