@@ -61,15 +61,15 @@ spec:
         heritage: {{ .Release.Service }}
     spec:
       affinity:
-        {{- if .Values.agones.controller.topologySpreadConstraints.enabled }}
-        topologySpreadConstraints:
-          - maxSkew: {{ .Values.agones.controller.topologySpreadConstraints.maxSkew }}
-            topologyKey: {{ .Values.agones.controller.topologySpreadConstraints.topologyKey }}
-            whenUnsatisfiable: {{ .Values.agones.controller.topologySpreadConstraints.whenUnsatisfiable }}
-            labelSelector:
-              matchLabels:
-                {{- toYaml .Values.agones.controller.topologySpreadConstraints.labelSelector | nindent 8 }}
-        {{- end }}
+      {{- if .Values.agones.controller.topologySpreadConstraints.enabled }}
+      topologySpreadConstraints:
+        - maxSkew: {{ .Values.agones.controller.topologySpreadConstraints.maxSkew }}
+          topologyKey: {{ .Values.agones.controller.topologySpreadConstraints.topologyKey }}
+          whenUnsatisfiable: {{ .Values.agones.controller.topologySpreadConstraints.whenUnsatisfiable }}
+          labelSelector:
+            matchLabels:
+              {{- toYaml .Values.agones.controller.topologySpreadConstraints.labelSelector.matchLabels | nindent 16 }}
+      {{- end }}      
       {{- if .Values.agones.controller.affinity }}
       {{- if .Values.agones.requireDedicatedNodes }}
       {{- fail "agones.controller.affinity and agones.requireDedicatedNodes cannot be set at the same time!" }}

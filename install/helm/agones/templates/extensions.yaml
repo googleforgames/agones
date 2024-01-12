@@ -33,15 +33,6 @@ metadata:
 {{- toYaml .Values.agones.controller.allocationApiService.annotations | nindent 4 }}
 {{- end }}
 spec:
-  {{- if .Values.agones.extensions.topologySpreadConstraints.enabled }}
-  topologySpreadConstraints:
-    - maxSkew: {{ .Values.agones.extensions.topologySpreadConstraints.maxSkew }}
-      topologyKey: {{ .Values.agones.extensions.topologySpreadConstraints.topologyKey }}
-      whenUnsatisfiable: {{ .Values.agones.extensions.topologySpreadConstraints.whenUnsatisfiable }}
-      labelSelector:
-        matchLabels:
-          {{- toYaml .Values.agones.extensions.topologySpreadConstraints.labelSelector | nindent 8 }}
-  {{- end }}
   group: allocation.agones.dev
   groupPriorityMinimum: 1000
   versionPriority: 15
@@ -58,6 +49,17 @@ spec:
   version: v1
 {{- end}}
 {{- if .Values.agones.registerWebhooks }}
+  template:
+    spec:
+      {{- if .Values.agones.extensions.topologySpreadConstraints.enabled }}
+      topologySpreadConstraints:
+        - maxSkew: {{ .Values.agones.extensions.topologySpreadConstraints.maxSkew }}
+          topologyKey: {{ .Values.agones.extensions.topologySpreadConstraints.topologyKey }}
+          whenUnsatisfiable: {{ .Values.agones.extensions.topologySpreadConstraints.whenUnsatisfiable }}
+          labelSelector:
+            matchLabels:
+              {{- toYaml .Values.agones.extensions.topologySpreadConstraints.labelSelector.matchLabels | nindent 16 }}
+      {{- end }}
 ---
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
