@@ -1367,26 +1367,26 @@ func TestCounters(t *testing.T) {
 			want: "COUNTER: 1\n",
 		},
 		"GetCounterCount Counter Does Not Exist": {
-			msg:  "GET_COUNTER_COUNT game",
+			msg:  "GET_COUNTER_COUNT fame",
 			want: "ERROR: -1\n",
 		},
 		"IncrementCounter": {
 			msg:         "INCREMENT_COUNTER foo 10",
-			want:        "true",
+			want:        "true\n",
 			counterName: "foo",
-			wantCount:   "20",
+			wantCount:   "20\n",
 		},
 		"IncrementCounter Past Capacity": {
 			msg:         "INCREMENT_COUNTER games 50",
 			want:        "ERROR: false\n",
 			counterName: "games",
-			wantCount:   "1",
+			wantCount:   "1\n",
 		},
 		"IncrementCounter Negative": {
 			msg:         "INCREMENT_COUNTER games -1",
 			want:        "ERROR: false\n",
 			counterName: "games",
-			wantCount:   "1",
+			wantCount:   "1\n",
 		},
 		"IncrementCounter Counter Does Not Exist": {
 			msg:  "INCREMENT_COUNTER same 1",
@@ -1394,21 +1394,21 @@ func TestCounters(t *testing.T) {
 		},
 		"DecrementCounter": {
 			msg:         "DECREMENT_COUNTER bar 10",
-			want:        "true",
+			want:        "true\n",
 			counterName: "bar",
-			wantCount:   "0",
+			wantCount:   "0\n",
 		},
 		"DecrementCounter Past Capacity": {
 			msg:         "DECREMENT_COUNTER games 2",
 			want:        "ERROR: false\n",
 			counterName: "games",
-			wantCount:   "1",
+			wantCount:   "1\n",
 		},
 		"DecrementCounter Negative": {
 			msg:         "DECREMENT_COUNTER games -1",
 			want:        "ERROR: false\n",
 			counterName: "games",
-			wantCount:   "1",
+			wantCount:   "1\n",
 		},
 		"DecrementCounter Counter Does Not Exist": {
 			msg:  "DECREMENT_COUNTER lame 1",
@@ -1416,25 +1416,25 @@ func TestCounters(t *testing.T) {
 		},
 		"SetCounterCount": {
 			msg:         "SET_COUNTER_COUNT baz 0",
-			want:        "true",
+			want:        "true\n",
 			counterName: "baz",
-			wantCount:   "0",
+			wantCount:   "0\n",
 		},
 		"SetCounterCount Past Capacity": {
 			msg:         "SET_COUNTER_COUNT games 51",
 			want:        "ERROR: false\n",
 			counterName: "games",
-			wantCount:   "1",
+			wantCount:   "1\n",
 		},
 		"SetCounterCount Past Zero": {
 			msg:         "SET_COUNTER_COUNT games -1",
 			want:        "ERROR: false\n",
 			counterName: "games",
-			wantCount:   "1",
+			wantCount:   "1\n",
 		},
 		"GetCounterCapacity": {
 			msg:  "GET_COUNTER_CAPACITY games",
-			want: "50",
+			want: "50\n",
 		},
 		"GetCounterCapacity Counter Does Not Exist": {
 			msg:  "GET_COUNTER_CAPACITY dame",
@@ -1442,15 +1442,15 @@ func TestCounters(t *testing.T) {
 		},
 		"SetCounterCapacity": {
 			msg:          "SET_COUNTER_CAPACITY qux 0",
-			want:         "true",
+			want:         "true\n",
 			counterName:  "qux",
-			wantCapacity: "0",
+			wantCapacity: "0\n",
 		},
 		"SetCounterCapacity Past Zero": {
 			msg:         "SET_COUNTER_CAPACITY games -42",
 			want:        "ERROR: false\n",
 			counterName: "games",
-			wantCount:   "1",
+			wantCount:   "1\n",
 		},
 	}
 	// nolint:dupl  // Linter errors on lines are duplicate of TestLists
