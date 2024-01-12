@@ -84,7 +84,7 @@ func TestRustGameServerReady(t *testing.T) {
 					Containers: []corev1.Container{
 						{
 							Name:  "rust-simple",
-							Image: "us-docker.pkg.dev/agones-images/examples/rust-simple-server:0.11",
+							Image: "us-docker.pkg.dev/agones-images/examples/rust-simple-server:0.13",
 						},
 					},
 				},
@@ -156,7 +156,7 @@ func TestNodeJSGameServerReady(t *testing.T) {
 					Containers: []corev1.Container{
 						{
 							Name:  "nodejs-simple",
-							Image: "us-docker.pkg.dev/agones-images/examples/nodejs-simple-server:0.9",
+							Image: "us-docker.pkg.dev/agones-images/examples/nodejs-simple-server:0.10",
 							Resources: corev1.ResourceRequirements{
 								Requests: corev1.ResourceList{
 									corev1.ResourceMemory: resource.MustParse("100Mi"),
