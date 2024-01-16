@@ -51,7 +51,7 @@ spec:
 {{- if .Values.agones.registerWebhooks }}
   template:
     spec:
-      {{- if .Values.agones.extensions.topologySpreadConstraints.enabled }}
+      {{- if .Values.agones.extensions.topologySpreadConstraints }}
       topologySpreadConstraints:
         - maxSkew: {{ .Values.agones.extensions.topologySpreadConstraints.maxSkew }}
           topologyKey: {{ .Values.agones.extensions.topologySpreadConstraints.topologyKey }}

@@ -177,8 +177,7 @@ spec:
 {{- toYaml .Values.agones.allocator.annotations | nindent 8 }}
 {{- end }}
     spec:
-      affinity:
-      {{- if .Values.agones.allocator.topologySpreadConstraints.enabled }}
+      {{- if .Values.agones.allocator.topologySpreadConstraints }}
       topologySpreadConstraints:
         - maxSkew: {{ .Values.agones.allocator.topologySpreadConstraints.maxSkew }}
           topologyKey: {{ .Values.agones.allocator.topologySpreadConstraints.topologyKey }}
@@ -187,6 +186,7 @@ spec:
             matchLabels:
               {{- toYaml .Values.agones.allocator.topologySpreadConstraints.labelSelector.matchLabels | nindent 20 }}
       {{- end }}
+      affinity:
       {{- if .Values.agones.allocator.affinity }}
       {{- if .Values.agones.requireDedicatedNodes }}
       {{- fail "agones.allocator.affinity and agones.requireDedicatedNodes cannot be set at the same time!" }}

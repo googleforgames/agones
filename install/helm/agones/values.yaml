@@ -265,7 +265,7 @@ agones:
     totalRemoteAllocationTimeout: 30s
     allocationBatchWaitTime: 500ms
     topologySpreadConstraints:
-      enabled: false
+      enabled: true
       maxSkew: 1
       topologyKey: kubernetes.io/hostname
       whenUnsatisfiable: ScheduleAnyway
