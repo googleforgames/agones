@@ -31,8 +31,6 @@ const (
 	tlsDir = "/certs/"
 )
 
-var closeCh = make(chan struct{})
-
 // tls is a http server interface to enable easier testing
 type tls interface {
 	Close() error
@@ -45,9 +43,9 @@ type tls interface {
 type Server struct {
 	logger   *logrus.Entry
 	Mux      *http.ServeMux
-	Certs    *cryptotls.Certificate
 	CertMu   sync.Mutex
 	tls      tls
+	Certs    *cryptotls.Certificate
 	certFile string
 	keyFile  string
 }
@@ -61,43 +59,46 @@ func NewServer(certFile, keyFile string) *Server {
 		certFile: certFile,
 		keyFile:  keyFile,
 	}
-
-	tlsCert, err := readTLSCert()
-	if err != nil {
-		logrus.WithError(err).Fatal("could not load TLS certs.")
-	}
-	wh.CertMu.Lock()
-	wh.Certs = tlsCert
-	wh.CertMu.Unlock()
-
-	wh.tls = &http.Server{
-		Addr:    ":8081",
-		Handler: wh.Mux,
-	}
-
-	// Start a goroutine to watch for certificate changes
-	go watchForCertificateChanges(wh)
-
-	wh.Mux.HandleFunc("/", wh.defaultHandler)
 	wh.logger = runtime.NewLoggerWithType(wh)
+	wh.setupServer()
+	wh.Mux.HandleFunc("/", wh.defaultHandler)
 
 	return wh
 }
 
-// It will load the key pair certificate
-func readTLSCert() (*cryptotls.Certificate, error) {
+func (s *Server) setupServer() {
+	s.tls = &http.Server{
+		Addr:    ":8081",
+		Handler: s.Mux,
+		TLSConfig: &cryptotls.Config{
+			GetCertificate: s.getCertificate,
+		},
+	}
+
 	tlsCert, err := cryptotls.LoadX509KeyPair(tlsDir+"server.crt", tlsDir+"server.key")
 	if err != nil {
-		return nil, err
+		s.logger.WithError(err).Error("could not load Initial TLS certs; keeping old one")
+		return
 	}
-	return &tlsCert, nil
+
+	s.CertMu.Lock()
+	defer s.CertMu.Unlock()
+	s.Certs = &tlsCert
 }
 
-// watchForCertificateChanges watches for changes in the certificate files
-func watchForCertificateChanges(s *Server) {
-	// Watch for changes in the tlsDir
+// getCertificate returns the current TLS certificate
+func (s *Server) getCertificate(hello *cryptotls.ClientHelloInfo) (*cryptotls.Certificate, error) {
+	s.CertMu.Lock()
+	defer s.CertMu.Unlock()
+	return s.Certs, nil
+}
+
+// WatchForCertificateChanges watches for changes in the certificate files
+func (s *Server) WatchForCertificateChanges() (func(), error) {
+
 	cancelTLS, err := fswatch.Watch(s.logger, tlsDir, time.Second, func() {
 		// Load the new TLS certificate
+		s.logger.Info("TLS certs changed, reloading")
 		tlsCert, err := cryptotls.LoadX509KeyPair(tlsDir+"server.crt", tlsDir+"server.key")
 		if err != nil {
 			s.logger.WithError(err).Error("could not load TLS certs; keeping old one")
@@ -105,17 +106,14 @@ func watchForCertificateChanges(s *Server) {
 		}
 		s.CertMu.Lock()
 		defer s.CertMu.Unlock()
-		// Update the Certs structure with the new certificate
 		s.Certs = &tlsCert
 		s.logger.Info("TLS certs updated")
 	})
 	if err != nil {
 		s.logger.WithError(err).Fatal("could not create watcher for TLS certs")
+		return nil, err
 	}
-
-	// Wait for the signal to close
-	<-closeCh
-	cancelTLS()
+	return cancelTLS, nil
 }
 
 // Run runs the webhook server, starting a https listener.
@@ -124,7 +122,6 @@ func (s *Server) Run(ctx context.Context, _ int) error {
 	go func() {
 		<-ctx.Done()
 		s.tls.Close() // nolint: errcheck,gosec
-		close(closeCh)
 	}()
 
 	s.logger.WithField("server", s).Infof("https server started")
