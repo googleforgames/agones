@@ -37,17 +37,17 @@ type tls interface {
 	ListenAndServeTLS(certFile, keyFile string) error
 }
 
-// CertServer holds the Server certificate
-type CertServer struct {
-	Certs  *cryptotls.Certificate
-	CertMu sync.Mutex
+// certServer holds the Server certificate
+type certServer struct {
+	certs  *cryptotls.Certificate
+	certMu sync.Mutex
 }
 
 // Server is a HTTPs server that conforms to the runner interface
 // we use in /cmd/controller, and has a public Mux that can be updated
 // has a default 404 handler, to make discovery of k8s services a bit easier.
 type Server struct {
-	CertServer CertServer
+	certServer certServer
 	logger     *logrus.Entry
 	Mux        *http.ServeMux
 	tls        tls
@@ -86,16 +86,16 @@ func (s *Server) setupServer() {
 		return
 	}
 
-	s.CertServer.CertMu.Lock()
-	defer s.CertServer.CertMu.Unlock()
-	s.CertServer.Certs = &tlsCert
+	s.certServer.certMu.Lock()
+	defer s.certServer.certMu.Unlock()
+	s.certServer.certs = &tlsCert
 }
 
 // getCertificate returns the current TLS certificate
 func (s *Server) getCertificate(hello *cryptotls.ClientHelloInfo) (*cryptotls.Certificate, error) {
-	s.CertServer.CertMu.Lock()
-	defer s.CertServer.CertMu.Unlock()
-	return s.CertServer.Certs, nil
+	s.certServer.certMu.Lock()
+	defer s.certServer.certMu.Unlock()
+	return s.certServer.certs, nil
 }
 
 // WatchForCertificateChanges watches for changes in the certificate files
@@ -109,9 +109,9 @@ func (s *Server) WatchForCertificateChanges() (func(), error) {
 			s.logger.WithError(err).Error("could not load TLS certs; keeping old one")
 			return
 		}
-		s.CertServer.CertMu.Lock()
-		defer s.CertServer.CertMu.Unlock()
-		s.CertServer.Certs = &tlsCert
+		s.certServer.certMu.Lock()
+		defer s.certServer.certMu.Unlock()
+		s.certServer.certs = &tlsCert
 		s.logger.Info("TLS certs updated")
 	})
 	if err != nil {
