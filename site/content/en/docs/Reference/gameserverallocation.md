@@ -10,7 +10,7 @@ weight: 30
 
 Allocation is the process of selecting the optimal `GameServer` that matches the filters defined in the `GameServerAllocation` specification below, and returning its details.
 
-A successful Alloction moves the `GameServer` to the `Allocated` state, which demarcates that it is currently active, likely with players on it, and should not be removed until SDK.Shutdown() is called, or it is explicitly manually deleted.
+A successful Alloction moves the `GameServer` to the `Allocated` state, which indicates that it is currently active, likely with players on it, and should not be removed until SDK.Shutdown() is called, or it is explicitly manually deleted.
 
 A full `GameServerAllocation` specification is available below and in the
 {{< ghlink href="/examples/gameserverallocation.yaml" >}}example folder{{< /ghlink >}} for reference:
