@@ -182,7 +182,7 @@ func testPlayers(ctx context.Context, alphaCli *alpha.APIClient) {
 
 func testCounters(ctx context.Context, alphaCli *alpha.APIClient) {
 	// Tests are expected to run sequentially on the same pre-defined Counter in the localsdk server
-	counterName := "conformanceTestCounter"
+	counterName := "rooms"
 
 	expectedCounter := alpha.AlphaCounter{Name: counterName, Count: "1", Capacity: "10"}
 	if counter, _, err := alphaCli.SDKApi.GetCounter(ctx, counterName); err != nil {
@@ -216,7 +216,7 @@ func testCounters(ctx context.Context, alphaCli *alpha.APIClient) {
 
 func testLists(ctx context.Context, alphaCli *alpha.APIClient) {
 	// Tests are expected to run sequentially on the same pre-defined List in the localsdk server
-	listName := "conformanceTestList"
+	listName := "players"
 
 	expectedList := alpha.AlphaList{Name: listName, Values: []string{"test0", "test1", "test2"}, Capacity: "100"}
 	if list, _, err := alphaCli.SDKApi.GetList(ctx, listName); err != nil {

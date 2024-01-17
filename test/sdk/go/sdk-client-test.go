@@ -157,8 +157,8 @@ func testPlayerTracking(sdk *goSdk.SDK) {
 }
 
 func testCounts(sdk *goSdk.SDK) {
-	// LocalSDKServer starting "conformanceTestCounter": {Count: 1, Capacity: 10}
-	counter := "conformanceTestCounter"
+	// LocalSDKServer starting "rooms": {Count: 1, Capacity: 10}
+	counter := "rooms"
 	count, err := sdk.Alpha().GetCounterCount(counter)
 	if err != nil {
 		log.Fatalf("Error getting Counter count: %s", err)
