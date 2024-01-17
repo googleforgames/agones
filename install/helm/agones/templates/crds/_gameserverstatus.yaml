@@ -91,7 +91,7 @@ status:
             minimum: 0
           capacity:
             type: integer
-            default: 1000
+            default: 9223372036854775807
             minimum: 0
     lists:
       type: object

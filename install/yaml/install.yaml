@@ -5478,7 +5478,7 @@ spec:
                              capacity:
                                title: Max capacity of the counter
                                type: integer
-                               default: 1000
+                               default: 9223372036854775807
                                minimum: 0
                        lists:
                          type: object
@@ -10893,7 +10893,7 @@ spec:
                      capacity:
                        title: Max capacity of the counter
                        type: integer
-                       default: 1000
+                       default: 9223372036854775807
                        minimum: 0
                lists:
                  type: object
@@ -11015,7 +11015,7 @@ spec:
                        minimum: 0
                      capacity:
                        type: integer
-                       default: 1000
+                       default: 9223372036854775807
                        minimum: 0
                lists:
                  type: object
@@ -16430,7 +16430,7 @@ spec:
                               capacity:
                                 title: Max capacity of the counter
                                 type: integer
-                                default: 1000
+                                default: 9223372036854775807
                                 minimum: 0
                         lists:
                           type: object
