@@ -139,6 +139,11 @@ func main() {
 	}
 	// https server and the items that share the Mux for routing
 	httpsServer := https.NewServer(ctlConf.CertFile, ctlConf.KeyFile)
+	cancelTLS, err := httpsServer.WatchForCertificateChanges()
+	if err != nil {
+		logger.WithError(err).Fatal("Got an error while watching certificate changes")
+	}
+	defer cancelTLS()
 	wh := webhooks.NewWebHook(httpsServer.Mux)
 	api := apiserver.NewAPIServer(httpsServer.Mux)
 
