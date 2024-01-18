@@ -24,8 +24,7 @@ DisableResyncOnSDKServer: false
 CountsAndLists: false
 
 # Dev features
-FeatureGKEAutopilotExtendedDurationPods: false
+GKEAutopilotExtendedDurationPods: false
 
 # Example feature
 Example: false
-
