@@ -195,8 +195,8 @@ func testCounts(sdk *goSdk.SDK) {
 }
 
 func testLists(sdk *goSdk.SDK) {
-	// LocalSDKServer starting "conformanceTestList": {Values: []string{"test0", "test1", "test2"}, Capacity: 100}}
-	list := "conformanceTestList"
+	// LocalSDKServer starting "players": {Values: []string{"test0", "test1", "test2"}, Capacity: 100}}
+	list := "players"
 	vals := []string{"test0", "test1", "test2"}
 
 	contains, err := sdk.Alpha().ListContains(list, "test1")
