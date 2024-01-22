@@ -148,11 +148,11 @@ func NewLocalSDKServer(filePath string, testSdkName string) (*LocalSDKServer, er
 		// Adding test Counter and List for the conformance tests (not nil for LocalSDKServer tests)
 		if l.gs.Status.Counters == nil {
 			l.gs.Status.Counters = map[string]*sdk.GameServer_Status_CounterStatus{
-				"conformanceTestCounter": {Count: 1, Capacity: 10}}
+				"rooms": {Count: 1, Capacity: 10}}
 		}
 		if l.gs.Status.Lists == nil {
 			l.gs.Status.Lists = map[string]*sdk.GameServer_Status_ListStatus{
-				"conformanceTestList": {Values: []string{"test0", "test1", "test2"}, Capacity: 100}}
+				"players": {Values: []string{"test0", "test1", "test2"}, Capacity: 100}}
 		}
 	}
 
