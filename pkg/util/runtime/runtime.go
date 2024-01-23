@@ -127,7 +127,7 @@ func InClusterBuildConfig(kubeconfigPath string) (*restclient.Config, error) {
 	klog.Warning("error creating inClusterConfig, trying to build config from flags", err)
 
 	if kubeconfigPath == "" {
-		klog.Warning("kubeconfigPath was not specified. Using the inClusterConfig. This might not work.")
+		klog.Warning("No kubeconfigPath provided. Attempting to use a default configuration.")
 	}
 
 	return clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
