@@ -693,8 +693,18 @@ func (c *Controller) updateFleetStatus(ctx context.Context, fleet *agonesv1.Flee
 		// TODO: integrate this extra loop into the above for loop when PlayerTracking moves to GA
 		for _, gsSet := range list {
 			if gsSet.Status.Players != nil {
-				fCopy.Status.Players.Count += gsSet.Status.Players.Count
-				fCopy.Status.Players.Capacity += gsSet.Status.Players.Capacity
+				fCopy.Status.Players.Count, err = SafeAddInt64(fCopy.Status.Players.Count, gsSet.Status.Players.Count)
+				if err != nil {
+					log.Printf("Error adding player counts: %v", err)
+					return err
+				}
+				
+				fCopy.Status.Players.Capacity, err = SafeAddInt64(fCopy.Status.Players.Capacity, gsSet.Status.Players.Capacity)
+				if err != nil {
+					log.Printf("Error adding player capacities: %v", err)
+					return err
+				}
+				
 			}
 		}
 	}
@@ -702,6 +712,22 @@ func (c *Controller) updateFleetStatus(ctx context.Context, fleet *agonesv1.Flee
 	_, err = c.fleetGetter.Fleets(fCopy.ObjectMeta.Namespace).UpdateStatus(ctx, fCopy, metav1.UpdateOptions{})
 	return errors.Wrapf(err, "error updating status of fleet %s", fCopy.ObjectMeta.Name)
 }
+
+//int64 oveflow check
+func SafeAddInt64(left, right int64) (int64, error) {
+	ErrOverflow := errors.New("integer overflow")
+    if right > 0 {
+        if left > math.MaxInt64-right {
+            return 0, ErrOverflow
+        }
+    } else {
+        if left < math.MinInt64-right {
+            return 0, ErrOverflow
+        }
+    }
+    return left + right, nil
+}
+
 
 // filterGameServerSetByActive returns the active GameServerSet (or nil if it
 // doesn't exist) and then the rest of the GameServerSets that are controlled
