@@ -30,9 +30,9 @@ mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_path := $(dir $(mkfile_path))
 root_path := $(realpath $(project_path)/../..)
 ifeq ($(REPOSITORY),)
-	server_tag := rust-simple-server:0.12
+	server_tag := rust-simple-server:0.13
 else
-	server_tag := $(REPOSITORY)/rust-simple-server:0.12
+	server_tag := $(REPOSITORY)/rust-simple-server:0.13
 endif
 
 #   _____                    _
