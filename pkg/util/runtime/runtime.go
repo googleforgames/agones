@@ -27,7 +27,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/runtime"
 	restclient "k8s.io/client-go/rest"
 	clientcmd "k8s.io/client-go/tools/clientcmd"
-	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 	"k8s.io/klog"
 )
 
@@ -115,26 +114,23 @@ func NewServerMux() *gwruntime.ServeMux {
 	return mux
 }
 
-// InClusterBuildConfig is a helper function that builds configs by trying the InClusterConfig().
-// If InClusterConfig is unsuccessful, it falls back to BuildCustomConfigFromFlags.
+// InClusterBuildConfig is a helper function that first attempts to build configurations
+// using InClusterConfig(). If InClusterConfig is unsuccessful, it then tries to build
+// configurations from a kubeconfigPath. This path is typically passed in as a command line
+// flag for cluster components. If neither the InClusterConfig nor the kubeconfigPath
+// are successful, the function logs a warning and falls back to a default configuration.
 func InClusterBuildConfig(kubeconfigPath string) (*restclient.Config, error) {
 	kubeconfig, err := restclient.InClusterConfig()
 	if err == nil {
 		return kubeconfig, nil
 	}
-	klog.Warning("error creating inClusterConfig, trying BuildCustomConfigFromFlags()", err)
-	return BuildCustomConfigFromFlags("", kubeconfigPath)
-}
+	klog.Warning("error creating inClusterConfig, trying to build config from flags", err)
 
-// BuildCustomConfigFromFlags is a helper function that builds configs from a masterURL
-// or a kubeconfigPath. These parameters are passed in as command line flags for cluster
-// components. If neither masterUrl or kubeconfigPath are passed,
-// the function logs a warning and falls back to a default configuration
-func BuildCustomConfigFromFlags(masterURL, kubeconfigPath string) (*restclient.Config, error) {
-	if kubeconfigPath == "" && masterURL == "" {
-		klog.Warning("Neither --kubeconfig nor --master was specified.  Using the inClusterConfig.  This might not work.")
+	if kubeconfigPath == "" {
+		klog.Warning("kubeconfigPath was not specified. Using the inClusterConfig. This might not work.")
 	}
+
 	return clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
 		&clientcmd.ClientConfigLoadingRules{ExplicitPath: kubeconfigPath},
-		&clientcmd.ConfigOverrides{ClusterInfo: clientcmdapi.Cluster{Server: masterURL}}).ClientConfig()
+		&clientcmd.ConfigOverrides{}).ClientConfig()
 }
