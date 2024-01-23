@@ -752,20 +752,20 @@ func TestControllerUpdateFleetCounterStatus(t *testing.T) {
 			ua := action.(k8stesting.UpdateAction)
 			fleet := ua.GetObject().(*agonesv1.Fleet)
 
-			assert.Equal(t, int64(1100), fleet.Status.Counters["fullCounter"].AllocatedCount)
-			assert.Equal(t, int64(1100), fleet.Status.Counters["fullCounter"].AllocatedCapacity)
-			assert.Equal(t, int64(1100), fleet.Status.Counters["fullCounter"].Capacity)
-			assert.Equal(t, int64(1100), fleet.Status.Counters["fullCounter"].Count)
+			assert.Equal(t, agonesv1.SafeAdd(1000, 100), fleet.Status.Counters["fullCounter"].AllocatedCount)
+			assert.Equal(t, agonesv1.SafeAdd(1000, 100), fleet.Status.Counters["fullCounter"].AllocatedCapacity)
+			assert.Equal(t, agonesv1.SafeAdd(1000, 100), fleet.Status.Counters["fullCounter"].Capacity)
+			assert.Equal(t, agonesv1.SafeAdd(1000, 100), fleet.Status.Counters["fullCounter"].Count)
 
-			assert.Equal(t, int64(11), fleet.Status.Counters["anotherCounter"].AllocatedCount)
-			assert.Equal(t, int64(20), fleet.Status.Counters["anotherCounter"].AllocatedCapacity)
-			assert.Equal(t, int64(200), fleet.Status.Counters["anotherCounter"].Capacity)
-			assert.Equal(t, int64(42), fleet.Status.Counters["anotherCounter"].Count)
+			assert.Equal(t, agonesv1.SafeAdd(10, 1), fleet.Status.Counters["anotherCounter"].AllocatedCount)
+			assert.Equal(t, agonesv1.SafeAdd(15, 5), fleet.Status.Counters["anotherCounter"].AllocatedCapacity)
+			assert.Equal(t, agonesv1.SafeAdd(150, 50), fleet.Status.Counters["anotherCounter"].Capacity)
+			assert.Equal(t, agonesv1.SafeAdd(40, 2), fleet.Status.Counters["anotherCounter"].Count)
 
-			assert.Equal(t, int64(21), fleet.Status.Counters["thirdCounter"].AllocatedCount)
-			assert.Equal(t, int64(30), fleet.Status.Counters["thirdCounter"].AllocatedCapacity)
-			assert.Equal(t, int64(400), fleet.Status.Counters["thirdCounter"].Capacity)
-			assert.Equal(t, int64(21), fleet.Status.Counters["thirdCounter"].Count)
+			assert.Equal(t, agonesv1.SafeAdd(21, 0), fleet.Status.Counters["thirdCounter"].AllocatedCount)
+			assert.Equal(t, agonesv1.SafeAdd(25, 5), fleet.Status.Counters["thirdCounter"].AllocatedCapacity)
+			assert.Equal(t, agonesv1.SafeAdd(200, 200), fleet.Status.Counters["thirdCounter"].Capacity)
+			assert.Equal(t, agonesv1.SafeAdd(20, 1), fleet.Status.Counters["thirdCounter"].Count)
 
 			return true, fleet, nil
 		})
