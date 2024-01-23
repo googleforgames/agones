@@ -680,12 +680,12 @@ func aggregateCounters(aggCounterStatus map[string]agonesv1.AggregatedCounterSta
 		// If the Counter exists in both maps, aggregate the values.
 		if counter, ok := aggCounterStatus[key]; ok {
 			// Aggregate for all game server statuses (expected IsBeingDeleted)
-			counter.Count += val.Count
+			counter.Count = fleets.SafeAdd(counter.Count, val.Count)
 			counter.Capacity = fleets.SafeAdd(counter.Capacity, val.Capacity)
 
 			// Aggregate for Allocated game servers only
 			if gsState == agonesv1.GameServerStateAllocated {
-				counter.AllocatedCount += val.Count
+				counter.AllocatedCount = fleets.SafeAdd(counter.AllocatedCount, val.Count)
 				counter.AllocatedCapacity = fleets.SafeAdd(counter.AllocatedCapacity, val.Capacity)
 			}
 			aggCounterStatus[key] = counter
