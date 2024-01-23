@@ -27,13 +27,13 @@ import (
 	getterv1 "agones.dev/agones/pkg/client/clientset/versioned/typed/agones/v1"
 	"agones.dev/agones/pkg/client/informers/externalversions"
 	listerv1 "agones.dev/agones/pkg/client/listers/agones/v1"
+	"agones.dev/agones/pkg/fleets"
 	"agones.dev/agones/pkg/gameservers"
 	"agones.dev/agones/pkg/util/crd"
 	"agones.dev/agones/pkg/util/logfields"
 	"agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/webhooks"
 	"agones.dev/agones/pkg/util/workerqueue"
-	"agones.dev/agones/pkg/fleets"
 	"github.com/google/go-cmp/cmp"
 	"github.com/heptiolabs/healthcheck"
 	"github.com/pkg/errors"
@@ -680,32 +680,13 @@ func aggregateCounters(aggCounterStatus map[string]agonesv1.AggregatedCounterSta
 		// If the Counter exists in both maps, aggregate the values.
 		if counter, ok := aggCounterStatus[key]; ok {
 			// Aggregate for all game server statuses (expected IsBeingDeleted)
-			counter.Count, err = fleets.SafeAddInt64(counter.Count + val.Count)
-			if err != nil {
-				log.Printf("Error adding counter count: %v", err)
-				return err
-			}
-			
-			counter.Capacity, err = fleets.SafeAddInt64(counter.Capacity + val.Capacity)
-			if err != nil {
-				log.Printf("Error adding counter capacity: %v", err)
-				return err
-			}
+			counter.Count += val.Count
+			counter.Capacity = fleets.SafeAdd(counter.Capacity, val.Capacity)
 
 			// Aggregate for Allocated game servers only
 			if gsState == agonesv1.GameServerStateAllocated {
-				counter.AllocatedCount, err = fleets.SafeAddInt64(counter.AllocatedCount + val.Count)
-				if err != nil {
-					log.Printf("Error adding allocated count: %v", err)
-					return err
-				}
-	
-				counter.AllocatedCapacity, err = fleets.SafeAddInt64(counter.AllocatedCapacity + val.Capacity)
-				if err != nil {
-					log.Printf("Error adding allocated capacity: %v", err)
-					return err
-				}
-
+				counter.AllocatedCount += val.Count
+				counter.AllocatedCapacity = fleets.SafeAdd(counter.AllocatedCapacity, val.Capacity)
 			}
 			aggCounterStatus[key] = counter
 		} else {

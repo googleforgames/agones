@@ -18,6 +18,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math"
 	"time"
 
 	"agones.dev/agones/pkg/apis/agones"
@@ -693,18 +694,8 @@ func (c *Controller) updateFleetStatus(ctx context.Context, fleet *agonesv1.Flee
 		// TODO: integrate this extra loop into the above for loop when PlayerTracking moves to GA
 		for _, gsSet := range list {
 			if gsSet.Status.Players != nil {
-				fCopy.Status.Players.Count, err = SafeAddInt64(fCopy.Status.Players.Count, gsSet.Status.Players.Count)
-				if err != nil {
-					log.Printf("Error adding player counts: %v", err)
-					return err
-				}
-				
-				fCopy.Status.Players.Capacity, err = SafeAddInt64(fCopy.Status.Players.Capacity, gsSet.Status.Players.Capacity)
-				if err != nil {
-					log.Printf("Error adding player capacities: %v", err)
-					return err
-				}
-				
+				fCopy.Status.Players.Count += gsSet.Status.Players.Count
+				fCopy.Status.Players.Capacity += gsSet.Status.Players.Capacity
 			}
 		}
 	}
@@ -712,22 +703,6 @@ func (c *Controller) updateFleetStatus(ctx context.Context, fleet *agonesv1.Flee
 	_, err = c.fleetGetter.Fleets(fCopy.ObjectMeta.Namespace).UpdateStatus(ctx, fCopy, metav1.UpdateOptions{})
 	return errors.Wrapf(err, "error updating status of fleet %s", fCopy.ObjectMeta.Name)
 }
-
-//int64 oveflow check
-func SafeAddInt64(left, right int64) (int64, error) {
-	ErrOverflow := errors.New("integer overflow")
-    if right > 0 {
-        if left > math.MaxInt64-right {
-            return 0, ErrOverflow
-        }
-    } else {
-        if left < math.MinInt64-right {
-            return 0, ErrOverflow
-        }
-    }
-    return left + right, nil
-}
-
 
 // filterGameServerSetByActive returns the active GameServerSet (or nil if it
 // doesn't exist) and then the rest of the GameServerSets that are controlled
@@ -747,6 +722,14 @@ func (c *Controller) filterGameServerSetByActive(fleet *agonesv1.Fleet, list []*
 	return active, rest
 }
 
+// SafeAdd prevents overflow by limiting the sum to math.MaxInt64.
+func SafeAdd(x, y int64) int64 {
+	if x > math.MaxInt64-y {
+		return math.MaxInt64
+	}
+	return x + y
+}
+
 // mergeCounters adds the contents of AggregatedCounterStatus c2 into c1.
 func mergeCounters(c1, c2 map[string]agonesv1.AggregatedCounterStatus) map[string]agonesv1.AggregatedCounterStatus {
 	if c1 == nil {
@@ -756,9 +739,9 @@ func mergeCounters(c1, c2 map[string]agonesv1.AggregatedCounterStatus) map[strin
 	for key, val := range c2 {
 		// If the Counter exists in both maps, aggregate the values.
 		if counter, ok := c1[key]; ok {
-			counter.AllocatedCapacity += val.AllocatedCapacity
+			counter.AllocatedCapacity = SafeAdd(counter.AllocatedCapacity, val.AllocatedCapacity)
 			counter.AllocatedCount += val.AllocatedCount
-			counter.Capacity += val.Capacity
+			counter.Capacity = SafeAdd(counter.Capacity, val.Capacity)
 			counter.Count += val.Count
 			c1[key] = counter
 		} else {
