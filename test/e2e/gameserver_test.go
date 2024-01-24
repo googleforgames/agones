@@ -1550,7 +1550,7 @@ func TestLists(t *testing.T) {
 		},
 		"ListContains false": {
 			msg:  "LIST_CONTAINS games game0",
-			want: "false",
+			want: "ERROR: false\n",
 		},
 		"GetListLength": {
 			msg:  "GET_LIST_LENGTH games",

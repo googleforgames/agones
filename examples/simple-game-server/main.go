@@ -795,12 +795,12 @@ func listContains(s *sdk.SDK, listName string, value string) (string, error) {
 	ok, err := s.Alpha().ListContains(listName, value)
 	if err != nil {
 		log.Printf("Error getting List %s contains value %s: %s", listName, value, err)
-		return strconv.FormatBool(ok), err
+		return "ERROR: " + strconv.FormatBool(ok) + "\n", err
 	}
 	if ok {
 		return "SUCCESS: " + strconv.FormatBool(ok) + "\n", nil
 	}
-	return strconv.FormatBool(ok), err
+	return "ERROR: " + strconv.FormatBool(ok) + "\n", err
 }
 
 // getListLength returns the length (number of values) of the given List as a string
@@ -820,12 +820,12 @@ func getListValues(s *sdk.SDK, listName string) (string, error) {
 	values, err := s.Alpha().GetListValues(listName)
 	if err != nil {
 		log.Printf("Error getting List %s values: %s", listName, err)
-		return strings.Join(values, ",") + "\n", err
+		return "VALUES: " + strings.Join(values, ",") + "\n", err
 	}
 	if len(values) > 0 {
         return "VALUES: " + strings.Join(values, ",") + "\n", nil
-    }
-	return strings.Join(values, ",") + "\n", err
+    } 
+	return "VALUES: " + strings.Join(values, ",") + "\n", nil
 }
 
 // appendListValue returns if the given value was successfuly added to the List (true) or not (false)
