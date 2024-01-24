@@ -34,8 +34,8 @@ import (
 	"agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/webhooks"
 	"agones.dev/agones/pkg/util/workerqueue"
+	jsonpatch "github.com/evanphx/json-patch/v5"
 	"github.com/heptiolabs/healthcheck"
-	"github.com/mattbaird/jsonpatch"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	admissionv1 "k8s.io/api/admission/v1"
@@ -253,25 +253,24 @@ func (ext *Extensions) creationMutationHandler(review admissionv1.AdmissionRevie
 		return review, nil
 	}
 
-	ext.baseLogger.Infof("ZZZML BEFORE: %s", string(obj.Raw))
+	ext.baseLogger.Infof("ZZZML BEFORE JSON: %s", string(obj.Raw))
 	// This is the main logic of this function
 	// the rest is really just json plumbing
+	ext.baseLogger.Infof("ZZZML BEFORE Spec.Counters: %v", gs.Spec.Counters)
+	ext.baseLogger.Infof("ZZZML BEFORE Status.Counters: %v", gs.Status.Counters)
 	gs.ApplyDefaults()
+	ext.baseLogger.Infof("ZZZML AFTER Spec.Counters: %v", gs.Spec.Counters)
+	ext.baseLogger.Infof("ZZZML AFTER Status.Counters: %v", gs.Status.Counters)
 
 	newGS, err := json.Marshal(gs)
 	if err != nil {
 		return review, errors.Wrapf(err, "error marshalling default applied GameServer %s to json", gs.ObjectMeta.Name)
 	}
-	ext.baseLogger.Infof("ZZZML AFTER: %s", string(newGS))
+	ext.baseLogger.Infof("ZZZML AFTER JSON: %s", string(newGS))
 
-	patch, err := jsonpatch.CreatePatch(obj.Raw, newGS)
+	jsonPatch, err := jsonpatch.CreateMergePatch(obj.Raw, newGS)
 	if err != nil {
 		return review, errors.Wrapf(err, "error creating patch for GameServer %s", gs.ObjectMeta.Name)
-	}
-
-	jsonPatch, err := json.Marshal(patch)
-	if err != nil {
-		return review, errors.Wrapf(err, "error creating json for patch for GameServer %s", gs.ObjectMeta.Name)
 	}
 	ext.baseLogger.Infof("ZZZML PATCH: %s", jsonPatch)
 
