@@ -22,11 +22,13 @@ import (
 	"log"
 	"path/filepath"
 
-	"agones.dev/agones/pkg/util/runtime"
+	"github.com/sirupsen/logrus"
 	policy "k8s.io/api/policy/v1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/util/homedir"
+
+	"agones.dev/agones/pkg/util/runtime"
 )
 
 // Borrowed from https://stackoverflow.com/questions/62803041/how-to-evict-or-delete-pods-from-kubernetes-using-golang-client
@@ -49,8 +51,9 @@ func main() {
 	if *pod == "" {
 		log.Fatal("--pod must be non-empty")
 	}
+	logger := logrus.New()
 
-	config, err := runtime.InClusterBuildConfig(*kubeconfig)
+	config, err := runtime.InClusterBuildConfig(logger.WithFields(logrus.Fields{}), *kubeconfig)
 	if err != nil {
 		log.Fatalf("Could not build config: %v", err)
 	}

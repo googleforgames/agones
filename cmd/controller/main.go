@@ -24,17 +24,6 @@ import (
 	"strings"
 	"time"
 
-	"agones.dev/agones/pkg"
-	"agones.dev/agones/pkg/client/clientset/versioned"
-	"agones.dev/agones/pkg/client/informers/externalversions"
-	"agones.dev/agones/pkg/cloudproduct"
-	"agones.dev/agones/pkg/fleetautoscalers"
-	"agones.dev/agones/pkg/fleets"
-	"agones.dev/agones/pkg/gameservers"
-	"agones.dev/agones/pkg/gameserversets"
-	"agones.dev/agones/pkg/metrics"
-	"agones.dev/agones/pkg/util/runtime"
-	"agones.dev/agones/pkg/util/signals"
 	"github.com/google/uuid"
 	"github.com/heptiolabs/healthcheck"
 	"github.com/pkg/errors"
@@ -51,6 +40,18 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/leaderelection"
 	"k8s.io/client-go/tools/leaderelection/resourcelock"
+
+	"agones.dev/agones/pkg"
+	"agones.dev/agones/pkg/client/clientset/versioned"
+	"agones.dev/agones/pkg/client/informers/externalversions"
+	"agones.dev/agones/pkg/cloudproduct"
+	"agones.dev/agones/pkg/fleetautoscalers"
+	"agones.dev/agones/pkg/fleets"
+	"agones.dev/agones/pkg/gameservers"
+	"agones.dev/agones/pkg/gameserversets"
+	"agones.dev/agones/pkg/metrics"
+	"agones.dev/agones/pkg/util/runtime"
+	"agones.dev/agones/pkg/util/signals"
 )
 
 const (
@@ -133,7 +134,7 @@ func main() {
 	}
 
 	// if the kubeconfig fails InClusterBuildConfig will try in cluster config
-	clientConf, err := runtime.InClusterBuildConfig(ctlConf.KubeConfig)
+	clientConf, err := runtime.InClusterBuildConfig(logger.WithFields(logrus.Fields{}), ctlConf.KubeConfig)
 	if err != nil {
 		logger.WithError(err).Fatal("Could not create in cluster config")
 	}

@@ -27,7 +27,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/runtime"
 	restclient "k8s.io/client-go/rest"
 	clientcmd "k8s.io/client-go/tools/clientcmd"
-	"k8s.io/klog"
 )
 
 const sourceKey = "source"
@@ -119,15 +118,15 @@ func NewServerMux() *gwruntime.ServeMux {
 // configurations from a kubeconfigPath. This path is typically passed in as a command line
 // flag for cluster components. If neither the InClusterConfig nor the kubeconfigPath
 // are successful, the function logs a warning and falls back to a default configuration.
-func InClusterBuildConfig(kubeconfigPath string) (*restclient.Config, error) {
+func InClusterBuildConfig(logger *logrus.Entry, kubeconfigPath string) (*restclient.Config, error) {
 	kubeconfig, err := restclient.InClusterConfig()
 	if err == nil {
 		return kubeconfig, nil
 	}
-	klog.Warning("error creating inClusterConfig, trying to build config from flags", err)
+	logger.WithError(err).Warning("Error creating inClusterConfig, trying to build config from flags", err)
 
 	if kubeconfigPath == "" {
-		klog.Warning("No kubeconfigPath provided. Attempting to use a default configuration.")
+		logrus.Warning("No kubeconfigPath provided. Attempting to use a default configuration.")
 	}
 
 	return clientcmd.NewNonInteractiveDeferredLoadingClientConfig(

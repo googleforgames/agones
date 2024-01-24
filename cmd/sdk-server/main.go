@@ -25,6 +25,17 @@ import (
 	"strings"
 	"time"
 
+	gwruntime "github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
+	"github.com/spf13/pflag"
+	"github.com/spf13/viper"
+	"github.com/tmc/grpc-websocket-proxy/wsproxy"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
+
 	"agones.dev/agones/pkg"
 	"agones.dev/agones/pkg/client/clientset/versioned"
 	"agones.dev/agones/pkg/sdk"
@@ -33,15 +44,6 @@ import (
 	"agones.dev/agones/pkg/sdkserver"
 	"agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/signals"
-	gwruntime "github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
-	"github.com/pkg/errors"
-	"github.com/spf13/pflag"
-	"github.com/spf13/viper"
-	"github.com/tmc/grpc-websocket-proxy/wsproxy"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
 )
 
 const (
@@ -119,7 +121,7 @@ func main() {
 	default:
 		var config *rest.Config
 		// if the kubeconfig fails InClusterBuildConfig will try in cluster config
-		config, err := runtime.InClusterBuildConfig(ctlConf.KubeConfig)
+		config, err := runtime.InClusterBuildConfig(logger.WithFields(logrus.Fields{}), ctlConf.KubeConfig)
 		if err != nil {
 			logger.WithError(err).Fatal("Could not create in cluster config")
 		}

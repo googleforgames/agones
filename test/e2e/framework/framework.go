@@ -30,11 +30,6 @@ import (
 	"testing"
 	"time"
 
-	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
-	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
-	autoscaling "agones.dev/agones/pkg/apis/autoscaling/v1"
-	"agones.dev/agones/pkg/client/clientset/versioned"
-	"agones.dev/agones/pkg/util/runtime"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
@@ -53,6 +48,12 @@ import (
 
 	// required to use gcloud login see: https://github.com/kubernetes/client-go/issues/242
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
+
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
+	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
+	autoscaling "agones.dev/agones/pkg/apis/autoscaling/v1"
+	"agones.dev/agones/pkg/client/clientset/versioned"
+	"agones.dev/agones/pkg/util/runtime"
 )
 
 // special labels that can be put on pods to trigger automatic cleanup.
@@ -80,7 +81,8 @@ type Framework struct {
 }
 
 func newFramework(kubeconfig string, qps float32, burst int) (*Framework, error) {
-	config, err := runtime.InClusterBuildConfig(kubeconfig)
+	logger := logrus.New()
+	config, err := runtime.InClusterBuildConfig(logger.WithFields(logrus.Fields{}), kubeconfig)
 	if err != nil {
 		return nil, errors.Wrap(err, "build config from flags failed")
 	}
