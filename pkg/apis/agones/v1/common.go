@@ -16,6 +16,7 @@ package v1
 
 import (
 	"math"
+	"math/big"
 
 	apivalidation "k8s.io/apimachinery/pkg/api/validation"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -187,9 +188,22 @@ type Priority struct {
 }
 
 // SafeAdd prevents overflow by limiting the sum to math.MaxInt64.
+// func SafeAdd(x, y int64) int64 {
+// 	if x > math.MaxInt64-y {
+// 		return math.MaxInt64
+// 	}
+// 	return x + y
+// }
+
+// SafeAdd adds two int64 values using big.Int to prevent overflow.
+// Returns the result as int64. If the result exceeds int64 range, returns math.MaxInt64.
 func SafeAdd(x, y int64) int64 {
-	if x > math.MaxInt64-y {
-		return math.MaxInt64
+	num1 := big.NewInt(x)
+	num2 := big.NewInt(y)
+	sum := new(big.Int).Add(num1, num2)
+
+	if sum.IsInt64() {
+		return sum.Int64()
 	}
-	return x + y
+	return math.MaxInt64
 }
