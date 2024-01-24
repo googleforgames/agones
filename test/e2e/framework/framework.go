@@ -81,8 +81,8 @@ type Framework struct {
 }
 
 func newFramework(kubeconfig string, qps float32, burst int) (*Framework, error) {
-	logger := logrus.New()
-	config, err := runtime.InClusterBuildConfig(logger.WithFields(logrus.Fields{}), kubeconfig)
+	logger := runtime.NewLoggerWithSource("framework")
+	config, err := runtime.InClusterBuildConfig(logger, kubeconfig)
 	if err != nil {
 		return nil, errors.Wrap(err, "build config from flags failed")
 	}

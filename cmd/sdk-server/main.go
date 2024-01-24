@@ -27,7 +27,6 @@ import (
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"github.com/tmc/grpc-websocket-proxy/wsproxy"
@@ -121,7 +120,7 @@ func main() {
 	default:
 		var config *rest.Config
 		// if the kubeconfig fails InClusterBuildConfig will try in cluster config
-		config, err := runtime.InClusterBuildConfig(logger.WithFields(logrus.Fields{}), ctlConf.KubeConfig)
+		config, err := runtime.InClusterBuildConfig(logger, ctlConf.KubeConfig)
 		if err != nil {
 			logger.WithError(err).Fatal("Could not create in cluster config")
 		}

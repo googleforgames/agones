@@ -134,7 +134,7 @@ func main() {
 	}
 
 	// if the kubeconfig fails InClusterBuildConfig will try in cluster config
-	clientConf, err := runtime.InClusterBuildConfig(logger.WithFields(logrus.Fields{}), ctlConf.KubeConfig)
+	clientConf, err := runtime.InClusterBuildConfig(logger, ctlConf.KubeConfig)
 	if err != nil {
 		logger.WithError(err).Fatal("Could not create in cluster config")
 	}
