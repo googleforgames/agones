@@ -730,10 +730,10 @@ func mergeCounters(c1, c2 map[string]agonesv1.AggregatedCounterStatus) map[strin
 	for key, val := range c2 {
 		// If the Counter exists in both maps, aggregate the values.
 		if counter, ok := c1[key]; ok {
-			counter.AllocatedCapacity += val.AllocatedCapacity
-			counter.AllocatedCount += val.AllocatedCount
-			counter.Capacity += val.Capacity
-			counter.Count += val.Count
+			counter.AllocatedCapacity = agonesv1.SafeAdd(counter.AllocatedCapacity, val.AllocatedCapacity)
+			counter.AllocatedCount = agonesv1.SafeAdd(counter.AllocatedCount, val.AllocatedCount)
+			counter.Capacity = agonesv1.SafeAdd(counter.Capacity, val.Capacity)
+			counter.Count = agonesv1.SafeAdd(counter.Count, val.Count)
 			c1[key] = counter
 		} else {
 			c1[key] = *val.DeepCopy()
