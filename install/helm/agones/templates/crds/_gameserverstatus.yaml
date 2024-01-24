@@ -87,10 +87,12 @@ status:
           count:
             title: The current count
             type: integer
+            format: int64
             default: 0
             minimum: 0
           capacity:
             type: integer
+            format: int64
             default: 1000
             minimum: 0
     lists:
@@ -104,6 +106,7 @@ status:
           capacity:
             title: Max capacity of the array (can be less than or equal to value of values.maxItems)
             type: integer
+            format: int64
             minimum: 0
             default: 1000
             maximum: 1000 # must be equal to values.maxItems

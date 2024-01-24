@@ -164,11 +164,13 @@ properties:
             count:
               title: Initial count value
               type: integer
+              format: int64
               default: 0
               minimum: 0
             capacity:
               title: Max capacity of the counter
               type: integer
+              format: int64
               default: 1000
               minimum: 0
       lists:
@@ -181,6 +183,7 @@ properties:
           properties:
             capacity:
               type: integer
+              format: int64
               title: Max capacity of the array (can be less than or equal to value of maxItems)
               minimum: 0
               default: 1000

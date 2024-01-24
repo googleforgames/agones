@@ -16,7 +16,6 @@ package gameservers
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"strconv"
 	"sync"
@@ -48,6 +47,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtimeschema "k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/apimachinery/pkg/util/json"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -253,6 +253,7 @@ func (ext *Extensions) creationMutationHandler(review admissionv1.AdmissionRevie
 		return review, nil
 	}
 
+	ext.baseLogger.Infof("ZZZML BEFORE: %s", string(obj.Raw))
 	// This is the main logic of this function
 	// the rest is really just json plumbing
 	gs.ApplyDefaults()
@@ -261,6 +262,7 @@ func (ext *Extensions) creationMutationHandler(review admissionv1.AdmissionRevie
 	if err != nil {
 		return review, errors.Wrapf(err, "error marshalling default applied GameServer %s to json", gs.ObjectMeta.Name)
 	}
+	ext.baseLogger.Infof("ZZZML AFTER: %s", string(newGS))
 
 	patch, err := jsonpatch.CreatePatch(obj.Raw, newGS)
 	if err != nil {
@@ -271,6 +273,7 @@ func (ext *Extensions) creationMutationHandler(review admissionv1.AdmissionRevie
 	if err != nil {
 		return review, errors.Wrapf(err, "error creating json for patch for GameServer %s", gs.ObjectMeta.Name)
 	}
+	ext.baseLogger.Infof("ZZZML PATCH: %s", jsonPatch)
 
 	pt := admissionv1.PatchTypeJSONPatch
 	review.Response.PatchType = &pt
