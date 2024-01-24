@@ -241,19 +241,23 @@ Declared keys and default values for Counters and Lists are specified in
 Modified Counter and List values and capacities will be updated
 in [`GameServer.Status.Counters` and `GameServer.Status.Lists`][gameserverstatus] respectively.
 
-{{< alert title="Note" color="info">}}
+{{% alert title="Note" color="info" %}}
 The SDK batches mutation operations every 1 second for performance reasons. However, changes made and subsequently 
 retrieved through the SDK will be atomically accurate through the SDK, as those values are tracked within the 
 SDK Server sidecar process.
 
-However, changes made through Allocation or the Kubernetes API to `GameServer` List and Counter values will be 
-eventually consistent when being retrieved through the SDK.
+Changes made through Allocation or the Kubernetes API to
+[`GameServer.Spec.Counters` and `GameServer.Spec.Lists`]({{< ref "/docs/Reference/agones_crd_api_reference.html#agones.dev/v1.GameServerSpec" >}})
+will be eventually consistent when being retrieved through the SDK.
 
-Since the SDK update operations back to the 
+Since the Agones SDK server batches the update operations of 
+[`GameServer.Status.Counters` and `GameServer.Status.Lists`]({{<ref "/docs/Reference/agones_crd_api_reference.html#agones.dev/v1.GameServerStatus" >}})
+asynchronously, this means that if you update 
 [`GameServer.status`]({{< ref "/docs/Reference/agones_crd_api_reference.html#agones.dev/v1.GameServerStatus" >}}) values
-is batched asynchronously, it is worth noting that any value incremented past a counter or list capacity may be silently
-truncated to the currently set capacity if modified concurrently through the SDK and Allocation/Kubernetes API.
-{{< /alert >}}
+through both the SDK and the Allocation/Kubernetes API, the batch processing may silently truncate some of those values
+to the capacity of that Counter or List.
+
+{{% /alert %}}
 
 #### Counters
 
@@ -262,33 +266,33 @@ All functions will return an error if the specified `key` is not predefined in t
 
 ##### Alpha().GetCounterCount(key)
 
-This function retrieves either the [`GameServer.Status.Counts[key].Count`][gameserverstatus] or the SDK awaiting-batch
+This function retrieves either the [`GameServer.Status.Counters[key].Count`][gameserverstatus] or the SDK awaiting-batch
 value for a given key, whichever is most up to date.
 
 ##### Alpha().SetCounterCount(key, amount)
 
-This function sets the value of [`GameServer.Status.Counts[key].Count`][gameserverstatus] for the given key to the
+This function sets the value of [`GameServer.Status.Counters[key].Count`][gameserverstatus] for the given key to the
 passed in amount. This operation overwrites any previous values and the new value cannot exceed the Counter's capacity.
 
 ##### Alpha().IncrementCounter(key, amount)
 
-This function increments [`GameServer.Status.Counts[key].Count`][gameserverstatus] for the given key by the passed in
+This function increments [`GameServer.Status.Counters[key].Count`][gameserverstatus] for the given key by the passed in
 non-negative amount. The function returns an error if the Counter is already at capacity (at time of operation),
 indicating no increment will occur.
 
 ##### Alpha().DecrementCounter(key, amount)
 
-This function decreases [`GameServer.Status.Counts[key].Count`][gameserverstatus] for the given key by the passed in
+This function decreases [`GameServer.Status.Counters[key].Count`][gameserverstatus] for the given key by the passed in
 non-negative amount. It returns an error if the Counter's count is already at zero.
 
 ##### Alpha().SetCounterCapacity(key, amount)
 
-This function sets the maximum [`GameServer.Status.Counts[key].Capacity`][gameserverstatus] for the given key by the
+This function sets the maximum [`GameServer.Status.Counters[key].Capacity`][gameserverstatus] for the given key by the
 passed in non-negative amount. A capacity value of 0 indicates no capacity limit.
 
 ##### Alpha().GetCounterCapacity(key)
 
-This function retrieves either the [`GameServer.Status.Counts[key].Capacity`][gameserverstatus] or the SDK
+This function retrieves either the [`GameServer.Status.Counters[key].Capacity`][gameserverstatus] or the SDK
 awaiting-batch value for the given key, whichever is most up to date.
 
 #### Lists
@@ -324,7 +328,7 @@ awaiting-batch value for the given key, whichever is most up to date.
 ##### Alpha().GetListValues(key)
 
 This function retrieves either the [`GameServer.Status.Lists[key].Values`][gameserverstatus] or the SDK
-awaiting-batch value for the given key, whichever is most up to date.
+awaiting-batch values array for the given key, whichever is most up to date.
 
 ##### Alpha().ListContains(key, value)
 
@@ -333,7 +337,7 @@ of [`Alpha().GetListValues(key)`](#alphagetlistvalueskey).
 
 ##### Alpha().GetListLength(key)
 
-Convenience function, which retrieves the length the results of [`Alpha().GetListValues(key)`](#alphagetlistvalueskey).
+Convenience function, which retrieves the length of the results of [`Alpha().GetListValues(key)`](#alphagetlistvalueskey).
 
 [gameserverspec]: {{< ref "/docs/Reference/agones_crd_api_reference.html#agones.dev/v1.GameServerSpec" >}}
 [gameserverstatus]: {{< ref "/docs/Reference/agones_crd_api_reference.html#agones.dev/v1.GameServerStatus" >}}
