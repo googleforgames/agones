@@ -825,7 +825,7 @@ func getListValues(s *sdk.SDK, listName string) (string, error) {
 	if len(values) > 0 {
         return "VALUES: " + strings.Join(values, ",") + "\n", nil
     } 
-	return "VALUES: " + strings.Join(values, ",") + "\n", nil
+	return "NO VALUES" + strings.Join(values, ",") + "\n", nil
 }
 
 // appendListValue returns if the given value was successfuly added to the List (true) or not (false)
