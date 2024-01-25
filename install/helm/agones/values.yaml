@@ -94,12 +94,13 @@ agones:
         minAvailable: 1
     topologySpreadConstraints:
       enabled: true
-      maxSkew: 1
-      topologyKey: kubernetes.io/hostname
-      whenUnsatisfiable: ScheduleAnyway
-      labelSelector:
-        matchLabels:
-          app: agones-controller
+      constraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: agones-controller
   extensions:
     resources: {}
       # requests:
@@ -149,12 +150,13 @@ agones:
       failureThreshold: 3
     topologySpreadConstraints:
       enabled: true
-      maxSkew: 1
-      topologyKey: kubernetes.io/hostname
-      whenUnsatisfiable: ScheduleAnyway
-      labelSelector:
-        matchLabels:
-          app: agones-extensions
+      constraints:      
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: agones-extensions
   ping:
     install: true
     pdb:
@@ -198,12 +200,13 @@ agones:
       timeoutSeconds: 1
     topologySpreadConstraints:
       enabled: true
-      maxSkew: 1
-      topologyKey: kubernetes.io/hostname
-      whenUnsatisfiable: ScheduleAnyway
-      labelSelector:
-        matchLabels:
-          app: agones-ping
+      constraints: 
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: agones-ping
   allocator:
     install: true
     pdb:
@@ -274,12 +277,13 @@ agones:
     allocationBatchWaitTime: 500ms
     topologySpreadConstraints:
       enabled: true
-      maxSkew: 1
-      topologyKey: kubernetes.io/hostname
-      whenUnsatisfiable: ScheduleAnyway
-      labelSelector:
-        matchLabels:
-          app: agones-allocator    
+      constraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: agones-allocator    
   image:
     registry: us-docker.pkg.dev/agones-images/release
     tag: 1.38.0-dev

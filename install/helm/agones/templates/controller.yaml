@@ -62,7 +62,7 @@ spec:
     spec:
       {{- if .Values.agones.controller.topologySpreadConstraints }}
       topologySpreadConstraints:
-        {{- toYaml .Values.agones.controller.topologySpreadConstraints | nindent 8 }}
+        {{- toYaml .Values.agones.controller.topologySpreadConstraints.constraints | nindent 8 }}
       {{- end }}
       affinity:
       {{- if .Values.agones.controller.affinity }}

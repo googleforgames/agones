@@ -50,7 +50,7 @@ spec:
     spec:
       {{- if .Values.agones.ping.topologySpreadConstraints }}
       topologySpreadConstraints:
-        {{- toYaml .Values.agones.ping.topologySpreadConstraints | nindent 8 }}
+        {{- toYaml .Values.agones.ping.topologySpreadConstraints.constraints | nindent 8 }}
       {{- end }}
       affinity:
       {{- if .Values.agones.ping.affinity }}
