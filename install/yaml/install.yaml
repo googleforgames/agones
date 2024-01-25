@@ -17006,13 +17006,12 @@ spec:
         heritage: Helm
     spec:
       topologySpreadConstraints:
-        enabled: true
-        labelSelector:
-          matchLabels:
-            app: agones-controller
-        maxSkew: 1
-        topologyKey: kubernetes.io/hostname
-        whenUnsatisfiable: ScheduleAnyway
+        - labelSelector:
+            matchLabels:
+              app: agones-controller
+          maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
       affinity:
         nodeAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
@@ -17173,13 +17172,12 @@ spec:
         heritage: Helm
     spec:
       topologySpreadConstraints:
-        enabled: true
-        labelSelector:
-          matchLabels:
-            app: agones-extensions
-        maxSkew: 1
-        topologyKey: kubernetes.io/hostname
-        whenUnsatisfiable: ScheduleAnyway
+        - labelSelector:
+            matchLabels:
+              app: agones-extensions
+          maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
       affinity:
         nodeAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
@@ -17320,13 +17318,12 @@ spec:
         heritage: Helm
     spec:
       topologySpreadConstraints:
-        enabled: true
-        labelSelector:
-          matchLabels:
-            app: agones-ping
-        maxSkew: 1
-        topologyKey: kubernetes.io/hostname
-        whenUnsatisfiable: ScheduleAnyway
+        - labelSelector:
+            matchLabels:
+              app: agones-ping
+          maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
       affinity:
         nodeAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
@@ -17394,13 +17391,12 @@ spec:
         prometheus.io/path: "/metrics"
     spec:
       topologySpreadConstraints:
-        enabled: true
-        labelSelector:
-          matchLabels:
-            app: agones-allocator
-        maxSkew: 1
-        topologyKey: kubernetes.io/hostname
-        whenUnsatisfiable: ScheduleAnyway
+        - labelSelector:
+            matchLabels:
+              app: agones-allocator
+          maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
       affinity:
         nodeAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
