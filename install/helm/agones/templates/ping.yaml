@@ -50,12 +50,7 @@ spec:
     spec:
       {{- if .Values.agones.ping.topologySpreadConstraints }}
       topologySpreadConstraints:
-        - maxSkew: {{ .Values.agones.ping.topologySpreadConstraints.maxSkew }}
-          topologyKey: {{ .Values.agones.ping.topologySpreadConstraints.topologyKey }}
-          whenUnsatisfiable: {{ .Values.agones.ping.topologySpreadConstraints.whenUnsatisfiable }}
-          labelSelector:
-            matchLabels:
-              {{- toYaml .Values.agones.ping.topologySpreadConstraints.labelSelector.matchLabels | nindent 16 }}
+        {{- toYaml .Values.agones.ping.topologySpreadConstraints | nindent 8 }}
       {{- end }}
       affinity:
       {{- if .Values.agones.ping.affinity }}

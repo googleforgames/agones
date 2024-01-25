@@ -62,12 +62,7 @@ spec:
     spec:
       {{- if .Values.agones.controller.topologySpreadConstraints }}
       topologySpreadConstraints:
-        - maxSkew: {{ .Values.agones.controller.topologySpreadConstraints.maxSkew }}
-          topologyKey: {{ .Values.agones.controller.topologySpreadConstraints.topologyKey }}
-          whenUnsatisfiable: {{ .Values.agones.controller.topologySpreadConstraints.whenUnsatisfiable }}
-          labelSelector:
-            matchLabels:
-              {{- toYaml .Values.agones.controller.topologySpreadConstraints.labelSelector.matchLabels | nindent 20 }}
+        {{- toYaml .Values.agones.controller.topologySpreadConstraints | nindent 8 }}
       {{- end }}
       affinity:
       {{- if .Values.agones.controller.affinity }}

@@ -179,12 +179,7 @@ spec:
     spec:
       {{- if .Values.agones.allocator.topologySpreadConstraints }}
       topologySpreadConstraints:
-        - maxSkew: {{ .Values.agones.allocator.topologySpreadConstraints.maxSkew }}
-          topologyKey: {{ .Values.agones.allocator.topologySpreadConstraints.topologyKey }}
-          whenUnsatisfiable: {{ .Values.agones.allocator.topologySpreadConstraints.whenUnsatisfiable }}
-          labelSelector:
-            matchLabels:
-              {{- toYaml .Values.agones.allocator.topologySpreadConstraints.labelSelector.matchLabels | nindent 20 }}
+        {{- toYaml .Values.agones.allocator.topologySpreadConstraints | nindent 8 }}
       {{- end }}
       affinity:
       {{- if .Values.agones.allocator.affinity }}
