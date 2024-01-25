@@ -48,6 +48,15 @@ spec:
 {{- toYaml .Values.agones.ping.annotations | nindent 8 }}
 {{- end }}
     spec:
+      {{- if .Values.agones.ping.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        - maxSkew: {{ .Values.agones.ping.topologySpreadConstraints.maxSkew }}
+          topologyKey: {{ .Values.agones.ping.topologySpreadConstraints.topologyKey }}
+          whenUnsatisfiable: {{ .Values.agones.ping.topologySpreadConstraints.whenUnsatisfiable }}
+          labelSelector:
+            matchLabels:
+              {{- toYaml .Values.agones.ping.topologySpreadConstraints.labelSelector.matchLabels | nindent 16 }}
+      {{- end }}
       affinity:
       {{- if .Values.agones.ping.affinity }}
       {{- if .Values.agones.requireDedicatedNodes }}

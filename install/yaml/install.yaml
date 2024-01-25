@@ -17317,6 +17317,13 @@ spec:
         release: agones-manual
         heritage: Helm
     spec:
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+                app: agones-ping
       affinity:
         nodeAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
