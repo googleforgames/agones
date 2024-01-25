@@ -79,6 +79,9 @@ resource "google_container_cluster" "primary" {
   network    = local.network
   subnetwork = local.subnetwork
 
+  remove_default_node_pool = true
+  initial_node_count       = 1
+
   networking_mode = "VPC_NATIVE"
   ip_allocation_policy {}
 
@@ -106,114 +109,7 @@ resource "google_container_cluster" "primary" {
     }
   }
 
-  node_pool {
-    name       = "default"
-    node_count = local.autoscale ? null : local.initialNodeCount
-    version    = local.releaseChannel == "UNSPECIFIED" ? data.google_container_engine_versions.version.latest_node_version : data.google_container_engine_versions.version.release_channel_latest_version[local.releaseChannel]
-
-    dynamic "autoscaling" {
-      for_each = local.autoscale ? [1] : []
-      content {
-        min_node_count = local.minNodeCount
-        max_node_count = local.maxNodeCount
-      }
-    }
-
-    management {
-      auto_upgrade = local.releaseChannel == "UNSPECIFIED" ? false : true
-    }
-
-    node_config {
-      machine_type = local.machineType
-
-      oauth_scopes = [
-        "https://www.googleapis.com/auth/devstorage.read_only",
-        "https://www.googleapis.com/auth/logging.write",
-        "https://www.googleapis.com/auth/monitoring",
-        "https://www.googleapis.com/auth/service.management.readonly",
-        "https://www.googleapis.com/auth/servicecontrol",
-        "https://www.googleapis.com/auth/trace.append",
-      ]
-
-      tags = ["game-server"]
-
-      gcfs_config {
-        enabled = local.enableImageStreaming
-      }
-    }
-  }
-  node_pool {
-    name       = "agones-system"
-    node_count = 1
-    version    = local.releaseChannel == "UNSPECIFIED" ? data.google_container_engine_versions.version.latest_node_version : data.google_container_engine_versions.version.release_channel_latest_version[local.releaseChannel]
-
-    management {
-      auto_upgrade = local.releaseChannel == "UNSPECIFIED" ? false : true
-    }
-
-    node_config {
-      machine_type = "e2-standard-4"
-
-      oauth_scopes = [
-        "https://www.googleapis.com/auth/devstorage.read_only",
-        "https://www.googleapis.com/auth/logging.write",
-        "https://www.googleapis.com/auth/monitoring",
-        "https://www.googleapis.com/auth/service.management.readonly",
-        "https://www.googleapis.com/auth/servicecontrol",
-        "https://www.googleapis.com/auth/trace.append",
-      ]
-
-      labels = {
-        "agones.dev/agones-system" = "true"
-      }
-
-      taint {
-        key    = "agones.dev/agones-system"
-        value  = "true"
-        effect = "NO_EXECUTE"
-      }
-
-      gcfs_config {
-        enabled = true
-      }
-    }
-  }
-  node_pool {
-    name       = "agones-metrics"
-    node_count = 1
-    version    = local.releaseChannel == "UNSPECIFIED" ? data.google_container_engine_versions.version.latest_node_version : data.google_container_engine_versions.version.release_channel_latest_version[local.releaseChannel]
-
-    management {
-      auto_upgrade = local.releaseChannel == "UNSPECIFIED" ? false : true
-    }
-
-    node_config {
-      machine_type = "e2-standard-4"
-
-      oauth_scopes = [
-        "https://www.googleapis.com/auth/devstorage.read_only",
-        "https://www.googleapis.com/auth/logging.write",
-        "https://www.googleapis.com/auth/monitoring",
-        "https://www.googleapis.com/auth/service.management.readonly",
-        "https://www.googleapis.com/auth/servicecontrol",
-        "https://www.googleapis.com/auth/trace.append",
-      ]
-
-      labels = {
-        "agones.dev/agones-metrics" = "true"
-      }
-
-      taint {
-        key    = "agones.dev/agones-metrics"
-        value  = "true"
-        effect = "NO_EXECUTE"
-      }
-
-      gcfs_config {
-        enabled = true
-      }
-    }
-  }
+  
   dynamic "ip_allocation_policy" {
     for_each = tonumber(local.windowsInitialNodeCount) > 0 ? [1] : []
     content {
@@ -275,4 +171,116 @@ resource "google_compute_firewall" "default" {
 
   target_tags   = ["game-server"]
   source_ranges = [var.sourceRanges]
+}
+
+resource "google_container_node_pool" "default" {
+  name       = "default"
+  cluster    = google_container_cluster.primary.id
+  node_count = local.autoscale ? null : local.initialNodeCount
+  version    = local.releaseChannel == "UNSPECIFIED" ? data.google_container_engine_versions.version.latest_node_version : data.google_container_engine_versions.version.release_channel_latest_version[local.releaseChannel]
+
+  dynamic "autoscaling" {
+    for_each = local.autoscale ? [1] : []
+    content {
+      min_node_count = local.minNodeCount
+      max_node_count = local.maxNodeCount
+    }
+  }
+
+  management {
+    auto_upgrade = local.releaseChannel == "UNSPECIFIED" ? false : true
+  }
+
+  node_config {
+    machine_type = local.machineType
+
+    oauth_scopes = [
+      "https://www.googleapis.com/auth/devstorage.read_only",
+      "https://www.googleapis.com/auth/logging.write",
+      "https://www.googleapis.com/auth/monitoring",
+      "https://www.googleapis.com/auth/service.management.readonly",
+      "https://www.googleapis.com/auth/servicecontrol",
+      "https://www.googleapis.com/auth/trace.append",
+    ]
+
+    tags = ["game-server"]
+
+    gcfs_config {
+      enabled = local.enableImageStreaming
+    }
+  }
+}
+resource "google_container_node_pool" "agones-system" {
+  name       = "agones-system"
+  cluster    = google_container_cluster.primary.id
+  node_count = 1
+  version    = local.releaseChannel == "UNSPECIFIED" ? data.google_container_engine_versions.version.latest_node_version : data.google_container_engine_versions.version.release_channel_latest_version[local.releaseChannel]
+
+  management {
+    auto_upgrade = local.releaseChannel == "UNSPECIFIED" ? false : true
+  }
+
+  node_config {
+    machine_type = "e2-standard-4"
+
+    oauth_scopes = [
+      "https://www.googleapis.com/auth/devstorage.read_only",
+      "https://www.googleapis.com/auth/logging.write",
+      "https://www.googleapis.com/auth/monitoring",
+      "https://www.googleapis.com/auth/service.management.readonly",
+      "https://www.googleapis.com/auth/servicecontrol",
+      "https://www.googleapis.com/auth/trace.append",
+    ]
+
+    labels = {
+      "agones.dev/agones-system" = "true"
+    }
+
+    taint {
+      key    = "agones.dev/agones-system"
+      value  = "true"
+      effect = "NO_EXECUTE"
+    }
+
+    gcfs_config {
+      enabled = true
+    }
+  }
+}
+resource "google_container_node_pool" "agones-metrics" {
+  name       = "agones-metrics"
+  cluster    = google_container_cluster.primary.id
+  node_count = 1
+  version    = local.releaseChannel == "UNSPECIFIED" ? data.google_container_engine_versions.version.latest_node_version : data.google_container_engine_versions.version.release_channel_latest_version[local.releaseChannel]
+
+  management {
+    auto_upgrade = local.releaseChannel == "UNSPECIFIED" ? false : true
+  }
+
+  node_config {
+    machine_type = "e2-standard-4"
+
+    oauth_scopes = [
+      "https://www.googleapis.com/auth/devstorage.read_only",
+      "https://www.googleapis.com/auth/logging.write",
+      "https://www.googleapis.com/auth/monitoring",
+      "https://www.googleapis.com/auth/service.management.readonly",
+      "https://www.googleapis.com/auth/servicecontrol",
+      "https://www.googleapis.com/auth/trace.append",
+    ]
+
+    labels = {
+      "agones.dev/agones-metrics" = "true"
+    }
+
+    taint {
+      key    = "agones.dev/agones-metrics"
+      value  = "true"
+      effect = "NO_EXECUTE"
+    }
+
+    gcfs_config {
+      enabled = true
+    }
+  }
 }
