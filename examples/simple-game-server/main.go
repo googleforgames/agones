@@ -793,11 +793,12 @@ func setListCapacity(s *sdk.SDK, listName string, amount string) (string, error)
 func listContains(s *sdk.SDK, listName string, value string) (string, error) {
 	log.Printf("Getting List %s contains value %s", listName, value)
 	ok, err := s.Alpha().ListContains(listName, value)
-	if err != nil {
+	if ok {
+		return "SUCCESS: " + strconv.FormatBool(ok) + "\n", nil
+	} else {
 		log.Printf("Error getting List %s contains value %s: %s", listName, value, err)
 		return "ERROR: " + strconv.FormatBool(ok) + "\n", err
 	}
-	return "SUCCESS: " + strconv.FormatBool(ok) + "\n", nil
 }
 
 // getListLength returns the length (number of values) of the given List as a string
