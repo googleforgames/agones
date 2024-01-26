@@ -798,7 +798,7 @@ func listContains(s *sdk.SDK, listName string, value string) (string, error) {
 		return strconv.FormatBool(ok), err
 	}	
 	if ok {
-		return "SUCCESS: " + strconv.FormatBool(ok) + "\n", nil
+		return "FOUND: " + strconv.FormatBool(ok) + "\n", nil
 	}
 	return "ERROR: " + strconv.FormatBool(ok) + "\n", err
 }

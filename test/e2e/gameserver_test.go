@@ -1546,7 +1546,7 @@ func TestLists(t *testing.T) {
 		},
 		"ListContains": {
 			msg:  "LIST_CONTAINS games game2",
-			want: "SUCCESS: true\n",
+			want: "FOUND: true\n",
 		},
 		"ListContains false": {
 			msg:  "LIST_CONTAINS games game0",
