@@ -17005,13 +17005,6 @@ spec:
         release: agones-manual
         heritage: Helm
     spec:
-      topologySpreadConstraints:
-        - labelSelector:
-            matchLabels:
-              app: agones-controller
-          maxSkew: 1
-          topologyKey: kubernetes.io/hostname
-          whenUnsatisfiable: ScheduleAnyway
       affinity:
         nodeAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
@@ -17171,13 +17164,6 @@ spec:
         release: agones-manual
         heritage: Helm
     spec:
-      topologySpreadConstraints:
-        - labelSelector:
-            matchLabels:
-              app: agones-extensions
-          maxSkew: 1
-          topologyKey: kubernetes.io/hostname
-          whenUnsatisfiable: ScheduleAnyway
       affinity:
         nodeAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
@@ -17317,13 +17303,6 @@ spec:
         release: agones-manual
         heritage: Helm
     spec:
-      topologySpreadConstraints:
-        - labelSelector:
-            matchLabels:
-              app: agones-ping
-          maxSkew: 1
-          topologyKey: kubernetes.io/hostname
-          whenUnsatisfiable: ScheduleAnyway
       affinity:
         nodeAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
@@ -17390,13 +17369,6 @@ spec:
         prometheus.io/port: "8080"
         prometheus.io/path: "/metrics"
     spec:
-      topologySpreadConstraints:
-        - labelSelector:
-            matchLabels:
-              app: agones-allocator
-          maxSkew: 1
-          topologyKey: kubernetes.io/hostname
-          whenUnsatisfiable: ScheduleAnyway
       affinity:
         nodeAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
