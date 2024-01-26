@@ -1,6 +1,6 @@
 module agones.dev/agones/examples/simple-game-server
 
-go 1.20
+go 1.21
 
 require agones.dev/agones v1.36.0
 

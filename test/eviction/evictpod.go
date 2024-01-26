@@ -19,14 +19,14 @@ package main
 import (
 	"context"
 	"flag"
-	"log"
 	"path/filepath"
 
 	policy "k8s.io/api/policy/v1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/homedir"
+
+	"agones.dev/agones/pkg/util/runtime"
 )
 
 // Borrowed from https://stackoverflow.com/questions/62803041/how-to-evict-or-delete-pods-from-kubernetes-using-golang-client
@@ -45,22 +45,23 @@ func main() {
 	namespace := flag.String("namespace", "default", "Namespace (defaults to `default`)")
 	pod := flag.String("pod", "", "Pod name (required)")
 	flag.Parse()
+	logger := runtime.NewLoggerWithSource("evictpod")
 
 	if *pod == "" {
-		log.Fatal("--pod must be non-empty")
+		logger.Fatal("--pod must be non-empty")
 	}
 
-	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
+	config, err := runtime.InClusterBuildConfig(logger, *kubeconfig)
 	if err != nil {
-		log.Fatalf("Could not build config: %v", err)
+		logger.WithError(err).Fatalf("Could not build config: %v", err)
 	}
 
 	kubeClient, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		log.Fatalf("Could not create the kubernetes clientset: %v", err)
+		logger.WithError(err).Fatalf("Could not create the kubernetes clientset: %v", err)
 	}
 
 	if err := evictPod(ctx, kubeClient, *pod, *namespace); err != nil {
-		log.Fatalf("Pod eviction failed: %v", err)
+		logger.WithError(err).Fatalf("Pod eviction failed: %v", err)
 	}
 }
