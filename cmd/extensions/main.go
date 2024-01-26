@@ -24,6 +24,16 @@ import (
 	"strings"
 	"time"
 
+	"github.com/heptiolabs/healthcheck"
+	"github.com/pkg/errors"
+	prom "github.com/prometheus/client_golang/prometheus"
+	"github.com/sirupsen/logrus"
+	"github.com/spf13/pflag"
+	"github.com/spf13/viper"
+	"gopkg.in/natefinch/lumberjack.v2"
+	"k8s.io/client-go/informers"
+	"k8s.io/client-go/kubernetes"
+
 	"agones.dev/agones/pkg"
 	"agones.dev/agones/pkg/client/clientset/versioned"
 	"agones.dev/agones/pkg/client/informers/externalversions"
@@ -39,16 +49,6 @@ import (
 	"agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/signals"
 	"agones.dev/agones/pkg/util/webhooks"
-	"github.com/heptiolabs/healthcheck"
-	"github.com/pkg/errors"
-	prom "github.com/prometheus/client_golang/prometheus"
-	"github.com/sirupsen/logrus"
-	"github.com/spf13/pflag"
-	"github.com/spf13/viper"
-	"gopkg.in/natefinch/lumberjack.v2"
-	"k8s.io/client-go/informers"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
 )
 
 const (
@@ -114,8 +114,8 @@ func main() {
 	logger.WithField("version", pkg.Version).WithField("featureGates", runtime.EncodeFeatures()).
 		WithField("ctlConf", ctlConf).Info("starting extensions operator...")
 
-	// if the kubeconfig fails BuildConfigFromFlags will try in cluster config
-	clientConf, err := clientcmd.BuildConfigFromFlags("", ctlConf.KubeConfig)
+	// if the kubeconfig fails InClusterBuildConfig will try in cluster config
+	clientConf, err := runtime.InClusterBuildConfig(logger, ctlConf.KubeConfig)
 	if err != nil {
 		logger.WithError(err).Fatal("Could not create in cluster config")
 	}
