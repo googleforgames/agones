@@ -704,10 +704,10 @@ func TestControllerUpdateFleetCounterStatus(t *testing.T) {
 	gsSet1.ObjectMeta.Name = "gsSet1"
 	gsSet1.Status.Counters = map[string]agonesv1.AggregatedCounterStatus{
 		"fullCounter": {
-            AllocatedCount:    9223372036854775807,
-            AllocatedCapacity: 9223372036854775807,
-            Capacity:          9223372036854775807,
-            Count:             9223372036854775807,
+			AllocatedCount:    9223372036854775807,
+			AllocatedCapacity: 9223372036854775807,
+			Capacity:          9223372036854775807,
+			Count:             9223372036854775807,
 		},
 		"anotherCounter": {
 			AllocatedCount:    11,
@@ -752,10 +752,10 @@ func TestControllerUpdateFleetCounterStatus(t *testing.T) {
 			ua := action.(k8stesting.UpdateAction)
 			fleet := ua.GetObject().(*agonesv1.Fleet)
 
-            assert.Equal(t, int64(9223372036854775807), fleet.Status.Counters["fullCounter"].AllocatedCount)
-            assert.Equal(t, int64(9223372036854775807), fleet.Status.Counters["fullCounter"].AllocatedCapacity)
-            assert.Equal(t, int64(9223372036854775807), fleet.Status.Counters["fullCounter"].Capacity)
-            assert.Equal(t, int64(9223372036854775807), fleet.Status.Counters["fullCounter"].Count)
+			assert.Equal(t, int64(9223372036854775807), fleet.Status.Counters["fullCounter"].AllocatedCount)
+			assert.Equal(t, int64(9223372036854775807), fleet.Status.Counters["fullCounter"].AllocatedCapacity)
+			assert.Equal(t, int64(9223372036854775807), fleet.Status.Counters["fullCounter"].Capacity)
+			assert.Equal(t, int64(9223372036854775807), fleet.Status.Counters["fullCounter"].Count)
 
 			assert.Equal(t, int64(11), fleet.Status.Counters["anotherCounter"].AllocatedCount)
 			assert.Equal(t, int64(20), fleet.Status.Counters["anotherCounter"].AllocatedCapacity)

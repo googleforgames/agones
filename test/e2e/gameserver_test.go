@@ -27,11 +27,6 @@ import (
 	"testing"
 	"time"
 
-	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
-	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
-	agtesting "agones.dev/agones/pkg/testing"
-	"agones.dev/agones/pkg/util/runtime"
-	e2eframework "agones.dev/agones/test/e2e/framework"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -41,6 +36,12 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/rand"
 	"k8s.io/apimachinery/pkg/util/wait"
+
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
+	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
+	agtesting "agones.dev/agones/pkg/testing"
+	"agones.dev/agones/pkg/util/runtime"
+	e2eframework "agones.dev/agones/test/e2e/framework"
 )
 
 const (
@@ -1099,7 +1100,7 @@ spec:
           preferredDuringSchedulingIgnoredDuringExecution: ERROR
       containers:
         - name: simple-game-server
-          image: us-docker.pkg.dev/agones-images/examples/simple-game-server:0.24
+          image: us-docker.pkg.dev/agones-images/examples/simple-game-server:0.25
 `
 	err := os.WriteFile("/tmp/invalid.yaml", []byte(gsYaml), 0o644)
 	require.NoError(t, err)
