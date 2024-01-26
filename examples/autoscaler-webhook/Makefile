@@ -31,9 +31,9 @@ project_path := $(dir $(mkfile_path))
 root_path := $(realpath $(project_path)/../..)
 
 ifeq ($(REPOSITORY),)
-	autoscaler_webhook_tag := autoscaler-webhook:0.10
+	autoscaler_webhook_tag := autoscaler-webhook:0.11
 else
-	autoscaler_webhook_tag := $(REPOSITORY)/autoscaler-webhook:0.10
+	autoscaler_webhook_tag := $(REPOSITORY)/autoscaler-webhook:0.11
 endif
 
 #   _____                    _
