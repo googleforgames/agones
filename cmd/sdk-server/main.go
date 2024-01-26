@@ -25,14 +25,6 @@ import (
 	"strings"
 	"time"
 
-	"agones.dev/agones/pkg"
-	"agones.dev/agones/pkg/client/clientset/versioned"
-	"agones.dev/agones/pkg/sdk"
-	sdkalpha "agones.dev/agones/pkg/sdk/alpha"
-	sdkbeta "agones.dev/agones/pkg/sdk/beta"
-	"agones.dev/agones/pkg/sdkserver"
-	"agones.dev/agones/pkg/util/runtime"
-	"agones.dev/agones/pkg/util/signals"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/pkg/errors"
 	"github.com/spf13/pflag"
@@ -42,7 +34,15 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
+
+	"agones.dev/agones/pkg"
+	"agones.dev/agones/pkg/client/clientset/versioned"
+	"agones.dev/agones/pkg/sdk"
+	sdkalpha "agones.dev/agones/pkg/sdk/alpha"
+	sdkbeta "agones.dev/agones/pkg/sdk/beta"
+	"agones.dev/agones/pkg/sdkserver"
+	"agones.dev/agones/pkg/util/runtime"
+	"agones.dev/agones/pkg/util/signals"
 )
 
 const (
@@ -119,8 +119,8 @@ func main() {
 		}
 	default:
 		var config *rest.Config
-		// if the kubeconfig fails BuildConfigFromFlags will try in cluster config
-		config, err := clientcmd.BuildConfigFromFlags("", ctlConf.KubeConfig)
+		// if the kubeconfig fails InClusterBuildConfig will try in cluster config
+		config, err := runtime.InClusterBuildConfig(logger, ctlConf.KubeConfig)
 		if err != nil {
 			logger.WithError(err).Fatal("Could not create in cluster config")
 		}
