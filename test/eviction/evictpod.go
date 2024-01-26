@@ -45,7 +45,7 @@ func main() {
 	namespace := flag.String("namespace", "default", "Namespace (defaults to `default`)")
 	pod := flag.String("pod", "", "Pod name (required)")
 	flag.Parse()
-	logger := runtime.NewLoggerWithSource("main")
+	logger := runtime.NewLoggerWithSource("evictpod")
 
 	if *pod == "" {
 		logger.Fatal("--pod must be non-empty")
