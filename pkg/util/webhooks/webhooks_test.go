@@ -22,13 +22,14 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	admissionv1 "k8s.io/api/admission/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 )
 
 func TestWebHookAddHandler(t *testing.T) {
@@ -163,7 +164,7 @@ func TestWebHookFleetValidationHandler(t *testing.T) {
 							"template": {
 								"spec": {
 									"containers": [{
-										"image": "us-docker.pkg.dev/agones-images/examples/simple-game-server:0.24",
+										"image": "us-docker.pkg.dev/agones-images/examples/simple-game-server:0.25",
 										"name": false
 									}]
 								}
