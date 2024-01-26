@@ -1429,3 +1429,9 @@ func (s *SDKServer) NewSDKServerContext(ctx context.Context) context.Context {
 	}()
 	return sdkCtx
 }
+
+func (s *SDKServer) gsListUpdatesLen() int {
+	s.gsUpdateMutex.RLock()
+	defer s.gsUpdateMutex.RUnlock()
+	return len(s.gsListUpdates)
+}
