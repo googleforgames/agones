@@ -177,6 +177,10 @@ spec:
 {{- toYaml .Values.agones.allocator.annotations | nindent 8 }}
 {{- end }}
     spec:
+      {{- if .Values.agones.allocator.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- toYaml .Values.agones.allocator.topologySpreadConstraints | nindent 8 }}
+      {{- end }}
       affinity:
       {{- if .Values.agones.allocator.affinity }}
       {{- if .Values.agones.requireDedicatedNodes }}
