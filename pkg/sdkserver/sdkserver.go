@@ -1230,8 +1230,8 @@ func (s *SDKServer) updateList(ctx context.Context) error {
 
 	// Cache a copy of the successfully updated gameserver
 	s.gsCopy = gs
-	// Clear the gsCounterUpdates
-	s.gsCounterUpdates = map[string]counterUpdateRequest{}
+	// Clear the gsListUpdates
+	s.gsListUpdates = map[string]listUpdateRequest{}
 
 	return nil
 }
@@ -1428,4 +1428,10 @@ func (s *SDKServer) NewSDKServerContext(ctx context.Context) context.Context {
 		cancel()
 	}()
 	return sdkCtx
+}
+
+func (s *SDKServer) gsListUpdatesLen() int {
+	s.gsUpdateMutex.RLock()
+	defer s.gsUpdateMutex.RUnlock()
+	return len(s.gsListUpdates)
 }
