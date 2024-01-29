@@ -820,12 +820,12 @@ func getListValues(s *sdk.SDK, listName string) (string, error) {
 	values, err := s.Alpha().GetListValues(listName)
 	if err != nil {
 		log.Printf("Error getting List %s values: %s", listName, err)
-		return strings.Join(values, ","), err
+		return "INVALID LIST NAME", err
 	}
 	if len(values) > 0 {
         return "VALUES: " + strings.Join(values, ",") + "\n", nil
     }
-	return "Empty List" + strings.Join(values, ",") + "\n", err
+	return "VALUES: <none>\n", err
 }
 
 // appendListValue returns if the given value was successfuly added to the List (true) or not (false)

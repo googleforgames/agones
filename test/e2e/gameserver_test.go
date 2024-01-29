@@ -1563,7 +1563,7 @@ func TestLists(t *testing.T) {
 		},
 		"GetListValues empty": {
 			msg:  "GET_LIST_VALUES foo",
-			want: "Empty List\n",
+			want: "VALUES: <none>\n",
 		},
 		"AppendListValue": {
 			msg:        "APPEND_LIST_VALUE bar bar3",
