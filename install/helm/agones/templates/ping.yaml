@@ -48,6 +48,10 @@ spec:
 {{- toYaml .Values.agones.ping.annotations | nindent 8 }}
 {{- end }}
     spec:
+      {{- if .Values.agones.ping.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- toYaml .Values.agones.ping.topologySpreadConstraints | nindent 8 }}
+      {{- end }}
       affinity:
       {{- if .Values.agones.ping.affinity }}
       {{- if .Values.agones.requireDedicatedNodes }}
