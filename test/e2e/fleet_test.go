@@ -1750,7 +1750,7 @@ func TestFleetAggregatedListStatus(t *testing.T) {
 			msg = fmt.Sprintf("APPEND_LIST_VALUE gamers gamer%d", i)
 			reply, err = framework.SendGameServerUDP(t, &gs, msg)
 			require.NoError(t, err)
-			assert.Equal(t, "true", reply)
+			assert.Equal(t, "SUCCESS: true\n", reply)
 		}
 
 		if gs.Status.State == agonesv1.GameServerStateAllocated {
