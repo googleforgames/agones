@@ -1659,13 +1659,13 @@ func TestFleetAggregatedCounterStatus(t *testing.T) {
 		msg := fmt.Sprintf("SET_COUNTER_CAPACITY games %d", capacity)
 		reply, err := framework.SendGameServerUDP(t, &gs, msg)
 		require.NoError(t, err)
-		assert.Equal(t, "true", reply)
+		assert.Equal(t, "SUCCESS: true\n", reply)
 
 		totalCount += count
 		msg = fmt.Sprintf("SET_COUNTER_COUNT games %d", count)
 		reply, err = framework.SendGameServerUDP(t, &gs, msg)
 		require.NoError(t, err)
-		assert.Equal(t, "true", reply)
+		assert.Equal(t, "SUCCESS: true\n", reply)
 
 		if gs.Status.State == agonesv1.GameServerStateAllocated {
 			allocatedCapacity += capacity
@@ -1742,7 +1742,7 @@ func TestFleetAggregatedListStatus(t *testing.T) {
 		msg := fmt.Sprintf("SET_LIST_CAPACITY gamers %d", capacity)
 		reply, err := framework.SendGameServerUDP(t, &gs, msg)
 		require.NoError(t, err)
-		assert.Equal(t, "true", reply)
+		assert.Equal(t, "SUCCESS: true\n", reply)
 
 		totalCount += count
 		// Each list starts with a count of 2 (Values: []string{"gamer0", "gamer1"})
