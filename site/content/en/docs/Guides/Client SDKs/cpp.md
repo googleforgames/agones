@@ -11,35 +11,127 @@ Check the [Client SDK Documentation]({{< relref "_index.md" >}}) for more detail
 
 ## SDK Functionality
 
-| Area            | Action              | Implemented |
-|-----------------|---------------------|-------------|
-| Lifecycle       | Ready               | ✔️          |
-| Lifecycle       | Health              | ✔️          |
-| Lifecycle       | Reserve             | ✔️          |
-| Lifecycle       | Allocate            | ✔️          |
-| Lifecycle       | Shutdown            | ✔️          |
-| Configuration   | GameServer          | ✔️          |
-| Configuration   | WatchGameServer     | ✔️          |
-| Metadata        | SetAnnotation       | ✔️          |
-| Metadata        | SetLabel            | ✔️          |
-| Counters        | GetCounterCount     | ❌         |
-| Counters        | SetCounterCount     | ❌         |
-| Counters        | IncrementCounter    | ❌         |
-| Counters        | DecrementCounter    | ❌         |
-| Counters        | SetCounterCapacity  | ❌         |
-| Counters        | GetCounterCapacity  | ❌         |
-| Lists           | AppendListValue     | ❌         |
-| Lists           | DeleteListValue     | ❌         |
-| Lists           | SetListCapacity     | ❌         |
-| Lists           | GetListCapacity     | ❌         |
-| Lists           | ListContains        | ❌         |
-| Lists           | GetListLength       | ❌         |
-| Lists           | GetListValues       | ❌         |
+| Area          | Action             | Implemented |
+|---------------|--------------------|-------------|
+| Lifecycle     | Ready              | ✔️          |
+| Lifecycle     | Health             | ✔️          |
+| Lifecycle     | Reserve            | ✔️          |
+| Lifecycle     | Allocate           | ✔️          |
+| Lifecycle     | Shutdown           | ✔️          |
+| Configuration | GameServer         | ✔️          |
+| Configuration | WatchGameServer    | ✔️          |
+| Metadata      | SetAnnotation      | ✔️          |
+| Metadata      | SetLabel           | ✔️          |
+| Counters      | GetCounterCount    | ❌           |
+| Counters      | SetCounterCount    | ❌           |
+| Counters      | IncrementCounter   | ❌           |
+| Counters      | DecrementCounter   | ❌           |
+| Counters      | SetCounterCapacity | ❌           |
+| Counters      | GetCounterCapacity | ❌           |
+| Lists         | AppendListValue    | ❌           |
+| Lists         | DeleteListValue    | ❌           |
+| Lists         | SetListCapacity    | ❌           |
+| Lists         | GetListCapacity    | ❌           |
+| Lists         | ListContains       | ❌           |
+| Lists         | GetListLength      | ❌           |
+| Lists         | GetListValues      | ❌           |
 
-## Download
+## Installation
 
-Download the source from the [Releases Page](https://github.com/googleforgames/agones/releases)
-or {{< ghlink href="sdks/cpp" >}}directly from GitHub{{< /ghlink >}}.
+### Download
+
+Download the source from the [Releases Page](https://github.com/googleforgames/agones/releases) or {{< ghlink href="sdks/cpp" >}}directly from GitHub{{< /ghlink >}}.
+
+### Building the Libraries from source
+CMake is used to build SDK for all supported platforms (Linux/Window/macOS).
+
+### Prerequisites
+* CMake >= 3.15.0
+* Git
+* C++17 compiler
+
+### Dependencies
+
+Agones SDK only depends on the [gRPC](https://grpc.io/) library.
+
+{{< feature publishVersion="1.39.0" >}}
+{{< alert title="Warning" color="warning" >}}
+Prior to Agones release 1.39.0 if the gRPC dependency was not found locally installed, the CMake system would install
+the supported gRPC version for you. Unfortunately this process was very brittle and often broke with gRPC updates,
+therefore this functionality has been removed, and a manual installation of gRPC is now required.
+{{< /alert >}}
+{{< /feature >}}
+
+{{% feature publishVersion="1.39.0" %}}
+This version of the Agones C++ SDK has been tested with gRPC 1.57.1. To install it from source 
+[follow the instructions](https://grpc.io/docs/languages/cpp/quickstart/#build-and-install-grpc-and-protocol-buffers).
+
+It may also be available from your system's package manager, but that may not align with the supported gRPC version, so
+use at your own risk.
+
+{{% /feature %}}
+
+{{% feature expiryVersion="1.39.0" %}}
+
+If CMake cannot find gRPC with find_package(), it downloads and builds gRPC.
+There are some extra prerequisites for OpenSSL on Windows, see [documentation](https://github.com/openssl/openssl/blob/OpenSSL_1_1_1-stable/NOTES.WIN):
+
+* Perl
+* NASM
+
+Note that OpenSSL is not used in Agones SDK, but it is required to have a successful build of gRPC.
+
+## Options
+Following options are available:
+
+- **AGONES_THIRDPARTY_INSTALL_PATH** (default is CMAKE_INSTALL_PREFIX) - installation path for Agones prerequisites (used only if gRPC and Protobuf are not found by find_package)
+- **AGONES_ZLIB_STATIC** (default is ON) - use static version of zlib for gRPC
+
+(Windows only):
+
+- **AGONES_BUILD_THIRDPARTY_DEBUG** (default is OFF) - build both debug and release versions of SDK's prerequisites. Option is not used if you already have built gRPC.
+- **AGONES_OPENSSL_CONFIG_STRING** (default is VC-WIN64A) - arguments to configure OpenSSL build ([documentation](https://github.com/openssl/openssl/blob/OpenSSL_1_1_1-stable/INSTALL)). Used only if OpenSSL and gRPC is built by Agones.
+
+{{% /feature %}}
+
+## Linux / MacOS
+```bash
+mkdir -p .build
+cd .build
+cmake .. -DCMAKE_BUILD_TYPE=Release -G "Unix Makefiles" -DCMAKE_INSTALL_PREFIX=./install
+cmake --build . --target install
+```
+
+## Windows
+Building with Visual Studio:
+```bash
+md .build
+cd .build
+cmake .. -G "Visual Studio 15 2017 Win64" -DCMAKE_INSTALL_PREFIX=./install
+cmake --build . --config Release --target install
+```
+Building with NMake
+```bash
+md .build
+cd .build
+cmake .. -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=./install
+cmake --build . --target install
+```
+
+**CMAKE_INSTALL_PREFIX** may be skipped if it is OK to install Agones SDK to a default location (usually /usr/local or c:/Program Files/Agones).
+
+CMake option `-Wno-dev` is specified to suppress [CMP0048](https://cmake.org/cmake/help/v3.13/policy/CMP0048.html) deprecation warning for gRPC build.
+
+{{% feature expiryVersion="1.39.0" %}}
+If **AGONES_ZLIB_STATIC** is set to OFF, ensure that you have installed zlib. For Windows, it's enough to copy zlib.dll near to gameserver executable. For Linux/Mac usually no actions are needed.
+{{% /feature %}}
+
+## Usage
+
+### Using SDK
+In CMake-based projects it's enough to specify a folder where SDK is installed with `CMAKE_PREFIX_PATH` and use `find_package(agones CONFIG REQUIRED)` command. For example: {{< ghlink href="examples/cpp-simple" >}}cpp-simple{{< / >}}.
+It may be useful to disable some [protobuf warnings](https://github.com/protocolbuffers/protobuf/blob/master/cmake/README.md#notes-on-compiler-warnings) in your project.
+
 
 ## Usage
 
@@ -166,72 +258,8 @@ sdk->WatchGameServer([](const agones::dev::sdk::GameServer& gameserver){
 });
 ```
 
-For more information, you can also read the [SDK Overview]({{< relref "_index.md" >}}), check out
-{{< ghlink href="sdks/cpp/include/agones/sdk.h" >}}sdk.h{{< /ghlink >}} and also look at the
-{{< ghlink href="examples/cpp-simple" >}}C++ example{{< / >}}.
+## Next Steps
 
-### Failure
-When running on Agones, the above functions should only fail under exceptional circumstances, so please
-file a bug if it occurs.
-
-### Building the Libraries from source
-CMake is used to build SDK for all supported platforms (Linux/Window/MacOS).
-
-## Prerequisites
-* CMake >= 3.13.0
-* Git
-* C++14 compiler
-
-Agones SDK depends on [gRPC](https://github.com/grpc/grpc/blob/master/BUILDING.md). If CMake cannot find gRPC with find_package(), it downloads and builds gRPC.
-There are some extra prerequisites for OpenSSL on Windows, see [documentation](https://github.com/openssl/openssl/blob/OpenSSL_1_1_1-stable/NOTES.WIN):
-
-* Perl
-* NASM
-
-Note that OpenSSL is not used in Agones SDK, but it is required to have full successfull build of gRPC.
-
-## Options
-Following options are available:
-
-- **AGONES_THIRDPARTY_INSTALL_PATH** (default is CMAKE_INSTALL_PREFIX) - installation path for Agones prerequisites (used only if gRPC and Protobuf are not found by find_package)
-- **AGONES_ZLIB_STATIC** (default is ON) - use static version of zlib for gRPC
-
-(Windows only):
-
-- **AGONES_BUILD_THIRDPARTY_DEBUG** (default is OFF) - build both debug and release versions of SDK's prerequisites. Option is not used if you already have built gRPC.
-- **AGONES_OPENSSL_CONFIG_STRING** (default is VC-WIN64A) - arguments to configure OpenSSL build ([documentation](https://github.com/openssl/openssl/blob/OpenSSL_1_1_1-stable/INSTALL)). Used only if OpenSSL and gRPC is built by Agones.
-
-## Linux / MacOS
-```bash
-mkdir -p .build
-cd .build
-cmake .. -DCMAKE_BUILD_TYPE=Release -G "Unix Makefiles" -DCMAKE_INSTALL_PREFIX=./install
-cmake --build . --target install
-```
-
-## Windows
-Building with Visual Studio:
-```bash
-md .build
-cd .build
-cmake .. -G "Visual Studio 15 2017 Win64" -DCMAKE_INSTALL_PREFIX=./install
-cmake --build . --config Release --target install
-```
-Building with NMake
-```bash
-md .build
-cd .build
-cmake .. -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=./install
-cmake --build . --target install
-```
-
-## Remarks
-**CMAKE_INSTALL_PREFIX** may be skipped if it is OK to install Agones SDK to a default location (usually /usr/local or c:/Program Files/Agones).
-
-CMake option `-Wno-dev` is specified to suppress [CMP0048](https://cmake.org/cmake/help/v3.13/policy/CMP0048.html) deprecation warning for gRPC build.
-
-If **AGONES_ZLIB_STATIC** is set to OFF, ensure that you have installed zlib. For Windows it's enough to copy zlib.dll near to gameserver executable. For Linux/Mac usually no actions are needed.
-
-### Using SDK
-In CMake-based projects it's enough to specify a folder where SDK is installed with `CMAKE_PREFIX_PATH` and use `find_package(agones CONFIG REQUIRED)` command. For example: {{< ghlink href="examples/cpp-simple" >}}cpp-simple{{< / >}}.
-It may be useful to disable some [protobuf warnings](https://github.com/protocolbuffers/protobuf/blob/master/cmake/README.md#notes-on-compiler-warnings) in your project.
+* Read the [SDK Overview]({{< relref "_index.md" >}}) to review all SDK functionality
+* Look at the {{< ghlink href="examples/cpp-simple" >}}C++ example for a full build template{{< / >}}.
+* Check out {{< ghlink href="sdks/cpp/include/agones/sdk.h" >}}sdk.h{{< /ghlink >}}.
