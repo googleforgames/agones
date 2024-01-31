@@ -53,6 +53,10 @@ spec:
         release: {{ .Release.Name }}
         heritage: {{ .Release.Service }}
     spec:
+      {{- if .Values.agones.extensions.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- toYaml .Values.agones.extensions.topologySpreadConstraints | nindent 8 }}
+      {{- end }}
       affinity:
       {{- if .Values.agones.extensions.affinity }}
       {{- if .Values.agones.requireDedicatedNodes }}
