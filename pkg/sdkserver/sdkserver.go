@@ -1239,7 +1239,7 @@ func (s *SDKServer) updateList(ctx context.Context) error {
 
 // Returns a new string list with the string keys in toDeleteValues removed from valuesList.
 func deleteValues(valuesList []string, toDeleteValues map[string]bool) []string {
-	newValuesList := make([]string, 0, len(valuesList))
+	var newValuesList []string
 	for _, value := range valuesList {
 		if _, ok := toDeleteValues[value]; ok {
 			continue
