@@ -1,5 +1,57 @@
 # Changelog
 
+## [v1.38.0](https://github.com/googleforgames/agones/tree/v1.38.0) (2024-01-30)
+
+[Full Changelog](https://github.com/googleforgames/agones/compare/v1.37.0...v1.38.0)
+
+**Breaking changes:**
+- Nodepool upgrades on GKE Terraform apply by @markmandel in https://github.com/googleforgames/agones/pull/3612
+
+**Implemented enhancements:**
+- Add Feature Template for Issues Created from Agones Website by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3561
+- controller refresh certificate by @ashutosji in https://github.com/googleforgames/agones/pull/3489
+- Kubernetes Config Update: Prioritize InClusterConfig function by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3584
+- Support topologySpreadConstraints by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3591
+
+**Fixed bugs:**
+- ci/cache project root cloudbuild.yaml fix by @markmandel in https://github.com/googleforgames/agones/pull/3566
+- GKEAutopilotExtendedDurationPods: Fix embarassing typo preventing use by @zmerlynn in https://github.com/googleforgames/agones/pull/3596
+- Prevent Int64 Overflow by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3605
+- SDK server not clearing lists on update by @jlory in https://github.com/googleforgames/agones/pull/3606
+
+**Other:**
+- Prep for release v1.38.0 by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3558
+- Bump golang.org/x/crypto from 0.14.0 to 0.17.0 in /examples/allocation-endpoint/client by @dependabot in https://github.com/googleforgames/agones/pull/3551
+- Bump golang.org/x/crypto from 0.14.0 to 0.17.0 by @dependabot in https://github.com/googleforgames/agones/pull/3550
+- Increase performance test cluster size by @gongmax in https://github.com/googleforgames/agones/pull/3559
+- fix: typo by @qhyun2 in https://github.com/googleforgames/agones/pull/3562
+- Docs: Link to SDK Service Account by @markmandel in https://github.com/googleforgames/agones/pull/3565
+- Docs: gomod go 1.21 by @markmandel in https://github.com/googleforgames/agones/pull/3568
+- Upgrade Docker to 24.0.6 by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3567
+- Upgrade from Debian Bullseye to Bookworm for Rust by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3571
+- Update /cmd: Switch from debian11 to debian12 by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3577
+- Upgrade from Debian Bullseye to Bookworm for NodeJS by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3572
+- Switch from debian11 to debian12 for crd-client image by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3573
+- Update autoscaler-webhook: Switch from debian11 to debian12 by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3575
+- Fix Lint Warning by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3585
+- Update simple-game-server: Switch from debian11 to debian12 by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3576
+- Bump simple-game-server to 0.24 by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3588
+- Bump Example Images: Rust, Crd-client, NodeJS, Autoscaler-webhook by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3587
+- Use Docker 24.0.6 for performanace test by @gongmax in https://github.com/googleforgames/agones/pull/3592
+- Upgrade Docker to 24.0.6  by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3580
+- Update Site Go Version by @markmandel in https://github.com/googleforgames/agones/pull/3595
+- Docs: Lifecycle Management of Counters and Lists in REST by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3560
+- Local SDK: Refactor List and Count keys for default GameServer by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3598
+- Docs: Game Server Allocation Details  by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3583
+- Counts and Lists: Improvements to SDK docs by @markmandel in https://github.com/googleforgames/agones/pull/3569
+- Upgrade Golang Version to 1.21.6 by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3602
+- Example Images with Updated Tags by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3613
+- Simple Game Server: Add \n to Counters and Lists Response by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3589
+
+**New Contributors:**
+- @qhyun2 made their first contribution in https://github.com/googleforgames/agones/pull/3562
+- @jlory made their first contribution in https://github.com/googleforgames/agones/pull/3606
+
 ## [v1.37.0](https://github.com/googleforgames/agones/tree/v1.37.0) (2023-12-19)
 
 [Full Changelog](https://github.com/googleforgames/agones/compare/v1.36.0...v1.37.0)
