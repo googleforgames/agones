@@ -1437,16 +1437,8 @@ func TestSDKServerAddListValue(t *testing.T) {
 			require.NoError(t, err)
 			assert.NoError(t, sc.WaitForConnection(ctx))
 			sc.informerFactory.Start(ctx.Done())
-			assert.True(t, cache.WaitForCacheSync(ctx.Done(), sc.gameServerSynced))
-
-			wg := sync.WaitGroup{}
-			wg.Add(1)
-
-			go func() {
-				err = sc.Run(ctx)
-				assert.NoError(t, err)
-				wg.Done()
-			}()
+			require.True(t, cache.WaitForCacheSync(ctx.Done(), sc.gameServerSynced))
+			sc.gsWaitForSync.Done()
 
 			// check initial value comes through
 			require.Eventually(t, func() bool {
@@ -1469,6 +1461,14 @@ func TestSDKServerAddListValue(t *testing.T) {
 			assert.Equal(t, testCase.want.Values, got.Values)
 			assert.Equal(t, testCase.want.Capacity, got.Capacity)
 
+			// start workerqueue processing at this point, so there is no chance of processing the above updates
+			// earlier.
+			sc.gsWaitForSync.Add(1)
+			go func() {
+				err = sc.Run(ctx)
+				assert.NoError(t, err)
+			}()
+
 			// on an update, confirm that the update hits the K8s api
 			if testCase.updated {
 				select {
@@ -1487,7 +1487,6 @@ func TestSDKServerAddListValue(t *testing.T) {
 			assert.Equal(t, testCase.expectedUpdatesQueueLen, glu)
 
 			cancel()
-			wg.Wait()
 		})
 	}
 }
@@ -1586,16 +1585,8 @@ func TestSDKServerRemoveListValue(t *testing.T) {
 			require.NoError(t, err)
 			assert.NoError(t, sc.WaitForConnection(ctx))
 			sc.informerFactory.Start(ctx.Done())
-			assert.True(t, cache.WaitForCacheSync(ctx.Done(), sc.gameServerSynced))
-
-			wg := sync.WaitGroup{}
-			wg.Add(1)
-
-			go func() {
-				err = sc.Run(ctx)
-				assert.NoError(t, err)
-				wg.Done()
-			}()
+			require.True(t, cache.WaitForCacheSync(ctx.Done(), sc.gameServerSynced))
+			sc.gsWaitForSync.Done()
 
 			// check initial value comes through
 			require.Eventually(t, func() bool {
@@ -1618,6 +1609,14 @@ func TestSDKServerRemoveListValue(t *testing.T) {
 			assert.Equal(t, testCase.want.Values, got.Values)
 			assert.Equal(t, testCase.want.Capacity, got.Capacity)
 
+			// start workerqueue processing at this point, so there is no chance of processing the above updates
+			// earlier.
+			sc.gsWaitForSync.Add(1)
+			go func() {
+				err = sc.Run(ctx)
+				assert.NoError(t, err)
+			}()
+
 			// on an update, confirm that the update hits the K8s api
 			if testCase.updated {
 				select {
@@ -1636,7 +1635,6 @@ func TestSDKServerRemoveListValue(t *testing.T) {
 			assert.Equal(t, testCase.expectedUpdatesQueueLen, glu)
 
 			cancel()
-			wg.Wait()
 		})
 	}
 }
