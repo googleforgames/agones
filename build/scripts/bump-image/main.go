@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package main implements a program to increment the new tag for the simple-game-server image in examples/simple-game-server dir
+// Package main implements a program to increment the new tag for the given examples image
 package main
 
 import (
