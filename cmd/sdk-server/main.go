@@ -27,6 +27,7 @@ import (
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"github.com/tmc/grpc-websocket-proxy/wsproxy"
@@ -66,10 +67,21 @@ const (
 )
 
 var (
-	logger = runtime.NewLoggerWithSource("main")
+	logger             = runtime.NewLoggerWithSource("main")
+	SDKSERVER_LOGLEVEL string
 )
 
 func main() {
+	sdkServerLogLevelEnv := os.Getenv("SDKSERVER_LOGLEVEL")
+	if sdkServerLogLevelEnv == "" {
+		sdkServerLogLevelEnv = "Info"
+	}
+	logLevel, err := logrus.ParseLevel(sdkServerLogLevelEnv)
+	if err != nil {
+		logrus.WithError(err).Fatal("Invalid sdkServer logLevel")
+	}
+	logrus.SetLevel(logLevel)
+
 	ctlConf := parseEnvFlags()
 	logger.WithField("version", pkg.Version).WithField("featureGates", runtime.EncodeFeatures()).
 		WithField("ctlConf", ctlConf).Info("Starting sdk sidecar")
