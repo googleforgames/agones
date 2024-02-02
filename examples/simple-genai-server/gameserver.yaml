@@ -1,0 +1,42 @@
+---
+# Copyright 2024 Google LLC All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+apiVersion: agones.dev/v1
+kind: GameServer
+metadata:
+  name: gen-ai-server
+spec:
+  ports:
+    - name: default
+      portPolicy: Dynamic
+      containerPort: 7654
+      protocol: TCPUDP
+  template:
+    spec:
+      containers:
+        - name: simple-genai-game-server
+          image: us-docker.pkg.dev/agones-images/examples/simple-genai-game-server:0.1
+          env:
+            - name: TCP
+              value: "TRUE"
+            - name: ENDPOINT
+              # Replace with your GenAI inference server's endpoint address.
+              value: "http://34.105.57.254/genai"
+          resources:
+            requests:
+              memory: 64Mi
+              cpu: 20m
+            limits:
+              memory: 64Mi
+              cpu: 20m
