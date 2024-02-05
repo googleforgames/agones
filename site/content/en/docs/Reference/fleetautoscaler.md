@@ -6,8 +6,15 @@ description: "A `FleetAutoscaler`'s job is to automatically scale up and down a 
 weight: 30
 ---
 
-A full `FleetAutoscaler` specification is available below and in the 
-{{< ghlink href="examples/fleetautoscaler.yaml" >}}example folder{{< /ghlink >}} for reference :
+A full `FleetAutoscaler` specification is available below and in the
+{{< ghlink href="examples/fleetautoscaler.yaml" >}}example folder{{< /ghlink >}} for reference, but here are several
+examples that show different autoscaling policies.
+
+## Ready Buffer Autoscaling
+
+Fleet autoscaling with a buffer can be used to maintain a configured number of game server instances ready to serve
+players based on number of allocated instances in a Fleet. The buffer size can be specified as an absolute number or a
+percentage of the desired number of Ready game server instances over the Allocated count.
 
 ```yaml
 apiVersion: "autoscaling.agones.dev/v1"
@@ -47,7 +54,91 @@ spec:
       seconds: 30
 ```
 
-Or for Webhook FleetAutoscaler below and in {{< ghlink href="examples/webhookfleetautoscaler.yaml" >}}example folder{{< /ghlink >}}:
+## Counter and List Autoscaling
+
+A Counter based autoscaler can be used to autoscale `GameServers` based on a Count and Capacity set on each of the 
+GameServers in a Fleet to ensure there is always a buffer of total capacity available.
+
+For example, if you have a game server that can support 10 rooms, and you want to ensure that there are always at least
+5 rooms available, you could use a counter-based autoscaler with a buffer size of 5. The autoscaler would then scale the
+`Fleet` up or down based on the difference between the count of rooms across the `Fleet` and the capacity of
+rooms across the Fleet to ensure the buffer is maintained.
+
+Counter-based `FleetAutoscaler` specification below and in the {{< ghlink href="examples/counterfleetautoscaler.yaml" >}}example folder{{< /ghlink >}}:
+
+```yaml
+apiVersion: autoscaling.agones.dev/v1
+kind: FleetAutoscaler
+metadata:
+  name: fleet-autoscaler-counter
+spec:
+  fleetName: fleet-example
+  policy:
+    type: Counter  # Counter based autoscaling
+    counter:
+      # Key is the name of the Counter. Required field.
+      key: players
+      # BufferSize is the size of a buffer of counted items that are available in the Fleet (available capacity).
+      # Value can be an absolute number (ex: 5) or a percentage of the Counter available capacity (ex: 5%).
+      # An absolute number is calculated from percentage by rounding up. Must be bigger than 0. Required field.
+      bufferSize: 5
+      # MinCapacity is the minimum aggregate Counter total capacity across the fleet.
+      # If BufferSize is specified as a percentage, MinCapacity is required and cannot be 0.
+      # If non zero, MinCapacity must be smaller than MaxCapacity and must be greater than or equal to BufferSize.
+      minCapacity: 10
+      # MaxCapacity is the maximum aggregate Counter total capacity across the fleet.
+      # MaxCapacity must be greater than or equal to both MinCapacity and BufferSize. Required field.
+      maxCapacity: 100
+```
+
+A List based autoscaler can be used to autoscale `GameServers` based on the List length and Capacity set on each of the
+GameServers in a Fleet to ensure there is always a buffer of total capacity available.
+
+For example, if you have a game server that can support 10 players, and you want to ensure that there are always 
+room for at least 5 players across `GameServers` in a `Fleet`, you could use a list-based autoscaler with a buffer size 
+of 5. The autoscaler would then scale the `Fleet` up or down based on the difference between the total length of 
+the `players` and the total `players` capacity across the Fleet to ensure the buffer is maintained.
+
+List-based `FleetAutoscaler` specification below and in the {{< ghlink href="examples/listfleetautoscaler.yaml" >}}example folder{{< /ghlink >}}:
+
+```yaml
+apiVersion: autoscaling.agones.dev/v1
+kind: FleetAutoscaler
+metadata:
+  name: fleet-autoscaler-list
+spec:
+  fleetName: fleet-example
+  policy:
+    type: List  # List based autoscaling.
+    list:
+      # Key is the name of the List. Required field.
+      key: rooms
+      # BufferSize is the size of a buffer based on the List capacity that is available over the current
+      # aggregate List length in the Fleet (available capacity).
+      # It can be specified either as an absolute value (i.e. 5) or percentage format (i.e. 5%).
+      # Must be bigger than 0. Required field.
+      bufferSize: 5
+      # MinCapacity is the minimum aggregate List total capacity across the fleet.
+      # If BufferSize is specified as a percentage, MinCapacity is required must be greater than 0.
+      # If non-zero, MinCapacity must be smaller than MaxCapacity and must be greater than or equal to BufferSize.
+      minCapacity: 10
+      # MaxCapacity is the maximum aggregate List total capacity across the fleet.
+      # MaxCapacity must be greater than or equal to both MinCapacity and BufferSize. Required field.
+      maxCapacity: 100
+```
+
+## Webhook Autoscaling
+
+A webhook-based `FleetAutoscaler` can be used to delegate the scaling logic to a separate http based service. This
+can be useful if you want to use a custom scaling algorithm or if you want to integrate with other systems. For
+example, you could use a webhook-based `FleetAutoscaler` to scale your fleet based on data from a match-maker or player
+authentication system or a combination of systems.
+
+Webhook based autoscalers have the added benefit of being able to scale a Fleet to 0 replicas, since they are able to
+scale up on demand based on an external signal before a `GameServerAllocation` is executed from a match-maker or 
+similar system.
+
+For Webhook FleetAutoscaler below and in {{< ghlink href="examples/webhookfleetautoscaler.yaml" >}}example folder{{< /ghlink >}}:
 
 ```yaml
 apiVersion: "autoscaling.agones.dev/v1"
@@ -79,60 +170,7 @@ spec:
       seconds: 30
 ```
 
-Counter-based `FleetAutoscaler` specification below and in the {{< ghlink href="examples/counterfleetautoscaler.yaml" >}}example folder{{< /ghlink >}}:
-
-```yaml
-apiVersion: autoscaling.agones.dev/v1
-kind: FleetAutoscaler
-metadata:
-  name: fleet-autoscaler-counter
-spec:
-  fleetName: fleet-example
-  policy:
-    type: Counter  # Counter based autoscaling
-    counter:
-      # Key is the name of the Counter. Required field.
-      key: players
-      # BufferSize is the size of a buffer of counted items that are available in the Fleet (available capacity).
-      # Value can be an absolute number (ex: 5) or a percentage of the Counter available capacity (ex: 5%).
-      # An absolute number is calculated from percentage by rounding up. Must be bigger than 0. Required field.
-      bufferSize: 5
-      # MinCapacity is the minimum aggregate Counter total capacity across the fleet.
-      # If BufferSize is specified as a percentage, MinCapacity is required and cannot be 0.
-      # If non zero, MinCapacity must be smaller than MaxCapacity and must be greater than or equal to BufferSize.
-      minCapacity: 10
-      # MaxCapacity is the maximum aggregate Counter total capacity across the fleet.
-      # MaxCapacity must be greater than or equal to both MinCapacity and BufferSize. Required field.
-      maxCapacity: 100
-```
-
-List-based `FleetAutoscaler` specification below and in the {{< ghlink href="examples/listfleetautoscaler.yaml" >}}example folder{{< /ghlink >}}:
-
-```yaml
-apiVersion: autoscaling.agones.dev/v1
-kind: FleetAutoscaler
-metadata:
-  name: fleet-autoscaler-list
-spec:
-  fleetName: fleet-example
-  policy:
-    type: List  # List based autoscaling.
-    list:
-      # Key is the name of the List. Required field.
-      key: rooms
-      # BufferSize is the size of a buffer based on the List capacity that is available over the current
-      # aggregate List length in the Fleet (available capacity).
-      # It can be specified either as an absolute value (i.e. 5) or percentage format (i.e. 5%).
-      # Must be bigger than 0. Required field.
-      bufferSize: 5
-      # MinCapacity is the minimum aggregate List total capacity across the fleet.
-      # If BufferSize is specified as a percentage, MinCapacity is required must be greater than 0.
-      # If non zero, MinCapacity must be smaller than MaxCapacity and must be greater than or equal to BufferSize.
-      minCapacity: 10
-      # MaxCapacity is the maximum aggregate List total capacity across the fleet.
-      # MaxCapacity must be greater than or equal to both MinCapacity and BufferSize. Required field.
-      maxCapacity: 100
-```
+## Spec Field Reference
 
 Since Agones defines a new 
 [Custom Resources Definition (CRD)](https://kubernetes.io/docs/concepts/api-extension/custom-resources/) 
@@ -183,7 +221,8 @@ The `spec` field is the actual `FleetAutoscaler` specification and it is compose
   - `type` is type of the sync. For now only "FixedInterval" is available
   - `fixedInterval` parameters of the fixedInterval sync
     - `seconds` is the time in seconds between each auto scaling
-# Webhook Endpoint Specification
+
+## Webhook Endpoint Specification
 
 Webhook endpoint is used to delegate the scaling logic to a separate pod or server.
 
