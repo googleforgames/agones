@@ -148,6 +148,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.image.extensions.pullPolicy`                     | Image pull policy for extensions                                                                                                                                                                                                                                                                                 | `IfNotPresent`                            |
 
 
+
 ### Agones Controller
 
 | Parameter                                                | Description                                                                                                                                                                                                                                                                                                      | Default                                   |
@@ -183,6 +184,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.controller.mutatingWebhook.annotations`          | [Annotations][annotations] added to the Agones mutating webhook                                                                                                                                                                                                                                                  | `{}`                                      |
 | `agones.controller.mutatingWebhook.disableCaBundle`      | Disable ca-bundle so it can be injected by cert-manager                                                                                                                                                                                                                                                          | `false`                                   |
 | `agones.controller.allocationBatchWaitTime`              | Wait time between each allocation batch when performing allocations in controller mode                                                                                                                                                                                                                           | `500ms`                                   |
+| `agones.controller.topologySpreadConstraints`                           | Ensures better resource utilization and high availability by evenly distributing Pods in the agones-system namespace                                                                                                                                                     | `{}`                                   |
 
 ### Ping Service
 
@@ -219,6 +221,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.ping.pdb.enabled`                                | Set to `true` to enable the creation of a [PodDisruptionBudget](https://kubernetes.io/docs/tasks/run-application/configure-pdb/) for the ping deployment                                                                                                                                                         | `false`                                   |
 | `agones.ping.pdb.minAvailable`                           | Description of the number of pods from that set that must still be available after the eviction, even in the absence of the evicted pod. Can be either an absolute number or a percentage. Mutually Exclusive with `maxUnavailable`                                                                              | `1`                                       |
 | `agones.ping.pdb.maxUnavailable`                         | Description of the number of pods from that set that can be unavailable after the eviction. It can be either an absolute number or a percentage Mutually Exclusive with `minAvailable`                                                                                                                           | \`\`                                      |
+| `agones.ping.topologySpreadConstraints`                           | Ensures better resource utilization and high availability by evenly distributing Pods in the agones-system namespace                                                                                                                                                     | `{}`                                   |
 
 ### Allocator Service
 
@@ -276,6 +279,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.allocator.pdb.enabled`                           | Set to `true` to enable the creation of a [PodDisruptionBudget](https://kubernetes.io/docs/tasks/run-application/configure-pdb/) for the allocator deployment                                                                                                                                                    | `false`                                   |
 | `agones.allocator.pdb.minAvailable`                      | Description of the number of pods from that set that must still be available after the eviction, even in the absence of the evicted pod. Can be either an absolute number or a percentage. Mutually Exclusive with `maxUnavailable`                                                                              | `1`                                       |
 | `agones.allocator.pdb.maxUnavailable`                    | Description of the number of pods from that set that can be unavailable after the eviction. It can be either an absolute number or a percentage. Mutually Exclusive with `minAvailable`                                                                                                                          | \`\`                                      |
+| `agones.allocator.topologySpreadConstraints`                           | Ensures better resource utilization and high availability by evenly distributing Pods in the agones-system namespace                                                                                                                                                     | `{}`                                   |
 
 
 ### Extensions
@@ -313,6 +317,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.extensions.pdb.minAvailable`                     | Description of the number of pods from that set that must still be available after the eviction, even in the absence of the evicted pod. Can be either an absolute number or a percentage. Mutually Exclusive with maxUnavailable                                                                                | `1`                                       |
 | `agones.extensions.pdb.maxUnavailable`                   | Description of the number of pods from that set that can be unavailable after the eviction. It can be either an absolute number or a percentage Mutually Exclusive with `minAvailable`                                                                                                                           | \`\`                                      |
 | `agones.extensions.replicas`                             | The number of replicas to run in the deployment                                                                                                                                                                                                                                                                  | `2`                                       |
+| `agones.extensions.topologySpreadConstraints`                           | Ensures better resource utilization and high availability by evenly distributing Pods in the agones-system namespace                                                                                                                                                     | `{}`                                   |
 
 ### GameServers
 

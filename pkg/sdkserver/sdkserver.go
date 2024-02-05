@@ -23,6 +23,20 @@ import (
 	"sync"
 	"time"
 
+	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
+	corev1 "k8s.io/api/core/v1"
+	apiequality "k8s.io/apimachinery/pkg/api/equality"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/fields"
+	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/kubernetes/scheme"
+	k8sv1 "k8s.io/client-go/kubernetes/typed/core/v1"
+	"k8s.io/client-go/tools/cache"
+	"k8s.io/client-go/tools/record"
+	"k8s.io/utils/clock"
+
 	"agones.dev/agones/pkg/apis/agones"
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	"agones.dev/agones/pkg/client/clientset/versioned"
@@ -37,19 +51,6 @@ import (
 	"agones.dev/agones/pkg/util/logfields"
 	"agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/workerqueue"
-	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
-	corev1 "k8s.io/api/core/v1"
-	apiequality "k8s.io/apimachinery/pkg/api/equality"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/fields"
-	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/kubernetes/scheme"
-	k8sv1 "k8s.io/client-go/kubernetes/typed/core/v1"
-	"k8s.io/client-go/tools/cache"
-	"k8s.io/client-go/tools/record"
-	"k8s.io/utils/clock"
 )
 
 // Operation is a synchronisation action
@@ -1230,21 +1231,22 @@ func (s *SDKServer) updateList(ctx context.Context) error {
 
 	// Cache a copy of the successfully updated gameserver
 	s.gsCopy = gs
-	// Clear the gsCounterUpdates
-	s.gsCounterUpdates = map[string]counterUpdateRequest{}
+	// Clear the gsListUpdates
+	s.gsListUpdates = map[string]listUpdateRequest{}
 
 	return nil
 }
 
 // Returns a new string list with the string keys in toDeleteValues removed from valuesList.
 func deleteValues(valuesList []string, toDeleteValues map[string]bool) []string {
-	newList := make([]string, 0, len(valuesList)-len(toDeleteValues))
-	for i, val := range valuesList {
-		if _, ok := toDeleteValues[val]; !ok {
-			newList = append(newList, valuesList[i])
+	newValuesList := []string{}
+	for _, value := range valuesList {
+		if _, ok := toDeleteValues[value]; ok {
+			continue
 		}
+		newValuesList = append(newValuesList, value)
 	}
-	return newList
+	return newValuesList
 }
 
 // sendGameServerUpdate sends a watch game server event
@@ -1428,4 +1430,10 @@ func (s *SDKServer) NewSDKServerContext(ctx context.Context) context.Context {
 		cancel()
 	}()
 	return sdkCtx
+}
+
+func (s *SDKServer) gsListUpdatesLen() int {
+	s.gsUpdateMutex.RLock()
+	defer s.gsUpdateMutex.RUnlock()
+	return len(s.gsListUpdates)
 }

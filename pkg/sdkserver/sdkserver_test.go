@@ -1351,18 +1351,20 @@ func TestSDKServerAddListValue(t *testing.T) {
 	}
 
 	fixtures := map[string]struct {
-		listName   string
-		requests   []*alpha.AddListValueRequest
-		want       agonesv1.ListStatus
-		updateErrs []bool
-		updated    bool
+		listName                string
+		requests                []*alpha.AddListValueRequest
+		want                    agonesv1.ListStatus
+		updateErrs              []bool
+		updated                 bool
+		expectedUpdatesQueueLen int
 	}{
 		"Add value": {
-			listName:   "foo",
-			requests:   []*alpha.AddListValueRequest{{Name: "foo", Value: "five"}},
-			want:       agonesv1.ListStatus{Values: []string{"one", "two", "three", "four", "five"}, Capacity: int64(10)},
-			updateErrs: []bool{false},
-			updated:    true,
+			listName:                "foo",
+			requests:                []*alpha.AddListValueRequest{{Name: "foo", Value: "five"}},
+			want:                    agonesv1.ListStatus{Values: []string{"one", "two", "three", "four", "five"}, Capacity: int64(10)},
+			updateErrs:              []bool{false},
+			updated:                 true,
+			expectedUpdatesQueueLen: 0,
 		},
 		"Add multiple values including duplicates": {
 			listName: "bar",
@@ -1372,9 +1374,10 @@ func TestSDKServerAddListValue(t *testing.T) {
 				{Name: "bar", Value: "five"},
 				{Name: "bar", Value: "zero"},
 			},
-			want:       agonesv1.ListStatus{Values: []string{"one", "two", "three", "four", "five", "zero"}, Capacity: int64(10)},
-			updateErrs: []bool{false, true, true, false},
-			updated:    true,
+			want:                    agonesv1.ListStatus{Values: []string{"one", "two", "three", "four", "five", "zero"}, Capacity: int64(10)},
+			updateErrs:              []bool{false, true, true, false},
+			updated:                 true,
+			expectedUpdatesQueueLen: 0,
 		},
 		"Add multiple values past capacity": {
 			listName: "baz",
@@ -1391,8 +1394,9 @@ func TestSDKServerAddListValue(t *testing.T) {
 				Values:   []string{"one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"},
 				Capacity: int64(10),
 			},
-			updateErrs: []bool{false, false, false, false, false, false, true},
-			updated:    true,
+			updateErrs:              []bool{false, false, false, false, false, false, true},
+			updated:                 true,
+			expectedUpdatesQueueLen: 0,
 		},
 	}
 
@@ -1433,16 +1437,8 @@ func TestSDKServerAddListValue(t *testing.T) {
 			require.NoError(t, err)
 			assert.NoError(t, sc.WaitForConnection(ctx))
 			sc.informerFactory.Start(ctx.Done())
-			assert.True(t, cache.WaitForCacheSync(ctx.Done(), sc.gameServerSynced))
-
-			wg := sync.WaitGroup{}
-			wg.Add(1)
-
-			go func() {
-				err = sc.Run(ctx)
-				assert.NoError(t, err)
-				wg.Done()
-			}()
+			require.True(t, cache.WaitForCacheSync(ctx.Done(), sc.gameServerSynced))
+			sc.gsWaitForSync.Done()
 
 			// check initial value comes through
 			require.Eventually(t, func() bool {
@@ -1465,6 +1461,14 @@ func TestSDKServerAddListValue(t *testing.T) {
 			assert.Equal(t, testCase.want.Values, got.Values)
 			assert.Equal(t, testCase.want.Capacity, got.Capacity)
 
+			// start workerqueue processing at this point, so there is no chance of processing the above updates
+			// earlier.
+			sc.gsWaitForSync.Add(1)
+			go func() {
+				err = sc.Run(ctx)
+				assert.NoError(t, err)
+			}()
+
 			// on an update, confirm that the update hits the K8s api
 			if testCase.updated {
 				select {
@@ -1478,8 +1482,11 @@ func TestSDKServerAddListValue(t *testing.T) {
 				}
 			}
 
+			// on an update, confirms that the update queue list contains the right amount of items
+			glu := sc.gsListUpdatesLen()
+			assert.Equal(t, testCase.expectedUpdatesQueueLen, glu)
+
 			cancel()
-			wg.Wait()
 		})
 	}
 }
@@ -1499,18 +1506,20 @@ func TestSDKServerRemoveListValue(t *testing.T) {
 	}
 
 	fixtures := map[string]struct {
-		listName   string
-		requests   []*alpha.RemoveListValueRequest
-		want       agonesv1.ListStatus
-		updateErrs []bool
-		updated    bool
+		listName                string
+		requests                []*alpha.RemoveListValueRequest
+		want                    agonesv1.ListStatus
+		updateErrs              []bool
+		updated                 bool
+		expectedUpdatesQueueLen int
 	}{
 		"Remove value": {
-			listName:   "foo",
-			requests:   []*alpha.RemoveListValueRequest{{Name: "foo", Value: "two"}},
-			want:       agonesv1.ListStatus{Values: []string{"one", "three", "four"}, Capacity: int64(100)},
-			updateErrs: []bool{false},
-			updated:    true,
+			listName:                "foo",
+			requests:                []*alpha.RemoveListValueRequest{{Name: "foo", Value: "two"}},
+			want:                    agonesv1.ListStatus{Values: []string{"one", "three", "four"}, Capacity: int64(100)},
+			updateErrs:              []bool{false},
+			updated:                 true,
+			expectedUpdatesQueueLen: 0,
 		},
 		"Remove multiple values including duplicates": {
 			listName: "bar",
@@ -1519,9 +1528,10 @@ func TestSDKServerRemoveListValue(t *testing.T) {
 				{Name: "bar", Value: "three"},
 				{Name: "bar", Value: "two"},
 			},
-			want:       agonesv1.ListStatus{Values: []string{"one", "four"}, Capacity: int64(100)},
-			updateErrs: []bool{false, false, true},
-			updated:    true,
+			want:                    agonesv1.ListStatus{Values: []string{"one", "four"}, Capacity: int64(100)},
+			updateErrs:              []bool{false, false, true},
+			updated:                 true,
+			expectedUpdatesQueueLen: 0,
 		},
 		"Remove all values": {
 			listName: "baz",
@@ -1531,9 +1541,10 @@ func TestSDKServerRemoveListValue(t *testing.T) {
 				{Name: "baz", Value: "four"},
 				{Name: "baz", Value: "one"},
 			},
-			want:       agonesv1.ListStatus{Values: []string{}, Capacity: int64(100)},
-			updateErrs: []bool{false, false, false, false},
-			updated:    true,
+			want:                    agonesv1.ListStatus{Values: []string{}, Capacity: int64(100)},
+			updateErrs:              []bool{false, false, false, false},
+			updated:                 true,
+			expectedUpdatesQueueLen: 0,
 		},
 	}
 
@@ -1574,16 +1585,8 @@ func TestSDKServerRemoveListValue(t *testing.T) {
 			require.NoError(t, err)
 			assert.NoError(t, sc.WaitForConnection(ctx))
 			sc.informerFactory.Start(ctx.Done())
-			assert.True(t, cache.WaitForCacheSync(ctx.Done(), sc.gameServerSynced))
-
-			wg := sync.WaitGroup{}
-			wg.Add(1)
-
-			go func() {
-				err = sc.Run(ctx)
-				assert.NoError(t, err)
-				wg.Done()
-			}()
+			require.True(t, cache.WaitForCacheSync(ctx.Done(), sc.gameServerSynced))
+			sc.gsWaitForSync.Done()
 
 			// check initial value comes through
 			require.Eventually(t, func() bool {
@@ -1606,6 +1609,14 @@ func TestSDKServerRemoveListValue(t *testing.T) {
 			assert.Equal(t, testCase.want.Values, got.Values)
 			assert.Equal(t, testCase.want.Capacity, got.Capacity)
 
+			// start workerqueue processing at this point, so there is no chance of processing the above updates
+			// earlier.
+			sc.gsWaitForSync.Add(1)
+			go func() {
+				err = sc.Run(ctx)
+				assert.NoError(t, err)
+			}()
+
 			// on an update, confirm that the update hits the K8s api
 			if testCase.updated {
 				select {
@@ -1619,8 +1630,11 @@ func TestSDKServerRemoveListValue(t *testing.T) {
 				}
 			}
 
+			// on an update, confirms that the update queue list contains the right amount of items
+			glu := sc.gsListUpdatesLen()
+			assert.Equal(t, testCase.expectedUpdatesQueueLen, glu)
+
 			cancel()
-			wg.Wait()
 		})
 	}
 }
@@ -1640,11 +1654,12 @@ func TestSDKServerUpdateList(t *testing.T) {
 	}
 
 	fixtures := map[string]struct {
-		listName  string
-		request   *alpha.UpdateListRequest
-		want      agonesv1.ListStatus
-		updateErr bool
-		updated   bool
+		listName                string
+		request                 *alpha.UpdateListRequest
+		want                    agonesv1.ListStatus
+		updateErr               bool
+		updated                 bool
+		expectedUpdatesQueueLen int
 	}{
 		"set capacity to max": {
 			listName: "foo",
@@ -1655,9 +1670,10 @@ func TestSDKServerUpdateList(t *testing.T) {
 				},
 				UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"capacity"}},
 			},
-			want:      agonesv1.ListStatus{Values: []string{"one", "two", "three", "four"}, Capacity: int64(1000)},
-			updateErr: false,
-			updated:   true,
+			want:                    agonesv1.ListStatus{Values: []string{"one", "two", "three", "four"}, Capacity: int64(1000)},
+			updateErr:               false,
+			updated:                 true,
+			expectedUpdatesQueueLen: 0,
 		},
 		"set capacity to min values are truncated": {
 			listName: "bar",
@@ -1668,9 +1684,10 @@ func TestSDKServerUpdateList(t *testing.T) {
 				},
 				UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"capacity"}},
 			},
-			want:      agonesv1.ListStatus{Values: []string{}, Capacity: int64(0)},
-			updateErr: false,
-			updated:   true,
+			want:                    agonesv1.ListStatus{Values: []string{}, Capacity: int64(0)},
+			updateErr:               false,
+			updated:                 true,
+			expectedUpdatesQueueLen: 0,
 		},
 		"set capacity past max": {
 			listName: "baz",
@@ -1681,9 +1698,10 @@ func TestSDKServerUpdateList(t *testing.T) {
 				},
 				UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"capacity"}},
 			},
-			want:      agonesv1.ListStatus{Values: []string{"one", "two", "three", "four"}, Capacity: int64(100)},
-			updateErr: true,
-			updated:   false,
+			want:                    agonesv1.ListStatus{Values: []string{"one", "two", "three", "four"}, Capacity: int64(100)},
+			updateErr:               true,
+			updated:                 false,
+			expectedUpdatesQueueLen: 0,
 		},
 	}
 
@@ -1766,6 +1784,10 @@ func TestSDKServerUpdateList(t *testing.T) {
 					assert.Fail(t, "List should have been updated")
 				}
 			}
+
+			// on an update, confirm that the update queue list contains the right amount of items
+			glu := sc.gsListUpdatesLen()
+			assert.Equal(t, testCase.expectedUpdatesQueueLen, glu)
 
 			cancel()
 			wg.Wait()

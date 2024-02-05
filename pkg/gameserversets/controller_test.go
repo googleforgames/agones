@@ -356,20 +356,24 @@ func TestComputeStatus(t *testing.T) {
 		gs1.Status.Counters = map[string]agonesv1.CounterStatus{
 			"firstCounter":  {Count: 5, Capacity: 10},
 			"secondCounter": {Count: 100, Capacity: 1000},
+			"fullCounter":   {Count: 9223372036854775807, Capacity: 9223372036854775807},
 		}
 		gs2 := gsWithState(agonesv1.GameServerStateReserved)
 		gs2.Status.Counters = map[string]agonesv1.CounterStatus{
 			"firstCounter": {Count: 10, Capacity: 15},
+			"fullCounter":  {Count: 9223372036854775807, Capacity: 9223372036854775807},
 		}
 		gs3 := gsWithState(agonesv1.GameServerStateCreating)
 		gs3.Status.Counters = map[string]agonesv1.CounterStatus{
 			"firstCounter":  {Count: 20, Capacity: 30},
 			"secondCounter": {Count: 100, Capacity: 1000},
+			"fullCounter":   {Count: 9223372036854775807, Capacity: 9223372036854775807},
 		}
 		gs4 := gsWithState(agonesv1.GameServerStateReady)
 		gs4.Status.Counters = map[string]agonesv1.CounterStatus{
 			"firstCounter":  {Count: 15, Capacity: 30},
 			"secondCounter": {Count: 20, Capacity: 200},
+			"fullCounter":   {Count: 9223372036854775807, Capacity: 9223372036854775807},
 		}
 		list = append(list, gs1, gs2, gs3, gs4)
 
@@ -390,6 +394,12 @@ func TestComputeStatus(t *testing.T) {
 					AllocatedCapacity: 1000,
 					Count:             220,
 					Capacity:          2200,
+				},
+				"fullCounter": {
+					AllocatedCount:    9223372036854775807,
+					AllocatedCapacity: 9223372036854775807,
+					Count:             9223372036854775807,
+					Capacity:          9223372036854775807,
 				},
 			},
 			Lists: map[string]agonesv1.AggregatedListStatus{},

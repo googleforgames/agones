@@ -29,11 +29,6 @@ import (
 	"testing"
 	"time"
 
-	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
-	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
-	autoscalingv1 "agones.dev/agones/pkg/apis/autoscaling/v1"
-	"agones.dev/agones/pkg/util/runtime"
-	e2e "agones.dev/agones/test/e2e/framework"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
@@ -48,6 +43,12 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
+
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
+	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
+	autoscalingv1 "agones.dev/agones/pkg/apis/autoscaling/v1"
+	"agones.dev/agones/pkg/util/runtime"
+	e2e "agones.dev/agones/test/e2e/framework"
 )
 
 var deletePropagationForeground = metav1.DeletePropagationForeground
@@ -644,7 +645,7 @@ func defaultAutoscalerWebhook(namespace string) (*corev1.Pod, *corev1.Service) {
 		},
 		Spec: corev1.PodSpec{
 			Containers: []corev1.Container{{Name: "webhook",
-				Image:           "us-docker.pkg.dev/agones-images/examples/autoscaler-webhook:0.10",
+				Image:           "us-docker.pkg.dev/agones-images/examples/autoscaler-webhook:0.11",
 				ImagePullPolicy: corev1.PullAlways,
 				Ports: []corev1.ContainerPort{{
 					ContainerPort: 8000,

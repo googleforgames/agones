@@ -27,11 +27,6 @@ import (
 	"testing"
 	"time"
 
-	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
-	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
-	agtesting "agones.dev/agones/pkg/testing"
-	"agones.dev/agones/pkg/util/runtime"
-	e2eframework "agones.dev/agones/test/e2e/framework"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -41,6 +36,12 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/rand"
 	"k8s.io/apimachinery/pkg/util/wait"
+
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
+	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
+	agtesting "agones.dev/agones/pkg/testing"
+	"agones.dev/agones/pkg/util/runtime"
+	e2eframework "agones.dev/agones/test/e2e/framework"
 )
 
 const (
@@ -1099,7 +1100,7 @@ spec:
           preferredDuringSchedulingIgnoredDuringExecution: ERROR
       containers:
         - name: simple-game-server
-          image: us-docker.pkg.dev/agones-images/examples/simple-game-server:0.24
+          image: us-docker.pkg.dev/agones-images/examples/simple-game-server:0.27
 `
 	err := os.WriteFile("/tmp/invalid.yaml", []byte(gsYaml), 0o644)
 	require.NoError(t, err)
@@ -1364,7 +1365,7 @@ func TestCounters(t *testing.T) {
 	}{
 		"GetCounterCount": {
 			msg:  "GET_COUNTER_COUNT games",
-			want: "1",
+			want: "COUNTER: 1\n",
 		},
 		"GetCounterCount Counter Does Not Exist": {
 			msg:  "GET_COUNTER_COUNT fame",
@@ -1372,21 +1373,21 @@ func TestCounters(t *testing.T) {
 		},
 		"IncrementCounter": {
 			msg:         "INCREMENT_COUNTER foo 10",
-			want:        "true",
+			want:        "SUCCESS: true\n",
 			counterName: "foo",
-			wantCount:   "20",
+			wantCount:   "COUNTER: 20\n",
 		},
 		"IncrementCounter Past Capacity": {
 			msg:         "INCREMENT_COUNTER games 50",
 			want:        "ERROR: false\n",
 			counterName: "games",
-			wantCount:   "1",
+			wantCount:   "COUNTER: 1\n",
 		},
 		"IncrementCounter Negative": {
 			msg:         "INCREMENT_COUNTER games -1",
 			want:        "ERROR: false\n",
 			counterName: "games",
-			wantCount:   "1",
+			wantCount:   "COUNTER: 1\n",
 		},
 		"IncrementCounter Counter Does Not Exist": {
 			msg:  "INCREMENT_COUNTER same 1",
@@ -1394,21 +1395,21 @@ func TestCounters(t *testing.T) {
 		},
 		"DecrementCounter": {
 			msg:         "DECREMENT_COUNTER bar 10",
-			want:        "true",
+			want:        "SUCCESS: true\n",
 			counterName: "bar",
-			wantCount:   "0",
+			wantCount:   "COUNTER: 0\n",
 		},
 		"DecrementCounter Past Capacity": {
 			msg:         "DECREMENT_COUNTER games 2",
 			want:        "ERROR: false\n",
 			counterName: "games",
-			wantCount:   "1",
+			wantCount:   "COUNTER: 1\n",
 		},
 		"DecrementCounter Negative": {
 			msg:         "DECREMENT_COUNTER games -1",
 			want:        "ERROR: false\n",
 			counterName: "games",
-			wantCount:   "1",
+			wantCount:   "COUNTER: 1\n",
 		},
 		"DecrementCounter Counter Does Not Exist": {
 			msg:  "DECREMENT_COUNTER lame 1",
@@ -1416,25 +1417,25 @@ func TestCounters(t *testing.T) {
 		},
 		"SetCounterCount": {
 			msg:         "SET_COUNTER_COUNT baz 0",
-			want:        "true",
+			want:        "SUCCESS: true\n",
 			counterName: "baz",
-			wantCount:   "0",
+			wantCount:   "COUNTER: 0\n",
 		},
 		"SetCounterCount Past Capacity": {
 			msg:         "SET_COUNTER_COUNT games 51",
 			want:        "ERROR: false\n",
 			counterName: "games",
-			wantCount:   "1",
+			wantCount:   "COUNTER: 1\n",
 		},
 		"SetCounterCount Past Zero": {
 			msg:         "SET_COUNTER_COUNT games -1",
 			want:        "ERROR: false\n",
 			counterName: "games",
-			wantCount:   "1",
+			wantCount:   "COUNTER: 1\n",
 		},
 		"GetCounterCapacity": {
 			msg:  "GET_COUNTER_CAPACITY games",
-			want: "50",
+			want: "CAPACITY: 50\n",
 		},
 		"GetCounterCapacity Counter Does Not Exist": {
 			msg:  "GET_COUNTER_CAPACITY dame",
@@ -1442,15 +1443,15 @@ func TestCounters(t *testing.T) {
 		},
 		"SetCounterCapacity": {
 			msg:          "SET_COUNTER_CAPACITY qux 0",
-			want:         "true",
+			want:         "SUCCESS: true\n",
 			counterName:  "qux",
-			wantCapacity: "0",
+			wantCapacity: "CAPACITY: 0\n",
 		},
 		"SetCounterCapacity Past Zero": {
 			msg:         "SET_COUNTER_CAPACITY games -42",
 			want:        "ERROR: false\n",
 			counterName: "games",
-			wantCount:   "1",
+			wantCount:   "COUNTER: 1\n",
 		},
 	}
 	// nolint:dupl  // Linter errors on lines are duplicate of TestLists
@@ -1524,69 +1525,69 @@ func TestLists(t *testing.T) {
 	}{
 		"GetListCapacity": {
 			msg:  "GET_LIST_CAPACITY games",
-			want: "50",
+			want: "CAPACITY: 50\n",
 		},
 		"SetListCapacity": {
 			msg:          "SET_LIST_CAPACITY foo 1000",
-			want:         "true",
+			want:         "SUCCESS: true\n",
 			listName:     "foo",
-			wantCapacity: "1000",
+			wantCapacity: "CAPACITY: 1000\n",
 		},
 		"SetListCapacity past 1000": {
 			msg:          "SET_LIST_CAPACITY games 1001",
 			want:         "ERROR: false\n",
 			listName:     "games",
-			wantCapacity: "50",
+			wantCapacity: "CAPACITY: 50\n",
 		},
 		"SetListCapacity negative": {
 			msg:          "SET_LIST_CAPACITY games -1",
 			want:         "ERROR: false\n",
 			listName:     "games",
-			wantCapacity: "50",
+			wantCapacity: "CAPACITY: 50\n",
 		},
 		"ListContains": {
 			msg:  "LIST_CONTAINS games game2",
-			want: "true",
+			want: "FOUND: true\n",
 		},
 		"ListContains false": {
 			msg:  "LIST_CONTAINS games game0",
-			want: "false",
+			want: "FOUND: false\n",
 		},
 		"GetListLength": {
 			msg:  "GET_LIST_LENGTH games",
-			want: "2",
+			want: "LENGTH: 2\n",
 		},
 		"GetListValues": {
 			msg:  "GET_LIST_VALUES games",
-			want: "game1,game2\n",
+			want: "VALUES: game1,game2\n",
 		},
 		"GetListValues empty": {
 			msg:  "GET_LIST_VALUES foo",
-			want: "\n",
+			want: "VALUES: <none>\n",
 		},
 		"AppendListValue": {
 			msg:        "APPEND_LIST_VALUE bar bar3",
-			want:       "true",
+			want:       "SUCCESS: true\n",
 			listName:   "bar",
-			wantLength: "3",
+			wantLength: "LENGTH: 3\n",
 		},
 		"AppendListValue past capacity": {
 			msg:        "APPEND_LIST_VALUE baz baz2",
 			want:       "ERROR: false\n",
 			listName:   "baz",
-			wantLength: "1",
+			wantLength: "LENGTH: 1\n",
 		},
 		"DeleteListValue": {
 			msg:        "DELETE_LIST_VALUE qux qux3",
-			want:       "true",
+			want:       "SUCCESS: true\n",
 			listName:   "qux",
-			wantLength: "3",
+			wantLength: "LENGTH: 3\n",
 		},
 		"DeleteListValue value does not exist": {
 			msg:        "DELETE_LIST_VALUE games game4",
 			want:       "ERROR: false\n",
 			listName:   "games",
-			wantLength: "2",
+			wantLength: "LENGTH: 2\n",
 		},
 	}
 	// nolint:dupl  // Linter errors on lines are duplicate of TestCounters

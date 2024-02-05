@@ -24,7 +24,7 @@
 #
 
 # base version target. This is usually the next release.
-base_version = 1.38.0
+base_version = 1.39.0
 
 #
 # All of the following can be overwritten with environment variables
@@ -61,7 +61,7 @@ KIND_PROFILE ?= agones
 KIND_CONTAINER_NAME=$(KIND_PROFILE)-control-plane
 
 # Game Server image to use while doing end-to-end tests
-GS_TEST_IMAGE ?= us-docker.pkg.dev/agones-images/examples/simple-game-server:0.24
+GS_TEST_IMAGE ?= us-docker.pkg.dev/agones-images/examples/simple-game-server:0.27
 
 # Enable all alpha feature gates. Keep in sync with `false` (alpha) entries in pkg/util/runtime/features.go:featureDefaults
 ALPHA_FEATURE_GATES ?= "PlayerAllocationFilter=true&PlayerTracking=true&CountsAndLists=true&DisableResyncOnSDKServer=true&Example=true"
