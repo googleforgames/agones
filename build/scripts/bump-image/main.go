@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package main implements a program to increment the new tag for the given examples image
+// Package main implements a program to increment the new tag for the given examples image. Run this script using `make bump-image IMAGENAME=<imageName> VERSION=<version>`
 package main
 
 import (
@@ -29,7 +29,7 @@ import (
 var (
 	imageName       string
 	version         string
-	versionPattern  = regexp.MustCompile(`simple-game-server:(\d+)\.(\d+)`)
+	versionPattern  *regexp.Regexp
 	targetedFolders = map[string]bool{
 		"build":    true,
 		"examples": true,
