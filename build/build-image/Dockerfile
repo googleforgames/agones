@@ -17,9 +17,14 @@
 FROM debian:bookworm
 
 RUN apt-get update && \
-    apt-get install -y build-essential gnupg curl git wget psmisc rsync make python bash-completion \
-    zip nano jq graphviz gettext-base plantuml software-properties-common && \
+    apt-get install -y build-essential gnupg curl git wget psmisc rsync make python3 bash-completion \
+    zip nano jq graphviz gettext-base plantuml software-properties-common ruby-full && \
     apt-get clean
+
+RUN gem install fpm && \
+    fpm -s empty -t deb -p python2.7-0.0.0-0-any.deb --name python2.7 --license MIT --version 0.0.0 --architecture all --description 'Dummy package to satisfy google-cloud-cli dependencies.' --maintainer 'Yourself' && \
+    dpkg -i python2.7-0.0.0-0-any.deb && \
+    rm python2.7-0.0.0-0-any.deb
 
 # install go
 WORKDIR /usr/local
@@ -34,7 +39,7 @@ WORKDIR /opt
 
 # credits https://cloud.google.com/sdk/docs/install#deb
 RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] http://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key --keyring /usr/share/keyrings/cloud.google.gpg  add - && apt-get update -y && \
-    apt-get install google-cloud-cli google-cloud-cli-gke-gcloud-auth-plugin -y && \
+    apt-get install google-cloud-cli google-cloud-cli-gke-gcloud-auth-plugin google-cloud-cli-app-engine-go -y && \
     echo "source /usr/share/google-cloud-sdk/completion.bash.inc" >> /root/.bashrc
 
 # update the path for go
