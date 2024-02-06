@@ -25,7 +25,8 @@ then
     mkdir -p "$DIR"/sdk/.build
     cp -r /go/src/agones.dev/agones/sdks/cpp/* $DIR/sdk
     cd $DIR/sdk/.build
-    cmake .. -DCMAKE_BUILD_TYPE=Release -DAGONES_SILENT_OUTPUT=OFF -DCMAKE_INSTALL_PREFIX=$DIR/sdk/.build -DAGONES_THIRDPARTY_INSTALL_PATH=$DIR/sdk/.build -G "Unix Makefiles" -Wno-dev
+    cmake .. -DCMAKE_BUILD_TYPE=Release -DAGONES_SILENT_OUTPUT=OFF \
+      -DCMAKE_INSTALL_PREFIX=$DIR/sdk/.build -G "Unix Makefiles" -Wno-dev
 else
     echo "Directory with cpp SDK third party dependencies \
 has already built - using cached version. \

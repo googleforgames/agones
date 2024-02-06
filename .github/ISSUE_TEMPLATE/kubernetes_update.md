@@ -39,10 +39,14 @@ List of items to do for upgrading to {version_1} {version_2} {version_3}
         - [ ] `dev_minikube_example_cluster_version`, which is {version_2} with the supported patch version
 - [ ] If client-go pulled in a new version of gRPC, then also
     - [ ] Update the `grpc_release_tag` in the SDK [base image grpc version](https://github.com/googleforgames/agones/blob/main/build/includes/sdk.mk).
-    - [ ] Update the gRPC version number in C++ CMake scripts, `AGONES_GRPC_VERSION` [here](https://github.com/googleforgames/agones/blob/main/sdks/cpp/CMakeLists.txt)
-          and `gRPC_GIT_TAG` [here](https://github.com/googleforgames/agones/blob/main/sdks/cpp/cmake/prerequisites.cmake)
+    - [ ] Update the gRPC version number in C++ gRPC Dependency documentation [here](https://github.com/googleforgames/agones/blob/main/site/content/en/docs/Guides/Client%20SDKs/cpp.md).
+    - [ ] Update the gRPC version
+      ([Dockerfile](https://github.com/googleforgames/agones/blob/main/examples/cpp-simple/Dockerfile)) and 
+      increment the image tag
+      ([Makefile](https://github.com/googleforgames/agones/blob/main/examples/cpp-simple/Makefile)) in the C++
+      `cpp-simple` example.
     - [ ] Regenerate all client sdks: [make gen-all-sdk-grpc](https://github.com/googleforgames/agones/blob/main/build/README.md#make-gen-all-sdk-grpc) 
-          This can take an hour or so, as the above changes force a rebuild. Plan your day accordingly 😃.
+          This can take 20 minutes or so, as the above changes force a rebuild. Plan your day accordingly 😃.
     - [ ] Regenerate allocated API endpoints: [make gen-allocation-grpc](https://github.com/googleforgames/agones/blob/main/build/README.md#make-gen-allocation-grpc)
 - [ ] Confirm the update works as expected by running e2e tests
     - [ ] Add the new supported Kubernetes versions to the e2e clusters creation
