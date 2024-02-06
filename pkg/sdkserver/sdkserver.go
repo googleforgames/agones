@@ -246,19 +246,18 @@ func (s *SDKServer) Run(ctx context.Context) error {
 		return err
 	}
 
-	logLevel := agonesv1.SdkServerLogLevelInfo
-	// grab configuration details
-	if gs.Spec.SdkServer.LogLevel != "" {
-		logLevel = gs.Spec.SdkServer.LogLevel
-	}
-	s.logger.WithField("logLevel", logLevel).Debug("Setting LogLevel configuration")
-	level, err := logrus.ParseLevel(strings.ToLower(string(logLevel)))
-	if err == nil {
-		s.logger.Logger.SetLevel(level)
-	} else {
-		s.logger.WithError(err).Warn("Specified wrong Logging.SdkServer. Setting default loglevel - Info")
-		s.logger.Logger.SetLevel(logrus.InfoLevel)
-	}
+	logLevelEnv := os.Getenv("LOG_LEVEL")
+    if logLevelEnv != "" {
+        logLevel = logLevelEnv
+    }
+    s.logger.WithField("logLevel", logLevel).Debug("Setting LogLevel configuration")
+    level, err := logrus.ParseLevel(strings.ToLower(string(logLevel)))
+    if err == nil {
+        s.logger.Logger.SetLevel(level)
+    } else {
+        s.logger.WithError(err).Warn("Specified wrong LogLevel. Setting default loglevel - Info")
+        s.logger.Logger.SetLevel(logrus.InfoLevel)
+    }
 
 	s.health = gs.Spec.Health
 	s.logger.WithField("health", s.health).Debug("Setting health configuration")

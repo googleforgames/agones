@@ -659,6 +659,10 @@ func (c *Controller) sidecar(gs *agonesv1.GameServer) corev1.Container {
 				Name:  "FEATURE_GATES",
 				Value: runtime.EncodeFeatures(),
 			},
+			{
+                Name:  "LOG_LEVEL",
+                Value: "info",
+            },
 		},
 		Resources: corev1.ResourceRequirements{},
 		LivenessProbe: &corev1.Probe{
