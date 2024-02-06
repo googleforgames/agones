@@ -1208,11 +1208,13 @@ func TestControllerCreateGameServerPod(t *testing.T) {
 			assert.Equal(t, sidecarContainer.Resources.Requests.Cpu(), &c.sidecarCPURequest)
 			assert.Equal(t, sidecarContainer.Resources.Limits.Memory(), &c.sidecarMemoryLimit)
 			assert.Equal(t, sidecarContainer.Resources.Requests.Memory(), &c.sidecarMemoryRequest)
-			assert.Len(t, sidecarContainer.Env, 3, "3 env vars")
+			assert.Len(t, sidecarContainer.Env, 4, "4 env vars")
 			assert.Equal(t, "GAMESERVER_NAME", sidecarContainer.Env[0].Name)
 			assert.Equal(t, fixture.ObjectMeta.Name, sidecarContainer.Env[0].Value)
 			assert.Equal(t, "POD_NAMESPACE", sidecarContainer.Env[1].Name)
 			assert.Equal(t, "FEATURE_GATES", sidecarContainer.Env[2].Name)
+			assert.Equal(t, "LOG_LEVEL", sidecarContainer.Env[3].Name)
+			assert.Equal(t, "info", sidecarContainer.Env[3].Value)
 
 			gsContainer := pod.Spec.Containers[1]
 			assert.Equal(t, fixture.Spec.Ports[0].HostPort, gsContainer.Ports[0].HostPort)
