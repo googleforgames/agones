@@ -42,7 +42,7 @@ var (
 
 func init() {
 	flag.StringVar(&imageName, "imageName", "", "Image name to update")
-	flag.StringVar(&version, "version", "", "Version to update to")
+	flag.StringVar(&version, "version", "", "Version to update")
 }
 
 func main() {
