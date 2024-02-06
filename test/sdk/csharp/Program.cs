@@ -280,6 +280,131 @@ if (featureGates.Contains("CountsAndLists"))
     }
 }
 
+if (featureGates.Contains("CountsAndLists"))
+// Tests are expected to run sequentially on the same pre-defined List in the localsdk server
+{
+    var alpha = sdk.Alpha();
+    var key = "players";
+
+    {
+        var wantCapacity = 100;
+        var task = alpha.GetListCapacityAsync(key);
+        task.Wait();
+        var gotCapacity = task.Result;
+        if (wantCapacity != gotCapacity)
+        {
+            Console.Error.WriteLine($"List capacity should be {wantCapacity}, but is {gotCapacity}");
+            Environment.Exit(1);
+        }
+    }
+
+    {
+        var wantCapacity = 10;
+        var task = alpha.SetListCapacityAsync(key, wantCapacity);
+        task.Wait();
+        var setCapacity = task.Result;
+        if (setCapacity != true)
+        {
+            Console.Error.WriteLine($"SetListCapacityAsync for List {key} did not set");
+            Environment.Exit(1);
+        }
+        var getTask = alpha.GetListCapacityAsync(key);
+        getTask.Wait();
+        var gotCapacity = getTask.Result;
+        if (wantCapacity != gotCapacity)
+        {
+            Console.Error.WriteLine($"List capacity should be {wantCapacity}, but is {gotCapacity}");
+            Environment.Exit(1);
+        }
+    }
+
+    {
+        var value = "foo";
+        var want = false;
+        var task = alpha.ListContainsAsync(key, value);
+        task.Wait();
+        var got = task.Result;
+        if (want != got)
+        {
+            Console.Error.WriteLine($"ListContains expected {want} for value {value}, but got {got}");
+            Environment.Exit(1);
+        }
+        value = "test1";
+        want = true;
+        task = alpha.ListContainsAsync(key, value);
+        task.Wait();
+        got = task.Result;
+        if (want != got)
+        {
+            Console.Error.WriteLine($"ListContains expected {want} for value {value}, but got {got}");
+            Environment.Exit(1);
+        }
+    }
+
+    {
+        var wantValues = new List<string> { "test0", "test1", "test2" };
+        var task = alpha.GetListValuesAsync(key);
+        task.Wait();
+        var gotValues = task.Result;
+        var equal = Enumerable.SequenceEqual(wantValues, gotValues);
+        if (!equal)
+        {
+            var wantStr = String.Join(" ", wantValues);
+            var gotStr = String.Join(" ", gotValues);
+            Console.Error.WriteLine($"List values should be {wantStr}, but is {gotStr}");
+            Environment.Exit(1);
+        }
+    }
+
+    {
+        var addValue = "test3";
+        var wantValues = new List<string> { "test0", "test1", "test2", "test3" };
+        var task = alpha.AppendListValueAsync(key, addValue);
+        task.Wait();
+        var got = task.Result;
+        if (got != true)
+        {
+            Console.Error.WriteLine($"AppendListValueAsync for List {key} did not append {addValue}");
+            Environment.Exit(1);
+        }
+        var getTask = alpha.GetListValuesAsync(key);
+        getTask.Wait();
+        var gotValues = getTask.Result;
+        var equal = Enumerable.SequenceEqual(wantValues, gotValues);
+        if (!equal)
+        {
+            var wantStr = String.Join(" ", wantValues);
+            var gotStr = String.Join(" ", gotValues);
+            Console.Error.WriteLine($"List values should be {wantStr}, but is {gotStr}");
+            Environment.Exit(1);
+        }
+    }
+
+    {
+        var removeValue = "test2";
+        var wantValues = new List<string> { "test0", "test1", "test3" };
+        var task = alpha.DeleteListValueAsync(key, removeValue);
+        task.Wait();
+        var got = task.Result;
+        if (got != true)
+        {
+            Console.Error.WriteLine($"DeleteListValueAsync for List {key} did not delete {removeValue}");
+            Environment.Exit(1);
+        }
+        var getTask = alpha.GetListValuesAsync(key);
+        getTask.Wait();
+        var gotValues = getTask.Result;
+        var equal = Enumerable.SequenceEqual(wantValues, gotValues);
+        if (!equal)
+        {
+            var wantStr = String.Join(" ", wantValues);
+            var gotStr = String.Join(" ", gotValues);
+            Console.Error.WriteLine($"List values should be {wantStr}, but is {gotStr}");
+            Environment.Exit(1);
+        }
+    }
+}
+
 var shutDownStatus = await sdk.ShutDownAsync();
 if (shutDownStatus.StatusCode != StatusCode.OK)
 {

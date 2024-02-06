@@ -34,5 +34,12 @@ namespace Agones
         Task<bool> SetCounterCountAsync(string key, long amount);
         Task<long> GetCounterCapacityAsync(string key);
         Task<bool> SetCounterCapacityAsync(string key, long amount);
+        Task<long> GetListCapacityAsync(string key);
+        Task<bool> SetListCapacityAsync(string key, long amount);
+        Task<bool> ListContainsAsync(string key, string value);
+        Task<int> GetListLengthAsync(string key);
+        Task<List<string>> GetListValuesAsync(string key);
+        Task<bool> AppendListValueAsync(string key, string value);
+        Task<bool> DeleteListValueAsync(string key, string value);
     }
 }
