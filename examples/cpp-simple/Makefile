@@ -30,10 +30,11 @@ PROD_REPO ?= us-docker.pkg.dev/agones-images/examples
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_path := $(dir $(mkfile_path))
 root_path = $(realpath $(project_path)/../..)
+version := 0.17
 ifeq ($(REPOSITORY),)
-	server_tag := cpp-simple-server:0.16
+	server_tag := cpp-simple-server:$(version)
 else
-	server_tag := $(REPOSITORY)/cpp-simple-server:0.16
+	server_tag := $(REPOSITORY)/cpp-simple-server:$(version)
 endif
 
 #   _____                    _
