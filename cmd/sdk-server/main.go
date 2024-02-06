@@ -27,7 +27,6 @@ import (
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"github.com/tmc/grpc-websocket-proxy/wsproxy"
@@ -67,7 +66,7 @@ const (
 )
 
 var (
-	logger             = runtime.NewLoggerWithSource("main")
+	logger = runtime.NewLoggerWithSource("main")
 )
 
 func main() {
