@@ -20,6 +20,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Grpc.Net.Client;
+using gProto = Google.Protobuf.WellKnownTypes;
 
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Agones.Test")]
 namespace Agones
@@ -387,6 +388,199 @@ namespace Agones
             catch (RpcException ex)
             {
                 LogError(ex, $"Unable to invoke SetCounterCapacity({key}, {amount}).");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// GetListCapacityAsync returns the Capacity for a List, given the List's key (name).
+        /// Will error if the key was not predefined in the GameServer resource on creation.
+        /// </summary>
+        /// <returns>The List's capacity</returns>
+        public async Task<long> GetListCapacityAsync(string key)
+        {
+            try
+            {
+                var request = new GetListRequest()
+                {
+                    Name = key,
+                };
+                var list = await client.GetListAsync(request,
+                  deadline: DateTime.UtcNow.AddSeconds(RequestTimeoutSec), cancellationToken: ctoken);
+                return list.Capacity;
+            }
+            catch (RpcException ex)
+            {
+                LogError(ex, $"Unable to invoke GetListCapacity({key}).");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// SetListCapacityAsync sets the capacity for a given list. Capacity must be between 0 and 1000.
+        /// Will error if the key was not predefined in the GameServer resource on creation.
+        /// </summary>
+        /// <returns>True if the set List capacity request was successful.</returns>
+        public async Task<bool> SetListCapacityAsync(string key, long amount)
+        {
+            try
+            {
+                var list = new List()
+                {
+                    Name = key,
+                    Capacity = amount,
+                };
+                // FieldMask to update the capacity field only
+                var updateMask = new gProto.FieldMask()
+                {
+                    Paths = { "capacity" },
+                };
+                var request = new UpdateListRequest()
+                {
+                    List = list,
+                    UpdateMask = updateMask,
+                };
+                var response = await client.UpdateListAsync(request,
+                  deadline: DateTime.UtcNow.AddSeconds(RequestTimeoutSec), cancellationToken: ctoken);
+                return true;
+            }
+            catch (RpcException ex)
+            {
+                LogError(ex, $"Unable to invoke SetListCapacity({key}, {amount}).");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// ListContainsAsync returns if a string exists in a List's values list, given the List's key
+        /// and the string value. Search is case-sensitive.
+        /// Will error if the key was not predefined in the GameServer resource on creation.
+        /// </summary>
+        /// <returns>True if the value is found in the List</returns>
+        public async Task<bool> ListContainsAsync(string key, string value)
+        {
+            try
+            {
+                var request = new GetListRequest()
+                {
+                    Name = key,
+                };
+                var list = await client.GetListAsync(request,
+                  deadline: DateTime.UtcNow.AddSeconds(RequestTimeoutSec), cancellationToken: ctoken);
+                foreach (string val in list.Values)
+                {
+                    if (val == value)
+                    {
+                        return true;
+                    };
+                }
+                return false;
+            }
+            catch (RpcException ex)
+            {
+                LogError(ex, $"Unable to invoke ListContains({key}, {value}).");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// GetListLengthAsync returns the length of the Values list for a List, given the List's key.
+        /// Will error if the key was not predefined in the GameServer resource on creation.
+        /// </summary>
+        /// <returns>The length of List's values array</returns>
+        public async Task<int> GetListLengthAsync(string key)
+        {
+            try
+            {
+                var request = new GetListRequest()
+                {
+                    Name = key,
+                };
+                var list = await client.GetListAsync(request,
+                  deadline: DateTime.UtcNow.AddSeconds(RequestTimeoutSec), cancellationToken: ctoken);
+                return list.Values.Count;
+            }
+            catch (RpcException ex)
+            {
+                LogError(ex, $"Unable to invoke GetListLength({key}).");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// GetListValuesAsync returns the Values for a List, given the List's key (name).
+        /// Will error if the key was not predefined in the GameServer resource on creation.
+        /// </summary>
+        /// <returns>The List's values array</returns>
+        public async Task<List<string>> GetListValuesAsync(string key)
+        {
+            try
+            {
+                var request = new GetListRequest()
+                {
+                    Name = key,
+                };
+                var list = await client.GetListAsync(request,
+                  deadline: DateTime.UtcNow.AddSeconds(RequestTimeoutSec), cancellationToken: ctoken);
+                var values = new string[list.Values.Count];
+                list.Values.CopyTo(values, 0);
+                return values.ToList();
+            }
+            catch (RpcException ex)
+            {
+                LogError(ex, $"Unable to invoke GetListValues({key}).");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// AppendListValueAsync appends a string to a List's values list, given the List's key (name)
+        /// and the string value. Will error if the string already exists in the list.
+        /// Will error if the key was not predefined in the GameServer resource on creation.
+        /// </summary>
+        /// <returns>True if the append List value request was successful.</returns>
+        public async Task<bool> AppendListValueAsync(string key, string value)
+        {
+            try
+            {
+                var request = new AddListValueRequest()
+                {
+                    Name = key,
+                    Value = value,
+                };
+                var response = await client.AddListValueAsync(request,
+                  deadline: DateTime.UtcNow.AddSeconds(RequestTimeoutSec), cancellationToken: ctoken);
+                return true;
+            }
+            catch (RpcException ex)
+            {
+                LogError(ex, $"Unable to invoke AppendListValue({key}, {value}).");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// DeleteListValueAsync removes a string from a List's values list, given the List's key
+        /// and the string value. Will error if the string does not exist in the list.
+        /// Will error if the key was not predefined in the GameServer resource on creation.
+        /// </summary>
+        /// <returns>True if the delete List value request was successful.</returns>
+        public async Task<bool> DeleteListValueAsync(string key, string value)
+        {
+            try
+            {
+                var request = new RemoveListValueRequest()
+                {
+                    Name = key,
+                    Value = value,
+                };
+                var response = await client.RemoveListValueAsync(request,
+                  deadline: DateTime.UtcNow.AddSeconds(RequestTimeoutSec), cancellationToken: ctoken);
+                return true;
+            }
+            catch (RpcException ex)
+            {
+                LogError(ex, $"Unable to invoke DeleteListValue({key}, {value}).");
                 throw;
             }
         }

@@ -22,6 +22,7 @@ using Moq;
 using System;
 using Grpc.Net.Client;
 using Microsoft.Extensions.Logging;
+using gProto = Google.Protobuf.WellKnownTypes;
 
 namespace Agones.Tests
 {
@@ -309,6 +310,209 @@ namespace Agones.Tests
 
             var response = await mockSdk.Alpha().SetCounterCapacityAsync(key, amount);
             Assert.AreEqual(true, response);
+        }
+
+        [TestMethod]
+        public async Task GetListCapacityAsync_Sends_OK()
+        {
+            var mockClient = new Mock<SDK.SDKClient>();
+            var mockSdk = new AgonesSDK();
+            var key = "listKey";
+            long wantCapacity = 999;
+            var list = new List()
+            {
+                Name = key,
+                Capacity = wantCapacity,
+            };
+            var expected = new GetListRequest()
+            {
+                Name = key,
+            };
+
+            mockClient.Setup(m => m.GetListAsync(expected, It.IsAny<Metadata>(),
+            It.IsAny<DateTime?>(), It.IsAny<CancellationToken>())).Returns(
+                (GetListRequest _, Metadata _, DateTime? _, CancellationToken _) =>
+                new AsyncUnaryCall<List>(Task.FromResult(list), Task.FromResult(new Metadata()),
+                () => Status.DefaultSuccess, () => new Metadata(), () => { }));
+            mockSdk.alpha.client = mockClient.Object;
+
+            var response = await mockSdk.Alpha().GetListCapacityAsync(key);
+            Assert.AreEqual(wantCapacity, response);
+        }
+
+        [TestMethod]
+        public async Task SetListCapacityAsync_Sends_OK()
+        {
+            var mockClient = new Mock<SDK.SDKClient>();
+            var mockSdk = new AgonesSDK();
+            var key = "listKey";
+            var amount = 99;
+            var list = new List()
+            {
+                Name = key,
+                Capacity = amount,
+            };
+            var updateMask = new gProto.FieldMask()
+            {
+                Paths = { "capacity" },
+            };
+            var expected = new UpdateListRequest()
+            {
+                List = list,
+                UpdateMask = updateMask,
+            };
+
+            mockClient.Setup(m => m.UpdateListAsync(expected, It.IsAny<Metadata>(),
+                    It.IsAny<DateTime?>(), It.IsAny<CancellationToken>())).Returns(
+                    (UpdateListRequest _, Metadata _, DateTime? _, CancellationToken _) =>
+                    new AsyncUnaryCall<List>(Task.FromResult(list), Task.FromResult(new Metadata()),
+                  () => Status.DefaultSuccess, () => new Metadata(), () => { }));
+            mockSdk.alpha.client = mockClient.Object;
+
+            var response = await mockSdk.Alpha().SetListCapacityAsync(key, amount);
+            Assert.AreEqual(true, response);
+        }
+
+        [TestMethod]
+        public async Task ListContainsAsync_Sends_OK()
+        {
+            var mockClient = new Mock<SDK.SDKClient>();
+            var mockSdk = new AgonesSDK();
+            var key = "listKey";
+            var value = "foo";
+            var list = new List()
+            {
+                Name = key,
+            };
+            list.Values.Add(value);
+            var expected = new GetListRequest()
+            {
+                Name = key,
+            };
+
+            mockClient.Setup(m => m.GetListAsync(expected, It.IsAny<Metadata>(),
+            It.IsAny<DateTime?>(), It.IsAny<CancellationToken>())).Returns(
+                (GetListRequest _, Metadata _, DateTime? _, CancellationToken _) =>
+                new AsyncUnaryCall<List>(Task.FromResult(list), Task.FromResult(new Metadata()),
+                () => Status.DefaultSuccess, () => new Metadata(), () => { }));
+            mockSdk.alpha.client = mockClient.Object;
+
+            var response = await mockSdk.Alpha().ListContainsAsync(key, value);
+            Assert.AreEqual(true, response);
+        }
+
+        [TestMethod]
+        public async Task AppendListValueAsync_Sends_OK()
+        {
+            var mockClient = new Mock<SDK.SDKClient>();
+            var mockSdk = new AgonesSDK();
+            var key = "listKey";
+            var value = "foo";
+            var list = new List()
+            {
+                Name = key,
+            };
+            var expected = new AddListValueRequest()
+            {
+                Name = key,
+                Value = value,
+            };
+
+            mockClient.Setup(m => m.AddListValueAsync(expected, It.IsAny<Metadata>(),
+                    It.IsAny<DateTime?>(), It.IsAny<CancellationToken>())).Returns(
+                    (AddListValueRequest _, Metadata _, DateTime? _, CancellationToken _) =>
+                    new AsyncUnaryCall<List>(Task.FromResult(list), Task.FromResult(new Metadata()),
+                  () => Status.DefaultSuccess, () => new Metadata(), () => { }));
+            mockSdk.alpha.client = mockClient.Object;
+
+            var response = await mockSdk.Alpha().AppendListValueAsync(key, value);
+            Assert.AreEqual(true, response);
+        }
+
+        [TestMethod]
+        public async Task DeleteListValueAsync_Sends_OK()
+        {
+            var mockClient = new Mock<SDK.SDKClient>();
+            var mockSdk = new AgonesSDK();
+            var key = "listKey";
+            var value = "foo";
+            var list = new List()
+            {
+                Name = key,
+            };
+            var expected = new RemoveListValueRequest()
+            {
+                Name = key,
+                Value = value,
+            };
+
+            mockClient.Setup(m => m.RemoveListValueAsync(expected, It.IsAny<Metadata>(),
+                    It.IsAny<DateTime?>(), It.IsAny<CancellationToken>())).Returns(
+                    (RemoveListValueRequest _, Metadata _, DateTime? _, CancellationToken _) =>
+                    new AsyncUnaryCall<List>(Task.FromResult(list), Task.FromResult(new Metadata()),
+                  () => Status.DefaultSuccess, () => new Metadata(), () => { }));
+            mockSdk.alpha.client = mockClient.Object;
+
+            var response = await mockSdk.Alpha().DeleteListValueAsync(key, value);
+            Assert.AreEqual(true, response);
+        }
+
+        [TestMethod]
+        public async Task GetListLengthAsync_Sends_OK()
+        {
+            var mockClient = new Mock<SDK.SDKClient>();
+            var mockSdk = new AgonesSDK();
+            var key = "listKey";
+            long wantLength = 3;
+            var values = new string[] { "foo", "bar", "baz" };
+            var list = new List()
+            {
+                Name = key,
+            };
+            list.Values.Add(values);
+            var expected = new GetListRequest()
+            {
+                Name = key,
+            };
+
+            mockClient.Setup(m => m.GetListAsync(expected, It.IsAny<Metadata>(),
+            It.IsAny<DateTime?>(), It.IsAny<CancellationToken>())).Returns(
+                (GetListRequest _, Metadata _, DateTime? _, CancellationToken _) =>
+                new AsyncUnaryCall<List>(Task.FromResult(list), Task.FromResult(new Metadata()),
+                () => Status.DefaultSuccess, () => new Metadata(), () => { }));
+            mockSdk.alpha.client = mockClient.Object;
+
+            var response = await mockSdk.Alpha().GetListLengthAsync(key);
+            Assert.AreEqual(wantLength, response);
+        }
+
+        [TestMethod]
+        public async Task GetListValuesAsync_Sends_OK()
+        {
+            var mockClient = new Mock<SDK.SDKClient>();
+            var mockSdk = new AgonesSDK();
+            var key = "listKey";
+            var wantValues = new string[] { "foo", "bar", "baz" };
+            var list = new List()
+            {
+                Name = key,
+            };
+            list.Values.Add(wantValues);
+            var expected = new GetListRequest()
+            {
+                Name = key,
+            };
+
+            mockClient.Setup(m => m.GetListAsync(expected, It.IsAny<Metadata>(),
+            It.IsAny<DateTime?>(), It.IsAny<CancellationToken>())).Returns(
+                (GetListRequest _, Metadata _, DateTime? _, CancellationToken _) =>
+                new AsyncUnaryCall<List>(Task.FromResult(list), Task.FromResult(new Metadata()),
+                () => Status.DefaultSuccess, () => new Metadata(), () => { }));
+            mockSdk.alpha.client = mockClient.Object;
+
+
+            var response = await mockSdk.Alpha().GetListValuesAsync(key);
+            CollectionAssert.AreEqual(wantValues, response);
         }
 
         [TestMethod]
