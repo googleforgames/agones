@@ -138,6 +138,10 @@ Webhook based autoscalers have the added benefit of being able to scale a Fleet 
 scale up on demand based on an external signal before a `GameServerAllocation` is executed from a match-maker or 
 similar system.
 
+In order to define the path to your Webhook you can use either `URL` or `service`. Note that `caBundle` parameter is
+required if you use HTTPS for webhook `FleetAutoscaler`, `caBundle` should be omitted if you want to use HTTP webhook
+server.
+
 For Webhook FleetAutoscaler below and in {{< ghlink href="examples/webhookfleetautoscaler.yaml" >}}example folder{{< /ghlink >}}:
 
 ```yaml
@@ -170,15 +174,12 @@ spec:
       seconds: 30
 ```
 
+See the [Webhook Endpoint Specification](#webhook-endpoint-specification) for the specification of the incoming and 
+outgoing JSON packet structure for the webhook endpoint.
+
 ## Spec Field Reference
 
-Since Agones defines a new 
-[Custom Resources Definition (CRD)](https://kubernetes.io/docs/concepts/api-extension/custom-resources/) 
-we can define a new resource using the kind `FleetAutoscaler` with the custom group `autoscaling.agones.dev` 
-and API version `v1`
-
-
-The `spec` field is the actual `FleetAutoscaler` specification and it is composed as follows:
+The `spec` field of the `FleetAutoscaler` is composed as follows:
 
 - `fleetName` is name of the fleet to attach to and control. Must be an existing `Fleet` in the same namespace
    as this `FleetAutoscaler`.
@@ -220,18 +221,18 @@ The `spec` field is the actual `FleetAutoscaler` specification and it is compose
 - `sync` is autoscaling sync strategy. It defines when to run the autoscaling
   - `type` is type of the sync. For now only "FixedInterval" is available
   - `fixedInterval` parameters of the fixedInterval sync
-    - `seconds` is the time in seconds between each auto scaling
+    - `seconds` is the time in seconds between each autoscaling
 
 ## Webhook Endpoint Specification
 
-Webhook endpoint is used to delegate the scaling logic to a separate pod or server.
+A webhook based `FleetAutoscaler` sends an HTTP POST request to the webhook endpoint every sync period (default is 30s) 
+with a JSON body, and scale the target fleet based on the data that is returned.
 
-FleetAutoscaler would send a request to the webhook endpoint every sync period (which is currently 30s) with a JSON body, and scale the target fleet based on the data that is returned.
-JSON payload with a FleetAutoscaleReview data structure would be sent to webhook endpoint and received from it with FleetAutoscaleResponse field populated. FleetAutoscaleResponse contains target Replica count which would trigger scaling of the fleet according to it.
+The JSON payload that is sent is a `FleetAutoscaleReview` data structure and a `FleetAutoscaleResponse` data 
+structure is expected to be returned. 
 
-In order to define the path to your Webhook you can use either `URL` or `service`. Note that `caBundle` parameter is required if you use HTTPS for webhook fleetautoscaler, `caBundle` should be omitted if you want to use HTTP webhook server.
-
-The connection to this webhook endpoint should be defined in `FleetAutoscaler` using Webhook policy type.
+The `FleetAutoscaleResponse`'s `Replica` field is used to set the target `Fleet` count with each sync interval, thereby
+providing the autoscaling functionality.
 
 ```go
 // FleetAutoscaleReview is passed to the webhook with a populated Request value,
