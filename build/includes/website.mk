@@ -138,3 +138,8 @@ update-navbar-version: FILENAME ?= ""
 update-navbar-version: ensure-build-image
 	docker run --rm $(common_mounts) --workdir=$(mount_path) $(DOCKER_RUN_ARGS) $(build_tag) \
 		go run build/scripts/update-navbar-version/main.go -file=$(FILENAME)
+
+# bump examples image
+bump-image: ensure-build-image
+	docker run --rm $(common_mounts) --workdir=$(mount_path) $(DOCKER_RUN_ARGS) $(build_tag) \
+		go run build/scripts/bump-image/main.go -imageName=$(IMAGENAME) -version=$(VERSION)
