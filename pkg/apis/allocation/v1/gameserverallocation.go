@@ -148,10 +148,10 @@ type PlayerSelector struct {
 
 // CounterSelector is the filter options for a GameServer based on the count and/or available capacity.
 type CounterSelector struct {
-	// MinCount is the minimum current value. Defaults to 0.
+	// MinCount is the minimum current value. Defaults to 1000.
 	// +optional
 	MinCount int64 `json:"minCount"`
-	// MaxCount is the maximum current value. Defaults to 0, which translates as max(in64).
+	// MaxCount is the maximum current value. Defaults to 1000 and setting count to max(int64) may lead to issues and is not recommended.
 	// +optional
 	MaxCount int64 `json:"maxCount"`
 	// MinAvailable specifies the minimum capacity (current capacity - current count) available on a GameServer. Defaults to 1000.

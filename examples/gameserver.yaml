@@ -95,7 +95,7 @@ spec:
   #     count: 1 # initial value.
   #     capacity: 100 # (Optional) Defaults to 1000 and setting capacity to max(int64) may lead to issues and is not recommended.
   #   sessions:
-  #     count: 1
+  #     count: 1 # Defaults to 1000 and setting count to max(int64) may lead to issues and is not recommended.
   # lists: # lists are lists of values stored against this GameServer that can be added and deleted from. Keys must be declared at GameServer creation time.
   #   players: # an empty list, with a capacity set to 10.
   #     capacity: 10  # capacity value, defaults to 1000.

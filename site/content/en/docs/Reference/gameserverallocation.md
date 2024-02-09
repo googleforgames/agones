@@ -50,10 +50,10 @@ spec:
       # [FeatureFlag:CountsAndLists]
       # counters: # selector for counter current values of a GameServer count
       #   rooms:
-      #     minCount: 1 # minimum value. Defaults to 0.
-      #     maxCount: 5 # maximum value. Defaults to max(int64)
+      #     minCount: 1 # minimum value. Defaults to 1000.
+      #     maxCount: 5 # maximum value. Defaults to 1000 and setting capacity to max(int64) may lead to issues and is not recommended.
       #     minAvailable: 1 # minimum available (current capacity - current count). Defaults to 1000.
-      #     maxAvailable: 10 # maximum available (current capacity - current count) . Defaults to 1000 and setting capacity to max(int64) may lead to issues and is not recommended.
+      #     maxAvailable: 10 # maximum available (current capacity - current count). Defaults to 1000 and setting capacity to max(int64) may lead to issues and is not recommended.
       # lists:
       #   players:
       #     containsValue: "x6k8z" # only match GameServers who has this value in the list. Defaults to "", which is all.

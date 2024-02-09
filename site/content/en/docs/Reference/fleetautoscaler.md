@@ -85,7 +85,7 @@ spec:
       # MinCapacity is the minimum aggregate Counter total capacity across the fleet, defaulting to 1000.
       # If BufferSize is specified as a percentage, MinCapacity is required and cannot be 0.
       # If non zero, MinCapacity must be smaller than MaxCapacity and must be greater than or equal to BufferSize.
-minCapacity: 10
+      minCapacity: 10
       # MaxCapacity is the maximum aggregate Counter total capacity across the fleet, defaulting to 1000.
       # MaxCapacity must be greater than or equal to both MinCapacity and BufferSize.
       # Setting MaxCapacity to max(int64) may result in issues. Required field.
