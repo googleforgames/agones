@@ -85,7 +85,7 @@ spec:
   # counters: # counters are int64 counters that can be incremented and decremented by set amounts. Keys must be declared at GameServer creation time.
   #   games: # arbitrary key.
   #     count: 1 # initial value.
-  #     capacity: 100 # (Optional) Defaults to 1000 and setting capacity to max(int64) may lead to issues and is not recommended. See [GitHub issue #3636](https://github.com/googleforgames/agones/issues/3636) for more details.
+  #     capacity: 100 # (Optional) Defaults to 1000 and setting capacity to max(int64) may lead to issues and is not recommended. See GitHub issue https://github.com/googleforgames/agones/issues/3636 for more details.
   #   sessions:
   #     count: 1
   # lists: # lists are lists of values stored against this GameServer that can be added and deleted from. Keys must be declared at GameServer creation time.
