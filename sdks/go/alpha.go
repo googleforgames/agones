@@ -96,9 +96,7 @@ func (a *Alpha) GetCounterCount(key string) (int64, error) {
 }
 
 // IncrementCounter increases a counter by the given nonnegative integer amount.
-// Will execute the increment operation against the current CRD value.
-// By default, the counter's capacity is set to 1000. Attempting to set the capacity
-// to max(int64) could lead to issues and is not recommended.
+// Will execute the increment operation against the current CRD value. Will max at max(int64).
 // Will error if the key was not predefined in the GameServer resource on creation.
 // Returns false if the count is at the current capacity (to the latest knowledge of the SDK),
 // and no increment will occur.

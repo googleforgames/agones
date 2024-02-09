@@ -132,7 +132,7 @@ The `spec` field is the actual `Fleet` specification and it is composed as follo
 - `priorities`: (Alpha, requires `CountsAndLists` feature flag): Defines which gameservers in the Fleet are most important to keep around - impacts scale down logic.
   - `type`: Sort by a "Counter" or a "List".
   - `key`: The name of the Counter or List. If not found on the GameServer, has no impact.
-  - `order`: Order: Sort by “Ascending” or “Descending”. “Descending” a bigger Capacity is preferred. “Ascending” would be smaller Capacity is preferred. Note that the default Counters capacity is 1000 and setting Counters capacity to max(int64) may lead to issues and is not recommended.
+  - `order`: Order: Sort by “Ascending” or “Descending”. “Descending” a bigger Capacity is preferred. “Ascending” would be smaller Capacity is preferred.
 - `template` a full `GameServer` configuration template.
    See the [GameServer]({{< relref "gameserver.md" >}}) reference for all available fields.
 

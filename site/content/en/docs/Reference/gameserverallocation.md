@@ -50,10 +50,10 @@ spec:
       # [FeatureFlag:CountsAndLists]
       # counters: # selector for counter current values of a GameServer count
       #   rooms:
-      #     minCount: 1 # minimum value. Defaults to 1000.
-      #     maxCount: 5 # maximum value. Defaults to 1000 and setting capacity to max(int64) may lead to issues and is not recommended.
-      #     minAvailable: 1 # minimum available (current capacity - current count). Defaults to 1000.
-      #     maxAvailable: 10 # maximum available (current capacity - current count). Defaults to 1000 and setting capacity to max(int64) may lead to issues and is not recommended.
+      #     minCount: 1 # minimum value. Defaults to 0.
+      #     maxCount: 5 # maximum value. Defaults to max(int64)
+      #     minAvailable: 1 # minimum available (current capacity - current count). Defaults to 0.
+      #     maxAvailable: 10 # maximum available (current capacity - current count) Defaults to max(int64)
       # lists:
       #   players:
       #     containsValue: "x6k8z" # only match GameServers who has this value in the list. Defaults to "", which is all.
@@ -188,7 +188,7 @@ The `spec` field is the actual `GameServerAllocation` specification, and it is c
   GameServer via Allocation. Defaults to "Ready". The only other option is "Allocated", which can be used in
   conjunction with label/annotation/player selectors to retrieve an already Allocated GameServer.
 - `counters` (Alpha, "CountsAndLists" feature flag) enables filtering based on game server Counter status, such as
-  the minimum and maximum number of active rooms, defaulting to a capacity of 1000. This helps in selecting game servers based on their current activity
+  the minimum and maximum number of active rooms. This helps in selecting game servers based on their current activity
   or capacity. Optional.
 - `lists` (Alpha, "CountsAndLists" feature flag) enables filtering based on game server List status, such as allowing
     for inclusion or exclusion of specific players. Optional.
