@@ -154,10 +154,10 @@ type CounterSelector struct {
 	// MaxCount is the maximum current value. Defaults to 0, which translates as max(in64).
 	// +optional
 	MaxCount int64 `json:"maxCount"`
-	// MinAvailable specifies the minimum capacity (current capacity - current count) available on a GameServer. Defaults to 0.
+	// MinAvailable specifies the minimum capacity (current capacity - current count) available on a GameServer. Defaults to 1000.
 	// +optional
 	MinAvailable int64 `json:"minAvailable"`
-	// MaxAvailable specifies the maximum capacity (current capacity - current count) available on a GameServer. Defaults to 0, which translates to max(int64).
+	// MaxAvailable specifies the maximum capacity (current capacity - current count) available on a GameServer. Defaults to 1000 and setting capacity to max(int64) may lead to issues and is not recommended.
 	// +optional
 	MaxAvailable int64 `json:"maxAvailable"`
 }

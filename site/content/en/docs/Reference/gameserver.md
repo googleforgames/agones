@@ -85,7 +85,7 @@ spec:
   # counters: # counters are int64 counters that can be incremented and decremented by set amounts. Keys must be declared at GameServer creation time.
   #   games: # arbitrary key.
   #     count: 1 # initial value.
-  #     capacity: 100 # (Optional) Maximum value for the counter. 0 is max(int64).
+  #     capacity: 100 # (Optional) Defaults to 1000 and setting capacity to max(int64) may lead to issues and is not recommended.
   #   sessions:
   #     count: 1
   # lists: # lists are lists of values stored against this GameServer that can be added and deleted from. Keys must be declared at GameServer creation time.
@@ -146,7 +146,7 @@ The `spec` field is the actual GameServer specification and it is composed as fo
   - `grpcPort` the port that the SDK Server binds to for gRPC connections
   - `httpPort` the port that the SDK Server binds to for HTTP gRPC gateway connections
 - `players` (Alpha, behind "PlayerTracking" feature gate), sets this GameServer's initial player capacity
-- `counters` (Alpha, requires "CountsAndLists" feature flag) are int64 counters that can be incremented and decremented by set amounts. Keys must be declared at GameServer creation time.
+- `counters` (Alpha, requires "CountsAndLists" feature flag) are int64 counters with a default capacity of 1000 that can be incremented and decremented by set amounts. Keys must be declared at GameServer creation time. Note that setting the capacity to max(int64) may lead to issues
 - `lists` (Alpha, requires "CountsAndLists" feature flag) are lists of values stored against this GameServer that can be added and deleted from. Key must be declared at GameServer creation time.
 - `template` the [pod spec template]({{% k8s-api-version href="#podtemplatespec-v1-core" %}}) to run your GameServer containers, [see](https://kubernetes.io/docs/concepts/workloads/pods/pod-overview/#pod-templates) for more information.
 
