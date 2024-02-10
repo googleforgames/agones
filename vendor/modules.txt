@@ -256,9 +256,6 @@ github.com/magiconair/properties
 github.com/mailru/easyjson/buffer
 github.com/mailru/easyjson/jlexer
 github.com/mailru/easyjson/jwriter
-# github.com/mattbaird/jsonpatch v0.0.0-20230413205102-771768614e91
-## explicit
-github.com/mattbaird/jsonpatch
 # github.com/matttproud/golang_protobuf_extensions v1.0.4
 ## explicit; go 1.9
 github.com/matttproud/golang_protobuf_extensions/pbutil
@@ -436,6 +433,9 @@ golang.org/x/tools/internal/gocommand
 golang.org/x/tools/internal/gopathwalk
 golang.org/x/tools/internal/imports
 golang.org/x/tools/internal/typeparams
+# gomodules.xyz/jsonpatch/v2 v2.4.0
+## explicit; go 1.20
+gomodules.xyz/jsonpatch/v2
 # google.golang.org/api v0.138.0
 ## explicit; go 1.19
 google.golang.org/api/googleapi
