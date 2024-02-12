@@ -17,7 +17,6 @@ require (
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.17.1
 	github.com/hashicorp/golang-lru v0.5.1
 	github.com/heptiolabs/healthcheck v0.0.0-20171201210846-da5fdee475fb
-	github.com/mattbaird/jsonpatch v0.0.0-20230413205102-771768614e91
 	github.com/mennanov/fmutils v0.2.0
 	github.com/mitchellh/hashstructure/v2 v2.0.2
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822
@@ -33,6 +32,7 @@ require (
 	golang.org/x/oauth2 v0.12.0
 	golang.org/x/time v0.3.0
 	golang.org/x/tools v0.13.0
+	gomodules.xyz/jsonpatch/v2 v2.4.0
 	google.golang.org/api v0.138.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20230822172742-b8732ec3820d
 	google.golang.org/grpc v1.57.1
