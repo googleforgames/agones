@@ -27,6 +27,7 @@ import (
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"github.com/tmc/grpc-websocket-proxy/wsproxy"
@@ -70,6 +71,14 @@ var (
 )
 
 func main() {
+	logLevelEnv := os.Getenv("LOG_LEVEL")
+	logLevel, err := logrus.ParseLevel(strings.ToLower(logLevelEnv))
+	if err != nil {
+		logger.WithError(err).Warn("Invalid LOG_LEVEL value. Defaulting to 'info'.")
+		logLevel = logrus.InfoLevel
+	}
+	logger.Logger.SetLevel(logLevel)
+
 	ctlConf := parseEnvFlags()
 	logger.WithField("version", pkg.Version).WithField("featureGates", runtime.EncodeFeatures()).
 		WithField("ctlConf", ctlConf).Info("Starting sdk sidecar")
@@ -139,7 +148,7 @@ func main() {
 
 		var s *sdkserver.SDKServer
 		s, err = sdkserver.NewSDKServer(ctlConf.GameServerName, ctlConf.PodNamespace,
-			kubeClient, agonesClient)
+			kubeClient, agonesClient, logLevel)
 		if err != nil {
 			logger.WithError(err).Fatalf("Could not start sidecar")
 		}

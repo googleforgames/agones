@@ -661,7 +661,7 @@ func (c *Controller) sidecar(gs *agonesv1.GameServer) corev1.Container {
 			},
 			{
 				Name:  "LOG_LEVEL",
-				Value: "info",
+				Value: string(gs.Spec.SdkServer.LogLevel),
 			},
 		},
 		Resources: corev1.ResourceRequirements{},
