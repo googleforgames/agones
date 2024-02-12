@@ -26,36 +26,53 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"strings"
+	"strconv"
 	"time"
 
 	"agones.dev/agones/pkg/util/signals"
 	sdk "agones.dev/agones/sdks/go"
 )
 
-// main starts a UDP or TCP server
+// Main starts a server that serves as an example of how to integrate GenAI endpoints into your dedicated game server.
 func main() {
 	sigCtx, _ := signals.NewSigKillContext()
 
 	port := flag.String("port", "7654", "The port to listen to traffic on")
-	udp := flag.Bool("udp", true, "Server will listen on UDP")
-	tcp := flag.Bool("tcp", false, "Server will listen on TCP")
-	endpoint := flag.String("endpoint", "", "The full base URL to send API requests to")
+	simEndpoint := flag.String("simEndpoint", "", "The full base URL to send API requests to to simulate user input")
+	genAiEndpoint := flag.String("genAiEndpoint", "", "The full base URL to send API requests to to simulate computer (NPC) responses to user input")
+	simPrompt := flag.String("SimPrompt", "", "The first prompt for the simEndpoint")
+	genAiPrompt := flag.String("GenAiPrompt", "", "The first prompt for the genAiEndpoint")
+	numChats := flag.Int("NumChats", 1, "Number of back and forth chats between the sim and genAI")
+
+	var simConn *connection
+	var compConn * connection
 
 	flag.Parse()
 	if ep := os.Getenv("PORT"); ep != "" {
 		port = &ep
 	}
-	if eudp := os.Getenv("UDP"); eudp != "" {
-		u := strings.ToUpper(eudp) == "TRUE"
-		udp = &u
+	if se := os.Getenv("SimEndpoint"); se != "" {
+		simEndpoint = &se
+		log.Printf("Creating Client at endpoint %s", *simEndpoint)
+		simConn = initClient(*simEndpoint)
 	}
-	if etcp := os.Getenv("TCP"); etcp != "" {
-		t := strings.ToUpper(etcp) == "TRUE"
-		tcp = &t
+	if gae := os.Getenv("GenAiEndpoint"); gae != "" {
+		genAiEndpoint = &gae
+		log.Printf("Creating Client at endpoint %s", *genAiEndpoint)
+		compConn = initClient(*genAiEndpoint)
 	}
-	if endp := os.Getenv("ENDPOINT"); endp != "" {
-		endpoint = &endp
+	if sp := os.Getenv("SimPrompt"); sp != "" {
+		simPrompt = &sp
+	}
+	if gap := os.Getenv("GenAiPrompt"); gap != "" {
+		genAiPrompt = &gap
+	}
+	if nc := os.Getenv("NumChats"); nc != "" {
+		num, err := strconv.Atoi(nc)
+		numChats = &num
+		if err != nil {
+			log.Fatalf("Could not parse NumChats: %v", err)
+		}
 	}
 
 	log.Print("Creating SDK instance")
@@ -64,35 +81,33 @@ func main() {
 		log.Fatalf("Could not connect to sdk: %v", err)
 	}
 
-
 	log.Print("Starting Health Ping")
 	// TODO: Is "cancel" still being used even if no method explicitly uses it?
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, _ := signals.NewSigKillContext()
 	go doHealth(s, ctx)
 
-	log.Printf("Creating Client at endpoint %s", *endpoint)
-	clientConn, err := initClient(*endpoint)
-
-	if *udp {
-		go udpListener(port, s, cancel, clientConn)
+	// Start up TCP listener so the user can interact with the GenAI endpoint manually
+	if simConn == nil {
+		go tcpListener(port, s, compConn)
+	} else {
+		go handleChat(*simPrompt, *genAiPrompt, simConn, compConn, *numChats)
 	}
 
-	if *tcp {
-		go tcpListener(port, s, cancel, clientConn)
-	}
 
 	log.Print("Marking this server as ready")
-	ready(s)
+	if err := s.Ready(); err != nil {
+		log.Fatalf("Could not send ready message")
+	}
 
 	<-sigCtx.Done()
 	os.Exit(0)
 }
 
-func initClient(endpoint string) (*connection, error) {
+func initClient(endpoint string) (*connection) {
 	// TODO: create option for a client certificate
 	client := &http.Client{}
 	conn := &connection{client: client, endpoint: endpoint}
-	return conn, nil
+	return conn
 }
 
 type connection struct {
@@ -119,7 +134,7 @@ func handleGenAIRequest(txt string, clientConn *connection) (string, error) {
 	}
 	jsonStr, err := json.Marshal(jsonRequest)
 	if err != nil {
-		return "unable to marshal json request", err
+		return "", fmt.Errorf("unable to marshal json request: %v", err)
 	}
 
 	req, err := http.NewRequest("POST", clientConn.endpoint, bytes.NewBuffer(jsonStr))
@@ -131,10 +146,13 @@ func handleGenAIRequest(txt string, clientConn *connection) (string, error) {
 
 	resp, err := clientConn.client.Do(req)
 	if err != nil {
-		return "Post request error", err
+		return "", fmt.Errorf("unable to post request: %v", err)
 	}
 
-	responseBody, _ := io.ReadAll(resp.Body)
+	responseBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("unable to read response body: %v", err)
+	}
 	defer resp.Body.Close()
 	body := string(responseBody)
 
@@ -144,61 +162,29 @@ func handleGenAIRequest(txt string, clientConn *connection) (string, error) {
 	return string(responseBody) + "\n", err
 }
 
-func udpListener(port *string, s *sdk.SDK, cancel context.CancelFunc, clientConn *connection) {
-	log.Printf("Starting UDP server, listening on port %s", *port)
-	conn, err := net.ListenPacket("udp", ":"+*port)
+// Two AIs talking to each other
+func handleChat(simPrompt string, comPrompt string, simConn *connection, compConn *connection, numChats int) {
+	if numChats <= 0 {
+		return
+	}
+	compResp, err := handleGenAIRequest(comPrompt, compConn)
 	if err != nil {
-		log.Fatalf("Could not start UDP server: %v", err)
+		log.Fatalf("could not send request: %v", err)
+	} else {
+		log.Printf("%d GENAI PROMPT: %s\nGENAI RESPONSE: %s\n", numChats, comPrompt, compResp)
 	}
-	defer conn.Close() // nolint: errcheck
-	udpReadWriteLoop(conn, cancel, s, clientConn)
-}
-
-func udpReadWriteLoop(conn net.PacketConn, cancel context.CancelFunc, s *sdk.SDK, clientConn *connection) {
-	b := make([]byte, 1024)
-	for {
-		sender, txt := readPacket(conn, b)
-
-		log.Printf("Received UDP: %v", txt)
-
-		if txt == "EXIT" {
-			exit(s)
-		}
-
-		// TODO: handle in go routine
-		response, err := handleGenAIRequest(txt, clientConn)
-		if err != nil {
-			response = "ERROR: " + err.Error() + "\n"
-		}
-
-		udpRespond(conn, sender, response)
-	}
-}
-
-// readPacket reads a string from the connection
-func readPacket(conn net.PacketConn, b []byte) (net.Addr, string) {
-	n, sender, err := conn.ReadFrom(b)
+	simResp, err := handleGenAIRequest(simPrompt, simConn)
 	if err != nil {
-		log.Fatalf("Could not read from udp stream: %v", err)
+		log.Fatalf("could not send request: %v", err)
+	} else {
+		log.Printf("%d, SIM PROMPT: %s\nSIM RESPONSE: %s\n", numChats, simPrompt, simResp)
 	}
-	txt := strings.TrimSpace(string(b[:n]))
-	log.Printf("Received packet from %v: %v", sender.String(), txt)
-	return sender, txt
+
+	numChats -= 1
+	handleChat(compResp, simResp, simConn, compConn, numChats)
 }
 
-// respond responds to a given sender.
-func udpRespond(conn net.PacketConn, sender net.Addr, txt string) {
-	log.Printf("Responding to UDP with %s", txt)
-
-	n, err := conn.WriteTo([]byte(txt), sender);
-	if err != nil {
-		log.Fatalf("Could not write to udp stream: %v", err)
-	}
-	log.Printf("WriteTo successful %d", n)
-}
-
-
-func tcpListener(port *string, s *sdk.SDK, cancel context.CancelFunc, clientConn *connection) {
+func tcpListener(port *string, s *sdk.SDK, clientConn *connection) {
 	log.Printf("Starting TCP server, listening on port %s", *port)
 	ln, err := net.Listen("tcp", ":"+*port)
 	if err != nil {
@@ -211,26 +197,22 @@ func tcpListener(port *string, s *sdk.SDK, cancel context.CancelFunc, clientConn
 		if err != nil {
 			log.Printf("Unable to accept incoming TCP connection: %v", err)
 		}
-		go tcpHandleConnection(conn, s, cancel, clientConn)
+		go tcpHandleConnection(conn, s, clientConn)
 	}
 }
 
 // handleConnection services a single tcp connection to the server
-func tcpHandleConnection(conn net.Conn, s *sdk.SDK, cancel context.CancelFunc, clientConn *connection) {
+func tcpHandleConnection(conn net.Conn, s *sdk.SDK, clientConn *connection) {
 	log.Printf("TCP Client %s connected", conn.RemoteAddr().String())
 	scanner := bufio.NewScanner(conn)
 	for scanner.Scan() {
-		tcpHandleCommand(conn, scanner.Text(), s, cancel, clientConn)
+		tcpHandleCommand(conn, scanner.Text(), s, clientConn)
 	}
 	log.Printf("TCP Client %s disconnected", conn.RemoteAddr().String())
 }
 
-func tcpHandleCommand(conn net.Conn, txt string, s *sdk.SDK, cancel context.CancelFunc, clientConn *connection) {
+func tcpHandleCommand(conn net.Conn, txt string, s *sdk.SDK, clientConn *connection) {
 	log.Printf("TCP txt: %v", txt)
-
-	if txt == "EXIT" {
-		exit(s)
-	}
 
 	response, err := handleGenAIRequest(txt, clientConn)
 	if err != nil {
@@ -264,25 +246,5 @@ func doHealth(sdk *sdk.SDK, ctx context.Context) {
 			return
 		case <-tick:
 		}
-	}
-}
-
-// exit shutdowns the server
-func exit(s *sdk.SDK) {
-	log.Printf("Received EXIT command. Exiting.")
-	// This tells Agones to shutdown this Game Server
-	shutdownErr := s.Shutdown()
-	if shutdownErr != nil {
-		log.Printf("Could not shutdown")
-	}
-	// The process will exit when Agones removes the pod and the
-	// container receives the SIGTERM signal
-}
-
-// ready attempts to mark this gameserver as ready
-func ready(s *sdk.SDK) {
-	err := s.Ready()
-	if err != nil {
-		log.Fatalf("Could not send ready message")
 	}
 }

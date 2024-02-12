@@ -21,18 +21,24 @@ spec:
     - name: default
       portPolicy: Dynamic
       containerPort: 7654
-      protocol: TCPUDP
+      protocol: TCP
   template:
     spec:
       containers:
         - name: simple-genai-game-server
           image: us-docker.pkg.dev/agones-images/examples/simple-genai-game-server:0.1
           env:
-            - name: TCP
-              value: "TRUE"
-            - name: ENDPOINT
-              # Replace with your GenAI inference server's endpoint address.
-              value: "http://34.105.57.254/genai"
+            - name: GenAiEndpoint
+              # Replace with your GenAI and Sim inference servers' endpoint addresses.
+              value: "http://192.1.1.2/genai/chat"
+            - name: SimEndpoint
+              value: "http://192.1.1.2/genai/chat"
+            - name: SimPrompt
+              value: "Respond to everything in the form of a question"
+            - name: GenAiPrompt
+              value: "I would like to buy a car"
+            - name: NumChats
+              value: "20"
           resources:
             requests:
               memory: 64Mi
