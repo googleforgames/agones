@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
 	"strings"
 	"sync"
 	"time"
@@ -248,19 +247,8 @@ func (s *SDKServer) Run(ctx context.Context) error {
 		return err
 	}
 
-	var logLevel string
-	logLevelEnv := os.Getenv("LOG_LEVEL")
-	if logLevelEnv != "" {
-		logLevel = logLevelEnv
-	}
-	s.logger.WithField("logLevel", logLevel).Debug("Setting LogLevel configuration")
-	level, err := logrus.ParseLevel(strings.ToLower(logLevel))
-	if err == nil {
-		s.logger.Logger.SetLevel(level)
-	} else {
-		s.logger.WithError(err).Warn("Specified wrong LogLevel. Setting default loglevel - Info")
-		s.logger.Logger.SetLevel(logrus.InfoLevel)
-	}
+	currentLogLevel := s.logger.Logger.GetLevel()
+	s.logger.WithField("logLevel", currentLogLevel).Debug("Setting LogLevel configuration")
 
 	s.health = gs.Spec.Health
 	s.logger.WithField("health", s.health).Debug("Setting health configuration")
