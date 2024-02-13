@@ -59,7 +59,7 @@ Table of Contents
         * [make pprof-cpu-web](#make-pprof-cpu-web)
         * [make pprof-heap-web](#make-pprof-heap-web)
         * [make shell](#make-shell)
-        * [make godoc](#make-godoc)
+        * [make pkgsite](#make-pkgsite)
         * [make build-controller-image](#make-build-controller-image)
         * [make build-agones-sdk-image](#make-build-agones-sdk-image)
         * [make gen-install](#make-gen-install)
@@ -655,8 +655,8 @@ Start the web interface for pprof for heap profiling.
 #### `make shell`
 Run a bash shell with the developer tools (go tooling, kubectl, etc) and source code in it.
 
-#### `make godoc`
-Run a container with godoc (search index enabled)
+#### `make pkgsite`
+Run a container with pkgsite on port 8888
 
 #### `make build-controller-image`
 Compile the gameserver controller and then build the docker image

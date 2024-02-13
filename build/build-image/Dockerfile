@@ -41,7 +41,8 @@ RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] http://packages.c
 ENV PATH /usr/local/go/bin:/go/bin:$PATH
 
 # install go tooling for development, building and testing
-RUN go install golang.org/x/tools/cmd/goimports@latest
+RUN go install golang.org/x/tools/cmd/goimports@latest && \
+    go install golang.org/x/pkgsite/cmd/pkgsite@latest
 
 # the kubernetes version for the file
 ENV KUBERNETES_VER 1.27.6
