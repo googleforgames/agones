@@ -264,6 +264,8 @@ to the capacity of that Counter or List.
 All functions will return an error if the specified `key` is not predefined in the 
 [`GameServer.Spec.Counters`][gameserverspec] resource configuration.
 
+**Note:** For Counters, the default setting for the capacity is preset to 1000. It is recommended to avoid configuring the capacity to max(int64), as doing so could cause problems with [JSON Patch operations](https://github.com/googleforgames/agones/issues/3636).
+
 ##### Alpha().GetCounterCount(key)
 
 This function retrieves either the [`GameServer.Status.Counters[key].Count`][gameserverstatus] or the SDK awaiting-batch

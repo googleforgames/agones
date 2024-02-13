@@ -17,7 +17,7 @@
 # Base images for SDKs Bump: 3
 #
 
-FROM debian:bullseye
+FROM debian:bookworm
 
 RUN apt-get update && apt-get install -y \
   build-essential autoconf libtool git pkg-config curl \
@@ -25,11 +25,12 @@ RUN apt-get update && apt-get install -y \
   && apt-get clean
 
 ARG GRPC_RELEASE_TAG
-# install protobuf first, then grpc
+# Install grpc locally for reuse across builds.
 RUN git clone --recurse-submodules -b $GRPC_RELEASE_TAG --depth 1 --shallow-submodules https://github.com/grpc/grpc /var/local/git/grpc && \
     cd /var/local/git/grpc && \
     mkdir -p cmake/build && \
     cd cmake/build && \
+    export CMAKE_BUILD_PARALLEL_LEVEL=$(nproc) && \
     cmake -DCMAKE_BUILD_TYPE=Release -DgRPC_INSTALL=ON -DgRPC_BUILD_TESTS=OFF ../.. && \
     make -j$(nproc) && make install
 

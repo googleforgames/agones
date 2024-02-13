@@ -39,14 +39,12 @@ steps:
     id: cpp-sdk-build-restore-cache
     args:
       - --bucket=gs://$_CACHE_BUCKET
-      - --key=$_CPP_SDK_BUILD_CACHE_KEY-$( checksum sdks/cpp/cmake/prerequisites.cmake
-        )
+      - --key=$_CPP_SDK_BUILD_CACHE_KEY-$( checksum sdks/cpp/CMakeLists.txt )
   - name: us-docker.pkg.dev/$PROJECT_ID/ci/restore_cache
     id: cpp-sdk-conformance-restore-cache
     args:
       - --bucket=gs://$_CACHE_BUCKET
-      - --key=$_CPP_SDK_CONFORMANCE_CACHE_KEY-$( checksum sdks/cpp/cmake/prerequisites.cmake
-        )
+      - --key=$_CPP_SDK_CONFORMANCE_CACHE_KEY-$( checksum sdks/cpp/CMakeLists.txt )
   - name: us-docker.pkg.dev/$PROJECT_ID/ci/restore_cache
     id: rust-sdk-build-restore-cache
     args:

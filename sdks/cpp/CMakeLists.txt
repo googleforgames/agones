@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-cmake_minimum_required (VERSION 3.5.0)
+cmake_minimum_required(VERSION 3.15)
 
 # Silent cmake/build output (internal option)
 # Extra command line options
@@ -62,45 +62,36 @@ project(agones VERSION ${AGONES_VERSION} HOMEPAGE_URL https://github.com/googlef
 
 # Options
 option(AGONES_FORCE_GRPC_VERSION "Build Agones C++ SDK only with supported gRPC version" ON)
-option(AGONES_BUILD_ONLY_PREREQUISITIES "Build only prerequisites of Agones" OFF)
-option(AGONES_ZLIB_STATIC "Use static version of ZLIB" ON)
-option(AGONES_BUILD_THIRDPARTY_DEBUG "Build debug version of thirdparty libraries (MSVC only)" OFF)
 option(AGONES_CLANG_FORMAT "Apply clang-format (if found) as a pre-build step" OFF)
-set(AGONES_THIRDPARTY_INSTALL_PATH "${CMAKE_INSTALL_PREFIX}" CACHE STRING "Path for installing third-party OpenSSL and gRPC, if they are not found with find_package")
-set(AGONES_OPENSSL_CONFIG_STRING "VC-WIN64A" CACHE STRING "See https://github.com/openssl/openssl/blob/OpenSSL_1_1_1-stable/INSTALL for details")
 
 # Prerequisities
 # [markmandel] - not 100% sure what include(CMakeFindDependencyMacro) does, but it solves the building issue.
 # https://cmake.org/cmake/help/latest/manual/cmake-packages.7.html#creating-a-package-configuration-file
 include(CMakeFindDependencyMacro)
-include(./cmake/prerequisites.cmake)
+include(ProcessorCount)
+
+ProcessorCount(CPU_COUNT)
+if (CPU_COUNT GREATER 0 AND NOT DEFINED CMAKE_BUILD_PARALLEL_LEVEL)
+    set(ENV{CMAKE_BUILD_PARALLEL_LEVEL} "${CPU_COUNT}")
+    message(STATUS "Setting CMAKE_BUILD_PARALLEL_LEVEL to $ENV{CMAKE_BUILD_PARALLEL_LEVEL}")
+endif()
+
+# gRPC
+find_package(Protobuf REQUIRED)
+find_package(gRPC CONFIG REQUIRED)
 find_package(Threads REQUIRED)
-find_package(ZLIB REQUIRED)
-find_package(Protobuf REQUIRED CONFIG)
-find_package(gRPC ${AGONES_GRPC_VERSION} ${AGONES_GRPC_VERSION_MATCH} REQUIRED CONFIG)
 
-if (AGONES_BUILD_ONLY_PREREQUISITIES)
-    return()
-endif()
-
-# Currently we doesn't support build time generation of proto/gRPC files,
-# so gRPC version should be strict
-set(AGONES_FORCE_GRPC_VERSION ON)
-set(AGONES_GRPC_VERSION_MATCH "")
-if (AGONES_FORCE_GRPC_VERSION)
-    set(AGONES_GRPC_VERSION_MATCH EXACT)
-endif()
+message(STATUS "gRPC version found: ${gRPC_VERSION}")
 
 # Settings
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_INCLUDE_CURRENT_DIR_IN_INTERFACE ON)
 set(CMAKE_DEBUG_POSTFIX "d")
-set(AGONES_GRPC_VERSION "1.57.0")
 
 # Platform specific stuff
 if (WIN32)

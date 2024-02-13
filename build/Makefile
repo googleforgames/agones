@@ -135,6 +135,8 @@ ifdef DOCKER_RUN
 	ensure-build-image += ensure-build-image
 endif
 
+git_safe = git config --global --add safe.directory $(mount_path)
+
 # When performing full build, always rebuild go packages and compress more
 ifdef FULL_BUILD
 	go_rebuild_flags = -a
@@ -489,7 +491,8 @@ build-extensions-binary-linux-arm64: $(ensure-build-image)
 lint: LINT_TIMEOUT ?= 15m
 lint: $(ensure-build-image)
 	docker run -t -e "TERM=xterm-256color" -e "$(gomod_on)" --rm $(common_mounts) -w $(workdir_path) $(DOCKER_RUN_ARGS) $(build_tag) bash -c \
-		"golangci-lint run ./examples/... && \
+		"$(git_safe) && \
+		golangci-lint run ./examples/... && \
 		golangci-lint run --timeout $(LINT_TIMEOUT) ./... && \
 		yamllint ."
 
@@ -743,10 +746,10 @@ shell: $(ensure-build-image)
 		$(DOCKER_RUN_ARGS) \
 		$(build_tag) bash -l
 
-# run a container with godoc
-godoc:
-	docker run -p 8888:8888 --rm $(common_mounts) -v $(build_path)/.index:/root/.index \
-		$(build_tag) godoc -http=":8888" -index=true
+# run a container with pkgsite
+pkgsite:
+	docker run -p 8888:8888 --rm $(common_mounts) -w $(workdir_path) \
+		$(build_tag) pkgsite -http=":8888" .
 
 # start cpu profiling pprof with a web ui
 pprof-cpu-web:

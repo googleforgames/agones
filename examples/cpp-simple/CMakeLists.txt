@@ -12,12 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-cmake_minimum_required (VERSION 3.13.0)
+cmake_minimum_required(VERSION 3.15)
 
 project(cpp-simple CXX)
 
 # Settings
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
@@ -37,7 +37,6 @@ elseif(APPLE)
 elseif(UNIX AND NOT APPLE)
   # Linux
 endif()
-
 
 include_directories(${agones_INCLUDE_DIRS})
 set(SRC_FILES "server.cc")

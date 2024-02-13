@@ -44,7 +44,7 @@ site-static: ensure-build-image
 	docker run --rm $(common_mounts) --workdir=$(mount_path)/site $(DOCKER_RUN_ARGS) $(build_tag) \
 		bash -c "npm list autoprefixer || npm install autoprefixer@9.8.6"
 	docker run --rm $(common_mounts) --workdir=$(mount_path)/site $(DOCKER_RUN_ARGS) $(build_tag) bash -c \
-        "git config --global --add safe.directory /go/src/agones.dev/agones &&  $(ENV) hugo --config=config.toml $(ARGS)"
+        "$(git_safe) && $(ENV) hugo --config=config.toml $(ARGS)"
 
 site-gen-app-yaml: SERVICE ?= default
 site-gen-app-yaml:
@@ -138,3 +138,8 @@ update-navbar-version: FILENAME ?= ""
 update-navbar-version: ensure-build-image
 	docker run --rm $(common_mounts) --workdir=$(mount_path) $(DOCKER_RUN_ARGS) $(build_tag) \
 		go run build/scripts/update-navbar-version/main.go -file=$(FILENAME)
+
+# bump examples image
+bump-image: ensure-build-image
+	docker run --rm $(common_mounts) --workdir=$(mount_path) $(DOCKER_RUN_ARGS) $(build_tag) \
+		go run build/scripts/bump-image/main.go -imageName=$(IMAGENAME) -version=$(VERSION)
