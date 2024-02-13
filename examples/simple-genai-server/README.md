@@ -12,12 +12,8 @@ This particular inference server has the request structure for the /chat endpoin
 
 ```
 type GenAIRequest struct {
-  Context         string  `json:"context"`
-	MaxOutputTokens int     `json:"max_output_tokens"`
+	Context         string  `json:"context,omitempty"`
 	Prompt          string  `json:"prompt"`
-	Temperature     float64 `json:"temperature"`
-	TopK            int     `json:"top_k"`
-	TopP            float64 `json:"top_p"`
 }
 ```
 
@@ -36,7 +32,7 @@ and [installing Agones](https://agones.dev/site/docs/installation/install-agones
 
 Modify the `gameserver.yaml` `GenAiEndpoint` value to your inference server's endpoint. If you want
 to manually interact with the GenAI endpoint via netcat, remove the rest of the env variables in the
-`gameserver.yaml`.
+`gameserver.yaml`. Optionally, include the `GenAiContext` in your `gameserver.yaml`.
 
 If you want to have two clients "chat" to each other, modify the `gameserver.yaml` `SimEndpoint`
 value to your inference server's endpoint. Alternatively you can create a basic http server that

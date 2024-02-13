@@ -38,11 +38,11 @@ func main() {
 	sigCtx, _ := signals.NewSigKillContext()
 
 	port := flag.String("port", "7654", "The port to listen to traffic on")
-	simEndpoint := flag.String("simEndpoint", "", "The full base URL to send API requests to to simulate user input")
 	genAiEndpoint := flag.String("genAiEndpoint", "", "The full base URL to send API requests to to simulate computer (NPC) responses to user input")
-	prompt := flag.String("Prompt", "", "The first prompt for the GenAI endpoint")
-	simContext := flag.String("SimContext", "", "Context for the Sim endpoint")
 	genAiContext := flag.String("GenAiContext", "", "Context for the GenAI endpoint")
+	prompt := flag.String("Prompt", "", "The first prompt for the GenAI endpoint")
+	simEndpoint := flag.String("simEndpoint", "", "The full base URL to send API requests to to simulate user input")
+	simContext := flag.String("SimContext", "", "Context for the Sim endpoint")
 	numChats := flag.Int("NumChats", 1, "Number of back and forth chats between the sim and genAI")
 
 	var simConn *connection
@@ -73,10 +73,10 @@ func main() {
 	}
 	if nc := os.Getenv("NumChats"); nc != "" {
 		num, err := strconv.Atoi(nc)
-		numChats = &num
 		if err != nil {
 			log.Fatalf("Could not parse NumChats: %v", err)
 		}
+		numChats = &num
 	}
 
 	log.Print("Creating SDK instance")
@@ -90,17 +90,16 @@ func main() {
 	ctx, _ := signals.NewSigKillContext()
 	go doHealth(s, ctx)
 
+	log.Print("Marking this server as ready")
+	if err := s.Ready(); err != nil {
+		log.Fatalf("Could not send ready message")
+	}
+
 	// Start up TCP listener so the user can interact with the GenAI endpoint manually
 	if simConn == nil {
 		go tcpListener(port, s, compConn)
 	} else {
 		go handleChat(*prompt, compConn, simConn, *numChats)
-	}
-
-
-	log.Print("Marking this server as ready")
-	if err := s.Ready(); err != nil {
-		log.Fatalf("Could not send ready message")
 	}
 
 	<-sigCtx.Done()
@@ -123,21 +122,13 @@ type connection struct {
 
 type GenAIRequest struct {
 	Context         string  `json:"context,omitempty"`
-	MaxOutputTokens int     `json:"max_output_tokens"`
 	Prompt          string  `json:"prompt"`
-	Temperature     float64 `json:"temperature"`
-	TopK            int     `json:"top_k"`
-	TopP            float64 `json:"top_p"`
 }
 
 func handleGenAIRequest(prompt string, clientConn *connection) (string, error) {
 	jsonRequest := GenAIRequest{
 		Context: clientConn.context,
-		MaxOutputTokens: 256,
 		Prompt: prompt,
-		Temperature: 0.2,
-		TopK: 40,
-		TopP: 0.8,
 	}
 	jsonStr, err := json.Marshal(jsonRequest)
 	if err != nil {
@@ -225,8 +216,6 @@ func tcpHandleCommand(conn net.Conn, txt string, s *sdk.SDK, clientConn *connect
 
 // respond responds to a given sender.
 func tcpRespond(conn net.Conn, txt string) {
-	log.Printf("Responding to TCP with %s", txt)
-
 	if _, err := conn.Write([]byte(txt)); err != nil {
 		log.Fatalf("Could not write to TCP stream: %v", err)
 	}
