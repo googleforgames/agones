@@ -40,8 +40,9 @@ func main() {
 	port := flag.String("port", "7654", "The port to listen to traffic on")
 	simEndpoint := flag.String("simEndpoint", "", "The full base URL to send API requests to to simulate user input")
 	genAiEndpoint := flag.String("genAiEndpoint", "", "The full base URL to send API requests to to simulate computer (NPC) responses to user input")
-	simPrompt := flag.String("SimPrompt", "", "The first prompt for the simEndpoint")
-	genAiPrompt := flag.String("GenAiPrompt", "", "The first prompt for the genAiEndpoint")
+	prompt := flag.String("Prompt", "", "The first prompt for the GenAI endpoint")
+	simContext := flag.String("SimContext", "", "Context for the Sim endpoint")
+	genAiContext := flag.String("GenAiContext", "", "Context for the GenAI endpoint")
 	numChats := flag.Int("NumChats", 1, "Number of back and forth chats between the sim and genAI")
 
 	var simConn *connection
@@ -51,21 +52,24 @@ func main() {
 	if ep := os.Getenv("PORT"); ep != "" {
 		port = &ep
 	}
+	if sc := os.Getenv("SimContext"); sc != "" {
+		simContext = &sc
+	}
+	if gac := os.Getenv("GenAiContext"); gac != "" {
+		genAiContext = &gac
+	}
+	if p := os.Getenv("Prompt"); p != "" {
+		prompt = &p
+	}
 	if se := os.Getenv("SimEndpoint"); se != "" {
 		simEndpoint = &se
 		log.Printf("Creating Client at endpoint %s", *simEndpoint)
-		simConn = initClient(*simEndpoint)
+		simConn = initClient(*simEndpoint, *simContext)
 	}
 	if gae := os.Getenv("GenAiEndpoint"); gae != "" {
 		genAiEndpoint = &gae
 		log.Printf("Creating Client at endpoint %s", *genAiEndpoint)
-		compConn = initClient(*genAiEndpoint)
-	}
-	if sp := os.Getenv("SimPrompt"); sp != "" {
-		simPrompt = &sp
-	}
-	if gap := os.Getenv("GenAiPrompt"); gap != "" {
-		genAiPrompt = &gap
+		compConn = initClient(*genAiEndpoint, *genAiContext)
 	}
 	if nc := os.Getenv("NumChats"); nc != "" {
 		num, err := strconv.Atoi(nc)
@@ -90,7 +94,7 @@ func main() {
 	if simConn == nil {
 		go tcpListener(port, s, compConn)
 	} else {
-		go handleChat(*simPrompt, *genAiPrompt, simConn, compConn, *numChats)
+		go handleChat(*prompt, compConn, simConn, *numChats)
 	}
 
 
@@ -103,20 +107,22 @@ func main() {
 	os.Exit(0)
 }
 
-func initClient(endpoint string) (*connection) {
+func initClient(endpoint string, context string) (*connection) {
 	// TODO: create option for a client certificate
 	client := &http.Client{}
-	conn := &connection{client: client, endpoint: endpoint}
+	conn := &connection{client: client, endpoint: endpoint, context: context}
 	return conn
 }
 
 type connection struct {
 	client   *http.Client
 	endpoint string // full base URL for API requests
+	context  string
 	// TODO: create options for routes off the base URL
 }
 
 type GenAIRequest struct {
+	Context         string  `json:"context,omitempty"`
 	MaxOutputTokens int     `json:"max_output_tokens"`
 	Prompt          string  `json:"prompt"`
 	Temperature     float64 `json:"temperature"`
@@ -124,10 +130,11 @@ type GenAIRequest struct {
 	TopP            float64 `json:"top_p"`
 }
 
-func handleGenAIRequest(txt string, clientConn *connection) (string, error) {
+func handleGenAIRequest(prompt string, clientConn *connection) (string, error) {
 	jsonRequest := GenAIRequest{
+		Context: clientConn.context,
 		MaxOutputTokens: 256,
-		Prompt: txt,
+		Prompt: prompt,
 		Temperature: 0.2,
 		TopK: 40,
 		TopP: 0.8,
@@ -162,26 +169,20 @@ func handleGenAIRequest(txt string, clientConn *connection) (string, error) {
 	return string(responseBody) + "\n", err
 }
 
-// Two AIs talking to each other
-func handleChat(simPrompt string, comPrompt string, simConn *connection, compConn *connection, numChats int) {
+// Two AIs (connection endpoints) talking to each other
+func handleChat(prompt string, conn1 *connection, conn2 *connection, numChats int) {
 	if numChats <= 0 {
 		return
 	}
-	compResp, err := handleGenAIRequest(comPrompt, compConn)
+	response, err := handleGenAIRequest(prompt, conn1)
 	if err != nil {
 		log.Fatalf("could not send request: %v", err)
 	} else {
-		log.Printf("%d GENAI PROMPT: %s\nGENAI RESPONSE: %s\n", numChats, comPrompt, compResp)
-	}
-	simResp, err := handleGenAIRequest(simPrompt, simConn)
-	if err != nil {
-		log.Fatalf("could not send request: %v", err)
-	} else {
-		log.Printf("%d, SIM PROMPT: %s\nSIM RESPONSE: %s\n", numChats, simPrompt, simResp)
+		log.Printf("%d PROMPT: %s\nRESPONSE: %s\n", numChats, prompt, response)
 	}
 
 	numChats -= 1
-	handleChat(compResp, simResp, simConn, compConn, numChats)
+	handleChat(response, conn2, conn1, numChats)
 }
 
 func tcpListener(port *string, s *sdk.SDK, clientConn *connection) {

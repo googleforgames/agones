@@ -33,12 +33,14 @@ spec:
               value: "http://192.1.1.2/genai/chat"
             - name: SimEndpoint
               value: "http://192.1.1.2/genai/chat"
-            - name: SimPrompt
-              value: "Respond to everything in the form of a question"
-            - name: GenAiPrompt
+            - name: SimContext
+              value: "You are buying a car"
+            - name: GenAiContext
+              value: "You are a car salesperson"
+            - name: Prompt
               value: "I would like to buy a car"
             - name: NumChats
-              value: "20"
+              value: "50"
           resources:
             requests:
               memory: 64Mi

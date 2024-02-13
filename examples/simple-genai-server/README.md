@@ -8,10 +8,11 @@ endpoints to "chat" to each other.
 
 You will need a separate GenAI inference server. This game server uses the
 [Google for Games GenAI](https://github.com/googleforgames/GenAI-quickstart) as its inference server.
-This particular inference server has the request structure:
+This particular inference server has the request structure for the /chat endpoint:
 
 ```
 type GenAIRequest struct {
+  Context         string  `json:"context"`
 	MaxOutputTokens int     `json:"max_output_tokens"`
 	Prompt          string  `json:"prompt"`
 	Temperature     float64 `json:"temperature"`
@@ -40,12 +41,12 @@ to manually interact with the GenAI endpoint via netcat, remove the rest of the 
 If you want to have two clients "chat" to each other, modify the `gameserver.yaml` `SimEndpoint`
 value to your inference server's endpoint. Alternatively you can create a basic http server that
 accepts requests in the structure noted in the above section, and returns a predetermined set of
-responses for the chat. The `SimPrompt` and `GenAiPrompt` are the first request prompts sent to
-their respective GenAI endpoints. The default values for these is an empty string. `NumChats` is the
-number of back and forth "chats" between the `SimEndpoint` and the `GenAiPrompt`. The default value
-is `1` which means that one request (the `SimPrompt` and `GenAiPrompt`) will be sent to each
-endpoint. Each additional "chat" will send the reponses from one endpoint the other endpoint and
-vice versa.
+responses for the chat. The `GenAiContext` is sent to the `GenAiEndpoint` with each request, and the
+`SimContext` is sent to the `SimEndpoint` with each request as part of the GenAIRequest structure.
+The default values for `GenAiContext` and `SimContext` are empty strings. The `Prompt` is the first
+sent to prompt send to the GenAI endpoint to start the chat. The default values for the prompt is an
+empty string. `NumChats` is the number of requests made to the `SimEndpoint` and `GenAiEndpoint`.
+The default value for is `NumChats` is `1`.
 
 ## Running the Game Server
 
