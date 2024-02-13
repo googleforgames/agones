@@ -746,10 +746,10 @@ shell: $(ensure-build-image)
 		$(DOCKER_RUN_ARGS) \
 		$(build_tag) bash -l
 
-# run a container with godoc
-godoc:
-	docker run -p 8888:8888 --rm $(common_mounts) -v $(build_path)/.index:/root/.index \
-		$(build_tag) godoc -http=":8888" -index=true
+# run a container with pkgsite
+pkgsite:
+	docker run -p 8888:8888 --rm $(common_mounts) -w $(workdir_path) \
+		$(build_tag) pkgsite -http=":8888" .
 
 # start cpu profiling pprof with a web ui
 pprof-cpu-web:
