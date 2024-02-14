@@ -158,11 +158,11 @@ type CounterPolicy struct {
 	// Key is the name of the Counter. Required field.
 	Key string `json:"key"`
 
-	// MaxCapacity is the maximum aggregate Counter total capacity across the fleet.
+	// MaxCapacity is the maximum aggregate Counter available capacity across the fleet.
 	// MaxCapacity must be bigger than both MinCapacity and BufferSize. Required field.
 	MaxCapacity int64 `json:"maxCapacity"`
 
-	// MinCapacity is the minimum aggregate Counter total capacity across the fleet.
+	// MinCapacity is the minimum aggregate Counter available capacity across the fleet.
 	// If zero, MinCapacity is ignored.
 	// If non zero, MinCapacity must be smaller than MaxCapacity and bigger than BufferSize.
 	MinCapacity int64 `json:"minCapacity"`
@@ -179,11 +179,11 @@ type ListPolicy struct {
 	// Key is the name of the List. Required field.
 	Key string `json:"key"`
 
-	// MaxCapacity is the maximum aggregate List total capacity across the fleet.
+	// MaxCapacity is the maximum aggregate List available capacity across the fleet.
 	// MaxCapacity must be bigger than both MinCapacity and BufferSize. Required field.
 	MaxCapacity int64 `json:"maxCapacity"`
 
-	// MinCapacity is the minimum aggregate List total capacity across the fleet.
+	// MinCapacity is the minimum aggregate List available capacity across the fleet.
 	// If zero, it is ignored.
 	// If non zero, it must be smaller than MaxCapacity and bigger than BufferSize.
 	MinCapacity int64 `json:"minCapacity"`
