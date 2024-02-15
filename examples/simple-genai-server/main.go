@@ -38,15 +38,15 @@ func main() {
 	sigCtx, _ := signals.NewSigKillContext()
 
 	port := flag.String("port", "7654", "The port to listen to traffic on")
-	genAiEndpoint := flag.String("genAiEndpoint", "", "The full base URL to send API requests to to simulate computer (NPC) responses to user input")
+	genAiEndpoint := flag.String("GenAiEndpoint", "", "The full base URL to send API requests to to simulate computer (NPC) responses to user input")
 	genAiContext := flag.String("GenAiContext", "", "Context for the GenAI endpoint")
 	prompt := flag.String("Prompt", "", "The first prompt for the GenAI endpoint")
-	simEndpoint := flag.String("simEndpoint", "", "The full base URL to send API requests to to simulate user input")
+	simEndpoint := flag.String("SimEndpoint", "", "The full base URL to send API requests to to simulate user input")
 	simContext := flag.String("SimContext", "", "Context for the Sim endpoint")
 	numChats := flag.Int("NumChats", 1, "Number of back and forth chats between the sim and genAI")
 
 	var simConn *connection
-	var compConn * connection
+	var genAiConn *connection
 
 	flag.Parse()
 	if ep := os.Getenv("PORT"); ep != "" {
@@ -63,13 +63,9 @@ func main() {
 	}
 	if se := os.Getenv("SimEndpoint"); se != "" {
 		simEndpoint = &se
-		log.Printf("Creating Client at endpoint %s", *simEndpoint)
-		simConn = initClient(*simEndpoint, *simContext)
 	}
 	if gae := os.Getenv("GenAiEndpoint"); gae != "" {
 		genAiEndpoint = &gae
-		log.Printf("Creating Client at endpoint %s", *genAiEndpoint)
-		compConn = initClient(*genAiEndpoint, *genAiContext)
 	}
 	if nc := os.Getenv("NumChats"); nc != "" {
 		num, err := strconv.Atoi(nc)
@@ -86,30 +82,40 @@ func main() {
 	}
 
 	log.Print("Starting Health Ping")
-	// TODO: Is "cancel" still being used even if no method explicitly uses it?
-	ctx, _ := signals.NewSigKillContext()
-	go doHealth(s, ctx)
+	go doHealth(s, sigCtx)
 
 	log.Print("Marking this server as ready")
 	if err := s.Ready(); err != nil {
 		log.Fatalf("Could not send ready message")
 	}
 
+	if *simEndpoint != "" {
+		log.Printf("Creating Sim Client at endpoint %s", *simEndpoint)
+		simConn = initClient(*simEndpoint, *simContext, "Sim")
+	}
+
+	if *genAiEndpoint == "" {
+		log.Fatalf("GenAiEndpoint must be specified")
+	}
+	log.Printf("Creating GenAI Client at endpoint %s", *genAiEndpoint)
+	genAiConn = initClient(*genAiEndpoint, *genAiContext, "GenAI")
+
 	// Start up TCP listener so the user can interact with the GenAI endpoint manually
 	if simConn == nil {
-		go tcpListener(port, s, compConn)
+		go tcpListener(*port, genAiConn)
 	} else {
-		go handleChat(*prompt, compConn, simConn, *numChats)
+		log.Printf("Starting autonomous chat with Prompt: %s", *prompt)
+		go autonomousChat(*prompt, genAiConn, simConn, *numChats)
 	}
 
 	<-sigCtx.Done()
 	os.Exit(0)
 }
 
-func initClient(endpoint string, context string) (*connection) {
+func initClient(endpoint string, context string, name string) *connection {
 	// TODO: create option for a client certificate
 	client := &http.Client{}
-	conn := &connection{client: client, endpoint: endpoint, context: context}
+	conn := &connection{client: client, endpoint: endpoint, context: context, name: name}
 	return conn
 }
 
@@ -117,18 +123,19 @@ type connection struct {
 	client   *http.Client
 	endpoint string // full base URL for API requests
 	context  string
+	name     string // human readable name for the connection
 	// TODO: create options for routes off the base URL
 }
 
 type GenAIRequest struct {
-	Context         string  `json:"context,omitempty"`
-	Prompt          string  `json:"prompt"`
+	Context string `json:"context,omitempty"`
+	Prompt  string `json:"prompt"`
 }
 
 func handleGenAIRequest(prompt string, clientConn *connection) (string, error) {
 	jsonRequest := GenAIRequest{
 		Context: clientConn.context,
-		Prompt: prompt,
+		Prompt:  prompt,
 	}
 	jsonStr, err := json.Marshal(jsonRequest)
 	if err != nil {
@@ -137,7 +144,7 @@ func handleGenAIRequest(prompt string, clientConn *connection) (string, error) {
 
 	req, err := http.NewRequest("POST", clientConn.endpoint, bytes.NewBuffer(jsonStr))
 	if err != nil {
-		return "unable create http POST request", err
+		return "", fmt.Errorf("unable create http POST request: %v", err)
 	}
 	req.Header.Set("accept", "application/json")
 	req.Header.Set("Content-Type", "application/json")
@@ -161,7 +168,7 @@ func handleGenAIRequest(prompt string, clientConn *connection) (string, error) {
 }
 
 // Two AIs (connection endpoints) talking to each other
-func handleChat(prompt string, conn1 *connection, conn2 *connection, numChats int) {
+func autonomousChat(prompt string, conn1 *connection, conn2 *connection, numChats int) {
 	if numChats <= 0 {
 		return
 	}
@@ -169,16 +176,18 @@ func handleChat(prompt string, conn1 *connection, conn2 *connection, numChats in
 	if err != nil {
 		log.Fatalf("could not send request: %v", err)
 	} else {
-		log.Printf("%d PROMPT: %s\nRESPONSE: %s\n", numChats, prompt, response)
+		log.Printf("%d %s RESPONSE: %s\n", numChats, conn1.name, response)
 	}
 
 	numChats -= 1
-	handleChat(response, conn2, conn1, numChats)
+	// Flip between the connection that the response is sent to
+	autonomousChat(response, conn2, conn1, numChats)
 }
 
-func tcpListener(port *string, s *sdk.SDK, clientConn *connection) {
-	log.Printf("Starting TCP server, listening on port %s", *port)
-	ln, err := net.Listen("tcp", ":"+*port)
+// Manually interact via TCP with the GenAI endpont
+func tcpListener(port string, genAiConn *connection) {
+	log.Printf("Starting TCP server, listening on port %s", port)
+	ln, err := net.Listen("tcp", ":"+port)
 	if err != nil {
 		log.Fatalf("Could not start TCP server: %v", err)
 	}
@@ -189,36 +198,30 @@ func tcpListener(port *string, s *sdk.SDK, clientConn *connection) {
 		if err != nil {
 			log.Printf("Unable to accept incoming TCP connection: %v", err)
 		}
-		go tcpHandleConnection(conn, s, clientConn)
+		go tcpHandleConnection(conn, genAiConn)
 	}
 }
 
-// handleConnection services a single tcp connection to the server
-func tcpHandleConnection(conn net.Conn, s *sdk.SDK, clientConn *connection) {
+// handleConnection services a single tcp connection to the GenAI endpoint
+func tcpHandleConnection(conn net.Conn, genAiConn *connection) {
 	log.Printf("TCP Client %s connected", conn.RemoteAddr().String())
+
 	scanner := bufio.NewScanner(conn)
 	for scanner.Scan() {
-		tcpHandleCommand(conn, scanner.Text(), s, clientConn)
+		txt := scanner.Text()
+		log.Printf("TCP txt: %v", txt)
+
+		response, err := handleGenAIRequest(txt, genAiConn)
+		if err != nil {
+			response = "ERROR: " + err.Error() + "\n"
+		}
+
+		if _, err := conn.Write([]byte(response)); err != nil {
+			log.Fatalf("Could not write to TCP stream: %v", err)
+		}
 	}
+
 	log.Printf("TCP Client %s disconnected", conn.RemoteAddr().String())
-}
-
-func tcpHandleCommand(conn net.Conn, txt string, s *sdk.SDK, clientConn *connection) {
-	log.Printf("TCP txt: %v", txt)
-
-	response, err := handleGenAIRequest(txt, clientConn)
-	if err != nil {
-		response = "ERROR: " + err.Error() + "\n"
-	}
-
-	tcpRespond(conn, response)
-}
-
-// respond responds to a given sender.
-func tcpRespond(conn net.Conn, txt string) {
-	if _, err := conn.Write([]byte(txt)); err != nil {
-		log.Fatalf("Could not write to TCP stream: %v", err)
-	}
 }
 
 // doHealth sends the regular Health Pings
