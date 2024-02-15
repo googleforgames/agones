@@ -285,7 +285,7 @@ steps:
         set -o pipefail
         pids=()
         cloudProducts=("generic" "gke-autopilot")
-        declare -A versionsAndRegions=( [1.27]=us-east1 [1.28]=us-west1 [1.29]=us-central1 )
+        declare -A versionsAndRegions=( [1.27]=us-east1 [1.28]=us-west1 [1.29]=asia-east1 )
         for cloudProduct in ${cloudProducts[@]}
         do
           for version in "${!versionsAndRegions[@]}"
