@@ -247,9 +247,6 @@ func (s *SDKServer) Run(ctx context.Context) error {
 		return err
 	}
 
-	currentLogLevel := s.logger.Logger.GetLevel()
-	s.logger.WithField("logLevel", currentLogLevel).Debug("Setting LogLevel configuration")
-
 	s.health = gs.Spec.Health
 	s.logger.WithField("health", s.health).Debug("Setting health configuration")
 	s.healthTimeout = time.Duration(gs.Spec.Health.PeriodSeconds) * time.Second
