@@ -60,10 +60,10 @@ spec:
   # Which `GameServers` in the Fleet are most important to keep around - impacts scale down logic.
   # priorities:
   # - type: Counter # Sort by a “Counter”
-  #   key: player # The name of the Counter. No impact if no GameServer found.
+  #   key: rooms # The name of the Counter. No impact if no GameServer found.
   #   order: Descending # Default is "Ascending" so smaller available capacity will be removed first on down scaling.
   # - type: List # Sort by a “List”
-  #   key: room # The name of the List. No impact if no GameServer found.
+  #   key: players # The name of the List. No impact if no GameServer found.
   #   order: Ascending # Default is "Ascending" so smaller available capacity will be removed first on down scaling.
   #      
   template:

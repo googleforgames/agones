@@ -281,6 +281,52 @@ spec:
 For more details on how Agones implements infrastructure optimisation, see the documentation on
 [Scheduling and Autoscaling]({{< ref "/docs/Advanced/scheduling-and-autoscaling.md" >}}).
 
+## Fleet Scale Down Prioritisation
+
+Another optimisation control you can apply with `Fleets` when Agones' scaled them down, is to also set `priorities` 
+to influence the order in which `GameServers` are shutdown and deleted.
+
+While neither `players` or `rooms` are particularly good examples for this functionality, if we wanted to ensure 
+that `Ready` `GameServers` with the most available capacity `rooms` where a factor when scaling down a `Fleet` we could 
+implement the following:
+
+```yaml
+apiVersion: agones.dev/v1
+kind: Fleet
+metadata:
+  name: simple-game-server
+spec:
+  replicas: 2
+  priorities:
+    - type: Counter
+      key: rooms
+      order: Descending
+  template:
+    spec:
+      ports:
+        - name: default
+          containerPort: 7654
+      counters:
+        rooms: # room counter
+          count: 0
+          capacity: 10
+      template:
+        spec:
+          containers:
+            - name: simple-game-server
+              image: {{< example-image >}}
+```
+
+Depending on the Fleet allocation strategy, the `priorities` block will influence scale down logic as follows:
+
+* Packed: The [usual infrastructure optimisation strategy]({{< ref "/docs/Advanced/scheduling-and-autoscaling.md#fleet-scheduling" >}})
+  still applies, but the `priorities` block is used as a tie-breaker within the least utilised infrastructure, to ensure
+  optimal infrastructure usage while also allowing some custom prioritisation of `GameServers`.
+* Distributed: The entire selection of `GameServers` will be sorted by this priority list to provide the
+  order that `GameServers` will be scaled down by.
+
+See [Fleet Reference]({{< ref "/docs/Reference/fleet.md" >}}) for all the configuration options.
+
 ## Autoscaling
 
 Counters and Lists expands on Fleet Autoscaling capabilities, by allowing you to autoscale based on available capacity
