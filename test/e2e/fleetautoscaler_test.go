@@ -845,7 +845,7 @@ func TestCounterAutoscaler(t *testing.T) {
 				fap.Counter = &autoscalingv1.CounterPolicy{
 					Key:         "players",
 					BufferSize:  intstr.FromInt(5), // Buffer refers to the available capacity (AggregateCapacity - AggregateCount)
-					MinCapacity: 10,                // Min and MaxCapacity refer to the available capacity aggregated across the fleet, NOT the available capacity
+					MinCapacity: 10,                // Min and MaxCapacity refer to the total capacity aggregated across the fleet, NOT the available capacity
 					MaxCapacity: 100,
 				}
 			}),

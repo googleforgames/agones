@@ -82,11 +82,11 @@ spec:
       # Value can be an absolute number (ex: 5) or a percentage of the Counter available capacity (ex: 5%).
       # An absolute number is calculated from percentage by rounding up. Must be bigger than 0. Required field.
       bufferSize: 5
-      # MinCapacity is the minimum aggregate Counter available capacity across the fleet.
+      # MinCapacity is the minimum aggregate Counter total capacity across the fleet.
       # If BufferSize is specified as a percentage, MinCapacity is required and cannot be 0.
       # If non zero, MinCapacity must be smaller than MaxCapacity and must be greater than or equal to BufferSize.
       minCapacity: 10
-      # MaxCapacity is the maximum aggregate Counter available capacity across the fleet.
+      # MaxCapacity is the maximum aggregate Counter total capacity across the fleet.
       # MaxCapacity must be greater than or equal to both MinCapacity and BufferSize. Required field.
       maxCapacity: 100
 ```
@@ -118,11 +118,11 @@ spec:
       # It can be specified either as an absolute value (i.e. 5) or percentage format (i.e. 5%).
       # Must be bigger than 0. Required field.
       bufferSize: 5
-      # MinCapacity is the minimum aggregate List available capacity across the fleet.
+      # MinCapacity is the minimum aggregate List total capacity across the fleet.
       # If BufferSize is specified as a percentage, MinCapacity is required must be greater than 0.
       # If non-zero, MinCapacity must be smaller than MaxCapacity and must be greater than or equal to BufferSize.
       minCapacity: 10
-      # MaxCapacity is the maximum aggregate List available capacity across the fleet.
+      # MaxCapacity is the maximum aggregate List total capacity across the fleet.
       # MaxCapacity must be greater than or equal to both MinCapacity and BufferSize. Required field.
       maxCapacity: 100
 ```
@@ -210,14 +210,14 @@ The `spec` field of the `FleetAutoscaler` is composed as follows:
     - `counter` contains the settings for counter-based autoscaling:
       - `key` is the name of the counter to use for scaling decisions.
       - `bufferSize` is the size of a buffer of counted items that are available in the Fleet (available capacity). Value can be an absolute number or a percentage of desired game server instances. An absolute number is calculated from percentage by rounding up. Must be bigger than 0.
-      - `minCapacity` is the minimum aggregate Counter available capacity across the fleet. If zero, MinCapacity is ignored. If non zero, MinCapacity must be smaller than MaxCapacity and bigger than BufferSize.
-      - `maxCapacity` is the maximum aggregate Counter available capacity across the fleet. It must be bigger than both MinCapacity and BufferSize.
+      - `minCapacity` is the minimum aggregate Counter total capacity across the fleet. If zero, MinCapacity is ignored. If non zero, MinCapacity must be smaller than MaxCapacity and bigger than BufferSize.
+      - `maxCapacity` is the maximum aggregate Counter total capacity across the fleet. It must be bigger than both MinCapacity and BufferSize.
   - `list` parameters of the list policy type
     - `list` contains the settings for list-based autoscaling:
       - `key` is the name of the list to use for scaling decisions.
       - `bufferSize` is the size of a buffer based on the List capacity that is available over the current aggregate List length in the Fleet (available capacity). It can be specified either as an absolute value or percentage format.
-      - `minCapacity` is the minimum aggregate List available capacity across the fleet. If zero, it is ignored. If non zero, it must be smaller than MaxCapacity and bigger than BufferSize.
-      - `maxCapacity` is the maximum aggregate List available capacity across the fleet. It must be bigger than both MinCapacity and BufferSize. Required field.
+      - `minCapacity` is the minimum aggregate List total capacity across the fleet. If zero, it is ignored. If non zero, it must be smaller than MaxCapacity and bigger than BufferSize.
+      - `maxCapacity` is the maximum aggregate List total capacity across the fleet. It must be bigger than both MinCapacity and BufferSize. Required field.
 - `sync` is autoscaling sync strategy. It defines when to run the autoscaling
   - `type` is type of the sync. For now only "FixedInterval" is available
   - `fixedInterval` parameters of the fixedInterval sync

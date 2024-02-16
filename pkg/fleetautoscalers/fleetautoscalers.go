@@ -300,7 +300,7 @@ func applyCounterOrListPolicy(c *autoscalingv1.CounterPolicy, l *autoscalingv1.L
 		bufferSize = l.BufferSize
 	}
 
-	// Checks if we've limited by AVAILABLE capacity
+	// Checks if we've limited by TOTAL capacity
 	limited, scale := isLimited(aggCapacity, minCapacity, maxCapacity)
 
 	// Total current number of Replicas
@@ -319,7 +319,7 @@ func applyCounterOrListPolicy(c *autoscalingv1.CounterPolicy, l *autoscalingv1.L
 		if err != nil {
 			return 0, false, err
 		}
-		// The desired AVAILABLE capacity based on the Aggregated Allocated Counts (see applyBufferPolicy for explanation)
+		// The desired TOTAL capacity based on the Aggregated Allocated Counts (see applyBufferPolicy for explanation)
 		desiredCapacity := int64(math.Ceil(float64(aggAllocatedCount*100) / float64(100-bufferPercent)))
 		// Convert into a desired AVAILABLE capacity aka the buffer
 		buffer = desiredCapacity - aggAllocatedCount
