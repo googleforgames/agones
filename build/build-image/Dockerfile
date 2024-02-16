@@ -14,12 +14,17 @@
 
 # ForceUpdate 12 -- change here if you need to force a rebuild
 
-FROM debian:bullseye
+FROM debian:bookworm
 
 RUN apt-get update && \
-    apt-get install -y build-essential gnupg curl git wget psmisc rsync make python bash-completion \
-    zip nano jq graphviz gettext-base plantuml software-properties-common && \
+    apt-get install -y build-essential gnupg curl git wget psmisc rsync make python3 bash-completion \
+    zip nano jq graphviz gettext-base plantuml software-properties-common ruby-full && \
     apt-get clean
+
+RUN gem install fpm && \
+    fpm -s empty -t deb -p python2.7-0.0.0-0-any.deb --name python2.7 --license MIT --version 0.0.0 --architecture all --description 'Dummy package to satisfy google-cloud-cli dependencies.' --maintainer 'Yourself' && \
+    dpkg -i python2.7-0.0.0-0-any.deb && \
+    rm python2.7-0.0.0-0-any.deb
 
 # install go
 WORKDIR /usr/local
@@ -70,10 +75,9 @@ RUN echo "source <(helm completion bash)" >> /root/.bashrc
 # install golang-ci linter
 RUN go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.51.2
 
-# Install Python, pip, and yamllint
+# Install yamllint
 RUN apt-get update && \
-    apt-get install -y python3-pip && \
-    pip3 install yamllint==1.32.0
+    apt-get install -y yamllint
 
 # install gotestsum test runner
 RUN go install gotest.tools/gotestsum@latest
