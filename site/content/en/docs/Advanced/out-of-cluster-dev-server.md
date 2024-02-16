@@ -128,7 +128,7 @@ Here is a sample command to run the SDK Server, with each argument discussed aft
   * It is set to the name of the dev `GameServer` k8s resource.
   * It tells the SDK Sever which resource to read/write to on the k8s cluster.
   * This example value of `my-local-server` matches to the instructions for setting up a [Local Game Server]({{< ref "/docs/Guides/local-game-server.md" >}}).
-* `--pod-namespacee` is a necessary arg, passed instead of the `POD_NAMESPACE` enviroment variable.
+* `--pod-namespace` is a necessary arg, passed instead of the `POD_NAMESPACE` enviroment variable.
   * It is set set to the namespace which the dev `GameServer` resides in.
   * It tells the SDK Sever which namespace to look under for the `GameServer` to read/write to on the k8s cluster.
   * This example value of `default` is used as most instructions in this documentation assumes `GameServers` to be created in the `default` namespace.
