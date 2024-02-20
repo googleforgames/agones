@@ -15,7 +15,7 @@
 apiVersion: agones.dev/v1
 kind: GameServer
 metadata:
-  name: gen-ai-server
+  name: gen-ai-server-auto
 spec:
   ports:
     - name: default
@@ -27,9 +27,12 @@ spec:
       containers:
         - name: simple-genai-game-server
           image: us-docker.pkg.dev/agones-images/examples/simple-genai-game-server:0.1
+          # imagePullPolicy: Always  # add for development
           env:
             - name: GenAiEndpoint
-              # Replace with your GenAI and Sim inference servers' endpoint addresses.
+              # Replace with your GenAI and Sim inference servers' endpoint addresses. If the game
+              # server is in the same cluster as your inference server you can also use the k8s
+              # service discovery such as value: "http://vertex-chat-api.genai.svc.cluster.local:80"
               value: "http://192.1.1.2/genai/chat"
             - name: SimEndpoint
               value: "http://192.1.1.2/genai/chat"
@@ -48,3 +51,10 @@ spec:
             limits:
               memory: 64Mi
               cpu: 20m
+      # Schedule onto the game server node pool when running in the same cluster as the inference server.
+      # tolerations:
+      #   - key: "agones.dev/role"
+      #     value: "gameserver"
+      #     effect: "NoExecute"
+      # nodeSelector:
+      #   agones.dev/role: gameserver

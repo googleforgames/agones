@@ -45,9 +45,6 @@ func main() {
 	simContext := flag.String("SimContext", "", "Context for the Sim endpoint")
 	numChats := flag.Int("NumChats", 1, "Number of back and forth chats between the sim and genAI")
 
-	var simConn *connection
-	var genAiConn *connection
-
 	flag.Parse()
 	if ep := os.Getenv("PORT"); ep != "" {
 		port = &ep
@@ -84,11 +81,7 @@ func main() {
 	log.Print("Starting Health Ping")
 	go doHealth(s, sigCtx)
 
-	log.Print("Marking this server as ready")
-	if err := s.Ready(); err != nil {
-		log.Fatalf("Could not send ready message")
-	}
-
+	var simConn *connection
 	if *simEndpoint != "" {
 		log.Printf("Creating Sim Client at endpoint %s", *simEndpoint)
 		simConn = initClient(*simEndpoint, *simContext, "Sim")
@@ -98,7 +91,12 @@ func main() {
 		log.Fatalf("GenAiEndpoint must be specified")
 	}
 	log.Printf("Creating GenAI Client at endpoint %s", *genAiEndpoint)
-	genAiConn = initClient(*genAiEndpoint, *genAiContext, "GenAI")
+	genAiConn := initClient(*genAiEndpoint, *genAiContext, "GenAI")
+
+	log.Print("Marking this server as ready")
+	if err := s.Ready(); err != nil {
+		log.Fatalf("Could not send ready message")
+	}
 
 	// Start up TCP listener so the user can interact with the GenAI endpoint manually
 	if simConn == nil {
@@ -175,12 +173,11 @@ func autonomousChat(prompt string, conn1 *connection, conn2 *connection, numChat
 	response, err := handleGenAIRequest(prompt, conn1)
 	if err != nil {
 		log.Fatalf("could not send request: %v", err)
-	} else {
-		log.Printf("%d %s RESPONSE: %s\n", numChats, conn1.name, response)
 	}
+	log.Printf("%d %s RESPONSE: %s\n", numChats, conn1.name, response)
 
 	numChats -= 1
-	// Flip between the connection that the response is sent to
+	// Flip between the connection that the response is sent to.
 	autonomousChat(response, conn2, conn1, numChats)
 }
 
@@ -196,7 +193,7 @@ func tcpListener(port string, genAiConn *connection) {
 	for {
 		conn, err := ln.Accept()
 		if err != nil {
-			log.Printf("Unable to accept incoming TCP connection: %v", err)
+			log.Fatalf("Unable to accept incoming TCP connection: %v", err)
 		}
 		go tcpHandleConnection(conn, genAiConn)
 	}
