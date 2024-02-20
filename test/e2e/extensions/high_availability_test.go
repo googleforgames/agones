@@ -111,7 +111,7 @@ func waitForAgonesExtensionsRunning(ctx context.Context) error {
 			return true, err
 		}
 
-		if len(list.Items) < 2 {
+		if len(list.Items) != 2 {
 			return false, nil
 		}
 
