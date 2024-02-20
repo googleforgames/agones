@@ -184,7 +184,7 @@ func TestSidecarRun(t *testing.T) {
 				return true, gs, nil
 			})
 
-			sc, err := NewSDKServer("test", "default", m.KubeClient, m.AgonesClient)
+			sc, err := NewSDKServer("test", "default", m.KubeClient, m.AgonesClient, logrus.DebugLevel)
 			stop := make(chan struct{})
 			defer close(stop)
 			ctx, cancel := context.WithCancel(context.Background())
@@ -442,7 +442,7 @@ func TestSidecarUnhealthyMessage(t *testing.T) {
 	t.Parallel()
 
 	m := agtesting.NewMocks()
-	sc, err := NewSDKServer("test", "default", m.KubeClient, m.AgonesClient)
+	sc, err := NewSDKServer("test", "default", m.KubeClient, m.AgonesClient, logrus.DebugLevel)
 	require.NoError(t, err)
 
 	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
@@ -591,7 +591,7 @@ func TestSidecarHealthy(t *testing.T) {
 
 func TestSidecarHTTPHealthCheck(t *testing.T) {
 	m := agtesting.NewMocks()
-	sc, err := NewSDKServer("test", "default", m.KubeClient, m.AgonesClient)
+	sc, err := NewSDKServer("test", "default", m.KubeClient, m.AgonesClient, logrus.DebugLevel)
 	require.NoError(t, err)
 
 	now := time.Now().Add(time.Hour).UTC()
@@ -2325,7 +2325,7 @@ func TestSDKServerGracefulTerminationGameServerStateChannel(t *testing.T) {
 }
 
 func defaultSidecar(m agtesting.Mocks) (*SDKServer, error) {
-	server, err := NewSDKServer("test", "default", m.KubeClient, m.AgonesClient)
+	server, err := NewSDKServer("test", "default", m.KubeClient, m.AgonesClient, logrus.DebugLevel)
 	if err != nil {
 		return server, err
 	}

@@ -25,8 +25,10 @@ import (
 	"strings"
 	"time"
 
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"github.com/tmc/grpc-websocket-proxy/wsproxy"
@@ -71,6 +73,12 @@ var (
 
 func main() {
 	ctlConf := parseEnvFlags()
+	logLevel, err := logrus.ParseLevel(ctlConf.LogLevel)
+	if err != nil {
+		logrus.WithError(err).Warn("Invalid LOG_LEVEL value. Defaulting to 'info'.")
+		logLevel = logrus.InfoLevel
+	}
+	logger.Logger.SetLevel(logLevel)
 	logger.WithField("version", pkg.Version).WithField("featureGates", runtime.EncodeFeatures()).
 		WithField("ctlConf", ctlConf).Info("Starting sdk sidecar")
 
@@ -139,7 +147,7 @@ func main() {
 
 		var s *sdkserver.SDKServer
 		s, err = sdkserver.NewSDKServer(ctlConf.GameServerName, ctlConf.PodNamespace,
-			kubeClient, agonesClient)
+			kubeClient, agonesClient, logLevel)
 		if err != nil {
 			logger.WithError(err).Fatalf("Could not start sidecar")
 		}
@@ -261,6 +269,7 @@ func runGateway(ctx context.Context, grpcEndpoint string, mux *gwruntime.ServeMu
 // parseEnvFlags parses all the flags and environment variables and returns
 // a configuration structure
 func parseEnvFlags() config {
+	var gs agonesv1.GameServer
 	viper.AllowEmptyEnv(true)
 	viper.SetDefault(localFlag, false)
 	viper.SetDefault(fileFlag, "")
@@ -272,6 +281,7 @@ func parseEnvFlags() config {
 	viper.SetDefault(gracefulTerminationFlag, true)
 	viper.SetDefault(grpcPortFlag, defaultGRPCPort)
 	viper.SetDefault(httpPortFlag, defaultHTTPPort)
+	viper.SetDefault("logLevel", string(gs.Spec.SdkServer.LogLevel))
 	pflag.String(gameServerNameFlag, viper.GetString(gameServerNameFlag),
 		"Optional flag to set GameServer name. Overrides value given from `GAMESERVER_NAME` environment variable.")
 	pflag.String(podNamespaceFlag, viper.GetString(gameServerNameFlag),
@@ -307,8 +317,8 @@ func parseEnvFlags() config {
 	runtime.Must(viper.BindEnv(grpcPortFlag))
 	runtime.Must(viper.BindEnv(httpPortFlag))
 	runtime.Must(viper.BindPFlags(pflag.CommandLine))
+	runtime.Must(viper.BindEnv("logLevel", "SDK_LOG_LEVEL"))
 	runtime.Must(runtime.FeaturesBindEnv())
-
 	runtime.Must(runtime.ParseFeaturesFromEnv())
 
 	return config{
@@ -325,6 +335,7 @@ func parseEnvFlags() config {
 		GracefulTermination: viper.GetBool(gracefulTerminationFlag),
 		GRPCPort:            viper.GetInt(grpcPortFlag),
 		HTTPPort:            viper.GetInt(httpPortFlag),
+		LogLevel:            viper.GetString("logLevel"),
 	}
 }
 
@@ -343,6 +354,7 @@ type config struct {
 	GracefulTermination bool
 	GRPCPort            int
 	HTTPPort            int
+	LogLevel            string
 }
 
 // healthCheckWrapper ensures that an http 400 response is returned
