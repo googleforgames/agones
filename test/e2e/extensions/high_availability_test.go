@@ -130,5 +130,18 @@ func waitForAgonesExtensionsRunning(ctx context.Context) error {
 // getAgonesExtensionsPods returns all the Agones extensions pods
 func getAgoneseExtensionsPods(ctx context.Context) (*corev1.PodList, error) {
 	opts := metav1.ListOptions{LabelSelector: labels.Set{"agones.dev/role": "extensions"}.String()}
-	return framework.KubeClient.CoreV1().Pods("agones-system").List(ctx, opts)
+	pods, err := framework.KubeClient.CoreV1().Pods("agones-system").List(ctx, opts)
+	if err != nil {
+		return nil, err
+	}
+
+	// Filter Running pods
+	var runningPods []corev1.Pod
+	for _, pod := range pods.Items {
+		if pod.ObjectMeta.DeletionTimestamp.IsZero() {
+			runningPods = append(runningPods, pod)
+		}
+	}
+
+	return &corev1.PodList{Items: runningPods}, nil
 }
