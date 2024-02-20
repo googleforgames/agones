@@ -37,7 +37,6 @@ import (
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
-	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -834,22 +833,6 @@ func (f *Framework) LogEvents(t *testing.T, log *logrus.Entry, namespace string,
 	for i := range events.Items {
 		event := events.Items[i]
 		log.WithField("lastTimestamp", event.LastTimestamp).WithField("type", event.Type).WithField("reason", event.Reason).WithField("message", event.Message).Info("Event!")
-	}
-
-	ctx := context.Background()
-	// Accessor takes an arbitrary object pointer and returns meta.Interface https://pkg.go.dev/k8s.io/apimachinery/pkg/api/meta#Accessor
-	objMeta, err := meta.Accessor(objOrRef)
-	require.NoError(t, err, "error getting object metadata")
-	deployment, err := f.KubeClient.AppsV1().Deployments(namespace).Get(ctx, objMeta.GetName(), metav1.GetOptions{})
-	require.NoError(t, err, "error getting deployment")
-	if deployment.Status.Replicas > 2 {
-		log.WithField("GetCreationTimestamp", deployment.GetCreationTimestamp()).WithField("deploymentName", deployment.Name).WithField("replicaCount", deployment.Status.Replicas).WithField("conditions", deployment.Status.Conditions).Info("Deployment status when replica count exceeds 2")
-	}
-
-	pods, err := f.KubeClient.CoreV1().Pods(namespace).List(ctx, metav1.ListOptions{LabelSelector: "app=" + deployment.Name})
-	require.NoError(t, err, "error listing pods")
-	for _, pod := range pods.Items {
-		log.WithField("podName", pod.Name).WithField("phase", pod.Status.Phase).WithField("status", pod.Status).WithField("conditions", pod.Status.Conditions).Info("Pod status")
 	}
 }
 
