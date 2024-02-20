@@ -848,8 +848,8 @@ func (f *Framework) LogEvents(t *testing.T, log *logrus.Entry, namespace string,
 
 	pods, err := f.KubeClient.CoreV1().Pods(namespace).List(ctx, metav1.ListOptions{LabelSelector: "app=" + deployment.Name})
 	require.NoError(t, err, "error listing pods")
-	for _, pod := range pods.Items {
-		log.WithField("podName", pod.Name).WithField("phase", pod.Status.Phase).WithField("status", pod.Status).WithField("conditions", pod.Status.Conditions).Info("Pod status")
+	for i := range pods.Items {
+		log.WithField("podName", pods.Items[i].Name).WithField("phase", pods.Items[i].Status.Phase).WithField("status", pods.Items[i].Status).WithField("conditions", pods.Items[i].Status.Conditions).Info("Pod status")
 	}
 }
 

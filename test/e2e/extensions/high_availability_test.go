@@ -137,9 +137,9 @@ func getAgoneseExtensionsPods(ctx context.Context) (*corev1.PodList, error) {
 
 	// Filter Running pods
 	var runningPods []corev1.Pod
-	for _, pod := range pods.Items {
-		if pod.ObjectMeta.DeletionTimestamp.IsZero() {
-			runningPods = append(runningPods, pod)
+	for i := range pods.Items {
+		if pods.Items[i].ObjectMeta.DeletionTimestamp.IsZero() {
+			runningPods = append(runningPods, pods.Items[i])
 		}
 	}
 
