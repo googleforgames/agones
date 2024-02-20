@@ -154,6 +154,16 @@ on bare metal, and the cluster size rarely changes, if at all.
 This attempts to distribute the load across the entire cluster as much as possible, to take advantage of the static
 size of the cluster.
 
+{{% alert title="Note" color="info" %}}
+`Distributed` scheduling does not set
+a [`PodAffinity`](https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#inter-pod-affinity-and-anti-affinity-beta-feature)
+on `GameServer` `Pods`, and instead assumes that the default scheduler for your cluster will distribute the 
+`GameServer` `Pods` across the cluster by default.
+
+If your default scheduler does not do this, you may wish to set your own `PodAffinity` to spread the load across the
+cluster, or update the default scheduler to provide this functionality.
+{{% /alert %}}
+
 This affects Allocation Scheduling, Pod Scheduling and Fleet Scale Down Scheduling.
 
 #### Cluster Autoscaler
