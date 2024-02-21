@@ -1243,27 +1243,35 @@ func (s *SDKServer) sendGameServerUpdate(gs *agonesv1.GameServer) {
 	s.streamMutex.Lock()
 	defer s.streamMutex.Unlock()
 
-	for i, stream := range s.connectedStreams {
+	// Filter the slice of streams sharing the same backing array and capacity as the original
+	// so that storage is reused and no memory allocations are made. This modifies the original
+	// slice.
+	//
+	// See https://go.dev/wiki/SliceTricks#filtering-without-allocating
+	remainingStreams := s.connectedStreams[:0]
+	for _, stream := range s.connectedStreams {
 		select {
 		case <-stream.Context().Done():
-			s.connectedStreams = append(s.connectedStreams[:i], s.connectedStreams[i+1:]...)
+			s.logger.Debug("Dropping stream")
 
 			err := stream.Context().Err()
 			switch {
 			case err != nil:
 				s.logger.WithError(errors.WithStack(err)).Error("stream closed with error")
 			default:
-				s.logger.Debug("stream closed")
+				s.logger.Debug("Stream closed")
 			}
-			continue
 		default:
-		}
+			s.logger.Debug("Keeping stream")
+			remainingStreams = append(remainingStreams, stream)
 
-		if err := stream.Send(convert(gs)); err != nil {
-			s.logger.WithError(errors.WithStack(err)).
-				Error("error sending game server update event")
+			if err := stream.Send(convert(gs)); err != nil {
+				s.logger.WithError(errors.WithStack(err)).
+					Error("error sending game server update event")
+			}
 		}
 	}
+	s.connectedStreams = remainingStreams
 
 	if gs.Status.State == agonesv1.GameServerStateShutdown {
 		// Wrap this in a go func(), just in case pushing to this channel deadlocks since there is only one instance of
