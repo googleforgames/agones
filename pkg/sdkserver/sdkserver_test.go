@@ -833,28 +833,28 @@ func TestSDKServer_SendGameServerUpdateRemovesDisconnectedStream(t *testing.T) {
 		return err == nil
 	}, time.Minute, time.Second, "Could not find the GameServer")
 
-	streamCtx, streamCancel := context.WithCancel(context.Background())
-	t.Cleanup(streamCancel)
+	// Create and initialize two streams.
+	streamOne := newGameServerMockStream()
+	streamOneCtx, streamOneCancel := context.WithCancel(context.Background())
+	t.Cleanup(streamOneCancel)
+	streamOne.ctx = streamOneCtx
+	asyncWatchGameServer(t, sc, streamOne)
 
-	// Trigger stream removal by sending an update on a cancelled stream.
+	streamTwo := newGameServerMockStream()
+	streamTwoCtx, streamTwoCancel := context.WithCancel(context.Background())
+	t.Cleanup(streamTwoCancel)
+	streamTwo.ctx = streamTwoCtx
+	asyncWatchGameServer(t, sc, streamTwo)
 
-	stream := newGameServerMockStream()
-	stream.ctx = streamCtx
+	// Verify that two streams are connected.
+	assert.Nil(t, waitConnectedStreamCount(sc, 2))
+	streamOneCancel()
+	streamTwoCancel()
 
-	asyncWatchGameServer(t, sc, stream)
-	assert.Nil(t, waitConnectedStreamCount(sc, 1))
-
-	<-stream.msgs // Initial msg when WatchGameServer() is called.
-
-	streamCancel()
-
+	// Trigger stream removal by sending a game server update.
 	sc.sendGameServerUpdate(fixture)
-
-	select {
-	case <-stream.msgs:
-		assert.Fail(t, "Event stream should have been removed.")
-	case <-time.After(1 * time.Second):
-	}
+	// Verify that zero streams are connected.
+	assert.Nil(t, waitConnectedStreamCount(sc, 0))
 }
 
 func TestSDKServerUpdateEventHandler(t *testing.T) {
