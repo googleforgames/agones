@@ -37,10 +37,19 @@ func TestGameServerCreationAfterDeletingOneExtensionsPod(t *testing.T) {
 
 	list, err := getAgoneseExtensionsPods(ctx)
 	logger.Infof("Length of pod list is %v", len(list.Items))
-	for i := range list.Items {
-		logger.Infof("Name of extensions pod %v: %v", i, list.Items[i].ObjectMeta.Name)
-		logger.Infof("Host IP %v", list.Items[i].Status.HostIP)
-		logger.Infof("Pod IPs %v", list.Items[i].Status.PodIPs)
+	if len(list.Items) > 2 {
+		logger.WithField("podCount", len(list.Items)).Info("Logging events for the Deployment due to pod count > 2 before deleting extensions pod")
+		for i := range list.Items {
+			logger.Infof("Name of extensions pod %v: %v", i, list.Items[i].ObjectMeta.Name)
+			logger.Infof("Status of extensions pod %v", list.Items[i].Status)
+			framework.LogEvents(t, logger, "agones-system", &list.Items[i])
+		}
+	} else {
+		for i := range list.Items {
+			logger.Infof("Name of extensions pod %v: %v", i, list.Items[i].ObjectMeta.Name)
+			logger.Infof("Host IP %v", list.Items[i].Status.HostIP)
+			logger.Infof("Pod IPs %v", list.Items[i].Status.PodIPs)
+		}
 	}
 	require.NoError(t, err, "Could not get list of Extension pods")
 	assert.Greater(t, len(list.Items), 1, "Cluster has no Extensions pod or has only 1 extensions pod")
