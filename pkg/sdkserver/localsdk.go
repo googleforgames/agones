@@ -70,6 +70,12 @@ func defaultGs() *sdk.GameServer {
 			State:   "Ready",
 			Address: "127.0.0.1",
 			Ports:   []*sdk.GameServer_Status_Port{{Name: "default", Port: 7777}},
+			Counters: map[string]*sdk.GameServer_Status_CounterStatus{
+				"rooms": {Count: 1, Capacity: 10},
+			},
+			Lists: map[string]*sdk.GameServer_Status_ListStatus{
+				"players": {Values: []string{"test0", "test1", "test2"}, Capacity: 100},
+			},
 		},
 	}
 }
@@ -145,15 +151,13 @@ func NewLocalSDKServer(filePath string, testSdkName string) (*LocalSDKServer, er
 	if runtime.FeatureEnabled(runtime.FeaturePlayerTracking) && l.gs.Status.Players == nil {
 		l.gs.Status.Players = &sdk.GameServer_Status_PlayerStatus{}
 	}
+
 	if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
-		// Adding test Counter and List for the conformance tests (not nil for LocalSDKServer tests)
-		if l.gs.Status.Counters == nil && filePath == "" {
-			l.gs.Status.Counters = map[string]*sdk.GameServer_Status_CounterStatus{
-				"rooms": {Count: 1, Capacity: 10}}
+		if l.gs.Status.Counters == nil {
+			l.gs.Status.Counters = make(map[string]*sdk.GameServer_Status_CounterStatus)
 		}
-		if l.gs.Status.Lists == nil && filePath == "" {
-			l.gs.Status.Lists = map[string]*sdk.GameServer_Status_ListStatus{
-				"players": {Values: []string{"test0", "test1", "test2"}, Capacity: 100}}
+		if l.gs.Status.Lists == nil {
+			l.gs.Status.Lists = make(map[string]*sdk.GameServer_Status_ListStatus)
 		}
 	}
 
