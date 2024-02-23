@@ -27,10 +27,17 @@ your container registry. If you are making a series of changes you may also want
 
 ## Setting up Agones
 
+### Set up Agones on a Different Cluster than the GenAI Inference Server
+
 To set up the Game Servers on a different cluster than the GenAI inference server follow the
 instructions for [creating a cluster](https://agones.dev/site/docs/installation/creating-cluster/).
+Follow the instructions for
+[installing Agones](https://agones.dev/site/docs/installation/install-agones/).
 
-To set the Game Servers on the same cluster as your GenAI inference server
+
+### Set the Game Servers on the Same Cluster as the GenAI Inference Server
+
+To set the Game Servers on the same cluster as Google for Games GenAI inference server
 [create an Agones controller node pool](https://agones.dev/site/docs/installation/creating-cluster/gke/#optional-creating-a-dedicated-node-pool),
 optionally [create a metrics node pool](https://agones.dev/site/docs/installation/creating-cluster/gke/#optional-creating-a-metrics-node-pool),
 create a node pool for your game servers:
@@ -57,8 +64,7 @@ Note that if you use this dedicated game-servers node-pool you will also need to
 and `nodeSelector` in the [gameserver_manualchat.yaml](gameserver_manualchat.yaml) or
 [gameserver_autochat.yaml](gameserver_autochat.yaml).
 
-Once you have set up a separate cluster for the Game Servers, or have set up the dedicated node-pools
-in the same cluster as the inference server, follow the instructions for
+Lastly, follow the instructions for
 [installing Agones](https://agones.dev/site/docs/installation/install-agones/).
 
 ## Setting up the Game Server
@@ -94,6 +100,8 @@ If you set up the `gameserver_autochat.yaml` the chat will be in the game server
 kubectl logs -f gen-ai-server-auto -c simple-genai-game-server
 ```
 
+In autochat mode the game server will shutdown automatically once the chat is complete.
+
 If you set up the `gameserver_manualchat.yaml` you can manually send requests to the GenAI endpoint.
 Retreive the IP address and port:
 
@@ -111,3 +119,5 @@ You can now send requests to the GenAI endpoint:
 nc {IP} {PORT}
 Enter your prompt for the GenAI server in the same terminal, and the response will appear here too.
 ```
+
+In manual chat mode the game server will need to be manually deleted `kubectl delete gs gen-ai-server-manual`.

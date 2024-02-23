@@ -27,6 +27,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"sync"
 	"time"
 
 	"agones.dev/agones/pkg/util/signals"
@@ -101,20 +102,28 @@ func main() {
 	// Start up TCP listener so the user can interact with the GenAI endpoint manually
 	if simConn == nil {
 		go tcpListener(*port, genAiConn)
+		<-sigCtx.Done()
 	} else {
 		log.Printf("Starting autonomous chat with Prompt: %s", *prompt)
-		go autonomousChat(*prompt, genAiConn, simConn, *numChats)
+		var wg sync.WaitGroup
+		// TODO: Add flag for creating X number of chats
+		wg.Add(1)
+		go autonomousChat(*prompt, genAiConn, simConn, *numChats, &wg, sigCtx)
+		wg.Wait()
 	}
 
-	<-sigCtx.Done()
+	log.Printf("Shutting down the Game Server.")
+	shutdownErr := s.Shutdown()
+	if shutdownErr != nil {
+		log.Printf("Could not shutdown")
+	}
 	os.Exit(0)
 }
 
 func initClient(endpoint string, context string, name string) *connection {
 	// TODO: create option for a client certificate
 	client := &http.Client{}
-	conn := &connection{client: client, endpoint: endpoint, context: context, name: name}
-	return conn
+	return &connection{client: client, endpoint: endpoint, context: context, name: name}
 }
 
 type connection struct {
@@ -166,19 +175,27 @@ func handleGenAIRequest(prompt string, clientConn *connection) (string, error) {
 }
 
 // Two AIs (connection endpoints) talking to each other
-func autonomousChat(prompt string, conn1 *connection, conn2 *connection, numChats int) {
-	if numChats <= 0 {
+func autonomousChat(prompt string, conn1 *connection, conn2 *connection, numChats int, wg *sync.WaitGroup, sigCtx context.Context) {
+	select {
+	case <-sigCtx.Done():
+		wg.Done()
 		return
-	}
-	response, err := handleGenAIRequest(prompt, conn1)
-	if err != nil {
-		log.Fatalf("could not send request: %v", err)
-	}
-	log.Printf("%d %s RESPONSE: %s\n", numChats, conn1.name, response)
+	default:
+		if numChats <= 0 {
+			wg.Done()
+			return
+		}
 
-	numChats -= 1
-	// Flip between the connection that the response is sent to.
-	autonomousChat(response, conn2, conn1, numChats)
+		response, err := handleGenAIRequest(prompt, conn1)
+		if err != nil {
+			log.Fatalf("Could not send request: %v", err)
+		}
+		log.Printf("%d %s RESPONSE: %s\n", numChats, conn1.name, response)
+
+		numChats -= 1
+		// Flip between the connection that the response is sent to.
+		autonomousChat(response, conn2, conn1, numChats, wg, sigCtx)
+	}
 }
 
 // Manually interact via TCP with the GenAI endpont
