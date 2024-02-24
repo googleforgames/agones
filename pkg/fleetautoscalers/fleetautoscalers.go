@@ -204,7 +204,7 @@ func applyBufferPolicy(b *autoscalingv1.BufferPolicy, f *agonesv1.Fleet) (int32,
 	var replicas int32
 
 	if b.BufferSize.Type == intstr.Int {
-		replicas = f.Status.AllocatedReplicas + int32(b.BufferSize.IntValue())
+		replicas = f.Status.Replicas - f.Status.ReadyReplicas + int32(b.BufferSize.IntValue())
 	} else {
 		// the percentage value is a little more complex, as we can't apply
 		// the desired percentage to any current value, but to the future one
