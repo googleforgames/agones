@@ -16,6 +16,9 @@
 // Run:
 //  terraform apply -var project="<YOUR_GCP_ProjectID>" [-var agones_version="1.17.0"]
 
+// To enable agones-metrics add below command in `terraform apply`:
+// -var enableAgonesMetricsNodepool=true
+
 terraform {
   required_version = ">= 1.0.0"
   required_providers {

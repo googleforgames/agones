@@ -61,3 +61,10 @@ variable "firewallName" {
   type        = string
   default     = ""
 }
+
+# enableAgonesMetricsNodepool specifies whether to enable agones-metrics node pool
+# By default it is disabled
+variable "enableAgonesMetricsNodepool" {
+  description = "enable or disable the creation of agones-metrics node pool."
+  default     = false
+}
