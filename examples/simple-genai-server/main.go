@@ -45,6 +45,8 @@ func main() {
 	simEndpoint := flag.String("SimEndpoint", "", "The full base URL to send API requests to simulate user input")
 	simContext := flag.String("SimContext", "", "Context for the Sim endpoint")
 	numChats := flag.Int("NumChats", 1, "Number of back and forth chats between the sim and genAI")
+	genAiNpc := flag.Bool("GenAiNpc", false, "Set to true if the GenAIEndpoint is the npc-chat-api endpoint")
+	simNpc := flag.Bool("SimNpc", false, "Set to true if the SimEndpoint is the npc-chat-api endpoint")
 
 	flag.Parse()
 	if ep := os.Getenv("PORT"); ep != "" {
@@ -72,6 +74,20 @@ func main() {
 		}
 		numChats = &num
 	}
+	if gan := os.Getenv("GenAiNpc"); gan != "" {
+		gnpc, err := strconv.ParseBool(gan)
+		if err != nil {
+			log.Fatalf("Could parse GenAiNpc: %v", err)
+		}
+		genAiNpc = &gnpc
+	}
+	if sn := os.Getenv("SimNpc"); sn != "" {
+		snpc, err := strconv.ParseBool(sn)
+		if err != nil {
+			log.Fatalf("Could parse GenAiNpc: %v", err)
+		}
+		simNpc = &snpc
+	}
 
 	log.Print("Creating SDK instance")
 	s, err := sdk.NewSDK()
@@ -85,14 +101,14 @@ func main() {
 	var simConn *connection
 	if *simEndpoint != "" {
 		log.Printf("Creating Sim Client at endpoint %s", *simEndpoint)
-		simConn = initClient(*simEndpoint, *simContext, "Sim")
+		simConn = initClient(*simEndpoint, *simContext, "Sim", *simNpc)
 	}
 
 	if *genAiEndpoint == "" {
 		log.Fatalf("GenAiEndpoint must be specified")
 	}
 	log.Printf("Creating GenAI Client at endpoint %s", *genAiEndpoint)
-	genAiConn := initClient(*genAiEndpoint, *genAiContext, "GenAI")
+	genAiConn := initClient(*genAiEndpoint, *genAiContext, "GenAI", *genAiNpc)
 
 	log.Print("Marking this server as ready")
 	if err := s.Ready(); err != nil {
@@ -120,10 +136,10 @@ func main() {
 	os.Exit(0)
 }
 
-func initClient(endpoint string, context string, name string) *connection {
+func initClient(endpoint string, context string, name string, npc bool) *connection {
 	// TODO: create option for a client certificate
 	client := &http.Client{}
-	return &connection{client: client, endpoint: endpoint, context: context, name: name}
+	return &connection{client: client, endpoint: endpoint, context: context, name: name, npc: npc}
 }
 
 type connection struct {
@@ -131,19 +147,35 @@ type connection struct {
 	endpoint string // full base URL for API requests
 	context  string
 	name     string // human readable name for the connection
+	npc      bool   // true if the endpoint is the NPC API
 	// TODO: create options for routes off the base URL
 }
 
 type GenAIRequest struct {
-	Context string `json:"context,omitempty"`
-	Prompt  string `json:"prompt"`
+	Context string `json:"context,omitempty"` // Optional, for use with Vertex APIs
+	Prompt  string `json:"prompt,omitempty"`  // For use with Vertex APIs
+	Message string `json:"message,omitempty"` // For use with NPC API
+}
+
+// Expected format for the NPC endpoint response
+type NPCResponse struct {
+	Response string `json:"response"`
 }
 
 func handleGenAIRequest(prompt string, clientConn *connection) (string, error) {
-	jsonRequest := GenAIRequest{
-		Context: clientConn.context,
-		Prompt:  prompt,
+	var jsonRequest GenAIRequest
+	// If the endpoint is the NPC API, use the json request format specifc to that API
+	if clientConn.npc {
+		jsonRequest = GenAIRequest{
+			Message:  prompt,
+		}
+	} else {
+		jsonRequest = GenAIRequest{
+			Context: clientConn.context,
+			Prompt:  prompt,
+		}
 	}
+
 	jsonStr, err := json.Marshal(jsonRequest)
 	if err != nil {
 		return "", fmt.Errorf("unable to marshal json request: %v", err)
@@ -189,6 +221,15 @@ func autonomousChat(prompt string, conn1 *connection, conn2 *connection, numChat
 		response, err := handleGenAIRequest(prompt, conn1)
 		if err != nil {
 			log.Fatalf("Could not send request: %v", err)
+		}
+		// If we sent the request to the NPC endpoint we need to parse the json response {response: "response"}
+		if conn1.npc {
+			npcResponse := NPCResponse{}
+			err = json.Unmarshal([]byte(response), &npcResponse)
+			if err != nil {
+				log.Fatalf("Unable to unmarshal NPC endpoint response: %v", err)
+			}
+			response = npcResponse.Response
 		}
 		log.Printf("%d %s RESPONSE: %s\n", numChats, conn1.name, response)
 
