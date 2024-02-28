@@ -39,10 +39,10 @@ func main() {
 	sigCtx, _ := signals.NewSigKillContext()
 
 	port := flag.String("port", "7654", "The port to listen to traffic on")
-	genAiEndpoint := flag.String("GenAiEndpoint", "", "The full base URL to send API requests to to simulate computer (NPC) responses to user input")
+	genAiEndpoint := flag.String("GenAiEndpoint", "", "The full base URL to send API requests to simulate computer (NPC) responses to user input")
 	genAiContext := flag.String("GenAiContext", "", "Context for the GenAI endpoint")
 	prompt := flag.String("Prompt", "", "The first prompt for the GenAI endpoint")
-	simEndpoint := flag.String("SimEndpoint", "", "The full base URL to send API requests to to simulate user input")
+	simEndpoint := flag.String("SimEndpoint", "", "The full base URL to send API requests to simulate user input")
 	simContext := flag.String("SimContext", "", "Context for the Sim endpoint")
 	numChats := flag.Int("NumChats", 1, "Number of back and forth chats between the sim and genAI")
 
