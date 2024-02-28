@@ -47,7 +47,7 @@ var (
 )
 
 func defaultGs() *sdk.GameServer {
-	return &sdk.GameServer{
+	gs := &sdk.GameServer{
 		ObjectMeta: &sdk.GameServer_ObjectMeta{
 			Name:              "local",
 			Namespace:         "default",
@@ -70,14 +70,19 @@ func defaultGs() *sdk.GameServer {
 			State:   "Ready",
 			Address: "127.0.0.1",
 			Ports:   []*sdk.GameServer_Status_Port{{Name: "default", Port: 7777}},
-			Counters: map[string]*sdk.GameServer_Status_CounterStatus{
-				"rooms": {Count: 1, Capacity: 10},
-			},
-			Lists: map[string]*sdk.GameServer_Status_ListStatus{
-				"players": {Values: []string{"test0", "test1", "test2"}, Capacity: 100},
-			},
 		},
 	}
+
+	if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
+		gs.Status.Counters = map[string]*sdk.GameServer_Status_CounterStatus{
+			"rooms": {Count: 1, Capacity: 10},
+		}
+		gs.Status.Lists = map[string]*sdk.GameServer_Status_ListStatus{
+			"players": {Values: []string{"test0", "test1", "test2"}, Capacity: 100},
+		}
+	}
+
+	return gs
 }
 
 // LocalSDKServer type is the SDKServer implementation for when the sidecar
