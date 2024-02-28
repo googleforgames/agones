@@ -137,7 +137,7 @@ type SDKServer struct {
 // NewSDKServer creates a SDKServer that sets up an
 // InClusterConfig for Kubernetes
 func NewSDKServer(gameServerName, namespace string, kubeClient kubernetes.Interface,
-	agonesClient versioned.Interface) (*SDKServer, error) {
+	agonesClient versioned.Interface, logLevel logrus.Level) (*SDKServer, error) {
 	mux := http.NewServeMux()
 	resync := 30 * time.Second
 	if runtime.FeatureEnabled(runtime.FeatureDisableResyncOnSDKServer) {
@@ -182,6 +182,7 @@ func NewSDKServer(gameServerName, namespace string, kubeClient kubernetes.Interf
 
 	s.informerFactory = factory
 	s.logger = runtime.NewLoggerWithType(s).WithField("gsKey", namespace+"/"+gameServerName)
+	s.logger.Logger.SetLevel(logLevel)
 
 	_, _ = gameServers.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
 		UpdateFunc: func(_, newObj interface{}) {
@@ -244,20 +245,6 @@ func (s *SDKServer) Run(ctx context.Context) error {
 	gs, err := s.gameServer()
 	if err != nil {
 		return err
-	}
-
-	logLevel := agonesv1.SdkServerLogLevelInfo
-	// grab configuration details
-	if gs.Spec.SdkServer.LogLevel != "" {
-		logLevel = gs.Spec.SdkServer.LogLevel
-	}
-	s.logger.WithField("logLevel", logLevel).Debug("Setting LogLevel configuration")
-	level, err := logrus.ParseLevel(strings.ToLower(string(logLevel)))
-	if err == nil {
-		s.logger.Logger.SetLevel(level)
-	} else {
-		s.logger.WithError(err).Warn("Specified wrong Logging.SdkServer. Setting default loglevel - Info")
-		s.logger.Logger.SetLevel(logrus.InfoLevel)
 	}
 
 	s.health = gs.Spec.Health
@@ -1256,27 +1243,35 @@ func (s *SDKServer) sendGameServerUpdate(gs *agonesv1.GameServer) {
 	s.streamMutex.Lock()
 	defer s.streamMutex.Unlock()
 
-	for i, stream := range s.connectedStreams {
+	// Filter the slice of streams sharing the same backing array and capacity as the original
+	// so that storage is reused and no memory allocations are made. This modifies the original
+	// slice.
+	//
+	// See https://go.dev/wiki/SliceTricks#filtering-without-allocating
+	remainingStreams := s.connectedStreams[:0]
+	for _, stream := range s.connectedStreams {
 		select {
 		case <-stream.Context().Done():
-			s.connectedStreams = append(s.connectedStreams[:i], s.connectedStreams[i+1:]...)
+			s.logger.Debug("Dropping stream")
 
 			err := stream.Context().Err()
 			switch {
 			case err != nil:
 				s.logger.WithError(errors.WithStack(err)).Error("stream closed with error")
 			default:
-				s.logger.Debug("stream closed")
+				s.logger.Debug("Stream closed")
 			}
-			continue
 		default:
-		}
+			s.logger.Debug("Keeping stream")
+			remainingStreams = append(remainingStreams, stream)
 
-		if err := stream.Send(convert(gs)); err != nil {
-			s.logger.WithError(errors.WithStack(err)).
-				Error("error sending game server update event")
+			if err := stream.Send(convert(gs)); err != nil {
+				s.logger.WithError(errors.WithStack(err)).
+					Error("error sending game server update event")
+			}
 		}
 	}
+	s.connectedStreams = remainingStreams
 
 	if gs.Status.State == agonesv1.GameServerStateShutdown {
 		// Wrap this in a go func(), just in case pushing to this channel deadlocks since there is only one instance of
