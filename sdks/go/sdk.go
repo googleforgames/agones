@@ -55,11 +55,16 @@ var Logger ErrorLog = func(msg string, err error) {
 // Blocks until connection and handshake are made.
 // Times out after 30 seconds.
 func NewSDK() (*SDK, error) {
-	p := os.Getenv("AGONES_SDK_GRPC_PORT")
-	if p == "" {
-		p = "9357"
+	host := os.Getenv("AGONES_SDK_GRPC_HOST")
+	if host == "" {
+		host = "localhost"
 	}
-	addr := fmt.Sprintf("localhost:%s", p)
+
+	port := os.Getenv("AGONES_SDK_GRPC_PORT")
+	if port == "" {
+		port = "9357"
+	}
+	addr := fmt.Sprintf("%s:%s", host, port)
 	s := &SDK{
 		ctx: context.Background(),
 	}
