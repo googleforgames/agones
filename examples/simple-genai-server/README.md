@@ -76,7 +76,7 @@ include the context with each chat (post request) that you make to the GenAI end
 
 If you want to have two clients "chat" to each other, modify the
 [gameserver_autochat.yaml](gameserver_autochat.yaml) `GenAiEndpoint` value to your inference
-server's endpoint. Also modift the `SimEndpoint` value to your inference server's endpoint.
+server's endpoint. Also modify the `SimEndpoint` value to your inference server's endpoint.
 Alternatively you can create a basic http server that accepts requests in the structure noted in the
 above section, and returns a predetermined set of responses for the chat. The `GenAiContext` is sent
 to the `GenAiEndpoint` with each request, and the `SimContext` is sent to the `SimEndpoint` with
