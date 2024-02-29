@@ -209,7 +209,7 @@ resource "google_container_node_pool" "agones-system" {
 }
 
 resource "google_container_node_pool" "agones-metrics" {
-  count      = var.enableAgonesMetricsNodepool ? 1 : 0
+  count      = var.enable_agones_metrics_nodepool ? 1 : 0
   name       = "agones-metrics"
   cluster    = google_container_cluster.primary.id
   node_count = 1
