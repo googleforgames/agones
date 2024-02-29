@@ -522,9 +522,7 @@ namespace Agones
                 };
                 var list = await client.GetListAsync(request,
                   deadline: DateTime.UtcNow.AddSeconds(RequestTimeoutSec), cancellationToken: ctoken);
-                var values = new string[list.Values.Count];
-                list.Values.CopyTo(values, 0);
-                return values.ToList();
+                return list.Values.ToList();
             }
             catch (RpcException ex)
             {
