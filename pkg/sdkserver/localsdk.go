@@ -25,18 +25,19 @@ import (
 	"sync"
 	"time"
 
-	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
-	"agones.dev/agones/pkg/sdk"
-	"agones.dev/agones/pkg/sdk/alpha"
-	"agones.dev/agones/pkg/sdk/beta"
-	"agones.dev/agones/pkg/util/apiserver"
-	"agones.dev/agones/pkg/util/runtime"
 	"github.com/fsnotify/fsnotify"
 	"github.com/mennanov/fmutils"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/proto"
 	"k8s.io/apimachinery/pkg/util/yaml"
+
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
+	"agones.dev/agones/pkg/sdk"
+	"agones.dev/agones/pkg/sdk/alpha"
+	"agones.dev/agones/pkg/sdk/beta"
+	"agones.dev/agones/pkg/util/apiserver"
+	"agones.dev/agones/pkg/util/runtime"
 )
 
 var (
@@ -46,7 +47,7 @@ var (
 )
 
 func defaultGs() *sdk.GameServer {
-	return &sdk.GameServer{
+	gs := &sdk.GameServer{
 		ObjectMeta: &sdk.GameServer_ObjectMeta{
 			Name:              "local",
 			Namespace:         "default",
@@ -71,6 +72,17 @@ func defaultGs() *sdk.GameServer {
 			Ports:   []*sdk.GameServer_Status_Port{{Name: "default", Port: 7777}},
 		},
 	}
+
+	if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
+		gs.Status.Counters = map[string]*sdk.GameServer_Status_CounterStatus{
+			"rooms": {Count: 1, Capacity: 10},
+		}
+		gs.Status.Lists = map[string]*sdk.GameServer_Status_ListStatus{
+			"players": {Values: []string{"test0", "test1", "test2"}, Capacity: 100},
+		}
+	}
+
+	return gs
 }
 
 // LocalSDKServer type is the SDKServer implementation for when the sidecar
@@ -144,15 +156,13 @@ func NewLocalSDKServer(filePath string, testSdkName string) (*LocalSDKServer, er
 	if runtime.FeatureEnabled(runtime.FeaturePlayerTracking) && l.gs.Status.Players == nil {
 		l.gs.Status.Players = &sdk.GameServer_Status_PlayerStatus{}
 	}
+
 	if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
-		// Adding test Counter and List for the conformance tests (not nil for LocalSDKServer tests)
 		if l.gs.Status.Counters == nil {
-			l.gs.Status.Counters = map[string]*sdk.GameServer_Status_CounterStatus{
-				"rooms": {Count: 1, Capacity: 10}}
+			l.gs.Status.Counters = make(map[string]*sdk.GameServer_Status_CounterStatus)
 		}
 		if l.gs.Status.Lists == nil {
-			l.gs.Status.Lists = map[string]*sdk.GameServer_Status_ListStatus{
-				"players": {Values: []string{"test0", "test1", "test2"}, Capacity: 100}}
+			l.gs.Status.Lists = make(map[string]*sdk.GameServer_Status_ListStatus)
 		}
 	}
 
