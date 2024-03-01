@@ -85,6 +85,8 @@ this will be picked up by the local server, and will change the current active c
 events for `WatchGameServer()`. This is a useful way of testing functionality, such as changes of state from `Ready` to
 `Allocated` in your game server code.
 
+It's important to note that during local development, only specific parts of the GameServer configuration can be modified through SDK calls. For instance, `counters` and `lists` should be placed within the `gameserver.status` section of the configuration file. By making this change, the relevant parts of the configuration are properly exposed and can be accessed through the SDK calls.
+
 {{< alert title="Note" color="info">}}
 File modification events can fire more than one for each save (for a variety of reasons),
 but it's best practice to ensure handlers that implement `WatchGameServer()` be idempotent regardless, as repeats can
