@@ -40,7 +40,8 @@ variable "kubernetes_versions" {
   default     = {
     "1.26" = ["asia-east1", "REGULAR"]
     "1.27" = ["us-east1", "REGULAR"]
-    "1.28" = ["us-west1", "RAPID"]
+    "1.28" = ["us-west1", "REGULAR"]
+    "1.29" = ["europe-west1", "RAPID"]
   }
 }
 
