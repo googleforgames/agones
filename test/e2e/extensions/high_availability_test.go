@@ -98,13 +98,13 @@ func TestGameServerCreationRightAfterDeletingOneExtensionsPod(t *testing.T) {
 // faking a extensions pod crash.
 func deleteAgonesExtensionsPod(ctx context.Context, t *testing.T, waitForExtensions bool) {
 	list, err := getAgoneseExtensionsPods(ctx)
-	assert.NoError(t, err)
+	require.NoError(t, err, "Could not get list of Extension pods")
 
 	policy := metav1.DeletePropagationBackground
 	podToDelete := list.Items[1]
 	err = framework.KubeClient.CoreV1().Pods("agones-system").Delete(ctx, podToDelete.ObjectMeta.Name,
 		metav1.DeleteOptions{PropagationPolicy: &policy})
-	assert.NoError(t, err)
+	require.NoError(t, err, "Could not delete the Extension pods")
 	if waitForExtensions {
 		require.Eventually(t, func() bool {
 			_, err := framework.KubeClient.CoreV1().Pods("agones-system").Get(ctx, podToDelete.ObjectMeta.Name, metav1.GetOptions{})
