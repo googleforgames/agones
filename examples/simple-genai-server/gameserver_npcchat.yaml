@@ -35,6 +35,10 @@ spec:
             # GenAiContext is not passed to the npc-chat-api endpoint.
             - name: GenAiNpc # False by default. Use GenAiNpc "true" when using the npc-chat-api as the GenAiEndpoint.
               value: "true"
+            - name: FromID # Default is "2".
+              value: "2"
+            - name: ToID # Default is "1".
+              value: "1"
             - name: SimEndpoint
               value: "http://vertex-chat-api.genai.svc.cluster.local:80"
             - name: SimContext
