@@ -50,16 +50,21 @@ var Logger ErrorLog = func(msg string, err error) {
 	fmt.Fprintf(os.Stderr, "%s: %s\n", msg, err)
 }
 
-// NewSDK starts a new SDK instance, and connects to localhost
-// on port "AGONES_SDK_GRPC_PORT" which by default is 9357.
+// NewSDK starts a new SDK instance, defaulting to a connection at "localhost:9357"
+// unless overridden by "AGONES_SDK_GRPC_HOST" and "AGONES_SDK_GRPC_PORT" environment variables.
 // Blocks until connection and handshake are made.
 // Times out after 30 seconds.
 func NewSDK() (*SDK, error) {
-	p := os.Getenv("AGONES_SDK_GRPC_PORT")
-	if p == "" {
-		p = "9357"
+	host := os.Getenv("AGONES_SDK_GRPC_HOST")
+	if host == "" {
+		host = "localhost"
 	}
-	addr := fmt.Sprintf("localhost:%s", p)
+
+	port := os.Getenv("AGONES_SDK_GRPC_PORT")
+	if port == "" {
+		port = "9357"
+	}
+	addr := fmt.Sprintf("%s:%s", host, port)
 	s := &SDK{
 		ctx: context.Background(),
 	}
