@@ -100,6 +100,7 @@ func main() {
 	for i, sc := range *scenarios {
 		logger.Printf("\n\n%v :Running Scenario %v with %v clients submitting requests every %vms for %v\n===================\n", time.Now(), i+1, sc.numOfClients, sc.intervalMillisecond, sc.duration)
 
+		var mu sync.Mutex
 		var wg sync.WaitGroup
 		failureCnts := make([]uint64, sc.numOfClients)
 		allocCnts := make([]uint64, sc.numOfClients)
@@ -123,6 +124,8 @@ func main() {
 					go func() {
 						defer wgc.Done()
 						if err := allocate(client); err != noerror {
+							mu.Lock()
+							defer mu.Unlock()
 							failureDtls[clientID][err]++
 							failureCnts[clientID]++
 						}
