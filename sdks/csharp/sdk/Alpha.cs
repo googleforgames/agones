@@ -467,13 +467,10 @@ namespace Agones
                 };
                 var list = await client.GetListAsync(request,
                   deadline: DateTime.UtcNow.AddSeconds(RequestTimeoutSec), cancellationToken: ctoken);
-                foreach (string val in list.Values)
+                if (list.Values.Contains(value))
                 {
-                    if (val == value)
-                    {
-                        return true;
-                    };
-                }
+                    return true;
+                };
                 return false;
             }
             catch (RpcException ex)
