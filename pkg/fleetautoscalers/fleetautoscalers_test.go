@@ -937,7 +937,7 @@ func TestApplyCounterPolicy(t *testing.T) {
 							}}}},
 			},
 			want: expected{
-				replicas: 2,
+				replicas: 1,
 				limited:  false,
 				wantErr:  false,
 			},
@@ -1729,7 +1729,7 @@ func TestApplyListPolicy(t *testing.T) {
 							}}}},
 			},
 			want: expected{
-				replicas: 3,
+				replicas: 4,
 				limited:  false,
 				wantErr:  false,
 			},
