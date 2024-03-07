@@ -44,10 +44,10 @@ spec:
             limits:
               memory: 64Mi
               cpu: 20m
-      # Schedule onto the game server node pool when running in the same cluster as the inference server.
-      # tolerations:
-      #   - key: "agones.dev/role"
-      #     value: "gameserver"
-      #     effect: "NoExecute"
-      # nodeSelector:
-      #   agones.dev/role: gameserver
+              # Schedule onto the game server node pool when running in the same cluster as the inference server.
+              # tolerations:
+              #   - key: "agones.dev/role"
+              #     value: "gameserver"
+              #     effect: "NoExecute"
+              # nodeSelector:
+              #   agones.dev/role: gameserver

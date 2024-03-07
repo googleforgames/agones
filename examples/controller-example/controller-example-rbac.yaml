@@ -23,21 +23,21 @@ kind: ClusterRole
 metadata:
   name: controller-example-role
 rules:
-- apiGroups: [""]
-  resources: ["events"]
-  verbs: ["create", "patch"]
-- apiGroups: ["agones.dev"]
-  resources: ["gameservers"]
-  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["create", "patch"]
+  - apiGroups: ["agones.dev"]
+    resources: ["gameservers"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: controller-example-access
 subjects:
-- kind: ServiceAccount
-  name: controller-example-sa
-  namespace: agones-system
+  - kind: ServiceAccount
+    name: controller-example-sa
+    namespace: agones-system
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
