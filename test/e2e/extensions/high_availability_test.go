@@ -37,10 +37,19 @@ func TestGameServerCreationAfterDeletingOneExtensionsPod(t *testing.T) {
 
 	list, err := getAgoneseExtensionsPods(ctx)
 	logger.Infof("Length of pod list is %v", len(list.Items))
-	for i := range list.Items {
-		logger.Infof("Name of extensions pod %v: %v", i, list.Items[i].ObjectMeta.Name)
-		logger.Infof("Host IP %v", list.Items[i].Status.HostIP)
-		logger.Infof("Pod IPs %v", list.Items[i].Status.PodIPs)
+	if len(list.Items) > 2 {
+		logger.WithField("podCount", len(list.Items)).Info("Logging events for the Deployment due to pod count > 2 before deleting extensions pod")
+		for i := range list.Items {
+			logger.Infof("Name of extensions pod %v: %v", i, list.Items[i].ObjectMeta.Name)
+			logger.Infof("Status of extensions pod %v", list.Items[i].Status)
+			framework.LogEvents(t, logger, "agones-system", &list.Items[i])
+		}
+	} else {
+		for i := range list.Items {
+			logger.Infof("Name of extensions pod %v: %v", i, list.Items[i].ObjectMeta.Name)
+			logger.Infof("Host IP %v", list.Items[i].Status.HostIP)
+			logger.Infof("Pod IPs %v", list.Items[i].Status.PodIPs)
+		}
 	}
 	require.NoError(t, err, "Could not get list of Extension pods")
 	assert.Greater(t, len(list.Items), 1, "Cluster has no Extensions pod or has only 1 extensions pod")
@@ -89,13 +98,13 @@ func TestGameServerCreationRightAfterDeletingOneExtensionsPod(t *testing.T) {
 // faking a extensions pod crash.
 func deleteAgonesExtensionsPod(ctx context.Context, t *testing.T, waitForExtensions bool) {
 	list, err := getAgoneseExtensionsPods(ctx)
-	assert.NoError(t, err)
+	require.NoError(t, err, "Could not get list of Extension pods")
 
 	policy := metav1.DeletePropagationBackground
 	podToDelete := list.Items[1]
 	err = framework.KubeClient.CoreV1().Pods("agones-system").Delete(ctx, podToDelete.ObjectMeta.Name,
 		metav1.DeleteOptions{PropagationPolicy: &policy})
-	assert.NoError(t, err)
+	require.NoError(t, err, "Could not delete the Extension pods")
 	if waitForExtensions {
 		require.Eventually(t, func() bool {
 			_, err := framework.KubeClient.CoreV1().Pods("agones-system").Get(ctx, podToDelete.ObjectMeta.Name, metav1.GetOptions{})
@@ -130,5 +139,18 @@ func waitForAgonesExtensionsRunning(ctx context.Context) error {
 // getAgonesExtensionsPods returns all the Agones extensions pods
 func getAgoneseExtensionsPods(ctx context.Context) (*corev1.PodList, error) {
 	opts := metav1.ListOptions{LabelSelector: labels.Set{"agones.dev/role": "extensions"}.String()}
-	return framework.KubeClient.CoreV1().Pods("agones-system").List(ctx, opts)
+	pods, err := framework.KubeClient.CoreV1().Pods("agones-system").List(ctx, opts)
+	if err != nil {
+		return nil, err
+	}
+
+	// Filter Running pods
+	var runningPods []corev1.Pod
+	for i := range pods.Items {
+		if pods.Items[i].ObjectMeta.DeletionTimestamp.IsZero() {
+			runningPods = append(runningPods, pods.Items[i])
+		}
+	}
+
+	return &corev1.PodList{Items: runningPods}, nil
 }
