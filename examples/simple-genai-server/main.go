@@ -47,62 +47,62 @@ func main() {
 	numChats := flag.Int("NumChats", 1, "Number of back and forth chats between the sim and genAI")
 	genAiNpc := flag.Bool("GenAiNpc", false, "Set to true if the GenAIEndpoint is the npc-chat-api endpoint")
 	simNpc := flag.Bool("SimNpc", false, "Set to true if the SimEndpoint is the npc-chat-api endpoint")
-	fromID := flag.Int("FromID", 2, "Entity sending messages to the npc-chat-api")
-	toID := flag.Int("ToID", 1, "Entity receiving messages on the npc-chat-api (the NPC's ID)")
+	fromId := flag.Int("FromID", 2, "Entity sending messages to the npc-chat-api")
+	toId := flag.Int("ToID", 1, "Entity receiving messages on the npc-chat-api (the NPC's ID)")
 
 	flag.Parse()
 	if ep := os.Getenv("PORT"); ep != "" {
 		port = &ep
 	}
-	if sc := os.Getenv("SimContext"); sc != "" {
+	if sc := os.Getenv("SIM_CONTEXT"); sc != "" {
 		simContext = &sc
 	}
-	if gac := os.Getenv("GenAiContext"); gac != "" {
+	if gac := os.Getenv("GEN_AI_CONTEXT"); gac != "" {
 		genAiContext = &gac
 	}
-	if p := os.Getenv("Prompt"); p != "" {
+	if p := os.Getenv("PROMPT"); p != "" {
 		prompt = &p
 	}
-	if se := os.Getenv("SimEndpoint"); se != "" {
+	if se := os.Getenv("SIM_ENDPOINT"); se != "" {
 		simEndpoint = &se
 	}
-	if gae := os.Getenv("GenAiEndpoint"); gae != "" {
+	if gae := os.Getenv("GEN_AI_ENDPOINT"); gae != "" {
 		genAiEndpoint = &gae
 	}
-	if nc := os.Getenv("NumChats"); nc != "" {
+	if nc := os.Getenv("NUM_CHATS"); nc != "" {
 		num, err := strconv.Atoi(nc)
 		if err != nil {
 			log.Fatalf("Could not parse NumChats: %v", err)
 		}
 		numChats = &num
 	}
-	if gan := os.Getenv("GenAiNpc"); gan != "" {
+	if gan := os.Getenv("GEN_AI_NPC"); gan != "" {
 		gnpc, err := strconv.ParseBool(gan)
 		if err != nil {
 			log.Fatalf("Could parse GenAiNpc: %v", err)
 		}
 		genAiNpc = &gnpc
 	}
-	if sn := os.Getenv("SimNpc"); sn != "" {
+	if sn := os.Getenv("SIM_NPC"); sn != "" {
 		snpc, err := strconv.ParseBool(sn)
 		if err != nil {
 			log.Fatalf("Could parse GenAiNpc: %v", err)
 		}
 		simNpc = &snpc
 	}
-	if fid := os.Getenv("FromID"); fid != "" {
+	if fid := os.Getenv("FROM_ID"); fid != "" {
 		num, err := strconv.Atoi(fid)
 		if err != nil {
-			log.Fatalf("Could not parse FromID: %v", err)
+			log.Fatalf("Could not parse FromId: %v", err)
 		}
-		fromID = &num
+		fromId = &num
 	}
-	if tid := os.Getenv("ToID"); tid != "" {
+	if tid := os.Getenv("TO_ID"); tid != "" {
 		num, err := strconv.Atoi(tid)
 		if err != nil {
-			log.Fatalf("Could not parse ToID: %v", err)
+			log.Fatalf("Could not parse ToId: %v", err)
 		}
-		toID = &num
+		toId = &num
 	}
 
 	log.Print("Creating SDK instance")
@@ -117,14 +117,14 @@ func main() {
 	var simConn *connection
 	if *simEndpoint != "" {
 		log.Printf("Creating Sim Client at endpoint %s", *simEndpoint)
-		simConn = initClient(*simEndpoint, *simContext, "Sim", *simNpc, *fromID, *toID)
+		simConn = initClient(*simEndpoint, *simContext, "Sim", *simNpc, *fromId, *toId)
 	}
 
 	if *genAiEndpoint == "" {
 		log.Fatalf("GenAiEndpoint must be specified")
 	}
 	log.Printf("Creating GenAI Client at endpoint %s", *genAiEndpoint)
-	genAiConn := initClient(*genAiEndpoint, *genAiContext, "GenAI", *genAiNpc, *fromID, *toID)
+	genAiConn := initClient(*genAiEndpoint, *genAiContext, "GenAI", *genAiNpc, *fromId, *toId)
 
 	log.Print("Marking this server as ready")
 	if err := s.Ready(); err != nil {

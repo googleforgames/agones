@@ -31,6 +31,7 @@ spec:
           env:
             - name: GenAiEndpoint
             # Use the service endpoint address when running in the same cluster as the inference server.
+              # TODO (igooch): Change this to the `/genai/npc-chat` endpoint when it's properly plumbed in the inference server
               value: "http://npc-chat-api.genai.svc.cluster.local:80"
             # GenAiContext is not passed to the npc-chat-api endpoint.
             - name: GenAiNpc # False by default. Use GenAiNpc "true" when using the npc-chat-api as the GenAiEndpoint.
@@ -40,7 +41,7 @@ spec:
             - name: ToID # Default is "1".
               value: "1"
             - name: SimEndpoint
-              value: "http://vertex-chat-api.genai.svc.cluster.local:80"
+              value: "http://192.1.1.2/genai/chat"
             - name: SimContext
               value: "Ask questions about one of the following: What happened here? Where were you during the earthquake? Do you have supplies?"
             - name: SimNpc
@@ -57,9 +58,9 @@ spec:
               memory: 64Mi
               cpu: 20m
       # Schedule onto the game server node pool when running in the same cluster as the inference server.
-      tolerations:
-        - key: "agones.dev/role"
-          value: "gameserver"
-          effect: "NoExecute"
-      nodeSelector:
-        agones.dev/role: gameserver
+      # tolerations:
+      #   - key: "agones.dev/role"
+      #     value: "gameserver"
+      #     effect: "NoExecute"
+      # nodeSelector:
+      #   agones.dev/role: gameserver
