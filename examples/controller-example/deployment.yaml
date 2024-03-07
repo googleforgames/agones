@@ -27,20 +27,8 @@ spec:
       labels:
         app: controller-example
     spec:
-      serviceAccountName: default
+      serviceAccountName: controller-example-sa
       containers:
         - name: controller-example
-          image: us-docker.pkg.dev/agones-mangalpalli/examples/controller-example:0.1
+          image: us-docker.pkg.dev/agones-images/examples/controller-example:0.8
           imagePullPolicy: Always
-          env:
-            - name: GAMESERVER_IMAGE
-              value: us-docker.pkg.dev/agones-mangalpalli/examples/simple-game-server:0.27
-          resources:
-            limits:
-              cpu: 500m
-              ephemeral-storage: 1Gi
-              memory: 2Gi
-            requests:
-              cpu: 500m
-              ephemeral-storage: 1Gi
-              memory: 2Gi
