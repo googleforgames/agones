@@ -30,5 +30,5 @@ spec:
       serviceAccountName: controller-example-sa
       containers:
         - name: controller-example
-          image: us-docker.pkg.dev/agones-images/examples/controller-example:0.8
+          image: us-docker.pkg.dev/agones-images/examples/controller-example:0.1
           imagePullPolicy: Always
