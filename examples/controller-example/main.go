@@ -38,51 +38,53 @@ type GameServerReconciler struct {
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
 func (r *GameServerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	log := r.Log.WithValues("gameserver", req.NamespacedName)
-
-	// Fetch the GameServer instance
+	fmt.Println("Entering Reconcile method.")
 	gameServer := &agonesv1.GameServer{}
-
-	log.Info("Fetching GameServer", "gameServerName", gameServer.Name, "gameServerNamespace", gameServer.Namespace)
-
 	err := r.Get(ctx, req.NamespacedName, gameServer)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			log.Info("GameServer resource not found. Ignoring since object must be deleted.")
+			r.Log.Info("GameServer resource not found. Ignoring since object must be deleted", "name", req.NamespacedName)
 			return ctrl.Result{}, nil
 		}
-		log.Error(err, "unable to fetch GameServer")
-		return ctrl.Result{}, client.IgnoreNotFound(err)
+		r.Log.Error(err, "unable to fetch GameServer", "name", req.NamespacedName)
+		return ctrl.Result{}, err
 	}
-	// logging the GameServer's name and current state
-	log.Info("GameServer event observed", "name", gameServer.Name, "state", gameServer.Status.State)
+
+	// Log current state and labels
+	r.Log.Info("Fetched GameServer", "gameServerName", gameServer.Name, "gameServerNamespace", gameServer.Namespace, "state", gameServer.Status.State, "currentLabels", gameServer.Labels)
 
 	if gameServer.Labels == nil {
 		gameServer.Labels = map[string]string{}
 	}
-	gameServer.Labels["state"] = fmt.Sprintf("%v", gameServer.Status.State)
 
-	log.Info("GameServer event observed", "name", gameServer.Name, "state", gameServer.Status.State)
+	originalState := gameServer.Labels["state"]
+	newState := fmt.Sprintf("%v", gameServer.Status.State)
+	gameServer.Labels["state"] = newState
+
+	r.Log.Info("Updating GameServer labels", "originalState", originalState, "newState", newState)
 
 	// Attempt to update the GameServer with a retry loop for handling conflicts
 	retryAttempts := 5
 	for i := 0; i < retryAttempts; i++ {
-		log.Info("Entering into retry loop", "attempt", i)
 		err = r.Update(ctx, gameServer)
 		if err != nil {
-			if i < retryAttempts-1 && errors.IsConflict(err) {
+			if errors.IsConflict(err) {
+				r.Log.Info("Conflict detected when trying to update GameServer. Retrying...", "attempt", i+1)
 				// Conflict detected, refetch the latest version and retry
-				_ = r.Get(ctx, req.NamespacedName, gameServer)
+				if err := r.Get(ctx, req.NamespacedName, gameServer); err != nil {
+					r.Log.Error(err, "Failed to fetch latest GameServer state", "name", gameServer.Name)
+					return ctrl.Result{}, err
+				}
 				continue
 			}
-			log.Error(err, "failed to update GameServer")
+			r.Log.Error(err, "Failed to update GameServer", "name", gameServer.Name)
 			return ctrl.Result{}, err
 		}
-		// Update succeeded
+
+		r.Log.Info("GameServer label updated successfully", "name", gameServer.Name, "updatedLabels", gameServer.Labels)
+		fmt.Println("Update succeeded.")
 		break
 	}
-
-	log.Info("GameServer updated successfully", "name", gameServer.Name)
 
 	return ctrl.Result{}, nil
 }
@@ -91,12 +93,14 @@ func main() {
 	var err error
 	ctrl.SetLogger(zap.New(zap.UseDevMode(true)))
 
+	fmt.Println("Starting controller manager.")
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{})
 	if err != nil {
 		fmt.Println("Unable to start manager", err)
 		os.Exit(1)
 	}
 
+	fmt.Println("Creating Controller.")
 	err = ctrl.NewControllerManagedBy(mgr).
 		For(&agonesv1.GameServer{}).
 		Complete(&GameServerReconciler{
