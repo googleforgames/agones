@@ -63,4 +63,3 @@ spec:
         - name: custom-controller
           image: us-docker.pkg.dev/agones-images/examples/custom-controller:0.1
           imagePullPolicy: Always
-          
