@@ -33,7 +33,7 @@ FROM mcr.microsoft.com/windows/servercore:${WINDOWS_VERSION}
 
 WORKDIR /
 
-COPY --from=builder /go/src/agones.dev/agones/examples/simple-game-server/simple-game-server.exe /server
+COPY --from=builder /go/src/agones.dev/agones/examples/simple-game-server/simple-game-server.exe /server/
 
 EXPOSE 7654
 USER ContainerUser
