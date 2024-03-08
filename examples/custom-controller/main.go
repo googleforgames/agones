@@ -18,6 +18,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"os"
 
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
@@ -57,7 +58,7 @@ func (r *GameServerReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	}
 
 	originalState := gameServer.Labels["state"]
-	newState := gameServer.Status.State.String()
+	newState := fmt.Sprintf("%v", gameServer.Status.State)
 	gameServer.Labels["state"] = newState
 
 	r.Log.Info("Updating GameServer labels", "originalState", originalState, "newState", newState)
