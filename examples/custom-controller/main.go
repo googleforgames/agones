@@ -18,7 +18,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"os"
 
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
@@ -38,7 +37,7 @@ type GameServerReconciler struct {
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
 func (r *GameServerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	fmt.Println("Entering Reconcile method.")
+	r.Log.Info("Entering Reconcile method.")
 	gameServer := &agonesv1.GameServer{}
 	err := r.Get(ctx, req.NamespacedName, gameServer)
 	if err != nil {
@@ -58,34 +57,16 @@ func (r *GameServerReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	}
 
 	originalState := gameServer.Labels["state"]
-	newState := fmt.Sprintf("%v", gameServer.Status.State)
+	newState := gameServer.Status.State.String()
 	gameServer.Labels["state"] = newState
 
 	r.Log.Info("Updating GameServer labels", "originalState", originalState, "newState", newState)
 
-	// Attempt to update the GameServer with a retry loop for handling conflicts
-	retryAttempts := 5
-	for i := 0; i < retryAttempts; i++ {
-		err = r.Update(ctx, gameServer)
-		if err != nil {
-			if errors.IsConflict(err) {
-				r.Log.Info("Conflict detected when trying to update GameServer. Retrying...", "attempt", i+1)
-				// Conflict detected, refetch the latest version and retry
-				if err := r.Get(ctx, req.NamespacedName, gameServer); err != nil {
-					r.Log.Error(err, "Failed to fetch latest GameServer state", "name", gameServer.Name)
-					return ctrl.Result{}, err
-				}
-				continue
-			}
-			r.Log.Error(err, "Failed to update GameServer", "name", gameServer.Name)
-			return ctrl.Result{}, err
-		}
-
-		r.Log.Info("GameServer label updated successfully", "name", gameServer.Name, "updatedLabels", gameServer.Labels)
-		fmt.Println("Update succeeded.")
-		break
+	if err := r.Update(ctx, gameServer); err != nil {
+		r.Log.Error(err, "Failed to update GameServer", "name", gameServer.Name)
+		return ctrl.Result{}, err
 	}
-
+	r.Log.Info("GameServer label updated successfully", "name", gameServer.Name, "updatedLabels", gameServer.Labels)
 	return ctrl.Result{}, nil
 }
 
@@ -93,14 +74,14 @@ func main() {
 	var err error
 	ctrl.SetLogger(zap.New(zap.UseDevMode(true)))
 
-	fmt.Println("Starting controller manager.")
+	ctrl.Log.Info("Starting controller manager.")
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{})
 	if err != nil {
-		fmt.Println("Unable to start manager", err)
+		ctrl.Log.Error(err, "Unable to start manager")
 		os.Exit(1)
 	}
 
-	fmt.Println("Creating Controller.")
+	ctrl.Log.Info("Creating Controller.")
 	err = ctrl.NewControllerManagedBy(mgr).
 		For(&agonesv1.GameServer{}).
 		Complete(&GameServerReconciler{
@@ -108,14 +89,14 @@ func main() {
 			Log:    ctrl.Log.WithName("controllers").WithName("GameServer"),
 		})
 	if err != nil {
-		fmt.Println("Unable to create controller", err)
+		ctrl.Log.Error(err, "Unable to create controller")
 		os.Exit(1)
 	}
 
 	// Start the controller manager
-	fmt.Println("Starting the Cmd.")
+	ctrl.Log.Info("Starting the Cmd.")
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
-		fmt.Println("Problem running manager", err)
+		ctrl.Log.Error(err, "Problem running manager")
 		os.Exit(1)
 	}
 }

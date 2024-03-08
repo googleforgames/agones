@@ -1,4 +1,4 @@
-module controller-example
+module custom-controller
 
 go 1.21
 

@@ -27,9 +27,9 @@ REPOSITORY ?=
 PROD_REPO ?= us-docker.pkg.dev/agones-images/examples
 version := 0.1
 ifeq ($(REPOSITORY),)
-	server_tag := controller-example:$(version)
+	server_tag := custom-controller:$(version)
 else
-	server_tag := $(REPOSITORY)/controller-example:$(version)
+	server_tag := $(REPOSITORY)/custom-controller:$(version)
 endif
 
 #   _____                    _
@@ -54,6 +54,6 @@ gar-check:
 echo-image-tag:
 	@echo $(PROD_REPO)/$(server_tag)
 
-# build and push the crd-client image with specified tag
+# build and push the example custom controller image with specified tag
 cloud-build:
 	gcloud builds submit --config=cloudbuild.yaml
