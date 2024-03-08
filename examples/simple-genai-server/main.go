@@ -45,32 +45,64 @@ func main() {
 	simEndpoint := flag.String("SimEndpoint", "", "The full base URL to send API requests to simulate user input")
 	simContext := flag.String("SimContext", "", "Context for the Sim endpoint")
 	numChats := flag.Int("NumChats", 1, "Number of back and forth chats between the sim and genAI")
+	genAiNpc := flag.Bool("GenAiNpc", false, "Set to true if the GenAIEndpoint is the npc-chat-api endpoint")
+	simNpc := flag.Bool("SimNpc", false, "Set to true if the SimEndpoint is the npc-chat-api endpoint")
+	fromId := flag.Int("FromID", 2, "Entity sending messages to the npc-chat-api")
+	toId := flag.Int("ToID", 1, "Entity receiving messages on the npc-chat-api (the NPC's ID)")
 
 	flag.Parse()
 	if ep := os.Getenv("PORT"); ep != "" {
 		port = &ep
 	}
-	if sc := os.Getenv("SimContext"); sc != "" {
+	if sc := os.Getenv("SIM_CONTEXT"); sc != "" {
 		simContext = &sc
 	}
-	if gac := os.Getenv("GenAiContext"); gac != "" {
+	if gac := os.Getenv("GEN_AI_CONTEXT"); gac != "" {
 		genAiContext = &gac
 	}
-	if p := os.Getenv("Prompt"); p != "" {
+	if p := os.Getenv("PROMPT"); p != "" {
 		prompt = &p
 	}
-	if se := os.Getenv("SimEndpoint"); se != "" {
+	if se := os.Getenv("SIM_ENDPOINT"); se != "" {
 		simEndpoint = &se
 	}
-	if gae := os.Getenv("GenAiEndpoint"); gae != "" {
+	if gae := os.Getenv("GEN_AI_ENDPOINT"); gae != "" {
 		genAiEndpoint = &gae
 	}
-	if nc := os.Getenv("NumChats"); nc != "" {
+	if nc := os.Getenv("NUM_CHATS"); nc != "" {
 		num, err := strconv.Atoi(nc)
 		if err != nil {
 			log.Fatalf("Could not parse NumChats: %v", err)
 		}
 		numChats = &num
+	}
+	if gan := os.Getenv("GEN_AI_NPC"); gan != "" {
+		gnpc, err := strconv.ParseBool(gan)
+		if err != nil {
+			log.Fatalf("Could parse GenAiNpc: %v", err)
+		}
+		genAiNpc = &gnpc
+	}
+	if sn := os.Getenv("SIM_NPC"); sn != "" {
+		snpc, err := strconv.ParseBool(sn)
+		if err != nil {
+			log.Fatalf("Could parse GenAiNpc: %v", err)
+		}
+		simNpc = &snpc
+	}
+	if fid := os.Getenv("FROM_ID"); fid != "" {
+		num, err := strconv.Atoi(fid)
+		if err != nil {
+			log.Fatalf("Could not parse FromId: %v", err)
+		}
+		fromId = &num
+	}
+	if tid := os.Getenv("TO_ID"); tid != "" {
+		num, err := strconv.Atoi(tid)
+		if err != nil {
+			log.Fatalf("Could not parse ToId: %v", err)
+		}
+		toId = &num
 	}
 
 	log.Print("Creating SDK instance")
@@ -85,14 +117,14 @@ func main() {
 	var simConn *connection
 	if *simEndpoint != "" {
 		log.Printf("Creating Sim Client at endpoint %s", *simEndpoint)
-		simConn = initClient(*simEndpoint, *simContext, "Sim")
+		simConn = initClient(*simEndpoint, *simContext, "Sim", *simNpc, *fromId, *toId)
 	}
 
 	if *genAiEndpoint == "" {
 		log.Fatalf("GenAiEndpoint must be specified")
 	}
 	log.Printf("Creating GenAI Client at endpoint %s", *genAiEndpoint)
-	genAiConn := initClient(*genAiEndpoint, *genAiContext, "GenAI")
+	genAiConn := initClient(*genAiEndpoint, *genAiContext, "GenAI", *genAiNpc, *fromId, *toId)
 
 	log.Print("Marking this server as ready")
 	if err := s.Ready(); err != nil {
@@ -108,7 +140,8 @@ func main() {
 		var wg sync.WaitGroup
 		// TODO: Add flag for creating X number of chats
 		wg.Add(1)
-		go autonomousChat(*prompt, genAiConn, simConn, *numChats, &wg, sigCtx)
+		chatHistory := []Message{{Author: simConn.name, Content: *prompt}}
+		go autonomousChat(*prompt, genAiConn, simConn, *numChats, &wg, sigCtx, chatHistory)
 		wg.Wait()
 	}
 
@@ -120,31 +153,68 @@ func main() {
 	os.Exit(0)
 }
 
-func initClient(endpoint string, context string, name string) *connection {
+func initClient(endpoint string, context string, name string, npc bool, fromID int, toID int) *connection {
 	// TODO: create option for a client certificate
 	client := &http.Client{}
-	return &connection{client: client, endpoint: endpoint, context: context, name: name}
+	return &connection{client: client, endpoint: endpoint, context: context, name: name, npc: npc, fromId: fromID, toId:  toID}
 }
 
 type connection struct {
 	client   *http.Client
-	endpoint string // full base URL for API requests
+	endpoint string // Full base URL for API requests
 	context  string
-	name     string // human readable name for the connection
+	name     string // Human readable name for the connection
+	npc      bool   // True if the endpoint is the NPC API
+	fromId   int // For use with NPC API, sender ID
+	toId     int // For use with NPC API, receiver ID
 	// TODO: create options for routes off the base URL
 }
 
+// For use with Vertex APIs
 type GenAIRequest struct {
-	Context string `json:"context,omitempty"`
-	Prompt  string `json:"prompt"`
+	Context     string    `json:"context,omitempty"` // Optional
+	Prompt      string    `json:"prompt,omitempty"`
+	ChatHistory []Message `json:"messages,omitempty"` // Optional, stores chat history for use with Vertex Chat API
 }
 
-func handleGenAIRequest(prompt string, clientConn *connection) (string, error) {
-	jsonRequest := GenAIRequest{
-		Context: clientConn.context,
-		Prompt:  prompt,
+// For use with NPC API
+type NPCRequest struct {
+	Msg    string `json:"message,omitempty"`
+	FromId int `json:"from_id,omitempty"`
+	ToId   int `json:"to_id,omitempty"`
+}
+
+// Expected format for the NPC endpoint response
+type NPCResponse struct {
+	Response string `json:"response"`
+}
+
+// Conversation history provided to the model in a structured alternate-author form.
+// https://cloud.google.com/vertex-ai/docs/generative-ai/model-reference/text-chat
+type Message struct {
+	Author  string `json:"author"`
+	Content string `json:"content"`
+}
+
+func handleGenAIRequest(prompt string, clientConn *connection, chatHistory []Message) (string, error) {
+	var jsonStr []byte
+	var err error
+	// If the endpoint is the NPC API, use the json request format specifc to that API
+	if clientConn.npc {
+		npcRequest := NPCRequest{
+			Msg:    prompt,
+			FromId: clientConn.fromId,
+			ToId:   clientConn.toId,
+		}
+		jsonStr, err = json.Marshal(npcRequest)
+	} else {
+		genAIRequest := GenAIRequest{
+			Context:     clientConn.context,
+			Prompt:      prompt,
+			ChatHistory: chatHistory,
+		}
+		jsonStr, err = json.Marshal(genAIRequest)
 	}
-	jsonStr, err := json.Marshal(jsonRequest)
 	if err != nil {
 		return "", fmt.Errorf("unable to marshal json request: %v", err)
 	}
@@ -175,7 +245,7 @@ func handleGenAIRequest(prompt string, clientConn *connection) (string, error) {
 }
 
 // Two AIs (connection endpoints) talking to each other
-func autonomousChat(prompt string, conn1 *connection, conn2 *connection, numChats int, wg *sync.WaitGroup, sigCtx context.Context) {
+func autonomousChat(prompt string, conn1 *connection, conn2 *connection, numChats int, wg *sync.WaitGroup, sigCtx context.Context, chatHistory []Message) {
 	select {
 	case <-sigCtx.Done():
 		wg.Done()
@@ -186,15 +256,27 @@ func autonomousChat(prompt string, conn1 *connection, conn2 *connection, numChat
 			return
 		}
 
-		response, err := handleGenAIRequest(prompt, conn1)
+		response, err := handleGenAIRequest(prompt, conn1, chatHistory)
 		if err != nil {
 			log.Fatalf("Could not send request: %v", err)
 		}
+		// If we sent the request to the NPC endpoint we need to parse the json response {response: "response"}
+		if conn1.npc {
+			npcResponse := NPCResponse{}
+			err = json.Unmarshal([]byte(response), &npcResponse)
+			if err != nil {
+				log.Fatalf("Unable to unmarshal NPC endpoint response: %v", err)
+			}
+			response = npcResponse.Response
+		}
 		log.Printf("%d %s RESPONSE: %s\n", numChats, conn1.name, response)
+
+		chat := Message{Author: conn1.name, Content: response}
+		chatHistory = append(chatHistory, chat)
 
 		numChats -= 1
 		// Flip between the connection that the response is sent to.
-		autonomousChat(response, conn2, conn1, numChats, wg, sigCtx)
+		autonomousChat(response, conn2, conn1, numChats, wg, sigCtx, chatHistory)
 	}
 }
 
@@ -225,7 +307,8 @@ func tcpHandleConnection(conn net.Conn, genAiConn *connection) {
 		txt := scanner.Text()
 		log.Printf("TCP txt: %v", txt)
 
-		response, err := handleGenAIRequest(txt, genAiConn)
+		// TODO: update with chathistroy
+		response, err := handleGenAIRequest(txt, genAiConn, nil)
 		if err != nil {
 			response = "ERROR: " + err.Error() + "\n"
 		}
