@@ -29,26 +29,26 @@ spec:
           image: us-docker.pkg.dev/agones-images/examples/simple-genai-game-server:0.1
           # imagePullPolicy: Always  # add for development
           env:
-            - name: GenAiEndpoint
+            - name: GEN_AI_ENDPOINT
             # Use the service endpoint address when running in the same cluster as the inference server.
               # TODO (igooch): Change this to the `/genai/npc-chat` endpoint when it's properly plumbed in the inference server
               value: "http://npc-chat-api.genai.svc.cluster.local:80"
             # GenAiContext is not passed to the npc-chat-api endpoint.
-            - name: GenAiNpc # False by default. Use GenAiNpc "true" when using the npc-chat-api as the GenAiEndpoint.
+            - name: GEN_AI_NPC # False by default. Use GEN_AI_NPC "true" when using the npc-chat-api as the GEN_AI_ENDPOINT.
               value: "true"
-            - name: FromID # Default is "2".
+            - name: FROM_ID # Default is "2".
               value: "2"
-            - name: ToID # Default is "1".
+            - name: TO_ID # Default is "1".
               value: "1"
-            - name: SimEndpoint
+            - name: SIM_ENDPOINT
               value: "http://192.1.1.2/genai/chat"
-            - name: SimContext
+            - name: SIM_CONTEXT
               value: "Ask questions about one of the following: What happened here? Where were you during the earthquake? Do you have supplies?"
-            - name: SimNpc
-              value: "false" # False by default. Use SimNpc "true" when using the npc-chat-api as the SimEndpoint.
-            - name: Prompt
+            - name: SIM_NPC
+              value: "false" # False by default. Use SIM_NPC "true" when using the npc-chat-api as the SIM_ENDPOINT.
+            - name: PROMPT
               value: "Hello"
-            - name: NumChats
+            - name: NUM_CHATS
               value: "50"
           resources:
             requests:
