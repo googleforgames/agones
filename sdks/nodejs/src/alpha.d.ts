@@ -28,6 +28,8 @@ declare class Alpha {
 	isPlayerConnected(playerID: PlayerId): Promise<boolean>
 
 	getConnectedPlayers(): Promise<PlayerId[]>
+
+	getCounterCount(key: string): Promise<number>
 }
 
 export default Alpha;

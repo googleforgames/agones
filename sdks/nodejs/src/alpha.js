@@ -83,7 +83,7 @@ class Alpha {
 		});
 	}
 
-	getPlayerCount() {
+	async getPlayerCount() {
 		const request = new messages.Empty();
 
 		return new Promise((resolve, reject) => {
@@ -97,7 +97,7 @@ class Alpha {
 		});
 	}
 
-	isPlayerConnected(playerID) {
+	async isPlayerConnected(playerID) {
 		const request = new messages.PlayerID();
 		request.setPlayerid(playerID);
 
@@ -112,7 +112,7 @@ class Alpha {
 		});
 	}
 
-	getConnectedPlayers() {
+	async getConnectedPlayers() {
 		const request = new messages.Empty();
 
 		return new Promise((resolve, reject) => {
@@ -121,6 +121,20 @@ class Alpha {
 					reject(error);
 				} else {
 					resolve(response.getListList());
+				}
+			});
+		});
+	}
+
+	async getCounterCount(key) {
+		const request = new messages.GetCounterRequest();
+		request.setName(key);
+		return new Promise((resolve, reject) => {
+			this.client.getCounter(request, (error, response) => {
+				if (error) {
+					reject(error);
+				} else {
+					resolve(response.getCount());
 				}
 			});
 		});

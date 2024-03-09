@@ -251,4 +251,35 @@ describe('Alpha', () => {
 			}
 		});
 	});
+
+	
+	describe('getCounterCount', () => {
+		it('calls the server and handles the response', async () => {
+			spyOn(alpha.client, 'getCounter').and.callFake((request, callback) => {
+				let count = new messages.Count();
+				count.setCount(10);
+				callback(undefined, count);
+			});
+
+			let count = await alpha.getCounterCount('key');
+			expect(alpha.client.getCounter).toHaveBeenCalled();
+			expect(count).toEqual(10);
+			let request = alpha.client.getCounter.calls.argsFor(0)[0];
+			expect(request.getName()).toEqual('key');
+		});
+
+		it('calls the server and handles failure', async () => {
+			spyOn(alpha.client, 'getCounter').and.callFake((request, callback) => {
+				callback('error', undefined);
+			});
+			try {
+				await alpha.getCounterCount('key');
+				fail();
+			} catch (error) {
+				expect(alpha.client.getCounter).toHaveBeenCalled();
+				expect(error).toEqual('error');
+			}
+		});
+	});
+
 });
