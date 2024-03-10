@@ -18,6 +18,8 @@ const grpc = require('@grpc/grpc-js');
 const messages = require('../lib/alpha/alpha_pb');
 const servicesPackageDefinition = require('../lib/alpha/alpha_grpc_pb');
 
+const OUT_OF_RANGE = 'OUT_OF_RANGE';
+
 class Alpha {
 	constructor(address, credentials) {
 		const services = grpc.loadPackageDefinition(servicesPackageDefinition);
@@ -135,6 +137,24 @@ class Alpha {
 					reject(error);
 				} else {
 					resolve(response.getCount());
+				}
+			});
+		});
+	}
+
+	async incrementCounter(key, amount) {
+		const request = new messages.CounterUpdateRequest();
+		request.setName(key);
+		request.setCountdiff(amount);
+		return new Promise((resolve, reject) => {
+			this.client.updateCounter(request, (error) => {
+				if (error) {
+					if (error === OUT_OF_RANGE) {
+						return resolve(false);
+					}
+					reject(error);
+				} else {
+					resolve(true);
 				}
 			});
 		});

@@ -31,29 +31,29 @@ declare class Alpha {
 
 	getCounterCount(key: string): Promise<number>
 
-	incrementCounter(key: string, amount: number): Promise<bool>
+	incrementCounter(key: string, amount: number): Promise<boolean>
 
-	decrementCounter(key: string, amount: number): Promise<bool>
+	decrementCounter(key: string, amount: number): Promise<boolean>
 
-	setCounterCount(key: string, amount: int64): Promise<bool>
+	setCounterCount(key: string, amount: number): Promise<boolean>
 
-	getCounterCapacity(key: string): Promise<bool>
+	getCounterCapacity(key: string): Promise<boolean>
 
-	setCounterCapacity(key: string, amount: number): Promise<bool>
+	setCounterCapacity(key: string, amount: number): Promise<boolean>
 
 	getListCapacity(key: string): Promise<number>
 
-	setListCapacity(key: string, amount: int64): Promise<bool>
+	setListCapacity(key: string, amount: number): Promise<boolean>
 
-	listContains(key: string, value: string): Promise<bool>
+	listContains(key: string, value: string): Promise<boolean>
 
 	getListLength(key: string): Promise<number>
 
 	getListValues(key: string): Promise<string[]>
 
-	appendListValue(key: string, value: string): Promise<bool>
+	appendListValue(key: string, value: string): Promise<boolean>
 
-	deleteListValue(key:string , value: string): Promise<bool>
+	deleteListValue(key:string , value: string): Promise<boolean>
 }
 
 export default Alpha;
