@@ -96,10 +96,15 @@ Configurable parameters:
 - gameserver_maxPort - the upper bound of the port range which gameservers will listen on (default is "8000")
 - gameserver_namespaces - a list of namespaces which will be used to run gameservers (default is `["default"]`). For example `["default", "xbox-gameservers", "mobile-gameservers"]`
 - force_update - whether or not to force the replacement/update of resource (default is true, false may be required to prevent immutability errors when updating the configuration)
-- location - the name of the [location](https://cloud.google.com/compute/docs/regions-zones) you want your cluster  to be created in (default is "us-west1-c")
+- location - the name of the [location](https://cloud.google.com/compute/docs/regions-zones) you want your cluster to be created in (default is "us-west1-c")
 - autoscale - whether you want to enable autoscale for the gameserver nodepool (default is false)
 - min_node_count - the minimum number of nodes for a nodepool when autoscale is enabled (default is "1")
 - max_node_count - the maximum number of nodes for a nodepool when autoscale is enabled (default is "5")
+{{% feature publishVersion="1.38.0" %}}
+- set - value block with custom values to be merged with the values yaml in the agones helm_release block. See [helm_release.set](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release#set) for usage._
+- set_list - value block with list of custom values to be merged with the values yaml in the agones helm_release block. See [helm_release.set_list](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release#set_list) for usage.
+- set_sensitive - value block with custom sensitive values to be merged with the values yaml in the agones helm_release block that won't be exposed in the plan's diff. See [helm_release.set_sensitive](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release#set_sensitive) for usage.
+{{% /feature %}}
 
 {{% alert title="Warning" color="warning"%}}
 On the lines that read `source = "git::https://github.com/googleforgames/agones.git//install/terraform/modules/gke/?ref=main"`
