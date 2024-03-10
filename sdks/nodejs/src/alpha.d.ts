@@ -39,7 +39,7 @@ declare class Alpha {
 
 	getCounterCapacity(key: string): Promise<number>
 
-	setCounterCapacity(key: string, amount: number): Promise<boolean>
+	setCounterCapacity(key: string, amount: number): Promise<void>
 
 	getListCapacity(key: string): Promise<number>
 

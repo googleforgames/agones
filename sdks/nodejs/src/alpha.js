@@ -199,7 +199,7 @@ class Alpha {
 	}
 
 	async getCounterCapacity(key) {
-		const request = new messages.GetCounterRequest();
+		const request = new messages.CounterUpdateRequest();
 		request.setName(key);
 		return new Promise((resolve, reject) => {
 			this.client.getCounter(request, (error, response) => {
@@ -207,6 +207,23 @@ class Alpha {
 					reject(error);
 				} else {
 					resolve(response.getCapacity());
+				}
+			});
+		});
+	}
+
+	async setCounterCapacity(key, amount) {
+		const request = new messages.CounterUpdateRequest();
+		request.setName(key);
+		const capacity = new messages.Count();
+		capacity.setCount(amount);
+		request.setCapacity(capacity);
+		return new Promise((resolve, reject) => {
+			this.client.updateCounter(request, (error) => {
+				if (error) {
+					reject(error);
+				} else {
+					resolve();
 				}
 			});
 		});
