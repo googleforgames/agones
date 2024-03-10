@@ -26,7 +26,7 @@ spec:
     spec:
       containers:
         - name: simple-genai-game-server
-          image: us-docker.pkg.dev/agones-images/examples/simple-genai-game-server:0.1
+          image: us-docker.pkg.dev/agones-images/examples/simple-genai-game-server:0.2
           # imagePullPolicy: Always  # add for development
           env:
             - name: GEN_AI_ENDPOINT
@@ -44,10 +44,3 @@ spec:
             limits:
               memory: 64Mi
               cpu: 20m
-      # Schedule onto the game server node pool when running in the same cluster as the inference server.
-      # tolerations:
-      #   - key: "agones.dev/role"
-      #     value: "gameserver"
-      #     effect: "NoExecute"
-      # nodeSelector:
-      #   agones.dev/role: gameserver

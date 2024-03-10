@@ -115,7 +115,10 @@ If you set up the `gameserver_autochat.yaml` the chat will be in the game server
 kubectl logs -f gen-ai-server-auto -c simple-genai-game-server
 ```
 
-In autochat mode the game server will shutdown automatically once the chat is complete.
+In autochat mode, the game server will stay running forever until the game server is deleted.
+While running, we keep `--ConcurrentPlayers` slots of players running - each simulated player
+will initiate a chat and then go until they send `--StopPhrase` or until `--NumChats`, whichever
+comes first, after which a new player will fill the slot.
 
 If you set up the `gameserver_manualchat.yaml` you can manually send requests to the GenAI endpoint.
 Retreive the IP address and port:
