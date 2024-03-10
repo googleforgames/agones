@@ -286,7 +286,6 @@ describe('Alpha', () => {
 		it('calls the server and handles the response while under capacity', async () => {
 			spyOn(alpha.client, 'updateCounter').and.callFake((request, callback) => {
 				let count = new messages.Count();
-				count.setCount(10);
 				callback(undefined, count);
 			});
 
@@ -314,6 +313,45 @@ describe('Alpha', () => {
 			});
 			try {
 				await alpha.incrementCounter('key', 5);
+				fail();
+			} catch (error) {
+				expect(alpha.client.updateCounter).toHaveBeenCalled();
+				expect(error).toEqual('error');
+			}
+		});
+	});
+
+	describe('decrementCounter', () => {
+		it('calls the server and handles the response while above zero', async () => {
+			spyOn(alpha.client, 'updateCounter').and.callFake((request, callback) => {
+				let count = new messages.Count();
+				callback(undefined, count);
+			});
+
+			let response = await alpha.decrementCounter('key', 5);
+			expect(alpha.client.updateCounter).toHaveBeenCalled();
+			expect(response).toEqual(true);
+			let request = alpha.client.updateCounter.calls.argsFor(0)[0];
+			expect(request.getName()).toEqual('key');
+			expect(request.getCountdiff()).toEqual(-5);
+		});
+
+		it('calls the server and handles the response while over capacity', async () => {
+			spyOn(alpha.client, 'updateCounter').and.callFake((request, callback) => {
+				callback('OUT_OF_RANGE', undefined);
+			});
+
+			let response = await alpha.decrementCounter('key', 5);
+			expect(alpha.client.updateCounter).toHaveBeenCalled();
+			expect(response).toEqual(false);
+		});
+
+		it('calls the server and handles failure', async () => {
+			spyOn(alpha.client, 'updateCounter').and.callFake((request, callback) => {
+				callback('error', undefined);
+			});
+			try {
+				await alpha.decrementCounter('key', 5);
 				fail();
 			} catch (error) {
 				expect(alpha.client.updateCounter).toHaveBeenCalled();

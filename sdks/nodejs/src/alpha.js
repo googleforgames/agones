@@ -159,6 +159,24 @@ class Alpha {
 			});
 		});
 	}
+
+	async decrementCounter(key, amount) {
+		const request = new messages.CounterUpdateRequest();
+		request.setName(key);
+		request.setCountdiff(-amount);
+		return new Promise((resolve, reject) => {
+			this.client.updateCounter(request, (error) => {
+				if (error) {
+					if (error === OUT_OF_RANGE) {
+						return resolve(false);
+					}
+					reject(error);
+				} else {
+					resolve(true);
+				}
+			});
+		});
+	}
 }
 
 module.exports = Alpha;
