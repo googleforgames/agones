@@ -359,4 +359,43 @@ describe('Alpha', () => {
 			}
 		});
 	});
+
+	describe('setCounterCount', () => {
+		it('calls the server and handles the response while in range', async () => {
+			spyOn(alpha.client, 'updateCounter').and.callFake((request, callback) => {
+				let count = new messages.Count();
+				callback(undefined, count);
+			});
+
+			let response = await alpha.setCounterCount('key', 5);
+			expect(alpha.client.updateCounter).toHaveBeenCalled();
+			expect(response).toEqual(true);
+			let request = alpha.client.updateCounter.calls.argsFor(0)[0];
+			expect(request.getName()).toEqual('key');
+			expect(request.getCount().getCount()).toEqual(5);
+		});
+
+		it('calls the server and handles the response out of range', async () => {
+			spyOn(alpha.client, 'updateCounter').and.callFake((request, callback) => {
+				callback('OUT_OF_RANGE', undefined);
+			});
+
+			let response = await alpha.setCounterCount('key', 5);
+			expect(alpha.client.updateCounter).toHaveBeenCalled();
+			expect(response).toEqual(false);
+		});
+
+		it('calls the server and handles failure', async () => {
+			spyOn(alpha.client, 'updateCounter').and.callFake((request, callback) => {
+				callback('error', undefined);
+			});
+			try {
+				await alpha.setCounterCount('key', 5);
+				fail();
+			} catch (error) {
+				expect(alpha.client.updateCounter).toHaveBeenCalled();
+				expect(error).toEqual('error');
+			}
+		});
+	});
 });

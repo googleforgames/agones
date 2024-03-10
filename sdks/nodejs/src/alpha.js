@@ -177,6 +177,26 @@ class Alpha {
 			});
 		});
 	}
+
+	async setCounterCount(key, amount) {
+		const request = new messages.CounterUpdateRequest();
+		request.setName(key);
+		let count = new messages.Count();
+		count.setCount(amount);
+		request.setCount(count);
+		return new Promise((resolve, reject) => {
+			this.client.updateCounter(request, (error) => {
+				if (error) {
+					if (error === OUT_OF_RANGE) {
+						return resolve(false);
+					}
+					reject(error);
+				} else {
+					resolve(true);
+				}
+			});
+		});
+	}
 }
 
 module.exports = Alpha;
