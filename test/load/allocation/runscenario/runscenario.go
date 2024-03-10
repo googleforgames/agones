@@ -27,6 +27,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	pb "agones.dev/agones/pkg/allocation/go"
@@ -123,11 +124,12 @@ func main() {
 					go func() {
 						defer wgc.Done()
 						if err := allocate(client); err != noerror {
-							failureDtls[clientID][err]++
-							failureCnts[clientID]++
+							tmpVar := failureDtls[clientID][err]
+							atomic.AddUint64(&tmpVar, 1)
+							atomic.AddUint64(&failureCnts[clientID], 1)
 						}
 					}()
-					allocCnts[clientID]++
+					atomic.AddUint64(&allocCnts[clientID], 1)
 					time.Sleep(time.Duration(sc.intervalMillisecond) * time.Millisecond)
 				}
 				wgc.Wait()
@@ -141,8 +143,8 @@ func main() {
 		var scnAllocCnt uint64
 		scnErrDtls := allocErrorCodeCntMap()
 		for j := 0; j < sc.numOfClients; j++ {
-			scnAllocCnt += allocCnts[j]
-			scnFailureCnt += failureCnts[j]
+			scnAllocCnt += atomic.LoadUint64(&allocCnts[j])
+			scnFailureCnt += atomic.LoadUint64(&failureCnts[j])
 			for k, v := range failureDtls[j] {
 				totalFailureDtls[k] += v
 				scnErrDtls[k] += v

@@ -101,6 +101,7 @@ Configurable parameters:
 - min_node_count - the minimum number of nodes for a nodepool when autoscale is enabled (default is "1")
 - max_node_count - the maximum number of nodes for a nodepool when autoscale is enabled (default is "5")
 {{% feature publishVersion="1.38.0" %}}
+- enable_agones_metrics_nodepool - whether you want to enable `"agones-metrics"` for the gameserver nodepool (default is false)
 - set - value block with custom values to be merged with the values yaml in the agones helm_release block. See [helm_release.set](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release#set) for usage._
 - set_list - value block with list of custom values to be merged with the values yaml in the agones helm_release block. See [helm_release.set_list](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release#set_list) for usage.
 - set_sensitive - value block with custom sensitive values to be merged with the values yaml in the agones helm_release block that won't be exposed in the plan's diff. See [helm_release.set_sensitive](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release#set_sensitive) for usage.

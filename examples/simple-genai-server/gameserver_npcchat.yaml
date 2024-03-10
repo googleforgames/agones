@@ -1,0 +1,66 @@
+---
+# Copyright 2024 Google LLC All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+apiVersion: agones.dev/v1
+kind: GameServer
+metadata:
+  name: gen-ai-server-npc
+spec:
+  ports:
+    - name: default
+      portPolicy: Dynamic
+      containerPort: 7654
+      protocol: TCP
+  template:
+    spec:
+      containers:
+        - name: simple-genai-game-server
+          image: us-docker.pkg.dev/agones-images/examples/simple-genai-game-server:0.1
+          # imagePullPolicy: Always  # add for development
+          env:
+            - name: GEN_AI_ENDPOINT
+            # Use the service endpoint address when running in the same cluster as the inference server.
+              # TODO (igooch): Change this to the `/genai/npc-chat` endpoint when it's properly plumbed in the inference server
+              value: "http://npc-chat-api.genai.svc.cluster.local:80"
+            # GenAiContext is not passed to the npc-chat-api endpoint.
+            - name: GEN_AI_NPC # False by default. Use GEN_AI_NPC "true" when using the npc-chat-api as the GEN_AI_ENDPOINT.
+              value: "true"
+            - name: FROM_ID # Default is "2".
+              value: "2"
+            - name: TO_ID # Default is "1".
+              value: "1"
+            - name: SIM_ENDPOINT
+              value: "http://192.1.1.2/genai/chat"
+            - name: SIM_CONTEXT
+              value: "Ask questions about one of the following: What happened here? Where were you during the earthquake? Do you have supplies?"
+            - name: SIM_NPC
+              value: "false" # False by default. Use SIM_NPC "true" when using the npc-chat-api as the SIM_ENDPOINT.
+            - name: PROMPT
+              value: "Hello"
+            - name: NUM_CHATS
+              value: "50"
+          resources:
+            requests:
+              memory: 64Mi
+              cpu: 20m
+            limits:
+              memory: 64Mi
+              cpu: 20m
+      # Schedule onto the game server node pool when running in the same cluster as the inference server.
+      # tolerations:
+      #   - key: "agones.dev/role"
+      #     value: "gameserver"
+      #     effect: "NoExecute"
+      # nodeSelector:
+      #   agones.dev/role: gameserver

@@ -35,7 +35,7 @@ gcloud config set project $PROJECT
 gcloud container clusters get-credentials $CLUSTER_NAME \
         --zone=$CLUSTER_LOCATION --project=$PROJECT
 
-DOCKER_RUN= make install REGISTRY='"'$REGISTRY'"' 
+make install LOG_LEVEL=info REGISTRY='"'$REGISTRY'"' DOCKER_RUN=""
 
 cd /go/src/agones.dev/agones/test/load/allocation
 
