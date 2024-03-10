@@ -197,6 +197,20 @@ class Alpha {
 			});
 		});
 	}
+
+	async getCounterCapacity(key) {
+		const request = new messages.GetCounterRequest();
+		request.setName(key);
+		return new Promise((resolve, reject) => {
+			this.client.getCounter(request, (error, response) => {
+				if (error) {
+					reject(error);
+				} else {
+					resolve(response.getCapacity());
+				}
+			});
+		});
+	}
 }
 
 module.exports = Alpha;

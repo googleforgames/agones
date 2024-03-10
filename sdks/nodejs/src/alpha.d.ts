@@ -37,7 +37,7 @@ declare class Alpha {
 
 	setCounterCount(key: string, amount: number): Promise<boolean>
 
-	getCounterCapacity(key: string): Promise<boolean>
+	getCounterCapacity(key: string): Promise<number>
 
 	setCounterCapacity(key: string, amount: number): Promise<boolean>
 
