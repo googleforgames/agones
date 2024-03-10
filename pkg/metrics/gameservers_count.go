@@ -61,8 +61,13 @@ func (c GameServerCount) record(gameservers []*agonesv1.GameServer) error {
 	// Otherwise OpenCensus will write the last value recorded to the prom endpoint.
 	// TL;DR we can't remove a gauge
 	c.reset()
+
+	// only record gameservers's fleet count
+	fleetNameMap := map[string]struct{}{}
+
 	// counts gameserver per state and fleet
 	for _, g := range gameservers {
+		fleetNameMap[g.Labels[agonesv1.FleetNameLabel]] = struct{}{}
 		c.increment(g.Labels[agonesv1.FleetNameLabel], g.GetNamespace(), g.Status.State)
 	}
 
@@ -74,6 +79,9 @@ func (c GameServerCount) record(gameservers []*agonesv1.GameServer) error {
 			}
 			if fleet.namespace == "" {
 				fleet.namespace = noneValue
+			}
+			if _, ok := fleetNameMap[fleet.name]; !ok {
+				continue
 			}
 
 			if err := stats.RecordWithTags(context.Background(), []tag.Mutator{tag.Upsert(keyType, string(state)),
