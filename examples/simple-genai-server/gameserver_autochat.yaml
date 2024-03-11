@@ -29,20 +29,20 @@ spec:
           image: us-docker.pkg.dev/agones-images/examples/simple-genai-game-server:0.1
           # imagePullPolicy: Always  # add for development
           env:
-            - name: GenAiEndpoint
+            - name: GEN_AI_ENDPOINT
               # Replace with your GenAI and Sim inference servers' endpoint addresses. If the game
               # server is in the same cluster as your inference server you can also use the k8s
               # service discovery such as value: "http://vertex-chat-api.genai.svc.cluster.local:80"
               value: "http://192.1.1.2/genai/chat"
-            - name: SimEndpoint
+            - name: SIM_ENDPOINT
               value: "http://192.1.1.2/genai/chat"
-            - name: SimContext
+            - name: SIM_CONTEXT
               value: "You are buying a car"
-            - name: GenAiContext
+            - name: GEN_AI_CONTEXT
               value: "You are a car salesperson"
-            - name: Prompt
+            - name: PROMPT
               value: "I would like to buy a car"
-            - name: NumChats
+            - name: NUM_CHATS
               value: "50"
           resources:
             requests:
