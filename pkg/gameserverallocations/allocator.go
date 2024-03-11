@@ -284,6 +284,10 @@ func (c *Allocator) allocateFromLocalCluster(ctx context.Context, gsa *allocatio
 			Labels:      gs.ObjectMeta.Labels,
 			Annotations: gs.ObjectMeta.Annotations,
 		}
+		if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
+			gsa.Status.Counters = gs.Status.Counters
+			gsa.Status.Lists = gs.Status.Lists
+		}
 	}
 
 	c.loggerForGameServerAllocation(gsa).Debug("Game server allocation")
