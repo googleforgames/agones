@@ -29,10 +29,11 @@ PROD_REPO ?= us-docker.pkg.dev/agones-images/examples
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_path := $(dir $(mkfile_path))
 root_path := $(realpath $(project_path)/../..)
+version := 0.13
 ifeq ($(REPOSITORY),)
-	server_tag := rust-simple-server:0.13
+	server_tag := rust-simple-server:$(version)
 else
-	server_tag := $(REPOSITORY)/rust-simple-server:0.13
+	server_tag := $(REPOSITORY)/rust-simple-server:$(version)
 endif
 
 #   _____                    _
