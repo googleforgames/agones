@@ -34,6 +34,7 @@ These are all examples of simple game server implementations, that integrate the
   [Xonotic](http://www.xonotic.org) and hosts it on Agones.
 * {{< ghlink href="examples/supertuxkart" >}}SuperTuxKart{{< /ghlink >}} \- Wraps the SDK around the open source
   racing game [SuperTuxKart](https://supertuxkart.net/), and hosts it on Agones.
+ - {{< ghlink href="examples/custom-controller" >}}Custom-Controller{{< /ghlink >}} (Go) - A custom controller for Agones designed to log GameServer details on insert, update, or delete, demonstrating how to build your own controller. 
 
 ## Building on top of Agones
 
