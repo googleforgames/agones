@@ -658,8 +658,29 @@ func TestAllocatorRunLocalAllocationsCountsAndLists(t *testing.T) {
 					Count:    999,
 					Capacity: 1000,
 				}}}}
+	gs4 := agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs4", Namespace: defaultNs, UID: "4"},
+		Status: agonesv1.GameServerStatus{NodeName: "node1", State: agonesv1.GameServerStateReady,
+			Lists: map[string]agonesv1.ListStatus{
+				"foo": { // Available Capacity == 10
+					Values:   []string{},
+					Capacity: 10,
+				}}}}
+	gs5 := agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs5", Namespace: defaultNs, UID: "5"},
+		Status: agonesv1.GameServerStatus{NodeName: "node1", State: agonesv1.GameServerStateReady,
+			Lists: map[string]agonesv1.ListStatus{
+				"foo": { // Available Capacity == 9
+					Values:   []string{"1"},
+					Capacity: 10,
+				}}}}
+	gs6 := agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs6", Namespace: defaultNs, UID: "6"},
+		Status: agonesv1.GameServerStatus{NodeName: "node1", State: agonesv1.GameServerStateReady,
+			Lists: map[string]agonesv1.ListStatus{
+				"foo": { // Available Capacity == 1
+					Values:   []string{"1", "2", "3", "4", "5", "6", "7", "8", "9"},
+					Capacity: 10,
+				}}}}
 
-	gsList := []agonesv1.GameServer{gs1, gs2, gs3}
+	gsList := []agonesv1.GameServer{gs1, gs2, gs3, gs4, gs5, gs6}
 
 	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
 		return true, &agonesv1.GameServerList{Items: gsList}, nil
@@ -722,6 +743,45 @@ func TestAllocatorRunLocalAllocationsCountsAndLists(t *testing.T) {
 					Order: agonesv1.GameServerPriorityDescending},
 			},
 		}}
+	gsaListAscending := &allocationv1.GameServerAllocation{
+		ObjectMeta: metav1.ObjectMeta{Namespace: defaultNs},
+		Spec: allocationv1.GameServerAllocationSpec{
+			Scheduling: apis.Packed,
+			Selectors: []allocationv1.GameServerSelector{{
+				GameServerState: &READY,
+			}},
+			Priorities: []agonesv1.Priority{
+				{Type: agonesv1.GameServerPriorityList,
+					Key:   "foo",
+					Order: agonesv1.GameServerPriorityAscending},
+			},
+		}}
+	gsaListDescending := &allocationv1.GameServerAllocation{
+		ObjectMeta: metav1.ObjectMeta{Namespace: defaultNs},
+		Spec: allocationv1.GameServerAllocationSpec{
+			Scheduling: apis.Packed,
+			Selectors: []allocationv1.GameServerSelector{{
+				GameServerState: &READY,
+			}},
+			Priorities: []agonesv1.Priority{
+				{Type: agonesv1.GameServerPriorityList,
+					Key:   "foo",
+					Order: agonesv1.GameServerPriorityDescending},
+			},
+		}}
+	gsaListDistributed := &allocationv1.GameServerAllocation{
+		ObjectMeta: metav1.ObjectMeta{Namespace: defaultNs},
+		Spec: allocationv1.GameServerAllocationSpec{
+			Scheduling: apis.Distributed,
+			Selectors: []allocationv1.GameServerSelector{{
+				GameServerState: &READY,
+			}},
+			Priorities: []agonesv1.Priority{
+				{Type: agonesv1.GameServerPriorityList,
+					Key:   "foo",
+					Order: agonesv1.GameServerPriorityDescending},
+			},
+		}}
 
 	j1 := request{gsa: gsaDescending.DeepCopy(), response: make(chan response)}
 	a.pendingRequests <- j1
@@ -729,6 +789,12 @@ func TestAllocatorRunLocalAllocationsCountsAndLists(t *testing.T) {
 	a.pendingRequests <- j2
 	j3 := request{gsa: gsaDistributed.DeepCopy(), response: make(chan response)}
 	a.pendingRequests <- j3
+	j4 := request{gsa: gsaListDescending.DeepCopy(), response: make(chan response)}
+	a.pendingRequests <- j4
+	j5 := request{gsa: gsaListAscending.DeepCopy(), response: make(chan response)}
+	a.pendingRequests <- j5
+	j6 := request{gsa: gsaListDistributed.DeepCopy(), response: make(chan response)}
+	a.pendingRequests <- j6
 
 	go a.ListenAndAllocate(ctx, 5)
 
@@ -737,18 +803,49 @@ func TestAllocatorRunLocalAllocationsCountsAndLists(t *testing.T) {
 	assert.NotNil(t, res1.gs)
 	assert.Equal(t, agonesv1.GameServerStateAllocated, res1.gs.Status.State)
 	assert.Equal(t, gs1.ObjectMeta.Name, res1.gs.ObjectMeta.Name)
+	assert.Equal(t, gs1.Status.Counters["foo"].Count, res1.gs.Status.Counters["foo"].Count)
+	assert.Equal(t, gs1.Status.Counters["foo"].Capacity, res1.gs.Status.Counters["foo"].Capacity)
 
 	res2 := <-j2.response
 	assert.NoError(t, res2.err)
 	assert.NotNil(t, res2.gs)
 	assert.Equal(t, agonesv1.GameServerStateAllocated, res2.gs.Status.State)
 	assert.Equal(t, gs3.ObjectMeta.Name, res2.gs.ObjectMeta.Name)
+	assert.Equal(t, gs3.Status.Counters["foo"].Count, res2.gs.Status.Counters["foo"].Count)
+	assert.Equal(t, gs3.Status.Counters["foo"].Capacity, res2.gs.Status.Counters["foo"].Capacity)
 
 	res3 := <-j3.response
 	assert.NoError(t, res3.err)
 	assert.NotNil(t, res3.gs)
 	assert.Equal(t, agonesv1.GameServerStateAllocated, res3.gs.Status.State)
 	assert.Equal(t, gs2.ObjectMeta.Name, res3.gs.ObjectMeta.Name)
+	assert.Equal(t, gs2.Status.Counters["foo"].Count, res3.gs.Status.Counters["foo"].Count)
+	assert.Equal(t, gs2.Status.Counters["foo"].Capacity, res3.gs.Status.Counters["foo"].Capacity)
+
+	res4 := <-j4.response
+	assert.NoError(t, res4.err)
+	assert.NotNil(t, res4.gs)
+	assert.Equal(t, agonesv1.GameServerStateAllocated, res4.gs.Status.State)
+	assert.Equal(t, gs4.ObjectMeta.Name, res4.gs.ObjectMeta.Name)
+	assert.Equal(t, gs4.Status.Lists["foo"].Values, res4.gs.Status.Lists["foo"].Values)
+	assert.Equal(t, gs4.Status.Lists["foo"].Capacity, res4.gs.Status.Lists["foo"].Capacity)
+
+	res5 := <-j5.response
+	assert.NoError(t, res5.err)
+	assert.NotNil(t, res5.gs)
+	assert.Equal(t, agonesv1.GameServerStateAllocated, res5.gs.Status.State)
+	assert.Equal(t, gs6.ObjectMeta.Name, res5.gs.ObjectMeta.Name)
+	assert.Equal(t, gs6.Status.Lists["foo"].Values, res5.gs.Status.Lists["foo"].Values)
+	assert.Equal(t, gs6.Status.Lists["foo"].Capacity, res5.gs.Status.Lists["foo"].Capacity)
+
+	res6 := <-j6.response
+	assert.NoError(t, res6.err)
+	assert.NotNil(t, res6.gs)
+	assert.Equal(t, agonesv1.GameServerStateAllocated, res6.gs.Status.State)
+	assert.Equal(t, gs5.ObjectMeta.Name, res6.gs.ObjectMeta.Name)
+	assert.Equal(t, gs5.Status.Lists["foo"].Values, res6.gs.Status.Lists["foo"].Values)
+	assert.Equal(t, gs5.Status.Lists["foo"].Capacity, res6.gs.Status.Lists["foo"].Capacity)
+
 }
 
 func TestControllerAllocationUpdateWorkers(t *testing.T) {

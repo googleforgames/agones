@@ -55,6 +55,19 @@
       ],
       "default": "Packed"
     },
+    "AllocationResponseCounterStatus": {
+      "type": "object",
+      "properties": {
+        "count": {
+          "type": "string",
+          "format": "int64"
+        },
+        "capacity": {
+          "type": "string",
+          "format": "int64"
+        }
+      }
+    },
     "AllocationResponseGameServerMetadata": {
       "type": "object",
       "properties": {
@@ -96,6 +109,21 @@
         }
       },
       "description": "The gameserver port info that is allocated."
+    },
+    "AllocationResponseListStatus": {
+      "type": "object",
+      "properties": {
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "capacity": {
+          "type": "string",
+          "format": "int64"
+        }
+      }
     },
     "GameServerSelectorGameServerState": {
       "type": "string",
@@ -212,6 +240,19 @@
         },
         "metadata": {
           "$ref": "#/definitions/AllocationResponseGameServerMetadata"
+        },
+        "counters": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/AllocationResponseCounterStatus"
+          },
+          "description": "(Alpha, CountsAndLists feature flag) Status of Counters and Lists on allocation."
+        },
+        "lists": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/AllocationResponseListStatus"
+          }
         }
       }
     },
