@@ -43,7 +43,7 @@ func (r *GameServerReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	err := r.Get(ctx, req.NamespacedName, gameServer)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			r.Log.Info("GameServer resource not found. Ignoring since object must be deleted", "name", req.NamespacedName)
+			r.Log.Info("GameServer resource not found and it must be deleted", "name", req.NamespacedName)
 			return ctrl.Result{}, nil
 		}
 		r.Log.Error(err, "unable to fetch GameServer", "name", req.NamespacedName)
@@ -59,6 +59,9 @@ func (r *GameServerReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 
 	originalState := gameServer.Labels["state"]
 	newState := fmt.Sprintf("%v", gameServer.Status.State)
+	if originalState == newState {
+		return ctrl.Result{}, nil
+	}
 	gameServer.Labels["state"] = newState
 
 	r.Log.Info("Updating GameServer labels", "originalState", originalState, "newState", newState)
