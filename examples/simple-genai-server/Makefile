@@ -26,7 +26,7 @@ REPOSITORY ?= us-docker.pkg.dev/agones-images/examples
 
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_path := $(dir $(mkfile_path))
-server_tag := $(REPOSITORY)/simple-genai-game-server:0.1
+server_tag := $(REPOSITORY)/simple-genai-game-server:0.2
 server_tag_linux_amd64 = $(server_tag)-linux-amd64
 push_server_manifest = $(server_tag_linux_amd64)
 root_path = $(realpath $(project_path)/../..)
