@@ -54,45 +54,19 @@ CMake is used to build SDK for all supported platforms (Linux/Window/macOS).
 
 Agones SDK only depends on the [gRPC](https://grpc.io/) library.
 
-{{< feature publishVersion="1.39.0" >}}
 {{< alert title="Warning" color="warning" >}}
 Prior to Agones release 1.39.0 if the gRPC dependency was not found locally installed, the CMake system would install
 the supported gRPC version for you. Unfortunately this process was very brittle and often broke with gRPC updates,
 therefore this functionality has been removed, and a manual installation of gRPC is now required.
 {{< /alert >}}
-{{< /feature >}}
 
-{{% feature publishVersion="1.39.0" %}}
 This version of the Agones C++ SDK has been tested with gRPC 1.57.1. To install it from source 
 [follow the instructions](https://grpc.io/docs/languages/cpp/quickstart/#build-and-install-grpc-and-protocol-buffers).
 
 It may also be available from your system's package manager, but that may not align with the supported gRPC version, so
 use at your own risk.
 
-{{% /feature %}}
 
-{{% feature expiryVersion="1.39.0" %}}
-
-If CMake cannot find gRPC with find_package(), it downloads and builds gRPC.
-There are some extra prerequisites for OpenSSL on Windows, see [documentation](https://github.com/openssl/openssl/blob/OpenSSL_1_1_1-stable/NOTES.WIN):
-
-* Perl
-* NASM
-
-Note that OpenSSL is not used in Agones SDK, but it is required to have a successful build of gRPC.
-
-## Options
-Following options are available:
-
-- **AGONES_THIRDPARTY_INSTALL_PATH** (default is CMAKE_INSTALL_PREFIX) - installation path for Agones prerequisites (used only if gRPC and Protobuf are not found by find_package)
-- **AGONES_ZLIB_STATIC** (default is ON) - use static version of zlib for gRPC
-
-(Windows only):
-
-- **AGONES_BUILD_THIRDPARTY_DEBUG** (default is OFF) - build both debug and release versions of SDK's prerequisites. Option is not used if you already have built gRPC.
-- **AGONES_OPENSSL_CONFIG_STRING** (default is VC-WIN64A) - arguments to configure OpenSSL build ([documentation](https://github.com/openssl/openssl/blob/OpenSSL_1_1_1-stable/INSTALL)). Used only if OpenSSL and gRPC is built by Agones.
-
-{{% /feature %}}
 
 ## Linux / MacOS
 ```bash
@@ -122,9 +96,6 @@ cmake --build . --target install
 
 CMake option `-Wno-dev` is specified to suppress [CMP0048](https://cmake.org/cmake/help/v3.13/policy/CMP0048.html) deprecation warning for gRPC build.
 
-{{% feature expiryVersion="1.39.0" %}}
-If **AGONES_ZLIB_STATIC** is set to OFF, ensure that you have installed zlib. For Windows, it's enough to copy zlib.dll near to gameserver executable. For Linux/Mac usually no actions are needed.
-{{% /feature %}}
 
 ## Usage
 
