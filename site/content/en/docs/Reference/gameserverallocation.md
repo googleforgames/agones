@@ -216,10 +216,8 @@ Once created the `GameServerAllocation` will have a `status` field consisting of
 - `Metadata` conststs of:
   - `Labels` containing the labels of the game server at allocation time.
   - `Annotations` containing the annotations of the underlying game server at allocation time.
-{{% feature publishVersion="1.39.0" %}}
 - `Counters` (Alpha, "CountsAndLists" feature flag) is a map of [CounterStatus][counterstatus] of the game server at allocation time.
 - `Lists` (Alpha, "CountsAndLists" feature flag) is a map of [ListStatus][liststatus] of the game server at allocation time.
-{{% /feature %}}
 {{< alert title="Info" color="info" >}}
 
 For performance reasons, the query cache for a `GameServerAllocation` is _eventually consistent_.
