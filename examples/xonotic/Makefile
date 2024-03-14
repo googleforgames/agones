@@ -37,10 +37,11 @@ WINDOWS_DOCKER_PUSH_ARGS = --push
 
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_path := $(dir $(mkfile_path))
+version := 1.8
 ifeq ($(REPOSITORY),)
-	server_tag := xonotic-example:1.8
+	server_tag := xonotic-example:$(version)
 else
-	server_tag := $(REPOSITORY)/xonotic-example:1.8
+	server_tag := $(REPOSITORY)/xonotic-example:$(version)
 endif
 
 server_tag_linux_amd64 = $(server_tag)-linux-amd64
