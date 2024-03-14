@@ -27,9 +27,9 @@ REPOSITORY ?=
 PROD_REPO ?= us-docker.pkg.dev/agones-images/examples
 
 ifeq ($(REPOSITORY),)
-	server_tag := crd-client:0.14
+	server_tag := crd-client:0.15
 else
-	server_tag := $(REPOSITORY)/crd-client:0.14
+	server_tag := $(REPOSITORY)/crd-client:0.15
 endif
 
 #   _____                    _
