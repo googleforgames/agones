@@ -31,9 +31,9 @@ mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_path := $(dir $(mkfile_path))
 root_path = $(realpath $(project_path)/../..)
 ifeq ($(REPOSITORY),)
-	server_tag := allocation-endpoint-proxy:0.6
+	server_tag := allocation-endpoint-proxy:0.7
 else
-	server_tag := $(REPOSITORY)/allocation-endpoint-proxy:0.6
+	server_tag := $(REPOSITORY)/allocation-endpoint-proxy:0.7
 endif
 
 #   _____                    _
