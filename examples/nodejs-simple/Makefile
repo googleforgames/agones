@@ -30,10 +30,11 @@ PROD_REPO ?= us-docker.pkg.dev/agones-images/examples
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_path := $(dir $(mkfile_path))
 root_path = $(realpath $(project_path)/../..)
+version := 0.10
 ifeq ($(REPOSITORY),)
-	server_tag := nodejs-simple-server:0.10
+	server_tag := nodejs-simple-server:$(version)
 else
-	server_tag := $(REPOSITORY)/nodejs-simple-server:0.10
+	server_tag := $(REPOSITORY)/nodejs-simple-server:$(version)
 endif
 
 #   _____                    _

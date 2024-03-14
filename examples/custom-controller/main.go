@@ -79,7 +79,12 @@ func main() {
 	ctrl.SetLogger(zap.New(zap.UseDevMode(true)))
 
 	ctrl.Log.Info("Starting controller manager.")
-	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{})
+	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
+		LeaderElection:             true,
+		LeaderElectionResourceLock: "leases",
+		LeaderElectionNamespace:    "agones-system",
+		LeaderElectionID:           "custom-controller-leader",
+	})
 	if err != nil {
 		ctrl.Log.Error(err, "Unable to start manager")
 		os.Exit(1)
