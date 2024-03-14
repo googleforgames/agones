@@ -36,6 +36,8 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/types/known/wrapperspb"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/uuid"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -298,6 +300,188 @@ func TestRestAllocatorWithDeprecatedRequired(t *testing.T) {
 	})
 
 	assert.NoError(t, err)
+}
+
+func TestAllocatorWithCountersAndLists(t *testing.T) {
+	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
+		t.Skip("FeatureCountsAndLists is not enabled")
+		return
+	}
+	ctx := context.Background()
+
+	ip, port := helper.GetAllocatorEndpoint(ctx, t, framework)
+	requestURL := fmt.Sprintf(allocatorReqURLFmt, ip, port)
+	tlsCA := helper.RefreshAllocatorTLSCerts(ctx, t, ip, framework)
+
+	var flt *agonesv1.Fleet
+	var err error
+	flt, err = helper.CreateFleetWithOpts(ctx, framework.Namespace, framework, func(f *agonesv1.Fleet) {
+		f.Spec.Template.Spec.Counters = map[string]agonesv1.CounterStatus{
+			"players": {
+				Capacity: 10,
+			},
+		}
+		f.Spec.Template.Spec.Lists = map[string]agonesv1.ListStatus{
+			"rooms": {
+				Capacity: 10,
+			},
+		}
+	})
+	assert.NoError(t, err)
+	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
+	request := &pb.AllocationRequest{
+		Namespace: framework.Namespace,
+		GameServerSelectors: []*pb.GameServerSelector{{
+			MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name},
+			Counters: map[string]*pb.CounterSelector{
+				"players": {
+					MinAvailable: 1,
+				},
+			},
+			Lists: map[string]*pb.ListSelector{
+				"rooms": {
+					MinAvailable: 1,
+				},
+			},
+		}},
+		Counters: map[string]*pb.CounterAction{
+			"players": {
+				Action: wrapperspb.String(agonesv1.GameServerPriorityIncrement),
+				Amount: wrapperspb.Int64(1),
+			},
+		},
+		Lists: map[string]*pb.ListAction{
+			"rooms": {
+				AddValues: []string{"1"},
+			},
+		},
+	}
+	err = wait.PollUntilContextTimeout(context.Background(), 2*time.Second, 5*time.Minute, true, func(ctx context.Context) (bool, error) {
+		dialOpts, err := helper.CreateRemoteClusterDialOption(ctx, allocatorClientSecretNamespace, allocatorClientSecretName, tlsCA, framework)
+		if err != nil {
+			return false, err
+		}
+		conn, err := grpc.Dial(requestURL, dialOpts)
+		if err != nil {
+			logrus.WithError(err).Info("failing grpc.Dial")
+			return false, nil
+		}
+		defer conn.Close() // nolint: errcheck
+
+		grpcClient := pb.NewAllocationServiceClient(conn)
+		response, err := grpcClient.Allocate(context.Background(), request)
+		if err != nil {
+			return false, nil
+		}
+		assert.Contains(t, response.GetCounters(), "players")
+		assert.Equal(t, int64(10), response.GetCounters()["players"].Capacity.GetValue())
+		assert.Equal(t, int64(1), response.GetCounters()["players"].Count.GetValue())
+		assert.Contains(t, response.GetLists(), "rooms")
+		assert.Equal(t, int64(10), response.GetLists()["rooms"].Capacity.GetValue())
+		assert.EqualValues(t, request.Lists["rooms"].AddValues, response.GetLists()["rooms"].Values)
+		return true, nil
+	})
+	require.NoError(t, err)
+}
+
+func TestRestAllocatorWithCountersAndLists(t *testing.T) {
+	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
+		t.Skip("FeatureCountsAndLists is not enabled")
+		return
+	}
+	ctx := context.Background()
+
+	ip, port := helper.GetAllocatorEndpoint(ctx, t, framework)
+	requestURL := fmt.Sprintf(allocatorReqURLFmt, ip, port)
+	tlsCA := helper.RefreshAllocatorTLSCerts(ctx, t, ip, framework)
+
+	var flt *agonesv1.Fleet
+	var err error
+	flt, err = helper.CreateFleetWithOpts(ctx, framework.Namespace, framework, func(f *agonesv1.Fleet) {
+		f.Spec.Template.Spec.Counters = map[string]agonesv1.CounterStatus{
+			"players": {
+				Capacity: 10,
+			},
+		}
+		f.Spec.Template.Spec.Lists = map[string]agonesv1.ListStatus{
+			"rooms": {
+				Capacity: 10,
+			},
+		}
+	})
+	assert.NoError(t, err)
+	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
+	request := &pb.AllocationRequest{
+		Namespace: framework.Namespace,
+		GameServerSelectors: []*pb.GameServerSelector{{
+			MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name},
+			Counters: map[string]*pb.CounterSelector{
+				"players": {
+					MinAvailable: 1,
+				},
+			},
+			Lists: map[string]*pb.ListSelector{
+				"rooms": {
+					MinAvailable: 1,
+				},
+			},
+		}},
+		Counters: map[string]*pb.CounterAction{
+			"players": {
+				Action: wrapperspb.String(agonesv1.GameServerPriorityIncrement),
+				Amount: wrapperspb.Int64(1),
+			},
+		},
+		Lists: map[string]*pb.ListAction{
+			"rooms": {
+				AddValues: []string{"1"},
+			},
+		},
+	}
+	err = wait.PollUntilContextTimeout(context.Background(), 2*time.Second, 5*time.Minute, true, func(ctx context.Context) (bool, error) {
+		tlsCfg, err := helper.GetTLSConfig(ctx, allocatorClientSecretNamespace, allocatorClientSecretName, tlsCA, framework)
+		if !assert.Nil(t, err) {
+			return false, err
+		}
+		client := &http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: tlsCfg,
+			},
+		}
+		jsonRes, err := protojson.Marshal(request)
+		if !assert.Nil(t, err) {
+			return false, nil
+		}
+		req, err := http.NewRequest("POST", "https://"+requestURL+"/gameserverallocation", bytes.NewBuffer(jsonRes))
+		if !assert.Nil(t, err) {
+			return false, nil
+		}
+		resp, err := client.Do(req)
+		if err != nil {
+			return false, nil
+		}
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return false, nil
+		}
+		defer resp.Body.Close() // nolint: errcheck
+		if resp.StatusCode != http.StatusOK {
+			return false, nil
+		}
+		var response pb.AllocationResponse
+		err = protojson.Unmarshal(body, &response)
+		if err != nil {
+			return false, nil
+		}
+		assert.Contains(t, response.GetCounters(), "players")
+		assert.Equal(t, int64(10), response.GetCounters()["players"].Capacity.GetValue())
+		assert.Equal(t, int64(1), response.GetCounters()["players"].Count.GetValue())
+		assert.Contains(t, response.GetLists(), "rooms")
+		assert.Equal(t, int64(10), response.GetLists()["rooms"].Capacity.GetValue())
+		assert.EqualValues(t, request.Lists["rooms"].AddValues, response.GetLists()["rooms"].Values)
+		return true, nil
+	})
+	require.NoError(t, err)
 }
 
 func TestRestAllocatorWithSelectors(t *testing.T) {
