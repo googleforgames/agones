@@ -17,7 +17,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -38,11 +37,38 @@ var (
 		"site":     true,
 		"test":     true,
 	}
+	versionPatternInMakefile *regexp.Regexp
 )
 
 func init() {
 	flag.StringVar(&imageName, "imageName", "", "Image name to update")
 	flag.StringVar(&version, "version", "", "Version to update")
+	versionPatternInMakefile = regexp.MustCompile(`version\s*:=\s*\d+\.\d+`)
+}
+
+func imageNamePrefix(imageName string) string {
+	// Exceptions list
+	exceptions := map[string]bool{
+		"simple-genai-game-server": true,
+		"simple-game-server":       true,
+	}
+
+	// Use the first two words for exceptions, otherwise use the first word
+	separator := "-"
+	if exceptions[imageName] {
+		return firstTwoWords(imageName, separator)
+	}
+
+	parts := strings.Split(imageName, separator)
+	return parts[0] // Only use the first word for non-exceptions
+}
+
+func firstTwoWords(s, separator string) string {
+	parts := strings.Split(s, separator)
+	if len(parts) >= 2 {
+		return parts[0] + separator + parts[1]
+	}
+	return parts[0]
 }
 
 func main() {
@@ -65,7 +91,12 @@ func main() {
 				return err
 			}
 			if !info.IsDir() && filepath.Ext(path) != ".md" {
-				err = updateFileVersion(path, newVersion)
+				// Update the version in Makefiles located within the directories that are relevant to the given imageName.
+				if folder == "examples" && strings.HasPrefix(filepath.Base(filepath.Dir(path)), imageNamePrefix(imageName)) && filepath.Base(path) == "Makefile" {
+					err = updateMakefileVersion(path, newVersion)
+				} else {
+					err = updateFileVersion(path, newVersion)
+				}
 				if err != nil {
 					log.Printf("Error updating file %s: %v", path, err)
 				}
@@ -91,7 +122,7 @@ func incrementVersion(version string) string {
 	}
 
 	minor++
-	return fmt.Sprintf("%s.%d", parts[0], minor)
+	return parts[0] + "." + strconv.Itoa(minor)
 }
 
 func updateFileVersion(filePath, newVersion string) error {
@@ -101,6 +132,17 @@ func updateFileVersion(filePath, newVersion string) error {
 	}
 
 	content := versionPattern.ReplaceAllString(string(input), imageName+":"+newVersion)
+
+	return os.WriteFile(filePath, []byte(content), 0o644)
+}
+
+func updateMakefileVersion(filePath, newVersion string) error {
+	input, err := os.ReadFile(filePath)
+	if err != nil {
+		return err
+	}
+
+	content := versionPatternInMakefile.ReplaceAllString(string(input), "version := "+newVersion)
 
 	return os.WriteFile(filePath, []byte(content), 0o644)
 }
