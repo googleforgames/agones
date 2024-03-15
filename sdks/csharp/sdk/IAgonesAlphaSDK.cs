@@ -29,17 +29,17 @@ namespace Agones
         Task<bool> IsPlayerConnectedAsync(string id);
         Task<List<string>> GetConnectedPlayersAsync();
         Task<long> GetCounterCountAsync(string key);
-        Task<bool> IncrementCounterAsync(string key, long amount);
-        Task<bool> DecrementCounterAsync(string key, long amount);
-        Task<bool> SetCounterCountAsync(string key, long amount);
+        Task IncrementCounterAsync(string key, long amount);
+        Task DecrementCounterAsync(string key, long amount);
+        Task SetCounterCountAsync(string key, long amount);
         Task<long> GetCounterCapacityAsync(string key);
-        Task<bool> SetCounterCapacityAsync(string key, long amount);
+        Task SetCounterCapacityAsync(string key, long amount);
         Task<long> GetListCapacityAsync(string key);
-        Task<bool> SetListCapacityAsync(string key, long amount);
+        Task SetListCapacityAsync(string key, long amount);
         Task<bool> ListContainsAsync(string key, string value);
         Task<int> GetListLengthAsync(string key);
-        Task<List<string>> GetListValuesAsync(string key);
-        Task<bool> AppendListValueAsync(string key, string value);
-        Task<bool> DeleteListValueAsync(string key, string value);
+        Task<IList<string>> GetListValuesAsync(string key);
+        Task AppendListValueAsync(string key, string value);
+        Task DeleteListValueAsync(string key, string value);
     }
 }
