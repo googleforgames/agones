@@ -15,6 +15,7 @@
 using Agones.Dev.Sdk.Alpha;
 using Grpc.Core;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -194,8 +195,7 @@ namespace Agones.Tests
               () => Status.DefaultSuccess, () => new Metadata(), () => { }));
             mockSdk.alpha.client = mockClient.Object;
 
-            var response = await mockSdk.Alpha().IncrementCounterAsync(key, amount);
-            Assert.AreEqual(true, response);
+            await mockSdk.Alpha().IncrementCounterAsync(key, amount);
         }
 
         [TestMethod]
@@ -222,8 +222,7 @@ namespace Agones.Tests
               () => Status.DefaultSuccess, () => new Metadata(), () => { }));
             mockSdk.alpha.client = mockClient.Object;
 
-            var response = await mockSdk.Alpha().DecrementCounterAsync(key, 9);
-            Assert.AreEqual(true, response);
+            await mockSdk.Alpha().DecrementCounterAsync(key, 9);
         }
 
         [TestMethod]
@@ -251,8 +250,7 @@ namespace Agones.Tests
               () => Status.DefaultSuccess, () => new Metadata(), () => { }));
             mockSdk.alpha.client = mockClient.Object;
 
-            var response = await mockSdk.Alpha().SetCounterCountAsync(key, amount);
-            Assert.AreEqual(true, response);
+            await mockSdk.Alpha().SetCounterCountAsync(key, amount);
         }
 
         [TestMethod]
@@ -308,8 +306,7 @@ namespace Agones.Tests
               () => Status.DefaultSuccess, () => new Metadata(), () => { }));
             mockSdk.alpha.client = mockClient.Object;
 
-            var response = await mockSdk.Alpha().SetCounterCapacityAsync(key, amount);
-            Assert.AreEqual(true, response);
+            await mockSdk.Alpha().SetCounterCapacityAsync(key, amount);
         }
 
         [TestMethod]
@@ -369,8 +366,7 @@ namespace Agones.Tests
                   () => Status.DefaultSuccess, () => new Metadata(), () => { }));
             mockSdk.alpha.client = mockClient.Object;
 
-            var response = await mockSdk.Alpha().SetListCapacityAsync(key, amount);
-            Assert.AreEqual(true, response);
+            await mockSdk.Alpha().SetListCapacityAsync(key, amount);
         }
 
         [TestMethod]
@@ -425,8 +421,7 @@ namespace Agones.Tests
                   () => Status.DefaultSuccess, () => new Metadata(), () => { }));
             mockSdk.alpha.client = mockClient.Object;
 
-            var response = await mockSdk.Alpha().AppendListValueAsync(key, value);
-            Assert.AreEqual(true, response);
+            await mockSdk.Alpha().AppendListValueAsync(key, value);
         }
 
         [TestMethod]
@@ -453,8 +448,7 @@ namespace Agones.Tests
                   () => Status.DefaultSuccess, () => new Metadata(), () => { }));
             mockSdk.alpha.client = mockClient.Object;
 
-            var response = await mockSdk.Alpha().DeleteListValueAsync(key, value);
-            Assert.AreEqual(true, response);
+            await mockSdk.Alpha().DeleteListValueAsync(key, value);
         }
 
         [TestMethod]
@@ -492,7 +486,7 @@ namespace Agones.Tests
             var mockClient = new Mock<SDK.SDKClient>();
             var mockSdk = new AgonesSDK();
             var key = "listKey";
-            var wantValues = new string[] { "foo", "bar", "baz" };
+            IList<string> wantValues = new List<string> { "foo", "bar", "baz" };
             var list = new List()
             {
                 Name = key,
@@ -512,7 +506,7 @@ namespace Agones.Tests
 
 
             var response = await mockSdk.Alpha().GetListValuesAsync(key);
-            CollectionAssert.AreEqual(wantValues, response);
+            Assert.IsTrue(Enumerable.SequenceEqual(wantValues, response));
         }
 
         [TestMethod]

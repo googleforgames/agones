@@ -187,14 +187,17 @@ if (featureGates.Contains("CountsAndLists"))
     {
         var wantCount = 10;
         var increment = 9;
-        var task = alpha.IncrementCounterAsync(key, increment);
-        task.Wait();
-        var incremented = task.Result;
-        if (incremented != true)
+        try
         {
-            Console.Error.WriteLine($"IncrementCounterAsync for Counter {key} did not increment");
+            var task = alpha.IncrementCounterAsync(key, increment);
+            task.Wait();
+        }
+        catch (Exception e)
+        {
+            Console.Error.WriteLine($"IncrementCounterAsync for Counter {key} did not increment. Error: {e.ToString()}");
             Environment.Exit(1);
         }
+
         var getTask = alpha.GetCounterCountAsync(key);
         getTask.Wait();
         var gotCount = getTask.Result;
@@ -208,14 +211,17 @@ if (featureGates.Contains("CountsAndLists"))
     {
         var wantCount = 5;
         var decrement = 5;
-        var task = alpha.DecrementCounterAsync(key, decrement);
-        task.Wait();
-        var decremented = task.Result;
-        if (decremented != true)
+        try
         {
-            Console.Error.WriteLine($"DecrementCounterAsync for Counter {key} did not decrement");
+            var task = alpha.DecrementCounterAsync(key, decrement);
+            task.Wait();
+        }
+        catch (Exception e)
+        {
+            Console.Error.WriteLine($"DecrementCounterAsync for Counter {key} did not decrement. Error: {e.ToString()}");
             Environment.Exit(1);
         }
+
         var getTask = alpha.GetCounterCountAsync(key);
         getTask.Wait();
         var gotCount = getTask.Result;
@@ -228,14 +234,17 @@ if (featureGates.Contains("CountsAndLists"))
 
     {
         var wantCount = 3;
-        var task = alpha.SetCounterCountAsync(key, wantCount);
-        task.Wait();
-        var setCount = task.Result;
-        if (setCount != true)
+        try
         {
-            Console.Error.WriteLine($"SetCounterCountAsync for Counter {key} did not set");
+            var task = alpha.SetCounterCountAsync(key, wantCount);
+            task.Wait();
+        }
+        catch (Exception e)
+        {
+            Console.Error.WriteLine($"SetCounterCountAsync for Counter {key} did not set. Error: {e.ToString()}");
             Environment.Exit(1);
         }
+
         var getTask = alpha.GetCounterCountAsync(key);
         getTask.Wait();
         var gotCount = getTask.Result;
@@ -261,14 +270,17 @@ if (featureGates.Contains("CountsAndLists"))
 
     {
         var wantCapacity = 0;
-        var task = alpha.SetCounterCapacityAsync(key, wantCapacity);
-        task.Wait();
-        var setCapacity = task.Result;
-        if (setCapacity != true)
+        try
         {
-            Console.Error.WriteLine($"SetCounterCapacityAsync for Counter {key} did not set");
+            var task = alpha.SetCounterCapacityAsync(key, wantCapacity);
+            task.Wait();
+        }
+        catch (Exception e)
+        {
+            Console.Error.WriteLine($"SetCounterCapacityAsync for Counter {key} did not set. Error: {e.ToString()}");
             Environment.Exit(1);
         }
+
         var getTask = alpha.GetCounterCapacityAsync(key);
         getTask.Wait();
         var gotCapacity = getTask.Result;
@@ -300,14 +312,17 @@ if (featureGates.Contains("CountsAndLists"))
 
     {
         var wantCapacity = 10;
-        var task = alpha.SetListCapacityAsync(key, wantCapacity);
-        task.Wait();
-        var setCapacity = task.Result;
-        if (setCapacity != true)
+        try
         {
-            Console.Error.WriteLine($"SetListCapacityAsync for List {key} did not set");
+            var task = alpha.SetListCapacityAsync(key, wantCapacity);
+            task.Wait();
+        }
+        catch (Exception e)
+        {
+            Console.Error.WriteLine($"SetListCapacityAsync for List {key} did not set. Error: {e.ToString()}");
             Environment.Exit(1);
         }
+
         var getTask = alpha.GetListCapacityAsync(key);
         getTask.Wait();
         var gotCapacity = getTask.Result;
@@ -342,7 +357,7 @@ if (featureGates.Contains("CountsAndLists"))
     }
 
     {
-        var wantValues = new List<string> { "test0", "test1", "test2" };
+        IList<string> wantValues = new List<string> { "test0", "test1", "test2" };
         var task = alpha.GetListValuesAsync(key);
         task.Wait();
         var gotValues = task.Result;
@@ -358,15 +373,18 @@ if (featureGates.Contains("CountsAndLists"))
 
     {
         var addValue = "test3";
-        var wantValues = new List<string> { "test0", "test1", "test2", "test3" };
-        var task = alpha.AppendListValueAsync(key, addValue);
-        task.Wait();
-        var got = task.Result;
-        if (got != true)
+        IList<string> wantValues = new List<string> { "test0", "test1", "test2", "test3" };
+        try
         {
-            Console.Error.WriteLine($"AppendListValueAsync for List {key} did not append {addValue}");
+            var task = alpha.AppendListValueAsync(key, addValue);
+            task.Wait();
+        }
+        catch (Exception e)
+        {
+            Console.Error.WriteLine($"AppendListValueAsync for List {key} did not append {addValue}. Error: {e.ToString()}");
             Environment.Exit(1);
         }
+
         var getTask = alpha.GetListValuesAsync(key);
         getTask.Wait();
         var gotValues = getTask.Result;
@@ -382,15 +400,18 @@ if (featureGates.Contains("CountsAndLists"))
 
     {
         var removeValue = "test2";
-        var wantValues = new List<string> { "test0", "test1", "test3" };
-        var task = alpha.DeleteListValueAsync(key, removeValue);
-        task.Wait();
-        var got = task.Result;
-        if (got != true)
+        IList<string> wantValues = new List<string> { "test0", "test1", "test3" };
+        try
         {
-            Console.Error.WriteLine($"DeleteListValueAsync for List {key} did not delete {removeValue}");
+            var task = alpha.DeleteListValueAsync(key, removeValue);
+            task.Wait();
+        }
+        catch (Exception e)
+        {
+            Console.Error.WriteLine($"DeleteListValueAsync for List {key} did not delete {removeValue}. Error: {e.ToString()}");
             Environment.Exit(1);
         }
+
         var getTask = alpha.GetListValuesAsync(key);
         getTask.Wait();
         var gotValues = getTask.Result;

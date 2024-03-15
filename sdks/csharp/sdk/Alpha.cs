@@ -213,7 +213,7 @@ namespace Agones
 
         /// <summary>
         /// GetCounterCountAsync returns the Count for a Counter, given the Counter's key (name).
-        /// Will error if the key was not predefined in the GameServer resource on creation.
+        /// Throws error if the key was not predefined in the GameServer resource on creation.
         /// </summary>
         /// <returns>The Counter's Count</returns>
         public async Task<long> GetCounterCountAsync(string key)
@@ -238,16 +238,15 @@ namespace Agones
         /// <summary>
         /// IncrementCounterAsync increases a counter by the given nonnegative integer amount.
         /// Will execute the increment operation against the current CRD value. Will max at max(int64).
-        /// Will error if the key was not predefined in the GameServer resource on creation.
-        /// Returns false if the count is at the current capacity (to the latest knowledge of the SDK),
+        /// Throws error if the key was not predefined in the GameServer resource on creation.
+        /// Throws error if the count is at the current capacity (to the latest knowledge of the SDK),
         /// and no increment will occur.
         ///
         /// Note: A potential race condition here is that if count values are set from both the SDK and
         /// through the K8s API (Allocation or otherwise), since the SDK append operation back to the CRD
         /// value is batched asynchronous any value incremented past the capacity will be silently truncated.
         /// </summary>
-        /// <returns>True if the increment counter request was successful.</returns>
-        public async Task<bool> IncrementCounterAsync(string key, long amount)
+        public async Task IncrementCounterAsync(string key, long amount)
         {
             if (amount < 0)
             {
@@ -264,10 +263,9 @@ namespace Agones
                 {
                     CounterUpdateRequest = request,
                 };
-                var response = await client.UpdateCounterAsync(updateRequest,
+                await client.UpdateCounterAsync(updateRequest,
                   deadline: DateTime.UtcNow.AddSeconds(RequestTimeoutSec), cancellationToken: ctoken);
-                // If we get a response (Counter) without an error, then the request was successful.
-                return true;
+                // If there is no error, then the request was successful.
             }
             catch (RpcException ex)
             {
@@ -278,11 +276,10 @@ namespace Agones
 
         /// <summary>
         /// DecrementCounterAsync decreases the current count by the given nonnegative integer amount.
-        /// The Counter Will not go below 0. Will execute the decrement operation against the current CRD value.
-        /// Returns false if the count is at 0 (to the latest knowledge of the SDK), and no decrement will occur.
+        /// The Counter will not go below 0. Will execute the decrement operation against the current CRD value.
+        /// Throws error if the count is at 0 (to the latest knowledge of the SDK), and no decrement will occur.
         /// </summary>
-        /// <returns>True if the decrement counter request was successful.</returns>
-        public async Task<bool> DecrementCounterAsync(string key, long amount)
+        public async Task DecrementCounterAsync(string key, long amount)
         {
             if (amount < 0)
             {
@@ -299,9 +296,8 @@ namespace Agones
                 {
                     CounterUpdateRequest = request,
                 };
-                var response = await client.UpdateCounterAsync(updateRequest,
+                await client.UpdateCounterAsync(updateRequest,
                   deadline: DateTime.UtcNow.AddSeconds(RequestTimeoutSec), cancellationToken: ctoken);
-                return true;
             }
             catch (RpcException ex)
             {
@@ -314,8 +310,7 @@ namespace Agones
         /// SetCounterCountAsync sets a count to the given value. Use with care, as this will
         /// overwrite any previous invocations’ value. Cannot be greater than Capacity.
         /// </summary>
-        /// <returns>True if the set Counter count request was successful.</returns>
-        public async Task<bool> SetCounterCountAsync(string key, long amount)
+        public async Task SetCounterCountAsync(string key, long amount)
         {
             try
             {
@@ -328,9 +323,8 @@ namespace Agones
                 {
                     CounterUpdateRequest = request,
                 };
-                var response = await client.UpdateCounterAsync(updateRequest,
+                await client.UpdateCounterAsync(updateRequest,
                   deadline: DateTime.UtcNow.AddSeconds(RequestTimeoutSec), cancellationToken: ctoken);
-                return true;
             }
             catch (RpcException ex)
             {
@@ -341,7 +335,7 @@ namespace Agones
 
         /// <summary>
         /// GetCounterCapacityAsync returns the Capacity for a Counter, given the Counter's key (name).
-        /// Will error if the key was not predefined in the GameServer resource on creation.
+        /// Throws error if the key was not predefined in the GameServer resource on creation.
         /// </summary>
         /// <returns>The Counter's capacity</returns>
         public async Task<long> GetCounterCapacityAsync(string key)
@@ -367,8 +361,7 @@ namespace Agones
         /// SetCounterCapacityAsync sets the capacity for the given Counter.
         /// A capacity of 0 is no capacity.
         /// </summary>
-        /// <returns>True if the set Counter capacity request was successful.</returns>
-        public async Task<bool> SetCounterCapacityAsync(string key, long amount)
+        public async Task SetCounterCapacityAsync(string key, long amount)
         {
             try
             {
@@ -381,9 +374,8 @@ namespace Agones
                 {
                     CounterUpdateRequest = request,
                 };
-                var response = await client.UpdateCounterAsync(updateRequest,
+                await client.UpdateCounterAsync(updateRequest,
                   deadline: DateTime.UtcNow.AddSeconds(RequestTimeoutSec), cancellationToken: ctoken);
-                return true;
             }
             catch (RpcException ex)
             {
@@ -394,7 +386,7 @@ namespace Agones
 
         /// <summary>
         /// GetListCapacityAsync returns the Capacity for a List, given the List's key (name).
-        /// Will error if the key was not predefined in the GameServer resource on creation.
+        /// Throws error if the key was not predefined in the GameServer resource on creation.
         /// </summary>
         /// <returns>The List's capacity</returns>
         public async Task<long> GetListCapacityAsync(string key)
@@ -418,10 +410,9 @@ namespace Agones
 
         /// <summary>
         /// SetListCapacityAsync sets the capacity for a given list. Capacity must be between 0 and 1000.
-        /// Will error if the key was not predefined in the GameServer resource on creation.
+        /// Throws error if the key was not predefined in the GameServer resource on creation.
         /// </summary>
-        /// <returns>True if the set List capacity request was successful.</returns>
-        public async Task<bool> SetListCapacityAsync(string key, long amount)
+        public async Task SetListCapacityAsync(string key, long amount)
         {
             try
             {
@@ -440,9 +431,8 @@ namespace Agones
                     List = list,
                     UpdateMask = updateMask,
                 };
-                var response = await client.UpdateListAsync(request,
+                await client.UpdateListAsync(request,
                   deadline: DateTime.UtcNow.AddSeconds(RequestTimeoutSec), cancellationToken: ctoken);
-                return true;
             }
             catch (RpcException ex)
             {
@@ -454,7 +444,7 @@ namespace Agones
         /// <summary>
         /// ListContainsAsync returns if a string exists in a List's values list, given the List's key
         /// and the string value. Search is case-sensitive.
-        /// Will error if the key was not predefined in the GameServer resource on creation.
+        /// Throws error if the key was not predefined in the GameServer resource on creation.
         /// </summary>
         /// <returns>True if the value is found in the List</returns>
         public async Task<bool> ListContainsAsync(string key, string value)
@@ -482,7 +472,7 @@ namespace Agones
 
         /// <summary>
         /// GetListLengthAsync returns the length of the Values list for a List, given the List's key.
-        /// Will error if the key was not predefined in the GameServer resource on creation.
+        /// Throws error if the key was not predefined in the GameServer resource on creation.
         /// </summary>
         /// <returns>The length of List's values array</returns>
         public async Task<int> GetListLengthAsync(string key)
@@ -506,10 +496,10 @@ namespace Agones
 
         /// <summary>
         /// GetListValuesAsync returns the Values for a List, given the List's key (name).
-        /// Will error if the key was not predefined in the GameServer resource on creation.
+        /// Throws error if the key was not predefined in the GameServer resource on creation.
         /// </summary>
         /// <returns>The List's values array</returns>
-        public async Task<List<string>> GetListValuesAsync(string key)
+        public async Task<IList<string>> GetListValuesAsync(string key)
         {
             try
             {
@@ -519,7 +509,7 @@ namespace Agones
                 };
                 var list = await client.GetListAsync(request,
                   deadline: DateTime.UtcNow.AddSeconds(RequestTimeoutSec), cancellationToken: ctoken);
-                return list.Values.ToList();
+                return list.Values;
             }
             catch (RpcException ex)
             {
@@ -530,11 +520,10 @@ namespace Agones
 
         /// <summary>
         /// AppendListValueAsync appends a string to a List's values list, given the List's key (name)
-        /// and the string value. Will error if the string already exists in the list.
-        /// Will error if the key was not predefined in the GameServer resource on creation.
+        /// and the string value. Throws error if the string already exists in the list.
+        /// Throws error if the key was not predefined in the GameServer resource on creation.
         /// </summary>
-        /// <returns>True if the append List value request was successful.</returns>
-        public async Task<bool> AppendListValueAsync(string key, string value)
+        public async Task AppendListValueAsync(string key, string value)
         {
             try
             {
@@ -543,9 +532,8 @@ namespace Agones
                     Name = key,
                     Value = value,
                 };
-                var response = await client.AddListValueAsync(request,
+                await client.AddListValueAsync(request,
                   deadline: DateTime.UtcNow.AddSeconds(RequestTimeoutSec), cancellationToken: ctoken);
-                return true;
             }
             catch (RpcException ex)
             {
@@ -556,11 +544,10 @@ namespace Agones
 
         /// <summary>
         /// DeleteListValueAsync removes a string from a List's values list, given the List's key
-        /// and the string value. Will error if the string does not exist in the list.
-        /// Will error if the key was not predefined in the GameServer resource on creation.
+        /// and the string value. Throws error if the string does not exist in the list.
+        /// Throws error if the key was not predefined in the GameServer resource on creation.
         /// </summary>
-        /// <returns>True if the delete List value request was successful.</returns>
-        public async Task<bool> DeleteListValueAsync(string key, string value)
+        public async Task DeleteListValueAsync(string key, string value)
         {
             try
             {
@@ -569,9 +556,8 @@ namespace Agones
                     Name = key,
                     Value = value,
                 };
-                var response = await client.RemoveListValueAsync(request,
+                await client.RemoveListValueAsync(request,
                   deadline: DateTime.UtcNow.AddSeconds(RequestTimeoutSec), cancellationToken: ctoken);
-                return true;
             }
             catch (RpcException ex)
             {
