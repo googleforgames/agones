@@ -289,6 +289,57 @@ func TestControllerGameServersTotal(t *testing.T) {
 	})
 }
 
+func TestControllerFleet_OnDeleting(t *testing.T) {
+	runtime.FeatureTestMutex.Lock()
+	defer runtime.FeatureTestMutex.Unlock()
+
+	resetMetrics()
+	exporter := &metricExporter{}
+	reader := metricexport.NewReader()
+	c := newFakeController()
+	defer c.close()
+	c.run(t)
+
+	deletionTime := metav1.NewTime(time.Now())
+
+	fd := fleet("fleet-deleted", 100, 100, 100, 100, 100)
+	ft := fleet("fleet-test", 8, 2, 5, 1, 1)
+	c.fleetWatch.Add(fd)
+
+	fd.DeletionTimestamp = &deletionTime
+	c.fleetWatch.Modify(fd)
+
+	c.fleetWatch.Add(ft)
+
+	// wait until the fleet-deleting exists.
+	require.Eventually(t, func() bool {
+		ex := &metricExporter{}
+		reader.ReadAndExport(ex)
+
+		for _, m := range ex.metrics {
+			if m.Descriptor.Name == fleetReplicaCountName {
+				for _, d := range m.TimeSeries {
+					value := d.LabelValues[0].Value
+					if len(value) > 0 && value == "fleet-test" {
+						return true
+					}
+				}
+			}
+		}
+
+		return false
+	}, 10*time.Second, time.Second)
+
+	reader.ReadAndExport(exporter)
+	assertMetricData(t, exporter, fleetReplicaCountName, []expectedMetricData{
+		{labels: []string{"fleet-test", defaultNs, "total"}, val: int64(8)},
+		{labels: []string{"fleet-test", defaultNs, "allocated"}, val: int64(2)},
+		{labels: []string{"fleet-test", defaultNs, "ready"}, val: int64(5)},
+		{labels: []string{"fleet-test", defaultNs, "desired"}, val: int64(1)},
+		{labels: []string{"fleet-test", defaultNs, "reserved"}, val: int64(1)},
+	})
+}
+
 func TestControllerFleetReplicasCount_ResetMetricsOnDelete(t *testing.T) {
 	runtime.FeatureTestMutex.Lock()
 	defer runtime.FeatureTestMutex.Unlock()
@@ -336,6 +387,55 @@ func TestControllerFleetReplicasCount_ResetMetricsOnDelete(t *testing.T) {
 		{labels: []string{"fleet-test", defaultNs, "desired"}, val: int64(5)},
 		{labels: []string{"fleet-test", defaultNs, "ready"}, val: int64(1)},
 		{labels: []string{"fleet-test", defaultNs, "total"}, val: int64(8)},
+	})
+}
+
+func TestControllerFleetAutoScaler_OnDeleting(t *testing.T) {
+	runtime.FeatureTestMutex.Lock()
+	defer runtime.FeatureTestMutex.Unlock()
+
+	resetMetrics()
+	exporter := &metricExporter{}
+	reader := metricexport.NewReader()
+	c := newFakeController()
+	defer c.close()
+	c.run(t)
+
+	deletionTime := metav1.NewTime(time.Now())
+
+	fas := fleetAutoScaler("fleet-deleting", "fas-deleting")
+	fast := fleetAutoScaler("fleet-test", "fas-test")
+	c.fasWatch.Add(fas)
+
+	fas.DeletionTimestamp = &deletionTime
+	c.fasWatch.Modify(fas)
+
+	c.fasWatch.Add(fast)
+	fast.Status.CurrentReplicas = 5
+	c.fasWatch.Modify(fast)
+
+	// wait until the fas-test exists and current-replicas's value greater than zero.
+	require.Eventually(t, func() bool {
+		ex := &metricExporter{}
+		reader.ReadAndExport(ex)
+
+		for _, m := range ex.metrics {
+			if m.Descriptor.Name == fleetAutoscalerCurrentReplicaCountName {
+				for _, d := range m.TimeSeries {
+					value := d.LabelValues[1].Value
+					if len(value) > 0 && value == "fas-test" {
+						return true
+					}
+				}
+			}
+		}
+
+		return false
+	}, 10*time.Second, time.Second)
+
+	reader.ReadAndExport(exporter)
+	assertMetricData(t, exporter, fleetAutoscalerCurrentReplicaCountName, []expectedMetricData{
+		{labels: []string{"fleet-test", "fas-test", defaultNs}, val: int64(5)},
 	})
 }
 
