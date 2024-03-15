@@ -1,17 +1,11 @@
 ---
-title: "Example Build and Run a Simple Gameserver that Connects to an Inference Server"
-linkTitle: "Build and Run a Simple GenAI Gameserver"
+title: "Build and Run a Simple Game Server that Connects to an Inference Server"
+linkTitle: "GenAI Game Server"
 date:
 publishDate:
 description: >
   This example shows how to set up a simple game server that integrates with your inference server's GenAI endpoints. You can either interact with one GenAI endpoint via TCP, or set up two endpoints to "chat" to each other.
 ---
-
-## Objectives
-
-- Set up a GenAI inference server
-- Run a simple gameserver that connects to the inference server
-- Play!
 
 ## Setting up the GenAI Inference Server
 
@@ -26,21 +20,23 @@ type GenAIRequest struct {
 }
 ```
 
-For details on how to modify the request structure for an endpoint that might use a different structure check out the [README](https://github.com/googleforgames/agones/tree/main/examples/simple-genai-server#readme).
+### (Optional) Modify the GenAIRequest Structure
+
+If you need a different request structure for your GenAI endpoint, you will need to clone or fork the Agones repository and
+modify the above `GenAIRequest struct` in [main.go](https://github.com/googleforgames/agones/blob/main/examples/simple-genai-server/main.go). Update `REPOSITORY` in the
+[agones/examples/simple-genai-server/Makefile](https://github.com/googleforgames/agones/blob/main/examples/simple-genai-server/Makefile)
+to your own container registry and run `make build && make push` from within the
+`agones/examples/simple-genai-server` path. Then modify the `gameserver_*.yaml` to pull the image from
+your container registry. If you are making a series of changes you may also want to add
+`imagePullPolicy: Always` to the container image in `gameserver_*.yaml`.
 
 ## Setting up Agones
 
-### Set up Agones on a Different Cluster than the GenAI Inference Server
-
 To set up the Game Servers on a different cluster than the GenAI inference server follow the
 instructions for [creating a cluster](https://agones.dev/site/docs/installation/creating-cluster/).
-Follow the instructions for
-[installing Agones](https://agones.dev/site/docs/installation/install-agones/).
 
-
-### Set the Game Servers on the Same Cluster as the GenAI Inference Server
-
-To set the Game Servers on the same cluster as Google for Games GenAI inference server follow the instructions for [installing Agones](https://agones.dev/site/docs/installation/install-agones/).
+If you set up a separate cluster for your game servers [install Agones](https://agones.dev/site/docs/installation/install-agones/).
+on that cluster, otherwise install Agones into your GenAI inference server cluster.
 
 ## Setting up the Game Server
 
@@ -104,9 +100,11 @@ kubectl get gs gen-ai-server-manual -o jsonpath='{.status.address}:{.status.port
 
 You can now send requests to the GenAI endpoint:
 
-> [!NOTE]
-> If you do not have netcat installed (i.e. you get a response of `nc: command not found`), you can
-> install netcat by running `sudo apt install netcat`.
+{{< alert title="Note" color="info" >}}
+If you do not have netcat installed (i.e. you get a response of `nc: command not found`), you can
+install netcat by running `sudo apt install netcat`.
+{{< /alert >}}
+
 
 ```
 nc {IP} {PORT}
