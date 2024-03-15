@@ -1,12 +1,21 @@
-# Simple Game Server for GenAI
+---
+title: "Example Build and Run a Simple Gameserver that Connects to an Inference Server"
+linkTitle: "Build and Run a Simple GenAI Gameserver"
+date:
+publishDate:
+description: >
+  This example shows how to set up a simple game server that integrates with your inference server's GenAI endpoints. You can either interact with one GenAI endpoint via TCP, or set up two endpoints to "chat" to each other.
+---
 
-A simple game server that serves as an example of how to integrate GenAI endpoints into your
-dedicated game server. You can either interact with one GenAI endpoint via TCP, or set up two
-endpoints to "chat" to each other.
+## Objectives
+
+- Set up a GenAI inference server
+- Run a simple gameserver that connects to the inference server
+- Play!
 
 ## Setting up the GenAI Inference Server
 
-You will need a separate GenAI inference server. This game server uses the
+You will need a separate GenAI inference server. This example uses the
 [Google for Games GenAI](https://github.com/googleforgames/GenAI-quickstart) as its inference server.
 This particular inference server has the request structure for the /chat endpoint:
 
@@ -17,13 +26,7 @@ type GenAIRequest struct {
 }
 ```
 
-If you need a different request structure, you will need to clone or fork this repository and
-modify this in [main.go](main.go). Update `REPOSITORY` in the
-[agones/examples/simple-genai-server/Makefile](Makefile)
-to your own container registry and run `make build && make push` from within the
-`agones/examples/simple-genai-server` path. Then modify the `gameserver.yaml` to pull the image from
-your container registry. If you are making a series of changes you may also want to add
-`imagePullPolicy: Always` to the container image in `gameserver.yaml`.
+For details on how to modify the request structure for an endpoint that might use a different structure check out the [README](https://github.com/googleforgames/agones/tree/main/examples/simple-genai-server#readme).
 
 ## Setting up Agones
 
