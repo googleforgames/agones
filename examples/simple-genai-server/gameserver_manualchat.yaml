@@ -26,15 +26,15 @@ spec:
     spec:
       containers:
         - name: simple-genai-game-server
-          image: us-docker.pkg.dev/agones-images/examples/simple-genai-game-server:0.1
+          image: us-docker.pkg.dev/agones-images/examples/simple-genai-game-server:0.2
           # imagePullPolicy: Always  # add for development
           env:
-            - name: GenAiEndpoint
+            - name: GEN_AI_ENDPOINT
               # Replace with your GenAI server's endpoint address. If the game server is in the
               # same cluster as your inference server you can also use the k8s service discovery
               # such as value: "http://vertex-chat-api.genai.svc.cluster.local:80"
               value: "http://192.1.1.2/genai/chat"
-            - name: GenAiContext
+            - name: GEN_AI_CONTEXT
               # Context is optional, and will be sent along with each post request
               value: "You are a car salesperson"
           resources:
@@ -44,10 +44,3 @@ spec:
             limits:
               memory: 64Mi
               cpu: 20m
-      # Schedule onto the game server node pool when running in the same cluster as the inference server.
-      # tolerations:
-      #   - key: "agones.dev/role"
-      #     value: "gameserver"
-      #     effect: "NoExecute"
-      # nodeSelector:
-      #   agones.dev/role: gameserver

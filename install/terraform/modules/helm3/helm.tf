@@ -48,6 +48,40 @@ resource "helm_release" "agones" {
     length(var.values_file) == 0 ? "" : file(var.values_file),
   ]
 
+  dynamic "set" {
+    for_each = tolist(var.set_values)
+    iterator = set_item
+
+    content {
+      name  = set_item.value.name
+      type  = set_item.value.type
+      value = set_item.value.value
+    }
+  }
+
+  dynamic "set_list" {
+    for_each = tolist(var.set_list_values)
+    iterator = set_item
+
+    content {
+      name  = set_item.value.name
+      value = set_item.value.value
+    }
+  }
+
+  // Due to a Terraform limitation sensitive values can't be iterated over.
+  // See https://github.com/hashicorp/terraform/issues/29744 
+  dynamic "set_sensitive" {
+    for_each = tolist(nonsensitive(var.set_sensitive_values))
+    iterator = set_item
+
+    content {
+      name  = set_item.value.name
+      type  = set_item.value.type
+      value = sensitive(set_item.value.value)
+    }
+  }
+
   set {
     name  = "agones.crds.CleanupOnDelete"
     value = var.crd_cleanup
@@ -114,7 +148,7 @@ resource "helm_release" "agones" {
   }
 
   set {
-    name = "agones.allocator.service.loadBalancerIP"
+    name  = "agones.allocator.service.loadBalancerIP"
     value = var.load_balancer_ip
   }
 }

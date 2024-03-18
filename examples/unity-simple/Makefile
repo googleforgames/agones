@@ -28,7 +28,8 @@ REPOSITORY = us-docker.pkg.dev/agones-images/examples
 
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_path := $(dir $(mkfile_path))
-server_tag = $(REPOSITORY)/unity-simple-server:0.3
+version := 0.3
+server_tag = $(REPOSITORY)/unity-simple-server:$(version)
 
 #   _____                    _
 #  |_   _|_ _ _ __ __ _  ___| |_ ___

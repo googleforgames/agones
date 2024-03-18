@@ -270,18 +270,20 @@ func TestCounterAndListGameServerAllocation(t *testing.T) {
 	client := framework.AgonesClient.AgonesV1()
 
 	flt := defaultFleet(framework.Namespace)
-	flt.Spec.Template.Spec.Counters = map[string]agonesv1.CounterStatus{
+	initialCounters := map[string]agonesv1.CounterStatus{
 		"games": {
 			Count:    2,
 			Capacity: 10,
 		},
 	}
-	flt.Spec.Template.Spec.Lists = map[string]agonesv1.ListStatus{
+	initialLists := map[string]agonesv1.ListStatus{
 		"players": {
 			Values:   []string{"player0"},
 			Capacity: 10,
 		},
 	}
+	flt.Spec.Template.Spec.Counters = initialCounters
+	flt.Spec.Template.Spec.Lists = initialLists
 
 	flt, err := client.Fleets(framework.Namespace).Create(ctx, flt.DeepCopy(), metav1.CreateOptions{})
 	require.NoError(t, err)
@@ -589,6 +591,10 @@ func TestCounterAndListGameServerAllocation(t *testing.T) {
 			}
 			require.NoError(t, err)
 			assert.Equal(t, string(testCase.wantAllocated), string(gsa.Status.State))
+			if gsa.Status.State == allocated {
+				assert.Equal(t, initialCounters, gsa.Status.Counters)
+				assert.Equal(t, initialLists, gsa.Status.Lists)
+			}
 
 			gs1, err := framework.AgonesClient.AgonesV1().GameServers(flt.ObjectMeta.Namespace).Get(ctx, gsa.Status.GameServerName, metav1.GetOptions{})
 			if testCase.wantAllocated == unallocated {
@@ -604,6 +610,10 @@ func TestCounterAndListGameServerAllocation(t *testing.T) {
 			require.NoError(t, err)
 			assert.Equal(t, string(testCase.wantAllocated), string(gsa.Status.State))
 			assert.Equal(t, gs1.ObjectMeta.Name, gsa.Status.GameServerName)
+			if gsa.Status.State == allocated {
+				assert.Equal(t, initialCounters, gsa.Status.Counters)
+				assert.Equal(t, initialLists, gsa.Status.Lists)
+			}
 
 			gs2, err := framework.AgonesClient.AgonesV1().GameServers(flt.ObjectMeta.Namespace).Get(ctx, gsa.Status.GameServerName, metav1.GetOptions{})
 			require.NoError(t, err)
@@ -812,6 +822,14 @@ func TestCounterGameServerAllocationActions(t *testing.T) {
 			}
 			require.NoError(t, err)
 			assert.Equal(t, string(allocated), string(gsa.Status.State))
+			counterStatus, ok := gsa.Status.Counters["games"]
+			assert.True(t, ok)
+			if testCase.wantCount != nil {
+				assert.Equal(t, *testCase.wantCount, counterStatus.Count)
+			}
+			if testCase.wantCapacity != nil {
+				assert.Equal(t, *testCase.wantCapacity, counterStatus.Capacity)
+			}
 
 			gs1, err := framework.AgonesClient.AgonesV1().GameServers(flt.ObjectMeta.Namespace).Get(ctx, gsa.Status.GameServerName, metav1.GetOptions{})
 			require.NoError(t, err)
@@ -901,8 +919,9 @@ func TestListGameServerAllocationActions(t *testing.T) {
 						"players": {
 							Capacity: &one,
 						}}}},
-			wantGsaErr: false,
-			wantValues: []string{"player0"},
+			wantGsaErr:   false,
+			wantValues:   []string{"player0"},
+			wantCapacity: &one,
 		},
 	}
 
@@ -916,6 +935,12 @@ func TestListGameServerAllocationActions(t *testing.T) {
 			}
 			require.NoError(t, err)
 			assert.Equal(t, string(allocated), string(gsa.Status.State))
+			listStatus, ok := gsa.Status.Lists["players"]
+			assert.True(t, ok)
+			if testCase.wantCapacity != nil {
+				assert.Equal(t, *testCase.wantCapacity, listStatus.Capacity)
+			}
+			assert.Equal(t, testCase.wantValues, listStatus.Values)
 
 			gs1, err := framework.AgonesClient.AgonesV1().GameServers(flt.ObjectMeta.Namespace).Get(ctx, gsa.Status.GameServerName, metav1.GetOptions{})
 			require.NoError(t, err)

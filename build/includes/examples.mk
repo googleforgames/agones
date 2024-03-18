@@ -34,13 +34,17 @@ test-examples-on-gar: example-image-test.xonotic
 test-examples-on-gar: example-image-test.crd-client
 test-examples-on-gar: example-image-test.supertuxkart
 test-examples-on-gar: example-image-test.simple-game-server
+test-examples-on-gar: example-image-test.simple-genai-server
+test-examples-on-gar: example-image-test.custom-controller
 
 push-example-golang-images: example-image-push.allocation-endpoint
 push-example-golang-images: example-image-push.autoscaler-webhook
 push-example-golang-images: example-image-push.crd-client
 push-example-golang-images: example-image-push.simple-game-server
+push-example-golang-images: example-image-push.simple-genai-server
 push-example-golang-images: example-image-push.supertuxkart
 push-example-golang-images: example-image-push.xonotic
+push-example-golang-images: example-image-push.custom-controller
 
 # Test to ensure the example image found in the % folder is on GAR. Fails if it is not.
 example-image-test.%:
@@ -50,10 +54,10 @@ example-image-push.%:
 	$(DOCKER_RUN) bash -c "cd examples/$* && make push"
 
 # Perform make build for golang examples
-build-go-examples: build-example-allocation-endpoint build-example-autoscaler-webhook build-example-crd-client build-example-simple-game-server build-example-supertuxkart build-example-xonotic
+build-go-examples: build-example-allocation-endpoint build-example-autoscaler-webhook build-example-crd-client build-example-simple-game-server build-example-simple-genai-server build-example-supertuxkart build-example-xonotic build-example-custom-controller
 
 # Perform make build for all examples
-build-examples: build-example-allocation-endpoint build-example-autoscaler-webhook build-example-cpp-simple build-example-crd-client build-example-nodejs-simple build-example-rust-simple build-example-simple-game-server build-example-supertuxkart build-example-xonotic
+build-examples: build-example-allocation-endpoint build-example-autoscaler-webhook build-example-cpp-simple build-example-crd-client build-example-nodejs-simple build-example-rust-simple build-example-simple-game-server build-example-simple-genai-server build-example-supertuxkart build-example-xonotic
 
 # Run "make build" command for one example directory
 build-example:
@@ -85,8 +89,14 @@ build-example-rust-simple:
 build-example-simple-game-server:
 	$(MAKE) build-example EXAMPLE=simple-game-server
 
+build-example-simple-genai-server:
+	$(MAKE) build-example EXAMPLE=simple-genai-server
+
 build-example-supertuxkart:
 	$(MAKE) build-example EXAMPLE=supertuxkart
 
 build-example-xonotic:
 	$(MAKE) build-example EXAMPLE=xonotic
+
+build-example-custom-controller:
+	$(MAKE) build-example EXAMPLE=custom-controller

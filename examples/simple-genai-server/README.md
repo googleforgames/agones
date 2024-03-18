@@ -85,6 +85,21 @@ each request as part of the GenAIRequest structure. The default values for `GenA
 to start the chat. The default values for the prompt is an empty string. `NumChats` is the number of
 requests made to the `SimEndpoint` and `GenAiEndpoint`. The default value for is `NumChats` is `1`.
 
+If you want to set up the chat with the npc-chat-api from the [Google for Games GenAI](https://github.com/googleforgames/GenAI-quickstart/genai/api/npc_chat_api)
+you will need the Game Servers on the same cluster as the GenAI Inference Server. Set either the
+`GenAiEndpoint` or `SimEndpoint` to the NPC service `"http://npc-chat-api.genai.svc.cluster.local:80"`.
+Set whichever endpoint the pointing to the NPC service to be, either the `GenAiNpc` or `SimNpc`,
+to be `"true"`. The `GenAIRequest` to the NPC endpoint only sends the message (prompt), so any
+additional context outside of the prompt is ignored. `FromID` is the entity sending messages to NPC,
+and `ToID` is the entity receiving the message (the NPC ID).
+```
+type NPCRequest struct {
+	Msg    string `json:"message,omitempty"`
+	FromId int `json:"from_id,omitempty"`
+	ToId   int `json:"to_id,omitempty"`
+}
+```
+
 ## Running the Game Server
 
 Once you have modified the `gameserver_autochat.yaml` or `gameserver_manualchat.yaml` to use your
@@ -100,7 +115,10 @@ If you set up the `gameserver_autochat.yaml` the chat will be in the game server
 kubectl logs -f gen-ai-server-auto -c simple-genai-game-server
 ```
 
-In autochat mode the game server will shutdown automatically once the chat is complete.
+In autochat mode, the game server will stay running forever until the game server is deleted.
+While running, we keep `--ConcurrentPlayers` slots of players running - each simulated player
+will initiate a chat and then go until they send `--StopPhrase` or until `--NumChats`, whichever
+comes first, after which a new player will fill the slot.
 
 If you set up the `gameserver_manualchat.yaml` you can manually send requests to the GenAI endpoint.
 Retreive the IP address and port:

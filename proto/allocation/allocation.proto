@@ -105,6 +105,10 @@ message AllocationResponse {
   string source = 6;
   optional GameServerMetadata metadata = 7;
 
+  // (Alpha, CountsAndLists feature flag) Status of Counters and Lists on allocation.
+  map<string, CounterStatus> counters = 9;
+  map<string, ListStatus> lists = 10;
+
   // The gameserver port info that is allocated.
   message GameServerStatusPort {
     string name = 1;
@@ -120,6 +124,16 @@ message AllocationResponse {
   message GameServerMetadata {
     map<string, string> labels = 1;
     map<string, string> annotations = 2;
+  }
+
+  message CounterStatus {
+    google.protobuf.Int64Value count = 1;
+    google.protobuf.Int64Value capacity = 2;
+  }
+
+  message ListStatus {
+    repeated string values = 1;
+    google.protobuf.Int64Value capacity = 2;
   }
 }
 
