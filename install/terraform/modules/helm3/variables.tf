@@ -88,3 +88,30 @@ variable "gameserver_namespaces" {
 variable "load_balancer_ip" {
   default = ""
 }
+
+variable "set_values" {
+  type = set(object({
+    name  = string
+    type  = string
+    value = string
+  }))
+  default = []
+}
+
+variable "set_list_values" {
+  type = set(object({
+    name  = string
+    value = list(string)
+  }))
+  default = []
+}
+
+variable "set_sensitive_values" {
+  type = set(object({
+    name  = string
+    type  = string
+    value = string
+  }))
+  default   = []
+  sensitive = true
+}

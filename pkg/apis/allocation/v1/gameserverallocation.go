@@ -531,8 +531,10 @@ type GameServerAllocationStatus struct {
 	NodeName       string                          `json:"nodeName,omitempty"`
 	// If the allocation is from a remote cluster, Source is the endpoint of the remote agones-allocator.
 	// Otherwise, Source is "local"
-	Source   string              `json:"source"`
-	Metadata *GameServerMetadata `json:"metadata,omitempty"`
+	Source   string                            `json:"source"`
+	Metadata *GameServerMetadata               `json:"metadata,omitempty"`
+	Counters map[string]agonesv1.CounterStatus `json:"counters,omitempty"`
+	Lists    map[string]agonesv1.ListStatus    `json:"lists,omitempty"`
 }
 
 // GameServerMetadata is the metadata from the allocated game server at allocation time
