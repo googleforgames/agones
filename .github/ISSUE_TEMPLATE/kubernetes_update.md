@@ -60,7 +60,7 @@ List of items to do for upgrading to {version_1} {version_2} {version_3}
         - [ ] In `build/terraform/e2e/module.tf`, remove the oldest supported version from the map `kubernetes_versions`.
         - [ ] Destroy the old clusters with new scripts: `cd build; make GCP_PROJECT=agones-images gcloud-e2e-test-cluster`
 - [ ] Recreate the performance test cluster, and config the performance test to run on the new cluster
-    - [ ] In `build/terraform/performance/module.tf`, update the `kubernetes_versions` to {version_2} and its corresponding region.
+    - [ ] In `build/terraform/performance/module.tf`, update the `kubernetes_versions` to {version_2} and make sure the region is always set to `us-central1`.
     - [ ] Recreate the cluster with the new script:
         ```
         cd build; make shell; cd build/terraform/performance
