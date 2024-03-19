@@ -101,6 +101,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &applyconfigurationautoscalingv1.FleetAutoscalerSyncApplyConfiguration{}
 	case autoscalingv1.SchemeGroupVersion.WithKind("ListPolicy"):
 		return &applyconfigurationautoscalingv1.ListPolicyApplyConfiguration{}
+	case autoscalingv1.SchemeGroupVersion.WithKind("WebhookFallback"):
+		return &applyconfigurationautoscalingv1.WebhookFallbackApplyConfiguration{}
 	case autoscalingv1.SchemeGroupVersion.WithKind("WebhookPolicy"):
 		return &applyconfigurationautoscalingv1.WebhookPolicyApplyConfiguration{}
 
