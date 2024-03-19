@@ -58,9 +58,9 @@ gcloud-e2e-infra-state-bucket:
 
 ensure-e2e-infra-state-bucket: GCP_PROJECT ?= $(shell $(current_project))
 ensure-e2e-infra-state-bucket:
-	@buckets=$$(docker run --rm $(common_mounts) $(build_tag) gcloud storage buckets describe gs://$(GCP_PROJECT)-e2e-infra-bucket-tfstate --format="value(id)");\
+	@buckets=$$(docker run --rm $(common_mounts) $(build_tag) gcloud storage buckets describe gs://$(GCP_PROJECT)-e2e-infra-bucket-tfstate --format="value(name)");\
 	if [ -z $${buckets} ]; then\
-		echo "E2E infra state bucket $(GCP_PROJECT)-e2e-infra-bucket-tfstate does not exist, creating...";\
+		echo "** E2E infra state bucket $(GCP_PROJECT)-e2e-infra-bucket-tfstate does not exist (or gcloud failed), creating...";\
 		$(MAKE) gcloud-e2e-infra-state-bucket;\
 	fi
 
