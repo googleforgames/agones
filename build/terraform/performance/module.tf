@@ -16,9 +16,6 @@
 // Run:
 //  terraform init -backend-config="bucket=<YOUR_GCP_ProjectID>-performance-infra-bucket-tfstate" -backend-config="prefix=terraform/state"
 //  terraform apply -var project="<YOUR_GCP_ProjectID>"
-// The performance test cluster is hosted in project `agones-images`, i.e:
-//  terraform init -backend-config="bucket=agones-images-performance-infra-bucket-tfstate" -backend-config="prefix=terraform/state"
-//  terraform apply -var project="agones-images"
 
 terraform {
   required_version = ">= 1.0.0"
@@ -41,7 +38,7 @@ variable "kubernetes_versions" {
   description = "Create performance test clusters with these k8s versions in these regions"
   type        = map(list(string))
   default     = {
-    "1.27" = ["us-central1", "REGULAR"]
+    "1.28" = ["us-central1", "RAPID"]
   }
 }
 
