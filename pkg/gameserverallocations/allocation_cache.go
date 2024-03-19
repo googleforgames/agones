@@ -225,24 +225,8 @@ func (c *AllocationCache) ListSortedGameServers(gsa *allocationv1.GameServerAllo
 
 		// if we end up here, then break the tie with Counter or List Priority.
 		if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) && (gsa != nil) {
-			for _, priority := range gsa.Spec.Priorities {
-				res := compareGameServers(&priority, gs1, gs2)
-				switch priority.Order {
-				case agonesv1.GameServerPriorityAscending:
-					if res == -1 {
-						return true
-					}
-					if res == 1 {
-						return false
-					}
-				case agonesv1.GameServerPriorityDescending:
-					if res == -1 {
-						return false
-					}
-					if res == 1 {
-						return true
-					}
-				}
+			if res := gs1.CompareCountAndListPriorities(gsa.Spec.Priorities, gs2); res != nil {
+				return *res
 			}
 		}
 
@@ -266,24 +250,8 @@ func (c *AllocationCache) ListSortedGameServersPriorities(gsa *allocationv1.Game
 		gs2 := list[j]
 
 		if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) && (gsa != nil) {
-			for _, priority := range gsa.Spec.Priorities {
-				res := compareGameServers(&priority, gs1, gs2)
-				switch priority.Order {
-				case agonesv1.GameServerPriorityAscending:
-					if res == -1 {
-						return true
-					}
-					if res == 1 {
-						return false
-					}
-				case agonesv1.GameServerPriorityDescending:
-					if res == -1 {
-						return false
-					}
-					if res == 1 {
-						return true
-					}
-				}
+			if res := gs1.CompareCountAndListPriorities(gsa.Spec.Priorities, gs2); res != nil {
+				return *res
 			}
 		}
 
@@ -292,69 +260,6 @@ func (c *AllocationCache) ListSortedGameServersPriorities(gsa *allocationv1.Game
 	})
 
 	return list
-}
-
-// compareGameServers compares two game servers based on a CountsAndLists Priority using available
-// capacity (Capacity - Count for Counters, and Capacity - len(Values) for Lists) as the comparison.
-// Returns -1 if gs1 < gs2; 1 if gs1 > gs2; 0 if gs1 == gs2; 0 if neither gamer server has the Priority.
-// If only one game server has the Priority, prefer that server. I.e. nil < gsX when Priority
-// Order is Descending (3, 2, 1, 0, nil), and nil > gsX when Order is Ascending (0, 1, 2, 3, nil).
-func compareGameServers(p *agonesv1.Priority, gs1, gs2 *agonesv1.GameServer) int {
-	var gs1ok, gs2ok bool
-	switch p.Type {
-	case agonesv1.GameServerPriorityCounter:
-		// Check if both game servers contain the Counter.
-		counter1, ok1 := gs1.Status.Counters[p.Key]
-		counter2, ok2 := gs2.Status.Counters[p.Key]
-		// If both game servers have the Counter
-		if ok1 && ok2 {
-			availCapacity1 := counter1.Capacity - counter1.Count
-			availCapacity2 := counter2.Capacity - counter2.Count
-			if availCapacity1 < availCapacity2 {
-				return -1
-			}
-			if availCapacity1 > availCapacity2 {
-				return 1
-			}
-			if availCapacity1 == availCapacity2 {
-				return 0
-			}
-		}
-		gs1ok = ok1
-		gs2ok = ok2
-	case agonesv1.GameServerPriorityList:
-		// Check if both game servers contain the List.
-		list1, ok1 := gs1.Status.Lists[p.Key]
-		list2, ok2 := gs2.Status.Lists[p.Key]
-		// If both game servers have the List
-		if ok1 && ok2 {
-			availCapacity1 := list1.Capacity - int64(len(list1.Values))
-			availCapacity2 := list2.Capacity - int64(len(list2.Values))
-			if availCapacity1 < availCapacity2 {
-				return -1
-			}
-			if availCapacity1 > availCapacity2 {
-				return 1
-			}
-			if availCapacity1 == availCapacity2 {
-				return 0
-			}
-		}
-		gs1ok = ok1
-		gs2ok = ok2
-	}
-	// If only one game server has the Priority, prefer that server. I.e. nil < gsX when Order is
-	// Descending (3, 2, 1, 0, nil), and nil > gsX when Order is Ascending (0, 1, 2, 3, nil).
-	if (gs1ok && p.Order == agonesv1.GameServerPriorityDescending) ||
-		(gs2ok && p.Order == agonesv1.GameServerPriorityAscending) {
-		return 1
-	}
-	if (gs1ok && p.Order == agonesv1.GameServerPriorityAscending) ||
-		(gs2ok && p.Order == agonesv1.GameServerPriorityDescending) {
-		return -1
-	}
-	// If neither game server has the Priority
-	return 0
 }
 
 // SyncGameServers synchronises the GameServers to Gameserver cache. This is called when a failure

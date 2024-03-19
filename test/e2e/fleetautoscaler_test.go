@@ -1377,7 +1377,7 @@ func TestListAutoscalerWithSDKMethods(t *testing.T) {
 				MinCapacity: 12,
 				MaxCapacity: 400,
 			},
-			order:         agonesv1.GameServerPriorityAscending,
+			order:         agonesv1.GameServerPriorityDescending,
 			msg:           "APPEND_LIST_VALUE sessions session0",
 			startReplicas: 5,
 			wantReplicas:  6,
@@ -1390,7 +1390,7 @@ func TestListAutoscalerWithSDKMethods(t *testing.T) {
 				MaxCapacity: 400,
 			},
 			msg:           "DELETE_LIST_VALUE sessions session1",
-			order:         agonesv1.GameServerPriorityDescending,
+			order:         agonesv1.GameServerPriorityAscending,
 			startReplicas: 2,
 			wantReplicas:  1,
 		},
@@ -1436,8 +1436,9 @@ func TestListAutoscalerWithSDKMethods(t *testing.T) {
 			gameservers, err := framework.ListGameServersFromFleet(flt)
 			assert.NoError(t, err)
 
-			logrus.WithField("msg", testCase.msg).Info(name)
-			_, err = framework.SendGameServerUDP(t, &gameservers[1], testCase.msg)
+			gs := &gameservers[1]
+			logrus.WithField("command", testCase.msg).WithField("gs", gs.ObjectMeta.Name).Info(name)
+			_, err = framework.SendGameServerUDP(t, gs, testCase.msg)
 			require.NoError(t, err)
 
 			framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(testCase.wantReplicas))
