@@ -449,10 +449,12 @@ func TestAutoscalerWebhook(t *testing.T) {
 	fas.Spec.Policy.Buffer = nil
 	path := "scale"
 	fas.Spec.Policy.Webhook = &autoscalingv1.WebhookPolicy{
-		Service: &admregv1.ServiceReference{
-			Name:      svc.ObjectMeta.Name,
-			Namespace: framework.Namespace,
-			Path:      &path,
+		WebhookClientConfig: admregv1.WebhookClientConfig{
+			Service: &admregv1.ServiceReference{
+				Name:      svc.ObjectMeta.Name,
+				Namespace: framework.Namespace,
+				Path:      &path,
+			},
 		},
 	}
 	fas, err = fleetautoscalers.Create(ctx, fas, metav1.CreateOptions{})
@@ -608,12 +610,14 @@ func TestFleetAutoscalerTLSWebhook(t *testing.T) {
 	path := "scale"
 
 	fas.Spec.Policy.Webhook = &autoscalingv1.WebhookPolicy{
-		Service: &admregv1.ServiceReference{
-			Name:      svc.ObjectMeta.Name,
-			Namespace: defaultNS,
-			Path:      &path,
+		WebhookClientConfig: admregv1.WebhookClientConfig{
+			Service: &admregv1.ServiceReference{
+				Name:      svc.ObjectMeta.Name,
+				Namespace: defaultNS,
+				Path:      &path,
+			},
+			CABundle: caPem,
 		},
-		CABundle: caPem,
 	}
 	fas, err = fleetautoscalers.Create(ctx, fas.DeepCopy(), metav1.CreateOptions{})
 	if assert.Nil(t, err) {
