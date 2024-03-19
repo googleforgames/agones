@@ -477,7 +477,7 @@ func validatePriorities(priorities []agonesv1.Priority, fldPath *field.Path) fie
 			allErrs = append(allErrs, field.Invalid(keyPath, priority.Type, "key must not be nil"))
 		}
 		if priority.Order != agonesv1.GameServerPriorityAscending && priority.Order != agonesv1.GameServerPriorityDescending {
-			allErrs = append(allErrs, field.Invalid(keyPath, priority.Order, "order must be \"Increment\" or \"Decrement\""))
+			allErrs = append(allErrs, field.Invalid(keyPath, priority.Order, "order must be \"Ascending\" or \"Descending\""))
 		}
 	}
 
