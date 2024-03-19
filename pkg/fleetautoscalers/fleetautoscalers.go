@@ -48,18 +48,29 @@ var client = http.Client{
 	},
 }
 
+type fallbackError struct {
+	err error
+}
+
+func (e fallbackError) Error() string {
+	if e.err == nil {
+		return "fallback error"
+	}
+	return e.Error()
+}
+
 // computeDesiredFleetSize computes the new desired size of the given fleet
-func computeDesiredFleetSize(fas *autoscalingv1.FleetAutoscaler, f *agonesv1.Fleet,
+func computeDesiredFleetSize(pol autoscalingv1.FleetAutoscalerPolicy, f *agonesv1.Fleet,
 	gameServerLister listeragonesv1.GameServerLister, nodeCounts map[string]gameservers.NodeCount) (int32, bool, error) {
-	switch fas.Spec.Policy.Type {
+	switch pol.Type {
 	case autoscalingv1.BufferPolicyType:
-		return applyBufferPolicy(fas.Spec.Policy.Buffer, f)
+		return applyBufferPolicy(pol.Buffer, f)
 	case autoscalingv1.WebhookPolicyType:
-		return applyWebhookPolicy(fas.Spec.Policy.Webhook, f)
+		return applyWebhookPolicy(pol.Webhook, f, gameServerLister, nodeCounts)
 	case autoscalingv1.CounterPolicyType:
-		return applyCounterOrListPolicy(fas.Spec.Policy.Counter, nil, f, gameServerLister, nodeCounts)
+		return applyCounterOrListPolicy(pol.Counter, nil, f, gameServerLister, nodeCounts)
 	case autoscalingv1.ListPolicyType:
-		return applyCounterOrListPolicy(nil, fas.Spec.Policy.List, f, gameServerLister, nodeCounts)
+		return applyCounterOrListPolicy(nil, pol.List, f, gameServerLister, nodeCounts)
 	}
 
 	return 0, false, errors.New("wrong policy type, should be one of: Buffer, Webhook, Counter, List")
@@ -133,7 +144,9 @@ func setCABundle(caBundle []byte) error {
 	return nil
 }
 
-func applyWebhookPolicy(w *autoscalingv1.WebhookPolicy, f *agonesv1.Fleet) (replicas int32, limited bool, err error) {
+func applyWebhookPolicy(w *autoscalingv1.WebhookPolicy, f *agonesv1.Fleet,
+	gameServerLister listeragonesv1.GameServerLister, nodeCounts map[string]gameservers.NodeCount,
+) (replicas int32, limited bool, err error) {
 	if w == nil {
 		return 0, false, errors.New("webhookPolicy parameter must not be nil")
 	}
@@ -161,6 +174,20 @@ func applyWebhookPolicy(w *autoscalingv1.WebhookPolicy, f *agonesv1.Fleet) (repl
 	if err != nil {
 		return 0, false, err
 	}
+
+	defer func() {
+		if err == nil || w.Fallback == nil {
+			return
+		}
+
+		werr := err
+		replicas, limited, err = computeDesiredFleetSize(w.Fallback.Policy, f, gameServerLister, nodeCounts)
+		if err != nil {
+			err = errors.Wrap(werr, err.Error())
+		} else {
+			err = fallbackError{err: werr}
+		}
+	}()
 
 	res, err := client.Post(
 		u.String(),
