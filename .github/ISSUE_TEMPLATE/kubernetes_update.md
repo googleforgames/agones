@@ -67,4 +67,4 @@ List of items to do for upgrading to {version_1} {version_2} {version_3}
         terraform init -backend-config="bucket=agones-images-performance-infra-bucket-tfstate" -backend-config="prefix=terraform/state"
         terraform apply -var project="agones-images"
         ```
-    - [ ] Update the `_TEST_CLUSTER_NAME` in `ci/perf-test-cloudbuild.yaml` to the name of the new created performance test cluster. 
+    - [ ] Update the `_TEST_CLUSTER_NAME` in `ci/perf-test-cloudbuild.yaml` to the name of the new created performance test cluster, and send a PR with the changes.
