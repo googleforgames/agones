@@ -5719,6 +5719,13 @@ spec:
                         caBundle:
                           type: string
                           format: byte
+                        fallback:
+                          type: object
+                          nullable: true
+                          properties:
+                            policy:
+                              type: object
+                              x-kubernetes-preserve-unknown-fields: true
                     counter:
                       type: object
                       nullable: true
