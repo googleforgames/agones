@@ -981,3 +981,87 @@ func MergeRemoveDuplicates(list1 []string, list2 []string) []string {
 	}
 	return uniqueList
 }
+
+// CompareCountAndListPriorities compares two game servers based on a list of CountsAndLists Priorities using available
+// capacity as the comparison.
+func (gs *GameServer) CompareCountAndListPriorities(priorities []Priority, other *GameServer) *bool {
+	for _, priority := range priorities {
+		res := gs.compareCountAndListPriority(&priority, other)
+		if res != nil {
+			// reverse if descending
+			if priority.Order == GameServerPriorityDescending {
+				flip := !*res
+				return &flip
+			}
+
+			return res
+		}
+	}
+
+	return nil
+}
+
+// compareCountAndListPriority compares two game servers based on a CountsAndLists Priority using available
+// capacity (Capacity - Count for Counters, and Capacity - len(Values) for Lists) as the comparison.
+// Returns true if gs1 < gs2; false if gs1 > gs2; nil if gs1 == gs2; nil if neither gamer server has the Priority.
+// If only one game server has the Priority, prefer that server. I.e. nil < gsX when Priority
+// Order is Descending (3, 2, 1, 0, nil), and nil > gsX when Order is Ascending (0, 1, 2, 3, nil).
+func (gs *GameServer) compareCountAndListPriority(p *Priority, other *GameServer) *bool {
+	var gs1ok, gs2ok bool
+	t := true
+	f := false
+	switch p.Type {
+	case GameServerPriorityCounter:
+		// Check if both game servers contain the Counter.
+		counter1, ok1 := gs.Status.Counters[p.Key]
+		counter2, ok2 := other.Status.Counters[p.Key]
+		// If both game servers have the Counter
+		if ok1 && ok2 {
+			availCapacity1 := counter1.Capacity - counter1.Count
+			availCapacity2 := counter2.Capacity - counter2.Count
+			if availCapacity1 < availCapacity2 {
+				return &t
+			}
+			if availCapacity1 > availCapacity2 {
+				return &f
+			}
+			if availCapacity1 == availCapacity2 {
+				return nil
+			}
+		}
+		gs1ok = ok1
+		gs2ok = ok2
+	case GameServerPriorityList:
+		// Check if both game servers contain the List.
+		list1, ok1 := gs.Status.Lists[p.Key]
+		list2, ok2 := other.Status.Lists[p.Key]
+		// If both game servers have the List
+		if ok1 && ok2 {
+			availCapacity1 := list1.Capacity - int64(len(list1.Values))
+			availCapacity2 := list2.Capacity - int64(len(list2.Values))
+			if availCapacity1 < availCapacity2 {
+				return &t
+			}
+			if availCapacity1 > availCapacity2 {
+				return &f
+			}
+			if availCapacity1 == availCapacity2 {
+				return nil
+			}
+		}
+		gs1ok = ok1
+		gs2ok = ok2
+	}
+	// If only one game server has the Priority, prefer that server. I.e. nil < gsX when Order is
+	// Descending (3, 2, 1, 0, nil), and nil > gsX when Order is Ascending (0, 1, 2, 3, nil).
+	if (gs1ok && p.Order == GameServerPriorityDescending) ||
+		(gs2ok && p.Order == GameServerPriorityAscending) {
+		return &f
+	}
+	if (gs1ok && p.Order == GameServerPriorityAscending) ||
+		(gs2ok && p.Order == GameServerPriorityDescending) {
+		return &t
+	}
+	// If neither game server has the Priority
+	return nil
+}
