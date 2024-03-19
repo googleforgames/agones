@@ -60,11 +60,11 @@ List of items to do for upgrading to {version_1} {version_2} {version_3}
         - [ ] In `build/terraform/e2e/module.tf`, continue following the instructions in the comment to update the `kubernetes_versions` map.
         - [ ] Destroy the old clusters with new scripts: `cd build; make GCP_PROJECT=agones-images gcloud-e2e-test-cluster`
 - [ ] Recreate the performance test cluster, and config the performance test to run on the new cluster
-    - [ ] In `build/terraform/performance/module.tf`, update the `kubernetes_versions` to {version_2} and its corresponding region.
+    - [ ] In `build/terraform/performance/module.tf`, update the `kubernetes_versions` to {version_2} and make sure the region is always set to `us-central1`.
     - [ ] Recreate the cluster with the new script:
         ```
         cd build; make shell; cd build/terraform/performance
         terraform init -backend-config="bucket=agones-images-performance-infra-bucket-tfstate" -backend-config="prefix=terraform/state"
         terraform apply -var project="agones-images"
         ```
-    - [ ] Update the `_TEST_CLUSTER_NAME` in `ci/perf-test-cloudbuild.yaml` to the name of the new created performance test cluster. 
+    - [ ] Update the `_TEST_CLUSTER_NAME` in `ci/perf-test-cloudbuild.yaml` to the name of the new created performance test cluster, and send a PR with the changes.
