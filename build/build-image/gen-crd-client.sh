@@ -16,7 +16,7 @@
 
 set -x
 
-bash /go/src/k8s.io/code-generator/generate-groups.sh "all" \
+bash /go/src/k8s.io/code-generator/kube_codegen.sh "all" \
     agones.dev/agones/pkg/client \
     agones.dev/agones/pkg/apis "allocation:v1 agones:v1 multicluster:v1 autoscaling:v1" \
     --go-header-file=/go/src/agones.dev/agones/build/boilerplate.go.txt
