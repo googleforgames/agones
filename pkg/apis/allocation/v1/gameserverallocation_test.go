@@ -1041,6 +1041,95 @@ func TestGameServerListActions(t *testing.T) {
 	}
 }
 
+func TestValidatePriorities(t *testing.T) {
+	t.Parallel()
+
+	runtime.FeatureTestMutex.Lock()
+	defer runtime.FeatureTestMutex.Unlock()
+	assert.NoError(t, runtime.ParseFeatures(fmt.Sprintf("%s=true", runtime.FeatureCountsAndLists)))
+
+	fieldPath := field.NewPath("spec.Priorities")
+
+	testScenarios := map[string]struct {
+		priorities []agonesv1.Priority
+		wantErr    bool
+	}{
+		"Valid priorities": {
+			priorities: []agonesv1.Priority{
+				{
+					Type:  agonesv1.GameServerPriorityList,
+					Key:   "test",
+					Order: agonesv1.GameServerPriorityAscending,
+				},
+				{
+					Type:  agonesv1.GameServerPriorityCounter,
+					Key:   "test",
+					Order: agonesv1.GameServerPriorityDescending,
+				},
+			},
+			wantErr: false,
+		},
+		"No type": {
+			priorities: []agonesv1.Priority{
+				{
+					Key:   "test",
+					Order: agonesv1.GameServerPriorityDescending,
+				},
+			},
+			wantErr: true,
+		},
+		"Invalid type": {
+			priorities: []agonesv1.Priority{
+				{
+					Key:   "test",
+					Type:  "invalid",
+					Order: agonesv1.GameServerPriorityDescending,
+				},
+			},
+			wantErr: true,
+		},
+		"No Key": {
+			priorities: []agonesv1.Priority{
+				{
+					Type:  agonesv1.GameServerPriorityCounter,
+					Order: agonesv1.GameServerPriorityDescending,
+				},
+			},
+			wantErr: true,
+		},
+		"No Order": {
+			priorities: []agonesv1.Priority{
+				{
+					Type: agonesv1.GameServerPriorityList,
+					Key:  "test",
+				},
+			},
+			wantErr: true,
+		},
+		"Invalid Order": {
+			priorities: []agonesv1.Priority{
+				{
+					Type:  agonesv1.GameServerPriorityList,
+					Key:   "test",
+					Order: "invalid",
+				},
+			},
+			wantErr: true,
+		},
+	}
+
+	for test, testScenario := range testScenarios {
+		t.Run(test, func(t *testing.T) {
+			allErrs := validatePriorities(testScenario.priorities, fieldPath)
+			if testScenario.wantErr {
+				assert.NotNil(t, allErrs)
+			} else {
+				assert.Nil(t, allErrs)
+			}
+		})
+	}
+}
+
 func TestValidateCounterActions(t *testing.T) {
 	t.Parallel()
 
