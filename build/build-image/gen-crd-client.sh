@@ -14,9 +14,33 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set -x
+#!/bin/bash
 
-bash /go/src/k8s.io/code-generator/kube_codegen.sh "all" \
-    agones.dev/agones/pkg/client \
-    agones.dev/agones/pkg/apis "allocation:v1 agones:v1 multicluster:v1 autoscaling:v1" \
-    --go-header-file=/go/src/agones.dev/agones/build/boilerplate.go.txt
+set -x
+set -o errexit
+set -o nounset
+set -o pipefail
+
+echo "Starting CRD client generation process..."
+
+echo "Current working directory: $(pwd)"
+
+CODEGEN_SCRIPT="/go/src/k8s.io/code-generator/kube_codegen.sh"
+echo "Using codegen script at: ${CODEGEN_SCRIPT}"
+
+echo "Sourcing kube_codegen.sh..."
+source "${CODEGEN_SCRIPT}"
+
+echo "Generating CRD client code..."
+kube::codegen::gen_client \
+  --input-pkg-root agones.dev/agones/pkg/apis \
+  --output-base /go/src \
+  --output-pkg-root agones.dev/agones/pkg/client \
+  --boilerplate /go/src/agones.dev/agones/build/boilerplate.go.txt
+
+echo "CRD client code generation complete."
+
+echo "Post-generation working directory: $(pwd)"
+echo "Listing generated client directories and files:"
+ls -lR "$(pwd)/pkg/client"
+
