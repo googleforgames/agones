@@ -842,17 +842,33 @@ update-go-deps:
 	$(DOCKER_RUN) go mod vendor
 
 test-gen-crd-client:
-	mkdir -p build/tmp
-	mv ../pkg/client build/tmp
-	make gen-crd-client
-	diff_output=$$(diff -bBr build/tmp/client ../pkg/client); \
-	if [ -z "$$diff_output" ]; then \
-		echo "No differences found. Deleting build/tmp"; \
-		rm -r build/tmp; \
+	@echo "Setting up temporary directories and moving current client code..."
+	@mkdir -p build/tmp
+	@mv ../pkg/client build/tmp || echo "Moving existing client code failed."
+	@echo "Regenerating CRD client..."
+	@make gen-crd-client
+	@diff_output=""; \
+	for file in $$(find build/tmp/client -type f); do \
+		rel_path=$${file#build/tmp/client/}; \
+		target_file="../pkg/client/$${rel_path}"; \
+		if [ -f "$${target_file}" ]; then \
+			file_diff=$$(diff -u "$${file}" "$${target_file}"); \
+			if [ -n "$${file_diff}" ]; then \
+				diff_output="$${diff_output}\nDifferences in $${rel_path}:\n$${file_diff}"; \
+				diff_output="$${diff_output}\n--- Content of differing file in build/tmp/client:\n$$(cat "$${file}")\n--- Content of differing file in ../pkg/client:\n$$(cat "$${target_file}")"; \
+			fi; \
+		else \
+			diff_output="$${diff_output}\nFile $${rel_path} not found in ../pkg/client"; \
+			diff_output="$${diff_output}\n--- Content of file not found:\n$$(cat "$${file}")"; \
+		fi; \
+	done; \
+	if [ -z "$${diff_output}" ]; then \
+		echo "No differences found. Cleaning up temporary directories..."; \
+		rm -rf build/tmp; \
 	else \
-		echo "Differences found."; \
-		echo "$$diff_output"; \
+		echo -e "Differences found:\n$${diff_output}"; \
 	fi
+
 
 install-release: $(ensure-build-image)
 	docker run -it --rm \
