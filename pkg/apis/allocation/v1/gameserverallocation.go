@@ -465,6 +465,25 @@ func validateLists(lists map[string]ListSelector, fldPath *field.Path) field.Err
 	return allErrs
 }
 
+// validatePriorities validates that the Priorities fields has valid values for Priorities
+func validatePriorities(priorities []agonesv1.Priority, fldPath *field.Path) field.ErrorList {
+	var allErrs field.ErrorList
+	for index, priority := range priorities {
+		keyPath := fldPath.Index(index)
+		if priority.Type != agonesv1.GameServerPriorityCounter && priority.Type != agonesv1.GameServerPriorityList {
+			allErrs = append(allErrs, field.Invalid(keyPath, priority.Type, "type must be \"Counter\" or \"List\""))
+		}
+		if priority.Key == "" {
+			allErrs = append(allErrs, field.Invalid(keyPath, priority.Type, "key must not be nil"))
+		}
+		if priority.Order != agonesv1.GameServerPriorityAscending && priority.Order != agonesv1.GameServerPriorityDescending {
+			allErrs = append(allErrs, field.Invalid(keyPath, priority.Order, "order must be \"Ascending\" or \"Descending\""))
+		}
+	}
+
+	return allErrs
+}
+
 // validateCounterActions validates that the Counters field has valid values for CounterActions
 func validateCounterActions(counters map[string]CounterAction, fldPath *field.Path) field.ErrorList {
 	var allErrs field.ErrorList
@@ -592,6 +611,9 @@ func (gsa *GameServerAllocation) Validate() field.ErrorList {
 	}
 
 	if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
+		if gsa.Spec.Priorities != nil {
+			allErrs = append(allErrs, validatePriorities(gsa.Spec.Priorities, specPath.Child("priorities"))...)
+		}
 		if gsa.Spec.Counters != nil {
 			allErrs = append(allErrs, validateCounterActions(gsa.Spec.Counters, specPath.Child("counters"))...)
 		}
