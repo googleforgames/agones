@@ -21,45 +21,11 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-echo "Starting CRD client generation process..."
-
-echo "Current working directory: $(pwd)"
-
-pushd /go/src/k8s.io/code-generator
-
-echo "Fetching the latest tags from remote..."
-git fetch --tags
-
-echo "Checking if the tag v0.30.0-beta.0 exists..."
-if git show-ref --tags | grep -q "refs/tags/v0.30.0-beta.0"; then
-    echo "Tag found. Checking out v0.30.0-beta.0..."
-    git checkout v0.30.0-beta.0
-else
-    echo "Tag v0.30.0-beta.0 does not exist. Exiting..."
-    exit 1
-fi
-
-popd
-
-
 CODEGEN_SCRIPT="/go/src/k8s.io/code-generator/kube_codegen.sh"
-echo "Using codegen script at: ${CODEGEN_SCRIPT}"
 
-echo "Sourcing kube_codegen.sh..."
 source "${CODEGEN_SCRIPT}"
 
 echo "Generating CRD client code..."
-# kube::codegen::gen_client \
-#   /go/src/agones.dev/agones/pkg/apis \
-#   --output-dir /go/src/agones.dev/agones/pkg/client \
-#   --boilerplate /go/src/agones.dev/agones/build/boilerplate.go.txt
-
-
-# kube::codegen::gen_client \
-#   --input-pkg-root agones.dev/agones/pkg/apis \
-#   --output-base /go/src \
-#   --output-pkg-root agones.dev/agones/pkg/client \
-#   --boilerplate /go/src/agones.dev/agones/build/boilerplate.go.txt
 OUTPUT_DIR="/go/src/agones.dev/agones/pkg/client"
 OUTPUT_PKG="agones.dev/agones/pkg/client"
 
@@ -72,5 +38,3 @@ kube::codegen::gen_client \
   /go/src/agones.dev/agones/pkg/apis
 
 echo "CRD client code generation complete."
-
-echo "Post-generation working directory: $(pwd)"
