@@ -62,9 +62,3 @@ To remove your game server and track its deletion in the log events, run the fol
 ```bash
 kubectl delete gameserver <simple-game-server-name>
 ```
-
-
-
-
-
-
