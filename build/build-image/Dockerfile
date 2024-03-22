@@ -50,9 +50,9 @@ RUN go install golang.org/x/tools/cmd/goimports@latest && \
     go install golang.org/x/pkgsite/cmd/pkgsite@latest
 
 # the kubernetes version for the file
-# Reminder: On next Kubernetes version update, consider bumping the pinned version.
-# For the k8s 1.29 bump, we might switch code-gen to the stable v1.30 tag. 
-# After 1.30, stop pinning to a specific code-gen version.
+#
+# When this is raised to 1.29: bump the code-generator version on line 66 to the v0.30 tag.
+# When this is raised to >=1.30: delete line 66-67 and uncomment line 68 to stop pinning code-generator.
 ENV KUBERNETES_VER 1.28.6
 
 # overwrite kubectl as we want a specific version
@@ -63,8 +63,9 @@ RUN echo "source <(kubectl completion bash)" >> /root/.bashrc
 
 # install the release branch of the code generator tools
 RUN mkdir -p /go/src/k8s.io && cd /go/src/k8s.io && \
-    # git clone -b kubernetes-${KUBERNETES_VER} --depth=3 https://github.com/kubernetes/code-generator.git
     git clone -b v0.30.0-beta.0 --depth=3 https://github.com/kubernetes/code-generator.git
+    # We are pinning code-generator for now - kube_codegen.sh has substantial improvements in later releases.
+    # git clone -b kubernetes-${KUBERNETES_VER} --depth=3 https://github.com/kubernetes/code-generator.git
 
 # install Helm package manager
 ENV HELM_VER 3.10.3
