@@ -371,7 +371,7 @@ describe('Alpha', () => {
 			expect(response).toEqual(true);
 			let request = alpha.client.updateCounter.calls.argsFor(0)[0];
 			expect(request.getName()).toEqual('key');
-			expect(request.getCount().getCount()).toEqual(5);
+			expect(request.getCount().getValue()).toEqual(5);
 		});
 
 		it('calls the server and handles the response out of range', async () => {
@@ -438,8 +438,8 @@ describe('Alpha', () => {
 			expect(alpha.client.updateCounter).toHaveBeenCalled();
 			expect(response).toBeUndefined();
 			let request = alpha.client.updateCounter.calls.argsFor(0)[0];
-			expect(request.getName()).toEqual('key');
-			expect(request.getCapacity().getCount()).toEqual(5);
+			expect(request.getCounterupdaterequest().getName()).toEqual('key');
+			expect(request.getCounterupdaterequest().getCapacity().getValue()).toEqual(5);
 		});
 
 		it('calls the server and handles failure', async () => {

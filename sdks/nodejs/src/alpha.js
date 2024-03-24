@@ -14,6 +14,7 @@
 // limitations under the License.
 
 const grpc = require('@grpc/grpc-js');
+const jspbWrappers = require('google-protobuf/google/protobuf/wrappers_pb');
 
 const messages = require('../lib/alpha/alpha_pb');
 const servicesPackageDefinition = require('../lib/alpha/alpha_grpc_pb');
@@ -184,10 +185,10 @@ class Alpha {
 	}
 
 	async setCounterCount(key, amount) {
+		let count = new jspbWrappers.Int64Value();
+		count.setValue(amount);
 		const request = new messages.CounterUpdateRequest();
 		request.setName(key);
-		let count = new messages.Count();
-		count.setCount(amount);
 		request.setCount(count);
 
 		return new Promise((resolve, reject) => {
@@ -220,11 +221,13 @@ class Alpha {
 	}
 
 	async setCounterCapacity(key, amount) {
-		const request = new messages.CounterUpdateRequest();
-		request.setName(key);
-		const capacity = new messages.Count();
-		capacity.setCount(amount);
-		request.setCapacity(capacity);
+		const capacity = new jspbWrappers.Int64Value();
+		capacity.setValue(amount);
+		const updateRequest = new messages.CounterUpdateRequest();
+		updateRequest.setName(key);
+		updateRequest.setCapacity(capacity);
+		const request = new messages.UpdateCounterRequest();
+		request.setCounterupdaterequest(updateRequest);
 
 		return new Promise((resolve, reject) => {
 			this.client.updateCounter(request, (error) => {
@@ -253,10 +256,10 @@ class Alpha {
 	}
 
 	async setListCapacity(key, amount) {
-		const request = new messages.UpdateListRequest();
 		const list = new messages.List();
 		list.setName(key);
 		list.setCapacity(amount);
+		const request = new messages.UpdateListRequest();
 		request.setList(list);
 
 		return new Promise((resolve, reject) => {
