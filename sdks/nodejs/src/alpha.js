@@ -18,6 +18,8 @@ const grpc = require('@grpc/grpc-js');
 const messages = require('../lib/alpha/alpha_pb');
 const servicesPackageDefinition = require('../lib/alpha/alpha_grpc_pb');
 
+const ALREADY_EXISTS = 'ALREADY_EXISTS';
+const NOT_FOUND = 'NOT_FOUND';
 const OUT_OF_RANGE = 'OUT_OF_RANGE';
 
 class Alpha {
@@ -131,6 +133,7 @@ class Alpha {
 	async getCounterCount(key) {
 		const request = new messages.GetCounterRequest();
 		request.setName(key);
+
 		return new Promise((resolve, reject) => {
 			this.client.getCounter(request, (error, response) => {
 				if (error) {
@@ -146,6 +149,7 @@ class Alpha {
 		const request = new messages.CounterUpdateRequest();
 		request.setName(key);
 		request.setCountdiff(amount);
+
 		return new Promise((resolve, reject) => {
 			this.client.updateCounter(request, (error) => {
 				if (error) {
@@ -164,6 +168,7 @@ class Alpha {
 		const request = new messages.CounterUpdateRequest();
 		request.setName(key);
 		request.setCountdiff(-amount);
+
 		return new Promise((resolve, reject) => {
 			this.client.updateCounter(request, (error) => {
 				if (error) {
@@ -184,6 +189,7 @@ class Alpha {
 		let count = new messages.Count();
 		count.setCount(amount);
 		request.setCount(count);
+
 		return new Promise((resolve, reject) => {
 			this.client.updateCounter(request, (error) => {
 				if (error) {
@@ -199,8 +205,9 @@ class Alpha {
 	}
 
 	async getCounterCapacity(key) {
-		const request = new messages.CounterUpdateRequest();
+		const request = new messages.GetCounterRequest();
 		request.setName(key);
+
 		return new Promise((resolve, reject) => {
 			this.client.getCounter(request, (error, response) => {
 				if (error) {
@@ -218,12 +225,129 @@ class Alpha {
 		const capacity = new messages.Count();
 		capacity.setCount(amount);
 		request.setCapacity(capacity);
+
 		return new Promise((resolve, reject) => {
 			this.client.updateCounter(request, (error) => {
 				if (error) {
 					reject(error);
 				} else {
 					resolve();
+				}
+			});
+		});
+	}
+
+	async getListCapacity(key) {
+		const request = new messages.GetListRequest();
+		request.setName(key);
+
+		return new Promise((resolve, reject) => {
+			this.client.getList(request, (error, response) => {
+				if (error) {
+					reject(error);
+				} else {
+					resolve(response.getCapacity());
+				}
+			});
+		});
+	}
+
+	async setListCapacity(key, amount) {
+		const request = new messages.UpdateListRequest();
+		const list = new messages.List();
+		list.setName(key);
+		list.setCapacity(amount);
+		request.setList(list);
+
+		return new Promise((resolve, reject) => {
+			this.client.updateList(request, (error) => {
+				if (error) {
+					reject(error);
+				} else {
+					resolve();
+				}
+			});
+		});
+	}
+
+	async listContains(key, value) {
+		const request = new messages.GetListRequest();
+		request.setName(key);
+
+		return new Promise((resolve, reject) => {
+			this.client.getList(request, (error, response) => {
+				if (error) {
+					reject(error);
+				} else {
+					resolve(response.getValuesList().indexOf(value) >= 0);
+				}
+			});
+		});
+	}
+
+	async getListLength(key) {
+		const request = new messages.GetListRequest();
+		request.setName(key);
+
+		return new Promise((resolve, reject) => {
+			this.client.getList(request, (error, response) => {
+				if (error) {
+					reject(error);
+				} else {
+					resolve(response.getValuesList().length);
+				}
+			});
+		});
+	}
+
+	async getListValues(key) {
+		const request = new messages.GetListRequest();
+		request.setName(key);
+
+		return new Promise((resolve, reject) => {
+			this.client.getList(request, (error, response) => {
+				if (error) {
+					reject(error);
+				} else {
+					resolve(response.getValuesList());
+				}
+			});
+		});
+	}
+
+	async appendListValue(key, value) {
+		const request = new messages.AddListValueRequest();
+		request.setName(key);
+		request.setValue(value);
+
+		return new Promise((resolve, reject) => {
+			this.client.addListValue(request, (error) => {
+				if (error) {
+					if (error === ALREADY_EXISTS || error === OUT_OF_RANGE) {
+						return resolve(false);
+					}
+					reject(error);
+				} else {
+					resolve(true);
+				}
+			});
+		});
+	}
+
+	async deleteListValue(key, value) {
+		const request = new messages.RemoveListValueRequest();
+		request.setName(key);
+		request.setValue(value);
+
+		return new Promise((resolve, reject) => {
+			this.client.removeListValue(request, (error) => {
+				if (error) {
+					if (error === NOT_FOUND) {
+						return resolve(false);
+					}
+					reject(error);
+				} else {
+					resolve(true);
 				}
 			});
 		});

@@ -455,4 +455,251 @@ describe('Alpha', () => {
 			}
 		});
 	});
+
+	describe('getListCapacity', () => {
+		it('calls the server and handles the response', async () => {
+			spyOn(alpha.client, 'getList').and.callFake((request, callback) => {
+				let list = new messages.List();
+				list.setCapacity(10);
+				callback(undefined, list);
+			});
+
+			let capacity = await alpha.getListCapacity('key');
+			expect(alpha.client.getList).toHaveBeenCalled();
+			expect(capacity).toEqual(10);
+			let request = alpha.client.getList.calls.argsFor(0)[0];
+			expect(request.getName()).toEqual('key');
+		});
+
+		it('calls the server and handles failure', async () => {
+			spyOn(alpha.client, 'getList').and.callFake((request, callback) => {
+				callback('error', undefined);
+			});
+			try {
+				await alpha.getListCapacity('key');
+				fail();
+			} catch (error) {
+				expect(alpha.client.getList).toHaveBeenCalled();
+				expect(error).toEqual('error');
+			}
+		});
+	});
+
+	describe('setListCapacity', () => {
+		it('calls the server and handles the response while in range', async () => {
+			spyOn(alpha.client, 'updateList').and.callFake((request, callback) => {
+				let list = new messages.List();
+				callback(undefined, list);
+			});
+
+			let response = await alpha.setListCapacity('key', 5);
+			expect(alpha.client.updateList).toHaveBeenCalled();
+			expect(response).toBeUndefined();
+			let request = alpha.client.updateList.calls.argsFor(0)[0];
+			expect(request.getList().getName()).toEqual('key');
+			expect(request.getList().getCapacity()).toEqual(5);
+		});
+
+		it('calls the server and handles failure', async () => {
+			spyOn(alpha.client, 'updateList').and.callFake((request, callback) => {
+				callback('error', undefined);
+			});
+			try {
+				await alpha.setListCapacity('key', 5);
+				fail();
+			} catch (error) {
+				expect(alpha.client.updateList).toHaveBeenCalled();
+				expect(error).toEqual('error');
+			}
+		});
+	});
+
+	describe('listContains', () => {
+		it('calls the server and handles the response when the value is contained', async () => {
+			spyOn(alpha.client, 'getList').and.callFake((request, callback) => {
+				let list = new messages.List();
+				list.setValuesList(['firstValue', 'secondValue']);
+				callback(undefined, list);
+			});
+
+			let contains = await alpha.listContains('key', 'secondValue');
+			expect(alpha.client.getList).toHaveBeenCalled();
+			expect(contains).toEqual(true);
+			let request = alpha.client.getList.calls.argsFor(0)[0];
+			expect(request.getName()).toEqual('key');
+		});
+
+		it('calls the server and handles the response when the value is not contained', async () => {
+			spyOn(alpha.client, 'getList').and.callFake((request, callback) => {
+				let list = new messages.List();
+				list.setValuesList(['firstValue', 'secondValue']);
+				callback(undefined, list);
+			});
+
+			let contains = await alpha.listContains('key', 'thirdValue');
+			expect(alpha.client.getList).toHaveBeenCalled();
+			expect(contains).toEqual(false);
+			let request = alpha.client.getList.calls.argsFor(0)[0];
+			expect(request.getName()).toEqual('key');
+		});
+
+		it('calls the server and handles failure', async () => {
+			spyOn(alpha.client, 'getList').and.callFake((request, callback) => {
+				callback('error', undefined);
+			});
+			try {
+				await alpha.listContains('key', 'value');
+				fail();
+			} catch (error) {
+				expect(alpha.client.getList).toHaveBeenCalled();
+				expect(error).toEqual('error');
+			}
+		});
+	});
+
+	describe('getListLength', () => {
+		it('calls the server and handles the response', async () => {
+			spyOn(alpha.client, 'getList').and.callFake((request, callback) => {
+				let list = new messages.List();
+				list.setValuesList(['firstValue', 'secondValue']);
+				callback(undefined, list);
+			});
+
+			let length = await alpha.getListLength('key');
+			expect(alpha.client.getList).toHaveBeenCalled();
+			expect(length).toEqual(2);
+			let request = alpha.client.getList.calls.argsFor(0)[0];
+			expect(request.getName()).toEqual('key');
+		});
+
+		it('calls the server and handles failure', async () => {
+			spyOn(alpha.client, 'getList').and.callFake((request, callback) => {
+				callback('error', undefined);
+			});
+			try {
+				await alpha.getListLength('key');
+				fail();
+			} catch (error) {
+				expect(alpha.client.getList).toHaveBeenCalled();
+				expect(error).toEqual('error');
+			}
+		});
+	});
+
+	describe('getListValues', () => {
+		it('calls the server and handles the response', async () => {
+			spyOn(alpha.client, 'getList').and.callFake((request, callback) => {
+				let list = new messages.List();
+				list.setValuesList(['firstValue', 'secondValue']);
+				callback(undefined, list);
+			});
+
+			let values = await alpha.getListValues('key');
+			expect(alpha.client.getList).toHaveBeenCalled();
+			expect(values).toEqual(['firstValue', 'secondValue']);
+			let request = alpha.client.getList.calls.argsFor(0)[0];
+			expect(request.getName()).toEqual('key');
+		});
+
+		it('calls the server and handles failure', async () => {
+			spyOn(alpha.client, 'getList').and.callFake((request, callback) => {
+				callback('error', undefined);
+			});
+			try {
+				await alpha.getListValues('key');
+				fail();
+			} catch (error) {
+				expect(alpha.client.getList).toHaveBeenCalled();
+				expect(error).toEqual('error');
+			}
+		});
+	});
+
+	describe('appendListValue', () => {
+		it('calls the server and handles the response when the value is appended', async () => {
+			spyOn(alpha.client, 'addListValue').and.callFake((request, callback) => {
+				let list = new messages.List();
+				callback(undefined, list);
+			});
+
+			let response = await alpha.appendListValue('key', 'value');
+			expect(alpha.client.addListValue).toHaveBeenCalled();
+			expect(response).toEqual(true);
+			let request = alpha.client.addListValue.calls.argsFor(0)[0];
+			expect(request.getName()).toEqual('key');
+			expect(request.getValue()).toEqual('value');
+		});
+
+		it('calls the server and handles the response when capacity is reached', async () => {
+			spyOn(alpha.client, 'addListValue').and.callFake((request, callback) => {
+				callback('OUT_OF_RANGE', undefined);
+			});
+
+			let response = await alpha.appendListValue('key', 'value');
+			expect(alpha.client.addListValue).toHaveBeenCalled();
+			expect(response).toEqual(false);
+		});
+
+		it('calls the server and handles the reponse when the value already exists', async () => {
+			spyOn(alpha.client, 'addListValue').and.callFake((request, callback) => {
+				callback('ALREADY_EXISTS', undefined);
+			});
+
+			let response = await alpha.appendListValue('key', 'value');
+			expect(alpha.client.addListValue).toHaveBeenCalled();
+			expect(response).toEqual(false);
+		});
+
+		it('calls the server and handles failure', async () => {
+			spyOn(alpha.client, 'addListValue').and.callFake((request, callback) => {
+				callback('error', undefined);
+			});
+			try {
+				await alpha.appendListValue('key', 'value');
+				fail();
+			} catch (error) {
+				expect(alpha.client.addListValue).toHaveBeenCalled();
+				expect(error).toEqual('error');
+			}
+		});
+	});
+
+	describe('deleteListValue', () => {
+		it('calls the server and handles the response when the value is deleted', async () => {
+			spyOn(alpha.client, 'removeListValue').and.callFake((request, callback) => {
+				let list = new messages.List();
+				callback(undefined, list);
+			});
+
+			let response = await alpha.deleteListValue('key', 'value');
+			expect(alpha.client.removeListValue).toHaveBeenCalled();
+			expect(response).toEqual(true);
+			let request = alpha.client.removeListValue.calls.argsFor(0)[0];
+			expect(request.getName()).toEqual('key');
+			expect(request.getValue()).toEqual('value');
+		});
+
+		it('calls the server and handles the response when the value does not exist', async () => {
+			spyOn(alpha.client, 'removeListValue').and.callFake((request, callback) => {
+				callback('NOT_FOUND', undefined);
+			});
+
+			let response = await alpha.deleteListValue('key', 'value');
+			expect(alpha.client.removeListValue).toHaveBeenCalled();
+			expect(response).toEqual(false);
+		});
+
+		it('calls the server and handles failure', async () => {
+			spyOn(alpha.client, 'removeListValue').and.callFake((request, callback) => {
+				callback('error', undefined);
+			});
+			try {
+				await alpha.deleteListValue('key', 'value');
+				fail();
+			} catch (error) {
+				expect(alpha.client.removeListValue).toHaveBeenCalled();
+				expect(error).toEqual('error');
+			}
+		});
+	});
 });
