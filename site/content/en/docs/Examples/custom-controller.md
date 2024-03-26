@@ -52,9 +52,9 @@ kubectl apply -f examples/simple-game-server/fleet.yaml
 ```
 
 When you run this command, it will:
-- Specifies that there should be 2 replicas of the Fleet.
-- Specifies that the Pods should have a container port named "default" with a value of 7654.
-- Sets resource requests and limits for the container named `simple-game-server`.
+- Specify that there should be 2 replicas of the Fleet.
+- Specify that the Pods should have a container port named "default" with a value of 7654.
+- Set the resource requests and limits for the container named `simple-game-server`.
 
 ## Create a GameServer Instance
 
