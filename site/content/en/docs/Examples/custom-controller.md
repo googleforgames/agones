@@ -43,6 +43,19 @@ kubectl logs -f <custom-controller-pod> -n agones-system
 
 **Note**: If a custom controller runs into trouble with logging events, the backup controller will automatically assume the leadership role, ensuring uninterrupted logging of event details.
 
+## Deploy the Agones Fleet
+
+To apply the fleet configuration to your cluster, use the following command:
+
+```bash
+kubectl apply -f examples/simple-game-server/fleet.yaml
+```
+
+When you run this command, it will:
+- Specifies that there should be 2 replicas of the Fleet.
+- Specifies that the Pods should have a container port named "default" with a value of 7654.
+- Sets resource requests and limits for the container named `simple-game-server`.
+
 ## Create a GameServer Instance
 
 Create a gameserver using below command. After this, you'll be able to see logs about the server being created.
