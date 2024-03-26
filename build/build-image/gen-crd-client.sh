@@ -14,9 +14,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set -x
+#!/bin/bash
 
-bash /go/src/k8s.io/code-generator/generate-groups.sh "all" \
-    agones.dev/agones/pkg/client \
-    agones.dev/agones/pkg/apis "allocation:v1 agones:v1 multicluster:v1 autoscaling:v1" \
-    --go-header-file=/go/src/agones.dev/agones/build/boilerplate.go.txt
+set -x
+set -o errexit
+set -o nounset
+set -o pipefail
+
+CODEGEN_SCRIPT="/go/src/k8s.io/code-generator/kube_codegen.sh"
+
+source "${CODEGEN_SCRIPT}"
+
+echo "Generating CRD client code..."
+OUTPUT_DIR="/go/src/agones.dev/agones/pkg/client"
+OUTPUT_PKG="agones.dev/agones/pkg/client"
+
+kube::codegen::gen_client \
+  --with-watch \
+  --with-applyconfig \
+  --output-dir "${OUTPUT_DIR}" \
+  --output-pkg "${OUTPUT_PKG}" \
+  --boilerplate /go/src/agones.dev/agones/build/boilerplate.go.txt \
+  /go/src/agones.dev/agones/pkg/apis
+
+echo "CRD client code generation complete."
