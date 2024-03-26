@@ -4,18 +4,26 @@ linkTitle: "Custom Controller"
 date:
 publishDate:
 description: >
-  This example shows how to deploy and run the Custom Controller example on Agones, a tool to monitor the running dedicated game servers on Kubernetes.
+  This Custom Controller example shows how to deploy and run the Custom Controller example on Agones, a tool to monitor the running dedicated game servers on Kubernetes. Prior to beginning, ensure the following prerequisites are met:
+
+  - You have a running Kubernetes cluster.
+  
+  - Agones is installed on your cluster.
 ---
 
 ## Deploy the Custom Controller
 
-To get started, update the [deployment.yaml](https://github.com/googleforgames/agones/blob/main/examples/custom-controller/deployment.yaml) file to use your Docker image, then apply it to your cluster:
+For a quick deployment of the custom controller on your cluster, execute:
 
 ```bash
 kubectl apply -f deployment.yaml
 ```
 
-When you run the command, it quickly sets up your controller by doing four things: creating a service account for secure communication with Kubernetes, defining a role with the right permissions to handle game servers and events, linking this role to the account for broad access, and launching two controllers for reliability,
+When you run this command, it quickly sets up your controller by doing four things: 
+ - Creating a service account for secure communication with Kubernetes
+ - Defining a role with the right permissions to handle game servers and events
+ - Linking this role to the account for broad access
+ - Launching two controllers for reliability.
 
 ## Verify the Controller
 
@@ -41,7 +49,6 @@ Create a gameserver using below command. After this, you'll be able to see logs 
 
 ```bash
 kubectl create -f <your-gameserver.yaml>
-
 ```
 
 ## Edit the GameServer
