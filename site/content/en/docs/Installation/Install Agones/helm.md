@@ -477,7 +477,6 @@ agones:
         cert-manager.io/inject-ca-from: agones-system/my-release-agones-cert
       disableCaBundle: true
   extensions:
-    disableSecret: true
     customCertSecretPath:
     - key: ca.crt
       path: ca.crt
@@ -485,18 +484,6 @@ agones:
       path: server.crt
     - key: tls.key
       path: server.key
-    allocationApiService:
-      annotations:
-        cert-manager.io/inject-ca-from: agones-system/my-release-agones-cert
-      disableCaBundle: true
-    validatingWebhook:
-      annotations:
-        cert-manager.io/inject-ca-from: agones-system/my-release-agones-cert
-      disableCaBundle: true
-    mutatingWebhook:
-      annotations:
-        cert-manager.io/inject-ca-from: agones-system/my-release-agones-cert
-      disableCaBundle: true
 ```
 
 After copying the above yaml into a `values.yaml` file, use below command to install Agones:
