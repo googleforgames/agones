@@ -16,7 +16,6 @@
 
 # Beta features
 DisableResyncOnSDKServer: true
-FleetAllocationOverflow: true
 
 # Alpha features
 CountsAndLists: false

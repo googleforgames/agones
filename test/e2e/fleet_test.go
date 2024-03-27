@@ -1774,9 +1774,6 @@ func TestFleetAggregatedListStatus(t *testing.T) {
 }
 
 func TestFleetAllocationOverflow(t *testing.T) {
-	if !runtime.FeatureEnabled(runtime.FeatureFleetAllocateOverflow) {
-		t.SkipNow()
-	}
 	t.Parallel()
 	ctx := context.Background()
 	client := framework.AgonesClient.AgonesV1()

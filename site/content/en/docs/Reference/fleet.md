@@ -12,7 +12,7 @@ Like any other Kubernetes resource you describe a `Fleet`'s desired state via a 
 
 A full `Fleet` specification is available below and in the {{< ghlink href="examples/fleet.yaml" >}}example folder{{< /ghlink >}} for reference :
 
-
+{{% feature expiryVersion="1.40.0" %}}
 ```yaml
 apiVersion: "agones.dev/v1"
 kind: Fleet
@@ -92,6 +92,87 @@ spec:
           - name: simple-game-server
             image: {{< example-image >}}
 ```
+{{% /feature %}}
+
+{{% feature publishVersion="1.40.0" %}}
+```yaml
+apiVersion: "agones.dev/v1"
+kind: Fleet
+# Fleet Metadata
+# {{< k8s-api-version href="#objectmeta-v1-meta" >}}
+metadata:
+  name: fleet-example
+spec:
+  # the number of GameServers to keep Ready or Allocated in this Fleet
+  replicas: 2
+  # defines how GameServers are organised across the cluster.
+  # Options include:
+  # "Packed" (default) is aimed at dynamic Kubernetes clusters, such as cloud providers, wherein we want to bin pack
+  # resources
+  # "Distributed" is aimed at static Kubernetes clusters, wherein we want to distribute resources across the entire
+  # cluster
+  scheduling: Packed
+  # a GameServer template - see:
+  # https://agones.dev/site/docs/reference/gameserver/ for all the options
+  strategy:
+    # The replacement strategy for when the GameServer template is changed. Default option is "RollingUpdate",
+    # "RollingUpdate" will increment by maxSurge value on each iteration, while decrementing by maxUnavailable on each
+    # iteration, until all GameServers have been switched from one version to another.
+    # "Recreate" terminates all non-allocated GameServers, and starts up a new set with the new details to replace them.
+    type: RollingUpdate
+    # Only relevant when `type: RollingUpdate`
+    rollingUpdate:
+      # the amount to increment the new GameServers by. Defaults to 25%
+      maxSurge: 25%
+      # the amount to decrements GameServers by. Defaults to 25%
+      maxUnavailable: 25%
+  # Labels and/or Annotations to apply to overflowing GameServers when the number of Allocated GameServers is more
+  # than the desired replicas on the underlying `GameServerSet`
+  allocationOverflow:
+    labels:
+      mykey: myvalue
+      version: "" # empty an existing label value
+    annotations:
+      otherkey: setthisvalue
+  #
+  # [Stage:Alpha]
+  # [FeatureFlag:CountsAndLists]
+  # Which gameservers in the Fleet are most important to keep around - impacts scale down logic.
+  # priorities:
+  # - type: Counter # Sort by a “Counter”
+  #   key: player # The name of the Counter. No impact if no GameServer found.
+  #   order: Descending # Default is "Ascending" so smaller capacity will be removed first on down scaling.
+  # - type: List # Sort by a “List”
+  #   key: room # The name of the List. No impact if no GameServer found.
+  #   order: Ascending # Default is "Ascending" so smaller capacity will be removed first on down scaling.
+  #      
+  template:
+    # GameServer metadata
+    metadata:
+      labels:
+        foo: bar
+    # GameServer specification
+    spec:
+      ports:
+      - name: default
+        portPolicy: Dynamic
+        containerPort: 26000
+      health:
+        initialDelaySeconds: 30
+        periodSeconds: 60
+      # Parameters for game server sidecar
+      sdkServer:
+        logLevel: Info
+        grpcPort: 9357
+        httpPort: 9358
+      # The GameServer's Pod template
+      template:
+        spec:
+          containers:
+          - name: simple-game-server
+            image: {{< example-image >}}
+```
+{{% /feature %}}
 
 Since Agones defines a new 
 [Custom Resources Definition (CRD)](https://kubernetes.io/docs/concepts/api-extension/custom-resources/) 

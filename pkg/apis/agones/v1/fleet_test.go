@@ -19,8 +19,6 @@ import (
 	"strings"
 	"testing"
 
-	"agones.dev/agones/pkg/apis"
-	"agones.dev/agones/pkg/util/runtime"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	appsv1 "k8s.io/api/apps/v1"
@@ -29,6 +27,9 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/apimachinery/pkg/util/validation/field"
+
+	"agones.dev/agones/pkg/apis"
+	"agones.dev/agones/pkg/util/runtime"
 )
 
 func TestFleetGameServerSetGameServer(t *testing.T) {
@@ -69,7 +70,7 @@ func TestFleetGameServerSetGameServer(t *testing.T) {
 	runtime.FeatureTestMutex.Lock()
 	defer runtime.FeatureTestMutex.Unlock()
 
-	runtime.Must(runtime.ParseFeatures(fmt.Sprintf("%s=true&%s=true", runtime.FeatureFleetAllocateOverflow, runtime.FeatureCountsAndLists)))
+	runtime.Must(runtime.ParseFeatures(fmt.Sprintf("%s=true", runtime.FeatureCountsAndLists)))
 	gsSet = f.GameServerSet()
 	assert.Nil(t, gsSet.Spec.AllocationOverflow)
 
@@ -214,10 +215,6 @@ func TestFleetGameserverSpec(t *testing.T) {
 
 func TestFleetAllocationOverflow(t *testing.T) {
 	t.Parallel()
-	runtime.FeatureTestMutex.Lock()
-	defer runtime.FeatureTestMutex.Unlock()
-
-	runtime.Must(runtime.ParseFeatures(fmt.Sprintf("%s=true", runtime.FeatureFleetAllocateOverflow)))
 
 	f := defaultFleet()
 	f.ApplyDefaults()
@@ -234,10 +231,6 @@ func TestFleetAllocationOverflow(t *testing.T) {
 	require.Len(t, errs, 1)
 	require.Equal(t, field.ErrorTypeInvalid, errs[0].Type)
 
-	runtime.Must(runtime.ParseFeatures(fmt.Sprintf("%s=false", runtime.FeatureFleetAllocateOverflow)))
-	errs = f.Validate(fakeAPIHooks{})
-	require.Len(t, errs, 1)
-	require.Equal(t, field.ErrorTypeForbidden, errs[0].Type)
 }
 
 func TestFleetName(t *testing.T) {
