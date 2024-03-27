@@ -16,10 +16,11 @@
 
 # Beta features
 FleetAllocationOverflow: true
+DisableResyncOnSDKServer: true
+
 
 # Alpha features
 CountsAndLists: false
-DisableResyncOnSDKServer: false
 GKEAutopilotExtendedDurationPods: false
 PlayerAllocationFilter: false
 PlayerTracking: false
