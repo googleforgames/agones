@@ -18,9 +18,6 @@ import (
 	"errors"
 	"fmt"
 
-	"agones.dev/agones/pkg/apis"
-	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
-	"agones.dev/agones/pkg/util/runtime"
 	"github.com/mitchellh/hashstructure/v2"
 	corev1 "k8s.io/api/core/v1"
 	apivalidation "k8s.io/apimachinery/pkg/api/validation"
@@ -28,6 +25,10 @@ import (
 	metav1validation "k8s.io/apimachinery/pkg/apis/meta/v1/validation"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/validation/field"
+
+	"agones.dev/agones/pkg/apis"
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
+	"agones.dev/agones/pkg/util/runtime"
 )
 
 const (
@@ -564,6 +565,13 @@ type GameServerMetadata struct {
 
 // ApplyDefaults applies the default values to this GameServerAllocation
 func (gsa *GameServerAllocation) ApplyDefaults() {
+	if len(gsa.Spec.Priorities) == 0 {
+		defaultPriority := agonesv1.Priority{
+			Order: "Ascending",
+		}
+		gsa.Spec.Priorities = []agonesv1.Priority{defaultPriority}
+	}
+
 	if gsa.Spec.Scheduling == "" {
 		gsa.Spec.Scheduling = apis.Packed
 	}

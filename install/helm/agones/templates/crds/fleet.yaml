@@ -132,6 +132,7 @@ spec:
                         enum:
                           - Ascending
                           - Descending
+                        default: Ascending
                 template:
                   {{- $data := dict "metadata" true "podPreserveUnknownFields" .Values.gameservers.podPreserveUnknownFields }}
                   {{- include "gameserver.schema" $data | indent 17 }}
