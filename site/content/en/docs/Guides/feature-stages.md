@@ -39,9 +39,9 @@ The current set of `alpha` and `beta` feature gates:
 {{% feature publishVersion="1.40.0" %}}
 | Feature Name                                                                                                                | Gate                               | Default  | Stage   | Since  |
 |-----------------------------------------------------------------------------------------------------------------------------|------------------------------------|----------|---------|--------|
-| [Allocated GameServers are notified on relevant Fleet Updates][fleet-updates]                                               | `FleetAllocationOverflow`          | Enabled  | `Stable` | 1.40.0 |
+| [Allocated GameServers are notified on relevant Fleet Updates][fleet-updates]                                               | `FleetAllocationOverflow`          | Enabled  | `Stable`| 1.40.0 |
+| [DisableResyncOnSDKServer](https://github.com/googleforgames/agones/issues/3377)                                            | `DisableResyncOnSDKServer`         | Enabled  | `Beta`  | 1.40.0 |
 | [CountsAndLists](https://github.com/googleforgames/agones/issues/2716)                                                      | `CountsAndLists`                   | Disabled | `Alpha` | 1.37.0 |
-| [DisableResyncOnSDKServer](https://github.com/googleforgames/agones/issues/3377)                                            | `DisableResyncOnSDKServer`         | Disabled | `Alpha` | 1.37.0 |
 | [Support for Extended Duration Pods on GKE Autopilot (*1.28+ only*)](https://github.com/googleforgames/agones/issues/3386)  | `GKEAutopilotExtendedDurationPods` | Disabled | `Alpha` | 1.37.0 |
 | [GameServer player capacity filtering on GameServerAllocations](https://github.com/googleforgames/agones/issues/1239)       | `PlayerAllocationFilter`           | Disabled | `Alpha` | 1.14.0 |
 | [Player Tracking]({{< ref "/docs/Guides/player-tracking.md" >}})                                                            | `PlayerTracking`                   | Disabled | `Alpha` | 1.6.0  |

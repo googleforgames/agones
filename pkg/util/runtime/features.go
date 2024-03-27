@@ -95,10 +95,11 @@ var (
 	// In each of these, keep the feature sorted by descending maturity then alphabetical
 	featureDefaults = map[Feature]bool{
 		// Beta features
+		FeatureDisableResyncOnSDKServer: true,
+
 
 		// Alpha features
 		FeatureCountsAndLists:                   false,
-		FeatureDisableResyncOnSDKServer:         false,
 		FeatureGKEAutopilotExtendedDurationPods: false,
 		FeaturePlayerAllocationFilter:           false,
 		FeaturePlayerTracking:                   false,
