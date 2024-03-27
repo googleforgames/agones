@@ -299,6 +299,7 @@ spec:
                       order:
                         type: string
                         description: Ascending or Descending sort order. Default is "Ascending" so remove smaller available capacity first. "Descending" would remove larger available capacity first.
+                        default: Ascending
                         enum:
                           - Ascending
                           - Descending
