@@ -305,14 +305,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.extensions.logLevel`                             | Agones Extensions Log level. Log only entries with that severity and above                                                                                                                                                                                                                                       | `info`                                    |
 | `agones.extensions.persistentLogs`                       | Store Agones extensions logs in a temporary volume attached to a container for debugging                                                                                                                                                                                                                         | `true`                                    |
 | `agones.extensions.persistentLogsSizeLimitMB`            | Maximum total size of all Agones container logs in MB                                                                                                                                                                                                                                                            | `10000`                                   |
-| `agones.extensions.disableSecret`                        | Disables the creation of any allocator secrets. If true, you MUST provide the `{agones.releaseName}-cert` secrets before installation.                                                                                                                                                                           | `false`                                   |
 | `agones.extensions.customCertSecretPath`                 | Remap cert-manager path to server.crt and server.key                                                                                                                                                                                                                                                             | `{}`                                      |
-| `agones.extensions.allocationApiService.annotations`     | [Annotations][annotations] added to the Agones apiregistration                                                                                                                                                                                                                                                   | `{}`                                      |
-| `agones.extensions.allocationApiService.disableCaBundle` | Disable ca-bundle so it can be injected by cert-manager                                                                                                                                                                                                                                                          | `false`                                   |
-| `agones.extensions.validatingWebhook.annotations`        | [Annotations][annotations] added to the Agones validating webhook                                                                                                                                                                                                                                                | `{}`                                      |
-| `agones.extensions.validatingWebhook.disableCaBundle`    | Disable ca-bundle so it can be injected by cert-manager                                                                                                                                                                                                                                                          | `false`                                   |
-| `agones.extensions.mutatingWebhook.annotations`          | [Annotations][annotations] added to the Agones mutating webhook                                                                                                                                                                                                                                                  | `{}`                                      |
-| `agones.extensions.mutatingWebhook.disableCaBundle`      | Disable ca-bundle so it can be injected by cert-manager                                                                                                                                                                                                                                                          | `false`                                   |
 | `agones.extensions.allocationBatchWaitTime`              | Wait time between each allocation batch when performing allocations in controller mode                                                                                                                                                                                                                           | `500ms`                                   |
 | `agones.extensions.pdb.minAvailable`                     | Description of the number of pods from that set that must still be available after the eviction, even in the absence of the evicted pod. Can be either an absolute number or a percentage. Mutually Exclusive with maxUnavailable                                                                                | `1`                                       |
 | `agones.extensions.pdb.maxUnavailable`                   | Description of the number of pods from that set that can be unavailable after the eviction. It can be either an absolute number or a percentage Mutually Exclusive with `minAvailable`                                                                                                                           | \`\`                                      |
@@ -477,7 +470,6 @@ agones:
         cert-manager.io/inject-ca-from: agones-system/my-release-agones-cert
       disableCaBundle: true
   extensions:
-    disableSecret: true
     customCertSecretPath:
     - key: ca.crt
       path: ca.crt
@@ -485,18 +477,6 @@ agones:
       path: server.crt
     - key: tls.key
       path: server.key
-    allocationApiService:
-      annotations:
-        cert-manager.io/inject-ca-from: agones-system/my-release-agones-cert
-      disableCaBundle: true
-    validatingWebhook:
-      annotations:
-        cert-manager.io/inject-ca-from: agones-system/my-release-agones-cert
-      disableCaBundle: true
-    mutatingWebhook:
-      annotations:
-        cert-manager.io/inject-ca-from: agones-system/my-release-agones-cert
-      disableCaBundle: true
 ```
 
 After copying the above yaml into a `values.yaml` file, use below command to install Agones:
