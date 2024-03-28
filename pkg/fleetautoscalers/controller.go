@@ -313,15 +313,20 @@ func (c *Controller) syncFleetAutoscaler(ctx context.Context, key string) error 
 	}
 
 	currentReplicas := fleet.Status.Replicas
-	desiredReplicas, scalingLimited, err := computeDesiredFleetSize(fas, fleet, c.gameServerLister, c.counter.Counts())
+	desiredReplicas, scalingLimited, err := computeDesiredFleetSize(fas.Spec.Policy, fleet, c.gameServerLister, c.counter.Counts())
 	if err != nil {
 		c.recorder.Eventf(fas, corev1.EventTypeWarning, "FleetAutoscaler",
 			"Error calculating desired fleet size on FleetAutoscaler %s. Error: %s", fas.ObjectMeta.Name, err.Error())
 
-		if err := c.updateStatusUnableToScale(ctx, fas); err != nil {
-			return err
+		switch {
+		case errors.As(err, &fallbackError{}):
+			// The error has been reported in the events. Use the fallback values.
+		default:
+			if err := c.updateStatusUnableToScale(ctx, fas); err != nil {
+				return err
+			}
+			return errors.Wrapf(err, "error calculating autoscaling fleet: %s", fleet.ObjectMeta.Name)
 		}
-		return errors.Wrapf(err, "error calculating autoscaling fleet: %s", fleet.ObjectMeta.Name)
 	}
 
 	// Scale the fleet to the new size

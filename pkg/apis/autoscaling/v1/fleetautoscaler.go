@@ -151,7 +151,19 @@ type BufferPolicy struct {
 // WebhookPolicy controls the desired behavior of the webhook policy.
 // It contains the description of the webhook autoscaler service
 // used to form url which is accessible inside the cluster
-type WebhookPolicy admregv1.WebhookClientConfig
+type WebhookPolicy struct {
+	admregv1.WebhookClientConfig `json:",inline"`
+
+	// Fallback defines how the autoscaler should behave in the event the webhook fails.
+	// +optional
+	Fallback *WebhookFallback `json:"fallback,omitempty"`
+}
+
+// WebhookFallback controls the fallback behaviour.
+type WebhookFallback struct {
+	// Autoscaling policy
+	Policy FleetAutoscalerPolicy `json:"policy"`
+}
 
 // CounterPolicy controls the desired behavior of the Counter autoscaler policy.
 type CounterPolicy struct {
@@ -258,23 +270,29 @@ type FleetAutoscaleReview struct {
 
 // Validate validates the FleetAutoscaler scaling settings
 func (fas *FleetAutoscaler) Validate() field.ErrorList {
-	var allErrs field.ErrorList
-	switch fas.Spec.Policy.Type {
-	case BufferPolicyType:
-		allErrs = fas.Spec.Policy.Buffer.ValidateBufferPolicy(field.NewPath("spec", "policy", "buffer"))
-
-	case WebhookPolicyType:
-		allErrs = fas.Spec.Policy.Webhook.ValidateWebhookPolicy(field.NewPath("spec", "policy", "webhook"))
-
-	case CounterPolicyType:
-		allErrs = fas.Spec.Policy.Counter.ValidateCounterPolicy(field.NewPath("spec", "policy", "counter"))
-
-	case ListPolicyType:
-		allErrs = fas.Spec.Policy.List.ValidateListPolicy(field.NewPath("spec", "policy", "list"))
-	}
+	allErrs := fas.Spec.Policy.Validate(field.NewPath("spec", "policy"))
 
 	if fas.Spec.Sync != nil {
 		allErrs = append(allErrs, fas.Spec.Sync.FixedInterval.ValidateFixedIntervalSync(field.NewPath("spec", "sync", "fixedInterval"))...)
+	}
+	return allErrs
+}
+
+// Validate validates the FleetAutoscalerPolicy settings.
+func (f *FleetAutoscalerPolicy) Validate(fldPath *field.Path) field.ErrorList {
+	var allErrs field.ErrorList
+	switch f.Type {
+	case BufferPolicyType:
+		allErrs = f.Buffer.ValidateBufferPolicy(fldPath.Child("buffer"))
+
+	case WebhookPolicyType:
+		allErrs = f.Webhook.ValidateWebhookPolicy(fldPath.Child("webhook"))
+
+	case CounterPolicyType:
+		allErrs = f.Counter.ValidateCounterPolicy(fldPath.Child("counter"))
+
+	case ListPolicyType:
+		allErrs = f.List.ValidateListPolicy(fldPath.Child("list"))
 	}
 	return allErrs
 }
@@ -306,6 +324,17 @@ func (w *WebhookPolicy) ValidateWebhookPolicy(fldPath *field.Path) field.ErrorLi
 			allErrs = append(allErrs, field.Invalid(fldPath.Child("caBundle"), w.CABundle, "CABundle should be provided if HTTPS webhook is used"))
 		}
 
+	}
+	if w.Fallback != nil {
+		polPath := fldPath.Child("fallback", "policy")
+
+		allErrs = append(allErrs, w.Fallback.Policy.Validate(polPath)...)
+
+		pol := w.Fallback.Policy
+		if pol.Type == WebhookPolicyType && pol.Webhook != nil && pol.Webhook.Fallback != nil {
+			// Do not allow nested fallbacks.
+			allErrs = append(allErrs, field.Invalid(polPath.Child("webhook", "fallback"), pol.Webhook.Fallback, "Webhook Fallback should not be nested in a Fallback"))
+		}
 	}
 	return allErrs
 }

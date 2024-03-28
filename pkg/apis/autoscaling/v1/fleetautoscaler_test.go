@@ -127,6 +127,8 @@ func TestFleetAutoscalerValidateUpdate(t *testing.T) {
 func TestFleetAutoscalerWebhookValidateUpdate(t *testing.T) {
 	t.Parallel()
 
+	goodURL := "https://good.example.com"
+
 	t.Run("good service value", func(t *testing.T) {
 		fas := webhookFixture()
 		causes := fas.Validate()
@@ -169,7 +171,7 @@ func TestFleetAutoscalerWebhookValidateUpdate(t *testing.T) {
 	goodCaBundle := "\n-----BEGIN CERTIFICATE-----\nMIIDXjCCAkYCCQDvT9MAXwnuqDANBgkqhkiG9w0BAQsFADBxMQswCQYDVQQGEwJV\nUzETMBEGA1UECAwKQ2FsaWZvcm5pYTEWMBQGA1UEBwwNTW91bnRhaW4gVmlldzEP\nMA0GA1UECgwGQWdvbmVzMQ8wDQYDVQQLDAZBZ29uZXMxEzARBgNVBAMMCmFnb25l\ncy5kZXYwHhcNMTkwMTAzMTEwNTA0WhcNMjExMDIzMTEwNTA0WjBxMQswCQYDVQQG\nEwJVUzETMBEGA1UECAwKQ2FsaWZvcm5pYTEWMBQGA1UEBwwNTW91bnRhaW4gVmll\ndzEPMA0GA1UECgwGQWdvbmVzMQ8wDQYDVQQLDAZBZ29uZXMxEzARBgNVBAMMCmFn\nb25lcy5kZXYwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDFwohJp3xK\n4iORkJXNO2KEkdrVYK7xpXTrPvZqLzoyMBOXi9b+lOKILUPaKtZ33GIwola31bHp\ni7V97vh3irIQVpap6uncesRTX0qk5Y70f7T6lByMKDsxi5ddea3ztAftH+PMYSLn\nE7H9276R1lvX8HZ0E2T4ea63PcVcTldw74ueEQr7HFMVucO+hHjgNJXDsWFUNppv\nxqWOvlIEDRdQzB1UYd13orqX0t514Ikp5Y3oNigXftDH+lZPlrWGsknMIDWr4DKP\n7NB1BZMfLFu/HXTGI9dK5Zc4T4GG4DBZqlgDPdzAXSBUT9cRQvbLrZ5+tUjOZK5E\nzEEIqyUo1+QdAgMBAAEwDQYJKoZIhvcNAQELBQADggEBABgtnWaWIDFCbKvhD8cF\nd5fvARFJcRl4dcChoqANeUXK4iNiCEPiDJb4xDGrLSVOeQ2IMbghqCwJfH93aqTr\n9kFQPvYbCt10TPQpmmh2//QjWGc7lxniFWR8pAVYdCGHqIAMvW2V2177quHsqc2I\nNTXyEUus0SDHLK8swLQxoCVw4fSq+kjMFW/3zOvMfh13rZH7Lo0gQyAUcuHM5U7g\nbhCZ3yVkDYpPxVv2vL0eyWUdLrQjYXyY7MWHPXvDozi3CtuBZlp6ulgeubi6jhHE\nIzuOM3qiLMJ/KG8MlIgGCwSX/x0vfO0/LtkZM7P1+yptSr/Se5QiZMtmpxC+DDWJ\n2xw=\n-----END CERTIFICATE-----"
 	t.Run("good url and CABundle value", func(t *testing.T) {
 		fas := webhookFixture()
-		url := "https://good.example.com"
+		url := goodURL
 		fas.Spec.Policy.Webhook.URL = &url
 		fas.Spec.Policy.Webhook.Service = nil
 		fas.Spec.Policy.Webhook.CABundle = []byte(goodCaBundle)
@@ -214,6 +216,80 @@ func TestFleetAutoscalerWebhookValidateUpdate(t *testing.T) {
 		assert.Equal(t, "spec.policy.webhook.url", causes[0].Field)
 	})
 
+	t.Run("good webhook fallback policy", func(t *testing.T) {
+		fas := webhookFixture()
+		url := goodURL
+		fas.Spec.Policy.Webhook.URL = &url
+		fas.Spec.Policy.Webhook.Service = nil
+		fas.Spec.Policy.Webhook.CABundle = []byte(goodCaBundle)
+		fas.Spec.Policy.Webhook.Fallback = &WebhookFallback{
+			Policy: FleetAutoscalerPolicy{
+				Type: BufferPolicyType,
+				Buffer: &BufferPolicy{
+					BufferSize:  intstr.FromInt(5),
+					MaxReplicas: 10,
+				},
+			},
+		}
+
+		causes := fas.Validate()
+		assert.Len(t, causes, 0)
+	})
+
+	t.Run("bad webhook fallback policy", func(t *testing.T) {
+		fas := webhookFixture()
+		url := goodURL
+		fas.Spec.Policy.Webhook.URL = &url
+		fas.Spec.Policy.Webhook.Service = nil
+		fas.Spec.Policy.Webhook.CABundle = []byte(goodCaBundle)
+		fas.Spec.Policy.Webhook.Fallback = &WebhookFallback{
+			Policy: FleetAutoscalerPolicy{
+				Type: BufferPolicyType,
+				Buffer: &BufferPolicy{
+					BufferSize: intstr.FromInt(5),
+				},
+			},
+		}
+
+		causes := fas.Validate()
+		assert.Len(t, causes, 1)
+		assert.Equal(t, "spec.policy.webhook.fallback.policy.buffer.maxReplicas", causes[0].Field)
+	})
+
+	t.Run("webhook fallback policy with fallback policy", func(t *testing.T) {
+		fas := webhookFixture()
+		url := goodURL
+		fas.Spec.Policy.Webhook.URL = &url
+		fas.Spec.Policy.Webhook.Service = nil
+		fas.Spec.Policy.Webhook.CABundle = []byte(goodCaBundle)
+		fas.Spec.Policy.Webhook.Fallback = &WebhookFallback{
+			Policy: FleetAutoscalerPolicy{
+				Type: WebhookPolicyType,
+				Webhook: &WebhookPolicy{
+					WebhookClientConfig: admregv1.WebhookClientConfig{
+						Service: &admregv1.ServiceReference{
+							Name:      "service1",
+							Namespace: "default",
+							Path:      &url,
+						},
+					},
+					Fallback: &WebhookFallback{
+						Policy: FleetAutoscalerPolicy{
+							Type: BufferPolicyType,
+							Buffer: &BufferPolicy{
+								BufferSize:  intstr.FromInt(5),
+								MaxReplicas: 10,
+							},
+						},
+					},
+				},
+			},
+		}
+
+		causes := fas.Validate()
+		assert.Len(t, causes, 1)
+		assert.Equal(t, "spec.policy.webhook.fallback.policy.webhook.fallback", causes[0].Field)
+	})
 }
 
 // nolint:dupl  // Linter errors on lines are duplicate of TestFleetAutoscalerListValidateUpdate
@@ -499,10 +575,12 @@ func customFixture(t FleetAutoscalerPolicyType) *FleetAutoscaler {
 		res.Spec.Policy.Buffer = nil
 		url := "/scale"
 		res.Spec.Policy.Webhook = &WebhookPolicy{
-			Service: &admregv1.ServiceReference{
-				Name:      "service1",
-				Namespace: "default",
-				Path:      &url,
+			WebhookClientConfig: admregv1.WebhookClientConfig{
+				Service: &admregv1.ServiceReference{
+					Name:      "service1",
+					Namespace: "default",
+					Path:      &url,
+				},
 			},
 		}
 	case CounterPolicyType:
