@@ -57,7 +57,7 @@ spec:
 ## Counter and List Autoscaling
 
 A Counter based autoscaler can be used to autoscale `GameServers` based on a Count and Capacity set on each of the 
-GameServers in a Fleet to ensure there is always a buffer of total capacity available.
+GameServers in a Fleet to ensure there is always a buffer of available capacity available.
 
 For example, if you have a game server that can support 10 rooms, and you want to ensure that there are always at least
 5 rooms available, you could use a counter-based autoscaler with a buffer size of 5. The autoscaler would then scale the
@@ -77,7 +77,7 @@ spec:
     type: Counter  # Counter based autoscaling
     counter:
       # Key is the name of the Counter. Required field.
-      key: players
+      key: rooms
       # BufferSize is the size of a buffer of counted items that are available in the Fleet (available capacity).
       # Value can be an absolute number (ex: 5) or a percentage of the Counter available capacity (ex: 5%).
       # An absolute number is calculated from percentage by rounding up. Must be bigger than 0. Required field.
@@ -92,7 +92,7 @@ spec:
 ```
 
 A List based autoscaler can be used to autoscale `GameServers` based on the List length and Capacity set on each of the
-GameServers in a Fleet to ensure there is always a buffer of total capacity available.
+GameServers in a Fleet to ensure there is always a buffer of available capacity available.
 
 For example, if you have a game server that can support 10 players, and you want to ensure that there are always 
 room for at least 5 players across `GameServers` in a `Fleet`, you could use a list-based autoscaler with a buffer size 
@@ -112,7 +112,7 @@ spec:
     type: List  # List based autoscaling.
     list:
       # Key is the name of the List. Required field.
-      key: rooms
+      key: players
       # BufferSize is the size of a buffer based on the List capacity that is available over the current
       # aggregate List length in the Fleet (available capacity).
       # It can be specified either as an absolute value (i.e. 5) or percentage format (i.e. 5%).

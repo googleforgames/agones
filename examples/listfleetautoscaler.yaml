@@ -33,7 +33,7 @@ spec:
     type: List  # List based autoscaling.
     list:
       # Key is the name of the List. Required field.
-      key: rooms
+      key: players
       # BufferSize is the size of a buffer based on the List capacity that is available over the current
       # aggregate List length in the Fleet (available capacity).
       # It can be specified either as an absolute value (i.e. 5) or percentage format (i.e. 5%).

@@ -85,10 +85,17 @@ type GameServerAllocationSpec struct {
 	// This is useful for things like smoke testing of new game servers.
 	Preferred []GameServerSelector `json:"preferred,omitempty" hash:"ignore"`
 
-	// (Alpha, CountsAndLists feature flag) The first Priority on the array of Priorities is the most
-	// important for sorting. The allocator will use the first priority for sorting GameServers by
-	// available Capacity in the Selector set. Acts as a tie-breaker after sorting the game servers
-	// by State and Strategy Packed. Impacts which GameServer is checked first.
+	// [Stage: Alpha]
+	// [FeatureFlag:CountsAndLists]
+	// `Priorities` configuration alters the order in which `GameServers` are searched for matches to the configured `selectors`.
+	//
+	// Priority of sorting is in descending importance. I.e. The position 0 `priority` entry is checked first.
+	//
+	// For `Packed` strategy sorting, this priority list will be the tie-breaker within the least utilised infrastructure, to ensure optimal
+	// infrastructure usage while also allowing some custom prioritisation of `GameServers`.
+	//
+	// For `Distributed` strategy sorting, the entire selection of `GameServers` will be sorted by this priority list to provide the
+	// order that `GameServers` will be allocated by.
 	// +optional
 	Priorities []agonesv1.Priority `json:"priorities,omitempty"`
 
@@ -105,10 +112,14 @@ type GameServerAllocationSpec struct {
 	// You can use this to tell the server necessary session data
 	MetaPatch MetaPatch `json:"metadata,omitempty" hash:"ignore"`
 
-	// (Alpha, CountsAndLists feature flag) Counter actions to perform during allocation.
+	// [Stage: Alpha]
+	// [FeatureFlag:CountsAndLists]
+	// Counter actions to perform during allocation.
 	// +optional
 	Counters map[string]CounterAction `json:"counters,omitempty" hash:"ignore"`
-	// (Alpha, CountsAndLists feature flag) List actions to perform during allocation.
+	// [Stage: Alpha]
+	// [FeatureFlag:CountsAndLists]
+	// List actions to perform during allocation.
 	// +optional
 	Lists map[string]ListAction `json:"lists,omitempty" hash:"ignore"`
 }
@@ -128,12 +139,16 @@ type GameServerSelector struct {
 	// Players provides a filter on minimum and maximum values for player capacity when retrieving a GameServer
 	// through Allocation. Defaults to no limits.
 	Players *PlayerSelector `json:"players,omitempty"`
-	// (Alpha, CountsAndLists feature flag) Counters provides filters on minimum and maximum values
+	// [Stage: Alpha]
+	// [FeatureFlag:CountsAndLists]
+	// Counters provides filters on minimum and maximum values
 	// for a Counter's count and available capacity when retrieving a GameServer through Allocation.
 	// Defaults to no limits.
 	// +optional
 	Counters map[string]CounterSelector `json:"counters,omitempty"`
-	// (Alpha, CountsAndLists feature flag) Lists provides filters on minimum and maximum values
+	// [Stage: Alpha]
+	// [FeatureFlag:CountsAndLists]
+	// Lists provides filters on minimum and maximum values
 	// for List capacity, and for the existence of a value in a List, when retrieving a GameServer
 	// through Allocation. Defaults to no limits.
 	// +optional
