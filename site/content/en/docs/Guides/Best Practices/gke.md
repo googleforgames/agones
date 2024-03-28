@@ -13,7 +13,7 @@ On this page, we've collected several [Google Kubernetes Engine (GKE)](https://c
 
 ### Why?
 
-We recommned using [Release Channels](https://cloud.google.com/kubernetes-engine/docs/concepts/release-channels) for all GKE clusters. Using Release Channels has several advantages:
+We recommend using [Release Channels](https://cloud.google.com/kubernetes-engine/docs/concepts/release-channels) for all GKE clusters. Using Release Channels has several advantages:
 * Google automatically manages the version and upgrade cadence for your Kubernetes Control Plane and its nodes.
 * Clusters on a Release Channel are allowed to use the `No minor upgrades` and `No minor or node upgrades` [scope of maintenance exclusions](https://cloud.google.com/kubernetes-engine/docs/concepts/maintenance-windows-and-exclusions#limitations-maint-exclusions) - in other words, enrolling a cluster in a Release Channel gives you _more control_ over node upgrades.
 * Clusters enrolled in `rapid` channel have access to the newest Kubernetes version first. Agones strives to [support the newest release in `rapid` channel]({{< relref "Installation#agones-and-kubernetes-supported-versions" >}}) to allow you to test the newest Kubernetes soon after it's available in GKE.
