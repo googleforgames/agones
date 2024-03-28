@@ -166,9 +166,8 @@ func (c *Controller) recordFleetAutoScalerChanges(old, next interface{}) {
 		}
 	}
 
-	// fleet autoscaler has been deleted last value should be 0
+	// do not record fleetautoscaler, delete event will do this.
 	if fas.DeletionTimestamp != nil {
-		c.recordFleetAutoScalerDeletion(fas)
 		return
 	}
 
@@ -233,9 +232,8 @@ func (c *Controller) recordFleetChanges(obj interface{}) {
 		return
 	}
 
-	// fleet has been deleted last value should be 0
+	// do not record fleet, delete event will do this.
 	if f.DeletionTimestamp != nil {
-		c.recordFleetDeletion(f)
 		return
 	}
 
