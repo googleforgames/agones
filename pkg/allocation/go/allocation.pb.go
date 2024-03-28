@@ -272,12 +272,21 @@ type AllocationRequest struct {
 	// This is useful for things like smoke testing of new game servers.
 	// Note: This field can only be set if neither Required or Preferred is set.
 	GameServerSelectors []*GameServerSelector `protobuf:"bytes,8,rep,name=gameServerSelectors,proto3" json:"gameServerSelectors,omitempty"`
-	// (Alpha, CountsAndLists feature flag) The first Priority on the array of Priorities is the most
-	// important for sorting. The allocator will use the first priority for sorting GameServers in the
-	// Selector set, and will only use any following priority for tie-breaking during sort.
-	// Impacts which GameServer is checked first.
+	// [Stage: Alpha]
+	// [FeatureFlag:CountsAndLists]
+	// `Priorities` configuration alters the order in which `GameServers` are searched for matches to the configured `selectors`.
+	//
+	// Priority of sorting is in descending importance. I.e. The position 0 `priority` entry is checked first.
+	//
+	// For `Packed` strategy sorting, this priority list will be the tie-breaker within the least utilised infrastructure, to ensure optimal
+	// infrastructure usage while also allowing some custom prioritisation of `GameServers`.
+	//
+	// For `Distributed` strategy sorting, the entire selection of `GameServers` will be sorted by this priority list to provide the
+	// order that `GameServers` will be allocated by.
 	Priorities []*Priority `protobuf:"bytes,9,rep,name=priorities,proto3" json:"priorities,omitempty"`
-	// (Alpha, CountsAndLists feature flag) Counters and Lists provide a set of actions to perform
+	// [Stage: Alpha]
+	// [FeatureFlag:CountsAndLists]
+	// Counters and Lists provide a set of actions to perform
 	// on Counters and Lists during allocation.
 	Counters map[string]*CounterAction `protobuf:"bytes,10,rep,name=counters,proto3" json:"counters,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 	Lists    map[string]*ListAction    `protobuf:"bytes,11,rep,name=lists,proto3" json:"lists,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
