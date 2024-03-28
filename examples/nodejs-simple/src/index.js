@@ -160,6 +160,11 @@ const runAlphaSuite = async (agonesSDK) => {
 	console.log('Disconnecting the same player');
 	result = await agonesSDK.alpha.playerDisconnect('firstPlayerID');
 	console.log(`result: ${result}`);
+
+	await setTimeout(10000);
+	console.log('Setting counter capacity');
+	result = await agonesSDK.alpha.setCounterCapacity('testCounter', 10);
+	console.log(`result: ${result}`);
 };
 
 let args = process.argv.slice(2);

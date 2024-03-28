@@ -14,9 +14,14 @@
 // limitations under the License.
 
 const grpc = require('@grpc/grpc-js');
+const jspbWrappers = require('google-protobuf/google/protobuf/wrappers_pb');
 
 const messages = require('../lib/alpha/alpha_pb');
 const servicesPackageDefinition = require('../lib/alpha/alpha_grpc_pb');
+
+const ALREADY_EXISTS = 'ALREADY_EXISTS';
+const NOT_FOUND = 'NOT_FOUND';
+const OUT_OF_RANGE = 'OUT_OF_RANGE';
 
 class Alpha {
 	constructor(address, credentials) {
@@ -83,7 +88,7 @@ class Alpha {
 		});
 	}
 
-	getPlayerCount() {
+	async getPlayerCount() {
 		const request = new messages.Empty();
 
 		return new Promise((resolve, reject) => {
@@ -97,7 +102,7 @@ class Alpha {
 		});
 	}
 
-	isPlayerConnected(playerID) {
+	async isPlayerConnected(playerID) {
 		const request = new messages.PlayerID();
 		request.setPlayerid(playerID);
 
@@ -112,7 +117,7 @@ class Alpha {
 		});
 	}
 
-	getConnectedPlayers() {
+	async getConnectedPlayers() {
 		const request = new messages.Empty();
 
 		return new Promise((resolve, reject) => {
@@ -121,6 +126,231 @@ class Alpha {
 					reject(error);
 				} else {
 					resolve(response.getListList());
+				}
+			});
+		});
+	}
+
+	async getCounterCount(key) {
+		const request = new messages.GetCounterRequest();
+		request.setName(key);
+
+		return new Promise((resolve, reject) => {
+			this.client.getCounter(request, (error, response) => {
+				if (error) {
+					reject(error);
+				} else {
+					resolve(response.getCount());
+				}
+			});
+		});
+	}
+
+	async incrementCounter(key, amount) {
+		const request = new messages.CounterUpdateRequest();
+		request.setName(key);
+		request.setCountdiff(amount);
+
+		return new Promise((resolve, reject) => {
+			this.client.updateCounter(request, (error) => {
+				if (error) {
+					if (error === OUT_OF_RANGE) {
+						return resolve(false);
+					}
+					reject(error);
+				} else {
+					resolve(true);
+				}
+			});
+		});
+	}
+
+	async decrementCounter(key, amount) {
+		const request = new messages.CounterUpdateRequest();
+		request.setName(key);
+		request.setCountdiff(-amount);
+
+		return new Promise((resolve, reject) => {
+			this.client.updateCounter(request, (error) => {
+				if (error) {
+					if (error === OUT_OF_RANGE) {
+						return resolve(false);
+					}
+					reject(error);
+				} else {
+					resolve(true);
+				}
+			});
+		});
+	}
+
+	async setCounterCount(key, amount) {
+		let count = new jspbWrappers.Int64Value();
+		count.setValue(amount);
+		const request = new messages.CounterUpdateRequest();
+		request.setName(key);
+		request.setCount(count);
+
+		return new Promise((resolve, reject) => {
+			this.client.updateCounter(request, (error) => {
+				if (error) {
+					if (error === OUT_OF_RANGE) {
+						return resolve(false);
+					}
+					reject(error);
+				} else {
+					resolve(true);
+				}
+			});
+		});
+	}
+
+	async getCounterCapacity(key) {
+		const request = new messages.GetCounterRequest();
+		request.setName(key);
+
+		return new Promise((resolve, reject) => {
+			this.client.getCounter(request, (error, response) => {
+				if (error) {
+					reject(error);
+				} else {
+					resolve(response.getCapacity());
+				}
+			});
+		});
+	}
+
+	async setCounterCapacity(key, amount) {
+		const capacity = new jspbWrappers.Int64Value();
+		capacity.setValue(amount);
+		const updateRequest = new messages.CounterUpdateRequest();
+		updateRequest.setName(key);
+		updateRequest.setCapacity(capacity);
+		const request = new messages.UpdateCounterRequest();
+		request.setCounterupdaterequest(updateRequest);
+
+		return new Promise((resolve, reject) => {
+			this.client.updateCounter(request, (error) => {
+				if (error) {
+					reject(error);
+				} else {
+					resolve();
+				}
+			});
+		});
+	}
+
+	async getListCapacity(key) {
+		const request = new messages.GetListRequest();
+		request.setName(key);
+
+		return new Promise((resolve, reject) => {
+			this.client.getList(request, (error, response) => {
+				if (error) {
+					reject(error);
+				} else {
+					resolve(response.getCapacity());
+				}
+			});
+		});
+	}
+
+	async setListCapacity(key, amount) {
+		const list = new messages.List();
+		list.setName(key);
+		list.setCapacity(amount);
+		const request = new messages.UpdateListRequest();
+		request.setList(list);
+
+		return new Promise((resolve, reject) => {
+			this.client.updateList(request, (error) => {
+				if (error) {
+					reject(error);
+				} else {
+					resolve();
+				}
+			});
+		});
+	}
+
+	async listContains(key, value) {
+		const request = new messages.GetListRequest();
+		request.setName(key);
+
+		return new Promise((resolve, reject) => {
+			this.client.getList(request, (error, response) => {
+				if (error) {
+					reject(error);
+				} else {
+					resolve(response.getValuesList().indexOf(value) >= 0);
+				}
+			});
+		});
+	}
+
+	async getListLength(key) {
+		const request = new messages.GetListRequest();
+		request.setName(key);
+
+		return new Promise((resolve, reject) => {
+			this.client.getList(request, (error, response) => {
+				if (error) {
+					reject(error);
+				} else {
+					resolve(response.getValuesList().length);
+				}
+			});
+		});
+	}
+
+	async getListValues(key) {
+		const request = new messages.GetListRequest();
+		request.setName(key);
+
+		return new Promise((resolve, reject) => {
+			this.client.getList(request, (error, response) => {
+				if (error) {
+					reject(error);
+				} else {
+					resolve(response.getValuesList());
+				}
+			});
+		});
+	}
+
+	async appendListValue(key, value) {
+		const request = new messages.AddListValueRequest();
+		request.setName(key);
+		request.setValue(value);
+
+		return new Promise((resolve, reject) => {
+			this.client.addListValue(request, (error) => {
+				if (error) {
+					if (error === ALREADY_EXISTS || error === OUT_OF_RANGE) {
+						return resolve(false);
+					}
+					reject(error);
+				} else {
+					resolve(true);
+				}
+			});
+		});
+	}
+
+	async deleteListValue(key, value) {
+		const request = new messages.RemoveListValueRequest();
+		request.setName(key);
+		request.setValue(value);
+
+		return new Promise((resolve, reject) => {
+			this.client.removeListValue(request, (error) => {
+				if (error) {
+					if (error === NOT_FOUND) {
+						return resolve(false);
+					}
+					reject(error);
+				} else {
+					resolve(true);
 				}
 			});
 		});

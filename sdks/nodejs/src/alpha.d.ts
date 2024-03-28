@@ -28,6 +28,32 @@ declare class Alpha {
 	isPlayerConnected(playerID: PlayerId): Promise<boolean>
 
 	getConnectedPlayers(): Promise<PlayerId[]>
+
+	getCounterCount(key: string): Promise<number>
+
+	incrementCounter(key: string, amount: number): Promise<boolean>
+
+	decrementCounter(key: string, amount: number): Promise<boolean>
+
+	setCounterCount(key: string, amount: number): Promise<boolean>
+
+	getCounterCapacity(key: string): Promise<number>
+
+	setCounterCapacity(key: string, amount: number): Promise<void>
+
+	getListCapacity(key: string): Promise<number>
+
+	setListCapacity(key: string, amount: number): Promise<boolean>
+
+	listContains(key: string, value: string): Promise<boolean>
+
+	getListLength(key: string): Promise<number>
+
+	getListValues(key: string): Promise<string[]>
+
+	appendListValue(key: string, value: string): Promise<boolean>
+
+	deleteListValue(key:string , value: string): Promise<boolean>
 }
 
 export default Alpha;
