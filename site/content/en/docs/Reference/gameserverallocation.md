@@ -80,31 +80,37 @@ spec:
       mode: deathmatch
     annotations:
       map:  garden22
-    # [Stage:Alpha]
-    # [FeatureFlag:CountsAndLists]
-    # The first Priority on the array of Priorities is the most important for sorting. The allocator will
-    # use the first priority for sorting GameServers by available Capacity in the Selector set. Acts as a
-    # tie-breaker after sorting the game servers by State and Strategy Packed. Impacts which GameServer
-    # is checked first. Optional.
-    # priorities:
-    # - type: List  # Whether a Counter or a List.
-    #   key: rooms  # The name of the Counter or List.
-    #   order: Ascending  # "Ascending" lists smaller available capacity first.
-    # [Stage:Alpha]
-    # [FeatureFlag:CountsAndLists]
-    # Counter actions to perform during allocation. Optional.
-    # counters:
-    #   rooms:
-    #     action: increment # Either "Increment" or "Decrement" the Counter’s Count.
-    #     amount: 1 # Amount is the amount to increment or decrement the Count. Must be a positive integer.
-    #     capacity: 5 # Amount to update the maximum capacity of the Counter to this number. Min 0, Max int64.
-    # List actions to perform during allocation. Optional.
-    # lists:
-    #   players:
-    #     addValues: # appends values to a List’s Values array. Any duplicate values will be ignored
-    #       - x7un
-    #       - 8inz
-    #     capacity: 40 # Updates the maximum capacity of the Counter to this number. Min 0, Max 1000.
+  # [Stage: Alpha]
+  # [FeatureFlag:CountsAndLists]
+  # `Priorities` configuration alters the order in which `GameServers` are searched for matches to the configured `selectors`.
+  #
+  # Priority of sorting is in descending importance. I.e. The position 0 `priority` entry is checked first.
+  #
+  # For `Packed` strategy sorting, this priority list will be the tie-breaker within the least utilised infrastructure, to ensure optimal
+  # infrastructure usage while also allowing some custom prioritisation of `GameServers`.
+  #
+  # For `Distributed` strategy sorting, the entire selection of `GameServers` will be sorted by this priority list to provide the
+  # order that `GameServers` will be allocated by.
+  # Optional.
+  # priorities:
+  # - type: Counter  # Whether a Counter or a List.
+  #   key: rooms  # The name of the Counter or List.
+  #   order: Ascending  # "Ascending" lists smaller available capacity first.
+  # [Stage: Alpha]
+  # [FeatureFlag:CountsAndLists]
+  # Counter actions to perform during allocation. Optional.
+  # counters:
+  #   rooms:
+  #     action: Increment # Either "Increment" or "Decrement" the Counter’s Count.
+  #     amount: 1 # Amount is the amount to increment or decrement the Count. Must be a positive integer.
+  #     capacity: 5 # Amount to update the maximum capacity of the Counter to this number. Min 0, Max int64.
+  # List actions to perform during allocation. Optional.
+  # lists:
+  #   players:
+  #     addValues: # appends values to a List’s Values array. Any duplicate values will be ignored
+  #       - x7un
+  #       - 8inz
+  #     capacity: 40 # Updates the maximum capacity of the Counter to this number. Min 0, Max 1000.
   {{< /tab >}}
   {{< tab header="required & preferred (deprecated)" lang="yaml" >}}
 apiVersion: "allocation.agones.dev/v1"
@@ -199,8 +205,7 @@ The `spec` field is the actual `GameServerAllocation` specification, and it is c
   cluster. See [Scheduling and Autoscaling]({{< ref "/docs/Advanced/scheduling-and-autoscaling.md" >}}) for more details.
 - `metadata` is an optional list of custom labels and/or annotations that will be used to patch
   the game server's metadata in the moment of allocation. This can be used to tell the server necessary session data
-- `priorities` (Alpha, requires `CountsAndLists` feature flag) manages counters and lists for game servers, setting limits on
-  room counts and player inclusion/exclusion.
+- `priorities` (Alpha, requires `CountsAndLists` feature flag) alters the priority by which game `GameServers` are allocated by available capacity.
 - `counters` (Alpha, "CountsAndLists" feature flag) Counter actions to perform during allocation.
 - `lists` (Alpha, "CountsAndLists" feature flag) List actions to perform during allocation.
 

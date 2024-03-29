@@ -54,17 +54,18 @@ List of items to do for upgrading to {version_1} {version_2} {version_3}
         - [ ] Recreate clusters with new scripts: `cd build; make GCP_PROJECT=agones-images gcloud-e2e-test-cluster`
     - [ ] Update the Cloud Build configuration to run e2e test on the new created clusters, and disable the e2e test on the cluster with the oldest supported K8s version
         - [ ] Update the `versionsAndRegions` variable to add the new supported version and remove the oldest supported K8s version in `cloudbuild.yaml` `submit-e2e-test-cloud-build` step
+        - [ ] Update the `featureWithGateByVersion` variable to add the new supported version and remove the oldest supported K8s version in `cloudbuild.yaml` `submit-e2e-test-cloud-build` step
         - [ ] Run `make lint` for code quality check.
         - [ ] Submit a PR to trigger the e2e tests and verfiy they all pass
     - [ ] After the PR that includes the above Cloud Build configuration change has been merged and all the existing pending PRs in the Cloud Build queue have picked up the new configuration, submit a separate PR to update the e2e clusters terraform module to remove the e2e cluster with the oldest supported K8s version.
         - [ ] In `build/terraform/e2e/module.tf`, continue following the instructions in the comment to update the `kubernetes_versions` map.
         - [ ] Destroy the old clusters with new scripts: `cd build; make GCP_PROJECT=agones-images gcloud-e2e-test-cluster`
 - [ ] Recreate the performance test cluster, and config the performance test to run on the new cluster
-    - [ ] In `build/terraform/performance/module.tf`, update the `kubernetes_versions` to {version_2} and its corresponding region.
+    - [ ] In `build/terraform/performance/module.tf`, update the `kubernetes_versions` to {version_2} and make sure the region is always set to `us-central1`.
     - [ ] Recreate the cluster with the new script:
         ```
         cd build; make shell; cd build/terraform/performance
         terraform init -backend-config="bucket=agones-images-performance-infra-bucket-tfstate" -backend-config="prefix=terraform/state"
         terraform apply -var project="agones-images"
         ```
-    - [ ] Update the `_TEST_CLUSTER_NAME` in `ci/perf-test-cloudbuild.yaml` to the name of the new created performance test cluster. 
+    - [ ] Update the `_TEST_CLUSTER_NAME` in `ci/perf-test-cloudbuild.yaml` to the name of the new created performance test cluster, and send a PR with the changes.
