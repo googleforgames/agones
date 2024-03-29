@@ -57,14 +57,14 @@ spec:
   #
   # [Stage:Alpha]
   # [FeatureFlag:CountsAndLists]
-  # Which gameservers in the Fleet are most important to keep around - impacts scale down logic.
+  # Which `GameServers` in the Fleet are most important to keep around - impacts scale down logic.
   # priorities:
   # - type: Counter # Sort by a “Counter”
-  #   key: player # The name of the Counter. No impact if no GameServer found.
-  #   order: Descending # Default is "Ascending" so smaller capacity will be removed first on down scaling.
+  #   key: rooms # The name of the Counter. No impact if no GameServer found.
+  #   order: Descending # Default is "Ascending" so smaller available capacity will be removed first on down scaling.
   # - type: List # Sort by a “List”
-  #   key: room # The name of the List. No impact if no GameServer found.
-  #   order: Ascending # Default is "Ascending" so smaller capacity will be removed first on down scaling.
+  #   key: players # The name of the List. No impact if no GameServer found.
+  #   order: Ascending # Default is "Ascending" so smaller available capacity will be removed first on down scaling.
   #      
   template:
     # GameServer metadata
@@ -210,10 +210,11 @@ The `spec` field is the actual `Fleet` specification and it is composed as follo
   - `Fleet's Scheduling Strategy`: The GameServers associated with the GameServerSet are sorted based on either `Packed` or `Distributed` strategy.
       - `Packed`: Agones maximizes resource utilization by trying to populate nodes that are already in use before allocating GameServers to other nodes.
       - `Distributed`: Agones employs this strategy to spread out GameServer allocations, ensuring an even distribution of GameServers across the available nodes.
-- `priorities`: (Alpha, requires `CountsAndLists` feature flag): Defines which gameservers in the Fleet are most important to keep around - impacts scale down logic.
+- `priorities`: (Alpha, requires `CountsAndLists` feature flag): Defines which `GameServers` in the Fleet are most
+  important to keep around - impacts scale down logic.
   - `type`: Sort by a "Counter" or a "List".
   - `key`: The name of the Counter or List. If not found on the GameServer, has no impact.
-  - `order`: Order: Sort by “Ascending” or “Descending”. “Descending” a bigger Capacity is preferred. “Ascending” would be smaller Capacity is preferred.
+  - `order`: Order: Sort by “Ascending” or “Descending”. “Descending” a bigger available capacity is preferred. “Ascending” would be smaller available capacity is preferred.
 - `template` a full `GameServer` configuration template.
    See the [GameServer]({{< relref "gameserver.md" >}}) reference for all available fields.
 
