@@ -290,8 +290,6 @@ func TestControllerGameServersTotal(t *testing.T) {
 }
 
 func TestControllerFleetOnDeleting(t *testing.T) {
-	runtime.FeatureTestMutex.Lock()
-	defer runtime.FeatureTestMutex.Unlock()
 
 	resetMetrics()
 	exporter := &metricExporter{}
