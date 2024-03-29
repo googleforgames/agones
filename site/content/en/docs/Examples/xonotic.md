@@ -84,7 +84,7 @@ Post-gameplay, consider cleaning up resources:
 To delete the Agones fleet you deployed, execute the following command. This will remove the fleet along with all the game server instances it manages:
 
 ```bash
-kubectl delete -f leet.yaml
+kubectl delete -f fleet.yaml
 ```
 
 ### Remove Allocated GameServers
