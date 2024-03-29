@@ -400,8 +400,6 @@ func TestControllerFleetReplicasCount_ResetMetricsOnDelete(t *testing.T) {
 }
 
 func TestControllerFleetAutoScalerOnDeleting(t *testing.T) {
-	runtime.FeatureTestMutex.Lock()
-	defer runtime.FeatureTestMutex.Unlock()
 
 	resetMetrics()
 	exporter := &metricExporter{}
