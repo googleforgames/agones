@@ -97,7 +97,6 @@ var (
 		// Beta features
 		FeatureDisableResyncOnSDKServer: true,
 
-
 		// Alpha features
 		FeatureCountsAndLists:                   false,
 		FeatureGKEAutopilotExtendedDurationPods: false,
