@@ -4,12 +4,16 @@ linkTitle: "Custom Controller"
 date:
 publishDate:
 description: >
-  This Custom Controller example shows how to deploy and run the Custom Controller example on Agones, a tool to monitor the running dedicated game servers on Kubernetes. Prior to beginning, ensure the following prerequisites are met:
+  This Custom Controller example shows how to create, deploy and run a Custom Kubernetes Controller for Agones that logs changes to GameServers and modifies their labels.
+---
+
+## Prerequisite
+
+ To get started, ensure the following prerequisites are met:
 
   - You have a running Kubernetes cluster.
   
-  - Agones is installed on your cluster.
----
+  - Agones is installed on your cluster. See [Agones guide](https://agones.dev/site/docs/installation/install-agones/).
 
 ## Deploy the Custom Controller
 
@@ -74,11 +78,30 @@ kubectl edit gameserver <simple-game-server-name>
 
 This will open an editor for you to make changes, and the modification will be reflected in log events.
 
-
 ## Delete the GameServer
 
 To remove your game server and track its deletion in the log events, run the following command:
 
 ```bash
 kubectl delete gameserver <simple-game-server-name>
+```
+
+## Cleaning Up
+
+When you're done with the Agones fleet and the custom controller, it's a good practice to clean up the resources to prevent unnecessary resource consumption. Follow these steps to remove them:
+
+### Remove the Fleet
+
+To delete the Agones fleet you deployed, execute the following command. This will remove the fleet along with all the game server instances it manages:
+
+```bash
+kubectl delete -f examples/simple-game-server/fleet.yaml
+```
+
+### Remove the Custom Controller
+
+To remove the custom controller from your cluster, execute the following command. This will delete the deployment that you created earlier.
+
+```bash
+kubectl delete -f deployment.yaml
 ```
