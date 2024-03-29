@@ -346,13 +346,15 @@ Convenience function, which retrieves the length of the results of [`Alpha().Get
 
 ### Player Tracking
 
-{{< alpha title="Player Tracking" gate="PlayerTracking" >}}
+{{% pageinfo color="info" %}}
+[Counters and Lists]({{< ref "/docs/Guides/counters-and-lists.md" >}}) will eventually replace the Alpha functionality
+of Player Tracking, which will subsequently be removed from Agones.
 
-{{< alert title="Warning" color="warning">}}
-[Counters and Lists](#counters-and-lists) will eventually replace the Alpha functionality of Player Tracking, which will subsequently be
-removed from Agones. If you are currently using this Alpha feature, we would love for you to test (and ideally migrate
-to!) this new functionality to ensure it will meet all your needs.
-{{< /alert >}}
+If you are currently using this Alpha feature, we would love for you to test (and ideally migrate to!) this new
+functionality to Counters and Lists to ensure it meet all your needs.
+{{% /pageinfo %}}
+
+{{< alpha title="Player Tracking" gate="PlayerTracking" >}}
 
 #### Alpha().PlayerConnect(playerID)
 
