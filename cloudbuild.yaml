@@ -166,10 +166,6 @@ steps:
     dir: build
     env: ['REGISTRY=${_REGISTRY}']
     args: [-j, '4', push]
-
-  #
-  # Build all the SDKs
-  #
   - name: make-docker
     id: build-sdks
     waitFor:
@@ -178,18 +174,6 @@ steps:
       - ensure-build-sdk-image-base
     dir: build
     args: [-j, '4', --output-sync=recurse, build-sdks]
-
-  #
-  # Cache the cpp sdk build directory, to speed up subsequent builds (considerably)
-  #
-  - name: us-docker.pkg.dev/$PROJECT_ID/ci/save_cache
-    args:
-      - --bucket=gs://$_CACHE_BUCKET
-      - --key=$_CPP_SDK_BUILD_CACHE_KEY-$( checksum sdks/cpp/CMakeLists.txt )
-      - --path=sdks/cpp/.build
-    id: cpp-sdk-build-save-cache
-    waitFor:
-      - build-sdks
 
   #
   # Run the all the automated tests (except e2e) in parallel
@@ -205,28 +189,28 @@ steps:
     args: [-j, '5', --output-sync=target, test]
 
   #
-  # Cache the htmltest url checks. Faster builds, and lower network flakiness.
+  # SDK conformance tests
   #
-  - name: us-docker.pkg.dev/$PROJECT_ID/ci/save_cache
-    args:
-      - --bucket=gs://$_CACHE_BUCKET
-      - --key=$_HTMLTEST_CACHE_KEY
-      - --path=site/tmp
-    id: htmltest-save-cache
+  - name: make-docker
+    id: sdk-conformance
+    dir: build
+    env: ['REGISTRY=${_REGISTRY}']
+    args: [-j, '5', --output-sync=target, run-sdk-conformance-tests]
     waitFor:
+      - build-images
       - tests
 
   #
   # Site preview
   #
-
-  # don't promote, as it can cause failures when two deploys try and promote at the same time.
   - name: make-docker  # build a preview of the website
     id: site-static
     waitFor: [tests]
     dir: build
     args: [site-static-preview, site-gen-app-yaml, SERVICE=preview]
-  - name: gcr.io/cloud-builders/gcloud  # deploy the preview of the website
+  # deploy the preview of the website; # don't promote, as it can cause failures
+  # when two deploys try and promote at the same time.
+  - name: gcr.io/cloud-builders/gcloud
     id: deploy-site-static
     waitFor: [site-static]
     dir: site
@@ -234,6 +218,10 @@ steps:
     env:
       - GOPATH=/workspace/go
       - GO111MODULE=on
+
+  #
+  # End to end tests
+  #
 
   # wait for us to be the oldest ongoing build before we run e2es
   - name: gcr.io/cloud-builders/gcloud
@@ -337,42 +325,42 @@ steps:
       - cancel-orphan-e2e-tests
 
   #
-  # SDK conformance tests
+  # Store caches, to speed up subsequent builds (considerably)
   #
-  - name: make-docker
-    id: sdk-conformance
-    dir: build
-    env: ['REGISTRY=${_REGISTRY}']
-    args: [-j, '5', --output-sync=target, run-sdk-conformance-tests]
+  - name: us-docker.pkg.dev/$PROJECT_ID/ci/save_cache
+    args:
+      - --bucket=gs://$_CACHE_BUCKET
+      - --key=$_CPP_SDK_BUILD_CACHE_KEY-$( checksum sdks/cpp/CMakeLists.txt )
+      - --path=sdks/cpp/.build # CPP SDK build
+    id: cpp-sdk-build-save-cache
     waitFor:
-      - build-images
-      - tests
-
-  #
-  # Cache the CPP conformance build directory, to speed up subsequent builds (considerably)
-  #
+      - build-sdks
   - name: us-docker.pkg.dev/$PROJECT_ID/ci/save_cache
     args:
       - --bucket=gs://$_CACHE_BUCKET
       - --key=$_CPP_SDK_CONFORMANCE_CACHE_KEY-$( sdks/cpp/CMakeLists.txt )
-      - --path=test/sdk/cpp/sdk
+      - --path=test/sdk/cpp/sdk # CPP conformance test build
     id: cpp-sdk-conformance-save-cache
     waitFor:
       - sdk-conformance
-
-  #
-  # Cache the Rust SDK build directory, to speed up subsequent builds (considerably)
-  #
   - name: us-docker.pkg.dev/$PROJECT_ID/ci/save_cache
     args:
       - --bucket=gs://$_CACHE_BUCKET
       - --key=$_RUST_SDK_BUILD_CACHE_KEY-$( checksum test/sdk/rust/Cargo.toml )
-      - --path=test/sdk/rust/.cargo
+      - --path=test/sdk/rust/.cargo # Rust conformance test build
       - --path=test/sdk/rust/.cargo-targets
       - --no-clobber
     id: rust-build-save-cache
     waitFor:
       - sdk-conformance
+  - name: us-docker.pkg.dev/$PROJECT_ID/ci/save_cache
+    args:
+      - --bucket=gs://$_CACHE_BUCKET
+      - --key=$_HTMLTEST_CACHE_KEY
+      - --path=site/tmp # htmltest URL checks
+    id: htmltest-save-cache
+    waitFor:
+      - tests
 
   #
   # Zip up artifacts and push to storage
@@ -385,6 +373,7 @@ steps:
     waitFor: [build-images, tests]
     dir: cmd/sdk-server/bin
     args: [-m, cp, '*.zip', gs://agones-artifacts/sdk-server]
+
 substitutions:
   _CACHE_BUCKET: agones-build-cache
   _HTMLTEST_CACHE_KEY: htmltest-0.10.1
