@@ -54,6 +54,7 @@ List of items to do for upgrading to {version_1} {version_2} {version_3}
         - [ ] Recreate clusters with new scripts: `cd build; make GCP_PROJECT=agones-images gcloud-e2e-test-cluster`
     - [ ] Update the Cloud Build configuration to run e2e test on the new created clusters, and disable the e2e test on the cluster with the oldest supported K8s version
         - [ ] Update the `versionsAndRegions` variable to add the new supported version and remove the oldest supported K8s version in `cloudbuild.yaml` `submit-e2e-test-cloud-build` step
+        - [ ] Update the `featureWithGateByVersion` variable to add the new supported version and remove the oldest supported K8s version in `cloudbuild.yaml` `submit-e2e-test-cloud-build` step
         - [ ] Run `make lint` for code quality check.
         - [ ] Submit a PR to trigger the e2e tests and verfiy they all pass
     - [ ] After the PR that includes the above Cloud Build configuration change has been merged and all the existing pending PRs in the Cloud Build queue have picked up the new configuration, submit a separate PR to update the e2e clusters terraform module to remove the e2e cluster with the oldest supported K8s version.

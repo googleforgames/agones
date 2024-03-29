@@ -38,13 +38,6 @@ const (
 	////////////////
 	// Alpha features
 
-	// FeaturePlayerAllocationFilter is a feature flag that enables the ability for Allocations to filter based on
-	// player capacity.
-	FeaturePlayerAllocationFilter Feature = "PlayerAllocationFilter"
-
-	// FeaturePlayerTracking is a feature flag to enable/disable player tracking features.
-	FeaturePlayerTracking Feature = "PlayerTracking"
-
 	// FeatureCountsAndLists is a feature flag that enables/disables counts and lists feature
 	// (a generic implenetation of the player tracking feature).
 	FeatureCountsAndLists Feature = "CountsAndLists"
@@ -52,12 +45,19 @@ const (
 	// FeatureDisableResyncOnSDKServer is a feature flag to enable/disable resync on SDK server.
 	FeatureDisableResyncOnSDKServer Feature = "DisableResyncOnSDKServer"
 
+	// FeatureGKEAutopilotExtendedDurationPods enables the use of Extended Duration pods
+	// when Agones is running on Autopilot. Available on 1.28+ only.
+	FeatureGKEAutopilotExtendedDurationPods = "GKEAutopilotExtendedDurationPods"
+
+	// FeaturePlayerAllocationFilter is a feature flag that enables the ability for Allocations to filter based on
+	// player capacity.
+	FeaturePlayerAllocationFilter Feature = "PlayerAllocationFilter"
+
+	// FeaturePlayerTracking is a feature flag to enable/disable player tracking features.
+	FeaturePlayerTracking Feature = "PlayerTracking"
+
 	////////////////
 	// Dev features
-
-	// FeatureGKEAutopilotExtendedDurationPods enables the use of Extended Duration pods
-	// when Agones is running on Autopilot.
-	FeatureGKEAutopilotExtendedDurationPods = "GKEAutopilotExtendedDurationPods"
 
 	////////////////
 	// Example feature
@@ -99,16 +99,16 @@ var (
 	// In each of these, keep the feature sorted by descending maturity then alphabetical
 	featureDefaults = map[Feature]bool{
 		// Beta features
-		FeatureFleetAllocateOverflow: true,
+		FeatureDisableResyncOnSDKServer: true,
+		FeatureFleetAllocateOverflow:    true,
 
 		// Alpha features
-		FeaturePlayerAllocationFilter:   false,
-		FeaturePlayerTracking:           false,
-		FeatureDisableResyncOnSDKServer: false,
-		FeatureCountsAndLists:           false,
+		FeatureCountsAndLists:                   false,
+		FeatureGKEAutopilotExtendedDurationPods: false,
+		FeaturePlayerAllocationFilter:           false,
+		FeaturePlayerTracking:                   false,
 
 		// Dev features
-		FeatureGKEAutopilotExtendedDurationPods: false,
 
 		// Example feature
 		FeatureExample: false,
