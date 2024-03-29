@@ -92,7 +92,7 @@ After playing SuperTuxKart, it's a good practice to clean up the resources to pr
 To delete the Agones fleet you deployed, execute the following command. This will remove the fleet along with all the game server instances it manages:
 
 ```bash
-kubectl delete -f examples/simple-game-server/fleet.yaml
+kubectl delete -f fleet.yaml
 ```
 
 ### Remove Allocated GameServers
