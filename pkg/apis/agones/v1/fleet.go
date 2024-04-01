@@ -15,14 +15,15 @@
 package v1
 
 import (
-	"agones.dev/agones/pkg"
-	"agones.dev/agones/pkg/apis"
-	"agones.dev/agones/pkg/apis/agones"
-	"agones.dev/agones/pkg/util/runtime"
 	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/validation/field"
+
+	"agones.dev/agones/pkg"
+	"agones.dev/agones/pkg/apis"
+	"agones.dev/agones/pkg/apis/agones"
+	"agones.dev/agones/pkg/util/runtime"
 )
 
 const (
@@ -59,8 +60,6 @@ type FleetList struct {
 type FleetSpec struct {
 	// Replicas are the number of GameServers that should be in this set. Defaults to 0.
 	Replicas int32 `json:"replicas"`
-	// [Stage: Beta]
-	// [FeatureFlag:FleetAllocationOverflow]
 	// Labels and/or Annotations to apply to overflowing GameServers when the number of Allocated GameServers is more
 	// than the desired replicas on the underlying `GameServerSet`
 	// +optional
@@ -139,7 +138,7 @@ func (f *Fleet) GameServerSet() *GameServerSet {
 
 	gsSet.ObjectMeta.Labels[FleetNameLabel] = f.ObjectMeta.Name
 
-	if runtime.FeatureEnabled(runtime.FeatureFleetAllocateOverflow) && f.Spec.AllocationOverflow != nil {
+	if f.Spec.AllocationOverflow != nil {
 		gsSet.Spec.AllocationOverflow = f.Spec.AllocationOverflow.DeepCopy()
 	}
 
@@ -221,11 +220,7 @@ func (f *Fleet) Validate(apiHooks APIHooks) field.ErrorList {
 	allErrs = append(allErrs, validateObjectMeta(&f.Spec.Template.ObjectMeta, field.NewPath("spec", "template", "metadata"))...)
 
 	if f.Spec.AllocationOverflow != nil {
-		if runtime.FeatureEnabled(runtime.FeatureFleetAllocateOverflow) {
-			allErrs = append(allErrs, f.Spec.AllocationOverflow.Validate(field.NewPath("spec", "allocationOverflow"))...)
-		} else {
-			allErrs = append(allErrs, field.Forbidden(field.NewPath("spec", "allocationOverflow"), "Allocation Overflow is not enabled"))
-		}
+		allErrs = append(allErrs, f.Spec.AllocationOverflow.Validate(field.NewPath("spec", "allocationOverflow"))...)
 	}
 
 	if f.Spec.Priorities != nil && !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {

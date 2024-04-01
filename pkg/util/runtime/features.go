@@ -31,10 +31,6 @@ const (
 	////////////////
 	// Beta features
 
-	// FeatureFleetAllocateOverflow enables setting labels and/or annotations on Allocated GameServers
-	// if the desired number of the underlying GameServerSet drops below the number of Allocated GameServers.
-	FeatureFleetAllocateOverflow Feature = "FleetAllocationOverflow"
-
 	////////////////
 	// Alpha features
 
@@ -100,7 +96,6 @@ var (
 	featureDefaults = map[Feature]bool{
 		// Beta features
 		FeatureDisableResyncOnSDKServer: true,
-		FeatureFleetAllocateOverflow:    true,
 
 		// Alpha features
 		FeatureCountsAndLists:                   false,
