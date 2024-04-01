@@ -23,6 +23,22 @@ Check the [Client SDK Documentation]({{< relref "_index.md" >}}) for more detail
 | Configuration   | WatchGameServer     | ✔️           |
 | Metadata        | SetAnnotation       | ✔️           |
 | Metadata        | SetLabel            | ✔️           |
+{{% feature expiryVersion="1.40.0" %}}
+| Counters        | GetCounterCount     | ❌           |
+| Counters        | SetCounterCount     | ❌           |
+| Counters        | IncrementCounter    | ❌           |
+| Counters        | DecrementCounter    | ❌           |
+| Counters        | SetCounterCapacity  | ❌           |
+| Counters        | GetCounterCapacity  | ❌           |
+| Lists           | AppendListValue     | ❌           |
+| Lists           | DeleteListValue     | ❌           |
+| Lists           | SetListCapacity     | ❌           |
+| Lists           | GetListCapacity     | ❌           |
+| Lists           | ListContains        | ❌           |
+| Lists           | GetListLength       | ❌           |
+| Lists           | GetListValues       | ❌           |
+{{% /feature %}}
+{{% feature publishVersion="1.40.0" %}}
 | Counters        | GetCounterCount     | ✔️           |
 | Counters        | SetCounterCount     | ✔️           |
 | Counters        | IncrementCounter    | ✔️           |
@@ -36,6 +52,7 @@ Check the [Client SDK Documentation]({{< relref "_index.md" >}}) for more detail
 | Lists           | ListContains        | ✔️           |
 | Lists           | GetListLength       | ✔️           |
 | Lists           | GetListValues       | ✔️           |
+{{% /feature %}}
 | Player Tracking | GetConnectedPlayers | ✔️           |
 | Player Tracking | GetPlayerCapacity   | ✔️           |
 | Player Tracking | GetPlayerCount      | ✔️           |
@@ -201,6 +218,7 @@ var playerId = "player1";
 bool isConnected = await agones.Alpha().IsPlayerConnectedAsync(playerId);
 ```
 
+{{% feature publishVersion="1.40.0" %}}
 ## Counters
 
 ### Alpha: GetCounterCount
@@ -278,7 +296,7 @@ long count = await agones.Alpha().GetCounterCapacityAsync(key);
 
 Appends a string to a List's values list, given the List's key (name) and the string value. Will
 error if the string already exists in the list. Will error if the key was not predefined in the
-GameServer resource on creation.
+GameServer resource on creation. Will error if the list is already at capacity.
 
 ```csharp
 string key = "players";
@@ -349,6 +367,7 @@ was not predefined in the GameServer resource on creation.
 string key = "players";
 List<string> values = await agones.Alpha().GetListValuesAsync(key);
 ```
+{{% /feature %}}
 
 ## Remarks
 - All requests other than `ConnectAsync` will wait for up to 15 seconds before giving up, time to wait can also be set in the constructor.
