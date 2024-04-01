@@ -34,9 +34,7 @@ type fleetKey struct {
 }
 
 // increment adds the count of gameservers for a given fleetName and state
-func (c GameServerCount) increment(fleetName, fleetNamespace string, state agonesv1.GameServerState) {
-	key := fleetKey{name: fleetName, namespace: fleetNamespace}
-
+func (c GameServerCount) increment(key fleetKey, state agonesv1.GameServerState) {
 	fleets, ok := c[state]
 	if !ok {
 		fleets = map[fleetKey]int64{}
@@ -61,14 +59,31 @@ func (c GameServerCount) record(gameservers []*agonesv1.GameServer) error {
 	// Otherwise OpenCensus will write the last value recorded to the prom endpoint.
 	// TL;DR we can't remove a gauge
 	c.reset()
+
+	// only record gameservers's fleet count
+	fleetNameMap := map[fleetKey]struct{}{}
+
 	// counts gameserver per state and fleet
 	for _, g := range gameservers {
-		c.increment(g.Labels[agonesv1.FleetNameLabel], g.GetNamespace(), g.Status.State)
+		fleetName := g.Labels[agonesv1.FleetNameLabel]
+		fleetNamespace := g.GetNamespace()
+		key := fleetKey{name: fleetName, namespace: fleetNamespace}
+
+		fleetNameMap[key] = struct{}{}
+		c.increment(key, g.Status.State)
 	}
 
 	errs := []error{}
+	deletedFleets := map[agonesv1.GameServerState][]fleetKey{}
 	for state, fleets := range c {
 		for fleet, count := range fleets {
+			if _, ok := fleetNameMap[fleet]; !ok {
+				if _, ok := deletedFleets[state]; !ok {
+					deletedFleets[state] = []fleetKey{}
+				}
+				deletedFleets[state] = append(deletedFleets[state], fleet)
+			}
+
 			if fleet.name == "" {
 				fleet.name = noneValue
 			}
@@ -80,6 +95,12 @@ func (c GameServerCount) record(gameservers []*agonesv1.GameServer) error {
 				tag.Upsert(keyFleetName, fleet.name), tag.Upsert(keyNamespace, fleet.namespace)}, gameServerCountStats.M(count)); err != nil {
 				errs = append(errs, err)
 			}
+		}
+	}
+
+	for state, fleets := range deletedFleets {
+		for _, fleet := range fleets {
+			delete(c[state], fleet)
 		}
 	}
 	return errors.NewAggregate(errs)
