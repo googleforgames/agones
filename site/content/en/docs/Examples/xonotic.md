@@ -17,6 +17,8 @@ description: >
 
   - The Xonotic client downloaded for gameplay. Download it from [Xonotic](http://www.xonotic.org)
 
+  - Example code for Xonotic on Agones is available {{< ghlink href="examples/xonotic" >}}here{{< /ghlink >}}
+
 ## Deploy the Agones Fleet
 
 Deploy the fleet configuration for your Xonotic servers using the command:
@@ -71,9 +73,17 @@ After allocating a GameServer from the fleet and obtaining its status and IP, yo
 
 **Multiplayer Mode**: From the main menu, select "Multiplayer".
 
+![Select Multiplayer](/images/xonotic-front-page.png)
+
 **Server Connection**: Choose to join a server manually and input the IP and port number you obtained from the `kubectl get gameservers` command.
 
+![Enter IP and Port](/images/xonotic-enter-ip-port.png)
+
+
 **Join the Game**: After entering the server details, proceed to join the server. You should now be connected to your Agones-managed Xonotic game server and ready to play.
+
+![Join the Game](/images/xonotic-join-game.png)
+
 
 ## Cleaning Up
 
@@ -85,12 +95,4 @@ To delete the Agones fleet you deployed, execute the following command. This wil
 
 ```bash
 kubectl delete -f fleet.yaml
-```
-
-### Remove Allocated GameServers
-
-To delete the allocated game server, execute the following command.
-
-```bash
-kubectl delete -f <your-gameserver.yaml>
 ```
