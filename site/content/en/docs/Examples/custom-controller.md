@@ -15,6 +15,8 @@ description: >
   
   - Agones is installed on your cluster. See [Agones guide](https://agones.dev/site/docs/installation/install-agones/).
 
+  - Example custom controller code is available {{< ghlink href="examples/custom-controller" >}}here{{< /ghlink >}}
+
 ## Deploy the Custom Controller
 
 For a quick deployment of the custom controller on your cluster, execute:
