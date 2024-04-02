@@ -73,16 +73,16 @@ After allocating a GameServer from the fleet and obtaining its status and IP, yo
 
 **Multiplayer Mode**: From the main menu, select "Multiplayer".
 
-![Select Multiplayer](/images/xonotic-front-page.png)
+![Select Multiplayer](../../../images/xonotic-front-page.png)
 
 **Server Connection**: Choose to join a server manually and input the IP and port number you obtained from the `kubectl get gameservers` command.
 
-![Enter IP and Port](/images/xonotic-enter-ip-port.png)
+![Enter IP and Port](../../../images/xonotic-enter-ip-port.png)
 
 
 **Join the Game**: After entering the server details, proceed to join the server. You should now be connected to your Agones-managed Xonotic game server and ready to play.
 
-![Join the Game](/images/xonotic-join-game.png)
+![Join the Game](../../../images/xonotic-join-game.png)
 
 
 ## Cleaning Up
