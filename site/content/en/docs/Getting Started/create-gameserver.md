@@ -169,6 +169,8 @@ ACK: Hello World !
 You can finally type `EXIT` and hit `<Enter>`, which tells the SDK to run the 
 [Shutdown command]({{< ref "/docs/Guides/Client SDKs/_index.md#shutdown" >}}), and therefore shuts down the `GameServer`.
 
+To exit `nc` you can press `<ctrl>+c`.
+
 If you run `kubectl describe gameserver` again - either the GameServer will be gone completely, or it will be in `Shutdown` state, on the way to being deleted.
 
 {{< alert title="Note" color="info">}}
