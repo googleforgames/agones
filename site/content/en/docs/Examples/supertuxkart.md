@@ -16,6 +16,7 @@ description: >
   - Agones is installed on your cluster. See [Agones guide](https://agones.dev/site/docs/installation/install-agones/).
 
   - Supertuxkart client is downloaded separately to play. See [SuperTuxKart](https://supertuxkart.net/)
+  - Example code for Supertuxkart on Agones is available {{< ghlink href="examples/supertuxkart" >}}here{{< /ghlink >}}
 
 ## Deploy the Agones Fleet
 
@@ -93,12 +94,4 @@ To delete the Agones fleet you deployed, execute the following command. This wil
 
 ```bash
 kubectl delete -f fleet.yaml
-```
-
-### Remove Allocated GameServers
-
-To delete the allocated game server, execute the following command.
-
-```bash
-kubectl delete -f <your-gameserver.yaml>
 ```
