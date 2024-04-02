@@ -59,8 +59,6 @@ type GameServerSetList struct {
 type GameServerSetSpec struct {
 	// Replicas are the number of GameServers that should be in this set
 	Replicas int32 `json:"replicas"`
-	// [Stage: Beta]
-	// [FeatureFlag:FleetAllocationOverflow]
 	// Labels and Annotations to apply to GameServers when the number of Allocated GameServers drops below
 	// the desired replicas on the underlying `GameServerSet`
 	// +optional
