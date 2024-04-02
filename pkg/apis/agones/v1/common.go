@@ -184,6 +184,7 @@ type Priority struct {
 	Key string `json:"key"`
 	// Order: Sort by "Ascending" or "Descending". "Descending" a bigger available capacity is preferred.
 	// "Ascending" would be smaller available capacity is preferred.
+	// The default sort order is "Ascending"
 	Order string `json:"order"`
 }
 
