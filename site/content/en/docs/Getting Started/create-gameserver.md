@@ -153,38 +153,33 @@ to the `GameServer`, please check the
 
 ### 3. Connect to the GameServer
 
-{{< alert title="Note" color="info">}}
-If you have Agones installed on Google Kubernetes Engine, and are using
-  Cloud Shell for your terminal, UDP is blocked. For this step, we recommend
-  SSH'ing into a running VM in your project, such as a Kubernetes node.
-  You can click the 'SSH' button on the [Google Compute Engine Instances](https://console.cloud.google.com/compute/instances)
-  page to do this.
-  Run `toolbox` on GKE Node to run docker container with tools and then `nc` command would be available.
-{{< /alert >}}
+You can now communicate with the Game Server, by running:
+```shell
+nc -u {IP} {PORT}
+```
 
-You can now communicate with the Game Server :
+Now write any text you would like, and hit `<Enter>`. You should see your text echoed back, like so: 
+
+```shell
+nc -u 35.233.183.43 7190
+Hello World !
+ACK: Hello World !
+```
+
+You can finally type `EXIT` and hit `<Enter>`, which tells the SDK to run the 
+[Shutdown command]({{< ref "/docs/Guides/Client SDKs/_index.md#shutdown" >}}), and therefore shuts down the `GameServer`.
+
+If you run `kubectl describe gameserver` again - either the GameServer will be gone completely, or it will be in `Shutdown` state, on the way to being deleted.
 
 {{< alert title="Note" color="info">}}
 If you do not have netcat installed
-  (i.e. you get a response of `nc: command not found`),
-  you can install netcat by running `sudo apt install netcat`.
+(i.e. you get a response of `nc: command not found`),
+you can install netcat by running `sudo apt install netcat`.
 
 If you are on Windows, you can alternatively install netcat on
 [WSL](https://docs.microsoft.com/en-us/windows/wsl/install-win10),
 or download a version of netcat for Windows from [nmap.org](https://nmap.org/ncat/).
 {{< /alert >}}
-
-```
-nc -u {IP} {PORT}
-Hello World !
-ACK: Hello World !
-EXIT
-```
-
-You can finally type `EXIT` which tells the SDK to run the [Shutdown command]({{< ref "/docs/Guides/Client SDKs/_index.md#shutdown" >}}), and therefore shuts down the `GameServer`.
-
-If you run `kubectl describe gameserver` again - either the GameServer will be gone completely, or it will be in `Shutdown` state, on the way to being deleted.
-
 
 ## Next Step
 
