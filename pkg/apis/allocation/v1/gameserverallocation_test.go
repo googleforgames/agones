@@ -36,9 +36,19 @@ func TestGameServerAllocationApplyDefaults(t *testing.T) {
 
 	assert.Equal(t, apis.Packed, gsa.Spec.Scheduling)
 
-	gsa = &GameServerAllocation{Spec: GameServerAllocationSpec{Scheduling: apis.Distributed}}
+	priorities := []agonesv1.Priority{
+		{Type: agonesv1.GameServerPriorityList},
+		{Type: agonesv1.GameServerPriorityCounter},
+	}
+	expectedPrioritiesWithDefault := []agonesv1.Priority{
+		{Type: agonesv1.GameServerPriorityList, Order: agonesv1.GameServerPriorityAscending},
+		{Type: agonesv1.GameServerPriorityCounter, Order: agonesv1.GameServerPriorityAscending},
+	}
+
+	gsa = &GameServerAllocation{Spec: GameServerAllocationSpec{Scheduling: apis.Distributed, Priorities: priorities}}
 	gsa.ApplyDefaults()
 	assert.Equal(t, apis.Distributed, gsa.Spec.Scheduling)
+	assert.Equal(t, expectedPrioritiesWithDefault, gsa.Spec.Priorities)
 
 	runtime.FeatureTestMutex.Lock()
 	defer runtime.FeatureTestMutex.Unlock()
