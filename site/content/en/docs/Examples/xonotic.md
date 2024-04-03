@@ -13,49 +13,52 @@ description: >
 
   - You have a running Kubernetes cluster.
 
-  - Agones is installed on your cluster. Refer to the [Agones guide](https://agones.dev/site/docs/installation/install-agones/).
+  - Agones is installed on your cluster. Refer to the [Agones guide](https://agones.dev/site/docs/installation/install-agones/) for the instructions.
 
   - The Xonotic client downloaded for gameplay. Download it from [Xonotic](http://www.xonotic.org)
 
-  - Example code for Xonotic on Agones is available {{< ghlink href="examples/xonotic" >}}here{{< /ghlink >}}
+  - (Optional) Review {{< ghlink href="examples/xonotic" >}}Xonotic code{{< /ghlink >}} to see the details of this example.
 
-## Deploy the Agones Fleet
 
-Deploy the fleet configuration for your Xonotic servers using the command:
+## Create a Fleet
 
-```bash
-kubectl apply -f fleet.yaml
-```
-
-## Verify Fleet Creation
-
-After applying the fleet configuration, you can check to ensure that the fleet has been successfully created:
+Let's create a Fleet using the following command:
 
 ```bash
-kubectl get fleets
+kubectl apply -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/xonotic/fleet.yaml
 ```
 
-Verify that the Xonotic fleet status is `Ready`, confirming that the servers are correctly set up. Further, check the status of individual pods:
+You should see a successful output similar to this :
+
+```
+fleet.agones.dev/xonotic created
+```
+
+This has created a Fleet record inside Kubernetes, which in turn creates two warm [GameServers]({{< ref "/docs/Reference/gameserver.md" >}})
+that are available to be allocated for a game session.
 
 ```bash
-kubectl get pods
+kubectl get fleet
+```
+It should look something like this:
+
+```
+NAME           SCHEDULING   DESIRED   CURRENT   ALLOCATED   READY   AGE
+xonotic        Packed       2         2         0           2       55s
 ```
 
-The Xonotic server pods should be `Running`, indicating they're active and ready for connections.
+You can also see the GameServers that have been created by the Fleet by running `kubectl get gameservers`,
+the GameServer will be prefixed by `xonotic`.
 
-## Allocate a GameServer
-
-Allocate a GameServer from the fleet using:
-
-```bash
-kubectl apply -f <your-gameserver.yaml>
+```
+NAME                       STATE   ADDRESS          PORT   NODE                                        AGE
+xonotic-7lk8x-hgfrg        Ready   34.71.168.92     7206   gk3-genai-quickstart-pool-3-ba2a705f-wpmc   103s
+xonotic-7lk8x-rwhst        Ready   34.71.168.92     7330   gk3-genai-quickstart-pool-3-ba2a705f-wpmc   103s
 ```
 
-After applying, you can monitor the newly created GameServer resource, its status, and IP:
+For the full details of the YAML file head to the [Fleet Specification Guide]({{< ref "/docs/Reference/fleet.md" >}})
 
-```bash
-kubectl get gameservers
-```
+{{< alert title="Note" color="info">}} The game servers deployed from a `Fleet` resource will be deployed in the same namespace. The above example omits specifying a namespace, which implies both the `Fleet` and the associated `GameServer` resources will be deployed to the `default` namespace. {{< /alert >}}
 
 ## Viewing GameServer Logs
 
@@ -74,6 +77,7 @@ After allocating a GameServer from the fleet and obtaining its status and IP, yo
 **Multiplayer Mode**: From the main menu, select "Multiplayer".
 
 ![Select Multiplayer](../../../images/xonotic-front-page.png)
+
 
 **Server Connection**: Choose to join a server manually and input the IP and port number you obtained from the `kubectl get gameservers` command.
 
@@ -94,5 +98,5 @@ Post-gameplay, consider cleaning up resources:
 To delete the Agones fleet you deployed, execute the following command. This will remove the fleet along with all the game server instances it manages:
 
 ```bash
-kubectl delete -f fleet.yaml
+kubectl delete -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/xonotic/fleet.yaml
 ```
