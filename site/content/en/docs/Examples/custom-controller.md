@@ -9,17 +9,17 @@ description: >
 
 ## Prerequisite
 
- To get started, ensure the following prerequisites are met:
+To get started, ensure the following prerequisites are met:
 
   - You have a running Kubernetes cluster.
   
-  - Agones is installed on your cluster. See [Agones guide](https://agones.dev/site/docs/installation/install-agones/).
+  - Agones is installed on your cluster. Refer [Agones guide](https://agones.dev/site/docs/installation/install-agones/).
 
   - (Optional) Review {{< ghlink href="examples/custom-controller" >}}example code{{< /ghlink >}} to see the details of this example.
 
-## Deploy a Custom Controller
+## Create a Custom Controller
 
-For a quick deployment of a custom controller on your cluster, execute:
+Let's create a custom controller on your cluster using the following command:
 
 ```bash
 kubectl apply -f https://raw.githubusercontent.com/googleforgames/agones/release-1.39.0/examples/custom-controller/deployment.yaml
