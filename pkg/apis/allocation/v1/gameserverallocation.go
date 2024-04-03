@@ -583,6 +583,12 @@ func (gsa *GameServerAllocation) ApplyDefaults() {
 		gsa.Spec.Scheduling = apis.Packed
 	}
 
+	for i := range gsa.Spec.Priorities {
+		if len(gsa.Spec.Priorities[i].Order) == 0 {
+			gsa.Spec.Priorities[i].Order = agonesv1.GameServerPriorityAscending
+		}
+	}
+
 	if len(gsa.Spec.Selectors) == 0 {
 		gsa.Spec.Required.ApplyDefaults()
 
