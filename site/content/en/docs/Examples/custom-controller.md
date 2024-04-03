@@ -22,7 +22,7 @@ To get started, ensure the following prerequisites are met:
 Let's create a custom controller on your cluster using the following command:
 
 ```bash
-kubectl apply -f https://raw.githubusercontent.com/googleforgames/agones/release-1.39.0/examples/custom-controller/deployment.yaml
+kubectl apply -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/custom-controller/deployment.yaml
 ```
 
 When you run this command, it quickly sets up your controller by doing four things: 
@@ -106,7 +106,7 @@ When you're done with the Agones fleet and the custom controller, it's a good pr
 To delete the Agones fleet you deployed, execute the following command. This will remove the fleet along with all the game server instances it manages:
 
 ```bash
-kubectl delete -f https://raw.githubusercontent.com/googleforgames/agones/release-1.39.0/examples/simple-game-server/fleet.yaml
+kubectl delete -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-game-server/fleet.yaml
 ```
 
 ### Remove the Custom Controller
@@ -114,5 +114,5 @@ kubectl delete -f https://raw.githubusercontent.com/googleforgames/agones/releas
 To remove the custom controller from your cluster, execute the following command. This will delete the deployment that you created earlier.
 
 ```bash
-kubectl delete -f https://raw.githubusercontent.com/googleforgames/agones/release-1.39.0/examples/custom-controller/deployment.yaml
+kubectl delete -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/custom-controller/deployment.yaml
 ```
