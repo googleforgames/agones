@@ -9,60 +9,53 @@ description: >
 
 ## Prerequisite
 
- To get started, ensure the following prerequisites are met:
+To get started, ensure the following prerequisites are met:
 
   - You have a running Kubernetes cluster.
-  
-  - Agones is installed on your cluster. See [Agones guide](https://agones.dev/site/docs/installation/install-agones/).
 
-  - Supertuxkart client is downloaded separately to play. See [SuperTuxKart](https://supertuxkart.net/)
-  - Example code for Supertuxkart on Agones is available {{< ghlink href="examples/supertuxkart" >}}here{{< /ghlink >}}
+  - Agones is installed on your cluster. Refer to the [Agones guide](https://agones.dev/site/docs/installation/install-agones/) for the instructions.
 
-## Deploy the Agones Fleet
+  - (Optional) Review {{< ghlink href="examples/supertuxkart" >}}supertuxkart code{{< /ghlink >}} to see the details of this example.
 
-To apply the fleet configuration to your cluster, use the following command:
+## Create a Fleet
 
-```bash
-kubectl apply -f fleet.yaml
-```
-
-When you run this command, it will:
-- Initiate the creation of a Supertuxkart game server fleet as defined in your `fleet.yaml`.
-- Set up the fleet with 2 replicas, meaning two instances of the game server will be launched.
-- Configure each game server to expose the specified container port (8080).
-- Apply health check settings, with an initial delay of 30 seconds and subsequent checks every 60 seconds.
-- Ensure the deployment strategy is set to `Recreate`, meaning all existing replicas are removed before new ones are created if the fleet is updated.
-
-## Verify Fleet Creation
-
-After applying the fleet configuration, you can check to ensure that the fleet has been successfully created:
+Let's create a Fleet using the following command:
 
 ```bash
-kubectl get fleets
+kubectl apply -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/supertuxkart/fleet.yaml
 ```
 
-Make sure your Supertuxkart servers are all set by checking that their status shows as `Ready`.
-This means they're properly configured. Additionally, you can check the status of individual pods within the fleet:
+You should see a successful output similar to this :
+
+```
+fleet.agones.dev/supertuxkart created
+```
+
+This has created a Fleet record inside Kubernetes, which in turn creates two warm [GameServers]({{< ref "/docs/Reference/gameserver.md" >}})
+that are available to be allocated for a game session.
 
 ```bash
-kubectl get pods
+kubectl get fleet
+```
+It should look something like this:
+
+```
+NAME           SCHEDULING   DESIRED   CURRENT   ALLOCATED   READY   AGE
+supertuxkart   Packed       2         2         0           2       55s
 ```
 
-Ensure Supertuxkart pods are active by confirming their statuses are listed as `Running`.
+You can also see the GameServers that have been created by the Fleet by running `kubectl get gameservers`,
+the GameServer will be prefixed by `supertuxkart`.
 
-## Allocate a GameServer
-
-Allocate a GameServer from the fleet using:
-
-```bash
-kubectl apply -f <your-gameserver.yaml>
+```
+NAME                             STATE       ADDRESS        PORT   NODE                                  AGE
+supertuxkart-xfw2g-bwwkb         Ready       34.82.158.69   7421   gke-agon-default-pool-f18c8e90-1f9k   103s
+supertuxkart-xfw2g-skdnf         Ready       34.82.158.69   7585   gke-agon-default-pool-f18c8e90-1f9k   103s
 ```
 
-After applying, you can monitor the newly created GameServer resource, its status, and IP:
+For the full details of the YAML file head to the [Fleet Specification Guide]({{< ref "/docs/Reference/fleet.md" >}})
 
-```bash
-kubectl get gameservers
-```
+{{< alert title="Note" color="info">}} The game servers deployed from a `Fleet` resource will be deployed in the same namespace. The above example omits specifying a namespace, which implies both the `Fleet` and the associated `GameServer` resources will be deployed to the `default` namespace. {{< /alert >}}
 
 ## Viewing GameServer Logs
 
@@ -76,13 +69,17 @@ kubectl logs -f <supertuxkart-game-server-pod-name>
 
 After allocating a GameServer from the fleet and obtaining its status and IP, you're ready to connect and play. Here’s how to use the server IP and port to join the game with the SuperTuxKart client:
 
-**Launch SuperTuxKart**: Open the SuperTuxKart client you downloaded earlier.
+**Launch SuperTuxKart**: Navigate to the SuperTuxKart client you downloaded earlier. Execute the `run_game.sh` script to launch and play the game.
 
-**Navigate to Online Play**: From the main menu, select the "Online Play" option.
+**Navigate to Online Play**: From the main menu, select the "Online" option and then select "Enter server address" from the available options.
 
-**Enter Server Details**: Look for an option to "Join" a server by IP or a similar option where you can manually enter server details. Input the IP address and port number you obtained from the `kubectl get gameservers` command.
+**Enter Server Details**: In the subsequent screen, you will be prompted to input the IP address and port number in order to join the game. Please enter the IP address and port number obtained from the `kubectl get gameservers` command.
+
+![enter ip and port](../../../images/supertuxkart-enter-ip-port.png)
 
 **Join the Game**: After entering the server details, proceed to join the server. You should now be connected to your Agones-managed SuperTuxKart game server and ready to play.
+
+![start race](../../../images/supertuxkart-start-race.png)
 
 ## Cleaning Up
 
@@ -93,5 +90,5 @@ After playing SuperTuxKart, it's a good practice to clean up the resources to pr
 To delete the Agones fleet you deployed, execute the following command. This will remove the fleet along with all the game server instances it manages:
 
 ```bash
-kubectl delete -f fleet.yaml
+kubectl delete -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/supertuxkart/fleet.yaml
 ```
