@@ -15,7 +15,7 @@ To get started, ensure the following prerequisites are met:
   
   - Agones is installed on your cluster. Refer [Agones guide](https://agones.dev/site/docs/installation/install-agones/).
 
-  - (Optional) Review {{< ghlink href="examples/custom-controller" >}}example code{{< /ghlink >}} to see the details of this example.
+  - (Optional) Review {{< ghlink href="examples/custom-controller" >}}Custom Controller code{{< /ghlink >}} to see the details of this example.
 
 ## Create a Custom Controller
 
