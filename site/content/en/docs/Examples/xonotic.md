@@ -72,7 +72,7 @@ kubectl logs -f <xonotic-game-server-pod-name>
 
 After allocating a GameServer from the fleet and obtaining its status and IP, you're ready to connect and play. Here’s how to use the server IP and port to join the game with the Xonotic server:
 
-**Launch Xonotic**: Start the Xonotic client you previously downloaded.
+**Launch Xonotic**: Start the Xonotic client you previously downloaded by executing the `xonotic-linux64-sdl` or `xonotic-linux64-glx` script to launch and play the game.
 
 **Multiplayer Mode**: From the main menu, select "Multiplayer".
 
