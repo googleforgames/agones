@@ -15,14 +15,14 @@ description: >
   
   - Agones is installed on your cluster. See [Agones guide](https://agones.dev/site/docs/installation/install-agones/).
 
-  - Example custom controller code is available {{< ghlink href="examples/custom-controller" >}}here{{< /ghlink >}}
+  - (Optional) Review {{< ghlink href="examples/custom-controller" >}}example code{{< /ghlink >}} to see the details of this example.
 
-## Deploy the Custom Controller
+## Deploy a Custom Controller
 
-For a quick deployment of the custom controller on your cluster, execute:
+For a quick deployment of a custom controller on your cluster, execute:
 
 ```bash
-kubectl apply -f deployment.yaml
+kubectl apply -f https://raw.githubusercontent.com/googleforgames/agones/release-1.39.0/examples/custom-controller/deployment.yaml
 ```
 
 When you run this command, it quickly sets up your controller by doing four things: 
@@ -33,60 +33,69 @@ When you run this command, it quickly sets up your controller by doing four thin
 
 ## Verify the Controller
 
-To ensure the custom controller is operational, execute the following command. You should see two instances of the controller actively running:
+To ensure the custom controller is operational, execute the following command. You should see two instances of the controller actively running with the prefix `custom-controller`:
 
 ```bash
 kubectl get pods -n agones-system
 ```
+
+You should see a successful output similar to this:
+
+```
+NAME                                 READY   STATUS    RESTARTS   AGE
+custom-controller-74c798cfd8-ld6wk   1/1     Running   0          84s
+custom-controller-74c798cfd8-whpp2   1/1     Running   0          84s
+```
+
+## Create a Fleet
+
+Let's create a Fleet using the following command:
+
+```bash
+kubectl apply -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-game-server/fleet.yaml
+```
+
+You should see a successful output similar to this :
+
+```
+fleet.agones.dev/simple-game-server created
+```
+
+This has created a Fleet record inside Kubernetes, which in turn creates two warm [GameServers]({{< ref "/docs/Reference/gameserver.md" >}})
+that are available to be allocated for a game session.
+
+```bash
+kubectl get fleet
+```
+It should look something like this:
+
+```
+NAME                 SCHEDULING   DESIRED   CURRENT   ALLOCATED   READY     AGE
+simple-game-server   Packed       2         3         0           2         9m
+```
+
+You can also see the GameServers that have been created by the Fleet by running `kubectl get gameservers`,
+the GameServer will be prefixed by `simple-game-server`.
+
+```
+NAME                             STATE     ADDRESS            PORT   NODE      AGE
+simple-game-server-llg4x-rx6rc   Ready     192.168.122.205    7752   minikube   9m
+simple-game-server-llg4x-v6g2r   Ready     192.168.122.205    7623   minikube   9m
+```
+
+For the full details of the YAML file head to the [Fleet Specification Guide]({{< ref "/docs/Reference/fleet.md" >}})
+
+{{< alert title="Note" color="info">}} The game servers deployed from a `Fleet` resource will be deployed in the same namespace. The above example omits specifying a namespace, which implies both the `Fleet` and the associated `GameServer` resources will be deployed to the `default` namespace. {{< /alert >}}
 
 ## Monitor the log events for the custom controller pod
 
 To monitor the log events of the custom controller pod during the creation, modification, and deletion of game servers, use the following command:
 
 ```bash
-kubectl logs -f <custom-controller-pod> -n agones-system
+kubectl logs -f deployments/custom-controller -n agones-system
 ```
 
-**Note**: If a custom controller runs into trouble with logging events, the backup controller will automatically assume the leadership role, ensuring uninterrupted logging of event details.
-
-## Deploy the Agones Fleet
-
-To apply the fleet configuration to your cluster, use the following command:
-
-```bash
-kubectl apply -f examples/simple-game-server/fleet.yaml
-```
-
-When you run this command, it will:
-- Specify that there should be 2 replicas of the Fleet.
-- Specify that the Pods should have a container port named "default" with a value of 7654.
-- Set the resource requests and limits for the container named `simple-game-server`.
-
-## Create a GameServer Instance
-
-Create a gameserver using below command. After this, you'll be able to see logs about the server being created.
-
-```bash
-kubectl create -f <your-gameserver.yaml>
-```
-
-## Edit the GameServer
-
-To edit settings of your game server, use:
-
-```bash
-kubectl edit gameserver <simple-game-server-name> 
-```
-
-This will open an editor for you to make changes, and the modification will be reflected in log events.
-
-## Delete the GameServer
-
-To remove your game server and track its deletion in the log events, run the following command:
-
-```bash
-kubectl delete gameserver <simple-game-server-name>
-```
+**Note**: If this controller fails for any reason, we've also implemented leader election such that the backup controller will automatically assume the leadership role, ensuring uninterrupted logging of event details.
 
 ## Cleaning Up
 
@@ -97,7 +106,7 @@ When you're done with the Agones fleet and the custom controller, it's a good pr
 To delete the Agones fleet you deployed, execute the following command. This will remove the fleet along with all the game server instances it manages:
 
 ```bash
-kubectl delete -f examples/simple-game-server/fleet.yaml
+kubectl delete -f https://raw.githubusercontent.com/googleforgames/agones/release-1.39.0/examples/simple-game-server/fleet.yaml
 ```
 
 ### Remove the Custom Controller
@@ -105,5 +114,5 @@ kubectl delete -f examples/simple-game-server/fleet.yaml
 To remove the custom controller from your cluster, execute the following command. This will delete the deployment that you created earlier.
 
 ```bash
-kubectl delete -f deployment.yaml
+kubectl delete -f https://raw.githubusercontent.com/googleforgames/agones/release-1.39.0/examples/custom-controller/deployment.yaml
 ```
