@@ -167,18 +167,18 @@ func testCounts(sdk *goSdk.SDK) {
 		log.Fatalf("Counter count should be 1, but is %d", count)
 	}
 
-	err = sdk.Alpha().IncrementCounter(counter, 9)
-	if err != nil {
+	inc, err := sdk.Alpha().IncrementCounter(counter, 9)
+	if !inc {
 		log.Fatalf("Error incrementing Counter: %s", err)
 	}
 
-	err = sdk.Alpha().DecrementCounter(counter, 10)
-	if err != nil {
+	dec, err := sdk.Alpha().DecrementCounter(counter, 10)
+	if !dec {
 		log.Fatalf("Error decrementing Counter: %s", err)
 	}
 
-	err = sdk.Alpha().SetCounterCount(counter, 10)
-	if err != nil {
+	setCount, err := sdk.Alpha().SetCounterCount(counter, 10)
+	if !setCount {
 		log.Fatalf("Error setting Counter count: %s", err)
 	}
 
@@ -189,8 +189,8 @@ func testCounts(sdk *goSdk.SDK) {
 		log.Fatalf("Counter capacity should be 10, but is %d", capacity)
 	}
 
-	err = sdk.Alpha().SetCounterCapacity(counter, 1)
-	if err != nil {
+	setCapacity, err := sdk.Alpha().SetCounterCapacity(counter, 1)
+	if !setCapacity {
 		log.Fatalf("Error setting Counter capacity: %s", err)
 	}
 }
@@ -219,13 +219,13 @@ func testLists(sdk *goSdk.SDK) {
 		log.Fatalf("List values should be %v, but is %v", vals, values)
 	}
 
-	err = sdk.Alpha().AppendListValue(list, "test3")
-	if err != nil {
+	appendValue, err := sdk.Alpha().AppendListValue(list, "test3")
+	if !appendValue {
 		log.Fatalf("Unable to append value \"test3\" err: %s", err)
 	}
 
-	err = sdk.Alpha().DeleteListValue(list, "test2")
-	if err != nil {
+	deleteValue, err := sdk.Alpha().DeleteListValue(list, "test2")
+	if !deleteValue {
 		log.Fatalf("Unable to delete value \"test2\" err: %s", err)
 	}
 
@@ -236,8 +236,8 @@ func testLists(sdk *goSdk.SDK) {
 		log.Fatalf("List capacity should be 100, but is %d", capacity)
 	}
 
-	err = sdk.Alpha().SetListCapacity(list, 2)
-	if err != nil {
+	setCapacity, err := sdk.Alpha().SetListCapacity(list, 2)
+	if !setCapacity {
 		log.Fatalf("Error setting List capacity: %s", err)
 	}
 }
