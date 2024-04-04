@@ -322,8 +322,15 @@ func handleResponse(txt string, s *sdk.SDK, cancel context.CancelFunc) (response
 			responseError = fmt.Errorf("Invalid INCREMENT_COUNTER, should have 2 arguments")
 			return
 		}
-		response, responseError = incrementCounter(s, parts[1], parts[2])
-		addACK = false
+		var err error
+		// response, responseError = incrementCounter(s, parts[1], parts[2])
+		response, err = incrementCounter(s, parts[1], parts[2])
+		if err != nil {
+			response = err.Error()
+			responseError = err
+			addACK = false
+			return
+		}
 
 	case "DECREMENT_COUNTER":
 		if len(parts) < 3 {
@@ -693,48 +700,48 @@ func getCounterCount(s *sdk.SDK, counterName string) (string, error) {
 }
 
 // incrementCounter returns the if the Counter Count was incremented successfully (true) or not (false)
-func incrementCounter(s *sdk.SDK, counterName string, amount string) error {
+func incrementCounter(s *sdk.SDK, counterName string, amount string) (string, error) {
 	amountInt, err := strconv.ParseInt(amount, 10, 64)
 	if err != nil {
-		return fmt.Errorf("could not increment Counter %s by unparseable amount %s: %s", counterName, amount, err)
+		return "", fmt.Errorf("could not increment Counter %s by unparseable amount %s: %s", counterName, amount, err)
 	}
 	log.Printf("Incrementing Counter %s Count by amount %d", counterName, amountInt)
-	err = s.Alpha().IncrementCounter(counterName, amountInt)
+	_, err = s.Alpha().IncrementCounter(counterName, amountInt)
 	if err != nil {
 		log.Printf("Error incrementing Counter %s Count by amount %d: %s", counterName, amountInt, err)
-		return err
+		return "", err
 	}
-	return nil
+	return "SUCCESS", nil
 }
 
 // decrementCounter returns the if the Counter Count was decremented successfully (true) or not (false)
-func decrementCounter(s *sdk.SDK, counterName string, amount string) error {
+func decrementCounter(s *sdk.SDK, counterName string, amount string) (string, error) {
 	amountInt, err := strconv.ParseInt(amount, 10, 64)
 	if err != nil {
-		return fmt.Errorf("could not decrement Counter %s by unparseable amount %s: %s", counterName, amount, err)
+		return "false", fmt.Errorf("could not decrement Counter %s by unparseable amount %s: %s", counterName, amount, err)
 	}
 	log.Printf("Decrementing Counter %s Count by amount %d", counterName, amountInt)
-	err = s.Alpha().DecrementCounter(counterName, amountInt)
+	ok, err := s.Alpha().DecrementCounter(counterName, amountInt)
 	if err != nil {
 		log.Printf("Error decrementing Counter %s Count by amount %d: %s", counterName, amountInt, err)
-		return err
+		return strconv.FormatBool(ok), err
 	}
-	return nil
+	return "SUCCESS: " + strconv.FormatBool(ok) + "\n", nil
 }
 
 // setCounterCount returns the if the Counter was set to a new Count successfully (true) or not (false)
-func setCounterCount(s *sdk.SDK, counterName string, amount string) error {
+func setCounterCount(s *sdk.SDK, counterName string, amount string) (string, error) {
 	amountInt, err := strconv.ParseInt(amount, 10, 64)
 	if err != nil {
-		return fmt.Errorf("could not set Counter %s to unparseable amount %s: %s", counterName, amount, err)
+		return "false", fmt.Errorf("could not set Counter %s to unparseable amount %s: %s", counterName, amount, err)
 	}
 	log.Printf("Setting Counter %s Count to amount %d", counterName, amountInt)
-	err = s.Alpha().SetCounterCount(counterName, amountInt)
+	ok, err := s.Alpha().SetCounterCount(counterName, amountInt)
 	if err != nil {
 		log.Printf("Error setting Counter %s Count by amount %d: %s", counterName, amountInt, err)
-		return err
+		return strconv.FormatBool(ok), err
 	}
-	return nil
+	return "SUCCESS: " + strconv.FormatBool(ok) + "\n", nil
 }
 
 // getCounterCapacity returns the Capacity of the given Counter as a string
@@ -749,18 +756,18 @@ func getCounterCapacity(s *sdk.SDK, counterName string) (string, error) {
 }
 
 // setCounterCapacity returns the if the Counter was set to a new Capacity successfully (true) or not (false)
-func setCounterCapacity(s *sdk.SDK, counterName string, amount string) error {
+func setCounterCapacity(s *sdk.SDK, counterName string, amount string) (string, error) {
 	amountInt, err := strconv.ParseInt(amount, 10, 64)
 	if err != nil {
-		return fmt.Errorf("could not set Counter %s to unparseable amount %s: %s", counterName, amount, err)
+		return "false", fmt.Errorf("could not set Counter %s to unparseable amount %s: %s", counterName, amount, err)
 	}
 	log.Printf("Setting Counter %s Capacity to amount %d", counterName, amountInt)
-	err = s.Alpha().SetCounterCapacity(counterName, amountInt)
+	ok, err := s.Alpha().SetCounterCapacity(counterName, amountInt)
 	if err != nil {
 		log.Printf("Error setting Counter %s Capacity to amount %d: %s", counterName, amountInt, err)
-		return err
+		return strconv.FormatBool(ok), err
 	}
-	return nil
+	return "SUCCESS: " + strconv.FormatBool(ok) + "\n", nil
 }
 
 // getListCapacity returns the Capacity of the given List as a string
@@ -775,18 +782,18 @@ func getListCapacity(s *sdk.SDK, listName string) (string, error) {
 }
 
 // setListCapacity returns if the List was set to a new Capacity successfully (true) or not (false)
-func setListCapacity(s *sdk.SDK, listName string, amount string) error {
+func setListCapacity(s *sdk.SDK, listName string, amount string) (string, error) {
 	amountInt, err := strconv.ParseInt(amount, 10, 64)
 	if err != nil {
-		return fmt.Errorf("could not set List %s to unparseable amount %s: %s", listName, amount, err)
+		return "false", fmt.Errorf("could not set List %s to unparseable amount %s: %s", listName, amount, err)
 	}
 	log.Printf("Setting List %s Capacity to amount %d", listName, amountInt)
-	err = s.Alpha().SetListCapacity(listName, amountInt)
+	ok, err := s.Alpha().SetListCapacity(listName, amountInt)
 	if err != nil {
 		log.Printf("Error setting List %s Capacity to amount %d: %s", listName, amountInt, err)
-		return err
+		return strconv.FormatBool(ok), err
 	}
-	return nil
+	return "SUCCESS: " + strconv.FormatBool(ok) + "\n", nil
 }
 
 // listContains returns true if the given value is in the given List, false otherwise
@@ -796,8 +803,8 @@ func listContains(s *sdk.SDK, listName string, value string) (string, error) {
 	if err != nil {
 		log.Printf("Error getting List %s contains value %s: %s", listName, value, err)
 		return strconv.FormatBool(ok), err
-	}	
-  return "FOUND: " + strconv.FormatBool(ok) + "\n", nil
+	}
+	return "FOUND: " + strconv.FormatBool(ok) + "\n", nil
 }
 
 // getListLength returns the length (number of values) of the given List as a string
@@ -820,31 +827,31 @@ func getListValues(s *sdk.SDK, listName string) (string, error) {
 		return "INVALID LIST NAME", err
 	}
 	if len(values) > 0 {
-        return "VALUES: " + strings.Join(values, ",") + "\n", nil
-    }
+		return "VALUES: " + strings.Join(values, ",") + "\n", nil
+	}
 	return "VALUES: <none>\n", err
 }
 
 // appendListValue returns if the given value was successfuly added to the List (true) or not (false)
-func appendListValue(s *sdk.SDK, listName string, value string) error {
+func appendListValue(s *sdk.SDK, listName string, value string) (string, error) {
 	log.Printf("Appending Value %s to List %s", value, listName)
-	err := s.Alpha().AppendListValue(listName, value)
+	ok, err := s.Alpha().AppendListValue(listName, value)
 	if err != nil {
 		log.Printf("Error appending Value %s to List %s: %s", value, listName, err)
-		return err
+		return strconv.FormatBool(ok), err
 	}
-	return nil
+	return "SUCCESS: " + strconv.FormatBool(ok) + "\n", nil
 }
 
 // deleteListValue returns if the given value was successfuly deleted from the List (true) or not (false)
-func deleteListValue(s *sdk.SDK, listName string, value string) error {
+func deleteListValue(s *sdk.SDK, listName string, value string) (string, error) {
 	log.Printf("Deleting Value %s from List %s", value, listName)
-	err := s.Alpha().DeleteListValue(listName, value)
+	ok, err := s.Alpha().DeleteListValue(listName, value)
 	if err != nil {
 		log.Printf("Error deleting Value %s to List %s: %s", value, listName, err)
-		return err
+		return strconv.FormatBool(ok), err
 	}
-	return nil
+	return "SUCCESS: " + strconv.FormatBool(ok) + "\n", nil
 }
 
 // doHealth sends the regular Health Pings

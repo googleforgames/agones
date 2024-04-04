@@ -99,16 +99,15 @@ func (a *Alpha) GetCounterCount(key string) (int64, error) {
 // IncrementCounter increases a counter by the given nonnegative integer amount.
 // Will execute the increment operation against the current CRD value. Will max at max(int64).
 // Will error if the key was not predefined in the GameServer resource on creation.
-// If the count is already at the current capacity (to the latest knowledge of the SDK),
-// and no increment will occur. and the function will return nil to indicate
-// successful operation. An error is returned if the amount is negative
+// Returns false if the count is at the current capacity (to the latest knowledge of the SDK),
+// and no increment will occur.
 //
 // Note: A potential race condition here is that if count values are set from both the SDK and
 // through the K8s API (Allocation or otherwise), since the SDK append operation back to the CRD
 // value is batched asynchronous any value incremented past the capacity will be silently truncated.
-func (a *Alpha) IncrementCounter(key string, amount int64) error {
+func (a *Alpha) IncrementCounter(key string, amount int64) (bool, error) {
 	if amount < 0 {
-		return errors.Errorf("CountIncrement amount must be a positive int64, found %d", amount)
+		return false, errors.Errorf("CountIncrement amount must be a positive int64, found %d", amount)
 	}
 	_, err := a.client.UpdateCounter(context.Background(), &alpha.UpdateCounterRequest{
 		CounterUpdateRequest: &alpha.CounterUpdateRequest{
@@ -116,17 +115,17 @@ func (a *Alpha) IncrementCounter(key string, amount int64) error {
 			CountDiff: amount,
 		}})
 	if err != nil {
-		return errors.Wrapf(err, "could not increment Counter %s by amount %d", key, amount)
+		return false, errors.Wrapf(err, "could not increment Counter %s by amount %d", key, amount)
 	}
-	return err
+	return true, err
 }
 
 // DecrementCounter decreases the current count by the given nonnegative integer amount.
 // The Counter Will not go below 0. Will execute the decrement operation against the current CRD value.
-// An error is returned if the amount is negative or if the decrement operation fails.
-func (a *Alpha) DecrementCounter(key string, amount int64) error {
+// Returns false if the count is at 0 (to the latest knowledge of the SDK), and no decrement will occur.
+func (a *Alpha) DecrementCounter(key string, amount int64) (bool, error) {
 	if amount < 0 {
-		return errors.Errorf("CountDecrement amount must be a positive int64, found %d", amount)
+		return false, errors.Errorf("CountDecrement amount must be a positive int64, found %d", amount)
 	}
 	_, err := a.client.UpdateCounter(context.Background(), &alpha.UpdateCounterRequest{
 		CounterUpdateRequest: &alpha.CounterUpdateRequest{
@@ -134,23 +133,23 @@ func (a *Alpha) DecrementCounter(key string, amount int64) error {
 			CountDiff: amount * -1,
 		}})
 	if err != nil {
-		return errors.Wrapf(err, "could not decrement Counter %s by amount %d", key, amount)
+		return false, errors.Wrapf(err, "could not decrement Counter %s by amount %d", key, amount)
 	}
-	return err
+	return true, err
 }
 
 // SetCounterCount sets a count to the given value. Use with care, as this will overwrite any previous
 // invocations’ value. Cannot be greater than Capacity.
-func (a *Alpha) SetCounterCount(key string, amount int64) error {
+func (a *Alpha) SetCounterCount(key string, amount int64) (bool, error) {
 	_, err := a.client.UpdateCounter(context.Background(), &alpha.UpdateCounterRequest{
 		CounterUpdateRequest: &alpha.CounterUpdateRequest{
 			Name:  key,
 			Count: wrapperspb.Int64(amount),
 		}})
 	if err != nil {
-		return errors.Wrapf(err, "could not set Counter %s count to amount %d", key, amount)
+		return false, errors.Wrapf(err, "could not set Counter %s count to amount %d", key, amount)
 	}
-	return err
+	return true, err
 }
 
 // GetCounterCapacity returns the Capacity for a Counter, given the Counter's key (name).
@@ -164,16 +163,16 @@ func (a *Alpha) GetCounterCapacity(key string) (int64, error) {
 }
 
 // SetCounterCapacity sets the capacity for the given Counter. A capacity of 0 is no capacity.
-func (a *Alpha) SetCounterCapacity(key string, amount int64) error {
+func (a *Alpha) SetCounterCapacity(key string, amount int64) (bool, error) {
 	_, err := a.client.UpdateCounter(context.Background(), &alpha.UpdateCounterRequest{
 		CounterUpdateRequest: &alpha.CounterUpdateRequest{
 			Name:     key,
 			Capacity: wrapperspb.Int64(amount),
 		}})
 	if err != nil {
-		return errors.Wrapf(err, "could not set Counter %s capacity to amount %d", key, amount)
+		return false, errors.Wrapf(err, "could not set Counter %s capacity to amount %d", key, amount)
 	}
-	return err
+	return true, err
 }
 
 // GetListCapacity returns the Capacity for a List, given the List's key (name).
@@ -188,7 +187,7 @@ func (a *Alpha) GetListCapacity(key string) (int64, error) {
 
 // SetListCapacity sets the capacity for a given list. Capacity must be between 0 and 1000.
 // Will error if the key was not predefined in the GameServer resource on creation.
-func (a *Alpha) SetListCapacity(key string, amount int64) error {
+func (a *Alpha) SetListCapacity(key string, amount int64) (bool, error) {
 	_, err := a.client.UpdateList(context.Background(), &alpha.UpdateListRequest{
 		List: &alpha.List{
 			Name:     key,
@@ -197,9 +196,9 @@ func (a *Alpha) SetListCapacity(key string, amount int64) error {
 		UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"capacity"}},
 	})
 	if err != nil {
-		return errors.Wrapf(err, "could not set List %s capacity to amount %d", key, amount)
+		return false, errors.Wrapf(err, "could not set List %s capacity to amount %d", key, amount)
 	}
-	return err
+	return true, err
 }
 
 // ListContains returns if a string exists in a List's values list, given the List's key (name)
@@ -241,21 +240,21 @@ func (a *Alpha) GetListValues(key string) ([]string, error) {
 // AppendListValue appends a string to a List's values list, given the List's key (name)
 // and the string value. Will error if the string already exists in the list.
 // Will error if the key was not predefined in the GameServer resource on creation.
-func (a *Alpha) AppendListValue(key, value string) error {
+func (a *Alpha) AppendListValue(key, value string) (bool, error) {
 	_, err := a.client.AddListValue(context.Background(), &alpha.AddListValueRequest{Name: key, Value: value})
 	if err != nil {
-		return errors.Wrapf(err, "could not get List %s", key)
+		return false, errors.Wrapf(err, "could not get List %s", key)
 	}
-	return nil
+	return true, nil
 }
 
 // DeleteListValue removes a string from a List's values list, given the List's key (name)
 // and the string value. Will error if the string does not exist in the list.
 // Will error if the key was not predefined in the GameServer resource on creation.
-func (a *Alpha) DeleteListValue(key, value string) error {
+func (a *Alpha) DeleteListValue(key, value string) (bool, error) {
 	_, err := a.client.RemoveListValue(context.Background(), &alpha.RemoveListValueRequest{Name: key, Value: value})
 	if err != nil {
-		return errors.Wrapf(err, "could not get List %s", key)
+		return false, errors.Wrapf(err, "could not get List %s", key)
 	}
-	return nil
+	return true, nil
 }

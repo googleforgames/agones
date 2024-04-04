@@ -1100,7 +1100,7 @@ spec:
           preferredDuringSchedulingIgnoredDuringExecution: ERROR
       containers:
         - name: simple-game-server
-          image: us-docker.pkg.dev/agones-images/examples/simple-game-server:0.28
+          image: us-docker.pkg.dev/agones-mangalpalli/examples/simple-game-server:0.28
 `
 	err := os.WriteFile("/tmp/invalid.yaml", []byte(gsYaml), 0o644)
 	require.NoError(t, err)
@@ -1373,63 +1373,63 @@ func TestCounters(t *testing.T) {
 		},
 		"IncrementCounter": {
 			msg:         "INCREMENT_COUNTER foo 10",
-			want:        "SUCCESS\n",
+			want:        "ACK: SUCCESS\n",
 			counterName: "foo",
 			wantCount:   "COUNTER: 20\n",
 		},
 		"IncrementCounter Past Capacity": {
 			msg:         "INCREMENT_COUNTER games 50",
-			want:        "ERROR\n",
+			want:        "ERROR: could not increment Counter games by amount 50: rpc error: code = Unknown desc = out of range. Count must be within range [0,Capacity]. Found Count: 51, Capacity: 50\n",
 			counterName: "games",
 			wantCount:   "COUNTER: 1\n",
 		},
 		"IncrementCounter Negative": {
 			msg:         "INCREMENT_COUNTER games -1",
-			want:        "ERROR\n",
+			want:        "ERROR: CountIncrement amount must be a positive int64, found -1\n",
 			counterName: "games",
 			wantCount:   "COUNTER: 1\n",
 		},
 		"IncrementCounter Counter Does Not Exist": {
 			msg:  "INCREMENT_COUNTER same 1",
-			want: "ERROR\n",
+			want: "ERROR: could not increment Counter same by amount 1: rpc error: code = Unknown desc = counter not found: same\n",
 		},
 		"DecrementCounter": {
 			msg:         "DECREMENT_COUNTER bar 10",
-			want:        "SUCCESS\n",
+			want:        "SUCCESS: true\n",
 			counterName: "bar",
 			wantCount:   "COUNTER: 0\n",
 		},
 		"DecrementCounter Past Capacity": {
 			msg:         "DECREMENT_COUNTER games 2",
-			want:        "ERROR\n",
+			want:        "ERROR: false\n",
 			counterName: "games",
 			wantCount:   "COUNTER: 1\n",
 		},
 		"DecrementCounter Negative": {
 			msg:         "DECREMENT_COUNTER games -1",
-			want:        "ERROR\n",
+			want:        "ERROR: false\n",
 			counterName: "games",
 			wantCount:   "COUNTER: 1\n",
 		},
 		"DecrementCounter Counter Does Not Exist": {
 			msg:  "DECREMENT_COUNTER lame 1",
-			want: "ERROR\n",
+			want: "ERROR: false\n",
 		},
 		"SetCounterCount": {
 			msg:         "SET_COUNTER_COUNT baz 0",
-			want:        "SUCCESS\n",
+			want:        "SUCCESS: true\n",
 			counterName: "baz",
 			wantCount:   "COUNTER: 0\n",
 		},
 		"SetCounterCount Past Capacity": {
 			msg:         "SET_COUNTER_COUNT games 51",
-			want:        "ERROR\n",
+			want:        "ERROR: false\n",
 			counterName: "games",
 			wantCount:   "COUNTER: 1\n",
 		},
 		"SetCounterCount Past Zero": {
 			msg:         "SET_COUNTER_COUNT games -1",
-			want:        "ERROR\n",
+			want:        "ERROR: false\n",
 			counterName: "games",
 			wantCount:   "COUNTER: 1\n",
 		},
@@ -1443,13 +1443,13 @@ func TestCounters(t *testing.T) {
 		},
 		"SetCounterCapacity": {
 			msg:          "SET_COUNTER_CAPACITY qux 0",
-			want:         "SUCCESS\n",
+			want:         "SUCCESS: true\n",
 			counterName:  "qux",
 			wantCapacity: "CAPACITY: 0\n",
 		},
 		"SetCounterCapacity Past Zero": {
 			msg:         "SET_COUNTER_CAPACITY games -42",
-			want:        "ERROR\n",
+			want:        "ERROR: false\n",
 			counterName: "games",
 			wantCount:   "COUNTER: 1\n",
 		},
@@ -1529,19 +1529,19 @@ func TestLists(t *testing.T) {
 		},
 		"SetListCapacity": {
 			msg:          "SET_LIST_CAPACITY foo 1000",
-			want:         "SUCCESS\n",
+			want:         "SUCCESS: true\n",
 			listName:     "foo",
 			wantCapacity: "CAPACITY: 1000\n",
 		},
 		"SetListCapacity past 1000": {
 			msg:          "SET_LIST_CAPACITY games 1001",
-			want:         "ERROR\n",
+			want:         "ERROR: false\n",
 			listName:     "games",
 			wantCapacity: "CAPACITY: 50\n",
 		},
 		"SetListCapacity negative": {
 			msg:          "SET_LIST_CAPACITY games -1",
-			want:         "ERROR\n",
+			want:         "ERROR: false\n",
 			listName:     "games",
 			wantCapacity: "CAPACITY: 50\n",
 		},
@@ -1567,25 +1567,25 @@ func TestLists(t *testing.T) {
 		},
 		"AppendListValue": {
 			msg:        "APPEND_LIST_VALUE bar bar3",
-			want:       "SUCCESS\n",
+			want:       "SUCCESS: true\n",
 			listName:   "bar",
 			wantLength: "LENGTH: 3\n",
 		},
 		"AppendListValue past capacity": {
 			msg:        "APPEND_LIST_VALUE baz baz2",
-			want:       "ERROR\n",
+			want:       "ERROR: false\n",
 			listName:   "baz",
 			wantLength: "LENGTH: 1\n",
 		},
 		"DeleteListValue": {
 			msg:        "DELETE_LIST_VALUE qux qux3",
-			want:       "SUCCESS\n",
+			want:       "SUCCESS: true\n",
 			listName:   "qux",
 			wantLength: "LENGTH: 3\n",
 		},
 		"DeleteListValue value does not exist": {
 			msg:        "DELETE_LIST_VALUE games game4",
-			want:       "ERROR\n",
+			want:       "ERROR: false\n",
 			listName:   "games",
 			wantLength: "LENGTH: 2\n",
 		},
