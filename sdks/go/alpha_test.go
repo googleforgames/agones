@@ -126,18 +126,16 @@ func TestAlphaGetAndUpdateCounter(t *testing.T) {
 		assert.Equal(t, sessions.Capacity, capacity)
 
 		wantCapacity := int64(25)
-		ok, err := a.SetCounterCapacity("sessions", wantCapacity)
+		err = a.SetCounterCapacity("sessions", wantCapacity)
 		assert.NoError(t, err)
-		assert.True(t, ok)
 
 		capacity, err = a.GetCounterCapacity("sessions")
 		assert.NoError(t, err)
 		assert.Equal(t, wantCapacity, capacity)
 
 		wantCount := int64(10)
-		ok, err = a.SetCounterCount("sessions", wantCount)
+		err = a.SetCounterCount("sessions", wantCount)
 		assert.NoError(t, err)
-		assert.True(t, ok)
 
 		count, err = a.GetCounterCount("sessions")
 		assert.NoError(t, err)
@@ -151,13 +149,11 @@ func TestAlphaGetAndUpdateCounter(t *testing.T) {
 		_, err = a.GetCounterCapacity("secessions")
 		assert.Error(t, err)
 
-		ok, err := a.SetCounterCapacity("secessions", int64(100))
+		err = a.SetCounterCapacity("secessions", int64(100))
 		assert.Error(t, err)
-		assert.False(t, ok)
 
-		ok, err = a.SetCounterCount("secessions", int64(0))
+		err = a.SetCounterCount("secessions", int64(0))
 		assert.Error(t, err)
-		assert.False(t, ok)
 	})
 
 	// nolint:dupl // testing DecrementCounter and IncrementCounter are not duplicates.
@@ -166,25 +162,22 @@ func TestAlphaGetAndUpdateCounter(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, games.Count, count)
 
-		ok, err := a.DecrementCounter("games", 21)
+		err = a.DecrementCounter("games", 21)
 		assert.Error(t, err)
-		assert.False(t, ok)
 
 		count, err = a.GetCounterCount("games")
 		assert.NoError(t, err)
 		assert.Equal(t, games.Count, count)
 
-		ok, err = a.DecrementCounter("games", -12)
+		err = a.DecrementCounter("games", -12)
 		assert.Error(t, err)
-		assert.False(t, ok)
 
 		count, err = a.GetCounterCount("games")
 		assert.NoError(t, err)
 		assert.Equal(t, games.Count, count)
 
-		ok, err = a.DecrementCounter("games", 12)
+		err = a.DecrementCounter("games", 12)
 		assert.NoError(t, err)
-		assert.True(t, ok)
 
 		count, err = a.GetCounterCount("games")
 		assert.NoError(t, err)
@@ -197,25 +190,22 @@ func TestAlphaGetAndUpdateCounter(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, gamers.Count, count)
 
-		msg, err := a.IncrementCounter("gamers", 250)
+		err = a.IncrementCounter("gamers", 250)
 		assert.Error(t, err)
-		assert.Equal(t, "", msg)
 
 		count, err = a.GetCounterCount("gamers")
 		assert.NoError(t, err)
 		assert.Equal(t, gamers.Count, count)
 
-		msg, err = a.IncrementCounter("gamers", -237)
+		err = a.IncrementCounter("gamers", -237)
 		assert.Error(t, err)
-		assert.Equal(t, "", msg)
 
 		count, err = a.GetCounterCount("gamers")
 		assert.NoError(t, err)
 		assert.Equal(t, gamers.Count, count)
 
-		msg, err = a.IncrementCounter("gamers", 237)
+		err = a.IncrementCounter("gamers", 237)
 		assert.NoError(t, err)
-		assert.Equal(t, "", msg)
 
 		count, err = a.GetCounterCount("gamers")
 		assert.NoError(t, err)
@@ -273,9 +263,8 @@ func TestAlphaGetAndUpdateList(t *testing.T) {
 		assert.Equal(t, foo.Capacity, capacity)
 
 		wantCapacity := int64(5)
-		ok, err := a.SetListCapacity("foo", wantCapacity)
+		err = a.SetListCapacity("foo", wantCapacity)
 		assert.NoError(t, err)
-		assert.True(t, ok)
 
 		capacity, err = a.GetListCapacity("foo")
 		assert.NoError(t, err)
@@ -291,9 +280,8 @@ func TestAlphaGetAndUpdateList(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, bar.Values, values)
 
-		ok, err := a.AppendListValue("bar", "ghi")
+		err = a.AppendListValue("bar", "ghi")
 		assert.NoError(t, err)
-		assert.True(t, ok)
 
 		length, err = a.GetListLength("bar")
 		assert.NoError(t, err)
@@ -318,9 +306,8 @@ func TestAlphaGetAndUpdateList(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, baz.Values, values)
 
-		ok, err := a.DeleteListValue("baz", "456")
+		err = a.DeleteListValue("baz", "456")
 		assert.NoError(t, err)
-		assert.True(t, ok)
 
 		length, err = a.GetListLength("baz")
 		assert.NoError(t, err)
