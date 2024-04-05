@@ -1,10 +1,10 @@
 ---
 title: "Deploying and Running SuperTuxKart Server Using Agones"
-linkTitle: "Supertuxkart"
+linkTitle: "SuperTuxKart"
 date:
 publishDate:
 description: >
-  This Supertuxkart example shows how to set up, deploy, and manage a Supertuxkart game server on a Kubernetes cluster using Agones. It highlights an approach to integrate with existing dedicated game servers.
+  This SuperTuxKart example shows how to set up, deploy, and manage a SuperTuxKart game server on a Kubernetes cluster using Agones. It highlights an approach to integrate with existing dedicated game servers.
 ---
 
 ## Prerequisite
@@ -15,7 +15,9 @@ To get started, ensure the following prerequisites are met:
 
   - Agones is installed on your cluster. Refer to the [Agones guide](https://agones.dev/site/docs/installation/install-agones/) for the instructions.
 
-  - (Optional) Review {{< ghlink href="examples/supertuxkart" >}}supertuxkart code{{< /ghlink >}} to see the details of this example.
+  - The SuperTuxKart client downloaded for gameplay. Download it from [SuperTuxKart](https://supertuxkart.net/Main_Page)
+
+  - (Optional) Review {{< ghlink href="examples/supertuxkart" >}}SuperTuxKart code{{< /ghlink >}} to see the details of this example.
 
 ## Create a Fleet
 
@@ -31,7 +33,7 @@ You should see a successful output similar to this :
 fleet.agones.dev/supertuxkart created
 ```
 
-This has created a Fleet record inside Kubernetes, which in turn creates two warm [GameServers]({{< ref "/docs/Reference/gameserver.md" >}})
+This has created a Fleet record inside Kubernetes, which in turn creates two ready [GameServers]({{< ref "/docs/Reference/gameserver.md" >}})
 that are available to be allocated for a game session.
 
 ```bash
@@ -69,7 +71,7 @@ kubectl logs -f <supertuxkart-game-server-pod-name>
 
 After allocating a GameServer from the fleet and obtaining its status and IP, you're ready to connect and play. Here’s how to use the server IP and port to join the game with the SuperTuxKart client:
 
-**Launch SuperTuxKart**: Navigate to the SuperTuxKart client you downloaded earlier. Execute the `run_game.sh` script to launch and play the game.
+**Launch SuperTuxKart**: Start the SuperTuxKart client you downloaded earlier by running the executable for your operating system ([documentation]https://supertuxkart.net/FAQ)
 
 **Navigate to Online Play**: From the main menu, select the "Online" option and then select "Enter server address" from the available options.
 
@@ -81,13 +83,14 @@ After allocating a GameServer from the fleet and obtaining its status and IP, yo
 
 ![start race](../../../images/supertuxkart-start-race.png)
 
+**Launch the Game with AI Bots**: To start the server with AI players, use the `<executable-script> --connect-now=<IP:port> --network-ai=<number of AIs>` command, substituting `<IP:port>` with your server's IP address and port number and `<number of AIs>` with the desired number of bots. For more information, refer to the [SuperTuxKart documentation](https://github.com/supertuxkart/stk-code/blob/master/NETWORKING.md#testing-server).
+
+![race with AI bots](../../../images/supertuxkart-AI-players.png)
+
+
 ## Cleaning Up
 
-After playing SuperTuxKart, it's a good practice to clean up the resources to prevent unnecessary resource consumption. Follow these steps to remove them:
-
-### Remove the Fleet
-
-To delete the Agones fleet you deployed, execute the following command. This will remove the fleet along with all the game server instances it manages:
+After playing SuperTuxKart, it's a good practice to clean up the resources to prevent unnecessary resource consumption. To delete the Agones fleet you deployed, execute the following command. This will remove the fleet along with all the game server instances it manages:
 
 ```bash
 kubectl delete -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/supertuxkart/fleet.yaml
