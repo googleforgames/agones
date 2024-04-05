@@ -34,7 +34,7 @@ You should see a successful output similar to this :
 fleet.agones.dev/xonotic created
 ```
 
-This has created a Fleet record inside Kubernetes, which in turn creates two warm [GameServers]({{< ref "/docs/Reference/gameserver.md" >}})
+This has created a Fleet record inside Kubernetes, which in turn creates two ready [GameServers]({{< ref "/docs/Reference/gameserver.md" >}})
 that are available to be allocated for a game session.
 
 ```bash
