@@ -26,10 +26,8 @@ kubectl apply -f https://raw.githubusercontent.com/googleforgames/agones/{{< rel
 ```
 
 When you run this command, it quickly sets up your controller by doing four things: 
- - Creating a service account for secure communication with Kubernetes
- - Defining a role with the right permissions to handle game servers and events
- - Linking this role to the account for broad access
- - Launching two controllers for reliability.
+ - Sets up the appropriate [RBAC](https://kubernetes.io/docs/reference/access-authn-authz/rbac/) permissions for the custom controller
+ - Launching two controllers for reliability, with leader election setup between them.
 
 ## Verify the Controller
 
@@ -61,7 +59,7 @@ You should see a successful output similar to this :
 fleet.agones.dev/simple-game-server created
 ```
 
-This has created a Fleet record inside Kubernetes, which in turn creates two warm [GameServers]({{< ref "/docs/Reference/gameserver.md" >}})
+This has created a Fleet record inside Kubernetes, which in turn creates two ready [GameServers]({{< ref "/docs/Reference/gameserver.md" >}})
 that are available to be allocated for a game session.
 
 ```bash
@@ -89,7 +87,7 @@ For the full details of the YAML file head to the [Fleet Specification Guide]({{
 
 ## Monitor the log events for the custom controller pod
 
-To monitor the log events of the custom controller pod during the creation, modification, and deletion of game servers, use the following command:
+To monitor the logs of the custom controller during the creation, modification, and deletion of game servers, use the following command:
 
 ```bash
 kubectl logs -f deployments/custom-controller -n agones-system
