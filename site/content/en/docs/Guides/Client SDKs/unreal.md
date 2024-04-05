@@ -63,11 +63,17 @@ or {{< ghlink href="sdks/unreal" >}}directly from GitHub{{< /ghlink >}}.
 
 ## Resources
 
-[Unreal](https://www.unrealengine.com/) is a [game engine](https://en.wikipedia.org/wiki/Game_engine) that is used by anyone from hobbyists all the way through to huge AAA Game Stuidos.
+<a href="https://www.unrealengine.com/" data-proofer-ignore>Unreal</a>
+is a [game engine](https://en.wikipedia.org/wiki/Game_engine) that is used by
+anyone from hobbyists all the way through to huge AAA Game Studios.
 
-With this in mind there is a vast amount to learn to run a production game using Unreal, even before you get to learning how it integrates with Agones. If you want to kick the tires with a starter project you will probably be fine with one of the starter projects out of the box.
+With this in mind there is a vast amount to learn to run a production game using Unreal, even before you get to learning
+how it integrates with Agones. If you want to kick the tires with a starter project you will probably be fine with one
+of the starter projects out of the box.
 
-However as your Unreal/Agones project gets more advanced you will want to understand more about the engine itself and how it can be used to integrate with this project. There will be different ways of interacting via in Play In Editor (PIE) versus running as an actual dedicated game server packaged into a container.
+However, as your Unreal/Agones project gets more advanced you will want to understand more about the engine itself and
+how it can be used to integrate with this project. There will be different ways of interacting via in Play In Editor (
+PIE) versus running as an actual dedicated game server packaged into a container.
 
 There are few helpful links for latest Unreal Engine 5:
 - [UE5 Documentation Site](https://docs.unrealengine.com/en-US/)
