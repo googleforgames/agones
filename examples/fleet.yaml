@@ -50,11 +50,8 @@ spec:
       maxSurge: 25%
       # the amount to decrements GameServers by. Defaults to 25%
       maxUnavailable: 25%
-  # [Stage:Beta]
-  # [FeatureFlag:FleetAllocationOverflow]
   # Labels and/or Annotations to apply to overflowing GameServers when the number of Allocated GameServers exceeds
   # the desired replicas in the underlying `GameServerSet`
-  # Now in Beta, and enabled by default
   allocationOverflow:
     labels:
       mykey: myvalue
@@ -66,7 +63,7 @@ spec:
   # [FeatureFlag:CountsAndLists]
   # Which gameservers in the Fleet are most important to keep around - impacts scale down logic.
   # priorities:
-  # - type: List  # Whether a Counter or a List.
+  # - type: Counter  # Whether a Counter or a List.
   #   key: rooms  # The name of the Counter or List.
   #   order: Ascending  # Default is "Ascending" so smaller capacity will be removed first on down scaling.
   #

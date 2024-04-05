@@ -20,19 +20,6 @@ import (
 	"sync"
 	"time"
 
-	"agones.dev/agones/pkg/apis"
-	"agones.dev/agones/pkg/apis/agones"
-	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
-	"agones.dev/agones/pkg/client/clientset/versioned"
-	getterv1 "agones.dev/agones/pkg/client/clientset/versioned/typed/agones/v1"
-	"agones.dev/agones/pkg/client/informers/externalversions"
-	listerv1 "agones.dev/agones/pkg/client/listers/agones/v1"
-	"agones.dev/agones/pkg/gameservers"
-	"agones.dev/agones/pkg/util/crd"
-	"agones.dev/agones/pkg/util/logfields"
-	"agones.dev/agones/pkg/util/runtime"
-	"agones.dev/agones/pkg/util/webhooks"
-	"agones.dev/agones/pkg/util/workerqueue"
 	"github.com/google/go-cmp/cmp"
 	"github.com/heptiolabs/healthcheck"
 	"github.com/pkg/errors"
@@ -49,6 +36,20 @@ import (
 	typedcorev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
+
+	"agones.dev/agones/pkg/apis"
+	"agones.dev/agones/pkg/apis/agones"
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
+	"agones.dev/agones/pkg/client/clientset/versioned"
+	getterv1 "agones.dev/agones/pkg/client/clientset/versioned/typed/agones/v1"
+	"agones.dev/agones/pkg/client/informers/externalversions"
+	listerv1 "agones.dev/agones/pkg/client/listers/agones/v1"
+	"agones.dev/agones/pkg/gameservers"
+	"agones.dev/agones/pkg/util/crd"
+	"agones.dev/agones/pkg/util/logfields"
+	"agones.dev/agones/pkg/util/runtime"
+	"agones.dev/agones/pkg/util/webhooks"
+	"agones.dev/agones/pkg/util/workerqueue"
 )
 
 var (
@@ -130,9 +131,7 @@ func NewController(
 	eventBroadcaster.StartRecordingToSink(&typedcorev1.EventSinkImpl{Interface: kubeClient.CoreV1().Events("")})
 	c.recorder = eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: "gameserverset-controller"})
 
-	if runtime.FeatureEnabled(runtime.FeatureFleetAllocateOverflow) {
-		c.allocationController = NewAllocatorOverflowController(health, counter, agonesClient, agonesInformerFactory)
-	}
+	c.allocationController = NewAllocatorOverflowController(health, counter, agonesClient, agonesInformerFactory)
 
 	_, _ = gsSetInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: c.workerqueue.Enqueue,
@@ -189,13 +188,11 @@ func (c *Controller) Run(ctx context.Context, workers int) error {
 		return errors.New("failed to wait for caches to sync")
 	}
 
-	if runtime.FeatureEnabled(runtime.FeatureFleetAllocateOverflow) {
-		go func() {
-			if err := c.allocationController.Run(ctx); err != nil {
-				c.baseLogger.WithError(err).Error("error running allocation overflow controller")
-			}
-		}()
-	}
+	go func() {
+		if err := c.allocationController.Run(ctx); err != nil {
+			c.baseLogger.WithError(err).Error("error running allocation overflow controller")
+		}
+	}()
 
 	c.workerqueue.Run(ctx, workers)
 	return nil
