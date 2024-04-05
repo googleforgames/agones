@@ -5,6 +5,23 @@ description: >
   In order to allow allocation from multiple clusters, Agones provides a mechanism to set redirect rules for allocation requests to the right cluster.
 ---
 
+{{% pageinfo color="info" %}}
+This implementation of multi-cluster allocation was written before managed and open source multi-cluster Service Meshes 
+such as [Istio](https://istio.io/latest/docs/setup/install/multicluster/)
+and [Linkerd](https://linkerd.io/2.15/features/multicluster/), were available and so widely utilised.
+
+We now recommend implementing a Service Mesh in each of your Agones clusters and backend services cluster to provide 
+a multi-cluster allocation endpoint that points to each Agones cluster's 
+[Allocation Service]({{< relref "allocator-service.md">}}).
+
+Service Mesh specific projects provide far more powerful features, easier configuration and maintenance, and we 
+expect that they will be something that you will likely be installing in your multi-cluster architecture anyway.
+
+Further documentation on setting up Agones with a Service Mesh is incoming, but to see an example utilising
+[Google Cloud Service Mesh](https://cloud.google.com/service-mesh), which is backed by Istio, see the 
+[Global Scale Game](https://github.com/googleforgames/global-multiplayer-demo) demo project.
+{{% /pageinfo %}}
+
 There may be different types of clusters, such as on-premise, and Google Kubernetes Engine (GKE), used by a game to help with the cost-saving and availability.
 For this purpose, Agones provides a mechanism to define priorities on the clusters. Priorities are defined on {{< ghlink href="pkg/apis/multicluster/v1/gameserverallocationpolicy.go" >}}GameServerAllocationPolicy{{< /ghlink >}} agones CRD. A matchmaker can enable the multi-cluster rules on a request and target [agones-allocator]({{< relref "allocator-service.md">}}) endpoint in any of the clusters and get resources allocated on the cluster with the highest priority. If the cluster with the highest priority is overloaded, the allocation request is redirected to the cluster with the next highest priority.
 
