@@ -35,9 +35,17 @@ namespace Agones.Model
             this.State = (string) data["state"];
             this.Address = (string) data["address"];
 
+            this.Addresses = new List<StatusAddresses>();
+            var addressItems = (IReadOnlyList<object>) data["addresses"];
+            foreach (var i in addressItems)
+            {
+                var address = new StatusAddresses((Dictionary<string, object>) i);
+                this.Addresses.Add(address);
+            }
+
             this.Ports = new List<StatusPort>();
-            var items = (IReadOnlyList<object>) data["ports"];
-            foreach (var i in items)
+            var portItems = (IReadOnlyList<object>) data["ports"];
+            foreach (var i in portItems)
             {
                 var port = new StatusPort((Dictionary<string, object>) i);
                 this.Ports.Add(port);
@@ -46,6 +54,7 @@ namespace Agones.Model
 
         public string State { get; }
         public string Address { get; }
+        public List<StatusAddresses> Addresses { get; }
         public List<StatusPort> Ports { get; }
 
         /// <summary>
@@ -58,6 +67,7 @@ namespace Agones.Model
             sb.Append("class GameServerStatus {\n");
             sb.Append("  State: ").Append(State).Append("\n");
             sb.Append("  Address: ").Append(Address).Append("\n");
+            sb.Append("  Addresses: ").Append(string.Join(";", Addresses)).Append("\n");
             sb.Append("  Ports: ").Append(string.Join(";", Ports)).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
@@ -95,6 +105,11 @@ namespace Agones.Model
                      this.Address.Equals(input.Address))
                 ) &&
                 (
+                    this.Addresses == input.Addresses ||
+                    this.Addresses != null &&
+                    this.Addresses.SequenceEqual(input.Addresses)
+                ) &&
+                (
                     this.Ports == input.Ports ||
                     this.Ports != null &&
                     this.Ports.SequenceEqual(input.Ports)
@@ -114,6 +129,8 @@ namespace Agones.Model
                     hashCode = hashCode * 59 + this.State.GetHashCode();
                 if (this.Address != null)
                     hashCode = hashCode * 59 + this.Address.GetHashCode();
+                if (this.Addresses != null)
+                    hashCode = hashCode * 59 + this.Addresses.GetHashCode();
                 if (this.Ports != null)
                     hashCode = hashCode * 59 + this.Ports.GetHashCode();
                 return hashCode;
