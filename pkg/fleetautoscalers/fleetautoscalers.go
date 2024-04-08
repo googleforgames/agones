@@ -321,8 +321,21 @@ func applyCounterOrListPolicy(c *autoscalingv1.CounterPolicy, l *autoscalingv1.L
 		}
 		// The desired TOTAL capacity based on the Aggregated Allocated Counts (see applyBufferPolicy for explanation)
 		desiredCapacity := int64(math.Ceil(float64(aggAllocatedCount*100) / float64(100-bufferPercent)))
+
+		// Ensures desiredCapacity is at least 1
+		if desiredCapacity < 1 {
+			desiredCapacity = 1
+		}
+
 		// Convert into a desired AVAILABLE capacity aka the buffer
 		buffer = desiredCapacity - aggAllocatedCount
+
+		// Ensures buffer is at least 1 if desiredCapacity calculation results in a value less than or equal to aggAllocatedCount
+		if buffer < 1 {
+			buffer = 1
+			desiredCapacity = aggAllocatedCount + buffer
+		}
+
 	}
 
 	// Current available capacity across the TOTAL fleet
