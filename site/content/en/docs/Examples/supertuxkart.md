@@ -81,7 +81,7 @@ After allocating a GameServer from the fleet and obtaining its status and IP, yo
 
 **Join the Game**: After entering the server details, proceed to join the server. You should now be connected to your Agones-managed SuperTuxKart game server and ready to play.
 
-![start race](../../../images/supertuxkart-start-race.png)
+![start race](../../../images/supertuxkart-race-start.png)
 
 **Launch the Game with AI Bots**: To start the server with AI players, use the `<executable-script> --connect-now=<IP:port> --network-ai=<number of AIs>` command, substituting `<IP:port>` with your server's IP address and port number and `<number of AIs>` with the desired number of bots. For more information, refer to the [SuperTuxKart documentation](https://github.com/supertuxkart/stk-code/blob/master/NETWORKING.md#testing-server).
 
