@@ -71,7 +71,7 @@ kubectl logs -f <supertuxkart-game-server-pod-name>
 
 After allocating a GameServer from the fleet and obtaining its status and IP, you're ready to connect and play. Here’s how to use the server IP and port to join the game with the SuperTuxKart client:
 
-**Launch SuperTuxKart**: Start the SuperTuxKart client you downloaded earlier by running the executable for your operating system ([documentation]https://supertuxkart.net/FAQ)
+**Launch SuperTuxKart**: Start the SuperTuxKart client you downloaded earlier by running the executable for your operating system ([documentation](https://supertuxkart.net/FAQ))
 
 **Navigate to Online Play**: From the main menu, select the "Online" option and then select "Enter server address" from the available options.
 
