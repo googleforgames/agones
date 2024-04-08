@@ -2200,7 +2200,7 @@ func newFakeController() (*Controller, agtesting.Mocks) {
 	c := NewController(
 		generic.New(),
 		healthcheck.NewHandler(),
-		10, 20, "sidecar:dev", false,
+		10, 20, nil, "sidecar:dev", false,
 		resource.MustParse("0.05"), resource.MustParse("0.1"),
 		resource.MustParse("50Mi"), resource.MustParse("100Mi"), "sdk-service-account",
 		m.KubeClient, m.KubeInformerFactory, m.ExtClient, m.AgonesClient, m.AgonesInformerFactory)

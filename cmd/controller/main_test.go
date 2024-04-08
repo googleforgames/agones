@@ -17,6 +17,7 @@ package main
 import (
 	"testing"
 
+	"agones.dev/agones/pkg/portallocator"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/api/resource"
 )
@@ -29,25 +30,49 @@ func TestControllerConfigValidation(t *testing.T) {
 	assert.Len(t, errs, 1)
 	errorsContainString(t, errs, "max Port cannot be set less that the Min Port")
 
+	c.PortRanges = map[string]portallocator.PortRange{
+		"game": {MinPort: 20, MaxPort: 12},
+	}
+	errs = c.validate()
+	assert.Len(t, errs, 2)
+	errorsContainString(t, errs, "max Port cannot be set less that the Min Port for port range game")
+
 	c.SidecarMemoryRequest = resource.MustParse("2Gi")
 	c.SidecarMemoryLimit = resource.MustParse("1Gi")
 	errs = c.validate()
-	assert.Len(t, errs, 2)
+	assert.Len(t, errs, 3)
 	errorsContainString(t, errs, "Request must be less than or equal to memory limit")
 
 	c.SidecarMemoryLimit = resource.MustParse("2Gi")
 	c.SidecarCPURequest = resource.MustParse("2m")
 	c.SidecarCPULimit = resource.MustParse("1m")
 	errs = c.validate()
-	assert.Len(t, errs, 2)
+	assert.Len(t, errs, 3)
 	errorsContainString(t, errs, "Request must be less than or equal to cpu limit")
 
 	c.SidecarMemoryLimit = resource.MustParse("2Gi")
 	c.SidecarCPURequest = resource.MustParse("-2m")
 	c.SidecarCPULimit = resource.MustParse("2m")
 	errs = c.validate()
-	assert.Len(t, errs, 2)
+	assert.Len(t, errs, 3)
 	errorsContainString(t, errs, "Resource cpu request value must be non negative")
+}
+
+func TestControllerConfigValidation_PortRangeOverlap(t *testing.T) {
+	t.Parallel()
+
+	c := config{
+		MinPort: 10,
+		MaxPort: 20,
+		PortRanges: map[string]portallocator.PortRange{
+			"game":  {MinPort: 15, MaxPort: 25},
+			"other": {MinPort: 21, MaxPort: 31},
+		},
+	}
+	errs := c.validate()
+	assert.Len(t, errs, 2)
+	errorsContainString(t, errs, "port range game overlaps with min/max port")
+	errorsContainString(t, errs, "port range game overlaps with min/max port of range other")
 }
 
 func errorsContainString(t *testing.T, errs []error, expected string) {

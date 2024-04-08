@@ -264,6 +264,10 @@ type Health struct {
 type GameServerPort struct {
 	// Name is the descriptive name of the port
 	Name string `json:"name,omitempty"`
+	// (Alpha, PortRanges feature flag) Range is the port range name from which to select a port when using a
+	// 'Dynamic' or 'Passthrough' port policy.
+	// +optional
+	Range string `json:"range,omitempty"`
 	// PortPolicy defines the policy for how the HostPort is populated.
 	// Dynamic port will allocate a HostPort within the selected MIN_PORT and MAX_PORT range passed to the controller
 	// at installation time.
@@ -840,7 +844,7 @@ func (gs *GameServer) HasPortPolicy(policy PortPolicy) bool {
 	return false
 }
 
-// Status returns a GameServerSatusPort for this GameServerPort
+// Status returns a GameServerStatusPort for this GameServerPort
 func (p GameServerPort) Status() GameServerStatusPort {
 	return GameServerStatusPort{Name: p.Name, Port: p.HostPort}
 }
@@ -851,6 +855,17 @@ func (gs *GameServer) CountPorts(f func(policy PortPolicy) bool) int {
 	count := 0
 	for _, p := range gs.Spec.Ports {
 		if f(p.PortPolicy) {
+			count++
+		}
+	}
+	return count
+}
+
+// CountPortsForRange returns the number of ports that match condition function and range name.
+func (gs *GameServer) CountPortsForRange(name string, f func(policy PortPolicy) bool) int {
+	count := 0
+	for _, p := range gs.Spec.Ports {
+		if p.Range == name && f(p.PortPolicy) {
 			count++
 		}
 	}

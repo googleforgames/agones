@@ -23,6 +23,7 @@ import (
 
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	agtesting "agones.dev/agones/pkg/testing"
+	utilruntime "agones.dev/agones/pkg/util/runtime"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -44,11 +45,60 @@ var (
 
 func TestPortAllocatorAllocate(t *testing.T) {
 	t.Parallel()
+	utilruntime.FeatureTestMutex.Lock()
+	defer utilruntime.FeatureTestMutex.Unlock()
+
+	err := utilruntime.ParseFeatures(string(utilruntime.FeaturePortRanges) + "=true")
+	assert.NoError(t, err)
+	defer func() {
+		_ = utilruntime.ParseFeatures("")
+	}()
+
+	m := agtesting.NewMocks()
+	pa := newAllocator(10, 50, map[string]PortRange{"test": {MinPort: 51, MaxPort: 100}}, m.KubeInformerFactory, m.AgonesInformerFactory)
+	nodeWatch := watch.NewFake()
+	m.KubeClient.AddWatchReactor("nodes", k8stesting.DefaultWatchReactor(nodeWatch, nil))
+
+	ctx, cancel := agtesting.StartInformers(m, pa.allocators[0].nodeSynced, pa.allocators[1].nodeSynced)
+	defer cancel()
+
+	// Make sure the add's don't corrupt the sync
+	// (no longer an issue, but leave this here for posterity)
+	nodeWatch.Add(&n1)
+	nodeWatch.Add(&n2)
+	assert.True(t, cache.WaitForCacheSync(ctx.Done(), pa.allocators[0].nodeSynced, pa.allocators[1].nodeSynced))
+
+	err = pa.allocators[0].syncAll()
+	require.NoError(t, err)
+	err = pa.allocators[1].syncAll()
+	require.NoError(t, err)
+
+	// single port empty
+	fixture := dynamicGameServerFixture()
+	fixture.Spec.Ports = append(fixture.Spec.Ports,
+		agonesv1.GameServerPort{Name: "passthrough", Range: "test", PortPolicy: agonesv1.Passthrough},
+		agonesv1.GameServerPort{Name: "passthrough", Range: "test", PortPolicy: agonesv1.Passthrough},
+	)
+	gs := pa.Allocate(fixture)
+
+	assert.NotNil(t, gs)
+	assert.GreaterOrEqual(t, gs.Spec.Ports[0].HostPort, int32(10))
+	assert.LessOrEqual(t, gs.Spec.Ports[0].HostPort, int32(50))
+	assert.GreaterOrEqual(t, gs.Spec.Ports[1].HostPort, int32(51))
+	assert.LessOrEqual(t, gs.Spec.Ports[1].HostPort, int32(100))
+	assert.GreaterOrEqual(t, gs.Spec.Ports[2].HostPort, int32(51))
+	assert.LessOrEqual(t, gs.Spec.Ports[2].HostPort, int32(100))
+	assert.Equal(t, 1, countTotalAllocatedPorts(pa.allocators[0]))
+	assert.Equal(t, 2, countTotalAllocatedPorts(pa.allocators[1]))
+}
+
+func TestPortRangeAllocatorAllocate(t *testing.T) {
+	t.Parallel()
 	fixture := dynamicGameServerFixture()
 
 	t.Run("test allocated port counts", func(t *testing.T) {
 		m := agtesting.NewMocks()
-		pa := newAllocator(10, 50, m.KubeInformerFactory, m.AgonesInformerFactory)
+		pa := newRangeAllocator("", 10, 50, m.KubeInformerFactory, m.AgonesInformerFactory)
 		nodeWatch := watch.NewFake()
 		m.KubeClient.AddWatchReactor("nodes", k8stesting.DefaultWatchReactor(nodeWatch, nil))
 
@@ -137,7 +187,7 @@ func TestPortAllocatorAllocate(t *testing.T) {
 
 	t.Run("ports are all allocated", func(t *testing.T) {
 		m := agtesting.NewMocks()
-		pa := newAllocator(10, 20, m.KubeInformerFactory, m.AgonesInformerFactory)
+		pa := newRangeAllocator("", 10, 20, m.KubeInformerFactory, m.AgonesInformerFactory)
 		nodeWatch := watch.NewFake()
 		m.KubeClient.AddWatchReactor("nodes", k8stesting.DefaultWatchReactor(nodeWatch, nil))
 
@@ -173,7 +223,7 @@ func TestPortAllocatorAllocate(t *testing.T) {
 		m := agtesting.NewMocks()
 		minPort := int32(10)
 		maxPort := int32(20)
-		pa := newAllocator(minPort, maxPort, m.KubeInformerFactory, m.AgonesInformerFactory)
+		pa := newRangeAllocator("", minPort, maxPort, m.KubeInformerFactory, m.AgonesInformerFactory)
 		nodeWatch := watch.NewFake()
 		m.KubeClient.AddWatchReactor("nodes", k8stesting.DefaultWatchReactor(nodeWatch, nil))
 
@@ -241,7 +291,7 @@ func TestPortAllocatorAllocate(t *testing.T) {
 	t.Run("ports are unique in a node", func(t *testing.T) {
 		fixture := dynamicGameServerFixture()
 		m := agtesting.NewMocks()
-		pa := newAllocator(10, 20, m.KubeInformerFactory, m.AgonesInformerFactory)
+		pa := newRangeAllocator("", 10, 20, m.KubeInformerFactory, m.AgonesInformerFactory)
 
 		m.KubeClient.AddReactor("list", "nodes", func(action k8stesting.Action) (bool, runtime.Object, error) {
 			nl := &corev1.NodeList{Items: []corev1.Node{n1}}
@@ -264,7 +314,7 @@ func TestPortAllocatorAllocate(t *testing.T) {
 
 	t.Run("portPolicy as an empty string", func(t *testing.T) {
 		m := agtesting.NewMocks()
-		pa := newAllocator(10, 50, m.KubeInformerFactory, m.AgonesInformerFactory)
+		pa := newRangeAllocator("", 10, 50, m.KubeInformerFactory, m.AgonesInformerFactory)
 		nodeWatch := watch.NewFake()
 		m.KubeClient.AddWatchReactor("nodes", k8stesting.DefaultWatchReactor(nodeWatch, nil))
 
@@ -289,10 +339,53 @@ func TestPortAllocatorAllocate(t *testing.T) {
 	})
 }
 
-func TestPortAllocatorMultithreadAllocate(t *testing.T) {
+func TestPortRangeAllocatorAllocate_NamedRange(t *testing.T) {
+	t.Parallel()
+	utilruntime.FeatureTestMutex.Lock()
+	defer utilruntime.FeatureTestMutex.Unlock()
+
+	err := utilruntime.ParseFeatures(string(utilruntime.FeaturePortRanges) + "=true")
+	assert.NoError(t, err)
+	defer func() {
+		_ = utilruntime.ParseFeatures("")
+	}()
+
+	m := agtesting.NewMocks()
+	pa := newRangeAllocator("test", 10, 50, m.KubeInformerFactory, m.AgonesInformerFactory)
+	nodeWatch := watch.NewFake()
+	m.KubeClient.AddWatchReactor("nodes", k8stesting.DefaultWatchReactor(nodeWatch, nil))
+
+	ctx, cancel := agtesting.StartInformers(m, pa.nodeSynced)
+	defer cancel()
+
+	// Make sure the add's don't corrupt the sync
+	// (no longer an issue, but leave this here for posterity)
+	nodeWatch.Add(&n1)
+	nodeWatch.Add(&n2)
+	assert.True(t, cache.WaitForCacheSync(ctx.Done(), pa.nodeSynced))
+
+	err = pa.syncAll()
+	require.NoError(t, err)
+
+	// single port empty
+	fixture := dynamicGameServerFixture()
+	fixture.Spec.Ports = append(fixture.Spec.Ports,
+		agonesv1.GameServerPort{Name: "passthrough", Range: "test", PortPolicy: agonesv1.Passthrough},
+		agonesv1.GameServerPort{Name: "passthrough", Range: "test", PortPolicy: agonesv1.Passthrough},
+	)
+	gs := pa.Allocate(fixture)
+
+	assert.NotNil(t, gs)
+	assert.Empty(t, gs.Spec.Ports[0].HostPort)
+	assert.NotEmpty(t, gs.Spec.Ports[1].HostPort)
+	assert.NotEmpty(t, gs.Spec.Ports[2].HostPort)
+	assert.Equal(t, 2, countTotalAllocatedPorts(pa))
+}
+
+func TestPortRangeAllocatorMultithreadAllocate(t *testing.T) {
 	fixture := dynamicGameServerFixture()
 	m := agtesting.NewMocks()
-	pa := newAllocator(10, 20, m.KubeInformerFactory, m.AgonesInformerFactory)
+	pa := newRangeAllocator("", 10, 20, m.KubeInformerFactory, m.AgonesInformerFactory)
 
 	m.KubeClient.AddReactor("list", "nodes", func(action k8stesting.Action) (bool, runtime.Object, error) {
 		nl := &corev1.NodeList{Items: []corev1.Node{n1, n2}}
@@ -326,12 +419,12 @@ func TestPortAllocatorMultithreadAllocate(t *testing.T) {
 	wg.Wait()
 }
 
-func TestPortAllocatorDeAllocate(t *testing.T) {
+func TestPortRangeAllocatorDeAllocate(t *testing.T) {
 	t.Parallel()
 
 	fixture := dynamicGameServerFixture()
 	m := agtesting.NewMocks()
-	pa := newAllocator(10, 20, m.KubeInformerFactory, m.AgonesInformerFactory)
+	pa := newRangeAllocator("", 10, 20, m.KubeInformerFactory, m.AgonesInformerFactory)
 	nodes := []corev1.Node{n1, n2, n3}
 	m.KubeClient.AddReactor("list", "nodes", func(action k8stesting.Action) (bool, runtime.Object, error) {
 		nl := &corev1.NodeList{Items: nodes}
@@ -368,11 +461,11 @@ func TestPortAllocatorDeAllocate(t *testing.T) {
 	}
 }
 
-func TestPortAllocatorSyncPortAllocations(t *testing.T) {
+func TestPortRangeAllocatorSyncPortAllocations(t *testing.T) {
 	t.Parallel()
 
 	m := agtesting.NewMocks()
-	pa := newAllocator(10, 20, m.KubeInformerFactory, m.AgonesInformerFactory)
+	pa := newRangeAllocator("", 10, 20, m.KubeInformerFactory, m.AgonesInformerFactory)
 
 	m.KubeClient.AddReactor("list", "nodes", func(action k8stesting.Action) (bool, runtime.Object, error) {
 		nl := &corev1.NodeList{Items: []corev1.Node{n1, n2, n3}}
@@ -410,7 +503,12 @@ func TestPortAllocatorSyncPortAllocations(t *testing.T) {
 				Ports: []agonesv1.GameServerPort{{PortPolicy: agonesv1.Static, HostPort: 12}},
 			},
 			Status: agonesv1.GameServerStatus{State: agonesv1.GameServerStateCreating}}
-		gsl := &agonesv1.GameServerList{Items: []agonesv1.GameServer{gs1, gs2, gs3, gs4, gs5, gs6}}
+		gs7 := agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs7", UID: "7"},
+			Spec: agonesv1.GameServerSpec{
+				Ports: []agonesv1.GameServerPort{{PortPolicy: agonesv1.Dynamic, HostPort: 30}},
+			},
+			Status: agonesv1.GameServerStatus{State: agonesv1.GameServerStateReady, Ports: []agonesv1.GameServerStatusPort{{Port: 30}}, NodeName: n1.ObjectMeta.Name}}
+		gsl := &agonesv1.GameServerList{Items: []agonesv1.GameServer{gs1, gs2, gs3, gs4, gs5, gs6, gs7}}
 		return true, gsl, nil
 	})
 
@@ -435,7 +533,7 @@ func TestPortAllocatorSyncPortAllocations(t *testing.T) {
 	assert.Equal(t, 5, count)
 }
 
-func TestPortAllocatorSyncDeleteGameServer(t *testing.T) {
+func TestPortRangeAllocatorSyncDeleteGameServer(t *testing.T) {
 	t.Parallel()
 
 	m := agtesting.NewMocks()
@@ -463,7 +561,7 @@ func TestPortAllocatorSyncDeleteGameServer(t *testing.T) {
 		},
 		Status: agonesv1.GameServerStatus{State: agonesv1.GameServerStateReady, Ports: []agonesv1.GameServerStatusPort{{Port: 10}}, NodeName: n2.ObjectMeta.Name}}
 
-	pa := newAllocator(10, 20, m.KubeInformerFactory, m.AgonesInformerFactory)
+	pa := newRangeAllocator("", 10, 20, m.KubeInformerFactory, m.AgonesInformerFactory)
 
 	m.KubeClient.AddReactor("list", "nodes", func(action k8stesting.Action) (bool, runtime.Object, error) {
 		nl := &corev1.NodeList{Items: []corev1.Node{n1, n2, n3}}
@@ -522,7 +620,7 @@ func TestNodePortAllocation(t *testing.T) {
 	t.Parallel()
 
 	m := agtesting.NewMocks()
-	pa := newAllocator(10, 20, m.KubeInformerFactory, m.AgonesInformerFactory)
+	pa := newRangeAllocator("", 10, 20, m.KubeInformerFactory, m.AgonesInformerFactory)
 	nodes := []corev1.Node{n1, n2, n3}
 	m.KubeClient.AddReactor("list", "nodes", func(action k8stesting.Action) (bool, runtime.Object, error) {
 		nl := &corev1.NodeList{Items: nodes}
@@ -556,10 +654,10 @@ func TestTakePortAllocation(t *testing.T) {
 	}
 }
 
-func TestPortAllocatorRegisterExistingGameServerPorts(t *testing.T) {
+func TestPortRangeAllocatorRegisterExistingGameServerPorts(t *testing.T) {
 	t.Parallel()
 	m := agtesting.NewMocks()
-	pa := newAllocator(10, 13, m.KubeInformerFactory, m.AgonesInformerFactory)
+	pa := newRangeAllocator("", 10, 13, m.KubeInformerFactory, m.AgonesInformerFactory)
 
 	gs1 := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs1", UID: "1"},
 		Spec: agonesv1.GameServerSpec{
@@ -603,7 +701,7 @@ func dynamicGameServerFixture() *agonesv1.GameServer {
 
 // countAllocatedPorts counts how many of a given port have been
 // allocated across nodes
-func countAllocatedPorts(pa *portAllocator, p int32) int {
+func countAllocatedPorts(pa *portRangeAllocator, p int32) int {
 	count := 0
 	for _, node := range pa.portAllocations {
 		if node[p] {
@@ -614,7 +712,7 @@ func countAllocatedPorts(pa *portAllocator, p int32) int {
 }
 
 // countTotalAllocatedPorts counts the total number of allocated ports
-func countTotalAllocatedPorts(pa *portAllocator) int {
+func countTotalAllocatedPorts(pa *portRangeAllocator) int {
 	count := 0
 	for _, node := range pa.portAllocations {
 		for _, alloc := range node {
@@ -626,7 +724,7 @@ func countTotalAllocatedPorts(pa *portAllocator) int {
 	return count
 }
 
-func countTotalPorts(pa *portAllocator) int {
+func countTotalPorts(pa *portRangeAllocator) int {
 	count := 0
 	for _, node := range pa.portAllocations {
 		count += len(node)

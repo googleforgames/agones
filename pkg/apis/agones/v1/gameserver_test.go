@@ -1430,6 +1430,22 @@ func TestGameServerCountPorts(t *testing.T) {
 	}))
 }
 
+func TestGameServerCountPortsForRange(t *testing.T) {
+	fixture := &GameServer{Spec: GameServerSpec{Ports: []GameServerPort{
+		{PortPolicy: Dynamic, Range: "test"},
+		{PortPolicy: Dynamic},
+		{PortPolicy: Dynamic, Range: "test"},
+		{PortPolicy: Static, Range: "test"},
+	}}}
+
+	assert.Equal(t, 2, fixture.CountPortsForRange("test", func(policy PortPolicy) bool {
+		return policy == Dynamic
+	}))
+	assert.Equal(t, 1, fixture.CountPortsForRange("test", func(policy PortPolicy) bool {
+		return policy == Static
+	}))
+}
+
 func TestGameServerPatch(t *testing.T) {
 	fixture := &GameServer{ObjectMeta: metav1.ObjectMeta{Name: "lucy"},
 		Spec: GameServerSpec{Container: "goat"}}

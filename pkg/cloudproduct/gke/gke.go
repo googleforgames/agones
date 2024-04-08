@@ -124,6 +124,7 @@ func (*gkeAutopilot) SyncPodPortsToGameServer(gs *agonesv1.GameServer, pod *core
 }
 
 func (*gkeAutopilot) NewPortAllocator(minPort, maxPort int32,
+	_ map[string]portallocator.PortRange,
 	_ informers.SharedInformerFactory,
 	_ externalversions.SharedInformerFactory) portallocator.Interface {
 	return &autopilotPortAllocator{minPort: minPort, maxPort: maxPort}
