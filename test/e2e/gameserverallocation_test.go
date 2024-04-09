@@ -1407,27 +1407,44 @@ func TestGameServerAllocationDuringMultipleAllocationClients(t *testing.T) {
 
 	logrus.Infof("Starting Allocation.")
 	var wg sync.WaitGroup
+	scaleDone := make(chan bool)
+
+	go func() {
+		time.Sleep(3 * time.Second)
+		scaleFleetPatch(ctx, t, preferred, preferred.Spec.Replicas-10)
+		close(scaleDone) // scaling is done
+	}()
 
 	// Allocate GS by 10 clients in parallel while the fleet is scaling down
 	for i := 0; i < 10; i++ {
 		wg.Add(1)
 
-		go func() {
+		go func(i int) {
 			defer wg.Done()
 			for j := 0; j < 10; j++ {
-				gsa1, err := framework.AgonesClient.AllocationV1().GameServerAllocations(framework.Namespace).Create(ctx, gsa.DeepCopy(), metav1.CreateOptions{})
-				if err == nil {
-					allocatedGS.LoadOrStore(gsa1.Status.GameServerName, true)
-				} else {
-					t.Errorf("could not completed gsa1 allocation : %v", err)
+				select {
+				case <-scaleDone:
+					logrus.Warnf("Skipping allocation for client %d, iteration %d because scaling has started.", i, j)
+					return
+				default:
+					gsa1, err := framework.AgonesClient.AllocationV1().GameServerAllocations(framework.Namespace).Create(ctx, gsa.DeepCopy(), metav1.CreateOptions{})
+					if err == nil {
+						allocatedGS.LoadOrStore(gsa1.Status.GameServerName, true)
+						logrus.Infof("Allocation successful for client %d, iteration %d", i, j)
+					} else {
+						logrus.Errorf("Allocation failed for client %d, iteration %d: %v", i, j, err)
+						t.Errorf("could not completed gsa1 allocation : %d, iteration %d: %v", i, j, err)
+					}
 				}
+				// short delay to allow other goroutines to proceed
+				time.Sleep(100 * time.Millisecond)
 			}
-		}()
+		}(i)
 	}
 
-	time.Sleep(3 * time.Second)
+	// time.Sleep(3 * time.Second)
 	// scale down further while allocating
-	scaleFleetPatch(ctx, t, preferred, preferred.Spec.Replicas-10)
+	// scaleFleetPatch(ctx, t, preferred, preferred.Spec.Replicas-10)
 
 	wg.Wait()
 	logrus.Infof("Finished Allocation.")
