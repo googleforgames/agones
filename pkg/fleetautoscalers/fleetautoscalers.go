@@ -333,7 +333,6 @@ func applyCounterOrListPolicy(c *autoscalingv1.CounterPolicy, l *autoscalingv1.L
 		// Ensures buffer is at least 1 if desiredCapacity calculation results in a value less than or equal to aggAllocatedCount
 		if buffer < 1 {
 			buffer = 1
-			desiredCapacity = aggAllocatedCount + buffer
 		}
 
 	}
