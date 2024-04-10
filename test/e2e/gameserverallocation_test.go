@@ -1388,8 +1388,7 @@ func TestGameServerAllocationDuringMultipleAllocationClients(t *testing.T) {
 	if assert.Nil(t, err) {
 		defer fleets.Delete(ctx, preferred.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
 	} else {
-		// assert.FailNow(t, "could not create first fleet")
-		t.Fatalf("could not create first fleet: %v", err)
+		assert.FailNow(t, "could not create first fleet")
 	}
 
 	framework.AssertFleetCondition(t, preferred, e2e.FleetReadyCount(preferred.Spec.Replicas))
@@ -1415,7 +1414,7 @@ func TestGameServerAllocationDuringMultipleAllocationClients(t *testing.T) {
 		scaleFleetPatch(ctx, t, preferred, preferred.Spec.Replicas-10)
 	}()
 
-	var totalAllocations int32 = 0
+	var totalAllocations int32
 
 	// Allocate GS by 10 clients in parallel while the fleet is scaling down
 	for i := 0; i < 10; i++ {
@@ -1426,7 +1425,6 @@ func TestGameServerAllocationDuringMultipleAllocationClients(t *testing.T) {
 			for j := 0; j < 10; j++ {
 				gsa1, err := framework.AgonesClient.AllocationV1().GameServerAllocations(framework.Namespace).Create(ctx, gsa.DeepCopy(), metav1.CreateOptions{})
 				if err == nil {
-					// allocatedGS.LoadOrStore(gsa1.Status.GameServerName, true)
 					_, loaded := allocatedGS.LoadOrStore(gsa1.Status.GameServerName, true)
 					if !loaded {
 						atomic.AddInt32(&totalAllocations, 1)
