@@ -111,6 +111,10 @@ spec:
         - name: MAX_PORT
           value: {{ .Values.gameservers.maxPort | quote }}
         {{- if .Values.gameservers.portRanges }}
+        {{- $featureGates := include "agones.featureGates" . | fromYaml }}
+        {{- if not $featureGates.PortRanges }}
+        {{- fail "gameservers.portRanges specified without feature gate PortRanges enabled!" }}
+        {{- end }}
         {{- $minPorts := dict -}}
         {{- $maxPorts := dict -}}
         {{- range $v := .Values.gameservers.portRanges -}}

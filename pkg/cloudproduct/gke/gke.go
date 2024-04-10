@@ -40,6 +40,7 @@ const (
 	primaryContainerAnnotation   = "autopilot.gke.io/primary-container"
 
 	errPortPolicyMustBeDynamic      = "portPolicy must be Dynamic on GKE Autopilot"
+	errRangeInvalid                 = "range must not be used on GKE Autopilot"
 	errSchedulingMustBePacked       = "scheduling strategy must be Packed on GKE Autopilot"
 	errEvictionSafeOnUpgradeInvalid = "eviction.safe OnUpgrade not supported on GKE Autopilot"
 )
@@ -137,6 +138,9 @@ func (g *gkeAutopilot) ValidateGameServerSpec(gss *agonesv1.GameServerSpec, fldP
 	for i, p := range gss.Ports {
 		if p.PortPolicy != agonesv1.Dynamic {
 			allErrs = append(allErrs, field.Invalid(fldPath.Child("ports").Index(i).Child("portPolicy"), string(p.PortPolicy), errPortPolicyMustBeDynamic))
+		}
+		if p.Range != "" {
+			allErrs = append(allErrs, field.Invalid(fldPath.Child("ports").Index(i).Child("range"), string(p.PortPolicy), errRangeInvalid))
 		}
 	}
 	// See SetEviction comment below for why we block EvictionSafeOnUpgrade, if Extended Duration pods aren't supported.
