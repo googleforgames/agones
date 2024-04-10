@@ -49,8 +49,6 @@ steps:
       - ${_TEST_CLUSTER_NAME}
       - ${_TEST_CLUSTER_LOCATION}
       - ${_REGISTRY}
-      - ${_PARENT_COMMIT_SHA}
-      - ${_PARENT_BUILD_ID}
     id: e2e-stable
     waitFor: [e2e-feature-gates]
 tags:
