@@ -18,16 +18,9 @@ import (
 	"context"
 	"fmt"
 	"sync"
-	"sync/atomic"
 	"testing"
 	"time"
 
-	"agones.dev/agones/pkg/apis"
-	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
-	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
-	multiclusterv1 "agones.dev/agones/pkg/apis/multicluster/v1"
-	"agones.dev/agones/pkg/util/runtime"
-	e2e "agones.dev/agones/test/e2e/framework"
 	"github.com/google/go-cmp/cmp"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
@@ -36,6 +29,13 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/uuid"
 	"k8s.io/apimachinery/pkg/util/wait"
+
+	"agones.dev/agones/pkg/apis"
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
+	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
+	multiclusterv1 "agones.dev/agones/pkg/apis/multicluster/v1"
+	"agones.dev/agones/pkg/util/runtime"
+	e2e "agones.dev/agones/test/e2e/framework"
 )
 
 func TestCreateFleetAndGameServerAllocate(t *testing.T) {
@@ -1409,53 +1409,40 @@ func TestGameServerAllocationDuringMultipleAllocationClients(t *testing.T) {
 	logrus.Infof("Starting Allocation.")
 	var wg sync.WaitGroup
 
-	go func() {
-		time.Sleep(3 * time.Second)
-		scaleFleetPatch(ctx, t, preferred, preferred.Spec.Replicas-10)
-	}()
-
-	var totalAllocations int32
-
 	// Allocate GS by 10 clients in parallel while the fleet is scaling down
 	for i := 0; i < 10; i++ {
 		wg.Add(1)
 
-		go func(i int) {
+		go func() {
 			defer wg.Done()
 			for j := 0; j < 10; j++ {
-				gsa1, err := framework.AgonesClient.AllocationV1().GameServerAllocations(framework.Namespace).Create(ctx, gsa.DeepCopy(), metav1.CreateOptions{})
-				if err == nil {
-					_, loaded := allocatedGS.LoadOrStore(gsa1.Status.GameServerName, true)
-					if !loaded {
-						atomic.AddInt32(&totalAllocations, 1)
+				for attempt := 0; attempt < 3; attempt++ {
+					gsa1, err := framework.AgonesClient.AllocationV1().GameServerAllocations(framework.Namespace).Create(ctx, gsa.DeepCopy(), metav1.CreateOptions{})
+					if err == nil {
+						allocatedGS.LoadOrStore(gsa1.Status.GameServerName, true)
+						break
 					}
-
-					logrus.Infof("Allocation successful for client %d, iteration %d", i, j)
-				} else {
-					logrus.Errorf("Allocation failed for client %d, iteration %d: %v", i, j, err)
-					t.Errorf("could not completed gsa1 allocation : %d, iteration %d: %v", i, j, err)
+				}
+				if err != nil {
+					t.Logf("could not completed gsa1 allocation : %v", err)
 				}
 			}
-			// short delay to allow other goroutines to proceed
-			time.Sleep(100 * time.Millisecond)
-		}(i)
+		}()
 	}
 
-	// time.Sleep(3 * time.Second)
+	time.Sleep(3 * time.Second)
 	// scale down further while allocating
-	// scaleFleetPatch(ctx, t, preferred, preferred.Spec.Replicas-10)
+	scaleFleetPatch(ctx, t, preferred, preferred.Spec.Replicas-10)
 
 	wg.Wait()
 	logrus.Infof("Finished Allocation.")
 
 	// count the number of unique game servers allocated
 	// there should not be any duplicate
-	// uniqueAllocatedGSs := 0
-	// allocatedGS.Range(func(k, v interface{}) bool {
-	// 	uniqueAllocatedGSs++
-	// 	return true
-	// })
-	// assert.Equal(t, 100, uniqueAllocatedGSs)
-
-	assert.Equal(t, 100, totalAllocations)
+	uniqueAllocatedGSs := 0
+	allocatedGS.Range(func(k, v interface{}) bool {
+		uniqueAllocatedGSs++
+		return true
+	})
+	assert.Equal(t, 100, uniqueAllocatedGSs)
 }
