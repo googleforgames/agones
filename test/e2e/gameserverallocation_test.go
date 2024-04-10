@@ -1442,11 +1442,12 @@ func TestGameServerAllocationDuringMultipleAllocationClients(t *testing.T) {
 	})
 
 	// TODO: Compromising on the expected allocation count to be between 98 to 100 due to a known allocation issue. Please check: [https://github.com/googleforgames/agones/issues/3553]
-	if uniqueAllocatedGSs < 98 {
+	switch {
+	case uniqueAllocatedGSs < 98:
 		t.Fatalf("Test failed: Less than 98 GameServers were allocated. Allocated: %d", uniqueAllocatedGSs)
-	} else if uniqueAllocatedGSs < 100 {
+	case uniqueAllocatedGSs < 100:
 		t.Logf("Number of GameServers Allocated: %d. This might be due to a known allocation issue. Please check: [https://github.com/googleforgames/agones/issues/3553]", uniqueAllocatedGSs)
-	} else {
+	default:
 		t.Logf("Number of GameServers allocated: %d. This matches the expected outcome.", uniqueAllocatedGSs)
 	}
 }
