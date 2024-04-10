@@ -58,15 +58,6 @@ xonotic-7lk8x-rwhst        Ready   34.71.168.92     7330   gk3-genai-quickstart-
 
 For the full details of the YAML file head to the [Fleet Specification Guide]({{< ref "/docs/Reference/fleet.md" >}})
 
-{{< alert title="Note" color="info">}} The game servers deployed from a `Fleet` resource will be deployed in the same namespace. The above example omits specifying a namespace, which implies both the `Fleet` and the associated `GameServer` resources will be deployed to the `default` namespace. {{< /alert >}}
-
-## Viewing GameServer Logs
-
-For troubleshooting or to check how your game servers are running, you can look at the logs of a specific pod using:
-
-```bash
-kubectl logs -f <xonotic-game-server-pod-name>
-```
 
 ## Connect to the Game Server
 
