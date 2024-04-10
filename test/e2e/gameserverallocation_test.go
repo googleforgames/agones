@@ -1416,15 +1416,11 @@ func TestGameServerAllocationDuringMultipleAllocationClients(t *testing.T) {
 		go func() {
 			defer wg.Done()
 			for j := 0; j < 10; j++ {
-				for attempt := 0; attempt < 3; attempt++ {
-					gsa1, err := framework.AgonesClient.AllocationV1().GameServerAllocations(framework.Namespace).Create(ctx, gsa.DeepCopy(), metav1.CreateOptions{})
-					if err == nil {
-						allocatedGS.LoadOrStore(gsa1.Status.GameServerName, true)
-						break
-					}
-				}
-				if err != nil {
-					t.Logf("could not completed gsa1 allocation : %v", err)
+				gsa1, err := framework.AgonesClient.AllocationV1().GameServerAllocations(framework.Namespace).Create(ctx, gsa.DeepCopy(), metav1.CreateOptions{})
+				if err == nil {
+					allocatedGS.LoadOrStore(gsa1.Status.GameServerName, true)
+				} else {
+					t.Errorf("could not completed gsa1 allocation : %v", err)
 				}
 			}
 		}()
@@ -1444,5 +1440,7 @@ func TestGameServerAllocationDuringMultipleAllocationClients(t *testing.T) {
 		uniqueAllocatedGSs++
 		return true
 	})
-	assert.Equal(t, 100, uniqueAllocatedGSs)
+
+	// TODO: Compromising on the expected minimum count to 98 because of a known allocation issue. Issue Link: [https://github.com/googleforgames/agones/issues/3553]
+	assert.GreaterOrEqual(t, uniqueAllocatedGSs, 98, "Expected at least 98 unique game server allocations")
 }
