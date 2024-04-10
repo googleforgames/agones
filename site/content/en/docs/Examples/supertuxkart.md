@@ -57,16 +57,6 @@ supertuxkart-xfw2g-skdnf         Ready       34.82.158.69   7585   gke-agon-defa
 
 For the full details of the YAML file head to the [Fleet Specification Guide]({{< ref "/docs/Reference/fleet.md" >}})
 
-{{< alert title="Note" color="info">}} The game servers deployed from a `Fleet` resource will be deployed in the same namespace. The above example omits specifying a namespace, which implies both the `Fleet` and the associated `GameServer` resources will be deployed to the `default` namespace. {{< /alert >}}
-
-## Viewing GameServer Logs
-
-For troubleshooting or to check how your game servers are running, you can look at the logs of a specific pod using:
-
-```bash
-kubectl logs -f <supertuxkart-game-server-pod-name>
-```
-
 ## Connect to the Game Server
 
 After allocating a GameServer from the fleet and obtaining its status and IP, you're ready to connect and play. Here’s how to use the server IP and port to join the game with the SuperTuxKart client:
