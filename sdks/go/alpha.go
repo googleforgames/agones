@@ -107,7 +107,7 @@ func (a *Alpha) GetCounterCount(key string) (int64, error) {
 // value is batched asynchronous any value incremented past the capacity will be silently truncated.
 func (a *Alpha) IncrementCounter(key string, amount int64) error {
 	if amount < 0 {
-		return errors.Errorf("CountIncrement amount must be a positive int64, found %d", amount)
+		return errors.Errorf("amount must be a positive int64, found %d", amount)
 	}
 	_, err := a.client.UpdateCounter(context.Background(), &alpha.UpdateCounterRequest{
 		CounterUpdateRequest: &alpha.CounterUpdateRequest{
@@ -115,7 +115,7 @@ func (a *Alpha) IncrementCounter(key string, amount int64) error {
 			CountDiff: amount,
 		}})
 	if err != nil {
-		return errors.Wrapf(err, "Could not increment Counter %s by amount %d", key, amount)
+		return errors.Wrapf(err, "could not increment Counter %s by amount %d", key, amount)
 	}
 	return err
 }
@@ -125,7 +125,7 @@ func (a *Alpha) IncrementCounter(key string, amount int64) error {
 // Will error if the count is at 0 (to the latest knowledge of the SDK), and no decrement will occur.
 func (a *Alpha) DecrementCounter(key string, amount int64) error {
 	if amount < 0 {
-		return errors.Errorf("CountDecrement amount must be a positive int64, found %d", amount)
+		return errors.Errorf("amount must be a positive int64, found %d", amount)
 	}
 	_, err := a.client.UpdateCounter(context.Background(), &alpha.UpdateCounterRequest{
 		CounterUpdateRequest: &alpha.CounterUpdateRequest{
@@ -133,7 +133,7 @@ func (a *Alpha) DecrementCounter(key string, amount int64) error {
 			CountDiff: amount * -1,
 		}})
 	if err != nil {
-		return errors.Wrapf(err, "Could not decrement Counter %s by amount %d", key, amount)
+		return errors.Wrapf(err, "could not decrement Counter %s by amount %d", key, amount)
 	}
 	return err
 }
