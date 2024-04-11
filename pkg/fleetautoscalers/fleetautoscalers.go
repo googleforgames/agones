@@ -28,6 +28,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pkg/errors"
+	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/apimachinery/pkg/util/uuid"
+
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	autoscalingv1 "agones.dev/agones/pkg/apis/autoscaling/v1"
 	listeragonesv1 "agones.dev/agones/pkg/client/listers/agones/v1"
@@ -35,9 +39,6 @@ import (
 	"agones.dev/agones/pkg/gameservers"
 	gssets "agones.dev/agones/pkg/gameserversets"
 	"agones.dev/agones/pkg/util/runtime"
-	"github.com/pkg/errors"
-	"k8s.io/apimachinery/pkg/util/intstr"
-	"k8s.io/apimachinery/pkg/util/uuid"
 )
 
 var tlsConfig = &tls.Config{}
@@ -321,16 +322,10 @@ func applyCounterOrListPolicy(c *autoscalingv1.CounterPolicy, l *autoscalingv1.L
 		}
 		// The desired TOTAL capacity based on the Aggregated Allocated Counts (see applyBufferPolicy for explanation)
 		desiredCapacity := int64(math.Ceil(float64(aggAllocatedCount*100) / float64(100-bufferPercent)))
-
-		// Ensures desiredCapacity is at least 1
-		if desiredCapacity < 1 {
-			desiredCapacity = 1
-		}
-
 		// Convert into a desired AVAILABLE capacity aka the buffer
 		buffer = desiredCapacity - aggAllocatedCount
 
-		// Ensures buffer is at least 1 if desiredCapacity calculation results in a value less than or equal to aggAllocatedCount
+		// Ensures buffer is at least 1
 		if buffer < 1 {
 			buffer = 1
 		}
