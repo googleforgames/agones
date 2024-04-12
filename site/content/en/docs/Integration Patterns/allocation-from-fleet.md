@@ -20,9 +20,12 @@ label selector to target a specific `Fleet` by name. In this instance, we are ta
 apiVersion: "allocation.agones.dev/v1"
 kind: GameServerAllocation
 spec:
-  required:
-    matchLabels:
-      agones.dev/fleet: xonotic
+  selectors:
+    - matchLabels:
+        agones.dev/fleet: xonotic
+      players:
+        minAvailable: 0
+        maxAvailable: 99
 ```
 
 ## Next Steps:
