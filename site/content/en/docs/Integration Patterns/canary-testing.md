@@ -35,12 +35,17 @@ state that in our system, the label `canary: "true"` will be added to any canary
 apiVersion: "allocation.agones.dev/v1"
 kind: GameServerAllocation
 spec:
-  preferred:
-    - matchLabels:
-        canary: "true"
-  required:
-    matchLabels:
+  - matchLabels:
+      canary: "true"
       agones.dev/fleet: stable
+    players:
+      minAvailable: 0
+      maxAvailable: 99
+  - matchLabels:
+      agones.dev/fleet: stable
+    players:
+      minAvailable: 0
+      maxAvailable: 99
 ```
 
 The above `Allocation` will then preferentially choose the `Fleet` that has `GameServers` with the label and key 
