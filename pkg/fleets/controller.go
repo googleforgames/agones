@@ -550,6 +550,9 @@ func (c *Controller) rollingUpdateRestFixedOnReady(ctx context.Context, fleet *a
 	if len(rest) == 0 {
 		return nil
 	}
+	if runtime.FeatureEnabled(runtime.FeatureRollingUpdateFix) {
+		return c.rollingUpdateRestFixedOnReadyRollingUpdateFix(ctx, fleet, active, rest)
+	}
 
 	// Look at Kubernetes Deployment util ResolveFenceposts() function
 	r, err := intstr.GetValueFromIntOrPercent(fleet.Spec.Strategy.RollingUpdate.MaxUnavailable, int(fleet.Spec.Replicas), false)
