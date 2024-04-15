@@ -23,9 +23,6 @@ spec:
   selectors:
     - matchLabels:
         agones.dev/fleet: xonotic
-      players:
-        minAvailable: 0
-        maxAvailable: 99
 ```
 
 ## Next Steps:
