@@ -344,7 +344,7 @@ kubectl create secret tls autoscalersecret --cert=webhook.crt --key=webhook.key
 You need to put Base64-encoded string into caBundle field in your fleetautoscaler yaml configuration:
 ```bash
 wget https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/webhookfleetautoscalertls.yaml
-sed --in-place -e "s/\$CA_BUNDLE/$( cat ./rootCA.pem |  base64 -w0)/“ webhookfleetautoscalertls.yaml
+sed --in-place -e "s/\$CA_BUNDLE/$( cat ./rootCA.pem |  base64 -w0)/" webhookfleetautoscalertls.yaml
 ```
 
 #### 3. Deploy a Webhook service for autoscaling
