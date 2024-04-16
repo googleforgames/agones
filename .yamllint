@@ -47,4 +47,3 @@ ignore:
   - /site/themes/docsy/
   - /site/vendor/
   - /vendor/
-  - /examples/gameserverallocation.yaml
