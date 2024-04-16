@@ -38,6 +38,7 @@ spec:
   selectors:
     - matchLabels:
         canary: "true"
+    - matchLabels:
         agones.dev/fleet: stable
 ```
 
