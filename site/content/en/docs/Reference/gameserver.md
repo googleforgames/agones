@@ -190,7 +190,7 @@ Game Servers are created through Kubernetes API (either directly or through a [F
 
 [`GameServer.Status`][gss] has two fields which reflect the network address of the `GameServer`: `address` and `addresses`.
 The `address` field is a policy-based choice of "primary address" that will work for many use cases,
-and will always be one of the `addresses`. The `addresses` field contains every address in the [`Node.Status.addresses`][addresses],
+and will always be one of the `addresses`. The `addresses` field contains every address in the [`Node.Status.addresses`][addresses] and [`Pod.Status.PodIPs`][pod IPs] (to allow a direct pod access),
 representing all known ways to reach the `GameServer` over the network.
 
 To choose `address` from `addresses`, [Agones looks for the following address types][addressFunc], in highest to lowest priorty:
@@ -198,6 +198,7 @@ To choose `address` from `addresses`, [Agones looks for the following address ty
 * `ExternalIP`
 * `InternalDNS`
 * `InternalIP`
+* `PodIP`
 
 e.g. if any `ExternalDNS` address is found in the respective `Node`, it is used as the `address`.
 
