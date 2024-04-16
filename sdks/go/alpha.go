@@ -117,7 +117,7 @@ func (a *Alpha) IncrementCounter(key string, amount int64) error {
 	if err != nil {
 		return errors.Wrapf(err, "Could not increment Counter %s by amount %d", key, amount)
 	}
-	return err
+	return nil
 }
 
 // DecrementCounter decreases the current count by the given nonnegative integer amount.
@@ -135,7 +135,7 @@ func (a *Alpha) DecrementCounter(key string, amount int64) error {
 	if err != nil {
 		return errors.Wrapf(err, "Could not decrement Counter %s by amount %d", key, amount)
 	}
-	return err
+	return nil
 }
 
 // SetCounterCount sets a count to the given value. Use with care, as this will overwrite any previous
@@ -149,7 +149,7 @@ func (a *Alpha) SetCounterCount(key string, amount int64) error {
 	if err != nil {
 		return errors.Wrapf(err, "could not set Counter %s count to amount %d", key, amount)
 	}
-	return err
+	return nil
 }
 
 // GetCounterCapacity returns the Capacity for a Counter, given the Counter's key (name).
@@ -172,7 +172,7 @@ func (a *Alpha) SetCounterCapacity(key string, amount int64) error {
 	if err != nil {
 		return errors.Wrapf(err, "could not set Counter %s capacity to amount %d", key, amount)
 	}
-	return err
+	return nil
 }
 
 // GetListCapacity returns the Capacity for a List, given the List's key (name).
@@ -198,7 +198,7 @@ func (a *Alpha) SetListCapacity(key string, amount int64) error {
 	if err != nil {
 		return errors.Wrapf(err, "could not set List %s capacity to amount %d", key, amount)
 	}
-	return err
+	return nil
 }
 
 // ListContains returns if a string exists in a List's values list, given the List's key (name)
