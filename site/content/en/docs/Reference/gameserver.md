@@ -190,7 +190,7 @@ Game Servers are created through Kubernetes API (either directly or through a [F
 
 [`GameServer.Status`][gss] has two fields which reflect the network address of the `GameServer`: `address` and `addresses`.
 The `address` field is a policy-based choice of "primary address" that will work for many use cases,
-and will always be one of the `addresses`. The `addresses` field contains every address in the [`Node.Status.addresses`][addresses] and [`Pod.Status.PodIPs`][pod IPs] (to allow a direct pod access),
+and will always be one of the `addresses`. The `addresses` field contains every address in the [`Node.Status.addresses`][addresses] and [`Pod.Status.podIPs`][podIPs] (to allow a direct pod access),
 representing all known ways to reach the `GameServer` over the network.
 
 To choose `address` from `addresses`, [Agones looks for the following address types][addressFunc], in highest to lowest priorty:
@@ -206,5 +206,6 @@ The policy for `address` will work for many use-cases, but for some advanced cas
 to evaluate all `addresses` and pick the addresses that best suits your needs.
 
 [addresses]: https://v1-26.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#nodeaddress-v1-core
+[podIPs]: https://v1-26.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#podip-v1-core
 [addressFunc]: https://github.com/googleforgames/agones/blob/a59c5394c7f5bac66e530d21446302581c10c225/pkg/gameservers/gameservers.go#L37-L71
 [gss]: {{% ref "/docs/Reference/agones_crd_api_reference.html#agones.dev/v1.GameServerStatus"  %}}
