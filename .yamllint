@@ -5,6 +5,37 @@ rules:
   truthy: disable
   line-length:
     max: 1500
+    level: error
+  trailing-spaces:
+    level: error
+  comments-indentation:
+    level: error
+  comments:
+    level: error
+  braces:
+    level: error
+  indentation:
+    level: error
+  brackets:
+    level: error
+  colons:
+    level: error
+  commas:
+    level: error
+  empty-lines:
+    level: error
+  float-values:
+    level: error
+  hyphens:
+    level: error
+  key-duplicates:
+    level: error
+  new-line-at-end-of-file:
+    level: error
+  new-lines:
+    level: error
+  octal-values:
+    level: error
 
 ignore:
   - /build/.gomod/
