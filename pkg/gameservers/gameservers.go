@@ -88,6 +88,16 @@ func applyGameServerAddressAndPort(gs *agonesv1.GameServer, node *corev1.Node, p
 	gs.Status.Addresses = addrs
 	gs.Status.NodeName = pod.Spec.NodeName
 
+	// TODO: Update / Add tests
+	// TODO: Update doc
+	for _, ip := range pod.Status.PodIPs {
+		gs.Status.Addresses = append(gs.Status.Addresses, corev1.NodeAddress{
+			// TODO: Move this to a const
+			Type:    "PodIP",
+			Address: ip.String(),
+		})
+	}
+
 	if err := syncPodPortsToGameServer(gs, pod); err != nil {
 		return gs, errors.Wrapf(err, "cloud product error syncing ports on GameServer %s", gs.ObjectMeta.Name)
 	}
