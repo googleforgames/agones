@@ -1379,19 +1379,19 @@ func TestCounters(t *testing.T) {
 		},
 		"IncrementCounter Past Capacity": {
 			msg:         "INCREMENT_COUNTER games 50",
-			want:        "ERROR: Could not increment Counter games by amount 50: rpc error: code = Unknown desc = out of range. Count must be within range [0,Capacity]. Found Count: 51, Capacity: 50\n",
+			want:        "ERROR: could not increment Counter games by amount 50: rpc error: code = Unknown desc = out of range. Count must be within range [0,Capacity]. Found Count: 51, Capacity: 50\n",
 			counterName: "games",
 			wantCount:   "COUNTER: 1\n",
 		},
 		"IncrementCounter Negative": {
 			msg:         "INCREMENT_COUNTER games -1",
-			want:        "ERROR: CountIncrement amount must be a positive int64, found -1\n",
+			want:        "ERROR: amount must be a positive int64, found -1\n",
 			counterName: "games",
 			wantCount:   "COUNTER: 1\n",
 		},
 		"IncrementCounter Counter Does Not Exist": {
 			msg:  "INCREMENT_COUNTER same 1",
-			want: "ERROR: Could not increment Counter same by amount 1: rpc error: code = Unknown desc = counter not found: same\n",
+			want: "ERROR: could not increment Counter same by amount 1: rpc error: code = Unknown desc = counter not found: same\n",
 		},
 		"DecrementCounter": {
 			msg:         "DECREMENT_COUNTER bar 10",
@@ -1401,19 +1401,19 @@ func TestCounters(t *testing.T) {
 		},
 		"DecrementCounter Past Capacity": {
 			msg:         "DECREMENT_COUNTER games 2",
-			want:        "ERROR: Could not decrement Counter games by amount 2: rpc error: code = Unknown desc = out of range. Count must be within range [0,Capacity]. Found Count: -1, Capacity: 50\n",
+			want:        "ERROR: could not decrement Counter games by amount 2: rpc error: code = Unknown desc = out of range. Count must be within range [0,Capacity]. Found Count: -1, Capacity: 50\n",
 			counterName: "games",
 			wantCount:   "COUNTER: 1\n",
 		},
 		"DecrementCounter Negative": {
 			msg:         "DECREMENT_COUNTER games -1",
-			want:        "ERROR: CountDecrement amount must be a positive int64, found -1\n",
+			want:        "ERROR: amount must be a positive int64, found -1\n",
 			counterName: "games",
 			wantCount:   "COUNTER: 1\n",
 		},
 		"DecrementCounter Counter Does Not Exist": {
 			msg:  "DECREMENT_COUNTER lame 1",
-			want: "ERROR: Could not decrement Counter lame by amount 1: rpc error: code = Unknown desc = counter not found: lame\n",
+			want: "ERROR: could not decrement Counter lame by amount 1: rpc error: code = Unknown desc = counter not found: lame\n",
 		},
 		"SetCounterCount": {
 			msg:         "SET_COUNTER_COUNT baz 0",
