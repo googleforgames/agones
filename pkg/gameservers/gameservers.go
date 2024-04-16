@@ -24,6 +24,11 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 )
 
+const (
+	// NodePodIP identifies an IP address from a pod.
+	NodePodIP corev1.NodeAddressType = "PodIP"
+)
+
 // isGameServerPod returns if this Pod is a Pod that comes from a GameServer
 func isGameServerPod(pod *corev1.Pod) bool {
 	if agonesv1.GameServerRolePodSelector.Matches(labels.Set(pod.ObjectMeta.Labels)) {
@@ -92,9 +97,8 @@ func applyGameServerAddressAndPort(gs *agonesv1.GameServer, node *corev1.Node, p
 	// TODO: Update doc
 	for _, ip := range pod.Status.PodIPs {
 		gs.Status.Addresses = append(gs.Status.Addresses, corev1.NodeAddress{
-			// TODO: Move this to a const
-			Type:    "PodIP",
-			Address: ip.String(),
+			Type:    NodePodIP,
+			Address: ip.IP,
 		})
 	}
 
