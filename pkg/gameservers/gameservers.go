@@ -93,7 +93,6 @@ func applyGameServerAddressAndPort(gs *agonesv1.GameServer, node *corev1.Node, p
 	gs.Status.Addresses = addrs
 	gs.Status.NodeName = pod.Spec.NodeName
 
-	// TODO: Update / Add tests
 	// TODO: Update doc
 	for _, ip := range pod.Status.PodIPs {
 		gs.Status.Addresses = append(gs.Status.Addresses, corev1.NodeAddress{
