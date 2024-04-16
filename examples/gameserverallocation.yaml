@@ -85,6 +85,7 @@ spec:
       mode: deathmatch
     annotations:
       map: garden22
+  # yamllint disable rule:comments-indentation rule:line-length
   # [Stage: Alpha]
   # [FeatureFlag:CountsAndLists]
   # `Priorities` configuration alters the order in which `GameServers` are searched for matches to the configured `selectors`.

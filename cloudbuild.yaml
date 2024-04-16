@@ -331,7 +331,7 @@ steps:
     args:
       - --bucket=gs://$_CACHE_BUCKET
       - --key=$_CPP_SDK_BUILD_CACHE_KEY-$( checksum sdks/cpp/CMakeLists.txt )
-      - --path=sdks/cpp/.build # CPP SDK build
+      - --path=sdks/cpp/.build  # CPP SDK build
     id: cpp-sdk-build-save-cache
     waitFor:
       - build-sdks
@@ -339,7 +339,7 @@ steps:
     args:
       - --bucket=gs://$_CACHE_BUCKET
       - --key=$_CPP_SDK_CONFORMANCE_CACHE_KEY-$( sdks/cpp/CMakeLists.txt )
-      - --path=test/sdk/cpp/sdk # CPP conformance test build
+      - --path=test/sdk/cpp/sdk  # CPP conformance test build
     id: cpp-sdk-conformance-save-cache
     waitFor:
       - sdk-conformance
@@ -347,7 +347,7 @@ steps:
     args:
       - --bucket=gs://$_CACHE_BUCKET
       - --key=$_RUST_SDK_BUILD_CACHE_KEY-$( checksum test/sdk/rust/Cargo.toml )
-      - --path=test/sdk/rust/.cargo # Rust conformance test build
+      - --path=test/sdk/rust/.cargo  # Rust conformance test build
       - --path=test/sdk/rust/.cargo-targets
       - --no-clobber
     id: rust-build-save-cache
@@ -357,7 +357,7 @@ steps:
     args:
       - --bucket=gs://$_CACHE_BUCKET
       - --key=$_HTMLTEST_CACHE_KEY
-      - --path=site/tmp # htmltest URL checks
+      - --path=site/tmp  # htmltest URL checks
     id: htmltest-save-cache
     waitFor:
       - tests
