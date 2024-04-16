@@ -17,11 +17,12 @@ package gameservers
 import (
 	"net"
 
-	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 )
 
 // isGameServerPod returns if this Pod is a Pod that comes from a GameServer
@@ -87,6 +88,15 @@ func applyGameServerAddressAndPort(gs *agonesv1.GameServer, node *corev1.Node, p
 	gs.Status.Address = addr
 	gs.Status.Addresses = addrs
 	gs.Status.NodeName = pod.Spec.NodeName
+
+	// append Pod IP addresses to GameServer status for direct pod access, this is beneficial for configurations such as IPv6 without NAT.
+	for _, ip := range pod.Status.PodIPs {
+		podIPEntry := corev1.NodeAddress{
+			Type:    corev1.NodeAddressType("PodIP"),
+			Address: ip.IP,
+		}
+		gs.Status.Addresses = append(gs.Status.Addresses, podIPEntry)
+	}
 
 	if err := syncPodPortsToGameServer(gs, pod); err != nil {
 		return gs, errors.Wrapf(err, "cloud product error syncing ports on GameServer %s", gs.ObjectMeta.Name)

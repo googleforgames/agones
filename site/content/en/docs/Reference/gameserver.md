@@ -204,6 +204,29 @@ e.g. if any `ExternalDNS` address is found in the respective `Node`, it is used 
 The policy for `address` will work for many use-cases, but for some advanced cases, such as IPv6 enablement, you may need
 to evaluate all `addresses` and pick the addresses that best suits your needs.
 
+### Direct Pod Communication
+
+Agones includes Pod IP addresses in the addresses list, marked specifically to facilitate direct access. This adjustment is particularly valuable in environments like IPv6 networks where NAT is not used, allowing for direct, unaltered routing of network traffic to the Pods.
+
+Example configuration:
+
+```yaml
+apiVersion: agones.dev/v1
+kind: GameServer
+metadata:
+  name: game-server-example
+spec:
+  # Game server specification details
+status:
+  addresses:
+    - type: ExternalIP
+      address: xxx.xxx.xx.x
+    - type: InternalIP
+      address: xxx.xxx.xx.x
+    - type: PodIP
+      address: xxx.xxx.xx.x
+```
+
 [addresses]: https://v1-26.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#nodeaddress-v1-core
 [addressFunc]: https://github.com/googleforgames/agones/blob/a59c5394c7f5bac66e530d21446302581c10c225/pkg/gameservers/gameservers.go#L37-L71
 [gss]: {{% ref "/docs/Reference/agones_crd_api_reference.html#agones.dev/v1.GameServerStatus"  %}}
