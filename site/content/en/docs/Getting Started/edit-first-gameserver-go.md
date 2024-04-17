@@ -31,12 +31,12 @@ Change the following line in `main.go`:
 
 From:
 ```go
-respond(conn, sender, "ACK: "+txt+"\n")
+response = "ACK TCP: " + response + "\n"
 ```
 
 To:
 ```go
-respond(conn, sender, "ACK: Echo says "+txt+"\n")
+response = "ACK TCP Echo Says: " + response + "\n"
 ```
 
 ### Build Server
@@ -49,16 +49,9 @@ GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o bin/server -a -v main.go
 
 ## Using Docker File
 
-### Create a new docker image
+### Create a new docker image and pusht the image to GCP Registry
 ```bash
-docker build -t gcr.io/[PROJECT_ID]/agones-simple-game-server:modified .
-```
-
-Note: you can change the image name "agones-simple-game-server" to something else.
-
-### If using GKE, push the image to GCP Registry
-```bash
-docker push gcr.io/[PROJECT_ID]/agones-simple-game-server:modified
+make WITH_WINDOWS=0 WITH_ARM64=0 REPOSITORY={$REGISTRY} push
 ```
 
 Note: Review [Authentication Methods](https://cloud.google.com/container-registry/docs/advanced-authentication)
@@ -76,8 +69,8 @@ Modify the following line from gameserver.yaml to use the new configuration.
 ```yaml
 spec:
   containers:
-  - name: agones-simple-game-server
-    image: gcr.io/[PROJECT_ID]/agones-simple-game-server:modified
+  - name: simple-game-server
+    image: {$REGISTRY}/simple-game-server:{$TAG}
 ```
 
 ### If using GKE, deploy Server to GKE
@@ -86,7 +79,7 @@ Apply the latest settings to the Kubernetes container.
 ```bash
 gcloud config set container/cluster [CLUSTER_NAME]
 gcloud container clusters get-credentials [CLUSTER_NAME]
-kubectl apply -f gameserver.yaml
+kubectl create -f gameserver.yaml
 ```
 
 ### If using Minikube, deploy the Server to Minikube
@@ -103,7 +96,7 @@ kubectl describe gameserver
 Let's retrieve the IP address and the allocated port of your Game Server:
 
 ```bash
-kubectl get gs simple-game-server -o jsonpath='{.status.address}:{.status.ports[0].port}'
+kubectl get gameservers | grep Ready | awk '{print $3":"$4 }'
 ```
 
 You can now communicate with the Game Server :
@@ -117,7 +110,7 @@ If you do not have netcat installed
 ```
 nc -u {IP} {PORT}
 Hello World!
-ACK:  Echo says  Hello World!
+ACK TCP:  Echo says  Hello World!
 EXIT
 ```
 
