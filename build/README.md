@@ -319,7 +319,7 @@ First, [install Kind](https://github.com/kubernetes-sigs/kind#installation-and-u
 
 Next we will create the Agones Kind cluster. Run `make kind-test-cluster` to create the `agones` Kubernetes cluster.
 
-This will also setup helm and a kubeconfig, the kubeconfig location can found using the following command `kind get kubeconfig-path --name=agones` assuming you're using the default `KIND_PROFILE`.
+This will also setup helm and a kubeconfig, the kubeconfig location can found using the following command `kind get kubeconfig --name=agones` assuming you're using the default `KIND_PROFILE`.
 
 You can verify that your new cluster information by running (if you don't have kubectl you can skip to the shell section):
 
