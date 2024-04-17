@@ -32,15 +32,14 @@ To ensure we don't have to change the Allocation system every time we have a can
 state that in our system, the label `canary: "true"` will be added to any canary `Fleet` in the cluster.   
 
 ```yaml
-apiVersion: "allocation.agones.dev/v1"
+apiVersion: allocation.agones.dev/v1
 kind: GameServerAllocation
 spec:
-  preferred:
+  selectors:
     - matchLabels:
         canary: "true"
-  required:
-    matchLabels:
-      agones.dev/fleet: stable
+    - matchLabels:
+        agones.dev/fleet: stable
 ```
 
 The above `Allocation` will then preferentially choose the `Fleet` that has `GameServers` with the label and key 

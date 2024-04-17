@@ -12,3 +12,5 @@ It is not a direct integration, but is an approach to integrate with existing
 dedicated game servers.
 
 You will need to download the SuperTuxKart client separately to play.
+
+For detailed instructions refer to the [Agones Documentation](https://agones.dev/site/docs/examples/supertuxkart/).
