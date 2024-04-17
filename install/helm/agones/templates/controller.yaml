@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-{{- $replicas := (int (default .Values.agones.controller.replicas .Values.agones.extensions.replicas)) }}
+{{- $replicas := (int .Values.agones.controller.replicas) }}
 {{- if lt $replicas 1 }}
 {{- fail "agones.controller.replica field has an invalid value!" }}
 {{- end }}
@@ -41,9 +41,9 @@ spec:
     metadata:
       annotations:
 {{- if eq $replicas 1 }}
-        cluster-autoscaler.kubernetes.io/safe-to-evict: {{ default .Values.agones.controller.safeToEvict .Values.agones.extensions.safeToEvict | quote }}
+        cluster-autoscaler.kubernetes.io/safe-to-evict: {{ .Values.agones.controller.safeToEvict | quote }}
 {{- end }}
-{{- if (default .Values.agones.controller.generateTLS .Values.agones.extensions.generateTLS) }}
+{{- if .Values.agones.controller.generateTLS }}
         revision/tls-cert: {{ .Release.Revision | quote }}
 {{- end }}
 {{- if and (.Values.agones.metrics.prometheusServiceDiscovery) (.Values.agones.metrics.prometheusEnabled) }}
@@ -51,9 +51,8 @@ spec:
         prometheus.io/port: "8080"
         prometheus.io/path: "/metrics"
 {{- end }}
-{{- $annotations := default .Values.agones.controller.annotations .Values.agones.extensions.annotations }}
-{{- if $annotations }}
-{{- toYaml $annotations | nindent 8 }}
+{{- if .Values.agones.controller.annotations }}
+{{- toYaml .Values.agones.controller.annotations | nindent 8 }}
 {{- end }}
       labels:
         agones.dev/role: controller
@@ -61,20 +60,18 @@ spec:
         release: {{ .Release.Name }}
         heritage: {{ .Release.Service }}
     spec:
-      {{- $topologySpreadConstraints := default .Values.agones.controller.topologySpreadConstraints .Values.agones.extensions.topologySpreadConstraints}}
-      {{- if $topologySpreadConstraints }}
+      {{- if .Values.agones.controller.topologySpreadConstraints }}
       topologySpreadConstraints:
-        {{- toYaml $topologySpreadConstraints | nindent 8 }}
+        {{- toYaml .Values.agones.controller.topologySpreadConstraints | nindent 8 }}
       {{- end }}
       affinity:
-      {{- $affinity := default .Values.agones.controller.affinity .Values.agones.extensions.affinity}}
-      {{- if $affinity }}
+      {{- if .Values.agones.controller.affinity }}
       {{- if .Values.agones.requireDedicatedNodes }}
       {{- fail "agones.controller.affinity and agones.requireDedicatedNodes cannot be set at the same time!" }}
       {{- end}}
       {{- end}}
-      {{- if $affinity }}
-{{ toYaml $affinity | indent 8 }}
+      {{- if .Values.agones.controller.affinity }}
+{{ toYaml .Values.agones.controller.affinity | indent 8 }}
       {{- else}}
         nodeAffinity:
           {{- if .Values.agones.requireDedicatedNodes }}
@@ -90,15 +87,13 @@ spec:
               - key: agones.dev/agones-system
                 operator: Exists
       {{- end }}
-      {{- $nodeSelector := default .Values.agones.controller.nodeSelector .Values.agones.extensions.nodeSelector }}
-      {{- if $nodeSelector }}
+      {{- if .Values.agones.controller.nodeSelector }}
       nodeSelector:
-{{ toYaml $nodeSelector | indent 8 }}
+{{ toYaml .Values.agones.controller.nodeSelector | indent 8 }}
       {{- end }}
-      {{- $tolerations := default .Values.agones.controller.tolerations .Values.agones.extensions.tolerations }}
-      {{- if $tolerations }}
+      {{- if .Values.agones.controller.tolerations }}
       tolerations:
-{{ toYaml $tolerations | indent 8 }}
+{{ toYaml .Values.agones.controller.tolerations | indent 8 }}
       {{- end }}
       {{- if .Values.agones.createPriorityClass }}
       priorityClassName: {{ .Values.agones.priorityClassName }}
@@ -138,24 +133,24 @@ spec:
         - name: GCP_PROJECT_ID
           value: {{ .Values.agones.metrics.stackdriverProjectID | quote }}
         - name: NUM_WORKERS
-          value: {{ default .Values.agones.controller.numWorkers .Values.agones.extensions.numWorkers | quote }}
+          value: {{ .Values.agones.controller.numWorkers | quote }}
         - name: API_SERVER_QPS
-          value: {{ default .Values.agones.controller.apiServerQPS .Values.agones.extensions.apiServerQPS | quote }}
+          value: {{ .Values.agones.controller.apiServerQPS | quote }}
         - name: API_SERVER_QPS_BURST
-          value: {{ default .Values.agones.controller.apiServerQPSBurst .Values.agones.extensions.apiServerQPSBurst | quote }}
+          value: {{ .Values.agones.controller.apiServerQPSBurst | quote }}
         - name: LOG_LEVEL
-          value: {{ default .Values.agones.controller.logLevel .Values.agones.extensions.logLevel | quote }}
+          value: {{ .Values.agones.controller.logLevel | quote }}
         - name: FEATURE_GATES
           value: {{ .Values.agones.featureGates | quote }}
         - name: ALLOCATION_BATCH_WAIT_TIME
-          value: {{ default .Values.agones.controller.allocationBatchWaitTime .Values.agones.extensions.allocationBatchWaitTime | quote }}
+          value: {{ .Values.agones.controller.allocationBatchWaitTime | quote }}
         - name: CLOUD_PRODUCT
           value: {{ .Values.agones.cloudProduct | quote }}
-{{- if default .Values.agones.controller.persistentLogs .Values.agones.extensions.persistentLogs }}
+{{- if .Values.agones.controller.persistentLogs }}
         - name: LOG_DIR
           value: "/logs"
         - name: LOG_SIZE_LIMIT_MB
-          value: {{ default .Values.agones.controller.persistentLogsSizeLimitMB .Values.agones.extensions.persistentLogsSizeLimitMB | quote }}
+          value: {{ .Values.agones.controller.persistentLogsSizeLimitMB | quote }}
 {{- end }}
         - name: POD_NAME
           valueFrom:
@@ -180,24 +175,24 @@ spec:
           httpGet:
             path: /live
             port: http
-          initialDelaySeconds: {{ default .Values.agones.controller.healthCheck.initialDelaySeconds .Values.agones.extensions.healthCheck.initialDelaySeconds }}
-          periodSeconds: {{ default .Values.agones.controller.healthCheck.periodSeconds .Values.agones.extensions.healthCheck.periodSeconds }}
-          failureThreshold: {{ default .Values.agones.controller.healthCheck.failureThreshold .Values.agones.extensions.healthCheck.failureThreshold }}
-          timeoutSeconds: {{ default .Values.agones.controller.healthCheck.timeoutSeconds .Values.agones.extensions.healthCheck.timeoutSeconds }}
+          initialDelaySeconds: {{ .Values.agones.controller.healthCheck.initialDelaySeconds }}
+          periodSeconds: {{ .Values.agones.controller.healthCheck.periodSeconds }}
+          failureThreshold: {{ .Values.agones.controller.healthCheck.failureThreshold }}
+          timeoutSeconds: {{ .Values.agones.controller.healthCheck.timeoutSeconds }}
         resources:
-{{- if default .Values.agones.controller.resources .Values.agones.extensions.resources }}
-{{ toYaml default .Values.agones.controller.resources .Values.agones.extensions.resources | indent 10 }}
+{{- if .Values.agones.controller.resources }}
+{{ toYaml .Values.agones.controller.resources | indent 10 }}
 {{- else}}
           limits:
-            ephemeral-storage: {{ add (default .Values.agones.controller.persistentLogsSizeLimitMB .Values.agones.extensions.persistentLogsSizeLimitMB) 100 | printf "%dMi" }}
+            ephemeral-storage: {{ add .Values.agones.controller.persistentLogsSizeLimitMB 100 | printf "%dMi" }}
           requests:
-            ephemeral-storage: {{ add (default .Values.agones.controller.persistentLogsSizeLimitMB .Values.agones.extensions.persistentLogsSizeLimitMB) 100 | printf "%dMi" }}
+            ephemeral-storage: {{ add .Values.agones.controller.persistentLogsSizeLimitMB 100 | printf "%dMi" }}
 {{- end }}
         volumeMounts:
         - name: certs
           mountPath: /certs
           readOnly: true
-{{- if default .Values.agones.controller.persistentLogs .Values.agones.extensions.persistentLogs }}
+{{- if .Values.agones.controller.persistentLogs }}
         - name: logs
           mountPath: /logs
           readOnly: false
@@ -206,12 +201,11 @@ spec:
       - name: certs
         secret:
           secretName: {{ template "agones.fullname" . }}-cert
-{{- $customCertSecretPath := default .Values.agones.controller.customCertSecretPath .Values.agones.extensions.customCertSecretPath}}
-{{- if $customCertSecretPath }}
+{{- if .Values.agones.controller.customCertSecretPath }}
           items:
-{{- toYaml $customCertSecretPath | nindent 10 }}
+{{- toYaml .Values.agones.controller.customCertSecretPath | nindent 10 }}
 {{- end }}
-{{- if default .Values.agones.controller.persistentLogs .Values.agones.extensions.persistentLogs }}
+{{- if .Values.agones.controller.persistentLogs }}
       - name: logs
         emptyDir: {}
 {{- end }}
@@ -226,13 +220,13 @@ kind: PodDisruptionBudget
 metadata:
   name: agones-controller-pdb
 spec:
-{{- if default .Values.agones.controller.pdb.minAvailable .Values.agones.extensions.pdb.minAvailable }}
-{{- if default .Values.agones.controller.pdb.maxUnavailable .Values.agones.extensions.pdb.maxUnavailable }}
+{{- if .Values.agones.controller.pdb.minAvailable }}
+{{- if .Values.agones.controller.pdb.maxUnavailable }}
 {{- fail "minAvailable and maxUnavailable are mutually exclusive!" }}
 {{- end}}
 {{- end}}
-  minAvailable: {{ default .Values.agones.controller.pdb.minAvailable .Values.agones.extensions.pdb.minAvailable }}
-  maxUnavailable: {{ default .Values.agones.controller.pdb.maxUnavailable .Values.agones.extensions.pdb.maxUnavailable }}
+  minAvailable: {{ .Values.agones.controller.pdb.minAvailable }}
+  maxUnavailable: {{ .Values.agones.controller.pdb.maxUnavailable }}
   selector:
     matchLabels:
       agones.dev/role: controller

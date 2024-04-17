@@ -159,14 +159,13 @@ spec:
           periodSeconds: {{ .Values.agones.extensions.readiness.periodSeconds }}
           failureThreshold: {{ .Values.agones.extensions.readiness.failureThreshold }}
         resources:
-{{- $persistentLogsSizeLimitMB := default .Values.agones.controller.persistentLogsSizeLimitMB .Values.agones.extensions.persistentLogsSizeLimitMB }}
 {{- if .Values.agones.extensions.resources }}
 {{ toYaml .Values.agones.extensions.resources | indent 10 }}
 {{- else}}
           limits:
-            ephemeral-storage: {{ add $persistentLogsSizeLimitMB 100 | printf "%dMi" }}
+            ephemeral-storage: {{ add .Values.agones.controller.persistentLogsSizeLimitMB 100 | printf "%dMi" }}
           requests:
-            ephemeral-storage: {{ add $persistentLogsSizeLimitMB 100 | printf "%dMi" }}
+            ephemeral-storage: {{ add .Values.agones.controller.persistentLogsSizeLimitMB 100 | printf "%dMi" }}
 {{- end }}
         volumeMounts:
         - name: certs

@@ -51,10 +51,9 @@ spec:
         volumeMounts:
         - name: script
           mountPath: /scripts/
-      {{- $tolerations := default .Values.agones.controller.tolerations .Values.agones.extensions.tolerations }}
-      {{- if $tolerations }}
+      {{- if .Values.agones.controller.tolerations }}
       tolerations:
-{{ toYaml $tolerations | indent 8 }}
+{{ toYaml .Values.agones.controller.tolerations | indent 8 }}
       {{- end }}
       volumes:
       - name: script
