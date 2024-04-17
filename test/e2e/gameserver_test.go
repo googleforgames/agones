@@ -39,7 +39,7 @@ import (
 
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
-	"agones.dev/agones/pkg/gameservers"
+	gameserversv1 "agones.dev/agones/pkg/gameservers"
 	agtesting "agones.dev/agones/pkg/testing"
 	"agones.dev/agones/pkg/util/runtime"
 	e2eframework "agones.dev/agones/test/e2e/framework"
@@ -64,7 +64,7 @@ func TestCreateConnect(t *testing.T) {
 
 	var hasPodIPAddress bool
 	for i, addr := range readyGs.Status.Addresses {
-		if addr.Type == gameservers.NodePodIP {
+		if addr.Type == gameserversv1.NodePodIP {
 			assert.NotEmpty(t, readyGs.Status.Addresses[i].Address)
 			hasPodIPAddress = true
 		}
