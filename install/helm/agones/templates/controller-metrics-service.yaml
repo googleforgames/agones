@@ -27,5 +27,5 @@ spec:
     agones.dev/role: controller
   ports:
     - name: metrics
-      port: {{ .Values.agones.controller.http.port }}
+      port: {{ default .Values.agones.controller.http.port .Values.agones.extensions.http.port }}
       targetPort: http

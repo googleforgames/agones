@@ -28,9 +28,10 @@ metadata:
     chart: {{ template "agones.chart" . }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
-{{- if .Values.agones.controller.allocationApiService.annotations }}
-  annotations:
-{{- toYaml .Values.agones.controller.allocationApiService.annotations | nindent 4 }}
+{{- $annotations := default .Values.agones.controller.allocationApiService.annotations .Values.agones.extensions.allocationApiService.annotations }}
+{{- if $annotations }}
+annotations:
+{{ toYaml $annotations | nindent 4 }}
 {{- end }}
 spec:
   group: allocation.agones.dev
@@ -39,11 +40,12 @@ spec:
   service:
     name: agones-controller-service
     namespace: {{ .Release.Namespace }}
-{{- if not .Values.agones.controller.allocationApiService.disableCaBundle }}
-{{- if .Values.agones.controller.generateTLS }}
+{{- if not (default .Values.agones.controller.allocationApiService.disableCaBundle .Values.agones.extensions.allocationApiService.disableCaBundle) }}
+{{- $tlsCert1 := default .Values.agones.controller.tlsCert .Values.agones.extensions.tlsCert }}
+{{- if (default .Values.agones.controller.generateTLS .Values.agones.extensions.generateTLS) }}
   caBundle: {{ b64enc $ca.Cert }}
 {{- else }}
-  caBundle: {{ default (.Files.Get "certs/server.crt") .Values.agones.controller.tlsCert | b64enc }}
+  caBundle: {{ default (.Files.Get "certs/server.crt") $tlsCert1 | b64enc }}
 {{- end }}
 {{- end }}
   version: v1
@@ -54,9 +56,10 @@ apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
 metadata:
   name: agones-validation-webhook
-{{- if .Values.agones.controller.validatingWebhook.annotations }}
+{{- $annotations := default .Values.agones.controller.validatingWebhook.annotations .Values.agones.extensions.validatingWebhook.annotations}}
+{{- if $annotations }}
   annotations:
-{{- toYaml .Values.agones.controller.validatingWebhook.annotations | nindent 4 }}
+{{- toYaml $annotations | nindent 4 }}
 {{- end }}
   labels:
     component: controller
@@ -75,11 +78,12 @@ webhooks:
         name: agones-controller-service
         namespace: {{ .Release.Namespace }}
         path: /validate
-{{- if not .Values.agones.controller.validatingWebhook.disableCaBundle }}
-{{- if .Values.agones.controller.generateTLS }}
+{{- if not (default .Values.agones.controller.validatingWebhook.disableCaBundle .Values.agones.extensions.validatingWebhook.disableCaBundle) }}
+{{- $tlsCert := default .Values.agones.controller.tlsCert .Values.agones.extensions.tlsCert }}
+{{- if (default .Values.agones.controller.generateTLS .Values.agones.extensions.generateTLS) }}
       caBundle: {{ b64enc $ca.Cert }}
 {{- else }}
-      caBundle: {{ default (.Files.Get "certs/server.crt") .Values.agones.controller.tlsCert | b64enc }}
+      caBundle: {{ default (.Files.Get "certs/server.crt") $tlsCert | b64enc }}
 {{- end }}
 {{- end }}
     rules:
@@ -117,9 +121,10 @@ apiVersion: admissionregistration.k8s.io/v1
 kind: MutatingWebhookConfiguration
 metadata:
   name: agones-mutation-webhook
-{{- if .Values.agones.controller.mutatingWebhook.annotations }}
+{{- $annotations := default .Values.agones.controller.mutatingWebhook.annotations .Values.agones.extensions.mutatingWebhook.annotations}}
+{{- if $annotations }}
   annotations:
-{{- toYaml .Values.agones.controller.mutatingWebhook.annotations | nindent 4 }}
+{{- toYaml $annotations | nindent 4 }}
 {{- end }}
   labels:
     component: controller
@@ -138,11 +143,12 @@ webhooks:
         name: agones-controller-service
         namespace: {{ .Release.Namespace }}
         path: /mutate
-{{- if not .Values.agones.controller.mutatingWebhook.disableCaBundle }}
-{{- if .Values.agones.controller.generateTLS }}
+{{- if not (default .Values.agones.controller.mutatingWebhook.disableCaBundle .Values.agones.extensions.mutatingWebhook.disableCaBundle) }}
+{{- $tlsCert := default .Values.agones.controller.tlsCert .Values.agones.extensions.tlsCert}}
+{{- if (default .Values.agones.controller.generateTLS .Values.agones.extensions.generateTLS) }}
       caBundle: {{ b64enc $ca.Cert }}
 {{- else }}
-      caBundle: {{ default (.Files.Get "certs/server.crt") .Values.agones.controller.tlsCert | b64enc }}
+      caBundle: {{ default (.Files.Get "certs/server.crt") $tlsCert | b64enc }}
 {{- end }}
 {{- end }}
     rules:
@@ -165,7 +171,7 @@ webhooks:
           - CREATE
           - UPDATE
 {{- end }}
-{{- if not .Values.agones.controller.disableSecret }}
+{{- if not (default .Values.agones.controller.disableSecret .Values.agones.extensions.disableSecret) }}
 ---
 apiVersion: v1
 kind: Secret
@@ -179,11 +185,13 @@ metadata:
     heritage: "{{ .Release.Service }}"
 type: Opaque
 data:
-{{- if .Values.agones.controller.generateTLS }}
+{{- $tlsCert := default .Values.agones.controller.tlsCert .Values.agones.extensions.tlsCert }}
+{{- $tlsKey := default .Values.agones.controller.tlsKey .Values.agones.extensions.tlsKey }}
+{{- if (default .Values.agones.controller.generateTLS .Values.agones.extensions.generateTLS) }}
   server.crt: {{ b64enc $cert.Cert }}
   server.key: {{ b64enc $cert.Key }}
 {{- else }}
-  server.crt: {{ default (.Files.Get "certs/server.crt") .Values.agones.controller.tlsCert | b64enc }}
-  server.key: {{ default (.Files.Get "certs/server.key") .Values.agones.controller.tlsKey | b64enc }}
+  server.crt: {{ default (.Files.Get "certs/server.crt") $tlsCert | b64enc }}
+  server.key: {{ default (.Files.Get "certs/server.key") $tlsKey | b64enc }}
 {{- end }}
 {{- end }}
