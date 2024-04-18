@@ -1373,7 +1373,7 @@ func TestCounters(t *testing.T) {
 		},
 		"IncrementCounter": {
 			msg:         "INCREMENT_COUNTER foo 10",
-			want:        "ACK: SUCCESS\n",
+			want:        "SUCCESS\n",
 			counterName: "foo",
 			wantCount:   "COUNTER: 20\n",
 		},
@@ -1395,7 +1395,7 @@ func TestCounters(t *testing.T) {
 		},
 		"DecrementCounter": {
 			msg:         "DECREMENT_COUNTER bar 10",
-			want:        "ACK: SUCCESS\n",
+			want:        "SUCCESS\n",
 			counterName: "bar",
 			wantCount:   "COUNTER: 0\n",
 		},
@@ -1417,7 +1417,7 @@ func TestCounters(t *testing.T) {
 		},
 		"SetCounterCount": {
 			msg:         "SET_COUNTER_COUNT baz 0",
-			want:        "ACK: SUCCESS\n",
+			want:        "SUCCESS\n",
 			counterName: "baz",
 			wantCount:   "COUNTER: 0\n",
 		},
@@ -1443,7 +1443,7 @@ func TestCounters(t *testing.T) {
 		},
 		"SetCounterCapacity": {
 			msg:          "SET_COUNTER_CAPACITY qux 0",
-			want:         "ACK: SUCCESS\n",
+			want:         "SUCCESS\n",
 			counterName:  "qux",
 			wantCapacity: "CAPACITY: 0\n",
 		},
@@ -1529,7 +1529,7 @@ func TestLists(t *testing.T) {
 		},
 		"SetListCapacity": {
 			msg:          "SET_LIST_CAPACITY foo 1000",
-			want:         "ACK: SUCCESS\n",
+			want:         "SUCCESS\n",
 			listName:     "foo",
 			wantCapacity: "CAPACITY: 1000\n",
 		},
@@ -1567,7 +1567,7 @@ func TestLists(t *testing.T) {
 		},
 		"AppendListValue": {
 			msg:        "APPEND_LIST_VALUE bar bar3",
-			want:       "ACK: SUCCESS\n",
+			want:       "SUCCESS\n",
 			listName:   "bar",
 			wantLength: "LENGTH: 3\n",
 		},
@@ -1579,7 +1579,7 @@ func TestLists(t *testing.T) {
 		},
 		"DeleteListValue": {
 			msg:        "DELETE_LIST_VALUE qux qux3",
-			want:       "ACK: SUCCESS\n",
+			want:       "SUCCESS\n",
 			listName:   "qux",
 			wantLength: "LENGTH: 3\n",
 		},

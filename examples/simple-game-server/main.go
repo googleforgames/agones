@@ -324,6 +324,7 @@ func handleResponse(txt string, s *sdk.SDK, cancel context.CancelFunc) (response
 			return
 		}
 		response, err = incrementCounter(s, parts[1], parts[2])
+		addACK = false
 
 	case "DECREMENT_COUNTER":
 		if len(parts) < 3 {
@@ -332,6 +333,7 @@ func handleResponse(txt string, s *sdk.SDK, cancel context.CancelFunc) (response
 			return
 		}
 		response, err = decrementCounter(s, parts[1], parts[2])
+		addACK = false
 
 	case "SET_COUNTER_COUNT":
 		if len(parts) < 3 {
@@ -340,6 +342,7 @@ func handleResponse(txt string, s *sdk.SDK, cancel context.CancelFunc) (response
 			return
 		}
 		response, err = setCounterCount(s, parts[1], parts[2])
+		addACK = false
 
 	case "GET_COUNTER_CAPACITY":
 		if len(parts) < 2 {
@@ -357,6 +360,7 @@ func handleResponse(txt string, s *sdk.SDK, cancel context.CancelFunc) (response
 			return
 		}
 		response, err = setCounterCapacity(s, parts[1], parts[2])
+		addACK = false
 
 	case "GET_LIST_CAPACITY":
 		if len(parts) < 2 {
@@ -374,6 +378,7 @@ func handleResponse(txt string, s *sdk.SDK, cancel context.CancelFunc) (response
 			return
 		}
 		response, err = setListCapacity(s, parts[1], parts[2])
+		addACK = false
 
 	case "LIST_CONTAINS":
 		if len(parts) < 3 {
@@ -409,6 +414,7 @@ func handleResponse(txt string, s *sdk.SDK, cancel context.CancelFunc) (response
 			return
 		}
 		response, err = appendListValue(s, parts[1], parts[2])
+		addACK = false
 
 	case "DELETE_LIST_VALUE":
 		if len(parts) < 3 {
@@ -417,10 +423,11 @@ func handleResponse(txt string, s *sdk.SDK, cancel context.CancelFunc) (response
 			return
 		}
 		response, err = deleteListValue(s, parts[1], parts[2])
+		addACK = false
 	}
 
 	if err != nil {
-		return err.Error(), false, err
+		return err.Error(), addACK, err
 	}
 
 	return
@@ -703,7 +710,7 @@ func incrementCounter(s *sdk.SDK, counterName string, amount string) (string, er
 		log.Printf("Error incrementing Counter %s Count by amount %d: %s", counterName, amountInt, err)
 		return "", err
 	}
-	return "SUCCESS", nil
+	return "SUCCESS\n", nil
 }
 
 // decrementCounter returns if the Counter Count was decremented successfully or not
@@ -718,7 +725,7 @@ func decrementCounter(s *sdk.SDK, counterName string, amount string) (string, er
 		log.Printf("Error decrementing Counter %s Count by amount %d: %s", counterName, amountInt, err)
 		return "", err
 	}
-	return "SUCCESS", nil
+	return "SUCCESS\n", nil
 }
 
 // setCounterCount returns the if the Counter was set to a new Count successfully or not
@@ -733,7 +740,7 @@ func setCounterCount(s *sdk.SDK, counterName string, amount string) (string, err
 		log.Printf("Error setting Counter %s Count by amount %d: %s", counterName, amountInt, err)
 		return "", err
 	}
-	return "SUCCESS", nil
+	return "SUCCESS\n", nil
 }
 
 // getCounterCapacity returns the Capacity of the given Counter as a string
@@ -759,7 +766,7 @@ func setCounterCapacity(s *sdk.SDK, counterName string, amount string) (string, 
 		log.Printf("Error setting Counter %s Capacity to amount %d: %s", counterName, amountInt, err)
 		return "", err
 	}
-	return "SUCCESS", nil
+	return "SUCCESS\n", nil
 }
 
 // getListCapacity returns the Capacity of the given List as a string
@@ -785,7 +792,7 @@ func setListCapacity(s *sdk.SDK, listName string, amount string) (string, error)
 		log.Printf("Error setting List %s Capacity to amount %d: %s", listName, amountInt, err)
 		return "", err
 	}
-	return "SUCCESS", nil
+	return "SUCCESS\n", nil
 }
 
 // listContains returns true if the given value is in the given List, false otherwise
@@ -832,7 +839,7 @@ func appendListValue(s *sdk.SDK, listName string, value string) (string, error) 
 		log.Printf("Error appending Value %s to List %s: %s", value, listName, err)
 		return "", err
 	}
-	return "SUCCESS", nil
+	return "SUCCESS\n", nil
 }
 
 // deleteListValue returns if the given value was successfuly deleted from the List or not
@@ -843,7 +850,7 @@ func deleteListValue(s *sdk.SDK, listName string, value string) (string, error) 
 		log.Printf("Error deleting Value %s to List %s: %s", value, listName, err)
 		return "", err
 	}
-	return "SUCCESS", nil
+	return "SUCCESS\n", nil
 }
 
 // doHealth sends the regular Health Pings
