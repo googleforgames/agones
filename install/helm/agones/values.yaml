@@ -281,10 +281,8 @@ gameservers:
   - default
   minPort: 7000
   maxPort: 8000
-  portRanges: []
-    # - name: game
-    #   minPort: 9000
-    #   maxPort: 10000
+  additionalPortRanges: {}
+    # game: [9000, 10000]
   podPreserveUnknownFields: false
 
 helm:

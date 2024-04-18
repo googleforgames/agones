@@ -74,7 +74,7 @@ func newAllocator(minPort, maxPort int32, portRanges map[string]PortRange,
 	kubeInformerFactory informers.SharedInformerFactory,
 	agonesInformerFactory externalversions.SharedInformerFactory) *portAllocator {
 	allocs := make([]*portRangeAllocator, 0, len(portRanges)+1)
-	allocs = append(allocs, newRangeAllocator("", minPort, maxPort, kubeInformerFactory, agonesInformerFactory))
+	allocs = append(allocs, newRangeAllocator(agonesv1.DefaultPortRange, minPort, maxPort, kubeInformerFactory, agonesInformerFactory))
 
 	if runtime.FeatureEnabled(runtime.FeaturePortRanges) {
 		for name, pr := range portRanges {

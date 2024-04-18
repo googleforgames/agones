@@ -139,8 +139,8 @@ func (g *gkeAutopilot) ValidateGameServerSpec(gss *agonesv1.GameServerSpec, fldP
 		if p.PortPolicy != agonesv1.Dynamic {
 			allErrs = append(allErrs, field.Invalid(fldPath.Child("ports").Index(i).Child("portPolicy"), string(p.PortPolicy), errPortPolicyMustBeDynamic))
 		}
-		if p.Range != "" {
-			allErrs = append(allErrs, field.Invalid(fldPath.Child("ports").Index(i).Child("range"), string(p.PortPolicy), errRangeInvalid))
+		if p.Range != agonesv1.DefaultPortRange {
+			allErrs = append(allErrs, field.Invalid(fldPath.Child("ports").Index(i).Child("range"), p.Range, errRangeInvalid))
 		}
 	}
 	// See SetEviction comment below for why we block EvictionSafeOnUpgrade, if Extended Duration pods aren't supported.

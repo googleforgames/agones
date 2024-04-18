@@ -17,6 +17,8 @@ package main
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"io"
 	"math"
 	"net/http"
@@ -31,7 +33,6 @@ import (
 	"github.com/pkg/errors"
 	prom "github.com/prometheus/client_golang/prometheus"
 	"github.com/sirupsen/logrus"
-	"github.com/spf13/cast"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"gopkg.in/natefinch/lumberjack.v2"
@@ -71,8 +72,7 @@ const (
 	pullSidecarFlag              = "always-pull-sidecar"
 	minPortFlag                  = "min-port"
 	maxPortFlag                  = "max-port"
-	portRangeMinPortFlag         = "port-range-min-port"
-	portRangeMaxPortFlag         = "port-range-max-port"
+	additionalPortRangesFlag     = "additional-port-ranges"
 	certFileFlag                 = "cert-file"
 	keyFileFlag                  = "key-file"
 	numWorkersFlag               = "num-workers"
@@ -212,7 +212,7 @@ func main() {
 	gsCounter := gameservers.NewPerNodeCounter(kubeInformerFactory, agonesInformerFactory)
 
 	gsController := gameservers.NewController(controllerHooks, health,
-		ctlConf.MinPort, ctlConf.MaxPort, ctlConf.PortRanges, ctlConf.SidecarImage, ctlConf.AlwaysPullSidecar,
+		ctlConf.MinPort, ctlConf.MaxPort, ctlConf.AdditionalPortRanges, ctlConf.SidecarImage, ctlConf.AlwaysPullSidecar,
 		ctlConf.SidecarCPURequest, ctlConf.SidecarCPULimit,
 		ctlConf.SidecarMemoryRequest, ctlConf.SidecarMemoryLimit, ctlConf.SdkServiceAccount,
 		kubeClient, kubeInformerFactory, extClient, agonesClient, agonesInformerFactory)
@@ -288,8 +288,7 @@ func parseEnvFlags() config {
 	pflag.String(sdkServerAccountFlag, viper.GetString(sdkServerAccountFlag), "Overwrite what service account default for GameServer Pods. Defaults to Can also use SDK_SERVICE_ACCOUNT")
 	pflag.Int32(minPortFlag, 0, "Required. The minimum port that that a GameServer can be allocated to. Can also use MIN_PORT env variable.")
 	pflag.Int32(maxPortFlag, 0, "Required. The maximum port that that a GameServer can be allocated to. Can also use MAX_PORT env variable.")
-	pflag.StringToInt(portRangeMinPortFlag, cast.ToStringMapInt(viper.GetStringMap(portRangeMinPortFlag)), "Optional. Named set of port range min ports in JSON object format. Can Also use PORT_RANGE_MIN_PORT env variable.")
-	pflag.StringToInt(portRangeMaxPortFlag, cast.ToStringMapInt(viper.GetStringMap(portRangeMaxPortFlag)), "Optional. Named set of port range max ports in JSON object format. Can Also use PORT_RANGE_MAX_PORT env variable.")
+	pflag.String(additionalPortRangesFlag, viper.GetString(additionalPortRangesFlag), `Optional. Named set of port ranges in JSON object format: '{"game": [5000, 6000]}'. Can Also use ADDITIONAL_PORT_RANGES env variable.`)
 	pflag.String(keyFileFlag, viper.GetString(keyFileFlag), "Optional. Path to the key file")
 	pflag.String(certFileFlag, viper.GetString(certFileFlag), "Optional. Path to the crt file")
 	pflag.String(kubeconfigFlag, viper.GetString(kubeconfigFlag), "Optional. kubeconfig to run the controller out of the cluster. Only use it for debugging as webhook won't works.")
@@ -320,8 +319,7 @@ func parseEnvFlags() config {
 	runtime.Must(viper.BindEnv(sdkServerAccountFlag))
 	runtime.Must(viper.BindEnv(minPortFlag))
 	runtime.Must(viper.BindEnv(maxPortFlag))
-	runtime.Must(viper.BindEnv(portRangeMinPortFlag))
-	runtime.Must(viper.BindEnv(portRangeMaxPortFlag))
+	runtime.Must(viper.BindEnv(additionalPortRangesFlag))
 	runtime.Must(viper.BindEnv(keyFileFlag))
 	runtime.Must(viper.BindEnv(certFileFlag))
 	runtime.Must(viper.BindEnv(kubeconfigFlag))
@@ -364,23 +362,15 @@ func parseEnvFlags() config {
 		logger.WithError(err).Fatalf("could not parse %s", sidecarMemoryLimitFlag)
 	}
 
-	portRanges := map[string]portallocator.PortRange{}
-	for k, v := range viper.GetStringMap(portRangeMinPortFlag) {
-		portRanges[k] = portallocator.PortRange{MinPort: cast.ToInt32(v)}
-	}
-	for k, v := range viper.GetStringMap(portRangeMaxPortFlag) {
-		if r, ok := portRanges[k]; ok {
-			r.MaxPort = cast.ToInt32(v)
-			portRanges[k] = r
-			continue
-		}
-		portRanges[k] = portallocator.PortRange{MaxPort: cast.ToInt32(v)}
+	portRanges, err := parsePortRanges(viper.GetString(additionalPortRangesFlag))
+	if err != nil {
+		logger.WithError(err).Fatalf("could not parse %s", additionalPortRangesFlag)
 	}
 
 	return config{
 		MinPort:                 int32(viper.GetInt64(minPortFlag)),
 		MaxPort:                 int32(viper.GetInt64(maxPortFlag)),
-		PortRanges:              portRanges,
+		AdditionalPortRanges:    portRanges,
 		SidecarImage:            viper.GetString(sidecarImageFlag),
 		SidecarCPURequest:       requestCPU,
 		SidecarCPULimit:         limitCPU,
@@ -407,11 +397,34 @@ func parseEnvFlags() config {
 	}
 }
 
+func parsePortRanges(s string) (map[string]portallocator.PortRange, error) {
+	if s == "" {
+		return nil, nil
+	}
+
+	prs := map[string][]int32{}
+	if err := json.Unmarshal([]byte(s), &prs); err != nil {
+		return nil, fmt.Errorf("invlaid additional port range format: %w", err)
+	}
+
+	portRanges := map[string]portallocator.PortRange{}
+	for k, v := range prs {
+		if len(v) != 2 {
+			return nil, fmt.Errorf("invalid port range ports for %s: requires both min and max port", k)
+		}
+		portRanges[k] = portallocator.PortRange{
+			MinPort: v[0],
+			MaxPort: v[1],
+		}
+	}
+	return portRanges, nil
+}
+
 // config stores all required configuration to create a game server controller.
 type config struct {
 	MinPort                 int32
 	MaxPort                 int32
-	PortRanges              map[string]portallocator.PortRange
+	AdditionalPortRanges    map[string]portallocator.PortRange
 	SidecarImage            string
 	SidecarCPURequest       resource.Quantity
 	SidecarCPULimit         resource.Quantity
@@ -440,7 +453,7 @@ type config struct {
 // validate ensures the ctlConfig data is valid.
 func (c *config) validate() []error {
 	validationErrors := make([]error, 0)
-	portErrors := validatePorts(c.MinPort, c.MaxPort, c.PortRanges)
+	portErrors := validatePorts(c.MinPort, c.MaxPort, c.AdditionalPortRanges)
 	validationErrors = append(validationErrors, portErrors...)
 	resourceErrors := validateResource(c.SidecarCPURequest, c.SidecarCPULimit, corev1.ResourceCPU)
 	validationErrors = append(validationErrors, resourceErrors...)

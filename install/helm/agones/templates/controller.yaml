@@ -110,21 +110,13 @@ spec:
         # maximum port that can be exposed to GameServer traffic
         - name: MAX_PORT
           value: {{ .Values.gameservers.maxPort | quote }}
-        {{- if .Values.gameservers.portRanges }}
+        {{- if .Values.gameservers.additionalPortRanges }}
         {{- $featureGates := include "agones.featureGates" . | fromYaml }}
         {{- if not $featureGates.PortRanges }}
         {{- fail "gameservers.portRanges specified without feature gate PortRanges enabled!" }}
         {{- end }}
-        {{- $minPorts := dict -}}
-        {{- $maxPorts := dict -}}
-        {{- range $v := .Values.gameservers.portRanges -}}
-        {{- $minPorts = set $minPorts $v.name $v.minPort -}}
-        {{- $maxPorts = set $maxPorts $v.name $v.maxPort -}}
-        {{- end }}
-        - name: PORT_RANGE_MIN_PORT
-          value: {{ $minPorts | toJson | quote }}
-        - name: PORT_RANGE_MAX_PORT
-          value: {{ $maxPorts | toJson | quote }}
+        - name: ADDITIONAL_PORT_RANGES
+          value: {{ .Values.gameservers.additionalPortRanges | toJson | quote }}
         {{- end }}
         - name: SIDECAR_IMAGE # overwrite the GameServer sidecar image that is used
           value: "{{ .Values.agones.image.registry }}/{{ .Values.agones.image.sdk.name}}:{{ default .Values.agones.image.tag .Values.agones.image.sdk.tag }}"

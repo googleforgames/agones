@@ -115,6 +115,9 @@ const (
 	// ProtocolTCPUDP Protocol exposes the hostPort allocated for this container for both TCP and UDP.
 	ProtocolTCPUDP corev1.Protocol = "TCPUDP"
 
+	// DefaultPortRange is the name of the default port range.
+	DefaultPortRange = "default"
+
 	// RoleLabel is the label in which the Agones role is specified.
 	// Pods from a GameServer will have the value "gameserver"
 	RoleLabel = agones.GroupName + "/role"
@@ -437,6 +440,10 @@ func (gss *GameServerSpec) applyPortDefaults() {
 		// basic spec
 		if p.PortPolicy == "" {
 			gss.Ports[i].PortPolicy = Dynamic
+		}
+
+		if p.Range == "" {
+			gss.Ports[i].Range = DefaultPortRange
 		}
 
 		if p.Protocol == "" {

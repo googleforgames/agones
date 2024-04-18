@@ -30,7 +30,7 @@ func TestControllerConfigValidation(t *testing.T) {
 	assert.Len(t, errs, 1)
 	errorsContainString(t, errs, "max Port cannot be set less that the Min Port")
 
-	c.PortRanges = map[string]portallocator.PortRange{
+	c.AdditionalPortRanges = map[string]portallocator.PortRange{
 		"game": {MinPort: 20, MaxPort: 12},
 	}
 	errs = c.validate()
@@ -64,7 +64,7 @@ func TestControllerConfigValidation_PortRangeOverlap(t *testing.T) {
 	c := config{
 		MinPort: 10,
 		MaxPort: 20,
-		PortRanges: map[string]portallocator.PortRange{
+		AdditionalPortRanges: map[string]portallocator.PortRange{
 			"game":  {MinPort: 15, MaxPort: 25},
 			"other": {MinPort: 21, MaxPort: 31},
 		},
