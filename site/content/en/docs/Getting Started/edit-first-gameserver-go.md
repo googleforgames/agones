@@ -49,7 +49,7 @@ GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o bin/server -a -v main.go
 
 ## Using Docker File
 
-### Create a new docker image and pusht the image to GCP Registry
+### Create a new docker image and push the image to GCP Registry
 ```bash
 make WITH_WINDOWS=0 WITH_ARM64=0 REPOSITORY={$REGISTRY} push
 ```
@@ -70,7 +70,7 @@ Modify the following line from gameserver.yaml to use the new configuration.
 spec:
   containers:
   - name: simple-game-server
-    image: {$REGISTRY}/simple-game-server:{$TAG}
+    image: ${REGISTRY}/simple-game-server:${TAG}
 ```
 
 ### If using GKE, deploy Server to GKE

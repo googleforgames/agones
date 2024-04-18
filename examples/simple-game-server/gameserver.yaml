@@ -25,7 +25,7 @@ spec:
     spec:
       containers:
         - name: simple-game-server
-          image: us-west1-docker.pkg.dev/vicenteferrara-gke-dev/agones/simple-game-server:0.28
+          image: ${REGISTRY}/simple-game-server:${TAG}
           resources:
             requests:
               memory: 64Mi
