@@ -26,6 +26,11 @@ import (
 
 // isGameServerPod returns if this Pod is a Pod that comes from a GameServer
 func isGameServerPod(pod *corev1.Pod) bool {
+	// add some defense in case this happens
+	if pod == nil {
+		return false
+	}
+
 	if agonesv1.GameServerRolePodSelector.Matches(labels.Set(pod.ObjectMeta.Labels)) {
 		owner := metav1.GetControllerOf(pod)
 		return owner != nil && owner.Kind == "GameServer"
