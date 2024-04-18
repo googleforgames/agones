@@ -1873,7 +1873,12 @@ func TestFleetAllocationOverflow(t *testing.T) {
 			return false
 		}, 5*time.Minute, time.Second, "Rolling update did not complete")
 
-		assertCount(t, log, flt, 1)
+		if runtime.FeatureEnabled(runtime.FeatureRollingUpdateFix) {
+			// In the rolling update fix, the old GSS will be scaled to Spec.Replicas=0.
+			assertCount(t, log, flt, 2)
+		} else {
+			assertCount(t, log, flt, 1)
+		}
 	})
 }
 
