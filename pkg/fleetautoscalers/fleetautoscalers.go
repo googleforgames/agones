@@ -324,12 +324,6 @@ func applyCounterOrListPolicy(c *autoscalingv1.CounterPolicy, l *autoscalingv1.L
 		desiredCapacity := int64(math.Ceil(float64(aggAllocatedCount*100) / float64(100-bufferPercent)))
 		// Convert into a desired AVAILABLE capacity aka the buffer
 		buffer = desiredCapacity - aggAllocatedCount
-
-		// Ensures buffer is at least 1
-		if buffer < 1 {
-			buffer = 1
-		}
-
 	}
 
 	// Current available capacity across the TOTAL fleet
@@ -352,8 +346,14 @@ func applyCounterOrListPolicy(c *autoscalingv1.CounterPolicy, l *autoscalingv1.L
 			return scaleLimited(scale, f, gameServerLister, nodeCounts, key, isCounter, replicas,
 				capacity, aggCapacity, minCapacity, maxCapacity)
 		}
-		return scaleDown(f, gameServerLister, nodeCounts, key, isCounter, replicas, aggCount,
-			aggCapacity, minCapacity, buffer)
+		if replicas > 1 {
+			result, isLimited, err := scaleDown(f, gameServerLister, nodeCounts, key, isCounter, replicas, aggCount,
+				aggCapacity, minCapacity, buffer)
+			if result <= 1 {
+				return 1, true, nil
+			}
+			return result, isLimited, err
+		}
 	}
 
 	if isCounter {
