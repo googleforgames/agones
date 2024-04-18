@@ -1600,6 +1600,21 @@ func TestControllerRollingUpdateDeployment(t *testing.T) {
 				updated:              true,
 			},
 		},
+		"rolling update scales down with fleet spec replicas = 0": {
+			features:                         "RollingUpdateFix=true",
+			fleetSpecReplicas:                0,
+			activeSpecReplicas:               0,
+			activeStatusReplicas:             0,
+			inactiveSpecReplicas:             3,
+			inactiveStatusReplicas:           3,
+			inactiveStatusReadyReplicas:      3,
+			inactiveStatusAllocationReplicas: 0,
+			expected: expected{
+				inactiveSpecReplicas: 0,
+				replicas:             0,
+				updated:              true,
+			},
+		},
 	}
 
 	for k, v := range fixtures {
