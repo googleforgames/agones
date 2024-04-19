@@ -198,13 +198,14 @@ kind: PodDisruptionBudget
 metadata:
   name: agones-extensions-pdb
 spec:
+{{- $maxUnavailable := default .Values.agones.controller.pdb.maxUnavailable .Values.agones.extensions.pdb.maxUnavailable }}
 {{- if .Values.agones.extensions.pdb.minAvailable }}
-{{- if .Values.agones.extensions.pdb.maxUnavailable }}
+{{- if $maxUnavailable }}
 {{- fail "minAvailable and maxUnavailable are mutually exclusive!" }}
 {{- end}}
 {{- end}}
   minAvailable: {{ .Values.agones.extensions.pdb.minAvailable }}
-  maxUnavailable: {{ .Values.agones.extensions.pdb.maxUnavailable }}
+  maxUnavailable: {{ $maxUnavailable }}
   selector:
     matchLabels:
       agones.dev/role: extensions
