@@ -179,10 +179,6 @@ or [GKE Autopilot mode](#create-an-autopilot-mode-cluster-for-agones).
 
 ### Create an Autopilot mode cluster for Agones
 
-{{<alert title="Note" color="info">}}
-These installation instructions apply to Agones 1.30+
-{{</alert>}}
-
 1. Choose a [Release Channel]({{<ref "/docs/Guides/Best Practices/gke.md#release-channels" >}}) (Autopilot clusters must be on a Release Channel).
 
 1. Create the cluster:
