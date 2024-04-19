@@ -939,7 +939,7 @@ func TestApplyCounterPolicy(t *testing.T) {
 			},
 			want: expected{
 				replicas: 1,
-				limited:  true,
+				limited:  false,
 				wantErr:  false,
 			},
 		},
@@ -1269,7 +1269,7 @@ func TestApplyCounterPolicy(t *testing.T) {
 			},
 			want: expected{
 				replicas: 1,
-				limited:  true,
+				limited:  false,
 				wantErr:  false,
 			},
 		},

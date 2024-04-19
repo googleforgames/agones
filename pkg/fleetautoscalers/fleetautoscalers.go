@@ -346,14 +346,12 @@ func applyCounterOrListPolicy(c *autoscalingv1.CounterPolicy, l *autoscalingv1.L
 			return scaleLimited(scale, f, gameServerLister, nodeCounts, key, isCounter, replicas,
 				capacity, aggCapacity, minCapacity, maxCapacity)
 		}
-		if replicas > 1 {
-			result, isLimited, err := scaleDown(f, gameServerLister, nodeCounts, key, isCounter, replicas, aggCount,
-				aggCapacity, minCapacity, buffer)
-			if result <= 1 {
-				return 1, true, nil
-			}
-			return result, isLimited, err
+		result, isLimited, err := scaleDown(f, gameServerLister, nodeCounts, key, isCounter, replicas, aggCount,
+			aggCapacity, minCapacity, buffer)
+		if result < 1 {
+			return 1, true, nil
 		}
+		return result, isLimited, err
 	}
 
 	if isCounter {
