@@ -90,9 +90,15 @@ func NewMissingPodController(health healthcheck.Handler,
 	_, _ = gameServers.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
 		UpdateFunc: func(_, newObj interface{}) {
 			gs := newObj.(*agonesv1.GameServer)
+
 			if _, isDev := gs.GetDevAddress(); !isDev && !isBeforePodCreated(gs) && !gs.IsBeingDeleted() &&
 				!(gs.Status.State == agonesv1.GameServerStateUnhealthy) && !(gs.Status.State == agonesv1.GameServerStateError) {
-				c.workerqueue.Enqueue(gs)
+
+				// Only queue the Pod if there is an issue retrieving it. If it exists, don't queue it, since we know it's not missing.
+				// If there was an error accessing the Kubernetes control plane then enqueue it, so it can be rechecked when the control plane comes back up.
+				if pod, err := c.podLister.Pods(gs.ObjectMeta.Namespace).Get(gs.ObjectMeta.Name); err != nil || !isGameServerPod(pod) {
+					c.workerqueue.Enqueue(gs)
+				}
 			}
 		},
 	})

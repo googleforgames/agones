@@ -89,7 +89,7 @@ func NewHealthController(
 	_, _ = podInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		UpdateFunc: func(oldObj, newObj interface{}) {
 			pod := newObj.(*corev1.Pod)
-			if isGameServerPod(pod) && hc.isUnhealthy(pod) {
+			if pod.ObjectMeta.DeletionTimestamp.IsZero() && isGameServerPod(pod) && hc.isUnhealthy(pod) {
 				hc.workerqueue.Enqueue(pod)
 			}
 		},

@@ -16,6 +16,7 @@ package gameservers
 
 import (
 	"context"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -23,6 +24,7 @@ import (
 	agtesting "agones.dev/agones/pkg/testing"
 	"github.com/heptiolabs/healthcheck"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -178,9 +180,22 @@ func TestMissingPodControllerRun(t *testing.T) {
 	gsWatch := watch.NewFake()
 	m.AgonesClient.AddWatchReactor("gameservers", k8stesting.DefaultWatchReactor(gsWatch, nil))
 
+	// do we have a pod?
+	exist := atomic.Bool{}
+	exist.Store(false)
+
+	m.KubeClient.AddReactor("list", "pods", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		if exist.Load() {
+			pod, err := gs.Pod(agtesting.FakeAPIHooks{})
+			require.NoError(t, err)
+			return true, &corev1.PodList{Items: []corev1.Pod{*pod}}, nil
+		}
+		return true, &corev1.PodList{Items: []corev1.Pod{}}, nil
+	})
+
 	c.workerqueue.SyncHandler = h
 
-	ctx, cancel := agtesting.StartInformers(m, c.gameServerSynced)
+	ctx, cancel := agtesting.StartInformers(m, c.gameServerSynced, c.podSynced)
 	defer cancel()
 
 	go func() {
@@ -189,7 +204,7 @@ func TestMissingPodControllerRun(t *testing.T) {
 	}()
 
 	noChange := func() {
-		assert.True(t, cache.WaitForCacheSync(ctx.Done(), c.gameServerSynced))
+		assert.True(t, cache.WaitForCacheSync(ctx.Done(), c.gameServerSynced, c.podSynced))
 		select {
 		case <-received:
 			assert.FailNow(t, "should not run sync")
@@ -216,6 +231,7 @@ func TestMissingPodControllerRun(t *testing.T) {
 	noChange()
 
 	// ready gs
+	exist.Store(true)
 	gs.Status.State = agonesv1.GameServerStateReady
 	gsWatch.Modify(gs.DeepCopy())
 	result()
