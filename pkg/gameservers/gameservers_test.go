@@ -136,6 +136,7 @@ func TestApplyGameServerAddressAndPort(t *testing.T) {
 			pod, err := gsFixture.Pod(agtesting.FakeAPIHooks{})
 			require.NoError(t, err)
 			pod.Spec.NodeName = node.ObjectMeta.Name
+			pod.Status.PodIPs = []corev1.PodIP{{IP: ipFixture}}
 			tc.podMod(pod)
 
 			gs, err := applyGameServerAddressAndPort(gsFixture, node, pod, tc.podSyncer)
@@ -146,6 +147,10 @@ func TestApplyGameServerAddressAndPort(t *testing.T) {
 			}
 			assert.Equal(t, ipFixture, gs.Status.Address)
 			assert.Equal(t, node.ObjectMeta.Name, gs.Status.NodeName)
+			assert.Equal(t, []corev1.NodeAddress{
+				{Address: ipFixture, Type: "ExternalIP"},
+				{Address: ipFixture, Type: "PodIP"},
+			}, gs.Status.Addresses)
 		})
 	}
 
