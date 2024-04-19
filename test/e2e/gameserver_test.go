@@ -60,6 +60,16 @@ func TestCreateConnect(t *testing.T) {
 	assert.NotEmpty(t, readyGs.Status.Ports[0].Port)
 	assert.NotEmpty(t, readyGs.Status.Address)
 	assert.NotEmpty(t, readyGs.Status.Addresses)
+
+	var hasPodIPAddress bool
+	for i, addr := range readyGs.Status.Addresses {
+		if addr.Type == agonesv1.NodePodIP {
+			assert.NotEmpty(t, readyGs.Status.Addresses[i].Address)
+			hasPodIPAddress = true
+		}
+	}
+	assert.True(t, hasPodIPAddress)
+
 	assert.NotEmpty(t, readyGs.Status.NodeName)
 	assert.Equal(t, readyGs.Status.State, agonesv1.GameServerStateReady)
 
