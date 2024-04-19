@@ -198,9 +198,9 @@ To choose `address` from `addresses`, [Agones looks for the following address ty
 * `ExternalIP`
 * `InternalDNS`
 * `InternalIP`
-* `PodIP`
 
-e.g. if any `ExternalDNS` address is found in the respective `Node`, it is used as the `address`.
+e.g. if any `ExternalDNS` address is found in the respective `Node`, it is used as the `address`. (`PodIP` is not considered
+for `address`.)
 
 The policy for `address` will work for many use-cases, but for some advanced cases, such as IPv6 enablement, you may need
 to evaluate all `addresses` and pick the addresses that best suits your needs.
