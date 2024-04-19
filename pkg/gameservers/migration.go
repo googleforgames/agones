@@ -94,13 +94,13 @@ func NewMigrationController(health healthcheck.Handler,
 	_, _ = podInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
 			pod := obj.(*corev1.Pod)
-			if isActiveGameServerWithNode(pod) {
+			if _, _, ok, err := mc.isMigratingGameServerPod(pod); err != nil || ok {
 				mc.workerqueue.Enqueue(pod)
 			}
 		},
 		UpdateFunc: func(_, newObj interface{}) {
 			pod := newObj.(*corev1.Pod)
-			if isActiveGameServerWithNode(pod) {
+			if _, _, ok, err := mc.isMigratingGameServerPod(pod); err != nil || ok {
 				mc.workerqueue.Enqueue(pod)
 			}
 		},
@@ -132,9 +132,52 @@ func (mc *MigrationController) loggerForGameServer(gs *agonesv1.GameServer) *log
 	return mc.loggerForGameServerKey(gsName).WithField("gs", gs)
 }
 
-// isActiveGameServerWithNode tests to see if a Pod is active and has a Node assigned.
-func isActiveGameServerWithNode(pod *corev1.Pod) bool {
-	return pod.Spec.NodeName != "" && pod.ObjectMeta.DeletionTimestamp.IsZero() && isGameServerPod(pod)
+func (mc *MigrationController) isMigratingGameServerPod(pod *k8sv1.Pod) (*agonesv1.GameServer, *k8sv1.Node, bool, error) {
+	if pod.Spec.NodeName == "" || !pod.ObjectMeta.DeletionTimestamp.IsZero() || !isGameServerPod(pod) {
+		return nil, nil, false, nil
+	}
+
+	key := pod.Namespace + "/" + pod.Name
+	gs, err := mc.gameServerLister.GameServers(pod.ObjectMeta.Namespace).Get(pod.ObjectMeta.Name)
+	if err != nil {
+		if k8serrors.IsNotFound(err) {
+			mc.loggerForGameServerKey(key).Debug("GameServer is no longer available for syncing")
+			return nil, nil, false, nil
+		}
+		return nil, nil, false, errors.Wrapf(err, "error retrieving GameServer %s from namespace %s", pod.ObjectMeta.Name, pod.ObjectMeta.Namespace)
+	}
+
+	// Either the address has not been set, or we're being deleted already
+	if gs.Status.NodeName == "" || gs.IsBeingDeleted() || gs.Status.State == agonesv1.GameServerStateUnhealthy {
+		return nil, nil, false, nil
+	}
+
+	if pod.Spec.NodeName == "" {
+		return nil, nil, false, workerqueue.NewDebugError(errors.Errorf("node not yet populated for Pod %s", pod.ObjectMeta.Name))
+	}
+
+	node, err := mc.nodeLister.Get(pod.Spec.NodeName)
+	if err != nil {
+		if k8serrors.IsNotFound(err) {
+			mc.loggerForGameServerKey(key).WithField("node", pod.Spec.NodeName).Debug("Node is no longer available for syncing")
+			return nil, nil, false, nil
+		}
+		return nil, nil, false, errors.Wrapf(err, "error retrieving node %s for Pod %s", pod.Spec.NodeName, pod.ObjectMeta.Name)
+	}
+
+	// if the node is being terminated, then also escape, because the Pod is going to be Terminated if it hasn't been
+	// already.
+	if !node.ObjectMeta.DeletionTimestamp.IsZero() {
+		return nil, nil, false, nil
+	}
+
+	// if the nodes match, and the default GameServer Address matches one of the node addresses - escape, since
+	// migration isn't happening.
+	if pod.Spec.NodeName == gs.Status.NodeName && mc.anyAddressMatch(node, gs) {
+		return nil, nil, false, nil
+	}
+
+	return gs, node, true, nil
 }
 
 // syncGameServer will check if the Pod for the GameServer
@@ -148,20 +191,6 @@ func (mc *MigrationController) syncGameServer(ctx context.Context, key string) e
 		return nil
 	}
 
-	gs, err := mc.gameServerLister.GameServers(namespace).Get(name)
-	if err != nil {
-		if k8serrors.IsNotFound(err) {
-			mc.loggerForGameServerKey(key).Debug("GameServer is no longer available for syncing")
-			return nil
-		}
-		return errors.Wrapf(err, "error retrieving GameServer %s from namespace %s", name, namespace)
-	}
-
-	// Either the address has not been set, or we're being deleted already
-	if gs.Status.NodeName == "" || gs.IsBeingDeleted() || gs.Status.State == agonesv1.GameServerStateUnhealthy {
-		return nil
-	}
-
 	pod, err := mc.podLister.Pods(namespace).Get(name)
 	if err != nil {
 		if k8serrors.IsNotFound(err) {
@@ -170,48 +199,40 @@ func (mc *MigrationController) syncGameServer(ctx context.Context, key string) e
 		}
 		return errors.Wrapf(err, "error retrieving Pod %s from namespace %s", name, namespace)
 	}
-	if !pod.ObjectMeta.DeletionTimestamp.IsZero() {
-		return nil
+
+	gs, node, ok, err := mc.isMigratingGameServerPod(pod)
+	// if there is an error, retry, but if not migrating then escape and continue on with your life doing other things.
+	if err != nil || !ok {
+		return err
 	}
 
-	if pod.Spec.NodeName == "" {
-		return workerqueue.NewDebugError(errors.Errorf("node not yet populated for Pod %s", pod.ObjectMeta.Name))
-	}
-	node, err := mc.nodeLister.Get(pod.Spec.NodeName)
-	if err != nil {
-		return errors.Wrapf(err, "error retrieving node %s for Pod %s", pod.Spec.NodeName, pod.ObjectMeta.Name)
-	}
-
-	if pod.Spec.NodeName != gs.Status.NodeName || !mc.anyAddressMatch(node, gs) {
-		gsCopy := gs.DeepCopy()
-
-		var eventMsg string
-		// If the GameServer has yet to become ready, we will reapply the Address and Port
-		// otherwise, we move it to Unhealthy so that a new GameServer will be recreated.
-		if gsCopy.IsBeforeReady() {
-			gsCopy, err = applyGameServerAddressAndPort(gsCopy, node, pod, mc.syncPodPortsToGameServer)
-			if err != nil {
-				return err
-			}
-			eventMsg = "Address updated due to Node migration"
-		} else {
-			gsCopy.Status.State = agonesv1.GameServerStateUnhealthy
-			eventMsg = "Node migration occurred"
-		}
-
-		if _, err = mc.gameServerGetter.GameServers(gsCopy.ObjectMeta.Namespace).Update(ctx, gsCopy, metav1.UpdateOptions{}); err != nil {
+	// If the GameServer has yet to become ready, we will reapply the Address and Port
+	// otherwise, we move it to Unhealthy so that a new GameServer will be recreated.
+	gsCopy := gs.DeepCopy()
+	var eventMsg string
+	if gsCopy.IsBeforeReady() {
+		gsCopy, err = applyGameServerAddressAndPort(gsCopy, node, pod, mc.syncPodPortsToGameServer)
+		if err != nil {
 			return err
 		}
-
-		mc.loggerForGameServer(gs).Debug("GameServer migration occurred")
-		mc.recorder.Event(gs, corev1.EventTypeWarning, string(gsCopy.Status.State), eventMsg)
+		eventMsg = "Address updated due to Node migration"
+	} else {
+		gsCopy.Status.State = agonesv1.GameServerStateUnhealthy
+		eventMsg = "Node migration occurred"
 	}
+
+	if gs, err = mc.gameServerGetter.GameServers(gsCopy.ObjectMeta.Namespace).Update(ctx, gsCopy, metav1.UpdateOptions{}); err != nil {
+		return err
+	}
+
+	mc.loggerForGameServer(gs).Debug("GameServer migration occurred")
+	mc.recorder.Event(gs, corev1.EventTypeWarning, string(gsCopy.Status.State), eventMsg)
 
 	return nil
 }
 
 func (mc *MigrationController) anyAddressMatch(node *k8sv1.Node, gs *agonesv1.GameServer) bool {
-	nodeAddresses := []string{}
+	var nodeAddresses []string
 	for _, a := range node.Status.Addresses {
 		if a.Address == gs.Status.Address {
 			return true
