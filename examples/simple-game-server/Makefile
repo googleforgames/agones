@@ -38,7 +38,7 @@ WITH_ARM64 ?= 1
 
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_path := $(dir $(mkfile_path))
-version := 0.29
+version := 0.30
 ifeq ($(REPOSITORY),)
 	server_tag := simple-game-server:$(version)
 else

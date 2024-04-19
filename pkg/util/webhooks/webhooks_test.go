@@ -164,7 +164,7 @@ func TestWebHookFleetValidationHandler(t *testing.T) {
 							"template": {
 								"spec": {
 									"containers": [{
-										"image": "us-docker.pkg.dev/agones-images/examples/simple-game-server:0.29",
+										"image": "us-docker.pkg.dev/agones-images/examples/simple-game-server:0.30",
 										"name": false
 									}]
 								}
