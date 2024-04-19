@@ -28,7 +28,7 @@ spec:
     # [Stage:Alpha]
     # [FeatureFlag:PortRanges]
     # range is the optional port range name from which to select a port when using a 'Dynamic' or 'Passthrough' port policy.
-    range: game
+    range: default
     # portPolicy has three options:
     # - "Dynamic" (default) the system allocates a free hostPort for the gameserver, for game clients to connect to
     # - "Static", user defines the hostPort that the game client will connect to. Then onus is on the user to ensure that the
