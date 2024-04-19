@@ -16,13 +16,10 @@ package converters
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
-	pb "agones.dev/agones/pkg/allocation/go"
-	"agones.dev/agones/pkg/apis"
-	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
-	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
-	"agones.dev/agones/pkg/util/runtime"
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/codes"
@@ -30,6 +27,12 @@ import (
 	"google.golang.org/protobuf/types/known/wrapperspb"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	pb "agones.dev/agones/pkg/allocation/go"
+	"agones.dev/agones/pkg/apis"
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
+	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
+	"agones.dev/agones/pkg/util/runtime"
 )
 
 func TestConvertAllocationRequestToGameServerAllocation(t *testing.T) {
@@ -1532,4 +1535,26 @@ func TestConvertAllocationResponseToGSA(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestGetUnallocatedStatusCode(t *testing.T) {
+	// Test default behavior
+	t.Run("DefaultBehavior", func(t *testing.T) {
+		viper.Reset()
+		viper.SetDefault("HTTP_UNALLOCATED", "429")
+		if got := getUnallocatedStatusCode(); got != codes.ResourceExhausted {
+			t.Errorf("getUnallocatedStatusCode() = %v, want %v", got, codes.ResourceExhausted)
+		}
+	})
+
+	// Test when HTTP_UNALLOCATED is set to "503"
+	t.Run("HttpStatus503", func(t *testing.T) {
+		viper.Reset()
+		os.Setenv("HTTP_UNALLOCATED", "503")
+		defer os.Unsetenv("HTTP_UNALLOCATED")
+		viper.AutomaticEnv()
+		if got := getUnallocatedStatusCode(); got != codes.Unavailable {
+			t.Errorf("getUnallocatedStatusCode() = %v, want %v", got, codes.Unavailable)
+		}
+	})
 }

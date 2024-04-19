@@ -16,17 +16,24 @@
 package converters
 
 import (
-	pb "agones.dev/agones/pkg/allocation/go"
-	"agones.dev/agones/pkg/apis"
-	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
-	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
-	"agones.dev/agones/pkg/util/runtime"
+	"github.com/spf13/viper"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	pb "agones.dev/agones/pkg/allocation/go"
+	"agones.dev/agones/pkg/apis"
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
+	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
+	"agones.dev/agones/pkg/util/runtime"
 )
+
+func init() {
+	viper.AutomaticEnv()
+	viper.SetDefault("HTTP_UNALLOCATED", "429")
+}
 
 // ConvertAllocationRequestToGSA converts AllocationRequest to GameServerAllocation V1 (GSA)
 func ConvertAllocationRequestToGSA(in *pb.AllocationRequest) *allocationv1.GameServerAllocation {
@@ -480,13 +487,26 @@ func convertAllocationListsToGSALists(in map[string]*pb.AllocationResponse_ListS
 	return out
 }
 
+// use viper to get the code
+func getUnallocatedStatusCode() codes.Code {
+	httpStatus := viper.GetString("HTTP_UNALLOCATED")
+	switch httpStatus {
+	case "429":
+		return codes.ResourceExhausted
+	case "503":
+		return codes.Unavailable
+	default:
+		return codes.ResourceExhausted
+	}
+}
+
 // convertStateV1ToError converts GameServerAllocationState V1 (GSA) to AllocationResponse_GameServerAllocationState
 func convertStateV1ToError(in allocationv1.GameServerAllocationState) error {
 	switch in {
 	case allocationv1.GameServerAllocationAllocated:
 		return nil
 	case allocationv1.GameServerAllocationUnAllocated:
-		return status.Error(codes.ResourceExhausted, "there is no available GameServer to allocate")
+		return status.Error(getUnallocatedStatusCode(), "there is no available GameServer to allocate")
 	case allocationv1.GameServerAllocationContention:
 		return status.Error(codes.Aborted, "too many concurrent requests have overwhelmed the system")
 	}
