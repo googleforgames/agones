@@ -26,17 +26,6 @@ import (
 	"sync"
 	"time"
 
-	"agones.dev/agones/pkg"
-	"agones.dev/agones/pkg/allocation/converters"
-	pb "agones.dev/agones/pkg/allocation/go"
-	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
-	"agones.dev/agones/pkg/client/clientset/versioned"
-	"agones.dev/agones/pkg/client/informers/externalversions"
-	"agones.dev/agones/pkg/gameserverallocations"
-	"agones.dev/agones/pkg/gameservers"
-	"agones.dev/agones/pkg/util/fswatch"
-	"agones.dev/agones/pkg/util/runtime"
-	"agones.dev/agones/pkg/util/signals"
 	"github.com/heptiolabs/healthcheck"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -53,6 +42,18 @@ import (
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+
+	"agones.dev/agones/pkg"
+	"agones.dev/agones/pkg/allocation/converters"
+	pb "agones.dev/agones/pkg/allocation/go"
+	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
+	"agones.dev/agones/pkg/client/clientset/versioned"
+	"agones.dev/agones/pkg/client/informers/externalversions"
+	"agones.dev/agones/pkg/gameserverallocations"
+	"agones.dev/agones/pkg/gameservers"
+	"agones.dev/agones/pkg/util/fswatch"
+	"agones.dev/agones/pkg/util/runtime"
+	"agones.dev/agones/pkg/util/signals"
 )
 
 var (
@@ -81,6 +82,7 @@ const (
 	logLevelFlag                     = "log-level"
 	allocationBatchWaitTime          = "allocation-batch-wait-time"
 	readinessShutdownDuration        = "readiness-shutdown-duration"
+	httpUnallocatedStatusCodeFlag    = "http-unallocated-status-code"
 )
 
 func parseEnvFlags() config {
@@ -98,6 +100,7 @@ func parseEnvFlags() config {
 	viper.SetDefault(totalRemoteAllocationTimeoutFlag, 30*time.Second)
 	viper.SetDefault(logLevelFlag, "Info")
 	viper.SetDefault(allocationBatchWaitTime, 500*time.Millisecond)
+	viper.SetDefault(httpUnallocatedStatusCodeFlag, "429")
 
 	pflag.Int32(httpPortFlag, viper.GetInt32(httpPortFlag), "Port to listen on for REST requests")
 	pflag.Int32(grpcPortFlag, viper.GetInt32(grpcPortFlag), "Port to listen on for gRPC requests")
@@ -114,6 +117,7 @@ func parseEnvFlags() config {
 	pflag.String(logLevelFlag, viper.GetString(logLevelFlag), "Agones Log level")
 	pflag.Duration(allocationBatchWaitTime, viper.GetDuration(allocationBatchWaitTime), "Flag to configure the waiting period between allocations batches")
 	pflag.Duration(readinessShutdownDuration, viper.GetDuration(readinessShutdownDuration), "Time in seconds for SIGTERM/SIGINT handler to sleep for.")
+	pflag.String(httpUnallocatedStatusCodeFlag, viper.GetString(httpUnallocatedStatusCodeFlag), "HTTP status code used when no game servers are available to allocate")
 	runtime.FeaturesBindFlags()
 	pflag.Parse()
 
@@ -133,6 +137,7 @@ func parseEnvFlags() config {
 	runtime.Must(viper.BindEnv(logLevelFlag))
 	runtime.Must(viper.BindEnv(allocationBatchWaitTime))
 	runtime.Must(viper.BindEnv(readinessShutdownDuration))
+	runtime.Must(viper.BindEnv(httpUnallocatedStatusCodeFlag, "HTTP_UNALLOCATED_STATUS_CODE"))
 	runtime.Must(viper.BindPFlags(pflag.CommandLine))
 	runtime.Must(runtime.FeaturesBindEnv())
 
@@ -154,6 +159,7 @@ func parseEnvFlags() config {
 		totalRemoteAllocationTimeout: viper.GetDuration(totalRemoteAllocationTimeoutFlag),
 		allocationBatchWaitTime:      viper.GetDuration(allocationBatchWaitTime),
 		ReadinessShutdownDuration:    viper.GetDuration(readinessShutdownDuration),
+		httpUnallocatedStatusCode:    viper.GetString(httpUnallocatedStatusCodeFlag),
 	}
 }
 
@@ -173,6 +179,7 @@ type config struct {
 	remoteAllocationTimeout      time.Duration
 	allocationBatchWaitTime      time.Duration
 	ReadinessShutdownDuration    time.Duration
+	httpUnallocatedStatusCode    string
 }
 
 // grpcHandlerFunc returns an http.Handler that delegates to grpcServer on incoming gRPC

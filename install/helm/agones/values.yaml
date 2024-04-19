@@ -226,7 +226,7 @@ agones:
         portName: https
         targetPort: 8443
         nodePort: 0 # nodePort will be used if the serviceType is set to NodePort
-        unallocatedStatus: 429
+        unallocatedStatusCode: 429
       grpc:
         enabled: true
         appProtocol: ""
