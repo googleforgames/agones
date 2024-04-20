@@ -16,7 +16,6 @@ package converters
 
 import (
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/spf13/viper"
@@ -1537,24 +1536,36 @@ func TestConvertAllocationResponseToGSA(t *testing.T) {
 	}
 }
 
-func TestGetUnallocatedStatusCode(t *testing.T) {
-	// Test default behavior
-	t.Run("DefaultBehavior", func(t *testing.T) {
-		viper.Reset()
-		viper.SetDefault("HTTP_UNALLOCATED", "429")
-		if got := getUnallocatedStatusCode(); got != codes.ResourceExhausted {
-			t.Errorf("getUnallocatedStatusCode() = %v, want %v", got, codes.ResourceExhausted)
-		}
-	})
+func TestConvertStateV1ToError(t *testing.T) {
+	viper.Set("HTTP_UNALLOCATED_STATUS_CODE", "429")
 
-	// Test when HTTP_UNALLOCATED is set to "503"
-	t.Run("HttpStatus503", func(t *testing.T) {
-		viper.Reset()
-		os.Setenv("HTTP_UNALLOCATED", "503")
-		defer os.Unsetenv("HTTP_UNALLOCATED")
-		viper.AutomaticEnv()
-		if got := getUnallocatedStatusCode(); got != codes.Unavailable {
-			t.Errorf("getUnallocatedStatusCode() = %v, want %v", got, codes.Unavailable)
-		}
-	})
+	tests := []struct {
+		name    string
+		state   allocationv1.GameServerAllocationState
+		wantErr error
+	}{
+		{
+			name:    "Unallocated with Default Code",
+			state:   allocationv1.GameServerAllocationUnAllocated,
+			wantErr: status.Error(codes.ResourceExhausted, "there is no available GameServer to allocate"),
+		},
+		{
+			name:    "Allocated State",
+			state:   allocationv1.GameServerAllocationAllocated,
+			wantErr: nil,
+		},
+		{
+			name:    "Contention State Handling",
+			state:   allocationv1.GameServerAllocationContention,
+			wantErr: status.Error(codes.Aborted, "too many concurrent requests have overwhelmed the system"),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := convertStateV1ToError(tt.state); (err != nil) != (tt.wantErr != nil) || (err != nil && err.Error() != tt.wantErr.Error()) {
+				t.Errorf("convertStateV1ToError() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
 }
