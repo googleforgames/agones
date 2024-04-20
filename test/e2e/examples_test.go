@@ -45,7 +45,7 @@ func TestSuperTuxKartGameServerReady(t *testing.T) {
 					Containers: []corev1.Container{
 						{
 							Name:  "supertuxkart",
-							Image: "us-docker.pkg.dev/agones-images/examples/supertuxkart-example:0.12",
+							Image: "us-docker.pkg.dev/agones-images/examples/supertuxkart-example:0.13",
 							Env: []corev1.EnvVar{
 								{
 									Name:  "ENABLE_PLAYER_TRACKING",
