@@ -55,7 +55,11 @@ func TestPortAllocatorAllocate(t *testing.T) {
 	}()
 
 	m := agtesting.NewMocks()
-	pa := newAllocator(10, 50, map[string]PortRange{"test": {MinPort: 51, MaxPort: 100}}, m.KubeInformerFactory, m.AgonesInformerFactory)
+	pr := map[string]PortRange{
+		agonesv1.DefaultPortRange: {MinPort: 10, MaxPort: 50},
+		"test":                    {MinPort: 51, MaxPort: 100},
+	}
+	pa := newAllocator(pr, m.KubeInformerFactory, m.AgonesInformerFactory)
 	nodeWatch := watch.NewFake()
 	m.KubeClient.AddWatchReactor("nodes", k8stesting.DefaultWatchReactor(nodeWatch, nil))
 

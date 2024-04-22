@@ -64,22 +64,18 @@ type portAllocator struct {
 // New returns a new dynamic port allocator. minPort and maxPort are the
 // top and bottom portAllocations that can be allocated in the range for
 // the game servers.
-func New(minPort, maxPort int32, portRanges map[string]PortRange,
+func New(portRanges map[string]PortRange,
 	kubeInformerFactory informers.SharedInformerFactory,
 	agonesInformerFactory externalversions.SharedInformerFactory) Interface {
-	return newAllocator(minPort, maxPort, portRanges, kubeInformerFactory, agonesInformerFactory)
+	return newAllocator(portRanges, kubeInformerFactory, agonesInformerFactory)
 }
 
-func newAllocator(minPort, maxPort int32, portRanges map[string]PortRange,
+func newAllocator(portRanges map[string]PortRange,
 	kubeInformerFactory informers.SharedInformerFactory,
 	agonesInformerFactory externalversions.SharedInformerFactory) *portAllocator {
-	allocs := make([]*portRangeAllocator, 0, len(portRanges)+1)
-	allocs = append(allocs, newRangeAllocator(agonesv1.DefaultPortRange, minPort, maxPort, kubeInformerFactory, agonesInformerFactory))
-
-	if runtime.FeatureEnabled(runtime.FeaturePortRanges) {
-		for name, pr := range portRanges {
-			allocs = append(allocs, newRangeAllocator(name, pr.MinPort, pr.MaxPort, kubeInformerFactory, agonesInformerFactory))
-		}
+	allocs := make([]*portRangeAllocator, 0, len(portRanges))
+	for name, pr := range portRanges {
+		allocs = append(allocs, newRangeAllocator(name, pr.MinPort, pr.MaxPort, kubeInformerFactory, agonesInformerFactory))
 	}
 
 	return &portAllocator{

@@ -17,6 +17,7 @@ package main
 import (
 	"testing"
 
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	"agones.dev/agones/pkg/portallocator"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -25,14 +26,14 @@ import (
 func TestControllerConfigValidation(t *testing.T) {
 	t.Parallel()
 
-	c := config{MinPort: 10, MaxPort: 2}
+	c := config{PortRanges: map[string]portallocator.PortRange{
+		agonesv1.DefaultPortRange: {MinPort: 10, MaxPort: 2},
+	}}
 	errs := c.validate()
 	assert.Len(t, errs, 1)
 	errorsContainString(t, errs, "max Port cannot be set less that the Min Port")
 
-	c.AdditionalPortRanges = map[string]portallocator.PortRange{
-		"game": {MinPort: 20, MaxPort: 12},
-	}
+	c.PortRanges["game"] = portallocator.PortRange{MinPort: 20, MaxPort: 12}
 	errs = c.validate()
 	assert.Len(t, errs, 2)
 	errorsContainString(t, errs, "max Port cannot be set less that the Min Port for port range game")
@@ -62,11 +63,10 @@ func TestControllerConfigValidation_PortRangeOverlap(t *testing.T) {
 	t.Parallel()
 
 	c := config{
-		MinPort: 10,
-		MaxPort: 20,
-		AdditionalPortRanges: map[string]portallocator.PortRange{
-			"game":  {MinPort: 15, MaxPort: 25},
-			"other": {MinPort: 21, MaxPort: 31},
+		PortRanges: map[string]portallocator.PortRange{
+			agonesv1.DefaultPortRange: {MinPort: 10, MaxPort: 20},
+			"game":                    {MinPort: 15, MaxPort: 25},
+			"other":                   {MinPort: 21, MaxPort: 31},
 		},
 	}
 	errs := c.validate()

@@ -113,7 +113,7 @@ spec:
         {{- if .Values.gameservers.additionalPortRanges }}
         {{- $featureGates := include "agones.featureGates" . | fromYaml }}
         {{- if not $featureGates.PortRanges }}
-        {{- fail "gameservers.portRanges specified without feature gate PortRanges enabled!" }}
+        {{- fail "gameservers.additionalPortRanges specified without feature gate PortRanges enabled!" }}
         {{- end }}
         - name: ADDITIONAL_PORT_RANGES
           value: {{ .Values.gameservers.additionalPortRanges | toJson | quote }}
