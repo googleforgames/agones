@@ -96,7 +96,7 @@ kubectl describe gameserver
 Let's retrieve the IP address and the allocated port of your Game Server:
 
 ```bash
-kubectl get gameservers | grep Ready | awk '{print $3":"$4 }'
+kubectl get gs -o jsonpath='{.items[0].status.address}:{.items[0].status.ports[0].port}'
 ```
 
 You can now communicate with the Game Server :
