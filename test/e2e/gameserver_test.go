@@ -60,6 +60,16 @@ func TestCreateConnect(t *testing.T) {
 	assert.NotEmpty(t, readyGs.Status.Ports[0].Port)
 	assert.NotEmpty(t, readyGs.Status.Address)
 	assert.NotEmpty(t, readyGs.Status.Addresses)
+
+	var hasPodIPAddress bool
+	for i, addr := range readyGs.Status.Addresses {
+		if addr.Type == agonesv1.NodePodIP {
+			assert.NotEmpty(t, readyGs.Status.Addresses[i].Address)
+			hasPodIPAddress = true
+		}
+	}
+	assert.True(t, hasPodIPAddress)
+
 	assert.NotEmpty(t, readyGs.Status.NodeName)
 	assert.Equal(t, readyGs.Status.State, agonesv1.GameServerStateReady)
 
@@ -1100,7 +1110,7 @@ spec:
           preferredDuringSchedulingIgnoredDuringExecution: ERROR
       containers:
         - name: simple-game-server
-          image: us-docker.pkg.dev/agones-images/examples/simple-game-server:0.28
+          image: us-docker.pkg.dev/agones-images/examples/simple-game-server:0.31
 `
 	err := os.WriteFile("/tmp/invalid.yaml", []byte(gsYaml), 0o644)
 	require.NoError(t, err)
@@ -1373,63 +1383,63 @@ func TestCounters(t *testing.T) {
 		},
 		"IncrementCounter": {
 			msg:         "INCREMENT_COUNTER foo 10",
-			want:        "SUCCESS: true\n",
+			want:        "SUCCESS\n",
 			counterName: "foo",
 			wantCount:   "COUNTER: 20\n",
 		},
 		"IncrementCounter Past Capacity": {
 			msg:         "INCREMENT_COUNTER games 50",
-			want:        "ERROR: false\n",
+			want:        "ERROR: could not increment Counter games by amount 50: rpc error: code = Unknown desc = out of range. Count must be within range [0,Capacity]. Found Count: 51, Capacity: 50\n",
 			counterName: "games",
 			wantCount:   "COUNTER: 1\n",
 		},
 		"IncrementCounter Negative": {
 			msg:         "INCREMENT_COUNTER games -1",
-			want:        "ERROR: false\n",
+			want:        "ERROR: amount must be a positive int64, found -1\n",
 			counterName: "games",
 			wantCount:   "COUNTER: 1\n",
 		},
 		"IncrementCounter Counter Does Not Exist": {
 			msg:  "INCREMENT_COUNTER same 1",
-			want: "ERROR: false\n",
+			want: "ERROR: could not increment Counter same by amount 1: rpc error: code = Unknown desc = counter not found: same\n",
 		},
 		"DecrementCounter": {
 			msg:         "DECREMENT_COUNTER bar 10",
-			want:        "SUCCESS: true\n",
+			want:        "SUCCESS\n",
 			counterName: "bar",
 			wantCount:   "COUNTER: 0\n",
 		},
 		"DecrementCounter Past Capacity": {
 			msg:         "DECREMENT_COUNTER games 2",
-			want:        "ERROR: false\n",
+			want:        "ERROR: could not decrement Counter games by amount 2: rpc error: code = Unknown desc = out of range. Count must be within range [0,Capacity]. Found Count: -1, Capacity: 50\n",
 			counterName: "games",
 			wantCount:   "COUNTER: 1\n",
 		},
 		"DecrementCounter Negative": {
 			msg:         "DECREMENT_COUNTER games -1",
-			want:        "ERROR: false\n",
+			want:        "ERROR: amount must be a positive int64, found -1\n",
 			counterName: "games",
 			wantCount:   "COUNTER: 1\n",
 		},
 		"DecrementCounter Counter Does Not Exist": {
 			msg:  "DECREMENT_COUNTER lame 1",
-			want: "ERROR: false\n",
+			want: "ERROR: could not decrement Counter lame by amount 1: rpc error: code = Unknown desc = counter not found: lame\n",
 		},
 		"SetCounterCount": {
 			msg:         "SET_COUNTER_COUNT baz 0",
-			want:        "SUCCESS: true\n",
+			want:        "SUCCESS\n",
 			counterName: "baz",
 			wantCount:   "COUNTER: 0\n",
 		},
 		"SetCounterCount Past Capacity": {
 			msg:         "SET_COUNTER_COUNT games 51",
-			want:        "ERROR: false\n",
+			want:        "ERROR: could not set Counter games count to amount 51: rpc error: code = Unknown desc = out of range. Count must be within range [0,Capacity]. Found Count: 51, Capacity: 50\n",
 			counterName: "games",
 			wantCount:   "COUNTER: 1\n",
 		},
 		"SetCounterCount Past Zero": {
 			msg:         "SET_COUNTER_COUNT games -1",
-			want:        "ERROR: false\n",
+			want:        "ERROR: could not set Counter games count to amount -1: rpc error: code = Unknown desc = out of range. Count must be within range [0,Capacity]. Found Count: -1, Capacity: 50\n",
 			counterName: "games",
 			wantCount:   "COUNTER: 1\n",
 		},
@@ -1443,13 +1453,13 @@ func TestCounters(t *testing.T) {
 		},
 		"SetCounterCapacity": {
 			msg:          "SET_COUNTER_CAPACITY qux 0",
-			want:         "SUCCESS: true\n",
+			want:         "SUCCESS\n",
 			counterName:  "qux",
 			wantCapacity: "CAPACITY: 0\n",
 		},
 		"SetCounterCapacity Past Zero": {
 			msg:         "SET_COUNTER_CAPACITY games -42",
-			want:        "ERROR: false\n",
+			want:        "ERROR: could not set Counter games capacity to amount -42: rpc error: code = Unknown desc = out of range. Capacity must be greater than or equal to 0. Found Capacity: -42\n",
 			counterName: "games",
 			wantCount:   "COUNTER: 1\n",
 		},
@@ -1529,19 +1539,19 @@ func TestLists(t *testing.T) {
 		},
 		"SetListCapacity": {
 			msg:          "SET_LIST_CAPACITY foo 1000",
-			want:         "SUCCESS: true\n",
+			want:         "SUCCESS\n",
 			listName:     "foo",
 			wantCapacity: "CAPACITY: 1000\n",
 		},
 		"SetListCapacity past 1000": {
 			msg:          "SET_LIST_CAPACITY games 1001",
-			want:         "ERROR: false\n",
+			want:         "ERROR: could not set List games capacity to amount 1001: rpc error: code = Unknown desc = out of range. Capacity must be within range [0,1000]. Found Capacity: 1001\n",
 			listName:     "games",
 			wantCapacity: "CAPACITY: 50\n",
 		},
 		"SetListCapacity negative": {
 			msg:          "SET_LIST_CAPACITY games -1",
-			want:         "ERROR: false\n",
+			want:         "ERROR: could not set List games capacity to amount -1: rpc error: code = Unknown desc = out of range. Capacity must be within range [0,1000]. Found Capacity: -1\n",
 			listName:     "games",
 			wantCapacity: "CAPACITY: 50\n",
 		},
@@ -1567,25 +1577,25 @@ func TestLists(t *testing.T) {
 		},
 		"AppendListValue": {
 			msg:        "APPEND_LIST_VALUE bar bar3",
-			want:       "SUCCESS: true\n",
+			want:       "SUCCESS\n",
 			listName:   "bar",
 			wantLength: "LENGTH: 3\n",
 		},
 		"AppendListValue past capacity": {
 			msg:        "APPEND_LIST_VALUE baz baz2",
-			want:       "ERROR: false\n",
+			want:       "ERROR: could not get List baz: rpc error: code = Unknown desc = out of range. No available capacity. Current Capacity: 1, List Size: 1\n",
 			listName:   "baz",
 			wantLength: "LENGTH: 1\n",
 		},
 		"DeleteListValue": {
 			msg:        "DELETE_LIST_VALUE qux qux3",
-			want:       "SUCCESS: true\n",
+			want:       "SUCCESS\n",
 			listName:   "qux",
 			wantLength: "LENGTH: 3\n",
 		},
 		"DeleteListValue value does not exist": {
 			msg:        "DELETE_LIST_VALUE games game4",
-			want:       "ERROR: false\n",
+			want:       "ERROR: could not get List games: rpc error: code = Unknown desc = not found. Value: game4 not found in List: games\n",
 			listName:   "games",
 			wantLength: "LENGTH: 2\n",
 		},
