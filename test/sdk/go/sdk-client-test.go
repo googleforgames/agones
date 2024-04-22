@@ -21,12 +21,13 @@ import (
 	"strings"
 	"time"
 
-	pkgSdk "agones.dev/agones/pkg/sdk"
-	"agones.dev/agones/pkg/util/runtime"
-	goSdk "agones.dev/agones/sdks/go"
 	"github.com/google/go-cmp/cmp"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
+
+	pkgSdk "agones.dev/agones/pkg/sdk"
+	"agones.dev/agones/pkg/util/runtime"
+	goSdk "agones.dev/agones/sdks/go"
 )
 
 func main() {
@@ -166,18 +167,18 @@ func testCounts(sdk *goSdk.SDK) {
 		log.Fatalf("Counter count should be 1, but is %d", count)
 	}
 
-	inc, err := sdk.Alpha().IncrementCounter(counter, 9)
-	if !inc {
+	err = sdk.Alpha().IncrementCounter(counter, 9)
+	if err != nil {
 		log.Fatalf("Error incrementing Counter: %s", err)
 	}
 
-	dec, err := sdk.Alpha().DecrementCounter(counter, 10)
-	if !dec {
+	err = sdk.Alpha().DecrementCounter(counter, 10)
+	if err != nil {
 		log.Fatalf("Error decrementing Counter: %s", err)
 	}
 
-	setCount, err := sdk.Alpha().SetCounterCount(counter, 10)
-	if !setCount {
+	err = sdk.Alpha().SetCounterCount(counter, 10)
+	if err != nil {
 		log.Fatalf("Error setting Counter count: %s", err)
 	}
 
@@ -188,8 +189,8 @@ func testCounts(sdk *goSdk.SDK) {
 		log.Fatalf("Counter capacity should be 10, but is %d", capacity)
 	}
 
-	setCapacity, err := sdk.Alpha().SetCounterCapacity(counter, 1)
-	if !setCapacity {
+	err = sdk.Alpha().SetCounterCapacity(counter, 1)
+	if err != nil {
 		log.Fatalf("Error setting Counter capacity: %s", err)
 	}
 }
@@ -218,13 +219,13 @@ func testLists(sdk *goSdk.SDK) {
 		log.Fatalf("List values should be %v, but is %v", vals, values)
 	}
 
-	appendValue, err := sdk.Alpha().AppendListValue(list, "test3")
-	if !appendValue {
+	err = sdk.Alpha().AppendListValue(list, "test3")
+	if err != nil {
 		log.Fatalf("Unable to append value \"test3\" err: %s", err)
 	}
 
-	deleteValue, err := sdk.Alpha().DeleteListValue(list, "test2")
-	if !deleteValue {
+	err = sdk.Alpha().DeleteListValue(list, "test2")
+	if err != nil {
 		log.Fatalf("Unable to delete value \"test2\" err: %s", err)
 	}
 
@@ -235,8 +236,8 @@ func testLists(sdk *goSdk.SDK) {
 		log.Fatalf("List capacity should be 100, but is %d", capacity)
 	}
 
-	setCapacity, err := sdk.Alpha().SetListCapacity(list, 2)
-	if !setCapacity {
+	err = sdk.Alpha().SetListCapacity(list, 2)
+	if err != nil {
 		log.Fatalf("Error setting List capacity: %s", err)
 	}
 }

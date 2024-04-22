@@ -22,6 +22,7 @@ import (
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	agtesting "agones.dev/agones/pkg/testing"
 	"github.com/heptiolabs/healthcheck"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
@@ -31,56 +32,6 @@ import (
 	k8stesting "k8s.io/client-go/testing"
 	"k8s.io/client-go/tools/cache"
 )
-
-func TestMigrationControllerIsRunningGameServer(t *testing.T) {
-	fixtures := map[string]struct {
-		setup    func(*corev1.Pod) *corev1.Pod
-		expected bool
-	}{
-		"not a gameserver pod": {
-			setup: func(pod *corev1.Pod) *corev1.Pod {
-				return &corev1.Pod{}
-			},
-			expected: false,
-		},
-		"game server pod": {
-			setup: func(pod *corev1.Pod) *corev1.Pod {
-				return pod
-			},
-			expected: false,
-		},
-		"game server pod that has a nodename": {
-			setup: func(pod *corev1.Pod) *corev1.Pod {
-				pod.Spec.NodeName = "x"
-				return pod
-			},
-			expected: true,
-		},
-		"game server pod that has a node, but is being deleted": {
-			setup: func(pod *corev1.Pod) *corev1.Pod {
-				pod.Spec.NodeName = "z"
-				now := metav1.Now()
-				pod.ObjectMeta.DeletionTimestamp = &now
-				return pod
-			},
-			expected: false,
-		},
-	}
-
-	for k, v := range fixtures {
-		t.Run(k, func(t *testing.T) {
-			gs := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
-				Spec: newSingleContainerSpec()}
-			gs.ApplyDefaults()
-
-			gsPod, err := gs.Pod(agtesting.FakeAPIHooks{})
-			require.NoError(t, err)
-
-			pod := v.setup(gsPod)
-			assert.Equal(t, v.expected, isActiveGameServerWithNode(pod))
-		})
-	}
-}
 
 func TestMigrationControllerSyncGameServer(t *testing.T) {
 	t.Parallel()
@@ -242,11 +193,45 @@ func TestMigrationControllerSyncGameServer(t *testing.T) {
 }
 
 func TestMigrationControllerRun(t *testing.T) {
+	logrus.SetLevel(logrus.DebugLevel)
+
 	m := agtesting.NewMocks()
 	c := NewMigrationController(healthcheck.NewHandler(), m.KubeClient, m.AgonesClient, m.KubeInformerFactory, m.AgonesInformerFactory, nilSyncPodPortsToGameServer)
+
+	node := corev1.Node{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: nodeFixtureName,
+		},
+		Status: corev1.NodeStatus{
+			Addresses: []corev1.NodeAddress{
+				{
+					Type:    corev1.NodeExternalIP,
+					Address: ipFixture,
+				},
+			},
+		},
+	}
+	nodeChangedName := nodeFixtureName + "+changed"
+	nodeChanged := corev1.Node{
+		ObjectMeta: metav1.ObjectMeta{Name: nodeChangedName},
+		Status: corev1.NodeStatus{
+			Addresses: []corev1.NodeAddress{
+				{
+					Type:    corev1.NodeExternalIP,
+					Address: "no",
+				},
+			},
+		},
+	}
+
 	gs := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
-		Spec: newSingleContainerSpec(), Status: agonesv1.GameServerStatus{}}
+		Spec: newSingleContainerSpec(), Status: agonesv1.GameServerStatus{
+			NodeName: nodeFixtureName,
+			Address:  ipFixture,
+			State:    agonesv1.GameServerStateAllocated,
+		}}
 	gs.ApplyDefaults()
+
 	gsPod, err := gs.Pod(agtesting.FakeAPIHooks{})
 	require.NoError(t, err)
 	gsPod.Spec.NodeName = nodeFixtureName
@@ -261,9 +246,15 @@ func TestMigrationControllerRun(t *testing.T) {
 	podWatch := watch.NewFake()
 	m.KubeClient.AddWatchReactor("pods", k8stesting.DefaultWatchReactor(podWatch, nil))
 
+	nodeWatch := watch.NewFake()
+	m.KubeClient.AddWatchReactor("nodes", k8stesting.DefaultWatchReactor(nodeWatch, nil))
+
+	gsWatch := watch.NewFake()
+	m.AgonesClient.AddWatchReactor("gameservers", k8stesting.DefaultWatchReactor(gsWatch, nil))
+
 	c.workerqueue.SyncHandler = h
 
-	ctx, cancel := agtesting.StartInformers(m, c.gameServerSynced)
+	ctx, cancel := agtesting.StartInformers(m, c.nodeSynced, c.gameServerSynced, c.podSynced)
 	defer cancel()
 
 	go func() {
@@ -272,33 +263,57 @@ func TestMigrationControllerRun(t *testing.T) {
 	}()
 
 	noChange := func() {
-		assert.True(t, cache.WaitForCacheSync(ctx.Done(), c.podSynced))
+		require.True(t, cache.WaitForCacheSync(ctx.Done(), c.nodeSynced, c.gameServerSynced, c.podSynced))
 		select {
 		case <-received:
-			assert.Fail(t, "should not be updated")
-		default:
+			require.Fail(t, "should not be updated")
+		case <-time.After(1 * time.Second):
 		}
 	}
 
 	result := func() {
+		require.True(t, cache.WaitForCacheSync(ctx.Done(), c.nodeSynced, c.gameServerSynced, c.podSynced))
 		select {
 		case res := <-received:
-			assert.Equal(t, "default/test", res)
+			require.Equal(t, "default/test", res)
 		case <-time.After(2 * time.Second):
-			assert.Fail(t, "did not receive queue")
+			require.Fail(t, "did not receive queue")
 		}
 	}
 
-	// initial pod
+	// initial pod, no gameserver, no nodes
+	logrus.Info("initial pod, no gameserver, no node")
+	gsPod.ObjectMeta.Labels["change"] = "no-pod-no-gameserver-no-node"
 	podWatch.Add(gsPod.DeepCopy())
-	result()
+	noChange()
 
-	gsPod.Spec.NodeName += "+changed"
+	// pod with gameserver, no nodes
+	logrus.Info("pod with gameserver, no node")
+	gsWatch.Add(gs.DeepCopy())
+	require.True(t, cache.WaitForCacheSync(ctx.Done(), c.gameServerSynced))
+	gsPod.ObjectMeta.Labels["change"] = "pod-gameserver-no-node"
+	podWatch.Modify(gsPod.DeepCopy())
+	noChange()
+
+	// pod with gameserver, and nodes
+	logrus.Info("pod with gameserver, and node")
+	nodeWatch.Add(node.DeepCopy())
+	nodeWatch.Add(nodeChanged.DeepCopy())
+	require.True(t, cache.WaitForCacheSync(ctx.Done(), c.nodeSynced))
+	gsPod.ObjectMeta.Labels["change"] = "pod-gameserver-node"
+	podWatch.Modify(gsPod.DeepCopy())
+	noChange()
+
+	// pod with a different NodeName to the Node.
+	logrus.Info("pod with a different NodeName to the Node.")
+	gsPod.Spec.NodeName = nodeChangedName
+	gsPod.ObjectMeta.Labels["change"] = "pod-gameserver-node-changed"
 	podWatch.Modify(gsPod.DeepCopy())
 	result()
 
 	// deleted pod
 	now := metav1.Now()
+	logrus.Info("deleted pod")
 	gsPod.ObjectMeta.DeletionTimestamp = &now
 	podWatch.Modify(gsPod.DeepCopy())
 	noChange()
@@ -312,7 +327,7 @@ func TestMigrationControllerRun(t *testing.T) {
 	podWatch.Add(pod.DeepCopy())
 	noChange()
 
-	pod.Spec.NodeName += "+changed"
+	pod.Spec.NodeName = nodeChangedName
 	podWatch.Modify(pod.DeepCopy())
 	noChange()
 }

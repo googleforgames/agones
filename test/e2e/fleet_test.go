@@ -23,12 +23,6 @@ import (
 	"testing"
 	"time"
 
-	"agones.dev/agones/pkg/apis"
-	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
-	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
-	typedagonesv1 "agones.dev/agones/pkg/client/clientset/versioned/typed/agones/v1"
-	"agones.dev/agones/pkg/util/runtime"
-	e2e "agones.dev/agones/test/e2e/framework"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -45,6 +39,13 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/util/retry"
+
+	"agones.dev/agones/pkg/apis"
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
+	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
+	typedagonesv1 "agones.dev/agones/pkg/client/clientset/versioned/typed/agones/v1"
+	"agones.dev/agones/pkg/util/runtime"
+	e2e "agones.dev/agones/test/e2e/framework"
 )
 
 const (
@@ -1659,13 +1660,13 @@ func TestFleetAggregatedCounterStatus(t *testing.T) {
 		msg := fmt.Sprintf("SET_COUNTER_CAPACITY games %d", capacity)
 		reply, err := framework.SendGameServerUDP(t, &gs, msg)
 		require.NoError(t, err)
-		assert.Equal(t, "SUCCESS: true\n", reply)
+		assert.Equal(t, "SUCCESS\n", reply)
 
 		totalCount += count
 		msg = fmt.Sprintf("SET_COUNTER_COUNT games %d", count)
 		reply, err = framework.SendGameServerUDP(t, &gs, msg)
 		require.NoError(t, err)
-		assert.Equal(t, "SUCCESS: true\n", reply)
+		assert.Equal(t, "SUCCESS\n", reply)
 
 		if gs.Status.State == agonesv1.GameServerStateAllocated {
 			allocatedCapacity += capacity
@@ -1742,7 +1743,7 @@ func TestFleetAggregatedListStatus(t *testing.T) {
 		msg := fmt.Sprintf("SET_LIST_CAPACITY gamers %d", capacity)
 		reply, err := framework.SendGameServerUDP(t, &gs, msg)
 		require.NoError(t, err)
-		assert.Equal(t, "SUCCESS: true\n", reply)
+		assert.Equal(t, "SUCCESS\n", reply)
 
 		totalCount += count
 		// Each list starts with a count of 2 (Values: []string{"gamer0", "gamer1"})
@@ -1750,7 +1751,7 @@ func TestFleetAggregatedListStatus(t *testing.T) {
 			msg = fmt.Sprintf("APPEND_LIST_VALUE gamers gamer%d", i)
 			reply, err = framework.SendGameServerUDP(t, &gs, msg)
 			require.NoError(t, err)
-			assert.Equal(t, "SUCCESS: true\n", reply)
+			assert.Equal(t, "SUCCESS\n", reply)
 		}
 
 		if gs.Status.State == agonesv1.GameServerStateAllocated {
