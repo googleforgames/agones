@@ -16,6 +16,8 @@
 package converters
 
 import (
+	"net/http"
+
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/wrapperspb"
@@ -488,6 +490,12 @@ func convertStateV1ToError(in allocationv1.GameServerAllocationState, httpStatus
 	case allocationv1.GameServerAllocationAllocated:
 		return nil
 	case allocationv1.GameServerAllocationUnAllocated:
+		if httpStatusCode == http.StatusTooManyRequests {
+			return status.Error(codes.ResourceExhausted, "there are too many requests")
+		}
+		if httpStatusCode == http.StatusOK {
+			return nil
+		}
 		return status.Error(codes.Code(httpStatusCode), "there is no available GameServer to allocate")
 	case allocationv1.GameServerAllocationContention:
 		return status.Error(codes.Aborted, "too many concurrent requests have overwhelmed the system")
