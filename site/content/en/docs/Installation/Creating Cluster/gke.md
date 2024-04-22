@@ -198,7 +198,7 @@ Flag explanations:
 
 ## Creating the cluster
 
-Create a GKE cluster (preferably an Autopilot mode cluster) in which you'll install Agones. You can use
+Create a GKE cluster in which you'll install Agones. You can use
 [GKE Standard mode](#create-a-standard-mode-cluster-for-agones)
 or [GKE Autopilot mode](#create-an-autopilot-mode-cluster-for-agones).
 
