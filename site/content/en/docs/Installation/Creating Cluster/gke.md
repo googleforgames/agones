@@ -171,9 +171,14 @@ gcloud compute firewall-rules create gke-agones-game-server-firewall \
   --description "Firewall to allow game server udp traffic"
 ```
 
-### Create an Autopilot mode cluster for Agones
+## Creating the cluster
 
+Create a GKE cluster in which you'll install Agones. You can use
+[GKE Standard mode](#create-a-standard-mode-cluster-for-agones)
+or [GKE Autopilot mode](#create-an-autopilot-mode-cluster-for-agones).
 You can read more about choosing a [cluster mode above](#choosing-a-gke-cluster-mode).
+
+### Create an Autopilot mode cluster for Agones
 
 1. Choose a [Release Channel]({{<ref "/docs/Guides/Best Practices/gke.md#release-channels" >}}) (Autopilot clusters must be on a Release Channel).
 
@@ -196,11 +201,6 @@ Flag explanations:
 * `--release-channel`: The release channel [you chose above](#choosing-a-release-channel-and-optional-version).
 * `--autoprovisioning-network-tags`: Defines the tags that will be attached to new nodes in the cluster. This is to grant access through ports via the [firewall created above](#creating-the-firewall).
 
-## Creating the cluster
-
-Create a GKE cluster in which you'll install Agones. You can use
-[GKE Standard mode](#create-a-standard-mode-cluster-for-agones)
-or [GKE Autopilot mode](#create-an-autopilot-mode-cluster-for-agones).
 
 ### Create a Standard mode cluster for Agones
 
