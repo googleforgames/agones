@@ -25,7 +25,7 @@
 
 REPOSITORY ?=
 PROD_REPO ?= us-docker.pkg.dev/agones-images/examples
-version := 0.3
+version := 0.4
 ifeq ($(REPOSITORY),)
 	server_tag := custom-controller:$(version)
 else
