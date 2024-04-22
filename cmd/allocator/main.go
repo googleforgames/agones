@@ -82,7 +82,7 @@ const (
 	logLevelFlag                     = "log-level"
 	allocationBatchWaitTime          = "allocation-batch-wait-time"
 	readinessShutdownDuration        = "readiness-shutdown-duration"
-	httpUnallocatedStatusCodeFlag    = "http-unallocated-status-code"
+	httpUnallocatedStatusCode        = "http-unallocated-status-code"
 )
 
 func parseEnvFlags() config {
@@ -100,7 +100,7 @@ func parseEnvFlags() config {
 	viper.SetDefault(totalRemoteAllocationTimeoutFlag, 30*time.Second)
 	viper.SetDefault(logLevelFlag, "Info")
 	viper.SetDefault(allocationBatchWaitTime, 500*time.Millisecond)
-	viper.SetDefault(httpUnallocatedStatusCodeFlag, "429")
+	viper.SetDefault(httpUnallocatedStatusCode, http.StatusTooManyRequests)
 
 	pflag.Int32(httpPortFlag, viper.GetInt32(httpPortFlag), "Port to listen on for REST requests")
 	pflag.Int32(grpcPortFlag, viper.GetInt32(grpcPortFlag), "Port to listen on for gRPC requests")
@@ -117,7 +117,7 @@ func parseEnvFlags() config {
 	pflag.String(logLevelFlag, viper.GetString(logLevelFlag), "Agones Log level")
 	pflag.Duration(allocationBatchWaitTime, viper.GetDuration(allocationBatchWaitTime), "Flag to configure the waiting period between allocations batches")
 	pflag.Duration(readinessShutdownDuration, viper.GetDuration(readinessShutdownDuration), "Time in seconds for SIGTERM/SIGINT handler to sleep for.")
-	pflag.String(httpUnallocatedStatusCodeFlag, viper.GetString(httpUnallocatedStatusCodeFlag), "HTTP status code used when no game servers are available to allocate")
+	pflag.Int32(httpUnallocatedStatusCode, viper.GetInt32(httpUnallocatedStatusCode), "HTTP status code to return when no GameServer is available")
 	runtime.FeaturesBindFlags()
 	pflag.Parse()
 
@@ -137,7 +137,7 @@ func parseEnvFlags() config {
 	runtime.Must(viper.BindEnv(logLevelFlag))
 	runtime.Must(viper.BindEnv(allocationBatchWaitTime))
 	runtime.Must(viper.BindEnv(readinessShutdownDuration))
-	runtime.Must(viper.BindEnv(httpUnallocatedStatusCodeFlag, "HTTP_UNALLOCATED_STATUS_CODE"))
+	runtime.Must(viper.BindEnv(httpUnallocatedStatusCode))
 	runtime.Must(viper.BindPFlags(pflag.CommandLine))
 	runtime.Must(runtime.FeaturesBindEnv())
 
@@ -159,7 +159,7 @@ func parseEnvFlags() config {
 		totalRemoteAllocationTimeout: viper.GetDuration(totalRemoteAllocationTimeoutFlag),
 		allocationBatchWaitTime:      viper.GetDuration(allocationBatchWaitTime),
 		ReadinessShutdownDuration:    viper.GetDuration(readinessShutdownDuration),
-		httpUnallocatedStatusCode:    viper.GetString(httpUnallocatedStatusCodeFlag),
+		httpUnallocatedStatusCode:    int(viper.GetInt32(httpUnallocatedStatusCode)),
 	}
 }
 
@@ -179,7 +179,7 @@ type config struct {
 	remoteAllocationTimeout      time.Duration
 	allocationBatchWaitTime      time.Duration
 	ReadinessShutdownDuration    time.Duration
-	httpUnallocatedStatusCode    string
+	httpUnallocatedStatusCode    int
 }
 
 // grpcHandlerFunc returns an http.Handler that delegates to grpcServer on incoming gRPC
@@ -251,7 +251,7 @@ func main() {
 		os.Exit(0)
 	})
 
-	h := newServiceHandler(ctx, kubeClient, agonesClient, health, conf.MTLSDisabled, conf.TLSDisabled, conf.remoteAllocationTimeout, conf.totalRemoteAllocationTimeout, conf.allocationBatchWaitTime)
+	h := newServiceHandler(ctx, kubeClient, agonesClient, health, conf.MTLSDisabled, conf.TLSDisabled, conf.remoteAllocationTimeout, conf.totalRemoteAllocationTimeout, conf.allocationBatchWaitTime, conf.httpUnallocatedStatusCode)
 
 	if !h.tlsDisabled {
 		cancelTLS, err := fswatch.Watch(logger, tlsDir, time.Second, func() {
@@ -385,7 +385,7 @@ func runGRPC(h *serviceHandler, grpcPort int) {
 	}()
 }
 
-func newServiceHandler(ctx context.Context, kubeClient kubernetes.Interface, agonesClient versioned.Interface, health healthcheck.Handler, mTLSDisabled bool, tlsDisabled bool, remoteAllocationTimeout time.Duration, totalRemoteAllocationTimeout time.Duration, allocationBatchWaitTime time.Duration) *serviceHandler {
+func newServiceHandler(ctx context.Context, kubeClient kubernetes.Interface, agonesClient versioned.Interface, health healthcheck.Handler, mTLSDisabled bool, tlsDisabled bool, remoteAllocationTimeout time.Duration, totalRemoteAllocationTimeout time.Duration, allocationBatchWaitTime time.Duration, httpUnallocatedStatusCode int) *serviceHandler {
 	defaultResync := 30 * time.Second
 	agonesInformerFactory := externalversions.NewSharedInformerFactory(agonesClient, defaultResync)
 	kubeInformerFactory := informers.NewSharedInformerFactory(kubeClient, defaultResync)
@@ -405,8 +405,9 @@ func newServiceHandler(ctx context.Context, kubeClient kubernetes.Interface, ago
 		allocationCallback: func(gsa *allocationv1.GameServerAllocation) (k8sruntime.Object, error) {
 			return allocator.Allocate(ctx, gsa)
 		},
-		mTLSDisabled: mTLSDisabled,
-		tlsDisabled:  tlsDisabled,
+		mTLSDisabled:              mTLSDisabled,
+		tlsDisabled:               tlsDisabled,
+		httpUnallocatedStatusCode: httpUnallocatedStatusCode,
 	}
 
 	kubeInformerFactory.Start(ctx.Done())
@@ -606,6 +607,8 @@ type serviceHandler struct {
 
 	mTLSDisabled bool
 	tlsDisabled  bool
+
+	httpUnallocatedStatusCode int
 }
 
 // Allocate implements the Allocate gRPC method definition
@@ -628,7 +631,7 @@ func (h *serviceHandler) Allocate(ctx context.Context, in *pb.AllocationRequest)
 		logger.Errorf("internal server error - Bad GSA format %v", resultObj)
 		return nil, status.Errorf(codes.Internal, "internal server error- Bad GSA format %v", resultObj)
 	}
-	response, err := converters.ConvertGSAToAllocationResponse(allocatedGsa)
+	response, err := converters.ConvertGSAToAllocationResponse(allocatedGsa, h.httpUnallocatedStatusCode)
 	logger.WithField("response", response).WithError(err).Infof("allocation response is being sent")
 
 	return response, err

@@ -16,7 +16,6 @@
 package converters
 
 import (
-	"github.com/spf13/viper"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/wrapperspb"
@@ -305,12 +304,12 @@ func convertGameServerSelectorsToInternalGameServerSelectors(in []*pb.GameServer
 }
 
 // ConvertGSAToAllocationResponse converts GameServerAllocation V1 (GSA) to AllocationResponse
-func ConvertGSAToAllocationResponse(in *allocationv1.GameServerAllocation) (*pb.AllocationResponse, error) {
+func ConvertGSAToAllocationResponse(in *allocationv1.GameServerAllocation, httpStatusCode int) (*pb.AllocationResponse, error) {
 	if in == nil {
 		return nil, nil
 	}
 
-	if err := convertStateV1ToError(in.Status.State); err != nil {
+	if err := convertStateV1ToError(in.Status.State, httpStatusCode); err != nil {
 		return nil, err
 	}
 
@@ -483,23 +482,13 @@ func convertAllocationListsToGSALists(in map[string]*pb.AllocationResponse_ListS
 }
 
 // convertStateV1ToError converts GameServerAllocationState V1 (GSA) to AllocationResponse_GameServerAllocationState
-func convertStateV1ToError(in allocationv1.GameServerAllocationState) error {
-
-	var code codes.Code
-	switch viper.GetString("HTTP_UNALLOCATED_STATUS_CODE") {
-	case "429":
-		code = codes.ResourceExhausted
-	case "503":
-		code = codes.Unavailable
-	default:
-		code = codes.ResourceExhausted
-	}
+func convertStateV1ToError(in allocationv1.GameServerAllocationState, httpStatusCode int) error {
 
 	switch in {
 	case allocationv1.GameServerAllocationAllocated:
 		return nil
 	case allocationv1.GameServerAllocationUnAllocated:
-		return status.Error(code, "there is no available GameServer to allocate")
+		return status.Error(codes.Code(httpStatusCode), "there is no available GameServer to allocate")
 	case allocationv1.GameServerAllocationContention:
 		return status.Error(codes.Aborted, "too many concurrent requests have overwhelmed the system")
 	}
