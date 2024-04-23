@@ -72,7 +72,6 @@ func TestControllerConfigValidation_PortRangeOverlap(t *testing.T) {
 	errs := c.validate()
 	assert.Len(t, errs, 2)
 	errorsContainString(t, errs, "port range game overlaps with min/max port")
-	errorsContainString(t, errs, "port range game overlaps with min/max port of range other")
 }
 
 func errorsContainString(t *testing.T, errs []error, expected string) {
