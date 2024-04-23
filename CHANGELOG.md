@@ -5,6 +5,7 @@
 [Full Changelog](https://github.com/googleforgames/agones/compare/v1.39.0...v1.40.0)
 
 **Breaking changes:**
+- Optimise GameServer Sub-Controller Queues by @markmandel in https://github.com/googleforgames/agones/pull/3781
 - Counters and Lists: Remove Bool Returns  by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3738
 
 **Implemented enhancements:**
@@ -27,7 +28,6 @@
 - Fix(Counter & Lists): Add validation for `priorities` by @lacroixthomas in https://github.com/googleforgames/agones/pull/3714
 - fix: #3607 Metrics data loss in K8S controller by @alvin-7 in https://github.com/googleforgames/agones/pull/3692
 - Deflake GameServerAllocationDuringMultipleAllocationClients by allowing errors by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3750
-- Optimise GameServer Sub-Controller Queues by @markmandel in https://github.com/googleforgames/agones/pull/3781
 
 **Security fixes:**
 - Bump protobufjs from 7.2.4 to 7.2.6 in /sdks/nodejs by @dependabot in https://github.com/googleforgames/agones/pull/3755
