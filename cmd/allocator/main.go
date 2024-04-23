@@ -251,7 +251,7 @@ func main() {
 		os.Exit(0)
 	})
 
-	grpcUnallocatedStatusCode := GrpcCodeFromHTTPStatus(conf.httpUnallocatedStatusCode)
+	grpcUnallocatedStatusCode := grpcCodeFromHTTPStatus(conf.httpUnallocatedStatusCode)
 
 	h := newServiceHandler(ctx, kubeClient, agonesClient, health, conf.MTLSDisabled, conf.TLSDisabled, conf.remoteAllocationTimeout, conf.totalRemoteAllocationTimeout, conf.allocationBatchWaitTime, grpcUnallocatedStatusCode)
 
@@ -639,9 +639,9 @@ func (h *serviceHandler) Allocate(ctx context.Context, in *pb.AllocationRequest)
 	return response, err
 }
 
-// GrpcCodeFromHTTPStatus converts an HTTP status code to the corresponding gRPC status code.
-func GrpcCodeFromHTTPStatus(httpStatusCode int) codes.Code {
-	switch httpStatusCode {
+// grpcCodeFromHTTPStatus converts an HTTP status code to the corresponding gRPC status code.
+func grpcCodeFromHTTPStatus(httpUnallocatedStatusCode int) codes.Code {
+	switch httpUnallocatedStatusCode {
 	case http.StatusOK:
 		return codes.OK
 	case 499:
@@ -667,6 +667,7 @@ func GrpcCodeFromHTTPStatus(httpStatusCode int) codes.Code {
 	case http.StatusServiceUnavailable:
 		return codes.Unavailable
 	default:
-		return codes.Unknown
+		logger.WithField("httpStatusCode", httpUnallocatedStatusCode).Warnf("received unknown http status code, defaulting to codes.ResourceExhausted / 429")
+		return codes.ResourceExhausted
 	}
 }
