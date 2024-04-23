@@ -5,9 +5,6 @@
 [Full Changelog](https://github.com/googleforgames/agones/compare/v1.39.0...v1.40.0)
 
 **Breaking changes:**
-- Be prescriptive about rotating regions when updating Kubernetes versions by @zmerlynn in https://github.com/googleforgames/agones/pull/3716
-- Fix ensure-e2e-infra-state-bucket by @zmerlynn in https://github.com/googleforgames/agones/pull/3719
-- Create Performance Cluster 1.28 by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3720
 - Counters and Lists: Remove Bool Returns  by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3738
 
 **Implemented enhancements:**
@@ -21,6 +18,9 @@
 - Feat/counter and list defaulting order to ascending by @lacroixthomas in https://github.com/googleforgames/agones/pull/3734
 - Add handling for StatusAddresses in GameServerStatus for the Unity SDK by @charlesvien in https://github.com/googleforgames/agones/pull/3739
 - Feat(gameservers): Shared pod IPs with GameServer Addresses by @lacroixthomas in https://github.com/googleforgames/agones/pull/3764
+- Be prescriptive about rotating regions when updating Kubernetes versions by @zmerlynn in https://github.com/googleforgames/agones/pull/3716
+- Fix ensure-e2e-infra-state-bucket by @zmerlynn in https://github.com/googleforgames/agones/pull/3719
+- Create Performance Cluster 1.28 by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3720
 
 **Fixed bugs:**
 - Counters & Lists: Consolidate `priorities` sorting by @markmandel in https://github.com/googleforgames/agones/pull/3690
@@ -31,6 +31,7 @@
 
 **Security fixes:**
 - Bump protobufjs from 7.2.4 to 7.2.6 in /sdks/nodejs by @dependabot in https://github.com/googleforgames/agones/pull/3755
+- Bump golang.org/x/net from 0.19.0 to 0.23.0 by @zmerlynn in https://github.com/googleforgames/agones/pull/3793
 
 **Other:**
 - Flaky: TestGameServerCreationAfterDeletingOneExtensionsPod by @markmandel in https://github.com/googleforgames/agones/pull/3699
@@ -57,7 +58,6 @@
 - Xonotic Example on Agones Site by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3742
 - nit documentation fix in kind cluster section when building Agones by @vicentefb in https://github.com/googleforgames/agones/pull/3770
 - Merged steps inside documentation about webhook certificate creation by @vicentefb in https://github.com/googleforgames/agones/pull/3768
-- Bump golang.org/x/net from 0.19.0 to 0.23.0 by @zmerlynn in https://github.com/googleforgames/agones/pull/3793
 - Example Images: Increment Tags by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3796
 - Update simple game server example documentation by @vicentefb in https://github.com/googleforgames/agones/pull/3776
 
