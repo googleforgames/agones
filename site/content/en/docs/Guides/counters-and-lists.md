@@ -286,17 +286,6 @@ For more details on how Agones implements infrastructure optimisation, see the d
 Another optimisation control you can apply with `Fleets` when Agones' scaled them down, is to also set `priorities` 
 to influence the order in which `GameServers` are shutdown and deleted.
 
-{{< feature expiryVersion="1.40.0" >}}
-
-{{% alert title="Warning" color="warning" %}}
-In versions 1.39.0 and lower, Fleet prioritisation is calculated using _total capacity_, not _available capacity_. This
-is being updated in the 1.40.0 release such that this and all uses of `priorities` operate using _available capacity_,
-and unless otherwise noted, will be the default behaviour in future releases.
-
-Therefore, in this rare case, the documentation on this functionality is forward-looking.
-{{% /alert %}}
-
-{{< /feature >}}
 
 While neither `players` or `rooms` are particularly good examples for this functionality, if we wanted to ensure 
 that `Ready` `GameServers` with the most available capacity `rooms` where a factor when scaling down a `Fleet` we could 
