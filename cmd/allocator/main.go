@@ -639,6 +639,7 @@ func (h *serviceHandler) Allocate(ctx context.Context, in *pb.AllocationRequest)
 	return response, err
 }
 
+// GrpcCodeFromHTTPStatus converts an HTTP status code to the corresponding gRPC status code.
 func GrpcCodeFromHTTPStatus(httpStatusCode int) codes.Code {
 	switch httpStatusCode {
 	case http.StatusOK:
@@ -646,7 +647,7 @@ func GrpcCodeFromHTTPStatus(httpStatusCode int) codes.Code {
 	case 499:
 		return codes.Canceled
 	case http.StatusInternalServerError:
-		return codes.Unknown
+		return codes.Internal
 	case http.StatusBadRequest:
 		return codes.InvalidArgument
 	case http.StatusGatewayTimeout:

@@ -1351,7 +1351,7 @@ func TestConvertGSAToAllocationResponse(t *testing.T) {
 				grpcUnallocatedStatusCode = codes.ResourceExhausted
 			}
 
-			out, err := ConvertGSAToAllocationResponse(tc.in, tc.grpcUnallocatedStatusCode)
+			out, err := ConvertGSAToAllocationResponse(tc.in, grpcUnallocatedStatusCode)
 			if tc.wantErrCode != 0 {
 				st, ok := status.FromError(err)
 				if !assert.True(t, ok) {
