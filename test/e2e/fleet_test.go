@@ -719,6 +719,7 @@ func TestFleetUpdates(t *testing.T) {
 		t.Run(k, func(t *testing.T) {
 			t.Parallel()
 			client := framework.AgonesClient.AgonesV1()
+			log := e2e.TestLogger(t)
 
 			flt := v()
 			flt.Spec.Template.ObjectMeta.Annotations = map[string]string{key: red}
@@ -726,22 +727,24 @@ func TestFleetUpdates(t *testing.T) {
 			require.NoError(t, err)
 			defer client.Fleets(framework.Namespace).Delete(ctx, flt.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
 
+			// gate that we have the keys we expect.
 			err = framework.WaitForFleetGameServersCondition(flt, func(gs *agonesv1.GameServer) bool {
 				return gs.ObjectMeta.Annotations[key] == red
 			})
 			require.NoError(t, err)
 
 			// if the generation has been updated, it's time to try again.
-			err = wait.PollUntilContextTimeout(context.Background(), time.Second, 10*time.Second, true, func(ctx context.Context) (bool, error) {
+			err = wait.PollUntilContextTimeout(context.Background(), time.Second, time.Minute, true, func(ctx context.Context) (bool, error) {
 				flt, err = framework.AgonesClient.AgonesV1().Fleets(framework.Namespace).Get(ctx, flt.ObjectMeta.Name, metav1.GetOptions{})
 				if err != nil {
+					log.WithError(err).WithField("flt", flt.ObjectMeta.Name).Warn("Could not retrieve fleet, trying again")
 					return false, err
 				}
 				fltCopy := flt.DeepCopy()
 				fltCopy.Spec.Template.ObjectMeta.Annotations[key] = green
 				_, err = framework.AgonesClient.AgonesV1().Fleets(framework.Namespace).Update(ctx, fltCopy, metav1.UpdateOptions{})
 				if err != nil {
-					logrus.WithError(err).Warn("Could not update fleet, trying again")
+					log.WithError(err).WithField("flt", flt.ObjectMeta.Name).Warn("Could not update fleet, trying again")
 					return false, nil
 				}
 
@@ -749,6 +752,12 @@ func TestFleetUpdates(t *testing.T) {
 			})
 			require.NoError(t, err)
 
+			// let's make sure we're fully Ready
+			framework.AssertFleetCondition(t, flt, func(entry *logrus.Entry, fleet *agonesv1.Fleet) bool {
+				return flt.Spec.Replicas == fleet.Status.ReadyReplicas
+			})
+
+			// ...and fully rolled out
 			err = framework.WaitForFleetGameServersCondition(flt, func(gs *agonesv1.GameServer) bool {
 				return gs.ObjectMeta.Annotations[key] == green
 			})
