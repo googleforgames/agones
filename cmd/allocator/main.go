@@ -82,7 +82,7 @@ const (
 	logLevelFlag                     = "log-level"
 	allocationBatchWaitTime          = "allocation-batch-wait-time"
 	readinessShutdownDuration        = "readiness-shutdown-duration"
-	grpcUnallocatedStatusCode        = "grpc-unallocated-status-code"
+	httpUnallocatedStatusCode        = "http-unallocated-status-code"
 )
 
 func parseEnvFlags() config {
@@ -100,7 +100,7 @@ func parseEnvFlags() config {
 	viper.SetDefault(totalRemoteAllocationTimeoutFlag, 30*time.Second)
 	viper.SetDefault(logLevelFlag, "Info")
 	viper.SetDefault(allocationBatchWaitTime, 500*time.Millisecond)
-	viper.SetDefault(grpcUnallocatedStatusCode, codes.ResourceExhausted)
+	viper.SetDefault(httpUnallocatedStatusCode, http.StatusTooManyRequests)
 
 	pflag.Int32(httpPortFlag, viper.GetInt32(httpPortFlag), "Port to listen on for REST requests")
 	pflag.Int32(grpcPortFlag, viper.GetInt32(grpcPortFlag), "Port to listen on for gRPC requests")
@@ -117,7 +117,7 @@ func parseEnvFlags() config {
 	pflag.String(logLevelFlag, viper.GetString(logLevelFlag), "Agones Log level")
 	pflag.Duration(allocationBatchWaitTime, viper.GetDuration(allocationBatchWaitTime), "Flag to configure the waiting period between allocations batches")
 	pflag.Duration(readinessShutdownDuration, viper.GetDuration(readinessShutdownDuration), "Time in seconds for SIGTERM/SIGINT handler to sleep for.")
-	pflag.String(grpcUnallocatedStatusCode, viper.GetString(grpcUnallocatedStatusCode), "gRPC status code to return when no GameServer is available")
+	pflag.Int32(httpUnallocatedStatusCode, viper.GetInt32(httpUnallocatedStatusCode), "HTTP status code to return when no GameServer is available")
 	runtime.FeaturesBindFlags()
 	pflag.Parse()
 
@@ -137,7 +137,7 @@ func parseEnvFlags() config {
 	runtime.Must(viper.BindEnv(logLevelFlag))
 	runtime.Must(viper.BindEnv(allocationBatchWaitTime))
 	runtime.Must(viper.BindEnv(readinessShutdownDuration))
-	runtime.Must(viper.BindEnv(grpcUnallocatedStatusCode))
+	runtime.Must(viper.BindEnv(httpUnallocatedStatusCode))
 	runtime.Must(viper.BindPFlags(pflag.CommandLine))
 	runtime.Must(runtime.FeaturesBindEnv())
 
@@ -159,7 +159,7 @@ func parseEnvFlags() config {
 		totalRemoteAllocationTimeout: viper.GetDuration(totalRemoteAllocationTimeoutFlag),
 		allocationBatchWaitTime:      viper.GetDuration(allocationBatchWaitTime),
 		ReadinessShutdownDuration:    viper.GetDuration(readinessShutdownDuration),
-		grpcUnallocatedStatusCode:    codes.Code(viper.GetInt32(grpcUnallocatedStatusCode)),
+		httpUnallocatedStatusCode:    int(viper.GetInt32(httpUnallocatedStatusCode)),
 	}
 }
 
@@ -179,7 +179,7 @@ type config struct {
 	remoteAllocationTimeout      time.Duration
 	allocationBatchWaitTime      time.Duration
 	ReadinessShutdownDuration    time.Duration
-	grpcUnallocatedStatusCode    codes.Code
+	httpUnallocatedStatusCode    int
 }
 
 // grpcHandlerFunc returns an http.Handler that delegates to grpcServer on incoming gRPC
@@ -251,7 +251,9 @@ func main() {
 		os.Exit(0)
 	})
 
-	h := newServiceHandler(ctx, kubeClient, agonesClient, health, conf.MTLSDisabled, conf.TLSDisabled, conf.remoteAllocationTimeout, conf.totalRemoteAllocationTimeout, conf.allocationBatchWaitTime, conf.grpcUnallocatedStatusCode)
+	grpcUnallocatedStatusCode := GrpcCodeFromHTTPStatus(conf.httpUnallocatedStatusCode)
+
+	h := newServiceHandler(ctx, kubeClient, agonesClient, health, conf.MTLSDisabled, conf.TLSDisabled, conf.remoteAllocationTimeout, conf.totalRemoteAllocationTimeout, conf.allocationBatchWaitTime, grpcUnallocatedStatusCode)
 
 	if !h.tlsDisabled {
 		cancelTLS, err := fswatch.Watch(logger, tlsDir, time.Second, func() {
@@ -635,4 +637,35 @@ func (h *serviceHandler) Allocate(ctx context.Context, in *pb.AllocationRequest)
 	logger.WithField("response", response).WithError(err).Infof("allocation response is being sent")
 
 	return response, err
+}
+
+func GrpcCodeFromHTTPStatus(httpStatusCode int) codes.Code {
+	switch httpStatusCode {
+	case http.StatusOK:
+		return codes.OK
+	case 499:
+		return codes.Canceled
+	case http.StatusInternalServerError:
+		return codes.Unknown
+	case http.StatusBadRequest:
+		return codes.InvalidArgument
+	case http.StatusGatewayTimeout:
+		return codes.DeadlineExceeded
+	case http.StatusNotFound:
+		return codes.NotFound
+	case http.StatusConflict:
+		return codes.AlreadyExists
+	case http.StatusForbidden:
+		return codes.PermissionDenied
+	case http.StatusUnauthorized:
+		return codes.Unauthenticated
+	case http.StatusTooManyRequests:
+		return codes.ResourceExhausted
+	case http.StatusNotImplemented:
+		return codes.Unimplemented
+	case http.StatusServiceUnavailable:
+		return codes.Unavailable
+	default:
+		return codes.Unknown
+	}
 }

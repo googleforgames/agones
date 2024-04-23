@@ -304,12 +304,12 @@ func convertGameServerSelectorsToInternalGameServerSelectors(in []*pb.GameServer
 }
 
 // ConvertGSAToAllocationResponse converts GameServerAllocation V1 (GSA) to AllocationResponse
-func ConvertGSAToAllocationResponse(in *allocationv1.GameServerAllocation, grpcStatusCode codes.Code) (*pb.AllocationResponse, error) {
+func ConvertGSAToAllocationResponse(in *allocationv1.GameServerAllocation, grpcUnallocatedStatusCode codes.Code) (*pb.AllocationResponse, error) {
 	if in == nil {
 		return nil, nil
 	}
 
-	if err := convertStateV1ToError(in.Status.State, grpcStatusCode); err != nil {
+	if err := convertStateV1ToError(in.Status.State, grpcUnallocatedStatusCode); err != nil {
 		return nil, err
 	}
 
@@ -482,13 +482,13 @@ func convertAllocationListsToGSALists(in map[string]*pb.AllocationResponse_ListS
 }
 
 // convertStateV1ToError converts GameServerAllocationState V1 (GSA) to AllocationResponse_GameServerAllocationState
-func convertStateV1ToError(in allocationv1.GameServerAllocationState, grpcStatusCode codes.Code) error {
+func convertStateV1ToError(in allocationv1.GameServerAllocationState, grpcUnallocatedStatusCode codes.Code) error {
 
 	switch in {
 	case allocationv1.GameServerAllocationAllocated:
 		return nil
 	case allocationv1.GameServerAllocationUnAllocated:
-		return status.Error(grpcStatusCode, "there is no available GameServer to allocate")
+		return status.Error(grpcUnallocatedStatusCode, "there is no available GameServer to allocate")
 	case allocationv1.GameServerAllocationContention:
 		return status.Error(codes.Aborted, "too many concurrent requests have overwhelmed the system")
 	}

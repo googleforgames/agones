@@ -844,13 +844,13 @@ func TestConvertGSAToAllocationRequest(t *testing.T) {
 
 func TestConvertGSAToAllocationResponse(t *testing.T) {
 	tests := []struct {
-		name             string
-		features         string
-		in               *allocationv1.GameServerAllocation
-		grpcStatusCode   codes.Code
-		want             *pb.AllocationResponse
-		wantErrCode      codes.Code
-		skipConvertToGSA bool
+		name                      string
+		features                  string
+		in                        *allocationv1.GameServerAllocation
+		grpcUnallocatedStatusCode codes.Code
+		want                      *pb.AllocationResponse
+		wantErrCode               codes.Code
+		skipConvertToGSA          bool
 	}{
 		{
 			name: "status state is set to allocated",
@@ -875,7 +875,6 @@ func TestConvertGSAToAllocationResponse(t *testing.T) {
 					Source:   "local",
 				},
 			},
-			grpcStatusCode: codes.OK,
 			want: &pb.AllocationResponse{
 				GameServerName: "GSN",
 				Address:        "address",
@@ -913,9 +912,9 @@ func TestConvertGSAToAllocationResponse(t *testing.T) {
 					NodeName: "node-name",
 				},
 			},
-			grpcStatusCode:   codes.ResourceExhausted,
-			wantErrCode:      codes.ResourceExhausted,
-			skipConvertToGSA: true,
+			grpcUnallocatedStatusCode: codes.ResourceExhausted,
+			wantErrCode:               codes.ResourceExhausted,
+			skipConvertToGSA:          true,
 		},
 		{
 			name: "status state is set to contention",
@@ -928,9 +927,9 @@ func TestConvertGSAToAllocationResponse(t *testing.T) {
 					State: allocationv1.GameServerAllocationContention,
 				},
 			},
-			grpcStatusCode:   codes.Aborted,
-			wantErrCode:      codes.Aborted,
-			skipConvertToGSA: true,
+			grpcUnallocatedStatusCode: codes.Aborted,
+			wantErrCode:               codes.Aborted,
+			skipConvertToGSA:          true,
 		},
 		{
 			name: "Empty fields",
@@ -943,9 +942,9 @@ func TestConvertGSAToAllocationResponse(t *testing.T) {
 					Ports: []agonesv1.GameServerStatusPort{},
 				},
 			},
-			grpcStatusCode:   codes.Unknown,
-			wantErrCode:      codes.Unknown,
-			skipConvertToGSA: true,
+			grpcUnallocatedStatusCode: codes.Unknown,
+			wantErrCode:               codes.Unknown,
+			skipConvertToGSA:          true,
 		},
 		{
 			name: "Empty objects",
@@ -958,14 +957,12 @@ func TestConvertGSAToAllocationResponse(t *testing.T) {
 					State: allocationv1.GameServerAllocationAllocated,
 				},
 			},
-			grpcStatusCode: 0,
-			want:           &pb.AllocationResponse{},
+			want: &pb.AllocationResponse{},
 		},
 		{
-			name:           "nil objects",
-			in:             nil,
-			grpcStatusCode: 0,
-			want:           nil,
+			name: "nil objects",
+			in:   nil,
+			want: nil,
 		},
 		{
 			name: "status metadata contains labels and annotations",
@@ -1000,7 +997,6 @@ func TestConvertGSAToAllocationResponse(t *testing.T) {
 					},
 				},
 			},
-			grpcStatusCode: codes.OK,
 			want: &pb.AllocationResponse{
 				GameServerName: "GSN",
 				Address:        "address",
@@ -1063,7 +1059,6 @@ func TestConvertGSAToAllocationResponse(t *testing.T) {
 					},
 				},
 			},
-			grpcStatusCode: codes.OK,
 			want: &pb.AllocationResponse{
 				GameServerName: "GSN",
 				Address:        "address",
@@ -1143,7 +1138,6 @@ func TestConvertGSAToAllocationResponse(t *testing.T) {
 					},
 				},
 			},
-			grpcStatusCode: codes.OK,
 			want: &pb.AllocationResponse{
 				GameServerName: "GSN",
 				Address:        "address",
@@ -1229,7 +1223,6 @@ func TestConvertGSAToAllocationResponse(t *testing.T) {
 					},
 				},
 			},
-			grpcStatusCode: codes.OK,
 			want: &pb.AllocationResponse{
 				GameServerName: "GSN",
 				Address:        "address",
@@ -1309,7 +1302,6 @@ func TestConvertGSAToAllocationResponse(t *testing.T) {
 					},
 				},
 			},
-			grpcStatusCode: codes.OK,
 			want: &pb.AllocationResponse{
 				GameServerName: "GSN",
 				Address:        "address",
@@ -1354,7 +1346,12 @@ func TestConvertGSAToAllocationResponse(t *testing.T) {
 			defer runtime.FeatureTestMutex.Unlock()
 			require.NoError(t, runtime.ParseFeatures(tc.features))
 
-			out, err := ConvertGSAToAllocationResponse(tc.in, tc.grpcStatusCode)
+			grpcUnallocatedStatusCode := tc.grpcUnallocatedStatusCode
+			if grpcUnallocatedStatusCode == codes.OK {
+				grpcUnallocatedStatusCode = codes.ResourceExhausted
+			}
+
+			out, err := ConvertGSAToAllocationResponse(tc.in, tc.grpcUnallocatedStatusCode)
 			if tc.wantErrCode != 0 {
 				st, ok := status.FromError(err)
 				if !assert.True(t, ok) {
@@ -1549,46 +1546,45 @@ func TestConvertAllocationResponseToGSA(t *testing.T) {
 
 func TestConvertStateV1ToError(t *testing.T) {
 	tests := []struct {
-		name           string
-		state          allocationv1.GameServerAllocationState
-		grpcStatusCode codes.Code
-		wantErr        error
+		name                      string
+		state                     allocationv1.GameServerAllocationState
+		grpcUnallocatedStatusCode codes.Code
+		wantErr                   error
 	}{
 		{
-			name:           "Allocated State",
-			state:          allocationv1.GameServerAllocationAllocated,
-			grpcStatusCode: codes.OK,
-			wantErr:        nil,
+			name:    "Allocated State",
+			state:   allocationv1.GameServerAllocationAllocated,
+			wantErr: nil,
 		},
 		{
-			name:           "Unallocated with Default Code",
-			state:          allocationv1.GameServerAllocationUnAllocated,
-			grpcStatusCode: codes.ResourceExhausted,
-			wantErr:        status.Error(codes.ResourceExhausted, "there is no available GameServer to allocate"),
+			name:                      "Unallocated with Default Code",
+			state:                     allocationv1.GameServerAllocationUnAllocated,
+			grpcUnallocatedStatusCode: codes.ResourceExhausted,
+			wantErr:                   status.Error(codes.ResourceExhausted, "there is no available GameServer to allocate"),
 		},
 		{
-			name:           "Unallocated with Too Many Requests",
-			state:          allocationv1.GameServerAllocationUnAllocated,
-			grpcStatusCode: codes.ResourceExhausted,
-			wantErr:        status.Error(codes.ResourceExhausted, "there is no available GameServer to allocate"),
+			name:                      "Unallocated with Too Many Requests",
+			state:                     allocationv1.GameServerAllocationUnAllocated,
+			grpcUnallocatedStatusCode: codes.ResourceExhausted,
+			wantErr:                   status.Error(codes.ResourceExhausted, "there is no available GameServer to allocate"),
 		},
 		{
-			name:           "Unallocated with Unexpected gRPC Status",
-			state:          allocationv1.GameServerAllocationUnAllocated,
-			grpcStatusCode: codes.Internal,
-			wantErr:        status.Error(codes.Internal, "there is no available GameServer to allocate"),
+			name:                      "Unallocated with Unexpected gRPC Status",
+			state:                     allocationv1.GameServerAllocationUnAllocated,
+			grpcUnallocatedStatusCode: codes.Internal,
+			wantErr:                   status.Error(codes.Internal, "there is no available GameServer to allocate"),
 		},
 		{
-			name:           "Contention State Handling",
-			state:          allocationv1.GameServerAllocationContention,
-			grpcStatusCode: codes.Aborted,
-			wantErr:        status.Error(codes.Aborted, "too many concurrent requests have overwhelmed the system"),
+			name:                      "Contention State Handling",
+			state:                     allocationv1.GameServerAllocationContention,
+			grpcUnallocatedStatusCode: codes.Aborted,
+			wantErr:                   status.Error(codes.Aborted, "too many concurrent requests have overwhelmed the system"),
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := convertStateV1ToError(tt.state, tt.grpcStatusCode)
+			err := convertStateV1ToError(tt.state, tt.grpcUnallocatedStatusCode)
 			if (err != nil) != (tt.wantErr != nil) || (err != nil && err.Error() != tt.wantErr.Error()) {
 				t.Errorf("convertStateV1ToError() error = %v, wantErr %v", err, tt.wantErr)
 			}
