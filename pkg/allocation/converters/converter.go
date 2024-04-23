@@ -16,8 +16,6 @@
 package converters
 
 import (
-	"net/http"
-
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/wrapperspb"
@@ -306,12 +304,12 @@ func convertGameServerSelectorsToInternalGameServerSelectors(in []*pb.GameServer
 }
 
 // ConvertGSAToAllocationResponse converts GameServerAllocation V1 (GSA) to AllocationResponse
-func ConvertGSAToAllocationResponse(in *allocationv1.GameServerAllocation, httpStatusCode int) (*pb.AllocationResponse, error) {
+func ConvertGSAToAllocationResponse(in *allocationv1.GameServerAllocation, grpcStatusCode codes.Code) (*pb.AllocationResponse, error) {
 	if in == nil {
 		return nil, nil
 	}
 
-	if err := convertStateV1ToError(in.Status.State, httpStatusCode); err != nil {
+	if err := convertStateV1ToError(in.Status.State, grpcStatusCode); err != nil {
 		return nil, err
 	}
 
@@ -484,19 +482,13 @@ func convertAllocationListsToGSALists(in map[string]*pb.AllocationResponse_ListS
 }
 
 // convertStateV1ToError converts GameServerAllocationState V1 (GSA) to AllocationResponse_GameServerAllocationState
-func convertStateV1ToError(in allocationv1.GameServerAllocationState, httpStatusCode int) error {
+func convertStateV1ToError(in allocationv1.GameServerAllocationState, grpcStatusCode codes.Code) error {
 
 	switch in {
 	case allocationv1.GameServerAllocationAllocated:
 		return nil
 	case allocationv1.GameServerAllocationUnAllocated:
-		if httpStatusCode == http.StatusTooManyRequests {
-			return status.Error(codes.ResourceExhausted, "there are too many requests")
-		}
-		if httpStatusCode == http.StatusOK {
-			return nil
-		}
-		return status.Error(codes.Code(httpStatusCode), "there is no available GameServer to allocate")
+		return status.Error(grpcStatusCode, "there is no available GameServer to allocate")
 	case allocationv1.GameServerAllocationContention:
 		return status.Error(codes.Aborted, "too many concurrent requests have overwhelmed the system")
 	}

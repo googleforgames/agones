@@ -16,7 +16,6 @@ package converters
 
 import (
 	"fmt"
-	"net/http"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -848,7 +847,7 @@ func TestConvertGSAToAllocationResponse(t *testing.T) {
 		name             string
 		features         string
 		in               *allocationv1.GameServerAllocation
-		httpStatusCode   int
+		grpcStatusCode   codes.Code
 		want             *pb.AllocationResponse
 		wantErrCode      codes.Code
 		skipConvertToGSA bool
@@ -876,7 +875,7 @@ func TestConvertGSAToAllocationResponse(t *testing.T) {
 					Source:   "local",
 				},
 			},
-			httpStatusCode: http.StatusOK,
+			grpcStatusCode: codes.OK,
 			want: &pb.AllocationResponse{
 				GameServerName: "GSN",
 				Address:        "address",
@@ -914,7 +913,7 @@ func TestConvertGSAToAllocationResponse(t *testing.T) {
 					NodeName: "node-name",
 				},
 			},
-			httpStatusCode:   http.StatusTooManyRequests,
+			grpcStatusCode:   codes.ResourceExhausted,
 			wantErrCode:      codes.ResourceExhausted,
 			skipConvertToGSA: true,
 		},
@@ -929,7 +928,7 @@ func TestConvertGSAToAllocationResponse(t *testing.T) {
 					State: allocationv1.GameServerAllocationContention,
 				},
 			},
-			httpStatusCode:   http.StatusConflict,
+			grpcStatusCode:   codes.Aborted,
 			wantErrCode:      codes.Aborted,
 			skipConvertToGSA: true,
 		},
@@ -944,7 +943,7 @@ func TestConvertGSAToAllocationResponse(t *testing.T) {
 					Ports: []agonesv1.GameServerStatusPort{},
 				},
 			},
-			httpStatusCode:   0,
+			grpcStatusCode:   codes.Unknown,
 			wantErrCode:      codes.Unknown,
 			skipConvertToGSA: true,
 		},
@@ -959,13 +958,13 @@ func TestConvertGSAToAllocationResponse(t *testing.T) {
 					State: allocationv1.GameServerAllocationAllocated,
 				},
 			},
-			httpStatusCode: 0,
+			grpcStatusCode: 0,
 			want:           &pb.AllocationResponse{},
 		},
 		{
 			name:           "nil objects",
 			in:             nil,
-			httpStatusCode: 0,
+			grpcStatusCode: 0,
 			want:           nil,
 		},
 		{
@@ -1001,7 +1000,7 @@ func TestConvertGSAToAllocationResponse(t *testing.T) {
 					},
 				},
 			},
-			httpStatusCode: http.StatusOK,
+			grpcStatusCode: codes.OK,
 			want: &pb.AllocationResponse{
 				GameServerName: "GSN",
 				Address:        "address",
@@ -1064,7 +1063,7 @@ func TestConvertGSAToAllocationResponse(t *testing.T) {
 					},
 				},
 			},
-			httpStatusCode: http.StatusOK,
+			grpcStatusCode: codes.OK,
 			want: &pb.AllocationResponse{
 				GameServerName: "GSN",
 				Address:        "address",
@@ -1144,7 +1143,7 @@ func TestConvertGSAToAllocationResponse(t *testing.T) {
 					},
 				},
 			},
-			httpStatusCode: http.StatusOK,
+			grpcStatusCode: codes.OK,
 			want: &pb.AllocationResponse{
 				GameServerName: "GSN",
 				Address:        "address",
@@ -1230,7 +1229,7 @@ func TestConvertGSAToAllocationResponse(t *testing.T) {
 					},
 				},
 			},
-			httpStatusCode: http.StatusOK,
+			grpcStatusCode: codes.OK,
 			want: &pb.AllocationResponse{
 				GameServerName: "GSN",
 				Address:        "address",
@@ -1310,7 +1309,7 @@ func TestConvertGSAToAllocationResponse(t *testing.T) {
 					},
 				},
 			},
-			httpStatusCode: http.StatusOK,
+			grpcStatusCode: codes.OK,
 			want: &pb.AllocationResponse{
 				GameServerName: "GSN",
 				Address:        "address",
@@ -1355,7 +1354,7 @@ func TestConvertGSAToAllocationResponse(t *testing.T) {
 			defer runtime.FeatureTestMutex.Unlock()
 			require.NoError(t, runtime.ParseFeatures(tc.features))
 
-			out, err := ConvertGSAToAllocationResponse(tc.in, tc.httpStatusCode)
+			out, err := ConvertGSAToAllocationResponse(tc.in, tc.grpcStatusCode)
 			if tc.wantErrCode != 0 {
 				st, ok := status.FromError(err)
 				if !assert.True(t, ok) {
@@ -1552,44 +1551,44 @@ func TestConvertStateV1ToError(t *testing.T) {
 	tests := []struct {
 		name           string
 		state          allocationv1.GameServerAllocationState
-		httpStatusCode int
+		grpcStatusCode codes.Code
 		wantErr        error
 	}{
 		{
 			name:           "Allocated State",
 			state:          allocationv1.GameServerAllocationAllocated,
-			httpStatusCode: http.StatusOK,
+			grpcStatusCode: codes.OK,
 			wantErr:        nil,
 		},
 		{
 			name:           "Unallocated with Default Code",
 			state:          allocationv1.GameServerAllocationUnAllocated,
-			httpStatusCode: http.StatusOK,
-			wantErr:        nil,
+			grpcStatusCode: codes.ResourceExhausted,
+			wantErr:        status.Error(codes.ResourceExhausted, "there is no available GameServer to allocate"),
 		},
 		{
 			name:           "Unallocated with Too Many Requests",
 			state:          allocationv1.GameServerAllocationUnAllocated,
-			httpStatusCode: http.StatusTooManyRequests,
-			wantErr:        status.Error(codes.ResourceExhausted, "there are too many requests"),
+			grpcStatusCode: codes.ResourceExhausted,
+			wantErr:        status.Error(codes.ResourceExhausted, "there is no available GameServer to allocate"),
 		},
 		{
-			name:           "Unallocated with Unexpected HTTP Status",
+			name:           "Unallocated with Unexpected gRPC Status",
 			state:          allocationv1.GameServerAllocationUnAllocated,
-			httpStatusCode: http.StatusInternalServerError,
-			wantErr:        status.Error(codes.Code(500), "there is no available GameServer to allocate"),
+			grpcStatusCode: codes.Internal,
+			wantErr:        status.Error(codes.Internal, "there is no available GameServer to allocate"),
 		},
 		{
 			name:           "Contention State Handling",
 			state:          allocationv1.GameServerAllocationContention,
-			httpStatusCode: http.StatusConflict,
+			grpcStatusCode: codes.Aborted,
 			wantErr:        status.Error(codes.Aborted, "too many concurrent requests have overwhelmed the system"),
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := convertStateV1ToError(tt.state, tt.httpStatusCode)
+			err := convertStateV1ToError(tt.state, tt.grpcStatusCode)
 			if (err != nil) != (tt.wantErr != nil) || (err != nil && err.Error() != tt.wantErr.Error()) {
 				t.Errorf("convertStateV1ToError() error = %v, wantErr %v", err, tt.wantErr)
 			}
