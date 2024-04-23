@@ -18,11 +18,6 @@ import (
 	"fmt"
 	"testing"
 
-	pb "agones.dev/agones/pkg/allocation/go"
-	"agones.dev/agones/pkg/apis"
-	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
-	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
-	"agones.dev/agones/pkg/util/runtime"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/codes"
@@ -30,6 +25,12 @@ import (
 	"google.golang.org/protobuf/types/known/wrapperspb"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	pb "agones.dev/agones/pkg/allocation/go"
+	"agones.dev/agones/pkg/apis"
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
+	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
+	"agones.dev/agones/pkg/util/runtime"
 )
 
 func TestConvertAllocationRequestToGameServerAllocation(t *testing.T) {
@@ -843,12 +844,13 @@ func TestConvertGSAToAllocationRequest(t *testing.T) {
 
 func TestConvertGSAToAllocationResponse(t *testing.T) {
 	tests := []struct {
-		name             string
-		features         string
-		in               *allocationv1.GameServerAllocation
-		want             *pb.AllocationResponse
-		wantErrCode      codes.Code
-		skipConvertToGSA bool
+		name                      string
+		features                  string
+		in                        *allocationv1.GameServerAllocation
+		grpcUnallocatedStatusCode codes.Code
+		want                      *pb.AllocationResponse
+		wantErrCode               codes.Code
+		skipConvertToGSA          bool
 	}{
 		{
 			name: "status state is set to allocated",
@@ -1332,6 +1334,32 @@ func TestConvertGSAToAllocationResponse(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "status field is set to unallocated, non-default unallocated",
+			in: &allocationv1.GameServerAllocation{
+				TypeMeta: metav1.TypeMeta{
+					Kind:       "GameServerAllocation",
+					APIVersion: "allocation.agones.dev/v1",
+				},
+				Status: allocationv1.GameServerAllocationStatus{
+					State:          allocationv1.GameServerAllocationUnAllocated,
+					GameServerName: "GSN",
+					Ports: []agonesv1.GameServerStatusPort{
+						{
+							Port: 123,
+						},
+						{
+							Name: "port-name",
+						},
+					},
+					Address:  "address",
+					NodeName: "node-name",
+				},
+			},
+			grpcUnallocatedStatusCode: codes.Unimplemented,
+			wantErrCode:               codes.Unimplemented,
+			skipConvertToGSA:          true,
+		},
 	}
 	for _, tc := range tests {
 		tc := tc
@@ -1341,7 +1369,12 @@ func TestConvertGSAToAllocationResponse(t *testing.T) {
 			defer runtime.FeatureTestMutex.Unlock()
 			require.NoError(t, runtime.ParseFeatures(tc.features))
 
-			out, err := ConvertGSAToAllocationResponse(tc.in)
+			grpcUnallocatedStatusCode := tc.grpcUnallocatedStatusCode
+			if grpcUnallocatedStatusCode == codes.OK {
+				grpcUnallocatedStatusCode = codes.ResourceExhausted
+			}
+
+			out, err := ConvertGSAToAllocationResponse(tc.in, grpcUnallocatedStatusCode)
 			if tc.wantErrCode != 0 {
 				st, ok := status.FromError(err)
 				if !assert.True(t, ok) {

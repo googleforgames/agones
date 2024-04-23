@@ -17437,6 +17437,8 @@ spec:
           value: "8443"
         - name: GRPC_PORT
           value: "8443"
+        - name: HTTP_UNALLOCATED_STATUS_CODE
+          value: "429"
         - name: API_SERVER_QPS
           value: "400"
         - name: API_SERVER_QPS_BURST
