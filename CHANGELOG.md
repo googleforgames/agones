@@ -5,7 +5,6 @@
 [Full Changelog](https://github.com/googleforgames/agones/compare/v1.39.0...v1.40.0)
 
 **Breaking changes:**
-- Optimise GameServer Sub-Controller Queues by @markmandel in https://github.com/googleforgames/agones/pull/3781
 - Counters and Lists: Remove Bool Returns  by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3738
 
 **Implemented enhancements:**
@@ -22,6 +21,7 @@
 - Be prescriptive about rotating regions when updating Kubernetes versions by @zmerlynn in https://github.com/googleforgames/agones/pull/3716
 - Fix ensure-e2e-infra-state-bucket by @zmerlynn in https://github.com/googleforgames/agones/pull/3719
 - Create Performance Cluster 1.28 by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3720
+- Optimise GameServer Sub-Controller Queues by @markmandel in https://github.com/googleforgames/agones/pull/3781
 
 **Fixed bugs:**
 - Counters & Lists: Consolidate `priorities` sorting by @markmandel in https://github.com/googleforgames/agones/pull/3690
