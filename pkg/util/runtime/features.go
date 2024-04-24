@@ -31,12 +31,12 @@ const (
 	////////////////
 	// Beta features
 
-	////////////////
-	// Alpha features
-
-	// FeatureCountsAndLists is a feature flag that enables/disables counts and lists feature
+	// FeatureCountsAndLists is a feature flag that enables counts and lists feature
 	// (a generic implenetation of the player tracking feature).
 	FeatureCountsAndLists Feature = "CountsAndLists"
+
+	////////////////
+	// Alpha features
 
 	// FeatureDisableResyncOnSDKServer is a feature flag to enable/disable resync on SDK server.
 	FeatureDisableResyncOnSDKServer Feature = "DisableResyncOnSDKServer"
@@ -95,10 +95,10 @@ var (
 	// In each of these, keep the feature sorted by descending maturity then alphabetical
 	featureDefaults = map[Feature]bool{
 		// Beta features
+		FeatureCountsAndLists:           true,
 		FeatureDisableResyncOnSDKServer: true,
 
 		// Alpha features
-		FeatureCountsAndLists:                   false,
 		FeatureGKEAutopilotExtendedDurationPods: false,
 		FeaturePlayerAllocationFilter:           false,
 		FeaturePlayerTracking:                   false,
