@@ -38,7 +38,6 @@ DEFAULT_CONFORMANCE_TESTS = ready,allocate,setlabel,setannotation,gameserver,hea
 ALPHA_CONFORMANCE_TESTS = getplayercapacity,setplayercapacity,playerconnect,playerdisconnect,getplayercount,isplayerconnected,getconnectedplayers
 # TODO: Move Counter and List tests into ALPHA_CONFORMANCE_TESTS once the they are written for all SDKs
 COUNTS_AND_LISTS_TESTS = getcounter,updatecounter,setcountcounter,setcapacitycounter,getlist,updatelist,addlistvalue,removelistvalue
-COUNTS_AND_LISTS_GATE := CountsAndLists=true
 
 .PHONY: test-sdks test-sdk build-sdks build-sdk gen-all-sdk-grpc gen-sdk-grpc run-all-sdk-command run-sdk-command build-example
 
@@ -172,7 +171,7 @@ run-sdk-conformance-test-go:
 	# run without feature flags
 	$(MAKE) run-sdk-conformance-test SDK_FOLDER=go GRPC_PORT=9001 HTTP_PORT=9101
 	# run with feature flags enabled
-	$(MAKE) run-sdk-conformance-test SDK_FOLDER=go GRPC_PORT=9001 HTTP_PORT=9101 FEATURE_GATES=$(ALPHA_FEATURE_GATES),$(COUNTS_AND_LISTS_GATE) TESTS=$(DEFAULT_CONFORMANCE_TESTS),$(ALPHA_CONFORMANCE_TESTS),$(COUNTS_AND_LISTS_TESTS)
+	$(MAKE) run-sdk-conformance-test SDK_FOLDER=go GRPC_PORT=9001 HTTP_PORT=9101 FEATURE_GATES=$(ALPHA_FEATURE_GATES) TESTS=$(DEFAULT_CONFORMANCE_TESTS),$(ALPHA_CONFORMANCE_TESTS),$(COUNTS_AND_LISTS_TESTS)
 
 run-sdk-conformance-test-rust:
 	# run without feature flags
@@ -188,14 +187,14 @@ run-sdk-conformance-test-csharp:
 	# run without feature flags
 	$(MAKE) run-sdk-conformance-test SDK_FOLDER=csharp GRPC_PORT=9005 HTTP_PORT=9105
 	# run with feature flags enabled
-	$(MAKE) run-sdk-conformance-test SDK_FOLDER=csharp GRPC_PORT=9005 HTTP_PORT=9105 FEATURE_GATES=$(ALPHA_FEATURE_GATES),$(COUNTS_AND_LISTS_GATE) TESTS=$(DEFAULT_CONFORMANCE_TESTS),$(ALPHA_CONFORMANCE_TESTS),$(COUNTS_AND_LISTS_TESTS)
+	$(MAKE) run-sdk-conformance-test SDK_FOLDER=csharp GRPC_PORT=9005 HTTP_PORT=9105 FEATURE_GATES=$(ALPHA_FEATURE_GATES) TESTS=$(DEFAULT_CONFORMANCE_TESTS),$(ALPHA_CONFORMANCE_TESTS),$(COUNTS_AND_LISTS_TESTS)
 
 run-sdk-conformance-test-rest:
 	# (note: the restapi folder doesn't use GRPC_PORT but run-sdk-conformance-no-build defaults it, so we supply a unique value here)
 	# run without feature flags
 	$(MAKE) run-sdk-conformance-test SDK_FOLDER=restapi GRPC_PORT=9050 HTTP_PORT=9150
 	# run with feature flags enabled
-	$(MAKE) run-sdk-conformance-test SDK_FOLDER=restapi GRPC_PORT=9050 HTTP_PORT=9150 FEATURE_GATES=$(ALPHA_FEATURE_GATES),$(COUNTS_AND_LISTS_GATE) TESTS=$(DEFAULT_CONFORMANCE_TESTS),$(ALPHA_CONFORMANCE_TESTS),$(COUNTS_AND_LISTS_TESTS)
+	$(MAKE) run-sdk-conformance-test SDK_FOLDER=restapi GRPC_PORT=9050 HTTP_PORT=9150 FEATURE_GATES=$(ALPHA_FEATURE_GATES) TESTS=$(DEFAULT_CONFORMANCE_TESTS),$(ALPHA_CONFORMANCE_TESTS),$(COUNTS_AND_LISTS_TESTS)
 
 	$(MAKE) run-sdk-command COMMAND=clean SDK_FOLDER=restapi
 
