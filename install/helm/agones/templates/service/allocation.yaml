@@ -253,6 +253,8 @@ spec:
         - name: GRPC_PORT
           value: {{ .Values.agones.allocator.service.grpc.targetPort | quote }}
         {{- end }}
+        - name: HTTP_UNALLOCATED_STATUS_CODE
+          value: {{ .Values.agones.allocator.service.http.unallocatedStatusCode | quote }}
         - name: API_SERVER_QPS
           value: {{ .Values.agones.allocator.apiServerQPS | quote }}
         - name: API_SERVER_QPS_BURST
