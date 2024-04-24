@@ -36,6 +36,7 @@ COMMAND ?= gen
 SDK_IMAGE_TAG=$(build_sdk_prefix)$(SDK_FOLDER):$(build_sdk_version)
 DEFAULT_CONFORMANCE_TESTS = ready,allocate,setlabel,setannotation,gameserver,health,shutdown,watch,reserve
 ALPHA_CONFORMANCE_TESTS = getplayercapacity,setplayercapacity,playerconnect,playerdisconnect,getplayercount,isplayerconnected,getconnectedplayers
+ALPHA_CONFORMANCE_TESTS += getcounter,updatecounter,setcountcounter,setcapacitycounter,getlist,updatelist,addlistvalue,removelistvalue
 # TODO: Move Counter and List tests into ALPHA_CONFORMANCE_TESTS once the they are written for all SDKs
 COUNTS_AND_LISTS_TESTS = getcounter,updatecounter,setcountcounter,setcapacitycounter,getlist,updatelist,addlistvalue,removelistvalue
 
