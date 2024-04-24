@@ -26,6 +26,11 @@ import (
 
 // isGameServerPod returns if this Pod is a Pod that comes from a GameServer
 func isGameServerPod(pod *corev1.Pod) bool {
+	// add some defense in case this happens
+	if pod == nil {
+		return false
+	}
+
 	if agonesv1.GameServerRolePodSelector.Matches(labels.Set(pod.ObjectMeta.Labels)) {
 		owner := metav1.GetControllerOf(pod)
 		return owner != nil && owner.Kind == "GameServer"
@@ -87,6 +92,13 @@ func applyGameServerAddressAndPort(gs *agonesv1.GameServer, node *corev1.Node, p
 	gs.Status.Address = addr
 	gs.Status.Addresses = addrs
 	gs.Status.NodeName = pod.Spec.NodeName
+
+	for _, ip := range pod.Status.PodIPs {
+		gs.Status.Addresses = append(gs.Status.Addresses, corev1.NodeAddress{
+			Type:    agonesv1.NodePodIP,
+			Address: ip.IP,
+		})
+	}
 
 	if err := syncPodPortsToGameServer(gs, pod); err != nil {
 		return gs, errors.Wrapf(err, "cloud product error syncing ports on GameServer %s", gs.ObjectMeta.Name)
