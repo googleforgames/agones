@@ -29,6 +29,7 @@ import (
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -452,7 +453,7 @@ func (s *SDKServer) gameServer() (*agonesv1.GameServer, error) {
 // updateLabels updates the labels on this GameServer to the ones persisted in SDKServer,
 // i.e. SDKServer.gsLabels, with the prefix of "agones.dev/sdk-"
 func (s *SDKServer) updateLabels(ctx context.Context) error {
-	s.logger.WithField("labels", s.gsLabels).Debug("Updating label")
+	s.logger.WithField("labels", s.gsLabels).Debug("Patching label")
 	gs, err := s.gameServer()
 	if err != nil {
 		return err
@@ -469,7 +470,12 @@ func (s *SDKServer) updateLabels(ctx context.Context) error {
 	}
 	s.gsUpdateMutex.RUnlock()
 
-	_, err = s.gameServerGetter.GameServers(s.namespace).Update(ctx, gsCopy, metav1.UpdateOptions{})
+	patch, err := gs.Patch(gsCopy)
+	if err != nil {
+		return err
+	}
+
+	_, err = s.gameServerGetter.GameServers(s.namespace).Patch(ctx, gs.GetObjectMeta().GetName(), types.JSONPatchType, patch, metav1.PatchOptions{})
 	return err
 }
 

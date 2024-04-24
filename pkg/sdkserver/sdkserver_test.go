@@ -16,6 +16,7 @@ package sdkserver
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"strconv"
 	"sync"
@@ -29,6 +30,7 @@ import (
 	"agones.dev/agones/pkg/sdk/beta"
 	agtesting "agones.dev/agones/pkg/testing"
 	agruntime "agones.dev/agones/pkg/util/runtime"
+	jsonpatch "github.com/evanphx/json-patch"
 	"github.com/google/go-cmp/cmp"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
@@ -44,6 +46,91 @@ import (
 	"k8s.io/utils/clock"
 	testclocks "k8s.io/utils/clock/testing"
 )
+
+func TestPatchGameServer(t *testing.T) {
+
+	m := agtesting.NewMocks()
+	initialLabels := map[string]string{"initial": "label"}
+
+	gs := agonesv1.GameServer{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test", Namespace: "default", Generation: 1, Labels: initialLabels,
+		},
+		Spec: agonesv1.GameServerSpec{
+			SdkServer: agonesv1.SdkServer{
+				LogLevel: "Debug",
+			},
+		},
+	}
+	gs.ApplyDefaults()
+
+	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{gs}}, nil
+	})
+
+	patched := make(chan *agonesv1.GameServer, 10)
+
+	m.AgonesClient.AddReactor("patch", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		pa := action.(k8stesting.PatchAction)
+		patchJSON := pa.GetPatch()
+		patch, err := jsonpatch.DecodePatch(patchJSON)
+		assert.NoError(t, err)
+		gsJSON, err := json.Marshal(gs)
+		assert.NoError(t, err)
+		patchedGs, err := patch.Apply(gsJSON)
+		assert.NoError(t, err)
+		err = json.Unmarshal(patchedGs, &gs)
+		assert.NoError(t, err)
+		patched <- &gs
+		return false, &gs, nil
+	})
+
+	ctx, cancel := context.WithCancel(context.Background())
+	sc, err := defaultSidecar(m)
+	require.NoError(t, err)
+	assert.NoError(t, sc.WaitForConnection(ctx))
+	sc.informerFactory.Start(ctx.Done())
+	assert.True(t, cache.WaitForCacheSync(ctx.Done(), sc.gameServerSynced))
+
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+
+	go func() {
+		err = sc.Run(ctx)
+		assert.NoError(t, err)
+		wg.Done()
+	}()
+
+	// check initial value comes through
+	require.Eventually(t, func() bool {
+		gs, err := sc.GetGameServer(ctx, &sdk.Empty{})
+		assert.NoError(t, err)
+		return assert.Equal(t, initialLabels, gs.ObjectMeta.Labels)
+	}, 10*time.Second, time.Second)
+
+	// Update the Game Server
+	_, err = sc.SetLabel(ctx, &sdk.KeyValue{Key: "foo", Value: "value-foo"})
+	assert.Nil(t, err)
+
+	// Confirm update is applied to the SDK Server
+	expectedLabels := map[string]string{"initial": "label", "agones.dev/sdk-foo": "value-foo"}
+	require.Eventually(t, func() bool {
+		gs, err := sc.GetGameServer(ctx, &sdk.Empty{})
+		assert.NoError(t, err)
+		return assert.Equal(t, expectedLabels, gs.ObjectMeta.Labels)
+	}, 10*time.Second, time.Second)
+
+	// on an update, confirm that the update hits the K8s api
+	select {
+	case value := <-patched:
+		assert.Equal(t, expectedLabels, value.Labels)
+	case <-time.After(10 * time.Second):
+		assert.Fail(t, "game server should have been patched")
+	}
+
+	cancel()
+	wg.Wait()
+}
 
 func TestSidecarRun(t *testing.T) {
 	t.Parallel()
@@ -94,19 +181,19 @@ func TestSidecarRun(t *testing.T) {
 				recordings: []string{"Warning " + string(agonesv1.GameServerStateUnhealthy)},
 			},
 		},
-		"label": {
-			f: func(sc *SDKServer, ctx context.Context) {
-				_, err := sc.SetLabel(ctx, &sdk.KeyValue{Key: "foo", Value: "value-foo"})
-				assert.Nil(t, err)
-				_, err = sc.SetLabel(ctx, &sdk.KeyValue{Key: "bar", Value: "value-bar"})
-				assert.Nil(t, err)
-			},
-			expected: expected{
-				labels: map[string]string{
-					metadataPrefix + "foo": "value-foo",
-					metadataPrefix + "bar": "value-bar"},
-			},
-		},
+		// "label": {
+		// 	f: func(sc *SDKServer, ctx context.Context) {
+		// 		_, err := sc.SetLabel(ctx, &sdk.KeyValue{Key: "foo", Value: "value-foo"})
+		// 		assert.Nil(t, err)
+		// 		_, err = sc.SetLabel(ctx, &sdk.KeyValue{Key: "bar", Value: "value-bar"})
+		// 		assert.Nil(t, err)
+		// 	},
+		// 	expected: expected{
+		// 		labels: map[string]string{
+		// 			metadataPrefix + "foo": "value-foo",
+		// 			metadataPrefix + "bar": "value-bar"},
+		// 	},
+		// },
 		"annotation": {
 			f: func(sc *SDKServer, ctx context.Context) {
 				_, err := sc.SetAnnotation(ctx, &sdk.KeyValue{Key: "test-1", Value: "annotation-1"})
@@ -288,13 +375,13 @@ func TestSDKServerSyncGameServer(t *testing.T) {
 			sc.gsAnnotations = v.scData.gsAnnotations
 
 			updated := false
+			gs := agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{
+				UID:  "1234",
+				Name: sc.gameServerName, Namespace: sc.namespace,
+				Labels: map[string]string{}, Annotations: map[string]string{}},
+			}
 
 			m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-				gs := agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{
-					UID:  "1234",
-					Name: sc.gameServerName, Namespace: sc.namespace,
-					Labels: map[string]string{}, Annotations: map[string]string{}},
-				}
 				return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{gs}}, nil
 			})
 			m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
@@ -305,14 +392,31 @@ func TestSDKServerSyncGameServer(t *testing.T) {
 				if v.expected.state != "" {
 					assert.Equal(t, v.expected.state, gs.Status.State)
 				}
-				for label, value := range v.expected.labels {
-					assert.Equal(t, value, gs.ObjectMeta.Labels[label])
-				}
+
 				for ann, value := range v.expected.annotations {
 					assert.Equal(t, value, gs.ObjectMeta.Annotations[ann])
 				}
 
 				return true, gs, nil
+			})
+
+			m.AgonesClient.AddReactor("patch", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+				pa := action.(k8stesting.PatchAction)
+				patchJSON := pa.GetPatch()
+				patch, err := jsonpatch.DecodePatch(patchJSON)
+				assert.NoError(t, err)
+				gsJSON, err := json.Marshal(gs)
+				assert.NoError(t, err)
+				patchedGs, err := patch.Apply(gsJSON)
+				assert.NoError(t, err)
+				err = json.Unmarshal(patchedGs, &gs)
+				assert.NoError(t, err)
+
+				for label, value := range v.expected.labels {
+					assert.Equal(t, value, gs.ObjectMeta.Labels[label])
+				}
+				updated = true
+				return false, &gs, nil
 			})
 
 			ctx, cancel := context.WithCancel(context.Background())
