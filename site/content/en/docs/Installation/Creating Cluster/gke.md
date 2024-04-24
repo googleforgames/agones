@@ -165,7 +165,7 @@ We need a firewall to allow UDP traffic to nodes tagged as `game-server` via por
 next section.
 
 ```bash
-gcloud compute firewall-rules create game-server-firewall \
+gcloud compute firewall-rules create gke-agones-game-server-firewall \
   --allow udp:7000-8000 \
   --target-tags game-server \
   --description "Firewall to allow game server udp traffic"
@@ -176,6 +176,31 @@ gcloud compute firewall-rules create game-server-firewall \
 Create a GKE cluster in which you'll install Agones. You can use
 [GKE Standard mode](#create-a-standard-mode-cluster-for-agones)
 or [GKE Autopilot mode](#create-an-autopilot-mode-cluster-for-agones).
+You can read more about choosing a [cluster mode above](#choosing-a-gke-cluster-mode).
+
+### Create an Autopilot mode cluster for Agones
+
+1. Choose a [Release Channel]({{<ref "/docs/Guides/Best Practices/gke.md#release-channels" >}}) (Autopilot clusters must be on a Release Channel).
+
+1. Create the cluster:
+
+    ```bash
+    gcloud container clusters create-auto [CLUSTER_NAME] \
+      --region=[COMPUTE_REGION] \
+      --release-channel=[RELEASE_CHANNEL] \
+      --autoprovisioning-network-tags=game-server
+    ```
+
+Replace the following:
+* `[CLUSTER_NAME]`: The name of your cluster.
+* `[COMPUTE_REGION]`: the GCP region to create the cluster in.
+* `[RELEASE_CHANNEL]`: one of `rapid`, `regular`, or `stable`, chosen [above](#choosing-a-release-channel-and-optional-version). The default is `regular`.
+
+Flag explanations:
+* `--region`: The compute region [you chose above](#choosing-a-gke-cluster-mode).
+* `--release-channel`: The release channel [you chose above](#choosing-a-release-channel-and-optional-version).
+* `--autoprovisioning-network-tags`: Defines the tags that will be attached to new nodes in the cluster. This is to grant access through ports via the [firewall created above](#creating-the-firewall).
+
 
 ### Create a Standard mode cluster for Agones
 
@@ -291,35 +316,6 @@ Flag explanations:
 * `--image-type`: The image type of the instances in the node pool - `WINDOWS_LTSC_CONTAINERD` in this case.
 * `--machine-type`: The type of machine to use for nodes. Default: `e2-standard-4`. Depending on the needs of your game, you may wish to [have smaller or larger machines](https://cloud.google.com/compute/docs/machine-types).
 * `--num-nodes`: The number of nodes per cluster zone. For regional clusters, `--num-nodes=1` creates one node in 3 separate zones in the region, giving you faster recovery time in the event of a node failure.
-
-### Create an Autopilot mode cluster for Agones
-
-{{<alert title="Note" color="info">}}
-These installation instructions apply to Agones 1.30+
-{{</alert>}}
-
-1. Choose a [Release Channel]({{<ref "/docs/Guides/Best Practices/gke.md#release-channels" >}}) (Autopilot clusters must be on a Release Channel).
-
-1. Create the cluster:
-
-    ```bash
-    gcloud container clusters create-auto [CLUSTER_NAME] \
-      --region=[COMPUTE_REGION] \
-      --release-channel=[RELEASE_CHANNEL] \
-      --autoprovisioning-network-tags=game-server
-    ```
-
-Replace the following:
-* `[CLUSTER_NAME]`: The name of your cluster.
-* `[COMPUTE_REGION]`: the GCP region to create the cluster in.
-* `[RELEASE_CHANNEL]`: one of `rapid`, `regular`, or `stable`, chosen [above](#choosing-a-release-channel-and-optional-version). The default is `regular`.
-
-Flag explanations:
-* `--region`: The compute region [you chose above](#choosing-a-gke-cluster-mode).
-* `--release-channel`: The release channel [you chose above](#choosing-a-release-channel-and-optional-version).
-* `--autoprovisioning-network-tags`: Defines the tags that will be attached to new nodes in the cluster. This is to grant access through ports via the [firewall created above](#creating-the-firewall).
-
-
 
 ## Setting up cluster credentials
 
