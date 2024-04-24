@@ -143,6 +143,9 @@ const (
 	// error state. The timestamp is encoded in RFC3339 format.
 	GameServerErroredAtAnnotation = agones.GroupName + "/errored-at"
 
+	// NodePodIP identifies an IP address from a pod.
+	NodePodIP corev1.NodeAddressType = "PodIP"
+
 	// True is the string "true" to appease the goconst lint.
 	True = "true"
 	// False is the string "false" to appease the goconst lint.

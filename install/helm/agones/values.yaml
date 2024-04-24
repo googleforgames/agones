@@ -226,6 +226,7 @@ agones:
         portName: https
         targetPort: 8443
         nodePort: 0 # nodePort will be used if the serviceType is set to NodePort
+        unallocatedStatusCode: 429
       grpc:
         enabled: true
         appProtocol: ""
@@ -254,7 +255,7 @@ agones:
     topologySpreadConstraints: {}
   image:
     registry: us-docker.pkg.dev/agones-images/release
-    tag: 1.40.0-dev
+    tag: 1.41.0-dev
     controller:
       name: agones-controller
       pullPolicy: IfNotPresent
