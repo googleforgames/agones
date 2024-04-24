@@ -346,12 +346,8 @@ func applyCounterOrListPolicy(c *autoscalingv1.CounterPolicy, l *autoscalingv1.L
 			return scaleLimited(scale, f, gameServerLister, nodeCounts, key, isCounter, replicas,
 				capacity, aggCapacity, minCapacity, maxCapacity)
 		}
-		result, isLimited, err := scaleDown(f, gameServerLister, nodeCounts, key, isCounter, replicas, aggCount,
+		return scaleDown(f, gameServerLister, nodeCounts, key, isCounter, replicas, aggCount,
 			aggCapacity, minCapacity, buffer)
-		if result < 1 {
-			return 1, true, nil
-		}
-		return result, isLimited, err
 	}
 
 	if isCounter {
@@ -475,8 +471,8 @@ func scaleDown(f *agonesv1.Fleet, gameServerLister listeragonesv1.GameServerList
 	nodeCounts map[string]gameservers.NodeCount, key string, isCounter bool, replicas int32,
 	aggCount, aggCapacity, minCapacity, buffer int64) (int32, bool, error) {
 	// Exit early if we're already at MinCapacity to avoid calling getSortedGameServers if unnecessary
-	if aggCapacity == minCapacity {
-		return replicas, true, nil
+	if aggCapacity <= minCapacity {
+		return max(replicas, 1), true, nil
 	}
 
 	// We first need to get the individual game servers in order of deletion on scale down, as any
@@ -491,6 +487,9 @@ func scaleDown(f *agonesv1.Fleet, gameServerLister listeragonesv1.GameServerList
 	// "Remove" one game server at a time in order of potential deletion. (Not actually removed here,
 	// that's done later, if possible, by the fleetautoscaler controller.)
 	for _, gs := range gameServers {
+		if replicas == 1 {
+			return 1, true, nil
+		}
 		replicas--
 		switch isCounter {
 		case true:
@@ -526,11 +525,13 @@ func scaleDown(f *agonesv1.Fleet, gameServerLister listeragonesv1.GameServerList
 			return replicas, true, nil
 		}
 	}
+	return max(replicas, 1), false, nil
+}
 
-	// We are not currently able to scale down to zero replicas, so one replica is the minimum allowed.
-	if replicas < 1 {
-		replicas = 1
+// Helper function to return maximum of two int32 values
+func max(a, b int32) int32 {
+	if a > b {
+		return a
 	}
-
-	return replicas, false, nil
+	return b
 }
