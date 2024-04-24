@@ -36,7 +36,7 @@ is active at any given time (see [High Availability]({{< relref "high-availabili
 
 ## `agones-ping` (not pictured)
 
-`agones-ping` is a simple ping service for latency testing from your game client - see [Latency Testing]({{< relref "ping-service.md">}})).
+`agones-ping` is a simple ping service for latency testing from your game client - see [Latency Testing]({{< relref "ping-service.md">}}).
 
 # Agones CRDs
 
