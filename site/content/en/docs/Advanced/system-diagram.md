@@ -40,7 +40,7 @@ is active at any given time (see [High Availability]({{< relref "high-availabili
 
 # Agones CRDs
 
-See [Create a Game Server]({{< relref "create-gameserver.md">}})), [Create a Game Server]({{< relref "create-fleet.md">}})) for examples of Agones CRDs in action, or the [API Reference]({{< ref "/docs/Reference" >}}) for more detail.
+See [Create a Game Server]({{< relref "create-gameserver.md">}}), [Create a Game Server]({{< relref "create-fleet.md">}}) for examples of Agones CRDs in action, or the [API Reference]({{< ref "/docs/Reference" >}}) for more detail.
 
 All of the Agones CRDs are controlled and updated by `agones-controller`. `GameServer` is additionally updated by the SDK Sidecar and `agones-extensions` (moving a `GameServer` from [`Ready` to `Allocated`]({{< ref "/docs/Reference/gameserver.md#gameserver-state-diagram" >}}))
 
