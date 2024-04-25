@@ -8,13 +8,13 @@ description: >
 ---
 
 {{< alert color="info" title="Note" >}}
-Whichever approach you take to upgrading Agones, make sure to test it in your development environment 
+Whichever approach you take to upgrading Agones, make sure to test it in your development environment
 before applying it to production.
 {{< /alert >}}
 
 ## Upgrading Agones
 
-The following are strategies for safely upgrading Agones from one version to another. They may require adjustment to 
+The following are strategies for safely upgrading Agones from one version to another. They may require adjustment to
 your particular game architecture but should provide a solid foundation for updating Agones safely.
 
 The recommended approach is to use [multiple clusters](#upgrading-agones-multiple-clusters), such that the upgrade can be tested
@@ -23,14 +23,14 @@ gradually with production load and easily rolled back if the need arises.
 {{< alert color="warning" title="Warning" >}}
 Changing [Feature Gates]({{% ref "/docs/Guides/feature-stages.md#feature-gates" %}}) within your Agones install
 can constitute an "upgrade" as it may create or remove functionality
-in the Agones installation that may not be forward or backward compatible with installed resources in an existing 
+in the Agones installation that may not be forward or backward compatible with installed resources in an existing
 installation.
 {{< /alert >}}
 
 ### Upgrading Agones: Multiple Clusters
 
 We essentially want to transition our GameServer allocations from a cluster with the old version of Agones,
-to a cluster with the upgraded version of Agones while ensuring nothing surprising 
+to a cluster with the upgraded version of Agones while ensuring nothing surprising
 happens during this process.
 
 This also allows easy rollback to the previous infrastructure that we already know to be working in production, with
@@ -94,14 +94,14 @@ gradually with production load and easily rolled back if the need arises.
 
 Agones has [multiple supported Kubernetes versions]({{< relref "_index.md#agones-and-kubernetes-supported-versions" >}}) for each version. You can stick with a minor Kubernetes version until it is not supported by Agones, but it is recommended to do supported minor (e.g. 1.12.1 ➡ 1.13.2) Kubernetes version upgrades at the same time as a matching Agones upgrades.
 
-Patch upgrades (e.g. 1.12.1 ➡ 1.12.3) within the same minor version of Kubernetes can be done at any time. 
+Patch upgrades (e.g. 1.12.1 ➡ 1.12.3) within the same minor version of Kubernetes can be done at any time.
 
 ### Multiple Clusters
 
 This process is very similar to the [Upgrading Agones: Multiple Clusters](#upgrading-agones-multiple-clusters) approach above.
 
 We essentially want to transition our GameServer allocations from a cluster with the old version of Kubernetes,
-to a cluster with the upgraded version of Kubernetes while ensuring nothing surprising 
+to a cluster with the upgraded version of Kubernetes while ensuring nothing surprising
 happens during this process.
 
 This also allows easy rollback to the previous infrastructure that we already know to be working in production, with
@@ -128,7 +128,74 @@ upgrades.
    between the Agones controller being recreated and GameServers being deleted doesn't occur, and GameServers can end up stuck in erroneous states.
 1. Start and complete your control plane upgrade(s).
 1. Start and complete your node upgrades.
-1. Scale your Fleets back up and/or recreate your GameServers. 
+1. Scale your Fleets back up and/or recreate your GameServers.
 1. Run any other tests to ensure the Agones installation is still working as expected.
 1. Close your maintenance window.
 7. Congratulations - you have now upgraded to a new version of Kubernetes! 👍
+
+{{% feature publishVersion="1.41.0" %}}
+## SDK Proto Compatibility Guarantees as of Agones v1.41.0
+Our [SDK Server]({{< relref "../guides/Client SDKs/sdk-server.md" >}}) compatibility contract: A
+game server binary using Beta and Stable SDKs will remain compatible with a _newer_ `sdk-server`,
+within possible deprecation windows:
+- If your game server uses a non-deprecated Stable API, your binary will be compatible for 10
+releases (~1y) starting from the SDK version packaged.
+  - For example, if the game server uses non-deprecated stable APIs in the 1.40 SDK, it will be
+  compatible through the 1.50 SDK.
+  - Stable APIs will almost certainly be compatible beyond 10 releases, but 10 releases is
+  guaranteed.
+- If your game server uses a non-deprecated Beta API, your binary will be compatible for 5 releases
+(~6mo).
+- Alpha SDK Protos are subject to change between releases.
+  - A game server binary using Alpha SDKs may not be compatible with a newer sdk-server.
+  - In Alpha, incompatible changes retaining the same SDK proto message name are allowed.
+  - When we make incompatible Alpha changes, we will document the APIs involved.
+
+## SDK Deprecation Policies as of Agones v1.41.0
+Breaking changes will be called out in upgrade documentation to allow admins to plan their upgrades.
+### Stable Deprecation Policies
+A Stable API may be marked as deprecated in release X and removed from Stable in release X+10.
+### Beta Deprecation Policies
+When a feature graduates from Beta to Stable at release X, the API will be present in both Beta and
+Stable surfaces from release X to release X+5. The Beta API is marked as deprecated in release X and
+removed from Beta in release X+5.
+A Beta API may be marked as deprecated in release X and removed from Beta in release X+5 without the
+API graduating to Stable.
+### Alpha Deprecation Policies
+There is no guaranteed proto compatibility between releases for Alpha SDK protos. When an Alpha API
+graduates to Beta the API will be deleted from the Alpha proto with no overlapping release.
+An API may be removed from the Alpha proto during any release without graduating to Beta.
+
+## SDK Server APIs and Stability Levels
+
+"Legacy" indicates that this API has been in the SDK Server in a release before we began tracking
+proto compatibility. \
+The Actions may differ from the [Client SDK]({{< relref "Client SDKs">}}) depending on how each
+Client SDK is implemented.
+
+| Area                | Action                | Stable | Beta | Alpha  |
+|---------------------|-----------------------|--------|------|--------|
+| Lifecycle           | Ready                 | Legacy |      |        |
+| Lifecycle           | Health                | Legacy |      |        |
+| Lifecycle           | Reserve               | Legacy |      |        |
+| Lifecycle           | Allocate              | Legacy |      |        |
+| Lifecycle           | Shutdown              | Legacy |      |        |
+| Configuration       | GetGameServer         | Legacy |      |        |
+| Configuration       | WatchGameServer       | Legacy |      |        |
+| Metadata            | SetAnnotation         | Legacy |      |        |
+| Metadata            | SetLabel              | Legacy |      |        |
+| Counters            | GetCounter            |        |      | 1.37.0 |
+| Counters            | UpdateCounter         |        |      | 1.37.0 |
+| Lists               | GetList               |        |      | 1.37.0 |
+| Lists               | UpdateList            |        |      | 1.37.0 |
+| Lists               | AddListValue          |        |      | 1.37.0 |
+| Lists               | RemoveListValue       |        |      | 1.37.0 |
+| Player Tracking     | GetPlayerCapacity     |        |      | Legacy |
+| Player Tracking     | SetPlayerCapacity     |        |      | Legacy |
+| Player Tracking     | PlayerConnect         |        |      | Legacy |
+| Player Tracking     | GetConnectedPlayers   |        |      | Legacy |
+| Player Tracking     | IsPlayerConnected     |        |      | Legacy |
+| Player Tracking     | GetPlayerCount        |        |      | Legacy |
+| Player Tracking     | PlayerDisconnect      |        |      | Legacy |
+
+{{% /feature %}}
