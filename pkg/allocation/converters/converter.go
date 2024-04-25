@@ -16,16 +16,17 @@
 package converters
 
 import (
-	pb "agones.dev/agones/pkg/allocation/go"
-	"agones.dev/agones/pkg/apis"
-	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
-	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
-	"agones.dev/agones/pkg/util/runtime"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	pb "agones.dev/agones/pkg/allocation/go"
+	"agones.dev/agones/pkg/apis"
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
+	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
+	"agones.dev/agones/pkg/util/runtime"
 )
 
 // ConvertAllocationRequestToGSA converts AllocationRequest to GameServerAllocation V1 (GSA)
@@ -303,12 +304,12 @@ func convertGameServerSelectorsToInternalGameServerSelectors(in []*pb.GameServer
 }
 
 // ConvertGSAToAllocationResponse converts GameServerAllocation V1 (GSA) to AllocationResponse
-func ConvertGSAToAllocationResponse(in *allocationv1.GameServerAllocation) (*pb.AllocationResponse, error) {
+func ConvertGSAToAllocationResponse(in *allocationv1.GameServerAllocation, grpcUnallocatedStatusCode codes.Code) (*pb.AllocationResponse, error) {
 	if in == nil {
 		return nil, nil
 	}
 
-	if err := convertStateV1ToError(in.Status.State); err != nil {
+	if err := convertStateV1ToError(in.Status.State, grpcUnallocatedStatusCode); err != nil {
 		return nil, err
 	}
 
@@ -481,12 +482,13 @@ func convertAllocationListsToGSALists(in map[string]*pb.AllocationResponse_ListS
 }
 
 // convertStateV1ToError converts GameServerAllocationState V1 (GSA) to AllocationResponse_GameServerAllocationState
-func convertStateV1ToError(in allocationv1.GameServerAllocationState) error {
+func convertStateV1ToError(in allocationv1.GameServerAllocationState, grpcUnallocatedStatusCode codes.Code) error {
+
 	switch in {
 	case allocationv1.GameServerAllocationAllocated:
 		return nil
 	case allocationv1.GameServerAllocationUnAllocated:
-		return status.Error(codes.ResourceExhausted, "there is no available GameServer to allocate")
+		return status.Error(grpcUnallocatedStatusCode, "there is no available GameServer to allocate")
 	case allocationv1.GameServerAllocationContention:
 		return status.Error(codes.Aborted, "too many concurrent requests have overwhelmed the system")
 	}

@@ -2,7 +2,7 @@
 {{- $test := eq (.Get "link_test") "true" | default true }}
 <p>The following prerequisites are required to create a GameServer:</p>
 <ol>
-<li>A Kubernetes cluster with the UDP port range 7000-8000 open on each node.</li>
+<li>A Kubernetes cluster with the UDP port range 7000-8000 open on each node. <a href="{{ .Site.BaseURL }}docs/installation/creating-cluster/gke/#creating-the-firewall">Creating the firewall.</a></li>
 <li>Agones controller installed in the targeted cluster</li>
 <li>kubectl properly configured</li>
 <li>Netcat which is already installed on most Linux/macOS distributions, for windows you can use <a href="https://docs.microsoft.com/en-us/windows/wsl/install-win10">WSL</a>.</li>
