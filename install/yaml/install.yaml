@@ -10816,6 +10816,7 @@ spec:
                        - Dynamic
                        - Static
                        - Passthrough
+                       - DirectToGameServer
                      protocol:
                        title: Protocol being used. Defaults to UDP. TCP and TCPUDP are other options.
                        type: string
@@ -16365,6 +16366,7 @@ spec:
                                 - Dynamic
                                 - Static
                                 - Passthrough
+                                - DirectToGameServer
                               protocol:
                                 title: Protocol being used. Defaults to UDP. TCP and TCPUDP are other options.
                                 type: string
