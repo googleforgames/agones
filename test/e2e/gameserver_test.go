@@ -866,7 +866,7 @@ func TestGameServerDirectToGameServerPort(t *testing.T) {
 	port := readyGs.Spec.Ports[0]
 	assert.Equal(t, agonesv1.DirectToGameServer, port.PortPolicy)
 	assert.Empty(t, port.HostPort)
-	assert.Equal(t, 7777, port.ContainerPort)
+	assert.EqualValues(t, 7777, port.ContainerPort)
 
 	reply, err := framework.SendGameServerUDP(t, readyGs, "Hello World !")
 	if err != nil {
