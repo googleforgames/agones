@@ -168,9 +168,9 @@ run-sdk-conformance-test-node:
 	$(MAKE) run-sdk-conformance-test SDK_FOLDER=node GRPC_PORT=9002 HTTP_PORT=9102
 
 run-sdk-conformance-test-go:
-	# run without feature flags
+	# run with on-by-default (Beta) feature flags enabled
 	$(MAKE) run-sdk-conformance-test SDK_FOLDER=go GRPC_PORT=9001 HTTP_PORT=9101 TESTS=$(DEFAULT_CONFORMANCE_TESTS),$(COUNTS_AND_LISTS_TESTS)
-	# run with feature flags enabled
+	# run with Alpha and Beta feature flags enabled
 	$(MAKE) run-sdk-conformance-test SDK_FOLDER=go GRPC_PORT=9001 HTTP_PORT=9101 FEATURE_GATES=$(ALPHA_FEATURE_GATES) TESTS=$(DEFAULT_CONFORMANCE_TESTS),$(ALPHA_CONFORMANCE_TESTS),$(COUNTS_AND_LISTS_TESTS)
 
 run-sdk-conformance-test-rust:
@@ -184,17 +184,17 @@ run-sdk-conformance-test-rust:
 	DOCKER_RUN_ARGS="$(DOCKER_RUN_ARGS) -e RUN_ASYNC=true" $(MAKE) run-sdk-conformance-test SDK_FOLDER=rust GRPC_PORT=9004 HTTP_PORT=9104 FEATURE_GATES=PlayerTracking=true TESTS=$(DEFAULT_CONFORMANCE_TESTS),$(ALPHA_CONFORMANCE_TESTS)
 
 run-sdk-conformance-test-csharp:
-	# run without feature flags
-	$(MAKE) run-sdk-conformance-test SDK_FOLDER=csharp GRPC_PORT=9005 HTTP_PORT=9105 TESTS=$(DEFAULT_CONFORMANCE_TESTS),$(COUNTS_AND_LISTS_TESTS)
-	# run with feature flags enabled
-	$(MAKE) run-sdk-conformance-test SDK_FOLDER=csharp GRPC_PORT=9005 HTTP_PORT=9105 FEATURE_GATES=$(ALPHA_FEATURE_GATES) TESTS=$(DEFAULT_CONFORMANCE_TESTS),$(ALPHA_CONFORMANCE_TESTS),$(COUNTS_AND_LISTS_TESTS)
+	# run with Beta feature flags enabled
+	$(MAKE) run-sdk-conformance-test SDK_FOLDER=csharp GRPC_PORT=9005 HTTP_PORT=9105 FEATURE_GATES=$(BETA_FEATURE_GATES) TESTS=$(DEFAULT_CONFORMANCE_TESTS),$(COUNTS_AND_LISTS_TESTS)
+	# run with Alpha feature flags enabled
+	$(MAKE) run-sdk-conformance-test SDK_FOLDER=csharp GRPC_PORT=9005 HTTP_PORT=9105 FEATURE_GATES=$(ALPHA_FEATURE_GATES) TESTS=$(DEFAULT_CONFORMANCE_TESTS),$(ALPHA_CONFORMANCE_TESTS)
 
 run-sdk-conformance-test-rest:
 	# (note: the restapi folder doesn't use GRPC_PORT but run-sdk-conformance-no-build defaults it, so we supply a unique value here)
-	# run without feature flags
-	$(MAKE) run-sdk-conformance-test SDK_FOLDER=restapi GRPC_PORT=9050 HTTP_PORT=9150 TESTS=$(DEFAULT_CONFORMANCE_TESTS),$(COUNTS_AND_LISTS_TESTS)
-	# run with feature flags enabled
-	$(MAKE) run-sdk-conformance-test SDK_FOLDER=restapi GRPC_PORT=9050 HTTP_PORT=9150 FEATURE_GATES=$(ALPHA_FEATURE_GATES) TESTS=$(DEFAULT_CONFORMANCE_TESTS),$(ALPHA_CONFORMANCE_TESTS),$(COUNTS_AND_LISTS_TESTS)
+	# run with Beta feature flags enabled
+	$(MAKE) run-sdk-conformance-test SDK_FOLDER=restapi GRPC_PORT=9050 HTTP_PORT=9150 FEATURE_GATES=$(BETA_FEATURE_GATES) TESTS=$(DEFAULT_CONFORMANCE_TESTS),$(COUNTS_AND_LISTS_TESTS)
+	# run with Alpha feature flags enabled
+	$(MAKE) run-sdk-conformance-test SDK_FOLDER=restapi GRPC_PORT=9050 HTTP_PORT=9150 FEATURE_GATES=$(ALPHA_FEATURE_GATES) TESTS=$(DEFAULT_CONFORMANCE_TESTS),$(ALPHA_CONFORMANCE_TESTS)
 
 	$(MAKE) run-sdk-command COMMAND=clean SDK_FOLDER=restapi
 
