@@ -22,12 +22,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
 
-	"agones.dev/agones/pkg/sdk/alpha"
+	"agones.dev/agones/pkg/sdk/beta"
 )
 
-func TestAlphaGetAndSetPlayerCapacity(t *testing.T) {
-	mock := &alphaMock{}
-	a := Alpha{
+func TestBetaGetAndSetPlayerCapacity(t *testing.T) {
+	mock := &betaMock{}
+	a := Beta{
 		client: mock,
 	}
 
@@ -73,44 +73,44 @@ func TestAlphaGetAndSetPlayerCapacity(t *testing.T) {
 	assert.Equal(t, []string{playerID}, list)
 }
 
-func TestAlphaGetAndUpdateCounter(t *testing.T) {
-	mock := &alphaMock{}
+func TestBetaGetAndUpdateCounter(t *testing.T) {
+	mock := &betaMock{}
 	// Counters must be predefined in the GameServer resource on creation.
-	mock.counters = make(map[string]*alpha.Counter)
+	mock.counters = make(map[string]*beta.Counter)
 
-	sessions := alpha.Counter{
+	sessions := beta.Counter{
 		Name:     "sessions",
 		Count:    21,
 		Capacity: 42,
 	}
-	games := alpha.Counter{
+	games := beta.Counter{
 		Name:     "games",
 		Count:    12,
 		Capacity: 24,
 	}
-	gamers := alpha.Counter{
+	gamers := beta.Counter{
 		Name:     "gamers",
 		Count:    263,
 		Capacity: 500,
 	}
 
-	mock.counters["sessions"] = &alpha.Counter{
+	mock.counters["sessions"] = &beta.Counter{
 		Name:     "sessions",
 		Count:    21,
 		Capacity: 42,
 	}
-	mock.counters["games"] = &alpha.Counter{
+	mock.counters["games"] = &beta.Counter{
 		Name:     "games",
 		Count:    12,
 		Capacity: 24,
 	}
-	mock.counters["gamers"] = &alpha.Counter{
+	mock.counters["gamers"] = &beta.Counter{
 		Name:     "gamers",
 		Count:    263,
 		Capacity: 500,
 	}
 
-	a := Alpha{
+	a := Beta{
 		client: mock,
 	}
 
@@ -214,44 +214,44 @@ func TestAlphaGetAndUpdateCounter(t *testing.T) {
 
 }
 
-func TestAlphaGetAndUpdateList(t *testing.T) {
-	mock := &alphaMock{}
+func TestBetaGetAndUpdateList(t *testing.T) {
+	mock := &betaMock{}
 	// Lists must be predefined in the GameServer resource on creation.
-	mock.lists = make(map[string]*alpha.List)
+	mock.lists = make(map[string]*beta.List)
 
-	foo := alpha.List{
+	foo := beta.List{
 		Name:     "foo",
 		Values:   []string{},
 		Capacity: 2,
 	}
-	bar := alpha.List{
+	bar := beta.List{
 		Name:     "bar",
 		Values:   []string{"abc", "def"},
 		Capacity: 5,
 	}
-	baz := alpha.List{
+	baz := beta.List{
 		Name:     "baz",
 		Values:   []string{"123", "456", "789"},
 		Capacity: 5,
 	}
 
-	mock.lists["foo"] = &alpha.List{
+	mock.lists["foo"] = &beta.List{
 		Name:     "foo",
 		Values:   []string{},
 		Capacity: 2,
 	}
-	mock.lists["bar"] = &alpha.List{
+	mock.lists["bar"] = &beta.List{
 		Name:     "bar",
 		Values:   []string{"abc", "def"},
 		Capacity: 5,
 	}
-	mock.lists["baz"] = &alpha.List{
+	mock.lists["baz"] = &beta.List{
 		Name:     "baz",
 		Values:   []string{"123", "456", "789"},
 		Capacity: 5,
 	}
 
-	a := Alpha{
+	a := Beta{
 		client: mock,
 	}
 
@@ -325,57 +325,57 @@ func TestAlphaGetAndUpdateList(t *testing.T) {
 
 }
 
-type alphaMock struct {
+type betaMock struct {
 	capacity           int64
 	playerCount        int64
 	playerConnected    string
 	playerDisconnected string
-	counters           map[string]*alpha.Counter
-	lists              map[string]*alpha.List
+	counters           map[string]*beta.Counter
+	lists              map[string]*beta.List
 }
 
-func (a *alphaMock) PlayerConnect(ctx context.Context, id *alpha.PlayerID, opts ...grpc.CallOption) (*alpha.Bool, error) {
+func (a *betaMock) PlayerConnect(ctx context.Context, id *beta.PlayerID, opts ...grpc.CallOption) (*beta.Bool, error) {
 	a.playerConnected = id.PlayerID
 	a.playerCount++
-	return &alpha.Bool{Bool: true}, nil
+	return &beta.Bool{Bool: true}, nil
 }
 
-func (a *alphaMock) PlayerDisconnect(ctx context.Context, id *alpha.PlayerID, opts ...grpc.CallOption) (*alpha.Bool, error) {
+func (a *betaMock) PlayerDisconnect(ctx context.Context, id *beta.PlayerID, opts ...grpc.CallOption) (*beta.Bool, error) {
 	a.playerDisconnected = id.PlayerID
 	a.playerCount--
-	return &alpha.Bool{Bool: true}, nil
+	return &beta.Bool{Bool: true}, nil
 }
 
-func (a *alphaMock) IsPlayerConnected(ctx context.Context, id *alpha.PlayerID, opts ...grpc.CallOption) (*alpha.Bool, error) {
-	return &alpha.Bool{Bool: id.PlayerID == a.playerConnected}, nil
+func (a *betaMock) IsPlayerConnected(ctx context.Context, id *beta.PlayerID, opts ...grpc.CallOption) (*beta.Bool, error) {
+	return &beta.Bool{Bool: id.PlayerID == a.playerConnected}, nil
 }
 
-func (a *alphaMock) GetConnectedPlayers(ctx context.Context, in *alpha.Empty, opts ...grpc.CallOption) (*alpha.PlayerIDList, error) {
-	return &alpha.PlayerIDList{List: []string{a.playerConnected}}, nil
+func (a *betaMock) GetConnectedPlayers(ctx context.Context, in *beta.Empty, opts ...grpc.CallOption) (*beta.PlayerIDList, error) {
+	return &beta.PlayerIDList{List: []string{a.playerConnected}}, nil
 }
 
-func (a *alphaMock) SetPlayerCapacity(ctx context.Context, in *alpha.Count, opts ...grpc.CallOption) (*alpha.Empty, error) {
+func (a *betaMock) SetPlayerCapacity(ctx context.Context, in *beta.Count, opts ...grpc.CallOption) (*beta.Empty, error) {
 	a.capacity = in.Count
-	return &alpha.Empty{}, nil
+	return &beta.Empty{}, nil
 }
 
-func (a *alphaMock) GetPlayerCapacity(ctx context.Context, in *alpha.Empty, opts ...grpc.CallOption) (*alpha.Count, error) {
-	return &alpha.Count{Count: a.capacity}, nil
+func (a *betaMock) GetPlayerCapacity(ctx context.Context, in *beta.Empty, opts ...grpc.CallOption) (*beta.Count, error) {
+	return &beta.Count{Count: a.capacity}, nil
 }
 
-func (a *alphaMock) GetPlayerCount(ctx context.Context, in *alpha.Empty, opts ...grpc.CallOption) (*alpha.Count, error) {
-	return &alpha.Count{Count: a.playerCount}, nil
+func (a *betaMock) GetPlayerCount(ctx context.Context, in *beta.Empty, opts ...grpc.CallOption) (*beta.Count, error) {
+	return &beta.Count{Count: a.playerCount}, nil
 }
 
-func (a *alphaMock) GetCounter(ctx context.Context, in *alpha.GetCounterRequest, opts ...grpc.CallOption) (*alpha.Counter, error) {
+func (a *betaMock) GetCounter(ctx context.Context, in *beta.GetCounterRequest, opts ...grpc.CallOption) (*beta.Counter, error) {
 	if counter, ok := a.counters[in.Name]; ok {
 		return counter, nil
 	}
 	return nil, errors.Errorf("counter not found: %s", in.Name)
 }
 
-func (a *alphaMock) UpdateCounter(ctx context.Context, in *alpha.UpdateCounterRequest, opts ...grpc.CallOption) (*alpha.Counter, error) {
-	counter, err := a.GetCounter(ctx, &alpha.GetCounterRequest{Name: in.CounterUpdateRequest.Name})
+func (a *betaMock) UpdateCounter(ctx context.Context, in *beta.UpdateCounterRequest, opts ...grpc.CallOption) (*beta.Counter, error) {
+	counter, err := a.GetCounter(ctx, &beta.GetCounterRequest{Name: in.CounterUpdateRequest.Name})
 	if err != nil {
 		return nil, err
 	}
@@ -408,9 +408,9 @@ func (a *alphaMock) UpdateCounter(ctx context.Context, in *alpha.UpdateCounterRe
 	return a.counters[in.CounterUpdateRequest.Name], nil
 }
 
-// GetList returns the list of alphaMock. Note: unlike the SDK Server, this does not return
+// GetList returns the list of betaMock. Note: unlike the SDK Server, this does not return
 // a list with any pending batched changes applied.
-func (a *alphaMock) GetList(ctx context.Context, in *alpha.GetListRequest, opts ...grpc.CallOption) (*alpha.List, error) {
+func (a *betaMock) GetList(ctx context.Context, in *beta.GetListRequest, opts ...grpc.CallOption) (*beta.List, error) {
 	if in == nil {
 		return nil, errors.Errorf("GetListRequest cannot be nil")
 	}
@@ -422,7 +422,7 @@ func (a *alphaMock) GetList(ctx context.Context, in *alpha.GetListRequest, opts 
 
 // Note: unlike the SDK Server, UpdateList does not batch changes and instead updates the list
 // directly.
-func (a *alphaMock) UpdateList(ctx context.Context, in *alpha.UpdateListRequest, opts ...grpc.CallOption) (*alpha.List, error) {
+func (a *betaMock) UpdateList(ctx context.Context, in *beta.UpdateListRequest, opts ...grpc.CallOption) (*beta.List, error) {
 	if in == nil {
 		return nil, errors.Errorf("UpdateListRequest cannot be nil")
 	}
@@ -438,12 +438,12 @@ func (a *alphaMock) UpdateList(ctx context.Context, in *alpha.UpdateListRequest,
 		list.Values = append([]string{}, list.Values[:list.Capacity]...)
 	}
 	a.lists[in.List.Name] = list
-	return &alpha.List{}, nil
+	return &beta.List{}, nil
 }
 
 // Note: unlike the SDK Server, AddListValue does not batch changes and instead updates the list
 // directly.
-func (a *alphaMock) AddListValue(ctx context.Context, in *alpha.AddListValueRequest, opts ...grpc.CallOption) (*alpha.List, error) {
+func (a *betaMock) AddListValue(ctx context.Context, in *beta.AddListValueRequest, opts ...grpc.CallOption) (*beta.List, error) {
 	if in == nil {
 		return nil, errors.Errorf("AddListValueRequest cannot be nil")
 	}
@@ -461,12 +461,12 @@ func (a *alphaMock) AddListValue(ctx context.Context, in *alpha.AddListValueRequ
 	}
 	list.Values = append(list.Values, in.Value)
 	a.lists[in.Name] = list
-	return &alpha.List{}, nil
+	return &beta.List{}, nil
 }
 
 // Note: unlike the SDK Server, RemoveListValue does not batch changes and instead updates the list
 // directly.
-func (a *alphaMock) RemoveListValue(ctx context.Context, in *alpha.RemoveListValueRequest, opts ...grpc.CallOption) (*alpha.List, error) {
+func (a *betaMock) RemoveListValue(ctx context.Context, in *beta.RemoveListValueRequest, opts ...grpc.CallOption) (*beta.List, error) {
 	if in == nil {
 		return nil, errors.Errorf("RemoveListValueRequest cannot be nil")
 	}
@@ -480,7 +480,7 @@ func (a *alphaMock) RemoveListValue(ctx context.Context, in *alpha.RemoveListVal
 		}
 		list.Values = append(list.Values[:i], list.Values[i+1:]...)
 		a.lists[in.Name] = list
-		return &alpha.List{}, nil
+		return &beta.List{}, nil
 	}
 	return nil, errors.Errorf("not found. Value: %s not found in List: %s", in.Value, in.Name)
 }
