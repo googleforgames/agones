@@ -18,6 +18,7 @@ package agones.dev.sdk.beta;
 option go_package = "./beta";
 
 import "google/api/annotations.proto";
+import "google/api/client.proto";
 import "google/api/field_behavior.proto";
 import "google/api/resource.proto";
 import "google/protobuf/empty.proto";
