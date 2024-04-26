@@ -1,0 +1,179 @@
+// Copyright 2024 Google LLC All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//	http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+digraph {
+    compound=true
+    graph [fontname = "helvetica", style="rounded", nodesep=0.2, newrank="true"]
+    node [fontname = "helvetica", shape="box3d"]
+    edge [fontname = "helvetica", pad="0.2", penwidth="2"]
+
+    subgraph cluster_invisible_margin0 {
+        style="invis"
+        graph[margin=20]
+        rank="source"
+
+        GameFrontEnd [ label= "game front end" ]
+    }
+
+    subgraph cluster_invisible_margin1 {
+        style="invis"
+        graph[margin=20]
+        rank="same"
+        // rank="source"
+
+        subgraph cluster_acp {
+            label="Agones Control Plane"
+            graph[margin=4, style="rounded"]
+
+            subgraph cluster_allocator {
+                label="agones-allocator Deployment";
+                rank="same"
+
+                AllocatorN [ label = "agones-allocator\nreplica N", style="filled" ]
+                Allocator1 [ label = "agones-allocator\nreplica 1", style="filled" ]
+            }
+            subgraph cluster_controller {
+                label="agones-controller Deployment";
+                rank="same"
+
+                ControllerSpare [ label = "agones-controller\nspare", style="filled" ]
+                Controller [ label = "agones-controller\nleader", style="filled" ]
+            }
+            subgraph cluster_extensions {
+                label="agones-extensions Deployment";
+                rank="same"
+
+                ExtensionsN [ label = "agones-extensions\nreplica N", style="filled" ]
+                Extensions1 [ label = "agones-extensions\nreplica 1", style="filled" ]
+            }
+        }
+    }
+
+    GameFrontEnd -> AllocatorN
+    GameFrontEnd -> Allocator1
+
+    subgraph cluster_invisible_margin2 {
+        style="invis"
+        graph[margin=20]
+
+        subgraph cluster_kcp {
+            label="Kubernetes Control Plane"
+            graph[margin=4, style="rounded"]
+            node[shape="note"]
+
+            subgraph cluster_agones_crds {
+                label="Agones CRDs"
+                rank="same"
+
+                subgraph cluster_fleet {
+                    label="Fleet"
+
+                    subgraph cluster_gss_2 {
+                        label="GameServerSet 2"
+                        graph[style=rounded]
+
+                        GameServer3 [ label = "GameServer\ngame-server-3" ]
+                    }
+
+                    subgraph cluster_gss_1 {
+                        label="GameServerSet 1"
+                        graph[style=rounded]
+
+                        GameServer2 [ label = "GameServer\ngame-server-2" ]
+                        GameServer1 [ label = "GameServer\ngame-server-1" ]
+                    }
+                }
+            }
+            subgraph cluster_pods {
+                label="Pods"
+                rank="same"
+
+                Pod1 [ label = "game-server-1" ]
+                Pod2 [ label = "game-server-2" ]
+                Pod3 [ label = "game-server-3" ]
+            }
+            GameServer1 -> Pod1 [ style="dotted" ]
+            GameServer2 -> Pod2 [ style="dotted" ]
+            GameServer3 -> Pod3 [ style="dotted" ]
+        }
+    }
+
+    subgraph cluster_invisible_key {
+        style="invis"
+        graph[margin=20, nodesep=1]
+
+        subgraph cluster_key_top {
+            style="invis"
+
+            k8s_top [ label="", style="invis" ]
+            gsa_top [ label="", style="invis" ]
+            sdk_top [ label="", style="invis" ]
+            control_top [ label="", style="invis" ]
+
+            KubeResource [label="kubernetes\nresource", shape="note" ]
+        }
+
+        subgraph cluster_key_bottom {
+            k8s_bottom [label="", style="invis"]
+            gsa_bottom [ label="", style="invis" ]
+            sdk_bottom [label="", style="invis"]
+            control_bottom [label="", style="invis"]
+
+            Container [style="filled"]
+        }
+
+        KubeResource -> Container [ style="invis" ]
+        k8s_top -> k8s_bottom [ color="blue", label="K8s"  ]
+        gsa_top -> gsa_bottom [ color="green", label="Allocations"  ]
+        sdk_top -> sdk_bottom [ color="red", label="SDK\ngRPC" ]
+        control_top -> control_bottom [ style="dotted", label="controls" ]
+
+    }
+
+    subgraph cluster_invisible_margin3 {
+        style="invis"
+        graph[margin=0]
+        rank="sink"
+
+        subgraph cluster_pod {
+            label="Pod game-server-1 runtime"
+            graph[margin=4, style="rounded"]
+
+            SDKServer [ label = "sdk-server\nSDK Sidecar", style="filled" ]
+            GameServerContainer [ label = "dedicated\ngame server", style="filled" ]
+            GameServerContainer -> SDKServer [ color="red" ]
+        }
+
+        GameClient [ label="game client" ]
+        GameClient -> GameServerContainer
+
+        // force position using invisible edges
+        k8s_bottom -> SDKServer [ style="invis" ]
+        gsa_bottom -> SDKServer [ style="invis" ]
+        sdk_bottom -> SDKServer [ style="invis" ]
+        control_bottom -> SDKServer [ style="invis" ]
+        Container -> SDKServer[ style="invis" ]
+    }
+
+    GameServer1 -> Extensions1 [ ltail="cluster_kcp", color="blue" ]
+    GameServer1 -> ExtensionsN [ ltail="cluster_kcp", color="blue" ]
+    GameServer1 -> Extensions1 [ ltail="cluster_kcp", color="green", constraint=false ]
+    GameServer1 -> ExtensionsN [ ltail="cluster_kcp", color="green", constraint=false ]
+    Controller -> GameServer1 [ lhead="cluster_kcp", color="blue" ]
+    Allocator1 -> GameServer1 [ lhead="cluster_kcp", color="green" ]
+    AllocatorN -> GameServer1 [ lhead="cluster_kcp", color="green" ]
+    SDKServer -> GameServer1 [ color="blue" ]
+
+    Pod1 -> GameServerContainer [ lhead="cluster_pod", style="dotted" ]
+}
