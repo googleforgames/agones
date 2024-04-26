@@ -25,12 +25,14 @@ spec:
   ports:
     # name is a descriptive name for the port
   - name: default
-    # portPolicy has three options:
+    # portPolicy has four options:
     # - "Dynamic" (default) the system allocates a free hostPort for the gameserver, for game clients to connect to
     # - "Static", user defines the hostPort that the game client will connect to. Then onus is on the user to ensure that the
     # port is available. When static is the policy specified, `hostPort` is required to be populated
     # - "Passthrough" dynamically sets the `containerPort` to the same value as the dynamically selected hostPort.
     #      This will mean that users will need to lookup what port has been opened through the server side SDK.
+    # - "DirectToGameServer" allows connecting directly to a pod/gameserver that have an external IP address and a defined ContainerPort.
+    #       HostPort is not used and gameservers on the same host all have the same port number (ContainerPort).
     portPolicy: Static
     # The name of the container to open the port on. Defaults to the game server container if omitted or empty.
     container: simple-game-server

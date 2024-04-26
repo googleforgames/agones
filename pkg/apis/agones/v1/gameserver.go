@@ -82,6 +82,9 @@ const (
 	// Passthrough dynamically sets the `containerPort` to the same value as the dynamically selected hostPort.
 	// This will mean that users will need to lookup what port has been opened through the server side SDK.
 	Passthrough PortPolicy = "Passthrough"
+	// DirectToGameServer allows connecting directly to a pod with an external IP address.
+	// The Host Port is not used in this case and users will set the `containerPort` for the GameServer.
+	DirectToGameServer PortPolicy = "DirectToGameServer"
 )
 
 // EvictionSafe specified whether the game server supports termination via SIGTERM
@@ -561,7 +564,7 @@ func (gss *GameServerSpec) Validate(apiHooks APIHooks, devAddress string, fldPat
 	// no host port when using dynamic PortPolicy
 	for i, p := range gss.Ports {
 		path := fldPath.Child("ports").Index(i)
-		if p.PortPolicy == Dynamic || p.PortPolicy == Static {
+		if p.PortPolicy == Dynamic || p.PortPolicy == Static || p.PortPolicy == DirectToGameServer {
 			if p.ContainerPort <= 0 {
 				allErrs = append(allErrs, field.Required(path.Child("containerPort"), ErrContainerPortRequired))
 			}
@@ -571,7 +574,7 @@ func (gss *GameServerSpec) Validate(apiHooks APIHooks, devAddress string, fldPat
 			allErrs = append(allErrs, field.Required(path.Child("containerPort"), ErrContainerPortPassthrough))
 		}
 
-		if p.HostPort > 0 && (p.PortPolicy == Dynamic || p.PortPolicy == Passthrough) {
+		if p.HostPort > 0 && (p.PortPolicy == Dynamic || p.PortPolicy == Passthrough || p.PortPolicy == DirectToGameServer) {
 			allErrs = append(allErrs, field.Forbidden(path.Child("hostPort"), ErrHostPort))
 		}
 
@@ -740,9 +743,14 @@ func (gs *GameServer) Pod(apiHooks APIHooks, sidecars ...corev1.Container) (*cor
 
 	gs.podObjectMeta(pod)
 	for _, p := range gs.Spec.Ports {
+		var hostPort int32
+		if p.PortPolicy != DirectToGameServer {
+			hostPort = p.HostPort
+		}
+
 		cp := corev1.ContainerPort{
 			ContainerPort: p.ContainerPort,
-			HostPort:      p.HostPort,
+			HostPort:      hostPort,
 			Protocol:      p.Protocol,
 		}
 		err := gs.ApplyToPodContainer(pod, *p.Container, func(c corev1.Container) corev1.Container {
@@ -853,6 +861,10 @@ func (gs *GameServer) HasPortPolicy(policy PortPolicy) bool {
 
 // Status returns a GameServerStatusPort for this GameServerPort
 func (p GameServerPort) Status() GameServerStatusPort {
+	if p.PortPolicy == DirectToGameServer {
+		return GameServerStatusPort{Name: p.Name, Port: p.ContainerPort}
+	}
+
 	return GameServerStatusPort{Name: p.Name, Port: p.HostPort}
 }
 

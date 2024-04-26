@@ -58,17 +58,20 @@ properties:
             portPolicy:
               title: the port policy that will be applied to the game server
               description: |
-                  portPolicy has three options:
+                  portPolicy has four options:
                   - "Dynamic" (default) the system allocates a random free hostPort for the gameserver, for game clients to connect to
                   - "Static", user defines the hostPort that the game client will connect to. Then onus is on the user to ensure that the
                   port is available. When static is the policy specified, `hostPort` is required to be populated
                   - "Passthrough" dynamically sets the `containerPort` to the same value as the dynamically selected hostPort.
                   This will mean that users will need to lookup what port has been opened through the server side SDK.
+                  - "DirectToGameServer" allows connecting directly to a pod/gameserver that have an external IP address and a defined ContainerPort.
+                  HostPort is not used and gameservers on the same host all have the same port number (ContainerPort).
               type: string
               enum:
               - Dynamic
               - Static
               - Passthrough
+              - DirectToGameServer
             protocol:
               title: Protocol being used. Defaults to UDP. TCP and TCPUDP are other options.
               type: string
@@ -87,7 +90,7 @@ properties:
               maximum: 65535
             hostPort:
               title: The port exposed on the host
-              description: Only required when `portPolicy` is "Static". Overwritten when portPolicy is "Dynamic" or "Passthrough".
+              description: Only required when `portPolicy` is "Static". Overwritten when portPolicy is "Dynamic", "Passthrough" or "DirectToGameServer".
               type: integer
               minimum: 1
               maximum: 65535

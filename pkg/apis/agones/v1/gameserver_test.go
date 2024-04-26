@@ -38,18 +38,51 @@ const (
 )
 
 func TestStatus(t *testing.T) {
-	name := "test-name"
-	port := int32(7788)
-	p := GameServerPort{Name: name, HostPort: port}
+	testCases := map[string]struct {
+		hostPort      int32
+		containerPort int32
+		portPolicy    PortPolicy
+		expected      GameServerStatusPort
+	}{
+		"PortPolicy Dynamic, should use HostPort": {
+			hostPort:      7788,
+			containerPort: 7777,
+			portPolicy:    Dynamic,
+			expected:      GameServerStatusPort{Name: "test-name", Port: 7788},
+		},
+		"PortPolicy Static - should use HostPort": {
+			hostPort:      7788,
+			containerPort: 7777,
+			portPolicy:    Static,
+			expected:      GameServerStatusPort{Name: "test-name", Port: 7788},
+		},
+		"PortPolicy Passthrough - should use HostPort": {
+			hostPort:      7788,
+			containerPort: 7777,
+			portPolicy:    Passthrough,
+			expected:      GameServerStatusPort{Name: "test-name", Port: 7788},
+		},
+		"PortPolicy DirectToGameServer - should use ContainerPort": {
+			hostPort:      7788,
+			containerPort: 7777,
+			portPolicy:    DirectToGameServer,
+			expected:      GameServerStatusPort{Name: "test-name", Port: 7777},
+		},
+	}
 
-	res := p.Status()
-	assert.Equal(t, name, res.Name)
-	assert.Equal(t, port, res.Port)
+	for _, tc := range testCases {
+		name := "test-name"
+		p := GameServerPort{Name: name, HostPort: tc.hostPort, ContainerPort: tc.containerPort, PortPolicy: tc.portPolicy}
+
+		res := p.Status()
+		assert.Equal(t, tc.expected, res)
+
+	}
 }
 
 func TestIsBeingDeleted(t *testing.T) {
 	deletionTimestamp := metav1.Date(2009, 11, 17, 20, 34, 58, 651387237, time.UTC)
-	var testCases = []struct {
+	testCases := []struct {
 		description string
 		gs          *GameServer
 		expected    bool
@@ -142,7 +175,9 @@ func TestGameServerApplyDefaults(t *testing.T) {
 				Template: corev1.PodTemplateSpec{
 					Spec: corev1.PodSpec{Containers: []corev1.Container{
 						{Name: "testing", Image: "testing/image"},
-					}}}},
+					}},
+				},
+			},
 		}
 		f(&gs.Spec)
 		return gs
@@ -255,7 +290,9 @@ func TestGameServerApplyDefaults(t *testing.T) {
 						Spec: corev1.PodSpec{
 							Containers: []corev1.Container{
 								{Name: "testing", Image: "testing/image"},
-								{Name: "testing2", Image: "testing/image2"}}},
+								{Name: "testing2", Image: "testing/image2"},
+							},
+						},
 					},
 					SdkServer: SdkServer{
 						LogLevel: SdkServerLogLevelInfo,
@@ -263,7 +300,8 @@ func TestGameServerApplyDefaults(t *testing.T) {
 						HTTPPort: 9358,
 					},
 				},
-				Status: GameServerStatus{State: "TestState"}},
+				Status: GameServerStatus{State: "TestState"},
+			},
 			expected: wantDefaultAnd(func(e *expected) {
 				e.container = "testing2"
 				e.protocol = "TCP"
@@ -454,7 +492,7 @@ func TestGameServerValidate(t *testing.T) {
 
 	longNameLen64 := strings.Repeat("f", validation.LabelValueMaxLength+1)
 
-	var testCases = []struct {
+	testCases := []struct {
 		description   string
 		gs            GameServer
 		applyDefaults bool
@@ -465,7 +503,9 @@ func TestGameServerValidate(t *testing.T) {
 			gs: GameServer{
 				Spec: GameServerSpec{
 					Template: corev1.PodTemplateSpec{
-						Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "testing", Image: "testing/image"}}}}},
+						Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "testing", Image: "testing/image"}}},
+					},
+				},
 			},
 			applyDefaults: true,
 		},
@@ -488,14 +528,16 @@ func TestGameServerValidate(t *testing.T) {
 						Spec: corev1.PodSpec{Containers: []corev1.Container{
 							{Name: "testing", Image: "testing/image"},
 							{Name: "anothertest", Image: "testing/image"},
-						}}}},
+						}},
+					},
+				},
 			},
 			applyDefaults: false,
 			want: field.ErrorList{
 				field.Required(field.NewPath("spec", "container"), "Container is required when using multiple containers in the pod template"),
 				field.Invalid(field.NewPath("spec", "container"), "", "Could not find a container named "),
-				field.Required(field.NewPath("spec", "ports").Index(0).Child("containerPort"), "ContainerPort must be defined for Dynamic and Static PortPolicies"),
-				field.Forbidden(field.NewPath("spec", "ports").Index(0).Child("hostPort"), "HostPort cannot be specified with a Dynamic or Passthrough PortPolicy"),
+				field.Required(field.NewPath("spec", "ports").Index(0).Child("containerPort"), "ContainerPort must be defined for Dynamic, Static and DirectToGameServer PortPolicies"),
+				field.Forbidden(field.NewPath("spec", "ports").Index(0).Child("hostPort"), "HostPort cannot be specified with a Dynamic, Passthrough or DirectToGameServer PortPolicy"),
 			},
 		},
 		{
@@ -714,6 +756,7 @@ func TestGameServerValidate(t *testing.T) {
 						{Name: "one", PortPolicy: Passthrough, ContainerPort: 1294},
 						{PortPolicy: Passthrough, Name: "two", HostPort: 7890},
 						{PortPolicy: Dynamic, Name: "three", HostPort: 7890, ContainerPort: 1294},
+						{PortPolicy: DirectToGameServer, Name: "four", HostPort: 7890, ContainerPort: 1294},
 					},
 					Container: "my_image",
 					Template: corev1.PodTemplateSpec{
@@ -728,8 +771,9 @@ func TestGameServerValidate(t *testing.T) {
 			applyDefaults: true,
 			want: field.ErrorList{
 				field.Required(field.NewPath("spec", "ports").Index(0).Child("containerPort"), "ContainerPort cannot be specified with Passthrough PortPolicy"),
-				field.Forbidden(field.NewPath("spec", "ports").Index(1).Child("hostPort"), "HostPort cannot be specified with a Dynamic or Passthrough PortPolicy"),
-				field.Forbidden(field.NewPath("spec", "ports").Index(2).Child("hostPort"), "HostPort cannot be specified with a Dynamic or Passthrough PortPolicy"),
+				field.Forbidden(field.NewPath("spec", "ports").Index(1).Child("hostPort"), "HostPort cannot be specified with a Dynamic, Passthrough or DirectToGameServer PortPolicy"),
+				field.Forbidden(field.NewPath("spec", "ports").Index(2).Child("hostPort"), "HostPort cannot be specified with a Dynamic, Passthrough or DirectToGameServer PortPolicy"),
+				field.Forbidden(field.NewPath("spec", "ports").Index(3).Child("hostPort"), "HostPort cannot be specified with a Dynamic, Passthrough or DirectToGameServer PortPolicy"),
 			},
 		},
 		{
@@ -769,21 +813,24 @@ func TestGameServerValidate(t *testing.T) {
 					Namespace: "default",
 				},
 				Spec: GameServerSpec{
-					Ports: []GameServerPort{{Name: "main",
+					Ports: []GameServerPort{{
+						Name:          "main",
 						ContainerPort: -4,
-						PortPolicy:    Dynamic}},
+						PortPolicy:    Dynamic,
+					}},
 					Container: "testing",
 					Template: corev1.PodTemplateSpec{
 						Spec: corev1.PodSpec{Containers: []corev1.Container{
 							{Name: "testing", Image: "testing/image"},
-						}}},
+						}},
+					},
 				},
 			},
 			applyDefaults: false,
 			want: field.ErrorList{
 				field.Required(
 					field.NewPath("spec", "ports").Index(0).Child("containerPort"),
-					"ContainerPort must be defined for Dynamic and Static PortPolicies",
+					"ContainerPort must be defined for Dynamic, Static and DirectToGameServer PortPolicies",
 				),
 			},
 		},
@@ -795,7 +842,8 @@ func TestGameServerValidate(t *testing.T) {
 					Namespace: "default",
 				},
 				Spec: GameServerSpec{
-					Ports: []GameServerPort{{Name: "main",
+					Ports: []GameServerPort{{
+						Name:          "main",
 						ContainerPort: 7777,
 						PortPolicy:    Dynamic,
 					}},
@@ -816,7 +864,8 @@ func TestGameServerValidate(t *testing.T) {
 									},
 								},
 							},
-						}}},
+						}},
+					},
 				},
 			},
 			applyDefaults: false,
@@ -836,7 +885,8 @@ func TestGameServerValidate(t *testing.T) {
 					Namespace: "default",
 				},
 				Spec: GameServerSpec{
-					Ports: []GameServerPort{{Name: "main",
+					Ports: []GameServerPort{{
+						Name:          "main",
 						ContainerPort: 7777,
 						PortPolicy:    Dynamic,
 					}},
@@ -857,7 +907,8 @@ func TestGameServerValidate(t *testing.T) {
 									},
 								},
 							},
-						}}},
+						}},
+					},
 				},
 			},
 			applyDefaults: false,
@@ -877,7 +928,8 @@ func TestGameServerValidate(t *testing.T) {
 					Namespace: "default",
 				},
 				Spec: GameServerSpec{
-					Ports: []GameServerPort{{Name: "main",
+					Ports: []GameServerPort{{
+						Name:          "main",
 						ContainerPort: 7777,
 						PortPolicy:    Dynamic,
 					}},
@@ -898,7 +950,8 @@ func TestGameServerValidate(t *testing.T) {
 									},
 								},
 							},
-						}}},
+						}},
+					},
 				},
 			},
 			applyDefaults: false,
@@ -923,7 +976,8 @@ func TestGameServerValidate(t *testing.T) {
 					Namespace: "default",
 				},
 				Spec: GameServerSpec{
-					Ports: []GameServerPort{{Name: "main",
+					Ports: []GameServerPort{{
+						Name:          "main",
 						ContainerPort: 7777,
 						PortPolicy:    Dynamic,
 					}},
@@ -944,7 +998,8 @@ func TestGameServerValidate(t *testing.T) {
 									},
 								},
 							},
-						}}},
+						}},
+					},
 				},
 			},
 			applyDefaults: false,
@@ -964,7 +1019,8 @@ func TestGameServerValidate(t *testing.T) {
 					Namespace: "default",
 				},
 				Spec: GameServerSpec{
-					Ports: []GameServerPort{{Name: "main",
+					Ports: []GameServerPort{{
+						Name:          "main",
 						ContainerPort: 7777,
 						PortPolicy:    Dynamic,
 					}},
@@ -985,7 +1041,8 @@ func TestGameServerValidate(t *testing.T) {
 									},
 								},
 							},
-						}}},
+						}},
+					},
 				},
 			},
 			applyDefaults: false,
@@ -1005,7 +1062,8 @@ func TestGameServerValidate(t *testing.T) {
 					Namespace: "default",
 				},
 				Spec: GameServerSpec{
-					Ports: []GameServerPort{{Name: "main",
+					Ports: []GameServerPort{{
+						Name:          "main",
 						ContainerPort: 7777,
 						PortPolicy:    Dynamic,
 					}},
@@ -1026,7 +1084,8 @@ func TestGameServerValidate(t *testing.T) {
 									},
 								},
 							},
-						}}},
+						}},
+					},
 				},
 			},
 			applyDefaults: false,
@@ -1064,7 +1123,7 @@ func TestGameServerValidateFeatures(t *testing.T) {
 
 	portContainerName := "another-container"
 
-	var testCases = []struct {
+	testCases := []struct {
 		description string
 		feature     string
 		gs          GameServer
@@ -1090,7 +1149,8 @@ func TestGameServerValidateFeatures(t *testing.T) {
 					Template: corev1.PodTemplateSpec{
 						Spec: corev1.PodSpec{Containers: []corev1.Container{
 							{Name: "testing", Image: "testing/image"},
-						}}},
+						}},
+					},
 				},
 			},
 			want: field.ErrorList{
@@ -1120,7 +1180,8 @@ func TestGameServerValidateFeatures(t *testing.T) {
 					Template: corev1.PodTemplateSpec{
 						Spec: corev1.PodSpec{Containers: []corev1.Container{
 							{Name: "testing", Image: "testing/image"},
-						}}},
+						}},
+					},
 				},
 			},
 		},
@@ -1132,7 +1193,9 @@ func TestGameServerValidateFeatures(t *testing.T) {
 					Container: "testing",
 					Players:   &PlayersSpec{InitialCapacity: 10},
 					Template: corev1.PodTemplateSpec{
-						Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "testing", Image: "testing/image"}}}}},
+						Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "testing", Image: "testing/image"}}},
+					},
+				},
 			},
 			want: field.ErrorList{
 				field.Forbidden(
@@ -1149,7 +1212,9 @@ func TestGameServerValidateFeatures(t *testing.T) {
 					Container: "testing",
 					Players:   &PlayersSpec{InitialCapacity: 10},
 					Template: corev1.PodTemplateSpec{
-						Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "testing", Image: "testing/image"}}}}},
+						Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "testing", Image: "testing/image"}}},
+					},
+				},
 			},
 		},
 		{
@@ -1160,7 +1225,9 @@ func TestGameServerValidateFeatures(t *testing.T) {
 					Container: "testing",
 					Counters:  map[string]CounterStatus{},
 					Template: corev1.PodTemplateSpec{
-						Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "testing", Image: "testing/image"}}}}},
+						Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "testing", Image: "testing/image"}}},
+					},
+				},
 			},
 			want: field.ErrorList{
 				field.Forbidden(
@@ -1177,7 +1244,9 @@ func TestGameServerValidateFeatures(t *testing.T) {
 					Container: "testing",
 					Lists:     map[string]ListStatus{},
 					Template: corev1.PodTemplateSpec{
-						Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "testing", Image: "testing/image"}}}}},
+						Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "testing", Image: "testing/image"}}},
+					},
+				},
 			},
 			want: field.ErrorList{
 				field.Forbidden(
@@ -1194,7 +1263,9 @@ func TestGameServerValidateFeatures(t *testing.T) {
 					Container: "testing",
 					Counters:  map[string]CounterStatus{},
 					Template: corev1.PodTemplateSpec{
-						Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "testing", Image: "testing/image"}}}}},
+						Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "testing", Image: "testing/image"}}},
+					},
+				},
 			},
 		},
 		{
@@ -1205,7 +1276,9 @@ func TestGameServerValidateFeatures(t *testing.T) {
 					Container: "testing",
 					Lists:     map[string]ListStatus{},
 					Template: corev1.PodTemplateSpec{
-						Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "testing", Image: "testing/image"}}}}},
+						Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "testing", Image: "testing/image"}}},
+					},
+				},
 			},
 		},
 	}
@@ -1264,7 +1337,8 @@ func TestGameServerPodContainerNotFoundErrReturned(t *testing.T) {
 	t.Parallel()
 
 	containerName1 := "Container1"
-	fixture := &GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default", UID: "1234"},
+	fixture := &GameServer{
+		ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default", UID: "1234"},
 		Spec: GameServerSpec{
 			Container: "can-not-find-this-name",
 			Ports: []GameServerPort{
@@ -1280,7 +1354,8 @@ func TestGameServerPodContainerNotFoundErrReturned(t *testing.T) {
 					Containers: []corev1.Container{{Name: "Container2", Image: "container/image"}},
 				},
 			},
-		}, Status: GameServerStatus{State: GameServerStateCreating}}
+		}, Status: GameServerStatus{State: GameServerStateCreating},
+	}
 
 	_, err := fixture.Pod(fakeAPIHooks{})
 	if assert.NotNil(t, err, "Pod should return an error") {
@@ -1339,8 +1414,10 @@ func TestGameServerPodWithMultiplePortAllocations(t *testing.T) {
 }
 
 func TestGameServerPodObjectMeta(t *testing.T) {
-	fixture := &GameServer{ObjectMeta: metav1.ObjectMeta{Name: "lucy"},
-		Spec: GameServerSpec{Container: "goat"}}
+	fixture := &GameServer{
+		ObjectMeta: metav1.ObjectMeta{Name: "lucy"},
+		Spec:       GameServerSpec{Container: "goat"},
+	}
 
 	for desc, tc := range map[string]struct {
 		scheduling apis.SchedulingStrategy
@@ -1403,7 +1480,8 @@ func TestGameServerDisableServiceAccount(t *testing.T) {
 			Spec: corev1.PodSpec{
 				Containers: []corev1.Container{{Name: "container", Image: "container/image"}},
 			},
-		}}}
+		},
+	}}
 
 	gs.ApplyDefaults()
 	pod, err := gs.Pod(fakeAPIHooks{})
@@ -1473,9 +1551,10 @@ func TestGameServerGetDevAddress(t *testing.T) {
 		},
 		Spec: GameServerSpec{
 			Ports: []GameServerPort{{HostPort: 7777, PortPolicy: Static}},
-			Template: corev1.PodTemplateSpec{Spec: corev1.PodSpec{
-				Containers: []corev1.Container{{Name: "container", Image: "container/image"}},
-			},
+			Template: corev1.PodTemplateSpec{
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{{Name: "container", Image: "container/image"}},
+				},
 			},
 		},
 	}
@@ -1536,7 +1615,6 @@ func TestGameServerIsBeforeReady(t *testing.T) {
 			assert.Equal(t, test.expected, gs.IsBeforeReady(), test.state)
 		})
 	}
-
 }
 
 func TestGameServerApplyToPodContainer(t *testing.T) {
@@ -1546,7 +1624,7 @@ func TestGameServerApplyToPodContainer(t *testing.T) {
 		tty bool
 	}
 
-	var testCases = []struct {
+	testCases := []struct {
 		description string
 		gs          *GameServer
 		expected    expected
@@ -1612,7 +1690,8 @@ func TestGameServerApplyToPodContainer(t *testing.T) {
 }
 
 func defaultGameServer() *GameServer {
-	return &GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default", UID: "1234"},
+	return &GameServer{
+		ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default", UID: "1234"},
 		Spec: GameServerSpec{
 			Ports: []GameServerPort{
 				{
@@ -1626,7 +1705,8 @@ func defaultGameServer() *GameServer {
 					Containers: []corev1.Container{{Name: "container", Image: "container/image"}},
 				},
 			},
-		}, Status: GameServerStatus{State: GameServerStateCreating}}
+		}, Status: GameServerStatus{State: GameServerStateCreating},
+	}
 }
 
 func TestGameServerUpdateCount(t *testing.T) {
@@ -1646,7 +1726,9 @@ func TestGameServerUpdateCount(t *testing.T) {
 					"foos": {
 						Count:    0,
 						Capacity: 100,
-					}}}},
+					},
+				},
+			}},
 			name:    "foo",
 			action:  "Increment",
 			amount:  1,
@@ -1658,7 +1740,9 @@ func TestGameServerUpdateCount(t *testing.T) {
 					"foos": {
 						Count:    1,
 						Capacity: 100,
-					}}}},
+					},
+				},
+			}},
 			name:   "foos",
 			action: "Decrement",
 			amount: -1,
@@ -1674,7 +1758,9 @@ func TestGameServerUpdateCount(t *testing.T) {
 					"players": {
 						Count:    0,
 						Capacity: 100,
-					}}}},
+					},
+				},
+			}},
 			name:   "players",
 			action: "Increment",
 			amount: 1,
@@ -1690,7 +1776,9 @@ func TestGameServerUpdateCount(t *testing.T) {
 					"bars": {
 						Count:    99,
 						Capacity: 100,
-					}}}},
+					},
+				},
+			}},
 			name:   "bars",
 			action: "Decrement",
 			amount: 10,
@@ -1706,7 +1794,9 @@ func TestGameServerUpdateCount(t *testing.T) {
 					"bazes": {
 						Count:    99,
 						Capacity: 100,
-					}}}},
+					},
+				},
+			}},
 			name:   "bazes",
 			action: "decrement",
 			amount: 10,
@@ -1722,7 +1812,9 @@ func TestGameServerUpdateCount(t *testing.T) {
 					"baz": {
 						Count:    99,
 						Capacity: 100,
-					}}}},
+					},
+				},
+			}},
 			name:   "baz",
 			action: "Decrement",
 			amount: 100,
@@ -1738,7 +1830,9 @@ func TestGameServerUpdateCount(t *testing.T) {
 					"splayers": {
 						Count:    99,
 						Capacity: 100,
-					}}}},
+					},
+				},
+			}},
 			name:   "splayers",
 			action: "Increment",
 			amount: 2,
@@ -1781,7 +1875,9 @@ func TestGameServerUpdateCounterCapacity(t *testing.T) {
 					"foos": {
 						Count:    0,
 						Capacity: 100,
-					}}}},
+					},
+				},
+			}},
 			name:     "foo",
 			capacity: 1000,
 			wantErr:  true,
@@ -1792,7 +1888,9 @@ func TestGameServerUpdateCounterCapacity(t *testing.T) {
 					"foos": {
 						Count:    0,
 						Capacity: 100,
-					}}}},
+					},
+				},
+			}},
 			name:     "foos",
 			capacity: -1000,
 			want: CounterStatus{
@@ -1807,7 +1905,9 @@ func TestGameServerUpdateCounterCapacity(t *testing.T) {
 					"sessions": {
 						Count:    0,
 						Capacity: 100,
-					}}}},
+					},
+				},
+			}},
 			name:     "sessions",
 			capacity: 9223372036854775807,
 			want: CounterStatus{
@@ -1848,7 +1948,9 @@ func TestGameServerUpdateListCapacity(t *testing.T) {
 					"things": {
 						Values:   []string{},
 						Capacity: 100,
-					}}}},
+					},
+				},
+			}},
 			name:     "thing",
 			capacity: 1000,
 			wantErr:  true,
@@ -1859,7 +1961,9 @@ func TestGameServerUpdateListCapacity(t *testing.T) {
 					"things": {
 						Values:   []string{},
 						Capacity: 100,
-					}}}},
+					},
+				},
+			}},
 			name:     "things",
 			capacity: 1000,
 			want: ListStatus{
@@ -1874,7 +1978,9 @@ func TestGameServerUpdateListCapacity(t *testing.T) {
 					"slings": {
 						Values:   []string{},
 						Capacity: 100,
-					}}}},
+					},
+				},
+			}},
 			name:     "slings",
 			capacity: 10000,
 			want: ListStatus{
@@ -1889,7 +1995,9 @@ func TestGameServerUpdateListCapacity(t *testing.T) {
 					"flings": {
 						Values:   []string{},
 						Capacity: 999,
-					}}}},
+					},
+				},
+			}},
 			name:     "flings",
 			capacity: -100,
 			want: ListStatus{
@@ -1933,7 +2041,9 @@ func TestGameServerAppendListValues(t *testing.T) {
 					"things": {
 						Values:   []string{},
 						Capacity: 100,
-					}}}},
+					},
+				},
+			}},
 			name:    "thing",
 			values:  []string{"thing1", "thing2", "thing3"},
 			wantErr: true,
@@ -1944,7 +2054,9 @@ func TestGameServerAppendListValues(t *testing.T) {
 					"things": {
 						Values:   []string{"thing1"},
 						Capacity: 100,
-					}}}},
+					},
+				},
+			}},
 			name:   "things",
 			values: []string{"thing2", "thing3"},
 			want: ListStatus{
@@ -1959,7 +2071,9 @@ func TestGameServerAppendListValues(t *testing.T) {
 					"games": {
 						Values:   []string{"game0"},
 						Capacity: 10,
-					}}}},
+					},
+				},
+			}},
 			name:   "games",
 			values: []string{"game1", "game2", "game2", "game1"},
 			want: ListStatus{
@@ -1974,7 +2088,9 @@ func TestGameServerAppendListValues(t *testing.T) {
 					"objects": {
 						Values:   []string{"object1", "object2"},
 						Capacity: 10,
-					}}}},
+					},
+				},
+			}},
 			name:   "objects",
 			values: []string{"object2", "object1", "object3", "object3"},
 			want: ListStatus{
@@ -1989,7 +2105,9 @@ func TestGameServerAppendListValues(t *testing.T) {
 					"blings": {
 						Values:   []string{"bling1"},
 						Capacity: 10,
-					}}}},
+					},
+				},
+			}},
 			name:   "blings",
 			values: nilSlice,
 			want: ListStatus{
@@ -2004,7 +2122,9 @@ func TestGameServerAppendListValues(t *testing.T) {
 					"bananaslugs": {
 						Values:   []string{"bananaslugs1", "bananaslug2", "bananaslug3"},
 						Capacity: 5,
-					}}}},
+					},
+				},
+			}},
 			name:   "bananaslugs",
 			values: []string{"bananaslug4", "bananaslug5", "bananaslug6"},
 			want: ListStatus{
