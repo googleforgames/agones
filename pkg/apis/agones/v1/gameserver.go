@@ -82,8 +82,8 @@ const (
 	// Passthrough dynamically sets the `containerPort` to the same value as the dynamically selected hostPort.
 	// This will mean that users will need to lookup what port has been opened through the server side SDK.
 	Passthrough PortPolicy = "Passthrough"
-	// DirectToGameServer allows connecting directly to a pod with an external IP address.
-	// The Host Port is not used in this case and users will set the `containerPort` for the GameServer.
+	// DirectToGameServer allows connecting directly to a pod with a publicly routable IP address.
+	// The `hostPort` is not used and the `containerPort` is required. All gameservers will get the same port number.
 	DirectToGameServer PortPolicy = "DirectToGameServer"
 )
 
