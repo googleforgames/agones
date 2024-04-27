@@ -939,6 +939,51 @@ func TestControllerSyncGameServerCreatingState(t *testing.T) {
 		agtesting.AssertEventContains(t, m.FakeRecorder.Events, "Pod")
 	})
 
+	t.Run("Testing label is added when using passthrough portpolicy", func(t *testing.T) {
+		// Enable featureruntime.FeatureEnabled(runtime.FeatureAutopilotPassthroughPort)
+		c, m := newFakeController()
+		fixture := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
+			Spec: newSingleContainerSpec(), Status: agonesv1.GameServerStatus{State: agonesv1.GameServerStateCreating}}
+		fixture.Spec.Ports[0].PortPolicy = "Passthrough"
+		fixture.Spec.Ports[0].Name = "udp-port"
+		fixture.Spec.Ports[0].HostPort = 7000
+		fixture.ApplyDefaults()
+		podCreated := false
+		gsUpdated := false
+
+		var pod *corev1.Pod
+		m.KubeClient.AddReactor("create", "pods", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			podCreated = true
+			ca := action.(k8stesting.CreateAction)
+			pod = ca.GetObject().(*corev1.Pod)
+			assert.True(t, metav1.IsControlledBy(pod, fixture))
+			return true, pod, nil
+		})
+		m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			gsUpdated = true
+			ua := action.(k8stesting.UpdateAction)
+			gs := ua.GetObject().(*agonesv1.GameServer)
+			assert.Equal(t, agonesv1.GameServerStateStarting, gs.Status.State)
+			assert.Equal(t, "autopilot-passthrough", gs.Spec.Template.Labels["agones.dev/port"])
+			assert.Len(t, gs.Spec.Ports, 1)
+			assert.Equal(t, "udp-port", gs.Spec.Ports[0].Name)
+			assert.Equal(t, corev1.ProtocolUDP, gs.Spec.Ports[0].Protocol)
+			return true, gs, nil
+		})
+
+		ctx, cancel := agtesting.StartInformers(m, c.gameServerSynced, c.podSynced)
+		defer cancel()
+
+		gs, err := c.syncGameServerCreatingState(ctx, fixture)
+
+		assert.NoError(t, err)
+		assert.True(t, podCreated, "Pod should have been created")
+
+		assert.Equal(t, agonesv1.GameServerStateStarting, gs.Status.State)
+		assert.True(t, gsUpdated, "GameServer should have been updated")
+		agtesting.AssertEventContains(t, m.FakeRecorder.Events, "Pod")
+	})
+
 	t.Run("Syncing from Created State, with no issues", func(t *testing.T) {
 		c, m := newFakeController()
 		fixture := newFixture()
