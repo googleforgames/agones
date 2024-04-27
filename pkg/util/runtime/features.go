@@ -55,6 +55,9 @@ const (
 	// FeaturePlayerTracking is a feature flag to enable/disable player tracking features.
 	FeaturePlayerTracking Feature = "PlayerTracking"
 
+	// FeatureAutopilotPassthroughPort is a feature flag that enables/disables Passthrough Port Policy.
+	FeatureAutopilotPassthroughPort Feature = "PassthroughPortPolicy"
+
 	////////////////
 	// Dev features
 
@@ -102,6 +105,7 @@ var (
 		// Beta features
 		FeatureCountsAndLists:           true,
 		FeatureDisableResyncOnSDKServer: true,
+		FeatureAutopilotPassthroughPort: true,
 
 		// Alpha features
 		FeatureGKEAutopilotExtendedDurationPods: false,
