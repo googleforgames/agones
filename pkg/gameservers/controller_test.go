@@ -28,6 +28,7 @@ import (
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	"agones.dev/agones/pkg/cloudproduct/generic"
 	agtesting "agones.dev/agones/pkg/testing"
+	agonesruntime "agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/webhooks"
 	"github.com/heptiolabs/healthcheck"
 	"github.com/sirupsen/logrus"
@@ -938,12 +939,15 @@ func TestControllerSyncGameServerCreatingState(t *testing.T) {
 		agtesting.AssertEventContains(t, m.FakeRecorder.Events, "Pod")
 	})
 
-	t.Run("Testing label is added when using passthrough portpolicy", func(t *testing.T) {
-		// Enable featureruntime.FeatureEnabled(runtime.FeatureAutopilotPassthroughPort)
+	t.Run("Testing pod label is added to gameserver when using Passthrough PortPolicy", func(t *testing.T) {
+		features := fmt.Sprintf("%s=true", agonesruntime.FeatureAutopilotPassthroughPort)
+		agonesruntime.FeatureTestMutex.Lock()
+		defer agonesruntime.FeatureTestMutex.Unlock()
+		require.NoError(t, agonesruntime.ParseFeatures(features))
 		c, m := newFakeController()
 		fixture := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
 			Spec: newSingleContainerSpec(), Status: agonesv1.GameServerStatus{State: agonesv1.GameServerStateCreating}}
-		fixture.Spec.Ports[0].PortPolicy = "Passthrough"
+		fixture.Spec.Ports[0].PortPolicy = agonesv1.Passthrough
 		fixture.Spec.Ports[0].Name = "udp-port"
 		fixture.Spec.Ports[0].HostPort = 7000
 		fixture.ApplyDefaults()
@@ -963,7 +967,7 @@ func TestControllerSyncGameServerCreatingState(t *testing.T) {
 			ua := action.(k8stesting.UpdateAction)
 			gs := ua.GetObject().(*agonesv1.GameServer)
 			assert.Equal(t, agonesv1.GameServerStateStarting, gs.Status.State)
-			assert.Equal(t, "autopilot-passthrough", gs.Spec.Template.Labels["agones.dev/port"])
+			assert.Equal(t, "autopilot-passthrough", gs.Spec.Template.Labels[agonesv1.GameServerPortPolicyPodLabel])
 			assert.Len(t, gs.Spec.Ports, 1)
 			assert.Equal(t, "udp-port", gs.Spec.Ports[0].Name)
 			assert.Equal(t, corev1.ProtocolUDP, gs.Spec.Ports[0].Protocol)

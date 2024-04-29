@@ -521,9 +521,9 @@ func (c *Controller) syncGameServerCreatingState(ctx context.Context, gs *agones
 				})
 			}
 		}
-		if /*runtime.FeatureEnabled(runtime.FeatureAutopilotPassthroughPort) && */ isPortPolicyPasthrough(gs) {
+		if runtime.FeatureEnabled(runtime.FeatureAutopilotPassthroughPort) && portPolicyOption(gs, agonesv1.Passthrough) {
 			gs.Spec.Template.Labels = make(map[string]string)
-			gs.Spec.Template.Labels["agones.dev/port"] = "autopilot-passthrough"
+			gs.Spec.Template.Labels[agonesv1.GameServerPortPolicyPodLabel] = "autopilot-passthrough"
 		}
 
 		gs, err = c.createGameServerPod(ctx, gs)
@@ -545,9 +545,9 @@ func (c *Controller) syncGameServerCreatingState(ctx context.Context, gs *agones
 	return gs, nil
 }
 
-func isPortPolicyPasthrough(gs *agonesv1.GameServer) bool {
+func portPolicyOption(gs *agonesv1.GameServer, portPolicy agonesv1.PortPolicy) bool {
 	for _, p := range gs.Spec.Ports {
-		if p.PortPolicy == "Passthrough" {
+		if p.PortPolicy == portPolicy {
 			return true
 		}
 	}
