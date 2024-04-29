@@ -863,17 +863,12 @@ func TestGameServerDirectToGameServerPort(t *testing.T) {
 		assert.FailNow(t, "Could not get a GameServer ready", err.Error())
 	}
 
+	// To test sending UDP traffic directly to a pod, a product like Calico which uses BGP is needed
+	// so this only tests that the port is set correctly.
 	port := readyGs.Spec.Ports[0]
 	assert.Equal(t, agonesv1.DirectToGameServer, port.PortPolicy)
 	assert.Empty(t, port.HostPort)
 	assert.EqualValues(t, 7777, port.ContainerPort)
-
-	reply, err := framework.SendGameServerUDP(t, readyGs, "Hello World !")
-	if err != nil {
-		t.Fatalf("Could ping GameServer: %v", err)
-	}
-
-	assert.Equal(t, "ACK: Hello World !\n", reply)
 }
 
 func TestGameServerTcpProtocol(t *testing.T) {
