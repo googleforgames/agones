@@ -1024,7 +1024,7 @@ func TestSDKServerReserveTimeout(t *testing.T) {
 	gs.ApplyDefaults()
 
 	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-		return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{*gs.DeepCopy()}}, nil
+		return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{gs}}, nil
 	})
 
 	m.AgonesClient.AddReactor("patch", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
@@ -1032,15 +1032,16 @@ func TestSDKServerReserveTimeout(t *testing.T) {
 		patchJSON := pa.GetPatch()
 		patch, err := jsonpatch.DecodePatch(patchJSON)
 		assert.NoError(t, err)
-		gsJSON, err := json.Marshal(gs)
+		gsCopy := gs.DeepCopy()
+		gsJSON, err := json.Marshal(gsCopy)
 		assert.NoError(t, err)
 		patchedGs, err := patch.Apply(gsJSON)
 		assert.NoError(t, err)
-		err = json.Unmarshal(patchedGs, &gs)
+		err = json.Unmarshal(patchedGs, &gsCopy)
 		assert.NoError(t, err)
 
-		state <- gs.Status
-		return true, &gs, nil
+		state <- gsCopy.Status
+		return true, gsCopy, nil
 	})
 
 	sc, err := defaultSidecar(m)
