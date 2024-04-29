@@ -1024,7 +1024,7 @@ func TestSDKServerReserveTimeout(t *testing.T) {
 	gs.ApplyDefaults()
 
 	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-		return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{gs}}, nil
+		return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{*gs.DeepCopy()}}, nil
 	})
 
 	m.AgonesClient.AddReactor("patch", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
@@ -1060,89 +1060,76 @@ func TestSDKServerReserveTimeout(t *testing.T) {
 		wg.Done()
 	}()
 
-	assertReservedUntil := func(d *time.Duration, status agonesv1.GameServerStatus) {
-		if d == nil {
-			assert.Nil(t, status.ReservedUntil)
-		} else {
-			assert.Equal(t, time.Now().Add(*d).Round(time.Second), status.ReservedUntil.Time.Round(time.Second))
-		}
-	}
-
-	// confirm that the update hits the K8s api
-	assertStateChangeK8 := func(expectedState agonesv1.GameServerState, d *time.Duration) {
+	assertStateChange := func(expected agonesv1.GameServerState, additional func(status agonesv1.GameServerStatus)) {
 		select {
 		case current := <-state:
-			assert.Equal(t, expectedState, current.State)
-			assertReservedUntil(d, current)
-		case <-time.After(10 * time.Second):
-			assert.Fail(t, "game server should have been patched")
+			assert.Equal(t, expected, current.State)
+			additional(current)
+		case <-time.After(5 * time.Second):
+			assert.Fail(t, "should have gone to Reserved by now")
 		}
 	}
-
-	// confirm that the update hits the SDK Server
-	assertStateChangeSC := func(expectedState agonesv1.GameServerState, d *time.Duration) {
-		require.Eventually(t, func() bool {
-			gs, err := sc.GetGameServer(ctx, &sdk.Empty{})
-			assert.NoError(t, err)
-			return assert.Equal(t, string(expectedState), gs.Status.State)
-		}, 10*time.Second, time.Second)
-		assertStateChangeK8(expectedState, d)
+	assertReservedUntilDuration := func(d time.Duration) func(status agonesv1.GameServerStatus) {
+		return func(status agonesv1.GameServerStatus) {
+			assert.WithinDuration(t, time.Now().Add(d), status.ReservedUntil.Time, 1*time.Second)
+		}
+	}
+	assertReservedUntilNil := func(status agonesv1.GameServerStatus) {
+		assert.Nil(t, status.ReservedUntil)
 	}
 
 	_, err = sc.Reserve(context.Background(), &sdk.Duration{Seconds: 3})
 	assert.NoError(t, err)
-	d := 2 * time.Second
-	assertStateChangeSC(agonesv1.GameServerStateReserved, &d)
+	assertStateChange(agonesv1.GameServerStateReserved, assertReservedUntilDuration(3*time.Second))
 
 	// Wait for the game server to go back to being Ready.
-	// assertStateChangeSC(agonesv1.GameServerStateRequestReady, nil)
-	// assertStateChange(agonesv1.GameServerStateRequestReady, func(status agonesv1.GameServerStatus) {
-	// 	assert.Nil(t, status.ReservedUntil)
-	// })
+	assertStateChange(agonesv1.GameServerStateRequestReady, func(status agonesv1.GameServerStatus) {
+		assert.Nil(t, status.ReservedUntil)
+	})
 
 	// Test that a 0 second input into Reserved, never will go back to Ready
-	// _, err = sc.Reserve(context.Background(), &sdk.Duration{Seconds: 0})
-	// assert.NoError(t, err)
-	// assertStateChange(agonesv1.GameServerStateReserved, assertReservedUntilNil)
-	// assert.False(t, sc.reserveTimer.Stop())
+	_, err = sc.Reserve(context.Background(), &sdk.Duration{Seconds: 0})
+	assert.NoError(t, err)
+	assertStateChange(agonesv1.GameServerStateReserved, assertReservedUntilNil)
+	assert.False(t, sc.reserveTimer.Stop())
 
-	// // Test that a negative input into Reserved, is the same as a 0 input
-	// _, err = sc.Reserve(context.Background(), &sdk.Duration{Seconds: -100})
-	// assert.NoError(t, err)
-	// assertStateChange(agonesv1.GameServerStateReserved, 2*time.Second, assertReservedUntilNil)
-	// assert.False(t, sc.reserveTimer.Stop())
+	// Test that a negative input into Reserved, is the same as a 0 input
+	_, err = sc.Reserve(context.Background(), &sdk.Duration{Seconds: -100})
+	assert.NoError(t, err)
+	assertStateChange(agonesv1.GameServerStateReserved, assertReservedUntilNil)
+	assert.False(t, sc.reserveTimer.Stop())
 
-	// // Test that the timer to move Reserved->Ready is reset when requesting another state.
+	// Test that the timer to move Reserved->Ready is reset when requesting another state.
 
-	// // Test the return to a Ready state.
-	// _, err = sc.Reserve(context.Background(), &sdk.Duration{Seconds: 3})
-	// assert.NoError(t, err)
-	// assertStateChange(agonesv1.GameServerStateReserved, 2*time.Second, assertReservedUntilDuration(3*time.Second))
+	// Test the return to a Ready state.
+	_, err = sc.Reserve(context.Background(), &sdk.Duration{Seconds: 3})
+	assert.NoError(t, err)
+	assertStateChange(agonesv1.GameServerStateReserved, assertReservedUntilDuration(3*time.Second))
 
-	// _, err = sc.Ready(context.Background(), &sdk.Empty{})
-	// assert.NoError(t, err)
-	// assertStateChange(agonesv1.GameServerStateRequestReady, 2*time.Second, assertReservedUntilNil)
-	// assert.False(t, sc.reserveTimer.Stop())
+	_, err = sc.Ready(context.Background(), &sdk.Empty{})
+	assert.NoError(t, err)
+	assertStateChange(agonesv1.GameServerStateRequestReady, assertReservedUntilNil)
+	assert.False(t, sc.reserveTimer.Stop())
 
-	// // Test Allocated resets the timer on Reserved->Ready
-	// _, err = sc.Reserve(context.Background(), &sdk.Duration{Seconds: 3})
-	// assert.NoError(t, err)
-	// assertStateChange(agonesv1.GameServerStateReserved, 2*time.Second, assertReservedUntilDuration(3*time.Second))
+	// Test Allocated resets the timer on Reserved->Ready
+	_, err = sc.Reserve(context.Background(), &sdk.Duration{Seconds: 3})
+	assert.NoError(t, err)
+	assertStateChange(agonesv1.GameServerStateReserved, assertReservedUntilDuration(3*time.Second))
 
-	// _, err = sc.Allocate(context.Background(), &sdk.Empty{})
-	// assert.NoError(t, err)
-	// assertStateChange(agonesv1.GameServerStateAllocated, 2*time.Second, assertReservedUntilNil)
-	// assert.False(t, sc.reserveTimer.Stop())
+	_, err = sc.Allocate(context.Background(), &sdk.Empty{})
+	assert.NoError(t, err)
+	assertStateChange(agonesv1.GameServerStateAllocated, assertReservedUntilNil)
+	assert.False(t, sc.reserveTimer.Stop())
 
-	// // Test Shutdown resets the timer on Reserved->Ready
-	// _, err = sc.Reserve(context.Background(), &sdk.Duration{Seconds: 3})
-	// assert.NoError(t, err)
-	// assertStateChange(agonesv1.GameServerStateReserved, 2*time.Second, assertReservedUntilDuration(3*time.Second))
+	// Test Shutdown resets the timer on Reserved->Ready
+	_, err = sc.Reserve(context.Background(), &sdk.Duration{Seconds: 3})
+	assert.NoError(t, err)
+	assertStateChange(agonesv1.GameServerStateReserved, assertReservedUntilDuration(3*time.Second))
 
-	// _, err = sc.Shutdown(context.Background(), &sdk.Empty{})
-	// assert.NoError(t, err)
-	// assertStateChange(agonesv1.GameServerStateShutdown, 2*time.Second, assertReservedUntilNil)
-	// assert.False(t, sc.reserveTimer.Stop())
+	_, err = sc.Shutdown(context.Background(), &sdk.Empty{})
+	assert.NoError(t, err)
+	assertStateChange(agonesv1.GameServerStateShutdown, assertReservedUntilNil)
+	assert.False(t, sc.reserveTimer.Stop())
 
 	cancel()
 	wg.Wait()
