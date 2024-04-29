@@ -42,8 +42,8 @@ import (
 
 var (
 	_ sdk.SDKServer   = &LocalSDKServer{}
-	_ alpha.SDKServer = &AlphaSDKAdapter{}
-	_ beta.SDKServer  = &BetaSDKAdapter{}
+	_ alpha.SDKServer = &LocalSDKServer{}
+	_ beta.SDKServer  = &LocalSDKServer{}
 )
 
 func defaultGs() *sdk.GameServer {
@@ -104,16 +104,6 @@ type LocalSDKServer struct {
 	reserveTimer      *time.Timer
 	testMode          bool
 	testSdkName       string
-}
-
-// AlphaSDKAdapter extends LocalSDKServer with alpha stage features.
-type AlphaSDKAdapter struct {
-	*LocalSDKServer
-}
-
-// BetaSDKAdapter extends LocalSDKServer with beta stage features.
-type BetaSDKAdapter struct {
-	*LocalSDKServer
 }
 
 // NewLocalSDKServer returns the default LocalSDKServer
@@ -437,7 +427,7 @@ func (l *LocalSDKServer) stopReserveTimer() {
 // PlayerConnect should be called when a player connects.
 // [Stage:Alpha]
 // [FeatureFlag:PlayerTracking]
-func (l *AlphaSDKAdapter) PlayerConnect(ctx context.Context, id *alpha.PlayerID) (*alpha.Bool, error) {
+func (l *LocalSDKServer) PlayerConnect(ctx context.Context, id *alpha.PlayerID) (*alpha.Bool, error) {
 	if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
 		return &alpha.Bool{Bool: false}, errors.Errorf("%s not enabled", runtime.FeaturePlayerTracking)
 	}
@@ -471,7 +461,7 @@ func (l *AlphaSDKAdapter) PlayerConnect(ctx context.Context, id *alpha.PlayerID)
 // PlayerDisconnect should be called when a player disconnects.
 // [Stage:Alpha]
 // [FeatureFlag:PlayerTracking]
-func (l *AlphaSDKAdapter) PlayerDisconnect(ctx context.Context, id *alpha.PlayerID) (*alpha.Bool, error) {
+func (l *LocalSDKServer) PlayerDisconnect(ctx context.Context, id *alpha.PlayerID) (*alpha.Bool, error) {
 	if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
 		return &alpha.Bool{Bool: false}, errors.Errorf("%s not enabled", runtime.FeaturePlayerTracking)
 	}
@@ -505,7 +495,7 @@ func (l *AlphaSDKAdapter) PlayerDisconnect(ctx context.Context, id *alpha.Player
 // IsPlayerConnected returns if the playerID is currently connected to the GameServer.
 // [Stage:Alpha]
 // [FeatureFlag:PlayerTracking]
-func (l *AlphaSDKAdapter) IsPlayerConnected(c context.Context, id *alpha.PlayerID) (*alpha.Bool, error) {
+func (l *LocalSDKServer) IsPlayerConnected(c context.Context, id *alpha.PlayerID) (*alpha.Bool, error) {
 	if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
 		return &alpha.Bool{Bool: false}, errors.Errorf("%s not enabled", runtime.FeaturePlayerTracking)
 	}
@@ -534,7 +524,7 @@ func (l *AlphaSDKAdapter) IsPlayerConnected(c context.Context, id *alpha.PlayerI
 // GetConnectedPlayers returns the list of the currently connected player ids.
 // [Stage:Alpha]
 // [FeatureFlag:PlayerTracking]
-func (l *AlphaSDKAdapter) GetConnectedPlayers(c context.Context, empty *alpha.Empty) (*alpha.PlayerIDList, error) {
+func (l *LocalSDKServer) GetConnectedPlayers(c context.Context, empty *alpha.Empty) (*alpha.PlayerIDList, error) {
 	if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
 		return nil, errors.Errorf("%s not enabled", runtime.FeaturePlayerTracking)
 	}
@@ -556,7 +546,7 @@ func (l *AlphaSDKAdapter) GetConnectedPlayers(c context.Context, empty *alpha.Em
 // GetPlayerCount returns the current player count.
 // [Stage:Alpha]
 // [FeatureFlag:PlayerTracking]
-func (l *AlphaSDKAdapter) GetPlayerCount(ctx context.Context, _ *alpha.Empty) (*alpha.Count, error) {
+func (l *LocalSDKServer) GetPlayerCount(ctx context.Context, _ *alpha.Empty) (*alpha.Count, error) {
 	if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
 		return nil, errors.Errorf("%s not enabled", runtime.FeaturePlayerTracking)
 	}
@@ -576,7 +566,7 @@ func (l *AlphaSDKAdapter) GetPlayerCount(ctx context.Context, _ *alpha.Empty) (*
 // SetPlayerCapacity to change the game server's player capacity.
 // [Stage:Alpha]
 // [FeatureFlag:PlayerTracking]
-func (l *AlphaSDKAdapter) SetPlayerCapacity(_ context.Context, count *alpha.Count) (*alpha.Empty, error) {
+func (l *LocalSDKServer) SetPlayerCapacity(_ context.Context, count *alpha.Count) (*alpha.Empty, error) {
 	if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
 		return nil, errors.Errorf("%s not enabled", runtime.FeaturePlayerTracking)
 	}
@@ -599,7 +589,7 @@ func (l *AlphaSDKAdapter) SetPlayerCapacity(_ context.Context, count *alpha.Coun
 // GetPlayerCapacity returns the current player capacity.
 // [Stage:Alpha]
 // [FeatureFlag:PlayerTracking]
-func (l *AlphaSDKAdapter) GetPlayerCapacity(_ context.Context, _ *alpha.Empty) (*alpha.Count, error) {
+func (l *LocalSDKServer) GetPlayerCapacity(_ context.Context, _ *alpha.Empty) (*alpha.Count, error) {
 	if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
 		return nil, errors.Errorf("%s not enabled", runtime.FeaturePlayerTracking)
 	}
@@ -622,7 +612,7 @@ func (l *AlphaSDKAdapter) GetPlayerCapacity(_ context.Context, _ *alpha.Empty) (
 // GetCounter returns a Counter. Returns not found if the counter does not exist.
 // [Stage:Beta]
 // [FeatureFlag:CountsAndLists]
-func (l *BetaSDKAdapter) GetCounter(ctx context.Context, in *beta.GetCounterRequest) (*beta.Counter, error) {
+func (l *LocalSDKServer) GetCounter(ctx context.Context, in *beta.GetCounterRequest) (*beta.Counter, error) {
 	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
 		return nil, errors.Errorf("%s not enabled", runtime.FeatureCountsAndLists)
 	}
@@ -648,7 +638,7 @@ func (l *BetaSDKAdapter) GetCounter(ctx context.Context, in *beta.GetCounterRequ
 // Returns error if the Count is out of range [0,Capacity].
 // [Stage:Beta]
 // [FeatureFlag:CountsAndLists]
-func (l *BetaSDKAdapter) UpdateCounter(ctx context.Context, in *beta.UpdateCounterRequest) (*beta.Counter, error) {
+func (l *LocalSDKServer) UpdateCounter(ctx context.Context, in *beta.UpdateCounterRequest) (*beta.Counter, error) {
 	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
 		return nil, errors.Errorf("%s not enabled", runtime.FeatureCountsAndLists)
 	}
@@ -707,7 +697,7 @@ func (l *BetaSDKAdapter) UpdateCounter(ctx context.Context, in *beta.UpdateCount
 // GetList returns a List. Returns not found if the List does not exist.
 // [Stage:Beta]
 // [FeatureFlag:CountsAndLists]
-func (l *BetaSDKAdapter) GetList(ctx context.Context, in *beta.GetListRequest) (*beta.List, error) {
+func (l *LocalSDKServer) GetList(ctx context.Context, in *beta.GetListRequest) (*beta.List, error) {
 	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
 		return nil, errors.Errorf("%s not enabled", runtime.FeatureCountsAndLists)
 	}
@@ -731,7 +721,7 @@ func (l *BetaSDKAdapter) GetList(ctx context.Context, in *beta.GetListRequest) (
 // then the default value for the variable will be set (i.e. 0 for "capacity", empty list for "values").
 // [Stage:Beta]
 // [FeatureFlag:CountsAndLists]
-func (l *BetaSDKAdapter) UpdateList(ctx context.Context, in *beta.UpdateListRequest) (*beta.List, error) {
+func (l *LocalSDKServer) UpdateList(ctx context.Context, in *beta.UpdateListRequest) (*beta.List, error) {
 	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
 		return nil, errors.Errorf("%s not enabled", runtime.FeatureCountsAndLists)
 	}
@@ -783,7 +773,7 @@ func (l *BetaSDKAdapter) UpdateList(ctx context.Context, in *beta.UpdateListRequ
 // Returns out of range if the List is already at Capacity.
 // [Stage:Beta]
 // [FeatureFlag:CountsAndLists]
-func (l *BetaSDKAdapter) AddListValue(ctx context.Context, in *beta.AddListValueRequest) (*beta.List, error) {
+func (l *LocalSDKServer) AddListValue(ctx context.Context, in *beta.AddListValueRequest) (*beta.List, error) {
 	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
 		return nil, errors.Errorf("%s not enabled", runtime.FeatureCountsAndLists)
 	}
@@ -816,7 +806,7 @@ func (l *BetaSDKAdapter) AddListValue(ctx context.Context, in *beta.AddListValue
 // Returns not found if the value is not in the List.
 // [Stage:Beta]
 // [FeatureFlag:CountsAndLists]
-func (l *BetaSDKAdapter) RemoveListValue(ctx context.Context, in *beta.RemoveListValueRequest) (*beta.List, error) {
+func (l *LocalSDKServer) RemoveListValue(ctx context.Context, in *beta.RemoveListValueRequest) (*beta.List, error) {
 	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
 		return nil, errors.Errorf("%s not enabled", runtime.FeatureCountsAndLists)
 	}

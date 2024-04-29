@@ -25,7 +25,6 @@ import (
 	"strings"
 	"time"
 
-	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -38,6 +37,7 @@ import (
 	"k8s.io/client-go/rest"
 
 	"agones.dev/agones/pkg"
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	"agones.dev/agones/pkg/client/clientset/versioned"
 	"agones.dev/agones/pkg/sdk"
 	sdkalpha "agones.dev/agones/pkg/sdk/alpha"
@@ -199,11 +199,9 @@ func registerLocal(grpcServer *grpc.Server, ctlConf config) (func(), error) {
 		return nil, err
 	}
 
-	alphaSDKAdapter := &sdkserver.AlphaSDKAdapter{LocalSDKServer: s}
-	betaSDKAdapter := &sdkserver.BetaSDKAdapter{LocalSDKServer: s}
 	sdk.RegisterSDKServer(grpcServer, s)
-	sdkalpha.RegisterSDKServer(grpcServer, alphaSDKAdapter)
-	sdkbeta.RegisterSDKServer(grpcServer, betaSDKAdapter)
+	sdkalpha.RegisterSDKServer(grpcServer, s)
+	sdkbeta.RegisterSDKServer(grpcServer, s)
 
 	return func() {
 		s.Close()
@@ -224,11 +222,9 @@ func registerTestSdkServer(grpcServer *grpc.Server, ctlConf config) (func(), err
 	s.SetExpectedSequence(expectedFuncs)
 	s.SetSdkName(ctlConf.TestSdkName)
 
-	alphaSDKAdapter := &sdkserver.AlphaSDKAdapter{LocalSDKServer: s}
-	betaSDKAdapter := &sdkserver.BetaSDKAdapter{LocalSDKServer: s}
 	sdk.RegisterSDKServer(grpcServer, s)
-	sdkalpha.RegisterSDKServer(grpcServer, alphaSDKAdapter)
-	sdkbeta.RegisterSDKServer(grpcServer, betaSDKAdapter)
+	sdkalpha.RegisterSDKServer(grpcServer, s)
+	sdkbeta.RegisterSDKServer(grpcServer, s)
 	return func() {
 		s.Close()
 	}, err

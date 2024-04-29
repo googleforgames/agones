@@ -24,11 +24,6 @@ import (
 	"testing"
 	"time"
 
-	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
-	"agones.dev/agones/pkg/sdk"
-	"agones.dev/agones/pkg/sdk/alpha"
-	"agones.dev/agones/pkg/sdk/beta"
-	"agones.dev/agones/pkg/util/runtime"
 	"github.com/google/go-cmp/cmp"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
@@ -37,6 +32,12 @@ import (
 	"google.golang.org/protobuf/types/known/wrapperspb"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
+
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
+	"agones.dev/agones/pkg/sdk"
+	"agones.dev/agones/pkg/sdk/alpha"
+	"agones.dev/agones/pkg/sdk/beta"
+	"agones.dev/agones/pkg/util/runtime"
 )
 
 func TestLocal(t *testing.T) {
@@ -336,7 +337,6 @@ func TestLocalSDKServerPlayerCapacity(t *testing.T) {
 	assert.NoError(t, err)
 	l, err := NewLocalSDKServer(path, "")
 	assert.Nil(t, err)
-	alphaSDKAdapter := &AlphaSDKAdapter{LocalSDKServer: l}
 
 	stream := newGameServerMockStream()
 	go func() {
@@ -356,11 +356,11 @@ func TestLocalSDKServerPlayerCapacity(t *testing.T) {
 	})
 	assert.NoError(t, err)
 
-	c, err := alphaSDKAdapter.GetPlayerCapacity(context.Background(), e)
+	c, err := l.GetPlayerCapacity(context.Background(), e)
 	assert.NoError(t, err)
 	assert.Equal(t, int64(0), c.Count)
 
-	_, err = alphaSDKAdapter.SetPlayerCapacity(context.Background(), &alpha.Count{Count: 10})
+	_, err = l.SetPlayerCapacity(context.Background(), &alpha.Count{Count: 10})
 	assert.NoError(t, err)
 
 	select {
@@ -370,7 +370,7 @@ func TestLocalSDKServerPlayerCapacity(t *testing.T) {
 		assert.Fail(t, "timeout getting watch")
 	}
 
-	c, err = alphaSDKAdapter.GetPlayerCapacity(context.Background(), e)
+	c, err = l.GetPlayerCapacity(context.Background(), e)
 	assert.NoError(t, err)
 	assert.Equal(t, int64(10), c.Count)
 
@@ -389,32 +389,30 @@ func TestLocalSDKServerPlayerConnectAndDisconnectWithoutPlayerTracking(t *testin
 	l, err := NewLocalSDKServer("", "")
 	assert.Nil(t, err)
 
-	alphaSDKAdapter := &AlphaSDKAdapter{LocalSDKServer: l}
-
 	e := &alpha.Empty{}
-	capacity, err := alphaSDKAdapter.GetPlayerCapacity(context.Background(), e)
+	capacity, err := l.GetPlayerCapacity(context.Background(), e)
 	assert.Nil(t, capacity)
 	assert.Error(t, err)
 
-	count, err := alphaSDKAdapter.GetPlayerCount(context.Background(), e)
+	count, err := l.GetPlayerCount(context.Background(), e)
 	assert.Error(t, err)
 	assert.Nil(t, count)
 
-	list, err := alphaSDKAdapter.GetConnectedPlayers(context.Background(), e)
+	list, err := l.GetConnectedPlayers(context.Background(), e)
 	assert.Error(t, err)
 	assert.Nil(t, list)
 
 	id := &alpha.PlayerID{PlayerID: "test-player"}
 
-	ok, err := alphaSDKAdapter.PlayerConnect(context.Background(), id)
+	ok, err := l.PlayerConnect(context.Background(), id)
 	assert.Error(t, err)
 	assert.False(t, ok.Bool)
 
-	ok, err = alphaSDKAdapter.IsPlayerConnected(context.Background(), id)
+	ok, err = l.IsPlayerConnected(context.Background(), id)
 	assert.Error(t, err)
 	assert.False(t, ok.Bool)
 
-	ok, err = alphaSDKAdapter.PlayerDisconnect(context.Background(), id)
+	ok, err = l.PlayerDisconnect(context.Background(), id)
 	assert.Error(t, err)
 	assert.False(t, ok.Bool)
 }
@@ -486,7 +484,6 @@ func TestLocalSDKServerPlayerConnectAndDisconnect(t *testing.T) {
 				l, err = NewLocalSDKServer("", "")
 			}
 			assert.Nil(t, err)
-			alphaSDKAdapter := &AlphaSDKAdapter{LocalSDKServer: l}
 			l.SetTestMode(v.testMode)
 
 			stream := newGameServerMockStream()
@@ -508,7 +505,7 @@ func TestLocalSDKServerPlayerConnectAndDisconnect(t *testing.T) {
 			assert.NoError(t, err)
 
 			if !v.useFile || v.gs == nil {
-				_, err := alphaSDKAdapter.SetPlayerCapacity(context.Background(), &alpha.Count{
+				_, err := l.SetPlayerCapacity(context.Background(), &alpha.Count{
 					Count: 1,
 				})
 				assert.NoError(t, err)
@@ -521,26 +518,26 @@ func TestLocalSDKServerPlayerConnectAndDisconnect(t *testing.T) {
 			}
 
 			id := &alpha.PlayerID{PlayerID: "one"}
-			ok, err := alphaSDKAdapter.IsPlayerConnected(context.Background(), id)
+			ok, err := l.IsPlayerConnected(context.Background(), id)
 			assert.NoError(t, err)
 			if assert.NotNil(t, ok) {
 				assert.False(t, ok.Bool, "player should not be connected")
 			}
 
-			count, err := alphaSDKAdapter.GetPlayerCount(context.Background(), e)
+			count, err := l.GetPlayerCount(context.Background(), e)
 			assert.NoError(t, err)
 			assert.Equal(t, int64(0), count.Count)
 
-			list, err := alphaSDKAdapter.GetConnectedPlayers(context.Background(), e)
+			list, err := l.GetConnectedPlayers(context.Background(), e)
 			assert.NoError(t, err)
 			assert.Empty(t, list.List)
 
 			// connect a player
-			ok, err = alphaSDKAdapter.PlayerConnect(context.Background(), id)
+			ok, err = l.PlayerConnect(context.Background(), id)
 			assert.NoError(t, err)
 			assert.True(t, ok.Bool, "Player should not exist yet")
 
-			count, err = alphaSDKAdapter.GetPlayerCount(context.Background(), e)
+			count, err = l.GetPlayerCount(context.Background(), e)
 			assert.NoError(t, err)
 			assert.Equal(t, int64(1), count.Count)
 
@@ -553,42 +550,42 @@ func TestLocalSDKServerPlayerConnectAndDisconnect(t *testing.T) {
 				return gs.Status.Players
 			})
 
-			ok, err = alphaSDKAdapter.IsPlayerConnected(context.Background(), id)
+			ok, err = l.IsPlayerConnected(context.Background(), id)
 			assert.NoError(t, err)
 			assert.True(t, ok.Bool, "player should be connected")
 
-			list, err = alphaSDKAdapter.GetConnectedPlayers(context.Background(), e)
+			list, err = l.GetConnectedPlayers(context.Background(), e)
 			assert.NoError(t, err)
 			assert.Equal(t, []string{id.PlayerID}, list.List)
 
 			// add same player
-			ok, err = alphaSDKAdapter.PlayerConnect(context.Background(), id)
+			ok, err = l.PlayerConnect(context.Background(), id)
 			assert.NoError(t, err)
 			assert.False(t, ok.Bool, "Player already exists")
 
-			count, err = alphaSDKAdapter.GetPlayerCount(context.Background(), e)
+			count, err = l.GetPlayerCount(context.Background(), e)
 			assert.NoError(t, err)
 			assert.Equal(t, int64(1), count.Count)
 			assertNoWatchUpdate(t, stream)
 
-			list, err = alphaSDKAdapter.GetConnectedPlayers(context.Background(), e)
+			list, err = l.GetConnectedPlayers(context.Background(), e)
 			assert.NoError(t, err)
 			assert.Equal(t, []string{id.PlayerID}, list.List)
 
 			// should return an error if we try to add another, since we're at capacity
 			nopePlayer := &alpha.PlayerID{PlayerID: "nope"}
-			_, err = alphaSDKAdapter.PlayerConnect(context.Background(), nopePlayer)
+			_, err = l.PlayerConnect(context.Background(), nopePlayer)
 			assert.EqualError(t, err, "Players are already at capacity")
 
-			ok, err = alphaSDKAdapter.IsPlayerConnected(context.Background(), nopePlayer)
+			ok, err = l.IsPlayerConnected(context.Background(), nopePlayer)
 			assert.NoError(t, err)
 			assert.False(t, ok.Bool)
 
 			// disconnect a player
-			ok, err = alphaSDKAdapter.PlayerDisconnect(context.Background(), id)
+			ok, err = l.PlayerDisconnect(context.Background(), id)
 			assert.NoError(t, err)
 			assert.True(t, ok.Bool, "Player should be removed")
-			count, err = alphaSDKAdapter.GetPlayerCount(context.Background(), e)
+			count, err = l.GetPlayerCount(context.Background(), e)
 			assert.NoError(t, err)
 			assert.Equal(t, int64(0), count.Count)
 
@@ -601,15 +598,15 @@ func TestLocalSDKServerPlayerConnectAndDisconnect(t *testing.T) {
 				return gs.Status.Players
 			})
 
-			list, err = alphaSDKAdapter.GetConnectedPlayers(context.Background(), e)
+			list, err = l.GetConnectedPlayers(context.Background(), e)
 			assert.NoError(t, err)
 			assert.Empty(t, list.List)
 
 			// remove same player
-			ok, err = alphaSDKAdapter.PlayerDisconnect(context.Background(), id)
+			ok, err = l.PlayerDisconnect(context.Background(), id)
 			assert.NoError(t, err)
 			assert.False(t, ok.Bool, "Player already be gone")
-			count, err = alphaSDKAdapter.GetPlayerCount(context.Background(), e)
+			count, err = l.GetPlayerCount(context.Background(), e)
 			assert.NoError(t, err)
 			assert.Equal(t, int64(0), count.Count)
 			assertNoWatchUpdate(t, stream)
@@ -638,7 +635,6 @@ func TestLocalSDKServerGetCounter(t *testing.T) {
 	assert.NoError(t, err)
 	l, err := NewLocalSDKServer(path, "")
 	assert.Nil(t, err)
-	betaSDKAdapter := &BetaSDKAdapter{LocalSDKServer: l}
 
 	stream := newGameServerMockStream()
 	go func() {
@@ -675,7 +671,7 @@ func TestLocalSDKServerGetCounter(t *testing.T) {
 
 	for testName, testScenario := range testScenarios {
 		t.Run(testName, func(t *testing.T) {
-			got, err := betaSDKAdapter.GetCounter(context.Background(), &beta.GetCounterRequest{Name: testScenario.name})
+			got, err := l.GetCounter(context.Background(), &beta.GetCounterRequest{Name: testScenario.name})
 			// Check tests expecting non-errors
 			if testScenario.want != nil {
 				assert.NoError(t, err)
@@ -715,7 +711,6 @@ func TestLocalSDKServerUpdateCounter(t *testing.T) {
 	assert.NoError(t, err)
 	l, err := NewLocalSDKServer(path, "")
 	assert.Nil(t, err)
-	betaSDKAdapter := &BetaSDKAdapter{LocalSDKServer: l}
 
 	stream := newGameServerMockStream()
 	go func() {
@@ -828,7 +823,7 @@ func TestLocalSDKServerUpdateCounter(t *testing.T) {
 
 	for testName, testScenario := range testScenarios {
 		t.Run(testName, func(t *testing.T) {
-			got, err := betaSDKAdapter.UpdateCounter(context.Background(), testScenario.updateRequest)
+			got, err := l.UpdateCounter(context.Background(), testScenario.updateRequest)
 			// Check tests expecting non-errors
 			if testScenario.want != nil {
 				assert.NoError(t, err)
@@ -864,7 +859,6 @@ func TestLocalSDKServerGetList(t *testing.T) {
 	assert.NoError(t, err)
 	l, err := NewLocalSDKServer(path, "")
 	assert.Nil(t, err)
-	betaSDKAdapter := &BetaSDKAdapter{LocalSDKServer: l}
 
 	stream := newGameServerMockStream()
 	go func() {
@@ -901,7 +895,7 @@ func TestLocalSDKServerGetList(t *testing.T) {
 
 	for testName, testScenario := range testScenarios {
 		t.Run(testName, func(t *testing.T) {
-			got, err := betaSDKAdapter.GetList(context.Background(), &beta.GetListRequest{Name: testScenario.name})
+			got, err := l.GetList(context.Background(), &beta.GetListRequest{Name: testScenario.name})
 			// Check tests expecting non-errors
 			if testScenario.want != nil {
 				assert.NoError(t, err)
@@ -941,7 +935,6 @@ func TestLocalSDKServerUpdateList(t *testing.T) {
 	assert.NoError(t, err)
 	l, err := NewLocalSDKServer(path, "")
 	assert.Nil(t, err)
-	betaSDKAdapter := &BetaSDKAdapter{LocalSDKServer: l}
 
 	stream := newGameServerMockStream()
 	go func() {
@@ -1101,7 +1094,7 @@ func TestLocalSDKServerUpdateList(t *testing.T) {
 
 	for testName, testScenario := range testScenarios {
 		t.Run(testName, func(t *testing.T) {
-			got, err := betaSDKAdapter.UpdateList(context.Background(), testScenario.updateRequest)
+			got, err := l.UpdateList(context.Background(), testScenario.updateRequest)
 			// Check tests expecting non-errors
 			if testScenario.want != nil {
 				assert.NoError(t, err)
@@ -1138,7 +1131,6 @@ func TestLocalSDKServerAddListValue(t *testing.T) {
 	assert.NoError(t, err)
 	l, err := NewLocalSDKServer(path, "")
 	assert.Nil(t, err)
-	betaSDKAdapter := &BetaSDKAdapter{LocalSDKServer: l}
 
 	stream := newGameServerMockStream()
 	go func() {
@@ -1194,7 +1186,7 @@ func TestLocalSDKServerAddListValue(t *testing.T) {
 
 	for testName, testScenario := range testScenarios {
 		t.Run(testName, func(t *testing.T) {
-			got, err := betaSDKAdapter.AddListValue(context.Background(), testScenario.addRequest)
+			got, err := l.AddListValue(context.Background(), testScenario.addRequest)
 			// Check tests expecting non-errors
 			if testScenario.want != nil {
 				assert.NoError(t, err)
@@ -1231,7 +1223,6 @@ func TestLocalSDKServerRemoveListValue(t *testing.T) {
 	assert.NoError(t, err)
 	l, err := NewLocalSDKServer(path, "")
 	assert.Nil(t, err)
-	betaSDKAdapter := &BetaSDKAdapter{LocalSDKServer: l}
 
 	stream := newGameServerMockStream()
 	go func() {
@@ -1280,7 +1271,7 @@ func TestLocalSDKServerRemoveListValue(t *testing.T) {
 
 	for testName, testScenario := range testScenarios {
 		t.Run(testName, func(t *testing.T) {
-			got, err := betaSDKAdapter.RemoveListValue(context.Background(), testScenario.removeRequest)
+			got, err := l.RemoveListValue(context.Background(), testScenario.removeRequest)
 			// Check tests expecting non-errors
 			if testScenario.want != nil {
 				assert.NoError(t, err)
