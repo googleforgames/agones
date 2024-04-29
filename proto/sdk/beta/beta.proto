@@ -38,7 +38,7 @@ option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
 
 // SDK service to be used in the GameServer SDK to the Pod Sidecar
 service SDK {
-      // Gets a Counter. Returns NOT_FOUND if the Counter does not exist.
+    // Gets a Counter. Returns NOT_FOUND if the Counter does not exist.
     rpc GetCounter(GetCounterRequest) returns (Counter) {
       option (google.api.http) = {
         get: "/v1beta1/counters/{name}"

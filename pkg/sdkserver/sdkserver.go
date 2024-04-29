@@ -45,6 +45,7 @@ import (
 	listersv1 "agones.dev/agones/pkg/client/listers/agones/v1"
 	"agones.dev/agones/pkg/gameserverallocations"
 	"agones.dev/agones/pkg/sdk"
+	"agones.dev/agones/pkg/sdk/alpha"
 	"agones.dev/agones/pkg/sdk/beta"
 	"agones.dev/agones/pkg/util/apiserver"
 	"agones.dev/agones/pkg/util/logfields"
@@ -658,7 +659,7 @@ func (s *SDKServer) stopReserveTimer() {
 // PlayerConnect should be called when a player connects.
 // [Stage:Beta]
 // [FeatureFlag:PlayerTracking]
-func (s *SDKServer) PlayerConnect(ctx context.Context, id *beta.PlayerID) (*beta.Bool, error) {
+func (s *SDKServer) PlayerConnect(ctx context.Context, id *alpha.PlayerID) (*beta.Bool, error) {
 	if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
 		return &beta.Bool{Bool: false}, errors.Errorf("%s not enabled", runtime.FeaturePlayerTracking)
 	}
@@ -688,7 +689,7 @@ func (s *SDKServer) PlayerConnect(ctx context.Context, id *beta.PlayerID) (*beta
 // PlayerDisconnect should be called when a player disconnects.
 // [Stage:Beta]
 // [FeatureFlag:PlayerTracking]
-func (s *SDKServer) PlayerDisconnect(ctx context.Context, id *beta.PlayerID) (*beta.Bool, error) {
+func (s *SDKServer) PlayerDisconnect(ctx context.Context, id *alpha.PlayerID) (*beta.Bool, error) {
 	if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
 		return &beta.Bool{Bool: false}, errors.Errorf("%s not enabled", runtime.FeaturePlayerTracking)
 	}
@@ -719,7 +720,7 @@ func (s *SDKServer) PlayerDisconnect(ctx context.Context, id *beta.PlayerID) (*b
 // This is always accurate, even if the value hasn’t been updated to the GameServer status yet.
 // [Stage:Beta]
 // [FeatureFlag:PlayerTracking]
-func (s *SDKServer) IsPlayerConnected(ctx context.Context, id *beta.PlayerID) (*beta.Bool, error) {
+func (s *SDKServer) IsPlayerConnected(ctx context.Context, id *alpha.PlayerID) (*beta.Bool, error) {
 	if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
 		return &beta.Bool{Bool: false}, errors.Errorf("%s not enabled", runtime.FeaturePlayerTracking)
 	}
@@ -742,14 +743,14 @@ func (s *SDKServer) IsPlayerConnected(ctx context.Context, id *beta.PlayerID) (*
 // This is always accurate, even if the value hasn’t been updated to the GameServer status yet.
 // [Stage:Beta]
 // [FeatureFlag:PlayerTracking]
-func (s *SDKServer) GetConnectedPlayers(c context.Context, empty *beta.Empty) (*beta.PlayerIDList, error) {
+func (s *SDKServer) GetConnectedPlayers(c context.Context, empty *beta.Empty) (*alpha.PlayerIDList, error) {
 	if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
 		return nil, errors.Errorf("%s not enabled", runtime.FeaturePlayerTracking)
 	}
 	s.gsUpdateMutex.RLock()
 	defer s.gsUpdateMutex.RUnlock()
 
-	return &beta.PlayerIDList{List: s.gsConnectedPlayers}, nil
+	return &alpha.PlayerIDList{List: s.gsConnectedPlayers}, nil
 }
 
 // GetPlayerCount returns the current player count.

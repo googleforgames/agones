@@ -25,54 +25,6 @@ import (
 	"agones.dev/agones/pkg/sdk/beta"
 )
 
-func TestBetaGetAndSetPlayerCapacity(t *testing.T) {
-	mock := &betaMock{}
-	a := Beta{
-		client: mock,
-	}
-
-	err := a.SetPlayerCapacity(15)
-	assert.NoError(t, err)
-	assert.Equal(t, int64(15), mock.capacity)
-
-	capacity, err := a.GetPlayerCapacity()
-	assert.NoError(t, err)
-	assert.Equal(t, int64(15), capacity)
-
-	playerID := "one"
-	ok, err := a.PlayerConnect(playerID)
-	assert.NoError(t, err)
-	assert.True(t, ok)
-	assert.Equal(t, playerID, mock.playerConnected)
-
-	count, err := a.GetPlayerCount()
-	assert.NoError(t, err)
-	assert.Equal(t, int64(1), count)
-
-	ok, err = a.PlayerDisconnect(playerID)
-	assert.NoError(t, err)
-	assert.True(t, ok)
-	assert.Equal(t, playerID, mock.playerDisconnected)
-
-	// Put the player back in.
-	ok, err = a.PlayerConnect(playerID)
-	assert.NoError(t, err)
-	assert.True(t, ok)
-	assert.Equal(t, int64(1), count)
-
-	ok, err = a.IsPlayerConnected(playerID)
-	assert.NoError(t, err)
-	assert.True(t, ok, "Player should be connected")
-
-	ok, err = a.IsPlayerConnected("false")
-	assert.NoError(t, err)
-	assert.False(t, ok, "Player should not be connected")
-
-	list, err := a.GetConnectedPlayers()
-	assert.NoError(t, err)
-	assert.Equal(t, []string{playerID}, list)
-}
-
 func TestBetaGetAndUpdateCounter(t *testing.T) {
 	mock := &betaMock{}
 	// Counters must be predefined in the GameServer resource on creation.
@@ -326,45 +278,8 @@ func TestBetaGetAndUpdateList(t *testing.T) {
 }
 
 type betaMock struct {
-	capacity           int64
-	playerCount        int64
-	playerConnected    string
-	playerDisconnected string
-	counters           map[string]*beta.Counter
-	lists              map[string]*beta.List
-}
-
-func (a *betaMock) PlayerConnect(ctx context.Context, id *beta.PlayerID, opts ...grpc.CallOption) (*beta.Bool, error) {
-	a.playerConnected = id.PlayerID
-	a.playerCount++
-	return &beta.Bool{Bool: true}, nil
-}
-
-func (a *betaMock) PlayerDisconnect(ctx context.Context, id *beta.PlayerID, opts ...grpc.CallOption) (*beta.Bool, error) {
-	a.playerDisconnected = id.PlayerID
-	a.playerCount--
-	return &beta.Bool{Bool: true}, nil
-}
-
-func (a *betaMock) IsPlayerConnected(ctx context.Context, id *beta.PlayerID, opts ...grpc.CallOption) (*beta.Bool, error) {
-	return &beta.Bool{Bool: id.PlayerID == a.playerConnected}, nil
-}
-
-func (a *betaMock) GetConnectedPlayers(ctx context.Context, in *beta.Empty, opts ...grpc.CallOption) (*beta.PlayerIDList, error) {
-	return &beta.PlayerIDList{List: []string{a.playerConnected}}, nil
-}
-
-func (a *betaMock) SetPlayerCapacity(ctx context.Context, in *beta.Count, opts ...grpc.CallOption) (*beta.Empty, error) {
-	a.capacity = in.Count
-	return &beta.Empty{}, nil
-}
-
-func (a *betaMock) GetPlayerCapacity(ctx context.Context, in *beta.Empty, opts ...grpc.CallOption) (*beta.Count, error) {
-	return &beta.Count{Count: a.capacity}, nil
-}
-
-func (a *betaMock) GetPlayerCount(ctx context.Context, in *beta.Empty, opts ...grpc.CallOption) (*beta.Count, error) {
-	return &beta.Count{Count: a.playerCount}, nil
+	counters map[string]*beta.Counter
+	lists    map[string]*beta.List
 }
 
 func (a *betaMock) GetCounter(ctx context.Context, in *beta.GetCounterRequest, opts ...grpc.CallOption) (*beta.Counter, error) {

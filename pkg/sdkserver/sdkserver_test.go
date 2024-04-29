@@ -25,6 +25,7 @@ import (
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	"agones.dev/agones/pkg/gameserverallocations"
 	"agones.dev/agones/pkg/sdk"
+	"agones.dev/agones/pkg/sdk/alpha"
 	"agones.dev/agones/pkg/sdk/beta"
 	agtesting "agones.dev/agones/pkg/testing"
 	agruntime "agones.dev/agones/pkg/util/runtime"
@@ -1957,7 +1958,7 @@ func TestSDKServerPlayerConnectAndDisconnectWithoutPlayerTracking(t *testing.T) 
 	require.Error(t, err)
 	assert.Nil(t, list)
 
-	id := &beta.PlayerID{PlayerID: "test-player"}
+	id := &alpha.PlayerID{PlayerID: "test-player"}
 
 	ok, err := sc.PlayerConnect(context.Background(), id)
 	require.Error(t, err)
@@ -2040,14 +2041,14 @@ func TestSDKServerPlayerConnectAndDisconnect(t *testing.T) {
 	require.NoError(t, err)
 	assert.Empty(t, list.List)
 
-	ok, err := sc.IsPlayerConnected(context.Background(), &beta.PlayerID{PlayerID: "1"})
+	ok, err := sc.IsPlayerConnected(context.Background(), &alpha.PlayerID{PlayerID: "1"})
 	require.NoError(t, err)
 	assert.False(t, ok.Bool, "no player connected yet")
 
 	// sdk value should always be correct, even if we send more than one update per second.
 	for i := int64(0); i < capacity; i++ {
 		token := strconv.FormatInt(i, 10)
-		id := &beta.PlayerID{PlayerID: token}
+		id := &alpha.PlayerID{PlayerID: token}
 		ok, err := sc.PlayerConnect(context.Background(), id)
 		require.NoError(t, err)
 		assert.True(t, ok.Bool, "Player "+token+" should not yet be connected")
@@ -2082,7 +2083,7 @@ func TestSDKServerPlayerConnectAndDisconnect(t *testing.T) {
 	}
 
 	// should return an error if we try and add another, since we're at capacity
-	nopePlayer := &beta.PlayerID{PlayerID: "nope"}
+	nopePlayer := &alpha.PlayerID{PlayerID: "nope"}
 	_, err = sc.PlayerConnect(context.Background(), nopePlayer)
 	assert.EqualError(t, err, "players are already at capacity")
 
@@ -2090,7 +2091,7 @@ func TestSDKServerPlayerConnectAndDisconnect(t *testing.T) {
 	// let's leave one player behind
 	for i := int64(0); i < capacity-1; i++ {
 		token := strconv.FormatInt(i, 10)
-		id := &beta.PlayerID{PlayerID: token}
+		id := &alpha.PlayerID{PlayerID: token}
 		ok, err := sc.PlayerDisconnect(context.Background(), id)
 		require.NoError(t, err)
 		assert.Truef(t, ok.Bool, "Player %s should be disconnected", token)
@@ -2125,12 +2126,12 @@ func TestSDKServerPlayerConnectAndDisconnect(t *testing.T) {
 	}
 
 	// last player is still there
-	ok, err = sc.IsPlayerConnected(context.Background(), &beta.PlayerID{PlayerID: "2"})
+	ok, err = sc.IsPlayerConnected(context.Background(), &alpha.PlayerID{PlayerID: "2"})
 	require.NoError(t, err)
 	assert.True(t, ok.Bool, "Player 2 should be connected")
 
 	// finally, check idempotency of connect and disconnect
-	id := &beta.PlayerID{PlayerID: "2"} // only one left behind
+	id := &alpha.PlayerID{PlayerID: "2"} // only one left behind
 	ok, err = sc.PlayerConnect(context.Background(), id)
 	require.NoError(t, err)
 	assert.False(t, ok.Bool, "Player 2 should already be connected")

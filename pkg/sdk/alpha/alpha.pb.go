@@ -31,9 +31,9 @@
 // versions:
 // 	protoc-gen-go v1.28.1
 // 	protoc        v4.23.4
-// source: beta.proto
+// source: alpha.proto
 
-package beta
+package alpha
 
 import (
 	reflect "reflect"
@@ -65,7 +65,7 @@ type Empty struct {
 func (x *Empty) Reset() {
 	*x = Empty{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_beta_proto_msgTypes[0]
+		mi := &file_alpha_proto_msgTypes[0]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -78,7 +78,7 @@ func (x *Empty) String() string {
 func (*Empty) ProtoMessage() {}
 
 func (x *Empty) ProtoReflect() protoreflect.Message {
-	mi := &file_beta_proto_msgTypes[0]
+	mi := &file_alpha_proto_msgTypes[0]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -91,7 +91,7 @@ func (x *Empty) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Empty.ProtoReflect.Descriptor instead.
 func (*Empty) Descriptor() ([]byte, []int) {
-	return file_beta_proto_rawDescGZIP(), []int{0}
+	return file_alpha_proto_rawDescGZIP(), []int{0}
 }
 
 // Store a count variable.
@@ -106,7 +106,7 @@ type Count struct {
 func (x *Count) Reset() {
 	*x = Count{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_beta_proto_msgTypes[1]
+		mi := &file_alpha_proto_msgTypes[1]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -119,7 +119,7 @@ func (x *Count) String() string {
 func (*Count) ProtoMessage() {}
 
 func (x *Count) ProtoReflect() protoreflect.Message {
-	mi := &file_beta_proto_msgTypes[1]
+	mi := &file_alpha_proto_msgTypes[1]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -132,7 +132,7 @@ func (x *Count) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Count.ProtoReflect.Descriptor instead.
 func (*Count) Descriptor() ([]byte, []int) {
-	return file_beta_proto_rawDescGZIP(), []int{1}
+	return file_alpha_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *Count) GetCount() int64 {
@@ -154,7 +154,7 @@ type Bool struct {
 func (x *Bool) Reset() {
 	*x = Bool{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_beta_proto_msgTypes[2]
+		mi := &file_alpha_proto_msgTypes[2]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -167,7 +167,7 @@ func (x *Bool) String() string {
 func (*Bool) ProtoMessage() {}
 
 func (x *Bool) ProtoReflect() protoreflect.Message {
-	mi := &file_beta_proto_msgTypes[2]
+	mi := &file_alpha_proto_msgTypes[2]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -180,7 +180,7 @@ func (x *Bool) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Bool.ProtoReflect.Descriptor instead.
 func (*Bool) Descriptor() ([]byte, []int) {
-	return file_beta_proto_rawDescGZIP(), []int{2}
+	return file_alpha_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *Bool) GetBool() bool {
@@ -190,37 +190,32 @@ func (x *Bool) GetBool() bool {
 	return false
 }
 
-// A representation of a Counter.
-type Counter struct {
+// The unique identifier for a given player.
+type PlayerID struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// The name of the Counter
-	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	// The current count of the Counter
-	Count int64 `protobuf:"varint,2,opt,name=count,proto3" json:"count,omitempty"`
-	// The maximum capacity of the Counter
-	Capacity int64 `protobuf:"varint,3,opt,name=capacity,proto3" json:"capacity,omitempty"`
+	PlayerID string `protobuf:"bytes,1,opt,name=playerID,proto3" json:"playerID,omitempty"`
 }
 
-func (x *Counter) Reset() {
-	*x = Counter{}
+func (x *PlayerID) Reset() {
+	*x = PlayerID{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_beta_proto_msgTypes[5]
+		mi := &file_alpha_proto_msgTypes[3]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
 }
 
-func (x *Counter) String() string {
+func (x *PlayerID) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*Counter) ProtoMessage() {}
+func (*PlayerID) ProtoMessage() {}
 
-func (x *Counter) ProtoReflect() protoreflect.Message {
-	mi := &file_beta_proto_msgTypes[5]
+func (x *PlayerID) ProtoReflect() protoreflect.Message {
+	mi := &file_alpha_proto_msgTypes[3]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -231,66 +226,44 @@ func (x *Counter) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use Counter.ProtoReflect.Descriptor instead.
-func (*Counter) Descriptor() ([]byte, []int) {
-	return file_beta_proto_rawDescGZIP(), []int{5}
+// Deprecated: Use PlayerID.ProtoReflect.Descriptor instead.
+func (*PlayerID) Descriptor() ([]byte, []int) {
+	return file_alpha_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *Counter) GetName() string {
+func (x *PlayerID) GetPlayerID() string {
 	if x != nil {
-		return x.Name
+		return x.PlayerID
 	}
 	return ""
 }
 
-func (x *Counter) GetCount() int64 {
-	if x != nil {
-		return x.Count
-	}
-	return 0
-}
-
-func (x *Counter) GetCapacity() int64 {
-	if x != nil {
-		return x.Capacity
-	}
-	return 0
-}
-
-// A representation of a Counter Update Request.
-type CounterUpdateRequest struct {
+// List of Player IDs
+type PlayerIDList struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// The name of the Counter to update
-	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	// The value to set the Counter Count
-	Count *wrapperspb.Int64Value `protobuf:"bytes,2,opt,name=count,proto3" json:"count,omitempty"`
-	// The value to set the Counter Capacity
-	Capacity *wrapperspb.Int64Value `protobuf:"bytes,3,opt,name=capacity,proto3" json:"capacity,omitempty"`
-	// countDiff tracks if a Counter Update Request is CountIncrement (positive), CountDecrement
-	// (negative), 0 if a CountSet or CapacitySet request
-	CountDiff int64 `protobuf:"varint,4,opt,name=countDiff,proto3" json:"countDiff,omitempty"`
+	List []string `protobuf:"bytes,1,rep,name=list,proto3" json:"list,omitempty"`
 }
 
-func (x *CounterUpdateRequest) Reset() {
-	*x = CounterUpdateRequest{}
+func (x *PlayerIDList) Reset() {
+	*x = PlayerIDList{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_beta_proto_msgTypes[6]
+		mi := &file_alpha_proto_msgTypes[4]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
 }
 
-func (x *CounterUpdateRequest) String() string {
+func (x *PlayerIDList) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*CounterUpdateRequest) ProtoMessage() {}
+func (*PlayerIDList) ProtoMessage() {}
 
-func (x *CounterUpdateRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_beta_proto_msgTypes[6]
+func (x *PlayerIDList) ProtoReflect() protoreflect.Message {
+	mi := &file_alpha_proto_msgTypes[4]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -301,424 +274,21 @@ func (x *CounterUpdateRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use CounterUpdateRequest.ProtoReflect.Descriptor instead.
-func (*CounterUpdateRequest) Descriptor() ([]byte, []int) {
-	return file_beta_proto_rawDescGZIP(), []int{6}
+// Deprecated: Use PlayerIDList.ProtoReflect.Descriptor instead.
+func (*PlayerIDList) Descriptor() ([]byte, []int) {
+	return file_alpha_proto_rawDescGZIP(), []int{4}
 }
 
-func (x *CounterUpdateRequest) GetName() string {
-	if x != nil {
-		return x.Name
-	}
-	return ""
-}
-
-func (x *CounterUpdateRequest) GetCount() *wrapperspb.Int64Value {
-	if x != nil {
-		return x.Count
-	}
-	return nil
-}
-
-func (x *CounterUpdateRequest) GetCapacity() *wrapperspb.Int64Value {
-	if x != nil {
-		return x.Capacity
-	}
-	return nil
-}
-
-func (x *CounterUpdateRequest) GetCountDiff() int64 {
-	if x != nil {
-		return x.CountDiff
-	}
-	return 0
-}
-
-type GetCounterRequest struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	// The name of the Counter to get
-	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-}
-
-func (x *GetCounterRequest) Reset() {
-	*x = GetCounterRequest{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_beta_proto_msgTypes[7]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *GetCounterRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*GetCounterRequest) ProtoMessage() {}
-
-func (x *GetCounterRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_beta_proto_msgTypes[7]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use GetCounterRequest.ProtoReflect.Descriptor instead.
-func (*GetCounterRequest) Descriptor() ([]byte, []int) {
-	return file_beta_proto_rawDescGZIP(), []int{7}
-}
-
-func (x *GetCounterRequest) GetName() string {
-	if x != nil {
-		return x.Name
-	}
-	return ""
-}
-
-type UpdateCounterRequest struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	// The requested update to make to the Counter
-	CounterUpdateRequest *CounterUpdateRequest `protobuf:"bytes,1,opt,name=counterUpdateRequest,proto3" json:"counterUpdateRequest,omitempty"`
-}
-
-func (x *UpdateCounterRequest) Reset() {
-	*x = UpdateCounterRequest{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_beta_proto_msgTypes[8]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *UpdateCounterRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*UpdateCounterRequest) ProtoMessage() {}
-
-func (x *UpdateCounterRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_beta_proto_msgTypes[8]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use UpdateCounterRequest.ProtoReflect.Descriptor instead.
-func (*UpdateCounterRequest) Descriptor() ([]byte, []int) {
-	return file_beta_proto_rawDescGZIP(), []int{8}
-}
-
-func (x *UpdateCounterRequest) GetCounterUpdateRequest() *CounterUpdateRequest {
-	if x != nil {
-		return x.CounterUpdateRequest
-	}
-	return nil
-}
-
-// A representation of a List.
-type List struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	// The name of the List
-	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	// The maximum capacity of the List
-	Capacity int64 `protobuf:"varint,2,opt,name=capacity,proto3" json:"capacity,omitempty"`
-	// The array of items in the List ["v1", "v2", …]
-	Values []string `protobuf:"bytes,3,rep,name=values,proto3" json:"values,omitempty"`
-}
-
-func (x *List) Reset() {
-	*x = List{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_beta_proto_msgTypes[9]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *List) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*List) ProtoMessage() {}
-
-func (x *List) ProtoReflect() protoreflect.Message {
-	mi := &file_beta_proto_msgTypes[9]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use List.ProtoReflect.Descriptor instead.
-func (*List) Descriptor() ([]byte, []int) {
-	return file_beta_proto_rawDescGZIP(), []int{9}
-}
-
-func (x *List) GetName() string {
-	if x != nil {
-		return x.Name
-	}
-	return ""
-}
-
-func (x *List) GetCapacity() int64 {
-	if x != nil {
-		return x.Capacity
-	}
-	return 0
-}
-
-func (x *List) GetValues() []string {
-	if x != nil {
-		return x.Values
-	}
-	return nil
-}
-
-type GetListRequest struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	// The name of the List to get
-	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-}
-
-func (x *GetListRequest) Reset() {
-	*x = GetListRequest{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_beta_proto_msgTypes[10]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *GetListRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*GetListRequest) ProtoMessage() {}
-
-func (x *GetListRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_beta_proto_msgTypes[10]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use GetListRequest.ProtoReflect.Descriptor instead.
-func (*GetListRequest) Descriptor() ([]byte, []int) {
-	return file_beta_proto_rawDescGZIP(), []int{10}
-}
-
-func (x *GetListRequest) GetName() string {
-	if x != nil {
-		return x.Name
-	}
-	return ""
-}
-
-type UpdateListRequest struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	// The List to update
-	List *List `protobuf:"bytes,1,opt,name=list,proto3" json:"list,omitempty"`
-	// Required. Mask (list) of fields to update.
-	// Fields are specified relative to the List
-	// (e.g. `capacity`, `values`; *not* `List.capacity` or `List.values`).
-	UpdateMask *fieldmaskpb.FieldMask `protobuf:"bytes,2,opt,name=update_mask,json=updateMask,proto3" json:"update_mask,omitempty"`
-}
-
-func (x *UpdateListRequest) Reset() {
-	*x = UpdateListRequest{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_beta_proto_msgTypes[11]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *UpdateListRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*UpdateListRequest) ProtoMessage() {}
-
-func (x *UpdateListRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_beta_proto_msgTypes[11]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use UpdateListRequest.ProtoReflect.Descriptor instead.
-func (*UpdateListRequest) Descriptor() ([]byte, []int) {
-	return file_beta_proto_rawDescGZIP(), []int{11}
-}
-
-func (x *UpdateListRequest) GetList() *List {
+func (x *PlayerIDList) GetList() []string {
 	if x != nil {
 		return x.List
 	}
 	return nil
 }
 
-func (x *UpdateListRequest) GetUpdateMask() *fieldmaskpb.FieldMask {
-	if x != nil {
-		return x.UpdateMask
-	}
-	return nil
-}
+var File_alpha_proto protoreflect.FileDescriptor
 
-type AddListValueRequest struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	// The name of the List to add a value to.
-	Name  string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	Value string `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
-}
-
-func (x *AddListValueRequest) Reset() {
-	*x = AddListValueRequest{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_beta_proto_msgTypes[12]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *AddListValueRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*AddListValueRequest) ProtoMessage() {}
-
-func (x *AddListValueRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_beta_proto_msgTypes[12]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use AddListValueRequest.ProtoReflect.Descriptor instead.
-func (*AddListValueRequest) Descriptor() ([]byte, []int) {
-	return file_beta_proto_rawDescGZIP(), []int{12}
-}
-
-func (x *AddListValueRequest) GetName() string {
-	if x != nil {
-		return x.Name
-	}
-	return ""
-}
-
-func (x *AddListValueRequest) GetValue() string {
-	if x != nil {
-		return x.Value
-	}
-	return ""
-}
-
-type RemoveListValueRequest struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	// The name of the List to remove a value from.
-	Name  string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	Value string `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
-}
-
-func (x *RemoveListValueRequest) Reset() {
-	*x = RemoveListValueRequest{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_beta_proto_msgTypes[13]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *RemoveListValueRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*RemoveListValueRequest) ProtoMessage() {}
-
-func (x *RemoveListValueRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_beta_proto_msgTypes[13]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use RemoveListValueRequest.ProtoReflect.Descriptor instead.
-func (*RemoveListValueRequest) Descriptor() ([]byte, []int) {
-	return file_beta_proto_rawDescGZIP(), []int{13}
-}
-
-func (x *RemoveListValueRequest) GetName() string {
-	if x != nil {
-		return x.Name
-	}
-	return ""
-}
-
-func (x *RemoveListValueRequest) GetValue() string {
-	if x != nil {
-		return x.Value
-	}
-	return ""
-}
-
-var File_beta_proto protoreflect.FileDescriptor
-
-var file_beta_proto_rawDesc = []byte{
+var file_alpha_proto_rawDesc = []byte{
 	0x0a, 0x0b, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x14, 0x61,
 	0x67, 0x6f, 0x6e, 0x65, 0x73, 0x2e, 0x64, 0x65, 0x76, 0x2e, 0x73, 0x64, 0x6b, 0x2e, 0x61, 0x6c,
 	0x70, 0x68, 0x61, 0x1a, 0x1c, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2f, 0x61, 0x70, 0x69, 0x2f,
@@ -933,52 +503,40 @@ var file_beta_proto_rawDesc = []byte{
 }
 
 var (
-	file_beta_proto_rawDescOnce sync.Once
-	file_beta_proto_rawDescData = file_beta_proto_rawDesc
+	file_alpha_proto_rawDescOnce sync.Once
+	file_alpha_proto_rawDescData = file_alpha_proto_rawDesc
 )
 
-func file_beta_proto_rawDescGZIP() []byte {
-	file_beta_proto_rawDescOnce.Do(func() {
-		file_beta_proto_rawDescData = protoimpl.X.CompressGZIP(file_beta_proto_rawDescData)
+func file_alpha_proto_rawDescGZIP() []byte {
+	file_alpha_proto_rawDescOnce.Do(func() {
+		file_alpha_proto_rawDescData = protoimpl.X.CompressGZIP(file_alpha_proto_rawDescData)
 	})
-	return file_beta_proto_rawDescData
+	return file_alpha_proto_rawDescData
 }
 
-var file_beta_proto_msgTypes = make([]protoimpl.MessageInfo, 14)
-var file_beta_proto_goTypes = []interface{}{
-	(*Empty)(nil),                  // 0: agones.dev.sdk.beta.Empty
-	(*Count)(nil),                  // 1: agones.dev.sdk.beta.Count
-	(*Bool)(nil),                   // 2: agones.dev.sdk.beta.Bool
-	(*Counter)(nil),                // 3: agones.dev.sdk.beta.Counter
-	(*CounterUpdateRequest)(nil),   // 4: agones.dev.sdk.beta.CounterUpdateRequest
-	(*GetCounterRequest)(nil),      // 5: agones.dev.sdk.beta.GetCounterRequest
-	(*UpdateCounterRequest)(nil),   // 6: agones.dev.sdk.beta.UpdateCounterRequest
-	(*List)(nil),                   // 7: agones.dev.sdk.beta.List
-	(*GetListRequest)(nil),         // 8: agones.dev.sdk.beta.GetListRequest
-	(*UpdateListRequest)(nil),      // 9: agones.dev.sdk.beta.UpdateListRequest
-	(*AddListValueRequest)(nil),    // 10: agones.dev.sdk.beta.AddListValueRequest
-	(*RemoveListValueRequest)(nil), // 11: agones.dev.sdk.beta.RemoveListValueRequest
-	(*wrapperspb.Int64Value)(nil),  // 12: google.protobuf.Int64Value
-	(*fieldmaskpb.FieldMask)(nil),  // 13: google.protobuf.FieldMask
+var file_alpha_proto_msgTypes = make([]protoimpl.MessageInfo, 14)
+var file_alpha_proto_goTypes = []interface{}{
+	(*Empty)(nil),                 // 0: agones.dev.sdk.alpha.Empty
+	(*Count)(nil),                 // 1: agones.dev.sdk.alpha.Count
+	(*Bool)(nil),                  // 2: agones.dev.sdk.alpha.Bool
+	(*PlayerID)(nil),              // 3: agones.dev.sdk.alpha.PlayerID
+	(*PlayerIDList)(nil),          // 4: agones.dev.sdk.alpha.PlayerIDList
+	(*wrapperspb.Int64Value)(nil), // 14: google.protobuf.Int64Value
+	(*fieldmaskpb.FieldMask)(nil), // 15: google.protobuf.FieldMask
 }
-var file_beta_proto_depIdxs = []int32{
-	14, // 0: agones.dev.sdk.beta.CounterUpdateRequest.count:type_name -> google.protobuf.Int64Value
-	14, // 1: agones.dev.sdk.beta.CounterUpdateRequest.capacity:type_name -> google.protobuf.Int64Value
-	6,  // 2: agones.dev.sdk.beta.UpdateCounterRequest.counterUpdateRequest:type_name -> agones.dev.sdk.beta.CounterUpdateRequest
-	9,  // 3: agones.dev.sdk.beta.UpdateListRequest.list:type_name -> agones.dev.sdk.beta.List
-	15, // 4: agones.dev.sdk.beta.UpdateListRequest.update_mask:type_name -> google.protobuf.FieldMask
-	7,  // 5: agones.dev.sdk.beta.SDK.GetCounter:input_type -> agones.dev.sdk.beta.GetCounterRequest
-	8,  // 6: agones.dev.sdk.beta.SDK.UpdateCounter:input_type -> agones.dev.sdk.beta.UpdateCounterRequest
-	10, // 7: agones.dev.sdk.beta.SDK.GetList:input_type -> agones.dev.sdk.beta.GetListRequest
-	11, // 8: agones.dev.sdk.beta.SDK.UpdateList:input_type -> agones.dev.sdk.beta.UpdateListRequest
-	12, // 9: agones.dev.sdk.beta.SDK.AddListValue:input_type -> agones.dev.sdk.beta.AddListValueRequest
-	13, // 10: agones.dev.sdk.beta.SDK.RemoveListValue:input_type -> agones.dev.sdk.beta.RemoveListValueRequest
-	5,  // 11: agones.dev.sdk.beta.SDK.GetCounter:output_type -> agones.dev.sdk.beta.Counter
-	5,  // 12: agones.dev.sdk.beta.SDK.UpdateCounter:output_type -> agones.dev.sdk.beta.Counter
-	9,  // 13: agones.dev.sdk.beta.SDK.GetList:output_type -> agones.dev.sdk.beta.List
-	9,  // 14: agones.dev.sdk.beta.SDK.UpdateList:output_type -> agones.dev.sdk.beta.List
-	9,  // 15: agones.dev.sdk.beta.SDK.AddListValue:output_type -> agones.dev.sdk.beta.List
-	9,  // 16: agones.dev.sdk.beta.SDK.RemoveListValue:output_type -> agones.dev.sdk.beta.List
+var file_alpha_proto_depIdxs = []int32{
+	14, // 0: agones.dev.sdk.alpha.CounterUpdateRequest.count:type_name -> google.protobuf.Int64Value
+	14, // 1: agones.dev.sdk.alpha.CounterUpdateRequest.capacity:type_name -> google.protobuf.Int64Value
+	6,  // 2: agones.dev.sdk.alpha.UpdateCounterRequest.counterUpdateRequest:type_name -> agones.dev.sdk.alpha.CounterUpdateRequest
+	9,  // 3: agones.dev.sdk.alpha.UpdateListRequest.list:type_name -> agones.dev.sdk.alpha.List
+	15, // 4: agones.dev.sdk.alpha.UpdateListRequest.update_mask:type_name -> google.protobuf.FieldMask
+	3,  // 5: agones.dev.sdk.alpha.SDK.PlayerConnect:input_type -> agones.dev.sdk.alpha.PlayerID
+	3,  // 6: agones.dev.sdk.alpha.SDK.PlayerDisconnect:input_type -> agones.dev.sdk.alpha.PlayerID
+	1,  // 7: agones.dev.sdk.alpha.SDK.SetPlayerCapacity:input_type -> agones.dev.sdk.alpha.Count
+	0,  // 8: agones.dev.sdk.alpha.SDK.GetPlayerCapacity:input_type -> agones.dev.sdk.alpha.Empty
+	0,  // 9: agones.dev.sdk.alpha.SDK.GetPlayerCount:input_type -> agones.dev.sdk.alpha.Empty
+	3,  // 10: agones.dev.sdk.alpha.SDK.IsPlayerConnected:input_type -> agones.dev.sdk.alpha.PlayerID
+	0,  // 11: agones.dev.sdk.alpha.SDK.GetConnectedPlayers:input_type -> agones.dev.sdk.alpha.Empty
 	18, // [18:31] is the sub-list for method output_type
 	5,  // [5:18] is the sub-list for method input_type
 	5,  // [5:5] is the sub-list for extension type_name
@@ -986,13 +544,13 @@ var file_beta_proto_depIdxs = []int32{
 	0,  // [0:5] is the sub-list for field type_name
 }
 
-func init() { file_beta_proto_init() }
-func file_beta_proto_init() {
-	if File_beta_proto != nil {
+func init() { file_alpha_proto_init() }
+func file_alpha_proto_init() {
+	if File_alpha_proto != nil {
 		return
 	}
 	if !protoimpl.UnsafeEnabled {
-		file_beta_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
+		file_alpha_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Empty); i {
 			case 0:
 				return &v.state
@@ -1004,7 +562,7 @@ func file_beta_proto_init() {
 				return nil
 			}
 		}
-		file_beta_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
+		file_alpha_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Count); i {
 			case 0:
 				return &v.state
@@ -1016,7 +574,7 @@ func file_beta_proto_init() {
 				return nil
 			}
 		}
-		file_beta_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
+		file_alpha_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Bool); i {
 			case 0:
 				return &v.state
@@ -1028,8 +586,8 @@ func file_beta_proto_init() {
 				return nil
 			}
 		}
-		file_beta_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Counter); i {
+		file_alpha_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*PlayerID); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1040,92 +598,8 @@ func file_beta_proto_init() {
 				return nil
 			}
 		}
-		file_beta_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*CounterUpdateRequest); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_beta_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetCounterRequest); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_beta_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*UpdateCounterRequest); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_beta_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*List); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_beta_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetListRequest); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_beta_proto_msgTypes[11].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*UpdateListRequest); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_beta_proto_msgTypes[12].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AddListValueRequest); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_beta_proto_msgTypes[13].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*RemoveListValueRequest); i {
+		file_alpha_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*PlayerIDList); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1141,18 +615,18 @@ func file_beta_proto_init() {
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: file_beta_proto_rawDesc,
+			RawDescriptor: file_alpha_proto_rawDesc,
 			NumEnums:      0,
 			NumMessages:   14,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
-		GoTypes:           file_beta_proto_goTypes,
-		DependencyIndexes: file_beta_proto_depIdxs,
-		MessageInfos:      file_beta_proto_msgTypes,
+		GoTypes:           file_alpha_proto_goTypes,
+		DependencyIndexes: file_alpha_proto_depIdxs,
+		MessageInfos:      file_alpha_proto_msgTypes,
 	}.Build()
-	File_beta_proto = out.File
-	file_beta_proto_rawDesc = nil
-	file_beta_proto_goTypes = nil
-	file_beta_proto_depIdxs = nil
+	File_alpha_proto = out.File
+	file_alpha_proto_rawDesc = nil
+	file_alpha_proto_goTypes = nil
+	file_alpha_proto_depIdxs = nil
 }

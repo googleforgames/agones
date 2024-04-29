@@ -40,6 +40,7 @@ import (
 	"agones.dev/agones/pkg"
 	"agones.dev/agones/pkg/client/clientset/versioned"
 	"agones.dev/agones/pkg/sdk"
+	sdkalpha "agones.dev/agones/pkg/sdk/alpha"
 	sdkbeta "agones.dev/agones/pkg/sdk/beta"
 	"agones.dev/agones/pkg/sdkserver"
 	"agones.dev/agones/pkg/util/runtime"
@@ -197,8 +198,12 @@ func registerLocal(grpcServer *grpc.Server, ctlConf config) (func(), error) {
 		return nil, err
 	}
 
+	alphaSDKAdapter := &sdkserver.AlphaSDKAdapter{LocalSDKServer: s}
+	betaSDKAdapter := &sdkserver.BetaSDKAdapter{LocalSDKServer: s}
 	sdk.RegisterSDKServer(grpcServer, s)
-	sdkbeta.RegisterSDKServer(grpcServer, s)
+	sdkalpha.RegisterSDKServer(grpcServer, alphaSDKAdapter)
+	sdkbeta.RegisterSDKServer(grpcServer, betaSDKAdapter)
+
 	return func() {
 		s.Close()
 	}, err
@@ -218,8 +223,11 @@ func registerTestSdkServer(grpcServer *grpc.Server, ctlConf config) (func(), err
 	s.SetExpectedSequence(expectedFuncs)
 	s.SetSdkName(ctlConf.TestSdkName)
 
+	alphaSDKAdapter := &sdkserver.AlphaSDKAdapter{LocalSDKServer: s}
+	betaSDKAdapter := &sdkserver.BetaSDKAdapter{LocalSDKServer: s}
 	sdk.RegisterSDKServer(grpcServer, s)
-	sdkbeta.RegisterSDKServer(grpcServer, s)
+	sdkalpha.RegisterSDKServer(grpcServer, alphaSDKAdapter)
+	sdkbeta.RegisterSDKServer(grpcServer, betaSDKAdapter)
 	return func() {
 		s.Close()
 	}, err
@@ -248,6 +256,11 @@ func runGateway(ctx context.Context, grpcEndpoint string, mux *gwruntime.ServeMu
 	if err := sdk.RegisterSDKHandler(ctx, mux, conn); err != nil {
 		logger.WithError(err).Fatal("Could not register sdk grpc-gateway")
 	}
+
+	if err := sdkalpha.RegisterSDKHandler(ctx, mux, conn); err != nil {
+		logger.WithError(err).Fatal("Could not register alpha sdk grpc-gateway")
+	}
+
 	if err := sdkbeta.RegisterSDKHandler(ctx, mux, conn); err != nil {
 		logger.WithError(err).Fatal("Could not register beta sdk grpc-gateway")
 	}

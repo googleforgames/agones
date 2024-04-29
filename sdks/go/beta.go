@@ -37,55 +37,6 @@ func newBeta(conn *grpc.ClientConn) *Beta {
 	}
 }
 
-// GetPlayerCapacity gets the last player capacity that was set through the SDK.
-// If the player capacity is set from outside the SDK, use SDK.GameServer() instead.
-func (a *Beta) GetPlayerCapacity() (int64, error) {
-	c, err := a.client.GetPlayerCapacity(context.Background(), &beta.Empty{})
-	return c.GetCount(), errors.Wrap(err, "could not get player capacity")
-}
-
-// SetPlayerCapacity changes the player capacity to a new value.
-func (a *Beta) SetPlayerCapacity(capacity int64) error {
-	_, err := a.client.SetPlayerCapacity(context.Background(), &beta.Count{Count: capacity})
-	return errors.Wrap(err, "could not set player capacity")
-}
-
-// PlayerConnect increases the SDK’s stored player count by one, and appends this playerID to status.players.id.
-// Will return true and add the playerID to the list of playerIDs if the playerIDs was not already in the
-// list of connected playerIDs.
-func (a *Beta) PlayerConnect(id string) (bool, error) {
-	ok, err := a.client.PlayerConnect(context.Background(), &beta.PlayerID{PlayerID: id})
-	return ok.GetBool(), errors.Wrap(err, "could not register connected player")
-}
-
-// PlayerDisconnect Decreases the SDK’s stored player count by one, and removes the playerID from status.players.id.
-// Will return true and remove the supplied playerID from the list of connected playerIDs if the
-// playerID value exists within the list.
-func (a *Beta) PlayerDisconnect(id string) (bool, error) {
-	ok, err := a.client.PlayerDisconnect(context.Background(), &beta.PlayerID{PlayerID: id})
-	return ok.GetBool(), errors.Wrap(err, "could not register disconnected player")
-}
-
-// GetPlayerCount returns the current player count.
-func (a *Beta) GetPlayerCount() (int64, error) {
-	count, err := a.client.GetPlayerCount(context.Background(), &beta.Empty{})
-	return count.GetCount(), errors.Wrap(err, "could not get player count")
-}
-
-// IsPlayerConnected returns if the playerID is currently connected to the GameServer.
-// This is always accurate, even if the value hasn’t been updated to the GameServer status yet.
-func (a *Beta) IsPlayerConnected(id string) (bool, error) {
-	ok, err := a.client.IsPlayerConnected(context.Background(), &beta.PlayerID{PlayerID: id})
-	return ok.GetBool(), errors.Wrap(err, "could not get if player is connected")
-}
-
-// GetConnectedPlayers returns the list of the currently connected player ids.
-// This is always accurate, even if the value hasn’t been updated to the GameServer status yet.
-func (a *Beta) GetConnectedPlayers() ([]string, error) {
-	list, err := a.client.GetConnectedPlayers(context.Background(), &beta.Empty{})
-	return list.GetList(), errors.Wrap(err, "could not list connected players")
-}
-
 // GetCounterCount returns the Count for a Counter, given the Counter's key (name).
 // Will error if the key was not predefined in the GameServer resource on creation.
 func (a *Beta) GetCounterCount(key string) (int64, error) {

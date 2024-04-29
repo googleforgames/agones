@@ -113,11 +113,11 @@ func main() {
 
 func testPlayerTracking(sdk *goSdk.SDK) {
 	capacity := int64(10)
-	if err := sdk.Beta().SetPlayerCapacity(capacity); err != nil {
+	if err := sdk.Alpha().SetPlayerCapacity(capacity); err != nil {
 		log.Fatalf("Error setting player capacity: %s", err)
 	}
 
-	c, err := sdk.Beta().GetPlayerCapacity()
+	c, err := sdk.Alpha().GetPlayerCapacity()
 	if err != nil {
 		log.Fatalf("Error getting player capacity: %s", err)
 	}
@@ -126,31 +126,31 @@ func testPlayerTracking(sdk *goSdk.SDK) {
 	}
 
 	playerID := "1234"
-	if ok, err := sdk.Beta().PlayerConnect(playerID); err != nil {
+	if ok, err := sdk.Alpha().PlayerConnect(playerID); err != nil {
 		log.Fatalf("Error registering player as connected: %s", err)
 	} else if !ok {
 		log.Fatalf("PlayerConnect returned false")
 	}
 
-	if ok, err := sdk.Beta().IsPlayerConnected(playerID); err != nil {
+	if ok, err := sdk.Alpha().IsPlayerConnected(playerID); err != nil {
 		log.Fatalf("Error checking if player is connected: %s", err)
 	} else if !ok {
 		log.Fatalf("IsPlayerConnected returned false")
 	}
 
-	if list, err := sdk.Beta().GetConnectedPlayers(); err != nil {
+	if list, err := sdk.Alpha().GetConnectedPlayers(); err != nil {
 		log.Fatalf("Error getting connected player: %s", err)
 	} else if len(list) == 0 {
 		log.Fatalf("No connected players returned")
 	}
 
-	if ok, err := sdk.Beta().PlayerDisconnect(playerID); err != nil {
+	if ok, err := sdk.Alpha().PlayerDisconnect(playerID); err != nil {
 		log.Fatalf("Error registering player as disconnected: %s", err)
 	} else if !ok {
 		log.Fatalf("PlayerDisconnect returned false")
 	}
 
-	if c, err = sdk.Beta().GetPlayerCount(); err != nil {
+	if c, err = sdk.Alpha().GetPlayerCount(); err != nil {
 		log.Fatalf("Error retrieving player count: %s", err)
 	} else if c != int64(0) {
 		log.Fatalf("Player Count should be 0, but is %d", c)
