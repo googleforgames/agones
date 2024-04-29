@@ -47,6 +47,24 @@ import (
 	testclocks "k8s.io/utils/clock/testing"
 )
 
+// PatchGameServer is a helper function for the AddReactor "patch" that creates and applies a patch
+// to a gameserver. Returns a patched copy and does not modify the original game server.
+func PatchGameServer(t *testing.T, action k8stesting.Action, gs *agonesv1.GameServer) *agonesv1.GameServer {
+	pa := action.(k8stesting.PatchAction)
+	patchJSON := pa.GetPatch()
+	patch, err := jsonpatch.DecodePatch(patchJSON)
+	assert.NoError(t, err)
+	gsCopy := gs.DeepCopy()
+	gsJSON, err := json.Marshal(gsCopy)
+	assert.NoError(t, err)
+	patchedGs, err := patch.Apply(gsJSON)
+	assert.NoError(t, err)
+	err = json.Unmarshal(patchedGs, &gsCopy)
+	assert.NoError(t, err)
+
+	return gsCopy
+}
+
 func TestSidecarRun(t *testing.T) {
 	t.Parallel()
 
@@ -167,32 +185,24 @@ func TestSidecarRun(t *testing.T) {
 			gs.ApplyDefaults()
 
 			m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-				return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{gs}}, nil
+				return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{*gs.DeepCopy()}}, nil
 			})
 
 			m.AgonesClient.AddReactor("patch", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
 				defer close(done)
-				pa := action.(k8stesting.PatchAction)
-				patchJSON := pa.GetPatch()
-				patch, err := jsonpatch.DecodePatch(patchJSON)
-				assert.NoError(t, err)
-				gsJSON, err := json.Marshal(gs)
-				assert.NoError(t, err)
-				patchedGs, err := patch.Apply(gsJSON)
-				assert.NoError(t, err)
-				err = json.Unmarshal(patchedGs, &gs)
-				assert.NoError(t, err)
+
+				gsCopy := PatchGameServer(t, action, &gs)
 
 				if v.expected.state != "" {
-					assert.Equal(t, v.expected.state, gs.Status.State)
+					assert.Equal(t, v.expected.state, gsCopy.Status.State)
 				}
 				for label, value := range v.expected.labels {
-					assert.Equal(t, value, gs.ObjectMeta.Labels[label])
+					assert.Equal(t, value, gsCopy.ObjectMeta.Labels[label])
 				}
 				for ann, value := range v.expected.annotations {
-					assert.Equal(t, value, gs.ObjectMeta.Annotations[ann])
+					assert.Equal(t, value, gsCopy.ObjectMeta.Annotations[ann])
 				}
-				return true, &gs, nil
+				return true, gsCopy, nil
 			})
 
 			sc, err := NewSDKServer("test", "default", m.KubeClient, m.AgonesClient, logrus.DebugLevel)
@@ -305,32 +315,23 @@ func TestSDKServerSyncGameServer(t *testing.T) {
 			}
 
 			m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-				return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{gs}}, nil
+				return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{*gs.DeepCopy()}}, nil
 			})
 
 			m.AgonesClient.AddReactor("patch", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-				pa := action.(k8stesting.PatchAction)
-				patchJSON := pa.GetPatch()
-				patch, err := jsonpatch.DecodePatch(patchJSON)
-				assert.NoError(t, err)
-				gsJSON, err := json.Marshal(gs)
-				assert.NoError(t, err)
-				patchedGs, err := patch.Apply(gsJSON)
-				assert.NoError(t, err)
-				err = json.Unmarshal(patchedGs, &gs)
-				assert.NoError(t, err)
+				gsCopy := PatchGameServer(t, action, &gs)
 
 				if v.expected.state != "" {
-					assert.Equal(t, v.expected.state, gs.Status.State)
+					assert.Equal(t, v.expected.state, gsCopy.Status.State)
 				}
 				for label, value := range v.expected.labels {
-					assert.Equal(t, value, gs.ObjectMeta.Labels[label])
+					assert.Equal(t, value, gsCopy.ObjectMeta.Labels[label])
 				}
 				for ann, value := range v.expected.annotations {
-					assert.Equal(t, value, gs.ObjectMeta.Annotations[ann])
+					assert.Equal(t, value, gsCopy.ObjectMeta.Annotations[ann])
 				}
 				updated = true
-				return false, &gs, nil
+				return false, gsCopy, nil
 			})
 
 			ctx, cancel := context.WithCancel(context.Background())
@@ -390,7 +391,7 @@ func TestSidecarUpdateState(t *testing.T) {
 
 				return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{gs}}, nil
 			})
-			m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			m.AgonesClient.AddReactor("patch", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
 				updated = true
 				return true, nil, nil
 			})
@@ -476,22 +477,13 @@ func TestSidecarUnhealthyMessage(t *testing.T) {
 	gs.ApplyDefaults()
 
 	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-		return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{gs}}, nil
+		return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{*gs.DeepCopy()}}, nil
 	})
 
 	m.AgonesClient.AddReactor("patch", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-		pa := action.(k8stesting.PatchAction)
-		patchJSON := pa.GetPatch()
-		patch, err := jsonpatch.DecodePatch(patchJSON)
-		assert.NoError(t, err)
-		gsJSON, err := json.Marshal(gs)
-		assert.NoError(t, err)
-		patchedGs, err := patch.Apply(gsJSON)
-		assert.NoError(t, err)
-		err = json.Unmarshal(patchedGs, &gs)
-		assert.NoError(t, err)
+		gsCopy := PatchGameServer(t, action, &gs)
 
-		return true, &gs, nil
+		return true, gsCopy, nil
 	})
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -957,26 +949,18 @@ func TestSDKServerReserveTimeoutOnRun(t *testing.T) {
 
 	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
 		n := metav1.NewTime(metav1.Now().Add(time.Second))
-		gs.Status.ReservedUntil = &n
+		gsCopy := gs.DeepCopy()
+		gsCopy.Status.ReservedUntil = &n
 
-		return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{gs}}, nil
+		return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{*gsCopy}}, nil
 	})
 
 	m.AgonesClient.AddReactor("patch", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-		pa := action.(k8stesting.PatchAction)
-		patchJSON := pa.GetPatch()
-		patch, err := jsonpatch.DecodePatch(patchJSON)
-		assert.NoError(t, err)
-		gsJSON, err := json.Marshal(gs)
-		assert.NoError(t, err)
-		patchedGs, err := patch.Apply(gsJSON)
-		assert.NoError(t, err)
-		err = json.Unmarshal(patchedGs, &gs)
-		assert.NoError(t, err)
+		gsCopy := PatchGameServer(t, action, &gs)
 
-		updated <- gs.Status
+		updated <- gsCopy.Status
 
-		return true, &gs, nil
+		return true, gsCopy, nil
 	})
 
 	sc, err := defaultSidecar(m)
@@ -1024,21 +1008,11 @@ func TestSDKServerReserveTimeout(t *testing.T) {
 	gs.ApplyDefaults()
 
 	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-		return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{gs}}, nil
+		return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{*gs.DeepCopy()}}, nil
 	})
 
 	m.AgonesClient.AddReactor("patch", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-		pa := action.(k8stesting.PatchAction)
-		patchJSON := pa.GetPatch()
-		patch, err := jsonpatch.DecodePatch(patchJSON)
-		assert.NoError(t, err)
-		gsCopy := gs.DeepCopy()
-		gsJSON, err := json.Marshal(gsCopy)
-		assert.NoError(t, err)
-		patchedGs, err := patch.Apply(gsJSON)
-		assert.NoError(t, err)
-		err = json.Unmarshal(patchedGs, &gsCopy)
-		assert.NoError(t, err)
+		gsCopy := PatchGameServer(t, action, &gs)
 
 		state <- gsCopy.Status
 		return true, gsCopy, nil
@@ -1318,25 +1292,16 @@ func TestSDKServerUpdateCounter(t *testing.T) {
 			gs.ApplyDefaults()
 
 			m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-				return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{gs}}, nil
+				return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{*gs.DeepCopy()}}, nil
 			})
 
 			updated := make(chan map[string]agonesv1.CounterStatus, 10)
 
 			m.AgonesClient.AddReactor("patch", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-				pa := action.(k8stesting.PatchAction)
-				patchJSON := pa.GetPatch()
-				patch, err := jsonpatch.DecodePatch(patchJSON)
-				assert.NoError(t, err)
-				gsJSON, err := json.Marshal(gs)
-				assert.NoError(t, err)
-				patchedGs, err := patch.Apply(gsJSON)
-				assert.NoError(t, err)
-				err = json.Unmarshal(patchedGs, &gs)
-				assert.NoError(t, err)
+				gsCopy := PatchGameServer(t, action, &gs)
 
-				updated <- gs.Status.Counters
-				return true, &gs, nil
+				updated <- gsCopy.Status.Counters
+				return true, gsCopy, nil
 			})
 
 			ctx, cancel := context.WithCancel(context.Background())
@@ -1480,25 +1445,16 @@ func TestSDKServerAddListValue(t *testing.T) {
 			gs.ApplyDefaults()
 
 			m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-				return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{gs}}, nil
+				return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{*gs.DeepCopy()}}, nil
 			})
 
 			updated := make(chan map[string]agonesv1.ListStatus, 10)
 
 			m.AgonesClient.AddReactor("patch", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-				pa := action.(k8stesting.PatchAction)
-				patchJSON := pa.GetPatch()
-				patch, err := jsonpatch.DecodePatch(patchJSON)
-				assert.NoError(t, err)
-				gsJSON, err := json.Marshal(gs)
-				assert.NoError(t, err)
-				patchedGs, err := patch.Apply(gsJSON)
-				assert.NoError(t, err)
-				err = json.Unmarshal(patchedGs, &gs)
-				assert.NoError(t, err)
+				gsCopy := PatchGameServer(t, action, &gs)
 
-				updated <- gs.Status.Lists
-				return true, &gs, nil
+				updated <- gsCopy.Status.Lists
+				return true, gsCopy, nil
 			})
 
 			ctx, cancel := context.WithCancel(context.Background())
@@ -1638,25 +1594,16 @@ func TestSDKServerRemoveListValue(t *testing.T) {
 			gs.ApplyDefaults()
 
 			m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-				return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{gs}}, nil
+				return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{*gs.DeepCopy()}}, nil
 			})
 
 			updated := make(chan map[string]agonesv1.ListStatus, 10)
 
 			m.AgonesClient.AddReactor("patch", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-				pa := action.(k8stesting.PatchAction)
-				patchJSON := pa.GetPatch()
-				patch, err := jsonpatch.DecodePatch(patchJSON)
-				assert.NoError(t, err)
-				gsJSON, err := json.Marshal(gs)
-				assert.NoError(t, err)
-				patchedGs, err := patch.Apply(gsJSON)
-				assert.NoError(t, err)
-				err = json.Unmarshal(patchedGs, &gs)
-				assert.NoError(t, err)
+				gsCopy := PatchGameServer(t, action, &gs)
 
-				updated <- gs.Status.Lists
-				return true, &gs, nil
+				updated <- gsCopy.Status.Lists
+				return true, gsCopy, nil
 			})
 
 			ctx, cancel := context.WithCancel(context.Background())
@@ -1805,25 +1752,16 @@ func TestSDKServerUpdateList(t *testing.T) {
 			gs.ApplyDefaults()
 
 			m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-				return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{gs}}, nil
+				return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{*gs.DeepCopy()}}, nil
 			})
 
 			updated := make(chan map[string]agonesv1.ListStatus, 10)
 
 			m.AgonesClient.AddReactor("patch", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-				pa := action.(k8stesting.PatchAction)
-				patchJSON := pa.GetPatch()
-				patch, err := jsonpatch.DecodePatch(patchJSON)
-				assert.NoError(t, err)
-				gsJSON, err := json.Marshal(gs)
-				assert.NoError(t, err)
-				patchedGs, err := patch.Apply(gsJSON)
-				assert.NoError(t, err)
-				err = json.Unmarshal(patchedGs, &gs)
-				assert.NoError(t, err)
+				gsCopy := PatchGameServer(t, action, &gs)
 
-				updated <- gs.Status.Lists
-				return true, &gs, nil
+				updated <- gsCopy.Status.Lists
+				return true, gsCopy, nil
 			})
 
 			ctx, cancel := context.WithCancel(context.Background())
@@ -1941,7 +1879,7 @@ func TestSDKServerPlayerCapacity(t *testing.T) {
 			},
 		}
 		gs.ApplyDefaults()
-		return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{gs}}, nil
+		return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{*gs.DeepCopy()}}, nil
 	})
 
 	updated := make(chan int64, 10)
