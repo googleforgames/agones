@@ -1877,16 +1877,16 @@ func TestSDKServerPlayerCapacity(t *testing.T) {
 
 	// async, so check after a period
 	err = wait.PollUntilContextTimeout(context.Background(), time.Second, 10*time.Second, true, func(ctx context.Context) (bool, error) {
-		count, err := sc.GetPlayerCapacity(context.Background(), &beta.Empty{})
+		count, err := sc.GetPlayerCapacity(context.Background(), &alpha.Empty{})
 		return count.Count == 10, err
 	})
 	assert.NoError(t, err)
 
 	// on update from the SDK, the value is available from GetPlayerCapacity
-	_, err = sc.SetPlayerCapacity(context.Background(), &beta.Count{Count: 20})
+	_, err = sc.SetPlayerCapacity(context.Background(), &alpha.Count{Count: 20})
 	assert.NoError(t, err)
 
-	count, err := sc.GetPlayerCapacity(context.Background(), &beta.Empty{})
+	count, err := sc.GetPlayerCapacity(context.Background(), &alpha.Empty{})
 	require.NoError(t, err)
 	assert.Equal(t, int64(20), count.Count)
 
@@ -1941,7 +1941,7 @@ func TestSDKServerPlayerConnectAndDisconnectWithoutPlayerTracking(t *testing.T) 
 
 	// check initial value comes through
 	// async, so check after a period
-	e := &beta.Empty{}
+	e := &alpha.Empty{}
 	err = wait.PollUntilContextTimeout(context.Background(), time.Second, 10*time.Second, true, func(ctx context.Context) (bool, error) {
 		count, err := sc.GetPlayerCapacity(context.Background(), e)
 
@@ -2026,7 +2026,7 @@ func TestSDKServerPlayerConnectAndDisconnect(t *testing.T) {
 
 	// check initial value comes through
 	// async, so check after a period
-	e := &beta.Empty{}
+	e := &alpha.Empty{}
 	err = wait.PollUntilContextTimeout(context.Background(), time.Second, 10*time.Second, true, func(ctx context.Context) (bool, error) {
 		count, err := sc.GetPlayerCapacity(context.Background(), e)
 		return count.Count == capacity, err
