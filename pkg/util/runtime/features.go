@@ -31,15 +31,18 @@ const (
 	////////////////
 	// Beta features
 
-	////////////////
-	// Alpha features
-
-	// FeatureCountsAndLists is a feature flag that enables/disables counts and lists feature
+	// FeatureCountsAndLists is a feature flag that enables counts and lists feature
 	// (a generic implenetation of the player tracking feature).
 	FeatureCountsAndLists Feature = "CountsAndLists"
 
+	////////////////
+	// Alpha features
+
 	// FeatureDisableResyncOnSDKServer is a feature flag to enable/disable resync on SDK server.
 	FeatureDisableResyncOnSDKServer Feature = "DisableResyncOnSDKServer"
+
+	////////////////
+	// Alpha features
 
 	// FeatureGKEAutopilotExtendedDurationPods enables the use of Extended Duration pods
 	// when Agones is running on Autopilot. Available on 1.28+ only.
@@ -83,22 +86,24 @@ var (
 	// * move from `false` to `true` in `featureDefaults`.
 	// * move from `false` to `true` in install/helm/agones/defaultfeaturegates.yaml
 	// * remove from `ALPHA_FEATURE_GATES` in build/Makefile
+	// * add to `BETA_FEATURE_GATES` in build/Makefile
 	// * invert in the e2e-runner config in cloudbuild.yaml
 	// * change the value in site/content/en/docs/Guides/feature-stages.md.
 	// * Ensure that the features in each file are organized categorically and alphabetically.
 	//
 	// To promote a feature from beta->GA:
 	// * remove all places consuming the feature gate and fold logic to true
-	//   * consider cleanup - often folding a gate to true allows refactoring
+	// * consider cleanup - often folding a gate to true allows refactoring
 	// * invert the "new alpha feature" steps above
+	// * remove from `BETA_FEATURE_GATES` in build/Makefile
 	//
 	// In each of these, keep the feature sorted by descending maturity then alphabetical
 	featureDefaults = map[Feature]bool{
 		// Beta features
+		FeatureCountsAndLists:           true,
 		FeatureDisableResyncOnSDKServer: true,
 
 		// Alpha features
-		FeatureCountsAndLists:                   false,
 		FeatureGKEAutopilotExtendedDurationPods: false,
 		FeaturePlayerAllocationFilter:           false,
 		FeaturePlayerTracking:                   false,
