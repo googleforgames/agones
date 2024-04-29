@@ -356,7 +356,6 @@ func (s *SDKServer) updateState(ctx context.Context) error {
 	}
 	s.gsUpdateMutex.RUnlock()
 
-	gameServers := s.gameServerGetter.GameServers(s.namespace)
 	gs, err := s.gameServer()
 	if err != nil {
 		return err
@@ -407,7 +406,7 @@ func (s *SDKServer) updateState(ctx context.Context) error {
 		gsCopy.ObjectMeta.Annotations[gameserverallocations.LastAllocatedAnnotationKey] = string(ts)
 	}
 
-	gs, err = gameServers.Update(ctx, gsCopy, metav1.UpdateOptions{})
+	gs, err = s.patchGameServer(ctx, gs, gsCopy)
 	if err != nil {
 		return errors.Wrapf(err, "could not update GameServer %s/%s to state %s", s.namespace, s.gameServerName, gsCopy.Status.State)
 	}
@@ -450,10 +449,21 @@ func (s *SDKServer) gameServer() (*agonesv1.GameServer, error) {
 	return gs, nil
 }
 
+// patchGameServer is a helper function to create and apply a patch update, so the changes in
+// gsCopy are applied to the original gs.
+func (s *SDKServer) patchGameServer(ctx context.Context, gs, gsCopy *agonesv1.GameServer) (*agonesv1.GameServer, error) {
+	patch, err := gs.Patch(gsCopy)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println("PATCH", string(patch))
+	return s.gameServerGetter.GameServers(s.namespace).Patch(ctx, gs.GetObjectMeta().GetName(), types.JSONPatchType, patch, metav1.PatchOptions{})
+}
+
 // updateLabels updates the labels on this GameServer to the ones persisted in SDKServer,
 // i.e. SDKServer.gsLabels, with the prefix of "agones.dev/sdk-"
 func (s *SDKServer) updateLabels(ctx context.Context) error {
-	s.logger.WithField("labels", s.gsLabels).Debug("Patching label")
+	s.logger.WithField("labels", s.gsLabels).Debug("Updating label")
 	gs, err := s.gameServer()
 	if err != nil {
 		return err
@@ -470,12 +480,7 @@ func (s *SDKServer) updateLabels(ctx context.Context) error {
 	}
 	s.gsUpdateMutex.RUnlock()
 
-	patch, err := gs.Patch(gsCopy)
-	if err != nil {
-		return err
-	}
-
-	_, err = s.gameServerGetter.GameServers(s.namespace).Patch(ctx, gs.GetObjectMeta().GetName(), types.JSONPatchType, patch, metav1.PatchOptions{})
+	_, err = s.patchGameServer(ctx, gs, gsCopy)
 	return err
 }
 
@@ -499,7 +504,12 @@ func (s *SDKServer) updateAnnotations(ctx context.Context) error {
 	}
 	s.gsUpdateMutex.RUnlock()
 
-	_, err = s.gameServerGetter.GameServers(s.namespace).Update(ctx, gsCopy, metav1.UpdateOptions{})
+	patch, err := gs.Patch(gsCopy)
+	if err != nil {
+		return err
+	}
+
+	_, err = s.gameServerGetter.GameServers(s.namespace).Patch(ctx, gs.GetObjectMeta().GetName(), types.JSONPatchType, patch, metav1.PatchOptions{})
 	return err
 }
 
