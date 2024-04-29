@@ -1370,7 +1370,7 @@ func TestSDKConformanceFunctionality(t *testing.T) {
 	assert.True(t, b, "we should receive strings from all go routines %v %v", l.expectedSequence, l.requestSequence)
 }
 
-func TestBetaSDKConformanceFunctionality(t *testing.T) {
+func TestAlphaSDKConformanceFunctionality(t *testing.T) {
 	t.Parallel()
 	lStable, err := NewLocalSDKServer("", "")
 	assert.Nil(t, err)
