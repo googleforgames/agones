@@ -78,6 +78,7 @@ func NewSDK() (*SDK, error) {
 	}
 	s.client = sdk.NewSDKClient(conn)
 	s.health, err = s.client.Health(s.ctx)
+	s.alpha = newAlpha(conn)
 	s.beta = newBeta(conn)
 	return s, errors.Wrap(err, "could not set up health check")
 }
