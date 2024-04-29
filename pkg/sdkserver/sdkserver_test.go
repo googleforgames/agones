@@ -1358,31 +1358,41 @@ func TestSDKServerUpdateCounter(t *testing.T) {
 		t.Run(test, func(t *testing.T) {
 			m := agtesting.NewMocks()
 
+			gs := agonesv1.GameServer{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "test", Namespace: "default", Generation: 1,
+				},
+				Spec: agonesv1.GameServerSpec{
+					SdkServer: agonesv1.SdkServer{
+						LogLevel: "Debug",
+					},
+				},
+				Status: agonesv1.GameServerStatus{
+					Counters: counters,
+				},
+			}
+			gs.ApplyDefaults()
+
 			m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-				gs := agonesv1.GameServer{
-					ObjectMeta: metav1.ObjectMeta{
-						Name: "test", Namespace: "default", Generation: 1,
-					},
-					Spec: agonesv1.GameServerSpec{
-						SdkServer: agonesv1.SdkServer{
-							LogLevel: "Debug",
-						},
-					},
-					Status: agonesv1.GameServerStatus{
-						Counters: counters,
-					},
-				}
-				gs.ApplyDefaults()
 				return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{gs}}, nil
 			})
 
 			updated := make(chan map[string]agonesv1.CounterStatus, 10)
-			m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-				ua := action.(k8stesting.UpdateAction)
-				gs := ua.GetObject().(*agonesv1.GameServer)
-				gs.ObjectMeta.Generation++
+
+			m.AgonesClient.AddReactor("patch", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+				pa := action.(k8stesting.PatchAction)
+				patchJSON := pa.GetPatch()
+				patch, err := jsonpatch.DecodePatch(patchJSON)
+				assert.NoError(t, err)
+				gsJSON, err := json.Marshal(gs)
+				assert.NoError(t, err)
+				patchedGs, err := patch.Apply(gsJSON)
+				assert.NoError(t, err)
+				err = json.Unmarshal(patchedGs, &gs)
+				assert.NoError(t, err)
+
 				updated <- gs.Status.Counters
-				return true, gs, nil
+				return false, &gs, nil
 			})
 
 			ctx, cancel := context.WithCancel(context.Background())

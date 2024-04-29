@@ -979,7 +979,12 @@ func (s *SDKServer) updateCounter(ctx context.Context) error {
 		names = append(names, name)
 	}
 
-	gs, err = s.gameServerGetter.GameServers(s.namespace).Update(ctx, gsCopy, metav1.UpdateOptions{})
+	patch, err := gs.Patch(gsCopy)
+	if err != nil {
+		return err
+	}
+
+	_, err = s.gameServerGetter.GameServers(s.namespace).Patch(ctx, gs.GetObjectMeta().GetName(), types.JSONPatchType, patch, metav1.PatchOptions{})
 	if err != nil {
 		return err
 	}
