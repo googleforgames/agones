@@ -166,6 +166,7 @@ func main() {
 			}
 		}()
 		sdk.RegisterSDKServer(grpcServer, s)
+		sdkalpha.RegisterSDKServer(grpcServer, s)
 		sdkbeta.RegisterSDKServer(grpcServer, s)
 	}
 
