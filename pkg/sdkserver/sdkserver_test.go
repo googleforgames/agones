@@ -1233,7 +1233,7 @@ func TestSDKServerUpdateCounter(t *testing.T) {
 			updated:    true,
 		},
 		"increment illegal": {
-			counterName: "widgets",
+			counterName: "foo",
 			requests: []*beta.UpdateCounterRequest{{
 				CounterUpdateRequest: &beta.CounterUpdateRequest{
 					Name:      "foo",
@@ -1392,7 +1392,7 @@ func TestSDKServerUpdateCounter(t *testing.T) {
 				assert.NoError(t, err)
 
 				updated <- gs.Status.Counters
-				return false, &gs, nil
+				return true, &gs, nil
 			})
 
 			ctx, cancel := context.WithCancel(context.Background())
@@ -1441,7 +1441,7 @@ func TestSDKServerUpdateCounter(t *testing.T) {
 						agonesv1.CounterStatus{Count: testCase.want.Count, Capacity: testCase.want.Capacity},
 						value[testCase.counterName])
 				case <-time.After(10 * time.Second):
-					assert.Fail(t, "Counter should have been updated")
+					assert.Fail(t, "Counter should have been patched")
 				}
 			}
 
@@ -1520,31 +1520,41 @@ func TestSDKServerAddListValue(t *testing.T) {
 		t.Run(test, func(t *testing.T) {
 			m := agtesting.NewMocks()
 
+			gs := agonesv1.GameServer{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "test", Namespace: "default", Generation: 1,
+				},
+				Spec: agonesv1.GameServerSpec{
+					SdkServer: agonesv1.SdkServer{
+						LogLevel: "Debug",
+					},
+				},
+				Status: agonesv1.GameServerStatus{
+					Lists: lists,
+				},
+			}
+			gs.ApplyDefaults()
+
 			m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-				gs := agonesv1.GameServer{
-					ObjectMeta: metav1.ObjectMeta{
-						Name: "test", Namespace: "default", Generation: 1,
-					},
-					Spec: agonesv1.GameServerSpec{
-						SdkServer: agonesv1.SdkServer{
-							LogLevel: "Debug",
-						},
-					},
-					Status: agonesv1.GameServerStatus{
-						Lists: lists,
-					},
-				}
-				gs.ApplyDefaults()
 				return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{gs}}, nil
 			})
 
 			updated := make(chan map[string]agonesv1.ListStatus, 10)
-			m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-				ua := action.(k8stesting.UpdateAction)
-				gs := ua.GetObject().(*agonesv1.GameServer)
-				gs.ObjectMeta.Generation++
+
+			m.AgonesClient.AddReactor("patch", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+				pa := action.(k8stesting.PatchAction)
+				patchJSON := pa.GetPatch()
+				patch, err := jsonpatch.DecodePatch(patchJSON)
+				assert.NoError(t, err)
+				gsJSON, err := json.Marshal(gs)
+				assert.NoError(t, err)
+				patchedGs, err := patch.Apply(gsJSON)
+				assert.NoError(t, err)
+				err = json.Unmarshal(patchedGs, &gs)
+				assert.NoError(t, err)
+
 				updated <- gs.Status.Lists
-				return true, gs, nil
+				return true, &gs, nil
 			})
 
 			ctx, cancel := context.WithCancel(context.Background())
@@ -1593,7 +1603,7 @@ func TestSDKServerAddListValue(t *testing.T) {
 						agonesv1.ListStatus{Values: testCase.want.Values, Capacity: testCase.want.Capacity},
 						value[testCase.listName])
 				case <-time.After(10 * time.Second):
-					assert.Fail(t, "List should have been updated")
+					assert.Fail(t, "List should have been patched")
 				}
 			}
 
@@ -1668,31 +1678,41 @@ func TestSDKServerRemoveListValue(t *testing.T) {
 		t.Run(test, func(t *testing.T) {
 			m := agtesting.NewMocks()
 
+			gs := agonesv1.GameServer{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "test", Namespace: "default", Generation: 1,
+				},
+				Spec: agonesv1.GameServerSpec{
+					SdkServer: agonesv1.SdkServer{
+						LogLevel: "Debug",
+					},
+				},
+				Status: agonesv1.GameServerStatus{
+					Lists: lists,
+				},
+			}
+			gs.ApplyDefaults()
+
 			m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-				gs := agonesv1.GameServer{
-					ObjectMeta: metav1.ObjectMeta{
-						Name: "test", Namespace: "default", Generation: 1,
-					},
-					Spec: agonesv1.GameServerSpec{
-						SdkServer: agonesv1.SdkServer{
-							LogLevel: "Debug",
-						},
-					},
-					Status: agonesv1.GameServerStatus{
-						Lists: lists,
-					},
-				}
-				gs.ApplyDefaults()
 				return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{gs}}, nil
 			})
 
 			updated := make(chan map[string]agonesv1.ListStatus, 10)
-			m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-				ua := action.(k8stesting.UpdateAction)
-				gs := ua.GetObject().(*agonesv1.GameServer)
-				gs.ObjectMeta.Generation++
+
+			m.AgonesClient.AddReactor("patch", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+				pa := action.(k8stesting.PatchAction)
+				patchJSON := pa.GetPatch()
+				patch, err := jsonpatch.DecodePatch(patchJSON)
+				assert.NoError(t, err)
+				gsJSON, err := json.Marshal(gs)
+				assert.NoError(t, err)
+				patchedGs, err := patch.Apply(gsJSON)
+				assert.NoError(t, err)
+				err = json.Unmarshal(patchedGs, &gs)
+				assert.NoError(t, err)
+
 				updated <- gs.Status.Lists
-				return true, gs, nil
+				return true, &gs, nil
 			})
 
 			ctx, cancel := context.WithCancel(context.Background())
@@ -1741,7 +1761,7 @@ func TestSDKServerRemoveListValue(t *testing.T) {
 						agonesv1.ListStatus{Values: testCase.want.Values, Capacity: testCase.want.Capacity},
 						value[testCase.listName])
 				case <-time.After(10 * time.Second):
-					assert.Fail(t, "List should have been updated")
+					assert.Fail(t, "List should have been patched")
 				}
 			}
 
@@ -1825,31 +1845,41 @@ func TestSDKServerUpdateList(t *testing.T) {
 		t.Run(test, func(t *testing.T) {
 			m := agtesting.NewMocks()
 
+			gs := agonesv1.GameServer{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "test", Namespace: "default", Generation: 1,
+				},
+				Spec: agonesv1.GameServerSpec{
+					SdkServer: agonesv1.SdkServer{
+						LogLevel: "Debug",
+					},
+				},
+				Status: agonesv1.GameServerStatus{
+					Lists: lists,
+				},
+			}
+			gs.ApplyDefaults()
+
 			m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-				gs := agonesv1.GameServer{
-					ObjectMeta: metav1.ObjectMeta{
-						Name: "test", Namespace: "default", Generation: 1,
-					},
-					Spec: agonesv1.GameServerSpec{
-						SdkServer: agonesv1.SdkServer{
-							LogLevel: "Debug",
-						},
-					},
-					Status: agonesv1.GameServerStatus{
-						Lists: lists,
-					},
-				}
-				gs.ApplyDefaults()
 				return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{gs}}, nil
 			})
 
 			updated := make(chan map[string]agonesv1.ListStatus, 10)
-			m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-				ua := action.(k8stesting.UpdateAction)
-				gs := ua.GetObject().(*agonesv1.GameServer)
-				gs.ObjectMeta.Generation++
+
+			m.AgonesClient.AddReactor("patch", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+				pa := action.(k8stesting.PatchAction)
+				patchJSON := pa.GetPatch()
+				patch, err := jsonpatch.DecodePatch(patchJSON)
+				assert.NoError(t, err)
+				gsJSON, err := json.Marshal(gs)
+				assert.NoError(t, err)
+				patchedGs, err := patch.Apply(gsJSON)
+				assert.NoError(t, err)
+				err = json.Unmarshal(patchedGs, &gs)
+				assert.NoError(t, err)
+
 				updated <- gs.Status.Lists
-				return true, gs, nil
+				return true, &gs, nil
 			})
 
 			ctx, cancel := context.WithCancel(context.Background())
@@ -1896,7 +1926,7 @@ func TestSDKServerUpdateList(t *testing.T) {
 						agonesv1.ListStatus{Values: testCase.want.Values, Capacity: testCase.want.Capacity},
 						value[testCase.listName])
 				case <-time.After(10 * time.Second):
-					assert.Fail(t, "List should have been updated")
+					assert.Fail(t, "List should have been patched")
 				}
 			}
 
