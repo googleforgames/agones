@@ -31,6 +31,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Protobuf Include="../proto/sdk/sdk.proto;../proto/sdk/alpha/alpha.proto" AdditionalImportDirs="../proto/googleapis" GrpcServices="Client" />
+    <Protobuf Include="../proto/sdk/sdk.proto;../proto/sdk/alpha/alpha.proto../proto/sdk/beta/beta.proto" AdditionalImportDirs="../proto/googleapis" GrpcServices="Client" />
   </ItemGroup>
 </Project>
