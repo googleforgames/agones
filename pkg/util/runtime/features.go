@@ -130,7 +130,6 @@ var (
 		// Beta features
 		FeatureCountsAndLists:           true,
 		FeatureDisableResyncOnSDKServer: true,
-		FeatureAutopilotPassthroughPort: true,
 
 		// Alpha features
 		FeatureGKEAutopilotExtendedDurationPods: false,

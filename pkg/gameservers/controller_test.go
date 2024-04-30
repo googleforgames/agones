@@ -29,6 +29,7 @@ import (
 	"agones.dev/agones/pkg/cloudproduct/generic"
 	"agones.dev/agones/pkg/portallocator"
 	agtesting "agones.dev/agones/pkg/testing"
+
 	agonesruntime "agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/webhooks"
 	"github.com/heptiolabs/healthcheck"
@@ -961,6 +962,7 @@ func TestControllerSyncGameServerCreatingState(t *testing.T) {
 			ca := action.(k8stesting.CreateAction)
 			pod = ca.GetObject().(*corev1.Pod)
 			assert.True(t, metav1.IsControlledBy(pod, fixture))
+			assert.Equal(t, "autopilot-passthrough", pod.ObjectMeta.Labels[agonesv1.GameServerPortPolicyPodLabel])
 			return true, pod, nil
 		})
 		m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
@@ -968,7 +970,6 @@ func TestControllerSyncGameServerCreatingState(t *testing.T) {
 			ua := action.(k8stesting.UpdateAction)
 			gs := ua.GetObject().(*agonesv1.GameServer)
 			assert.Equal(t, agonesv1.GameServerStateStarting, gs.Status.State)
-			assert.Equal(t, "autopilot-passthrough", gs.Spec.Template.Labels[agonesv1.GameServerPortPolicyPodLabel])
 			assert.Len(t, gs.Spec.Ports, 1)
 			assert.Equal(t, "udp-port", gs.Spec.Ports[0].Name)
 			assert.Equal(t, corev1.ProtocolUDP, gs.Spec.Ports[0].Protocol)

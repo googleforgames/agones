@@ -185,6 +185,7 @@ func setPrimaryContainer(pod *corev1.Pod, containerName string) {
 		return
 	}
 	pod.ObjectMeta.Annotations[primaryContainerAnnotation] = containerName
+
 }
 
 // podSpecSeccompUnconfined sets to seccomp profile to `Unconfined` to avoid serious performance
