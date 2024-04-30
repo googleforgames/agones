@@ -32,18 +32,8 @@ var global = Function('return this')();
 
 var google_api_annotations_pb = require('./google/api/annotations_pb.js');
 goog.object.extend(proto, google_api_annotations_pb);
-var google_api_client_pb = require('./google/api/client_pb.js');
-goog.object.extend(proto, google_api_client_pb);
 var google_api_field_behavior_pb = require('./google/api/field_behavior_pb.js');
 goog.object.extend(proto, google_api_field_behavior_pb);
-var google_api_resource_pb = require('./google/api/resource_pb.js');
-goog.object.extend(proto, google_api_resource_pb);
-var google_protobuf_empty_pb = require('google-protobuf/google/protobuf/empty_pb.js');
-goog.object.extend(proto, google_protobuf_empty_pb);
-var google_protobuf_field_mask_pb = require('google-protobuf/google/protobuf/field_mask_pb.js');
-goog.object.extend(proto, google_protobuf_field_mask_pb);
-var google_protobuf_wrappers_pb = require('google-protobuf/google/protobuf/wrappers_pb.js');
-goog.object.extend(proto, google_protobuf_wrappers_pb);
 var protoc$gen$openapiv2_options_annotations_pb = require('./protoc-gen-openapiv2/options/annotations_pb.js');
 goog.object.extend(proto, protoc$gen$openapiv2_options_annotations_pb);
 goog.exportSymbol('proto.agones.dev.sdk.alpha.Bool', null, global);

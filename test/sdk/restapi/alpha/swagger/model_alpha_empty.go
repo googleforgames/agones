@@ -23,5 +23,5 @@
  */
 package swagger
 
-type SdkalphaEmpty struct {
+type AlphaEmpty struct {
 }

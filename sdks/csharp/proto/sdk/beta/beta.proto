@@ -24,17 +24,16 @@ import "google/api/resource.proto";
 import "google/protobuf/empty.proto";
 import "google/protobuf/field_mask.proto";
 import "google/protobuf/wrappers.proto";
-import "protoc-gen-openapiv2/options/annotations.proto";
 
-option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
-  info: {
-    title: "beta.proto";
+
+
+
+
     version: "version not set";
   };
-  schemes: HTTP;
-  consumes: "application/json";
-  produces: "application/json";
-};
+
+
+
 
 // SDK service to be used in the GameServer SDK to the Pod Sidecar
 service SDK {
@@ -109,7 +108,7 @@ message Count {
 
 // Store a boolean result
 message Bool {
-    bool bool = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {format: "boolean"}];
+    bool bool = 1;
 }
 
 // A representation of a Counter.

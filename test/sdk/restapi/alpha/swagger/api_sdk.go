@@ -549,15 +549,15 @@ func (a *SDKApiService) PlayerDisconnect(ctx context.Context, body AlphaPlayerId
 SDKApiService Update the GameServer.Status.Players.Capacity value with a new capacity.
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @param body Store a count variable.
-@return SdkalphaEmpty
+@return AlphaEmpty
 */
-func (a *SDKApiService) SetPlayerCapacity(ctx context.Context, body AlphaCount) (SdkalphaEmpty, *http.Response, error) {
+func (a *SDKApiService) SetPlayerCapacity(ctx context.Context, body AlphaCount) (AlphaEmpty, *http.Response, error) {
 	var (
 		localVarHttpMethod = strings.ToUpper("Put")
 		localVarPostBody   interface{}
 		localVarFileName   string
 		localVarFileBytes  []byte
-		localVarReturnValue SdkalphaEmpty
+		localVarReturnValue AlphaEmpty
 	)
 
 	// create path and map variables
@@ -616,7 +616,7 @@ func (a *SDKApiService) SetPlayerCapacity(ctx context.Context, body AlphaCount) 
 			error: localVarHttpResponse.Status,
 		}
 		if localVarHttpResponse.StatusCode == 200 {
-			var v SdkalphaEmpty
+			var v AlphaEmpty
 			err = a.client.decode(&v, localVarBody, localVarHttpResponse.Header.Get("Content-Type"));
 				if err != nil {
 					newErr.error = err.Error()

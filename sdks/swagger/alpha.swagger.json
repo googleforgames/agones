@@ -43,7 +43,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/sdkalphaEmpty"
+              "$ref": "#/definitions/alphaEmpty"
             }
           }
         },
@@ -205,6 +205,10 @@
       },
       "description": "Store a count variable."
     },
+    "alphaEmpty": {
+      "type": "object",
+      "title": "I am Empty"
+    },
     "alphaPlayerID": {
       "type": "object",
       "properties": {
@@ -225,10 +229,6 @@
         }
       },
       "title": "List of Player IDs"
-    },
-    "sdkalphaEmpty": {
-      "type": "object",
-      "title": "I am Empty"
     }
   }
 }
