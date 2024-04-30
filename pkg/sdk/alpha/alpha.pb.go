@@ -286,6 +286,532 @@ func (x *PlayerIDList) GetList() []string {
 	return nil
 }
 
+// A representation of a Counter.
+type Counter struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// The name of the Counter
+	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	// The current count of the Counter
+	Count int64 `protobuf:"varint,2,opt,name=count,proto3" json:"count,omitempty"`
+	// The maximum capacity of the Counter
+	Capacity int64 `protobuf:"varint,3,opt,name=capacity,proto3" json:"capacity,omitempty"`
+}
+
+func (x *Counter) Reset() {
+	*x = Counter{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_alpha_proto_msgTypes[5]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *Counter) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Counter) ProtoMessage() {}
+
+func (x *Counter) ProtoReflect() protoreflect.Message {
+	mi := &file_alpha_proto_msgTypes[5]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Counter.ProtoReflect.Descriptor instead.
+func (*Counter) Descriptor() ([]byte, []int) {
+	return file_alpha_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *Counter) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *Counter) GetCount() int64 {
+	if x != nil {
+		return x.Count
+	}
+	return 0
+}
+
+func (x *Counter) GetCapacity() int64 {
+	if x != nil {
+		return x.Capacity
+	}
+	return 0
+}
+
+// A representation of a Counter Update Request.
+type CounterUpdateRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// The name of the Counter to update
+	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	// The value to set the Counter Count
+	Count *wrapperspb.Int64Value `protobuf:"bytes,2,opt,name=count,proto3" json:"count,omitempty"`
+	// The value to set the Counter Capacity
+	Capacity *wrapperspb.Int64Value `protobuf:"bytes,3,opt,name=capacity,proto3" json:"capacity,omitempty"`
+	// countDiff tracks if a Counter Update Request is CountIncrement (positive), CountDecrement
+	// (negative), 0 if a CountSet or CapacitySet request
+	CountDiff int64 `protobuf:"varint,4,opt,name=countDiff,proto3" json:"countDiff,omitempty"`
+}
+
+func (x *CounterUpdateRequest) Reset() {
+	*x = CounterUpdateRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_alpha_proto_msgTypes[6]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *CounterUpdateRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CounterUpdateRequest) ProtoMessage() {}
+
+func (x *CounterUpdateRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_alpha_proto_msgTypes[6]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CounterUpdateRequest.ProtoReflect.Descriptor instead.
+func (*CounterUpdateRequest) Descriptor() ([]byte, []int) {
+	return file_alpha_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *CounterUpdateRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *CounterUpdateRequest) GetCount() *wrapperspb.Int64Value {
+	if x != nil {
+		return x.Count
+	}
+	return nil
+}
+
+func (x *CounterUpdateRequest) GetCapacity() *wrapperspb.Int64Value {
+	if x != nil {
+		return x.Capacity
+	}
+	return nil
+}
+
+func (x *CounterUpdateRequest) GetCountDiff() int64 {
+	if x != nil {
+		return x.CountDiff
+	}
+	return 0
+}
+
+type GetCounterRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// The name of the Counter to get
+	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+}
+
+func (x *GetCounterRequest) Reset() {
+	*x = GetCounterRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_alpha_proto_msgTypes[7]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *GetCounterRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetCounterRequest) ProtoMessage() {}
+
+func (x *GetCounterRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_alpha_proto_msgTypes[7]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetCounterRequest.ProtoReflect.Descriptor instead.
+func (*GetCounterRequest) Descriptor() ([]byte, []int) {
+	return file_alpha_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *GetCounterRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+type UpdateCounterRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// The requested update to make to the Counter
+	CounterUpdateRequest *CounterUpdateRequest `protobuf:"bytes,1,opt,name=counterUpdateRequest,proto3" json:"counterUpdateRequest,omitempty"`
+}
+
+func (x *UpdateCounterRequest) Reset() {
+	*x = UpdateCounterRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_alpha_proto_msgTypes[8]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *UpdateCounterRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateCounterRequest) ProtoMessage() {}
+
+func (x *UpdateCounterRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_alpha_proto_msgTypes[8]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateCounterRequest.ProtoReflect.Descriptor instead.
+func (*UpdateCounterRequest) Descriptor() ([]byte, []int) {
+	return file_alpha_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *UpdateCounterRequest) GetCounterUpdateRequest() *CounterUpdateRequest {
+	if x != nil {
+		return x.CounterUpdateRequest
+	}
+	return nil
+}
+
+// A representation of a List.
+type List struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// The name of the List
+	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	// The maximum capacity of the List
+	Capacity int64 `protobuf:"varint,2,opt,name=capacity,proto3" json:"capacity,omitempty"`
+	// The array of items in the List ["v1", "v2", …]
+	Values []string `protobuf:"bytes,3,rep,name=values,proto3" json:"values,omitempty"`
+}
+
+func (x *List) Reset() {
+	*x = List{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_alpha_proto_msgTypes[9]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *List) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*List) ProtoMessage() {}
+
+func (x *List) ProtoReflect() protoreflect.Message {
+	mi := &file_alpha_proto_msgTypes[9]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use List.ProtoReflect.Descriptor instead.
+func (*List) Descriptor() ([]byte, []int) {
+	return file_alpha_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *List) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *List) GetCapacity() int64 {
+	if x != nil {
+		return x.Capacity
+	}
+	return 0
+}
+
+func (x *List) GetValues() []string {
+	if x != nil {
+		return x.Values
+	}
+	return nil
+}
+
+type GetListRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// The name of the List to get
+	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+}
+
+func (x *GetListRequest) Reset() {
+	*x = GetListRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_alpha_proto_msgTypes[10]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *GetListRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetListRequest) ProtoMessage() {}
+
+func (x *GetListRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_alpha_proto_msgTypes[10]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetListRequest.ProtoReflect.Descriptor instead.
+func (*GetListRequest) Descriptor() ([]byte, []int) {
+	return file_alpha_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *GetListRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+type UpdateListRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// The List to update
+	List *List `protobuf:"bytes,1,opt,name=list,proto3" json:"list,omitempty"`
+	// Required. Mask (list) of fields to update.
+	// Fields are specified relative to the List
+	// (e.g. `capacity`, `values`; *not* `List.capacity` or `List.values`).
+	UpdateMask *fieldmaskpb.FieldMask `protobuf:"bytes,2,opt,name=update_mask,json=updateMask,proto3" json:"update_mask,omitempty"`
+}
+
+func (x *UpdateListRequest) Reset() {
+	*x = UpdateListRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_alpha_proto_msgTypes[11]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *UpdateListRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateListRequest) ProtoMessage() {}
+
+func (x *UpdateListRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_alpha_proto_msgTypes[11]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateListRequest.ProtoReflect.Descriptor instead.
+func (*UpdateListRequest) Descriptor() ([]byte, []int) {
+	return file_alpha_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *UpdateListRequest) GetList() *List {
+	if x != nil {
+		return x.List
+	}
+	return nil
+}
+
+func (x *UpdateListRequest) GetUpdateMask() *fieldmaskpb.FieldMask {
+	if x != nil {
+		return x.UpdateMask
+	}
+	return nil
+}
+
+type AddListValueRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// The name of the List to add a value to.
+	Name  string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Value string `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
+}
+
+func (x *AddListValueRequest) Reset() {
+	*x = AddListValueRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_alpha_proto_msgTypes[12]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *AddListValueRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AddListValueRequest) ProtoMessage() {}
+
+func (x *AddListValueRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_alpha_proto_msgTypes[12]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AddListValueRequest.ProtoReflect.Descriptor instead.
+func (*AddListValueRequest) Descriptor() ([]byte, []int) {
+	return file_alpha_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *AddListValueRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *AddListValueRequest) GetValue() string {
+	if x != nil {
+		return x.Value
+	}
+	return ""
+}
+
+type RemoveListValueRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// The name of the List to remove a value from.
+	Name  string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Value string `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
+}
+
+func (x *RemoveListValueRequest) Reset() {
+	*x = RemoveListValueRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_alpha_proto_msgTypes[13]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *RemoveListValueRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RemoveListValueRequest) ProtoMessage() {}
+
+func (x *RemoveListValueRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_alpha_proto_msgTypes[13]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RemoveListValueRequest.ProtoReflect.Descriptor instead.
+func (*RemoveListValueRequest) Descriptor() ([]byte, []int) {
+	return file_alpha_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *RemoveListValueRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *RemoveListValueRequest) GetValue() string {
+	if x != nil {
+		return x.Value
+	}
+	return ""
+}
+
 var File_alpha_proto protoreflect.FileDescriptor
 
 var file_alpha_proto_rawDesc = []byte{
@@ -516,13 +1042,22 @@ func file_alpha_proto_rawDescGZIP() []byte {
 
 var file_alpha_proto_msgTypes = make([]protoimpl.MessageInfo, 14)
 var file_alpha_proto_goTypes = []interface{}{
-	(*Empty)(nil),                 // 0: agones.dev.sdk.alpha.Empty
-	(*Count)(nil),                 // 1: agones.dev.sdk.alpha.Count
-	(*Bool)(nil),                  // 2: agones.dev.sdk.alpha.Bool
-	(*PlayerID)(nil),              // 3: agones.dev.sdk.alpha.PlayerID
-	(*PlayerIDList)(nil),          // 4: agones.dev.sdk.alpha.PlayerIDList
-	(*wrapperspb.Int64Value)(nil), // 14: google.protobuf.Int64Value
-	(*fieldmaskpb.FieldMask)(nil), // 15: google.protobuf.FieldMask
+	(*Empty)(nil),                  // 0: agones.dev.sdk.alpha.Empty
+	(*Count)(nil),                  // 1: agones.dev.sdk.alpha.Count
+	(*Bool)(nil),                   // 2: agones.dev.sdk.alpha.Bool
+	(*PlayerID)(nil),               // 3: agones.dev.sdk.alpha.PlayerID
+	(*PlayerIDList)(nil),           // 4: agones.dev.sdk.alpha.PlayerIDList
+	(*Counter)(nil),                // 5: agones.dev.sdk.alpha.Counter
+	(*CounterUpdateRequest)(nil),   // 6: agones.dev.sdk.alpha.CounterUpdateRequest
+	(*GetCounterRequest)(nil),      // 7: agones.dev.sdk.alpha.GetCounterRequest
+	(*UpdateCounterRequest)(nil),   // 8: agones.dev.sdk.alpha.UpdateCounterRequest
+	(*List)(nil),                   // 9: agones.dev.sdk.alpha.List
+	(*GetListRequest)(nil),         // 10: agones.dev.sdk.alpha.GetListRequest
+	(*UpdateListRequest)(nil),      // 11: agones.dev.sdk.alpha.UpdateListRequest
+	(*AddListValueRequest)(nil),    // 12: agones.dev.sdk.alpha.AddListValueRequest
+	(*RemoveListValueRequest)(nil), // 13: agones.dev.sdk.alpha.RemoveListValueRequest
+	(*wrapperspb.Int64Value)(nil),  // 14: google.protobuf.Int64Value
+	(*fieldmaskpb.FieldMask)(nil),  // 15: google.protobuf.FieldMask
 }
 var file_alpha_proto_depIdxs = []int32{
 	14, // 0: agones.dev.sdk.alpha.CounterUpdateRequest.count:type_name -> google.protobuf.Int64Value
@@ -537,6 +1072,25 @@ var file_alpha_proto_depIdxs = []int32{
 	0,  // 9: agones.dev.sdk.alpha.SDK.GetPlayerCount:input_type -> agones.dev.sdk.alpha.Empty
 	3,  // 10: agones.dev.sdk.alpha.SDK.IsPlayerConnected:input_type -> agones.dev.sdk.alpha.PlayerID
 	0,  // 11: agones.dev.sdk.alpha.SDK.GetConnectedPlayers:input_type -> agones.dev.sdk.alpha.Empty
+	7,  // 12: agones.dev.sdk.alpha.SDK.GetCounter:input_type -> agones.dev.sdk.alpha.GetCounterRequest
+	8,  // 13: agones.dev.sdk.alpha.SDK.UpdateCounter:input_type -> agones.dev.sdk.alpha.UpdateCounterRequest
+	10, // 14: agones.dev.sdk.alpha.SDK.GetList:input_type -> agones.dev.sdk.alpha.GetListRequest
+	11, // 15: agones.dev.sdk.alpha.SDK.UpdateList:input_type -> agones.dev.sdk.alpha.UpdateListRequest
+	12, // 16: agones.dev.sdk.alpha.SDK.AddListValue:input_type -> agones.dev.sdk.alpha.AddListValueRequest
+	13, // 17: agones.dev.sdk.alpha.SDK.RemoveListValue:input_type -> agones.dev.sdk.alpha.RemoveListValueRequest
+	2,  // 18: agones.dev.sdk.alpha.SDK.PlayerConnect:output_type -> agones.dev.sdk.alpha.Bool
+	2,  // 19: agones.dev.sdk.alpha.SDK.PlayerDisconnect:output_type -> agones.dev.sdk.alpha.Bool
+	0,  // 20: agones.dev.sdk.alpha.SDK.SetPlayerCapacity:output_type -> agones.dev.sdk.alpha.Empty
+	1,  // 21: agones.dev.sdk.alpha.SDK.GetPlayerCapacity:output_type -> agones.dev.sdk.alpha.Count
+	1,  // 22: agones.dev.sdk.alpha.SDK.GetPlayerCount:output_type -> agones.dev.sdk.alpha.Count
+	2,  // 23: agones.dev.sdk.alpha.SDK.IsPlayerConnected:output_type -> agones.dev.sdk.alpha.Bool
+	4,  // 24: agones.dev.sdk.alpha.SDK.GetConnectedPlayers:output_type -> agones.dev.sdk.alpha.PlayerIDList
+	5,  // 25: agones.dev.sdk.alpha.SDK.GetCounter:output_type -> agones.dev.sdk.alpha.Counter
+	5,  // 26: agones.dev.sdk.alpha.SDK.UpdateCounter:output_type -> agones.dev.sdk.alpha.Counter
+	9,  // 27: agones.dev.sdk.alpha.SDK.GetList:output_type -> agones.dev.sdk.alpha.List
+	9,  // 28: agones.dev.sdk.alpha.SDK.UpdateList:output_type -> agones.dev.sdk.alpha.List
+	9,  // 29: agones.dev.sdk.alpha.SDK.AddListValue:output_type -> agones.dev.sdk.alpha.List
+	9,  // 30: agones.dev.sdk.alpha.SDK.RemoveListValue:output_type -> agones.dev.sdk.alpha.List
 	18, // [18:31] is the sub-list for method output_type
 	5,  // [5:18] is the sub-list for method input_type
 	5,  // [5:5] is the sub-list for extension type_name
@@ -600,6 +1154,114 @@ func file_alpha_proto_init() {
 		}
 		file_alpha_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*PlayerIDList); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_alpha_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*Counter); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_alpha_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*CounterUpdateRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_alpha_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*GetCounterRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_alpha_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*UpdateCounterRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_alpha_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*List); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_alpha_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*GetListRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_alpha_proto_msgTypes[11].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*UpdateListRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_alpha_proto_msgTypes[12].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*AddListValueRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_alpha_proto_msgTypes[13].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*RemoveListValueRequest); i {
 			case 0:
 				return &v.state
 			case 1:
