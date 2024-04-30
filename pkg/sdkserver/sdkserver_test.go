@@ -1864,30 +1864,32 @@ func TestSDKServerPlayerCapacity(t *testing.T) {
 	sc, err := defaultSidecar(m)
 	require.NoError(t, err)
 
+	gs := agonesv1.GameServer{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test", Namespace: "default",
+		},
+		Spec: agonesv1.GameServerSpec{
+			SdkServer: agonesv1.SdkServer{
+				LogLevel: "Debug",
+			},
+			Players: &agonesv1.PlayersSpec{
+				InitialCapacity: 10,
+			},
+		},
+	}
+	gs.ApplyDefaults()
+
 	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-		gs := agonesv1.GameServer{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: "test", Namespace: "default",
-			},
-			Spec: agonesv1.GameServerSpec{
-				SdkServer: agonesv1.SdkServer{
-					LogLevel: "Debug",
-				},
-				Players: &agonesv1.PlayersSpec{
-					InitialCapacity: 10,
-				},
-			},
-		}
-		gs.ApplyDefaults()
 		return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{*gs.DeepCopy()}}, nil
 	})
 
 	updated := make(chan int64, 10)
-	m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-		ua := action.(k8stesting.UpdateAction)
-		gs := ua.GetObject().(*agonesv1.GameServer)
-		updated <- gs.Status.Players.Capacity
-		return true, gs, nil
+	m.AgonesClient.AddReactor("patch", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+
+		gsCopy := PatchGameServer(t, action, &gs)
+
+		updated <- gsCopy.Status.Players.Capacity
+		return true, gsCopy, nil
 	})
 
 	assert.NoError(t, sc.WaitForConnection(ctx))
@@ -1921,7 +1923,7 @@ func TestSDKServerPlayerCapacity(t *testing.T) {
 	case value := <-updated:
 		assert.Equal(t, int64(20), value)
 	case <-time.After(time.Minute):
-		assert.Fail(t, "Should have been updated")
+		assert.Fail(t, "Should have been patched")
 	}
 
 	agtesting.AssertEventContains(t, m.FakeRecorder.Events, "PlayerCapacity Set to 20")
@@ -2015,30 +2017,31 @@ func TestSDKServerPlayerConnectAndDisconnect(t *testing.T) {
 	require.NoError(t, err)
 
 	capacity := int64(3)
+	gs := agonesv1.GameServer{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test", Namespace: "default",
+		},
+		Spec: agonesv1.GameServerSpec{
+			SdkServer: agonesv1.SdkServer{
+				LogLevel: "Debug",
+			},
+			// this is here to give us a reference, so we know when sc.Run() has completed.
+			Players: &agonesv1.PlayersSpec{
+				InitialCapacity: capacity,
+			},
+		},
+	}
+	gs.ApplyDefaults()
+
 	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-		gs := agonesv1.GameServer{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: "test", Namespace: "default",
-			},
-			Spec: agonesv1.GameServerSpec{
-				SdkServer: agonesv1.SdkServer{
-					LogLevel: "Debug",
-				},
-				// this is here to give us a reference, so we know when sc.Run() has completed.
-				Players: &agonesv1.PlayersSpec{
-					InitialCapacity: capacity,
-				},
-			},
-		}
-		gs.ApplyDefaults()
-		return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{gs}}, nil
+		return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{*gs.DeepCopy()}}, nil
 	})
+
 	updated := make(chan *agonesv1.PlayerStatus, 10)
-	m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-		ua := action.(k8stesting.UpdateAction)
-		gs := ua.GetObject().(*agonesv1.GameServer)
-		updated <- gs.Status.Players
-		return true, gs, nil
+	m.AgonesClient.AddReactor("patch", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		gsCopy := PatchGameServer(t, action, &gs)
+		updated <- gsCopy.Status.Players
+		return true, gsCopy, nil
 	})
 
 	assert.NoError(t, sc.WaitForConnection(ctx))

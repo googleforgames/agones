@@ -1383,12 +1383,17 @@ func (s *SDKServer) updatePlayerCapacity(ctx context.Context) error {
 	gsCopy.Status.Players.Capacity = s.gsPlayerCapacity
 	s.gsUpdateMutex.RUnlock()
 
-	gs, err = s.gameServerGetter.GameServers(s.namespace).Update(ctx, gsCopy, metav1.UpdateOptions{})
+	patch, err := gs.Patch(gsCopy)
 	if err != nil {
 		return err
 	}
-	s.recorder.Event(gs, corev1.EventTypeNormal, "PlayerCapacity", fmt.Sprintf("Set to %d", gs.Status.Players.Capacity))
-	return nil
+
+	gs, err = s.gameServerGetter.GameServers(s.namespace).Patch(ctx, gs.GetObjectMeta().GetName(), types.JSONPatchType, patch, metav1.PatchOptions{})
+	if err == nil {
+		s.recorder.Event(gs, corev1.EventTypeNormal, "PlayerCapacity", fmt.Sprintf("Set to %d", gs.Status.Players.Capacity))
+	}
+
+	return err
 }
 
 // updateConnectedPlayers updates the Player IDs and Count fields in the GameServer's Status.
@@ -1416,12 +1421,17 @@ func (s *SDKServer) updateConnectedPlayers(ctx context.Context) error {
 		return nil
 	}
 
-	gs, err = s.gameServerGetter.GameServers(s.namespace).Update(ctx, gsCopy, metav1.UpdateOptions{})
+	patch, err := gs.Patch(gsCopy)
 	if err != nil {
 		return err
 	}
-	s.recorder.Event(gs, corev1.EventTypeNormal, "PlayerCount", fmt.Sprintf("Set to %d", gs.Status.Players.Count))
-	return nil
+
+	gs, err = s.gameServerGetter.GameServers(s.namespace).Patch(ctx, gs.GetObjectMeta().GetName(), types.JSONPatchType, patch, metav1.PatchOptions{})
+	if err == nil {
+		s.recorder.Event(gs, corev1.EventTypeNormal, "PlayerCount", fmt.Sprintf("Set to %d", gs.Status.Players.Count))
+	}
+
+	return err
 }
 
 // NewSDKServerContext returns a Context that cancels when SIGTERM or os.Interrupt
