@@ -521,10 +521,6 @@ func (c *Controller) syncGameServerCreatingState(ctx context.Context, gs *agones
 				})
 			}
 		}
-		if runtime.FeatureEnabled(runtime.FeatureAutopilotPassthroughPort) && portPolicyOption(gs, agonesv1.Passthrough) {
-			gs.Spec.Template.Labels = make(map[string]string)
-			gs.Spec.Template.Labels[agonesv1.GameServerPortPolicyPodLabel] = "autopilot-passthrough"
-		}
 
 		gs, err = c.createGameServerPod(ctx, gs)
 		if err != nil || gs.Status.State == agonesv1.GameServerStateError {
@@ -543,15 +539,6 @@ func (c *Controller) syncGameServerCreatingState(ctx context.Context, gs *agones
 		return gs, errors.Wrapf(err, "error updating GameServer %s to Starting state", gs.Name)
 	}
 	return gs, nil
-}
-
-func portPolicyOption(gs *agonesv1.GameServer, portPolicy agonesv1.PortPolicy) bool {
-	for _, p := range gs.Spec.Ports {
-		if p.PortPolicy == portPolicy {
-			return true
-		}
-	}
-	return false
 }
 
 // syncDevelopmentGameServer manages advances a development gameserver to Ready status and registers its address and ports.

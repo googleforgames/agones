@@ -24,6 +24,7 @@ PlayerAllocationFilter: false
 PlayerTracking: false
 
 # Dev features
+FeatureAutopilotPassthroughPort: true
 
 # Example feature
 Example: false
