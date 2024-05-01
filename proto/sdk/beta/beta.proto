@@ -102,16 +102,6 @@ service SDK {
 message Empty {
 }
 
-// Store a count variable.
-message Count {
-    int64 count = 1;
-}
-
-// Store a boolean result
-message Bool {
-    bool bool = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {format: "boolean"}];
-}
-
 // A representation of a Counter.
 message Counter {
   option (google.api.resource) = {

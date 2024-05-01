@@ -19,6 +19,15 @@ option go_package = "./alpha";
 
 import "google/api/annotations.proto";
 
+
+
+
+
+
+
+
+
+
 // SDK service to be used in the GameServer SDK to the Pod Sidecar.
 service SDK {
     // PlayerConnect increases the SDK’s stored player count by one, and appends this playerID to GameServer.Status.Players.IDs.
