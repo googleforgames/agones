@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-using Agones.Dev.Sdk.Alpha;
+using Agones.Dev.Sdk.Beta;
 using Grpc.Core;
 using Microsoft.Extensions.Logging;
 using System;
@@ -25,7 +25,7 @@ using gProto = Google.Protobuf.WellKnownTypes;
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Agones.Test")]
 namespace Agones
 {
-    public sealed class Beta : IAgonesAlphaSDK
+    public sealed class Beta : IAgonesBetaSDK
     {
 
         /// <summary>

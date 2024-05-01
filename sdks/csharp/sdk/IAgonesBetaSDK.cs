@@ -19,7 +19,7 @@ using Grpc.Core;
 
 namespace Agones
 {
-    public interface IAgonesAlphaSDK : IDisposable
+    public interface IAgonesBetaSDK : IDisposable
     {
         Task<long> GetCounterCountAsync(string key);
         Task IncrementCounterAsync(string key, long amount);

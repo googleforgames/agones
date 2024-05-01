@@ -21,19 +21,8 @@ import "google/api/annotations.proto";
 import "google/api/client.proto";
 import "google/api/field_behavior.proto";
 import "google/api/resource.proto";
-import "google/protobuf/empty.proto";
 import "google/protobuf/field_mask.proto";
 import "google/protobuf/wrappers.proto";
-
-
-
-
-
-    version: "version not set";
-  };
-
-
-
 
 // SDK service to be used in the GameServer SDK to the Pod Sidecar
 service SDK {
