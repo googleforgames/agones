@@ -257,6 +257,54 @@ func TestSetPassthroughLabel(t *testing.T) {
 				},
 			},
 		},
+		"gameserver with  Static port policy does not add label to pod": {
+			features: fmt.Sprintf("%s=true", runtime.FeatureAutopilotPassthroughPort),
+
+			pod: &corev1.Pod{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{},
+					Labels:      map[string]string{},
+				},
+			},
+			ports: []agonesv1.GameServerPort{
+				{
+					Name:          "awesome-udp",
+					PortPolicy:    agonesv1.Static,
+					ContainerPort: 1234,
+					Protocol:      corev1.ProtocolUDP,
+				},
+			},
+			wantPod: &corev1.Pod{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{},
+					Labels:      map[string]string{},
+				},
+			},
+		},
+		"gameserver, no feature gate, with Passthrough port policy does not add label to pod": {
+			features: fmt.Sprintf("%s=false", runtime.FeatureAutopilotPassthroughPort),
+
+			pod: &corev1.Pod{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{},
+					Labels:      map[string]string{},
+				},
+			},
+			ports: []agonesv1.GameServerPort{
+				{
+					Name:          "awesome-udp",
+					PortPolicy:    agonesv1.Passthrough,
+					ContainerPort: 1234,
+					Protocol:      corev1.ProtocolUDP,
+				},
+			},
+			wantPod: &corev1.Pod{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{},
+					Labels:      map[string]string{},
+				},
+			},
+		},
 	} {
 		t.Run(name, func(t *testing.T) {
 			runtime.FeatureTestMutex.Lock()

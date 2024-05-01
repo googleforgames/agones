@@ -162,7 +162,7 @@ func (*gkeAutopilot) MutateGameServerPod(gss *agonesv1.GameServerSpec, pod *core
 }
 
 // setPassthroughLabel sets the agones.dev/port: "autopilot-passthrough" label to the game server container.
-// This will help to back the container port from the allocated port using an objectSelect of this label
+// This will help to back the container port from the allocated port using an objectSelector of this label
 // in GameServers that are using Passthrough Port Policy
 func setPassthroughLabel(gs *agonesv1.GameServerSpec, pod *corev1.Pod) {
 	if runtime.FeatureEnabled(runtime.FeatureAutopilotPassthroughPort) && hasPortPolicy(gs, agonesv1.Passthrough) {
@@ -179,7 +179,6 @@ func setPrimaryContainer(pod *corev1.Pod, containerName string) {
 		return
 	}
 	pod.ObjectMeta.Annotations[primaryContainerAnnotation] = containerName
-
 }
 
 // podSpecSeccompUnconfined sets to seccomp profile to `Unconfined` to avoid serious performance

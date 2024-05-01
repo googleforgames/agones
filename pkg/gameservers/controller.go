@@ -521,7 +521,6 @@ func (c *Controller) syncGameServerCreatingState(ctx context.Context, gs *agones
 				})
 			}
 		}
-
 		gs, err = c.createGameServerPod(ctx, gs)
 		if err != nil || gs.Status.State == agonesv1.GameServerStateError {
 			return gs, err
