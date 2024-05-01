@@ -504,12 +504,7 @@ func (s *SDKServer) updateAnnotations(ctx context.Context) error {
 	}
 	s.gsUpdateMutex.RUnlock()
 
-	patch, err := gs.Patch(gsCopy)
-	if err != nil {
-		return err
-	}
-
-	_, err = s.gameServerGetter.GameServers(s.namespace).Patch(ctx, gs.GetObjectMeta().GetName(), types.JSONPatchType, patch, metav1.PatchOptions{})
+	_, err = s.patchGameServer(ctx, gs, gsCopy)
 	return err
 }
 
@@ -989,12 +984,7 @@ func (s *SDKServer) updateCounter(ctx context.Context) error {
 		names = append(names, name)
 	}
 
-	patch, err := gs.Patch(gsCopy)
-	if err != nil {
-		return err
-	}
-
-	_, err = s.gameServerGetter.GameServers(s.namespace).Patch(ctx, gs.GetObjectMeta().GetName(), types.JSONPatchType, patch, metav1.PatchOptions{})
+	_, err = s.patchGameServer(ctx, gs, gsCopy)
 	if err != nil {
 		return err
 	}
@@ -1225,12 +1215,7 @@ func (s *SDKServer) updateList(ctx context.Context) error {
 		names = append(names, name)
 	}
 
-	patch, err := gs.Patch(gsCopy)
-	if err != nil {
-		return err
-	}
-
-	_, err = s.gameServerGetter.GameServers(s.namespace).Patch(ctx, gs.GetObjectMeta().GetName(), types.JSONPatchType, patch, metav1.PatchOptions{})
+	_, err = s.patchGameServer(ctx, gs, gsCopy)
 	if err != nil {
 		return err
 	}
@@ -1383,12 +1368,7 @@ func (s *SDKServer) updatePlayerCapacity(ctx context.Context) error {
 	gsCopy.Status.Players.Capacity = s.gsPlayerCapacity
 	s.gsUpdateMutex.RUnlock()
 
-	patch, err := gs.Patch(gsCopy)
-	if err != nil {
-		return err
-	}
-
-	gs, err = s.gameServerGetter.GameServers(s.namespace).Patch(ctx, gs.GetObjectMeta().GetName(), types.JSONPatchType, patch, metav1.PatchOptions{})
+	gs, err = s.patchGameServer(ctx, gs, gsCopy)
 	if err == nil {
 		s.recorder.Event(gs, corev1.EventTypeNormal, "PlayerCapacity", fmt.Sprintf("Set to %d", gs.Status.Players.Capacity))
 	}
@@ -1421,12 +1401,7 @@ func (s *SDKServer) updateConnectedPlayers(ctx context.Context) error {
 		return nil
 	}
 
-	patch, err := gs.Patch(gsCopy)
-	if err != nil {
-		return err
-	}
-
-	gs, err = s.gameServerGetter.GameServers(s.namespace).Patch(ctx, gs.GetObjectMeta().GetName(), types.JSONPatchType, patch, metav1.PatchOptions{})
+	gs, err = s.patchGameServer(ctx, gs, gsCopy)
 	if err == nil {
 		s.recorder.Event(gs, corev1.EventTypeNormal, "PlayerCount", fmt.Sprintf("Set to %d", gs.Status.Players.Count))
 	}

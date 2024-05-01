@@ -47,9 +47,9 @@ import (
 	testclocks "k8s.io/utils/clock/testing"
 )
 
-// PatchGameServer is a helper function for the AddReactor "patch" that creates and applies a patch
+// patchGameServer is a helper function for the AddReactor "patch" that creates and applies a patch
 // to a gameserver. Returns a patched copy and does not modify the original game server.
-func PatchGameServer(t *testing.T, action k8stesting.Action, gs *agonesv1.GameServer) *agonesv1.GameServer {
+func patchGameServer(t *testing.T, action k8stesting.Action, gs *agonesv1.GameServer) *agonesv1.GameServer {
 	pa := action.(k8stesting.PatchAction)
 	patchJSON := pa.GetPatch()
 	patch, err := jsonpatch.DecodePatch(patchJSON)
@@ -191,7 +191,7 @@ func TestSidecarRun(t *testing.T) {
 			m.AgonesClient.AddReactor("patch", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
 				defer close(done)
 
-				gsCopy := PatchGameServer(t, action, &gs)
+				gsCopy := patchGameServer(t, action, &gs)
 
 				if v.expected.state != "" {
 					assert.Equal(t, v.expected.state, gsCopy.Status.State)
@@ -319,7 +319,7 @@ func TestSDKServerSyncGameServer(t *testing.T) {
 			})
 
 			m.AgonesClient.AddReactor("patch", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-				gsCopy := PatchGameServer(t, action, &gs)
+				gsCopy := patchGameServer(t, action, &gs)
 
 				if v.expected.state != "" {
 					assert.Equal(t, v.expected.state, gsCopy.Status.State)
@@ -481,7 +481,7 @@ func TestSidecarUnhealthyMessage(t *testing.T) {
 	})
 
 	m.AgonesClient.AddReactor("patch", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-		gsCopy := PatchGameServer(t, action, &gs)
+		gsCopy := patchGameServer(t, action, &gs)
 
 		return true, gsCopy, nil
 	})
@@ -956,7 +956,7 @@ func TestSDKServerReserveTimeoutOnRun(t *testing.T) {
 	})
 
 	m.AgonesClient.AddReactor("patch", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-		gsCopy := PatchGameServer(t, action, &gs)
+		gsCopy := patchGameServer(t, action, &gs)
 
 		updated <- gsCopy.Status
 
@@ -1012,7 +1012,7 @@ func TestSDKServerReserveTimeout(t *testing.T) {
 	})
 
 	m.AgonesClient.AddReactor("patch", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-		gsCopy := PatchGameServer(t, action, &gs)
+		gsCopy := patchGameServer(t, action, &gs)
 
 		state <- gsCopy.Status
 		return true, gsCopy, nil
@@ -1298,7 +1298,7 @@ func TestSDKServerUpdateCounter(t *testing.T) {
 			updated := make(chan map[string]agonesv1.CounterStatus, 10)
 
 			m.AgonesClient.AddReactor("patch", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-				gsCopy := PatchGameServer(t, action, &gs)
+				gsCopy := patchGameServer(t, action, &gs)
 
 				updated <- gsCopy.Status.Counters
 				return true, gsCopy, nil
@@ -1451,7 +1451,7 @@ func TestSDKServerAddListValue(t *testing.T) {
 			updated := make(chan map[string]agonesv1.ListStatus, 10)
 
 			m.AgonesClient.AddReactor("patch", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-				gsCopy := PatchGameServer(t, action, &gs)
+				gsCopy := patchGameServer(t, action, &gs)
 
 				updated <- gsCopy.Status.Lists
 				return true, gsCopy, nil
@@ -1600,7 +1600,7 @@ func TestSDKServerRemoveListValue(t *testing.T) {
 			updated := make(chan map[string]agonesv1.ListStatus, 10)
 
 			m.AgonesClient.AddReactor("patch", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-				gsCopy := PatchGameServer(t, action, &gs)
+				gsCopy := patchGameServer(t, action, &gs)
 
 				updated <- gsCopy.Status.Lists
 				return true, gsCopy, nil
@@ -1758,7 +1758,7 @@ func TestSDKServerUpdateList(t *testing.T) {
 			updated := make(chan map[string]agonesv1.ListStatus, 10)
 
 			m.AgonesClient.AddReactor("patch", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-				gsCopy := PatchGameServer(t, action, &gs)
+				gsCopy := patchGameServer(t, action, &gs)
 
 				updated <- gsCopy.Status.Lists
 				return true, gsCopy, nil
@@ -1886,7 +1886,7 @@ func TestSDKServerPlayerCapacity(t *testing.T) {
 	updated := make(chan int64, 10)
 	m.AgonesClient.AddReactor("patch", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
 
-		gsCopy := PatchGameServer(t, action, &gs)
+		gsCopy := patchGameServer(t, action, &gs)
 
 		updated <- gsCopy.Status.Players.Capacity
 		return true, gsCopy, nil
@@ -2039,7 +2039,7 @@ func TestSDKServerPlayerConnectAndDisconnect(t *testing.T) {
 
 	updated := make(chan *agonesv1.PlayerStatus, 10)
 	m.AgonesClient.AddReactor("patch", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-		gsCopy := PatchGameServer(t, action, &gs)
+		gsCopy := patchGameServer(t, action, &gs)
 		updated <- gsCopy.Status.Players
 		return true, gsCopy, nil
 	})
