@@ -50,19 +50,19 @@ spec:
       # via Allocation. Defaults to "Ready". The only other option is "Allocated", which can be used in conjunction with
       # label/annotation/player selectors to retrieve an already Allocated GameServer.
       gameServerState: Ready
-      # [Stage:Alpha]
+      # [Stage:Beta]
       # [FeatureFlag:CountsAndLists]
-      # counters: # selector for counter current values of a GameServer count
-      #   rooms:
-      #     minCount: 1 # minimum value. Defaults to 0.
-      #     maxCount: 5 # maximum value. Defaults to max(int64)
-      #     minAvailable: 1 # minimum available (current capacity - current count). Defaults to 0.
-      #     maxAvailable: 10 # maximum available (current capacity - current count) Defaults to max(int64)
-      # lists:
-      #   players:
-      #     containsValue: "x6k8z" # only match GameServers who has this value in the list. Defaults to "", which is all.
-      #     minAvailable: 1 # minimum available (current capacity - current count). Defaults to 0.
-      #     maxAvailable: 10 # maximum available (current capacity - current count) Defaults to 0, which translates to max(int64)
+      counters: # selector for counter current values of a GameServer count
+        rooms:
+          minCount: 1 # minimum value. Defaults to 0.
+          maxCount: 5 # maximum value. Defaults to max(int64)
+          minAvailable: 1 # minimum available (current capacity - current count). Defaults to 0.
+          maxAvailable: 10 # maximum available (current capacity - current count) Defaults to max(int64)
+      lists:
+        players:
+          containsValue: "x6k8z" # only match GameServers who has this value in the list. Defaults to "", which is all.
+          minAvailable: 1 # minimum available (current capacity - current count). Defaults to 0.
+          maxAvailable: 10 # maximum available (current capacity - current count) Defaults to 0, which translates to max(int64)
       #
       # [Stage:Alpha]
       # [FeatureFlag:PlayerAllocationFilter]
@@ -86,7 +86,7 @@ spec:
     annotations:
       map: garden22
   # yamllint disable rule:comments-indentation rule:line-length
-  # [Stage: Alpha]
+  # [Stage: Beta]
   # [FeatureFlag:CountsAndLists]
   # `Priorities` configuration alters the order in which `GameServers` are searched for matches to the configured `selectors`.
   #
@@ -98,22 +98,22 @@ spec:
   # For `Distributed` strategy sorting, the entire selection of `GameServers` will be sorted by this priority list to provide the
   # order that `GameServers` will be allocated by.
   # Optional.
-  # priorities:
-  # - type: Counter  # Whether a Counter or a List.
-  #   key: rooms  # The name of the Counter or List.
-  #   order: Ascending  # "Ascending" lists smaller available capacity first.
-  # [Stage:Alpha]
+  priorities:
+  - type: Counter  # Whether a Counter or a List.
+    key: rooms  # The name of the Counter or List.
+    order: Ascending  # "Ascending" lists smaller available capacity first.
+  # [Stage:Beta]
   # [FeatureFlag:CountsAndLists]
   # Counter actions to perform during allocation. Optional.
-  # counters:
-  #   rooms:
-  #     action: Increment # Either "Increment" or "Decrement" the Counter’s Count.
-  #     amount: 1 # Amount is the amount to increment or decrement the Count. Must be a positive integer.
-  #     capacity: 5 # Amount to update the maximum capacity of the Counter to this number. Min 0, Max int64.
+  counters:
+    rooms:
+      action: Increment # Either "Increment" or "Decrement" the Counter’s Count.
+      amount: 1 # Amount is the amount to increment or decrement the Count. Must be a positive integer.
+      capacity: 5 # Amount to update the maximum capacity of the Counter to this number. Min 0, Max int64.
   # List actions to perform during allocation. Optional.
-  # lists:
-  #   players:
-  #     addValues: # appends values to a List’s Values array. Any duplicate values will be ignored
-  #       - x7un
-  #       - 8inz
-  #     capacity: 40 # Updates the maximum capacity of the Counter to this number. Min 0, Max 1000.
+  lists:
+    players:
+      addValues: # appends values to a List’s Values array. Any duplicate values will be ignored
+        - x7un
+        - 8inz
+      capacity: 40 # Updates the maximum capacity of the Counter to this number. Min 0, Max 1000.
