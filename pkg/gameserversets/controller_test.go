@@ -340,6 +340,8 @@ func TestComputeStatus(t *testing.T) {
 				Count:    30,
 				Capacity: 55,
 			},
+			Counters: map[string]agonesv1.AggregatedCounterStatus{},
+			Lists:    map[string]agonesv1.AggregatedListStatus{},
 		}
 
 		assert.Equal(t, expected, computeStatus(list))

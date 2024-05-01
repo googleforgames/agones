@@ -123,6 +123,9 @@ const (
 	// GameServerPodLabel is the label that the name of the GameServer
 	// is set on the Pod the GameServer controls
 	GameServerPodLabel = agones.GroupName + "/gameserver"
+	// GameServerPortPolicyPodLabel is the label to identify the port policy
+	// of the pod
+	GameServerPortPolicyPodLabel = agones.GroupName + "/port"
 	// GameServerContainerAnnotation is the annotation that stores
 	// which container is the container that runs the dedicated game server
 	GameServerContainerAnnotation = agones.GroupName + "/container"
