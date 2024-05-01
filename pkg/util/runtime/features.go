@@ -58,6 +58,9 @@ const (
 	////////////////
 	// Dev features
 
+	// FeatureAutopilotPassthroughPort is a feature flag that enables/disables Passthrough Port Policy.
+	FeatureAutopilotPassthroughPort Feature = "PassthroughPortPolicy"
+
 	////////////////
 	// Example feature
 
@@ -109,6 +112,7 @@ var (
 		FeaturePlayerTracking:                   false,
 
 		// Dev features
+		FeatureAutopilotPassthroughPort: true,
 
 		// Example feature
 		FeatureExample: false,
