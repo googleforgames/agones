@@ -155,9 +155,19 @@ func (*gkeAutopilot) ValidateScheduling(ss apis.SchedulingStrategy, fldPath *fie
 }
 
 func (*gkeAutopilot) MutateGameServerPod(gss *agonesv1.GameServerSpec, pod *corev1.Pod) error {
+	setPassthroughLabel(gss, pod)
 	setPrimaryContainer(pod, gss.Container)
 	podSpecSeccompUnconfined(&pod.Spec)
 	return nil
+}
+
+// setPassthroughLabel sets the agones.dev/port: "autopilot-passthrough" label to the game server container.
+// This will help to back the container port from the allocated port using an objectSelector of this label
+// in GameServers that are using Passthrough Port Policy
+func setPassthroughLabel(gs *agonesv1.GameServerSpec, pod *corev1.Pod) {
+	if runtime.FeatureEnabled(runtime.FeatureAutopilotPassthroughPort) && hasPortPolicy(gs, agonesv1.Passthrough) {
+		pod.ObjectMeta.Labels[agonesv1.GameServerPortPolicyPodLabel] = "autopilot-passthrough"
+	}
 }
 
 // setPrimaryContainer sets the autopilot.gke.io/primary-container annotation to the game server container.
@@ -221,6 +231,15 @@ func setEvictionNoExtended(ev *agonesv1.Eviction, pod *corev1.Pod) error {
 		}
 	}
 	return nil
+}
+
+func hasPortPolicy(gs *agonesv1.GameServerSpec, portPolicy agonesv1.PortPolicy) bool {
+	for _, p := range gs.Ports {
+		if p.PortPolicy == portPolicy {
+			return true
+		}
+	}
+	return false
 }
 
 type autopilotPortAllocator struct {

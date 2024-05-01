@@ -14,10 +14,12 @@
 package gke
 
 import (
+	"fmt"
 	"testing"
 
 	"agones.dev/agones/pkg/apis"
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
+	"agones.dev/agones/pkg/util/runtime"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
@@ -218,6 +220,100 @@ func TestPodSeccompUnconfined(t *testing.T) {
 			podSpec := tc.podSpec.DeepCopy()
 			podSpecSeccompUnconfined(podSpec)
 			assert.Equal(t, tc.wantPodSpec, podSpec)
+		})
+	}
+}
+
+func TestSetPassthroughLabel(t *testing.T) {
+	for name, tc := range map[string]struct {
+		pod      *corev1.Pod
+		wantPod  *corev1.Pod
+		ports    []agonesv1.GameServerPort
+		features string
+	}{
+		"gameserver with with Passthrough port policy adds label to pod": {
+			features: fmt.Sprintf("%s=true", runtime.FeatureAutopilotPassthroughPort),
+
+			pod: &corev1.Pod{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{},
+					Labels:      map[string]string{},
+				},
+			},
+			ports: []agonesv1.GameServerPort{
+				{
+					Name:          "awesome-udp",
+					PortPolicy:    agonesv1.Passthrough,
+					ContainerPort: 1234,
+					Protocol:      corev1.ProtocolUDP,
+				},
+			},
+			wantPod: &corev1.Pod{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{},
+					Labels: map[string]string{
+						agonesv1.GameServerPortPolicyPodLabel: "autopilot-passthrough",
+					},
+				},
+			},
+		},
+		"gameserver with  Static port policy does not add label to pod": {
+			features: fmt.Sprintf("%s=true", runtime.FeatureAutopilotPassthroughPort),
+
+			pod: &corev1.Pod{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{},
+					Labels:      map[string]string{},
+				},
+			},
+			ports: []agonesv1.GameServerPort{
+				{
+					Name:          "awesome-udp",
+					PortPolicy:    agonesv1.Static,
+					ContainerPort: 1234,
+					Protocol:      corev1.ProtocolUDP,
+				},
+			},
+			wantPod: &corev1.Pod{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{},
+					Labels:      map[string]string{},
+				},
+			},
+		},
+		"gameserver, no feature gate, with Passthrough port policy does not add label to pod": {
+			features: fmt.Sprintf("%s=false", runtime.FeatureAutopilotPassthroughPort),
+
+			pod: &corev1.Pod{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{},
+					Labels:      map[string]string{},
+				},
+			},
+			ports: []agonesv1.GameServerPort{
+				{
+					Name:          "awesome-udp",
+					PortPolicy:    agonesv1.Passthrough,
+					ContainerPort: 1234,
+					Protocol:      corev1.ProtocolUDP,
+				},
+			},
+			wantPod: &corev1.Pod{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{},
+					Labels:      map[string]string{},
+				},
+			},
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			runtime.FeatureTestMutex.Lock()
+			defer runtime.FeatureTestMutex.Unlock()
+			require.NoError(t, runtime.ParseFeatures(tc.features))
+			gs := (&autopilotPortAllocator{minPort: 7000, maxPort: 8000}).Allocate(&agonesv1.GameServer{Spec: agonesv1.GameServerSpec{Ports: tc.ports}})
+			pod := tc.pod.DeepCopy()
+			setPassthroughLabel(&gs.Spec, pod)
+			assert.Equal(t, tc.wantPod, pod)
 		})
 	}
 }
