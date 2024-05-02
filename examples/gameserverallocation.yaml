@@ -28,15 +28,14 @@ metadata:
   name: allocation-example
 spec:
   # GameServer selector from which to choose GameServers from.
-  # GameServers still have the hard requirement to be `Ready` to be allocated from
-  # however we can also make available `matchExpressions` for even greater
-  # flexibility.
+  # GameServers still have the hard requirement to be `Ready` to be allocated from.
+  # However, we can also make available `matchExpressions` for even greater flexibility.
   # Below is an example of a GameServer allocated against a given fleet.
   # See: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/ for more details
   # The selectors is an ordered list of allocations set.
   # If the first selector is not matched, the selection attempts the second selector, and so on.
   # This is useful for things like smoke testing of new game servers.
-  # This also support `matchExpressions`
+  # This also supports `matchExpressions`
   selectors:
     - matchLabels:
         agones.dev/fleet: green-fleet

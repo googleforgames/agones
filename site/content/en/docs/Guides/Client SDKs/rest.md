@@ -345,7 +345,7 @@ Response:
 
 #### Counters
 
-In all the  Counter examples, we retrieve the counter under the key `rooms` as if it was previously defined in [`GameServer.Spec.counters[room]`]({{< ref "/docs/Reference/agones_crd_api_reference.html#agones.dev/v1.GameServerSpec" >}}).
+In all the Counter examples, we retrieve the counter under the key `rooms` as if it was previously defined in [`GameServer.Spec.counters[room]`]({{< ref "/docs/Reference/agones_crd_api_reference.html#agones.dev/v1.GameServerSpec" >}}).
 
 For your own Counter REST requests, replace the value `rooms` with your own key in the path.
 
