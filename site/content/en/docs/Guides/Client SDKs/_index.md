@@ -52,6 +52,7 @@ The SDKs will automatically discover and connect to the gRPC port specified in t
 If your game server requires using a REST client, it is advised to use the port from the environment variable,
 otherwise your game server will not be able to contact the SDK server if it is configured to use a non-default port.
 
+{{% feature expiryVersion="1.41.0" %}}
 ## Function Reference
 
 While each of the SDKs are canonical to their languages, they all have the following
@@ -80,6 +81,37 @@ Functions which changes GameServer state or settings are:
 14. Alpha().AppendListValue()
 15. Alpha().DeleteListValue()
 16. Alpha().SetListCapacity()
+{{% /feature %}}
+{{% feature publishVersion="1.41.0" %}}
+## Function Reference
+
+While each of the SDKs are canonical to their languages, they all have the following
+functions that implement the core responsibilities of the SDK.
+
+For language specific documentation, have a look at the respective source (linked above), 
+and the {{< ghlink href="examples" >}}examples{{< /ghlink >}}.
+
+Calling any of state changing functions mentioned below does not guarantee that GameServer Custom Resource object would actually change its state right after the call. For instance, it could be moved to the `Shutdown` state elsewhere (for example, when a fleet scales down), which leads to no changes in `GameServer` object. You can verify the result of this call by waiting for the desired state in a callback to WatchGameServer() function.
+
+Functions which changes GameServer state or settings are:
+
+1. Ready()
+2. Shutdown()
+3. SetLabel()
+4. SetAnnotation()
+5. Allocate()
+6. Reserve()
+7. Alpha().SetCapacity()
+8. Alpha().PlayerConnect()
+9. Alpha().PlayerDisconnect()
+10. Beta().SetCounterCount()
+11. Beta().IncrementCounter()
+12. Beta().DecrementCounter()
+13. Beta().SetCounterCapacity()
+14. Beta().AppendListValue()
+15. Beta().DeleteListValue()
+16. Beta().SetListCapacity()
+{{% /feature %}}
 
 ### Lifecycle Management
 

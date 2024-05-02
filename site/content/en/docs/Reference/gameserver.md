@@ -243,7 +243,6 @@ spec:
         - room1
         - room2
         - room3
-  #  
   # Pod template configuration
   # {{< k8s-api-version href="#podtemplate-v1-core" >}}
   template:
