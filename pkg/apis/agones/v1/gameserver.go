@@ -82,9 +82,8 @@ const (
 	// Passthrough dynamically sets the `containerPort` to the same value as the dynamically selected hostPort.
 	// This will mean that users will need to lookup what port has been opened through the server side SDK.
 	Passthrough PortPolicy = "Passthrough"
-	// DirectToGameServer allows connecting directly to a pod with a publicly routable IP address.
-	// The `hostPort` is not used and the `containerPort` is required. All gameservers will get the same port number.
-	DirectToGameServer PortPolicy = "DirectToGameServer"
+	// None means the `hostPort` is ignored and if defined, the `containerPort` (optional) is used to set the port on the GameServer instance.
+	None PortPolicy = "None"
 )
 
 // EvictionSafe specified whether the game server supports termination via SIGTERM
@@ -564,7 +563,7 @@ func (gss *GameServerSpec) Validate(apiHooks APIHooks, devAddress string, fldPat
 	// no host port when using dynamic PortPolicy
 	for i, p := range gss.Ports {
 		path := fldPath.Child("ports").Index(i)
-		if p.PortPolicy == Dynamic || p.PortPolicy == Static || p.PortPolicy == DirectToGameServer {
+		if p.PortPolicy == Dynamic || p.PortPolicy == Static {
 			if p.ContainerPort <= 0 {
 				allErrs = append(allErrs, field.Required(path.Child("containerPort"), ErrContainerPortRequired))
 			}
@@ -574,7 +573,7 @@ func (gss *GameServerSpec) Validate(apiHooks APIHooks, devAddress string, fldPat
 			allErrs = append(allErrs, field.Required(path.Child("containerPort"), ErrContainerPortPassthrough))
 		}
 
-		if p.HostPort > 0 && (p.PortPolicy == Dynamic || p.PortPolicy == Passthrough || p.PortPolicy == DirectToGameServer) {
+		if p.HostPort > 0 && (p.PortPolicy == Dynamic || p.PortPolicy == Passthrough) {
 			allErrs = append(allErrs, field.Forbidden(path.Child("hostPort"), ErrHostPort))
 		}
 
@@ -744,7 +743,7 @@ func (gs *GameServer) Pod(apiHooks APIHooks, sidecars ...corev1.Container) (*cor
 	gs.podObjectMeta(pod)
 	for _, p := range gs.Spec.Ports {
 		var hostPort int32
-		if p.PortPolicy != DirectToGameServer {
+		if p.PortPolicy != None {
 			hostPort = p.HostPort
 		}
 
@@ -861,7 +860,7 @@ func (gs *GameServer) HasPortPolicy(policy PortPolicy) bool {
 
 // Status returns a GameServerStatusPort for this GameServerPort
 func (p GameServerPort) Status() GameServerStatusPort {
-	if p.PortPolicy == DirectToGameServer {
+	if p.PortPolicy == None {
 		return GameServerStatusPort{Name: p.Name, Port: p.ContainerPort}
 	}
 

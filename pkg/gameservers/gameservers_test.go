@@ -133,12 +133,12 @@ func TestApplyGameServerAddressAndPort(t *testing.T) {
 			},
 			wantPort: 9876,
 		},
-		"container port with PortPolicy DirectToGameServer changed after create": {
+		"container port with PortPolicy None changed after create": {
 			podMod: func(pod *corev1.Pod) {
 				pod.Spec.Containers[0].Ports[0].ContainerPort = 9876
 			},
 			podSyncer: func(gs *agonesv1.GameServer, pod *corev1.Pod) error {
-				gs.Spec.Ports[0].PortPolicy = agonesv1.DirectToGameServer
+				gs.Spec.Ports[0].PortPolicy = agonesv1.None
 				gs.Spec.Ports[0].ContainerPort = pod.Spec.Containers[0].Ports[0].ContainerPort
 				return nil
 			},

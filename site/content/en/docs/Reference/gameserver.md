@@ -31,8 +31,7 @@ spec:
     # port is available. When static is the policy specified, `hostPort` is required to be populated
     # - "Passthrough" dynamically sets the `containerPort` to the same value as the dynamically selected hostPort.
     #      This will mean that users will need to lookup what port has been opened through the server side SDK.
-    # - "DirectToGameServer" allows connecting directly to gameservers that have a publicly routable IP address and a defined `containerPort`.
-    #       `hostPort` is not used and gameservers on the same host all have the same port number. `containerPort` is required.
+    # - "None" means the `hostPort` is ignored and if defined, the `containerPort` (optional) is used to set the port on the GameServer instance.
     portPolicy: Static
     # The name of the container to open the port on. Defaults to the game server container if omitted or empty.
     container: simple-game-server
@@ -251,9 +250,9 @@ The `spec` field is the actual GameServer specification and it is composed as fo
         - `Dynamic` (default) the system allocates a random free hostPort for the gameserver, for game clients to connect to.
         - `Static`, user defines the hostPort that the game client will connect to. Then onus is on the user to ensure that the port is available. When static is the policy specified, `hostPort` is required to be populated.
         - `Passthrough` dynamically sets the `containerPort`  to the same value as the dynamically selected hostPort. This will mean that users will need to lookup what port to open through the server side SDK before starting communications.
-        - `DirectToGameServer` allows connecting directly to gameservers that have a publicly routable IP address and a defined `containerPort`. `hostPort` is not used and gameservers on the same host all have the same port number. `containerPort` is required.
+        - `None` means the `hostPort` is ignored and if defined, the `containerPort` (optional) is used to set the port on the GameServer instance.
   - `container` (Alpha) the name of the container to open the port on. Defaults to the game server container if omitted or empty.
-  - `containerPort` the port that is being opened on the game server process, this is a required field for `Dynamic`, `Static` and `DirectToGameServer` port policies, and should not be included in <code>Passthrough</code> configuration.
+  - `containerPort` the port that is being opened on the game server process, this is a required field for `Dynamic` and `Static` port policies, and should not be included in <code>Passthrough</code> configuration.
   - `protocol` the protocol being used. Defaults to UDP. TCP and TCPUDP are other options.
 - `health` to track the overall healthy state of the GameServer, more information available in the [health check documentation]({{< relref "../Guides/health-checking.md" >}}).
 - `sdkServer` defines parameters for the game server sidecar

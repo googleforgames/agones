@@ -19,7 +19,7 @@ metadata:
 spec:
   ports:
     - name: default
-      portPolicy: DirectToGameServer
+      portPolicy: None
       containerPort: 7777
   template:
     spec:

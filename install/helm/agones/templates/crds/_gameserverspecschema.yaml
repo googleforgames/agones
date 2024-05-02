@@ -64,14 +64,13 @@ properties:
                   port is available. When static is the policy specified, `hostPort` is required to be populated
                   - "Passthrough" dynamically sets the `containerPort` to the same value as the dynamically selected hostPort.
                   This will mean that users will need to lookup what port has been opened through the server side SDK.
-                  - "DirectToGameServer" allows connecting directly to gameservers that have a publicly routable IP address and a defined `containerPort`.
-                  `hostPort` is not used and gameservers on the same host all have the same port number. `containerPort` is required.
+                  - "None" means the `hostPort` is ignored and if defined, the `containerPort` (optional) is used to set the port on the GameServer instance.
               type: string
               enum:
               - Dynamic
               - Static
               - Passthrough
-              - DirectToGameServer
+              - None
             protocol:
               title: Protocol being used. Defaults to UDP. TCP and TCPUDP are other options.
               type: string
@@ -90,7 +89,7 @@ properties:
               maximum: 65535
             hostPort:
               title: The port exposed on the host
-              description: Only required when `portPolicy` is "Static". Overwritten when portPolicy is "Dynamic", "Passthrough" or "DirectToGameServer".
+              description: Only required when `portPolicy` is "Static". Overwritten when portPolicy is "Dynamic" or "Passthrough".
               type: integer
               minimum: 1
               maximum: 65535

@@ -44,28 +44,28 @@ func TestStatus(t *testing.T) {
 		portPolicy    PortPolicy
 		expected      GameServerStatusPort
 	}{
-		"PortPolicy Dynamic, should use HostPort": {
+		"PortPolicy Dynamic, should use hostPort": {
 			hostPort:      7788,
 			containerPort: 7777,
 			portPolicy:    Dynamic,
 			expected:      GameServerStatusPort{Name: "test-name", Port: 7788},
 		},
-		"PortPolicy Static - should use HostPort": {
+		"PortPolicy Static - should use hostPort": {
 			hostPort:      7788,
 			containerPort: 7777,
 			portPolicy:    Static,
 			expected:      GameServerStatusPort{Name: "test-name", Port: 7788},
 		},
-		"PortPolicy Passthrough - should use HostPort": {
+		"PortPolicy Passthrough - should use hostPort": {
 			hostPort:      7788,
 			containerPort: 7777,
 			portPolicy:    Passthrough,
 			expected:      GameServerStatusPort{Name: "test-name", Port: 7788},
 		},
-		"PortPolicy DirectToGameServer - should use ContainerPort": {
+		"PortPolicy None - should use containerPort and ignore hostPort": {
 			hostPort:      7788,
 			containerPort: 7777,
-			portPolicy:    DirectToGameServer,
+			portPolicy:    None,
 			expected:      GameServerStatusPort{Name: "test-name", Port: 7777},
 		},
 	}
@@ -536,8 +536,8 @@ func TestGameServerValidate(t *testing.T) {
 			want: field.ErrorList{
 				field.Required(field.NewPath("spec", "container"), "Container is required when using multiple containers in the pod template"),
 				field.Invalid(field.NewPath("spec", "container"), "", "Could not find a container named "),
-				field.Required(field.NewPath("spec", "ports").Index(0).Child("containerPort"), "ContainerPort must be defined for Dynamic, Static and DirectToGameServer PortPolicies"),
-				field.Forbidden(field.NewPath("spec", "ports").Index(0).Child("hostPort"), "HostPort cannot be specified with a Dynamic, Passthrough or DirectToGameServer PortPolicy"),
+				field.Required(field.NewPath("spec", "ports").Index(0).Child("containerPort"), "ContainerPort must be defined for Dynamic and Static PortPolicies"),
+				field.Forbidden(field.NewPath("spec", "ports").Index(0).Child("hostPort"), "HostPort cannot be specified with a Dynamic or Passthrough PortPolicy"),
 			},
 		},
 		{
@@ -756,7 +756,6 @@ func TestGameServerValidate(t *testing.T) {
 						{Name: "one", PortPolicy: Passthrough, ContainerPort: 1294},
 						{PortPolicy: Passthrough, Name: "two", HostPort: 7890},
 						{PortPolicy: Dynamic, Name: "three", HostPort: 7890, ContainerPort: 1294},
-						{PortPolicy: DirectToGameServer, Name: "four", HostPort: 7890, ContainerPort: 1294},
 					},
 					Container: "my_image",
 					Template: corev1.PodTemplateSpec{
@@ -771,9 +770,8 @@ func TestGameServerValidate(t *testing.T) {
 			applyDefaults: true,
 			want: field.ErrorList{
 				field.Required(field.NewPath("spec", "ports").Index(0).Child("containerPort"), "ContainerPort cannot be specified with Passthrough PortPolicy"),
-				field.Forbidden(field.NewPath("spec", "ports").Index(1).Child("hostPort"), "HostPort cannot be specified with a Dynamic, Passthrough or DirectToGameServer PortPolicy"),
-				field.Forbidden(field.NewPath("spec", "ports").Index(2).Child("hostPort"), "HostPort cannot be specified with a Dynamic, Passthrough or DirectToGameServer PortPolicy"),
-				field.Forbidden(field.NewPath("spec", "ports").Index(3).Child("hostPort"), "HostPort cannot be specified with a Dynamic, Passthrough or DirectToGameServer PortPolicy"),
+				field.Forbidden(field.NewPath("spec", "ports").Index(1).Child("hostPort"), "HostPort cannot be specified with a Dynamic or Passthrough PortPolicy"),
+				field.Forbidden(field.NewPath("spec", "ports").Index(2).Child("hostPort"), "HostPort cannot be specified with a Dynamic or Passthrough PortPolicy"),
 			},
 		},
 		{
@@ -830,7 +828,7 @@ func TestGameServerValidate(t *testing.T) {
 			want: field.ErrorList{
 				field.Required(
 					field.NewPath("spec", "ports").Index(0).Child("containerPort"),
-					"ContainerPort must be defined for Dynamic, Static and DirectToGameServer PortPolicies",
+					"ContainerPort must be defined for Dynamic and Static PortPolicies",
 				),
 			},
 		},

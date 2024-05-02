@@ -849,11 +849,11 @@ func TestGameServerPassthroughPort(t *testing.T) {
 	assert.Equal(t, "ACK: Hello World !\n", reply)
 }
 
-func TestGameServerDirectToGameServerPort(t *testing.T) {
-	framework.SkipOnCloudProduct(t, "gke-autopilot", "does not support DirectToGameServer PortPolicy")
+func TestGameServerPortPolicyNone(t *testing.T) {
+	framework.SkipOnCloudProduct(t, "gke-autopilot", "does not support None PortPolicy")
 	t.Parallel()
 	gs := framework.DefaultGameServer(framework.Namespace)
-	gs.Spec.Ports[0] = agonesv1.GameServerPort{PortPolicy: agonesv1.DirectToGameServer, ContainerPort: 7777}
+	gs.Spec.Ports[0] = agonesv1.GameServerPort{PortPolicy: agonesv1.None, ContainerPort: 7777}
 	// gate
 	errs := gs.Validate(agtesting.FakeAPIHooks{})
 	assert.Len(t, errs, 0)
@@ -863,10 +863,10 @@ func TestGameServerDirectToGameServerPort(t *testing.T) {
 		assert.FailNow(t, "Could not get a GameServer ready", err.Error())
 	}
 
-	// To test sending UDP traffic directly to a pod, a product like Calico which uses BGP is needed
+	// To test sending UDP traffic directly to a pod when no hostPort is set, a product like Calico which uses BGP is needed
 	// so this only tests that the port is set correctly.
 	port := readyGs.Spec.Ports[0]
-	assert.Equal(t, agonesv1.DirectToGameServer, port.PortPolicy)
+	assert.Equal(t, agonesv1.None, port.PortPolicy)
 	assert.Empty(t, port.HostPort)
 	assert.EqualValues(t, 7777, port.ContainerPort)
 }
