@@ -268,7 +268,7 @@ spec:
       addValues: # appends values to a List’s Values array. Any duplicate values will be ignored
         - x7un
         - 8inz
-  #     capacity: 40 # Updates the maximum capacity of the Counter to this number. Min 0, Max 1000.
+      capacity: 40 # Updates the maximum capacity of the Counter to this number. Min 0, Max 1000.
   {{< /tab >}}
   {{< tab header="required & preferred (deprecated)" lang="yaml" >}}
 apiVersion: "allocation.agones.dev/v1"
