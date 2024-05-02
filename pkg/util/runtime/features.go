@@ -55,6 +55,9 @@ const (
 	// FeaturePlayerTracking is a feature flag to enable/disable player tracking features.
 	FeaturePlayerTracking Feature = "PlayerTracking"
 
+	// FeatureRollingUpdateFix is a feature flag to enable/disable fleet controller fixes.
+	FeatureRollingUpdateFix Feature = "RollingUpdateFix"
+
 	////////////////
 	// Dev features
 
@@ -110,6 +113,7 @@ var (
 		FeatureGKEAutopilotExtendedDurationPods: false,
 		FeaturePlayerAllocationFilter:           false,
 		FeaturePlayerTracking:                   false,
+		FeatureRollingUpdateFix:                 false,
 
 		// Dev features
 		FeatureAutopilotPassthroughPort: true,
