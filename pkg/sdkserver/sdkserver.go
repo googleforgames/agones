@@ -456,7 +456,7 @@ func (s *SDKServer) patchGameServer(ctx context.Context, gs, gsCopy *agonesv1.Ga
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("PATCH", string(patch))
+
 	return s.gameServerGetter.GameServers(s.namespace).Patch(ctx, gs.GetObjectMeta().GetName(), types.JSONPatchType, patch, metav1.PatchOptions{})
 }
 

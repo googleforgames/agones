@@ -173,7 +173,7 @@ func TestSidecarRun(t *testing.T) {
 
 			gs := agonesv1.GameServer{
 				ObjectMeta: metav1.ObjectMeta{
-					Name: "test", Namespace: "default",
+					Name: "test", Namespace: "default", ResourceVersion: "0",
 				},
 				Spec: agonesv1.GameServerSpec{
 					Health: agonesv1.Health{Disabled: false, FailureThreshold: 1, PeriodSeconds: 1, InitialDelaySeconds: 0},
@@ -310,7 +310,7 @@ func TestSDKServerSyncGameServer(t *testing.T) {
 			updated := false
 			gs := agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{
 				UID:  "1234",
-				Name: sc.gameServerName, Namespace: sc.namespace,
+				Name: sc.gameServerName, Namespace: sc.namespace, ResourceVersion: "0",
 				Labels: map[string]string{}, Annotations: map[string]string{}},
 			}
 
@@ -382,7 +382,7 @@ func TestSidecarUpdateState(t *testing.T) {
 
 			m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
 				gs := agonesv1.GameServer{
-					ObjectMeta: metav1.ObjectMeta{Name: sc.gameServerName, Namespace: sc.namespace},
+					ObjectMeta: metav1.ObjectMeta{Name: sc.gameServerName, Namespace: sc.namespace, ResourceVersion: "0"},
 					Status:     agonesv1.GameServerStatus{},
 				}
 
@@ -467,7 +467,7 @@ func TestSidecarUnhealthyMessage(t *testing.T) {
 
 	gs := agonesv1.GameServer{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "test", Namespace: "default",
+			Name: "test", Namespace: "default", ResourceVersion: "0",
 		},
 		Spec: agonesv1.GameServerSpec{},
 		Status: agonesv1.GameServerStatus{
@@ -939,7 +939,7 @@ func TestSDKServerReserveTimeoutOnRun(t *testing.T) {
 
 	gs := agonesv1.GameServer{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "test", Namespace: "default",
+			Name: "test", Namespace: "default", ResourceVersion: "0",
 		},
 		Status: agonesv1.GameServerStatus{
 			State: agonesv1.GameServerStateReserved,
@@ -1001,7 +1001,7 @@ func TestSDKServerReserveTimeout(t *testing.T) {
 
 	gs := agonesv1.GameServer{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "test", Namespace: "default",
+			Name: "test", Namespace: "default", ResourceVersion: "0",
 		},
 		Spec: agonesv1.GameServerSpec{Health: agonesv1.Health{Disabled: true}},
 	}
@@ -1278,7 +1278,7 @@ func TestSDKServerUpdateCounter(t *testing.T) {
 
 			gs := agonesv1.GameServer{
 				ObjectMeta: metav1.ObjectMeta{
-					Name: "test", Namespace: "default", Generation: 1,
+					Name: "test", Namespace: "default", ResourceVersion: "0", Generation: 1,
 				},
 				Spec: agonesv1.GameServerSpec{
 					SdkServer: agonesv1.SdkServer{
@@ -1431,7 +1431,7 @@ func TestSDKServerAddListValue(t *testing.T) {
 
 			gs := agonesv1.GameServer{
 				ObjectMeta: metav1.ObjectMeta{
-					Name: "test", Namespace: "default", Generation: 1,
+					Name: "test", Namespace: "default", ResourceVersion: "0", Generation: 1,
 				},
 				Spec: agonesv1.GameServerSpec{
 					SdkServer: agonesv1.SdkServer{
@@ -1580,7 +1580,7 @@ func TestSDKServerRemoveListValue(t *testing.T) {
 
 			gs := agonesv1.GameServer{
 				ObjectMeta: metav1.ObjectMeta{
-					Name: "test", Namespace: "default", Generation: 1,
+					Name: "test", Namespace: "default", ResourceVersion: "0", Generation: 1,
 				},
 				Spec: agonesv1.GameServerSpec{
 					SdkServer: agonesv1.SdkServer{
@@ -1738,7 +1738,7 @@ func TestSDKServerUpdateList(t *testing.T) {
 
 			gs := agonesv1.GameServer{
 				ObjectMeta: metav1.ObjectMeta{
-					Name: "test", Namespace: "default", Generation: 1,
+					Name: "test", Namespace: "default", ResourceVersion: "0", Generation: 1,
 				},
 				Spec: agonesv1.GameServerSpec{
 					SdkServer: agonesv1.SdkServer{
@@ -1866,7 +1866,7 @@ func TestSDKServerPlayerCapacity(t *testing.T) {
 
 	gs := agonesv1.GameServer{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "test", Namespace: "default",
+			Name: "test", Namespace: "default", ResourceVersion: "0",
 		},
 		Spec: agonesv1.GameServerSpec{
 			SdkServer: agonesv1.SdkServer{
@@ -2019,7 +2019,7 @@ func TestSDKServerPlayerConnectAndDisconnect(t *testing.T) {
 	capacity := int64(3)
 	gs := agonesv1.GameServer{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "test", Namespace: "default",
+			Name: "test", Namespace: "default", ResourceVersion: "0",
 		},
 		Spec: agonesv1.GameServerSpec{
 			SdkServer: agonesv1.SdkServer{

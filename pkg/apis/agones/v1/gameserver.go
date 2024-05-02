@@ -879,8 +879,10 @@ func (gs *GameServer) CountPortsForRange(name string, f func(policy PortPolicy) 
 	return count
 }
 
-// Patch creates a JSONPatch to move the current GameServer
-// to the passed in delta GameServer
+// Patch creates a JSONPatch to move the current GameServer to the passed in delta GameServer.
+// Returned Patch includes a "test" operation that will cause the GameServers.Patch() operation to
+// fail if the Game Server has been updated (ResourceVersion has changed) in between when the Patch
+// was created and applied.
 func (gs *GameServer) Patch(delta *GameServer) ([]byte, error) {
 	var result []byte
 
@@ -899,7 +901,13 @@ func (gs *GameServer) Patch(delta *GameServer) ([]byte, error) {
 		return result, errors.Wrapf(err, "error creating patch for GameServer %s", gs.ObjectMeta.Name)
 	}
 
-	result, err = json.Marshal(patch)
+	// Per https://jsonpatch.com/ "Tests that the specified value is set in the document. If the test
+	// fails, then the patch as a whole should not apply."
+	// Used here to check the object has not been updated (has not changed ResourceVersion).
+	patches := []jsonpatch.JsonPatchOperation{{Operation: "test", Path: "/metadata/resourceVersion", Value: gs.ObjectMeta.ResourceVersion}}
+	patches = append(patches, patch...)
+
+	result, err = json.Marshal(patches)
 	return result, errors.Wrapf(err, "error creating json for patch for GameServer %s", gs.ObjectMeta.Name)
 }
 
