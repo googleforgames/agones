@@ -1450,7 +1450,11 @@ func TestRollingUpdateOnReady(t *testing.T) {
 }
 
 func TestControllerRollingUpdateDeployment(t *testing.T) {
-	t.Parallel()
+	t.Cleanup(func() {
+		utilruntime.FeatureTestMutex.Lock()
+		defer utilruntime.FeatureTestMutex.Unlock()
+		require.NoError(t, utilruntime.ParseFeatures(""))
+	})
 
 	type expected struct {
 		inactiveSpecReplicas int32
@@ -1460,45 +1464,50 @@ func TestControllerRollingUpdateDeployment(t *testing.T) {
 	}
 
 	fixtures := map[string]struct {
+		features                         string
 		fleetSpecReplicas                int32
 		activeSpecReplicas               int32
 		activeStatusReplicas             int32
 		readyReplicas                    int32
 		inactiveSpecReplicas             int32
 		inactiveStatusReplicas           int32
+		inactiveStatusReadyReplicas      int32
 		inactiveStatusAllocationReplicas int32
 		nilMaxSurge                      bool
 		nilMaxUnavailable                bool
 		expected                         expected
 	}{
 		"nil MaxUnavailable, err expected": {
-			fleetSpecReplicas:      100,
-			activeSpecReplicas:     0,
-			activeStatusReplicas:   0,
-			inactiveSpecReplicas:   100,
-			inactiveStatusReplicas: 100,
-			nilMaxUnavailable:      true,
+			fleetSpecReplicas:           100,
+			activeSpecReplicas:          0,
+			activeStatusReplicas:        0,
+			inactiveSpecReplicas:        100,
+			inactiveStatusReplicas:      100,
+			inactiveStatusReadyReplicas: 100,
+			nilMaxUnavailable:           true,
 			expected: expected{
 				err: "error parsing MaxUnavailable value: fleet-1: nil value for IntOrString",
 			},
 		},
 		"nil MaxSurge, err expected": {
-			fleetSpecReplicas:      100,
-			activeSpecReplicas:     0,
-			activeStatusReplicas:   0,
-			inactiveSpecReplicas:   100,
-			inactiveStatusReplicas: 100,
-			nilMaxSurge:            true,
+			fleetSpecReplicas:           100,
+			activeSpecReplicas:          0,
+			activeStatusReplicas:        0,
+			inactiveSpecReplicas:        100,
+			inactiveStatusReplicas:      100,
+			inactiveStatusReadyReplicas: 100,
+			nilMaxSurge:                 true,
 			expected: expected{
 				err: "error parsing MaxSurge value: fleet-1: nil value for IntOrString",
 			},
 		},
 		"full inactive, empty inactive": {
-			fleetSpecReplicas:      100,
-			activeSpecReplicas:     0,
-			activeStatusReplicas:   0,
-			inactiveSpecReplicas:   100,
-			inactiveStatusReplicas: 100,
+			fleetSpecReplicas:           100,
+			activeSpecReplicas:          0,
+			activeStatusReplicas:        0,
+			inactiveSpecReplicas:        100,
+			inactiveStatusReplicas:      100,
+			inactiveStatusReadyReplicas: 100,
 			expected: expected{
 				inactiveSpecReplicas: 70,
 				replicas:             25,
@@ -1511,6 +1520,7 @@ func TestControllerRollingUpdateDeployment(t *testing.T) {
 			activeStatusReplicas:             75,
 			inactiveSpecReplicas:             10,
 			inactiveStatusReplicas:           10,
+			inactiveStatusReadyReplicas:      10,
 			inactiveStatusAllocationReplicas: 5,
 
 			expected: expected{
@@ -1520,11 +1530,12 @@ func TestControllerRollingUpdateDeployment(t *testing.T) {
 			},
 		},
 		"attempt to drive replicas over the max surge": {
-			fleetSpecReplicas:      100,
-			activeSpecReplicas:     25,
-			activeStatusReplicas:   25,
-			inactiveSpecReplicas:   95,
-			inactiveStatusReplicas: 95,
+			fleetSpecReplicas:           100,
+			activeSpecReplicas:          25,
+			activeStatusReplicas:        25,
+			inactiveSpecReplicas:        95,
+			inactiveStatusReplicas:      95,
+			inactiveStatusReadyReplicas: 95,
 			expected: expected{
 				inactiveSpecReplicas: 45,
 				replicas:             30,
@@ -1537,8 +1548,8 @@ func TestControllerRollingUpdateDeployment(t *testing.T) {
 			activeStatusReplicas:             0,
 			inactiveSpecReplicas:             5,
 			inactiveStatusReplicas:           5,
+			inactiveStatusReadyReplicas:      5,
 			inactiveStatusAllocationReplicas: 2,
-
 			expected: expected{
 				inactiveSpecReplicas: 4,
 				replicas:             2,
@@ -1551,11 +1562,56 @@ func TestControllerRollingUpdateDeployment(t *testing.T) {
 			activeStatusReplicas:             75,
 			inactiveSpecReplicas:             10,
 			inactiveStatusReplicas:           10,
+			inactiveStatusReadyReplicas:      10,
 			inactiveStatusAllocationReplicas: 5,
-
 			expected: expected{
 				inactiveSpecReplicas: 0,
 				replicas:             70,
+				updated:              true,
+			},
+		},
+		"rolling update does not remove all ready replicas": {
+			features:                         "RollingUpdateFix=true",
+			fleetSpecReplicas:                100,
+			activeSpecReplicas:               0,
+			activeStatusReplicas:             0,
+			inactiveSpecReplicas:             100,
+			inactiveStatusReplicas:           100,
+			inactiveStatusReadyReplicas:      10,
+			inactiveStatusAllocationReplicas: 90,
+			expected: expected{
+				inactiveSpecReplicas: 97,
+				replicas:             10,
+				updated:              true,
+			},
+		},
+		"rolling update stops scaling fully allocated inactive": {
+			features:                         "RollingUpdateFix=true",
+			fleetSpecReplicas:                100,
+			activeSpecReplicas:               50,
+			activeStatusReplicas:             50,
+			inactiveSpecReplicas:             50,
+			inactiveStatusReplicas:           50,
+			inactiveStatusReadyReplicas:      0,
+			inactiveStatusAllocationReplicas: 50,
+			expected: expected{
+				inactiveSpecReplicas: 0,
+				replicas:             50,
+				updated:              true,
+			},
+		},
+		"rolling update scales down with fleet spec replicas = 0": {
+			features:                         "RollingUpdateFix=true",
+			fleetSpecReplicas:                0,
+			activeSpecReplicas:               0,
+			activeStatusReplicas:             0,
+			inactiveSpecReplicas:             3,
+			inactiveStatusReplicas:           3,
+			inactiveStatusReadyReplicas:      3,
+			inactiveStatusAllocationReplicas: 0,
+			expected: expected{
+				inactiveSpecReplicas: 0,
+				replicas:             0,
 				updated:              true,
 			},
 		},
@@ -1563,6 +1619,10 @@ func TestControllerRollingUpdateDeployment(t *testing.T) {
 
 	for k, v := range fixtures {
 		t.Run(k, func(t *testing.T) {
+			utilruntime.FeatureTestMutex.Lock()
+			defer utilruntime.FeatureTestMutex.Unlock()
+			require.NoError(t, utilruntime.ParseFeatures(v.features))
+
 			f := defaultFixture()
 
 			mu := intstr.FromString("30%")
@@ -1571,7 +1631,7 @@ func TestControllerRollingUpdateDeployment(t *testing.T) {
 
 			// Inactive GameServerSet is downscaled second time only after
 			// ReadyReplicas has raised.
-			f.Status.ReadyReplicas = v.fleetSpecReplicas
+			f.Status.ReadyReplicas = v.activeStatusReplicas + v.inactiveStatusReadyReplicas
 
 			if v.nilMaxSurge {
 				f.Spec.Strategy.RollingUpdate.MaxSurge = nil
@@ -1593,9 +1653,9 @@ func TestControllerRollingUpdateDeployment(t *testing.T) {
 
 			inactive := f.GameServerSet()
 			inactive.ObjectMeta.Name = "inactive"
-			inactive.Status.ReadyReplicas = v.inactiveStatusReplicas
 			inactive.Spec.Replicas = v.inactiveSpecReplicas
 			inactive.Status.Replicas = v.inactiveStatusReplicas
+			inactive.Status.ReadyReplicas = v.inactiveStatusReadyReplicas
 			inactive.Status.AllocatedReplicas = v.inactiveStatusAllocationReplicas
 
 			logrus.WithField("inactive", inactive).Info("Setting up the initial inactive")

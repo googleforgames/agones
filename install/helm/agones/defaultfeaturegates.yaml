@@ -22,6 +22,7 @@ DisableResyncOnSDKServer: true
 GKEAutopilotExtendedDurationPods: false
 PlayerAllocationFilter: false
 PlayerTracking: false
+RollingUpdateFix: false
 
 # Dev features
 FeatureAutopilotPassthroughPort: true
