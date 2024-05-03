@@ -169,12 +169,12 @@ if (featureGates.Contains("PlayerTracking"))
 if (featureGates.Contains("CountsAndLists"))
 // Tests are expected to run sequentially on the same pre-defined Counter in the localsdk server
 {
-    var alpha = sdk.Alpha();
+    var beta = sdk.Beta();
     var key = "rooms";
 
     {
         var wantCount = 1;
-        var task = alpha.GetCounterCountAsync(key);
+        var task = beta.GetCounterCountAsync(key);
         task.Wait();
         var gotCount = task.Result;
         if (wantCount != gotCount)
@@ -189,7 +189,7 @@ if (featureGates.Contains("CountsAndLists"))
         var increment = 9;
         try
         {
-            var task = alpha.IncrementCounterAsync(key, increment);
+            var task = beta.IncrementCounterAsync(key, increment);
             task.Wait();
         }
         catch (Exception e)
@@ -198,7 +198,7 @@ if (featureGates.Contains("CountsAndLists"))
             Environment.Exit(1);
         }
 
-        var getTask = alpha.GetCounterCountAsync(key);
+        var getTask = beta.GetCounterCountAsync(key);
         getTask.Wait();
         var gotCount = getTask.Result;
         if (wantCount != gotCount)
@@ -213,7 +213,7 @@ if (featureGates.Contains("CountsAndLists"))
         var decrement = 5;
         try
         {
-            var task = alpha.DecrementCounterAsync(key, decrement);
+            var task = beta.DecrementCounterAsync(key, decrement);
             task.Wait();
         }
         catch (Exception e)
@@ -222,7 +222,7 @@ if (featureGates.Contains("CountsAndLists"))
             Environment.Exit(1);
         }
 
-        var getTask = alpha.GetCounterCountAsync(key);
+        var getTask = beta.GetCounterCountAsync(key);
         getTask.Wait();
         var gotCount = getTask.Result;
         if (wantCount != gotCount)
@@ -236,7 +236,7 @@ if (featureGates.Contains("CountsAndLists"))
         var wantCount = 3;
         try
         {
-            var task = alpha.SetCounterCountAsync(key, wantCount);
+            var task = beta.SetCounterCountAsync(key, wantCount);
             task.Wait();
         }
         catch (Exception e)
@@ -245,7 +245,7 @@ if (featureGates.Contains("CountsAndLists"))
             Environment.Exit(1);
         }
 
-        var getTask = alpha.GetCounterCountAsync(key);
+        var getTask = beta.GetCounterCountAsync(key);
         getTask.Wait();
         var gotCount = getTask.Result;
         if (wantCount != gotCount)
@@ -257,7 +257,7 @@ if (featureGates.Contains("CountsAndLists"))
 
     {
         var wantCapacity = 10;
-        var task = alpha.GetCounterCapacityAsync(key);
+        var task = beta.GetCounterCapacityAsync(key);
         task.Wait();
         var gotCapacity = task.Result;
         if (wantCapacity != gotCapacity)
@@ -272,7 +272,7 @@ if (featureGates.Contains("CountsAndLists"))
         var wantCapacity = 0;
         try
         {
-            var task = alpha.SetCounterCapacityAsync(key, wantCapacity);
+            var task = beta.SetCounterCapacityAsync(key, wantCapacity);
             task.Wait();
         }
         catch (Exception e)
@@ -281,7 +281,7 @@ if (featureGates.Contains("CountsAndLists"))
             Environment.Exit(1);
         }
 
-        var getTask = alpha.GetCounterCapacityAsync(key);
+        var getTask = beta.GetCounterCapacityAsync(key);
         getTask.Wait();
         var gotCapacity = getTask.Result;
         if (wantCapacity != gotCapacity)
@@ -295,12 +295,12 @@ if (featureGates.Contains("CountsAndLists"))
 if (featureGates.Contains("CountsAndLists"))
 // Tests are expected to run sequentially on the same pre-defined List in the localsdk server
 {
-    var alpha = sdk.Alpha();
+    var beta = sdk.Beta();
     var key = "players";
 
     {
         var wantCapacity = 100;
-        var task = alpha.GetListCapacityAsync(key);
+        var task = beta.GetListCapacityAsync(key);
         task.Wait();
         var gotCapacity = task.Result;
         if (wantCapacity != gotCapacity)
@@ -314,7 +314,7 @@ if (featureGates.Contains("CountsAndLists"))
         var wantCapacity = 10;
         try
         {
-            var task = alpha.SetListCapacityAsync(key, wantCapacity);
+            var task = beta.SetListCapacityAsync(key, wantCapacity);
             task.Wait();
         }
         catch (Exception e)
@@ -323,7 +323,7 @@ if (featureGates.Contains("CountsAndLists"))
             Environment.Exit(1);
         }
 
-        var getTask = alpha.GetListCapacityAsync(key);
+        var getTask = beta.GetListCapacityAsync(key);
         getTask.Wait();
         var gotCapacity = getTask.Result;
         if (wantCapacity != gotCapacity)
@@ -336,7 +336,7 @@ if (featureGates.Contains("CountsAndLists"))
     {
         var value = "foo";
         var want = false;
-        var task = alpha.ListContainsAsync(key, value);
+        var task = beta.ListContainsAsync(key, value);
         task.Wait();
         var got = task.Result;
         if (want != got)
@@ -346,7 +346,7 @@ if (featureGates.Contains("CountsAndLists"))
         }
         value = "test1";
         want = true;
-        task = alpha.ListContainsAsync(key, value);
+        task = beta.ListContainsAsync(key, value);
         task.Wait();
         got = task.Result;
         if (want != got)
@@ -358,7 +358,7 @@ if (featureGates.Contains("CountsAndLists"))
 
     {
         IList<string> wantValues = new List<string> { "test0", "test1", "test2" };
-        var task = alpha.GetListValuesAsync(key);
+        var task = beta.GetListValuesAsync(key);
         task.Wait();
         var gotValues = task.Result;
         var equal = Enumerable.SequenceEqual(wantValues, gotValues);
@@ -376,7 +376,7 @@ if (featureGates.Contains("CountsAndLists"))
         IList<string> wantValues = new List<string> { "test0", "test1", "test2", "test3" };
         try
         {
-            var task = alpha.AppendListValueAsync(key, addValue);
+            var task = beta.AppendListValueAsync(key, addValue);
             task.Wait();
         }
         catch (Exception e)
@@ -385,7 +385,7 @@ if (featureGates.Contains("CountsAndLists"))
             Environment.Exit(1);
         }
 
-        var getTask = alpha.GetListValuesAsync(key);
+        var getTask = beta.GetListValuesAsync(key);
         getTask.Wait();
         var gotValues = getTask.Result;
         var equal = Enumerable.SequenceEqual(wantValues, gotValues);
@@ -403,7 +403,7 @@ if (featureGates.Contains("CountsAndLists"))
         IList<string> wantValues = new List<string> { "test0", "test1", "test3" };
         try
         {
-            var task = alpha.DeleteListValueAsync(key, removeValue);
+            var task = beta.DeleteListValueAsync(key, removeValue);
             task.Wait();
         }
         catch (Exception e)
@@ -412,7 +412,7 @@ if (featureGates.Contains("CountsAndLists"))
             Environment.Exit(1);
         }
 
-        var getTask = alpha.GetListValuesAsync(key);
+        var getTask = beta.GetListValuesAsync(key);
         getTask.Wait();
         var gotValues = getTask.Result;
         var equal = Enumerable.SequenceEqual(wantValues, gotValues);
