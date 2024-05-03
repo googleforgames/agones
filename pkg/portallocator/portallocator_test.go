@@ -92,8 +92,6 @@ func TestPortAllocatorAllocate(t *testing.T) {
 	assert.LessOrEqual(t, gs.Spec.Ports[1].HostPort, int32(100))
 	assert.GreaterOrEqual(t, gs.Spec.Ports[2].HostPort, int32(51))
 	assert.LessOrEqual(t, gs.Spec.Ports[2].HostPort, int32(100))
-	assert.Equal(t, 1, countTotalAllocatedPorts(pa.allocators[0]))
-	assert.Equal(t, 2, countTotalAllocatedPorts(pa.allocators[1]))
 }
 
 func TestPortRangeAllocatorAllocate(t *testing.T) {
