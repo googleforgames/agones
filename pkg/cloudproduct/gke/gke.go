@@ -39,10 +39,10 @@ const (
 	hostPortAssignmentAnnotation = "autopilot.gke.io/host-port-assignment"
 	primaryContainerAnnotation   = "autopilot.gke.io/primary-container"
 
-	errPortPolicyMustBeDynamic      = "portPolicy must be Dynamic on GKE Autopilot"
-	errRangeInvalid                 = "range must not be used on GKE Autopilot"
-	errSchedulingMustBePacked       = "scheduling strategy must be Packed on GKE Autopilot"
-	errEvictionSafeOnUpgradeInvalid = "eviction.safe OnUpgrade not supported on GKE Autopilot"
+	errPortPolicyMustBeDynamicOrNone = "portPolicy must be Dynamic or None on GKE Autopilot"
+	errRangeInvalid                  = "range must not be used on GKE Autopilot"
+	errSchedulingMustBePacked        = "scheduling strategy must be Packed on GKE Autopilot"
+	errEvictionSafeOnUpgradeInvalid  = "eviction.safe OnUpgrade not supported on GKE Autopilot"
 )
 
 var (
@@ -126,7 +126,8 @@ func (*gkeAutopilot) SyncPodPortsToGameServer(gs *agonesv1.GameServer, pod *core
 
 func (*gkeAutopilot) NewPortAllocator(portRanges map[string]portallocator.PortRange,
 	_ informers.SharedInformerFactory,
-	_ externalversions.SharedInformerFactory) portallocator.Interface {
+	_ externalversions.SharedInformerFactory,
+) portallocator.Interface {
 	defPortRange := portRanges[agonesv1.DefaultPortRange]
 	return &autopilotPortAllocator{minPort: defPortRange.MinPort, maxPort: defPortRange.MaxPort}
 }
@@ -136,10 +137,10 @@ func (*gkeAutopilot) WaitOnFreePorts() bool { return true }
 func (g *gkeAutopilot) ValidateGameServerSpec(gss *agonesv1.GameServerSpec, fldPath *field.Path) field.ErrorList {
 	allErrs := g.ValidateScheduling(gss.Scheduling, fldPath.Child("scheduling"))
 	for i, p := range gss.Ports {
-		if p.PortPolicy != agonesv1.Dynamic {
-			allErrs = append(allErrs, field.Invalid(fldPath.Child("ports").Index(i).Child("portPolicy"), string(p.PortPolicy), errPortPolicyMustBeDynamic))
+		if p.PortPolicy != agonesv1.Dynamic && p.PortPolicy != agonesv1.None {
+			allErrs = append(allErrs, field.Invalid(fldPath.Child("ports").Index(i).Child("portPolicy"), string(p.PortPolicy), errPortPolicyMustBeDynamicOrNone))
 		}
-		if p.Range != agonesv1.DefaultPortRange {
+		if p.Range != agonesv1.DefaultPortRange && p.PortPolicy != agonesv1.None {
 			allErrs = append(allErrs, field.Invalid(fldPath.Child("ports").Index(i).Child("range"), p.Range, errRangeInvalid))
 		}
 	}
