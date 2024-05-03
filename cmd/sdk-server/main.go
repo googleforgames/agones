@@ -25,7 +25,6 @@ import (
 	"strings"
 	"time"
 
-	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -38,6 +37,7 @@ import (
 	"k8s.io/client-go/rest"
 
 	"agones.dev/agones/pkg"
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	"agones.dev/agones/pkg/client/clientset/versioned"
 	"agones.dev/agones/pkg/sdk"
 	sdkalpha "agones.dev/agones/pkg/sdk/alpha"
@@ -202,6 +202,7 @@ func registerLocal(grpcServer *grpc.Server, ctlConf config) (func(), error) {
 	sdk.RegisterSDKServer(grpcServer, s)
 	sdkalpha.RegisterSDKServer(grpcServer, s)
 	sdkbeta.RegisterSDKServer(grpcServer, s)
+
 	return func() {
 		s.Close()
 	}, err
@@ -252,8 +253,13 @@ func runGateway(ctx context.Context, grpcEndpoint string, mux *gwruntime.ServeMu
 	if err := sdk.RegisterSDKHandler(ctx, mux, conn); err != nil {
 		logger.WithError(err).Fatal("Could not register sdk grpc-gateway")
 	}
+
 	if err := sdkalpha.RegisterSDKHandler(ctx, mux, conn); err != nil {
 		logger.WithError(err).Fatal("Could not register alpha sdk grpc-gateway")
+	}
+
+	if err := sdkbeta.RegisterSDKHandler(ctx, mux, conn); err != nil {
+		logger.WithError(err).Fatal("Could not register beta sdk grpc-gateway")
 	}
 
 	logger.WithField("httpEndpoint", httpServer.Addr).Info("Starting SDKServer grpc-gateway...")
