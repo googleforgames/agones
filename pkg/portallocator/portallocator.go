@@ -49,12 +49,72 @@ type Interface interface {
 	DeAllocate(gs *agonesv1.GameServer)
 }
 
+// PortRange is a named port range.
+type PortRange struct {
+	// MinPort is the minimum port that can be allocated in this range.
+	MinPort int32
+	// MaxPort is the maximum port that can be allocated in this range.
+	MaxPort int32
+}
+
+type portAllocator struct {
+	allocators []*portRangeAllocator
+}
+
+// New returns a new dynamic port allocator. minPort and maxPort are the
+// top and bottom portAllocations that can be allocated in the range for
+// the game servers.
+func New(portRanges map[string]PortRange,
+	kubeInformerFactory informers.SharedInformerFactory,
+	agonesInformerFactory externalversions.SharedInformerFactory) Interface {
+	return newAllocator(portRanges, kubeInformerFactory, agonesInformerFactory)
+}
+
+func newAllocator(portRanges map[string]PortRange,
+	kubeInformerFactory informers.SharedInformerFactory,
+	agonesInformerFactory externalversions.SharedInformerFactory) *portAllocator {
+	allocs := make([]*portRangeAllocator, 0, len(portRanges))
+	for name, pr := range portRanges {
+		allocs = append(allocs, newRangeAllocator(name, pr.MinPort, pr.MaxPort, kubeInformerFactory, agonesInformerFactory))
+	}
+
+	return &portAllocator{
+		allocators: allocs,
+	}
+}
+
+// Run sets up the current state of port allocations and starts tracking Pod and Node changes.
+func (pa *portAllocator) Run(ctx context.Context) error {
+	for _, a := range pa.allocators {
+		if err := a.Run(ctx); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// Allocate assigns a port to the GameServer and returns it.
+func (pa *portAllocator) Allocate(gs *agonesv1.GameServer) *agonesv1.GameServer {
+	for _, a := range pa.allocators {
+		gs = a.Allocate(gs)
+	}
+	return gs
+}
+
+// DeAllocate marks the given ports as no longer allocated.
+func (pa *portAllocator) DeAllocate(gs *agonesv1.GameServer) {
+	for _, a := range pa.allocators {
+		a.DeAllocate(gs)
+	}
+}
+
 // A set of port allocations for a node
 type portAllocation map[int32]bool
 
 //nolint:govet // ignore fieldalignment, singleton
-type portAllocator struct {
+type portRangeAllocator struct {
 	logger             *logrus.Entry
+	name               string
 	mutex              sync.RWMutex
 	portAllocations    []portAllocation
 	gameServerRegistry map[types.UID]bool
@@ -68,23 +128,15 @@ type portAllocator struct {
 	nodeInformer       cache.SharedIndexInformer
 }
 
-// New returns a new dynamic port allocator. minPort and maxPort are the
-// top and bottom portAllocations that can be allocated in the range for
-// the game servers.
-func New(minPort, maxPort int32,
+func newRangeAllocator(name string, minPort, maxPort int32,
 	kubeInformerFactory informers.SharedInformerFactory,
-	agonesInformerFactory externalversions.SharedInformerFactory) Interface {
-	return newAllocator(minPort, maxPort, kubeInformerFactory, agonesInformerFactory)
-}
-
-func newAllocator(minPort, maxPort int32,
-	kubeInformerFactory informers.SharedInformerFactory,
-	agonesInformerFactory externalversions.SharedInformerFactory) *portAllocator {
+	agonesInformerFactory externalversions.SharedInformerFactory) *portRangeAllocator {
 	v1 := kubeInformerFactory.Core().V1()
 	nodes := v1.Nodes()
 	gameServers := agonesInformerFactory.Agones().V1().GameServers()
 
-	pa := &portAllocator{
+	pa := &portRangeAllocator{
+		name:               name,
 		mutex:              sync.RWMutex{},
 		minPort:            minPort,
 		maxPort:            maxPort,
@@ -96,7 +148,7 @@ func newAllocator(minPort, maxPort int32,
 		nodeInformer:       nodes.Informer(),
 		nodeSynced:         nodes.Informer().HasSynced,
 	}
-	pa.logger = runtime.NewLoggerWithType(pa)
+	pa.logger = runtime.NewLoggerWithType(pa).WithField("range", name)
 
 	_, _ = pa.gameServerInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		DeleteFunc: pa.syncDeleteGameServer,
@@ -108,7 +160,7 @@ func newAllocator(minPort, maxPort int32,
 
 // Run sets up the current state of port allocations and
 // starts tracking Pod and Node changes
-func (pa *portAllocator) Run(ctx context.Context) error {
+func (pa *portRangeAllocator) Run(ctx context.Context) error {
 	pa.logger.Debug("Running")
 
 	if !cache.WaitForCacheSync(ctx.Done(), pa.gameServerSynced, pa.nodeSynced) {
@@ -124,7 +176,7 @@ func (pa *portAllocator) Run(ctx context.Context) error {
 }
 
 // Allocate assigns a port to the GameServer and returns it.
-func (pa *portAllocator) Allocate(gs *agonesv1.GameServer) *agonesv1.GameServer {
+func (pa *portRangeAllocator) Allocate(gs *agonesv1.GameServer) *agonesv1.GameServer {
 	pa.mutex.Lock()
 	defer pa.mutex.Unlock()
 
@@ -158,9 +210,16 @@ func (pa *portAllocator) Allocate(gs *agonesv1.GameServer) *agonesv1.GameServer 
 	// this allows us to do recursion, within the mutex lock
 	var allocate func(gs *agonesv1.GameServer) *agonesv1.GameServer
 	allocate = func(gs *agonesv1.GameServer) *agonesv1.GameServer {
-		amount := gs.CountPorts(func(policy agonesv1.PortPolicy) bool {
-			return policy == agonesv1.Dynamic || policy == agonesv1.Passthrough
-		})
+		var amount int
+		if runtime.FeatureEnabled(runtime.FeaturePortRanges) {
+			amount = gs.CountPortsForRange(pa.name, func(policy agonesv1.PortPolicy) bool {
+				return policy == agonesv1.Dynamic || policy == agonesv1.Passthrough
+			})
+		} else {
+			amount = gs.CountPorts(func(policy agonesv1.PortPolicy) bool {
+				return policy == agonesv1.Dynamic || policy == agonesv1.Passthrough
+			})
+		}
 		allocations := findOpenPorts(amount)
 
 		if len(allocations) == amount {
@@ -170,6 +229,9 @@ func (pa *portAllocator) Allocate(gs *agonesv1.GameServer) *agonesv1.GameServer 
 
 			for i, p := range gs.Spec.Ports {
 				if p.PortPolicy != agonesv1.Dynamic && p.PortPolicy != agonesv1.Passthrough {
+					continue
+				}
+				if runtime.FeatureEnabled(runtime.FeaturePortRanges) && p.Range != pa.name {
 					continue
 				}
 				// pop off allocation
@@ -221,7 +283,7 @@ func (pa *portAllocator) Allocate(gs *agonesv1.GameServer) *agonesv1.GameServer 
 }
 
 // DeAllocate marks the given ports as no longer allocated
-func (pa *portAllocator) DeAllocate(gs *agonesv1.GameServer) {
+func (pa *portRangeAllocator) DeAllocate(gs *agonesv1.GameServer) {
 	// skip if it wasn't previously allocated
 
 	found := func() bool {
@@ -253,7 +315,7 @@ func (pa *portAllocator) DeAllocate(gs *agonesv1.GameServer) {
 
 // syncDeleteGameServer when a GameServer Pod is deleted
 // make the HostPort available
-func (pa *portAllocator) syncDeleteGameServer(object interface{}) {
+func (pa *portRangeAllocator) syncDeleteGameServer(object interface{}) {
 	if gs, ok := object.(*agonesv1.GameServer); ok {
 		pa.logger.WithField("gs", gs).Debug("Syncing deleted GameServer")
 		pa.DeAllocate(gs)
@@ -266,7 +328,7 @@ func (pa *portAllocator) syncDeleteGameServer(object interface{}) {
 // portAllocations are marked as taken.
 // Locks the mutex while doing this.
 // This is basically a stop the world Garbage Collection on port allocations, but it only happens on startup.
-func (pa *portAllocator) syncAll() error {
+func (pa *portRangeAllocator) syncAll() error {
 	pa.mutex.Lock()
 	defer pa.mutex.Unlock()
 
@@ -304,7 +366,7 @@ func (pa *portAllocator) syncAll() error {
 // registerExistingGameServerPorts registers the gameservers against gsRegistry and the ports against nodePorts.
 // and returns an ordered list of portAllocations per cluster nodes, and an array of
 // any GameServers allocated a port, but not yet assigned a Node will returned as an array of port values.
-func (pa *portAllocator) registerExistingGameServerPorts(gameservers []*agonesv1.GameServer, nodes []*corev1.Node, gsRegistry map[types.UID]bool) ([]portAllocation, []int32) {
+func (pa *portRangeAllocator) registerExistingGameServerPorts(gameservers []*agonesv1.GameServer, nodes []*corev1.Node, gsRegistry map[types.UID]bool) ([]portAllocation, []int32) {
 	// setup blank port values
 	nodePortAllocation := pa.nodePortAllocation(nodes)
 	nodePortCount := make(map[string]int64, len(nodes))
@@ -317,6 +379,10 @@ func (pa *portAllocator) registerExistingGameServerPorts(gameservers []*agonesv1
 	for _, gs := range gameservers {
 		for _, p := range gs.Spec.Ports {
 			if p.PortPolicy != agonesv1.Dynamic && p.PortPolicy != agonesv1.Passthrough {
+				continue
+			}
+			// if the port exists in our range, it should be marked as taken.
+			if p.HostPort < pa.minPort || p.HostPort > pa.maxPort {
 				continue
 			}
 			gsRegistry[gs.ObjectMeta.UID] = true
@@ -356,7 +422,7 @@ func (pa *portAllocator) registerExistingGameServerPorts(gameservers []*agonesv1
 
 // nodePortAllocation returns a map of port allocations all set to being available
 // with a map key for each node, as well as the node registry record (since we're already looping)
-func (pa *portAllocator) nodePortAllocation(nodes []*corev1.Node) map[string]portAllocation {
+func (pa *portRangeAllocator) nodePortAllocation(nodes []*corev1.Node) map[string]portAllocation {
 	nodePorts := map[string]portAllocation{}
 
 	for _, n := range nodes {
@@ -369,7 +435,7 @@ func (pa *portAllocator) nodePortAllocation(nodes []*corev1.Node) map[string]por
 	return nodePorts
 }
 
-func (pa *portAllocator) newPortAllocation() portAllocation {
+func (pa *portRangeAllocator) newPortAllocation() portAllocation {
 	p := make(portAllocation, (pa.maxPort-pa.minPort)+1)
 	for i := pa.minPort; i <= pa.maxPort; i++ {
 		p[i] = false

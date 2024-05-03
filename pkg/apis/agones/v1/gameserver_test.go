@@ -152,6 +152,7 @@ func TestGameServerApplyDefaults(t *testing.T) {
 		protocol            corev1.Protocol
 		state               GameServerState
 		policy              PortPolicy
+		portRange           string
 		health              Health
 		scheduling          apis.SchedulingStrategy
 		sdkServer           SdkServer
@@ -165,6 +166,7 @@ func TestGameServerApplyDefaults(t *testing.T) {
 		e := expected{
 			container:  "testing",
 			protocol:   "UDP",
+			portRange:  DefaultPortRange,
 			state:      GameServerStatePortAllocation,
 			policy:     Dynamic,
 			scheduling: apis.Packed,
@@ -240,6 +242,7 @@ func TestGameServerApplyDefaults(t *testing.T) {
 					Container: "testing2",
 					Ports: []GameServerPort{{
 						Protocol:   "TCP",
+						Range:      DefaultPortRange,
 						PortPolicy: Static,
 					}},
 					Health: Health{
@@ -408,6 +411,7 @@ func TestGameServerApplyDefaults(t *testing.T) {
 			assert.Contains(t, test.gameServer.ObjectMeta.Finalizers, agones.GroupName)
 			assert.Equal(t, test.expected.container, spec.Container)
 			assert.Equal(t, test.expected.protocol, spec.Ports[0].Protocol)
+			assert.Equal(t, test.expected.portRange, spec.Ports[0].Range)
 			assert.Equal(t, test.expected.state, test.gameServer.Status.State)
 			assert.Equal(t, test.expected.scheduling, test.gameServer.Spec.Scheduling)
 			assert.Equal(t, test.expected.health, test.gameServer.Spec.Health)
@@ -1426,6 +1430,22 @@ func TestGameServerCountPorts(t *testing.T) {
 		return policy == Dynamic
 	}))
 	assert.Equal(t, 1, fixture.CountPorts(func(policy PortPolicy) bool {
+		return policy == Static
+	}))
+}
+
+func TestGameServerCountPortsForRange(t *testing.T) {
+	fixture := &GameServer{Spec: GameServerSpec{Ports: []GameServerPort{
+		{PortPolicy: Dynamic, Range: "test"},
+		{PortPolicy: Dynamic},
+		{PortPolicy: Dynamic, Range: "test"},
+		{PortPolicy: Static, Range: "test"},
+	}}}
+
+	assert.Equal(t, 2, fixture.CountPortsForRange("test", func(policy PortPolicy) bool {
+		return policy == Dynamic
+	}))
+	assert.Equal(t, 1, fixture.CountPortsForRange("test", func(policy PortPolicy) bool {
 		return policy == Static
 	}))
 }
