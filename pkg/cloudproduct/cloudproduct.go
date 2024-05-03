@@ -48,7 +48,7 @@ type ControllerHooksInterface interface {
 	SyncPodPortsToGameServer(*agonesv1.GameServer, *corev1.Pod) error
 
 	// NewPortAllocator creates a PortAllocator. See gameservers.NewPortAllocator for parameters.
-	NewPortAllocator(int32, int32, informers.SharedInformerFactory, externalversions.SharedInformerFactory) portallocator.Interface
+	NewPortAllocator(map[string]portallocator.PortRange, informers.SharedInformerFactory, externalversions.SharedInformerFactory) portallocator.Interface
 
 	// WaitOnFreePorts
 	WaitOnFreePorts() bool

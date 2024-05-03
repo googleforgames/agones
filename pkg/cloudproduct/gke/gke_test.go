@@ -91,18 +91,21 @@ func TestValidateGameServer(t *testing.T) {
 				{
 					Name:          "some-tcpudp",
 					PortPolicy:    agonesv1.Dynamic,
+					Range:         agonesv1.DefaultPortRange,
 					ContainerPort: 4321,
 					Protocol:      agonesv1.ProtocolTCPUDP,
 				},
 				{
 					Name:          "awesome-udp",
 					PortPolicy:    agonesv1.Dynamic,
+					Range:         agonesv1.DefaultPortRange,
 					ContainerPort: 1234,
 					Protocol:      corev1.ProtocolUDP,
 				},
 				{
 					Name:          "awesome-tcp",
 					PortPolicy:    agonesv1.Dynamic,
+					Range:         agonesv1.DefaultPortRange,
 					ContainerPort: 1234,
 					Protocol:      corev1.ProtocolTCP,
 				},
@@ -110,23 +113,57 @@ func TestValidateGameServer(t *testing.T) {
 			safeToEvict: agonesv1.EvictionSafeAlways,
 			scheduling:  apis.Packed,
 		},
+		"bad port range => fails validation": {
+			ports: []agonesv1.GameServerPort{
+				{
+					Name:          "best-tcpudp",
+					PortPolicy:    agonesv1.Dynamic,
+					Range:         agonesv1.DefaultPortRange,
+					ContainerPort: 4321,
+					Protocol:      agonesv1.ProtocolTCPUDP,
+				},
+				{
+					Name:          "bad-range",
+					PortPolicy:    agonesv1.Dynamic,
+					Range:         "game",
+					ContainerPort: 1234,
+					Protocol:      corev1.ProtocolUDP,
+				},
+				{
+					Name:          "another-bad-range",
+					PortPolicy:    agonesv1.Dynamic,
+					Range:         "game",
+					ContainerPort: 1234,
+					Protocol:      corev1.ProtocolUDP,
+				},
+			},
+			safeToEvict: agonesv1.EvictionSafeAlways,
+			scheduling:  apis.Packed,
+			want: field.ErrorList{
+				field.Invalid(field.NewPath("spec", "ports").Index(1).Child("range"), "game", "range must not be used on GKE Autopilot"),
+				field.Invalid(field.NewPath("spec", "ports").Index(2).Child("range"), "game", "range must not be used on GKE Autopilot"),
+			},
+		},
 		"bad policy (no feature gates) => fails validation": {
 			ports: []agonesv1.GameServerPort{
 				{
 					Name:          "best-tcpudp",
 					PortPolicy:    agonesv1.Dynamic,
+					Range:         agonesv1.DefaultPortRange,
 					ContainerPort: 4321,
 					Protocol:      agonesv1.ProtocolTCPUDP,
 				},
 				{
 					Name:          "bad-udp",
 					PortPolicy:    agonesv1.Static,
+					Range:         agonesv1.DefaultPortRange,
 					ContainerPort: 1234,
 					Protocol:      corev1.ProtocolUDP,
 				},
 				{
 					Name:          "another-bad-udp",
 					PortPolicy:    agonesv1.Static,
+					Range:         agonesv1.DefaultPortRange,
 					ContainerPort: 1234,
 					Protocol:      corev1.ProtocolUDP,
 				},
@@ -146,18 +183,21 @@ func TestValidateGameServer(t *testing.T) {
 				{
 					Name:          "best-tcpudp",
 					PortPolicy:    agonesv1.Dynamic,
+					Range:         agonesv1.DefaultPortRange,
 					ContainerPort: 4321,
 					Protocol:      agonesv1.ProtocolTCPUDP,
 				},
 				{
 					Name:          "bad-udp",
 					PortPolicy:    agonesv1.Static,
+					Range:         agonesv1.DefaultPortRange,
 					ContainerPort: 1234,
 					Protocol:      corev1.ProtocolUDP,
 				},
 				{
 					Name:          "another-bad-udp",
 					PortPolicy:    agonesv1.Static,
+					Range:         agonesv1.DefaultPortRange,
 					ContainerPort: 1234,
 					Protocol:      corev1.ProtocolUDP,
 				},

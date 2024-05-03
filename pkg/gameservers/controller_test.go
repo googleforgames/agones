@@ -27,6 +27,7 @@ import (
 	"agones.dev/agones/pkg/apis/agones"
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	"agones.dev/agones/pkg/cloudproduct/generic"
+	"agones.dev/agones/pkg/portallocator"
 	agtesting "agones.dev/agones/pkg/testing"
 	"agones.dev/agones/pkg/util/webhooks"
 	"github.com/heptiolabs/healthcheck"
@@ -2200,7 +2201,8 @@ func newFakeController() (*Controller, agtesting.Mocks) {
 	c := NewController(
 		generic.New(),
 		healthcheck.NewHandler(),
-		10, 20, "sidecar:dev", false,
+		map[string]portallocator.PortRange{agonesv1.DefaultPortRange: {MinPort: 10, MaxPort: 20}},
+		"sidecar:dev", false,
 		resource.MustParse("0.05"), resource.MustParse("0.1"),
 		resource.MustParse("50Mi"), resource.MustParse("100Mi"), "sdk-service-account",
 		m.KubeClient, m.KubeInformerFactory, m.ExtClient, m.AgonesClient, m.AgonesInformerFactory)

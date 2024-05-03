@@ -46,10 +46,10 @@ func (*generic) SetEviction(ev *agonesv1.Eviction, pod *corev1.Pod) error {
 
 func (*generic) SyncPodPortsToGameServer(*agonesv1.GameServer, *corev1.Pod) error { return nil }
 
-func (*generic) NewPortAllocator(minPort, maxPort int32,
+func (*generic) NewPortAllocator(portRanges map[string]portallocator.PortRange,
 	kubeInformerFactory informers.SharedInformerFactory,
 	agonesInformerFactory externalversions.SharedInformerFactory) portallocator.Interface {
-	return portallocator.New(minPort, maxPort, kubeInformerFactory, agonesInformerFactory)
+	return portallocator.New(portRanges, kubeInformerFactory, agonesInformerFactory)
 }
 
 func (*generic) WaitOnFreePorts() bool { return false }

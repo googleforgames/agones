@@ -40,6 +40,7 @@ const (
 	primaryContainerAnnotation   = "autopilot.gke.io/primary-container"
 
 	errPortPolicyMustBeDynamic      = "portPolicy must be Dynamic on GKE Autopilot"
+	errRangeInvalid                 = "range must not be used on GKE Autopilot"
 	errSchedulingMustBePacked       = "scheduling strategy must be Packed on GKE Autopilot"
 	errEvictionSafeOnUpgradeInvalid = "eviction.safe OnUpgrade not supported on GKE Autopilot"
 )
@@ -123,10 +124,11 @@ func (*gkeAutopilot) SyncPodPortsToGameServer(gs *agonesv1.GameServer, pod *core
 	return nil
 }
 
-func (*gkeAutopilot) NewPortAllocator(minPort, maxPort int32,
+func (*gkeAutopilot) NewPortAllocator(portRanges map[string]portallocator.PortRange,
 	_ informers.SharedInformerFactory,
 	_ externalversions.SharedInformerFactory) portallocator.Interface {
-	return &autopilotPortAllocator{minPort: minPort, maxPort: maxPort}
+	defPortRange := portRanges[agonesv1.DefaultPortRange]
+	return &autopilotPortAllocator{minPort: defPortRange.MinPort, maxPort: defPortRange.MaxPort}
 }
 
 func (*gkeAutopilot) WaitOnFreePorts() bool { return true }
@@ -136,6 +138,9 @@ func (g *gkeAutopilot) ValidateGameServerSpec(gss *agonesv1.GameServerSpec, fldP
 	for i, p := range gss.Ports {
 		if p.PortPolicy != agonesv1.Dynamic {
 			allErrs = append(allErrs, field.Invalid(fldPath.Child("ports").Index(i).Child("portPolicy"), string(p.PortPolicy), errPortPolicyMustBeDynamic))
+		}
+		if p.Range != agonesv1.DefaultPortRange {
+			allErrs = append(allErrs, field.Invalid(fldPath.Child("ports").Index(i).Child("range"), p.Range, errRangeInvalid))
 		}
 	}
 	// See SetEviction comment below for why we block EvictionSafeOnUpgrade, if Extended Duration pods aren't supported.
