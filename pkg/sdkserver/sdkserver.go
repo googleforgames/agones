@@ -793,9 +793,9 @@ func (s *SDKServer) GetPlayerCapacity(ctx context.Context, _ *alpha.Empty) (*alp
 }
 
 // GetCounter returns a Counter. Returns error if the counter does not exist.
-// [Stage:Alpha]
+// [Stage:Beta]
 // [FeatureFlag:CountsAndLists]
-func (s *SDKServer) GetCounter(ctx context.Context, in *alpha.GetCounterRequest) (*alpha.Counter, error) {
+func (s *SDKServer) GetCounter(ctx context.Context, in *beta.GetCounterRequest) (*beta.Counter, error) {
 	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
 		return nil, errors.Errorf("%s not enabled", runtime.FeatureCountsAndLists)
 	}
@@ -815,7 +815,7 @@ func (s *SDKServer) GetCounter(ctx context.Context, in *alpha.GetCounterRequest)
 		return nil, errors.Errorf("counter not found: %s", in.Name)
 	}
 	s.logger.WithField("Get Counter", counter).Debugf("Got Counter %s", in.Name)
-	protoCounter := alpha.Counter{Name: in.Name, Count: counter.Count, Capacity: counter.Capacity}
+	protoCounter := beta.Counter{Name: in.Name, Count: counter.Count, Capacity: counter.Capacity}
 	// If there are batched changes that have not yet been applied, apply them to the Counter.
 	// This does NOT validate batched the changes.
 	if counterUpdate, ok := s.gsCounterUpdates[in.Name]; ok {
@@ -844,9 +844,9 @@ func (s *SDKServer) GetCounter(ctx context.Context, in *alpha.GetCounterRequest)
 // UpdateCounterRequest must be one and only one of Capacity, Count, or CountDiff.
 // Returns error if the Counter does not exist (name cannot be updated).
 // Returns error if the Count is out of range [0,Capacity].
-// [Stage:Alpha]
+// [Stage:Beta]
 // [FeatureFlag:CountsAndLists]
-func (s *SDKServer) UpdateCounter(ctx context.Context, in *alpha.UpdateCounterRequest) (*alpha.Counter, error) {
+func (s *SDKServer) UpdateCounter(ctx context.Context, in *beta.UpdateCounterRequest) (*beta.Counter, error) {
 	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
 		return nil, errors.Errorf("%s not enabled", runtime.FeatureCountsAndLists)
 	}
@@ -928,7 +928,7 @@ func (s *SDKServer) UpdateCounter(ctx context.Context, in *alpha.UpdateCounterRe
 
 	// Queue up the Update for later batch processing by updateCounters.
 	s.workerqueue.Enqueue(cache.ExplicitKey(updateCounters))
-	return &alpha.Counter{}, nil
+	return &beta.Counter{}, nil
 }
 
 // updateCounter updates the Counters in the GameServer's Status with the batched update requests.
@@ -994,9 +994,9 @@ func (s *SDKServer) updateCounter(ctx context.Context) error {
 }
 
 // GetList returns a List. Returns not found if the List does not exist.
-// [Stage:Alpha]
+// [Stage:Beta]
 // [FeatureFlag:CountsAndLists]
-func (s *SDKServer) GetList(ctx context.Context, in *alpha.GetListRequest) (*alpha.List, error) {
+func (s *SDKServer) GetList(ctx context.Context, in *beta.GetListRequest) (*beta.List, error) {
 	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
 		return nil, errors.Errorf("%s not enabled", runtime.FeatureCountsAndLists)
 	}
@@ -1019,7 +1019,7 @@ func (s *SDKServer) GetList(ctx context.Context, in *alpha.GetListRequest) (*alp
 	}
 
 	s.logger.WithField("Get List", list).Debugf("Got List %s", in.Name)
-	protoList := alpha.List{Name: in.Name, Values: list.Values, Capacity: list.Capacity}
+	protoList := beta.List{Name: in.Name, Values: list.Values, Capacity: list.Capacity}
 	// If there are batched changes that have not yet been applied, apply them to the List.
 	// This does NOT validate batched the changes, and does NOT modify the List.
 	if listUpdate, ok := s.gsListUpdates[in.Name]; ok {
@@ -1046,9 +1046,9 @@ func (s *SDKServer) GetList(ctx context.Context, in *alpha.GetListRequest) (*alp
 // This function currently only updates the Capacity of a List.
 // Returns error if the List does not exist (name cannot be updated).
 // Returns error if the List update capacity is out of range [0,1000].
-// [Stage:Alpha]
+// [Stage:Beta]
 // [FeatureFlag:CountsAndLists]
-func (s *SDKServer) UpdateList(ctx context.Context, in *alpha.UpdateListRequest) (*alpha.List, error) {
+func (s *SDKServer) UpdateList(ctx context.Context, in *beta.UpdateListRequest) (*beta.List, error) {
 	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
 		return nil, errors.Errorf("%s not enabled", runtime.FeatureCountsAndLists)
 	}
@@ -1077,7 +1077,7 @@ func (s *SDKServer) UpdateList(ctx context.Context, in *alpha.UpdateListRequest)
 		s.gsListUpdates[name] = batchList
 		// Queue up the Update for later batch processing by updateLists.
 		s.workerqueue.Enqueue(cache.ExplicitKey(updateLists))
-		return &alpha.List{}, nil
+		return &beta.List{}, nil
 	}
 	return nil, errors.Errorf("not found. %s List not found", name)
 }
@@ -1086,9 +1086,9 @@ func (s *SDKServer) UpdateList(ctx context.Context, in *alpha.UpdateListRequest)
 // Returns not found if the List does not exist.
 // Returns already exists if the value is already in the List.
 // Returns out of range if the List is already at Capacity.
-// [Stage:Alpha]
+// [Stage:Beta]
 // [FeatureFlag:CountsAndLists]
-func (s *SDKServer) AddListValue(ctx context.Context, in *alpha.AddListValueRequest) (*alpha.List, error) {
+func (s *SDKServer) AddListValue(ctx context.Context, in *beta.AddListValueRequest) (*beta.List, error) {
 	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
 		return nil, errors.Errorf("%s not enabled", runtime.FeatureCountsAndLists)
 	}
@@ -1097,7 +1097,7 @@ func (s *SDKServer) AddListValue(ctx context.Context, in *alpha.AddListValueRequ
 	}
 	s.logger.WithField("name", in.Name).Debug("Add List Value")
 
-	list, err := s.GetList(ctx, &alpha.GetListRequest{Name: in.Name})
+	list, err := s.GetList(ctx, &beta.GetListRequest{Name: in.Name})
 	if err != nil {
 		return nil, err
 	}
@@ -1121,15 +1121,15 @@ func (s *SDKServer) AddListValue(ctx context.Context, in *alpha.AddListValueRequ
 	s.gsListUpdates[in.Name] = batchList
 	// Queue up the Update for later batch processing by updateLists.
 	s.workerqueue.Enqueue(cache.ExplicitKey(updateLists))
-	return &alpha.List{}, nil
+	return &beta.List{}, nil
 }
 
 // RemoveListValue collapses all remove a value from a List requests into a single UpdateList request.
 // Returns not found if the List does not exist.
 // Returns not found if the value is not in the List.
-// [Stage:Alpha]
+// [Stage:Beta]
 // [FeatureFlag:CountsAndLists]
-func (s *SDKServer) RemoveListValue(ctx context.Context, in *alpha.RemoveListValueRequest) (*alpha.List, error) {
+func (s *SDKServer) RemoveListValue(ctx context.Context, in *beta.RemoveListValueRequest) (*beta.List, error) {
 	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
 		return nil, errors.Errorf("%s not enabled", runtime.FeatureCountsAndLists)
 	}
@@ -1138,7 +1138,7 @@ func (s *SDKServer) RemoveListValue(ctx context.Context, in *alpha.RemoveListVal
 	}
 	s.logger.WithField("name", in.Name).Debug("Remove List Value")
 
-	list, err := s.GetList(ctx, &alpha.GetListRequest{Name: in.Name})
+	list, err := s.GetList(ctx, &beta.GetListRequest{Name: in.Name})
 	if err != nil {
 		return nil, err
 	}
@@ -1160,7 +1160,7 @@ func (s *SDKServer) RemoveListValue(ctx context.Context, in *alpha.RemoveListVal
 		s.gsListUpdates[in.Name] = batchList
 		// Queue up the Update for later batch processing by updateLists.
 		s.workerqueue.Enqueue(cache.ExplicitKey(updateLists))
-		return &alpha.List{}, nil
+		return &beta.List{}, nil
 	}
 	return nil, errors.Errorf("not found. Value: %s not found in List: %s", in.Value, in.Name)
 }
