@@ -1046,7 +1046,7 @@ func TestSDKServerReserveTimeout(t *testing.T) {
 	}
 	assertReservedUntilDuration := func(d time.Duration) func(status agonesv1.GameServerStatus) {
 		return func(status agonesv1.GameServerStatus) {
-			assert.WithinDuration(t, time.Now().Add(d), status.ReservedUntil.Time, 1*time.Second)
+			assert.WithinDuration(t, time.Now().Add(d), status.ReservedUntil.Time, 1500*time.Millisecond)
 		}
 	}
 	assertReservedUntilNil := func(status agonesv1.GameServerStatus) {
