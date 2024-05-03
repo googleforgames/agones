@@ -850,7 +850,6 @@ func TestGameServerPassthroughPort(t *testing.T) {
 }
 
 func TestGameServerPortPolicyNone(t *testing.T) {
-	framework.SkipOnCloudProduct(t, "gke-autopilot", "does not support None PortPolicy")
 	t.Parallel()
 	gs := framework.DefaultGameServer(framework.Namespace)
 	gs.Spec.Ports[0] = agonesv1.GameServerPort{PortPolicy: agonesv1.None, ContainerPort: 7777}
