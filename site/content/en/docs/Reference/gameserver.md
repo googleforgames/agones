@@ -192,26 +192,25 @@ spec:
   #   # set this GameServer's initial player capacity
   #   initialCapacity: 10
   #
-  # [Stage:Alpha]
+  # [Stage:Beta]
   # [FeatureFlag:CountsAndLists]
   # Counts and Lists provides the configuration for generic (player, room, session, etc.) tracking features.
-  # Commented out since Alpha, and disabled by default
-  # counters: # counters are int64 counters that can be incremented and decremented by set amounts. Keys must be declared at GameServer creation time.
-  #   games: # arbitrary key.
-  #     count: 1 # initial value.
-  #     capacity: 100 # (Optional) Defaults to 1000 and setting capacity to max(int64) may lead to issues and is not recommended. See GitHub issue https://github.com/googleforgames/agones/issues/3636 for more details.
-  #   sessions:
-  #     count: 1
-  # lists: # lists are lists of values stored against this GameServer that can be added and deleted from. Keys must be declared at GameServer creation time.
-  #   players: # an empty list, with a capacity set to 10.
-  #     capacity: 10 # capacity value, defaults to 1000.
-  #   rooms:
-  #     capacity: 333
-  #     values: # initial set of values in a list.
-  #       - room1
-  #       - room2
-  #       - room3
-  #  
+  # Now in Beta, and enabled by default
+  counters: # counters are int64 counters that can be incremented and decremented by set amounts. Keys must be declared at GameServer creation time.
+    games: # arbitrary key.
+      count: 1 # initial value.
+      capacity: 100 # (Optional) Defaults to 1000 and setting capacity to max(int64) may lead to issues and is not recommended. See GitHub issue https://github.com/googleforgames/agones/issues/3636 for more details.
+    sessions:
+      count: 1
+  lists: # lists are lists of values stored against this GameServer that can be added and deleted from. Keys must be declared at GameServer creation time.
+    players: # an empty list, with a capacity set to 10.
+      capacity: 10 # capacity value, defaults to 1000.
+    rooms:
+      capacity: 333
+      values: # initial set of values in a list.
+        - room1
+        - room2
+        - room3  
   # Pod template configuration
   # {{< k8s-api-version href="#podtemplate-v1-core" >}}
   template:
@@ -240,12 +239,12 @@ but also attach specific [annotations](https://kubernetes.io/docs/concepts/overv
 
 The length of the `name` field of the Gameserver should not exceed 63 characters.
 
+{{% feature expiryVersion="1.41.0" %}}
 The `spec` field is the actual GameServer specification and it is composed as follow:
 
 - `container` is the name of container running the GameServer in case you have more than one container defined in the [pod](https://kubernetes.io/docs/concepts/workloads/pods/pod-overview/). If you do,  this is a mandatory field. For instance this is useful if you want to run a sidecar to ship logs.
 - `ports` are an array of ports that can be exposed as direct connections to the game server container
   - `name` is an optional descriptive name for a port
-  - `range` (Alpha, behind "PortRanges" feature gate) is the optional port range name from which to select a port when using a 'Dynamic' or 'Passthrough' port policy.
   - `portPolicy` has three options:
         - `Dynamic` (default) the system allocates a random free hostPort for the gameserver, for game clients to connect to.
         - `Static`, user defines the hostPort that the game client will connect to. Then onus is on the user to ensure that the port is available. When static is the policy specified, `hostPort` is required to be populated.
@@ -269,6 +268,38 @@ The `spec` field is the actual GameServer specification and it is composed as fo
 {{< alert title="Note" color="info">}}
 The GameServer resource does not support updates. If you need to make regular updates to the GameServer spec, consider using a [Fleet]({{< ref "/docs/Reference/fleet.md" >}}).
 {{< /alert >}}
+{{% /feature %}}
+{{% feature publishVersion="1.41.0" %}}
+The `spec` field is the actual GameServer specification and it is composed as follow:
+
+- `container` is the name of container running the GameServer in case you have more than one container defined in the [pod](https://kubernetes.io/docs/concepts/workloads/pods/pod-overview/). If you do,  this is a mandatory field. For instance this is useful if you want to run a sidecar to ship logs.
+- `ports` are an array of ports that can be exposed as direct connections to the game server container
+  - `name` is an optional descriptive name for a port
+  - `range` (Alpha, behind "PortRanges" feature gate) is the optional port range name from which to select a port when using a 'Dynamic' or 'Passthrough' port policy.
+  - `portPolicy` has three options:
+        - `Dynamic` (default) the system allocates a random free hostPort for the gameserver, for game clients to connect to.
+        - `Static`, user defines the hostPort that the game client will connect to. Then onus is on the user to ensure that the port is available. When static is the policy specified, `hostPort` is required to be populated.
+        - `Passthrough` dynamically sets the `containerPort`  to the same value as the dynamically selected hostPort. This will mean that users will need to lookup what port to open through the server side SDK before starting communications.
+  - `container` (Alpha) the name of the container to open the port on. Defaults to the game server container if omitted or empty.
+  - `containerPort` the port that is being opened on the game server process, this is a required field for `Dynamic` and `Static` port policies, and should not be included in <code>Passthrough</code> configuration.
+  - `protocol` the protocol being used. Defaults to UDP. TCP and TCPUDP are other options.
+- `health` to track the overall healthy state of the GameServer, more information available in the [health check documentation]({{< relref "../Guides/health-checking.md" >}}).
+- `sdkServer` defines parameters for the game server sidecar
+  - `logging` field defines log level for SDK server. Defaults to "Info". It has three options:
+    - "Info" (default) The SDK server will output all messages except for debug messages
+    - "Debug" The SDK server will output all messages including debug messages
+    - "Error" The SDK server will only output error messages
+  - `grpcPort` the port that the SDK Server binds to for gRPC connections
+  - `httpPort` the port that the SDK Server binds to for HTTP gRPC gateway connections
+- `players` (Alpha, behind "PlayerTracking" feature gate), sets this GameServer's initial player capacity
+- `counters` (Beta, requires "CountsAndLists" feature flag) are int64 counters with a default capacity of 1000 that can be incremented and decremented by set amounts. Keys must be declared at GameServer creation time. Note that setting the capacity to max(int64) may lead to issues.
+- `lists` (Beta, requires "CountsAndLists" feature flag) are lists of values stored against this GameServer that can be added and deleted from. Key must be declared at GameServer creation time.
+- `template` the [pod spec template]({{% k8s-api-version href="#podtemplatespec-v1-core" %}}) to run your GameServer containers, [see](https://kubernetes.io/docs/concepts/workloads/pods/pod-overview/#pod-templates) for more information.
+
+{{< alert title="Note" color="info">}}
+The GameServer resource does not support updates. If you need to make regular updates to the GameServer spec, consider using a [Fleet]({{< ref "/docs/Reference/fleet.md" >}}).
+{{< /alert >}}
+{{% /feature %}}
 
 ## Stable Network ID
 

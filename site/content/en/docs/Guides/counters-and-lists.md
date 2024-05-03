@@ -7,7 +7,12 @@ description: >
   Track, allocate and auto-scale based on user defined counters and lists stored on a `GameServer`.
 ---
 
+{{% feature expiryVersion="1.41.0" %}}
 {{< alpha title="Counters and Lists" gate="CountsAndLists" >}}
+{{% /feature %}}
+{{% feature publishVersion="1.41.0" %}}
+{{< beta title="Counters and Lists" gate="CountsAndLists" >}}
+{{% /feature %}}
 
 Counters and Lists is provided as a way to track arbitrary integer counter values as well as
 lists of values against a `GameServer` by a user provided key. 
@@ -86,6 +91,7 @@ and `GameServer.Status.Lists[players].Capacity` is the current capacity for the 
 
 Check the API reference for [`GameServerStatus`][gameserverstatus] for all the details on the data structure.
 
+{{% feature expiryVersion="1.41.0" %}}
 ### SDK
 
 Counter and Lists values can be accessed through the Agones SDK when that information is required within your game
@@ -108,11 +114,37 @@ to the `GameServer`.
 
 See the [SDK Guide]({{< ref "/docs/Guides/Client SDKs/_index.md" >}}) for the full set of data retrieval functions 
 that are available.
+{{% /feature %}}
+{{% feature publishVersion="1.41.0" %}}
+### SDK
+
+Counter and Lists values can be accessed through the Agones SDK when that information is required within your game
+server process.
+
+For example, to retrieve the above `room` counter, each language SDK has some implementation of the
+[`SDK.Beta().GetCounterCount("room")`]({{< ref "/docs/Guides/Client SDKs/_index.md#betagetcountercountkey" >}}) 
+function 
+that returns
+the current value of the counter. Similarly, to retrieve the `players` list, we can use the
+[`SDK.Beta().GetListValues("players")`]({{< ref "/docs/Guides/Client SDKs/_index.md#betagetlistvalueskey" >}})
+function.
+
+The special ability of the SDK retrieval operations, is that is also tracks any modifications that have been made
+through the SDK, that have yet to be persisted to the `GameServer`, and will return values with that data included.
+
+This means that any modifications made to Counters and Lists sent through the SDK can be immediately and atomically
+retrieved from the SDK from the game server binary with accurate information without having to wait for it be persisted
+to the `GameServer`.
+
+See the [SDK Guide]({{< ref "/docs/Guides/Client SDKs/_index.md" >}}) for the full set of data retrieval functions 
+that are available.
+{{% /feature %}}
 
 ## Manipulation
 
 We also have several ways to manipulate the Counter and List information stored on a `GameServer` instance, depending on your use case.
 
+{{% feature expiryVersion="1.41.0" %}}
 ### SDK
 
 Counter and Lists values can be modified through the Agones SDK when you wish to be able to edit that information 
@@ -126,7 +158,22 @@ function.
 
 See the [SDK Guide]({{< ref "/docs/Guides/Client SDKs/_index.md" >}}) for the full set of modification functions 
 that are available.
+{{% /feature %}}
+{{% feature publishVersion="1.41.0" %}}
+### SDK
 
+Counter and Lists values can be modified through the Agones SDK when you wish to be able to edit that information 
+within your game server process.
+
+For example, to increment the above `room` counter by 1, each language SDK has some implementation of the
+[`SDK.Beta().IncrementCounter("room", 1)`]({{< ref "/docs/Guides/Client SDKs/_index.md#betaincrementcounterkey-amount" >}}) 
+function thatincrements the counter by 1. Similarly, to add the value `player1` to the `players` list, we can use the
+[`SDK.Beta().AppendListValue("players", "player1")`]({{< ref "/docs/Guides/Client SDKs/_index.md#betaappendlistvaluekey-value" >}})
+function.
+
+See the [SDK Guide]({{< ref "/docs/Guides/Client SDKs/_index.md" >}}) for the full set of modification functions 
+that are available.
+{{% /feature %}}
 ### Allocation
 
 When performing a `GameServer` allocation, you may want to manipulate the Counter and/or List information atomically 

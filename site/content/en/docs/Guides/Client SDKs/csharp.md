@@ -146,6 +146,7 @@ agonesSDK.WatchGameServer((gameServer) => { Console.WriteLine($"Server - Watch {
 ```
 
 
+{{% feature expiryVersion="1.41.0" %}}
 ### Counters And Lists
 
 {{< alpha title="Counters And Lists" gate="CountsAndLists" >}}
@@ -221,9 +222,9 @@ predefined in the GameServer resource on creation.
 string key = "rooms";
 long count = await agones.Alpha().GetCounterCapacityAsync(key);
 ```
-#$## Lists
+#### Lists
 
-##$## Alpha: AppendListValue
+##### Alpha: AppendListValue
 
 Appends a string to a List's values list, given the List's key (name) and the string value. Will
 error if the string already exists in the list. Will error if the key was not predefined in the
@@ -235,7 +236,7 @@ string value = "player1";
 await agones.Alpha().AppendListValueAsync(key, value);
 ```
 
-##$## Alpha: DeleteListValue
+##### Alpha: DeleteListValue
 
 DeleteListValue removes a string from a List's values list, given the List's key (name) and the
 string value. Will error if the string does not exist in the list. Will error if the key was not
@@ -247,7 +248,7 @@ string value = "player2";
 await agones.Alpha().DeleteListValueAsync(key, value);
 ```
 
-###$# Alpha: SetListCapacity
+##### Alpha: SetListCapacity
 
 Sets the capacity for a given list. Capacity must be between 0 and 1000. Will error if the key was
 not predefined in the GameServer resource on creation.
@@ -258,7 +259,7 @@ long amount = 1000;
 await agones.Alpha().SetListCapacityAsync(key, amount);
 ```
 
-##$## Alpha: GetListCapacity
+##### Alpha: GetListCapacity
 
 Returns the Capacity for a List, given the List's key (name). Will error if the key was not
 predefined in the GameServer resource on creation.
@@ -268,7 +269,7 @@ string key = "players";
 long amount = await agones.Alpha().GetListCapacityAsync(key);
 ```
 
-##$## Alpha: ListContains
+##### Alpha: ListContains
 
 Returns if a string exists in a List's values list, given the List's key (name) and the string value.
 Search is case-sensitive. Will error if the key was not predefined in the GameServer resource on creation.
@@ -279,7 +280,7 @@ string value = "player3";
 bool contains = await agones.Alpha().ListContainsAsync(key, value);
 ```
 
-##$## Alpha: GetListLength
+##### Alpha: GetListLength
 
 GetListLength returns the length of the Values list for a List, given the List's key (name). Will
 error if the key was not predefined in the GameServer resource on creation.
@@ -289,7 +290,7 @@ string key = "players";
 int listLength = await agones.Alpha().GetListLengthAsync(key);
 ```
 
-##$## Alpha: GetListValues
+##### Alpha: GetListValues
 
 Returns the <IList<string>> Values for a List, given the List's key (name). Will error if the key
 was not predefined in the GameServer resource on creation.
@@ -298,6 +299,161 @@ was not predefined in the GameServer resource on creation.
 string key = "players";
 List<string> values = await agones.Alpha().GetListValuesAsync(key);
 ```
+{{% /feature %}}
+{{% feature publishVersion="1.41.0" %}}
+### Counters And Lists
+
+{{< beta title="Counters And Lists" gate="CountsAndLists" >}}
+
+#### Counters
+
+##### Beta: GetCounterCount
+
+Returns the Count for a Counter, given the Counter's key (name). Will error if the key was not
+predefined in the GameServer resource on creation.
+
+```csharp
+string key = "rooms";
+long count = await agones.Beta().GetCounterCountAsync(key);
+```
+
+##### Beta: SetCounterCount
+
+Sets a count to the given value. Use with care, as this will overwrite any previous invocations’ value.
+Cannot be greater than Capacity.
+
+```csharp
+string key = "rooms";
+long amount = 0;
+await agones.Beta().SetCounterCountAsync(key, amount);
+```
+
+##### Beta: IncrementCounter
+
+Increases a counter by the given nonnegative integer amount. Will execute the increment operation
+against the current CRD value. Will max at max(int64). Will error if the key was not predefined in
+the GameServer resource on creation. Errors if the count is at the current capacity (to the latest
+knowledge of the SDK), and no increment will occur.
+
+Note: A potential race condition here is that if count values are set from both the SDK and through
+the K8s API (Allocation or otherwise), since the SDK append operation back to the CRD value is
+batched asynchronous any value incremented past the capacity will be silently truncated.
+
+```csharp
+string key = "rooms";
+long amount = 1;
+await agones.Beta().IncrementCounterAsync(key, amount);
+```
+
+##### Beta: DecrementCounter
+
+Decreases the current count by the given nonnegative integer amount. The Counter Will not go below 0.
+Will execute the decrement operation against the current CRD value. Errors if the count is at 0 (to
+the latest knowledge of the SDK), and no decrement will occur.
+
+```csharp
+string key = "rooms";
+long amount = 2;
+await agones.Beta().DecrementCounterAsync(key, amount);
+```
+
+##### Beta: SetCounterCapacity
+
+Sets the capacity for the given Counter. A capacity of 0 is no capacity.
+
+```csharp
+string key = "rooms";
+long amount = 0;
+await agones.Beta().SetCounterCapacityAsync(key, amount);
+```
+
+##### Beta: GetCounterCapacity
+
+Returns the Capacity for a Counter, given the Counter's key (name). Will error if the key was not
+predefined in the GameServer resource on creation.
+
+```csharp
+string key = "rooms";
+long count = await agones.Beta().GetCounterCapacityAsync(key);
+```
+#### Lists
+
+##### Beta: AppendListValue
+
+Appends a string to a List's values list, given the List's key (name) and the string value. Will
+error if the string already exists in the list. Will error if the key was not predefined in the
+GameServer resource on creation. Will error if the list is already at capacity.
+
+```csharp
+string key = "players";
+string value = "player1";
+await agones.Beta().AppendListValueAsync(key, value);
+```
+
+##### Beta: DeleteListValue
+
+DeleteListValue removes a string from a List's values list, given the List's key (name) and the
+string value. Will error if the string does not exist in the list. Will error if the key was not
+predefined in the GameServer resource on creation.
+
+```csharp
+string key = "players";
+string value = "player2";
+await agones.Beta().DeleteListValueAsync(key, value);
+```
+
+##### Beta: SetListCapacity
+
+Sets the capacity for a given list. Capacity must be between 0 and 1000. Will error if the key was
+not predefined in the GameServer resource on creation.
+
+```csharp
+string key = "players";
+long amount = 1000;
+await agones.Beta().SetListCapacityAsync(key, amount);
+```
+
+##### Beta: GetListCapacity
+
+Returns the Capacity for a List, given the List's key (name). Will error if the key was not
+predefined in the GameServer resource on creation.
+
+```csharp
+string key = "players";
+long amount = await agones.Beta().GetListCapacityAsync(key);
+```
+
+##### Beta: ListContains
+
+Returns if a string exists in a List's values list, given the List's key (name) and the string value.
+Search is case-sensitive. Will error if the key was not predefined in the GameServer resource on creation.
+
+```csharp
+string key = "players";
+string value = "player3";
+bool contains = await agones.Beta().ListContainsAsync(key, value);
+```
+
+##### Beta: GetListLength
+
+GetListLength returns the length of the Values list for a List, given the List's key (name). Will
+error if the key was not predefined in the GameServer resource on creation.
+
+```csharp
+string key = "players";
+int listLength = await agones.Beta().GetListLengthAsync(key);
+```
+
+##### Beta: GetListValues
+
+Returns the <IList<string>> Values for a List, given the List's key (name). Will error if the key
+was not predefined in the GameServer resource on creation.
+
+```csharp
+string key = "players";
+List<string> values = await agones.Beta().GetListValuesAsync(key);
+```
+{{% /feature %}}
 
 ### Player Tracking
 
