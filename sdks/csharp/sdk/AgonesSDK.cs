@@ -34,6 +34,7 @@ namespace Agones
 
 		internal SDK.SDKClient client;
 		internal readonly Alpha alpha;
+		internal readonly Beta beta;
 		internal readonly GrpcChannel channel;
 		internal AsyncClientStreamingCall<Empty,Empty> healthStream;
 		internal readonly CancellationTokenSource cts;
@@ -81,6 +82,7 @@ namespace Agones
 
 			client = sdkClient ?? new SDK.SDKClient(channel);
 			alpha = new Alpha(channel, requestTimeoutSec, cancellationTokenSource, logger);
+			beta = new Beta(channel, requestTimeoutSec, cancellationTokenSource, logger);
 		}
 
 		/// <summary>
@@ -91,6 +93,17 @@ namespace Agones
 		{
 			return alpha;
 		}
+
+		/// <summary>
+		/// Beta returns the AlphBeta SDK
+		/// </summary>
+		/// <returns>Agones beta SDK</returns>
+		public IAgonesBetaSDK Beta()
+		{
+			return beta;
+		}
+
+
 
 		/// <summary>
 		/// Connect the underlying gRPC channel.

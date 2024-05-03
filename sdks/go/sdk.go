@@ -40,6 +40,7 @@ type SDK struct {
 	ctx    context.Context
 	health sdk.SDK_HealthClient
 	alpha  *Alpha
+	beta   *Beta
 }
 
 // ErrorLog is a function to log the error.
@@ -78,12 +79,18 @@ func NewSDK() (*SDK, error) {
 	s.client = sdk.NewSDKClient(conn)
 	s.health, err = s.client.Health(s.ctx)
 	s.alpha = newAlpha(conn)
+	s.beta = newBeta(conn)
 	return s, errors.Wrap(err, "could not set up health check")
 }
 
 // Alpha returns the Alpha SDK.
 func (s *SDK) Alpha() *Alpha {
 	return s.alpha
+}
+
+// Beta returns the Beta SDK.
+func (s *SDK) Beta() *Beta {
+	return s.beta
 }
 
 // Ready marks the Game Server as ready to receive connections.

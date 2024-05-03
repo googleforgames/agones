@@ -20,10 +20,12 @@ import (
 	"strings"
 	"time"
 
-	alpha "agones.dev/agones/test/sdk/restapi/alpha/swagger"
-	"agones.dev/agones/test/sdk/restapi/swagger"
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/net/context"
+
+	alpha "agones.dev/agones/test/sdk/restapi/alpha/swagger"
+	beta "agones.dev/agones/test/sdk/restapi/beta/swagger"
+	"agones.dev/agones/test/sdk/restapi/swagger"
 )
 
 func main() {
@@ -37,6 +39,11 @@ func main() {
 	alphaConf := alpha.NewConfiguration()
 	alphaConf.BasePath = "http://localhost:" + portStr
 	alphaCli := alpha.NewAPIClient(alphaConf)
+
+	log.Println("Beta Client is starting")
+	betaConf := beta.NewConfiguration()
+	betaConf.BasePath = "http://localhost:" + portStr
+	betaCli := beta.NewAPIClient(betaConf)
 
 	ctx := context.Background()
 
@@ -121,8 +128,8 @@ func main() {
 	}
 
 	if strings.Contains(os.Getenv("FEATURE_GATES"), "CountsAndLists=true") {
-		testCounters(ctx, alphaCli)
-		testLists(ctx, alphaCli)
+		testCounters(ctx, betaCli)
+		testLists(ctx, betaCli)
 	} else {
 		log.Print("Counts and Lists not enabled, skipping.")
 	}
@@ -180,12 +187,12 @@ func testPlayers(ctx context.Context, alphaCli *alpha.APIClient) {
 	}
 }
 
-func testCounters(ctx context.Context, alphaCli *alpha.APIClient) {
+func testCounters(ctx context.Context, betaCli *beta.APIClient) {
 	// Tests are expected to run sequentially on the same pre-defined Counter in the localsdk server
 	counterName := "rooms"
 
-	expectedCounter := alpha.AlphaCounter{Name: counterName, Count: "1", Capacity: "10"}
-	if counter, _, err := alphaCli.SDKApi.GetCounter(ctx, counterName); err != nil {
+	expectedCounter := beta.BetaCounter{Name: counterName, Count: "1", Capacity: "10"}
+	if counter, _, err := betaCli.SDKApi.GetCounter(ctx, counterName); err != nil {
 		log.Fatalf("Error getting Counter: %s", err)
 	} else {
 		if !cmp.Equal(expectedCounter, counter) {
@@ -194,8 +201,8 @@ func testCounters(ctx context.Context, alphaCli *alpha.APIClient) {
 	}
 
 	// Test updatecounter, setcapacitycounter
-	expectedCounter = alpha.AlphaCounter{Name: counterName, Count: "0", Capacity: "42"}
-	if counter, _, err := alphaCli.SDKApi.UpdateCounter(ctx, alpha.TheRequestedUpdateToMakeToTheCounter{CountDiff: "-1", Capacity: "42"}, counterName); err != nil {
+	expectedCounter = beta.BetaCounter{Name: counterName, Count: "0", Capacity: "42"}
+	if counter, _, err := betaCli.SDKApi.UpdateCounter(ctx, beta.TheRequestedUpdateToMakeToTheCounter{CountDiff: "-1", Capacity: "42"}, counterName); err != nil {
 		log.Fatalf("Error getting Counter: %s", err)
 	} else {
 		if !cmp.Equal(expectedCounter, counter) {
@@ -204,8 +211,8 @@ func testCounters(ctx context.Context, alphaCli *alpha.APIClient) {
 	}
 
 	// Test setcountcounter
-	expectedCounter = alpha.AlphaCounter{Name: counterName, Count: "40", Capacity: "42"}
-	if counter, _, err := alphaCli.SDKApi.UpdateCounter(ctx, alpha.TheRequestedUpdateToMakeToTheCounter{Count: "40", Capacity: "42"}, counterName); err != nil {
+	expectedCounter = beta.BetaCounter{Name: counterName, Count: "40", Capacity: "42"}
+	if counter, _, err := betaCli.SDKApi.UpdateCounter(ctx, beta.TheRequestedUpdateToMakeToTheCounter{Count: "40", Capacity: "42"}, counterName); err != nil {
 		log.Fatalf("Error getting Counter: %s", err)
 	} else {
 		if !cmp.Equal(expectedCounter, counter) {
@@ -214,12 +221,12 @@ func testCounters(ctx context.Context, alphaCli *alpha.APIClient) {
 	}
 }
 
-func testLists(ctx context.Context, alphaCli *alpha.APIClient) {
+func testLists(ctx context.Context, betaCli *beta.APIClient) {
 	// Tests are expected to run sequentially on the same pre-defined List in the localsdk server
 	listName := "players"
 
-	expectedList := alpha.AlphaList{Name: listName, Values: []string{"test0", "test1", "test2"}, Capacity: "100"}
-	if list, _, err := alphaCli.SDKApi.GetList(ctx, listName); err != nil {
+	expectedList := beta.BetaList{Name: listName, Values: []string{"test0", "test1", "test2"}, Capacity: "100"}
+	if list, _, err := betaCli.SDKApi.GetList(ctx, listName); err != nil {
 		log.Fatalf("Error getting List: %s", err)
 	} else {
 		if !cmp.Equal(expectedList, list) {
@@ -227,8 +234,8 @@ func testLists(ctx context.Context, alphaCli *alpha.APIClient) {
 		}
 	}
 
-	expectedList = alpha.AlphaList{Name: listName, Values: []string{"test123", "test456"}, Capacity: "10"}
-	if list, _, err := alphaCli.SDKApi.UpdateList(ctx, alpha.TheListToUpdate{Values: []string{"test123", "test456"}, Capacity: "10"}, listName); err != nil {
+	expectedList = beta.BetaList{Name: listName, Values: []string{"test123", "test456"}, Capacity: "10"}
+	if list, _, err := betaCli.SDKApi.UpdateList(ctx, beta.TheListToUpdate{Values: []string{"test123", "test456"}, Capacity: "10"}, listName); err != nil {
 		log.Fatalf("Error getting List: %s", err)
 	} else {
 		if !cmp.Equal(expectedList, list) {
@@ -236,8 +243,8 @@ func testLists(ctx context.Context, alphaCli *alpha.APIClient) {
 		}
 	}
 
-	expectedList = alpha.AlphaList{Name: listName, Values: []string{"test123", "test456", "test789"}, Capacity: "10"}
-	if list, _, err := alphaCli.SDKApi.AddListValue(ctx, alpha.ListsNameaddValueBody{Value: "test789"}, listName); err != nil {
+	expectedList = beta.BetaList{Name: listName, Values: []string{"test123", "test456", "test789"}, Capacity: "10"}
+	if list, _, err := betaCli.SDKApi.AddListValue(ctx, beta.ListsNameaddValueBody{Value: "test789"}, listName); err != nil {
 		log.Fatalf("Error getting List: %s", err)
 	} else {
 		if !cmp.Equal(expectedList, list) {
@@ -245,8 +252,8 @@ func testLists(ctx context.Context, alphaCli *alpha.APIClient) {
 		}
 	}
 
-	expectedList = alpha.AlphaList{Name: listName, Values: []string{"test123", "test789"}, Capacity: "10"}
-	if list, _, err := alphaCli.SDKApi.RemoveListValue(ctx, alpha.ListsNameremoveValueBody{Value: "test456"}, listName); err != nil {
+	expectedList = beta.BetaList{Name: listName, Values: []string{"test123", "test789"}, Capacity: "10"}
+	if list, _, err := betaCli.SDKApi.RemoveListValue(ctx, beta.ListsNameremoveValueBody{Value: "test456"}, listName); err != nil {
 		log.Fatalf("Error getting List: %s", err)
 	} else {
 		if !cmp.Equal(expectedList, list) {
