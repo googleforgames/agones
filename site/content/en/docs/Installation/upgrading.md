@@ -134,9 +134,14 @@ upgrades.
 7. Congratulations - you have now upgraded to a new version of Kubernetes! 👍
 
 {{% feature publishVersion="1.41.0" %}}
-## SDK Proto Compatibility Guarantees as of Agones v1.41.0
-Our [SDK Server]({{< relref "../guides/Client SDKs/sdk-server.md" >}}) compatibility contract: A
-game server binary using Beta and Stable SDKs will remain compatible with a _newer_ `sdk-server`,
+## SDK Compatibility Guarantees
+In order to allow compatibility between game server binaries and `sdk-server`, a game server binary
+using Beta and Stable SDK protos must remain compatible with a newer `sdk-server`. Why? SDK proto
+compatibility is crucial to reducing toil on our users. We don’t want to require users to redeploy
+binaries every release (6w!), and like to encourage upgrades as much as possible.
+
+Our SDK Server compatibility contract as of Agones v1.41.0: A
+game server binary using Beta and Stable SDKs will remain compatible with a _newer_ Agones Release,
 within possible deprecation windows:
 - If your game server uses a non-deprecated Stable API, your binary will be compatible for 10
 releases (~1y) starting from the SDK version packaged.
@@ -145,8 +150,7 @@ releases (~1y) starting from the SDK version packaged.
   - Stable APIs will almost certainly be compatible beyond 10 releases, but 10 releases is
   guaranteed.
 - If your game server uses a non-deprecated Beta API, your binary will be compatible for 5 releases
-(~6mo).
-- Alpha SDK Protos are subject to change between releases.
+(~6mo).- Alpha SDK APIs are subject to change between releases.
   - A game server binary using Alpha SDKs may not be compatible with a newer sdk-server.
   - In Alpha, incompatible changes retaining the same SDK proto message name are allowed.
   - When we make incompatible Alpha changes, we will document the APIs involved.
@@ -166,10 +170,10 @@ There is no guaranteed proto compatibility between releases for Alpha SDK protos
 graduates to Beta the API will be deleted from the Alpha proto with no overlapping release.
 An API may be removed from the Alpha proto during any release without graduating to Beta.
 
-## SDK Server APIs and Stability Levels
+## SDK APIs and Stability Levels
 
 "Legacy" indicates that this API has been in the SDK Server in a release before we began tracking
-proto compatibility. \
+SDK compatibility. \
 The Actions may differ from the [Client SDK]({{< relref "Client SDKs">}}) depending on how each
 Client SDK is implemented.
 
