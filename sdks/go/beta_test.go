@@ -62,104 +62,104 @@ func TestBetaGetAndUpdateCounter(t *testing.T) {
 		Capacity: 500,
 	}
 
-	a := Beta{
+	b := Beta{
 		client: mock,
 	}
 
 	t.Parallel()
 
 	t.Run("Set Counter and Set Capacity", func(t *testing.T) {
-		count, err := a.GetCounterCount("sessions")
+		count, err := b.GetCounterCount("sessions")
 		assert.NoError(t, err)
 		assert.Equal(t, sessions.Count, count)
 
-		capacity, err := a.GetCounterCapacity("sessions")
+		capacity, err := b.GetCounterCapacity("sessions")
 		assert.NoError(t, err)
 		assert.Equal(t, sessions.Capacity, capacity)
 
 		wantCapacity := int64(25)
-		err = a.SetCounterCapacity("sessions", wantCapacity)
+		err = b.SetCounterCapacity("sessions", wantCapacity)
 		assert.NoError(t, err)
 
-		capacity, err = a.GetCounterCapacity("sessions")
+		capacity, err = b.GetCounterCapacity("sessions")
 		assert.NoError(t, err)
 		assert.Equal(t, wantCapacity, capacity)
 
 		wantCount := int64(10)
-		err = a.SetCounterCount("sessions", wantCount)
+		err = b.SetCounterCount("sessions", wantCount)
 		assert.NoError(t, err)
 
-		count, err = a.GetCounterCount("sessions")
+		count, err = b.GetCounterCount("sessions")
 		assert.NoError(t, err)
 		assert.Equal(t, wantCount, count)
 	})
 
 	t.Run("Get and Set Non-Defined Counter", func(t *testing.T) {
-		_, err := a.GetCounterCount("secessions")
+		_, err := b.GetCounterCount("secessions")
 		assert.Error(t, err)
 
-		_, err = a.GetCounterCapacity("secessions")
+		_, err = b.GetCounterCapacity("secessions")
 		assert.Error(t, err)
 
-		err = a.SetCounterCapacity("secessions", int64(100))
+		err = b.SetCounterCapacity("secessions", int64(100))
 		assert.Error(t, err)
 
-		err = a.SetCounterCount("secessions", int64(0))
+		err = b.SetCounterCount("secessions", int64(0))
 		assert.Error(t, err)
 	})
 
 	// nolint:dupl // testing DecrementCounter and IncrementCounter are not duplicates.
 	t.Run("Decrement Counter Fails then Success", func(t *testing.T) {
-		count, err := a.GetCounterCount("games")
+		count, err := b.GetCounterCount("games")
 		assert.NoError(t, err)
 		assert.Equal(t, games.Count, count)
 
-		err = a.DecrementCounter("games", 21)
+		err = b.DecrementCounter("games", 21)
 		assert.Error(t, err)
 
-		count, err = a.GetCounterCount("games")
+		count, err = b.GetCounterCount("games")
 		assert.NoError(t, err)
 		assert.Equal(t, games.Count, count)
 
-		err = a.DecrementCounter("games", -12)
+		err = b.DecrementCounter("games", -12)
 		assert.Error(t, err)
 
-		count, err = a.GetCounterCount("games")
+		count, err = b.GetCounterCount("games")
 		assert.NoError(t, err)
 		assert.Equal(t, games.Count, count)
 
-		err = a.DecrementCounter("games", 12)
+		err = b.DecrementCounter("games", 12)
 		assert.NoError(t, err)
 
-		count, err = a.GetCounterCount("games")
+		count, err = b.GetCounterCount("games")
 		assert.NoError(t, err)
 		assert.Equal(t, int64(0), count)
 	})
 
 	// nolint:dupl // testing DecrementCounter and IncrementCounter are not duplicates.
 	t.Run("Increment Counter Fails then Success", func(t *testing.T) {
-		count, err := a.GetCounterCount("gamers")
+		count, err := b.GetCounterCount("gamers")
 		assert.NoError(t, err)
 		assert.Equal(t, gamers.Count, count)
 
-		err = a.IncrementCounter("gamers", 250)
+		err = b.IncrementCounter("gamers", 250)
 		assert.Error(t, err)
 
-		count, err = a.GetCounterCount("gamers")
+		count, err = b.GetCounterCount("gamers")
 		assert.NoError(t, err)
 		assert.Equal(t, gamers.Count, count)
 
-		err = a.IncrementCounter("gamers", -237)
+		err = b.IncrementCounter("gamers", -237)
 		assert.Error(t, err)
 
-		count, err = a.GetCounterCount("gamers")
+		count, err = b.GetCounterCount("gamers")
 		assert.NoError(t, err)
 		assert.Equal(t, gamers.Count, count)
 
-		err = a.IncrementCounter("gamers", 237)
+		err = b.IncrementCounter("gamers", 237)
 		assert.NoError(t, err)
 
-		count, err = a.GetCounterCount("gamers")
+		count, err = b.GetCounterCount("gamers")
 		assert.NoError(t, err)
 		assert.Equal(t, int64(500), count)
 	})
@@ -203,74 +203,74 @@ func TestBetaGetAndUpdateList(t *testing.T) {
 		Capacity: 5,
 	}
 
-	a := Beta{
+	b := Beta{
 		client: mock,
 	}
 
 	t.Parallel()
 
 	t.Run("Get and Set List Capacity", func(t *testing.T) {
-		capacity, err := a.GetListCapacity("foo")
+		capacity, err := b.GetListCapacity("foo")
 		assert.NoError(t, err)
 		assert.Equal(t, foo.Capacity, capacity)
 
 		wantCapacity := int64(5)
-		err = a.SetListCapacity("foo", wantCapacity)
+		err = b.SetListCapacity("foo", wantCapacity)
 		assert.NoError(t, err)
 
-		capacity, err = a.GetListCapacity("foo")
+		capacity, err = b.GetListCapacity("foo")
 		assert.NoError(t, err)
 		assert.Equal(t, wantCapacity, capacity)
 	})
 
 	t.Run("Get List Length, Get List Values, ListContains, and Append List Value", func(t *testing.T) {
-		length, err := a.GetListLength("bar")
+		length, err := b.GetListLength("bar")
 		assert.NoError(t, err)
 		assert.Equal(t, len(bar.Values), length)
 
-		values, err := a.GetListValues("bar")
+		values, err := b.GetListValues("bar")
 		assert.NoError(t, err)
 		assert.Equal(t, bar.Values, values)
 
-		err = a.AppendListValue("bar", "ghi")
+		err = b.AppendListValue("bar", "ghi")
 		assert.NoError(t, err)
 
-		length, err = a.GetListLength("bar")
+		length, err = b.GetListLength("bar")
 		assert.NoError(t, err)
 		assert.Equal(t, len(bar.Values)+1, length)
 
 		wantValues := []string{"abc", "def", "ghi"}
-		values, err = a.GetListValues("bar")
+		values, err = b.GetListValues("bar")
 		assert.NoError(t, err)
 		assert.Equal(t, wantValues, values)
 
-		contains, err := a.ListContains("bar", "ghi")
+		contains, err := b.ListContains("bar", "ghi")
 		assert.NoError(t, err)
 		assert.True(t, contains)
 	})
 
 	t.Run("Get List Length, Get List Values, ListContains, and Delete List Value", func(t *testing.T) {
-		length, err := a.GetListLength("baz")
+		length, err := b.GetListLength("baz")
 		assert.NoError(t, err)
 		assert.Equal(t, len(baz.Values), length)
 
-		values, err := a.GetListValues("baz")
+		values, err := b.GetListValues("baz")
 		assert.NoError(t, err)
 		assert.Equal(t, baz.Values, values)
 
-		err = a.DeleteListValue("baz", "456")
+		err = b.DeleteListValue("baz", "456")
 		assert.NoError(t, err)
 
-		length, err = a.GetListLength("baz")
+		length, err = b.GetListLength("baz")
 		assert.NoError(t, err)
 		assert.Equal(t, len(baz.Values)-1, length)
 
 		wantValues := []string{"123", "789"}
-		values, err = a.GetListValues("baz")
+		values, err = b.GetListValues("baz")
 		assert.NoError(t, err)
 		assert.Equal(t, wantValues, values)
 
-		contains, err := a.ListContains("baz", "456")
+		contains, err := b.ListContains("baz", "456")
 		assert.NoError(t, err)
 		assert.False(t, contains)
 	})
@@ -282,15 +282,15 @@ type betaMock struct {
 	lists    map[string]*beta.List
 }
 
-func (a *betaMock) GetCounter(ctx context.Context, in *beta.GetCounterRequest, opts ...grpc.CallOption) (*beta.Counter, error) {
-	if counter, ok := a.counters[in.Name]; ok {
+func (b *betaMock) GetCounter(ctx context.Context, in *beta.GetCounterRequest, opts ...grpc.CallOption) (*beta.Counter, error) {
+	if counter, ok := b.counters[in.Name]; ok {
 		return counter, nil
 	}
 	return nil, errors.Errorf("counter not found: %s", in.Name)
 }
 
-func (a *betaMock) UpdateCounter(ctx context.Context, in *beta.UpdateCounterRequest, opts ...grpc.CallOption) (*beta.Counter, error) {
-	counter, err := a.GetCounter(ctx, &beta.GetCounterRequest{Name: in.CounterUpdateRequest.Name})
+func (b *betaMock) UpdateCounter(ctx context.Context, in *beta.UpdateCounterRequest, opts ...grpc.CallOption) (*beta.Counter, error) {
+	counter, err := b.GetCounter(ctx, &beta.GetCounterRequest{Name: in.CounterUpdateRequest.Name})
 	if err != nil {
 		return nil, err
 	}
@@ -319,17 +319,17 @@ func (a *betaMock) UpdateCounter(ctx context.Context, in *beta.UpdateCounterRequ
 			in.CounterUpdateRequest)
 	}
 
-	a.counters[in.CounterUpdateRequest.Name] = counter
-	return a.counters[in.CounterUpdateRequest.Name], nil
+	b.counters[in.CounterUpdateRequest.Name] = counter
+	return b.counters[in.CounterUpdateRequest.Name], nil
 }
 
 // GetList returns the list of betaMock. Note: unlike the SDK Server, this does not return
 // a list with any pending batched changes applied.
-func (a *betaMock) GetList(ctx context.Context, in *beta.GetListRequest, opts ...grpc.CallOption) (*beta.List, error) {
+func (b *betaMock) GetList(ctx context.Context, in *beta.GetListRequest, opts ...grpc.CallOption) (*beta.List, error) {
 	if in == nil {
 		return nil, errors.Errorf("GetListRequest cannot be nil")
 	}
-	if list, ok := a.lists[in.Name]; ok {
+	if list, ok := b.lists[in.Name]; ok {
 		return list, nil
 	}
 	return nil, errors.Errorf("list not found: %s", in.Name)
@@ -337,11 +337,11 @@ func (a *betaMock) GetList(ctx context.Context, in *beta.GetListRequest, opts ..
 
 // Note: unlike the SDK Server, UpdateList does not batch changes and instead updates the list
 // directly.
-func (a *betaMock) UpdateList(ctx context.Context, in *beta.UpdateListRequest, opts ...grpc.CallOption) (*beta.List, error) {
+func (b *betaMock) UpdateList(ctx context.Context, in *beta.UpdateListRequest, opts ...grpc.CallOption) (*beta.List, error) {
 	if in == nil {
 		return nil, errors.Errorf("UpdateListRequest cannot be nil")
 	}
-	list, ok := a.lists[in.List.Name]
+	list, ok := b.lists[in.List.Name]
 	if !ok {
 		return nil, errors.Errorf("list not found: %s", in.List.Name)
 	}
@@ -352,17 +352,17 @@ func (a *betaMock) UpdateList(ctx context.Context, in *beta.UpdateListRequest, o
 	if len(list.Values) > int(list.Capacity) {
 		list.Values = append([]string{}, list.Values[:list.Capacity]...)
 	}
-	a.lists[in.List.Name] = list
+	b.lists[in.List.Name] = list
 	return &beta.List{}, nil
 }
 
 // Note: unlike the SDK Server, AddListValue does not batch changes and instead updates the list
 // directly.
-func (a *betaMock) AddListValue(ctx context.Context, in *beta.AddListValueRequest, opts ...grpc.CallOption) (*beta.List, error) {
+func (b *betaMock) AddListValue(ctx context.Context, in *beta.AddListValueRequest, opts ...grpc.CallOption) (*beta.List, error) {
 	if in == nil {
 		return nil, errors.Errorf("AddListValueRequest cannot be nil")
 	}
-	list, ok := a.lists[in.Name]
+	list, ok := b.lists[in.Name]
 	if !ok {
 		return nil, errors.Errorf("list not found: %s", in.Name)
 	}
@@ -375,17 +375,17 @@ func (a *betaMock) AddListValue(ctx context.Context, in *beta.AddListValueReques
 		}
 	}
 	list.Values = append(list.Values, in.Value)
-	a.lists[in.Name] = list
+	b.lists[in.Name] = list
 	return &beta.List{}, nil
 }
 
 // Note: unlike the SDK Server, RemoveListValue does not batch changes and instead updates the list
 // directly.
-func (a *betaMock) RemoveListValue(ctx context.Context, in *beta.RemoveListValueRequest, opts ...grpc.CallOption) (*beta.List, error) {
+func (b *betaMock) RemoveListValue(ctx context.Context, in *beta.RemoveListValueRequest, opts ...grpc.CallOption) (*beta.List, error) {
 	if in == nil {
 		return nil, errors.Errorf("RemoveListValueRequest cannot be nil")
 	}
-	list, ok := a.lists[in.Name]
+	list, ok := b.lists[in.Name]
 	if !ok {
 		return nil, errors.Errorf("list not found: %s", in.Name)
 	}
@@ -394,7 +394,7 @@ func (a *betaMock) RemoveListValue(ctx context.Context, in *beta.RemoveListValue
 			continue
 		}
 		list.Values = append(list.Values[:i], list.Values[i+1:]...)
-		a.lists[in.Name] = list
+		b.lists[in.Name] = list
 		return &beta.List{}, nil
 	}
 	return nil, errors.Errorf("not found. Value: %s not found in List: %s", in.Value, in.Name)
