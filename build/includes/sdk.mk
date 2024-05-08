@@ -257,14 +257,30 @@ check-makefile-version-increment:
 	@echo "Current directory: $$(pwd)"
 	@echo "Checking for script changes in 'examples' subdirectories..."
 	@cd $(CURDIR)/..; \
-	changed_dirs=$$(git diff --name-only HEAD | grep -E "examples/.*/(main\.go|Dockerfile|Dockerfile\.windows|go\.mod|go\.sum)$$" | xargs -n1 -r dirname | sort -u); \
+	changed_dirs=$$(git diff --name-only HEAD | grep -E "examples/.*/(main\.go|Dockerfile|Dockerfile\.windows|go\.mod|go\.sum)$$" | xargs -n1 dirname | sort -u); \
 	for dir in $$changed_dirs; do \
 		echo "Analyzing directory: $$dir"; \
 		subdir=$$dir; \
 		while [ ! -f "$$subdir/Makefile" ] && [ "$$subdir" != "examples" ]; do \
 			subdir=$$(dirname "$$subdir"); \
 		done; \
-		if [ -f "$$subdir/Makefile" ]; then \
+		changes_detected=""; \
+		if [ -f "$$dir/main.go" ] && git diff HEAD "$$dir/main.go" | grep '^\+' > /dev/null; then \
+			changes_detected="true"; \
+		fi; \
+		if [ -f "$$dir/go.mod" ] && git diff HEAD "$$dir/go.mod" | grep '^\+' > /dev/null; then \
+			changes_detected="true"; \
+		fi; \
+		if [ -f "$$dir/go.sum" ] && git diff HEAD "$$dir/go.sum" | grep '^\+' > /dev/null; then \
+			changes_detected="true"; \
+		fi; \
+		if [ -f "$$dir/Dockerfile" ] && git diff HEAD "$$dir/Dockerfile" | grep '^\+' | grep -vE '^\+\s*#' > /dev/null; then \
+			changes_detected="true"; \
+		fi; \
+		if [ -f "$$dir/Dockerfile.windows" ] && git diff HEAD "$$dir/Dockerfile.windows" | grep '^\+' | grep -vE '^\+\s*#' > /dev/null; then \
+			changes_detected="true"; \
+		fi; \
+		if [ "$$changes_detected" = "true" ] && [ -f "$$subdir/Makefile" ]; then \
 			echo "Found Makefile in $$subdir"; \
 			current_version=$$(sed 's/#.*//' "$$subdir/Makefile" | grep -oP '^[^#]*version\s*:=\s*\K[^ ]+' | head -n1); \
 			echo "Current version in $$subdir: $$current_version"; \
@@ -277,7 +293,7 @@ check-makefile-version-increment:
 				exit 1; \
 			fi; \
 		else \
-			echo "No Makefile found in $$dir, even after checking parent directories up to 'examples'."; \
+			echo "No substantive changes detected or no Makefile found in $$dir."; \
 		fi; \
 	done; \
 	echo "Version increment check completed successfully for all relevant directories within 'examples'."
