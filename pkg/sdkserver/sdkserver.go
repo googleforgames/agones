@@ -826,7 +826,7 @@ func (s *SDKServer) GetCounter(ctx context.Context, in *beta.GetCounterRequest) 
 		return nil, errors.Errorf("counter not found: %s", in.Name)
 	}
 	s.logger.WithField("Get Counter", counter).Debugf("Got Counter %s", in.Name)
-	protoCounter := beta.Counter{Name: in.Name, Count: counter.Count, Capacity: counter.Capacity}
+	protoCounter := &beta.Counter{Name: in.Name, Count: counter.Count, Capacity: counter.Capacity}
 	// If there are batched changes that have not yet been applied, apply them to the Counter.
 	// This does NOT validate batched the changes.
 	if counterUpdate, ok := s.gsCounterUpdates[in.Name]; ok {
@@ -848,7 +848,7 @@ func (s *SDKServer) GetCounter(ctx context.Context, in *beta.GetCounterRequest) 
 		s.logger.WithField("Get Counter", counter).Debugf("Applied Batched Counter Updates %v", counterUpdate)
 	}
 
-	return &protoCounter, nil
+	return protoCounter, nil
 }
 
 // UpdateCounter collapses all UpdateCounterRequests for a given Counter into a single request.
@@ -984,7 +984,7 @@ func (s *SDKServer) updateCounter(ctx context.Context) error {
 		names = append(names, name)
 	}
 
-	_, err = s.patchGameServer(ctx, gs, gsCopy)
+	gs, err = s.patchGameServer(ctx, gs, gsCopy)
 	if err != nil {
 		return err
 	}
@@ -1215,7 +1215,7 @@ func (s *SDKServer) updateList(ctx context.Context) error {
 		names = append(names, name)
 	}
 
-	_, err = s.patchGameServer(ctx, gs, gsCopy)
+	gs, err = s.patchGameServer(ctx, gs, gsCopy)
 	if err != nil {
 		return err
 	}
