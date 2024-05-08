@@ -113,6 +113,15 @@ steps:
     args: [test-gen-all-sdk-grpc]
 
   #
+  # Ensure examples images are bumped
+  #
+  - name: make-docker
+    id: check-makefile-version-increment
+    waitFor: [ensure-build-sdk-image-base]
+    dir: build
+    args: [check-makefile-version-increment]
+
+  #
   # Preventing Broken PR Merges in CI
   #
   - name: make-docker

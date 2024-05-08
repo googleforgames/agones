@@ -251,3 +251,33 @@ test-gen-all-sdk-grpc:
 		echo "$$diff_output_test_sdk"; \
 		exit 1; \
 	fi
+
+# Ensure examples images are bumped when there is any change in the scripts
+check-makefile-version-increment:
+	@echo "Current directory: $$(pwd)"
+	@echo "Checking for script changes in 'examples' subdirectories..."
+	@cd $(CURDIR)/..; \
+	changed_dirs=$$(git diff --name-only HEAD | grep -E "examples/.*/(main\.go|Dockerfile|Dockerfile\.windows|go\.mod|go\.sum)$$" | xargs -n1 -r dirname | sort -u); \
+	for dir in $$changed_dirs; do \
+		echo "Analyzing directory: $$dir"; \
+		subdir=$$dir; \
+		while [ ! -f "$$subdir/Makefile" ] && [ "$$subdir" != "examples" ]; do \
+			subdir=$$(dirname "$$subdir"); \
+		done; \
+		if [ -f "$$subdir/Makefile" ]; then \
+			echo "Found Makefile in $$subdir"; \
+			current_version=$$(sed 's/#.*//' "$$subdir/Makefile" | grep -oP '^[^#]*version\s*:=\s*\K[^ ]+' | head -n1); \
+			echo "Current version in $$subdir: $$current_version"; \
+			last_version=$$(git log -1 --format="%H" -- "$$subdir/Makefile" | xargs -I {} git show {}:"$$subdir/Makefile" | sed 's/#.*//' | grep -oP '^[^#]*version\s*:=\s*\K[^ ]+' | head -n1); \
+			echo "Last recorded version in $$subdir: $$last_version"; \
+			if [ "$$current_version" != "$$last_version" ]; then \
+				echo "Version increment check passed for $$subdir."; \
+			else \
+				echo "*** Failure: Version has not been incremented correctly in $$subdir. Last recorded version: $$last_version, Current version: $$current_version"; \
+				exit 1; \
+			fi; \
+		else \
+			echo "No Makefile found in $$dir, even after checking parent directories up to 'examples'."; \
+		fi; \
+	done; \
+	echo "Version increment check completed successfully for all relevant directories within 'examples'."

@@ -25,7 +25,7 @@
 
 REPOSITORY ?=
 PROD_REPO ?= us-docker.pkg.dev/agones-images/examples
-version := 0.4
+version := 0.4  # Change this to ignore the version change presubmit: `check-makefile-version-increment`
 ifeq ($(REPOSITORY),)
 	server_tag := custom-controller:$(version)
 else
