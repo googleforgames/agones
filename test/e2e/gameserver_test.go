@@ -34,6 +34,7 @@ import (
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/rand"
 	"k8s.io/apimachinery/pkg/util/wait"
 
@@ -1710,4 +1711,62 @@ func TestGameServerSlowStart(t *testing.T) {
 	// start delays.
 	_, err := framework.CreateGameServerAndWaitUntilReady(t, framework.Namespace, gs)
 	assert.NoError(t, err)
+}
+
+func TestGameServerPatch(t *testing.T) {
+	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
+		t.SkipNow()
+	}
+	t.Parallel()
+	ctx := context.Background()
+
+	gs := framework.DefaultGameServer(framework.Namespace)
+	gs, err := framework.CreateGameServerAndWaitUntilReady(t, framework.Namespace, gs)
+	require.NoError(t, err)
+	defer framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Delete(ctx, gs.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint: errcheck
+	assert.Equal(t, agonesv1.GameServerStateReady, gs.Status.State)
+
+	// Create a gameserver to patch against
+	gsCopy := gs.DeepCopy()
+	gsCopy.ObjectMeta.Labels = map[string]string{"foo": "foo-value"}
+
+	patch, err := gs.Patch(gsCopy)
+	require.NoError(t, err)
+	patchString := string(patch)
+	require.Contains(t, patchString, fmt.Sprintf("{\"op\":\"test\",\"path\":\"/metadata/resourceVersion\",\"value\":%q}", gs.ObjectMeta.ResourceVersion))
+	require.Contains(t, patchString, "{\"op\":\"add\",\"path\":\"/metadata/labels\",\"value\":{\"foo\":\"foo-value\"}}")
+
+	// Confirm patch is applied correctly
+	patchedGs, err := framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Patch(ctx, gs.GetObjectMeta().GetName(), types.JSONPatchType, patch, metav1.PatchOptions{})
+	require.NoError(t, err)
+	require.Equal(t, patchedGs.ObjectMeta.Labels, map[string]string{"foo": "foo-value"})
+	require.NotEqual(t, patchedGs.ObjectMeta.ResourceVersion, gs.ObjectMeta.ResourceVersion)
+
+	// Confirm a patch applied to an old version of a game server is not applied
+	gsCopy.ObjectMeta.Labels = map[string]string{"bar": "bar-value"}
+	patch, err = gs.Patch(gsCopy)
+	require.NoError(t, err)
+
+	_, err = framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Patch(ctx, gs.GetObjectMeta().GetName(), types.JSONPatchType, patch, metav1.PatchOptions{})
+	require.Error(t, err)
+
+	getGs, err := framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Get(ctx, gs.ObjectMeta.Name, metav1.GetOptions{})
+	require.NoError(t, err)
+	require.Equal(t, getGs.ObjectMeta.Labels, map[string]string{"foo": "foo-value"})
+	require.Equal(t, getGs.ObjectMeta.ResourceVersion, patchedGs.ObjectMeta.ResourceVersion)
+
+	// Confirm patch goes through with the most up-to-date game server
+	gsCopy = patchedGs.DeepCopy()
+	gsCopy.ObjectMeta.Labels = map[string]string{"bar": "bar-value"}
+	patch, err = patchedGs.Patch(gsCopy)
+	require.NoError(t, err)
+
+	rePatchedGs, err := framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Patch(ctx, gs.GetObjectMeta().GetName(), types.JSONPatchType, patch, metav1.PatchOptions{})
+	require.NoError(t, err)
+	require.Equal(t, rePatchedGs.ObjectMeta.Labels, map[string]string{"bar": "bar-value"})
+
+	getGs, err = framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Get(ctx, gs.ObjectMeta.Name, metav1.GetOptions{})
+	require.NoError(t, err)
+	require.Equal(t, getGs.ObjectMeta.Labels, map[string]string{"bar": "bar-value"})
+	require.Equal(t, getGs.ObjectMeta.ResourceVersion, rePatchedGs.ObjectMeta.ResourceVersion)
 }
