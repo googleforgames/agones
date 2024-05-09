@@ -320,6 +320,12 @@ func applyCounterOrListPolicy(c *autoscalingv1.CounterPolicy, l *autoscalingv1.L
 		if err != nil {
 			return 0, false, err
 		}
+		// If the Aggregated Allocated Counts is 0 then desired capacity gets calculated as 0. If the
+		// capacity of 1 replica is equal to or greater than minimum capacity we can exit early.
+		if aggAllocatedCount <= 0 && capacity >= minCapacity {
+			return 1, true, nil
+		}
+
 		// The desired TOTAL capacity based on the Aggregated Allocated Counts (see applyBufferPolicy for explanation)
 		desiredCapacity := int64(math.Ceil(float64(aggAllocatedCount*100) / float64(100-bufferPercent)))
 		// Convert into a desired AVAILABLE capacity aka the buffer
@@ -471,8 +477,8 @@ func scaleDown(f *agonesv1.Fleet, gameServerLister listeragonesv1.GameServerList
 	nodeCounts map[string]gameservers.NodeCount, key string, isCounter bool, replicas int32,
 	aggCount, aggCapacity, minCapacity, buffer int64) (int32, bool, error) {
 	// Exit early if we're already at MinCapacity to avoid calling getSortedGameServers if unnecessary
-	if aggCapacity <= minCapacity {
-		return max(replicas, 1), true, nil
+	if aggCapacity == minCapacity {
+		return replicas, true, nil
 	}
 
 	// We first need to get the individual game servers in order of deletion on scale down, as any
@@ -487,9 +493,6 @@ func scaleDown(f *agonesv1.Fleet, gameServerLister listeragonesv1.GameServerList
 	// "Remove" one game server at a time in order of potential deletion. (Not actually removed here,
 	// that's done later, if possible, by the fleetautoscaler controller.)
 	for _, gs := range gameServers {
-		if replicas == 1 {
-			return 1, true, nil
-		}
 		replicas--
 		switch isCounter {
 		case true:
@@ -525,13 +528,11 @@ func scaleDown(f *agonesv1.Fleet, gameServerLister listeragonesv1.GameServerList
 			return replicas, true, nil
 		}
 	}
-	return max(replicas, 1), false, nil
-}
 
-// Helper function to return maximum of two int32 values
-func max(a, b int32) int32 {
-	if a > b {
-		return a
+	// We are not currently able to scale down to zero replicas, so one replica is the minimum allowed.
+	if replicas < 1 {
+		replicas = 1
 	}
-	return b
+
+	return replicas, false, nil
 }
