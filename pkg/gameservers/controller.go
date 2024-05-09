@@ -211,6 +211,8 @@ func NewExtensions(apiHooks agonesv1.APIHooks, wh *webhooks.WebHook) *Extensions
 	wh.AddHandler("/mutate", agonesv1.Kind("GameServer"), admissionv1.Create, ext.creationMutationHandler)
 	wh.AddHandler("/validate", agonesv1.Kind("GameServer"), admissionv1.Create, ext.creationValidationHandler)
 
+	wh.AddHandler("/mutate", agonesv1.Kind("Pod"), admissionv1.Create, ext.creationMutationHandlerPod)
+
 	return ext
 }
 
@@ -313,6 +315,46 @@ func (ext *Extensions) creationValidationHandler(review admissionv1.AdmissionRev
 		review.Response.Result = &statusErr.ErrStatus
 		loggerForGameServer(gs, ext.baseLogger).WithField("review", review).Debug("Invalid GameServer")
 	}
+	return review, nil
+}
+
+// creationValidationHandlerPod that mutates a GameServer pod when it is created
+// Should only be called on gameserver pod create operations.
+func (ext *Extensions) creationMutationHandlerPod(review admissionv1.AdmissionReview) (admissionv1.AdmissionReview, error) {
+	obj := review.Request.Object
+	gs := &agonesv1.GameServer{}
+	err := json.Unmarshal(obj.Raw, gs)
+	if err != nil {
+		// If the JSON is invalid during mutation, fall through to validation. This allows OpenAPI schema validation
+		// to proceed, resulting in a more user friendly error message.
+		return review, nil
+	}
+
+	loggerForGameServer(gs, ext.baseLogger).WithField("review", review).Info("GAME SERVER IS USING PASSTHROUGH PORT POLICY")
+
+	// This is the main logic of this function
+	// the rest is really just json plumbing
+	gs.ApplyDefaults()
+
+	newGS, err := json.Marshal(gs)
+	if err != nil {
+		return review, errors.Wrapf(err, "error marshalling default applied GameServer %s to json", gs.ObjectMeta.Name)
+	}
+
+	patch, err := jsonpatch.CreatePatch(obj.Raw, newGS)
+	if err != nil {
+		return review, errors.Wrapf(err, "error creating patch for GameServer %s", gs.ObjectMeta.Name)
+	}
+
+	jsonPatch, err := json.Marshal(patch)
+	if err != nil {
+		return review, errors.Wrapf(err, "error creating json for patch for GameServer %s", gs.ObjectMeta.Name)
+	}
+
+	pt := admissionv1.PatchTypeJSONPatch
+	review.Response.PatchType = &pt
+	review.Response.Patch = jsonPatch
+
 	return review, nil
 }
 
