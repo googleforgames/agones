@@ -1451,7 +1451,7 @@ func TestGameServerCountPortsForRange(t *testing.T) {
 }
 
 func TestGameServerPatch(t *testing.T) {
-	fixture := &GameServer{ObjectMeta: metav1.ObjectMeta{Name: "lucy"},
+	fixture := &GameServer{ObjectMeta: metav1.ObjectMeta{Name: "lucy", ResourceVersion: "1234"},
 		Spec: GameServerSpec{Container: "goat"}}
 
 	delta := fixture.DeepCopy()
@@ -1461,6 +1461,7 @@ func TestGameServerPatch(t *testing.T) {
 	assert.Nil(t, err)
 
 	assert.Contains(t, string(patch), `{"op":"replace","path":"/spec/container","value":"bear"}`)
+	assert.Contains(t, string(patch), `{"op":"test","path":"/metadata/resourceVersion","value":"1234"}`)
 }
 
 func TestGameServerGetDevAddress(t *testing.T) {

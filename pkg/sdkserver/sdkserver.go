@@ -29,6 +29,7 @@ import (
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -355,7 +356,6 @@ func (s *SDKServer) updateState(ctx context.Context) error {
 	}
 	s.gsUpdateMutex.RUnlock()
 
-	gameServers := s.gameServerGetter.GameServers(s.namespace)
 	gs, err := s.gameServer()
 	if err != nil {
 		return err
@@ -406,7 +406,7 @@ func (s *SDKServer) updateState(ctx context.Context) error {
 		gsCopy.ObjectMeta.Annotations[gameserverallocations.LastAllocatedAnnotationKey] = string(ts)
 	}
 
-	gs, err = gameServers.Update(ctx, gsCopy, metav1.UpdateOptions{})
+	gs, err = s.patchGameServer(ctx, gs, gsCopy)
 	if err != nil {
 		return errors.Wrapf(err, "could not update GameServer %s/%s to state %s", s.namespace, s.gameServerName, gsCopy.Status.State)
 	}
@@ -449,6 +449,17 @@ func (s *SDKServer) gameServer() (*agonesv1.GameServer, error) {
 	return gs, nil
 }
 
+// patchGameServer is a helper function to create and apply a patch update, so the changes in
+// gsCopy are applied to the original gs.
+func (s *SDKServer) patchGameServer(ctx context.Context, gs, gsCopy *agonesv1.GameServer) (*agonesv1.GameServer, error) {
+	patch, err := gs.Patch(gsCopy)
+	if err != nil {
+		return nil, err
+	}
+
+	return s.gameServerGetter.GameServers(s.namespace).Patch(ctx, gs.GetObjectMeta().GetName(), types.JSONPatchType, patch, metav1.PatchOptions{})
+}
+
 // updateLabels updates the labels on this GameServer to the ones persisted in SDKServer,
 // i.e. SDKServer.gsLabels, with the prefix of "agones.dev/sdk-"
 func (s *SDKServer) updateLabels(ctx context.Context) error {
@@ -469,7 +480,7 @@ func (s *SDKServer) updateLabels(ctx context.Context) error {
 	}
 	s.gsUpdateMutex.RUnlock()
 
-	_, err = s.gameServerGetter.GameServers(s.namespace).Update(ctx, gsCopy, metav1.UpdateOptions{})
+	_, err = s.patchGameServer(ctx, gs, gsCopy)
 	return err
 }
 
@@ -493,7 +504,7 @@ func (s *SDKServer) updateAnnotations(ctx context.Context) error {
 	}
 	s.gsUpdateMutex.RUnlock()
 
-	_, err = s.gameServerGetter.GameServers(s.namespace).Update(ctx, gsCopy, metav1.UpdateOptions{})
+	_, err = s.patchGameServer(ctx, gs, gsCopy)
 	return err
 }
 
@@ -815,7 +826,7 @@ func (s *SDKServer) GetCounter(ctx context.Context, in *beta.GetCounterRequest) 
 		return nil, errors.Errorf("counter not found: %s", in.Name)
 	}
 	s.logger.WithField("Get Counter", counter).Debugf("Got Counter %s", in.Name)
-	protoCounter := beta.Counter{Name: in.Name, Count: counter.Count, Capacity: counter.Capacity}
+	protoCounter := &beta.Counter{Name: in.Name, Count: counter.Count, Capacity: counter.Capacity}
 	// If there are batched changes that have not yet been applied, apply them to the Counter.
 	// This does NOT validate batched the changes.
 	if counterUpdate, ok := s.gsCounterUpdates[in.Name]; ok {
@@ -837,7 +848,7 @@ func (s *SDKServer) GetCounter(ctx context.Context, in *beta.GetCounterRequest) 
 		s.logger.WithField("Get Counter", counter).Debugf("Applied Batched Counter Updates %v", counterUpdate)
 	}
 
-	return &protoCounter, nil
+	return protoCounter, nil
 }
 
 // UpdateCounter collapses all UpdateCounterRequests for a given Counter into a single request.
@@ -973,7 +984,7 @@ func (s *SDKServer) updateCounter(ctx context.Context) error {
 		names = append(names, name)
 	}
 
-	gs, err = s.gameServerGetter.GameServers(s.namespace).Update(ctx, gsCopy, metav1.UpdateOptions{})
+	gs, err = s.patchGameServer(ctx, gs, gsCopy)
 	if err != nil {
 		return err
 	}
@@ -1204,7 +1215,7 @@ func (s *SDKServer) updateList(ctx context.Context) error {
 		names = append(names, name)
 	}
 
-	gs, err = s.gameServerGetter.GameServers(s.namespace).Update(ctx, gsCopy, metav1.UpdateOptions{})
+	gs, err = s.patchGameServer(ctx, gs, gsCopy)
 	if err != nil {
 		return err
 	}
@@ -1357,12 +1368,12 @@ func (s *SDKServer) updatePlayerCapacity(ctx context.Context) error {
 	gsCopy.Status.Players.Capacity = s.gsPlayerCapacity
 	s.gsUpdateMutex.RUnlock()
 
-	gs, err = s.gameServerGetter.GameServers(s.namespace).Update(ctx, gsCopy, metav1.UpdateOptions{})
-	if err != nil {
-		return err
+	gs, err = s.patchGameServer(ctx, gs, gsCopy)
+	if err == nil {
+		s.recorder.Event(gs, corev1.EventTypeNormal, "PlayerCapacity", fmt.Sprintf("Set to %d", gs.Status.Players.Capacity))
 	}
-	s.recorder.Event(gs, corev1.EventTypeNormal, "PlayerCapacity", fmt.Sprintf("Set to %d", gs.Status.Players.Capacity))
-	return nil
+
+	return err
 }
 
 // updateConnectedPlayers updates the Player IDs and Count fields in the GameServer's Status.
@@ -1390,12 +1401,12 @@ func (s *SDKServer) updateConnectedPlayers(ctx context.Context) error {
 		return nil
 	}
 
-	gs, err = s.gameServerGetter.GameServers(s.namespace).Update(ctx, gsCopy, metav1.UpdateOptions{})
-	if err != nil {
-		return err
+	gs, err = s.patchGameServer(ctx, gs, gsCopy)
+	if err == nil {
+		s.recorder.Event(gs, corev1.EventTypeNormal, "PlayerCount", fmt.Sprintf("Set to %d", gs.Status.Players.Count))
 	}
-	s.recorder.Event(gs, corev1.EventTypeNormal, "PlayerCount", fmt.Sprintf("Set to %d", gs.Status.Players.Count))
-	return nil
+
+	return err
 }
 
 // NewSDKServerContext returns a Context that cancels when SIGTERM or os.Interrupt
