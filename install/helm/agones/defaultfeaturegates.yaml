@@ -26,7 +26,7 @@ RollingUpdateFix: false
 PortRanges: false
 
 # Dev features
-FeatureAutopilotPassthroughPort: true
+FeatureAutopilotPassthroughPort: false
 
 # Example feature
 Example: false
