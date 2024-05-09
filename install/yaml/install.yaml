@@ -16691,7 +16691,7 @@ rules:
   verbs: ["create", "patch"]
 - apiGroups: ["agones.dev"]
   resources: ["gameservers"]
-  verbs: ["list", "update", "watch"]
+  verbs: ["list", "patch", "watch"]
 ---
 # Source: agones/templates/service/allocation.yaml
 # Bind the agones-allocator ServiceAccount to the agones-allocator ClusterRole

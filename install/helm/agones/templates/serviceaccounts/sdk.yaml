@@ -45,7 +45,7 @@ rules:
   verbs: ["create", "patch"]
 - apiGroups: ["agones.dev"]
   resources: ["gameservers"]
-  verbs: ["list", "update", "watch"]
+  verbs: ["list", "patch", "watch"]
 ---
   {{- range .Values.gameservers.namespaces }}
 apiVersion: rbac.authorization.k8s.io/v1
