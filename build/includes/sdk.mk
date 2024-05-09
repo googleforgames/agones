@@ -257,7 +257,7 @@ check-makefile-version-increment:
 	@echo "Current directory: $$(pwd)"
 	@echo "Checking for script changes in 'examples' subdirectories..."
 	@cd $(CURDIR)/..; \
-	changed_dirs=$$(git diff --name-only HEAD | grep -E "examples/.*/(main\.go|Dockerfile|Dockerfile\.windows|go\.mod|go\.sum)$$" | xargs -n1 dirname | sort -u); \
+	changed_dirs=$$(git diff --name-only HEAD | grep -E "examples/.*/(main\.go|Dockerfile|Dockerfile\.windows|go\.mod|go\.sum)$$" | xargs -n1 -r dirname | sort -u); \
 	for dir in $$changed_dirs; do \
 		echo "Analyzing directory: $$dir"; \
 		subdir=$$dir; \
