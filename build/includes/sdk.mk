@@ -264,23 +264,7 @@ check-makefile-version-increment:
 		while [ ! -f "$$subdir/Makefile" ] && [ "$$subdir" != "examples" ]; do \
 			subdir=$$(dirname "$$subdir"); \
 		done; \
-		changes_detected=""; \
-		if [ -f "$$dir/main.go" ] && git diff HEAD "$$dir/main.go" | grep '^\+' > /dev/null; then \
-			changes_detected="true"; \
-		fi; \
-		if [ -f "$$dir/go.mod" ] && git diff HEAD "$$dir/go.mod" | grep '^\+' > /dev/null; then \
-			changes_detected="true"; \
-		fi; \
-		if [ -f "$$dir/go.sum" ] && git diff HEAD "$$dir/go.sum" | grep '^\+' > /dev/null; then \
-			changes_detected="true"; \
-		fi; \
-		if [ -f "$$dir/Dockerfile" ] && git diff HEAD "$$dir/Dockerfile" | grep '^\+' | grep -vE '^\+\s*#' > /dev/null; then \
-			changes_detected="true"; \
-		fi; \
-		if [ -f "$$dir/Dockerfile.windows" ] && git diff HEAD "$$dir/Dockerfile.windows" | grep '^\+' | grep -vE '^\+\s*#' > /dev/null; then \
-			changes_detected="true"; \
-		fi; \
-		if [ "$$changes_detected" = "true" ] && [ -f "$$subdir/Makefile" ]; then \
+		if [ -f "$$subdir/Makefile" ]; then \
 			echo "Found Makefile in $$subdir"; \
 			current_version=$$(sed 's/#.*//' "$$subdir/Makefile" | grep -oP '^[^#]*version\s*:=\s*\K[^ ]+' | head -n1); \
 			echo "Current version in $$subdir: $$current_version"; \
