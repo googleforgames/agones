@@ -115,6 +115,9 @@ const (
 	// ProtocolTCPUDP Protocol exposes the hostPort allocated for this container for both TCP and UDP.
 	ProtocolTCPUDP corev1.Protocol = "TCPUDP"
 
+	// DefaultPortRange is the name of the default port range.
+	DefaultPortRange = "default"
+
 	// RoleLabel is the label in which the Agones role is specified.
 	// Pods from a GameServer will have the value "gameserver"
 	RoleLabel = agones.GroupName + "/role"
@@ -264,6 +267,10 @@ type Health struct {
 type GameServerPort struct {
 	// Name is the descriptive name of the port
 	Name string `json:"name,omitempty"`
+	// (Alpha, PortRanges feature flag) Range is the port range name from which to select a port when using a
+	// 'Dynamic' or 'Passthrough' port policy.
+	// +optional
+	Range string `json:"range,omitempty"`
 	// PortPolicy defines the policy for how the HostPort is populated.
 	// Dynamic port will allocate a HostPort within the selected MIN_PORT and MAX_PORT range passed to the controller
 	// at installation time.
@@ -433,6 +440,10 @@ func (gss *GameServerSpec) applyPortDefaults() {
 		// basic spec
 		if p.PortPolicy == "" {
 			gss.Ports[i].PortPolicy = Dynamic
+		}
+
+		if p.Range == "" {
+			gss.Ports[i].Range = DefaultPortRange
 		}
 
 		if p.Protocol == "" {
@@ -840,7 +851,7 @@ func (gs *GameServer) HasPortPolicy(policy PortPolicy) bool {
 	return false
 }
 
-// Status returns a GameServerSatusPort for this GameServerPort
+// Status returns a GameServerStatusPort for this GameServerPort
 func (p GameServerPort) Status() GameServerStatusPort {
 	return GameServerStatusPort{Name: p.Name, Port: p.HostPort}
 }
@@ -857,8 +868,21 @@ func (gs *GameServer) CountPorts(f func(policy PortPolicy) bool) int {
 	return count
 }
 
-// Patch creates a JSONPatch to move the current GameServer
-// to the passed in delta GameServer
+// CountPortsForRange returns the number of ports that match condition function and range name.
+func (gs *GameServer) CountPortsForRange(name string, f func(policy PortPolicy) bool) int {
+	count := 0
+	for _, p := range gs.Spec.Ports {
+		if p.Range == name && f(p.PortPolicy) {
+			count++
+		}
+	}
+	return count
+}
+
+// Patch creates a JSONPatch to move the current GameServer to the passed in delta GameServer.
+// Returned Patch includes a "test" operation that will cause the GameServers.Patch() operation to
+// fail if the Game Server has been updated (ResourceVersion has changed) in between when the Patch
+// was created and applied.
 func (gs *GameServer) Patch(delta *GameServer) ([]byte, error) {
 	var result []byte
 
@@ -877,7 +901,13 @@ func (gs *GameServer) Patch(delta *GameServer) ([]byte, error) {
 		return result, errors.Wrapf(err, "error creating patch for GameServer %s", gs.ObjectMeta.Name)
 	}
 
-	result, err = json.Marshal(patch)
+	// Per https://jsonpatch.com/ "Tests that the specified value is set in the document. If the test
+	// fails, then the patch as a whole should not apply."
+	// Used here to check the object has not been updated (has not changed ResourceVersion).
+	patches := []jsonpatch.JsonPatchOperation{{Operation: "test", Path: "/metadata/resourceVersion", Value: gs.ObjectMeta.ResourceVersion}}
+	patches = append(patches, patch...)
+
+	result, err = json.Marshal(patches)
 	return result, errors.Wrapf(err, "error creating json for patch for GameServer %s", gs.ObjectMeta.Name)
 }
 

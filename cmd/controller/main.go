@@ -17,6 +17,8 @@ package main
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -24,6 +26,8 @@ import (
 	"strings"
 	"time"
 
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
+	"agones.dev/agones/pkg/portallocator"
 	"github.com/google/uuid"
 	"github.com/heptiolabs/healthcheck"
 	"github.com/pkg/errors"
@@ -68,6 +72,7 @@ const (
 	pullSidecarFlag              = "always-pull-sidecar"
 	minPortFlag                  = "min-port"
 	maxPortFlag                  = "max-port"
+	additionalPortRangesFlag     = "additional-port-ranges"
 	certFileFlag                 = "cert-file"
 	keyFileFlag                  = "key-file"
 	numWorkersFlag               = "num-workers"
@@ -207,7 +212,7 @@ func main() {
 	gsCounter := gameservers.NewPerNodeCounter(kubeInformerFactory, agonesInformerFactory)
 
 	gsController := gameservers.NewController(controllerHooks, health,
-		ctlConf.MinPort, ctlConf.MaxPort, ctlConf.SidecarImage, ctlConf.AlwaysPullSidecar,
+		ctlConf.PortRanges, ctlConf.SidecarImage, ctlConf.AlwaysPullSidecar,
 		ctlConf.SidecarCPURequest, ctlConf.SidecarCPULimit,
 		ctlConf.SidecarMemoryRequest, ctlConf.SidecarMemoryLimit, ctlConf.SdkServiceAccount,
 		kubeClient, kubeInformerFactory, extClient, agonesClient, agonesInformerFactory)
@@ -282,7 +287,8 @@ func parseEnvFlags() config {
 	pflag.Bool(pullSidecarFlag, viper.GetBool(pullSidecarFlag), "For development purposes, set the sidecar image to have a ImagePullPolicy of Always. Can also use ALWAYS_PULL_SIDECAR env variable")
 	pflag.String(sdkServerAccountFlag, viper.GetString(sdkServerAccountFlag), "Overwrite what service account default for GameServer Pods. Defaults to Can also use SDK_SERVICE_ACCOUNT")
 	pflag.Int32(minPortFlag, 0, "Required. The minimum port that that a GameServer can be allocated to. Can also use MIN_PORT env variable.")
-	pflag.Int32(maxPortFlag, 0, "Required. The maximum port that that a GameServer can be allocated to. Can also use MAX_PORT env variable")
+	pflag.Int32(maxPortFlag, 0, "Required. The maximum port that that a GameServer can be allocated to. Can also use MAX_PORT env variable.")
+	pflag.String(additionalPortRangesFlag, viper.GetString(additionalPortRangesFlag), `Optional. Named set of port ranges in JSON object format: '{"game": [5000, 6000]}'. Can Also use ADDITIONAL_PORT_RANGES env variable.`)
 	pflag.String(keyFileFlag, viper.GetString(keyFileFlag), "Optional. Path to the key file")
 	pflag.String(certFileFlag, viper.GetString(certFileFlag), "Optional. Path to the crt file")
 	pflag.String(kubeconfigFlag, viper.GetString(kubeconfigFlag), "Optional. kubeconfig to run the controller out of the cluster. Only use it for debugging as webhook won't works.")
@@ -313,6 +319,7 @@ func parseEnvFlags() config {
 	runtime.Must(viper.BindEnv(sdkServerAccountFlag))
 	runtime.Must(viper.BindEnv(minPortFlag))
 	runtime.Must(viper.BindEnv(maxPortFlag))
+	runtime.Must(viper.BindEnv(additionalPortRangesFlag))
 	runtime.Must(viper.BindEnv(keyFileFlag))
 	runtime.Must(viper.BindEnv(certFileFlag))
 	runtime.Must(viper.BindEnv(kubeconfigFlag))
@@ -355,9 +362,17 @@ func parseEnvFlags() config {
 		logger.WithError(err).Fatalf("could not parse %s", sidecarMemoryLimitFlag)
 	}
 
+	portRanges, err := parsePortRanges(viper.GetString(additionalPortRangesFlag))
+	if err != nil {
+		logger.WithError(err).Fatalf("could not parse %s", additionalPortRangesFlag)
+	}
+	portRanges[agonesv1.DefaultPortRange] = portallocator.PortRange{
+		MinPort: int32(viper.GetInt64(minPortFlag)),
+		MaxPort: int32(viper.GetInt64(maxPortFlag)),
+	}
+
 	return config{
-		MinPort:                 int32(viper.GetInt64(minPortFlag)),
-		MaxPort:                 int32(viper.GetInt64(maxPortFlag)),
+		PortRanges:              portRanges,
 		SidecarImage:            viper.GetString(sidecarImageFlag),
 		SidecarCPURequest:       requestCPU,
 		SidecarCPULimit:         limitCPU,
@@ -384,10 +399,32 @@ func parseEnvFlags() config {
 	}
 }
 
+func parsePortRanges(s string) (map[string]portallocator.PortRange, error) {
+	if s == "" || !runtime.FeatureEnabled(runtime.FeaturePortRanges) {
+		return map[string]portallocator.PortRange{}, nil
+	}
+
+	prs := map[string][]int32{}
+	if err := json.Unmarshal([]byte(s), &prs); err != nil {
+		return nil, fmt.Errorf("invlaid additional port range format: %w", err)
+	}
+
+	portRanges := map[string]portallocator.PortRange{}
+	for k, v := range prs {
+		if len(v) != 2 {
+			return nil, fmt.Errorf("invalid port range ports for %s: requires both min and max port", k)
+		}
+		portRanges[k] = portallocator.PortRange{
+			MinPort: v[0],
+			MaxPort: v[1],
+		}
+	}
+	return portRanges, nil
+}
+
 // config stores all required configuration to create a game server controller.
 type config struct {
-	MinPort                 int32
-	MaxPort                 int32
+	PortRanges              map[string]portallocator.PortRange
 	SidecarImage            string
 	SidecarCPURequest       resource.Quantity
 	SidecarCPULimit         resource.Quantity
@@ -416,12 +453,8 @@ type config struct {
 // validate ensures the ctlConfig data is valid.
 func (c *config) validate() []error {
 	validationErrors := make([]error, 0)
-	if c.MinPort <= 0 || c.MaxPort <= 0 {
-		validationErrors = append(validationErrors, errors.New("min Port and Max Port values are required"))
-	}
-	if c.MaxPort < c.MinPort {
-		validationErrors = append(validationErrors, errors.New("max Port cannot be set less that the Min Port"))
-	}
+	portErrors := validatePorts(c.PortRanges)
+	validationErrors = append(validationErrors, portErrors...)
 	resourceErrors := validateResource(c.SidecarCPURequest, c.SidecarCPULimit, corev1.ResourceCPU)
 	validationErrors = append(validationErrors, resourceErrors...)
 	resourceErrors = validateResource(c.SidecarMemoryRequest, c.SidecarMemoryLimit, corev1.ResourceMemory)
@@ -447,6 +480,61 @@ func validateResource(request resource.Quantity, limit resource.Quantity, resour
 	}
 
 	return validationErrors
+}
+
+func validatePorts(portRanges map[string]portallocator.PortRange) []error {
+	validationErrors := make([]error, 0)
+	for k, r := range portRanges {
+		portErrors := validatePortRange(r.MinPort, r.MaxPort, k)
+		validationErrors = append(validationErrors, portErrors...)
+
+	}
+
+	if len(validationErrors) > 0 {
+		return validationErrors
+	}
+
+	keys := make([]string, 0, len(portRanges))
+	values := make([]portallocator.PortRange, 0, len(portRanges))
+	for k, v := range portRanges {
+		keys = append(keys, k)
+		values = append(values, v)
+	}
+
+	for i, pr := range values {
+		for j := i + 1; j < len(values); j++ {
+			if overlaps(values[j].MinPort, values[j].MaxPort, pr.MinPort, pr.MaxPort) {
+				switch {
+				case keys[j] == agonesv1.DefaultPortRange:
+					validationErrors = append(validationErrors, errors.Errorf("port range %s overlaps with min/max port", keys[i]))
+				case keys[i] == agonesv1.DefaultPortRange:
+					validationErrors = append(validationErrors, errors.Errorf("port range %s overlaps with min/max port", keys[j]))
+				default:
+					validationErrors = append(validationErrors, errors.Errorf("port range %s overlaps with min/max port of range %s", keys[i], keys[j]))
+				}
+			}
+		}
+	}
+	return validationErrors
+}
+
+func validatePortRange(minPort, maxPort int32, rangeName string) []error {
+	validationErrors := make([]error, 0)
+	var rangeCtx string
+	if rangeName != agonesv1.DefaultPortRange {
+		rangeCtx = " for port range " + rangeName
+	}
+	if minPort <= 0 || maxPort <= 0 {
+		validationErrors = append(validationErrors, errors.New("min Port and Max Port values are required"+rangeCtx))
+	}
+	if maxPort < minPort {
+		validationErrors = append(validationErrors, errors.New("max Port cannot be set less that the Min Port"+rangeCtx))
+	}
+	return validationErrors
+}
+
+func overlaps(minA, maxA, minB, maxB int32) bool {
+	return max(minA, minB) < min(maxA, maxB)
 }
 
 type runner interface {

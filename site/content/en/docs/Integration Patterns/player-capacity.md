@@ -7,6 +7,7 @@ description: >
   Find a `GameServer` that has room for a specific number of players.
 ---
 
+{{% feature expiryVersion="1.41.0" %}}
 {{% pageinfo color="info" %}}
 [Counters and Lists]({{< ref "/docs/Guides/counters-and-lists.md" >}}) will eventually replace the Alpha functionality
 of Player Tracking, which will subsequently be removed from Agones.
@@ -16,6 +17,18 @@ functionality to Counters and Lists to ensure it meet all your needs.
 
 This document will be updated to utilise Counters and Lists in the near future.
 {{% /pageinfo %}}
+{{% /feature %}}
+{{% feature publishVersion="1.41.0" %}}
+{{% pageinfo color="info" %}}
+[Counters and Lists]({{< ref "/docs/Guides/counters-and-lists.md" >}}) will eventually replace the Beta functionality
+of Player Tracking, which will subsequently be removed from Agones.
+
+If you are currently using this Beta feature, we would love for you to test (and ideally migrate to!) this new
+functionality to Counters and Lists to ensure it meet all your needs.
+
+This document will be updated to utilise Counters and Lists in the near future.
+{{% /pageinfo %}}
+{{% /feature %}}
 
 {{< alpha
 title="Player Tracking and Allocation Player Filter"

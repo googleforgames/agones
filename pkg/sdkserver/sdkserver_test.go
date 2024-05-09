@@ -16,6 +16,7 @@ package sdkserver
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"strconv"
 	"sync"
@@ -26,8 +27,10 @@ import (
 	"agones.dev/agones/pkg/gameserverallocations"
 	"agones.dev/agones/pkg/sdk"
 	"agones.dev/agones/pkg/sdk/alpha"
+	"agones.dev/agones/pkg/sdk/beta"
 	agtesting "agones.dev/agones/pkg/testing"
 	agruntime "agones.dev/agones/pkg/util/runtime"
+	jsonpatch "github.com/evanphx/json-patch"
 	"github.com/google/go-cmp/cmp"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
@@ -43,6 +46,24 @@ import (
 	"k8s.io/utils/clock"
 	testclocks "k8s.io/utils/clock/testing"
 )
+
+// patchGameServer is a helper function for the AddReactor "patch" that creates and applies a patch
+// to a gameserver. Returns a patched copy and does not modify the original game server.
+func patchGameServer(t *testing.T, action k8stesting.Action, gs *agonesv1.GameServer) *agonesv1.GameServer {
+	pa := action.(k8stesting.PatchAction)
+	patchJSON := pa.GetPatch()
+	patch, err := jsonpatch.DecodePatch(patchJSON)
+	assert.NoError(t, err)
+	gsCopy := gs.DeepCopy()
+	gsJSON, err := json.Marshal(gsCopy)
+	assert.NoError(t, err)
+	patchedGs, err := patch.Apply(gsJSON)
+	assert.NoError(t, err)
+	err = json.Unmarshal(patchedGs, &gsCopy)
+	assert.NoError(t, err)
+
+	return gsCopy
+}
 
 func TestSidecarRun(t *testing.T) {
 	t.Parallel()
@@ -150,38 +171,38 @@ func TestSidecarRun(t *testing.T) {
 			m := agtesting.NewMocks()
 			done := make(chan bool)
 
+			gs := agonesv1.GameServer{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "test", Namespace: "default", ResourceVersion: "0",
+				},
+				Spec: agonesv1.GameServerSpec{
+					Health: agonesv1.Health{Disabled: false, FailureThreshold: 1, PeriodSeconds: 1, InitialDelaySeconds: 0},
+				},
+				Status: agonesv1.GameServerStatus{
+					State: agonesv1.GameServerStateStarting,
+				},
+			}
+			gs.ApplyDefaults()
+
 			m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-				gs := agonesv1.GameServer{
-					ObjectMeta: metav1.ObjectMeta{
-						Name: "test", Namespace: "default",
-					},
-					Spec: agonesv1.GameServerSpec{
-						Health: agonesv1.Health{Disabled: false, FailureThreshold: 1, PeriodSeconds: 1, InitialDelaySeconds: 0},
-					},
-					Status: agonesv1.GameServerStatus{
-						State: agonesv1.GameServerStateStarting,
-					},
-				}
-				gs.ApplyDefaults()
-				return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{gs}}, nil
+				return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{*gs.DeepCopy()}}, nil
 			})
-			m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+
+			m.AgonesClient.AddReactor("patch", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
 				defer close(done)
-				ua := action.(k8stesting.UpdateAction)
-				gs := ua.GetObject().(*agonesv1.GameServer)
+
+				gsCopy := patchGameServer(t, action, &gs)
 
 				if v.expected.state != "" {
-					assert.Equal(t, v.expected.state, gs.Status.State)
+					assert.Equal(t, v.expected.state, gsCopy.Status.State)
 				}
-
 				for label, value := range v.expected.labels {
-					assert.Equal(t, value, gs.ObjectMeta.Labels[label])
+					assert.Equal(t, value, gsCopy.ObjectMeta.Labels[label])
 				}
 				for ann, value := range v.expected.annotations {
-					assert.Equal(t, value, gs.ObjectMeta.Annotations[ann])
+					assert.Equal(t, value, gsCopy.ObjectMeta.Annotations[ann])
 				}
-
-				return true, gs, nil
+				return true, gsCopy, nil
 			})
 
 			sc, err := NewSDKServer("test", "default", m.KubeClient, m.AgonesClient, logrus.DebugLevel)
@@ -287,31 +308,30 @@ func TestSDKServerSyncGameServer(t *testing.T) {
 			sc.gsAnnotations = v.scData.gsAnnotations
 
 			updated := false
+			gs := agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{
+				UID:  "1234",
+				Name: sc.gameServerName, Namespace: sc.namespace, ResourceVersion: "0",
+				Labels: map[string]string{}, Annotations: map[string]string{}},
+			}
 
 			m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-				gs := agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{
-					UID:  "1234",
-					Name: sc.gameServerName, Namespace: sc.namespace,
-					Labels: map[string]string{}, Annotations: map[string]string{}},
-				}
-				return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{gs}}, nil
+				return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{*gs.DeepCopy()}}, nil
 			})
-			m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-				updated = true
-				ua := action.(k8stesting.UpdateAction)
-				gs := ua.GetObject().(*agonesv1.GameServer)
+
+			m.AgonesClient.AddReactor("patch", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+				gsCopy := patchGameServer(t, action, &gs)
 
 				if v.expected.state != "" {
-					assert.Equal(t, v.expected.state, gs.Status.State)
+					assert.Equal(t, v.expected.state, gsCopy.Status.State)
 				}
 				for label, value := range v.expected.labels {
-					assert.Equal(t, value, gs.ObjectMeta.Labels[label])
+					assert.Equal(t, value, gsCopy.ObjectMeta.Labels[label])
 				}
 				for ann, value := range v.expected.annotations {
-					assert.Equal(t, value, gs.ObjectMeta.Annotations[ann])
+					assert.Equal(t, value, gsCopy.ObjectMeta.Annotations[ann])
 				}
-
-				return true, gs, nil
+				updated = true
+				return false, gsCopy, nil
 			})
 
 			ctx, cancel := context.WithCancel(context.Background())
@@ -362,7 +382,7 @@ func TestSidecarUpdateState(t *testing.T) {
 
 			m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
 				gs := agonesv1.GameServer{
-					ObjectMeta: metav1.ObjectMeta{Name: sc.gameServerName, Namespace: sc.namespace},
+					ObjectMeta: metav1.ObjectMeta{Name: sc.gameServerName, Namespace: sc.namespace, ResourceVersion: "0"},
 					Status:     agonesv1.GameServerStatus{},
 				}
 
@@ -371,7 +391,7 @@ func TestSidecarUpdateState(t *testing.T) {
 
 				return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{gs}}, nil
 			})
-			m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			m.AgonesClient.AddReactor("patch", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
 				updated = true
 				return true, nil, nil
 			})
@@ -445,23 +465,25 @@ func TestSidecarUnhealthyMessage(t *testing.T) {
 	sc, err := NewSDKServer("test", "default", m.KubeClient, m.AgonesClient, logrus.DebugLevel)
 	require.NoError(t, err)
 
+	gs := agonesv1.GameServer{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test", Namespace: "default", ResourceVersion: "0",
+		},
+		Spec: agonesv1.GameServerSpec{},
+		Status: agonesv1.GameServerStatus{
+			State: agonesv1.GameServerStateStarting,
+		},
+	}
+	gs.ApplyDefaults()
+
 	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-		gs := agonesv1.GameServer{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: "test", Namespace: "default",
-			},
-			Spec: agonesv1.GameServerSpec{},
-			Status: agonesv1.GameServerStatus{
-				State: agonesv1.GameServerStateStarting,
-			},
-		}
-		gs.ApplyDefaults()
-		return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{gs}}, nil
+		return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{*gs.DeepCopy()}}, nil
 	})
-	m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-		ua := action.(k8stesting.UpdateAction)
-		gs := ua.GetObject().(*agonesv1.GameServer)
-		return true, gs, nil
+
+	m.AgonesClient.AddReactor("patch", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		gsCopy := patchGameServer(t, action, &gs)
+
+		return true, gsCopy, nil
 	})
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -915,28 +937,30 @@ func TestSDKServerReserveTimeoutOnRun(t *testing.T) {
 
 	updated := make(chan agonesv1.GameServerStatus, 1)
 
+	gs := agonesv1.GameServer{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test", Namespace: "default", ResourceVersion: "0",
+		},
+		Status: agonesv1.GameServerStatus{
+			State: agonesv1.GameServerStateReserved,
+		},
+	}
+	gs.ApplyDefaults()
+
 	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
 		n := metav1.NewTime(metav1.Now().Add(time.Second))
+		gsCopy := gs.DeepCopy()
+		gsCopy.Status.ReservedUntil = &n
 
-		gs := agonesv1.GameServer{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: "test", Namespace: "default",
-			},
-			Status: agonesv1.GameServerStatus{
-				State:         agonesv1.GameServerStateReserved,
-				ReservedUntil: &n,
-			},
-		}
-		gs.ApplyDefaults()
-		return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{gs}}, nil
+		return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{*gsCopy}}, nil
 	})
-	m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-		ua := action.(k8stesting.UpdateAction)
-		gs := ua.GetObject().(*agonesv1.GameServer)
 
-		updated <- gs.Status
+	m.AgonesClient.AddReactor("patch", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		gsCopy := patchGameServer(t, action, &gs)
 
-		return true, gs, nil
+		updated <- gsCopy.Status
+
+		return true, gsCopy, nil
 	})
 
 	sc, err := defaultSidecar(m)
@@ -975,24 +999,23 @@ func TestSDKServerReserveTimeout(t *testing.T) {
 	state := make(chan agonesv1.GameServerStatus, 100)
 	defer close(state)
 
+	gs := agonesv1.GameServer{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test", Namespace: "default", ResourceVersion: "0",
+		},
+		Spec: agonesv1.GameServerSpec{Health: agonesv1.Health{Disabled: true}},
+	}
+	gs.ApplyDefaults()
+
 	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-		gs := agonesv1.GameServer{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: "test", Namespace: "default",
-			},
-			Spec: agonesv1.GameServerSpec{Health: agonesv1.Health{Disabled: true}},
-		}
-		gs.ApplyDefaults()
-		return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{gs}}, nil
+		return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{*gs.DeepCopy()}}, nil
 	})
 
-	m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-		ua := action.(k8stesting.UpdateAction)
-		gs := ua.GetObject().(*agonesv1.GameServer)
+	m.AgonesClient.AddReactor("patch", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		gsCopy := patchGameServer(t, action, &gs)
 
-		state <- gs.Status
-
-		return true, gs, nil
+		state <- gsCopy.Status
+		return true, gsCopy, nil
 	})
 
 	sc, err := defaultSidecar(m)
@@ -1012,18 +1035,18 @@ func TestSDKServerReserveTimeout(t *testing.T) {
 		wg.Done()
 	}()
 
-	assertStateChange := func(expected agonesv1.GameServerState, timeout time.Duration, additional func(status agonesv1.GameServerStatus)) {
+	assertStateChange := func(expected agonesv1.GameServerState, additional func(status agonesv1.GameServerStatus)) {
 		select {
 		case current := <-state:
 			assert.Equal(t, expected, current.State)
 			additional(current)
-		case <-time.After(timeout):
+		case <-time.After(5 * time.Second):
 			assert.Fail(t, "should have gone to Reserved by now")
 		}
 	}
 	assertReservedUntilDuration := func(d time.Duration) func(status agonesv1.GameServerStatus) {
 		return func(status agonesv1.GameServerStatus) {
-			assert.Equal(t, time.Now().Add(d).Round(time.Second), status.ReservedUntil.Time.Round(time.Second))
+			assert.WithinDuration(t, time.Now().Add(d), status.ReservedUntil.Time, 1500*time.Millisecond)
 		}
 	}
 	assertReservedUntilNil := func(status agonesv1.GameServerStatus) {
@@ -1032,23 +1055,23 @@ func TestSDKServerReserveTimeout(t *testing.T) {
 
 	_, err = sc.Reserve(context.Background(), &sdk.Duration{Seconds: 3})
 	assert.NoError(t, err)
-	assertStateChange(agonesv1.GameServerStateReserved, 2*time.Second, assertReservedUntilDuration(3*time.Second))
+	assertStateChange(agonesv1.GameServerStateReserved, assertReservedUntilDuration(3*time.Second))
 
 	// Wait for the game server to go back to being Ready.
-	assertStateChange(agonesv1.GameServerStateRequestReady, 4*time.Second, func(status agonesv1.GameServerStatus) {
+	assertStateChange(agonesv1.GameServerStateRequestReady, func(status agonesv1.GameServerStatus) {
 		assert.Nil(t, status.ReservedUntil)
 	})
 
 	// Test that a 0 second input into Reserved, never will go back to Ready
 	_, err = sc.Reserve(context.Background(), &sdk.Duration{Seconds: 0})
 	assert.NoError(t, err)
-	assertStateChange(agonesv1.GameServerStateReserved, 2*time.Second, assertReservedUntilNil)
+	assertStateChange(agonesv1.GameServerStateReserved, assertReservedUntilNil)
 	assert.False(t, sc.reserveTimer.Stop())
 
 	// Test that a negative input into Reserved, is the same as a 0 input
 	_, err = sc.Reserve(context.Background(), &sdk.Duration{Seconds: -100})
 	assert.NoError(t, err)
-	assertStateChange(agonesv1.GameServerStateReserved, 2*time.Second, assertReservedUntilNil)
+	assertStateChange(agonesv1.GameServerStateReserved, assertReservedUntilNil)
 	assert.False(t, sc.reserveTimer.Stop())
 
 	// Test that the timer to move Reserved->Ready is reset when requesting another state.
@@ -1056,31 +1079,31 @@ func TestSDKServerReserveTimeout(t *testing.T) {
 	// Test the return to a Ready state.
 	_, err = sc.Reserve(context.Background(), &sdk.Duration{Seconds: 3})
 	assert.NoError(t, err)
-	assertStateChange(agonesv1.GameServerStateReserved, 2*time.Second, assertReservedUntilDuration(3*time.Second))
+	assertStateChange(agonesv1.GameServerStateReserved, assertReservedUntilDuration(3*time.Second))
 
 	_, err = sc.Ready(context.Background(), &sdk.Empty{})
 	assert.NoError(t, err)
-	assertStateChange(agonesv1.GameServerStateRequestReady, 2*time.Second, assertReservedUntilNil)
+	assertStateChange(agonesv1.GameServerStateRequestReady, assertReservedUntilNil)
 	assert.False(t, sc.reserveTimer.Stop())
 
 	// Test Allocated resets the timer on Reserved->Ready
 	_, err = sc.Reserve(context.Background(), &sdk.Duration{Seconds: 3})
 	assert.NoError(t, err)
-	assertStateChange(agonesv1.GameServerStateReserved, 2*time.Second, assertReservedUntilDuration(3*time.Second))
+	assertStateChange(agonesv1.GameServerStateReserved, assertReservedUntilDuration(3*time.Second))
 
 	_, err = sc.Allocate(context.Background(), &sdk.Empty{})
 	assert.NoError(t, err)
-	assertStateChange(agonesv1.GameServerStateAllocated, 2*time.Second, assertReservedUntilNil)
+	assertStateChange(agonesv1.GameServerStateAllocated, assertReservedUntilNil)
 	assert.False(t, sc.reserveTimer.Stop())
 
 	// Test Shutdown resets the timer on Reserved->Ready
 	_, err = sc.Reserve(context.Background(), &sdk.Duration{Seconds: 3})
 	assert.NoError(t, err)
-	assertStateChange(agonesv1.GameServerStateReserved, 2*time.Second, assertReservedUntilDuration(3*time.Second))
+	assertStateChange(agonesv1.GameServerStateReserved, assertReservedUntilDuration(3*time.Second))
 
 	_, err = sc.Shutdown(context.Background(), &sdk.Empty{})
 	assert.NoError(t, err)
-	assertStateChange(agonesv1.GameServerStateShutdown, 2*time.Second, assertReservedUntilNil)
+	assertStateChange(agonesv1.GameServerStateShutdown, assertReservedUntilNil)
 	assert.False(t, sc.reserveTimer.Stop())
 
 	cancel()
@@ -1111,15 +1134,15 @@ func TestSDKServerUpdateCounter(t *testing.T) {
 
 	fixtures := map[string]struct {
 		counterName string
-		requests    []*alpha.UpdateCounterRequest
+		requests    []*beta.UpdateCounterRequest
 		want        agonesv1.CounterStatus
 		updateErrs  []bool
 		updated     bool
 	}{
 		"increment": {
 			counterName: "widgets",
-			requests: []*alpha.UpdateCounterRequest{{
-				CounterUpdateRequest: &alpha.CounterUpdateRequest{
+			requests: []*beta.UpdateCounterRequest{{
+				CounterUpdateRequest: &beta.CounterUpdateRequest{
 					Name:      "widgets",
 					CountDiff: 9,
 				}}},
@@ -1128,9 +1151,9 @@ func TestSDKServerUpdateCounter(t *testing.T) {
 			updated:    true,
 		},
 		"increment illegal": {
-			counterName: "widgets",
-			requests: []*alpha.UpdateCounterRequest{{
-				CounterUpdateRequest: &alpha.CounterUpdateRequest{
+			counterName: "foo",
+			requests: []*beta.UpdateCounterRequest{{
+				CounterUpdateRequest: &beta.CounterUpdateRequest{
 					Name:      "foo",
 					CountDiff: 100,
 				}}},
@@ -1140,8 +1163,8 @@ func TestSDKServerUpdateCounter(t *testing.T) {
 		},
 		"decrement": {
 			counterName: "bar",
-			requests: []*alpha.UpdateCounterRequest{{
-				CounterUpdateRequest: &alpha.CounterUpdateRequest{
+			requests: []*beta.UpdateCounterRequest{{
+				CounterUpdateRequest: &beta.CounterUpdateRequest{
 					Name:      "bar",
 					CountDiff: -1,
 				}}},
@@ -1151,8 +1174,8 @@ func TestSDKServerUpdateCounter(t *testing.T) {
 		},
 		"decrement illegal": {
 			counterName: "baz",
-			requests: []*alpha.UpdateCounterRequest{{
-				CounterUpdateRequest: &alpha.CounterUpdateRequest{
+			requests: []*beta.UpdateCounterRequest{{
+				CounterUpdateRequest: &beta.CounterUpdateRequest{
 					Name:      "baz",
 					CountDiff: -11,
 				}}},
@@ -1162,8 +1185,8 @@ func TestSDKServerUpdateCounter(t *testing.T) {
 		},
 		"set capacity": {
 			counterName: "bazel",
-			requests: []*alpha.UpdateCounterRequest{{
-				CounterUpdateRequest: &alpha.CounterUpdateRequest{
+			requests: []*beta.UpdateCounterRequest{{
+				CounterUpdateRequest: &beta.CounterUpdateRequest{
 					Name:     "bazel",
 					Capacity: wrapperspb.Int64(0),
 				}}},
@@ -1173,8 +1196,8 @@ func TestSDKServerUpdateCounter(t *testing.T) {
 		},
 		"set capacity illegal": {
 			counterName: "fish",
-			requests: []*alpha.UpdateCounterRequest{{
-				CounterUpdateRequest: &alpha.CounterUpdateRequest{
+			requests: []*beta.UpdateCounterRequest{{
+				CounterUpdateRequest: &beta.CounterUpdateRequest{
 					Name:     "fish",
 					Capacity: wrapperspb.Int64(-1),
 				}}},
@@ -1184,8 +1207,8 @@ func TestSDKServerUpdateCounter(t *testing.T) {
 		},
 		"set count": {
 			counterName: "onefish",
-			requests: []*alpha.UpdateCounterRequest{{
-				CounterUpdateRequest: &alpha.CounterUpdateRequest{
+			requests: []*beta.UpdateCounterRequest{{
+				CounterUpdateRequest: &beta.CounterUpdateRequest{
 					Name:  "onefish",
 					Count: wrapperspb.Int64(42),
 				}}},
@@ -1195,8 +1218,8 @@ func TestSDKServerUpdateCounter(t *testing.T) {
 		},
 		"set count illegal": {
 			counterName: "twofish",
-			requests: []*alpha.UpdateCounterRequest{{
-				CounterUpdateRequest: &alpha.CounterUpdateRequest{
+			requests: []*beta.UpdateCounterRequest{{
+				CounterUpdateRequest: &beta.CounterUpdateRequest{
 					Name:  "twofish",
 					Count: wrapperspb.Int64(101),
 				}}},
@@ -1206,12 +1229,12 @@ func TestSDKServerUpdateCounter(t *testing.T) {
 		},
 		"increment past set capacity illegal": {
 			counterName: "redfish",
-			requests: []*alpha.UpdateCounterRequest{{
-				CounterUpdateRequest: &alpha.CounterUpdateRequest{
+			requests: []*beta.UpdateCounterRequest{{
+				CounterUpdateRequest: &beta.CounterUpdateRequest{
 					Name:     "redfish",
 					Capacity: wrapperspb.Int64(0),
 				}},
-				{CounterUpdateRequest: &alpha.CounterUpdateRequest{
+				{CounterUpdateRequest: &beta.CounterUpdateRequest{
 					Name:      "redfish",
 					CountDiff: 1,
 				}}},
@@ -1221,12 +1244,12 @@ func TestSDKServerUpdateCounter(t *testing.T) {
 		},
 		"decrement past set capacity illegal": {
 			counterName: "bluefish",
-			requests: []*alpha.UpdateCounterRequest{{
-				CounterUpdateRequest: &alpha.CounterUpdateRequest{
+			requests: []*beta.UpdateCounterRequest{{
+				CounterUpdateRequest: &beta.CounterUpdateRequest{
 					Name:     "bluefish",
 					Capacity: wrapperspb.Int64(0),
 				}},
-				{CounterUpdateRequest: &alpha.CounterUpdateRequest{
+				{CounterUpdateRequest: &beta.CounterUpdateRequest{
 					Name:      "bluefish",
 					CountDiff: -1,
 				}}},
@@ -1236,8 +1259,8 @@ func TestSDKServerUpdateCounter(t *testing.T) {
 		},
 		"setcapacity, setcount, and diffcount": {
 			counterName: "fivefish",
-			requests: []*alpha.UpdateCounterRequest{{
-				CounterUpdateRequest: &alpha.CounterUpdateRequest{
+			requests: []*beta.UpdateCounterRequest{{
+				CounterUpdateRequest: &beta.CounterUpdateRequest{
 					Name:      "fivefish",
 					Capacity:  wrapperspb.Int64(25),
 					Count:     wrapperspb.Int64(0),
@@ -1253,31 +1276,32 @@ func TestSDKServerUpdateCounter(t *testing.T) {
 		t.Run(test, func(t *testing.T) {
 			m := agtesting.NewMocks()
 
+			gs := agonesv1.GameServer{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "test", Namespace: "default", ResourceVersion: "0", Generation: 1,
+				},
+				Spec: agonesv1.GameServerSpec{
+					SdkServer: agonesv1.SdkServer{
+						LogLevel: "Debug",
+					},
+				},
+				Status: agonesv1.GameServerStatus{
+					Counters: counters,
+				},
+			}
+			gs.ApplyDefaults()
+
 			m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-				gs := agonesv1.GameServer{
-					ObjectMeta: metav1.ObjectMeta{
-						Name: "test", Namespace: "default", Generation: 1,
-					},
-					Spec: agonesv1.GameServerSpec{
-						SdkServer: agonesv1.SdkServer{
-							LogLevel: "Debug",
-						},
-					},
-					Status: agonesv1.GameServerStatus{
-						Counters: counters,
-					},
-				}
-				gs.ApplyDefaults()
-				return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{gs}}, nil
+				return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{*gs.DeepCopy()}}, nil
 			})
 
 			updated := make(chan map[string]agonesv1.CounterStatus, 10)
-			m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-				ua := action.(k8stesting.UpdateAction)
-				gs := ua.GetObject().(*agonesv1.GameServer)
-				gs.ObjectMeta.Generation++
-				updated <- gs.Status.Counters
-				return true, gs, nil
+
+			m.AgonesClient.AddReactor("patch", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+				gsCopy := patchGameServer(t, action, &gs)
+
+				updated <- gsCopy.Status.Counters
+				return true, gsCopy, nil
 			})
 
 			ctx, cancel := context.WithCancel(context.Background())
@@ -1298,7 +1322,7 @@ func TestSDKServerUpdateCounter(t *testing.T) {
 
 			// check initial value comes through
 			require.Eventually(t, func() bool {
-				counter, err := sc.GetCounter(context.Background(), &alpha.GetCounterRequest{Name: testCase.counterName})
+				counter, err := sc.GetCounter(context.Background(), &beta.GetCounterRequest{Name: testCase.counterName})
 				return counter.Count == 10 && counter.Capacity == 100 && err == nil
 			}, 10*time.Second, time.Second)
 
@@ -1312,7 +1336,7 @@ func TestSDKServerUpdateCounter(t *testing.T) {
 				}
 			}
 
-			got, err := sc.GetCounter(context.Background(), &alpha.GetCounterRequest{Name: testCase.counterName})
+			got, err := sc.GetCounter(context.Background(), &beta.GetCounterRequest{Name: testCase.counterName})
 			assert.NoError(t, err)
 			assert.Equal(t, testCase.want.Count, got.Count)
 			assert.Equal(t, testCase.want.Capacity, got.Capacity)
@@ -1326,7 +1350,7 @@ func TestSDKServerUpdateCounter(t *testing.T) {
 						agonesv1.CounterStatus{Count: testCase.want.Count, Capacity: testCase.want.Capacity},
 						value[testCase.counterName])
 				case <-time.After(10 * time.Second):
-					assert.Fail(t, "Counter should have been updated")
+					assert.Fail(t, "Counter should have been patched")
 				}
 			}
 
@@ -1352,7 +1376,7 @@ func TestSDKServerAddListValue(t *testing.T) {
 
 	fixtures := map[string]struct {
 		listName                string
-		requests                []*alpha.AddListValueRequest
+		requests                []*beta.AddListValueRequest
 		want                    agonesv1.ListStatus
 		updateErrs              []bool
 		updated                 bool
@@ -1360,7 +1384,7 @@ func TestSDKServerAddListValue(t *testing.T) {
 	}{
 		"Add value": {
 			listName:                "foo",
-			requests:                []*alpha.AddListValueRequest{{Name: "foo", Value: "five"}},
+			requests:                []*beta.AddListValueRequest{{Name: "foo", Value: "five"}},
 			want:                    agonesv1.ListStatus{Values: []string{"one", "two", "three", "four", "five"}, Capacity: int64(10)},
 			updateErrs:              []bool{false},
 			updated:                 true,
@@ -1368,7 +1392,7 @@ func TestSDKServerAddListValue(t *testing.T) {
 		},
 		"Add multiple values including duplicates": {
 			listName: "bar",
-			requests: []*alpha.AddListValueRequest{
+			requests: []*beta.AddListValueRequest{
 				{Name: "bar", Value: "five"},
 				{Name: "bar", Value: "one"},
 				{Name: "bar", Value: "five"},
@@ -1381,7 +1405,7 @@ func TestSDKServerAddListValue(t *testing.T) {
 		},
 		"Add multiple values past capacity": {
 			listName: "baz",
-			requests: []*alpha.AddListValueRequest{
+			requests: []*beta.AddListValueRequest{
 				{Name: "baz", Value: "five"},
 				{Name: "baz", Value: "six"},
 				{Name: "baz", Value: "seven"},
@@ -1405,31 +1429,32 @@ func TestSDKServerAddListValue(t *testing.T) {
 		t.Run(test, func(t *testing.T) {
 			m := agtesting.NewMocks()
 
+			gs := agonesv1.GameServer{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "test", Namespace: "default", ResourceVersion: "0", Generation: 1,
+				},
+				Spec: agonesv1.GameServerSpec{
+					SdkServer: agonesv1.SdkServer{
+						LogLevel: "Debug",
+					},
+				},
+				Status: agonesv1.GameServerStatus{
+					Lists: lists,
+				},
+			}
+			gs.ApplyDefaults()
+
 			m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-				gs := agonesv1.GameServer{
-					ObjectMeta: metav1.ObjectMeta{
-						Name: "test", Namespace: "default", Generation: 1,
-					},
-					Spec: agonesv1.GameServerSpec{
-						SdkServer: agonesv1.SdkServer{
-							LogLevel: "Debug",
-						},
-					},
-					Status: agonesv1.GameServerStatus{
-						Lists: lists,
-					},
-				}
-				gs.ApplyDefaults()
-				return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{gs}}, nil
+				return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{*gs.DeepCopy()}}, nil
 			})
 
 			updated := make(chan map[string]agonesv1.ListStatus, 10)
-			m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-				ua := action.(k8stesting.UpdateAction)
-				gs := ua.GetObject().(*agonesv1.GameServer)
-				gs.ObjectMeta.Generation++
-				updated <- gs.Status.Lists
-				return true, gs, nil
+
+			m.AgonesClient.AddReactor("patch", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+				gsCopy := patchGameServer(t, action, &gs)
+
+				updated <- gsCopy.Status.Lists
+				return true, gsCopy, nil
 			})
 
 			ctx, cancel := context.WithCancel(context.Background())
@@ -1442,7 +1467,7 @@ func TestSDKServerAddListValue(t *testing.T) {
 
 			// check initial value comes through
 			require.Eventually(t, func() bool {
-				list, err := sc.GetList(context.Background(), &alpha.GetListRequest{Name: testCase.listName})
+				list, err := sc.GetList(context.Background(), &beta.GetListRequest{Name: testCase.listName})
 				return cmp.Equal(list.Values, []string{"one", "two", "three", "four"}) && list.Capacity == 10 && err == nil
 			}, 10*time.Second, time.Second)
 
@@ -1456,7 +1481,7 @@ func TestSDKServerAddListValue(t *testing.T) {
 				}
 			}
 
-			got, err := sc.GetList(context.Background(), &alpha.GetListRequest{Name: testCase.listName})
+			got, err := sc.GetList(context.Background(), &beta.GetListRequest{Name: testCase.listName})
 			assert.NoError(t, err)
 			assert.Equal(t, testCase.want.Values, got.Values)
 			assert.Equal(t, testCase.want.Capacity, got.Capacity)
@@ -1478,7 +1503,7 @@ func TestSDKServerAddListValue(t *testing.T) {
 						agonesv1.ListStatus{Values: testCase.want.Values, Capacity: testCase.want.Capacity},
 						value[testCase.listName])
 				case <-time.After(10 * time.Second):
-					assert.Fail(t, "List should have been updated")
+					assert.Fail(t, "List should have been patched")
 				}
 			}
 
@@ -1507,7 +1532,7 @@ func TestSDKServerRemoveListValue(t *testing.T) {
 
 	fixtures := map[string]struct {
 		listName                string
-		requests                []*alpha.RemoveListValueRequest
+		requests                []*beta.RemoveListValueRequest
 		want                    agonesv1.ListStatus
 		updateErrs              []bool
 		updated                 bool
@@ -1515,7 +1540,7 @@ func TestSDKServerRemoveListValue(t *testing.T) {
 	}{
 		"Remove value": {
 			listName:                "foo",
-			requests:                []*alpha.RemoveListValueRequest{{Name: "foo", Value: "two"}},
+			requests:                []*beta.RemoveListValueRequest{{Name: "foo", Value: "two"}},
 			want:                    agonesv1.ListStatus{Values: []string{"one", "three", "four"}, Capacity: int64(100)},
 			updateErrs:              []bool{false},
 			updated:                 true,
@@ -1523,7 +1548,7 @@ func TestSDKServerRemoveListValue(t *testing.T) {
 		},
 		"Remove multiple values including duplicates": {
 			listName: "bar",
-			requests: []*alpha.RemoveListValueRequest{
+			requests: []*beta.RemoveListValueRequest{
 				{Name: "bar", Value: "two"},
 				{Name: "bar", Value: "three"},
 				{Name: "bar", Value: "two"},
@@ -1535,7 +1560,7 @@ func TestSDKServerRemoveListValue(t *testing.T) {
 		},
 		"Remove all values": {
 			listName: "baz",
-			requests: []*alpha.RemoveListValueRequest{
+			requests: []*beta.RemoveListValueRequest{
 				{Name: "baz", Value: "three"},
 				{Name: "baz", Value: "two"},
 				{Name: "baz", Value: "four"},
@@ -1553,31 +1578,32 @@ func TestSDKServerRemoveListValue(t *testing.T) {
 		t.Run(test, func(t *testing.T) {
 			m := agtesting.NewMocks()
 
+			gs := agonesv1.GameServer{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "test", Namespace: "default", ResourceVersion: "0", Generation: 1,
+				},
+				Spec: agonesv1.GameServerSpec{
+					SdkServer: agonesv1.SdkServer{
+						LogLevel: "Debug",
+					},
+				},
+				Status: agonesv1.GameServerStatus{
+					Lists: lists,
+				},
+			}
+			gs.ApplyDefaults()
+
 			m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-				gs := agonesv1.GameServer{
-					ObjectMeta: metav1.ObjectMeta{
-						Name: "test", Namespace: "default", Generation: 1,
-					},
-					Spec: agonesv1.GameServerSpec{
-						SdkServer: agonesv1.SdkServer{
-							LogLevel: "Debug",
-						},
-					},
-					Status: agonesv1.GameServerStatus{
-						Lists: lists,
-					},
-				}
-				gs.ApplyDefaults()
-				return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{gs}}, nil
+				return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{*gs.DeepCopy()}}, nil
 			})
 
 			updated := make(chan map[string]agonesv1.ListStatus, 10)
-			m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-				ua := action.(k8stesting.UpdateAction)
-				gs := ua.GetObject().(*agonesv1.GameServer)
-				gs.ObjectMeta.Generation++
-				updated <- gs.Status.Lists
-				return true, gs, nil
+
+			m.AgonesClient.AddReactor("patch", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+				gsCopy := patchGameServer(t, action, &gs)
+
+				updated <- gsCopy.Status.Lists
+				return true, gsCopy, nil
 			})
 
 			ctx, cancel := context.WithCancel(context.Background())
@@ -1590,7 +1616,7 @@ func TestSDKServerRemoveListValue(t *testing.T) {
 
 			// check initial value comes through
 			require.Eventually(t, func() bool {
-				list, err := sc.GetList(context.Background(), &alpha.GetListRequest{Name: testCase.listName})
+				list, err := sc.GetList(context.Background(), &beta.GetListRequest{Name: testCase.listName})
 				return cmp.Equal(list.Values, []string{"one", "two", "three", "four"}) && list.Capacity == 100 && err == nil
 			}, 10*time.Second, time.Second)
 
@@ -1604,7 +1630,7 @@ func TestSDKServerRemoveListValue(t *testing.T) {
 				}
 			}
 
-			got, err := sc.GetList(context.Background(), &alpha.GetListRequest{Name: testCase.listName})
+			got, err := sc.GetList(context.Background(), &beta.GetListRequest{Name: testCase.listName})
 			assert.NoError(t, err)
 			assert.Equal(t, testCase.want.Values, got.Values)
 			assert.Equal(t, testCase.want.Capacity, got.Capacity)
@@ -1626,7 +1652,7 @@ func TestSDKServerRemoveListValue(t *testing.T) {
 						agonesv1.ListStatus{Values: testCase.want.Values, Capacity: testCase.want.Capacity},
 						value[testCase.listName])
 				case <-time.After(10 * time.Second):
-					assert.Fail(t, "List should have been updated")
+					assert.Fail(t, "List should have been patched")
 				}
 			}
 
@@ -1655,7 +1681,7 @@ func TestSDKServerUpdateList(t *testing.T) {
 
 	fixtures := map[string]struct {
 		listName                string
-		request                 *alpha.UpdateListRequest
+		request                 *beta.UpdateListRequest
 		want                    agonesv1.ListStatus
 		updateErr               bool
 		updated                 bool
@@ -1663,8 +1689,8 @@ func TestSDKServerUpdateList(t *testing.T) {
 	}{
 		"set capacity to max": {
 			listName: "foo",
-			request: &alpha.UpdateListRequest{
-				List: &alpha.List{
+			request: &beta.UpdateListRequest{
+				List: &beta.List{
 					Name:     "foo",
 					Capacity: int64(1000),
 				},
@@ -1677,8 +1703,8 @@ func TestSDKServerUpdateList(t *testing.T) {
 		},
 		"set capacity to min values are truncated": {
 			listName: "bar",
-			request: &alpha.UpdateListRequest{
-				List: &alpha.List{
+			request: &beta.UpdateListRequest{
+				List: &beta.List{
 					Name:     "bar",
 					Capacity: int64(0),
 				},
@@ -1691,8 +1717,8 @@ func TestSDKServerUpdateList(t *testing.T) {
 		},
 		"set capacity past max": {
 			listName: "baz",
-			request: &alpha.UpdateListRequest{
-				List: &alpha.List{
+			request: &beta.UpdateListRequest{
+				List: &beta.List{
 					Name:     "baz",
 					Capacity: int64(1001),
 				},
@@ -1710,31 +1736,32 @@ func TestSDKServerUpdateList(t *testing.T) {
 		t.Run(test, func(t *testing.T) {
 			m := agtesting.NewMocks()
 
+			gs := agonesv1.GameServer{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "test", Namespace: "default", ResourceVersion: "0", Generation: 1,
+				},
+				Spec: agonesv1.GameServerSpec{
+					SdkServer: agonesv1.SdkServer{
+						LogLevel: "Debug",
+					},
+				},
+				Status: agonesv1.GameServerStatus{
+					Lists: lists,
+				},
+			}
+			gs.ApplyDefaults()
+
 			m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-				gs := agonesv1.GameServer{
-					ObjectMeta: metav1.ObjectMeta{
-						Name: "test", Namespace: "default", Generation: 1,
-					},
-					Spec: agonesv1.GameServerSpec{
-						SdkServer: agonesv1.SdkServer{
-							LogLevel: "Debug",
-						},
-					},
-					Status: agonesv1.GameServerStatus{
-						Lists: lists,
-					},
-				}
-				gs.ApplyDefaults()
-				return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{gs}}, nil
+				return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{*gs.DeepCopy()}}, nil
 			})
 
 			updated := make(chan map[string]agonesv1.ListStatus, 10)
-			m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-				ua := action.(k8stesting.UpdateAction)
-				gs := ua.GetObject().(*agonesv1.GameServer)
-				gs.ObjectMeta.Generation++
-				updated <- gs.Status.Lists
-				return true, gs, nil
+
+			m.AgonesClient.AddReactor("patch", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+				gsCopy := patchGameServer(t, action, &gs)
+
+				updated <- gsCopy.Status.Lists
+				return true, gsCopy, nil
 			})
 
 			ctx, cancel := context.WithCancel(context.Background())
@@ -1755,7 +1782,7 @@ func TestSDKServerUpdateList(t *testing.T) {
 
 			// check initial value comes through
 			require.Eventually(t, func() bool {
-				list, err := sc.GetList(context.Background(), &alpha.GetListRequest{Name: testCase.listName})
+				list, err := sc.GetList(context.Background(), &beta.GetListRequest{Name: testCase.listName})
 				return cmp.Equal(list.Values, []string{"one", "two", "three", "four"}) && list.Capacity == 100 && err == nil
 			}, 10*time.Second, time.Second)
 
@@ -1767,7 +1794,7 @@ func TestSDKServerUpdateList(t *testing.T) {
 				assert.NoError(t, err)
 			}
 
-			got, err := sc.GetList(context.Background(), &alpha.GetListRequest{Name: testCase.listName})
+			got, err := sc.GetList(context.Background(), &beta.GetListRequest{Name: testCase.listName})
 			assert.NoError(t, err)
 			assert.Equal(t, testCase.want.Values, got.Values)
 			assert.Equal(t, testCase.want.Capacity, got.Capacity)
@@ -1781,7 +1808,7 @@ func TestSDKServerUpdateList(t *testing.T) {
 						agonesv1.ListStatus{Values: testCase.want.Values, Capacity: testCase.want.Capacity},
 						value[testCase.listName])
 				case <-time.After(10 * time.Second):
-					assert.Fail(t, "List should have been updated")
+					assert.Fail(t, "List should have been patched")
 				}
 			}
 
@@ -1837,30 +1864,32 @@ func TestSDKServerPlayerCapacity(t *testing.T) {
 	sc, err := defaultSidecar(m)
 	require.NoError(t, err)
 
+	gs := agonesv1.GameServer{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test", Namespace: "default", ResourceVersion: "0",
+		},
+		Spec: agonesv1.GameServerSpec{
+			SdkServer: agonesv1.SdkServer{
+				LogLevel: "Debug",
+			},
+			Players: &agonesv1.PlayersSpec{
+				InitialCapacity: 10,
+			},
+		},
+	}
+	gs.ApplyDefaults()
+
 	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-		gs := agonesv1.GameServer{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: "test", Namespace: "default",
-			},
-			Spec: agonesv1.GameServerSpec{
-				SdkServer: agonesv1.SdkServer{
-					LogLevel: "Debug",
-				},
-				Players: &agonesv1.PlayersSpec{
-					InitialCapacity: 10,
-				},
-			},
-		}
-		gs.ApplyDefaults()
-		return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{gs}}, nil
+		return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{*gs.DeepCopy()}}, nil
 	})
 
 	updated := make(chan int64, 10)
-	m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-		ua := action.(k8stesting.UpdateAction)
-		gs := ua.GetObject().(*agonesv1.GameServer)
-		updated <- gs.Status.Players.Capacity
-		return true, gs, nil
+	m.AgonesClient.AddReactor("patch", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+
+		gsCopy := patchGameServer(t, action, &gs)
+
+		updated <- gsCopy.Status.Players.Capacity
+		return true, gsCopy, nil
 	})
 
 	assert.NoError(t, sc.WaitForConnection(ctx))
@@ -1894,7 +1923,7 @@ func TestSDKServerPlayerCapacity(t *testing.T) {
 	case value := <-updated:
 		assert.Equal(t, int64(20), value)
 	case <-time.After(time.Minute):
-		assert.Fail(t, "Should have been updated")
+		assert.Fail(t, "Should have been patched")
 	}
 
 	agtesting.AssertEventContains(t, m.FakeRecorder.Events, "PlayerCapacity Set to 20")
@@ -1988,30 +2017,31 @@ func TestSDKServerPlayerConnectAndDisconnect(t *testing.T) {
 	require.NoError(t, err)
 
 	capacity := int64(3)
+	gs := agonesv1.GameServer{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test", Namespace: "default", ResourceVersion: "0",
+		},
+		Spec: agonesv1.GameServerSpec{
+			SdkServer: agonesv1.SdkServer{
+				LogLevel: "Debug",
+			},
+			// this is here to give us a reference, so we know when sc.Run() has completed.
+			Players: &agonesv1.PlayersSpec{
+				InitialCapacity: capacity,
+			},
+		},
+	}
+	gs.ApplyDefaults()
+
 	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-		gs := agonesv1.GameServer{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: "test", Namespace: "default",
-			},
-			Spec: agonesv1.GameServerSpec{
-				SdkServer: agonesv1.SdkServer{
-					LogLevel: "Debug",
-				},
-				// this is here to give us a reference, so we know when sc.Run() has completed.
-				Players: &agonesv1.PlayersSpec{
-					InitialCapacity: capacity,
-				},
-			},
-		}
-		gs.ApplyDefaults()
-		return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{gs}}, nil
+		return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{*gs.DeepCopy()}}, nil
 	})
+
 	updated := make(chan *agonesv1.PlayerStatus, 10)
-	m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-		ua := action.(k8stesting.UpdateAction)
-		gs := ua.GetObject().(*agonesv1.GameServer)
-		updated <- gs.Status.Players
-		return true, gs, nil
+	m.AgonesClient.AddReactor("patch", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		gsCopy := patchGameServer(t, action, &gs)
+		updated <- gsCopy.Status.Players
+		return true, gsCopy, nil
 	})
 
 	assert.NoError(t, sc.WaitForConnection(ctx))

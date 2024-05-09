@@ -347,7 +347,7 @@
           "format": "int64"
         }
       },
-      "title": "[Stage:Alpha]\n[FeatureFlag:CountsAndLists]"
+      "title": "[Stage:Beta]\n[FeatureFlag:CountsAndLists]"
     },
     "StatusListStatus": {
       "type": "object",
@@ -363,7 +363,7 @@
           }
         }
       },
-      "title": "[Stage:Alpha]\n[FeatureFlag:CountsAndLists]"
+      "title": "[Stage:Beta]\n[FeatureFlag:CountsAndLists]"
     },
     "StatusPlayerStatus": {
       "type": "object",
@@ -458,14 +458,14 @@
           "additionalProperties": {
             "$ref": "#/definitions/StatusCounterStatus"
           },
-          "title": "[Stage:Alpha]\n[FeatureFlag:CountsAndLists]"
+          "title": "[Stage:Beta]\n[FeatureFlag:CountsAndLists]"
         },
         "lists": {
           "type": "object",
           "additionalProperties": {
             "$ref": "#/definitions/StatusListStatus"
           },
-          "title": "[Stage:Alpha]\n[FeatureFlag:CountsAndLists]"
+          "title": "[Stage:Beta]\n[FeatureFlag:CountsAndLists]"
         }
       }
     },

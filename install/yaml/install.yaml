@@ -5369,6 +5369,9 @@ spec:
                              name:
                                title: Name is the descriptive name of the port
                                type: string
+                             range:
+                               title: the port range name from which to select a port when using a 'Dynamic' or 'Passthrough' port policy. Defaults to 'default'.
+                               type: string
                              portPolicy:
                                title: the port policy that will be applied to the game server
                                description: |
@@ -10790,6 +10793,9 @@ spec:
                    properties:
                      name:
                        title: Name is the descriptive name of the port
+                       type: string
+                     range:
+                       title: the port range name from which to select a port when using a 'Dynamic' or 'Passthrough' port policy. Defaults to 'default'.
                        type: string
                      portPolicy:
                        title: the port policy that will be applied to the game server
@@ -16335,6 +16341,9 @@ spec:
                               name:
                                 title: Name is the descriptive name of the port
                                 type: string
+                              range:
+                                title: the port range name from which to select a port when using a 'Dynamic' or 'Passthrough' port policy. Defaults to 'default'.
+                                type: string
                               portPolicy:
                                 title: the port policy that will be applied to the game server
                                 description: |
@@ -16682,7 +16691,7 @@ rules:
   verbs: ["create", "patch"]
 - apiGroups: ["agones.dev"]
   resources: ["gameservers"]
-  verbs: ["list", "update", "watch"]
+  verbs: ["list", "patch", "watch"]
 ---
 # Source: agones/templates/service/allocation.yaml
 # Bind the agones-allocator ServiceAccount to the agones-allocator ClusterRole
