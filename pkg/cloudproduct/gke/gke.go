@@ -263,13 +263,13 @@ func (apa *autopilotPortAllocator) Allocate(gs *agonesv1.GameServer) *agonesv1.G
 
 	var ports []agonesv1.GameServerPort
 	for i, p := range gs.Spec.Ports {
-		/*
-			if p.PortPolicy != agonesv1.Dynamic {
-				logger.WithField("gs", gs.Name).WithField("portPolicy", p.PortPolicy).Error(
-					"GameServer has invalid PortPolicy for Autopilot - this should have been rejected by webhooks. Refusing to assign ports.")
-				return gs
-			}
-		*/
+
+		if p.PortPolicy != agonesv1.Dynamic && !runtime.FeatureEnabled(runtime.FeatureAutopilotPassthroughPort) {
+			logger.WithField("gs", gs.Name).WithField("portPolicy", p.PortPolicy).Error(
+				"GameServer has invalid PortPolicy for Autopilot - this should have been rejected by webhooks. Refusing to assign ports.")
+			return gs
+		}
+
 		p.HostPort = int32(i + 1) // Autopilot expects _some_ host port - use a value unique to this GameServer Port.
 
 		if p.Protocol == agonesv1.ProtocolTCPUDP {
