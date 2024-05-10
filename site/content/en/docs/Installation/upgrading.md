@@ -135,10 +135,12 @@ upgrades.
 
 {{% feature publishVersion="1.41.0" %}}
 ## SDK Compatibility Guarantees
-In order to allow compatibility between game server binaries and `sdk-server`, a game server binary
-using Beta and Stable SDK protos must remain compatible with a newer `sdk-server`. Why? SDK proto
-compatibility is crucial to reducing toil on our users. We don’t want to require users to redeploy
-binaries every release (6w!), and like to encourage upgrades as much as possible.
+
+The SDK compatibility contract aims to ensure smooth upgrades and reduce the need for frequent
+binary redeployments for game server users.
+What’s the point of having a compatibility guarantee?
+Goal: Reduce user toil by minimizing the need for frequent binary redeployments due to SDK changes.
+Versioning: Clear documentation of API maturity levels and history (Stable, Beta, Alpha) with release information.
 
 Our SDK Server compatibility contract as of Agones v1.41.0: A
 game server binary using Beta and Stable SDKs will remain compatible with a _newer_ Agones Release,
@@ -156,16 +158,30 @@ releases (~1y) starting from the SDK version packaged.
   - When we make incompatible Alpha changes, we will document the APIs involved.
 
 ## SDK Deprecation Policies as of Agones v1.41.0
-Breaking changes will be called out in upgrade documentation to allow admins to plan their upgrades.
+
+- Client SDK updates are not mandatory for game server binaries except for SDK proto deprecations or
+breaking Alpha API changes.
+
+- You can continue to use a binary compiled several months ago working, except in the case of a deprecation.
+
+- Breaking changes will be called out in upgrade documentation to allow admins to plan their upgrades.
+
+- Expect to check if there are breaking changes to Stable APIs you use yearly or Beta APIs semi-annually.
+
 ### Stable Deprecation Policies
+
 A Stable API may be marked as deprecated in release X and removed from Stable in release X+10.
+
 ### Beta Deprecation Policies
+
 When a feature graduates from Beta to Stable at release X, the API will be present in both Beta and
 Stable surfaces from release X to release X+5. The Beta API is marked as deprecated in release X and
 removed from Beta in release X+5.
 A Beta API may be marked as deprecated in release X and removed from Beta in release X+5 without the
 API graduating to Stable.
+
 ### Alpha Deprecation Policies
+
 There is no guaranteed proto compatibility between releases for Alpha SDK protos. When an Alpha API
 graduates to Beta the API will be deleted from the Alpha proto with no overlapping release.
 An API may be removed from the Alpha proto during any release without graduating to Beta.
