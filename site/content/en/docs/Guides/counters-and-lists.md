@@ -335,7 +335,7 @@ to influence the order in which `GameServers` are shutdown and deleted.
 
 
 While neither `players` or `rooms` are particularly good examples for this functionality, if we wanted to ensure 
-that `Ready` `GameServers` with the most available capacity `rooms` where a factor when scaling down a `Fleet` we could 
+that `Ready` `GameServers` with the most available capacity `rooms` were a factor when scaling down a `Fleet` we could 
 implement the following:
 
 ```yaml

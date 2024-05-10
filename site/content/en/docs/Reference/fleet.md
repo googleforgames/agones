@@ -58,11 +58,11 @@ spec:
   # Which gameservers in the Fleet are most important to keep around - impacts scale down logic.
   # priorities:
   # - type: Counter # Sort by a “Counter”
-  #   key: player # The name of the Counter. No impact if no GameServer found.
-  #   order: Descending # Default is "Ascending" so smaller capacity will be removed first on down scaling.
+  #   key: rooms # The name of the Counter. No impact if no GameServer found.
+  #   order: Descending # Default is "Ascending" so smaller available capacity will be removed first on down scaling.
   # - type: List # Sort by a “List”
-  #   key: room # The name of the List. No impact if no GameServer found.
-  #   order: Ascending # Default is "Ascending" so smaller capacity will be removed first on down scaling.
+  #   key: players # The name of the List. No impact if no GameServer found.
+  #   order: Ascending # Default is "Ascending" so smaller available capacity will be removed first on down scaling.
   #      
   template:
     # GameServer metadata
@@ -83,6 +83,27 @@ spec:
         logLevel: Info
         grpcPort: 9357
         httpPort: 9358
+  #
+  # [Stage:Alpha]
+  # [FeatureFlag:CountsAndLists]
+  # Counts and Lists provides the configuration for generic (player, room, session, etc.) tracking features.
+  # Commented out since Alpha, and disabled by default
+  # counters: # counters are int64 counters stored against a GameServer in the fleet that can be incremented and decremented by set amounts. Keys must be declared at Fleet creation time.
+  #   games: # arbitrary key.
+  #     count: 0 # initial value.
+  #     capacity: 100 # (Optional) Defaults to 1000 and setting capacity to max(int64) may lead to issues and is not recommended. See GitHub issue https://github.com/googleforgames/agones/issues/3636 for more details.
+  #   sessions:
+  #     count: 0
+  # lists: # lists are lists of values stored against a GameServer in the fleet that can be added and deleted from. Keys must be declared at Fleet creation time.
+  #   players: # an empty list, with a capacity set to 10.
+  #     capacity: 10 # (Optional) Defaults to 1000.
+  #   rooms:
+  #     capacity: 333
+  #     values: # initial set of values in a list.
+  #       - room1
+  #       - room2
+  #       - room3
+  #  
       # The GameServer's Pod template
       template:
         spec:
