@@ -137,32 +137,31 @@ upgrades.
 ## SDK Compatibility Guarantees
 
 The SDK compatibility contract aims to ensure smooth upgrades and reduce the need for frequent
-binary redeployments for game server users.
-What’s the point of having a compatibility guarantee?
-Goal: Reduce user toil by minimizing the need for frequent binary redeployments due to SDK changes.
-Versioning: Clear documentation of API maturity levels and history (Stable, Beta, Alpha) with release information.
+binary redeployments for game server users due to SDK changes. We implement SDK feature versioning
+that matches our [Feature Gates]({{% ref "/docs/Guides/feature-stages.md#feature-gates" %}}) to
+provide clear documentation of API maturity levels and history (Stable, Beta, Alpha) with release
+information.
 
-Our SDK Server compatibility contract as of Agones v1.41.0: A
+**Our SDK Server compatibility contract as of Agones v1.41.0**: A
 game server binary using Beta and Stable SDKs will remain compatible with a _newer_ Agones Release,
 within possible deprecation windows:
 - If your game server uses a non-deprecated Stable API, your binary will be compatible for 10
-releases (~1y) starting from the SDK version packaged.
+releases (~1y) or more starting from the SDK version packaged.
   - For example, if the game server uses non-deprecated stable APIs in the 1.40 SDK, it will be
   compatible through the 1.50 SDK.
-  - Stable APIs will almost certainly be compatible beyond 10 releases, but 10 releases is
-  guaranteed.
-- If your game server uses a non-deprecated Beta API, your binary will be compatible for 5 releases
-(~6mo).- Alpha SDK APIs are subject to change between releases.
-  - A game server binary using Alpha SDKs may not be compatible with a newer sdk-server.
-  - In Alpha, incompatible changes retaining the same SDK proto message name are allowed.
+  - Stable APIs will almost certainly be compatible beyond 10 releases, as deprecation of stable
+  APIs is rare, but 10 releases is guaranteed.
+- If your game server uses a non-deprecated Beta API, your binary will be guaranteed compatible for
+  5 releases (~6mo), but may be compatible past that point.
+- Alpha SDK APIs are subject to change between releases.
+  - A game server binary using Alpha SDKs may not be compatible with a newer Agones release if
+  breaking changes have been made between releases.
   - When we make incompatible Alpha changes, we will document the APIs involved.
 
-## SDK Deprecation Policies as of Agones v1.41.0
+## SDK Deprecation Policies as of Agones
 
-- Client SDK updates are not mandatory for game server binaries except for SDK proto deprecations or
-breaking Alpha API changes.
-
-- You can continue to use a binary compiled several months ago working, except in the case of a deprecation.
+- Client SDK updates are not mandatory for game server binaries except for SDK when the underlying
+proto format has deprecations or breaking Alpha API changes.
 
 - Breaking changes will be called out in upgrade documentation to allow admins to plan their upgrades.
 
@@ -174,22 +173,22 @@ A Stable API may be marked as deprecated in release X and removed from Stable in
 
 ### Beta Deprecation Policies
 
-When a feature graduates from Beta to Stable at release X, the API will be present in both Beta and
+When a SDK API feature graduates from Beta to Stable at release X, the API will be present in both Beta and
 Stable surfaces from release X to release X+5. The Beta API is marked as deprecated in release X and
 removed from Beta in release X+5.
 A Beta API may be marked as deprecated in release X and removed from Beta in release X+5 without the
-API graduating to Stable.
+API graduating to Stable if it's determined that changes need to be made to the Beta API.
 
 ### Alpha Deprecation Policies
 
-There is no guaranteed proto compatibility between releases for Alpha SDK protos. When an Alpha API
-graduates to Beta the API will be deleted from the Alpha proto with no overlapping release.
-An API may be removed from the Alpha proto during any release without graduating to Beta.
+There is no guaranteed compatibility between releases for Alpha SDKs. When an Alpha API
+graduates to Beta the API will be deleted from the Alpha SDK with no overlapping release.
+An API may be removed from the Alpha SDK during any release without graduating to Beta.
 
 ## SDK APIs and Stability Levels
 
 "Legacy" indicates that this API has been in the SDK Server in a release before we began tracking
-SDK compatibility. \
+SDK compatibility with release 1.41.0. \
 The Actions may differ from the [Client SDK]({{< relref "Client SDKs">}}) depending on how each
 Client SDK is implemented.
 
