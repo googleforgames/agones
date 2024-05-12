@@ -19,10 +19,6 @@ const jspbWrappers = require('google-protobuf/google/protobuf/wrappers_pb');
 const messages = require('../lib/alpha/alpha_pb');
 const servicesPackageDefinition = require('../lib/alpha/alpha_grpc_pb');
 
-const ALREADY_EXISTS = 'ALREADY_EXISTS';
-const NOT_FOUND = 'NOT_FOUND';
-const OUT_OF_RANGE = 'OUT_OF_RANGE';
-
 class Alpha {
 	constructor(address, credentials) {
 		const services = grpc.loadPackageDefinition(servicesPackageDefinition);
@@ -154,12 +150,9 @@ class Alpha {
 		return new Promise((resolve, reject) => {
 			this.client.updateCounter(request, (error) => {
 				if (error) {
-					if (error === OUT_OF_RANGE) {
-						return resolve(false);
-					}
 					reject(error);
 				} else {
-					resolve(true);
+					resolve();
 				}
 			});
 		});
@@ -173,12 +166,9 @@ class Alpha {
 		return new Promise((resolve, reject) => {
 			this.client.updateCounter(request, (error) => {
 				if (error) {
-					if (error === OUT_OF_RANGE) {
-						return resolve(false);
-					}
 					reject(error);
 				} else {
-					resolve(true);
+					resolve();
 				}
 			});
 		});
@@ -194,12 +184,9 @@ class Alpha {
 		return new Promise((resolve, reject) => {
 			this.client.updateCounter(request, (error) => {
 				if (error) {
-					if (error === OUT_OF_RANGE) {
-						return resolve(false);
-					}
 					reject(error);
 				} else {
-					resolve(true);
+					resolve();
 				}
 			});
 		});
@@ -326,12 +313,9 @@ class Alpha {
 		return new Promise((resolve, reject) => {
 			this.client.addListValue(request, (error) => {
 				if (error) {
-					if (error === ALREADY_EXISTS || error === OUT_OF_RANGE) {
-						return resolve(false);
-					}
 					reject(error);
 				} else {
-					resolve(true);
+					resolve();
 				}
 			});
 		});
@@ -345,12 +329,9 @@ class Alpha {
 		return new Promise((resolve, reject) => {
 			this.client.removeListValue(request, (error) => {
 				if (error) {
-					if (error === NOT_FOUND) {
-						return resolve(false);
-					}
 					reject(error);
 				} else {
-					resolve(true);
+					resolve();
 				}
 			});
 		});

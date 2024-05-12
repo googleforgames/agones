@@ -290,20 +290,10 @@ describe('Alpha', () => {
 
 			let response = await alpha.incrementCounter('key', 5);
 			expect(alpha.client.updateCounter).toHaveBeenCalled();
-			expect(response).toEqual(true);
+			expect(response).toEqual(undefined);
 			let request = alpha.client.updateCounter.calls.argsFor(0)[0];
 			expect(request.getName()).toEqual('key');
 			expect(request.getCountdiff()).toEqual(5);
-		});
-
-		it('calls the server and handles the response while over capacity', async () => {
-			spyOn(alpha.client, 'updateCounter').and.callFake((request, callback) => {
-				callback('OUT_OF_RANGE', undefined);
-			});
-
-			let response = await alpha.incrementCounter('key', 5);
-			expect(alpha.client.updateCounter).toHaveBeenCalled();
-			expect(response).toEqual(false);
 		});
 
 		it('calls the server and handles failure', async () => {
@@ -321,7 +311,7 @@ describe('Alpha', () => {
 	});
 
 	describe('decrementCounter', () => {
-		it('calls the server and handles the response while above zero', async () => {
+		it('calls the server and handles the response', async () => {
 			spyOn(alpha.client, 'updateCounter').and.callFake((request, callback) => {
 				let counter = new messages.Counter();
 				callback(undefined, counter);
@@ -329,20 +319,10 @@ describe('Alpha', () => {
 
 			let response = await alpha.decrementCounter('key', 5);
 			expect(alpha.client.updateCounter).toHaveBeenCalled();
-			expect(response).toEqual(true);
+			expect(response).toEqual(undefined);
 			let request = alpha.client.updateCounter.calls.argsFor(0)[0];
 			expect(request.getName()).toEqual('key');
 			expect(request.getCountdiff()).toEqual(-5);
-		});
-
-		it('calls the server and handles the response while over capacity', async () => {
-			spyOn(alpha.client, 'updateCounter').and.callFake((request, callback) => {
-				callback('OUT_OF_RANGE', undefined);
-			});
-
-			let response = await alpha.decrementCounter('key', 5);
-			expect(alpha.client.updateCounter).toHaveBeenCalled();
-			expect(response).toEqual(false);
 		});
 
 		it('calls the server and handles failure', async () => {
@@ -360,7 +340,7 @@ describe('Alpha', () => {
 	});
 
 	describe('setCounterCount', () => {
-		it('calls the server and handles the response while in range', async () => {
+		it('calls the server and handles the response', async () => {
 			spyOn(alpha.client, 'updateCounter').and.callFake((request, callback) => {
 				let counter = new messages.Counter();
 				callback(undefined, counter);
@@ -368,20 +348,10 @@ describe('Alpha', () => {
 
 			let response = await alpha.setCounterCount('key', 5);
 			expect(alpha.client.updateCounter).toHaveBeenCalled();
-			expect(response).toEqual(true);
+			expect(response).toEqual(undefined);
 			let request = alpha.client.updateCounter.calls.argsFor(0)[0];
 			expect(request.getName()).toEqual('key');
 			expect(request.getCount().getValue()).toEqual(5);
-		});
-
-		it('calls the server and handles the response out of range', async () => {
-			spyOn(alpha.client, 'updateCounter').and.callFake((request, callback) => {
-				callback('OUT_OF_RANGE', undefined);
-			});
-
-			let response = await alpha.setCounterCount('key', 5);
-			expect(alpha.client.updateCounter).toHaveBeenCalled();
-			expect(response).toEqual(false);
 		});
 
 		it('calls the server and handles failure', async () => {
@@ -428,7 +398,7 @@ describe('Alpha', () => {
 	});
 
 	describe('setCounterCapacity', () => {
-		it('calls the server and handles the response while in range', async () => {
+		it('calls the server and handles the response', async () => {
 			spyOn(alpha.client, 'updateCounter').and.callFake((request, callback) => {
 				let counter = new messages.Counter();
 				callback(undefined, counter);
@@ -436,7 +406,7 @@ describe('Alpha', () => {
 
 			let response = await alpha.setCounterCapacity('key', 5);
 			expect(alpha.client.updateCounter).toHaveBeenCalled();
-			expect(response).toBeUndefined();
+			expect(response).toEqual(undefined);
 			let request = alpha.client.updateCounter.calls.argsFor(0)[0];
 			expect(request.getCounterupdaterequest().getName()).toEqual('key');
 			expect(request.getCounterupdaterequest().getCapacity().getValue()).toEqual(5);
@@ -494,7 +464,7 @@ describe('Alpha', () => {
 
 			let response = await alpha.setListCapacity('key', 5);
 			expect(alpha.client.updateList).toHaveBeenCalled();
-			expect(response).toBeUndefined();
+			expect(response).toEqual(undefined);
 			let request = alpha.client.updateList.calls.argsFor(0)[0];
 			expect(request.getList().getName()).toEqual('key');
 			expect(request.getList().getCapacity()).toEqual(5);
@@ -616,7 +586,7 @@ describe('Alpha', () => {
 	});
 
 	describe('appendListValue', () => {
-		it('calls the server and handles the response when the value is appended', async () => {
+		it('calls the server and handles the response', async () => {
 			spyOn(alpha.client, 'addListValue').and.callFake((request, callback) => {
 				let list = new messages.List();
 				callback(undefined, list);
@@ -624,30 +594,10 @@ describe('Alpha', () => {
 
 			let response = await alpha.appendListValue('key', 'value');
 			expect(alpha.client.addListValue).toHaveBeenCalled();
-			expect(response).toEqual(true);
+			expect(response).toEqual(undefined);
 			let request = alpha.client.addListValue.calls.argsFor(0)[0];
 			expect(request.getName()).toEqual('key');
 			expect(request.getValue()).toEqual('value');
-		});
-
-		it('calls the server and handles the response when capacity is reached', async () => {
-			spyOn(alpha.client, 'addListValue').and.callFake((request, callback) => {
-				callback('OUT_OF_RANGE', undefined);
-			});
-
-			let response = await alpha.appendListValue('key', 'value');
-			expect(alpha.client.addListValue).toHaveBeenCalled();
-			expect(response).toEqual(false);
-		});
-
-		it('calls the server and handles the reponse when the value already exists', async () => {
-			spyOn(alpha.client, 'addListValue').and.callFake((request, callback) => {
-				callback('ALREADY_EXISTS', undefined);
-			});
-
-			let response = await alpha.appendListValue('key', 'value');
-			expect(alpha.client.addListValue).toHaveBeenCalled();
-			expect(response).toEqual(false);
 		});
 
 		it('calls the server and handles failure', async () => {
@@ -665,7 +615,7 @@ describe('Alpha', () => {
 	});
 
 	describe('deleteListValue', () => {
-		it('calls the server and handles the response when the value is deleted', async () => {
+		it('calls the server and handles the response', async () => {
 			spyOn(alpha.client, 'removeListValue').and.callFake((request, callback) => {
 				let list = new messages.List();
 				callback(undefined, list);
@@ -673,20 +623,10 @@ describe('Alpha', () => {
 
 			let response = await alpha.deleteListValue('key', 'value');
 			expect(alpha.client.removeListValue).toHaveBeenCalled();
-			expect(response).toEqual(true);
+			expect(response).toEqual(undefined);
 			let request = alpha.client.removeListValue.calls.argsFor(0)[0];
 			expect(request.getName()).toEqual('key');
 			expect(request.getValue()).toEqual('value');
-		});
-
-		it('calls the server and handles the response when the value does not exist', async () => {
-			spyOn(alpha.client, 'removeListValue').and.callFake((request, callback) => {
-				callback('NOT_FOUND', undefined);
-			});
-
-			let response = await alpha.deleteListValue('key', 'value');
-			expect(alpha.client.removeListValue).toHaveBeenCalled();
-			expect(response).toEqual(false);
 		});
 
 		it('calls the server and handles failure', async () => {
