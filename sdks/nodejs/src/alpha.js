@@ -14,6 +14,7 @@
 // limitations under the License.
 
 const grpc = require('@grpc/grpc-js');
+const fieldMask = require('google-protobuf/google/protobuf/field_mask_pb');
 const jspbWrappers = require('google-protobuf/google/protobuf/wrappers_pb');
 
 const messages = require('../lib/alpha/alpha_pb');
@@ -143,9 +144,11 @@ class Alpha {
 	}
 
 	async incrementCounter(key, amount) {
-		const request = new messages.CounterUpdateRequest();
-		request.setName(key);
-		request.setCountdiff(amount);
+		const updateRequest = new messages.CounterUpdateRequest();
+		updateRequest.setName(key);
+		updateRequest.setCountdiff(amount);
+		const request = new messages.UpdateCounterRequest();
+		request.setCounterupdaterequest(updateRequest);
 
 		return new Promise((resolve, reject) => {
 			this.client.updateCounter(request, (error) => {
@@ -159,9 +162,11 @@ class Alpha {
 	}
 
 	async decrementCounter(key, amount) {
-		const request = new messages.CounterUpdateRequest();
-		request.setName(key);
-		request.setCountdiff(-amount);
+		const updateRequest = new messages.CounterUpdateRequest();
+		updateRequest.setName(key);
+		updateRequest.setCountdiff(-amount);
+		const request = new messages.UpdateCounterRequest();
+		request.setCounterupdaterequest(updateRequest);
 
 		return new Promise((resolve, reject) => {
 			this.client.updateCounter(request, (error) => {
@@ -177,9 +182,11 @@ class Alpha {
 	async setCounterCount(key, amount) {
 		let count = new jspbWrappers.Int64Value();
 		count.setValue(amount);
-		const request = new messages.CounterUpdateRequest();
-		request.setName(key);
-		request.setCount(count);
+		const updateRequest = new messages.CounterUpdateRequest();
+		updateRequest.setName(key);
+		updateRequest.setCount(count);
+		const request = new messages.UpdateCounterRequest();
+		request.setCounterupdaterequest(updateRequest);
 
 		return new Promise((resolve, reject) => {
 			this.client.updateCounter(request, (error) => {
@@ -246,8 +253,10 @@ class Alpha {
 		const list = new messages.List();
 		list.setName(key);
 		list.setCapacity(amount);
+		const updateMask = new fieldMask.FieldMask({Name: 'capacity'});
 		const request = new messages.UpdateListRequest();
 		request.setList(list);
+		request.setUpdateMask(updateMask);
 
 		return new Promise((resolve, reject) => {
 			this.client.updateList(request, (error) => {

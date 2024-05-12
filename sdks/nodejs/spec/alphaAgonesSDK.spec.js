@@ -292,8 +292,8 @@ describe('Alpha', () => {
 			expect(alpha.client.updateCounter).toHaveBeenCalled();
 			expect(response).toEqual(undefined);
 			let request = alpha.client.updateCounter.calls.argsFor(0)[0];
-			expect(request.getName()).toEqual('key');
-			expect(request.getCountdiff()).toEqual(5);
+			expect(request.getCounterupdaterequest().getName()).toEqual('key');
+			expect(request.getCounterupdaterequest().getCountdiff()).toEqual(5);
 		});
 
 		it('calls the server and handles failure', async () => {
@@ -321,8 +321,8 @@ describe('Alpha', () => {
 			expect(alpha.client.updateCounter).toHaveBeenCalled();
 			expect(response).toEqual(undefined);
 			let request = alpha.client.updateCounter.calls.argsFor(0)[0];
-			expect(request.getName()).toEqual('key');
-			expect(request.getCountdiff()).toEqual(-5);
+			expect(request.getCounterupdaterequest().getName()).toEqual('key');
+			expect(request.getCounterupdaterequest().getCountdiff()).toEqual(-5);
 		});
 
 		it('calls the server and handles failure', async () => {
@@ -350,8 +350,8 @@ describe('Alpha', () => {
 			expect(alpha.client.updateCounter).toHaveBeenCalled();
 			expect(response).toEqual(undefined);
 			let request = alpha.client.updateCounter.calls.argsFor(0)[0];
-			expect(request.getName()).toEqual('key');
-			expect(request.getCount().getValue()).toEqual(5);
+			expect(request.getCounterupdaterequest().getName()).toEqual('key');
+			expect(request.getCounterupdaterequest().getCount().getValue()).toEqual(5);
 		});
 
 		it('calls the server and handles failure', async () => {
