@@ -79,13 +79,22 @@ message AllocationRequest {
   // Note: This field can only be set if neither Required or Preferred is set.
   repeated GameServerSelector gameServerSelectors = 8;
 
-  // (Alpha, CountsAndLists feature flag) The first Priority on the array of Priorities is the most
-	// important for sorting. The allocator will use the first priority for sorting GameServers in the
-	// Selector set, and will only use any following priority for tie-breaking during sort.
-	// Impacts which GameServer is checked first.
+  // [Stage: Alpha]
+  // [FeatureFlag:CountsAndLists]
+  // `Priorities` configuration alters the order in which `GameServers` are searched for matches to the configured `selectors`.
+  //
+  // Priority of sorting is in descending importance. I.e. The position 0 `priority` entry is checked first.
+  //
+  // For `Packed` strategy sorting, this priority list will be the tie-breaker within the least utilised infrastructure, to ensure optimal
+  // infrastructure usage while also allowing some custom prioritisation of `GameServers`.
+  //
+  // For `Distributed` strategy sorting, the entire selection of `GameServers` will be sorted by this priority list to provide the
+  // order that `GameServers` will be allocated by.
 	repeated Priority priorities = 9;
 
-  // (Alpha, CountsAndLists feature flag) Counters and Lists provide a set of actions to perform
+  // [Stage: Alpha]
+  // [FeatureFlag:CountsAndLists]
+  // Counters and Lists provide a set of actions to perform
 	// on Counters and Lists during allocation.
   map<string, CounterAction> counters = 10;
   map<string, ListAction> lists = 11;
@@ -105,6 +114,10 @@ message AllocationResponse {
   string source = 6;
   optional GameServerMetadata metadata = 7;
 
+  // (Alpha, CountsAndLists feature flag) Status of Counters and Lists on allocation.
+  map<string, CounterStatus> counters = 9;
+  map<string, ListStatus> lists = 10;
+
   // The gameserver port info that is allocated.
   message GameServerStatusPort {
     string name = 1;
@@ -120,6 +133,16 @@ message AllocationResponse {
   message GameServerMetadata {
     map<string, string> labels = 1;
     map<string, string> annotations = 2;
+  }
+
+  message CounterStatus {
+    google.protobuf.Int64Value count = 1;
+    google.protobuf.Int64Value capacity = 2;
+  }
+
+  message ListStatus {
+    repeated string values = 1;
+    google.protobuf.Int64Value capacity = 2;
   }
 }
 

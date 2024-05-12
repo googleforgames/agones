@@ -18,11 +18,6 @@ import (
 	"fmt"
 	"testing"
 
-	pb "agones.dev/agones/pkg/allocation/go"
-	"agones.dev/agones/pkg/apis"
-	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
-	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
-	"agones.dev/agones/pkg/util/runtime"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/codes"
@@ -30,6 +25,12 @@ import (
 	"google.golang.org/protobuf/types/known/wrapperspb"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	pb "agones.dev/agones/pkg/allocation/go"
+	"agones.dev/agones/pkg/apis"
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
+	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
+	"agones.dev/agones/pkg/util/runtime"
 )
 
 func TestConvertAllocationRequestToGameServerAllocation(t *testing.T) {
@@ -843,11 +844,13 @@ func TestConvertGSAToAllocationRequest(t *testing.T) {
 
 func TestConvertGSAToAllocationResponse(t *testing.T) {
 	tests := []struct {
-		name             string
-		in               *allocationv1.GameServerAllocation
-		want             *pb.AllocationResponse
-		wantErrCode      codes.Code
-		skipConvertToGSA bool
+		name                      string
+		features                  string
+		in                        *allocationv1.GameServerAllocation
+		grpcUnallocatedStatusCode codes.Code
+		want                      *pb.AllocationResponse
+		wantErrCode               codes.Code
+		skipConvertToGSA          bool
 	}{
 		{
 			name: "status state is set to allocated",
@@ -1082,13 +1085,296 @@ func TestConvertGSAToAllocationResponse(t *testing.T) {
 				},
 			},
 		},
+		{
+			name:     "all fields are set (CountsAndLists)",
+			features: fmt.Sprintf("%s=true", runtime.FeatureCountsAndLists),
+			in: &allocationv1.GameServerAllocation{
+				TypeMeta: metav1.TypeMeta{
+					Kind:       "GameServerAllocation",
+					APIVersion: "allocation.agones.dev/v1",
+				},
+				Status: allocationv1.GameServerAllocationStatus{
+					State:          allocationv1.GameServerAllocationAllocated,
+					GameServerName: "GSN",
+					Ports: []agonesv1.GameServerStatusPort{
+						{
+							Port: 123,
+						},
+						{
+							Name: "port-name",
+						},
+					},
+					Address: "address",
+					Addresses: []corev1.NodeAddress{
+						{Type: "SomeAddressType", Address: "123.123.123.123"},
+						{Type: "AnotherAddressType", Address: "321.321.321.321"},
+					},
+					NodeName: "node-name",
+					Source:   "local",
+					Metadata: &allocationv1.GameServerMetadata{
+						Labels: map[string]string{
+							"label-key": "label-value",
+							"other-key": "other-value",
+						},
+						Annotations: map[string]string{
+							"annotation-key": "annotation-value",
+							"other-key":      "other-value",
+						},
+					},
+					Counters: map[string]agonesv1.CounterStatus{
+						"p": {
+							Count:    0,
+							Capacity: 1,
+						},
+					},
+					Lists: map[string]agonesv1.ListStatus{
+						"p": {
+							Values:   []string{"foo", "bar", "baz"},
+							Capacity: 10,
+						},
+					},
+				},
+			},
+			want: &pb.AllocationResponse{
+				GameServerName: "GSN",
+				Address:        "address",
+				Addresses: []*pb.AllocationResponse_GameServerStatusAddress{
+					{Type: "SomeAddressType", Address: "123.123.123.123"},
+					{Type: "AnotherAddressType", Address: "321.321.321.321"},
+				},
+				NodeName: "node-name",
+				Ports: []*pb.AllocationResponse_GameServerStatusPort{
+					{
+						Port: 123,
+					},
+					{
+						Name: "port-name",
+					},
+				},
+				Source: "local",
+				Metadata: &pb.AllocationResponse_GameServerMetadata{
+					Labels: map[string]string{
+						"label-key": "label-value",
+						"other-key": "other-value",
+					},
+					Annotations: map[string]string{
+						"annotation-key": "annotation-value",
+						"other-key":      "other-value",
+					},
+				},
+				Counters: map[string]*pb.AllocationResponse_CounterStatus{
+					"p": {
+						Count:    wrapperspb.Int64(0),
+						Capacity: wrapperspb.Int64(1),
+					},
+				},
+				Lists: map[string]*pb.AllocationResponse_ListStatus{
+					"p": {
+						Values:   []string{"foo", "bar", "baz"},
+						Capacity: wrapperspb.Int64(10),
+					},
+				},
+			},
+		},
+		{
+			name:     "Counters fields are set (CountsAndLists)",
+			features: fmt.Sprintf("%s=true", runtime.FeatureCountsAndLists),
+			in: &allocationv1.GameServerAllocation{
+				TypeMeta: metav1.TypeMeta{
+					Kind:       "GameServerAllocation",
+					APIVersion: "allocation.agones.dev/v1",
+				},
+				Status: allocationv1.GameServerAllocationStatus{
+					State:          allocationv1.GameServerAllocationAllocated,
+					GameServerName: "GSN",
+					Ports: []agonesv1.GameServerStatusPort{
+						{
+							Port: 123,
+						},
+						{
+							Name: "port-name",
+						},
+					},
+					Address: "address",
+					Addresses: []corev1.NodeAddress{
+						{Type: "SomeAddressType", Address: "123.123.123.123"},
+						{Type: "AnotherAddressType", Address: "321.321.321.321"},
+					},
+					NodeName: "node-name",
+					Source:   "local",
+					Metadata: &allocationv1.GameServerMetadata{
+						Labels: map[string]string{
+							"label-key": "label-value",
+							"other-key": "other-value",
+						},
+						Annotations: map[string]string{
+							"annotation-key": "annotation-value",
+							"other-key":      "other-value",
+						},
+					},
+					Counters: map[string]agonesv1.CounterStatus{
+						"p": {
+							Count:    0,
+							Capacity: 1,
+						},
+					},
+				},
+			},
+			want: &pb.AllocationResponse{
+				GameServerName: "GSN",
+				Address:        "address",
+				Addresses: []*pb.AllocationResponse_GameServerStatusAddress{
+					{Type: "SomeAddressType", Address: "123.123.123.123"},
+					{Type: "AnotherAddressType", Address: "321.321.321.321"},
+				},
+				NodeName: "node-name",
+				Ports: []*pb.AllocationResponse_GameServerStatusPort{
+					{
+						Port: 123,
+					},
+					{
+						Name: "port-name",
+					},
+				},
+				Source: "local",
+				Metadata: &pb.AllocationResponse_GameServerMetadata{
+					Labels: map[string]string{
+						"label-key": "label-value",
+						"other-key": "other-value",
+					},
+					Annotations: map[string]string{
+						"annotation-key": "annotation-value",
+						"other-key":      "other-value",
+					},
+				},
+				Counters: map[string]*pb.AllocationResponse_CounterStatus{
+					"p": {
+						Count:    wrapperspb.Int64(0),
+						Capacity: wrapperspb.Int64(1),
+					},
+				},
+			},
+		},
+		{
+			name:     "Lists fields are set (CountsAndLists)",
+			features: fmt.Sprintf("%s=true", runtime.FeatureCountsAndLists),
+			in: &allocationv1.GameServerAllocation{
+				TypeMeta: metav1.TypeMeta{
+					Kind:       "GameServerAllocation",
+					APIVersion: "allocation.agones.dev/v1",
+				},
+				Status: allocationv1.GameServerAllocationStatus{
+					State:          allocationv1.GameServerAllocationAllocated,
+					GameServerName: "GSN",
+					Ports: []agonesv1.GameServerStatusPort{
+						{
+							Port: 123,
+						},
+						{
+							Name: "port-name",
+						},
+					},
+					Address: "address",
+					Addresses: []corev1.NodeAddress{
+						{Type: "SomeAddressType", Address: "123.123.123.123"},
+						{Type: "AnotherAddressType", Address: "321.321.321.321"},
+					},
+					NodeName: "node-name",
+					Source:   "local",
+					Metadata: &allocationv1.GameServerMetadata{
+						Labels: map[string]string{
+							"label-key": "label-value",
+							"other-key": "other-value",
+						},
+						Annotations: map[string]string{
+							"annotation-key": "annotation-value",
+							"other-key":      "other-value",
+						},
+					},
+					Lists: map[string]agonesv1.ListStatus{
+						"p": {
+							Values:   []string{"foo", "bar", "baz"},
+							Capacity: 10,
+						},
+					},
+				},
+			},
+			want: &pb.AllocationResponse{
+				GameServerName: "GSN",
+				Address:        "address",
+				Addresses: []*pb.AllocationResponse_GameServerStatusAddress{
+					{Type: "SomeAddressType", Address: "123.123.123.123"},
+					{Type: "AnotherAddressType", Address: "321.321.321.321"},
+				},
+				NodeName: "node-name",
+				Ports: []*pb.AllocationResponse_GameServerStatusPort{
+					{
+						Port: 123,
+					},
+					{
+						Name: "port-name",
+					},
+				},
+				Source: "local",
+				Metadata: &pb.AllocationResponse_GameServerMetadata{
+					Labels: map[string]string{
+						"label-key": "label-value",
+						"other-key": "other-value",
+					},
+					Annotations: map[string]string{
+						"annotation-key": "annotation-value",
+						"other-key":      "other-value",
+					},
+				},
+				Lists: map[string]*pb.AllocationResponse_ListStatus{
+					"p": {
+						Values:   []string{"foo", "bar", "baz"},
+						Capacity: wrapperspb.Int64(10),
+					},
+				},
+			},
+		},
+		{
+			name: "status field is set to unallocated, non-default unallocated",
+			in: &allocationv1.GameServerAllocation{
+				TypeMeta: metav1.TypeMeta{
+					Kind:       "GameServerAllocation",
+					APIVersion: "allocation.agones.dev/v1",
+				},
+				Status: allocationv1.GameServerAllocationStatus{
+					State:          allocationv1.GameServerAllocationUnAllocated,
+					GameServerName: "GSN",
+					Ports: []agonesv1.GameServerStatusPort{
+						{
+							Port: 123,
+						},
+						{
+							Name: "port-name",
+						},
+					},
+					Address:  "address",
+					NodeName: "node-name",
+				},
+			},
+			grpcUnallocatedStatusCode: codes.Unimplemented,
+			wantErrCode:               codes.Unimplemented,
+			skipConvertToGSA:          true,
+		},
 	}
 	for _, tc := range tests {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
+			runtime.FeatureTestMutex.Lock()
+			defer runtime.FeatureTestMutex.Unlock()
+			require.NoError(t, runtime.ParseFeatures(tc.features))
 
-			out, err := ConvertGSAToAllocationResponse(tc.in)
+			grpcUnallocatedStatusCode := tc.grpcUnallocatedStatusCode
+			if grpcUnallocatedStatusCode == codes.OK {
+				grpcUnallocatedStatusCode = codes.ResourceExhausted
+			}
+
+			out, err := ConvertGSAToAllocationResponse(tc.in, grpcUnallocatedStatusCode)
 			if tc.wantErrCode != 0 {
 				st, ok := status.FromError(err)
 				if !assert.True(t, ok) {
@@ -1116,9 +1402,10 @@ func TestConvertGSAToAllocationResponse(t *testing.T) {
 
 func TestConvertAllocationResponseToGSA(t *testing.T) {
 	tests := []struct {
-		name string
-		in   *pb.AllocationResponse
-		want *allocationv1.GameServerAllocation
+		name     string
+		features string
+		in       *pb.AllocationResponse
+		want     *allocationv1.GameServerAllocation
 	}{
 		{
 			name: "Empty fields",
@@ -1162,12 +1449,116 @@ func TestConvertAllocationResponseToGSA(t *testing.T) {
 				},
 			},
 		},
+		{
+			name:     "Counters and Lists convert",
+			features: fmt.Sprintf("%s=true", runtime.FeatureCountsAndLists),
+			in: &pb.AllocationResponse{
+				Ports:  []*pb.AllocationResponse_GameServerStatusPort{},
+				Source: "33.188.237.156:443",
+				Counters: map[string]*pb.AllocationResponse_CounterStatus{
+					"p": {
+						Count:    wrapperspb.Int64(1),
+						Capacity: wrapperspb.Int64(3),
+					},
+				},
+				Lists: map[string]*pb.AllocationResponse_ListStatus{
+					"p": {
+						Values:   []string{"foo", "bar", "baz"},
+						Capacity: wrapperspb.Int64(3),
+					},
+				},
+			},
+			want: &allocationv1.GameServerAllocation{
+				TypeMeta: metav1.TypeMeta{
+					Kind:       "GameServerAllocation",
+					APIVersion: "allocation.agones.dev/v1",
+				},
+				Status: allocationv1.GameServerAllocationStatus{
+					State:  allocationv1.GameServerAllocationAllocated,
+					Source: "33.188.237.156:443",
+					Counters: map[string]agonesv1.CounterStatus{
+						"p": {
+							Count:    1,
+							Capacity: 3,
+						},
+					},
+					Lists: map[string]agonesv1.ListStatus{
+						"p": {
+							Values:   []string{"foo", "bar", "baz"},
+							Capacity: 3,
+						},
+					},
+				},
+			},
+		},
+		{
+			name:     "Counters convert",
+			features: fmt.Sprintf("%s=true", runtime.FeatureCountsAndLists),
+			in: &pb.AllocationResponse{
+				Ports:  []*pb.AllocationResponse_GameServerStatusPort{},
+				Source: "33.188.237.156:443",
+				Counters: map[string]*pb.AllocationResponse_CounterStatus{
+					"p": {
+						Count:    wrapperspb.Int64(1),
+						Capacity: wrapperspb.Int64(3),
+					},
+				},
+			},
+			want: &allocationv1.GameServerAllocation{
+				TypeMeta: metav1.TypeMeta{
+					Kind:       "GameServerAllocation",
+					APIVersion: "allocation.agones.dev/v1",
+				},
+				Status: allocationv1.GameServerAllocationStatus{
+					State:  allocationv1.GameServerAllocationAllocated,
+					Source: "33.188.237.156:443",
+					Counters: map[string]agonesv1.CounterStatus{
+						"p": {
+							Count:    1,
+							Capacity: 3,
+						},
+					},
+				},
+			},
+		},
+		{
+			name:     "List convert",
+			features: fmt.Sprintf("%s=true", runtime.FeatureCountsAndLists),
+			in: &pb.AllocationResponse{
+				Ports:  []*pb.AllocationResponse_GameServerStatusPort{},
+				Source: "33.188.237.156:443",
+				Lists: map[string]*pb.AllocationResponse_ListStatus{
+					"p": {
+						Values:   []string{"foo", "bar", "baz"},
+						Capacity: wrapperspb.Int64(3),
+					},
+				},
+			},
+			want: &allocationv1.GameServerAllocation{
+				TypeMeta: metav1.TypeMeta{
+					Kind:       "GameServerAllocation",
+					APIVersion: "allocation.agones.dev/v1",
+				},
+				Status: allocationv1.GameServerAllocationStatus{
+					State:  allocationv1.GameServerAllocationAllocated,
+					Source: "33.188.237.156:443",
+					Lists: map[string]agonesv1.ListStatus{
+						"p": {
+							Values:   []string{"foo", "bar", "baz"},
+							Capacity: 3,
+						},
+					},
+				},
+			},
+		},
 	}
 	for _, tc := range tests {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
-
+			runtime.FeatureTestMutex.Lock()
+			defer runtime.FeatureTestMutex.Unlock()
+			require.NoError(t, runtime.ParseFeatures(tc.features))
 			out := ConvertAllocationResponseToGSA(tc.in, tc.in.Source)
 			if !assert.Equal(t, tc.want, out) {
 				t.Errorf("mismatch with want after conversion: \"%s\"", tc.name)

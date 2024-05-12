@@ -52,6 +52,9 @@ properties:
             name:
               title: Name is the descriptive name of the port
               type: string
+            range:
+              title: the port range name from which to select a port when using a 'Dynamic' or 'Passthrough' port policy. Defaults to 'default'.
+              type: string
             portPolicy:
               title: the port policy that will be applied to the game server
               description: |

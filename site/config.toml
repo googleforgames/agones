@@ -80,27 +80,27 @@ github_repo = "https://github.com/googleforgames/agones"
 gcs_engine_id = "016691298986124624340:x7qv2dywdao"
 
 # current release branch. Never is rc.
-release_branch = "release-1.38.0"
+release_branch = "release-1.40.0"
 # the main version. Never is rc.
-release_version = "1.38.0"
+release_version = "1.40.0"
 
 # shown for production
-supported_k8s = ["1.26", "1.27", "1.28"]
-k8s_api_version = "1.27"
-gke_example_cluster_version = "1.27"
-aks_example_cluster_version = "1.28.0"
-eks_example_cluster_version = "1.28"
-minikube_example_cluster_version = "1.27.6"
+supported_k8s = ["1.27", "1.28", "1.29"]
+k8s_api_version = "1.28"
+gke_example_cluster_version = "1.28"
+aks_example_cluster_version = "1.28"
+eks_example_cluster_version = "1.29"
+minikube_example_cluster_version = "1.28.6"
 # shown in development (or the next versions that will be supported)
-dev_supported_k8s = ["1.26", "1.27", "1.28"]
-dev_k8s_api_version = "1.27"
-dev_gke_example_cluster_version = "1.27"
-dev_aks_example_cluster_version = "1.28.0"
-dev_eks_example_cluster_version = "1.28"
-dev_minikube_example_cluster_version = "1.27.6"
+dev_supported_k8s = ["1.27", "1.28", "1.29"]
+dev_k8s_api_version = "1.28"
+dev_gke_example_cluster_version = "1.28"
+dev_aks_example_cluster_version = "1.28"
+dev_eks_example_cluster_version = "1.29"
+dev_minikube_example_cluster_version = "1.28.6"
 
 # example tag
-example_image_tag = "us-docker.pkg.dev/agones-images/examples/simple-game-server:0.27"
+example_image_tag = "us-docker.pkg.dev/agones-images/examples/simple-game-server:0.32"
 
 # Enable syntax highlighting and copy buttons on code blocks with Prism
 prism_syntax_highlighting = true

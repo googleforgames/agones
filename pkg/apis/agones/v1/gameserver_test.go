@@ -152,6 +152,7 @@ func TestGameServerApplyDefaults(t *testing.T) {
 		protocol            corev1.Protocol
 		state               GameServerState
 		policy              PortPolicy
+		portRange           string
 		health              Health
 		scheduling          apis.SchedulingStrategy
 		sdkServer           SdkServer
@@ -165,6 +166,7 @@ func TestGameServerApplyDefaults(t *testing.T) {
 		e := expected{
 			container:  "testing",
 			protocol:   "UDP",
+			portRange:  DefaultPortRange,
 			state:      GameServerStatePortAllocation,
 			policy:     Dynamic,
 			scheduling: apis.Packed,
@@ -240,6 +242,7 @@ func TestGameServerApplyDefaults(t *testing.T) {
 					Container: "testing2",
 					Ports: []GameServerPort{{
 						Protocol:   "TCP",
+						Range:      DefaultPortRange,
 						PortPolicy: Static,
 					}},
 					Health: Health{
@@ -408,6 +411,7 @@ func TestGameServerApplyDefaults(t *testing.T) {
 			assert.Contains(t, test.gameServer.ObjectMeta.Finalizers, agones.GroupName)
 			assert.Equal(t, test.expected.container, spec.Container)
 			assert.Equal(t, test.expected.protocol, spec.Ports[0].Protocol)
+			assert.Equal(t, test.expected.portRange, spec.Ports[0].Range)
 			assert.Equal(t, test.expected.state, test.gameServer.Status.State)
 			assert.Equal(t, test.expected.scheduling, test.gameServer.Spec.Scheduling)
 			assert.Equal(t, test.expected.health, test.gameServer.Spec.Health)
@@ -1430,8 +1434,24 @@ func TestGameServerCountPorts(t *testing.T) {
 	}))
 }
 
+func TestGameServerCountPortsForRange(t *testing.T) {
+	fixture := &GameServer{Spec: GameServerSpec{Ports: []GameServerPort{
+		{PortPolicy: Dynamic, Range: "test"},
+		{PortPolicy: Dynamic},
+		{PortPolicy: Dynamic, Range: "test"},
+		{PortPolicy: Static, Range: "test"},
+	}}}
+
+	assert.Equal(t, 2, fixture.CountPortsForRange("test", func(policy PortPolicy) bool {
+		return policy == Dynamic
+	}))
+	assert.Equal(t, 1, fixture.CountPortsForRange("test", func(policy PortPolicy) bool {
+		return policy == Static
+	}))
+}
+
 func TestGameServerPatch(t *testing.T) {
-	fixture := &GameServer{ObjectMeta: metav1.ObjectMeta{Name: "lucy"},
+	fixture := &GameServer{ObjectMeta: metav1.ObjectMeta{Name: "lucy", ResourceVersion: "1234"},
 		Spec: GameServerSpec{Container: "goat"}}
 
 	delta := fixture.DeepCopy()
@@ -1441,6 +1461,7 @@ func TestGameServerPatch(t *testing.T) {
 	assert.Nil(t, err)
 
 	assert.Contains(t, string(patch), `{"op":"replace","path":"/spec/container","value":"bear"}`)
+	assert.Contains(t, string(patch), `{"op":"test","path":"/metadata/resourceVersion","value":"1234"}`)
 }
 
 func TestGameServerGetDevAddress(t *testing.T) {

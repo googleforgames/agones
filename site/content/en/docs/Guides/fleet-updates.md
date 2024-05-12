@@ -32,7 +32,7 @@ So when a Fleet is edited (any field other than `replicas`, see note below), eit
 1. Shutdown the `maxUnavailable` number of `GameServers` in the Fleet, skipping `Allocated` `GameServers`.
 1. Repeat above steps until all the previous `GameServer` configurations have been `Shutdown` and deleted.
 
-By default, a Fleet will wait for new `GameSevers` to become `Ready` during a Rolling Update before continuing to shutdown additional `GameServers`, only counting `GameServers` that are `Ready` as being available when calculating the current `maxUnavailable` value which controls the rate at which `GameServers` are updated.
+By default, a Fleet will wait for new `GameServers` to become `Ready` during a Rolling Update before continuing to shutdown additional `GameServers`, only counting `GameServers` that are `Ready` as being available when calculating the current `maxUnavailable` value which controls the rate at which `GameServers` are updated.
 This ensures that a Fleet cannot accidentally have zero `GameServers` in the `Ready` state if something goes wrong during a Rolling Update or if `GameServers` have a long delay before moving to the `Ready` state.
 
 {{< alert title="Note" color="info">}}
@@ -127,8 +127,6 @@ the rate that you deem fit for your specific rollout.
 
 ## Notifying GameServers on Fleet Update/Downscale
 
-
-{{< beta title="Allocated GameSever Overflow Notification" gate="FleetAllocationOverflow" >}}
 
 When `Allocated` `GameServers` are utilised for a long time, such as a Lobby `GameServer`,
 or a `GameServer` that is being reused multiple times in a row, it can be useful

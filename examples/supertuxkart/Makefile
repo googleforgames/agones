@@ -28,10 +28,11 @@ PROD_REPO ?= us-docker.pkg.dev/agones-images/examples
 
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_path := $(dir $(mkfile_path))
+version := 0.13
 ifeq ($(REPOSITORY),)
-	image_tag := supertuxkart-example:0.11
+	image_tag := supertuxkart-example:$(version)
 else
-	image_tag := $(REPOSITORY)/supertuxkart-example:0.11
+	image_tag := $(REPOSITORY)/supertuxkart-example:$(version)
 endif
 
 #   _____                    _

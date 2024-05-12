@@ -1,5 +1,121 @@
 # Changelog
 
+## [v1.40.0](https://github.com/googleforgames/agones/tree/v1.40.0) (2024-04-23)
+
+[Full Changelog](https://github.com/googleforgames/agones/compare/v1.39.0...v1.40.0)
+
+**Breaking changes:**
+- Counters and Lists: Remove Bool Returns  by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3738
+
+**Implemented enhancements:**
+- Leader Election in Custom Controller by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3696
+- Migrating from generate-groups.sh to kube_codegen.sh by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3722
+- Move GKEAutopilotExtendedDurationPods to Alpha in 1.28+ by @zmerlynn in https://github.com/googleforgames/agones/pull/3729
+- Move DisableResyncOnSDKServer to Beta by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3732
+- Counters & Lists landing page and doc improvements by @markmandel in https://github.com/googleforgames/agones/pull/3649
+- Graduate FleetAllocationOverflow to Stable by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3733
+- Adds Counters and Lists to CSharp SDK by @igooch in https://github.com/googleforgames/agones/pull/3581
+- Feat/counter and list defaulting order to ascending by @lacroixthomas in https://github.com/googleforgames/agones/pull/3734
+- Add handling for StatusAddresses in GameServerStatus for the Unity SDK by @charlesvien in https://github.com/googleforgames/agones/pull/3739
+- Feat(gameservers): Shared pod IPs with GameServer Addresses by @lacroixthomas in https://github.com/googleforgames/agones/pull/3764
+- Be prescriptive about rotating regions when updating Kubernetes versions by @zmerlynn in https://github.com/googleforgames/agones/pull/3716
+- Fix ensure-e2e-infra-state-bucket by @zmerlynn in https://github.com/googleforgames/agones/pull/3719
+- Create Performance Cluster 1.28 by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3720
+- Optimise GameServer Sub-Controller Queues by @markmandel in https://github.com/googleforgames/agones/pull/3781
+
+**Fixed bugs:**
+- Counters & Lists: Consolidate `priorities` sorting by @markmandel in https://github.com/googleforgames/agones/pull/3690
+- Fix(Counter & Lists): Add validation for `priorities` by @lacroixthomas in https://github.com/googleforgames/agones/pull/3714
+- fix: #3607 Metrics data loss in K8S controller by @alvin-7 in https://github.com/googleforgames/agones/pull/3692
+- Deflake GameServerAllocationDuringMultipleAllocationClients by allowing errors by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3750
+
+**Security fixes:**
+- Bump protobufjs from 7.2.4 to 7.2.6 in /sdks/nodejs by @dependabot in https://github.com/googleforgames/agones/pull/3755
+- Bump golang.org/x/net from 0.19.0 to 0.23.0 by @zmerlynn in https://github.com/googleforgames/agones/pull/3793
+
+**Other:**
+- Flaky: TestGameServerCreationAfterDeletingOneExtensionsPod by @markmandel in https://github.com/googleforgames/agones/pull/3699
+- Prep for release v1.40.0 by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3700
+- Bumps cpp-simple Image and Refactoring Example Makefiles by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3695
+- Upgrade Protobuf to 1.33.0 by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3711
+- Modify Script for Makefile Version Updates in Examples Directory by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3712
+- Adds simple genai server example documentation to the Agones site by @igooch in https://github.com/googleforgames/agones/pull/3713
+- Update Supported Kubernetes to 1.27, 1.28, 1.29 by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3654
+- fix: typo in docs by @qhyun2 in https://github.com/googleforgames/agones/pull/3723
+- Tweak: Setting up the Game Server by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3717
+- Docs: gke.md - spelling by @daniellee in https://github.com/googleforgames/agones/pull/3740
+- Aesthetic rearrangement of cloudbuild.yaml by @zmerlynn in https://github.com/googleforgames/agones/pull/3741
+- Docs: Make hitting <enter> on connection explicit by @markmandel in https://github.com/googleforgames/agones/pull/3743
+- CI: Don't check Unreal Link by @markmandel in https://github.com/googleforgames/agones/pull/3745
+- New recommendation for multi-cluster allocation by @markmandel in https://github.com/googleforgames/agones/pull/3744
+- Custom Controller Example Page on Agones Website by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3725
+- Add Nitrado logo by @towolf in https://github.com/googleforgames/agones/pull/3753
+- Remove unnecessary args from e2e-test-cloudbuild by @zmerlynn in https://github.com/googleforgames/agones/pull/3754
+- Update Allocation from Fleet Documentation by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3761
+- Transform Lint Warnings into Errors by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3756
+- Update Canary Testing Documentation by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3760
+- Supertuxkart Example on Agones Site by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3728
+- Xonotic Example on Agones Site by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3742
+- nit documentation fix in kind cluster section when building Agones by @vicentefb in https://github.com/googleforgames/agones/pull/3770
+- Merged steps inside documentation about webhook certificate creation by @vicentefb in https://github.com/googleforgames/agones/pull/3768
+- Example Images: Increment Tags by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3796
+- Update simple game server example documentation by @vicentefb in https://github.com/googleforgames/agones/pull/3776
+
+**New Contributors:**
+- @lacroixthomas made their first contribution in https://github.com/googleforgames/agones/pull/3714
+- @daniellee made their first contribution in https://github.com/googleforgames/agones/pull/3740
+- @charlesvien made their first contribution in https://github.com/googleforgames/agones/pull/3739
+- @vicentefb made their first contribution in https://github.com/googleforgames/agones/pull/3770
+
+## [v1.39.0](https://github.com/googleforgames/agones/tree/v1.39.0) (2024-03-12)
+
+[Full Changelog](https://github.com/googleforgames/agones/compare/v1.38.0...v1.39.0)
+
+**Breaking changes:**
+- Breaking: Remove Cmake gRPC install when not found by @markmandel in https://github.com/googleforgames/agones/pull/3621
+- by default disable agones-metrics nodepools by @ashutosji in https://github.com/googleforgames/agones/pull/3672
+
+**Implemented enhancements:**
+- More description on fleetautoscaler.md by @markmandel in https://github.com/googleforgames/agones/pull/3632
+- Modify NewSDK(): Hardcode localhost by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3676
+- Allow passing values to Helm release of the Agones Terraform module by @Pierca7 in https://github.com/googleforgames/agones/pull/3665
+- Create Controller Example by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3680
+- feat: allocation response with counters and lists data by @katsew in https://github.com/googleforgames/agones/pull/3681
+- simple-genai-server 0.2: Make autonomous mode effective by @zmerlynn in https://github.com/googleforgames/agones/pull/3693
+
+**Fixed bugs:**
+- fix(SdkList):  fix list delete values panic by @GStones in https://github.com/googleforgames/agones/pull/3615
+- Define SDKServer LogLevel early by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3631
+- Fix the handling of removing disconnected streams to avoid a panic when multiple streams disconnect from the sdkserver by @roberthbailey in https://github.com/googleforgames/agones/pull/3668
+- resolve flaky e2e test by @ashutosji in https://github.com/googleforgames/agones/pull/3616
+- fix: cannot load extensions image on minikube node by @katsew in https://github.com/googleforgames/agones/pull/3682
+- added mutex at right places by @ashutosji in https://github.com/googleforgames/agones/pull/3678
+- correct path of gameserver for windows node by @ashutosji in https://github.com/googleforgames/agones/pull/3687
+
+**Other:**
+- Prep for release v1.39.0 by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3620
+- Flake: List Add/Delete Unit Tests by @markmandel in https://github.com/googleforgames/agones/pull/3627
+- Script to bump example images by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3626
+- Linting: need `git ... --add safe.directory` by @markmandel in https://github.com/googleforgames/agones/pull/3638
+- Migrate to https://github.com/gomodules/jsonpatch by @markmandel in https://github.com/googleforgames/agones/pull/3639
+- Docs: Default Counter Capacity as 1000 by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3637
+- Build: Replace godoc with pkgsite by @markmandel in https://github.com/googleforgames/agones/pull/3643
+- fix: typo by @qhyun2 in https://github.com/googleforgames/agones/pull/3658
+- Switch to debian:bookworm by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3657
+- Document `Distributed` pod scheduling. by @markmandel in https://github.com/googleforgames/agones/pull/3662
+- Downscale performance test cluster by @markmandel in https://github.com/googleforgames/agones/pull/3666
+- Info log level on Performance tests by @markmandel in https://github.com/googleforgames/agones/pull/3667
+- Adds simple game server for gen AI by @igooch in https://github.com/googleforgames/agones/pull/3628
+- fix: minor typos for simple-genai-server endpoints and readme by @indexjoseph in https://github.com/googleforgames/agones/pull/3673
+- Local SDK: Counters and Lists by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3660
+- Adds Chat Message History and Connects to the NPC Chat API by @igooch in https://github.com/googleforgames/agones/pull/3679
+- Adding build targets for the simple-genai-server example. by @roberthbailey in https://github.com/googleforgames/agones/pull/3689
+
+**New Contributors:**
+- @GStones made their first contribution in https://github.com/googleforgames/agones/pull/3615
+- @indexjoseph made their first contribution in https://github.com/googleforgames/agones/pull/3673
+- @Pierca7 made their first contribution in https://github.com/googleforgames/agones/pull/3665
+
 ## [v1.38.0](https://github.com/googleforgames/agones/tree/v1.38.0) (2024-01-30)
 
 [Full Changelog](https://github.com/googleforgames/agones/compare/v1.37.0...v1.38.0)

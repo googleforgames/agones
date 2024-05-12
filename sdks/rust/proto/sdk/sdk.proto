@@ -167,14 +167,14 @@ message GameServer {
             repeated string ids = 3;
         }
 
-        // [Stage:Alpha]
+        // [Stage:Beta]
         // [FeatureFlag:CountsAndLists]
         message CounterStatus {
           int64 count = 1;
           int64 capacity = 2;
         }
 
-        // [Stage:Alpha]
+        // [Stage:Beta]
         // [FeatureFlag:CountsAndLists]
         message ListStatus {
           int64 capacity = 1;
@@ -190,11 +190,11 @@ message GameServer {
         // [FeatureFlag:PlayerTracking]
         PlayerStatus players = 4;
 
-        // [Stage:Alpha]
+        // [Stage:Beta]
         // [FeatureFlag:CountsAndLists]
         map<string, CounterStatus> counters = 5;
 
-        // [Stage:Alpha]
+        // [Stage:Beta]
         // [FeatureFlag:CountsAndLists]
         map<string, ListStatus> lists = 6;
     }

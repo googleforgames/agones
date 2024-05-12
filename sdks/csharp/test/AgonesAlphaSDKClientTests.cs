@@ -15,6 +15,7 @@
 using Agones.Dev.Sdk.Alpha;
 using Grpc.Core;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -22,6 +23,7 @@ using Moq;
 using System;
 using Grpc.Net.Client;
 using Microsoft.Extensions.Logging;
+using gProto = Google.Protobuf.WellKnownTypes;
 
 namespace Agones.Tests
 {

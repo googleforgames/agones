@@ -166,6 +166,266 @@ if (featureGates.Contains("PlayerTracking"))
     }
 }
 
+if (featureGates.Contains("CountsAndLists"))
+// Tests are expected to run sequentially on the same pre-defined Counter in the localsdk server
+{
+    var beta = sdk.Beta();
+    var key = "rooms";
+
+    {
+        var wantCount = 1;
+        var task = beta.GetCounterCountAsync(key);
+        task.Wait();
+        var gotCount = task.Result;
+        if (wantCount != gotCount)
+        {
+            Console.Error.WriteLine($"Counter count should be {wantCount}, but is {gotCount}");
+            Environment.Exit(1);
+        }
+    }
+
+    {
+        var wantCount = 10;
+        var increment = 9;
+        try
+        {
+            var task = beta.IncrementCounterAsync(key, increment);
+            task.Wait();
+        }
+        catch (Exception e)
+        {
+            Console.Error.WriteLine($"IncrementCounterAsync for Counter {key} did not increment. Error: {e.ToString()}");
+            Environment.Exit(1);
+        }
+
+        var getTask = beta.GetCounterCountAsync(key);
+        getTask.Wait();
+        var gotCount = getTask.Result;
+        if (wantCount != gotCount)
+        {
+            Console.Error.WriteLine($"Counter count should be {wantCount}, but is {gotCount}");
+            Environment.Exit(1);
+        }
+    }
+
+    {
+        var wantCount = 5;
+        var decrement = 5;
+        try
+        {
+            var task = beta.DecrementCounterAsync(key, decrement);
+            task.Wait();
+        }
+        catch (Exception e)
+        {
+            Console.Error.WriteLine($"DecrementCounterAsync for Counter {key} did not decrement. Error: {e.ToString()}");
+            Environment.Exit(1);
+        }
+
+        var getTask = beta.GetCounterCountAsync(key);
+        getTask.Wait();
+        var gotCount = getTask.Result;
+        if (wantCount != gotCount)
+        {
+            Console.Error.WriteLine($"Counter count should be {wantCount}, but is {gotCount}");
+            Environment.Exit(1);
+        }
+    }
+
+    {
+        var wantCount = 3;
+        try
+        {
+            var task = beta.SetCounterCountAsync(key, wantCount);
+            task.Wait();
+        }
+        catch (Exception e)
+        {
+            Console.Error.WriteLine($"SetCounterCountAsync for Counter {key} did not set. Error: {e.ToString()}");
+            Environment.Exit(1);
+        }
+
+        var getTask = beta.GetCounterCountAsync(key);
+        getTask.Wait();
+        var gotCount = getTask.Result;
+        if (wantCount != gotCount)
+        {
+            Console.Error.WriteLine($"Counter count should be {wantCount}, but is {gotCount}");
+            Environment.Exit(1);
+        }
+    }
+
+    {
+        var wantCapacity = 10;
+        var task = beta.GetCounterCapacityAsync(key);
+        task.Wait();
+        var gotCapacity = task.Result;
+        if (wantCapacity != gotCapacity)
+        {
+            Console.Error.WriteLine($"Counter capacity should be {wantCapacity}, but is {gotCapacity}");
+            Environment.Exit(1);
+        }
+    }
+
+
+    {
+        var wantCapacity = 0;
+        try
+        {
+            var task = beta.SetCounterCapacityAsync(key, wantCapacity);
+            task.Wait();
+        }
+        catch (Exception e)
+        {
+            Console.Error.WriteLine($"SetCounterCapacityAsync for Counter {key} did not set. Error: {e.ToString()}");
+            Environment.Exit(1);
+        }
+
+        var getTask = beta.GetCounterCapacityAsync(key);
+        getTask.Wait();
+        var gotCapacity = getTask.Result;
+        if (wantCapacity != gotCapacity)
+        {
+            Console.Error.WriteLine($"Counter capacity should be {wantCapacity}, but is {gotCapacity}");
+            Environment.Exit(1);
+        }
+    }
+}
+
+if (featureGates.Contains("CountsAndLists"))
+// Tests are expected to run sequentially on the same pre-defined List in the localsdk server
+{
+    var beta = sdk.Beta();
+    var key = "players";
+
+    {
+        var wantCapacity = 100;
+        var task = beta.GetListCapacityAsync(key);
+        task.Wait();
+        var gotCapacity = task.Result;
+        if (wantCapacity != gotCapacity)
+        {
+            Console.Error.WriteLine($"List capacity should be {wantCapacity}, but is {gotCapacity}");
+            Environment.Exit(1);
+        }
+    }
+
+    {
+        var wantCapacity = 10;
+        try
+        {
+            var task = beta.SetListCapacityAsync(key, wantCapacity);
+            task.Wait();
+        }
+        catch (Exception e)
+        {
+            Console.Error.WriteLine($"SetListCapacityAsync for List {key} did not set. Error: {e.ToString()}");
+            Environment.Exit(1);
+        }
+
+        var getTask = beta.GetListCapacityAsync(key);
+        getTask.Wait();
+        var gotCapacity = getTask.Result;
+        if (wantCapacity != gotCapacity)
+        {
+            Console.Error.WriteLine($"List capacity should be {wantCapacity}, but is {gotCapacity}");
+            Environment.Exit(1);
+        }
+    }
+
+    {
+        var value = "foo";
+        var want = false;
+        var task = beta.ListContainsAsync(key, value);
+        task.Wait();
+        var got = task.Result;
+        if (want != got)
+        {
+            Console.Error.WriteLine($"ListContains expected {want} for value {value}, but got {got}");
+            Environment.Exit(1);
+        }
+        value = "test1";
+        want = true;
+        task = beta.ListContainsAsync(key, value);
+        task.Wait();
+        got = task.Result;
+        if (want != got)
+        {
+            Console.Error.WriteLine($"ListContains expected {want} for value {value}, but got {got}");
+            Environment.Exit(1);
+        }
+    }
+
+    {
+        IList<string> wantValues = new List<string> { "test0", "test1", "test2" };
+        var task = beta.GetListValuesAsync(key);
+        task.Wait();
+        var gotValues = task.Result;
+        var equal = Enumerable.SequenceEqual(wantValues, gotValues);
+        if (!equal)
+        {
+            var wantStr = String.Join(" ", wantValues);
+            var gotStr = String.Join(" ", gotValues);
+            Console.Error.WriteLine($"List values should be {wantStr}, but is {gotStr}");
+            Environment.Exit(1);
+        }
+    }
+
+    {
+        var addValue = "test3";
+        IList<string> wantValues = new List<string> { "test0", "test1", "test2", "test3" };
+        try
+        {
+            var task = beta.AppendListValueAsync(key, addValue);
+            task.Wait();
+        }
+        catch (Exception e)
+        {
+            Console.Error.WriteLine($"AppendListValueAsync for List {key} did not append {addValue}. Error: {e.ToString()}");
+            Environment.Exit(1);
+        }
+
+        var getTask = beta.GetListValuesAsync(key);
+        getTask.Wait();
+        var gotValues = getTask.Result;
+        var equal = Enumerable.SequenceEqual(wantValues, gotValues);
+        if (!equal)
+        {
+            var wantStr = String.Join(" ", wantValues);
+            var gotStr = String.Join(" ", gotValues);
+            Console.Error.WriteLine($"List values should be {wantStr}, but is {gotStr}");
+            Environment.Exit(1);
+        }
+    }
+
+    {
+        var removeValue = "test2";
+        IList<string> wantValues = new List<string> { "test0", "test1", "test3" };
+        try
+        {
+            var task = beta.DeleteListValueAsync(key, removeValue);
+            task.Wait();
+        }
+        catch (Exception e)
+        {
+            Console.Error.WriteLine($"DeleteListValueAsync for List {key} did not delete {removeValue}. Error: {e.ToString()}");
+            Environment.Exit(1);
+        }
+
+        var getTask = beta.GetListValuesAsync(key);
+        getTask.Wait();
+        var gotValues = getTask.Result;
+        var equal = Enumerable.SequenceEqual(wantValues, gotValues);
+        if (!equal)
+        {
+            var wantStr = String.Join(" ", wantValues);
+            var gotStr = String.Join(" ", gotValues);
+            Console.Error.WriteLine($"List values should be {wantStr}, but is {gotStr}");
+            Environment.Exit(1);
+        }
+    }
+}
+
 var shutDownStatus = await sdk.ShutDownAsync();
 if (shutDownStatus.StatusCode != StatusCode.OK)
 {

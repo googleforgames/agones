@@ -205,6 +205,20 @@ func (in *GameServerAllocationStatus) DeepCopyInto(out *GameServerAllocationStat
 		*out = new(GameServerMetadata)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.Counters != nil {
+		in, out := &in.Counters, &out.Counters
+		*out = make(map[string]agonesv1.CounterStatus, len(*in))
+		for key, val := range *in {
+			(*out)[key] = val
+		}
+	}
+	if in.Lists != nil {
+		in, out := &in.Lists, &out.Lists
+		*out = make(map[string]agonesv1.ListStatus, len(*in))
+		for key, val := range *in {
+			(*out)[key] = *val.DeepCopy()
+		}
+	}
 	return
 }
 

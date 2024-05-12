@@ -23,12 +23,6 @@ import (
 	"testing"
 	"time"
 
-	"agones.dev/agones/pkg/apis"
-	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
-	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
-	typedagonesv1 "agones.dev/agones/pkg/client/clientset/versioned/typed/agones/v1"
-	"agones.dev/agones/pkg/util/runtime"
-	e2e "agones.dev/agones/test/e2e/framework"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -45,6 +39,13 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/util/retry"
+
+	"agones.dev/agones/pkg/apis"
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
+	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
+	typedagonesv1 "agones.dev/agones/pkg/client/clientset/versioned/typed/agones/v1"
+	"agones.dev/agones/pkg/util/runtime"
+	e2e "agones.dev/agones/test/e2e/framework"
 )
 
 const (
@@ -718,6 +719,7 @@ func TestFleetUpdates(t *testing.T) {
 		t.Run(k, func(t *testing.T) {
 			t.Parallel()
 			client := framework.AgonesClient.AgonesV1()
+			log := e2e.TestLogger(t)
 
 			flt := v()
 			flt.Spec.Template.ObjectMeta.Annotations = map[string]string{key: red}
@@ -725,22 +727,24 @@ func TestFleetUpdates(t *testing.T) {
 			require.NoError(t, err)
 			defer client.Fleets(framework.Namespace).Delete(ctx, flt.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
 
+			// gate that we have the keys we expect.
 			err = framework.WaitForFleetGameServersCondition(flt, func(gs *agonesv1.GameServer) bool {
 				return gs.ObjectMeta.Annotations[key] == red
 			})
 			require.NoError(t, err)
 
 			// if the generation has been updated, it's time to try again.
-			err = wait.PollUntilContextTimeout(context.Background(), time.Second, 10*time.Second, true, func(ctx context.Context) (bool, error) {
+			err = wait.PollUntilContextTimeout(context.Background(), time.Second, time.Minute, true, func(ctx context.Context) (bool, error) {
 				flt, err = framework.AgonesClient.AgonesV1().Fleets(framework.Namespace).Get(ctx, flt.ObjectMeta.Name, metav1.GetOptions{})
 				if err != nil {
+					log.WithError(err).WithField("flt", flt.ObjectMeta.Name).Warn("Could not retrieve fleet, trying again")
 					return false, err
 				}
 				fltCopy := flt.DeepCopy()
 				fltCopy.Spec.Template.ObjectMeta.Annotations[key] = green
 				_, err = framework.AgonesClient.AgonesV1().Fleets(framework.Namespace).Update(ctx, fltCopy, metav1.UpdateOptions{})
 				if err != nil {
-					logrus.WithError(err).Warn("Could not update fleet, trying again")
+					log.WithError(err).WithField("flt", flt.ObjectMeta.Name).Warn("Could not update fleet, trying again")
 					return false, nil
 				}
 
@@ -748,6 +752,12 @@ func TestFleetUpdates(t *testing.T) {
 			})
 			require.NoError(t, err)
 
+			// let's make sure we're fully Ready
+			framework.AssertFleetCondition(t, flt, func(entry *logrus.Entry, fleet *agonesv1.Fleet) bool {
+				return flt.Spec.Replicas == fleet.Status.ReadyReplicas
+			})
+
+			// ...and fully rolled out
 			err = framework.WaitForFleetGameServersCondition(flt, func(gs *agonesv1.GameServer) bool {
 				return gs.ObjectMeta.Annotations[key] == green
 			})
@@ -1659,13 +1669,13 @@ func TestFleetAggregatedCounterStatus(t *testing.T) {
 		msg := fmt.Sprintf("SET_COUNTER_CAPACITY games %d", capacity)
 		reply, err := framework.SendGameServerUDP(t, &gs, msg)
 		require.NoError(t, err)
-		assert.Equal(t, "SUCCESS: true\n", reply)
+		assert.Equal(t, "SUCCESS\n", reply)
 
 		totalCount += count
 		msg = fmt.Sprintf("SET_COUNTER_COUNT games %d", count)
 		reply, err = framework.SendGameServerUDP(t, &gs, msg)
 		require.NoError(t, err)
-		assert.Equal(t, "SUCCESS: true\n", reply)
+		assert.Equal(t, "SUCCESS\n", reply)
 
 		if gs.Status.State == agonesv1.GameServerStateAllocated {
 			allocatedCapacity += capacity
@@ -1742,7 +1752,7 @@ func TestFleetAggregatedListStatus(t *testing.T) {
 		msg := fmt.Sprintf("SET_LIST_CAPACITY gamers %d", capacity)
 		reply, err := framework.SendGameServerUDP(t, &gs, msg)
 		require.NoError(t, err)
-		assert.Equal(t, "SUCCESS: true\n", reply)
+		assert.Equal(t, "SUCCESS\n", reply)
 
 		totalCount += count
 		// Each list starts with a count of 2 (Values: []string{"gamer0", "gamer1"})
@@ -1750,7 +1760,7 @@ func TestFleetAggregatedListStatus(t *testing.T) {
 			msg = fmt.Sprintf("APPEND_LIST_VALUE gamers gamer%d", i)
 			reply, err = framework.SendGameServerUDP(t, &gs, msg)
 			require.NoError(t, err)
-			assert.Equal(t, "SUCCESS: true\n", reply)
+			assert.Equal(t, "SUCCESS\n", reply)
 		}
 
 		if gs.Status.State == agonesv1.GameServerStateAllocated {
@@ -1774,9 +1784,6 @@ func TestFleetAggregatedListStatus(t *testing.T) {
 }
 
 func TestFleetAllocationOverflow(t *testing.T) {
-	if !runtime.FeatureEnabled(runtime.FeatureFleetAllocateOverflow) {
-		t.SkipNow()
-	}
 	t.Parallel()
 	ctx := context.Background()
 	client := framework.AgonesClient.AgonesV1()
@@ -1866,7 +1873,12 @@ func TestFleetAllocationOverflow(t *testing.T) {
 			return false
 		}, 5*time.Minute, time.Second, "Rolling update did not complete")
 
-		assertCount(t, log, flt, 1)
+		if runtime.FeatureEnabled(runtime.FeatureRollingUpdateFix) {
+			// In the rolling update fix, the old GSS will be scaled to Spec.Replicas=0.
+			assertCount(t, log, flt, 2)
+		} else {
+			assertCount(t, log, flt, 1)
+		}
 	})
 }
 

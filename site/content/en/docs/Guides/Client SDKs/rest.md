@@ -238,6 +238,7 @@ Apply an Annotation with the prefix "agones.dev/sdk-" to the backing `GameServer
 curl -d '{"key": "foo", "value": "bar"}' -H "Content-Type: application/json" -X PUT http://localhost:${AGONES_SDK_HTTP_PORT}/metadata/annotation
 ```
 
+{{% feature expiryVersion="1.41.0" %}}
 ### Counters and Lists
 
 {{< alpha title="Counters and Lists" gate="CountsAndLists" >}}
@@ -336,6 +337,107 @@ Response:
 ```json
 {"name":"players", "capacity":"120", "values":["player4", "player9"]}
 ```
+{{% /feature %}}
+{{% feature publishVersion="1.41.0" %}}
+### Counters and Lists
+
+{{< beta title="Counters and Lists" gate="CountsAndLists" >}}
+
+#### Counters
+
+In all the Counter examples, we retrieve the counter under the key `rooms` as if it was previously defined in [`GameServer.Spec.counters[room]`]({{< ref "/docs/Reference/agones_crd_api_reference.html#agones.dev/v1.GameServerSpec" >}}).
+
+For your own Counter REST requests, replace the value `rooms` with your own key in the path.
+
+##### Beta: GetCounter
+This function retrieves a specified counter by its key, `rooms`, and returns its information.
+
+###### Example
+
+```bash
+curl -H "Content-Type: application/json" -X GET http://localhost:${AGONES_SDK_HTTP_PORT}/v1beta1/counters/rooms
+```
+
+Response:
+```json
+{"name":"rooms", "count":"1", "capacity":"10"}
+```
+
+##### Beta: UpdateCounter
+This function updates the properties of the counter with the key `rooms`, such as its count and capacity, and returns the updated counter details.
+
+###### Example
+
+```bash
+curl -d '{"count": "5", "capacity": "11"}' -H "Content-Type: application/json" -X PATCH http://localhost:${AGONES_SDK_HTTP_PORT}/v1beta1/counters/rooms
+```
+
+Response:
+```json
+{"name":"rooms", "count":"5", "capacity":"11"}
+```
+
+#### Lists
+
+In all the List examples, we retrieve the list under the key `players` as if it was previously defined in [`GameServer.Spec.lists[players]`]({{< ref "/docs/Reference/agones_crd_api_reference.html#agones.dev/v1.GameServerSpec" >}}).
+
+For your own List REST based requests, replace the value `players` with your own key in the path.
+
+##### Beta: GetList
+This function retrieves the list's properties with the key `players`, returns the list's information.
+
+###### Example
+```bash
+curl -H "Content-Type: application/json" -X GET http://localhost:${AGONES_SDK_HTTP_PORT}/v1beta1/lists/players
+```
+
+Response:
+```json
+{"name":"players", "capacity":"100", "values":["player0", "player1", "player2"]}     
+```
+
+##### Beta: UpdateList
+This function updates the list's properties with the key `players`, such as its capacity and values, returns the updated list details. This will overwrite all existing List.Values with the update list request values. Use addValue or removeValue for modifying the List.Values field.
+
+###### Example
+
+```bash
+curl -d '{"capacity": "120", "values": ["player3", "player4"]}' -H "Content-Type: application/json" -X PATCH http://localhost:${AGONES_SDK_HTTP_PORT}/v1beta1/lists/players
+```
+
+Response:
+```json
+{"name":"players", "capacity":"120", "values":["player3", "player4"]}
+```
+
+##### Beta: AddListValue
+This function adds a new value to a list with the key `players` and returns the list with this addition.
+
+###### Example     
+
+```bash
+curl -d '{"value": "player9"}' -H "Content-Type: application/json" -X POST http://localhost:${AGONES_SDK_HTTP_PORT}/v1beta1/lists/players:addValue
+```
+
+Response:
+```json
+{"name":"players", "capacity":"120", "values":["player3", "player4", "player9"]}
+```
+
+##### Beta: RemoveListValue
+This function removes a value from the list with the key `players` and returns updated list.
+     
+###### Example  
+
+```bash
+curl -d '{"value": "player3"}' -H "Content-Type: application/json" -X POST http://localhost:${AGONES_SDK_HTTP_PORT}/v1beta1/lists/players:removeValue
+```
+
+Response:
+```json
+{"name":"players", "capacity":"120", "values":["player4", "player9"]}
+```
+{{% /feature %}}
 
 ### Player Tracking
 

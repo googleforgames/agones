@@ -115,6 +115,9 @@ const (
 	// ProtocolTCPUDP Protocol exposes the hostPort allocated for this container for both TCP and UDP.
 	ProtocolTCPUDP corev1.Protocol = "TCPUDP"
 
+	// DefaultPortRange is the name of the default port range.
+	DefaultPortRange = "default"
+
 	// RoleLabel is the label in which the Agones role is specified.
 	// Pods from a GameServer will have the value "gameserver"
 	RoleLabel = agones.GroupName + "/role"
@@ -123,6 +126,9 @@ const (
 	// GameServerPodLabel is the label that the name of the GameServer
 	// is set on the Pod the GameServer controls
 	GameServerPodLabel = agones.GroupName + "/gameserver"
+	// GameServerPortPolicyPodLabel is the label to identify the port policy
+	// of the pod
+	GameServerPortPolicyPodLabel = agones.GroupName + "/port"
 	// GameServerContainerAnnotation is the annotation that stores
 	// which container is the container that runs the dedicated game server
 	GameServerContainerAnnotation = agones.GroupName + "/container"
@@ -142,6 +148,9 @@ const (
 	// GameServerErroredAtAnnotation is an annotation that records the timestamp the GameServer entered the
 	// error state. The timestamp is encoded in RFC3339 format.
 	GameServerErroredAtAnnotation = agones.GroupName + "/errored-at"
+
+	// NodePodIP identifies an IP address from a pod.
+	NodePodIP corev1.NodeAddressType = "PodIP"
 
 	// True is the string "true" to appease the goconst lint.
 	True = "true"
@@ -258,6 +267,10 @@ type Health struct {
 type GameServerPort struct {
 	// Name is the descriptive name of the port
 	Name string `json:"name,omitempty"`
+	// (Alpha, PortRanges feature flag) Range is the port range name from which to select a port when using a
+	// 'Dynamic' or 'Passthrough' port policy.
+	// +optional
+	Range string `json:"range,omitempty"`
 	// PortPolicy defines the policy for how the HostPort is populated.
 	// Dynamic port will allocate a HostPort within the selected MIN_PORT and MAX_PORT range passed to the controller
 	// at installation time.
@@ -427,6 +440,10 @@ func (gss *GameServerSpec) applyPortDefaults() {
 		// basic spec
 		if p.PortPolicy == "" {
 			gss.Ports[i].PortPolicy = Dynamic
+		}
+
+		if p.Range == "" {
+			gss.Ports[i].Range = DefaultPortRange
 		}
 
 		if p.Protocol == "" {
@@ -834,7 +851,7 @@ func (gs *GameServer) HasPortPolicy(policy PortPolicy) bool {
 	return false
 }
 
-// Status returns a GameServerSatusPort for this GameServerPort
+// Status returns a GameServerStatusPort for this GameServerPort
 func (p GameServerPort) Status() GameServerStatusPort {
 	return GameServerStatusPort{Name: p.Name, Port: p.HostPort}
 }
@@ -851,8 +868,21 @@ func (gs *GameServer) CountPorts(f func(policy PortPolicy) bool) int {
 	return count
 }
 
-// Patch creates a JSONPatch to move the current GameServer
-// to the passed in delta GameServer
+// CountPortsForRange returns the number of ports that match condition function and range name.
+func (gs *GameServer) CountPortsForRange(name string, f func(policy PortPolicy) bool) int {
+	count := 0
+	for _, p := range gs.Spec.Ports {
+		if p.Range == name && f(p.PortPolicy) {
+			count++
+		}
+	}
+	return count
+}
+
+// Patch creates a JSONPatch to move the current GameServer to the passed in delta GameServer.
+// Returned Patch includes a "test" operation that will cause the GameServers.Patch() operation to
+// fail if the Game Server has been updated (ResourceVersion has changed) in between when the Patch
+// was created and applied.
 func (gs *GameServer) Patch(delta *GameServer) ([]byte, error) {
 	var result []byte
 
@@ -871,7 +901,13 @@ func (gs *GameServer) Patch(delta *GameServer) ([]byte, error) {
 		return result, errors.Wrapf(err, "error creating patch for GameServer %s", gs.ObjectMeta.Name)
 	}
 
-	result, err = json.Marshal(patch)
+	// Per https://jsonpatch.com/ "Tests that the specified value is set in the document. If the test
+	// fails, then the patch as a whole should not apply."
+	// Used here to check the object has not been updated (has not changed ResourceVersion).
+	patches := []jsonpatch.JsonPatchOperation{{Operation: "test", Path: "/metadata/resourceVersion", Value: gs.ObjectMeta.ResourceVersion}}
+	patches = append(patches, patch...)
+
+	result, err = json.Marshal(patches)
 	return result, errors.Wrapf(err, "error creating json for patch for GameServer %s", gs.ObjectMeta.Name)
 }
 
@@ -980,4 +1016,88 @@ func MergeRemoveDuplicates(list1 []string, list2 []string) []string {
 		}
 	}
 	return uniqueList
+}
+
+// CompareCountAndListPriorities compares two game servers based on a list of CountsAndLists Priorities using available
+// capacity as the comparison.
+func (gs *GameServer) CompareCountAndListPriorities(priorities []Priority, other *GameServer) *bool {
+	for _, priority := range priorities {
+		res := gs.compareCountAndListPriority(&priority, other)
+		if res != nil {
+			// reverse if descending
+			if priority.Order == GameServerPriorityDescending {
+				flip := !*res
+				return &flip
+			}
+
+			return res
+		}
+	}
+
+	return nil
+}
+
+// compareCountAndListPriority compares two game servers based on a CountsAndLists Priority using available
+// capacity (Capacity - Count for Counters, and Capacity - len(Values) for Lists) as the comparison.
+// Returns true if gs1 < gs2; false if gs1 > gs2; nil if gs1 == gs2; nil if neither gamer server has the Priority.
+// If only one game server has the Priority, prefer that server. I.e. nil < gsX when Priority
+// Order is Descending (3, 2, 1, 0, nil), and nil > gsX when Order is Ascending (0, 1, 2, 3, nil).
+func (gs *GameServer) compareCountAndListPriority(p *Priority, other *GameServer) *bool {
+	var gs1ok, gs2ok bool
+	t := true
+	f := false
+	switch p.Type {
+	case GameServerPriorityCounter:
+		// Check if both game servers contain the Counter.
+		counter1, ok1 := gs.Status.Counters[p.Key]
+		counter2, ok2 := other.Status.Counters[p.Key]
+		// If both game servers have the Counter
+		if ok1 && ok2 {
+			availCapacity1 := counter1.Capacity - counter1.Count
+			availCapacity2 := counter2.Capacity - counter2.Count
+			if availCapacity1 < availCapacity2 {
+				return &t
+			}
+			if availCapacity1 > availCapacity2 {
+				return &f
+			}
+			if availCapacity1 == availCapacity2 {
+				return nil
+			}
+		}
+		gs1ok = ok1
+		gs2ok = ok2
+	case GameServerPriorityList:
+		// Check if both game servers contain the List.
+		list1, ok1 := gs.Status.Lists[p.Key]
+		list2, ok2 := other.Status.Lists[p.Key]
+		// If both game servers have the List
+		if ok1 && ok2 {
+			availCapacity1 := list1.Capacity - int64(len(list1.Values))
+			availCapacity2 := list2.Capacity - int64(len(list2.Values))
+			if availCapacity1 < availCapacity2 {
+				return &t
+			}
+			if availCapacity1 > availCapacity2 {
+				return &f
+			}
+			if availCapacity1 == availCapacity2 {
+				return nil
+			}
+		}
+		gs1ok = ok1
+		gs2ok = ok2
+	}
+	// If only one game server has the Priority, prefer that server. I.e. nil < gsX when Order is
+	// Descending (3, 2, 1, 0, nil), and nil > gsX when Order is Ascending (0, 1, 2, 3, nil).
+	if (gs1ok && p.Order == GameServerPriorityDescending) ||
+		(gs2ok && p.Order == GameServerPriorityAscending) {
+		return &f
+	}
+	if (gs1ok && p.Order == GameServerPriorityAscending) ||
+		(gs2ok && p.Order == GameServerPriorityDescending) {
+		return &t
+	}
+	// If neither game server has the Priority
+	return nil
 }

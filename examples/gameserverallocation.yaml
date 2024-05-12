@@ -28,15 +28,14 @@ metadata:
   name: allocation-example
 spec:
   # GameServer selector from which to choose GameServers from.
-  # GameServers still have the hard requirement to be `Ready` to be allocated from
-  # however we can also make available `matchExpressions` for even greater
-  # flexibility.
+  # GameServers still have the hard requirement to be `Ready` to be allocated from.
+  # However, we can also make available `matchExpressions` for even greater flexibility.
   # Below is an example of a GameServer allocated against a given fleet.
   # See: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/ for more details
   # The selectors is an ordered list of allocations set.
   # If the first selector is not matched, the selection attempts the second selector, and so on.
   # This is useful for things like smoke testing of new game servers.
-  # This also support `matchExpressions`
+  # This also supports `matchExpressions`
   selectors:
     - matchLabels:
         agones.dev/fleet: green-fleet
@@ -50,19 +49,19 @@ spec:
       # via Allocation. Defaults to "Ready". The only other option is "Allocated", which can be used in conjunction with
       # label/annotation/player selectors to retrieve an already Allocated GameServer.
       gameServerState: Ready
-      # [Stage:Alpha]
+      # [Stage:Beta]
       # [FeatureFlag:CountsAndLists]
-      # counters: # selector for counter current values of a GameServer count
-      #   rooms:
-      #     minCount: 1 # minimum value. Defaults to 0.
-      #     maxCount: 5 # maximum value. Defaults to max(int64)
-      #     minAvailable: 1 # minimum available (current capacity - current count). Defaults to 0.
-      #     maxAvailable: 10 # maximum available (current capacity - current count) Defaults to max(int64)
-      # lists:
-      #   players:
-      #     containsValue: "x6k8z" # only match GameServers who has this value in the list. Defaults to "", which is all.
-      #     minAvailable: 1 # minimum available (current capacity - current count). Defaults to 0.
-      #     maxAvailable: 10 # maximum available (current capacity - current count) Defaults to 0, which translates to max(int64)
+      counters:  # selector for counter current values of a GameServer count
+        rooms:
+          minCount: 1  # minimum value. Defaults to 0.
+          maxCount: 5  # maximum value. Defaults to max(int64)
+          minAvailable: 1  # minimum available (current capacity - current count). Defaults to 0.
+          maxAvailable: 10  # maximum available (current capacity - current count) Defaults to max(int64)
+      lists:
+        players:
+          containsValue: "x6k8z"  # only match GameServers who has this value in the list. Defaults to "", which is all.
+          minAvailable: 1  # minimum available (current capacity - current count). Defaults to 0.
+          maxAvailable: 10  # maximum available (current capacity - current count) Defaults to 0, which translates to max(int64)
       #
       # [Stage:Alpha]
       # [FeatureFlag:PlayerAllocationFilter]
@@ -85,3 +84,35 @@ spec:
       mode: deathmatch
     annotations:
       map: garden22
+  # yamllint disable rule:comments-indentation rule:line-length
+  # [Stage: Beta]
+  # [FeatureFlag:CountsAndLists]
+  # `Priorities` configuration alters the order in which `GameServers` are searched for matches to the configured `selectors`.
+  #
+  # Priority of sorting is in descending importance. I.e. The position 0 `priority` entry is checked first.
+  #
+  # For `Packed` strategy sorting, this priority list will be the tie-breaker within the least utilised infrastructure, to ensure optimal
+  # infrastructure usage while also allowing some custom prioritisation of `GameServers`.
+  #
+  # For `Distributed` strategy sorting, the entire selection of `GameServers` will be sorted by this priority list to provide the
+  # order that `GameServers` will be allocated by.
+  # Optional.
+  priorities:
+    - type: Counter  # Whether a Counter or a List.
+      key: rooms  # The name of the Counter or List.
+      order: Ascending  # "Ascending" lists smaller available capacity first.
+  # [Stage:Beta]
+  # [FeatureFlag:CountsAndLists]
+  # Counter actions to perform during allocation. Optional.
+  counters:
+    rooms:
+      action: Increment  # Either "Increment" or "Decrement" the Counter’s Count.
+      amount: 1  # Amount is the amount to increment or decrement the Count. Must be a positive integer.
+      capacity: 5  # Amount to update the maximum capacity of the Counter to this number. Min 0, Max int64.
+  # List actions to perform during allocation. Optional.
+  lists:
+    players:
+      addValues:  # appends values to a List’s Values array. Any duplicate values will be ignored
+        - x7un
+        - 8inz
+      capacity: 40  # Updates the maximum capacity of the Counter to this number. Min 0, Max 1000.

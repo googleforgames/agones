@@ -50,7 +50,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: agones-1.39.0-dev
+    chart: agones-1.41.0-dev
     release: agones-manual
     heritage: Helm
 ---
@@ -75,7 +75,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: agones-1.39.0-dev
+    chart: agones-1.41.0-dev
     release: agones-manual
     heritage: Helm
 ---
@@ -100,7 +100,7 @@ metadata:
   namespace: default
   labels:
     app: agones
-    chart: agones-1.39.0-dev
+    chart: agones-1.41.0-dev
     release: agones-manual
     heritage: Helm
 ---
@@ -112,7 +112,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: "agones-1.39.0-dev"
+    chart: "agones-1.41.0-dev"
     release: "agones-manual"
     heritage: "Helm"
 type: Opaque
@@ -129,7 +129,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: "agones-1.39.0-dev"
+    chart: "agones-1.41.0-dev"
     release: "agones-manual"
     heritage: "Helm"
 data:
@@ -145,7 +145,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: "agones-1.39.0-dev"
+    chart: "agones-1.41.0-dev"
     release: "agones-manual"
     heritage: "Helm"
 data:
@@ -161,7 +161,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: "agones-1.39.0-dev"
+    chart: "agones-1.41.0-dev"
     release: "agones-manual"
     heritage: "Helm"
 data:
@@ -191,7 +191,7 @@ metadata:
   labels:
     component: crd
     app: agones
-    chart: agones-1.39.0-dev
+    chart: agones-1.41.0-dev
     release: agones-manual
     heritage: Helm
 spec:
@@ -298,7 +298,8 @@ spec:
                         description: The name of the Counter or List. If not found on the GameServer, those GameServer with the key will have priority over those that do not.
                       order:
                         type: string
-                        description: Ascending or Descending sort order. Default is "Ascending" so remove smaller total capacity first. "Descending" would remove larger total capacity first.
+                        description: Ascending or Descending sort order. Default is "Ascending" so remove smaller available capacity first. "Descending" would remove larger available capacity first.
+                        default: Ascending
                         enum:
                           - Ascending
                           - Descending
@@ -1687,6 +1688,9 @@ spec:
                                            description: "Requests describes the minimum amount of compute resources required. If Requests is omitted for a container, it defaults to Limits if that is explicitly specified, otherwise to an implementation-defined value. Requests cannot exceed Limits. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/"
                                            type: object
                                        type: object
+                                     restartPolicy:
+                                       description: "RestartPolicy defines the restart behavior of individual containers in a pod. This field may only be set for init containers, and the only allowed value is \"Always\". For non-init containers or when this field is not specified, the restart behavior is defined by the Pod's restart policy and the container type. Setting the RestartPolicy as \"Always\" for the init container will have the following effect: this init container will be continually restarted on exit until all regular containers have terminated. Once all regular containers have completed, all init containers with restartPolicy \"Always\" will be shut down. This lifecycle differs from normal init containers and is often referred to as a \"sidecar\" container. Although this init container still starts in the init container sequence, it does not wait for the container to complete before proceeding to the next init container. Instead, the next init container starts immediately after this init container is started, or after any startupProbe has successfully completed."
+                                       type: string
                                      securityContext:
                                        description: "SecurityContext defines the security options the container should be run with. If set, the fields of SecurityContext override the equivalent fields of PodSecurityContext. More info: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/"
                                        properties:
@@ -1755,7 +1759,7 @@ spec:
                                            description: The seccomp options to use by this container. If seccomp options are provided at both the pod & container level, the container options override the pod options. Note that this field cannot be set when spec.os.name is windows.
                                            properties:
                                              localhostProfile:
-                                               description: localhostProfile indicates a profile defined in a file on the node should be used. The profile must be preconfigured on the node to work. Must be a descending path, relative to the kubelet's configured seccomp profile location. Must only be set if type is "Localhost".
+                                               description: localhostProfile indicates a profile defined in a file on the node should be used. The profile must be preconfigured on the node to work. Must be a descending path, relative to the kubelet's configured seccomp profile location. Must be set if type is "Localhost". Must NOT be set for any other type.
                                                type: string
                                              type:
                                                description: |-
@@ -1785,7 +1789,7 @@ spec:
                                                description: GMSACredentialSpecName is the name of the GMSA credential spec to use.
                                                type: string
                                              hostProcess:
-                                               description: HostProcess determines if a container should be run as a 'Host Process' container. This field is alpha-level and will only be honored by components that enable the WindowsHostProcessContainers feature flag. Setting this field without the feature flag will result in errors when validating the Pod. All of a Pod's containers must have the same effective HostProcess value (it is not allowed to have a mix of HostProcess containers and non-HostProcess containers).  In addition, if HostProcess is true then HostNetwork must also be set to true.
+                                               description: HostProcess determines if a container should be run as a 'Host Process' container. All of a Pod's containers must have the same effective HostProcess value (it is not allowed to have a mix of HostProcess containers and non-HostProcess containers). In addition, if HostProcess is true then HostNetwork must also be set to true.
                                                type: boolean
                                              runAsUserName:
                                                description: The UserName in Windows to run the entrypoint of the container process. Defaults to the user specified in image metadata if unspecified. May also be set in PodSecurityContext. If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence.
@@ -2602,6 +2606,9 @@ spec:
                                            description: "Requests describes the minimum amount of compute resources required. If Requests is omitted for a container, it defaults to Limits if that is explicitly specified, otherwise to an implementation-defined value. Requests cannot exceed Limits. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/"
                                            type: object
                                        type: object
+                                     restartPolicy:
+                                       description: Restart policy for the container to manage the restart behavior of each container within a pod. This may only be set for init containers. You cannot set this field on ephemeral containers.
+                                       type: string
                                      securityContext:
                                        description: "Optional: SecurityContext defines the security options the ephemeral container should be run with. If set, the fields of SecurityContext override the equivalent fields of PodSecurityContext."
                                        properties:
@@ -2670,7 +2677,7 @@ spec:
                                            description: The seccomp options to use by this container. If seccomp options are provided at both the pod & container level, the container options override the pod options. Note that this field cannot be set when spec.os.name is windows.
                                            properties:
                                              localhostProfile:
-                                               description: localhostProfile indicates a profile defined in a file on the node should be used. The profile must be preconfigured on the node to work. Must be a descending path, relative to the kubelet's configured seccomp profile location. Must only be set if type is "Localhost".
+                                               description: localhostProfile indicates a profile defined in a file on the node should be used. The profile must be preconfigured on the node to work. Must be a descending path, relative to the kubelet's configured seccomp profile location. Must be set if type is "Localhost". Must NOT be set for any other type.
                                                type: string
                                              type:
                                                description: |-
@@ -2700,7 +2707,7 @@ spec:
                                                description: GMSACredentialSpecName is the name of the GMSA credential spec to use.
                                                type: string
                                              hostProcess:
-                                               description: HostProcess determines if a container should be run as a 'Host Process' container. This field is alpha-level and will only be honored by components that enable the WindowsHostProcessContainers feature flag. Setting this field without the feature flag will result in errors when validating the Pod. All of a Pod's containers must have the same effective HostProcess value (it is not allowed to have a mix of HostProcess containers and non-HostProcess containers).  In addition, if HostProcess is true then HostNetwork must also be set to true.
+                                               description: HostProcess determines if a container should be run as a 'Host Process' container. All of a Pod's containers must have the same effective HostProcess value (it is not allowed to have a mix of HostProcess containers and non-HostProcess containers). In addition, if HostProcess is true then HostNetwork must also be set to true.
                                                type: boolean
                                              runAsUserName:
                                                description: The UserName in Windows to run the entrypoint of the container process. Defaults to the user specified in image metadata if unspecified. May also be set in PodSecurityContext. If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence.
@@ -3519,6 +3526,9 @@ spec:
                                            description: "Requests describes the minimum amount of compute resources required. If Requests is omitted for a container, it defaults to Limits if that is explicitly specified, otherwise to an implementation-defined value. Requests cannot exceed Limits. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/"
                                            type: object
                                        type: object
+                                     restartPolicy:
+                                       description: "RestartPolicy defines the restart behavior of individual containers in a pod. This field may only be set for init containers, and the only allowed value is \"Always\". For non-init containers or when this field is not specified, the restart behavior is defined by the Pod's restart policy and the container type. Setting the RestartPolicy as \"Always\" for the init container will have the following effect: this init container will be continually restarted on exit until all regular containers have terminated. Once all regular containers have completed, all init containers with restartPolicy \"Always\" will be shut down. This lifecycle differs from normal init containers and is often referred to as a \"sidecar\" container. Although this init container still starts in the init container sequence, it does not wait for the container to complete before proceeding to the next init container. Instead, the next init container starts immediately after this init container is started, or after any startupProbe has successfully completed."
+                                       type: string
                                      securityContext:
                                        description: "SecurityContext defines the security options the container should be run with. If set, the fields of SecurityContext override the equivalent fields of PodSecurityContext. More info: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/"
                                        properties:
@@ -3587,7 +3597,7 @@ spec:
                                            description: The seccomp options to use by this container. If seccomp options are provided at both the pod & container level, the container options override the pod options. Note that this field cannot be set when spec.os.name is windows.
                                            properties:
                                              localhostProfile:
-                                               description: localhostProfile indicates a profile defined in a file on the node should be used. The profile must be preconfigured on the node to work. Must be a descending path, relative to the kubelet's configured seccomp profile location. Must only be set if type is "Localhost".
+                                               description: localhostProfile indicates a profile defined in a file on the node should be used. The profile must be preconfigured on the node to work. Must be a descending path, relative to the kubelet's configured seccomp profile location. Must be set if type is "Localhost". Must NOT be set for any other type.
                                                type: string
                                              type:
                                                description: |-
@@ -3617,7 +3627,7 @@ spec:
                                                description: GMSACredentialSpecName is the name of the GMSA credential spec to use.
                                                type: string
                                              hostProcess:
-                                               description: HostProcess determines if a container should be run as a 'Host Process' container. This field is alpha-level and will only be honored by components that enable the WindowsHostProcessContainers feature flag. Setting this field without the feature flag will result in errors when validating the Pod. All of a Pod's containers must have the same effective HostProcess value (it is not allowed to have a mix of HostProcess containers and non-HostProcess containers).  In addition, if HostProcess is true then HostNetwork must also be set to true.
+                                               description: HostProcess determines if a container should be run as a 'Host Process' container. All of a Pod's containers must have the same effective HostProcess value (it is not allowed to have a mix of HostProcess containers and non-HostProcess containers). In addition, if HostProcess is true then HostNetwork must also be set to true.
                                                type: boolean
                                              runAsUserName:
                                                description: The UserName in Windows to run the entrypoint of the container process. Defaults to the user specified in image metadata if unspecified. May also be set in PodSecurityContext. If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence.
@@ -3893,9 +3903,7 @@ spec:
                                            description: |-
                                              ResourceClaimTemplateName is the name of a ResourceClaimTemplate object in the same namespace as this pod.
                          
-                                             The template will be used to create a new ResourceClaim, which will be bound to this pod. When this pod is deleted, the ResourceClaim will also be deleted. The name of the ResourceClaim will be <pod name>-<resource name>, where <resource name> is the PodResourceClaim.Name. Pod validation will reject the pod if the concatenated name is not valid for a ResourceClaim (e.g. too long).
-                         
-                                             An existing ResourceClaim with that name that is not owned by the pod will not be used for the pod to avoid using an unrelated resource by mistake. Scheduling and pod startup are then blocked until the unrelated ResourceClaim is removed.
+                                             The template will be used to create a new ResourceClaim, which will be bound to this pod. When this pod is deleted, the ResourceClaim will also be deleted. The pod name and resource name, along with a generated component, will be used to form a unique name for the ResourceClaim, which will be recorded in pod.status.resourceClaimStatuses.
                          
                                              This field is immutable and no changes will be made to the corresponding ResourceClaim by the control plane after creating the ResourceClaim.
                                            type: string
@@ -3993,7 +4001,7 @@ spec:
                                      description: The seccomp options to use by the containers in this pod. Note that this field cannot be set when spec.os.name is windows.
                                      properties:
                                        localhostProfile:
-                                         description: localhostProfile indicates a profile defined in a file on the node should be used. The profile must be preconfigured on the node to work. Must be a descending path, relative to the kubelet's configured seccomp profile location. Must only be set if type is "Localhost".
+                                         description: localhostProfile indicates a profile defined in a file on the node should be used. The profile must be preconfigured on the node to work. Must be a descending path, relative to the kubelet's configured seccomp profile location. Must be set if type is "Localhost". Must NOT be set for any other type.
                                          type: string
                                        type:
                                          description: |-
@@ -4044,7 +4052,7 @@ spec:
                                          description: GMSACredentialSpecName is the name of the GMSA credential spec to use.
                                          type: string
                                        hostProcess:
-                                         description: HostProcess determines if a container should be run as a 'Host Process' container. This field is alpha-level and will only be honored by components that enable the WindowsHostProcessContainers feature flag. Setting this field without the feature flag will result in errors when validating the Pod. All of a Pod's containers must have the same effective HostProcess value (it is not allowed to have a mix of HostProcess containers and non-HostProcess containers).  In addition, if HostProcess is true then HostNetwork must also be set to true.
+                                         description: HostProcess determines if a container should be run as a 'Host Process' container. All of a Pod's containers must have the same effective HostProcess value (it is not allowed to have a mix of HostProcess containers and non-HostProcess containers). In addition, if HostProcess is true then HostNetwork must also be set to true.
                                          type: boolean
                                        runAsUserName:
                                          description: The UserName in Windows to run the entrypoint of the container process. Defaults to the user specified in image metadata if unspecified. May also be set in PodSecurityContext. If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence.
@@ -5361,6 +5369,9 @@ spec:
                              name:
                                title: Name is the descriptive name of the port
                                type: string
+                             range:
+                               title: the port range name from which to select a port when using a 'Dynamic' or 'Passthrough' port policy. Defaults to 'default'.
+                               type: string
                              portPolicy:
                                title: the port policy that will be applied to the game server
                                description: |
@@ -5626,7 +5637,7 @@ metadata:
   labels:
     component: crd
     app: agones
-    chart: agones-1.39.0-dev
+    chart: agones-1.41.0-dev
     release: agones-manual
     heritage: Helm
 spec:
@@ -5816,7 +5827,7 @@ metadata:
   labels:
     component: crd
     app: agones
-    chart: agones-1.39.0-dev
+    chart: agones-1.41.0-dev
     release: agones-manual
     heritage: Helm
 spec:
@@ -7102,6 +7113,9 @@ spec:
                                    description: "Requests describes the minimum amount of compute resources required. If Requests is omitted for a container, it defaults to Limits if that is explicitly specified, otherwise to an implementation-defined value. Requests cannot exceed Limits. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/"
                                    type: object
                                type: object
+                             restartPolicy:
+                               description: "RestartPolicy defines the restart behavior of individual containers in a pod. This field may only be set for init containers, and the only allowed value is \"Always\". For non-init containers or when this field is not specified, the restart behavior is defined by the Pod's restart policy and the container type. Setting the RestartPolicy as \"Always\" for the init container will have the following effect: this init container will be continually restarted on exit until all regular containers have terminated. Once all regular containers have completed, all init containers with restartPolicy \"Always\" will be shut down. This lifecycle differs from normal init containers and is often referred to as a \"sidecar\" container. Although this init container still starts in the init container sequence, it does not wait for the container to complete before proceeding to the next init container. Instead, the next init container starts immediately after this init container is started, or after any startupProbe has successfully completed."
+                               type: string
                              securityContext:
                                description: "SecurityContext defines the security options the container should be run with. If set, the fields of SecurityContext override the equivalent fields of PodSecurityContext. More info: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/"
                                properties:
@@ -7170,7 +7184,7 @@ spec:
                                    description: The seccomp options to use by this container. If seccomp options are provided at both the pod & container level, the container options override the pod options. Note that this field cannot be set when spec.os.name is windows.
                                    properties:
                                      localhostProfile:
-                                       description: localhostProfile indicates a profile defined in a file on the node should be used. The profile must be preconfigured on the node to work. Must be a descending path, relative to the kubelet's configured seccomp profile location. Must only be set if type is "Localhost".
+                                       description: localhostProfile indicates a profile defined in a file on the node should be used. The profile must be preconfigured on the node to work. Must be a descending path, relative to the kubelet's configured seccomp profile location. Must be set if type is "Localhost". Must NOT be set for any other type.
                                        type: string
                                      type:
                                        description: |-
@@ -7200,7 +7214,7 @@ spec:
                                        description: GMSACredentialSpecName is the name of the GMSA credential spec to use.
                                        type: string
                                      hostProcess:
-                                       description: HostProcess determines if a container should be run as a 'Host Process' container. This field is alpha-level and will only be honored by components that enable the WindowsHostProcessContainers feature flag. Setting this field without the feature flag will result in errors when validating the Pod. All of a Pod's containers must have the same effective HostProcess value (it is not allowed to have a mix of HostProcess containers and non-HostProcess containers).  In addition, if HostProcess is true then HostNetwork must also be set to true.
+                                       description: HostProcess determines if a container should be run as a 'Host Process' container. All of a Pod's containers must have the same effective HostProcess value (it is not allowed to have a mix of HostProcess containers and non-HostProcess containers). In addition, if HostProcess is true then HostNetwork must also be set to true.
                                        type: boolean
                                      runAsUserName:
                                        description: The UserName in Windows to run the entrypoint of the container process. Defaults to the user specified in image metadata if unspecified. May also be set in PodSecurityContext. If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence.
@@ -8017,6 +8031,9 @@ spec:
                                    description: "Requests describes the minimum amount of compute resources required. If Requests is omitted for a container, it defaults to Limits if that is explicitly specified, otherwise to an implementation-defined value. Requests cannot exceed Limits. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/"
                                    type: object
                                type: object
+                             restartPolicy:
+                               description: Restart policy for the container to manage the restart behavior of each container within a pod. This may only be set for init containers. You cannot set this field on ephemeral containers.
+                               type: string
                              securityContext:
                                description: "Optional: SecurityContext defines the security options the ephemeral container should be run with. If set, the fields of SecurityContext override the equivalent fields of PodSecurityContext."
                                properties:
@@ -8085,7 +8102,7 @@ spec:
                                    description: The seccomp options to use by this container. If seccomp options are provided at both the pod & container level, the container options override the pod options. Note that this field cannot be set when spec.os.name is windows.
                                    properties:
                                      localhostProfile:
-                                       description: localhostProfile indicates a profile defined in a file on the node should be used. The profile must be preconfigured on the node to work. Must be a descending path, relative to the kubelet's configured seccomp profile location. Must only be set if type is "Localhost".
+                                       description: localhostProfile indicates a profile defined in a file on the node should be used. The profile must be preconfigured on the node to work. Must be a descending path, relative to the kubelet's configured seccomp profile location. Must be set if type is "Localhost". Must NOT be set for any other type.
                                        type: string
                                      type:
                                        description: |-
@@ -8115,7 +8132,7 @@ spec:
                                        description: GMSACredentialSpecName is the name of the GMSA credential spec to use.
                                        type: string
                                      hostProcess:
-                                       description: HostProcess determines if a container should be run as a 'Host Process' container. This field is alpha-level and will only be honored by components that enable the WindowsHostProcessContainers feature flag. Setting this field without the feature flag will result in errors when validating the Pod. All of a Pod's containers must have the same effective HostProcess value (it is not allowed to have a mix of HostProcess containers and non-HostProcess containers).  In addition, if HostProcess is true then HostNetwork must also be set to true.
+                                       description: HostProcess determines if a container should be run as a 'Host Process' container. All of a Pod's containers must have the same effective HostProcess value (it is not allowed to have a mix of HostProcess containers and non-HostProcess containers). In addition, if HostProcess is true then HostNetwork must also be set to true.
                                        type: boolean
                                      runAsUserName:
                                        description: The UserName in Windows to run the entrypoint of the container process. Defaults to the user specified in image metadata if unspecified. May also be set in PodSecurityContext. If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence.
@@ -8934,6 +8951,9 @@ spec:
                                    description: "Requests describes the minimum amount of compute resources required. If Requests is omitted for a container, it defaults to Limits if that is explicitly specified, otherwise to an implementation-defined value. Requests cannot exceed Limits. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/"
                                    type: object
                                type: object
+                             restartPolicy:
+                               description: "RestartPolicy defines the restart behavior of individual containers in a pod. This field may only be set for init containers, and the only allowed value is \"Always\". For non-init containers or when this field is not specified, the restart behavior is defined by the Pod's restart policy and the container type. Setting the RestartPolicy as \"Always\" for the init container will have the following effect: this init container will be continually restarted on exit until all regular containers have terminated. Once all regular containers have completed, all init containers with restartPolicy \"Always\" will be shut down. This lifecycle differs from normal init containers and is often referred to as a \"sidecar\" container. Although this init container still starts in the init container sequence, it does not wait for the container to complete before proceeding to the next init container. Instead, the next init container starts immediately after this init container is started, or after any startupProbe has successfully completed."
+                               type: string
                              securityContext:
                                description: "SecurityContext defines the security options the container should be run with. If set, the fields of SecurityContext override the equivalent fields of PodSecurityContext. More info: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/"
                                properties:
@@ -9002,7 +9022,7 @@ spec:
                                    description: The seccomp options to use by this container. If seccomp options are provided at both the pod & container level, the container options override the pod options. Note that this field cannot be set when spec.os.name is windows.
                                    properties:
                                      localhostProfile:
-                                       description: localhostProfile indicates a profile defined in a file on the node should be used. The profile must be preconfigured on the node to work. Must be a descending path, relative to the kubelet's configured seccomp profile location. Must only be set if type is "Localhost".
+                                       description: localhostProfile indicates a profile defined in a file on the node should be used. The profile must be preconfigured on the node to work. Must be a descending path, relative to the kubelet's configured seccomp profile location. Must be set if type is "Localhost". Must NOT be set for any other type.
                                        type: string
                                      type:
                                        description: |-
@@ -9032,7 +9052,7 @@ spec:
                                        description: GMSACredentialSpecName is the name of the GMSA credential spec to use.
                                        type: string
                                      hostProcess:
-                                       description: HostProcess determines if a container should be run as a 'Host Process' container. This field is alpha-level and will only be honored by components that enable the WindowsHostProcessContainers feature flag. Setting this field without the feature flag will result in errors when validating the Pod. All of a Pod's containers must have the same effective HostProcess value (it is not allowed to have a mix of HostProcess containers and non-HostProcess containers).  In addition, if HostProcess is true then HostNetwork must also be set to true.
+                                       description: HostProcess determines if a container should be run as a 'Host Process' container. All of a Pod's containers must have the same effective HostProcess value (it is not allowed to have a mix of HostProcess containers and non-HostProcess containers). In addition, if HostProcess is true then HostNetwork must also be set to true.
                                        type: boolean
                                      runAsUserName:
                                        description: The UserName in Windows to run the entrypoint of the container process. Defaults to the user specified in image metadata if unspecified. May also be set in PodSecurityContext. If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence.
@@ -9308,9 +9328,7 @@ spec:
                                    description: |-
                                      ResourceClaimTemplateName is the name of a ResourceClaimTemplate object in the same namespace as this pod.
                  
-                                     The template will be used to create a new ResourceClaim, which will be bound to this pod. When this pod is deleted, the ResourceClaim will also be deleted. The name of the ResourceClaim will be <pod name>-<resource name>, where <resource name> is the PodResourceClaim.Name. Pod validation will reject the pod if the concatenated name is not valid for a ResourceClaim (e.g. too long).
-                 
-                                     An existing ResourceClaim with that name that is not owned by the pod will not be used for the pod to avoid using an unrelated resource by mistake. Scheduling and pod startup are then blocked until the unrelated ResourceClaim is removed.
+                                     The template will be used to create a new ResourceClaim, which will be bound to this pod. When this pod is deleted, the ResourceClaim will also be deleted. The pod name and resource name, along with a generated component, will be used to form a unique name for the ResourceClaim, which will be recorded in pod.status.resourceClaimStatuses.
                  
                                      This field is immutable and no changes will be made to the corresponding ResourceClaim by the control plane after creating the ResourceClaim.
                                    type: string
@@ -9408,7 +9426,7 @@ spec:
                              description: The seccomp options to use by the containers in this pod. Note that this field cannot be set when spec.os.name is windows.
                              properties:
                                localhostProfile:
-                                 description: localhostProfile indicates a profile defined in a file on the node should be used. The profile must be preconfigured on the node to work. Must be a descending path, relative to the kubelet's configured seccomp profile location. Must only be set if type is "Localhost".
+                                 description: localhostProfile indicates a profile defined in a file on the node should be used. The profile must be preconfigured on the node to work. Must be a descending path, relative to the kubelet's configured seccomp profile location. Must be set if type is "Localhost". Must NOT be set for any other type.
                                  type: string
                                type:
                                  description: |-
@@ -9459,7 +9477,7 @@ spec:
                                  description: GMSACredentialSpecName is the name of the GMSA credential spec to use.
                                  type: string
                                hostProcess:
-                                 description: HostProcess determines if a container should be run as a 'Host Process' container. This field is alpha-level and will only be honored by components that enable the WindowsHostProcessContainers feature flag. Setting this field without the feature flag will result in errors when validating the Pod. All of a Pod's containers must have the same effective HostProcess value (it is not allowed to have a mix of HostProcess containers and non-HostProcess containers).  In addition, if HostProcess is true then HostNetwork must also be set to true.
+                                 description: HostProcess determines if a container should be run as a 'Host Process' container. All of a Pod's containers must have the same effective HostProcess value (it is not allowed to have a mix of HostProcess containers and non-HostProcess containers). In addition, if HostProcess is true then HostNetwork must also be set to true.
                                  type: boolean
                                runAsUserName:
                                  description: The UserName in Windows to run the entrypoint of the container process. Defaults to the user specified in image metadata if unspecified. May also be set in PodSecurityContext. If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence.
@@ -10776,6 +10794,9 @@ spec:
                      name:
                        title: Name is the descriptive name of the port
                        type: string
+                     range:
+                       title: the port range name from which to select a port when using a 'Dynamic' or 'Passthrough' port policy. Defaults to 'default'.
+                       type: string
                      portPolicy:
                        title: the port policy that will be applied to the game server
                        description: |
@@ -11084,7 +11105,7 @@ metadata:
   labels:
     component: crd
     app: agones
-    chart: agones-1.39.0-dev
+    chart: agones-1.41.0-dev
     release: agones-manual
     heritage: Helm
   name: gameserverallocationpolicies.multicluster.agones.dev
@@ -11163,7 +11184,7 @@ metadata:
   labels:
     component: crd
     app: agones
-    chart: agones-1.39.0-dev
+    chart: agones-1.41.0-dev
     release: agones-manual
     heritage: Helm
 spec:
@@ -12639,6 +12660,9 @@ spec:
                                             description: "Requests describes the minimum amount of compute resources required. If Requests is omitted for a container, it defaults to Limits if that is explicitly specified, otherwise to an implementation-defined value. Requests cannot exceed Limits. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/"
                                             type: object
                                         type: object
+                                      restartPolicy:
+                                        description: "RestartPolicy defines the restart behavior of individual containers in a pod. This field may only be set for init containers, and the only allowed value is \"Always\". For non-init containers or when this field is not specified, the restart behavior is defined by the Pod's restart policy and the container type. Setting the RestartPolicy as \"Always\" for the init container will have the following effect: this init container will be continually restarted on exit until all regular containers have terminated. Once all regular containers have completed, all init containers with restartPolicy \"Always\" will be shut down. This lifecycle differs from normal init containers and is often referred to as a \"sidecar\" container. Although this init container still starts in the init container sequence, it does not wait for the container to complete before proceeding to the next init container. Instead, the next init container starts immediately after this init container is started, or after any startupProbe has successfully completed."
+                                        type: string
                                       securityContext:
                                         description: "SecurityContext defines the security options the container should be run with. If set, the fields of SecurityContext override the equivalent fields of PodSecurityContext. More info: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/"
                                         properties:
@@ -12707,7 +12731,7 @@ spec:
                                             description: The seccomp options to use by this container. If seccomp options are provided at both the pod & container level, the container options override the pod options. Note that this field cannot be set when spec.os.name is windows.
                                             properties:
                                               localhostProfile:
-                                                description: localhostProfile indicates a profile defined in a file on the node should be used. The profile must be preconfigured on the node to work. Must be a descending path, relative to the kubelet's configured seccomp profile location. Must only be set if type is "Localhost".
+                                                description: localhostProfile indicates a profile defined in a file on the node should be used. The profile must be preconfigured on the node to work. Must be a descending path, relative to the kubelet's configured seccomp profile location. Must be set if type is "Localhost". Must NOT be set for any other type.
                                                 type: string
                                               type:
                                                 description: |-
@@ -12737,7 +12761,7 @@ spec:
                                                 description: GMSACredentialSpecName is the name of the GMSA credential spec to use.
                                                 type: string
                                               hostProcess:
-                                                description: HostProcess determines if a container should be run as a 'Host Process' container. This field is alpha-level and will only be honored by components that enable the WindowsHostProcessContainers feature flag. Setting this field without the feature flag will result in errors when validating the Pod. All of a Pod's containers must have the same effective HostProcess value (it is not allowed to have a mix of HostProcess containers and non-HostProcess containers).  In addition, if HostProcess is true then HostNetwork must also be set to true.
+                                                description: HostProcess determines if a container should be run as a 'Host Process' container. All of a Pod's containers must have the same effective HostProcess value (it is not allowed to have a mix of HostProcess containers and non-HostProcess containers). In addition, if HostProcess is true then HostNetwork must also be set to true.
                                                 type: boolean
                                               runAsUserName:
                                                 description: The UserName in Windows to run the entrypoint of the container process. Defaults to the user specified in image metadata if unspecified. May also be set in PodSecurityContext. If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence.
@@ -13554,6 +13578,9 @@ spec:
                                             description: "Requests describes the minimum amount of compute resources required. If Requests is omitted for a container, it defaults to Limits if that is explicitly specified, otherwise to an implementation-defined value. Requests cannot exceed Limits. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/"
                                             type: object
                                         type: object
+                                      restartPolicy:
+                                        description: Restart policy for the container to manage the restart behavior of each container within a pod. This may only be set for init containers. You cannot set this field on ephemeral containers.
+                                        type: string
                                       securityContext:
                                         description: "Optional: SecurityContext defines the security options the ephemeral container should be run with. If set, the fields of SecurityContext override the equivalent fields of PodSecurityContext."
                                         properties:
@@ -13622,7 +13649,7 @@ spec:
                                             description: The seccomp options to use by this container. If seccomp options are provided at both the pod & container level, the container options override the pod options. Note that this field cannot be set when spec.os.name is windows.
                                             properties:
                                               localhostProfile:
-                                                description: localhostProfile indicates a profile defined in a file on the node should be used. The profile must be preconfigured on the node to work. Must be a descending path, relative to the kubelet's configured seccomp profile location. Must only be set if type is "Localhost".
+                                                description: localhostProfile indicates a profile defined in a file on the node should be used. The profile must be preconfigured on the node to work. Must be a descending path, relative to the kubelet's configured seccomp profile location. Must be set if type is "Localhost". Must NOT be set for any other type.
                                                 type: string
                                               type:
                                                 description: |-
@@ -13652,7 +13679,7 @@ spec:
                                                 description: GMSACredentialSpecName is the name of the GMSA credential spec to use.
                                                 type: string
                                               hostProcess:
-                                                description: HostProcess determines if a container should be run as a 'Host Process' container. This field is alpha-level and will only be honored by components that enable the WindowsHostProcessContainers feature flag. Setting this field without the feature flag will result in errors when validating the Pod. All of a Pod's containers must have the same effective HostProcess value (it is not allowed to have a mix of HostProcess containers and non-HostProcess containers).  In addition, if HostProcess is true then HostNetwork must also be set to true.
+                                                description: HostProcess determines if a container should be run as a 'Host Process' container. All of a Pod's containers must have the same effective HostProcess value (it is not allowed to have a mix of HostProcess containers and non-HostProcess containers). In addition, if HostProcess is true then HostNetwork must also be set to true.
                                                 type: boolean
                                               runAsUserName:
                                                 description: The UserName in Windows to run the entrypoint of the container process. Defaults to the user specified in image metadata if unspecified. May also be set in PodSecurityContext. If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence.
@@ -14471,6 +14498,9 @@ spec:
                                             description: "Requests describes the minimum amount of compute resources required. If Requests is omitted for a container, it defaults to Limits if that is explicitly specified, otherwise to an implementation-defined value. Requests cannot exceed Limits. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/"
                                             type: object
                                         type: object
+                                      restartPolicy:
+                                        description: "RestartPolicy defines the restart behavior of individual containers in a pod. This field may only be set for init containers, and the only allowed value is \"Always\". For non-init containers or when this field is not specified, the restart behavior is defined by the Pod's restart policy and the container type. Setting the RestartPolicy as \"Always\" for the init container will have the following effect: this init container will be continually restarted on exit until all regular containers have terminated. Once all regular containers have completed, all init containers with restartPolicy \"Always\" will be shut down. This lifecycle differs from normal init containers and is often referred to as a \"sidecar\" container. Although this init container still starts in the init container sequence, it does not wait for the container to complete before proceeding to the next init container. Instead, the next init container starts immediately after this init container is started, or after any startupProbe has successfully completed."
+                                        type: string
                                       securityContext:
                                         description: "SecurityContext defines the security options the container should be run with. If set, the fields of SecurityContext override the equivalent fields of PodSecurityContext. More info: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/"
                                         properties:
@@ -14539,7 +14569,7 @@ spec:
                                             description: The seccomp options to use by this container. If seccomp options are provided at both the pod & container level, the container options override the pod options. Note that this field cannot be set when spec.os.name is windows.
                                             properties:
                                               localhostProfile:
-                                                description: localhostProfile indicates a profile defined in a file on the node should be used. The profile must be preconfigured on the node to work. Must be a descending path, relative to the kubelet's configured seccomp profile location. Must only be set if type is "Localhost".
+                                                description: localhostProfile indicates a profile defined in a file on the node should be used. The profile must be preconfigured on the node to work. Must be a descending path, relative to the kubelet's configured seccomp profile location. Must be set if type is "Localhost". Must NOT be set for any other type.
                                                 type: string
                                               type:
                                                 description: |-
@@ -14569,7 +14599,7 @@ spec:
                                                 description: GMSACredentialSpecName is the name of the GMSA credential spec to use.
                                                 type: string
                                               hostProcess:
-                                                description: HostProcess determines if a container should be run as a 'Host Process' container. This field is alpha-level and will only be honored by components that enable the WindowsHostProcessContainers feature flag. Setting this field without the feature flag will result in errors when validating the Pod. All of a Pod's containers must have the same effective HostProcess value (it is not allowed to have a mix of HostProcess containers and non-HostProcess containers).  In addition, if HostProcess is true then HostNetwork must also be set to true.
+                                                description: HostProcess determines if a container should be run as a 'Host Process' container. All of a Pod's containers must have the same effective HostProcess value (it is not allowed to have a mix of HostProcess containers and non-HostProcess containers). In addition, if HostProcess is true then HostNetwork must also be set to true.
                                                 type: boolean
                                               runAsUserName:
                                                 description: The UserName in Windows to run the entrypoint of the container process. Defaults to the user specified in image metadata if unspecified. May also be set in PodSecurityContext. If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence.
@@ -14845,9 +14875,7 @@ spec:
                                             description: |-
                                               ResourceClaimTemplateName is the name of a ResourceClaimTemplate object in the same namespace as this pod.
                           
-                                              The template will be used to create a new ResourceClaim, which will be bound to this pod. When this pod is deleted, the ResourceClaim will also be deleted. The name of the ResourceClaim will be <pod name>-<resource name>, where <resource name> is the PodResourceClaim.Name. Pod validation will reject the pod if the concatenated name is not valid for a ResourceClaim (e.g. too long).
-                          
-                                              An existing ResourceClaim with that name that is not owned by the pod will not be used for the pod to avoid using an unrelated resource by mistake. Scheduling and pod startup are then blocked until the unrelated ResourceClaim is removed.
+                                              The template will be used to create a new ResourceClaim, which will be bound to this pod. When this pod is deleted, the ResourceClaim will also be deleted. The pod name and resource name, along with a generated component, will be used to form a unique name for the ResourceClaim, which will be recorded in pod.status.resourceClaimStatuses.
                           
                                               This field is immutable and no changes will be made to the corresponding ResourceClaim by the control plane after creating the ResourceClaim.
                                             type: string
@@ -14945,7 +14973,7 @@ spec:
                                       description: The seccomp options to use by the containers in this pod. Note that this field cannot be set when spec.os.name is windows.
                                       properties:
                                         localhostProfile:
-                                          description: localhostProfile indicates a profile defined in a file on the node should be used. The profile must be preconfigured on the node to work. Must be a descending path, relative to the kubelet's configured seccomp profile location. Must only be set if type is "Localhost".
+                                          description: localhostProfile indicates a profile defined in a file on the node should be used. The profile must be preconfigured on the node to work. Must be a descending path, relative to the kubelet's configured seccomp profile location. Must be set if type is "Localhost". Must NOT be set for any other type.
                                           type: string
                                         type:
                                           description: |-
@@ -14996,7 +15024,7 @@ spec:
                                           description: GMSACredentialSpecName is the name of the GMSA credential spec to use.
                                           type: string
                                         hostProcess:
-                                          description: HostProcess determines if a container should be run as a 'Host Process' container. This field is alpha-level and will only be honored by components that enable the WindowsHostProcessContainers feature flag. Setting this field without the feature flag will result in errors when validating the Pod. All of a Pod's containers must have the same effective HostProcess value (it is not allowed to have a mix of HostProcess containers and non-HostProcess containers).  In addition, if HostProcess is true then HostNetwork must also be set to true.
+                                          description: HostProcess determines if a container should be run as a 'Host Process' container. All of a Pod's containers must have the same effective HostProcess value (it is not allowed to have a mix of HostProcess containers and non-HostProcess containers). In addition, if HostProcess is true then HostNetwork must also be set to true.
                                           type: boolean
                                         runAsUserName:
                                           description: The UserName in Windows to run the entrypoint of the container process. Defaults to the user specified in image metadata if unspecified. May also be set in PodSecurityContext. If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence.
@@ -16313,6 +16341,9 @@ spec:
                               name:
                                 title: Name is the descriptive name of the port
                                 type: string
+                              range:
+                                title: the port range name from which to select a port when using a 'Dynamic' or 'Passthrough' port policy. Defaults to 'default'.
+                                type: string
                               portPolicy:
                                 title: the port policy that will be applied to the game server
                                 description: |
@@ -16567,7 +16598,7 @@ metadata:
   name: agones-allocator
   labels:
     app: agones
-    chart: agones-1.39.0-dev
+    chart: agones-1.41.0-dev
     release: agones-manual
     heritage: Helm
 rules:
@@ -16597,7 +16628,7 @@ metadata:
   name: agones-controller
   labels:
     app: agones
-    chart: agones-1.39.0-dev
+    chart: agones-1.41.0-dev
     release: agones-manual
     heritage: Helm
 rules:
@@ -16651,7 +16682,7 @@ metadata:
   name: agones-sdk
   labels:
     app: agones
-    chart: agones-1.39.0-dev
+    chart: agones-1.41.0-dev
     release: agones-manual
     heritage: Helm
 rules:
@@ -16660,7 +16691,7 @@ rules:
   verbs: ["create", "patch"]
 - apiGroups: ["agones.dev"]
   resources: ["gameservers"]
-  verbs: ["list", "update", "watch"]
+  verbs: ["list", "patch", "watch"]
 ---
 # Source: agones/templates/service/allocation.yaml
 # Bind the agones-allocator ServiceAccount to the agones-allocator ClusterRole
@@ -16670,7 +16701,7 @@ metadata:
   name: agones-allocator
   labels:
     app: agones
-    chart: agones-1.39.0-dev
+    chart: agones-1.41.0-dev
     release: agones-manual
     heritage: Helm
 subjects:
@@ -16689,7 +16720,7 @@ metadata:
   name: agones-controller-access
   labels:
     app: agones
-    chart: agones-1.39.0-dev
+    chart: agones-1.41.0-dev
     release: agones-manual
     heritage: Helm
 subjects:
@@ -16741,7 +16772,7 @@ metadata:
   namespace: default
   labels:
     app: agones
-    chart: agones-1.39.0-dev
+    chart: agones-1.41.0-dev
     release: agones-manual
     heritage: Helm
 subjects:
@@ -16775,7 +16806,7 @@ metadata:
   labels:
     agones.dev/role: controller
     app: agones
-    chart: agones-1.39.0-dev
+    chart: agones-1.41.0-dev
     release: agones-manual
     heritage: Helm
 spec:
@@ -16809,7 +16840,7 @@ metadata:
   labels:
     agones.dev/role: extensions
     app: agones
-    chart: agones-1.39.0-dev
+    chart: agones-1.41.0-dev
     release: agones-manual
     heritage: Helm
 spec:
@@ -16829,7 +16860,7 @@ metadata:
   labels:
     component: ping
     app: agones
-    chart: agones-1.39.0-dev
+    chart: agones-1.41.0-dev
     release: agones-manual
     heritage: Helm
 spec:
@@ -16851,7 +16882,7 @@ metadata:
   labels:
     component: ping
     app: agones
-    chart: agones-1.39.0-dev
+    chart: agones-1.41.0-dev
     release: agones-manual
     heritage: Helm
 spec:
@@ -16887,7 +16918,7 @@ metadata:
   labels:
     agones.dev/role: extensions
     app: agones
-    chart: agones-1.39.0-dev
+    chart: agones-1.41.0-dev
     release: agones-manual
     heritage: Helm
 spec:
@@ -16924,7 +16955,7 @@ metadata:
   labels:
     component: allocator
     app: agones
-    chart: agones-1.39.0-dev
+    chart: agones-1.41.0-dev
     release: agones-manual
     heritage: Helm
 spec:
@@ -16946,7 +16977,7 @@ metadata:
   labels:
     multicluster.agones.dev/role: allocator
     app: agones
-    chart: agones-1.39.0-dev
+    chart: agones-1.41.0-dev
     release: agones-manual
     heritage: Helm
 spec:
@@ -16980,7 +17011,7 @@ metadata:
   labels:
     component: controller
     app: agones
-    chart: agones-1.39.0-dev
+    chart: agones-1.41.0-dev
     release: agones-manual
     heritage: Helm
 spec:
@@ -17022,7 +17053,7 @@ spec:
       serviceAccountName: agones-controller
       containers:
       - name: agones-controller
-        image: "us-docker.pkg.dev/agones-images/release/agones-controller:1.39.0-dev"
+        image: "us-docker.pkg.dev/agones-images/release/agones-controller:1.41.0-dev"
         imagePullPolicy: IfNotPresent
         env:
         # minimum port that can be exposed to GameServer traffic
@@ -17032,7 +17063,7 @@ spec:
         - name: MAX_PORT
           value: "8000"
         - name: SIDECAR_IMAGE # overwrite the GameServer sidecar image that is used
-          value: "us-docker.pkg.dev/agones-images/release/agones-sdk:1.39.0-dev"
+          value: "us-docker.pkg.dev/agones-images/release/agones-sdk:1.41.0-dev"
         - name: ALWAYS_PULL_SIDECAR # set the sidecar imagePullPolicy to Always
           value: "false"
         - name: SIDECAR_CPU_REQUEST
@@ -17138,7 +17169,7 @@ metadata:
   labels:
     component: extensions
     app: agones
-    chart: agones-1.39.0-dev
+    chart: agones-1.41.0-dev
     release: agones-manual
     heritage: Helm
 spec:
@@ -17182,7 +17213,7 @@ spec:
       terminationGracePeriodSeconds: 27
       containers:
       - name: agones-extensions
-        image: "us-docker.pkg.dev/agones-images/release/agones-extensions:1.39.0-dev"
+        image: "us-docker.pkg.dev/agones-images/release/agones-extensions:1.41.0-dev"
         imagePullPolicy: IfNotPresent
         env:
         - name: PROMETHEUS_EXPORTER
@@ -17284,7 +17315,7 @@ metadata:
   labels:
     component: ping
     app: agones
-    chart: agones-1.39.0-dev
+    chart: agones-1.41.0-dev
     release: agones-manual
     heritage: Helm
 spec:
@@ -17319,7 +17350,7 @@ spec:
       priorityClassName: agones-system
       containers:
         - name: agones-ping
-          image: "us-docker.pkg.dev/agones-images/release/agones-ping:1.39.0-dev"
+          image: "us-docker.pkg.dev/agones-images/release/agones-ping:1.41.0-dev"
           imagePullPolicy: IfNotPresent
           livenessProbe:
             httpGet:
@@ -17393,7 +17424,7 @@ spec:
           secretName: allocator-client-ca
       containers:
       - name: agones-allocator
-        image: "us-docker.pkg.dev/agones-images/release/agones-allocator:1.39.0-dev"
+        image: "us-docker.pkg.dev/agones-images/release/agones-allocator:1.41.0-dev"
         imagePullPolicy: IfNotPresent
         livenessProbe:
           httpGet:
@@ -17415,6 +17446,8 @@ spec:
           value: "8443"
         - name: GRPC_PORT
           value: "8443"
+        - name: HTTP_UNALLOCATED_STATUS_CODE
+          value: "429"
         - name: API_SERVER_QPS
           value: "400"
         - name: API_SERVER_QPS_BURST
@@ -17474,7 +17507,7 @@ metadata:
   labels:
     component: controller
     app: agones
-    chart: agones-1.39.0-dev
+    chart: agones-1.41.0-dev
     release: agones-manual
     heritage: Helm
 spec:
@@ -17525,7 +17558,7 @@ metadata:
   labels:
     component: controller
     app: agones
-    chart: agones-1.39.0-dev
+    chart: agones-1.41.0-dev
     release: agones-manual
     heritage: Helm
 webhooks:
@@ -17577,7 +17610,7 @@ metadata:
   labels:
     component: controller
     app: agones
-    chart: agones-1.39.0-dev
+    chart: agones-1.41.0-dev
     release: agones-manual
     heritage: Helm
 webhooks:

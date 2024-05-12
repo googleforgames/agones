@@ -192,6 +192,7 @@ func handleResponse(txt string, s *sdk.SDK, cancel context.CancelFunc) (response
 	response = txt
 	addACK = true
 	responseError = nil
+	var err error
 
 	switch parts[0] {
 	// shuts down the gameserver
@@ -322,7 +323,7 @@ func handleResponse(txt string, s *sdk.SDK, cancel context.CancelFunc) (response
 			responseError = fmt.Errorf("Invalid INCREMENT_COUNTER, should have 2 arguments")
 			return
 		}
-		response, responseError = incrementCounter(s, parts[1], parts[2])
+		response, err = incrementCounter(s, parts[1], parts[2])
 		addACK = false
 
 	case "DECREMENT_COUNTER":
@@ -331,7 +332,7 @@ func handleResponse(txt string, s *sdk.SDK, cancel context.CancelFunc) (response
 			responseError = fmt.Errorf("Invalid DECREMENT_COUNTER, should have 2 arguments")
 			return
 		}
-		response, responseError = decrementCounter(s, parts[1], parts[2])
+		response, err = decrementCounter(s, parts[1], parts[2])
 		addACK = false
 
 	case "SET_COUNTER_COUNT":
@@ -340,7 +341,7 @@ func handleResponse(txt string, s *sdk.SDK, cancel context.CancelFunc) (response
 			responseError = fmt.Errorf("Invalid SET_COUNTER_COUNT, should have 2 arguments")
 			return
 		}
-		response, responseError = setCounterCount(s, parts[1], parts[2])
+		response, err = setCounterCount(s, parts[1], parts[2])
 		addACK = false
 
 	case "GET_COUNTER_CAPACITY":
@@ -358,7 +359,7 @@ func handleResponse(txt string, s *sdk.SDK, cancel context.CancelFunc) (response
 			responseError = fmt.Errorf("Invalid SET_COUNTER_CAPACITY, should have 2 arguments")
 			return
 		}
-		response, responseError = setCounterCapacity(s, parts[1], parts[2])
+		response, err = setCounterCapacity(s, parts[1], parts[2])
 		addACK = false
 
 	case "GET_LIST_CAPACITY":
@@ -376,7 +377,7 @@ func handleResponse(txt string, s *sdk.SDK, cancel context.CancelFunc) (response
 			responseError = fmt.Errorf("Invalid SET_LIST_CAPACITY, should have 2 arguments")
 			return
 		}
-		response, responseError = setListCapacity(s, parts[1], parts[2])
+		response, err = setListCapacity(s, parts[1], parts[2])
 		addACK = false
 
 	case "LIST_CONTAINS":
@@ -412,7 +413,7 @@ func handleResponse(txt string, s *sdk.SDK, cancel context.CancelFunc) (response
 			responseError = fmt.Errorf("Invalid APPEND_LIST_VALUE, should have 2 arguments")
 			return
 		}
-		response, responseError = appendListValue(s, parts[1], parts[2])
+		response, err = appendListValue(s, parts[1], parts[2])
 		addACK = false
 
 	case "DELETE_LIST_VALUE":
@@ -421,9 +422,14 @@ func handleResponse(txt string, s *sdk.SDK, cancel context.CancelFunc) (response
 			responseError = fmt.Errorf("Invalid DELETE_LIST_VALUE, should have 2 arguments")
 			return
 		}
-		response, responseError = deleteListValue(s, parts[1], parts[2])
+		response, err = deleteListValue(s, parts[1], parts[2])
 		addACK = false
 	}
+
+	if err != nil {
+		return err.Error(), addACK, err
+	}
+
 	return
 }
 
@@ -684,7 +690,7 @@ func getPlayerCount(s *sdk.SDK) string {
 // getCounterCount returns the Count of the given Counter as a string
 func getCounterCount(s *sdk.SDK, counterName string) (string, error) {
 	log.Printf("Retrieving Counter %s Count", counterName)
-	count, err := s.Alpha().GetCounterCount(counterName)
+	count, err := s.Beta().GetCounterCount(counterName)
 	if err != nil {
 		log.Printf("Error getting Counter %s Count: %s", counterName, err)
 		return strconv.FormatInt(count, 10), err
@@ -692,55 +698,55 @@ func getCounterCount(s *sdk.SDK, counterName string) (string, error) {
 	return "COUNTER: " + strconv.FormatInt(count, 10) + "\n", nil
 }
 
-// incrementCounter returns the if the Counter Count was incremented successfully (true) or not (false)
+// incrementCounter returns the if the Counter Count was incremented successfully or not
 func incrementCounter(s *sdk.SDK, counterName string, amount string) (string, error) {
 	amountInt, err := strconv.ParseInt(amount, 10, 64)
 	if err != nil {
-		return "false", fmt.Errorf("could not increment Counter %s by unparseable amount %s: %s", counterName, amount, err)
+		return "", fmt.Errorf("Could not increment Counter %s by unparseable amount %s: %s", counterName, amount, err)
 	}
 	log.Printf("Incrementing Counter %s Count by amount %d", counterName, amountInt)
-	ok, err := s.Alpha().IncrementCounter(counterName, amountInt)
+	err = s.Beta().IncrementCounter(counterName, amountInt)
 	if err != nil {
 		log.Printf("Error incrementing Counter %s Count by amount %d: %s", counterName, amountInt, err)
-		return strconv.FormatBool(ok), err
+		return "", err
 	}
-	return "SUCCESS: " + strconv.FormatBool(ok) + "\n", nil
+	return "SUCCESS\n", nil
 }
 
-// decrementCounter returns the if the Counter Count was decremented successfully (true) or not (false)
+// decrementCounter returns if the Counter Count was decremented successfully or not
 func decrementCounter(s *sdk.SDK, counterName string, amount string) (string, error) {
 	amountInt, err := strconv.ParseInt(amount, 10, 64)
 	if err != nil {
-		return "false", fmt.Errorf("could not decrement Counter %s by unparseable amount %s: %s", counterName, amount, err)
+		return "", fmt.Errorf("could not decrement Counter %s by unparseable amount %s: %s", counterName, amount, err)
 	}
 	log.Printf("Decrementing Counter %s Count by amount %d", counterName, amountInt)
-	ok, err := s.Alpha().DecrementCounter(counterName, amountInt)
+	err = s.Beta().DecrementCounter(counterName, amountInt)
 	if err != nil {
 		log.Printf("Error decrementing Counter %s Count by amount %d: %s", counterName, amountInt, err)
-		return strconv.FormatBool(ok), err
+		return "", err
 	}
-	return "SUCCESS: " + strconv.FormatBool(ok) + "\n", nil
+	return "SUCCESS\n", nil
 }
 
-// setCounterCount returns the if the Counter was set to a new Count successfully (true) or not (false)
+// setCounterCount returns the if the Counter was set to a new Count successfully or not
 func setCounterCount(s *sdk.SDK, counterName string, amount string) (string, error) {
 	amountInt, err := strconv.ParseInt(amount, 10, 64)
 	if err != nil {
-		return "false", fmt.Errorf("could not set Counter %s to unparseable amount %s: %s", counterName, amount, err)
+		return "", fmt.Errorf("could not set Counter %s to unparseable amount %s: %s", counterName, amount, err)
 	}
 	log.Printf("Setting Counter %s Count to amount %d", counterName, amountInt)
-	ok, err := s.Alpha().SetCounterCount(counterName, amountInt)
+	err = s.Beta().SetCounterCount(counterName, amountInt)
 	if err != nil {
 		log.Printf("Error setting Counter %s Count by amount %d: %s", counterName, amountInt, err)
-		return strconv.FormatBool(ok), err
+		return "", err
 	}
-	return "SUCCESS: " + strconv.FormatBool(ok) + "\n", nil
+	return "SUCCESS\n", nil
 }
 
 // getCounterCapacity returns the Capacity of the given Counter as a string
 func getCounterCapacity(s *sdk.SDK, counterName string) (string, error) {
 	log.Printf("Retrieving Counter %s Capacity", counterName)
-	count, err := s.Alpha().GetCounterCapacity(counterName)
+	count, err := s.Beta().GetCounterCapacity(counterName)
 	if err != nil {
 		log.Printf("Error getting Counter %s Capacity: %s", counterName, err)
 		return strconv.FormatInt(count, 10), err
@@ -748,25 +754,25 @@ func getCounterCapacity(s *sdk.SDK, counterName string) (string, error) {
 	return "CAPACITY: " + strconv.FormatInt(count, 10) + "\n", nil
 }
 
-// setCounterCapacity returns the if the Counter was set to a new Capacity successfully (true) or not (false)
+// setCounterCapacity returns the if the Counter was set to a new Capacity successfully or not
 func setCounterCapacity(s *sdk.SDK, counterName string, amount string) (string, error) {
 	amountInt, err := strconv.ParseInt(amount, 10, 64)
 	if err != nil {
-		return "false", fmt.Errorf("could not set Counter %s to unparseable amount %s: %s", counterName, amount, err)
+		return "", fmt.Errorf("could not set Counter %s to unparseable amount %s: %s", counterName, amount, err)
 	}
 	log.Printf("Setting Counter %s Capacity to amount %d", counterName, amountInt)
-	ok, err := s.Alpha().SetCounterCapacity(counterName, amountInt)
+	err = s.Beta().SetCounterCapacity(counterName, amountInt)
 	if err != nil {
 		log.Printf("Error setting Counter %s Capacity to amount %d: %s", counterName, amountInt, err)
-		return strconv.FormatBool(ok), err
+		return "", err
 	}
-	return "SUCCESS: " + strconv.FormatBool(ok) + "\n", nil
+	return "SUCCESS\n", nil
 }
 
 // getListCapacity returns the Capacity of the given List as a string
 func getListCapacity(s *sdk.SDK, listName string) (string, error) {
 	log.Printf("Retrieving List %s Capacity", listName)
-	capacity, err := s.Alpha().GetListCapacity(listName)
+	capacity, err := s.Beta().GetListCapacity(listName)
 	if err != nil {
 		log.Printf("Error getting List %s Capacity: %s", listName, err)
 		return strconv.FormatInt(capacity, 10), err
@@ -774,36 +780,36 @@ func getListCapacity(s *sdk.SDK, listName string) (string, error) {
 	return "CAPACITY: " + strconv.FormatInt(capacity, 10) + "\n", nil
 }
 
-// setListCapacity returns if the List was set to a new Capacity successfully (true) or not (false)
+// setListCapacity returns if the List was set to a new Capacity successfully or not
 func setListCapacity(s *sdk.SDK, listName string, amount string) (string, error) {
 	amountInt, err := strconv.ParseInt(amount, 10, 64)
 	if err != nil {
-		return "false", fmt.Errorf("could not set List %s to unparseable amount %s: %s", listName, amount, err)
+		return "", fmt.Errorf("could not set List %s to unparseable amount %s: %s", listName, amount, err)
 	}
 	log.Printf("Setting List %s Capacity to amount %d", listName, amountInt)
-	ok, err := s.Alpha().SetListCapacity(listName, amountInt)
+	err = s.Beta().SetListCapacity(listName, amountInt)
 	if err != nil {
 		log.Printf("Error setting List %s Capacity to amount %d: %s", listName, amountInt, err)
-		return strconv.FormatBool(ok), err
+		return "", err
 	}
-	return "SUCCESS: " + strconv.FormatBool(ok) + "\n", nil
+	return "SUCCESS\n", nil
 }
 
 // listContains returns true if the given value is in the given List, false otherwise
 func listContains(s *sdk.SDK, listName string, value string) (string, error) {
 	log.Printf("Getting List %s contains value %s", listName, value)
-	ok, err := s.Alpha().ListContains(listName, value)
+	ok, err := s.Beta().ListContains(listName, value)
 	if err != nil {
 		log.Printf("Error getting List %s contains value %s: %s", listName, value, err)
 		return strconv.FormatBool(ok), err
-	}	
-  return "FOUND: " + strconv.FormatBool(ok) + "\n", nil
+	}
+	return "FOUND: " + strconv.FormatBool(ok) + "\n", nil
 }
 
 // getListLength returns the length (number of values) of the given List as a string
 func getListLength(s *sdk.SDK, listName string) (string, error) {
 	log.Printf("Getting List %s length", listName)
-	length, err := s.Alpha().GetListLength(listName)
+	length, err := s.Beta().GetListLength(listName)
 	if err != nil {
 		log.Printf("Error getting List %s length: %s", listName, err)
 		return strconv.Itoa(length), err
@@ -814,37 +820,37 @@ func getListLength(s *sdk.SDK, listName string) (string, error) {
 // getListValues return the values in the given List as a comma delineated string
 func getListValues(s *sdk.SDK, listName string) (string, error) {
 	log.Printf("Getting List %s values", listName)
-	values, err := s.Alpha().GetListValues(listName)
+	values, err := s.Beta().GetListValues(listName)
 	if err != nil {
 		log.Printf("Error getting List %s values: %s", listName, err)
 		return "INVALID LIST NAME", err
 	}
 	if len(values) > 0 {
-        return "VALUES: " + strings.Join(values, ",") + "\n", nil
-    }
-	return "VALUES: <none>\n", err
+		return "VALUES: " + strings.Join(values, ",") + "\n", nil
+	}
+	return "VALUES: <none>\n", nil
 }
 
-// appendListValue returns if the given value was successfuly added to the List (true) or not (false)
+// appendListValue returns if the given value was successfuly added to the List or not
 func appendListValue(s *sdk.SDK, listName string, value string) (string, error) {
 	log.Printf("Appending Value %s to List %s", value, listName)
-	ok, err := s.Alpha().AppendListValue(listName, value)
+	err := s.Beta().AppendListValue(listName, value)
 	if err != nil {
 		log.Printf("Error appending Value %s to List %s: %s", value, listName, err)
-		return strconv.FormatBool(ok), err
+		return "", err
 	}
-	return "SUCCESS: " + strconv.FormatBool(ok) + "\n", nil
+	return "SUCCESS\n", nil
 }
 
-// deleteListValue returns if the given value was successfuly deleted from the List (true) or not (false)
+// deleteListValue returns if the given value was successfuly deleted from the List or not
 func deleteListValue(s *sdk.SDK, listName string, value string) (string, error) {
 	log.Printf("Deleting Value %s from List %s", value, listName)
-	ok, err := s.Alpha().DeleteListValue(listName, value)
+	err := s.Beta().DeleteListValue(listName, value)
 	if err != nil {
 		log.Printf("Error deleting Value %s to List %s: %s", value, listName, err)
-		return strconv.FormatBool(ok), err
+		return "", err
 	}
-	return "SUCCESS: " + strconv.FormatBool(ok) + "\n", nil
+	return "SUCCESS\n", nil
 }
 
 // doHealth sends the regular Health Pings

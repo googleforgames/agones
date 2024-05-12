@@ -16,16 +16,17 @@
 package converters
 
 import (
-	pb "agones.dev/agones/pkg/allocation/go"
-	"agones.dev/agones/pkg/apis"
-	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
-	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
-	"agones.dev/agones/pkg/util/runtime"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	pb "agones.dev/agones/pkg/allocation/go"
+	"agones.dev/agones/pkg/apis"
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
+	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
+	"agones.dev/agones/pkg/util/runtime"
 )
 
 // ConvertAllocationRequestToGSA converts AllocationRequest to GameServerAllocation V1 (GSA)
@@ -303,16 +304,16 @@ func convertGameServerSelectorsToInternalGameServerSelectors(in []*pb.GameServer
 }
 
 // ConvertGSAToAllocationResponse converts GameServerAllocation V1 (GSA) to AllocationResponse
-func ConvertGSAToAllocationResponse(in *allocationv1.GameServerAllocation) (*pb.AllocationResponse, error) {
+func ConvertGSAToAllocationResponse(in *allocationv1.GameServerAllocation, grpcUnallocatedStatusCode codes.Code) (*pb.AllocationResponse, error) {
 	if in == nil {
 		return nil, nil
 	}
 
-	if err := convertStateV1ToError(in.Status.State); err != nil {
+	if err := convertStateV1ToError(in.Status.State, grpcUnallocatedStatusCode); err != nil {
 		return nil, err
 	}
 
-	return &pb.AllocationResponse{
+	res := &pb.AllocationResponse{
 		GameServerName: in.Status.GameServerName,
 		Address:        in.Status.Address,
 		Addresses:      convertGSAAddressesToAllocationAddresses(in.Status.Addresses),
@@ -320,7 +321,41 @@ func ConvertGSAToAllocationResponse(in *allocationv1.GameServerAllocation) (*pb.
 		Ports:          convertGSAAgonesPortsToAllocationPorts(in.Status.Ports),
 		Source:         in.Status.Source,
 		Metadata:       convertGSAMetadataToAllocationMetadata(in.Status.Metadata),
-	}, nil
+	}
+	if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
+		if in.Status.Counters != nil {
+			res.Counters = convertGSACountersToAllocationCounters(in.Status.Counters)
+		}
+		if in.Status.Lists != nil {
+			res.Lists = convertGSAListsToAllocationLists(in.Status.Lists)
+		}
+	}
+
+	return res, nil
+}
+
+// convertGSACountersToAllocationCounters converts a map of GameServerStatusCounter to AllocationResponse_CounterStatus
+func convertGSACountersToAllocationCounters(in map[string]agonesv1.CounterStatus) map[string]*pb.AllocationResponse_CounterStatus {
+	out := map[string]*pb.AllocationResponse_CounterStatus{}
+	for k, v := range in {
+		out[k] = &pb.AllocationResponse_CounterStatus{
+			Count:    wrapperspb.Int64(v.Count),
+			Capacity: wrapperspb.Int64(v.Capacity),
+		}
+	}
+	return out
+}
+
+// convertGSAListsToAllocationLists converts a map of GameServerStatusList to AllocationResponse_ListStatus
+func convertGSAListsToAllocationLists(in map[string]agonesv1.ListStatus) map[string]*pb.AllocationResponse_ListStatus {
+	out := map[string]*pb.AllocationResponse_ListStatus{}
+	for k, v := range in {
+		out[k] = &pb.AllocationResponse_ListStatus{
+			Values:   v.Values,
+			Capacity: wrapperspb.Int64(v.Capacity),
+		}
+	}
+	return out
 }
 
 // ConvertAllocationResponseToGSA converts AllocationResponse to GameServerAllocation V1 (GSA)
@@ -340,6 +375,14 @@ func ConvertAllocationResponseToGSA(in *pb.AllocationResponse, rs string) *alloc
 			Source:         rs,
 			Metadata:       convertAllocationMetadataToGSAMetadata(in.Metadata),
 		},
+	}
+	if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
+		if in.Counters != nil {
+			out.Status.Counters = convertAllocationCountersToGSACounters(in.Counters)
+		}
+		if in.Lists != nil {
+			out.Status.Lists = convertAllocationListsToGSALists(in.Lists)
+		}
 	}
 	out.SetGroupVersionKind(allocationv1.SchemeGroupVersion.WithKind("GameServerAllocation"))
 
@@ -416,13 +459,36 @@ func convertAllocationMetadataToGSAMetadata(in *pb.AllocationResponse_GameServer
 	return metadata
 }
 
+func convertAllocationCountersToGSACounters(in map[string]*pb.AllocationResponse_CounterStatus) map[string]agonesv1.CounterStatus {
+	out := map[string]agonesv1.CounterStatus{}
+	for k, v := range in {
+		out[k] = agonesv1.CounterStatus{
+			Count:    v.Count.GetValue(),
+			Capacity: v.Capacity.GetValue(),
+		}
+	}
+	return out
+}
+
+func convertAllocationListsToGSALists(in map[string]*pb.AllocationResponse_ListStatus) map[string]agonesv1.ListStatus {
+	out := map[string]agonesv1.ListStatus{}
+	for k, v := range in {
+		out[k] = agonesv1.ListStatus{
+			Values:   v.Values,
+			Capacity: v.Capacity.GetValue(),
+		}
+	}
+	return out
+}
+
 // convertStateV1ToError converts GameServerAllocationState V1 (GSA) to AllocationResponse_GameServerAllocationState
-func convertStateV1ToError(in allocationv1.GameServerAllocationState) error {
+func convertStateV1ToError(in allocationv1.GameServerAllocationState, grpcUnallocatedStatusCode codes.Code) error {
+
 	switch in {
 	case allocationv1.GameServerAllocationAllocated:
 		return nil
 	case allocationv1.GameServerAllocationUnAllocated:
-		return status.Error(codes.ResourceExhausted, "there is no available GameServer to allocate")
+		return status.Error(grpcUnallocatedStatusCode, "there is no available GameServer to allocate")
 	case allocationv1.GameServerAllocationContention:
 		return status.Error(codes.Aborted, "too many concurrent requests have overwhelmed the system")
 	}

@@ -9,3 +9,5 @@ It is not a direct integration, but is an approach for to integrate with existin
 dedicated game servers.
 
 You will need to download the Xonotic client separately to play.
+
+For detailed instructions refer to the [Agones Documentation](https://agones.dev/site/docs/examples/xonotic/).

@@ -44,8 +44,6 @@ spec:
       maxSurge: 25%
       # the amount to decrements GameServers by. Defaults to 25%
       maxUnavailable: 25%
-  # [Stage:Beta]
-  # [FeatureFlag:FleetAllocationOverflow]
   # Labels and/or Annotations to apply to overflowing GameServers when the number of Allocated GameServers is more
   # than the desired replicas on the underlying `GameServerSet`
   allocationOverflow:
@@ -129,10 +127,11 @@ The `spec` field is the actual `Fleet` specification and it is composed as follo
   - `Fleet's Scheduling Strategy`: The GameServers associated with the GameServerSet are sorted based on either `Packed` or `Distributed` strategy.
       - `Packed`: Agones maximizes resource utilization by trying to populate nodes that are already in use before allocating GameServers to other nodes.
       - `Distributed`: Agones employs this strategy to spread out GameServer allocations, ensuring an even distribution of GameServers across the available nodes.
-- `priorities`: (Alpha, requires `CountsAndLists` feature flag): Defines which gameservers in the Fleet are most important to keep around - impacts scale down logic.
+- `priorities`: (Alpha, requires `CountsAndLists` feature flag): Defines which `GameServers` in the Fleet are most
+  important to keep around - impacts scale down logic.
   - `type`: Sort by a "Counter" or a "List".
   - `key`: The name of the Counter or List. If not found on the GameServer, has no impact.
-  - `order`: Order: Sort by “Ascending” or “Descending”. “Descending” a bigger Capacity is preferred. “Ascending” would be smaller Capacity is preferred.
+  - `order`: Order: Sort by “Ascending” or “Descending”. “Descending” a bigger available capacity is preferred. “Ascending” would be smaller available capacity is preferred.
 - `template` a full `GameServer` configuration template.
    See the [GameServer]({{< relref "gameserver.md" >}}) reference for all available fields.
 

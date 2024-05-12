@@ -25,11 +25,11 @@
 
 REPOSITORY ?=
 PROD_REPO ?= us-docker.pkg.dev/agones-images/examples
-
+version := 0.16
 ifeq ($(REPOSITORY),)
-	server_tag := crd-client:0.14
+	server_tag := crd-client:$(version)
 else
-	server_tag := $(REPOSITORY)/crd-client:0.14
+	server_tag := $(REPOSITORY)/crd-client:$(version)
 endif
 
 #   _____                    _

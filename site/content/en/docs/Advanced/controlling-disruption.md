@@ -84,7 +84,7 @@ As a quick reference:
 | evictions.safe setting  |  `safe-to-evict` pod annotation |  `agones.dev/safe-to-evict` label |
 |-------------------------|---------------------------------|-----------------------------------|
 | `Never` (default)       | `false`                         | `false` (matches PDB)             |
-| `OnUpdate`              | `false`                         | `true` (does not match PDB)       |
+| `OnUpgrade`             | `false`                         | `true` (does not match PDB)       |
 | `Always`                | `true`                          | `true` (does not match PDB)       |
 
 ## Further Reading

@@ -59,18 +59,23 @@ type GameServerSetList struct {
 type GameServerSetSpec struct {
 	// Replicas are the number of GameServers that should be in this set
 	Replicas int32 `json:"replicas"`
-	// [Stage: Beta]
-	// [FeatureFlag:FleetAllocationOverflow]
 	// Labels and Annotations to apply to GameServers when the number of Allocated GameServers drops below
 	// the desired replicas on the underlying `GameServerSet`
 	// +optional
 	AllocationOverflow *AllocationOverflow `json:"allocationOverflow,omitempty"`
 	// Scheduling strategy. Defaults to "Packed".
 	Scheduling apis.SchedulingStrategy `json:"scheduling,omitempty"`
-	// (Alpha, CountsAndLists feature flag) The first Priority on the array of Priorities is the most
-	// important for sorting. The Fleetautoscaler will use the first priority for sorting GameServers
-	// by total Capacity in the Fleet and acts as a tie-breaker after sorting the game servers by
-	// State and Strategy. Impacts scale down logic.
+	// [Stage: Alpha]
+	// [FeatureFlag:CountsAndLists]
+	// `Priorities` configuration alters scale down logic in Fleets based on the configured available capacity order under that key.
+	//
+	// Priority of sorting is in descending importance. I.e. The position 0 `priority` entry is checked first.
+	//
+	// For `Packed` strategy scale down, this priority list will be the tie-breaker within the node, to ensure optimal
+	// infrastructure usage while also allowing some custom prioritisation of `GameServers`.
+	//
+	// For `Distributed` strategy scale down, the entire `Fleet` will be sorted by this priority list to provide the
+	// order of `GameServers` to delete on scale down.
 	// +optional
 	Priorities []Priority `json:"priorities,omitempty"`
 	// Template the GameServer template to apply for this GameServerSet

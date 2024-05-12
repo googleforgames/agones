@@ -106,7 +106,7 @@ type Controller struct {
 func NewController(
 	controllerHooks cloudproduct.ControllerHooksInterface,
 	health healthcheck.Handler,
-	minPort, maxPort int32,
+	portRanges map[string]portallocator.PortRange,
 	sidecarImage string,
 	alwaysPullSidecarImage bool,
 	sidecarCPURequest resource.Quantity,
@@ -143,7 +143,7 @@ func NewController(
 		gameServerSynced:       gsInformer.HasSynced,
 		nodeLister:             kubeInformerFactory.Core().V1().Nodes().Lister(),
 		nodeSynced:             kubeInformerFactory.Core().V1().Nodes().Informer().HasSynced,
-		portAllocator:          controllerHooks.NewPortAllocator(minPort, maxPort, kubeInformerFactory, agonesInformerFactory),
+		portAllocator:          controllerHooks.NewPortAllocator(portRanges, kubeInformerFactory, agonesInformerFactory),
 		healthController:       NewHealthController(health, kubeClient, agonesClient, kubeInformerFactory, agonesInformerFactory, controllerHooks.WaitOnFreePorts()),
 		migrationController:    NewMigrationController(health, kubeClient, agonesClient, kubeInformerFactory, agonesInformerFactory, controllerHooks.SyncPodPortsToGameServer),
 		missingPodController:   NewMissingPodController(health, kubeClient, agonesClient, kubeInformerFactory, agonesInformerFactory),
@@ -819,6 +819,12 @@ func (c *Controller) syncGameServerStartingState(ctx context.Context, gs *agones
 	if pod.Spec.NodeName == "" {
 		return gs, workerqueue.NewDebugError(errors.Errorf("node not yet populated for Pod %s", pod.ObjectMeta.Name))
 	}
+
+	// Ensure the pod IPs are populated
+	if pod.Status.PodIPs == nil || len(pod.Status.PodIPs) == 0 {
+		return gs, workerqueue.NewDebugError(errors.Errorf("pod IPs not yet populated for Pod %s", pod.ObjectMeta.Name))
+	}
+
 	node, err := c.nodeLister.Get(pod.Spec.NodeName)
 	if err != nil {
 		return gs, errors.Wrapf(err, "error retrieving node %s for Pod %s", pod.Spec.NodeName, pod.ObjectMeta.Name)

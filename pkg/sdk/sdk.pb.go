@@ -434,10 +434,10 @@ type GameServer_Status struct {
 	// [Stage:Alpha]
 	// [FeatureFlag:PlayerTracking]
 	Players *GameServer_Status_PlayerStatus `protobuf:"bytes,4,opt,name=players,proto3" json:"players,omitempty"`
-	// [Stage:Alpha]
+	// [Stage:Beta]
 	// [FeatureFlag:CountsAndLists]
 	Counters map[string]*GameServer_Status_CounterStatus `protobuf:"bytes,5,rep,name=counters,proto3" json:"counters,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
-	// [Stage:Alpha]
+	// [Stage:Beta]
 	// [FeatureFlag:CountsAndLists]
 	Lists map[string]*GameServer_Status_ListStatus `protobuf:"bytes,6,rep,name=lists,proto3" json:"lists,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 }
@@ -769,7 +769,7 @@ func (x *GameServer_Status_PlayerStatus) GetIds() []string {
 	return nil
 }
 
-// [Stage:Alpha]
+// [Stage:Beta]
 // [FeatureFlag:CountsAndLists]
 type GameServer_Status_CounterStatus struct {
 	state         protoimpl.MessageState
@@ -826,7 +826,7 @@ func (x *GameServer_Status_CounterStatus) GetCapacity() int64 {
 	return 0
 }
 
-// [Stage:Alpha]
+// [Stage:Beta]
 // [FeatureFlag:CountsAndLists]
 type GameServer_Status_ListStatus struct {
 	state         protoimpl.MessageState

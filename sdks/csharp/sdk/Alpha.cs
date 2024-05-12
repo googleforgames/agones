@@ -20,6 +20,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Grpc.Net.Client;
+using gProto = Google.Protobuf.WellKnownTypes;
 
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Agones.Test")]
 namespace Agones
@@ -49,7 +50,7 @@ namespace Agones
         {
             _logger = logger;
             RequestTimeoutSec = requestTimeoutSec;
-            
+
             if (cancellationTokenSource == null)
             {
                 cts = new CancellationTokenSource();
@@ -60,7 +61,7 @@ namespace Agones
                 cts = cancellationTokenSource;
                 ownsCts = false;
             }
-            
+
             ctoken = cts.Token;
             client = new SDK.SDKClient(channel);
         }
@@ -218,12 +219,12 @@ namespace Agones
             }
 
             cts.Cancel();
-            
+
             if (ownsCts)
             {
                 cts.Dispose();
             }
-            
+
             _disposed = true;
             GC.SuppressFinalize(this);
         }

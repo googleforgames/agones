@@ -21,12 +21,13 @@ import (
 	"strings"
 	"time"
 
-	pkgSdk "agones.dev/agones/pkg/sdk"
-	"agones.dev/agones/pkg/util/runtime"
-	goSdk "agones.dev/agones/sdks/go"
 	"github.com/google/go-cmp/cmp"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
+
+	pkgSdk "agones.dev/agones/pkg/sdk"
+	"agones.dev/agones/pkg/util/runtime"
+	goSdk "agones.dev/agones/sdks/go"
 )
 
 func main() {
@@ -159,37 +160,37 @@ func testPlayerTracking(sdk *goSdk.SDK) {
 func testCounts(sdk *goSdk.SDK) {
 	// LocalSDKServer starting "rooms": {Count: 1, Capacity: 10}
 	counter := "rooms"
-	count, err := sdk.Alpha().GetCounterCount(counter)
+	count, err := sdk.Beta().GetCounterCount(counter)
 	if err != nil {
 		log.Fatalf("Error getting Counter count: %s", err)
 	} else if count != int64(1) {
 		log.Fatalf("Counter count should be 1, but is %d", count)
 	}
 
-	inc, err := sdk.Alpha().IncrementCounter(counter, 9)
-	if !inc {
+	err = sdk.Beta().IncrementCounter(counter, 9)
+	if err != nil {
 		log.Fatalf("Error incrementing Counter: %s", err)
 	}
 
-	dec, err := sdk.Alpha().DecrementCounter(counter, 10)
-	if !dec {
+	err = sdk.Beta().DecrementCounter(counter, 10)
+	if err != nil {
 		log.Fatalf("Error decrementing Counter: %s", err)
 	}
 
-	setCount, err := sdk.Alpha().SetCounterCount(counter, 10)
-	if !setCount {
+	err = sdk.Beta().SetCounterCount(counter, 10)
+	if err != nil {
 		log.Fatalf("Error setting Counter count: %s", err)
 	}
 
-	capacity, err := sdk.Alpha().GetCounterCapacity(counter)
+	capacity, err := sdk.Beta().GetCounterCapacity(counter)
 	if err != nil {
 		log.Fatalf("Error getting Counter capacity: %s", err)
 	} else if capacity != int64(10) {
 		log.Fatalf("Counter capacity should be 10, but is %d", capacity)
 	}
 
-	setCapacity, err := sdk.Alpha().SetCounterCapacity(counter, 1)
-	if !setCapacity {
+	err = sdk.Beta().SetCounterCapacity(counter, 1)
+	if err != nil {
 		log.Fatalf("Error setting Counter capacity: %s", err)
 	}
 }
@@ -199,44 +200,44 @@ func testLists(sdk *goSdk.SDK) {
 	list := "players"
 	vals := []string{"test0", "test1", "test2"}
 
-	contains, err := sdk.Alpha().ListContains(list, "test1")
+	contains, err := sdk.Beta().ListContains(list, "test1")
 	if !contains {
 		log.Fatalf("List should contain value \"test1\" err: %s", err)
 	}
 
-	length, err := sdk.Alpha().GetListLength(list)
+	length, err := sdk.Beta().GetListLength(list)
 	if err != nil {
 		log.Fatalf("Error getting List length: %s", err)
 	} else if int64(length) != 3 {
 		log.Fatalf("List length should be 3, but is %d", length)
 	}
 
-	values, err := sdk.Alpha().GetListValues(list)
+	values, err := sdk.Beta().GetListValues(list)
 	if err != nil {
 		log.Fatalf("Error getting List values: %s", err)
 	} else if !cmp.Equal(vals, values) {
 		log.Fatalf("List values should be %v, but is %v", vals, values)
 	}
 
-	appendValue, err := sdk.Alpha().AppendListValue(list, "test3")
-	if !appendValue {
+	err = sdk.Beta().AppendListValue(list, "test3")
+	if err != nil {
 		log.Fatalf("Unable to append value \"test3\" err: %s", err)
 	}
 
-	deleteValue, err := sdk.Alpha().DeleteListValue(list, "test2")
-	if !deleteValue {
+	err = sdk.Beta().DeleteListValue(list, "test2")
+	if err != nil {
 		log.Fatalf("Unable to delete value \"test2\" err: %s", err)
 	}
 
-	capacity, err := sdk.Alpha().GetListCapacity(list)
+	capacity, err := sdk.Beta().GetListCapacity(list)
 	if err != nil {
 		log.Fatalf("Error getting List capacity: %s", err)
 	} else if capacity != int64(100) {
 		log.Fatalf("List capacity should be 100, but is %d", capacity)
 	}
 
-	setCapacity, err := sdk.Alpha().SetListCapacity(list, 2)
-	if !setCapacity {
+	err = sdk.Beta().SetListCapacity(list, 2)
+	if err != nil {
 		log.Fatalf("Error setting List capacity: %s", err)
 	}
 }

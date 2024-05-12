@@ -31,12 +31,22 @@ const (
 	////////////////
 	// Beta features
 
-	// FeatureFleetAllocateOverflow enables setting labels and/or annotations on Allocated GameServers
-	// if the desired number of the underlying GameServerSet drops below the number of Allocated GameServers.
-	FeatureFleetAllocateOverflow Feature = "FleetAllocationOverflow"
+	// FeatureCountsAndLists is a feature flag that enables counts and lists feature
+	// (a generic implenetation of the player tracking feature).
+	FeatureCountsAndLists Feature = "CountsAndLists"
 
 	////////////////
 	// Alpha features
+
+	// FeatureDisableResyncOnSDKServer is a feature flag to enable/disable resync on SDK server.
+	FeatureDisableResyncOnSDKServer Feature = "DisableResyncOnSDKServer"
+
+	////////////////
+	// Alpha features
+
+	// FeatureGKEAutopilotExtendedDurationPods enables the use of Extended Duration pods
+	// when Agones is running on Autopilot. Available on 1.28+ only.
+	FeatureGKEAutopilotExtendedDurationPods = "GKEAutopilotExtendedDurationPods"
 
 	// FeaturePlayerAllocationFilter is a feature flag that enables the ability for Allocations to filter based on
 	// player capacity.
@@ -45,19 +55,17 @@ const (
 	// FeaturePlayerTracking is a feature flag to enable/disable player tracking features.
 	FeaturePlayerTracking Feature = "PlayerTracking"
 
-	// FeatureCountsAndLists is a feature flag that enables/disables counts and lists feature
-	// (a generic implenetation of the player tracking feature).
-	FeatureCountsAndLists Feature = "CountsAndLists"
+	// FeatureRollingUpdateFix is a feature flag to enable/disable fleet controller fixes.
+	FeatureRollingUpdateFix Feature = "RollingUpdateFix"
 
-	// FeatureDisableResyncOnSDKServer is a feature flag to enable/disable resync on SDK server.
-	FeatureDisableResyncOnSDKServer Feature = "DisableResyncOnSDKServer"
+	// FeaturePortRanges is a feature flag to enable/disable specific port ranges.
+	FeaturePortRanges Feature = "PortRanges"
 
 	////////////////
 	// Dev features
 
-	// FeatureGKEAutopilotExtendedDurationPods enables the use of Extended Duration pods
-	// when Agones is running on Autopilot.
-	FeatureGKEAutopilotExtendedDurationPods = "GKEAutopilotExtendedDurationPods"
+	// FeatureAutopilotPassthroughPort is a feature flag that enables/disables Passthrough Port Policy.
+	FeatureAutopilotPassthroughPort Feature = "PassthroughPortPolicy"
 
 	////////////////
 	// Example feature
@@ -87,28 +95,32 @@ var (
 	// * move from `false` to `true` in `featureDefaults`.
 	// * move from `false` to `true` in install/helm/agones/defaultfeaturegates.yaml
 	// * remove from `ALPHA_FEATURE_GATES` in build/Makefile
+	// * add to `BETA_FEATURE_GATES` in build/Makefile
 	// * invert in the e2e-runner config in cloudbuild.yaml
 	// * change the value in site/content/en/docs/Guides/feature-stages.md.
 	// * Ensure that the features in each file are organized categorically and alphabetically.
 	//
 	// To promote a feature from beta->GA:
 	// * remove all places consuming the feature gate and fold logic to true
-	//   * consider cleanup - often folding a gate to true allows refactoring
+	// * consider cleanup - often folding a gate to true allows refactoring
 	// * invert the "new alpha feature" steps above
+	// * remove from `BETA_FEATURE_GATES` in build/Makefile
 	//
 	// In each of these, keep the feature sorted by descending maturity then alphabetical
 	featureDefaults = map[Feature]bool{
 		// Beta features
-		FeatureFleetAllocateOverflow: true,
+		FeatureCountsAndLists:           true,
+		FeatureDisableResyncOnSDKServer: true,
 
 		// Alpha features
-		FeaturePlayerAllocationFilter:   false,
-		FeaturePlayerTracking:           false,
-		FeatureDisableResyncOnSDKServer: false,
-		FeatureCountsAndLists:           false,
+		FeatureGKEAutopilotExtendedDurationPods: false,
+		FeaturePlayerAllocationFilter:           false,
+		FeaturePlayerTracking:                   false,
+		FeatureRollingUpdateFix:                 false,
+		FeaturePortRanges:                       false,
 
 		// Dev features
-		FeatureGKEAutopilotExtendedDurationPods: false,
+		FeatureAutopilotPassthroughPort: false,
 
 		// Example feature
 		FeatureExample: false,

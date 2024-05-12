@@ -28,7 +28,6 @@ steps:
   #
   # Run the e2e tests with FeatureGates inverted compared to Stable
   #
-  # Keep in sync with (the inverse of) pkg/util/runtime/features.go:featureDefaults
   - name: e2e-runner
     args:
       - ${_FEATURE_WITH_GATE}
@@ -50,8 +49,6 @@ steps:
       - ${_TEST_CLUSTER_NAME}
       - ${_TEST_CLUSTER_LOCATION}
       - ${_REGISTRY}
-      - ${_PARENT_COMMIT_SHA}
-      - ${_PARENT_BUILD_ID}
     id: e2e-stable
     waitFor: [e2e-feature-gates]
 tags:

@@ -7,6 +7,25 @@ description: >
   Track player connections, disconnections, counts and capacities through the Agones SDK
 ---
 
+{{% feature expiryVersion="1.41.0" %}}
+{{% pageinfo color="info" %}}
+[Counters and Lists]({{< ref "/docs/Guides/counters-and-lists.md" >}}) will eventually replace the Alpha functionality
+of Player Tracking, which will subsequently be removed from Agones.
+
+If you are currently using this Alpha feature, we would love for you to test (and ideally migrate to!) this new
+functionality to Counters and Lists to ensure it meet all your needs.
+{{% /pageinfo %}}
+{{% /feature %}}
+{{% feature publishVersion="1.41.0" %}}
+{{% pageinfo color="info" %}}
+[Counters and Lists]({{< ref "/docs/Guides/counters-and-lists.md" >}}) will eventually replace the Beta functionality
+of Player Tracking, which will subsequently be removed from Agones.
+
+If you are currently using this Beta feature, we would love for you to test (and ideally migrate to!) this new
+functionality to Counters and Lists to ensure it meet all your needs.
+{{% /pageinfo %}}
+{{% /feature %}}
+
 {{< alpha title="Player Tracking" gate="PlayerTracking" >}}
 
 ## Managing GameServer Capacities

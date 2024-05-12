@@ -24,17 +24,18 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
-	autoscalingv1 "agones.dev/agones/pkg/apis/autoscaling/v1"
-	"agones.dev/agones/pkg/gameservers"
-	agtesting "agones.dev/agones/pkg/testing"
-	utilruntime "agones.dev/agones/pkg/util/runtime"
 	"github.com/stretchr/testify/assert"
 	admregv1 "k8s.io/api/admissionregistration/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	k8stesting "k8s.io/client-go/testing"
+
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
+	autoscalingv1 "agones.dev/agones/pkg/apis/autoscaling/v1"
+	"agones.dev/agones/pkg/gameservers"
+	agtesting "agones.dev/agones/pkg/testing"
+	utilruntime "agones.dev/agones/pkg/util/runtime"
 )
 
 const (
@@ -937,7 +938,7 @@ func TestApplyCounterPolicy(t *testing.T) {
 							}}}},
 			},
 			want: expected{
-				replicas: 2,
+				replicas: 1,
 				limited:  false,
 				wantErr:  false,
 			},
@@ -1729,7 +1730,7 @@ func TestApplyListPolicy(t *testing.T) {
 							}}}},
 			},
 			want: expected{
-				replicas: 3,
+				replicas: 4,
 				limited:  false,
 				wantErr:  false,
 			},
@@ -1950,8 +1951,8 @@ func TestApplyListPolicy(t *testing.T) {
 							}}}},
 			},
 			want: expected{
-				replicas: 0,
-				limited:  false,
+				replicas: 1,
+				limited:  true,
 				wantErr:  false,
 			},
 		},

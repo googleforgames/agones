@@ -128,7 +128,8 @@ spec:
                         description: The name of the Counter or List. If not found on the GameServer, those GameServer with the key will have priority over those that do not.
                       order:
                         type: string
-                        description: Ascending or Descending sort order. Default is "Ascending" so remove smaller total capacity first. "Descending" would remove larger total capacity first.
+                        description: Ascending or Descending sort order. Default is "Ascending" so remove smaller available capacity first. "Descending" would remove larger available capacity first.
+                        default: Ascending
                         enum:
                           - Ascending
                           - Descending
