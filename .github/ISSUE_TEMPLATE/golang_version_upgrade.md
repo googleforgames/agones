@@ -22,12 +22,13 @@ Steps to upgrade Golang version:
 
 - [ ] Create a PR for the above changes and send for review
 
-- [ ] After the above PR is approved, **before** merging it, run the following at `build` directory to generate and push the new example images:
-
-    `export REGISTRY=us-docker.pkg.dev/agones-images/examples`
-
-    `make gcloud-auth-docker`
-
-    `make build-go-examples && make push-example-golang-images`
+- [ ] After the above PR is approved, **before** merging it, run the following to generate and push the new example images:
+    - [ ] In `examples/autoscaler-webhook`, run: `make cloud-build`
+    - [ ] In `examples/crd-client`, run: `make cloud-build`
+    - [ ] In `examples/custom-controller`, run: `make cloud-build`
+    - [ ] In `examples/simple-game-server`, run: `make cloud-build`
+    - [ ] In `examples/simple-genai-server`, run: `make cloud-build`
+    - [ ] In `examples/supertuxkart`, run: `make cloud-build`
+    - [ ] In `examples/xonotic`, run: `make cloud-build`
 
 - [ ] Merge the above PR
