@@ -137,10 +137,10 @@ func (*gkeAutopilot) WaitOnFreePorts() bool { return true }
 func (g *gkeAutopilot) ValidateGameServerSpec(gss *agonesv1.GameServerSpec, fldPath *field.Path) field.ErrorList {
 	allErrs := g.ValidateScheduling(gss.Scheduling, fldPath.Child("scheduling"))
 	for i, p := range gss.Ports {
-		if p.PortPolicy != agonesv1.Dynamic && p.PortPolicy != agonesv1.None {
+		if p.PortPolicy != agonesv1.Dynamic && (p.PortPolicy != agonesv1.None || !runtime.FeatureEnabled(runtime.FeaturePortPolicyNone)) {
 			allErrs = append(allErrs, field.Invalid(fldPath.Child("ports").Index(i).Child("portPolicy"), string(p.PortPolicy), errPortPolicyMustBeDynamicOrNone))
 		}
-		if p.Range != agonesv1.DefaultPortRange && p.PortPolicy != agonesv1.None {
+		if p.Range != agonesv1.DefaultPortRange && (p.PortPolicy != agonesv1.None || !runtime.FeatureEnabled(runtime.FeaturePortPolicyNone)) {
 			allErrs = append(allErrs, field.Invalid(fldPath.Child("ports").Index(i).Child("range"), p.Range, errRangeInvalid))
 		}
 	}

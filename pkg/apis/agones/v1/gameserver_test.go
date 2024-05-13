@@ -69,6 +69,9 @@ func TestStatus(t *testing.T) {
 			expected:      GameServerStatusPort{Name: "test-name", Port: 7777},
 		},
 	}
+	runtime.FeatureTestMutex.Lock()
+	defer runtime.FeatureTestMutex.Unlock()
+	require.NoError(t, runtime.ParseFeatures(string(runtime.FeaturePortPolicyNone)+"=true"))
 
 	for _, tc := range testCases {
 		name := "test-name"
@@ -1527,8 +1530,10 @@ func TestGameServerCountPortsForRange(t *testing.T) {
 }
 
 func TestGameServerPatch(t *testing.T) {
-	fixture := &GameServer{ObjectMeta: metav1.ObjectMeta{Name: "lucy", ResourceVersion: "1234"},
-		Spec: GameServerSpec{Container: "goat"}}
+	fixture := &GameServer{
+		ObjectMeta: metav1.ObjectMeta{Name: "lucy", ResourceVersion: "1234"},
+		Spec:       GameServerSpec{Container: "goat"},
+	}
 
 	delta := fixture.DeepCopy()
 	delta.Spec.Container = "bear"

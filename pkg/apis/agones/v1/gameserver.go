@@ -278,6 +278,9 @@ type GameServerPort struct {
 	// at installation time.
 	// When `Static` portPolicy is specified, `HostPort` is required, to specify the port that game clients will
 	// connect to
+	// `Passthrough` dynamically sets the `containerPort` to the same value as the dynamically selected hostPort.
+	// `None` portPolicy ignores `HostPort` and the `containerPort` (optional) is used to set the port on the GameServer instance.
+	// `Passthrough` dynamically sets the `containerPort` to the same value as the dynamically selected hostPort.
 	PortPolicy PortPolicy `json:"portPolicy,omitempty"`
 	// Container is the name of the container on which to open the port. Defaults to the game server container.
 	// +optional
@@ -743,7 +746,8 @@ func (gs *GameServer) Pod(apiHooks APIHooks, sidecars ...corev1.Container) (*cor
 	gs.podObjectMeta(pod)
 	for _, p := range gs.Spec.Ports {
 		var hostPort int32
-		if p.PortPolicy != None {
+
+		if !runtime.FeatureEnabled(runtime.FeaturePortPolicyNone) || p.PortPolicy != None {
 			hostPort = p.HostPort
 		}
 
@@ -860,7 +864,7 @@ func (gs *GameServer) HasPortPolicy(policy PortPolicy) bool {
 
 // Status returns a GameServerStatusPort for this GameServerPort
 func (p GameServerPort) Status() GameServerStatusPort {
-	if p.PortPolicy == None {
+	if runtime.FeatureEnabled(runtime.FeaturePortPolicyNone) && p.PortPolicy == None {
 		return GameServerStatusPort{Name: p.Name, Port: p.ContainerPort}
 	}
 

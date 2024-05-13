@@ -27,6 +27,7 @@ import (
 // with apply.
 type GameServerPortApplyConfiguration struct {
 	Name          *string          `json:"name,omitempty"`
+	Range         *string          `json:"range,omitempty"`
 	PortPolicy    *v1.PortPolicy   `json:"portPolicy,omitempty"`
 	Container     *string          `json:"container,omitempty"`
 	ContainerPort *int32           `json:"containerPort,omitempty"`
@@ -45,6 +46,14 @@ func GameServerPort() *GameServerPortApplyConfiguration {
 // If called multiple times, the Name field is set to the value of the last call.
 func (b *GameServerPortApplyConfiguration) WithName(value string) *GameServerPortApplyConfiguration {
 	b.Name = &value
+	return b
+}
+
+// WithRange sets the Range field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Range field is set to the value of the last call.
+func (b *GameServerPortApplyConfiguration) WithRange(value string) *GameServerPortApplyConfiguration {
+	b.Range = &value
 	return b
 }
 

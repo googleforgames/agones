@@ -218,6 +218,11 @@ func TestValidateGameServer(t *testing.T) {
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
+			// PortPolicy None is behind a feature flag
+			runtime.FeatureTestMutex.Lock()
+			defer runtime.FeatureTestMutex.Unlock()
+			require.NoError(t, runtime.ParseFeatures(string(runtime.FeaturePortPolicyNone)+"=true"))
+
 			causes := (&gkeAutopilot{useExtendedDurationPods: tc.edPods}).ValidateGameServerSpec(&agonesv1.GameServerSpec{
 				Ports:      tc.ports,
 				Scheduling: tc.scheduling,
