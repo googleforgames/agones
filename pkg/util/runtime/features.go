@@ -101,14 +101,14 @@ var (
 	// * Ensure that the features in each file are organized categorically and alphabetically.
 	//
 	// Feature Promotion: alpha->beta for SDK Functions
-	// * Move Files from alpha->beta:
+	// * Move methods from alpha->beta files:
 	// 		- From proto/sdk/alpha/alpha.proto to proto/sdk/beta/beta.proto
 	//		- For each language-specific SDK (e.g., Go, C#, Rust):
 	//			- Move implementation files (e.g., alpha.go to beta.go)
 	//			- Move test files (e.g., alpha_test.go to beta_test.go)
-	//			- Note: Delete references to 'alpha' in the moved alpha files.
-	// * Change all instances of alpha->beta:
-	//		- Proto Files: proto/sdk/sdk.proto
+	//			- Note: Delete references to 'alpha' in the moved alpha methods.
+	// * Change all code and documentation references of alpha->beta:
+	//		- Proto Files: proto/sdk/sdk.proto `[Stage:Alpha]->[Stage:Beta]`
 	//		- SDK Implementations: Update in language-specific SDKs (e.g., sdks/go/sdk.go, sdks/csharp/sdk/AgonesSDK.cs).
 	//		- Examples & Tests: Adjust in files like examples/simple-game-server/main.go and language-specific test files.
 	// * Include beta information in relevant SDK files
