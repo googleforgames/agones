@@ -136,7 +136,7 @@ var (
 		FeaturePortRanges:                       false,
 
 		// Dev features
-		FeatureAutopilotPassthroughPort: true,
+		FeatureAutopilotPassthroughPort: false,
 
 		// Example feature
 		FeatureExample: false,
