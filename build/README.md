@@ -459,7 +459,7 @@ This option is enabled by default via implicit `make WITH_WINDOWS=1 build-images
 To disable, use `make WITH_WINDOWS=0 build-images`.
 
 ### WINDOWS_VERSIONS
-List of Windows Server versions to build for. Defaults to `ltsc2019` for Windows Server 2019.
+List of Windows Server versions to build for. Defaults to `ltsc2022` for Windows Server 2022.
 See https://hub.docker.com/_/microsoft-windows-servercore for all available Windows versions.
 
 ### WITH_ARM64
@@ -585,7 +585,7 @@ make test-e2e-integration ARGS='-run TestGameServerReserve'
 Run controller failure portion of the end-to-end tests.
 
 #### `make test-e2e-allocator-crash`
-Run allocator failure portion of the end-to-end test. 
+Run allocator failure portion of the end-to-end test.
 
 #### `make setup-prometheus`
 

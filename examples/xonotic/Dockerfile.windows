@@ -34,7 +34,7 @@
 # Use `--build-arg WINDOWS_VERSION=` to select the correct base image
 # See https://docs.microsoft.com/en-us/virtualization/windowscontainers/deploy-containers/version-compatibility
 # for details.
-ARG WINDOWS_VERSION=ltsc2019
+ARG WINDOWS_VERSION=ltsc2022
 
 # Build Stage
 FROM --platform=linux/amd64 golang:1.21.6 as base

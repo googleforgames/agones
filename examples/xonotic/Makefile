@@ -26,7 +26,7 @@
 REPOSITORY ?=
 PROD_REPO ?= us-docker.pkg.dev/agones-images/examples
 
-WINDOWS_VERSIONS = ltsc2019 ltsc2022
+WINDOWS_VERSIONS = ltsc2022
 BUILDX_WINDOWS_BUILDER = windows-builder
 
 # Build with Windows support
