@@ -850,11 +850,11 @@ func TestGameServerPassthroughPort(t *testing.T) {
 }
 
 func TestGameServerPortPolicyNone(t *testing.T) {
-	t.Parallel()
+	if !runtime.FeatureEnabled(runtime.FeaturePortPolicyNone) {
+		t.SkipNow()
+	}
 
-	runtime.FeatureTestMutex.Lock()
-	defer runtime.FeatureTestMutex.Unlock()
-	require.NoError(t, runtime.ParseFeatures(string(runtime.FeaturePortPolicyNone)+"=true"))
+	t.Parallel()
 
 	gs := framework.DefaultGameServer(framework.Namespace)
 	gs.Spec.Ports[0] = agonesv1.GameServerPort{PortPolicy: agonesv1.None, ContainerPort: 7777}
