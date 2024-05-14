@@ -100,7 +100,7 @@ spec:
       # Now in Beta, and enabled by default
       counters:
         players:
-          count: 9
+          count: 9 # Initial Value
           capacity: 10
         sessions:
           count:  # Count and/or capacity must be listed (but may be nil) otherwise the counter will by dropped by the CRD schema.

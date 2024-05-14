@@ -86,26 +86,26 @@ spec:
         grpcPort: 9357
         httpPort: 9358
       #
-      # [Stage:Alpha]
+      # [Stage:Beta]
       # [FeatureFlag:CountsAndLists]
       # Counts and Lists provides the configuration for generic (player, room, session, etc.) tracking features.
-      # Commented out since Alpha, and disabled by default
-      # counters: # counters are int64 counters stored against a GameServer in the fleet that can be incremented and decremented by set amounts. Keys must be declared at Fleet creation time.
-      #   games: # arbitrary key.
-      #     count: 0 # initial value.
-      #     capacity: 100 # (Optional) Defaults to 1000 and setting capacity to max(int64) may lead to issues and is not recommended. See GitHub issue https://github.com/googleforgames/agones/issues/3636 for more details.
+      # Now in Beta, and enabled by default
+      # counters:
+      #   players:
+      #     count: 0 # Initial Value
+      #     capacity: 10
       #   sessions:
-      #     count: 0
-      # lists: # lists are lists of values stored against a GameServer in the fleet that can be added and deleted from. Keys must be declared at Fleet creation time.
-      #   players: # an empty list, with a capacity set to 10.
-      #     capacity: 10 # (Optional) Defaults to 1000.
+      #     count:  # Count and/or capacity must be listed (but may be nil) otherwise the counter will by dropped by the CRD schema.
+      # lists:
+      #   players:
+      #     capacity:  # Capacity and/or values must be listed (but may be nil) otherwise the list will be dropped by the CRD schema.
       #   rooms:
-      #     capacity: 333
-      #     values: # initial set of values in a list.
+      #     capacity: 5
+      #     values:
       #       - room1
       #       - room2
       #       - room3
-      #  
+      #
       # The GameServer's Pod template
       template:
         spec:
