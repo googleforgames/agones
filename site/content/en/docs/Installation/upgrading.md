@@ -158,7 +158,7 @@ releases (~1y) or more starting from the SDK version packaged.
   breaking changes have been made between releases.
   - When we make incompatible Alpha changes, we will document the APIs involved.
 
-## SDK Deprecation Policies as of Agones
+## SDK Deprecation Policies as of Agones 1.41
 
 - Client SDK updates are not mandatory for game server binaries except for SDK when the underlying
 proto format has deprecations or breaking Alpha API changes.
