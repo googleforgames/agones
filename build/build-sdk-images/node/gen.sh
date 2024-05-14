@@ -25,7 +25,6 @@ googleapis=/go/src/agones.dev/agones/proto/googleapis
 gatewaygrpc=/go/src/agones.dev/agones/proto/grpc-gateway
 
 cd /go/src/agones.dev/agones
-
 mkdir -p ./sdks/nodejs/lib/beta
 
 grpc_tools_node_protoc -I ${googleapis} -I ${gatewaygrpc} -I ${sdk} --js_out=import_style=commonjs,binary:./sdks/nodejs/lib google/api/annotations.proto google/api/client.proto google/api/field_behavior.proto google/api/http.proto google/api/launch_stage.proto google/api/resource.proto protoc-gen-openapiv2/options/annotations.proto protoc-gen-openapiv2/options/openapiv2.proto
