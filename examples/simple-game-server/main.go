@@ -117,7 +117,10 @@ func main() {
 			time.Sleep(time.Duration(*readyDelaySec) * time.Second)
 		}
 		log.Print("Marking this server as ready")
-		ready(s)
+		err := s.Ready()
+		if err != nil {
+			log.Fatalf("Could not send ready message")
+		}
 	}
 
 	<-sigCtx.Done()
