@@ -53,16 +53,18 @@ spec:
     annotations:
       otherkey: setthisvalue
   #
-  # [Stage:Alpha]
+  # [Stage:Beta]
   # [FeatureFlag:CountsAndLists]
   # Which gameservers in the Fleet are most important to keep around - impacts scale down logic.
+  # Priority of sorting is in descending importance. I.e. The position 0 `priority` entry is checked first.
+  # Now in Beta, and enabled by default
   # priorities:
-  # - type: Counter # Sort by a “Counter”
-  #   key: rooms # The name of the Counter. No impact if no GameServer found.
+  # - type: Counter # Whether a Counter or a List.
+  #   key: rooms # The name of the Counter or List. No impact if no GameServer found.
   #   order: Descending # Default is "Ascending" so smaller available capacity will be removed first on down scaling.
-  # - type: List # Sort by a “List”
-  #   key: players # The name of the List. No impact if no GameServer found.
-  #   order: Ascending # Default is "Ascending" so smaller available capacity will be removed first on down scaling.
+  # - type: List
+  #   key: players
+  #   order: Ascending
   #      
   template:
     # GameServer metadata
