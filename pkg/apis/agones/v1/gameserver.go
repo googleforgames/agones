@@ -222,11 +222,11 @@ type GameServerSpec struct {
 	// (Alpha, PlayerTracking feature flag) Players provides the configuration for player tracking features.
 	// +optional
 	Players *PlayersSpec `json:"players,omitempty"`
-	// (Alpha, CountsAndLists feature flag) Counters provides the configuration for tracking of int64 values against a GameServer.
+	// (Beta, CountsAndLists feature flag) Counters provides the configuration for tracking of int64 values against a GameServer.
 	// Keys must be declared at GameServer creation time.
 	// +optional
 	Counters map[string]CounterStatus `json:"counters,omitempty"`
-	// (Alpha, CountsAndLists feature flag) Lists provides the configuration for tracking of lists of up to 1000 values against a GameServer.
+	// (Beta, CountsAndLists feature flag) Lists provides the configuration for tracking of lists of up to 1000 values against a GameServer.
 	// Keys must be declared at GameServer creation time.
 	// +optional
 	Lists map[string]ListStatus `json:"lists,omitempty"`
@@ -313,7 +313,7 @@ type GameServerStatus struct {
 	// [FeatureFlag:PlayerTracking]
 	// +optional
 	Players *PlayerStatus `json:"players"`
-	// (Alpha, CountsAndLists feature flag) Counters and Lists provides the configuration for generic tracking features.
+	// (Beta, CountsAndLists feature flag) Counters and Lists provides the configuration for generic tracking features.
 	// +optional
 	Counters map[string]CounterStatus `json:"counters,omitempty"`
 	// +optional

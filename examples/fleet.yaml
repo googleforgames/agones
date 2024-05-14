@@ -59,7 +59,7 @@ spec:
     annotations:
       otherkey: setthisvalue
   #
-  # [Stage:Alpha]
+  # [Stage:Beta]
   # [FeatureFlag:CountsAndLists]
   # Which gameservers in the Fleet are most important to keep around - impacts scale down logic.
   # priorities:
