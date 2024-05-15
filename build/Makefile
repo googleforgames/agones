@@ -52,6 +52,9 @@ WINDOWS_DOCKER_PUSH_ARGS =
 # GKE-Windows version map: https://cloud.google.com/kubernetes-engine/docs/how-to/creating-a-cluster-windows#version_mapping
 WINDOWS_VERSIONS = ltsc2019 ltsc2022
 
+# https://github.com/microsoft/Windows-Containers/issues/493: Pin the LTSC2019 image to an older sha
+LTSC2019_IMAGE_TAG = "@sha256:6fdf140282a2f809dae9b13fe441635867f0a27c33a438771673b8da8f3348a4"
+
 # Specify stress test level 1..100
 # STRESS_TEST_LEVEL=n requires capacity between 50*n up to 100*n simple-game-server Game Servers.
 STRESS_TEST_LEVEL ?= 20
@@ -616,7 +619,7 @@ build-agones-sdk-image-windows: $(foreach winver, $(WINDOWS_VERSIONS), build-ago
 
 # Build the image for the gameserver sidecar and SDK binaries
 build-agones-sdk-image-windows-%: $(ensure-build-image) build-agones-sdk-binary build-licenses build-required-src-dist ensure-windows-buildx-%
-	docker buildx build --platform windows/amd64 --builder $(BUILDX_WINDOWS_BUILDER)-$* -f $(agones_path)/cmd/sdk-server/Dockerfile.windows --tag=$(sidecar_tag)-windows_amd64-$* --build-arg WINDOWS_VERSION=$* $(DOCKER_BUILD_ARGS) $(agones_path)/cmd/sdk-server/ $(WINDOWS_DOCKER_PUSH_ARGS)
+	docker buildx build --platform windows/amd64 --builder $(BUILDX_WINDOWS_BUILDER)-$* -f $(agones_path)/cmd/sdk-server/Dockerfile.windows --tag=$(sidecar_tag)-windows_amd64-$* --build-arg WINDOWS_VERSION=$* --build-arg IMAGE_TAG=$(if $(filter ltsc2019,$*),$(LTSC2019_IMAGE_TAG)) $(DOCKER_BUILD_ARGS) $(agones_path)/cmd/sdk-server/ $(WINDOWS_DOCKER_PUSH_ARGS)
 
 # Build a static binary for the ping service
 build-ping-binary: build-ping-binary-amd64
