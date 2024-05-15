@@ -107,7 +107,6 @@ spec:
             - room1
             - room2
             - room3
-      #
       # The GameServer's Pod template
       template:
         spec:

@@ -132,7 +132,6 @@ spec:
       version: "" # empty an existing label value
     annotations:
       otherkey: setthisvalue
-  #
   # [Stage:Beta]
   # [FeatureFlag:CountsAndLists]
   # Which gameservers in the Fleet are most important to keep around - impacts scale down logic.
@@ -143,7 +142,6 @@ spec:
     - type: List # Sort by a “List”
       key: room # The name of the List. No impact if no GameServer found.
       order: Ascending # Default is "Ascending" so smaller capacity will be removed first on down scaling.
-  #      
   template:
     # GameServer metadata
     metadata:
@@ -163,6 +161,26 @@ spec:
         logLevel: Info
         grpcPort: 9357
         httpPort: 9358
+      #
+      # [Stage:Beta]
+      # [FeatureFlag:CountsAndLists]
+      # Counts and Lists provides the configuration for generic (player, room, session, etc.) tracking features.
+      # Now in Beta, and enabled by default
+      counters:
+        players:
+          count: 9
+          capacity: 10
+        sessions:
+          count:  # Count and/or capacity must be listed (but may be nil) otherwise the counter will by dropped by the CRD schema.
+      lists:
+        players:
+          capacity:  # Capacity and/or values must be listed (but may be nil) otherwise the list will be dropped by the CRD schema.
+        rooms:
+          capacity: 5
+          values:
+            - room1
+            - room2
+            - room3
       # The GameServer's Pod template
       template:
         spec:
