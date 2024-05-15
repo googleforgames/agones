@@ -272,7 +272,7 @@ type AllocationRequest struct {
 	// This is useful for things like smoke testing of new game servers.
 	// Note: This field can only be set if neither Required or Preferred is set.
 	GameServerSelectors []*GameServerSelector `protobuf:"bytes,8,rep,name=gameServerSelectors,proto3" json:"gameServerSelectors,omitempty"`
-	// [Stage: Alpha]
+	// [Stage: Beta]
 	// [FeatureFlag:CountsAndLists]
 	// `Priorities` configuration alters the order in which `GameServers` are searched for matches to the configured `selectors`.
 	//
@@ -284,7 +284,7 @@ type AllocationRequest struct {
 	// For `Distributed` strategy sorting, the entire selection of `GameServers` will be sorted by this priority list to provide the
 	// order that `GameServers` will be allocated by.
 	Priorities []*Priority `protobuf:"bytes,9,rep,name=priorities,proto3" json:"priorities,omitempty"`
-	// [Stage: Alpha]
+	// [Stage: Beta]
 	// [FeatureFlag:CountsAndLists]
 	// Counters and Lists provide a set of actions to perform
 	// on Counters and Lists during allocation.
@@ -417,7 +417,7 @@ type AllocationResponse struct {
 	NodeName  string                                        `protobuf:"bytes,5,opt,name=nodeName,proto3" json:"nodeName,omitempty"`
 	Source    string                                        `protobuf:"bytes,6,opt,name=source,proto3" json:"source,omitempty"`
 	Metadata  *AllocationResponse_GameServerMetadata        `protobuf:"bytes,7,opt,name=metadata,proto3,oneof" json:"metadata,omitempty"`
-	// (Alpha, CountsAndLists feature flag) Status of Counters and Lists on allocation.
+	// (Beta, CountsAndLists feature flag) Status of Counters and Lists on allocation.
 	Counters map[string]*AllocationResponse_CounterStatus `protobuf:"bytes,9,rep,name=counters,proto3" json:"counters,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 	Lists    map[string]*AllocationResponse_ListStatus    `protobuf:"bytes,10,rep,name=lists,proto3" json:"lists,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 }
