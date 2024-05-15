@@ -13,7 +13,8 @@
 # limitations under the License.
 
 ARG WINDOWS_VERSION=ltsc2019
-FROM mcr.microsoft.com/windows/servercore:${WINDOWS_VERSION}
+ARG IMAGE_TAG=
+FROM mcr.microsoft.com/windows/servercore:${WINDOWS_VERSION}${IMAGE_TAG}
 
 COPY ./bin/sdk-server.windows.amd64.exe /agones/sdk-server.exe
 COPY ./bin/LICENSES ./bin/dependencies-src.tgz /agones/
