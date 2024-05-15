@@ -157,8 +157,8 @@ func TestGameServerApplyDefaults(t *testing.T) {
 		scheduling          apis.SchedulingStrategy
 		sdkServer           SdkServer
 		alphaPlayerCapacity *int64
-		alphaCounterSpec    map[string]CounterStatus
-		alphaListSpec       map[string]ListStatus
+		betaCounterSpec     map[string]CounterStatus
+		betaListSpec        map[string]ListStatus
 		evictionSafeSpec    EvictionSafe
 		evictionSafeStatus  EvictionSafe
 	}
@@ -213,8 +213,8 @@ func TestGameServerApplyDefaults(t *testing.T) {
 				gss.Counters["games"] = CounterStatus{Count: 1, Capacity: 100}
 			}),
 			expected: wantDefaultAnd(func(e *expected) {
-				e.alphaCounterSpec = make(map[string]CounterStatus)
-				e.alphaCounterSpec["games"] = CounterStatus{Count: 1, Capacity: 100}
+				e.betaCounterSpec = make(map[string]CounterStatus)
+				e.betaCounterSpec["games"] = CounterStatus{Count: 1, Capacity: 100}
 			}),
 		},
 		"CountsAndLists=true, Lists": {
@@ -224,8 +224,8 @@ func TestGameServerApplyDefaults(t *testing.T) {
 				gss.Lists["players"] = ListStatus{Capacity: 100, Values: []string{"foo", "bar"}}
 			}),
 			expected: wantDefaultAnd(func(e *expected) {
-				e.alphaListSpec = make(map[string]ListStatus)
-				e.alphaListSpec["players"] = ListStatus{Capacity: 100, Values: []string{"foo", "bar"}}
+				e.betaListSpec = make(map[string]ListStatus)
+				e.betaListSpec["players"] = ListStatus{Capacity: 100, Values: []string{"foo", "bar"}}
 			}),
 		},
 		"defaults on passthrough": {
@@ -432,14 +432,14 @@ func TestGameServerApplyDefaults(t *testing.T) {
 			} else {
 				assert.Nil(t, test.gameServer.Status.Eviction)
 			}
-			if test.expected.alphaCounterSpec != nil {
-				assert.Equal(t, test.expected.alphaCounterSpec, test.gameServer.Status.Counters)
+			if test.expected.betaCounterSpec != nil {
+				assert.Equal(t, test.expected.betaCounterSpec, test.gameServer.Status.Counters)
 			} else {
 				assert.Nil(t, test.gameServer.Spec.Counters)
 				assert.Nil(t, test.gameServer.Status.Counters)
 			}
-			if test.expected.alphaListSpec != nil {
-				assert.Equal(t, test.expected.alphaListSpec, test.gameServer.Status.Lists)
+			if test.expected.betaListSpec != nil {
+				assert.Equal(t, test.expected.betaListSpec, test.gameServer.Status.Lists)
 			} else {
 				assert.Nil(t, test.gameServer.Spec.Lists)
 				assert.Nil(t, test.gameServer.Status.Lists)
