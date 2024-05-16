@@ -18,10 +18,11 @@
 
 // If you are getting `Error: googleapi: Error 409: Your previous request to create the named bucket
 // succeeded and you already own it., conflict` this means that your local tfstate file has
-// divereged from the tfstate file in gcloud. To use the gcloud version of the tfstate, delete your
-// local .terraform and .tfstate files. You may need to run `sudo chown -R yourusername .` to be
-// able to delete them. Then navigate to this directory and run `terraform init`. Pull in the the
-// tfstate file from gcloud with `terraform import google_storage_bucket.default agones-images-e2e-infra-bucket-tfstate`.
+// divereged from the tfstate file in Google Cloud Storage (GCS). To use the GCS version of the
+// tfstate, delete your local .terraform and .tfstate files. You may need to run
+// `sudo chown -R yourusername .` to be able to delete them. Then navigate to this directory and run
+// `terraform init`. Pull in the tfstate file from gcloud with
+// `terraform import google_storage_bucket.default agones-images-e2e-infra-bucket-tfstate`.
 
 // # GCS bucket for holding the Terraform state of the e2e Terraform config.
 
