@@ -66,7 +66,7 @@ const connect = async () => {
 	}
 };
 
-const testCounts = async(sdk) {
+const testCounts = async(sdk) => {
 	// LocalSDKServer starting "rooms": {Count: 1, Capacity: 10}
 	const counter = "rooms";
 
@@ -113,7 +113,7 @@ const testCounts = async(sdk) {
 	}
 }
 
-const testLists = async(sdk) {
+const testLists = async(sdk) => {
 	// LocalSDKServer starting "players": {Values: []string{"test0", "test1", "test2"}, Capacity: 100}}
 	const list = "players"
 	const listValues = ["test0", "test1", "test2"]

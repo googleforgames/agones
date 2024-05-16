@@ -18,7 +18,7 @@ const {setTimeout} = require('timers/promises');
 const DEFAULT_TIMEOUT = 60;
 const MAX_TIMEOUT = 2147483;
 
-const connect = async (timeout, enableAlpha, enableCountsAndLists) => {
+const connect = async (timeout, enableAlpha, enableBeta) => {
 	let agonesSDK = new AgonesSDK();
 
 	let lifetimeInterval;
@@ -82,9 +82,9 @@ const connect = async (timeout, enableAlpha, enableCountsAndLists) => {
 			await runAlphaSuite(agonesSDK);
 		}
 
-		if (enableCountsAndLists) {
-			console.log('Running counts and lists suite');
-			await runCountAndListsSuite(agonesSDK);
+		if (enableBeta) {
+			console.log('Running beta suite');
+			await runBetaSuite(agonesSDK);
 		}
 
 		if (timeout === 0) {
@@ -172,72 +172,72 @@ const runAlphaSuite = async (agonesSDK) => {
 	console.log(`result: ${result}`);
 };
 
-const runCountAndListsSuite = async (agonesSDK) => {
+const runBetaSuite = async (agonesSDK) => {
 	let result;
 
 	await setTimeout(5000);
 	console.log('Getting counter count');
-	result = await agonesSDK.alpha.getCounterCount('games');
+	result = await agonesSDK.beta.getCounterCount('games');
 	console.log(`result: ${result}`);
 
 	await setTimeout(5000);
 	console.log('Incrementing counter');
-	await agonesSDK.alpha.incrementCounter('games', 1);
+	await agonesSDK.beta.incrementCounter('games', 1);
 
 	await setTimeout(5000);
 	console.log('Decrementing counter');
-	await agonesSDK.alpha.decrementCounter('games', 1);
+	await agonesSDK.beta.decrementCounter('games', 1);
 
 	await setTimeout(5000);
 	console.log('Setting counter count');
-	await agonesSDK.alpha.setCounterCount('games', 2);
+	await agonesSDK.beta.setCounterCount('games', 2);
 
 	await setTimeout(5000);
 	console.log('Getting counter capacity');
-	result = await agonesSDK.alpha.getCounterCapacity('games');
+	result = await agonesSDK.beta.getCounterCapacity('games');
 	console.log(`result: ${result}`);
 
 	await setTimeout(5000);
 	console.log('Setting counter capacity');
-	await agonesSDK.alpha.setCounterCapacity('games', 200);
+	await agonesSDK.beta.setCounterCapacity('games', 200);
 
 	await setTimeout(5000);
 	console.log('Getting list capacity');
-	result = await agonesSDK.alpha.getListCapacity('rooms');
+	result = await agonesSDK.beta.getListCapacity('rooms');
 	console.log(`result: ${result}`);
 
 	await setTimeout(5000);
 	console.log('Setting list capacity');
-	await agonesSDK.alpha.setListCapacity('rooms', 10);
+	await agonesSDK.beta.setListCapacity('rooms', 10);
 
 	await setTimeout(5000);
 	console.log('Getting list contains');
-	result = await agonesSDK.alpha.listContains('rooms', 'room1');
+	result = await agonesSDK.beta.listContains('rooms', 'room1');
 	console.log(`result: ${result}`);
 
 	await setTimeout(5000);
 	console.log('Getting list length');
-	result = await agonesSDK.alpha.getListLength('rooms');
+	result = await agonesSDK.beta.getListLength('rooms');
 	console.log(`result: ${result}`);
 
 	await setTimeout(5000);
 	console.log('Getting list values');
-	result = await agonesSDK.alpha.getListValues('rooms');
+	result = await agonesSDK.beta.getListValues('rooms');
 	console.log(`result: ${result}`);
 
 	await setTimeout(5000);
 	console.log('Appending list value');
-	await agonesSDK.alpha.appendListValue('rooms', 'room3');
+	await agonesSDK.beta.appendListValue('rooms', 'room3');
 
 	await setTimeout(5000);
 	console.log('Deleting list value');
-	await agonesSDK.alpha.deleteListValue('rooms', 'room3');
+	await agonesSDK.beta.deleteListValue('rooms', 'room3');
 };
 
 let args = process.argv.slice(2);
 let timeout = DEFAULT_TIMEOUT;
 let enableAlpha = false;
-let enableCountsAndLists = false;
+let enableBeta = false;
 
 for (let arg of args) {
 	let [argName, argValue] = arg.split('=');
@@ -247,7 +247,7 @@ for (let arg of args) {
 Options:
 	--timeout=...\t\tshutdown timeout in seconds. Use 0 to never shut down
 	--alpha\t\t\tenable alpha features
-	--countsandlists\tenable counts and lists features`);
+	--beta\t\t\tenable beta features`);
 		return;
 	}
 	if (argName === '--timeout') {
@@ -269,10 +269,10 @@ Options:
 		enableAlpha = true;
 	}
 
-	if (argName === '--countsandlists') {
-		console.log('Enabling counts and lists features!');
-		enableCountsAndLists = true;
+	if (argName === '--beta') {
+		console.log('Enabling beta features!');
+		enableBeta = true;
 	}
 }
 
-connect(timeout, enableAlpha, enableCountsAndLists);
+connect(timeout, enableAlpha, enableBeta);
