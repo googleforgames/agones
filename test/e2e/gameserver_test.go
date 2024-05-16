@@ -53,7 +53,6 @@ func TestCreateConnect(t *testing.T) {
 	t.Parallel()
 	gs := framework.DefaultGameServer(framework.Namespace)
 	readyGs, err := framework.CreateGameServerAndWaitUntilReady(t, framework.Namespace, gs)
-
 	if err != nil {
 		t.Fatalf("Could not get a GameServer ready: %v", err)
 	}
@@ -75,7 +74,6 @@ func TestCreateConnect(t *testing.T) {
 	assert.Equal(t, readyGs.Status.State, agonesv1.GameServerStateReady)
 
 	reply, err := framework.SendGameServerUDP(t, readyGs, "Hello World !")
-
 	if err != nil {
 		t.Fatalf("Could ping GameServer: %v", err)
 	}
@@ -146,7 +144,6 @@ func TestSDKSetLabel(t *testing.T) {
 
 	assert.Equal(t, readyGs.Status.State, agonesv1.GameServerStateReady)
 	reply, err := framework.SendGameServerUDP(t, readyGs, "LABEL")
-
 	if err != nil {
 		t.Fatalf("Could ping GameServer: %v", err)
 	}
@@ -184,7 +181,6 @@ func TestHealthCheckDisable(t *testing.T) {
 	defer framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Delete(ctx, readyGs.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint: errcheck
 
 	_, err = framework.SendGameServerUDP(t, readyGs, "UNHEALTHY")
-
 	if err != nil {
 		t.Fatalf("Could not ping GameServer: %v", err)
 	}
@@ -213,7 +209,6 @@ func TestSDKSetAnnotation(t *testing.T) {
 
 	assert.Equal(t, readyGs.Status.State, agonesv1.GameServerStateReady)
 	reply, err := framework.SendGameServerUDP(t, readyGs, "ANNOTATION")
-
 	if err != nil {
 		t.Fatalf("Could ping GameServer: %v", err)
 	}
@@ -649,7 +644,8 @@ func TestGameServerWithPortsMappedToMultipleContainers(t *testing.T) {
 	secondContainerName := "second-udp-server"
 	firstPort := "gameport"
 	secondPort := "second-gameport"
-	gs := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{GenerateName: "udp-server", Namespace: framework.Namespace},
+	gs := &agonesv1.GameServer{
+		ObjectMeta: metav1.ObjectMeta{GenerateName: "udp-server", Namespace: framework.Namespace},
 		Spec: agonesv1.GameServerSpec{
 			Container: firstContainerName,
 			Ports: []agonesv1.GameServerPort{{
@@ -851,6 +847,32 @@ func TestGameServerPassthroughPort(t *testing.T) {
 	}
 
 	assert.Equal(t, "ACK: Hello World !\n", reply)
+}
+
+func TestGameServerPortPolicyNone(t *testing.T) {
+	if !runtime.FeatureEnabled(runtime.FeaturePortPolicyNone) {
+		t.SkipNow()
+	}
+
+	t.Parallel()
+
+	gs := framework.DefaultGameServer(framework.Namespace)
+	gs.Spec.Ports[0] = agonesv1.GameServerPort{PortPolicy: agonesv1.None, ContainerPort: 7777}
+	// gate
+	errs := gs.Validate(agtesting.FakeAPIHooks{})
+	assert.Len(t, errs, 0)
+
+	readyGs, err := framework.CreateGameServerAndWaitUntilReady(t, framework.Namespace, gs)
+	if err != nil {
+		assert.FailNow(t, "Could not get a GameServer ready", err.Error())
+	}
+
+	// To test sending UDP traffic directly to a pod when no hostPort is set, a product like Calico which uses BGP is needed
+	// so this only tests that the port is set correctly.
+	port := readyGs.Spec.Ports[0]
+	assert.Equal(t, agonesv1.None, port.PortPolicy)
+	assert.Empty(t, port.HostPort)
+	assert.EqualValues(t, 7777, port.ContainerPort)
 }
 
 func TestGameServerTcpProtocol(t *testing.T) {

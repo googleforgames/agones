@@ -61,6 +61,9 @@ const (
 	// FeaturePortRanges is a feature flag to enable/disable specific port ranges.
 	FeaturePortRanges Feature = "PortRanges"
 
+	// FeaturePortPolicyNone is a feature flag to allow setting Port Policy to None.
+	FeaturePortPolicyNone Feature = "PortPolicyNone"
+
 	////////////////
 	// Dev features
 
@@ -134,6 +137,7 @@ var (
 		FeaturePlayerTracking:                   false,
 		FeatureRollingUpdateFix:                 false,
 		FeaturePortRanges:                       false,
+		FeaturePortPolicyNone:                   false,
 
 		// Dev features
 		FeatureAutopilotPassthroughPort: false,
