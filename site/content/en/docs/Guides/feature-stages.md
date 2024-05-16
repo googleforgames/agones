@@ -46,6 +46,7 @@ The current set of `alpha` and `beta` feature gates:
 | [Player Tracking]({{< ref "/docs/Guides/player-tracking.md" >}})                                                            | `PlayerTracking`                   | Disabled | `Alpha` | 1.6.0  |
 | [Rolling Update Fixes](https://github.com/googleforgames/agones/issues/3688)                                                | `RollingUpdateFix`                 | Disabled | `Alpha` | 1.41.0 |
 | [Multiple dynamic port ranges](https://github.com/googleforgames/agones/issues/1911)                                        | `PortRanges`                       | Disabled | `Alpha` | 1.41.0 |
+| [Port Policy None](https://github.com/googleforgames/agones/issues/3804)                                                    | `PortPolicyNone`                   | Disabled | `Alpha` | 1.41.0 |
 | Example Gate (not in use)                                                                                                   | `Example`                          | Disabled | None    | 0.13.0 |
 
 [fleet-updates]: {{% relref "./fleet-updates.md#notifying-gameservers-on-fleet-updatedownscale" %}}

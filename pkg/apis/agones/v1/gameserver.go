@@ -82,6 +82,8 @@ const (
 	// Passthrough dynamically sets the `containerPort` to the same value as the dynamically selected hostPort.
 	// This will mean that users will need to lookup what port has been opened through the server side SDK.
 	Passthrough PortPolicy = "Passthrough"
+	// None means the `hostPort` is ignored and if defined, the `containerPort` (optional) is used to set the port on the GameServer instance.
+	None PortPolicy = "None"
 )
 
 // EvictionSafe specified whether the game server supports termination via SIGTERM
@@ -276,6 +278,8 @@ type GameServerPort struct {
 	// at installation time.
 	// When `Static` portPolicy is specified, `HostPort` is required, to specify the port that game clients will
 	// connect to
+	// `Passthrough` dynamically sets the `containerPort` to the same value as the dynamically selected hostPort.
+	// `None` portPolicy ignores `HostPort` and the `containerPort` (optional) is used to set the port on the GameServer instance.
 	PortPolicy PortPolicy `json:"portPolicy,omitempty"`
 	// Container is the name of the container on which to open the port. Defaults to the game server container.
 	// +optional
@@ -740,9 +744,15 @@ func (gs *GameServer) Pod(apiHooks APIHooks, sidecars ...corev1.Container) (*cor
 
 	gs.podObjectMeta(pod)
 	for _, p := range gs.Spec.Ports {
+		var hostPort int32
+
+		if !runtime.FeatureEnabled(runtime.FeaturePortPolicyNone) || p.PortPolicy != None {
+			hostPort = p.HostPort
+		}
+
 		cp := corev1.ContainerPort{
 			ContainerPort: p.ContainerPort,
-			HostPort:      p.HostPort,
+			HostPort:      hostPort,
 			Protocol:      p.Protocol,
 		}
 		err := gs.ApplyToPodContainer(pod, *p.Container, func(c corev1.Container) corev1.Container {
@@ -853,6 +863,10 @@ func (gs *GameServer) HasPortPolicy(policy PortPolicy) bool {
 
 // Status returns a GameServerStatusPort for this GameServerPort
 func (p GameServerPort) Status() GameServerStatusPort {
+	if runtime.FeatureEnabled(runtime.FeaturePortPolicyNone) && p.PortPolicy == None {
+		return GameServerStatusPort{Name: p.Name, Port: p.ContainerPort}
+	}
+
 	return GameServerStatusPort{Name: p.Name, Port: p.HostPort}
 }
 
