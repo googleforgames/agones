@@ -59,14 +59,13 @@ spec:
     annotations:
       otherkey: setthisvalue
   #
-  # [Stage:Alpha]
+  # [Stage:Beta]
   # [FeatureFlag:CountsAndLists]
   # Which gameservers in the Fleet are most important to keep around - impacts scale down logic.
-  # priorities:
-  # - type: Counter  # Whether a Counter or a List.
-  #   key: rooms  # The name of the Counter or List.
-  #   order: Ascending  # Default is "Ascending" so smaller capacity will be removed first on down scaling.
-  #
+  priorities:
+    - type: Counter  # Whether a Counter or a List.
+      key: rooms  # The name of the Counter or List.
+      order: Ascending  # Default is "Ascending" so smaller capacity will be removed first on down scaling.
   template:
     # GameServer metadata
     metadata:
@@ -108,7 +107,6 @@ spec:
             - room1
             - room2
             - room3
-      #
       # The GameServer's Pod template
       template:
         spec:

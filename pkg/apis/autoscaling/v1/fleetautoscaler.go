@@ -72,12 +72,12 @@ type FleetAutoscalerPolicy struct {
 	// Webhook policy config params. Present only if FleetAutoscalerPolicyType = Webhook.
 	// +optional
 	Webhook *WebhookPolicy `json:"webhook,omitempty"`
-	// [Stage:Alpha]
+	// [Stage:Beta]
 	// [FeatureFlag:CountsAndLists]
 	// Counter policy config params. Present only if FleetAutoscalerPolicyType = Counter.
 	// +optional
 	Counter *CounterPolicy `json:"counter,omitempty"`
-	// [Stage:Alpha]
+	// [Stage:Beta]
 	// [FeatureFlag:CountsAndLists]
 	// List policy config params. Present only if FleetAutoscalerPolicyType = List.
 	// +optional
@@ -108,12 +108,12 @@ const (
 	// WebhookPolicyType is a simple webhook strategy used for horizontal fleet scaling
 	// GameServers
 	WebhookPolicyType FleetAutoscalerPolicyType = "Webhook"
-	// [Stage:Alpha]
+	// [Stage:Beta]
 	// [FeatureFlag:CountsAndLists]
 	// CounterPolicyType is for Counter based fleet autoscaling
 	// nolint:revive // Linter contains comment doesn't start with CounterPolicyType
 	CounterPolicyType FleetAutoscalerPolicyType = "Counter"
-	// [Stage:Alpha]
+	// [Stage:Beta]
 	// [FeatureFlag:CountsAndLists]
 	// ListPolicyType is for List based fleet autoscaling
 	// nolint:revive // Linter contains comment doesn't start with ListPolicyType

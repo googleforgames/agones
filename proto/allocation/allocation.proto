@@ -79,7 +79,7 @@ message AllocationRequest {
   // Note: This field can only be set if neither Required or Preferred is set.
   repeated GameServerSelector gameServerSelectors = 8;
 
-  // [Stage: Alpha]
+  // [Stage: Beta]
   // [FeatureFlag:CountsAndLists]
   // `Priorities` configuration alters the order in which `GameServers` are searched for matches to the configured `selectors`.
   //
@@ -92,7 +92,7 @@ message AllocationRequest {
   // order that `GameServers` will be allocated by.
 	repeated Priority priorities = 9;
 
-  // [Stage: Alpha]
+  // [Stage: Beta]
   // [FeatureFlag:CountsAndLists]
   // Counters and Lists provide a set of actions to perform
 	// on Counters and Lists during allocation.
@@ -114,7 +114,7 @@ message AllocationResponse {
   string source = 6;
   optional GameServerMetadata metadata = 7;
 
-  // (Alpha, CountsAndLists feature flag) Status of Counters and Lists on allocation.
+  // (Beta, CountsAndLists feature flag) Status of Counters and Lists on allocation.
   map<string, CounterStatus> counters = 9;
   map<string, ListStatus> lists = 10;
 
