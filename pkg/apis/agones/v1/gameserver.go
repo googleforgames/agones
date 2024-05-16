@@ -280,7 +280,6 @@ type GameServerPort struct {
 	// connect to
 	// `Passthrough` dynamically sets the `containerPort` to the same value as the dynamically selected hostPort.
 	// `None` portPolicy ignores `HostPort` and the `containerPort` (optional) is used to set the port on the GameServer instance.
-	// `Passthrough` dynamically sets the `containerPort` to the same value as the dynamically selected hostPort.
 	PortPolicy PortPolicy `json:"portPolicy,omitempty"`
 	// Container is the name of the container on which to open the port. Defaults to the game server container.
 	// +optional

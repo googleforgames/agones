@@ -5513,7 +5513,9 @@ PortPolicy
 Dynamic port will allocate a HostPort within the selected MIN_PORT and MAX_PORT range passed to the controller
 at installation time.
 When <code>Static</code> portPolicy is specified, <code>HostPort</code> is required, to specify the port that game clients will
-connect to</p>
+connect to
+<code>Passthrough</code> dynamically sets the <code>containerPort</code> to the same value as the dynamically selected hostPort.
+<code>None</code> portPolicy ignores <code>HostPort</code> and the <code>containerPort</code> (optional) is used to set the port on the GameServer instance.</p>
 </td>
 </tr>
 <tr>
