@@ -173,9 +173,10 @@ apiVersion: admissionregistration.k8s.io/v1
 kind: MutatingWebhookConfiguration
 metadata:
   name: zzz-agones-mutation-webhook
-{{- if .Values.agones.controller.mutatingWebhook.annotations }}
+{{- $annotations := default .Values.agones.controller.mutatingWebhook.annotations .Values.agones.extensions.mutatingWebhook.annotations }}
+{{- if $annotations }}
   annotations:
-{{- toYaml .Values.agones.controller.mutatingWebhook.annotations | nindent 4 }}
+{{- toYaml $annotations | nindent 4 }}
 {{- end }}
   labels:
     component: controller
@@ -206,7 +207,7 @@ webhooks:
         agones.dev/port: "autopilot-passthrough"
     rules:
       - apiGroups:
-          - agones.dev
+          - ""
         resources:
           - "pods"
         apiVersions:
