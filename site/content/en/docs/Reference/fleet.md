@@ -54,19 +54,17 @@ spec:
     annotations:
       otherkey: setthisvalue
   #
-  # [Stage:Beta]
+  # [Stage:Alpha]
   # [FeatureFlag:CountsAndLists]
   # Which gameservers in the Fleet are most important to keep around - impacts scale down logic.
-  # Priority of sorting is in descending importance. I.e. The position 0 `priority` entry is checked first.
-  # Now in Beta, and enabled by default
   # priorities:
-  # - type: Counter # Whether a Counter or a List.
-  #   key: rooms # The name of the Counter or List. No impact if no GameServer found.
+  # - type: Counter # Sort by a “Counter”
+  #   key: rooms # The name of the Counter. No impact if no GameServer found.
   #   order: Descending # Default is "Ascending" so smaller available capacity will be removed first on down scaling.
-  # - type: List
-  #   key: players
-  #   order: Ascending
-  #      
+  # - type: List # Sort by a “List”
+  #   key: players # The name of the List. No impact if no GameServer found.
+  #   order: Ascending # Default is "Ascending" so smaller available capacity will be removed first on down scaling.
+  #  
   template:
     # GameServer metadata
     metadata:
@@ -87,10 +85,9 @@ spec:
         grpcPort: 9357
         httpPort: 9358
       #
-      # [Stage:Beta]
+      # [Stage:Alpha]
       # [FeatureFlag:CountsAndLists]
       # Counts and Lists provides the configuration for generic (player, room, etc.) tracking features.
-      # Now in Beta, and enabled by default
       # counters:
       #   rooms:
       #     count: 0 # Initial Value
@@ -150,13 +147,14 @@ spec:
   # [Stage:Beta]
   # [FeatureFlag:CountsAndLists]
   # Which gameservers in the Fleet are most important to keep around - impacts scale down logic.
+  # Now in Beta, and enabled by default
   priorities:
     - type: Counter # Sort by a “Counter”
-      key: player # The name of the Counter. No impact if no GameServer found.
-      order: Descending # Default is "Ascending" so smaller capacity will be removed first on down scaling.
+      key: rooms # The name of the Counter. No impact if no GameServer found.
+      order: Descending # Default is "Ascending" so smaller available capacity will be removed first on down scaling.
     - type: List # Sort by a “List”
-      key: room # The name of the List. No impact if no GameServer found.
-      order: Ascending # Default is "Ascending" so smaller capacity will be removed first on down scaling.
+      key: players # The name of the List. No impact if no GameServer found.
+      order: Ascending # Default is "Ascending" so smaller available capacity will be removed first on down scaling.
   template:
     # GameServer metadata
     metadata:
@@ -185,17 +183,9 @@ spec:
         players:
           count: 9
           capacity: 10
-        sessions:
-          count:  # Count and/or capacity must be listed (but may be nil) otherwise the counter will by dropped by the CRD schema.
       lists:
         players:
           capacity:  # Capacity and/or values must be listed (but may be nil) otherwise the list will be dropped by the CRD schema.
-        rooms:
-          capacity: 5
-          values:
-            - room1
-            - room2
-            - room3
       # The GameServer's Pod template
       template:
         spec:
