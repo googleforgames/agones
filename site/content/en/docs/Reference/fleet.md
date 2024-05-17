@@ -94,7 +94,7 @@ spec:
       #     capacity: 10
       # lists:
       #   players:
-      #     capacity:  # Capacity and/or values must be listed (but may be nil) otherwise the list will be dropped by the CRD schema.
+      #     values: []
       #
       # The GameServer's Pod template
       template:
@@ -181,11 +181,11 @@ spec:
       # Now in Beta, and enabled by default
       counters:
         players:
-          count: 9
+          count: 0 # Initial value
           capacity: 10
       lists:
         players:
-          capacity:  # Capacity and/or values must be listed (but may be nil) otherwise the list will be dropped by the CRD schema.
+          values: []
       # The GameServer's Pod template
       template:
         spec:
