@@ -66,7 +66,7 @@ spec:
   # Now in Beta, and enabled by default
   # priorities:
   # - type: Counter  # Whether a Counter or a List.
-  #   key: sessions  # The name of the Counter or List. No impact if no GameServer found.
+  #   key: rooms  # The name of the Counter or List. No impact if no GameServer found.
   #   order: Ascending  # Default is "Ascending" so smaller available capacity will be removed first on down scaling.
   # - type: List
   #   key: players
@@ -99,20 +99,12 @@ spec:
       # Counts and Lists provides the configuration for generic (player, room, session, etc.) tracking features.
       # Now in Beta, and enabled by default
       counters:
-        players:
-          count: 9  # Initial Value
+        rooms:
+          count: 0  # Initial Value. Count and/or capacity must be listed (but may be nil) otherwise the counter will by dropped by the CRD schema.
           capacity: 10
-        sessions:
-          count:  # Count and/or capacity must be listed (but may be nil) otherwise the counter will by dropped by the CRD schema.
       lists:
         players:
           capacity:  # Capacity and/or values must be listed (but may be nil) otherwise the list will be dropped by the CRD schema.
-        rooms:
-          capacity: 5
-          values:
-            - room1
-            - room2
-            - room3
       #
       # The GameServer's Pod template
       template:

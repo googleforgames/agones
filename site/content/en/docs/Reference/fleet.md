@@ -88,23 +88,15 @@ spec:
       #
       # [Stage:Beta]
       # [FeatureFlag:CountsAndLists]
-      # Counts and Lists provides the configuration for generic (player, room, session, etc.) tracking features.
+      # Counts and Lists provides the configuration for generic (player, room, etc.) tracking features.
       # Now in Beta, and enabled by default
       # counters:
-      #   players:
+      #   rooms:
       #     count: 0 # Initial Value
       #     capacity: 10
-      #   sessions:
-      #     count:  # Count and/or capacity must be listed (but may be nil) otherwise the counter will by dropped by the CRD schema.
       # lists:
       #   players:
       #     capacity:  # Capacity and/or values must be listed (but may be nil) otherwise the list will be dropped by the CRD schema.
-      #   rooms:
-      #     capacity: 5
-      #     values:
-      #       - room1
-      #       - room2
-      #       - room3
       #
       # The GameServer's Pod template
       template:
