@@ -180,7 +180,7 @@ spec:
       # Counts and Lists provides the configuration for generic (player, room, session, etc.) tracking features.
       # Now in Beta, and enabled by default
       counters:
-        players:
+        rooms:
           count: 0 # Initial value
           capacity: 10
       lists:
