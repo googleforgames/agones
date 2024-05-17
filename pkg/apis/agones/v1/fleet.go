@@ -68,7 +68,7 @@ type FleetSpec struct {
 	Strategy appsv1.DeploymentStrategy `json:"strategy"`
 	// Scheduling strategy. Defaults to "Packed".
 	Scheduling apis.SchedulingStrategy `json:"scheduling"`
-	// [Stage: Alpha]
+	// [Stage: Beta]
 	// [FeatureFlag:CountsAndLists]
 	// `Priorities` configuration alters scale down logic in Fleets based on the configured available capacity order under that key.
 	//
@@ -101,11 +101,11 @@ type FleetStatus struct {
 	// Players are the current total player capacity and count for this Fleet
 	// +optional
 	Players *AggregatedPlayerStatus `json:"players,omitempty"`
-	// (Alpha, CountsAndLists feature flag) Counters provides aggregated Counter capacity and Counter
+	// (Beta, CountsAndLists feature flag) Counters provides aggregated Counter capacity and Counter
 	// count for this Fleet.
 	// +optional
 	Counters map[string]AggregatedCounterStatus `json:"counters,omitempty"`
-	// (Alpha, CountsAndLists feature flag) Lists provides aggregated List capacityv and List values
+	// (Beta, CountsAndLists feature flag) Lists provides aggregated List capacityv and List values
 	// for this Fleet.
 	// +optional
 	Lists map[string]AggregatedListStatus `json:"lists,omitempty"`

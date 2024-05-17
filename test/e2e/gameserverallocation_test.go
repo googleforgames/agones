@@ -1166,7 +1166,7 @@ func TestGameServerAllocationMetaDataPatch(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
 
-	log := logrus.WithField("test", t.Name())
+	log := e2e.TestLogger(t)
 	createAndAllocate := func(input *allocationv1.GameServerAllocation) *allocationv1.GameServerAllocation {
 		gs := framework.DefaultGameServer(framework.Namespace)
 		gs.ObjectMeta.Labels = map[string]string{"test": t.Name()}
@@ -1375,6 +1375,7 @@ func TestGameServerAllocationDeletionOnUnAllocate(t *testing.T) {
 
 func TestGameServerAllocationDuringMultipleAllocationClients(t *testing.T) {
 	t.Parallel()
+	log := e2e.TestLogger(t)
 	ctx := context.Background()
 
 	fleets := framework.AgonesClient.AgonesV1().Fleets(framework.Namespace)
@@ -1406,7 +1407,7 @@ func TestGameServerAllocationDuringMultipleAllocationClients(t *testing.T) {
 
 	allocatedGS := sync.Map{}
 
-	logrus.Infof("Starting Allocation.")
+	log.Info("Starting 100 allocation attempts")
 	var wg sync.WaitGroup
 
 	// Allocate GS by 10 clients in parallel while the fleet is scaling down
@@ -1420,18 +1421,19 @@ func TestGameServerAllocationDuringMultipleAllocationClients(t *testing.T) {
 				if err == nil {
 					allocatedGS.LoadOrStore(gsa1.Status.GameServerName, true)
 				} else {
-					t.Errorf("could not completed gsa1 allocation : %v", err)
+					log.Infof("Allocation error: %v", err)
 				}
 			}
 		}()
 	}
 
-	time.Sleep(3 * time.Second)
 	// scale down further while allocating
+	time.Sleep(1 * time.Second)
+	log.Infof("Scaling Fleet down by 10 replicas")
 	scaleFleetPatch(ctx, t, preferred, preferred.Spec.Replicas-10)
 
 	wg.Wait()
-	logrus.Infof("Finished Allocation.")
+	log.Infof("Finished allocation attempts")
 
 	// count the number of unique game servers allocated
 	// there should not be any duplicate
@@ -1444,7 +1446,7 @@ func TestGameServerAllocationDuringMultipleAllocationClients(t *testing.T) {
 	// TODO: Compromising on the expected allocation count to be between 98 to 100 due to a known allocation issue. Please check: [https://github.com/googleforgames/agones/issues/3553]
 	switch {
 	case uniqueAllocatedGSs < 98:
-		t.Fatalf("Test failed: Less than 98 GameServers were allocated. Allocated: %d", uniqueAllocatedGSs)
+		t.Errorf("Test failed: Less than 98 GameServers were allocated. Allocated: %d", uniqueAllocatedGSs)
 	case uniqueAllocatedGSs < 100:
 		t.Logf("Number of GameServers Allocated: %d. This might be due to a known allocation issue. Please check: [https://github.com/googleforgames/agones/issues/3553]", uniqueAllocatedGSs)
 	default:

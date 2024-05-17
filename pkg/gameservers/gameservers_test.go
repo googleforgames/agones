@@ -60,29 +60,35 @@ func TestAddress(t *testing.T) {
 			expectedAddress: "11.11.11.11",
 		},
 		"node with internal and external ip": {
-			node: &corev1.Node{ObjectMeta: metav1.ObjectMeta{Name: nodeFixtureName},
+			node: &corev1.Node{
+				ObjectMeta: metav1.ObjectMeta{Name: nodeFixtureName},
 				Status: corev1.NodeStatus{Addresses: []corev1.NodeAddress{
 					{Address: "9.9.9.8", Type: corev1.NodeExternalIP},
 					{Address: "12.12.12.12", Type: corev1.NodeInternalIP},
-				}}},
+				}},
+			},
 			expectedAddress: "9.9.9.8",
 		},
 		"node with external and internal dns": {
-			node: &corev1.Node{ObjectMeta: metav1.ObjectMeta{Name: nodeFixtureName},
+			node: &corev1.Node{
+				ObjectMeta: metav1.ObjectMeta{Name: nodeFixtureName},
 				Status: corev1.NodeStatus{Addresses: []corev1.NodeAddress{
 					{Address: "external.example.com", Type: corev1.NodeExternalDNS},
 					{Address: "internal.example.com", Type: corev1.NodeInternalDNS},
-				}}},
+				}},
+			},
 			expectedAddress: "external.example.com",
 		},
 		"node with external and internal dns without feature flag": {
-			node: &corev1.Node{ObjectMeta: metav1.ObjectMeta{Name: nodeFixtureName},
+			node: &corev1.Node{
+				ObjectMeta: metav1.ObjectMeta{Name: nodeFixtureName},
 				Status: corev1.NodeStatus{Addresses: []corev1.NodeAddress{
 					{Address: "external.example.com", Type: corev1.NodeExternalDNS},
 					{Address: "internal.example.com", Type: corev1.NodeInternalDNS},
 					{Address: "9.9.9.8", Type: corev1.NodeExternalIP},
 					{Address: "12.12.12.12", Type: corev1.NodeInternalIP},
-				}}},
+				}},
+			},
 			expectedAddress: "external.example.com",
 		},
 	}
@@ -112,9 +118,9 @@ func TestApplyGameServerAddressAndPort(t *testing.T) {
 	noopMod := func(*corev1.Pod) {}
 	noopSyncer := func(*agonesv1.GameServer, *corev1.Pod) error { return nil }
 	for name, tc := range map[string]struct {
-		podMod       func(*corev1.Pod)
-		podSyncer    func(*agonesv1.GameServer, *corev1.Pod) error
-		wantHostPort int32
+		podMod    func(*corev1.Pod)
+		podSyncer func(*agonesv1.GameServer, *corev1.Pod) error
+		wantPort  int32
 	}{
 		"normal": {noopMod, noopSyncer, 9999},
 		"host ports changed after create": {
@@ -125,12 +131,34 @@ func TestApplyGameServerAddressAndPort(t *testing.T) {
 				gs.Spec.Ports[0].HostPort = pod.Spec.Containers[0].Ports[0].HostPort
 				return nil
 			},
-			wantHostPort: 9876,
+			wantPort: 9876,
+		},
+		"container port with PortPolicy None changed after create": {
+			podMod: func(pod *corev1.Pod) {
+				pod.Spec.Containers[0].Ports[0].ContainerPort = 9876
+			},
+			podSyncer: func(gs *agonesv1.GameServer, pod *corev1.Pod) error {
+				gs.Spec.Ports[0].PortPolicy = agonesv1.None
+				gs.Spec.Ports[0].ContainerPort = pod.Spec.Containers[0].Ports[0].ContainerPort
+				return nil
+			},
+			wantPort: 9876,
+		},
+		"Pod IP changed after create": {
+			podMod: func(pod *corev1.Pod) {
+				pod.Status.PodIPs = []corev1.PodIP{
+					{IP: ipFixture},
+				}
+			},
+			podSyncer: noopSyncer,
+			wantPort:  9999,
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
-			gsFixture := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
-				Spec: newSingleContainerSpec(), Status: agonesv1.GameServerStatus{State: agonesv1.GameServerStateRequestReady}}
+			gsFixture := &agonesv1.GameServer{
+				ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
+				Spec:       newSingleContainerSpec(), Status: agonesv1.GameServerStatus{State: agonesv1.GameServerStateRequestReady},
+			}
 			gsFixture.ApplyDefaults()
 			node := &corev1.Node{ObjectMeta: metav1.ObjectMeta{Name: nodeFixtureName}, Status: corev1.NodeStatus{Addresses: []corev1.NodeAddress{{Address: ipFixture, Type: corev1.NodeExternalIP}}}}
 			pod, err := gsFixture.Pod(agtesting.FakeAPIHooks{})
@@ -139,11 +167,15 @@ func TestApplyGameServerAddressAndPort(t *testing.T) {
 			pod.Status.PodIPs = []corev1.PodIP{{IP: ipFixture}}
 			tc.podMod(pod)
 
+			// PortPolicy None is behind a feature flag
+			runtime.FeatureTestMutex.Lock()
+			defer runtime.FeatureTestMutex.Unlock()
+			require.NoError(t, runtime.ParseFeatures(string(runtime.FeaturePortPolicyNone)+"=true"))
+
 			gs, err := applyGameServerAddressAndPort(gsFixture, node, pod, tc.podSyncer)
 			require.NoError(t, err)
 			if assert.NotEmpty(t, gs.Spec.Ports) {
-				assert.Equal(t, tc.wantHostPort, gs.Status.Ports[0].Port)
-				assert.Equal(t, gs.Spec.Ports[0].HostPort, gs.Status.Ports[0].Port)
+				assert.Equal(t, tc.wantPort, gs.Status.Ports[0].Port)
 			}
 			assert.Equal(t, ipFixture, gs.Status.Address)
 			assert.Equal(t, node.ObjectMeta.Name, gs.Status.NodeName)
@@ -155,8 +187,10 @@ func TestApplyGameServerAddressAndPort(t *testing.T) {
 	}
 
 	t.Run("No IP specified, err expected", func(t *testing.T) {
-		gsFixture := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
-			Spec: newSingleContainerSpec(), Status: agonesv1.GameServerStatus{State: agonesv1.GameServerStateRequestReady}}
+		gsFixture := &agonesv1.GameServer{
+			ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
+			Spec:       newSingleContainerSpec(), Status: agonesv1.GameServerStatus{State: agonesv1.GameServerStateRequestReady},
+		}
 		gsFixture.ApplyDefaults()
 		node := &corev1.Node{ObjectMeta: metav1.ObjectMeta{Name: nodeFixtureName}, Status: corev1.NodeStatus{Addresses: []corev1.NodeAddress{}}}
 		pod, err := gsFixture.Pod(agtesting.FakeAPIHooks{})
