@@ -139,12 +139,13 @@ spec:
     # [FeatureFlag:PortRanges]
     # range is the optional port range name from which to select a port when using a 'Dynamic' or 'Passthrough' port policy.
     range: default
-    # portPolicy has three options:
+    # portPolicy has four options:
     # - "Dynamic" (default) the system allocates a free hostPort for the gameserver, for game clients to connect to
     # - "Static", user defines the hostPort that the game client will connect to. Then onus is on the user to ensure that the
     # port is available. When static is the policy specified, `hostPort` is required to be populated
     # - "Passthrough" dynamically sets the `containerPort` to the same value as the dynamically selected hostPort.
     #      This will mean that users will need to lookup what port has been opened through the server side SDK.
+    # - "None" means the `hostPort` is ignored and if defined, the `containerPort` (optional) is used to set the port on the GameServer instance.
     portPolicy: Static
     # The name of the container to open the port on. Defaults to the game server container if omitted or empty.
     container: simple-game-server
@@ -246,9 +247,9 @@ The `spec` field is the actual GameServer specification and it is composed as fo
 - `ports` are an array of ports that can be exposed as direct connections to the game server container
   - `name` is an optional descriptive name for a port
   - `portPolicy` has three options:
-        - `Dynamic` (default) the system allocates a random free hostPort for the gameserver, for game clients to connect to.
-        - `Static`, user defines the hostPort that the game client will connect to. Then onus is on the user to ensure that the port is available. When static is the policy specified, `hostPort` is required to be populated.
-        - `Passthrough` dynamically sets the `containerPort`  to the same value as the dynamically selected hostPort. This will mean that users will need to lookup what port to open through the server side SDK before starting communications.
+    - `Dynamic` (default) the system allocates a random free hostPort for the gameserver, for game clients to connect to.
+    - `Static`, user defines the hostPort that the game client will connect to. Then onus is on the user to ensure that the port is available. When static is the policy specified, `hostPort` is required to be populated.
+    - `Passthrough` dynamically sets the `containerPort`  to the same value as the dynamically selected hostPort. This will mean that users will need to lookup what port to open through the server side SDK before starting communications.
   - `container` (Alpha) the name of the container to open the port on. Defaults to the game server container if omitted or empty.
   - `containerPort` the port that is being opened on the game server process, this is a required field for `Dynamic` and `Static` port policies, and should not be included in <code>Passthrough</code> configuration.
   - `protocol` the protocol being used. Defaults to UDP. TCP and TCPUDP are other options.
@@ -276,10 +277,11 @@ The `spec` field is the actual GameServer specification and it is composed as fo
 - `ports` are an array of ports that can be exposed as direct connections to the game server container
   - `name` is an optional descriptive name for a port
   - `range` (Alpha, behind "PortRanges" feature gate) is the optional port range name from which to select a port when using a 'Dynamic' or 'Passthrough' port policy.
-  - `portPolicy` has three options:
-        - `Dynamic` (default) the system allocates a random free hostPort for the gameserver, for game clients to connect to.
-        - `Static`, user defines the hostPort that the game client will connect to. Then onus is on the user to ensure that the port is available. When static is the policy specified, `hostPort` is required to be populated.
-        - `Passthrough` dynamically sets the `containerPort`  to the same value as the dynamically selected hostPort. This will mean that users will need to lookup what port to open through the server side SDK before starting communications.
+  - `portPolicy` has four options:
+    - `Dynamic` (default) the system allocates a random free hostPort for the gameserver, for game clients to connect to.
+    - `Static`, user defines the hostPort that the game client will connect to. Then onus is on the user to ensure that the port is available. When static is the policy specified, `hostPort` is required to be populated.
+    - `Passthrough` dynamically sets the `containerPort`  to the same value as the dynamically selected hostPort. This will mean that users will need to lookup what port to open through the server side SDK before starting communications.
+    - `None` means the `hostPort` is ignored and if defined, the `containerPort` (optional) is used to set the port on the GameServer instance.
   - `container` (Alpha) the name of the container to open the port on. Defaults to the game server container if omitted or empty.
   - `containerPort` the port that is being opened on the game server process, this is a required field for `Dynamic` and `Static` port policies, and should not be included in <code>Passthrough</code> configuration.
   - `protocol` the protocol being used. Defaults to UDP. TCP and TCPUDP are other options.
