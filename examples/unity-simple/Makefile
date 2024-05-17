@@ -28,7 +28,10 @@ REPOSITORY = us-docker.pkg.dev/agones-images/examples
 
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_path := $(dir $(mkfile_path))
-version := 0.3  # Change this to ignore the version change presubmit: `check-makefile-version-increment`
+
+# Bump this version if CI fails on `check-makefile-version-increment`
+version := 0.3
+
 server_tag = $(REPOSITORY)/unity-simple-server:$(version)
 
 #   _____                    _
