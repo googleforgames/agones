@@ -63,7 +63,7 @@ spec:
   # [FeatureFlag:CountsAndLists]
   # Which gameservers in the Fleet are most important to keep around - impacts scale down logic.
   # Priority of sorting is in descending importance. I.e. The position 0 `priority` entry is checked first.
-  # Now in Beta, and enabled by default
+  # Now in Beta, and enabled by default.
   priorities:
     - type: Counter  # Whether a Counter or a List.
       key: rooms  # The name of the Counter or List. No impact if no GameServer found.
@@ -96,7 +96,7 @@ spec:
       # [Stage:Beta]
       # [FeatureFlag:CountsAndLists]
       # Counts and Lists provides the configuration for generic (player, room, session, etc.) tracking features.
-      # Now in Beta, and enabled by default
+      # Now in Beta, and enabled by default.
       counters:
         rooms:
           count: 0  # Initial Value. Count and/or capacity must be listed (but may be nil) otherwise the counter will by dropped by the CRD schema.
