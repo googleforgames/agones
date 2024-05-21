@@ -84,11 +84,17 @@ spec:
   # Commented out since Alpha, and disabled by default
   # counters: # counters are int64 counters that can be incremented and decremented by set amounts. Keys must be declared at GameServer creation time.
   #   rooms: # arbitrary key.
-  #     count: 1 # initial value.
+  #     count: 1 # initial value can be set.
   #     capacity: 100 # (Optional) Defaults to 1000 and setting capacity to max(int64) may lead to issues and is not recommended. See GitHub issue https://github.com/googleforgames/agones/issues/3636 for more details.
   # lists: # lists are lists of values stored against this GameServer that can be added and deleted from. Keys must be declared at GameServer creation time.
   #   players: # an empty list, with a capacity set to 10.
   #     capacity: 10 # capacity value, defaults to 1000.
+  #   rooms: # note that it is allowed to have the same key name with one used in counters
+  #     capacity: 5
+  #     values: # initial values can also be set for lists
+  #       - room1
+  #       - room2
+  #       - room3
   #  
   # Pod template configuration
   # {{< k8s-api-version href="#podtemplate-v1-core" >}}
@@ -191,11 +197,17 @@ spec:
   # Now in Beta, and enabled by default
   counters: # counters are int64 counters that can be incremented and decremented by set amounts. Keys must be declared at GameServer creation time.
     rooms: # arbitrary key.
-      count: 1 # initial value.
+      count: 1 # initial value can be set.
       capacity: 100 # (Optional) Defaults to 1000 and setting capacity to max(int64) may lead to issues and is not recommended. See GitHub issue https://github.com/googleforgames/agones/issues/3636 for more details.
   lists: # lists are lists of values stored against this GameServer that can be added and deleted from. Keys must be declared at GameServer creation time.
     players: # an empty list, with a capacity set to 10.
       capacity: 10 # capacity value, defaults to 1000.
+    rooms: # note that it is allowed to have the same key name with one used in counters
+      capacity: 5
+      values: # initial values can also be set for lists
+        - room1
+        - room2
+        - room3
   # Pod template configuration
   # {{< k8s-api-version href="#podtemplate-v1-core" >}}
   template:
