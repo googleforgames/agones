@@ -106,7 +106,7 @@ spec:
     players:  # an empty list, with a capacity set to 10.
       capacity: 10  # capacity value, defaults to 1000.
     rooms: # note that it is allowed to have the same key name with one used in counters
-      capacity: 5
+      capacity: 333
       values: # initial values can also be set for lists
         - room1
         - room2
