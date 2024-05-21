@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC All Rights Reserved.
+// Copyright 2024 Google LLC All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -69,8 +69,11 @@ func handleResponse(txt string, s *sdk.SDK, cancel context.CancelFunc) (response
 	responseError = nil
 
 	handler, exists := responseMap[parts[0]]
+	if exists && parts[0] == "EXIT" {
+		return response, addACK, responseError
+	}
 	if !exists {
-		return fmt.Sprintf("Unknown response command: %s", parts[0]), true, nil
+		return response, addACK, responseError
 	}
 	if parts[0] == "UNHEALTHY" {
 		return handler(s, parts, cancel)
