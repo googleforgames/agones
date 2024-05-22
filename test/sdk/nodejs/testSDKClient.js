@@ -20,6 +20,7 @@ const agonesSDK = new AgonesSDK();
 const connect = async () => {
 	// temp to view env variables
 	console.log(process.env);
+	console.log(process.argv);
 
 	let UID = '';
 	try {
