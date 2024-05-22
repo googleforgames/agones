@@ -190,14 +190,14 @@
             "type": "object",
             "$ref": "#/definitions/allocationPriority"
           },
-          "description": "[Stage: Alpha]\n[FeatureFlag:CountsAndLists]\n`Priorities` configuration alters the order in which `GameServers` are searched for matches to the configured `selectors`.\n\nPriority of sorting is in descending importance. I.e. The position 0 `priority` entry is checked first.\n\nFor `Packed` strategy sorting, this priority list will be the tie-breaker within the least utilised infrastructure, to ensure optimal\ninfrastructure usage while also allowing some custom prioritisation of `GameServers`.\n\nFor `Distributed` strategy sorting, the entire selection of `GameServers` will be sorted by this priority list to provide the\norder that `GameServers` will be allocated by."
+          "description": "[Stage: Beta]\n[FeatureFlag:CountsAndLists]\n`Priorities` configuration alters the order in which `GameServers` are searched for matches to the configured `selectors`.\n\nPriority of sorting is in descending importance. I.e. The position 0 `priority` entry is checked first.\n\nFor `Packed` strategy sorting, this priority list will be the tie-breaker within the least utilised infrastructure, to ensure optimal\ninfrastructure usage while also allowing some custom prioritisation of `GameServers`.\n\nFor `Distributed` strategy sorting, the entire selection of `GameServers` will be sorted by this priority list to provide the\norder that `GameServers` will be allocated by."
         },
         "counters": {
           "type": "object",
           "additionalProperties": {
             "$ref": "#/definitions/allocationCounterAction"
           },
-          "description": "[Stage: Alpha]\n[FeatureFlag:CountsAndLists]\nCounters and Lists provide a set of actions to perform\non Counters and Lists during allocation."
+          "description": "[Stage: Beta]\n[FeatureFlag:CountsAndLists]\nCounters and Lists provide a set of actions to perform\non Counters and Lists during allocation."
         },
         "lists": {
           "type": "object",
@@ -246,7 +246,7 @@
           "additionalProperties": {
             "$ref": "#/definitions/AllocationResponseCounterStatus"
           },
-          "description": "(Alpha, CountsAndLists feature flag) Status of Counters and Lists on allocation."
+          "description": "(Beta, CountsAndLists feature flag) Status of Counters and Lists on allocation."
         },
         "lists": {
           "type": "object",
