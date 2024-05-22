@@ -248,8 +248,7 @@ func (pa *portRangeAllocator) Allocate(gs *agonesv1.GameServer) *agonesv1.GameSe
 				if p.Protocol == agonesv1.ProtocolTCPUDP {
 					var duplicate = p
 					duplicate.HostPort = a.port
-					logger := runtime.NewLoggerWithSource("gke")
-					logger.Info("[VICENTE]INSIDE PORT ALLOCATOR", a.port)
+
 					if duplicate.PortPolicy == agonesv1.Passthrough {
 						duplicate.ContainerPort = a.port
 					}

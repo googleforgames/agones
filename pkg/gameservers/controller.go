@@ -59,9 +59,10 @@ import (
 )
 
 const (
-	sdkserverSidecarName = "agones-gameserver-sidecar"
-	grpcPortEnvVar       = "AGONES_SDK_GRPC_PORT"
-	httpPortEnvVar       = "AGONES_SDK_HTTP_PORT"
+	sdkserverSidecarName  = "agones-gameserver-sidecar"
+	grpcPortEnvVar        = "AGONES_SDK_GRPC_PORT"
+	httpPortEnvVar        = "AGONES_SDK_HTTP_PORT"
+	passthroughPortEnvVar = "PASSTHROUGH"
 )
 
 // Extensions struct contains what is needed to bind webhook handlers
@@ -205,21 +206,15 @@ func NewController(
 // initializes a new logger for extensions.
 func NewExtensions(apiHooks agonesv1.APIHooks, wh *webhooks.WebHook) *Extensions {
 	ext := &Extensions{apiHooks: apiHooks}
-	logger := runtime.NewLoggerWithSource("gke")
+
 	ext.baseLogger = runtime.NewLoggerWithType(ext)
 
 	wh.AddHandler("/mutate", agonesv1.Kind("GameServer"), admissionv1.Create, ext.creationMutationHandler)
-
 	wh.AddHandler("/validate", agonesv1.Kind("GameServer"), admissionv1.Create, ext.creationValidationHandler)
-	logger.Info("[VICENTE] EXTENSION after validate", ext)
 
-	// runtimeschema.GroupVersionKind.GroupKind(corev1.SchemeGroupVersion.WithKind("Pod")),
-	wh.AddHandler("/mutate", corev1.SchemeGroupVersion.WithKind("Pod").GroupKind(), admissionv1.Create, ext.creationMutationHandlerPod)
-
-	logger.Info("[VICENTE] EXTENSION after mutate Pod", ext)
-	//v1.SchemeGroupVersion.WithKind
-	// k8s.io/api/core/v1"
-
+	if runtime.FeatureEnabled(runtime.FeatureAutopilotPassthroughPort) {
+		wh.AddHandler("/mutate", corev1.SchemeGroupVersion.WithKind("Pod").GroupKind(), admissionv1.Create, ext.creationMutationHandlerPod)
+	}
 	return ext
 }
 
@@ -253,8 +248,6 @@ func fastRateLimiter() workqueue.RateLimiter {
 // Should only be called on gameserver create operations.
 // nolint:dupl
 func (ext *Extensions) creationMutationHandler(review admissionv1.AdmissionReview) (admissionv1.AdmissionReview, error) {
-	logger := runtime.NewLoggerWithSource("gke")
-	logger.Info("[VICENTE]INSIDE CREATION MUTATION HANDLERRR FOR GAME SERVER")
 	obj := review.Request.Object
 	gs := &agonesv1.GameServer{}
 	err := json.Unmarshal(obj.Raw, gs)
@@ -327,49 +320,35 @@ func (ext *Extensions) creationValidationHandler(review admissionv1.AdmissionRev
 	return review, nil
 }
 
-// creationValidationHandlerPod that mutates a GameServer pod when it is created
+// creationMutationHandlerPod that mutates a GameServer pod when it is created
 // Should only be called on gameserver pod create operations.
 func (ext *Extensions) creationMutationHandlerPod(review admissionv1.AdmissionReview) (admissionv1.AdmissionReview, error) {
 	logger := runtime.NewLoggerWithSource("gke")
-	logger.Info("[VICENTE] INSIDE CREATION MUTATION HANDLER FOR POD")
 	obj := review.Request.Object
-	gs := &agonesv1.GameServer{}
-	err := json.Unmarshal(obj.Raw, gs)
+	pod := &corev1.Pod{}
+	err := json.Unmarshal(obj.Raw, pod)
 	if err != nil {
 		// If the JSON is invalid during mutation, fall through to validation. This allows OpenAPI schema validation
 		// to proceed, resulting in a more user friendly error message.
 		return review, nil
 	}
-	logger.Info("[VICENTE]INSIDE CREATION MUTATION HANDLER", gs.Spec.Template.Spec)
 
-	//gs.Spec.Template.Spec.Containers[1].Ports[0].ContainerPort = gs.Spec.Ports[0].HostPort
-	logger.Info("[VICENTE]AFTER ASSIGNING PORT", gs.Spec.Template.Spec)
+	logger.WithField("review", review).Debug("creationMutationHandlerPod")
+	pod.Spec.Containers[1].Ports[0].ContainerPort = pod.Spec.Containers[1].Ports[0].HostPort
 
-	loggerForGameServer(gs, ext.baseLogger).WithField("review", review).Info("GAME SERVER IS USING PASSTHROUGH PORT POLICY")
-
-	// This is the main logic of this function
-	// the rest is really just json plumbing
-	gs.ApplyDefaults()
-
-	logger.Info("[VICENTE]INSIDE CREATION MUTATION HANDLER", gs.Spec.Template.Spec)
-
-	//gs.Spec.Template.Spec.Containers[1].Ports[0].ContainerPort = gs.Spec.Ports[0].HostPort
-	logger.Info("[VICENTE]AFTER ASSIGNING PORT", gs.Spec.Template.Spec)
-
-	newGS, err := json.Marshal(gs)
-
+	newPod, err := json.Marshal(pod)
 	if err != nil {
-		return review, errors.Wrapf(err, "error marshalling default applied GameServer %s to json", gs.ObjectMeta.Name)
+		return review, errors.Wrapf(err, "error marshalling changes applied Pod %s to json", pod.ObjectMeta.Name)
 	}
 
-	patch, err := jsonpatch.CreatePatch(obj.Raw, newGS)
+	patch, err := jsonpatch.CreatePatch(obj.Raw, newPod)
 	if err != nil {
-		return review, errors.Wrapf(err, "error creating patch for GameServer %s", gs.ObjectMeta.Name)
+		return review, errors.Wrapf(err, "error creating patch for Pod %s", pod.ObjectMeta.Name)
 	}
 
 	jsonPatch, err := json.Marshal(patch)
 	if err != nil {
-		return review, errors.Wrapf(err, "error creating json for patch for GameServer %s", gs.ObjectMeta.Name)
+		return review, errors.Wrapf(err, "error creating json for patch for Pod %s", pod.ObjectMeta.Name)
 	}
 
 	pt := admissionv1.PatchTypeJSONPatch
@@ -648,24 +627,11 @@ func (c *Controller) syncDevelopmentGameServer(ctx context.Context, gs *agonesv1
 
 // createGameServerPod creates the backing Pod for a given GameServer
 func (c *Controller) createGameServerPod(ctx context.Context, gs *agonesv1.GameServer) (*agonesv1.GameServer, error) {
-	logger := runtime.NewLoggerWithSource("gke")
-
 	sidecar := c.sidecar(gs)
-	logger.Info("[VICENTE]After sidecar", sidecar)
-
-	c.recorder.Event(gs, corev1.EventTypeNormal, string(gs.Status.State), "after sidecar")
-
 	pod, err := gs.Pod(c.controllerHooks, sidecar)
-	logger.Info("[VICENTE]After pod", pod.Spec.Containers)
-	logger.Info("[VICENTE]After pod err", err)
-	c.recorder.Event(gs, corev1.EventTypeNormal, string(gs.Status.State), "after pod")
-
 	if err != nil {
 		// this shouldn't happen, but if it does.
 		loggerForGameServer(gs, c.baseLogger).WithError(err).Error("error creating pod from Game Server")
-		logger.Info("[VICENTE]error is not nil", err)
-		c.recorder.Event(gs, corev1.EventTypeNormal, string(gs.Status.State), "ERROR CREATING POD")
-
 		gs, err = c.moveToErrorState(ctx, gs, err.Error())
 		return gs, err
 	}
@@ -689,15 +655,12 @@ func (c *Controller) createGameServerPod(ctx context.Context, gs *agonesv1.GameS
 
 	loggerForGameServer(gs, c.baseLogger).WithField("pod", pod).Debug("Creating Pod for GameServer")
 	pod, err = c.podGetter.Pods(gs.ObjectMeta.Namespace).Create(ctx, pod, metav1.CreateOptions{})
-	logger.Info("[VICENTE]Pod was created err", err)
-	logger.Info("[VICENTE]Pod was created", pod.Spec.Containers)
 	if err != nil {
 		switch {
 		case k8serrors.IsAlreadyExists(err):
 			c.recorder.Event(gs, corev1.EventTypeNormal, string(gs.Status.State), "Pod already exists, reused")
 			return gs, nil
 		case k8serrors.IsInvalid(err):
-			logger.Info("[VICENTE]Pod was invalid", err)
 			loggerForGameServer(gs, c.baseLogger).WithField("pod", pod).Errorf("Pod created is invalid")
 			gs, err = c.moveToErrorState(ctx, gs, err.Error())
 			return gs, err

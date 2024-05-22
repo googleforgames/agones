@@ -86,7 +86,7 @@ func (wh *WebHook) handle(path string, w http.ResponseWriter, r *http.Request) e
 		review.Response = &admissionv1.AdmissionResponse{Allowed: true}
 	}
 	review.Response.UID = review.Request.UID
-	wh.logger.WithField("name", review.Request.Name).WithField("path", path).WithField("kind", review.Request.Kind.Kind).WithField("group", review.Request.Kind.Group).Info("[VICENTE] INSIDE HANDLE")
+	wh.logger.WithField("name", review.Request.Name).WithField("path", path).WithField("kind", review.Request.Kind.Kind).WithField("group", review.Request.Kind.Group).Info("handling webhook request")
 
 	for _, oh := range wh.handlers[path] {
 		if oh.operation == review.Request.Operation &&
@@ -111,10 +111,7 @@ func (wh *WebHook) handle(path string, w http.ResponseWriter, r *http.Request) e
 					Reason:  metav1.StatusReasonInternalError,
 					Details: &details,
 				}
-				//wh.logger.WithField("name", review.Request.Name).WithField("path", path).WithField("kind", review.Request.Kind.Kind).WithField("group", review.Request.Kind.Group).Info("[VICENTE] INSIDE HANDLE")
 			}
-			//wh.logger.WithField("name", review.Request.Name).WithField("path", path).WithField("kind", review.Request.Kind.Kind).WithField("group", review.Request.Kind.Group).Info("[VICENTE] ERROR", err)
-
 		}
 	}
 	err = json.NewEncoder(w).Encode(review)

@@ -734,8 +734,6 @@ func (gs *GameServer) ApplyToPodContainer(pod *corev1.Pod, containerName string,
 // Pod creates a new Pod from the PodTemplateSpec
 // attached to the GameServer resource
 func (gs *GameServer) Pod(apiHooks APIHooks, sidecars ...corev1.Container) (*corev1.Pod, error) {
-	logger := runtime.NewLoggerWithSource("gke")
-
 	pod := &corev1.Pod{
 		ObjectMeta: *gs.Spec.Template.ObjectMeta.DeepCopy(),
 		Spec:       *gs.Spec.Template.Spec.DeepCopy(),
@@ -768,26 +766,21 @@ func (gs *GameServer) Pod(apiHooks APIHooks, sidecars ...corev1.Container) (*cor
 			return nil, err
 		}
 	}
-
 	// Put the sidecars at the start of the list of containers so that the kubelet starts them first.
 	containers := make([]corev1.Container, 0, len(sidecars)+len(pod.Spec.Containers))
 	containers = append(containers, sidecars...)
 	containers = append(containers, pod.Spec.Containers...)
 	pod.Spec.Containers = containers
-	pod.Spec.Containers[1].Ports[0].ContainerPort = 6000
-
-	logger.Info("[VICENTE]After for loop for ports", pod.Spec.Containers)
 
 	gs.podScheduling(pod)
 
 	if err := apiHooks.MutateGameServerPod(&gs.Spec, pod); err != nil {
-		logger.Info("[VICENTE]After for loop for ERROR MTUATAING", err)
 		return nil, err
 	}
 	if err := apiHooks.SetEviction(gs.Status.Eviction, pod); err != nil {
 		return nil, err
 	}
-	logger.Info("[VICENTE]After for loop NO ERROR", pod.Spec.Containers)
+
 	return pod, nil
 }
 
