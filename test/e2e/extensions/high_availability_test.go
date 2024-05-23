@@ -84,7 +84,7 @@ func TestGameServerCreationRightAfterDeletingOneExtensionsPod(t *testing.T) {
 	logger.Infof("Removing one of the Extensions Pods: %v", list.Items[1].ObjectMeta.Name)
 	deleteAgonesExtensionsPod(ctx, t, false)
 
-	endTime := time.Now().Add(30 * time.Second)
+	endTime := time.Now().Add(60 * time.Second)
 	for time.Now().Before(endTime) {
 		gs := framework.DefaultGameServer(defaultNs)
 		logger.Infof("Creating game-server %s...", gs.Name)

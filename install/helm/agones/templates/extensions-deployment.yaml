@@ -92,7 +92,7 @@ spec:
       priorityClassName: {{ .Values.agones.priorityClassName }}
       {{- end }}
       serviceAccountName: {{ .Values.agones.serviceaccount.controller.name }}
-      terminationGracePeriodSeconds: {{ mul .Values.agones.extensions.readiness.periodSeconds .Values.agones.extensions.readiness.failureThreshold 3 }}
+      terminationGracePeriodSeconds: {{ mul .Values.agones.extensions.readiness.periodSeconds .Values.agones.extensions.readiness.failureThreshold 5 }}
       containers:
       - name: agones-extensions
         image: "{{ .Values.agones.image.registry }}/{{ .Values.agones.image.extensions.name}}:{{ default .Values.agones.image.tag .Values.agones.image.extensions.tag }}"
@@ -137,7 +137,7 @@ spec:
         - name: CONTAINER_NAME
           value: "agones-extensions"
         - name: READINESS_SHUTDOWN_DURATION
-          value: {{ mul .Values.agones.extensions.readiness.periodSeconds .Values.agones.extensions.readiness.failureThreshold 2 }}s
+          value: {{ mul .Values.agones.extensions.readiness.periodSeconds .Values.agones.extensions.readiness.failureThreshold 4 }}s
         ports:
         - name: webhooks
           containerPort: 8081
