@@ -167,8 +167,6 @@ run-sdk-conformance-test-cpp:
 run-sdk-conformance-test-node:
 	# run with on-by-default (Beta) feature flags enabled
 	$(MAKE) run-sdk-conformance-test SDK_FOLDER=node GRPC_PORT=9002 HTTP_PORT=9102 TESTS=$(DEFAULT_CONFORMANCE_TESTS),$(COUNTS_AND_LISTS_TESTS)
-	# run with Alpha and Beta feature flags enabled
-	$(MAKE) run-sdk-conformance-test SDK_FOLDER=node GRPC_PORT=9002 HTTP_PORT=9102 FEATURE_GATES=$(ALPHA_FEATURE_GATES) TESTS=$(DEFAULT_CONFORMANCE_TESTS),$(ALPHA_CONFORMANCE_TESTS),$(COUNTS_AND_LISTS_TESTS)
 
 run-sdk-conformance-test-go:
 	# run with on-by-default (Beta) feature flags enabled

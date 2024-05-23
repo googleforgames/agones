@@ -18,10 +18,6 @@ const {setTimeout} = require('timers/promises');
 const agonesSDK = new AgonesSDK();
 
 const connect = async () => {
-	// temp to view env variables
-	console.log(process.env);
-	console.log(process.argv);
-
 	let UID = '';
 	try {
 		console.log("attempting to connect");
@@ -54,9 +50,8 @@ const connect = async () => {
 		console.log('send allocate request');
 		agonesSDK.allocate();
 
-		if (process.env.COUNTS_AND_LISTS_TESTS) {
-			await testCounts(agonesSDK);
-		}
+		await testCounts(agonesSDK);
+		await testLists(agonesSDK);
 
 		await setTimeout(1000);
 		console.log('send shutdown request');
