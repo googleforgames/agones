@@ -109,6 +109,12 @@ func TestValidateGameServer(t *testing.T) {
 					ContainerPort: 1234,
 					Protocol:      corev1.ProtocolTCP,
 				},
+				{
+					Name:          "none-udp",
+					PortPolicy:    agonesv1.None,
+					ContainerPort: 1234,
+					Protocol:      corev1.ProtocolUDP,
+				},
 			},
 			safeToEvict: agonesv1.EvictionSafeAlways,
 			scheduling:  apis.Packed,
@@ -172,8 +178,8 @@ func TestValidateGameServer(t *testing.T) {
 			scheduling:  apis.Distributed,
 			want: field.ErrorList{
 				field.Invalid(field.NewPath("spec", "scheduling"), "Distributed", "scheduling strategy must be Packed on GKE Autopilot"),
-				field.Invalid(field.NewPath("spec", "ports").Index(1).Child("portPolicy"), "Static", "portPolicy must be Dynamic on GKE Autopilot"),
-				field.Invalid(field.NewPath("spec", "ports").Index(2).Child("portPolicy"), "Static", "portPolicy must be Dynamic on GKE Autopilot"),
+				field.Invalid(field.NewPath("spec", "ports").Index(1).Child("portPolicy"), "Static", "portPolicy must be Dynamic or None on GKE Autopilot"),
+				field.Invalid(field.NewPath("spec", "ports").Index(2).Child("portPolicy"), "Static", "portPolicy must be Dynamic or None on GKE Autopilot"),
 				field.Invalid(field.NewPath("spec", "eviction", "safe"), "OnUpgrade", "eviction.safe OnUpgrade not supported on GKE Autopilot"),
 			},
 		},
@@ -206,12 +212,17 @@ func TestValidateGameServer(t *testing.T) {
 			scheduling:  apis.Distributed,
 			want: field.ErrorList{
 				field.Invalid(field.NewPath("spec", "scheduling"), "Distributed", "scheduling strategy must be Packed on GKE Autopilot"),
-				field.Invalid(field.NewPath("spec", "ports").Index(1).Child("portPolicy"), "Static", "portPolicy must be Dynamic on GKE Autopilot"),
-				field.Invalid(field.NewPath("spec", "ports").Index(2).Child("portPolicy"), "Static", "portPolicy must be Dynamic on GKE Autopilot"),
+				field.Invalid(field.NewPath("spec", "ports").Index(1).Child("portPolicy"), "Static", "portPolicy must be Dynamic or None on GKE Autopilot"),
+				field.Invalid(field.NewPath("spec", "ports").Index(2).Child("portPolicy"), "Static", "portPolicy must be Dynamic or None on GKE Autopilot"),
 			},
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
+			// PortPolicy None is behind a feature flag
+			runtime.FeatureTestMutex.Lock()
+			defer runtime.FeatureTestMutex.Unlock()
+			require.NoError(t, runtime.ParseFeatures(string(runtime.FeaturePortPolicyNone)+"=true"))
+
 			causes := (&gkeAutopilot{useExtendedDurationPods: tc.edPods}).ValidateGameServerSpec(&agonesv1.GameServerSpec{
 				Ports:      tc.ports,
 				Scheduling: tc.scheduling,

@@ -24,9 +24,10 @@ PlayerAllocationFilter: false
 PlayerTracking: false
 RollingUpdateFix: false
 PortRanges: false
+PortPolicyNone: false
 
 # Dev features
-FeatureAutopilotPassthroughPort: true
+FeatureAutopilotPassthroughPort: false
 
 # Example feature
 Example: false
