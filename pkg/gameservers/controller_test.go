@@ -435,7 +435,7 @@ func TestControllerCreationMutationHandler(t *testing.T) {
 			expected: expected{
 				responseAllowed: true,
 				patches: []jsonpatch.JsonPatchOperation{
-					{Operation: "add", Path: "/metadata/finalizers", Value: []interface{}{"agones.dev"}},
+					{Operation: "add", Path: "/metadata/finalizers", Value: []interface{}{"agones.dev/controller"}},
 					{Operation: "add", Path: "/spec/ports/0/protocol", Value: "UDP"}},
 			},
 		},

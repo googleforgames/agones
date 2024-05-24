@@ -455,12 +455,12 @@ func (c *Controller) syncGameServerDeletionTimestamp(ctx context.Context, gs *ag
 	// remove the finalizer for this controller
 	var fin []string
 	for _, f := range gsCopy.ObjectMeta.Finalizers {
-		if f != agones.GroupName {
+		if f != agones.GroupName && f != agonesv1.FinalizerName {
 			fin = append(fin, f)
 		}
 	}
 	gsCopy.ObjectMeta.Finalizers = fin
-	loggerForGameServer(gsCopy, c.baseLogger).Debugf("No pods found, removing finalizer %s", agones.GroupName)
+	loggerForGameServer(gsCopy, c.baseLogger).Debugf("No pods found, removing finalizer %s", agonesv1.FinalizerName)
 	gs, err = c.gameServerGetter.GameServers(gsCopy.ObjectMeta.Namespace).Update(ctx, gsCopy, metav1.UpdateOptions{})
 	return gs, errors.Wrapf(err, "error removing finalizer for GameServer %s", gsCopy.ObjectMeta.Name)
 }
