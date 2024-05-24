@@ -34,7 +34,7 @@ import (
 
 const (
 	retryInterval = 5 * time.Second
-	retryTimeout  = 45 * time.Second
+	retryTimeout  = 60 * time.Second
 )
 
 func TestAllocatorAfterDeleteReplica(t *testing.T) {

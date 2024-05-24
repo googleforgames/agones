@@ -213,7 +213,7 @@ spec:
 {{ toYaml .Values.agones.allocator.tolerations | indent 8 }}
       {{- end }}
       serviceAccountName: {{ $.Values.agones.serviceaccount.allocator.name }}
-      terminationGracePeriodSeconds: {{ mul .Values.agones.allocator.readiness.periodSeconds .Values.agones.allocator.readiness.failureThreshold 3 }}
+      terminationGracePeriodSeconds: {{ mul .Values.agones.allocator.readiness.periodSeconds .Values.agones.allocator.readiness.failureThreshold 5 }}
       {{- if eq .Values.agones.allocator.disableTLS false }}
       volumes:
       - name: tls
@@ -292,7 +292,7 @@ spec:
         - name: ALLOCATION_BATCH_WAIT_TIME
           value: {{ .Values.agones.allocator.allocationBatchWaitTime | quote }}
         - name: READINESS_SHUTDOWN_DURATION
-          value: {{ mul .Values.agones.allocator.readiness.periodSeconds .Values.agones.extensions.readiness.failureThreshold 2 }}s
+          value: {{ mul .Values.agones.allocator.readiness.periodSeconds .Values.agones.extensions.readiness.failureThreshold 4 }}s
         ports:
         {{- if .Values.agones.allocator.service.http.enabled }}
         - name: {{ .Values.agones.allocator.service.http.portName }}
