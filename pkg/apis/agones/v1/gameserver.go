@@ -150,6 +150,8 @@ const (
 	// GameServerErroredAtAnnotation is an annotation that records the timestamp the GameServer entered the
 	// error state. The timestamp is encoded in RFC3339 format.
 	GameServerErroredAtAnnotation = agones.GroupName + "/errored-at"
+	// FinalizerName is the domain name and finalizer path used to manage garbage collection of the GameServer.
+	FinalizerName = agones.GroupName + "/controller"
 
 	// NodePodIP identifies an IP address from a pod.
 	NodePodIP corev1.NodeAddressType = "PodIP"
@@ -362,7 +364,7 @@ func (gs *GameServer) ApplyDefaults() {
 		gs.ObjectMeta.Annotations = map[string]string{}
 	}
 	gs.ObjectMeta.Annotations[VersionAnnotation] = pkg.Version
-	gs.ObjectMeta.Finalizers = append(gs.ObjectMeta.Finalizers, agones.GroupName)
+	gs.ObjectMeta.Finalizers = append(gs.ObjectMeta.Finalizers, FinalizerName)
 
 	gs.Spec.ApplyDefaults()
 	gs.applyStatusDefaults()

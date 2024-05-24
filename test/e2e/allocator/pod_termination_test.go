@@ -23,9 +23,9 @@ import (
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	helper "agones.dev/agones/test/e2e/allochelper"
 	e2e "agones.dev/agones/test/e2e/framework"
-	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/grpc/status"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 
@@ -39,13 +39,14 @@ const (
 
 func TestAllocatorAfterDeleteReplica(t *testing.T) {
 	ctx := context.Background()
+	logger := e2e.TestLogger(t)
 
 	var list *v1.PodList
 
 	dep, err := framework.KubeClient.AppsV1().Deployments("agones-system").Get(ctx, "agones-allocator", metav1.GetOptions{})
 	require.NoError(t, err, "Failed to get replicas")
 	replicaCnt := int(*(dep.Spec.Replicas))
-	logrus.Infof("Replica count config is %d", replicaCnt)
+	logger.Infof("Replica count config is %d", replicaCnt)
 
 	// poll and wait until all allocator pods are running
 	_ = wait.PollUntilContextTimeout(context.Background(), retryInterval, retryTimeout, true, func(ctx context.Context) (done bool, err error) {
@@ -60,7 +61,7 @@ func TestAllocatorAfterDeleteReplica(t *testing.T) {
 
 		for _, allocpod := range list.Items {
 			podstatus := string(allocpod.Status.Phase)
-			logrus.Infof("Allocator Pod %s, has status of %s", allocpod.ObjectMeta.Name, podstatus)
+			logger.Infof("Allocator Pod %s, has status of %s", allocpod.ObjectMeta.Name, podstatus)
 			if podstatus != "Running" {
 				return false, nil
 			}
@@ -96,7 +97,7 @@ func TestAllocatorAfterDeleteReplica(t *testing.T) {
 	// Wait and keep making calls till we know the draining time has passed
 	_ = wait.PollUntilContextTimeout(context.Background(), retryInterval, retryTimeout, true, func(ctx context.Context) (bool, error) {
 		response, err = grpcClient.Allocate(context.Background(), request)
-		logrus.Info(response)
+		logger.Infof("err = %v (code = %v), response = %v", err, status.Code(err), response)
 		helper.ValidateAllocatorResponse(t, response)
 		require.NoError(t, err, "Failed grpc allocation request")
 		err = helper.DeleteAgonesPod(ctx, response.GameServerName, framework.Namespace, framework)

@@ -449,7 +449,7 @@ func TestGameServerApplyDefaults(t *testing.T) {
 			assert.Equal(t, pkg.Version, test.gameServer.Annotations[VersionAnnotation])
 
 			spec := test.gameServer.Spec
-			assert.Contains(t, test.gameServer.ObjectMeta.Finalizers, agones.GroupName)
+			assert.Contains(t, test.gameServer.ObjectMeta.Finalizers, FinalizerName)
 			assert.Equal(t, test.expected.container, spec.Container)
 			assert.Equal(t, test.expected.protocol, spec.Ports[0].Protocol)
 			assert.Equal(t, test.expected.portRange, spec.Ports[0].Range)
