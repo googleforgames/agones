@@ -2277,6 +2277,13 @@ func newSingleContainerSpec() agonesv1.GameServerSpec {
 
 func newPassthroughPortSingleContainerSpec() corev1.PodSpec {
 	return corev1.PodSpec{
-		Containers: []corev1.Container{{Name: "agones-gameserver-sidecar", Image: "container/image", Env: []corev1.EnvVar{{Name: passthroughPortEnvVar, Value: "TRUE"}}}, {Name: "simple-game-server", Image: "container2/image", Ports: []corev1.ContainerPort{{HostPort: 7777, ContainerPort: 555}}, Env: []corev1.EnvVar{{Name: passthroughPortEnvVar, Value: "TRUE"}}}},
+		Containers: []corev1.Container{
+			{Name: "agones-gameserver-sidecar",
+				Image: "container/image",
+				Env:   []corev1.EnvVar{{Name: passthroughPortEnvVar, Value: "TRUE"}}},
+			{Name: "simple-game-server",
+				Image: "container2/image",
+				Ports: []corev1.ContainerPort{{HostPort: 7777, ContainerPort: 555}},
+				Env:   []corev1.EnvVar{{Name: passthroughPortEnvVar, Value: "TRUE"}}}},
 	}
 }

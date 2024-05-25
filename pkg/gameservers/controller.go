@@ -323,7 +323,6 @@ func (ext *Extensions) creationValidationHandler(review admissionv1.AdmissionRev
 // creationMutationHandlerPod that mutates a GameServer pod when it is created
 // Should only be called on gameserver pod create operations.
 func (ext *Extensions) creationMutationHandlerPod(review admissionv1.AdmissionReview) (admissionv1.AdmissionReview, error) {
-	logger := runtime.NewLoggerWithSource("gke")
 	obj := review.Request.Object
 	pod := &corev1.Pod{}
 	err := json.Unmarshal(obj.Raw, pod)
@@ -333,7 +332,9 @@ func (ext *Extensions) creationMutationHandlerPod(review admissionv1.AdmissionRe
 		return review, nil
 	}
 
-	logger.WithField("review", review).Debug("creationMutationHandlerPod")
+	ext.baseLogger.WithField("pod.Name", pod.Name).Debug("creationMutationHandlerPod")
+
+	// TODO: We need to deal with case of multiple and mixed type ports before enabling the feature gate.
 	pod.Spec.Containers[1].Ports[0].ContainerPort = pod.Spec.Containers[1].Ports[0].HostPort
 
 	newPod, err := json.Marshal(pod)

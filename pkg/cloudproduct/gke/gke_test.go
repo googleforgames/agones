@@ -79,14 +79,16 @@ func TestSyncPodPortsToGameServer(t *testing.T) {
 
 func TestValidateGameServer(t *testing.T) {
 	for name, tc := range map[string]struct {
-		edPods      bool
-		ports       []agonesv1.GameServerPort
-		scheduling  apis.SchedulingStrategy
-		safeToEvict agonesv1.EvictionSafe
-		want        field.ErrorList
+		edPods          bool
+		ports           []agonesv1.GameServerPort
+		scheduling      apis.SchedulingStrategy
+		safeToEvict     agonesv1.EvictionSafe
+		want            field.ErrorList
+		passthroughFlag string
 	}{
-		"no ports => validated": {scheduling: apis.Packed},
+		"no ports => validated": {passthroughFlag: "false", scheduling: apis.Packed},
 		"good ports => validated": {
+			passthroughFlag: "true",
 			ports: []agonesv1.GameServerPort{
 				{
 					Name:          "some-tcpudp",
@@ -115,11 +117,26 @@ func TestValidateGameServer(t *testing.T) {
 					ContainerPort: 1234,
 					Protocol:      corev1.ProtocolUDP,
 				},
+				{
+					Name:          "passthrough-udp",
+					PortPolicy:    agonesv1.Passthrough,
+					Range:         agonesv1.DefaultPortRange,
+					ContainerPort: 1234,
+					Protocol:      corev1.ProtocolUDP,
+				},
+				{
+					Name:          "passthrough-tcp",
+					PortPolicy:    agonesv1.Passthrough,
+					Range:         agonesv1.DefaultPortRange,
+					ContainerPort: 1234,
+					Protocol:      corev1.ProtocolTCP,
+				},
 			},
 			safeToEvict: agonesv1.EvictionSafeAlways,
 			scheduling:  apis.Packed,
 		},
 		"bad port range => fails validation": {
+			passthroughFlag: "true",
 			ports: []agonesv1.GameServerPort{
 				{
 					Name:          "best-tcpudp",
@@ -142,15 +159,32 @@ func TestValidateGameServer(t *testing.T) {
 					ContainerPort: 1234,
 					Protocol:      corev1.ProtocolUDP,
 				},
+				{
+					Name:          "passthrough-udp-bad-range",
+					PortPolicy:    agonesv1.Passthrough,
+					Range:         "passthrough",
+					ContainerPort: 1234,
+					Protocol:      corev1.ProtocolUDP,
+				},
+				{
+					Name:          "passthrough-tcp-bad-range",
+					PortPolicy:    agonesv1.Passthrough,
+					Range:         "games",
+					ContainerPort: 1234,
+					Protocol:      corev1.ProtocolTCP,
+				},
 			},
 			safeToEvict: agonesv1.EvictionSafeAlways,
 			scheduling:  apis.Packed,
 			want: field.ErrorList{
 				field.Invalid(field.NewPath("spec", "ports").Index(1).Child("range"), "game", "range must not be used on GKE Autopilot"),
 				field.Invalid(field.NewPath("spec", "ports").Index(2).Child("range"), "game", "range must not be used on GKE Autopilot"),
+				field.Invalid(field.NewPath("spec", "ports").Index(3).Child("range"), "passthrough", "range must not be used on GKE Autopilot"),
+				field.Invalid(field.NewPath("spec", "ports").Index(4).Child("range"), "games", "range must not be used on GKE Autopilot"),
 			},
 		},
 		"bad policy (no feature gates) => fails validation": {
+			passthroughFlag: "false",
 			ports: []agonesv1.GameServerPort{
 				{
 					Name:          "best-tcpudp",
@@ -173,6 +207,20 @@ func TestValidateGameServer(t *testing.T) {
 					ContainerPort: 1234,
 					Protocol:      corev1.ProtocolUDP,
 				},
+				{
+					Name:          "passthrough-tcp",
+					PortPolicy:    agonesv1.Passthrough,
+					Range:         agonesv1.DefaultPortRange,
+					ContainerPort: 1234,
+					Protocol:      corev1.ProtocolTCP,
+				},
+				{
+					Name:          "passthrough-udp",
+					PortPolicy:    agonesv1.Passthrough,
+					Range:         agonesv1.DefaultPortRange,
+					ContainerPort: 1234,
+					Protocol:      corev1.ProtocolUDP,
+				},
 			},
 			safeToEvict: agonesv1.EvictionSafeOnUpgrade,
 			scheduling:  apis.Distributed,
@@ -180,11 +228,14 @@ func TestValidateGameServer(t *testing.T) {
 				field.Invalid(field.NewPath("spec", "scheduling"), "Distributed", "scheduling strategy must be Packed on GKE Autopilot"),
 				field.Invalid(field.NewPath("spec", "ports").Index(1).Child("portPolicy"), "Static", "portPolicy must be Dynamic or None on GKE Autopilot"),
 				field.Invalid(field.NewPath("spec", "ports").Index(2).Child("portPolicy"), "Static", "portPolicy must be Dynamic or None on GKE Autopilot"),
+				field.Invalid(field.NewPath("spec", "ports").Index(3).Child("portPolicy"), "Passthrough", "portPolicy must be Dynamic or None on GKE Autopilot"),
+				field.Invalid(field.NewPath("spec", "ports").Index(4).Child("portPolicy"), "Passthrough", "portPolicy must be Dynamic or None on GKE Autopilot"),
 				field.Invalid(field.NewPath("spec", "eviction", "safe"), "OnUpgrade", "eviction.safe OnUpgrade not supported on GKE Autopilot"),
 			},
 		},
 		"bad policy (GKEAutopilotExtendedDurationPods enabled) => fails validation but OnUpgrade works": {
-			edPods: true,
+			edPods:          true,
+			passthroughFlag: "false",
 			ports: []agonesv1.GameServerPort{
 				{
 					Name:          "best-tcpudp",
@@ -207,6 +258,13 @@ func TestValidateGameServer(t *testing.T) {
 					ContainerPort: 1234,
 					Protocol:      corev1.ProtocolUDP,
 				},
+				{
+					Name:          "passthrough-udp",
+					PortPolicy:    agonesv1.Passthrough,
+					Range:         agonesv1.DefaultPortRange,
+					ContainerPort: 1234,
+					Protocol:      corev1.ProtocolUDP,
+				},
 			},
 			safeToEvict: agonesv1.EvictionSafeOnUpgrade,
 			scheduling:  apis.Distributed,
@@ -214,6 +272,7 @@ func TestValidateGameServer(t *testing.T) {
 				field.Invalid(field.NewPath("spec", "scheduling"), "Distributed", "scheduling strategy must be Packed on GKE Autopilot"),
 				field.Invalid(field.NewPath("spec", "ports").Index(1).Child("portPolicy"), "Static", "portPolicy must be Dynamic or None on GKE Autopilot"),
 				field.Invalid(field.NewPath("spec", "ports").Index(2).Child("portPolicy"), "Static", "portPolicy must be Dynamic or None on GKE Autopilot"),
+				field.Invalid(field.NewPath("spec", "ports").Index(3).Child("portPolicy"), "Passthrough", "portPolicy must be Dynamic or None on GKE Autopilot"),
 			},
 		},
 	} {
@@ -221,7 +280,7 @@ func TestValidateGameServer(t *testing.T) {
 			// PortPolicy None is behind a feature flag
 			runtime.FeatureTestMutex.Lock()
 			defer runtime.FeatureTestMutex.Unlock()
-			require.NoError(t, runtime.ParseFeatures(string(runtime.FeaturePortPolicyNone)+"=true"))
+			require.NoError(t, runtime.ParseFeatures(fmt.Sprintf("%s=true&%s="+tc.passthroughFlag, runtime.FeaturePortPolicyNone, runtime.FeatureAutopilotPassthroughPort)))
 
 			causes := (&gkeAutopilot{useExtendedDurationPods: tc.edPods}).ValidateGameServerSpec(&agonesv1.GameServerSpec{
 				Ports:      tc.ports,
@@ -451,12 +510,14 @@ func TestSetEvictionNoExtended(t *testing.T) {
 
 func TestAutopilotPortAllocator(t *testing.T) {
 	for name, tc := range map[string]struct {
-		ports          []agonesv1.GameServerPort
-		wantPorts      []agonesv1.GameServerPort
-		wantAnnotation bool
+		ports           []agonesv1.GameServerPort
+		wantPorts       []agonesv1.GameServerPort
+		passthroughFlag string
+		wantAnnotation  bool
 	}{
-		"no ports => no change": {},
+		"no ports => no change": {passthroughFlag: "false"},
 		"ports => assigned and annotated": {
+			passthroughFlag: "true",
 			ports: []agonesv1.GameServerPort{
 				{
 					Name:          "some-tcpudp",
@@ -479,6 +540,19 @@ func TestAutopilotPortAllocator(t *testing.T) {
 				{
 					Name:          "another-tcpudp",
 					PortPolicy:    agonesv1.Dynamic,
+					ContainerPort: 5678,
+					Protocol:      agonesv1.ProtocolTCPUDP,
+				},
+				{
+					Name:          "passthrough-tcp",
+					PortPolicy:    agonesv1.Passthrough,
+					Range:         agonesv1.DefaultPortRange,
+					ContainerPort: 1234,
+					Protocol:      corev1.ProtocolTCP,
+				},
+				{
+					Name:          "passthrough-tcpudp",
+					PortPolicy:    agonesv1.Passthrough,
 					ContainerPort: 5678,
 					Protocol:      agonesv1.ProtocolTCPUDP,
 				},
@@ -526,16 +600,51 @@ func TestAutopilotPortAllocator(t *testing.T) {
 					HostPort:      4,
 					Protocol:      corev1.ProtocolUDP,
 				},
+				{
+					Name:          "passthrough-tcp",
+					PortPolicy:    agonesv1.Passthrough,
+					Range:         agonesv1.DefaultPortRange,
+					ContainerPort: 1234,
+					HostPort:      5,
+					Protocol:      corev1.ProtocolTCP,
+				},
+				{
+					Name:          "passthrough-tcpudp-tcp",
+					PortPolicy:    agonesv1.Passthrough,
+					ContainerPort: 5678,
+					HostPort:      6,
+					Protocol:      corev1.ProtocolTCP,
+				},
+				{
+					Name:          "passthrough-tcpudp-udp",
+					PortPolicy:    agonesv1.Passthrough,
+					ContainerPort: 5678,
+					HostPort:      6,
+					Protocol:      corev1.ProtocolUDP,
+				},
 			},
 			wantAnnotation: true,
 		},
 		"bad policy => no change (should be rejected by webhooks previously)": {
+			passthroughFlag: "false",
 			ports: []agonesv1.GameServerPort{
 				{
 					Name:          "awesome-udp",
 					PortPolicy:    agonesv1.Static,
 					ContainerPort: 1234,
 					Protocol:      corev1.ProtocolUDP,
+				},
+				{
+					Name:          "awesome-none-udp",
+					PortPolicy:    agonesv1.None,
+					ContainerPort: 1234,
+					Protocol:      corev1.ProtocolUDP,
+				},
+				{
+					Name:          "passthrough-tcp",
+					PortPolicy:    agonesv1.Passthrough,
+					ContainerPort: 1234,
+					Protocol:      corev1.ProtocolTCP,
 				},
 			},
 			wantPorts: []agonesv1.GameServerPort{
@@ -545,10 +654,26 @@ func TestAutopilotPortAllocator(t *testing.T) {
 					ContainerPort: 1234,
 					Protocol:      corev1.ProtocolUDP,
 				},
+				{
+					Name:          "awesome-none-udp",
+					PortPolicy:    agonesv1.None,
+					ContainerPort: 1234,
+					Protocol:      corev1.ProtocolUDP,
+				},
+				{
+					Name:          "passthrough-tcp",
+					PortPolicy:    agonesv1.Passthrough,
+					ContainerPort: 1234,
+					Protocol:      corev1.ProtocolTCP,
+				},
 			},
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
+			// PortPolicy None is behind a feature flag
+			runtime.FeatureTestMutex.Lock()
+			defer runtime.FeatureTestMutex.Unlock()
+			require.NoError(t, runtime.ParseFeatures(fmt.Sprintf("%s="+tc.passthroughFlag, runtime.FeatureAutopilotPassthroughPort)))
 			gs := (&autopilotPortAllocator{minPort: 8000, maxPort: 9000}).Allocate(&agonesv1.GameServer{Spec: agonesv1.GameServerSpec{Ports: tc.ports}})
 			wantGS := &agonesv1.GameServer{Spec: agonesv1.GameServerSpec{Ports: tc.wantPorts}}
 			if tc.wantAnnotation {
