@@ -134,12 +134,12 @@ func (*gkeAutopilot) NewPortAllocator(portRanges map[string]portallocator.PortRa
 
 func (*gkeAutopilot) WaitOnFreePorts() bool { return true }
 
-func checkPassthroughPortPolicy(PortPolicy agonesv1.PortPolicy) bool {
+func checkPassthroughPortPolicy(portPolicy agonesv1.PortPolicy) bool {
 	// if feature is not enabled and port is Passthrough return true because that should be an invalid port
 	// if feature is not enabled and port is not Passthrough you can return false because there's no error  but check for None port
 	// if feature is enabled and port is passthrough return false because there is no error
 	// if feature is enabled and port is not passthrough return false because there is no error but check for None port
-	return (!runtime.FeatureEnabled(runtime.FeatureAutopilotPassthroughPort) && PortPolicy == agonesv1.Passthrough) || PortPolicy == agonesv1.Static
+	return (!runtime.FeatureEnabled(runtime.FeatureAutopilotPassthroughPort) && portPolicy == agonesv1.Passthrough) || portPolicy == agonesv1.Static
 }
 
 func (g *gkeAutopilot) ValidateGameServerSpec(gss *agonesv1.GameServerSpec, fldPath *field.Path) field.ErrorList {
@@ -264,13 +264,13 @@ type autopilotPortAllocator struct {
 func (*autopilotPortAllocator) Run(_ context.Context) error        { return nil }
 func (*autopilotPortAllocator) DeAllocate(gs *agonesv1.GameServer) {}
 
-func checkPassthroughPortPolicyForAutopilot(PortPolicy agonesv1.PortPolicy) bool {
+func checkPassthroughPortPolicyForAutopilot(portPolicy agonesv1.PortPolicy) bool {
 	// Autopilot can have Dynamic or Passthrough
 	// if feature is not enabled and port is Passthrough -> true
 	// if feature is not enabled and port is not Passthrough -> true
 	// if feature is enabled and port is Passthrough -> false
 	// if feature is enabled and port is not Passthrough -> true
-	return !(runtime.FeatureEnabled(runtime.FeatureAutopilotPassthroughPort) && PortPolicy == agonesv1.Passthrough)
+	return !(runtime.FeatureEnabled(runtime.FeatureAutopilotPassthroughPort) && portPolicy == agonesv1.Passthrough)
 }
 
 func (apa *autopilotPortAllocator) Allocate(gs *agonesv1.GameServer) *agonesv1.GameServer {
