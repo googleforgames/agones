@@ -59,9 +59,10 @@ import (
 )
 
 const (
-	sdkserverSidecarName = "agones-gameserver-sidecar"
-	grpcPortEnvVar       = "AGONES_SDK_GRPC_PORT"
-	httpPortEnvVar       = "AGONES_SDK_HTTP_PORT"
+	sdkserverSidecarName  = "agones-gameserver-sidecar"
+	grpcPortEnvVar        = "AGONES_SDK_GRPC_PORT"
+	httpPortEnvVar        = "AGONES_SDK_HTTP_PORT"
+	passthroughPortEnvVar = "PASSTHROUGH"
 )
 
 // Extensions struct contains what is needed to bind webhook handlers
@@ -211,6 +212,9 @@ func NewExtensions(apiHooks agonesv1.APIHooks, wh *webhooks.WebHook) *Extensions
 	wh.AddHandler("/mutate", agonesv1.Kind("GameServer"), admissionv1.Create, ext.creationMutationHandler)
 	wh.AddHandler("/validate", agonesv1.Kind("GameServer"), admissionv1.Create, ext.creationValidationHandler)
 
+	if runtime.FeatureEnabled(runtime.FeatureAutopilotPassthroughPort) {
+		wh.AddHandler("/mutate", corev1.SchemeGroupVersion.WithKind("Pod").GroupKind(), admissionv1.Create, ext.creationMutationHandlerPod)
+	}
 	return ext
 }
 
@@ -313,6 +317,45 @@ func (ext *Extensions) creationValidationHandler(review admissionv1.AdmissionRev
 		review.Response.Result = &statusErr.ErrStatus
 		loggerForGameServer(gs, ext.baseLogger).WithField("review", review).Debug("Invalid GameServer")
 	}
+	return review, nil
+}
+
+// creationMutationHandlerPod that mutates a GameServer pod when it is created
+// Should only be called on gameserver pod create operations.
+func (ext *Extensions) creationMutationHandlerPod(review admissionv1.AdmissionReview) (admissionv1.AdmissionReview, error) {
+	obj := review.Request.Object
+	pod := &corev1.Pod{}
+	err := json.Unmarshal(obj.Raw, pod)
+	if err != nil {
+		// If the JSON is invalid during mutation, fall through to validation. This allows OpenAPI schema validation
+		// to proceed, resulting in a more user friendly error message.
+		return review, nil
+	}
+
+	ext.baseLogger.WithField("pod.Name", pod.Name).Debug("creationMutationHandlerPod")
+
+	// TODO: We need to deal with case of multiple and mixed type ports before enabling the feature gate.
+	pod.Spec.Containers[1].Ports[0].ContainerPort = pod.Spec.Containers[1].Ports[0].HostPort
+
+	newPod, err := json.Marshal(pod)
+	if err != nil {
+		return review, errors.Wrapf(err, "error marshalling changes applied Pod %s to json", pod.ObjectMeta.Name)
+	}
+
+	patch, err := jsonpatch.CreatePatch(obj.Raw, newPod)
+	if err != nil {
+		return review, errors.Wrapf(err, "error creating patch for Pod %s", pod.ObjectMeta.Name)
+	}
+
+	jsonPatch, err := json.Marshal(patch)
+	if err != nil {
+		return review, errors.Wrapf(err, "error creating json for patch for Pod %s", pod.ObjectMeta.Name)
+	}
+
+	pt := admissionv1.PatchTypeJSONPatch
+	review.Response.PatchType = &pt
+	review.Response.Patch = jsonPatch
+
 	return review, nil
 }
 

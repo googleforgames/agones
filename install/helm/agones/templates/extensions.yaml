@@ -169,6 +169,54 @@ webhooks:
 {{- end }}
 {{- if not (default .Values.agones.controller.disableSecret .Values.agones.extensions.disableSecret) }}
 ---
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: zzz-agones-mutation-webhook
+{{- $annotations := default .Values.agones.controller.mutatingWebhook.annotations .Values.agones.extensions.mutatingWebhook.annotations }}
+{{- if $annotations }}
+  annotations:
+{{- toYaml $annotations | nindent 4 }}
+{{- end }}
+  labels:
+    component: controller
+    app: {{ template "agones.name" . }}
+    chart: {{ template "agones.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+webhooks:
+  - name: mutations.agones.dev
+    admissionReviewVersions:
+      - v1
+    sideEffects: None
+    failurePolicy: Fail
+    clientConfig:
+      service:
+        name: agones-controller-service
+        namespace: {{ .Release.Namespace }}
+        path: /mutate
+{{- if not .Values.agones.controller.mutatingWebhook.disableCaBundle }}
+{{- if .Values.agones.controller.generateTLS }}
+      caBundle: {{ b64enc $ca.Cert }}
+{{- else }}
+      caBundle: {{ default (.Files.Get "certs/server.crt") .Values.agones.controller.tlsCert | b64enc }}
+{{- end }}
+{{- end }}
+    objectSelector:
+      matchLabels:
+        agones.dev/port: "autopilot-passthrough"
+    rules:
+      - apiGroups:
+          - ""
+        resources:
+          - "pods"
+        apiVersions:
+          - "v1"
+        operations:
+          - CREATE
+{{- end }}
+{{- if not .Values.agones.controller.disableSecret }}
+---
 apiVersion: v1
 kind: Secret
 metadata:

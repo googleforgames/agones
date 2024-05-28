@@ -134,10 +134,18 @@ func (*gkeAutopilot) NewPortAllocator(portRanges map[string]portallocator.PortRa
 
 func (*gkeAutopilot) WaitOnFreePorts() bool { return true }
 
+func checkPassthroughPortPolicy(portPolicy agonesv1.PortPolicy) bool {
+	// if feature is not enabled and port is Passthrough return true because that should be an invalid port
+	// if feature is not enabled and port is not Passthrough you can return false because there's no error  but check for None port
+	// if feature is enabled and port is passthrough return false because there is no error
+	// if feature is enabled and port is not passthrough return false because there is no error but check for None port
+	return (!runtime.FeatureEnabled(runtime.FeatureAutopilotPassthroughPort) && portPolicy == agonesv1.Passthrough) || portPolicy == agonesv1.Static
+}
+
 func (g *gkeAutopilot) ValidateGameServerSpec(gss *agonesv1.GameServerSpec, fldPath *field.Path) field.ErrorList {
 	allErrs := g.ValidateScheduling(gss.Scheduling, fldPath.Child("scheduling"))
 	for i, p := range gss.Ports {
-		if p.PortPolicy != agonesv1.Dynamic && (p.PortPolicy != agonesv1.None || !runtime.FeatureEnabled(runtime.FeaturePortPolicyNone)) {
+		if p.PortPolicy != agonesv1.Dynamic && (p.PortPolicy != agonesv1.None || !runtime.FeatureEnabled(runtime.FeaturePortPolicyNone)) && checkPassthroughPortPolicy(p.PortPolicy) {
 			allErrs = append(allErrs, field.Invalid(fldPath.Child("ports").Index(i).Child("portPolicy"), string(p.PortPolicy), errPortPolicyMustBeDynamicOrNone))
 		}
 		if p.Range != agonesv1.DefaultPortRange && (p.PortPolicy != agonesv1.None || !runtime.FeatureEnabled(runtime.FeaturePortPolicyNone)) {
@@ -256,6 +264,15 @@ type autopilotPortAllocator struct {
 func (*autopilotPortAllocator) Run(_ context.Context) error        { return nil }
 func (*autopilotPortAllocator) DeAllocate(gs *agonesv1.GameServer) {}
 
+func checkPassthroughPortPolicyForAutopilot(portPolicy agonesv1.PortPolicy) bool {
+	// Autopilot can have Dynamic or Passthrough
+	// if feature is not enabled and port is Passthrough -> true
+	// if feature is not enabled and port is not Passthrough -> true
+	// if feature is enabled and port is Passthrough -> false
+	// if feature is enabled and port is not Passthrough -> true
+	return !(runtime.FeatureEnabled(runtime.FeatureAutopilotPassthroughPort) && portPolicy == agonesv1.Passthrough)
+}
+
 func (apa *autopilotPortAllocator) Allocate(gs *agonesv1.GameServer) *agonesv1.GameServer {
 	if len(gs.Spec.Ports) == 0 {
 		return gs // Nothing to do.
@@ -263,7 +280,7 @@ func (apa *autopilotPortAllocator) Allocate(gs *agonesv1.GameServer) *agonesv1.G
 
 	var ports []agonesv1.GameServerPort
 	for i, p := range gs.Spec.Ports {
-		if p.PortPolicy != agonesv1.Dynamic {
+		if p.PortPolicy != agonesv1.Dynamic && checkPassthroughPortPolicyForAutopilot(p.PortPolicy) {
 			logger.WithField("gs", gs.Name).WithField("portPolicy", p.PortPolicy).Error(
 				"GameServer has invalid PortPolicy for Autopilot - this should have been rejected by webhooks. Refusing to assign ports.")
 			return gs
