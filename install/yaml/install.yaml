@@ -17216,7 +17216,7 @@ spec:
           value: "true"
       priorityClassName: agones-system
       serviceAccountName: agones-controller
-      terminationGracePeriodSeconds: 45
+      terminationGracePeriodSeconds: 27
       containers:
       - name: agones-extensions
         image: "us-docker.pkg.dev/agones-images/release/agones-extensions:1.41.0-dev"
@@ -17259,7 +17259,7 @@ spec:
         - name: CONTAINER_NAME
           value: "agones-extensions"
         - name: READINESS_SHUTDOWN_DURATION
-          value: 36s
+          value: 18s
         ports:
         - name: webhooks
           containerPort: 8081
@@ -17420,7 +17420,7 @@ spec:
           operator: Equal
           value: "true"
       serviceAccountName: agones-allocator
-      terminationGracePeriodSeconds: 45
+      terminationGracePeriodSeconds: 27
       volumes:
       - name: tls
         secret:
@@ -17491,7 +17491,7 @@ spec:
         - name: ALLOCATION_BATCH_WAIT_TIME
           value: "500ms"
         - name: READINESS_SHUTDOWN_DURATION
-          value: 36s
+          value: 18s
         ports:
         - name: https
           containerPort: 8443
