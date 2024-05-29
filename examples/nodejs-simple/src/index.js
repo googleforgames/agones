@@ -177,61 +177,61 @@ const runBetaSuite = async (agonesSDK) => {
 
 	await setTimeout(5000);
 	console.log('Getting counter count');
-	result = await agonesSDK.beta.getCounterCount('games');
+	result = await agonesSDK.beta.getCounterCount('rooms');
 	console.log(`result: ${result}`);
 
 	await setTimeout(5000);
 	console.log('Incrementing counter');
-	await agonesSDK.beta.incrementCounter('games', 1);
+	await agonesSDK.beta.incrementCounter('rooms', 1);
 
 	await setTimeout(5000);
 	console.log('Decrementing counter');
-	await agonesSDK.beta.decrementCounter('games', 1);
+	await agonesSDK.beta.decrementCounter('rooms', 1);
 
 	await setTimeout(5000);
 	console.log('Setting counter count');
-	await agonesSDK.beta.setCounterCount('games', 2);
+	await agonesSDK.beta.setCounterCount('rooms', 2);
 
 	await setTimeout(5000);
 	console.log('Getting counter capacity');
-	result = await agonesSDK.beta.getCounterCapacity('games');
+	result = await agonesSDK.beta.getCounterCapacity('rooms');
 	console.log(`result: ${result}`);
 
 	await setTimeout(5000);
 	console.log('Setting counter capacity');
-	await agonesSDK.beta.setCounterCapacity('games', 200);
+	await agonesSDK.beta.setCounterCapacity('rooms', 200);
 
 	await setTimeout(5000);
 	console.log('Getting list capacity');
-	result = await agonesSDK.beta.getListCapacity('rooms');
+	result = await agonesSDK.beta.getListCapacity('players');
 	console.log(`result: ${result}`);
 
 	await setTimeout(5000);
 	console.log('Setting list capacity');
-	await agonesSDK.beta.setListCapacity('rooms', 10);
+	await agonesSDK.beta.setListCapacity('players', 10);
 
 	await setTimeout(5000);
 	console.log('Getting list contains');
-	result = await agonesSDK.beta.listContains('rooms', 'room1');
+	result = await agonesSDK.beta.listContains('players', 'test0');
 	console.log(`result: ${result}`);
 
 	await setTimeout(5000);
 	console.log('Getting list length');
-	result = await agonesSDK.beta.getListLength('rooms');
+	result = await agonesSDK.beta.getListLength('players');
 	console.log(`result: ${result}`);
 
 	await setTimeout(5000);
 	console.log('Getting list values');
-	result = await agonesSDK.beta.getListValues('rooms');
+	result = await agonesSDK.beta.getListValues('players');
 	console.log(`result: ${result}`);
 
 	await setTimeout(5000);
 	console.log('Appending list value');
-	await agonesSDK.beta.appendListValue('rooms', 'room3');
+	await agonesSDK.beta.appendListValue('players', 'test3');
 
 	await setTimeout(5000);
 	console.log('Deleting list value');
-	await agonesSDK.beta.deleteListValue('rooms', 'room3');
+	await agonesSDK.beta.deleteListValue('players', 'test3');
 };
 
 let args = process.argv.slice(2);
