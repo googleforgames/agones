@@ -590,8 +590,8 @@ func TestControllerCreationMutationHandlerPod(t *testing.T) {
 	}
 
 	t.Run("valid pod mutation for Passthrough portPolicy, containerPort should be the same as hostPort", func(t *testing.T) {
-		gameServerHostPort_0 := float64(newPassthroughPortSingleContainerSpec().Spec.Containers[1].Ports[0].HostPort)
-		gameServerHostPort_2 := float64(newPassthroughPortSingleContainerSpec().Spec.Containers[1].Ports[2].HostPort)
+		gameServerHostPort0 := float64(newPassthroughPortSingleContainerSpec().Spec.Containers[1].Ports[0].HostPort)
+		gameServerHostPort2 := float64(newPassthroughPortSingleContainerSpec().Spec.Containers[1].Ports[2].HostPort)
 		fixture := newPassthroughPortSingleContainerSpec()
 		raw, err := json.Marshal(fixture)
 		require.NoError(t, err)
@@ -607,8 +607,8 @@ func TestControllerCreationMutationHandlerPod(t *testing.T) {
 		}
 		expected := expected{
 			patches: []jsonpatch.JsonPatchOperation{
-				{Operation: "replace", Path: "/spec/containers/1/ports/0/containerPort", Value: gameServerHostPort_0},
-				{Operation: "replace", Path: "/spec/containers/1/ports/2/containerPort", Value: gameServerHostPort_2}},
+				{Operation: "replace", Path: "/spec/containers/1/ports/0/containerPort", Value: gameServerHostPort0},
+				{Operation: "replace", Path: "/spec/containers/1/ports/2/containerPort", Value: gameServerHostPort2}},
 		}
 
 		result, err := ext.creationMutationHandlerPod(review)
@@ -2281,8 +2281,7 @@ func newSingleContainerSpec() agonesv1.GameServerSpec {
 // The annotation would look like autopilot.gke.io/passthrough-port-assignment: '{"example-server":["0","2"]}'
 func newPassthroughPortSingleContainerSpec() corev1.Pod {
 	passthroughContainerPortMap := make(map[string][]string)
-	passthroughContainerPortMap["example-server"] = append(passthroughContainerPortMap["example-server"], "0")
-	passthroughContainerPortMap["example-server"] = append(passthroughContainerPortMap["example-server"], "2")
+	passthroughContainerPortMap["example-server"] = append(passthroughContainerPortMap["example-server"], "0", "2")
 	var containerToPassthroughMapJSON []byte
 	containerToPassthroughMapJSON, err := json.Marshal(passthroughContainerPortMap)
 	if err != nil {

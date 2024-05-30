@@ -156,6 +156,7 @@ const (
 	// NodePodIP identifies an IP address from a pod.
 	NodePodIP corev1.NodeAddressType = "PodIP"
 
+	// PassthroughPortAssignmentAnnotation is an annotation to keep track of game server container and its Passthrough ports indices
 	PassthroughPortAssignmentAnnotation = "autopilot.gke.io/container-passthrough-port-assignment"
 
 	// True is the string "true" to appease the goconst lint.

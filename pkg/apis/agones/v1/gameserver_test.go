@@ -1518,8 +1518,7 @@ func TestGameServerPassthroughPortAnnotation(t *testing.T) {
 	}}
 
 	passthroughContainerPortMap := make(map[string][]string)
-	passthroughContainerPortMap["container"] = append(passthroughContainerPortMap["container"], "0")
-	passthroughContainerPortMap["container"] = append(passthroughContainerPortMap["container"], "3")
+	passthroughContainerPortMap["container"] = append(passthroughContainerPortMap["container"], "0", "3")
 	var containerToPassthroughMapJSON []byte
 	containerToPassthroughMapJSON, err := json.Marshal(passthroughContainerPortMap)
 	if err != nil {
