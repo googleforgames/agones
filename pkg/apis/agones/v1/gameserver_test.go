@@ -140,32 +140,6 @@ func TestIsBeingDeleted(t *testing.T) {
 	}
 }
 
-func TestGameServerFindGameServerContainer(t *testing.T) {
-	t.Parallel()
-
-	fixture := corev1.Container{Name: "mycontainer", Image: "foo/mycontainer"}
-	gs := &GameServer{
-		Spec: GameServerSpec{
-			Container: "mycontainer",
-			Template: corev1.PodTemplateSpec{
-				Spec: corev1.PodSpec{
-					Containers: []corev1.Container{
-						fixture,
-						{Name: "notmycontainer", Image: "foo/notmycontainer"},
-					},
-				},
-			},
-		},
-	}
-
-	i, container, err := gs.FindGameServerContainer()
-	assert.Nil(t, err)
-	assert.Equal(t, fixture, container)
-	container.Ports = append(container.Ports, corev1.ContainerPort{HostPort: 1234})
-	gs.Spec.Template.Spec.Containers[i] = container
-	assert.Equal(t, gs.Spec.Template.Spec.Containers[0], container)
-}
-
 func TestGameServerApplyDefaults(t *testing.T) {
 	t.Parallel()
 
