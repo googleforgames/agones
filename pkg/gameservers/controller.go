@@ -336,21 +336,18 @@ func (ext *Extensions) creationMutationHandlerPod(review admissionv1.AdmissionRe
 
 	annotation, ok := pod.ObjectMeta.Annotations[agonesv1.PassthroughPortAssignmentAnnotation]
 	if !ok {
-		return review, nil
+		ext.baseLogger.WithField("pod.Name", pod.Name).Debug("creationMutationHandlerPod, " + agonesv1.PassthroughPortAssignmentAnnotation + ": " + pod.ObjectMeta.Annotations[agonesv1.PassthroughPortAssignmentAnnotation])
 	}
 
-	passthroughPortAssignmentMap := make(map[string][]string)
+	passthroughPortAssignmentMap := make(map[string][]int)
 	if err := json.Unmarshal([]byte(annotation), &passthroughPortAssignmentMap); err != nil {
-		return review, errors.Wrapf(err, "could not unmarshal annotation %s (value %q)", passthroughPortAssignmentMap, annotation)
+		return review, errors.Wrapf(err, "could not unmarshal annotation %q (value %q)", passthroughPortAssignmentMap, annotation)
 	}
 
 	for _, p := range pod.Spec.Containers {
 		if containerPassthrough, ok := passthroughPortAssignmentMap[p.Name]; ok {
 			for i := range containerPassthrough {
-				i, err := strconv.Atoi(containerPassthrough[i])
-				if err != nil {
-					return review, err
-				}
+				i := containerPassthrough[i]
 				p.Ports[i].ContainerPort = p.Ports[i].HostPort
 			}
 		}

@@ -2280,8 +2280,8 @@ func newSingleContainerSpec() agonesv1.GameServerSpec {
 // Assume ports 0 and 2 are Passthrough ports for "example-server" container
 // The annotation would look like autopilot.gke.io/passthrough-port-assignment: '{"example-server":["0","2"]}'
 func newPassthroughPortSingleContainerSpec() corev1.Pod {
-	passthroughContainerPortMap := make(map[string][]string)
-	passthroughContainerPortMap["example-server"] = append(passthroughContainerPortMap["example-server"], "0", "2")
+	passthroughContainerPortMap := make(map[string][]int)
+	passthroughContainerPortMap["example-server"] = append(passthroughContainerPortMap["example-server"], 0, 2)
 	var containerToPassthroughMapJSON []byte
 	containerToPassthroughMapJSON, err := json.Marshal(passthroughContainerPortMap)
 	if err != nil {

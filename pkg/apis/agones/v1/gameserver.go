@@ -157,7 +157,7 @@ const (
 	NodePodIP corev1.NodeAddressType = "PodIP"
 
 	// PassthroughPortAssignmentAnnotation is an annotation to keep track of game server container and its Passthrough ports indices
-	PassthroughPortAssignmentAnnotation = "autopilot.gke.io/container-passthrough-port-assignment"
+	PassthroughPortAssignmentAnnotation = "agones.dev/container-passthrough-port-assignment"
 
 	// True is the string "true" to appease the goconst lint.
 	True = "true"
@@ -749,7 +749,7 @@ func (gs *GameServer) Pod(apiHooks APIHooks, sidecars ...corev1.Container) (*cor
 
 	gs.podObjectMeta(pod)
 
-	passthroughContainerPortMap := make(map[string][]string)
+	passthroughContainerPortMap := make(map[string][]int)
 	for i, p := range gs.Spec.Ports {
 		var hostPort int32
 		if !runtime.FeatureEnabled(runtime.FeaturePortPolicyNone) || p.PortPolicy != None {
@@ -770,7 +770,7 @@ func (gs *GameServer) Pod(apiHooks APIHooks, sidecars ...corev1.Container) (*cor
 			return nil, err
 		}
 		if runtime.FeatureEnabled(runtime.FeatureAutopilotPassthroughPort) && p.PortPolicy == Passthrough {
-			passthroughContainerPortMap[*p.Container] = append(passthroughContainerPortMap[*p.Container], fmt.Sprint(i))
+			passthroughContainerPortMap[*p.Container] = append(passthroughContainerPortMap[*p.Container], i)
 		}
 	}
 

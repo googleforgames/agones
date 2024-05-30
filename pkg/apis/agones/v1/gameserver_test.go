@@ -1503,22 +1503,35 @@ func TestGameServerPassthroughPortAnnotation(t *testing.T) {
 	runtime.FeatureTestMutex.Lock()
 	defer runtime.FeatureTestMutex.Unlock()
 	require.NoError(t, runtime.ParseFeatures(string(runtime.FeatureAutopilotPassthroughPort)+"=true"))
+	containerOne := "containerOne"
+	containerTwo := "containerTwo"
+	containerThree := "containerThree"
+	containerFour := "containerFour"
 	gs := &GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gameserver", UID: "1234"}, Spec: GameServerSpec{
+		Container: "containerOne",
 		Ports: []GameServerPort{
-			{Name: "defaultPassthrough", PortPolicy: Passthrough},
-			{Name: "defaultDynamic", PortPolicy: Dynamic, ContainerPort: 7654},
-			{Name: "defaultDynamicTwo", PortPolicy: Dynamic, ContainerPort: 7659},
-			{Name: "defaultPassthroughTwo", PortPolicy: Passthrough},
+			{Name: "defaultPassthrough", PortPolicy: Passthrough, Container: &containerTwo},
+			{Name: "defaultDynamic", PortPolicy: Dynamic, ContainerPort: 7654, Container: &containerTwo},
+			{Name: "defaultDynamicTwo", PortPolicy: Dynamic, ContainerPort: 7659, Container: &containerOne},
+			{Name: "defaultPassthroughTwo", PortPolicy: Passthrough, Container: &containerOne},
+			{Name: "defaultDynamicThree", PortPolicy: Dynamic, ContainerPort: 7660, Container: &containerThree},
+			{Name: "defaultDynamicThree", PortPolicy: Passthrough, Container: &containerFour},
 		},
 		Template: corev1.PodTemplateSpec{
 			Spec: corev1.PodSpec{
-				Containers: []corev1.Container{{Name: "container", Image: "container/image"}},
+				Containers: []corev1.Container{
+					{Name: "containerOne", Image: "container/image"},
+					{Name: "containerTwo", Image: "container/image"},
+					{Name: "containerThree", Image: "container/image"},
+					{Name: "containerFour", Image: "container/image"}},
 			},
 		},
 	}}
 
-	passthroughContainerPortMap := make(map[string][]string)
-	passthroughContainerPortMap["container"] = append(passthroughContainerPortMap["container"], "0", "3")
+	passthroughContainerPortMap := make(map[string][]int)
+	passthroughContainerPortMap["containerOne"] = append(passthroughContainerPortMap["containerOne"], 3)
+	passthroughContainerPortMap["containerTwo"] = append(passthroughContainerPortMap["containerTwo"], 0)
+	passthroughContainerPortMap["containerFour"] = append(passthroughContainerPortMap["containerFour"], 5)
 	var containerToPassthroughMapJSON []byte
 	containerToPassthroughMapJSON, err := json.Marshal(passthroughContainerPortMap)
 	if err != nil {
@@ -1528,13 +1541,13 @@ func TestGameServerPassthroughPortAnnotation(t *testing.T) {
 	gs.ApplyDefaults()
 	pod, err := gs.Pod(fakeAPIHooks{})
 	assert.NoError(t, err)
-	assert.Len(t, pod.Spec.Containers, 1)
+	assert.Len(t, pod.Spec.Containers, 4)
 	assert.Empty(t, pod.Spec.Containers[0].VolumeMounts)
 	assert.Equal(t, pod.ObjectMeta.Annotations[PassthroughPortAssignmentAnnotation], string(containerToPassthroughMapJSON))
 
 	err = gs.DisableServiceAccount(pod)
 	assert.NoError(t, err)
-	assert.Len(t, pod.Spec.Containers, 1)
+	assert.Len(t, pod.Spec.Containers, 4)
 	assert.Len(t, pod.Spec.Containers[0].VolumeMounts, 1)
 	assert.Equal(t, "/var/run/secrets/kubernetes.io/serviceaccount", pod.Spec.Containers[0].VolumeMounts[0].MountPath)
 }
