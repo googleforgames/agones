@@ -1510,12 +1510,15 @@ func TestGameServerPassthroughPortAnnotation(t *testing.T) {
 	gs := &GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gameserver", UID: "1234"}, Spec: GameServerSpec{
 		Container: "containerOne",
 		Ports: []GameServerPort{
-			{Name: "defaultPassthrough", PortPolicy: Passthrough, Container: &containerTwo},
-			{Name: "defaultDynamic", PortPolicy: Dynamic, ContainerPort: 7654, Container: &containerTwo},
-			{Name: "defaultDynamicTwo", PortPolicy: Dynamic, ContainerPort: 7659, Container: &containerOne},
-			{Name: "defaultPassthroughTwo", PortPolicy: Passthrough, Container: &containerOne},
+			{Name: "defaultDynamicOne", PortPolicy: Dynamic, ContainerPort: 7659, Container: &containerOne},
+			{Name: "defaultPassthroughOne", PortPolicy: Passthrough, Container: &containerOne},
+			{Name: "defaultPassthroughTwo", PortPolicy: Passthrough, Container: &containerTwo},
+			{Name: "defaultDynamicTwo", PortPolicy: Dynamic, ContainerPort: 7654, Container: &containerTwo},
 			{Name: "defaultDynamicThree", PortPolicy: Dynamic, ContainerPort: 7660, Container: &containerThree},
-			{Name: "defaultDynamicThree", PortPolicy: Passthrough, Container: &containerFour},
+			{Name: "defaultDynamicThree", PortPolicy: Dynamic, ContainerPort: 7661, Container: &containerThree},
+			{Name: "defaultDynamicThree", PortPolicy: Dynamic, ContainerPort: 7662, Container: &containerThree},
+			{Name: "defaulPassthroughThree", PortPolicy: Passthrough, Container: &containerThree},
+			{Name: "defaultPassthroughFour", PortPolicy: Passthrough, Container: &containerFour},
 		},
 		Template: corev1.PodTemplateSpec{
 			Spec: corev1.PodSpec{
@@ -1529,9 +1532,10 @@ func TestGameServerPassthroughPortAnnotation(t *testing.T) {
 	}}
 
 	passthroughContainerPortMap := make(map[string][]int)
-	passthroughContainerPortMap["containerOne"] = append(passthroughContainerPortMap["containerOne"], 3)
+	passthroughContainerPortMap["containerOne"] = append(passthroughContainerPortMap["containerOne"], 1)
 	passthroughContainerPortMap["containerTwo"] = append(passthroughContainerPortMap["containerTwo"], 0)
-	passthroughContainerPortMap["containerFour"] = append(passthroughContainerPortMap["containerFour"], 5)
+	passthroughContainerPortMap["containerThree"] = append(passthroughContainerPortMap["containerThree"], 3)
+	passthroughContainerPortMap["containerFour"] = append(passthroughContainerPortMap["containerFour"], 0)
 	var containerToPassthroughMapJSON []byte
 	containerToPassthroughMapJSON, err := json.Marshal(passthroughContainerPortMap)
 	if err != nil {

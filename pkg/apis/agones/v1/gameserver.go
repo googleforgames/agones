@@ -750,7 +750,8 @@ func (gs *GameServer) Pod(apiHooks APIHooks, sidecars ...corev1.Container) (*cor
 	gs.podObjectMeta(pod)
 
 	passthroughContainerPortMap := make(map[string][]int)
-	for i, p := range gs.Spec.Ports {
+	portIdx := 0
+	for _, p := range gs.Spec.Ports {
 		var hostPort int32
 		if !runtime.FeatureEnabled(runtime.FeaturePortPolicyNone) || p.PortPolicy != None {
 			hostPort = p.HostPort
@@ -762,6 +763,7 @@ func (gs *GameServer) Pod(apiHooks APIHooks, sidecars ...corev1.Container) (*cor
 			Protocol:      p.Protocol,
 		}
 		err := gs.ApplyToPodContainer(pod, *p.Container, func(c corev1.Container) corev1.Container {
+			portIdx = len(c.Ports)
 			c.Ports = append(c.Ports, cp)
 
 			return c
@@ -770,7 +772,7 @@ func (gs *GameServer) Pod(apiHooks APIHooks, sidecars ...corev1.Container) (*cor
 			return nil, err
 		}
 		if runtime.FeatureEnabled(runtime.FeatureAutopilotPassthroughPort) && p.PortPolicy == Passthrough {
-			passthroughContainerPortMap[*p.Container] = append(passthroughContainerPortMap[*p.Container], i)
+			passthroughContainerPortMap[*p.Container] = append(passthroughContainerPortMap[*p.Container], portIdx)
 		}
 	}
 
