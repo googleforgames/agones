@@ -15,6 +15,7 @@
 package v1
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 	"testing"
@@ -1489,6 +1490,48 @@ func TestGameServerDisableServiceAccount(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Len(t, pod.Spec.Containers, 1)
 	assert.Empty(t, pod.Spec.Containers[0].VolumeMounts)
+
+	err = gs.DisableServiceAccount(pod)
+	assert.NoError(t, err)
+	assert.Len(t, pod.Spec.Containers, 1)
+	assert.Len(t, pod.Spec.Containers[0].VolumeMounts, 1)
+	assert.Equal(t, "/var/run/secrets/kubernetes.io/serviceaccount", pod.Spec.Containers[0].VolumeMounts[0].MountPath)
+}
+
+func TestGameServerPassthroughPortAnnotation(t *testing.T) {
+	t.Parallel()
+	runtime.FeatureTestMutex.Lock()
+	defer runtime.FeatureTestMutex.Unlock()
+	require.NoError(t, runtime.ParseFeatures(string(runtime.FeatureAutopilotPassthroughPort)+"=true"))
+	gs := &GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gameserver", UID: "1234"}, Spec: GameServerSpec{
+		Ports: []GameServerPort{
+			{Name: "defaultPassthrough", PortPolicy: Passthrough},
+			{Name: "defaultDynamic", PortPolicy: Dynamic, ContainerPort: 7654},
+			{Name: "defaultDynamicTwo", PortPolicy: Dynamic, ContainerPort: 7659},
+			{Name: "defaultPassthroughTwo", PortPolicy: Passthrough},
+		},
+		Template: corev1.PodTemplateSpec{
+			Spec: corev1.PodSpec{
+				Containers: []corev1.Container{{Name: "container", Image: "container/image"}},
+			},
+		},
+	}}
+
+	passthroughContainerPortMap := make(map[string][]string)
+	passthroughContainerPortMap["container"] = append(passthroughContainerPortMap["container"], "0")
+	passthroughContainerPortMap["container"] = append(passthroughContainerPortMap["container"], "3")
+	var containerToPassthroughMapJSON []byte
+	containerToPassthroughMapJSON, err := json.Marshal(passthroughContainerPortMap)
+	if err != nil {
+		assert.NoError(t, err)
+	}
+
+	gs.ApplyDefaults()
+	pod, err := gs.Pod(fakeAPIHooks{})
+	assert.NoError(t, err)
+	assert.Len(t, pod.Spec.Containers, 1)
+	assert.Empty(t, pod.Spec.Containers[0].VolumeMounts)
+	assert.Equal(t, pod.ObjectMeta.Annotations[PassthroughPortAssignmentAnnotation], string(containerToPassthroughMapJSON))
 
 	err = gs.DisableServiceAccount(pod)
 	assert.NoError(t, err)

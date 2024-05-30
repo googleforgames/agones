@@ -140,7 +140,7 @@ var (
 		FeaturePortPolicyNone:                   false,
 
 		// Dev features
-		FeatureAutopilotPassthroughPort: false,
+		FeatureAutopilotPassthroughPort: true,
 
 		// Example feature
 		FeatureExample: false,

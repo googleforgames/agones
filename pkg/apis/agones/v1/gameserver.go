@@ -156,6 +156,8 @@ const (
 	// NodePodIP identifies an IP address from a pod.
 	NodePodIP corev1.NodeAddressType = "PodIP"
 
+	PassthroughPortAssignmentAnnotation = "autopilot.gke.io/container-passthrough-port-assignment"
+
 	// True is the string "true" to appease the goconst lint.
 	True = "true"
 	// False is the string "false" to appease the goconst lint.
@@ -745,9 +747,10 @@ func (gs *GameServer) Pod(apiHooks APIHooks, sidecars ...corev1.Container) (*cor
 	}
 
 	gs.podObjectMeta(pod)
-	for _, p := range gs.Spec.Ports {
-		var hostPort int32
 
+	passthroughContainerPortMap := make(map[string][]string)
+	for i, p := range gs.Spec.Ports {
+		var hostPort int32
 		if !runtime.FeatureEnabled(runtime.FeaturePortPolicyNone) || p.PortPolicy != None {
 			hostPort = p.HostPort
 		}
@@ -765,7 +768,20 @@ func (gs *GameServer) Pod(apiHooks APIHooks, sidecars ...corev1.Container) (*cor
 		if err != nil {
 			return nil, err
 		}
+		if runtime.FeatureEnabled(runtime.FeatureAutopilotPassthroughPort) && p.PortPolicy == Passthrough {
+			passthroughContainerPortMap[*p.Container] = append(passthroughContainerPortMap[*p.Container], fmt.Sprint(i))
+		}
 	}
+
+	if len(passthroughContainerPortMap) != 0 {
+		var containerToPassthroughMapJSON []byte
+		containerToPassthroughMapJSON, err := json.Marshal(passthroughContainerPortMap)
+		if err != nil {
+			return nil, err
+		}
+		pod.ObjectMeta.Annotations[PassthroughPortAssignmentAnnotation] = string(containerToPassthroughMapJSON)
+	}
+
 	// Put the sidecars at the start of the list of containers so that the kubelet starts them first.
 	containers := make([]corev1.Container, 0, len(sidecars)+len(pod.Spec.Containers))
 	containers = append(containers, sidecars...)

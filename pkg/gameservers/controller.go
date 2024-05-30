@@ -334,8 +334,27 @@ func (ext *Extensions) creationMutationHandlerPod(review admissionv1.AdmissionRe
 
 	ext.baseLogger.WithField("pod.Name", pod.Name).Debug("creationMutationHandlerPod")
 
-	// TODO: We need to deal with case of multiple and mixed type ports before enabling the feature gate.
-	pod.Spec.Containers[1].Ports[0].ContainerPort = pod.Spec.Containers[1].Ports[0].HostPort
+	annotation, ok := pod.ObjectMeta.Annotations[agonesv1.PassthroughPortAssignmentAnnotation]
+	if !ok {
+		return review, nil
+	}
+
+	passthroughPortAssignmentMap := make(map[string][]string)
+	if err := json.Unmarshal([]byte(annotation), &passthroughPortAssignmentMap); err != nil {
+		return review, errors.Wrapf(err, "could not unmarshal annotation %s (value %q)", passthroughPortAssignmentMap, annotation)
+	}
+
+	for _, p := range pod.Spec.Containers {
+		if containerPassthrough, ok := passthroughPortAssignmentMap[p.Name]; ok {
+			for i := range containerPassthrough {
+				i, err := strconv.Atoi(containerPassthrough[i])
+				if err != nil {
+					return review, err
+				}
+				p.Ports[i].ContainerPort = p.Ports[i].HostPort
+			}
+		}
+	}
 
 	newPod, err := json.Marshal(pod)
 	if err != nil {
