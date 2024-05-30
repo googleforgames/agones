@@ -27,16 +27,16 @@ Also complete the "Enabling creation of RBAC resources" and "Installing Agones" 
 ### Modify the simple-game-server example source code
 Modify the {{< ghlink href="examples/simple-game-server/main.go" >}}main.go{{< /ghlink >}} file. For example:
 
-Change the following line in `main.go`:
+Change the following line in function `udpReadWriteLoop` in file `main.go`:
 
 From:
 ```go
-response = "ACK TCP: " + response + "\n"
+response = "ACK: " + response + "\n"
 ```
 
 To:
 ```go
-response = "ACK TCP Echo Says: " + response + "\n"
+response = "ACK Echo Says: " + response + "\n"
 ```
 
 ### Build Server
@@ -110,7 +110,7 @@ If you do not have netcat installed
 ```
 nc -u {IP} {PORT}
 Hello World!
-ACK TCP:  Echo says  Hello World!
+ACK Echo Says:  Hello World!
 EXIT
 ```
 
