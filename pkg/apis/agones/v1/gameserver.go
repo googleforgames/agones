@@ -753,6 +753,7 @@ func (gs *GameServer) Pod(apiHooks APIHooks, sidecars ...corev1.Container) (*cor
 	portIdx := 0
 	for _, p := range gs.Spec.Ports {
 		var hostPort int32
+
 		if !runtime.FeatureEnabled(runtime.FeaturePortPolicyNone) || p.PortPolicy != None {
 			hostPort = p.HostPort
 		}
