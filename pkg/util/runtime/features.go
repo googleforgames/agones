@@ -64,11 +64,11 @@ const (
 	// FeaturePortPolicyNone is a feature flag to allow setting Port Policy to None.
 	FeaturePortPolicyNone Feature = "PortPolicyNone"
 
-	////////////////
-	// Dev features
-
 	// FeatureAutopilotPassthroughPort is a feature flag that enables/disables Passthrough Port Policy.
 	FeatureAutopilotPassthroughPort Feature = "PassthroughPortPolicy"
+
+	////////////////
+	// Dev features
 
 	////////////////
 	// Example feature
@@ -138,9 +138,9 @@ var (
 		FeatureRollingUpdateFix:                 false,
 		FeaturePortRanges:                       false,
 		FeaturePortPolicyNone:                   false,
+		FeatureAutopilotPassthroughPort:         false,
 
 		// Dev features
-		FeatureAutopilotPassthroughPort: false,
 
 		// Example feature
 		FeatureExample: false,
