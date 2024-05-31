@@ -247,7 +247,8 @@ func main() {
 		podReady = false
 		time.Sleep(conf.ReadinessShutdownDuration)
 		cancelCtx()
-		logger.Infof("Readiness shutdown duration has passed, exiting pod")
+		logger.Infof("Readiness shutdown duration has passed, context cancelled")
+		time.Sleep(1 * time.Second) // allow a brief time for cleanup, but force exit if main doesn't
 		os.Exit(0)
 	})
 

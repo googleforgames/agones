@@ -140,32 +140,6 @@ func TestIsBeingDeleted(t *testing.T) {
 	}
 }
 
-func TestGameServerFindGameServerContainer(t *testing.T) {
-	t.Parallel()
-
-	fixture := corev1.Container{Name: "mycontainer", Image: "foo/mycontainer"}
-	gs := &GameServer{
-		Spec: GameServerSpec{
-			Container: "mycontainer",
-			Template: corev1.PodTemplateSpec{
-				Spec: corev1.PodSpec{
-					Containers: []corev1.Container{
-						fixture,
-						{Name: "notmycontainer", Image: "foo/notmycontainer"},
-					},
-				},
-			},
-		},
-	}
-
-	i, container, err := gs.FindGameServerContainer()
-	assert.Nil(t, err)
-	assert.Equal(t, fixture, container)
-	container.Ports = append(container.Ports, corev1.ContainerPort{HostPort: 1234})
-	gs.Spec.Template.Spec.Containers[i] = container
-	assert.Equal(t, gs.Spec.Template.Spec.Containers[0], container)
-}
-
 func TestGameServerApplyDefaults(t *testing.T) {
 	t.Parallel()
 
@@ -449,7 +423,7 @@ func TestGameServerApplyDefaults(t *testing.T) {
 			assert.Equal(t, pkg.Version, test.gameServer.Annotations[VersionAnnotation])
 
 			spec := test.gameServer.Spec
-			assert.Contains(t, test.gameServer.ObjectMeta.Finalizers, agones.GroupName)
+			assert.Contains(t, test.gameServer.ObjectMeta.Finalizers, FinalizerName)
 			assert.Equal(t, test.expected.container, spec.Container)
 			assert.Equal(t, test.expected.protocol, spec.Ports[0].Protocol)
 			assert.Equal(t, test.expected.portRange, spec.Ports[0].Range)

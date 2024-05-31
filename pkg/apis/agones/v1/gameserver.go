@@ -150,6 +150,8 @@ const (
 	// GameServerErroredAtAnnotation is an annotation that records the timestamp the GameServer entered the
 	// error state. The timestamp is encoded in RFC3339 format.
 	GameServerErroredAtAnnotation = agones.GroupName + "/errored-at"
+	// FinalizerName is the domain name and finalizer path used to manage garbage collection of the GameServer.
+	FinalizerName = agones.GroupName + "/controller"
 
 	// NodePodIP identifies an IP address from a pod.
 	NodePodIP corev1.NodeAddressType = "PodIP"
@@ -362,7 +364,7 @@ func (gs *GameServer) ApplyDefaults() {
 		gs.ObjectMeta.Annotations = map[string]string{}
 	}
 	gs.ObjectMeta.Annotations[VersionAnnotation] = pkg.Version
-	gs.ObjectMeta.Finalizers = append(gs.ObjectMeta.Finalizers, agones.GroupName)
+	gs.ObjectMeta.Finalizers = append(gs.ObjectMeta.Finalizers, FinalizerName)
 
 	gs.Spec.ApplyDefaults()
 	gs.applyStatusDefaults()
@@ -708,13 +710,6 @@ func (gss *GameServerSpec) FindContainer(name string) (int, corev1.Container, er
 	}
 
 	return -1, corev1.Container{}, errors.Errorf("Could not find a container named %s", name)
-}
-
-// FindGameServerContainer returns the container that is specified in
-// gameServer.Spec.Container. Returns the index and the value.
-// Returns an error if not found
-func (gs *GameServer) FindGameServerContainer() (int, corev1.Container, error) {
-	return gs.Spec.FindContainer(gs.Spec.Container)
 }
 
 // ApplyToPodContainer applies func(v1.Container) to the specified container in the pod.

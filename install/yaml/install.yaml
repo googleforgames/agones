@@ -17599,6 +17599,42 @@ webhooks:
           - CREATE
           - UPDATE
 ---
+# Source: agones/templates/extensions.yaml
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: zzz-agones-mutation-webhook
+  labels:
+    component: controller
+    app: agones
+    chart: agones-1.41.0-dev
+    release: agones-manual
+    heritage: Helm
+webhooks:
+  - name: mutations.agones.dev
+    admissionReviewVersions:
+      - v1
+    sideEffects: None
+    failurePolicy: Fail
+    clientConfig:
+      service:
+        name: agones-controller-service
+        namespace: agones-system
+        path: /mutate
+      caBundle: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUVjVENDQTFtZ0F3SUJBZ0lVRm5DOUsxT1kzRnFNaWhqN3RWbXh5R3hwUVdzd0RRWUpLb1pJaHZjTkFRRUwKQlFBd2dhb3hDekFKQmdOVkJBWVRBbFZUTVJNd0VRWURWUVFJREFwVGIyMWxMVk4wWVhSbE1ROHdEUVlEVlFRSwpEQVpCWjI5dVpYTXhEekFOQmdOVkJBc01Ca0ZuYjI1bGN6RTBNRElHQTFVRUF3d3JZV2R2Ym1WekxXTnZiblJ5CmIyeHNaWEl0YzJWeWRtbGpaUzVoWjI5dVpYTXRjM2x6ZEdWdExuTjJZekV1TUN3R0NTcUdTSWIzRFFFSkFSWWYKWVdkdmJtVnpMV1JwYzJOMWMzTkFaMjl2WjJ4bFozSnZkWEJ6TG1OdmJUQWVGdzB5TVRBMk16QXhPVFUyTWpGYQpGdzB6TVRBMk1qZ3hPVFUyTWpGYU1JR3FNUXN3Q1FZRFZRUUdFd0pWVXpFVE1CRUdBMVVFQ0F3S1UyOXRaUzFUCmRHRjBaVEVQTUEwR0ExVUVDZ3dHUVdkdmJtVnpNUTh3RFFZRFZRUUxEQVpCWjI5dVpYTXhOREF5QmdOVkJBTU0KSzJGbmIyNWxjeTFqYjI1MGNtOXNiR1Z5TFhObGNuWnBZMlV1WVdkdmJtVnpMWE41YzNSbGJTNXpkbU14TGpBcwpCZ2txaGtpRzl3MEJDUUVXSDJGbmIyNWxjeTFrYVhOamRYTnpRR2R2YjJkc1pXZHliM1Z3Y3k1amIyMHdnZ0VpCk1BMEdDU3FHU0liM0RRRUJBUVVBQTRJQkR3QXdnZ0VLQW9JQkFRQ2dka0xPS0NINThLSkJpdEJqeVlyTDArRTkKdEl0TFhGVGdxQU9TMGdBQitSVXNZMGhicmVWRHd0SExKYXBnMG55Ni9UYTcvMEc1Wm9kaGR4RlFtS2JWMUxmWQpmZGR0Qm4vOGd4Wi9JQ2dRblU3N3RqY1pLV3JxaW4vZ3h3ZUJua3hjWEtrT3Z1MldoRHdZZVFLN3ZHNEljOGhzClZHb1hTZWo4US94d2M4a0FCRG04YVRSU1RUYmsyWi9kem9mUmswU2xrc1BrVWV5b0NwRGVGbERqY0tTcDAzWnUKV2dBUTNpVy83c1AxVFV5WEtnblZ5M2ZpWm1RQUZreEtOQkxVV0gvVEJJeWtMdUVCMmRYYUd0L0VpZzQ4SWpVOQpMYUxyM3JWSW1Dcmt6dlB5V3VEZTd6MmVKdDE3WEhoTFVHcnE4YTFUSFp3d1NSWUZRc29tQ09ORVNBSTdBZ01CCkFBR2pnWXd3Z1lrd0hRWURWUjBPQkJZRUZMa3FUUWNMQloyMUlWc3BGbkNiaS9TbGtUbzlNQjhHQTFVZEl3UVkKTUJhQUZMa3FUUWNMQloyMUlWc3BGbkNiaS9TbGtUbzlNQThHQTFVZEV3RUIvd1FGTUFNQkFmOHdOZ1lEVlIwUgpCQzh3TFlJcllXZHZibVZ6TFdOdmJuUnliMnhzWlhJdGMyVnlkbWxqWlM1aFoyOXVaWE10YzNsemRHVnRMbk4yCll6QU5CZ2txaGtpRzl3MEJBUXNGQUFPQ0FRRUFWQTUxU3dNcEhZY20zUnRuc2I5MkgwUTZYT1ZndEJzSWRaY1QKbFBuSmFBSGdybEt2SnhiMU0rdTdQYllDZkZOTWlUTStyWGZ5cWtJRXY3VU1aN0dWeS9CYm9zTk1sb2M0UHJjaAo3RnVlai9zVnArcW1GT1c0VzlPVTFwcytqWm5vcHJ4Z3R1OVgzbmpBZjZiWWVqQWMzaVo0Q0xpem8vMDd2Qk94CnA5L3J4R0FjSVVjQW04Y3hXa01kaEduNnZOYkNFcXJoVTRJdnZSYlMwVnlrckhPY3RGM25raC9GbnRHQU80RDEKUEgrUThSQXBNK2xBeGtXcFIvNXlHTXdLM05WcS9kc2JaclQ5RHhId0hUU2tqL3JXZVRrWmxIN042MHpZL3JqbwpNUjBJNEtOWHl3WElTcGdNbE93dkxPdGY2aUNYeHJDNyt1RjdyQmxCei9tSUNxYnR0dz09Ci0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K
+    objectSelector:
+      matchLabels:
+        agones.dev/port: "autopilot-passthrough"
+    rules:
+      - apiGroups:
+          - ""
+        resources:
+          - "pods"
+        apiVersions:
+          - "v1"
+        operations:
+          - CREATE
+---
 # Source: agones/templates/priority-class.yaml
 apiVersion: scheduling.k8s.io/v1
 kind: PriorityClass

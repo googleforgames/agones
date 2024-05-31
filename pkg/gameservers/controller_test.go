@@ -57,6 +57,7 @@ const (
 )
 
 var GameServerKind = metav1.GroupVersionKind(agonesv1.SchemeGroupVersion.WithKind("GameServer"))
+var PodKind = corev1.SchemeGroupVersion.WithKind("Pod")
 
 func TestControllerSyncGameServer(t *testing.T) {
 	t.Parallel()
@@ -435,7 +436,7 @@ func TestControllerCreationMutationHandler(t *testing.T) {
 			expected: expected{
 				responseAllowed: true,
 				patches: []jsonpatch.JsonPatchOperation{
-					{Operation: "add", Path: "/metadata/finalizers", Value: []interface{}{"agones.dev"}},
+					{Operation: "add", Path: "/metadata/finalizers", Value: []interface{}{"agones.dev/controller"}},
 					{Operation: "add", Path: "/spec/ports/0/protocol", Value: "UDP"}},
 			},
 		},
@@ -577,6 +578,54 @@ func TestControllerCreationValidationHandler(t *testing.T) {
 		if assert.Error(t, err) {
 			assert.Equal(t, `error unmarshalling GameServer json after schema validation: "WRONG DATA": json: cannot unmarshal string into Go value of type v1.GameServer`, err.Error())
 		}
+	})
+}
+
+func TestControllerCreationMutationHandlerPod(t *testing.T) {
+	t.Parallel()
+	ext := newFakeExtensions()
+
+	type expected struct {
+		patches []jsonpatch.JsonPatchOperation
+	}
+
+	t.Run("valid pod mutation for Passthrough portPolicy, containerPort should be the same as hostPort", func(t *testing.T) {
+		gameServerHostPort := float64(newPassthroughPortSingleContainerSpec().Containers[1].Ports[0].HostPort)
+		fixture := &corev1.Pod{Spec: newPassthroughPortSingleContainerSpec()}
+		raw, err := json.Marshal(fixture)
+		require.NoError(t, err)
+		review := admissionv1.AdmissionReview{
+			Request: &admissionv1.AdmissionRequest{
+				Kind:      metav1.GroupVersionKind(PodKind),
+				Operation: admissionv1.Create,
+				Object: runtime.RawExtension{
+					Raw: raw,
+				},
+			},
+			Response: &admissionv1.AdmissionResponse{Allowed: true},
+		}
+		expected := expected{
+			patches: []jsonpatch.JsonPatchOperation{
+				{Operation: "replace", Path: "/spec/containers/1/ports/0/containerPort", Value: gameServerHostPort}},
+		}
+
+		result, err := ext.creationMutationHandlerPod(review)
+		assert.NoError(t, err)
+		patch := &jsonpatch.ByPath{}
+		err = json.Unmarshal(result.Response.Patch, patch)
+		found := false
+
+		for _, expected := range expected.patches {
+			for _, p := range *patch {
+				if assert.ObjectsAreEqual(p, expected) {
+					found = true
+				}
+			}
+			assert.True(t, found, "Could not find operation %#v in patch %v", expected, *patch)
+		}
+
+		require.NoError(t, err)
+
 	})
 }
 
@@ -2223,5 +2272,18 @@ func newSingleContainerSpec() agonesv1.GameServerSpec {
 				Containers: []corev1.Container{{Name: "container", Image: "container/image"}},
 			},
 		},
+	}
+}
+
+func newPassthroughPortSingleContainerSpec() corev1.PodSpec {
+	return corev1.PodSpec{
+		Containers: []corev1.Container{
+			{Name: "agones-gameserver-sidecar",
+				Image: "container/image",
+				Env:   []corev1.EnvVar{{Name: passthroughPortEnvVar, Value: "TRUE"}}},
+			{Name: "simple-game-server",
+				Image: "container2/image",
+				Ports: []corev1.ContainerPort{{HostPort: 7777, ContainerPort: 555}},
+				Env:   []corev1.EnvVar{{Name: passthroughPortEnvVar, Value: "TRUE"}}}},
 	}
 }
