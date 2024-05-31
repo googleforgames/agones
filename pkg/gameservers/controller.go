@@ -336,7 +336,8 @@ func (ext *Extensions) creationMutationHandlerPod(review admissionv1.AdmissionRe
 
 	annotation, ok := pod.ObjectMeta.Annotations[agonesv1.PassthroughPortAssignmentAnnotation]
 	if !ok {
-		ext.baseLogger.WithField("pod.Name", pod.Name).Debug("creationMutationHandlerPod, " + agonesv1.PassthroughPortAssignmentAnnotation + ": " + pod.ObjectMeta.Annotations[agonesv1.PassthroughPortAssignmentAnnotation])
+		ext.baseLogger.WithField("pod.Name", pod.Name).Info("the agones.dev/container-passthrough-port-assignment annotation is empty and it's unexpected")
+		return review, nil
 	}
 
 	passthroughPortAssignmentMap := make(map[string][]int)

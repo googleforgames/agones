@@ -15,7 +15,6 @@
 package v1
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 	"testing"
@@ -1531,23 +1530,14 @@ func TestGameServerPassthroughPortAnnotation(t *testing.T) {
 		},
 	}}
 
-	passthroughContainerPortMap := make(map[string][]int)
-	passthroughContainerPortMap["containerOne"] = append(passthroughContainerPortMap["containerOne"], 1)
-	passthroughContainerPortMap["containerTwo"] = append(passthroughContainerPortMap["containerTwo"], 0)
-	passthroughContainerPortMap["containerThree"] = append(passthroughContainerPortMap["containerThree"], 3)
-	passthroughContainerPortMap["containerFour"] = append(passthroughContainerPortMap["containerFour"], 0)
-	var containerToPassthroughMapJSON []byte
-	containerToPassthroughMapJSON, err := json.Marshal(passthroughContainerPortMap)
-	if err != nil {
-		assert.NoError(t, err)
-	}
+	passthroughContainerPortMap := "{\"containerFour\":[0],\"containerOne\":[1],\"containerThree\":[3],\"containerTwo\":[0]}"
 
 	gs.ApplyDefaults()
 	pod, err := gs.Pod(fakeAPIHooks{})
 	assert.NoError(t, err)
 	assert.Len(t, pod.Spec.Containers, 4)
 	assert.Empty(t, pod.Spec.Containers[0].VolumeMounts)
-	assert.Equal(t, pod.ObjectMeta.Annotations[PassthroughPortAssignmentAnnotation], string(containerToPassthroughMapJSON))
+	assert.Equal(t, pod.ObjectMeta.Annotations[PassthroughPortAssignmentAnnotation], passthroughContainerPortMap)
 
 	err = gs.DisableServiceAccount(pod)
 	assert.NoError(t, err)
