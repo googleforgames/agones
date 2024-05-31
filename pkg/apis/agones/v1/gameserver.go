@@ -715,13 +715,6 @@ func (gss *GameServerSpec) FindContainer(name string) (int, corev1.Container, er
 	return -1, corev1.Container{}, errors.Errorf("Could not find a container named %s", name)
 }
 
-// FindGameServerContainer returns the container that is specified in
-// gameServer.Spec.Container. Returns the index and the value.
-// Returns an error if not found
-func (gs *GameServer) FindGameServerContainer() (int, corev1.Container, error) {
-	return gs.Spec.FindContainer(gs.Spec.Container)
-}
-
 // ApplyToPodContainer applies func(v1.Container) to the specified container in the pod.
 // Returns an error if the container is not found.
 func (gs *GameServer) ApplyToPodContainer(pod *corev1.Pod, containerName string, f func(corev1.Container) corev1.Container) error {
