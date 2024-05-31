@@ -165,7 +165,7 @@ run-sdk-conformance-test-cpp:
 	$(MAKE) run-sdk-conformance-test SDK_FOLDER=cpp GRPC_PORT=9003 HTTP_PORT=9103
 
 run-sdk-conformance-test-node:
-	# run with on-by-default (Beta) feature flags enabled
+	# run with on-by-default (Beta) feature flags enabled. If running locally first run `SDK_FOLDER=node make test-sdk` to build dependencies.
 	$(MAKE) run-sdk-conformance-test SDK_FOLDER=node GRPC_PORT=9002 HTTP_PORT=9102 TESTS=$(DEFAULT_CONFORMANCE_TESTS),$(COUNTS_AND_LISTS_TESTS)
 
 run-sdk-conformance-test-go:
