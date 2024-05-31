@@ -87,6 +87,26 @@ kubectl create -f gameserver.yaml
 kubectl apply -f gameserver.yaml
 ```
 
+{{< alert title="Note" color="info">}}
+If you changed `main.go` again and want to apply the changes to the new game servers, then you also need 
+to modify the `gamerserver.yaml` file's `imagePullPolicy` to be `Always`, or else the new game servers might
+only pull a cached version of the image, which doesn't have the new changes. See the documentation for
+[ImagePullPolicy](https://kubernetes.io/docs/concepts/containers/images/#updating-images) for more details.
+  ```yaml
+  spec:
+  containers:
+  - name: simple-game-server
+    image: ${REGISTRY}/simple-game-server:${TAG}
+    imagePullPolicy: Always
+  ```
+
+Alternatively, you can also manually increment the `version` field in the `Makefile` file and change the `TAG`
+variable accordingly. However this is more cumbersome because you need to increment the `version` field each
+time you want to see a new change reflected in `main.go`, so it is usually less preferred during code development.
+However, after finishing all the planned changes, you should instead increment the `version` field and remove
+the `imagePullPolicy: Always` line  to show that the game server has a new version that includes those changes.
+{{< /alert >}}
+
 ### Check the GameServer Status
 ```bash
 kubectl describe gameserver
