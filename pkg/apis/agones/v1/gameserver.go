@@ -156,6 +156,9 @@ const (
 	// NodePodIP identifies an IP address from a pod.
 	NodePodIP corev1.NodeAddressType = "PodIP"
 
+	// PassthroughPortAssignmentAnnotation is an annotation to keep track of game server container and its Passthrough ports indices
+	PassthroughPortAssignmentAnnotation = "agones.dev/container-passthrough-port-assignment"
+
 	// True is the string "true" to appease the goconst lint.
 	True = "true"
 	// False is the string "false" to appease the goconst lint.
@@ -738,8 +741,11 @@ func (gs *GameServer) Pod(apiHooks APIHooks, sidecars ...corev1.Container) (*cor
 	}
 
 	gs.podObjectMeta(pod)
+
+	passthroughContainerPortMap := make(map[string][]int)
 	for _, p := range gs.Spec.Ports {
 		var hostPort int32
+		portIdx := 0
 
 		if !runtime.FeatureEnabled(runtime.FeaturePortPolicyNone) || p.PortPolicy != None {
 			hostPort = p.HostPort
@@ -751,6 +757,7 @@ func (gs *GameServer) Pod(apiHooks APIHooks, sidecars ...corev1.Container) (*cor
 			Protocol:      p.Protocol,
 		}
 		err := gs.ApplyToPodContainer(pod, *p.Container, func(c corev1.Container) corev1.Container {
+			portIdx = len(c.Ports)
 			c.Ports = append(c.Ports, cp)
 
 			return c
@@ -758,7 +765,19 @@ func (gs *GameServer) Pod(apiHooks APIHooks, sidecars ...corev1.Container) (*cor
 		if err != nil {
 			return nil, err
 		}
+		if runtime.FeatureEnabled(runtime.FeatureAutopilotPassthroughPort) && p.PortPolicy == Passthrough {
+			passthroughContainerPortMap[*p.Container] = append(passthroughContainerPortMap[*p.Container], portIdx)
+		}
 	}
+
+	if len(passthroughContainerPortMap) != 0 {
+		containerToPassthroughMapJSON, err := json.Marshal(passthroughContainerPortMap)
+		if err != nil {
+			return nil, err
+		}
+		pod.ObjectMeta.Annotations[PassthroughPortAssignmentAnnotation] = string(containerToPassthroughMapJSON)
+	}
+
 	// Put the sidecars at the start of the list of containers so that the kubelet starts them first.
 	containers := make([]corev1.Container, 0, len(sidecars)+len(pod.Spec.Containers))
 	containers = append(containers, sidecars...)

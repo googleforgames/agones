@@ -590,8 +590,10 @@ func TestControllerCreationMutationHandlerPod(t *testing.T) {
 	}
 
 	t.Run("valid pod mutation for Passthrough portPolicy, containerPort should be the same as hostPort", func(t *testing.T) {
-		gameServerHostPort := float64(newPassthroughPortSingleContainerSpec().Containers[1].Ports[0].HostPort)
-		fixture := &corev1.Pod{Spec: newPassthroughPortSingleContainerSpec()}
+		gameServerHostPort0 := float64(newPassthroughPortSingleContainerSpec().Spec.Containers[1].Ports[0].HostPort)
+		gameServerHostPort2 := float64(newPassthroughPortSingleContainerSpec().Spec.Containers[1].Ports[1].HostPort)
+		gameServerHostPort3 := float64(newPassthroughPortSingleContainerSpec().Spec.Containers[2].Ports[0].HostPort)
+		fixture := newPassthroughPortSingleContainerSpec()
 		raw, err := json.Marshal(fixture)
 		require.NoError(t, err)
 		review := admissionv1.AdmissionReview{
@@ -606,7 +608,9 @@ func TestControllerCreationMutationHandlerPod(t *testing.T) {
 		}
 		expected := expected{
 			patches: []jsonpatch.JsonPatchOperation{
-				{Operation: "replace", Path: "/spec/containers/1/ports/0/containerPort", Value: gameServerHostPort}},
+				{Operation: "replace", Path: "/spec/containers/1/ports/0/containerPort", Value: gameServerHostPort0},
+				{Operation: "replace", Path: "/spec/containers/1/ports/1/containerPort", Value: gameServerHostPort2},
+				{Operation: "replace", Path: "/spec/containers/2/ports/0/containerPort", Value: gameServerHostPort3}},
 		}
 
 		result, err := ext.creationMutationHandlerPod(review)
@@ -2275,15 +2279,32 @@ func newSingleContainerSpec() agonesv1.GameServerSpec {
 	}
 }
 
-func newPassthroughPortSingleContainerSpec() corev1.PodSpec {
-	return corev1.PodSpec{
-		Containers: []corev1.Container{
-			{Name: "agones-gameserver-sidecar",
-				Image: "container/image",
-				Env:   []corev1.EnvVar{{Name: passthroughPortEnvVar, Value: "TRUE"}}},
-			{Name: "simple-game-server",
-				Image: "container2/image",
-				Ports: []corev1.ContainerPort{{HostPort: 7777, ContainerPort: 555}},
-				Env:   []corev1.EnvVar{{Name: passthroughPortEnvVar, Value: "TRUE"}}}},
+// Assume container ports 0 and 1 are Passthrough ports for "example-server" container and container port 0 for "example-server-two"
+// The annotation would look like autopilot.gke.io/passthrough-port-assignment: '{"example-server":["0","1"], "example-server-two":[0]}'
+func newPassthroughPortSingleContainerSpec() corev1.Pod {
+	passthroughContainerPortMap := "{\"example-server\":[0,1],\"example-server-two\":[0]}"
+	return corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Annotations: map[string]string{agonesv1.PassthroughPortAssignmentAnnotation: passthroughContainerPortMap},
+		},
+		Spec: corev1.PodSpec{
+			Containers: []corev1.Container{
+				{Name: "agones-gameserver-sidecar",
+					Image: "container/image",
+					Env:   []corev1.EnvVar{{Name: passthroughPortEnvVar, Value: "TRUE"}}},
+				{Name: "example-server",
+					Image: "container2/image",
+					Ports: []corev1.ContainerPort{
+						{HostPort: 7777, ContainerPort: 5555},
+						{HostPort: 7776, ContainerPort: 7797},
+						{HostPort: 7775, ContainerPort: 7793}},
+					Env: []corev1.EnvVar{{Name: passthroughPortEnvVar, Value: "TRUE"}}},
+				{Name: "example-server-two",
+					Image: "container3/image",
+					Ports: []corev1.ContainerPort{
+						{HostPort: 7745, ContainerPort: 7983},
+						{HostPort: 7312, ContainerPort: 7364}},
+					Env: []corev1.EnvVar{{Name: passthroughPortEnvVar, Value: "TRUE"}}}},
+		},
 	}
 }
