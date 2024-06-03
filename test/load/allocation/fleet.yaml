@@ -33,7 +33,7 @@ spec:
         spec:
           containers:
             - args: [-automaticShutdownDelaySec=600]
-              image: us-docker.pkg.dev/agones-images/examples/simple-game-server:0.33
+              image: us-central1-docker.pkg.dev/agones-ashutoshnsingh/example/simple-game-server:0.33-dev-linux-amd64
               name: simple-game-server
               resources:
                 limits:

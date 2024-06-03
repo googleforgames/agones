@@ -69,9 +69,6 @@ func handleResponse(txt string, s *sdk.SDK, cancel context.CancelFunc) (response
 	responseError = nil
 
 	handler, exists := responseMap[parts[0]]
-	if exists && parts[0] == "EXIT" {
-		return response, addACK, responseError
-	}
 	if !exists {
 		return response, addACK, responseError
 	}
@@ -84,10 +81,12 @@ func handleResponse(txt string, s *sdk.SDK, cancel context.CancelFunc) (response
 
 func handleExit(s *sdk.SDK, parts []string, _ ...context.CancelFunc) (response string, addACK bool, responseError error) {
 	// handle elsewhere, as we respond before exiting
+	response, addACK = defaultReply(parts)
 	return
 }
 
 func handleUnhealthy(s *sdk.SDK, parts []string, cancel ...context.CancelFunc) (response string, addACK bool, responseError error) {
+	response, addACK = defaultReply(parts)
 	if len(cancel) > 0 {
 		cancel[0]() // Invoke cancel function if provided
 	}
@@ -113,6 +112,7 @@ func handleGameServer(s *sdk.SDK, parts []string, _ ...context.CancelFunc) (resp
 
 // handleReady attempts to mark this gameserver as ready
 func handleReady(s *sdk.SDK, parts []string, _ ...context.CancelFunc) (response string, addACK bool, responseError error) {
+	response, addACK = defaultReply(parts)
 	err := s.Ready()
 	if err != nil {
 		log.Fatalf("Could not send ready message: %v", err)
@@ -122,6 +122,7 @@ func handleReady(s *sdk.SDK, parts []string, _ ...context.CancelFunc) (response 
 
 // handleAllocate attempts to allocate this gameserver
 func handleAllocate(s *sdk.SDK, parts []string, _ ...context.CancelFunc) (response string, addACK bool, responseError error) {
+	response, addACK = defaultReply(parts)
 	err := s.Allocate()
 	if err != nil {
 		log.Fatalf("could not allocate gameserver: %v", err)
@@ -131,13 +132,18 @@ func handleAllocate(s *sdk.SDK, parts []string, _ ...context.CancelFunc) (respon
 
 // handleReserve reserve for 10 seconds
 func handleReserve(s *sdk.SDK, parts []string, _ ...context.CancelFunc) (response string, addACK bool, responseError error) {
+	response, addACK = defaultReply(parts)
 	if len(parts) != 2 {
 		response = "Invalid RESERVE, should have 1 argument"
 		responseError = fmt.Errorf("Invalid RESERVE, should have 1 argument")
+		addACK = false
+		return
 	}
 	if dur, err := time.ParseDuration(parts[1]); err != nil {
 		response = fmt.Sprintf("%s\n", err)
 		responseError = err
+		addACK = false
+		return
 	} else {
 		err := s.Reserve(dur)
 		if err != nil {
@@ -150,6 +156,7 @@ func handleReserve(s *sdk.SDK, parts []string, _ ...context.CancelFunc) (respons
 // handleWatch creates a callback to log when
 // gameserver events occur
 func handleWatch(s *sdk.SDK, parts []string, _ ...context.CancelFunc) (response string, addACK bool, responseError error) {
+	response, addACK = defaultReply(parts)
 	err := s.WatchGameServer(func(gs *coresdk.GameServer) {
 		j, err := json.Marshal(gs)
 		if err != nil {
@@ -164,11 +171,12 @@ func handleWatch(s *sdk.SDK, parts []string, _ ...context.CancelFunc) (response 
 }
 
 func handleLabel(s *sdk.SDK, parts []string, _ ...context.CancelFunc) (response string, addACK bool, responseError error) {
+	response, addACK = defaultReply(parts)
 	switch len(parts) {
-	case 0:
+	case 1:
 		// Legacy format
 		setLabel(s, "timestamp", strconv.FormatInt(time.Now().Unix(), 10))
-	case 2:
+	case 3:
 		setLabel(s, parts[1], parts[2])
 	default:
 		response = "Invalid LABEL command, must use zero or 2 arguments"
@@ -184,11 +192,12 @@ func handleCrash(s *sdk.SDK, parts []string, _ ...context.CancelFunc) (response 
 }
 
 func handleAnnotation(s *sdk.SDK, parts []string, _ ...context.CancelFunc) (response string, addACK bool, responseError error) {
+	response, addACK = defaultReply(parts)
 	switch len(parts) {
 	case 1:
 		// Legacy format
 		setAnnotation(s, "timestamp", time.Now().UTC().String())
-	case 2:
+	case 3:
 		setAnnotation(s, parts[1], parts[2])
 	default:
 		response = "Invalid ANNOTATION command, must use zero or 2 arguments"
@@ -210,7 +219,7 @@ func handlePlayerCapacity(s *sdk.SDK, parts []string, _ ...context.CancelFunc) (
 		response = strconv.FormatInt(capacity, 10) + "\n"
 		addACK = false
 	case 2:
-		if cap, err := strconv.Atoi(parts[0]); err != nil {
+		if cap, err := strconv.Atoi(parts[1]); err != nil {
 			response = fmt.Sprintf("%s", err)
 			responseError = err
 		} else {
@@ -307,6 +316,7 @@ func handleGetCounterCount(s *sdk.SDK, parts []string, _ ...context.CancelFunc) 
 	if err != nil {
 		log.Printf("Error getting Counter %s Count: %s", parts[1], err)
 		response, responseError = strconv.FormatInt(count, 10), err
+		return
 	}
 	response, responseError = "COUNTER: "+strconv.FormatInt(count, 10)+"\n", nil
 	addACK = false
@@ -323,15 +333,16 @@ func handleIncrementCounter(s *sdk.SDK, parts []string, _ ...context.CancelFunc)
 	amountInt, err := strconv.ParseInt(parts[2], 10, 64)
 	if err != nil {
 		response, responseError = "", fmt.Errorf("Could not increment Counter %s by unparseable amount %s: %s", parts[1], parts[2], err)
+		return
 	}
 	log.Printf("Incrementing Counter %s Count by amount %d", parts[1], amountInt)
 	err = s.Beta().IncrementCounter(parts[1], amountInt)
 	if err != nil {
 		log.Printf("Error incrementing Counter %s Count by amount %d: %s", parts[1], amountInt, err)
 		response, responseError = "", err
+		return
 	}
 	response, responseError = "SUCCESS\n", nil
-	addACK = false
 	return
 }
 
@@ -345,15 +356,16 @@ func handleDecrementCounter(s *sdk.SDK, parts []string, _ ...context.CancelFunc)
 	amountInt, err := strconv.ParseInt(parts[2], 10, 64)
 	if err != nil {
 		response, responseError = "", fmt.Errorf("could not decrement Counter %s by unparseable amount %s: %s", parts[1], parts[2], err)
+		return
 	}
 	log.Printf("Decrementing Counter %s Count by amount %d", parts[1], amountInt)
 	err = s.Beta().DecrementCounter(parts[1], amountInt)
 	if err != nil {
 		log.Printf("Error decrementing Counter %s Count by amount %d: %s", parts[1], amountInt, err)
 		response, responseError = "", err
+		return
 	}
 	response, responseError = "SUCCESS\n", nil
-	addACK = false
 	return
 }
 
@@ -367,15 +379,16 @@ func handleSetCounterCount(s *sdk.SDK, parts []string, _ ...context.CancelFunc) 
 	amountInt, err := strconv.ParseInt(parts[2], 10, 64)
 	if err != nil {
 		response, responseError = "", fmt.Errorf("could not set Counter %s to unparseable amount %s: %s", parts[1], parts[2], err)
+		return
 	}
 	log.Printf("Setting Counter %s Count to amount %d", parts[1], amountInt)
 	err = s.Beta().SetCounterCount(parts[1], amountInt)
 	if err != nil {
 		log.Printf("Error setting Counter %s Count by amount %d: %s", parts[1], amountInt, err)
 		response, responseError = "", err
+		return
 	}
 	response, responseError = "SUCCESS\n", nil
-	addACK = false
 	return
 }
 
@@ -391,9 +404,9 @@ func handleGetCounterCapacity(s *sdk.SDK, parts []string, _ ...context.CancelFun
 	if err != nil {
 		log.Printf("Error getting Counter %s Capacity: %s", parts[1], err)
 		response, responseError = strconv.FormatInt(count, 10), err
+		return
 	}
 	response, responseError = "CAPACITY: "+strconv.FormatInt(count, 10)+"\n", nil
-	addACK = false
 	return
 }
 
@@ -407,15 +420,16 @@ func handleSetCounterCapacity(s *sdk.SDK, parts []string, _ ...context.CancelFun
 	amountInt, err := strconv.ParseInt(parts[2], 10, 64)
 	if err != nil {
 		response, responseError = "", fmt.Errorf("could not set Counter %s to unparseable amount %s: %s", parts[1], parts[2], err)
+		return
 	}
 	log.Printf("Setting Counter %s Capacity to amount %d", parts[1], amountInt)
 	err = s.Beta().SetCounterCapacity(parts[1], amountInt)
 	if err != nil {
 		log.Printf("Error setting Counter %s Capacity to amount %d: %s", parts[1], amountInt, err)
 		response, responseError = "", err
+		return
 	}
 	response, responseError = "SUCCESS\n", nil
-	addACK = false
 	return
 }
 
@@ -431,9 +445,9 @@ func handleGetListCapacity(s *sdk.SDK, parts []string, _ ...context.CancelFunc) 
 	if err != nil {
 		log.Printf("Error getting List %s Capacity: %s", parts[1], err)
 		response, responseError = strconv.FormatInt(capacity, 10), err
+		return
 	}
 	response, responseError = "CAPACITY: "+strconv.FormatInt(capacity, 10)+"\n", nil
-	addACK = false
 	return
 }
 
@@ -447,15 +461,16 @@ func handleSetListCapacity(s *sdk.SDK, parts []string, _ ...context.CancelFunc) 
 	amountInt, err := strconv.ParseInt(parts[2], 10, 64)
 	if err != nil {
 		response, responseError = "", fmt.Errorf("could not set List %s to unparseable amount %s: %s", parts[1], parts[2], err)
+		return
 	}
 	log.Printf("Setting List %s Capacity to amount %d", parts[1], amountInt)
 	err = s.Beta().SetListCapacity(parts[1], amountInt)
 	if err != nil {
 		log.Printf("Error setting List %s Capacity to amount %d: %s", parts[1], amountInt, err)
 		response, responseError = "", err
+		return
 	}
 	response, responseError = "SUCCESS\n", nil
-	addACK = false
 	return
 }
 
@@ -471,9 +486,9 @@ func handleListContains(s *sdk.SDK, parts []string, _ ...context.CancelFunc) (re
 	if err != nil {
 		log.Printf("Error getting List %s contains value %s: %s", parts[1], parts[2], err)
 		response, responseError = strconv.FormatBool(ok), err
+		return
 	}
 	response, responseError = "FOUND: "+strconv.FormatBool(ok)+"\n", nil
-	addACK = false
 	return
 }
 
@@ -489,9 +504,9 @@ func handleGetListLength(s *sdk.SDK, parts []string, _ ...context.CancelFunc) (r
 	if err != nil {
 		log.Printf("Error getting List %s length: %s", parts[1], err)
 		response, responseError = strconv.Itoa(length), err
+		return
 	}
 	response, responseError = "LENGTH: "+strconv.Itoa(length)+"\n", nil
-	addACK = false
 	return
 }
 
@@ -507,12 +522,13 @@ func handleGetListValues(s *sdk.SDK, parts []string, _ ...context.CancelFunc) (r
 	if err != nil {
 		log.Printf("Error getting List %s values: %s", parts[1], err)
 		response, responseError = "INVALID LIST NAME", err
+		return
 	}
 	if len(values) > 0 {
 		response, responseError = "VALUES: "+strings.Join(values, ",")+"\n", nil
+		return
 	}
 	response, responseError = "VALUES: <none>\n", nil
-	addACK = false
 	return
 }
 
@@ -528,9 +544,9 @@ func handleAppendListValue(s *sdk.SDK, parts []string, _ ...context.CancelFunc) 
 	if err != nil {
 		log.Printf("Error appending Value %s to List %s: %s", parts[2], parts[1], err)
 		response, responseError = "", err
+		return
 	}
 	response, responseError = "SUCCESS\n", nil
-	addACK = false
 	return
 }
 
@@ -546,9 +562,9 @@ func handleDeleteListValue(s *sdk.SDK, parts []string, _ ...context.CancelFunc) 
 	if err != nil {
 		log.Printf("Error deleting Value %s to List %s: %s", parts[2], parts[1], err)
 		response, responseError = "", err
+		return
 	}
 	response, responseError = "SUCCESS\n", nil
-	addACK = false
 	return
 }
 
@@ -581,4 +597,11 @@ func exit(s *sdk.SDK) {
 	}
 	// The process will exit when Agones removes the pod and the
 	// container receives the SIGTERM signal
+}
+
+// defaultReply is default handler response
+func defaultReply(parts []string) (string, bool) {
+	response := strings.Join(parts, " ")
+	addACK := true
+	return response, addACK
 }
