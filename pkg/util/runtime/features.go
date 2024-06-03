@@ -44,6 +44,9 @@ const (
 	////////////////
 	// Alpha features
 
+	// FeatureAutopilotPassthroughPort is a feature flag that enables/disables Passthrough Port Policy.
+	FeatureAutopilotPassthroughPort Feature = "AutopilotPassthroughPort"
+
 	// FeatureGKEAutopilotExtendedDurationPods enables the use of Extended Duration pods
 	// when Agones is running on Autopilot. Available on 1.28+ only.
 	FeatureGKEAutopilotExtendedDurationPods = "GKEAutopilotExtendedDurationPods"
@@ -66,9 +69,6 @@ const (
 
 	////////////////
 	// Dev features
-
-	// FeatureAutopilotPassthroughPort is a feature flag that enables/disables Passthrough Port Policy.
-	FeatureAutopilotPassthroughPort Feature = "PassthroughPortPolicy"
 
 	////////////////
 	// Example feature
@@ -132,6 +132,7 @@ var (
 		FeatureDisableResyncOnSDKServer: true,
 
 		// Alpha features
+		FeatureAutopilotPassthroughPort:         false,
 		FeatureGKEAutopilotExtendedDurationPods: false,
 		FeaturePlayerAllocationFilter:           false,
 		FeaturePlayerTracking:                   false,
@@ -140,7 +141,6 @@ var (
 		FeaturePortPolicyNone:                   false,
 
 		// Dev features
-		FeatureAutopilotPassthroughPort: false,
 
 		// Example feature
 		FeatureExample: false,
