@@ -25,7 +25,7 @@ PlayerTracking: false
 RollingUpdateFix: false
 PortRanges: false
 PortPolicyNone: false
-FeatureAutopilotPassthroughPort: false
+AutopilotPassthroughPort: false
 
 # Dev features
 
