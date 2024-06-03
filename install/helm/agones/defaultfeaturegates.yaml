@@ -19,13 +19,13 @@ CountsAndLists: true
 DisableResyncOnSDKServer: true
 
 # Alpha features
+AutopilotPassthroughPort: false
 GKEAutopilotExtendedDurationPods: false
 PlayerAllocationFilter: false
 PlayerTracking: false
 RollingUpdateFix: false
 PortRanges: false
 PortPolicyNone: false
-AutopilotPassthroughPort: false
 
 # Dev features
 
