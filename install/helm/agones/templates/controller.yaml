@@ -103,6 +103,8 @@ spec:
       - name: agones-controller
         image: "{{ .Values.agones.image.registry }}/{{ .Values.agones.image.controller.name}}:{{ default .Values.agones.image.tag .Values.agones.image.controller.tag }}"
         imagePullPolicy: {{ .Values.agones.image.controller.pullPolicy }}
+        securityContext:
+          runAsNonRoot: true
         env:
         # minimum port that can be exposed to GameServer traffic
         - name: MIN_PORT
