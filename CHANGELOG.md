@@ -1,5 +1,63 @@
 # Changelog
 
+## [v1.41.0](https://github.com/googleforgames/agones/tree/v1.41.0) (2024-06-04)
+
+[Full Changelog](https://github.com/googleforgames/agones/compare/v1.40.0...v1.41.0)
+
+**Implemented enhancements:**
+- Configure Allocator Status Code by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3782
+- Graduate Counters and Lists to Beta by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3801
+- Passthrough autopilot - Adds an AutopilotPassthroughPort Feature Gate and new pod label by @vicentefb in https://github.com/googleforgames/agones/pull/3809
+- CountsAndLists: Move to Beta Protobuf by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3806
+- feat: support multiple port ranges by @nrwiersma in https://github.com/googleforgames/agones/pull/3747
+- Changes `sdk-server` to Patch instead of Update by @igooch in https://github.com/googleforgames/agones/pull/3803
+- Generate grpc for nodejs from alpha to beta by @lacroixthomas in https://github.com/googleforgames/agones/pull/3825
+- Update CountsAndLists from Alpha to Beta by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3824
+- feat(gameserver): New DirectToGameServer PortPolicy allows direct traffic to a GameServer by @daniellee in https://github.com/googleforgames/agones/pull/3807
+- Passthrough autopilot - Adds mutating webhook by @vicentefb in https://github.com/googleforgames/agones/pull/3833
+- Passthrough autopilot - added ports array case and updated unit tests by @vicentefb in https://github.com/googleforgames/agones/pull/3842
+- Nodejs counters and lists by @steven-supersolid in https://github.com/googleforgames/agones/pull/3726
+- Promote AutopilotPassthroughPort feature gate to Alpha by @vicentefb in https://github.com/googleforgames/agones/pull/3849
+
+**Fixed bugs:**
+- Helm Param Update: Default to agones.controller if agones.extensions is Missing by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3773
+- fix: rollout strategy issues by @nrwiersma in https://github.com/googleforgames/agones/pull/3762
+- Set Minimum Buffer Size to 1 by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3749
+- Pin ltsc2019 to older SHA by @zmerlynn in https://github.com/googleforgames/agones/pull/3829
+- TestGameServerAllocationDuringMultipleAllocationClients: Readdress flake by @zmerlynn in https://github.com/googleforgames/agones/pull/3831
+- Refactor finalizer name to include valid domain name and path by @indexjoseph in https://github.com/googleforgames/agones/pull/3840
+- agones-{extensions,allocator}: Be more defensive about draining by @zmerlynn in https://github.com/googleforgames/agones/pull/3839
+- agones-{extensions,allocator}: Pause after cancelling context by @zmerlynn in https://github.com/googleforgames/agones/pull/3843
+- Change the line to modify in Quickstart: Edit a Game Server by @peterzhongyi in https://github.com/googleforgames/agones/pull/3844
+
+**Other:**
+- Prep for Release v1.41.0 by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3800
+- Update site documentation to reflect firewall prefix and default to Autopilot cluster creation for Agones by @vicentefb in https://github.com/googleforgames/agones/pull/3769
+- Add a System Diagram and overview page by @zmerlynn in https://github.com/googleforgames/agones/pull/3792
+- Update Side Menu: Preserve and Restore Scroll Position by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3805
+- fix: typo by @skmpf in https://github.com/googleforgames/agones/pull/3808
+- Helm Config: Add httpUnallocatedStatusCode in Allocator Service by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3802
+- Update Docs: CountersAndLists to Beta by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3810
+- Disable Dev feature FeatureAutopilotPassthroughPort by @vicentefb in https://github.com/googleforgames/agones/pull/3815
+- Disable FeatureAutopilotPassthroughPort in features.go by @vicentefb in https://github.com/googleforgames/agones/pull/3816
+- SDK proto compatibility guarantees and deprecation policies documentation by @igooch in https://github.com/googleforgames/agones/pull/3774
+- Fix dangling "as of" by @zmerlynn in https://github.com/googleforgames/agones/pull/3827
+- Steps to Promote SDK Features from Alpha to Beta by @Kalaiselvi84 in https://github.com/googleforgames/agones/pull/3814
+- Adds comment for help troubleshooting issues with terraform tfstate by @igooch in https://github.com/googleforgames/agones/pull/3822
+- docs: improve counter and list example comments by @yonbh in https://github.com/googleforgames/agones/pull/3818
+- Skip /tmp/ on yamllint by @zmerlynn in https://github.com/googleforgames/agones/pull/3838
+- TestAllocatorAfterDeleteReplica: More logging by @zmerlynn in https://github.com/googleforgames/agones/pull/3837
+- Instructions for upgrading golang version by @gongmax in https://github.com/googleforgames/agones/pull/3819
+- Remove unused function FindGameServerContainer by @zmerlynn in https://github.com/googleforgames/agones/pull/3841
+- Adds Unreal to the List of URL Links to Not Check by @igooch in https://github.com/googleforgames/agones/pull/3847
+- docs: clarify virtualization setup for Windows versions by @andresromerodev in https://github.com/googleforgames/agones/pull/3850
+
+**New Contributors:**
+- @skmpf made their first contribution in https://github.com/googleforgames/agones/pull/3808
+- @yonbh made their first contribution in https://github.com/googleforgames/agones/pull/3818
+- @peterzhongyi made their first contribution in https://github.com/googleforgames/agones/pull/3844
+- @andresromerodev made their first contribution in https://github.com/googleforgames/agones/pull/3850
+
 ## [v1.40.0](https://github.com/googleforgames/agones/tree/v1.40.0) (2024-04-23)
 
 [Full Changelog](https://github.com/googleforgames/agones/compare/v1.39.0...v1.40.0)
