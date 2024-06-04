@@ -105,6 +105,7 @@ spec:
         imagePullPolicy: {{ .Values.agones.image.controller.pullPolicy }}
         securityContext:
           runAsNonRoot: true
+          allowPrivilegeEscalation: false
         env:
         # minimum port that can be exposed to GameServer traffic
         - name: MIN_PORT

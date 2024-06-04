@@ -231,6 +231,7 @@ spec:
         imagePullPolicy: {{ .Values.agones.image.allocator.pullPolicy }}
         securityContext:
           runAsNonRoot: true
+          allowPrivilegeEscalation: false
         livenessProbe:
           httpGet:
             path: /live

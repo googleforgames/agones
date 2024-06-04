@@ -92,6 +92,7 @@ spec:
           imagePullPolicy: {{ .Values.agones.image.ping.pullPolicy }}
           securityContext:
             runAsNonRoot: true
+            allowPrivilegeEscalation: false
 {{- if .Values.agones.ping.resources }}
           resources:
 {{ toYaml .Values.agones.ping.resources | indent 12 }}
