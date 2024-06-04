@@ -52,37 +52,6 @@ The SDKs will automatically discover and connect to the gRPC port specified in t
 If your game server requires using a REST client, it is advised to use the port from the environment variable,
 otherwise your game server will not be able to contact the SDK server if it is configured to use a non-default port.
 
-{{% feature expiryVersion="1.41.0" %}}
-## Function Reference
-
-While each of the SDKs are canonical to their languages, they all have the following
-functions that implement the core responsibilities of the SDK.
-
-For language specific documentation, have a look at the respective source (linked above), 
-and the {{< ghlink href="examples" >}}examples{{< /ghlink >}}.
-
-Calling any of state changing functions mentioned below does not guarantee that GameServer Custom Resource object would actually change its state right after the call. For instance, it could be moved to the `Shutdown` state elsewhere (for example, when a fleet scales down), which leads to no changes in `GameServer` object. You can verify the result of this call by waiting for the desired state in a callback to WatchGameServer() function.
-
-Functions which changes GameServer state or settings are:
-
-1. Ready()
-2. Shutdown()
-3. SetLabel()
-4. SetAnnotation()
-5. Allocate()
-6. Reserve()
-7. Alpha().SetCapacity()
-8. Alpha().PlayerConnect()
-9. Alpha().PlayerDisconnect()
-10. Alpha().SetCounterCount()
-11. Alpha().IncrementCounter()
-12. Alpha().DecrementCounter()
-13. Alpha().SetCounterCapacity()
-14. Alpha().AppendListValue()
-15. Alpha().DeleteListValue()
-16. Alpha().SetListCapacity()
-{{% /feature %}}
-{{% feature publishVersion="1.41.0" %}}
 ## Function Reference
 
 While each of the SDKs are canonical to their languages, they all have the following
@@ -111,7 +80,6 @@ Functions which changes GameServer state or settings are:
 14. Beta().AppendListValue()
 15. Beta().DeleteListValue()
 16. Beta().SetListCapacity()
-{{% /feature %}}
 
 ### Lifecycle Management
 
@@ -262,12 +230,7 @@ observable through the Kubernetes API.
 
 ### Counters And Lists
 
-{{% feature expiryVersion="1.41.0" %}}
-{{< alpha title="Counters And Lists" gate="CountsAndLists" >}}
-{{% /feature %}}
-{{% feature publishVersion="1.41.0" %}}
 {{< beta title="Counters And Lists" gate="CountsAndLists" >}}
-{{% /feature %}}
 
 The `Counters` and `Lists` features in the SDK offer a flexible configuration for tracking various entities like 
 players, rooms, and sessions.
@@ -296,93 +259,6 @@ to the capacity of that Counter or List.
 
 {{% /alert %}}
 
-{{% feature expiryVersion="1.41.0" %}}
-#### Counters
-
-All functions will return an error if the specified `key` is not predefined in the 
-[`GameServer.Spec.Counters`][gameserverspec] resource configuration.
-
-**Note:** For Counters, the default setting for the capacity is preset to 1000. It is recommended to avoid configuring the capacity to max(int64), as doing so could cause problems with [JSON Patch operations](https://github.com/googleforgames/agones/issues/3636).
-
-##### Alpha().GetCounterCount(key)
-
-This function retrieves either the [`GameServer.Status.Counters[key].Count`][gameserverstatus] or the SDK awaiting-batch
-value for a given key, whichever is most up to date.
-
-##### Alpha().SetCounterCount(key, amount)
-
-This function sets the value of [`GameServer.Status.Counters[key].Count`][gameserverstatus] for the given key to the
-passed in amount. This operation overwrites any previous values and the new value cannot exceed the Counter's capacity.
-
-##### Alpha().IncrementCounter(key, amount)
-
-This function increments [`GameServer.Status.Counters[key].Count`][gameserverstatus] for the given key by the passed in
-non-negative amount. The function returns an error if the Counter is already at capacity (at time of operation),
-indicating no increment will occur.
-
-##### Alpha().DecrementCounter(key, amount)
-
-This function decreases [`GameServer.Status.Counters[key].Count`][gameserverstatus] for the given key by the passed in
-non-negative amount. It returns an error if the Counter's count is already at zero.
-
-##### Alpha().SetCounterCapacity(key, amount)
-
-This function sets the maximum [`GameServer.Status.Counters[key].Capacity`][gameserverstatus] for the given key by the
-passed in non-negative amount. A capacity value of 0 indicates no capacity limit.
-
-##### Alpha().GetCounterCapacity(key)
-
-This function retrieves either the [`GameServer.Status.Counters[key].Capacity`][gameserverstatus] or the SDK
-awaiting-batch value for the given key, whichever is most up to date.
-
-#### Lists
-
-All functions will return an error if the specified `key` is not predefined in the 
-[`GameServer.Spec.Lists`][gameserverspec] resource configuration.
-
-##### Alpha().AppendListValue(key, value)
-
-This function appends the specified string value to the List
-in [`GameServer.Status.Lists[key].Values`][gameserverstatus].
-
-An error is returned if the string already exists in the list or if the list is at capacity.
-
-##### Alpha().DeleteListValue(key, value)
-
-This function removes the specified string value from the List
-in [`GameServer.Status.Lists[key].Values`][gameserverstatus].
-
-An error is returned if the string does not exist in the list.
-
-##### Alpha().SetListCapacity(key, amount)
-
-This function sets the maximum capacity for the List at [`GameServer.Status.Lists[key].Capacity`][gameserverstatus].
-
-The capacity value is required to be between 0 and 1000.
-
-##### Alpha().GetListCapacity(key)
-
-This function retrieves either the [`GameServer.Status.Lists[key].Capacity`][gameserverstatus] or the SDK
-awaiting-batch value for the given key, whichever is most up to date.
-
-##### Alpha().GetListValues(key)
-
-This function retrieves either the [`GameServer.Status.Lists[key].Values`][gameserverstatus] or the SDK
-awaiting-batch values array for the given key, whichever is most up to date.
-
-##### Alpha().ListContains(key, value)
-
-Convenience function, which returns if the specific string value exists in the results
-of [`Alpha().GetListValues(key)`](#alphagetlistvalueskey).
-
-##### Alpha().GetListLength(key)
-
-Convenience function, which retrieves the length of the results of [`Alpha().GetListValues(key)`](#alphagetlistvalueskey).
-
-[gameserverspec]: {{< ref "/docs/Reference/agones_crd_api_reference.html#agones.dev/v1.GameServerSpec" >}}
-[gameserverstatus]: {{< ref "/docs/Reference/agones_crd_api_reference.html#agones.dev/v1.GameServerStatus" >}}
-{{% /feature %}}
-{{% feature publishVersion="1.41.0" %}}
 #### Counters
 
 All functions will return an error if the specified `key` is not predefined in the 
@@ -467,7 +343,6 @@ Convenience function, which retrieves the length of the results of [`Beta().GetL
 
 [gameserverspec]: {{< ref "/docs/Reference/agones_crd_api_reference.html#agones.dev/v1.GameServerSpec" >}}
 [gameserverstatus]: {{< ref "/docs/Reference/agones_crd_api_reference.html#agones.dev/v1.GameServerStatus" >}}
-{{% /feature %}}
 
 ### Player Tracking
 
