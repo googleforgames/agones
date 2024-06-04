@@ -1,4 +1,13 @@
 ---
+# Source: agones/templates/priority-class.yaml
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: agones-system
+value: 1000000
+globalDefault: false
+description: "This priority class should be used for Agones service pods only."
+---
 # Source: agones/templates/controller.yaml
 apiVersion: policy/v1
 kind: PodDisruptionBudget
@@ -17061,6 +17070,8 @@ spec:
       - name: agones-controller
         image: "us-docker.pkg.dev/agones-images/release/agones-controller:1.41.0-dev"
         imagePullPolicy: IfNotPresent
+        securityContext:
+          runAsNonRoot: true
         env:
         # minimum port that can be exposed to GameServer traffic
         - name: MIN_PORT
@@ -17221,6 +17232,8 @@ spec:
       - name: agones-extensions
         image: "us-docker.pkg.dev/agones-images/release/agones-extensions:1.41.0-dev"
         imagePullPolicy: IfNotPresent
+        securityContext:
+          runAsNonRoot: true
         env:
         - name: PROMETHEUS_EXPORTER
           value: "true"
@@ -17358,6 +17371,8 @@ spec:
         - name: agones-ping
           image: "us-docker.pkg.dev/agones-images/release/agones-ping:1.41.0-dev"
           imagePullPolicy: IfNotPresent
+          securityContext:
+            runAsNonRoot: true
           livenessProbe:
             httpGet:
               port: 8080
@@ -17432,6 +17447,8 @@ spec:
       - name: agones-allocator
         image: "us-docker.pkg.dev/agones-images/release/agones-allocator:1.41.0-dev"
         imagePullPolicy: IfNotPresent
+        securityContext:
+          runAsNonRoot: true
         livenessProbe:
           httpGet:
             path: /live
@@ -17634,15 +17651,6 @@ webhooks:
           - "v1"
         operations:
           - CREATE
----
-# Source: agones/templates/priority-class.yaml
-apiVersion: scheduling.k8s.io/v1
-kind: PriorityClass
-metadata:
-  name: agones-system
-value: 1000000
-globalDefault: false
-description: "This priority class should be used for Agones service pods only."
 ---
 # Source: agones/templates/extensions.yaml
 apiVersion: admissionregistration.k8s.io/v1
