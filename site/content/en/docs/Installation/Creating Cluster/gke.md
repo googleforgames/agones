@@ -126,10 +126,8 @@ whether these constraints impact your workloads:
    supported.
 *  **[Host port policy]({{<ref "/docs/reference/agones_crd_api_reference#agones.dev/v1.GameServerPort">}}):** `Dynamic` is supported, which is the Agones default.
    `Static` and `Passthrough` are not supported.
-{{% feature publishVersion="1.41.0" %}}
 *  **[Port range]({{<ref "/docs/reference/agones_crd_api_reference#agones.dev/v1.GameServerPort">}}):** `default` is supported, which is the Agones default.
    Additional port ranges are not supported.
-{{% /feature %}}
 *  **Seccomp profile:** Agones sets the seccomp profile to `Unconfined` to
    avoid unexpected container creation delays that might occur because
    Autopilot enables the

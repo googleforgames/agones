@@ -133,7 +133,6 @@ upgrades.
 1. Close your maintenance window.
 7. Congratulations - you have now upgraded to a new version of Kubernetes! 👍
 
-{{% feature publishVersion="1.41.0" %}}
 ## SDK Compatibility Guarantees
 
 The SDK compatibility contract aims to ensure smooth upgrades and reduce the need for frequent
@@ -217,4 +216,3 @@ Client SDK is implemented.
 | Player Tracking     | GetPlayerCount        |        |      | Legacy |
 | Player Tracking     | PlayerDisconnect      |        |      | Legacy |
 
-{{% /feature %}}
