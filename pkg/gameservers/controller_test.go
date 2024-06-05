@@ -1304,7 +1304,7 @@ func TestControllerCreateGameServerPod(t *testing.T) {
 			assert.Equal(t, fixture.ObjectMeta.Name, sidecarContainer.Env[0].Value)
 			assert.Equal(t, "POD_NAMESPACE", sidecarContainer.Env[1].Name)
 			assert.Equal(t, "FEATURE_GATES", sidecarContainer.Env[2].Name)
-			assert.Equal(t, "LOG_LEVEL", sidecarContainer.Env[3].Name)
+			assert.Equal(t, "SDK_LOG_LEVEL", sidecarContainer.Env[3].Name)
 			assert.Equal(t, string(fixture.Spec.SdkServer.LogLevel), sidecarContainer.Env[3].Value)
 
 			gsContainer := pod.Spec.Containers[1]
