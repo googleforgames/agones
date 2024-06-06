@@ -717,7 +717,7 @@ func (c *Controller) sidecar(gs *agonesv1.GameServer) corev1.Container {
 				Value: runtime.EncodeFeatures(),
 			},
 			{
-				Name:  "SDK_LOG_LEVEL",
+				Name:  "LOG_LEVEL",
 				Value: string(gs.Spec.SdkServer.LogLevel),
 			},
 		},
