@@ -229,6 +229,10 @@ spec:
       - name: agones-allocator
         image: "{{ .Values.agones.image.registry }}/{{ .Values.agones.image.allocator.name}}:{{ default .Values.agones.image.tag .Values.agones.image.allocator.tag }}"
         imagePullPolicy: {{ .Values.agones.image.allocator.pullPolicy }}
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          allowPrivilegeEscalation: false
         livenessProbe:
           httpGet:
             path: /live

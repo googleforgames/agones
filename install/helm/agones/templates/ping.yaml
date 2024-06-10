@@ -90,6 +90,10 @@ spec:
         - name: agones-ping
           image: "{{ .Values.agones.image.registry }}/{{ .Values.agones.image.ping.name}}:{{ default .Values.agones.image.tag .Values.agones.image.ping.tag }}"
           imagePullPolicy: {{ .Values.agones.image.ping.pullPolicy }}
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
 {{- if .Values.agones.ping.resources }}
           resources:
 {{ toYaml .Values.agones.ping.resources | indent 12 }}

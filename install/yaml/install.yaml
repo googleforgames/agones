@@ -17061,6 +17061,10 @@ spec:
       - name: agones-controller
         image: "us-docker.pkg.dev/agones-images/release/agones-controller:1.42.0-dev"
         imagePullPolicy: IfNotPresent
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          allowPrivilegeEscalation: false
         env:
         # minimum port that can be exposed to GameServer traffic
         - name: MIN_PORT
@@ -17221,6 +17225,10 @@ spec:
       - name: agones-extensions
         image: "us-docker.pkg.dev/agones-images/release/agones-extensions:1.42.0-dev"
         imagePullPolicy: IfNotPresent
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          allowPrivilegeEscalation: false
         env:
         - name: PROMETHEUS_EXPORTER
           value: "true"
@@ -17358,6 +17366,10 @@ spec:
         - name: agones-ping
           image: "us-docker.pkg.dev/agones-images/release/agones-ping:1.42.0-dev"
           imagePullPolicy: IfNotPresent
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
           livenessProbe:
             httpGet:
               port: 8080
@@ -17432,6 +17444,10 @@ spec:
       - name: agones-allocator
         image: "us-docker.pkg.dev/agones-images/release/agones-allocator:1.42.0-dev"
         imagePullPolicy: IfNotPresent
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          allowPrivilegeEscalation: false
         livenessProbe:
           httpGet:
             path: /live

@@ -97,6 +97,10 @@ spec:
       - name: agones-extensions
         image: "{{ .Values.agones.image.registry }}/{{ .Values.agones.image.extensions.name}}:{{ default .Values.agones.image.tag .Values.agones.image.extensions.tag }}"
         imagePullPolicy: {{ .Values.agones.image.extensions.pullPolicy }}
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          allowPrivilegeEscalation: false
         env:
         - name: PROMETHEUS_EXPORTER
           value: {{ .Values.agones.metrics.prometheusEnabled | quote }}
