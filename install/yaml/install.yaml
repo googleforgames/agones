@@ -17227,7 +17227,7 @@ spec:
         imagePullPolicy: IfNotPresent
         securityContext:
           runAsNonRoot: true
-          runAsUser: 1001
+          runAsUser: 1000
           allowPrivilegeEscalation: false
         env:
         - name: PROMETHEUS_EXPORTER
@@ -17368,7 +17368,7 @@ spec:
           imagePullPolicy: IfNotPresent
           securityContext:
             runAsNonRoot: true
-            runAsUser: 1002
+            runAsUser: 1000
             allowPrivilegeEscalation: false
           livenessProbe:
             httpGet:
@@ -17446,7 +17446,7 @@ spec:
         imagePullPolicy: IfNotPresent
         securityContext:
           runAsNonRoot: true
-          runAsUser: 1003
+          runAsUser: 1000
           allowPrivilegeEscalation: false
         livenessProbe:
           httpGet:

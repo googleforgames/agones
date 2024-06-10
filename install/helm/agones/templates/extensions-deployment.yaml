@@ -99,7 +99,7 @@ spec:
         imagePullPolicy: {{ .Values.agones.image.extensions.pullPolicy }}
         securityContext:
           runAsNonRoot: true
-          runAsUser: 1001
+          runAsUser: 1000
           allowPrivilegeEscalation: false
         env:
         - name: PROMETHEUS_EXPORTER

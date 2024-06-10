@@ -92,7 +92,7 @@ spec:
           imagePullPolicy: {{ .Values.agones.image.ping.pullPolicy }}
           securityContext:
             runAsNonRoot: true
-            runAsUser: 1002
+            runAsUser: 1000
             allowPrivilegeEscalation: false
 {{- if .Values.agones.ping.resources }}
           resources:
