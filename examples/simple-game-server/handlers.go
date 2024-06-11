@@ -209,6 +209,7 @@ func handleAnnotation(s *sdk.SDK, parts []string, _ ...context.CancelFunc) (resp
 // handlePlayerCapacity sets the player capacity to the given value
 // or returns the current player capacity as a string
 func handlePlayerCapacity(s *sdk.SDK, parts []string, _ ...context.CancelFunc) (response string, addACK bool, responseError error) {
+	response, addACK = defaultReply(parts)
 	switch len(parts) {
 	case 1:
 		log.Print("Getting Player Capacity")
@@ -237,6 +238,7 @@ func handlePlayerCapacity(s *sdk.SDK, parts []string, _ ...context.CancelFunc) (
 
 // handlePlayerConnect connects a given player
 func handlePlayerConnect(s *sdk.SDK, parts []string, _ ...context.CancelFunc) (response string, addACK bool, responseError error) {
+	response, addACK = defaultReply(parts)
 	if len(parts) < 2 {
 		response = "Invalid PLAYER_CONNECT, should have 1 argument"
 		responseError = fmt.Errorf("Invalid PLAYER_CONNECT, should have 1 argument")
@@ -251,6 +253,7 @@ func handlePlayerConnect(s *sdk.SDK, parts []string, _ ...context.CancelFunc) (r
 
 // handlePlayerDisconnect disconnects a given player
 func handlePlayerDisconnect(s *sdk.SDK, parts []string, _ ...context.CancelFunc) (response string, addACK bool, responseError error) {
+	response, addACK = defaultReply(parts)
 	if len(parts) < 2 {
 		response = "Invalid PLAYER_DISCONNECT, should have 1 argument"
 		responseError = fmt.Errorf("Invalid PLAYER_DISCONNECT, should have 1 argument")
