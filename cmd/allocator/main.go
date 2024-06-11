@@ -230,6 +230,8 @@ func main() {
 	// so if one of the allocator pod can't reach Kubernetes it will be removed
 	// from the Kubernetes service.
 	listenCtx, cancelListenCtx := context.WithCancel(context.Background())
+	workerCtx, cancelWorkerCtx := context.WithCancel(context.Background())
+
 	podReady = true
 	grpcHealth := grpchealth.NewServer() // only used for gRPC, ignored o/w
 	health.AddReadinessCheck("allocator-agones-client", func() error {
@@ -253,7 +255,7 @@ func main() {
 
 	grpcUnallocatedStatusCode := grpcCodeFromHTTPStatus(conf.httpUnallocatedStatusCode)
 
-	h := newServiceHandler(context.Background(), kubeClient, agonesClient, health, conf.MTLSDisabled, conf.TLSDisabled, conf.remoteAllocationTimeout, conf.totalRemoteAllocationTimeout, conf.allocationBatchWaitTime, grpcUnallocatedStatusCode)
+	h := newServiceHandler(workerCtx, kubeClient, agonesClient, health, conf.MTLSDisabled, conf.TLSDisabled, conf.remoteAllocationTimeout, conf.totalRemoteAllocationTimeout, conf.allocationBatchWaitTime, grpcUnallocatedStatusCode)
 
 	if !h.tlsDisabled {
 		cancelTLS, err := fswatch.Watch(logger, tlsDir, time.Second, func() {
@@ -309,9 +311,14 @@ func main() {
 	healthserver.Handle("/", health)
 	go func() { _ = healthserver.Run(listenCtx, 0) }()
 
+	// TODO: This is messy. Contexts are the wrong way to handle this - we should be using shutdown,
+	// and a cascading graceful shutdown instead of multiple contexts and sleeps.
 	<-listenCtx.Done()
 	logger.Infof("Listen context cancelled")
-	time.Sleep(5 * time.Second) // allow a brief time for cleanup/shutdown
+	time.Sleep(5 * time.Second)
+	cancelWorkerCtx()
+	logger.Infof("Worker context cancelled")
+	time.Sleep(1 * time.Second)
 	logger.Info("Shut down allocator")
 }
 
