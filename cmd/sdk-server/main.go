@@ -286,7 +286,7 @@ func parseEnvFlags() config {
 	viper.SetDefault(gracefulTerminationFlag, true)
 	viper.SetDefault(grpcPortFlag, defaultGRPCPort)
 	viper.SetDefault(httpPortFlag, defaultHTTPPort)
-	viper.SetDefault(logLevelFlag, "INFO")
+	viper.SetDefault(logLevelFlag, "Info")
 	pflag.String(gameServerNameFlag, viper.GetString(gameServerNameFlag),
 		"Optional flag to set GameServer name. Overrides value given from `GAMESERVER_NAME` environment variable.")
 	pflag.String(podNamespaceFlag, viper.GetString(gameServerNameFlag),
