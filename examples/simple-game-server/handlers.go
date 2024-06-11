@@ -335,14 +335,14 @@ func handleIncrementCounter(s *sdk.SDK, parts []string, _ ...context.CancelFunc)
 	}
 	amountInt, err := strconv.ParseInt(parts[2], 10, 64)
 	if err != nil {
-		response, responseError = "", fmt.Errorf("Could not increment Counter %s by unparseable amount %s: %s", parts[1], parts[2], err)
+		response, responseError = err.Error(), fmt.Errorf("Could not increment Counter %s by unparseable amount %s: %s", parts[1], parts[2], err)
 		return
 	}
 	log.Printf("Incrementing Counter %s Count by amount %d", parts[1], amountInt)
 	err = s.Beta().IncrementCounter(parts[1], amountInt)
 	if err != nil {
 		log.Printf("Error incrementing Counter %s Count by amount %d: %s", parts[1], amountInt, err)
-		response, responseError = "", err
+		response, responseError = err.Error(), err
 		return
 	}
 	response, responseError = "SUCCESS\n", nil
@@ -358,14 +358,14 @@ func handleDecrementCounter(s *sdk.SDK, parts []string, _ ...context.CancelFunc)
 	}
 	amountInt, err := strconv.ParseInt(parts[2], 10, 64)
 	if err != nil {
-		response, responseError = "", fmt.Errorf("could not decrement Counter %s by unparseable amount %s: %s", parts[1], parts[2], err)
+		response, responseError = err.Error(), fmt.Errorf("could not decrement Counter %s by unparseable amount %s: %s", parts[1], parts[2], err)
 		return
 	}
 	log.Printf("Decrementing Counter %s Count by amount %d", parts[1], amountInt)
 	err = s.Beta().DecrementCounter(parts[1], amountInt)
 	if err != nil {
 		log.Printf("Error decrementing Counter %s Count by amount %d: %s", parts[1], amountInt, err)
-		response, responseError = "", err
+		response, responseError = err.Error(), err
 		return
 	}
 	response, responseError = "SUCCESS\n", nil
@@ -381,14 +381,14 @@ func handleSetCounterCount(s *sdk.SDK, parts []string, _ ...context.CancelFunc) 
 	}
 	amountInt, err := strconv.ParseInt(parts[2], 10, 64)
 	if err != nil {
-		response, responseError = "", fmt.Errorf("could not set Counter %s to unparseable amount %s: %s", parts[1], parts[2], err)
+		response, responseError = err.Error(), fmt.Errorf("could not set Counter %s to unparseable amount %s: %s", parts[1], parts[2], err)
 		return
 	}
 	log.Printf("Setting Counter %s Count to amount %d", parts[1], amountInt)
 	err = s.Beta().SetCounterCount(parts[1], amountInt)
 	if err != nil {
 		log.Printf("Error setting Counter %s Count by amount %d: %s", parts[1], amountInt, err)
-		response, responseError = "", err
+		response, responseError = err.Error(), err
 		return
 	}
 	response, responseError = "SUCCESS\n", nil
@@ -422,14 +422,14 @@ func handleSetCounterCapacity(s *sdk.SDK, parts []string, _ ...context.CancelFun
 	}
 	amountInt, err := strconv.ParseInt(parts[2], 10, 64)
 	if err != nil {
-		response, responseError = "", fmt.Errorf("could not set Counter %s to unparseable amount %s: %s", parts[1], parts[2], err)
+		response, responseError = err.Error(), fmt.Errorf("could not set Counter %s to unparseable amount %s: %s", parts[1], parts[2], err)
 		return
 	}
 	log.Printf("Setting Counter %s Capacity to amount %d", parts[1], amountInt)
 	err = s.Beta().SetCounterCapacity(parts[1], amountInt)
 	if err != nil {
 		log.Printf("Error setting Counter %s Capacity to amount %d: %s", parts[1], amountInt, err)
-		response, responseError = "", err
+		response, responseError = err.Error(), err
 		return
 	}
 	response, responseError = "SUCCESS\n", nil
@@ -463,14 +463,14 @@ func handleSetListCapacity(s *sdk.SDK, parts []string, _ ...context.CancelFunc) 
 	}
 	amountInt, err := strconv.ParseInt(parts[2], 10, 64)
 	if err != nil {
-		response, responseError = "", fmt.Errorf("could not set List %s to unparseable amount %s: %s", parts[1], parts[2], err)
+		response, responseError = err.Error(), fmt.Errorf("could not set List %s to unparseable amount %s: %s", parts[1], parts[2], err)
 		return
 	}
 	log.Printf("Setting List %s Capacity to amount %d", parts[1], amountInt)
 	err = s.Beta().SetListCapacity(parts[1], amountInt)
 	if err != nil {
 		log.Printf("Error setting List %s Capacity to amount %d: %s", parts[1], amountInt, err)
-		response, responseError = "", err
+		response, responseError = err.Error(), err
 		return
 	}
 	response, responseError = "SUCCESS\n", nil
@@ -546,7 +546,7 @@ func handleAppendListValue(s *sdk.SDK, parts []string, _ ...context.CancelFunc) 
 	err := s.Beta().AppendListValue(parts[1], parts[2])
 	if err != nil {
 		log.Printf("Error appending Value %s to List %s: %s", parts[2], parts[1], err)
-		response, responseError = "", err
+		response, responseError = err.Error(), err
 		return
 	}
 	response, responseError = "SUCCESS\n", nil
@@ -564,7 +564,7 @@ func handleDeleteListValue(s *sdk.SDK, parts []string, _ ...context.CancelFunc) 
 	err := s.Beta().DeleteListValue(parts[1], parts[2])
 	if err != nil {
 		log.Printf("Error deleting Value %s to List %s: %s", parts[2], parts[1], err)
-		response, responseError = "", err
+		response, responseError = err.Error(), err
 		return
 	}
 	response, responseError = "SUCCESS\n", nil
