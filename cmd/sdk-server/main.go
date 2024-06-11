@@ -37,7 +37,6 @@ import (
 	"k8s.io/client-go/rest"
 
 	"agones.dev/agones/pkg"
-	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	"agones.dev/agones/pkg/client/clientset/versioned"
 	"agones.dev/agones/pkg/sdk"
 	sdkalpha "agones.dev/agones/pkg/sdk/alpha"
@@ -65,6 +64,7 @@ const (
 	timeoutFlag             = "timeout"
 	grpcPortFlag            = "grpc-port"
 	httpPortFlag            = "http-port"
+	logLevelFlag            = "log-level"
 )
 
 var (
@@ -275,7 +275,6 @@ func runGateway(ctx context.Context, grpcEndpoint string, mux *gwruntime.ServeMu
 // parseEnvFlags parses all the flags and environment variables and returns
 // a configuration structure
 func parseEnvFlags() config {
-	var gs agonesv1.GameServer
 	viper.AllowEmptyEnv(true)
 	viper.SetDefault(localFlag, false)
 	viper.SetDefault(fileFlag, "")
@@ -287,7 +286,7 @@ func parseEnvFlags() config {
 	viper.SetDefault(gracefulTerminationFlag, true)
 	viper.SetDefault(grpcPortFlag, defaultGRPCPort)
 	viper.SetDefault(httpPortFlag, defaultHTTPPort)
-	viper.SetDefault("logLevel", string(gs.Spec.SdkServer.LogLevel))
+	viper.SetDefault(logLevelFlag, "Info")
 	pflag.String(gameServerNameFlag, viper.GetString(gameServerNameFlag),
 		"Optional flag to set GameServer name. Overrides value given from `GAMESERVER_NAME` environment variable.")
 	pflag.String(podNamespaceFlag, viper.GetString(gameServerNameFlag),
@@ -323,7 +322,7 @@ func parseEnvFlags() config {
 	runtime.Must(viper.BindEnv(grpcPortFlag))
 	runtime.Must(viper.BindEnv(httpPortFlag))
 	runtime.Must(viper.BindPFlags(pflag.CommandLine))
-	runtime.Must(viper.BindEnv("logLevel", "SDK_LOG_LEVEL"))
+	runtime.Must(viper.BindEnv(logLevelFlag))
 	runtime.Must(runtime.FeaturesBindEnv())
 	runtime.Must(runtime.ParseFeaturesFromEnv())
 
@@ -341,7 +340,7 @@ func parseEnvFlags() config {
 		GracefulTermination: viper.GetBool(gracefulTerminationFlag),
 		GRPCPort:            viper.GetInt(grpcPortFlag),
 		HTTPPort:            viper.GetInt(httpPortFlag),
-		LogLevel:            viper.GetString("logLevel"),
+		LogLevel:            viper.GetString(logLevelFlag),
 	}
 }
 
