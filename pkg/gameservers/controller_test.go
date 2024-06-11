@@ -1306,6 +1306,9 @@ func TestControllerCreateGameServerPod(t *testing.T) {
 			assert.Equal(t, "FEATURE_GATES", sidecarContainer.Env[2].Name)
 			assert.Equal(t, "LOG_LEVEL", sidecarContainer.Env[3].Name)
 			assert.Equal(t, string(fixture.Spec.SdkServer.LogLevel), sidecarContainer.Env[3].Value)
+			assert.Equal(t, *sidecarContainer.SecurityContext.AllowPrivilegeEscalation, false)
+			assert.Equal(t, *sidecarContainer.SecurityContext.RunAsNonRoot, true)
+			assert.Equal(t, *sidecarContainer.SecurityContext.RunAsUser, int64(1000))
 
 			gsContainer := pod.Spec.Containers[1]
 			assert.Equal(t, fixture.Spec.Ports[0].HostPort, gsContainer.Ports[0].HostPort)

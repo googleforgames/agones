@@ -56,6 +56,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/workqueue"
+	"k8s.io/utils/pointer"
 )
 
 const (
@@ -763,6 +764,13 @@ func (c *Controller) sidecar(gs *agonesv1.GameServer) corev1.Container {
 	if c.alwaysPullSidecarImage {
 		sidecar.ImagePullPolicy = corev1.PullAlways
 	}
+
+	sidecar.SecurityContext = &corev1.SecurityContext{
+		AllowPrivilegeEscalation: pointer.Bool(false),
+		RunAsNonRoot:             pointer.Bool(true),
+		RunAsUser:                pointer.Int64(1000),
+	}
+
 	return sidecar
 }
 
