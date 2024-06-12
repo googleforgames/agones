@@ -23,19 +23,19 @@ Check the [Client SDK Documentation]({{< relref "_index.md" >}}) for more detail
 | Configuration   | WatchGameServer     | ✔️          |
 | Metadata        | SetAnnotation       | ✔️          |
 | Metadata        | SetLabel            | ✔️          |
-| Counters        | GetCounterCount     | ❌         |
-| Counters        | SetCounterCount     | ❌         |
-| Counters        | IncrementCounter    | ❌         |
-| Counters        | DecrementCounter    | ❌         |
-| Counters        | SetCounterCapacity  | ❌         |
-| Counters        | GetCounterCapacity  | ❌         |
-| Lists           | AppendListValue     | ❌         |
-| Lists           | DeleteListValue     | ❌         |
-| Lists           | SetListCapacity     | ❌         |
-| Lists           | GetListCapacity     | ❌         |
-| Lists           | ListContains        | ❌         |
-| Lists           | GetListLength       | ❌         |
-| Lists           | GetListValues       | ❌         |
+| Counters        | GetCounterCount     | ✔️          |
+| Counters        | SetCounterCount     | ✔️          |
+| Counters        | IncrementCounter    | ✔️          |
+| Counters        | DecrementCounter    | ✔️          |
+| Counters        | SetCounterCapacity  | ✔️          |
+| Counters        | GetCounterCapacity  | ✔️          |
+| Lists           | AppendListValue     | ✔️          |
+| Lists           | DeleteListValue     | ✔️          |
+| Lists           | SetListCapacity     | ✔️          |
+| Lists           | GetListCapacity     | ✔️          |
+| Lists           | ListContains        | ✔️          |
+| Lists           | GetListLength       | ✔️          |
+| Lists           | GetListValues       | ✔️          |
 | Player Tracking | GetConnectedPlayers | ✔️          |
 | Player Tracking | GetPlayerCapacity   | ✔️          |
 | Player Tracking | GetPlayerCount      | ✔️          |
