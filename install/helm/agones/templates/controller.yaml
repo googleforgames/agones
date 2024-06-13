@@ -134,6 +134,12 @@ spec:
           value: {{ .Values.agones.image.sdk.memoryRequest | quote }}
         - name: SIDECAR_MEMORY_LIMIT
           value: {{ .Values.agones.image.sdk.memoryLimit | quote }}
+        - name: SIDECAR_RUN_AS_NONROOT
+          value: "true"
+        - name: SIDECAR_RUN_AS_USER
+          value: "1000"
+        - name: SIDECAR_ALLOW_PRIVILEGE_ESCALATION
+          value: "false"
         - name: SDK_SERVICE_ACCOUNT
           value: {{ .Values.agones.serviceaccount.sdk.name | quote }}
         - name: PROMETHEUS_EXPORTER
