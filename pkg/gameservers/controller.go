@@ -83,7 +83,7 @@ type Controller struct {
 	sidecarCPULimit        resource.Quantity
 	sidecarMemoryRequest   resource.Quantity
 	sidecarMemoryLimit     resource.Quantity
-	sidecarSecurityCtx     corev1.SecurityContext
+	sidecarSecurityCtx     *corev1.SecurityContext
 	sdkServiceAccount      string
 	crdGetter              apiextclientv1.CustomResourceDefinitionInterface
 	podGetter              typedcorev1.PodsGetter
@@ -115,7 +115,7 @@ func NewController(
 	sidecarCPULimit resource.Quantity,
 	sidecarMemoryRequest resource.Quantity,
 	sidecarMemoryLimit resource.Quantity,
-	sidecarSecurityCtx corev1.SecurityContext,
+	sidecarSecurityCtx *corev1.SecurityContext,
 	sdkServiceAccount string,
 	kubeClient kubernetes.Interface,
 	kubeInformerFactory informers.SharedInformerFactory,
@@ -767,7 +767,7 @@ func (c *Controller) sidecar(gs *agonesv1.GameServer) corev1.Container {
 		sidecar.ImagePullPolicy = corev1.PullAlways
 	}
 
-	sidecar.SecurityContext = &c.sidecarSecurityCtx
+	sidecar.SecurityContext = c.sidecarSecurityCtx
 
 	return sidecar
 }

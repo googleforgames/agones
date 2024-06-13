@@ -2266,7 +2266,7 @@ func newFakeController() (*Controller, agtesting.Mocks) {
 		map[string]portallocator.PortRange{agonesv1.DefaultPortRange: {MinPort: 10, MaxPort: 20}},
 		"sidecar:dev", false,
 		resource.MustParse("0.05"), resource.MustParse("0.1"),
-		resource.MustParse("50Mi"), resource.MustParse("100Mi"), securityCtx, "sdk-service-account",
+		resource.MustParse("50Mi"), resource.MustParse("100Mi"), &securityCtx, "sdk-service-account",
 		m.KubeClient, m.KubeInformerFactory, m.ExtClient, m.AgonesClient, m.AgonesInformerFactory)
 	c.recorder = m.FakeRecorder
 	return c, m

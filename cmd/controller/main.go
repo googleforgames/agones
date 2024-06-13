@@ -223,7 +223,7 @@ func main() {
 	gsController := gameservers.NewController(controllerHooks, health,
 		ctlConf.PortRanges, ctlConf.SidecarImage, ctlConf.AlwaysPullSidecar,
 		ctlConf.SidecarCPURequest, ctlConf.SidecarCPULimit,
-		ctlConf.SidecarMemoryRequest, ctlConf.SidecarMemoryLimit, securityCtx, ctlConf.SdkServiceAccount,
+		ctlConf.SidecarMemoryRequest, ctlConf.SidecarMemoryLimit, &securityCtx, ctlConf.SdkServiceAccount,
 		kubeClient, kubeInformerFactory, extClient, agonesClient, agonesInformerFactory)
 	gsSetController := gameserversets.NewController(health, gsCounter,
 		kubeClient, extClient, agonesClient, agonesInformerFactory)
