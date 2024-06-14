@@ -44,7 +44,7 @@ func (s *Server) Run(ctx context.Context, _ int) error {
 	}
 	go func() {
 		<-ctx.Done()
-		_ = srv.Close()
+		_ = srv.Shutdown(context.Background())
 	}()
 
 	if err := srv.ListenAndServe(); err != nil {

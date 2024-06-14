@@ -33,7 +33,7 @@ const (
 
 // tls is a http server interface to enable easier testing
 type tls interface {
-	Close() error
+	Shutdown(context.Context) error
 	ListenAndServeTLS(certFile, keyFile string) error
 }
 
@@ -126,7 +126,7 @@ func (s *Server) WatchForCertificateChanges() (func(), error) {
 func (s *Server) Run(ctx context.Context, _ int) error {
 	go func() {
 		<-ctx.Done()
-		s.tls.Close() // nolint: errcheck,gosec
+		_ = s.tls.Shutdown(context.Background())
 	}()
 
 	s.logger.WithField("server", s).Infof("https server started")

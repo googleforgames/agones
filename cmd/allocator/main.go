@@ -226,12 +226,11 @@ func main() {
 		logger.WithError(err).Fatal("could not create clients")
 	}
 
+	listenCtx, cancelListenCtx := context.WithCancel(context.Background())
+
 	// This will test the connection to agones on each readiness probe
 	// so if one of the allocator pod can't reach Kubernetes it will be removed
 	// from the Kubernetes service.
-	listenCtx, cancelListenCtx := context.WithCancel(context.Background())
-	workerCtx, cancelWorkerCtx := context.WithCancel(context.Background())
-
 	podReady = true
 	grpcHealth := grpchealth.NewServer() // only used for gRPC, ignored o/w
 	health.AddReadinessCheck("allocator-agones-client", func() error {
@@ -255,6 +254,7 @@ func main() {
 
 	grpcUnallocatedStatusCode := grpcCodeFromHTTPStatus(conf.httpUnallocatedStatusCode)
 
+	workerCtx, cancelWorkerCtx := context.WithCancel(context.Background())
 	h := newServiceHandler(workerCtx, kubeClient, agonesClient, health, conf.MTLSDisabled, conf.TLSDisabled, conf.remoteAllocationTimeout, conf.totalRemoteAllocationTimeout, conf.allocationBatchWaitTime, grpcUnallocatedStatusCode)
 
 	if !h.tlsDisabled {
@@ -295,11 +295,11 @@ func main() {
 
 	// If grpc and http use the same port then use a mux.
 	if conf.GRPCPort == conf.HTTPPort {
-		runMux(listenCtx, h, grpcHealth, conf.HTTPPort)
+		runMux(listenCtx, workerCtx, h, grpcHealth, conf.HTTPPort)
 	} else {
 		// Otherwise, run each on a dedicated port.
 		if validPort(conf.HTTPPort) {
-			runREST(listenCtx, h, conf.HTTPPort)
+			runREST(listenCtx, workerCtx, h, conf.HTTPPort)
 		}
 		if validPort(conf.GRPCPort) {
 			runGRPC(listenCtx, h, grpcHealth, conf.GRPCPort)
@@ -327,7 +327,7 @@ func validPort(port int) bool {
 	return port >= 0 && port < maxPort
 }
 
-func runMux(ctx context.Context, h *serviceHandler, grpcHealth *grpchealth.Server, httpPort int) {
+func runMux(listenCtx context.Context, workerCtx context.Context, h *serviceHandler, grpcHealth *grpchealth.Server, httpPort int) {
 	logger.Infof("Running the mux handler on port %d", httpPort)
 	grpcServer := grpc.NewServer(h.getMuxServerOptions()...)
 	pb.RegisterAllocationServiceServer(grpcServer, h)
@@ -338,19 +338,19 @@ func runMux(ctx context.Context, h *serviceHandler, grpcHealth *grpchealth.Serve
 		panic(err)
 	}
 
-	runHTTP(ctx, h, httpPort, grpcHandlerFunc(grpcServer, mux))
+	runHTTP(listenCtx, workerCtx, h, httpPort, grpcHandlerFunc(grpcServer, mux))
 }
 
-func runREST(ctx context.Context, h *serviceHandler, httpPort int) {
+func runREST(listenCtx context.Context, workerCtx context.Context, h *serviceHandler, httpPort int) {
 	logger.WithField("port", httpPort).Info("Running the rest handler")
 	mux := runtime.NewServerMux()
 	if err := pb.RegisterAllocationServiceHandlerServer(context.Background(), mux, h); err != nil {
 		panic(err)
 	}
-	runHTTP(ctx, h, httpPort, mux)
+	runHTTP(listenCtx, workerCtx, h, httpPort, mux)
 }
 
-func runHTTP(ctx context.Context, h *serviceHandler, httpPort int, handler http.Handler) {
+func runHTTP(listenCtx context.Context, workerCtx context.Context, h *serviceHandler, httpPort int, handler http.Handler) {
 	cfg := &tls.Config{}
 	if !h.tlsDisabled {
 		cfg.GetCertificate = h.getTLSCert
@@ -369,8 +369,8 @@ func runHTTP(ctx context.Context, h *serviceHandler, httpPort int, handler http.
 
 	go func() {
 		go func() {
-			<-ctx.Done()
-			_ = server.Close()
+			<-listenCtx.Done()
+			_ = server.Shutdown(workerCtx)
 		}()
 
 		var err error
@@ -405,7 +405,7 @@ func runGRPC(ctx context.Context, h *serviceHandler, grpcHealth *grpchealth.Serv
 	go func() {
 		go func() {
 			<-ctx.Done()
-			grpcServer.Stop()
+			grpcServer.GracefulStop()
 		}()
 
 		err := grpcServer.Serve(listener)
