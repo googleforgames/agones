@@ -17084,12 +17084,8 @@ spec:
           value: "0"
         - name: SIDECAR_MEMORY_LIMIT
           value: "0"
-        - name: SIDECAR_RUN_AS_NONROOT
-          value: "true"
         - name: SIDECAR_RUN_AS_USER
           value: "1000"
-        - name: SIDECAR_ALLOW_PRIVILEGE_ESCALATION
-          value: "false"
         - name: SDK_SERVICE_ACCOUNT
           value: "agones-sdk"
         - name: PROMETHEUS_EXPORTER
