@@ -1256,6 +1256,52 @@ func TestGameServerValidateFeatures(t *testing.T) {
 				},
 			},
 		},
+		{
+			description: "PortPolicyNone is disabled, PortPolicy field set to None",
+			feature:     fmt.Sprintf("%s=false", runtime.FeaturePortPolicyNone),
+			gs: GameServer{
+				Spec: GameServerSpec{
+					Ports: []GameServerPort{
+						{
+							Name:          "main",
+							ContainerPort: 7777,
+							PortPolicy:    None,
+						},
+					},
+					Container: "testing",
+					Lists:     map[string]ListStatus{},
+					Template: corev1.PodTemplateSpec{
+						Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "testing", Image: "testing/image"}}},
+					},
+				},
+			},
+			want: field.ErrorList{
+				field.Forbidden(
+					field.NewPath("spec.ports[0].portPolicy"),
+					"Value cannot be set to None unless feature flag PortPolicyNone is enabled",
+				),
+			},
+		},
+		{
+			description: "PortPolicyNone is enabled, PortPolicy field set to None",
+			feature:     fmt.Sprintf("%s=true", runtime.FeaturePortPolicyNone),
+			gs: GameServer{
+				Spec: GameServerSpec{
+					Ports: []GameServerPort{
+						{
+							Name:          "main",
+							ContainerPort: 7777,
+							PortPolicy:    None,
+						},
+					},
+					Container: "testing",
+					Lists:     map[string]ListStatus{},
+					Template: corev1.PodTemplateSpec{
+						Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "testing", Image: "testing/image"}}},
+					},
+				},
+			},
+		},
 	}
 
 	for _, tc := range testCases {
@@ -1499,7 +1545,8 @@ func TestGameServerPassthroughPortAnnotation(t *testing.T) {
 					{Name: "containerOne", Image: "container/image"},
 					{Name: "containerTwo", Image: "container/image"},
 					{Name: "containerThree", Image: "container/image"},
-					{Name: "containerFour", Image: "container/image"}},
+					{Name: "containerFour", Image: "container/image"},
+				},
 			},
 		},
 	}}
