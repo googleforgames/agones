@@ -74,16 +74,17 @@ To use the AgonesSDK, you will need to import the namespace by adding `using Ago
 var agones = new AgonesSDK();
 ```
 
+{{% feature expiryVersion="1.42.0" %}}
 ### Connection
 
-~To connect to the SDK server, either locally or when running on Agones, run the `ConnectAsync()` method.
+To connect to the SDK server, either locally or when running on Agones, run the `ConnectAsync()` method.
 This will wait for up to 30 seconds if the SDK server has not yet started and the connection cannot be made,
-and will return `false` if there was an issue connecting.~ This is an obsolete function that now always returns true.
+and will return `false` if there was an issue connecting. This is an obsolete function that now always returns true.
 
 ```csharp
 bool ok = await agones.ConnectAsync();
 ```
-
+{{% /feature %}}
 ### Ready
 
 To mark the game server as [ready to receive player connections]({{< relref "_index.md#ready" >}}), call the async method `ReadyAsync()`.
