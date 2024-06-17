@@ -68,6 +68,7 @@ const (
 	sidecarCPULimitFlag          = "sidecar-cpu-limit"
 	sidecarMemoryRequestFlag     = "sidecar-memory-request"
 	sidecarMemoryLimitFlag       = "sidecar-memory-limit"
+	sidecarRunAsUserFlag         = "sidecar-run-as-user"
 	sdkServerAccountFlag         = "sdk-service-account"
 	pullSidecarFlag              = "always-pull-sidecar"
 	minPortFlag                  = "min-port"
@@ -214,7 +215,7 @@ func main() {
 	gsController := gameservers.NewController(controllerHooks, health,
 		ctlConf.PortRanges, ctlConf.SidecarImage, ctlConf.AlwaysPullSidecar,
 		ctlConf.SidecarCPURequest, ctlConf.SidecarCPULimit,
-		ctlConf.SidecarMemoryRequest, ctlConf.SidecarMemoryLimit, ctlConf.SdkServiceAccount,
+		ctlConf.SidecarMemoryRequest, ctlConf.SidecarMemoryLimit, ctlConf.SidecarRunAsUser, ctlConf.SdkServiceAccount,
 		kubeClient, kubeInformerFactory, extClient, agonesClient, agonesInformerFactory)
 	gsSetController := gameserversets.NewController(health, gsCounter,
 		kubeClient, extClient, agonesClient, agonesInformerFactory)
@@ -260,6 +261,7 @@ func parseEnvFlags() config {
 	viper.SetDefault(sidecarCPULimitFlag, "0")
 	viper.SetDefault(sidecarMemoryRequestFlag, "0")
 	viper.SetDefault(sidecarMemoryLimitFlag, "0")
+	viper.SetDefault(sidecarRunAsUserFlag, "1000")
 	viper.SetDefault(pullSidecarFlag, false)
 	viper.SetDefault(sdkServerAccountFlag, "agones-sdk")
 	viper.SetDefault(certFileFlag, filepath.Join(base, "certs", "server.crt"))
@@ -284,6 +286,7 @@ func parseEnvFlags() config {
 	pflag.String(sidecarCPURequestFlag, viper.GetString(sidecarCPURequestFlag), "Flag to overwrite the GameServer sidecar container's cpu request. Can also use SIDECAR_CPU_REQUEST env variable")
 	pflag.String(sidecarMemoryLimitFlag, viper.GetString(sidecarMemoryLimitFlag), "Flag to overwrite the GameServer sidecar container's memory limit. Can also use SIDECAR_MEMORY_LIMIT env variable")
 	pflag.String(sidecarMemoryRequestFlag, viper.GetString(sidecarMemoryRequestFlag), "Flag to overwrite the GameServer sidecar container's memory request. Can also use SIDECAR_MEMORY_REQUEST env variable")
+	pflag.Int32(sidecarRunAsUserFlag, viper.GetInt32(sidecarRunAsUserFlag), "Flag to indicate the GameServer sidecar container's UID. Can also use SIDECAR_RUN_AS_USER env variable")
 	pflag.Bool(pullSidecarFlag, viper.GetBool(pullSidecarFlag), "For development purposes, set the sidecar image to have a ImagePullPolicy of Always. Can also use ALWAYS_PULL_SIDECAR env variable")
 	pflag.String(sdkServerAccountFlag, viper.GetString(sdkServerAccountFlag), "Overwrite what service account default for GameServer Pods. Defaults to Can also use SDK_SERVICE_ACCOUNT")
 	pflag.Int32(minPortFlag, 0, "Required. The minimum port that that a GameServer can be allocated to. Can also use MIN_PORT env variable.")
@@ -315,6 +318,7 @@ func parseEnvFlags() config {
 	runtime.Must(viper.BindEnv(sidecarCPURequestFlag))
 	runtime.Must(viper.BindEnv(sidecarMemoryLimitFlag))
 	runtime.Must(viper.BindEnv(sidecarMemoryRequestFlag))
+	runtime.Must(viper.BindEnv(sidecarRunAsUserFlag))
 	runtime.Must(viper.BindEnv(pullSidecarFlag))
 	runtime.Must(viper.BindEnv(sdkServerAccountFlag))
 	runtime.Must(viper.BindEnv(minPortFlag))
@@ -378,6 +382,7 @@ func parseEnvFlags() config {
 		SidecarCPULimit:         limitCPU,
 		SidecarMemoryRequest:    requestMemory,
 		SidecarMemoryLimit:      limitMemory,
+		SidecarRunAsUser:        int(viper.GetInt32(sidecarRunAsUserFlag)),
 		SdkServiceAccount:       viper.GetString(sdkServerAccountFlag),
 		AlwaysPullSidecar:       viper.GetBool(pullSidecarFlag),
 		KeyFile:                 viper.GetString(keyFileFlag),
@@ -430,6 +435,7 @@ type config struct {
 	SidecarCPULimit         resource.Quantity
 	SidecarMemoryRequest    resource.Quantity
 	SidecarMemoryLimit      resource.Quantity
+	SidecarRunAsUser        int
 	SdkServiceAccount       string
 	AlwaysPullSidecar       bool
 	PrometheusMetrics       bool
