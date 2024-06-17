@@ -150,7 +150,7 @@ func NewFromFlags() (*Framework, error) {
 	}
 
 	viper.SetDefault(kubeconfigFlag, filepath.Join(usr.HomeDir, ".kube", "config"))
-	viper.SetDefault(gsimageFlag, "us-central1-docker.pkg.dev/agones-ashutoshnsingh/example/simple-game-server:0.33-dev-linux-amd64")
+	viper.SetDefault(gsimageFlag, "us-docker.pkg.dev/agones-images/examples/simple-game-server:0.33")
 	viper.SetDefault(pullSecretFlag, "")
 	viper.SetDefault(stressTestLevelFlag, 0)
 	viper.SetDefault(perfOutputDirFlag, "")
@@ -799,7 +799,7 @@ func (f *Framework) DefaultGameServer(namespace string) *agonesv1.GameServer {
 					Containers: []corev1.Container{{
 						Name:            "game-server",
 						Image:           f.GameServerImage,
-						ImagePullPolicy: corev1.PullAlways,
+						ImagePullPolicy: corev1.PullIfNotPresent,
 						Resources: corev1.ResourceRequirements{
 							Requests: corev1.ResourceList{
 								corev1.ResourceCPU:    resource.MustParse("30m"),
