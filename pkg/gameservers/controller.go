@@ -56,6 +56,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/workqueue"
+	"k8s.io/utils/pointer"
 )
 
 const (
@@ -83,6 +84,7 @@ type Controller struct {
 	sidecarCPULimit        resource.Quantity
 	sidecarMemoryRequest   resource.Quantity
 	sidecarMemoryLimit     resource.Quantity
+	sidecarRunAsUser       int
 	sdkServiceAccount      string
 	crdGetter              apiextclientv1.CustomResourceDefinitionInterface
 	podGetter              typedcorev1.PodsGetter
@@ -114,6 +116,7 @@ func NewController(
 	sidecarCPULimit resource.Quantity,
 	sidecarMemoryRequest resource.Quantity,
 	sidecarMemoryLimit resource.Quantity,
+	sidecarRunAsUser int,
 	sdkServiceAccount string,
 	kubeClient kubernetes.Interface,
 	kubeInformerFactory informers.SharedInformerFactory,
@@ -133,6 +136,7 @@ func NewController(
 		sidecarCPURequest:      sidecarCPURequest,
 		sidecarMemoryLimit:     sidecarMemoryLimit,
 		sidecarMemoryRequest:   sidecarMemoryRequest,
+		sidecarRunAsUser:       sidecarRunAsUser,
 		alwaysPullSidecarImage: alwaysPullSidecarImage,
 		sdkServiceAccount:      sdkServiceAccount,
 		crdGetter:              extClient.ApiextensionsV1().CustomResourceDefinitions(),
@@ -763,6 +767,13 @@ func (c *Controller) sidecar(gs *agonesv1.GameServer) corev1.Container {
 	if c.alwaysPullSidecarImage {
 		sidecar.ImagePullPolicy = corev1.PullAlways
 	}
+
+	sidecar.SecurityContext = &corev1.SecurityContext{
+		AllowPrivilegeEscalation: pointer.Bool(false),
+		RunAsNonRoot:             pointer.Bool(true),
+		RunAsUser:                pointer.Int64(int64(c.sidecarRunAsUser)),
+	}
+
 	return sidecar
 }
 
