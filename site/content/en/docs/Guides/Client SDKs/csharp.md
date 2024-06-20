@@ -77,8 +77,6 @@ var agones = new AgonesSDK();
 {{% feature expiryVersion="1.42.0" %}}
 ### Connection
 
-To connect to the SDK server, either locally or when running on Agones, run the `ConnectAsync()` method.
-This will wait for up to 30 seconds if the SDK server has not yet started and the connection cannot be made,
 and will return `false` if there was an issue connecting. This is an obsolete function that now always returns true.
 
 ```csharp
