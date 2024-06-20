@@ -5685,6 +5685,7 @@ spec:
                       - Webhook
                       - Counter
                       - List
+                      - Chain
                     buffer:
                       type: object
                       nullable: true
@@ -5767,6 +5768,128 @@ spec:
                           anyOf:
                             - type: integer
                             - type: string
+                    chain:
+                        type: array
+                        nullable: true
+                        items:
+                          type: object
+                          nullable: true
+                          required:
+                            - policy
+                          properties:
+                            id: # The id of a chain entry
+                              type: string
+                            schedule:
+                              type: object
+                              properties:
+                                timezone: # Timezone to be used for the between period and active period.
+                                  type: string
+                                between:
+                                  type: object
+                                  start:
+                                    type: string
+                                  end:
+                                    type: string
+                                activePeriod:
+                                  type: object
+                                  startCron: # Cron expression defining the start time
+                                    type: string
+                                  duration: # The length of time the policy should be applied for
+                                    type: string
+                            policy:
+                              type: object
+                              required:
+                                - type
+                              properties:
+                                type:
+                                  type: string
+                                  enum:
+                                  - Buffer
+                                  - Webhook
+                                  - Counter
+                                  - List
+                                buffer:
+                                  type: object
+                                  nullable: true
+                                  required:
+                                    - maxReplicas
+                                  properties:
+                                    minReplicas:
+                                      type: integer
+                                      minimum: 0
+                                    maxReplicas:
+                                      type: integer
+                                      minimum: 1
+                                    bufferSize:
+                                      x-kubernetes-int-or-string: true
+                                      anyOf:
+                                        - type: integer
+                                        - type: string
+                                webhook:
+                                  type: object
+                                  nullable: true
+                                  properties:
+                                    url:
+                                      type: string
+                                    service:
+                                      type: object
+                                      required:
+                                        - namespace
+                                        - name
+                                      properties:
+                                        namespace:
+                                          type: string
+                                        name:
+                                          type: string
+                                        path:
+                                          type: string
+                                        port:
+                                          type: integer
+                                    caBundle:
+                                      type: string
+                                      format: byte
+                                counter:
+                                  type: object
+                                  nullable: true
+                                  required:
+                                    - key
+                                    - bufferSize
+                                    - maxCapacity
+                                  properties:
+                                    key:  # The name of the Counter.
+                                      type: string
+                                    minCapacity:  # Minimum aggregate counter capacity that can be provided by this FleetAutoscaler. If not specified, the actual minimum capacity will be bufferSize.
+                                      type: integer
+                                      minimum: 0
+                                    maxCapacity:  # Maximum aggregate counter capacity that can be provided by this FleetAutoscaler. Required.
+                                      type: integer
+                                      minimum: 1
+                                    bufferSize:  # Size of a buffer of counted items that are available in the Fleet (available capacity). It can be specified either in absolute (i.e. 5) or percentage format (i.e. 5%).
+                                      x-kubernetes-int-or-string: true
+                                      anyOf:
+                                        - type: integer
+                                        - type: string
+                                list:
+                                  type: object
+                                  nullable: true
+                                  required:
+                                    - key
+                                    - bufferSize
+                                    - maxCapacity
+                                  properties:
+                                    key:  # The name of the List.
+                                      type: string
+                                    minCapacity:  # Minimum aggregate list capacity that can be provided by this FleetAutoscaler. If not specified, the actual minimum capacity will be bufferSize.
+                                      type: integer
+                                      minimum: 0
+                                    maxCapacity:  # Maximum aggregate list capacity that can be provided by this FleetAutoscaler. Required.
+                                      type: integer
+                                      minimum: 1
+                                    bufferSize:  # Size of a buffer based on the list capacity that is available over the current aggregate list length in the Fleet. It can be specified either in absolute (i.e. 5) or percentage format (i.e. 5%).
+                                      x-kubernetes-int-or-string: true
+                                      anyOf:
+                                        - type: integer
+                                        - type: string
                 sync:
                   type: object
                   required:
