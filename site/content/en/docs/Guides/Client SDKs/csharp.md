@@ -357,7 +357,9 @@ bool isConnected = await agones.Alpha().IsPlayerConnectedAsync(playerId);
 ```
 
 ## Remarks
+{{% feature expiryVersion="1.42.0" %}}
 - All requests other than `ConnectAsync` will wait for up to 15 seconds before giving up, time to wait can also be set in the constructor.
+{{% /feature %}}
 - Default host & port are `localhost:9357`
 - Methods that do not return a data object such as `GameServer` will return a gRPC `Grpc.Core.Status` object. To check the state of the request, check `Status.StatusCode` & `Status.Detail`.
 Ex:
