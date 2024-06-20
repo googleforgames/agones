@@ -77,7 +77,7 @@ var agones = new AgonesSDK();
 {{% feature expiryVersion="1.42.0" %}}
 ### Connection
 
-and will return `false` if there was an issue connecting. This is an obsolete function that now always returns true.
+The `ConnectAsync()` method is an obsolete function that now always returns true.
 
 ```csharp
 bool ok = await agones.ConnectAsync();
