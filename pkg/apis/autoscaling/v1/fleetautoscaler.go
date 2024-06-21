@@ -82,6 +82,10 @@ type FleetAutoscalerPolicy struct {
 	// List policy config params. Present only if FleetAutoscalerPolicyType = List.
 	// +optional
 	List *ListPolicy `json:"list,omitempty"`
+	// [Stage:Beta]
+	// [FeatureFlag:ChainFleetAutoscaler]
+	// Chain policy config params. Present only if FleetAutoscalerPolicyType = Chain.
+	// +optional
 }
 
 // FleetAutoscalerPolicyType is the policy for autoscaling
@@ -118,6 +122,11 @@ const (
 	// ListPolicyType is for List based fleet autoscaling
 	// nolint:revive // Linter contains comment doesn't start with ListPolicyType
 	ListPolicyType FleetAutoscalerPolicyType = "List"
+	// [Stage:Beta]
+	// [FeatureFlag:ChainFleetAutoscaler]
+	// ChainPolicyType is for Chain based fleet autoscaling
+	// nolint:revive // Linter contains comment doesn't start with ChainPolicyType
+	ChainPolicyType FleetAutoscalerPolicyType = "Chain"
 	// FixedIntervalSyncType is a simple fixed interval based strategy for trigger autoscaling
 	FixedIntervalSyncType FleetAutoscalerSyncType = "FixedInterval"
 
@@ -194,6 +203,54 @@ type ListPolicy struct {
 	// Must be bigger than 0. Required field.
 	BufferSize intstr.IntOrString `json:"bufferSize"`
 }
+
+type Between struct {
+	// Start is the datetime that the policy is eligible to be applied.
+	// If not set, the policy is always eligible to be applied
+	// as soon as possible. If the datetime is in the past, the policy is
+	// immediately eligible to be applied as well.
+	// Optional field.
+	Start string `json:"start"`
+
+	// End is the datetime that the policy is no longer eligible to be applied.
+	// If not set, the policy is always eligible to be applied.
+	// after the start time. Optional field. 
+	End string `json:"end"`
+}
+
+type ActivePeriod struct {
+	// StartCron defines when the policy should be applied. 
+	// If not set, the policy is always eligible to be applied.
+	// This must conform to UNIX cron syntax.
+	// Optional field.
+	StartCron string `json:"startCron"`
+
+	// Duration is the length of time that the policy is applied. 
+	// If not set, the duration is indefinite.
+	// A duration string is a possibly signed sequence of decimal numbers, 
+	// (e.g. "300ms", "-1.5h" or "2h45m").
+	// Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".
+	// Optional field.
+	Duration string `json:"duration"`
+}
+
+type ChainEntry struct {
+	// Policy is the name of the policy to be applied.
+	// Required field.
+	Policy string `json:"policy"`
+
+	// Between defines the time period that the policy is eligible to be applied.
+	// Optional field.
+	Between Between `json:"between"`
+
+	// ActivePeriod defines the time period that the policy is applied.
+	// Optional field.
+	ActivePeriod ActivePeriod `json:"activePeriod"`
+}
+
+// ChainPolicy controls the desired behavior of the Chain autoscaler policy.
+ChainPolicy []ChainEntry
+	
 
 // FixedIntervalSync controls the desired behavior of the fixed interval based sync.
 type FixedIntervalSync struct {
