@@ -74,16 +74,15 @@ To use the AgonesSDK, you will need to import the namespace by adding `using Ago
 var agones = new AgonesSDK();
 ```
 
+{{% feature expiryVersion="1.42.0" %}}
 ### Connection
 
-To connect to the SDK server, either locally or when running on Agones, run the `ConnectAsync()` method.
-This will wait for up to 30 seconds if the SDK server has not yet started and the connection cannot be made,
-and will return `false` if there was an issue connecting.
+The `ConnectAsync()` method is an obsolete function that now always returns true.
 
 ```csharp
 bool ok = await agones.ConnectAsync();
 ```
-
+{{% /feature %}}
 ### Ready
 
 To mark the game server as [ready to receive player connections]({{< relref "_index.md#ready" >}}), call the async method `ReadyAsync()`.
@@ -358,7 +357,12 @@ bool isConnected = await agones.Alpha().IsPlayerConnectedAsync(playerId);
 ```
 
 ## Remarks
+{{% feature expiryVersion="1.42.0" %}}
 - All requests other than `ConnectAsync` will wait for up to 15 seconds before giving up, time to wait can also be set in the constructor.
+{{% /feature %}}
+{{% feature publishVersion="1.42.0" %}}
+- All requests will wait for up to 15 seconds before giving up. Time to wait can also be set in the constructor.
+{{% /feature %}}
 - Default host & port are `localhost:9357`
 - Methods that do not return a data object such as `GameServer` will return a gRPC `Grpc.Core.Status` object. To check the state of the request, check `Status.StatusCode` & `Status.Detail`.
 Ex:
