@@ -296,9 +296,15 @@ Response:
 ```
 
 ##### Beta: UpdateList
-This function updates the list's properties with the key `players`, such as its capacity and values, returns the updated list details. This will overwrite all existing List.Values with the update list request values. Use addValue or removeValue for modifying the List.Values field.
+This function updates the list's properties with the key `players`, such as its capacity and values, and returns the updated list details.
+
+**Note:** The behavior of this function differs between the Local SDK Server and the SDK Server.
+
+- **Local SDK Server:** This will overwrite both the capacity and the values with the update request values. Use `AddListValue` or `RemoveListValue` for modifying the `List.Values` field.
+- **SDK Server:** This will only update the capacity of the list and does not modify the values.
 
 ###### Example
+**Local SDK Server Example:**
 
 ```bash
 curl -d '{"capacity": "120", "values": ["player3", "player4"]}' -H "Content-Type: application/json" -X PATCH http://localhost:${AGONES_SDK_HTTP_PORT}/v1beta1/lists/players
@@ -307,6 +313,16 @@ curl -d '{"capacity": "120", "values": ["player3", "player4"]}' -H "Content-Type
 Response:
 ```json
 {"name":"players", "capacity":"120", "values":["player3", "player4"]}
+```
+**SDK Server Example:**
+
+```bash
+curl -d '{"capacity": "120"}' -H "Content-Type: application/json" -X PATCH http://localhost:${AGONES_SDK_HTTP_PORT}/v1beta1/lists/players
+```
+
+Response:
+```json
+{"name":"players", "capacity":"120", "values":["player0", "player1", "player2"]}
 ```
 
 ##### Beta: AddListValue
