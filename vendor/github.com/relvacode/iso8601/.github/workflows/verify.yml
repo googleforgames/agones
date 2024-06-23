@@ -1,0 +1,41 @@
+name: Verify
+
+on: [push]
+
+jobs:
+  go-vet-lint-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: stable
+
+      - name: Verify dependencies
+        run: go mod verify
+
+      - name: Run go vet
+        run: go vet ./...
+
+      - name: Install staticcheck
+        run: go install honnef.co/go/tools/cmd/staticcheck@latest
+
+      - name: Run staticcheck
+        run: staticcheck ./...
+
+      - name: Install golint
+        run: go install golang.org/x/lint/golint@latest
+
+      - name: Run golint
+        run: golint ./...
+
+      - name: Run tests
+        run: go test -race -vet=off -json ./... > TestResults.json
+
+      - name: Upload Go test results
+        uses: actions/upload-artifact@v3
+        with:
+          name: Go-test-results
+          path: TestResults.json

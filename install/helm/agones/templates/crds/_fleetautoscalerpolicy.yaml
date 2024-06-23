@@ -118,7 +118,7 @@ policy:
           required:
             - policy
           properties:
-            id: # The id of a chain entry
+            uid: # The id of a chain entry, the id should be unique within the chain.
               type: string
             schedule:
               type: object

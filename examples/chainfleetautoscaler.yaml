@@ -32,7 +32,7 @@ spec:
       chain:
         # Id of chain entry.
         # Optional.
-      - id: "weekday"
+      - uid: "weekday"
         type: Schedule # Schedule based condition.
         schedule:
           # Timezone to be used for the schedule.
@@ -64,7 +64,7 @@ spec:
             maxReplicas: 2000
         # Id of chain entry.
         # Optional.
-      - id: "weekend" 
+      - uid: "weekend" 
         type: Schedule
         schedule:
           # Timezone to be used for the schedule.
@@ -93,7 +93,7 @@ spec:
             minCapacity: 500
             maxCapacity: 1000
         # Id of chain entry.
-      - id: "default"
+      - uid: "default"
         # Policy will always be applied when no other policy is applicable.
         # Required.
         policy:
