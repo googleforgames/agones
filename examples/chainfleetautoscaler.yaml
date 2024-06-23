@@ -14,7 +14,7 @@
 
 #
 # [Stage:Alpha]
-# [FeatureFlag:ChainFleetAutoscaler]
+# [FeatureFlag:ScheduledAutoscaler]
 # Example of a FleetAutoscaler - This is used to scale a fleet on a schedule,
 # allowing for different policies to be applied at different times.
 #

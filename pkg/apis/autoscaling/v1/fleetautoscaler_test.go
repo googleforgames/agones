@@ -477,30 +477,6 @@ func TestFleetAutoscalerChainValidateUpdate(t *testing.T) {
 			wantLength:   1,
 			wantField:    "spec.policy.chain",
 		},
-		"nil parameters": {
-			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
-				fap.Chain = nil
-			}),
-			featureFlags: string(runtime.FeatureScheduledAutoscaler) + "=true",
-			wantLength:   1,
-			wantField:    "spec.policy.chain",
-		},
-		"empty items": {
-			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
-				fap.Chain.Items = nil
-			}),
-			featureFlags: string(runtime.FeatureScheduledAutoscaler) + "=true",
-			wantLength:   1,
-			wantField:    "spec.policy.chain.items",
-		},
-		"empty schedule": {
-			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
-				fap.Chain.Items[0].Schedule = Schedule{}
-			}),
-			featureFlags: string(runtime.FeatureScheduledAutoscaler) + "=true",
-			wantLength:   1,
-			wantField:    "spec.policy.chain.items[0].schedule",
-		},
 		"empty policy": {
 			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
 				fap.Chain.Items[0].Policy = FleetAutoscalerPolicy{}
@@ -509,29 +485,62 @@ func TestFleetAutoscalerChainValidateUpdate(t *testing.T) {
 			wantLength:   1,
 			wantField:    "spec.policy.chain.items[0].policy",
 		},
-		"bad buffer size": {
+		"nested chain policy not allowed": {
 			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
-				fap.Chain.Items[0].Policy.Buffer.BufferSize = intstr.FromInt(0)
+				fap.Chain.Items[0].Policy.Chain = &ChainPolicy{}
 			}),
 			featureFlags: string(runtime.FeatureScheduledAutoscaler) + "=true",
 			wantLength:   1,
-			wantField:    "spec.policy.chain.items[0].policy.buffer.bufferSize",
+			wantField:    "spec.policy.chain.items[0].policy.chain",
 		},
-		"bad min replicas": {
+		"invalid nested policy": {
 			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
-				fap.Chain.Items[0].Policy.Buffer.MinReplicas = 2
-			}),
+				fap.Chain.Items[0].Policy.Buffer.MinReplicas = 20
+			}
+			),
 			featureFlags: string(runtime.FeatureScheduledAutoscaler) + "=true",
 			wantLength:   1,
 			wantField:    "spec.policy.chain.items[0].policy.buffer.minReplicas",
 		},
-		"bad max replicas": {
+		"invalid time zone": {
 			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
-				fap.Chain.Items[0].Policy.Buffer.MaxReplicas = 2
+				fap.Chain.Items[0].Schedule.Timezone = "invalid"
 			}),
 			featureFlags: string(runtime.FeatureScheduledAutoscaler) + "=true",
 			wantLength:   1,
-			wantField:    "spec.policy.chain.items[0].policy.buffer.maxReplicas",
+			wantField:    "spec.policy.chain.items[0].schedule.timezone",
+		},
+		"invalid start time": {
+			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
+				fap.Chain.Items[0].Schedule.Between.Start = "invalid"
+			}),
+			featureFlags: string(runtime.FeatureScheduledAutoscaler) + "=true",
+			wantLength:   1,
+			wantField:    "spec.policy.chain.items[0].schedule.between.start",
+		},
+		"invalid end time": {
+			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
+				fap.Chain.Items[0].Schedule.Between.End = "invalid"
+			}),
+			featureFlags: string(runtime.FeatureScheduledAutoscaler) + "=true",
+			wantLength:   1,
+			wantField:    "spec.policy.chain.items[0].schedule.between.end",
+		},
+		"invalid start cron": {
+			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
+				fap.Chain.Items[0].Schedule.ActivePeriod.StartCron = "invalid"
+			}),
+			featureFlags: string(runtime.FeatureScheduledAutoscaler) + "=true",
+			wantLength:   1,
+			wantField:    "spec.policy.chain.items[0].schedule.activePeriod.startCron",
+		},
+		"invalid duration": {
+			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
+				fap.Chain.Items[0].Schedule.ActivePeriod.Duration = "invalid"
+			}),
+			featureFlags: string(runtime.FeatureScheduledAutoscaler) + "=true",
+			wantLength:   1,
+			wantField:    "spec.policy.chain.items[0].schedule.activePeriod.duration",
 		},
 	}
 
