@@ -21,7 +21,6 @@ namespace Agones
 {
     public interface IAgonesSDK : IDisposable
     {
-        Task<bool> ConnectAsync();
         Task<Status> ReadyAsync();
         Task<Status> AllocateAsync();
         Task<Status> ReserveAsync(long seconds);
