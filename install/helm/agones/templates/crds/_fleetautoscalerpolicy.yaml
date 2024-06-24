@@ -148,10 +148,10 @@ policy:
                 type:
                   type: string
                   enum:
-                  - Buffer
-                  - Webhook
-                  - Counter
-                  - List
+                    - Buffer
+                    - Webhook
+                    - Counter
+                    - List
                 buffer:
                   type: object
                   nullable: true
