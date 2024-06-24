@@ -85,7 +85,7 @@ type FleetAutoscalerPolicy struct {
 	// List policy config params. Present only if FleetAutoscalerPolicyType = List.
 	// +optional
 	List *ListPolicy `json:"list,omitempty"`
-	// [Stage:Beta]
+	// [Stage:Alpha]
 	// [FeatureFlag:ScheduledAutoscaler]
 	// Chain policy config params. Present only if FleetAutoscalerPolicyType = Chain.
 	// +optional
