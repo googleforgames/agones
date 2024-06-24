@@ -67,11 +67,11 @@ const (
 	// FeaturePortPolicyNone is a feature flag to allow setting Port Policy to None.
 	FeaturePortPolicyNone Feature = "PortPolicyNone"
 
-	// FeatureScheduledAutoscaler is a feature flag to enable/disable scheduled fleet autoscaling.
-	FeatureScheduledAutoscaler Feature = "ScheduledAutoscaler"
-
 	////////////////
 	// Dev features
+
+	// FeatureScheduledAutoscaler is a feature flag to enable/disable scheduled fleet autoscaling.
+	FeatureScheduledAutoscaler Feature = "ScheduledAutoscaler"
 
 	////////////////
 	// Example feature
