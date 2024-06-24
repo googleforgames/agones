@@ -5681,11 +5681,11 @@ spec:
                     type:
                       type: string
                       enum:
-                      - Buffer
-                      - Webhook
-                      - Counter
-                      - List
-                      - Chain
+                        - Buffer
+                        - Webhook
+                        - Counter
+                        - List
+                        - Chain
                     buffer:
                       type: object
                       nullable: true
@@ -5767,7 +5767,7 @@ spec:
                           x-kubernetes-int-or-string: true
                           anyOf:
                             - type: integer
-                            - type: string 
+                            - type: string
                     chain:
                         type: array
                         nullable: true
