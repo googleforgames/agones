@@ -5767,7 +5767,7 @@ spec:
                           x-kubernetes-int-or-string: true
                           anyOf:
                             - type: integer
-                            - type: string
+                            - type: string 
                     chain:
                         type: array
                         nullable: true
@@ -5777,7 +5777,7 @@ spec:
                           required:
                             - policy
                           properties:
-                            id: # The id of a chain entry
+                            uid: # The uid of a chain entry.
                               type: string
                             schedule:
                               type: object

@@ -596,10 +596,6 @@ func listFixture() *FleetAutoscaler {
 	return customFixture(ListPolicyType)
 }
 
-func chainFixture() *FleetAutoscaler {
-	return customFixture(ChainPolicyType)
-}
-
 func customFixture(t FleetAutoscalerPolicyType) *FleetAutoscaler {
 	res := &FleetAutoscaler{
 		ObjectMeta: metav1.ObjectMeta{Name: "test"},
@@ -646,78 +642,6 @@ func customFixture(t FleetAutoscalerPolicyType) *FleetAutoscaler {
 		res.Spec.Policy.List = &ListPolicy{
 			BufferSize:  intstr.FromInt(5),
 			MaxCapacity: 10,
-		}
-
-	case ChainPolicyType:
-		res.Spec.Policy.Type = ChainPolicyType
-		res.Spec.Policy.Buffer = nil
-		res.Spec.Policy.Chain = &ChainPolicy{
-			Items: []ChainEntry{
-				{
-					UID: "weekdays",
-					Schedule: Schedule{
-						Timezone: "UTC",
-						Between: Between{
-							Start: "08:00",
-							End:   "18:00",
-						},
-						ActivePeriod: ActivePeriod{
-							StartCron: "0 8 * * 1-5",
-							Duration:  "10h",
-						},
-					},
-					Policy: FleetAutoscalerPolicy{
-						Type: BufferPolicyType,
-						Buffer: &BufferPolicy{
-							BufferSize:  intstr.FromInt(5),
-							MaxReplicas: 10,
-						},
-					},
-				},
-				{
-					UID: "weekends",
-					Schedule: Schedule{
-						Timezone: "UTC",
-						Between: Between{
-							Start: "08:00",
-							End:   "18:00",
-						},
-						ActivePeriod: ActivePeriod{
-							StartCron: "0 8 * * 6-7",
-							Duration:  "10h",
-						},
-					},
-					Policy: FleetAutoscalerPolicy{
-						Type: CounterPolicyType,
-						Counter: &CounterPolicy{
-							Key:         "playerCount",
-							BufferSize:  intstr.FromInt(5),
-							MaxCapacity: 10,
-						},
-					},
-				},
-				{
-					UID: "holidays",
-					Schedule: Schedule{
-						Timezone: "UTC",
-						Between: Between{
-							Start: "08:00",
-							End:   "18:00",
-						},
-						ActivePeriod: ActivePeriod{
-							StartCron: "0 8 * * 1-5",
-							Duration:  "10h",
-						},
-					},
-					Policy: FleetAutoscalerPolicy{
-						Type: BufferPolicyType,
-						Buffer: &BufferPolicy{
-							BufferSize:  intstr.FromInt(5),
-							MaxReplicas: 10,
-						},
-					},
-				},
-			},
 		}
 	}
 	return res
