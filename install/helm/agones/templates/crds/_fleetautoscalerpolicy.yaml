@@ -109,6 +109,8 @@ policy:
           anyOf:
             - type: integer
             - type: string
+    {{- $featureGates := include "agones.featureGates" . | fromYaml }} 
+    {{- if not $featureGates.ScheduledAutoscaler }} 
     chain:
         type: array
         nullable: true
@@ -118,7 +120,7 @@ policy:
           required:
             - policy
           properties:
-            uid: # The id of a chain entry, the id should be unique within the chain.
+            uid: # The uid of a chain entry.
               type: string
             schedule:
               type: object
@@ -231,4 +233,5 @@ policy:
                       anyOf:
                         - type: integer
                         - type: string
+    {{- end }}
 {{- end }}

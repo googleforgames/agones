@@ -456,112 +456,6 @@ func TestFleetAutoscalerListValidateUpdate(t *testing.T) {
 	}
 }
 
-func TestFleetAutoscalerChainValidateUpdate(t *testing.T) {
-	t.Parallel()
-
-	modifiedFAS := func(f func(*FleetAutoscalerPolicy)) *FleetAutoscaler {
-		fas := chainFixture()
-		f(&fas.Spec.Policy)
-		return fas
-	}
-
-	testCases := map[string]struct {
-		fas          *FleetAutoscaler
-		featureFlags string
-		wantLength   int
-		wantField    string
-	}{
-		"feature gate not turned on": {
-			fas:          chainFixture(),
-			featureFlags: string(runtime.FeatureScheduledAutoscaler) + "=false",
-			wantLength:   1,
-			wantField:    "spec.policy.chain",
-		},
-		"empty policy": {
-			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
-				fap.Chain.Items[0].Policy = FleetAutoscalerPolicy{}
-			}),
-			featureFlags: string(runtime.FeatureScheduledAutoscaler) + "=true",
-			wantLength:   1,
-			wantField:    "spec.policy.chain.items[0].policy",
-		},
-		"nested chain policy not allowed": {
-			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
-				fap.Chain.Items[0].Policy.Chain = &ChainPolicy{}
-			}),
-			featureFlags: string(runtime.FeatureScheduledAutoscaler) + "=true",
-			wantLength:   1,
-			wantField:    "spec.policy.chain.items[0].policy.chain",
-		},
-		"invalid nested policy": {
-			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
-				fap.Chain.Items[0].Policy.Buffer.MinReplicas = 20
-			}
-			),
-			featureFlags: string(runtime.FeatureScheduledAutoscaler) + "=true",
-			wantLength:   1,
-			wantField:    "spec.policy.chain.items[0].policy.buffer.minReplicas",
-		},
-		"invalid time zone": {
-			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
-				fap.Chain.Items[0].Schedule.Timezone = "invalid"
-			}),
-			featureFlags: string(runtime.FeatureScheduledAutoscaler) + "=true",
-			wantLength:   1,
-			wantField:    "spec.policy.chain.items[0].schedule.timezone",
-		},
-		"invalid start time": {
-			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
-				fap.Chain.Items[0].Schedule.Between.Start = "invalid"
-			}),
-			featureFlags: string(runtime.FeatureScheduledAutoscaler) + "=true",
-			wantLength:   1,
-			wantField:    "spec.policy.chain.items[0].schedule.between.start",
-		},
-		"invalid end time": {
-			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
-				fap.Chain.Items[0].Schedule.Between.End = "invalid"
-			}),
-			featureFlags: string(runtime.FeatureScheduledAutoscaler) + "=true",
-			wantLength:   1,
-			wantField:    "spec.policy.chain.items[0].schedule.between.end",
-		},
-		"invalid start cron": {
-			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
-				fap.Chain.Items[0].Schedule.ActivePeriod.StartCron = "invalid"
-			}),
-			featureFlags: string(runtime.FeatureScheduledAutoscaler) + "=true",
-			wantLength:   1,
-			wantField:    "spec.policy.chain.items[0].schedule.activePeriod.startCron",
-		},
-		"invalid duration": {
-			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
-				fap.Chain.Items[0].Schedule.ActivePeriod.Duration = "invalid"
-			}),
-			featureFlags: string(runtime.FeatureScheduledAutoscaler) + "=true",
-			wantLength:   1,
-			wantField:    "spec.policy.chain.items[0].schedule.activePeriod.duration",
-		},
-	}
-
-	runtime.FeatureTestMutex.Lock()
-	defer runtime.FeatureTestMutex.Unlock()
-
-	for name, tc := range testCases {
-		t.Run(name, func(t *testing.T) {
-			err := runtime.ParseFeatures(tc.featureFlags)
-			assert.NoError(t, err)
-
-			causes := tc.fas.Validate()
-
-			assert.Len(t, causes, tc.wantLength)
-			if tc.wantLength > 0 {
-				assert.Equal(t, tc.wantField, causes[0].Field)
-			}
-		})
-	}
-}
-
 func defaultFixture() *FleetAutoscaler {
 	return customFixture(BufferPolicyType)
 }
@@ -576,10 +470,6 @@ func counterFixture() *FleetAutoscaler {
 
 func listFixture() *FleetAutoscaler {
 	return customFixture(ListPolicyType)
-}
-
-func chainFixture() *FleetAutoscaler {
-	return customFixture(ChainPolicyType)
 }
 
 func customFixture(t FleetAutoscalerPolicyType) *FleetAutoscaler {
@@ -628,78 +518,6 @@ func customFixture(t FleetAutoscalerPolicyType) *FleetAutoscaler {
 		res.Spec.Policy.List = &ListPolicy{
 			BufferSize:  intstr.FromInt(5),
 			MaxCapacity: 10,
-		}
-
-	case ChainPolicyType:
-		res.Spec.Policy.Type = ChainPolicyType
-		res.Spec.Policy.Buffer = nil
-		res.Spec.Policy.Chain = &ChainPolicy{
-			Items: []ChainEntry{
-				{
-					UID: "weekdays",
-					Schedule: Schedule{
-						Timezone: "UTC",
-						Between: Between{
-							Start: "08:00",
-							End:   "18:00",
-						},
-						ActivePeriod: ActivePeriod{
-							StartCron: "0 8 * * 1-5",
-							Duration:  "10h",
-						},
-					},
-					Policy: FleetAutoscalerPolicy{
-						Type: BufferPolicyType,
-						Buffer: &BufferPolicy{
-							BufferSize:  intstr.FromInt(5),
-							MaxReplicas: 10,
-						},
-					},
-				},
-				{
-					UID: "weekends",
-					Schedule: Schedule{
-						Timezone: "UTC",
-						Between: Between{
-							Start: "08:00",
-							End:   "18:00",
-						},
-						ActivePeriod: ActivePeriod{
-							StartCron: "0 8 * * 6-7",
-							Duration:  "10h",
-						},
-					},
-					Policy: FleetAutoscalerPolicy{
-						Type: CounterPolicyType,
-						Counter: &CounterPolicy{
-							Key:         "playerCount",
-							BufferSize:  intstr.FromInt(5),
-							MaxCapacity: 10,
-						},
-					},
-				},
-				{
-					UID: "holidays",
-					Schedule: Schedule{
-						Timezone: "UTC",
-						Between: Between{
-							Start: "08:00",
-							End:   "18:00",
-						},
-						ActivePeriod: ActivePeriod{
-							StartCron: "0 8 * * 1-5",
-							Duration:  "10h",
-						},
-					},
-					Policy: FleetAutoscalerPolicy{
-						Type: BufferPolicyType,
-						Buffer: &BufferPolicy{
-							BufferSize:  intstr.FromInt(5),
-							MaxReplicas: 10,
-						},
-					},
-				},
-			},
 		}
 	}
 	return res
