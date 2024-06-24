@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+---
 {{/* schema for a fleet autoscaler policy */}}
 {{- define "fleetautoscaler.policy" }}
 policy:
@@ -22,11 +23,11 @@ policy:
     type:
       type: string
       enum:
-      - Buffer
-      - Webhook
-      - Counter
-      - List
-      - Chain
+        - Buffer
+        - Webhook
+        - Counter
+        - List
+        - Chain
     buffer:
       type: object
       nullable: true
@@ -109,8 +110,8 @@ policy:
           anyOf:
             - type: integer
             - type: string
-    {{- $featureGates := include "agones.featureGates" . | fromYaml }} 
-    {{- if not $featureGates.ScheduledAutoscaler }} 
+    {{- $featureGates := include "agones.featureGates" . | fromYaml }}
+    {{- if not $featureGates.ScheduledAutoscaler }}
     chain:
         type: array
         nullable: true

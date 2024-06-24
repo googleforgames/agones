@@ -1,3 +1,4 @@
+---
 # Copyright 2023 Google LLC All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,10 +14,10 @@
 # limitations under the License.
 
 #
-# [Stage:Dev]
-# [FeatureFlag:ScheduledAutoscaler]
-# Example of a FleetAutoscaler - This is used to scale a fleet on a schedule,
-# allowing for different policies to be applied at different times.
+# [Stage:Beta]
+# [FeatureFlag:CountsAndLists]
+# Example of a FleetAutoscaler - this is used to scale a Fleet automatically depending on the
+# available capacity of a Counter across the fleet.
 #
 
 #
@@ -28,65 +29,66 @@ metadata:
   name: chain-fleet-autoscaler
 spec:
   policy:
-    type: Chain # Chain based policy for autoscaling.
+    # Chain based policy for autoscaling.
+    type: Chain
     chain:
-    # UID of chain entry. Optional.
-    - uid: "weekday"
-      type: Schedule # Schedule based condition.
-      schedule:
-        # Timezone to be used for the schedule. Optional.
-        timezone: "America/New_York"
-        between:
-          # The policy becomes eligible for application starting on 
-          # Feb 20, 2024 at 4:04 PM. Optional.
-          start: "2024-02-19 16:04:00"
-          # The policy becomes ineligible for application on 
-          # Feb 23, 2024 at 4:04 PM. Optional.
-          end: "2024-02-23 16:04:00" # optional
-        activePeriod:
-          # Start applying the bufferSize everyday at 1:00 AM EST
-          # (Only eligible starting on Feb 20, 2024 at 4:04 PM EST). Optional.
-          startCron: "0 1 * * 0"
-          # Only apply the bufferSize for this 5 hours. Optional.
-          duration: "5h"
-      # Policy to be applied when the condition is met. Required.
-      policy:
-        type: Buffer
-        buffer:
-          bufferSize: 50
-          minReplicas: 100
-          maxReplicas: 2000
-    # UID of chain entry. Optional.
-    - uid: "weekend" 
-      type: Schedule
-      schedule:
-        # Timezone to be used for the schedule. Optional.
-        timezone: "America/New_York"
-        between:
-          # The policy becomes eligible for application starting on
-          # Feb 24, 2024 at 4:05 PM. Optional.
-          start: "2024-02-24 16:05:00"
-          end: "2024-02-26 16:05:00"
-        activePeriod:
-          # Start applying the bufferSize everyday at 1:00  AM
-          # (Only eligible starting on Feb 24, 2024 at 4:05 PM). Optional.
-          startCron: "0 1 * * 0"
-          # Only apply the bufferSize for this 7 hours. Optional.
-          duration: "7h"
-      # Policy to be applied when the condition is met. Required.
-      policy:
-        type: Counter
-        counter:
-          key: rooms
-          bufferSize: 10
-          minCapacity: 500
-          maxCapacity: 1000
-    # UID of chain entry.
-    - uid: "default"
-      # Policy will always be applied when no other policy is applicable. Required.
-      policy:
-        type: Buffer
-        buffer:
-          bufferSize: 5
-          minReplicas: 100
-          maxReplicas: 2000
+      # UID of chain entry. Optional.
+      - uid: "weekday"
+        type: Schedule  # Schedule based condition.
+        schedule:
+          # Timezone to be used for the schedule. Optional.
+          timezone: "America/New_York"
+          between:
+            # The policy becomes eligible for application starting on
+            # Feb 20, 2024 at 4:04 PM. Optional.
+            start: "2024-02-19 16:04:00"
+            # The policy becomes ineligible for application on
+            # Feb 23, 2024 at 4:04 PM. Optional.
+            end: "2024-02-23 16:04:00"
+          activePeriod:
+            # Start applying the bufferSize everyday at 1:00 AM EST
+            # (Only eligible starting on Feb 20, 2024 at 4:04 PM EST). Optional.
+            startCron: "0 1 * * 0"
+            # Only apply the bufferSize for this 5 hours. Optional.
+            duration: "5h"
+        # Policy to be applied when the condition is met. Required.
+        policy:
+          type: Buffer
+          buffer:
+            bufferSize: 50
+            minReplicas: 100
+            maxReplicas: 2000
+      # UID of chain entry. Optional.
+      - uid: "weekend"
+        type: Schedule
+        schedule:
+          # Timezone to be used for the schedule. Optional.
+          timezone: "America/New_York"
+          between:
+            # The policy becomes eligible for application starting on
+            # Feb 24, 2024 at 4:05 PM. Optional.
+            start: "2024-02-24 16:05:00"
+            end: "2024-02-26 16:05:00"
+          activePeriod:
+            # Start applying the bufferSize everyday at 1:00  AM
+            # (Only eligible starting on Feb 24, 2024 at 4:05 PM). Optional.
+            startCron: "0 1 * * 0"
+            # Only apply the bufferSize for this 7 hours. Optional.
+            duration: "7h"
+        # Policy to be applied when the condition is met. Required.
+        policy:
+          type: Counter
+          counter:
+            key: rooms
+            bufferSize: 10
+            minCapacity: 500
+            maxCapacity: 1000
+      # UID of chain entry.
+      - uid: "default"
+        # Policy will always be applied when no other policy is applicable. Required.
+        policy:
+          type: Buffer
+          buffer:
+            bufferSize: 5
+            minReplicas: 100
+            maxReplicas: 2000
