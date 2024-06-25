@@ -27,7 +27,7 @@ RollingUpdateFix: false
 PortRanges: false
 PortPolicyNone: false
 
-# Dev features`
+# Dev features
 ScheduledAutoscaler: false
 
 # Example feature
