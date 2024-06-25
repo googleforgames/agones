@@ -16,7 +16,7 @@
 #
 # [Stage:Dev]
 # [FeatureFlag:ScheduledAutoscaler]
-# Example of a FleetAutoscaler - this is used to scale a Fleet based on a schedule..
+# Example of a FleetAutoscaler - this is used to scale a Fleet based on a schedule.
 #
 
 #
