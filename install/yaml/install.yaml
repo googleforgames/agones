@@ -5779,24 +5779,24 @@ spec:
                           properties:
                             uid: # The uid of a chain entry.
                               type: string
-                            schedule:
+                            schedule: # Defines when the policy is applied.
                               type: object
                               properties:
                                 timezone: # Timezone to be used for the between period and active period.
                                   type: string
                                 between:
                                   type: object
-                                  start:
+                                  start: # Defines when to start evaluating the active period.
                                     type: string
-                                  end:
+                                  end: # Defines when to stop evaluating the active period.
                                     type: string
                                 activePeriod:
                                   type: object
-                                  startCron: # Cron expression defining the start time
+                                  startCron: # Cron expression defining when to start applying the policy.
                                     type: string
-                                  duration: # The length of time the policy should be applied for
+                                  duration: # The length of time the policy should be applied for.
                                     type: string
-                            policy:
+                            policy: # Defines which policy to apply during the active period. Required.
                               type: object
                               required:
                                 - type
