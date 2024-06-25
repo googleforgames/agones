@@ -103,18 +103,6 @@ namespace Agones
 			return beta;
 		}
 
-
-
-		/// <summary>
-		/// Connect the underlying gRPC channel.
-		/// </summary>
-		/// <returns>Always return true</returns>
-		[Obsolete("No need to call ConnectAsync anymore")]
-		public async Task<bool> ConnectAsync()
-		{
-			return true;
-		}
-
 		/// <summary>
 		/// Tells Agones that the Game Server is ready to take player connections
 		/// </summary>
