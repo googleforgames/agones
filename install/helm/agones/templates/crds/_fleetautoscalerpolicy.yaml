@@ -23,11 +23,11 @@ policy:
     type:
       type: string
       enum:
-        - Buffer
-        - Webhook
-        - Counter
-        - List
-        - Chain
+      - Buffer
+      - Webhook
+      - Counter
+      - List
+      - Chain
     buffer:
       type: object
       nullable: true
@@ -148,11 +148,10 @@ policy:
                 type:
                   type: string
                   enum:
-                    - Buffer
-                    - Webhook
-                    - Counter
-                    - List
-                buffer:
+                  - Buffer
+                  - Webhook
+                  - Counter
+                  - List
                   type: object
                   nullable: true
                   required:
