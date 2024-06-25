@@ -51,9 +51,10 @@ import (
 )
 
 const (
-	ipFixture       = "12.12.12.12"
-	ipv6Fixture     = "2001:0db8:85a3:0000:0000:8a2e:0370:7334"
-	nodeFixtureName = "node1"
+	ipFixture        = "12.12.12.12"
+	ipv6Fixture      = "2001:0db8:85a3:0000:0000:8a2e:0370:7334"
+	nodeFixtureName  = "node1"
+	sidecarRunAsUser = 1000
 )
 
 var GameServerKind = metav1.GroupVersionKind(agonesv1.SchemeGroupVersion.WithKind("GameServer"))
@@ -1306,6 +1307,9 @@ func TestControllerCreateGameServerPod(t *testing.T) {
 			assert.Equal(t, "FEATURE_GATES", sidecarContainer.Env[2].Name)
 			assert.Equal(t, "LOG_LEVEL", sidecarContainer.Env[3].Name)
 			assert.Equal(t, string(fixture.Spec.SdkServer.LogLevel), sidecarContainer.Env[3].Value)
+			assert.Equal(t, *sidecarContainer.SecurityContext.AllowPrivilegeEscalation, false)
+			assert.Equal(t, *sidecarContainer.SecurityContext.RunAsNonRoot, true)
+			assert.Equal(t, *sidecarContainer.SecurityContext.RunAsUser, int64(sidecarRunAsUser))
 
 			gsContainer := pod.Spec.Containers[1]
 			assert.Equal(t, fixture.Spec.Ports[0].HostPort, gsContainer.Ports[0].HostPort)
@@ -2257,7 +2261,7 @@ func newFakeController() (*Controller, agtesting.Mocks) {
 		map[string]portallocator.PortRange{agonesv1.DefaultPortRange: {MinPort: 10, MaxPort: 20}},
 		"sidecar:dev", false,
 		resource.MustParse("0.05"), resource.MustParse("0.1"),
-		resource.MustParse("50Mi"), resource.MustParse("100Mi"), "sdk-service-account",
+		resource.MustParse("50Mi"), resource.MustParse("100Mi"), sidecarRunAsUser, "sdk-service-account",
 		m.KubeClient, m.KubeInformerFactory, m.ExtClient, m.AgonesClient, m.AgonesInformerFactory)
 	c.recorder = m.FakeRecorder
 	return c, m
