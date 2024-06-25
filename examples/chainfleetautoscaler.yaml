@@ -14,10 +14,9 @@
 # limitations under the License.
 
 #
-# [Stage:Beta]
-# [FeatureFlag:CountsAndLists]
-# Example of a FleetAutoscaler - this is used to scale a Fleet automatically depending on the
-# available capacity of a Counter across the fleet.
+# [Stage:Dev]
+# [FeatureFlag:ScheduledAutoscaler]
+# Example of a FleetAutoscaler - this is used to scale a Fleet based on a schedule..
 #
 
 #
