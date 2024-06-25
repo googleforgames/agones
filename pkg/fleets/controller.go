@@ -678,6 +678,13 @@ func (c *Controller) updateFleetStatus(ctx context.Context, fleet *agonesv1.Flee
 		fCopy.Status.Counters = make(map[string]agonesv1.AggregatedCounterStatus)
 		fCopy.Status.Lists = make(map[string]agonesv1.AggregatedListStatus)
 	}
+	// Drop Counters and Lists status if the feature flag has been set to false
+	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
+		if len(fCopy.Status.Counters) != 0 || len(fCopy.Status.Lists) != 0 {
+			fCopy.Status.Counters = map[string]agonesv1.AggregatedCounterStatus{}
+			fCopy.Status.Lists = map[string]agonesv1.AggregatedListStatus{}
+		}
+	}
 
 	for _, gsSet := range list {
 		fCopy.Status.Replicas += gsSet.Status.Replicas

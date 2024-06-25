@@ -635,6 +635,13 @@ func computeStatus(list []*agonesv1.GameServer) agonesv1.GameServerSetStatus {
 			status.ReservedReplicas++
 		}
 
+		// Drop Counters and Lists status if the feature flag has been set to false
+		if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
+			if len(status.Counters) != 0 || len(status.Lists) != 0 {
+				status.Counters = map[string]agonesv1.AggregatedCounterStatus{}
+				status.Lists = map[string]agonesv1.AggregatedListStatus{}
+			}
+		}
 		// Aggregates all Counters and Lists only for GameServer all states (except IsBeingDeleted)
 		if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
 			status.Counters = aggregateCounters(status.Counters, gs.Status.Counters, gs.Status.State)

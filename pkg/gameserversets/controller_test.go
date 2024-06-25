@@ -17,7 +17,6 @@ package gameserversets
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"math/rand"
 	"net/http"
@@ -33,6 +32,7 @@ import (
 	utilruntime "agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/webhooks"
 	"github.com/heptiolabs/healthcheck"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -462,6 +462,87 @@ func TestComputeStatus(t *testing.T) {
 
 		assert.Equal(t, expected, computeStatus(list))
 	})
+}
+
+// Test that the aggregated Counters and Lists are removed from the Game Server Set status if the
+// FeatureCountsAndLists flag is set to false.
+func TestGameServerSetDropCountsAndListsStatus(t *testing.T) {
+	t.Parallel()
+	utilruntime.FeatureTestMutex.Lock()
+	defer utilruntime.FeatureTestMutex.Unlock()
+
+	gss := defaultFixture()
+	c, m := newFakeController()
+
+	list := createGameServers(gss, 2)
+	list[0].Status.Counters = map[string]agonesv1.CounterStatus{
+		"firstCounter": {Count: 5, Capacity: 10},
+	}
+	list[1].Status.Lists = map[string]agonesv1.ListStatus{
+		"firstList": {Capacity: 100, Values: []string{"4", "5", "6"}},
+	}
+	gsList := []*agonesv1.GameServer{&list[0], &list[1]}
+
+	expectedCounterStatus := map[string]agonesv1.AggregatedCounterStatus{
+		"firstCounter": {
+			AllocatedCount:    0,
+			AllocatedCapacity: 0,
+			Capacity:          10,
+			Count:             5,
+		},
+	}
+	expectedListStatus := map[string]agonesv1.AggregatedListStatus{
+		"firstList": {
+			AllocatedCount:    0,
+			AllocatedCapacity: 0,
+			Capacity:          100,
+			Count:             3,
+		},
+	}
+
+	flag := ""
+	updated := false
+
+	m.AgonesClient.AddReactor("update", "gameserversets",
+		func(action k8stesting.Action) (bool, runtime.Object, error) {
+			updated = true
+			ua := action.(k8stesting.UpdateAction)
+			gsSet := ua.GetObject().(*agonesv1.GameServerSet)
+
+			switch flag {
+			case string(utilruntime.FeatureCountsAndLists) + "=true":
+				assert.Equal(t, expectedCounterStatus, gsSet.Status.Counters)
+				assert.Equal(t, expectedListStatus, gsSet.Status.Lists)
+			case string(utilruntime.FeatureCountsAndLists) + "=false":
+				assert.Nil(t, gsSet.Status.Counters)
+				assert.Nil(t, gsSet.Status.Lists)
+			default:
+				return false, nil, errors.Errorf("Flag string(utilruntime.FeatureCountsAndLists) should be set")
+			}
+
+			return true, gsSet, nil
+		})
+
+	// Expect starting fleet to have Aggregated Counter and List Statuses
+	flag = string(utilruntime.FeatureCountsAndLists) + "=true"
+	require.NoError(t, utilruntime.ParseFeatures(flag))
+	err := c.syncGameServerSetStatus(context.Background(), gss, gsList)
+	assert.Nil(t, err)
+	assert.True(t, updated)
+
+	updated = false
+	flag = string(utilruntime.FeatureCountsAndLists) + "=false"
+	require.NoError(t, utilruntime.ParseFeatures(flag))
+	err = c.syncGameServerSetStatus(context.Background(), gss, gsList)
+	assert.Nil(t, err)
+	assert.True(t, updated)
+
+	updated = false
+	flag = string(utilruntime.FeatureCountsAndLists) + "=true"
+	require.NoError(t, utilruntime.ParseFeatures(flag))
+	err = c.syncGameServerSetStatus(context.Background(), gss, gsList)
+	assert.Nil(t, err)
+	assert.True(t, updated)
 }
 
 func TestControllerWatchGameServers(t *testing.T) {
