@@ -1,4 +1,4 @@
-# Copyright 2020 Google LLC All Rights Reserved.
+# Copyright 2024 Google LLC All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -27,7 +27,10 @@ policy:
       - Webhook
       - Counter
       - List
+      {{- $featureGates := include "agones.featureGates" . | fromYaml }}
+      {{- if $featureGates.ScheduledAutoscaler }}
       - Chain
+      {{- end }}
     buffer:
       type: object
       nullable: true
@@ -110,8 +113,7 @@ policy:
           anyOf:
             - type: integer
             - type: string
-    {{- $featureGates := include "agones.featureGates" . | fromYaml }}
-    {{- if not $featureGates.ScheduledAutoscaler }}
+    {{- if $featureGates.ScheduledAutoscaler }}
     chain:
         type: array
         nullable: true
@@ -140,98 +142,6 @@ policy:
                     type: string
                   duration: # The length of time the policy should be applied for.
                     type: string
-            policy: # Defines which policy to apply during the active period. Required.
-              type: object
-              required:
-                - type
-              properties:
-                type:
-                  type: string
-                  enum:
-                  - Buffer
-                  - Webhook
-                  - Counter
-                  - List
-                  type: object
-                  nullable: true
-                  required:
-                    - maxReplicas
-                  properties:
-                    minReplicas:
-                      type: integer
-                      minimum: 0
-                    maxReplicas:
-                      type: integer
-                      minimum: 1
-                    bufferSize:
-                      x-kubernetes-int-or-string: true
-                      anyOf:
-                        - type: integer
-                        - type: string
-                webhook:
-                  type: object
-                  nullable: true
-                  properties:
-                    url:
-                      type: string
-                    service:
-                      type: object
-                      required:
-                        - namespace
-                        - name
-                      properties:
-                        namespace:
-                          type: string
-                        name:
-                          type: string
-                        path:
-                          type: string
-                        port:
-                          type: integer
-                    caBundle:
-                      type: string
-                      format: byte
-                counter:
-                  type: object
-                  nullable: true
-                  required:
-                    - key
-                    - bufferSize
-                    - maxCapacity
-                  properties:
-                    key:  # The name of the Counter.
-                      type: string
-                    minCapacity:  # Minimum aggregate counter capacity that can be provided by this FleetAutoscaler. If not specified, the actual minimum capacity will be bufferSize.
-                      type: integer
-                      minimum: 0
-                    maxCapacity:  # Maximum aggregate counter capacity that can be provided by this FleetAutoscaler. Required.
-                      type: integer
-                      minimum: 1
-                    bufferSize:  # Size of a buffer of counted items that are available in the Fleet (available capacity). It can be specified either in absolute (i.e. 5) or percentage format (i.e. 5%).
-                      x-kubernetes-int-or-string: true
-                      anyOf:
-                        - type: integer
-                        - type: string
-                list:
-                  type: object
-                  nullable: true
-                  required:
-                    - key
-                    - bufferSize
-                    - maxCapacity
-                  properties:
-                    key:  # The name of the List.
-                      type: string
-                    minCapacity:  # Minimum aggregate list capacity that can be provided by this FleetAutoscaler. If not specified, the actual minimum capacity will be bufferSize.
-                      type: integer
-                      minimum: 0
-                    maxCapacity:  # Maximum aggregate list capacity that can be provided by this FleetAutoscaler. Required.
-                      type: integer
-                      minimum: 1
-                    bufferSize:  # Size of a buffer based on the list capacity that is available over the current aggregate list length in the Fleet. It can be specified either in absolute (i.e. 5) or percentage format (i.e. 5%).
-                      x-kubernetes-int-or-string: true
-                      anyOf:
-                        - type: integer
-                        - type: string
+            {{ include "fleetautoscaler.policy" | indent 12 }} # Defines which policy to apply during the active period. Required.
     {{- end }}
 {{- end }}
