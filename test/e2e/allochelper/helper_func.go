@@ -293,7 +293,9 @@ func DeleteAgonesPod(ctx context.Context, podName string, namespace string, fram
 	return err
 }
 
-// GetAllocatorClient creates a client and ensure that it can be connected to
+// GetAllocatorClient creates an allocator client and ensures that it can be connected to. Returns
+// a client that has at least once successfully allocated from a fleet. The fleet used to test
+// the client is leaked.
 func GetAllocatorClient(ctx context.Context, t *testing.T, framework *e2e.Framework) (pb.AllocationServiceClient, error) {
 	logger := e2e.TestLogger(t)
 	ip, port := GetAllocatorEndpoint(ctx, t, framework)
@@ -334,13 +336,15 @@ func GetAllocatorClient(ctx context.Context, t *testing.T, framework *e2e.Framew
 	}
 
 	var response *pb.AllocationResponse
-	err = wait.PollUntilContextTimeout(context.Background(), 2*time.Second, 5*time.Minute, true, func(ctx context.Context) (bool, error) {
-		response, err = grpcClient.Allocate(context.Background(), request)
+	err = wait.PollUntilContextTimeout(ctx, 5*time.Second, 5*time.Minute, true, func(ctx context.Context) (bool, error) {
+		response, err = grpcClient.Allocate(ctx, request)
 		if err != nil {
-			logger.WithError(err).Info("failing Allocate request")
+			logger.WithError(err).Info("Failed grpc allocation request while waiting for certs to stabilize")
 			return false, nil
 		}
 		ValidateAllocatorResponse(t, response)
+		err = DeleteAgonesPod(ctx, response.GameServerName, framework.Namespace, framework)
+		assert.NoError(t, err, "Failed to delete game server pod %s", response.GameServerName)
 		return true, nil
 	})
 	if err != nil {
