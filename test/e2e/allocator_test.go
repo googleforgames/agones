@@ -87,12 +87,12 @@ func TestAllocatorWithDeprecatedRequired(t *testing.T) {
 	// wait for the allocation system to come online
 	err = wait.PollUntilContextTimeout(context.Background(), 2*time.Second, 5*time.Minute, true, func(ctx context.Context) (bool, error) {
 		// create the grpc client each time, as we may end up looking at an old cert
-		dialOpts, err := helper.CreateRemoteClusterDialOption(ctx, allocatorClientSecretNamespace, allocatorClientSecretName, tlsCA, framework)
+		dialOpts, err := helper.CreateRemoteClusterDialOptions(ctx, allocatorClientSecretNamespace, allocatorClientSecretName, tlsCA, framework)
 		if err != nil {
 			return false, err
 		}
 
-		conn, err := grpc.Dial(requestURL, dialOpts)
+		conn, err := grpc.Dial(requestURL, dialOpts...)
 		if err != nil {
 			logrus.WithError(err).Info("failing grpc.Dial")
 			return false, nil
@@ -181,12 +181,12 @@ func TestAllocatorWithSelectors(t *testing.T) {
 	// wait for the allocation system to come online
 	err = wait.PollUntilContextTimeout(context.Background(), 2*time.Second, 5*time.Minute, true, func(ctx context.Context) (bool, error) {
 		// create the grpc client each time, as we may end up looking at an old cert
-		dialOpts, err := helper.CreateRemoteClusterDialOption(ctx, allocatorClientSecretNamespace, allocatorClientSecretName, tlsCA, framework)
+		dialOpts, err := helper.CreateRemoteClusterDialOptions(ctx, allocatorClientSecretNamespace, allocatorClientSecretName, tlsCA, framework)
 		if err != nil {
 			return false, err
 		}
 
-		conn, err := grpc.Dial(requestURL, dialOpts)
+		conn, err := grpc.Dial(requestURL, dialOpts...)
 		if err != nil {
 			logrus.WithError(err).Info("failing grpc.Dial")
 			return false, nil
@@ -357,11 +357,11 @@ func TestAllocatorWithCountersAndLists(t *testing.T) {
 		},
 	}
 	err = wait.PollUntilContextTimeout(context.Background(), 2*time.Second, 5*time.Minute, true, func(ctx context.Context) (bool, error) {
-		dialOpts, err := helper.CreateRemoteClusterDialOption(ctx, allocatorClientSecretNamespace, allocatorClientSecretName, tlsCA, framework)
+		dialOpts, err := helper.CreateRemoteClusterDialOptions(ctx, allocatorClientSecretNamespace, allocatorClientSecretName, tlsCA, framework)
 		if err != nil {
 			return false, err
 		}
-		conn, err := grpc.Dial(requestURL, dialOpts)
+		conn, err := grpc.Dial(requestURL, dialOpts...)
 		if err != nil {
 			logrus.WithError(err).Info("failing grpc.Dial")
 			return false, nil
@@ -612,12 +612,12 @@ func TestAllocatorCrossNamespace(t *testing.T) {
 	// wait for the allocation system to come online
 	err = wait.PollUntilContextTimeout(context.Background(), 2*time.Second, 5*time.Minute, true, func(ctx context.Context) (bool, error) {
 		// create the grpc client each time, as we may end up looking at an old cert
-		dialOpts, err := helper.CreateRemoteClusterDialOption(ctx, namespaceA, allocatorClientSecretName, tlsCA, framework)
+		dialOpts, err := helper.CreateRemoteClusterDialOptions(ctx, namespaceA, allocatorClientSecretName, tlsCA, framework)
 		if err != nil {
 			return false, err
 		}
 
-		conn, err := grpc.Dial(requestURL, dialOpts)
+		conn, err := grpc.Dial(requestURL, dialOpts...)
 		if err != nil {
 			logrus.WithError(err).Info("failing grpc.Dial")
 			return false, nil

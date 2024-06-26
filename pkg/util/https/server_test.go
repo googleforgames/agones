@@ -27,7 +27,7 @@ type testServer struct {
 	server *httptest.Server
 }
 
-func (ts *testServer) Close() error {
+func (ts *testServer) Shutdown(_ context.Context) error {
 	ts.server.Close()
 	return nil
 }

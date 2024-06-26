@@ -18,7 +18,6 @@ package main
 import (
 	"context"
 	"io"
-	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -46,6 +45,7 @@ import (
 	"agones.dev/agones/pkg/metrics"
 	"agones.dev/agones/pkg/util/apiserver"
 	"agones.dev/agones/pkg/util/https"
+	"agones.dev/agones/pkg/util/httpserver"
 	"agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/signals"
 	"agones.dev/agones/pkg/util/webhooks"
@@ -150,7 +150,7 @@ func main() {
 	agonesInformerFactory := externalversions.NewSharedInformerFactory(agonesClient, defaultResync)
 	kubeInformerFactory := informers.NewSharedInformerFactory(kubeClient, defaultResync)
 
-	server := &httpServer{}
+	server := &httpserver.Server{Logger: logger}
 	var health healthcheck.Handler
 
 	// Stackdriver metrics
@@ -339,27 +339,4 @@ type config struct {
 
 type runner interface {
 	Run(ctx context.Context, workers int) error
-}
-
-type httpServer struct {
-	http.ServeMux
-}
-
-func (h *httpServer) Run(_ context.Context, _ int) error {
-	logger.Info("Starting http server...")
-	srv := &http.Server{
-		Addr:    ":8080",
-		Handler: h,
-	}
-	defer srv.Close() // nolint: errcheck
-
-	if err := srv.ListenAndServe(); err != nil {
-		if err == http.ErrServerClosed {
-			logger.WithError(err).Info("http server closed")
-		} else {
-			wrappedErr := errors.Wrap(err, "Could not listen on :8080")
-			runtime.HandleError(logger.WithError(wrappedErr), wrappedErr)
-		}
-	}
-	return nil
 }
