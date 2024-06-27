@@ -117,11 +117,7 @@ policy:
           anyOf:
             - type: integer
             - type: string
-<<<<<<< HEAD
     {{- if .includeChainPolicy }}
-=======
-    {{- if $featureGates.ScheduledAutoscaler }}
->>>>>>> 17038c8e6 (fix copyright dates, feature gate and include policy)
     chain:
       type: array
       nullable: true
@@ -140,7 +136,6 @@ policy:
                 type: object
                 start: # Defines when to start evaluating the active period, must conform to RFC3339.
                   type: string
-<<<<<<< HEAD
                 end: # Defines when to stop evaluating the active period, must conform to RFC3339.
                   type: string
               activePeriod:
@@ -152,20 +147,5 @@ policy:
                 duration: # The length of time the policy should be applied for (e.g. 2h45m).
                   type: string
             {{- include "fleetautoscaler.policy" (dict "includeChainPolicy" false) | indent 12 }} # Defines which policy to apply during the active period. Required.
-=======
-                between:
-                  type: object
-                  start: # Defines when to start evaluating the active period.
-                    type: string
-                  end: # Defines when to stop evaluating the active period.
-                    type: string
-                activePeriod:
-                  type: object
-                  startCron: # Cron expression defining when to start applying the policy.
-                    type: string
-                  duration: # The length of time the policy should be applied for.
-                    type: string
-            {{ include "fleetautoscaler.policy" | indent 12 }} # Defines which policy to apply during the active period. Required.
->>>>>>> 17038c8e6 (fix copyright dates, feature gate and include policy)
     {{- end }}
 {{- end }}
