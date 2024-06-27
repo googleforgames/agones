@@ -55,7 +55,8 @@ spec:
                   minLength: 1
                   maxLength: 63
                   pattern: "^[a-z0-9]([-\\.a-z0-9]*[a-z0-9])?$"
-                {{- include "fleetautoscaler.policy" . | indent 16 }}
+                {{- $featureGates := include "agones.featureGates" . | fromYaml }}
+                {{- include "fleetautoscaler.policy" (dict "includeChainPolicy" $featureGates.ScheduledAutoscaler) | indent 16 }}
                 sync:
                   type: object
                   required:

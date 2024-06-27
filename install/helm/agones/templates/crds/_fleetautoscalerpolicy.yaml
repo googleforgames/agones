@@ -27,8 +27,7 @@ policy:
       - Webhook
       - Counter
       - List
-      {{- $featureGates := include "agones.featureGates" . | fromYaml }}
-      {{- if $featureGates.ScheduledAutoscaler }}
+      {{- if .includeChainPolicy }}
       - Chain
       {{- end }}
     buffer:
@@ -113,7 +112,7 @@ policy:
           anyOf:
             - type: integer
             - type: string
-    {{- if $featureGates.ScheduledAutoscaler }}
+    {{- if .includeChainPolicy }}
     chain:
         type: array
         nullable: true
@@ -142,6 +141,6 @@ policy:
                     type: string
                   duration: # The length of time the policy should be applied for.
                     type: string
-            {{ include "fleetautoscaler.policy" | indent 12 }} # Defines which policy to apply during the active period. Required.
+            {{- include "fleetautoscaler.policy" (dict "includeChainPolicy" false) | indent 12 }} # Defines which policy to apply during the active period. Required.
     {{- end }}
 {{- end }}
