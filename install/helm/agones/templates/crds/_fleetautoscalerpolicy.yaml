@@ -27,12 +27,7 @@ policy:
       - Webhook
       - Counter
       - List
-<<<<<<< HEAD
       {{- if .includeChainPolicy }}
-=======
-      {{- $featureGates := include "agones.featureGates" . | fromYaml }}
-      {{- if $featureGates.ScheduledAutoscaler }}
->>>>>>> 17038c8e6 (fix copyright dates, feature gate and include policy)
       - Chain
       {{- end }}
     buffer:
