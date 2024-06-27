@@ -114,33 +114,33 @@ policy:
             - type: string
     {{- if .includeChainPolicy }}
     chain:
-        type: array
+      type: array
+      nullable: true
+      items:
+        type: object
         nullable: true
-        items:
-          type: object
-          nullable: true
-          required:
-            - policy
-          properties:
-            uid: # The uid of a chain entry.
-              type: string
-            schedule: # Defines when the policy is applied.
-              type: object
-              properties:
-                timezone: # Timezone to be used for the between period and active period.
+        required:
+          - policy
+        properties:
+          uid: # The uid of a chain entry.
+            type: string
+          schedule: # Defines when the policy is applied.
+            type: object
+            properties:
+              timezone: # Timezone to be used for the between period and active period.
+                type: string
+              between:
+                type: object
+                start: # Defines when to start evaluating the active period.
                   type: string
-                between:
-                  type: object
-                  start: # Defines when to start evaluating the active period.
-                    type: string
-                  end: # Defines when to stop evaluating the active period.
-                    type: string
-                activePeriod:
-                  type: object
-                  startCron: # Cron expression defining when to start applying the policy.
-                    type: string
-                  duration: # The length of time the policy should be applied for.
-                    type: string
+                end: # Defines when to stop evaluating the active period.
+                  type: string
+              activePeriod:
+                type: object
+                startCron: # Cron expression defining when to start applying the policy.
+                  type: string
+                duration: # The length of time the policy should be applied for.
+                  type: string
             {{- include "fleetautoscaler.policy" (dict "includeChainPolicy" false) | indent 12 }} # Defines which policy to apply during the active period. Required.
     {{- end }}
 {{- end }}
