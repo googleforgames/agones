@@ -226,3 +226,27 @@ The properties for the Unity Agones SDK can be found in the Inspector.
   - Whether the server sends a health ping to the Agones sidecar. (default: `true`)
 - Log Enabled
   - Debug Logging Enabled. Debug logging for development of this Plugin. (default: `false`)
+
+## Contributing
+Thank you for your interest in contributing to the Agones Unity client library. Setting up a local workspace to help develop the Agones Unity Client SDK involves cloning the Agones source code, having a host unity project, and allow the unity project to run the external tests in the Unity test runner.
+
+### A local copy of Agones source code
+If you don't already have a local copy of the Agones source code you can either (1) clone the official [googleforgames/agones repository](https://github.com/googleforgames/agones) or (2) fork when you know you want to contribute and then clone your fork. Make note of where you clone the project to for the next setup steps!
+
+### Setting up the Host Unity Project
+You will want a unity project to "host" a local copy of the agones unity sdk source code. We like the unity project name "Agones Unity SDK Host Project" but name the host unity project whatever you like.
+
+Next we will tell the unity package manager about the local agones unity sdk. Open up the unity Package Manager window (`Window > Package Manager`). Click the `+` (top left side of Package Manager window) to then click `Add package from disk`. Select your local copy of [sdks/unity/package.json](https://github.com/googleforgames/agones/blob/main/sdks/unity/package.json) in the file finder window. Unity package manager will then load up the Agones Unity SDK which will reflect in the package manager window.
+
+Next will be configuring the host unity project to run agones unity sdk tests. Open up `Packages/manifest.json` from the root of the host unity project. Add the follow to the JSON file after the `dependencies` property:
+```json
+...
+  },
+  "testables": [
+    "com.googleforgames.agones"
+  ]
+}
+```
+You are now able to see tests for agones unity sdk in the test runner of your host unity project.
+
+Open up a code editor to your unity project as you normally would but when contributing you will be selecting files from the `Packages/Agones Unity SDK` section the code base to make edits. Tests covering contributions is always encouraged. You are now ready to develop the agones unity sdk using a unity host project.
