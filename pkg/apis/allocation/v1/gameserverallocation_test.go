@@ -139,6 +139,14 @@ func TestGameServerSelectorApplyDefaults(t *testing.T) {
 	assert.NotNil(t, s.Counters)
 	assert.NotNil(t, s.Lists)
 
+	// Test apply defaults is idempotent -- calling ApplyDefaults more than one time does not change the original result.
+	s.ApplyDefaults()
+	assert.Equal(t, agonesv1.GameServerStateReady, *s.GameServerState)
+	assert.Equal(t, int64(0), s.Players.MinAvailable)
+	assert.Equal(t, int64(0), s.Players.MaxAvailable)
+	assert.NotNil(t, s.Counters)
+	assert.NotNil(t, s.Lists)
+
 	state := agonesv1.GameServerStateAllocated
 	// set values
 	s = &GameServerSelector{
@@ -147,6 +155,19 @@ func TestGameServerSelectorApplyDefaults(t *testing.T) {
 		Counters:        map[string]CounterSelector{"foo": {MinAvailable: 1, MaxAvailable: 10}},
 		Lists:           map[string]ListSelector{"bar": {MinAvailable: 2}},
 	}
+	s.ApplyDefaults()
+	assert.Equal(t, state, *s.GameServerState)
+	assert.Equal(t, int64(10), s.Players.MinAvailable)
+	assert.Equal(t, int64(20), s.Players.MaxAvailable)
+	assert.Equal(t, int64(0), s.Counters["foo"].MinCount)
+	assert.Equal(t, int64(0), s.Counters["foo"].MaxCount)
+	assert.Equal(t, int64(1), s.Counters["foo"].MinAvailable)
+	assert.Equal(t, int64(10), s.Counters["foo"].MaxAvailable)
+	assert.Equal(t, int64(2), s.Lists["bar"].MinAvailable)
+	assert.Equal(t, int64(0), s.Lists["bar"].MaxAvailable)
+	assert.Equal(t, "", s.Lists["bar"].ContainsValue)
+
+	// Test apply defaults is idempotent -- calling ApplyDefaults more than one time does not change the original result.
 	s.ApplyDefaults()
 	assert.Equal(t, state, *s.GameServerState)
 	assert.Equal(t, int64(10), s.Players.MinAvailable)
