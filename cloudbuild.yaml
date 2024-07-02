@@ -379,7 +379,7 @@ steps:
   #
   - name: gcr.io/cloud-builders/gcloud
     id: cleanup-services
-    waitFor: [htmltest-save-cache, rust-build-save-cache, htmltest-save-cache, tests]
+    waitFor: [htmltest-save-cache, rust-build-save-cache, tests, build-images]
     entrypoint: bash
     args:
       - -c
