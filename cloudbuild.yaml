@@ -382,14 +382,14 @@ steps:
     waitFor: [htmltest-save-cache, rust-build-save-cache, htmltest-save-cache, tests]
     entrypoint: bash
     args:
-    - -c
-    - |
-      set -e
-      set -o pipefail
-      for service in preview development default; do
-       echo "Cleaning up $service service..."
+      - -c
+      - |
+        set -e
+        set -o pipefail
+        for service in preview development default; do
+        echo "Cleaning up $service service..."
         gcloud app versions list --service=$service --filter="traffic_split<1" --sort-by=~last_deployed_time.datetime --format="table[no-heading](version.id)"
-      done
+        done
 
 substitutions:
   _CACHE_BUCKET: agones-build-cache
