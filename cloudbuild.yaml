@@ -389,13 +389,7 @@ steps:
         set -o pipefail
         for service in preview development default; do
           echo "Cleaning up $service service..."
-          #Retrieve version ids
-          versions=$(gcloud app versions list --service=$service --filter="traffic_split<1" --sort-by=~last_deployed_time.datetime --format="table[no-heading](version.id)")
-           if [ "$service" == "preview" ]; then
-            tail -n +20 <<< "$versions"
-          else
-            tail -n +5 <<< "$versions"
-          fi
+          gcloud app versions list --service=$1 --filter="traffic_split<1" --sort-by=~last_deployed_time.datetime --format="table[no-heading](version.id)" | tail -n +50 #| xargs gcloud app versions delete --service=$service --quiet
         done
 
 substitutions:
