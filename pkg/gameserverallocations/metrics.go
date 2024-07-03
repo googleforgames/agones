@@ -44,29 +44,6 @@ var (
 )
 
 func init() {
-	/*
-		stateViews := []*view.View{
-			{
-				Name:        "gameserver_allocations_duration_seconds",
-				Measure:     gameServerAllocationsLatency,
-				Description: "The distribution of gameserver allocation requests latencies.",
-				Aggregation: view.Distribution(0, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1, 2, 3),
-				TagKeys:     []tag.Key{keyFleetName, keyClusterName, keyMultiCluster, keyStatus, keySchedulingStrategy, keyTest},
-			},
-			{
-				Name:        "gameserver_allocations_errors",
-				Measure:     gameServerAllocationsErrors,
-				Description: "The distribution of gameserver allocation errors",
-				Aggregation: view.LastValue(),
-				TagKeys:     []tag.Key{keyFleetName, keyClusterName, keyMultiCluster, keyStatus, keySchedulingStrategy},
-			},
-		}
-		//runtime.Must(view.Register(stateViews))
-		for _, v := range stateViews {
-			if err := view.Register(v); err != nil {
-				logger.WithError(err).Error("could not register view")
-			}
-		}*/
 	runtime.Must(view.Register(&view.View{
 		Name:        "gameserver_allocations_duration_seconds",
 		Measure:     gameServerAllocationsLatency,
