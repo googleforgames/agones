@@ -392,9 +392,9 @@ steps:
           #Retrieve version ids
           versions=$(gcloud app versions list --service=$service --filter="traffic_split<1" --sort-by=~last_deployed_time.datetime --format="table[no-heading](version.id)")
            if [ "$service" == "preview" ]; then
-            tail -n +30 <<< "$versions" #| xargs gcloud app versions delete --service=$service --quiet
+            tail -n +20 <<< "$versions"
           else
-            tail -n +10 <<< "$versions" #| xargs gcloud app versions delete --service=$service --quiet
+            tail -n +5 <<< "$versions"
           fi
         done
 
