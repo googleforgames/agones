@@ -37,17 +37,42 @@ var (
 	keyMultiCluster       = mt.MustTagKey("is_multicluster")
 	keyStatus             = mt.MustTagKey("status")
 	keySchedulingStrategy = mt.MustTagKey("scheduling_strategy")
+	keyTest               = mt.MustTagKey("test")
 
 	gameServerAllocationsLatency = stats.Float64("gameserver_allocations/latency", "The duration of gameserver allocations", "s")
+	gameServerAllocationsErrors  = stats.Float64("gameserver_allocations/errors", "The errors of gameserver allocations", "1")
 )
 
 func init() {
+	/*
+		stateViews := []*view.View{
+			{
+				Name:        "gameserver_allocations_duration_seconds",
+				Measure:     gameServerAllocationsLatency,
+				Description: "The distribution of gameserver allocation requests latencies.",
+				Aggregation: view.Distribution(0, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1, 2, 3),
+				TagKeys:     []tag.Key{keyFleetName, keyClusterName, keyMultiCluster, keyStatus, keySchedulingStrategy, keyTest},
+			},
+			{
+				Name:        "gameserver_allocations_errors",
+				Measure:     gameServerAllocationsErrors,
+				Description: "The distribution of gameserver allocation errors",
+				Aggregation: view.LastValue(),
+				TagKeys:     []tag.Key{keyFleetName, keyClusterName, keyMultiCluster, keyStatus, keySchedulingStrategy},
+			},
+		}
+		//runtime.Must(view.Register(stateViews))
+		for _, v := range stateViews {
+			if err := view.Register(v); err != nil {
+				logger.WithError(err).Error("could not register view")
+			}
+		}*/
 	runtime.Must(view.Register(&view.View{
 		Name:        "gameserver_allocations_duration_seconds",
 		Measure:     gameServerAllocationsLatency,
 		Description: "The distribution of gameserver allocation requests latencies.",
 		Aggregation: view.Distribution(0, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1, 2, 3),
-		TagKeys:     []tag.Key{keyFleetName, keyClusterName, keyMultiCluster, keyStatus, keySchedulingStrategy},
+		TagKeys:     []tag.Key{keyFleetName, keyClusterName, keyMultiCluster, keyStatus, keySchedulingStrategy, keyTest},
 	}))
 }
 
@@ -58,6 +83,7 @@ var latencyTags = []tag.Mutator{
 	tag.Insert(keySchedulingStrategy, "none"),
 	tag.Insert(keyFleetName, "none"),
 	tag.Insert(keyStatus, "none"),
+	tag.Insert(keyTest, "test"),
 }
 
 type metrics struct {
@@ -79,11 +105,12 @@ func (r *metrics) mutate(m ...tag.Mutator) {
 // setStatus set the latency status tag.
 func (r *metrics) setStatus(status string) {
 	r.mutate(tag.Update(keyStatus, status))
+	r.mutate(tag.Update(keyTest, "test1"))
 }
 
 // setError set the latency status tag as error.
 func (r *metrics) setError() {
-	r.mutate(tag.Update(keyStatus, "error"))
+	r.mutate(tag.Update(keyStatus, "ERRRORRRRRRRRR"))
 }
 
 // setRequest set request metric tags.
@@ -122,4 +149,9 @@ func (r *metrics) setResponse(o k8sruntime.Object) {
 // record the current allocation latency.
 func (r *metrics) record() {
 	stats.Record(r.ctx, gameServerAllocationsLatency.M(time.Since(r.start).Seconds()))
+}
+
+// record the current allocation error.
+func (r *metrics) recordAllocationError() {
+	stats.Record(r.ctx, gameServerAllocationsErrors.M(1))
 }
