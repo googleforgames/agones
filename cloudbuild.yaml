@@ -389,7 +389,7 @@ steps:
         set -o pipefail
         for service in preview development default; do
           echo "Cleaning up $service service..."
-          gcloud app versions list --service=$service --filter="traffic_split<1" --sort-by=~last_deployed_time.datetime --format="table[no-heading](version.id)"
+          gcloud app versions list --service=$service --filter="traffic_split<1" --sort-by=~last_deployed_time.datetime --format="table[no-heading](version.id)" | tail -n +$2
         done
 
 substitutions:
