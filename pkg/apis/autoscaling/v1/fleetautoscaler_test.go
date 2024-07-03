@@ -456,6 +456,24 @@ func TestFleetAutoscalerListValidateUpdate(t *testing.T) {
 	}
 }
 
+func TestFleetAutoscalerApplyDefaults(t *testing.T) {
+	fas := &FleetAutoscaler{}
+
+	// gate
+	assert.Nil(t, fas.Spec.Sync)
+
+	fas.ApplyDefaults()
+	assert.NotNil(t, fas.Spec.Sync)
+	assert.Equal(t, FixedIntervalSyncType, fas.Spec.Sync.Type)
+	assert.Equal(t, defaultIntervalSyncSeconds, fas.Spec.Sync.FixedInterval.Seconds)
+
+	// Test apply defaults is idempotent -- calling ApplyDefaults more than one time does not change the original result.
+	fas.ApplyDefaults()
+	assert.NotNil(t, fas.Spec.Sync)
+	assert.Equal(t, FixedIntervalSyncType, fas.Spec.Sync.Type)
+	assert.Equal(t, defaultIntervalSyncSeconds, fas.Spec.Sync.FixedInterval.Seconds)
+}
+
 func TestFleetAutoscalerChainValidateUpdate(t *testing.T) {
 	t.Parallel()
 
