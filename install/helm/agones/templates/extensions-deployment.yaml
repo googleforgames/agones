@@ -146,10 +146,10 @@ spec:
           value: "agones-extensions"
         - name: READINESS_SHUTDOWN_DURATION
           value: {{ mul .Values.agones.extensions.readiness.periodSeconds .Values.agones.extensions.readiness.failureThreshold 2 }}s
-        - name: HTTP_PORT
-          value: {{ .Values.agones.extensions.http.port }}
         - name: WEBHOOK_PORT
           value: {{ .Values.agones.extensions.webhooks.port }}
+        - name: HTTP_PORT
+          value: {{ .Values.agones.extensions.http.port }}
         ports:
         - name: webhooks
           containerPort: {{ .Values.agones.extensions.webhooks.port }}
