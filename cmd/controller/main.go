@@ -311,7 +311,7 @@ func parseEnvFlags() config {
 	pflag.String(logLevelFlag, viper.GetString(logLevelFlag), "Agones Log level")
 	pflag.Duration(allocationBatchWaitTime, viper.GetDuration(allocationBatchWaitTime), "Flag to configure the waiting period between allocations batches")
 	pflag.String(podNamespace, viper.GetString(podNamespace), "namespace of current pod")
-	pflag.String(httpPort, viper.GetString(httpPort), "Port for the HTTP server")
+	pflag.String(httpPort, viper.GetString(httpPort), "Port for the HTTP server. Defaults to 8080, can also use HTTP_PORT env variable")
 	pflag.Bool(leaderElectionFlag, viper.GetBool(leaderElectionFlag), "Flag to enable/disable leader election for controller pod")
 	cloudproduct.BindFlags()
 	runtime.FeaturesBindFlags()
@@ -622,7 +622,7 @@ func (h *httpServer) Run(_ context.Context, _ int) error {
 		if err == http.ErrServerClosed {
 			logger.WithError(err).Info("http server closed")
 		} else {
-			wrappedErr := errors.Wrap(err, "Could not listen on :"+h.Port)
+			wrappedErr := errors.Wrap(err, "Could not listen on :" + h.Port)
 			runtime.HandleError(logger.WithError(wrappedErr), wrappedErr)
 		}
 	}
