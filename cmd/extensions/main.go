@@ -68,6 +68,8 @@ const (
 	apiServerSustainedQPSFlag    = "api-server-qps"
 	apiServerBurstQPSFlag        = "api-server-qps-burst"
 	readinessShutdownDuration    = "readiness-shutdown-duration"
+	httpPort                     = "http-port"
+	webhookPort                  = "webhook-port"
 )
 
 var (
@@ -138,7 +140,7 @@ func main() {
 		logger.WithError(err).Fatal("Could not initialize cloud product")
 	}
 	// https server and the items that share the Mux for routing
-	httpsServer := https.NewServer(ctlConf.CertFile, ctlConf.KeyFile)
+	httpsServer := https.NewServer(ctlConf.CertFile, ctlConf.KeyFile, ctlConf.WebhookPort)
 	cancelTLS, err := httpsServer.WatchForCertificateChanges()
 	if err != nil {
 		logger.WithError(err).Fatal("Got an error while watching certificate changes")
@@ -150,7 +152,9 @@ func main() {
 	agonesInformerFactory := externalversions.NewSharedInformerFactory(agonesClient, defaultResync)
 	kubeInformerFactory := informers.NewSharedInformerFactory(kubeClient, defaultResync)
 
-	server := &httpServer{}
+	server := &httpServer{
+		Port: ctlConf.HttpPort,
+	}
 	var health healthcheck.Handler
 
 	// Stackdriver metrics
@@ -249,6 +253,8 @@ func parseEnvFlags() config {
 	viper.SetDefault(logDirFlag, "")
 	viper.SetDefault(logLevelFlag, "Info")
 	viper.SetDefault(logSizeLimitMBFlag, 10000) // 10 GB, will be split into 100 MB chunks
+	viper.SetDefault(httpPort, "8080")
+	viper.SetDefault(webhookPort, "8081")
 
 	pflag.String(keyFileFlag, viper.GetString(keyFileFlag), "Optional. Path to the key file")
 	pflag.String(certFileFlag, viper.GetString(certFileFlag), "Optional. Path to the crt file")
@@ -262,6 +268,8 @@ func parseEnvFlags() config {
 	pflag.Int32(numWorkersFlag, 64, "Number of controller workers per resource type")
 	pflag.Int32(apiServerSustainedQPSFlag, 100, "Maximum sustained queries per second to send to the API server")
 	pflag.Int32(apiServerBurstQPSFlag, 200, "Maximum burst queries per second to send to the API server")
+	pflag.String(httpPort, viper.GetString(httpPort), "Port for the HTTP server. Defaults to 8080, can also use HTTP_PORT env variable")
+	pflag.String(webhookPort, viper.GetString(webhookPort), "Port for the Webhook. Defaults to 8081, can also use WEBHOOK_PORT env variable")
 	pflag.String(logDirFlag, viper.GetString(logDirFlag), "If set, store logs in a given directory.")
 	pflag.Int32(logSizeLimitMBFlag, 1000, "Log file size limit in MB")
 	pflag.String(logLevelFlag, viper.GetString(logLevelFlag), "Agones Log level")
@@ -288,6 +296,8 @@ func parseEnvFlags() config {
 	runtime.Must(viper.BindEnv(logLevelFlag))
 	runtime.Must(viper.BindEnv(logDirFlag))
 	runtime.Must(viper.BindEnv(logSizeLimitMBFlag))
+	runtime.Must(viper.BindEnv(httpPort))
+	runtime.Must(viper.BindEnv(webhookPort))
 	runtime.Must(viper.BindEnv(allocationBatchWaitTime))
 	runtime.Must(viper.BindPFlags(pflag.CommandLine))
 	runtime.Must(viper.BindEnv(readinessShutdownDuration))
@@ -311,6 +321,8 @@ func parseEnvFlags() config {
 		LogDir:                    viper.GetString(logDirFlag),
 		LogLevel:                  viper.GetString(logLevelFlag),
 		LogSizeLimitMB:            int(viper.GetInt32(logSizeLimitMBFlag)),
+		HttpPort:                  viper.GetString(httpPort),
+		WebhookPort:               viper.GetString(webhookPort),
 		AllocationBatchWaitTime:   viper.GetDuration(allocationBatchWaitTime),
 		ReadinessShutdownDuration: viper.GetDuration(readinessShutdownDuration),
 	}
@@ -333,6 +345,8 @@ type config struct {
 	LogDir                    string
 	LogLevel                  string
 	LogSizeLimitMB            int
+	HttpPort                  string
+	WebhookPort               string
 	AllocationBatchWaitTime   time.Duration
 	ReadinessShutdownDuration time.Duration
 }
@@ -343,12 +357,13 @@ type runner interface {
 
 type httpServer struct {
 	http.ServeMux
+	Port string
 }
 
 func (h *httpServer) Run(_ context.Context, _ int) error {
 	logger.Info("Starting http server...")
 	srv := &http.Server{
-		Addr:    ":8080",
+		Addr:    ":" + h.Port,
 		Handler: h,
 	}
 	defer srv.Close() // nolint: errcheck
@@ -357,7 +372,7 @@ func (h *httpServer) Run(_ context.Context, _ int) error {
 		if err == http.ErrServerClosed {
 			logger.WithError(err).Info("http server closed")
 		} else {
-			wrappedErr := errors.Wrap(err, "Could not listen on :8080")
+			wrappedErr := errors.Wrap(err, "Could not listen on :" + h.Port)
 			runtime.HandleError(logger.WithError(wrappedErr), wrappedErr)
 		}
 	}

@@ -41,7 +41,7 @@ func (ts *testServer) ListenAndServeTLS(certFile, keyFile string) error {
 func TestServerRun(t *testing.T) {
 	t.Parallel()
 
-	s := NewServer("", "")
+	s := NewServer("", "", "")
 	ts := &testServer{server: httptest.NewUnstartedServer(s.Mux)}
 	s.tls = ts
 
