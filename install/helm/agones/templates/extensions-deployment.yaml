@@ -95,8 +95,6 @@ spec:
       terminationGracePeriodSeconds: {{ mul .Values.agones.extensions.readiness.periodSeconds .Values.agones.extensions.readiness.failureThreshold 3 }}
       {{- if .Values.agones.extensions.hostNetwork }}
       hostNetwork: true
-      {{- end }}
-      {{- if .Values.agones.extensions.hostNetwork }}
       dnsPolicy: ClusterFirstWithHostNet
       {{- end }}
       containers:
@@ -148,6 +146,10 @@ spec:
           value: "agones-extensions"
         - name: READINESS_SHUTDOWN_DURATION
           value: {{ mul .Values.agones.extensions.readiness.periodSeconds .Values.agones.extensions.readiness.failureThreshold 2 }}s
+        - name: HTTP_PORT
+          value: {{ .Values.agones.extensions.http.port }}
+        - name: WEBHOOK_PORT
+          value: {{ .Values.agones.extensions.webhooks.port }}
         ports:
         - name: webhooks
           containerPort: {{ .Values.agones.extensions.webhooks.port }}

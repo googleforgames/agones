@@ -101,8 +101,6 @@ spec:
       serviceAccountName: {{ .Values.agones.serviceaccount.controller.name }}
       {{- if .Values.agones.controller.hostNetwork }}
       hostNetwork: true
-      {{- end }}
-      {{- if .Values.agones.controller.hostNetwork }}
       dnsPolicy: ClusterFirstWithHostNet
       {{- end }}
       containers:
@@ -186,6 +184,8 @@ spec:
         - name: LEADER_ELECTION
           value: "true"
         {{- end }}
+        - name: HTTP_PORT
+          value: {{ .Values.agones.controller.http.port }}
         ports:
         - name: webhooks
           containerPort: {{ .Values.agones.controller.webhooks.port }}

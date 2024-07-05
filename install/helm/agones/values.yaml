@@ -62,7 +62,7 @@ agones:
   # with pod IP CIDRs.
   #
   # Note: The default port may conflicts with others on the host network. Therefore, if
-  # running in hostNetwork mode, you should change `http.port` and `webhooks.port` to an available port.
+  # running in hostNetwork mode, you should change `http.port` to an available port.
     hostnetwork: false
     tolerations:
     - key: "agones.dev/agones-system"
@@ -90,8 +90,6 @@ agones:
     numWorkers: 100
     apiServerQPS: 400
     apiServerQPSBurst: 500
-    webhooks:
-      port: 8081
     http:
       port: 8080
     healthCheck:
