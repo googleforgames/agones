@@ -187,8 +187,6 @@ spec:
         - name: HTTP_PORT
           value: {{ .Values.agones.controller.http.port }}
         ports:
-        - name: webhooks
-          containerPort: {{ .Values.agones.controller.webhooks.port }}
         - name: http
           containerPort: {{ .Values.agones.controller.http.port }}
         livenessProbe:
