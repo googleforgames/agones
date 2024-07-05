@@ -63,7 +63,7 @@ agones:
   #
   # Note: The default port may conflicts with others on the host network. Therefore, if
   # running in hostNetwork mode, you should change `http.port` to an available port.
-    hostnetwork: false
+    hostNetwork: false
     tolerations:
     - key: "agones.dev/agones-system"
       operator: "Equal"
@@ -117,7 +117,7 @@ agones:
   #
   # Note: The default port may conflicts with others on the host network. Therefore, if
   # running in hostNetwork mode, you should change `http.port` and `webhooks.port` to an available port.
-    hostnetwork: false
+    hostNetwork: false
     tolerations:
     - key: "agones.dev/agones-system"
       operator: "Equal"
