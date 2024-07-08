@@ -185,7 +185,7 @@ spec:
           value: "true"
         {{- end }}
         - name: HTTP_PORT
-          value: {{ .Values.agones.controller.http.port }}
+          value: {{ .Values.agones.controller.http.port | quote }}
         ports:
         - name: http
           containerPort: {{ .Values.agones.controller.http.port }}
