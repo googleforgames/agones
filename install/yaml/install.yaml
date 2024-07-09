@@ -17127,8 +17127,6 @@ spec:
         - name: LEADER_ELECTION
           value: "true"
         ports:
-        - name: webhooks
-          containerPort: 8081
         - name: http
           containerPort: 8080
         livenessProbe:
@@ -17270,6 +17268,10 @@ spec:
           value: "agones-extensions"
         - name: READINESS_SHUTDOWN_DURATION
           value: 18s
+        - name: WEBHOOK_PORT
+          value: "8081"
+        - name: HTTP_PORT
+          value: "8080"
         ports:
         - name: webhooks
           containerPort: 8081
