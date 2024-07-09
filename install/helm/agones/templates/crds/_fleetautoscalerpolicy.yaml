@@ -122,7 +122,7 @@ policy:
         required:
           - policy
         properties:
-          uid: # The uid of a chain entry.
+          id: # The Id of a chain entry.
             type: string
           schedule: # Defines when the policy is applied.
             type: object
