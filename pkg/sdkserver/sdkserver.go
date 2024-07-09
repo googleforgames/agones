@@ -1085,6 +1085,40 @@ func (s *SDKServer) UpdateList(ctx context.Context, in *beta.UpdateListRequest) 
 	if _, ok := gs.Status.Lists[name]; ok {
 		batchList := s.gsListUpdates[name]
 		batchList.capacitySet = &in.List.Capacity
+		currList := gs.Status.Lists[name]
+
+		// Find values to remove from the current list
+		valuesToDelete := map[string]bool{}
+		for _, value := range currList.Values {
+			valueFound := false
+			for _, element := range in.List.Values {
+				if value == element {
+					valueFound = true
+				}
+			}
+
+			if !valueFound {
+				valuesToDelete[value] = true
+			}
+		}
+		batchList.valuesToDelete = valuesToDelete
+
+		// Find values that need to be added to the current list from the incomming list
+		valuesToAdd := []string{}
+		for _, value := range in.List.Values {
+			valueFound := false
+			for _, element := range currList.Values {
+				if value == element {
+					valueFound = true
+				}
+			}
+
+			if !valueFound {
+				valuesToAdd = append(valuesToAdd, value)
+			}
+		}
+		batchList.valuesToAppend = valuesToAdd
+
 		s.gsListUpdates[name] = batchList
 		// Queue up the Update for later batch processing by updateLists.
 		s.workerqueue.Enqueue(cache.ExplicitKey(updateLists))
