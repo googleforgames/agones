@@ -13,7 +13,7 @@
 # limitations under the License.
 
 # build
-FROM golang:1.21.6 as builder
+FROM golang:1.21.12 as builder
 
 RUN apt-get update && apt-get install -y unzip curl
 

@@ -21,7 +21,7 @@
 ARG WINDOWS_VERSION=ltsc2019
 ARG IMAGE_TAG=""
 
-FROM --platform=linux/amd64 golang:1.21.6 as builder
+FROM --platform=linux/amd64 golang:1.21.12 as builder
 WORKDIR /go/src
 COPY . agones.dev/agones
 
