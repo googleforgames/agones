@@ -43,8 +43,7 @@ spec:
             # Feb 23, 2024 at 4:04 PM EST. Optional.
             end: "2024-02-23T16:04:04-05:00"
           activePeriod:
-            # Timezone to be used for the startCron field.
-            # Optional.
+            # Timezone to be used for the startCron field. Optional.
             timezone: "America/New_York"
             # Start applying the bufferSize everyday at 1:00  AM EST.
             # (Only eligible starting on Feb 20, 2024 at 4:04 PM.) Optional.
@@ -73,7 +72,7 @@ spec:
             # Optional.
             end: "2024-02-26T16:04:05-05:00"
           activePeriod:
-            # Timezone to be used for the schedule.
+            # Timezone to be used for the startCron field. Optional.
             timezone: "America/New_York"
             # Start applying the bufferSize everyday at 1:00  AM EST.
             # (Only eligible starting on Feb 24, 2024 at 4:05 PM EST)
