@@ -153,7 +153,7 @@ func main() {
 	kubeInformerFactory := informers.NewSharedInformerFactory(kubeClient, defaultResync)
 
 	server := &httpServer{
-		Port: ctlConf.HttpPort,
+		Port: ctlConf.HTTPPort,
 	}
 	var health healthcheck.Handler
 
@@ -321,7 +321,7 @@ func parseEnvFlags() config {
 		LogDir:                    viper.GetString(logDirFlag),
 		LogLevel:                  viper.GetString(logLevelFlag),
 		LogSizeLimitMB:            int(viper.GetInt32(logSizeLimitMBFlag)),
-		HttpPort:                  viper.GetString(httpPort),
+		HTTPPort:                  viper.GetString(httpPort),
 		WebhookPort:               viper.GetString(webhookPort),
 		AllocationBatchWaitTime:   viper.GetDuration(allocationBatchWaitTime),
 		ReadinessShutdownDuration: viper.GetDuration(readinessShutdownDuration),
@@ -345,7 +345,7 @@ type config struct {
 	LogDir                    string
 	LogLevel                  string
 	LogSizeLimitMB            int
-	HttpPort                  string
+	HTTPPort                  string
 	WebhookPort               string
 	AllocationBatchWaitTime   time.Duration
 	ReadinessShutdownDuration time.Duration
@@ -372,7 +372,7 @@ func (h *httpServer) Run(_ context.Context, _ int) error {
 		if err == http.ErrServerClosed {
 			logger.WithError(err).Info("http server closed")
 		} else {
-			wrappedErr := errors.Wrap(err, "Could not listen on :" + h.Port)
+			wrappedErr := errors.Wrap(err, "Could not listen on :"+h.Port)
 			runtime.HandleError(logger.WithError(wrappedErr), wrappedErr)
 		}
 	}

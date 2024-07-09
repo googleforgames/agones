@@ -173,7 +173,7 @@ func main() {
 	kubeInformerFactory := informers.NewSharedInformerFactory(kubeClient, defaultResync)
 
 	server := &httpServer{
-		Port: ctlConf.HttpPort,
+		Port: ctlConf.HTTPPort,
 	}
 	var rs []runner
 	var health healthcheck.Handler
@@ -407,7 +407,7 @@ func parseEnvFlags() config {
 		AllocationBatchWaitTime: viper.GetDuration(allocationBatchWaitTime),
 		PodNamespace:            viper.GetString(podNamespace),
 		LeaderElection:          viper.GetBool(leaderElectionFlag),
-		HttpPort:                viper.GetString(httpPort),
+		HTTPPort:                viper.GetString(httpPort),
 	}
 }
 
@@ -461,7 +461,7 @@ type config struct {
 	AllocationBatchWaitTime time.Duration
 	PodNamespace            string
 	LeaderElection          bool
-	HttpPort                string
+	HTTPPort                string
 }
 
 // validate ensures the ctlConfig data is valid.
@@ -622,7 +622,7 @@ func (h *httpServer) Run(_ context.Context, _ int) error {
 		if err == http.ErrServerClosed {
 			logger.WithError(err).Info("http server closed")
 		} else {
-			wrappedErr := errors.Wrap(err, "Could not listen on :" + h.Port)
+			wrappedErr := errors.Wrap(err, "Could not listen on :"+h.Port)
 			runtime.HandleError(logger.WithError(wrappedErr), wrappedErr)
 		}
 	}

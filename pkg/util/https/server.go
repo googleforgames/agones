@@ -139,7 +139,7 @@ func (s *Server) Run(ctx context.Context, _ int) error {
 		return nil
 	}
 
-	return errors.Wrap(err, "Could not listen on :" + s.port)
+	return errors.Wrap(err, "Could not listen on :"+s.port)
 }
 
 // defaultHandler Handles all the HTTP requests
