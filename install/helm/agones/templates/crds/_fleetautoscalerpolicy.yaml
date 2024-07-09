@@ -127,19 +127,19 @@ policy:
           schedule: # Defines when the policy is applied.
             type: object
             properties:
-              timezone: # Timezone to be used for the between period and active period.
-                type: string
               between:
                 type: object
-                start: # Defines when to start evaluating the active period.
+                start: # Defines when to start evaluating the active period, must conform to RFC3339.
                   type: string
-                end: # Defines when to stop evaluating the active period.
+                end: # Defines when to stop evaluating the active period, must conform to RFC3339.
                   type: string
               activePeriod:
                 type: object
-                startCron: # Cron expression defining when to start applying the policy.
+                timezone: # Timezone to be used for the startCron field, must conform with the IANA Time Zone database (e.g. America/New_York).
                   type: string
-                duration: # The length of time the policy should be applied for.
+                startCron:  # Cron expression defining when to start applying the policy. All TZ/CRON_TZ specification within startCron will be rejected, please use the timezone field above to specify a timezone. Must conform with UNIX CRON syntax.
+                  type: string
+                duration: # The length of time the policy should be applied for (e.g. 2h45m).
                   type: string
             {{- include "fleetautoscaler.policy" (dict "includeChainPolicy" false) | indent 12 }} # Defines which policy to apply during the active period. Required.
     {{- end }}

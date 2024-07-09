@@ -35,20 +35,22 @@ spec:
       - uid: "weekday"
         type: Schedule  # Schedule based condition.
         schedule:
-          # Timezone to be used for the schedule. Optional.
-          timezone: "America/New_York"
           between:
             # The policy becomes eligible for application starting on
-            # Feb 20, 2024 at 4:04 PM. Optional.
-            start: "2024-02-19 16:04:00"
+            # Feb 20, 2024 at 4:04 PM EST. Optional.
+            start: "2024-02-20T16:04:04-05:00"
             # The policy becomes ineligible for application on
-            # Feb 23, 2024 at 4:04 PM. Optional.
-            end: "2024-02-23 16:04:00"
+            # Feb 23, 2024 at 4:04 PM EST. Optional.
+            end: "2024-02-23T16:04:04-05:00"
           activePeriod:
-            # Start applying the bufferSize everyday at 1:00 AM EST
-            # (Only eligible starting on Feb 20, 2024 at 4:04 PM EST). Optional.
+            # Timezone to be used for the startCron field.
+            # Optional.
+            timezone: "America/New_York"
+            # Start applying the bufferSize everyday at 1:00  AM EST.
+            # (Only eligible starting on Feb 20, 2024 at 4:04 PM.) Optional.
             startCron: "0 1 * * 0"
-            # Only apply the bufferSize for this 5 hours. Optional.
+            # Only apply the bufferSize for this 5 hours
+            # Optional.
             duration: "5h"
         # Policy to be applied when the condition is met. Required.
         policy:
@@ -61,18 +63,24 @@ spec:
       - uid: "weekend"
         type: Schedule
         schedule:
-          # Timezone to be used for the schedule. Optional.
-          timezone: "America/New_York"
           between:
             # The policy becomes eligible for application starting on
-            # Feb 24, 2024 at 4:05 PM. Optional.
-            start: "2024-02-24 16:05:00"
-            end: "2024-02-26 16:05:00"
+            # Feb 24, 2024 at 4:05 PM EST.
+            # Optional.
+            start: "2024-02-24T16:04:05-05:00"
+            # The policy becomes ineligible for application starting on
+            # Feb 26, 2024 at 4:05 PM EST.
+            # Optional.
+            end: "2024-02-26T16:04:05-05:00"
           activePeriod:
-            # Start applying the bufferSize everyday at 1:00  AM
-            # (Only eligible starting on Feb 24, 2024 at 4:05 PM). Optional.
+            # Timezone to be used for the schedule.
+            timezone: "America/New_York"
+            # Start applying the bufferSize everyday at 1:00  AM EST.
+            # (Only eligible starting on Feb 24, 2024 at 4:05 PM EST)
+            # Optional.
             startCron: "0 1 * * 0"
-            # Only apply the bufferSize for this 7 hours. Optional.
+            # Only apply the bufferSize for this 7 hours
+            # Optional.
             duration: "7h"
         # Policy to be applied when the condition is met. Required.
         policy:
