@@ -43,7 +43,7 @@ spec:
           activePeriod:
             # Timezone to be used for the startCron field. Defaults to UTC if not set.
             timezone: "America/New_York"
-            # Start applying the policy everyday at 1:00  AM EST. If not set, the policy will always be applied in the .between window.
+            # Start applying the policy everyday at 1:00 AM EST. If not set, the policy will always be applied in the .between window.
             # (Only eligible starting on Feb 20, 2024 at 4:04 PM).
             startCron: "0 1 * * 0"
             # Only apply the policy for 5 hours. If not set, the duration will be defaulted to always/indefinite.
@@ -67,7 +67,7 @@ spec:
           activePeriod:
             # Timezone to be used for the startCron field. Defaults to UTC if not set.
             timezone: "America/New_York"
-            # Start applying the policy everyday at 1:00  AM EST. If not set, the policy will always be applied in the .between window.
+            # Start applying the policy everyday at 1:00 AM EST. If not set, the policy will always be applied in the .between window.
             # (Only eligible starting on Feb 24, 2024 at 4:05 PM EST)
             startCron: "0 1 * * 0"
             # Only apply the policy for 7 hours. If not set the duration will be defaulted to always/indefinite.
