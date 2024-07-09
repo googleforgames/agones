@@ -46,9 +46,9 @@ spec:
             # Timezone to be used for the startCron field. Optional.
             timezone: "America/New_York"
             # Start applying the bufferSize everyday at 1:00  AM EST.
-            # (Only eligible starting on Feb 20, 2024 at 4:04 PM.) Optional.
+            # (Only eligible starting on Feb 20, 2024 at 4:04 PM) Optional.
             startCron: "0 1 * * 0"
-            # Only apply the bufferSize for this 5 hours
+            # Only apply the bufferSize for this 5 hours. If not set the duration will be defaulted to always/indefinite.
             # Optional.
             duration: "5h"
         # Policy to be applied when the condition is met. Required.
@@ -78,7 +78,7 @@ spec:
             # (Only eligible starting on Feb 24, 2024 at 4:05 PM EST)
             # Optional.
             startCron: "0 1 * * 0"
-            # Only apply the bufferSize for this 7 hours
+            # Only apply the bufferSize for this 7 hours. If not set the duration will be defaulted to always/indefinite.
             # Optional.
             duration: "7h"
         # Policy to be applied when the condition is met. Required.
