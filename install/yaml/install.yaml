@@ -16932,7 +16932,7 @@ spec:
     agones.dev/role: extensions
   ports:
     - name: webhooks
-      port: 443
+      port: 8081
       targetPort: webhooks
     - name: web
       port: 8080
@@ -17126,6 +17126,8 @@ spec:
           value: "agones-controller"
         - name: LEADER_ELECTION
           value: "true"
+        - name: HTTP_PORT
+          value: "8080"
         ports:
         - name: http
           containerPort: 8080
@@ -17235,7 +17237,7 @@ spec:
         - name: STACKDRIVER_EXPORTER
           value: "false"
         - name: STACKDRIVER_LABELS
-          value: ""       
+          value: ""
         - name: GCP_PROJECT_ID
           value: ""
         - name: NUM_WORKERS
