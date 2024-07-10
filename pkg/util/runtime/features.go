@@ -70,6 +70,9 @@ const (
 	////////////////
 	// Dev features
 
+	// FeatureScheduledAutoscaler is a feature flag to enable/disable scheduled fleet autoscaling.
+	FeatureScheduledAutoscaler Feature = "ScheduledAutoscaler"
+
 	////////////////
 	// Example feature
 
@@ -141,6 +144,7 @@ var (
 		FeaturePortPolicyNone:                   false,
 
 		// Dev features
+		FeatureScheduledAutoscaler: false,
 
 		// Example feature
 		FeatureExample: false,
