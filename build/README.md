@@ -64,7 +64,7 @@ Table of Contents
         * [make build-agones-sdk-image](#make-build-agones-sdk-image)
         * [make gen-install](#make-gen-install)
         * [make gen-embedded-openapi](#make-gen-embedded-openapi)
-        * [make gen-crd-client](#make-gen-crd-client)
+        * [make gen-crd-code](#make-gen-crd-code)
         * [make gen-allocation-grpc](#make-gen-allocation-grpc)
         * [make gen-all-sdk-grpc](#make-gen-all-sdk-grpc)
         * [make gen-sdk-grpc](#make-gen-sdk-grpc)
@@ -585,7 +585,7 @@ make test-e2e-integration ARGS='-run TestGameServerReserve'
 Run controller failure portion of the end-to-end tests.
 
 #### `make test-e2e-allocator-crash`
-Run allocator failure portion of the end-to-end test. 
+Run allocator failure portion of the end-to-end test.
 
 #### `make setup-prometheus`
 
@@ -675,8 +675,8 @@ Generate the embedded OpenAPI specs for existing Kubernetes Objects, such as `Po
 
 This should be run against a clean or brand new cluster, as external CRD's or schemas could cause errors to occur.
 
-#### `make gen-crd-client`
-Generate the Custom Resource Definition client(s)
+#### `make gen-crd-code`
+Generate the Custom Resource Definition client(s), conversions, deepcopy, and defaults code.
 
 #### `make gen-allocation-grpc`
 Generate the allocator gRPC code

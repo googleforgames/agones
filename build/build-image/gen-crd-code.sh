@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright 2024 Google LLC All Rights Reserved.
+# Copyright 2017 Google LLC All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -24,6 +24,20 @@ set -o pipefail
 CODEGEN_SCRIPT="/go/src/k8s.io/code-generator/kube_codegen.sh"
 
 source "${CODEGEN_SCRIPT}"
+
+echo "Generating CRD client code..."
+OUTPUT_DIR="/go/src/agones.dev/agones/pkg/client"
+OUTPUT_PKG="agones.dev/agones/pkg/client"
+
+kube::codegen::gen_client \
+  --with-watch \
+  --with-applyconfig \
+  --output-dir "${OUTPUT_DIR}" \
+  --output-pkg "${OUTPUT_PKG}" \
+  --boilerplate /go/src/agones.dev/agones/build/boilerplate.go.txt \
+  /go/src/agones.dev/agones/pkg/apis
+
+echo "CRD client code generation complete."
 
 echo "Generating CRD conversions, deepcopy, and defaults code..."
 
