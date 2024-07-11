@@ -55,15 +55,6 @@ agones:
       #   memory: 256Mi
     nodeSelector: {}
     annotations: {}
-  # Determines if the Agones controller should operate in hostNetwork mode.
-  #
-  # This setting is necessary for certain managed Kubernetes clusters (e.g., AWS EKS) that use custom
-  # CNI plugins (such as Calico or Cilium) because the AWS-managed control plane cannot communicate
-  # with pod IP CIDRs.
-  #
-  # Note: The default port may conflicts with others on the host network. Therefore, if
-  # running in hostNetwork mode, you should change `http.port` to an available port.
-    hostNetwork: false
     tolerations:
     - key: "agones.dev/agones-system"
       operator: "Equal"

@@ -184,7 +184,7 @@ spec:
         - name: webhooks
           containerPort: 8081
         - name: http
-          containerPort: {{ .Values.agones.controller.http.port }}
+          containerPort: 8080
         livenessProbe:
           httpGet:
             path: /live
