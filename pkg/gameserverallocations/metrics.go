@@ -76,7 +76,7 @@ func init() {
 		Measure:     gameServerAllocationsLatency,
 		Description: "The distribution of gameserver allocation requests latencies.",
 		Aggregation: view.Distribution(0, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1, 2, 3),
-		TagKeys:     []tag.Key{keyFleetName, keyClusterName, keyMultiCluster, keyStatus, keySchedulingStrategy, keyTest},
+		TagKeys:     []tag.Key{keyFleetName, keyClusterName, keyMultiCluster, keyStatus, keySchedulingStrategy},
 	}))*/
 }
 
