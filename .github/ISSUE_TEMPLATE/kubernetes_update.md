@@ -26,7 +26,7 @@ List of items to do for upgrading to {version_1} {version_2} {version_3}
 - [ ] Update CRD API reference to {version_2}
     - [ ] Update links to k8s documentation in `site/assets/templates/crd-doc-config.json`
     - [ ] Regenerate crd api reference docs - `make gen-api-docs`
-    - [ ] Regenerate crd client libraries - `make gen-crd-code`
+    - [ ] Regenerate crd client libraries and generated code - `make gen-crd-code`
 - [ ] Regenerate Kubernetes resource includes (e.g. ObjectMeta, PodTemplateSpec)
     - [ ] Start a cluster with `make gcloud-test-cluster` (this cluster will use Kubernetes {version_2}), uninstall agones using `helm uninstall agones -n agones-system`, and then run  `make gen-embedded-openapi` and `make gen-install`
 - [ ] Update documentation for creating clusters and k8s API references to align with the above clusters versions and the k8s API version
