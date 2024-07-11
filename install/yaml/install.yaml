@@ -16932,7 +16932,7 @@ spec:
     agones.dev/role: extensions
   ports:
     - name: webhooks
-      port: 8081
+      port: 443
       targetPort: webhooks
     - name: web
       port: 8080

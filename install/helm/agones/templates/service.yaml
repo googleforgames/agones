@@ -29,7 +29,7 @@ spec:
     agones.dev/role: extensions
   ports:
     - name: webhooks
-      port: {{ .Values.agones.extensions.webhooks.port }}
+      port: 443
       targetPort: webhooks
     - name: web
       port: {{ .Values.agones.extensions.http.port }}
