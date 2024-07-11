@@ -738,12 +738,12 @@ gen-install: $(ensure-build-image)
 		--set agones.crds.cleanupOnDelete=false \
 		> $(mount_path)/install/yaml/install.yaml'
 
-# Generate the client for our CustomResourceDefinition
-gen-crd-client: $(ensure-build-image)
+# Generate the client, conversions, deepcopy, and defaults code for our CustomResourceDefinition
+gen-crd-code: $(ensure-build-image)
 	docker run --rm \
 		$(common_mounts) -w $(workdir_path) $(build_tag) bash -c "\
 		$(git_safe) && \
-		/root/gen-crd-client.sh && \
+		/root/gen-crd-code.sh && \
 		cd $(workdir_path)/pkg && goimports -w ."
 
 # Run a bash shell with the developer tools in it. (Creates the image if it doesn't exist)
@@ -848,14 +848,23 @@ update-go-deps:
 	$(DOCKER_RUN) go mod tidy
 	$(DOCKER_RUN) go mod vendor
 
-test-gen-crd-client:
-	mkdir -p build/tmp
-	mv ../pkg/client build/tmp
-	make gen-crd-client
-	diff_output=$$(diff -bBr build/tmp/client ../pkg/client); \
-	if [ -z "$$diff_output" ]; then \
-		echo "No differences found. Deleting build/tmp"; \
+test-gen-crd-code:
+	mkdir -p build/tmp/apis | mkdir -p build/tmp/client; \
+	cp -r ../pkg/apis/* build/tmp/apis | cp -r ../pkg/client/* build/tmp/client; \
+	make gen-crd-code; \
+	$(MAKE) diff-directory DIRECTORY=apis
+	$(MAKE) diff-directory DIRECTORY=client
+	# Delete build/tmp if the directory is empty
+	if [ ! "$(ls -A build/tmp)" ]; then \
+		echo "No differences found. Deleting empty directory build/tmp."; \
 		rm -r build/tmp; \
+	fi
+
+diff-directory:
+	diff_output=$$(diff -bBr build/tmp/$(DIRECTORY) ../pkg/$(DIRECTORY)); \
+	if [ -z "$$diff_output" ]; then \
+		echo "No differences found. Deleting build/tmp/$(DIRECTORY)"; \
+		rm -r build/tmp/$(DIRECTORY); \
 	else \
 		echo "Differences found."; \
 		echo "$$diff_output"; \

@@ -116,10 +116,10 @@ steps:
   # Preventing Broken PR Merges in CI
   #
   - name: make-docker
-    id: test-gen-crd-client
+    id: test-gen-crd-code
     waitFor: [pull-build-image]
     dir: build
-    args: [test-gen-crd-client]
+    args: [test-gen-crd-code]
 
   #
   # Runs the linter -- but also builds the build image, if not able to download
@@ -128,7 +128,7 @@ steps:
     id: lint
     waitFor:
       - pull-build-image
-      - test-gen-crd-client
+      - test-gen-crd-code
       - test-gen-all-sdk-grpc
     dir: build
     args: [lint]  # pull the build image if it exists
@@ -373,6 +373,24 @@ steps:
     waitFor: [build-images, tests]
     dir: cmd/sdk-server/bin
     args: [-m, cp, '*.zip', gs://agones-artifacts/sdk-server]
+
+  #
+  # Cleanup services "preview", "development", "default"
+  #
+  - name: gcr.io/cloud-builders/gcloud
+    id: cleanup-services
+    waitFor: [e2e-wait-to-become-leader]
+    allowFailure: true
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -e
+        set -o pipefail
+        for service in preview development default; do
+          echo "Cleaning up $service service..."
+          gcloud app versions list --service=$service --filter="traffic_split<1" --sort-by=~last_deployed_time.datetime --format="table[no-heading](version.id)" | tail -n +50 | xargs --no-run-if-empty gcloud app versions delete --service=$service --quiet
+        done
 
 substitutions:
   _CACHE_BUCKET: agones-build-cache

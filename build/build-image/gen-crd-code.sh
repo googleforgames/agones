@@ -38,3 +38,11 @@ kube::codegen::gen_client \
   /go/src/agones.dev/agones/pkg/apis
 
 echo "CRD client code generation complete."
+
+echo "Generating CRD conversions, deepcopy, and defaults code..."
+
+kube::codegen::gen_helpers \
+  --boilerplate /go/src/agones.dev/agones/build/boilerplate.go.txt \
+  /go/src/agones.dev/agones/pkg/apis
+
+echo "CRD conversions, deepcopy, and defaults code generation complete."
