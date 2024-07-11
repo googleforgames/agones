@@ -87,7 +87,6 @@ const (
 	defaultResync                = 30 * time.Second
 	podNamespace                 = "pod-namespace"
 	leaderElectionFlag           = "leader-election"
-	httpPort                     = "http-port"
 )
 
 var (
@@ -172,9 +171,7 @@ func main() {
 	agonesInformerFactory := externalversions.NewSharedInformerFactory(agonesClient, defaultResync)
 	kubeInformerFactory := informers.NewSharedInformerFactory(kubeClient, defaultResync)
 
-	server := &httpServer{
-		Port: ctlConf.HTTPPort,
-	}
+	server := &httpServer{}
 	var rs []runner
 	var health healthcheck.Handler
 
@@ -275,7 +272,6 @@ func parseEnvFlags() config {
 	viper.SetDefault(allocationBatchWaitTime, 500*time.Millisecond)
 	viper.SetDefault(podNamespace, "agones-system")
 	viper.SetDefault(leaderElectionFlag, false)
-	viper.SetDefault(httpPort, "8080")
 
 	viper.SetDefault(projectIDFlag, "")
 	viper.SetDefault(numWorkersFlag, 64)
@@ -311,7 +307,6 @@ func parseEnvFlags() config {
 	pflag.String(logLevelFlag, viper.GetString(logLevelFlag), "Agones Log level")
 	pflag.Duration(allocationBatchWaitTime, viper.GetDuration(allocationBatchWaitTime), "Flag to configure the waiting period between allocations batches")
 	pflag.String(podNamespace, viper.GetString(podNamespace), "namespace of current pod")
-	pflag.String(httpPort, viper.GetString(httpPort), "Port for the HTTP server. Defaults to 8080, can also use HTTP_PORT env variable")
 	pflag.Bool(leaderElectionFlag, viper.GetBool(leaderElectionFlag), "Flag to enable/disable leader election for controller pod")
 	cloudproduct.BindFlags()
 	runtime.FeaturesBindFlags()
@@ -345,7 +340,6 @@ func parseEnvFlags() config {
 	runtime.Must(viper.BindEnv(allocationBatchWaitTime))
 	runtime.Must(viper.BindEnv(podNamespace))
 	runtime.Must(viper.BindEnv(leaderElectionFlag))
-	runtime.Must(viper.BindEnv(httpPort))
 	runtime.Must(viper.BindPFlags(pflag.CommandLine))
 	runtime.Must(cloudproduct.BindEnv())
 	runtime.Must(runtime.FeaturesBindEnv())
@@ -407,7 +401,6 @@ func parseEnvFlags() config {
 		AllocationBatchWaitTime: viper.GetDuration(allocationBatchWaitTime),
 		PodNamespace:            viper.GetString(podNamespace),
 		LeaderElection:          viper.GetBool(leaderElectionFlag),
-		HTTPPort:                viper.GetString(httpPort),
 	}
 }
 
@@ -461,7 +454,6 @@ type config struct {
 	AllocationBatchWaitTime time.Duration
 	PodNamespace            string
 	LeaderElection          bool
-	HTTPPort                string
 }
 
 // validate ensures the ctlConfig data is valid.
@@ -557,7 +549,6 @@ type runner interface {
 
 type httpServer struct {
 	http.ServeMux
-	Port string
 }
 
 func whenLeader(ctx context.Context, cancel context.CancelFunc, logger *logrus.Entry, doLeaderElection bool, kubeClient *kubernetes.Clientset, namespace string, start func(_ context.Context)) {
@@ -613,7 +604,7 @@ func whenLeader(ctx context.Context, cancel context.CancelFunc, logger *logrus.E
 func (h *httpServer) Run(_ context.Context, _ int) error {
 	logger.Info("Starting http server...")
 	srv := &http.Server{
-		Addr:    ":" + h.Port,
+		Addr:    ":8080",
 		Handler: h,
 	}
 	defer srv.Close() // nolint: errcheck
@@ -622,7 +613,7 @@ func (h *httpServer) Run(_ context.Context, _ int) error {
 		if err == http.ErrServerClosed {
 			logger.WithError(err).Info("http server closed")
 		} else {
-			wrappedErr := errors.Wrap(err, "Could not listen on :"+h.Port)
+			wrappedErr := errors.Wrap(err, "Could not listen on :8080")
 			runtime.HandleError(logger.WithError(wrappedErr), wrappedErr)
 		}
 	}

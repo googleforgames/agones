@@ -17126,9 +17126,9 @@ spec:
           value: "agones-controller"
         - name: LEADER_ELECTION
           value: "true"
-        - name: HTTP_PORT
-          value: "8080"
         ports:
+        - name: webhooks
+          containerPort: 8081
         - name: http
           containerPort: 8080
         livenessProbe:

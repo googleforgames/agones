@@ -48,7 +48,7 @@ spec:
 {{- end }}
 {{- if and (.Values.agones.metrics.prometheusServiceDiscovery) (.Values.agones.metrics.prometheusEnabled) }}
         prometheus.io/scrape: "true"
-        prometheus.io/port: {{ .Values.agones.controller.http.port | quote }}
+        prometheus.io/port: "8080"
         prometheus.io/path: "/metrics"
 {{- end }}
 {{- if .Values.agones.controller.annotations }}
@@ -99,10 +99,6 @@ spec:
       priorityClassName: {{ .Values.agones.priorityClassName }}
       {{- end }}
       serviceAccountName: {{ .Values.agones.serviceaccount.controller.name }}
-      {{- if .Values.agones.controller.hostNetwork }}
-      hostNetwork: true
-      dnsPolicy: ClusterFirstWithHostNet
-      {{- end }}
       containers:
       - name: agones-controller
         image: "{{ .Values.agones.image.registry }}/{{ .Values.agones.image.controller.name}}:{{ default .Values.agones.image.tag .Values.agones.image.controller.tag }}"
@@ -184,9 +180,9 @@ spec:
         - name: LEADER_ELECTION
           value: "true"
         {{- end }}
-        - name: HTTP_PORT
-          value: {{ .Values.agones.controller.http.port | quote }}
         ports:
+        - name: webhooks
+          containerPort: 8081
         - name: http
           containerPort: {{ .Values.agones.controller.http.port }}
         livenessProbe:
