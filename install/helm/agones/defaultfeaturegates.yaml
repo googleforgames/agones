@@ -28,6 +28,7 @@ PortRanges: false
 PortPolicyNone: false
 
 # Dev features
+ScheduledAutoscaler: false
 
 # Example feature
 Example: false
