@@ -1,3 +1,13 @@
+---
+name: Golang version upgrade
+about: Steps to upgrade Golang version
+title: ''
+labels: kind/enhancement
+assignees: ''
+
+---
+
+
 Steps to upgrade Golang version:
 - [ ] Update `go.mod` and `go.sum`. At the root of the directory, run:
     - [ ] `find . -name 'go.mod' -not -path '*/\.*' -execdir go mod edit -go=<NEW_GOLANG_VERSION_WITHOUT_PATCH> \;`
