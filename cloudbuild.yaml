@@ -374,6 +374,24 @@ steps:
     dir: cmd/sdk-server/bin
     args: [-m, cp, '*.zip', gs://agones-artifacts/sdk-server]
 
+  #
+  # Cleanup services "preview", "development", "default"
+  #
+  - name: gcr.io/cloud-builders/gcloud
+    id: cleanup-services
+    waitFor: [e2e-wait-to-become-leader]
+    allowFailure: true
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -e
+        set -o pipefail
+        for service in preview development default; do
+          echo "Cleaning up $service service..."
+          gcloud app versions list --service=$service --filter="traffic_split<1" --sort-by=~last_deployed_time.datetime --format="table[no-heading](version.id)" | tail -n +50 | xargs --no-run-if-empty gcloud app versions delete --service=$service --quiet
+        done
+
 substitutions:
   _CACHE_BUCKET: agones-build-cache
   _HTMLTEST_CACHE_KEY: htmltest-0.10.1
