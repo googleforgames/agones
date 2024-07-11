@@ -25,7 +25,6 @@ import (
 	listerv1 "agones.dev/agones/pkg/client/listers/agones/v1"
 	mt "agones.dev/agones/pkg/metrics"
 	"agones.dev/agones/pkg/util/runtime"
-
 	"github.com/sirupsen/logrus"
 	"go.opencensus.io/stats"
 	"go.opencensus.io/stats/view"
@@ -155,7 +154,7 @@ func (r *metrics) record() {
 	stats.Record(r.ctx, gameServerAllocationsLatency.M(time.Since(r.start).Seconds()))
 }
 
-// record the current allocation error.
+// record the current allocation error rate.
 func (r *metrics) recordAllocationErrorRate(errorType string, retryCount int) {
 	stats.Record(r.ctx, gameServerAllocationsErrorRate.M(float64(1)))
 	r.mutate(tag.Update(keyStatus, errorType))

@@ -30,7 +30,6 @@ import (
 	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
 	multiclusterv1 "agones.dev/agones/pkg/apis/multicluster/v1"
 	getterv1 "agones.dev/agones/pkg/client/clientset/versioned/typed/agones/v1"
-
 	multiclusterinformerv1 "agones.dev/agones/pkg/client/informers/externalversions/multicluster/v1"
 	multiclusterlisterv1 "agones.dev/agones/pkg/client/listers/multicluster/v1"
 	"agones.dev/agones/pkg/util/apiserver"
@@ -67,8 +66,8 @@ var (
 	// ErrConflictInGameServerSelection is returned when the candidate gameserver already allocated
 	ErrConflictInGameServerSelection = errors.New("The Gameserver was already allocated")
 	// ErrTotalTimeoutExceeded is used to signal that total retry timeout has been exceeded and no additional retries should be made
-	ErrTotalTimeoutExceeded = status.Errorf(codes.DeadlineExceeded, "remote allocation total timeout exceeded")
-	allocatorCounter        int
+	ErrTotalTimeoutExceeded   = status.Errorf(codes.DeadlineExceeded, "remote allocation total timeout exceeded")
+	allocatorErrorRateCounter int
 )
 
 const (
@@ -195,7 +194,7 @@ func (c *Allocator) Allocate(ctx context.Context, gsa *allocationv1.GameServerAl
 	latency := c.newMetrics(ctx)
 	defer func() {
 		if err != nil {
-			latency.setError("errror")
+			latency.setError("ERROR")
 		}
 		latency.record()
 	}()
@@ -235,7 +234,7 @@ func (c *Allocator) Allocate(ctx context.Context, gsa *allocationv1.GameServerAl
 		return nil, err
 	}
 	latency.setResponse(out)
-	allocatorCounter = allocatorCounter + 1
+	allocatorErrorRateCounter = allocatorErrorRateCounter + 1
 	return out, nil
 }
 
@@ -256,9 +255,7 @@ func (c *Allocator) loggerForGameServerAllocation(gsa *allocationv1.GameServerAl
 func (c *Allocator) allocateFromLocalCluster(ctx context.Context, gsa *allocationv1.GameServerAllocation) (*allocationv1.GameServerAllocation, error) {
 	var gs *agonesv1.GameServer
 	latency := c.newMetrics(ctx)
-
 	err := Retry(allocationRetry, func() error {
-
 		var err error
 		var errorReason metav1.StatusReason
 		gs, err = c.allocate(ctx, gsa)
@@ -266,11 +263,11 @@ func (c *Allocator) allocateFromLocalCluster(ctx context.Context, gsa *allocatio
 			if status, ok := err.(k8serrors.APIStatus); ok || errors.As(err, &status) {
 				errorReason = status.Status().Reason
 			}
-			c.loggerForGameServerAllocation(gsa).WithError(err).Warn("FAILEDDddd to ALLOCATEEEE. Retrying...")
+			c.loggerForGameServerAllocation(gsa).WithError(err).Warn("Failed to Allocated. Retrying...")
 			defer func() {
 				if err != nil {
 					latency.setError(string(errorReason))
-					latency.recordAllocationErrorRate(string(errorReason), allocatorCounter)
+					latency.recordAllocationErrorRate(string(errorReason), allocatorErrorRateCounter)
 				}
 
 			}()
@@ -279,7 +276,7 @@ func (c *Allocator) allocateFromLocalCluster(ctx context.Context, gsa *allocatio
 	})
 
 	if err == nil {
-		latency.recordAllocationErrorRate("Success", allocatorCounter)
+		latency.recordAllocationErrorRate("Success", allocatorErrorRateCounter)
 	}
 
 	if err != nil && err != ErrNoGameServer && err != ErrConflictInGameServerSelection {
@@ -334,7 +331,6 @@ func (c *Allocator) applyMultiClusterAllocation(ctx context.Context, gsa *alloca
 	}
 
 	it := multiclusterv1.NewConnectionInfoIterator(policies)
-	a := 0
 	for {
 		connectionInfo := it.Next()
 		if connectionInfo == nil {
@@ -360,7 +356,6 @@ func (c *Allocator) applyMultiClusterAllocation(ctx context.Context, gsa *alloca
 		if result != nil && result.Status.State == allocationv1.GameServerAllocationAllocated {
 			return result, nil
 		}
-		a = a + 1
 	}
 	return result, err
 }
@@ -683,12 +678,16 @@ func (c *Allocator) applyAllocationToGameServer(ctx context.Context, mp allocati
 		return gsUpdate, updateErr
 	}
 
-	/*patch, err := gs.Patch(gs)
-	if err != nil {
-		return nil, err
-	}
+	/*
 
-		gsUpdate, updateErr := c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Patch(ctx, gs.GetObjectMeta().GetName(), types.JSONPatchType, patch, metav1.PatchOptions{})
+		Still need to revisit this section to see how Patch vs Update affects allocation rate
+
+		patch, err := gs.Patch(gs)
+		if err != nil {
+			return nil, err
+		}
+
+			gsUpdate, updateErr := c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Patch(ctx, gs.GetObjectMeta().GetName(), types.JSONPatchType, patch, metav1.PatchOptions{})
 	*/
 	if updateErr != nil {
 		return gsUpdate, updateErr
