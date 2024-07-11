@@ -28,6 +28,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 
+	"agones.dev/agones/pkg"
 	"agones.dev/agones/pkg/apis"
 	"agones.dev/agones/pkg/util/runtime"
 )
@@ -108,6 +109,16 @@ func TestFleetApplyDefaults(t *testing.T) {
 	assert.Equal(t, "25%", f.Spec.Strategy.RollingUpdate.MaxSurge.String())
 	assert.Equal(t, apis.Packed, f.Spec.Scheduling)
 	assert.Equal(t, int32(0), f.Spec.Replicas)
+	assert.Equal(t, pkg.Version, f.ObjectMeta.Annotations[VersionAnnotation])
+
+	// Test apply defaults is idempotent -- calling ApplyDefaults more than one time does not change the original result.
+	f.ApplyDefaults()
+	assert.Equal(t, appsv1.RollingUpdateDeploymentStrategyType, f.Spec.Strategy.Type)
+	assert.Equal(t, "25%", f.Spec.Strategy.RollingUpdate.MaxUnavailable.String())
+	assert.Equal(t, "25%", f.Spec.Strategy.RollingUpdate.MaxSurge.String())
+	assert.Equal(t, apis.Packed, f.Spec.Scheduling)
+	assert.Equal(t, int32(0), f.Spec.Replicas)
+	assert.Equal(t, pkg.Version, f.ObjectMeta.Annotations[VersionAnnotation])
 }
 
 func TestFleetUpperBoundReplicas(t *testing.T) {

@@ -121,7 +121,7 @@ const (
 	// FixedIntervalSyncType is a simple fixed interval based strategy for trigger autoscaling
 	FixedIntervalSyncType FleetAutoscalerSyncType = "FixedInterval"
 
-	defaultIntervalSyncSeconds = 30
+	defaultIntervalSyncSeconds int32 = 30
 )
 
 // BufferPolicy controls the desired behavior of the buffer policy.
