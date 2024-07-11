@@ -155,6 +155,24 @@ func (r *metrics) record() {
 }
 
 // record the current allocation error rate.
+// We only get "Conflict" error types which correspond to status code 409 which maps
+// to StatusReasonAlreadyExists error as shown below
+/*
+From vendor/k8s.io/apimachinery/pkg/apis/meta/v1/types.go
+	// StatusReasonAlreadyExists means the resource you are creating already exists.
+	// Details (optional):
+	//   "kind" string - the kind attribute of the conflicting resource
+	//   "id"   string - the identifier of the conflicting resource
+	// Status code 409
+	StatusReasonAlreadyExists StatusReason = "AlreadyExists"
+
+	// StatusReasonConflict means the requested operation cannot be completed
+	// due to a conflict in the operation. The client may need to alter the
+	// request. Each resource may define custom details that indicate the
+	// nature of the conflict.
+	// Status code 409
+	StatusReasonConflict StatusReason = "Conflict"
+*/
 func (r *metrics) recordAllocationErrorRate(errorType string, retryCount int) {
 	stats.Record(r.ctx, gameServerAllocationsErrorRate.M(float64(1)))
 	r.mutate(tag.Update(keyStatus, errorType))
