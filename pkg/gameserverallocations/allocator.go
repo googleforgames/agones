@@ -227,6 +227,7 @@ func (c *Allocator) Allocate(ctx context.Context, gsa *allocationv1.GameServerAl
 		out, err = c.applyMultiClusterAllocation(ctx, gsa)
 	} else {
 		out, err = c.allocateFromLocalCluster(ctx, gsa)
+		allocatorErrorRateCounter = allocatorErrorRateCounter + 1
 	}
 
 	if err != nil {
@@ -234,7 +235,6 @@ func (c *Allocator) Allocate(ctx context.Context, gsa *allocationv1.GameServerAl
 		return nil, err
 	}
 	latency.setResponse(out)
-	allocatorErrorRateCounter = allocatorErrorRateCounter + 1
 	return out, nil
 }
 
