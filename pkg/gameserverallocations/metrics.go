@@ -43,7 +43,7 @@ var (
 	keyRetryCount         = mt.MustTagKey("retry_count")
 
 	gameServerAllocationsLatency   = stats.Float64("gameserver_allocations/latency", "The duration of gameserver allocations", "s")
-	gameServerAllocationsErrorRate = stats.Float64("gameserver_allocations/errors", "The errors of gameserver allocations", "1")
+	gameServerAllocationsErrorRate = stats.Int64("gameserver_allocations/errors", "The errors of gameserver allocations", "1")
 )
 
 func init() {
@@ -174,7 +174,7 @@ From vendor/k8s.io/apimachinery/pkg/apis/meta/v1/types.go
 	StatusReasonConflict StatusReason = "Conflict"
 */
 func (r *metrics) recordAllocationErrorRate(errorType string, retryCount int) {
-	stats.Record(r.ctx, gameServerAllocationsErrorRate.M(float64(1)))
+	stats.Record(r.ctx, gameServerAllocationsErrorRate.M(int64(1)))
 	r.mutate(tag.Update(keyStatus, errorType))
 	r.mutate(tag.Update(keyRetryCount, fmt.Sprint(retryCount)))
 }
