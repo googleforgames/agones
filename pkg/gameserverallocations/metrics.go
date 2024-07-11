@@ -16,7 +16,6 @@ package gameserverallocations
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 	"time"
 
@@ -112,8 +111,10 @@ func (r *metrics) setStatus(status string) {
 }
 
 // setError set the latency status tag as error.
-func (r *metrics) setError(errorMessage string) {
-	r.mutate(tag.Update(keyStatus, errorMessage))
+func (r *metrics) setError(errorType string) {
+	r.mutate(tag.Update(keyStatus, "error"))
+	r.mutate(tag.Update(keyStatus, errorType))
+
 }
 
 // setRequest set request metric tags.
@@ -175,6 +176,4 @@ From vendor/k8s.io/apimachinery/pkg/apis/meta/v1/types.go
 */
 func (r *metrics) recordAllocationErrorRate(errorType string, retryCount int) {
 	stats.Record(r.ctx, gameServerAllocationsErrorRate.M(int64(1)))
-	r.mutate(tag.Update(keyStatus, errorType))
-	r.mutate(tag.Update(keyRetryCount, fmt.Sprint(retryCount)))
 }
