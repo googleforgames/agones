@@ -66,8 +66,7 @@ var (
 	// ErrConflictInGameServerSelection is returned when the candidate gameserver already allocated
 	ErrConflictInGameServerSelection = errors.New("The Gameserver was already allocated")
 	// ErrTotalTimeoutExceeded is used to signal that total retry timeout has been exceeded and no additional retries should be made
-	ErrTotalTimeoutExceeded   = status.Errorf(codes.DeadlineExceeded, "remote allocation total timeout exceeded")
-	allocatorErrorRateCounter int
+	ErrTotalTimeoutExceeded = status.Errorf(codes.DeadlineExceeded, "remote allocation total timeout exceeded")
 )
 
 const (
@@ -231,7 +230,6 @@ func (c *Allocator) Allocate(ctx context.Context, gsa *allocationv1.GameServerAl
 		out, err = c.applyMultiClusterAllocation(ctx, gsa)
 	} else {
 		out, err = c.allocateFromLocalCluster(ctx, gsa)
-		allocatorErrorRateCounter = allocatorErrorRateCounter + 1
 	}
 
 	if err != nil {
@@ -272,7 +270,7 @@ func (c *Allocator) allocateFromLocalCluster(ctx context.Context, gsa *allocatio
 				}
 				latency.setError(string(errorReason))
 			}
-			latency.recordAllocationErrorRate(string(errorReason), allocatorErrorRateCounter)
+			latency.recordAllocationErrorRate()
 		}()
 		return err
 	})

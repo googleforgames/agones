@@ -112,7 +112,7 @@ func (r *metrics) setStatus(status string) {
 
 // setError set the latency status tag as error.
 func (r *metrics) setError(errorType string) {
-	r.mutate(tag.Update(keyStatus, "error"))
+	r.mutate(tag.Update(keyStatus, errorType))
 	r.mutate(tag.Update(keyStatus, errorType))
 
 }
@@ -174,6 +174,6 @@ From vendor/k8s.io/apimachinery/pkg/apis/meta/v1/types.go
 	// Status code 409
 	StatusReasonConflict StatusReason = "Conflict"
 */
-func (r *metrics) recordAllocationErrorRate(errorType string, retryCount int) {
+func (r *metrics) recordAllocationErrorRate() {
 	stats.Record(r.ctx, gameServerAllocationsErrorRate.M(int64(1)))
 }
