@@ -234,7 +234,7 @@ Thank you for your interest in contributing to the Agones Unity client library. 
 If you don't already have a local copy of the Agones source code you can either (1) clone the official [googleforgames/agones repository](https://github.com/googleforgames/agones) for quicker access or (2) create a fork then clone your fork. Make note of where you clone the project to for the next setup steps!
 
 ### Setting up the Host Unity Project
-You will want a unity project to "host" a local copy of the agones unity sdk source code. We like the unity project name "Agones Unity SDK Host Project" but name the host unity project whatever you like. Open the project so unity can complete its initial project setup.
+You will want a Unity project to "host" a local copy of the Agones Unity SDK source code. We like the Unity project name "Agones Unity SDK Host Project" but name the host Unity project whatever you like. Open the project so Unity can complete its initial project setup.
 
 Next we will tell the unity package manager about the local agones unity sdk package. Open up the unity Package Manager window (`Window > Package Manager`). Click the `+` (top left side of Package Manager window) to then click `Add package from disk`. Select your local copy of [sdks/unity/package.json](https://github.com/googleforgames/agones/blob/main/sdks/unity/package.json) in the file finder window. Unity package manager will then load up the Agones Unity SDK which will reflect in the package manager window.
 
