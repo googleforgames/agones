@@ -49,12 +49,9 @@ func findGameServerForAllocation(gsa *allocationv1.GameServerAllocation, list []
 			}
 		}
 	case apis.Distributed:
-		// Determine if Priorities are set in the Fleet spec
-		prioritiesSet := len(gsa.Spec.Priorities) > 0
-
 		// randomised looping - make a list of indices, and then randomise them
 		// as we don't want to change the order of the gameserver slice
-		if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) || !prioritiesSet {
+		if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) || len(gsa.Spec.Priorities) == 0 {
 			l := len(list)
 			indices := make([]int, l)
 			for i := 0; i < l; i++ {
