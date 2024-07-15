@@ -83,8 +83,16 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &agonesv1.SdkServerApplyConfiguration{}
 
 		// Group=autoscaling.agones.dev, Version=v1
+	case autoscalingv1.SchemeGroupVersion.WithKind("ActivePeriod"):
+		return &applyconfigurationautoscalingv1.ActivePeriodApplyConfiguration{}
+	case autoscalingv1.SchemeGroupVersion.WithKind("Between"):
+		return &applyconfigurationautoscalingv1.BetweenApplyConfiguration{}
 	case autoscalingv1.SchemeGroupVersion.WithKind("BufferPolicy"):
 		return &applyconfigurationautoscalingv1.BufferPolicyApplyConfiguration{}
+	case autoscalingv1.SchemeGroupVersion.WithKind("ChainEntry"):
+		return &applyconfigurationautoscalingv1.ChainEntryApplyConfiguration{}
+	case autoscalingv1.SchemeGroupVersion.WithKind("ChainPolicy"):
+		return &applyconfigurationautoscalingv1.ChainPolicyApplyConfiguration{}
 	case autoscalingv1.SchemeGroupVersion.WithKind("CounterPolicy"):
 		return &applyconfigurationautoscalingv1.CounterPolicyApplyConfiguration{}
 	case autoscalingv1.SchemeGroupVersion.WithKind("FixedIntervalSync"):
@@ -101,6 +109,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &applyconfigurationautoscalingv1.FleetAutoscalerSyncApplyConfiguration{}
 	case autoscalingv1.SchemeGroupVersion.WithKind("ListPolicy"):
 		return &applyconfigurationautoscalingv1.ListPolicyApplyConfiguration{}
+	case autoscalingv1.SchemeGroupVersion.WithKind("Schedule"):
+		return &applyconfigurationautoscalingv1.ScheduleApplyConfiguration{}
 	case autoscalingv1.SchemeGroupVersion.WithKind("WebhookPolicy"):
 		return &applyconfigurationautoscalingv1.WebhookPolicyApplyConfiguration{}
 
