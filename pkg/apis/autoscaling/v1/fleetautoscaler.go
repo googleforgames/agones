@@ -16,10 +16,15 @@ package v1
 
 import (
 	"crypto/x509"
+	"fmt"
 	"net/url"
+	"strconv"
+	"strings"
+	"time"
 
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	"agones.dev/agones/pkg/util/runtime"
+	"github.com/robfig/cron/v3"
 	admregv1 "k8s.io/api/admissionregistration/v1"
 	apimachineryvalidation "k8s.io/apimachinery/pkg/api/validation"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -82,6 +87,11 @@ type FleetAutoscalerPolicy struct {
 	// List policy config params. Present only if FleetAutoscalerPolicyType = List.
 	// +optional
 	List *ListPolicy `json:"list,omitempty"`
+	// [Stage:Dev]
+	// [FeatureFlag:ScheduledAutoscaler]
+	// Chain policy config params. Present only if FleetAutoscalerPolicyType = Chain.
+	// +optional
+	Chain *ChainPolicy `json:"chain,omitempty"`
 }
 
 // FleetAutoscalerPolicyType is the policy for autoscaling
@@ -118,6 +128,11 @@ const (
 	// ListPolicyType is for List based fleet autoscaling
 	// nolint:revive // Linter contains comment doesn't start with ListPolicyType
 	ListPolicyType FleetAutoscalerPolicyType = "List"
+	// [Stage:Dev]
+	// [FeatureFlag:ScheduledAutoscaler]
+	// ChainPolicyType is for Chain based fleet autoscaling
+	// nolint:revive // Linter contains comment doesn't start with ChainPolicyType
+	ChainPolicyType FleetAutoscalerPolicyType = "Chain"
 	// FixedIntervalSyncType is a simple fixed interval based strategy for trigger autoscaling
 	FixedIntervalSyncType FleetAutoscalerSyncType = "FixedInterval"
 
@@ -195,6 +210,63 @@ type ListPolicy struct {
 	BufferSize intstr.IntOrString `json:"bufferSize"`
 }
 
+// Between defines the time period that the policy is eligible to be applied.
+type Between struct {
+	// Start is the datetime that the policy is eligible to be applied.
+	// This field must conform to RFC3339 format. If this field not set or is in the past, the policy is eligible to be applied
+	// as soon as the fleet autoscaler is running.
+	Start string `json:"start"`
+
+	// End is the datetime that the policy is no longer eligible to be applied.
+	// This field must conform to RFC3339 format. If not set, the policy is always eligible to be applied, after the start time above.
+	End string `json:"end"`
+}
+
+// ActivePeriod defines the time period that the policy is applied.
+type ActivePeriod struct {
+	// Timezone to be used for the startCron field. If not set, startCron is defaulted to the UTC timezone.
+	Timezone string `json:"timezone"`
+	// StartCron defines when the policy should be applied.
+	// If not set, the policy is always to be applied within the start and end time.
+	// This field must conform to UNIX cron syntax.
+	StartCron string `json:"startCron"`
+
+	// Duration is the length of time that the policy is applied.
+	// If not set, the duration is indefinite.
+	// A duration string is a possibly signed sequence of decimal numbers,
+	// (e.g. "300ms", "-1.5h" or "2h45m").
+	// The representation limits the largest representable duration to approximately 290 years.
+	// Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".
+	Duration string `json:"duration"`
+}
+
+// Schedule defines when the policy should be applied.
+type Schedule struct {
+	// Between defines the time period that the policy is eligible to be applied.
+	Between Between `json:"between"`
+
+	// ActivePeriod defines the time period that the policy is applied.
+	ActivePeriod ActivePeriod `json:"activePeriod"`
+}
+
+// ChainEntry defines a single entry in the ChainPolicy.
+type ChainEntry struct {
+	// ID is the unique identifier for a ChainEntry. If not set the identifier will be set to the index of chain entry.
+	ID string `json:"id"`
+
+	// Schedule defines when the policy is applied.
+	Schedule Schedule `json:"schedule"`
+
+	// Policy is the name of the policy to be applied. Required field.
+	Policy FleetAutoscalerPolicy `json:"policy"`
+}
+
+// ChainPolicy controls the desired behavior of the Chain autoscaler policy.
+type ChainPolicy struct {
+	// Items is a list of ChainEntry objects.
+	Items []ChainEntry `json:"items"`
+}
+
 // FixedIntervalSync controls the desired behavior of the fixed interval based sync.
 type FixedIntervalSync struct {
 	// Seconds defines how often we run fleet autoscaling in seconds
@@ -258,23 +330,32 @@ type FleetAutoscaleReview struct {
 
 // Validate validates the FleetAutoscaler scaling settings
 func (fas *FleetAutoscaler) Validate() field.ErrorList {
-	var allErrs field.ErrorList
-	switch fas.Spec.Policy.Type {
-	case BufferPolicyType:
-		allErrs = fas.Spec.Policy.Buffer.ValidateBufferPolicy(field.NewPath("spec", "policy", "buffer"))
-
-	case WebhookPolicyType:
-		allErrs = fas.Spec.Policy.Webhook.ValidateWebhookPolicy(field.NewPath("spec", "policy", "webhook"))
-
-	case CounterPolicyType:
-		allErrs = fas.Spec.Policy.Counter.ValidateCounterPolicy(field.NewPath("spec", "policy", "counter"))
-
-	case ListPolicyType:
-		allErrs = fas.Spec.Policy.List.ValidateListPolicy(field.NewPath("spec", "policy", "list"))
-	}
+	allErrs := fas.Spec.Policy.ValidatePolicy(field.NewPath("spec", "policy"))
 
 	if fas.Spec.Sync != nil {
 		allErrs = append(allErrs, fas.Spec.Sync.FixedInterval.ValidateFixedIntervalSync(field.NewPath("spec", "sync", "fixedInterval"))...)
+	}
+	return allErrs
+}
+
+// ValidatePolicy validates a FleetAutoscalerPolicy's settings.
+func (f *FleetAutoscalerPolicy) ValidatePolicy(fldPath *field.Path) field.ErrorList {
+	var allErrs field.ErrorList
+	switch f.Type {
+	case BufferPolicyType:
+		allErrs = f.Buffer.ValidateBufferPolicy(fldPath.Child("buffer"))
+
+	case WebhookPolicyType:
+		allErrs = f.Webhook.ValidateWebhookPolicy(fldPath.Child("webhook"))
+
+	case CounterPolicyType:
+		allErrs = f.Counter.ValidateCounterPolicy(fldPath.Child("counter"))
+
+	case ListPolicyType:
+		allErrs = f.List.ValidateListPolicy(fldPath.Child("list"))
+
+	case ChainPolicyType:
+		allErrs = f.Chain.ValidateChainPolicy(fldPath.Child("chain"))
 	}
 	return allErrs
 }
@@ -419,6 +500,67 @@ func (l *ListPolicy) ValidateListPolicy(fldPath *field.Path) field.ErrorList {
 		if l.MinCapacity < 1 {
 			allErrs = append(allErrs, field.Invalid(fldPath.Child("minCapacity"), l.BufferSize.String(), " when bufferSize in percentage format is used, minCapacity should be more than 0"))
 		}
+	}
+	return allErrs
+}
+
+// ValidateChainPolicy validates the FleetAutoscaler Chain policy settings.
+func (c *ChainPolicy) ValidateChainPolicy(fldPath *field.Path) field.ErrorList {
+	var allErrs field.ErrorList
+	if !runtime.FeatureEnabled(runtime.FeatureScheduledAutoscaler) {
+		return append(allErrs, field.Forbidden(fldPath, "feature ScheduledAutoscaler must be enabled"))
+	}
+	for i, entry := range c.Items {
+		if entry.ID != "" {
+			for j, otherEntry := range c.Items {
+				// If the entry's id is the same as another entry's id in the chain, append an error
+				if (entry.ID == otherEntry.ID || entry.ID == strconv.Itoa(j)) && i != j {
+					allErrs = append(allErrs, field.Invalid(fldPath.Child("items"), entry.ID, "id of chain entry must be unique"))
+				}
+			}
+		}
+		if entry.Schedule.Between.Start != "" {
+			// If start time is not a valid RFC3339 formatted datetime, append an error
+			if _, err := time.Parse(time.RFC3339, entry.Schedule.Between.Start); err != nil {
+				allErrs = append(allErrs, field.Invalid(fldPath.Child("items").Index(i).Child("schedule").Child("between").Child("start"), entry.Schedule.Between.Start, fmt.Sprintf("invalid start time: %s", err)))
+			}
+		}
+		if entry.Schedule.Between.End != "" {
+			// If end time is not a valid RFC3339 formatted datetime, append an error
+			if _, err := time.Parse(time.RFC3339, entry.Schedule.Between.End); err != nil {
+				allErrs = append(allErrs, field.Invalid(fldPath.Child("items").Index(i).Child("schedule").Child("between").Child("end"), entry.Schedule.Between.End, fmt.Sprintf("invalid end time: %s", err)))
+			}
+		}
+		// Validate the active period timezone (empty string defaults to UTC).
+		if _, err := time.LoadLocation(entry.Schedule.ActivePeriod.Timezone); err != nil {
+			allErrs = append(allErrs, field.Invalid(fldPath.Child("items").Index(i).Child("schedule").Child("activePeriod").Child("timezone"), entry.Schedule.ActivePeriod.Timezone, fmt.Sprintf("invalid timezone: %s", err)))
+		}
+		if entry.Schedule.ActivePeriod.StartCron != "" {
+			// If startCron is not a valid cron expression, append an error
+			if _, err := cron.ParseStandard(entry.Schedule.ActivePeriod.StartCron); err != nil {
+				allErrs = append(allErrs, field.Invalid(fldPath.Child("items").Index(i).Child("schedule").Child("activePeriod").Child("startCron"), entry.Schedule.ActivePeriod.StartCron, fmt.Sprintf("invalid startCron: %s", err)))
+			}
+			// If the cron expression contains a CRON_TZ or TZ specification, append an error
+			if strings.Contains(entry.Schedule.ActivePeriod.StartCron, "TZ") {
+				allErrs = append(allErrs, field.Invalid(fldPath.Child("items").Index(i).Child("schedule").Child("activePeriod").Child("startCron"), entry.Schedule.ActivePeriod.StartCron, "CRON_TZ or TZ used in start is not supported, please use the .schedule.timezone field to specify a timezone"))
+			}
+		}
+		if entry.Schedule.ActivePeriod.Duration != "" {
+			// If the duration is not valid duration format, append an error
+			if _, err := time.ParseDuration(entry.Schedule.ActivePeriod.Duration); err != nil {
+				allErrs = append(allErrs, field.Invalid(fldPath.Child("items").Index(i).Child("schedule").Child("activePeriod").Child("duration"), entry.Schedule.ActivePeriod.Duration, fmt.Sprintf("invalid duration: %s", err)))
+			}
+		}
+		// Validate that the chain entry has a policy
+		if entry.Policy.Type == "" {
+			allErrs = append(allErrs, field.Required(fldPath.Child("items").Index(i).Child("policy"), "policy type is missing"))
+		}
+		// Ensure the chain entry's policy is not a chain policy (to avoid nested policies)
+		if entry.Policy.Type == ChainPolicyType {
+			allErrs = append(allErrs, field.Invalid(fldPath.Child("items").Index(i).Child("policy"), entry.Policy.Type, "chain policy cannot be used in chain policy"))
+		}
+		// Validate the chain entry's policy
+		allErrs = append(allErrs, entry.Policy.ValidatePolicy(fldPath.Child("items").Index(i).Child("policy"))...)
 	}
 	return allErrs
 }
