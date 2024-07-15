@@ -257,22 +257,27 @@ func (c *Allocator) loggerForGameServerAllocation(gsa *allocationv1.GameServerAl
 func (c *Allocator) allocateFromLocalCluster(ctx context.Context, gsa *allocationv1.GameServerAllocation) (*allocationv1.GameServerAllocation, error) {
 	var gs *agonesv1.GameServer
 	latency := c.newMetrics(ctx)
+	retryCount := 0
 	err := Retry(allocationRetry, func() error {
 		var err error
 		var errorReason metav1.StatusReason
 		gs, err = c.allocate(ctx, gsa)
+		retryCount = retryCount + 1
 
-		c.loggerForGameServerAllocation(gsa).WithError(err).Warn("Failed to Allocated. Retrying...")
-		defer func() {
-			if err != nil {
-				if status, ok := err.(k8serrors.APIStatus); ok || errors.As(err, &status) {
-					errorReason = status.Status().Reason
-				}
-				latency.setError(string(errorReason))
+		c.loggerForGameServerAllocation(gsa).WithError(err).Warn("Failed to Allocated. Retrying... retryCount: ", retryCount)
+
+		if err != nil {
+			if status, ok := err.(k8serrors.APIStatus); ok || errors.As(err, &status) {
+				errorReason = status.Status().Reason
 			}
-			latency.recordAllocationErrorRate()
-		}()
+			latency.setError(string(errorReason))
+		} else {
+			latency.setError(string("Success ") + fmt.Sprint(retryCount))
+		}
+		latency.recordAllocationErrorRate()
+
 		return err
+
 	})
 
 	if err != nil && err != ErrNoGameServer && err != ErrConflictInGameServerSelection {
