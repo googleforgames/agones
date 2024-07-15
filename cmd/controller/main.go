@@ -20,7 +20,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -54,6 +53,7 @@ import (
 	"agones.dev/agones/pkg/gameservers"
 	"agones.dev/agones/pkg/gameserversets"
 	"agones.dev/agones/pkg/metrics"
+	"agones.dev/agones/pkg/util/httpserver"
 	"agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/signals"
 )
@@ -171,7 +171,7 @@ func main() {
 	agonesInformerFactory := externalversions.NewSharedInformerFactory(agonesClient, defaultResync)
 	kubeInformerFactory := informers.NewSharedInformerFactory(kubeClient, defaultResync)
 
-	server := &httpServer{}
+	server := &httpserver.Server{Logger: logger}
 	var rs []runner
 	var health healthcheck.Handler
 
@@ -547,10 +547,6 @@ type runner interface {
 	Run(ctx context.Context, workers int) error
 }
 
-type httpServer struct {
-	http.ServeMux
-}
-
 func whenLeader(ctx context.Context, cancel context.CancelFunc, logger *logrus.Entry, doLeaderElection bool, kubeClient *kubernetes.Clientset, namespace string, start func(_ context.Context)) {
 	if !doLeaderElection {
 		start(ctx)
@@ -599,23 +595,4 @@ func whenLeader(ctx context.Context, cancel context.CancelFunc, logger *logrus.E
 			},
 		},
 	})
-}
-
-func (h *httpServer) Run(_ context.Context, _ int) error {
-	logger.Info("Starting http server...")
-	srv := &http.Server{
-		Addr:    ":8080",
-		Handler: h,
-	}
-	defer srv.Close() // nolint: errcheck
-
-	if err := srv.ListenAndServe(); err != nil {
-		if err == http.ErrServerClosed {
-			logger.WithError(err).Info("http server closed")
-		} else {
-			wrappedErr := errors.Wrap(err, "Could not listen on :8080")
-			runtime.HandleError(logger.WithError(wrappedErr), wrappedErr)
-		}
-	}
-	return nil
 }
