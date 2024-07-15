@@ -153,7 +153,7 @@ func main() {
 	kubeInformerFactory := informers.NewSharedInformerFactory(kubeClient, defaultResync)
 
 	server := &httpserver.Server{
-		Port: ctlConf.HTTPPort,
+		Port:   ctlConf.HTTPPort,
 		Logger: logger,
 	}
 	var health healthcheck.Handler
