@@ -29,9 +29,6 @@ PROD_REPO ?= us-docker.pkg.dev/agones-images/examples
 WINDOWS_VERSIONS = ltsc2019 ltsc2022
 BUILDX_WINDOWS_BUILDER = windows-builder
 
-# https://github.com/microsoft/Windows-Containers/issues/493: Pin the LTSC2019 image to an older sha
-LTSC2019_IMAGE_TAG = "@sha256:6fdf140282a2f809dae9b13fe441635867f0a27c33a438771673b8da8f3348a4"
-
 # Build with Windows support
 WITH_WINDOWS ?= 1
 
@@ -40,7 +37,7 @@ WINDOWS_DOCKER_PUSH_ARGS = --push
 
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_path := $(dir $(mkfile_path))
-version := 1.9
+version := 2.0
 ifeq ($(REPOSITORY),)
 	server_tag := xonotic-example:$(version)
 else
@@ -89,7 +86,7 @@ push-windows-image-%:
 
 build-windows-image-%: ensure-windows-buildx
 	docker buildx build --platform windows/amd64 --builder $(BUILDX_WINDOWS_BUILDER) -f $(project_path)Dockerfile.windows \
-	--tag=$(server_tag)-windows_amd64-$* --build-arg WINDOWS_VERSION=$* --build-arg IMAGE_TAG=$(if $(filter ltsc2019,$*),$(LTSC2019_IMAGE_TAG),) . $(WINDOWS_DOCKER_PUSH_ARGS)
+	--tag=$(server_tag)-windows_amd64-$* --build-arg WINDOWS_VERSION=$* . $(WINDOWS_DOCKER_PUSH_ARGS)
 
 ensure-windows-buildx:
 # Windows image builds must be directed to a specific buildx context.

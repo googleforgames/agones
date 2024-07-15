@@ -35,10 +35,9 @@
 # See https://docs.microsoft.com/en-us/virtualization/windowscontainers/deploy-containers/version-compatibility
 # for details.
 ARG WINDOWS_VERSION=ltsc2019
-ARG IMAGE_TAG=""
 
 # Build Stage
-FROM --platform=linux/amd64 golang:1.21.6 as base
+FROM --platform=linux/amd64 golang:1.21.12 as base
 
 RUN apt-get update && apt-get install -y unzip curl
 
@@ -54,7 +53,7 @@ RUN curl -o xonotic.zip https://dl.xonotic.org/xonotic-0.8.6.zip && \
 
 
 # Final Image
-FROM mcr.microsoft.com/windows/servercore:${WINDOWS_VERSION}${IMAGE_TAG}
+FROM mcr.microsoft.com/windows/servercore:${WINDOWS_VERSION}
 
 WORKDIR C:/Xonotic
 
