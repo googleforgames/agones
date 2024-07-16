@@ -4,12 +4,16 @@
 
 [Full Changelog](https://github.com/googleforgames/agones/compare/v1.41.0...v1.42.0)
 
+**Breaking changes:**
+- Update csharp.md to indicate ConnectAsync is deprecated by @aallbrig in https://github.com/googleforgames/agones/pull/3866
+
 **Implemented enhancements:**
 - Add security context to Agones containers by @peterzhongyi in https://github.com/googleforgames/agones/pull/3856
 - Add Security Context to game server sidecar by @peterzhongyi in https://github.com/googleforgames/agones/pull/3869
 - Drop CountsAndLists Data from the Fleet and Game Server Set When the Flag is False by @igooch in https://github.com/googleforgames/agones/pull/3881
 - Adds tests to confirm that Fleet, Fleet Autoscaler, and Fleet Allocation apply defaults code is idempotent by @igooch in https://github.com/googleforgames/agones/pull/3888
 - feat: Add CRD Changes and Feature Flag for chain policy by @indexjoseph in https://github.com/googleforgames/agones/pull/3880
+
 **Fixed bugs:**
 - sdk-server expects SDK_LOG_LEVEL by @KAllan357 in https://github.com/googleforgames/agones/pull/3858
 - this will resolve From/layer extraction issue on ltsc2019 in examples by @ashutosji in https://github.com/googleforgames/agones/pull/3873
@@ -18,8 +22,10 @@
 - Buffer Unity SDK ReceiveData when watching for configuration changes by @ZeroParticle in https://github.com/googleforgames/agones/pull/3872
 - agones-{extensions,allocator}: Make servers context aware by @zmerlynn in https://github.com/googleforgames/agones/pull/3845
 - added condition for distributed logic by @ashutosji in https://github.com/googleforgames/agones/pull/3877
+
 **Security fixes:**
 - Bump @grpc/grpc-js from 1.10.7 to 1.10.9 in /sdks/nodejs by @dependabot in https://github.com/googleforgames/agones/pull/3863
+
 **Other:**
 - Preparation for Release v1.42.0 by @ashutosji in https://github.com/googleforgames/agones/pull/3854
 - Add helpful note to edit-first-gameserver-go by @peterzhongyi in https://github.com/googleforgames/agones/pull/3846
