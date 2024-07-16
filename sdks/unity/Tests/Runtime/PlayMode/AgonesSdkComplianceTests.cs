@@ -35,16 +35,6 @@ namespace Tests.Runtime.Playmode
             Assert.IsTrue(task.Result);
             _mockSdkServer.DeregisterResponseHandler("/ready");
         }
-        [UnityTest]
-        public IEnumerator AgonesSdk_()
-        {
-            _mockSdkServer.RegisterResponseHandler("/ready", _ => "{}");
-            var sut = _gameObject.AddComponent<AgonesSdk>();
-            var task = sut.Ready();
-            yield return AwaitTask(task);
-            Assert.IsTrue(task.Result);
-            _mockSdkServer.DeregisterResponseHandler("/ready");
-        }
         private IEnumerator AwaitTask(Task task)
         {
             while (!task.IsCompleted)
