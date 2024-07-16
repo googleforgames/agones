@@ -1,7 +1,7 @@
 # Agones Unity Client SDK
 
 ## Contributing
-Thank you for your interest in contributing to the Agones Unity client library. Setting up a local workspace to help develop the Agones Game Server Unity Client SDK involves cloning the Agones source code, having a host unity project, and allowing the unity project to run the external tests in the Unity test runner.
+Thank you for your interest in contributing to the Agones Unity client library. Setting up a local workspace to help develop the Agones Game Server Unity Client SDK involves cloning the Agones source code, having a host Unity project, and allowing the Unity project to run the external tests in the Unity test runner.
 
 ### A copy of Agones source code
 If you don't already have a local copy of the Agones source code you can either (1) clone the official [googleforgames/agones repository](https://github.com/googleforgames/agones) for quicker access or (2) create a fork then clone your fork. Make note of where you clone the project to for the next setup steps!
