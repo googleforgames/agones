@@ -83,3 +83,7 @@ There are multiple possible solutions, but the engines that have out of the box 
 
 While you can integrate other engines with Agones, if you are new to developing on a game engine, you may want to
 start with the above.
+
+## Additional Resources
+
+* [Game Network Resources](https://gamenetcode.com/) is a curated list of multiplayer game network programming (netcode) resources. Includes articles, talks, and tools covering various aspects of multiplayer game development. Use this resource to learn more about fundamental subjects in multiplayer game programming from companies such as Riot, Bungie, and Activision.

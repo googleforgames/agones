@@ -22,19 +22,31 @@
 #    \ V / (_| | |  | | (_| | |_) | |  __\__ \
 #     \_/ \__,_|_|  |_|\__,_|_.__/|_|\___|___/
 #
-REPOSITORY ?= us-docker.pkg.dev/agones-images/examples
+REPOSITORY ?=
+PROD_REPO ?= us-docker.pkg.dev/agones-images/examples
 
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_path := $(dir $(mkfile_path))
-version := 0.2
-server_tag := $(REPOSITORY)/simple-genai-game-server:$(version)
+version := 0.3
+ifeq ($(REPOSITORY),)
+	server_tag := simple-genai-game-server:$(version)
+else
+	server_tag := $(REPOSITORY)/simple-genai-game-server:$(version)
+endif
 server_tag_linux_amd64 = $(server_tag)-linux-amd64
 push_server_manifest = $(server_tag_linux_amd64)
 root_path = $(realpath $(project_path)/../..)
 
+#   _____                    _
+#  |_   _|_ _ _ __ __ _  ___| |_ ___
+#    | |/ _` | '__/ _` |/ _ \ __/ __|
+#    | | (_| | | | (_| |  __/ |_\__ \
+#    |_|\__,_|_|  \__, |\___|\__|___/
+#                 |___/
+
 build: build-linux-image-amd64
 push: push-linux-image-amd64
-  # Docker >=24.0.6
+  	# Docker >=24.0.6
 	docker buildx imagetools create --tag $(server_tag) \
     	$(push_server_manifest)
 
@@ -47,10 +59,14 @@ push-linux-image-amd64: build
 
 # check if hosted on Google Artifact Registry
 gar-check:
-	gcloud container images describe $(server_tag)
+	gcloud container images describe $(PROD_REPO)/$(server_tag)
 
 print-vars:
 	$(info project_path is $(project_path))
 	$(info server_tag is $(server_tag))
 	$(info server_tag_linux_amd64 is $(server_tag_linux_amd64))
 	$(info push_server_manifest is $(push_server_manifest))
+
+# build and push the simple-genai-server image with specified tag
+cloud-build:
+	cd $(root_path) && gcloud builds submit --config=./examples/simple-genai-server/cloudbuild.yaml

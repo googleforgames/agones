@@ -29,7 +29,7 @@ PROD_REPO ?= us-docker.pkg.dev/agones-images/examples
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_path := $(dir $(mkfile_path))
 root_path := $(realpath $(project_path)/../..)
-version := 0.13
+version := 0.14
 ifeq ($(REPOSITORY),)
 	autoscaler_webhook_tag := autoscaler-webhook:$(version)
 else

@@ -26,7 +26,7 @@ List of items to do for upgrading to {version_1} {version_2} {version_3}
 - [ ] Update CRD API reference to {version_2}
     - [ ] Update links to k8s documentation in `site/assets/templates/crd-doc-config.json`
     - [ ] Regenerate crd api reference docs - `make gen-api-docs`
-    - [ ] Regenerate crd client libraries - `make gen-crd-client`
+    - [ ] Regenerate crd client libraries and generated code - `make gen-crd-code`
 - [ ] Regenerate Kubernetes resource includes (e.g. ObjectMeta, PodTemplateSpec)
     - [ ] Start a cluster with `make gcloud-test-cluster` (this cluster will use Kubernetes {version_2}), uninstall agones using `helm uninstall agones -n agones-system`, and then run  `make gen-embedded-openapi` and `make gen-install`
 - [ ] Update documentation for creating clusters and k8s API references to align with the above clusters versions and the k8s API version
@@ -41,11 +41,11 @@ List of items to do for upgrading to {version_1} {version_2} {version_3}
     - [ ] Update the `grpc_release_tag` in the SDK [base image grpc version](https://github.com/googleforgames/agones/blob/main/build/includes/sdk.mk).
     - [ ] Update the gRPC version number in C++ gRPC Dependency documentation [here](https://github.com/googleforgames/agones/blob/main/site/content/en/docs/Guides/Client%20SDKs/cpp.md).
     - [ ] Update the gRPC version
-      ([Dockerfile](https://github.com/googleforgames/agones/blob/main/examples/cpp-simple/Dockerfile)) and 
+      ([Dockerfile](https://github.com/googleforgames/agones/blob/main/examples/cpp-simple/Dockerfile)) and
       increment the image tag
       ([Makefile](https://github.com/googleforgames/agones/blob/main/examples/cpp-simple/Makefile)) in the C++
       `cpp-simple` example.
-    - [ ] Regenerate all client sdks: [make gen-all-sdk-grpc](https://github.com/googleforgames/agones/blob/main/build/README.md#make-gen-all-sdk-grpc) 
+    - [ ] Regenerate all client sdks: [make gen-all-sdk-grpc](https://github.com/googleforgames/agones/blob/main/build/README.md#make-gen-all-sdk-grpc)
           This can take 20 minutes or so, as the above changes force a rebuild. Plan your day accordingly 😃.
     - [ ] Regenerate allocated API endpoints: [make gen-allocation-grpc](https://github.com/googleforgames/agones/blob/main/build/README.md#make-gen-allocation-grpc)
 - [ ] Confirm the update works as expected by running e2e tests
