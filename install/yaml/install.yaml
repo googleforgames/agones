@@ -17237,7 +17237,7 @@ spec:
         - name: STACKDRIVER_EXPORTER
           value: "false"
         - name: STACKDRIVER_LABELS
-          value: ""       
+          value: ""
         - name: GCP_PROJECT_ID
           value: ""
         - name: NUM_WORKERS
@@ -17270,6 +17270,10 @@ spec:
           value: "agones-extensions"
         - name: READINESS_SHUTDOWN_DURATION
           value: 18s
+        - name: WEBHOOK_PORT
+          value: "8081"
+        - name: HTTP_PORT
+          value: "8080"
         ports:
         - name: webhooks
           containerPort: 8081
