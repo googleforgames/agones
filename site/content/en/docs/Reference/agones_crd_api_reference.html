@@ -4413,9 +4413,6 @@ Generated with <code>gen-crd-api-reference-docs</code>.
 <p>Packages:</p>
 <ul>
 <li>
-<a href="#multicluster.agones.dev%2fv1">multicluster.agones.dev/v1</a>
-</li>
-<li>
 <a href="#agones.dev%2fv1">agones.dev/v1</a>
 </li>
 <li>
@@ -4424,296 +4421,10 @@ Generated with <code>gen-crd-api-reference-docs</code>.
 <li>
 <a href="#autoscaling.agones.dev%2fv1">autoscaling.agones.dev/v1</a>
 </li>
+<li>
+<a href="#multicluster.agones.dev%2fv1">multicluster.agones.dev/v1</a>
+</li>
 </ul>
-<h2 id="multicluster.agones.dev/v1">multicluster.agones.dev/v1</h2>
-<p>
-<p>Package v1 is the v1 version of the API.</p>
-</p>
-Resource Types:
-<ul><li>
-<a href="#multicluster.agones.dev/v1.GameServerAllocationPolicy">GameServerAllocationPolicy</a>
-</li></ul>
-<h3 id="multicluster.agones.dev/v1.GameServerAllocationPolicy">GameServerAllocationPolicy
-</h3>
-<p>
-<p>GameServerAllocationPolicy is the Schema for the gameserverallocationpolicies API</p>
-</p>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>apiVersion</code></br>
-string</td>
-<td>
-<code>
-multicluster.agones.dev/v1
-</code>
-</td>
-</tr>
-<tr>
-<td>
-<code>kind</code></br>
-string
-</td>
-<td><code>GameServerAllocationPolicy</code></td>
-</tr>
-<tr>
-<td>
-<code>metadata</code></br>
-<em>
-<a href="https://v1-28.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#objectmeta-v1-meta">
-Kubernetes meta/v1.ObjectMeta
-</a>
-</em>
-</td>
-<td>
-Refer to the Kubernetes API documentation for the fields of the
-<code>metadata</code> field.
-</td>
-</tr>
-<tr>
-<td>
-<code>spec</code></br>
-<em>
-<a href="#multicluster.agones.dev/v1.GameServerAllocationPolicySpec">
-GameServerAllocationPolicySpec
-</a>
-</em>
-</td>
-<td>
-<br/>
-<br/>
-<table>
-<tr>
-<td>
-<code>priority</code></br>
-<em>
-int32
-</em>
-</td>
-<td>
-</td>
-</tr>
-<tr>
-<td>
-<code>weight</code></br>
-<em>
-int
-</em>
-</td>
-<td>
-</td>
-</tr>
-<tr>
-<td>
-<code>connectionInfo</code></br>
-<em>
-<a href="#multicluster.agones.dev/v1.ClusterConnectionInfo">
-ClusterConnectionInfo
-</a>
-</em>
-</td>
-<td>
-</td>
-</tr>
-</table>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="multicluster.agones.dev/v1.ClusterConnectionInfo">ClusterConnectionInfo
-</h3>
-<p>
-(<em>Appears on:</em>
-<a href="#multicluster.agones.dev/v1.GameServerAllocationPolicySpec">GameServerAllocationPolicySpec</a>)
-</p>
-<p>
-<p>ClusterConnectionInfo defines the connection information for a cluster</p>
-</p>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>clusterName</code></br>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Optional: the name of the targeted cluster</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>allocationEndpoints</code></br>
-<em>
-[]string
-</em>
-</td>
-<td>
-<p>The endpoints for the allocator service in the targeted cluster.
-If the AllocationEndpoints is not set, the allocation happens on local cluster.
-If there are multiple endpoints any of the endpoints that can handle allocation request should suffice</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>secretName</code></br>
-<em>
-string
-</em>
-</td>
-<td>
-<p>The name of the secret that contains TLS client certificates to connect the allocator server in the targeted cluster</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>namespace</code></br>
-<em>
-string
-</em>
-</td>
-<td>
-<p>The cluster namespace from which to allocate gameservers</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>serverCa</code></br>
-<em>
-[]byte
-</em>
-</td>
-<td>
-<p>The PEM encoded server CA, used by the allocator client to authenticate the remote server.</p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="multicluster.agones.dev/v1.ConnectionInfoIterator">ConnectionInfoIterator
-</h3>
-<p>
-<p>ConnectionInfoIterator an iterator on ClusterConnectionInfo</p>
-</p>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>currPriority</code></br>
-<em>
-int
-</em>
-</td>
-<td>
-<p>currPriority Current priority index from the orderedPriorities</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>orderedPriorities</code></br>
-<em>
-[]int32
-</em>
-</td>
-<td>
-<p>orderedPriorities list of ordered priorities</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>priorityToCluster</code></br>
-<em>
-map[int32]map[string][]*agones.dev/agones/pkg/apis/multicluster/v1.GameServerAllocationPolicy
-</em>
-</td>
-<td>
-<p>priorityToCluster Map of priority to cluster-policies map</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>clusterBlackList</code></br>
-<em>
-map[string]bool
-</em>
-</td>
-<td>
-<p>clusterBlackList the cluster blacklist for the clusters that has already returned</p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="multicluster.agones.dev/v1.GameServerAllocationPolicySpec">GameServerAllocationPolicySpec
-</h3>
-<p>
-(<em>Appears on:</em>
-<a href="#multicluster.agones.dev/v1.GameServerAllocationPolicy">GameServerAllocationPolicy</a>)
-</p>
-<p>
-<p>GameServerAllocationPolicySpec defines the desired state of GameServerAllocationPolicy</p>
-</p>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>priority</code></br>
-<em>
-int32
-</em>
-</td>
-<td>
-</td>
-</tr>
-<tr>
-<td>
-<code>weight</code></br>
-<em>
-int
-</em>
-</td>
-<td>
-</td>
-</tr>
-<tr>
-<td>
-<code>connectionInfo</code></br>
-<em>
-<a href="#multicluster.agones.dev/v1.ClusterConnectionInfo">
-ClusterConnectionInfo
-</a>
-</em>
-</td>
-<td>
-</td>
-</tr>
-</tbody>
-</table>
-<hr/>
 <h2 id="agones.dev/v1">agones.dev/v1</h2>
 <p>
 <p>Package v1 is the v1 version of the API.</p>
@@ -8092,11 +7803,7 @@ string
 </em>
 </td>
 <td>
-<p>Duration is the length of time that the policy is applied.
-If not set, the duration is indefinite.
-A duration string is a possibly signed sequence of decimal numbers,
-(e.g. &ldquo;300ms&rdquo;, &ldquo;-1.5h&rdquo; or &ldquo;2h45m&rdquo;).
-The representation limits the largest representable duration to approximately 290 years.
+<p>The representation limits the largest representable duration to approximately 290 years.
 Valid time units are &ldquo;ns&rdquo;, &ldquo;us&rdquo; (or &ldquo;µs&rdquo;), &ldquo;ms&rdquo;, &ldquo;s&rdquo;, &ldquo;m&rdquo;, &ldquo;h&rdquo;.</p>
 </td>
 </tr>
@@ -8213,10 +7920,6 @@ capacity in the cluster etc)</p>
 <h3 id="autoscaling.agones.dev/v1.ChainEntry">ChainEntry
 </h3>
 <p>
-(<em>Appears on:</em>
-<a href="#autoscaling.agones.dev/v1.ChainPolicy">ChainPolicy</a>)
-</p>
-<p>
 <p>ChainEntry defines a single entry in the ChainPolicy.</p>
 </p>
 <table>
@@ -8267,7 +7970,7 @@ FleetAutoscalerPolicy
 </tbody>
 </table>
 <h3 id="autoscaling.agones.dev/v1.ChainPolicy">ChainPolicy
-</h3>
+(<code>[]agones.dev/agones/pkg/apis/autoscaling/v1.ChainEntry</code> alias)</p></h3>
 <p>
 (<em>Appears on:</em>
 <a href="#autoscaling.agones.dev/v1.FleetAutoscalerPolicy">FleetAutoscalerPolicy</a>)
@@ -8275,29 +7978,6 @@ FleetAutoscalerPolicy
 <p>
 <p>ChainPolicy controls the desired behavior of the Chain autoscaler policy.</p>
 </p>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>items</code></br>
-<em>
-<a href="#autoscaling.agones.dev/v1.ChainEntry">
-[]ChainEntry
-</a>
-</em>
-</td>
-<td>
-<p>Items is a list of ChainEntry objects.</p>
-</td>
-</tr>
-</tbody>
-</table>
 <h3 id="autoscaling.agones.dev/v1.CounterPolicy">CounterPolicy
 </h3>
 <p>
@@ -9059,6 +8739,295 @@ Kubernetes admissionregistration/v1.ServiceReference
 <em>(Optional)</em>
 <p><code>caBundle</code> is a PEM encoded CA bundle which will be used to validate the webhook&rsquo;s server certificate.
 If unspecified, system trust roots on the apiserver are used.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<hr/>
+<h2 id="multicluster.agones.dev/v1">multicluster.agones.dev/v1</h2>
+<p>
+<p>Package v1 is the v1 version of the API.</p>
+</p>
+Resource Types:
+<ul><li>
+<a href="#multicluster.agones.dev/v1.GameServerAllocationPolicy">GameServerAllocationPolicy</a>
+</li></ul>
+<h3 id="multicluster.agones.dev/v1.GameServerAllocationPolicy">GameServerAllocationPolicy
+</h3>
+<p>
+<p>GameServerAllocationPolicy is the Schema for the gameserverallocationpolicies API</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>apiVersion</code></br>
+string</td>
+<td>
+<code>
+multicluster.agones.dev/v1
+</code>
+</td>
+</tr>
+<tr>
+<td>
+<code>kind</code></br>
+string
+</td>
+<td><code>GameServerAllocationPolicy</code></td>
+</tr>
+<tr>
+<td>
+<code>metadata</code></br>
+<em>
+<a href="https://v1-28.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#objectmeta-v1-meta">
+Kubernetes meta/v1.ObjectMeta
+</a>
+</em>
+</td>
+<td>
+Refer to the Kubernetes API documentation for the fields of the
+<code>metadata</code> field.
+</td>
+</tr>
+<tr>
+<td>
+<code>spec</code></br>
+<em>
+<a href="#multicluster.agones.dev/v1.GameServerAllocationPolicySpec">
+GameServerAllocationPolicySpec
+</a>
+</em>
+</td>
+<td>
+<br/>
+<br/>
+<table>
+<tr>
+<td>
+<code>priority</code></br>
+<em>
+int32
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>weight</code></br>
+<em>
+int
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>connectionInfo</code></br>
+<em>
+<a href="#multicluster.agones.dev/v1.ClusterConnectionInfo">
+ClusterConnectionInfo
+</a>
+</em>
+</td>
+<td>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="multicluster.agones.dev/v1.ClusterConnectionInfo">ClusterConnectionInfo
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#multicluster.agones.dev/v1.GameServerAllocationPolicySpec">GameServerAllocationPolicySpec</a>)
+</p>
+<p>
+<p>ClusterConnectionInfo defines the connection information for a cluster</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>clusterName</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Optional: the name of the targeted cluster</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>allocationEndpoints</code></br>
+<em>
+[]string
+</em>
+</td>
+<td>
+<p>The endpoints for the allocator service in the targeted cluster.
+If the AllocationEndpoints is not set, the allocation happens on local cluster.
+If there are multiple endpoints any of the endpoints that can handle allocation request should suffice</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>secretName</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>The name of the secret that contains TLS client certificates to connect the allocator server in the targeted cluster</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>namespace</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>The cluster namespace from which to allocate gameservers</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>serverCa</code></br>
+<em>
+[]byte
+</em>
+</td>
+<td>
+<p>The PEM encoded server CA, used by the allocator client to authenticate the remote server.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="multicluster.agones.dev/v1.ConnectionInfoIterator">ConnectionInfoIterator
+</h3>
+<p>
+<p>ConnectionInfoIterator an iterator on ClusterConnectionInfo</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>currPriority</code></br>
+<em>
+int
+</em>
+</td>
+<td>
+<p>currPriority Current priority index from the orderedPriorities</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>orderedPriorities</code></br>
+<em>
+[]int32
+</em>
+</td>
+<td>
+<p>orderedPriorities list of ordered priorities</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>priorityToCluster</code></br>
+<em>
+map[int32]map[string][]*agones.dev/agones/pkg/apis/multicluster/v1.GameServerAllocationPolicy
+</em>
+</td>
+<td>
+<p>priorityToCluster Map of priority to cluster-policies map</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>clusterBlackList</code></br>
+<em>
+map[string]bool
+</em>
+</td>
+<td>
+<p>clusterBlackList the cluster blacklist for the clusters that has already returned</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="multicluster.agones.dev/v1.GameServerAllocationPolicySpec">GameServerAllocationPolicySpec
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#multicluster.agones.dev/v1.GameServerAllocationPolicy">GameServerAllocationPolicy</a>)
+</p>
+<p>
+<p>GameServerAllocationPolicySpec defines the desired state of GameServerAllocationPolicy</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>priority</code></br>
+<em>
+int32
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>weight</code></br>
+<em>
+int
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>connectionInfo</code></br>
+<em>
+<a href="#multicluster.agones.dev/v1.ClusterConnectionInfo">
+ClusterConnectionInfo
+</a>
+</em>
+</td>
+<td>
 </td>
 </tr>
 </tbody>

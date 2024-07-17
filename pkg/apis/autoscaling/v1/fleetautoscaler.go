@@ -16,9 +16,9 @@ package v1
 
 import (
 	"crypto/x509"
+	"errors"
 	"fmt"
 	"net/url"
-	"strconv"
 	"strings"
 	"time"
 
@@ -91,7 +91,7 @@ type FleetAutoscalerPolicy struct {
 	// [FeatureFlag:ScheduledAutoscaler]
 	// Chain policy config params. Present only if FleetAutoscalerPolicyType = Chain.
 	// +optional
-	Chain *ChainPolicy `json:"chain,omitempty"`
+	Chain ChainPolicy `json:"chain,omitempty"`
 }
 
 // FleetAutoscalerPolicyType is the policy for autoscaling
@@ -226,6 +226,7 @@ type Between struct {
 type ActivePeriod struct {
 	// Timezone to be used for the startCron field. If not set, startCron is defaulted to the UTC timezone.
 	Timezone string `json:"timezone"`
+
 	// StartCron defines when the policy should be applied.
 	// If not set, the policy is always to be applied within the start and end time.
 	// This field must conform to UNIX cron syntax.
@@ -262,10 +263,7 @@ type ChainEntry struct {
 }
 
 // ChainPolicy controls the desired behavior of the Chain autoscaler policy.
-type ChainPolicy struct {
-	// Items is a list of ChainEntry objects.
-	Items []ChainEntry `json:"items"`
-}
+type ChainPolicy []ChainEntry
 
 // FixedIntervalSync controls the desired behavior of the fixed interval based sync.
 type FixedIntervalSync struct {
@@ -507,60 +505,78 @@ func (l *ListPolicy) ValidateListPolicy(fldPath *field.Path) field.ErrorList {
 // ValidateChainPolicy validates the FleetAutoscaler Chain policy settings.
 func (c *ChainPolicy) ValidateChainPolicy(fldPath *field.Path) field.ErrorList {
 	var allErrs field.ErrorList
+	if c == nil {
+		return append(allErrs, field.Required(fldPath, "chain policy config params are missing"))
+	}
 	if !runtime.FeatureEnabled(runtime.FeatureScheduledAutoscaler) {
 		return append(allErrs, field.Forbidden(fldPath, "feature ScheduledAutoscaler must be enabled"))
 	}
-	for i, entry := range c.Items {
-		if entry.ID != "" {
-			for j, otherEntry := range c.Items {
-				// If the entry's id is the same as another entry's id in the chain, append an error
-				if (entry.ID == otherEntry.ID || entry.ID == strconv.Itoa(j)) && i != j {
-					allErrs = append(allErrs, field.Invalid(fldPath.Child("items"), entry.ID, "id of chain entry must be unique"))
-				}
-			}
+	seenIDs := make(map[string]bool)
+	for i, entry := range *c {
+
+		// Ensure that all IDs are unique
+		if seenIDs[entry.ID] {
+			allErrs = append(allErrs, field.Invalid(fldPath, entry.ID, "id of chain entry must be unique"))
+		} else {
+			seenIDs[entry.ID] = true
 		}
+
+		var startTime time.Time
+		var startErr error
 		if entry.Schedule.Between.Start != "" {
 			// If start time is not a valid RFC3339 formatted datetime, append an error
-			if _, err := time.Parse(time.RFC3339, entry.Schedule.Between.Start); err != nil {
-				allErrs = append(allErrs, field.Invalid(fldPath.Child("items").Index(i).Child("schedule").Child("between").Child("start"), entry.Schedule.Between.Start, fmt.Sprintf("invalid start time: %s", err)))
+			startTime, startErr = time.Parse(time.RFC3339, entry.Schedule.Between.Start)
+			if startErr != nil {
+				allErrs = append(allErrs, field.Invalid(fldPath.Index(i).Child("schedule").Child("between").Child("start"), entry.Schedule.Between.Start, fmt.Sprintf("invalid start time: %s", startErr)))
 			}
 		}
 		if entry.Schedule.Between.End != "" {
 			// If end time is not a valid RFC3339 formatted datetime, append an error
-			if _, err := time.Parse(time.RFC3339, entry.Schedule.Between.End); err != nil {
-				allErrs = append(allErrs, field.Invalid(fldPath.Child("items").Index(i).Child("schedule").Child("between").Child("end"), entry.Schedule.Between.End, fmt.Sprintf("invalid end time: %s", err)))
+			endTime, endErr := time.Parse(time.RFC3339, entry.Schedule.Between.End)
+			if endErr != nil {
+				allErrs = append(allErrs, field.Invalid(fldPath.Index(i).Child("schedule").Child("between").Child("end"), entry.Schedule.Between.End, fmt.Sprintf("invalid end time: %s", endErr)))
+			} else if endTime.Before(time.Now()) {
+				allErrs = append(allErrs, field.Invalid(fldPath.Index(i).Child("schedule").Child("between").Child("end"), entry.Schedule.Between.End, "end time must be after the current time"))
+				endErr = errors.New("end time before current time")
+			}
+			// Check if the end time is before the start time
+			if (!startTime.IsZero() && startErr == nil) && endErr == nil {
+				if endTime.Before(startTime) {
+					allErrs = append(allErrs, field.Invalid(fldPath.Index(i).Child("schedule").Child("between"), entry.Schedule.Between, "start time must be before end time"))
+				}
 			}
 		}
+
 		// Validate the active period timezone (empty string defaults to UTC).
 		if _, err := time.LoadLocation(entry.Schedule.ActivePeriod.Timezone); err != nil {
-			allErrs = append(allErrs, field.Invalid(fldPath.Child("items").Index(i).Child("schedule").Child("activePeriod").Child("timezone"), entry.Schedule.ActivePeriod.Timezone, fmt.Sprintf("invalid timezone: %s", err)))
+			allErrs = append(allErrs, field.Invalid(fldPath.Index(i).Child("schedule").Child("activePeriod").Child("timezone"), entry.Schedule.ActivePeriod.Timezone, fmt.Sprintf("invalid timezone: %s", err)))
 		}
 		if entry.Schedule.ActivePeriod.StartCron != "" {
 			// If startCron is not a valid cron expression, append an error
 			if _, err := cron.ParseStandard(entry.Schedule.ActivePeriod.StartCron); err != nil {
-				allErrs = append(allErrs, field.Invalid(fldPath.Child("items").Index(i).Child("schedule").Child("activePeriod").Child("startCron"), entry.Schedule.ActivePeriod.StartCron, fmt.Sprintf("invalid startCron: %s", err)))
+				allErrs = append(allErrs, field.Invalid(fldPath.Index(i).Child("schedule").Child("activePeriod").Child("startCron"), entry.Schedule.ActivePeriod.StartCron, fmt.Sprintf("invalid startCron: %s", err)))
 			}
 			// If the cron expression contains a CRON_TZ or TZ specification, append an error
 			if strings.Contains(entry.Schedule.ActivePeriod.StartCron, "TZ") {
-				allErrs = append(allErrs, field.Invalid(fldPath.Child("items").Index(i).Child("schedule").Child("activePeriod").Child("startCron"), entry.Schedule.ActivePeriod.StartCron, "CRON_TZ or TZ used in start is not supported, please use the .schedule.timezone field to specify a timezone"))
+				allErrs = append(allErrs, field.Invalid(fldPath.Index(i).Child("schedule").Child("activePeriod").Child("startCron"), entry.Schedule.ActivePeriod.StartCron, "CRON_TZ or TZ used in start is not supported, please use the .schedule.timezone field to specify a timezone"))
 			}
 		}
 		if entry.Schedule.ActivePeriod.Duration != "" {
 			// If the duration is not valid duration format, append an error
 			if _, err := time.ParseDuration(entry.Schedule.ActivePeriod.Duration); err != nil {
-				allErrs = append(allErrs, field.Invalid(fldPath.Child("items").Index(i).Child("schedule").Child("activePeriod").Child("duration"), entry.Schedule.ActivePeriod.Duration, fmt.Sprintf("invalid duration: %s", err)))
+				allErrs = append(allErrs, field.Invalid(fldPath.Index(i).Child("schedule").Child("activePeriod").Child("duration"), entry.Schedule.ActivePeriod.Duration, fmt.Sprintf("invalid duration: %s", err)))
 			}
 		}
 		// Validate that the chain entry has a policy
 		if entry.Policy.Type == "" {
-			allErrs = append(allErrs, field.Required(fldPath.Child("items").Index(i).Child("policy"), "policy type is missing"))
+			allErrs = append(allErrs, field.Required(fldPath.Index(i).Child("policy"), "policy type is missing"))
 		}
 		// Ensure the chain entry's policy is not a chain policy (to avoid nested policies)
-		if entry.Policy.Type == ChainPolicyType {
-			allErrs = append(allErrs, field.Invalid(fldPath.Child("items").Index(i).Child("policy"), entry.Policy.Type, "chain policy cannot be used in chain policy"))
+		if entry.Policy.Chain != nil {
+			allErrs = append(allErrs, field.Invalid(fldPath.Index(i).Child("policy"), entry.Policy.Type, "chain policy cannot be used in chain policy"))
 		}
 		// Validate the chain entry's policy
-		allErrs = append(allErrs, entry.Policy.ValidatePolicy(fldPath.Child("items").Index(i).Child("policy"))...)
+		allErrs = append(allErrs, entry.Policy.ValidatePolicy(fldPath.Index(i).Child("policy"))...)
 	}
 	return allErrs
 }

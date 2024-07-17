@@ -479,33 +479,31 @@ func TestFleetAutoscalerChainValidateUpdate(t *testing.T) {
 		},
 		"duplicate id": {
 			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
-				fap.Chain.Items[2].ID = "weekdays"
-			}),
-			featureFlags: string(runtime.FeatureScheduledAutoscaler) + "=true",
-			wantLength:   2,
-			wantField:    "spec.policy.chain.items",
-		},
-		"empty policy": {
-			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
-				fap.Chain.Items[0].Policy = FleetAutoscalerPolicy{}
+				fap.Chain[2].ID = "weekdays"
 			}),
 			featureFlags: string(runtime.FeatureScheduledAutoscaler) + "=true",
 			wantLength:   1,
-			wantField:    "spec.policy.chain.items[0].policy",
+			wantField:    "spec.policy.chain",
+		},
+		"empty policy": {
+			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
+				fap.Chain[0].Policy = FleetAutoscalerPolicy{}
+			}),
+			featureFlags: string(runtime.FeatureScheduledAutoscaler) + "=true",
+			wantLength:   1,
+			wantField:    "spec.policy.chain[0].policy",
 		},
 		"nested chain policy not allowed": {
 			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
-				fap.Chain.Items[1].Policy = FleetAutoscalerPolicy{
+				fap.Chain[1].Policy = FleetAutoscalerPolicy{
 					Type: ChainPolicyType,
-					Chain: &ChainPolicy{
-						Items: []ChainEntry{
-							{
-								Policy: FleetAutoscalerPolicy{
-									Type: BufferPolicyType,
-									Buffer: &BufferPolicy{
-										BufferSize:  intstr.FromInt(5),
-										MaxReplicas: 10,
-									},
+					Chain: ChainPolicy{
+						{
+							Policy: FleetAutoscalerPolicy{
+								Type: BufferPolicyType,
+								Buffer: &BufferPolicy{
+									BufferSize:  intstr.FromInt(5),
+									MaxReplicas: 10,
 								},
 							},
 						},
@@ -514,63 +512,80 @@ func TestFleetAutoscalerChainValidateUpdate(t *testing.T) {
 			}),
 			featureFlags: string(runtime.FeatureScheduledAutoscaler) + "=true",
 			wantLength:   1,
-			wantField:    "spec.policy.chain.items[1].policy",
+			wantField:    "spec.policy.chain[1].policy",
 		},
 		"invalid nested policy format": {
 			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
-				fap.Chain.Items[2].Policy.Buffer.MinReplicas = 20
+				fap.Chain[2].Policy.Buffer.MinReplicas = 20
 			}),
 			featureFlags: string(runtime.FeatureScheduledAutoscaler) + "=true",
 			wantLength:   1,
-			wantField:    "spec.policy.chain.items[2].policy.buffer.minReplicas",
+			wantField:    "spec.policy.chain[2].policy.buffer.minReplicas",
 		},
 		"invalid time zone": {
 			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
-				fap.Chain.Items[2].Schedule.ActivePeriod.Timezone = "invalid-timezone"
+				fap.Chain[2].Schedule.ActivePeriod.Timezone = "invalid-timezone"
 			}),
 			featureFlags: string(runtime.FeatureScheduledAutoscaler) + "=true",
 			wantLength:   1,
-			wantField:    "spec.policy.chain.items[2].schedule.activePeriod.timezone",
+			wantField:    "spec.policy.chain[2].schedule.activePeriod.timezone",
 		},
 		"invalid start time": {
 			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
-				fap.Chain.Items[1].Schedule.Between.Start = "08:00"
+				fap.Chain[1].Schedule.Between.Start = "08:00"
 			}),
 			featureFlags: string(runtime.FeatureScheduledAutoscaler) + "=true",
 			wantLength:   1,
-			wantField:    "spec.policy.chain.items[1].schedule.between.start",
+			wantField:    "spec.policy.chain[1].schedule.between.start",
 		},
 		"invalid end time": {
 			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
-				fap.Chain.Items[0].Schedule.Between.End = "0:900"
+				fap.Chain[0].Schedule.Between.End = "0:900"
 			}),
 			featureFlags: string(runtime.FeatureScheduledAutoscaler) + "=true",
 			wantLength:   1,
-			wantField:    "spec.policy.chain.items[0].schedule.between.end",
+			wantField:    "spec.policy.chain[0].schedule.between.end",
+		},
+		"end time before current time": {
+			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
+				fap.Chain[1].Schedule.Between.End = "2015-07-05T15:59:59Z"
+			}),
+			featureFlags: string(runtime.FeatureScheduledAutoscaler) + "=true",
+			wantLength:   1,
+			wantField:    "spec.policy.chain[1].schedule.between.end",
+		},
+		"end time before start time": {
+			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
+				fap.Chain[2].Schedule.Between.Start = "3099-07-05T15:59:59Z"
+				fap.Chain[2].Schedule.Between.End = "3099-07-04T15:59:59Z"
+			}),
+			featureFlags: string(runtime.FeatureScheduledAutoscaler) + "=true",
+			wantLength:   1,
+			wantField:    "spec.policy.chain[2].schedule.between",
 		},
 		"invalid cron format": {
 			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
-				fap.Chain.Items[0].Schedule.ActivePeriod.StartCron = "* * * * * * * *"
+				fap.Chain[0].Schedule.ActivePeriod.StartCron = "* * * * * * * *"
 			}),
 			featureFlags: string(runtime.FeatureScheduledAutoscaler) + "=true",
 			wantLength:   1,
-			wantField:    "spec.policy.chain.items[0].schedule.activePeriod.startCron",
+			wantField:    "spec.policy.chain[0].schedule.activePeriod.startCron",
 		},
 		"invalid cron format with tz specification": {
 			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
-				fap.Chain.Items[1].Schedule.ActivePeriod.StartCron = "CRON_TZ=America/New_York * * * * *"
+				fap.Chain[1].Schedule.ActivePeriod.StartCron = "CRON_TZ=America/New_York * * * * *"
 			}),
 			featureFlags: string(runtime.FeatureScheduledAutoscaler) + "=true",
 			wantLength:   1,
-			wantField:    "spec.policy.chain.items[1].schedule.activePeriod.startCron",
+			wantField:    "spec.policy.chain[1].schedule.activePeriod.startCron",
 		},
 		"invalid duration": {
 			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
-				fap.Chain.Items[2].Schedule.ActivePeriod.Duration = "-10d"
+				fap.Chain[2].Schedule.ActivePeriod.Duration = "-10d"
 			}),
 			featureFlags: string(runtime.FeatureScheduledAutoscaler) + "=true",
 			wantLength:   1,
-			wantField:    "spec.policy.chain.items[2].schedule.activePeriod.duration",
+			wantField:    "spec.policy.chain[2].schedule.activePeriod.duration",
 		},
 	}
 
@@ -680,70 +695,68 @@ func customFixture(t FleetAutoscalerPolicyType) *FleetAutoscaler {
 	case ChainPolicyType:
 		res.Spec.Policy.Type = ChainPolicyType
 		res.Spec.Policy.Buffer = nil
-		res.Spec.Policy.Chain = &ChainPolicy{
-			Items: []ChainEntry{
-				{
-					ID: "weekdays",
-					Schedule: Schedule{
-						Between: Between{
-							Start: "2024-07-01T15:59:59Z",
-							End:   "2024-07-03T15:59:59Z",
-						},
-						ActivePeriod: ActivePeriod{
-							Timezone:  "",
-							StartCron: "0 8 * * 1-5",
-							Duration:  "10h",
-						},
+		res.Spec.Policy.Chain = ChainPolicy{
+			{
+				ID: "weekdays",
+				Schedule: Schedule{
+					Between: Between{
+						Start: "2024-07-01T15:59:59Z",
+						End:   "9999-07-03T15:59:59Z",
 					},
-					Policy: FleetAutoscalerPolicy{
-						Type: BufferPolicyType,
-						Buffer: &BufferPolicy{
-							BufferSize:  intstr.FromInt(5),
-							MaxReplicas: 10,
-						},
+					ActivePeriod: ActivePeriod{
+						Timezone:  "",
+						StartCron: "0 8 * * 1-5",
+						Duration:  "10h",
 					},
 				},
-				{
-					ID: "weekends",
-					Schedule: Schedule{
-						Between: Between{
-							Start: "2024-07-04T15:59:59Z",
-							End:   "2024-07-05T15:59:59Z",
-						},
-						ActivePeriod: ActivePeriod{
-							Timezone:  "",
-							StartCron: "0 8 * * *",
-							Duration:  "10h",
-						},
-					},
-					Policy: FleetAutoscalerPolicy{
-						Type: CounterPolicyType,
-						Counter: &CounterPolicy{
-							Key:         "playerCount",
-							BufferSize:  intstr.FromInt(5),
-							MaxCapacity: 10,
-						},
+				Policy: FleetAutoscalerPolicy{
+					Type: BufferPolicyType,
+					Buffer: &BufferPolicy{
+						BufferSize:  intstr.FromInt(5),
+						MaxReplicas: 10,
 					},
 				},
-				{
-					ID: "holidays",
-					Schedule: Schedule{
-						Between: Between{
-							Start: "2024-07-05T15:59:59Z",
-							End:   "1990-12-31T15:59:59Z",
-						},
-						ActivePeriod: ActivePeriod{
-							Timezone:  "",
-							StartCron: "0 8 * * *",
-							Duration:  "10h",
-						},
+			},
+			{
+				ID: "weekends",
+				Schedule: Schedule{
+					Between: Between{
+						Start: "2024-07-04T15:59:59Z",
+						End:   "9999-07-05T15:59:59Z",
 					},
-					Policy: FleetAutoscalerPolicy{
-						Type: BufferPolicyType,
-						Buffer: &BufferPolicy{
-							BufferSize:  intstr.FromInt(5),
-							MaxReplicas: 10,
-						},
+					ActivePeriod: ActivePeriod{
+						Timezone:  "",
+						StartCron: "0 8 * * 5-6",
+						Duration:  "10h",
+					},
+				},
+				Policy: FleetAutoscalerPolicy{
+					Type: CounterPolicyType,
+					Counter: &CounterPolicy{
+						Key:         "playerCount",
+						BufferSize:  intstr.FromInt(5),
+						MaxCapacity: 10,
+					},
+				},
+			},
+			{
+				ID: "holidays",
+				Schedule: Schedule{
+					Between: Between{
+						Start: "2024-07-05T15:59:59Z",
+						End:   "9999-12-31T15:59:59Z",
+					},
+					ActivePeriod: ActivePeriod{
+						Timezone:  "",
+						StartCron: "0 8 * * *",
+						Duration:  "10h",
+					},
+				},
+				Policy: FleetAutoscalerPolicy{
+					Type: BufferPolicyType,
+					Buffer: &BufferPolicy{
+						BufferSize:  intstr.FromInt(5),
+						MaxReplicas: 10,
 					},
 				},
 			},

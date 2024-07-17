@@ -70,7 +70,7 @@ GS_TEST_IMAGE ?= us-docker.pkg.dev/agones-images/examples/simple-game-server:0.3
 BETA_FEATURE_GATES ?= "CountsAndLists=true&DisableResyncOnSDKServer=true"
 
 # Enable all alpha feature gates. Keep in sync with `false` (alpha) entries in pkg/util/runtime/features.go:featureDefaults
-ALPHA_FEATURE_GATES ?= "PlayerAllocationFilter=true&PlayerTracking=true&RollingUpdateFix=true&PortRanges=true&PortPolicyNone=true&AutopilotPassthroughPort=true&Example=true"
+ALPHA_FEATURE_GATES ?= "PlayerAllocationFilter=true&PlayerTracking=true&RollingUpdateFix=true&PortRanges=true&PortPolicyNone=true&AutopilotPassthroughPort=true&ScheduledAutoscaler=true&Example=true"
 
 # Build with Windows support
 WITH_WINDOWS=1
@@ -729,6 +729,7 @@ gen-embedded-openapi: ensure-build-image
 		go run -mod=mod ./main.go
 
 # Generate the static install script
+gen-install: FEATURE_GATES ?= $(ALPHA_FEATURE_GATES)
 gen-install: $(ensure-build-image)
 	docker run --rm $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) bash -c \
 		'helm template agones-manual --namespace agones-system $(mount_path)/install/helm/agones \
@@ -736,6 +737,7 @@ gen-install: $(ensure-build-image)
 		--set agones.allocator.generateTLS=false \
 		--set agones.allocator.generateClientTLS=false \
 		--set agones.crds.cleanupOnDelete=false \
+		--set agones.featureGates=$(FEATURE_GATES) \
 		> $(mount_path)/install/yaml/install.yaml'
 
 # Generate the client, conversions, deepcopy, and defaults code for our CustomResourceDefinition

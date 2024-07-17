@@ -27,17 +27,17 @@ kind: FleetAutoscaler
 metadata:
   name: chain-fleet-autoscaler
 spec:
+  fleetName: "fleet-example"
   policy:
     # Chain based policy for autoscaling.
     type: Chain
     chain:
       # Id of chain entry. If not set, the Id will be defaulted to the index of the entry within the chain.
       - id: "weekday"
-        type: Schedule  # Schedule based condition.
         schedule:
           between:
             # The policy becomes eligible for application starting on Feb 20, 2024 at 4:04 PM EST. If not set, the policy will immediately be eligible for application.
-            start: "2024-02-20T16:04:04-05:00"
+            start: "2024-07-20T16:04:04-05:00"
             # The policy becomes ineligible for application on Feb 23, 2024 at 4:04 PM EST. If not set, the policy will always be eligible for application (after the start time).
             end: "2024-02-23T16:04:04-05:00"
           activePeriod:
@@ -57,7 +57,6 @@ spec:
             maxReplicas: 2000
       # Id of chain entry. If not set, the Id will be defaulted to the index of the entry within the chain list.
       - id: "weekend"
-        type: Schedule
         schedule:
           between:
             # The policy becomes eligible for application starting on Feb 24, 2024 at 4:05 PM EST. If not set, the policy will immediately be eligible for application.

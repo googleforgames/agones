@@ -91,8 +91,6 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &applyconfigurationautoscalingv1.BufferPolicyApplyConfiguration{}
 	case autoscalingv1.SchemeGroupVersion.WithKind("ChainEntry"):
 		return &applyconfigurationautoscalingv1.ChainEntryApplyConfiguration{}
-	case autoscalingv1.SchemeGroupVersion.WithKind("ChainPolicy"):
-		return &applyconfigurationautoscalingv1.ChainPolicyApplyConfiguration{}
 	case autoscalingv1.SchemeGroupVersion.WithKind("CounterPolicy"):
 		return &applyconfigurationautoscalingv1.CounterPolicyApplyConfiguration{}
 	case autoscalingv1.SchemeGroupVersion.WithKind("FixedIntervalSync"):
