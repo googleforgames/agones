@@ -130,19 +130,21 @@ policy:
               between:
                 type: object
                 nullable: true
-                start: # Defines when to start evaluating the active period, must conform to RFC3339.
-                  type: string
-                end: # Defines when to stop evaluating the active period, must conform to RFC3339.
-                  type: string
+                properties:
+                  start: # Defines when to start evaluating the active period, must conform to RFC3339.
+                    type: string
+                  end: # Defines when to stop evaluating the active period, must conform to RFC3339.
+                    type: string
               activePeriod:
                 type: object
                 nullable: true
-                timezone: # Timezone to be used for the startCron field, must conform with the IANA Time Zone database (e.g. America/New_York).
-                  type: string
-                startCron:  # Cron expression defining when to start applying the policy. All TZ/CRON_TZ specification within startCron will be rejected, please use the timezone field above to specify a timezone. Must conform with UNIX CRON syntax.
-                  type: string
-                duration: # The length of time the policy should be applied for (e.g. 2h45m).
-                  type: string
+                properties:
+                  timezone: # Timezone to be used for the startCron field, must conform with the IANA Time Zone database (e.g. America/New_York).
+                    type: string
+                  startCron:  # Cron expression defining when to start applying the policy. All TZ/CRON_TZ specification within startCron will be rejected, please use the timezone field above to specify a timezone. Must conform with UNIX CRON syntax.
+                    type: string
+                  duration: # The length of time the policy should be applied for (e.g. 2h45m).
+                    type: string
           {{- include "fleetautoscaler.policy" (dict "includeChainPolicy" false) | indent 10 }} # Defines which policy to apply during the active period. Required.
     {{- end }}
 {{- end }}

@@ -36,15 +36,15 @@ spec:
       - id: "weekday"
         schedule:
           between:
-            # The policy becomes eligible for application starting on Feb 20, 2024 at 4:04 PM EST. If not set, the policy will immediately be eligible for application.
-            start: "2024-07-20T16:04:04-05:00"
-            # The policy becomes ineligible for application on Feb 23, 2024 at 4:04 PM EST. If not set, the policy will always be eligible for application (after the start time).
-            end: "2024-02-23T16:04:04-05:00"
+            # The policy becomes eligible for application starting on Feb 20, 2100 at 4:04 PM EST. If not set, the policy will immediately be eligible for application.
+            start: "2100-02-20T16:04:04-05:00"
+            # The policy becomes ineligible for application on Feb 23, 2100 at 4:04 PM EST. If not set, the policy will always be eligible for application (after the start time).
+            end: "2100-02-23T16:04:04-05:00"
           activePeriod:
             # Timezone to be used for the startCron field. Defaults to UTC if not set.
             timezone: "America/New_York"
             # Start applying the policy everyday at 1:00 AM EST. If not set, the policy will always be applied in the .between window.
-            # (Only eligible starting on Feb 20, 2024 at 4:04 PM).
+            # (Only eligible starting on Feb 20, 2100 at 4:04 PM).
             startCron: "0 1 * * 0"
             # Only apply the policy for 5 hours. If not set, the duration will be defaulted to always/indefinite.
             duration: "5h"
@@ -59,15 +59,15 @@ spec:
       - id: "weekend"
         schedule:
           between:
-            # The policy becomes eligible for application starting on Feb 24, 2024 at 4:05 PM EST. If not set, the policy will immediately be eligible for application.
-            start: "2024-02-24T16:04:05-05:00"
-            # The policy becomes ineligible for application starting on Feb 26, 2024 at 4:05 PM EST. If not set, the policy will always be eligible for application (after the start time).
-            end: "2024-02-26T16:04:05-05:00"
+            # The policy becomes eligible for application starting on Feb 24, 2100 at 4:05 PM EST. If not set, the policy will immediately be eligible for application.
+            start: "2100-02-24T16:04:05-05:00"
+            # The policy becomes ineligible for application starting on Feb 26, 2100 at 4:05 PM EST. If not set, the policy will always be eligible for application (after the start time).
+            end: "2100-02-26T16:04:05-05:00"
           activePeriod:
             # Timezone to be used for the startCron field. Defaults to UTC if not set.
             timezone: "America/New_York"
             # Start applying the policy everyday at 1:00 AM EST. If not set, the policy will always be applied in the .between window.
-            # (Only eligible starting on Feb 24, 2024 at 4:05 PM EST)
+            # (Only eligible starting on Feb 24, 2100 at 4:05 PM EST)
             startCron: "0 1 * * 0"
             # Only apply the policy for 7 hours. If not set the duration will be defaulted to always/indefinite.
             duration: "7h"
