@@ -78,7 +78,8 @@ configurable parameters.
 2. Wait until the `helm upgrade` is complete.
 3. Kick off rolling update of existing Fleet.
     1. Make any change to the Fleet Spec Template in your fleet.yaml and reapply with
-    `kubectl apply -f fleet.yaml`.
+    `kubectl apply -f fleet.yaml`. We recommend you also add or update a label on the fleet as in
+    the next step.
     2. If you have no changes to make to the existing Fleet Spec Template in the fleet.yaml,
     then add a label to the spec.template.metadata.labels. This has the added advantage that Game
     Servers can be selected for allocation by label. Reapply with `kubectl apply -f fleet.yaml`.
