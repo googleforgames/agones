@@ -41,7 +41,7 @@ namespace Tests.Runtime.Playmode
             Object.Destroy(_gameObject);
         }
         [UnityTest]
-        public IEnumerator AgonesSdk_Ready_ShouldAlwaysSucceed()
+        public IEnumerator AgonesSdk_Ready_ShouldInteractWithReadyApiEndpoint()
         {
             _mockSdkServer.RegisterResponseHandler("/ready", _ => "{}");
             var sut = _gameObject.AddComponent<AgonesSdk>();

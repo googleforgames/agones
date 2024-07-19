@@ -6,20 +6,9 @@ Thank you for your interest in contributing to the Agones Unity client library. 
 ### A copy of Agones source code
 If you don't already have a local copy of the Agones source code you can either (1) clone the official [googleforgames/agones repository](https://github.com/googleforgames/agones) for quicker access or (2) create a fork then clone your fork. Make note of where you clone the project to for the next setup steps!
 
-### Setting up the Host Unity Project
-You will want a Unity project to "host" a local copy of the Agones Unity SDK source code. We like the Unity project name "Agones Unity SDK Host Project" but name the host Unity project whatever you like. Open the project so Unity can complete its initial project setup.
+### Setting up the Test Agones Unity SDK Project
+In the directory `test/sdk/unity` there is a Test Agones Unity SDK project. This is the project you should add to your Unity Hub, to be able to develop the Agones Unity SDK. You can then open up the project in the Unity Editor application. Once open in the Unity Editor you can run the Agones Unity SDK test suite.
 
-Next we will tell the Unity package manager about the local Agones Unity SDK package. Open up the Unity Package Manager window (`Window > Package Manager`). Click the `+` (top left side of Package Manager window) to then click `Add package from disk`. Select your local copy of [SDKs/Unity/package.json](https://github.com/googleforgames/Agones/blob/main/SDKs/Unity/package.json) in the file finder window. Unity package manager will then load up the Agones Unity SDK which will reflect in the package manager window.
+Please be aware that when making contributions to the Agones Unity SDK you will be making modifications to directly to files under `Packages/Agones Unity SDK/` in Unity. The way this works is because the Test Agones Unity SDK project's `Package/manifest.json` uses a relative path to pull in the code directly from `sdks/unity`. For those new to Unity package development this may not be intuitive!
 
-Next will be configuring the host Unity project to run Agones Unity SDK tests. Open up `Packages/manifest.json` from the root of the host Unity project. Add the follow to the JSON file after the `dependencies` property:
-```json
-...
-  },
-  "testables": [
-    "com.googleforgames.agones"
-  ]
-}
-```
-You are now able to see tests for Agones Unity SDK in the test runner of your host Unity project.
-
-Open up a code editor to your Unity project as you normally would but when contributing you will be selecting files from the `Packages/Agones Unity SDK` section to make edits. Tests covering contributions is always encouraged. You are now ready to develop the Agones Unity SDK using a Unity host project!
+Tests covering contributions is always encouraged. You are now ready to develop the Agones Unity SDK using the Test Agones Unity SDK project!
