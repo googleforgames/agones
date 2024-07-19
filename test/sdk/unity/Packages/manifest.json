@@ -1,7 +1,9 @@
 {
   "dependencies": {
+    "com.googleforgames.agones": "file:../../../../sdks/unity",
     "com.unity.ide.rider": "3.0.31",
     "com.unity.ide.vscode": "1.2.5",
+    "com.unity.test-framework": "1.1.33",
     "com.unity.toolchain.macos-arm64-linux-x86_64": "2.0.3",
     "com.unity.ugui": "1.0.0",
     "com.unity.modules.ai": "1.0.0",
@@ -35,5 +37,8 @@
     "com.unity.modules.vr": "1.0.0",
     "com.unity.modules.wind": "1.0.0",
     "com.unity.modules.xr": "1.0.0"
-  }
+  },
+  "testables": [
+    "com.googleforgames.agones"
+  ]
 }
