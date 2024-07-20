@@ -1,10 +1,11 @@
 {
-    "name": "Agones.Tests.Runtime.PlayMode",
+    "name": "Tests.Runtime.Agones",
     "rootNamespace": "",
     "references": [
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
-        "Agones"
+        "Agones",
+        ""
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

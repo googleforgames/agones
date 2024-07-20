@@ -19,36 +19,25 @@ using Agones;
 using NUnit.Framework;
 using Tests.TestingEnvironment;
 using UnityEngine;
+using UnityEngine.Networking;
 using UnityEngine.TestTools;
 
-namespace Tests.Runtime.Playmode
+namespace Tests.Runtime.Agones
 {
     public class AgonesSdkComplianceTests
     {
-        private MockAgonesSdkServer _mockSdkServer;
-        private GameObject _gameObject;
-        [SetUp]
-        public void SetupTestEnvironment()
-        {
-            _mockSdkServer = new MockAgonesSdkServer();
-            _mockSdkServer.StartServer("http://localhost:9358");
-            _gameObject = new GameObject();
-        }
-        [TearDown]
-        public void TearDownTestEnvironment()
-        {
-            _mockSdkServer.StopServer();
-            Object.Destroy(_gameObject);
-        }
         [UnityTest]
         public IEnumerator AgonesSdk_Ready_ShouldInteractWithReadyApiEndpoint()
         {
-            _mockSdkServer.RegisterResponseHandler("/ready", _ => "{}");
-            var sut = _gameObject.AddComponent<AgonesSdk>();
+            var sut = new GameObject().AddComponent<AgonesSdk>();
+            var spy = new SpyRequestSender();
+            sut.requestSender = spy;
+            yield return null;
             var task = sut.Ready();
             yield return AwaitTask(task);
-            Assert.IsTrue(task.Result);
-            _mockSdkServer.DeregisterResponseHandler("/ready");
+            Assert.IsTrue(spy.LastApi.Contains("/ready"));
+            Assert.IsTrue(spy.LastJson.Equals("{}"));
+            Assert.AreEqual(spy.LastMethod, UnityWebRequest.kHttpVerbPOST);
         }
         private IEnumerator AwaitTask(Task task)
         {
