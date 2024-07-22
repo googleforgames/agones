@@ -23,12 +23,13 @@ A feature within Agones can be in `Alpha`, `Beta` or `Stable` stage.
 that can be found in the [Helm configuration]({{< ref "/docs/Installation/Install Agones/helm.md#configuration" >}}) documentation.
 
 The current set of `alpha` and `beta` feature gates:
+{{% feature publishVersion="1.43.0" %}}
 
 | Feature Name                                                                                                                | Gate                               | Default  | Stage   | Since  |
 |-----------------------------------------------------------------------------------------------------------------------------|------------------------------------|----------|---------|--------|
-| [CountsAndLists](https://github.com/googleforgames/agones/issues/2716)                                                      | `CountsAndLists`                   | Enabled  | `Beta` | 1.41.0 |
+| [CountsAndLists](https://github.com/googleforgames/agones/issues/2716)                                                      | `CountsAndLists`                   | Enabled  | `Beta`  | 1.41.0 |
 | [DisableResyncOnSDKServer](https://github.com/googleforgames/agones/issues/3377)                                            | `DisableResyncOnSDKServer`         | Enabled  | `Beta`  | 1.40.0 |
-| [Support Passthrough on GKE Autopilot](https://github.com/googleforgames/agones/issues/3721)                                | `AutopilotPassthroughPort`         | Disabled | `Alpha` | 1.41.0 |
+| [Support Passthrough on GKE Autopilot](https://github.com/googleforgames/agones/issues/3721)                                | `AutopilotPassthroughPort`         | Enabled  | `Beta`  | 1.43.0 |
 | [Support for Extended Duration Pods on GKE Autopilot (*1.28+ only*)](https://github.com/googleforgames/agones/issues/3386)  | `GKEAutopilotExtendedDurationPods` | Disabled | `Alpha` | 1.37.0 |
 | [GameServer player capacity filtering on GameServerAllocations](https://github.com/googleforgames/agones/issues/1239)       | `PlayerAllocationFilter`           | Disabled | `Alpha` | 1.14.0 |
 | [Player Tracking]({{< ref "/docs/Guides/player-tracking.md" >}})                                                            | `PlayerTracking`                   | Disabled | `Alpha` | 1.6.0  |
@@ -37,7 +38,7 @@ The current set of `alpha` and `beta` feature gates:
 | [Port Policy None](https://github.com/googleforgames/agones/issues/3804)                                                    | `PortPolicyNone`                   | Disabled | `Alpha` | 1.41.0 |
 | Example Gate (not in use)                                                                                                   | `Example`                          | Disabled | None    | 0.13.0 |
 
-[fleet-updates]: {{% relref "./fleet-updates.md#notifying-gameservers-on-fleet-updatedownscale" %}}
+{{% /feature %}}
 
 {{< alert title="Note" color="info" >}}
 If you aren't sure if Feature Flags have been set correctly, have a look at the
