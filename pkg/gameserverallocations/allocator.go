@@ -264,7 +264,7 @@ func (c *Allocator) allocateFromLocalCluster(ctx context.Context, gsa *allocatio
 		gs, err = c.allocate(ctx, gsa)
 		retryCount = retryCount + 1
 
-		c.loggerForGameServerAllocation(gsa).WithError(err).Warn("Failed to Allocated. Retrying... retryCount: ", retryCount)
+		c.loggerForGameServerAllocation(gsa).WithError(err).Warn("Failed to Allocated. Retrying...")
 
 		if err != nil {
 			if status, ok := err.(k8serrors.APIStatus); ok || errors.As(err, &status) {
