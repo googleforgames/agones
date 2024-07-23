@@ -58,6 +58,8 @@ The current set of `alpha` and `beta` feature gates:
 
 {{% /feature %}}
 
+[fleet-updates]: {{% relref "./fleet-updates.md#notifying-gameservers-on-fleet-updatedownscale" %}}
+
 {{< alert title="Note" color="info" >}}
 If you aren't sure if Feature Flags have been set correctly, have a look at the
 _[The Feature Flag I enabled/disabled isn't working as expected]({{% relref "troubleshooting.md#the-feature-flag-i-enableddisabled-isnt-working-as-expected" %}})_
