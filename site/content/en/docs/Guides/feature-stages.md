@@ -28,7 +28,7 @@ The current set of `alpha` and `beta` feature gates:
 
 | Feature Name                                                                                                                | Gate                               | Default  | Stage   | Since  |
 |-----------------------------------------------------------------------------------------------------------------------------|------------------------------------|----------|---------|--------|
-| [CountsAndLists](https://github.com/googleforgames/agones/issues/2716)                                                      | `CountsAndLists`                   | Enabled  | `Beta`  | 1.41.0 |
+| [CountsAndLists](https://github.com/googleforgames/agones/issues/2716)                                                      | `CountsAndLists`                   | Enabled  | `Beta` | 1.41.0 |
 | [DisableResyncOnSDKServer](https://github.com/googleforgames/agones/issues/3377)                                            | `DisableResyncOnSDKServer`         | Enabled  | `Beta`  | 1.40.0 |
 | [Support Passthrough on GKE Autopilot](https://github.com/googleforgames/agones/issues/3721)                                | `AutopilotPassthroughPort`         | Disabled | `Alpha` | 1.41.0 |
 | [Support for Extended Duration Pods on GKE Autopilot (*1.28+ only*)](https://github.com/googleforgames/agones/issues/3386)  | `GKEAutopilotExtendedDurationPods` | Disabled | `Alpha` | 1.37.0 |
