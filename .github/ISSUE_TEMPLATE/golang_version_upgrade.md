@@ -2,7 +2,7 @@
 name: Golang version upgrade
 about: Steps to upgrade Golang version
 title: ''
-labels: kind/enhancement
+labels: kind/cleanup
 assignees: ''
 
 ---
