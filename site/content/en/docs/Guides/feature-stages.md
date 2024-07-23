@@ -24,6 +24,8 @@ that can be found in the [Helm configuration]({{< ref "/docs/Installation/Instal
 
 The current set of `alpha` and `beta` feature gates:
 
+{{% feature expiryVersion="1.43.0" %}}
+
 | Feature Name                                                                                                                | Gate                               | Default  | Stage   | Since  |
 |-----------------------------------------------------------------------------------------------------------------------------|------------------------------------|----------|---------|--------|
 | [CountsAndLists](https://github.com/googleforgames/agones/issues/2716)                                                      | `CountsAndLists`                   | Enabled  | `Beta`  | 1.41.0 |
@@ -36,6 +38,8 @@ The current set of `alpha` and `beta` feature gates:
 | [Multiple dynamic port ranges](https://github.com/googleforgames/agones/issues/1911)                                        | `PortRanges`                       | Disabled | `Alpha` | 1.41.0 |
 | [Port Policy None](https://github.com/googleforgames/agones/issues/3804)                                                    | `PortPolicyNone`                   | Disabled | `Alpha` | 1.41.0 |
 | Example Gate (not in use)                                                                                                   | `Example`                          | Disabled | None    | 0.13.0 |
+
+{{% /feature %}}
 
 {{% feature publishVersion="1.43.0" %}}
 
