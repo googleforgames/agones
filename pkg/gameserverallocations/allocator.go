@@ -193,12 +193,14 @@ func (c *Allocator) Allocate(ctx context.Context, gsa *allocationv1.GameServerAl
 	latency := c.newMetrics(ctx)
 	defer func() {
 		if err != nil {
-			var errorReason metav1.StatusReason
+			//var errorReason metav1.StatusReason
 			if status, ok := err.(k8serrors.APIStatus); ok || errors.As(err, &status) {
-				errorReason = status.Status().Reason
+				//errorReason = status.Status().Reason
 			}
-			latency.setError(string(errorReason))
+			latency.setError( /*string(errorReason)*/ )
 		}
+		c.baseLogger.Info("[VICENTE] RECORDING")
+
 		latency.record()
 	}()
 	latency.setRequest(gsa)
@@ -256,11 +258,11 @@ func (c *Allocator) loggerForGameServerAllocation(gsa *allocationv1.GameServerAl
 // Add here  a a number of times we are entering
 func (c *Allocator) allocateFromLocalCluster(ctx context.Context, gsa *allocationv1.GameServerAllocation) (*allocationv1.GameServerAllocation, error) {
 	var gs *agonesv1.GameServer
-	latency := c.newMetrics(ctx)
+	//latency := c.newMetrics(ctx)
 	retryCount := 0
 	err := Retry(allocationRetry, func() error {
 		var err error
-		var errorReason metav1.StatusReason
+		//var errorReason metav1.StatusReason
 		gs, err = c.allocate(ctx, gsa)
 		retryCount = retryCount + 1
 
@@ -268,13 +270,13 @@ func (c *Allocator) allocateFromLocalCluster(ctx context.Context, gsa *allocatio
 
 		if err != nil {
 			if status, ok := err.(k8serrors.APIStatus); ok || errors.As(err, &status) {
-				errorReason = status.Status().Reason
+				//errorReason = status.Status().Reason
 			}
-			latency.setError(string(errorReason))
+			//latency.setError(string(errorReason))
 		} else {
-			latency.setError(string("Success ") + fmt.Sprint(retryCount))
+			//latency.setError(string("Success ") + fmt.Sprint(retryCount))
 		}
-		latency.recordAllocationErrorRate()
+		//latency.recordAllocationErrorRate()
 
 		return err
 
