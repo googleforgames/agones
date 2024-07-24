@@ -43,6 +43,7 @@ var (
 
 	gameServerAllocationsLatency   = stats.Float64("gameserver_allocations/latency", "The duration of gameserver allocations", "s")
 	gameServerAllocationsErrorRate = stats.Int64("gameserver_allocations/errors", "The errors of gameserver allocations", "1")
+	gameServerAllocationsTest      = stats.Int64("gameserver_allocations/test", "The test of gameserver allocations", "1")
 )
 
 func init() {
@@ -59,6 +60,13 @@ func init() {
 			Name:        "gameserver_allocations_error_rate",
 			Measure:     gameServerAllocationsErrorRate,
 			Description: "The distribution of gameserver allocation errors",
+			Aggregation: view.Count(),
+			TagKeys:     []tag.Key{keyFleetName, keyClusterName, keyMultiCluster, keyStatus, keySchedulingStrategy, keyRetryCount},
+		},
+		{
+			Name:        "gameserver_allocations_testttt",
+			Measure:     gameServerAllocationsTest,
+			Description: "The distribution of gameserver allocation test",
 			Aggregation: view.Count(),
 			TagKeys:     []tag.Key{keyFleetName, keyClusterName, keyMultiCluster, keyStatus, keySchedulingStrategy, keyRetryCount},
 		},
@@ -179,4 +187,6 @@ From vendor/k8s.io/apimachinery/pkg/apis/meta/v1/types.go
 */
 func (r *metrics) recordAllocationErrorRate() {
 	stats.Record(r.ctx, gameServerAllocationsErrorRate.M(int64(1)))
+	stats.Record(r.ctx, gameServerAllocationsTest.M(int64(1)))
+
 }
