@@ -221,6 +221,9 @@ func main() {
 	health, closer := setupMetricsRecorder(conf)
 	defer closer()
 
+	// http.DefaultServerMux is used for http connection, not for https
+	http.Handle("/", health)
+
 	kubeClient, agonesClient, err := getClients(conf)
 	if err != nil {
 		logger.WithError(err).Fatal("could not create clients")
@@ -305,6 +308,9 @@ func main() {
 			runGRPC(listenCtx, h, grpcHealth, conf.GRPCPort)
 		}
 	}
+
+	err = http.ListenAndServe(":8080", http.DefaultServeMux)
+	logger.WithError(err).Fatal("allocation service crashed")
 
 	// Finally listen on 8080 (http), used to serve /live and /ready handlers for Kubernetes probes.
 	healthserver := httpserver.Server{Logger: logger}
