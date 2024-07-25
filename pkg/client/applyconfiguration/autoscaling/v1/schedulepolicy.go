@@ -18,23 +18,24 @@
 
 package v1
 
-// ScheduleApplyConfiguration represents an declarative configuration of the Schedule type for use
+// SchedulePolicyApplyConfiguration represents an declarative configuration of the SchedulePolicy type for use
 // with apply.
-type ScheduleApplyConfiguration struct {
-	Between      *BetweenApplyConfiguration      `json:"between,omitempty"`
-	ActivePeriod *ActivePeriodApplyConfiguration `json:"activePeriod,omitempty"`
+type SchedulePolicyApplyConfiguration struct {
+	Between      *BetweenApplyConfiguration               `json:"between,omitempty"`
+	ActivePeriod *ActivePeriodApplyConfiguration          `json:"activePeriod,omitempty"`
+	Policy       *FleetAutoscalerPolicyApplyConfiguration `json:"policy,omitempty"`
 }
 
-// ScheduleApplyConfiguration constructs an declarative configuration of the Schedule type for use with
+// SchedulePolicyApplyConfiguration constructs an declarative configuration of the SchedulePolicy type for use with
 // apply.
-func Schedule() *ScheduleApplyConfiguration {
-	return &ScheduleApplyConfiguration{}
+func SchedulePolicy() *SchedulePolicyApplyConfiguration {
+	return &SchedulePolicyApplyConfiguration{}
 }
 
 // WithBetween sets the Between field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Between field is set to the value of the last call.
-func (b *ScheduleApplyConfiguration) WithBetween(value *BetweenApplyConfiguration) *ScheduleApplyConfiguration {
+func (b *SchedulePolicyApplyConfiguration) WithBetween(value *BetweenApplyConfiguration) *SchedulePolicyApplyConfiguration {
 	b.Between = value
 	return b
 }
@@ -42,7 +43,15 @@ func (b *ScheduleApplyConfiguration) WithBetween(value *BetweenApplyConfiguratio
 // WithActivePeriod sets the ActivePeriod field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ActivePeriod field is set to the value of the last call.
-func (b *ScheduleApplyConfiguration) WithActivePeriod(value *ActivePeriodApplyConfiguration) *ScheduleApplyConfiguration {
+func (b *SchedulePolicyApplyConfiguration) WithActivePeriod(value *ActivePeriodApplyConfiguration) *SchedulePolicyApplyConfiguration {
 	b.ActivePeriod = value
+	return b
+}
+
+// WithPolicy sets the Policy field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Policy field is set to the value of the last call.
+func (b *SchedulePolicyApplyConfiguration) WithPolicy(value *FleetAutoscalerPolicyApplyConfiguration) *SchedulePolicyApplyConfiguration {
+	b.Policy = value
 	return b
 }

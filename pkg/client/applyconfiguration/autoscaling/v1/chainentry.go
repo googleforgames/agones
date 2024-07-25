@@ -21,9 +21,8 @@ package v1
 // ChainEntryApplyConfiguration represents an declarative configuration of the ChainEntry type for use
 // with apply.
 type ChainEntryApplyConfiguration struct {
-	ID       *string                                  `json:"id,omitempty"`
-	Schedule *ScheduleApplyConfiguration              `json:"schedule,omitempty"`
-	Policy   *FleetAutoscalerPolicyApplyConfiguration `json:"policy,omitempty"`
+	ID     *string                                  `json:"id,omitempty"`
+	Policy *FleetAutoscalerPolicyApplyConfiguration `json:"policy,omitempty"`
 }
 
 // ChainEntryApplyConfiguration constructs an declarative configuration of the ChainEntry type for use with
@@ -37,14 +36,6 @@ func ChainEntry() *ChainEntryApplyConfiguration {
 // If called multiple times, the ID field is set to the value of the last call.
 func (b *ChainEntryApplyConfiguration) WithID(value string) *ChainEntryApplyConfiguration {
 	b.ID = &value
-	return b
-}
-
-// WithSchedule sets the Schedule field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the Schedule field is set to the value of the last call.
-func (b *ChainEntryApplyConfiguration) WithSchedule(value *ScheduleApplyConfiguration) *ChainEntryApplyConfiguration {
-	b.Schedule = value
 	return b
 }
 

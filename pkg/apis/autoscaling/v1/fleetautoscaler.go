@@ -91,6 +91,11 @@ type FleetAutoscalerPolicy struct {
 	// [FeatureFlag:ScheduledAutoscaler]
 	// Chain policy config params. Present only if FleetAutoscalerPolicyType = Chain.
 	// +optional
+	Schedule *SchedulePolicy `json:"schedule,omitempty"`
+	// [Stage:Dev]
+	// [FeatureFlag:ScheduledAutoscaler]
+	// Chain policy config params. Present only if FleetAutoscalerPolicyType = Chain.
+	// +optional
 	Chain ChainPolicy `json:"chain,omitempty"`
 }
 
@@ -128,6 +133,11 @@ const (
 	// ListPolicyType is for List based fleet autoscaling
 	// nolint:revive // Linter contains comment doesn't start with ListPolicyType
 	ListPolicyType FleetAutoscalerPolicyType = "List"
+	// [Stage:Dev]
+	// [FeatureFlag:ScheduledAutoscaler]
+	// SchedulePolicyType is for Schedule based fleet autoscaling
+	// nolint:revive // Linter contains comment doesn't start with SchedulePolicyType
+	SchedulePolicyType FleetAutoscalerPolicyType = "Schedule"
 	// [Stage:Dev]
 	// [FeatureFlag:ScheduledAutoscaler]
 	// ChainPolicyType is for Chain based fleet autoscaling
@@ -215,11 +225,11 @@ type Between struct {
 	// Start is the datetime that the policy is eligible to be applied.
 	// This field must conform to RFC3339 format. If this field not set or is in the past, the policy is eligible to be applied
 	// as soon as the fleet autoscaler is running.
-	Start string `json:"start"`
+	Start metav1.Time `json:"start"`
 
 	// End is the datetime that the policy is no longer eligible to be applied.
 	// This field must conform to RFC3339 format. If not set, the policy is always eligible to be applied, after the start time above.
-	End string `json:"end"`
+	End metav1.Time `json:"end"`
 }
 
 // ActivePeriod defines the time period that the policy is applied.
@@ -241,22 +251,22 @@ type ActivePeriod struct {
 	Duration string `json:"duration"`
 }
 
-// Schedule defines when the policy should be applied.
-type Schedule struct {
+// SchedulePolicy controls the desired behavior of the Schedule autoscaler policy.
+type SchedulePolicy struct {
 	// Between defines the time period that the policy is eligible to be applied.
 	Between Between `json:"between"`
 
 	// ActivePeriod defines the time period that the policy is applied.
 	ActivePeriod ActivePeriod `json:"activePeriod"`
+
+	// Policy is the name of the policy to be applied. Required field.
+	Policy FleetAutoscalerPolicy `json:"policy"`
 }
 
 // ChainEntry defines a single entry in the ChainPolicy.
 type ChainEntry struct {
 	// ID is the unique identifier for a ChainEntry. If not set the identifier will be set to the index of chain entry.
 	ID string `json:"id"`
-
-	// Schedule defines when the policy is applied.
-	Schedule Schedule `json:"schedule"`
 
 	// Policy is the name of the policy to be applied. Required field.
 	Policy FleetAutoscalerPolicy `json:"policy"`
@@ -351,7 +361,8 @@ func (f *FleetAutoscalerPolicy) ValidatePolicy(fldPath *field.Path) field.ErrorL
 
 	case ListPolicyType:
 		allErrs = f.List.ValidateListPolicy(fldPath.Child("list"))
-
+	case SchedulePolicyType:
+		allErrs = f.Schedule.ValidateSchedulePolicy(fldPath.Child("schedule"))
 	case ChainPolicyType:
 		allErrs = f.Chain.ValidateChainPolicy(fldPath.Child("chain"))
 	}
@@ -502,6 +513,53 @@ func (l *ListPolicy) ValidateListPolicy(fldPath *field.Path) field.ErrorList {
 	return allErrs
 }
 
+// ValidateSchedulePolicy validates the FleetAutoscaler Schedule policy settings.
+func (s *SchedulePolicy) ValidateSchedulePolicy(fldPath *field.Path) field.ErrorList {
+	var allErrs field.ErrorList
+	if s == nil {
+		return append(allErrs, field.Required(fldPath, "schedule policy config params are missing"))
+	}
+	if !runtime.FeatureEnabled(runtime.FeatureScheduledAutoscaler) {
+		return append(allErrs, field.Forbidden(fldPath, "feature ScheduledAutoscaler must be enabled"))
+	}
+	if s.ActivePeriod.Timezone != "" {
+		if _, err := time.LoadLocation(s.ActivePeriod.Timezone); err != nil {
+			allErrs = append(allErrs, field.Invalid(fldPath.Child("activePeriod").Child("timezone"), s.ActivePeriod.Timezone, fmt.Sprintf("Error parsing timezone: %s\n", err)))
+		}
+	}
+	if !s.Between.End.IsZero() {
+		startTime := s.Between.Start.Time
+		endTime := s.Between.End.Time
+		var endErr error
+		if endTime.Before(time.Now()) {
+			allErrs = append(allErrs, field.Invalid(fldPath.Child("between").Child("end"), s.Between.End, "end time must be after the current time"))
+			endErr = errors.New("end time before current time")
+		}
+
+		if !startTime.IsZero() && endErr == nil {
+			if endTime.Before(startTime) {
+				allErrs = append(allErrs, field.Invalid(fldPath.Child("between"), s.Between, "start time must be before end time"))
+			}
+		}
+	}
+	if s.ActivePeriod.StartCron != "" {
+		// If startCron is not a valid cron expression, append an error
+		if _, err := cron.ParseStandard(s.ActivePeriod.StartCron); err != nil {
+			allErrs = append(allErrs, field.Invalid(fldPath.Child("activePeriod").Child("startCron"), s.ActivePeriod.StartCron, fmt.Sprintf("invalid startCron: %s", err)))
+		}
+		// If the cron expression contains a CRON_TZ or TZ specification, append an error
+		if strings.Contains(s.ActivePeriod.StartCron, "TZ") {
+			allErrs = append(allErrs, field.Invalid(fldPath.Child("activePeriod").Child("startCron"), s.ActivePeriod.StartCron, "CRON_TZ or TZ used in activePeriod is not supported, please use the .schedule.timezone field to specify a timezone"))
+		}
+	}
+	if s.ActivePeriod.Duration != "" {
+		if _, err := time.ParseDuration(s.ActivePeriod.Duration); err != nil {
+			allErrs = append(allErrs, field.Invalid(fldPath.Child("activePeriod").Child("duration"), s.ActivePeriod.StartCron, fmt.Sprintf("invalid duration: %s", err)))
+		}
+	}
+	return allErrs
+}
+
 // ValidateChainPolicy validates the FleetAutoscaler Chain policy settings.
 func (c *ChainPolicy) ValidateChainPolicy(fldPath *field.Path) field.ErrorList {
 	var allErrs field.ErrorList
@@ -520,58 +578,10 @@ func (c *ChainPolicy) ValidateChainPolicy(fldPath *field.Path) field.ErrorList {
 		} else {
 			seenIDs[entry.ID] = true
 		}
-
-		var startTime time.Time
-		var startErr error
-		if entry.Schedule.Between.Start != "" {
-			// If start time is not a valid RFC3339 formatted datetime, append an error
-			startTime, startErr = time.Parse(time.RFC3339, entry.Schedule.Between.Start)
-			if startErr != nil {
-				allErrs = append(allErrs, field.Invalid(fldPath.Index(i).Child("schedule").Child("between").Child("start"), entry.Schedule.Between.Start, fmt.Sprintf("invalid start time: %s", startErr)))
-			}
-		}
-		if entry.Schedule.Between.End != "" {
-			// If end time is not a valid RFC3339 formatted datetime, append an error
-			endTime, endErr := time.Parse(time.RFC3339, entry.Schedule.Between.End)
-			if endErr != nil {
-				allErrs = append(allErrs, field.Invalid(fldPath.Index(i).Child("schedule").Child("between").Child("end"), entry.Schedule.Between.End, fmt.Sprintf("invalid end time: %s", endErr)))
-			} else if endTime.Before(time.Now()) {
-				allErrs = append(allErrs, field.Invalid(fldPath.Index(i).Child("schedule").Child("between").Child("end"), entry.Schedule.Between.End, "end time must be after the current time"))
-				endErr = errors.New("end time before current time")
-			}
-			// Check if the end time is before the start time
-			if (!startTime.IsZero() && startErr == nil) && endErr == nil {
-				if endTime.Before(startTime) {
-					allErrs = append(allErrs, field.Invalid(fldPath.Index(i).Child("schedule").Child("between"), entry.Schedule.Between, "start time must be before end time"))
-				}
-			}
-		}
-
-		// Validate the active period timezone (empty string defaults to UTC).
-		if _, err := time.LoadLocation(entry.Schedule.ActivePeriod.Timezone); err != nil {
-			allErrs = append(allErrs, field.Invalid(fldPath.Index(i).Child("schedule").Child("activePeriod").Child("timezone"), entry.Schedule.ActivePeriod.Timezone, fmt.Sprintf("invalid timezone: %s", err)))
-		}
-		if entry.Schedule.ActivePeriod.StartCron != "" {
-			// If startCron is not a valid cron expression, append an error
-			if _, err := cron.ParseStandard(entry.Schedule.ActivePeriod.StartCron); err != nil {
-				allErrs = append(allErrs, field.Invalid(fldPath.Index(i).Child("schedule").Child("activePeriod").Child("startCron"), entry.Schedule.ActivePeriod.StartCron, fmt.Sprintf("invalid startCron: %s", err)))
-			}
-			// If the cron expression contains a CRON_TZ or TZ specification, append an error
-			if strings.Contains(entry.Schedule.ActivePeriod.StartCron, "TZ") {
-				allErrs = append(allErrs, field.Invalid(fldPath.Index(i).Child("schedule").Child("activePeriod").Child("startCron"), entry.Schedule.ActivePeriod.StartCron, "CRON_TZ or TZ used in start is not supported, please use the .schedule.timezone field to specify a timezone"))
-			}
-		}
-		if entry.Schedule.ActivePeriod.Duration != "" {
-			// If the duration is not valid duration format, append an error
-			if _, err := time.ParseDuration(entry.Schedule.ActivePeriod.Duration); err != nil {
-				allErrs = append(allErrs, field.Invalid(fldPath.Index(i).Child("schedule").Child("activePeriod").Child("duration"), entry.Schedule.ActivePeriod.Duration, fmt.Sprintf("invalid duration: %s", err)))
-			}
-		}
-		// Validate that the chain entry has a policy
 		if entry.Policy.Type == "" {
 			allErrs = append(allErrs, field.Required(fldPath.Index(i).Child("policy"), "policy type is missing"))
 		}
-		// Ensure the chain entry's policy is not a chain policy (to avoid nested policies)
+		// Ensure the chain entry's policy is not a chain policy (to avoid nested chain policies)
 		if entry.Policy.Chain != nil {
 			allErrs = append(allErrs, field.Invalid(fldPath.Index(i).Child("policy"), entry.Policy.Type, "chain policy cannot be used in chain policy"))
 		}

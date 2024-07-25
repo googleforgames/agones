@@ -16,6 +16,7 @@ package v1
 
 import (
 	"testing"
+	"time"
 
 	"agones.dev/agones/pkg/util/runtime"
 	"github.com/stretchr/testify/assert"
@@ -456,6 +457,74 @@ func TestFleetAutoscalerListValidateUpdate(t *testing.T) {
 	}
 }
 
+func TestFleetAutoscalerScheduleValidateUpdate(t *testing.T) {
+	t.Parallel()
+
+	modifiedFAS := func(f func(*FleetAutoscalerPolicy)) *FleetAutoscaler {
+		fas := scheduleFixture()
+		f(&fas.Spec.Policy)
+		return fas
+	}
+
+	testCases := map[string]struct {
+		fas          *FleetAutoscaler
+		featureFlags string
+		wantLength   int
+		wantField    string
+	}{
+		"end time before current time": {
+			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
+				fap.Schedule.Between.End = metav1.Date(2024, 0o7, 0o3, 15, 59, 59, 0, time.UTC)
+			}),
+			featureFlags: string(runtime.FeatureScheduledAutoscaler) + "=true",
+			wantLength:   1,
+			wantField:    "spec.policy.schedule.between.end",
+		},
+		"end time before start time": {
+			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
+				fap.Schedule.Between.Start = metav1.Date(3999, 0o6, 15, 15, 59, 59, 0, time.UTC)
+				fap.Schedule.Between.End = metav1.Date(3999, 0o5, 15, 15, 59, 59, 0, time.UTC)
+			}),
+			featureFlags: string(runtime.FeatureScheduledAutoscaler) + "=true",
+			wantLength:   1,
+			wantField:    "spec.policy.schedule.between",
+		},
+		"invalid cron format": {
+			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
+				fap.Schedule.ActivePeriod.StartCron = "* * * * * * * *"
+			}),
+			featureFlags: string(runtime.FeatureScheduledAutoscaler) + "=true",
+			wantLength:   1,
+			wantField:    "spec.policy.schedule.activePeriod.startCron",
+		},
+		"invalid cron format with tz specification": {
+			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
+				fap.Schedule.ActivePeriod.StartCron = "CRON_TZ=America/New_York * * * * *"
+			}),
+			featureFlags: string(runtime.FeatureScheduledAutoscaler) + "=true",
+			wantLength:   1,
+			wantField:    "spec.policy.schedule.activePeriod.startCron",
+		},
+	}
+
+	runtime.FeatureTestMutex.Lock()
+	defer runtime.FeatureTestMutex.Unlock()
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			err := runtime.ParseFeatures(tc.featureFlags)
+			assert.NoError(t, err)
+
+			causes := tc.fas.Validate()
+
+			assert.Len(t, causes, tc.wantLength)
+			if tc.wantLength > 0 {
+				assert.Equal(t, tc.wantField, causes[0].Field)
+			}
+		})
+	}
+}
+
 func TestFleetAutoscalerChainValidateUpdate(t *testing.T) {
 	t.Parallel()
 
@@ -479,7 +548,7 @@ func TestFleetAutoscalerChainValidateUpdate(t *testing.T) {
 		},
 		"duplicate id": {
 			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
-				fap.Chain[2].ID = "weekdays"
+				fap.Chain[1].ID = "weekends"
 			}),
 			featureFlags: string(runtime.FeatureScheduledAutoscaler) + "=true",
 			wantLength:   1,
@@ -516,76 +585,11 @@ func TestFleetAutoscalerChainValidateUpdate(t *testing.T) {
 		},
 		"invalid nested policy format": {
 			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
-				fap.Chain[2].Policy.Buffer.MinReplicas = 20
+				fap.Chain[1].Policy.Buffer.MinReplicas = 20
 			}),
 			featureFlags: string(runtime.FeatureScheduledAutoscaler) + "=true",
 			wantLength:   1,
-			wantField:    "spec.policy.chain[2].policy.buffer.minReplicas",
-		},
-		"invalid time zone": {
-			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
-				fap.Chain[2].Schedule.ActivePeriod.Timezone = "invalid-timezone"
-			}),
-			featureFlags: string(runtime.FeatureScheduledAutoscaler) + "=true",
-			wantLength:   1,
-			wantField:    "spec.policy.chain[2].schedule.activePeriod.timezone",
-		},
-		"invalid start time": {
-			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
-				fap.Chain[1].Schedule.Between.Start = "08:00"
-			}),
-			featureFlags: string(runtime.FeatureScheduledAutoscaler) + "=true",
-			wantLength:   1,
-			wantField:    "spec.policy.chain[1].schedule.between.start",
-		},
-		"invalid end time": {
-			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
-				fap.Chain[0].Schedule.Between.End = "0:900"
-			}),
-			featureFlags: string(runtime.FeatureScheduledAutoscaler) + "=true",
-			wantLength:   1,
-			wantField:    "spec.policy.chain[0].schedule.between.end",
-		},
-		"end time before current time": {
-			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
-				fap.Chain[1].Schedule.Between.End = "2015-07-05T15:59:59Z"
-			}),
-			featureFlags: string(runtime.FeatureScheduledAutoscaler) + "=true",
-			wantLength:   1,
-			wantField:    "spec.policy.chain[1].schedule.between.end",
-		},
-		"end time before start time": {
-			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
-				fap.Chain[2].Schedule.Between.Start = "3099-07-05T15:59:59Z"
-				fap.Chain[2].Schedule.Between.End = "3099-07-04T15:59:59Z"
-			}),
-			featureFlags: string(runtime.FeatureScheduledAutoscaler) + "=true",
-			wantLength:   1,
-			wantField:    "spec.policy.chain[2].schedule.between",
-		},
-		"invalid cron format": {
-			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
-				fap.Chain[0].Schedule.ActivePeriod.StartCron = "* * * * * * * *"
-			}),
-			featureFlags: string(runtime.FeatureScheduledAutoscaler) + "=true",
-			wantLength:   1,
-			wantField:    "spec.policy.chain[0].schedule.activePeriod.startCron",
-		},
-		"invalid cron format with tz specification": {
-			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
-				fap.Chain[1].Schedule.ActivePeriod.StartCron = "CRON_TZ=America/New_York * * * * *"
-			}),
-			featureFlags: string(runtime.FeatureScheduledAutoscaler) + "=true",
-			wantLength:   1,
-			wantField:    "spec.policy.chain[1].schedule.activePeriod.startCron",
-		},
-		"invalid duration": {
-			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
-				fap.Chain[2].Schedule.ActivePeriod.Duration = "-10d"
-			}),
-			featureFlags: string(runtime.FeatureScheduledAutoscaler) + "=true",
-			wantLength:   1,
-			wantField:    "spec.policy.chain[2].schedule.activePeriod.duration",
+			wantField:    "spec.policy.chain[1].policy.buffer.minReplicas",
 		},
 	}
 
@@ -641,6 +645,10 @@ func listFixture() *FleetAutoscaler {
 	return customFixture(ListPolicyType)
 }
 
+func scheduleFixture() *FleetAutoscaler {
+	return customFixture(SchedulePolicyType)
+}
+
 func chainFixture() *FleetAutoscaler {
 	return customFixture(ChainPolicyType)
 }
@@ -692,66 +700,58 @@ func customFixture(t FleetAutoscalerPolicyType) *FleetAutoscaler {
 			BufferSize:  intstr.FromInt(5),
 			MaxCapacity: 10,
 		}
+	case SchedulePolicyType:
+		res.Spec.Policy.Type = SchedulePolicyType
+		res.Spec.Policy.Buffer = nil
+		res.Spec.Policy.Schedule = &SchedulePolicy{
+			Between: Between{
+				Start: metav1.Date(2024, 0o7, 0o1, 15, 59, 59, 0, time.UTC),
+				End:   metav1.Date(9999, 0o7, 0o3, 15, 59, 59, 0, time.UTC),
+			},
+			ActivePeriod: ActivePeriod{
+				Timezone:  "",
+				StartCron: "* * * * 1-5",
+				Duration:  "",
+			},
+			Policy: FleetAutoscalerPolicy{
+				Type: BufferPolicyType,
+				Buffer: &BufferPolicy{
+					BufferSize:  intstr.FromInt(5),
+					MaxReplicas: 10,
+				},
+			},
+		}
 	case ChainPolicyType:
 		res.Spec.Policy.Type = ChainPolicyType
 		res.Spec.Policy.Buffer = nil
 		res.Spec.Policy.Chain = ChainPolicy{
 			{
-				ID: "weekdays",
-				Schedule: Schedule{
-					Between: Between{
-						Start: "2024-07-01T15:59:59Z",
-						End:   "9999-07-03T15:59:59Z",
-					},
-					ActivePeriod: ActivePeriod{
-						Timezone:  "",
-						StartCron: "0 8 * * 1-5",
-						Duration:  "10h",
-					},
-				},
-				Policy: FleetAutoscalerPolicy{
-					Type: BufferPolicyType,
-					Buffer: &BufferPolicy{
-						BufferSize:  intstr.FromInt(5),
-						MaxReplicas: 10,
-					},
-				},
-			},
-			{
 				ID: "weekends",
-				Schedule: Schedule{
-					Between: Between{
-						Start: "2024-07-04T15:59:59Z",
-						End:   "9999-07-05T15:59:59Z",
-					},
-					ActivePeriod: ActivePeriod{
-						Timezone:  "",
-						StartCron: "0 8 * * 5-6",
-						Duration:  "10h",
-					},
-				},
 				Policy: FleetAutoscalerPolicy{
-					Type: CounterPolicyType,
-					Counter: &CounterPolicy{
-						Key:         "playerCount",
-						BufferSize:  intstr.FromInt(5),
-						MaxCapacity: 10,
+					Type: SchedulePolicyType,
+					Schedule: &SchedulePolicy{
+						Between: Between{
+							Start: metav1.Date(2024, 0o7, 0o4, 15, 59, 59, 0, time.UTC),
+							End:   metav1.Date(9999, 0o7, 0o5, 15, 59, 59, 0, time.UTC),
+						},
+						ActivePeriod: ActivePeriod{
+							Timezone:  "",
+							StartCron: "* * * * 5-6",
+							Duration:  "",
+						},
+						Policy: FleetAutoscalerPolicy{
+							Type: CounterPolicyType,
+							Counter: &CounterPolicy{
+								Key:         "playerCount",
+								BufferSize:  intstr.FromInt(5),
+								MaxCapacity: 10,
+							},
+						},
 					},
 				},
 			},
 			{
-				ID: "holidays",
-				Schedule: Schedule{
-					Between: Between{
-						Start: "2024-07-05T15:59:59Z",
-						End:   "9999-12-31T15:59:59Z",
-					},
-					ActivePeriod: ActivePeriod{
-						Timezone:  "",
-						StartCron: "0 8 * * *",
-						Duration:  "10h",
-					},
-				},
+				ID: "",
 				Policy: FleetAutoscalerPolicy{
 					Type: BufferPolicyType,
 					Buffer: &BufferPolicy{
