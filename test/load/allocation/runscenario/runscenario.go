@@ -127,6 +127,7 @@ func main() {
 							tmpVar := failureDtls[clientID][err]
 							atomic.AddUint64(&tmpVar, 1)
 							atomic.AddUint64(&failureCnts[clientID], 1)
+							failureDtls[clientID][err] = tmpVar
 						}
 					}()
 					atomic.AddUint64(&allocCnts[clientID], 1)

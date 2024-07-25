@@ -31,6 +31,9 @@ const (
 	////////////////
 	// Beta features
 
+	// FeatureAutopilotPassthroughPort is a feature flag that enables/disables Passthrough Port Policy.
+	FeatureAutopilotPassthroughPort Feature = "AutopilotPassthroughPort"
+
 	// FeatureCountsAndLists is a feature flag that enables counts and lists feature
 	// (a generic implenetation of the player tracking feature).
 	FeatureCountsAndLists Feature = "CountsAndLists"
@@ -43,9 +46,6 @@ const (
 
 	////////////////
 	// Alpha features
-
-	// FeatureAutopilotPassthroughPort is a feature flag that enables/disables Passthrough Port Policy.
-	FeatureAutopilotPassthroughPort Feature = "AutopilotPassthroughPort"
 
 	// FeatureGKEAutopilotExtendedDurationPods enables the use of Extended Duration pods
 	// when Agones is running on Autopilot. Available on 1.28+ only.
@@ -131,11 +131,11 @@ var (
 	// In each of these, keep the feature sorted by descending maturity then alphabetical
 	featureDefaults = map[Feature]bool{
 		// Beta features
+		FeatureAutopilotPassthroughPort: true,
 		FeatureCountsAndLists:           true,
 		FeatureDisableResyncOnSDKServer: true,
 
 		// Alpha features
-		FeatureAutopilotPassthroughPort:         false,
 		FeatureGKEAutopilotExtendedDurationPods: false,
 		FeaturePlayerAllocationFilter:           false,
 		FeaturePlayerTracking:                   false,

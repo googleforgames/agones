@@ -41,7 +41,7 @@ spec:
 {{- end }}
 {{- if and (.Values.agones.metrics.prometheusServiceDiscovery) (.Values.agones.metrics.prometheusEnabled) }}
         prometheus.io/scrape: "true"
-        prometheus.io/port: "8080"
+        prometheus.io/port: {{ .Values.agones.extensions.http.port | quote }}
         prometheus.io/path: "/metrics"
 {{- end }}
 {{- if .Values.agones.extensions.annotations }}
@@ -93,6 +93,10 @@ spec:
       {{- end }}
       serviceAccountName: {{ .Values.agones.serviceaccount.controller.name }}
       terminationGracePeriodSeconds: {{ mul .Values.agones.extensions.readiness.periodSeconds .Values.agones.extensions.readiness.failureThreshold 3 }}
+      {{- if .Values.agones.extensions.hostNetwork }}
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      {{- end }}
       containers:
       - name: agones-extensions
         image: "{{ .Values.agones.image.registry }}/{{ .Values.agones.image.extensions.name}}:{{ default .Values.agones.image.tag .Values.agones.image.extensions.tag }}"
@@ -107,7 +111,7 @@ spec:
         - name: STACKDRIVER_EXPORTER
           value: {{ .Values.agones.metrics.stackdriverEnabled | quote }}
         - name: STACKDRIVER_LABELS
-          value: {{ .Values.agones.metrics.stackdriverLabels | quote }}       
+          value: {{ .Values.agones.metrics.stackdriverLabels | quote }}
         - name: GCP_PROJECT_ID
           value: {{ .Values.agones.metrics.stackdriverProjectID | quote }}
         - name: NUM_WORKERS
@@ -142,11 +146,15 @@ spec:
           value: "agones-extensions"
         - name: READINESS_SHUTDOWN_DURATION
           value: {{ mul .Values.agones.extensions.readiness.periodSeconds .Values.agones.extensions.readiness.failureThreshold 2 }}s
+        - name: WEBHOOK_PORT
+          value: {{ .Values.agones.extensions.webhooks.port | quote }}
+        - name: HTTP_PORT
+          value: {{ .Values.agones.extensions.http.port | quote }}
         ports:
         - name: webhooks
-          containerPort: 8081
+          containerPort: {{ .Values.agones.extensions.webhooks.port }}
         - name: http
-          containerPort: 8080
+          containerPort: {{ .Values.agones.extensions.http.port }}
         livenessProbe:
           httpGet:
             path: /live
@@ -158,7 +166,7 @@ spec:
         readinessProbe:
           httpGet:
             path: /ready
-            port: 8080
+            port: {{ .Values.agones.extensions.http.port }}
           initialDelaySeconds: {{ .Values.agones.extensions.readiness.initialDelaySeconds }}
           periodSeconds: {{ .Values.agones.extensions.readiness.periodSeconds }}
           failureThreshold: {{ .Values.agones.extensions.readiness.failureThreshold }}

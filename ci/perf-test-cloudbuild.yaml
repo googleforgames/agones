@@ -108,7 +108,7 @@ substitutions:
   _TEST_DURATION: "10m"
   _TEST_CLIENTS: "50"
   _TEST_INTERVAL: "1000"
-tags: [ci, 'commit-${COMMIT_SHA}']
+tags: [perf, 'commit-${COMMIT_SHA}']
 timeout: 7200s  # 2h
 queueTtl: 10800s  # 3h
 options:

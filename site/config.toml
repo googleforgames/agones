@@ -80,9 +80,9 @@ github_repo = "https://github.com/googleforgames/agones"
 gcs_engine_id = "016691298986124624340:x7qv2dywdao"
 
 # current release branch. Never is rc.
-release_branch = "release-1.41.0"
+release_branch = "release-1.42.0"
 # the main version. Never is rc.
-release_version = "1.41.0"
+release_version = "1.42.0"
 
 # shown for production
 supported_k8s = ["1.27", "1.28", "1.29"]
@@ -100,7 +100,7 @@ dev_eks_example_cluster_version = "1.29"
 dev_minikube_example_cluster_version = "1.28.6"
 
 # example tag
-example_image_tag = "us-docker.pkg.dev/agones-images/examples/simple-game-server:0.33"
+example_image_tag = "us-docker.pkg.dev/agones-images/examples/simple-game-server:0.34"
 
 # Enable syntax highlighting and copy buttons on code blocks with Prism
 prism_syntax_highlighting = true

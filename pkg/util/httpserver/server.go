@@ -31,6 +31,7 @@ import (
 //nolint:govet // ignore field alignment complaint, this is a singleton
 type Server struct {
 	http.ServeMux
+	Port string
 
 	Logger *logrus.Entry
 }
@@ -38,8 +39,11 @@ type Server struct {
 // Run runs an http server on port :8080.
 func (s *Server) Run(ctx context.Context, _ int) error {
 	s.Logger.Info("Starting http server...")
+	if s.Port == "" {
+		s.Port = "8080"
+	}
 	srv := &http.Server{
-		Addr:    ":8080",
+		Addr:    ":" + s.Port,
 		Handler: s,
 	}
 	go func() {
@@ -51,7 +55,7 @@ func (s *Server) Run(ctx context.Context, _ int) error {
 		if err == http.ErrServerClosed {
 			s.Logger.WithError(err).Info("http server closed")
 		} else {
-			wrappedErr := errors.Wrap(err, "Could not listen on :8080")
+			wrappedErr := errors.Wrap(err, "Could not listen on :"+s.Port)
 			runtime.HandleError(s.Logger.WithError(wrappedErr), wrappedErr)
 		}
 	}

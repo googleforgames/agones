@@ -53,16 +53,18 @@ type Server struct {
 	tls        tls
 	certFile   string
 	keyFile    string
+	port       string
 }
 
 // NewServer returns a Server instance.
-func NewServer(certFile, keyFile string) *Server {
+func NewServer(certFile, keyFile string, port string) *Server {
 	mux := http.NewServeMux()
 
 	wh := &Server{
 		Mux:      mux,
 		certFile: certFile,
 		keyFile:  keyFile,
+		port:     port,
 	}
 	wh.logger = runtime.NewLoggerWithType(wh)
 	wh.setupServer()
@@ -73,7 +75,7 @@ func NewServer(certFile, keyFile string) *Server {
 
 func (s *Server) setupServer() {
 	s.tls = &http.Server{
-		Addr:    ":8081",
+		Addr:    ":" + s.port,
 		Handler: s.Mux,
 		TLSConfig: &cryptotls.Config{
 			GetCertificate: s.getCertificate,
@@ -129,7 +131,7 @@ func (s *Server) Run(ctx context.Context, _ int) error {
 		_ = s.tls.Shutdown(context.Background())
 	}()
 
-	s.logger.WithField("server", s).Infof("https server started")
+	s.logger.WithField("server", s).Infof("https server started on port :" + s.port)
 
 	err := s.tls.ListenAndServeTLS(s.certFile, s.keyFile)
 	if err == http.ErrServerClosed {
@@ -137,7 +139,7 @@ func (s *Server) Run(ctx context.Context, _ int) error {
 		return nil
 	}
 
-	return errors.Wrap(err, "Could not listen on :8081")
+	return errors.Wrap(err, "Could not listen on :"+s.port)
 }
 
 // defaultHandler Handles all the HTTP requests
