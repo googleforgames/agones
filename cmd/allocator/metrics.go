@@ -14,9 +14,8 @@
 package main
 
 import (
-	"net/http"
-
 	"agones.dev/agones/pkg/metrics"
+	"agones.dev/agones/pkg/util/httpserver"
 	"github.com/heptiolabs/healthcheck"
 	prom "github.com/prometheus/client_golang/prometheus"
 	"go.opencensus.io/plugin/ocgrpc"
@@ -33,7 +32,7 @@ func registerMetricViews() {
 	}
 }
 
-func setupMetricsRecorder(conf config) (health healthcheck.Handler, closer func()) {
+func setupMetricsRecorder(conf config, healthserver *httpserver.Server) (health healthcheck.Handler, closer func()) {
 	health = healthcheck.NewHandler()
 	closer = func() {}
 
@@ -54,7 +53,7 @@ func setupMetricsRecorder(conf config) (health healthcheck.Handler, closer func(
 		if err != nil {
 			logger.WithError(err).Fatal("Could not register prometheus exporter")
 		}
-		http.Handle("/metrics", metricHandler)
+		healthserver.Handle("/metrics", metricHandler)
 		health = healthcheck.NewMetricsHandler(registry, "agones")
 	}
 
