@@ -89,7 +89,7 @@ type FleetAutoscalerPolicy struct {
 	List *ListPolicy `json:"list,omitempty"`
 	// [Stage:Dev]
 	// [FeatureFlag:ScheduledAutoscaler]
-	// Chain policy config params. Present only if FleetAutoscalerPolicyType = Chain.
+	// Schedule policy config params. Present only if FleetAutoscalerPolicyType = Schedule.
 	// +optional
 	Schedule *SchedulePolicy `json:"schedule,omitempty"`
 	// [Stage:Dev]
@@ -581,11 +581,11 @@ func (c *ChainPolicy) ValidateChainPolicy(fldPath *field.Path) field.ErrorList {
 			seenIDs[entry.ID] = true
 		}
 		if entry.Type == "" {
-			allErrs = append(allErrs, field.Required(fldPath.Index(i).Child("policy"), "policy type is missing"))
+			allErrs = append(allErrs, field.Required(fldPath.Index(i).Child("type"), "policy type is missing"))
 		}
 		// Ensure the chain entry's policy is not a chain policy (to avoid nested chain policies)
 		if entry.Chain != nil {
-			allErrs = append(allErrs, field.Invalid(fldPath.Index(i).Child("policy"), entry.FleetAutoscalerPolicy.Type, "chain policy cannot be used in chain policy"))
+			allErrs = append(allErrs, field.Invalid(fldPath.Index(i).Child("type"), entry.FleetAutoscalerPolicy.Type, "chain policy cannot be used in chain policy"))
 		}
 		// Validate the chain entry's policy
 		allErrs = append(allErrs, entry.FleetAutoscalerPolicy.ValidatePolicy(fldPath.Index(i).Child("policy"))...)

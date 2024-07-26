@@ -568,7 +568,7 @@ func TestFleetAutoscalerChainValidateUpdate(t *testing.T) {
 			}),
 			featureFlags: string(runtime.FeatureScheduledAutoscaler) + "=true",
 			wantLength:   1,
-			wantField:    "spec.policy.chain[0].policy",
+			wantField:    "spec.policy.chain[0].type",
 		},
 		"nested chain policy not allowed": {
 			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
@@ -589,7 +589,7 @@ func TestFleetAutoscalerChainValidateUpdate(t *testing.T) {
 			}),
 			featureFlags: string(runtime.FeatureScheduledAutoscaler) + "=true",
 			wantLength:   1,
-			wantField:    "spec.policy.chain[1].policy",
+			wantField:    "spec.policy.chain[1].type",
 		},
 		"invalid nested policy format": {
 			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
