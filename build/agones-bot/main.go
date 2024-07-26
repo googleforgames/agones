@@ -85,7 +85,7 @@ func (g *githubNotifier) SetUp(ctx context.Context, config *notifiers.Config, sg
 func (g *githubNotifier) SendNotification(ctx context.Context, build *cloudbuild.Build) error {
 	statusName := cloudbuild.Build_Status_name[int32(build.Status)]
 	log.Infof("Build Status: %s, Detail: %s", statusName, build.StatusDetail)
-	if build.Status == cloudbuild.Build_QUEUED || build.Status == cloudbuild.Build_WORKING {
+	if build.Status == cloudbuild.Build_QUEUED || build.Status == cloudbuild.Build_WORKING || build.Status == cloudbuild.Build_CANCELLED {
 		log.Info("Skipping notification")
 		return nil
 	}
