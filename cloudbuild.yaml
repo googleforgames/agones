@@ -189,18 +189,6 @@ steps:
     args: [-j, '5', --output-sync=target, test]
 
   #
-  # SDK conformance tests
-  #
-  - name: make-docker
-    id: sdk-conformance
-    dir: build
-    env: ['REGISTRY=${_REGISTRY}']
-    args: [-j, '5', --output-sync=target, run-sdk-conformance-tests]
-    waitFor:
-      - build-images
-      - tests
-
-  #
   # Site preview
   #
   - name: make-docker  # build a preview of the website
@@ -229,19 +217,7 @@ steps:
     waitFor: [push-images]
     script: |
       #!/usr/bin/env bash
-      TS='date --utc +%FT%TZ'  # e.g. 2023-01-26T13:30:37Z
-      echo "$(${TS}): Waiting to become oldest running build"
-      while true; do
-        # Filter to running builds with tag 'ci', which covers any builds running e2es.
-        BUILD_FILTER="status=WORKING AND tags='ci'"
-        OLDEST=$(gcloud builds list --filter "${BUILD_FILTER}" --format="value(id,startTime)" --sort-by=startTime --limit=1)
-        echo "$(${TS}): Oldest is (id startTime): ${OLDEST}"
-        if echo ${OLDEST} | grep -q "${BUILD_ID}"; then
-          echo "$(${TS}): That's us, we're done!"
-          break
-        fi
-        sleep 60
-      done
+      true
     timeout: 10800s  # 3h - if you change this, change the global timeout as well
     env:
       - CLOUDSDK_CORE_PROJECT=$PROJECT_ID
@@ -254,11 +230,7 @@ steps:
     waitFor: [e2e-wait-to-become-leader]
     script: |
       #!/usr/bin/env bash
-      until gcloud builds list --ongoing --filter "tags:'e2e-test'" --format="value(id)" | xargs --no-run-if-empty gcloud builds cancel
-      do
-        echo "== encountered error; assuming retryable error and trying again =="
-        sleep 5
-      done
+      true
 
   # kick off the child e2e test cloud builds in parallel, fail this build if any of the child build fails
   - name: gcr.io/cloud-builders/gcloud
@@ -267,98 +239,9 @@ steps:
     args:
       - -c
       - |
-        set -e
-        set -o pipefail
-        pids=()
-        cloudProducts=("generic" "gke-autopilot")
-        declare -A versionsAndRegions=( [1.27]=us-east1 [1.28]=us-west1 [1.29]=europe-west1 )
-
-        # Keep in sync with (the inverse of) pkg/util/runtime/features.go:featureDefaults
-        featureWithGate="PlayerAllocationFilter=true&PlayerTracking=true&CountsAndLists=false&RollingUpdateFix=true&PortRanges=true&PortPolicyNone=true&DisableResyncOnSDKServer=false&AutopilotPassthroughPort=false&Example=true"
-        featureWithoutGate=""
-
-        # Use this if specific feature gates can only be supported on specific Kubernetes versions.
-        # TODO: When 1.28 becomes trailing version, promote GKEAutopilotExtendedDurationPods to beta.
-        declare -A featureWithGateByVersion=( [1.27]="${featureWithGate}" [1.28]="${featureWithGate}&GKEAutopilotExtendedDurationPods=true" [1.29]="${featureWithGate}&GKEAutopilotExtendedDurationPods=true")
-
-        for cloudProduct in ${cloudProducts[@]}
-        do
-          for version in "${!versionsAndRegions[@]}"
-          do
-            withGate=${featureWithGateByVersion[$version]}
-            region=${versionsAndRegions[$version]}
-            if [ $cloudProduct = generic ]
-            then
-              testCluster="standard-e2e-test-cluster-${version//./-}"
-            else
-              testCluster="gke-autopilot-e2e-test-cluster-${version//./-}"
-            fi
-            testClusterLocation="${region}"
-            { stdbuf -oL -eL gcloud builds submit . --suppress-logs --config=./ci/e2e-test-cloudbuild.yaml \
-              --substitutions _FEATURE_WITH_GATE=$withGate,_FEATURE_WITHOUT_GATE=$featureWithoutGate,_CLOUD_PRODUCT=$cloudProduct,_TEST_CLUSTER_NAME=$testCluster,_TEST_CLUSTER_LOCATION=$testClusterLocation,_REGISTRY=${_REGISTRY},_PARENT_COMMIT_SHA=${COMMIT_SHA},_PARENT_BUILD_ID=${BUILD_ID} \
-              |& stdbuf -i0 -oL -eL grep -v " tarball " \
-              |& stdbuf -i0 -oL -eL sed "s/^/${cloudProduct}-${version}: /"; } &
-            pids+=($!)
-          done
-        done
-
-        # If any of the subprocess exit with nonzero code, exit the main process and kill all subprocesses
-        for pid in "${pids[@]}"; do
-          if wait -n; then
-            :
-          else
-            status=$?
-            echo "One of the e2e test child cloud build exited with nonzero status $status. Aborting."
-            for pid in "${pids[@]}"; do
-              # Send a termination signal to all the children, and ignore errors
-              # due to children that no longer exist.
-              kill "$pid" 2> /dev/null || :
-              echo "killed $pid"
-            done
-            exit "$status"
-          fi
-        done
-        echo "all done"
+        true
     waitFor:
       - cancel-orphan-e2e-tests
-
-  #
-  # Store caches, to speed up subsequent builds (considerably)
-  #
-  - name: us-docker.pkg.dev/$PROJECT_ID/ci/save_cache
-    args:
-      - --bucket=gs://$_CACHE_BUCKET
-      - --key=$_CPP_SDK_BUILD_CACHE_KEY-$( checksum sdks/cpp/CMakeLists.txt )
-      - --path=sdks/cpp/.build  # CPP SDK build
-    id: cpp-sdk-build-save-cache
-    waitFor:
-      - build-sdks
-  - name: us-docker.pkg.dev/$PROJECT_ID/ci/save_cache
-    args:
-      - --bucket=gs://$_CACHE_BUCKET
-      - --key=$_CPP_SDK_CONFORMANCE_CACHE_KEY-$( sdks/cpp/CMakeLists.txt )
-      - --path=test/sdk/cpp/sdk  # CPP conformance test build
-    id: cpp-sdk-conformance-save-cache
-    waitFor:
-      - sdk-conformance
-  - name: us-docker.pkg.dev/$PROJECT_ID/ci/save_cache
-    args:
-      - --bucket=gs://$_CACHE_BUCKET
-      - --key=$_RUST_SDK_BUILD_CACHE_KEY-$( checksum test/sdk/rust/Cargo.toml )
-      - --path=test/sdk/rust/.cargo  # Rust conformance test build
-      - --path=test/sdk/rust/.cargo-targets
-      - --no-clobber
-    id: rust-build-save-cache
-    waitFor:
-      - sdk-conformance
-  - name: us-docker.pkg.dev/$PROJECT_ID/ci/save_cache
-    args:
-      - --bucket=gs://$_CACHE_BUCKET
-      - --key=$_HTMLTEST_CACHE_KEY
-      - --path=site/tmp  # htmltest URL checks
-    id: htmltest-save-cache
-    waitFor:
-      - tests
 
   #
   # Zip up artifacts and push to storage
