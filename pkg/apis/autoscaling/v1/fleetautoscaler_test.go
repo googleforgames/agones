@@ -472,9 +472,15 @@ func TestFleetAutoscalerScheduleValidateUpdate(t *testing.T) {
 		wantLength   int
 		wantField    string
 	}{
+		"feature gate not turned on": {
+			fas:          scheduleFixture(),
+			featureFlags: string(runtime.FeatureScheduledAutoscaler) + "=false",
+			wantLength:   1,
+			wantField:    "spec.policy.schedule",
+		},
 		"end time before current time": {
 			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
-				fap.Schedule.Between.End = metav1.Date(2024, 0o7, 0o3, 15, 59, 59, 0, time.UTC)
+				fap.Schedule.Between.End = mustParseDate("2024-07-03T15:59:59Z")
 			}),
 			featureFlags: string(runtime.FeatureScheduledAutoscaler) + "=true",
 			wantLength:   1,
@@ -482,8 +488,10 @@ func TestFleetAutoscalerScheduleValidateUpdate(t *testing.T) {
 		},
 		"end time before start time": {
 			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
-				fap.Schedule.Between.Start = metav1.Date(3999, 0o6, 15, 15, 59, 59, 0, time.UTC)
-				fap.Schedule.Between.End = metav1.Date(3999, 0o5, 15, 15, 59, 59, 0, time.UTC)
+				mustParseDate("3999-06-15T15:59:59Z")
+				mustParseDate("3999-05-15T15:59:59Z")
+				fap.Schedule.Between.Start = mustParseDate("3999-06-15T15:59:59Z")
+				fap.Schedule.Between.End = mustParseDate("3999-05-15T15:59:59Z")
 			}),
 			featureFlags: string(runtime.FeatureScheduledAutoscaler) + "=true",
 			wantLength:   1,
@@ -556,7 +564,7 @@ func TestFleetAutoscalerChainValidateUpdate(t *testing.T) {
 		},
 		"empty policy": {
 			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
-				fap.Chain[0].Policy = FleetAutoscalerPolicy{}
+				fap.Chain[0].FleetAutoscalerPolicy = FleetAutoscalerPolicy{}
 			}),
 			featureFlags: string(runtime.FeatureScheduledAutoscaler) + "=true",
 			wantLength:   1,
@@ -564,11 +572,11 @@ func TestFleetAutoscalerChainValidateUpdate(t *testing.T) {
 		},
 		"nested chain policy not allowed": {
 			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
-				fap.Chain[1].Policy = FleetAutoscalerPolicy{
+				fap.Chain[1].FleetAutoscalerPolicy = FleetAutoscalerPolicy{
 					Type: ChainPolicyType,
 					Chain: ChainPolicy{
 						{
-							Policy: FleetAutoscalerPolicy{
+							FleetAutoscalerPolicy: FleetAutoscalerPolicy{
 								Type: BufferPolicyType,
 								Buffer: &BufferPolicy{
 									BufferSize:  intstr.FromInt(5),
@@ -585,7 +593,7 @@ func TestFleetAutoscalerChainValidateUpdate(t *testing.T) {
 		},
 		"invalid nested policy format": {
 			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
-				fap.Chain[1].Policy.Buffer.MinReplicas = 20
+				fap.Chain[1].FleetAutoscalerPolicy.Buffer.MinReplicas = 20
 			}),
 			featureFlags: string(runtime.FeatureScheduledAutoscaler) + "=true",
 			wantLength:   1,
@@ -627,6 +635,11 @@ func TestFleetAutoscalerApplyDefaults(t *testing.T) {
 	assert.NotNil(t, fas.Spec.Sync)
 	assert.Equal(t, FixedIntervalSyncType, fas.Spec.Sync.Type)
 	assert.Equal(t, defaultIntervalSyncSeconds, fas.Spec.Sync.FixedInterval.Seconds)
+}
+
+func mustParseDate(timeStr string) metav1.Time {
+	t, _ := time.Parse(time.RFC3339, timeStr)
+	return metav1.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), t.Nanosecond(), t.Location())
 }
 
 func defaultFixture() *FleetAutoscaler {
@@ -705,8 +718,8 @@ func customFixture(t FleetAutoscalerPolicyType) *FleetAutoscaler {
 		res.Spec.Policy.Buffer = nil
 		res.Spec.Policy.Schedule = &SchedulePolicy{
 			Between: Between{
-				Start: metav1.Date(2024, 0o7, 0o1, 15, 59, 59, 0, time.UTC),
-				End:   metav1.Date(9999, 0o7, 0o3, 15, 59, 59, 0, time.UTC),
+				Start: mustParseDate("2024-07-01T15:59:59Z"),
+				End:   mustParseDate("9999-07-03T15:59:59Z"),
 			},
 			ActivePeriod: ActivePeriod{
 				Timezone:  "",
@@ -727,12 +740,12 @@ func customFixture(t FleetAutoscalerPolicyType) *FleetAutoscaler {
 		res.Spec.Policy.Chain = ChainPolicy{
 			{
 				ID: "weekends",
-				Policy: FleetAutoscalerPolicy{
+				FleetAutoscalerPolicy: FleetAutoscalerPolicy{
 					Type: SchedulePolicyType,
 					Schedule: &SchedulePolicy{
 						Between: Between{
-							Start: metav1.Date(2024, 0o7, 0o4, 15, 59, 59, 0, time.UTC),
-							End:   metav1.Date(9999, 0o7, 0o5, 15, 59, 59, 0, time.UTC),
+							Start: mustParseDate("2024-07-04T15:59:59Z"),
+							End:   mustParseDate("9999-07-05T15:59:59Z"),
 						},
 						ActivePeriod: ActivePeriod{
 							Timezone:  "",
@@ -752,7 +765,7 @@ func customFixture(t FleetAutoscalerPolicyType) *FleetAutoscaler {
 			},
 			{
 				ID: "",
-				Policy: FleetAutoscalerPolicy{
+				FleetAutoscalerPolicy: FleetAutoscalerPolicy{
 					Type: BufferPolicyType,
 					Buffer: &BufferPolicy{
 						BufferSize:  intstr.FromInt(5),

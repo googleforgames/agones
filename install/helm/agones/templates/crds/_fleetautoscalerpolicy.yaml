@@ -15,11 +15,13 @@
 ---
 {{/* schema for a fleet autoscaler policy */}}
 {{- define "fleetautoscaler.policy" }}
+{{- if .includePolicy }}
 policy:
   type: object
   required:
     - type
   properties:
+{{- end }}
     type:
       type: string
       enum:
@@ -138,7 +140,7 @@ policy:
               type: string
             duration: # The length of time the policy should be applied for (e.g. 2h45m).
               type: string
-        {{- include "fleetautoscaler.policy" (dict "includeChainPolicy" false "includeSchedulePolicy" false) | indent 8 }}
+        {{- include "fleetautoscaler.policy" (dict "includeChainPolicy" false "includeSchedulePolicy" false "includePolicy" true) | indent 8 }}
     {{- end }}
     {{- if .includeChainPolicy }}
     chain:
@@ -146,11 +148,9 @@ policy:
       nullable: true
       items:
         type: object
-        required:
-          - policy
         properties:
           id: # The Id of a chain entry.
             type: string
-          {{- include "fleetautoscaler.policy" (dict "includeChainPolicy" false "includeSchedulePolicy" true) | indent 10 }} # Defines which policy to apply during the active period. Required.
+          {{- include "fleetautoscaler.policy" (dict "includeChainPolicy" false "includeSchedulePolicy" true "includePolicy" false) | indent 6 }} # Defines which policy to apply during the active period. Required.
     {{- end }}
 {{- end }}

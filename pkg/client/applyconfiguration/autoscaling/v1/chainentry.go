@@ -18,11 +18,15 @@
 
 package v1
 
+import (
+	autoscalingv1 "agones.dev/agones/pkg/apis/autoscaling/v1"
+)
+
 // ChainEntryApplyConfiguration represents an declarative configuration of the ChainEntry type for use
 // with apply.
 type ChainEntryApplyConfiguration struct {
-	ID     *string                                  `json:"id,omitempty"`
-	Policy *FleetAutoscalerPolicyApplyConfiguration `json:"policy,omitempty"`
+	ID                                      *string `json:"id,omitempty"`
+	FleetAutoscalerPolicyApplyConfiguration `json:",inline"`
 }
 
 // ChainEntryApplyConfiguration constructs an declarative configuration of the ChainEntry type for use with
@@ -39,10 +43,58 @@ func (b *ChainEntryApplyConfiguration) WithID(value string) *ChainEntryApplyConf
 	return b
 }
 
-// WithPolicy sets the Policy field in the declarative configuration to the given value
+// WithType sets the Type field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the Policy field is set to the value of the last call.
-func (b *ChainEntryApplyConfiguration) WithPolicy(value *FleetAutoscalerPolicyApplyConfiguration) *ChainEntryApplyConfiguration {
-	b.Policy = value
+// If called multiple times, the Type field is set to the value of the last call.
+func (b *ChainEntryApplyConfiguration) WithType(value autoscalingv1.FleetAutoscalerPolicyType) *ChainEntryApplyConfiguration {
+	b.Type = &value
+	return b
+}
+
+// WithBuffer sets the Buffer field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Buffer field is set to the value of the last call.
+func (b *ChainEntryApplyConfiguration) WithBuffer(value *BufferPolicyApplyConfiguration) *ChainEntryApplyConfiguration {
+	b.Buffer = value
+	return b
+}
+
+// WithWebhook sets the Webhook field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Webhook field is set to the value of the last call.
+func (b *ChainEntryApplyConfiguration) WithWebhook(value *WebhookPolicyApplyConfiguration) *ChainEntryApplyConfiguration {
+	b.Webhook = value
+	return b
+}
+
+// WithCounter sets the Counter field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Counter field is set to the value of the last call.
+func (b *ChainEntryApplyConfiguration) WithCounter(value *CounterPolicyApplyConfiguration) *ChainEntryApplyConfiguration {
+	b.Counter = value
+	return b
+}
+
+// WithList sets the List field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the List field is set to the value of the last call.
+func (b *ChainEntryApplyConfiguration) WithList(value *ListPolicyApplyConfiguration) *ChainEntryApplyConfiguration {
+	b.List = value
+	return b
+}
+
+// WithSchedule sets the Schedule field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Schedule field is set to the value of the last call.
+func (b *ChainEntryApplyConfiguration) WithSchedule(value *SchedulePolicyApplyConfiguration) *ChainEntryApplyConfiguration {
+	b.Schedule = value
+	return b
+}
+
+// WithChain sets the Chain field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Chain field is set to the value of the last call.
+func (b *ChainEntryApplyConfiguration) WithChain(value autoscalingv1.ChainPolicy) *ChainEntryApplyConfiguration {
+	b.Chain = &value
 	return b
 }

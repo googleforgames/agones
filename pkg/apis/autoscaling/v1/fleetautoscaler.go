@@ -269,7 +269,7 @@ type ChainEntry struct {
 	ID string `json:"id"`
 
 	// Policy is the name of the policy to be applied. Required field.
-	Policy FleetAutoscalerPolicy `json:"policy"`
+	FleetAutoscalerPolicy `json:",inline"`
 }
 
 // ChainPolicy controls the desired behavior of the Chain autoscaler policy.
@@ -361,8 +361,10 @@ func (f *FleetAutoscalerPolicy) ValidatePolicy(fldPath *field.Path) field.ErrorL
 
 	case ListPolicyType:
 		allErrs = f.List.ValidateListPolicy(fldPath.Child("list"))
+
 	case SchedulePolicyType:
 		allErrs = f.Schedule.ValidateSchedulePolicy(fldPath.Child("schedule"))
+
 	case ChainPolicyType:
 		allErrs = f.Chain.ValidateChainPolicy(fldPath.Child("chain"))
 	}
@@ -578,15 +580,15 @@ func (c *ChainPolicy) ValidateChainPolicy(fldPath *field.Path) field.ErrorList {
 		} else {
 			seenIDs[entry.ID] = true
 		}
-		if entry.Policy.Type == "" {
+		if entry.Type == "" {
 			allErrs = append(allErrs, field.Required(fldPath.Index(i).Child("policy"), "policy type is missing"))
 		}
 		// Ensure the chain entry's policy is not a chain policy (to avoid nested chain policies)
-		if entry.Policy.Chain != nil {
-			allErrs = append(allErrs, field.Invalid(fldPath.Index(i).Child("policy"), entry.Policy.Type, "chain policy cannot be used in chain policy"))
+		if entry.Chain != nil {
+			allErrs = append(allErrs, field.Invalid(fldPath.Index(i).Child("policy"), entry.FleetAutoscalerPolicy.Type, "chain policy cannot be used in chain policy"))
 		}
 		// Validate the chain entry's policy
-		allErrs = append(allErrs, entry.Policy.ValidatePolicy(fldPath.Index(i).Child("policy"))...)
+		allErrs = append(allErrs, entry.FleetAutoscalerPolicy.ValidatePolicy(fldPath.Index(i).Child("policy"))...)
 	}
 	return allErrs
 }
