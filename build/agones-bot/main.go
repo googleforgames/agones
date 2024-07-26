@@ -110,7 +110,7 @@ func (g *githubNotifier) SendNotification(ctx context.Context, build *cloudbuild
 	}
 
 	dryRun := false
-	if testPR >= 0 && pr != testPR {
+	if testPR > 0 && pr != testPR {
 		log.Infof("Not test PR #%d, dry run", testPR)
 		dryRun = true
 	}
