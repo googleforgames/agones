@@ -19,31 +19,34 @@
 package v1
 
 import (
-	v1 "agones.dev/agones/pkg/apis/autoscaling/v1"
+	autoscalingv1 "agones.dev/agones/pkg/apis/autoscaling/v1"
 )
 
-// FleetAutoscalerPolicyApplyConfiguration represents an declarative configuration of the FleetAutoscalerPolicy type for use
+// ChainEntryApplyConfiguration represents an declarative configuration of the ChainEntry type for use
 // with apply.
-type FleetAutoscalerPolicyApplyConfiguration struct {
-	Type     *v1.FleetAutoscalerPolicyType     `json:"type,omitempty"`
-	Buffer   *BufferPolicyApplyConfiguration   `json:"buffer,omitempty"`
-	Webhook  *WebhookPolicyApplyConfiguration  `json:"webhook,omitempty"`
-	Counter  *CounterPolicyApplyConfiguration  `json:"counter,omitempty"`
-	List     *ListPolicyApplyConfiguration     `json:"list,omitempty"`
-	Schedule *SchedulePolicyApplyConfiguration `json:"schedule,omitempty"`
-	Chain    *v1.ChainPolicy                   `json:"chain,omitempty"`
+type ChainEntryApplyConfiguration struct {
+	ID                                      *string `json:"id,omitempty"`
+	FleetAutoscalerPolicyApplyConfiguration `json:",inline"`
 }
 
-// FleetAutoscalerPolicyApplyConfiguration constructs an declarative configuration of the FleetAutoscalerPolicy type for use with
+// ChainEntryApplyConfiguration constructs an declarative configuration of the ChainEntry type for use with
 // apply.
-func FleetAutoscalerPolicy() *FleetAutoscalerPolicyApplyConfiguration {
-	return &FleetAutoscalerPolicyApplyConfiguration{}
+func ChainEntry() *ChainEntryApplyConfiguration {
+	return &ChainEntryApplyConfiguration{}
+}
+
+// WithID sets the ID field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ID field is set to the value of the last call.
+func (b *ChainEntryApplyConfiguration) WithID(value string) *ChainEntryApplyConfiguration {
+	b.ID = &value
+	return b
 }
 
 // WithType sets the Type field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Type field is set to the value of the last call.
-func (b *FleetAutoscalerPolicyApplyConfiguration) WithType(value v1.FleetAutoscalerPolicyType) *FleetAutoscalerPolicyApplyConfiguration {
+func (b *ChainEntryApplyConfiguration) WithType(value autoscalingv1.FleetAutoscalerPolicyType) *ChainEntryApplyConfiguration {
 	b.Type = &value
 	return b
 }
@@ -51,7 +54,7 @@ func (b *FleetAutoscalerPolicyApplyConfiguration) WithType(value v1.FleetAutosca
 // WithBuffer sets the Buffer field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Buffer field is set to the value of the last call.
-func (b *FleetAutoscalerPolicyApplyConfiguration) WithBuffer(value *BufferPolicyApplyConfiguration) *FleetAutoscalerPolicyApplyConfiguration {
+func (b *ChainEntryApplyConfiguration) WithBuffer(value *BufferPolicyApplyConfiguration) *ChainEntryApplyConfiguration {
 	b.Buffer = value
 	return b
 }
@@ -59,7 +62,7 @@ func (b *FleetAutoscalerPolicyApplyConfiguration) WithBuffer(value *BufferPolicy
 // WithWebhook sets the Webhook field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Webhook field is set to the value of the last call.
-func (b *FleetAutoscalerPolicyApplyConfiguration) WithWebhook(value *WebhookPolicyApplyConfiguration) *FleetAutoscalerPolicyApplyConfiguration {
+func (b *ChainEntryApplyConfiguration) WithWebhook(value *WebhookPolicyApplyConfiguration) *ChainEntryApplyConfiguration {
 	b.Webhook = value
 	return b
 }
@@ -67,7 +70,7 @@ func (b *FleetAutoscalerPolicyApplyConfiguration) WithWebhook(value *WebhookPoli
 // WithCounter sets the Counter field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Counter field is set to the value of the last call.
-func (b *FleetAutoscalerPolicyApplyConfiguration) WithCounter(value *CounterPolicyApplyConfiguration) *FleetAutoscalerPolicyApplyConfiguration {
+func (b *ChainEntryApplyConfiguration) WithCounter(value *CounterPolicyApplyConfiguration) *ChainEntryApplyConfiguration {
 	b.Counter = value
 	return b
 }
@@ -75,7 +78,7 @@ func (b *FleetAutoscalerPolicyApplyConfiguration) WithCounter(value *CounterPoli
 // WithList sets the List field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the List field is set to the value of the last call.
-func (b *FleetAutoscalerPolicyApplyConfiguration) WithList(value *ListPolicyApplyConfiguration) *FleetAutoscalerPolicyApplyConfiguration {
+func (b *ChainEntryApplyConfiguration) WithList(value *ListPolicyApplyConfiguration) *ChainEntryApplyConfiguration {
 	b.List = value
 	return b
 }
@@ -83,7 +86,7 @@ func (b *FleetAutoscalerPolicyApplyConfiguration) WithList(value *ListPolicyAppl
 // WithSchedule sets the Schedule field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Schedule field is set to the value of the last call.
-func (b *FleetAutoscalerPolicyApplyConfiguration) WithSchedule(value *SchedulePolicyApplyConfiguration) *FleetAutoscalerPolicyApplyConfiguration {
+func (b *ChainEntryApplyConfiguration) WithSchedule(value *SchedulePolicyApplyConfiguration) *ChainEntryApplyConfiguration {
 	b.Schedule = value
 	return b
 }
@@ -91,7 +94,7 @@ func (b *FleetAutoscalerPolicyApplyConfiguration) WithSchedule(value *SchedulePo
 // WithChain sets the Chain field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Chain field is set to the value of the last call.
-func (b *FleetAutoscalerPolicyApplyConfiguration) WithChain(value v1.ChainPolicy) *FleetAutoscalerPolicyApplyConfiguration {
+func (b *ChainEntryApplyConfiguration) WithChain(value autoscalingv1.ChainPolicy) *ChainEntryApplyConfiguration {
 	b.Chain = &value
 	return b
 }
