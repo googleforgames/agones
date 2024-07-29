@@ -15,7 +15,7 @@
 # To redeploy agones-bot:
 #   make
 
-STORAGE := gs://agones-bot-pr-commenter-config
+STORAGE ?= gs://agones-bot-pr-commenter-config
 
 current_dir := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 
@@ -30,7 +30,7 @@ deploy:
 	gsutil cp $(current_dir)/agones-bot-pr-commenter.yaml $(STORAGE)
 	gcloud run deploy agones-bot-pr-commenter \
 		--project=agones-images \
-		--image="us-docker.pkg.dev/agones-images/ci/agones-bot" \
+		--image="us-docker.pkg.dev/agones-images/build/agones-bot" \
 		--service-account=agones-bot-pr-commenter@agones-images.iam.gserviceaccount.com \
 		--platform managed \
 		--no-allow-unauthenticated \

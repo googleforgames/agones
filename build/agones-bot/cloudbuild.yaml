@@ -23,4 +23,4 @@ images:
 options:
   dynamic_substitutions: true
 substitutions:
-  _REGISTRY: "us-docker.pkg.dev/${PROJECT_ID}/ci"
+  _REGISTRY: "us-docker.pkg.dev/${PROJECT_ID}/build"
