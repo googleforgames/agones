@@ -6,7 +6,7 @@ See [Install Agones using Helm](https://agones.dev/site/docs/installation/instal
 
 ## Development Work on Agones Custom Resource Definitions (CRDs)
 
-Agones [extends the Kubernetes API with CustomResourceDefinitions](https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/) for the kinds `Fleet`, `GameServerSet`, `GameServer`, `FleetAutoscaler`. (`GameServerAllocationPolicy` has been depcrecated in favor of `GameServerAllocation` which does not a have CRD.) Regardless of installation method, the definitions for the Agones Custom Resources are in the [agones/install/helm/agones/templates/crds](./templates/crds/) directory. The double braces `{{ }}` in the CRDs and elsewhere are [Helm chart template](https://helm.sh/docs/chart_template_guide/getting_started/) features.
+Agones [extends the Kubernetes API with CustomResourceDefinitions](https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/) for the kinds `Fleet`, `GameServerSet`, `GameServer`, `FleetAutoscaler`. (`GameServerAllocation` does not a have CRD.) Regardless of installation method, the definitions for the Agones Custom Resources are in the [agones/install/helm/agones/templates/crds](./templates/crds/) directory. The double braces `{{ }}` in the CRDs and elsewhere are [Helm chart template](https://helm.sh/docs/chart_template_guide/getting_started/) features.
 
 ### Adding a New Field to a CRD
 
