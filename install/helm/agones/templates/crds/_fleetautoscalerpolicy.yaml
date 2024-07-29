@@ -121,6 +121,8 @@ policy:
     schedule: # Defines when the policy is applied.
       type: object
       nullable: true
+      required:
+        - policy
       properties:
         between:
           type: object
@@ -148,6 +150,9 @@ policy:
       nullable: true
       items:
         type: object
+        nullable: true
+        required:
+          - type
         properties:
           id: # The Id of a chain entry.
             type: string

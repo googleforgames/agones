@@ -580,12 +580,14 @@ func (c *ChainPolicy) ValidateChainPolicy(fldPath *field.Path) field.ErrorList {
 		} else {
 			seenIDs[entry.ID] = true
 		}
-		if entry.Type == "" {
-			allErrs = append(allErrs, field.Required(fldPath.Index(i).Child("type"), "policy type is missing"))
+		// Ensure that chain entry has a policy
+		hasValidPolicy := entry.Buffer == nil && entry.Webhook == nil && entry.Counter == nil && entry.List == nil && entry.Schedule == nil
+		if entry.Type == "" || hasValidPolicy {
+			allErrs = append(allErrs, field.Required(fldPath.Index(i), "policy is missing"))
 		}
 		// Ensure the chain entry's policy is not a chain policy (to avoid nested chain policies)
 		if entry.Chain != nil {
-			allErrs = append(allErrs, field.Invalid(fldPath.Index(i).Child("type"), entry.FleetAutoscalerPolicy.Type, "chain policy cannot be used in chain policy"))
+			allErrs = append(allErrs, field.Invalid(fldPath.Index(i), entry.FleetAutoscalerPolicy.Type, "chain policy cannot be used in chain policy"))
 		}
 		// Validate the chain entry's policy
 		allErrs = append(allErrs, entry.FleetAutoscalerPolicy.ValidatePolicy(fldPath.Index(i).Child("policy"))...)
