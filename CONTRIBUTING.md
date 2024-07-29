@@ -107,6 +107,13 @@ You can see them on our calendar
 [mailing list or Slack](https://agones.dev/site/community/)
 for notifications.
 
+## Becoming a Contributor on Agones
+
+If you have submitted at least one Pull Request and had it merged, you may wish to become an official contributor.
+This will give you the ability to have tickets assigned to you (or you can assign tickets to yourself!).
+
+We have a [community membership guide](./docs/governance/community_membership.md), that outlines the process.
+
 ## Becoming an Approver on Agones
 
 If you are interested in becoming an Approver on the Agones project and getting commit access to the
