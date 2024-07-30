@@ -488,8 +488,6 @@ func TestFleetAutoscalerScheduleValidateUpdate(t *testing.T) {
 		},
 		"end time before start time": {
 			fas: modifiedFAS(func(fap *FleetAutoscalerPolicy) {
-				mustParseDate("3999-06-15T15:59:59Z")
-				mustParseDate("3999-05-15T15:59:59Z")
 				fap.Schedule.Between.Start = mustParseDate("3999-06-15T15:59:59Z")
 				fap.Schedule.Between.End = mustParseDate("3999-05-15T15:59:59Z")
 			}),
