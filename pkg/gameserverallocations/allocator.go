@@ -258,7 +258,7 @@ func (c *Allocator) allocateFromLocalCluster(ctx context.Context, gsa *allocatio
 	err := Retry(allocationRetry, func() error {
 		var err error
 		gs, err = c.allocate(ctx, gsa)
-		retryCount = retryCount + 1
+		retryCount++
 
 		if err != nil {
 			c.loggerForGameServerAllocation(gsa).WithError(err).Warn("Failed to Allocated. Retrying...")
@@ -667,21 +667,6 @@ func (c *Allocator) applyAllocationToGameServer(ctx context.Context, mp allocati
 
 	gsUpdate, updateErr := c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(ctx, gs, metav1.UpdateOptions{})
 
-	if updateErr != nil {
-		return gsUpdate, updateErr
-	}
-
-	/*
-
-		Still need to revisit this section to see how Patch vs Update affects allocation rate
-
-		patch, err := gs.Patch(gs)
-		if err != nil {
-			return nil, err
-		}
-
-			gsUpdate, updateErr := c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Patch(ctx, gs.GetObjectMeta().GetName(), types.JSONPatchType, patch, metav1.PatchOptions{})
-	*/
 	if updateErr != nil {
 		return gsUpdate, updateErr
 	}
