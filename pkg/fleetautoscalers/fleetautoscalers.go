@@ -393,12 +393,12 @@ func applyChainPolicy(c autoscalingv1.ChainPolicy, f *agonesv1.Fleet, gameServer
 			schedRep, schedLim, schedErr := applySchedulePolicy(entry.Schedule, f, gameServerLister, nodeCounts)
 			// If the schedule is active and no error was returned from the policy, then return the replicas, limited and error
 			if isScheduleActive(entry.Schedule) && schedErr == nil {
-				return schedRep, schedLim, schedErr
+				return schedRep, schedLim, nil
 			}
 		case autoscalingv1.WebhookPolicyType:
 			webhookRep, webhookLim, webhookErr := applyWebhookPolicy(entry.Webhook, f)
 			if webhookErr == nil {
-				return webhookRep, webhookLim, webhookErr
+				return webhookRep, webhookLim, nil
 			}
 		default:
 			return computeDesiredFleetSize(entry.FleetAutoscalerPolicy, f, gameServerLister, nodeCounts)
