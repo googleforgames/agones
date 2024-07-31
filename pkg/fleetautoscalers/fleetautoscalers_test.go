@@ -23,6 +23,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	admregv1 "k8s.io/api/admissionregistration/v1"
@@ -2126,6 +2127,276 @@ func TestApplyListPolicy(t *testing.T) {
 
 			if tc.want.wantErr {
 				assert.NotNil(t, err)
+			} else {
+				assert.Nil(t, err)
+				assert.Equal(t, tc.want.replicas, replicas)
+				assert.Equal(t, tc.want.limited, limited)
+			}
+		})
+	}
+}
+
+// nolint:dupl  // Linter errors on lines are duplicate of TestApplySchedulePolicy
+// NOTE: Does not test for the validity of a fleet autoscaler policy (ValidateSchedulePolicy)
+func TestApplySchedulePolicy(t *testing.T) {
+	t.Parallel()
+
+	nc := map[string]gameservers.NodeCount{
+		"n1": {Ready: 1, Allocated: 1},
+	}
+	modifiedFleet := func(f func(*agonesv1.Fleet)) *agonesv1.Fleet {
+		_, fleet := defaultFixtures()
+		f(fleet)
+		return fleet
+	}
+
+	type expected struct {
+		replicas int32
+		limited  bool
+		err      string
+	}
+
+	testCases := map[string]struct {
+		fleet                   *agonesv1.Fleet
+		featureFlags            string
+		specReplicas            int32
+		statusReplicas          int32
+		statusAllocatedReplicas int32
+		statusReadyReplicas     int32
+		sp                      *autoscalingv1.SchedulePolicy
+		gsList                  []agonesv1.GameServer
+		now                     func() time.Time
+		want                    expected
+	}{
+		"differing start and end timezones": {},
+		"daylight saving time start": {
+			featureFlags: string(utilruntime.FeatureScheduledAutoscaler) + "=true",
+			sp:           &autoscalingv1.SchedulePolicy{},
+			want: expected{
+				replicas: 0,
+				limited:  false,
+				err:      "",
+			},
+		},
+		"daylight saving time end": {
+			featureFlags: string(utilruntime.FeatureScheduledAutoscaler) + "=true",
+			sp:           &autoscalingv1.SchedulePolicy{},
+			},
+			want: expected{
+				replicas: 0,
+				limited:  false,
+				err:      "",
+			},
+		},
+		"daylight saving time cron time": {
+			featureFlags: string(utilruntime.FeatureScheduledAutoscaler) + "=true",
+			sp:           &autoscalingv1.SchedulePolicy{},
+			want: expected{
+				replicas: 0,
+				limited:  false,
+				err:      "",
+			},
+		},
+		"leap year time change": {
+			featureFlags: string(utilruntime.FeatureScheduledAutoscaler) + "=true",
+			sp:           &autoscalingv1.SchedulePolicy{},
+			want: expected{
+				replicas: 0,
+				limited:  false,
+				err:      "",
+			},
+		},
+		"new year": {},
+	}
+
+	utilruntime.FeatureTestMutex.Lock()
+	defer utilruntime.FeatureTestMutex.Unlock()
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			err := utilruntime.ParseFeatures(tc.featureFlags)
+			assert.NoError(t, err)
+
+			// For Counters and Lists
+			m := agtesting.NewMocks()
+			m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+				return true, &agonesv1.GameServerList{Items: tc.gsList}, nil
+			})
+
+			informer := m.AgonesInformerFactory.Agones().V1()
+			_, cancel := agtesting.StartInformers(m,
+				informer.GameServers().Informer().HasSynced)
+			defer cancel()
+
+			replicas, limited, err := applySchedulePolicy(*tc.sp, tc.fleet, informer.GameServers().Lister(), nc)
+
+			if tc.want.err != "" && assert.NotNil(t, err) {
+				assert.Equal(t, tc.want.err, err.Error())
+			} else {
+				assert.Nil(t, err)
+				assert.Equal(t, tc.want.replicas, replicas)
+				assert.Equal(t, tc.want.limited, limited)
+			}
+		})
+	}
+}
+
+// nolint:dupl  // Linter errors on lines are duplicate of TestApplyChainPolicy
+// NOTE: Does not test for the validity of a fleet autoscaler policy (ValidateChainPolicy)
+func TestApplyChainPolicy(t *testing.T) {
+	t.Parallel()
+
+	nc := map[string]gameservers.NodeCount{
+		"n1": {Ready: 1, Allocated: 1},
+	}
+	modifiedFleet := func(f func(*agonesv1.Fleet)) *agonesv1.Fleet {
+		_, fleet := defaultFixtures()
+		f(fleet)
+		return fleet
+	}
+
+	type expected struct {
+		replicas int32
+		limited  bool
+		err      string
+	}
+
+	testCases := map[string]struct {
+		fleet                   *agonesv1.Fleet
+		featureFlags            string
+		specReplicas            int32
+		statusReplicas          int32
+		statusAllocatedReplicas int32
+		statusReadyReplicas     int32
+		cp                      *autoscalingv1.ChainPolicy
+		gsList                  []agonesv1.GameServer
+		now                     func() time.Time
+		want                    expected
+	}{
+		"scheduled autoscaler feature flag not enabled": {
+			fleet: modifiedFleet(func(f *agonesv1.Fleet) {
+				f.Spec.Template.Spec.Lists = make(map[string]agonesv1.ListStatus)
+				f.Spec.Template.Spec.Lists["gamers"] = agonesv1.ListStatus{
+					Values:   []string{},
+					Capacity: 7}
+				f.Status.Replicas = 10
+				f.Status.ReadyReplicas = 5
+				f.Status.AllocatedReplicas = 5
+				f.Status.Lists = make(map[string]agonesv1.AggregatedListStatus)
+				f.Status.Lists["gamers"] = agonesv1.AggregatedListStatus{
+					Count:    31,
+					Capacity: 70,
+				}
+			}),
+			featureFlags: string(utilruntime.FeatureScheduledAutoscaler) + "=false",
+			cp:           &autoscalingv1.ChainPolicy{},
+			now: func() time.Time {
+				return time.Time{}
+			},
+			want: expected{
+				replicas: 0,
+				limited:  false,
+				err:      "",
+			},
+		},
+		"nil chain policy": {
+			featureFlags: string(utilruntime.FeatureScheduledAutoscaler) + "=true",
+			cp:           nil,
+			now: func() time.Time {
+				return time.Time{}
+			},
+			want: expected{
+				replicas: 0,
+				limited:  false,
+				err:      "",
+			},
+		},
+		"default policy": {
+			featureFlags: string(utilruntime.FeatureScheduledAutoscaler) + "=true",
+			cp: &autoscalingv1.ChainPolicy{
+				{
+					ID:                    "",
+					FleetAutoscalerPolicy: autoscalingv1.FleetAutoscalerPolicy{},
+				},
+			},
+			want: expected{
+				replicas: 5,
+				limited:  false,
+				err:      "",
+			},
+		},
+		"one webhook policy, no default policy":  {},
+		"one webhook policy, one default policy": {},
+		"two inactive schedule entries, no default": {
+			featureFlags: string(utilruntime.FeatureScheduledAutoscaler) + "=true",
+			cp: &autoscalingv1.ChainPolicy{
+				{
+					ID:                    "",
+					FleetAutoscalerPolicy: autoscalingv1.FleetAutoscalerPolicy{
+						// Between: autoscalingv1.Between{
+						// 	Start: "00:00",
+						// },
+					},
+				},
+				{
+					ID:                    "",
+					FleetAutoscalerPolicy: autoscalingv1.FleetAutoscalerPolicy{},
+				},
+			},
+			want: expected{
+				replicas: 0,
+				limited:  false,
+				err:      "",
+			},
+		},
+		"two inactive schedules entries, one default": {
+			featureFlags: string(utilruntime.FeatureScheduledAutoscaler) + "=true",
+			cp: &autoscalingv1.ChainPolicy{
+				{
+					ID:                    "",
+					FleetAutoscalerPolicy: autoscalingv1.FleetAutoscalerPolicy{},
+				},
+				{
+					ID:                    "",
+					FleetAutoscalerPolicy: autoscalingv1.FleetAutoscalerPolicy{},
+				},
+				{
+					ID:                    "",
+					FleetAutoscalerPolicy: autoscalingv1.FleetAutoscalerPolicy{},
+				},
+			},
+			want: expected{
+				replicas: 5,
+				limited:  false,
+				err:      "",
+			},
+		},
+		"two default entries": {},
+	}
+
+	utilruntime.FeatureTestMutex.Lock()
+	defer utilruntime.FeatureTestMutex.Unlock()
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			err := utilruntime.ParseFeatures(tc.featureFlags)
+			assert.NoError(t, err)
+
+			// For Counters and Lists
+			m := agtesting.NewMocks()
+			m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+				return true, &agonesv1.GameServerList{Items: tc.gsList}, nil
+			})
+
+			informer := m.AgonesInformerFactory.Agones().V1()
+			_, cancel := agtesting.StartInformers(m,
+				informer.GameServers().Informer().HasSynced)
+			defer cancel()
+
+			replicas, limited, err := applyChainPolicy(*tc.cp, tc.fleet, informer.GameServers().Lister(), nc)
+
+			if tc.want.err != "" && assert.NotNil(t, err) {
+				assert.Equal(t, tc.want.err, err.Error())
 			} else {
 				assert.Nil(t, err)
 				assert.Equal(t, tc.want.replicas, replicas)
