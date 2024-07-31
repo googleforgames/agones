@@ -63,7 +63,7 @@ func computeDesiredFleetSize(pol autoscalingv1.FleetAutoscalerPolicy, f *agonesv
 	case autoscalingv1.ListPolicyType:
 		return applyCounterOrListPolicy(nil, pol.List, f, gameServerLister, nodeCounts)
 	case autoscalingv1.SchedulePolicyType:
-		return applySchedulePolicy(pol.Schedule, f, gameServerLister, nodeCounts)
+		return applySchedulePolicy(pol.Schedule, f, gameServerLister, nodeCounts, time.Now())
 	case autoscalingv1.ChainPolicyType:
 		return applyChainPolicy(pol.Chain, f, gameServerLister, nodeCounts)
 	}
@@ -367,17 +367,25 @@ func applyCounterOrListPolicy(c *autoscalingv1.CounterPolicy, l *autoscalingv1.L
 	return 0, false, errors.Errorf("unable to apply ListPolicy %v", l)
 }
 
-func applySchedulePolicy(s *autoscalingv1.SchedulePolicy, f *agonesv1.Fleet, gameServerLister listeragonesv1.GameServerLister, nodeCounts map[string]gameservers.NodeCount) (int32, bool, error) {
+func applySchedulePolicy(s *autoscalingv1.SchedulePolicy, f *agonesv1.Fleet, gameServerLister listeragonesv1.GameServerLister, nodeCounts map[string]gameservers.NodeCount, currentTime time.Time) (int32, bool, error) {
 	// Ensure the scheduled autoscaler feature gate is enabled
 	if !runtime.FeatureEnabled(runtime.FeatureScheduledAutoscaler) {
 		return 0, false, errors.Errorf("cannot apply SchedulePolicy unless feature flag %s is enabled", runtime.FeatureScheduledAutoscaler)
 	}
 
-	if isScheduleActive(s) {
+	fmt.Println("Above")
+	if isScheduleActive(s, currentTime) {
+		fmt.Println("Inside")
 		return computeDesiredFleetSize(s.Policy, f, gameServerLister, nodeCounts)
 	}
 
-	return f.Status.Replicas, false, nil
+	var replicas int32
+	fmt.Println("Outside")
+	if f != nil {
+		replicas = f.Status.Replicas
+	}
+
+	return replicas, false, nil
 }
 
 func applyChainPolicy(c autoscalingv1.ChainPolicy, f *agonesv1.Fleet, gameServerLister listeragonesv1.GameServerLister, nodeCounts map[string]gameservers.NodeCount) (int32, bool, error) {
@@ -390,9 +398,9 @@ func applyChainPolicy(c autoscalingv1.ChainPolicy, f *agonesv1.Fleet, gameServer
 	for _, entry := range c {
 		switch entry.Type {
 		case autoscalingv1.SchedulePolicyType:
-			schedRep, schedLim, schedErr := applySchedulePolicy(entry.Schedule, f, gameServerLister, nodeCounts)
+			schedRep, schedLim, schedErr := applySchedulePolicy(entry.Schedule, f, gameServerLister, nodeCounts, time.Now())
 			// If the schedule is active and no error was returned from the policy, then return the replicas, limited and error
-			if isScheduleActive(entry.Schedule) && schedErr == nil {
+			if isScheduleActive(entry.Schedule, time.Now()) && schedErr == nil {
 				return schedRep, schedLim, nil
 			}
 		case autoscalingv1.WebhookPolicyType:
@@ -409,30 +417,34 @@ func applyChainPolicy(c autoscalingv1.ChainPolicy, f *agonesv1.Fleet, gameServer
 }
 
 // isScheduleActive checks if a chain entry's is active and returns a boolean, true if active, false otherwise
-func isScheduleActive(s *autoscalingv1.SchedulePolicy) bool {
-	now := time.Now()
-	scheduleDelta := time.Minute * -1
+func isScheduleActive(s *autoscalingv1.SchedulePolicy, currentTime time.Time) bool {
+	// var now = time.Now()
+	// fmt.Printf("Time Now Is: %s\n", now)
+	cronDelta := time.Minute * -2
 
 	// If a start time is present and the current time is before the start time, the schedule is inactive so return false
 	startTime := s.Between.Start.Time
-	if !startTime.IsZero() && now.Before(startTime) {
+	if !startTime.IsZero() && currentTime.Before(startTime) {
+		fmt.Println("ONE")
 		return false
 	}
 
 	// If an end time is present and the current time is after the end time, the schedule is inactive so return false
 	endTime := s.Between.End.Time
-	if !endTime.IsZero() && now.After(endTime) {
+	if !endTime.IsZero() && currentTime.After(endTime) {
+		fmt.Println("TWO")
 		return false
 	}
 
 	// If no startCron field is specified, then it's automatically true (duration is no longer relevant since we're always running)
 	if s.ActivePeriod.StartCron == "" {
+		fmt.Println("THREE")
 		return true
 	}
 
 	location, _ := time.LoadLocation(s.ActivePeriod.Timezone)
 	startCron, _ := cron.ParseStandard(s.ActivePeriod.StartCron)
-	nextStart := startCron.Next(now.In(location)).Add(scheduleDelta)
+	nextStartTime := startCron.Next(currentTime.In(location)).Add(cronDelta)
 	duration, err := time.ParseDuration(s.ActivePeriod.Duration)
 
 	// If there's an err, then the duration field is empty, meaning duration is indefinite
@@ -442,10 +454,14 @@ func isScheduleActive(s *autoscalingv1.SchedulePolicy) bool {
 
 	// If the current time is after the next start time, and the duration is indefinite or the current time is before the next start time + duration,
 	// then return true
-	if now.After(nextStart) && (duration == 0 || now.Before(nextStart.Add(duration))) {
+	fmt.Printf("Current Time: %s\n", currentTime)
+	fmt.Printf("Next Start Time: %s\n", nextStartTime)
+	if currentTime.After(nextStartTime) && (duration == 0 || currentTime.Before(nextStartTime.Add(duration))) {
+		fmt.Println("FOUR")
 		return true
 	}
 
+	fmt.Println("FIVE")
 	return false
 }
 

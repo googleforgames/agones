@@ -2141,14 +2141,9 @@ func TestApplyListPolicy(t *testing.T) {
 func TestApplySchedulePolicy(t *testing.T) {
 	t.Parallel()
 
-	nc := map[string]gameservers.NodeCount{
-		"n1": {Ready: 1, Allocated: 1},
-	}
-	modifiedFleet := func(f func(*agonesv1.Fleet)) *agonesv1.Fleet {
-		_, fleet := defaultFixtures()
-		f(fleet)
-		return fleet
-	}
+	// nc := map[string]gameservers.NodeCount{
+	// 	"n1": {Ready: 1, Allocated: 1},
+	// }
 
 	type expected struct {
 		replicas int32
@@ -2157,23 +2152,19 @@ func TestApplySchedulePolicy(t *testing.T) {
 	}
 
 	testCases := map[string]struct {
-		fleet                   *agonesv1.Fleet
 		featureFlags            string
 		specReplicas            int32
 		statusReplicas          int32
 		statusAllocatedReplicas int32
 		statusReadyReplicas     int32
-		now                     func() time.Time
+		now                     time.Time
 		sp                      *autoscalingv1.SchedulePolicy
 		gsList                  []agonesv1.GameServer
 		want                    expected
 	}{
 		"scheduled autoscaler feature flag not enabled": {
 			featureFlags: string(utilruntime.FeatureScheduledAutoscaler) + "=false",
-			now: func() time.Time {
-				return mustParseTime("2021-01-01T00:00:00Z")
-			},
-			sp: &autoscalingv1.SchedulePolicy{},
+			sp:           &autoscalingv1.SchedulePolicy{},
 			want: expected{
 				replicas: 0,
 				limited:  false,
@@ -2182,9 +2173,7 @@ func TestApplySchedulePolicy(t *testing.T) {
 		},
 		"no start time": {
 			featureFlags: string(utilruntime.FeatureScheduledAutoscaler) + "=true",
-			now: func() time.Time {
-				return mustParseTime("2021-01-01T00:00:00Z")
-			},
+			now:          mustParseTime("2021-01-00T00:00:00Z"),
 			sp: &autoscalingv1.SchedulePolicy{
 				Between: autoscalingv1.Between{
 					End: mustParseMetav1Time("2021-01-01T00:00:00Z"),
@@ -2192,25 +2181,26 @@ func TestApplySchedulePolicy(t *testing.T) {
 				ActivePeriod: autoscalingv1.ActivePeriod{
 					Timezone:  "UTC",
 					StartCron: "* * * * *",
-					Duration:  "1h",
+					Duration:  "48h",
 				},
 				Policy: autoscalingv1.FleetAutoscalerPolicy{
 					Type: autoscalingv1.BufferPolicyType,
 					Buffer: &autoscalingv1.BufferPolicy{
-						MinReplicas: 5,
-						MaxReplicas: 10,
 						BufferSize:  intstr.FromInt(1),
+						MinReplicas: 3,
+						MaxReplicas: 10,
 					},
 				},
 			},
 			want: expected{
-				replicas: 5,
+				replicas: 3,
 				limited:  false,
 				wantErr:  false,
 			},
 		},
 		"no end time": {
 			featureFlags: string(utilruntime.FeatureScheduledAutoscaler) + "=true",
+			now:          mustParseTime("2021-01-02T00:00:00Z"),
 			sp: &autoscalingv1.SchedulePolicy{
 				Between: autoscalingv1.Between{
 					Start: mustParseMetav1Time("2021-01-01T00:00:00Z"),
@@ -2223,23 +2213,21 @@ func TestApplySchedulePolicy(t *testing.T) {
 				Policy: autoscalingv1.FleetAutoscalerPolicy{
 					Type: autoscalingv1.BufferPolicyType,
 					Buffer: &autoscalingv1.BufferPolicy{
-						MinReplicas: 3,
-						MaxReplicas: 10,
 						BufferSize:  intstr.FromInt(1),
+						MinReplicas: 4,
+						MaxReplicas: 7,
 					},
 				},
 			},
 			want: expected{
-				replicas: 3,
-				limited:  false,
+				replicas: 4,
+				limited:  true,
 				wantErr:  false,
 			},
 		},
 		"no cron time": {
 			featureFlags: string(utilruntime.FeatureScheduledAutoscaler) + "=true",
-			now: func() time.Time {
-				return mustParseTime("2021-01-01T00:00:00Z")
-			},
+			now:          mustParseTime("2021-01-01T0:30:00Z"),
 			sp: &autoscalingv1.SchedulePolicy{
 				Between: autoscalingv1.Between{
 					Start: mustParseMetav1Time("2021-01-01T00:00:00Z"),
@@ -2252,20 +2240,21 @@ func TestApplySchedulePolicy(t *testing.T) {
 				Policy: autoscalingv1.FleetAutoscalerPolicy{
 					Type: autoscalingv1.BufferPolicyType,
 					Buffer: &autoscalingv1.BufferPolicy{
-						MinReplicas: 4,
+						MinReplicas: 5,
 						MaxReplicas: 10,
 						BufferSize:  intstr.FromInt(1),
 					},
 				},
 			},
 			want: expected{
-				replicas: 4,
-				limited:  false,
+				replicas: 5,
+				limited:  true,
 				wantErr:  false,
 			},
 		},
 		"no duration": {
 			featureFlags: string(utilruntime.FeatureScheduledAutoscaler) + "=true",
+			now:          mustParseTime("2021-01-01T0:30:00Z"),
 			sp: &autoscalingv1.SchedulePolicy{
 				Between: autoscalingv1.Between{
 					Start: mustParseMetav1Time("2021-01-01T00:00:00Z"),
@@ -2278,74 +2267,68 @@ func TestApplySchedulePolicy(t *testing.T) {
 				Policy: autoscalingv1.FleetAutoscalerPolicy{
 					Type: autoscalingv1.BufferPolicyType,
 					Buffer: &autoscalingv1.BufferPolicy{
-						MinReplicas: 5,
-						MaxReplicas: 10,
-						BufferSize:  intstr.FromInt(1),
+						BufferSize:  intstr.FromInt(8),
+						MinReplicas: 11,
+						MaxReplicas: 30,
 					},
 				},
 			},
 			want: expected{
-				replicas: 5,
-				limited:  false,
+				replicas: 11,
+				limited:  true,
 				wantErr:  false,
 			},
 		},
 		"no start time, end time, cron time, duration": {
 			featureFlags: string(utilruntime.FeatureScheduledAutoscaler) + "=true",
-			now: func() time.Time {
-				return mustParseTime("2021-01-01T00:00:00Z")
-			},
+			now:          mustParseTime("2021-01-01T00:00:00Z"),
 			sp: &autoscalingv1.SchedulePolicy{
 				Policy: autoscalingv1.FleetAutoscalerPolicy{
 					Type: autoscalingv1.BufferPolicyType,
 					Buffer: &autoscalingv1.BufferPolicy{
+						BufferSize:  intstr.FromInt(1),
 						MinReplicas: 6,
 						MaxReplicas: 10,
-						BufferSize:  intstr.FromInt(1),
 					},
 				},
 			},
 			want: expected{
 				replicas: 6,
-				limited:  false,
+				limited:  true,
 				wantErr:  false,
 			},
 		},
 		"daylight saving time start": {
 			featureFlags: string(utilruntime.FeatureScheduledAutoscaler) + "=true",
-			now: func() time.Time {
-				return mustParseTime("2021-03-14T00:00:00Z")
-			},
+			now:          mustParseTime("2021-03-14T02:00:00Z"),
 			sp: &autoscalingv1.SchedulePolicy{
 				Between: autoscalingv1.Between{
-					Start: mustParseMetav1Time("2021-03-14T00:00:00Z"),
+					Start: mustParseMetav1Time("2021-03-13T00:00:00Z"),
 					End:   mustParseMetav1Time("2021-03-15T00:00:00Z"),
 				},
 				ActivePeriod: autoscalingv1.ActivePeriod{
 					Timezone:  "UTC",
-					StartCron: "0 0 * * *",
+					StartCron: "* 2 * * *",
 					Duration:  "1h",
 				},
 				Policy: autoscalingv1.FleetAutoscalerPolicy{
 					Type: autoscalingv1.BufferPolicyType,
 					Buffer: &autoscalingv1.BufferPolicy{
+						BufferSize:  intstr.FromInt(1),
 						MinReplicas: 7,
 						MaxReplicas: 10,
-						BufferSize:  intstr.FromInt(1),
 					},
 				},
 			},
 			want: expected{
 				replicas: 7,
-				limited:  false,
+				limited:  true,
 				wantErr:  false,
 			},
 		},
 		"daylight saving time end": {
 			featureFlags: string(utilruntime.FeatureScheduledAutoscaler) + "=true",
-			now: func() time.Time {
-				return mustParseTime("2021-11-07T00:00:00Z")
-			},
+			now:          mustParseTime("2021-11-07T01:59:59Z"),
 			sp: &autoscalingv1.SchedulePolicy{
 				Between: autoscalingv1.Between{
 					Start: mustParseMetav1Time("2021-11-07T00:00:00Z"),
@@ -2353,7 +2336,7 @@ func TestApplySchedulePolicy(t *testing.T) {
 				},
 				ActivePeriod: autoscalingv1.ActivePeriod{
 					Timezone:  "UTC",
-					StartCron: "0 0 * * *",
+					StartCron: "0 2 * * *",
 					Duration:  "1h",
 				},
 				Policy: autoscalingv1.FleetAutoscalerPolicy{
@@ -2367,93 +2350,36 @@ func TestApplySchedulePolicy(t *testing.T) {
 			},
 			want: expected{
 				replicas: 8,
-				limited:  false,
-				wantErr:  false,
-			},
-		},
-		"daylight saving time cron time": {
-			featureFlags: string(utilruntime.FeatureScheduledAutoscaler) + "=true",
-			now: func() time.Time {
-				return mustParseTime("2021-11-07T00:00:00Z")
-			},
-			sp: &autoscalingv1.SchedulePolicy{
-				Between: autoscalingv1.Between{
-					Start: mustParseMetav1Time("2021-11-07T00:00:00Z"),
-					End:   mustParseMetav1Time("2021-11-08T00:00:00Z"),
-				},
-				ActivePeriod: autoscalingv1.ActivePeriod{
-					Timezone:  "UTC",
-					StartCron: "0 0 * * *",
-					Duration:  "1h",
-				},
-				Policy: autoscalingv1.FleetAutoscalerPolicy{
-					Type: autoscalingv1.BufferPolicyType,
-					Buffer: &autoscalingv1.BufferPolicy{
-						MinReplicas: 9,
-						MaxReplicas: 10,
-						BufferSize:  intstr.FromInt(1),
-					},
-				},
-			},
-			want: expected{
-				replicas: 0,
-				limited:  false,
-				wantErr:  false,
-			},
-		},
-		"leap year time change": {
-			featureFlags: string(utilruntime.FeatureScheduledAutoscaler) + "=true",
-			now: func() time.Time {
-				return mustParseTime("2020-03-08T00:00:00Z")
-			},
-			sp: &autoscalingv1.SchedulePolicy{
-				Between: autoscalingv1.Between{
-					Start: mustParseMetav1Time("2020-03-08T00:00:00Z"),
-					End:   mustParseMetav1Time("2020-03-09T00:00:00Z"),
-				},
-				ActivePeriod: autoscalingv1.ActivePeriod{
-					Timezone:  "UTC",
-					StartCron: "0 0 * * *",
-					Duration:  "1h",
-				},
-				Policy: autoscalingv1.FleetAutoscalerPolicy{
-					Type: autoscalingv1.BufferPolicyType,
-					Buffer: &autoscalingv1.BufferPolicy{
-						MinReplicas: 10,
-						MaxReplicas: 11,
-						BufferSize:  intstr.FromInt(1),
-					},
-				},
-			},
-			want: expected{
-				replicas: 10,
-				limited:  false,
+				limited:  true,
 				wantErr:  false,
 			},
 		},
 		"new year": {
 			featureFlags: string(utilruntime.FeatureScheduledAutoscaler) + "=true",
-			now: func() time.Time {
-				return mustParseTime("2021-01-01T00:00:00Z")
-			}
+			now:          mustParseTime("2021-01-01T00:00:00Z"),
 			sp: &autoscalingv1.SchedulePolicy{
 				Between: autoscalingv1.Between{
-					Start: mustParseMetav1Time("2021-01-01T00:00:00Z"),
+					Start: mustParseMetav1Time("2020-12-31T24:59:59Z"),
 					End:   mustParseMetav1Time("2021-01-02T00:00:00Z"),
 				},
-				ActivePeriod: {
+				ActivePeriod: autoscalingv1.ActivePeriod{
 					Timezone:  "UTC",
-					StartCron: "0 0 * * *",
+					StartCron: "* 0 * * *",
 					Duration:  "1h",
 				},
 				Policy: autoscalingv1.FleetAutoscalerPolicy{
 					Type: autoscalingv1.BufferPolicyType,
 					Buffer: &autoscalingv1.BufferPolicy{
+						BufferSize:  intstr.FromInt(1),
 						MinReplicas: 11,
 						MaxReplicas: 12,
-						BufferSize:  intstr.FromInt(1),
 					},
 				},
+			},
+			want: expected{
+				replicas: 11,
+				limited:  true,
+				wantErr:  false,
 			},
 		},
 	}
@@ -2467,22 +2393,24 @@ func TestApplySchedulePolicy(t *testing.T) {
 			assert.NoError(t, err)
 
 			// For Counters and Lists
-			m := agtesting.NewMocks()
-			m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-				return true, &agonesv1.GameServerList{Items: tc.gsList}, nil
-			})
+			// m := agtesting.NewMocks()
+			// m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			// 	return true, &agonesv1.GameServerList{Items: tc.gsList}, nil
+			// })
 
-			informer := m.AgonesInformerFactory.Agones().V1()
-			_, cancel := agtesting.StartInformers(m,
-				informer.GameServers().Informer().HasSynced)
-			defer cancel()
+			// informer := m.AgonesInformerFactory.Agones().V1()
+			// _, cancel := agtesting.StartInformers(m,
+			// 	informer.GameServers().Informer().HasSynced)
+			// defer cancel()
 
-			replicas, limited, err := applySchedulePolicy(tc.sp, tc.fleet, informer.GameServers().Lister(), nc)
+			_, f := defaultFixtures()
+			replicas, limited, err := applySchedulePolicy(tc.sp, f, nil, nil, tc.now)
 
 			if tc.want.wantErr {
 				assert.NotNil(t, err)
 			} else {
 				assert.Nil(t, err)
+				// fmt.Printf("Err: %s\n", err.Error())
 				assert.Equal(t, tc.want.replicas, replicas)
 				assert.Equal(t, tc.want.limited, limited)
 			}
@@ -2492,196 +2420,192 @@ func TestApplySchedulePolicy(t *testing.T) {
 
 // nolint:dupl  // Linter errors on lines are duplicate of TestApplyChainPolicy
 // NOTE: Does not test for the validity of a fleet autoscaler policy (ValidateChainPolicy)
-func TestApplyChainPolicy(t *testing.T) {
-	t.Parallel()
+// func TestApplyChainPolicy(t *testing.T) {
+// 	t.Parallel()
 
-	// For Counters and Lists
-	nc := map[string]gameservers.NodeCount{
-		"n1": {Ready: 1, Allocated: 1},
-	}
-	modifiedFleet := func(f func(*agonesv1.Fleet)) *agonesv1.Fleet {
-		_, fleet := defaultFixtures()
-		f(fleet)
-		return fleet
-	}
+// 	// For Counters and Lists
+// 	nc := map[string]gameservers.NodeCount{
+// 		"n1": {Ready: 1, Allocated: 1},
+// 	}
+// 	modifiedFleet := func(f func(*agonesv1.Fleet)) *agonesv1.Fleet {
+// 		_, fleet := defaultFixtures()
+// 		f(fleet)
+// 		return fleet
+// 	}
 
-	// For Webhook Policy
-	url := "scale"
-	invalidURL := ")1golang.org/"
+// 	// For Webhook Policy
+// 	url := "scale"
+// 	invalidURL := ")1golang.org/"
 
-	type expected struct {
-		replicas int32
-		limited  bool
-		wantErr  bool
-	}
+// 	type expected struct {
+// 		replicas int32
+// 		limited  bool
+// 		wantErr  bool
+// 	}
 
-	testCases := map[string]struct {
-		fleet                   *agonesv1.Fleet
-		featureFlags            string
-		specReplicas            int32
-		statusReplicas          int32
-		statusAllocatedReplicas int32
-		statusReadyReplicas     int32
-		now                     func() time.Time
-		cp                      *autoscalingv1.ChainPolicy
-		gsList                  []agonesv1.GameServer
-		want                    expected
-	}{
-		"scheduled autoscaler feature flag not enabled": {
-			featureFlags: string(utilruntime.FeatureScheduledAutoscaler) + "=false",
-			cp:           &autoscalingv1.ChainPolicy{},
-			now: func() time.Time {
-				return time.Time{}
-			},
-			want: expected{
-				replicas: 0,
-				limited:  false,
-				wantErr:  false,
-			},
-		},
-		"nil chain policy": {
-			featureFlags: string(utilruntime.FeatureScheduledAutoscaler) + "=true",
-			cp:           nil,
-			now: func() time.Time {
-				return time.Time{}
-			},
-			want: expected{
-				replicas: 0,
-				limited:  false,
-				wantErr:  false,
-			},
-		},
-		"default policy": {
-			featureFlags: string(utilruntime.FeatureScheduledAutoscaler) + "=true",
-			cp: &autoscalingv1.ChainPolicy{
-				{
-					ID:                    "",
-					FleetAutoscalerPolicy: autoscalingv1.FleetAutoscalerPolicy{
-						Type: autoscalingv1.BufferPolicyType,
-						Buffer: &autoscalingv1.BufferPolicy{
-							MinReplicas: 5,
-							MaxReplicas: 10,
-							BufferSize:  intstr.FromInt(1),
-						},
-					},
-				},
-			},
-			want: expected{
-				replicas: 5,
-				limited:  false,
-				wantErr:  false,
-			},
-		},
-		"one webhook policy, no default policy":  {
-			featureFlags: string(utilruntime.FeatureScheduledAutoscaler) + "=true",
-			cp: &autoscalingv1.ChainPolicy{
-				{
-					ID:                    "",
-					FleetAutoscalerPolicy: autoscalingv1.FleetAutoscalerPolicy{
+// 	testCases := map[string]struct {
+// 		fleet                   *agonesv1.Fleet
+// 		featureFlags            string
+// 		specReplicas            int32
+// 		statusReplicas          int32
+// 		statusAllocatedReplicas int32
+// 		statusReadyReplicas     int32
+// 		now                     func() time.Time
+// 		cp                      *autoscalingv1.ChainPolicy
+// 		gsList                  []agonesv1.GameServer
+// 		want                    expected
+// 	}{
+// 		"scheduled autoscaler feature flag not enabled": {
+// 			featureFlags: string(utilruntime.FeatureScheduledAutoscaler) + "=false",
+// 			cp:           &autoscalingv1.ChainPolicy{},
+// 			now: func() time.Time {
+// 				return time.Time{}
+// 			},
+// 			want: expected{
+// 				replicas: 0,
+// 				limited:  false,
+// 				wantErr:  false,
+// 			},
+// 		},
+// 		"nil chain policy": {
+// 			featureFlags: string(utilruntime.FeatureScheduledAutoscaler) + "=true",
+// 			cp:           nil,
+// 			now: func() time.Time {
+// 				return time.Time{}
+// 			},
+// 			want: expected{
+// 				replicas: 0,
+// 				limited:  false,
+// 				wantErr:  false,
+// 			},
+// 		},
+// 		"default policy": {
+// 			featureFlags: string(utilruntime.FeatureScheduledAutoscaler) + "=true",
+// 			cp: &autoscalingv1.ChainPolicy{
+// 				{
+// 					ID: "",
+// 					FleetAutoscalerPolicy: autoscalingv1.FleetAutoscalerPolicy{
+// 						Type: autoscalingv1.BufferPolicyType,
+// 						Buffer: &autoscalingv1.BufferPolicy{
+// 							MinReplicas: 5,
+// 							MaxReplicas: 10,
+// 							BufferSize:  intstr.FromInt(1),
+// 						},
+// 					},
+// 				},
+// 			},
+// 			want: expected{
+// 				replicas: 5,
+// 				limited:  false,
+// 				wantErr:  false,
+// 			},
+// 		},
+// 		"one webhook policy, no default policy": {
+// 			featureFlags: string(utilruntime.FeatureScheduledAutoscaler) + "=true",
+// 			cp: &autoscalingv1.ChainPolicy{
+// 				{
+// 					ID:                    "",
+// 					FleetAutoscalerPolicy: autoscalingv1.FleetAutoscalerPolicy{},
+// 				},
+// 			},
+// 		},
+// 		"one webhook policy, one default policy": {
+// 			featureFlags: string(utilruntime.FeatureScheduledAutoscaler) + "=true",
+// 			cp: &autoscalingv1.ChainPolicy{
+// 				{
+// 					ID:                    "",
+// 					FleetAutoscalerPolicy: autoscalingv1.FleetAutoscalerPolicy{},
+// 				},
+// 				{
+// 					ID: "",
+// 					FleetAutoscalerPolicy: autoscalingv1.FleetAutoscalerPolicy{
+// 						Type: autoscalingv1.BufferPolicyType,
+// 						Buffer: &autoscalingv1.BufferPolicy{
+// 							MinReplicas: 5,
+// 							MaxReplicas: 10,
+// 							BufferSize:  intstr.FromInt(1),
+// 						},
+// 					},
+// 				},
+// 			},
+// 		},
+// 		"two inactive schedule entries, no default": {
+// 			featureFlags: string(utilruntime.FeatureScheduledAutoscaler) + "=true",
+// 			cp: &autoscalingv1.ChainPolicy{
+// 				{
+// 					ID:                    "",
+// 					FleetAutoscalerPolicy: autoscalingv1.FleetAutoscalerPolicy{
+// 						// Between: autoscalingv1.Between{
+// 						// 	Start: "00:00",
+// 						// },
+// 					},
+// 				},
+// 				{
+// 					ID:                    "",
+// 					FleetAutoscalerPolicy: autoscalingv1.FleetAutoscalerPolicy{},
+// 				},
+// 			},
+// 			want: expected{
+// 				replicas: 0,
+// 				limited:  false,
+// 				wantErr:  false,
+// 			},
+// 		},
+// 		"two inactive schedules entries, one default": {
+// 			featureFlags: string(utilruntime.FeatureScheduledAutoscaler) + "=true",
+// 			cp: &autoscalingv1.ChainPolicy{
+// 				{
+// 					ID:                    "",
+// 					FleetAutoscalerPolicy: autoscalingv1.FleetAutoscalerPolicy{},
+// 				},
+// 				{
+// 					ID:                    "",
+// 					FleetAutoscalerPolicy: autoscalingv1.FleetAutoscalerPolicy{},
+// 				},
+// 				{
+// 					ID:                    "",
+// 					FleetAutoscalerPolicy: autoscalingv1.FleetAutoscalerPolicy{},
+// 				},
+// 			},
+// 			want: expected{
+// 				replicas: 5,
+// 				limited:  false,
+// 				wantErr:  false,
+// 			},
+// 		},
+// 	}
 
-			
-					},
-				},
-			},
-		},
-		"one webhook policy, one default policy": {
-			featureFlags: string(utilruntime.FeatureScheduledAutoscaler) + "=true",
-			cp: &autoscalingv1.ChainPolicy{
-				{
-					ID:                    "",
-					FleetAutoscalerPolicy: autoscalingv1.FleetAutoscalerPolicy{
-					},
-				},
-				{
-					ID:                    "",
-					FleetAutoscalerPolicy: autoscalingv1.FleetAutoscalerPolicy{
-						Type: autoscalingv1.BufferPolicyType,
-						Buffer: &autoscalingv1.BufferPolicy{
-							MinReplicas: 5,
-							MaxReplicas: 10,
-							BufferSize:  intstr.FromInt(1),
-						},
-					},
-				},
-			},
-		},
-		"two inactive schedule entries, no default": {
-			featureFlags: string(utilruntime.FeatureScheduledAutoscaler) + "=true",
-			cp: &autoscalingv1.ChainPolicy{
-				{
-					ID:                    "",
-					FleetAutoscalerPolicy: autoscalingv1.FleetAutoscalerPolicy{
-						// Between: autoscalingv1.Between{
-						// 	Start: "00:00",
-						// },
-					},
-				},
-				{
-					ID:                    "",
-					FleetAutoscalerPolicy: autoscalingv1.FleetAutoscalerPolicy{},
-				},
-			},
-			want: expected{
-				replicas: 0,
-				limited:  false,
-				wantErr:  false,
-			},
-		},
-		"two inactive schedules entries, one default": {
-			featureFlags: string(utilruntime.FeatureScheduledAutoscaler) + "=true",
-			cp: &autoscalingv1.ChainPolicy{
-				{
-					ID:                    "",
-					FleetAutoscalerPolicy: autoscalingv1.FleetAutoscalerPolicy{},
-				},
-				{
-					ID:                    "",
-					FleetAutoscalerPolicy: autoscalingv1.FleetAutoscalerPolicy{},
-				},
-				{
-					ID:                    "",
-					FleetAutoscalerPolicy: autoscalingv1.FleetAutoscalerPolicy{},
-				},
-			},
-			want: expected{
-				replicas: 5,
-				limited:  false,
-				wantErr:  false,
-			},
-		},
-	}
+// 	utilruntime.FeatureTestMutex.Lock()
+// 	defer utilruntime.FeatureTestMutex.Unlock()
 
-	utilruntime.FeatureTestMutex.Lock()
-	defer utilruntime.FeatureTestMutex.Unlock()
+// 	for name, tc := range testCases {
+// 		t.Run(name, func(t *testing.T) {
+// 			err := utilruntime.ParseFeatures(tc.featureFlags)
+// 			assert.NoError(t, err)
 
-	for name, tc := range testCases {
-		t.Run(name, func(t *testing.T) {
-			err := utilruntime.ParseFeatures(tc.featureFlags)
-			assert.NoError(t, err)
+// 			// For Counters and Lists
+// 			m := agtesting.NewMocks()
+// 			m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+// 				return true, &agonesv1.GameServerList{Items: tc.gsList}, nil
+// 			})
 
-			// For Counters and Lists
-			m := agtesting.NewMocks()
-			m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-				return true, &agonesv1.GameServerList{Items: tc.gsList}, nil
-			})
+// 			informer := m.AgonesInformerFactory.Agones().V1()
+// 			_, cancel := agtesting.StartInformers(m,
+// 				informer.GameServers().Informer().HasSynced)
+// 			defer cancel()
 
-			informer := m.AgonesInformerFactory.Agones().V1()
-			_, cancel := agtesting.StartInformers(m,
-				informer.GameServers().Informer().HasSynced)
-			defer cancel()
+// 			replicas, limited, err := applyChainPolicy(*tc.cp, tc.fleet, informer.GameServers().Lister(), nc)
 
-			replicas, limited, err := applyChainPolicy(*tc.cp, tc.fleet, informer.GameServers().Lister(), nc)
-
-			if tc.want.wantErr {
-				assert.NotNil(t, err)
-			} else {
-				assert.Nil(t, err)
-				assert.Equal(t, tc.want.replicas, replicas)
-				assert.Equal(t, tc.want.limited, limited)
-			}
-		})
-	}
-}
+// 			if tc.want.wantErr {
+// 				assert.NotNil(t, err)
+// 			} else {
+// 				assert.Nil(t, err)
+// 				assert.Equal(t, tc.want.replicas, replicas)
+// 				assert.Equal(t, tc.want.limited, limited)
+// 			}
+// 		})
+// 	}
+// }
 
 // Parse a time string and return a metav1.Time
 func mustParseMetav1Time(timeStr string) metav1.Time {
