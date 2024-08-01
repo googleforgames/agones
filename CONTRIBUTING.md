@@ -80,8 +80,7 @@ If you are working on a new feature, you may need to take feature stages into ac
 Continuous integration is provided by [Google Cloud Container Builder](https://cloud.google.com/container-builder/),
 through the [cloudbuilder.yaml](./cloudbuild.yaml) file found at the root of the directory.
 
-Build success/failure with relevant details are pushed automatically to pull requests via the not (yet 😉) opensourced
-build system.
+Build success/failure with relevant details are pushed automatically to pull requests via [agones-bot](./build/agones-bot/README.md).
 
 See the [Container Builder documentation](https://cloud.google.com/container-builder/docs/) for more details on
 how to edit and expand the build process.
