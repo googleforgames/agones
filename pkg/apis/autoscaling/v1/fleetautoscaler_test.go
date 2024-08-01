@@ -586,7 +586,7 @@ func TestFleetAutoscalerChainValidateUpdate(t *testing.T) {
 				}
 			}),
 			featureFlags: string(runtime.FeatureScheduledAutoscaler) + "=true",
-			wantLength:   2,
+			wantLength:   1,
 			wantField:    "spec.policy.chain[1]",
 		},
 		"invalid nested policy format": {

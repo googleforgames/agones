@@ -42,12 +42,21 @@ import (
 	"agones.dev/agones/pkg/util/runtime"
 )
 
+const maxDuration = "2540400h" // 290 Years
+
 var tlsConfig = &tls.Config{}
 var client = http.Client{
 	Timeout: 15 * time.Second,
 	Transport: &http.Transport{
 		TLSClientConfig: tlsConfig,
 	},
+}
+
+// InactiveScheduleError denotes an error for schedules that are not currently active.
+type InactiveScheduleError struct{}
+
+func (InactiveScheduleError) Error() string {
+	return "inactive schedule, policy not applicable"
 }
 
 // computeDesiredFleetSize computes the new desired size of the given fleet
@@ -65,7 +74,7 @@ func computeDesiredFleetSize(pol autoscalingv1.FleetAutoscalerPolicy, f *agonesv
 	case autoscalingv1.SchedulePolicyType:
 		return applySchedulePolicy(pol.Schedule, f, gameServerLister, nodeCounts, time.Now())
 	case autoscalingv1.ChainPolicyType:
-		return applyChainPolicy(pol.Chain, f, gameServerLister, nodeCounts)
+		return applyChainPolicy(pol.Chain, f, gameServerLister, nodeCounts, time.Now())
 	}
 
 	return 0, false, errors.New("wrong policy type, should be one of: Buffer, Webhook, Counter, List")
@@ -373,95 +382,101 @@ func applySchedulePolicy(s *autoscalingv1.SchedulePolicy, f *agonesv1.Fleet, gam
 		return 0, false, errors.Errorf("cannot apply SchedulePolicy unless feature flag %s is enabled", runtime.FeatureScheduledAutoscaler)
 	}
 
-	fmt.Println("Above")
 	if isScheduleActive(s, currentTime) {
-		fmt.Println("Inside")
 		return computeDesiredFleetSize(s.Policy, f, gameServerLister, nodeCounts)
 	}
 
-	var replicas int32
-	fmt.Println("Outside")
-	if f != nil {
-		replicas = f.Status.Replicas
-	}
-
-	return replicas, false, nil
+	// If the schedule wasn't active then return the current replica amount of the fleet
+	return f.Status.Replicas, false, &InactiveScheduleError{}
 }
 
-func applyChainPolicy(c autoscalingv1.ChainPolicy, f *agonesv1.Fleet, gameServerLister listeragonesv1.GameServerLister, nodeCounts map[string]gameservers.NodeCount) (int32, bool, error) {
+func applyChainPolicy(c autoscalingv1.ChainPolicy, f *agonesv1.Fleet, gameServerLister listeragonesv1.GameServerLister, nodeCounts map[string]gameservers.NodeCount, currentTime time.Time) (int32, bool, error) {
 	// Ensure the scheduled autoscaler feature gate is enabled
 	if !runtime.FeatureEnabled(runtime.FeatureScheduledAutoscaler) {
 		return 0, false, errors.Errorf("cannot apply ChainPolicy unless feature flag %s is enabled", runtime.FeatureScheduledAutoscaler)
 	}
 
+	replicas := f.Status.Replicas
+	var limited bool
+	var err error
+
 	// Loop over all entries in the chain
 	for _, entry := range c {
 		switch entry.Type {
 		case autoscalingv1.SchedulePolicyType:
-			schedRep, schedLim, schedErr := applySchedulePolicy(entry.Schedule, f, gameServerLister, nodeCounts, time.Now())
-			// If the schedule is active and no error was returned from the policy, then return the replicas, limited and error
-			if isScheduleActive(entry.Schedule, time.Now()) && schedErr == nil {
-				return schedRep, schedLim, nil
+			replicas, limited, err = applySchedulePolicy(entry.Schedule, f, gameServerLister, nodeCounts, currentTime)
+			// If no error was returned from the schedule policy (schedule is active and/or webhook policy within schedule was successful), then return the values given
+			if err == nil {
+				return replicas, limited, nil
 			}
 		case autoscalingv1.WebhookPolicyType:
-			webhookRep, webhookLim, webhookErr := applyWebhookPolicy(entry.Webhook, f)
-			if webhookErr == nil {
-				return webhookRep, webhookLim, nil
+			replicas, limited, err = applyWebhookPolicy(entry.Webhook, f)
+			// If no error was returned from the webhook policy, then return the values given
+			if err == nil {
+				return replicas, limited, nil
 			}
 		default:
+			// Every other policy type we just want to compute the desired fleet and return it
 			return computeDesiredFleetSize(entry.FleetAutoscalerPolicy, f, gameServerLister, nodeCounts)
 		}
+
 	}
 
-	return f.Status.Replicas, false, nil
+	// Fall off the chain
+	return replicas, limited, err
 }
 
 // isScheduleActive checks if a chain entry's is active and returns a boolean, true if active, false otherwise
 func isScheduleActive(s *autoscalingv1.SchedulePolicy, currentTime time.Time) bool {
-	// var now = time.Now()
-	// fmt.Printf("Time Now Is: %s\n", now)
-	cronDelta := time.Minute * -2
+	// Used for checking ahead of the schedule for daylight savings purposes
+	cronDelta := (time.Minute * -1) + (time.Second * -30)
 
-	// If a start time is present and the current time is before the start time, the schedule is inactive so return false
+	// If the current time is before the start time, the schedule is inactive so return false
 	startTime := s.Between.Start.Time
-	if !startTime.IsZero() && currentTime.Before(startTime) {
-		fmt.Println("ONE")
+	if currentTime.Before(startTime) {
 		return false
 	}
 
 	// If an end time is present and the current time is after the end time, the schedule is inactive so return false
 	endTime := s.Between.End.Time
 	if !endTime.IsZero() && currentTime.After(endTime) {
-		fmt.Println("TWO")
 		return false
 	}
 
 	// If no startCron field is specified, then it's automatically true (duration is no longer relevant since we're always running)
 	if s.ActivePeriod.StartCron == "" {
-		fmt.Println("THREE")
 		return true
 	}
 
+	// Ignore the error as validation is already done within the validateChainPolicy after being unmarshalled
 	location, _ := time.LoadLocation(s.ActivePeriod.Timezone)
-	startCron, _ := cron.ParseStandard(s.ActivePeriod.StartCron)
-	nextStartTime := startCron.Next(currentTime.In(location)).Add(cronDelta)
-	duration, err := time.ParseDuration(s.ActivePeriod.Duration)
 
-	// If there's an err, then the duration field is empty, meaning duration is indefinite
-	if err != nil {
-		duration = 0 // Indefinite duration if not set
+	// Ignore the error as validation is already done within the validateChainPolicy after being unmarshalled
+	startCron, _ := cron.ParseStandard(s.ActivePeriod.StartCron)
+
+	// Ignore the error as validation is already done within the validateChainPolicy after being unmarshalled.
+	// If the duration is empty set it to the largest duration possible (290 years)
+	duration, _ := time.ParseDuration(s.ActivePeriod.Duration)
+	if s.ActivePeriod.Duration == "" {
+		duration, _ = time.ParseDuration(maxDuration)
 	}
 
-	// If the current time is after the next start time, and the duration is indefinite or the current time is before the next start time + duration,
+	// Get the current time - duration
+	currentTimeMinusDuration := currentTime.Add(duration * -1)
+	// Take (current time - duration) to get the first available start time
+	cronStartTime := startCron.Next(currentTimeMinusDuration.In(location))
+	// Take the (cronStartTime + duration) to get the end time
+	cronEndTime := cronStartTime.Add(duration)
+
+	// If the current time is after the cronStartTime - 90 seconds (for daylight saving purposes) AND the current time before the cronEndTime
 	// then return true
-	fmt.Printf("Current Time: %s\n", currentTime)
-	fmt.Printf("Next Start Time: %s\n", nextStartTime)
-	if currentTime.After(nextStartTime) && (duration == 0 || currentTime.Before(nextStartTime.Add(duration))) {
-		fmt.Println("FOUR")
+	// Example: startCron = 0 14 * * * // 2:00 PM Everyday | duration = 1 hr | cronDelta = 90 seconds | currentTime = 2024-08-01T14:30:00Z | currentTimeMinusDuration = 2024-08-01T13:30:00Z
+	// then cronStartTime = 2024-08-01T14:00:00Z and cronEndTime = 2024-08-01T15:00:00Z
+	// and since currentTime > cronStartTime + cronDelta AND currentTime < cronEndTime, we return true
+	if currentTime.After(cronStartTime.Add(cronDelta)) && currentTime.Before(cronEndTime) {
 		return true
 	}
 
-	fmt.Println("FIVE")
 	return false
 }
 

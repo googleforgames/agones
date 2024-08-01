@@ -314,7 +314,8 @@ func (c *Controller) syncFleetAutoscaler(ctx context.Context, key string) error 
 
 	currentReplicas := fleet.Status.Replicas
 	desiredReplicas, scalingLimited, err := computeDesiredFleetSize(fas.Spec.Policy, fleet, c.gameServerLister, c.counter.Counts())
-	if err != nil {
+	// If there err is nil and not an inactive schedule error (ignorable in this case), then record the event
+	if err != nil && !errors.Is(err, InactiveScheduleError{}) {
 		c.recorder.Eventf(fas, corev1.EventTypeWarning, "FleetAutoscaler",
 			"Error calculating desired fleet size on FleetAutoscaler %s. Error: %s", fas.ObjectMeta.Name, err.Error())
 
