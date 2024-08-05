@@ -51,13 +51,13 @@ The following are steps to implement this:
 If you are upgrading a single cluster, we recommend creating a maintenance window, in which your game goes offline
 for the period of your upgrade, as there will be a short period in which Agones will be non-responsive during the upgrade.
 
-{{% feature publishVersion="1.43.0" %}}
+{{% feature publishVersion="1.99.0" %}}
 #### In-Place Agones Upgrades
 
 {{< alert color="warning" title="Warning" >}}
 Work is ongoing for [In-Place Agones Upgrades](https://github.com/googleforgames/agones/issues/3766),
-and the feature is currently in `Dev`. Please continue to use the multi-cluster strategy for
-production critical upgrades. Feedback on the upcoming `Alpha` and `Beta` releases is appreciated.
+and the feature is currently in `Alpha`. Please continue to use the multi-cluster strategy for
+production critical upgrades. Feedback on this `Alpha` feature is welcome and appreciated.
 {{< /alert >}}
 
 For In-Place Agones Upgrades we highly recommend installing using Helm. Helm has a significant
@@ -68,56 +68,46 @@ Note: By “controller derived configuration” we mean the parts of the Game Se
 are not part of the Game Server spec template that are instead passed to the Game Server through the
 controller, such as the FEATURE_GATES or the Agones SDK Image.
 
-##### Upgrade Existing Fleet (recommended)
-
-1. Run `helm upgrade my-release --install --atomic --wait --timeout 10m --namespace=agones-system`
-with all the appropriate arguments, such a `--version`, for your specific upgrade. Keep in mind that
-`helm upgrade` overwrites all `--set agones.` arguments, so these must be set for each upgrade. See
-[Helm Configuration]({{< relref "./Install Agones/helm.md" >}}) for a list of all available
-configurable parameters.
+1. Run `helm upgrade my-release agones/agones --install --atomic --wait --timeout 10m --namespace=agones-system` with all the appropriate arguments, such a `--version`, for your specific
+upgrade. Keep in mind that `helm upgrade` overwrites all `--set agones.` arguments, so these must be
+set for each upgrade. See [Helm Configuration]({{< relref "./Install Agones/helm.md" >}}) for a list
+of all available configurable parameters.
 2. Wait until the `helm upgrade` is complete.
-3. Kick off rolling update of existing Fleet.
-    1. Make any change to the Fleet Spec Template in your fleet.yaml and reapply with
-    `kubectl apply -f fleet.yaml`. We recommend you also add or update a label on the fleet as in
-    the next step.
-    2. If you have no changes to make to the existing Fleet Spec Template in the fleet.yaml,
-    then add a label to the spec.template.metadata.labels. This has the added advantage that Game
-    Servers can be selected for allocation by label. Reapply with `kubectl apply -f fleet.yaml`.
-    ```yaml
-    apiVersion: agones.dev/v1
-    kind: Fleet
-    metadata:
-      name: example-fleet
-    spec:
-      replicas: 2
-      template:
+3. To Upgrade the Fleet, or Not to Upgrade
+    1. *Option 1 -- Recommended* Kick off rolling update of the existing Fleet.
+        1. Make any change to the Fleet Spec Template in your fleet.yaml and reapply with
+        `kubectl apply -f fleet.yaml`. We recommend you also add or update a label on the fleet as in
+        the next step.
+        2. If you have no changes to make to the existing `spec.template` in the fleet.yaml, then either
+        add a label or annotation to the `spec.template.metadata`. Reapply with `kubectl apply -f fleet.yaml`.
+        ```yaml
+        apiVersion: agones.dev/v1
+        kind: Fleet
         metadata:
-          # Adding a label will start a Fleet rollout (RollingUpdate or Recreate based on the replacement strategy type) with the most up to date Agones config. The label can be any `key: value` pair.
-          labels:
-            release: 1.42.0
-    ```
+          name: example-fleet
+        spec:
+          replicas: 2
+          template:
+            metadata:
+              # Adding a label will start a Fleet rollout with the most up to date Agones config. The label can be any `key: value` pair.
+              labels:
+                release: 1.42.0
+        ```
+        3. Ready Game Servers will shut down (RollingUpdate or Recreate based on the Fleet replacement
+        strategy type) and be recreated on the new configuraiton. Allocated Game Servers will use the
+        existing configuration, and once they are set back to Ready, these Game Servers will shut down
+        and be replaced by Ready Game Servers at the new configuration.
+        4. Wait until all the previous Ready GameServers have been replaced by the new configuration.
 
-    3. This creates a new Game Server Set. Ready Game Servers will shut down and be recreated on
-    the new configuraiton on the new Game Server Set. Allocated Game Servers will use the existing
-    configuration, and once they are set back to Ready, these Game Servers will shut down and be
-    replaced by Ready Game Servers at the new configuration on the new Game Server Set.
-    4. The rollout is complete once there is one Game Server Set at the new configuration.
+    2. *Option 2 -- Not Recommended* Continue using Fleet at its existing configuration without kicking
+    off a Fleet upgrade.
+        1. Ready Game Servers and Allocated Game servers that return to the Ready state retain the old
+        configuration.
+        2. Any newly created Game Servers will be at the new configuration.
+        3. This make it difficult to track when the entire fleet is at a new configuration, and
+        increases the liklihood of having multiple Game Server configurations on the same Fleet.
 4. Run any other tests to ensure the Agones installation is working as expected.
 5. Congratulations - you have now upgraded to a new version of Agones! 👍
-
-##### Delay Upgrade to Existing Fleet (not recommended)
-
-1. Run `helm upgrade my-release --install --atomic --wait --timeout 10m --namespace=agones-system`
-with all the appropriate arguments, such a `--version`, for your specific upgrade. Keep in mind that
-`helm upgrade` overwrites all `--set agones.` arguments, so these must be set for each upgrade. See
-[Helm Configuration]({{< relref "./Install Agones/helm.md" >}}) for a list of all available
-configurable parameters.
-2. Continue using Fleet at its existing configuration without kicking off a Fleet upgrade.
-    1. Allocated Game servers that return to the Ready state retain the old configuration.
-    2. Any new Game Servers (either through manually increasing the number of replicas in
-    the fleet.yaml file or through an autoscaler) will be at the new configuration.
-3. Run any other tests to ensure the Agones installation is working as expected.
-4. Congratulations - you have now upgraded to a new version of Agones! 👍
 {{% /feature %}}
 
 #### Installation with install.yaml
