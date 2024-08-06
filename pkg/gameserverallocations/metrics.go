@@ -101,8 +101,8 @@ func (r *metrics) setStatus(status string) {
 }
 
 // setError set the latency status tag as error.
-func (r *metrics) setError(errorType string) {
-	r.mutate(tag.Update(keyStatus, errorType))
+func (r *metrics) setError() {
+	r.mutate(tag.Update(keyStatus, "error"))
 }
 
 // setRequest set request metric tags.

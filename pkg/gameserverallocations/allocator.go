@@ -193,7 +193,7 @@ func (c *Allocator) Allocate(ctx context.Context, gsa *allocationv1.GameServerAl
 	latency := c.newMetrics(ctx)
 	defer func() {
 		if err != nil {
-			latency.setError("error")
+			latency.setError()
 		}
 		latency.record()
 	}()
