@@ -265,9 +265,7 @@ func (c *Allocator) allocateFromLocalCluster(ctx context.Context, gsa *allocatio
 		} else {
 			latency.recordAllocationErrorRate(ctx, retryCount)
 		}
-
 		return err
-
 	})
 
 	if err != nil && err != ErrNoGameServer && err != ErrConflictInGameServerSelection {
@@ -664,7 +662,6 @@ func (c *Allocator) applyAllocationToGameServer(ctx context.Context, mp allocati
 	}
 
 	gsUpdate, updateErr := c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(ctx, gs, metav1.UpdateOptions{})
-
 	if updateErr != nil {
 		return gsUpdate, updateErr
 	}

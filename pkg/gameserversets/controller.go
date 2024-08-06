@@ -348,7 +348,6 @@ func (c *Controller) syncGameServerSet(ctx context.Context, key string) error {
 		if err := c.addMoreGameServers(ctx, gsSet, numServersToAdd); err != nil {
 			loggerForGameServerSet(c.baseLogger, gsSet).WithError(err).Warning("error adding game servers")
 		}
-
 	}
 
 	if len(toDelete) > 0 {
