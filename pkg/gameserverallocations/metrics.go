@@ -40,8 +40,8 @@ var (
 	keyStatus             = mt.MustTagKey("status")
 	keySchedulingStrategy = mt.MustTagKey("scheduling_strategy")
 
-	gameServerAllocationsLatency   = stats.Float64("gameserver_allocations/latency", "The duration of gameserver allocations", "s")
-	gameServerAllocationsErrorRate = stats.Int64("gameserver_allocations/errors", "The errors of gameserver allocations", "1")
+	gameServerAllocationsLatency    = stats.Float64("gameserver_allocations/latency", "The duration of gameserver allocations", "s")
+	gameServerAllocationsRetryTotal = stats.Int64("gameserver_allocations/errors", "The errors of gameserver allocations", "1")
 )
 
 func init() {
@@ -55,10 +55,10 @@ func init() {
 			TagKeys:     []tag.Key{keyFleetName, keyClusterName, keyMultiCluster, keyStatus, keySchedulingStrategy},
 		},
 		{
-			Name:        "gameserver_allocations_retry_rate",
-			Measure:     gameServerAllocationsErrorRate,
-			Description: "The distribution of gameserver allocation retry success rate",
-			Aggregation: view.Count(),
+			Name:        "gameserver_allocations_retry_total",
+			Measure:     gameServerAllocationsRetryTotal,
+			Description: "The count of gameserver allocation retry success rate",
+			Aggregation: view.Distribution(1, 2, 3, 4, 5),
 			TagKeys:     []tag.Key{keyFleetName, keyClusterName, keyMultiCluster, keyStatus, keySchedulingStrategy},
 		},
 	}
@@ -143,25 +143,8 @@ func (r *metrics) record() {
 	stats.Record(r.ctx, gameServerAllocationsLatency.M(time.Since(r.start).Seconds()))
 }
 
-// record the current allocation error rate.
-// We only get "Conflict" error types which correspond to status code 409 which maps
-// to StatusReasonAlreadyExists error as shown below
-/*
-From vendor/k8s.io/apimachinery/pkg/apis/meta/v1/types.go
-	// StatusReasonAlreadyExists means the resource you are creating already exists.
-	// Details (optional):
-	//   "kind" string - the kind attribute of the conflicting resource
-	//   "id"   string - the identifier of the conflicting resource
-	// Status code 409
-	StatusReasonAlreadyExists StatusReason = "AlreadyExists"
-
-	// StatusReasonConflict means the requested operation cannot be completed
-	// due to a conflict in the operation. The client may need to alter the
-	// request. Each resource may define custom details that indicate the
-	// nature of the conflict.
-	// Status code 409
-	StatusReasonConflict StatusReason = "Conflict"
-*/
-func (r *metrics) recordAllocationErrorRate() {
-	stats.Record(r.ctx, gameServerAllocationsErrorRate.M(int64(1)))
+// record the current allocation retry rate.
+func (r *metrics) recordAllocationErrorRate(ctx context.Context, retryCount int) {
+	mt.RecordWithTags(ctx, []tag.Mutator{tag.Upsert(keyStatus, "Success")},
+		gameServerAllocationsRetryTotal.M(int64(retryCount)))
 }
