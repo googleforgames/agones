@@ -16,6 +16,7 @@ package gameserversets
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	listerv1 "agones.dev/agones/pkg/client/listers/agones/v1"
@@ -94,5 +95,5 @@ func (r *metrics) setError(errorType string) {
 
 // setRequest set request metric tags.
 func (r *metrics) setRequest(count int) {
-	r.mutate(tag.Update(keyName, string(count)))
+	r.mutate(tag.Update(keyName, fmt.Sprint(count)))
 }
