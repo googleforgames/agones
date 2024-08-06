@@ -201,13 +201,13 @@ func (c *clientGoMetricAdapter) Register() {
 }
 
 func (clientGoMetricAdapter) Increment(ctx context.Context, code string, method string, host string) {
-	recordWithTags(ctx, []tag.Mutator{tag.Insert(keyStatusCode, code),
+	RecordWithTags(ctx, []tag.Mutator{tag.Insert(keyStatusCode, code),
 		tag.Insert(keyVerb, method)}, httpRequestTotalStats.M(int64(1)))
 }
 
 func (clientGoMetricAdapter) Observe(ctx context.Context, verb string, u url.URL, latency time.Duration) {
 	// url is without {namespace} and {name}, so cardinality of resulting metrics is low.
-	recordWithTags(ctx, []tag.Mutator{tag.Insert(keyVerb, verb),
+	RecordWithTags(ctx, []tag.Mutator{tag.Insert(keyVerb, verb),
 		tag.Insert(keyEndpoint, u.Path)}, httpRequestLatencyStats.M(latency.Seconds()))
 }
 

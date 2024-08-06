@@ -263,10 +263,8 @@ func (c *Allocator) allocateFromLocalCluster(ctx context.Context, gsa *allocatio
 		if err != nil {
 			c.loggerForGameServerAllocation(gsa).WithError(err).Warn("Failed to Allocated. Retrying...")
 		} else {
-			latency.setError(string("Success ") + fmt.Sprint(retryCount))
+			latency.recordAllocationErrorRate(ctx, retryCount)
 		}
-
-		latency.recordAllocationErrorRate()
 
 		return err
 
