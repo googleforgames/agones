@@ -42,7 +42,8 @@ var (
 	keyList       = MustTagKey("list")
 )
 
-func recordWithTags(ctx context.Context, mutators []tag.Mutator, ms ...stats.Measurement) {
+// RecordWithTags records a metric value and tags
+func RecordWithTags(ctx context.Context, mutators []tag.Mutator, ms ...stats.Measurement) {
 	if err := stats.RecordWithTags(ctx, mutators, ms...); err != nil {
 		logger.WithError(err).Warn("error while recoding stats")
 	}
