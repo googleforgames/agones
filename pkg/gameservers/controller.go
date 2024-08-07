@@ -56,7 +56,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/workqueue"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 )
 
 const (
@@ -769,9 +769,9 @@ func (c *Controller) sidecar(gs *agonesv1.GameServer) corev1.Container {
 	}
 
 	sidecar.SecurityContext = &corev1.SecurityContext{
-		AllowPrivilegeEscalation: pointer.Bool(false),
-		RunAsNonRoot:             pointer.Bool(true),
-		RunAsUser:                pointer.Int64(int64(c.sidecarRunAsUser)),
+		AllowPrivilegeEscalation: ptr.To(false),
+		RunAsNonRoot:             ptr.To(true),
+		RunAsUser:                ptr.To(int64(c.sidecarRunAsUser)),
 	}
 
 	return sidecar
