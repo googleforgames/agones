@@ -1445,3 +1445,18 @@ func TestListAutoscalerWithSDKMethods(t *testing.T) {
 		})
 	}
 }
+
+func TestAutoscalerSchedule(t *testing.T) {
+	if !runtime.FeatureEnabled(runtime.FeatureScheduledAutoscaler) {
+		t.SkipNow()
+	}
+	t.Parallel()
+}
+
+func TestAutoscalerChain(t *testing.T) {
+	if !runtime.FeatureEnabled(runtime.FeatureScheduledAutoscaler) {
+		t.SkipNow()
+	}
+	t.Parallel()
+
+}
