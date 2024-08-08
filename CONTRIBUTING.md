@@ -80,8 +80,7 @@ If you are working on a new feature, you may need to take feature stages into ac
 Continuous integration is provided by [Google Cloud Container Builder](https://cloud.google.com/container-builder/),
 through the [cloudbuilder.yaml](./cloudbuild.yaml) file found at the root of the directory.
 
-Build success/failure with relevant details are pushed automatically to pull requests via the not (yet 😉) opensourced
-build system.
+Build success/failure with relevant details are pushed automatically to pull requests via [agones-bot](./build/agones-bot/README.md).
 
 See the [Container Builder documentation](https://cloud.google.com/container-builder/docs/) for more details on
 how to edit and expand the build process.
@@ -106,6 +105,13 @@ You can see them on our calendar
 [ical](https://calendar.google.com/calendar/ical/google.com_828n8f18hfbtrs4vu4h1sks218%40group.calendar.google.com/public/basic.ics)) and/or join the 
 [mailing list or Slack](https://agones.dev/site/community/)
 for notifications.
+
+## Becoming a Collaborator on Agones
+
+If you have submitted at least one Pull Request and had it merged, you may wish to become an official collaborator.
+This will give you the ability to have tickets assigned to you (or you can assign tickets to yourself!).
+
+We have a [community membership guide](./docs/governance/community_membership.md), that outlines the process.
 
 ## Becoming an Approver on Agones
 

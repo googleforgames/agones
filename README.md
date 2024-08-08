@@ -53,6 +53,8 @@ Please read the [contributing](CONTRIBUTING.md) guide for directions on submitti
 
 See the [Developing, Testing and Building Agones](build/README.md) documentation for developing, testing and building Agones from source.
 
+For Agones client SDK development refer to [Developing, Testing, and Building Agones Client SDKs](sdks/README.md).
+
 The [Release Process](docs/governance/release_process.md) documentation displays the project's upcoming release calendar and release process.
 
 Agones is in active development - we would love your help in shaping its future!
