@@ -1451,6 +1451,17 @@ func TestAutoscalerSchedule(t *testing.T) {
 		t.SkipNow()
 	}
 	t.Parallel()
+
+	stable := framework.AgonesClient.AgonesV1()
+	fleets := stable.Fleets(framework.Namespace)
+	flt, err := fleets.Create(context.Background(), defaultFleet(framework.Namespace), metav1.CreateOptions{})
+	if assert.NoError(t, err) {
+		defer fleets.Delete(context.Background(), flt.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
+	}
+
+	// Create a scheduled autoscaler
+	scheduledFas := defaultAutoscalerSchedule(flt, framework.Namespace)
+
 }
 
 func TestAutoscalerChain(t *testing.T) {
@@ -1459,4 +1470,59 @@ func TestAutoscalerChain(t *testing.T) {
 	}
 	t.Parallel()
 
+	stable := framework.AgonesClient.AgonesV1()
+	fleets := stable.Fleets(framework.Namespace)
+	flt, err := fleets.Create(context.Background(), defaultFleet(framework.Namespace), metav1.CreateOptions{})
+	if assert.NoError(t, err) {
+		defer fleets.Delete(context.Background(), flt.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
+	}
+
+	// Create a chain autoscaler
+	chainFas := defaultAutoscalerChain(flt, framework.Namespace)
+}
+
+// defaultAutoscalerSchedule returns a default scheduled autoscaler for testing.
+func defaultAutoscalerSchedule(f *agonesv1.Fleet, namespace string) *autoscalingv1.FleetAutoscaler {
+	return &autoscalingv1.FleetAutoscaler{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      f.ObjectMeta.Name + "-scheduled-autoscaler",
+			Namespace: namespace,
+		},
+		Spec: autoscalingv1.FleetAutoscalerSpec{
+			FleetName: f.ObjectMeta.Name,
+			Policy: autoscalingv1.FleetAutoscalerPolicy{
+				Type:     autoscalingv1.SchedulePolicyType,
+				Schedule: &autoscalingv1.SchedulePolicy{},
+			},
+			Sync: &autoscalingv1.FleetAutoscalerSync{
+				Type: autoscalingv1.FixedIntervalSyncType,
+				FixedInterval: autoscalingv1.FixedIntervalSync{
+					Seconds: 5,
+				},
+			},
+		},
+	}
+}
+
+// defaultAutoscalerChain returns a default chain autoscaler for testing.
+func defaultAutoscalerChain(f *agonesv1.Fleet, namespace string) *autoscalingv1.FleetAutoscaler {
+	return &autoscalingv1.FleetAutoscaler{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      f.ObjectMeta.Name + "-chain-autoscaler",
+			Namespace: namespace,
+		},
+		Spec: autoscalingv1.FleetAutoscalerSpec{
+			FleetName: f.ObjectMeta.Name,
+			Policy: autoscalingv1.FleetAutoscalerPolicy{
+				Type:  autoscalingv1.ChainPolicyType,
+				Chain: autoscalingv1.ChainPolicy{},
+			},
+			Sync: &autoscalingv1.FleetAutoscalerSync{
+				Type: autoscalingv1.FixedIntervalSyncType,
+				FixedInterval: autoscalingv1.FixedIntervalSync{
+					Seconds: 5,
+				},
+			},
+		},
+	}
 }
