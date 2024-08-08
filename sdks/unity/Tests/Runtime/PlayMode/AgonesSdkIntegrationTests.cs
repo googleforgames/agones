@@ -34,14 +34,11 @@ namespace Tests.Runtime.Agones
         public IEnumerator UnitySetUp()
         {
             GameObject gameObject = new GameObject();
-            gameObject.AddComponent<AgonesSdk>();
-            gameObject.AddComponent<AgonesAlphaSdk>();
-            gameObject.AddComponent<AgonesBetaSdk>();
             yield return null;
 
-            this.sdk = gameObject.GetComponent<AgonesSdk>();
-            this.betaSdk = gameObject.GetComponent<AgonesBetaSdk>();
-            this.alphaSdk = gameObject.GetComponent<AgonesAlphaSdk>();
+            this.sdk = gameObject.AddComponent<AgonesSdk>();
+            this.betaSdk = gameObject.AddComponent<AgonesBetaSdk>();
+            this.alphaSdk = gameObject.AddComponent<AgonesAlphaSdk>();
 
             Assert.IsNotNull(this.sdk);
             Assert.IsNotNull(this.betaSdk);

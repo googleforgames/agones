@@ -10,7 +10,7 @@ Contained within this folder is a Unity project. After opening the Unity Hub app
 
 This project implements basic tests for the Unity SDK using the [Unity Test Framework](https://docs.unity3d.com/Packages/com.unity.test-framework@1.1/manual/index.html). These tests are PlayMode tests.
 
-To run these tests, open the Test Framework window in the Unity editor using Window > General > Test Framwork. More information [in the unity guide](https://docs.unity3d.com/Packages/com.unity.test-framework@1.1/manual/workflow-run-test.html).
+To run these tests, open the Test Framework window in the Unity editor using Window > General > Test Framwork. More information [in the Unity guide](https://docs.unity3d.com/Packages/com.unity.test-framework@1.1/manual/workflow-run-test.html).
 
 # Connecting to the Agones SDK Server
 
