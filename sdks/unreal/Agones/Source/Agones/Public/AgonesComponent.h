@@ -52,6 +52,16 @@ DECLARE_DYNAMIC_DELEGATE_OneParam(FSetLabelDelegate, const FEmptyResponse&, Resp
 
 DECLARE_DYNAMIC_DELEGATE_OneParam(FSetPlayerCapacityDelegate, const FEmptyResponse&, Response);
 
+DECLARE_DYNAMIC_DELEGATE_OneParam(FGetCounterDelegate, const FCounterResponse&, Response);
+
+DECLARE_DYNAMIC_DELEGATE_OneParam(FIncrementCounterDelegate, const FEmptyResponse&, Response);
+
+DECLARE_DYNAMIC_DELEGATE_OneParam(FDecrementCounterDelegate, const FEmptyResponse&, Response);
+
+DECLARE_DYNAMIC_DELEGATE_OneParam(FSetCounterCountDelegate, const FEmptyResponse&, Response);
+
+DECLARE_DYNAMIC_DELEGATE_OneParam(FSetCounterCapacityDelegate, const FEmptyResponse&, Response);
+
 DECLARE_DYNAMIC_DELEGATE_OneParam(FShutdownDelegate, const FEmptyResponse&, Response);
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FConnectedDelegate, const FGameServerResponse&, Response);
@@ -63,7 +73,8 @@ public:
 	{
 		Get,
 		Post,
-		Put
+		Put,
+		Patch
 	};
 
 	// ReSharper disable once CppNonExplicitConvertingConstructor
@@ -79,6 +90,8 @@ public:
 				return TEXT("POST");
 			case Put:
 				return TEXT("PUT");
+			case Patch:
+				return TEXT("PATCH");
 			case Get:
 			default:
 				return TEXT("GET");
@@ -289,6 +302,56 @@ public:
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Agones | Alpha | Player Tracking")
 	void SetPlayerCapacity(int64 Count, FSetPlayerCapacityDelegate SuccessDelegate, FAgonesErrorDelegate ErrorDelegate);
+
+	/**
+	 * \brief [Beta] GetCounter return counter (count and capacity) associated with a Key.
+	 * \param Key - Key to counter value
+	 * \param Count - Capacity of game server.
+	 * \param SuccessDelegate - Called on Successful call.
+	 * \param ErrorDelegate - Called on Unsuccessful call.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Agones | Beta | Counters")
+	void GetCounter(FString Key, FGetCounterDelegate SuccessDelegate, FAgonesErrorDelegate ErrorDelegate);
+
+	/**
+	 * \brief [Beta] IncrementCounter incremenets counter associated with a Key by 1.
+	 * \param Key - Key to counter value
+	 * \param Amount - Capacity of game server.
+	 * \param SuccessDelegate - Called on Successful call.
+	 * \param ErrorDelegate - Called on Unsuccessful call.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Agones | Beta | Counters")
+	void IncrementCounter(FString Key, int64 Amount, FIncrementCounterDelegate SuccessDelegate, FAgonesErrorDelegate ErrorDelegate);
+
+	/**
+	 * \brief [Beta] DecrementCounter decremenets counter associated with a Key by 1.
+	 * \param Key - Key to counter value
+	 * \param Amount - Capacity of game server.
+	 * \param SuccessDelegate - Called on Successful call.
+	 * \param ErrorDelegate - Called on Unsuccessful call.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Agones | Beta | Counters")
+	void DecrementCounter(FString Key, int64 Amount, FDecrementCounterDelegate SuccessDelegate, FAgonesErrorDelegate ErrorDelegate);
+
+	/**
+	 * \brief [Beta] SetCounterCount set counter count associated with a Key.
+	 * \param Key - Key to counter value
+	 * \param Count - Capacity of game server.
+	 * \param SuccessDelegate - Called on Successful call.
+	 * \param ErrorDelegate - Called on Unsuccessful call.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Agones | Beta | Counters")
+	void SetCounterCount(FString Key, int64 Count, FSetCounterCountDelegate SuccessDelegate, FAgonesErrorDelegate ErrorDelegate);
+
+	/**
+	 * \brief [Beta] SetCounterCount set counter capacity associated with a Key.
+	 * \param Key - Key to counter value
+	 * \param Capacity - Capacity of game server.
+	 * \param SuccessDelegate - Called on Successful call.
+	 * \param ErrorDelegate - Called on Unsuccessful call.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Agones | Beta | Counters")
+    void SetCounterCapacity(FString Key, int64 Capacity, FSetCounterCapacityDelegate SuccessDelegate, FAgonesErrorDelegate ErrorDelegate);
 
 private:
 	FHttpRequestRef BuildAgonesRequest(
