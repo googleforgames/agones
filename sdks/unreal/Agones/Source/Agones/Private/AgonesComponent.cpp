@@ -75,6 +75,44 @@ void UAgonesComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
     }
 }
 
+void UAgonesComponent::UpdateCounter(const FString& Key, const int64* Count, const int64* Capacity, const int64* CountDiff, FUpdateCounterDelegate SuccessDelegate, FAgonesErrorDelegate ErrorDelegate)
+{
+	TSharedRef<FJsonObject> JsonObject = MakeShareable(new FJsonObject());
+
+	if (Count != nullptr)
+	{
+		JsonObject->SetNumberField(TEXT("count"), *Count);
+	}
+	if (Capacity != nullptr)
+	{
+		JsonObject->SetNumberField(TEXT("capacity"), *Capacity);
+	}
+	if (CountDiff != nullptr)
+	{
+		JsonObject->SetNumberField(TEXT("countDiff"), *CountDiff);
+	}
+
+	FString Json;
+	if (!JsonObjectToJsonString(JsonObject, Json))
+	{
+		ErrorDelegate.ExecuteIfBound({ TEXT("Failed to serializing request") });
+		return;
+	}
+
+	FHttpRequestRef Request = BuildAgonesRequest(FString::Format(TEXT("v1beta1/counters/{0}"), { Key }), FHttpVerb::Patch, Json);
+	Request->OnProcessRequestComplete().BindWeakLambda(this,
+		[SuccessDelegate, ErrorDelegate](FHttpRequestPtr HttpRequest, FHttpResponsePtr HttpResponse, const bool bSucceeded)
+		{
+			if (!IsValidResponse(bSucceeded, HttpResponse, ErrorDelegate))
+			{
+				return;
+			}
+
+			SuccessDelegate.ExecuteIfBound({});
+		});
+	Request->ProcessRequest();
+}
+
 FHttpRequestRef UAgonesComponent::BuildAgonesRequest(const FString Path, const FHttpVerb Verb, const FString Content)
 {
 	FHttpModule* Http = &FHttpModule::Get();
@@ -489,106 +527,39 @@ void UAgonesComponent::GetCounter(FString Key, FGetCounterDelegate SuccessDelega
 
 void UAgonesComponent::IncrementCounter(FString Key, int64 Amount, FIncrementCounterDelegate SuccessDelegate, FAgonesErrorDelegate ErrorDelegate)
 {
-	TSharedRef<FJsonObject> JsonObject = MakeShareable(new FJsonObject());
-	JsonObject->SetNumberField(TEXT("countDiff"), Amount);
-
-	FString Json;
-	if (!JsonObjectToJsonString(JsonObject, Json))
-	{
-		ErrorDelegate.ExecuteIfBound({TEXT("Failed to serializing request")});
-		return;
-	}
-
-	FHttpRequestRef Request = BuildAgonesRequest(FString::Format(TEXT("v1beta1/counters/{0}"), {Key}), FHttpVerb::Patch, Json);
-	Request->OnProcessRequestComplete().BindWeakLambda(this,
-		[SuccessDelegate, ErrorDelegate](FHttpRequestPtr HttpRequest, FHttpResponsePtr HttpResponse, const bool bSucceeded)
+	const auto UpdateSuccessDelegate = FUpdateCounterDelegate::CreateLambda([SuccessDelegate](const FEmptyResponse&)
 		{
-			if (!IsValidResponse(bSucceeded, HttpResponse, ErrorDelegate))
-			{
-				return;
-			}
-
 			SuccessDelegate.ExecuteIfBound({});
 		});
-	Request->ProcessRequest();
+	UpdateCounter(Key, nullptr, nullptr, &Amount, UpdateSuccessDelegate, ErrorDelegate);
 }
 
 void UAgonesComponent::DecrementCounter(FString Key, int64 Amount, FDecrementCounterDelegate SuccessDelegate, FAgonesErrorDelegate ErrorDelegate)
 {
-	TSharedRef<FJsonObject> JsonObject = MakeShareable(new FJsonObject());
-	JsonObject->SetNumberField(TEXT("countDiff"), -Amount);
-
-	FString Json;
-	if (!JsonObjectToJsonString(JsonObject, Json))
-	{
-		ErrorDelegate.ExecuteIfBound({TEXT("Failed to serializing request")});
-		return;
-	}
-
-	FHttpRequestRef Request = BuildAgonesRequest(FString::Format(TEXT("v1beta1/counters/{0}"), {Key}), FHttpVerb::Patch, Json);
-	Request->OnProcessRequestComplete().BindWeakLambda(this,
-		[SuccessDelegate, ErrorDelegate](FHttpRequestPtr HttpRequest, FHttpResponsePtr HttpResponse, const bool bSucceeded)
+	const int64 NegativeAmount = -Amount;
+	const auto UpdateSuccessDelegate = FUpdateCounterDelegate::CreateLambda([SuccessDelegate](const FEmptyResponse&)
 		{
-			if (!IsValidResponse(bSucceeded, HttpResponse, ErrorDelegate))
-			{
-				return;
-			}
-
 			SuccessDelegate.ExecuteIfBound({});
 		});
-	Request->ProcessRequest();
+	UpdateCounter(Key, nullptr, nullptr, &NegativeAmount, UpdateSuccessDelegate, ErrorDelegate);
 }
 
 void UAgonesComponent::SetCounterCount(FString Key, int64 Count, FSetCounterCountDelegate SuccessDelegate, FAgonesErrorDelegate ErrorDelegate)
 {
-	TSharedRef<FJsonObject> JsonObject = MakeShareable(new FJsonObject());
-	JsonObject->SetNumberField(TEXT("count"), Count);
-
-	FString Json;
-	if (!JsonObjectToJsonString(JsonObject, Json))
-	{
-		ErrorDelegate.ExecuteIfBound({TEXT("Failed to serializing request")});
-		return;
-	}
-
-	FHttpRequestRef Request = BuildAgonesRequest(FString::Format(TEXT("v1beta1/counters/{0}"), {Key}), FHttpVerb::Patch, Json);
-	Request->OnProcessRequestComplete().BindWeakLambda(this,
-		[SuccessDelegate, ErrorDelegate](FHttpRequestPtr HttpRequest, FHttpResponsePtr HttpResponse, const bool bSucceeded)
+	const auto UpdateSuccessDelegate = FUpdateCounterDelegate::CreateLambda([SuccessDelegate](const FEmptyResponse&)
 		{
-			if (!IsValidResponse(bSucceeded, HttpResponse, ErrorDelegate))
-			{
-				return;
-			}
-
 			SuccessDelegate.ExecuteIfBound({});
 		});
-	Request->ProcessRequest();
+	UpdateCounter(Key, &Count, nullptr, nullptr, UpdateSuccessDelegate, ErrorDelegate);
 }
 
 void UAgonesComponent::SetCounterCapacity(FString Key, int64 Capacity, FSetCounterCapacityDelegate SuccessDelegate, FAgonesErrorDelegate ErrorDelegate)
 {
-	TSharedRef<FJsonObject> JsonObject = MakeShareable(new FJsonObject());
-	JsonObject->SetNumberField(TEXT("capacity"), Capacity);
-
-	FString Json;
-	if (!JsonObjectToJsonString(JsonObject, Json))
-	{
-		ErrorDelegate.ExecuteIfBound({TEXT("Failed to serializing request")});
-		return;
-	}
-
-	FHttpRequestRef Request = BuildAgonesRequest(FString::Format(TEXT("v1beta1/counters/{0}"), {Key}), FHttpVerb::Patch, Json);
-	Request->OnProcessRequestComplete().BindWeakLambda(this,
-		[SuccessDelegate, ErrorDelegate](FHttpRequestPtr HttpRequest, FHttpResponsePtr HttpResponse, const bool bSucceeded)
+	const auto UpdateSuccessDelegate = FUpdateCounterDelegate::CreateLambda([SuccessDelegate](const FEmptyResponse&) 
 		{
-			if (!IsValidResponse(bSucceeded, HttpResponse, ErrorDelegate))
-			{
-				return;
-			}
-
-			SuccessDelegate.ExecuteIfBound({});
+			SuccessDelegate.ExecuteIfBound({}); 
 		});
-	Request->ProcessRequest();
+	UpdateCounter(Key, nullptr, &Capacity, nullptr, UpdateSuccessDelegate, ErrorDelegate);
 }
 
 void UAgonesComponent::GetPlayerCapacity(FGetPlayerCapacityDelegate SuccessDelegate, FAgonesErrorDelegate ErrorDelegate)

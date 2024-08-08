@@ -354,6 +354,9 @@ public:
     void SetCounterCapacity(FString Key, int64 Capacity, FSetCounterCapacityDelegate SuccessDelegate, FAgonesErrorDelegate ErrorDelegate);
 
 private:
+	DECLARE_DELEGATE_OneParam(FUpdateCounterDelegate, const FEmptyResponse&);
+	void UpdateCounter(const FString& Key, const int64* Count, const int64* Capacity, const int64* CountDiff, FUpdateCounterDelegate SuccessDelegate, FAgonesErrorDelegate ErrorDelegate);
+
 	FHttpRequestRef BuildAgonesRequest(
 		FString Path = "", const FHttpVerb Verb = FHttpVerb::Post, const FString Content = "{}");
 
