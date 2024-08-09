@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -26,7 +27,6 @@ import (
 	"github.com/mennanov/fmutils"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	"google.golang.org/protobuf/proto"
 	corev1 "k8s.io/api/core/v1"
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -1091,30 +1091,56 @@ func (s *SDKServer) UpdateList(ctx context.Context, in *beta.UpdateListRequest) 
 		return nil, errors.Errorf("out of range. Capacity must be within range [0,1000]. Found Capacity: %d", in.List.Capacity)
 	}
 
-	if list, ok := gsCopy.Status.Lists[name]; ok {
-		//capacity := list.Capacity
-		//s.logger.WithField("name", capacity).Debug("Update List -- Currently only used for Updating Capacity")
+	if _, ok := gsCopy.Status.Lists[name]; ok {
 
-		// Create *beta.List from *sdk.GameServer_Status_ListStatus for merging.
-		tmpList := &beta.List{Name: name, Capacity: list.Capacity, Values: list.Values}
 		// Removes any fields from the request object that are not included in the FieldMask Paths.
 		fmutils.Filter(in.List, in.UpdateMask.Paths)
-		// Removes any fields from the existing gameserver object that are included in the FieldMask Paths.
-		fmutils.Prune(tmpList, in.UpdateMask.Paths)
-		// Due due filtering and pruning all gameserver object field(s) contained in the FieldMask are overwritten by the request object field(s).
-		proto.Merge(tmpList, in.List)
-		// Silently truncate list values if Capacity < len(Values)
-		if tmpList.Capacity < int64(len(tmpList.Values)) {
-			tmpList.Values = append([]string{}, tmpList.Values[:tmpList.Capacity]...)
+
+		batchList := listUpdateRequest{}
+
+		if slices.Contains(in.UpdateMask.Paths, "capacity") {
+			batchList.capacitySet = &in.List.Capacity
+		}
+		currList := gs.Status.Lists[name]
+
+		if slices.Contains(in.UpdateMask.Paths, "values") {
+			// Find values to remove from the current list
+			valuesToDelete := map[string]bool{}
+			for _, value := range currList.Values {
+				valueFound := false
+				for _, element := range in.List.Values {
+					if value == element {
+						valueFound = true
+					}
+				}
+
+				if !valueFound {
+					valuesToDelete[value] = true
+				}
+			}
+			batchList.valuesToDelete = valuesToDelete
+
+			// Find values that need to be added to the current list from the incomming list
+			valuesToAdd := []string{}
+			for _, value := range in.List.Values {
+				valueFound := false
+				for _, element := range currList.Values {
+					if value == element {
+						valueFound = true
+					}
+				}
+
+				if !valueFound {
+					valuesToAdd = append(valuesToAdd, value)
+				}
+			}
+			batchList.valuesToAppend = valuesToAdd
 		}
 
-		list.Capacity = tmpList.Capacity
-		list.Values = tmpList.Values
-		gsCopy.Status.Lists[name] = list
-		s.patchGameServer(ctx, gs, gsCopy)
-		gs.Status.Lists[name] = list // without this line all the unit tests fail. Does s.PatchGameServer really work as intended in a test environment?
-
-		return &beta.List{Name: name, Capacity: gs.Status.Lists[name].Capacity, Values: gs.Status.Lists[name].Values}, nil
+		// Queue up the Update for later batch processing by updateLists.
+		s.gsListUpdates[name] = batchList
+		s.workerqueue.Enqueue(cache.ExplicitKey(updateLists))
+		return &beta.List{}, nil
 	}
 	return nil, errors.Errorf("not found. %s List not found", name)
 }
