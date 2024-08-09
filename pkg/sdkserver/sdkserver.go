@@ -1090,7 +1090,7 @@ func (s *SDKServer) UpdateList(ctx context.Context, in *beta.UpdateListRequest) 
 		// Removes any fields from the request object that are not included in the FieldMask Paths.
 		fmutils.Filter(in.List, in.UpdateMask.Paths)
 
-		//The list will allow the current list to be overwritten
+		// The list will allow the current list to be overwritten
 		batchList := listUpdateRequest{}
 
 		// Only set the capacity if its included in the update mask paths
