@@ -350,7 +350,7 @@ public:
 	 * \param ErrorDelegate - Called on Unsuccessful call.
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Agones | Beta | Counters")
-    	void SetCounterCapacity(FString Key, int64 Capacity, FSetCounterCapacityDelegate SuccessDelegate, FAgonesErrorDelegate ErrorDelegate);
+	void SetCounterCapacity(FString Key, int64 Capacity, FSetCounterCapacityDelegate SuccessDelegate, FAgonesErrorDelegate ErrorDelegate);
 
 private:
 	DECLARE_DELEGATE_OneParam(FUpdateCounterDelegate, const FEmptyResponse&);
