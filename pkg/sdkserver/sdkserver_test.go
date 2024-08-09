@@ -1731,6 +1731,7 @@ func TestSDKServerUpdateList(t *testing.T) {
 			updated:                 false,
 			expectedUpdatesQueueLen: 0,
 		},
+		// New test cases to test updating values
 		"update values below capacity": {
 			listName: "qux",
 			request: &beta.UpdateListRequest{
