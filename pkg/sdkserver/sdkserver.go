@@ -19,10 +19,12 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"slices"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/mennanov/fmutils"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
@@ -1066,27 +1068,75 @@ func (s *SDKServer) UpdateList(ctx context.Context, in *beta.UpdateListRequest) 
 	if in == nil {
 		return nil, errors.Errorf("UpdateListRequest cannot be nil")
 	}
+	if in.List == nil || in.UpdateMask == nil {
+		return nil, errors.Errorf("invalid argument. List: %v and UpdateMask %v cannot be nil", in.List, in.UpdateMask)
+	}
+	if !in.UpdateMask.IsValid(in.List.ProtoReflect().Interface()) {
+		return nil, errors.Errorf("invalid argument. Field Mask Path(s): %v are invalid for List. Use valid field name(s): %v", in.UpdateMask.GetPaths(), in.List.ProtoReflect().Descriptor().Fields())
+	}
 
 	name := in.List.Name
-	s.logger.WithField("name", name).Debug("Update List -- Currently only used for Updating Capacity")
-
 	gs, err := s.gameServer()
 	if err != nil {
 		return nil, err
 	}
-
-	s.gsUpdateMutex.Lock()
-	defer s.gsUpdateMutex.Unlock()
 
 	if in.List.Capacity < 0 || in.List.Capacity > apiserver.ListMaxCapacity {
 		return nil, errors.Errorf("out of range. Capacity must be within range [0,1000]. Found Capacity: %d", in.List.Capacity)
 	}
 
 	if _, ok := gs.Status.Lists[name]; ok {
-		batchList := s.gsListUpdates[name]
-		batchList.capacitySet = &in.List.Capacity
-		s.gsListUpdates[name] = batchList
+
+		// Removes any fields from the request object that are not included in the FieldMask Paths.
+		fmutils.Filter(in.List, in.UpdateMask.Paths)
+
+		//The list will allow the current list to be overwritten
+		batchList := listUpdateRequest{}
+
+		// Only set the capacity if its included in the update mask paths
+		if slices.Contains(in.UpdateMask.Paths, "capacity") {
+			batchList.capacitySet = &in.List.Capacity
+		}
+
+		// Only change the values if its included in the update mask paths
+		if slices.Contains(in.UpdateMask.Paths, "values") {
+			currList := gs.Status.Lists[name]
+
+			// Find values to remove from the current list
+			valuesToDelete := map[string]bool{}
+			for _, value := range currList.Values {
+				valueFound := false
+				for _, element := range in.List.Values {
+					if value == element {
+						valueFound = true
+					}
+				}
+
+				if !valueFound {
+					valuesToDelete[value] = true
+				}
+			}
+			batchList.valuesToDelete = valuesToDelete
+
+			// Find values that need to be added to the current list from the incomming list
+			valuesToAdd := []string{}
+			for _, value := range in.List.Values {
+				valueFound := false
+				for _, element := range currList.Values {
+					if value == element {
+						valueFound = true
+					}
+				}
+
+				if !valueFound {
+					valuesToAdd = append(valuesToAdd, value)
+				}
+			}
+			batchList.valuesToAppend = valuesToAdd
+		}
+
 		// Queue up the Update for later batch processing by updateLists.
+		s.gsListUpdates[name] = batchList
 		s.workerqueue.Enqueue(cache.ExplicitKey(updateLists))
 		return &beta.List{}, nil
 	}
