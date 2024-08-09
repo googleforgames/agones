@@ -23,13 +23,11 @@ import (
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	helper "agones.dev/agones/test/e2e/allochelper"
 	e2e "agones.dev/agones/test/e2e/framework"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/grpc/status"
-	"k8s.io/apimachinery/pkg/labels"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
-
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (
@@ -39,25 +37,29 @@ const (
 
 func TestAllocatorAfterDeleteReplica(t *testing.T) {
 	ctx := context.Background()
-	logger := e2e.TestLogger(t)
 
-	// initialize gRPC client, which tests the connection
-	grpcClient, err := helper.GetAllocatorClient(ctx, t, framework)
-	require.NoError(t, err, "Could not initialize rpc client")
+	var list *v1.PodList
 
-	// poll and wait until all allocator pods are available
-	err = wait.PollUntilContextTimeout(context.Background(), retryInterval, retryTimeout, true, func(ctx context.Context) (done bool, err error) {
-		deployment, err := framework.KubeClient.AppsV1().Deployments("agones-system").Get(ctx, "agones-allocator", metav1.GetOptions{})
+	// poll and wait until all allocator pods are running
+	_ = wait.PollImmediate(retryInterval, retryTimeout, func() (done bool, err error) {
+		list, err = helper.GetAgonesAllocatorPods(ctx, framework)
 		if err != nil {
 			return true, err
 		}
-		if deployment.Status.Replicas != deployment.Status.AvailableReplicas {
-			logger.Infof("Waiting for agones-allocator to stabilize: %d/%d replicas available", deployment.Status.AvailableReplicas, deployment.Status.ReadyReplicas)
-			return false, nil
+
+		for _, allocpod := range list.Items {
+			podstatus := string(allocpod.Status.Phase)
+			logrus.Infof("Allocator Pod %s, has status of %s", allocpod.ObjectMeta.Name, podstatus)
+			if podstatus != "Running" {
+				return false, nil
+			}
 		}
+
 		return true, nil
 	})
-	require.NoError(t, err, "Failed to stabilize agones-allocator")
+
+	grpcClient, err := helper.GetAllocatorClient(ctx, t, framework)
+	require.NoError(t, err, "Could not initialize rpc client")
 
 	// create fleet
 	flt, err := helper.CreateFleet(ctx, framework.Namespace, framework)
@@ -66,23 +68,7 @@ func TestAllocatorAfterDeleteReplica(t *testing.T) {
 	}
 	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 
-	logger.Infof("=== agones-allocator available, gRPC client initialized ===")
-
-	// One probe into the test, delete all of the allocators except 1
-	go func() {
-		time.Sleep(retryInterval)
-
-		list, err := framework.KubeClient.CoreV1().Pods("agones-system").List(
-			ctx, metav1.ListOptions{LabelSelector: labels.Set{"multicluster.agones.dev/role": "allocator"}.String()})
-		if assert.NoError(t, err, "Could not list allocator pods") {
-			for _, pod := range list.Items[1:] {
-				logger.Infof("Deleting Pod %s", pod.ObjectMeta.Name)
-				err = helper.DeleteAgonesPod(ctx, pod.ObjectMeta.Name, "agones-system", framework)
-				assert.NoError(t, err, "Could not delete allocator pod")
-			}
-		}
-	}()
-
+	var response *pb.AllocationResponse
 	request := &pb.AllocationRequest{
 		Namespace:                    framework.Namespace,
 		PreferredGameServerSelectors: []*pb.GameServerSelector{{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}}},
@@ -90,18 +76,20 @@ func TestAllocatorAfterDeleteReplica(t *testing.T) {
 		Metadata:                     &pb.MetaPatch{Labels: map[string]string{"gslabel": "allocatedbytest"}},
 	}
 
-	// Wait and keep making calls till we know the draining time has passed
-	_ = wait.PollUntilContextTimeout(context.Background(), retryInterval, retryTimeout, true, func(ctx context.Context) (bool, error) {
-		ctx, cancelCtx := context.WithTimeout(ctx, retryInterval*2)
-		defer cancelCtx()
+	// delete all of the allocators except 1
+	for _, pod := range list.Items[1:] {
+		err = helper.DeleteAgonesAllocatorPod(ctx, pod.ObjectMeta.Name, framework)
+		require.NoError(t, err, "Could not delete allocator pod")
+	}
 
-		response, err := grpcClient.Allocate(ctx, request)
-		logger.Infof("err = %v (code = %v), response = %v", err, status.Code(err), response)
-		if assert.NoError(t, err, "Failed grpc allocation request") {
-			helper.ValidateAllocatorResponse(t, response)
-			err = helper.DeleteAgonesPod(ctx, response.GameServerName, framework.Namespace, framework)
-			assert.NoError(t, err, "Failed to delete game server pod %s", response.GameServerName)
-		}
+	// Wait and keep making calls till we know the draining time has passed
+	_ = wait.PollImmediate(retryInterval, retryTimeout, func() (bool, error) {
+		response, err = grpcClient.Allocate(context.Background(), request)
+		logrus.Info(response)
+		helper.ValidateAllocatorResponse(t, response)
+		require.NoError(t, err, "Failed grpc allocation request")
+		err = helper.DeleteAgonesPod(ctx, response.GameServerName, framework.Namespace, framework)
+		require.NoError(t, err, "Failed to delete game server pod %s", response.GameServerName)
 		return false, nil
 	})
 }
