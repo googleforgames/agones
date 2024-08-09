@@ -79,15 +79,15 @@ void UAgonesComponent::UpdateCounter(const FString& Key, const int64* Count, con
 {
 	TSharedRef<FJsonObject> JsonObject = MakeShareable(new FJsonObject());
 
-	if (Count != nullptr)
+	if (Count)
 	{
 		JsonObject->SetNumberField(TEXT("count"), *Count);
 	}
-	if (Capacity != nullptr)
+	if (Capacity)
 	{
 		JsonObject->SetNumberField(TEXT("capacity"), *Capacity);
 	}
-	if (CountDiff != nullptr)
+	if (CountDiff)
 	{
 		JsonObject->SetNumberField(TEXT("countDiff"), *CountDiff);
 	}
