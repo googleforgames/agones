@@ -373,3 +373,25 @@ struct FConnectedPlayersResponse
 		JsonObject->TryGetStringArrayField(TEXT("list"), ConnectedPlayers);
 	}
 };
+
+USTRUCT(BlueprintType)
+struct FCounterResponse
+{
+	GENERATED_BODY()
+
+	FCounterResponse()
+	{
+	}
+
+	UPROPERTY(BlueprintReadOnly, Category = "Agones")
+	int64 Count;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Agones")
+	int64 Capacity;
+
+	explicit FCounterResponse(const TSharedPtr<FJsonObject> JsonObject)
+	{
+		JsonObject->TryGetNumberField(TEXT("count"), Count);
+        JsonObject->TryGetNumberField(TEXT("capacity"), Capacity);
+	}
+};
