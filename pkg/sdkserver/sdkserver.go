@@ -1076,34 +1076,32 @@ func (s *SDKServer) UpdateList(ctx context.Context, in *beta.UpdateListRequest) 
 	}
 
 	name := in.List.Name
-	s.logger.WithField("name", name).Debug("Update List -- Currently only used for Updating Capacity")
-
 	gs, err := s.gameServer()
 	if err != nil {
 		return nil, err
 	}
 
-	s.gsUpdateMutex.Lock()
-	defer s.gsUpdateMutex.Unlock()
-	gsCopy := gs.DeepCopy()
-
 	if in.List.Capacity < 0 || in.List.Capacity > apiserver.ListMaxCapacity {
 		return nil, errors.Errorf("out of range. Capacity must be within range [0,1000]. Found Capacity: %d", in.List.Capacity)
 	}
 
-	if _, ok := gsCopy.Status.Lists[name]; ok {
+	if _, ok := gs.Status.Lists[name]; ok {
 
 		// Removes any fields from the request object that are not included in the FieldMask Paths.
 		fmutils.Filter(in.List, in.UpdateMask.Paths)
 
+		//The list will allow the current list to be overwritten
 		batchList := listUpdateRequest{}
 
+		// Only set the capacity if its included in the update mask paths
 		if slices.Contains(in.UpdateMask.Paths, "capacity") {
 			batchList.capacitySet = &in.List.Capacity
 		}
-		currList := gs.Status.Lists[name]
 
+		// Only change the values if its included in the update mask paths
 		if slices.Contains(in.UpdateMask.Paths, "values") {
+			currList := gs.Status.Lists[name]
+
 			// Find values to remove from the current list
 			valuesToDelete := map[string]bool{}
 			for _, value := range currList.Values {
