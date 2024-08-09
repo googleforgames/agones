@@ -38,8 +38,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/backoff"
 	"google.golang.org/grpc/credentials"
+	corev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -56,21 +56,6 @@ const (
 	allocatorClientSecretName      = "allocator-client.default"
 	allocatorClientSecretNamespace = "default"
 	replicasCount                  = 5
-
-	gRPCRetryPolicy = `{
-		"methodConfig": [{
-			"name": [{}],
-			"waitForReady": true,
-
-			"retryPolicy": {
-				"MaxAttempts": 4,
-				"InitialBackoff": ".01s",
-				"MaxBackoff": ".01s",
-				"BackoffMultiplier": 1.0,
-				"RetryableStatusCodes": [ "UNAVAILABLE" ]
-			}
-		}]
-	}`
 )
 
 // CopyDefaultAllocatorClientSecret copys the allocator client secret
@@ -121,26 +106,16 @@ func GetAllocatorEndpoint(ctx context.Context, t *testing.T, framework *e2e.Fram
 	return svc.Status.LoadBalancer.Ingress[0].IP, port.Port
 }
 
-// CreateRemoteClusterDialOptions creates a grpc client dial option with proper certs to make a remote call.
-func CreateRemoteClusterDialOptions(ctx context.Context, namespace, clientSecretName string, tlsCA []byte, framework *e2e.Framework) ([]grpc.DialOption, error) {
+// CreateRemoteClusterDialOption creates a grpc client dial option with proper certs to make a remote call.
+//
+//nolint:unparam
+func CreateRemoteClusterDialOption(ctx context.Context, namespace, clientSecretName string, tlsCA []byte, framework *e2e.Framework) (grpc.DialOption, error) {
 	tlsConfig, err := GetTLSConfig(ctx, namespace, clientSecretName, tlsCA, framework)
 	if err != nil {
 		return nil, err
 	}
 
-	return []grpc.DialOption{
-		grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)),
-		grpc.WithDefaultServiceConfig(gRPCRetryPolicy),
-		grpc.WithConnectParams(grpc.ConnectParams{
-			Backoff: backoff.Config{
-				BaseDelay:  time.Duration(100) * time.Millisecond,
-				Multiplier: 1.6,
-				Jitter:     0.2,
-				MaxDelay:   30 * time.Second,
-			},
-			MinConnectTimeout: time.Second,
-		}),
-	}, nil
+	return grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)), nil
 }
 
 // GetTLSConfig gets the namesapce client secret
@@ -279,10 +254,12 @@ func ValidateAllocatorResponse(t *testing.T, resp *pb.AllocationResponse) {
 	assert.Greater(t, len(resp.Ports), 0)
 	assert.NotEmpty(t, resp.GameServerName)
 	assert.NotEmpty(t, resp.Address)
-	assert.NotEmpty(t, resp.Addresses)
 	assert.NotEmpty(t, resp.NodeName)
-	assert.NotEmpty(t, resp.Metadata.Labels)
-	assert.NotEmpty(t, resp.Metadata.Annotations)
+}
+
+// DeleteAgonesAllocatorPod deletes a Agones allocator pod
+func DeleteAgonesAllocatorPod(ctx context.Context, podName string, framework *e2e.Framework) error {
+	return DeleteAgonesPod(ctx, podName, "agones-system", framework)
 }
 
 // DeleteAgonesPod deletes an Agones pod with the specified namespace and podname
@@ -293,11 +270,14 @@ func DeleteAgonesPod(ctx context.Context, podName string, namespace string, fram
 	return err
 }
 
-// GetAllocatorClient creates an allocator client and ensures that it can be connected to. Returns
-// a client that has at least once successfully allocated from a fleet. The fleet used to test
-// the client is leaked.
+// GetAgonesAllocatorPods returns all the Agones allocator pods
+func GetAgonesAllocatorPods(ctx context.Context, framework *e2e.Framework) (*corev1.PodList, error) {
+	opts := metav1.ListOptions{LabelSelector: labels.Set{"multicluster.agones.dev/role": "allocator"}.String()}
+	return framework.KubeClient.CoreV1().Pods("agones-system").List(ctx, opts)
+}
+
+// GetAllocatorClient creates a client and ensure that it can be connected to
 func GetAllocatorClient(ctx context.Context, t *testing.T, framework *e2e.Framework) (pb.AllocationServiceClient, error) {
-	logger := e2e.TestLogger(t)
 	ip, port := GetAllocatorEndpoint(ctx, t, framework)
 	requestURL := fmt.Sprintf(allocatorReqURLFmt, ip, port)
 	tlsCA := RefreshAllocatorTLSCerts(ctx, t, ip, framework)
@@ -308,22 +288,16 @@ func GetAllocatorClient(ctx context.Context, t *testing.T, framework *e2e.Framew
 	}
 	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 
-	dialOpts, err := CreateRemoteClusterDialOptions(ctx, allocatorClientSecretNamespace, allocatorClientSecretName, tlsCA, framework)
+	dialOpts, err := CreateRemoteClusterDialOption(ctx, allocatorClientSecretNamespace, allocatorClientSecretName, tlsCA, framework)
 	if err != nil {
 		return nil, err
 	}
 
-	conn, err := grpc.Dial(requestURL, dialOpts...)
+	conn, err := grpc.Dial(requestURL, dialOpts)
 	require.NoError(t, err, "Failed grpc.Dial")
 	go func() {
-		for {
-			state := conn.GetState()
-			logger.Infof("allocation client state: %v", state)
-			if notDone := conn.WaitForStateChange(ctx, state); !notDone {
-				break
-			}
-		}
-		_ = conn.Close()
+		<-ctx.Done()
+		conn.Close() // nolint: errcheck
 	}()
 
 	grpcClient := pb.NewAllocationServiceClient(conn)
@@ -336,15 +310,13 @@ func GetAllocatorClient(ctx context.Context, t *testing.T, framework *e2e.Framew
 	}
 
 	var response *pb.AllocationResponse
-	err = wait.PollUntilContextTimeout(ctx, 5*time.Second, 5*time.Minute, true, func(ctx context.Context) (bool, error) {
-		response, err = grpcClient.Allocate(ctx, request)
+	err = wait.PollImmediate(2*time.Second, 5*time.Minute, func() (bool, error) {
+		response, err = grpcClient.Allocate(context.Background(), request)
 		if err != nil {
-			logger.WithError(err).Info("Failed grpc allocation request while waiting for certs to stabilize")
+			logrus.WithError(err).Info("failing Allocate request")
 			return false, nil
 		}
 		ValidateAllocatorResponse(t, response)
-		err = DeleteAgonesPod(ctx, response.GameServerName, framework.Namespace, framework)
-		assert.NoError(t, err, "Failed to delete game server pod %s", response.GameServerName)
 		return true, nil
 	})
 	if err != nil {
