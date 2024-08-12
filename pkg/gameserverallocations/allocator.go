@@ -250,7 +250,7 @@ func (c *Allocator) loggerForGameServerAllocation(gsa *allocationv1.GameServerAl
 }
 
 // allocateFromLocalCluster allocates gameservers from the local cluster.
-// Registers number of times we retried before getting a sucess allocation
+// Registers number of times we retried before getting a success allocation
 func (c *Allocator) allocateFromLocalCluster(ctx context.Context, gsa *allocationv1.GameServerAllocation) (*allocationv1.GameServerAllocation, error) {
 	var gs *agonesv1.GameServer
 	latency := c.newMetrics(ctx)
