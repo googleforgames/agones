@@ -105,6 +105,7 @@ Table of Contents
         * [make kind-shell](#make-kind-shell)
         * [make kind-controller-portforward](#make-kind-controller-portforward)
   * [Dependencies](#dependencies)
+  * [Running Performance Test] (#running-performance-test)
   * [Troubleshooting](#troubleshooting)
       * [$GOPATH/$GOROOT error when building in WSL](#gopathgoroot-error-when-building-in-wsl)
       * [Error: cluster-admin-binding already exists](#error-cluster-admin-binding-already-exists)
@@ -895,6 +896,104 @@ Note the version in the pathname. Go may eliminate the need to do this in future
 
 We also use vendor to hold code patches while waiting for the project to release the fixes in their own code. An example is in [k8s.io/apimachinery](https://github.com/googleforgames/agones/issues/414) where a fix will be released later this year, but we updated our own vendored version in order to fix the issue sooner.
 
+## Running Performance Test
+
+To be able to run the performance script located in the following path: `agones/build/performance-test.sh` you need to have the following setup:
+
+#### Install a standard GKE cluster 
+
+```
+gcloud container clusters create {CLUSTER_NAME}	 \
+  --region={REGION} \
+  --release-channel={RELEASE_CHANNEL} \
+  --tags=game-server \
+  --scopes=gke-default \
+  --num-nodes={NUM_NODES} \
+  --enable-image-streaming \
+  --machine-type=e2-standard-4
+```
+
+#### Install Agones
+
+```
+helm repo add agones https://agones.dev/chart/stable
+helm repo update
+helm install agones --namespace agones-system --create-namespace agones/agones
+```
+
+#### Set up node for prometheus 
+
+```
+gcloud container node-pools create agones-metrics --cluster={CLUSTER_NAME} --zone={REGION} \
+  --node-taints agones.dev/agones-metrics=true:NoExecute \
+  --node-labels agones.dev/agones-metrics=true \
+  --num-nodes=1 \
+  --machine-type=e2-standard-4
+```
+
+#### Install Prometheus and port-forward
+
+cd agones/
+
+```
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo update
+
+helm upgrade --install --wait prom prometheus-community/prometheus --namespace metrics --create-namespace \
+    --set server.global.scrape_interval=30s \
+    --set server.persistentVolume.enabled=true \
+    --set server.persistentVolume.size=64Gi \
+    -f ./build/prometheus.yaml
+```
+
+`kubectl port-forward deployments/prom-prometheus-server 9090 -n metrics`
+
+Go to http://localhost:9090/
+
+#### Install Grafana
+
+`kubectl apply -f ./build/grafana/`
+
+```
+helm repo add grafana https://grafana.github.io/helm-charts
+helm repo update
+
+helm upgrade --install --wait grafana grafana/grafana --namespace metrics \
+  --set adminPassword={ADMIN_PASSWORD} -f ./build/grafana.yaml
+```
+
+`kubectl port-forward deployments/grafana 3000 -n metrics`
+
+Go to http://localhost:3000/
+
+#### Modify the performance-test.sh
+
+The performance-tests script contains a set of variables that need to be overwritten to work with your cluster and configuration settings. You can also pass these values through command line This is an example:
+
+```
+CLUSTER_NAME=agones-standard
+CLUSTER_LOCATION=us-central1-c
+REGISTRY=us-east1-docker.pkg.dev/user/agones
+PROJECT=my-project
+REPLICAS=10000
+AUTO_SHUTDOWN_DELAY=60
+BUFFER_SIZE=9900
+MAX_REPLICAS=20000
+DURATION=10m
+CLIENTS=50
+INTERVAL=1000
+```
+
+This script is an entyrpoint to be able to run the allocation performance test which can be found at `agones/test/load/allocation`
+
+You can see the fleet and autoscaler configuration (such as buffer size, min/max replicas and automatic shutdown delay, etc) in the following files: 
+
+* [performance-test-fleet-template](https://github.com/googleforgames/agones/blob/main/test/load/allocation/performance-test-fleet-template.yaml)
+* [performance-test-autoscaler-template.yaml](https://github.com/googleforgames/agones/blob/main/test/load/allocation/performance-test-autoscaler-template.yaml)
+
+Something to keep in mind with CLIENTS and INTERVAL is the following. Let's say you have client count 50 and interval 500ms, which means every client will submit 2 allocation requests in 1s, so the entire allocation requests that the allocator receives in 1s is 50 * 2 = 100, so the allocation request QPS from the allocator view is 100. 
+
+Finally, you can cd agones/build and run `sh performance-test.sh` if you see timeout issues please re-run the command. 
 
 ## Troubleshooting
 
