@@ -674,7 +674,7 @@ data:
             "align": false,
             "alignLevel": null
           }
-        }, 
+        },
         {
       "type": "timeseries",
       "title": "Average GameServer State duration",
