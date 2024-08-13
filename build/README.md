@@ -105,7 +105,7 @@ Table of Contents
         * [make kind-shell](#make-kind-shell)
         * [make kind-controller-portforward](#make-kind-controller-portforward)
   * [Dependencies](#dependencies)
-  * [Running Performance Test] (#running-performance-test)
+  * [Running Performance Test](#running-performance-test)
   * [Troubleshooting](#troubleshooting)
       * [$GOPATH/$GOROOT error when building in WSL](#gopathgoroot-error-when-building-in-wsl)
       * [Error: cluster-admin-binding already exists](#error-cluster-admin-binding-already-exists)
