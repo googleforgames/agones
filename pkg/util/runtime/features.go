@@ -38,9 +38,6 @@ const (
 	// (a generic implenetation of the player tracking feature).
 	FeatureCountsAndLists Feature = "CountsAndLists"
 
-	////////////////
-	// Alpha features
-
 	// FeatureDisableResyncOnSDKServer is a feature flag to enable/disable resync on SDK server.
 	FeatureDisableResyncOnSDKServer Feature = "DisableResyncOnSDKServer"
 
