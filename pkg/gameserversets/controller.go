@@ -59,12 +59,6 @@ var (
 )
 
 const (
-	//maxCreationParalellism         = 16
-	//maxGameServerCreationsPerBatch = 64
-
-	//maxDeletionParallelism         = 64
-	//maxGameServerDeletionsPerBatch = 64
-
 	// maxPodPendingCount is the maximum number of pending pods per game server set
 	maxPodPendingCount = 5000
 

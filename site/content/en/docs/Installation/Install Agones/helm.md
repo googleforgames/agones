@@ -187,7 +187,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.controller.maxCreationParalellism`                           | Maximum number of parallelizing creation calls in GSS controller                                                                                                                                                     | `16`                                   |
 | `agones.controller.maxGameServerCreationsPerBatch`                           | Maximum number of GameServer creation calls per batch                                                                                                                                                      | `64`                                   |
 | `agones.controller.maxDeletionParallelism`                           | Maximum number of parallelizing deletion calls in GSS                                                                                                                                                      | `64`                                   |
-| `agones.controller.maxGameServerDeletionsPerBatch`                           | Maximum number of GameServers deletion calls per batch                                                                                                                                                      | `64`                                   |
+| `agones.controller.maxGameServerDeletionsPerBatch`                           | Maximum number of GameServer deletion calls per batch                                                                                                                                                      | `64`                                   |
 
 ### Ping Service
 
