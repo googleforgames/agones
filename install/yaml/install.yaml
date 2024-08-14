@@ -17098,22 +17098,20 @@ spec:
           value: ""
         - name: NUM_WORKERS
           value: "100"
+        - name: MAX_CREATION_PARALELLISM
+          value: 
+        - name: MAX_GAME_SERVER_CREATIONS_PER_BATCH
+          value: "64"
+        - name: MAX_DELETION_PARALELLISM
+          value: 
+        - name: MAX_GAME_SERVER_DELETIONS_PER_BATCH
+          value: "64"
         - name: API_SERVER_QPS
           value: "400"
         - name: API_SERVER_QPS_BURST
           value: "500"
         - name: LOG_LEVEL
           value: "info"
-        - name: MAX_CREATION_PARALELLISM
-          value: "16"
-        - name: MAX_GAME_SERVER_CREATIONS_PER_BATCH
-          value: "64"
-        - name: MAX_DELETION_PARALELLISM
-          value: "64"
-        - name: MAX_GAME_SERVER_DELETIONS_PER_BATCH
-          value: "64"
-        - name: MAX_CREATION_PARALELLISM
-          value: "16"
         - name: FEATURE_GATES
           value: ""
         - name: ALLOCATION_BATCH_WAIT_TIME
@@ -17260,16 +17258,6 @@ spec:
           value: "info"
         - name: FEATURE_GATES
           value: ""
-        - name: MAX_CREATION_PARALELLISM
-          value: "16"
-        - name: MAX_GAME_SERVER_CREATIONS_PER_BATCH
-          value: "64"
-        - name: MAX_DELETION_PARALELLISM
-          value: "64"
-        - name: MAX_GAME_SERVER_DELETIONS_PER_BATCH
-          value: "64"
-        - name: MAX_CREATION_PARALELLISM
-          value: "16"
         - name: ALLOCATION_BATCH_WAIT_TIME
           value: "500ms"
         - name: CLOUD_PRODUCT
