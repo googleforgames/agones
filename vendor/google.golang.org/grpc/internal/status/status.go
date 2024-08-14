@@ -49,7 +49,7 @@ func New(c codes.Code, msg string) *Status {
 }
 
 // Newf returns New(c, fmt.Sprintf(format, a...)).
-func Newf(c codes.Code, format string, a ...any) *Status {
+func Newf(c codes.Code, format string, a ...interface{}) *Status {
 	return New(c, fmt.Sprintf(format, a...))
 }
 
@@ -64,7 +64,7 @@ func Err(c codes.Code, msg string) error {
 }
 
 // Errorf returns Error(c, fmt.Sprintf(format, a...)).
-func Errorf(c codes.Code, format string, a ...any) error {
+func Errorf(c codes.Code, format string, a ...interface{}) error {
 	return Err(c, fmt.Sprintf(format, a...))
 }
 
@@ -120,11 +120,11 @@ func (s *Status) WithDetails(details ...proto.Message) (*Status, error) {
 
 // Details returns a slice of details messages attached to the status.
 // If a detail cannot be decoded, the error is returned in place of the detail.
-func (s *Status) Details() []any {
+func (s *Status) Details() []interface{} {
 	if s == nil || s.s == nil {
 		return nil
 	}
-	details := make([]any, 0, len(s.s.Details))
+	details := make([]interface{}, 0, len(s.s.Details))
 	for _, any := range s.s.Details {
 		detail := &ptypes.DynamicAny{}
 		if err := ptypes.UnmarshalAny(any, detail); err != nil {
