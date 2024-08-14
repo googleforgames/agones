@@ -1471,6 +1471,7 @@ func TestScheduleAutoscaler(t *testing.T) {
 	fas, err := fleetautoscalers.Create(ctx, scheduleAutoscaler, metav1.CreateOptions{})
 	assert.NoError(t, err)
 
+	// Assert the fleet scaled up to the correct amount since the schedule is active
 	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(5))
 	fleetautoscalers.Delete(ctx, fas.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
 
@@ -1478,12 +1479,13 @@ func TestScheduleAutoscaler(t *testing.T) {
 	framework.ScaleFleet(t, log, flt, 3)
 	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(3))
 
-	// Between Active Period Cron Schedule (e.g. run between 1-2 * * * *, which is between the first minute and second minute of the hour)
+	// Between Active Period Cron Schedule (e.g. run between 1-2 * * * *, which is between the first and second minute of the hour)
 	scheduleAutoscaler = defaultAutoscalerSchedule(flt)
 	scheduleAutoscaler.Spec.Policy.Schedule.ActivePeriod.StartCron = nextCronMinuteBetween(time.Now())
 	fas, err = fleetautoscalers.Create(ctx, scheduleAutoscaler, metav1.CreateOptions{})
 	assert.NoError(t, err)
 
+	// Assert the fleet scaled up to the correct amount since the schedule is active
 	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(5))
 	fleetautoscalers.Delete(ctx, fas.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
 }
@@ -1512,7 +1514,7 @@ func TestChainAutoscaler(t *testing.T) {
 	fas, err := fleetautoscalers.Create(ctx, chainAutoscaler, metav1.CreateOptions{})
 	assert.NoError(t, err)
 
-	// Verify only the second schedule ran
+	// Assert that only the second schedule ran
 	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(4))
 	fleetautoscalers.Delete(ctx, fas.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
 
@@ -1536,9 +1538,9 @@ func TestChainAutoscaler(t *testing.T) {
 	fas, err = fleetautoscalers.Create(ctx, chainAutoscaler, metav1.CreateOptions{})
 	assert.NoError(t, err)
 
-	// Verify the first schedule has been applied
+	// Assert that the first schedule has been applied
 	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(10))
-	// Verify the second schedule has been applied
+	// Assert that the second schedule has been applied
 	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(4))
 
 	fleetautoscalers.Delete(ctx, fas.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
