@@ -59,11 +59,11 @@ var (
 )
 
 const (
-	maxCreationParalellism         = 16
-	maxGameServerCreationsPerBatch = 64
+	//maxCreationParalellism         = 16
+	//maxGameServerCreationsPerBatch = 64
 
-	maxDeletionParallelism         = 64
-	maxGameServerDeletionsPerBatch = 64
+	//maxDeletionParallelism         = 64
+	//maxGameServerDeletionsPerBatch = 64
 
 	// maxPodPendingCount is the maximum number of pending pods per game server set
 	maxPodPendingCount = 5000
@@ -81,19 +81,23 @@ type Extensions struct {
 
 // Controller is a GameServerSet controller
 type Controller struct {
-	baseLogger           *logrus.Entry
-	counter              *gameservers.PerNodeCounter
-	crdGetter            apiextclientv1.CustomResourceDefinitionInterface
-	gameServerGetter     getterv1.GameServersGetter
-	gameServerLister     listerv1.GameServerLister
-	gameServerSynced     cache.InformerSynced
-	gameServerSetGetter  getterv1.GameServerSetsGetter
-	gameServerSetLister  listerv1.GameServerSetLister
-	gameServerSetSynced  cache.InformerSynced
-	workerqueue          *workerqueue.WorkerQueue
-	recorder             record.EventRecorder
-	stateCache           *gameServerStateCache
-	allocationController *AllocationOverflowController
+	baseLogger                     *logrus.Entry
+	counter                        *gameservers.PerNodeCounter
+	crdGetter                      apiextclientv1.CustomResourceDefinitionInterface
+	gameServerGetter               getterv1.GameServersGetter
+	gameServerLister               listerv1.GameServerLister
+	gameServerSynced               cache.InformerSynced
+	gameServerSetGetter            getterv1.GameServerSetsGetter
+	gameServerSetLister            listerv1.GameServerSetLister
+	gameServerSetSynced            cache.InformerSynced
+	workerqueue                    *workerqueue.WorkerQueue
+	recorder                       record.EventRecorder
+	stateCache                     *gameServerStateCache
+	allocationController           *AllocationOverflowController
+	maxCreationParalellism         int
+	maxGameServerCreationsPerBatch int
+	maxDeletionParallelism         int
+	maxGameServerDeletionsPerBatch int
 }
 
 // NewController returns a new gameserverset crd controller
@@ -103,7 +107,11 @@ func NewController(
 	kubeClient kubernetes.Interface,
 	extClient extclientset.Interface,
 	agonesClient versioned.Interface,
-	agonesInformerFactory externalversions.SharedInformerFactory) *Controller {
+	agonesInformerFactory externalversions.SharedInformerFactory,
+	maxCreationParalellism int,
+	maxDeletionParallelism int,
+	maxGameServerCreationsPerBatch int,
+	maxGameServerDeletionsPerBatch int) *Controller {
 
 	gameServers := agonesInformerFactory.Agones().V1().GameServers()
 	gsInformer := gameServers.Informer()
@@ -111,15 +119,19 @@ func NewController(
 	gsSetInformer := gameServerSets.Informer()
 
 	c := &Controller{
-		crdGetter:           extClient.ApiextensionsV1().CustomResourceDefinitions(),
-		counter:             counter,
-		gameServerGetter:    agonesClient.AgonesV1(),
-		gameServerLister:    gameServers.Lister(),
-		gameServerSynced:    gsInformer.HasSynced,
-		gameServerSetGetter: agonesClient.AgonesV1(),
-		gameServerSetLister: gameServerSets.Lister(),
-		gameServerSetSynced: gsSetInformer.HasSynced,
-		stateCache:          &gameServerStateCache{},
+		crdGetter:                      extClient.ApiextensionsV1().CustomResourceDefinitions(),
+		counter:                        counter,
+		gameServerGetter:               agonesClient.AgonesV1(),
+		gameServerLister:               gameServers.Lister(),
+		gameServerSynced:               gsInformer.HasSynced,
+		gameServerSetGetter:            agonesClient.AgonesV1(),
+		gameServerSetLister:            gameServerSets.Lister(),
+		gameServerSetSynced:            gsSetInformer.HasSynced,
+		maxCreationParalellism:         maxCreationParalellism,
+		maxDeletionParallelism:         maxDeletionParallelism,
+		maxGameServerCreationsPerBatch: maxGameServerCreationsPerBatch,
+		maxGameServerDeletionsPerBatch: maxGameServerDeletionsPerBatch,
+		stateCache:                     &gameServerStateCache{},
 	}
 
 	c.baseLogger = runtime.NewLoggerWithType(c)
@@ -307,7 +319,7 @@ func (c *Controller) syncGameServerSet(ctx context.Context, key string) error {
 	list = c.stateCache.forGameServerSet(gsSet).reconcileWithUpdatedServerList(list)
 
 	numServersToAdd, toDelete, isPartial := computeReconciliationAction(gsSet.Spec.Scheduling, list, c.counter.Counts(),
-		int(gsSet.Spec.Replicas), maxGameServerCreationsPerBatch, maxGameServerDeletionsPerBatch, maxPodPendingCount, gsSet.Spec.Priorities)
+		int(gsSet.Spec.Replicas), c.maxGameServerCreationsPerBatch, c.maxGameServerDeletionsPerBatch, maxPodPendingCount, gsSet.Spec.Priorities)
 
 	// GameserverSet is marked for deletion then don't add gameservers.
 	if !gsSet.DeletionTimestamp.IsZero() {
@@ -509,7 +521,7 @@ func shouldDeleteErroredGameServer(gs *agonesv1.GameServer) bool {
 func (c *Controller) addMoreGameServers(ctx context.Context, gsSet *agonesv1.GameServerSet, count int) error {
 	loggerForGameServerSet(c.baseLogger, gsSet).WithField("count", count).Debug("Adding more gameservers")
 
-	return parallelize(newGameServersChannel(count, gsSet), maxCreationParalellism, func(gs *agonesv1.GameServer) error {
+	return parallelize(newGameServersChannel(count, gsSet), c.maxCreationParalellism, func(gs *agonesv1.GameServer) error {
 		gs, err := c.gameServerGetter.GameServers(gs.Namespace).Create(ctx, gs, metav1.CreateOptions{})
 		if err != nil {
 			return errors.Wrapf(err, "error creating gameserver for gameserverset %s", gsSet.ObjectMeta.Name)
@@ -524,7 +536,7 @@ func (c *Controller) addMoreGameServers(ctx context.Context, gsSet *agonesv1.Gam
 func (c *Controller) deleteGameServers(ctx context.Context, gsSet *agonesv1.GameServerSet, toDelete []*agonesv1.GameServer) error {
 	loggerForGameServerSet(c.baseLogger, gsSet).WithField("diff", len(toDelete)).Debug("Deleting gameservers")
 
-	return parallelize(gameServerListToChannel(toDelete), maxDeletionParallelism, func(gs *agonesv1.GameServer) error {
+	return parallelize(gameServerListToChannel(toDelete), c.maxDeletionParallelism, func(gs *agonesv1.GameServer) error {
 		// We should not delete the gameservers directly buy set their state to shutdown and let the gameserver controller to delete
 		gsCopy := gs.DeepCopy()
 		gsCopy.Status.State = agonesv1.GameServerStateShutdown

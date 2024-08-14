@@ -148,6 +148,14 @@ spec:
           value: {{ .Values.agones.metrics.stackdriverProjectID | quote }}
         - name: NUM_WORKERS
           value: {{ .Values.agones.controller.numWorkers | quote }}
+        - name: MAX_CREATION_PARALELLISM
+          value: {{ .Values.agones.controller.maxCreationParalellism | quote }}
+        - name: MAX_GAME_SERVER_CREATIONS_PER_BATCH
+          value: {{ .Values.agones.controller.maxGameServerCreationsPerBatch | quote }}
+        - name: MAX_DELETION_PARALELLISM
+          value: {{ .Values.agones.controller.maxDeletionParalellism | quote }}
+        - name: MAX_GAME_SERVER_DELETIONS_PER_BATCH
+          value: {{ .Values.agones.controller.maxGameServerDeletionsPerBatch | quote }}
         - name: API_SERVER_QPS
           value: {{ .Values.agones.controller.apiServerQPS | quote }}
         - name: API_SERVER_QPS_BURST

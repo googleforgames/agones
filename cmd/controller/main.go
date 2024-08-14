@@ -59,34 +59,38 @@ import (
 )
 
 const (
-	enableStackdriverMetricsFlag = "stackdriver-exporter"
-	stackdriverLabels            = "stackdriver-labels"
-	enablePrometheusMetricsFlag  = "prometheus-exporter"
-	projectIDFlag                = "gcp-project-id"
-	sidecarImageFlag             = "sidecar-image"
-	sidecarCPURequestFlag        = "sidecar-cpu-request"
-	sidecarCPULimitFlag          = "sidecar-cpu-limit"
-	sidecarMemoryRequestFlag     = "sidecar-memory-request"
-	sidecarMemoryLimitFlag       = "sidecar-memory-limit"
-	sidecarRunAsUserFlag         = "sidecar-run-as-user"
-	sdkServerAccountFlag         = "sdk-service-account"
-	pullSidecarFlag              = "always-pull-sidecar"
-	minPortFlag                  = "min-port"
-	maxPortFlag                  = "max-port"
-	additionalPortRangesFlag     = "additional-port-ranges"
-	certFileFlag                 = "cert-file"
-	keyFileFlag                  = "key-file"
-	numWorkersFlag               = "num-workers"
-	apiServerSustainedQPSFlag    = "api-server-qps"
-	apiServerBurstQPSFlag        = "api-server-qps-burst"
-	logDirFlag                   = "log-dir"
-	logLevelFlag                 = "log-level"
-	logSizeLimitMBFlag           = "log-size-limit-mb"
-	kubeconfigFlag               = "kubeconfig"
-	allocationBatchWaitTime      = "allocation-batch-wait-time"
-	defaultResync                = 30 * time.Second
-	podNamespace                 = "pod-namespace"
-	leaderElectionFlag           = "leader-election"
+	enableStackdriverMetricsFlag       = "stackdriver-exporter"
+	stackdriverLabels                  = "stackdriver-labels"
+	enablePrometheusMetricsFlag        = "prometheus-exporter"
+	projectIDFlag                      = "gcp-project-id"
+	sidecarImageFlag                   = "sidecar-image"
+	sidecarCPURequestFlag              = "sidecar-cpu-request"
+	sidecarCPULimitFlag                = "sidecar-cpu-limit"
+	sidecarMemoryRequestFlag           = "sidecar-memory-request"
+	sidecarMemoryLimitFlag             = "sidecar-memory-limit"
+	sidecarRunAsUserFlag               = "sidecar-run-as-user"
+	sdkServerAccountFlag               = "sdk-service-account"
+	pullSidecarFlag                    = "always-pull-sidecar"
+	minPortFlag                        = "min-port"
+	maxPortFlag                        = "max-port"
+	additionalPortRangesFlag           = "additional-port-ranges"
+	certFileFlag                       = "cert-file"
+	keyFileFlag                        = "key-file"
+	numWorkersFlag                     = "num-workers"
+	apiServerSustainedQPSFlag          = "api-server-qps"
+	apiServerBurstQPSFlag              = "api-server-qps-burst"
+	logDirFlag                         = "log-dir"
+	logLevelFlag                       = "log-level"
+	logSizeLimitMBFlag                 = "log-size-limit-mb"
+	kubeconfigFlag                     = "kubeconfig"
+	allocationBatchWaitTime            = "allocation-batch-wait-time"
+	defaultResync                      = 30 * time.Second
+	podNamespace                       = "pod-namespace"
+	leaderElectionFlag                 = "leader-election"
+	maxCreationParalellismFlag         = "max-creation-paralellism"
+	maxGameServerCreationsPerBatchFlag = "max-game-server-creations-per-batch"
+	maxDeletionParallelismFlag         = "max-deletion-parallelism"
+	maxGameServerDeletionsPerBatchFlag = "max-game-server-deletions-per-batch"
 )
 
 var (
@@ -218,7 +222,7 @@ func main() {
 		ctlConf.SidecarMemoryRequest, ctlConf.SidecarMemoryLimit, ctlConf.SidecarRunAsUser, ctlConf.SdkServiceAccount,
 		kubeClient, kubeInformerFactory, extClient, agonesClient, agonesInformerFactory)
 	gsSetController := gameserversets.NewController(health, gsCounter,
-		kubeClient, extClient, agonesClient, agonesInformerFactory)
+		kubeClient, extClient, agonesClient, agonesInformerFactory, ctlConf.MaxCreationParalellism, ctlConf.MaxDeletionParallelism, ctlConf.MaxGameServerCreationsPerBatch, ctlConf.MaxGameServerDeletionsPerBatch)
 	fleetController := fleets.NewController(health, kubeClient, extClient, agonesClient, agonesInformerFactory)
 	fasController := fleetautoscalers.NewController(health,
 		kubeClient, extClient, agonesClient, agonesInformerFactory, gsCounter)
@@ -281,6 +285,11 @@ func parseEnvFlags() config {
 	viper.SetDefault(logLevelFlag, "Info")
 	viper.SetDefault(logSizeLimitMBFlag, 10000) // 10 GB, will be split into 100 MB chunks
 
+	viper.SetDefault(maxCreationParalellismFlag, 16)
+	viper.SetDefault(maxGameServerCreationsPerBatchFlag, 64)
+	viper.SetDefault(maxDeletionParallelismFlag, 64)
+	viper.SetDefault(maxGameServerDeletionsPerBatchFlag, 64)
+
 	pflag.String(sidecarImageFlag, viper.GetString(sidecarImageFlag), "Flag to overwrite the GameServer sidecar image that is used. Can also use SIDECAR env variable")
 	pflag.String(sidecarCPULimitFlag, viper.GetString(sidecarCPULimitFlag), "Flag to overwrite the GameServer sidecar container's cpu limit. Can also use SIDECAR_CPU_LIMIT env variable")
 	pflag.String(sidecarCPURequestFlag, viper.GetString(sidecarCPURequestFlag), "Flag to overwrite the GameServer sidecar container's cpu request. Can also use SIDECAR_CPU_REQUEST env variable")
@@ -304,6 +313,10 @@ func parseEnvFlags() config {
 	pflag.Int32(apiServerBurstQPSFlag, 200, "Maximum burst queries per second to send to the API server")
 	pflag.String(logDirFlag, viper.GetString(logDirFlag), "If set, store logs in a given directory.")
 	pflag.Int32(logSizeLimitMBFlag, 1000, "Log file size limit in MB")
+	pflag.Int32(maxCreationParalellismFlag, viper.GetInt32(maxCreationParalellismFlag), "Maximum number of parallelizing creation calls in GSS controller")
+	pflag.Int32(maxGameServerCreationsPerBatchFlag, viper.GetInt32(maxGameServerCreationsPerBatchFlag), "Maximum number of GameServer creation calls per batch")
+	pflag.Int32(maxDeletionParallelismFlag, viper.GetInt32(maxDeletionParallelismFlag), "Maximum number of parallelizing deletion calls in GSS controller")
+	pflag.Int32(maxGameServerDeletionsPerBatchFlag, viper.GetInt32(maxGameServerDeletionsPerBatchFlag), "Maximum number of GameServers deletion calls per batch")
 	pflag.String(logLevelFlag, viper.GetString(logLevelFlag), "Agones Log level")
 	pflag.Duration(allocationBatchWaitTime, viper.GetDuration(allocationBatchWaitTime), "Flag to configure the waiting period between allocations batches")
 	pflag.String(podNamespace, viper.GetString(podNamespace), "namespace of current pod")
@@ -337,6 +350,10 @@ func parseEnvFlags() config {
 	runtime.Must(viper.BindEnv(logLevelFlag))
 	runtime.Must(viper.BindEnv(logDirFlag))
 	runtime.Must(viper.BindEnv(logSizeLimitMBFlag))
+	runtime.Must(viper.BindEnv(maxCreationParalellismFlag))
+	runtime.Must(viper.BindEnv(maxGameServerCreationsPerBatchFlag))
+	runtime.Must(viper.BindEnv(maxDeletionParallelismFlag))
+	runtime.Must(viper.BindEnv(maxGameServerDeletionsPerBatchFlag))
 	runtime.Must(viper.BindEnv(allocationBatchWaitTime))
 	runtime.Must(viper.BindEnv(podNamespace))
 	runtime.Must(viper.BindEnv(leaderElectionFlag))
@@ -376,31 +393,35 @@ func parseEnvFlags() config {
 	}
 
 	return config{
-		PortRanges:              portRanges,
-		SidecarImage:            viper.GetString(sidecarImageFlag),
-		SidecarCPURequest:       requestCPU,
-		SidecarCPULimit:         limitCPU,
-		SidecarMemoryRequest:    requestMemory,
-		SidecarMemoryLimit:      limitMemory,
-		SidecarRunAsUser:        int(viper.GetInt32(sidecarRunAsUserFlag)),
-		SdkServiceAccount:       viper.GetString(sdkServerAccountFlag),
-		AlwaysPullSidecar:       viper.GetBool(pullSidecarFlag),
-		KeyFile:                 viper.GetString(keyFileFlag),
-		CertFile:                viper.GetString(certFileFlag),
-		KubeConfig:              viper.GetString(kubeconfigFlag),
-		PrometheusMetrics:       viper.GetBool(enablePrometheusMetricsFlag),
-		Stackdriver:             viper.GetBool(enableStackdriverMetricsFlag),
-		GCPProjectID:            viper.GetString(projectIDFlag),
-		NumWorkers:              int(viper.GetInt32(numWorkersFlag)),
-		APIServerSustainedQPS:   int(viper.GetInt32(apiServerSustainedQPSFlag)),
-		APIServerBurstQPS:       int(viper.GetInt32(apiServerBurstQPSFlag)),
-		LogDir:                  viper.GetString(logDirFlag),
-		LogLevel:                viper.GetString(logLevelFlag),
-		LogSizeLimitMB:          int(viper.GetInt32(logSizeLimitMBFlag)),
-		StackdriverLabels:       viper.GetString(stackdriverLabels),
-		AllocationBatchWaitTime: viper.GetDuration(allocationBatchWaitTime),
-		PodNamespace:            viper.GetString(podNamespace),
-		LeaderElection:          viper.GetBool(leaderElectionFlag),
+		PortRanges:                     portRanges,
+		SidecarImage:                   viper.GetString(sidecarImageFlag),
+		SidecarCPURequest:              requestCPU,
+		SidecarCPULimit:                limitCPU,
+		SidecarMemoryRequest:           requestMemory,
+		SidecarMemoryLimit:             limitMemory,
+		SidecarRunAsUser:               int(viper.GetInt32(sidecarRunAsUserFlag)),
+		SdkServiceAccount:              viper.GetString(sdkServerAccountFlag),
+		AlwaysPullSidecar:              viper.GetBool(pullSidecarFlag),
+		KeyFile:                        viper.GetString(keyFileFlag),
+		CertFile:                       viper.GetString(certFileFlag),
+		KubeConfig:                     viper.GetString(kubeconfigFlag),
+		PrometheusMetrics:              viper.GetBool(enablePrometheusMetricsFlag),
+		Stackdriver:                    viper.GetBool(enableStackdriverMetricsFlag),
+		GCPProjectID:                   viper.GetString(projectIDFlag),
+		NumWorkers:                     int(viper.GetInt32(numWorkersFlag)),
+		APIServerSustainedQPS:          int(viper.GetInt32(apiServerSustainedQPSFlag)),
+		APIServerBurstQPS:              int(viper.GetInt32(apiServerBurstQPSFlag)),
+		LogDir:                         viper.GetString(logDirFlag),
+		LogLevel:                       viper.GetString(logLevelFlag),
+		LogSizeLimitMB:                 int(viper.GetInt32(logSizeLimitMBFlag)),
+		MaxGameServerCreationsPerBatch: int(viper.GetInt32(maxGameServerCreationsPerBatchFlag)),
+		MaxCreationParalellism:         int(viper.GetInt32(maxCreationParalellismFlag)),
+		MaxGameServerDeletionsPerBatch: int(viper.GetInt32(maxGameServerDeletionsPerBatchFlag)),
+		MaxDeletionParallelism:         int(viper.GetInt32(maxDeletionParallelismFlag)),
+		StackdriverLabels:              viper.GetString(stackdriverLabels),
+		AllocationBatchWaitTime:        viper.GetDuration(allocationBatchWaitTime),
+		PodNamespace:                   viper.GetString(podNamespace),
+		LeaderElection:                 viper.GetBool(leaderElectionFlag),
 	}
 }
 
@@ -429,31 +450,35 @@ func parsePortRanges(s string) (map[string]portallocator.PortRange, error) {
 
 // config stores all required configuration to create a game server controller.
 type config struct {
-	PortRanges              map[string]portallocator.PortRange
-	SidecarImage            string
-	SidecarCPURequest       resource.Quantity
-	SidecarCPULimit         resource.Quantity
-	SidecarMemoryRequest    resource.Quantity
-	SidecarMemoryLimit      resource.Quantity
-	SidecarRunAsUser        int
-	SdkServiceAccount       string
-	AlwaysPullSidecar       bool
-	PrometheusMetrics       bool
-	Stackdriver             bool
-	StackdriverLabels       string
-	KeyFile                 string
-	CertFile                string
-	KubeConfig              string
-	GCPProjectID            string
-	NumWorkers              int
-	APIServerSustainedQPS   int
-	APIServerBurstQPS       int
-	LogDir                  string
-	LogLevel                string
-	LogSizeLimitMB          int
-	AllocationBatchWaitTime time.Duration
-	PodNamespace            string
-	LeaderElection          bool
+	PortRanges                     map[string]portallocator.PortRange
+	SidecarImage                   string
+	SidecarCPURequest              resource.Quantity
+	SidecarCPULimit                resource.Quantity
+	SidecarMemoryRequest           resource.Quantity
+	SidecarMemoryLimit             resource.Quantity
+	SidecarRunAsUser               int
+	SdkServiceAccount              string
+	AlwaysPullSidecar              bool
+	PrometheusMetrics              bool
+	Stackdriver                    bool
+	StackdriverLabels              string
+	KeyFile                        string
+	CertFile                       string
+	KubeConfig                     string
+	GCPProjectID                   string
+	NumWorkers                     int
+	APIServerSustainedQPS          int
+	APIServerBurstQPS              int
+	LogDir                         string
+	LogLevel                       string
+	LogSizeLimitMB                 int
+	MaxGameServerCreationsPerBatch int
+	MaxCreationParalellism         int
+	MaxGameServerDeletionsPerBatch int
+	MaxDeletionParallelism         int
+	AllocationBatchWaitTime        time.Duration
+	PodNamespace                   string
+	LeaderElection                 bool
 }
 
 // validate ensures the ctlConfig data is valid.
