@@ -100,7 +100,7 @@ module "eks" {
   cluster_name    = var.cluster_name
   subnets         = module.vpc.public_subnets
   vpc_id          = module.vpc.vpc_id
-  cluster_version = "1.29"
+  cluster_version = "1.30"
 
   worker_groups_launch_template = [
     {
