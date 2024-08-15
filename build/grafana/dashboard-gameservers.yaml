@@ -29,7 +29,10 @@ data:
           {
             "$$hashKey": "object:261",
             "builtIn": 1,
-            "datasource": "-- Grafana --",
+            "datasource": {
+              "type": "datasource",
+              "uid": "grafana"
+            },
             "enable": true,
             "hide": true,
             "iconColor": "rgba(0, 211, 255, 1)",
@@ -40,35 +43,573 @@ data:
       },
       "description": "",
       "editable": true,
-      "gnetId": null,
+      "fiscalYearStartMonth": 0,
       "graphTooltip": 0,
-      "iteration": 1604523181564,
       "links": [],
       "panels": [
         {
-          "aliasColors": {},
-          "breakPoint": "50%",
-          "cacheTimeout": null,
-          "combine": {
-            "label": "Others",
-            "threshold": 0
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
           },
-          "datasource": null,
           "fieldConfig": {
             "defaults": {
-              "custom": {},
-              "displayName": "",
-              "mappings": [
-                {
-                  "from": "",
-                  "id": 1,
-                  "operator": "",
-                  "text": "",
-                  "to": "",
-                  "type": 1,
-                  "value": ""
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
                 }
+              },
+              "decimals": 0,
+              "mappings": [],
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 6,
+            "w": 7,
+            "x": 0,
+            "y": 0
+          },
+          "id": 4,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true,
+              "values": [
+                "value"
+              ]
+            },
+            "pieType": "pie",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
               ],
+              "fields": "",
+              "values": false
+            },
+            "tooltip": {
+              "maxHeight": 600,
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+              },
+              "expr": "sum(agones_gameservers_count{fleet_name=~\"$fleet\", namespace=~\"$namespace\"}) by (type)",
+              "format": "time_series",
+              "hide": false,
+              "instant": true,
+              "interval": "",
+              "intervalFactor": 1,
+              "legendFormat": "{{type}}",
+              "refId": "A"
+            }
+          ],
+          "title": "GameServers count per type",
+          "type": "piechart"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "links": [],
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "short"
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byValue",
+                  "options": {
+                    "op": "gte",
+                    "reducer": "allIsZero",
+                    "value": 0
+                  }
+                },
+                "properties": [
+                  {
+                    "id": "custom.hideFrom",
+                    "value": {
+                      "legend": true,
+                      "tooltip": true,
+                      "viz": false
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byValue",
+                  "options": {
+                    "op": "gte",
+                    "reducer": "allIsNull",
+                    "value": 0
+                  }
+                },
+                "properties": [
+                  {
+                    "id": "custom.hideFrom",
+                    "value": {
+                      "legend": true,
+                      "tooltip": true,
+                      "viz": false
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 6,
+            "w": 17,
+            "x": 7,
+            "y": 0
+          },
+          "id": 2,
+          "options": {
+            "legend": {
+              "calcs": [
+                "mean",
+                "lastNotNull"
+              ],
+              "displayMode": "table",
+              "placement": "right",
+              "showLegend": true
+            },
+            "tooltip": {
+              "maxHeight": 600,
+              "mode": "multi",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+              },
+              "expr": "sum(rate(agones_gameservers_total{fleet_name=~\"$fleet\", namespace=~\"$namespace\"}[$interval])) by (type)",
+              "format": "time_series",
+              "interval": "",
+              "intervalFactor": 1,
+              "legendFormat": "{{type}}",
+              "refId": "A"
+            }
+          ],
+          "title": "GameServers rate per type",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 100,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "normal"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "links": [],
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "short"
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byValue",
+                  "options": {
+                    "op": "gte",
+                    "reducer": "allIsZero",
+                    "value": 0
+                  }
+                },
+                "properties": [
+                  {
+                    "id": "custom.hideFrom",
+                    "value": {
+                      "legend": true,
+                      "tooltip": true,
+                      "viz": false
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byValue",
+                  "options": {
+                    "op": "gte",
+                    "reducer": "allIsNull",
+                    "value": 0
+                  }
+                },
+                "properties": [
+                  {
+                    "id": "custom.hideFrom",
+                    "value": {
+                      "legend": true,
+                      "tooltip": true,
+                      "viz": false
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 7,
+            "w": 12,
+            "x": 0,
+            "y": 6
+          },
+          "id": 7,
+          "options": {
+            "legend": {
+              "calcs": [
+                "mean",
+                "lastNotNull"
+              ],
+              "displayMode": "table",
+              "placement": "right",
+              "showLegend": true
+            },
+            "tooltip": {
+              "maxHeight": 600,
+              "mode": "multi",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+              },
+              "expr": "sum(agones_gameservers_count{fleet_name=~\"$fleet\", namespace=~\"$namespace\"}) by (type)",
+              "format": "time_series",
+              "interval": "",
+              "intervalFactor": 1,
+              "legendFormat": "{{type}}",
+              "refId": "A"
+            }
+          ],
+          "title": "GameServers count per type",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "links": [],
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "short"
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "allocated"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "#511749",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "desired"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "#ef843c",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "ready"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "#3f6833",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "total"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "#0a50a1",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 7,
+            "w": 12,
+            "x": 12,
+            "y": 6
+          },
+          "id": 9,
+          "options": {
+            "legend": {
+              "calcs": [
+                "mean",
+                "lastNotNull"
+              ],
+              "displayMode": "table",
+              "placement": "right",
+              "showLegend": true
+            },
+            "tooltip": {
+              "maxHeight": 600,
+              "mode": "multi",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+              },
+              "expr": "sum(agones_fleets_replicas_count{name=~\"$fleet\", namespace=~\"$namespace\"}) by (type)",
+              "format": "time_series",
+              "interval": "",
+              "intervalFactor": 1,
+              "legendFormat": "{{type}}",
+              "refId": "A"
+            }
+          ],
+          "title": "Fleet Replicas Count",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "links": [],
+              "mappings": [],
               "thresholds": {
                 "mode": "absolute",
                 "steps": [
@@ -86,403 +627,34 @@ data:
             },
             "overrides": []
           },
-          "fontSize": "80%",
-          "format": "short",
-          "gridPos": {
-            "h": 6,
-            "w": 7,
-            "x": 0,
-            "y": 0
-          },
-          "id": 4,
-          "interval": null,
-          "legend": {
-            "show": true,
-            "values": true
-          },
-          "legendType": "Under graph",
-          "links": [],
-          "nullPointMode": "connected",
-          "pieType": "pie",
-          "strokeWidth": 1,
-          "targets": [
-            {
-              "expr": "sum(agones_gameservers_count{fleet_name=~\"$fleet\", namespace=~\"$namespace\"}) by (type)",
-              "format": "time_series",
-              "hide": false,
-              "instant": true,
-              "interval": "",
-              "intervalFactor": 1,
-              "legendFormat": "{{type}}",
-              "refId": "A"
-            }
-          ],
-          "timeFrom": null,
-          "timeShift": null,
-          "title": "GameServers count per type",
-          "type": "grafana-piechart-panel",
-          "valueName": "current"
-        },
-        {
-          "aliasColors": {},
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
-          "datasource": null,
-          "fieldConfig": {
-            "defaults": {
-              "custom": {},
-              "links": []
-            },
-            "overrides": []
-          },
-          "fill": 1,
-          "fillGradient": 0,
-          "gridPos": {
-            "h": 6,
-            "w": 17,
-            "x": 7,
-            "y": 0
-          },
-          "hiddenSeries": false,
-          "id": 2,
-          "legend": {
-            "alignAsTable": true,
-            "avg": true,
-            "current": true,
-            "hideEmpty": true,
-            "hideZero": true,
-            "max": false,
-            "min": false,
-            "rightSide": true,
-            "show": true,
-            "total": false,
-            "values": true
-          },
-          "lines": true,
-          "linewidth": 1,
-          "links": [],
-          "nullPointMode": "null",
-          "options": {
-            "alertThreshold": true
-          },
-          "percentage": false,
-          "pointradius": 5,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": false,
-          "targets": [
-            {
-              "expr": "sum(rate(agones_gameservers_total{fleet_name=~\"$fleet\", namespace=~\"$namespace\"}[$interval])) by (type)",
-              "format": "time_series",
-              "interval": "",
-              "intervalFactor": 1,
-              "legendFormat": "{{type}}",
-              "refId": "A"
-            }
-          ],
-          "thresholds": [],
-          "timeFrom": null,
-          "timeRegions": [],
-          "timeShift": null,
-          "title": "GameServers rate per type",
-          "tooltip": {
-            "shared": true,
-            "sort": 0,
-            "value_type": "individual"
-          },
-          "type": "graph",
-          "xaxis": {
-            "buckets": null,
-            "mode": "time",
-            "name": null,
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            },
-            {
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            }
-          ],
-          "yaxis": {
-            "align": false,
-            "alignLevel": null
-          }
-        },
-        {
-          "aliasColors": {},
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
-          "datasource": null,
-          "fieldConfig": {
-            "defaults": {
-              "custom": {},
-              "links": []
-            },
-            "overrides": []
-          },
-          "fill": 10,
-          "fillGradient": 0,
-          "gridPos": {
-            "h": 7,
-            "w": 12,
-            "x": 0,
-            "y": 6
-          },
-          "hiddenSeries": false,
-          "id": 7,
-          "legend": {
-            "alignAsTable": true,
-            "avg": true,
-            "current": true,
-            "hideEmpty": true,
-            "hideZero": true,
-            "max": false,
-            "min": false,
-            "rightSide": true,
-            "show": true,
-            "total": false,
-            "values": true
-          },
-          "lines": true,
-          "linewidth": 1,
-          "links": [],
-          "nullPointMode": "null",
-          "options": {
-            "alertThreshold": true
-          },
-          "percentage": false,
-          "pointradius": 5,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "stack": true,
-          "steppedLine": false,
-          "targets": [
-            {
-              "expr": "sum(agones_gameservers_count{fleet_name=~\"$fleet\", namespace=~\"$namespace\"}) by (type)",
-              "format": "time_series",
-              "interval": "",
-              "intervalFactor": 1,
-              "legendFormat": "{{type}}",
-              "refId": "A"
-            }
-          ],
-          "thresholds": [],
-          "timeFrom": null,
-          "timeRegions": [],
-          "timeShift": null,
-          "title": "GameServers count per type",
-          "tooltip": {
-            "shared": true,
-            "sort": 0,
-            "value_type": "individual"
-          },
-          "type": "graph",
-          "xaxis": {
-            "buckets": null,
-            "mode": "time",
-            "name": null,
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            },
-            {
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            }
-          ],
-          "yaxis": {
-            "align": false,
-            "alignLevel": null
-          }
-        },
-        {
-          "aliasColors": {
-            "allocated": "#511749",
-            "desired": "#ef843c",
-            "ready": "#3f6833",
-            "total": "#0a50a1"
-          },
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
-          "datasource": null,
-          "fieldConfig": {
-            "defaults": {
-              "custom": {},
-              "links": []
-            },
-            "overrides": []
-          },
-          "fill": 1,
-          "fillGradient": 0,
-          "gridPos": {
-            "h": 7,
-            "w": 12,
-            "x": 12,
-            "y": 6
-          },
-          "hiddenSeries": false,
-          "id": 9,
-          "legend": {
-            "alignAsTable": true,
-            "avg": true,
-            "current": true,
-            "max": false,
-            "min": false,
-            "rightSide": true,
-            "show": true,
-            "total": false,
-            "values": true
-          },
-          "lines": true,
-          "linewidth": 1,
-          "links": [],
-          "nullPointMode": "null",
-          "options": {
-            "alertThreshold": true
-          },
-          "percentage": false,
-          "pointradius": 5,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": false,
-          "targets": [
-            {
-              "expr": "sum(agones_fleets_replicas_count{name=~\"$fleet\", namespace=~\"$namespace\"}) by (type)",
-              "format": "time_series",
-              "interval": "",
-              "intervalFactor": 1,
-              "legendFormat": "{{type}}",
-              "refId": "A"
-            }
-          ],
-          "thresholds": [],
-          "timeFrom": null,
-          "timeRegions": [],
-          "timeShift": null,
-          "title": "Fleet Replicas Count",
-          "tooltip": {
-            "shared": true,
-            "sort": 0,
-            "value_type": "individual"
-          },
-          "type": "graph",
-          "xaxis": {
-            "buckets": null,
-            "mode": "time",
-            "name": null,
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            },
-            {
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            }
-          ],
-          "yaxis": {
-            "align": false,
-            "alignLevel": null
-          }
-        },
-        {
-          "aliasColors": {},
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
-          "datasource": null,
-          "fieldConfig": {
-            "defaults": {
-              "custom": {},
-              "links": []
-            },
-            "overrides": []
-          },
-          "fill": 1,
-          "fillGradient": 0,
           "gridPos": {
             "h": 7,
             "w": 11,
             "x": 0,
             "y": 13
           },
-          "hiddenSeries": false,
           "id": 12,
-          "legend": {
-            "alignAsTable": true,
-            "avg": false,
-            "current": true,
-            "max": false,
-            "min": false,
-            "rightSide": true,
-            "show": true,
-            "total": false,
-            "values": true
-          },
-          "lines": true,
-          "linewidth": 1,
-          "links": [],
-          "nullPointMode": "null",
           "options": {
-            "alertThreshold": true
+            "legend": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "displayMode": "table",
+              "placement": "right",
+              "showLegend": true
+            },
+            "tooltip": {
+              "maxHeight": 600,
+              "mode": "multi",
+              "sort": "none"
+            }
           },
-          "percentage": false,
-          "pointradius": 5,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": false,
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+              },
               "expr": "histogram_quantile(1, sum(rate(agones_gameservers_node_count_bucket[1m])) by (le))",
               "format": "time_series",
               "intervalFactor": 1,
@@ -490,6 +662,10 @@ data:
               "refId": "F"
             },
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+              },
               "expr": "histogram_quantile(0.99, sum(rate(agones_gameservers_node_count_bucket[1m])) by (le))",
               "format": "time_series",
               "intervalFactor": 1,
@@ -497,6 +673,10 @@ data:
               "refId": "A"
             },
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+              },
               "expr": "histogram_quantile(0.90, sum(rate(agones_gameservers_node_count_bucket[1m])) by (le))",
               "format": "time_series",
               "intervalFactor": 1,
@@ -504,6 +684,10 @@ data:
               "refId": "B"
             },
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+              },
               "expr": "histogram_quantile(0.50, sum(rate(agones_gameservers_node_count_bucket[1m])) by (le))",
               "format": "time_series",
               "intervalFactor": 1,
@@ -511,6 +695,10 @@ data:
               "refId": "C"
             },
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+              },
               "expr": "histogram_quantile(0, sum(rate(agones_gameservers_node_count_bucket[1m])) by (le))",
               "format": "time_series",
               "intervalFactor": 1,
@@ -518,6 +706,10 @@ data:
               "refId": "E"
             },
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+              },
               "expr": "avg(delta(agones_gameservers_node_count_sum[1m]) / delta(agones_gameservers_node_count_count[1m]))",
               "format": "time_series",
               "interval": "",
@@ -526,100 +718,100 @@ data:
               "refId": "D"
             }
           ],
-          "thresholds": [],
-          "timeFrom": null,
-          "timeRegions": [],
-          "timeShift": null,
           "title": "GameServers per node",
-          "tooltip": {
-            "shared": true,
-            "sort": 0,
-            "value_type": "individual"
-          },
-          "type": "graph",
-          "xaxis": {
-            "buckets": null,
-            "mode": "time",
-            "name": null,
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "$$hashKey": "object:696",
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            },
-            {
-              "$$hashKey": "object:697",
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            }
-          ],
-          "yaxis": {
-            "align": false,
-            "alignLevel": null
-          }
+          "type": "timeseries"
         },
         {
-          "aliasColors": {},
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
-          "datasource": null,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
           "fieldConfig": {
             "defaults": {
-              "custom": {},
-              "links": []
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "normal"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "links": [],
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "short"
             },
             "overrides": []
           },
-          "fill": 1,
-          "fillGradient": 0,
           "gridPos": {
             "h": 7,
             "w": 13,
             "x": 11,
             "y": 13
           },
-          "hiddenSeries": false,
           "id": 14,
-          "legend": {
-            "alignAsTable": true,
-            "avg": true,
-            "current": true,
-            "max": true,
-            "min": false,
-            "rightSide": true,
-            "show": true,
-            "total": false,
-            "values": true
-          },
-          "lines": true,
-          "linewidth": 1,
-          "links": [],
-          "nullPointMode": "null",
           "options": {
-            "alertThreshold": true
+            "legend": {
+              "calcs": [
+                "mean",
+                "lastNotNull",
+                "max"
+              ],
+              "displayMode": "table",
+              "placement": "right",
+              "showLegend": true
+            },
+            "tooltip": {
+              "maxHeight": 600,
+              "mode": "multi",
+              "sort": "none"
+            }
           },
-          "percentage": false,
-          "pointradius": 5,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "stack": true,
-          "steppedLine": false,
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+              },
               "expr": "agones_nodes_count{empty=\"true\"}",
               "format": "time_series",
               "intervalFactor": 1,
@@ -627,6 +819,10 @@ data:
               "refId": "A"
             },
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+              },
               "expr": "agones_nodes_count{empty=\"false\"}",
               "format": "time_series",
               "intervalFactor": 1,
@@ -634,154 +830,115 @@ data:
               "refId": "B"
             }
           ],
-          "thresholds": [],
-          "timeFrom": null,
-          "timeRegions": [],
-          "timeShift": null,
           "title": "Node availability (stacked)",
-          "tooltip": {
-            "shared": true,
-            "sort": 0,
-            "value_type": "individual"
-          },
-          "type": "graph",
-          "xaxis": {
-            "buckets": null,
-            "mode": "time",
-            "name": null,
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            },
-            {
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            }
-          ],
-          "yaxis": {
-            "align": false,
-            "alignLevel": null
-          }
+          "type": "timeseries"
         },
         {
-      "type": "timeseries",
-      "title": "Average GameServer State duration",
-      "gridPos": {
-        "x": 0,
-        "y": 20,
-        "w": 24,
-        "h": 8
-      },
-      "datasource": {
-        "uid": "PBFA97CFB590B2093",
-        "type": "prometheus"
-      },
-      "id": 15,
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "sum (rate(agones_gameserver_state_duration_sum[5m]) / rate(agones_gameserver_state_duration_count[5m])) by(__name__,type)",
-          "range": true,
-          "instant": false,
           "datasource": {
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
-          "editorMode": "code",
-          "legendFormat": "__auto"
-        }
-      ],
-      "options": {
-        "tooltip": {
-          "mode": "single",
-          "sort": "none",
-          "maxHeight": 600
-        },
-        "legend": {
-          "showLegend": true,
-          "displayMode": "table",
-          "placement": "right",
-          "calcs": [
-            "lastNotNull",
-            "min",
-            "max",
-            "mean"
-          ]
-        }
-      },
-      "fieldConfig": {
-        "defaults": {
-          "custom": {
-            "drawStyle": "line",
-            "lineInterpolation": "linear",
-            "barAlignment": 0,
-            "lineWidth": 1,
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "spanNulls": false,
-            "insertNulls": false,
-            "showPoints": "auto",
-            "pointSize": 1,
-            "stacking": {
-              "mode": "none",
-              "group": "A"
-            },
-            "axisPlacement": "auto",
-            "axisLabel": "",
-            "axisColorMode": "text",
-            "axisBorderShow": false,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "axisCenteredZero": false,
-            "hideFrom": {
-              "tooltip": false,
-              "viz": false,
-              "legend": false
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            },
-            "axisGridShow": true
-          },
-          "color": {
-            "mode": "palette-classic"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "value": null,
-                "color": "green"
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
               },
-              {
-                "value": 80,
-                "color": "red"
-              }
-            ]
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisGridShow": true,
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 1,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "s"
+            },
+            "overrides": []
           },
-          "unit": "s"
-        },
-        "overrides": []
-      }
-      }
+          "gridPos": {
+            "h": 8,
+            "w": 24,
+            "x": 0,
+            "y": 20
+          },
+          "id": 15,
+          "options": {
+            "legend": {
+              "calcs": [
+                "lastNotNull",
+                "min",
+                "max",
+                "mean"
+              ],
+              "displayMode": "table",
+              "placement": "right",
+              "showLegend": true
+            },
+            "tooltip": {
+              "maxHeight": 600,
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+              },
+              "editorMode": "code",
+              "expr": "sum (rate(agones_gameserver_state_duration_sum[5m]) / rate(agones_gameserver_state_duration_count[5m])) by(__name__,type)",
+              "instant": false,
+              "legendFormat": "__auto",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Average GameServer State duration",
+          "type": "timeseries"
+        }
       ],
       "refresh": "5s",
-      "schemaVersion": 26,
-      "style": "dark",
+      "schemaVersion": 39,
       "tags": [
         "agones",
         "state",
@@ -800,11 +957,13 @@ data:
                 "$__all"
               ]
             },
-            "datasource": "Prometheus",
+            "datasource": {
+              "type": "prometheus",
+              "uid": "PBFA97CFB590B2093"
+            },
             "definition": "label_values(agones_gameservers_count, fleet_name)",
             "hide": 0,
             "includeAll": true,
-            "label": null,
             "multi": true,
             "name": "fleet",
             "options": [],
@@ -814,7 +973,6 @@ data:
             "skipUrlSync": false,
             "sort": 0,
             "tagValuesQuery": "",
-            "tags": [],
             "tagsQuery": "",
             "type": "query",
             "useTags": false
@@ -829,7 +987,6 @@ data:
               "value": "$__auto_interval_interval"
             },
             "hide": 0,
-            "label": null,
             "name": "interval",
             "options": [
               {
@@ -894,7 +1051,6 @@ data:
             "type": "interval"
           },
           {
-            "allValue": null,
             "current": {
               "selected": true,
               "text": [
@@ -904,11 +1060,13 @@ data:
                 "$__all"
               ]
             },
-            "datasource": "Prometheus",
+            "datasource": {
+              "type": "prometheus",
+              "uid": "PBFA97CFB590B2093"
+            },
             "definition": "label_values(agones_gameservers_count, namespace)",
             "hide": 0,
             "includeAll": true,
-            "label": null,
             "multi": true,
             "name": "namespace",
             "options": [],
@@ -918,7 +1076,6 @@ data:
             "skipUrlSync": false,
             "sort": 0,
             "tagValuesQuery": "",
-            "tags": [],
             "tagsQuery": "",
             "type": "query",
             "useTags": false
@@ -926,9 +1083,10 @@ data:
         ]
       },
       "time": {
-        "from": "now-15m",
+        "from": "now-24h",
         "to": "now"
       },
+      "timeRangeUpdatedDuringEditOrView": false,
       "timepicker": {
         "refresh_intervals": [
           "5s",
@@ -957,5 +1115,6 @@ data:
       "timezone": "",
       "title": "Agones GameServers",
       "uid": "D78OotUmk",
-      "version": 1
+      "version": 1,
+      "weekStart": ""
     }
