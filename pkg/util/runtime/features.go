@@ -139,9 +139,9 @@ var (
 		FeatureRollingUpdateFix:                 false,
 		FeaturePortRanges:                       false,
 		FeaturePortPolicyNone:                   false,
+		FeatureScheduledAutoscaler:              false,
 
 		// Dev features
-		FeatureScheduledAutoscaler: false,
 
 		// Example feature
 		FeatureExample: false,
