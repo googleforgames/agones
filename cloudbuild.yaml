@@ -271,7 +271,7 @@ steps:
         set -o pipefail
         pids=()
         cloudProducts=("generic" "gke-autopilot")
-        declare -A versionsAndRegions=( [1.28]=us-west1 [1.29]=europe-west1 [1.30]=asia-east1 )
+        declare -A versionsAndRegions=( [1.27]=us-east1 [1.28]=us-west1 [1.29]=europe-west1 )
 
         # Keep in sync with (the inverse of) pkg/util/runtime/features.go:featureDefaults
         featureWithGate="PlayerAllocationFilter=true&PlayerTracking=true&CountsAndLists=false&RollingUpdateFix=true&PortRanges=true&PortPolicyNone=true&ScheduledAutoscaler=true&DisableResyncOnSDKServer=false&AutopilotPassthroughPort=false&Example=true"
@@ -279,7 +279,7 @@ steps:
 
         # Use this if specific feature gates can only be supported on specific Kubernetes versions.
         # TODO: When 1.28 becomes trailing version, promote GKEAutopilotExtendedDurationPods to beta.
-        declare -A featureWithGateByVersion=( [1.28]="${featureWithGate}&GKEAutopilotExtendedDurationPods=true" [1.29]="${featureWithGate}&GKEAutopilotExtendedDurationPods=true" [1.30]="${featureWithGate}&GKEAutopilotExtendedDurationPods=true")
+        declare -A featureWithGateByVersion=( [1.27]="${featureWithGate}" [1.28]="${featureWithGate}&GKEAutopilotExtendedDurationPods=true" [1.29]="${featureWithGate}&GKEAutopilotExtendedDurationPods=true")
 
         for cloudProduct in ${cloudProducts[@]}
         do
