@@ -644,11 +644,6 @@ func (in *ValidationRule) DeepCopyInto(out *ValidationRule) {
 		*out = new(FieldValueErrorReason)
 		**out = **in
 	}
-	if in.OptionalOldSelf != nil {
-		in, out := &in.OptionalOldSelf, &out.OptionalOldSelf
-		*out = new(bool)
-		**out = **in
-	}
 	return
 }
 
