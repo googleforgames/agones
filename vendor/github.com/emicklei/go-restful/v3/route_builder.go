@@ -7,7 +7,6 @@ package restful
 import (
 	"fmt"
 	"os"
-	"path"
 	"reflect"
 	"runtime"
 	"strings"
@@ -31,29 +30,27 @@ type RouteBuilder struct {
 	typeNameHandleFunc TypeNameHandleFunction // required
 
 	// documentation
-	doc                    string
-	notes                  string
-	operation              string
-	readSample             interface{}
-	writeSamples           []interface{}
-	parameters             []*Parameter
-	errorMap               map[int]ResponseError
-	defaultResponse        *ResponseError
-	metadata               map[string]interface{}
-	extensions             map[string]interface{}
-	deprecated             bool
-	contentEncodingEnabled *bool
+	doc                     string
+	notes                   string
+	operation               string
+	readSample, writeSample interface{}
+	parameters              []*Parameter
+	errorMap                map[int]ResponseError
+	defaultResponse         *ResponseError
+	metadata                map[string]interface{}
+	extensions              map[string]interface{}
+	deprecated              bool
+	contentEncodingEnabled  *bool
 }
 
 // Do evaluates each argument with the RouteBuilder itself.
 // This allows you to follow DRY principles without breaking the fluent programming style.
 // Example:
+// 		ws.Route(ws.DELETE("/{name}").To(t.deletePerson).Do(Returns200, Returns500))
 //
-//	ws.Route(ws.DELETE("/{name}").To(t.deletePerson).Do(Returns200, Returns500))
-//
-//	func Returns500(b *RouteBuilder) {
-//		b.Returns(500, "Internal Server Error", restful.ServiceError{})
-//	}
+//		func Returns500(b *RouteBuilder) {
+//			b.Returns(500, "Internal Server Error", restful.ServiceError{})
+//		}
 func (b *RouteBuilder) Do(oneArgBlocks ...func(*RouteBuilder)) *RouteBuilder {
 	for _, each := range oneArgBlocks {
 		each(b)
@@ -136,9 +133,9 @@ func (b RouteBuilder) ParameterNamed(name string) (p *Parameter) {
 	return p
 }
 
-// Writes tells which one of the resource types will be written as the response payload. Optional.
-func (b *RouteBuilder) Writes(samples ...interface{}) *RouteBuilder {
-	b.writeSamples = samples // oneof
+// Writes tells what resource type will be written as the response payload. Optional.
+func (b *RouteBuilder) Writes(sample interface{}) *RouteBuilder {
+	b.writeSample = sample
 	return b
 }
 
@@ -343,29 +340,19 @@ func (b *RouteBuilder) Build() Route {
 		ResponseErrors:                   b.errorMap,
 		DefaultResponse:                  b.defaultResponse,
 		ReadSample:                       b.readSample,
-		WriteSamples:                     b.writeSamples,
+		WriteSample:                      b.writeSample,
 		Metadata:                         b.metadata,
 		Deprecated:                       b.deprecated,
 		contentEncodingEnabled:           b.contentEncodingEnabled,
 		allowedMethodsWithoutContentType: b.allowedMethodsWithoutContentType,
-	}
-	// set WriteSample if one specified
-	if len(b.writeSamples) == 1 {
-		route.WriteSample = b.writeSamples[0]
 	}
 	route.Extensions = b.extensions
 	route.postBuild()
 	return route
 }
 
-// merge two paths using the current (package global) merge path strategy.
-func concatPath(rootPath, routePath string) string {
-
-	if TrimRightSlashEnabled {
-		return strings.TrimRight(rootPath, "/") + "/" + strings.TrimLeft(routePath, "/")
-	} else {
-		return path.Join(rootPath, routePath)
-	}
+func concatPath(path1, path2 string) string {
+	return strings.TrimRight(path1, "/") + "/" + strings.TrimLeft(path2, "/")
 }
 
 var anonymousFuncCount int32
