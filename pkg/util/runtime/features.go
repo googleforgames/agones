@@ -44,9 +44,12 @@ const (
 	////////////////
 	// Alpha features
 
+	// FeatureFleetAutoscaleRequestMetaData is a feature flag that enables/disables fleet metadata on webhook autoscaler request.
+	FeatureFleetAutoscaleRequestMetaData Feature = "FleetAutoscaleRequestMetaData"
+
 	// FeatureGKEAutopilotExtendedDurationPods enables the use of Extended Duration pods
 	// when Agones is running on Autopilot. Available on 1.28+ only.
-	FeatureGKEAutopilotExtendedDurationPods = "GKEAutopilotExtendedDurationPods"
+	FeatureGKEAutopilotExtendedDurationPods Feature = "GKEAutopilotExtendedDurationPods"
 
 	// FeaturePlayerAllocationFilter is a feature flag that enables the ability for Allocations to filter based on
 	// player capacity.
@@ -133,6 +136,7 @@ var (
 		FeatureDisableResyncOnSDKServer: true,
 
 		// Alpha features
+		FeatureFleetAutoscaleRequestMetaData:    false,
 		FeatureGKEAutopilotExtendedDurationPods: false,
 		FeaturePlayerAllocationFilter:           false,
 		FeaturePlayerTracking:                   false,
