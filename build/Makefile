@@ -246,7 +246,6 @@ include ./includes/$(osinclude)
 include ./includes/build-image.mk
 include ./includes/release.mk
 include ./includes/google-cloud.mk
-include ./includes/terraform.mk
 include ./includes/minikube.mk
 include ./includes/kind.mk
 include ./includes/website.mk
