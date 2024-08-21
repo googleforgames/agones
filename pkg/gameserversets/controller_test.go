@@ -1300,7 +1300,7 @@ func createGameServers(gsSet *agonesv1.GameServerSet, size int) []agonesv1.GameS
 func newFakeController() (*Controller, agtesting.Mocks) {
 	m := agtesting.NewMocks()
 	counter := gameservers.NewPerNodeCounter(m.KubeInformerFactory, m.AgonesInformerFactory)
-	c := NewController(healthcheck.NewHandler(), counter, m.KubeClient, m.ExtClient, m.AgonesClient, m.AgonesInformerFactory, 16, 64, 64, 64)
+	c := NewController(healthcheck.NewHandler(), counter, m.KubeClient, m.ExtClient, m.AgonesClient, m.AgonesInformerFactory, 16, 64, 64, 64, 5000)
 	c.recorder = m.FakeRecorder
 	return c, m
 }

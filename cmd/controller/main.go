@@ -87,10 +87,11 @@ const (
 	defaultResync                      = 30 * time.Second
 	podNamespace                       = "pod-namespace"
 	leaderElectionFlag                 = "leader-election"
-	maxCreationParalellismFlag         = "max-creation-paralellism"
+	maxCreationParallelismFlag         = "max-creation-parallelism"
 	maxGameServerCreationsPerBatchFlag = "max-game-server-creations-per-batch"
 	maxDeletionParallelismFlag         = "max-deletion-parallelism"
 	maxGameServerDeletionsPerBatchFlag = "max-game-server-deletions-per-batch"
+	maxPodPendingCountFlag             = "max-pod-pending-count"
 )
 
 var (
@@ -222,7 +223,7 @@ func main() {
 		ctlConf.SidecarMemoryRequest, ctlConf.SidecarMemoryLimit, ctlConf.SidecarRunAsUser, ctlConf.SdkServiceAccount,
 		kubeClient, kubeInformerFactory, extClient, agonesClient, agonesInformerFactory)
 	gsSetController := gameserversets.NewController(health, gsCounter,
-		kubeClient, extClient, agonesClient, agonesInformerFactory, ctlConf.MaxCreationParalellism, ctlConf.MaxDeletionParallelism, ctlConf.MaxGameServerCreationsPerBatch, ctlConf.MaxGameServerDeletionsPerBatch)
+		kubeClient, extClient, agonesClient, agonesInformerFactory, ctlConf.MaxCreationParallelism, ctlConf.MaxDeletionParallelism, ctlConf.MaxGameServerCreationsPerBatch, ctlConf.MaxGameServerDeletionsPerBatch, ctlConf.MaxPodPendingCount)
 	fleetController := fleets.NewController(health, kubeClient, extClient, agonesClient, agonesInformerFactory)
 	fasController := fleetautoscalers.NewController(health,
 		kubeClient, extClient, agonesClient, agonesInformerFactory, gsCounter)
@@ -285,10 +286,11 @@ func parseEnvFlags() config {
 	viper.SetDefault(logLevelFlag, "Info")
 	viper.SetDefault(logSizeLimitMBFlag, 10000) // 10 GB, will be split into 100 MB chunks
 
-	viper.SetDefault(maxCreationParalellismFlag, 16)
+	viper.SetDefault(maxCreationParallelismFlag, 16)
 	viper.SetDefault(maxGameServerCreationsPerBatchFlag, 64)
 	viper.SetDefault(maxDeletionParallelismFlag, 64)
 	viper.SetDefault(maxGameServerDeletionsPerBatchFlag, 64)
+	viper.SetDefault(maxPodPendingCountFlag, 5000)
 
 	pflag.String(sidecarImageFlag, viper.GetString(sidecarImageFlag), "Flag to overwrite the GameServer sidecar image that is used. Can also use SIDECAR env variable")
 	pflag.String(sidecarCPULimitFlag, viper.GetString(sidecarCPULimitFlag), "Flag to overwrite the GameServer sidecar container's cpu limit. Can also use SIDECAR_CPU_LIMIT env variable")
@@ -313,10 +315,11 @@ func parseEnvFlags() config {
 	pflag.Int32(apiServerBurstQPSFlag, 200, "Maximum burst queries per second to send to the API server")
 	pflag.String(logDirFlag, viper.GetString(logDirFlag), "If set, store logs in a given directory.")
 	pflag.Int32(logSizeLimitMBFlag, 1000, "Log file size limit in MB")
-	pflag.Int32(maxCreationParalellismFlag, viper.GetInt32(maxCreationParalellismFlag), "Maximum number of parallelizing creation calls in GSS controller")
+	pflag.Int32(maxCreationParallelismFlag, viper.GetInt32(maxCreationParallelismFlag), "Maximum number of parallelizing creation calls in GSS controller")
 	pflag.Int32(maxGameServerCreationsPerBatchFlag, viper.GetInt32(maxGameServerCreationsPerBatchFlag), "Maximum number of GameServer creation calls per batch")
 	pflag.Int32(maxDeletionParallelismFlag, viper.GetInt32(maxDeletionParallelismFlag), "Maximum number of parallelizing deletion calls in GSS controller")
 	pflag.Int32(maxGameServerDeletionsPerBatchFlag, viper.GetInt32(maxGameServerDeletionsPerBatchFlag), "Maximum number of GameServers deletion calls per batch")
+	pflag.Int32(maxPodPendingCountFlag, viper.GetInt32(maxPodPendingCountFlag), "Maximum number of pending pods per game server set")
 	pflag.String(logLevelFlag, viper.GetString(logLevelFlag), "Agones Log level")
 	pflag.Duration(allocationBatchWaitTime, viper.GetDuration(allocationBatchWaitTime), "Flag to configure the waiting period between allocations batches")
 	pflag.String(podNamespace, viper.GetString(podNamespace), "namespace of current pod")
@@ -350,10 +353,11 @@ func parseEnvFlags() config {
 	runtime.Must(viper.BindEnv(logLevelFlag))
 	runtime.Must(viper.BindEnv(logDirFlag))
 	runtime.Must(viper.BindEnv(logSizeLimitMBFlag))
-	runtime.Must(viper.BindEnv(maxCreationParalellismFlag))
+	runtime.Must(viper.BindEnv(maxCreationParallelismFlag))
 	runtime.Must(viper.BindEnv(maxGameServerCreationsPerBatchFlag))
 	runtime.Must(viper.BindEnv(maxDeletionParallelismFlag))
 	runtime.Must(viper.BindEnv(maxGameServerDeletionsPerBatchFlag))
+	runtime.Must(viper.BindEnv(maxPodPendingCountFlag))
 	runtime.Must(viper.BindEnv(allocationBatchWaitTime))
 	runtime.Must(viper.BindEnv(podNamespace))
 	runtime.Must(viper.BindEnv(leaderElectionFlag))
@@ -415,9 +419,10 @@ func parseEnvFlags() config {
 		LogLevel:                       viper.GetString(logLevelFlag),
 		LogSizeLimitMB:                 int(viper.GetInt32(logSizeLimitMBFlag)),
 		MaxGameServerCreationsPerBatch: int(viper.GetInt32(maxGameServerCreationsPerBatchFlag)),
-		MaxCreationParalellism:         int(viper.GetInt32(maxCreationParalellismFlag)),
+		MaxCreationParallelism:         int(viper.GetInt32(maxCreationParallelismFlag)),
 		MaxGameServerDeletionsPerBatch: int(viper.GetInt32(maxGameServerDeletionsPerBatchFlag)),
 		MaxDeletionParallelism:         int(viper.GetInt32(maxDeletionParallelismFlag)),
+		MaxPodPendingCount:             int(viper.GetInt32(maxPodPendingCountFlag)),
 		StackdriverLabels:              viper.GetString(stackdriverLabels),
 		AllocationBatchWaitTime:        viper.GetDuration(allocationBatchWaitTime),
 		PodNamespace:                   viper.GetString(podNamespace),
@@ -473,9 +478,10 @@ type config struct {
 	LogLevel                       string
 	LogSizeLimitMB                 int
 	MaxGameServerCreationsPerBatch int
-	MaxCreationParalellism         int
+	MaxCreationParallelism         int
 	MaxGameServerDeletionsPerBatch int
 	MaxDeletionParallelism         int
+	MaxPodPendingCount             int
 	AllocationBatchWaitTime        time.Duration
 	PodNamespace                   string
 	LeaderElection                 bool

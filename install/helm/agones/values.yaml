@@ -81,10 +81,11 @@ agones:
     numWorkers: 100
     apiServerQPS: 400
     apiServerQPSBurst: 500
-    maxCreationParalellismFlag: 16
+    maxCreationParallelism: 16
     maxGameServerCreationsPerBatch: 64
-    maxDeletionParallelismFlag: 64
+    maxDeletionParallelism: 64
     maxGameServerDeletionsPerBatch: 64
+    maxPodPendingCount: 5000
     http:
       port: 8080
     healthCheck:
@@ -138,10 +139,6 @@ agones:
     numWorkers: 100
     apiServerQPS: 400
     apiServerQPSBurst: 500
-    maxCreationParalellismFlag: 16
-    maxGameServerCreationsPerBatch: 64
-    maxDeletionParallelismFlag: 64
-    maxGameServerDeletionsPerBatch: 64
     webhooks:
       port: 8081
     http:
