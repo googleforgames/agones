@@ -1,4 +1,4 @@
-// Copyright 2019 Google LLC All Rights Reserved.
+// Copyright 2024 Google LLC All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -74,7 +74,7 @@ type metrics struct {
 	start            time.Time
 }
 
-// record the current allocation latency.
+// record the current current gameserver creation latency
 func (r *metrics) record() {
 	stats.Record(r.ctx, gameServerCreationDuration.M(time.Since(r.start).Seconds()))
 }

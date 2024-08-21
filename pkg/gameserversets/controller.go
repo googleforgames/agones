@@ -762,7 +762,7 @@ func aggregateLists(aggListStatus map[string]agonesv1.AggregatedListStatus,
 	return aggListStatus
 }
 
-// newMetrics creates a new gsa latency recorder.
+// newMetrics creates a new gss latency recorder.
 func (c *Controller) newMetrics(ctx context.Context) *metrics {
 	ctx, err := tag.New(ctx, latencyTags...)
 	if err != nil {

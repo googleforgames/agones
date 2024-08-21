@@ -57,7 +57,7 @@ func init() {
 		{
 			Name:        "gameserver_allocations_retry_total",
 			Measure:     gameServerAllocationsRetryTotal,
-			Description: "The count of gameserver allocation retry success rate",
+			Description: "The count of gameserver allocation retry until it succeeds",
 			Aggregation: view.Distribution(1, 2, 3, 4, 5),
 			TagKeys:     []tag.Key{keyFleetName, keyClusterName, keyMultiCluster, keyStatus, keySchedulingStrategy},
 		},
@@ -144,7 +144,7 @@ func (r *metrics) record() {
 }
 
 // record the current allocation retry rate.
-func (r *metrics) recordAllocationErrorRate(ctx context.Context, retryCount int) {
+func (r *metrics) recordAllocationRetrySuccess(ctx context.Context, retryCount int) {
 	mt.RecordWithTags(ctx, []tag.Mutator{tag.Upsert(keyStatus, "Success")},
 		gameServerAllocationsRetryTotal.M(int64(retryCount)))
 }
