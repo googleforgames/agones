@@ -253,7 +253,7 @@ func (c *Allocator) loggerForGameServerAllocation(gsa *allocationv1.GameServerAl
 // Registers number of times we retried before getting a success allocation
 func (c *Allocator) allocateFromLocalCluster(ctx context.Context, gsa *allocationv1.GameServerAllocation) (*allocationv1.GameServerAllocation, error) {
 	var gs *agonesv1.GameServer
-	latency := c.newMetrics(ctx)
+	retry := c.newMetrics(ctx)
 	retryCount := 0
 	err := Retry(allocationRetry, func() error {
 		var err error
@@ -263,7 +263,7 @@ func (c *Allocator) allocateFromLocalCluster(ctx context.Context, gsa *allocatio
 		if err != nil {
 			c.loggerForGameServerAllocation(gsa).WithError(err).Warn("Failed to Allocated. Retrying...")
 		} else {
-			latency.recordAllocationRetrySuccess(ctx, retryCount)
+			retry.recordAllocationRetrySuccess(ctx, retryCount)
 		}
 		return err
 	})
