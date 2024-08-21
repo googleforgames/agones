@@ -902,24 +902,11 @@ To be able to run the performance script located in the following path: `agones/
 
 #### Install a standard GKE cluster 
 
-```
-gcloud container clusters create {CLUSTER_NAME}	 \
-  --region={REGION} \
-  --release-channel={RELEASE_CHANNEL} \
-  --tags=game-server \
-  --scopes=gke-default \
-  --num-nodes={NUM_NODES} \
-  --enable-image-streaming \
-  --machine-type=e2-standard-4
-```
+Follow for more details here: https://agones.dev/site/docs/installation/creating-cluster/gke/
 
 #### Install Agones
 
-```
-helm repo add agones https://agones.dev/chart/stable
-helm repo update
-helm install agones --namespace agones-system --create-namespace agones/agones
-```
+Follow for more details here: https://agones.dev/site/docs/installation/install-agones/helm/
 
 #### Set up node for prometheus 
 
@@ -936,8 +923,6 @@ gcloud container node-pools create agones-metrics --cluster={CLUSTER_NAME} --zon
 cd agones/
 
 https://agones.dev/site/docs/guides/metrics/#installation
-
-Go to http://localhost:3000/
 
 #### Modify the performance-test.sh
 
