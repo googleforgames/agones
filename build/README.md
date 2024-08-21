@@ -954,7 +954,7 @@ You might also want to comment out the first couple lines that come after the va
 # gcloud container clusters get-credentials $CLUSTER_NAME \
 #        --zone=$CLUSTER_LOCATION --project=$PROJECT
 
-make install LOG_LEVEL=info REGISTRY='"'$REGISTRY'"' DOCKER_RUN=""
+# make install LOG_LEVEL=info REGISTRY='"'$REGISTRY'"' DOCKER_RUN=""
 
 # cd /go/src/agones.dev/agones/test/load/allocation
 cd ../test/load/allocation
@@ -962,10 +962,12 @@ cd ../test/load/allocation
 
 This script is an entyrpoint to be able to run the allocation performance test which can be found at `agones/test/load/allocation`
 
-You can see the fleet and autoscaler configuration (such as buffer size, min/max replicas and automatic shutdown delay, etc) in the following files: 
+You can see the fleet and autoscaler configuration (such as buffer size and min/max replicas, etc) in the following files: 
 
 * [performance-test-fleet-template](https://github.com/googleforgames/agones/blob/main/test/load/allocation/performance-test-fleet-template.yaml)
 * [performance-test-autoscaler-template.yaml](https://github.com/googleforgames/agones/blob/main/test/load/allocation/performance-test-autoscaler-template.yaml)
+
+You could also modify the `automatic shutdown delay` parameter where if the value is greater than zero, it will automatically shut down the server this many seconds after the server becomes allocated (cannot be used if `automaticShutdownDelayMin` is set). It's a configuration for the simple game server.
 
 Something to keep in mind with CLIENTS and INTERVAL is the following. Let's say you have client count 50 and interval 500ms, which means every client will submit 2 allocation requests in 1s, so the entire allocation requests that the allocator receives in 1s is 50 * 2 = 100, so the allocation request QPS from the allocator view is 100. 
 
