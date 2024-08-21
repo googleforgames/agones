@@ -150,7 +150,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 
 ### Agones Controller
 
-{{% feature expiryhVersion="1.43.0" %}}
+{{% feature expiryVersion="1.43.0" %}}
 | Parameter                                                | Description                                                                                                                                                                                                                                                                                                      | Default                                   |
 |----------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------|
 | `agones.controller.replicas`                             | The number of replicas to run in the `agones-controller` deployment.                                                                                                                                                                | `2`                                       |
