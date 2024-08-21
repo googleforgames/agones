@@ -931,38 +931,11 @@ gcloud container node-pools create agones-metrics --cluster={CLUSTER_NAME} --zon
   --machine-type=e2-standard-4
 ```
 
-#### Install Prometheus and port-forward
+#### Install Prometheus, Grafana and port-forward
 
 cd agones/
 
-```
-helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-helm repo update
-
-helm upgrade --install --wait prom prometheus-community/prometheus --namespace metrics --create-namespace \
-    --set server.global.scrape_interval=30s \
-    --set server.persistentVolume.enabled=true \
-    --set server.persistentVolume.size=64Gi \
-    -f ./build/prometheus.yaml
-```
-
-`kubectl port-forward deployments/prom-prometheus-server 9090 -n metrics`
-
-Go to http://localhost:9090/
-
-#### Install Grafana
-
-`kubectl apply -f ./build/grafana/`
-
-```
-helm repo add grafana https://grafana.github.io/helm-charts
-helm repo update
-
-helm upgrade --install --wait grafana grafana/grafana --namespace metrics \
-  --set adminPassword={ADMIN_PASSWORD} -f ./build/grafana.yaml
-```
-
-`kubectl port-forward deployments/grafana 3000 -n metrics`
+https://agones.dev/site/docs/guides/metrics/#installation
 
 Go to http://localhost:3000/
 
@@ -982,6 +955,24 @@ MAX_REPLICAS=20000
 DURATION=10m
 CLIENTS=50
 INTERVAL=1000
+```
+
+You might also want to comment out the first couple lines that come after the variables are set and also change the cd directoy:
+
+```
+# export SHELL="/bin/bash"
+# mkdir -p /go/src/agones.dev/
+# ln -sf /workspace /go/src/agones.dev/agones
+# cd /go/src/agones.dev/agones/build
+
+# gcloud config set project $PROJECT
+# gcloud container clusters get-credentials $CLUSTER_NAME \
+#        --zone=$CLUSTER_LOCATION --project=$PROJECT
+
+make install LOG_LEVEL=info REGISTRY='"'$REGISTRY'"' DOCKER_RUN=""
+
+# cd /go/src/agones.dev/agones/test/load/allocation
+cd ../test/load/allocation
 ```
 
 This script is an entyrpoint to be able to run the allocation performance test which can be found at `agones/test/load/allocation`
