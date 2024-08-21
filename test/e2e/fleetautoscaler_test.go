@@ -1466,7 +1466,7 @@ func TestScheduleAutoscaler(t *testing.T) {
 	fleetautoscalers := framework.AgonesClient.AutoscalingV1().FleetAutoscalers(framework.Namespace)
 
 	// Active Cron Schedule (e.g. run after 1 * * * *, which is the after the first minute of the hour)
-	scheduleAutoscaler := defaultAutoscalerSchedule(flt)
+	scheduleAutoscaler := defaultAutoscalerSchedule(t, flt)
 	scheduleAutoscaler.Spec.Policy.Schedule.ActivePeriod.StartCron = nextCronMinute(time.Now())
 	fas, err := fleetautoscalers.Create(ctx, scheduleAutoscaler, metav1.CreateOptions{})
 	assert.NoError(t, err)
@@ -1479,7 +1479,7 @@ func TestScheduleAutoscaler(t *testing.T) {
 	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(3))
 
 	// Between Active Period Cron Schedule (e.g. run between 1-2 * * * *, which is between the first minute and second minute of the hour)
-	scheduleAutoscaler = defaultAutoscalerSchedule(flt)
+	scheduleAutoscaler = defaultAutoscalerSchedule(t, flt)
 	scheduleAutoscaler.Spec.Policy.Schedule.ActivePeriod.StartCron = nextCronMinuteBetween(time.Now())
 	fas, err = fleetautoscalers.Create(ctx, scheduleAutoscaler, metav1.CreateOptions{})
 	assert.NoError(t, err)
@@ -1508,7 +1508,7 @@ func TestChainAutoscaler(t *testing.T) {
 	fleetautoscalers := framework.AgonesClient.AutoscalingV1().FleetAutoscalers(framework.Namespace)
 
 	// 1st Schedule Inactive, 2nd Schedule Active - 30 seconds (Fallthrough)
-	chainAutoscaler := defaultAutoscalerChain(flt)
+	chainAutoscaler := defaultAutoscalerChain(t, flt)
 	fas, err := fleetautoscalers.Create(ctx, chainAutoscaler, metav1.CreateOptions{})
 	assert.NoError(t, err)
 
@@ -1521,7 +1521,7 @@ func TestChainAutoscaler(t *testing.T) {
 	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(3))
 
 	// 2 Active Schedules back to back - 1 minute (Fallthrough)
-	chainAutoscaler = defaultAutoscalerChain(flt)
+	chainAutoscaler = defaultAutoscalerChain(t, flt)
 	currentTime := time.Now()
 
 	// First schedule runs for 1 minute
@@ -1529,7 +1529,7 @@ func TestChainAutoscaler(t *testing.T) {
 	chainAutoscaler.Spec.Policy.Chain[0].Schedule.ActivePeriod.Duration = "1m"
 
 	// Second schedule runs 1 minute after the first schedule
-	oneMinute := mustParseDuration("1m")
+	oneMinute := mustParseDuration(t, "1m")
 	chainAutoscaler.Spec.Policy.Chain[0].Schedule.ActivePeriod.StartCron = nextCronMinute(currentTime.Add(oneMinute))
 	chainAutoscaler.Spec.Policy.Chain[1].Schedule.ActivePeriod.Duration = "5m"
 
@@ -1545,7 +1545,7 @@ func TestChainAutoscaler(t *testing.T) {
 }
 
 // defaultAutoscalerSchedule returns a default scheduled autoscaler for testing.
-func defaultAutoscalerSchedule(f *agonesv1.Fleet) *autoscalingv1.FleetAutoscaler {
+func defaultAutoscalerSchedule(t *testing.T, f *agonesv1.Fleet) *autoscalingv1.FleetAutoscaler {
 	return &autoscalingv1.FleetAutoscaler{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      f.ObjectMeta.Name + "-scheduled-autoscaler",
@@ -1557,8 +1557,8 @@ func defaultAutoscalerSchedule(f *agonesv1.Fleet) *autoscalingv1.FleetAutoscaler
 				Type: autoscalingv1.SchedulePolicyType,
 				Schedule: &autoscalingv1.SchedulePolicy{
 					Between: autoscalingv1.Between{
-						Start: currentTimePlusDuration("1s"),
-						End:   currentTimePlusDuration("1m"),
+						Start: currentTimePlusDuration(t, "1s"),
+						End:   currentTimePlusDuration(t, "1m"),
 					},
 					ActivePeriod: autoscalingv1.ActivePeriod{
 						Timezone:  "UTC",
@@ -1586,7 +1586,7 @@ func defaultAutoscalerSchedule(f *agonesv1.Fleet) *autoscalingv1.FleetAutoscaler
 }
 
 // defaultAutoscalerChain returns a default chain autoscaler for testing.
-func defaultAutoscalerChain(f *agonesv1.Fleet) *autoscalingv1.FleetAutoscaler {
+func defaultAutoscalerChain(t *testing.T, f *agonesv1.Fleet) *autoscalingv1.FleetAutoscaler {
 	return &autoscalingv1.FleetAutoscaler{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      f.ObjectMeta.Name + "-chain-autoscaler",
@@ -1603,8 +1603,8 @@ func defaultAutoscalerChain(f *agonesv1.Fleet) *autoscalingv1.FleetAutoscaler {
 							Type: autoscalingv1.SchedulePolicyType,
 							Schedule: &autoscalingv1.SchedulePolicy{
 								Between: autoscalingv1.Between{
-									Start: currentTimePlusDuration("1s"),
-									End:   currentTimePlusDuration("2m"),
+									Start: currentTimePlusDuration(t, "1s"),
+									End:   currentTimePlusDuration(t, "2m"),
 								},
 								ActivePeriod: autoscalingv1.ActivePeriod{
 									Timezone:  "",
@@ -1628,8 +1628,8 @@ func defaultAutoscalerChain(f *agonesv1.Fleet) *autoscalingv1.FleetAutoscaler {
 							Type: autoscalingv1.SchedulePolicyType,
 							Schedule: &autoscalingv1.SchedulePolicy{
 								Between: autoscalingv1.Between{
-									Start: currentTimePlusDuration("1s"),
-									End:   currentTimePlusDuration("5m"),
+									Start: currentTimePlusDuration(t, "1s"),
+									End:   currentTimePlusDuration(t, "5m"),
 								},
 								ActivePeriod: autoscalingv1.ActivePeriod{
 									Timezone:  "",
@@ -1659,9 +1659,9 @@ func defaultAutoscalerChain(f *agonesv1.Fleet) *autoscalingv1.FleetAutoscaler {
 	}
 }
 
-// inactiveCronSchedule returns the previous 3 minutes
+// inactiveCronSchedule returns the time 3 minutes ago
 // e.g. if the current time is 12:00, this method will return "57 * * * *"
-// meaning after 12:01
+// meaning 3 minutes before 12:00
 func inactiveCronSchedule(currentTime time.Time) string {
 	prevMinute := currentTime.Add(time.Minute * -3).Minute()
 	return fmt.Sprintf("%d * * * *", prevMinute)
@@ -1685,14 +1685,17 @@ func nextCronMinuteBetween(currentTime time.Time) string {
 }
 
 // Parse a duration string and return a duration struct
-func mustParseDuration(duration string) time.Duration {
-	d, _ := time.ParseDuration(duration)
+func mustParseDuration(t *testing.T, duration string) time.Duration {
+	d, err := time.ParseDuration(duration)
+	if !assert.Nil(t, err) {
+		fmt.Errorf("error parsing duration: %s", err)
+	}
 	return d
 }
 
 // Parse a time string and return a metav1.Time
-func currentTimePlusDuration(duration string) metav1.Time {
-	d := mustParseDuration(duration)
+func currentTimePlusDuration(t *testing.T, duration string) metav1.Time {
+	d := mustParseDuration(t, duration)
 	currentTimePlusDuration := time.Now().Add(d)
 	return metav1.NewTime(currentTimePlusDuration)
 }

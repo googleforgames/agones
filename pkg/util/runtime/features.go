@@ -55,20 +55,20 @@ const (
 	// FeaturePlayerTracking is a feature flag to enable/disable player tracking features.
 	FeaturePlayerTracking Feature = "PlayerTracking"
 
-	// FeatureRollingUpdateFix is a feature flag to enable/disable fleet controller fixes.
-	FeatureRollingUpdateFix Feature = "RollingUpdateFix"
-
 	// FeaturePortRanges is a feature flag to enable/disable specific port ranges.
 	FeaturePortRanges Feature = "PortRanges"
 
 	// FeaturePortPolicyNone is a feature flag to allow setting Port Policy to None.
 	FeaturePortPolicyNone Feature = "PortPolicyNone"
 
-	////////////////
-	// Dev features
+	// FeatureRollingUpdateFix is a feature flag to enable/disable fleet controller fixes.
+	FeatureRollingUpdateFix Feature = "RollingUpdateFix"
 
 	// FeatureScheduledAutoscaler is a feature flag to enable/disable scheduled fleet autoscaling.
 	FeatureScheduledAutoscaler Feature = "ScheduledAutoscaler"
+
+	////////////////
+	// Dev features
 
 	////////////////
 	// Example feature
