@@ -729,7 +729,6 @@ gen-embedded-openapi: ensure-build-image
 		go run -mod=mod ./main.go
 
 # Generate the static install script
-gen-install: FEATURE_GATES ?= $(ALPHA_FEATURE_GATES)
 gen-install: $(ensure-build-image)
 	docker run --rm $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) bash -c \
 		'helm template agones-manual --namespace agones-system $(mount_path)/install/helm/agones \
