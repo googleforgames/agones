@@ -736,7 +736,6 @@ gen-install: $(ensure-build-image)
 		--set agones.allocator.generateTLS=false \
 		--set agones.allocator.generateClientTLS=false \
 		--set agones.crds.cleanupOnDelete=false \
-		--set agones.featureGates=$(FEATURE_GATES) \
 		> $(mount_path)/install/yaml/install.yaml'
 
 # Generate the client, conversions, deepcopy, and defaults code for our CustomResourceDefinition
