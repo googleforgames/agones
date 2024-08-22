@@ -1687,9 +1687,7 @@ func nextCronMinuteBetween(currentTime time.Time) string {
 // Parse a duration string and return a duration struct
 func mustParseDuration(t *testing.T, duration string) time.Duration {
 	d, err := time.ParseDuration(duration)
-	if !assert.Nil(t, err) {
-		fmt.Errorf("error parsing duration: %s", err)
-	}
+	assert.Nil(t, err)
 	return d
 }
 
