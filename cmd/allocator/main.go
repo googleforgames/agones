@@ -217,8 +217,8 @@ func main() {
 	if !validPort(conf.GRPCPort) && !validPort(conf.HTTPPort) {
 		logger.WithField("grpc-port", conf.GRPCPort).WithField("http-port", conf.HTTPPort).Fatal("Must specify a valid gRPC port or an HTTP port for the allocator service")
 	}
-
-	health, closer := setupMetricsRecorder(conf)
+	healthserver := &httpserver.Server{Logger: logger}
+	health, closer := setupMetricsRecorder(conf, healthserver)
 	defer closer()
 
 	kubeClient, agonesClient, err := getClients(conf)
@@ -307,7 +307,6 @@ func main() {
 	}
 
 	// Finally listen on 8080 (http), used to serve /live and /ready handlers for Kubernetes probes.
-	healthserver := httpserver.Server{Logger: logger}
 	healthserver.Handle("/", health)
 	go func() { _ = healthserver.Run(listenCtx, 0) }()
 

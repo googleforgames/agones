@@ -16,7 +16,7 @@
 #
 # [Stage:Dev]
 # [FeatureFlag:ScheduledAutoscaler]
-# Example of a FleetAutoscaler - this is used to scale a Fleet based on a schedule.
+# Example of a FleetAutoscaler - this is used to scale a Fleet based on a chain.
 #
 
 #
@@ -27,65 +27,73 @@ kind: FleetAutoscaler
 metadata:
   name: chain-fleet-autoscaler
 spec:
+  fleetName: fleet-example
   policy:
     # Chain based policy for autoscaling.
     type: Chain
     chain:
       # Id of chain entry. If not set, the Id will be defaulted to the index of the entry within the chain.
       - id: "weekday"
-        type: Schedule  # Schedule based condition.
+        type: Schedule  # Schedule based policy.
         schedule:
           between:
-            # The policy becomes eligible for application starting on Feb 20, 2024 at 4:04 PM EST. If not set, the policy will immediately be eligible for application.
-            start: "2024-02-20T16:04:04-05:00"
-            # The policy becomes ineligible for application on Feb 23, 2024 at 4:04 PM EST. If not set, the policy will always be eligible for application (after the start time).
-            end: "2024-02-23T16:04:04-05:00"
+            # The policy becomes eligible for application starting on Feb 20, 2100 at 4:04 PM EST. If not set, the policy will immediately be eligible for application.
+            start: "2100-02-20T16:04:04-05:00"
+            # The policy becomes ineligible for application on Feb 23, 2100 at 4:04 PM EST. If not set, the policy will always be eligible for application (after the start time).
+            end: "2100-02-23T16:04:04-05:00"
           activePeriod:
             # Timezone to be used for the startCron field. Defaults to UTC if not set.
             timezone: "America/New_York"
             # Start applying the policy everyday at 1:00 AM EST. If not set, the policy will always be applied in the .between window.
-            # (Only eligible starting on Feb 20, 2024 at 4:04 PM).
+            # (Only eligible starting on Feb 20, 2100 at 4:04 PM).
             startCron: "0 1 * * 0"
             # Only apply the policy for 5 hours. If not set, the duration will be defaulted to always/indefinite.
             duration: "5h"
-        # Policy to be applied during the activePeriod. Required.
-        policy:
-          type: Buffer
-          buffer:
-            bufferSize: 50
-            minReplicas: 100
-            maxReplicas: 2000
+          # Policy to be applied during the activePeriod. Required.
+          policy:
+            type: Buffer
+            buffer:
+              bufferSize: 50
+              minReplicas: 100
+              maxReplicas: 2000
       # Id of chain entry. If not set, the Id will be defaulted to the index of the entry within the chain list.
       - id: "weekend"
-        type: Schedule
+        type: Schedule  # Schedule based policy.
         schedule:
           between:
-            # The policy becomes eligible for application starting on Feb 24, 2024 at 4:05 PM EST. If not set, the policy will immediately be eligible for application.
-            start: "2024-02-24T16:04:05-05:00"
-            # The policy becomes ineligible for application starting on Feb 26, 2024 at 4:05 PM EST. If not set, the policy will always be eligible for application (after the start time).
-            end: "2024-02-26T16:04:05-05:00"
+            # The policy becomes eligible for application starting on Feb 24, 2100 at 4:05 PM EST. If not set, the policy will immediately be eligible for application.
+            start: "2100-02-24T16:04:05-05:00"
+            # The policy becomes ineligible for application starting on Feb 26, 2100 at 4:05 PM EST. If not set, the policy will always be eligible for application (after the start time).
+            end: "2100-02-26T16:04:05-05:00"
           activePeriod:
             # Timezone to be used for the startCron field. Defaults to UTC if not set.
             timezone: "America/New_York"
             # Start applying the policy everyday at 1:00 AM EST. If not set, the policy will always be applied in the .between window.
-            # (Only eligible starting on Feb 24, 2024 at 4:05 PM EST)
+            # (Only eligible starting on Feb 24, 2100 at 4:05 PM EST)
             startCron: "0 1 * * 0"
             # Only apply the policy for 7 hours. If not set the duration will be defaulted to always/indefinite.
             duration: "7h"
-        # Policy to be applied during the activePeriod. Required.
-        policy:
-          type: Counter
-          counter:
-            key: rooms
-            bufferSize: 10
-            minCapacity: 500
-            maxCapacity: 1000
+          # Policy to be applied during the activePeriod. Required.
+          policy:
+            type: Counter
+            counter:
+              key: rooms
+              bufferSize: 10
+              minCapacity: 500
+              maxCapacity: 1000
       # Id of chain entry. If not set, the Id will be defaulted to the index of the entry within the chain list.
       - id: "default"
         # Policy will always be applied when no other policy is applicable. Required.
-        policy:
-          type: Buffer
-          buffer:
-            bufferSize: 5
-            minReplicas: 100
-            maxReplicas: 2000
+        type: Buffer
+        buffer:
+          bufferSize: 5
+          minReplicas: 100
+          maxReplicas: 2000
+  # The autoscaling sync strategy, this will determine how frequent any schedules within the chain is evaluated.
+  sync:
+    # type of the sync. for now, only FixedInterval is available
+    type: FixedInterval
+    # parameters of the fixedInterval sync
+    fixedInterval:
+      # the time in seconds between each auto scaling
+      seconds: 30

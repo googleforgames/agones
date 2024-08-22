@@ -1,0 +1,62 @@
+---
+# Copyright 2024 Google LLC All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+#
+# [Stage:Dev]
+# [FeatureFlag:ScheduledAutoscaler]
+# Example of a FleetAutoscaler - this is used to scale a Fleet based on a schedule.
+#
+
+#
+# For a full reference and details: https://agones.dev/site/docs/reference/fleetautoscaler/
+#
+apiVersion: autoscaling.agones.dev/v1
+kind: FleetAutoscaler
+metadata:
+  name: schedule-fleet-autoscaler
+spec:
+  fleetName: fleet-example
+  policy:
+    # Schedule based policy for autoscaling.
+    type: Schedule
+    schedule:
+      between:
+        # The policy becomes eligible for application starting on July 4th, 2024 at 4:04 PM PST. If not set, the policy will immediately be eligible for application.
+        start: "2024-07-04T16:04:04-07:00"
+        # The policy becomes ineligible for application on Sept 21, 2100 at 4:04 PM PST. If not set, the policy will always be eligible for application (after the start time).
+        end: "2100-09-21T16:04:04-07:00"
+      activePeriod:
+        # Timezone to be used for the startCron field. Defaults to UTC if not set.
+        timezone: "America/Los_Angeles"
+        # Start applying the policy everyday at 1:00 AM PST. If not set, the policy will always be applied in the .between window.
+        # (Only eligible starting on Feb 20, 2100 at 4:04 PM).
+        startCron: "0 1 * * 0"
+        # Only apply the policy for 5 hours. If not set, the duration will be defaulted to always/indefinite.
+        duration: "5h"
+      # Policy to be applied during the activePeriod. Required.
+      policy:
+        type: Buffer
+        buffer:
+          bufferSize: 50
+          minReplicas: 100
+          maxReplicas: 2000
+  # The autoscaling sync strategy, this will determine how frequent the schedule is evaluated.
+  sync:
+    # type of the sync. for now, only FixedInterval is available
+    type: FixedInterval
+    # parameters of the fixedInterval sync
+    fixedInterval:
+      # the time in seconds between each auto scaling
+      seconds: 30

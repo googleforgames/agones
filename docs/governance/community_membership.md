@@ -6,10 +6,11 @@ This is based on the [Kubernetes Community Membership](https://github.com/kubern
 
 There are currently two roles for this project, but that may grow in the future.
 
-| Role | Responsibilities | Requirements | Defined by |
-| -----| ---------------- | ------------ | -------|
-| Releaser | Create Agones releases | Sponsored by 2 approvers | Commit access to the Agones repository |
-| Approver | Review and approve contributions | Sponsored by 2 approvers and multiple contributions to the project | Commit access to the Agones repository and [OWNERS] file approver entry |
+| Role         | Responsibilities                 | Requirements                                                       | Defined by                                                              |
+|--------------|----------------------------------|--------------------------------------------------------------------|-------------------------------------------------------------------------|
+| Collaborator | Can have tickets assigned        | Have one PR merged                                                 | Read access to the Agones repository                                    |
+| Releaser     | Create Agones releases           | Sponsored by 2 approvers                                           | Commit access to the Agones repository                                  |
+| Approver     | Review and approve contributions | Sponsored by 2 approvers and multiple contributions to the project | Commit access to the Agones repository and [OWNERS] file approver entry |
 
 
 ## New contributors
@@ -25,6 +26,23 @@ principles in this document, familiarity with project organization, roles,
 policies, procedures, conventions, etc., and technical and/or writing ability.
 Role-specific expectations, responsibilities, and requirements are enumerated
 below.
+
+## Collaborator
+
+For regular contributors that wish to have issues assigned to them, we have the collaborator role.
+
+To become a collaborator, create an issue using the 
+[become a repo collaborator issue template](https://github.com/googleforgames/agones/issues/new?assignees=thisisnotapril&labels=area%2Fcommunity&projects=&template=become-a-repo-collaborator.md&title=Collaborator+Request)
+and we will review it as a team.
+
+**Defined by:** Read access to the Agones repository.
+
+### Requirements
+
+- Have at least one merged Pull Request.
+- Have reviewed the [contribution guidelines](https://github.com/googleforgames/agones/blob/main/CONTRIBUTING.md)
+- Have enabled [2FA on my GitHub account](https://github.com/settings/security)
+- Have joined the [Agones Slack workspace](https://join.slack.com/t/agones/shared_invite/zt-2mg1j7ddw-0QYA9IAvFFRKw51ZBK6mkQ)
 
 ## Releaser
 
