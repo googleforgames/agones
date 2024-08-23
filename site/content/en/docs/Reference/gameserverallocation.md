@@ -245,7 +245,7 @@ when using an API call. If not specified when using the command line, the [names
 
 [gameserverselector]: {{% ref "/docs/Reference/agones_crd_api_reference.html#allocation.agones.dev/v1.GameServerSelector"  %}}
 [namespace]: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces
-[addresses]: https://v1-26.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#nodeaddress-v1-core
+[addresses]: https://v1-28.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#nodeaddress-v1-core
 [counterstatus]: {{% ref "/docs/Reference/agones_crd_api_reference.html#agones.dev/v1.CounterStatus" %}}
 [liststatus]: {{% ref "/docs/Reference/agones_crd_api_reference.html#agones.dev/v1.ListStatus" %}}
 
