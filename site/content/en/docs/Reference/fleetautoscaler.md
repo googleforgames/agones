@@ -179,7 +179,7 @@ outgoing JSON packet structure for the webhook endpoint.
 
 ## Schedule and Chain Autoscaling
 
-A Schedule based autoscaler can be used to autoscale `GameServers` based on a schedule associated with a policy.
+A schedule-based autoscaler can automatically scale GameServers at a specific time based on a FleetAutoscaler policy.
 
 For example, if you have an in-game event happening at 12:00 AM PST on October 31, 2024 and you want to ensure that there are always at least 5 ready game servers at that specific time, you could use a schedule-based autoscaler that applies a buffer policy with a buffer size of 5. 
 
@@ -226,13 +226,13 @@ spec:
       seconds: 30
 ```
 
-A Chain based autoscaler can be used to autoscale `GameServers` based on a list of policies, the index of each policy within the list determines the priority in which the policies are evaluated and applied.
-
-For example, if you have an in-game event happening between 12:00 AM and 10:00 PM on October 31, 2024 EST, and you want to ensure there are always at least 5 ready game servers during that time, you chain add a schedule policy that applies a buffer policy with a buffer size of 5. Now, let's say you want to adjust the number of game servers after the event based on external factors after the in-game event, you could chain a webhook policy to dynamically. Finally as a fallback, for if the webhook invocation fails, you can chain another buffer policy to default to.
-
 {{< alert title="Note" color="info">}}
 While it's possible to use multiple FleetAutoscalers to perform the same actions on a fleet, this approach can result in unpredictable scaling behavior and overwhelm the controller. Multiple FleetAutoscalers pointing to the same fleet can lead to conflicting schedules and complex management. To avoid these issues, it's recommended to use the Chain Policy for defining scheduled scaling. This simplifies management and prevents unexpected scaling fluctuations.
 {{< /alert >}}
+
+A Chain-based autoscaler can be used to autoscale `GameServers` based on a list of policies. The index of each policy within the list determines its priority, with the first item in the chain having the highest priority and being evaluated first, followed by the second item, and so on. The order in the list is crucial as it directly affects the sequence in which policies are evaluated and applied.
+
+For example, if you have an in-game event happening between 12:00 AM and 10:00 PM on October 31, 2024 EST, and you want to ensure there are always at least 5 ready game servers during that time, you chain add a schedule policy that applies a buffer policy with a buffer size of 5. Now, let's say you want to adjust the number of game servers after the event based on external factors after the in-game event, you could chain a webhook policy to dynamically. Finally as a fallback, for if the webhook invocation fails, you can chain another buffer policy to default to.
 
 Chain-based `FleetAutoscaler` specification below and in the {{< ghlink href="examples/chainfleetautoscaler.yaml" >}}example folder{{< /ghlink >}}:
 
@@ -296,6 +296,7 @@ spec:
       # the time in seconds between each auto scaling
       seconds: 30
 ```
+
 ## Spec Field Reference
 
 The `spec` field of the `FleetAutoscaler` is composed as follows:
