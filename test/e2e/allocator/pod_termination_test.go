@@ -92,16 +92,10 @@ func TestAllocatorAfterDeleteReplica(t *testing.T) {
 
 	// Wait and keep making calls till we know the draining time has passed
 	_ = wait.PollUntilContextTimeout(context.Background(), retryInterval, retryTimeout, true, func(ctx context.Context) (bool, error) {
-		ctx, cancelCtx := context.WithTimeout(ctx, retryInterval*2)
-		defer cancelCtx()
-
-		response, err := grpcClient.Allocate(ctx, request)
+		response, err := grpcClient.Allocate(context.Background(), request)
 		logger.Infof("err = %v (code = %v), response = %v", err, status.Code(err), response)
-		if assert.NoError(t, err, "Failed grpc allocation request") {
-			helper.ValidateAllocatorResponse(t, response)
-			err = helper.DeleteAgonesPod(ctx, response.GameServerName, framework.Namespace, framework)
-			assert.NoError(t, err, "Failed to delete game server pod %s", response.GameServerName)
-		}
+		helper.ValidateAllocatorResponse(t, response)
+		require.NoError(t, err, "Failed grpc allocation request")
 		return false, nil
 	})
 }

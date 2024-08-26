@@ -192,9 +192,9 @@ func (c *Controller) recordFleetAutoScalerChanges(old, next interface{}) {
 	// recording buffer policy
 	if fas.Spec.Policy.Buffer != nil {
 		// recording limits
-		recordWithTags(ctx, []tag.Mutator{tag.Upsert(keyType, "max")},
+		RecordWithTags(ctx, []tag.Mutator{tag.Upsert(keyType, "max")},
 			fasBufferLimitsCountStats.M(int64(fas.Spec.Policy.Buffer.MaxReplicas)))
-		recordWithTags(ctx, []tag.Mutator{tag.Upsert(keyType, "min")},
+		RecordWithTags(ctx, []tag.Mutator{tag.Upsert(keyType, "min")},
 			fasBufferLimitsCountStats.M(int64(fas.Spec.Policy.Buffer.MinReplicas)))
 
 		// recording size
@@ -203,13 +203,13 @@ func (c *Controller) recordFleetAutoScalerChanges(old, next interface{}) {
 			sizeString := fas.Spec.Policy.Buffer.BufferSize.StrVal
 			if sizeString != "" {
 				if size, err := strconv.Atoi(sizeString[:len(sizeString)-1]); err == nil {
-					recordWithTags(ctx, []tag.Mutator{tag.Upsert(keyType, "percentage")},
+					RecordWithTags(ctx, []tag.Mutator{tag.Upsert(keyType, "percentage")},
 						fasBufferSizeStats.M(int64(size)))
 				}
 			}
 		} else {
 			// as count
-			recordWithTags(ctx, []tag.Mutator{tag.Upsert(keyType, "count")},
+			RecordWithTags(ctx, []tag.Mutator{tag.Upsert(keyType, "count")},
 				fasBufferSizeStats.M(int64(fas.Spec.Policy.Buffer.BufferSize.IntVal)))
 		}
 	}
@@ -312,15 +312,15 @@ func (c *Controller) recordFleetReplicas(fleetName, fleetNamespace string, total
 
 	ctx, _ := tag.New(context.Background(), tag.Upsert(keyName, fleetName), tag.Upsert(keyNamespace, fleetNamespace))
 
-	recordWithTags(ctx, []tag.Mutator{tag.Upsert(keyType, "total")},
+	RecordWithTags(ctx, []tag.Mutator{tag.Upsert(keyType, "total")},
 		fleetsReplicasCountStats.M(int64(total)))
-	recordWithTags(ctx, []tag.Mutator{tag.Upsert(keyType, "allocated")},
+	RecordWithTags(ctx, []tag.Mutator{tag.Upsert(keyType, "allocated")},
 		fleetsReplicasCountStats.M(int64(allocated)))
-	recordWithTags(ctx, []tag.Mutator{tag.Upsert(keyType, "ready")},
+	RecordWithTags(ctx, []tag.Mutator{tag.Upsert(keyType, "ready")},
 		fleetsReplicasCountStats.M(int64(ready)))
-	recordWithTags(ctx, []tag.Mutator{tag.Upsert(keyType, "desired")},
+	RecordWithTags(ctx, []tag.Mutator{tag.Upsert(keyType, "desired")},
 		fleetsReplicasCountStats.M(int64(desired)))
-	recordWithTags(ctx, []tag.Mutator{tag.Upsert(keyType, "reserved")},
+	RecordWithTags(ctx, []tag.Mutator{tag.Upsert(keyType, "reserved")},
 		fleetsReplicasCountStats.M(int64(reserved)))
 }
 
@@ -330,13 +330,13 @@ func (c *Controller) recordCounters(fleetName, fleetNamespace string, counters m
 	ctx, _ := tag.New(context.Background(), tag.Upsert(keyName, fleetName), tag.Upsert(keyNamespace, fleetNamespace))
 
 	for counter, counterStatus := range counters {
-		recordWithTags(ctx, []tag.Mutator{tag.Upsert(keyType, "allocated_count"), tag.Upsert(keyCounter, counter)},
+		RecordWithTags(ctx, []tag.Mutator{tag.Upsert(keyType, "allocated_count"), tag.Upsert(keyCounter, counter)},
 			fleetCountersStats.M(counterStatus.AllocatedCount))
-		recordWithTags(ctx, []tag.Mutator{tag.Upsert(keyType, "allocated_capacity"), tag.Upsert(keyCounter, counter)},
+		RecordWithTags(ctx, []tag.Mutator{tag.Upsert(keyType, "allocated_capacity"), tag.Upsert(keyCounter, counter)},
 			fleetCountersStats.M(counterStatus.AllocatedCapacity))
-		recordWithTags(ctx, []tag.Mutator{tag.Upsert(keyType, "total_count"), tag.Upsert(keyCounter, counter)},
+		RecordWithTags(ctx, []tag.Mutator{tag.Upsert(keyType, "total_count"), tag.Upsert(keyCounter, counter)},
 			fleetCountersStats.M(counterStatus.Count))
-		recordWithTags(ctx, []tag.Mutator{tag.Upsert(keyType, "total_capacity"), tag.Upsert(keyCounter, counter)},
+		RecordWithTags(ctx, []tag.Mutator{tag.Upsert(keyType, "total_capacity"), tag.Upsert(keyCounter, counter)},
 			fleetCountersStats.M(counterStatus.Capacity))
 	}
 }
@@ -347,13 +347,13 @@ func (c *Controller) recordLists(fleetName, fleetNamespace string, lists map[str
 	ctx, _ := tag.New(context.Background(), tag.Upsert(keyName, fleetName), tag.Upsert(keyNamespace, fleetNamespace))
 
 	for list, listStatus := range lists {
-		recordWithTags(ctx, []tag.Mutator{tag.Upsert(keyType, "allocated_count"), tag.Upsert(keyList, list)},
+		RecordWithTags(ctx, []tag.Mutator{tag.Upsert(keyType, "allocated_count"), tag.Upsert(keyList, list)},
 			fleetListsStats.M(listStatus.AllocatedCount))
-		recordWithTags(ctx, []tag.Mutator{tag.Upsert(keyType, "allocated_capacity"), tag.Upsert(keyList, list)},
+		RecordWithTags(ctx, []tag.Mutator{tag.Upsert(keyType, "allocated_capacity"), tag.Upsert(keyList, list)},
 			fleetListsStats.M(listStatus.AllocatedCapacity))
-		recordWithTags(ctx, []tag.Mutator{tag.Upsert(keyType, "total_count"), tag.Upsert(keyList, list)},
+		RecordWithTags(ctx, []tag.Mutator{tag.Upsert(keyType, "total_count"), tag.Upsert(keyList, list)},
 			fleetListsStats.M(listStatus.Count))
-		recordWithTags(ctx, []tag.Mutator{tag.Upsert(keyType, "total_capacity"), tag.Upsert(keyList, list)},
+		RecordWithTags(ctx, []tag.Mutator{tag.Upsert(keyType, "total_capacity"), tag.Upsert(keyList, list)},
 			fleetListsStats.M(listStatus.Capacity))
 	}
 }
@@ -386,19 +386,19 @@ func (c *Controller) recordGameServerStatusChanges(old, next interface{}) {
 		oldGs.Status.Players != nil {
 
 		if newGs.Status.Players.Count != oldGs.Status.Players.Count {
-			recordWithTags(context.Background(), []tag.Mutator{tag.Upsert(keyFleetName, fleetName),
+			RecordWithTags(context.Background(), []tag.Mutator{tag.Upsert(keyFleetName, fleetName),
 				tag.Upsert(keyName, newGs.GetName()), tag.Upsert(keyNamespace, newGs.GetNamespace())}, gameServerPlayerConnectedTotal.M(newGs.Status.Players.Count))
 		}
 
 		if newGs.Status.Players.Capacity-newGs.Status.Players.Count != oldGs.Status.Players.Capacity-oldGs.Status.Players.Count {
-			recordWithTags(context.Background(), []tag.Mutator{tag.Upsert(keyFleetName, fleetName),
+			RecordWithTags(context.Background(), []tag.Mutator{tag.Upsert(keyFleetName, fleetName),
 				tag.Upsert(keyName, newGs.GetName()), tag.Upsert(keyNamespace, newGs.GetNamespace())}, gameServerPlayerCapacityTotal.M(newGs.Status.Players.Capacity-newGs.Status.Players.Count))
 		}
 
 	}
 
 	if newGs.Status.State != oldGs.Status.State {
-		recordWithTags(context.Background(), []tag.Mutator{tag.Upsert(keyType, string(newGs.Status.State)),
+		RecordWithTags(context.Background(), []tag.Mutator{tag.Upsert(keyType, string(newGs.Status.State)),
 			tag.Upsert(keyFleetName, fleetName), tag.Upsert(keyNamespace, newGs.GetNamespace())}, gameServerTotalStats.M(1))
 
 		// Calculate the duration of the current state
@@ -406,7 +406,7 @@ func (c *Controller) recordGameServerStatusChanges(old, next interface{}) {
 		if err != nil {
 			c.logger.Warn(err.Error())
 		} else {
-			recordWithTags(context.Background(), []tag.Mutator{tag.Upsert(keyType, string(oldGs.Status.State)),
+			RecordWithTags(context.Background(), []tag.Mutator{tag.Upsert(keyType, string(oldGs.Status.State)),
 				tag.Upsert(keyFleetName, fleetName), tag.Upsert(keyNamespace, newGs.GetNamespace())}, gsStateDurationSec.M(duration))
 		}
 	}
@@ -516,9 +516,9 @@ func (c *Controller) collectNodeCounts() {
 	}
 
 	nodes = removeSystemNodes(nodes)
-	recordWithTags(context.Background(), []tag.Mutator{tag.Insert(keyEmpty, "true")},
+	RecordWithTags(context.Background(), []tag.Mutator{tag.Insert(keyEmpty, "true")},
 		nodesCountStats.M(int64(len(nodes)-len(gsPerNodes))))
-	recordWithTags(context.Background(), []tag.Mutator{tag.Insert(keyEmpty, "false")},
+	RecordWithTags(context.Background(), []tag.Mutator{tag.Insert(keyEmpty, "false")},
 		nodesCountStats.M(int64(len(gsPerNodes))))
 
 	for _, node := range nodes {
