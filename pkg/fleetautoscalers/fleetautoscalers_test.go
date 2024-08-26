@@ -2538,7 +2538,7 @@ func TestApplyChainPolicy(t *testing.T) {
 // Parse a time string and return a metav1.Time
 func mustParseMetav1Time(timeStr string) metav1.Time {
 	t, _ := time.Parse(time.RFC3339, timeStr)
-	return metav1.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), t.Nanosecond(), t.Location())
+	return metav1.NewTime(t)
 }
 
 // Parse a time string and return a time.Time
