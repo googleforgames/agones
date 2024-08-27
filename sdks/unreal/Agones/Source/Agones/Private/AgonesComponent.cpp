@@ -510,7 +510,7 @@ void UAgonesComponent::SetPlayerCapacity(
 
 void UAgonesComponent::GetCounter(FString Key, FGetCounterDelegate SuccessDelegate, FAgonesErrorDelegate ErrorDelegate)
 {
-	FHttpRequestRef Request = BuildAgonesRequest(FString::Format(TEXT("v1beta1/counters/{0}"), {Key}), FHttpVerb::Get);
+	FHttpRequestRef Request = BuildAgonesRequest(FString::Format(TEXT("v1beta1/counters/{0}"), {Key}), FHttpVerb::Get, "");
 	Request->OnProcessRequestComplete().BindWeakLambda(this,
 		[SuccessDelegate, ErrorDelegate](FHttpRequestPtr HttpRequest, FHttpResponsePtr HttpResponse, const bool bSucceeded)
 		{
