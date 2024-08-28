@@ -1,5 +1,46 @@
 # Changelog
 
+## [v1.43 .0](https://github.com/googleforgames/agones/tree/v1.43.0) (2024-08-27)
+
+[Full Changelog](https://github.com/googleforgames/agones/compare/v1.42.0...v1.43.0)
+
+**Implemented enhancements:**
+- Add Option to Use Host Network and Configure Ports by @Orza in https://github.com/googleforgames/agones/pull/3895
+- Graduate Passthrough Port Policy to Beta on Autopilot by @vicentefb in https://github.com/googleforgames/agones/pull/3916
+- Agones Unity SDK development setup instructions + Agones Unity SDK Ready test by @aallbrig in https://github.com/googleforgames/agones/pull/3887
+- feat: Add API Changes and Validation for FleetAutoscaler Schedule/Chain Policy by @indexjoseph in https://github.com/googleforgames/agones/pull/3893
+- feat: Adds autoscaling logic for new Chain and Schedule policies by @indexjoseph in https://github.com/googleforgames/agones/pull/3929
+- Adds basic framework for the in place Agones upgrades test controller by @igooch in https://github.com/googleforgames/agones/pull/3956
+- [Performance] - Added a new metric inside the allocator to track the success retry rate inside the retry loop  by @vicentefb in https://github.com/googleforgames/agones/pull/3927
+- Make the parameters that limits the number of GameServers to add configurable by @vicentefb in https://github.com/googleforgames/agones/pull/3950
+- feat: Adds e2e tests for chain/schedule policy and bump ScheduledAutoscaler to Alpha by @indexjoseph in https://github.com/googleforgames/agones/pull/3946
+- Implement CountsAndLists for Unity SDK + Tests by @ZeroParticle in https://github.com/googleforgames/agones/pull/3883
+
+**Fixed bugs:**
+- Resolves `make site-server` issue #3885 by @aallbrig in https://github.com/googleforgames/agones/pull/3914
+
+**Other:**
+- Preparation for Release v1.43.0 by @kamaljeeti in https://github.com/googleforgames/agones/pull/3910
+- Introduce external resource(s) on multiplayer game programming to docs by @aallbrig in https://github.com/googleforgames/agones/pull/3884
+- Added line of code to update failure count details inside runscenario by @vicentefb in https://github.com/googleforgames/agones/pull/3915
+- updated golang upgrade template by @ashutosji in https://github.com/googleforgames/agones/pull/3902
+- Changes for GitHub/Cloud Build app integration by @zmerlynn in https://github.com/googleforgames/agones/pull/3918
+- Meta: Contributor role by @markmandel in https://github.com/googleforgames/agones/pull/3922
+- Fix allocator metrics endpoint by @vicentefb in https://github.com/googleforgames/agones/pull/3921
+- Meta: Contributor => Collaborator by @markmandel in https://github.com/googleforgames/agones/pull/3928
+- Rewrite agones-bot, commit to Agones repo by @zmerlynn in https://github.com/googleforgames/agones/pull/3923
+- Small cleanup of incorrect comment in features.go file by @igooch in https://github.com/googleforgames/agones/pull/3944
+- Update Supported Kubernetes to 1.28, 1.29, 1.30 by @ashutosji in https://github.com/googleforgames/agones/pull/3933
+- remove ctx within the condition func by @peterzhongyi in https://github.com/googleforgames/agones/pull/3959
+- Reapply "Update Supported Kubernetes to 1.28, 1.29, 1.30 (#3933)" (#3… by @gongmax in https://github.com/googleforgames/agones/pull/3961
+- change kubernetes API version to fix broken CI by @peterzhongyi in https://github.com/googleforgames/agones/pull/3962
+- docs(godot): add Agones x Godot third party example by @andresromerodev in https://github.com/googleforgames/agones/pull/3938
+- Link Unity Netcode for Gameobjects example in documentation by @mbychkowski in https://github.com/googleforgames/agones/pull/3937
+- Docs: Use k8s-api-version for links by @markmandel in https://github.com/googleforgames/agones/pull/3963
+
+**New Contributors:**
+- @Orza made their first contribution in https://github.com/googleforgames/agones/pull/3895
+
 ## [v1.42.0](https://github.com/googleforgames/agones/tree/v1.42.0) (2024-07-16)
 
 [Full Changelog](https://github.com/googleforgames/agones/compare/v1.41.0...v1.42.0)
