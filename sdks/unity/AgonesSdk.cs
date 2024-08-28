@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -60,6 +61,9 @@ namespace Agones
             public string value;
             public KeyValueMessage(string k, string v) => (key, value) = (k, v);
         }
+
+        private List<WatchGameServerCallback> watchCallbacks = new List<WatchGameServerCallback>();
+        private bool watchingForUpdates = false;
 
         #region Unity Methods
         // Use this for initialization.
@@ -223,22 +227,44 @@ namespace Agones
         /// </summary>
         /// <param name="gameServer">The GameServer value</param>
         public delegate void WatchGameServerCallback(GameServer gameServer);
-        
+
         /// <summary>
         /// WatchGameServer watches for changes in the backing GameServer configuration.
         /// </summary>
         /// <param name="callback">This callback is executed whenever a GameServer configuration change occurs</param>
         public void WatchGameServer(WatchGameServerCallback callback)
         {
-            var req = new UnityWebRequest(sidecarAddress + "/watch/gameserver", UnityWebRequest.kHttpVerbGET);
-            req.downloadHandler = new GameServerHandler(callback);
-            req.SetRequestHeader("Content-Type", "application/json");
-            req.SendWebRequest();
-            Log("Agones Watch Started");
+            this.watchCallbacks.Add(callback);
+            if (!this.watchingForUpdates)
+            {
+                StartWatchingForUpdates();
+            }
         }
         #endregion
 
         #region AgonesRestClient Private Methods
+
+        private void NotifyWatchUpdates(GameServer gs)
+        {
+            this.watchCallbacks.ForEach((callback) =>
+            {
+                try
+                {
+                    callback(gs);
+                }
+                catch (Exception ignore) { } // Ignore callback exceptions
+            });
+        }
+
+        private void StartWatchingForUpdates()
+        {
+            var req = new UnityWebRequest(sidecarAddress + "/watch/gameserver", UnityWebRequest.kHttpVerbGET);
+            req.downloadHandler = new GameServerHandler(this);
+            req.SetRequestHeader("Content-Type", "application/json");
+            req.SendWebRequest();
+            this.watchingForUpdates = true;
+            Log("Agones Watch Started");
+        }
 
         private async void HealthCheckAsync()
         {
@@ -283,16 +309,16 @@ namespace Agones
 
             var result = new AsyncResult();
 
-            result.ok = req.responseCode == (long) HttpStatusCode.OK;
+            result.ok = req.responseCode == (long)HttpStatusCode.OK;
 
             if (result.ok)
             {
                 result.json = req.downloadHandler.text;
-                Log($"Agones SendRequest ok: {api} {req.downloadHandler.text}");
+                Log($"Agones SendRequest ok: {method} {api} {json} {req.downloadHandler.text}");
             }
             else
             {
-                Log($"Agones SendRequest failed: {api} {req.error}");
+                Log($"Agones SendRequest failed: {method} {api} {json} {req.error}");
             }
 
             req.Dispose();
@@ -364,12 +390,12 @@ namespace Agones
         /// </summary>
         private class GameServerHandler : DownloadHandlerScript
         {
-            private WatchGameServerCallback callback;
+            private AgonesSdk sdk;
             private StringBuilder stringBuilder;
 
-            public GameServerHandler(WatchGameServerCallback callback)
+            public GameServerHandler(AgonesSdk sdk)
             {
-                this.callback = callback;
+                this.sdk = sdk;
                 this.stringBuilder = new StringBuilder();
             }
 
@@ -386,17 +412,23 @@ namespace Agones
                     string fullLine = bufferString.Substring(0, newlineIndex);
                     try
                     {
-                        var dictionary = (Dictionary<string, object>) Json.Deserialize(fullLine);
+                        var dictionary = (Dictionary<string, object>)Json.Deserialize(fullLine);
                         var gameServer = new GameServer(dictionary["result"] as Dictionary<string, object>);
-                        this.callback(gameServer);
+                        this.sdk.NotifyWatchUpdates(gameServer);
                     }
-                    catch (Exception ignore) {} // Ignore parse errors
+                    catch (Exception ignore) { } // Ignore parse errors
                     bufferString = bufferString.Substring(newlineIndex + 1);
                 }
 
                 stringBuilder.Clear();
                 stringBuilder.Append(bufferString);
                 return true;
+            }
+
+            protected override void CompleteContent()
+            {
+                base.CompleteContent();
+                this.sdk.StartWatchingForUpdates();
             }
         }
         #endregion

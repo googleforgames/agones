@@ -26,9 +26,9 @@ PlayerTracking: false
 RollingUpdateFix: false
 PortRanges: false
 PortPolicyNone: false
+ScheduledAutoscaler: false
 
 # Dev features
-ScheduledAutoscaler: false
 
 # Example feature
 Example: false
