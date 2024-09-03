@@ -177,6 +177,126 @@ spec:
 See the [Webhook Endpoint Specification](#webhook-endpoint-specification) for the specification of the incoming and 
 outgoing JSON packet structure for the webhook endpoint.
 
+## Schedule and Chain Autoscaling
+
+A schedule-based autoscaler can automatically scale GameServers at a specific time based on a FleetAutoscaler policy.
+
+For example, if you have an in-game event happening at 12:00 AM PST on October 31, 2024 and you want to ensure that there are always at least 5 ready game servers at that specific time, you could use a schedule-based autoscaler that applies a buffer policy with a buffer size of 5. 
+
+Schedule-based `FleetAutoscaler` specification below and in the {{< ghlink href="examples/schedulefleetautoscaler.yaml" >}}example folder{{< /ghlink >}}:
+
+```yaml
+apiVersion: autoscaling.agones.dev/v1
+kind: FleetAutoscaler
+metadata:
+  name: schedule-fleet-autoscaler
+spec:
+  fleetName: fleet-example
+  policy:
+    # Schedule based policy for autoscaling.
+    type: Schedule
+    schedule:
+      between:
+        # The policy becomes eligible for application starting on October 31st, 2024 at 12:00 AM PST. If not set, the policy will immediately be eligible for application.
+        start: "2024-10-31T00:00:00-07:00"
+        # The policy is never ineligible for application. If not set, the policy will always be eligible for application (after the start time).
+        end: ""
+      activePeriod:
+        # Use PST time for the startCron field. Defaults to UTC if not set.
+        timezone: "America/Los_Angeles"
+        # Start applying the policy everyday at 12:00 AM PST. If not set, the policy will always be applied in the .between window.
+        # (Only eligible starting on October 31, 2024 at 12:00 AM PST).
+        startCron: "0 0 * * *"
+        # Apply this policy indefinitely. If not set, the duration will be defaulted to always/indefinite.
+        duration: ""
+      # Policy to be applied during the activePeriod. Required.
+      policy:
+        type: Buffer
+        buffer:
+          bufferSize: 5
+          minReplicas: 10
+          maxReplicas: 20
+  # The autoscaling sync strategy, this will determine how frequent the schedule is evaluated.
+  sync:
+    # type of the sync. for now, only FixedInterval is available
+    type: FixedInterval
+    # parameters of the fixedInterval sync
+    fixedInterval:
+      # the time in seconds between each auto scaling
+      seconds: 30
+```
+
+{{< alert title="Note" color="info">}}
+While it's possible to use multiple FleetAutoscalers to perform the same actions on a fleet, this approach can result in unpredictable scaling behavior and overwhelm the controller. Multiple FleetAutoscalers pointing to the same fleet can lead to conflicting schedules and complex management. To avoid these issues, it's recommended to use the Chain Policy for defining scheduled scaling. This simplifies management and prevents unexpected scaling fluctuations.
+{{< /alert >}}
+
+A Chain-based autoscaler can be used to autoscale `GameServers` based on a list of policies. The index of each policy within the list determines its priority, with the first item in the chain having the highest priority and being evaluated first, followed by the second item, and so on. The order in the list is crucial as it directly affects the sequence in which policies are evaluated and applied.
+
+For example, if you have an in-game event happening between 12:00 AM and 10:00 PM on October 31, 2024 EST, and you want to ensure there are always at least 5 ready game servers during that time, you chain add a schedule policy that applies a buffer policy with a buffer size of 5. Now, let's say you want to adjust the number of game servers after the event based on external factors after the in-game event, you could chain a webhook policy to dynamically. Finally as a fallback, for if the webhook invocation fails, you can chain another buffer policy to default to.
+
+Chain-based `FleetAutoscaler` specification below and in the {{< ghlink href="examples/chainfleetautoscaler.yaml" >}}example folder{{< /ghlink >}}:
+
+```yaml
+apiVersion: autoscaling.agones.dev/v1
+kind: FleetAutoscaler
+metadata:
+  name: chain-fleet-autoscaler
+spec:
+  fleetName: fleet-example
+  policy:
+    # Chain based policy for autoscaling.
+    type: Chain
+    chain:
+      # Id of chain entry. If not set, the Id will be defaulted to the index of the entry within the chain.
+      - id: "in-game-event"
+        type: Schedule
+        schedule:
+          between:
+            # The policy becomes eligible for application starting on October 31st, 2024 at 12:00 AM PST. If not set, the policy will immediately be eligible for application.
+            start: "2024-10-31T00:00:00-07:00"
+            # The policy is no longer eligible for application starting on  October 31st, 2024 at 10:00 PM PST. If not set, the policy will always be eligible for application (after the start time).
+            end: "2024-10-31T22:00:00-07:00"
+          activePeriod:
+            # Use PST time for the startCron field. Defaults to UTC if not set.
+            timezone: "America/Los_Angeles"
+            # Start applying the policy everyday at 1:00 AM PST. If not set, the policy will always be applied in the .between window.
+            # (Only eligible starting on October 31, 2024 at 12:00 AM PST).
+            startCron: "0 0 * * *"
+            # Apply this policy indefinitely. If not set, the duration will be defaulted to always/indefinite.
+            duration: ""
+          # Policy to be applied during the activePeriod. Required.
+          policy:
+            type: Buffer
+            buffer:
+              bufferSize: 5
+              minReplicas: 10
+              maxReplicas: 20
+      # Id of chain entry. If not set, the Id will be defaulted to the index of the entry within the chain list.
+      - id: "webhook"
+         type: Webhook
+          webhook:
+            service:
+              name: autoscaler-webhook-service
+              namespace: default
+              path: scale
+      # Id of chain entry. If not set, the Id will be defaulted to the index of the entry within the chain list.
+      - id: "default"
+        # Policy will always be applied when no other policy is applicable. Required.
+        type: Buffer
+        buffer:
+          bufferSize: 2
+          minReplicas: 5
+          maxReplicas: 10
+  # The autoscaling sync strategy, this will determine how frequent the chain is evaluated.
+  sync:
+    # type of the sync. for now, only FixedInterval is available
+    type: FixedInterval
+    # parameters of the fixedInterval sync
+    fixedInterval:
+      # the time in seconds between each auto scaling
+      seconds: 30
+```
+
 ## Spec Field Reference
 
 The `spec` field of the `FleetAutoscaler` is composed as follows:
