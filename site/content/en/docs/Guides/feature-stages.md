@@ -24,24 +24,7 @@ that can be found in the [Helm configuration]({{< ref "/docs/Installation/Instal
 
 The current set of `alpha` and `beta` feature gates:
 
-{{% feature expiryVersion="1.43.0" %}}
 
-| Feature Name                                                                                                                | Gate                               | Default  | Stage   | Since  |
-|-----------------------------------------------------------------------------------------------------------------------------|------------------------------------|----------|---------|--------|
-| [CountsAndLists](https://github.com/googleforgames/agones/issues/2716)                                                      | `CountsAndLists`                   | Enabled  | `Beta` | 1.41.0 |
-| [DisableResyncOnSDKServer](https://github.com/googleforgames/agones/issues/3377)                                            | `DisableResyncOnSDKServer`         | Enabled  | `Beta`  | 1.40.0 |
-| [Support Passthrough on GKE Autopilot](https://github.com/googleforgames/agones/issues/3721)                                | `AutopilotPassthroughPort`         | Disabled | `Alpha` | 1.41.0 |
-| [Support for Extended Duration Pods on GKE Autopilot (*1.28+ only*)](https://github.com/googleforgames/agones/issues/3386)  | `GKEAutopilotExtendedDurationPods` | Disabled | `Alpha` | 1.37.0 |
-| [GameServer player capacity filtering on GameServerAllocations](https://github.com/googleforgames/agones/issues/1239)       | `PlayerAllocationFilter`           | Disabled | `Alpha` | 1.14.0 |
-| [Player Tracking]({{< ref "/docs/Guides/player-tracking.md" >}})                                                            | `PlayerTracking`                   | Disabled | `Alpha` | 1.6.0  |
-| [Rolling Update Fixes](https://github.com/googleforgames/agones/issues/3688)                                                | `RollingUpdateFix`                 | Disabled | `Alpha` | 1.41.0 |
-| [Multiple dynamic port ranges](https://github.com/googleforgames/agones/issues/1911)                                        | `PortRanges`                       | Disabled | `Alpha` | 1.41.0 |
-| [Port Policy None](https://github.com/googleforgames/agones/issues/3804)                                                    | `PortPolicyNone`                   | Disabled | `Alpha` | 1.41.0 |
-| Example Gate (not in use)                                                                                                   | `Example`                          | Disabled | None    | 0.13.0 |
-
-{{% /feature %}}
-
-{{% feature publishVersion="1.43.0" %}}
 
 | Feature Name                                                                                                                | Gate                               | Default  | Stage   | Since  |
 |-----------------------------------------------------------------------------------------------------------------------------|------------------------------------|----------|---------|--------|
@@ -54,9 +37,9 @@ The current set of `alpha` and `beta` feature gates:
 | [Rolling Update Fixes](https://github.com/googleforgames/agones/issues/3688)                                                | `RollingUpdateFix`                 | Disabled | `Alpha` | 1.41.0 |
 | [Multiple dynamic port ranges](https://github.com/googleforgames/agones/issues/1911)                                        | `PortRanges`                       | Disabled | `Alpha` | 1.41.0 |
 | [Port Policy None](https://github.com/googleforgames/agones/issues/3804)                                                    | `PortPolicyNone`                   | Disabled | `Alpha` | 1.41.0 |
+| [Scheduled Fleet Autoscaling](https://github.com/googleforgames/agones/issues/3008)                                         | `ScheduledAutoscaler`              | Disabled | `Alpha` | 1.43.0 |
 | Example Gate (not in use)                                                                                                   | `Example`                          | Disabled | None    | 0.13.0 |
 
-{{% /feature %}}
 
 [fleet-updates]: {{% relref "./fleet-updates.md#notifying-gameservers-on-fleet-updatedownscale" %}}
 

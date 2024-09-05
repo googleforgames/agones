@@ -32,23 +32,42 @@ import (
 )
 
 var (
+	logger = runtime.NewLoggerWithSource("metrics")
+
 	keyFleetName          = mt.MustTagKey("fleet_name")
 	keyClusterName        = mt.MustTagKey("cluster_name")
 	keyMultiCluster       = mt.MustTagKey("is_multicluster")
 	keyStatus             = mt.MustTagKey("status")
 	keySchedulingStrategy = mt.MustTagKey("scheduling_strategy")
 
-	gameServerAllocationsLatency = stats.Float64("gameserver_allocations/latency", "The duration of gameserver allocations", "s")
+	gameServerAllocationsLatency    = stats.Float64("gameserver_allocations/latency", "The duration of gameserver allocations", "s")
+	gameServerAllocationsRetryTotal = stats.Int64("gameserver_allocations/errors", "The errors of gameserver allocations", "1")
 )
 
 func init() {
-	runtime.Must(view.Register(&view.View{
-		Name:        "gameserver_allocations_duration_seconds",
-		Measure:     gameServerAllocationsLatency,
-		Description: "The distribution of gameserver allocation requests latencies.",
-		Aggregation: view.Distribution(0, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1, 2, 3),
-		TagKeys:     []tag.Key{keyFleetName, keyClusterName, keyMultiCluster, keyStatus, keySchedulingStrategy},
-	}))
+
+	stateViews := []*view.View{
+		{
+			Name:        "gameserver_allocations_duration_seconds",
+			Measure:     gameServerAllocationsLatency,
+			Description: "The distribution of gameserver allocation requests latencies.",
+			Aggregation: view.Distribution(0, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1, 2, 3),
+			TagKeys:     []tag.Key{keyFleetName, keyClusterName, keyMultiCluster, keyStatus, keySchedulingStrategy},
+		},
+		{
+			Name:        "gameserver_allocations_retry_total",
+			Measure:     gameServerAllocationsRetryTotal,
+			Description: "The count of gameserver allocation retry until it succeeds",
+			Aggregation: view.Distribution(1, 2, 3, 4, 5),
+			TagKeys:     []tag.Key{keyFleetName, keyClusterName, keyMultiCluster, keyStatus, keySchedulingStrategy},
+		},
+	}
+
+	for _, v := range stateViews {
+		if err := view.Register(v); err != nil {
+			logger.WithError(err).Error("could not register view")
+		}
+	}
 }
 
 // default set of tags for latency metric
@@ -122,4 +141,10 @@ func (r *metrics) setResponse(o k8sruntime.Object) {
 // record the current allocation latency.
 func (r *metrics) record() {
 	stats.Record(r.ctx, gameServerAllocationsLatency.M(time.Since(r.start).Seconds()))
+}
+
+// record the current allocation retry rate.
+func (r *metrics) recordAllocationRetrySuccess(ctx context.Context, retryCount int) {
+	mt.RecordWithTags(ctx, []tag.Mutator{tag.Upsert(keyStatus, "Success")},
+		gameServerAllocationsRetryTotal.M(int64(retryCount)))
 }

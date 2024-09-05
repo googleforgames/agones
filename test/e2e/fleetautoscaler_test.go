@@ -1445,3 +1445,255 @@ func TestListAutoscalerWithSDKMethods(t *testing.T) {
 		})
 	}
 }
+
+func TestScheduleAutoscaler(t *testing.T) {
+	if !runtime.FeatureEnabled(runtime.FeatureScheduledAutoscaler) {
+		t.SkipNow()
+	}
+	t.Parallel()
+	ctx := context.Background()
+	log := e2e.TestLogger(t)
+
+	stable := framework.AgonesClient.AgonesV1()
+	fleets := stable.Fleets(framework.Namespace)
+	flt, err := fleets.Create(ctx, defaultFleet(framework.Namespace), metav1.CreateOptions{})
+	if assert.NoError(t, err) {
+		defer fleets.Delete(context.Background(), flt.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
+	}
+
+	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
+
+	fleetautoscalers := framework.AgonesClient.AutoscalingV1().FleetAutoscalers(framework.Namespace)
+
+	// Active Cron Schedule (e.g. run after 1 * * * *, which is the after the first minute of the hour)
+	scheduleAutoscaler := defaultAutoscalerSchedule(t, flt)
+	scheduleAutoscaler.Spec.Policy.Schedule.ActivePeriod.StartCron = nextCronMinute(time.Now())
+	fas, err := fleetautoscalers.Create(ctx, scheduleAutoscaler, metav1.CreateOptions{})
+	assert.NoError(t, err)
+
+	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(5))
+	fleetautoscalers.Delete(ctx, fas.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
+
+	// Return to starting 3 replicas
+	framework.ScaleFleet(t, log, flt, 3)
+	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(3))
+
+	// Between Active Period Cron Schedule (e.g. run between 1-2 * * * *, which is between the first minute and second minute of the hour)
+	scheduleAutoscaler = defaultAutoscalerSchedule(t, flt)
+	scheduleAutoscaler.Spec.Policy.Schedule.ActivePeriod.StartCron = nextCronMinuteBetween(time.Now())
+	fas, err = fleetautoscalers.Create(ctx, scheduleAutoscaler, metav1.CreateOptions{})
+	assert.NoError(t, err)
+
+	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(5))
+	fleetautoscalers.Delete(ctx, fas.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
+}
+
+func TestChainAutoscaler(t *testing.T) {
+	if !runtime.FeatureEnabled(runtime.FeatureScheduledAutoscaler) {
+		t.SkipNow()
+	}
+	t.Parallel()
+	ctx := context.Background()
+	log := e2e.TestLogger(t)
+
+	stable := framework.AgonesClient.AgonesV1()
+	fleets := stable.Fleets(framework.Namespace)
+	flt, err := fleets.Create(ctx, defaultFleet(framework.Namespace), metav1.CreateOptions{})
+	if assert.NoError(t, err) {
+		defer fleets.Delete(context.Background(), flt.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
+	}
+
+	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
+
+	fleetautoscalers := framework.AgonesClient.AutoscalingV1().FleetAutoscalers(framework.Namespace)
+
+	// 1st Schedule Inactive, 2nd Schedule Active - 30 seconds (Fallthrough)
+	chainAutoscaler := defaultAutoscalerChain(t, flt)
+	fas, err := fleetautoscalers.Create(ctx, chainAutoscaler, metav1.CreateOptions{})
+	assert.NoError(t, err)
+
+	// Verify only the second schedule ran
+	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(4))
+	fleetautoscalers.Delete(ctx, fas.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
+
+	// Return to starting 3 replicas
+	framework.ScaleFleet(t, log, flt, 3)
+	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(3))
+
+	// 2 Active Schedules back to back - 1 minute (Fallthrough)
+	chainAutoscaler = defaultAutoscalerChain(t, flt)
+	currentTime := time.Now()
+
+	// First schedule runs for 1 minute
+	chainAutoscaler.Spec.Policy.Chain[0].Schedule.ActivePeriod.StartCron = nextCronMinute(currentTime)
+	chainAutoscaler.Spec.Policy.Chain[0].Schedule.ActivePeriod.Duration = "1m"
+
+	// Second schedule runs 1 minute after the first schedule
+	oneMinute := mustParseDuration(t, "1m")
+	chainAutoscaler.Spec.Policy.Chain[0].Schedule.ActivePeriod.StartCron = nextCronMinute(currentTime.Add(oneMinute))
+	chainAutoscaler.Spec.Policy.Chain[1].Schedule.ActivePeriod.Duration = "5m"
+
+	fas, err = fleetautoscalers.Create(ctx, chainAutoscaler, metav1.CreateOptions{})
+	assert.NoError(t, err)
+
+	// Verify the first schedule has been applied
+	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(10))
+	// Verify the second schedule has been applied
+	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(4))
+
+	fleetautoscalers.Delete(ctx, fas.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
+}
+
+// defaultAutoscalerSchedule returns a default scheduled autoscaler for testing.
+func defaultAutoscalerSchedule(t *testing.T, f *agonesv1.Fleet) *autoscalingv1.FleetAutoscaler {
+	return &autoscalingv1.FleetAutoscaler{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      f.ObjectMeta.Name + "-scheduled-autoscaler",
+			Namespace: framework.Namespace,
+		},
+		Spec: autoscalingv1.FleetAutoscalerSpec{
+			FleetName: f.ObjectMeta.Name,
+			Policy: autoscalingv1.FleetAutoscalerPolicy{
+				Type: autoscalingv1.SchedulePolicyType,
+				Schedule: &autoscalingv1.SchedulePolicy{
+					Between: autoscalingv1.Between{
+						Start: currentTimePlusDuration(t, "1s"),
+						End:   currentTimePlusDuration(t, "1m"),
+					},
+					ActivePeriod: autoscalingv1.ActivePeriod{
+						Timezone:  "UTC",
+						StartCron: "* * * * *",
+						Duration:  "",
+					},
+					Policy: autoscalingv1.FleetAutoscalerPolicy{
+						Type: autoscalingv1.BufferPolicyType,
+						Buffer: &autoscalingv1.BufferPolicy{
+							BufferSize:  intstr.FromInt(5),
+							MinReplicas: 5,
+							MaxReplicas: 12,
+						},
+					},
+				},
+			},
+			Sync: &autoscalingv1.FleetAutoscalerSync{
+				Type: autoscalingv1.FixedIntervalSyncType,
+				FixedInterval: autoscalingv1.FixedIntervalSync{
+					Seconds: 5,
+				},
+			},
+		},
+	}
+}
+
+// defaultAutoscalerChain returns a default chain autoscaler for testing.
+func defaultAutoscalerChain(t *testing.T, f *agonesv1.Fleet) *autoscalingv1.FleetAutoscaler {
+	return &autoscalingv1.FleetAutoscaler{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      f.ObjectMeta.Name + "-chain-autoscaler",
+			Namespace: framework.Namespace,
+		},
+		Spec: autoscalingv1.FleetAutoscalerSpec{
+			FleetName: f.ObjectMeta.Name,
+			Policy: autoscalingv1.FleetAutoscalerPolicy{
+				Type: autoscalingv1.ChainPolicyType,
+				Chain: autoscalingv1.ChainPolicy{
+					{
+						ID: "schedule-1",
+						FleetAutoscalerPolicy: autoscalingv1.FleetAutoscalerPolicy{
+							Type: autoscalingv1.SchedulePolicyType,
+							Schedule: &autoscalingv1.SchedulePolicy{
+								Between: autoscalingv1.Between{
+									Start: currentTimePlusDuration(t, "1s"),
+									End:   currentTimePlusDuration(t, "2m"),
+								},
+								ActivePeriod: autoscalingv1.ActivePeriod{
+									Timezone:  "",
+									StartCron: inactiveCronSchedule(time.Now()),
+									Duration:  "1m",
+								},
+								Policy: autoscalingv1.FleetAutoscalerPolicy{
+									Type: autoscalingv1.BufferPolicyType,
+									Buffer: &autoscalingv1.BufferPolicy{
+										BufferSize:  intstr.FromInt(10),
+										MinReplicas: 10,
+										MaxReplicas: 20,
+									},
+								},
+							},
+						},
+					},
+					{
+						ID: "schedule-2",
+						FleetAutoscalerPolicy: autoscalingv1.FleetAutoscalerPolicy{
+							Type: autoscalingv1.SchedulePolicyType,
+							Schedule: &autoscalingv1.SchedulePolicy{
+								Between: autoscalingv1.Between{
+									Start: currentTimePlusDuration(t, "1s"),
+									End:   currentTimePlusDuration(t, "5m"),
+								},
+								ActivePeriod: autoscalingv1.ActivePeriod{
+									Timezone:  "",
+									StartCron: nextCronMinute(time.Now()),
+									Duration:  "",
+								},
+								Policy: autoscalingv1.FleetAutoscalerPolicy{
+									Type: autoscalingv1.BufferPolicyType,
+									Buffer: &autoscalingv1.BufferPolicy{
+										BufferSize:  intstr.FromInt(4),
+										MinReplicas: 3,
+										MaxReplicas: 7,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			Sync: &autoscalingv1.FleetAutoscalerSync{
+				Type: autoscalingv1.FixedIntervalSyncType,
+				FixedInterval: autoscalingv1.FixedIntervalSync{
+					Seconds: 5,
+				},
+			},
+		},
+	}
+}
+
+// inactiveCronSchedule returns the time 3 minutes ago
+// e.g. if the current time is 12:00, this method will return "57 * * * *"
+// meaning 3 minutes before 12:00
+func inactiveCronSchedule(currentTime time.Time) string {
+	prevMinute := currentTime.Add(time.Minute * -3).Minute()
+	return fmt.Sprintf("%d * * * *", prevMinute)
+}
+
+// nextCronMinute returns the very next minute in
+// e.g. if the current time is 12:00, this method will return "1 * * * *"
+// meaning after 12:01
+func nextCronMinute(currentTime time.Time) string {
+	nextMinute := currentTime.Add(time.Minute).Minute()
+	return fmt.Sprintf("%d * * * *", nextMinute)
+}
+
+// nextCronMinuteBetween returns the minute between the very next minute
+// e.g. if the current time is 12:00, this method will return "1-2 * * * *"
+// meaning between 12:01 - 12:02
+func nextCronMinuteBetween(currentTime time.Time) string {
+	nextMinute := currentTime.Add(time.Minute).Minute()
+	secondMinute := currentTime.Add(2 * time.Minute).Minute()
+	return fmt.Sprintf("%d-%d * * * *", nextMinute, secondMinute)
+}
+
+// Parse a duration string and return a duration struct
+func mustParseDuration(t *testing.T, duration string) time.Duration {
+	d, err := time.ParseDuration(duration)
+	assert.Nil(t, err)
+	return d
+}
+
+// Parse a time string and return a metav1.Time
+func currentTimePlusDuration(t *testing.T, duration string) metav1.Time {
+	d := mustParseDuration(t, duration)
+	currentTimePlusDuration := time.Now().Add(d)
+	return metav1.NewTime(currentTimePlusDuration)
+}
