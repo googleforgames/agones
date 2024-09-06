@@ -81,6 +81,11 @@ agones:
     numWorkers: 100
     apiServerQPS: 400
     apiServerQPSBurst: 500
+    maxCreationParallelism: 16
+    maxGameServerCreationsPerBatch: 64
+    maxDeletionParallelism: 64
+    maxGameServerDeletionsPerBatch: 64
+    maxPodPendingCount: 5000
     http:
       port: 8080
     healthCheck:
@@ -266,7 +271,7 @@ agones:
     topologySpreadConstraints: {}
   image:
     registry: us-docker.pkg.dev/agones-images/release
-    tag: 1.43.0-dev
+    tag: 1.44.0-dev
     controller:
       name: agones-controller
       pullPolicy: IfNotPresent

@@ -10,6 +10,9 @@ weight: 20
 
 * [Octops/Agones x Open Match](https://github.com/Octops/agones-discover-openmatch) - How to implement a matchmaking 
   system using Agones and Open Match
+* [Agones x Godot](https://andresromero.dev/blog/dedicated-game-server-hosting) - How to deploy a multiplayer Godot game with Agones. This post demonstrates hosting a simple multiplayer game server on Agones, utilizing the Agones Community SDK for Godot to manage server readiness and health checks. It also provides a brief introduction to dedicated game servers.
+* [Unity's Netcode for GameObjects + Agones](https://github.com/mbychkowski/unity-netcode-agones) - A simple Unity example that demonstrates Agones integrations with [Unity's Netcode for GameObjects](https://docs-multiplayer.unity3d.com/netcode/current/about/) for dedicated game servers.
+
 
 ## Minetest
 
