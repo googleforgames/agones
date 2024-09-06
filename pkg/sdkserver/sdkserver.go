@@ -1075,72 +1075,72 @@ func (s *SDKServer) UpdateList(ctx context.Context, in *beta.UpdateListRequest) 
 		return nil, errors.Errorf("invalid argument. Field Mask Path(s): %v are invalid for List. Use valid field name(s): %v", in.UpdateMask.GetPaths(), in.List.ProtoReflect().Descriptor().Fields())
 	}
 
-	name := in.List.Name
-	gs, err := s.gameServer()
-	if err != nil {
-		return nil, err
-	}
-
 	if in.List.Capacity < 0 || in.List.Capacity > apiserver.ListMaxCapacity {
 		return nil, errors.Errorf("out of range. Capacity must be within range [0,1000]. Found Capacity: %d", in.List.Capacity)
 	}
 
-	if _, ok := gs.Status.Lists[name]; ok {
+	s.gsUpdateMutex.RLock()
+	defer s.gsUpdateMutex.RUnlock()
 
-		// Removes any fields from the request object that are not included in the FieldMask Paths.
-		fmutils.Filter(in.List, in.UpdateMask.Paths)
+	list, err := s.GetList(ctx, &beta.GetListRequest{Name: in.List.Name})
+	if err != nil {
 
-		// The list will allow the current list to be overwritten
-		batchList := listUpdateRequest{}
-
-		// Only set the capacity if its included in the update mask paths
-		if slices.Contains(in.UpdateMask.Paths, "capacity") {
-			batchList.capacitySet = &in.List.Capacity
-		}
-
-		// Only change the values if its included in the update mask paths
-		if slices.Contains(in.UpdateMask.Paths, "values") {
-			currList := gs.Status.Lists[name]
-
-			// Find values to remove from the current list
-			valuesToDelete := map[string]bool{}
-			for _, value := range currList.Values {
-				valueFound := false
-				for _, element := range in.List.Values {
-					if value == element {
-						valueFound = true
-					}
-				}
-
-				if !valueFound {
-					valuesToDelete[value] = true
-				}
-			}
-			batchList.valuesToDelete = valuesToDelete
-
-			// Find values that need to be added to the current list from the incomming list
-			valuesToAdd := []string{}
-			for _, value := range in.List.Values {
-				valueFound := false
-				for _, element := range currList.Values {
-					if value == element {
-						valueFound = true
-					}
-				}
-
-				if !valueFound {
-					valuesToAdd = append(valuesToAdd, value)
-				}
-			}
-			batchList.valuesToAppend = valuesToAdd
-		}
-
-		// Queue up the Update for later batch processing by updateLists.
-		s.gsListUpdates[name] = batchList
-		s.workerqueue.Enqueue(cache.ExplicitKey(updateLists))
-		return &beta.List{}, nil
+		return nil, errors.Errorf("not found. %s List not found", list.Name)
 	}
-	return nil, errors.Errorf("not found. %s List not found", name)
+
+	// Removes any fields from the request object that are not included in the FieldMask Paths.
+	fmutils.Filter(in.List, in.UpdateMask.Paths)
+
+	// The list will allow the current list to be overwritten
+	batchList := listUpdateRequest{}
+
+	// Only set the capacity if its included in the update mask paths
+	if slices.Contains(in.UpdateMask.Paths, "capacity") {
+		batchList.capacitySet = &in.List.Capacity
+	}
+
+	// Only change the values if its included in the update mask paths
+	if slices.Contains(in.UpdateMask.Paths, "values") {
+		currList := list
+
+		// Find values to remove from the current list
+		valuesToDelete := map[string]bool{}
+		for _, value := range currList.Values {
+			valueFound := false
+			for _, element := range in.List.Values {
+				if value == element {
+					valueFound = true
+				}
+			}
+
+			if !valueFound {
+				valuesToDelete[value] = true
+			}
+		}
+		batchList.valuesToDelete = valuesToDelete
+
+		// Find values that need to be added to the current list from the incomming list
+		valuesToAdd := []string{}
+		for _, value := range in.List.Values {
+			valueFound := false
+			for _, element := range currList.Values {
+				if value == element {
+					valueFound = true
+				}
+			}
+
+			if !valueFound {
+				valuesToAdd = append(valuesToAdd, value)
+			}
+		}
+		batchList.valuesToAppend = valuesToAdd
+	}
+
+	// Queue up the Update for later batch processing by updateLists.
+	s.gsListUpdates[list.Name] = batchList
+	s.workerqueue.Enqueue(cache.ExplicitKey(updateLists))
+	return &beta.List{}, nil
+
 }
 
 // AddListValue collapses all append a value to the end of a List requests into a single UpdateList request.
