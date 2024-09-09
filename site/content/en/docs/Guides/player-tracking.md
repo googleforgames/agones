@@ -8,11 +8,11 @@ description: >
 ---
 
 {{% pageinfo color="info" %}}
-[Counters and Lists]({{< ref "/docs/Guides/counters-and-lists.md" >}}) will eventually replace the Beta functionality
-of Player Tracking, which will subsequently be removed from Agones.
+[Counters and Lists]({{< ref "/docs/Guides/counters-and-lists.md" >}}) replaces the Alpha functionality of Player
+Tracking, and Player Tracking will soon be removed from Agones.
 
-If you are currently using this Beta feature, we would love for you to test (and ideally migrate to!) this new
-functionality to Counters and Lists to ensure it meet all your needs.
+If you are currently using this Alpha feature, please plan on migrating to use Counters and Lists to ensure it meets
+all your needs.
 {{% /pageinfo %}}
 
 {{< alpha title="Player Tracking" gate="PlayerTracking" >}}
