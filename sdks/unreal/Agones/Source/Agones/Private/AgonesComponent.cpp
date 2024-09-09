@@ -18,6 +18,7 @@
 #include "HttpModule.h"
 #include "Interfaces/IHttpResponse.h"
 #include "JsonObjectConverter.h"
+#include "Policies/CondensedJsonPrintPolicy.h"
 #include "TimerManager.h"
 #include "IWebSocket.h"
 #include "WebSocketsModule.h"
@@ -29,6 +30,15 @@ typedef UTF8CHAR UTF8FromType;
 #else
 typedef ANSICHAR UTF8FromType;
 #endif
+
+template <typename CharType = TCHAR, typename PrintPolicy = TCondensedJsonPrintPolicy<TCHAR>>
+bool JsonObjectToJsonString(const TSharedRef<FJsonObject>& JsonObject, FString& OutJson, int32 Indent = 0)
+{
+    TSharedRef<TJsonWriter<CharType, PrintPolicy>> JsonWriter = TJsonWriterFactory<CharType, PrintPolicy>::Create(&OutJson, Indent);
+	bool bSuccess = FJsonSerializer::Serialize(JsonObject, JsonWriter);
+	JsonWriter->Close();
+	return bSuccess;
+}
 
 UAgonesComponent::UAgonesComponent()
 {
@@ -63,6 +73,44 @@ void UAgonesComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
     {
         WatchWebSocket->Close();
     }
+}
+
+void UAgonesComponent::UpdateCounter(const FString& Key, const int64* Count, const int64* Capacity, const int64* CountDiff, FUpdateCounterDelegate SuccessDelegate, FAgonesErrorDelegate ErrorDelegate)
+{
+	TSharedRef<FJsonObject> JsonObject = MakeShareable(new FJsonObject());
+
+	if (Count)
+	{
+		JsonObject->SetNumberField(TEXT("count"), *Count);
+	}
+	if (Capacity)
+	{
+		JsonObject->SetNumberField(TEXT("capacity"), *Capacity);
+	}
+	if (CountDiff)
+	{
+		JsonObject->SetNumberField(TEXT("countDiff"), *CountDiff);
+	}
+
+	FString Json;
+	if (!JsonObjectToJsonString(JsonObject, Json))
+	{
+		ErrorDelegate.ExecuteIfBound({ TEXT("Failed to serializing request") });
+		return;
+	}
+
+	FHttpRequestRef Request = BuildAgonesRequest(FString::Format(TEXT("v1beta1/counters/{0}"), { Key }), FHttpVerb::Patch, Json);
+	Request->OnProcessRequestComplete().BindWeakLambda(this,
+		[SuccessDelegate, ErrorDelegate](FHttpRequestPtr HttpRequest, FHttpResponsePtr HttpResponse, const bool bSucceeded)
+		{
+			if (!IsValidResponse(bSucceeded, HttpResponse, ErrorDelegate))
+			{
+				return;
+			}
+
+			SuccessDelegate.ExecuteIfBound({});
+		});
+	Request->ProcessRequest();
 }
 
 FHttpRequestRef UAgonesComponent::BuildAgonesRequest(const FString Path, const FHttpVerb Verb, const FString Content)
@@ -458,6 +506,60 @@ void UAgonesComponent::SetPlayerCapacity(
 			SuccessDelegate.ExecuteIfBound({});
 		});
 	Request->ProcessRequest();
+}
+
+void UAgonesComponent::GetCounter(FString Key, FGetCounterDelegate SuccessDelegate, FAgonesErrorDelegate ErrorDelegate)
+{
+	FHttpRequestRef Request = BuildAgonesRequest(FString::Format(TEXT("v1beta1/counters/{0}"), {Key}), FHttpVerb::Get, "");
+	Request->OnProcessRequestComplete().BindWeakLambda(this,
+		[SuccessDelegate, ErrorDelegate](FHttpRequestPtr HttpRequest, FHttpResponsePtr HttpResponse, const bool bSucceeded)
+		{
+			TSharedPtr<FJsonObject> JsonObject;
+			if (!IsValidJsonResponse(JsonObject, bSucceeded, HttpResponse, ErrorDelegate))
+			{
+				return;
+			}
+
+			SuccessDelegate.ExecuteIfBound(FCounterResponse(JsonObject));
+		});
+	Request->ProcessRequest();
+}
+
+void UAgonesComponent::IncrementCounter(FString Key, int64 Amount, FIncrementCounterDelegate SuccessDelegate, FAgonesErrorDelegate ErrorDelegate)
+{
+	const auto UpdateSuccessDelegate = FUpdateCounterDelegate::CreateLambda([SuccessDelegate](const FEmptyResponse&)
+		{
+			SuccessDelegate.ExecuteIfBound({});
+		});
+	UpdateCounter(Key, nullptr, nullptr, &Amount, UpdateSuccessDelegate, ErrorDelegate);
+}
+
+void UAgonesComponent::DecrementCounter(FString Key, int64 Amount, FDecrementCounterDelegate SuccessDelegate, FAgonesErrorDelegate ErrorDelegate)
+{
+	const int64 NegativeAmount = -Amount;
+	const auto UpdateSuccessDelegate = FUpdateCounterDelegate::CreateLambda([SuccessDelegate](const FEmptyResponse&)
+		{
+			SuccessDelegate.ExecuteIfBound({});
+		});
+	UpdateCounter(Key, nullptr, nullptr, &NegativeAmount, UpdateSuccessDelegate, ErrorDelegate);
+}
+
+void UAgonesComponent::SetCounterCount(FString Key, int64 Count, FSetCounterCountDelegate SuccessDelegate, FAgonesErrorDelegate ErrorDelegate)
+{
+	const auto UpdateSuccessDelegate = FUpdateCounterDelegate::CreateLambda([SuccessDelegate](const FEmptyResponse&)
+		{
+			SuccessDelegate.ExecuteIfBound({});
+		});
+	UpdateCounter(Key, &Count, nullptr, nullptr, UpdateSuccessDelegate, ErrorDelegate);
+}
+
+void UAgonesComponent::SetCounterCapacity(FString Key, int64 Capacity, FSetCounterCapacityDelegate SuccessDelegate, FAgonesErrorDelegate ErrorDelegate)
+{
+	const auto UpdateSuccessDelegate = FUpdateCounterDelegate::CreateLambda([SuccessDelegate](const FEmptyResponse&) 
+		{
+			SuccessDelegate.ExecuteIfBound({}); 
+		});
+	UpdateCounter(Key, nullptr, &Capacity, nullptr, UpdateSuccessDelegate, ErrorDelegate);
 }
 
 void UAgonesComponent::GetPlayerCapacity(FGetPlayerCapacityDelegate SuccessDelegate, FAgonesErrorDelegate ErrorDelegate)
