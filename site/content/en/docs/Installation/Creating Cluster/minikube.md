@@ -55,7 +55,8 @@ via Agones exposed ports.
 **Windows (amd64 - Windows 10 Enterprise or Pro)**
 * Hyper-V: You might need to refer to [this blog post](https://blog.thepolyglotprogrammer.com/setting-up-kubernetes-on-wsl-to-work-with-minikube-on-windows-10-90dac3c72fa1) and/or [this comment](https://github.com/microsoft/WSL/issues/4288#issuecomment-652259640) for WSL support.
 
-**Windows (amd64 - Windows 10 Home)**
+**Windows (amd64)**
+* Docker (default) with [this workaround](#minikube-start---ports-docker-only)
 * VirtualBox: You might need [this command](https://github.com/kubernetes/minikube/issues/3900) to disable hardware virtualization checks before starting the VM.
 
 _If you have successfully tested with other platforms and drivers, please click "edit this page" in the top right hand
@@ -72,6 +73,33 @@ If you are unable to do so, the following workarounds are available, and may wor
 
 Rather than using the published IP of a `GameServer` to connect, run `minikube ip -p agones` to get the local IP for
 the minikube node, and connect to that address.
+
+### minikube start \-\-ports (Docker only)
+
+Since you cannot connect to minikube's private IP on Windows, a more reliable option is to publish the `GameServer`'s port range
+directly through Docker by making use of Minikube's `--ports` option. Unfortunately, exposing Agones' entire default port range
+(7000-8000) may cause Minikube to crash upon startup, so you will likely need to set a narrower port range as shown below.
+
+This method requires a fresh Minikube cluster, so you may need to run `minikube delete -p agones` before continuing.
+
+```bash
+minikube start --kubernetes-version v{{% minikube-example-cluster-version %}} -p agones --ports 7000-7100:7000-7100/udp
+```
+
+When installing Agones on the new cluster (using [Helm]({{< relref "../Install Agones/helm.md" >}})), update the port range accordingly:
+
+```bash
+helm install my-release --namespace agones-system --create-namespace \
+  --set gameservers.minPort=7000,gameservers.maxPort=7100 agones/agones
+```
+
+Once you have a `GameServer` running, try connecting to its port either on 127.0.0.1 or WSL's IP (`wsl hostname -I`).
+
+{{< alert title="Note" color="info">}}
+The port range 7000-7100 will likely allow Minikube to start consistently, but you can narrow or widen this range
+to whatever works on your system. Make sure it is consistent between both the `minikube start` command shown above and
+the Helm configuration.
+{{< /alert >}}
 
 ### Create a service
 
