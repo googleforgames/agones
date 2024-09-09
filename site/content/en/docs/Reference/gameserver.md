@@ -208,7 +208,7 @@ for `address`.)
 The policy for `address` will work for many use-cases, but for some advanced cases, such as IPv6 enablement, you may need
 to evaluate all `addresses` and pick the addresses that best suits your needs.
 
-[addresses]: {{< k8s-api-version href="#nodeaddress-v1-core" >}}
-[podIPs]: {{< k8s-api-version href="#podip-v1-core" >}}
+[addresses]: {{% k8s-api-version href="#nodeaddress-v1-core" %}}
+[podIPs]: {{% k8s-api-version href="#podip-v1-core" %}}
 [addressFunc]: https://github.com/googleforgames/agones/blob/a59c5394c7f5bac66e530d21446302581c10c225/pkg/gameservers/gameservers.go#L37-L71
 [gss]: {{% ref "/docs/Reference/agones_crd_api_reference.html#agones.dev/v1.GameServerStatus"  %}}
