@@ -1674,9 +1674,11 @@ func TestSDKServerUpdateList(t *testing.T) {
 	require.NoError(t, err, "Can not parse FeatureCountsAndLists feature")
 
 	lists := map[string]agonesv1.ListStatus{
-		"foo": {Values: []string{"one", "two", "three", "four"}, Capacity: int64(100)},
-		"bar": {Values: []string{"one", "two", "three", "four"}, Capacity: int64(100)},
-		"baz": {Values: []string{"one", "two", "three", "four"}, Capacity: int64(100)},
+		"foo":  {Values: []string{"one", "two", "three", "four"}, Capacity: int64(100)},
+		"bar":  {Values: []string{"one", "two", "three", "four"}, Capacity: int64(100)},
+		"baz":  {Values: []string{"one", "two", "three", "four"}, Capacity: int64(100)},
+		"qux":  {Values: []string{"one", "two", "three", "four"}, Capacity: int64(100)},
+		"quux": {Values: []string{"one", "two", "three", "four"}, Capacity: int64(100)},
 	}
 
 	fixtures := map[string]struct {
@@ -1727,6 +1729,37 @@ func TestSDKServerUpdateList(t *testing.T) {
 			want:                    agonesv1.ListStatus{Values: []string{"one", "two", "three", "four"}, Capacity: int64(100)},
 			updateErr:               true,
 			updated:                 false,
+			expectedUpdatesQueueLen: 0,
+		},
+		// New test cases to test updating values
+		"update values below capacity": {
+			listName: "qux",
+			request: &beta.UpdateListRequest{
+				List: &beta.List{
+					Name:     "qux",
+					Capacity: int64(100),
+					Values:   []string{"one", "two", "three", "four", "five", "six"},
+				},
+				UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"capacity", "values"}},
+			},
+			want:                    agonesv1.ListStatus{Values: []string{"one", "two", "three", "four", "five", "six"}, Capacity: int64(100)},
+			updateErr:               false,
+			updated:                 true,
+			expectedUpdatesQueueLen: 0,
+		},
+		"update values above capacity": {
+			listName: "quux",
+			request: &beta.UpdateListRequest{
+				List: &beta.List{
+					Name:     "quux",
+					Capacity: int64(4),
+					Values:   []string{"one", "two", "three", "four", "five", "six"},
+				},
+				UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"capacity", "values"}},
+			},
+			want:                    agonesv1.ListStatus{Values: []string{"one", "two", "three", "four"}, Capacity: int64(4)},
+			updateErr:               false,
+			updated:                 true,
 			expectedUpdatesQueueLen: 0,
 		},
 	}
