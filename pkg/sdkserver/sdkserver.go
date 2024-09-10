@@ -1079,14 +1079,14 @@ func (s *SDKServer) UpdateList(ctx context.Context, in *beta.UpdateListRequest) 
 		return nil, errors.Errorf("out of range. Capacity must be within range [0,1000]. Found Capacity: %d", in.List.Capacity)
 	}
 
-	s.gsUpdateMutex.RLock()
-	defer s.gsUpdateMutex.RUnlock()
-
 	list, err := s.GetList(ctx, &beta.GetListRequest{Name: in.List.Name})
 	if err != nil {
 
 		return nil, errors.Errorf("not found. %s List not found", list.Name)
 	}
+
+	s.gsUpdateMutex.Lock()
+	defer s.gsUpdateMutex.Unlock()
 
 	// Removes any fields from the request object that are not included in the FieldMask Paths.
 	fmutils.Filter(in.List, in.UpdateMask.Paths)
