@@ -20,6 +20,7 @@ metadata:
   labels:
     app: upgrade-test-runner
 spec:
+  backoffLimit: 0
   ttlSecondsAfterFinished: 100
   template:
     spec:
@@ -40,4 +41,6 @@ spec:
           envFrom:
             - configMapRef:
                 name: version-map
+      priorityClassName: high-priority
       restartPolicy: Never
+      serviceAccountName: agones-sa

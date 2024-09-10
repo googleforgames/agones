@@ -13,6 +13,12 @@
 # limitations under the License.
 
 ---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: agones-sa
+  namespace: default
+---
 # Based off of https://kubernetes.io/docs/reference/access-authn-authz/rbac/#role-example
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
@@ -33,7 +39,7 @@ metadata:
   namespace: default
 subjects:
   - kind: ServiceAccount
-    name: default
+    name: agones-sa
     namespace: default
 roleRef:
   # "roleRef" specifies the binding to a Role / ClusterRole
@@ -57,9 +63,432 @@ metadata:
   name: read-nodes
 subjects:
   - kind: ServiceAccount
-    name: default
+    name: agones-sa
     namespace: default
 roleRef:
   kind: ClusterRole
   name: node-reader
   apiGroup: rbac.authorization.k8s.io
+---
+# Prevent the controller pod from being evicted
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: high-priority
+value: 1000001
+globalDefault: false
+description: "This priority class should be used for upgrade-test-runner pods only."
+---
+# Helm needs to be able to create namespaces
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: namespace-creator
+rules:
+  - apiGroups: [""]
+    resources: ["namespaces"]
+    verbs: ["get", "list", "watch", "create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: create-namespaces
+subjects:
+  - kind: ServiceAccount
+    name: agones-sa
+    namespace: default
+roleRef:
+  kind: ClusterRole
+  name: namespace-creator
+  apiGroup: rbac.authorization.k8s.io
+---
+# Helm needs to be able to create secrets
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  namespace: agones-system
+  name: secret-creator
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "watch", "list", "create", "patch", "update"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: create-secrets
+subjects:
+  - kind: ServiceAccount
+    name: agones-sa
+    namespace: default
+roleRef:
+  kind: ClusterRole
+  name: secret-creator
+  apiGroup: rbac.authorization.k8s.io
+---
+# Helm needs to be able to create priorityclasses
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  namespace: agones-system
+  name: priorityclass-creator
+rules:
+  - apiGroups: ["scheduling.k8s.io"]
+    resources: ["priorityclasses"]
+    verbs: ["get", "watch", "list", "create", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: create-priorityclasses
+subjects:
+  - kind: ServiceAccount
+    name: agones-sa
+    namespace: default
+roleRef:
+  kind: ClusterRole
+  name: priorityclass-creator
+  apiGroup: rbac.authorization.k8s.io
+---
+# Agones controller needs to be able to create poddisruptionbudgets
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  namespace: agones-system
+  name: poddisruptionbudget-creator
+rules:
+  - apiGroups: ["policy"]
+    resources: ["poddisruptionbudgets"]
+    verbs: ["get", "watch", "list", "create", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: create-poddisruptionbudgets
+subjects:
+  - kind: ServiceAccount
+    name: agones-sa
+    namespace: default
+roleRef:
+  kind: ClusterRole
+  name: poddisruptionbudget-creator
+  apiGroup: rbac.authorization.k8s.io
+---
+# Agones needs to be able to create serviceaccounts and services
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  namespace: agones-system
+  name: serviceaccount-manager
+rules:
+  - apiGroups: [""]
+    resources: ["serviceaccounts", "services"]
+    verbs: ["get", "watch", "list", "create", "patch", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: manage-serviceaccounts
+subjects:
+  - kind: ServiceAccount
+    name: agones-sa
+    namespace: default
+roleRef:
+  kind: ClusterRole
+  name: serviceaccount-manager
+  apiGroup: rbac.authorization.k8s.io
+---
+# Agones needs to be able to create apiservices
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: apiservices-creator
+rules:
+  - apiGroups: ["apiregistration.k8s.io"]
+    resources: ["apiservices"]
+    verbs: ["get", "watch", "list", "create", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: create-apiservices
+subjects:
+  - kind: ServiceAccount
+    name: agones-sa
+    namespace: default
+roleRef:
+  kind: ClusterRole
+  name: apiservices-creator
+  apiGroup: rbac.authorization.k8s.io
+---
+# Agones needs to be able to create Agones CustomResourceDefinitions
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  namespace: agones-system
+  name: crd-creator
+rules:
+  - apiGroups: ["apiextensions.k8s.io"]
+    resources: ["customresourcedefinitions"]
+    verbs: ["get", "watch", "list", "create", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: create-crds
+subjects:
+  - kind: ServiceAccount
+    name: agones-sa
+    namespace: default
+roleRef:
+  kind: ClusterRole
+  name: crd-creator
+  apiGroup: rbac.authorization.k8s.io
+---
+# Agones needs to be able to create clusterroles, clusterrolebindings, and rolebindings
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: clusterrole-creator
+rules:
+  - apiGroups: ["rbac.authorization.k8s.io"]
+    resources: ["clusterroles", "clusterrolebindings", "rolebindings"]
+    verbs: ["get", "watch", "list", "create", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: create-clusterroles
+subjects:
+  - kind: ServiceAccount
+    name: agones-sa
+    namespace: default
+roleRef:
+  kind: ClusterRole
+  name: clusterrole-creator
+  apiGroup: rbac.authorization.k8s.io
+---
+# Agones needs to be able to create deployments
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  namespace: agones-system
+  name: deployment-creator
+rules:
+  - apiGroups: ["apps"]
+    resources: ["deployments", "replicasets"]
+    verbs: ["get", "watch", "list", "create", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: create-deployments
+subjects:
+  - kind: ServiceAccount
+    name: agones-sa
+    namespace: default
+roleRef:
+  kind: ClusterRole
+  name: deployment-creator
+  apiGroup: rbac.authorization.k8s.io
+---
+# Agones needs to be able to create mutatingwebhookconfigurations and validatingwebhookconfigurations
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: webhookconfiguration-creator
+rules:
+  - apiGroups: ["admissionregistration.k8s.io"]
+    resources: ["mutatingwebhookconfigurations", "validatingwebhookconfigurations"]
+    verbs: ["get", "watch", "list", "create", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: create-webhookconfigurations
+subjects:
+  - kind: ServiceAccount
+    name: agones-sa
+    namespace: default
+roleRef:
+  kind: ClusterRole
+  name: webhookconfiguration-creator
+  apiGroup: rbac.authorization.k8s.io
+---
+# Below are agones specific bindings from install.yaml
+#
+# Source: agones/templates/service/allocation.yaml
+# Create a ClusterRole in that grants access to the agones allocation api
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: allocator
+  labels:
+    app: agones
+rules:
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["create", "patch"]
+  - apiGroups: ["allocation.agones.dev"]
+    resources: ["gameserverallocations"]
+    verbs: ["create"]
+  - apiGroups: [""]
+    resources: ["nodes", "secrets"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["agones.dev"]
+    resources: ["gameservers", "gameserversets"]
+    verbs: ["get", "list", "update", "watch"]
+  - apiGroups: ["agones.dev"]
+    resources: ["gameservers"]
+    verbs: ["patch"]
+  - apiGroups: ["multicluster.agones.dev"]
+    resources: ["gameserverallocationpolicies"]
+    verbs: ["get", "list", "watch"]
+---
+# Source: agones/templates/serviceaccounts/controller.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: controller
+  labels:
+    app: agones
+rules:
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["create", "patch"]
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["create", "update", "delete", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["nodes", "secrets"]
+    verbs: ["list", "watch"]
+  - apiGroups: ["admissionregistration.k8s.io"]  # only needed for cloudProduct detection
+    resources: ["mutatingwebhookconfigurations"]
+    verbs: ["get"]
+  - apiGroups: ["apiextensions.k8s.io"]
+    resources: ["customresourcedefinitions"]
+    verbs: ["get"]
+  - apiGroups: ["agones.dev"]
+    resources: ["gameservers", "gameserversets"]
+    verbs: ["create", "delete", "get", "list", "update", "watch"]
+  - apiGroups: ["agones.dev"]
+    resources: ["gameservers"]
+    verbs: ["patch"]
+  - apiGroups: ["agones.dev"]
+    resources: ["fleets"]
+    verbs: ["get", "list", "update", "watch"]
+  - apiGroups: ["agones.dev"]
+    resources: ["fleets/status", "gameserversets/status"]
+    verbs: ["update"]
+  - apiGroups: ["agones.dev"]
+    resources: ["fleets/finalizers", "gameserversets/finalizers", "gameservers/finalizers"]
+    verbs: ["update"]
+  - apiGroups: ["multicluster.agones.dev"]
+    resources: ["gameserverallocationpolicies"]
+    verbs: ["create", "delete", "get", "list", "update", "watch"]
+  - apiGroups: ["autoscaling.agones.dev"]
+    resources: ["fleetautoscalers"]
+    verbs: ["get", "list", "update", "watch"]
+  - apiGroups: ["autoscaling.agones.dev"]
+    resources: ["fleetautoscalers/status"]
+    verbs: ["update"]
+  - apiGroups: ["coordination.k8s.io"]
+    resources: ["leases"]
+    verbs: ["create", "delete", "get", "list", "update", "watch"]
+---
+# Source: agones/templates/serviceaccounts/sdk.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: sdk
+  labels:
+    app: agones
+rules:
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["create", "patch"]
+  - apiGroups: ["agones.dev"]
+    resources: ["gameservers"]
+    verbs: ["list", "patch", "watch"]
+---
+# Source: agones/templates/service/allocation.yaml
+# Bind the agones-allocator ServiceAccount to the agones-allocator ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: allocator
+  labels:
+    app: agones
+subjects:
+  - kind: ServiceAccount
+    name: agones-sa
+    namespace: default
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: allocator
+---
+# Source: agones/templates/serviceaccounts/controller.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: controller-access
+  labels:
+    app: agones
+subjects:
+  - kind: User
+    name: system:serviceaccount:default:agones-sa
+    apiGroup: rbac.authorization.k8s.io
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: controller
+---
+# Source: agones/templates/serviceaccounts/controller.yaml
+#
+# RBACs for APIService
+#
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: controller:system:auth-delegator
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:auth-delegator
+subjects:
+  - kind: ServiceAccount
+    name: agones-sa
+    namespace: default
+---
+# Source: agones/templates/serviceaccounts/controller.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: controller-auth-reader
+  namespace: kube-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: extension-apiserver-authentication-reader
+subjects:
+  - kind: ServiceAccount
+    name: agones-sa
+    namespace: default
+---
+# Source: agones/templates/serviceaccounts/sdk.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: sdk-access
+  namespace: default
+  labels:
+    app: agones
+subjects:
+  - kind: User
+    name: system:serviceaccount:default:agones-sa
+    apiGroup: rbac.authorization.k8s.io
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: sdk
