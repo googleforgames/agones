@@ -24,7 +24,7 @@
 #
 
 # base version target. This is usually the next release.
-base_version = 1.43.0
+base_version = 1.44.0
 
 #
 # All of the following can be overwritten with environment variables
@@ -246,7 +246,6 @@ include ./includes/$(osinclude)
 include ./includes/build-image.mk
 include ./includes/release.mk
 include ./includes/google-cloud.mk
-include ./includes/terraform.mk
 include ./includes/minikube.mk
 include ./includes/kind.mk
 include ./includes/website.mk
