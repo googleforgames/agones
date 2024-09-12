@@ -14,110 +14,112 @@
 
 # ForceUpdate 12 -- change here if you need to force a rebuild
 # Base Stage - Build Tools
-FROM debian:bookworm AS Build-Tools    
+# Use a minimal base image to reduce attack surface
+FROM debian:bookworm-slim AS base
 
-# Security: Limit permissions for running processes as root
+# Install build dependencies in one layer
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    build-essential \
-    gnupg \
-    curl \
-    git \
-    wget \
-    rsync \
-    make \
-    python3 \
-    bash-completion \
-    zip \
-    nano \
-    jq \
-    graphviz \
-    gettext-base \
-    plantuml \
-    software-properties-common \
-    ruby-full \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+    build-essential gnupg curl git wget psmisc rsync make python3 bash-completion \
+    zip nano jq graphviz gettext-base plantuml software-properties-common ruby-full \
+    ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
 
+# Install fpm, create dummy package, and clean up
 RUN gem install fpm && \
     fpm -s empty -t deb -p python2.7-0.0.0-0-any.deb --name python2.7 --license MIT --version 0.0.0 --architecture all --description 'Dummy package to satisfy google-cloud-cli dependencies.' --maintainer 'Yourself' && \
     dpkg -i python2.7-0.0.0-0-any.deb && \
     rm python2.7-0.0.0-0-any.deb
 
 # Install Go
+FROM base AS go-build
 WORKDIR /usr/local
 ENV GO_VERSION=1.21.12
 RUN wget -q https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz && \
     tar -xzf go${GO_VERSION}.linux-amd64.tar.gz && \
-    rm go${GO_VERSION}.linux-amd64.tar.gz && \
-    mkdir /go
+    rm go${GO_VERSION}.linux-amd64.tar.gz
 
-ENV GOPATH /go
-ENV GO111MODULE=on
-ENV PATH /usr/local/go/bin:/go/bin:$PATH
+# Install gcloud, kubectl, Helm, and other tools
+FROM base AS tools
+WORKDIR /opt
 
-# Install Go tools
-RUN go install golang.org/x/tools/cmd/goimports@latest \
-    golang.org/x/pkgsite/cmd/pkgsite@latest \
-    github.com/golangci/golangci-lint/cmd/golangci-lint@v1.51.2 \
-    gotest.tools/gotestsum@latest
+# Install Google Cloud CLI and kubectl
+RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] http://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && \
+    curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key --keyring /usr/share/keyrings/cloud.google.gpg add - && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends \
+    google-cloud-cli google-cloud-cli-gke-gcloud-auth-plugin google-cloud-cli-app-engine-go && \
+    rm -rf /var/lib/apt/lists/* && \
+    echo "source /usr/share/google-cloud-sdk/completion.bash.inc" >> /root/.bashrc
+
+# Install kubectl
+ENV KUBERNETES_VER 1.29.7
+RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/v${KUBERNETES_VER}/bin/linux/amd64/kubectl && \
+    chmod go+rx ./kubectl && \
+    mv ./kubectl /usr/local/bin/kubectl && \
+    echo "source <(kubectl completion bash)" >> /root/.bashrc
 
 # Install Helm
 ENV HELM_VER 3.10.3
-RUN curl -L https://get.helm.sh/helm-v${HELM_VER}-linux-amd64.tar.gz | tar -xz -C /tmp && \
+ENV HELM_URL https://get.helm.sh/helm-v${HELM_VER}-linux-amd64.tar.gz
+RUN curl -L ${HELM_URL} | tar -xzC /tmp && \
     mv /tmp/linux-amd64/helm /usr/local/bin/helm && \
-    chmod go+rx /usr/local/bin/helm
+    chmod go+rx /usr/local/bin/helm && \
+    rm -rf /tmp/linux-amd64 && \
+    echo "source <(helm completion bash)" >> /root/.bashrc
+
+# Install GolangCI linter, yamllint, gotestsum, Hugo, Terraform, and other tools
+FROM go-build AS final
+WORKDIR /root
+
+# Install Go tools
+RUN go install golang.org/x/tools/cmd/goimports@latest && \
+    go install golang.org/x/pkgsite/cmd/pkgsite@latest && \
+    go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.51.2 && \
+    go install gotest.tools/gotestsum@latest
+
+# Install yamllint
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends yamllint && \
+    rm -rf /var/lib/apt/lists/*
 
 # Install Hugo
 ENV HUGO_VER 0.118.2
-RUN wget -q https://github.com/gohugoio/hugo/releases/download/v${HUGO_VER}/hugo_extended_${HUGO_VER}_Linux-64bit.tar.gz -O /tmp/hugo.tar.gz && \
-    tar -xzvf /tmp/hugo.tar.gz -C /usr/local/bin/ hugo && rm /tmp/hugo.tar.gz
+RUN wget -q -O hugo.tar.gz https://github.com/gohugoio/hugo/releases/download/v${HUGO_VER}/hugo_extended_${HUGO_VER}_Linux-64bit.tar.gz && \
+    tar -zxvf hugo.tar.gz -C /usr/local/bin/ && \
+    rm hugo.tar.gz
 
-# Install Node.js (reduced layers)
-RUN apt-get update && apt-get install -y ca-certificates curl gnupg && \
-    mkdir -p /etc/apt/keyrings && \
-    curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg && \
-    echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_20.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list && \
-    apt-get update && apt-get install -y --no-install-recommends nodejs && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+# Install Node.js
+ARG NODE_MAJOR=20
+RUN curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg && \
+    echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" > /etc/apt/sources.list.d/nodesource.list && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends nodejs && \
+    rm -rf /var/lib/apt/lists/*
 
-# Final Stage - Application Runtime
-FROM debian:bookworm-slim AS runtime
+# Install additional tools
+RUN wget -nv -O terraform.zip https://releases.hashicorp.com/terraform/1.5.4/terraform_1.5.4_linux_amd64.zip && \
+    unzip terraform.zip && \
+    mv terraform /usr/local/bin/ && \
+    rm terraform.zip
 
-# Install only the necessary runtime dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    psmisc \
-    rsync \
-    bash-completion \
-    ca-certificates \
-    curl \
-    gnupg \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+# Install code generator tools
+RUN mkdir -p /go/src/github.com/ahmetb && \
+    cd /go/src/github.com/ahmetb && git clone -b v0.2.0 https://github.com/ahmetb/gen-crd-api-reference-docs && \
+    cd ./gen-crd-api-reference-docs && go build
 
-# Copy necessary binaries from build-tools stage
-COPY --from=build-tools /usr/local/go /usr/local/go
-COPY --from=build-tools /usr/local/bin/helm /usr/local/bin/helm
-COPY --from=build-tools /usr/local/bin/hugo /usr/local/bin/hugo
-COPY --from=build-tools /usr/local/bin/golangci-lint /usr/local/bin/golangci-lint
-COPY --from=build-tools /go/bin /go/bin
+# Install htmltest
+RUN wget -O htmltest.tar.gz https://github.com/wjdp/htmltest/releases/download/v0.13.0/htmltest_0.13.0_linux_amd64.tar.gz && \
+    tar -zxvf htmltest.tar.gz -C /tmp && \
+    mv /tmp/htmltest /usr/local/bin && \
+    rm -rf /tmp/htmltest htmltest.tar.gz
 
-ENV GOPATH /go
-ENV GO111MODULE=on
+# Copy scripts and set environment
+COPY *.sh /root/
+RUN chmod +x /root/*.sh
 ENV PATH /usr/local/go/bin:/go/bin:$PATH
+RUN echo "export EDITOR=nano" >> /root/.bashrc && \
+    echo "export PATH=/usr/local/go/bin:/go/bin:$PATH" >> /root/.bashrc
 
-# Install Google Cloud CLI
-RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] http://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && \
-    curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key --keyring /usr/share/keyrings/cloud.google.gpg add - && \
-    apt-get update && apt-get install -y google-cloud-cli google-cloud-cli-gke-gcloud-auth-plugin google-cloud-cli-app-engine-go && \
-    echo "source /usr/share/google-cloud-sdk/completion.bash.inc" >> /root/.bashrc
-
-# Install specific kubectl version
-ENV KUBERNETES_VER 1.29.7
-RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/v${KUBERNETES_VER}/bin/linux/amd64/kubectl && \
-    chmod +x ./kubectl && mv ./kubectl /usr/local/bin/kubectl
-
-# Copy the script files (if necessary)
-COPY --from=build-tools /root/*.sh /root/
-
-# Final setup
+# Final working directory
 WORKDIR /go
-CMD ["/bin/bash"]
