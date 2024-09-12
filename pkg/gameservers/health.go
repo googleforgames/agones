@@ -261,7 +261,7 @@ func (hc *HealthController) skipUnhealthyGameContainer(gs *agonesv1.GameServer, 
 	// in which case, send it back to the queue to try again.
 	gsReadyContainerID := gs.ObjectMeta.Annotations[agonesv1.GameServerReadyContainerIDAnnotation]
 	if pod.ObjectMeta.Annotations[agonesv1.GameServerReadyContainerIDAnnotation] != gsReadyContainerID {
-		return false, workerqueue.NewDebugError(errors.Errorf("pod and gameserver %s data are out of sync, retrying", gs.ObjectMeta.Name))
+		return false, workerqueue.NewTraceError(errors.Errorf("pod and gameserver %s data are out of sync, retrying", gs.ObjectMeta.Name))
 	}
 
 	if gs.IsBeforeReady() {

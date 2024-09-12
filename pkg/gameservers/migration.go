@@ -153,7 +153,7 @@ func (mc *MigrationController) isMigratingGameServerPod(pod *k8sv1.Pod) (*agones
 	}
 
 	if pod.Spec.NodeName == "" {
-		return nil, nil, false, workerqueue.NewDebugError(errors.Errorf("node not yet populated for Pod %s", pod.ObjectMeta.Name))
+		return nil, nil, false, workerqueue.NewTraceError(errors.Errorf("node not yet populated for Pod %s", pod.ObjectMeta.Name))
 	}
 
 	node, err := mc.nodeLister.Get(pod.Spec.NodeName)

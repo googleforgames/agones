@@ -198,13 +198,13 @@ func TestWorkerQueueEnqueueAfter(t *testing.T) {
 
 func TestDebugError(t *testing.T) {
 	err := errors.New("not a debug error")
-	assert.False(t, isDebugError(err))
+	assert.False(t, isTraceError(err))
 
-	err = NewDebugError(err)
-	assert.True(t, isDebugError(err))
+	err = NewTraceError(err)
+	assert.True(t, isTraceError(err))
 	assert.EqualError(t, err, "not a debug error")
 
-	err = NewDebugError(nil)
-	assert.True(t, isDebugError(err))
+	err = NewTraceError(nil)
+	assert.True(t, isTraceError(err))
 	assert.EqualError(t, err, "<nil>")
 }
