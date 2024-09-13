@@ -190,16 +190,6 @@ func runExecCommand(cmd string, args ...string) ([]byte, error) {
 	return out, err
 }
 
-// Install Agones to the cluster using the install.yaml file.
-// kubectl create namespace agones-system
-// kubectl apply --server-side -f https://raw.githubusercontent.com/googleforgames/agones/release-1.43.0/install/yaml/install.yaml
-func installYaml() error {
-	installArgs := []string{"apply", "--server-side", "-f", "https://raw.githubusercontent.com/googleforgames/agones/release-1.43.0/install/yaml/install.yaml"}
-
-	_, err := runExecCommand(KUBECTL_CMD, installArgs...)
-	return err
-}
-
 // Adds public Helm Agones releases to the cluster
 func addAgonesRepo() {
 	installArgs := [][]string{{"repo", "add", "agones", "https://agones.dev/chart/stable"},
