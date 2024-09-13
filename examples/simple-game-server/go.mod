@@ -1,11 +1,11 @@
 module agones.dev/agones/examples/simple-game-server
 
-go 1.21
+go 1.22
 
 require agones.dev/agones v1.36.0
 
 require (
-	github.com/golang/protobuf v1.5.3 // indirect
+	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.18.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	golang.org/x/net v0.23.0 // indirect
