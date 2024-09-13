@@ -23,6 +23,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	admregv1 "k8s.io/api/admissionregistration/v1"
@@ -40,6 +41,7 @@ import (
 
 const (
 	scaleFactor = 2
+	webhookURL  = "scale"
 )
 
 type testServer struct{}
@@ -187,7 +189,7 @@ func TestComputeDesiredFleetSize(t *testing.T) {
 			_, cancel := agtesting.StartInformers(m, gameServers.Informer().HasSynced)
 			defer cancel()
 
-			replicas, limited, err := computeDesiredFleetSize(fas, f, gameServers.Lister(), nc)
+			replicas, limited, err := computeDesiredFleetSize(fas.Spec.Policy, f, gameServers.Lister(), nc)
 
 			if tc.expected.err != "" && assert.NotNil(t, err) {
 				assert.Equal(t, tc.expected.err, err.Error())
@@ -350,7 +352,7 @@ func TestApplyWebhookPolicy(t *testing.T) {
 	defer server.Close()
 
 	_, f := defaultWebhookFixtures()
-	url := "scale"
+	url := webhookURL
 	emptyString := ""
 	invalidURL := ")1golang.org/"
 	wrongServerURL := "http://127.0.0.1:1"
@@ -580,7 +582,7 @@ func TestApplyWebhookPolicy(t *testing.T) {
 func TestApplyWebhookPolicyNilFleet(t *testing.T) {
 	t.Parallel()
 
-	url := "scale"
+	url := webhookURL
 	w := &autoscalingv1.WebhookPolicy{
 		Service: &admregv1.ServiceReference{
 			Name:      "service1",
@@ -2133,4 +2135,414 @@ func TestApplyListPolicy(t *testing.T) {
 			}
 		})
 	}
+}
+
+// nolint:dupl  // Linter errors on lines are duplicate of TestApplySchedulePolicy
+// NOTE: Does not test for the validity of a fleet autoscaler policy (ValidateSchedulePolicy)
+func TestApplySchedulePolicy(t *testing.T) {
+	t.Parallel()
+
+	type expected struct {
+		replicas int32
+		limited  bool
+		wantErr  bool
+	}
+
+	bufferPolicy := autoscalingv1.FleetAutoscalerPolicy{
+		Type: autoscalingv1.BufferPolicyType,
+		Buffer: &autoscalingv1.BufferPolicy{
+			BufferSize:  intstr.FromInt(1),
+			MinReplicas: 3,
+			MaxReplicas: 10,
+		},
+	}
+	expectedWhenActive := expected{
+		replicas: 3,
+		limited:  false,
+		wantErr:  false,
+	}
+	expectedWhenInactive := expected{
+		replicas: 0,
+		limited:  false,
+		wantErr:  true,
+	}
+
+	testCases := map[string]struct {
+		featureFlags            string
+		specReplicas            int32
+		statusReplicas          int32
+		statusAllocatedReplicas int32
+		statusReadyReplicas     int32
+		now                     time.Time
+		sp                      *autoscalingv1.SchedulePolicy
+		gsList                  []agonesv1.GameServer
+		want                    expected
+	}{
+		"scheduled autoscaler feature flag not enabled": {
+			featureFlags: string(utilruntime.FeatureScheduledAutoscaler) + "=false",
+			sp:           &autoscalingv1.SchedulePolicy{},
+			want: expected{
+				replicas: 0,
+				limited:  false,
+				wantErr:  true,
+			},
+		},
+		"no start time": {
+			featureFlags: string(utilruntime.FeatureScheduledAutoscaler) + "=true",
+			now:          mustParseTime("2020-12-26T08:30:00Z"),
+			sp: &autoscalingv1.SchedulePolicy{
+				Between: autoscalingv1.Between{
+					End: mustParseMetav1Time("2021-01-01T00:00:00Z"),
+				},
+				ActivePeriod: autoscalingv1.ActivePeriod{
+					Timezone:  "UTC",
+					StartCron: "* * * * *",
+					Duration:  "48h",
+				},
+				Policy: bufferPolicy,
+			},
+			want: expectedWhenActive,
+		},
+		"no end time": {
+			featureFlags: string(utilruntime.FeatureScheduledAutoscaler) + "=true",
+			now:          mustParseTime("2021-01-02T00:00:00Z"),
+			sp: &autoscalingv1.SchedulePolicy{
+				Between: autoscalingv1.Between{
+					Start: mustParseMetav1Time("2021-01-01T00:00:00Z"),
+				},
+				ActivePeriod: autoscalingv1.ActivePeriod{
+					Timezone:  "UTC",
+					StartCron: "* * * * *",
+					Duration:  "1h",
+				},
+				Policy: bufferPolicy,
+			},
+			want: expectedWhenActive,
+		},
+		"no cron time": {
+			featureFlags: string(utilruntime.FeatureScheduledAutoscaler) + "=true",
+			now:          mustParseTime("2021-01-01T0:30:00Z"),
+			sp: &autoscalingv1.SchedulePolicy{
+				Between: autoscalingv1.Between{
+					Start: mustParseMetav1Time("2021-01-01T00:00:00Z"),
+					End:   mustParseMetav1Time("2021-01-01T01:00:00Z"),
+				},
+				ActivePeriod: autoscalingv1.ActivePeriod{
+					Timezone: "UTC",
+					Duration: "1h",
+				},
+				Policy: bufferPolicy,
+			},
+			want: expectedWhenActive,
+		},
+		"no duration": {
+			featureFlags: string(utilruntime.FeatureScheduledAutoscaler) + "=true",
+			now:          mustParseTime("2021-01-01T0:30:00Z"),
+			sp: &autoscalingv1.SchedulePolicy{
+				Between: autoscalingv1.Between{
+					Start: mustParseMetav1Time("2021-01-01T00:00:00Z"),
+					End:   mustParseMetav1Time("2021-01-01T01:00:00Z"),
+				},
+				ActivePeriod: autoscalingv1.ActivePeriod{
+					Timezone:  "UTC",
+					StartCron: "* * * * *",
+				},
+				Policy: bufferPolicy,
+			},
+			want: expectedWhenActive,
+		},
+		"no start time, end time, cron time, duration": {
+			featureFlags: string(utilruntime.FeatureScheduledAutoscaler) + "=true",
+			now:          mustParseTime("2021-01-01T00:00:00Z"),
+			sp: &autoscalingv1.SchedulePolicy{
+				Policy: bufferPolicy,
+			},
+			want: expectedWhenActive,
+		},
+		"daylight saving time start": {
+			featureFlags: string(utilruntime.FeatureScheduledAutoscaler) + "=true",
+			now:          mustParseTime("2021-03-14T02:00:00Z"),
+			sp: &autoscalingv1.SchedulePolicy{
+				Between: autoscalingv1.Between{
+					Start: mustParseMetav1Time("2021-03-13T00:00:00Z"),
+					End:   mustParseMetav1Time("2021-03-15T00:00:00Z"),
+				},
+				ActivePeriod: autoscalingv1.ActivePeriod{
+					Timezone:  "UTC",
+					StartCron: "* 2 * * *",
+					Duration:  "1h",
+				},
+				Policy: bufferPolicy,
+			},
+			want: expectedWhenActive,
+		},
+		"daylight saving time end": {
+			featureFlags: string(utilruntime.FeatureScheduledAutoscaler) + "=true",
+			now:          mustParseTime("2021-11-07T01:59:59Z"),
+			sp: &autoscalingv1.SchedulePolicy{
+				Between: autoscalingv1.Between{
+					Start: mustParseMetav1Time("2021-11-07T00:00:00Z"),
+					End:   mustParseMetav1Time("2021-11-08T00:00:00Z"),
+				},
+				ActivePeriod: autoscalingv1.ActivePeriod{
+					Timezone:  "UTC",
+					StartCron: "0 2 * * *",
+					Duration:  "1h",
+				},
+				Policy: bufferPolicy,
+			},
+			want: expectedWhenActive,
+		},
+		"new year": {
+			featureFlags: string(utilruntime.FeatureScheduledAutoscaler) + "=true",
+			now:          mustParseTime("2021-01-01T00:00:00Z"),
+			sp: &autoscalingv1.SchedulePolicy{
+				Between: autoscalingv1.Between{
+					Start: mustParseMetav1Time("2020-12-31T24:59:59Z"),
+					End:   mustParseMetav1Time("2021-01-02T00:00:00Z"),
+				},
+				ActivePeriod: autoscalingv1.ActivePeriod{
+					Timezone:  "UTC",
+					StartCron: "* 0 * * *",
+					Duration:  "1h",
+				},
+				Policy: bufferPolicy,
+			},
+			want: expectedWhenActive,
+		},
+		"inactive schedule": {
+			featureFlags: string(utilruntime.FeatureScheduledAutoscaler) + "=true",
+			now:          mustParseTime("2023-12-12T03:49:00Z"),
+			sp: &autoscalingv1.SchedulePolicy{
+				Between: autoscalingv1.Between{
+					Start: mustParseMetav1Time("2022-12-31T24:59:59Z"),
+					End:   mustParseMetav1Time("2023-03-02T00:00:00Z"),
+				},
+				ActivePeriod: autoscalingv1.ActivePeriod{
+					Timezone:  "UTC",
+					StartCron: "* 0 * 3 *",
+					Duration:  "",
+				},
+				Policy: bufferPolicy,
+			},
+			want: expectedWhenInactive,
+		},
+	}
+
+	utilruntime.FeatureTestMutex.Lock()
+	defer utilruntime.FeatureTestMutex.Unlock()
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			err := utilruntime.ParseFeatures(tc.featureFlags)
+			assert.NoError(t, err)
+
+			_, f := defaultFixtures()
+			replicas, limited, err := applySchedulePolicy(tc.sp, f, nil, nil, tc.now)
+
+			if tc.want.wantErr {
+				assert.NotNil(t, err)
+			} else {
+				assert.Nil(t, err)
+				assert.Equal(t, tc.want.replicas, replicas)
+				assert.Equal(t, tc.want.limited, limited)
+			}
+		})
+	}
+}
+
+// nolint:dupl  // Linter errors on lines are duplicate of TestApplyChainPolicy
+// NOTE: Does not test for the validity of a fleet autoscaler policy (ValidateChainPolicy)
+func TestApplyChainPolicy(t *testing.T) {
+	t.Parallel()
+
+	// For Webhook Policy
+	ts := testServer{}
+	server := httptest.NewServer(ts)
+	defer server.Close()
+	url := webhookURL
+
+	type expected struct {
+		replicas int32
+		limited  bool
+		wantErr  bool
+	}
+
+	scheduleOne := autoscalingv1.ChainEntry{
+		ID: "schedule-1",
+		FleetAutoscalerPolicy: autoscalingv1.FleetAutoscalerPolicy{
+			Type: autoscalingv1.SchedulePolicyType,
+			Schedule: &autoscalingv1.SchedulePolicy{
+				Between: autoscalingv1.Between{
+					Start: mustParseMetav1Time("2024-08-01T10:07:36-06:00"),
+				},
+				ActivePeriod: autoscalingv1.ActivePeriod{
+					Timezone:  "America/Chicago",
+					StartCron: "* * * * *",
+					Duration:  "",
+				},
+				Policy: autoscalingv1.FleetAutoscalerPolicy{
+					Type: autoscalingv1.BufferPolicyType,
+					Buffer: &autoscalingv1.BufferPolicy{
+						BufferSize:  intstr.FromInt(1),
+						MinReplicas: 10,
+						MaxReplicas: 10,
+					},
+				},
+			},
+		},
+	}
+	scheduleTwo := autoscalingv1.ChainEntry{
+		ID: "schedule-2",
+		FleetAutoscalerPolicy: autoscalingv1.FleetAutoscalerPolicy{
+			Type: autoscalingv1.SchedulePolicyType,
+			Schedule: &autoscalingv1.SchedulePolicy{
+				Between: autoscalingv1.Between{
+					End: mustParseMetav1Time("2021-01-02T4:53:00-05:00"),
+				},
+				ActivePeriod: autoscalingv1.ActivePeriod{
+					Timezone:  "America/New_York",
+					StartCron: "0 1 3 * *",
+					Duration:  "",
+				},
+				Policy: autoscalingv1.FleetAutoscalerPolicy{
+					Type: autoscalingv1.BufferPolicyType,
+					Buffer: &autoscalingv1.BufferPolicy{
+						BufferSize:  intstr.FromInt(1),
+						MinReplicas: 3,
+						MaxReplicas: 10,
+					},
+				},
+			},
+		},
+	}
+	webhookEntry := autoscalingv1.ChainEntry{
+		ID: "webhook policy",
+		FleetAutoscalerPolicy: autoscalingv1.FleetAutoscalerPolicy{
+			Type: autoscalingv1.WebhookPolicyType,
+			Webhook: &autoscalingv1.WebhookPolicy{
+				Service: &admregv1.ServiceReference{
+					Name:      "service1",
+					Namespace: "default",
+					Path:      &url,
+				},
+				CABundle: []byte("invalid-value"),
+			},
+		},
+	}
+	defaultEntry := autoscalingv1.ChainEntry{
+		ID: "default",
+		FleetAutoscalerPolicy: autoscalingv1.FleetAutoscalerPolicy{
+			Type: autoscalingv1.BufferPolicyType,
+			Buffer: &autoscalingv1.BufferPolicy{
+				BufferSize:  intstr.FromInt(1),
+				MinReplicas: 6,
+				MaxReplicas: 10,
+			},
+		},
+	}
+
+	testCases := map[string]struct {
+		fleet                   *agonesv1.Fleet
+		featureFlags            string
+		specReplicas            int32
+		statusReplicas          int32
+		statusAllocatedReplicas int32
+		statusReadyReplicas     int32
+		now                     time.Time
+		cp                      *autoscalingv1.ChainPolicy
+		gsList                  []agonesv1.GameServer
+		want                    expected
+	}{
+		"scheduled autoscaler feature flag not enabled": {
+			featureFlags: string(utilruntime.FeatureScheduledAutoscaler) + "=false",
+			cp:           &autoscalingv1.ChainPolicy{},
+			want: expected{
+				replicas: 0,
+				limited:  false,
+				wantErr:  true,
+			},
+		},
+		"default policy": {
+			featureFlags: string(utilruntime.FeatureScheduledAutoscaler) + "=true",
+			cp:           &autoscalingv1.ChainPolicy{defaultEntry},
+			want: expected{
+				replicas: 6,
+				limited:  true,
+				wantErr:  false,
+			},
+		},
+		"one invalid webhook policy, one default (fallthrough)": {
+			featureFlags: string(utilruntime.FeatureScheduledAutoscaler) + "=true",
+			cp:           &autoscalingv1.ChainPolicy{webhookEntry, defaultEntry},
+			want: expected{
+				replicas: 6,
+				limited:  true,
+				wantErr:  false,
+			},
+		},
+		"two inactive schedule entries, no default (fall off chain)": {
+			featureFlags: string(utilruntime.FeatureScheduledAutoscaler) + "=true",
+			now:          mustParseTime("2021-01-01T0:30:00Z"),
+			cp:           &autoscalingv1.ChainPolicy{scheduleOne, scheduleOne},
+			want: expected{
+				replicas: 5,
+				limited:  false,
+				wantErr:  true,
+			},
+		},
+		"two inactive schedules entries, one default (fallthrough)": {
+			featureFlags: string(utilruntime.FeatureScheduledAutoscaler) + "=true",
+			now:          mustParseTime("2021-11-05T5:30:00Z"),
+			cp:           &autoscalingv1.ChainPolicy{scheduleOne, scheduleTwo, defaultEntry},
+			want: expected{
+				replicas: 6,
+				limited:  true,
+				wantErr:  false,
+			},
+		},
+		"two overlapping/active schedule entries, schedule-1 applied": {
+			featureFlags: string(utilruntime.FeatureScheduledAutoscaler) + "=true",
+			now:          mustParseTime("2024-08-01T10:07:36-06:00"),
+			cp:           &autoscalingv1.ChainPolicy{scheduleOne, scheduleTwo},
+			want: expected{
+				replicas: 10,
+				limited:  true,
+				wantErr:  false,
+			},
+		},
+	}
+
+	utilruntime.FeatureTestMutex.Lock()
+	defer utilruntime.FeatureTestMutex.Unlock()
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			err := utilruntime.ParseFeatures(tc.featureFlags)
+			assert.NoError(t, err)
+
+			_, f := defaultFixtures()
+			replicas, limited, err := applyChainPolicy(*tc.cp, f, nil, nil, tc.now)
+
+			if tc.want.wantErr {
+				assert.NotNil(t, err)
+			} else {
+				assert.Nil(t, err)
+				assert.Equal(t, tc.want.replicas, replicas)
+				assert.Equal(t, tc.want.limited, limited)
+			}
+		})
+	}
+}
+
+// Parse a time string and return a metav1.Time
+func mustParseMetav1Time(timeStr string) metav1.Time {
+	t, _ := time.Parse(time.RFC3339, timeStr)
+	return metav1.NewTime(t)
+}
+
+// Parse a time string and return a time.Time
+func mustParseTime(timeStr string) time.Time {
+	t, _ := time.Parse(time.RFC3339, timeStr)
+	return t
 }

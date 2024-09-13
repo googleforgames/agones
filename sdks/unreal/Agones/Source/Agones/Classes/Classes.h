@@ -150,6 +150,28 @@ struct FSpec
 };
 
 USTRUCT(BlueprintType)
+struct FAddress
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadOnly, Category="Agones")
+	FString Type;
+
+	UPROPERTY(BlueprintReadOnly, Category="Agones")
+	FString Address;
+
+	FAddress()
+	{
+	}
+
+	explicit FAddress(const TSharedPtr<FJsonObject> JsonObject)
+	{
+		JsonObject->TryGetStringField(TEXT("type"), Type);
+		JsonObject->TryGetStringField(TEXT("address"), Address);
+	}
+};
+
+USTRUCT(BlueprintType)
 struct FPort
 {
 	GENERATED_BODY()
@@ -183,6 +205,9 @@ struct FStatus
 	FString Address;
 
 	UPROPERTY(BlueprintReadOnly, Category="Agones")
+	TArray<FAddress> Addresses;
+
+	UPROPERTY(BlueprintReadOnly, Category="Agones")
 	TArray<FPort> Ports;
 
 	FStatus()
@@ -193,6 +218,20 @@ struct FStatus
 	{
 		JsonObject->TryGetStringField(TEXT("state"), State);
 		JsonObject->TryGetStringField(TEXT("address"), Address);
+		const TArray<TSharedPtr<FJsonValue>>* AddressesArray;
+		if (JsonObject->TryGetArrayField(TEXT("addresses"), AddressesArray))
+		{
+			const int32 ArrLen = AddressesArray->Num();
+			for (int32 i = 0; i < ArrLen; ++i)
+			{
+				const TSharedPtr<FJsonValue>& AddressItem = (*AddressesArray)[i];
+				if (AddressItem.IsValid() && !AddressItem->IsNull())
+				{
+					FAddress NewAddress = FAddress(AddressItem->AsObject());
+					Addresses.Add(NewAddress);
+				}
+			}
+		}
 		const TArray<TSharedPtr<FJsonValue>>* PortsArray;
 		if (JsonObject->TryGetArrayField(TEXT("ports"), PortsArray))
 		{
@@ -371,5 +410,27 @@ struct FConnectedPlayersResponse
 	explicit FConnectedPlayersResponse(const TSharedPtr<FJsonObject> JsonObject)
 	{
 		JsonObject->TryGetStringArrayField(TEXT("list"), ConnectedPlayers);
+	}
+};
+
+USTRUCT(BlueprintType)
+struct FCounterResponse
+{
+	GENERATED_BODY()
+
+	FCounterResponse()
+	{
+	}
+
+	UPROPERTY(BlueprintReadOnly, Category = "Agones")
+	int64 Count;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Agones")
+	int64 Capacity;
+
+	explicit FCounterResponse(const TSharedPtr<FJsonObject> JsonObject)
+	{
+		JsonObject->TryGetNumberField(TEXT("count"), Count);
+        JsonObject->TryGetNumberField(TEXT("capacity"), Capacity);
 	}
 };

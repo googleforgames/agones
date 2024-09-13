@@ -43,10 +43,14 @@ Follow the [Google Cloud Monitoring installation steps](#google-cloud-monitoring
 
 ## Metrics available
 
+
+
 | Name                                                  | Description                                                                                                                                                                                 | Type      |
 |-------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------|
 | agones_gameservers_count                              | The number of gameservers per fleet and status                                                                                                                                              | gauge     |
 | agones_gameserver_allocations_duration_seconds        | The distribution of gameserver allocation requests latencies                                                                                                                                | histogram |
+| agones_gameserver_allocations_retry_total             | The count of gameserver allocation retry until it succeeds | histogram |
+| agones_gameserver_creation_duration                   | The time gameserver takes to be created in seconds  | histogram | 
 | agones_gameservers_total                              | The total of gameservers per fleet and status                                                                                                                                               | counter   |
 | agones_gameserver_player_connected_total              | The total number of players connected to gameservers (Only available when [player tracking]({{< relref "player-tracking.md" >}}) is enabled)                                                | gauge     |
 | agones_gameserver_player_capacity_total               | The available capacity for players on gameservers (Only available when [player tracking]({{< relref "player-tracking.md" >}}) is enabled)                                                   | gauge     |
@@ -76,6 +80,8 @@ Follow the [Google Cloud Monitoring installation steps](#google-cloud-monitoring
 | agones_k8s_client_workqueue_retries_total             | Total number of items retried to the work queue                                                                                                                                             | counter   |
 | agones_k8s_client_workqueue_longest_running_processor | How long the longest running workqueue processor has been running in microseconds                                                                                                           | gauge     |
 | agones_k8s_client_workqueue_unfinished_work_seconds   | How long unfinished work has been sitting in the workqueue in seconds                                                                                                                       | gauge     |
+
+
 
 ### Dropping Metric Labels
 

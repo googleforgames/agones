@@ -24,7 +24,7 @@
 #
 
 # base version target. This is usually the next release.
-base_version = 1.43.0
+base_version = 1.44.0
 
 #
 # All of the following can be overwritten with environment variables
@@ -70,7 +70,7 @@ GS_TEST_IMAGE ?= us-docker.pkg.dev/agones-images/examples/simple-game-server:0.3
 BETA_FEATURE_GATES ?= "AutopilotPassthroughPort=true&CountsAndLists=true&DisableResyncOnSDKServer=true"
 
 # Enable all alpha feature gates. Keep in sync with `false` (alpha) entries in pkg/util/runtime/features.go:featureDefaults
-ALPHA_FEATURE_GATES ?= "PlayerAllocationFilter=true&PlayerTracking=true&RollingUpdateFix=true&PortRanges=true&PortPolicyNone=true&Example=true"
+ALPHA_FEATURE_GATES ?= "PlayerAllocationFilter=true&PlayerTracking=true&RollingUpdateFix=true&PortRanges=true&PortPolicyNone=true&ScheduledAutoscaler=true&Example=true"
 
 # Build with Windows support
 WITH_WINDOWS=1
@@ -246,7 +246,6 @@ include ./includes/$(osinclude)
 include ./includes/build-image.mk
 include ./includes/release.mk
 include ./includes/google-cloud.mk
-include ./includes/terraform.mk
 include ./includes/minikube.mk
 include ./includes/kind.mk
 include ./includes/website.mk
