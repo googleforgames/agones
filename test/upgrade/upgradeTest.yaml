@@ -30,17 +30,25 @@ spec:
           image: $(REGISTRY)/upgrade-test-controller:0.1
           imagePullPolicy: Always
           env:
-            - name: POD_NAME
+            - name: PodName
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.name
-            - name: POD_NAMESPACE
+            - name: PodNamespace
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
           envFrom:
             - configMapRef:
                 name: version-map
+          volumeMounts:
+            - name: gs-volume
+              mountPath: gameserver.yaml
+              subPath: "gameserver.yaml"
+      volumes:
+        - name: gs-volume
+          configMap:
+            name: gameserver-template
       priorityClassName: high-priority
       restartPolicy: Never
       serviceAccountName: agones-sa

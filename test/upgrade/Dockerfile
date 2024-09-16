@@ -39,10 +39,11 @@ FROM golang:1.22.6 AS build-stage
 
 WORKDIR /agones.dev
 
-COPY go.mod go.sum ./
-RUN go mod download
-
 COPY *.go ./
+
+RUN go mod init agones.dev/agones/test/upgrade/testContainer
+RUN go mod tidy
+RUN go mod download
 
 RUN CGO_ENABLED=0 GOOS=linux go build -o /upgrade-test
 
