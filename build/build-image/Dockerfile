@@ -78,7 +78,7 @@ RUN curl -L  ${HELM_URL} > /tmp/helm.tar.gz \
 RUN echo "source <(helm completion bash)" >> /root/.bashrc
 
 # install golang-ci linter
-RUN go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.51.2
+RUN go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.61.0
 
 # Install yamllint
 RUN apt-get update && \
