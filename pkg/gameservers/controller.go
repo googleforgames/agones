@@ -878,19 +878,19 @@ func (c *Controller) syncGameServerStartingState(ctx context.Context, gs *agones
 	if err != nil {
 		// expected to happen, so don't log it.
 		if k8serrors.IsNotFound(err) {
-			return nil, workerqueue.NewDebugError(err)
+			return nil, workerqueue.NewTraceError(err)
 		}
 
 		// do log if it's something other than NotFound, since that's weird.
 		return nil, err
 	}
 	if pod.Spec.NodeName == "" {
-		return gs, workerqueue.NewDebugError(errors.Errorf("node not yet populated for Pod %s", pod.ObjectMeta.Name))
+		return gs, workerqueue.NewTraceError(errors.Errorf("node not yet populated for Pod %s", pod.ObjectMeta.Name))
 	}
 
 	// Ensure the pod IPs are populated
 	if pod.Status.PodIPs == nil || len(pod.Status.PodIPs) == 0 {
-		return gs, workerqueue.NewDebugError(errors.Errorf("pod IPs not yet populated for Pod %s", pod.ObjectMeta.Name))
+		return gs, workerqueue.NewTraceError(errors.Errorf("pod IPs not yet populated for Pod %s", pod.ObjectMeta.Name))
 	}
 
 	node, err := c.nodeLister.Get(pod.Spec.NodeName)
@@ -943,7 +943,7 @@ func (c *Controller) syncGameServerRequestReadyState(ctx context.Context, gs *ag
 	if gs.Status.NodeName == "" {
 		addressPopulated = true
 		if pod.Spec.NodeName == "" {
-			return gs, workerqueue.NewDebugError(errors.Errorf("node not yet populated for Pod %s", pod.ObjectMeta.Name))
+			return gs, workerqueue.NewTraceError(errors.Errorf("node not yet populated for Pod %s", pod.ObjectMeta.Name))
 		}
 		node, err := c.nodeLister.Get(pod.Spec.NodeName)
 		if err != nil {
@@ -963,7 +963,7 @@ func (c *Controller) syncGameServerRequestReadyState(ctx context.Context, gs *ag
 				// check to make sure this container is actually running. If there was a recent crash, the cache may
 				// not yet have the newer, running container.
 				if cs.State.Running == nil {
-					return nil, workerqueue.NewDebugError(fmt.Errorf("game server container for GameServer %s in namespace %s is not currently running, try again", gsCopy.ObjectMeta.Name, gsCopy.ObjectMeta.Namespace))
+					return nil, workerqueue.NewTraceError(fmt.Errorf("game server container for GameServer %s in namespace %s is not currently running, try again", gsCopy.ObjectMeta.Name, gsCopy.ObjectMeta.Namespace))
 				}
 				gsCopy.ObjectMeta.Annotations[agonesv1.GameServerReadyContainerIDAnnotation] = cs.ContainerID
 			}
@@ -972,7 +972,7 @@ func (c *Controller) syncGameServerRequestReadyState(ctx context.Context, gs *ag
 	}
 	// Verify that we found the game server container - we may have a stale cache where pod is missing ContainerStatuses.
 	if _, ok := gsCopy.ObjectMeta.Annotations[agonesv1.GameServerReadyContainerIDAnnotation]; !ok {
-		return nil, workerqueue.NewDebugError(fmt.Errorf("game server container for GameServer %s in namespace %s not present in pod status, try again", gsCopy.ObjectMeta.Name, gsCopy.ObjectMeta.Namespace))
+		return nil, workerqueue.NewTraceError(fmt.Errorf("game server container for GameServer %s in namespace %s not present in pod status, try again", gsCopy.ObjectMeta.Name, gsCopy.ObjectMeta.Namespace))
 	}
 
 	// Also update the pod with the same annotation, so we can check if the Pod data is up-to-date, now and also in the HealthController.

@@ -37,29 +37,29 @@ const (
 	workFx = time.Second
 )
 
-// debugError is a marker type for errors that that should only be logged at a Debug level.
+// traceError is a marker type for errors that that should only be logged at a Trace level.
 // Useful if you want a Handler to be retried, but not logged at an Error level.
-type debugError struct {
+type traceError struct {
 	err error
 }
 
-// NewDebugError returns a debugError wrapper around an error.
-func NewDebugError(err error) error {
-	return &debugError{err: err}
+// NewTraceError returns a traceError wrapper around an error.
+func NewTraceError(err error) error {
+	return &traceError{err: err}
 }
 
 // Error returns the error string
-func (l *debugError) Error() string {
+func (l *traceError) Error() string {
 	if l.err == nil {
 		return "<nil>"
 	}
 	return l.err.Error()
 }
 
-// isDebugError returns if the error is a debug error or not
-func isDebugError(err error) bool {
+// isTraceError returns if the error is a trace error or not
+func isTraceError(err error) bool {
 	cause := errors.Cause(err)
-	_, ok := cause.(*debugError)
+	_, ok := cause.(*traceError)
 	return ok
 }
 
@@ -181,8 +181,8 @@ func (wq *WorkerQueue) processNextWorkItem(ctx context.Context) bool {
 
 	if err := wq.SyncHandler(ctx, key); err != nil {
 		// Conflicts are expected, so only show them in debug operations.
-		// Also check is debugError for other expected errors.
-		if k8serror.IsConflict(errors.Cause(err)) || isDebugError(err) {
+		// Also check is traceError for other expected errors.
+		if k8serror.IsConflict(errors.Cause(err)) || isTraceError(err) {
 			wq.logger.WithField(wq.keyName, obj).Trace(err)
 		} else {
 			runtime.HandleError(wq.logger.WithField(wq.keyName, obj), err)
