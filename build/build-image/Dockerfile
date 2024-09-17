@@ -58,7 +58,7 @@ ENV PATH /usr/local/go/bin:/go/bin:$PATH
 # Install Go tools
 RUN go install golang.org/x/tools/cmd/goimports@latest \
     golang.org/x/pkgsite/cmd/pkgsite@latest \
-    github.com/golangci/golangci-lint/cmd/golangci-lint@v1.51.2 \
+    github.com/golangci/golangci-lint/cmd/golangci-lint@latest \
     gotest.tools/gotestsum@latest
 
 # Install Helm
