@@ -25,7 +25,6 @@ import (
 
 	"github.com/heptiolabs/healthcheck"
 	"github.com/pkg/errors"
-	prom "github.com/prometheus/client_golang/prometheus"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -158,29 +157,8 @@ func main() {
 	}
 	var health healthcheck.Handler
 
-	// Stackdriver metrics
-	if ctlConf.Stackdriver {
-		sd, err := metrics.RegisterStackdriverExporter(ctlConf.GCPProjectID, ctlConf.StackdriverLabels)
-		if err != nil {
-			logger.WithError(err).Fatal("Could not register stackdriver exporter")
-		}
-		// It is imperative to invoke flush before your main function exits
-		defer sd.Flush()
-	}
-
-	// Prometheus metrics
-	if ctlConf.PrometheusMetrics {
-		registry := prom.NewRegistry()
-		metricHandler, err := metrics.RegisterPrometheusExporter(registry)
-		if err != nil {
-			logger.WithError(err).Fatal("Could not register prometheus exporter in extensions")
-		}
-		server.Handle("/metrics", metricHandler)
-		health = healthcheck.NewMetricsHandler(registry, "agones")
-	} else {
-		logger.Info("Not registaring prometheus metrics")
-		health = healthcheck.NewHandler()
-	}
+	health, closer := metrics.SetupMetrics(ctlConf.Stackdriver, ctlConf.PrometheusMetrics, ctlConf.GCPProjectID, ctlConf.StackdriverLabels, server) //add  ,logger in arg
+	defer closer()
 
 	podReady = true
 	health.AddReadinessCheck("agones-extensions", func() error {

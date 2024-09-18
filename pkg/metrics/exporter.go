@@ -19,9 +19,11 @@ import (
 	"os"
 	"time"
 
+	"agones.dev/agones/pkg/util/httpserver"
 	"cloud.google.com/go/compute/metadata"
 	"contrib.go.opencensus.io/exporter/prometheus"
 	"contrib.go.opencensus.io/exporter/stackdriver"
+	"github.com/heptiolabs/healthcheck"
 	"github.com/pkg/errors"
 	prom "github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
@@ -29,6 +31,14 @@ import (
 	"google.golang.org/genproto/googleapis/api/monitoredres"
 )
 
+/*
+type config struct {
+	Stackdriver       bool
+	PrometheusMetrics bool
+	GCPProjectID      string
+	StackdriverLabels string
+}
+*/
 // RegisterPrometheusExporter register a prometheus exporter to OpenCensus with a given prometheus metric registry.
 // It will automatically add go runtime and process metrics using default prometheus collectors.
 // The function return an http.handler that you can use to expose the prometheus endpoint.
@@ -118,4 +128,33 @@ func getMonitoredResource(projectID string) (*monitoredres.MonitoredResource, er
 			"container_name": os.Getenv("CONTAINER_NAME"),
 		},
 	}, nil
+}
+
+func SetupMetrics(stackdriver bool, prometheusMetrics bool, gcpProjectID string, stackdriverLabels string, server *httpserver.Server) (healthcheck.Handler, func()) { //, logger *logrus.Logger add in arg
+	var health healthcheck.Handler
+	var closer func() = func() {}
+
+	//Stackriver Metrics
+	if stackdriver {
+		sd, err := RegisterStackdriverExporter(gcpProjectID, stackdriverLabels)
+		if err != nil {
+			logger.WithError(err).Fatal("Could not register Stackdriver exporter")
+		}
+		closer = func() { sd.Flush() }
+	}
+
+	//Prometheus Metrics
+	if prometheusMetrics {
+		registry := prom.NewRegistry()
+		metricHandler, err := RegisterPrometheusExporter(registry)
+		if err != nil {
+			logger.WithError(err).Fatal("Could not register Prometheus exporter")
+		}
+		server.Handle("/metrics", metricHandler)
+		health = healthcheck.NewMetricsHandler(registry, "agones")
+	} else {
+		health = healthcheck.NewHandler()
+	}
+
+	return health, closer
 }
