@@ -31,11 +31,12 @@ import (
 	"google.golang.org/genproto/googleapis/api/monitoredres"
 )
 
-type MetricsConfig struct {
-	Stackdriver       bool
-	PrometheusMetrics bool
+// Config holds configuration for metrics reporting
+type Config struct {
 	GCPProjectID      string
 	StackdriverLabels string
+	Stackdriver       bool
+	PrometheusMetrics bool
 }
 
 // RegisterPrometheusExporter register a prometheus exporter to OpenCensus with a given prometheus metric registry.
@@ -129,12 +130,12 @@ func getMonitoredResource(projectID string) (*monitoredres.MonitoredResource, er
 	}, nil
 }
 
-// func SetupMetrics(stackdriver bool, prometheusMetrics bool, gcpProjectID string, stackdriverLabels string, server *httpserver.Server) (healthcheck.Handler, func()) { //, logger *logrus.Logger add in arg
-func SetupMetrics(conf MetricsConfig, server *httpserver.Server) (healthcheck.Handler, func()) {
+// SetupMetrics initializes metrics reporting with the provided configuration
+func SetupMetrics(conf Config, server *httpserver.Server) (healthcheck.Handler, func()) {
 	var health healthcheck.Handler
-	var closer func() = func() {}
+	var closer = func() {}
 
-	//Stackriver Metrics
+	// Stackriver Metrics
 	if conf.Stackdriver {
 		sd, err := RegisterStackdriverExporter(conf.GCPProjectID, conf.StackdriverLabels)
 		if err != nil {
@@ -143,7 +144,7 @@ func SetupMetrics(conf MetricsConfig, server *httpserver.Server) (healthcheck.Ha
 		closer = func() { sd.Flush() }
 	}
 
-	//Prometheus Metrics
+	// Prometheus Metrics
 	if conf.PrometheusMetrics {
 		registry := prom.NewRegistry()
 		metricHandler, err := RegisterPrometheusExporter(registry)

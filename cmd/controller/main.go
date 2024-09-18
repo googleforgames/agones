@@ -178,7 +178,7 @@ func main() {
 	var rs []runner
 	var health healthcheck.Handler
 
-	metricsConf := metrics.MetricsConfig{
+	metricsConf := metrics.Config{
 		Stackdriver:       ctlConf.Stackdriver,
 		PrometheusMetrics: ctlConf.PrometheusMetrics,
 		GCPProjectID:      ctlConf.GCPProjectID,
@@ -186,7 +186,6 @@ func main() {
 	}
 
 	health, closer := metrics.SetupMetrics(metricsConf, server)
-	//health, closer := metrics.SetupMetrics(ctlConf.Stackdriver, ctlConf.PrometheusMetrics, ctlConf.GCPProjectID, ctlConf.StackdriverLabels, server)
 	defer closer()
 
 	// If we are using Prometheus only exporter we can make reporting more often,
