@@ -19,6 +19,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"log"
 	"os"
 	"os/exec"
@@ -34,38 +35,43 @@ import (
 )
 
 const (
-	// HELM_CMD is the command line invocation of helm
-	HELM_CMD = "helm"
-	// KUBECTL_CMD is the command line invocation of kubectl
-	KUBECTL_CMD = "kubectl"
-	// IMAGE_PULL_POLICY sets the Agones Helm configuration to always pull the image
-	IMAGE_PULL_POLICY = "Always"
-	// SIDECAR_PULL_POLICY sets the Agones Helm configuration to always pull the SDK image
-	SIDECAR_PULL_POLICY = "true"
-	// LOG_LEVEL sets the Agones Helm configuration log level
-	LOG_LEVEL = "debug"
-	// HELM_CHART is the helm chart for the public Agones releases
-	HELM_CHART = "agones/agones"
-	// AGONES_REGISTRY is the public registry for Agones releases
-	AGONES_REGISTRY = "us-docker.pkg.dev/agones-images/release"
+	// HelmCmd is the command line invocation of helm
+	HelmCmd = "helm"
+	// KubectlCmd is the command line invocation of kubectl
+	KubectlCmd = "kubectl"
+	// ImagePullPolicy sets the Agones Helm configuration to always pull the image
+	ImagePullPolicy = "Always"
+	// SidecarPullPolicy sets the Agones Helm configuration to always pull the SDK image
+	SidecarPullPolicy = "true"
+	// LogLevel sets the Agones Helm configuration log level
+	LogLevel = "debug"
+	// HelmChart is the helm chart for the public Agones releases
+	HelmChart = "agones/agones"
+	// AgonesRegistry is the public registry for Agones releases
+	AgonesRegistry = "us-docker.pkg.dev/agones-images/release"
+	// TestRegistry is the public registry for upgrade test container files
+	// TODO: Create Test Registry in agones-images/ci
+	TestRegistry = "us-docker.pkg.dev/agones-images/ci/sdk-client-test"
 )
 
 var (
+	// Dev is the current development version of Agones
 	// TODO: Get the build version of dev (i.e. 1.44.0-dev-b765f49)
-	// DEV is the current development version of Agones
-	DEV = os.Getenv("DEV")
-	// POD_NAME the name of the pod this container is running in
-	POD_NAME = os.Getenv("POD_NAME")
-	// POD_NAMESPACE the name of the pod namespace this container is running in
-	POD_NAMESPACE = os.Getenv("POD_NAMESPACE")
-	// VERSION_MAPPINGS are the valid Kubernetes, Agones, and Feature Gate version configurations
-	VERSION_MAPPINGS = os.Getenv("version-mappings.json")
+	Dev = os.Getenv("Dev")
+	// ReleaseVersion is the latest released version of Agones (DEV - 1).
+	ReleaseVersion = os.Getenv("ReleaseVersion")
+	// PodName the name of the pod this container is running in
+	PodName = os.Getenv("PodName")
+	// PodNamespace the name of the pod namespace this container is running in
+	PodNamespace = os.Getenv("PodNamespace")
+	// VersionMappings are the valid Kubernetes, Agones, and Feature Gate version configurations
+	VersionMappings = os.Getenv("version-mappings.json")
 )
 
 func main() {
 	ctx := context.Background()
 
-	validConfigs := ConfigTestSetup(ctx)
+	validConfigs := configTestSetup(ctx)
 	addAgonesRepo()
 	runConfigWalker(ctx, validConfigs)
 }
@@ -81,8 +87,14 @@ type featureGates struct {
 }
 
 type configTest struct {
-	agonesVersion string
-	featureGates  string
+	agonesVersion  string
+	featureGates   string
+	gameServerPath string
+}
+
+type gameServerTemplate struct {
+	AgonesVersion string
+	Registry      string
 }
 
 type helmStatuses []struct {
@@ -96,14 +108,14 @@ type helmStatuses []struct {
 }
 
 // Determine test scenario to run
-func ConfigTestSetup(ctx context.Context) []*configTest {
+func configTestSetup(ctx context.Context) []*configTest {
 	versionMap := versionMappings{}
 
 	// Find the Kubernetes version of the node that this test is running on.
 	k8sVersion := findK8sVersion(ctx)
 
 	// Get the mappings of valid Kubernetes, Agones, and Feature Gate versions from the configmap.
-	err := json.Unmarshal([]byte(VERSION_MAPPINGS), &versionMap)
+	err := json.Unmarshal([]byte(VersionMappings), &versionMap)
 	if err != nil {
 		log.Fatal("Could not Unmarshal", err)
 	}
@@ -114,7 +126,12 @@ func ConfigTestSetup(ctx context.Context) []*configTest {
 		ct := configTest{}
 		ct.agonesVersion = agonesVersion
 		if agonesVersion == "DEV" {
-			ct.agonesVersion = DEV
+			ct.agonesVersion = Dev
+			// Game server container cannot be created at DEV version due to go.mod only able to access
+			// published Agones versions. Use N-1 for DEV.
+			ct.gameServerPath = createGameServerFile(ReleaseVersion)
+		} else {
+			ct.gameServerPath = createGameServerFile(agonesVersion)
 		}
 		// TODO: create different valid config based off of available feature gates
 		configTests = append(configTests, &ct)
@@ -139,7 +156,7 @@ func findK8sVersion(ctx context.Context) string {
 	// Wait to get pod and node as these may take a while to start on a new Autopilot cluster.
 	var pod *v1.Pod
 	err = wait.PollUntilContextTimeout(ctx, 5*time.Second, 7*time.Minute, true, func(ctx context.Context) (done bool, err error) {
-		pod, err = kubeClient.CoreV1().Pods(POD_NAMESPACE).Get(ctx, POD_NAME, metav1.GetOptions{})
+		pod, err = kubeClient.CoreV1().Pods(PodNamespace).Get(ctx, PodName, metav1.GetOptions{})
 		if err != nil {
 			return false, nil
 		}
@@ -166,10 +183,7 @@ func findK8sVersion(ctx context.Context) string {
 	// Finds the major.min version. I.e. k8sVersion 1.30 from gkeVersion v1.30.2-gke.1587003
 	gkeVersion := node.Status.NodeInfo.KubeletVersion
 	log.Println("KubeletVersion", gkeVersion)
-	r, err := regexp.Compile("\\d*\\.\\d*")
-	if err != nil {
-		log.Fatal("Could not compile regex: ", err)
-	}
+	r := regexp.MustCompile(`\d+\.\d+`)
 
 	return r.FindString(gkeVersion)
 }
@@ -196,7 +210,7 @@ func addAgonesRepo() {
 		{"repo", "update"}}
 
 	for _, args := range installArgs {
-		_, err := runExecCommand(HELM_CMD, args...)
+		_, err := runExecCommand(HelmCmd, args...)
 		if err != nil {
 			log.Fatalf("Could not add Agones helm repo: %s", err)
 		}
@@ -208,6 +222,8 @@ func installAgonesRelease(version, registry, featureGates, imagePullPolicy, side
 
 	// TODO: Include feature gates. (Current issue with Helm and string formatting of the feature gates.)
 	// 		"--set agones.featureGates=%s "+
+	// Remove this print line which is here to prevent linter complaining about featureGates not used.
+	log.Printf("Agones Version %s, FeatureGates %s", version, featureGates)
 
 	helmString := fmt.Sprintf(
 		"upgrade --install --atomic --wait --timeout=10m --namespace=agones-system --create-namespace --version %s "+
@@ -226,7 +242,7 @@ func installAgonesRelease(version, registry, featureGates, imagePullPolicy, side
 
 	helmArgs := strings.Split(helmString, " ")
 
-	_, err := runExecCommand(HELM_CMD, helmArgs...)
+	_, err := runExecCommand(HelmCmd, helmArgs...)
 	if err != nil {
 		return err
 	}
@@ -236,15 +252,14 @@ func installAgonesRelease(version, registry, featureGates, imagePullPolicy, side
 
 func runConfigWalker(ctx context.Context, validConfigs []*configTest) {
 	for _, config := range validConfigs {
-		registry := AGONES_REGISTRY
-		chart := HELM_CHART
-		if config.agonesVersion == DEV {
+		registry := AgonesRegistry
+		chart := HelmChart
+		if config.agonesVersion == Dev {
 			// TODO: Update to templated value for registry and chart for Dev build
 			continue
 		}
-
-		err := installAgonesRelease(config.agonesVersion, registry, config.featureGates, IMAGE_PULL_POLICY,
-			SIDECAR_PULL_POLICY, LOG_LEVEL, chart)
+		err := installAgonesRelease(config.agonesVersion, registry, config.featureGates, ImagePullPolicy,
+			SidecarPullPolicy, LogLevel, chart)
 		if err != nil {
 			log.Printf("installAgonesRelease err: %s", err)
 		}
@@ -258,7 +273,6 @@ func runConfigWalker(ctx context.Context, validConfigs []*configTest) {
 			}
 			return false, nil
 		})
-
 		if err != nil || helmStatus != "deployed" {
 			log.Fatalf("PollUntilContextTimeout timed out while attempting upgrade to Agones version %s. Helm Status %s",
 				config.agonesVersion, helmStatus)
@@ -270,9 +284,9 @@ func runConfigWalker(ctx context.Context, validConfigs []*configTest) {
 func checkHelmStatus(agonesVersion string) string {
 	helmStatus := helmStatuses{}
 	checkStatus := []string{"list", "-a", "-nagones-system", "-ojson"}
-	out, err := runExecCommand(HELM_CMD, checkStatus...)
+	out, err := runExecCommand(HelmCmd, checkStatus...)
 	if err != nil {
-		log.Fatalf("Could not run command %s %s, err: %s", KUBECTL_CMD, checkStatus, err)
+		log.Fatalf("Could not run command %s %s, err: %s", KubectlCmd, checkStatus, err)
 	}
 
 	err = json.Unmarshal(out, &helmStatus)
@@ -286,4 +300,40 @@ func checkHelmStatus(agonesVersion string) string {
 		}
 	}
 	return ""
+}
+
+// Creates a gameserver yaml file from the mounted gameserver.yaml template. The name of the new
+// gameserver yaml is based on the Agones version, i.e. gs1440.yaml for Agones version 1.44.0
+func createGameServerFile(agonesVersion string) string {
+	gsTmpl := gameServerTemplate{Registry: TestRegistry, AgonesVersion: agonesVersion}
+
+	gsTemplate, err := template.ParseFiles("gameserver.yaml")
+	if err != nil {
+		log.Fatal("Could not ParseFiles template gameserver.yaml", err)
+	}
+
+	// Must use /tmp since the container is a non-root user.
+	gsPath := strings.ReplaceAll("/tmp/gs"+agonesVersion, ".", "")
+	gsPath += ".yaml"
+	// Check if the file already exists
+	if _, err := os.Stat(gsPath); err == nil {
+		return gsPath
+	}
+	gsFile, err := os.Create(gsPath)
+	if err != nil {
+		log.Fatal("Could not create file ", err)
+	}
+
+	err = gsTemplate.Execute(gsFile, gsTmpl)
+	if err != nil {
+		if fErr := gsFile.Close(); fErr != nil {
+			log.Printf("Could not close game server file %s, err: %s", gsPath, fErr)
+		}
+		log.Fatal("Could not Execute template gameserver.yaml ", err)
+	}
+	if err = gsFile.Close(); err != nil {
+		log.Printf("Could not close game server file %s, err: %s", gsPath, err)
+	}
+
+	return gsPath
 }
