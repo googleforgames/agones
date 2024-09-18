@@ -157,7 +157,16 @@ func main() {
 	}
 	var health healthcheck.Handler
 
-	health, closer := metrics.SetupMetrics(ctlConf.Stackdriver, ctlConf.PrometheusMetrics, ctlConf.GCPProjectID, ctlConf.StackdriverLabels, server) //add  ,logger in arg
+	metricsConf := metrics.MetricsConfig{
+		Stackdriver:       ctlConf.Stackdriver,
+		PrometheusMetrics: ctlConf.PrometheusMetrics,
+		GCPProjectID:      ctlConf.GCPProjectID,
+		StackdriverLabels: ctlConf.StackdriverLabels,
+	}
+
+	health, closer := metrics.SetupMetrics(metricsConf, server)
+
+	//health, closer := metrics.SetupMetrics(ctlConf.Stackdriver, ctlConf.PrometheusMetrics, ctlConf.GCPProjectID, ctlConf.StackdriverLabels, server) //add  ,logger in arg
 	defer closer()
 
 	podReady = true
