@@ -23,15 +23,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/heptiolabs/healthcheck"
-	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
-	"github.com/spf13/pflag"
-	"github.com/spf13/viper"
-	"gopkg.in/natefinch/lumberjack.v2"
-	"k8s.io/client-go/informers"
-	"k8s.io/client-go/kubernetes"
-
 	"agones.dev/agones/pkg"
 	"agones.dev/agones/pkg/client/clientset/versioned"
 	"agones.dev/agones/pkg/client/informers/externalversions"
@@ -48,6 +39,14 @@ import (
 	"agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/signals"
 	"agones.dev/agones/pkg/util/webhooks"
+	"github.com/heptiolabs/healthcheck"
+	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
+	"github.com/spf13/pflag"
+	"github.com/spf13/viper"
+	"gopkg.in/natefinch/lumberjack.v2"
+	"k8s.io/client-go/informers"
+	"k8s.io/client-go/kubernetes"
 )
 
 const (
