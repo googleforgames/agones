@@ -29,6 +29,7 @@ import (
 	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/types"
@@ -459,7 +460,12 @@ func (s *SDKServer) patchGameServer(ctx context.Context, gs, gsCopy *agonesv1.Ga
 		return nil, err
 	}
 
-	return s.gameServerGetter.GameServers(s.namespace).Patch(ctx, gs.GetObjectMeta().GetName(), types.JSONPatchType, patch, metav1.PatchOptions{})
+	gs, err = s.gameServerGetter.GameServers(s.namespace).Patch(ctx, gs.GetObjectMeta().GetName(), types.JSONPatchType, patch, metav1.PatchOptions{})
+	// if the test operation fails, no reason to error log
+	if err != nil && k8serrors.IsInvalid(err) {
+		err = workerqueue.NewTraceError(err)
+	}
+	return gs, errors.Wrapf(err, "error attempting to patch gameserver: %s/%s", gsCopy.ObjectMeta.Namespace, gsCopy.ObjectMeta.Name)
 }
 
 // updateLabels updates the labels on this GameServer to the ones persisted in SDKServer,

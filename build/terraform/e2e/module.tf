@@ -38,7 +38,6 @@ variable "kubernetes_versions" {
   description = "Create e2e test clusters with these k8s versions in these regions"
   type        = map(list(string))
   default     = {
-    "1.27" = ["us-east1", "RAPID"]
     "1.28" = ["us-west1", "RAPID"]
     "1.29" = ["europe-west1", "RAPID"]
     "1.30" = ["asia-east1", "RAPID"]
