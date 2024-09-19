@@ -251,6 +251,10 @@ func installAgonesRelease(version, registry, featureGates, imagePullPolicy, side
 }
 
 func runConfigWalker(ctx context.Context, validConfigs []*configTest) {
+	// Done channel ensures that the createGameServers starts after the Agones version has been
+	// installed runs until the next Agones version has been installed.
+	done := make(chan bool)
+
 	for _, config := range validConfigs {
 		registry := AgonesRegistry
 		chart := HelmChart
@@ -277,7 +281,23 @@ func runConfigWalker(ctx context.Context, validConfigs []*configTest) {
 			log.Fatalf("PollUntilContextTimeout timed out while attempting upgrade to Agones version %s. Helm Status %s",
 				config.agonesVersion, helmStatus)
 		}
+
+		// Install Gameservers at the existing version.
+		// Start multiple GameServers (start one every X seconds).
+		// Each GameServer shuts itself down when done (part of the sdk-client-test.go)
+		// Run concurrently (do not block surrounding for loop)
+		// Run until we reach this line of code again (the next version of Agones has been installed).
+		// TODO:
+		// Create Watcher if the GameServer fails, (log.Fatalf), log info (current Agones version, Game
+		//  server version, what Agones version is being installed) and fail this test and end job.
+		close(done)
+		done = make(chan bool)
+		go createGameServers(done, config.gameServerPath)
 	}
+	// TODO:
+	// Wait for the existing Game Servers finish naturally by reaching their shutdown phase.
+	time.Sleep(2 * time.Minute)
+	close(done)
 }
 
 // checkHelmStatus returns the status of the Helm release at a specified agonesVersion if it exists.
@@ -336,4 +356,25 @@ func createGameServerFile(agonesVersion string) string {
 	}
 
 	return gsPath
+}
+
+// Create a game server every two seconds until the channel is closed.
+func createGameServers(done chan bool, gsPath string) {
+	args := []string{"create", "-f", gsPath}
+	ticker := time.NewTicker(5 * time.Second)
+
+	for {
+		select {
+		case <-done:
+			ticker.Stop()
+			return
+		case <-ticker.C:
+			_, err := runExecCommand(KubectlCmd, args...)
+			// TODO: Do not ignore error if unable to create due to something other than cluster scale up
+			if err != nil {
+				// log.Fatalf("Could not create Gameserver %s: %s", gsPath, err)
+				log.Printf("Could not create Gameserver %s: %s", gsPath, err)
+			}
+		}
+	}
 }

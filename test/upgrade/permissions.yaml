@@ -439,6 +439,9 @@ subjects:
   - kind: User
     name: system:serviceaccount:default:agones-sa
     apiGroup: rbac.authorization.k8s.io
+  - kind: ServiceAccount
+    name: agones-sa
+    namespace: default
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -488,6 +491,9 @@ subjects:
   - kind: User
     name: system:serviceaccount:default:agones-sa
     apiGroup: rbac.authorization.k8s.io
+  - kind: ServiceAccount
+    name: agones-sa
+    namespace: default
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole

@@ -31,6 +31,19 @@ data:
         - name: default
           portPolicy: Dynamic
           containerPort: 7654
+      sdkServer:
+        logLevel: Debug
+      counters:
+        rooms:
+          count: 1
+          capacity: 10
+      lists:
+        players:
+          capacity: 100
+          values:
+            - test0
+            - test1
+            - test2
       template:
         metadata:
           labels:
@@ -39,6 +52,13 @@ data:
           containers:
             - name: sdk-client-test
               image: "{{ .Registry }}:{{ .AgonesVersion }}"
+              imagePullPolicy: Always
+              startupProbe:
+                httpGet:
+                  path: /healthz
+                  port: 8080
+                failureThreshold: 240
+                periodSeconds: 5
               resources:
                 requests:
                   memory: 64Mi
@@ -46,3 +66,4 @@ data:
                 limits:
                   memory: 64Mi
                   cpu: 20m
+          serviceAccountName: agones-sa
