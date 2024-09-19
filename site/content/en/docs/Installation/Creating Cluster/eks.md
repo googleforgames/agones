@@ -41,7 +41,7 @@ For Agones to work correctly, we need to allow UDP traffic to pass through to ou
 * Select **Inbound Rules**
 * **Edit Rules** to add a new **Custom UDP Rule** with a 7000-8000 port range and an appropriate **Source** CIDR range (`0.0.0.0/0` allows all traffic)
 
-{{% feature publishVersion="1.43.0" %}}
+{{% feature publishVersion="1.44.0" %}}
 ## Use with custom CNI plugins
 
 To ensure compatibility with custom CNI plugins (such as Calico or [Cilium](https://docs.cilium.io/en/stable/installation/k8s-install-helm/)), configure extensions application to use `hostNetwork` for proper functionality via the `agones.extensions.hostNetwork` Agones [Helm]({{ ref "something-I-can't-do-off-the-top-of-my-head"}}) variable. Also make sure to set the `agones.extensions.http.port` and the `agones.extensions.webhooks.port` values as well.
