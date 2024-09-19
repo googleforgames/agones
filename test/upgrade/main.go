@@ -30,8 +30,10 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/cache"
 )
 
 const (
@@ -70,10 +72,24 @@ var (
 
 func main() {
 	ctx := context.Background()
+	cfg, err := rest.InClusterConfig()
+	if err != nil {
+		log.Fatal("Could not create in cluster config", cfg)
+	}
 
-	validConfigs := configTestSetup(ctx)
+	kubeClient, err := kubernetes.NewForConfig(cfg)
+	if err != nil {
+		log.Fatal("Could not create the kubernetes api clientset", err)
+	}
+
+	stopWatch := make(chan struct{})
+	go watchGameServerPods(kubeClient, stopWatch)
+
+	validConfigs := configTestSetup(ctx, kubeClient)
 	addAgonesRepo()
-	runConfigWalker(ctx, validConfigs)
+	runConfigWalker(ctx, validConfigs, kubeClient)
+
+	close(stopWatch)
 }
 
 type versionMappings struct {
@@ -108,11 +124,11 @@ type helmStatuses []struct {
 }
 
 // Determine test scenario to run
-func configTestSetup(ctx context.Context) []*configTest {
+func configTestSetup(ctx context.Context, kubeClient *kubernetes.Clientset) []*configTest {
 	versionMap := versionMappings{}
 
 	// Find the Kubernetes version of the node that this test is running on.
-	k8sVersion := findK8sVersion(ctx)
+	k8sVersion := findK8sVersion(ctx, kubeClient)
 
 	// Get the mappings of valid Kubernetes, Agones, and Feature Gate versions from the configmap.
 	err := json.Unmarshal([]byte(VersionMappings), &versionMap)
@@ -142,20 +158,10 @@ func configTestSetup(ctx context.Context) []*configTest {
 
 // Finds the Kubernetes version of the Kubelet on the node that the current pod is running on.
 // The Kubelet version is the same version as the node.
-func findK8sVersion(ctx context.Context) string {
-	cfg, err := rest.InClusterConfig()
-	if err != nil {
-		log.Fatal("Could not create in cluster config", cfg)
-	}
-
-	kubeClient, err := kubernetes.NewForConfig(cfg)
-	if err != nil {
-		log.Fatal("Could not create the kubernetes api clientset", err)
-	}
-
+func findK8sVersion(ctx context.Context, kubeClient *kubernetes.Clientset) string {
 	// Wait to get pod and node as these may take a while to start on a new Autopilot cluster.
 	var pod *v1.Pod
-	err = wait.PollUntilContextTimeout(ctx, 5*time.Second, 7*time.Minute, true, func(ctx context.Context) (done bool, err error) {
+	err := wait.PollUntilContextTimeout(ctx, 5*time.Second, 7*time.Minute, true, func(ctx context.Context) (done bool, err error) {
 		pod, err = kubeClient.CoreV1().Pods(PodNamespace).Get(ctx, PodName, metav1.GetOptions{})
 		if err != nil {
 			return false, nil
@@ -250,7 +256,7 @@ func installAgonesRelease(version, registry, featureGates, imagePullPolicy, side
 	return err
 }
 
-func runConfigWalker(ctx context.Context, validConfigs []*configTest) {
+func runConfigWalker(ctx context.Context, validConfigs []*configTest, kubeClient *kubernetes.Clientset) {
 	// Done channel ensures that the createGameServers starts after the Agones version has been
 	// installed runs until the next Agones version has been installed.
 	done := make(chan bool)
@@ -372,9 +378,35 @@ func createGameServers(done chan bool, gsPath string) {
 			_, err := runExecCommand(KubectlCmd, args...)
 			// TODO: Do not ignore error if unable to create due to something other than cluster scale up
 			if err != nil {
-				// log.Fatalf("Could not create Gameserver %s: %s", gsPath, err)
 				log.Printf("Could not create Gameserver %s: %s", gsPath, err)
 			}
 		}
 	}
+}
+
+// watchGameServerPods watches all pods for CrashLoopBackOff
+func watchGameServerPods(kubeClient *kubernetes.Clientset, stopWatch chan struct{}) {
+	kubeInformerFactory := informers.NewSharedInformerFactory(kubeClient, 5*time.Second)
+	podInformer := kubeInformerFactory.Core().V1().Pods().Informer()
+	log.Println("We're in watchGameServerPods")
+
+	_, err := podInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
+		UpdateFunc: func(_, newObj interface{}) {
+			newPod := newObj.(*v1.Pod)
+			for _, cs := range newPod.Status.ContainerStatuses {
+				if cs.Name == "sdk-client-test" && cs.State.Waiting != nil {
+					log.Printf("cs.State.Waiting.Reason: %s for pod: %s", cs.State.Waiting.Reason, newPod.Name)
+				}
+			}
+		},
+	})
+	if err != nil {
+		log.Fatal("Not able to create AddEventHandler", err)
+	}
+
+	go podInformer.Run(stopWatch)
+	if !cache.WaitForCacheSync(stopWatch, podInformer.HasSynced) {
+		log.Fatal("Timed out waiting for caches to sync")
+	}
+	<-stopWatch
 }
