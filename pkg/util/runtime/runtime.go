@@ -48,7 +48,7 @@ func init() {
 		},
 	})
 
-	runtime.ErrorHandlers[0] = func(_ context.Context, err error, msg string, keysAndValues ...interface{}) {
+	runtime.ErrorHandlers[0] = func(_ context.Context, err error, _ string, _ ...interface{}) {
 		if stackTrace, ok := err.(stackTracer); ok {
 			var stack []string
 			for _, f := range stackTrace.StackTrace() {

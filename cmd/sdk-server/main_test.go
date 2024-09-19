@@ -52,7 +52,7 @@ func TestHealthCheckWrapper(t *testing.T) {
 		{"non-empty body", bytes.NewBuffer([]byte(`{}`)), http.StatusOK},
 	}
 
-	testWrapper := healthCheckWrapper(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	testWrapper := healthCheckWrapper(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	}))
 

@@ -172,7 +172,7 @@ func TestPerNodeCounterRun(t *testing.T) {
 	gs4.ObjectMeta.Name = "gs4"
 	gs4.Status.State = agonesv1.GameServerStateAllocated
 
-	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+	m.AgonesClient.AddReactor("list", "gameservers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 		return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{*gs1, *gs2, *gs3, *gs4}}, nil
 	})
 

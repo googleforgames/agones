@@ -889,7 +889,7 @@ func (c *Controller) syncGameServerStartingState(ctx context.Context, gs *agones
 	}
 
 	// Ensure the pod IPs are populated
-	if pod.Status.PodIPs == nil || len(pod.Status.PodIPs) == 0 {
+	if len(pod.Status.PodIPs) == 0 {
 		return gs, workerqueue.NewTraceError(errors.Errorf("pod IPs not yet populated for Pod %s", pod.ObjectMeta.Name))
 	}
 

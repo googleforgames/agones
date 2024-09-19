@@ -33,7 +33,7 @@ func (ts *testServer) Shutdown(_ context.Context) error {
 }
 
 // ListenAndServeTLS(certFile, keyFile string) error
-func (ts *testServer) ListenAndServeTLS(certFile, keyFile string) error {
+func (ts *testServer) ListenAndServeTLS(_, _ string) error {
 	ts.server.StartTLS()
 	return nil
 }

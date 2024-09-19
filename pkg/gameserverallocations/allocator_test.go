@@ -58,7 +58,7 @@ func TestAllocatorAllocate(t *testing.T) {
 
 	gsList[3].ObjectMeta.DeletionTimestamp = &n
 
-	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
+	m.AgonesClient.AddReactor("list", "gameservers", func(_ k8stesting.Action) (bool, k8sruntime.Object, error) {
 		return true, &agonesv1.GameServerList{Items: gsList}, nil
 	})
 
@@ -81,7 +81,7 @@ func TestAllocatorAllocate(t *testing.T) {
 
 	require.NoError(t, a.Run(ctx))
 	// wait for it to be up and running
-	err := wait.PollUntilContextTimeout(context.Background(), time.Second, 10*time.Second, true, func(ctx context.Context) (done bool, err error) {
+	err := wait.PollUntilContextTimeout(context.Background(), time.Second, 10*time.Second, true, func(_ context.Context) (done bool, err error) {
 		return a.allocationCache.workerqueue.RunCount() == 1, nil
 	})
 	require.NoError(t, err)
@@ -145,7 +145,7 @@ func TestAllocatorAllocatePriority(t *testing.T) {
 		gsList[2].Status.NodeName = n1
 		gsList[3].Status.NodeName = n1
 
-		m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
+		m.AgonesClient.AddReactor("list", "gameservers", func(_ k8stesting.Action) (bool, k8sruntime.Object, error) {
 			return true, &agonesv1.GameServerList{Items: gsList}, nil
 		})
 
@@ -164,7 +164,7 @@ func TestAllocatorAllocatePriority(t *testing.T) {
 
 		require.NoError(t, a.Run(ctx))
 		// wait for it to be up and running
-		err := wait.PollUntilContextTimeout(context.Background(), time.Second, 10*time.Second, true, func(ctx context.Context) (done bool, err error) {
+		err := wait.PollUntilContextTimeout(context.Background(), time.Second, 10*time.Second, true, func(_ context.Context) (done bool, err error) {
 			return a.allocationCache.workerqueue.RunCount() == 1, nil
 		})
 		require.NoError(t, err)
@@ -431,7 +431,7 @@ func TestAllocationApplyAllocationError(t *testing.T) {
 	m := agtesting.NewMocks()
 	ctx := context.Background()
 
-	m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
+	m.AgonesClient.AddReactor("update", "gameservers", func(_ k8stesting.Action) (bool, k8sruntime.Object, error) {
 		return true, nil, errors.New("failed to update")
 	})
 
@@ -461,7 +461,7 @@ func TestAllocatorAllocateOnGameServerUpdateError(t *testing.T) {
 	// make sure there is more than can be retried, so there is always at least some.
 	gsLen := allocationRetry.Steps * 2
 	_, gsList := defaultFixtures(gsLen)
-	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
+	m.AgonesClient.AddReactor("list", "gameservers", func(_ k8stesting.Action) (bool, k8sruntime.Object, error) {
 		return true, &agonesv1.GameServerList{Items: gsList}, nil
 	})
 	m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
@@ -525,7 +525,7 @@ func TestAllocatorRunLocalAllocations(t *testing.T) {
 		gsList[0].Status.NodeName = "special"
 
 		a, m := newFakeAllocator()
-		m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
+		m.AgonesClient.AddReactor("list", "gameservers", func(_ k8stesting.Action) (bool, k8sruntime.Object, error) {
 			return true, &agonesv1.GameServerList{Items: gsList}, nil
 		})
 		updateCount := 0
@@ -682,7 +682,7 @@ func TestAllocatorRunLocalAllocationsCountsAndLists(t *testing.T) {
 
 	gsList := []agonesv1.GameServer{gs1, gs2, gs3, gs4, gs5, gs6}
 
-	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
+	m.AgonesClient.AddReactor("list", "gameservers", func(_ k8stesting.Action) (bool, k8sruntime.Object, error) {
 		return true, &agonesv1.GameServerList{Items: gsList}, nil
 	})
 
@@ -985,7 +985,7 @@ func TestAllocatorCreateRestClientError(t *testing.T) {
 		a, m := newFakeAllocator()
 
 		m.KubeClient.AddReactor("list", "secrets",
-			func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
+			func(_ k8stesting.Action) (bool, k8sruntime.Object, error) {
 				return true, &corev1.SecretList{
 					Items: []corev1.Secret{{
 						Data: map[string][]byte{
@@ -1012,7 +1012,7 @@ func TestAllocatorCreateRestClientError(t *testing.T) {
 		a, m := newFakeAllocator()
 
 		m.KubeClient.AddReactor("list", "secrets",
-			func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
+			func(_ k8stesting.Action) (bool, k8sruntime.Object, error) {
 				return true, &corev1.SecretList{
 					Items: []corev1.Secret{{
 						Data: map[string][]byte{
@@ -1040,7 +1040,7 @@ func TestAllocatorCreateRestClientError(t *testing.T) {
 		a, m := newFakeAllocator()
 
 		m.KubeClient.AddReactor("list", "secrets",
-			func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
+			func(_ k8stesting.Action) (bool, k8sruntime.Object, error) {
 				return true, getTestSecret("secret-name", clientCert), nil
 			})
 
@@ -1059,7 +1059,7 @@ func TestAllocatorCreateRestClientError(t *testing.T) {
 		a, m := newFakeAllocator()
 
 		m.KubeClient.AddReactor("list", "secrets",
-			func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
+			func(_ k8stesting.Action) (bool, k8sruntime.Object, error) {
 				return true, getTestSecret("secret-name", []byte("XXX")), nil
 			})
 

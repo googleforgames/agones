@@ -100,7 +100,7 @@ func TestHostName(t *testing.T) {
 			setup: func(gs *agonesv1.GameServer) {
 				gs.ObjectMeta.GenerateName = "game-server-1.0-"
 			},
-			test: func(gs *agonesv1.GameServer, pod *corev1.Pod) {
+			test: func(_ *agonesv1.GameServer, pod *corev1.Pod) {
 				expected := "game-server-1-0-"
 				// since it's a generated name, we just check the beginning.
 				assert.Equal(t, expected, pod.Spec.Hostname[:len(expected)])
@@ -383,7 +383,7 @@ func TestGameServerRestartBeforeReadyCrash(t *testing.T) {
 	}
 
 	logger.Info("crashing, and waiting to see restart")
-	err = messageAndWait(newGs, "CRASH", func(gs *agonesv1.GameServer, pod *corev1.Pod) bool {
+	err = messageAndWait(newGs, "CRASH", func(_ *agonesv1.GameServer, pod *corev1.Pod) bool {
 		for _, c := range pod.Status.ContainerStatuses {
 			if c.Name == newGs.Spec.Container && c.RestartCount > 0 {
 				logger.Info("successfully crashed. Moving on!")
@@ -407,7 +407,7 @@ func TestGameServerRestartBeforeReadyCrash(t *testing.T) {
 	// for this to come back up -- or we could get a delayed CRASH, so we have to
 	// wait for the process to restart again to fire the SDK.Ready()
 	logger.Info("marking GameServer as ready")
-	err = messageAndWait(newGs, "READY", func(gs *agonesv1.GameServer, pod *corev1.Pod) bool {
+	err = messageAndWait(newGs, "READY", func(gs *agonesv1.GameServer, _ *corev1.Pod) bool {
 		if gs.Status.State == agonesv1.GameServerStateReady {
 			logger.Info("ready! Moving On!")
 			return true
@@ -419,7 +419,7 @@ func TestGameServerRestartBeforeReadyCrash(t *testing.T) {
 	// now crash, should be unhealthy, since it's after being Ready
 	logger.Info("crashing again, should be unhealthy")
 	// retry on crash, as with the restarts, sometimes Go takes a moment to send this through.
-	err = messageAndWait(newGs, "CRASH", func(gs *agonesv1.GameServer, pod *corev1.Pod) bool {
+	err = messageAndWait(newGs, "CRASH", func(gs *agonesv1.GameServer, _ *corev1.Pod) bool {
 		logger.WithField("gs", gs.ObjectMeta.Name).WithField("state", gs.Status.State).
 			Info("checking final crash state")
 		if gs.Status.State == agonesv1.GameServerStateUnhealthy {
@@ -691,7 +691,7 @@ func TestGameServerWithPortsMappedToMultipleContainers(t *testing.T) {
 	timeOut := 60 * time.Second
 
 	expectedMsg1 := "Ping 1"
-	errPoll := wait.PollUntilContextTimeout(context.Background(), interval, timeOut, true, func(ctx context.Context) (done bool, err error) {
+	errPoll := wait.PollUntilContextTimeout(context.Background(), interval, timeOut, true, func(_ context.Context) (done bool, err error) {
 		res, err := framework.SendGameServerUDPToPort(t, readyGs, firstPort, expectedMsg1)
 		if err != nil {
 			t.Logf("Could not message GameServer on %s: %v. Will try again...", firstPort, err)
@@ -703,7 +703,7 @@ func TestGameServerWithPortsMappedToMultipleContainers(t *testing.T) {
 	}
 
 	expectedMsg2 := "Ping 2"
-	errPoll = wait.PollUntilContextTimeout(context.Background(), interval, timeOut, true, func(ctx context.Context) (done bool, err error) {
+	errPoll = wait.PollUntilContextTimeout(context.Background(), interval, timeOut, true, func(_ context.Context) (done bool, err error) {
 		res, err := framework.SendGameServerUDPToPort(t, readyGs, secondPort, expectedMsg2)
 		if err != nil {
 			t.Logf("Could not message GameServer on %s: %v. Will try again...", secondPort, err)

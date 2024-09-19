@@ -41,7 +41,7 @@ func TestWaitForEstablishedCRD(t *testing.T) {
 
 	t.Run("CRD already established", func(t *testing.T) {
 		extClient := &extfake.Clientset{}
-		extClient.AddReactor("get", "customresourcedefinitions", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		extClient.AddReactor("get", "customresourcedefinitions", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, crd, nil
 		})
 
@@ -54,7 +54,7 @@ func TestWaitForEstablishedCRD(t *testing.T) {
 		m := sync.RWMutex{}
 		established := false
 
-		extClient.AddReactor("get", "customresourcedefinitions", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		extClient.AddReactor("get", "customresourcedefinitions", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			m.RLock()
 			defer m.RUnlock()
 			if established {

@@ -96,7 +96,7 @@ func TestAutoscalerBasicFunctions(t *testing.T) {
 
 	// do an allocation and watch the fleet scale up
 	gsa := framework.CreateAndApplyAllocation(t, flt)
-	framework.AssertFleetCondition(t, flt, func(log *logrus.Entry, fleet *agonesv1.Fleet) bool {
+	framework.AssertFleetCondition(t, flt, func(_ *logrus.Entry, fleet *agonesv1.Fleet) bool {
 		return fleet.Status.AllocatedReplicas == 1
 	})
 
@@ -115,7 +115,7 @@ func TestAutoscalerBasicFunctions(t *testing.T) {
 	require.True(t, fas.Status.AbleToScale, "Could not get AbleToScale status")
 
 	// check that we are able to scale
-	framework.WaitForFleetAutoScalerCondition(t, fas, func(log *logrus.Entry, fas *autoscalingv1.FleetAutoscaler) bool {
+	framework.WaitForFleetAutoScalerCondition(t, fas, func(_ *logrus.Entry, fas *autoscalingv1.FleetAutoscaler) bool {
 		return !fas.Status.ScalingLimited
 	})
 
@@ -124,7 +124,7 @@ func TestAutoscalerBasicFunctions(t *testing.T) {
 	require.NoError(t, err, "could not patch fleetautoscaler")
 
 	// check that we are not able to scale
-	framework.WaitForFleetAutoScalerCondition(t, fas, func(log *logrus.Entry, fas *autoscalingv1.FleetAutoscaler) bool {
+	framework.WaitForFleetAutoScalerCondition(t, fas, func(_ *logrus.Entry, fas *autoscalingv1.FleetAutoscaler) bool {
 		return fas.Status.ScalingLimited
 	})
 
@@ -132,7 +132,7 @@ func TestAutoscalerBasicFunctions(t *testing.T) {
 	gp := int64(1)
 	err = stable.GameServers(framework.Namespace).Delete(ctx, gsa.Status.GameServerName, metav1.DeleteOptions{GracePeriodSeconds: &gp})
 	require.NoError(t, err)
-	framework.AssertFleetCondition(t, flt, func(log *logrus.Entry, fleet *agonesv1.Fleet) bool {
+	framework.AssertFleetCondition(t, flt, func(_ *logrus.Entry, fleet *agonesv1.Fleet) bool {
 		return fleet.Status.AllocatedReplicas == 0 &&
 			fleet.Status.ReadyReplicas == 1 &&
 			fleet.Status.Replicas == 1
@@ -233,7 +233,7 @@ func TestFleetAutoScalerRollingUpdate(t *testing.T) {
 	assert.True(t, fas.Status.AbleToScale, "Could not get AbleToScale status")
 
 	// check that we are able to scale
-	framework.WaitForFleetAutoScalerCondition(t, fas, func(log *logrus.Entry, fas *autoscalingv1.FleetAutoscaler) bool {
+	framework.WaitForFleetAutoScalerCondition(t, fas, func(_ *logrus.Entry, fas *autoscalingv1.FleetAutoscaler) bool {
 		return !fas.Status.ScalingLimited
 	})
 
@@ -623,11 +623,11 @@ func TestFleetAutoscalerTLSWebhook(t *testing.T) {
 		assert.FailNow(t, "Failed creating autoscaler, aborting TestTlsWebhook")
 	}
 	framework.CreateAndApplyAllocation(t, flt)
-	framework.AssertFleetCondition(t, flt, func(log *logrus.Entry, fleet *agonesv1.Fleet) bool {
+	framework.AssertFleetCondition(t, flt, func(_ *logrus.Entry, fleet *agonesv1.Fleet) bool {
 		return fleet.Status.AllocatedReplicas == 1
 	})
 
-	framework.AssertFleetCondition(t, flt, func(log *logrus.Entry, fleet *agonesv1.Fleet) bool {
+	framework.AssertFleetCondition(t, flt, func(_ *logrus.Entry, fleet *agonesv1.Fleet) bool {
 		return fleet.Status.Replicas > initialReplicasCount
 	})
 }
@@ -1010,7 +1010,7 @@ func TestCounterAutoscalerAllocated(t *testing.T) {
 				_, err := framework.AgonesClient.AllocationV1().GameServerAllocations(flt.ObjectMeta.Namespace).Create(ctx, gsa.DeepCopy(), metav1.CreateOptions{})
 				require.NoError(t, err)
 			}
-			framework.AssertFleetCondition(t, flt, func(entry *logrus.Entry, fleet *agonesv1.Fleet) bool {
+			framework.AssertFleetCondition(t, flt, func(_ *logrus.Entry, fleet *agonesv1.Fleet) bool {
 				log.WithField("fleet", fmt.Sprintf("%+v", fleet.Status)).Info("Checking for game server allocations")
 				return fleet.Status.AllocatedReplicas == testCase.wantAllocatedGs
 			})
@@ -1036,7 +1036,7 @@ func TestCounterAutoscalerAllocated(t *testing.T) {
 			assert.NoError(t, err)
 			defer fleetautoscalers.Delete(ctx, fas.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
 
-			framework.AssertFleetCondition(t, flt, func(entry *logrus.Entry, fleet *agonesv1.Fleet) bool {
+			framework.AssertFleetCondition(t, flt, func(_ *logrus.Entry, fleet *agonesv1.Fleet) bool {
 				return fleet.Status.AllocatedReplicas == testCase.wantAllocatedGs && fleet.Status.ReadyReplicas == testCase.wantReadyGs
 			})
 		})
@@ -1294,7 +1294,7 @@ func TestListAutoscalerAllocated(t *testing.T) {
 				_, err := framework.AgonesClient.AllocationV1().GameServerAllocations(flt.ObjectMeta.Namespace).Create(ctx, gsa.DeepCopy(), metav1.CreateOptions{})
 				require.NoError(t, err)
 			}
-			framework.AssertFleetCondition(t, flt, func(entry *logrus.Entry, fleet *agonesv1.Fleet) bool {
+			framework.AssertFleetCondition(t, flt, func(_ *logrus.Entry, fleet *agonesv1.Fleet) bool {
 				log.WithField("fleet", fmt.Sprintf("%+v", fleet.Status)).Info("Checking for game server allocations")
 				return fleet.Status.AllocatedReplicas == testCase.wantAllocatedGs
 			})
@@ -1320,7 +1320,7 @@ func TestListAutoscalerAllocated(t *testing.T) {
 			assert.NoError(t, err)
 			defer fleetautoscalers.Delete(ctx, fas.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
 
-			framework.AssertFleetCondition(t, flt, func(entry *logrus.Entry, fleet *agonesv1.Fleet) bool {
+			framework.AssertFleetCondition(t, flt, func(_ *logrus.Entry, fleet *agonesv1.Fleet) bool {
 				return fleet.Status.AllocatedReplicas == testCase.wantAllocatedGs && fleet.Status.ReadyReplicas == testCase.wantReadyGs
 			})
 
@@ -1334,7 +1334,7 @@ func TestListAutoscalerAllocated(t *testing.T) {
 				require.NoError(t, err)
 			}
 
-			framework.AssertFleetCondition(t, flt, func(entry *logrus.Entry, fleet *agonesv1.Fleet) bool {
+			framework.AssertFleetCondition(t, flt, func(_ *logrus.Entry, fleet *agonesv1.Fleet) bool {
 				log.WithField("fleet", fmt.Sprintf("%+v", fleet.Status)).Info("Checking for second game server allocations")
 				return fleet.Status.AllocatedReplicas == (testCase.wantAllocatedGs+testCase.wantSecondAllocation) &&
 					fleet.Status.ReadyReplicas == testCase.wantSecondReady

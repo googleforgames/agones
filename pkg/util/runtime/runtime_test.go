@@ -30,7 +30,7 @@ func TestHandleError(t *testing.T) {
 	defer func() { runtime.ErrorHandlers = old }()
 	var result error
 	runtime.ErrorHandlers = []runtime.ErrorHandler{
-		func(_ context.Context, err error, msg string, keysAndValues ...interface{}) {
+		func(_ context.Context, err error, _ string, _ ...interface{}) {
 			result = err
 		},
 	}

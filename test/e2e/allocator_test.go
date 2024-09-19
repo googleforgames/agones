@@ -277,7 +277,7 @@ func TestRestAllocatorWithDeprecatedRequired(t *testing.T) {
 	}
 
 	// wait for the allocation system to come online
-	err = wait.PollUntilContextTimeout(context.Background(), 2*time.Second, 5*time.Minute, true, func(ctx context.Context) (bool, error) {
+	err = wait.PollUntilContextTimeout(context.Background(), 2*time.Second, 5*time.Minute, true, func(_ context.Context) (bool, error) {
 		resp, err := client.Do(req)
 		if err != nil {
 			logrus.WithError(err).Info("failed Allocate rest request")
@@ -523,7 +523,7 @@ func TestRestAllocatorWithSelectors(t *testing.T) {
 
 	// wait for the allocation system to come online
 	var response pb.AllocationResponse
-	err = wait.PollUntilContextTimeout(context.Background(), 2*time.Second, 5*time.Minute, true, func(ctx context.Context) (bool, error) {
+	err = wait.PollUntilContextTimeout(context.Background(), 2*time.Second, 5*time.Minute, true, func(_ context.Context) (bool, error) {
 		resp, err := client.Do(req)
 		if err != nil {
 			logrus.WithError(err).Info("failed Allocate rest request")

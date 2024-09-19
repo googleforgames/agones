@@ -38,11 +38,11 @@ func (f FakeAPIHooks) ValidateScheduling(_ apis.SchedulingStrategy, _ *field.Pat
 }
 
 // MutateGameServerPod is called by createGameServerPod to allow for product specific pod mutation.
-func (f FakeAPIHooks) MutateGameServerPod(_ *agonesv1.GameServerSpec, pod *corev1.Pod) error {
+func (f FakeAPIHooks) MutateGameServerPod(_ *agonesv1.GameServerSpec, _ *corev1.Pod) error {
 	return nil
 }
 
 // SetEviction is called by gs.Pod to enforce GameServer.Status.Eviction.
-func (f FakeAPIHooks) SetEviction(_ *agonesv1.Eviction, pod *corev1.Pod) error {
+func (f FakeAPIHooks) SetEviction(_ *agonesv1.Eviction, _ *corev1.Pod) error {
 	return nil
 }
