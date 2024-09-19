@@ -24,6 +24,7 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -108,9 +109,11 @@ type configTest struct {
 	gameServerPath string
 }
 
+// CountsAndLists can be removed from the template once CountsAndLists is GA in all tested versions
 type gameServerTemplate struct {
-	AgonesVersion string
-	Registry      string
+	AgonesVersion  string
+	Registry       string
+	CountsAndLists bool
 }
 
 type helmStatuses []struct {
@@ -140,20 +143,40 @@ func configTestSetup(ctx context.Context, kubeClient *kubernetes.Clientset) []*c
 	configTests := []*configTest{}
 	for _, agonesVersion := range versionMap.K8sToAgonesVersions[k8sVersion] {
 		ct := configTest{}
+		// TODO: create different valid config based off of available feature gates. containsCountsAndLists
+		// will need to be updated to return true for when CountsAndLists=true.
+		countsAndLists := containsCountsAndLists(agonesVersion)
 		ct.agonesVersion = agonesVersion
-		if agonesVersion == "DEV" {
+		if agonesVersion == "Dev" {
 			ct.agonesVersion = Dev
 			// Game server container cannot be created at DEV version due to go.mod only able to access
 			// published Agones versions. Use N-1 for DEV.
-			ct.gameServerPath = createGameServerFile(ReleaseVersion)
+			ct.gameServerPath = createGameServerFile(ReleaseVersion, countsAndLists)
 		} else {
-			ct.gameServerPath = createGameServerFile(agonesVersion)
+			ct.gameServerPath = createGameServerFile(agonesVersion, countsAndLists)
 		}
-		// TODO: create different valid config based off of available feature gates
 		configTests = append(configTests, &ct)
 	}
 
 	return configTests
+}
+
+// containsCountsAndLists returns true if the agonesVersion >= 1.41.0 when the CountsAndLists
+// feature entered Beta (on by default)
+func containsCountsAndLists(agonesVersion string) bool {
+	if agonesVersion == "Dev" {
+		return true
+	}
+	r := regexp.MustCompile(`\d+\.\d+`)
+	strVersion := r.FindString(agonesVersion)
+	floatVersion, err := strconv.ParseFloat(strVersion, 64)
+	if err != nil {
+		log.Fatalf("Could not convert agonesVersion %s to float: %s", agonesVersion, err)
+	}
+	if floatVersion > 1.40 {
+		return true
+	}
+	return false
 }
 
 // Finds the Kubernetes version of the Kubelet on the node that the current pod is running on.
@@ -330,8 +353,8 @@ func checkHelmStatus(agonesVersion string) string {
 
 // Creates a gameserver yaml file from the mounted gameserver.yaml template. The name of the new
 // gameserver yaml is based on the Agones version, i.e. gs1440.yaml for Agones version 1.44.0
-func createGameServerFile(agonesVersion string) string {
-	gsTmpl := gameServerTemplate{Registry: TestRegistry, AgonesVersion: agonesVersion}
+func createGameServerFile(agonesVersion string, countsAndLists bool) string {
+	gsTmpl := gameServerTemplate{Registry: TestRegistry, AgonesVersion: agonesVersion, CountsAndLists: countsAndLists}
 
 	gsTemplate, err := template.ParseFiles("gameserver.yaml")
 	if err != nil {
@@ -360,6 +383,9 @@ func createGameServerFile(agonesVersion string) string {
 	if err = gsFile.Close(); err != nil {
 		log.Printf("Could not close game server file %s, err: %s", gsPath, err)
 	}
+
+	dat, _ := os.ReadFile(gsPath)
+	fmt.Print(string(dat))
 
 	return gsPath
 }

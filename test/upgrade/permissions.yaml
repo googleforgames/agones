@@ -102,28 +102,28 @@ roleRef:
   name: namespace-creator
   apiGroup: rbac.authorization.k8s.io
 ---
-# Helm needs to be able to create secrets
+# Helm needs to be able to perform CRUD operations on secrets
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   namespace: agones-system
-  name: secret-creator
+  name: secret-manager
 rules:
   - apiGroups: [""]
     resources: ["secrets"]
-    verbs: ["get", "watch", "list", "create", "patch", "update"]
+    verbs: ["get", "watch", "list", "create", "patch", "update", "delete"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: create-secrets
+  name: manage-secrets
 subjects:
   - kind: ServiceAccount
     name: agones-sa
     namespace: default
 roleRef:
   kind: ClusterRole
-  name: secret-creator
+  name: secret-manager
   apiGroup: rbac.authorization.k8s.io
 ---
 # Helm needs to be able to create priorityclasses

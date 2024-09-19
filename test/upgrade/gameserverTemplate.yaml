@@ -33,6 +33,7 @@ data:
           containerPort: 7654
       sdkServer:
         logLevel: Debug
+      {{ if .CountsAndLists }}
       counters:
         rooms:
           count: 1
@@ -44,6 +45,7 @@ data:
             - test0
             - test1
             - test2
+      {{ end }}
       template:
         metadata:
           labels:
@@ -53,12 +55,6 @@ data:
             - name: sdk-client-test
               image: "{{ .Registry }}:{{ .AgonesVersion }}"
               imagePullPolicy: Always
-              startupProbe:
-                httpGet:
-                  path: /healthz
-                  port: 8080
-                failureThreshold: 240
-                periodSeconds: 5
               resources:
                 requests:
                   memory: 64Mi
