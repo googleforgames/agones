@@ -43,7 +43,7 @@ For Agones to work correctly, we need to allow UDP traffic to pass through to ou
 
 ## Use with custom CNI plugins
 
-To ensure compatibility with custom CNI plugins (such as Calico or [Cilium](https://docs.cilium.io/en/stable/installation/k8s-install-helm/)), configure extensions application to use `hostNetwork` for proper functionality via the `agones.extensions.hostNetwork` Agones [Helm]({{ ref "something-I-can't-do-off-the-top-of-my-head"}}) variable. Also make sure to set the `agones.extensions.http.port` and the `agones.extensions.webhooks.port` values as well.
+To ensure compatibility with custom CNI plugins (such as Calico or [Cilium](https://docs.cilium.io/en/stable/installation/k8s-install-helm/)), configure extensions application to use `hostNetwork` for proper functionality via the `agones.extensions.hostNetwork` Agones [Helm]({{< relref "../Install Agones/helm.md" >}}) variable. Also make sure to set the `agones.extensions.http.port` and the `agones.extensions.webhooks.port` values as well.
 This requirement arises due to the control plane's inability to reach in-cluster pod endpoints when the data plane operates on a separate network layer ([Github Issue](https://github.com/aws/containers-roadmap/issues/2227)).
 Reconfiguring the kube-apiserver is not possible as it is an AWS managed component.
 
