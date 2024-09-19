@@ -46,7 +46,7 @@ Follow the [Google Cloud Monitoring installation steps](#google-cloud-monitoring
 
 
 | Name                                                  | Description                                                                                                                                                                                 | Type      |
-|-------------------------------------------------------|---------------------------------------------------------------------------p------------------------------------------------------------------------------------------------------------------|-----------|
+|-------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------|
 | agones_gameservers_count                              | The number of gameservers per fleet and status                                                                                                                                              | gauge     |
 | agones_gameserver_allocations_duration_seconds        | The distribution of gameserver allocation requests latencies                                                                                                                                | histogram |
 | agones_gameserver_allocations_retry_total             | The count of gameserver allocation retry until it succeeds | histogram |
