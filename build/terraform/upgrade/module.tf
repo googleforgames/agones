@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC All Rights Reserved.
+// Copyright 2024 Google LLC All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
 
 
 // Run:
-//  terraform init -backend-config="bucket=<YOUR_GCP_ProjectID>-e2e-infra-bucket-tfstate" -backend-config="prefix=terraform/state"
+//  terraform init -backend-config="bucket=<YOUR_GCP_ProjectID>-upgrade-infra-bucket-tfstate" -backend-config="prefix=terraform/state"
 //  terraform apply -var project="<YOUR_GCP_ProjectID>"
 
 terraform {
@@ -35,7 +35,7 @@ terraform {
 
 variable "project" {}
 variable "kubernetes_versions" {
-  description = "Create e2e test clusters with these k8s versions in these regions"
+  description = "Create upgrade test clusters with these k8s versions in these regions"
   type        = map(list(string))
   default     = {
     "1.28" = ["us-west1", "RAPID"]
