@@ -376,7 +376,7 @@ rules:
     verbs: ["patch"]
   - apiGroups: ["agones.dev"]
     resources: ["fleets"]
-    verbs: ["get", "list", "update", "watch"]
+    verbs: ["create", "delete", "get", "list", "update", "watch"]
   - apiGroups: ["agones.dev"]
     resources: ["fleets/status", "gameserversets/status"]
     verbs: ["update"]

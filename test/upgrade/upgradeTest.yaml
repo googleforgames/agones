@@ -42,13 +42,13 @@ spec:
             - configMapRef:
                 name: version-map
           volumeMounts:
-            - name: gs-volume
-              mountPath: gameserver.yaml
-              subPath: "gameserver.yaml"
+            - name: fleet-volume
+              mountPath: fleet.yaml
+              subPath: "fleet.yaml"
       volumes:
-        - name: gs-volume
+        - name: fleet-volume
           configMap:
-            name: gameserver-template
+            name: fleet-template
       priorityClassName: high-priority
       restartPolicy: Never
       serviceAccountName: agones-sa

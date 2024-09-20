@@ -88,7 +88,7 @@ func main() {
 
 	validConfigs := configTestSetup(ctx, kubeClient)
 	addAgonesRepo()
-	runConfigWalker(ctx, validConfigs, kubeClient)
+	runConfigWalker(ctx, validConfigs)
 
 	close(stopWatch)
 }
@@ -104,9 +104,9 @@ type featureGates struct {
 }
 
 type configTest struct {
-	agonesVersion  string
-	featureGates   string
-	gameServerPath string
+	agonesVersion string
+	featureGates  string
+	fleetPath     string
 }
 
 // CountsAndLists can be removed from the template once CountsAndLists is GA in all tested versions
@@ -151,9 +151,9 @@ func configTestSetup(ctx context.Context, kubeClient *kubernetes.Clientset) []*c
 			ct.agonesVersion = Dev
 			// Game server container cannot be created at DEV version due to go.mod only able to access
 			// published Agones versions. Use N-1 for DEV.
-			ct.gameServerPath = createGameServerFile(ReleaseVersion, countsAndLists)
+			ct.fleetPath = createFleetFile(ReleaseVersion, countsAndLists)
 		} else {
-			ct.gameServerPath = createGameServerFile(agonesVersion, countsAndLists)
+			ct.fleetPath = createFleetFile(agonesVersion, countsAndLists)
 		}
 		configTests = append(configTests, &ct)
 	}
@@ -279,11 +279,7 @@ func installAgonesRelease(version, registry, featureGates, imagePullPolicy, side
 	return err
 }
 
-func runConfigWalker(ctx context.Context, validConfigs []*configTest, kubeClient *kubernetes.Clientset) {
-	// Done channel ensures that the createGameServers starts after the Agones version has been
-	// installed runs until the next Agones version has been installed.
-	done := make(chan bool)
-
+func runConfigWalker(ctx context.Context, validConfigs []*configTest) {
 	for _, config := range validConfigs {
 		registry := AgonesRegistry
 		chart := HelmChart
@@ -311,22 +307,17 @@ func runConfigWalker(ctx context.Context, validConfigs []*configTest, kubeClient
 				config.agonesVersion, helmStatus)
 		}
 
-		// Install Gameservers at the existing version.
-		// Start multiple GameServers (start one every X seconds).
-		// Each GameServer shuts itself down when done (part of the sdk-client-test.go)
-		// Run concurrently (do not block surrounding for loop)
-		// Run until we reach this line of code again (the next version of Agones has been installed).
 		// TODO:
 		// Create Watcher if the GameServer fails, (log.Fatalf), log info (current Agones version, Game
 		//  server version, what Agones version is being installed) and fail this test and end job.
-		close(done)
-		done = make(chan bool)
-		go createGameServers(done, config.gameServerPath)
+		createFleet(config.fleetPath)
 	}
-	// TODO:
-	// Wait for the existing Game Servers finish naturally by reaching their shutdown phase.
+	// Wait for a bit of soak time after the last version of Agones has been installed before removing resources.
 	time.Sleep(2 * time.Minute)
-	close(done)
+	// TODO: Delete fleets, uninstall Agones, delete namespace
+	// kubectl get fleets --no-headers -o custom-columns=":metadata.name" | xargs kubectl delete fleets
+	// helm uninstall agones -n agones-system
+	// kubectl delete ns agones-system
 }
 
 // checkHelmStatus returns the status of the Helm release at a specified agonesVersion if it exists.
@@ -351,70 +342,80 @@ func checkHelmStatus(agonesVersion string) string {
 	return ""
 }
 
-// Creates a gameserver yaml file from the mounted gameserver.yaml template. The name of the new
-// gameserver yaml is based on the Agones version, i.e. gs1440.yaml for Agones version 1.44.0
-func createGameServerFile(agonesVersion string, countsAndLists bool) string {
-	gsTmpl := gameServerTemplate{Registry: TestRegistry, AgonesVersion: agonesVersion, CountsAndLists: countsAndLists}
+// Creates a fleet yaml file from the mounted fleet.yaml template. The name of the new
+// fleet yaml is based on the Agones version, i.e. fleet1440.yaml for Agones version 1.44.0
+func createFleetFile(agonesVersion string, countsAndLists bool) string {
+	fleetTmpl := gameServerTemplate{Registry: TestRegistry, AgonesVersion: agonesVersion, CountsAndLists: countsAndLists}
 
-	gsTemplate, err := template.ParseFiles("gameserver.yaml")
+	fleetTemplate, err := template.ParseFiles("fleet.yaml")
 	if err != nil {
-		log.Fatal("Could not ParseFiles template gameserver.yaml", err)
+		log.Fatal("Could not ParseFiles template fleet.yaml", err)
 	}
 
 	// Must use /tmp since the container is a non-root user.
-	gsPath := strings.ReplaceAll("/tmp/gs"+agonesVersion, ".", "")
-	gsPath += ".yaml"
+	fleetPath := strings.ReplaceAll("/tmp/fleet"+agonesVersion, ".", "")
+	fleetPath += ".yaml"
 	// Check if the file already exists
-	if _, err := os.Stat(gsPath); err == nil {
-		return gsPath
+	if _, err := os.Stat(fleetPath); err == nil {
+		return fleetPath
 	}
-	gsFile, err := os.Create(gsPath)
+	fleetFile, err := os.Create(fleetPath)
 	if err != nil {
 		log.Fatal("Could not create file ", err)
 	}
 
-	err = gsTemplate.Execute(gsFile, gsTmpl)
+	err = fleetTemplate.Execute(fleetFile, fleetTmpl)
 	if err != nil {
-		if fErr := gsFile.Close(); fErr != nil {
-			log.Printf("Could not close game server file %s, err: %s", gsPath, fErr)
+		if fErr := fleetFile.Close(); fErr != nil {
+			log.Printf("Could not close fleet file %s, err: %s", fleetPath, fErr)
 		}
-		log.Fatal("Could not Execute template gameserver.yaml ", err)
+		log.Fatal("Could not Execute template fleet.yaml ", err)
 	}
-	if err = gsFile.Close(); err != nil {
-		log.Printf("Could not close game server file %s, err: %s", gsPath, err)
+	if err = fleetFile.Close(); err != nil {
+		log.Printf("Could not close game server file %s, err: %s", fleetPath, err)
 	}
 
-	dat, _ := os.ReadFile(gsPath)
-	fmt.Print(string(dat))
-
-	return gsPath
+	return fleetPath
 }
 
-// Create a game server every two seconds until the channel is closed.
-func createGameServers(done chan bool, gsPath string) {
-	args := []string{"create", "-f", gsPath}
-	ticker := time.NewTicker(5 * time.Second)
+// Installs a Fleet from a fleet.yaml file at the given Fleet path. The game server binary will be
+// the sdk-client-test version in the fleet.yaml. The SDK version will be the same as the version of
+// the Agones controller that created the game server. As the sdk-client-test shuts down after a run
+// of tests the Fleet will create a new game server to replace it.
+func createFleet(fleetPath string) {
+	args := []string{"apply", "-f", fleetPath}
 
-	for {
-		select {
-		case <-done:
-			ticker.Stop()
-			return
-		case <-ticker.C:
-			_, err := runExecCommand(KubectlCmd, args...)
-			// TODO: Do not ignore error if unable to create due to something other than cluster scale up
-			if err != nil {
-				log.Printf("Could not create Gameserver %s: %s", gsPath, err)
-			}
-		}
+	backoff := wait.Backoff{
+		Steps:    5,
+		Duration: 1 * time.Second,
+		Factor:   2.0,
+		Jitter:   0.1,
 	}
+
+	err := wait.ExponentialBackoff(backoff, func() (bool, error) {
+		_, err := runExecCommand(KubectlCmd, args...)
+
+		switch {
+		case err == nil:
+			return true, nil
+		default:
+			return false, nil
+		}
+	})
+
+	if err == nil {
+		return
+	}
+
+	log.Fatalf("Could not create Fleet %s: %s", fleetPath, err)
 }
 
 // watchGameServerPods watches all pods for CrashLoopBackOff
 func watchGameServerPods(kubeClient *kubernetes.Clientset, stopWatch chan struct{}) {
 	kubeInformerFactory := informers.NewSharedInformerFactory(kubeClient, 5*time.Second)
 	podInformer := kubeInformerFactory.Core().V1().Pods().Informer()
-	log.Println("We're in watchGameServerPods")
+
+	// Filter by label agones.dev/role=gameserver
 
 	_, err := podInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		UpdateFunc: func(_, newObj interface{}) {
