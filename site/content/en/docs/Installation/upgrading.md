@@ -106,6 +106,11 @@ of all available configurable parameters.
         2. Any newly created Game Servers will be at the new configuration.
         3. This make it difficult to track when the entire fleet is at a new configuration, and
         increases the liklihood of having multiple Game Server configurations on the same Fleet.
+        4. If your fleet has significant Game Server churn you may run into an issue such as
+        `Internal error occurred: failed calling webhook "mutations.agones.dev": failed to call
+        webhook: Post "https://agones-controller-service.agones-system.svc:443/mutate?timeout=10s":
+        no endpoints available for service "agones-controller-service""`. If you see this error,
+        then confirm that Agones has properly upgraded, and follow instructions for Option 1 above.
 4. Run any other tests to ensure the Agones installation is working as expected.
 5. Congratulations - you have now upgraded to a new version of Agones! 👍
 {{% /feature %}}
