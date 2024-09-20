@@ -82,7 +82,7 @@ func main() {
 	}
 
 	validConfigs := configTestSetup(ctx, kubeClient)
-	go watchGameServerPods(kubeClient, make(chan struct{}), make(chan string, len(validConfigs)*2))
+	go watchGameServerPods(kubeClient, make(chan struct{}), make(map[string]podLog), len(validConfigs)*2)
 	addAgonesRepo()
 	runConfigWalker(ctx, validConfigs)
 	cleanUpResources()
@@ -109,6 +109,11 @@ type gameServerTemplate struct {
 	AgonesVersion  string
 	Registry       string
 	CountsAndLists bool
+}
+
+type podLog struct {
+	SdkVersion        string
+	GameServerVersion string
 }
 
 type helmStatuses []struct {
@@ -395,8 +400,8 @@ func createGameServers(ctx context.Context, gsPath string) {
 }
 
 // watchGameServerPods watches all game server pods for CrashLoopBackOff. Errors if the number of
-// CrashLoopBackOff backoff pods exceeds the stopWatch buffer.
-func watchGameServerPods(kubeClient *kubernetes.Clientset, stopCh chan struct{}, stopWatch chan string) {
+// CrashLoopBackOff backoff pods exceeds the number of acceptedFailures.
+func watchGameServerPods(kubeClient *kubernetes.Clientset, stopCh chan struct{}, failedPods map[string]podLog, acceptedFailures int) {
 	// Filter by label agones.dev/role=gameserver to only game server pods
 	labelOptions := informers.WithTweakListOptions(func(opts *metav1.ListOptions) {
 		opts.LabelSelector = "agones.dev/role=gameserver"
@@ -409,15 +414,16 @@ func watchGameServerPods(kubeClient *kubernetes.Clientset, stopCh chan struct{},
 		UpdateFunc: func(_, newObj interface{}) {
 			newPod := newObj.(*v1.Pod)
 			for _, cs := range newPod.Status.ContainerStatuses {
-				if cs.Name == "sdk-client-test" && cs.State.Waiting != nil && cs.State.Waiting.Reason == "CrashLoopBackOff" {
-					log.Printf("cs.State.Waiting.Reason: %s for pod: %s", cs.State.Waiting.Reason, newPod.Name)
-					// Put failed pods into the channel until it's full.
-					select {
-					case stopWatch <- newPod.Name:
-						return
-					default:
-						log.Fatal("Too many Game Server pods in CrashLoopBackOff")
-					}
+				if cs.Name != "sdk-client-test" || cs.State.Waiting == nil || cs.State.Waiting.Reason != "CrashLoopBackOff" {
+					continue
+				}
+				gsVersion := newPod.Labels["agonesVersion"]
+				sdkVersion := newPod.Annotations["agones.dev/sdk-version"]
+				log.Printf("%s for pod: %s with game server binary version %s, and SDK version %s", cs.State.Waiting.Reason, newPod.Name, gsVersion, sdkVersion)
+				// Put failed pods into the map until it reaches capacity.
+				failedPods[newPod.Name] = podLog{GameServerVersion: gsVersion, SdkVersion: sdkVersion}
+				if len(failedPods) > acceptedFailures {
+					log.Fatalf("Too many Game Server pods in CrashLoopBackOff: %v", failedPods)
 				}
 			}
 		},
