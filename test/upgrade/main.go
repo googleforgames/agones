@@ -305,9 +305,9 @@ func runConfigWalker(ctx context.Context, validConfigs []*configTest) {
 		}
 
 		go createGameServers(cancelCtx, config.gameServerPath)
+		// Allow some soak time at the Agones version before next upgrade
+		time.Sleep(1 * time.Minute)
 	}
-	// Allow some soak time at the last version
-	time.Sleep(1 * time.Minute)
 	cancel()
 	// TODO: Replace sleep with wait for the existing healthy Game Servers finish naturally by reaching their shutdown phase.
 	time.Sleep(30 * time.Second)
@@ -371,13 +371,13 @@ func createGameServerFile(agonesVersion string, countsAndLists bool) string {
 	return gsPath
 }
 
-// Create a game server every ten seconds until the context is cancelled. The game server container
+// Create a game server every five seconds until the context is cancelled. The game server container
 // be the same binary version as the game server file. The SDK version is always the same as the
 // version of the Agones controller that created it. The Game Server shuts itself down after the
 // tests have run as part of the `sdk-client-test` logic.
 func createGameServers(ctx context.Context, gsPath string) {
 	args := []string{"create", "-f", gsPath}
-	ticker := time.NewTicker(10 * time.Second)
+	ticker := time.NewTicker(5 * time.Second)
 
 	for {
 		select {
@@ -430,7 +430,6 @@ func watchGameServerPods(kubeClient *kubernetes.Clientset, stopCh chan struct{},
 	if !cache.WaitForCacheSync(stopCh, podInformer.HasSynced) {
 		log.Fatal("Timed out waiting for caches to sync")
 	}
-	<-stopCh
 }
 
 // Deletes any remaining Game Servers, Uninstalls Agones, and Deletes agones-system namespace.
