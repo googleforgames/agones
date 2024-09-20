@@ -26,6 +26,7 @@ data:
       generateName: sdk-client-test-
       labels:
         agonesVersion: {{ .AgonesVersion }}
+        app: sdk-client-test
     spec:
       ports:
         - name: default

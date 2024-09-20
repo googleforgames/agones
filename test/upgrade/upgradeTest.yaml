@@ -26,8 +26,8 @@ spec:
     spec:
       containers:
         - name: upgrade-test-controller
-          # TODO(igooch): Update image name to use a templated value
-          image: $(REGISTRY)/upgrade-test-controller:0.1
+          # TODO: Update image name to use a templated value for current Dev version
+          image: us-docker.pkg.dev/agones-images/ci/upgrade-test-controller:1.44.0-dev
           imagePullPolicy: Always
           env:
             - name: PodName
@@ -42,13 +42,13 @@ spec:
             - configMapRef:
                 name: version-map
           volumeMounts:
-            - name: fleet-volume
-              mountPath: fleet.yaml
-              subPath: "fleet.yaml"
+            - name: gs-volume
+              mountPath: gameserver.yaml
+              subPath: "gameserver.yaml"
       volumes:
-        - name: fleet-volume
+        - name: gs-volume
           configMap:
-            name: fleet-template
+            name: gameserver-template
       priorityClassName: high-priority
       restartPolicy: Never
       serviceAccountName: agones-sa

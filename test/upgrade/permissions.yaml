@@ -83,23 +83,23 @@ description: "This priority class should be used for upgrade-test-runner pods on
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: namespace-creator
+  name: namespace-manager
 rules:
   - apiGroups: [""]
     resources: ["namespaces"]
-    verbs: ["get", "list", "watch", "create"]
+    verbs: ["get", "list", "watch", "create", "delete"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: create-namespaces
+  name: manage-namespaces
 subjects:
   - kind: ServiceAccount
     name: agones-sa
     namespace: default
 roleRef:
   kind: ClusterRole
-  name: namespace-creator
+  name: namespace-manager
   apiGroup: rbac.authorization.k8s.io
 ---
 # Helm needs to be able to perform CRUD operations on secrets
