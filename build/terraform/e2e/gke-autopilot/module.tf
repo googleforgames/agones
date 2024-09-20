@@ -32,6 +32,7 @@ terraform {
 
 variable "project" {}
 variable "kubernetesVersion" {}
+variable "testName" {}
 variable "location" {}
 variable "releaseChannel" {}
 
@@ -39,11 +40,12 @@ module "gke_cluster" {
   source = "../../../../install/terraform/modules/gke-autopilot"
 
   cluster = {
-    "name"                          = format("gke-autopilot-e2e-test-cluster-%s", replace(var.kubernetesVersion, ".", "-"))
+    "name"                          = format("gke-autopilot-%s-test-cluster-%s", var.testName, replace(var.kubernetesVersion, ".", "-"))
     "project"                       = var.project
     "location"                      = var.location
     "releaseChannel"                = var.releaseChannel
     "kubernetesVersion"             = var.kubernetesVersion
+    "testName"                      = var.testName
     "deletionProtection"            = false
     "maintenanceExclusionStartTime" = timestamp()
     "maintenanceExclusionEndTime"   = timeadd(timestamp(), "2640h") # 110 days

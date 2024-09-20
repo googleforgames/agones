@@ -32,15 +32,13 @@ terraform {
 
 variable "project" {}
 variable "kubernetesVersion" {}
+variable "testName" {}
 variable "location" {}
 variable "releaseChannel" {}
+variable "initialNodeCount" {}
 
 variable "machineType" {
   default = "e2-standard-4"
-}
-
-variable "initialNodeCount" {
-  default = 10
 }
 
 variable "overrideName" {
@@ -51,7 +49,7 @@ module "gke_cluster" {
   source = "../../../../install/terraform/modules/gke"
 
   cluster = {
-    "name"                          = var.overrideName != "" ? var.overrideName : format("standard-e2e-test-cluster-%s", replace(var.kubernetesVersion, ".", "-"))
+    "name"                          = var.overrideName != "" ? var.overrideName : format("standard-%s-test-cluster-%s", var.testName, replace(var.kubernetesVersion, ".", "-"))
     "location"                      = var.location
     "releaseChannel"                = var.releaseChannel
     "machineType"                   = var.machineType
@@ -59,6 +57,7 @@ module "gke_cluster" {
     "enableImageStreaming"          = true
     "project"                       = var.project
     "kubernetesVersion"             = var.kubernetesVersion
+    "testName"                      = var.testName
     "maintenanceExclusionStartTime" = timestamp()
     "maintenanceExclusionEndTime"   = timeadd(timestamp(), "2640h") # 110 days
   }

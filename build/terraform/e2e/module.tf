@@ -62,22 +62,50 @@ variable "kubernetes_versions" {
   }
 }
 
+variable "test_names" {
+  description = "Use the same terraform templates for both e2e and upgrade tests. Includes test name and initial node counts for standard clusters."
+  type        = map(number)
+  default     = {
+    "e2e" = 10
+    "upgrade" = 4
+  }
+}
+
+// Handle nested loop in terraform. Flatten combines the two maps into a list.
+locals {
+  test_versions = distinct(flatten([
+    for name, nodes in var.test_names : [
+      for version, val in var.kubernetes_versions : {
+        test = name
+        version = version
+        location = val[0]
+        releaseChannel = val[1]
+        numNodes = nodes
+      }
+    ]
+  ]))
+}
+
 module "gke_standard_cluster" {
-  for_each = var.kubernetes_versions
-  source = "./gke-standard"
-  project = var.project
-  kubernetesVersion = each.key
-  location = each.value[0]
-  releaseChannel = each.value[1]
+  // local.test_versions is a list, but to use `for_each` it need to be a changed to a map.
+  for_each          = { for config in local.test_versions: "${config.test}.${config.version}" => config }
+  source            = "./gke-standard"
+  project           = var.project
+  testName          = each.value.test
+  kubernetesVersion = each.value.version
+  location          = each.value.location
+  releaseChannel    = each.value.releaseChannel
+  initialNodeCount  = each.value.numNodes
 }
 
 module "gke_autopilot_cluster" {
-  for_each = var.kubernetes_versions
-  source = "./gke-autopilot"
-  project = var.project
-  kubernetesVersion = each.key
-  location = each.value[0]
-  releaseChannel = each.value[1]
+  for_each          = { for entry in local.test_versions: "${entry.test}.${entry.version}" => entry }
+  source            = "./gke-autopilot"
+  project           = var.project
+  testName          = each.value.test
+  kubernetesVersion = each.value.version
+  location          = each.value.location
+  releaseChannel    = each.value.releaseChannel
 }
 
 resource "google_compute_firewall" "udp" {
