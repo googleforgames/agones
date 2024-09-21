@@ -23,16 +23,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/heptiolabs/healthcheck"
-	"github.com/pkg/errors"
-	prom "github.com/prometheus/client_golang/prometheus"
-	"github.com/sirupsen/logrus"
-	"github.com/spf13/pflag"
-	"github.com/spf13/viper"
-	"gopkg.in/natefinch/lumberjack.v2"
-	"k8s.io/client-go/informers"
-	"k8s.io/client-go/kubernetes"
-
 	"agones.dev/agones/pkg"
 	"agones.dev/agones/pkg/client/clientset/versioned"
 	"agones.dev/agones/pkg/client/informers/externalversions"
@@ -49,6 +39,14 @@ import (
 	"agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/signals"
 	"agones.dev/agones/pkg/util/webhooks"
+	"github.com/heptiolabs/healthcheck"
+	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
+	"github.com/spf13/pflag"
+	"github.com/spf13/viper"
+	"gopkg.in/natefinch/lumberjack.v2"
+	"k8s.io/client-go/informers"
+	"k8s.io/client-go/kubernetes"
 )
 
 const (
@@ -158,29 +156,15 @@ func main() {
 	}
 	var health healthcheck.Handler
 
-	// Stackdriver metrics
-	if ctlConf.Stackdriver {
-		sd, err := metrics.RegisterStackdriverExporter(ctlConf.GCPProjectID, ctlConf.StackdriverLabels)
-		if err != nil {
-			logger.WithError(err).Fatal("Could not register stackdriver exporter")
-		}
-		// It is imperative to invoke flush before your main function exits
-		defer sd.Flush()
+	metricsConf := metrics.Config{
+		Stackdriver:       ctlConf.Stackdriver,
+		PrometheusMetrics: ctlConf.PrometheusMetrics,
+		GCPProjectID:      ctlConf.GCPProjectID,
+		StackdriverLabels: ctlConf.StackdriverLabels,
 	}
 
-	// Prometheus metrics
-	if ctlConf.PrometheusMetrics {
-		registry := prom.NewRegistry()
-		metricHandler, err := metrics.RegisterPrometheusExporter(registry)
-		if err != nil {
-			logger.WithError(err).Fatal("Could not register prometheus exporter in extensions")
-		}
-		server.Handle("/metrics", metricHandler)
-		health = healthcheck.NewMetricsHandler(registry, "agones")
-	} else {
-		logger.Info("Not registaring prometheus metrics")
-		health = healthcheck.NewHandler()
-	}
+	health, closer := metrics.SetupMetrics(metricsConf, server)
+	defer closer()
 
 	podReady = true
 	health.AddReadinessCheck("agones-extensions", func() error {
