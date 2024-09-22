@@ -590,9 +590,11 @@ func TestApplyWebhookPolicy(t *testing.T) {
 }
 
 func TestApplyWebhookPolicyWithMetadata(t *testing.T) {
-	err := utilruntime.ParseFeatures(string(utilruntime.FeatureFleetAutoscaleRequestMetaData) + "=true")
-
 	t.Parallel()
+
+	err := utilruntime.ParseFeatures(string(utilruntime.FeatureFleetAutoscaleRequestMetaData) + "=true")
+	assert.NoError(t, err)
+
 	ts := testServer{}
 	server := httptest.NewServer(ts)
 	defer server.Close()
