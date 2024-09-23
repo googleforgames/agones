@@ -1,4 +1,4 @@
-// Copyright 2023 Google LLC All Rights Reserved.
+// Copyright 2024 Google LLC All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -35,16 +35,30 @@ variable "kubernetesVersion" {}
 variable "location" {}
 variable "releaseChannel" {}
 
+variable "machineType" {
+  default = "e2-standard-4"
+}
+
+variable "initialNodeCount" {
+  default = 4
+}
+
+variable "overrideName" {
+  default = ""
+}
+
 module "gke_cluster" {
-  source = "../../../../install/terraform/modules/gke-autopilot"
+  source = "../../../../install/terraform/modules/gke"
 
   cluster = {
-    "name"                          = format("gke-autopilot-e2e-test-cluster-%s", replace(var.kubernetesVersion, ".", "-"))
-    "project"                       = var.project
+    "name"                          = var.overrideName != "" ? var.overrideName : format("standard-upgrade-test-cluster-%s", replace(var.kubernetesVersion, ".", "-"))
     "location"                      = var.location
     "releaseChannel"                = var.releaseChannel
+    "machineType"                   = var.machineType
+    "initialNodeCount"              = var.initialNodeCount
+    "enableImageStreaming"          = true
+    "project"                       = var.project
     "kubernetesVersion"             = var.kubernetesVersion
-    "deletionProtection"            = false
     "maintenanceExclusionStartTime" = timestamp()
     "maintenanceExclusionEndTime"   = timeadd(timestamp(), "2640h") # 110 days
   }

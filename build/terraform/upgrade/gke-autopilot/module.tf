@@ -1,4 +1,4 @@
-// Copyright 2023 Google LLC All Rights Reserved.
+// Copyright 2024 Google LLC All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -39,7 +39,7 @@ module "gke_cluster" {
   source = "../../../../install/terraform/modules/gke-autopilot"
 
   cluster = {
-    "name"                          = format("gke-autopilot-e2e-test-cluster-%s", replace(var.kubernetesVersion, ".", "-"))
+    "name"                          = format("gke-autopilot-upgrade-test-cluster-%s", replace(var.kubernetesVersion, ".", "-"))
     "project"                       = var.project
     "location"                      = var.location
     "releaseChannel"                = var.releaseChannel

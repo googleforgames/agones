@@ -1,4 +1,4 @@
-// Copyright 2023 Google LLC All Rights Reserved.
+// Copyright 2024 Google LLC All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,15 +16,7 @@
 // Run:
 //  terraform apply -var project="<YOUR_GCP_ProjectID>"
 
-// If you are getting `Error: googleapi: Error 409: Your previous request to create the named bucket
-// succeeded and you already own it., conflict` this means that your local tfstate file has
-// divereged from the tfstate file in Google Cloud Storage (GCS). To use the GCS version of the
-// tfstate, delete your local .terraform and .tfstate files. You may need to run
-// `sudo chown -R yourusername .` to be able to delete them. Then navigate to this directory and run
-// `terraform init`. Pull in the tfstate file from gcloud with
-// `terraform import google_storage_bucket.default "<YOUR_GCP_ProjectID>"-e2e-infra-bucket-tfstate`.
-
-// # GCS bucket for holding the Terraform state of the e2e Terraform config.
+// GCS bucket for holding the Terraform state of the upgrade test Terraform config.
 
 terraform {
   required_version = ">= 1.0.0"
@@ -40,7 +32,7 @@ variable "project" {}
 
 resource "google_storage_bucket" "default" {
   project                     = var.project
-  name                        = "${var.project}-e2e-infra-bucket-tfstate"
+  name                        = "${var.project}-upgrade-infra-bucket-tfstate"
   force_destroy               = false
   uniform_bucket_level_access = true
   location                    = "US"

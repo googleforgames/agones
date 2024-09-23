@@ -26,11 +26,27 @@ data:
       generateName: sdk-client-test-
       labels:
         agonesVersion: {{ .AgonesVersion }}
+        app: sdk-client-test
     spec:
       ports:
         - name: default
           portPolicy: Dynamic
           containerPort: 7654
+      sdkServer:
+        logLevel: Debug
+      {{ if .CountsAndLists }}
+      counters:
+        rooms:
+          count: 1
+          capacity: 10
+      lists:
+        players:
+          capacity: 100
+          values:
+            - test0
+            - test1
+            - test2
+      {{ end }}
       template:
         metadata:
           labels:
@@ -39,6 +55,7 @@ data:
           containers:
             - name: sdk-client-test
               image: "{{ .Registry }}:{{ .AgonesVersion }}"
+              imagePullPolicy: Always
               resources:
                 requests:
                   memory: 64Mi
@@ -46,3 +63,4 @@ data:
                 limits:
                   memory: 64Mi
                   cpu: 20m
+          serviceAccountName: agones-sa
