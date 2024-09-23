@@ -14,10 +14,6 @@
 package main
 
 import (
-	"agones.dev/agones/pkg/metrics"
-	"agones.dev/agones/pkg/util/httpserver"
-	"github.com/heptiolabs/healthcheck"
-	prom "github.com/prometheus/client_golang/prometheus"
 	"go.opencensus.io/plugin/ocgrpc"
 	"go.opencensus.io/stats/view"
 )
@@ -30,33 +26,4 @@ func registerMetricViews() {
 	if err := view.Register(ocgrpc.DefaultServerViews...); err != nil {
 		logger.WithError(err).Error("could not register view")
 	}
-}
-
-func setupMetricsRecorder(conf config, healthserver *httpserver.Server) (health healthcheck.Handler, closer func()) {
-	health = healthcheck.NewHandler()
-	closer = func() {}
-
-	// Stackdriver metrics
-	if conf.Stackdriver {
-		sd, err := metrics.RegisterStackdriverExporter(conf.GCPProjectID, conf.StackdriverLabels)
-		if err != nil {
-			logger.WithError(err).Fatal("Could not register stackdriver exporter")
-		}
-		// It is imperative to invoke flush before your main function exits
-		closer = func() { sd.Flush() }
-	}
-
-	// Prometheus metrics
-	if conf.PrometheusMetrics {
-		registry := prom.NewRegistry()
-		metricHandler, err := metrics.RegisterPrometheusExporter(registry)
-		if err != nil {
-			logger.WithError(err).Fatal("Could not register prometheus exporter")
-		}
-		healthserver.Handle("/metrics", metricHandler)
-		health = healthcheck.NewMetricsHandler(registry, "agones")
-	}
-
-	metrics.SetReportingPeriod(conf.PrometheusMetrics, conf.Stackdriver)
-	return
 }
