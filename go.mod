@@ -1,6 +1,8 @@
 module agones.dev/agones
 
-go 1.22
+go 1.22.0
+
+toolchain go1.22.6
 
 require (
 	cloud.google.com/go/cloudbuild v1.13.0
