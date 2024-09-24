@@ -30,8 +30,8 @@ The current set of `alpha` and `beta` feature gates:
 |-----------------------------------------------------------------------------------------------------------------------------|------------------------------------|----------|---------|--------|
 | [CountsAndLists](https://github.com/googleforgames/agones/issues/2716)                                                      | `CountsAndLists`                   | Enabled  | `Beta`  | 1.41.0 |
 | [DisableResyncOnSDKServer](https://github.com/googleforgames/agones/issues/3377)                                            | `DisableResyncOnSDKServer`         | Enabled  | `Beta`  | 1.40.0 |
+| [Support for Extended Duration Pods on GKE Autopilot](https://github.com/googleforgames/agones/issues/3386)  | `GKEAutopilotExtendedDurationPods` | Enabled | `Beta` | 1.44.0 |
 | [Support Passthrough on GKE Autopilot](https://github.com/googleforgames/agones/issues/3721)                                | `AutopilotPassthroughPort`         | Enabled  | `Beta`  | 1.43.0 |
-| [Support for Extended Duration Pods on GKE Autopilot (*1.28+ only*)](https://github.com/googleforgames/agones/issues/3386)  | `GKEAutopilotExtendedDurationPods` | Disabled | `Alpha` | 1.37.0 |
 | [GameServer player capacity filtering on GameServerAllocations](https://github.com/googleforgames/agones/issues/1239)       | `PlayerAllocationFilter`           | Disabled | `Alpha` | 1.14.0 |
 | [Player Tracking]({{< ref "/docs/Guides/player-tracking.md" >}})                                                            | `PlayerTracking`                   | Disabled | `Alpha` | 1.6.0  |
 | [Rolling Update Fixes](https://github.com/googleforgames/agones/issues/3688)                                                | `RollingUpdateFix`                 | Disabled | `Alpha` | 1.41.0 |
