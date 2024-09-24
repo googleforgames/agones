@@ -279,7 +279,7 @@ steps:
 
         # Use this if specific feature gates can only be supported on specific Kubernetes versions.
         # TODO: When 1.28 becomes trailing version, promote GKEAutopilotExtendedDurationPods to beta.
-        declare -A featureWithGateByVersion=( [1.28]="${featureWithGate}&GKEAutopilotExtendedDurationPods=true" [1.29]="${featureWithGate}&GKEAutopilotExtendedDurationPods=true" [1.30]="${featureWithGate}&GKEAutopilotExtendedDurationPods=true")
+        declare -A featureWithGateByVersion=( [1.28]="${featureWithGate}&GKEAutopilotExtendedDurationPods=false" [1.29]="${featureWithGate}&GKEAutopilotExtendedDurationPods=false" [1.30]="${featureWithGate}&GKEAutopilotExtendedDurationPods=false")
 
         for cloudProduct in ${cloudProducts[@]}
         do
