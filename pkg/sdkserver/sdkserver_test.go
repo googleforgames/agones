@@ -140,6 +140,25 @@ func TestSidecarRun(t *testing.T) {
 					metadataPrefix + "test-2": "annotation-2"},
 			},
 		},
+		"annotations": {
+			f: func(sc *SDKServer, ctx context.Context) {
+				_, err := sc.SetAnnotations(ctx, &sdk.KeyValues{KeyValues: []*sdk.KeyValue{
+					{Key: "test-1", Value: "annotation-1"},
+					{Key: "test-2", Value: "annotation-2"},
+				}})
+				assert.Nil(t, err)
+				_, err = sc.SetAnnotations(ctx, &sdk.KeyValues{KeyValues: []*sdk.KeyValue{
+					{Key: "test-3", Value: "annotation-3"},
+				}})
+				assert.Nil(t, err)
+			},
+			expected: expected{
+				annotations: map[string]string{
+					metadataPrefix + "test-1": "annotation-1",
+					metadataPrefix + "test-2": "annotation-2",
+					metadataPrefix + "test-3": "annotation-3"},
+			},
+		},
 		"allocated": {
 			f: func(sc *SDKServer, ctx context.Context) {
 				_, err := sc.Allocate(ctx, &sdk.Empty{})

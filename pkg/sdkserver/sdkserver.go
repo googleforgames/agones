@@ -598,6 +598,21 @@ func (s *SDKServer) SetAnnotation(_ context.Context, kv *sdk.KeyValue) (*sdk.Emp
 	return &sdk.Empty{}, nil
 }
 
+// SetAnnotations adds the Key/Values to be used to set the annotations with the metadataPrefix to the `GameServer`
+// metdata
+func (s *SDKServer) SetAnnotations(_ context.Context, kvs *sdk.KeyValues) (*sdk.Empty, error) {
+	s.logger.WithField("values", kvs).Debug("Adding SetAnnotations to queue")
+
+	s.gsUpdateMutex.Lock()
+	for _, kv := range kvs.KeyValues {
+		s.gsAnnotations[kv.Key] = kv.Value
+	}
+	s.gsUpdateMutex.Unlock()
+
+	s.workerqueue.Enqueue(cache.ExplicitKey(string(updateAnnotation)))
+	return &sdk.Empty{}, nil
+}
+
 // GetGameServer returns the current GameServer configuration and state from the backing GameServer CRD
 func (s *SDKServer) GetGameServer(context.Context, *sdk.Empty) (*sdk.GameServer, error) {
 	s.logger.Debug("Received GetGameServer request")

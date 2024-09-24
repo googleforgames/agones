@@ -281,6 +281,84 @@ func TestLocalSDKServerSetAnnotation(t *testing.T) {
 	}
 }
 
+// nolint:dupl
+func TestLocalSDKServerSetAnnotations(t *testing.T) {
+	t.Parallel()
+
+	fixtures := map[string]struct {
+		gs *agonesv1.GameServer
+	}{
+		"default": {
+			gs: nil,
+		},
+		"no annotation": {
+			gs: &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "empty"}},
+		},
+		"empty": {
+			gs: &agonesv1.GameServer{},
+		},
+	}
+
+	for k, v := range fixtures {
+		t.Run(k, func(t *testing.T) {
+			ctx := context.Background()
+			e := &sdk.Empty{}
+			path, err := gsToTmpFile(v.gs)
+			assert.Nil(t, err)
+
+			l, err := NewLocalSDKServer(path, "")
+			assert.Nil(t, err)
+
+			kvs := &sdk.KeyValues{
+				KeyValues: []*sdk.KeyValue{
+					{Key: "bar", Value: "foo"},
+					{Key: "baz", Value: "foobar"},
+				},
+			}
+
+			stream := newGameServerMockStream()
+			wg := sync.WaitGroup{}
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				err := l.WatchGameServer(e, stream)
+				assert.Nil(t, err)
+			}()
+			assertInitialWatchUpdate(t, stream)
+
+			// make sure length of l.updateObservers is at least 1
+			err = wait.PollImmediate(time.Second, 10*time.Second, func() (bool, error) {
+				ret := false
+				l.updateObservers.Range(func(_, _ interface{}) bool {
+					ret = true
+					return false
+				})
+
+				return ret, nil
+			})
+			assert.Nil(t, err)
+
+			_, err = l.SetAnnotations(ctx, kvs)
+			assert.Nil(t, err)
+
+			gs, err := l.GetGameServer(ctx, e)
+			assert.Nil(t, err)
+			assert.Equal(t, gs.ObjectMeta.Annotations[metadataPrefix+"bar"], "foo")
+			assert.Equal(t, gs.ObjectMeta.Annotations[metadataPrefix+"baz"], "foobar")
+
+			assertWatchUpdate(t, stream, []string{"foo", "foobar"}, func(gs *sdk.GameServer) interface{} {
+				return []string{
+					gs.ObjectMeta.Annotations[metadataPrefix+"bar"],
+					gs.ObjectMeta.Annotations[metadataPrefix+"baz"],
+				}
+			})
+
+			l.Close()
+			wg.Wait()
+		})
+	}
+}
+
 func TestLocalSDKServerWatchGameServer(t *testing.T) {
 	t.Parallel()
 
