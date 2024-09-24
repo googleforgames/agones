@@ -31,6 +31,10 @@ const (
 	////////////////
 	// Beta features
 
+	// FeatureGKEAutopilotExtendedDurationPods enables the use of Extended Duration pods
+	// when Agones is running on Autopilot. Available on 1.28+ only.
+	FeatureGKEAutopilotExtendedDurationPods Feature = "GKEAutopilotExtendedDurationPods"
+
 	// FeatureAutopilotPassthroughPort is a feature flag that enables/disables Passthrough Port Policy.
 	FeatureAutopilotPassthroughPort Feature = "AutopilotPassthroughPort"
 
@@ -43,10 +47,6 @@ const (
 
 	////////////////
 	// Alpha features
-
-	// FeatureGKEAutopilotExtendedDurationPods enables the use of Extended Duration pods
-	// when Agones is running on Autopilot. Available on 1.28+ only.
-	FeatureGKEAutopilotExtendedDurationPods = "GKEAutopilotExtendedDurationPods"
 
 	// FeaturePlayerAllocationFilter is a feature flag that enables the ability for Allocations to filter based on
 	// player capacity.
@@ -128,18 +128,18 @@ var (
 	// In each of these, keep the feature sorted by descending maturity then alphabetical
 	featureDefaults = map[Feature]bool{
 		// Beta features
-		FeatureAutopilotPassthroughPort: true,
-		FeatureCountsAndLists:           true,
-		FeatureDisableResyncOnSDKServer: true,
+		FeatureGKEAutopilotExtendedDurationPods: true,
+		FeatureAutopilotPassthroughPort:         true,
+		FeatureCountsAndLists:                   true,
+		FeatureDisableResyncOnSDKServer:         true,
 
 		// Alpha features
-		FeatureGKEAutopilotExtendedDurationPods: false,
-		FeaturePlayerAllocationFilter:           false,
-		FeaturePlayerTracking:                   false,
-		FeatureRollingUpdateFix:                 false,
-		FeaturePortRanges:                       false,
-		FeaturePortPolicyNone:                   false,
-		FeatureScheduledAutoscaler:              false,
+		FeaturePlayerAllocationFilter: false,
+		FeaturePlayerTracking:         false,
+		FeatureRollingUpdateFix:       false,
+		FeaturePortRanges:             false,
+		FeaturePortPolicyNone:         false,
+		FeatureScheduledAutoscaler:    false,
 
 		// Dev features
 
