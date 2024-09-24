@@ -66,6 +66,7 @@ spec:
     #  - "Info" (default) The SDK server will output all messages except for debug messages
     #  - "Debug" The SDK server will output all messages including debug messages
     #  - "Error" The SDK server will only output error messages
+    #  - "Trace" The SDK server will output all messages, including detailed tracing information
     logLevel: Info
     # grpcPort and httpPort control what ports the sdkserver listens on.
     # Starting with Agones 1.2 the default grpcPort is 9357 and the default
@@ -146,6 +147,7 @@ The `spec` field is the actual GameServer specification and it is composed as fo
     - "Info" (default) The SDK server will output all messages except for debug messages
     - "Debug" The SDK server will output all messages including debug messages
     - "Error" The SDK server will only output error messages
+    - "Trace" The SDK server will output all messages, including detailed tracing information
   - `grpcPort` the port that the SDK Server binds to for gRPC connections
   - `httpPort` the port that the SDK Server binds to for HTTP gRPC gateway connections
 - `players` (Alpha, behind "PlayerTracking" feature gate), sets this GameServer's initial player capacity

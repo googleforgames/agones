@@ -17,7 +17,6 @@
 package runtime
 
 import (
-	"context"
 	"fmt"
 	"time"
 
@@ -48,7 +47,7 @@ func init() {
 		},
 	})
 
-	runtime.ErrorHandlers[0] = func(_ context.Context, err error, msg string, keysAndValues ...interface{}) {
+	runtime.ErrorHandlers[0] = func(err error) {
 		if stackTrace, ok := err.(stackTracer); ok {
 			var stack []string
 			for _, f := range stackTrace.StackTrace() {

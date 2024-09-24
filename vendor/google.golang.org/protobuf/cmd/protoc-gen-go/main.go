@@ -51,8 +51,6 @@ func main() {
 			}
 		}
 		gen.SupportedFeatures = gengo.SupportedFeatures
-		gen.SupportedEditionsMinimum = gengo.SupportedEditionsMinimum
-		gen.SupportedEditionsMaximum = gengo.SupportedEditionsMaximum
 		return nil
 	})
 }

@@ -2,6 +2,8 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+//go:generate go run mkstdlib.go
+
 // Package imports implements a Go pretty-printer (like package "go/format")
 // that also adds or removes import statements as necessary.
 package imports
@@ -107,7 +109,7 @@ func ApplyFixes(fixes []*ImportFix, filename string, src []byte, opt *Options, e
 }
 
 // formatFile formats the file syntax tree.
-// It may mutate the token.FileSet and the ast.File.
+// It may mutate the token.FileSet.
 //
 // If an adjust function is provided, it is called after formatting
 // with the original source (formatFile's src parameter) and the
@@ -234,7 +236,7 @@ func parse(fset *token.FileSet, filename string, src []byte, opt *Options) (*ast
 			src = src[:len(src)-len("}\n")]
 			// Gofmt has also indented the function body one level.
 			// Remove that indent.
-			src = bytes.ReplaceAll(src, []byte("\n\t"), []byte("\n"))
+			src = bytes.Replace(src, []byte("\n\t"), []byte("\n"), -1)
 			return matchSpace(orig, src)
 		}
 		return file, adjust, nil

@@ -78,6 +78,7 @@ spec:
     #  - "Info" (default) The SDK server will output all messages except for debug messages
     #  - "Debug" The SDK server will output all messages including debug messages
     #  - "Error" The SDK server will only output error messages
+    #  - "Trace" The SDK server will output all messages, including detailed tracing information
     logLevel: Info
     # grpcPort and httpPort control what ports the sdkserver listens on.
     # Starting with Agones 1.2 the default grpcPort is 9357 and the default
@@ -121,7 +122,7 @@ spec:
     spec:
       containers:
         - name: simple-game-server
-          image: us-docker.pkg.dev/agones-images/examples/simple-game-server:0.35
+          image: us-docker.pkg.dev/agones-images/examples/simple-game-server:0.34
           imagePullPolicy: Always
           # nodeSelector is a label that can be used to tell Kubernetes which host
           # OS to use. For Windows game servers uncomment the nodeSelector

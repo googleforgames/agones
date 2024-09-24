@@ -42,7 +42,7 @@ import (
 	"k8s.io/client-go/tools/pager"
 	"k8s.io/klog/v2"
 	"k8s.io/utils/clock"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	"k8s.io/utils/trace"
 )
 
@@ -638,7 +638,7 @@ func (r *Reflector) watchList(stopCh <-chan struct{}) (watch.Interface, error) {
 		options := metav1.ListOptions{
 			ResourceVersion:      lastKnownRV,
 			AllowWatchBookmarks:  true,
-			SendInitialEvents:    pointer.Bool(true),
+			SendInitialEvents:    ptr.To(true),
 			ResourceVersionMatch: metav1.ResourceVersionMatchNotOlderThan,
 			TimeoutSeconds:       &timeoutSeconds,
 		}
@@ -651,7 +651,7 @@ func (r *Reflector) watchList(stopCh <-chan struct{}) (watch.Interface, error) {
 			}
 			return nil, err
 		}
-		bookmarkReceived := pointer.Bool(false)
+		bookmarkReceived := ptr.To(false)
 		err = watchHandler(start, w, temporaryStore, r.expectedType, r.expectedGVK, r.name, r.typeDescription,
 			func(rv string) { resourceVersion = rv },
 			bookmarkReceived,
