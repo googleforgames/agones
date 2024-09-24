@@ -73,10 +73,6 @@ type Extensions struct {
 	apiHooks   agonesv1.APIHooks
 }
 
-var (
-	generationMap = make(map[string]int)
-)
-
 // Controller is a the main GameServer crd controller
 //
 //nolint:govet // ignore fieldalignment, singleton
@@ -108,6 +104,8 @@ type Controller struct {
 	creationWorkerQueue    *workerqueue.WorkerQueue // handles creation only
 	deletionWorkerQueue    *workerqueue.WorkerQueue // handles deletion only
 	recorder               record.EventRecorder
+	generationMap          map[string]int64
+	cMutex                 sync.RWMutex
 }
 
 // NewController returns a new gameserver crd controller
@@ -157,6 +155,8 @@ func NewController(
 		healthController:       NewHealthController(health, kubeClient, agonesClient, kubeInformerFactory, agonesInformerFactory, controllerHooks.WaitOnFreePorts()),
 		migrationController:    NewMigrationController(health, kubeClient, agonesClient, kubeInformerFactory, agonesInformerFactory, controllerHooks.SyncPodPortsToGameServer),
 		missingPodController:   NewMissingPodController(health, kubeClient, agonesClient, kubeInformerFactory, agonesInformerFactory),
+		generationMap:          make(map[string]int64),
+		cMutex:                 sync.RWMutex{},
 	}
 
 	c.baseLogger = runtime.NewLoggerWithType(c)
@@ -453,7 +453,6 @@ func (c *Controller) syncGameServer(ctx context.Context, key string) error {
 	}
 
 	gs, err := c.gameServerLister.GameServers(namespace).Get(name)
-	loggerForGameServerKey(key, c.baseLogger).Info("THIS IS THE CURRENT GENERATION: ", gs.Generation, " for: ", gs.Name)
 	update := c.newMetrics(ctx)
 
 	if err != nil {
@@ -468,54 +467,45 @@ func (c *Controller) syncGameServer(ctx context.Context, key string) error {
 	// in the Update request with the one in the local cache, and only make the Update request when the generation
 	// in the request is newer.
 
-	/*
-		if _, exists := generationMap[gs.Name]; exists {
-			if generationMap[gs.Name] > int(gs.Generation) {
-				loggerForGameServerKey(key, c.baseLogger).Info("RETURN NIL, THIS IS THE CACHE GENERATION: ", generationMap[gs.Name], " for: ", gs.Name, " AND REQUEST GENERATION: ", gs.Generation)
-				return nil
-			}
-		} */
+	c.cMutex.RLock()
+	generationCache, ok := c.generationMap[gs.Name]
+	c.cMutex.RUnlock()
+
+	if ok && (generationCache > gs.ObjectMeta.Generation) {
+		loggerForGameServer(gs, c.baseLogger).WithField("generationInCache", generationCache).WithField("generationInGS", gs.ObjectMeta.Generation).Infof("GameServer is not updated")
+		return workerqueue.NewDebugError(errors.New("GameServer is stale"))
+	}
 
 	if gs, err = c.syncGameServerDeletionTimestamp(ctx, gs); err != nil {
-		loggerForGameServerKey(key, c.baseLogger).Info("THIS IS THE ERROR in syncGameServerDeletionTimestamp", err.Error())
 		update.recordUpdateError(ctx, int64(1), "")
 		return err
 	}
 	if gs, err = c.syncGameServerPortAllocationState(ctx, gs); err != nil {
-		loggerForGameServerKey(key, c.baseLogger).Info("THIS IS THE ERROR in syncGameServerPortAllocationState", err.Error())
 		update.recordUpdateError(ctx, int64(2), "")
 		return err
 	}
 	if gs, err = c.syncGameServerCreatingState(ctx, gs); err != nil {
-		loggerForGameServerKey(key, c.baseLogger).Info("THIS IS THE ERROR in syncGameServerCreatingState", err.Error())
 		update.recordUpdateError(ctx, int64(3), "")
 		return err
 	}
 	if gs, err = c.syncGameServerStartingState(ctx, gs); err != nil {
-		loggerForGameServerKey(key, c.baseLogger).Info("THIS IS THE ERROR in syncGameServerStartingState", err.Error())
 		update.recordUpdateError(ctx, int64(4), "")
 		return err
 	}
 	if gs, err = c.syncGameServerRequestReadyState(ctx, gs); err != nil {
-		loggerForGameServerKey(key, c.baseLogger).Info("THIS IS THE ERROR in syncGameServerRequestReadyState", err.Error())
 		update.recordUpdateError(ctx, int64(5), "")
 		return err
 	}
 	if gs, err = c.syncDevelopmentGameServer(ctx, gs); err != nil {
-		loggerForGameServerKey(key, c.baseLogger).Info("THIS IS THE ERROR in syncDevelopmentGameServer", err.Error())
 		update.recordUpdateError(ctx, int64(6), "")
 		return err
 	}
 	if err := c.syncGameServerShutdownState(ctx, gs); err != nil {
-		loggerForGameServerKey(key, c.baseLogger).Info("THIS IS THE ERROR in syncGameServerShutdownState", err.Error())
 		update.recordUpdateError(ctx, int64(7), "")
 		return err
 	}
 
 	update.recordUpdateError(ctx, int64(8), "Success")
-
-	loggerForGameServerKey(key, c.baseLogger).Info("THIS IS THE GENERATION AFTER UPDATES: ", gs.Generation, " for: ", gs.Name)
-	//generationMap[gs.Name] = int(gs.Generation)
 
 	return nil
 }
