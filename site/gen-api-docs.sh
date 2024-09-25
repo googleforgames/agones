@@ -35,6 +35,7 @@ go mod edit --replace=agones.dev/agones@latest=../../../agones.dev/agones/
 go mod tidy
 go get agones.dev/agones@v1.43.0
 go get agones.dev/agones/pkg/apis/allocation/v1@v1.43.0
+go get agones.dev/agones/pkg/apis/autoscaling/v1@v1.43.0
 go build 
 
 cp /go/src/agones.dev/agones/site/assets/templates/pkg.tpl ./template
@@ -53,7 +54,7 @@ RESULT="/tmp/agones_crd_api_reference.html"
 # Version to compare
 OLD="/tmp/old_docs.html"
 
-./gen-crd-api-reference-docs --config ../../../agones.dev/agones/site/assets/templates/crd-doc-config.json --api-dir ../../../agones.dev/agones/pkg/apis/allocation --out-file $RESULT
+./gen-crd-api-reference-docs --config ../../../agones.dev/agones/site/assets/templates/crd-doc-config.json --api-dir ../../../agones.dev/agones/pkg/apis/ --out-file $RESULT
 awk '/\ feature\ publishVersion/{flag=1;next}/\ \/feature/{flag=0}flag' $FILE > $OLD
 
 # Get the title lines from +++ till empty string
