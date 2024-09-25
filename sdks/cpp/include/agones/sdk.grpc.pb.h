@@ -136,6 +136,14 @@ class SDK final {
     std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::agones::dev::sdk::Empty>> PrepareAsyncSetAnnotation(::grpc::ClientContext* context, const ::agones::dev::sdk::KeyValue& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::agones::dev::sdk::Empty>>(PrepareAsyncSetAnnotationRaw(context, request, cq));
     }
+    // Apply multiple Annotations to the backing GameServer metadata
+    virtual ::grpc::Status SetAnnotations(::grpc::ClientContext* context, const ::agones::dev::sdk::KeyValues& request, ::agones::dev::sdk::Empty* response) = 0;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::agones::dev::sdk::Empty>> AsyncSetAnnotations(::grpc::ClientContext* context, const ::agones::dev::sdk::KeyValues& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::agones::dev::sdk::Empty>>(AsyncSetAnnotationsRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::agones::dev::sdk::Empty>> PrepareAsyncSetAnnotations(::grpc::ClientContext* context, const ::agones::dev::sdk::KeyValues& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::agones::dev::sdk::Empty>>(PrepareAsyncSetAnnotationsRaw(context, request, cq));
+    }
     // Marks the GameServer as the Reserved state for Duration
     virtual ::grpc::Status Reserve(::grpc::ClientContext* context, const ::agones::dev::sdk::Duration& request, ::agones::dev::sdk::Empty* response) = 0;
     std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::agones::dev::sdk::Empty>> AsyncReserve(::grpc::ClientContext* context, const ::agones::dev::sdk::Duration& request, ::grpc::CompletionQueue* cq) {
@@ -169,6 +177,9 @@ class SDK final {
       // Apply a Annotation to the backing GameServer metadata
       virtual void SetAnnotation(::grpc::ClientContext* context, const ::agones::dev::sdk::KeyValue* request, ::agones::dev::sdk::Empty* response, std::function<void(::grpc::Status)>) = 0;
       virtual void SetAnnotation(::grpc::ClientContext* context, const ::agones::dev::sdk::KeyValue* request, ::agones::dev::sdk::Empty* response, ::grpc::ClientUnaryReactor* reactor) = 0;
+      // Apply multiple Annotations to the backing GameServer metadata
+      virtual void SetAnnotations(::grpc::ClientContext* context, const ::agones::dev::sdk::KeyValues* request, ::agones::dev::sdk::Empty* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void SetAnnotations(::grpc::ClientContext* context, const ::agones::dev::sdk::KeyValues* request, ::agones::dev::sdk::Empty* response, ::grpc::ClientUnaryReactor* reactor) = 0;
       // Marks the GameServer as the Reserved state for Duration
       virtual void Reserve(::grpc::ClientContext* context, const ::agones::dev::sdk::Duration* request, ::agones::dev::sdk::Empty* response, std::function<void(::grpc::Status)>) = 0;
       virtual void Reserve(::grpc::ClientContext* context, const ::agones::dev::sdk::Duration* request, ::agones::dev::sdk::Empty* response, ::grpc::ClientUnaryReactor* reactor) = 0;
@@ -195,6 +206,8 @@ class SDK final {
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::agones::dev::sdk::Empty>* PrepareAsyncSetLabelRaw(::grpc::ClientContext* context, const ::agones::dev::sdk::KeyValue& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::agones::dev::sdk::Empty>* AsyncSetAnnotationRaw(::grpc::ClientContext* context, const ::agones::dev::sdk::KeyValue& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::agones::dev::sdk::Empty>* PrepareAsyncSetAnnotationRaw(::grpc::ClientContext* context, const ::agones::dev::sdk::KeyValue& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::agones::dev::sdk::Empty>* AsyncSetAnnotationsRaw(::grpc::ClientContext* context, const ::agones::dev::sdk::KeyValues& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::agones::dev::sdk::Empty>* PrepareAsyncSetAnnotationsRaw(::grpc::ClientContext* context, const ::agones::dev::sdk::KeyValues& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::agones::dev::sdk::Empty>* AsyncReserveRaw(::grpc::ClientContext* context, const ::agones::dev::sdk::Duration& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::agones::dev::sdk::Empty>* PrepareAsyncReserveRaw(::grpc::ClientContext* context, const ::agones::dev::sdk::Duration& request, ::grpc::CompletionQueue* cq) = 0;
   };
@@ -261,6 +274,13 @@ class SDK final {
     std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::agones::dev::sdk::Empty>> PrepareAsyncSetAnnotation(::grpc::ClientContext* context, const ::agones::dev::sdk::KeyValue& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::agones::dev::sdk::Empty>>(PrepareAsyncSetAnnotationRaw(context, request, cq));
     }
+    ::grpc::Status SetAnnotations(::grpc::ClientContext* context, const ::agones::dev::sdk::KeyValues& request, ::agones::dev::sdk::Empty* response) override;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::agones::dev::sdk::Empty>> AsyncSetAnnotations(::grpc::ClientContext* context, const ::agones::dev::sdk::KeyValues& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::agones::dev::sdk::Empty>>(AsyncSetAnnotationsRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::agones::dev::sdk::Empty>> PrepareAsyncSetAnnotations(::grpc::ClientContext* context, const ::agones::dev::sdk::KeyValues& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::agones::dev::sdk::Empty>>(PrepareAsyncSetAnnotationsRaw(context, request, cq));
+    }
     ::grpc::Status Reserve(::grpc::ClientContext* context, const ::agones::dev::sdk::Duration& request, ::agones::dev::sdk::Empty* response) override;
     std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::agones::dev::sdk::Empty>> AsyncReserve(::grpc::ClientContext* context, const ::agones::dev::sdk::Duration& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::agones::dev::sdk::Empty>>(AsyncReserveRaw(context, request, cq));
@@ -285,6 +305,8 @@ class SDK final {
       void SetLabel(::grpc::ClientContext* context, const ::agones::dev::sdk::KeyValue* request, ::agones::dev::sdk::Empty* response, ::grpc::ClientUnaryReactor* reactor) override;
       void SetAnnotation(::grpc::ClientContext* context, const ::agones::dev::sdk::KeyValue* request, ::agones::dev::sdk::Empty* response, std::function<void(::grpc::Status)>) override;
       void SetAnnotation(::grpc::ClientContext* context, const ::agones::dev::sdk::KeyValue* request, ::agones::dev::sdk::Empty* response, ::grpc::ClientUnaryReactor* reactor) override;
+      void SetAnnotations(::grpc::ClientContext* context, const ::agones::dev::sdk::KeyValues* request, ::agones::dev::sdk::Empty* response, std::function<void(::grpc::Status)>) override;
+      void SetAnnotations(::grpc::ClientContext* context, const ::agones::dev::sdk::KeyValues* request, ::agones::dev::sdk::Empty* response, ::grpc::ClientUnaryReactor* reactor) override;
       void Reserve(::grpc::ClientContext* context, const ::agones::dev::sdk::Duration* request, ::agones::dev::sdk::Empty* response, std::function<void(::grpc::Status)>) override;
       void Reserve(::grpc::ClientContext* context, const ::agones::dev::sdk::Duration* request, ::agones::dev::sdk::Empty* response, ::grpc::ClientUnaryReactor* reactor) override;
      private:
@@ -316,6 +338,8 @@ class SDK final {
     ::grpc::ClientAsyncResponseReader< ::agones::dev::sdk::Empty>* PrepareAsyncSetLabelRaw(::grpc::ClientContext* context, const ::agones::dev::sdk::KeyValue& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::agones::dev::sdk::Empty>* AsyncSetAnnotationRaw(::grpc::ClientContext* context, const ::agones::dev::sdk::KeyValue& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::agones::dev::sdk::Empty>* PrepareAsyncSetAnnotationRaw(::grpc::ClientContext* context, const ::agones::dev::sdk::KeyValue& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::agones::dev::sdk::Empty>* AsyncSetAnnotationsRaw(::grpc::ClientContext* context, const ::agones::dev::sdk::KeyValues& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::agones::dev::sdk::Empty>* PrepareAsyncSetAnnotationsRaw(::grpc::ClientContext* context, const ::agones::dev::sdk::KeyValues& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::agones::dev::sdk::Empty>* AsyncReserveRaw(::grpc::ClientContext* context, const ::agones::dev::sdk::Duration& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::agones::dev::sdk::Empty>* PrepareAsyncReserveRaw(::grpc::ClientContext* context, const ::agones::dev::sdk::Duration& request, ::grpc::CompletionQueue* cq) override;
     const ::grpc::internal::RpcMethod rpcmethod_Ready_;
@@ -326,6 +350,7 @@ class SDK final {
     const ::grpc::internal::RpcMethod rpcmethod_WatchGameServer_;
     const ::grpc::internal::RpcMethod rpcmethod_SetLabel_;
     const ::grpc::internal::RpcMethod rpcmethod_SetAnnotation_;
+    const ::grpc::internal::RpcMethod rpcmethod_SetAnnotations_;
     const ::grpc::internal::RpcMethod rpcmethod_Reserve_;
   };
   static std::unique_ptr<Stub> NewStub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options = ::grpc::StubOptions());
@@ -350,6 +375,8 @@ class SDK final {
     virtual ::grpc::Status SetLabel(::grpc::ServerContext* context, const ::agones::dev::sdk::KeyValue* request, ::agones::dev::sdk::Empty* response);
     // Apply a Annotation to the backing GameServer metadata
     virtual ::grpc::Status SetAnnotation(::grpc::ServerContext* context, const ::agones::dev::sdk::KeyValue* request, ::agones::dev::sdk::Empty* response);
+    // Apply multiple Annotations to the backing GameServer metadata
+    virtual ::grpc::Status SetAnnotations(::grpc::ServerContext* context, const ::agones::dev::sdk::KeyValues* request, ::agones::dev::sdk::Empty* response);
     // Marks the GameServer as the Reserved state for Duration
     virtual ::grpc::Status Reserve(::grpc::ServerContext* context, const ::agones::dev::sdk::Duration* request, ::agones::dev::sdk::Empty* response);
   };
@@ -514,12 +541,32 @@ class SDK final {
     }
   };
   template <class BaseClass>
+  class WithAsyncMethod_SetAnnotations : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithAsyncMethod_SetAnnotations() {
+      ::grpc::Service::MarkMethodAsync(8);
+    }
+    ~WithAsyncMethod_SetAnnotations() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status SetAnnotations(::grpc::ServerContext* /*context*/, const ::agones::dev::sdk::KeyValues* /*request*/, ::agones::dev::sdk::Empty* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestSetAnnotations(::grpc::ServerContext* context, ::agones::dev::sdk::KeyValues* request, ::grpc::ServerAsyncResponseWriter< ::agones::dev::sdk::Empty>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(8, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  template <class BaseClass>
   class WithAsyncMethod_Reserve : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithAsyncMethod_Reserve() {
-      ::grpc::Service::MarkMethodAsync(8);
+      ::grpc::Service::MarkMethodAsync(9);
     }
     ~WithAsyncMethod_Reserve() override {
       BaseClassMustBeDerivedFromService(this);
@@ -530,10 +577,10 @@ class SDK final {
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     void RequestReserve(::grpc::ServerContext* context, ::agones::dev::sdk::Duration* request, ::grpc::ServerAsyncResponseWriter< ::agones::dev::sdk::Empty>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(8, context, request, response, new_call_cq, notification_cq, tag);
+      ::grpc::Service::RequestAsyncUnary(9, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
-  typedef WithAsyncMethod_Ready<WithAsyncMethod_Allocate<WithAsyncMethod_Shutdown<WithAsyncMethod_Health<WithAsyncMethod_GetGameServer<WithAsyncMethod_WatchGameServer<WithAsyncMethod_SetLabel<WithAsyncMethod_SetAnnotation<WithAsyncMethod_Reserve<Service > > > > > > > > > AsyncService;
+  typedef WithAsyncMethod_Ready<WithAsyncMethod_Allocate<WithAsyncMethod_Shutdown<WithAsyncMethod_Health<WithAsyncMethod_GetGameServer<WithAsyncMethod_WatchGameServer<WithAsyncMethod_SetLabel<WithAsyncMethod_SetAnnotation<WithAsyncMethod_SetAnnotations<WithAsyncMethod_Reserve<Service > > > > > > > > > > AsyncService;
   template <class BaseClass>
   class WithCallbackMethod_Ready : public BaseClass {
    private:
@@ -741,18 +788,45 @@ class SDK final {
       ::grpc::CallbackServerContext* /*context*/, const ::agones::dev::sdk::KeyValue* /*request*/, ::agones::dev::sdk::Empty* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
+  class WithCallbackMethod_SetAnnotations : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithCallbackMethod_SetAnnotations() {
+      ::grpc::Service::MarkMethodCallback(8,
+          new ::grpc::internal::CallbackUnaryHandler< ::agones::dev::sdk::KeyValues, ::agones::dev::sdk::Empty>(
+            [this](
+                   ::grpc::CallbackServerContext* context, const ::agones::dev::sdk::KeyValues* request, ::agones::dev::sdk::Empty* response) { return this->SetAnnotations(context, request, response); }));}
+    void SetMessageAllocatorFor_SetAnnotations(
+        ::grpc::MessageAllocator< ::agones::dev::sdk::KeyValues, ::agones::dev::sdk::Empty>* allocator) {
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(8);
+      static_cast<::grpc::internal::CallbackUnaryHandler< ::agones::dev::sdk::KeyValues, ::agones::dev::sdk::Empty>*>(handler)
+              ->SetMessageAllocator(allocator);
+    }
+    ~WithCallbackMethod_SetAnnotations() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status SetAnnotations(::grpc::ServerContext* /*context*/, const ::agones::dev::sdk::KeyValues* /*request*/, ::agones::dev::sdk::Empty* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual ::grpc::ServerUnaryReactor* SetAnnotations(
+      ::grpc::CallbackServerContext* /*context*/, const ::agones::dev::sdk::KeyValues* /*request*/, ::agones::dev::sdk::Empty* /*response*/)  { return nullptr; }
+  };
+  template <class BaseClass>
   class WithCallbackMethod_Reserve : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithCallbackMethod_Reserve() {
-      ::grpc::Service::MarkMethodCallback(8,
+      ::grpc::Service::MarkMethodCallback(9,
           new ::grpc::internal::CallbackUnaryHandler< ::agones::dev::sdk::Duration, ::agones::dev::sdk::Empty>(
             [this](
                    ::grpc::CallbackServerContext* context, const ::agones::dev::sdk::Duration* request, ::agones::dev::sdk::Empty* response) { return this->Reserve(context, request, response); }));}
     void SetMessageAllocatorFor_Reserve(
         ::grpc::MessageAllocator< ::agones::dev::sdk::Duration, ::agones::dev::sdk::Empty>* allocator) {
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(8);
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(9);
       static_cast<::grpc::internal::CallbackUnaryHandler< ::agones::dev::sdk::Duration, ::agones::dev::sdk::Empty>*>(handler)
               ->SetMessageAllocator(allocator);
     }
@@ -767,7 +841,7 @@ class SDK final {
     virtual ::grpc::ServerUnaryReactor* Reserve(
       ::grpc::CallbackServerContext* /*context*/, const ::agones::dev::sdk::Duration* /*request*/, ::agones::dev::sdk::Empty* /*response*/)  { return nullptr; }
   };
-  typedef WithCallbackMethod_Ready<WithCallbackMethod_Allocate<WithCallbackMethod_Shutdown<WithCallbackMethod_Health<WithCallbackMethod_GetGameServer<WithCallbackMethod_WatchGameServer<WithCallbackMethod_SetLabel<WithCallbackMethod_SetAnnotation<WithCallbackMethod_Reserve<Service > > > > > > > > > CallbackService;
+  typedef WithCallbackMethod_Ready<WithCallbackMethod_Allocate<WithCallbackMethod_Shutdown<WithCallbackMethod_Health<WithCallbackMethod_GetGameServer<WithCallbackMethod_WatchGameServer<WithCallbackMethod_SetLabel<WithCallbackMethod_SetAnnotation<WithCallbackMethod_SetAnnotations<WithCallbackMethod_Reserve<Service > > > > > > > > > > CallbackService;
   typedef CallbackService ExperimentalCallbackService;
   template <class BaseClass>
   class WithGenericMethod_Ready : public BaseClass {
@@ -906,12 +980,29 @@ class SDK final {
     }
   };
   template <class BaseClass>
+  class WithGenericMethod_SetAnnotations : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithGenericMethod_SetAnnotations() {
+      ::grpc::Service::MarkMethodGeneric(8);
+    }
+    ~WithGenericMethod_SetAnnotations() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status SetAnnotations(::grpc::ServerContext* /*context*/, const ::agones::dev::sdk::KeyValues* /*request*/, ::agones::dev::sdk::Empty* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+  };
+  template <class BaseClass>
   class WithGenericMethod_Reserve : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithGenericMethod_Reserve() {
-      ::grpc::Service::MarkMethodGeneric(8);
+      ::grpc::Service::MarkMethodGeneric(9);
     }
     ~WithGenericMethod_Reserve() override {
       BaseClassMustBeDerivedFromService(this);
@@ -1083,12 +1174,32 @@ class SDK final {
     }
   };
   template <class BaseClass>
+  class WithRawMethod_SetAnnotations : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithRawMethod_SetAnnotations() {
+      ::grpc::Service::MarkMethodRaw(8);
+    }
+    ~WithRawMethod_SetAnnotations() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status SetAnnotations(::grpc::ServerContext* /*context*/, const ::agones::dev::sdk::KeyValues* /*request*/, ::agones::dev::sdk::Empty* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestSetAnnotations(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(8, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  template <class BaseClass>
   class WithRawMethod_Reserve : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithRawMethod_Reserve() {
-      ::grpc::Service::MarkMethodRaw(8);
+      ::grpc::Service::MarkMethodRaw(9);
     }
     ~WithRawMethod_Reserve() override {
       BaseClassMustBeDerivedFromService(this);
@@ -1099,7 +1210,7 @@ class SDK final {
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     void RequestReserve(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(8, context, request, response, new_call_cq, notification_cq, tag);
+      ::grpc::Service::RequestAsyncUnary(9, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
@@ -1279,12 +1390,34 @@ class SDK final {
       ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
+  class WithRawCallbackMethod_SetAnnotations : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithRawCallbackMethod_SetAnnotations() {
+      ::grpc::Service::MarkMethodRawCallback(8,
+          new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+            [this](
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->SetAnnotations(context, request, response); }));
+    }
+    ~WithRawCallbackMethod_SetAnnotations() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status SetAnnotations(::grpc::ServerContext* /*context*/, const ::agones::dev::sdk::KeyValues* /*request*/, ::agones::dev::sdk::Empty* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual ::grpc::ServerUnaryReactor* SetAnnotations(
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
+  };
+  template <class BaseClass>
   class WithRawCallbackMethod_Reserve : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithRawCallbackMethod_Reserve() {
-      ::grpc::Service::MarkMethodRawCallback(8,
+      ::grpc::Service::MarkMethodRawCallback(9,
           new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
                    ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->Reserve(context, request, response); }));
@@ -1463,12 +1596,39 @@ class SDK final {
     virtual ::grpc::Status StreamedSetAnnotation(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::agones::dev::sdk::KeyValue,::agones::dev::sdk::Empty>* server_unary_streamer) = 0;
   };
   template <class BaseClass>
+  class WithStreamedUnaryMethod_SetAnnotations : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithStreamedUnaryMethod_SetAnnotations() {
+      ::grpc::Service::MarkMethodStreamed(8,
+        new ::grpc::internal::StreamedUnaryHandler<
+          ::agones::dev::sdk::KeyValues, ::agones::dev::sdk::Empty>(
+            [this](::grpc::ServerContext* context,
+                   ::grpc::ServerUnaryStreamer<
+                     ::agones::dev::sdk::KeyValues, ::agones::dev::sdk::Empty>* streamer) {
+                       return this->StreamedSetAnnotations(context,
+                         streamer);
+                  }));
+    }
+    ~WithStreamedUnaryMethod_SetAnnotations() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable regular version of this method
+    ::grpc::Status SetAnnotations(::grpc::ServerContext* /*context*/, const ::agones::dev::sdk::KeyValues* /*request*/, ::agones::dev::sdk::Empty* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    // replace default version of method with streamed unary
+    virtual ::grpc::Status StreamedSetAnnotations(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::agones::dev::sdk::KeyValues,::agones::dev::sdk::Empty>* server_unary_streamer) = 0;
+  };
+  template <class BaseClass>
   class WithStreamedUnaryMethod_Reserve : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithStreamedUnaryMethod_Reserve() {
-      ::grpc::Service::MarkMethodStreamed(8,
+      ::grpc::Service::MarkMethodStreamed(9,
         new ::grpc::internal::StreamedUnaryHandler<
           ::agones::dev::sdk::Duration, ::agones::dev::sdk::Empty>(
             [this](::grpc::ServerContext* context,
@@ -1489,7 +1649,7 @@ class SDK final {
     // replace default version of method with streamed unary
     virtual ::grpc::Status StreamedReserve(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::agones::dev::sdk::Duration,::agones::dev::sdk::Empty>* server_unary_streamer) = 0;
   };
-  typedef WithStreamedUnaryMethod_Ready<WithStreamedUnaryMethod_Allocate<WithStreamedUnaryMethod_Shutdown<WithStreamedUnaryMethod_GetGameServer<WithStreamedUnaryMethod_SetLabel<WithStreamedUnaryMethod_SetAnnotation<WithStreamedUnaryMethod_Reserve<Service > > > > > > > StreamedUnaryService;
+  typedef WithStreamedUnaryMethod_Ready<WithStreamedUnaryMethod_Allocate<WithStreamedUnaryMethod_Shutdown<WithStreamedUnaryMethod_GetGameServer<WithStreamedUnaryMethod_SetLabel<WithStreamedUnaryMethod_SetAnnotation<WithStreamedUnaryMethod_SetAnnotations<WithStreamedUnaryMethod_Reserve<Service > > > > > > > > StreamedUnaryService;
   template <class BaseClass>
   class WithSplitStreamingMethod_WatchGameServer : public BaseClass {
    private:
@@ -1518,7 +1678,7 @@ class SDK final {
     virtual ::grpc::Status StreamedWatchGameServer(::grpc::ServerContext* context, ::grpc::ServerSplitStreamer< ::agones::dev::sdk::Empty,::agones::dev::sdk::GameServer>* server_split_streamer) = 0;
   };
   typedef WithSplitStreamingMethod_WatchGameServer<Service > SplitStreamedService;
-  typedef WithStreamedUnaryMethod_Ready<WithStreamedUnaryMethod_Allocate<WithStreamedUnaryMethod_Shutdown<WithStreamedUnaryMethod_GetGameServer<WithSplitStreamingMethod_WatchGameServer<WithStreamedUnaryMethod_SetLabel<WithStreamedUnaryMethod_SetAnnotation<WithStreamedUnaryMethod_Reserve<Service > > > > > > > > StreamedService;
+  typedef WithStreamedUnaryMethod_Ready<WithStreamedUnaryMethod_Allocate<WithStreamedUnaryMethod_Shutdown<WithStreamedUnaryMethod_GetGameServer<WithSplitStreamingMethod_WatchGameServer<WithStreamedUnaryMethod_SetLabel<WithStreamedUnaryMethod_SetAnnotation<WithStreamedUnaryMethod_SetAnnotations<WithStreamedUnaryMethod_Reserve<Service > > > > > > > > > StreamedService;
 };
 
 }  // namespace sdk

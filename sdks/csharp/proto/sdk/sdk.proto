@@ -89,6 +89,14 @@ service SDK {
         };
     }
 
+    // Apply multiple Annotations to the backing GameServer metadata
+    rpc SetAnnotations(KeyValues) returns (Empty) {
+        option (google.api.http) = {
+            put: "/metadata/annotations"
+            body: "*"
+        };
+    }
+
     // Marks the GameServer as the Reserved state for Duration
     rpc Reserve(Duration) returns (Empty) {
         option (google.api.http) = {
@@ -106,6 +114,15 @@ message Empty {
 message KeyValue {
     string key = 1;
     string value = 2;
+}
+
+message KeyValues {
+    repeated KeyValue key_values = 1;
+}
+
+// Key entry
+message Key {
+    string key = 1;
 }
 
 // time duration, in seconds
