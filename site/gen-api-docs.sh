@@ -17,11 +17,13 @@
 set -ex
 
 #Reinstall Go 1.15 since the version upon it won't work with gen-crd-api-reference-docs
-rm -rf /usr/local/go
-GO_VERSION=1.15.13
-cd /usr/local
-wget -q https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz && \
-tar -xzf go${GO_VERSION}.linux-amd64.tar.gz && rm go${GO_VERSION}.linux-amd64.tar.gz
+# rm -rf /usr/local/go
+# GO_VERSION=1.15.13
+# cd /usr/local
+# wget -q https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz && \
+# tar -xzf go${GO_VERSION}.linux-amd64.tar.gz && rm go${GO_VERSION}.linux-amd64.tar.gz
+
+go version
 
 export GOPROXY=http://proxy.golang.org
 echo "using go proxy as a workaround for git.agache.org being down: $GOPROXY"
@@ -30,6 +32,9 @@ cd /go/src/github.com/ahmetb/gen-crd-api-reference-docs
 
 #Use local version of agones
 go mod edit --replace=agones.dev/agones@latest=../../../agones.dev/agones/
+go mod tidy
+go get agones.dev/agones@v1.43.0
+go get agones.dev/agones/pkg/apis/allocation/v1@v1.43.0
 go build 
 
 cp /go/src/agones.dev/agones/site/assets/templates/pkg.tpl ./template
@@ -48,7 +53,7 @@ RESULT="/tmp/agones_crd_api_reference.html"
 # Version to compare
 OLD="/tmp/old_docs.html"
 
-./gen-crd-api-reference-docs --config ../../../agones.dev/agones/site/assets/templates/crd-doc-config.json --api-dir ../../../agones.dev/agones/pkg/apis/ --out-file $RESULT
+./gen-crd-api-reference-docs --config ../../../agones.dev/agones/site/assets/templates/crd-doc-config.json --api-dir ../../../agones.dev/agones/pkg/apis/allocation --out-file $RESULT
 awk '/\ feature\ publishVersion/{flag=1;next}/\ \/feature/{flag=0}flag' $FILE > $OLD
 
 # Get the title lines from +++ till empty string
