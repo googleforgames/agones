@@ -20,12 +20,13 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"sort"
 	"time"
 
 	"github.com/pkg/errors"
-	"google.golang.org/grpc/credentials/insecure"
-
+	"golang.org/x/exp/maps"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 
 	"agones.dev/agones/pkg/sdk"
 )
@@ -137,6 +138,19 @@ func (s *SDK) SetAnnotation(key, value string) error {
 	kv := &sdk.KeyValue{Key: key, Value: value}
 	_, err := s.client.SetAnnotation(s.ctx, kv)
 	return errors.Wrap(err, "could not set annotation")
+}
+
+// SetAnnotations sets a metadata annotation on the `GameServer` with the prefix "agones.dev/sdk-".
+func (s *SDK) SetAnnotations(keyVals map[string]string) error {
+	keys := maps.Keys(keyVals)
+	sort.Strings(keys)
+
+	kvs := make([]*sdk.KeyValue, 0, len(keyVals))
+	for _, key := range keys {
+		kvs = append(kvs, &sdk.KeyValue{Key: key, Value: keyVals[key]})
+	}
+	_, err := s.client.SetAnnotations(s.ctx, &sdk.KeyValues{KeyValues: kvs})
+	return errors.Wrap(err, "could not set annotations")
 }
 
 // GameServer retrieve the GameServer details.

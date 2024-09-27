@@ -327,7 +327,7 @@ func TestLocalSDKServerSetAnnotations(t *testing.T) {
 			assertInitialWatchUpdate(t, stream)
 
 			// make sure length of l.updateObservers is at least 1
-			err = wait.PollImmediate(time.Second, 10*time.Second, func() (bool, error) {
+			err = wait.PollUntilContextTimeout(context.Background(), time.Second, 10*time.Second, true, func(ctx context.Context) (bool, error) {
 				ret := false
 				l.updateObservers.Range(func(_, _ interface{}) bool {
 					ret = true
