@@ -26,6 +26,16 @@ import (
 	"sync"
 	"time"
 
+	"agones.dev/agones/pkg"
+	"agones.dev/agones/pkg/allocation/converters"
+	pb "agones.dev/agones/pkg/allocation/go"
+	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
+	"agones.dev/agones/pkg/client/clientset/versioned"
+	"agones.dev/agones/pkg/client/informers/externalversions"
+	"agones.dev/agones/pkg/gameserverallocations"
+	"agones.dev/agones/pkg/gameservers"
+	"agones.dev/agones/pkg/metrics"
+	"agones.dev/agones/pkg/util/fswatch"
 	"github.com/heptiolabs/healthcheck"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -45,15 +55,6 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 
-	"agones.dev/agones/pkg"
-	"agones.dev/agones/pkg/allocation/converters"
-	pb "agones.dev/agones/pkg/allocation/go"
-	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
-	"agones.dev/agones/pkg/client/clientset/versioned"
-	"agones.dev/agones/pkg/client/informers/externalversions"
-	"agones.dev/agones/pkg/gameserverallocations"
-	"agones.dev/agones/pkg/gameservers"
-	"agones.dev/agones/pkg/util/fswatch"
 	"agones.dev/agones/pkg/util/httpserver"
 	"agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/signals"
@@ -218,8 +219,18 @@ func main() {
 		logger.WithField("grpc-port", conf.GRPCPort).WithField("http-port", conf.HTTPPort).Fatal("Must specify a valid gRPC port or an HTTP port for the allocator service")
 	}
 	healthserver := &httpserver.Server{Logger: logger}
-	health, closer := setupMetricsRecorder(conf, healthserver)
+	var health healthcheck.Handler
+
+	metricsConf := metrics.Config{
+		Stackdriver:       conf.Stackdriver,
+		PrometheusMetrics: conf.PrometheusMetrics,
+		GCPProjectID:      conf.GCPProjectID,
+		StackdriverLabels: conf.StackdriverLabels,
+	}
+	health, closer := metrics.SetupMetrics(metricsConf, healthserver)
 	defer closer()
+
+	metrics.SetReportingPeriod(conf.PrometheusMetrics, conf.Stackdriver)
 
 	kubeClient, agonesClient, err := getClients(conf)
 	if err != nil {
