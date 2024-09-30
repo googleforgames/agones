@@ -14,7 +14,7 @@
 
 # ForceUpdate 12 -- change here if you need to force a rebuild
 # Base Stage - Build Tools
-FROM debian:bookworm AS Build-Tools    
+FROM debian:bookworm AS build-tools    
 
 # Security: Limit permissions for running processes as root
 RUN apt-get update && \
@@ -59,6 +59,9 @@ ENV PATH /usr/local/go/bin:/go/bin:$PATH
 RUN go install golang.org/x/tools/cmd/goimports@latest && \
     go install golang.org/x/pkgsite/cmd/pkgsite@latest
 
+# Install golangci-lint
+RUN go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+
 # Install Helm
 ENV HELM_VER 3.10.3
 RUN curl -L https://get.helm.sh/helm-v${HELM_VER}-linux-amd64.tar.gz | tar -xz -C /tmp && \
@@ -95,7 +98,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY --from=build-tools /usr/local/go /usr/local/go
 COPY --from=build-tools /usr/local/bin/helm /usr/local/bin/helm
 COPY --from=build-tools /usr/local/bin/hugo /usr/local/bin/hugo
-COPY --from=build-tools /usr/local/bin/golangci-lint /usr/local/bin/golangci-lint
+COPY --from=build-tools /go/bin/golangci-lint /usr/local/bin/golangci-lint
 COPY --from=build-tools /go/bin /go/bin
 
 ENV GOPATH /go
@@ -118,4 +121,5 @@ COPY --from=build-tools /root/*.sh /root/
 
 # Final setup
 WORKDIR /go
-CMD ["/bin/bash"]
+CMD ["/bin/bash"] 
+
