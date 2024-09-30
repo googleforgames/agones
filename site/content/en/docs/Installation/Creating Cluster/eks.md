@@ -41,6 +41,12 @@ For Agones to work correctly, we need to allow UDP traffic to pass through to ou
 * Select **Inbound Rules**
 * **Edit Rules** to add a new **Custom UDP Rule** with a 7000-8000 port range and an appropriate **Source** CIDR range (`0.0.0.0/0` allows all traffic)
 
+## Use with custom CNI plugins
+
+To ensure compatibility with custom CNI plugins (such as Calico or [Cilium](https://docs.cilium.io/en/stable/installation/k8s-install-helm/)), configure extensions application to use `hostNetwork` for proper functionality via the `agones.extensions.hostNetwork` Agones [Helm]({{< relref "../Install Agones/helm.md" >}}) variable. Also make sure to set the `agones.extensions.http.port` and the `agones.extensions.webhooks.port` values as well.
+This requirement arises due to the control plane's inability to reach in-cluster pod endpoints when the data plane operates on a separate network layer ([Github Issue](https://github.com/aws/containers-roadmap/issues/2227)).
+Reconfiguring the kube-apiserver is not possible as it is an AWS managed component.
+
 ## Next Steps
 
-- Continue to [Install Agones]({{< relref "../Install Agones/_index.md" >}}).
+* Continue to [Install Agones]({{< relref "../Install Agones/_index.md" >}}).

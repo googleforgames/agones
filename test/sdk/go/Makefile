@@ -27,8 +27,10 @@ REGISTRY ?=
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_path := $(dir $(mkfile_path))
 root_path = $(realpath $(project_path)/)
-dev_version = 1.44.0-dev
-server_tag := $(REGISTRY)/upgrade-test-controller:$(dev_version)
+# Because go mod init in the Dockerfile installs the most recently released version of Agones, this
+# will need to be built and pushed post-release. During DEV it will be built at DEV - 1.
+release_version = 1.43.0
+server_tag := $(REGISTRY)/sdk-client-test:$(release_version)
 
 #   _____                    _
 #  |_   _|_ _ _ __ __ _  ___| |_ ___
@@ -43,3 +45,7 @@ build:
 
 push: build
 	docker push $(server_tag)
+
+# build and push the sdk-client-test image with specified tag
+cloud-build:
+	cd $(root_path) && gcloud builds submit --config=cloudbuild.yaml
