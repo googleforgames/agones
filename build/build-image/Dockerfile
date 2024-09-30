@@ -14,9 +14,9 @@
 
 # ForceUpdate 12 -- change here if you need to force a rebuild
 # Base Stage - Build Tools
-FROM debian:bookworm AS build-tools    
+FROM debian:bookworm AS build-tools
 
-# Security: Limit permissions for running processes as root
+# Install dependencies for building the dummy package
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     build-essential \
@@ -38,10 +38,11 @@ RUN apt-get update && \
     ruby-full \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
+# Create the dummy python2.7 package and specify the output location as /opt
 RUN gem install fpm && \
-    fpm -s empty -t deb -p python2.7-0.0.0-0-any.deb --name python2.7 --license MIT --version 0.0.0 --architecture all --description 'Dummy package to satisfy google-cloud-cli dependencies.' --maintainer 'Yourself' && \
-    dpkg -i python2.7-0.0.0-0-any.deb && \
-    rm python2.7-0.0.0-0-any.deb
+    fpm -s empty -t deb -p /opt/python2.7-0.0.0-0-any.deb --name python2.7 --license MIT --version 0.0.0 --architecture all --description 'Dummy package to satisfy google-cloud-cli dependencies.' --maintainer 'Yourself' && \
+    dpkg -i /opt/python2.7-0.0.0-0-any.deb && \
+    rm /opt/python2.7-0.0.0-0-any.deb
 
 # Install Go
 WORKDIR /usr/local
@@ -94,8 +95,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     gnupg \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Copy dummy python2.7 package from build-tools stage
-COPY --from=build-tools /python2.7-0.0.0-0-any.deb /tmp/
+# Copy the dummy python2.7 package from the build-tools stage to /tmp/
+COPY --from=build-tools /opt/python2.7-0.0.0-0-any.deb /tmp/
 
 # Install dummy python2.7 package
 RUN dpkg -i /tmp/python2.7-0.0.0-0-any.deb && rm /tmp/python2.7-0.0.0-0-any.deb
