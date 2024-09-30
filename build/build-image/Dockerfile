@@ -84,7 +84,7 @@ RUN apt-get update && apt-get install -y ca-certificates curl gnupg && \
 # Final Stage - Application Runtime
 FROM debian:bookworm-slim AS runtime
 
-# Install only the necessary runtime dependencies
+# Installing only the necessary runtime dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     psmisc \
     rsync \
@@ -93,6 +93,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     gnupg \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Copy dummy python2.7 package from build-tools stage
+COPY --from=build-tools /python2.7-0.0.0-0-any.deb /tmp/
+
+# Install dummy python2.7 package
+RUN dpkg -i /tmp/python2.7-0.0.0-0-any.deb && rm /tmp/python2.7-0.0.0-0-any.deb
 
 # Copy necessary binaries from build-tools stage
 COPY --from=build-tools /usr/local/go /usr/local/go
@@ -116,10 +122,10 @@ ENV KUBERNETES_VER 1.29.7
 RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/v${KUBERNETES_VER}/bin/linux/amd64/kubectl && \
     chmod +x ./kubectl && mv ./kubectl /usr/local/bin/kubectl
 
-# Copy the script files (if necessary)
+# Copy the script files 
 COPY --from=build-tools /root/*.sh /root/
 
 # Final setup
 WORKDIR /go
-CMD ["/bin/bash"] 
+CMD ["/bin/bash"]
 
