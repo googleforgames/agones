@@ -56,10 +56,8 @@ ENV GO111MODULE=on
 ENV PATH /usr/local/go/bin:/go/bin:$PATH
 
 # Install Go tools
-RUN go install golang.org/x/tools/cmd/goimports@v0.6.0 \
-    golang.org/x/pkgsite/cmd/pkgsite@v0.6.0 \
-    github.com/golangci/golangci-lint/cmd/golangci-lint@v1.53.0 \
-    gotest.tools/gotestsum@v1.8.2
+RUN go install golang.org/x/tools/cmd/goimports@latest && \
+    go install golang.org/x/pkgsite/cmd/pkgsite@latest
 
 # Install Helm
 ENV HELM_VER 3.10.3
