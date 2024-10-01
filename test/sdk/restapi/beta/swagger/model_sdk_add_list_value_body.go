@@ -23,6 +23,6 @@
  */
 package swagger
 
-type ListsNameremoveValueBody struct {
+type SdkAddListValueBody struct {
 	Value string `json:"value"`
 }
