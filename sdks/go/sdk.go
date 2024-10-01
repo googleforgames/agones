@@ -72,28 +72,16 @@ func NewSDK() (*SDK, error) {
 	// Block for at least 30 seconds.
 	ctx, cancel := context.WithTimeout(s.ctx, 30*time.Second)
 	defer cancel()
-	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	// nolint: staticcheck
+	conn, err := grpc.DialContext(ctx, addr, grpc.WithBlock(), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return s, errors.Wrapf(err, "could not connect to %s", addr)
 	}
-
-	// Set up the connection within the 30-second context.
-	done := make(chan error, 1)
-	go func() {
-		s.client = sdk.NewSDKClient(conn)
-		s.health, err = s.client.Health(s.ctx)
-		s.alpha = newAlpha(conn)
-		s.beta = newBeta(conn)
-
-		done <- errors.Wrap(err, "could not set up health check")
-	}()
-
-	select {
-	case err := <-done:
-		return s, err
-	case <-ctx.Done():
-		return s, errors.New("timeout while setting up client")
-	}
+	s.client = sdk.NewSDKClient(conn)
+	s.health, err = s.client.Health(s.ctx)
+	s.alpha = newAlpha(conn)
+	s.beta = newBeta(conn)
+	return s, errors.Wrap(err, "could not set up health check")
 }
 
 // Alpha returns the Alpha SDK.

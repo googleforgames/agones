@@ -245,7 +245,8 @@ func runGrpc(grpcServer *grpc.Server, grpcEndpoint string) {
 
 // runGateway runs the grpc-gateway
 func runGateway(ctx context.Context, grpcEndpoint string, mux *gwruntime.ServeMux, httpServer *http.Server) {
-	conn, err := grpc.NewClient(grpcEndpoint, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	// nolint: staticcheck
+	conn, err := grpc.DialContext(ctx, grpcEndpoint, grpc.WithBlock(), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		logger.WithError(err).Fatal("Could not dial grpc server...")
 	}
