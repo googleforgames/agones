@@ -5563,10 +5563,12 @@ spec:
                                - "Info" (default) The SDK server will output all messages except for debug messages
                                - "Debug" The SDK server will output all messages including debug messages
                                - "Error" The SDK server will only output error messages
+                               - "Trace" The SDK server will output all messages, including detailed tracing information
                              enum:
                              - Error
                              - Info
                              - Debug
+                             - Trace
                            grpcPort:
                              title: The port on which the SDK server binds the gRPC server to accept incoming connections
                              description: |
@@ -11132,10 +11134,12 @@ spec:
                        - "Info" (default) The SDK server will output all messages except for debug messages
                        - "Debug" The SDK server will output all messages including debug messages
                        - "Error" The SDK server will only output error messages
+                       - "Trace" The SDK server will output all messages, including detailed tracing information
                      enum:
                      - Error
                      - Info
                      - Debug
+                     - Trace
                    grpcPort:
                      title: The port on which the SDK server binds the gRPC server to accept incoming connections
                      description: |
@@ -16823,10 +16827,12 @@ spec:
                                 - "Info" (default) The SDK server will output all messages except for debug messages
                                 - "Debug" The SDK server will output all messages including debug messages
                                 - "Error" The SDK server will only output error messages
+                                - "Trace" The SDK server will output all messages, including detailed tracing information
                               enum:
                               - Error
                               - Info
                               - Debug
+                              - Trace
                             grpcPort:
                               title: The port on which the SDK server binds the gRPC server to accept incoming connections
                               description: |
