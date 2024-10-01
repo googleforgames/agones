@@ -111,6 +111,8 @@ const (
 	SdkServerLogLevelDebug SdkServerLogLevel = "Debug"
 	// SdkServerLogLevelError will cause the SDK server to only output error messages.
 	SdkServerLogLevelError SdkServerLogLevel = "Error"
+	// SdkServerLogLevelTrace will cause the SDK server to output all messages, including detailed tracing information.
+	SdkServerLogLevelTrace SdkServerLogLevel = "Trace"
 )
 
 const (
