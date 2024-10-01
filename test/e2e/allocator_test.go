@@ -92,9 +92,9 @@ func TestAllocatorWithDeprecatedRequired(t *testing.T) {
 			return false, err
 		}
 
-		conn, err := grpc.Dial(requestURL, dialOpts...)
+		conn, err := grpc.NewClient(requestURL, dialOpts...)
 		if err != nil {
-			logrus.WithError(err).Info("failing grpc.Dial")
+			logrus.WithError(err).Info("failing grpc.NewClient")
 			return false, nil
 		}
 		defer conn.Close() // nolint: errcheck
@@ -186,9 +186,9 @@ func TestAllocatorWithSelectors(t *testing.T) {
 			return false, err
 		}
 
-		conn, err := grpc.Dial(requestURL, dialOpts...)
+		conn, err := grpc.NewClient(requestURL, dialOpts...)
 		if err != nil {
-			logrus.WithError(err).Info("failing grpc.Dial")
+			logrus.WithError(err).Info("failing grpc.NewClient")
 			return false, nil
 		}
 		defer conn.Close() // nolint: errcheck
@@ -361,9 +361,9 @@ func TestAllocatorWithCountersAndLists(t *testing.T) {
 		if err != nil {
 			return false, err
 		}
-		conn, err := grpc.Dial(requestURL, dialOpts...)
+		conn, err := grpc.NewClient(requestURL, dialOpts...)
 		if err != nil {
-			logrus.WithError(err).Info("failing grpc.Dial")
+			logrus.WithError(err).Info("failing grpc.NewClient")
 			return false, nil
 		}
 		defer conn.Close() // nolint: errcheck
@@ -617,9 +617,9 @@ func TestAllocatorCrossNamespace(t *testing.T) {
 			return false, err
 		}
 
-		conn, err := grpc.Dial(requestURL, dialOpts...)
+		conn, err := grpc.NewClient(requestURL, dialOpts...)
 		if err != nil {
-			logrus.WithError(err).Info("failing grpc.Dial")
+			logrus.WithError(err).Info("failing grpc.NewClient")
 			return false, nil
 		}
 		defer conn.Close() // nolint: errcheck
