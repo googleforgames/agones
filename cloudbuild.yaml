@@ -278,7 +278,6 @@ steps:
         featureWithoutGate=""
 
         # Use this if specific feature gates can only be supported on specific Kubernetes versions.
-        # TODO: When 1.28 becomes trailing version, promote GKEAutopilotExtendedDurationPods to beta.
         declare -A featureWithGateByVersion=( [1.28]="${featureWithGate}" [1.29]="${featureWithGate}" [1.30]="${featureWithGate}")
 
         for cloudProduct in ${cloudProducts[@]}
