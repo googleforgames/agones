@@ -119,7 +119,7 @@ RUN chmod +x /root/*.sh
 FROM debian:bookworm-slim AS runtime
 
 # Install runtime dependencies
-RUN apt-get update && apt-get install -y psmisc rsync bash-completion ca-certificates curl gnupg && \
+RUN apt-get update && apt-get install -y psmisc rsync bash-completion ca-certificates curl gnupg git && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Copy dummy python2.7 package from build-tools stage
