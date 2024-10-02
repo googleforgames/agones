@@ -1,7 +1,7 @@
 FROM gcr.io/cloud-builders/gcloud
 
 RUN apt-get update && \
-    apt-get install -y wget psmisc make gcc python jq zip && \
+    apt-get install -y wget psmisc make gcc jq zip && \
     apt-get clean
 
 # install go
