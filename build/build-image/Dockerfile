@@ -25,9 +25,14 @@ RUN apt-get update && \
 
 # Create a dummy python2.7 package using fpm
 RUN gem install fpm && \
-    fpm -s empty -t deb -p /opt/python2.7-0.0.0-0-any.deb --name python2.7 --license MIT --version 0.0.0 --architecture all --description 'Dummy package to satisfy google-cloud-cli dependencies.' --maintainer 'Yourself' && \
-    dpkg -i /opt/python2.7-0.0.0-0-any.deb && \
-    rm /opt/python2.7-0.0.0-0-any.deb
+    fpm -s empty -t deb -p /opt/python2.7-0.0.0-0-any.deb --name python2.7 --license MIT --version 0.0.0 --architecture all --description 'Dummy package to satisfy google-cloud-cli dependencies.' --maintainer 'Youssef'
+
+# Install the .deb package
+RUN dpkg -i /opt/python2.7-0.0.0-0-any.deb
+
+# List contents of /opt to verify the .deb file exists
+RUN ls -l /opt
+
 
 # Install Go
 WORKDIR /usr/local
