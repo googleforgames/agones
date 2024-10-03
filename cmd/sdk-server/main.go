@@ -47,8 +47,9 @@ import (
 )
 
 const (
-	defaultGRPCPort = 9357
-	defaultHTTPPort = 9358
+	defaultGRPCPort   = 9357
+	defaultHTTPPort   = 9358
+	defaultHealthPort = 8080
 
 	// Flags (that can also be env vars)
 	gameServerNameFlag      = "gameserver-name"
@@ -64,6 +65,7 @@ const (
 	timeoutFlag             = "timeout"
 	grpcPortFlag            = "grpc-port"
 	httpPortFlag            = "http-port"
+	healthPortFlag          = "health-port"
 	logLevelFlag            = "log-level"
 )
 
@@ -147,7 +149,7 @@ func main() {
 
 		var s *sdkserver.SDKServer
 		s, err = sdkserver.NewSDKServer(ctlConf.GameServerName, ctlConf.PodNamespace,
-			kubeClient, agonesClient, logLevel)
+			kubeClient, agonesClient, logLevel, ctlConf.HealthPort)
 		if err != nil {
 			logger.WithError(err).Fatalf("Could not start sidecar")
 		}
@@ -286,6 +288,7 @@ func parseEnvFlags() config {
 	viper.SetDefault(gracefulTerminationFlag, true)
 	viper.SetDefault(grpcPortFlag, defaultGRPCPort)
 	viper.SetDefault(httpPortFlag, defaultHTTPPort)
+	viper.SetDefault(healthPortFlag, defaultHealthPort)
 	viper.SetDefault(logLevelFlag, "Info")
 	pflag.String(gameServerNameFlag, viper.GetString(gameServerNameFlag),
 		"Optional flag to set GameServer name. Overrides value given from `GAMESERVER_NAME` environment variable.")
@@ -297,6 +300,7 @@ func parseEnvFlags() config {
 	pflag.String(addressFlag, viper.GetString(addressFlag), "The Address to bind the server grpcPort to. Defaults to 'localhost'")
 	pflag.Int(grpcPortFlag, viper.GetInt(grpcPortFlag), fmt.Sprintf("Port on which to bind the gRPC server. Defaults to %d", defaultGRPCPort))
 	pflag.Int(httpPortFlag, viper.GetInt(httpPortFlag), fmt.Sprintf("Port on which to bind the HTTP server. Defaults to %d", defaultHTTPPort))
+	pflag.Int(healthPortFlag, viper.GetInt(healthPortFlag), fmt.Sprintf("Port on which to bind the healthcheck port on the HTTP server. Defaults to %d", defaultHealthPort))
 	pflag.Int(delayFlag, viper.GetInt(delayFlag), "Time to delay (in seconds) before starting to execute main. Useful for tests")
 	pflag.Int(timeoutFlag, viper.GetInt(timeoutFlag), "Time of execution (in seconds) before close. Useful for tests")
 	pflag.String(testFlag, viper.GetString(testFlag), "List functions which should be called during the SDK Conformance test run.")
@@ -321,6 +325,7 @@ func parseEnvFlags() config {
 	runtime.Must(viper.BindEnv(timeoutFlag))
 	runtime.Must(viper.BindEnv(grpcPortFlag))
 	runtime.Must(viper.BindEnv(httpPortFlag))
+	runtime.Must(viper.BindEnv(healthPortFlag))
 	runtime.Must(viper.BindPFlags(pflag.CommandLine))
 	runtime.Must(viper.BindEnv(logLevelFlag))
 	runtime.Must(runtime.FeaturesBindEnv())
@@ -340,6 +345,7 @@ func parseEnvFlags() config {
 		GracefulTermination: viper.GetBool(gracefulTerminationFlag),
 		GRPCPort:            viper.GetInt(grpcPortFlag),
 		HTTPPort:            viper.GetInt(httpPortFlag),
+		HealthPort:          viper.GetInt(healthPortFlag),
 		LogLevel:            viper.GetString(logLevelFlag),
 	}
 }
@@ -359,6 +365,7 @@ type config struct {
 	GracefulTermination bool
 	GRPCPort            int
 	HTTPPort            int
+	HealthPort          int
 	LogLevel            string
 }
 

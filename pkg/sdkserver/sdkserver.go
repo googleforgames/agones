@@ -141,7 +141,7 @@ type SDKServer struct {
 // NewSDKServer creates a SDKServer that sets up an
 // InClusterConfig for Kubernetes
 func NewSDKServer(gameServerName, namespace string, kubeClient kubernetes.Interface,
-	agonesClient versioned.Interface, logLevel logrus.Level) (*SDKServer, error) {
+	agonesClient versioned.Interface, logLevel logrus.Level, healthPort int) (*SDKServer, error) {
 	mux := http.NewServeMux()
 	resync := 30 * time.Second
 	if runtime.FeatureEnabled(runtime.FeatureDisableResyncOnSDKServer) {
@@ -163,7 +163,7 @@ func NewSDKServer(gameServerName, namespace string, kubeClient kubernetes.Interf
 		gameServerLister: gameServers.Lister(),
 		gameServerSynced: gameServers.Informer().HasSynced,
 		server: &http.Server{
-			Addr:    ":8080",
+			Addr:    fmt.Sprintf(":%d", healthPort),
 			Handler: mux,
 		},
 		clock:              clock.RealClock{},
