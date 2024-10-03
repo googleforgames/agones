@@ -143,44 +143,44 @@ type sdkMock struct {
 	annotations map[string]string
 }
 
-func (m *sdkMock) SetLabel(ctx context.Context, in *sdk.KeyValue, opts ...grpc.CallOption) (*sdk.Empty, error) {
+func (m *sdkMock) SetLabel(_ context.Context, in *sdk.KeyValue, _ ...grpc.CallOption) (*sdk.Empty, error) {
 	m.labels["agones.dev/sdk-"+in.Key] = in.Value
 	return &sdk.Empty{}, nil
 }
 
-func (m *sdkMock) SetAnnotation(ctx context.Context, in *sdk.KeyValue, opts ...grpc.CallOption) (*sdk.Empty, error) {
+func (m *sdkMock) SetAnnotation(_ context.Context, in *sdk.KeyValue, _ ...grpc.CallOption) (*sdk.Empty, error) {
 	m.annotations["agones.dev/sdk-"+in.Key] = in.Value
 	return &sdk.Empty{}, nil
 }
 
-func (m *sdkMock) WatchGameServer(ctx context.Context, in *sdk.Empty, opts ...grpc.CallOption) (sdk.SDK_WatchGameServerClient, error) {
+func (m *sdkMock) WatchGameServer(_ context.Context, _ *sdk.Empty, _ ...grpc.CallOption) (sdk.SDK_WatchGameServerClient, error) {
 	return m.wm, nil
 }
 
-func (m *sdkMock) GetGameServer(ctx context.Context, in *sdk.Empty, opts ...grpc.CallOption) (*sdk.GameServer, error) {
+func (m *sdkMock) GetGameServer(_ context.Context, _ *sdk.Empty, _ ...grpc.CallOption) (*sdk.GameServer, error) {
 	return &sdk.GameServer{}, nil
 }
 
-func (m *sdkMock) Ready(ctx context.Context, e *sdk.Empty, opts ...grpc.CallOption) (*sdk.Empty, error) {
+func (m *sdkMock) Ready(_ context.Context, e *sdk.Empty, _ ...grpc.CallOption) (*sdk.Empty, error) {
 	m.ready = true
 	return e, nil
 }
 
-func (m *sdkMock) Allocate(ctx context.Context, e *sdk.Empty, opts ...grpc.CallOption) (*sdk.Empty, error) {
+func (m *sdkMock) Allocate(_ context.Context, e *sdk.Empty, _ ...grpc.CallOption) (*sdk.Empty, error) {
 	m.allocated = true
 	return e, nil
 }
 
-func (m *sdkMock) Shutdown(ctx context.Context, e *sdk.Empty, opts ...grpc.CallOption) (*sdk.Empty, error) {
+func (m *sdkMock) Shutdown(_ context.Context, e *sdk.Empty, _ ...grpc.CallOption) (*sdk.Empty, error) {
 	m.shutdown = true
 	return e, nil
 }
 
-func (m *sdkMock) Health(ctx context.Context, opts ...grpc.CallOption) (sdk.SDK_HealthClient, error) {
+func (m *sdkMock) Health(_ context.Context, _ ...grpc.CallOption) (sdk.SDK_HealthClient, error) {
 	return m.hm, nil
 }
 
-func (m *sdkMock) Reserve(ctx context.Context, in *sdk.Duration, opts ...grpc.CallOption) (*sdk.Empty, error) {
+func (m *sdkMock) Reserve(_ context.Context, in *sdk.Duration, _ ...grpc.CallOption) (*sdk.Empty, error) {
 	m.reserved = in
 	return &sdk.Empty{}, nil
 }
@@ -214,11 +214,11 @@ func (h *healthMock) Context() context.Context {
 	panic("implement me")
 }
 
-func (h *healthMock) SendMsg(m interface{}) error {
+func (h *healthMock) SendMsg(_ interface{}) error {
 	panic("implement me")
 }
 
-func (h *healthMock) RecvMsg(m interface{}) error {
+func (h *healthMock) RecvMsg(_ interface{}) error {
 	panic("implement me")
 }
 
@@ -246,10 +246,10 @@ func (*watchMock) Context() context.Context {
 	panic("implement me")
 }
 
-func (*watchMock) SendMsg(m interface{}) error {
+func (*watchMock) SendMsg(_ interface{}) error {
 	panic("implement me")
 }
 
-func (*watchMock) RecvMsg(m interface{}) error {
+func (*watchMock) RecvMsg(_ interface{}) error {
 	panic("implement me")
 }

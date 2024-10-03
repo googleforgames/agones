@@ -31,7 +31,7 @@ import (
 
 func testHTTPHealth(t *testing.T, url string, expectedResponse string, expectedStatus int) {
 	// do a poll, because this code could run before the health check becomes live
-	err := wait.PollUntilContextTimeout(context.Background(), time.Second, 20*time.Second, true, func(ctx context.Context) (done bool, err error) {
+	err := wait.PollUntilContextTimeout(context.Background(), time.Second, 20*time.Second, true, func(_ context.Context) (done bool, err error) {
 		resp, err := http.Get(url)
 		if err != nil {
 			logrus.WithError(err).Error("Error connecting to ", url)
@@ -89,11 +89,11 @@ func (m *emptyMockStream) Context() context.Context {
 	panic("implement me")
 }
 
-func (m *emptyMockStream) SendMsg(msg interface{}) error {
+func (m *emptyMockStream) SendMsg(_ interface{}) error {
 	panic("implement me")
 }
 
-func (m *emptyMockStream) RecvMsg(msg interface{}) error {
+func (m *emptyMockStream) RecvMsg(_ interface{}) error {
 	panic("implement me")
 }
 
@@ -131,10 +131,10 @@ func (m *gameServerMockStream) Context() netcontext.Context {
 	return m.ctx
 }
 
-func (*gameServerMockStream) SendMsg(m interface{}) error {
+func (*gameServerMockStream) SendMsg(_ interface{}) error {
 	panic("implement me")
 }
 
-func (*gameServerMockStream) RecvMsg(m interface{}) error {
+func (*gameServerMockStream) RecvMsg(_ interface{}) error {
 	panic("implement me")
 }

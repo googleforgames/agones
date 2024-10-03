@@ -87,7 +87,7 @@ func NewHealthController(
 	hc.recorder = eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: "health-controller"})
 
 	_, _ = podInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		UpdateFunc: func(oldObj, newObj interface{}) {
+		UpdateFunc: func(_, newObj interface{}) {
 			pod := newObj.(*corev1.Pod)
 			if pod.ObjectMeta.DeletionTimestamp.IsZero() && isGameServerPod(pod) && hc.isUnhealthy(pod) {
 				hc.workerqueue.Enqueue(pod)

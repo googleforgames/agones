@@ -295,20 +295,20 @@ func TestControllerSyncFleetAutoscaler(t *testing.T) {
 			Time: time.Now(),
 		}
 
-		m.AgonesClient.AddReactor("list", "fleetautoscalers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("list", "fleetautoscalers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &autoscalingv1.FleetAutoscalerList{Items: []autoscalingv1.FleetAutoscaler{*fas}}, nil
 		})
 
-		m.AgonesClient.AddReactor("update", "fleetautoscalers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("update", "fleetautoscalers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			assert.FailNow(t, "fleetautoscaler should not update")
 			return false, nil, nil
 		})
 
-		m.AgonesClient.AddReactor("list", "fleets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("list", "fleets", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &agonesv1.FleetList{Items: []agonesv1.Fleet{*f}}, nil
 		})
 
-		m.AgonesClient.AddReactor("update", "fleets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("update", "fleets", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			assert.FailNow(t, "fleet should not update")
 			return false, nil, nil
 		})
@@ -335,7 +335,7 @@ func TestControllerSyncFleetAutoscaler(t *testing.T) {
 		fUpdated := false
 		fasUpdated := false
 
-		m.AgonesClient.AddReactor("list", "fleetautoscalers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("list", "fleetautoscalers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &autoscalingv1.FleetAutoscalerList{Items: []autoscalingv1.FleetAutoscaler{*fas}}, nil
 		})
 
@@ -351,7 +351,7 @@ func TestControllerSyncFleetAutoscaler(t *testing.T) {
 			return true, fas, nil
 		})
 
-		m.AgonesClient.AddReactor("list", "fleets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("list", "fleets", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &agonesv1.FleetList{Items: []agonesv1.Fleet{*f}}, nil
 		})
 
@@ -393,7 +393,7 @@ func TestControllerSyncFleetAutoscaler(t *testing.T) {
 		fUpdated := false
 		fasUpdated := false
 
-		m.AgonesClient.AddReactor("list", "fleetautoscalers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("list", "fleetautoscalers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &autoscalingv1.FleetAutoscalerList{Items: []autoscalingv1.FleetAutoscaler{*fas}}, nil
 		})
 
@@ -409,7 +409,7 @@ func TestControllerSyncFleetAutoscaler(t *testing.T) {
 			return true, fas, nil
 		})
 
-		m.AgonesClient.AddReactor("list", "fleets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("list", "fleets", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &agonesv1.FleetList{Items: []agonesv1.Fleet{*f}}, nil
 		})
 
@@ -451,20 +451,20 @@ func TestControllerSyncFleetAutoscaler(t *testing.T) {
 		fas.Spec.Policy.Webhook.URL = &(server.URL)
 		fas.Spec.Policy.Webhook.Service = nil
 
-		m.AgonesClient.AddReactor("list", "fleetautoscalers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("list", "fleetautoscalers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &autoscalingv1.FleetAutoscalerList{Items: []autoscalingv1.FleetAutoscaler{*fas}}, nil
 		})
 
-		m.AgonesClient.AddReactor("update", "fleetautoscalers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("update", "fleetautoscalers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			assert.FailNow(t, "fleetautoscaler should not update")
 			return false, nil, nil
 		})
 
-		m.AgonesClient.AddReactor("list", "fleets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("list", "fleets", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &agonesv1.FleetList{Items: []agonesv1.Fleet{*f}}, nil
 		})
 
-		m.AgonesClient.AddReactor("update", "fleets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("update", "fleets", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			assert.FailNow(t, "fleet should not update")
 			return false, nil, nil
 		})
@@ -491,7 +491,7 @@ func TestControllerSyncFleetAutoscaler(t *testing.T) {
 		fUpdated := false
 		fasUpdated := false
 
-		m.AgonesClient.AddReactor("list", "fleetautoscalers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("list", "fleetautoscalers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &autoscalingv1.FleetAutoscalerList{Items: []autoscalingv1.FleetAutoscaler{*fas}}, nil
 		})
 
@@ -507,7 +507,7 @@ func TestControllerSyncFleetAutoscaler(t *testing.T) {
 			return true, fas, nil
 		})
 
-		m.AgonesClient.AddReactor("list", "fleets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("list", "fleets", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &agonesv1.FleetList{Items: []agonesv1.Fleet{*f}}, nil
 		})
 
@@ -545,20 +545,20 @@ func TestControllerSyncFleetAutoscaler(t *testing.T) {
 			Time: time.Now(),
 		}
 
-		m.AgonesClient.AddReactor("list", "fleetautoscalers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("list", "fleetautoscalers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &autoscalingv1.FleetAutoscalerList{Items: []autoscalingv1.FleetAutoscaler{*fas}}, nil
 		})
 
-		m.AgonesClient.AddReactor("update", "fleetautoscalers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("update", "fleetautoscalers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			assert.FailNow(t, "fleetautoscaler should not update")
 			return true, nil, nil
 		})
 
-		m.AgonesClient.AddReactor("list", "fleets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("list", "fleets", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &agonesv1.FleetList{Items: []agonesv1.Fleet{*f}}, nil
 		})
 
-		m.AgonesClient.AddReactor("update", "fleets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("update", "fleets", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			assert.FailNow(t, "fleet should not update")
 
 			return false, nil, nil
@@ -584,16 +584,16 @@ func TestControllerSyncFleetAutoscaler(t *testing.T) {
 		fas.Status.CurrentReplicas = 10
 		fas.Status.DesiredReplicas = 10
 
-		m.AgonesClient.AddReactor("list", "fleetautoscalers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("list", "fleetautoscalers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &autoscalingv1.FleetAutoscalerList{Items: []autoscalingv1.FleetAutoscaler{*fas}}, nil
 		})
 
-		m.AgonesClient.AddReactor("update", "fleetautoscalers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("update", "fleetautoscalers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			assert.FailNow(t, "fleetautoscaler should not update")
 			return false, nil, nil
 		})
 
-		m.AgonesClient.AddReactor("update", "fleets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("update", "fleets", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			assert.FailNow(t, "fleet should not update")
 			return false, nil, nil
 		})
@@ -614,7 +614,7 @@ func TestControllerSyncFleetAutoscaler(t *testing.T) {
 		fas.Status.CurrentReplicas = 5
 		updated := false
 
-		m.AgonesClient.AddReactor("list", "fleetautoscalers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("list", "fleetautoscalers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &autoscalingv1.FleetAutoscalerList{Items: []autoscalingv1.FleetAutoscaler{*fas}}, nil
 		})
 
@@ -644,7 +644,7 @@ func TestControllerSyncFleetAutoscaler(t *testing.T) {
 		fas.Status.DesiredReplicas = 10
 		fas.Status.CurrentReplicas = 5
 
-		m.AgonesClient.AddReactor("list", "fleetautoscalers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("list", "fleetautoscalers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &autoscalingv1.FleetAutoscalerList{Items: []autoscalingv1.FleetAutoscaler{*fas}}, nil
 		})
 
@@ -675,11 +675,11 @@ func TestControllerSyncFleetAutoscaler(t *testing.T) {
 			Type: "WRONG TYPE",
 		}
 
-		m.AgonesClient.AddReactor("list", "fleetautoscalers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("list", "fleetautoscalers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &autoscalingv1.FleetAutoscalerList{Items: []autoscalingv1.FleetAutoscaler{*fas}}, nil
 		})
 
-		m.AgonesClient.AddReactor("list", "fleets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("list", "fleets", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &agonesv1.FleetList{Items: []agonesv1.Fleet{*f}}, nil
 		})
 
@@ -702,11 +702,11 @@ func TestControllerSyncFleetAutoscaler(t *testing.T) {
 			Type: "WRONG TYPE",
 		}
 
-		m.AgonesClient.AddReactor("list", "fleetautoscalers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("list", "fleetautoscalers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &autoscalingv1.FleetAutoscalerList{Items: []autoscalingv1.FleetAutoscaler{*fas}}, nil
 		})
 
-		m.AgonesClient.AddReactor("list", "fleets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("list", "fleets", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &agonesv1.FleetList{Items: []agonesv1.Fleet{*f}}, nil
 		})
 
@@ -730,11 +730,11 @@ func TestControllerSyncFleetAutoscaler(t *testing.T) {
 		c, m := newFakeController()
 		fas, f := defaultFixtures()
 
-		m.AgonesClient.AddReactor("list", "fleetautoscalers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("list", "fleetautoscalers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &autoscalingv1.FleetAutoscalerList{Items: []autoscalingv1.FleetAutoscaler{*fas}}, nil
 		})
 
-		m.AgonesClient.AddReactor("list", "fleets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("list", "fleets", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &agonesv1.FleetList{Items: []agonesv1.Fleet{*f}}, nil
 		})
 
@@ -817,7 +817,7 @@ func TestControllerScaleFleet(t *testing.T) {
 		fas, f := defaultFixtures()
 		replicas := f.Spec.Replicas
 
-		m.AgonesClient.AddReactor("update", "fleets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("update", "fleets", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			assert.FailNow(t, "fleet should not update")
 			return false, nil, nil
 		})
@@ -868,7 +868,7 @@ func TestControllerUpdateStatus(t *testing.T) {
 		fas.Status.DesiredReplicas = 20
 		fas.Status.LastScaleTime = nil
 
-		m.AgonesClient.AddReactor("update", "fleetautoscalers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("update", "fleetautoscalers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			assert.FailNow(t, "should not update")
 			return false, nil, nil
 		})
@@ -885,7 +885,7 @@ func TestControllerUpdateStatus(t *testing.T) {
 		c, m := newFakeController()
 		fas, _ := defaultFixtures()
 
-		m.AgonesClient.AddReactor("update", "fleetautoscalers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("update", "fleetautoscalers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, nil, errors.New("random-err")
 		})
 
@@ -987,7 +987,7 @@ func TestControllerUpdateStatusUnableToScale(t *testing.T) {
 		fas.Status.CurrentReplicas = 0
 		fas.Status.DesiredReplicas = 0
 
-		m.AgonesClient.AddReactor("update", "fleetautoscalers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("update", "fleetautoscalers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			assert.FailNow(t, "fleetautoscaler should not update")
 			return false, nil, nil
 		})
@@ -1048,12 +1048,12 @@ func TestControllerAddUpdateDeleteFasThread(t *testing.T) {
 
 	var counter int64
 	c, m := newFakeController()
-	c.workerqueue.SyncHandler = func(ctx context.Context, s string) error {
+	c.workerqueue.SyncHandler = func(_ context.Context, _ string) error {
 		atomic.AddInt64(&counter, 1)
 		return nil
 	}
 
-	m.ExtClient.AddReactor("get", "customresourcedefinitions", func(action k8stesting.Action) (bool, runtime.Object, error) {
+	m.ExtClient.AddReactor("get", "customresourcedefinitions", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 		return true, agtesting.NewEstablishedCRD(), nil
 	})
 
@@ -1138,7 +1138,7 @@ func TestControllerCleanFasThreads(t *testing.T) {
 	c, m := newFakeController()
 	fas, _ := defaultFixtures()
 
-	m.AgonesClient.AddReactor("list", "fleetautoscalers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+	m.AgonesClient.AddReactor("list", "fleetautoscalers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 		return true, &autoscalingv1.FleetAutoscalerList{Items: []autoscalingv1.FleetAutoscaler{*fas}}, nil
 	})
 

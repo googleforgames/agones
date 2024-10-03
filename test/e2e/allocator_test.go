@@ -92,9 +92,9 @@ func TestAllocatorWithDeprecatedRequired(t *testing.T) {
 			return false, err
 		}
 
-		conn, err := grpc.Dial(requestURL, dialOpts...)
+		conn, err := grpc.NewClient(requestURL, dialOpts...)
 		if err != nil {
-			logrus.WithError(err).Info("failing grpc.Dial")
+			logrus.WithError(err).Info("failing grpc.NewClient")
 			return false, nil
 		}
 		defer conn.Close() // nolint: errcheck
@@ -186,9 +186,9 @@ func TestAllocatorWithSelectors(t *testing.T) {
 			return false, err
 		}
 
-		conn, err := grpc.Dial(requestURL, dialOpts...)
+		conn, err := grpc.NewClient(requestURL, dialOpts...)
 		if err != nil {
-			logrus.WithError(err).Info("failing grpc.Dial")
+			logrus.WithError(err).Info("failing grpc.NewClient")
 			return false, nil
 		}
 		defer conn.Close() // nolint: errcheck
@@ -277,7 +277,7 @@ func TestRestAllocatorWithDeprecatedRequired(t *testing.T) {
 	}
 
 	// wait for the allocation system to come online
-	err = wait.PollUntilContextTimeout(context.Background(), 2*time.Second, 5*time.Minute, true, func(ctx context.Context) (bool, error) {
+	err = wait.PollUntilContextTimeout(context.Background(), 2*time.Second, 5*time.Minute, true, func(_ context.Context) (bool, error) {
 		resp, err := client.Do(req)
 		if err != nil {
 			logrus.WithError(err).Info("failed Allocate rest request")
@@ -361,9 +361,9 @@ func TestAllocatorWithCountersAndLists(t *testing.T) {
 		if err != nil {
 			return false, err
 		}
-		conn, err := grpc.Dial(requestURL, dialOpts...)
+		conn, err := grpc.NewClient(requestURL, dialOpts...)
 		if err != nil {
-			logrus.WithError(err).Info("failing grpc.Dial")
+			logrus.WithError(err).Info("failing grpc.NewClient")
 			return false, nil
 		}
 		defer conn.Close() // nolint: errcheck
@@ -523,7 +523,7 @@ func TestRestAllocatorWithSelectors(t *testing.T) {
 
 	// wait for the allocation system to come online
 	var response pb.AllocationResponse
-	err = wait.PollUntilContextTimeout(context.Background(), 2*time.Second, 5*time.Minute, true, func(ctx context.Context) (bool, error) {
+	err = wait.PollUntilContextTimeout(context.Background(), 2*time.Second, 5*time.Minute, true, func(_ context.Context) (bool, error) {
 		resp, err := client.Do(req)
 		if err != nil {
 			logrus.WithError(err).Info("failed Allocate rest request")
@@ -617,9 +617,9 @@ func TestAllocatorCrossNamespace(t *testing.T) {
 			return false, err
 		}
 
-		conn, err := grpc.Dial(requestURL, dialOpts...)
+		conn, err := grpc.NewClient(requestURL, dialOpts...)
 		if err != nil {
-			logrus.WithError(err).Info("failing grpc.Dial")
+			logrus.WithError(err).Info("failing grpc.NewClient")
 			return false, nil
 		}
 		defer conn.Close() // nolint: errcheck
