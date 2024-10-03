@@ -57,10 +57,11 @@ RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] http://packages.c
     echo "source /usr/share/google-cloud-sdk/completion.bash.inc" >> /root/.bashrc
 
 # Install additional Go tools
-RUN go install golang.org/x/tools/cmd/goimports@latest \
-    golang.org/x/pkgsite/cmd/pkgsite@latest \
-    github.com/golangci/golangci-lint/cmd/golangci-lint@v1.51.2 \
-    gotest.tools/gotestsum@latest
+
+RUN go install golang.org/x/tools/cmd/goimports@latest || echo "Failed to install goimports" && \
+    go install golang.org/x/pkgsite/cmd/pkgsite@latest || echo "Failed to install pkgsite" && \
+    go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.51.2 || echo "Failed to install golangci-lint" && \
+    go install gotest.tools/gotestsum@latest || echo "Failed to install gotestsum"
 
 # Install specific kubectl version
 RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/v${KUBERNETES_VER}/bin/linux/amd64/kubectl && \
