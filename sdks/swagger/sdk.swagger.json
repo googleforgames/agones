@@ -118,6 +118,33 @@
         ]
       }
     },
+    "/metadata/annotations": {
+      "put": {
+        "summary": "Apply multiple Annotations to the backing GameServer metadata",
+        "operationId": "SetAnnotations",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/sdkEmpty"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/sdkKeyValues"
+            }
+          }
+        ],
+        "tags": [
+          "SDK"
+        ]
+      }
+    },
     "/metadata/label": {
       "put": {
         "summary": "Apply a Label to the backing GameServer metadata",
@@ -480,6 +507,18 @@
         }
       },
       "title": "Key, Value entry"
+    },
+    "sdkKeyValues": {
+      "type": "object",
+      "properties": {
+        "key_values": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/sdkKeyValue"
+          }
+        }
+      }
     },
     "googlerpcStatus": {
       "type": "object",

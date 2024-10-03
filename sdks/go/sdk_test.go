@@ -128,6 +128,22 @@ func TestSDKSetAnnotation(t *testing.T) {
 	assert.Equal(t, expected, sm.annotations["agones.dev/sdk-foo"])
 }
 
+func TestSDKSetAnnotations(t *testing.T) {
+	t.Parallel()
+	sm := &sdkMock{
+		annotations: map[string]string{},
+	}
+	s := SDK{
+		ctx:    context.Background(),
+		client: sm,
+	}
+
+	err := s.SetAnnotations(map[string]string{"foo": "bar", "bar": "baz"})
+	assert.Nil(t, err)
+	assert.Equal(t, "bar", sm.annotations["agones.dev/sdk-foo"])
+	assert.Equal(t, "baz", sm.annotations["agones.dev/sdk-bar"])
+}
+
 var _ sdk.SDKClient = &sdkMock{}
 var _ sdk.SDK_HealthClient = &healthMock{}
 var _ sdk.SDK_WatchGameServerClient = &watchMock{}
@@ -150,6 +166,13 @@ func (m *sdkMock) SetLabel(ctx context.Context, in *sdk.KeyValue, opts ...grpc.C
 
 func (m *sdkMock) SetAnnotation(ctx context.Context, in *sdk.KeyValue, opts ...grpc.CallOption) (*sdk.Empty, error) {
 	m.annotations["agones.dev/sdk-"+in.Key] = in.Value
+	return &sdk.Empty{}, nil
+}
+
+func (m *sdkMock) SetAnnotations(ctx context.Context, in *sdk.KeyValues, opts ...grpc.CallOption) (*sdk.Empty, error) {
+	for _, kv := range in.KeyValues {
+		m.annotations["agones.dev/sdk-"+kv.Key] = kv.Value
+	}
 	return &sdk.Empty{}, nil
 }
 

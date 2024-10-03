@@ -122,9 +122,15 @@ AGONES_EXPORT extern GameServer_Status_PlayerStatusDefaultTypeInternal _GameServ
 class GameServer_Status_Port;
 struct GameServer_Status_PortDefaultTypeInternal;
 AGONES_EXPORT extern GameServer_Status_PortDefaultTypeInternal _GameServer_Status_Port_default_instance_;
+class Key;
+struct KeyDefaultTypeInternal;
+AGONES_EXPORT extern KeyDefaultTypeInternal _Key_default_instance_;
 class KeyValue;
 struct KeyValueDefaultTypeInternal;
 AGONES_EXPORT extern KeyValueDefaultTypeInternal _KeyValue_default_instance_;
+class KeyValues;
+struct KeyValuesDefaultTypeInternal;
+AGONES_EXPORT extern KeyValuesDefaultTypeInternal _KeyValues_default_instance_;
 }  // namespace sdk
 }  // namespace dev
 }  // namespace agones
@@ -162,7 +168,11 @@ AGONES_EXPORT ::agones::dev::sdk::GameServer_Status_PlayerStatus* Arena::CreateM
 template <>
 AGONES_EXPORT ::agones::dev::sdk::GameServer_Status_Port* Arena::CreateMaybeMessage<::agones::dev::sdk::GameServer_Status_Port>(Arena*);
 template <>
+AGONES_EXPORT ::agones::dev::sdk::Key* Arena::CreateMaybeMessage<::agones::dev::sdk::Key>(Arena*);
+template <>
 AGONES_EXPORT ::agones::dev::sdk::KeyValue* Arena::CreateMaybeMessage<::agones::dev::sdk::KeyValue>(Arena*);
+template <>
+AGONES_EXPORT ::agones::dev::sdk::KeyValues* Arena::CreateMaybeMessage<::agones::dev::sdk::KeyValues>(Arena*);
 PROTOBUF_NAMESPACE_CLOSE
 
 namespace agones {
@@ -485,6 +495,336 @@ class AGONES_EXPORT KeyValue final :
   friend struct ::TableStruct_sdk_2eproto;
 };// -------------------------------------------------------------------
 
+class AGONES_EXPORT KeyValues final :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:agones.dev.sdk.KeyValues) */ {
+ public:
+  inline KeyValues() : KeyValues(nullptr) {}
+  ~KeyValues() override;
+  template<typename = void>
+  explicit PROTOBUF_CONSTEXPR KeyValues(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  KeyValues(const KeyValues& from);
+  KeyValues(KeyValues&& from) noexcept
+    : KeyValues() {
+    *this = ::std::move(from);
+  }
+
+  inline KeyValues& operator=(const KeyValues& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline KeyValues& operator=(KeyValues&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  inline const ::PROTOBUF_NAMESPACE_ID::UnknownFieldSet& unknown_fields() const {
+    return _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance);
+  }
+  inline ::PROTOBUF_NAMESPACE_ID::UnknownFieldSet* mutable_unknown_fields() {
+    return _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const KeyValues& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const KeyValues* internal_default_instance() {
+    return reinterpret_cast<const KeyValues*>(
+               &_KeyValues_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    2;
+
+  friend void swap(KeyValues& a, KeyValues& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(KeyValues* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(KeyValues* other) {
+    if (other == this) return;
+    ABSL_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  KeyValues* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<KeyValues>(arena);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
+  void CopyFrom(const KeyValues& from);
+  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
+  void MergeFrom( const KeyValues& from) {
+    KeyValues::MergeImpl(*this, from);
+  }
+  private:
+  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg);
+  public:
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  ::size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  ::uint8_t* _InternalSerialize(
+      ::uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(KeyValues* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::absl::string_view FullMessageName() {
+    return "agones.dev.sdk.KeyValues";
+  }
+  protected:
+  explicit KeyValues(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  public:
+
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kKeyValuesFieldNumber = 1,
+  };
+  // repeated .agones.dev.sdk.KeyValue key_values = 1;
+  int key_values_size() const;
+  private:
+  int _internal_key_values_size() const;
+
+  public:
+  void clear_key_values() ;
+  ::agones::dev::sdk::KeyValue* mutable_key_values(int index);
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::agones::dev::sdk::KeyValue >*
+      mutable_key_values();
+  private:
+  const ::agones::dev::sdk::KeyValue& _internal_key_values(int index) const;
+  ::agones::dev::sdk::KeyValue* _internal_add_key_values();
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField<::agones::dev::sdk::KeyValue>& _internal_key_values() const;
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField<::agones::dev::sdk::KeyValue>* _internal_mutable_key_values();
+  public:
+  const ::agones::dev::sdk::KeyValue& key_values(int index) const;
+  ::agones::dev::sdk::KeyValue* add_key_values();
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::agones::dev::sdk::KeyValue >&
+      key_values() const;
+  // @@protoc_insertion_point(class_scope:agones.dev.sdk.KeyValues)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::agones::dev::sdk::KeyValue > key_values_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_sdk_2eproto;
+};// -------------------------------------------------------------------
+
+class AGONES_EXPORT Key final :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:agones.dev.sdk.Key) */ {
+ public:
+  inline Key() : Key(nullptr) {}
+  ~Key() override;
+  template<typename = void>
+  explicit PROTOBUF_CONSTEXPR Key(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  Key(const Key& from);
+  Key(Key&& from) noexcept
+    : Key() {
+    *this = ::std::move(from);
+  }
+
+  inline Key& operator=(const Key& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline Key& operator=(Key&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  inline const ::PROTOBUF_NAMESPACE_ID::UnknownFieldSet& unknown_fields() const {
+    return _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance);
+  }
+  inline ::PROTOBUF_NAMESPACE_ID::UnknownFieldSet* mutable_unknown_fields() {
+    return _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const Key& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const Key* internal_default_instance() {
+    return reinterpret_cast<const Key*>(
+               &_Key_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    3;
+
+  friend void swap(Key& a, Key& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(Key* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(Key* other) {
+    if (other == this) return;
+    ABSL_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  Key* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<Key>(arena);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
+  void CopyFrom(const Key& from);
+  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
+  void MergeFrom( const Key& from) {
+    Key::MergeImpl(*this, from);
+  }
+  private:
+  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg);
+  public:
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  ::size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  ::uint8_t* _InternalSerialize(
+      ::uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(Key* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::absl::string_view FullMessageName() {
+    return "agones.dev.sdk.Key";
+  }
+  protected:
+  explicit Key(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  public:
+
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kKeyFieldNumber = 1,
+  };
+  // string key = 1;
+  void clear_key() ;
+  const std::string& key() const;
+
+
+
+
+  template <typename Arg_ = const std::string&, typename... Args_>
+  void set_key(Arg_&& arg, Args_... args);
+  std::string* mutable_key();
+  PROTOBUF_NODISCARD std::string* release_key();
+  void set_allocated_key(std::string* ptr);
+
+  private:
+  const std::string& _internal_key() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_key(
+      const std::string& value);
+  std::string* _internal_mutable_key();
+
+  public:
+  // @@protoc_insertion_point(class_scope:agones.dev.sdk.Key)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr key_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_sdk_2eproto;
+};// -------------------------------------------------------------------
+
 class AGONES_EXPORT Duration final :
     public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:agones.dev.sdk.Duration) */ {
  public:
@@ -541,7 +881,7 @@ class AGONES_EXPORT Duration final :
                &_Duration_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    2;
+    4;
 
   friend void swap(Duration& a, Duration& b) {
     a.Swap(&b);
@@ -752,7 +1092,7 @@ class AGONES_EXPORT GameServer_ObjectMeta final :
                &_GameServer_ObjectMeta_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    5;
+    7;
 
   friend void swap(GameServer_ObjectMeta& a, GameServer_ObjectMeta& b) {
     a.Swap(&b);
@@ -1066,7 +1406,7 @@ class AGONES_EXPORT GameServer_Spec_Health final :
                &_GameServer_Spec_Health_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    6;
+    8;
 
   friend void swap(GameServer_Spec_Health& a, GameServer_Spec_Health& b) {
     a.Swap(&b);
@@ -1257,7 +1597,7 @@ class AGONES_EXPORT GameServer_Spec final :
                &_GameServer_Spec_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    7;
+    9;
 
   friend void swap(GameServer_Spec& a, GameServer_Spec& b) {
     a.Swap(&b);
@@ -1419,7 +1759,7 @@ class AGONES_EXPORT GameServer_Status_Address final :
                &_GameServer_Status_Address_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    8;
+    10;
 
   friend void swap(GameServer_Status_Address& a, GameServer_Status_Address& b) {
     a.Swap(&b);
@@ -1606,7 +1946,7 @@ class AGONES_EXPORT GameServer_Status_Port final :
                &_GameServer_Status_Port_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    9;
+    11;
 
   friend void swap(GameServer_Status_Port& a, GameServer_Status_Port& b) {
     a.Swap(&b);
@@ -1783,7 +2123,7 @@ class AGONES_EXPORT GameServer_Status_PlayerStatus final :
                &_GameServer_Status_PlayerStatus_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    10;
+    12;
 
   friend void swap(GameServer_Status_PlayerStatus& a, GameServer_Status_PlayerStatus& b) {
     a.Swap(&b);
@@ -1982,7 +2322,7 @@ class AGONES_EXPORT GameServer_Status_CounterStatus final :
                &_GameServer_Status_CounterStatus_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    11;
+    13;
 
   friend void swap(GameServer_Status_CounterStatus& a, GameServer_Status_CounterStatus& b) {
     a.Swap(&b);
@@ -2149,7 +2489,7 @@ class AGONES_EXPORT GameServer_Status_ListStatus final :
                &_GameServer_Status_ListStatus_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    12;
+    14;
 
   friend void swap(GameServer_Status_ListStatus& a, GameServer_Status_ListStatus& b) {
     a.Swap(&b);
@@ -2388,7 +2728,7 @@ class AGONES_EXPORT GameServer_Status final :
                &_GameServer_Status_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    15;
+    17;
 
   friend void swap(GameServer_Status& a, GameServer_Status& b) {
     a.Swap(&b);
@@ -2688,7 +3028,7 @@ class AGONES_EXPORT GameServer final :
                &_GameServer_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    16;
+    18;
 
   friend void swap(GameServer& a, GameServer& b) {
     a.Swap(&b);
@@ -2940,6 +3280,109 @@ inline void KeyValue::set_allocated_value(std::string* value) {
         }
   #endif  // PROTOBUF_FORCE_COPY_DEFAULT_STRING
   // @@protoc_insertion_point(field_set_allocated:agones.dev.sdk.KeyValue.value)
+}
+
+// -------------------------------------------------------------------
+
+// KeyValues
+
+// repeated .agones.dev.sdk.KeyValue key_values = 1;
+inline int KeyValues::_internal_key_values_size() const {
+  return _impl_.key_values_.size();
+}
+inline int KeyValues::key_values_size() const {
+  return _internal_key_values_size();
+}
+inline void KeyValues::clear_key_values() {
+  _internal_mutable_key_values()->Clear();
+}
+inline ::agones::dev::sdk::KeyValue* KeyValues::mutable_key_values(int index) {
+  // @@protoc_insertion_point(field_mutable:agones.dev.sdk.KeyValues.key_values)
+  return _internal_mutable_key_values()->Mutable(index);
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::agones::dev::sdk::KeyValue >*
+KeyValues::mutable_key_values() {
+  // @@protoc_insertion_point(field_mutable_list:agones.dev.sdk.KeyValues.key_values)
+  return _internal_mutable_key_values();
+}
+inline const ::agones::dev::sdk::KeyValue& KeyValues::_internal_key_values(int index) const {
+  return _internal_key_values().Get(index);
+}
+inline const ::agones::dev::sdk::KeyValue& KeyValues::key_values(int index) const {
+  // @@protoc_insertion_point(field_get:agones.dev.sdk.KeyValues.key_values)
+  return _internal_key_values(index);
+}
+inline ::agones::dev::sdk::KeyValue* KeyValues::_internal_add_key_values() {
+  return _internal_mutable_key_values()->Add();
+}
+inline ::agones::dev::sdk::KeyValue* KeyValues::add_key_values() {
+  ::agones::dev::sdk::KeyValue* _add = _internal_add_key_values();
+  // @@protoc_insertion_point(field_add:agones.dev.sdk.KeyValues.key_values)
+  return _add;
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::agones::dev::sdk::KeyValue >&
+KeyValues::key_values() const {
+  // @@protoc_insertion_point(field_list:agones.dev.sdk.KeyValues.key_values)
+  return _internal_key_values();
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField<::agones::dev::sdk::KeyValue>&
+KeyValues::_internal_key_values() const {
+  return _impl_.key_values_;
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField<::agones::dev::sdk::KeyValue>*
+KeyValues::_internal_mutable_key_values() {
+  return &_impl_.key_values_;
+}
+
+// -------------------------------------------------------------------
+
+// Key
+
+// string key = 1;
+inline void Key::clear_key() {
+  _impl_.key_.ClearToEmpty();
+}
+inline const std::string& Key::key() const {
+  // @@protoc_insertion_point(field_get:agones.dev.sdk.Key.key)
+  return _internal_key();
+}
+template <typename Arg_, typename... Args_>
+inline PROTOBUF_ALWAYS_INLINE void Key::set_key(Arg_&& arg,
+                                                     Args_... args) {
+  ;
+  _impl_.key_.Set(static_cast<Arg_&&>(arg), args..., GetArenaForAllocation());
+  // @@protoc_insertion_point(field_set:agones.dev.sdk.Key.key)
+}
+inline std::string* Key::mutable_key() {
+  std::string* _s = _internal_mutable_key();
+  // @@protoc_insertion_point(field_mutable:agones.dev.sdk.Key.key)
+  return _s;
+}
+inline const std::string& Key::_internal_key() const {
+  return _impl_.key_.Get();
+}
+inline void Key::_internal_set_key(const std::string& value) {
+  ;
+
+
+  _impl_.key_.Set(value, GetArenaForAllocation());
+}
+inline std::string* Key::_internal_mutable_key() {
+  ;
+  return _impl_.key_.Mutable( GetArenaForAllocation());
+}
+inline std::string* Key::release_key() {
+  // @@protoc_insertion_point(field_release:agones.dev.sdk.Key.key)
+  return _impl_.key_.Release();
+}
+inline void Key::set_allocated_key(std::string* value) {
+  _impl_.key_.SetAllocated(value, GetArenaForAllocation());
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+        if (_impl_.key_.IsDefault()) {
+          _impl_.key_.Set("", GetArenaForAllocation());
+        }
+  #endif  // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  // @@protoc_insertion_point(field_set_allocated:agones.dev.sdk.Key.key)
 }
 
 // -------------------------------------------------------------------

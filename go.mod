@@ -30,6 +30,7 @@ require (
 	github.com/stretchr/testify v1.8.4
 	github.com/tmc/grpc-websocket-proxy v0.0.0-20220101234140-673ab2c3ae75
 	go.opencensus.io v0.24.0
+	golang.org/x/exp v0.0.0-20220722155223-a9213eeb770e
 	golang.org/x/net v0.23.0
 	golang.org/x/oauth2 v0.12.0
 	golang.org/x/time v0.3.0
