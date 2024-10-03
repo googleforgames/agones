@@ -244,7 +244,7 @@ func testLists(ctx context.Context, betaCli *beta.APIClient) {
 	}
 
 	expectedList = beta.BetaList{Name: listName, Values: []string{"test123", "test456", "test789"}, Capacity: "10"}
-	if list, _, err := betaCli.SDKApi.AddListValue(ctx, beta.ListsNameaddValueBody{Value: "test789"}, listName); err != nil {
+	if list, _, err := betaCli.SDKApi.AddListValue(ctx, beta.SdkAddListValueBody{Value: "test789"}, listName); err != nil {
 		log.Fatalf("Error getting List: %s", err)
 	} else {
 		if !cmp.Equal(expectedList, list) {
@@ -253,7 +253,7 @@ func testLists(ctx context.Context, betaCli *beta.APIClient) {
 	}
 
 	expectedList = beta.BetaList{Name: listName, Values: []string{"test123", "test789"}, Capacity: "10"}
-	if list, _, err := betaCli.SDKApi.RemoveListValue(ctx, beta.ListsNameremoveValueBody{Value: "test456"}, listName); err != nil {
+	if list, _, err := betaCli.SDKApi.RemoveListValue(ctx, beta.SdkRemoveListValueBody{Value: "test456"}, listName); err != nil {
 		log.Fatalf("Error getting List: %s", err)
 	} else {
 		if !cmp.Equal(expectedList, list) {

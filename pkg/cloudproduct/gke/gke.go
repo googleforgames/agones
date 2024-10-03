@@ -261,8 +261,8 @@ type autopilotPortAllocator struct {
 	maxPort int32
 }
 
-func (*autopilotPortAllocator) Run(_ context.Context) error        { return nil }
-func (*autopilotPortAllocator) DeAllocate(gs *agonesv1.GameServer) {}
+func (*autopilotPortAllocator) Run(_ context.Context) error       { return nil }
+func (*autopilotPortAllocator) DeAllocate(_ *agonesv1.GameServer) {}
 
 func checkPassthroughPortPolicyForAutopilot(portPolicy agonesv1.PortPolicy) bool {
 	// Autopilot can have Dynamic or Passthrough

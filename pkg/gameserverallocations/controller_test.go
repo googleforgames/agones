@@ -73,7 +73,7 @@ func TestControllerAllocator(t *testing.T) {
 		c, m := newFakeController()
 		gsWatch := watch.NewFake()
 		m.AgonesClient.AddWatchReactor("gameservers", k8stesting.DefaultWatchReactor(gsWatch, nil))
-		m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
+		m.AgonesClient.AddReactor("list", "gameservers", func(_ k8stesting.Action) (bool, k8sruntime.Object, error) {
 			return true, &agonesv1.GameServerList{Items: gsList}, nil
 		})
 
@@ -98,7 +98,7 @@ func TestControllerAllocator(t *testing.T) {
 			assert.FailNow(t, err.Error())
 		}
 		// wait for it to be up and running
-		err := wait.PollUntilContextTimeout(context.Background(), time.Second, 10*time.Second, true, func(ctx context.Context) (done bool, err error) {
+		err := wait.PollUntilContextTimeout(context.Background(), time.Second, 10*time.Second, true, func(_ context.Context) (done bool, err error) {
 			return c.allocator.allocationCache.workerqueue.RunCount() == 1, nil
 		})
 		assert.NoError(t, err)
@@ -206,7 +206,7 @@ func TestMultiClusterAllocationFromLocal(t *testing.T) {
 		c, m := newFakeController()
 		fleetName := addReactorForGameServer(&m)
 
-		m.AgonesClient.AddReactor("list", "gameserverallocationpolicies", func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
+		m.AgonesClient.AddReactor("list", "gameserverallocationpolicies", func(_ k8stesting.Action) (bool, k8sruntime.Object, error) {
 			return true, &multiclusterv1.GameServerAllocationPolicyList{
 				Items: []multiclusterv1.GameServerAllocationPolicy{
 					{
@@ -236,7 +236,7 @@ func TestMultiClusterAllocationFromLocal(t *testing.T) {
 			assert.FailNow(t, err.Error())
 		}
 		// wait for it to be up and running
-		err := wait.PollUntilContextTimeout(context.Background(), time.Second, 10*time.Second, true, func(ctx context.Context) (done bool, err error) {
+		err := wait.PollUntilContextTimeout(context.Background(), time.Second, 10*time.Second, true, func(_ context.Context) (done bool, err error) {
 			return c.allocator.allocationCache.workerqueue.RunCount() == 1, nil
 		})
 		assert.NoError(t, err)
@@ -271,7 +271,7 @@ func TestMultiClusterAllocationFromLocal(t *testing.T) {
 		c, m := newFakeController()
 		fleetName := addReactorForGameServer(&m)
 
-		m.AgonesClient.AddReactor("list", "gameserverallocationpolicies", func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
+		m.AgonesClient.AddReactor("list", "gameserverallocationpolicies", func(_ k8stesting.Action) (bool, k8sruntime.Object, error) {
 			return true, &multiclusterv1.GameServerAllocationPolicyList{
 				Items: []multiclusterv1.GameServerAllocationPolicy{},
 			}, nil
@@ -284,7 +284,7 @@ func TestMultiClusterAllocationFromLocal(t *testing.T) {
 			assert.FailNow(t, err.Error())
 		}
 		// wait for it to be up and running
-		err := wait.PollUntilContextTimeout(context.Background(), time.Second, 10*time.Second, true, func(ctx context.Context) (done bool, err error) {
+		err := wait.PollUntilContextTimeout(context.Background(), time.Second, 10*time.Second, true, func(_ context.Context) (done bool, err error) {
 			return c.allocator.allocationCache.workerqueue.RunCount() == 1, nil
 		})
 		assert.NoError(t, err)
@@ -314,7 +314,7 @@ func TestMultiClusterAllocationFromLocal(t *testing.T) {
 	t.Run("Could not find a Ready GameServer", func(t *testing.T) {
 		c, m := newFakeController()
 
-		m.AgonesClient.AddReactor("list", "gameserverallocationpolicies", func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
+		m.AgonesClient.AddReactor("list", "gameserverallocationpolicies", func(_ k8stesting.Action) (bool, k8sruntime.Object, error) {
 			return true, &multiclusterv1.GameServerAllocationPolicyList{
 				Items: []multiclusterv1.GameServerAllocationPolicy{
 					{
@@ -344,7 +344,7 @@ func TestMultiClusterAllocationFromLocal(t *testing.T) {
 			assert.FailNow(t, err.Error())
 		}
 		// wait for it to be up and running
-		err := wait.PollUntilContextTimeout(context.Background(), time.Second, 10*time.Second, true, func(ctx context.Context) (done bool, err error) {
+		err := wait.PollUntilContextTimeout(context.Background(), time.Second, 10*time.Second, true, func(_ context.Context) (done bool, err error) {
 			return c.allocator.allocationCache.workerqueue.RunCount() == 1, nil
 		})
 		assert.NoError(t, err)
@@ -388,7 +388,7 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 		// Allocation policy reactor
 		secretName := clusterName + "secret"
 		targetedNamespace := "tns"
-		m.AgonesClient.AddReactor("list", "gameserverallocationpolicies", func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
+		m.AgonesClient.AddReactor("list", "gameserverallocationpolicies", func(_ k8stesting.Action) (bool, k8sruntime.Object, error) {
 			return true, &multiclusterv1.GameServerAllocationPolicyList{
 				Items: []multiclusterv1.GameServerAllocationPolicy{
 					{
@@ -412,7 +412,7 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 		})
 
 		m.KubeClient.AddReactor("list", "secrets",
-			func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
+			func(_ k8stesting.Action) (bool, k8sruntime.Object, error) {
 				return true, getTestSecret(secretName, nil), nil
 			})
 
@@ -439,7 +439,7 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 			},
 		}
 
-		c.allocator.remoteAllocationCallback = func(ctx context.Context, e string, dialOpt grpc.DialOption, request *pb.AllocationRequest) (*pb.AllocationResponse, error) {
+		c.allocator.remoteAllocationCallback = func(_ context.Context, e string, _ grpc.DialOption, _ *pb.AllocationRequest) (*pb.AllocationResponse, error) {
 			assert.Equal(t, endpoint+":443", e)
 			serverResponse := pb.AllocationResponse{
 				GameServerName: expectedGSName,
@@ -462,7 +462,7 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 		retry := 0
 		endpoint := "z.z.z.z"
 
-		c.allocator.remoteAllocationCallback = func(ctx context.Context, endpoint string, dialOpt grpc.DialOption, request *pb.AllocationRequest) (*pb.AllocationResponse, error) {
+		c.allocator.remoteAllocationCallback = func(_ context.Context, _ string, _ grpc.DialOption, _ *pb.AllocationRequest) (*pb.AllocationResponse, error) {
 			if count == 0 {
 				serverResponse := pb.AllocationResponse{}
 				count++
@@ -475,7 +475,7 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 
 		// Allocation policy reactor
 		secretName := clusterName + "secret"
-		m.AgonesClient.AddReactor("list", "gameserverallocationpolicies", func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
+		m.AgonesClient.AddReactor("list", "gameserverallocationpolicies", func(_ k8stesting.Action) (bool, k8sruntime.Object, error) {
 			return true, &multiclusterv1.GameServerAllocationPolicyList{
 				Items: []multiclusterv1.GameServerAllocationPolicy{
 					{
@@ -515,7 +515,7 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 		})
 
 		m.KubeClient.AddReactor("list", "secrets",
-			func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
+			func(_ k8stesting.Action) (bool, k8sruntime.Object, error) {
 				return true, getTestSecret(secretName, clientCert), nil
 			})
 
@@ -556,7 +556,7 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 		healthyEndpoint := "healthy_endpoint:443"
 
 		expectedGSName := "mocked"
-		c.allocator.remoteAllocationCallback = func(ctx context.Context, endpoint string, dialOpt grpc.DialOption, request *pb.AllocationRequest) (*pb.AllocationResponse, error) {
+		c.allocator.remoteAllocationCallback = func(_ context.Context, endpoint string, _ grpc.DialOption, _ *pb.AllocationRequest) (*pb.AllocationResponse, error) {
 			if endpoint == unhealthyEndpoint {
 				return nil, errors.New("test error message")
 			}
@@ -570,7 +570,8 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 
 		// Allocation policy reactor
 		secretName := clusterName + "secret"
-		m.AgonesClient.AddReactor("list", "gameserverallocationpolicies", func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
+
+		m.AgonesClient.AddReactor("list", "gameserverallocationpolicies", func(_ k8stesting.Action) (bool, k8sruntime.Object, error) {
 			return true, &multiclusterv1.GameServerAllocationPolicyList{
 				Items: []multiclusterv1.GameServerAllocationPolicy{
 					{
@@ -593,7 +594,7 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 		})
 
 		m.KubeClient.AddReactor("list", "secrets",
-			func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
+			func(_ k8stesting.Action) (bool, k8sruntime.Object, error) {
 				return true, getTestSecret(secretName, clientCert), nil
 			})
 
@@ -630,14 +631,14 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 		fleetName := addReactorForGameServer(&m)
 
 		calls := 0
-		c.allocator.remoteAllocationCallback = func(ctx context.Context, endpoint string, dialOpt grpc.DialOption, request *pb.AllocationRequest) (*pb.AllocationResponse, error) {
+		c.allocator.remoteAllocationCallback = func(_ context.Context, _ string, _ grpc.DialOption, _ *pb.AllocationRequest) (*pb.AllocationResponse, error) {
 			calls++
 			return nil, errors.New("Error")
 		}
 
 		// Allocation policy reactor
 		secretName := clusterName + "secret"
-		m.AgonesClient.AddReactor("list", "gameserverallocationpolicies", func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
+		m.AgonesClient.AddReactor("list", "gameserverallocationpolicies", func(_ k8stesting.Action) (bool, k8sruntime.Object, error) {
 			return true, &multiclusterv1.GameServerAllocationPolicyList{
 				Items: []multiclusterv1.GameServerAllocationPolicy{
 					{
@@ -660,7 +661,7 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 		})
 
 		m.KubeClient.AddReactor("list", "secrets",
-			func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
+			func(_ k8stesting.Action) (bool, k8sruntime.Object, error) {
 				return true, getTestSecret(secretName, clientCert), nil
 			})
 
@@ -700,7 +701,7 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 
 		// Mock server to return DeadlineExceeded on the first call and success on subsequent ones
 		calls := 0
-		c.allocator.remoteAllocationCallback = func(ctx context.Context, endpoint string, dialOpt grpc.DialOption, request *pb.AllocationRequest) (*pb.AllocationResponse, error) {
+		c.allocator.remoteAllocationCallback = func(_ context.Context, _ string, _ grpc.DialOption, _ *pb.AllocationRequest) (*pb.AllocationResponse, error) {
 			calls++
 			if calls == 1 {
 				return nil, status.Errorf(codes.DeadlineExceeded, "remote allocation call timeout")
@@ -710,7 +711,7 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 
 		// Allocation policy reactor
 		secretName := clusterName + "secret"
-		m.AgonesClient.AddReactor("list", "gameserverallocationpolicies", func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
+		m.AgonesClient.AddReactor("list", "gameserverallocationpolicies", func(_ k8stesting.Action) (bool, k8sruntime.Object, error) {
 			return true, &multiclusterv1.GameServerAllocationPolicyList{
 				Items: []multiclusterv1.GameServerAllocationPolicy{
 					{
@@ -733,7 +734,7 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 		})
 
 		m.KubeClient.AddReactor("list", "secrets",
-			func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
+			func(_ k8stesting.Action) (bool, k8sruntime.Object, error) {
 				return true, getTestSecret(secretName, clientCert), nil
 			})
 
@@ -785,7 +786,7 @@ func addReactorForGameServer(m *agtesting.Mocks) string {
 	f, gsList := defaultFixtures(3)
 	gsWatch := watch.NewFake()
 	m.AgonesClient.AddWatchReactor("gameservers", k8stesting.DefaultWatchReactor(gsWatch, nil))
-	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
+	m.AgonesClient.AddReactor("list", "gameservers", func(_ k8stesting.Action) (bool, k8sruntime.Object, error) {
 		return true, &agonesv1.GameServerList{Items: gsList}, nil
 	})
 	m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, k8sruntime.Object, error) {

@@ -18,7 +18,7 @@ set -ex
 
 #Reinstall Go 1.15 since the version upon it won't work with gen-crd-api-reference-docs
 rm -rf /usr/local/go
-GO_VERSION=1.15.13
+GO_VERSION=1.22.6
 cd /usr/local
 wget -q https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz && \
 tar -xzf go${GO_VERSION}.linux-amd64.tar.gz && rm go${GO_VERSION}.linux-amd64.tar.gz
@@ -30,6 +30,9 @@ cd /go/src/github.com/ahmetb/gen-crd-api-reference-docs
 
 #Use local version of agones
 go mod edit --replace=agones.dev/agones@latest=../../../agones.dev/agones/
+go mod tidy
+go get agones.dev/agones@v1.43.0
+go get agones.dev/agones/pkg/apis/allocation/v1@v1.43.0
 go build 
 
 cp /go/src/agones.dev/agones/site/assets/templates/pkg.tpl ./template

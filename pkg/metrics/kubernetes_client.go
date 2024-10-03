@@ -200,7 +200,7 @@ func (c *clientGoMetricAdapter) Register() {
 	workqueue.SetProvider(c)
 }
 
-func (clientGoMetricAdapter) Increment(ctx context.Context, code string, method string, host string) {
+func (clientGoMetricAdapter) Increment(ctx context.Context, code string, method string, _ string) {
 	RecordWithTags(ctx, []tag.Mutator{tag.Insert(keyStatusCode, code),
 		tag.Insert(keyVerb, method)}, httpRequestTotalStats.M(int64(1)))
 }

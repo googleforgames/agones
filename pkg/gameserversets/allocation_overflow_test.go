@@ -124,10 +124,10 @@ func TestAllocationOverflowSyncGameServerSet(t *testing.T) {
 		}
 
 		c, m := newFakeAllocationOverflowController()
-		m.AgonesClient.AddReactor("list", "gameserversets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("list", "gameserversets", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &agonesv1.GameServerSetList{Items: []agonesv1.GameServerSet{*gsSet}}, nil
 		})
-		m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("list", "gameservers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &agonesv1.GameServerList{Items: list}, nil
 		})
 		return gsSet, c, m
@@ -162,7 +162,7 @@ func TestAllocationOverflowSyncGameServerSet(t *testing.T) {
 		gsSet, c, m := setup(func(gs *agonesv1.GameServer) {
 			gs.ObjectMeta.Labels["colour"] = "green"
 		})
-		cancel := run(c, m, gsSet, func(action k8stesting.Action) (bool, runtime.Object, error) {
+		cancel := run(c, m, gsSet, func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			require.Fail(t, "should not update")
 			return true, nil, nil
 		})
