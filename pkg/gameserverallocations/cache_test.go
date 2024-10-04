@@ -43,7 +43,7 @@ func TestGameServerCacheEntry(t *testing.T) {
 	cache.Store("gs3", gs3)
 
 	count := 0
-	cache.Range(func(key string, gs *agonesv1.GameServer) bool {
+	cache.Range(func(_ string, _ *agonesv1.GameServer) bool {
 		count++
 		return count != 2
 	})

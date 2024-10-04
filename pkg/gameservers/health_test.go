@@ -133,13 +133,13 @@ func TestHealthControllerSkipUnhealthyGameContainer(t *testing.T) {
 			expected: expected{result: false},
 		},
 		"before ready, with no terminated container": {
-			setup: func(gs *agonesv1.GameServer, pod *corev1.Pod) {
+			setup: func(gs *agonesv1.GameServer, _ *corev1.Pod) {
 				gs.Status.State = agonesv1.GameServerStateScheduled
 			},
 			expected: expected{result: false},
 		},
 		"after ready, with no terminated container": {
-			setup: func(gs *agonesv1.GameServer, pod *corev1.Pod) {
+			setup: func(gs *agonesv1.GameServer, _ *corev1.Pod) {
 				gs.Status.State = agonesv1.GameServerStateAllocated
 			},
 			expected: expected{result: false},
@@ -181,7 +181,7 @@ func TestHealthControllerSkipUnhealthyGameContainer(t *testing.T) {
 			expected: expected{result: true},
 		},
 		"pod is missing!": {
-			setup: func(server *agonesv1.GameServer, pod *corev1.Pod) {
+			setup: func(_ *agonesv1.GameServer, pod *corev1.Pod) {
 				pod.ObjectMeta.Name = "missing"
 			},
 			expected: expected{result: false},
@@ -206,7 +206,7 @@ func TestHealthControllerSkipUnhealthyGameContainer(t *testing.T) {
 
 			v.setup(gs, pod)
 
-			m.KubeClient.AddReactor("list", "pods", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			m.KubeClient.AddReactor("list", "pods", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 				return true, &corev1.PodList{Items: []corev1.Pod{*pod}}, nil
 			})
 
@@ -307,7 +307,7 @@ func TestHealthControllerSyncGameServer(t *testing.T) {
 
 			got := false
 			updated := false
-			m.KubeClient.AddReactor("list", "pods", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			m.KubeClient.AddReactor("list", "pods", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 				list := &corev1.PodList{Items: []corev1.Pod{}}
 				if test.podStatus != nil {
 					pod, err := gs.Pod(agtesting.FakeAPIHooks{})
@@ -317,7 +317,7 @@ func TestHealthControllerSyncGameServer(t *testing.T) {
 				}
 				return true, list, nil
 			})
-			m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			m.AgonesClient.AddReactor("list", "gameservers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 				got = true
 				return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{gs}}, nil
 			})
@@ -352,11 +352,11 @@ func TestHealthControllerSyncGameServerUpdateFailed(t *testing.T) {
 		Status: agonesv1.GameServerStatus{State: agonesv1.GameServerStateAllocated}}
 	gs.ApplyDefaults()
 
-	m.KubeClient.AddReactor("list", "pods", func(action k8stesting.Action) (bool, runtime.Object, error) {
+	m.KubeClient.AddReactor("list", "pods", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 		list := &corev1.PodList{Items: []corev1.Pod{}}
 		return true, list, nil
 	})
-	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+	m.AgonesClient.AddReactor("list", "gameservers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 		return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{gs}}, nil
 	})
 	m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
@@ -414,7 +414,7 @@ func TestHealthControllerRun(t *testing.T) {
 	podWatch.Add(pod.DeepCopy())
 
 	go hc.Run(stop, 1) // nolint: errcheck
-	err = wait.PollUntilContextTimeout(context.Background(), time.Second, 10*time.Second, true, func(ctx context.Context) (bool, error) {
+	err = wait.PollUntilContextTimeout(context.Background(), time.Second, 10*time.Second, true, func(_ context.Context) (bool, error) {
 		return hc.workerqueue.RunCount() == 1, nil
 	})
 	assert.NoError(t, err)

@@ -24,5 +24,5 @@
 package swagger
 
 type GameServerSpec struct {
-	Health *SpecHealth `json:"health,omitempty"`
+	Health *GameServerSpecHealth `json:"health,omitempty"`
 }

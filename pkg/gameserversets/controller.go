@@ -155,7 +155,7 @@ func NewController(
 
 	_, _ = gsInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: c.gameServerEventHandler,
-		UpdateFunc: func(oldObj, newObj interface{}) {
+		UpdateFunc: func(_, newObj interface{}) {
 			gs := newObj.(*agonesv1.GameServer)
 			// ignore if already being deleted
 			if gs.ObjectMeta.DeletionTimestamp == nil {
@@ -607,6 +607,7 @@ func parallelize(gameServers chan *agonesv1.GameServer, parallelism int, work fu
 
 	for range gameServers {
 		// drain any remaining game servers in the channel, in case we did not consume them all
+		continue
 	}
 
 	// return first error from the channel, or nil if all successful.

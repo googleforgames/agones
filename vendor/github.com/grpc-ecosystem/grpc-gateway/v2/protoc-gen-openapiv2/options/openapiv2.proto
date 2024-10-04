@@ -34,7 +34,7 @@ enum Scheme {
 //      };
 //      license: {
 //        name: "BSD 3-Clause License";
-//        url: "https://github.com/grpc-ecosystem/grpc-gateway/blob/main/LICENSE.txt";
+//        url: "https://github.com/grpc-ecosystem/grpc-gateway/blob/main/LICENSE";
 //      };
 //    };
 //    schemes: HTTPS;
@@ -195,7 +195,7 @@ message Parameters {
 // `HeaderParameter` a HTTP header parameter.
 // See: https://swagger.io/specification/v2/#parameter-object
 message HeaderParameter {
-  // `Type` is a a supported HTTP header type.
+  // `Type` is a supported HTTP header type.
   // See https://swagger.io/specification/v2/#parameterType.
   enum Type {
     UNKNOWN = 0;
@@ -309,7 +309,7 @@ message Response {
 //      };
 //      license: {
 //        name: "BSD 3-Clause License";
-//        url: "https://github.com/grpc-ecosystem/grpc-gateway/blob/main/LICENSE.txt";
+//        url: "https://github.com/grpc-ecosystem/grpc-gateway/blob/main/LICENSE";
 //      };
 //    };
 //    ...
@@ -377,7 +377,7 @@ message Contact {
 //      ...
 //      license: {
 //        name: "BSD 3-Clause License";
-//        url: "https://github.com/grpc-ecosystem/grpc-gateway/blob/main/LICENSE.txt";
+//        url: "https://github.com/grpc-ecosystem/grpc-gateway/blob/main/LICENSE";
 //      };
 //      ...
 //    };

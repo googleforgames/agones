@@ -18,7 +18,7 @@
 FROM debian:bookworm AS build-tools
 
 # Set up arguments for tool versions
-ARG GO_VERSION=1.21.12
+ARG GO_VERSION=1.22.6
 ARG KUBERNETES_VER=1.29.7
 ARG HELM_VER=3.10.3
 ARG HUGO_VER=0.118.2
@@ -40,6 +40,7 @@ RUN gem install fpm && \
     dpkg -i /opt/python2.7-0.0.0-0-any.deb && rm /opt/python2.7-0.0.0-0-any.deb
 
 # Install Go
+WORKDIR /usr/local
 ENV GOPATH /go
 ENV GO111MODULE=on
 ENV PATH /usr/local/go/bin:/go/bin:$PATH
@@ -57,16 +58,19 @@ RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] http://packages.c
     echo "source /usr/share/google-cloud-sdk/completion.bash.inc" >> /root/.bashrc
 
 # Install additional Go tools
-
 RUN go install golang.org/x/tools/cmd/goimports@latest || echo "Failed to install goimports" && \
     go install golang.org/x/pkgsite/cmd/pkgsite@latest || echo "Failed to install pkgsite" && \
-    go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.51.2 || echo "Failed to install golangci-lint" && \
+    go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.61.0 || echo "Failed to install golangci-lint" && \
     go install gotest.tools/gotestsum@latest || echo "Failed to install gotestsum"
 
 # Install specific kubectl version
 RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/v${KUBERNETES_VER}/bin/linux/amd64/kubectl && \
     chmod +x kubectl && mv kubectl /usr/local/bin/kubectl && \
     echo "source <(kubectl completion bash)" >> /root/.bashrc
+
+# Install the release branch of the code generator tools
+RUN mkdir -p /go/src/k8s.io && cd /go/src/k8s.io && \
+    git clone -b v0.30.0 --depth=3 https://github.com/kubernetes/code-generator.git
 
 # Install Helm
 RUN curl -L https://get.helm.sh/helm-v${HELM_VER}-linux-amd64.tar.gz -o /tmp/helm.tar.gz && \
@@ -117,4 +121,3 @@ WORKDIR /go
 
 # Set the default command
 CMD ["/bin/bash"]
-

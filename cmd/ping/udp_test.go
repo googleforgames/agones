@@ -114,7 +114,7 @@ func TestUDPServerHealth(t *testing.T) {
 
 	cancel()
 
-	err = wait.PollUntilContextTimeout(context.Background(), time.Second, 5*time.Second, true, func(ctx context.Context) (bool, error) {
+	err = wait.PollUntilContextTimeout(context.Background(), time.Second, 5*time.Second, true, func(_ context.Context) (bool, error) {
 		return u.Health() != nil, nil
 	})
 
