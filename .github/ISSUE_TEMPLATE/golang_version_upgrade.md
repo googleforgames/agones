@@ -13,9 +13,10 @@ Steps to upgrade Golang version:
     - [ ] `find . -name 'go.mod' -not -path '*/\.*' -execdir go mod edit -go=<NEW_GOLANG_VERSION_WITHOUT_PATCH> \;`
     - [ ] `find . -name 'go.mod' -not -path '*/\.*' -execdir go mod tidy \;`
 
-- [ ] Update the Dockerfiles for `build` directory. At the root of the directory, run: 
+- [ ] Update the Dockerfiles for `build` directory. 
     
-    `find build -type f \( -not -path '*/\.*' -and -not -path 'build/tmp/*' \) -exec sed -i 's/GO_VERSION=[0-9]\+\.[0-9]\+\.[0-9]\+/GO_VERSION=<NEW_GOLANG_VERSION>/g' {} \;`
+    - [ ] At the root of the directory, run: `find build -type f \( -not -path '*/\.*' -and -not -path 'build/tmp/*' \) -exec sed -i 's/GO_VERSION=[0-9]\+\.[0-9]\+\.[0-9]\+/GO_VERSION=<NEW_GOLANG_VERSION>/g' {} \;`
+    - [ ] Update the `golang` version for file `build/agones-bot/Dockerfile` to <NEW_GOLANG_VERSION_WITHOUT_PATCH>
     
 - [ ] Update the Dockerfiles for `examples` directory. At the root of the directory, run:     
     - [ ] `find examples -name Dockerfile -exec sed -i 's/golang:[0-9]\+\.[0-9]\+-alpine/golang:<NEW_GOLANG_VERSION_WITHOUT_PATCH>-alpine/g' {} \;`
@@ -31,9 +32,7 @@ Steps to upgrade Golang version:
     - [ ] `make bump-image IMAGENAME=supertuxkart-example VERSION=<current-image-version>`
     - [ ] `make bump-image IMAGENAME=xonotic-example VERSION=<current-image-version>`
 
-- [ ] Create a PR for the above changes and send for review
-
-- [ ] After the above PR is approved, **before** merging it, run the following to generate and push the new example images:
+- [ ] Run the following to generate and push the new example images:
     - [ ] In `examples/allocation-endpoint`, run: `make cloud-build`
     - [ ] In `examples/autoscaler-webhook`, run: `make cloud-build`
     - [ ] In `examples/crd-client`, run: `make cloud-build`
@@ -43,4 +42,6 @@ Steps to upgrade Golang version:
     - [ ] In `examples/supertuxkart`, run: `make cloud-build`
     - [ ] In `examples/xonotic`, run: `make cloud-build`
 
-- [ ] Merge the above PR
+- [ ] Create a PR for the above changes and send for review
+
+- [ ] Merge the above PR after it is approved

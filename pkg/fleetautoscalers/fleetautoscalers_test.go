@@ -103,7 +103,7 @@ func (t testServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = io.WriteString(w, string(result))
+	_, err = w.Write(result)
 	if err != nil {
 		http.Error(w, "Error writing json from /address", http.StatusInternalServerError)
 		return
@@ -181,7 +181,7 @@ func TestComputeDesiredFleetSize(t *testing.T) {
 			f.Status.ReadyReplicas = tc.statusReadyReplicas
 
 			m := agtesting.NewMocks()
-			m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			m.AgonesClient.AddReactor("list", "gameservers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 				return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{}}, nil
 			})
 
@@ -1435,7 +1435,7 @@ func TestApplyCounterPolicy(t *testing.T) {
 			assert.NoError(t, err)
 
 			m := agtesting.NewMocks()
-			m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			m.AgonesClient.AddReactor("list", "gameservers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 				return true, &agonesv1.GameServerList{Items: tc.gsList}, nil
 			})
 
@@ -2115,7 +2115,7 @@ func TestApplyListPolicy(t *testing.T) {
 			assert.NoError(t, err)
 
 			m := agtesting.NewMocks()
-			m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			m.AgonesClient.AddReactor("list", "gameservers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 				return true, &agonesv1.GameServerList{Items: tc.gsList}, nil
 			})
 

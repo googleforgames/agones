@@ -100,7 +100,7 @@ dev_eks_example_cluster_version = "1.30"
 dev_minikube_example_cluster_version = "1.29.7"
 
 # example tag
-example_image_tag = "us-docker.pkg.dev/agones-images/examples/simple-game-server:0.34"
+example_image_tag = "us-docker.pkg.dev/agones-images/examples/simple-game-server:0.35"
 
 # Enable syntax highlighting and copy buttons on code blocks with Prism
 prism_syntax_highlighting = true

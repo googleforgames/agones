@@ -393,10 +393,10 @@ func runHTTP(listenCtx context.Context, workerCtx context.Context, h *serviceHan
 		if err == http.ErrServerClosed {
 			logger.WithError(err).Info("HTTP/HTTPS server closed")
 			os.Exit(0)
-		} else {
-			logger.WithError(err).Fatal("Unable to start HTTP/HTTPS listener")
-			os.Exit(1)
 		}
+		logger.WithError(err).Fatal("Unable to start HTTP/HTTPS listener")
+		os.Exit(1)
+
 	}()
 }
 
@@ -422,10 +422,10 @@ func runGRPC(ctx context.Context, h *serviceHandler, grpcHealth *grpchealth.Serv
 		if err != nil {
 			logger.WithError(err).Fatal("allocation service crashed")
 			os.Exit(1)
-		} else {
-			logger.Info("allocation server closed")
-			os.Exit(0)
 		}
+		logger.Info("allocation server closed")
+		os.Exit(0)
+
 	}()
 }
 
@@ -545,7 +545,7 @@ func (h *serviceHandler) getGRPCServerOptions() []grpc.ServerOption {
 	return append([]grpc.ServerOption{grpc.Creds(credentials.NewTLS(cfg))}, opts...)
 }
 
-func (h *serviceHandler) getTLSCert(ch *tls.ClientHelloInfo) (*tls.Certificate, error) {
+func (h *serviceHandler) getTLSCert(_ *tls.ClientHelloInfo) (*tls.Certificate, error) {
 	h.tlsMutex.RLock()
 	defer h.tlsMutex.RUnlock()
 	return h.tlsCert, nil
@@ -553,7 +553,7 @@ func (h *serviceHandler) getTLSCert(ch *tls.ClientHelloInfo) (*tls.Certificate, 
 
 // verifyClientCertificate verifies that the client certificate is accepted
 // This method is used as GetConfigForClient is cross lang incompatible.
-func (h *serviceHandler) verifyClientCertificate(rawCerts [][]byte, verifiedChains [][]*x509.Certificate) error {
+func (h *serviceHandler) verifyClientCertificate(rawCerts [][]byte, _ [][]*x509.Certificate) error {
 	opts := x509.VerifyOptions{
 		Roots:         h.caCertPool,
 		CurrentTime:   time.Now(),
@@ -656,7 +656,7 @@ type serviceHandler struct {
 }
 
 // Allocate implements the Allocate gRPC method definition
-func (h *serviceHandler) Allocate(ctx context.Context, in *pb.AllocationRequest) (*pb.AllocationResponse, error) {
+func (h *serviceHandler) Allocate(_ context.Context, in *pb.AllocationRequest) (*pb.AllocationResponse, error) {
 	logger.WithField("request", in).Infof("allocation request received.")
 	gsa := converters.ConvertAllocationRequestToGSA(in)
 	gsa.ApplyDefaults()

@@ -153,7 +153,6 @@ func main() {
 		}
 		if err != nil {
 			log.Fatalf("error listing builds: %v", err)
-			break
 		}
 		createTime := resp.CreateTime.AsTime()
 		if createTime.Before(windowStart) {
