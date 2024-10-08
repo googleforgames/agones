@@ -1,12 +1,12 @@
 FROM gcr.io/cloud-builders/gcloud
 
 RUN apt-get update && \
-    apt-get install -y wget psmisc make gcc python jq zip && \
+    apt-get install -y wget psmisc make gcc jq zip && \
     apt-get clean
 
 # install go
 WORKDIR /usr/local
-ENV GO_VERSION=1.21.12
+ENV GO_VERSION=1.22.6
 ENV GOPATH /go
 ENV GO111MODULE=on
 RUN wget -q https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz && \

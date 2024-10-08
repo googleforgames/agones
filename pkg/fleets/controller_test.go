@@ -61,7 +61,7 @@ func TestControllerSyncFleet(t *testing.T) {
 		c, m := newFakeController()
 
 		created := false
-		m.AgonesClient.AddReactor("list", "fleets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("list", "fleets", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &agonesv1.FleetList{Items: []agonesv1.Fleet{*f}}, nil
 		})
 
@@ -96,20 +96,20 @@ func TestControllerSyncFleet(t *testing.T) {
 		gsSet.ObjectMeta.UID = "4321"
 		gsSet.Spec.Replicas = f.Spec.Replicas
 
-		m.AgonesClient.AddReactor("list", "fleets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("list", "fleets", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &agonesv1.FleetList{Items: []agonesv1.Fleet{*f}}, nil
 		})
 
-		m.AgonesClient.AddReactor("list", "gameserversets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("list", "gameserversets", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &agonesv1.GameServerSetList{Items: []agonesv1.GameServerSet{*gsSet}}, nil
 		})
 
-		m.AgonesClient.AddReactor("create", "gameserversets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("create", "gameserversets", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			assert.FailNow(t, "gameserverset should not be created")
 			return true, nil, nil
 		})
 
-		m.AgonesClient.AddReactor("update", "gameserversets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("update", "gameserversets", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			assert.FailNow(t, "gameserverset should not have been updated")
 			return true, nil, nil
 		})
@@ -132,11 +132,11 @@ func TestControllerSyncFleet(t *testing.T) {
 		gsSet.Spec.Replicas = f.Spec.Replicas + 10
 		updated := false
 
-		m.AgonesClient.AddReactor("list", "fleets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("list", "fleets", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &agonesv1.FleetList{Items: []agonesv1.Fleet{*f}}, nil
 		})
 
-		m.AgonesClient.AddReactor("list", "gameserversets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("list", "gameserversets", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &agonesv1.GameServerSetList{Items: []agonesv1.GameServerSet{*gsSet}}, nil
 		})
 
@@ -170,11 +170,11 @@ func TestControllerSyncFleet(t *testing.T) {
 		gsSet.Spec.Scheduling = apis.Distributed
 		updated := false
 
-		m.AgonesClient.AddReactor("list", "fleets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("list", "fleets", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &agonesv1.FleetList{Items: []agonesv1.Fleet{*f}}, nil
 		})
 
-		m.AgonesClient.AddReactor("list", "gameserversets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("list", "gameserversets", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &agonesv1.GameServerSetList{Items: []agonesv1.GameServerSet{*gsSet}}, nil
 		})
 
@@ -213,11 +213,11 @@ func TestControllerSyncFleet(t *testing.T) {
 		updated := false
 		created := false
 
-		m.AgonesClient.AddReactor("list", "fleets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("list", "fleets", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &agonesv1.FleetList{Items: []agonesv1.Fleet{*f}}, nil
 		})
 
-		m.AgonesClient.AddReactor("list", "gameserversets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("list", "gameserversets", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &agonesv1.GameServerSetList{Items: []agonesv1.GameServerSet{*gsSet}}, nil
 		})
 
@@ -276,20 +276,20 @@ func TestControllerSyncFleet(t *testing.T) {
 		gsSet.Spec.Scheduling = f.Spec.Scheduling
 		gsSet.Status.Replicas = 5
 
-		m.AgonesClient.AddReactor("list", "fleets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("list", "fleets", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &agonesv1.FleetList{Items: []agonesv1.Fleet{*f}}, nil
 		})
 
-		m.AgonesClient.AddReactor("list", "gameserversets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("list", "gameserversets", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &agonesv1.GameServerSetList{Items: []agonesv1.GameServerSet{*gsSet}}, nil
 		})
 
-		m.AgonesClient.AddReactor("create", "gameserversets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("create", "gameserversets", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			assert.FailNow(t, "gameserverset should not have been created")
 			return false, nil, nil
 		})
 
-		m.AgonesClient.AddReactor("update", "gameserversets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("update", "gameserversets", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			assert.FailNow(t, "gameserverset should not have been updated")
 			return false, nil, nil
 		})
@@ -315,7 +315,7 @@ func TestControllerSyncFleet(t *testing.T) {
 		c, m := newFakeController()
 		c.gameServerSetLister = &fakeGSSListerWithErr{}
 
-		m.AgonesClient.AddReactor("list", "fleets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("list", "fleets", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &agonesv1.FleetList{Items: []agonesv1.Fleet{*f}}, nil
 		})
 
@@ -344,11 +344,11 @@ func TestControllerSyncFleet(t *testing.T) {
 		// make sure there is at least one replica, or the logic will escape before the check.
 		gsSet.Spec.Replicas = 1
 
-		m.AgonesClient.AddReactor("list", "fleets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("list", "fleets", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &agonesv1.FleetList{Items: []agonesv1.Fleet{*f}}, nil
 		})
 
-		m.AgonesClient.AddReactor("list", "gameserversets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("list", "gameserversets", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &agonesv1.GameServerSetList{Items: []agonesv1.GameServerSet{*gsSet}}, nil
 		})
 
@@ -367,15 +367,15 @@ func TestControllerSyncFleet(t *testing.T) {
 		// make gsSet.Spec.Template and f.Spec.Template different in order to make 'rest' list not empty
 		gsSet.Spec.Template.Name = "qqqqqqqqqqqqqqqqqqq"
 
-		m.AgonesClient.AddReactor("list", "fleets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("list", "fleets", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &agonesv1.FleetList{Items: []agonesv1.Fleet{*f}}, nil
 		})
 
-		m.AgonesClient.AddReactor("list", "gameserversets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("list", "gameserversets", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &agonesv1.GameServerSetList{Items: []agonesv1.GameServerSet{*gsSet}}, nil
 		})
 
-		m.AgonesClient.AddReactor("delete", "gameserversets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("delete", "gameserversets", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, nil, errors.New("random-err")
 		})
 
@@ -392,15 +392,15 @@ func TestControllerSyncFleet(t *testing.T) {
 
 		gsSet := f.GameServerSet()
 
-		m.AgonesClient.AddReactor("list", "fleets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("list", "fleets", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &agonesv1.FleetList{Items: []agonesv1.Fleet{*f}}, nil
 		})
 
-		m.AgonesClient.AddReactor("list", "gameserversets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("list", "gameserversets", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &agonesv1.GameServerSetList{Items: []agonesv1.GameServerSet{*gsSet}}, nil
 		})
 
-		m.AgonesClient.AddReactor("create", "gameserversets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("create", "gameserversets", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, nil, errors.New("random-err")
 		})
 
@@ -508,7 +508,7 @@ func TestControllerRun(t *testing.T) {
 	received := make(chan string)
 	defer close(received)
 
-	m.ExtClient.AddReactor("get", "customresourcedefinitions", func(action k8stesting.Action) (bool, runtime.Object, error) {
+	m.ExtClient.AddReactor("get", "customresourcedefinitions", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 		return true, agtesting.NewEstablishedCRD(), nil
 	})
 
@@ -589,7 +589,7 @@ func TestControllerUpdateFleetStatus(t *testing.T) {
 		gsSet2.Status.AllocatedReplicas = 2
 
 		m.AgonesClient.AddReactor("list", "gameserversets",
-			func(action k8stesting.Action) (bool, runtime.Object, error) {
+			func(_ k8stesting.Action) (bool, runtime.Object, error) {
 				return true, &agonesv1.GameServerSetList{Items: []agonesv1.GameServerSet{*gsSet1, *gsSet2}}, nil
 			})
 
@@ -663,7 +663,7 @@ func TestControllerUpdateFleetPlayerStatus(t *testing.T) {
 	}
 
 	m.AgonesClient.AddReactor("list", "gameserversets",
-		func(action k8stesting.Action) (bool, runtime.Object, error) {
+		func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &agonesv1.GameServerSetList{Items: []agonesv1.GameServerSet{*gsSet1, *gsSet2}}, nil
 		})
 
@@ -741,7 +741,7 @@ func TestControllerUpdateFleetCounterStatus(t *testing.T) {
 	}
 
 	m.AgonesClient.AddReactor("list", "gameserversets",
-		func(action k8stesting.Action) (bool, runtime.Object, error) {
+		func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &agonesv1.GameServerSetList{Items: []agonesv1.GameServerSet{*gsSet1, *gsSet2}}, nil
 		})
 
@@ -831,7 +831,7 @@ func TestControllerUpdateFleetListStatus(t *testing.T) {
 	}
 
 	m.AgonesClient.AddReactor("list", "gameserversets",
-		func(action k8stesting.Action) (bool, runtime.Object, error) {
+		func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &agonesv1.GameServerSetList{Items: []agonesv1.GameServerSet{*gsSet1, *gsSet2}}, nil
 		})
 
@@ -905,12 +905,12 @@ func TestFleetDropCountsAndListsStatus(t *testing.T) {
 	updated := false
 
 	m.AgonesClient.AddReactor("list", "gameserversets",
-		func(action k8stesting.Action) (bool, runtime.Object, error) {
+		func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &agonesv1.GameServerSetList{Items: []agonesv1.GameServerSet{*gss}}, nil
 		})
 
 	m.AgonesClient.AddReactor("list", "fleets",
-		func(action k8stesting.Action) (bool, runtime.Object, error) {
+		func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &agonesv1.FleetList{Items: []agonesv1.Fleet{*f}}, nil
 		})
 
@@ -1020,7 +1020,7 @@ func TestControllerRecreateDeployment(t *testing.T) {
 
 	t.Run("error on update", func(t *testing.T) {
 		c, m := newFakeController()
-		m.AgonesClient.AddReactor("update", "gameserversets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("update", "gameserversets", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, nil, errors.New("random-err")
 		})
 
@@ -1185,7 +1185,7 @@ func TestControllerUpsertGameServerSet(t *testing.T) {
 		gsSet.ObjectMeta.UID = "1234"
 		gsSet.Spec.Replicas = replicas + 10
 
-		m.AgonesClient.AddReactor("update", "gameserversets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("update", "gameserversets", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, nil, errors.New("random-err")
 		})
 
@@ -1198,7 +1198,7 @@ func TestControllerUpsertGameServerSet(t *testing.T) {
 		c, m := newFakeController()
 		gsSet := f.GameServerSet()
 
-		m.AgonesClient.AddReactor("update", "gameserversets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("update", "gameserversets", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, nil, errors.New("random-err")
 		})
 
@@ -1215,11 +1215,11 @@ func TestControllerUpsertGameServerSet(t *testing.T) {
 		gsSet.ObjectMeta.UID = "1234"
 		gsSet.Spec.Replicas = replicas
 
-		m.AgonesClient.AddReactor("create", "gameserversets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("create", "gameserversets", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			assert.FailNow(t, "should not create")
 			return false, nil, nil
 		})
-		m.AgonesClient.AddReactor("update", "gameserversets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("update", "gameserversets", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			assert.FailNow(t, "should not update")
 			return false, nil, nil
 		})
@@ -1427,7 +1427,7 @@ func TestControllerRollingUpdateDeploymentGSSUpdateFailedErrExpected(t *testing.
 	c, m := newFakeController()
 
 	// triggered inside rollingUpdateRest
-	m.AgonesClient.AddReactor("update", "gameserversets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+	m.AgonesClient.AddReactor("update", "gameserversets", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 		return true, nil, errors.New("random-err")
 	})
 
@@ -1865,91 +1865,91 @@ type fakeGSSListerWithErr struct {
 }
 
 // GameServerSetLister interface implementation
-func (fgsl *fakeGSSListerWithErr) List(selector labels.Selector) (ret []*v1.GameServerSet, err error) {
+func (fgsl *fakeGSSListerWithErr) List(_ labels.Selector) (ret []*v1.GameServerSet, err error) {
 	return nil, errors.New("random-err")
 }
 
-func (fgsl *fakeGSSListerWithErr) GameServerSets(namespace string) agonesv1client.GameServerSetNamespaceLister {
+func (fgsl *fakeGSSListerWithErr) GameServerSets(_ string) agonesv1client.GameServerSetNamespaceLister {
 	panic("not implemented")
 }
 
 type fakeFleetsGetterWithErr struct{}
 
 // FleetsGetter interface implementation
-func (ffg *fakeFleetsGetterWithErr) Fleets(namespace string) agonesv1clientset.FleetInterface {
+func (ffg *fakeFleetsGetterWithErr) Fleets(_ string) agonesv1clientset.FleetInterface {
 	return &fakeFleetsGetterWithErr{}
 }
 
-func (ffg *fakeFleetsGetterWithErr) Create(ctx context.Context, fleet *v1.Fleet, opts metav1.CreateOptions) (*v1.Fleet, error) {
+func (ffg *fakeFleetsGetterWithErr) Create(_ context.Context, _ *v1.Fleet, _ metav1.CreateOptions) (*v1.Fleet, error) {
 	panic("not implemented")
 }
 
-func (ffg *fakeFleetsGetterWithErr) Update(ctx context.Context, fleet *v1.Fleet, opts metav1.UpdateOptions) (*v1.Fleet, error) {
+func (ffg *fakeFleetsGetterWithErr) Update(_ context.Context, _ *v1.Fleet, _ metav1.UpdateOptions) (*v1.Fleet, error) {
 	panic("not implemented")
 }
 
-func (ffg *fakeFleetsGetterWithErr) UpdateStatus(ctx context.Context, fleet *v1.Fleet, opts metav1.UpdateOptions) (*v1.Fleet, error) {
+func (ffg *fakeFleetsGetterWithErr) UpdateStatus(_ context.Context, _ *v1.Fleet, _ metav1.UpdateOptions) (*v1.Fleet, error) {
 	panic("not implemented")
 }
 
-func (ffg *fakeFleetsGetterWithErr) Delete(ctx context.Context, name string, opts metav1.DeleteOptions) error {
+func (ffg *fakeFleetsGetterWithErr) Delete(_ context.Context, _ string, _ metav1.DeleteOptions) error {
 	panic("not implemented")
 }
 
-func (ffg *fakeFleetsGetterWithErr) DeleteCollection(ctx context.Context, opts metav1.DeleteOptions, listOpts metav1.ListOptions) error {
+func (ffg *fakeFleetsGetterWithErr) DeleteCollection(_ context.Context, _ metav1.DeleteOptions, _ metav1.ListOptions) error {
 	panic("not implemented")
 }
 
-func (ffg *fakeFleetsGetterWithErr) Get(ctx context.Context, name string, opts metav1.GetOptions) (*v1.Fleet, error) {
+func (ffg *fakeFleetsGetterWithErr) Get(_ context.Context, _ string, _ metav1.GetOptions) (*v1.Fleet, error) {
 	return nil, errors.New("err-from-fleet-getter")
 }
 
-func (ffg *fakeFleetsGetterWithErr) List(ctx context.Context, opts metav1.ListOptions) (*v1.FleetList, error) {
+func (ffg *fakeFleetsGetterWithErr) List(_ context.Context, _ metav1.ListOptions) (*v1.FleetList, error) {
 	panic("not implemented")
 }
 
-func (ffg *fakeFleetsGetterWithErr) Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error) {
+func (ffg *fakeFleetsGetterWithErr) Watch(_ context.Context, _ metav1.ListOptions) (watch.Interface, error) {
 	panic("not implemented")
 }
 
-func (ffg *fakeFleetsGetterWithErr) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *v1.Fleet, err error) {
+func (ffg *fakeFleetsGetterWithErr) Patch(_ context.Context, _ string, _ types.PatchType, _ []byte, _ metav1.PatchOptions, _ ...string) (result *v1.Fleet, err error) {
 	panic("not implemented")
 }
 
-func (ffg *fakeFleetsGetterWithErr) Apply(ctx context.Context, fleet *applyconfigurations.FleetApplyConfiguration, opts metav1.ApplyOptions) (*v1.Fleet, error) {
+func (ffg *fakeFleetsGetterWithErr) Apply(_ context.Context, _ *applyconfigurations.FleetApplyConfiguration, _ metav1.ApplyOptions) (*v1.Fleet, error) {
 	panic("not implemented")
 }
 
-func (ffg *fakeFleetsGetterWithErr) ApplyStatus(ctx context.Context, fleet *applyconfigurations.FleetApplyConfiguration, opts metav1.ApplyOptions) (*v1.Fleet, error) {
+func (ffg *fakeFleetsGetterWithErr) ApplyStatus(_ context.Context, _ *applyconfigurations.FleetApplyConfiguration, _ metav1.ApplyOptions) (*v1.Fleet, error) {
 	panic("not implemented")
 }
 
-func (ffg *fakeFleetsGetterWithErr) GetScale(ctx context.Context, fleetName string, options metav1.GetOptions) (*autoscalingv1.Scale, error) {
+func (ffg *fakeFleetsGetterWithErr) GetScale(_ context.Context, _ string, _ metav1.GetOptions) (*autoscalingv1.Scale, error) {
 	panic("not implemented")
 }
 
-func (ffg *fakeFleetsGetterWithErr) UpdateScale(ctx context.Context, fleetName string, scale *autoscalingv1.Scale, opts metav1.UpdateOptions) (*autoscalingv1.Scale, error) {
+func (ffg *fakeFleetsGetterWithErr) UpdateScale(_ context.Context, _ string, _ *autoscalingv1.Scale, _ metav1.UpdateOptions) (*autoscalingv1.Scale, error) {
 	panic("not implemented")
 }
 
 type fakeFleetListerWithErr struct{}
 
 // FleetLister interface implementation
-func (ffl *fakeFleetListerWithErr) List(selector labels.Selector) (ret []*v1.Fleet, err error) {
+func (ffl *fakeFleetListerWithErr) List(_ labels.Selector) (ret []*v1.Fleet, err error) {
 	return nil, errors.New("err-from-fleet-lister")
 }
 
-func (ffl *fakeFleetListerWithErr) Fleets(namespace string) agonesv1client.FleetNamespaceLister {
+func (ffl *fakeFleetListerWithErr) Fleets(_ string) agonesv1client.FleetNamespaceLister {
 	return &fakeFleetNamespaceListerWithErr{}
 }
 
 type fakeFleetNamespaceListerWithErr struct{}
 
 // FleetNamespaceLister interface implementation
-func (ffnl *fakeFleetNamespaceListerWithErr) List(selector labels.Selector) (ret []*v1.Fleet, err error) {
+func (ffnl *fakeFleetNamespaceListerWithErr) List(_ labels.Selector) (ret []*v1.Fleet, err error) {
 	return nil, errors.New("err-from-namespace-lister")
 }
 
-func (ffnl *fakeFleetNamespaceListerWithErr) Get(name string) (*v1.Fleet, error) {
+func (ffnl *fakeFleetNamespaceListerWithErr) Get(_ string) (*v1.Fleet, error) {
 	return nil, errors.New("err-from-namespace-lister")
 }

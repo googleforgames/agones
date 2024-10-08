@@ -57,7 +57,7 @@ func TestListGameServerSetsByFleetOwner(t *testing.T) {
 	gsSet4.ObjectMeta.OwnerReferences = nil
 
 	m := agtesting.NewMocks()
-	m.AgonesClient.AddReactor("list", "gameserversets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+	m.AgonesClient.AddReactor("list", "gameserversets", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 		return true, &agonesv1.GameServerSetList{Items: []agonesv1.GameServerSet{*gsSet1, *gsSet2, *gsSet3, *gsSet4}}, nil
 	})
 
@@ -91,7 +91,7 @@ func TestListGameServersByFleetOwner(t *testing.T) {
 
 	m := agtesting.NewMocks()
 
-	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+	m.AgonesClient.AddReactor("list", "gameservers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 		return true, &agonesv1.GameServerList{Items: gsList}, nil
 	})
 

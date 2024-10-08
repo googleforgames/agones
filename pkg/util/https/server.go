@@ -94,7 +94,7 @@ func (s *Server) setupServer() {
 }
 
 // getCertificate returns the current TLS certificate
-func (s *Server) getCertificate(hello *cryptotls.ClientHelloInfo) (*cryptotls.Certificate, error) {
+func (s *Server) getCertificate(_ *cryptotls.ClientHelloInfo) (*cryptotls.Certificate, error) {
 	s.certServer.certMu.Lock()
 	defer s.certServer.certMu.Unlock()
 	return s.certServer.certs, nil
@@ -131,7 +131,7 @@ func (s *Server) Run(ctx context.Context, _ int) error {
 		_ = s.tls.Shutdown(context.Background())
 	}()
 
-	s.logger.WithField("server", s).Infof("https server started on port :" + s.port)
+	s.logger.WithField("server", s).Infof("https server started on port :%s", s.port)
 
 	err := s.tls.ListenAndServeTLS(s.certFile, s.keyFile)
 	if err == http.ErrServerClosed {

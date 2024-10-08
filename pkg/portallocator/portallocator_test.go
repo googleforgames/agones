@@ -295,7 +295,7 @@ func TestPortRangeAllocatorAllocate(t *testing.T) {
 		m := agtesting.NewMocks()
 		pa := newRangeAllocator(agonesv1.DefaultPortRange, 10, 20, m.KubeInformerFactory, m.AgonesInformerFactory)
 
-		m.KubeClient.AddReactor("list", "nodes", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.KubeClient.AddReactor("list", "nodes", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			nl := &corev1.NodeList{Items: []corev1.Node{n1}}
 			return true, nl, nil
 		})
@@ -389,7 +389,7 @@ func TestPortRangeAllocatorMultithreadAllocate(t *testing.T) {
 	m := agtesting.NewMocks()
 	pa := newRangeAllocator(agonesv1.DefaultPortRange, 10, 20, m.KubeInformerFactory, m.AgonesInformerFactory)
 
-	m.KubeClient.AddReactor("list", "nodes", func(action k8stesting.Action) (bool, runtime.Object, error) {
+	m.KubeClient.AddReactor("list", "nodes", func(k8stesting.Action) (bool, runtime.Object, error) {
 		nl := &corev1.NodeList{Items: []corev1.Node{n1, n2}}
 		return true, nl, nil
 	})
@@ -428,7 +428,7 @@ func TestPortRangeAllocatorDeAllocate(t *testing.T) {
 	m := agtesting.NewMocks()
 	pa := newRangeAllocator(agonesv1.DefaultPortRange, 10, 20, m.KubeInformerFactory, m.AgonesInformerFactory)
 	nodes := []corev1.Node{n1, n2, n3}
-	m.KubeClient.AddReactor("list", "nodes", func(action k8stesting.Action) (bool, runtime.Object, error) {
+	m.KubeClient.AddReactor("list", "nodes", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 		nl := &corev1.NodeList{Items: nodes}
 		return true, nl, nil
 	})
@@ -469,12 +469,12 @@ func TestPortRangeAllocatorSyncPortAllocations(t *testing.T) {
 	m := agtesting.NewMocks()
 	pa := newRangeAllocator(agonesv1.DefaultPortRange, 10, 20, m.KubeInformerFactory, m.AgonesInformerFactory)
 
-	m.KubeClient.AddReactor("list", "nodes", func(action k8stesting.Action) (bool, runtime.Object, error) {
+	m.KubeClient.AddReactor("list", "nodes", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 		nl := &corev1.NodeList{Items: []corev1.Node{n1, n2, n3}}
 		return true, nl, nil
 	})
 
-	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+	m.AgonesClient.AddReactor("list", "gameservers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 		gs1 := agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs1", UID: "1"},
 			Spec: agonesv1.GameServerSpec{
 				Ports: []agonesv1.GameServerPort{{PortPolicy: agonesv1.Dynamic, HostPort: 10}},
@@ -565,7 +565,7 @@ func TestPortRangeAllocatorSyncDeleteGameServer(t *testing.T) {
 
 	pa := newRangeAllocator(agonesv1.DefaultPortRange, 10, 20, m.KubeInformerFactory, m.AgonesInformerFactory)
 
-	m.KubeClient.AddReactor("list", "nodes", func(action k8stesting.Action) (bool, runtime.Object, error) {
+	m.KubeClient.AddReactor("list", "nodes", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 		nl := &corev1.NodeList{Items: []corev1.Node{n1, n2, n3}}
 		return true, nl, nil
 	})
@@ -624,7 +624,7 @@ func TestNodePortAllocation(t *testing.T) {
 	m := agtesting.NewMocks()
 	pa := newRangeAllocator(agonesv1.DefaultPortRange, 10, 20, m.KubeInformerFactory, m.AgonesInformerFactory)
 	nodes := []corev1.Node{n1, n2, n3}
-	m.KubeClient.AddReactor("list", "nodes", func(action k8stesting.Action) (bool, runtime.Object, error) {
+	m.KubeClient.AddReactor("list", "nodes", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 		nl := &corev1.NodeList{Items: nodes}
 		return true, nl, nil
 	})

@@ -78,7 +78,7 @@ func (Scheme) EnumDescriptor() ([]byte, []int) {
 	return file_protoc_gen_openapiv2_options_openapiv2_proto_rawDescGZIP(), []int{0}
 }
 
-// `Type` is a a supported HTTP header type.
+// `Type` is a supported HTTP header type.
 // See https://swagger.io/specification/v2/#parameterType.
 type HeaderParameter_Type int32
 
@@ -378,7 +378,7 @@ func (SecurityScheme_Flow) EnumDescriptor() ([]byte, []int) {
 //	    };
 //	    license: {
 //	      name: "BSD 3-Clause License";
-//	      url: "https://github.com/grpc-ecosystem/grpc-gateway/blob/main/LICENSE.txt";
+//	      url: "https://github.com/grpc-ecosystem/grpc-gateway/blob/main/LICENSE";
 //	    };
 //	  };
 //	  schemes: HTTPS;
@@ -1113,7 +1113,7 @@ func (x *Response) GetExtensions() map[string]*structpb.Value {
 //	    };
 //	    license: {
 //	      name: "BSD 3-Clause License";
-//	      url: "https://github.com/grpc-ecosystem/grpc-gateway/blob/main/LICENSE.txt";
+//	      url: "https://github.com/grpc-ecosystem/grpc-gateway/blob/main/LICENSE";
 //	    };
 //	  };
 //	  ...
@@ -1321,7 +1321,7 @@ func (x *Contact) GetEmail() string {
 //	    ...
 //	    license: {
 //	      name: "BSD 3-Clause License";
-//	      url: "https://github.com/grpc-ecosystem/grpc-gateway/blob/main/LICENSE.txt";
+//	      url: "https://github.com/grpc-ecosystem/grpc-gateway/blob/main/LICENSE";
 //	    };
 //	    ...
 //	  };
