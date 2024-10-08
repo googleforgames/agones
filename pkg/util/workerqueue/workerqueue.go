@@ -75,7 +75,7 @@ type Handler func(context.Context, string) error
 type WorkerQueue struct {
 	logger  *logrus.Entry
 	keyName string
-	queue   workqueue.RateLimitingInterface
+	queue   workqueue.TypedRateLimitingInterface[any]
 	// SyncHandler is exported to make testing easier (hack)
 	SyncHandler Handler
 
@@ -85,20 +85,20 @@ type WorkerQueue struct {
 }
 
 // FastRateLimiter returns a rate limiter without exponential back-off, with specified maximum per-item retry delay.
-func FastRateLimiter(maxDelay time.Duration) workqueue.RateLimiter {
+func FastRateLimiter(maxDelay time.Duration) workqueue.TypedRateLimiter[any] {
 	const numFastRetries = 5
 	const fastDelay = 200 * time.Millisecond // first few retries up to 'numFastRetries' are fast
 
-	return workqueue.NewItemFastSlowRateLimiter(fastDelay, maxDelay, numFastRetries)
+	return workqueue.NewTypedItemFastSlowRateLimiter[any](fastDelay, maxDelay, numFastRetries)
 }
 
 // NewWorkerQueue returns a new worker queue for a given name
 func NewWorkerQueue(handler Handler, logger *logrus.Entry, keyName logfields.ResourceType, queueName string) *WorkerQueue {
-	return NewWorkerQueueWithRateLimiter(handler, logger, keyName, queueName, workqueue.DefaultControllerRateLimiter())
+	return NewWorkerQueueWithRateLimiter(handler, logger, keyName, queueName, workqueue.DefaultTypedControllerRateLimiter[any]())
 }
 
 // NewWorkerQueueWithRateLimiter returns a new worker queue for a given name and a custom rate limiter.
-func NewWorkerQueueWithRateLimiter(handler Handler, logger *logrus.Entry, keyName logfields.ResourceType, queueName string, rateLimiter workqueue.RateLimiter) *WorkerQueue {
+func NewWorkerQueueWithRateLimiter(handler Handler, logger *logrus.Entry, keyName logfields.ResourceType, queueName string, rateLimiter workqueue.TypedRateLimiter[any]) *WorkerQueue {
 	return &WorkerQueue{
 		keyName:     string(keyName),
 		logger:      logger.WithField("queue", queueName),

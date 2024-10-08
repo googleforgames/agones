@@ -80,7 +80,7 @@ func main() {
 
 		go func(clientID int) {
 			defer wg.Done()
-			conn, err := grpc.Dial(endpoint, dialOpts)
+			conn, err := grpc.NewClient(endpoint, dialOpts)
 			if err != nil {
 				fmt.Printf("(failed(client=%v) to get connection: %v\n", clientID, err)
 				return

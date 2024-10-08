@@ -54,7 +54,7 @@ func TestMissingPodControllerSyncGameServer(t *testing.T) {
 			},
 		},
 		"pod doesn't exist: game server is fine": {
-			setup: func(gs *agonesv1.GameServer, pod *corev1.Pod) (*agonesv1.GameServer, *corev1.Pod) {
+			setup: func(gs *agonesv1.GameServer, _ *corev1.Pod) (*agonesv1.GameServer, *corev1.Pod) {
 				return gs, nil
 			},
 			expected: expected{
@@ -68,7 +68,7 @@ func TestMissingPodControllerSyncGameServer(t *testing.T) {
 			},
 		},
 		"pod doesn't exist: game server not found": {
-			setup: func(gs *agonesv1.GameServer, pod *corev1.Pod) (*agonesv1.GameServer, *corev1.Pod) {
+			setup: func(_ *agonesv1.GameServer, _ *corev1.Pod) (*agonesv1.GameServer, *corev1.Pod) {
 				return nil, nil
 			},
 			expected: expected{
@@ -78,7 +78,7 @@ func TestMissingPodControllerSyncGameServer(t *testing.T) {
 			},
 		},
 		"pod doesn't exist: game server is being deleted": {
-			setup: func(gs *agonesv1.GameServer, pod *corev1.Pod) (*agonesv1.GameServer, *corev1.Pod) {
+			setup: func(gs *agonesv1.GameServer, _ *corev1.Pod) (*agonesv1.GameServer, *corev1.Pod) {
 				now := metav1.Now()
 				gs.ObjectMeta.DeletionTimestamp = &now
 				return gs, nil
@@ -90,7 +90,7 @@ func TestMissingPodControllerSyncGameServer(t *testing.T) {
 			},
 		},
 		"pod doesn't exist: game server is already Unhealthy": {
-			setup: func(gs *agonesv1.GameServer, pod *corev1.Pod) (*agonesv1.GameServer, *corev1.Pod) {
+			setup: func(gs *agonesv1.GameServer, _ *corev1.Pod) (*agonesv1.GameServer, *corev1.Pod) {
 				gs.Status.State = agonesv1.GameServerStateUnhealthy
 				return gs, nil
 			},
@@ -101,7 +101,7 @@ func TestMissingPodControllerSyncGameServer(t *testing.T) {
 			},
 		},
 		"pod is not a gameserver pod": {
-			setup: func(gs *agonesv1.GameServer, pod *corev1.Pod) (*agonesv1.GameServer, *corev1.Pod) {
+			setup: func(gs *agonesv1.GameServer, _ *corev1.Pod) (*agonesv1.GameServer, *corev1.Pod) {
 				return gs, &corev1.Pod{ObjectMeta: gs.ObjectMeta}
 			},
 			expected: expected{
@@ -130,13 +130,13 @@ func TestMissingPodControllerSyncGameServer(t *testing.T) {
 			assert.NoError(t, err)
 
 			gs, pod = v.setup(gs, pod)
-			m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			m.AgonesClient.AddReactor("list", "gameservers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 				if gs != nil {
 					return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{*gs}}, nil
 				}
 				return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{}}, nil
 			})
-			m.KubeClient.AddReactor("list", "pods", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			m.KubeClient.AddReactor("list", "pods", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 				if pod != nil {
 					return true, &corev1.PodList{Items: []corev1.Pod{*pod}}, nil
 				}
@@ -184,7 +184,7 @@ func TestMissingPodControllerRun(t *testing.T) {
 	exist := atomic.Bool{}
 	exist.Store(false)
 
-	m.KubeClient.AddReactor("list", "pods", func(action k8stesting.Action) (bool, runtime.Object, error) {
+	m.KubeClient.AddReactor("list", "pods", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 		if exist.Load() {
 			pod, err := gs.Pod(agtesting.FakeAPIHooks{})
 			require.NoError(t, err)

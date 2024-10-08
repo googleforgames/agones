@@ -79,7 +79,7 @@ func TestGameServerSetCacheEntry(t *testing.T) {
 	}{
 		{
 			desc:     "EmptyList",
-			setup:    func(c *gameServerSetCacheEntry) {},
+			setup:    func(_ *gameServerSetCacheEntry) {},
 			list:     nil,
 			expected: nil,
 		},

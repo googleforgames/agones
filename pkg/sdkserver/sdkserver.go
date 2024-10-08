@@ -141,7 +141,7 @@ type SDKServer struct {
 // NewSDKServer creates a SDKServer that sets up an
 // InClusterConfig for Kubernetes
 func NewSDKServer(gameServerName, namespace string, kubeClient kubernetes.Interface,
-	agonesClient versioned.Interface, logLevel logrus.Level) (*SDKServer, error) {
+	agonesClient versioned.Interface, logLevel logrus.Level, healthPort int) (*SDKServer, error) {
 	mux := http.NewServeMux()
 	resync := 30 * time.Second
 	if runtime.FeatureEnabled(runtime.FeatureDisableResyncOnSDKServer) {
@@ -163,7 +163,7 @@ func NewSDKServer(gameServerName, namespace string, kubeClient kubernetes.Interf
 		gameServerLister: gameServers.Lister(),
 		gameServerSynced: gameServers.Informer().HasSynced,
 		server: &http.Server{
-			Addr:    ":8080",
+			Addr:    fmt.Sprintf(":%d", healthPort),
 			Handler: mux,
 		},
 		clock:              clock.RealClock{},
@@ -200,14 +200,14 @@ func NewSDKServer(gameServerName, namespace string, kubeClient kubernetes.Interf
 	eventBroadcaster.StartRecordingToSink(&k8sv1.EventSinkImpl{Interface: kubeClient.CoreV1().Events("")})
 	s.recorder = eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: "gameserver-sidecar"})
 
-	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/healthz", func(w http.ResponseWriter, _ *http.Request) {
 		_, err := w.Write([]byte("ok"))
 		if err != nil {
 			s.logger.WithError(err).Error("could not send ok response on healthz")
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 	})
-	mux.HandleFunc("/gshealthz", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/gshealthz", func(w http.ResponseWriter, _ *http.Request) {
 		s.ensureHealthChecksRunning()
 		if s.healthy() {
 			_, err := w.Write([]byte("ok"))
@@ -530,7 +530,7 @@ func (s *SDKServer) enqueueState(state agonesv1.GameServerState) {
 
 // Ready enters the RequestReady state change for this GameServer into
 // the workqueue so it can be updated
-func (s *SDKServer) Ready(ctx context.Context, e *sdk.Empty) (*sdk.Empty, error) {
+func (s *SDKServer) Ready(_ context.Context, e *sdk.Empty) (*sdk.Empty, error) {
 	s.logger.Debug("Received Ready request, adding to queue")
 	s.stopReserveTimer()
 	s.enqueueState(agonesv1.GameServerStateRequestReady)
@@ -538,7 +538,7 @@ func (s *SDKServer) Ready(ctx context.Context, e *sdk.Empty) (*sdk.Empty, error)
 }
 
 // Allocate enters an Allocate state change into the workqueue, so it can be updated
-func (s *SDKServer) Allocate(ctx context.Context, e *sdk.Empty) (*sdk.Empty, error) {
+func (s *SDKServer) Allocate(_ context.Context, e *sdk.Empty) (*sdk.Empty, error) {
 	s.stopReserveTimer()
 	s.enqueueState(agonesv1.GameServerStateAllocated)
 	return e, nil
@@ -547,7 +547,7 @@ func (s *SDKServer) Allocate(ctx context.Context, e *sdk.Empty) (*sdk.Empty, err
 // Shutdown enters the Shutdown state change for this GameServer into
 // the workqueue so it can be updated. If gracefulTermination feature is enabled,
 // Shutdown will block on GameServer being shutdown.
-func (s *SDKServer) Shutdown(ctx context.Context, e *sdk.Empty) (*sdk.Empty, error) {
+func (s *SDKServer) Shutdown(_ context.Context, e *sdk.Empty) (*sdk.Empty, error) {
 	s.logger.Debug("Received Shutdown request, adding to queue")
 	s.stopReserveTimer()
 	s.enqueueState(agonesv1.GameServerStateShutdown)
@@ -631,7 +631,7 @@ func (s *SDKServer) WatchGameServer(_ *sdk.Empty, stream sdk.SDK_WatchGameServer
 }
 
 // Reserve moves this GameServer to the Reserved state for the Duration specified
-func (s *SDKServer) Reserve(ctx context.Context, d *sdk.Duration) (*sdk.Empty, error) {
+func (s *SDKServer) Reserve(_ context.Context, d *sdk.Duration) (*sdk.Empty, error) {
 	s.stopReserveTimer()
 
 	e := &sdk.Empty{}
@@ -678,7 +678,7 @@ func (s *SDKServer) stopReserveTimer() {
 // PlayerConnect should be called when a player connects.
 // [Stage:Alpha]
 // [FeatureFlag:PlayerTracking]
-func (s *SDKServer) PlayerConnect(ctx context.Context, id *alpha.PlayerID) (*alpha.Bool, error) {
+func (s *SDKServer) PlayerConnect(_ context.Context, id *alpha.PlayerID) (*alpha.Bool, error) {
 	if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
 		return &alpha.Bool{Bool: false}, errors.Errorf("%s not enabled", runtime.FeaturePlayerTracking)
 	}
@@ -708,7 +708,7 @@ func (s *SDKServer) PlayerConnect(ctx context.Context, id *alpha.PlayerID) (*alp
 // PlayerDisconnect should be called when a player disconnects.
 // [Stage:Alpha]
 // [FeatureFlag:PlayerTracking]
-func (s *SDKServer) PlayerDisconnect(ctx context.Context, id *alpha.PlayerID) (*alpha.Bool, error) {
+func (s *SDKServer) PlayerDisconnect(_ context.Context, id *alpha.PlayerID) (*alpha.Bool, error) {
 	if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
 		return &alpha.Bool{Bool: false}, errors.Errorf("%s not enabled", runtime.FeaturePlayerTracking)
 	}
@@ -739,7 +739,7 @@ func (s *SDKServer) PlayerDisconnect(ctx context.Context, id *alpha.PlayerID) (*
 // This is always accurate, even if the value hasn’t been updated to the GameServer status yet.
 // [Stage:Alpha]
 // [FeatureFlag:PlayerTracking]
-func (s *SDKServer) IsPlayerConnected(ctx context.Context, id *alpha.PlayerID) (*alpha.Bool, error) {
+func (s *SDKServer) IsPlayerConnected(_ context.Context, id *alpha.PlayerID) (*alpha.Bool, error) {
 	if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
 		return &alpha.Bool{Bool: false}, errors.Errorf("%s not enabled", runtime.FeaturePlayerTracking)
 	}
@@ -762,7 +762,7 @@ func (s *SDKServer) IsPlayerConnected(ctx context.Context, id *alpha.PlayerID) (
 // This is always accurate, even if the value hasn’t been updated to the GameServer status yet.
 // [Stage:Alpha]
 // [FeatureFlag:PlayerTracking]
-func (s *SDKServer) GetConnectedPlayers(c context.Context, empty *alpha.Empty) (*alpha.PlayerIDList, error) {
+func (s *SDKServer) GetConnectedPlayers(_ context.Context, _ *alpha.Empty) (*alpha.PlayerIDList, error) {
 	if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
 		return nil, errors.Errorf("%s not enabled", runtime.FeaturePlayerTracking)
 	}
@@ -775,7 +775,7 @@ func (s *SDKServer) GetConnectedPlayers(c context.Context, empty *alpha.Empty) (
 // GetPlayerCount returns the current player count.
 // [Stage:Alpha]
 // [FeatureFlag:PlayerTracking]
-func (s *SDKServer) GetPlayerCount(ctx context.Context, _ *alpha.Empty) (*alpha.Count, error) {
+func (s *SDKServer) GetPlayerCount(_ context.Context, _ *alpha.Empty) (*alpha.Count, error) {
 	if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
 		return nil, errors.Errorf("%s not enabled", runtime.FeaturePlayerTracking)
 	}
@@ -787,7 +787,7 @@ func (s *SDKServer) GetPlayerCount(ctx context.Context, _ *alpha.Empty) (*alpha.
 // SetPlayerCapacity to change the game server's player capacity.
 // [Stage:Alpha]
 // [FeatureFlag:PlayerTracking]
-func (s *SDKServer) SetPlayerCapacity(ctx context.Context, count *alpha.Count) (*alpha.Empty, error) {
+func (s *SDKServer) SetPlayerCapacity(_ context.Context, count *alpha.Count) (*alpha.Empty, error) {
 	if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
 		return nil, errors.Errorf("%s not enabled", runtime.FeaturePlayerTracking)
 	}
@@ -802,7 +802,7 @@ func (s *SDKServer) SetPlayerCapacity(ctx context.Context, count *alpha.Count) (
 // GetPlayerCapacity returns the current player capacity, as set by SDK.SetPlayerCapacity()
 // [Stage:Alpha]
 // [FeatureFlag:PlayerTracking]
-func (s *SDKServer) GetPlayerCapacity(ctx context.Context, _ *alpha.Empty) (*alpha.Count, error) {
+func (s *SDKServer) GetPlayerCapacity(_ context.Context, _ *alpha.Empty) (*alpha.Count, error) {
 	if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
 		return nil, errors.Errorf("%s not enabled", runtime.FeaturePlayerTracking)
 	}
@@ -814,7 +814,7 @@ func (s *SDKServer) GetPlayerCapacity(ctx context.Context, _ *alpha.Empty) (*alp
 // GetCounter returns a Counter. Returns error if the counter does not exist.
 // [Stage:Beta]
 // [FeatureFlag:CountsAndLists]
-func (s *SDKServer) GetCounter(ctx context.Context, in *beta.GetCounterRequest) (*beta.Counter, error) {
+func (s *SDKServer) GetCounter(_ context.Context, in *beta.GetCounterRequest) (*beta.Counter, error) {
 	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
 		return nil, errors.Errorf("%s not enabled", runtime.FeatureCountsAndLists)
 	}
@@ -865,7 +865,7 @@ func (s *SDKServer) GetCounter(ctx context.Context, in *beta.GetCounterRequest) 
 // Returns error if the Count is out of range [0,Capacity].
 // [Stage:Beta]
 // [FeatureFlag:CountsAndLists]
-func (s *SDKServer) UpdateCounter(ctx context.Context, in *beta.UpdateCounterRequest) (*beta.Counter, error) {
+func (s *SDKServer) UpdateCounter(_ context.Context, in *beta.UpdateCounterRequest) (*beta.Counter, error) {
 	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
 		return nil, errors.Errorf("%s not enabled", runtime.FeatureCountsAndLists)
 	}
@@ -1015,7 +1015,7 @@ func (s *SDKServer) updateCounter(ctx context.Context) error {
 // GetList returns a List. Returns not found if the List does not exist.
 // [Stage:Beta]
 // [FeatureFlag:CountsAndLists]
-func (s *SDKServer) GetList(ctx context.Context, in *beta.GetListRequest) (*beta.List, error) {
+func (s *SDKServer) GetList(_ context.Context, in *beta.GetListRequest) (*beta.List, error) {
 	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
 		return nil, errors.Errorf("%s not enabled", runtime.FeatureCountsAndLists)
 	}

@@ -46,7 +46,7 @@ SDKApiService Adds a value to a List and returns updated List. Returns NOT_FOUND
  * @param name The name of the List to add a value to.
 @return BetaList
 */
-func (a *SDKApiService) AddListValue(ctx context.Context, body ListsNameaddValueBody, name string) (BetaList, *http.Response, error) {
+func (a *SDKApiService) AddListValue(ctx context.Context, body SdkAddListValueBody, name string) (BetaList, *http.Response, error) {
 	var (
 		localVarHttpMethod = strings.ToUpper("Post")
 		localVarPostBody   interface{}
@@ -301,7 +301,7 @@ SDKApiService Removes a value from a List and returns updated List. Returns NOT_
  * @param name The name of the List to remove a value from.
 @return BetaList
 */
-func (a *SDKApiService) RemoveListValue(ctx context.Context, body ListsNameremoveValueBody, name string) (BetaList, *http.Response, error) {
+func (a *SDKApiService) RemoveListValue(ctx context.Context, body SdkRemoveListValueBody, name string) (BetaList, *http.Response, error) {
 	var (
 		localVarHttpMethod = strings.ToUpper("Post")
 		localVarPostBody   interface{}

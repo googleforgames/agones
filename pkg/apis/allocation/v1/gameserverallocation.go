@@ -343,7 +343,7 @@ func (la *ListAction) ListActions(list string, gs *agonesv1.GameServer) error {
 			errs = errors.Join(errs, capErr)
 		}
 	}
-	if la.AddValues != nil && len(la.AddValues) > 0 {
+	if len(la.AddValues) > 0 {
 		cntErr := gs.AppendListValues(list, la.AddValues)
 		if cntErr != nil {
 			errs = errors.Join(errs, cntErr)
