@@ -63,9 +63,10 @@ RUN go install golang.org/x/tools/cmd/goimports@latest || echo "Failed to instal
     go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.61.0 || echo "Failed to install golangci-lint" && \
     go install gotest.tools/gotestsum@latest || echo "Failed to install gotestsum"
 
-RUN mkdir -p /go/src/k8s.io && \
+# Installing the release branch of the code generator tools and the gen-crd-api-reference-docs repository
+RUN mkdir -p /go/src/k8s.io /go/src/github.com/ahmetb && \
+    rm -rf /go/src/k8s.io/code-generator /go/src/github.com/ahmetb/gen-crd-api-reference-docs && \
     git clone -b v0.30.0 --depth=3 https://github.com/kubernetes/code-generator.git /go/src/k8s.io/code-generator && \
-    mkdir -p /go/src/github.com/ahmetb && \
     git clone https://github.com/ahmetb/gen-crd-api-reference-docs.git /go/src/github.com/ahmetb/gen-crd-api-reference-docs
 
 # Install specific kubectl version
@@ -73,9 +74,6 @@ RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/v${KUBERN
     chmod +x kubectl && mv kubectl /usr/local/bin/kubectl && \
     echo "source <(kubectl completion bash)" >> /root/.bashrc
 
-# Install the release branch of the code generator tools
-RUN mkdir -p /go/src/k8s.io && cd /go/src/k8s.io && \
-    git clone -b v0.30.0 --depth=3 https://github.com/kubernetes/code-generator.git
 
 # Install Helm
 RUN curl -L https://get.helm.sh/helm-v${HELM_VER}-linux-amd64.tar.gz -o /tmp/helm.tar.gz && \
