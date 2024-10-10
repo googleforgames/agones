@@ -199,15 +199,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "type": "object",
-              "properties": {
-                "value": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "value"
-              ]
+              "$ref": "#/definitions/SDKAddListValueBody"
             }
           }
         ],
@@ -241,15 +233,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "type": "object",
-              "properties": {
-                "value": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "value"
-              ]
+              "$ref": "#/definitions/SDKRemoveListValueBody"
             }
           }
         ],
@@ -260,6 +244,28 @@
     }
   },
   "definitions": {
+    "SDKAddListValueBody": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "value"
+      ]
+    },
+    "SDKRemoveListValueBody": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "value"
+      ]
+    },
     "betaCounter": {
       "type": "object",
       "properties": {

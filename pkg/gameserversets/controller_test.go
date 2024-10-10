@@ -557,7 +557,7 @@ func TestControllerWatchGameServers(t *testing.T) {
 	received := make(chan string)
 	defer close(received)
 
-	m.ExtClient.AddReactor("get", "customresourcedefinitions", func(action k8stesting.Action) (bool, runtime.Object, error) {
+	m.ExtClient.AddReactor("get", "customresourcedefinitions", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 		return true, agtesting.NewEstablishedCRD(), nil
 	})
 	gsSetWatch := watch.NewFake()
@@ -650,17 +650,17 @@ func TestSyncGameServerSet(t *testing.T) {
 		list[1].Status.State = agonesv1.GameServerStateShutdown
 
 		c, m := newFakeController()
-		m.AgonesClient.AddReactor("list", "gameserversets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("list", "gameserversets", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &agonesv1.GameServerSetList{Items: []agonesv1.GameServerSet{*gsSet}}, nil
 		})
-		m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("list", "gameservers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &agonesv1.GameServerList{Items: list}, nil
 		})
-		m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("update", "gameservers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			assert.FailNow(t, "gameserver should not update")
 			return false, nil, nil
 		})
-		m.AgonesClient.AddReactor("create", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("create", "gameservers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			assert.FailNow(t, "new gameservers should not be created")
 
 			return false, nil, nil
@@ -683,10 +683,10 @@ func TestSyncGameServerSet(t *testing.T) {
 		count := 0
 
 		c, m := newFakeController()
-		m.AgonesClient.AddReactor("list", "gameserversets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("list", "gameserversets", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &agonesv1.GameServerSetList{Items: []agonesv1.GameServerSet{*gsSet}}, nil
 		})
-		m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("list", "gameservers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &agonesv1.GameServerList{Items: list}, nil
 		})
 
@@ -729,10 +729,10 @@ func TestSyncGameServerSet(t *testing.T) {
 		count := 0
 
 		c, m := newFakeController()
-		m.AgonesClient.AddReactor("list", "gameserversets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("list", "gameserversets", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &agonesv1.GameServerSetList{Items: []agonesv1.GameServerSet{*gsSet}}, nil
 		})
-		m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("list", "gameservers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &agonesv1.GameServerList{Items: list}, nil
 		})
 
@@ -775,10 +775,10 @@ func TestSyncGameServerSet(t *testing.T) {
 		count := 0
 
 		c, m := newFakeController()
-		m.AgonesClient.AddReactor("list", "gameserversets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("list", "gameserversets", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &agonesv1.GameServerSetList{Items: []agonesv1.GameServerSet{*gsSet}}, nil
 		})
-		m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("list", "gameservers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &agonesv1.GameServerList{Items: list}, nil
 		})
 
@@ -815,13 +815,13 @@ func TestSyncGameServerSet(t *testing.T) {
 		count := 0
 
 		c, m := newFakeController()
-		m.AgonesClient.AddReactor("list", "gameserversets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("list", "gameserversets", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &agonesv1.GameServerSetList{Items: []agonesv1.GameServerSet{*gsSet}}, nil
 		})
-		m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("list", "gameservers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &agonesv1.GameServerList{Items: list}, nil
 		})
-		m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("update", "gameservers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			count++
 			return true, nil, nil
 		})
@@ -848,10 +848,10 @@ func TestSyncGameServerSet(t *testing.T) {
 		var deleted []string
 
 		c, m := newFakeController()
-		m.AgonesClient.AddReactor("list", "gameserversets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("list", "gameserversets", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &agonesv1.GameServerSetList{Items: []agonesv1.GameServerSet{*gsSet}}, nil
 		})
-		m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("list", "gameservers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &agonesv1.GameServerList{Items: list}, nil
 		})
 		m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {

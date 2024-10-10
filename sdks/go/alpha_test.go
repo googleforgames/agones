@@ -79,35 +79,35 @@ type alphaMock struct {
 	playerDisconnected string
 }
 
-func (a *alphaMock) PlayerConnect(ctx context.Context, id *alpha.PlayerID, opts ...grpc.CallOption) (*alpha.Bool, error) {
+func (a *alphaMock) PlayerConnect(_ context.Context, id *alpha.PlayerID, _ ...grpc.CallOption) (*alpha.Bool, error) {
 	a.playerConnected = id.PlayerID
 	a.playerCount++
 	return &alpha.Bool{Bool: true}, nil
 }
 
-func (a *alphaMock) PlayerDisconnect(ctx context.Context, id *alpha.PlayerID, opts ...grpc.CallOption) (*alpha.Bool, error) {
+func (a *alphaMock) PlayerDisconnect(_ context.Context, id *alpha.PlayerID, _ ...grpc.CallOption) (*alpha.Bool, error) {
 	a.playerDisconnected = id.PlayerID
 	a.playerCount--
 	return &alpha.Bool{Bool: true}, nil
 }
 
-func (a *alphaMock) IsPlayerConnected(ctx context.Context, id *alpha.PlayerID, opts ...grpc.CallOption) (*alpha.Bool, error) {
+func (a *alphaMock) IsPlayerConnected(_ context.Context, id *alpha.PlayerID, _ ...grpc.CallOption) (*alpha.Bool, error) {
 	return &alpha.Bool{Bool: id.PlayerID == a.playerConnected}, nil
 }
 
-func (a *alphaMock) GetConnectedPlayers(ctx context.Context, in *alpha.Empty, opts ...grpc.CallOption) (*alpha.PlayerIDList, error) {
+func (a *alphaMock) GetConnectedPlayers(_ context.Context, _ *alpha.Empty, _ ...grpc.CallOption) (*alpha.PlayerIDList, error) {
 	return &alpha.PlayerIDList{List: []string{a.playerConnected}}, nil
 }
 
-func (a *alphaMock) SetPlayerCapacity(ctx context.Context, in *alpha.Count, opts ...grpc.CallOption) (*alpha.Empty, error) {
+func (a *alphaMock) SetPlayerCapacity(_ context.Context, in *alpha.Count, _ ...grpc.CallOption) (*alpha.Empty, error) {
 	a.capacity = in.Count
 	return &alpha.Empty{}, nil
 }
 
-func (a *alphaMock) GetPlayerCapacity(ctx context.Context, in *alpha.Empty, opts ...grpc.CallOption) (*alpha.Count, error) {
+func (a *alphaMock) GetPlayerCapacity(_ context.Context, _ *alpha.Empty, _ ...grpc.CallOption) (*alpha.Count, error) {
 	return &alpha.Count{Count: a.capacity}, nil
 }
 
-func (a *alphaMock) GetPlayerCount(ctx context.Context, in *alpha.Empty, opts ...grpc.CallOption) (*alpha.Count, error) {
+func (a *alphaMock) GetPlayerCount(_ context.Context, _ *alpha.Empty, _ ...grpc.CallOption) (*alpha.Count, error) {
 	return &alpha.Count{Count: a.playerCount}, nil
 }

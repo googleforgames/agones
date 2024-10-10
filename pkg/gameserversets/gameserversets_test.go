@@ -229,7 +229,7 @@ func TestListGameServersByGameServerSetOwner(t *testing.T) {
 	gs4.ObjectMeta.OwnerReferences = nil
 
 	m := agtesting.NewMocks()
-	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+	m.AgonesClient.AddReactor("list", "gameservers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 		return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{*gs1, *gs2, gs3, *gs4}}, nil
 	})
 

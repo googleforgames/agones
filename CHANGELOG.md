@@ -1,6 +1,50 @@
 # Changelog
 
-## [v1.43 .0](https://github.com/googleforgames/agones/tree/v1.43.0) (2024-08-27)
+## [v1.44.0](https://github.com/googleforgames/agones/tree/v1.44.0) (2024-10-08)
+
+[Full Changelog](https://github.com/googleforgames/agones/compare/v1.43.0...v1.44.0)
+
+**Implemented enhancements:**
+- Unreal SDK - Added counters to unreal sdk by @GloryOfNight in https://github.com/googleforgames/agones/pull/3935
+- Unreal SDK - Add Support for GameServer Status Addresses by @KAllan357 in https://github.com/googleforgames/agones/pull/3932
+- Updates upgrade test to install multiple versions of Agones on a cluster in succession by @igooch in https://github.com/googleforgames/agones/pull/3982
+- Adds game server template with containerized sdk-client-test by @igooch in https://github.com/googleforgames/agones/pull/3987
+- Adds clusters for the in place upgrades tests by @igooch in https://github.com/googleforgames/agones/pull/3990
+- Test in place upgrades run tests by @igooch in https://github.com/googleforgames/agones/pull/3991
+- Move Feature GKEAutopilotExtendedDurationPods To Beta by @kamaljeeti in https://github.com/googleforgames/agones/pull/4006
+**Fixed bugs:**
+- fix: remove bad character from metrics markdown by @code-eg in https://github.com/googleforgames/agones/pull/3981
+- Updating UpdateList to update the values on a list by @chrisfoster121 in https://github.com/googleforgames/agones/pull/3899
+- Cleanup Patch Sidecar Logging by @markmandel in https://github.com/googleforgames/agones/pull/3973
+- Refactor metrics registry exporter by @kamaljeeti in https://github.com/googleforgames/agones/pull/3989
+- Fix the build-e2e error by @gongmax in https://github.com/googleforgames/agones/pull/4009
+- Add a flag to sdkserver to avoid a collision on port 8080 by @KAllan357 in https://github.com/googleforgames/agones/pull/4010
+**Other:**
+- Update the note at the top of the player tracking docs by @roberthbailey in https://github.com/googleforgames/agones/pull/3974
+- Adds schedule and chain policy to fleetautoscaler documentation by @indexjoseph in https://github.com/googleforgames/agones/pull/3934
+- Improve documentation to run performance script by @vicentefb in https://github.com/googleforgames/agones/pull/3948
+- Preparation for Release v1.44.0 by @kamaljeeti in https://github.com/googleforgames/agones/pull/3975
+- Add instructions for running Agones on Minikube with the Windows Docker driver by @brightestpixel in https://github.com/googleforgames/agones/pull/3965
+- Use Markdown when use k8s-api-version variable by @peterzhongyi in https://github.com/googleforgames/agones/pull/3964
+- Refactor Terraform by @kamaljeeti in https://github.com/googleforgames/agones/pull/3958
+- Created performance cluster 1.29 by @ashutosji in https://github.com/googleforgames/agones/pull/3986
+- Adding missing documentation about: add option for extensions components to use host network and configure ports by @Orza in https://github.com/googleforgames/agones/pull/3912
+- fix: correct misspelled metric in docs by @antiphp in https://github.com/googleforgames/agones/pull/3999
+- Add finalizer name change to create gameserver example by @indexjoseph in https://github.com/googleforgames/agones/pull/4005
+- Formatting code with gofmt by @cuishuang in https://github.com/googleforgames/agones/pull/4000
+- Add 'Trace' to LogLevel in GameServer.Spec.SdkServer by @0xaravindh in https://github.com/googleforgames/agones/pull/3995
+- Upgrade to Golang Version 1.22.6 and Golangci lint version v1.61.0 by @0xaravindh in https://github.com/googleforgames/agones/pull/3988
+- Update the go version upgrade template by @gongmax in https://github.com/googleforgames/agones/pull/4011
+
+**New Contributors:**
+- @GloryOfNight made their first contribution in https://github.com/googleforgames/agones/pull/3935
+- @brightestpixel made their first contribution in https://github.com/googleforgames/agones/pull/3965
+- @code-eg made their first contribution in https://github.com/googleforgames/agones/pull/3981
+- @chrisfoster121 made their first contribution in https://github.com/googleforgames/agones/pull/3899
+- @cuishuang made their first contribution in https://github.com/googleforgames/agones/pull/4000
+- @0xaravindh made their first contribution in https://github.com/googleforgames/agones/pull/3995
+
+## [v1.43.0](https://github.com/googleforgames/agones/tree/v1.43.0) (2024-08-27)
 
 [Full Changelog](https://github.com/googleforgames/agones/compare/v1.42.0...v1.43.0)
 

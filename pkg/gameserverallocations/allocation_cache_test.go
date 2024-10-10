@@ -187,7 +187,7 @@ func TestAllocationCacheListSortedGameServers(t *testing.T) {
 
 			gsList := v.list
 
-			m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
+			m.AgonesClient.AddReactor("list", "gameservers", func(_ k8stesting.Action) (bool, k8sruntime.Object, error) {
 				return true, &agonesv1.GameServerList{Items: gsList}, nil
 			})
 
@@ -481,7 +481,7 @@ func TestListSortedGameServersPriorities(t *testing.T) {
 
 			cache, m := newFakeAllocationCache()
 
-			m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
+			m.AgonesClient.AddReactor("list", "gameservers", func(_ k8stesting.Action) (bool, k8sruntime.Object, error) {
 				return true, &agonesv1.GameServerList{Items: testScenario.list}, nil
 			})
 
@@ -514,9 +514,9 @@ func TestAllocatorRunCacheSync(t *testing.T) {
 
 	assertCacheEntries := func(expected int) {
 		count := 0
-		err := wait.PollUntilContextTimeout(context.Background(), time.Second, 5*time.Second, true, func(ctx context.Context) (done bool, err error) {
+		err := wait.PollUntilContextTimeout(context.Background(), time.Second, 5*time.Second, true, func(_ context.Context) (done bool, err error) {
 			count = 0
-			cache.cache.Range(func(key string, gs *agonesv1.GameServer) bool {
+			cache.cache.Range(func(_ string, _ *agonesv1.GameServer) bool {
 				count++
 				return true
 			})

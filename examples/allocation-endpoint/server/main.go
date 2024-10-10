@@ -271,6 +271,7 @@ func updateFailed(clusterName string, err error) {
 }
 
 func connectToAgonesCluster(ctx context.Context, clusterInfo *ClusterInfo) (*grpc.ClientConn, error) {
+	// nolint: staticcheck	
 	conn, err := grpc.DialContext(ctx, fmt.Sprintf("%s:443", clusterInfo.Endpoint), grpc.WithTransportCredentials(cred))
 	if err != nil {
 		return nil, errors.Wrapf(err, "could not connect to %s with endpoint %s", clusterInfo.Name, clusterInfo.Endpoint)

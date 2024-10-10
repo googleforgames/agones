@@ -64,7 +64,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	conn, err := grpc.Dial(endpoint, dialOpts)
+	conn, err := grpc.NewClient(endpoint, dialOpts)
 	if err != nil {
 		panic(err)
 	}

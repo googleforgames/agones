@@ -5,13 +5,13 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/golang/glog"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/internal/codegenerator"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/internal/descriptor/openapiconfig"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2/options"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 	"google.golang.org/genproto/googleapis/api/annotations"
+	"google.golang.org/grpc/grpclog"
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/types/descriptorpb"
 	"google.golang.org/protobuf/types/pluginpb"
@@ -27,6 +27,9 @@ type Registry struct {
 
 	// files is a mapping from file path to descriptor
 	files map[string]*File
+
+	// meths is a mapping from fully-qualified method name to descriptor
+	meths map[string]*Method
 
 	// prefix is a prefix to be inserted to golang package paths generated from proto package names.
 	prefix string
@@ -78,8 +81,15 @@ type Registry struct {
 	// in your protofile comments
 	useGoTemplate bool
 
+	// goTemplateArgs specifies a list of key value pair inputs to be displayed in Go templates
+	goTemplateArgs map[string]string
+
 	// ignoreComments determines whether all protofile comments should be excluded from output
 	ignoreComments bool
+
+	// removeInternalComments determines whether to remove substrings in comments that begin with
+	// `(--` and end with `--)` as specified in https://google.aip.dev/192#internal-comments.
+	removeInternalComments bool
 
 	// enumsAsInts render enum as integer, as opposed to string
 	enumsAsInts bool
@@ -168,6 +178,7 @@ func NewRegistry() *Registry {
 	return &Registry{
 		msgs:                           make(map[string]*Message),
 		enums:                          make(map[string]*Enum),
+		meths:                          make(map[string]*Method),
 		files:                          make(map[string]*File),
 		pkgMap:                         make(map[string]string),
 		pkgAliases:                     make(map[string]string),
@@ -279,7 +290,9 @@ func (r *Registry) registerMsg(file *File, outerPath []string, msgs []*descripto
 		}
 		file.Messages = append(file.Messages, m)
 		r.msgs[m.FQMN()] = m
-		glog.V(1).Infof("register name: %s", m.FQMN())
+		if grpclog.V(1) {
+			grpclog.Infof("Register name: %s", m.FQMN())
+		}
 
 		var outers []string
 		outers = append(outers, outerPath...)
@@ -300,14 +313,18 @@ func (r *Registry) registerEnum(file *File, outerPath []string, enums []*descrip
 		}
 		file.Enums = append(file.Enums, e)
 		r.enums[e.FQEN()] = e
-		glog.V(1).Infof("register enum name: %s", e.FQEN())
+		if grpclog.V(1) {
+			grpclog.Infof("Register enum name: %s", e.FQEN())
+		}
 	}
 }
 
 // LookupMsg looks up a message type by "name".
 // It tries to resolve "name" from "location" if "name" is a relative message name.
 func (r *Registry) LookupMsg(location, name string) (*Message, error) {
-	glog.V(1).Infof("lookup %s from %s", name, location)
+	if grpclog.V(1) {
+		grpclog.Infof("Lookup %s from %s", name, location)
+	}
 	if strings.HasPrefix(name, ".") {
 		m, ok := r.msgs[name]
 		if !ok {
@@ -333,7 +350,9 @@ func (r *Registry) LookupMsg(location, name string) (*Message, error) {
 // LookupEnum looks up a enum type by "name".
 // It tries to resolve "name" from "location" if "name" is a relative enum name.
 func (r *Registry) LookupEnum(location, name string) (*Enum, error) {
-	glog.V(1).Infof("lookup enum %s from %s", name, location)
+	if grpclog.V(1) {
+		grpclog.Infof("Lookup enum %s from %s", name, location)
+	}
 	if strings.HasPrefix(name, ".") {
 		e, ok := r.enums[name]
 		if !ok {
@@ -456,6 +475,14 @@ func (r *Registry) GetAllFQENs() []string {
 	return keys
 }
 
+func (r *Registry) GetAllFQMethNs() []string {
+	keys := make([]string, 0, len(r.meths))
+	for k := range r.meths {
+		keys = append(keys, k)
+	}
+	return keys
+}
+
 // SetAllowDeleteBody controls whether http delete methods may have a
 // body or fail loading if encountered.
 func (r *Registry) SetAllowDeleteBody(allow bool) {
@@ -571,6 +598,19 @@ func (r *Registry) GetUseGoTemplate() bool {
 	return r.useGoTemplate
 }
 
+func (r *Registry) SetGoTemplateArgs(kvs []string) {
+	r.goTemplateArgs = make(map[string]string)
+	for _, kv := range kvs {
+		if key, value, found := strings.Cut(kv, "="); found {
+			r.goTemplateArgs[key] = value
+		}
+	}
+}
+
+func (r *Registry) GetGoTemplateArgs() map[string]string {
+	return r.goTemplateArgs
+}
+
 // SetIgnoreComments sets ignoreComments
 func (r *Registry) SetIgnoreComments(ignore bool) {
 	r.ignoreComments = ignore
@@ -579,6 +619,16 @@ func (r *Registry) SetIgnoreComments(ignore bool) {
 // GetIgnoreComments returns ignoreComments
 func (r *Registry) GetIgnoreComments() bool {
 	return r.ignoreComments
+}
+
+// SetRemoveInternalComments sets removeInternalComments
+func (r *Registry) SetRemoveInternalComments(remove bool) {
+	r.removeInternalComments = remove
+}
+
+// GetRemoveInternalComments returns removeInternalComments
+func (r *Registry) GetRemoveInternalComments() bool {
+	return r.removeInternalComments
 }
 
 // SetEnumsAsInts set enumsAsInts

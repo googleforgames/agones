@@ -112,7 +112,7 @@ func main() {
 				failureDtls[clientID] = allocErrorCodeCntMap()
 				durCtx, cancel := context.WithTimeout(context.Background(), sc.duration)
 				defer cancel()
-				conn, err := grpc.Dial(endpoint, dialOpts)
+				conn, err := grpc.NewClient(endpoint, dialOpts)
 				if err != nil {
 					logger.Printf("Failed to dial for client %v: %v", clientID, err)
 					return

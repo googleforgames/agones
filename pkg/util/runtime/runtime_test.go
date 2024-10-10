@@ -17,6 +17,7 @@
 package runtime
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -28,8 +29,8 @@ func TestHandleError(t *testing.T) {
 	old := runtime.ErrorHandlers
 	defer func() { runtime.ErrorHandlers = old }()
 	var result error
-	runtime.ErrorHandlers = []func(error){
-		func(err error) {
+	runtime.ErrorHandlers = []runtime.ErrorHandler{
+		func(_ context.Context, err error, _ string, _ ...interface{}) {
 			result = err
 		},
 	}

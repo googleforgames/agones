@@ -22,7 +22,7 @@ RUN apt-get --allow-releaseinfo-change update && \
 ENV RUSTUP_HOME=/usr/local/rustup \
     CARGO_HOME=/usr/local/cargo \
     PATH=/usr/local/cargo/bin:$PATH \
-    RUST_VERSION=1.71.0
+    RUST_VERSION=1.71.1
 RUN wget -q https://static.rust-lang.org/rustup/dist/x86_64-unknown-linux-gnu/rustup-init && \
     chmod +x rustup-init && \
     ./rustup-init -y --no-modify-path --default-toolchain $RUST_VERSION && \

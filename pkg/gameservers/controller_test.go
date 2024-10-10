@@ -85,7 +85,7 @@ func TestControllerSyncGameServer(t *testing.T) {
 		watchPods := watch.NewFake()
 		mocks.KubeClient.AddWatchReactor("pods", k8stesting.DefaultWatchReactor(watchPods, nil))
 
-		mocks.KubeClient.AddReactor("list", "nodes", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		mocks.KubeClient.AddReactor("list", "nodes", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &corev1.NodeList{Items: []corev1.Node{node}}, nil
 		})
 		mocks.KubeClient.AddReactor("create", "pods", func(action k8stesting.Action) (bool, runtime.Object, error) {
@@ -104,7 +104,7 @@ func TestControllerSyncGameServer(t *testing.T) {
 			}, 5*time.Second, time.Second)
 			return true, pod, nil
 		})
-		mocks.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		mocks.AgonesClient.AddReactor("list", "gameservers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			gameServers := &agonesv1.GameServerList{Items: []agonesv1.GameServer{*fixture}}
 			return true, gameServers, nil
 		})
@@ -199,13 +199,13 @@ func TestControllerSyncGameServerWithDevIP(t *testing.T) {
 
 		fixture.ApplyDefaults()
 
-		mocks.KubeClient.AddReactor("list", "nodes", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		mocks.KubeClient.AddReactor("list", "nodes", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return false, nil, k8serrors.NewMethodNotSupported(schema.GroupResource{}, "list nodes should not be called")
 		})
-		mocks.KubeClient.AddReactor("create", "pods", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		mocks.KubeClient.AddReactor("create", "pods", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return false, nil, k8serrors.NewMethodNotSupported(schema.GroupResource{}, "creating a pod with dev mode is not supported")
 		})
-		mocks.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		mocks.AgonesClient.AddReactor("list", "gameservers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			gameServers := &agonesv1.GameServerList{Items: []agonesv1.GameServer{*fixture}}
 			return true, gameServers, nil
 		})
@@ -243,7 +243,7 @@ func TestControllerSyncGameServerWithDevIP(t *testing.T) {
 		gsFixture.ApplyDefaults()
 		gsFixture.Status.State = agonesv1.GameServerStateRequestReady
 
-		mocks.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		mocks.AgonesClient.AddReactor("list", "gameservers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			gameServers := &agonesv1.GameServerList{Items: []agonesv1.GameServer{*gsFixture}}
 			return true, gameServers, nil
 		})
@@ -276,11 +276,11 @@ func TestControllerSyncGameServerWithDevIP(t *testing.T) {
 		fixture.ApplyDefaults()
 		fixture.Status.State = agonesv1.GameServerStateAllocated
 
-		mocks.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		mocks.AgonesClient.AddReactor("list", "gameservers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			gameServers := &agonesv1.GameServerList{Items: []agonesv1.GameServer{*fixture}}
 			return true, gameServers, nil
 		})
-		mocks.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		mocks.AgonesClient.AddReactor("update", "gameservers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			require.Fail(t, "should not update")
 			return true, nil, nil
 		})
@@ -325,7 +325,7 @@ func TestControllerWatchGameServers(t *testing.T) {
 	podWatch := watch.NewFake()
 	m.AgonesClient.AddWatchReactor("gameservers", k8stesting.DefaultWatchReactor(gsWatch, nil))
 	m.KubeClient.AddWatchReactor("pods", k8stesting.DefaultWatchReactor(podWatch, nil))
-	m.ExtClient.AddReactor("get", "customresourcedefinitions", func(action k8stesting.Action) (bool, runtime.Object, error) {
+	m.ExtClient.AddReactor("get", "customresourcedefinitions", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 		return true, agtesting.NewEstablishedCRD(), nil
 	})
 
@@ -647,7 +647,7 @@ func TestControllerSyncGameServerDeletionTimestamp(t *testing.T) {
 		assert.Nil(t, err)
 
 		deleted := false
-		mocks.KubeClient.AddReactor("list", "pods", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		mocks.KubeClient.AddReactor("list", "pods", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &corev1.PodList{Items: []corev1.Pod{*pod}}, nil
 		})
 		mocks.KubeClient.AddReactor("delete", "pods", func(action k8stesting.Action) (bool, runtime.Object, error) {
@@ -677,10 +677,10 @@ func TestControllerSyncGameServerDeletionTimestamp(t *testing.T) {
 		pod, err := fixture.Pod(agtesting.FakeAPIHooks{})
 		assert.Nil(t, err)
 
-		mocks.KubeClient.AddReactor("list", "pods", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		mocks.KubeClient.AddReactor("list", "pods", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &corev1.PodList{Items: []corev1.Pod{*pod}}, nil
 		})
-		mocks.KubeClient.AddReactor("delete", "pods", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		mocks.KubeClient.AddReactor("delete", "pods", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, nil, errors.New("Delete-err")
 		})
 
@@ -771,7 +771,7 @@ func TestControllerSyncGameServerPortAllocationState(t *testing.T) {
 			Status: agonesv1.GameServerStatus{State: agonesv1.GameServerStatePortAllocation},
 		}
 		fixture.ApplyDefaults()
-		mocks.KubeClient.AddReactor("list", "nodes", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		mocks.KubeClient.AddReactor("list", "nodes", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &corev1.NodeList{Items: []corev1.Node{{ObjectMeta: metav1.ObjectMeta{Name: nodeFixtureName}}}}, nil
 		})
 
@@ -819,7 +819,7 @@ func TestControllerSyncGameServerPortAllocationState(t *testing.T) {
 			Status: agonesv1.GameServerStatus{State: agonesv1.GameServerStatePortAllocation},
 		}
 		fixture.ApplyDefaults()
-		mocks.KubeClient.AddReactor("list", "nodes", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		mocks.KubeClient.AddReactor("list", "nodes", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &corev1.NodeList{Items: []corev1.Node{{ObjectMeta: metav1.ObjectMeta{Name: nodeFixtureName}}}}, nil
 		})
 
@@ -1067,10 +1067,10 @@ func TestControllerSyncGameServerCreatingState(t *testing.T) {
 		pod, err := fixture.Pod(agtesting.FakeAPIHooks{})
 		assert.Nil(t, err)
 
-		m.KubeClient.AddReactor("list", "pods", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.KubeClient.AddReactor("list", "pods", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &corev1.PodList{Items: []corev1.Pod{*pod}}, nil
 		})
-		m.KubeClient.AddReactor("create", "pods", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.KubeClient.AddReactor("create", "pods", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			podCreated = true
 			return true, nil, nil
 		})
@@ -1098,7 +1098,7 @@ func TestControllerSyncGameServerCreatingState(t *testing.T) {
 		podCreated := false
 		gsUpdated := false
 
-		mocks.KubeClient.AddReactor("create", "pods", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		mocks.KubeClient.AddReactor("create", "pods", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			podCreated = true
 			return true, nil, k8serrors.NewInvalid(schema.GroupKind{}, "test", field.ErrorList{})
 		})
@@ -1156,10 +1156,10 @@ func TestControllerSyncGameServerStartingState(t *testing.T) {
 		pod.Status.PodIPs = []corev1.PodIP{{IP: ipv6Fixture}}
 		gsUpdated := false
 
-		m.KubeClient.AddReactor("list", "nodes", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.KubeClient.AddReactor("list", "nodes", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &corev1.NodeList{Items: []corev1.Node{node}}, nil
 		})
-		m.KubeClient.AddReactor("list", "pods", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.KubeClient.AddReactor("list", "pods", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &corev1.PodList{Items: []corev1.Pod{*pod}}, nil
 		})
 		m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
@@ -1196,10 +1196,10 @@ func TestControllerSyncGameServerStartingState(t *testing.T) {
 		require.NoError(t, err)
 		pod.Spec.NodeName = nodeFixtureName
 
-		m.KubeClient.AddReactor("list", "nodes", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.KubeClient.AddReactor("list", "nodes", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &corev1.NodeList{Items: []corev1.Node{node}}, nil
 		})
-		m.KubeClient.AddReactor("list", "pods", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.KubeClient.AddReactor("list", "pods", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &corev1.PodList{Items: []corev1.Pod{*pod}}, nil
 		})
 		m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
@@ -1224,10 +1224,10 @@ func TestControllerSyncGameServerStartingState(t *testing.T) {
 		pod.Spec.NodeName = nodeFixtureName
 		pod.Status.PodIPs = []corev1.PodIP{{IP: ipv6Fixture}}
 
-		m.KubeClient.AddReactor("list", "nodes", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.KubeClient.AddReactor("list", "nodes", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &corev1.NodeList{Items: []corev1.Node{node}}, nil
 		})
-		m.KubeClient.AddReactor("list", "pods", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.KubeClient.AddReactor("list", "pods", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &corev1.PodList{Items: []corev1.Pod{*pod}}, nil
 		})
 		m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
@@ -1362,7 +1362,7 @@ func TestControllerCreateGameServerPod(t *testing.T) {
 		podCreated := false
 		gsUpdated := false
 
-		mocks.KubeClient.AddReactor("create", "pods", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		mocks.KubeClient.AddReactor("create", "pods", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			podCreated = true
 			return true, nil, k8serrors.NewInvalid(schema.GroupKind{}, "test", field.ErrorList{})
 		})
@@ -1393,7 +1393,7 @@ func TestControllerCreateGameServerPod(t *testing.T) {
 		podCreated := false
 		gsUpdated := false
 
-		mocks.KubeClient.AddReactor("create", "pods", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		mocks.KubeClient.AddReactor("create", "pods", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			podCreated = true
 			return true, nil, k8serrors.NewForbidden(schema.GroupResource{}, "test", errors.New("test"))
 		})
@@ -1444,7 +1444,7 @@ func TestControllerSyncGameServerRequestReadyState(t *testing.T) {
 		gsUpdated := false
 		podUpdated := false
 
-		m.KubeClient.AddReactor("list", "pods", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.KubeClient.AddReactor("list", "pods", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &corev1.PodList{Items: []corev1.Pod{*pod}}, nil
 		})
 		m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
@@ -1492,7 +1492,7 @@ func TestControllerSyncGameServerRequestReadyState(t *testing.T) {
 		}
 		podUpdated := false
 
-		m.KubeClient.AddReactor("list", "pods", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.KubeClient.AddReactor("list", "pods", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &corev1.PodList{Items: []corev1.Pod{*pod}}, nil
 		})
 		m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
@@ -1537,10 +1537,10 @@ func TestControllerSyncGameServerRequestReadyState(t *testing.T) {
 		gsUpdated := false
 		podUpdated := false
 
-		m.KubeClient.AddReactor("list", "pods", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.KubeClient.AddReactor("list", "pods", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &corev1.PodList{Items: []corev1.Pod{*pod}}, nil
 		})
-		m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("update", "gameservers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			gsUpdated = true
 			return true, nil, nil
 		})
@@ -1581,7 +1581,7 @@ func TestControllerSyncGameServerRequestReadyState(t *testing.T) {
 		gsUpdated := false
 		podUpdated := false
 
-		m.KubeClient.AddReactor("list", "pods", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.KubeClient.AddReactor("list", "pods", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &corev1.PodList{Items: []corev1.Pod{*pod}}, nil
 		})
 		m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
@@ -1592,7 +1592,7 @@ func TestControllerSyncGameServerRequestReadyState(t *testing.T) {
 			assert.Equal(t, containerID, gs.Annotations[agonesv1.GameServerReadyContainerIDAnnotation])
 			return true, gs, nil
 		})
-		m.KubeClient.AddReactor("update", "pods", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.KubeClient.AddReactor("update", "pods", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			podUpdated = true
 			return true, nil, nil
 		})
@@ -1631,11 +1631,11 @@ func TestControllerSyncGameServerRequestReadyState(t *testing.T) {
 		ipFixture := "12.12.12.12"
 		nodeFixture := corev1.Node{ObjectMeta: metav1.ObjectMeta{Name: nodeFixtureName}, Status: corev1.NodeStatus{Addresses: []corev1.NodeAddress{{Address: ipFixture, Type: corev1.NodeExternalIP}}}}
 
-		m.KubeClient.AddReactor("list", "nodes", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.KubeClient.AddReactor("list", "nodes", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &corev1.NodeList{Items: []corev1.Node{nodeFixture}}, nil
 		})
 
-		m.KubeClient.AddReactor("list", "pods", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.KubeClient.AddReactor("list", "pods", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &corev1.PodList{Items: []corev1.Pod{*pod}}, nil
 		})
 		m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
@@ -1691,7 +1691,7 @@ func TestControllerSyncGameServerRequestReadyState(t *testing.T) {
 		gsUpdated := false
 		podUpdated := false
 
-		m.KubeClient.AddReactor("list", "pods", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.KubeClient.AddReactor("list", "pods", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &corev1.PodList{Items: []corev1.Pod{*pod}}, nil
 		})
 		m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
@@ -1744,14 +1744,14 @@ func TestControllerSyncGameServerRequestReadyState(t *testing.T) {
 		gsUpdated := false
 		podUpdated := false
 
-		m.KubeClient.AddReactor("list", "pods", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.KubeClient.AddReactor("list", "pods", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &corev1.PodList{Items: []corev1.Pod{*pod}}, nil
 		})
-		m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("update", "gameservers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			gsUpdated = true
 			return true, nil, nil
 		})
-		m.KubeClient.AddReactor("update", "pods", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.KubeClient.AddReactor("update", "pods", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			podUpdated = true
 			return true, nil, nil
 		})
@@ -1777,14 +1777,14 @@ func TestControllerSyncGameServerRequestReadyState(t *testing.T) {
 		gsUpdated := false
 		podUpdated := false
 
-		m.KubeClient.AddReactor("list", "pods", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.KubeClient.AddReactor("list", "pods", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &corev1.PodList{Items: []corev1.Pod{*pod}}, nil
 		})
-		m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("update", "gameservers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			gsUpdated = true
 			return true, nil, nil
 		})
-		m.KubeClient.AddReactor("update", "pods", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.KubeClient.AddReactor("update", "pods", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			podUpdated = true
 			return true, nil, nil
 		})
@@ -2221,7 +2221,7 @@ func testNoChange(t *testing.T, state agonesv1.GameServerState, f func(*Controll
 		Spec: newSingleContainerSpec(), Status: agonesv1.GameServerStatus{State: state}}
 	fixture.ApplyDefaults()
 	updated := false
-	mocks.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+	mocks.AgonesClient.AddReactor("update", "gameservers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 		updated = true
 		return true, nil, nil
 	})
@@ -2241,7 +2241,7 @@ func testWithNonZeroDeletionTimestamp(t *testing.T, f func(*Controller, *agonesv
 		Spec: newSingleContainerSpec(), Status: agonesv1.GameServerStatus{State: agonesv1.GameServerStateShutdown}}
 	fixture.ApplyDefaults()
 	updated := false
-	mocks.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+	mocks.AgonesClient.AddReactor("update", "gameservers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 		updated = true
 		return true, nil, nil
 	})

@@ -44,7 +44,7 @@ type metricExporter struct {
 	metrics []*metricdata.Metric
 }
 
-func (e *metricExporter) ExportMetrics(ctx context.Context, metrics []*metricdata.Metric) error {
+func (e *metricExporter) ExportMetrics(_ context.Context, metrics []*metricdata.Metric) error {
 	e.metrics = metrics
 	return nil
 }
@@ -533,13 +533,13 @@ func TestControllerGameServersNodeState(t *testing.T) {
 	resetMetrics()
 	m := agtesting.NewMocks()
 
-	m.KubeClient.AddReactor("list", "nodes", func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
+	m.KubeClient.AddReactor("list", "nodes", func(_ k8stesting.Action) (bool, k8sruntime.Object, error) {
 		n1 := nodeWithName("node1")
 		n2 := nodeWithName("node2")
 		n3 := nodeWithName("node3")
 		return true, &corev1.NodeList{Items: []corev1.Node{*n1, *n2, *n3}}, nil
 	})
-	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
+	m.AgonesClient.AddReactor("list", "gameservers", func(_ k8stesting.Action) (bool, k8sruntime.Object, error) {
 		gs1 := gameServerWithNode("node1")
 		gs2 := gameServerWithNode("node2")
 		gs3 := gameServerWithNode("node2")

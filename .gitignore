@@ -27,6 +27,7 @@
 *.iml
 bin
 *.o
+*.sln
 tmp
 terraform.tfvars
 terraform.tfstate*

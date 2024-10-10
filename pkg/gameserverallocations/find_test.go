@@ -253,7 +253,7 @@ func TestFindGameServerForAllocationPacked(t *testing.T) {
 			controller, m := newFakeController()
 			c := controller.allocator.allocationCache
 
-			m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
+			m.AgonesClient.AddReactor("list", "gameservers", func(_ k8stesting.Action) (bool, k8sruntime.Object, error) {
 				return true, &agonesv1.GameServerList{Items: v.list}, nil
 			})
 
@@ -316,7 +316,7 @@ func TestFindGameServerForAllocationDistributed(t *testing.T) {
 			Status: agonesv1.GameServerStatus{NodeName: "node3", State: agonesv1.GameServerStateReady}},
 	}
 
-	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
+	m.AgonesClient.AddReactor("list", "gameservers", func(_ k8stesting.Action) (bool, k8sruntime.Object, error) {
 		return true, &agonesv1.GameServerList{Items: gsList}, nil
 	})
 

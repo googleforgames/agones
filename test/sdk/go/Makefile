@@ -29,8 +29,8 @@ project_path := $(dir $(mkfile_path))
 root_path = $(realpath $(project_path)/)
 # Because go mod init in the Dockerfile installs the most recently released version of Agones, this
 # will need to be built and pushed post-release. During DEV it will be built at DEV - 1.
-base_version = 1.43.0
-server_tag := $(REGISTRY)/sdk-client-test:$(base_version)
+release_version = 1.43.0
+server_tag := $(REGISTRY)/sdk-client-test:$(release_version)
 
 #   _____                    _
 #  |_   _|_ _ _ __ __ _  ___| |_ ___

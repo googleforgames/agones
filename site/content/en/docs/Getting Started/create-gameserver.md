@@ -78,7 +78,7 @@ Kind:         GameServer
 Metadata:
   Creation Timestamp:  2019-02-27T15:06:20Z
   Finalizers:
-    agones.dev
+    agones.dev/controller
   Generate Name:     simple-game-server-
   Generation:        1
   Resource Version:  30377

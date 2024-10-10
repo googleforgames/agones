@@ -30,7 +30,7 @@ type ErrorHandlerFunc func(http.ResponseWriter, *http.Request) error
 
 // FourZeroFour is the standard 404 handler.
 func FourZeroFour(logger *logrus.Entry, w http.ResponseWriter, r *http.Request) {
-	f := ErrorHTTPHandler(logger, func(writer http.ResponseWriter, request *http.Request) error {
+	f := ErrorHTTPHandler(logger, func(_ http.ResponseWriter, _ *http.Request) error {
 		body, err := io.ReadAll(r.Body)
 		if err != nil {
 			return errors.Wrap(err, "error in default handler")

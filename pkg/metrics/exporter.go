@@ -19,15 +19,25 @@ import (
 	"os"
 	"time"
 
+	"agones.dev/agones/pkg/util/httpserver"
 	"cloud.google.com/go/compute/metadata"
 	"contrib.go.opencensus.io/exporter/prometheus"
 	"contrib.go.opencensus.io/exporter/stackdriver"
+	"github.com/heptiolabs/healthcheck"
 	"github.com/pkg/errors"
 	prom "github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
 	"go.opencensus.io/stats/view"
 	"google.golang.org/genproto/googleapis/api/monitoredres"
 )
+
+// Config holds configuration for metrics reporting
+type Config struct {
+	GCPProjectID      string
+	StackdriverLabels string
+	Stackdriver       bool
+	PrometheusMetrics bool
+}
 
 // RegisterPrometheusExporter register a prometheus exporter to OpenCensus with a given prometheus metric registry.
 // It will automatically add go runtime and process metrics using default prometheus collectors.
@@ -118,4 +128,34 @@ func getMonitoredResource(projectID string) (*monitoredres.MonitoredResource, er
 			"container_name": os.Getenv("CONTAINER_NAME"),
 		},
 	}, nil
+}
+
+// SetupMetrics initializes metrics reporting with the provided configuration
+func SetupMetrics(conf Config, server *httpserver.Server) (healthcheck.Handler, func()) {
+	var health healthcheck.Handler
+	var closer = func() {}
+
+	// Stackriver Metrics
+	if conf.Stackdriver {
+		sd, err := RegisterStackdriverExporter(conf.GCPProjectID, conf.StackdriverLabels)
+		if err != nil {
+			logger.WithError(err).Fatal("Could not register Stackdriver exporter")
+		}
+		closer = func() { sd.Flush() }
+	}
+
+	// Prometheus Metrics
+	if conf.PrometheusMetrics {
+		registry := prom.NewRegistry()
+		metricHandler, err := RegisterPrometheusExporter(registry)
+		if err != nil {
+			logger.WithError(err).Fatal("Could not register Prometheus exporter")
+		}
+		server.Handle("/metrics", metricHandler)
+		health = healthcheck.NewMetricsHandler(registry, "agones")
+	} else {
+		health = healthcheck.NewHandler()
+	}
+
+	return health, closer
 }

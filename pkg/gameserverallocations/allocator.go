@@ -141,7 +141,7 @@ func NewAllocator(policyInformer multiclusterinformerv1.GameServerAllocationPoli
 		remoteAllocationTimeout:      remoteAllocationTimeout,
 		totalRemoteAllocationTimeout: totalRemoteAllocationTimeout,
 		remoteAllocationCallback: func(ctx context.Context, endpoint string, dialOpts grpc.DialOption, request *pb.AllocationRequest) (*pb.AllocationResponse, error) {
-			conn, err := grpc.Dial(endpoint, dialOpts)
+			conn, err := grpc.NewClient(endpoint, dialOpts)
 			if err != nil {
 				return nil, err
 			}

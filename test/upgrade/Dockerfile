@@ -15,6 +15,7 @@
 FROM gcr.io/cloud-builders/gcloud AS builder
 
 RUN apt-get update && \
+    apt-get install -y curl && \
     apt-get clean
 
 WORKDIR /usr/local

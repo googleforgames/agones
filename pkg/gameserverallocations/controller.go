@@ -124,7 +124,7 @@ func (c *Extensions) processAllocationRequest(ctx context.Context, w http.Respon
 	if r.Method != http.MethodPost {
 		log.Warn("allocation handler only supports POST")
 		http.Error(w, "Method not supported", http.StatusMethodNotAllowed)
-		return
+		return nil
 	}
 
 	gsa, err := c.allocationDeserialization(r, namespace)

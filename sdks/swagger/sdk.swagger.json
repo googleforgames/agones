@@ -299,11 +299,11 @@
       "type": "object",
       "properties": {
         "health": {
-          "$ref": "#/definitions/SpecHealth"
+          "$ref": "#/definitions/GameServerSpecHealth"
         }
       }
     },
-    "SpecHealth": {
+    "GameServerSpecHealth": {
       "type": "object",
       "properties": {
         "disabled": {

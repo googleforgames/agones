@@ -30,7 +30,9 @@ var (
 	useFQNForOpenAPIName           = flag.Bool("fqn_for_openapi_name", false, "if set, the object's OpenAPI names will use the fully qualified names from the proto definition (ie my.package.MyMessage.MyInnerMessage). DEPRECATED: prefer `openapi_naming_strategy=fqn`")
 	openAPINamingStrategy          = flag.String("openapi_naming_strategy", "", "use the given OpenAPI naming strategy. Allowed values are `legacy`, `fqn`, `simple`. If unset, either `legacy` or `fqn` are selected, depending on the value of the `fqn_for_openapi_name` flag")
 	useGoTemplate                  = flag.Bool("use_go_templates", false, "if set, you can use Go templates in protofile comments")
+	goTemplateArgs                 = utilities.StringArrayFlag(flag.CommandLine, "go_template_args", "provide a custom value that can override a key in the Go template. Requires the `use_go_templates` option to be set")
 	ignoreComments                 = flag.Bool("ignore_comments", false, "if set, all protofile comments are excluded from output")
+	removeInternalComments         = flag.Bool("remove_internal_comments", false, "if set, removes all substrings in comments that start with `(--` and end with `--)` as specified in https://google.aip.dev/192#internal-comments")
 	disableDefaultErrors           = flag.Bool("disable_default_errors", false, "if set, disables generation of default errors. This is useful if you have defined custom error handling")
 	enumsAsInts                    = flag.Bool("enums_as_ints", false, "whether to render enum values as integers, as opposed to string values")
 	simpleOperationIDs             = flag.Bool("simple_operation_ids", false, "whether to remove the service prefix in the operationID generation. Can introduce duplicate operationIDs, use with caution.")
@@ -46,6 +48,8 @@ var (
 	useAllOfForRefs                = flag.Bool("use_allof_for_refs", false, "if set, will use allOf as container for $ref to preserve same-level properties.")
 	allowPatchFeature              = flag.Bool("allow_patch_feature", true, "whether to hide update_mask fields in PATCH requests from the generated swagger file.")
 	preserveRPCOrder               = flag.Bool("preserve_rpc_order", false, "if true, will ensure the order of paths emitted in openapi swagger files mirror the order of RPC methods found in proto files. If false, emitted paths will be ordered alphabetically.")
+
+	_ = flag.Bool("logtostderr", false, "Legacy glog compatibility. This flag is a no-op, you can safely remove it")
 )
 
 // Variables set by goreleaser at build time
@@ -130,6 +134,13 @@ func main() {
 	}
 	reg.SetUseGoTemplate(*useGoTemplate)
 	reg.SetIgnoreComments(*ignoreComments)
+	reg.SetRemoveInternalComments(*removeInternalComments)
+
+	if len(*goTemplateArgs) > 0 && !*useGoTemplate {
+		emitError(fmt.Errorf("`go_template_args` requires `use_go_templates` to be enabled"))
+		return
+	}
+	reg.SetGoTemplateArgs(*goTemplateArgs)
 
 	reg.SetOpenAPINamingStrategy(namingStrategy)
 	reg.SetEnumsAsInts(*enumsAsInts)

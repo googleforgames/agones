@@ -82,7 +82,7 @@ func serveHTTP(ctlConf config, h healthcheck.Handler) func() {
 	// add health check as well
 	mux.HandleFunc("/live", h.LiveEndpoint)
 
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/", func(w http.ResponseWriter, _ *http.Request) {
 		if _, err := w.Write([]byte(ctlConf.HTTPResponse)); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			logger.WithError(err).Error("Error responding to http request")

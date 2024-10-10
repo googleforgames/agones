@@ -313,8 +313,8 @@ func GetAllocatorClient(ctx context.Context, t *testing.T, framework *e2e.Framew
 		return nil, err
 	}
 
-	conn, err := grpc.Dial(requestURL, dialOpts...)
-	require.NoError(t, err, "Failed grpc.Dial")
+	conn, err := grpc.NewClient(requestURL, dialOpts...)
+	require.NoError(t, err, "Failed grpc.NewClient")
 	go func() {
 		for {
 			state := conn.GetState()

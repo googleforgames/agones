@@ -37,20 +37,20 @@ type mockGameServerNamespaceLister struct {
 	gameServer *agonesv1.GameServer
 }
 
-func (s *mockGameServerLister) List(selector labels.Selector) (ret []*agonesv1.GameServer, err error) {
+func (s *mockGameServerLister) List(_ labels.Selector) (ret []*agonesv1.GameServer, err error) {
 	return ret, nil
 }
 
-func (s *mockGameServerLister) GameServers(namespace string) gameserverv1.GameServerNamespaceLister {
+func (s *mockGameServerLister) GameServers(_ string) gameserverv1.GameServerNamespaceLister {
 	s.gameServersCalled = true
 	return s.gameServerNamespaceLister
 }
 
-func (s mockGameServerNamespaceLister) Get(name string) (*agonesv1.GameServer, error) {
+func (s mockGameServerNamespaceLister) Get(_ string) (*agonesv1.GameServer, error) {
 	return s.gameServer, nil
 }
 
-func (s mockGameServerNamespaceLister) List(selector labels.Selector) (ret []*agonesv1.GameServer, err error) {
+func (s mockGameServerNamespaceLister) List(_ labels.Selector) (ret []*agonesv1.GameServer, err error) {
 	return ret, nil
 }
 

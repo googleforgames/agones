@@ -105,6 +105,9 @@ func main() {
 		testLists(sdk)
 	}
 
+	// Delay before shutdown to prevent Game Servers from churning too quickly on a running cluster
+	time.Sleep(8 * time.Second)
+
 	err = sdk.Shutdown()
 	if err != nil {
 		log.Fatalf("Could not shutdown GameServer: %s", err)

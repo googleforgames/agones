@@ -89,8 +89,8 @@ type Controller struct {
 
 // NewController returns a new metrics controller
 func NewController(
-	kubeClient kubernetes.Interface,
-	agonesClient versioned.Interface,
+	_ kubernetes.Interface,
+	_ versioned.Interface,
 	kubeInformerFactory informers.SharedInformerFactory,
 	agonesInformerFactory externalversions.SharedInformerFactory) *Controller {
 
@@ -129,7 +129,7 @@ func NewController(
 
 	_, _ = fInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: c.recordFleetChanges,
-		UpdateFunc: func(old, next interface{}) {
+		UpdateFunc: func(_, next interface{}) {
 			c.recordFleetChanges(next)
 		},
 		DeleteFunc: c.recordFleetDeletion,
@@ -441,7 +441,7 @@ func (c *Controller) calcDuration(oldGs, newGs *agonesv1.GameServer) (duration f
 		val, ok := c.gameServerStateLastChange.Get(oldGSKey)
 		if !ok {
 			err = fmt.Errorf("could not find expected key %s", oldGSKey)
-			return
+			return 0, err
 		}
 		c.gameServerStateLastChange.Remove(oldGSKey)
 		duration = currentTime - val.(float64)

@@ -1150,7 +1150,7 @@ func TestCreateFullFleetAndCantGameServerAllocate(t *testing.T) {
 				}
 			}
 
-			framework.AssertFleetCondition(t, flt, func(log *logrus.Entry, fleet *agonesv1.Fleet) bool {
+			framework.AssertFleetCondition(t, flt, func(_ *logrus.Entry, fleet *agonesv1.Fleet) bool {
 				return fleet.Status.AllocatedReplicas == replicasCount
 			})
 
@@ -1438,7 +1438,7 @@ func TestGameServerAllocationDuringMultipleAllocationClients(t *testing.T) {
 	// count the number of unique game servers allocated
 	// there should not be any duplicate
 	uniqueAllocatedGSs := 0
-	allocatedGS.Range(func(k, v interface{}) bool {
+	allocatedGS.Range(func(_, _ interface{}) bool {
 		uniqueAllocatedGSs++
 		return true
 	})

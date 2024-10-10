@@ -54,7 +54,7 @@ func TestMigrationControllerSyncGameServer(t *testing.T) {
 			},
 			expected: expected{
 				updated:     false,
-				updateTests: func(t *testing.T, gs *agonesv1.GameServer) {},
+				updateTests: func(_ *testing.T, _ *agonesv1.GameServer) {},
 				postTests: func(t *testing.T, m agtesting.Mocks) {
 					agtesting.AssertNoEvent(t, m.FakeRecorder.Events)
 				},
@@ -68,7 +68,7 @@ func TestMigrationControllerSyncGameServer(t *testing.T) {
 			},
 			expected: expected{
 				updated:     false,
-				updateTests: func(t *testing.T, gs *agonesv1.GameServer) {},
+				updateTests: func(_ *testing.T, _ *agonesv1.GameServer) {},
 				postTests: func(t *testing.T, m agtesting.Mocks) {
 					agtesting.AssertNoEvent(t, m.FakeRecorder.Events)
 				},
@@ -160,14 +160,14 @@ func TestMigrationControllerSyncGameServer(t *testing.T) {
 			gs, pod, node = v.setup(gs, pod, node)
 
 			// populate
-			m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			m.AgonesClient.AddReactor("list", "gameservers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 				return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{*gs}}, nil
 			})
-			m.KubeClient.AddReactor("list", "nodes", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			m.KubeClient.AddReactor("list", "nodes", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 				return true,
 					&corev1.NodeList{Items: []corev1.Node{*node}}, nil
 			})
-			m.KubeClient.AddReactor("list", "pods", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			m.KubeClient.AddReactor("list", "pods", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 				return true, &corev1.PodList{Items: []corev1.Pod{*pod}}, nil
 			})
 

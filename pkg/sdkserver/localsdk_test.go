@@ -184,7 +184,7 @@ func TestLocalSDKServerSetLabel(t *testing.T) {
 			assertInitialWatchUpdate(t, stream)
 
 			// make sure length of l.updateObservers is at least 1
-			err = wait.PollUntilContextTimeout(context.Background(), time.Second, 10*time.Second, true, func(ctx context.Context) (bool, error) {
+			err = wait.PollUntilContextTimeout(context.Background(), time.Second, 10*time.Second, true, func(_ context.Context) (bool, error) {
 				ret := false
 				l.updateObservers.Range(func(_, _ interface{}) bool {
 					ret = true
@@ -253,7 +253,7 @@ func TestLocalSDKServerSetAnnotation(t *testing.T) {
 			assertInitialWatchUpdate(t, stream)
 
 			// make sure length of l.updateObservers is at least 1
-			err = wait.PollUntilContextTimeout(context.Background(), time.Second, 10*time.Second, true, func(ctx context.Context) (bool, error) {
+			err = wait.PollUntilContextTimeout(context.Background(), time.Second, 10*time.Second, true, func(_ context.Context) (bool, error) {
 				ret := false
 				l.updateObservers.Range(func(_, _ interface{}) bool {
 					ret = true
@@ -300,7 +300,7 @@ func TestLocalSDKServerWatchGameServer(t *testing.T) {
 	assertInitialWatchUpdate(t, stream)
 
 	// wait for watching to begin
-	err = wait.PollUntilContextTimeout(context.Background(), time.Second, 10*time.Second, true, func(ctx context.Context) (bool, error) {
+	err = wait.PollUntilContextTimeout(context.Background(), time.Second, 10*time.Second, true, func(_ context.Context) (bool, error) {
 		found := false
 		l.updateObservers.Range(func(_, _ interface{}) bool {
 			found = true
@@ -346,7 +346,7 @@ func TestLocalSDKServerPlayerCapacity(t *testing.T) {
 	assertInitialWatchUpdate(t, stream)
 
 	// wait for watching to begin
-	err = wait.PollUntilContextTimeout(context.Background(), time.Second, 10*time.Second, true, func(ctx context.Context) (bool, error) {
+	err = wait.PollUntilContextTimeout(context.Background(), time.Second, 10*time.Second, true, func(_ context.Context) (bool, error) {
 		found := false
 		l.updateObservers.Range(func(_, _ interface{}) bool {
 			found = true
@@ -494,7 +494,7 @@ func TestLocalSDKServerPlayerConnectAndDisconnect(t *testing.T) {
 			assertInitialWatchUpdate(t, stream)
 
 			// wait for watching to begin
-			err = wait.PollUntilContextTimeout(context.Background(), time.Second, 10*time.Second, true, func(ctx context.Context) (bool, error) {
+			err = wait.PollUntilContextTimeout(context.Background(), time.Second, 10*time.Second, true, func(_ context.Context) (bool, error) {
 				found := false
 				l.updateObservers.Range(func(_, _ interface{}) bool {
 					found = true
@@ -644,7 +644,7 @@ func TestLocalSDKServerGetCounter(t *testing.T) {
 	assertInitialWatchUpdate(t, stream)
 
 	// wait for watching to begin
-	err = wait.PollUntilContextTimeout(context.Background(), time.Second, 10*time.Second, true, func(ctx context.Context) (bool, error) {
+	err = wait.PollUntilContextTimeout(context.Background(), time.Second, 10*time.Second, true, func(_ context.Context) (bool, error) {
 		found := false
 		l.updateObservers.Range(func(_, _ interface{}) bool {
 			found = true
@@ -720,7 +720,7 @@ func TestLocalSDKServerUpdateCounter(t *testing.T) {
 	assertInitialWatchUpdate(t, stream)
 
 	// wait for watching to begin
-	err = wait.PollUntilContextTimeout(context.Background(), time.Second, 10*time.Second, true, func(ctx context.Context) (bool, error) {
+	err = wait.PollUntilContextTimeout(context.Background(), time.Second, 10*time.Second, true, func(_ context.Context) (bool, error) {
 		found := false
 		l.updateObservers.Range(func(_, _ interface{}) bool {
 			found = true
@@ -868,7 +868,7 @@ func TestLocalSDKServerGetList(t *testing.T) {
 	assertInitialWatchUpdate(t, stream)
 
 	// wait for watching to begin
-	err = wait.PollUntilContextTimeout(context.Background(), time.Second, 10*time.Second, true, func(ctx context.Context) (bool, error) {
+	err = wait.PollUntilContextTimeout(context.Background(), time.Second, 10*time.Second, true, func(_ context.Context) (bool, error) {
 		found := false
 		l.updateObservers.Range(func(_, _ interface{}) bool {
 			found = true
@@ -944,7 +944,7 @@ func TestLocalSDKServerUpdateList(t *testing.T) {
 	assertInitialWatchUpdate(t, stream)
 
 	// wait for watching to begin
-	err = wait.PollUntilContextTimeout(context.Background(), time.Second, 10*time.Second, true, func(ctx context.Context) (bool, error) {
+	err = wait.PollUntilContextTimeout(context.Background(), time.Second, 10*time.Second, true, func(_ context.Context) (bool, error) {
 		found := false
 		l.updateObservers.Range(func(_, _ interface{}) bool {
 			found = true
@@ -1140,7 +1140,7 @@ func TestLocalSDKServerAddListValue(t *testing.T) {
 	assertInitialWatchUpdate(t, stream)
 
 	// wait for watching to begin
-	err = wait.PollUntilContextTimeout(context.Background(), time.Second, 10*time.Second, true, func(ctx context.Context) (bool, error) {
+	err = wait.PollUntilContextTimeout(context.Background(), time.Second, 10*time.Second, true, func(_ context.Context) (bool, error) {
 		found := false
 		l.updateObservers.Range(func(_, _ interface{}) bool {
 			found = true
@@ -1232,7 +1232,7 @@ func TestLocalSDKServerRemoveListValue(t *testing.T) {
 	assertInitialWatchUpdate(t, stream)
 
 	// wait for watching to begin
-	err = wait.PollUntilContextTimeout(context.Background(), time.Second, 10*time.Second, true, func(ctx context.Context) (bool, error) {
+	err = wait.PollUntilContextTimeout(context.Background(), time.Second, 10*time.Second, true, func(_ context.Context) (bool, error) {
 		found := false
 		l.updateObservers.Range(func(_, _ interface{}) bool {
 			found = true

@@ -103,7 +103,7 @@ func TestSidecarRun(t *testing.T) {
 			},
 		},
 		"unhealthy": {
-			f: func(sc *SDKServer, ctx context.Context) {
+			f: func(sc *SDKServer, _ context.Context) {
 				time.Sleep(1 * time.Second)
 				sc.checkHealthUpdateState() // normally invoked from health check loop
 				time.Sleep(2 * time.Second) // exceed 1s timeout
@@ -184,7 +184,7 @@ func TestSidecarRun(t *testing.T) {
 			}
 			gs.ApplyDefaults()
 
-			m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			m.AgonesClient.AddReactor("list", "gameservers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 				return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{*gs.DeepCopy()}}, nil
 			})
 
@@ -205,7 +205,7 @@ func TestSidecarRun(t *testing.T) {
 				return true, gsCopy, nil
 			})
 
-			sc, err := NewSDKServer("test", "default", m.KubeClient, m.AgonesClient, logrus.DebugLevel)
+			sc, err := NewSDKServer("test", "default", m.KubeClient, m.AgonesClient, logrus.DebugLevel, 8080)
 			stop := make(chan struct{})
 			defer close(stop)
 			ctx, cancel := context.WithCancel(context.Background())
@@ -314,7 +314,7 @@ func TestSDKServerSyncGameServer(t *testing.T) {
 				Labels: map[string]string{}, Annotations: map[string]string{}},
 			}
 
-			m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			m.AgonesClient.AddReactor("list", "gameservers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 				return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{*gs.DeepCopy()}}, nil
 			})
 
@@ -380,7 +380,7 @@ func TestSidecarUpdateState(t *testing.T) {
 
 			updated := false
 
-			m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			m.AgonesClient.AddReactor("list", "gameservers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 				gs := agonesv1.GameServer{
 					ObjectMeta: metav1.ObjectMeta{Name: sc.gameServerName, Namespace: sc.namespace, ResourceVersion: "0"},
 					Status:     agonesv1.GameServerStatus{},
@@ -391,7 +391,7 @@ func TestSidecarUpdateState(t *testing.T) {
 
 				return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{gs}}, nil
 			})
-			m.AgonesClient.AddReactor("patch", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			m.AgonesClient.AddReactor("patch", "gameservers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 				updated = true
 				return true, nil, nil
 			})
@@ -462,7 +462,7 @@ func TestSidecarUnhealthyMessage(t *testing.T) {
 	t.Parallel()
 
 	m := agtesting.NewMocks()
-	sc, err := NewSDKServer("test", "default", m.KubeClient, m.AgonesClient, logrus.DebugLevel)
+	sc, err := NewSDKServer("test", "default", m.KubeClient, m.AgonesClient, logrus.DebugLevel, 8080)
 	require.NoError(t, err)
 
 	gs := agonesv1.GameServer{
@@ -476,7 +476,7 @@ func TestSidecarUnhealthyMessage(t *testing.T) {
 	}
 	gs.ApplyDefaults()
 
-	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+	m.AgonesClient.AddReactor("list", "gameservers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 		return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{*gs.DeepCopy()}}, nil
 	})
 
@@ -613,7 +613,7 @@ func TestSidecarHealthy(t *testing.T) {
 
 func TestSidecarHTTPHealthCheck(t *testing.T) {
 	m := agtesting.NewMocks()
-	sc, err := NewSDKServer("test", "default", m.KubeClient, m.AgonesClient, logrus.DebugLevel)
+	sc, err := NewSDKServer("test", "default", m.KubeClient, m.AgonesClient, logrus.DebugLevel, 8080)
 	require.NoError(t, err)
 
 	now := time.Now().Add(time.Hour).UTC()
@@ -621,7 +621,7 @@ func TestSidecarHTTPHealthCheck(t *testing.T) {
 	// now we control time - so slow machines won't fail anymore
 	sc.clock = fc
 
-	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+	m.AgonesClient.AddReactor("list", "gameservers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 		gs := agonesv1.GameServer{
 			ObjectMeta: metav1.ObjectMeta{Name: sc.gameServerName, Namespace: sc.namespace},
 			Spec: agonesv1.GameServerSpec{
@@ -674,7 +674,7 @@ func TestSDKServerGetGameServer(t *testing.T) {
 	}
 
 	m := agtesting.NewMocks()
-	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+	m.AgonesClient.AddReactor("list", "gameservers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 		return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{*fixture}}, nil
 	})
 
@@ -947,7 +947,7 @@ func TestSDKServerReserveTimeoutOnRun(t *testing.T) {
 	}
 	gs.ApplyDefaults()
 
-	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+	m.AgonesClient.AddReactor("list", "gameservers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 		n := metav1.NewTime(metav1.Now().Add(time.Second))
 		gsCopy := gs.DeepCopy()
 		gsCopy.Status.ReservedUntil = &n
@@ -1007,7 +1007,7 @@ func TestSDKServerReserveTimeout(t *testing.T) {
 	}
 	gs.ApplyDefaults()
 
-	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+	m.AgonesClient.AddReactor("list", "gameservers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 		return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{*gs.DeepCopy()}}, nil
 	})
 
@@ -1291,7 +1291,7 @@ func TestSDKServerUpdateCounter(t *testing.T) {
 			}
 			gs.ApplyDefaults()
 
-			m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			m.AgonesClient.AddReactor("list", "gameservers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 				return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{*gs.DeepCopy()}}, nil
 			})
 
@@ -1444,7 +1444,7 @@ func TestSDKServerAddListValue(t *testing.T) {
 			}
 			gs.ApplyDefaults()
 
-			m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			m.AgonesClient.AddReactor("list", "gameservers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 				return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{*gs.DeepCopy()}}, nil
 			})
 
@@ -1593,7 +1593,7 @@ func TestSDKServerRemoveListValue(t *testing.T) {
 			}
 			gs.ApplyDefaults()
 
-			m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			m.AgonesClient.AddReactor("list", "gameservers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 				return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{*gs.DeepCopy()}}, nil
 			})
 
@@ -1784,7 +1784,7 @@ func TestSDKServerUpdateList(t *testing.T) {
 			}
 			gs.ApplyDefaults()
 
-			m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			m.AgonesClient.AddReactor("list", "gameservers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 				return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{*gs.DeepCopy()}}, nil
 			})
 
@@ -1912,7 +1912,7 @@ func TestSDKServerPlayerCapacity(t *testing.T) {
 	}
 	gs.ApplyDefaults()
 
-	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+	m.AgonesClient.AddReactor("list", "gameservers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 		return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{*gs.DeepCopy()}}, nil
 	})
 
@@ -1937,7 +1937,7 @@ func TestSDKServerPlayerCapacity(t *testing.T) {
 	// check initial value comes through
 
 	// async, so check after a period
-	err = wait.PollUntilContextTimeout(context.Background(), time.Second, 10*time.Second, true, func(ctx context.Context) (bool, error) {
+	err = wait.PollUntilContextTimeout(context.Background(), time.Second, 10*time.Second, true, func(_ context.Context) (bool, error) {
 		count, err := sc.GetPlayerCapacity(context.Background(), &alpha.Empty{})
 		return count.Count == 10, err
 	})
@@ -1981,7 +1981,7 @@ func TestSDKServerPlayerConnectAndDisconnectWithoutPlayerTracking(t *testing.T) 
 	}
 
 	m := agtesting.NewMocks()
-	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+	m.AgonesClient.AddReactor("list", "gameservers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 		return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{*fixture}}, nil
 	})
 
@@ -2003,7 +2003,7 @@ func TestSDKServerPlayerConnectAndDisconnectWithoutPlayerTracking(t *testing.T) 
 	// check initial value comes through
 	// async, so check after a period
 	e := &alpha.Empty{}
-	err = wait.PollUntilContextTimeout(context.Background(), time.Second, 10*time.Second, true, func(ctx context.Context) (bool, error) {
+	err = wait.PollUntilContextTimeout(context.Background(), time.Second, 10*time.Second, true, func(_ context.Context) (bool, error) {
 		count, err := sc.GetPlayerCapacity(context.Background(), e)
 
 		assert.Nil(t, count)
@@ -2066,7 +2066,7 @@ func TestSDKServerPlayerConnectAndDisconnect(t *testing.T) {
 	}
 	gs.ApplyDefaults()
 
-	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+	m.AgonesClient.AddReactor("list", "gameservers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 		return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{*gs.DeepCopy()}}, nil
 	})
 
@@ -2089,7 +2089,7 @@ func TestSDKServerPlayerConnectAndDisconnect(t *testing.T) {
 	// check initial value comes through
 	// async, so check after a period
 	e := &alpha.Empty{}
-	err = wait.PollUntilContextTimeout(context.Background(), time.Second, 10*time.Second, true, func(ctx context.Context) (bool, error) {
+	err = wait.PollUntilContextTimeout(context.Background(), time.Second, 10*time.Second, true, func(_ context.Context) (bool, error) {
 		count, err := sc.GetPlayerCapacity(context.Background(), e)
 		return count.Count == capacity, err
 	})
@@ -2233,7 +2233,7 @@ func TestSDKServerGracefulTerminationInterrupt(t *testing.T) {
 		Spec: agonesv1.GameServerSpec{Health: agonesv1.Health{Disabled: true}},
 	}
 	gs.ApplyDefaults()
-	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+	m.AgonesClient.AddReactor("list", "gameservers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 		return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{*gs.DeepCopy()}}, nil
 	})
 	sc, err := defaultSidecar(m)
@@ -2298,7 +2298,7 @@ func TestSDKServerGracefulTerminationShutdown(t *testing.T) {
 		Spec: agonesv1.GameServerSpec{Health: agonesv1.Health{Disabled: true}},
 	}
 	gs.ApplyDefaults()
-	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+	m.AgonesClient.AddReactor("list", "gameservers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 		return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{*gs.DeepCopy()}}, nil
 	})
 
@@ -2363,7 +2363,7 @@ func TestSDKServerGracefulTerminationGameServerStateChannel(t *testing.T) {
 		Spec: agonesv1.GameServerSpec{Health: agonesv1.Health{Disabled: true}},
 	}
 	gs.ApplyDefaults()
-	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+	m.AgonesClient.AddReactor("list", "gameservers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 		return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{*gs.DeepCopy()}}, nil
 	})
 
@@ -2388,7 +2388,7 @@ func TestSDKServerGracefulTerminationGameServerStateChannel(t *testing.T) {
 }
 
 func defaultSidecar(m agtesting.Mocks) (*SDKServer, error) {
-	server, err := NewSDKServer("test", "default", m.KubeClient, m.AgonesClient, logrus.DebugLevel)
+	server, err := NewSDKServer("test", "default", m.KubeClient, m.AgonesClient, logrus.DebugLevel, 8080)
 	if err != nil {
 		return server, err
 	}
@@ -2398,7 +2398,7 @@ func defaultSidecar(m agtesting.Mocks) (*SDKServer, error) {
 }
 
 func waitForMessage(sc *SDKServer) error {
-	return wait.PollUntilContextTimeout(context.Background(), time.Second, 5*time.Second, true, func(ctx context.Context) (done bool, err error) {
+	return wait.PollUntilContextTimeout(context.Background(), time.Second, 5*time.Second, true, func(_ context.Context) (done bool, err error) {
 		sc.healthMutex.RLock()
 		defer sc.healthMutex.RUnlock()
 		return sc.clock.Now().UTC() == sc.healthLastUpdated, nil
@@ -2406,7 +2406,7 @@ func waitForMessage(sc *SDKServer) error {
 }
 
 func waitConnectedStreamCount(sc *SDKServer, count int) error { //nolint:unparam // Keep flexibility.
-	return wait.PollUntilContextTimeout(context.Background(), 1*time.Second, 10*time.Second, true, func(ctx context.Context) (bool, error) {
+	return wait.PollUntilContextTimeout(context.Background(), 1*time.Second, 10*time.Second, true, func(_ context.Context) (bool, error) {
 		sc.streamMutex.RLock()
 		defer sc.streamMutex.RUnlock()
 		return len(sc.connectedStreams) == count, nil

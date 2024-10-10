@@ -264,7 +264,7 @@ func (c *AllocationCache) ListSortedGameServersPriorities(gsa *allocationv1.Game
 
 // SyncGameServers synchronises the GameServers to Gameserver cache. This is called when a failure
 // happened during the allocation. This method will sync and make sure the cache is up to date.
-func (c *AllocationCache) SyncGameServers(ctx context.Context, key string) error {
+func (c *AllocationCache) SyncGameServers(_ context.Context, key string) error {
 	c.loggerForGameServerKey(key).Debug("Refreshing Allocation Gameserver cache")
 
 	return c.syncCache()
@@ -288,7 +288,7 @@ func (c *AllocationCache) syncCache() error {
 
 	// first remove the gameservers are not in the list anymore
 	tobeDeletedGSInCache := make([]string, 0)
-	c.cache.Range(func(key string, gs *agonesv1.GameServer) bool {
+	c.cache.Range(func(key string, _ *agonesv1.GameServer) bool {
 		if _, ok := currGameservers[key]; !ok {
 			tobeDeletedGSInCache = append(tobeDeletedGSInCache, key)
 		}

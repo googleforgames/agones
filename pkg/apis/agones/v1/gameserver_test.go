@@ -206,8 +206,8 @@ func TestGameServerApplyDefaults(t *testing.T) {
 		expected     expected
 	}{
 		"set basic defaults on a very simple gameserver": {
-			gameServer: defaultGameServerAnd(func(gss *GameServerSpec) {}),
-			expected:   wantDefaultAnd(func(e *expected) {}),
+			gameServer: defaultGameServerAnd(func(_ *GameServerSpec) {}),
+			expected:   wantDefaultAnd(func(_ *expected) {}),
 		},
 		"PlayerTracking=true": {
 			featureFlags: string(runtime.FeaturePlayerTracking) + "=true",
@@ -347,7 +347,7 @@ func TestGameServerApplyDefaults(t *testing.T) {
 			}),
 		},
 		"defaults are eviction.safe: Never": {
-			gameServer: defaultGameServerAnd(func(gss *GameServerSpec) {}),
+			gameServer: defaultGameServerAnd(func(_ *GameServerSpec) {}),
 			expected: wantDefaultAnd(func(e *expected) {
 				e.evictionSafeSpec = EvictionSafeNever
 				e.evictionSafeStatus = EvictionSafeNever

@@ -14,7 +14,7 @@
 
 module github-bot
 
-go 1.21
+go 1.22
 
 require (
 	github.com/GoogleCloudPlatform/cloud-build-notifiers/lib/notifiers v0.0.0-20210219212036-163c92a64b27

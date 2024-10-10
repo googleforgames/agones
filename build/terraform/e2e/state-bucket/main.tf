@@ -22,7 +22,7 @@
 // tfstate, delete your local .terraform and .tfstate files. You may need to run
 // `sudo chown -R yourusername .` to be able to delete them. Then navigate to this directory and run
 // `terraform init`. Pull in the tfstate file from gcloud with
-// `terraform import google_storage_bucket.default agones-images-e2e-infra-bucket-tfstate`.
+// `terraform import google_storage_bucket.default "<YOUR_GCP_ProjectID>"-e2e-infra-bucket-tfstate`.
 
 // # GCS bucket for holding the Terraform state of the e2e Terraform config.
 

@@ -91,7 +91,7 @@ func TestAllocatorAfterDeleteReplica(t *testing.T) {
 	}
 
 	// Wait and keep making calls till we know the draining time has passed
-	_ = wait.PollUntilContextTimeout(context.Background(), retryInterval, retryTimeout, true, func(ctx context.Context) (bool, error) {
+	_ = wait.PollUntilContextTimeout(context.Background(), retryInterval, retryTimeout, true, func(_ context.Context) (bool, error) {
 		response, err := grpcClient.Allocate(context.Background(), request)
 		logger.Infof("err = %v (code = %v), response = %v", err, status.Code(err), response)
 		helper.ValidateAllocatorResponse(t, response)

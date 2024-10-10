@@ -282,14 +282,14 @@ type betaMock struct {
 	lists    map[string]*beta.List
 }
 
-func (b *betaMock) GetCounter(ctx context.Context, in *beta.GetCounterRequest, opts ...grpc.CallOption) (*beta.Counter, error) {
+func (b *betaMock) GetCounter(_ context.Context, in *beta.GetCounterRequest, _ ...grpc.CallOption) (*beta.Counter, error) {
 	if counter, ok := b.counters[in.Name]; ok {
 		return counter, nil
 	}
 	return nil, errors.Errorf("counter not found: %s", in.Name)
 }
 
-func (b *betaMock) UpdateCounter(ctx context.Context, in *beta.UpdateCounterRequest, opts ...grpc.CallOption) (*beta.Counter, error) {
+func (b *betaMock) UpdateCounter(ctx context.Context, in *beta.UpdateCounterRequest, _ ...grpc.CallOption) (*beta.Counter, error) {
 	counter, err := b.GetCounter(ctx, &beta.GetCounterRequest{Name: in.CounterUpdateRequest.Name})
 	if err != nil {
 		return nil, err
@@ -325,7 +325,7 @@ func (b *betaMock) UpdateCounter(ctx context.Context, in *beta.UpdateCounterRequ
 
 // GetList returns the list of betaMock. Note: unlike the SDK Server, this does not return
 // a list with any pending batched changes applied.
-func (b *betaMock) GetList(ctx context.Context, in *beta.GetListRequest, opts ...grpc.CallOption) (*beta.List, error) {
+func (b *betaMock) GetList(_ context.Context, in *beta.GetListRequest, _ ...grpc.CallOption) (*beta.List, error) {
 	if in == nil {
 		return nil, errors.Errorf("GetListRequest cannot be nil")
 	}
@@ -337,7 +337,7 @@ func (b *betaMock) GetList(ctx context.Context, in *beta.GetListRequest, opts ..
 
 // Note: unlike the SDK Server, UpdateList does not batch changes and instead updates the list
 // directly.
-func (b *betaMock) UpdateList(ctx context.Context, in *beta.UpdateListRequest, opts ...grpc.CallOption) (*beta.List, error) {
+func (b *betaMock) UpdateList(_ context.Context, in *beta.UpdateListRequest, _ ...grpc.CallOption) (*beta.List, error) {
 	if in == nil {
 		return nil, errors.Errorf("UpdateListRequest cannot be nil")
 	}
@@ -358,7 +358,7 @@ func (b *betaMock) UpdateList(ctx context.Context, in *beta.UpdateListRequest, o
 
 // Note: unlike the SDK Server, AddListValue does not batch changes and instead updates the list
 // directly.
-func (b *betaMock) AddListValue(ctx context.Context, in *beta.AddListValueRequest, opts ...grpc.CallOption) (*beta.List, error) {
+func (b *betaMock) AddListValue(_ context.Context, in *beta.AddListValueRequest, _ ...grpc.CallOption) (*beta.List, error) {
 	if in == nil {
 		return nil, errors.Errorf("AddListValueRequest cannot be nil")
 	}
@@ -381,7 +381,7 @@ func (b *betaMock) AddListValue(ctx context.Context, in *beta.AddListValueReques
 
 // Note: unlike the SDK Server, RemoveListValue does not batch changes and instead updates the list
 // directly.
-func (b *betaMock) RemoveListValue(ctx context.Context, in *beta.RemoveListValueRequest, opts ...grpc.CallOption) (*beta.List, error) {
+func (b *betaMock) RemoveListValue(_ context.Context, in *beta.RemoveListValueRequest, _ ...grpc.CallOption) (*beta.List, error) {
 	if in == nil {
 		return nil, errors.Errorf("RemoveListValueRequest cannot be nil")
 	}

@@ -27,8 +27,8 @@ REGISTRY ?=
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_path := $(dir $(mkfile_path))
 root_path = $(realpath $(project_path)/)
-version := 0.1
-server_tag := $(REGISTRY)/upgrade-test-controller:$(version)
+dev_version = 1.44.0-dev
+server_tag := $(REGISTRY)/upgrade-test-controller:$(dev_version)
 
 #   _____                    _
 #  |_   _|_ _ _ __ __ _  ___| |_ ___
