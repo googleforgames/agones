@@ -715,7 +715,7 @@ func (c *Controller) updateFleetStatus(ctx context.Context, fleet *agonesv1.Flee
 
 func (c *Controller) createInitialListStatus(fleet *agonesv1.Fleet) map[string]agonesv1.AggregatedListStatus {
 	list := make(map[string]agonesv1.AggregatedListStatus)
-	for name, _ := range fleet.Spec.Template.Spec.Lists {
+	for name := range fleet.Spec.Template.Spec.Lists {
 		list[name] = agonesv1.AggregatedListStatus{}
 	}
 	return list
