@@ -582,9 +582,14 @@ func scaleUp(replicas int32, capacity, count, aggCapacity, availableCapacity, ma
 	additionalReplicas := int32(math.Ceil((float64(buffer) - float64(availableCapacity)) / float64(replicaCapacity)))
 
 	// Check to make sure we're not limited (over Max Capacity)
-	limited, _ := isLimited(aggCapacity+(int64(additionalReplicas)*capacity), minCapacity, maxCapacity)
+	limited, scale := isLimited(aggCapacity+(int64(additionalReplicas)*capacity), minCapacity, maxCapacity)
 	if limited {
-		additionalReplicas = int32((maxCapacity - aggCapacity) / capacity)
+		if scale == -1 {
+			additionalReplicas = int32(math.Ceil((float64(maxCapacity) - float64(aggCapacity)) / float64(capacity)))
+		} else {
+			additionalReplicas = int32(math.Ceil((float64(minCapacity) - float64(aggCapacity)) / float64(capacity)))
+		}
+
 	}
 
 	return replicas + additionalReplicas, limited, nil
