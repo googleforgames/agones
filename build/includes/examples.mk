@@ -100,3 +100,8 @@ build-example-xonotic:
 
 build-example-custom-controller:
 	$(MAKE) build-example EXAMPLE=custom-controller
+
+# ensure a version increase when an example changes
+check-example-versions: ensure-build-image
+	docker run --rm $(common_mounts) --workdir=$(mount_path)/build/scripts/example-version-checker $(DOCKER_RUN_ARGS) $(build_tag) \
+		go run .
