@@ -40,6 +40,7 @@ rules:
 ignore:
   - /build/.gomod/
   - /build/.config/
+  - /build/scripts/example-version-checker/tmp
   - /install/
   - /sdks/
   - /test/sdk/
