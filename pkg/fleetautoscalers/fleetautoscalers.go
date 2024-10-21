@@ -30,6 +30,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/robfig/cron/v3"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/uuid"
 
@@ -170,6 +171,14 @@ func applyWebhookPolicy(w *autoscalingv1.WebhookPolicy, f *agonesv1.Fleet) (repl
 			Status:    f.Status,
 		},
 		Response: nil,
+	}
+
+	if runtime.FeatureEnabled(runtime.FeatureFleetAutoscaleRequestMetaData) {
+		faReq.Request.MetaData = &metav1.ObjectMeta{
+			Name:        f.ObjectMeta.Name,
+			Labels:      f.ObjectMeta.Labels,
+			Annotations: f.ObjectMeta.Annotations,
+		}
 	}
 
 	b, err := json.Marshal(faReq)
