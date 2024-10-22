@@ -280,6 +280,7 @@ agones:
       pullPolicy: IfNotPresent
     sdk:
       name: agones-sdk
+      tag: 1.45.0-dev
       cpuRequest: 30m
       cpuLimit: 0
       memoryRequest: 0
