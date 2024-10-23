@@ -117,7 +117,7 @@ data:
           },
           "type": "stat",
           "title": "Fleet RollOut Percentage"
-        },        
+        },
         {
           "aliasColors": {},
           "breakPoint": "50%",
