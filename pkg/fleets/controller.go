@@ -676,7 +676,7 @@ func (c *Controller) updateFleetStatus(ctx context.Context, fleet *agonesv1.Flee
 	fCopy.Status.AllocatedReplicas = 0
 	if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
 		fCopy.Status.Counters = make(map[string]agonesv1.AggregatedCounterStatus)
-		fCopy.Status.Lists = c.createInitialListStatus(fleet)
+		fCopy.Status.Lists = make(map[string]agonesv1.AggregatedListStatus)
 	}
 	// Drop Counters and Lists status if the feature flag has been set to false
 	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
@@ -711,14 +711,6 @@ func (c *Controller) updateFleetStatus(ctx context.Context, fleet *agonesv1.Flee
 
 	_, err = c.fleetGetter.Fleets(fCopy.ObjectMeta.Namespace).UpdateStatus(ctx, fCopy, metav1.UpdateOptions{})
 	return errors.Wrapf(err, "error updating status of fleet %s", fCopy.ObjectMeta.Name)
-}
-
-func (c *Controller) createInitialListStatus(fleet *agonesv1.Fleet) map[string]agonesv1.AggregatedListStatus {
-	list := make(map[string]agonesv1.AggregatedListStatus)
-	for name := range fleet.Spec.Template.Spec.Lists {
-		list[name] = agonesv1.AggregatedListStatus{}
-	}
-	return list
 }
 
 // filterGameServerSetByActive returns the active GameServerSet (or nil if it
