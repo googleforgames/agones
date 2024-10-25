@@ -1,0 +1,37 @@
+// Copyright 2020 Google LLC All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+# OCI provider
+api_fingerprint      = "4d:bf:d7:fa:64:e1:f1:81:45:fe:9a:d3:b1:04:bc:5d"
+api_private_key_path = "~/.oci/oracleidentitycloudservice_xingning.ou-08-16-08-54.pem"
+region               = "us-chicago-1"
+home_region          = "us-ashburn-1"
+tenancy_id           = "ocid1.tenancy.oc1..aaaaaaaaro7aox2fclu4urtpgsbacnrmjv46e7n4fw3sc2wbq24l7dzf3kba"
+user_id              = "ocid1.user.oc1..aaaaaaaas6bmijxsml3tf2o5nmm6r5zydvgf26eg5lbhn6e2yxquhgycqq5q"
+compartment_id       = "ocid1.compartment.oc1..aaaaaaaawlhbg2uucr7at3lzkdwwucr7wdz47vb25dlvtmauqdbnlrrtcv6a"
+
+
+# SSH keys
+ssh_private_key_path = "~/.ssh/ssh-key-2022-11-08.key"
+ssh_public_key_path  = "~/.ssh/ssh-key-2022-11-08.key.pub"
+
+# OKE cluster
+cluster_name       = "agones-cluster"
+cluster_type       = "basic"
+kubernetes_version = "v1.30.1"
+
+# Angones
+node_count     = 3
+agones_version = ""
+feature_gates  = ""
