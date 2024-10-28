@@ -1,6 +1,6 @@
 ---
 title: "OCI Kubernetes Engine"
-linkTitle: "Oracle Cloud Infrastructure"
+linkTitle: "Oracle Cloud"
 weight: 40
 description: >
   Follow these steps to create an [OCI Kubernetes Engine (OKE)](https://www.oracle.com/cloud/cloud-native/kubernetes-engine/)

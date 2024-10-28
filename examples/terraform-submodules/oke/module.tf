@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC All Rights Reserved.
+// Copyright 2024 Google LLC All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -120,7 +120,6 @@ module "helm_agones" {
   // to Agones version 1.17.0
   // ***************************************************************************************************
   source = "git::https://github.com/googleforgames/agones.git//install/terraform/modules/oke-helm3/?ref=main"
-  //source = "../../../install/terraform/modules/oke-helm3"
 
   udp_expose         = "false"
   agones_version     = var.agones_version

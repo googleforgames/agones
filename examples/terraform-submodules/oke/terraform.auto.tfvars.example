@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC All Rights Reserved.
+// Copyright 2024 Google LLC All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ cluster_name       = "agones-cluster"
 cluster_type       = "basic"
 kubernetes_version = "v1.30.1"
 
-# Angones
+# Agones
 node_count     = 3
 agones_version = ""
 feature_gates  = ""

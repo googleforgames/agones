@@ -1,7 +1,7 @@
 ---
 title: "Installing Agones on OCI Kubernetes Engine using Terraform"
 linkTitle: "OCI"
-weight: 20
+weight: 30
 publishDate: 2024-10-21
 description: >
   You can use Terraform to provision an OKE cluster and install Agones on it.
@@ -9,7 +9,7 @@ description: >
 
 ## Installation
 
-You can use Terraform to provision your OKE (OCI Kubernetes Engine) cluster and install Agones on it using the Helm Terraform provider.
+You can use Terraform to provision your OKE (Oracle Kubernetes Engine) cluster and install Agones on it using the Helm Terraform provider.
 
 An example of the OKE submodule script files can be found here:
  {{< ghlink href="examples/terraform-submodules/oke/" >}}Terraform configuration with Agones submodule{{< /ghlink >}}
