@@ -22,7 +22,7 @@ data "google_client_config" "default" {}
 # A list of all parameters used in interpolation var.cluster
 # Set values to default if not key was not set in original map
 locals {
-  project                       = lookup(var.cluster, "project", "agones-kamaljeeti")
+  project                       = lookup(var.cluster, "project", "agones")
   location                      = lookup(var.cluster, "location", "us-west1-c")
   zone                          = lookup(var.cluster, "zone", "")
   name                          = lookup(var.cluster, "name", "test-cluster")

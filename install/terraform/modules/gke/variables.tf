@@ -24,7 +24,7 @@ variable "cluster" {
     "name"                          = "test-cluster"
     "machineType"                   = "e2-standard-4"
     "initialNodeCount"              = "4"
-    "project"                       = "agones-kamaljeeti"
+    "project"                       = "agones"
     "network"                       = "default"
     "subnetwork"                    = ""
     "releaseChannel"                = "UNSPECIFIED"
