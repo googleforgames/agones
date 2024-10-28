@@ -22,7 +22,7 @@ data "google_client_config" "default" {}
 # A list of all parameters used in interpolation var.cluster
 # Set values to default if not key was not set in original map
 locals {
-  project                       = lookup(var.cluster, "project", "agones")
+  project                       = lookup(var.cluster, "project", "agones-kamaljeeti")
   location                      = lookup(var.cluster, "location", "us-west1-c")
   zone                          = lookup(var.cluster, "zone", "")
   name                          = lookup(var.cluster, "name", "test-cluster")
@@ -32,7 +32,7 @@ locals {
   network                       = lookup(var.cluster, "network", "default")
   subnetwork                    = lookup(var.cluster, "subnetwork", "")
   releaseChannel                = lookup(var.cluster, "releaseChannel", "UNSPECIFIED")
-  kubernetesVersion             = lookup(var.cluster, "kubernetesVersion", "1.29")
+  kubernetesVersion             = lookup(var.cluster, "kubernetesVersion", "1.30")
   windowsInitialNodeCount       = lookup(var.cluster, "windowsInitialNodeCount", "0")
   windowsMachineType            = lookup(var.cluster, "windowsMachineType", "e2-standard-4")
   autoscale                     = lookup(var.cluster, "autoscale", false)

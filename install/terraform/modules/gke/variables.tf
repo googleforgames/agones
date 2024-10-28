@@ -24,11 +24,11 @@ variable "cluster" {
     "name"                          = "test-cluster"
     "machineType"                   = "e2-standard-4"
     "initialNodeCount"              = "4"
-    "project"                       = "agones"
+    "project"                       = "agones-kamaljeeti"
     "network"                       = "default"
     "subnetwork"                    = ""
     "releaseChannel"                = "UNSPECIFIED"
-    "kubernetesVersion"             = "1.29"
+    "kubernetesVersion"             = "1.30"
     "windowsInitialNodeCount"       = "0"
     "windowsMachineType"            = "e2-standard-4"
     "autoscale"                     = false

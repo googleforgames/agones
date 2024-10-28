@@ -53,7 +53,7 @@ RUN go install golang.org/x/tools/cmd/goimports@latest && \
 #
 # When this is raised to 1.29: bump the code-generator version on line 66 to the v0.30 tag.
 # When this is raised to >=1.30: delete line 66-67 and uncomment line 68 to stop pinning code-generator.
-ENV KUBERNETES_VER 1.29.7
+ENV KUBERNETES_VER 1.31.0
 
 # overwrite kubectl as we want a specific version
 RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/v${KUBERNETES_VER}/bin/linux/amd64/kubectl && \
