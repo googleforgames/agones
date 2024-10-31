@@ -355,7 +355,7 @@ func applyCounterOrListPolicy(c *autoscalingv1.CounterPolicy, l *autoscalingv1.L
 		}
 		return replicas, false, nil
 	case availableCapacity < buffer: // Scale Up
-		if limited && scale == -1 { // Case where we want to scale up but we're already limited by MaxCapacity
+		if limited { // Case where we want to scale up but we're already limited by MaxCapacity or MinCapacity.
 			return scaleLimited(scale, f, gameServerLister, nodeCounts, key, isCounter, replicas,
 				capacity, aggCapacity, minCapacity, maxCapacity)
 		}
@@ -582,14 +582,9 @@ func scaleUp(replicas int32, capacity, count, aggCapacity, availableCapacity, ma
 	additionalReplicas := int32(math.Ceil((float64(buffer) - float64(availableCapacity)) / float64(replicaCapacity)))
 
 	// Check to make sure we're not limited (over Max Capacity)
-	limited, scale := isLimited(aggCapacity+(int64(additionalReplicas)*capacity), minCapacity, maxCapacity)
+	limited, _ := isLimited(aggCapacity+(int64(additionalReplicas)*capacity), minCapacity, maxCapacity)
 	if limited {
-		if scale == -1 {
-			additionalReplicas = int32(math.Ceil((float64(maxCapacity) - float64(aggCapacity)) / float64(capacity)))
-		} else {
-			additionalReplicas = int32(math.Ceil((float64(minCapacity) - float64(aggCapacity)) / float64(capacity)))
-		}
-
+		additionalReplicas = int32((maxCapacity - aggCapacity) / capacity)
 	}
 
 	return replicas + additionalReplicas, limited, nil

@@ -1171,7 +1171,7 @@ func TestApplyCounterPolicy(t *testing.T) {
 				BufferSize:  intstr.FromInt(10),
 			},
 			want: expected{
-				replicas: 15,
+				replicas: 14,
 				limited:  true,
 				wantErr:  false,
 			},
@@ -1591,7 +1591,7 @@ func TestApplyListPolicy(t *testing.T) {
 			},
 			want: expected{
 				replicas: 2,
-				limited:  false,
+				limited:  true,
 				wantErr:  false,
 			},
 		},
@@ -1885,7 +1885,7 @@ func TestApplyListPolicy(t *testing.T) {
 				BufferSize:  intstr.FromString("50%"),
 			},
 			want: expected{
-				replicas: 5,
+				replicas: 4,
 				limited:  true,
 				wantErr:  false,
 			},
