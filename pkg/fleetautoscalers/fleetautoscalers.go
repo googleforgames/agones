@@ -355,7 +355,7 @@ func applyCounterOrListPolicy(c *autoscalingv1.CounterPolicy, l *autoscalingv1.L
 		}
 		return replicas, false, nil
 	case availableCapacity < buffer: // Scale Up
-		if limited && scale == -1 { // Case where we want to scale up but we're already limited by MaxCapacity
+		if limited { // Case where we want to scale up but we're already limited by MaxCapacity.
 			return scaleLimited(scale, f, gameServerLister, nodeCounts, key, isCounter, replicas,
 				capacity, aggCapacity, minCapacity, maxCapacity)
 		}
