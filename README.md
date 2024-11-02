@@ -5,6 +5,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/googleforgames/agones)](https://goreportcard.com/report/github.com/googleforgames/agones)
 [![GitHub release](https://img.shields.io/github/release/googleforgames/agones.svg)](https://github.com/googleforgames/agones/releases)
 [![Follow on Twitter](https://img.shields.io/twitter/follow/agonesdev.svg?style=social&logo=twitter)](https://twitter.com/intent/follow?screen_name=agonesdev)
+[![Gurubase](https://img.shields.io/badge/Gurubase-Ask%20Agones%20Guru-006BFF)](https://gurubase.io/g/agones)
 
 Agones is a library for hosting, running and scaling [dedicated game servers](https://en.wikipedia.org/wiki/Game_server#Dedicated_server) on [Kubernetes](https://kubernetes.io).
 
