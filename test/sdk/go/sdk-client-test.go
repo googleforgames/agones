@@ -17,6 +17,7 @@ package main
 
 import (
 	"log"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -27,16 +28,37 @@ import (
 
 	pkgSdk "agones.dev/agones/pkg/sdk"
 	"agones.dev/agones/pkg/util/runtime"
+	"agones.dev/agones/pkg/util/signals"
 	goSdk "agones.dev/agones/sdks/go"
 )
 
 func main() {
+	sigCtx, _ := signals.NewSigKillContext()
+	shutdownDelaySec := pflag.Int("shutdownDelaySec", 0, "Delay before calling sdk.Shutdown()")
+	gracefulTerminationDelaySec := pflag.Int("gracefulTerminationDelaySec", 0, "Delay after we've been asked to terminate (by SIGKILL or sdk.Shutdown)")
+
 	viper.AllowEmptyEnv(true)
 	runtime.FeaturesBindFlags()
 	pflag.Parse()
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 	runtime.Must(runtime.FeaturesBindEnv())
 	runtime.Must(runtime.ParseFeaturesFromEnv())
+
+	// Use to delays to prevent Game Servers from churning too quickly on a running cluster.
+	if sds := os.Getenv("SHUTDOWN_DELAY_SECONDS"); sds != "" {
+		sec, err := strconv.Atoi(sds)
+		if err != nil {
+			log.Fatalf("Could not parse SHUTDOWN_DELAY_SECONDS: %v", err)
+		}
+		shutdownDelaySec = &sec
+	}
+	if gtds := os.Getenv("GRACEFUL_TERMINATION_DELAY_SECONDS"); gtds != "" {
+		sec, err := strconv.Atoi(gtds)
+		if err != nil {
+			log.Fatalf("Could not parse GRACEFUL_TERMINATION_DELAY_SECONDS: %v", err)
+		}
+		gracefulTerminationDelaySec = &sec
+	}
 
 	log.SetFlags(log.Lshortfile)
 	log.Println("Client is starting")
@@ -105,13 +127,18 @@ func main() {
 		testLists(sdk)
 	}
 
-	// Delay before shutdown to prevent Game Servers from churning too quickly on a running cluster
-	time.Sleep(8 * time.Second)
+	log.Printf("Waiting %d seconds before shutting down game server", *shutdownDelaySec)
+	time.Sleep(time.Duration(*shutdownDelaySec) * time.Second)
 
 	err = sdk.Shutdown()
 	if err != nil {
 		log.Fatalf("Could not shutdown GameServer: %s", err)
 	}
+
+	<-sigCtx.Done()
+	log.Printf("Waiting %d seconds before exiting", *gracefulTerminationDelaySec)
+	time.Sleep(time.Duration(*gracefulTerminationDelaySec) * time.Second)
+	os.Exit(0)
 }
 
 func testPlayerTracking(sdk *goSdk.SDK) {
