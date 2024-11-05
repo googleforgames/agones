@@ -1209,6 +1209,87 @@ func TestListAutoscaler(t *testing.T) {
 	}
 }
 
+func TestListAutoscalerWithNoReplicas(t *testing.T) {
+	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
+		t.SkipNow()
+	}
+	t.Parallel()
+
+	ctx := context.Background()
+	client := framework.AgonesClient.AgonesV1()
+	log := e2e.TestLogger(t)
+
+	flt := defaultEmptyFleet(framework.Namespace)
+	flt.Spec.Template.Spec.Lists = map[string]agonesv1.ListStatus{
+		"games": {
+			Capacity: 5,
+		},
+	}
+
+	flt, err := client.Fleets(framework.Namespace).Create(ctx, flt.DeepCopy(), metav1.CreateOptions{})
+	require.NoError(t, err)
+	defer client.Fleets(framework.Namespace).Delete(ctx, flt.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
+	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
+
+	fleetautoscalers := framework.AgonesClient.AutoscalingV1().FleetAutoscalers(framework.Namespace)
+
+	listFas := func(f func(fap *autoscalingv1.FleetAutoscalerPolicy)) *autoscalingv1.FleetAutoscaler {
+		fas := autoscalingv1.FleetAutoscaler{
+			ObjectMeta: metav1.ObjectMeta{Name: flt.ObjectMeta.Name + "-list-autoscaler", Namespace: framework.Namespace},
+			Spec: autoscalingv1.FleetAutoscalerSpec{
+				FleetName: flt.ObjectMeta.Name,
+				Policy: autoscalingv1.FleetAutoscalerPolicy{
+					Type: autoscalingv1.ListPolicyType,
+				},
+				Sync: &autoscalingv1.FleetAutoscalerSync{
+					Type: autoscalingv1.FixedIntervalSyncType,
+					FixedInterval: autoscalingv1.FixedIntervalSync{
+						Seconds: 1,
+					},
+				},
+			},
+		}
+		f(&fas.Spec.Policy)
+		return &fas
+	}
+	testCases := map[string]struct {
+		fas          *autoscalingv1.FleetAutoscaler
+		wantFasErr   bool
+		wantReplicas int32
+	}{
+		"Scale Up to MinCapacity": {
+			fas: listFas(func(fap *autoscalingv1.FleetAutoscalerPolicy) {
+				fap.List = &autoscalingv1.ListPolicy{
+					Key:         "games",
+					BufferSize:  intstr.FromInt(3),
+					MinCapacity: 16,
+					MaxCapacity: 100,
+				}
+			}),
+			wantFasErr:   false,
+			wantReplicas: 4, // Capacity:20
+		},
+	}
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+
+			fas, err := fleetautoscalers.Create(ctx, testCase.fas, metav1.CreateOptions{})
+			if testCase.wantFasErr {
+				assert.Error(t, err)
+				return
+			}
+			assert.NoError(t, err)
+
+			framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(testCase.wantReplicas))
+			fleetautoscalers.Delete(ctx, fas.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
+
+			// Return to starting 0 replicas
+			framework.ScaleFleet(t, log, flt, 0)
+			framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(0))
+		})
+	}
+}
+
 func TestListAutoscalerAllocated(t *testing.T) {
 	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
 		t.SkipNow()
