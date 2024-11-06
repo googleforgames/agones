@@ -1980,12 +1980,23 @@ func defaultFleet(namespace string) *agonesv1.Fleet {
 	return fleetWithGameServerSpec(&gs.Spec, namespace)
 }
 
+// defaultEmptyFleet returns a default fleet configuration with no replicas.
+func defaultEmptyFleet(namespace string) *agonesv1.Fleet {
+	gs := framework.DefaultGameServer(namespace)
+	return fleetWithGameServerSpecAndReplicas(&gs.Spec, namespace, 0)
+}
+
 // fleetWithGameServerSpec returns a fleet with specified gameserver spec
 func fleetWithGameServerSpec(gsSpec *agonesv1.GameServerSpec, namespace string) *agonesv1.Fleet {
+	return fleetWithGameServerSpecAndReplicas(gsSpec, namespace, replicasCount)
+}
+
+// fleetWithGameServerSpecAndReplicas returns a fleet with specified gameserver spec and specified replica count
+func fleetWithGameServerSpecAndReplicas(gsSpec *agonesv1.GameServerSpec, namespace string, replicas int32) *agonesv1.Fleet {
 	return &agonesv1.Fleet{
 		ObjectMeta: metav1.ObjectMeta{GenerateName: "simple-fleet-1.0", Namespace: namespace},
 		Spec: agonesv1.FleetSpec{
-			Replicas: replicasCount,
+			Replicas: replicas,
 			Template: agonesv1.GameServerTemplateSpec{
 				Spec: *gsSpec,
 			},
