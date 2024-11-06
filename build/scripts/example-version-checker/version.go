@@ -60,7 +60,7 @@ func getVersionFromMakefile(contents string) (string, error) {
 }
 
 func lineContainsVersion(line string) bool {
-	return strings.HasPrefix(line, "version")
+	return strings.HasPrefix(line, "version :=")
 }
 
 func getVersionFromLine(line string) string {
