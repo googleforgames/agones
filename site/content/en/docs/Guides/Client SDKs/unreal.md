@@ -142,8 +142,8 @@ void APlatformGameSession::PostLogin(APlayerController* NewPlayer)
 ```
 
 #### Using Blueprints
-- Accessing other functionality of Agones can be done via Blueprints.
-![actions](../../../../images/unreal_bp_usage.png)
+- Accessing Agones functionality can be done via Blueprints.
+![usage](../../../../images/unreal_bp_usage.png)
 
 ## Configuration Options
 
