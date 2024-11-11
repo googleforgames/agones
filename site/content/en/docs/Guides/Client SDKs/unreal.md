@@ -123,7 +123,7 @@ PublicDependencyModuleNames.AddRange(
         "Agones",
     });
 ```
-- Add subsytem in header
+- Add subsystem in header
 ```c++
 #include "AgonesSubsystem.h"
 ```
