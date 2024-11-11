@@ -124,7 +124,7 @@ public:
 	/**
 	 * \brief HttpPort is the default Agones HTTP port to use.
 	 */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Agones, Config)
+	UPROPERTY(EditAnywhere, Category = Agones, Config)
 	FString HttpPort = "9358";
 
 	/**
