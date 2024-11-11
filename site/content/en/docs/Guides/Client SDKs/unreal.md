@@ -123,48 +123,27 @@ PublicDependencyModuleNames.AddRange(
         "Agones",
     });
 ```
-- Add component in header
+- Add subsytem in header
 ```c++
-#include "AgonesComponent.h"
-
-UPROPERTY(EditAnywhere, BlueprintReadWrite)
-UAgonesComponent* AgonesSDK;
-```
-- Initialize component in GameMode
-```c++
-#include "AgonesComponent.h"
-#include "Classes.h"
-
-ATestGameMode::ATestGameMode()
-{
-	AgonesSDK = CreateDefaultSubobject<UAgonesComponent>(TEXT("AgonesSDK"));
-}
+#include "AgonesSubsystem.h"
 ```
 
-- Use the Agones component to call PlayerReady
+- Use the Agones subsystem to call PlayerReady
 ```c++
 void APlatformGameSession::PostLogin(APlayerController* NewPlayer)
 {
-  // Empty brances are for callbacks on success and errror.
-  AgonesSDK->PlayerConnect("netspeak-player", {}, {});
+  UAgonesSubsystem* AgonesSDK = UAgonesSubsystem::Get(this);
+  if (AgonesSDK) // Check for nullptr is a must.
+  {
+    // Empty brances are for callbacks on success and errror.
+    AgonesSDK->PlayerConnect("netspeak-player", {}, {});
+  }
 }
 ```
 
-#### Using Blueprints (UE5)
-- Add Component to your Blueprint GameMode
-![component](../../../../images/unreal5_bp_component.png)
-- This will automatically call `/health` every 10 seconds and once `/gameserver` calls are succesful it will call `/ready`.
-
-- Accessing other functionality of Agones can be done via adding a node in Blueprints.
-![actions](../../../../images/unreal5_bp_actions.png)
-
-#### Using Blueprints (UE4)
-- Add Component to your Blueprint GameMode
-![component](../../../../images/unreal_bp_component.png)
-- This will automatically call `/health` every 10 seconds and once `/gameserver` calls are succesful it will call `/ready`.
-
-- Accessing other functionality of Agones can be done via adding a node in Blueprints.
-![actions](../../../../images/unreal_bp_actions.png)
+#### Using Blueprints
+- Accessing other functionality of Agones can be done via Blueprints.
+![actions](../../../../images/unreal_bp_usage.png)
 
 ## Configuration Options
 
@@ -174,6 +153,7 @@ A number of options can be altered via config files in Unreal these are supplied
 [/Script/Agones.AgonesComponent]
 HttpPort=1337
 HealthRateSeconds=5.0
+bDisableAutoHealthPing=false
 bDisableAutoConnect=true
 ```
 
