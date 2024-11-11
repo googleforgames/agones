@@ -109,7 +109,7 @@ private:
  * See - https://agones.dev/ for more information.
  */
 UCLASS(Config = Game, defaultconfig)
-class AGONES_API UAgonesSubsystem final : public UGameInstanceSubsystem, public FTSTickerObjectBase
+class AGONES_API UAgonesSubsystem : public UGameInstanceSubsystem, public FTSTickerObjectBase
 {
 	GENERATED_BODY()
 
