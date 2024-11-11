@@ -151,12 +151,25 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = Agones)
 	FConnectedDelegate ConnectedDelegate;
 
+	/**
+	 * \brief ShouldCreateSubsystem is a built in subsystem function that is called before Initialize.
+	 */
 	virtual bool ShouldCreateSubsystem(UObject* Outer) const override;
 
+	/**
+	* \brief Initialize is a built in subsystem function for initilization of subsystem.
+	* \param Collection can help initialize subsystem dependencies
+	*/
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 
+	/**
+	* \brief Deinitialize is a built in subsystem function called during destruction of GameInstance.
+	*/
 	virtual void Deinitialize() override;
 
+	/**
+	* \brief Tick is a built in ticker function called every frame.
+	*/
 	bool Tick(float DeltaTime) override;
 
 	/**
