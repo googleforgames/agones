@@ -36,5 +36,5 @@ gcloud config set project $PROJECT
 gcloud info
 gcloud config list
 gcloud auth list
-
+gcloud projects get-iam-policy $PROJECT
 
