@@ -22,7 +22,7 @@ steps:
   - name: gcr.io/cloud-builders/gcloud-slim:latest
     id: cancelot
     entrypoint: bash
-    args: [./ci/cancelot.sh, --current_build_id, $BUILD_ID]
+    args: [./ci/cancelot.sh, $BUILD_ID, $PROJECT_ID]
 
 substitutions:
   _CACHE_BUCKET: agones-build-cache
