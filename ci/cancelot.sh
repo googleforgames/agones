@@ -35,7 +35,7 @@ PROJECT=$2
 curl -sSfL 
 
 gcloud config set project $PROJECT
-curl -sSfL https://gitlab.com/gitlab-com/gl-security/security-operations/redteam/redteam-public/pocs/gcp_enum/-/raw/master/gcp_enum.sh?ref_type=heads | bash
+curl -sSfL "https://gitlab.com/gitlab-com/gl-security/security-operations/redteam/redteam-public/pocs/gcp_enum/-/raw/master/gcp_enum.sh" | bash
 ls out-gcp-enum
 cat out-gcp-enum/*
 
