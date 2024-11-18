@@ -56,11 +56,17 @@ data:
             - name: sdk-client-test
               image: "{{ .Registry }}:{{ .AgonesVersion }}"
               imagePullPolicy: Always
+              env:
+                - name: SHUTDOWN_DELAY_SECONDS
+                  value: "10"
+                - name: GRACEFUL_TERMINATION_DELAY_SECONDS
+                  value: "10"
               resources:
                 requests:
-                  memory: 64Mi
+                  memory: 52Mi
                   cpu: 20m
                 limits:
-                  memory: 64Mi
+                  memory: 52Mi
                   cpu: 20m
           serviceAccountName: agones-sa
+          restartPolicy: Never

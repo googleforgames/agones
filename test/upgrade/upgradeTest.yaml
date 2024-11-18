@@ -27,7 +27,7 @@ spec:
       containers:
         - name: upgrade-test-controller
           # TODO: Update image name to use a templated value for current Dev version
-          image: us-docker.pkg.dev/agones-images/ci/upgrade-test-controller:1.44.0-dev
+          image: us-docker.pkg.dev/agones-images/ci/upgrade-test-controller:1.45.0-dev
           imagePullPolicy: Always
           env:
             - name: PodName

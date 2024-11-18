@@ -233,6 +233,159 @@ steps:
   # End to end tests
   #
 
+  # Build upgrade test
+  - name: make-docker
+    id: build-upgrade-test
+    dir: test/upgrade
+    env: ['REGISTRY=${_REGISTRY}']
+    args: [build]
+    waitFor:
+      - push-images
+
+  # Push upgrade test
+  - name: make-docker
+    id: push-upgrade-test
+    dir: test/upgrade
+    env: ['REGISTRY=${_REGISTRY}']
+    args: [push]
+    waitFor:
+      - build-upgrade-test
+
+  - name: gcr.io/cloud-builders/gcloud
+    id: submit-upgrade-test-cloud-build
+    dir: test/upgrade
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -e
+        set -o pipefail
+
+        export SHELL="/bin/bash"
+        export KUBECONFIG="/root/.kube/config"
+        mkdir -p /go/src/agones.dev/ /root/.kube/
+        ln -s /workspace /go/src/agones.dev/agones
+        cd /go/src/agones.dev/agones/test/upgrade
+
+        pids=()
+        typeset -A waitPids    # Associative array for mapping `kubectl wait job` pid -> `kubectl wait job` output log name
+        # Kill all currently running child processes on exit or if a non-zero signal is seen
+        trap 'echo Cleaning up any remaining running pids: $(jobs -p) ; kill $(jobs -p) 2> /dev/null || :' EXIT SIGTERM
+
+        cloudProducts=("generic" "gke-autopilot")
+        declare -A versionsAndRegions=( [1.31]=us-east1 [1.30]=asia-east1 [1.29]=europe-west1 )
+
+        for cloudProduct in "${cloudProducts[@]}"
+        do
+          for version in "${!versionsAndRegions[@]}"
+          do
+            region=${versionsAndRegions[$version]}
+            if [ "$cloudProduct" = generic ]
+            then
+              testCluster="standard-upgrade-test-cluster-${version//./-}"
+            else
+              testCluster="gke-autopilot-upgrade-test-cluster-${version//./-}"
+            fi
+            testClusterLocation="${region}"
+
+            if [ "$1" = 'local' ]
+            then
+              gcloud auth login
+            fi
+            gcloud container clusters get-credentials "$testCluster" --region="$testClusterLocation" --project="$PROJECT_ID"
+
+            if [ "$cloudProduct" = gke-autopilot ] ; then
+              # For autopilot clusters use evictable "balloon" pods to keep a buffer in node pool autoscaling.
+              kubectl apply -f evictablePods.yaml
+            fi
+
+            # Clean up any existing job / namespace / apiservice from previous run
+            echo Checking if resources from a previous build of upgrade-test-runner exist and need to be cleaned up on cluster "${testCluster}".
+            if kubectl get jobs | grep upgrade-test-runner ; then
+              echo Deleting previous build of upgrade-test-runner on cluster "${testCluster}".
+              kubectl delete job upgrade-test-runner
+              kubectl wait --for=delete pod -l job-name=upgrade-test-runner --timeout=5m
+            fi
+
+            # Check if there are any dangling game servers.
+            if kubectl get gs ; then
+              kubectl delete gs -l app=sdk-client-test
+              kubectl wait --for=delete pod -l app=sdk-client-test --timeout=5m
+            fi
+
+            # The v1.allocation.agones.dev apiservice does not get removed automatically and will prevent the namespace from terminating.
+            if kubectl get apiservice | grep v1.allocation.agones.dev ; then
+                kubectl delete apiservice v1.allocation.agones.dev
+            fi
+
+            if kubectl get namespace | grep agones-system ; then
+              kubectl delete namespace agones-system
+              kubectl wait --for=delete ns agones-system --timeout=5m
+            fi
+
+            echo kubectl apply -f permissions.yaml on cluster "${testCluster}"
+            kubectl apply -f permissions.yaml
+            echo kubectl apply -f versionMap.yaml on cluster "${testCluster}"
+            kubectl apply -f versionMap.yaml
+            echo kubectl apply -f gameserverTemplate.yaml on cluster "${testCluster}"
+            kubectl apply -f gameserverTemplate.yaml
+
+            # TODO: Replace image: us-docker.pkg.dev/agones-images/ci/upgrade-test-controller:1.45.0-dev
+            # in upgradeTest.yaml with the commit tag (e.g. 1.45.0-dev-d3956c8) and pass the same VERSION as
+            # environment variable for main.go `DevVersion = os.Getenv("DevVersion")`
+            echo COMMIT_SHA "$COMMIT_SHA"
+            echo BUILD_ID "$BUILD_ID"
+            version="1.45.0-dev-$(git rev-parse --short=7 HEAD)"
+            echo VERSION "$version"
+
+            echo kubectl apply -f upgradeTest.yaml on cluster "${testCluster}"
+            kubectl apply -f upgradeTest.yaml
+
+            # We need to wait for job pod to be created and ready before we can wait on the job itself.
+            # TODO: Once all test clusters are at Kubernetes Version >= 1.31 use `kubectl wait --for=create` instead of sleep.
+            # kubectl wait --for=create pod -l job-name=upgrade-test-runner --timeout=1m
+            sleep 10s
+            kubectl wait --for=condition=ready pod -l job-name=upgrade-test-runner --timeout=5m
+
+            echo Wait for job upgrade-test-runner to complete or fail on cluster "${testCluster}"
+            kubectl wait job/upgrade-test-runner --timeout=20m --for jsonpath='{.status.conditions[*].status}'=True -o jsonpath='{.status.conditions[*].type}' | tee "${testCluster}".log &
+            waitPid=$!
+            pids+=( "$waitPid" )
+            waitPids[$waitPid]=${testCluster}.log
+          done
+        done
+
+        for pid in "${pids[@]}"; do
+          # This block executes when the process exits and pid status==0
+          if wait $pid; then
+            outputLog="${waitPids[$pid]}"
+            # wait for output to finish writing to file
+            until [ -s "$outputLog" ]; do sleep 1; done
+            output=$(<"${outputLog}")
+            echo  "${outputLog}": "${output}"
+
+            # "Complete" is successful job run.
+            # Version 1.31 has "SuccessCriteriaMet" as the first completion status returned, or "FailureTarget" in case of failure.
+            if [ "$output" == "Complete" ] || [ "$output" == "SuccessCriteriaMet" ] ; then
+              continue
+            else
+              exit 1
+            fi
+          # This block executes when the process exits and pid status!=0
+          else
+            status=$?
+            outputLog="${waitPids[$pid]}"
+            # Truncate .log
+            cluster=${outputLog%.*}
+            echo "One of the upgrade tests pid $pid from cluster $cluster exited with a non-zero status ${status}."
+            exit $status
+          fi
+        done
+        echo "End of Upgrade Tests"
+
+    waitFor:
+      - push-upgrade-test
+
   # wait for us to be the oldest ongoing build before we run e2es
   - name: gcr.io/cloud-builders/gcloud
     id: e2e-wait-to-become-leader
