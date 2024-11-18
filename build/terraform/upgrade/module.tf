@@ -38,10 +38,10 @@ variable "kubernetes_versions" {
   description = "Create upgrade test clusters with these k8s versions in these regions"
   type        = map(list(string))
   default     = {
-    "1.28" = ["us-west1", "RAPID"]
     "1.29" = ["europe-west1", "RAPID"]
     "1.30" = ["asia-east1", "RAPID"]
-    // "1.31" = ["us-east1", "RAPID"]
+    "1.31" = ["us-east1", "RAPID"]
+    //1.32" = ["us-west1", "RAPID"]
     //
     // Before merge: When adding Kubernetes version 1.{N}, first uncomment the line above, extending
     // the infrastructure to 4 versions temporarily. Come back to these instructions after the
@@ -80,30 +80,32 @@ module "gke_autopilot_cluster" {
   releaseChannel = each.value[1]
 }
 
-resource "google_compute_firewall" "udp" {
-  name    = "gke-game-server-firewall"
-  project = var.project
-  network = "default"
-
-  allow {
-    protocol = "udp"
-    ports    = ["7000-8000"]
-  }
-
-  target_tags = ["game-server"]
-  source_ranges = ["0.0.0.0/0"]
-}
-
-resource "google_compute_firewall" "tcp" {
-  name    = "gke-game-server-firewall-tcp"
-  project = var.project
-  network = "default"
-
-  allow {
-    protocol = "tcp"
-    ports    = ["7000-8000"]
-  }
-
-  target_tags = ["game-server"]
-  source_ranges = ["0.0.0.0/0"]
-}
+// NOTE: These are the same firewall rules as the e2e tests. If running only the upgrade clusters on
+// a new project the clusters will need these rules.
+// resource "google_compute_firewall" "udp" {
+//   name    = "gke-game-server-firewall"
+//  project = var.project
+//  network = "default"
+//
+//  allow {
+//    protocol = "udp"
+//    ports    = ["7000-8000"]
+//  }
+//
+//  target_tags = ["game-server"]
+//  source_ranges = ["0.0.0.0/0"]
+//}
+//
+// resource "google_compute_firewall" "tcp" {
+//  name    = "gke-game-server-firewall-tcp"
+//  project = var.project
+//  network = "default"
+//
+//  allow {
+//    protocol = "tcp"
+//    ports    = ["7000-8000"]
+//  }
+//
+//  target_tags = ["game-server"]
+//  source_ranges = ["0.0.0.0/0"]
+//}
