@@ -269,6 +269,15 @@ steps:
 
         pids=()
         typeset -A waitPids    # Associative array for mapping `kubectl wait job` pid -> `kubectl wait job` output log name
+        tmpdir=$(mktemp -d)
+        trap 'rm -rf -- "$tmpdir"' EXIT SIGTERM
+
+        # Update image tags to include the current build version.
+        DevVersion="1.45.0-dev-$(git rev-parse --short=7 HEAD)"
+        export DevVersion
+        envsubst < upgradeTest.yaml > "${tmpfile}"/upgradeTest.yaml
+        envsubst < versionMap.yaml > "${tmpfile}"/versionMap.yaml
+
         # Kill all currently running child processes on exit or if a non-zero signal is seen
         trap 'echo Cleaning up any remaining running pids: $(jobs -p) ; kill $(jobs -p) 2> /dev/null || :' EXIT SIGTERM
 
@@ -326,20 +335,12 @@ steps:
             echo kubectl apply -f permissions.yaml on cluster "${testCluster}"
             kubectl apply -f permissions.yaml
             echo kubectl apply -f versionMap.yaml on cluster "${testCluster}"
-            kubectl apply -f versionMap.yaml
+            kubectl apply -f "${tmpfile}"/versionMap.yaml
             echo kubectl apply -f gameserverTemplate.yaml on cluster "${testCluster}"
             kubectl apply -f gameserverTemplate.yaml
 
-            # TODO: Replace image: us-docker.pkg.dev/agones-images/ci/upgrade-test-controller:1.45.0-dev
-            # in upgradeTest.yaml with the commit tag (e.g. 1.45.0-dev-d3956c8) and pass the same VERSION as
-            # environment variable for main.go `DevVersion = os.Getenv("DevVersion")`
-            echo COMMIT_SHA "$COMMIT_SHA"
-            echo BUILD_ID "$BUILD_ID"
-            version="1.45.0-dev-$(git rev-parse --short=7 HEAD)"
-            echo VERSION "$version"
-
             echo kubectl apply -f upgradeTest.yaml on cluster "${testCluster}"
-            kubectl apply -f upgradeTest.yaml
+            kubectl apply -f "${tmpfile}"/upgradeTest.yaml
 
             # We need to wait for job pod to be created and ready before we can wait on the job itself.
             # TODO: Once all test clusters are at Kubernetes Version >= 1.31 use `kubectl wait --for=create` instead of sleep.
@@ -348,10 +349,10 @@ steps:
             kubectl wait --for=condition=ready pod -l job-name=upgrade-test-runner --timeout=5m
 
             echo Wait for job upgrade-test-runner to complete or fail on cluster "${testCluster}"
-            kubectl wait job/upgrade-test-runner --timeout=20m --for jsonpath='{.status.conditions[*].status}'=True -o jsonpath='{.status.conditions[*].type}' | tee "${testCluster}".log &
+            kubectl wait job/upgrade-test-runner --timeout=20m --for jsonpath='{.status.conditions[*].status}'=True -o jsonpath='{.status.conditions[*].type}' | tee "${tmpfile}"/"${testCluster}".log &
             waitPid=$!
             pids+=( "$waitPid" )
-            waitPids[$waitPid]=${testCluster}.log
+            waitPids[$waitPid]="${tmpfile}"/"${testCluster}".log
           done
         done
 

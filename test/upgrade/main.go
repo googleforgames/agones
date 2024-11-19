@@ -65,7 +65,7 @@ const (
 
 var (
 	// Dev is the current development version of Agones
-	Dev = os.Getenv("Dev")
+	DevVersion = os.Getenv("DevVersion")
 	// ReleaseVersion is the latest released version of Agones (DEV - 1).
 	ReleaseVersion = os.Getenv("ReleaseVersion")
 	// PodName the name of the pod this container is running in
@@ -162,7 +162,7 @@ func configTestSetup(ctx context.Context, kubeClient *kubernetes.Clientset) []*c
 		countsAndLists := containsCountsAndLists(agonesVersion)
 		ct.agonesVersion = agonesVersion
 		if agonesVersion == "Dev" {
-			ct.agonesVersion = Dev
+			ct.agonesVersion = DevVersion
 			// Game server container cannot be created at DEV version due to go.mod only able to access
 			// published Agones versions. Use N-1 for DEV.
 			ct.gameServerPath = createGameServerFile(ReleaseVersion, countsAndLists)
@@ -299,7 +299,7 @@ func runConfigWalker(ctx context.Context, validConfigs []*configTest) {
 	for _, config := range validConfigs {
 		registry := AgonesRegistry
 		chart := HelmChart
-		if config.agonesVersion == Dev {
+		if config.agonesVersion == DevVersion {
 			// TODO: Update to templated value for registry and chart for Dev build
 			continue
 		}
