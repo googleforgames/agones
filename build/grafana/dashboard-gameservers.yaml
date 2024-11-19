@@ -48,9 +48,88 @@ data:
       "links": [],
       "panels": [
         {
+          "gridPos": {
+            "h": 6,
+            "w": 5,
+            "x": 0,
+            "y": 0
+          },
           "datasource": {
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
+          },
+          "targets": [
+            {
+              "expr": "sum(agones_fleet_rollout_percent{name=~\"$fleet\", namespace=~\"$namespace\", type=\"current_replicas\"}) / sum(agones_fleet_rollout_percent{name=~\"$fleet\", namespace=~\"$namespace\", type=\"desired_replicas\"}) * 100",
+              "format": "time_series",
+              "interval": "",
+              "intervalFactor": 1,
+              "legendFormat": "{{type}}",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "reduceOptions": {
+              "calcs": ["lastNotNull"],
+              "fields": "",
+              "values": true
+            },
+            "orientation": "horizontal",
+            "textMode": "value",
+            "colorMode": "value",
+            "valueMappings": []
+          },
+          "fieldConfig": {
+            "defaults": {
+             "color": {
+                "mode": "thresholds"
+              },
+              "custom": {},
+               "thresholds": {
+                "mode": "percentage",
+                "steps": [
+                  {
+                    "color": "dark-red",
+                    "value": null
+                  },
+                  {
+                    "color": "dark-orange",
+                    "value": 20
+                  },
+                  {
+                    "color": "dark-green",
+                    "value": 50
+                  }
+                ]
+              },
+              "unit": "percent",
+              "links": []
+            },
+            "overrides": []
+          },
+          "legend": {
+            "show": false
+          },
+          "timeShift": null,
+          "nullPointMode": "null",
+          "options": {
+            "showThresholdLabels": false,
+            "showThresholdMarkers": true
+          },
+          "tooltip": {
+            "shared": false,
+            "value_type": "individual"
+          },
+          "type": "stat",
+          "title": "Fleet RollOut Percentage"
+        },
+        {
+          "aliasColors": {},
+          "breakPoint": "50%",
+          "cacheTimeout": null,
+          "combine": {
+            "label": "Others",
+            "threshold": 0
           },
           "fieldConfig": {
             "defaults": {
@@ -72,8 +151,8 @@ data:
           },
           "gridPos": {
             "h": 6,
-            "w": 7,
-            "x": 0,
+            "w": 5,
+            "x": 5,
             "y": 0
           },
           "id": 4,
@@ -224,8 +303,8 @@ data:
           },
           "gridPos": {
             "h": 6,
-            "w": 17,
-            "x": 7,
+            "w": 14,
+            "x": 10,
             "y": 0
           },
           "id": 2,
@@ -401,8 +480,46 @@ data:
               "refId": "A"
             }
           ],
-          "title": "GameServers count per type",
-          "type": "timeseries"
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "GameServer count overview",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
         },
         {
           "datasource": {
