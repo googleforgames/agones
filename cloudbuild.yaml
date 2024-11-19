@@ -251,6 +251,32 @@ steps:
     waitFor:
       - build-upgrade-test
 
+  # Wait for us to be the oldest ongoing build before we run upgrade and e2e tests
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    id: wait-to-become-leader
+    waitFor: [push-images]
+    script: |
+      #!/usr/bin/env bash
+      TS='date --utc +%FT%TZ'  # e.g. 2023-01-26T13:30:37Z
+      echo "$(${TS}): Waiting to become oldest running build"
+      while true; do
+        # Filter to running builds with tag 'ci', which covers any builds running e2es.
+        BUILD_FILTER="status=WORKING AND tags='ci'"
+        OLDEST=$(gcloud builds list --filter "${BUILD_FILTER}" --format="value(id,startTime)" --sort-by=startTime --limit=1)
+        echo "$(${TS}): Oldest is (id startTime): ${OLDEST}"
+        if echo ${OLDEST} | grep -q "${BUILD_ID}"; then
+          echo "$(${TS}): That's us, we're done!"
+          break
+        fi
+        sleep 60
+      done
+    timeout: 10800s  # 3h - if you change this, change the global timeout as well
+    env:
+      - CLOUDSDK_CORE_PROJECT=$PROJECT_ID
+      - BUILD_ID=$BUILD_ID
+      - TRIGGER_NAME=$TRIGGER_NAME
+
+  # Run the upgrade tests parallel, fail this step if any of the tests fail
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk
     id: submit-upgrade-test-cloud-build
     dir: test/upgrade
@@ -382,37 +408,13 @@ steps:
         echo "End of Upgrade Tests"
 
     waitFor:
+      - wait-to-become-leader
       - push-upgrade-test
-
-  # wait for us to be the oldest ongoing build before we run e2es
-  - name: gcr.io/cloud-builders/gcloud
-    id: e2e-wait-to-become-leader
-    waitFor: [push-images]
-    script: |
-      #!/usr/bin/env bash
-      TS='date --utc +%FT%TZ'  # e.g. 2023-01-26T13:30:37Z
-      echo "$(${TS}): Waiting to become oldest running build"
-      while true; do
-        # Filter to running builds with tag 'ci', which covers any builds running e2es.
-        BUILD_FILTER="status=WORKING AND tags='ci'"
-        OLDEST=$(gcloud builds list --filter "${BUILD_FILTER}" --format="value(id,startTime)" --sort-by=startTime --limit=1)
-        echo "$(${TS}): Oldest is (id startTime): ${OLDEST}"
-        if echo ${OLDEST} | grep -q "${BUILD_ID}"; then
-          echo "$(${TS}): That's us, we're done!"
-          break
-        fi
-        sleep 60
-      done
-    timeout: 10800s  # 3h - if you change this, change the global timeout as well
-    env:
-      - CLOUDSDK_CORE_PROJECT=$PROJECT_ID
-      - BUILD_ID=$BUILD_ID
-      - TRIGGER_NAME=$TRIGGER_NAME
 
   # cancel all the orphan e2e test cloud builds, fail to cancel any of the build will fail this whole build
   - name: gcr.io/cloud-builders/gcloud
     id: cancel-orphan-e2e-tests
-    waitFor: [e2e-wait-to-become-leader]
+    waitFor: [wait-to-become-leader]
     script: |
       #!/usr/bin/env bash
       until gcloud builds list --ongoing --filter "tags:'e2e-test'" --format="value(id)" | xargs --no-run-if-empty gcloud builds cancel
@@ -537,7 +539,7 @@ steps:
   #
   - name: gcr.io/cloud-builders/gcloud
     id: cleanup-services
-    waitFor: [e2e-wait-to-become-leader]
+    waitFor: [wait-to-become-leader]
     allowFailure: true
     entrypoint: bash
     args:
@@ -558,7 +560,7 @@ substitutions:
   _RUST_SDK_BUILD_CACHE_KEY: rust-sdk-build
   _REGISTRY: us-docker.pkg.dev/${PROJECT_ID}/ci
 tags: [ci, 'commit-${COMMIT_SHA}']
-timeout: 18000s  # 5h: 3h (e2e-wait-to-become-leader) + 1.5h (e2e timeout) + 0.5h (everything else)
+timeout: 18000s  # 5h: 3h (wait-to-become-leader) + 1.5h (e2e timeout) + 0.5h (everything else)
 queueTtl: 259200s  # 72h
 images:
   - ${_REGISTRY}/agones-controller
