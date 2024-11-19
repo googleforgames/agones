@@ -1,5 +1,36 @@
 # Changelog
 
+## [v1.45.0](https://github.com/googleforgames/agones/tree/v1.45.0) (2024-19-11)
+
+[Full Changelog](https://github.com/googleforgames/agones/compare/v1.44.0...v1.45.0)
+
+**Breaking changes:**
+- Update Supported Kubernetes to 1.29, 1.30, 1.31 by @kamaljeeti in https://github.com/googleforgames/agones/pull/4024
+
+**Implemented enhancements:**
+- Dashboard for Agones GameServer State duration by @vicentefb in https://github.com/googleforgames/agones/pull/3947
+- Add Shutdown Delay Seconds to the sdk-client-test containers by @igooch in https://github.com/googleforgames/agones/pull/4030
+- Add a CI check to fail on change to an example without a new version by @wheatear-dev in https://github.com/googleforgames/agones/pull/3940
+
+**Fixed bugs:**
+- Allowing list based fleet autoscaler to scale up from 0 replicas by @geopaulm in https://github.com/googleforgames/agones/pull/4016
+
+**Other:**
+- Preparation for Release v1.45.0 by @0xaravindh in https://github.com/googleforgames/agones/pull/4014
+- Update all Rust SDK dependencies to latest versions by @john-haven in https://github.com/googleforgames/agones/pull/4008
+- Write Terraform scripts and docs to show how to create OKE cluster and install Agones by @ouxingning in https://github.com/googleforgames/agones/pull/4023
+- Created performance cluster 1.30 by @kamaljeeti in https://github.com/googleforgames/agones/pull/4031
+- Updates the upgrade terraform by @igooch in https://github.com/googleforgames/agones/pull/4036
+- Adding Fleet Active GameServerSet Percentage Metrics by @0xaravindh in https://github.com/googleforgames/agones/pull/4021
+- Introducing Agones Guru on Gurubase.io by @kursataktas in https://github.com/googleforgames/agones/pull/4028
+
+**New Contributors:**
+- @john-haven made their first contribution in https://github.com/googleforgames/agones/pull/4008
+- @geopaulm made their first contribution in https://github.com/googleforgames/agones/pull/4016
+- @ouxingning made their first contribution in https://github.com/googleforgames/agones/pull/4023
+- @wheatear-dev made their first contribution in https://github.com/googleforgames/agones/pull/3940
+- @kursataktas made their first contribution in https://github.com/googleforgames/agones/pull/4028
+
 ## [v1.44.0](https://github.com/googleforgames/agones/tree/v1.44.0) (2024-10-08)
 
 [Full Changelog](https://github.com/googleforgames/agones/compare/v1.43.0...v1.44.0)
@@ -12,6 +43,7 @@
 - Adds clusters for the in place upgrades tests by @igooch in https://github.com/googleforgames/agones/pull/3990
 - Test in place upgrades run tests by @igooch in https://github.com/googleforgames/agones/pull/3991
 - Move Feature GKEAutopilotExtendedDurationPods To Beta by @kamaljeeti in https://github.com/googleforgames/agones/pull/4006
+
 **Fixed bugs:**
 - fix: remove bad character from metrics markdown by @code-eg in https://github.com/googleforgames/agones/pull/3981
 - Updating UpdateList to update the values on a list by @chrisfoster121 in https://github.com/googleforgames/agones/pull/3899
@@ -19,6 +51,7 @@
 - Refactor metrics registry exporter by @kamaljeeti in https://github.com/googleforgames/agones/pull/3989
 - Fix the build-e2e error by @gongmax in https://github.com/googleforgames/agones/pull/4009
 - Add a flag to sdkserver to avoid a collision on port 8080 by @KAllan357 in https://github.com/googleforgames/agones/pull/4010
+
 **Other:**
 - Update the note at the top of the player tracking docs by @roberthbailey in https://github.com/googleforgames/agones/pull/3974
 - Adds schedule and chain policy to fleetautoscaler documentation by @indexjoseph in https://github.com/googleforgames/agones/pull/3934
