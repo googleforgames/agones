@@ -1,6 +1,6 @@
 # Changelog
 
-## [v1.45.0](https://github.com/googleforgames/agones/tree/v1.45.0) (2024-19-11)
+## [v1.45.0](https://github.com/googleforgames/agones/tree/v1.45.0) (2024-11-19)
 
 [Full Changelog](https://github.com/googleforgames/agones/compare/v1.44.0...v1.45.0)
 
