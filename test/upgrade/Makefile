@@ -27,7 +27,7 @@ REGISTRY ?=
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_path := $(dir $(mkfile_path))
 root_path = $(realpath $(project_path)/)
-base_version = 1.45.0-dev
+base_version = 1.45.0
 # Version defaults to the short hash of the latest commit
 VERSION ?= $(base_version)-dev-$(shell git rev-parse --short=7 HEAD)
 server_tag := $(REGISTRY)/upgrade-test-controller:$(VERSION)
