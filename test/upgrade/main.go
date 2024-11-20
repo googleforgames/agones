@@ -150,7 +150,7 @@ func configTestSetup(ctx context.Context, kubeClient *kubernetes.Clientset) []*c
 	// Get the mappings of valid Kubernetes, Agones, and Feature Gate versions from the configmap.
 	err := json.Unmarshal([]byte(VersionMappings), &versionMap)
 	if err != nil {
-		log.Fatal("Could not Unmarshal", err)
+		log.Fatal("Could not Unmarshal ", err)
 	}
 
 	// Find valid Agones versions and feature gates for the current version of Kubernetes.

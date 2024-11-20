@@ -298,7 +298,7 @@ steps:
         trap 'rm -rf -- "$tmpdir"' EXIT SIGTERM
 
         # Update image tags to include the current build version.
-        DevVersion="1.45.0-dev-$(git rev-parse --short=7 HEAD)"
+        DevVersion="${_BASE_VERSION}-dev-$(git rev-parse --short=7 HEAD)"
         export DevVersion
         sed "s/\${DevVersion}/${DevVersion}/" upgradeTest.yaml > "${tmpdir}"/upgradeTest.yaml
         sed "s/\${DevVersion}/${DevVersion}/" versionMap.yaml > "${tmpdir}"/versionMap.yaml
@@ -553,6 +553,7 @@ steps:
         done
 
 substitutions:
+  _BASE_VERSION: 1.46.0
   _CACHE_BUCKET: agones-build-cache
   _HTMLTEST_CACHE_KEY: htmltest-0.10.1
   _CPP_SDK_BUILD_CACHE_KEY: cpp-sdk-build
