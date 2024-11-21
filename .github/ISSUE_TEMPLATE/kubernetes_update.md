@@ -41,10 +41,12 @@ List of items to do for upgrading to {version_1} {version_2} {version_3}
     - [ ] Update the `grpc_release_tag` in the SDK [base image grpc version](https://github.com/googleforgames/agones/blob/main/build/includes/sdk.mk).
     - [ ] Update the gRPC version number in C++ gRPC Dependency documentation [here](https://github.com/googleforgames/agones/blob/main/site/content/en/docs/Guides/Client%20SDKs/cpp.md).
     - [ ] Update the gRPC version
-      ([Dockerfile](https://github.com/googleforgames/agones/blob/main/examples/cpp-simple/Dockerfile)) and
-      increment the image tag
-      ([Makefile](https://github.com/googleforgames/agones/blob/main/examples/cpp-simple/Makefile)) in the C++
-      `cpp-simple` example.
+      ([Dockerfile](https://github.com/googleforgames/agones/blob/main/examples/cpp-simple/Dockerfile)) 
+    - [ ] Update the C++ `cpp-simple` image.
+        - [ ] Update the `cpp-simple` example images tag. At `build` directory, run:
+          - [ ] `make bump-image IMAGENAME=cpp-simple-server VERSION=<current-image-version>` 
+        - [ ] Run the following to generate and push the new `cpp-simple` example images:
+          - [ ] In `examples/cpp-simple`, run: `make cloud-build`
     - [ ] Regenerate all client sdks: [make gen-all-sdk-grpc](https://github.com/googleforgames/agones/blob/main/build/README.md#make-gen-all-sdk-grpc)
           This can take 20 minutes or so, as the above changes force a rebuild. Plan your day accordingly 😃.
     - [ ] Regenerate allocated API endpoints: [make gen-allocation-grpc](https://github.com/googleforgames/agones/blob/main/build/README.md#make-gen-allocation-grpc)
@@ -69,3 +71,4 @@ List of items to do for upgrading to {version_1} {version_2} {version_3}
         terraform apply -var project="agones-images"
         ```
     - [ ] Update the `_TEST_CLUSTER_NAME` in `ci/perf-test-cloudbuild.yaml` to the name of the new created performance test cluster, and send a PR with the changes.
+-
