@@ -414,7 +414,7 @@ func createGameServers(ctx context.Context, gsPath string, gsReady chan bool) {
 	checkFirstGameServerReady(ctx, gsReady, args...)
 
 	ticker := time.NewTicker(5 * time.Second)
-	retries := 6
+	retries := 8
 	retry := 0
 
 	for {
@@ -424,7 +424,7 @@ func createGameServers(ctx context.Context, gsPath string, gsReady chan bool) {
 			return
 		case <-ticker.C:
 			_, err := runExecCommand(KubectlCmd, args...)
-			// Ignore failures for ~30s at at time to account for the brief (~20s) during which the
+			// Ignore failures for ~45s at at time to account for the brief (~30s) during which the
 			// controller service is unavailable during upgrade.
 			if err != nil {
 				if retry > retries {
