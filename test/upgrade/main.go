@@ -57,10 +57,14 @@ const (
 	Timeout = 10 * time.Minute
 	// HelmChart is the helm chart for the public Agones releases
 	HelmChart = "agones/agones"
+	// TestChart is the registry for Agones Helm chart development builds
+	TestChart = "./install/helm"
 	// AgonesRegistry is the public registry for Agones releases
 	AgonesRegistry = "us-docker.pkg.dev/agones-images/release"
-	// TestRegistry is the public registry for upgrade test container files
-	TestRegistry = "us-docker.pkg.dev/agones-images/ci/sdk-client-test"
+	// TestRegistry is the registry for Agones development builds
+	TestRegistry = "us-docker.pkg.dev/agones-images/ci/"
+	// ContainerRegistry is the registry for upgrade test container files
+	ContainerRegistry = "us-docker.pkg.dev/agones-images/ci/sdk-client-test"
 )
 
 var (
@@ -300,13 +304,13 @@ func runConfigWalker(ctx context.Context, validConfigs []*configTest) {
 		registry := AgonesRegistry
 		chart := HelmChart
 		if config.agonesVersion == DevVersion {
-			// TODO: Update to templated value for registry and chart for Dev build
-			continue
+			registry = TestRegistry
+			chart = TestChart
 		}
 		err := installAgonesRelease(config.agonesVersion, registry, config.featureGates, ImagePullPolicy,
 			SidecarPullPolicy, LogLevel, chart)
 		if err != nil {
-			log.Printf("installAgonesRelease err: %s", err)
+			log.Fatalf("installAgonesRelease err: %s", err)
 		}
 
 		// Wait for the helm release to install. Waits the same amount of time as the Helm timeout.
@@ -350,6 +354,12 @@ func checkHelmStatus(agonesVersion string) string {
 		log.Fatal("Could not Unmarshal", err)
 	}
 
+	// Remove the commit sha from the DevVersion i.e. from 1.46.0-dev-7168dd3 to 1.46.0-dev
+	if agonesVersion == DevVersion {
+		r := regexp.MustCompile(`1\.\d+\.\d+-dev`)
+		agonesVersion = r.FindString(DevVersion)
+	}
+
 	for _, status := range helmStatus {
 		if status.AppVersion == agonesVersion {
 			return status.Status
@@ -362,7 +372,7 @@ func checkHelmStatus(agonesVersion string) string {
 // gameserver yaml is based on the Agones version, i.e. gs1440.yaml for Agones version 1.44.0
 // Note: This does not validate the created file.
 func createGameServerFile(agonesVersion string, countsAndLists bool) string {
-	gsTmpl := gameServerTemplate{Registry: TestRegistry, AgonesVersion: agonesVersion, CountsAndLists: countsAndLists}
+	gsTmpl := gameServerTemplate{Registry: ContainerRegistry, AgonesVersion: agonesVersion, CountsAndLists: countsAndLists}
 
 	gsTemplate, err := template.ParseFiles("gameserver.yaml")
 	if err != nil {
@@ -450,7 +460,7 @@ func checkFirstGameServerReady(ctx context.Context, gsReady chan bool, args ...s
 			log.Fatalf("Could not get Gameserver %s state: %s", gsName, err)
 		}
 		if err != nil {
-			retries += 1
+			retries++
 			return false, nil
 		}
 		// Sample output: Running   sdk-client-test-bbvx9

@@ -233,23 +233,14 @@ steps:
   # End to end tests
   #
 
-  # Build upgrade test
-  - name: make-docker
-    id: build-upgrade-test
-    dir: test/upgrade
-    env: ['REGISTRY=${_REGISTRY}']
-    args: [build]
-    waitFor:
-      - push-images
-
-  # Push upgrade test
+  # Build and Push upgrade test
   - name: make-docker
     id: push-upgrade-test
     dir: test/upgrade
     env: ['REGISTRY=${_REGISTRY}']
     args: [push]
     waitFor:
-      - build-upgrade-test
+      - push-images
 
   # Wait for us to be the oldest ongoing build before we run upgrade and e2e tests
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk

@@ -24,14 +24,11 @@
 #
 
 REGISTRY ?=
-mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
-project_path := $(dir $(mkfile_path))
-root_path = $(realpath $(project_path)/)
 base_version = 1.46.0
 # Version defaults to the short hash of the latest commit
 VERSION ?= $(base_version)-dev-$(shell git rev-parse --short=7 HEAD)
 server_tag := $(REGISTRY)/upgrade-test-controller:$(VERSION)
-
+cwd:=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 #   _____                    _
 #  |_   _|_ _ _ __ __ _  ___| |_ ___
 #    | |/ _` | '__/ _` |/ _ \ __/ __|
@@ -39,9 +36,12 @@ server_tag := $(REGISTRY)/upgrade-test-controller:$(VERSION)
 #    |_|\__,_|_|  \__, |\___|\__|___/
 #                 |___/
 
+# Using .ONESHELL allows us to `cd` to the parent directory agones. This gives the Dockerfile the
+# context of the agones directory, which allows it to COPY files from any child directory.
+.ONESHELL:
 # Build a docker image for the server, and tag it
 build:
-	cd $(root_path) && docker build -f $(project_path)Dockerfile --tag=$(server_tag) .
+	cd "$(cwd)/../.." && DOCKER_BUILDKIT=1 docker build -f $(cwd)/Dockerfile --tag=$(server_tag) .
 
 push: build
 	docker push $(server_tag)

@@ -12,11 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM gcr.io/cloud-builders/gcloud AS builder
+FROM golang:1.22.9-alpine AS builder
 
-RUN apt-get update && \
-    apt-get install -y curl && \
-    apt-get clean
+# install curl
+RUN apk update && \
+    apk upgrade && \
+    apk --no-cache add curl
 
 WORKDIR /usr/local
 
@@ -35,27 +36,20 @@ RUN curl -L  ${HELM_URL} > /tmp/helm.tar.gz \
     && chmod go+rx /usr/local/bin/helm \
     && rm /tmp/helm.tar.gz && rm -rf /tmp/linux-amd64
 
-# Build the Go image from source
-FROM golang:1.22.6 AS build-stage
-
+# Copy and build the Go application
 WORKDIR /agones.dev
-
-COPY *.go ./
-
+COPY test/upgrade/main.go ./
 RUN go mod init agones.dev/agones/test/upgrade/testContainer
 RUN go mod tidy
 RUN go mod download
-
 RUN CGO_ENABLED=0 GOOS=linux go build -o /upgrade-test
 
-# Copy the above binary into a lean image
-FROM gcr.io/distroless/static-debian12:nonroot AS build-release-stage
-
+# Copy the dev build Agones Helm chart
 WORKDIR /
 
-COPY --from=build-stage /upgrade-test /upgrade-test
-COPY --from=builder /usr/local /usr/local
-
-USER nonroot:nonroot
+# Use a non-root user for security best practices
+RUN adduser -D -g '' adduser
+USER adduser
+COPY --chown=adduser install/helm/agones /install/helm
 
 ENTRYPOINT ["/upgrade-test"]
