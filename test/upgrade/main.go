@@ -68,7 +68,7 @@ const (
 )
 
 var (
-	// Dev is the current development version of Agones
+	// DevVersion is the current development version of Agones
 	DevVersion = os.Getenv("DevVersion")
 	// ReleaseVersion is the latest released version of Agones (DEV - 1).
 	ReleaseVersion = os.Getenv("ReleaseVersion")
@@ -315,7 +315,7 @@ func runConfigWalker(ctx context.Context, validConfigs []*configTest) {
 
 		// Wait for the helm release to install. Waits the same amount of time as the Helm timeout.
 		var helmStatus string
-		err = wait.PollUntilContextTimeout(ctx, 10*time.Second, Timeout, true, func(ctx context.Context) (done bool, err error) {
+		err = wait.PollUntilContextTimeout(ctx, 10*time.Second, Timeout, true, func(_ context.Context) (done bool, err error) {
 			helmStatus = checkHelmStatus(config.agonesVersion)
 			if helmStatus == "deployed" {
 				return true, nil
@@ -426,11 +426,12 @@ func createGameServers(ctx context.Context, gsPath string, gsReady chan bool) {
 			_, err := runExecCommand(KubectlCmd, args...)
 			// Ignore failures for ~30s at at time to account for the brief (~20s) during which the
 			// controller service is unavailable during upgrade.
-			if err != nil && retry > retries {
-				log.Fatalf("Could not create Gameserver %s: %s. Too many successive errors.", gsPath, err)
-			} else if err != nil {
+			if err != nil {
+				if retry > retries {
+					log.Fatalf("Could not create Gameserver %s: %s. Too many successive errors.", gsPath, err)
+				}
 				log.Printf("Could not create Gameserver %s: %s. Retries left: %d.", gsPath, err, retries-retry)
-				retry += 1
+				retry++
 			} else {
 				retry = 0
 			}
@@ -454,7 +455,7 @@ func checkFirstGameServerReady(ctx context.Context, gsReady chan bool, args ...s
 
 	// Pod is created after Game Server, wait briefly before erroring out on unable to get pod.
 	retries := 0
-	err = wait.PollUntilContextTimeout(ctx, 2*time.Second, Timeout, true, func(ctx context.Context) (done bool, err error) {
+	err = wait.PollUntilContextTimeout(ctx, 2*time.Second, Timeout, true, func(_ context.Context) (done bool, err error) {
 		out, err := runExecCommand(KubectlCmd, getPodStatus...)
 		if err != nil && retries > 2 {
 			log.Fatalf("Could not get Gameserver %s state: %s", gsName, err)
@@ -471,6 +472,9 @@ func checkFirstGameServerReady(ctx context.Context, gsReady chan bool, args ...s
 		}
 		return false, nil
 	})
+	if err != nil {
+		log.Fatalf("PollUntilContextTimeout timed out while wait for first gameserver %s to be Ready", gsName)
+	}
 }
 
 // watchGameServers watches all game servers for errors. Errors if the number of failed game servers
@@ -543,7 +547,7 @@ func watchGameServerEvents(kubeClient *kubernetes.Clientset) {
 					gsPodName, newEvent.Message)
 			}
 			if newEvent.Reason == "BackOff" {
-				failedPods[gsPodName] += 1
+				failedPods[gsPodName]++
 				if backOffs, ok := failedPods[gsPodName]; ok {
 					if backOffs > acceptedFailures {
 						log.Fatalf("%s on %s %s has too many BackOffs. Latest event message: %s", containerName, newEvent.Kind,

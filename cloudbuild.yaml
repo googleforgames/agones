@@ -298,7 +298,7 @@ steps:
         trap 'echo Cleaning up any remaining running pids: $(jobs -p) ; kill $(jobs -p) 2> /dev/null || :' EXIT SIGTERM
 
         cloudProducts=("generic" "gke-autopilot")
-        declare -A versionsAndRegions=( [1.31]=us-east1 [1.30]=asia-east1 [1.29]=europe-west1 )
+        declare -A versionsAndRegions=( [1.31]=us-east1 [1.30]=us-central1 [1.29]=us-west1 )
 
         for cloudProduct in "${cloudProducts[@]}"
         do
