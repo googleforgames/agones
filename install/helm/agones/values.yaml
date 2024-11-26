@@ -280,7 +280,6 @@ agones:
       pullPolicy: IfNotPresent
     sdk:
       name: agones-sdk
-      tag: 1.46.0-dev
       agonesSdkImage: us-docker.pkg.dev/agones-images/release/agones-sdk:1.46.0-dev
       cpuRequest: 30m
       cpuLimit: 0
