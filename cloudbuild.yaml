@@ -327,25 +327,41 @@ steps:
             # Clean up any existing job / namespace / apiservice from previous run
             echo Checking if resources from a previous build of upgrade-test-runner exist and need to be cleaned up on cluster "${testCluster}".
             if kubectl get jobs | grep upgrade-test-runner ; then
-              echo Deleting previous build of upgrade-test-runner on cluster "${testCluster}".
+              echo Deleting job from previous run of upgrade-test-runner on cluster "${testCluster}".
               kubectl delete job upgrade-test-runner
               kubectl wait --for=delete pod -l job-name=upgrade-test-runner --timeout=5m
             fi
 
             # Check if there are any dangling game servers.
-            if kubectl get gs ; then
+            if kubectl get gs | grep ".*"; then
+              # Remove any finalizers so that dangling game servers can be manually deleted.
+              kubectl get gs -o=custom-columns=:.metadata.name --no-headers | xargs kubectl patch gs -p '{"metadata":{"finalizers":[]}}' --type=merge
+              sleep 5
+              echo Deleting game servers from previous run of upgrade-test-runner on cluster "${testCluster}".
               kubectl delete gs -l app=sdk-client-test
-              kubectl wait --for=delete pod -l app=sdk-client-test --timeout=5m
+            fi
+
+            if kubectl get po -l agones.dev/role=gameserver | grep ".*"; then
+              echo Deleting pods from previous run of upgrade-test-runner on cluster "${testCluster}".
+              kubectl delete po -l agones.dev/role=gameserver
+              kubectl wait --for=delete pod -l agones.dev/role=gameserver --timeout=5m
             fi
 
             # The v1.allocation.agones.dev apiservice does not get removed automatically and will prevent the namespace from terminating.
             if kubectl get apiservice | grep v1.allocation.agones.dev ; then
+                echo Deleting v1.allocation.agones.dev from previous run of upgrade-test-runner on cluster "${testCluster}".
                 kubectl delete apiservice v1.allocation.agones.dev
             fi
 
             if kubectl get namespace | grep agones-system ; then
+              echo Deleting agones-system namespace from previous run of upgrade-test-runner on cluster "${testCluster}".
               kubectl delete namespace agones-system
               kubectl wait --for=delete ns agones-system --timeout=5m
+            fi
+
+            if kubectl get crds | grep agones ; then
+              echo Deleting crds from previous run of upgrade-test-runner on cluster "${testCluster}".
+              kubectl get crds -o=custom-columns=:.metadata.name | grep agones | xargs kubectl delete crd
             fi
 
             echo kubectl apply -f permissions.yaml on cluster "${testCluster}"

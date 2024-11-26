@@ -62,7 +62,7 @@ const (
 	// AgonesRegistry is the public registry for Agones releases
 	AgonesRegistry = "us-docker.pkg.dev/agones-images/release"
 	// TestRegistry is the registry for Agones development builds
-	TestRegistry = "us-docker.pkg.dev/agones-images/ci/"
+	TestRegistry = "us-docker.pkg.dev/agones-images/ci"
 	// ContainerRegistry is the registry for upgrade test container files
 	ContainerRegistry = "us-docker.pkg.dev/agones-images/ci/sdk-client-test"
 )
