@@ -91,10 +91,11 @@ namespace Agones
         /// Async method that waits to connect to the SDK Server. Will timeout
         /// and return false after 30 seconds.
         /// </summary>
+        /// <param name="timeoutSeconds">The number of seconds to wait before timing out. Defaults to 30 seconds.</param>
         /// <returns>A task that indicated whether it was successful or not</returns>
-        public async Task<bool> Connect()
+        public async Task<bool> Connect(int timeoutSeconds = 30)
         {
-            for (var i = 0; i < 30; i++)
+            for (var i = 0; i < timeoutSeconds; i++)
             {
                 Log($"Attempting to connect...{i + 1}");
                 try
