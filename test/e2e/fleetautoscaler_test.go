@@ -944,6 +944,7 @@ func TestCounterAutoscaler(t *testing.T) {
 	}
 }
 
+// nolint:dupl  // Linter errors on lines are duplicate of TestListAutoscalerWithNoReplicas
 func TestCounterAutoscalerWithNoReplicas(t *testing.T) {
 	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
 		t.SkipNow()
@@ -968,7 +969,7 @@ func TestCounterAutoscalerWithNoReplicas(t *testing.T) {
 
 	fleetautoscalers := framework.AgonesClient.AutoscalingV1().FleetAutoscalers(framework.Namespace)
 
-	listFas := func(f func(fap *autoscalingv1.FleetAutoscalerPolicy)) *autoscalingv1.FleetAutoscaler {
+	counterFas := func(f func(fap *autoscalingv1.FleetAutoscalerPolicy)) *autoscalingv1.FleetAutoscaler {
 		fas := autoscalingv1.FleetAutoscaler{
 			ObjectMeta: metav1.ObjectMeta{Name: flt.ObjectMeta.Name + "-list-autoscaler", Namespace: framework.Namespace},
 			Spec: autoscalingv1.FleetAutoscalerSpec{
@@ -993,7 +994,7 @@ func TestCounterAutoscalerWithNoReplicas(t *testing.T) {
 		wantReplicas int32
 	}{
 		"Scale Up to MinCapacity": {
-			fas: listFas(func(fap *autoscalingv1.FleetAutoscalerPolicy) {
+			fas: counterFas(func(fap *autoscalingv1.FleetAutoscalerPolicy) {
 				fap.Counter = &autoscalingv1.CounterPolicy{
 					Key:         "games",
 					BufferSize:  intstr.FromInt(3),
@@ -1290,6 +1291,7 @@ func TestListAutoscaler(t *testing.T) {
 	}
 }
 
+// nolint:dupl  // Linter errors on lines are duplicate of TestCounterAutoscalerWithNoReplicas
 func TestListAutoscalerWithNoReplicas(t *testing.T) {
 	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
 		t.SkipNow()
