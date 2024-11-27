@@ -51,7 +51,7 @@ The following are steps to implement this:
 If you are upgrading a single cluster, we recommend creating a maintenance window, in which your game goes offline
 for the period of your upgrade, as there will be a short period in which Agones will be non-responsive during the upgrade.
 
-{{% feature publishVersion="1.99.0" %}}
+{{% feature publishVersion="1.46.0" %}}
 #### In-Place Agones Upgrades
 
 {{< alert color="warning" title="Warning" >}}
@@ -64,14 +64,24 @@ For In-Place Agones Upgrades we highly recommend installing using Helm. Helm has
 advantage over `install.yaml` in that Helm automatically rolls back the upgrade if the agones-system
 pods are not all successfully running within the designated `--timeout`.
 
+Regardless of the type of installation, there will be a brief ~20-30 second period during upgrade
+when the controller service switches to the new controller endpoint that service is unable to connect
+to the new controller. The SDK servers are still functional during this time, however the controller
+will not be able to receive requests such as creating new game servers. Be sure to include retry
+logic with back-off in your application logic to account for the error `Internal error occurred:
+failed calling webhook "mutations.agones.dev": failed to call webhook: Post
+"https://agones-controller-service.agones-system.svc:443/mutate?timeout=10s": no endpoints available
+for service "agones-controller-service""` during this time.
+
 Note: By “controller derived configuration” we mean the parts of the Game Server’s final state that
 are not part of the Game Server spec template that are instead passed to the Game Server through the
 controller, such as the FEATURE_GATES or the Agones SDK Image.
 
-1. Run `helm upgrade my-release agones/agones --install --atomic --wait --timeout 10m --namespace=agones-system` with all the appropriate arguments, such a `--version`, for your specific
-upgrade. Keep in mind that `helm upgrade` overwrites all `--set agones.` arguments, so these must be
-set for each upgrade. See [Helm Configuration]({{< relref "./Install Agones/helm.md" >}}) for a list
-of all available configurable parameters.
+1. Run `helm upgrade my-release agones/agones --install --atomic --wait --timeout 10m --namespace=agones-system`
+with all the appropriate arguments, such a `--version`, for your specific upgrade. Keep in mind that
+`helm upgrade` overwrites all `--set agones.` arguments, so these must be set for each upgrade. See
+[Helm Configuration]({{< relref "./Install Agones/helm.md" >}}) for a list of all available
+configurable parameters.
 2. Wait until the `helm upgrade` is complete.
 3. To Upgrade the Fleet, or Not to Upgrade
     1. *Option 1 -- Recommended* Kick off rolling update of the existing Fleet.
@@ -105,12 +115,7 @@ of all available configurable parameters.
         configuration.
         2. Any newly created Game Servers will be at the new configuration.
         3. This make it difficult to track when the entire fleet is at a new configuration, and
-        increases the liklihood of having multiple Game Server configurations on the same Fleet.
-        4. If your fleet has significant Game Server churn you may run into an issue such as
-        `Internal error occurred: failed calling webhook "mutations.agones.dev": failed to call
-        webhook: Post "https://agones-controller-service.agones-system.svc:443/mutate?timeout=10s":
-        no endpoints available for service "agones-controller-service""`. If you see this error,
-        then confirm that Agones has properly upgraded, and follow instructions for Option 1 above.
+        increases the likelihood of having multiple Game Server configurations on the same Fleet.
 4. Run any other tests to ensure the Agones installation is working as expected.
 5. Congratulations - you have now upgraded to a new version of Agones! 👍
 {{% /feature %}}
