@@ -12,7 +12,7 @@ import (
 
 const examplesDir = "examples"
 
-var excludedPatterns = [...]string{"*.md", "*.yaml", "OWNERS", ".gitignore"}
+var excludedPatterns = [...]string{"*.md", "*.yaml", "*.yml", "OWNERS", ".gitignore"}
 
 func dirIsExample(dirName string) bool {
 	makefileName := fmt.Sprintf("%s/Makefile", dirName)
@@ -80,8 +80,10 @@ func filenameIsIrrelevant(filename string, exampleNames []string) bool {
 		return true
 	}
 
+	_, splitname := filepath.Split(filename)
+
 	for _, excludedName := range excludedPatterns {
-		matches, err := filepath.Match(excludedName, filename)
+		matches, err := filepath.Match(excludedName, splitname)
 		if err != nil {
 			log.Fatalf("Unknown error: %s", err)
 		}
