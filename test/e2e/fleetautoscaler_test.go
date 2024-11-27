@@ -971,7 +971,7 @@ func TestCounterAutoscalerWithNoReplicas(t *testing.T) {
 
 	counterFas := func(f func(fap *autoscalingv1.FleetAutoscalerPolicy)) *autoscalingv1.FleetAutoscaler {
 		fas := autoscalingv1.FleetAutoscaler{
-			ObjectMeta: metav1.ObjectMeta{Name: flt.ObjectMeta.Name + "-list-autoscaler", Namespace: framework.Namespace},
+			ObjectMeta: metav1.ObjectMeta{Name: flt.ObjectMeta.Name + "-counter-autoscaler", Namespace: framework.Namespace},
 			Spec: autoscalingv1.FleetAutoscalerSpec{
 				FleetName: flt.ObjectMeta.Name,
 				Policy: autoscalingv1.FleetAutoscalerPolicy{
