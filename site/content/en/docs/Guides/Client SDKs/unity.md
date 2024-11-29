@@ -82,8 +82,8 @@ var agones = agonesGameObject.GetComponent<Agones.AgonesSdk>();
 ```
 
 To connect to the SDK server, either local or when running on Agones, run the async `Connect()` method.
-This will wait for up to 30 seconds if the SDK server has not yet started and the connection cannot be made,
-and will return `false` if there was an issue connecting.
+By default, this will wait for up to 30 seconds if the SDK server has not yet started and the connection cannot be made. You can specify an optional timeout duration argument to the method, e.g., Connect(60) for a 60-second timeout.
+The method will return false if there was an issue connecting.
 
 ```csharp
 bool ok = await agones.Connect();
