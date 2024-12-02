@@ -239,7 +239,9 @@ message CounterAction {
 // ListAction is an optional action that can be performed on a List at allocation.
 // AddValues: Append values to a List's Values array (optional). Any duplicate values will be ignored.
 // Capacity: Update the maximum capacity of the Counter to this number (optional). Min 0, Max 1000.
+// DeleteValues: Remove values from a List's Values array (optional). Any nonexistant values will be ignored.
 message ListAction {
 	repeated string addValues = 1;
 	google.protobuf.Int64Value capacity = 2;
+  repeated string deleteValues = 3;
 }
