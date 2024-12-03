@@ -51,7 +51,7 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 - [ ] Run `make post-build-release` to build the artifacts in GCS(These files will be attached in the release notes) and to push the latest images in the release repository and push chart on agones-chart.
 - [ ] Run `make shell` and run `gcloud config configurations activate <your development project>` to switch Agones
       development tooling off of the `agones-images` project.
-- [ ] Smoke Test: run `make install-release` to view helm releases, uninstall agones-system namesapce, fetch the latest version of Agones, verify the new version, installing agones-system namespace, and list all the pods of agones-system.
+- [ ] Smoke Test: run `make install-release` to view helm releases, uninstall agones-system namespace, fetch the latest version of Agones, verify the new version, installing agones-system namespace, and list all the pods of agones-system.
 - [ ] Attach all assets found in the cloud storage with {version} to the draft GitHub Release.
 - [ ] Copy any review changes from the release blog post into the draft GitHub release.
 - [ ] Publish the draft GitHub Release.
