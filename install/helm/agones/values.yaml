@@ -281,6 +281,7 @@ agones:
       pullPolicy: IfNotPresent
     sdk:
       name: agones-sdk
+      agonesSdkImage: us-docker.pkg.dev/agones-images/release/agones-sdk:1.46.0-dev
       cpuRequest: 30m
       cpuLimit: 0
       memoryRequest: 0
