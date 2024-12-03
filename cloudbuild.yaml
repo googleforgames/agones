@@ -313,10 +313,6 @@ steps:
             fi
             testClusterLocation="${region}"
 
-            if [ "$1" = 'local' ]
-            then
-              gcloud auth login
-            fi
             gcloud container clusters get-credentials "$testCluster" --region="$testClusterLocation" --project="$PROJECT_ID"
 
             if [ "$cloudProduct" = gke-autopilot ] ; then
