@@ -51,6 +51,7 @@ data:
         metadata:
           labels:
             agonesVersion: {{ .AgonesVersion }}
+            app: sdk-client-test
         spec:
           containers:
             - name: sdk-client-test

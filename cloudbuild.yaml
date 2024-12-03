@@ -341,10 +341,10 @@ steps:
               kubectl delete gs -l app=sdk-client-test
             fi
 
-            if kubectl get po -l agones.dev/role=gameserver | grep ".*"; then
+            if kubectl get po -l app=sdk-client-test | grep ".*"; then
               echo Deleting pods from previous run of upgrade-test-runner on cluster "${testCluster}".
-              kubectl delete po -l agones.dev/role=gameserver
-              kubectl wait --for=delete pod -l agones.dev/role=gameserver --timeout=5m
+              kubectl delete po -l app=sdk-client-test
+              kubectl wait --for=delete pod -l app=sdk-client-test --timeout=5m
             fi
 
             # The v1.allocation.agones.dev apiservice does not get removed automatically and will prevent the namespace from terminating.

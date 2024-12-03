@@ -37,6 +37,8 @@ spec:
     metadata:
       labels:
         app: evictable-pods
+        # Label for use with packed game server pod affinity rules
+        agones.dev/role: gameserver
     spec:
       priorityClassName: low-priority
       terminationGracePeriodSeconds: 0
@@ -53,3 +55,13 @@ spec:
             limits:
               memory: 52Mi
               cpu: 30m
+      # Use same affinity as packed game server pods
+      affinity:
+        podAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    agones.dev/role: gameserver
+                topologyKey: kubernetes.io/hostname
+              weight: 100
