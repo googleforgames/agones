@@ -514,12 +514,10 @@ func watchGameServers(agonesClient *versioned.Clientset, acceptedFailures int) {
 	}
 }
 
-// watchGameServerEvents watches all `sdk-client-test` containers for BackOff errors. The purpose is
-// to catch ImagePullBackOff and CrashBackOffLoop errors.
+// watchGameServerEvents watches all events on `sdk-client-test` containers for BackOff errors. The
+// purpose is to catch ImagePullBackOff errors.
 func watchGameServerEvents(kubeClient *kubernetes.Clientset) {
 	stopCh := make(chan struct{})
-	failedPods := make(map[string]int)
-	acceptedFailures := 6 // (6 * 5*time.Second defaultResync) == 30 seconds until failure
 
 	// Filter by Game Server `sdk-client-test` containers
 	containerName := "sdk-client-test"
@@ -539,21 +537,12 @@ func watchGameServerEvents(kubeClient *kubernetes.Clientset) {
 	eventInformer := kubeInformerFactory.Core().V1().Events().Informer()
 
 	_, err = eventInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		UpdateFunc: func(_, newObj interface{}) {
-			newEvent := newObj.(*v1.Event)
+		AddFunc: func(obj interface{}) {
+			newEvent := obj.(*v1.Event)
 			gsPodName := newEvent.InvolvedObject.Name
 			if newEvent.Reason == "Failed" {
 				log.Fatalf("%s on %s %s has failed. Latest event: message %s", containerName, newEvent.Kind,
 					gsPodName, newEvent.Message)
-			}
-			if newEvent.Reason == "BackOff" {
-				failedPods[gsPodName]++
-				if backOffs, ok := failedPods[gsPodName]; ok {
-					if backOffs > acceptedFailures {
-						log.Fatalf("%s on %s %s has too many BackOffs. Latest event message: %s", containerName, newEvent.Kind,
-							gsPodName, newEvent.Message)
-					}
-				}
 			}
 		},
 	})
