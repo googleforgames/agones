@@ -31,6 +31,7 @@ const (
 	fleetAutoscalersLimitedName             = "fleet_autoscalers_limited"
 	fleetCountersName                       = "fleet_counters"
 	fleetListsName                          = "fleet_lists"
+	gameServersCountersName                 = "gameservers_counters"
 	gameServersCountName                    = "gameservers_count"
 	gameServersTotalName                    = "gameservers_total"
 	gameServersPlayerConnectedTotalName     = "gameserver_player_connected_total"
@@ -45,7 +46,7 @@ var (
 	fleetAutoscalerViews = []string{fleetAutoscalerBufferLimitName, fleetAutoscalterBufferSizeName, fleetAutoscalerCurrentReplicaCountName,
 		fleetAutoscalersDesiredReplicaCountName, fleetAutoscalersAbleToScaleName, fleetAutoscalersLimitedName}
 	// fleetViews are metric views associated with Fleets
-	fleetViews = append([]string{fleetRolloutPercent, fleetReplicaCountName, gameServersCountName, gameServersTotalName, gameServersPlayerConnectedTotalName, gameServersPlayerCapacityTotalName, gameServerStateDurationName, fleetCountersName, fleetListsName}, fleetAutoscalerViews...)
+	fleetViews = append([]string{fleetRolloutPercent, fleetReplicaCountName, gameServersCountersName, gameServersCountName, gameServersTotalName, gameServersPlayerConnectedTotalName, gameServersPlayerCapacityTotalName, gameServerStateDurationName, fleetCountersName, fleetListsName}, fleetAutoscalerViews...)
 
 	stateDurationSeconds           = []float64{0, 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384}
 	fleetRolloutPercentStats       = stats.Int64("fleets/rollout_percent", "The current fleet rollout percentage", "1")
@@ -58,6 +59,7 @@ var (
 	fasLimitedStats                = stats.Int64("fas/limited", "The fleet autoscaler is capped (0 indicates false, 1 indicates true)", "1")
 	fleetCountersStats             = stats.Int64("fleets/counters", "Aggregated Counters counts and capacity across GameServers in the Fleet", "1")
 	fleetListsStats                = stats.Int64("fleets/lists", "Aggregated Lists counts and capacity across GameServers in the Fleet", "1")
+	gameServersCountersStats       = stats.Int64("gameservers/counters", "Counters connected to gameservers", "1")
 	gameServerCountStats           = stats.Int64("gameservers/count", "The count of gameservers", "1")
 	gameServerTotalStats           = stats.Int64("gameservers/total", "The total of gameservers", "1")
 	gameServerPlayerConnectedTotal = stats.Int64("gameservers/player_connected", "The total number of players connected to gameservers", "1")
@@ -136,6 +138,13 @@ var (
 			Description: "Aggregated Lists counts and capacity across GameServers in the Fleet",
 			Aggregation: view.LastValue(),
 			TagKeys:     []tag.Key{keyName, keyNamespace, keyType, keyList},
+		},
+		{
+			Name:        gameServersCountersName,
+			Measure:     gameServersCountersStats,
+			Description: "The current count of counters in gameservers",
+			Aggregation: view.LastValue(),
+			TagKeys:     []tag.Key{keyFleetName, keyName, keyNamespace},
 		},
 		{
 			Name:        gameServersCountName,

@@ -26,6 +26,7 @@ import (
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
 func main() {
@@ -55,6 +56,36 @@ func main() {
 
 	request := &pb.AllocationRequest{
 		Namespace: *namespace,
+		GameServerSelectors: []*pb.GameServerSelector{
+			{
+				GameServerState: pb.GameServerSelector_ALLOCATED,
+				MatchLabels: map[string]string{
+					"version": "1.2.3",
+				},
+				Counters: map[string]*pb.CounterSelector{
+					"players": {
+						MinAvailable: 1,
+					},
+				},
+			},
+			{
+				GameServerState: pb.GameServerSelector_READY,
+				MatchLabels: map[string]string{
+					"version": "1.2.3",
+				},
+				Counters: map[string]*pb.CounterSelector{
+					"players": {
+						MinAvailable: 1,
+					},
+				},
+			},
+		},
+		Counters: map[string]*pb.CounterAction{
+			"players": {
+				Action: wrapperspb.String("Increment"),
+				Amount: wrapperspb.Int64(1),
+			},
+		},
 		MultiClusterSetting: &pb.MultiClusterSetting{
 			Enabled: *multicluster,
 		},

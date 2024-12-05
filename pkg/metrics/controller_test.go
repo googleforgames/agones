@@ -158,6 +158,58 @@ func TestControllerGameServerCount(t *testing.T) {
 	})
 }
 
+func TestControllerGameServerCountersCount(t *testing.T) {
+	runtime.FeatureTestMutex.Lock()
+	defer runtime.FeatureTestMutex.Unlock()
+	runtime.EnableAllFeatures()
+	resetMetrics()
+	exporter := &metricExporter{}
+	reader := metricexport.NewReader()
+
+	c := newFakeController()
+	defer c.close()
+
+	gs1 := gameServerWithFleetAndState("test-fleet", agonesv1.GameServerStateReady)
+	gs1.Status.Counters["players"] = agonesv1.CounterStatus{Count: 0, Capacity: 10}
+	c.gsWatch.Add(gs1)
+	gs1 = gs1.DeepCopy()
+	playerCounter := gs1.Status.Counters["players"]
+	playerCounter.Count++
+	gs1.Status.Counters["players"] = playerCounter
+	c.gsWatch.Modify(gs1)
+
+	c.run(t)
+	require.True(t, c.sync())
+	require.Eventually(t, func() bool {
+		gs, err := c.gameServerLister.GameServers(gs1.ObjectMeta.Namespace).Get(gs1.ObjectMeta.Name)
+		assert.NoError(t, err)
+		pc := gs.Status.Counters["players"]
+		return pc.Count == 1
+	}, 5*time.Second, time.Second)
+	c.collect()
+
+	gs1 = gs1.DeepCopy()
+	playerCounter = gs1.Status.Counters["players"]
+	playerCounter.Count += 4
+	gs1.Status.Counters["players"] = playerCounter
+	c.gsWatch.Modify(gs1)
+
+	c.run(t)
+	require.True(t, c.sync())
+	require.Eventually(t, func() bool {
+		gs, err := c.gameServerLister.GameServers(gs1.ObjectMeta.Namespace).Get(gs1.ObjectMeta.Name)
+		assert.NoError(t, err)
+		pc := gs.Status.Counters["players"]
+		return pc.Count == 5
+	}, 5*time.Second, time.Second)
+	c.collect()
+
+	reader.ReadAndExport(exporter)
+	assertMetricData(t, exporter, gameServersCountersName, []expectedMetricData{
+		{labels: []string{"test-fleet", gs1.GetName(), defaultNs}, val: int64(5)},
+	})
+}
+
 func TestControllerGameServerPlayerConnectedCount(t *testing.T) {
 	runtime.FeatureTestMutex.Lock()
 	defer runtime.FeatureTestMutex.Unlock()
