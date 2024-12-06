@@ -62,7 +62,7 @@ const (
 
 var (
 	// MetricResyncPeriod is the interval to re-synchronize metrics based on indexed cache.
-	MetricResyncPeriod = time.Second * 15
+	MetricResyncPeriod = time.Second * 1
 )
 
 func init() {
@@ -449,7 +449,15 @@ func (c *Controller) recordGameServerStatusChanges(old, next interface{}) {
 			RecordWithTags(context.Background(), []tag.Mutator{tag.Upsert(keyFleetName, fleetName),
 				tag.Upsert(keyName, newGs.GetName()), tag.Upsert(keyNamespace, newGs.GetNamespace())}, gameServerPlayerCapacityTotal.M(newGs.Status.Players.Capacity-newGs.Status.Players.Count))
 		}
+	}
 
+	if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) && len(newGs.Status.Counters) != 0 {
+		if counterStatus, ok := newGs.Status.Counters["players"]; ok {
+			if counterStatus.Count != oldGs.Status.Counters["players"].Count {
+				RecordWithTags(context.Background(), []tag.Mutator{tag.Upsert(keyFleetName, fleetName),
+					tag.Upsert(keyName, newGs.GetName()), tag.Upsert(keyNamespace, newGs.GetNamespace())}, gameServersCountersStats.M(counterStatus.Count))
+			}
+		}
 	}
 
 	if newGs.Status.State != oldGs.Status.State {
