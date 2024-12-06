@@ -13,7 +13,7 @@ namespace AllocatorClient
         static async Task Main(string[] args)
         {
             if (args.Length < 6) {
-                throw new Exception("Arguments are missing. Expecting: <private key> <public key> <server CA> <external IP> <namepace> <enable multi-cluster>");
+                throw new Exception("Arguments are missing. Expecting: <private key> <public key> <server CA> <external IP> <namespace> <enable multi-cluster>");
             }
 
             string clientKey    = File.ReadAllText(args[0]);

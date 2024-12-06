@@ -24,18 +24,18 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   namespace: default
-  name: pod-reader
+  name: pod-manager
 rules:
   - apiGroups: [""]  # "" indicates the core API group
-    resources: ["pods"]
-    verbs: ["get", "watch", "list"]
+    resources: ["pods", "events"]
+    verbs: ["get", "delete", "list", "watch"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 # This role binding allows default service account to read all pods in the "default" namespace.
 # You need to already have a Role named "pod-reader" in that namespace.
 kind: RoleBinding
 metadata:
-  name: read-pods
+  name: manage-pods
   namespace: default
 subjects:
   - kind: ServiceAccount
@@ -44,7 +44,7 @@ subjects:
 roleRef:
   # "roleRef" specifies the binding to a Role / ClusterRole
   kind: Role  # this must be Role or ClusterRole
-  name: pod-reader  # this must match the name of the Role or ClusterRole you wish to bind to
+  name: pod-manager  # this must match the name of the Role or ClusterRole you wish to bind to
   apiGroup: rbac.authorization.k8s.io
 ---
 kind: ClusterRole
@@ -202,23 +202,23 @@ roleRef:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: apiservices-creator
+  name: apiservices-manager
 rules:
   - apiGroups: ["apiregistration.k8s.io"]
     resources: ["apiservices"]
-    verbs: ["get", "watch", "list", "create", "patch"]
+    verbs: ["create", "delete", "get", "list", "patch", "watch"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: create-apiservices
+  name: manage-apiservices
 subjects:
   - kind: ServiceAccount
     name: agones-sa
     namespace: default
 roleRef:
   kind: ClusterRole
-  name: apiservices-creator
+  name: apiservices-manager
   apiGroup: rbac.authorization.k8s.io
 ---
 # Agones needs to be able to create Agones CustomResourceDefinitions
@@ -249,23 +249,23 @@ roleRef:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: clusterrole-creator
+  name: clusterrole-manager
 rules:
   - apiGroups: ["rbac.authorization.k8s.io"]
     resources: ["clusterroles", "clusterrolebindings", "rolebindings"]
-    verbs: ["get", "watch", "list", "create", "patch"]
+    verbs: ["create", "delete", "get", "list", "patch", "watch"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: create-clusterroles
+  name: manager-clusterroles
 subjects:
   - kind: ServiceAccount
     name: agones-sa
     namespace: default
 roleRef:
   kind: ClusterRole
-  name: clusterrole-creator
+  name: clusterrole-manager
   apiGroup: rbac.authorization.k8s.io
 ---
 # Agones needs to be able to create deployments
@@ -498,3 +498,41 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
   name: sdk
+---
+# Source: agones/templates/hooks/sa.yaml
+# Permissions to grant to helm on helm uninstall
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  namespace: agones-system
+  name: helm-cleanup
+  labels:
+    app: agones
+rules:
+  - apiGroups: ["agones.dev", "multicluster.agones.dev", "autoscaling.agones.dev"]
+    resources: ["fleets", "fleetautoscalers", "gameservers", "gameserversets", "gameserverallocationpolicies"]
+    verbs: ["delete", "get", "list"]
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list"]
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["create", "delete", "get", "list"]
+  - apiGroups: ["batch"]
+    resources: ["jobs"]
+    verbs: ["create", "delete", "get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: helm-cleanup-access
+  labels:
+    app: agones
+subjects:
+  - kind: ServiceAccount
+    name: agones-sa
+    namespace: default
+roleRef:
+  kind: ClusterRole
+  name: helm-cleanup
+  apiGroup: rbac.authorization.k8s.io
