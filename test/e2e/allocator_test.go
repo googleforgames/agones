@@ -352,7 +352,8 @@ func TestAllocatorWithCountersAndLists(t *testing.T) {
 		},
 		Lists: map[string]*pb.ListAction{
 			"rooms": {
-				AddValues: []string{"1"},
+				AddValues:    []string{"1"},
+				DeleteValues: []string{"2"}, // This action is ignored. (Value does not exist.)
 			},
 		},
 	}
@@ -379,6 +380,7 @@ func TestAllocatorWithCountersAndLists(t *testing.T) {
 		assert.Contains(t, response.GetLists(), "rooms")
 		assert.Equal(t, int64(10), response.GetLists()["rooms"].Capacity.GetValue())
 		assert.EqualValues(t, request.Lists["rooms"].AddValues, response.GetLists()["rooms"].Values)
+		assert.NotEqualValues(t, request.Lists["rooms"].DeleteValues, response.GetLists()["rooms"].Values)
 		return true, nil
 	})
 	require.NoError(t, err)
@@ -405,6 +407,7 @@ func TestRestAllocatorWithCountersAndLists(t *testing.T) {
 		}
 		f.Spec.Template.Spec.Lists = map[string]agonesv1.ListStatus{
 			"rooms": {
+				Values:   []string{"one", "two", "three"},
 				Capacity: 10,
 			},
 		}
@@ -434,7 +437,8 @@ func TestRestAllocatorWithCountersAndLists(t *testing.T) {
 		},
 		Lists: map[string]*pb.ListAction{
 			"rooms": {
-				AddValues: []string{"1"},
+				AddValues:    []string{"1"},
+				DeleteValues: []string{"three", "one"},
 			},
 		},
 	}
@@ -478,7 +482,9 @@ func TestRestAllocatorWithCountersAndLists(t *testing.T) {
 		assert.Equal(t, int64(1), response.GetCounters()["players"].Count.GetValue())
 		assert.Contains(t, response.GetLists(), "rooms")
 		assert.Equal(t, int64(10), response.GetLists()["rooms"].Capacity.GetValue())
-		assert.EqualValues(t, request.Lists["rooms"].AddValues, response.GetLists()["rooms"].Values)
+		assert.Contains(t, response.GetLists()["rooms"].Values, request.Lists["rooms"].AddValues[0])
+		assert.NotContains(t, response.GetLists()["rooms"].Values, request.Lists["rooms"].DeleteValues[0])
+		assert.NotContains(t, response.GetLists()["rooms"].Values, request.Lists["rooms"].DeleteValues[1])
 		return true, nil
 	})
 	require.NoError(t, err)
