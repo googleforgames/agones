@@ -209,6 +209,9 @@ type ListAction struct {
 	// AddValues appends values to a List's Values array. Any duplicate values will be ignored.
 	// +optional
 	AddValues []string `json:"addValues,omitempty"`
+	// DeleteValues removes values from a List's Values array. Any nonexistant values will be ignored.
+	// +optional
+	DeleteValues []string `json:"deleteValues,omitempty"`
 	// Capacity updates the maximum capacity of the Counter to this number. Min 0, Max 1000.
 	// +optional
 	Capacity *int64 `json:"capacity,omitempty"`
@@ -345,6 +348,12 @@ func (la *ListAction) ListActions(list string, gs *agonesv1.GameServer) error {
 	}
 	if len(la.AddValues) > 0 {
 		cntErr := gs.AppendListValues(list, la.AddValues)
+		if cntErr != nil {
+			errs = errors.Join(errs, cntErr)
+		}
+	}
+	if len(la.DeleteValues) > 0 {
+		cntErr := gs.DeleteListValues(list, la.DeleteValues)
 		if cntErr != nil {
 			errs = errors.Join(errs, cntErr)
 		}

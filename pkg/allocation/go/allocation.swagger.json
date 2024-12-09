@@ -351,9 +351,15 @@
         "capacity": {
           "type": "string",
           "format": "int64"
+        },
+        "deleteValues": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       },
-      "description": "ListAction is an optional action that can be performed on a List at allocation.\nAddValues: Append values to a List's Values array (optional). Any duplicate values will be ignored.\nCapacity: Update the maximum capacity of the Counter to this number (optional). Min 0, Max 1000."
+      "description": "ListAction is an optional action that can be performed on a List at allocation.\nAddValues: Append values to a List's Values array (optional). Any duplicate values will be ignored.\nCapacity: Update the maximum capacity of the Counter to this number (optional). Min 0, Max 1000.\nDeleteValues: Remove values from a List's Values array (optional). Any nonexistant values will be ignored."
     },
     "allocationListSelector": {
       "type": "object",

@@ -1019,20 +1019,21 @@ func TestGameServerListActions(t *testing.T) {
 		},
 		"update list values and capacity": {
 			la: ListAction{
-				AddValues: []string{"magician1", "magician3"},
-				Capacity:  int64Pointer(42),
+				AddValues:    []string{"magician1", "magician3"},
+				Capacity:     int64Pointer(42),
+				DeleteValues: []string{"magician2", "magician5", "magician6"},
 			},
 			list: "magicians",
 			gs: &agonesv1.GameServer{Status: agonesv1.GameServerStatus{
 				Lists: map[string]agonesv1.ListStatus{
 					"magicians": {
-						Values:   []string{"magician1", "magician2"},
+						Values:   []string{"magician1", "magician2", "magician4", "magician5"},
 						Capacity: 100,
 					}}}},
 			want: &agonesv1.GameServer{Status: agonesv1.GameServerStatus{
 				Lists: map[string]agonesv1.ListStatus{
 					"magicians": {
-						Values:   []string{"magician1", "magician2", "magician3"},
+						Values:   []string{"magician1", "magician4", "magician3"},
 						Capacity: 42,
 					}}}},
 			wantErr: false,
@@ -1263,7 +1264,8 @@ func TestValidateListActions(t *testing.T) {
 					Capacity: int64Pointer(0),
 				},
 				"baz": {
-					AddValues: []string{},
+					AddValues:    []string{},
+					DeleteValues: []string{"good", "bye"},
 				},
 			},
 			wantErr: false,
