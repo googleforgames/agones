@@ -224,7 +224,7 @@ type Message struct {
 func handleGenAIRequest(prompt string, clientConn *connection, chatHistory []Message) (string, error) {
 	var jsonStr []byte
 	var err error
-	// If the endpoint is the NPC API, use the json request format specifc to that API
+	// If the endpoint is the NPC API, use the json request format specific to that API
 	if clientConn.npc {
 		npcRequest := NPCRequest{
 			Msg:    prompt,
@@ -329,7 +329,7 @@ func autonomousChat(prompt string, conn1 *connection, conn2 *connection, numChat
 	autonomousChat(response, conn2, conn1, numChats, stopPhase, chatHistory)
 }
 
-// Manually interact via TCP with the GenAI endpont
+// Manually interact via TCP with the GenAI endpoint
 func tcpListener(port string, genAiConn *connection) {
 	log.Printf("Starting TCP server, listening on port %s", port)
 	ln, err := net.Listen("tcp", ":"+port)

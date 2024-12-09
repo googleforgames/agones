@@ -1622,9 +1622,8 @@ func TestScheduleAutoscaler(t *testing.T) {
 	stable := framework.AgonesClient.AgonesV1()
 	fleets := stable.Fleets(framework.Namespace)
 	flt, err := fleets.Create(ctx, defaultFleet(framework.Namespace), metav1.CreateOptions{})
-	if assert.NoError(t, err) {
-		defer fleets.Delete(context.Background(), flt.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
-	}
+	require.NoError(t, err)
+	defer fleets.Delete(context.Background(), flt.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
 
 	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 
@@ -1634,7 +1633,7 @@ func TestScheduleAutoscaler(t *testing.T) {
 	scheduleAutoscaler := defaultAutoscalerSchedule(t, flt)
 	scheduleAutoscaler.Spec.Policy.Schedule.ActivePeriod.StartCron = nextCronMinute(time.Now())
 	fas, err := fleetautoscalers.Create(ctx, scheduleAutoscaler, metav1.CreateOptions{})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(5))
 	fleetautoscalers.Delete(ctx, fas.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
@@ -1647,7 +1646,7 @@ func TestScheduleAutoscaler(t *testing.T) {
 	scheduleAutoscaler = defaultAutoscalerSchedule(t, flt)
 	scheduleAutoscaler.Spec.Policy.Schedule.ActivePeriod.StartCron = nextCronMinuteBetween(time.Now())
 	fas, err = fleetautoscalers.Create(ctx, scheduleAutoscaler, metav1.CreateOptions{})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(5))
 	fleetautoscalers.Delete(ctx, fas.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
@@ -1843,8 +1842,13 @@ func nextCronMinute(currentTime time.Time) string {
 // nextCronMinuteBetween returns the minute between the very next minute
 // e.g. if the current time is 12:00, this method will return "1-2 * * * *"
 // meaning between 12:01 - 12:02
+// if the current minute if "59" since 59-0 is invalid, we'll return "0-1 * * * *" and wait for a bit longer on e2e tests.
 func nextCronMinuteBetween(currentTime time.Time) string {
 	nextMinute := currentTime.Add(time.Minute).Minute()
+	if nextMinute == 59 {
+		return "0-1 * * * *"
+	}
+
 	secondMinute := currentTime.Add(2 * time.Minute).Minute()
 	return fmt.Sprintf("%d-%d * * * *", nextMinute, secondMinute)
 }
