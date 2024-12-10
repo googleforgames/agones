@@ -64,6 +64,27 @@ struct KeyValueDefaultTypeInternal {
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT AGONES_EXPORT
     PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 KeyValueDefaultTypeInternal _KeyValue_default_instance_;
 
+inline constexpr Key::Impl_::Impl_(
+    ::_pbi::ConstantInitialized) noexcept
+      : key_(
+            &::google::protobuf::internal::fixed_address_empty_string,
+            ::_pbi::ConstantInitialized()),
+        _cached_size_{0} {}
+
+template <typename>
+PROTOBUF_CONSTEXPR Key::Key(::_pbi::ConstantInitialized)
+    : _impl_(::_pbi::ConstantInitialized()) {}
+struct KeyDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR KeyDefaultTypeInternal() : _instance(::_pbi::ConstantInitialized{}) {}
+  ~KeyDefaultTypeInternal() {}
+  union {
+    Key _instance;
+  };
+};
+
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT AGONES_EXPORT
+    PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 KeyDefaultTypeInternal _Key_default_instance_;
+
 inline constexpr GameServer_Status_Port::Impl_::Impl_(
     ::_pbi::ConstantInitialized) noexcept
       : name_(
@@ -247,6 +268,25 @@ struct DurationDefaultTypeInternal {
 
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT AGONES_EXPORT
     PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 DurationDefaultTypeInternal _Duration_default_instance_;
+
+inline constexpr KeyValues::Impl_::Impl_(
+    ::_pbi::ConstantInitialized) noexcept
+      : key_values_{},
+        _cached_size_{0} {}
+
+template <typename>
+PROTOBUF_CONSTEXPR KeyValues::KeyValues(::_pbi::ConstantInitialized)
+    : _impl_(::_pbi::ConstantInitialized()) {}
+struct KeyValuesDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR KeyValuesDefaultTypeInternal() : _instance(::_pbi::ConstantInitialized{}) {}
+  ~KeyValuesDefaultTypeInternal() {}
+  union {
+    KeyValues _instance;
+  };
+};
+
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT AGONES_EXPORT
+    PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 KeyValuesDefaultTypeInternal _KeyValues_default_instance_;
       template <typename>
 PROTOBUF_CONSTEXPR GameServer_Status_ListsEntry_DoNotUse::GameServer_Status_ListsEntry_DoNotUse(::_pbi::ConstantInitialized) {}
 struct GameServer_Status_ListsEntry_DoNotUseDefaultTypeInternal {
@@ -378,7 +418,7 @@ PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT AGONES_EXPORT
 }  // namespace sdk
 }  // namespace dev
 }  // namespace agones
-static ::_pb::Metadata file_level_metadata_sdk_2eproto[17];
+static ::_pb::Metadata file_level_metadata_sdk_2eproto[19];
 static constexpr const ::_pb::EnumDescriptor**
     file_level_enum_descriptors_sdk_2eproto = nullptr;
 static constexpr const ::_pb::ServiceDescriptor**
@@ -404,6 +444,24 @@ const ::uint32_t
         ~0u,  // no sizeof(Split)
         PROTOBUF_FIELD_OFFSET(::agones::dev::sdk::KeyValue, _impl_.key_),
         PROTOBUF_FIELD_OFFSET(::agones::dev::sdk::KeyValue, _impl_.value_),
+        ~0u,  // no _has_bits_
+        PROTOBUF_FIELD_OFFSET(::agones::dev::sdk::KeyValues, _internal_metadata_),
+        ~0u,  // no _extensions_
+        ~0u,  // no _oneof_case_
+        ~0u,  // no _weak_field_map_
+        ~0u,  // no _inlined_string_donated_
+        ~0u,  // no _split_
+        ~0u,  // no sizeof(Split)
+        PROTOBUF_FIELD_OFFSET(::agones::dev::sdk::KeyValues, _impl_.key_values_),
+        ~0u,  // no _has_bits_
+        PROTOBUF_FIELD_OFFSET(::agones::dev::sdk::Key, _internal_metadata_),
+        ~0u,  // no _extensions_
+        ~0u,  // no _oneof_case_
+        ~0u,  // no _weak_field_map_
+        ~0u,  // no _inlined_string_donated_
+        ~0u,  // no _split_
+        ~0u,  // no sizeof(Split)
+        PROTOBUF_FIELD_OFFSET(::agones::dev::sdk::Key, _impl_.key_),
         ~0u,  // no _has_bits_
         PROTOBUF_FIELD_OFFSET(::agones::dev::sdk::Duration, _internal_metadata_),
         ~0u,  // no _extensions_
@@ -593,25 +651,29 @@ static const ::_pbi::MigrationSchema
     schemas[] ABSL_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
         {0, -1, -1, sizeof(::agones::dev::sdk::Empty)},
         {8, -1, -1, sizeof(::agones::dev::sdk::KeyValue)},
-        {18, -1, -1, sizeof(::agones::dev::sdk::Duration)},
-        {27, 37, -1, sizeof(::agones::dev::sdk::GameServer_ObjectMeta_AnnotationsEntry_DoNotUse)},
-        {39, 49, -1, sizeof(::agones::dev::sdk::GameServer_ObjectMeta_LabelsEntry_DoNotUse)},
-        {51, -1, -1, sizeof(::agones::dev::sdk::GameServer_ObjectMeta)},
-        {68, -1, -1, sizeof(::agones::dev::sdk::GameServer_Spec_Health)},
-        {80, 89, -1, sizeof(::agones::dev::sdk::GameServer_Spec)},
-        {90, -1, -1, sizeof(::agones::dev::sdk::GameServer_Status_Address)},
-        {100, -1, -1, sizeof(::agones::dev::sdk::GameServer_Status_Port)},
-        {110, -1, -1, sizeof(::agones::dev::sdk::GameServer_Status_PlayerStatus)},
-        {121, -1, -1, sizeof(::agones::dev::sdk::GameServer_Status_CounterStatus)},
-        {131, -1, -1, sizeof(::agones::dev::sdk::GameServer_Status_ListStatus)},
-        {141, 151, -1, sizeof(::agones::dev::sdk::GameServer_Status_CountersEntry_DoNotUse)},
-        {153, 163, -1, sizeof(::agones::dev::sdk::GameServer_Status_ListsEntry_DoNotUse)},
-        {165, 180, -1, sizeof(::agones::dev::sdk::GameServer_Status)},
-        {187, 198, -1, sizeof(::agones::dev::sdk::GameServer)},
+        {18, -1, -1, sizeof(::agones::dev::sdk::KeyValues)},
+        {27, -1, -1, sizeof(::agones::dev::sdk::Key)},
+        {36, -1, -1, sizeof(::agones::dev::sdk::Duration)},
+        {45, 55, -1, sizeof(::agones::dev::sdk::GameServer_ObjectMeta_AnnotationsEntry_DoNotUse)},
+        {57, 67, -1, sizeof(::agones::dev::sdk::GameServer_ObjectMeta_LabelsEntry_DoNotUse)},
+        {69, -1, -1, sizeof(::agones::dev::sdk::GameServer_ObjectMeta)},
+        {86, -1, -1, sizeof(::agones::dev::sdk::GameServer_Spec_Health)},
+        {98, 107, -1, sizeof(::agones::dev::sdk::GameServer_Spec)},
+        {108, -1, -1, sizeof(::agones::dev::sdk::GameServer_Status_Address)},
+        {118, -1, -1, sizeof(::agones::dev::sdk::GameServer_Status_Port)},
+        {128, -1, -1, sizeof(::agones::dev::sdk::GameServer_Status_PlayerStatus)},
+        {139, -1, -1, sizeof(::agones::dev::sdk::GameServer_Status_CounterStatus)},
+        {149, -1, -1, sizeof(::agones::dev::sdk::GameServer_Status_ListStatus)},
+        {159, 169, -1, sizeof(::agones::dev::sdk::GameServer_Status_CountersEntry_DoNotUse)},
+        {171, 181, -1, sizeof(::agones::dev::sdk::GameServer_Status_ListsEntry_DoNotUse)},
+        {183, 198, -1, sizeof(::agones::dev::sdk::GameServer_Status)},
+        {205, 216, -1, sizeof(::agones::dev::sdk::GameServer)},
 };
 static const ::_pb::Message* const file_default_instances[] = {
     &::agones::dev::sdk::_Empty_default_instance_._instance,
     &::agones::dev::sdk::_KeyValue_default_instance_._instance,
+    &::agones::dev::sdk::_KeyValues_default_instance_._instance,
+    &::agones::dev::sdk::_Key_default_instance_._instance,
     &::agones::dev::sdk::_Duration_default_instance_._instance,
     &::agones::dev::sdk::_GameServer_ObjectMeta_AnnotationsEntry_DoNotUse_default_instance_._instance,
     &::agones::dev::sdk::_GameServer_ObjectMeta_LabelsEntry_DoNotUse_default_instance_._instance,
@@ -633,68 +695,73 @@ const char descriptor_table_protodef_sdk_2eproto[] ABSL_ATTRIBUTE_SECTION_VARIAB
     "\n\tsdk.proto\022\016agones.dev.sdk\032\034google/api/"
     "annotations.proto\032.protoc-gen-openapiv2/"
     "options/annotations.proto\"\007\n\005Empty\"&\n\010Ke"
-    "yValue\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t\"\033\n\010Du"
-    "ration\022\017\n\007seconds\030\001 \001(\003\"\213\014\n\nGameServer\022:"
-    "\n\013object_meta\030\001 \001(\0132%.agones.dev.sdk.Gam"
-    "eServer.ObjectMeta\022-\n\004spec\030\002 \001(\0132\037.agone"
-    "s.dev.sdk.GameServer.Spec\0221\n\006status\030\003 \001("
-    "\0132!.agones.dev.sdk.GameServer.Status\032\223\003\n"
-    "\nObjectMeta\022\014\n\004name\030\001 \001(\t\022\021\n\tnamespace\030\002"
-    " \001(\t\022\013\n\003uid\030\003 \001(\t\022\030\n\020resource_version\030\004 "
-    "\001(\t\022\022\n\ngeneration\030\005 \001(\003\022\032\n\022creation_time"
-    "stamp\030\006 \001(\003\022\032\n\022deletion_timestamp\030\007 \001(\003\022"
-    "K\n\013annotations\030\010 \003(\01326.agones.dev.sdk.Ga"
-    "meServer.ObjectMeta.AnnotationsEntry\022A\n\006"
-    "labels\030\t \003(\01321.agones.dev.sdk.GameServer"
-    ".ObjectMeta.LabelsEntry\0322\n\020AnnotationsEn"
-    "try\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028\001\032-\n\013L"
-    "abelsEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\002"
-    "8\001\032\273\001\n\004Spec\0226\n\006health\030\001 \001(\0132&.agones.dev"
-    ".sdk.GameServer.Spec.Health\032{\n\006Health\022\037\n"
-    "\010disabled\030\001 \001(\010B\r\222A\n\242\002\007boolean\022\026\n\016period"
-    "_seconds\030\002 \001(\005\022\031\n\021failure_threshold\030\003 \001("
-    "\005\022\035\n\025initial_delay_seconds\030\004 \001(\005\032\212\006\n\006Sta"
-    "tus\022\r\n\005state\030\001 \001(\t\022\017\n\007address\030\002 \001(\t\022<\n\ta"
-    "ddresses\030\007 \003(\0132).agones.dev.sdk.GameServ"
-    "er.Status.Address\0225\n\005ports\030\003 \003(\0132&.agone"
-    "s.dev.sdk.GameServer.Status.Port\022\?\n\007play"
-    "ers\030\004 \001(\0132..agones.dev.sdk.GameServer.St"
-    "atus.PlayerStatus\022A\n\010counters\030\005 \003(\0132/.ag"
-    "ones.dev.sdk.GameServer.Status.CountersE"
-    "ntry\022;\n\005lists\030\006 \003(\0132,.agones.dev.sdk.Gam"
-    "eServer.Status.ListsEntry\032(\n\007Address\022\014\n\004"
-    "type\030\001 \001(\t\022\017\n\007address\030\002 \001(\t\032\"\n\004Port\022\014\n\004n"
-    "ame\030\001 \001(\t\022\014\n\004port\030\002 \001(\005\032<\n\014PlayerStatus\022"
-    "\r\n\005count\030\001 \001(\003\022\020\n\010capacity\030\002 \001(\003\022\013\n\003ids\030"
-    "\003 \003(\t\0320\n\rCounterStatus\022\r\n\005count\030\001 \001(\003\022\020\n"
-    "\010capacity\030\002 \001(\003\032.\n\nListStatus\022\020\n\010capacit"
-    "y\030\001 \001(\003\022\016\n\006values\030\002 \003(\t\032`\n\rCountersEntry"
-    "\022\013\n\003key\030\001 \001(\t\022>\n\005value\030\002 \001(\0132/.agones.de"
-    "v.sdk.GameServer.Status.CounterStatus:\0028"
-    "\001\032Z\n\nListsEntry\022\013\n\003key\030\001 \001(\t\022;\n\005value\030\002 "
-    "\001(\0132,.agones.dev.sdk.GameServer.Status.L"
-    "istStatus:\0028\0012\206\006\n\003SDK\022H\n\005Ready\022\025.agones."
-    "dev.sdk.Empty\032\025.agones.dev.sdk.Empty\"\021\202\323"
-    "\344\223\002\013\"\006/ready:\001*\022N\n\010Allocate\022\025.agones.dev"
-    ".sdk.Empty\032\025.agones.dev.sdk.Empty\"\024\202\323\344\223\002"
-    "\016\"\t/allocate:\001*\022N\n\010Shutdown\022\025.agones.dev"
-    ".sdk.Empty\032\025.agones.dev.sdk.Empty\"\024\202\323\344\223\002"
-    "\016\"\t/shutdown:\001*\022L\n\006Health\022\025.agones.dev.s"
-    "dk.Empty\032\025.agones.dev.sdk.Empty\"\022\202\323\344\223\002\014\""
-    "\007/health:\001*(\001\022W\n\rGetGameServer\022\025.agones."
-    "dev.sdk.Empty\032\032.agones.dev.sdk.GameServe"
-    "r\"\023\202\323\344\223\002\r\022\013/gameserver\022a\n\017WatchGameServe"
-    "r\022\025.agones.dev.sdk.Empty\032\032.agones.dev.sd"
-    "k.GameServer\"\031\202\323\344\223\002\023\022\021/watch/gameserver0"
-    "\001\022W\n\010SetLabel\022\030.agones.dev.sdk.KeyValue\032"
-    "\025.agones.dev.sdk.Empty\"\032\202\323\344\223\002\024\032\017/metadat"
-    "a/label:\001*\022a\n\rSetAnnotation\022\030.agones.dev"
-    ".sdk.KeyValue\032\025.agones.dev.sdk.Empty\"\037\202\323"
-    "\344\223\002\031\032\024/metadata/annotation:\001*\022O\n\007Reserve"
-    "\022\030.agones.dev.sdk.Duration\032\025.agones.dev."
-    "sdk.Empty\"\023\202\323\344\223\002\r\"\010/reserve:\001*BOZ\005./sdk\222"
-    "AE\022\034\n\tsdk.proto2\017version not set*\001\0012\020app"
-    "lication/json:\020application/jsonb\006proto3"
+    "yValue\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t\"9\n\tKe"
+    "yValues\022,\n\nkey_values\030\001 \003(\0132\030.agones.dev"
+    ".sdk.KeyValue\"\022\n\003Key\022\013\n\003key\030\001 \001(\t\"\033\n\010Dur"
+    "ation\022\017\n\007seconds\030\001 \001(\003\"\213\014\n\nGameServer\022:\n"
+    "\013object_meta\030\001 \001(\0132%.agones.dev.sdk.Game"
+    "Server.ObjectMeta\022-\n\004spec\030\002 \001(\0132\037.agones"
+    ".dev.sdk.GameServer.Spec\0221\n\006status\030\003 \001(\013"
+    "2!.agones.dev.sdk.GameServer.Status\032\223\003\n\n"
+    "ObjectMeta\022\014\n\004name\030\001 \001(\t\022\021\n\tnamespace\030\002 "
+    "\001(\t\022\013\n\003uid\030\003 \001(\t\022\030\n\020resource_version\030\004 \001"
+    "(\t\022\022\n\ngeneration\030\005 \001(\003\022\032\n\022creation_times"
+    "tamp\030\006 \001(\003\022\032\n\022deletion_timestamp\030\007 \001(\003\022K"
+    "\n\013annotations\030\010 \003(\01326.agones.dev.sdk.Gam"
+    "eServer.ObjectMeta.AnnotationsEntry\022A\n\006l"
+    "abels\030\t \003(\01321.agones.dev.sdk.GameServer."
+    "ObjectMeta.LabelsEntry\0322\n\020AnnotationsEnt"
+    "ry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028\001\032-\n\013La"
+    "belsEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028"
+    "\001\032\273\001\n\004Spec\0226\n\006health\030\001 \001(\0132&.agones.dev."
+    "sdk.GameServer.Spec.Health\032{\n\006Health\022\037\n\010"
+    "disabled\030\001 \001(\010B\r\222A\n\242\002\007boolean\022\026\n\016period_"
+    "seconds\030\002 \001(\005\022\031\n\021failure_threshold\030\003 \001(\005"
+    "\022\035\n\025initial_delay_seconds\030\004 \001(\005\032\212\006\n\006Stat"
+    "us\022\r\n\005state\030\001 \001(\t\022\017\n\007address\030\002 \001(\t\022<\n\tad"
+    "dresses\030\007 \003(\0132).agones.dev.sdk.GameServe"
+    "r.Status.Address\0225\n\005ports\030\003 \003(\0132&.agones"
+    ".dev.sdk.GameServer.Status.Port\022\?\n\007playe"
+    "rs\030\004 \001(\0132..agones.dev.sdk.GameServer.Sta"
+    "tus.PlayerStatus\022A\n\010counters\030\005 \003(\0132/.ago"
+    "nes.dev.sdk.GameServer.Status.CountersEn"
+    "try\022;\n\005lists\030\006 \003(\0132,.agones.dev.sdk.Game"
+    "Server.Status.ListsEntry\032(\n\007Address\022\014\n\004t"
+    "ype\030\001 \001(\t\022\017\n\007address\030\002 \001(\t\032\"\n\004Port\022\014\n\004na"
+    "me\030\001 \001(\t\022\014\n\004port\030\002 \001(\005\032<\n\014PlayerStatus\022\r"
+    "\n\005count\030\001 \001(\003\022\020\n\010capacity\030\002 \001(\003\022\013\n\003ids\030\003"
+    " \003(\t\0320\n\rCounterStatus\022\r\n\005count\030\001 \001(\003\022\020\n\010"
+    "capacity\030\002 \001(\003\032.\n\nListStatus\022\020\n\010capacity"
+    "\030\001 \001(\003\022\016\n\006values\030\002 \003(\t\032`\n\rCountersEntry\022"
+    "\013\n\003key\030\001 \001(\t\022>\n\005value\030\002 \001(\0132/.agones.dev"
+    ".sdk.GameServer.Status.CounterStatus:\0028\001"
+    "\032Z\n\nListsEntry\022\013\n\003key\030\001 \001(\t\022;\n\005value\030\002 \001"
+    "(\0132,.agones.dev.sdk.GameServer.Status.Li"
+    "stStatus:\0028\0012\354\006\n\003SDK\022H\n\005Ready\022\025.agones.d"
+    "ev.sdk.Empty\032\025.agones.dev.sdk.Empty\"\021\202\323\344"
+    "\223\002\013\"\006/ready:\001*\022N\n\010Allocate\022\025.agones.dev."
+    "sdk.Empty\032\025.agones.dev.sdk.Empty\"\024\202\323\344\223\002\016"
+    "\"\t/allocate:\001*\022N\n\010Shutdown\022\025.agones.dev."
+    "sdk.Empty\032\025.agones.dev.sdk.Empty\"\024\202\323\344\223\002\016"
+    "\"\t/shutdown:\001*\022L\n\006Health\022\025.agones.dev.sd"
+    "k.Empty\032\025.agones.dev.sdk.Empty\"\022\202\323\344\223\002\014\"\007"
+    "/health:\001*(\001\022W\n\rGetGameServer\022\025.agones.d"
+    "ev.sdk.Empty\032\032.agones.dev.sdk.GameServer"
+    "\"\023\202\323\344\223\002\r\022\013/gameserver\022a\n\017WatchGameServer"
+    "\022\025.agones.dev.sdk.Empty\032\032.agones.dev.sdk"
+    ".GameServer\"\031\202\323\344\223\002\023\022\021/watch/gameserver0\001"
+    "\022W\n\010SetLabel\022\030.agones.dev.sdk.KeyValue\032\025"
+    ".agones.dev.sdk.Empty\"\032\202\323\344\223\002\024\032\017/metadata"
+    "/label:\001*\022a\n\rSetAnnotation\022\030.agones.dev."
+    "sdk.KeyValue\032\025.agones.dev.sdk.Empty\"\037\202\323\344"
+    "\223\002\031\032\024/metadata/annotation:\001*\022d\n\016SetAnnot"
+    "ations\022\031.agones.dev.sdk.KeyValues\032\025.agon"
+    "es.dev.sdk.Empty\" \202\323\344\223\002\032\032\025/metadata/anno"
+    "tations:\001*\022O\n\007Reserve\022\030.agones.dev.sdk.D"
+    "uration\032\025.agones.dev.sdk.Empty\"\023\202\323\344\223\002\r\"\010"
+    "/reserve:\001*BOZ\005./sdk\222AE\022\034\n\tsdk.proto2\017ve"
+    "rsion not set*\001\0012\020application/json:\020appl"
+    "ication/jsonb\006proto3"
 };
 static const ::_pbi::DescriptorTable* const descriptor_table_sdk_2eproto_deps[2] =
     {
@@ -705,13 +772,13 @@ static ::absl::once_flag descriptor_table_sdk_2eproto_once;
 const ::_pbi::DescriptorTable descriptor_table_sdk_2eproto = {
     false,
     false,
-    2599,
+    2780,
     descriptor_table_protodef_sdk_2eproto,
     "sdk.proto",
     &descriptor_table_sdk_2eproto_once,
     descriptor_table_sdk_2eproto_deps,
     2,
-    17,
+    19,
     schemas,
     file_default_instances,
     TableStruct_sdk_2eproto::offsets,
@@ -1000,6 +1067,395 @@ void KeyValue::InternalSwap(KeyValue* PROTOBUF_RESTRICT other) {
 }
 // ===================================================================
 
+class KeyValues::_Internal {
+ public:
+};
+
+KeyValues::KeyValues(::google::protobuf::Arena* arena)
+    : ::google::protobuf::Message(arena) {
+  SharedCtor(arena);
+  // @@protoc_insertion_point(arena_constructor:agones.dev.sdk.KeyValues)
+}
+inline PROTOBUF_NDEBUG_INLINE KeyValues::Impl_::Impl_(
+    ::google::protobuf::internal::InternalVisibility visibility, ::google::protobuf::Arena* arena,
+    const Impl_& from)
+      : key_values_{visibility, arena, from.key_values_},
+        _cached_size_{0} {}
+
+KeyValues::KeyValues(
+    ::google::protobuf::Arena* arena,
+    const KeyValues& from)
+    : ::google::protobuf::Message(arena) {
+  KeyValues* const _this = this;
+  (void)_this;
+  _internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(
+      from._internal_metadata_);
+  new (&_impl_) Impl_(internal_visibility(), arena, from._impl_);
+
+  // @@protoc_insertion_point(copy_constructor:agones.dev.sdk.KeyValues)
+}
+inline PROTOBUF_NDEBUG_INLINE KeyValues::Impl_::Impl_(
+    ::google::protobuf::internal::InternalVisibility visibility,
+    ::google::protobuf::Arena* arena)
+      : key_values_{visibility, arena},
+        _cached_size_{0} {}
+
+inline void KeyValues::SharedCtor(::_pb::Arena* arena) {
+  new (&_impl_) Impl_(internal_visibility(), arena);
+}
+KeyValues::~KeyValues() {
+  // @@protoc_insertion_point(destructor:agones.dev.sdk.KeyValues)
+  _internal_metadata_.Delete<::google::protobuf::UnknownFieldSet>();
+  SharedDtor();
+}
+inline void KeyValues::SharedDtor() {
+  ABSL_DCHECK(GetArena() == nullptr);
+  _impl_.~Impl_();
+}
+
+const ::google::protobuf::MessageLite::ClassData*
+KeyValues::GetClassData() const {
+  PROTOBUF_CONSTINIT static const ::google::protobuf::MessageLite::
+      ClassDataFull _data_ = {
+          {
+              nullptr,  // OnDemandRegisterArenaDtor
+              PROTOBUF_FIELD_OFFSET(KeyValues, _impl_._cached_size_),
+              false,
+          },
+          &KeyValues::MergeImpl,
+          &KeyValues::kDescriptorMethods,
+      };
+  return &_data_;
+}
+PROTOBUF_NOINLINE void KeyValues::Clear() {
+// @@protoc_insertion_point(message_clear_start:agones.dev.sdk.KeyValues)
+  PROTOBUF_TSAN_WRITE(&_impl_._tsan_detect_race);
+  ::uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  _impl_.key_values_.Clear();
+  _internal_metadata_.Clear<::google::protobuf::UnknownFieldSet>();
+}
+
+const char* KeyValues::_InternalParse(
+    const char* ptr, ::_pbi::ParseContext* ctx) {
+  ptr = ::_pbi::TcParser::ParseLoop(this, ptr, ctx, &_table_.header);
+  return ptr;
+}
+
+
+PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
+const ::_pbi::TcParseTable<0, 1, 1, 0, 2> KeyValues::_table_ = {
+  {
+    0,  // no _has_bits_
+    0, // no _extensions_
+    1, 0,  // max_field_number, fast_idx_mask
+    offsetof(decltype(_table_), field_lookup_table),
+    4294967294,  // skipmap
+    offsetof(decltype(_table_), field_entries),
+    1,  // num_field_entries
+    1,  // num_aux_entries
+    offsetof(decltype(_table_), aux_entries),
+    &_KeyValues_default_instance_._instance,
+    ::_pbi::TcParser::GenericFallback,  // fallback
+    #ifdef PROTOBUF_PREFETCH_PARSE_TABLE
+    ::_pbi::TcParser::GetTable<::agones::dev::sdk::KeyValues>(),  // to_prefetch
+    #endif  // PROTOBUF_PREFETCH_PARSE_TABLE
+  }, {{
+    // repeated .agones.dev.sdk.KeyValue key_values = 1;
+    {::_pbi::TcParser::FastMtR1,
+     {10, 63, 0, PROTOBUF_FIELD_OFFSET(KeyValues, _impl_.key_values_)}},
+  }}, {{
+    65535, 65535
+  }}, {{
+    // repeated .agones.dev.sdk.KeyValue key_values = 1;
+    {PROTOBUF_FIELD_OFFSET(KeyValues, _impl_.key_values_), 0, 0,
+    (0 | ::_fl::kFcRepeated | ::_fl::kMessage | ::_fl::kTvTable)},
+  }}, {{
+    {::_pbi::TcParser::GetTable<::agones::dev::sdk::KeyValue>()},
+  }}, {{
+  }},
+};
+
+::uint8_t* KeyValues::_InternalSerialize(
+    ::uint8_t* target,
+    ::google::protobuf::io::EpsCopyOutputStream* stream) const {
+  // @@protoc_insertion_point(serialize_to_array_start:agones.dev.sdk.KeyValues)
+  ::uint32_t cached_has_bits = 0;
+  (void)cached_has_bits;
+
+  // repeated .agones.dev.sdk.KeyValue key_values = 1;
+  for (unsigned i = 0, n = static_cast<unsigned>(
+                           this->_internal_key_values_size());
+       i < n; i++) {
+    const auto& repfield = this->_internal_key_values().Get(i);
+    target =
+        ::google::protobuf::internal::WireFormatLite::InternalWriteMessage(
+            1, repfield, repfield.GetCachedSize(),
+            target, stream);
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target =
+        ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
+            _internal_metadata_.unknown_fields<::google::protobuf::UnknownFieldSet>(::google::protobuf::UnknownFieldSet::default_instance), target, stream);
+  }
+  // @@protoc_insertion_point(serialize_to_array_end:agones.dev.sdk.KeyValues)
+  return target;
+}
+
+::size_t KeyValues::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:agones.dev.sdk.KeyValues)
+  ::size_t total_size = 0;
+
+  ::uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  // repeated .agones.dev.sdk.KeyValue key_values = 1;
+  total_size += 1UL * this->_internal_key_values_size();
+  for (const auto& msg : this->_internal_key_values()) {
+    total_size += ::google::protobuf::internal::WireFormatLite::MessageSize(msg);
+  }
+  return MaybeComputeUnknownFieldsSize(total_size, &_impl_._cached_size_);
+}
+
+
+void KeyValues::MergeImpl(::google::protobuf::MessageLite& to_msg, const ::google::protobuf::MessageLite& from_msg) {
+  auto* const _this = static_cast<KeyValues*>(&to_msg);
+  auto& from = static_cast<const KeyValues&>(from_msg);
+  // @@protoc_insertion_point(class_specific_merge_from_start:agones.dev.sdk.KeyValues)
+  ABSL_DCHECK_NE(&from, _this);
+  ::uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  _this->_internal_mutable_key_values()->MergeFrom(
+      from._internal_key_values());
+  _this->_internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(from._internal_metadata_);
+}
+
+void KeyValues::CopyFrom(const KeyValues& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:agones.dev.sdk.KeyValues)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+PROTOBUF_NOINLINE bool KeyValues::IsInitialized() const {
+  return true;
+}
+
+void KeyValues::InternalSwap(KeyValues* PROTOBUF_RESTRICT other) {
+  using std::swap;
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  _impl_.key_values_.InternalSwap(&other->_impl_.key_values_);
+}
+
+::google::protobuf::Metadata KeyValues::GetMetadata() const {
+  return ::_pbi::AssignDescriptors(&descriptor_table_sdk_2eproto_getter,
+                                   &descriptor_table_sdk_2eproto_once,
+                                   file_level_metadata_sdk_2eproto[2]);
+}
+// ===================================================================
+
+class Key::_Internal {
+ public:
+};
+
+Key::Key(::google::protobuf::Arena* arena)
+    : ::google::protobuf::Message(arena) {
+  SharedCtor(arena);
+  // @@protoc_insertion_point(arena_constructor:agones.dev.sdk.Key)
+}
+inline PROTOBUF_NDEBUG_INLINE Key::Impl_::Impl_(
+    ::google::protobuf::internal::InternalVisibility visibility, ::google::protobuf::Arena* arena,
+    const Impl_& from)
+      : key_(arena, from.key_),
+        _cached_size_{0} {}
+
+Key::Key(
+    ::google::protobuf::Arena* arena,
+    const Key& from)
+    : ::google::protobuf::Message(arena) {
+  Key* const _this = this;
+  (void)_this;
+  _internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(
+      from._internal_metadata_);
+  new (&_impl_) Impl_(internal_visibility(), arena, from._impl_);
+
+  // @@protoc_insertion_point(copy_constructor:agones.dev.sdk.Key)
+}
+inline PROTOBUF_NDEBUG_INLINE Key::Impl_::Impl_(
+    ::google::protobuf::internal::InternalVisibility visibility,
+    ::google::protobuf::Arena* arena)
+      : key_(arena),
+        _cached_size_{0} {}
+
+inline void Key::SharedCtor(::_pb::Arena* arena) {
+  new (&_impl_) Impl_(internal_visibility(), arena);
+}
+Key::~Key() {
+  // @@protoc_insertion_point(destructor:agones.dev.sdk.Key)
+  _internal_metadata_.Delete<::google::protobuf::UnknownFieldSet>();
+  SharedDtor();
+}
+inline void Key::SharedDtor() {
+  ABSL_DCHECK(GetArena() == nullptr);
+  _impl_.key_.Destroy();
+  _impl_.~Impl_();
+}
+
+const ::google::protobuf::MessageLite::ClassData*
+Key::GetClassData() const {
+  PROTOBUF_CONSTINIT static const ::google::protobuf::MessageLite::
+      ClassDataFull _data_ = {
+          {
+              nullptr,  // OnDemandRegisterArenaDtor
+              PROTOBUF_FIELD_OFFSET(Key, _impl_._cached_size_),
+              false,
+          },
+          &Key::MergeImpl,
+          &Key::kDescriptorMethods,
+      };
+  return &_data_;
+}
+PROTOBUF_NOINLINE void Key::Clear() {
+// @@protoc_insertion_point(message_clear_start:agones.dev.sdk.Key)
+  PROTOBUF_TSAN_WRITE(&_impl_._tsan_detect_race);
+  ::uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  _impl_.key_.ClearToEmpty();
+  _internal_metadata_.Clear<::google::protobuf::UnknownFieldSet>();
+}
+
+const char* Key::_InternalParse(
+    const char* ptr, ::_pbi::ParseContext* ctx) {
+  ptr = ::_pbi::TcParser::ParseLoop(this, ptr, ctx, &_table_.header);
+  return ptr;
+}
+
+
+PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
+const ::_pbi::TcParseTable<0, 1, 0, 30, 2> Key::_table_ = {
+  {
+    0,  // no _has_bits_
+    0, // no _extensions_
+    1, 0,  // max_field_number, fast_idx_mask
+    offsetof(decltype(_table_), field_lookup_table),
+    4294967294,  // skipmap
+    offsetof(decltype(_table_), field_entries),
+    1,  // num_field_entries
+    0,  // num_aux_entries
+    offsetof(decltype(_table_), field_names),  // no aux_entries
+    &_Key_default_instance_._instance,
+    ::_pbi::TcParser::GenericFallback,  // fallback
+    #ifdef PROTOBUF_PREFETCH_PARSE_TABLE
+    ::_pbi::TcParser::GetTable<::agones::dev::sdk::Key>(),  // to_prefetch
+    #endif  // PROTOBUF_PREFETCH_PARSE_TABLE
+  }, {{
+    // string key = 1;
+    {::_pbi::TcParser::FastUS1,
+     {10, 63, 0, PROTOBUF_FIELD_OFFSET(Key, _impl_.key_)}},
+  }}, {{
+    65535, 65535
+  }}, {{
+    // string key = 1;
+    {PROTOBUF_FIELD_OFFSET(Key, _impl_.key_), 0, 0,
+    (0 | ::_fl::kFcSingular | ::_fl::kUtf8String | ::_fl::kRepAString)},
+  }},
+  // no aux_entries
+  {{
+    "\22\3\0\0\0\0\0\0"
+    "agones.dev.sdk.Key"
+    "key"
+  }},
+};
+
+::uint8_t* Key::_InternalSerialize(
+    ::uint8_t* target,
+    ::google::protobuf::io::EpsCopyOutputStream* stream) const {
+  // @@protoc_insertion_point(serialize_to_array_start:agones.dev.sdk.Key)
+  ::uint32_t cached_has_bits = 0;
+  (void)cached_has_bits;
+
+  // string key = 1;
+  if (!this->_internal_key().empty()) {
+    const std::string& _s = this->_internal_key();
+    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+        _s.data(), static_cast<int>(_s.length()), ::google::protobuf::internal::WireFormatLite::SERIALIZE, "agones.dev.sdk.Key.key");
+    target = stream->WriteStringMaybeAliased(1, _s, target);
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target =
+        ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
+            _internal_metadata_.unknown_fields<::google::protobuf::UnknownFieldSet>(::google::protobuf::UnknownFieldSet::default_instance), target, stream);
+  }
+  // @@protoc_insertion_point(serialize_to_array_end:agones.dev.sdk.Key)
+  return target;
+}
+
+::size_t Key::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:agones.dev.sdk.Key)
+  ::size_t total_size = 0;
+
+  ::uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  // string key = 1;
+  if (!this->_internal_key().empty()) {
+    total_size += 1 + ::google::protobuf::internal::WireFormatLite::StringSize(
+                                    this->_internal_key());
+  }
+
+  return MaybeComputeUnknownFieldsSize(total_size, &_impl_._cached_size_);
+}
+
+
+void Key::MergeImpl(::google::protobuf::MessageLite& to_msg, const ::google::protobuf::MessageLite& from_msg) {
+  auto* const _this = static_cast<Key*>(&to_msg);
+  auto& from = static_cast<const Key&>(from_msg);
+  // @@protoc_insertion_point(class_specific_merge_from_start:agones.dev.sdk.Key)
+  ABSL_DCHECK_NE(&from, _this);
+  ::uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  if (!from._internal_key().empty()) {
+    _this->_internal_set_key(from._internal_key());
+  }
+  _this->_internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(from._internal_metadata_);
+}
+
+void Key::CopyFrom(const Key& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:agones.dev.sdk.Key)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+PROTOBUF_NOINLINE bool Key::IsInitialized() const {
+  return true;
+}
+
+void Key::InternalSwap(Key* PROTOBUF_RESTRICT other) {
+  using std::swap;
+  auto* arena = GetArena();
+  ABSL_DCHECK_EQ(arena, other->GetArena());
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  ::_pbi::ArenaStringPtr::InternalSwap(&_impl_.key_, &other->_impl_.key_, arena);
+}
+
+::google::protobuf::Metadata Key::GetMetadata() const {
+  return ::_pbi::AssignDescriptors(&descriptor_table_sdk_2eproto_getter,
+                                   &descriptor_table_sdk_2eproto_once,
+                                   file_level_metadata_sdk_2eproto[3]);
+}
+// ===================================================================
+
 class Duration::_Internal {
  public:
 };
@@ -1173,7 +1629,7 @@ void Duration::InternalSwap(Duration* PROTOBUF_RESTRICT other) {
 ::google::protobuf::Metadata Duration::GetMetadata() const {
   return ::_pbi::AssignDescriptors(&descriptor_table_sdk_2eproto_getter,
                                    &descriptor_table_sdk_2eproto_once,
-                                   file_level_metadata_sdk_2eproto[2]);
+                                   file_level_metadata_sdk_2eproto[4]);
 }
 // ===================================================================
 
@@ -1183,7 +1639,7 @@ GameServer_ObjectMeta_AnnotationsEntry_DoNotUse::GameServer_ObjectMeta_Annotatio
 ::google::protobuf::Metadata GameServer_ObjectMeta_AnnotationsEntry_DoNotUse::GetMetadata() const {
   return ::_pbi::AssignDescriptors(&descriptor_table_sdk_2eproto_getter,
                                    &descriptor_table_sdk_2eproto_once,
-                                   file_level_metadata_sdk_2eproto[3]);
+                                   file_level_metadata_sdk_2eproto[5]);
 }
 // ===================================================================
 
@@ -1193,7 +1649,7 @@ GameServer_ObjectMeta_LabelsEntry_DoNotUse::GameServer_ObjectMeta_LabelsEntry_Do
 ::google::protobuf::Metadata GameServer_ObjectMeta_LabelsEntry_DoNotUse::GetMetadata() const {
   return ::_pbi::AssignDescriptors(&descriptor_table_sdk_2eproto_getter,
                                    &descriptor_table_sdk_2eproto_once,
-                                   file_level_metadata_sdk_2eproto[4]);
+                                   file_level_metadata_sdk_2eproto[6]);
 }
 // ===================================================================
 
@@ -1671,7 +2127,7 @@ void GameServer_ObjectMeta::InternalSwap(GameServer_ObjectMeta* PROTOBUF_RESTRIC
 ::google::protobuf::Metadata GameServer_ObjectMeta::GetMetadata() const {
   return ::_pbi::AssignDescriptors(&descriptor_table_sdk_2eproto_getter,
                                    &descriptor_table_sdk_2eproto_once,
-                                   file_level_metadata_sdk_2eproto[5]);
+                                   file_level_metadata_sdk_2eproto[7]);
 }
 // ===================================================================
 
@@ -1925,7 +2381,7 @@ void GameServer_Spec_Health::InternalSwap(GameServer_Spec_Health* PROTOBUF_RESTR
 ::google::protobuf::Metadata GameServer_Spec_Health::GetMetadata() const {
   return ::_pbi::AssignDescriptors(&descriptor_table_sdk_2eproto_getter,
                                    &descriptor_table_sdk_2eproto_once,
-                                   file_level_metadata_sdk_2eproto[6]);
+                                   file_level_metadata_sdk_2eproto[8]);
 }
 // ===================================================================
 
@@ -2139,7 +2595,7 @@ void GameServer_Spec::InternalSwap(GameServer_Spec* PROTOBUF_RESTRICT other) {
 ::google::protobuf::Metadata GameServer_Spec::GetMetadata() const {
   return ::_pbi::AssignDescriptors(&descriptor_table_sdk_2eproto_getter,
                                    &descriptor_table_sdk_2eproto_once,
-                                   file_level_metadata_sdk_2eproto[7]);
+                                   file_level_metadata_sdk_2eproto[9]);
 }
 // ===================================================================
 
@@ -2365,7 +2821,7 @@ void GameServer_Status_Address::InternalSwap(GameServer_Status_Address* PROTOBUF
 ::google::protobuf::Metadata GameServer_Status_Address::GetMetadata() const {
   return ::_pbi::AssignDescriptors(&descriptor_table_sdk_2eproto_getter,
                                    &descriptor_table_sdk_2eproto_once,
-                                   file_level_metadata_sdk_2eproto[8]);
+                                   file_level_metadata_sdk_2eproto[10]);
 }
 // ===================================================================
 
@@ -2588,7 +3044,7 @@ void GameServer_Status_Port::InternalSwap(GameServer_Status_Port* PROTOBUF_RESTR
 ::google::protobuf::Metadata GameServer_Status_Port::GetMetadata() const {
   return ::_pbi::AssignDescriptors(&descriptor_table_sdk_2eproto_getter,
                                    &descriptor_table_sdk_2eproto_once,
-                                   file_level_metadata_sdk_2eproto[9]);
+                                   file_level_metadata_sdk_2eproto[11]);
 }
 // ===================================================================
 
@@ -2847,7 +3303,7 @@ void GameServer_Status_PlayerStatus::InternalSwap(GameServer_Status_PlayerStatus
 ::google::protobuf::Metadata GameServer_Status_PlayerStatus::GetMetadata() const {
   return ::_pbi::AssignDescriptors(&descriptor_table_sdk_2eproto_getter,
                                    &descriptor_table_sdk_2eproto_once,
-                                   file_level_metadata_sdk_2eproto[10]);
+                                   file_level_metadata_sdk_2eproto[12]);
 }
 // ===================================================================
 
@@ -3058,7 +3514,7 @@ void GameServer_Status_CounterStatus::InternalSwap(GameServer_Status_CounterStat
 ::google::protobuf::Metadata GameServer_Status_CounterStatus::GetMetadata() const {
   return ::_pbi::AssignDescriptors(&descriptor_table_sdk_2eproto_getter,
                                    &descriptor_table_sdk_2eproto_once,
-                                   file_level_metadata_sdk_2eproto[11]);
+                                   file_level_metadata_sdk_2eproto[13]);
 }
 // ===================================================================
 
@@ -3276,7 +3732,7 @@ void GameServer_Status_ListStatus::InternalSwap(GameServer_Status_ListStatus* PR
 ::google::protobuf::Metadata GameServer_Status_ListStatus::GetMetadata() const {
   return ::_pbi::AssignDescriptors(&descriptor_table_sdk_2eproto_getter,
                                    &descriptor_table_sdk_2eproto_once,
-                                   file_level_metadata_sdk_2eproto[12]);
+                                   file_level_metadata_sdk_2eproto[14]);
 }
 // ===================================================================
 
@@ -3286,7 +3742,7 @@ GameServer_Status_CountersEntry_DoNotUse::GameServer_Status_CountersEntry_DoNotU
 ::google::protobuf::Metadata GameServer_Status_CountersEntry_DoNotUse::GetMetadata() const {
   return ::_pbi::AssignDescriptors(&descriptor_table_sdk_2eproto_getter,
                                    &descriptor_table_sdk_2eproto_once,
-                                   file_level_metadata_sdk_2eproto[13]);
+                                   file_level_metadata_sdk_2eproto[15]);
 }
 // ===================================================================
 
@@ -3296,7 +3752,7 @@ GameServer_Status_ListsEntry_DoNotUse::GameServer_Status_ListsEntry_DoNotUse(::g
 ::google::protobuf::Metadata GameServer_Status_ListsEntry_DoNotUse::GetMetadata() const {
   return ::_pbi::AssignDescriptors(&descriptor_table_sdk_2eproto_getter,
                                    &descriptor_table_sdk_2eproto_once,
-                                   file_level_metadata_sdk_2eproto[14]);
+                                   file_level_metadata_sdk_2eproto[16]);
 }
 // ===================================================================
 
@@ -3729,7 +4185,7 @@ void GameServer_Status::InternalSwap(GameServer_Status* PROTOBUF_RESTRICT other)
 ::google::protobuf::Metadata GameServer_Status::GetMetadata() const {
   return ::_pbi::AssignDescriptors(&descriptor_table_sdk_2eproto_getter,
                                    &descriptor_table_sdk_2eproto_once,
-                                   file_level_metadata_sdk_2eproto[15]);
+                                   file_level_metadata_sdk_2eproto[17]);
 }
 // ===================================================================
 
@@ -4032,7 +4488,7 @@ void GameServer::InternalSwap(GameServer* PROTOBUF_RESTRICT other) {
 ::google::protobuf::Metadata GameServer::GetMetadata() const {
   return ::_pbi::AssignDescriptors(&descriptor_table_sdk_2eproto_getter,
                                    &descriptor_table_sdk_2eproto_once,
-                                   file_level_metadata_sdk_2eproto[16]);
+                                   file_level_metadata_sdk_2eproto[18]);
 }
 // @@protoc_insertion_point(namespace_scope)
 }  // namespace sdk
