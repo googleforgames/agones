@@ -54,6 +54,7 @@ agones:
       #   cpu: 1
       #   memory: 256Mi
     nodeSelector: {}
+    labels: {}
     annotations: {}
     tolerations:
     - key: "agones.dev/agones-system"
@@ -105,6 +106,7 @@ agones:
       #   memory: 256Mi
     nodeSelector: {}
     annotations: {}
+    labels: {}
   # Determines if the Agones extensions should operate in hostNetwork mode.
   #
   # This setting is necessary for certain managed Kubernetes clusters (e.g., AWS EKS) that use custom
@@ -231,6 +233,7 @@ agones:
     service:
       name: agones-allocator
       serviceType: LoadBalancer
+      externalTrafficPolicy: Cluster
       clusterIP: ""
       loadBalancerIP: ""
       loadBalancerSourceRanges: []

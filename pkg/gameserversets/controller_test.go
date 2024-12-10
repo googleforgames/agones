@@ -412,6 +412,44 @@ func TestComputeStatus(t *testing.T) {
 		assert.Equal(t, expected, computeStatus(gsSet, list))
 	})
 
+	t.Run("counters with no gameservers", func(t *testing.T) {
+		utilruntime.FeatureTestMutex.Lock()
+		defer utilruntime.FeatureTestMutex.Unlock()
+
+		require.NoError(t, utilruntime.ParseFeatures(fmt.Sprintf("%s=true", utilruntime.FeatureCountsAndLists)))
+
+		gsSet := defaultFixture()
+		gsSet.Spec.Template.Spec.Counters = map[string]agonesv1.CounterStatus{
+			"firstCounter":  {Capacity: 10, Count: 1},
+			"secondCounter": {Capacity: 10, Count: 1},
+		}
+		var list []*agonesv1.GameServer
+
+		expected := agonesv1.GameServerSetStatus{
+			Replicas:          0,
+			ReadyReplicas:     0,
+			ReservedReplicas:  0,
+			AllocatedReplicas: 0,
+			Lists:             map[string]agonesv1.AggregatedListStatus{},
+			Counters: map[string]agonesv1.AggregatedCounterStatus{
+				"firstCounter": {
+					AllocatedCount:    0,
+					AllocatedCapacity: 0,
+					Capacity:          0,
+					Count:             0,
+				},
+				"secondCounter": {
+					AllocatedCount:    0,
+					AllocatedCapacity: 0,
+					Capacity:          0,
+					Count:             0,
+				},
+			},
+		}
+
+		assert.Equal(t, expected, computeStatus(gsSet, list))
+	})
+
 	t.Run("lists", func(t *testing.T) {
 		utilruntime.FeatureTestMutex.Lock()
 		defer utilruntime.FeatureTestMutex.Unlock()
@@ -484,7 +522,7 @@ func TestComputeStatus(t *testing.T) {
 			ReadyReplicas:     0,
 			ReservedReplicas:  0,
 			AllocatedReplicas: 0,
-			Counters:          nil,
+			Counters:          map[string]agonesv1.AggregatedCounterStatus{},
 			Lists: map[string]agonesv1.AggregatedListStatus{
 				"firstList": {
 					AllocatedCount:    0,

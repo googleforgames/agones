@@ -944,6 +944,88 @@ func TestCounterAutoscaler(t *testing.T) {
 	}
 }
 
+// nolint:dupl  // Linter errors on lines are duplicate of TestListAutoscalerWithNoReplicas
+func TestCounterAutoscalerWithNoReplicas(t *testing.T) {
+	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
+		t.SkipNow()
+	}
+	t.Parallel()
+
+	ctx := context.Background()
+	client := framework.AgonesClient.AgonesV1()
+	log := e2e.TestLogger(t)
+
+	flt := defaultEmptyFleet(framework.Namespace)
+	flt.Spec.Template.Spec.Counters = map[string]agonesv1.CounterStatus{
+		"games": {
+			Capacity: 5,
+		},
+	}
+
+	flt, err := client.Fleets(framework.Namespace).Create(ctx, flt.DeepCopy(), metav1.CreateOptions{})
+	require.NoError(t, err)
+	defer client.Fleets(framework.Namespace).Delete(ctx, flt.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
+	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
+
+	fleetautoscalers := framework.AgonesClient.AutoscalingV1().FleetAutoscalers(framework.Namespace)
+
+	counterFas := func(f func(fap *autoscalingv1.FleetAutoscalerPolicy)) *autoscalingv1.FleetAutoscaler {
+		fas := autoscalingv1.FleetAutoscaler{
+			ObjectMeta: metav1.ObjectMeta{Name: flt.ObjectMeta.Name + "-counter-autoscaler", Namespace: framework.Namespace},
+			Spec: autoscalingv1.FleetAutoscalerSpec{
+				FleetName: flt.ObjectMeta.Name,
+				Policy: autoscalingv1.FleetAutoscalerPolicy{
+					Type: autoscalingv1.CounterPolicyType,
+				},
+				Sync: &autoscalingv1.FleetAutoscalerSync{
+					Type: autoscalingv1.FixedIntervalSyncType,
+					FixedInterval: autoscalingv1.FixedIntervalSync{
+						Seconds: 1,
+					},
+				},
+			},
+		}
+		f(&fas.Spec.Policy)
+		return &fas
+	}
+	testCases := map[string]struct {
+		fas          *autoscalingv1.FleetAutoscaler
+		wantFasErr   bool
+		wantReplicas int32
+	}{
+		"Scale Up to MinCapacity": {
+			fas: counterFas(func(fap *autoscalingv1.FleetAutoscalerPolicy) {
+				fap.Counter = &autoscalingv1.CounterPolicy{
+					Key:         "games",
+					BufferSize:  intstr.FromInt(3),
+					MinCapacity: 16,
+					MaxCapacity: 100,
+				}
+			}),
+			wantFasErr:   false,
+			wantReplicas: 4, // Capacity:20
+		},
+	}
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+
+			fas, err := fleetautoscalers.Create(ctx, testCase.fas, metav1.CreateOptions{})
+			if testCase.wantFasErr {
+				assert.Error(t, err)
+				return
+			}
+			assert.NoError(t, err)
+
+			framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(testCase.wantReplicas))
+			fleetautoscalers.Delete(ctx, fas.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
+
+			// Return to starting 0 replicas
+			framework.ScaleFleet(t, log, flt, 0)
+			framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(0))
+		})
+	}
+}
+
 func TestCounterAutoscalerAllocated(t *testing.T) {
 	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
 		t.SkipNow()
@@ -1209,6 +1291,7 @@ func TestListAutoscaler(t *testing.T) {
 	}
 }
 
+// nolint:dupl  // Linter errors on lines are duplicate of TestCounterAutoscalerWithNoReplicas
 func TestListAutoscalerWithNoReplicas(t *testing.T) {
 	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
 		t.SkipNow()
@@ -1538,9 +1621,8 @@ func TestScheduleAutoscaler(t *testing.T) {
 	stable := framework.AgonesClient.AgonesV1()
 	fleets := stable.Fleets(framework.Namespace)
 	flt, err := fleets.Create(ctx, defaultFleet(framework.Namespace), metav1.CreateOptions{})
-	if assert.NoError(t, err) {
-		defer fleets.Delete(context.Background(), flt.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
-	}
+	require.NoError(t, err)
+	defer fleets.Delete(context.Background(), flt.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
 
 	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 
@@ -1550,7 +1632,7 @@ func TestScheduleAutoscaler(t *testing.T) {
 	scheduleAutoscaler := defaultAutoscalerSchedule(t, flt)
 	scheduleAutoscaler.Spec.Policy.Schedule.ActivePeriod.StartCron = nextCronMinute(time.Now())
 	fas, err := fleetautoscalers.Create(ctx, scheduleAutoscaler, metav1.CreateOptions{})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(5))
 	fleetautoscalers.Delete(ctx, fas.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
@@ -1563,7 +1645,7 @@ func TestScheduleAutoscaler(t *testing.T) {
 	scheduleAutoscaler = defaultAutoscalerSchedule(t, flt)
 	scheduleAutoscaler.Spec.Policy.Schedule.ActivePeriod.StartCron = nextCronMinuteBetween(time.Now())
 	fas, err = fleetautoscalers.Create(ctx, scheduleAutoscaler, metav1.CreateOptions{})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(5))
 	fleetautoscalers.Delete(ctx, fas.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
@@ -1759,8 +1841,13 @@ func nextCronMinute(currentTime time.Time) string {
 // nextCronMinuteBetween returns the minute between the very next minute
 // e.g. if the current time is 12:00, this method will return "1-2 * * * *"
 // meaning between 12:01 - 12:02
+// if the current minute if "59" since 59-0 is invalid, we'll return "0-1 * * * *" and wait for a bit longer on e2e tests.
 func nextCronMinuteBetween(currentTime time.Time) string {
 	nextMinute := currentTime.Add(time.Minute).Minute()
+	if nextMinute == 59 {
+		return "0-1 * * * *"
+	}
+
 	secondMinute := currentTime.Add(2 * time.Minute).Minute()
 	return fmt.Sprintf("%d-%d * * * *", nextMinute, secondMinute)
 }

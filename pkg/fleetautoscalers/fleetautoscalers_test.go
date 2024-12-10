@@ -772,6 +772,31 @@ func TestApplyCounterPolicy(t *testing.T) {
 				wantErr:  true,
 			},
 		},
+		"Counter based fleet does not have any replicas": {
+			fleet: modifiedFleet(func(f *agonesv1.Fleet) {
+				f.Spec.Template.Spec.Counters = make(map[string]agonesv1.CounterStatus)
+				f.Spec.Template.Spec.Counters["gamers"] = agonesv1.CounterStatus{
+					Count:    0,
+					Capacity: 7}
+				f.Status.Replicas = 0
+				f.Status.ReadyReplicas = 0
+				f.Status.AllocatedReplicas = 0
+				f.Status.Counters = make(map[string]agonesv1.AggregatedCounterStatus)
+				f.Status.Counters["gamers"] = agonesv1.AggregatedCounterStatus{}
+			}),
+			featureFlags: string(utilruntime.FeatureCountsAndLists) + "=true",
+			cp: &autoscalingv1.CounterPolicy{
+				Key:         "gamers",
+				MaxCapacity: 100,
+				MinCapacity: 10,
+				BufferSize:  intstr.FromInt(10),
+			},
+			want: expected{
+				replicas: 2,
+				limited:  true,
+				wantErr:  false,
+			},
+		},
 		"fleet spec does not have counter": {
 			fleet: modifiedFleet(func(f *agonesv1.Fleet) {
 				f.Spec.Template.Spec.Counters = make(map[string]agonesv1.CounterStatus)
@@ -1570,7 +1595,7 @@ func TestApplyListPolicy(t *testing.T) {
 				wantErr:  true,
 			},
 		},
-		"fleet does not have any replicas": {
+		"List based fleet does not have any replicas": {
 			fleet: modifiedFleet(func(f *agonesv1.Fleet) {
 				f.Spec.Template.Spec.Lists = make(map[string]agonesv1.ListStatus)
 				f.Spec.Template.Spec.Lists["gamers"] = agonesv1.ListStatus{
