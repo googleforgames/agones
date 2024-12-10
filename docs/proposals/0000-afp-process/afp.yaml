@@ -1,0 +1,18 @@
+---
+title: Agones Feature Proposal Process
+afp-number: 0000
+authors:
+  - "@0xaravindh"
+reviewers:
+  - "@markmandel"
+  - "@gongmax"
+  - "@igooch"
+approvers:
+  - "@markmandel"
+  - "@gongmax"
+  - "@igooch"
+creation-date: 2024-12-10
+last-updated: 2024-12-10
+status: provisional
+latest-milestone: '0.0'
+stage: alpha
