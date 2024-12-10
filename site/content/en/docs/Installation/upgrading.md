@@ -51,6 +51,75 @@ The following are steps to implement this:
 If you are upgrading a single cluster, we recommend creating a maintenance window, in which your game goes offline
 for the period of your upgrade, as there will be a short period in which Agones will be non-responsive during the upgrade.
 
+{{% feature publishVersion="1.46.0" %}}
+#### In-Place Agones Upgrades
+
+{{< alert color="warning" title="Warning" >}}
+Work is ongoing for [In-Place Agones Upgrades](https://github.com/googleforgames/agones/issues/3766),
+and the feature is currently in `Alpha`. Please continue to use the multi-cluster strategy for
+production critical upgrades. Feedback on this `Alpha` feature is welcome and appreciated.
+{{< /alert >}}
+
+For In-Place Agones Upgrades we highly recommend installing using Helm. Helm has a significant
+advantage over `install.yaml` in that Helm automatically rolls back the upgrade if the agones-system
+pods are not all successfully running within the designated `--timeout`.
+
+Regardless of the type of installation, there will be a brief ~20-30 second period during upgrade
+when the controller service switches to the new controller endpoint that service is unable to connect
+to the new controller. The SDK servers are still functional during this time, however the controller
+will not be able to receive requests such as creating new game servers. Be sure to include retry
+logic with back-off in your application logic to account for the error `Internal error occurred:
+failed calling webhook "mutations.agones.dev": failed to call webhook: Post
+"https://agones-controller-service.agones-system.svc:443/mutate?timeout=10s": no endpoints available
+for service "agones-controller-service""` during this time.
+
+Note: By “controller derived configuration” we mean the parts of the Game Server’s final state that
+are not part of the Game Server spec template that are instead passed to the Game Server through the
+controller, such as the FEATURE_GATES or the Agones SDK Image.
+
+1. Run `helm upgrade my-release agones/agones --install --atomic --wait --timeout 10m --namespace=agones-system`
+with all the appropriate arguments, such a `--version`, for your specific upgrade. Keep in mind that
+`helm upgrade` overwrites all `--set agones.` arguments, so these must be set for each upgrade. See
+[Helm Configuration]({{< relref "./Install Agones/helm.md" >}}) for a list of all available
+configurable parameters.
+2. Wait until the `helm upgrade` is complete.
+3. To Upgrade the Fleet, or Not to Upgrade
+    1. *Option 1 -- Recommended* Kick off rolling update of the existing Fleet.
+        1. Make any change to the Fleet Spec Template in your fleet.yaml and reapply with
+        `kubectl apply -f fleet.yaml`. We recommend you also add or update a label on the fleet as in
+        the next step.
+        2. If you have no changes to make to the existing `spec.template` in the fleet.yaml, then either
+        add a label or annotation to the `spec.template.metadata`. Reapply with `kubectl apply -f fleet.yaml`.
+        ```yaml
+        apiVersion: agones.dev/v1
+        kind: Fleet
+        metadata:
+          name: example-fleet
+        spec:
+          replicas: 2
+          template:
+            metadata:
+              # Adding a label will start a Fleet rollout with the most up to date Agones config. The label can be any `key: value` pair.
+              labels:
+                release: 1.42.0
+        ```
+        3. Ready Game Servers will shut down (RollingUpdate or Recreate based on the Fleet replacement
+        strategy type) and be recreated on the new configuraiton. Allocated Game Servers will use the
+        existing configuration, and once they are set back to Ready, these Game Servers will shut down
+        and be replaced by Ready Game Servers at the new configuration.
+        4. Wait until all the previous Ready GameServers have been replaced by the new configuration.
+
+    2. *Option 2 -- Not Recommended* Continue using Fleet at its existing configuration without kicking
+    off a Fleet upgrade.
+        1. Ready Game Servers and Allocated Game servers that return to the Ready state retain the old
+        configuration.
+        2. Any newly created Game Servers will be at the new configuration.
+        3. This make it difficult to track when the entire fleet is at a new configuration, and
+        increases the likelihood of having multiple Game Server configurations on the same Fleet.
+4. Run any other tests to ensure the Agones installation is working as expected.
+5. Congratulations - you have now upgraded to a new version of Agones! 👍
+{{% /feature %}}
+
 #### Installation with install.yaml
 
 If you installed [Agones with install.yaml]({{< relref "./Install Agones/yaml.md" >}}), then you will need to delete
