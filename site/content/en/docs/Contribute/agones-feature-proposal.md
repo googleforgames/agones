@@ -64,8 +64,8 @@ It is particularly beneficial for tracking:
 
 To get started with contributing to the AFP process, check out the following resources:
 
-- **[AFP Template](https://github.com/googleforgames/agones/blob/main/docs/proposals/NNNN-afp-template/afp.yaml)**: A detailed template for creating an AFP.
-- **[AFP Metadata](https://github.com/googleforgames/agones/blob/main/docs/proposals/0000-afp-process/README.md#afp-metadata)**: Information on the metadata required for each AFP.
+- **[AFP Template](#)**: A detailed template for creating an AFP.
+- **[AFP Metadata](#)**: Information on the metadata required for each AFP.
 - **[How to Propose a Feature](https://github.com/googleforgames/agones/issues/new/choose)**: Step-by-step instructions on how to submit a new AFP.
 
 ### Examples of AFPs
