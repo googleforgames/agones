@@ -18,6 +18,7 @@ List of items to do for upgrading to {version_1} {version_2} {version_3}
 - [ ] Update kubectl in dev tooling to {version_2}, the latest patch version can be found [here](https://kubernetes.io/releases/)
     - [ ] Update kubectl in `build/build-image/Dockerfile`
     - [ ] Update kubectl in `build/e2e-image/Dockerfile`
+  - [ ] Update kubectl in `test/upgrade/Dockerfile`
 - [ ] Update the Kubernetes version of the below test clusters to {version_2}
     - [ ] Minikube in `build/includes/minikube.mk` (Get the patch version [here](https://kubernetes.io/releases/) since minikube supports the latest Kubernetes release)
     - [ ] Kind in `build/includes/kind.mk` (Confirm {version_2} is supported and get the patch version [here](https://github.com/kubernetes-sigs/kind/releases))
@@ -41,10 +42,10 @@ List of items to do for upgrading to {version_1} {version_2} {version_3}
     - [ ] Update the `grpc_release_tag` in the SDK [base image grpc version](https://github.com/googleforgames/agones/blob/main/build/includes/sdk.mk).
     - [ ] Update the gRPC version number in C++ gRPC Dependency documentation [here](https://github.com/googleforgames/agones/blob/main/site/content/en/docs/Guides/Client%20SDKs/cpp.md).
     - [ ] Update the gRPC version
-      ([Dockerfile](https://github.com/googleforgames/agones/blob/main/examples/cpp-simple/Dockerfile)) 
+      ([Dockerfile](https://github.com/googleforgames/agones/blob/main/examples/cpp-simple/Dockerfile))
     - [ ] Update the C++ `cpp-simple` image.
         - [ ] Update the `cpp-simple` example images tag. At `build` directory, run:
-          - [ ] `make bump-image IMAGENAME=cpp-simple-server VERSION=<current-image-version>` 
+          - [ ] `make bump-image IMAGENAME=cpp-simple-server VERSION=<current-image-version>`
         - [ ] Run the following to generate and push the new `cpp-simple` example images:
           - [ ] In `examples/cpp-simple`, run: `make cloud-build`
     - [ ] Regenerate all client sdks: [make gen-all-sdk-grpc](https://github.com/googleforgames/agones/blob/main/build/README.md#make-gen-all-sdk-grpc)
@@ -62,6 +63,14 @@ List of items to do for upgrading to {version_1} {version_2} {version_3}
     - [ ] After the PR that includes the above Cloud Build configuration change has been merged and all the existing pending PRs in the Cloud Build queue have picked up the new configuration, submit a separate PR to update the e2e clusters terraform module to remove the e2e cluster with the oldest supported K8s version.
         - [ ] In `build/terraform/e2e/module.tf`, continue following the instructions in the comment to update the `kubernetes_versions` map.
         - [ ] Destroy the old clusters with new scripts: `cd build; make GCP_PROJECT=agones-images gcloud-e2e-test-cluster`
+    - [ ] In `build/terraform/upgrade/module.tf`, continue following the instructions in the comment to
+          update the `kubernetes_versions` map.
+    - [ ] Run the same terraform command as in the previous step:
+          ```
+          cd build; make shell; cd build/terraform/upgrade
+          terraform init -backend-config="bucket=agones-images-upgrade-infra-bucket-tfstate" -backend-config="prefix=terraform/state"
+          terraform apply -var project="agones-images"
+          ```
 - [ ] Recreate the performance test cluster, and config the performance test to run on the new cluster
     - [ ] In `build/terraform/performance/module.tf`, update the `kubernetes_versions` to {version_2} and make sure the region is always set to `us-central1`.
     - [ ] Recreate the cluster with the new script:
