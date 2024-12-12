@@ -15,6 +15,7 @@ List of items to do for upgrading to {version_1} {version_2} {version_3}
     - [ ] Update Kubernetes version of GKE cluster (both `gke` and `gke-autopilot`) to {version_2}
     - [ ] Update Kubernetes version of AKS to the newest supported version in {version_1} {version_2} {version_3}
     - [ ] Update Kubernetes version of EKS to the newest supported version in {version_1} {version_2} {version_3}
+    - [ ] Update Kubernetes version of OKE to the newest supported version in {version_1} {version_2} {version_3}
 - [ ] Update kubectl in dev tooling to {version_2}, the latest patch version can be found [here](https://kubernetes.io/releases/)
     - [ ] Update kubectl in `build/build-image/Dockerfile`
     - [ ] Update kubectl in `build/e2e-image/Dockerfile`
