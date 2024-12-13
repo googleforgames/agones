@@ -234,6 +234,9 @@ github.com/heptiolabs/healthcheck
 # github.com/imdario/mergo v0.3.6
 ## explicit
 github.com/imdario/mergo
+# github.com/inconshreveable/mousetrap v1.1.0
+## explicit; go 1.18
+github.com/inconshreveable/mousetrap
 # github.com/jmespath/go-jmespath v0.4.0
 ## explicit; go 1.14
 github.com/jmespath/go-jmespath
@@ -313,6 +316,9 @@ github.com/spf13/afero/mem
 # github.com/spf13/cast v1.3.0
 ## explicit
 github.com/spf13/cast
+# github.com/spf13/cobra v1.8.1
+## explicit; go 1.15
+github.com/spf13/cobra
 # github.com/spf13/jwalterweatherman v1.0.0
 ## explicit
 github.com/spf13/jwalterweatherman
@@ -1085,6 +1091,9 @@ k8s.io/client-go/util/keyutil
 k8s.io/client-go/util/retry
 k8s.io/client-go/util/watchlist
 k8s.io/client-go/util/workqueue
+# k8s.io/component-base v0.31.0
+## explicit; go 1.22.0
+k8s.io/component-base/cli/flag
 # k8s.io/gengo v0.0.0-20230829151522-9cce18d56c01
 ## explicit; go 1.13
 k8s.io/gengo/parser
