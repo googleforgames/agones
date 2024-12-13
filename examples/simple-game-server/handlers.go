@@ -283,7 +283,7 @@ func handlePlayerConnected(s *sdk.SDK, parts []string, _ ...context.CancelFunc) 
 	return
 }
 
-// handleGetPlayers returns a comma delimeted list of connected players
+// handleGetPlayers returns a comma delimited list of connected players
 func handleGetPlayers(s *sdk.SDK, parts []string, _ ...context.CancelFunc) (response string, addACK bool, responseError error) {
 	log.Print("Retrieving connected player list")
 	list, err := s.Alpha().GetConnectedPlayers()
@@ -535,7 +535,7 @@ func handleGetListValues(s *sdk.SDK, parts []string, _ ...context.CancelFunc) (r
 	return
 }
 
-// handleAppendListValue returns if the given value was successfuly added to the List or not
+// handleAppendListValue returns if the given value was successfully added to the List or not
 func handleAppendListValue(s *sdk.SDK, parts []string, _ ...context.CancelFunc) (response string, addACK bool, responseError error) {
 	if len(parts) < 3 {
 		response = "Invalid APPEND_LIST_VALUE, should have 2 arguments"
@@ -553,7 +553,7 @@ func handleAppendListValue(s *sdk.SDK, parts []string, _ ...context.CancelFunc) 
 	return
 }
 
-// handleDeleteListValue returns if the given value was successfuly deleted from the List or not
+// handleDeleteListValue returns if the given value was successfully deleted from the List or not
 func handleDeleteListValue(s *sdk.SDK, parts []string, _ ...context.CancelFunc) (response string, addACK bool, responseError error) {
 	if len(parts) < 3 {
 		response = "Invalid DELETE_LIST_VALUE, should have 2 arguments"

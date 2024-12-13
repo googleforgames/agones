@@ -28,6 +28,7 @@ import (
 	"agones.dev/agones/pkg/client/informers/externalversions"
 	listerv1 "agones.dev/agones/pkg/client/listers/agones/v1"
 	autoscalinglisterv1 "agones.dev/agones/pkg/client/listers/autoscaling/v1"
+	fleetsv1 "agones.dev/agones/pkg/fleets"
 	"agones.dev/agones/pkg/util/runtime"
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/pkg/errors"
@@ -35,6 +36,7 @@ import (
 	"go.opencensus.io/stats"
 	"go.opencensus.io/tag"
 	corev1 "k8s.io/api/core/v1"
+	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -77,6 +79,7 @@ type Controller struct {
 	gameServerSynced          cache.InformerSynced
 	fleetSynced               cache.InformerSynced
 	fleetLister               listerv1.FleetLister
+	gameServerSetLister       listerv1.GameServerSetLister
 	fasSynced                 cache.InformerSynced
 	fasLister                 autoscalinglisterv1.FleetAutoscalerLister
 	lock                      sync.Mutex
@@ -103,6 +106,8 @@ func NewController(
 	fasInformer := fas.Informer()
 	node := kubeInformerFactory.Core().V1().Nodes()
 
+	gameServerSets := agonesInformerFactory.Agones().V1().GameServerSets()
+
 	// GameServerStateLastChange Contains the time when the GameServer
 	// changed its state last time
 	// on delete and state change remove GameServerName key
@@ -117,6 +122,7 @@ func NewController(
 		gameServerSynced:          gsInformer.HasSynced,
 		fleetSynced:               fInformer.HasSynced,
 		fleetLister:               fleets.Lister(),
+		gameServerSetLister:       gameServerSets.Lister(),
 		fasSynced:                 fasInformer.HasSynced,
 		fasLister:                 fas.Lister(),
 		gsCount:                   GameServerCount{},
@@ -240,6 +246,8 @@ func (c *Controller) recordFleetChanges(obj interface{}) {
 	c.recordFleetReplicas(f.Name, f.Namespace, f.Status.Replicas, f.Status.AllocatedReplicas,
 		f.Status.ReadyReplicas, f.Spec.Replicas, f.Status.ReservedReplicas)
 
+	c.recordFleetRolloutPercentage(f)
+
 	if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
 		if f.Status.Counters != nil {
 			c.recordCounters(f.Name, f.Namespace, f.Status.Counters)
@@ -248,6 +256,53 @@ func (c *Controller) recordFleetChanges(obj interface{}) {
 			c.recordLists(f.Name, f.Namespace, f.Status.Lists)
 		}
 	}
+}
+
+func (c *Controller) recordFleetRolloutPercentage(fleet *agonesv1.Fleet) {
+	list, err := fleetsv1.ListGameServerSetsByFleetOwner(c.gameServerSetLister, fleet)
+	if err != nil {
+		c.logger.Errorf("Error listing GameServerSets for fleet %s in namespace %s: %v", fleet.Name, fleet.Namespace, err.Error())
+		return
+	}
+
+	active, _ := c.filterGameServerSetByActive(fleet, list)
+
+	if active == nil {
+		fleetName := fleet.ObjectMeta.Namespace + "/" + fleet.ObjectMeta.Name
+		c.logger.Debugf("Could not find active GameServerSet %s", fleetName)
+		active = fleet.GameServerSet()
+	}
+
+	currentReplicas := active.Status.Replicas
+	desiredReplicas := fleet.Spec.Replicas
+
+	ctx, _ := tag.New(context.Background(), tag.Upsert(keyName, fleet.Name), tag.Upsert(keyNamespace, fleet.GetNamespace()))
+
+	// Record current replicas count
+	RecordWithTags(ctx, []tag.Mutator{tag.Upsert(keyType, "current_replicas")},
+		fleetRolloutPercentStats.M(int64(currentReplicas)))
+
+	// Record desired replicas count
+	RecordWithTags(ctx, []tag.Mutator{tag.Upsert(keyType, "desired_replicas")},
+		fleetRolloutPercentStats.M(int64(desiredReplicas)))
+}
+
+// filterGameServerSetByActive returns the active GameServerSet (or nil if it
+// doesn't exist) and then the rest of the GameServerSets that are controlled
+// by this Fleet
+func (c *Controller) filterGameServerSetByActive(fleet *agonesv1.Fleet, list []*agonesv1.GameServerSet) (*agonesv1.GameServerSet, []*agonesv1.GameServerSet) {
+	var active *agonesv1.GameServerSet
+	var rest []*agonesv1.GameServerSet
+
+	for _, gsSet := range list {
+		if apiequality.Semantic.DeepEqual(gsSet.Spec.Template, fleet.Spec.Template) {
+			active = gsSet
+		} else {
+			rest = append(rest, gsSet)
+		}
+	}
+
+	return active, rest
 }
 
 func (c *Controller) recordFleetDeletion(obj interface{}) {

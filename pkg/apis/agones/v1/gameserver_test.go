@@ -2223,6 +2223,63 @@ func TestGameServerAppendListValues(t *testing.T) {
 	}
 }
 
+func TestGameServerDeleteListValues(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		gs      GameServer
+		name    string
+		want    ListStatus
+		values  []string
+		wantErr bool
+	}{
+		"list not in game server no-op and error": {
+			gs: GameServer{Status: GameServerStatus{
+				Lists: map[string]ListStatus{
+					"foos": {
+						Values:   []string{"foo", "bar", "bax"},
+						Capacity: 100,
+					},
+				},
+			}},
+			name:    "foo",
+			values:  []string{"bar", "baz"},
+			wantErr: true,
+		},
+		"delete list value - one value not present": {
+			gs: GameServer{Status: GameServerStatus{
+				Lists: map[string]ListStatus{
+					"foo": {
+						Values:   []string{"foo", "bar", "bax"},
+						Capacity: 100,
+					},
+				},
+			}},
+			name:    "foo",
+			values:  []string{"bar", "baz"},
+			wantErr: false,
+			want: ListStatus{
+				Values:   []string{"foo", "bax"},
+				Capacity: 100,
+			},
+		},
+	}
+
+	for test, testCase := range testCases {
+		t.Run(test, func(t *testing.T) {
+			err := testCase.gs.DeleteListValues(testCase.name, testCase.values)
+			if err != nil {
+				assert.True(t, testCase.wantErr)
+			} else {
+				assert.False(t, testCase.wantErr)
+			}
+			if list, ok := testCase.gs.Status.Lists[testCase.name]; ok {
+				assert.Equal(t, testCase.want, list)
+			}
+		})
+	}
+}
+
 func TestMergeRemoveDuplicates(t *testing.T) {
 	t.Parallel()
 

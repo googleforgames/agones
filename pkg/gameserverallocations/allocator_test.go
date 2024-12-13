@@ -309,7 +309,7 @@ func TestAllocatorApplyAllocationToGameServerCountsListsActions(t *testing.T) {
 		Status: agonesv1.GameServerStatus{NodeName: "node1", State: agonesv1.GameServerStateReady,
 			Lists: map[string]agonesv1.ListStatus{
 				"players": {
-					Values:   []string{},
+					Values:   []string{"alice", "bob", "cat"},
 					Capacity: 100,
 				},
 			},
@@ -339,7 +339,7 @@ func TestAllocatorApplyAllocationToGameServerCountsListsActions(t *testing.T) {
 		wantCounters map[string]agonesv1.CounterStatus
 		wantLists    map[string]agonesv1.ListStatus
 	}{
-		"CounterActions increment and ListActions append and update capacity": {
+		"CounterActions increment and ListActions add, delete, and update capacity": {
 			features: fmt.Sprintf("%s=true", runtime.FeatureCountsAndLists),
 			gs:       &gs1,
 			gsa: &allocationv1.GameServerAllocation{
@@ -356,8 +356,9 @@ func TestAllocatorApplyAllocationToGameServerCountsListsActions(t *testing.T) {
 						}},
 					Lists: map[string]allocationv1.ListAction{
 						"players": {
-							AddValues: []string{"x7un", "8inz"},
-							Capacity:  &FORTY,
+							AddValues:    []string{"x7un", "8inz"},
+							Capacity:     &FORTY,
+							DeleteValues: []string{"bob"},
 						}}}},
 			wantCounters: map[string]agonesv1.CounterStatus{
 				"rooms": {
@@ -366,7 +367,7 @@ func TestAllocatorApplyAllocationToGameServerCountsListsActions(t *testing.T) {
 				}},
 			wantLists: map[string]agonesv1.ListStatus{
 				"players": {
-					Values:   []string{"x7un", "8inz"},
+					Values:   []string{"alice", "cat", "x7un", "8inz"},
 					Capacity: 40,
 				}},
 		},

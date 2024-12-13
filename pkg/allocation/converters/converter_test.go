@@ -135,8 +135,9 @@ func TestConvertAllocationRequestToGameServerAllocation(t *testing.T) {
 				},
 				Lists: map[string]*pb.ListAction{
 					"p": {
-						AddValues: []string{"foo", "bar", "baz"},
-						Capacity:  wrapperspb.Int64(10),
+						AddValues:    []string{"foo", "bar", "baz"},
+						Capacity:     wrapperspb.Int64(10),
+						DeleteValues: []string{"alice", "bob", "cat"},
 					},
 				},
 				Scheduling: pb.AllocationRequest_Packed,
@@ -217,8 +218,9 @@ func TestConvertAllocationRequestToGameServerAllocation(t *testing.T) {
 					},
 					Lists: map[string]allocationv1.ListAction{
 						"p": {
-							AddValues: []string{"foo", "bar", "baz"},
-							Capacity:  &ten,
+							AddValues:    []string{"foo", "bar", "baz"},
+							Capacity:     &ten,
+							DeleteValues: []string{"alice", "bob", "cat"},
 						},
 					},
 					Selectors: []allocationv1.GameServerSelector{
@@ -742,6 +744,9 @@ func TestConvertGSAToAllocationRequest(t *testing.T) {
 						"d": {
 							Capacity: &two,
 						},
+						"c": {
+							DeleteValues: []string{"good", "bye"},
+						},
 					},
 					Scheduling: apis.Distributed,
 				},
@@ -820,6 +825,9 @@ func TestConvertGSAToAllocationRequest(t *testing.T) {
 					},
 					"d": {
 						Capacity: wrapperspb.Int64(two),
+					},
+					"c": {
+						DeleteValues: []string{"good", "bye"},
 					},
 				},
 			},

@@ -90,12 +90,12 @@ message AllocationRequest {
   //
   // For `Distributed` strategy sorting, the entire selection of `GameServers` will be sorted by this priority list to provide the
   // order that `GameServers` will be allocated by.
-	repeated Priority priorities = 9;
+  repeated Priority priorities = 9;
 
   // [Stage: Beta]
   // [FeatureFlag:CountsAndLists]
   // Counters and Lists provide a set of actions to perform
-	// on Counters and Lists during allocation.
+  // on Counters and Lists during allocation.
   map<string, CounterAction> counters = 10;
   map<string, ListAction> lists = 11;
 }
@@ -191,10 +191,10 @@ message PlayerSelector {
 // CounterSelector is the filter options for a GameServer based on the count and/or available capacity.
 // 0 for MaxCount or MaxAvailable means unlimited maximum. Default for all fields: 0
 message CounterSelector {
-	int64 minCount = 1;
-	int64 maxCount = 2;
-	int64 minAvailable = 3;
-	int64 maxAvailable = 4;
+  int64 minCount = 1;
+  int64 maxCount = 2;
+  int64 minAvailable = 3;
+  int64 maxAvailable = 4;
 }
 
 // ListSelector is the filter options for a GameServer based on List available capacity and/or the
@@ -202,9 +202,9 @@ message CounterSelector {
 // 0 for MaxAvailable means unlimited maximum. Default for integer fields: 0
 // "" for ContainsValue means ignore field. Default for string field: ""
 message ListSelector {
-	string containsValue = 1;
-	int64 minAvailable = 2;
-	int64 maxAvailable = 3;
+  string containsValue = 1;
+  int64 minAvailable = 2;
+  int64 maxAvailable = 3;
 }
 
 // Priority is a sorting option for GameServers with Counters or Lists based on the Capacity.
@@ -232,14 +232,16 @@ message Priority {
 // Capacity: Update the maximum capacity of the Counter to this number (optional). Min 0, Max int64.
 message CounterAction {
   google.protobuf.StringValue action = 1;
-	google.protobuf.Int64Value amount = 2;
-	google.protobuf.Int64Value capacity = 3;
+  google.protobuf.Int64Value amount = 2;
+  google.protobuf.Int64Value capacity = 3;
 }
 
 // ListAction is an optional action that can be performed on a List at allocation.
 // AddValues: Append values to a List's Values array (optional). Any duplicate values will be ignored.
 // Capacity: Update the maximum capacity of the Counter to this number (optional). Min 0, Max 1000.
+// DeleteValues: Remove values from a List's Values array (optional). Any nonexistant values will be ignored.
 message ListAction {
-	repeated string addValues = 1;
-	google.protobuf.Int64Value capacity = 2;
+  repeated string addValues = 1;
+  google.protobuf.Int64Value capacity = 2;
+  repeated string deleteValues = 3;
 }

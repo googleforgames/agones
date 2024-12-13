@@ -21,6 +21,7 @@ import (
 )
 
 const (
+	fleetRolloutPercent                     = "fleet_rollout_percent"
 	fleetReplicaCountName                   = "fleets_replicas_count"
 	fleetAutoscalerBufferLimitName          = "fleet_autoscalers_buffer_limits"
 	fleetAutoscalterBufferSizeName          = "fleet_autoscalers_buffer_size"
@@ -44,9 +45,10 @@ var (
 	fleetAutoscalerViews = []string{fleetAutoscalerBufferLimitName, fleetAutoscalterBufferSizeName, fleetAutoscalerCurrentReplicaCountName,
 		fleetAutoscalersDesiredReplicaCountName, fleetAutoscalersAbleToScaleName, fleetAutoscalersLimitedName}
 	// fleetViews are metric views associated with Fleets
-	fleetViews = append([]string{fleetReplicaCountName, gameServersCountName, gameServersTotalName, gameServersPlayerConnectedTotalName, gameServersPlayerCapacityTotalName, gameServerStateDurationName, fleetCountersName, fleetListsName}, fleetAutoscalerViews...)
+	fleetViews = append([]string{fleetRolloutPercent, fleetReplicaCountName, gameServersCountName, gameServersTotalName, gameServersPlayerConnectedTotalName, gameServersPlayerCapacityTotalName, gameServerStateDurationName, fleetCountersName, fleetListsName}, fleetAutoscalerViews...)
 
 	stateDurationSeconds           = []float64{0, 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384}
+	fleetRolloutPercentStats       = stats.Int64("fleets/rollout_percent", "The current fleet rollout percentage", "1")
 	fleetsReplicasCountStats       = stats.Int64("fleets/replicas_count", "The count of replicas per fleet", "1")
 	fasBufferLimitsCountStats      = stats.Int64("fas/buffer_limits", "The buffer limits of autoscalers", "1")
 	fasBufferSizeStats             = stats.Int64("fas/buffer_size", "The buffer size value of autoscalers", "1")
@@ -65,6 +67,13 @@ var (
 	gsStateDurationSec             = stats.Float64("gameservers_state/duration", "The duration of gameservers to be in a particular state", stats.UnitSeconds)
 
 	stateViews = []*view.View{
+		{
+			Name:        fleetRolloutPercent,
+			Measure:     fleetRolloutPercentStats,
+			Description: "Measures the current progress of fleet rollout",
+			Aggregation: view.LastValue(),
+			TagKeys:     []tag.Key{keyName, keyType, keyNamespace},
+		},
 		{
 			Name:        fleetReplicaCountName,
 			Measure:     fleetsReplicasCountStats,

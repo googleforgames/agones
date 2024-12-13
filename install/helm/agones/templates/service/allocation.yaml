@@ -65,7 +65,7 @@ spec:
       targetPort: {{ .Values.agones.allocator.service.grpc.targetPort }}
       {{- if .Values.agones.allocator.service.grpc.appProtocol }}
       appProtocol: {{.Values.agones.allocator.service.grpc.appProtocol}}
-      {{- end}}      
+      {{- end}}
       {{- if eq .Values.agones.allocator.service.serviceType "NodePort" }}
       nodePort: {{ .Values.agones.allocator.service.grpc.nodePort }}
       {{- end }}
@@ -79,6 +79,7 @@ spec:
   loadBalancerIP: {{ .Values.agones.allocator.service.loadBalancerIP }}
 {{- end }}
 {{- if eq .Values.agones.allocator.service.serviceType "LoadBalancer" }}
+  externalTrafficPolicy: {{ .Values.agones.allocator.service.externalTrafficPolicy }}
   {{- if .Values.agones.allocator.service.loadBalancerSourceRanges }}
   loadBalancerSourceRanges:
 {{ toYaml .Values.agones.allocator.service.loadBalancerSourceRanges | indent 4 }}

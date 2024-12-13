@@ -28,8 +28,12 @@ import (
 	"strings"
 	"time"
 
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
+	"agones.dev/agones/pkg/client/clientset/versioned"
+	"agones.dev/agones/pkg/client/informers/externalversions"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
@@ -48,17 +52,24 @@ const (
 	SidecarPullPolicy = "true"
 	// LogLevel sets the Agones Helm configuration log level
 	LogLevel = "debug"
+	// Timeout sets the amount of time to wait for resources to become ready. Should be more than the
+	// time for an Autopilot cluster to scale up.
+	Timeout = 10 * time.Minute
 	// HelmChart is the helm chart for the public Agones releases
 	HelmChart = "agones/agones"
+	// TestChart is the registry for Agones Helm chart development builds
+	TestChart = "./install/helm"
 	// AgonesRegistry is the public registry for Agones releases
 	AgonesRegistry = "us-docker.pkg.dev/agones-images/release"
-	// TestRegistry is the public registry for upgrade test container files
-	TestRegistry = "us-docker.pkg.dev/agones-images/ci/sdk-client-test"
+	// TestRegistry is the registry for Agones development builds
+	TestRegistry = "us-docker.pkg.dev/agones-images/ci"
+	// ContainerRegistry is the registry for upgrade test container files
+	ContainerRegistry = "us-docker.pkg.dev/agones-images/ci/sdk-client-test"
 )
 
 var (
-	// Dev is the current development version of Agones
-	Dev = os.Getenv("Dev")
+	// DevVersion is the current development version of Agones
+	DevVersion = os.Getenv("DevVersion")
 	// ReleaseVersion is the latest released version of Agones (DEV - 1).
 	ReleaseVersion = os.Getenv("ReleaseVersion")
 	// PodName the name of the pod this container is running in
@@ -81,8 +92,14 @@ func main() {
 		log.Fatal("Could not create the kubernetes api clientset", err)
 	}
 
+	agonesClient, err := versioned.NewForConfig(cfg)
+	if err != nil {
+		log.Fatal("Could not create the agones api clientset")
+	}
+
 	validConfigs := configTestSetup(ctx, kubeClient)
-	go watchGameServerPods(kubeClient, make(chan struct{}), make(map[string]podLog), len(validConfigs)*2)
+	go watchGameServers(agonesClient, len(validConfigs)*2)
+	go watchGameServerEvents(kubeClient)
 	addAgonesRepo()
 	runConfigWalker(ctx, validConfigs)
 	cleanUpResources()
@@ -111,9 +128,10 @@ type gameServerTemplate struct {
 	CountsAndLists bool
 }
 
-type podLog struct {
+type gsLog struct {
 	SdkVersion        string
 	GameServerVersion string
+	GameServerState   string
 }
 
 type helmStatuses []struct {
@@ -136,7 +154,7 @@ func configTestSetup(ctx context.Context, kubeClient *kubernetes.Clientset) []*c
 	// Get the mappings of valid Kubernetes, Agones, and Feature Gate versions from the configmap.
 	err := json.Unmarshal([]byte(VersionMappings), &versionMap)
 	if err != nil {
-		log.Fatal("Could not Unmarshal", err)
+		log.Fatal("Could not Unmarshal ", err)
 	}
 
 	// Find valid Agones versions and feature gates for the current version of Kubernetes.
@@ -148,7 +166,7 @@ func configTestSetup(ctx context.Context, kubeClient *kubernetes.Clientset) []*c
 		countsAndLists := containsCountsAndLists(agonesVersion)
 		ct.agonesVersion = agonesVersion
 		if agonesVersion == "Dev" {
-			ct.agonesVersion = Dev
+			ct.agonesVersion = DevVersion
 			// Game server container cannot be created at DEV version due to go.mod only able to access
 			// published Agones versions. Use N-1 for DEV.
 			ct.gameServerPath = createGameServerFile(ReleaseVersion, countsAndLists)
@@ -285,19 +303,19 @@ func runConfigWalker(ctx context.Context, validConfigs []*configTest) {
 	for _, config := range validConfigs {
 		registry := AgonesRegistry
 		chart := HelmChart
-		if config.agonesVersion == Dev {
-			// TODO: Update to templated value for registry and chart for Dev build
-			continue
+		if config.agonesVersion == DevVersion {
+			registry = TestRegistry
+			chart = TestChart
 		}
 		err := installAgonesRelease(config.agonesVersion, registry, config.featureGates, ImagePullPolicy,
 			SidecarPullPolicy, LogLevel, chart)
 		if err != nil {
-			log.Printf("installAgonesRelease err: %s", err)
+			log.Fatalf("installAgonesRelease err: %s", err)
 		}
 
 		// Wait for the helm release to install. Waits the same amount of time as the Helm timeout.
 		var helmStatus string
-		err = wait.PollUntilContextTimeout(ctx, 10*time.Second, 10*time.Minute, true, func(ctx context.Context) (done bool, err error) {
+		err = wait.PollUntilContextTimeout(ctx, 10*time.Second, Timeout, true, func(_ context.Context) (done bool, err error) {
 			helmStatus = checkHelmStatus(config.agonesVersion)
 			if helmStatus == "deployed" {
 				return true, nil
@@ -309,7 +327,11 @@ func runConfigWalker(ctx context.Context, validConfigs []*configTest) {
 				config.agonesVersion, helmStatus)
 		}
 
-		go createGameServers(cancelCtx, config.gameServerPath)
+		gsReady := make(chan bool)
+		go createGameServers(cancelCtx, config.gameServerPath, gsReady)
+		// Wait for the first game server pod created to become ready
+		<-gsReady
+		close(gsReady)
 		// Allow some soak time at the Agones version before next upgrade
 		time.Sleep(1 * time.Minute)
 	}
@@ -332,6 +354,12 @@ func checkHelmStatus(agonesVersion string) string {
 		log.Fatal("Could not Unmarshal", err)
 	}
 
+	// Remove the commit sha from the DevVersion i.e. from 1.46.0-dev-7168dd3 to 1.46.0-dev
+	if agonesVersion == DevVersion {
+		r := regexp.MustCompile(`1\.\d+\.\d+-dev`)
+		agonesVersion = r.FindString(DevVersion)
+	}
+
 	for _, status := range helmStatus {
 		if status.AppVersion == agonesVersion {
 			return status.Status
@@ -342,8 +370,9 @@ func checkHelmStatus(agonesVersion string) string {
 
 // Creates a gameserver yaml file from the mounted gameserver.yaml template. The name of the new
 // gameserver yaml is based on the Agones version, i.e. gs1440.yaml for Agones version 1.44.0
+// Note: This does not validate the created file.
 func createGameServerFile(agonesVersion string, countsAndLists bool) string {
-	gsTmpl := gameServerTemplate{Registry: TestRegistry, AgonesVersion: agonesVersion, CountsAndLists: countsAndLists}
+	gsTmpl := gameServerTemplate{Registry: ContainerRegistry, AgonesVersion: agonesVersion, CountsAndLists: countsAndLists}
 
 	gsTemplate, err := template.ParseFiles("gameserver.yaml")
 	if err != nil {
@@ -377,12 +406,16 @@ func createGameServerFile(agonesVersion string, countsAndLists bool) string {
 }
 
 // Create a game server every five seconds until the context is cancelled. The game server container
-// be the same binary version as the game server file. The SDK version is always the same as the
+// is the same binary version as the game server file. The SDK version is always the same as the
 // version of the Agones controller that created it. The Game Server shuts itself down after the
 // tests have run as part of the `sdk-client-test` logic.
-func createGameServers(ctx context.Context, gsPath string) {
+func createGameServers(ctx context.Context, gsPath string, gsReady chan bool) {
 	args := []string{"create", "-f", gsPath}
+	checkFirstGameServerReady(ctx, gsReady, args...)
+
 	ticker := time.NewTicker(5 * time.Second)
+	retries := 8
+	retry := 0
 
 	for {
 		select {
@@ -391,39 +424,82 @@ func createGameServers(ctx context.Context, gsPath string) {
 			return
 		case <-ticker.C:
 			_, err := runExecCommand(KubectlCmd, args...)
-			// TODO: Do not ignore error if unable to create due to something other than cluster scale up
+			// Ignore failures for ~45s at at time to account for the brief (~30s) during which the
+			// controller service is unavailable during upgrade.
 			if err != nil {
-				log.Printf("Could not create Gameserver %s: %s", gsPath, err)
+				if retry > retries {
+					log.Fatalf("Could not create Gameserver %s: %s. Too many successive errors.", gsPath, err)
+				}
+				log.Printf("Could not create Gameserver %s: %s. Retries left: %d.", gsPath, err, retries-retry)
+				retry++
+			} else {
+				retry = 0
 			}
 		}
 	}
 }
 
-// watchGameServerPods watches all game server pods for CrashLoopBackOff. Errors if the number of
-// CrashLoopBackOff backoff pods exceeds the number of acceptedFailures.
-func watchGameServerPods(kubeClient *kubernetes.Clientset, stopCh chan struct{}, failedPods map[string]podLog, acceptedFailures int) {
-	// Filter by label agones.dev/role=gameserver to only game server pods
-	labelOptions := informers.WithTweakListOptions(func(opts *metav1.ListOptions) {
-		opts.LabelSelector = "agones.dev/role=gameserver"
-	})
-	kubeInformerFactory := informers.NewSharedInformerFactoryWithOptions(kubeClient, 5*time.Second,
-		informers.WithNamespace("default"), labelOptions)
-	podInformer := kubeInformerFactory.Core().V1().Pods().Informer()
+// checkFirstGameServerReady waits for the Game Server Pod to be running. This may take several
+// minutes in Autopilot.
+func checkFirstGameServerReady(ctx context.Context, gsReady chan bool, args ...string) {
+	// Sample output: gameserver.agones.dev/sdk-client-test-5zjdn created
+	output, err := runExecCommand(KubectlCmd, args...)
+	if err != nil {
+		log.Fatalf("Could not create Gameserver: %s", err)
+	}
+	r := regexp.MustCompile(`sdk-client-test-\S+`)
+	gsName := r.FindString(string(output))
+	// Game Server has too many states, so using the pod instead as there are only two healthy states.
+	// Includes the gs name to make output logs easier to read.
+	getPodStatus := []string{"get", "pod", gsName, "-o=custom-columns=:.status.phase,:.metadata.name", "--no-headers"}
 
-	_, err := podInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
+	// Pod is created after Game Server, wait briefly before erroring out on unable to get pod.
+	retries := 0
+	err = wait.PollUntilContextTimeout(ctx, 2*time.Second, Timeout, true, func(_ context.Context) (done bool, err error) {
+		out, err := runExecCommand(KubectlCmd, getPodStatus...)
+		if err != nil && retries > 2 {
+			log.Fatalf("Could not get Gameserver %s state: %s", gsName, err)
+		}
+		if err != nil {
+			retries++
+			return false, nil
+		}
+		// Sample output: Running   sdk-client-test-bbvx9
+		podStatus := strings.Split(string(out), " ")
+		if podStatus[0] == "Running" || podStatus[0] == "Succeeded" {
+			gsReady <- true
+			return true, nil
+		}
+		return false, nil
+	})
+	if err != nil {
+		log.Fatalf("PollUntilContextTimeout timed out while wait for first gameserver %s to be Ready", gsName)
+	}
+}
+
+// watchGameServers watches all game servers for errors. Errors if the number of failed game servers
+// exceeds the number of acceptedFailures.
+func watchGameServers(agonesClient *versioned.Clientset, acceptedFailures int) {
+	stopCh := make(chan struct{})
+	failedGs := make(map[string]gsLog)
+
+	agonesInformerFactory := externalversions.NewSharedInformerFactory(agonesClient, 5*time.Second)
+	gsInformer := agonesInformerFactory.Agones().V1().GameServers().Informer()
+
+	_, err := gsInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		UpdateFunc: func(_, newObj interface{}) {
-			newPod := newObj.(*v1.Pod)
-			for _, cs := range newPod.Status.ContainerStatuses {
-				if cs.Name != "sdk-client-test" || cs.State.Waiting == nil || cs.State.Waiting.Reason != "CrashLoopBackOff" {
-					continue
-				}
-				gsVersion := newPod.Labels["agonesVersion"]
-				sdkVersion := newPod.Annotations["agones.dev/sdk-version"]
-				log.Printf("%s for pod: %s with game server binary version %s, and SDK version %s", cs.State.Waiting.Reason, newPod.Name, gsVersion, sdkVersion)
-				// Put failed pods into the map until it reaches capacity.
-				failedPods[newPod.Name] = podLog{GameServerVersion: gsVersion, SdkVersion: sdkVersion}
-				if len(failedPods) > acceptedFailures {
-					log.Fatalf("Too many Game Server pods in CrashLoopBackOff: %v", failedPods)
+			newGs := newObj.(*agonesv1.GameServer)
+			if newGs.Status.State == "Error" || newGs.Status.State == "Unhealthy" {
+				gsVersion := newGs.Labels["agonesVersion"]
+				sdkVersion := newGs.Annotations["agones.dev/sdk-version"]
+				log.Printf("Game server %s with binary version %s, and SDK version %s in %s state\n",
+					newGs.Name, gsVersion, sdkVersion, newGs.Status.State)
+
+				// Put failed game servers into the map until it reaches capacity.
+				failedGs[newGs.Name] = gsLog{GameServerVersion: gsVersion, SdkVersion: sdkVersion,
+					GameServerState: string(newGs.Status.State)}
+				if len(failedGs) > acceptedFailures {
+					log.Fatalf("Too many Game Servers in Error or Unhealthy states: %v", failedGs)
 				}
 			}
 		},
@@ -432,9 +508,51 @@ func watchGameServerPods(kubeClient *kubernetes.Clientset, stopCh chan struct{},
 		log.Fatal("Not able to create AddEventHandler", err)
 	}
 
-	go podInformer.Run(stopCh)
-	if !cache.WaitForCacheSync(stopCh, podInformer.HasSynced) {
-		log.Fatal("Timed out waiting for caches to sync")
+	go gsInformer.Run(stopCh)
+	if !cache.WaitForCacheSync(stopCh, gsInformer.HasSynced) {
+		log.Fatal("Timed out waiting for game server informer cache to sync")
+	}
+}
+
+// watchGameServerEvents watches all events on `sdk-client-test` containers for BackOff errors. The
+// purpose is to catch ImagePullBackOff errors.
+func watchGameServerEvents(kubeClient *kubernetes.Clientset) {
+	stopCh := make(chan struct{})
+
+	// Filter by Game Server `sdk-client-test` containers
+	containerName := "sdk-client-test"
+	containerPath := "spec.containers{sdk-client-test}"
+	fieldSelector := fields.OneTermEqualSelector("involvedObject.fieldPath", containerPath).String()
+	// First delete previous `sdk-client-test` events, otherwise there will be events from previous runs.
+	_, err := runExecCommand(KubectlCmd, []string{"delete", "events", "--field-selector", fieldSelector}...)
+	if err != nil {
+		log.Fatal("Could not delete `sdk-client-test` events", err)
+	}
+
+	eventOptions := informers.WithTweakListOptions(func(opts *metav1.ListOptions) {
+		opts.FieldSelector = fieldSelector
+	})
+	kubeInformerFactory := informers.NewSharedInformerFactoryWithOptions(kubeClient, 5*time.Second,
+		informers.WithNamespace("default"), eventOptions)
+	eventInformer := kubeInformerFactory.Core().V1().Events().Informer()
+
+	_, err = eventInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
+		AddFunc: func(obj interface{}) {
+			newEvent := obj.(*v1.Event)
+			gsPodName := newEvent.InvolvedObject.Name
+			if newEvent.Reason == "Failed" {
+				log.Fatalf("%s on %s %s has failed. Latest event: message %s", containerName, newEvent.Kind,
+					gsPodName, newEvent.Message)
+			}
+		},
+	})
+	if err != nil {
+		log.Fatal("Not able to create AddEventHandler", err)
+	}
+
+	go eventInformer.Run(stopCh)
+	if !cache.WaitForCacheSync(stopCh, eventInformer.HasSynced) {
+		log.Fatal("Timed out waiting for eventInformer cache to sync")
 	}
 }
 
@@ -455,7 +573,7 @@ func cleanUpResources() {
 	// Apiservice v1.allocation.agones.dev, which is part of Service agones-system/agones-controller-service,
 	// does not always get cleaned up on Helm uninstall, and needs to be deleted (if it exists) before
 	// the agones-system namespace can be removed.
-	// Ignore the error, because an "error" means Helm already uninstall the apiservice.
+	// Ignore the error, because an "error" means Helm already uninstalled the apiservice.
 	args = []string{"delete", "apiservice", "v1.allocation.agones.dev"}
 	out, err := runExecCommand(KubectlCmd, args...)
 	if err == nil {

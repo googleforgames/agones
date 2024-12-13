@@ -877,6 +877,10 @@ func TestListGameServerAllocationActions(t *testing.T) {
 		Values:   []string{"player0", "player1", "player2"},
 		Capacity: 8,
 	}
+	lists["rooms"] = agonesv1.ListStatus{
+		Values:   []string{"room0", "room1", "room2"},
+		Capacity: 20,
+	}
 
 	flt := defaultFleet(framework.Namespace)
 	flt.Spec.Template.Spec.Lists = lists
@@ -893,6 +897,7 @@ func TestListGameServerAllocationActions(t *testing.T) {
 
 	testCases := map[string]struct {
 		gsa          allocationv1.GameServerAllocation
+		listName     string
 		wantGsaErr   bool
 		wantCapacity *int64
 		wantValues   []string
@@ -907,6 +912,7 @@ func TestListGameServerAllocationActions(t *testing.T) {
 						"players": {
 							AddValues: []string{"player3", "player4", "player5"},
 						}}}},
+			listName:   "players",
 			wantGsaErr: false,
 			wantValues: []string{"player0", "player1", "player2", "player3", "player4", "player5"},
 		},
@@ -920,9 +926,24 @@ func TestListGameServerAllocationActions(t *testing.T) {
 						"players": {
 							Capacity: &one,
 						}}}},
+			listName:     "players",
 			wantGsaErr:   false,
 			wantValues:   []string{"player0"},
 			wantCapacity: &one,
+		},
+		"delete List values": {
+			gsa: allocationv1.GameServerAllocation{
+				Spec: allocationv1.GameServerAllocationSpec{
+					Selectors: []allocationv1.GameServerSelector{
+						{LabelSelector: fleetSelector},
+					},
+					Lists: map[string]allocationv1.ListAction{
+						"rooms": {
+							DeleteValues: []string{"room1", "room0"},
+						}}}},
+			listName:   "rooms",
+			wantGsaErr: false,
+			wantValues: []string{"room2"},
 		},
 	}
 
@@ -936,7 +957,7 @@ func TestListGameServerAllocationActions(t *testing.T) {
 			}
 			require.NoError(t, err)
 			assert.Equal(t, string(allocated), string(gsa.Status.State))
-			listStatus, ok := gsa.Status.Lists["players"]
+			listStatus, ok := gsa.Status.Lists[testCase.listName]
 			assert.True(t, ok)
 			if testCase.wantCapacity != nil {
 				assert.Equal(t, *testCase.wantCapacity, listStatus.Capacity)
@@ -948,7 +969,7 @@ func TestListGameServerAllocationActions(t *testing.T) {
 			assert.Equal(t, allocated, gs1.Status.State)
 			assert.NotNil(t, gs1.ObjectMeta.Annotations["agones.dev/last-allocated"])
 
-			list, ok := gs1.Status.Lists["players"]
+			list, ok := gs1.Status.Lists[testCase.listName]
 			assert.True(t, ok)
 			if testCase.wantCapacity != nil {
 				assert.Equal(t, *testCase.wantCapacity, list.Capacity)

@@ -116,3 +116,6 @@ spec:
         - x7un
         - 8inz
       capacity: 40  # Updates the maximum capacity of the Counter to this number. Min 0, Max 1000.
+      deleteValues:  # removes values from a List's Valules array. Any nonexistant values are ignored.
+        - alice
+        - bob

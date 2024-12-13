@@ -320,7 +320,7 @@ func (c *Controller) syncGameServerSet(ctx context.Context, key string) error {
 		numServersToAdd = 0
 	}
 
-	status := computeStatus(list)
+	status := computeStatus(gsSet, list)
 	fields := logrus.Fields{}
 
 	for _, gs := range list {
@@ -616,7 +616,7 @@ func parallelize(gameServers chan *agonesv1.GameServer, parallelism int, work fu
 
 // syncGameServerSetStatus synchronises the GameServerSet State with active GameServer counts
 func (c *Controller) syncGameServerSetStatus(ctx context.Context, gsSet *agonesv1.GameServerSet, list []*agonesv1.GameServer) error {
-	return c.updateStatusIfChanged(ctx, gsSet, computeStatus(list))
+	return c.updateStatusIfChanged(ctx, gsSet, computeStatus(gsSet, list))
 }
 
 // updateStatusIfChanged updates GameServerSet status if it's different than provided.
@@ -633,8 +633,14 @@ func (c *Controller) updateStatusIfChanged(ctx context.Context, gsSet *agonesv1.
 }
 
 // computeStatus computes the status of the game server set.
-func computeStatus(list []*agonesv1.GameServer) agonesv1.GameServerSetStatus {
+func computeStatus(gsSet *agonesv1.GameServerSet, list []*agonesv1.GameServer) agonesv1.GameServerSetStatus {
 	var status agonesv1.GameServerSetStatus
+
+	// Initialize list status with empty lists from spec
+	if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
+		status.Lists = createInitialListStatus(gsSet)
+		status.Counters = createInitialCounterStatus(gsSet)
+	}
 	for _, gs := range list {
 		if gs.IsBeingDeleted() {
 			// don't count GS that are being deleted
@@ -685,6 +691,22 @@ func computeStatus(list []*agonesv1.GameServer) agonesv1.GameServerSetStatus {
 	}
 
 	return status
+}
+
+func createInitialListStatus(gsSet *agonesv1.GameServerSet) map[string]agonesv1.AggregatedListStatus {
+	list := make(map[string]agonesv1.AggregatedListStatus)
+	for name := range gsSet.Spec.Template.Spec.Lists {
+		list[name] = agonesv1.AggregatedListStatus{}
+	}
+	return list
+}
+
+func createInitialCounterStatus(gsSet *agonesv1.GameServerSet) map[string]agonesv1.AggregatedCounterStatus {
+	counters := make(map[string]agonesv1.AggregatedCounterStatus)
+	for name := range gsSet.Spec.Template.Spec.Counters {
+		counters[name] = agonesv1.AggregatedCounterStatus{}
+	}
+	return counters
 }
 
 // aggregateCounters adds the contents of a CounterStatus map to an AggregatedCounterStatus map.

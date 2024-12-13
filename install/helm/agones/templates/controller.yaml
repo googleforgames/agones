@@ -59,6 +59,9 @@ spec:
         app: {{ template "agones.name" . }}
         release: {{ .Release.Name }}
         heritage: {{ .Release.Service }}
+{{- if .Values.agones.controller.labels }}
+{{- toYaml .Values.agones.controller.labels | nindent 8 }}
+{{- end }}
     spec:
       {{- if .Values.agones.controller.topologySpreadConstraints }}
       topologySpreadConstraints:

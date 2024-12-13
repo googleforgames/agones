@@ -28,6 +28,9 @@ bin
 /site/public
 /test
 
+# Allow upgrade test directory
+!/test/upgrade
+
 # Created by .ignore support plugin (hsz.mobi)
 ### Go template
 # Binaries for programs and plugins

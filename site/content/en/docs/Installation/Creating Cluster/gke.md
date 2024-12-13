@@ -91,6 +91,9 @@ Agones `GameServer` and `Fleet` manifests that work on Standard are compatible
 on Autopilot with some constraints, described in the following section. We recommend
 running GKE Autopilot clusters, if you meet the constraints.
 
+If you choose GKE Autopilot mode, then you should skip the following sections on
+`NodePool` configuration. GKE Autopilot handles this for you.
+
 You can't convert existing Standard clusters to Autopilot; create new Autopilot
 clusters instead.
 
@@ -124,6 +127,7 @@ whether these constraints impact your workloads:
 *  **[Scheduling strategy]({{<ref "/docs/Advanced/scheduling-and-autoscaling#fleet-scheduling">}}):**
    `Packed` is supported, which is the Agones default. `Distributed` is not
    supported.
+* **Node pools:** Autopilot manages nodes for you. If you require node pools with different configurations, use GKE Standard.
 *  **[Host port policy]({{<ref "/docs/reference/agones_crd_api_reference#agones.dev/v1.GameServerPort">}}):** `Dynamic` is supported, which is the Agones default.
    `Static` and `Passthrough` are not supported.
 *  **[Port range]({{<ref "/docs/reference/agones_crd_api_reference#agones.dev/v1.GameServerPort">}}):** `default` is supported, which is the Agones default.
@@ -237,7 +241,7 @@ Flag explanations:
 Create a [dedicated node pool](https://cloud.google.com/kubernetes-engine/docs/concepts/node-pools)
 for the Agones resources to be installed in. If you skip this step, the Agones controllers will
 share the default node pool with your game servers, which is fine for experimentation but not
-recommended for a production deployment.
+recommended for a production deployment. You must also skip this step if you are using GKE Autopilot.
 
 ```bash
 gcloud container node-pools create agones-system \
@@ -264,7 +268,8 @@ Flag explanations:
 #### (Optional) Creating a metrics node pool
 
 Create a node pool for [Metrics]({{< relref "../../Guides/metrics.md" >}}) if you want to monitor the
- Agones system using Prometheus with Grafana or Cloud Logging and Monitoring.
+ Agones system using Prometheus with Grafana or Cloud Logging and Monitoring. You must skip this step
+if you are using GKE Autopilot.
 
 ```bash
 gcloud container node-pools create agones-metrics \
@@ -292,7 +297,7 @@ Flag explanations:
 
 If you run game servers on Windows, you
 need to create a dedicated node pool for those servers. Windows Server 2019 (`WINDOWS_LTSC_CONTAINERD`) is the recommended image for Windows
-game servers.
+game servers. Note that GKE Autopilot does not support Windows nodes.
 
 {{< alert title="Warning" color="warning">}}
 Running `GameServers` on Windows nodes is currently Alpha. Feel free to file feedback

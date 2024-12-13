@@ -311,6 +311,11 @@ func (in *ListAction) DeepCopyInto(out *ListAction) {
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
+	if in.DeleteValues != nil {
+		in, out := &in.DeleteValues, &out.DeleteValues
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
 	if in.Capacity != nil {
 		in, out := &in.Capacity, &out.Capacity
 		*out = new(int64)
