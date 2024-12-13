@@ -216,7 +216,7 @@ func NewTLS(c *tls.Config) TransportCredentials {
 			if _, ok := tls12ForbiddenCipherSuites[cs.ID]; !ok {
 				tc.config.CipherSuites = append(tc.config.CipherSuites, cs.ID)
 			}
-		
+		}
 	}
 	return tc
 }
