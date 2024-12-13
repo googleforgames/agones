@@ -10,7 +10,7 @@ description: >
 ---
 
 Installing Agones creates several [Custom Resource Definitions (CRD)](https://kubernetes.io/docs/concepts/api-extension/custom-resources),
-which can be accessed and manipulated through the Kubernetes API. 
+which can be accessed and manipulated through the Kubernetes API.
 
 The detailed list of Agones CRDs with their parameters could be found here - [Agones CRD API Reference](../../reference/agones_crd_api_reference/).
 
@@ -402,7 +402,19 @@ curl http://localhost:8001/apis/agones.dev/v1/namespaces/default/gameservers
 
 ### Allocate a gameserver from a fleet named 'simple-game-server', with GameServerAllocation
 ```bash
-curl -d '{"apiVersion":"allocation.agones.dev/v1","kind":"GameServerAllocation","spec":{"required":{"matchLabels":{"agones.dev/fleet":"simple-game-server"}}}}' -H "Content-Type: application/json" -X POST http://localhost:8001/apis/allocation.agones.dev/v1/namespaces/default/gameserverallocations
+curl -d '{
+  "apiVersion": "allocation.agones.dev/v1",
+  "kind": "GameServerAllocation",
+  "spec": {
+    "selectors": [
+      {
+        "matchLabels": {
+          "agones.dev/fleet": "simple-game-server"
+        }
+      }
+    ]
+  }
+}' -H "Content-Type: application/json" -X POST http://localhost:8001/apis/allocation.agones.dev/v1/namespaces/default/gameserverallocations
 ```
 ```
 {
