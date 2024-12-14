@@ -109,7 +109,7 @@ private:
  * See - https://agones.dev/ for more information.
  */
 UCLASS(Config = Game, defaultconfig)
-class AGONES_API UAgonesSubsystem : public UGameInstanceSubsystem, public FTSTickerObjectBase
+class AGONES_API UAgonesSubsystem : public UGameInstanceSubsystem
 {
 	GENERATED_BODY()
 
@@ -151,6 +151,9 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = Agones)
 	FConnectedDelegate ConnectedDelegate;
 
+	UAgonesSubsystem();
+    ~UAgonesSubsystem();
+
 	/**
 	 * \brief ShouldCreateSubsystem is a built in subsystem function that is called before Initialize.
 	 */
@@ -170,7 +173,7 @@ public:
 	/**
 	* \brief Tick is a built in ticker function called every frame.
 	*/
-	bool Tick(float DeltaTime) override;
+	bool Tick(float DeltaTime);
 
 	/**
 	 * \brief HealthPing loops calling the Health endpoint.
@@ -389,6 +392,8 @@ private:
 	void DeserializeAndBroadcastWatch(FString const& JsonString);
 
 	void EnsureWebSocketConnection();
+
+	FTSTicker::FDelegateHandle TickHandle;
 
 	FTimerHandle ConnectDelTimerHandle;
 

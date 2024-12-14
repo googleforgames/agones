@@ -104,7 +104,24 @@ UAgonesSubsystem* UAgonesSubsystem::Get(const UObject* WorldContext)
 	return GameInstance ? GameInstance->GetSubsystem<UAgonesSubsystem>() : nullptr;
 }
 
-bool UAgonesSubsystem::ShouldCreateSubsystem(UObject* Outer) const
+UAgonesSubsystem::UAgonesSubsystem() 
+	: UGameInstanceSubsystem()
+{
+	if (!HasAllFlags(RF_ClassDefaultObject)) 
+	{
+		const FTickerDelegate TickDelegate = FTickerDelegate::CreateUObject(this, &UAgonesSubsystem::Tick);
+		TickHandle = FTSTicker::GetCoreTicker().AddTicker(TickDelegate);
+
+		TimerManager = MakeUnique<FTimerManager>();
+	}
+}
+
+UAgonesSubsystem::~UAgonesSubsystem() 
+{ 
+	FTSTicker::GetCoreTicker().RemoveTicker(TickHandle);
+}
+
+bool UAgonesSubsystem::ShouldCreateSubsystem(UObject *Outer) const 
 {
 	return UE_SERVER;
 }
@@ -112,8 +129,6 @@ bool UAgonesSubsystem::ShouldCreateSubsystem(UObject* Outer) const
 void UAgonesSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
-
-	TimerManager = MakeUnique<FTimerManager>();
 
 	if (!bDisableAutoHealthPing) 
 	{
@@ -138,16 +153,7 @@ void UAgonesSubsystem::Deinitialize()
 
 bool UAgonesSubsystem::Tick(float DeltaTime)
 {
-	if (HasAllFlags(RF_ClassDefaultObject))
-	{
-		return false;
-	}
-
-	if (TimerManager)
-	{
-		TimerManager->Tick(DeltaTime);
-	}
-
+	TimerManager->Tick(DeltaTime);
 	return true;
 }
 
