@@ -130,19 +130,19 @@ public:
 	/**
 	 * \brief HealthRateSeconds is the frequency to send Health calls. Value of 0 will disable auto health calls.
 	 */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Agones, Config)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Agones, Config)
 	float HealthRateSeconds = 10.f;
 
 	/**
 	 * \brief bDisableAutoHealthPing will stop call to HealhPing() during initialization
 	 */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Agones, Config)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Agones, Config)
 	bool bDisableAutoHealthPing;
 
 	/**
 	 * \brief bDisableAutoConnect will stop auto connecting (calling GamesServer and Ready) during initialization.
 	 */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Agones, Config)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Agones, Config)
 	bool bDisableAutoConnect;
 
 	/**
