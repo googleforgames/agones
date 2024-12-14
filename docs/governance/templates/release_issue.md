@@ -40,6 +40,8 @@ and copy it into a release issue. Fill in relevant values, found inside {}
   - [ ] config.toml updates:
     - [ ] Run `make site-config-update-version` to update the release version and sync data between dev and prod.
     - [ ] Update documentation with updated example images tags.
+- [ ] Ensure that the `alphaGates` and `betaGates` for `"Dev"` in `test/upgrade/versionMap.yaml`
+      match the Alpha features and Beta features in `pkg/util/runtime/features.go`.
 - [ ] Create PR with these changes, and merge them with an approval.
 - [ ] Run `git remote update && git checkout main && git reset --hard upstream/main` to ensure your code is in line
       with upstream (unless this is a hotfix, then do the same, but for the release branch)
@@ -51,17 +53,24 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 - [ ] Run `make post-build-release` to build the artifacts in GCS(These files will be attached in the release notes) and to push the latest images in the release repository and push chart on agones-chart.
 - [ ] Run `make shell` and run `gcloud config configurations activate <your development project>` to switch Agones
       development tooling off of the `agones-images` project.
-- [ ] Smoke Test: run `make install-release` to view helm releases, uninstall agones-system namesapce, fetch the latest version of Agones, verify the new version, installing agones-system namespace, and list all the pods of agones-system.
+- [ ] Smoke Test: run `make install-release` to view helm releases, uninstall agones-system namespace, fetch the latest version of Agones, verify the new version, installing agones-system namespace, and list all the pods of agones-system.
 - [ ] Attach all assets found in the cloud storage with {version} to the draft GitHub Release.
 - [ ] Copy any review changes from the release blog post into the draft GitHub release.
 - [ ] Publish the draft GitHub Release.
 - [ ] Run `make release-branch` to create a release branch and run `gcloud config configurations activate <your development project>` to switch Agones development tooling off of the `agones-images` project.
-- [ ] Email mailing lists with the release details (copy-paste the release blog post). Refer to the [Internal Mailing list posting guide][Internal Mailing list posting guide] for details. 
+- [ ] Email mailing lists with the release details (copy-paste the release blog post). Refer to the [Internal Mailing list posting guide][Internal Mailing list posting guide] for details.
 - [ ] Paste the announcement blog post to the #users Slack group.
 - [ ] Post to the [agonesdev](https://twitter.com/agonesdev) Twitter account.
 - [ ] Run `git checkout main`.
 - [ ] Run `make sdk-publish-rust`. This command executes `cargo login` for authentication, performs a dry-run publish, and if that succeeds, does the actual publish. Will need [crate's API TOKEN](https://crates.io/settings/tokens) from your crate's account.
 - [ ] Run `make sdk-update-version release_stage=after version={version}` file. This command will update the SDKs and install directories files with `{version}+1-dev` and will also set `{version}+1` in `build/Makefile`.
+- [ ] In `test/sdk/go/Makefile` change `release_version` to `{version}`.
+  - [ ] Run `make shell` and run `gcloud config configurations activate agones-images`.
+  - [ ] Within the shell `cd` to the `test/sdk/go/` directory and run `make cloud-build`.
+- [ ] In `test/upgrade/Makefile` change `base_version` to `{version}`.
+- [ ] In `test/upgrade/versionMap.yaml` change `ReleaseVersion` to `{version}`.
+  - [ ] In `test/upgrade/versionMap.yaml` copy and paste `“Dev”` in `agonesVersionFeatureGates` map.
+  - [ ] Change one of the `“Dev”` in `agonesVersionFeatureGates` to `{version}`.
 - [ ] Create PR with these changes, and merge them with approval
 - [ ] Close this issue. _Congratulations!_ - the release is now complete! :tada: :clap: :smile: :+1:
 

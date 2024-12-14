@@ -639,6 +639,7 @@ func computeStatus(gsSet *agonesv1.GameServerSet, list []*agonesv1.GameServer) a
 	// Initialize list status with empty lists from spec
 	if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
 		status.Lists = createInitialListStatus(gsSet)
+		status.Counters = createInitialCounterStatus(gsSet)
 	}
 	for _, gs := range list {
 		if gs.IsBeingDeleted() {
@@ -698,6 +699,14 @@ func createInitialListStatus(gsSet *agonesv1.GameServerSet) map[string]agonesv1.
 		list[name] = agonesv1.AggregatedListStatus{}
 	}
 	return list
+}
+
+func createInitialCounterStatus(gsSet *agonesv1.GameServerSet) map[string]agonesv1.AggregatedCounterStatus {
+	counters := make(map[string]agonesv1.AggregatedCounterStatus)
+	for name := range gsSet.Spec.Template.Spec.Counters {
+		counters[name] = agonesv1.AggregatedCounterStatus{}
+	}
+	return counters
 }
 
 // aggregateCounters adds the contents of a CounterStatus map to an AggregatedCounterStatus map.

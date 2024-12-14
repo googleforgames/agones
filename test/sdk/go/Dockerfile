@@ -21,7 +21,6 @@ COPY *.go ./
 
 # Note: because this installs the most recently released version of Agones, this will need to be
 # built and pushed post-release.
-# TODO: Add to post-release check list.
 RUN go mod init agones.dev/agones/test/sdk/go/sdk-client-test
 RUN go mod tidy
 RUN go mod download

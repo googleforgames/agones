@@ -38,14 +38,13 @@ variable "kubernetes_versions" {
   description = "Create upgrade test clusters with these k8s versions in these regions"
   type        = map(list(string))
   default     = {
-    "1.28" = ["us-west1", "RAPID"]
-    "1.29" = ["europe-west1", "RAPID"]
-    "1.30" = ["asia-east1", "RAPID"]
-    // "1.31" = ["us-east1", "RAPID"]
+    "1.29" = ["us-west1", "RAPID"]
+    "1.30" = ["us-central1", "RAPID"]
+    "1.31" = ["us-east1", "RAPID"]
+    //1.32" = ["us-west1", "RAPID"]
     //
-    // Before merge: When adding Kubernetes version 1.{N}, first uncomment the line above, extending
-    // the infrastructure to 4 versions temporarily. Come back to these instructions after the
-    // update PR merges.
+    // Before merge: When adding Kubernetes version 1.{N}, first uncomment the line above. Come back
+    // to these instructions after the update PR merges.
     //
     // After merge: After the Kubernetes update PR merges, and all active PRs are updated:
     //
@@ -53,12 +52,11 @@ variable "kubernetes_versions" {
     // * Change the (commented out) 1.{N-3} to 1.{N+1}
     // * You should now have 3 versions uncommented (versions 1.{N-2} .. 1.{N}),
     //   and 1.{N+1} commented out for the next update. The new, commented out 1.{N+1}
-    //   should be using the region of the previous 1.{N-3} - this region will become
-    //   unused.
+    //   should be using the region of the current 1.{N-3}.
     //
-    // Rationale: We cycle the regions us-east1 -> us-west1 -> europe-west1 -> asia-east1 -> us-east1
-    // as versions are added, using 4 regions so that the PR adding 1.{N} is in a unique region to
-    // 1.{N-3} .. 1.{N-1}, meaning versions never need to share a region in CI.
+    // Rationale: We cycle the regions us-east1 -> us-west1 -> us-central1 -> us-east1 as versions
+    // are added, using 3 regions so that the PR adding 1.{N} is in a unique region to
+    // 1.{N-2} .. 1.{N-1}, meaning versions never need to share a region in CI.
   }
 }
 
@@ -80,30 +78,32 @@ module "gke_autopilot_cluster" {
   releaseChannel = each.value[1]
 }
 
-resource "google_compute_firewall" "udp" {
-  name    = "gke-game-server-firewall"
-  project = var.project
-  network = "default"
-
-  allow {
-    protocol = "udp"
-    ports    = ["7000-8000"]
-  }
-
-  target_tags = ["game-server"]
-  source_ranges = ["0.0.0.0/0"]
-}
-
-resource "google_compute_firewall" "tcp" {
-  name    = "gke-game-server-firewall-tcp"
-  project = var.project
-  network = "default"
-
-  allow {
-    protocol = "tcp"
-    ports    = ["7000-8000"]
-  }
-
-  target_tags = ["game-server"]
-  source_ranges = ["0.0.0.0/0"]
-}
+// NOTE: These are the same firewall rules as the e2e tests. If running only the upgrade clusters on
+// a new project the clusters will need these rules.
+// resource "google_compute_firewall" "udp" {
+//   name    = "gke-game-server-firewall"
+//  project = var.project
+//  network = "default"
+//
+//  allow {
+//    protocol = "udp"
+//    ports    = ["7000-8000"]
+//  }
+//
+//  target_tags = ["game-server"]
+//  source_ranges = ["0.0.0.0/0"]
+//}
+//
+// resource "google_compute_firewall" "tcp" {
+//  name    = "gke-game-server-firewall-tcp"
+//  project = var.project
+//  network = "default"
+//
+//  allow {
+//    protocol = "tcp"
+//    ports    = ["7000-8000"]
+//  }
+//
+//  target_tags = ["game-server"]
+//  source_ranges = ["0.0.0.0/0"]
+//}
