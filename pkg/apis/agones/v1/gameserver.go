@@ -1026,6 +1026,37 @@ func (gs *GameServer) AppendListValues(name string, values []string) error {
 	return errors.Errorf("unable to AppendListValues: Name %s, Values %s. List not found in GameServer %s", name, values, gs.ObjectMeta.GetName())
 }
 
+// DeleteListValues removes values from the ListStatus Values list. Values in the DeleteListValues
+// list that are not in the ListStatus Values list are ignored.
+func (gs *GameServer) DeleteListValues(name string, values []string) error {
+	if values == nil {
+		return errors.Errorf("unable to DeleteListValues: Name %s, Values %s. Values must not be nil", name, values)
+	}
+	if list, ok := gs.Status.Lists[name]; ok {
+		deleteValuesMap := make(map[string]bool)
+		for _, value := range values {
+			deleteValuesMap[value] = true
+		}
+		newList := deleteValues(list.Values, deleteValuesMap)
+		list.Values = newList
+		gs.Status.Lists[name] = list
+		return nil
+	}
+	return errors.Errorf("unable to DeleteListValues: Name %s, Values %s. List not found in GameServer %s", name, values, gs.ObjectMeta.GetName())
+}
+
+// deleteValues returns a new list with all the values in valuesList that are not keys in deleteValuesMap.
+func deleteValues(valuesList []string, deleteValuesMap map[string]bool) []string {
+	newValuesList := []string{}
+	for _, value := range valuesList {
+		if _, ok := deleteValuesMap[value]; ok {
+			continue
+		}
+		newValuesList = append(newValuesList, value)
+	}
+	return newValuesList
+}
+
 // truncateList truncates the list to the given capacity
 func truncateList(capacity int64, list []string) []string {
 	if list == nil || len(list) <= int(capacity) {

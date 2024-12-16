@@ -615,6 +615,12 @@ func convertAllocationListsToGSAListActions(in map[string]*pb.ListAction) map[st
 			copy(copyValues, addValues)
 			la.AddValues = copyValues
 		}
+		if v.DeleteValues != nil {
+			deleteValues := v.GetDeleteValues()
+			copyValues := make([]string, len(deleteValues))
+			copy(copyValues, deleteValues)
+			la.DeleteValues = copyValues
+		}
 		if v.Capacity != nil {
 			capacity := v.Capacity.GetValue()
 			la.Capacity = &capacity
@@ -638,6 +644,11 @@ func convertGSAListActionsToAllocationLists(in map[string]allocationv1.ListActio
 			copyValues := make([]string, len(v.AddValues))
 			copy(copyValues, v.AddValues)
 			la.AddValues = copyValues
+		}
+		if v.DeleteValues != nil {
+			copyValues := make([]string, len(v.DeleteValues))
+			copy(copyValues, v.DeleteValues)
+			la.DeleteValues = copyValues
 		}
 		if v.Capacity != nil {
 			la.Capacity = wrapperspb.Int64(*v.Capacity)

@@ -9,19 +9,23 @@ assignees: ''
 
 
 Steps to upgrade Golang version:
-- [ ] Update `go.mod` and `go.sum`. At the root of the directory, run:
+- [ ] Update `go.mod` and `go.sum`. At the root (agones) directory, run:
     - [ ] `find . -name 'go.mod' -not -path '*/\.*' -execdir go mod edit -go=<NEW_GOLANG_VERSION_WITHOUT_PATCH> \;`
     - [ ] `find . -name 'go.mod' -not -path '*/\.*' -execdir go mod tidy \;`
 
-- [ ] Update the Dockerfiles for `build` directory. 
-    
-    - [ ] At the root of the directory, run: `find build -type f \( -not -path '*/\.*' -and -not -path 'build/tmp/*' \) -exec sed -i 's/GO_VERSION=[0-9]\+\.[0-9]\+\.[0-9]\+/GO_VERSION=<NEW_GOLANG_VERSION>/g' {} \;`
+- [ ] Update the Dockerfiles for `build` directory.
+    - [ ] At the root directory, run: `find build -type f \( -not -path '*/\.*' -and -not -path 'build/tmp/*' \) -exec sed -i 's/GO_VERSION=[0-9]\+\.[0-9]\+\.[0-9]\+/GO_VERSION=<NEW_GOLANG_VERSION>/g' {} \;`
     - [ ] Update the `golang` version for file `build/agones-bot/Dockerfile` to <NEW_GOLANG_VERSION_WITHOUT_PATCH>
-    
-- [ ] Update the Dockerfiles for `examples` directory. At the root of the directory, run:     
+
+- [ ] Update the Dockerfiles for `test` directory.
+    - [ ] At the root directory, run: `find test -type f -exec sed -i 's/golang:[0-9]\+\.[0-9]\+\.[0-9]\+/golang:<NEW_GOLANG_VERSION>/g' {} \;`
+    - [ ] At the root directory, run: `find test -type f -exec sed -i 's/go [0-9]\+\.[0-9]\+\.[0-9]\+/go <NEW_GOLANG_VERSION>/g' {} \;`
+    - [ ] At the root directory, run: `find test -type f -name 'go.mod' -execdir go mod tidy \;`
+
+- [ ] Update the Dockerfiles for `examples` directory. At the root directory, run:
     - [ ] `find examples -name Dockerfile -exec sed -i 's/golang:[0-9]\+\.[0-9]\+-alpine/golang:<NEW_GOLANG_VERSION_WITHOUT_PATCH>-alpine/g' {} \;`
     - [ ] `find examples \( -name Dockerfile -o -name Dockerfile.windows \) -exec sed -i 's/golang:[0-9]\+\.[0-9]\+\.[0-9]\+/golang:<NEW_GOLANG_VERSION>/g' {} \;`
-    
+
 - [ ] Update the example images tag. At `build` directory, run:
     - [ ] `make bump-image IMAGENAME=allocation-endpoint-proxy VERSION=<current-image-version>`
     - [ ] `make bump-image IMAGENAME=autoscaler-webhook VERSION=<current-image-version>`
