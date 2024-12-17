@@ -1,6 +1,6 @@
 module custom-controller
 
-go 1.22
+go 1.23
 
 require (
 	agones.dev/agones v1.38.0
