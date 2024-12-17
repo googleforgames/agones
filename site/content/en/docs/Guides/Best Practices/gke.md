@@ -58,3 +58,10 @@ For sessions longer than an hour, there are currently two possible approaches to
   * delete the old, `blue` cluster when the `Fleet` successfully scales down.
 
 * (GKE Standard only) Use [node pool blue/green upgrades](https://cloud.google.com/kubernetes-engine/docs/concepts/node-pool-upgrade-strategies#blue-green-upgrade-strategy)
+
+## Google Cloud Support Package
+
+We recommend getting official support package for running Agones on Google Cloud. 
+
+Support for Agones on Google Cloud is offered under the
+[Google Cloud Premium support package](https://cloud.google.com/kubernetes-engine/docs/how-to/agones-support). 
