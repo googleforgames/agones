@@ -59,7 +59,7 @@ spec:
           containsValue: "x6k8z" # only match GameServers who has this value in the list. Defaults to "", which is all.
           minAvailable: 1 # minimum available (current capacity - current count). Defaults to 0.
           maxAvailable: 10 # maximum available (current capacity - current count) Defaults to 0, which translates to max(int64)
-      # [Stage:Alpha]      
+      # [Stage:Alpha]
       # [FeatureFlag:PlayerAllocationFilter]
       # Provides a filter on minimum and maximum values for player capacity when retrieving a GameServer
       # through Allocation. Defaults to no limits.
@@ -111,6 +111,9 @@ spec:
         - x7un
         - 8inz
       capacity: 40 # Updates the maximum capacity of the Counter to this number. Min 0, Max 1000.
+      deleteValues: # removes values from a List's Values array. Any nonexistant values are ignored.
+        - alice
+        - bob
   {{< /tab >}}
   {{< tab header="required & preferred (deprecated)" lang="yaml" >}}
 apiVersion: "allocation.agones.dev/v1"
@@ -170,7 +173,7 @@ spec:
     annotations:
       map:  garden22
   {{< /tab >}}
-{{< /tabpane >}}  
+{{< /tabpane >}}
 
 The `spec` field is the actual `GameServerAllocation` specification, and it is composed as follows:
 

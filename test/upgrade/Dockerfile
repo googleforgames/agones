@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM golang:1.22.9-alpine AS builder
+FROM golang:1.23.4-alpine AS builder
 
 # install curl
 RUN apk update && \
@@ -39,9 +39,8 @@ RUN curl -L  ${HELM_URL} > /tmp/helm.tar.gz \
 # Copy and build the Go application
 WORKDIR /agones.dev
 COPY test/upgrade/main.go ./
-RUN go mod init agones.dev/agones/test/upgrade/testContainer
-RUN go mod tidy
-RUN go mod download
+COPY test/upgrade/go.mod ./
+COPY test/upgrade/go.sum ./
 RUN CGO_ENABLED=0 GOOS=linux go build -o /upgrade-test
 
 # Copy the dev build Agones Helm chart

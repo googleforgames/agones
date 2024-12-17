@@ -645,7 +645,7 @@ func defaultAutoscalerWebhook(namespace string) (*corev1.Pod, *corev1.Service) {
 		},
 		Spec: corev1.PodSpec{
 			Containers: []corev1.Container{{Name: "webhook",
-				Image:           "us-docker.pkg.dev/agones-images/examples/autoscaler-webhook:0.15",
+				Image:           "us-docker.pkg.dev/agones-images/examples/autoscaler-webhook:0.16",
 				ImagePullPolicy: corev1.PullAlways,
 				Ports: []corev1.ContainerPort{{
 					ContainerPort: 8000,
@@ -1386,7 +1386,7 @@ func TestListAutoscalerAllocated(t *testing.T) {
 	defaultFlt := defaultFleet(framework.Namespace)
 	defaultFlt.Spec.Template.Spec.Lists = map[string]agonesv1.ListStatus{
 		"gamers": {
-			Values:   []string{},
+			Values:   []string{"gamer5", "gamer6"},
 			Capacity: 6, // AggregateCapacity 18
 		},
 	}
@@ -1441,7 +1441,7 @@ func TestListAutoscalerAllocated(t *testing.T) {
 			defer client.Fleets(framework.Namespace).Delete(ctx, flt.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
 			framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 
-			// Adds 4 gamers to each allocated gameserver.
+			// Adds 4 gamers to each allocated gameserver, and removes 2 existing gamers.
 			gsa := allocationv1.GameServerAllocation{
 				Spec: allocationv1.GameServerAllocationSpec{
 					Selectors: []allocationv1.GameServerSelector{
@@ -1450,7 +1450,8 @@ func TestListAutoscalerAllocated(t *testing.T) {
 					},
 					Lists: map[string]allocationv1.ListAction{
 						"gamers": {
-							AddValues: []string{"gamer1", "gamer2", "gamer3", "gamer4"},
+							AddValues:    []string{"gamer1", "gamer2", "gamer3", "gamer4"},
+							DeleteValues: []string{"gamer5", "gamer6"},
 						}}}}
 
 			// Allocate game servers, as Buffer Percent scales up (or down) based on allocated aggregate capacity
