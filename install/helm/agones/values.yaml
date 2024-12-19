@@ -186,6 +186,10 @@ agones:
       loadBalancerIP: ""
       loadBalancerSourceRanges: []
       annotations: {}
+      # ipFamilyPolicy: RequireDualStack
+      # ipFamilies:
+      # - IPv4
+      # - IPv6
     udp:
       expose: true
       rateLimit: 20
@@ -195,6 +199,10 @@ agones:
       loadBalancerIP: ""
       loadBalancerSourceRanges: []
       annotations: {}
+      # ipFamilyPolicy: RequireDualStack
+      # ipFamilies:
+      # - IPv4
+      # - IPv6
     healthCheck:
       initialDelaySeconds: 3
       periodSeconds: 3
@@ -238,6 +246,10 @@ agones:
       loadBalancerIP: ""
       loadBalancerSourceRanges: []
       annotations: {}
+      # ipFamilyPolicy: RequireDualStack
+      # ipFamilies:
+      # - IPv4
+      # - IPv6
       http:
         enabled: true
         appProtocol: ""
