@@ -17,7 +17,7 @@ kind: Fleet
 metadata:
   name: simple-game-server
 spec:
-  replicas: 300
+  replicas: 100
   template:
     metadata:
       labels:
@@ -26,9 +26,6 @@ spec:
       ports:
         - name: default
           containerPort: 7654
-      counters:
-        players:
-          capacity: 300
       template:
         spec:
           containers:

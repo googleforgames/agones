@@ -39,9 +39,16 @@ var (
 	keyMultiCluster       = mt.MustTagKey("is_multicluster")
 	keyStatus             = mt.MustTagKey("status")
 	keySchedulingStrategy = mt.MustTagKey("scheduling_strategy")
+	keyName               = mt.MustTagKey("name")
+	keyNamespace          = mt.MustTagKey("namespace")
 
 	gameServerAllocationsLatency    = stats.Float64("gameserver_allocations/latency", "The duration of gameserver allocations", "s")
 	gameServerAllocationsRetryTotal = stats.Int64("gameserver_allocations/errors", "The errors of gameserver allocations", "1")
+	gameServerAllocationsCount      = stats.Int64(
+		"gameserver_allocations/count",
+		"The total number of times a Game Server has been allocated.",
+		"1",
+	)
 )
 
 func init() {
@@ -60,6 +67,13 @@ func init() {
 			Description: "The count of gameserver allocation retry until it succeeds",
 			Aggregation: view.Distribution(1, 2, 3, 4, 5),
 			TagKeys:     []tag.Key{keyFleetName, keyClusterName, keyMultiCluster, keyStatus, keySchedulingStrategy},
+		},
+		{
+			Name:        "gameserver_allocations_count",
+			Measure:     gameServerAllocationsCount,
+			Description: "The number of times a game server is allocated",
+			Aggregation: view.Count(),
+			TagKeys:     []tag.Key{keyFleetName, keyName, keyNamespace},
 		},
 	}
 

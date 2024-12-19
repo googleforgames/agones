@@ -43,10 +43,14 @@ const (
 
 var (
 	// fleetAutoscalerViews are metric views associated with FleetAutoscalers
-	fleetAutoscalerViews = []string{fleetAutoscalerBufferLimitName, fleetAutoscalterBufferSizeName, fleetAutoscalerCurrentReplicaCountName,
-		fleetAutoscalersDesiredReplicaCountName, fleetAutoscalersAbleToScaleName, fleetAutoscalersLimitedName}
+	fleetAutoscalerViews = []string{fleetAutoscalerBufferLimitName, fleetAutoscalterBufferSizeName,
+		fleetAutoscalerCurrentReplicaCountName, fleetAutoscalersDesiredReplicaCountName,
+		fleetAutoscalersAbleToScaleName, fleetAutoscalersLimitedName}
 	// fleetViews are metric views associated with Fleets
-	fleetViews = append([]string{fleetRolloutPercent, fleetReplicaCountName, gameServersCountersName, gameServersCountName, gameServersTotalName, gameServersPlayerConnectedTotalName, gameServersPlayerCapacityTotalName, gameServerStateDurationName, fleetCountersName, fleetListsName}, fleetAutoscalerViews...)
+	fleetViews = append([]string{fleetRolloutPercent, fleetReplicaCountName, gameServersCountersName,
+		gameServersCountName, gameServersTotalName, gameServersPlayerConnectedTotalName,
+		gameServersPlayerCapacityTotalName, gameServerStateDurationName, fleetCountersName,
+		fleetListsName}, fleetAutoscalerViews...)
 
 	stateDurationSeconds           = []float64{0, 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384}
 	fleetRolloutPercentStats       = stats.Int64("fleets/rollout_percent", "The current fleet rollout percentage", "1")

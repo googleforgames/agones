@@ -20,6 +20,7 @@ import (
 	"crypto/x509"
 	goErrors "errors"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
@@ -37,6 +38,7 @@ import (
 	"agones.dev/agones/pkg/util/runtime"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"go.opencensus.io/stats"
 	"go.opencensus.io/tag"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -464,6 +466,18 @@ func (c *Allocator) allocate(ctx context.Context, gsa *allocationv1.GameServerAl
 
 	select {
 	case res := <-req.response: // wait for the batch to be completed
+		if res.err == nil && res.gs != nil {
+			ctx, err := tag.New(
+				ctx,
+				tag.Upsert(keyFleetName, res.gs.GetObjectMeta().GetLabels()[agonesv1.FleetNameLabel]),
+				tag.Upsert(keyName, res.gs.GetName()),
+				tag.Upsert(keyNamespace, res.gs.GetNamespace()),
+			)
+			if err != nil {
+				log.Fatal("Could not create tag", err)
+			}
+			stats.Record(ctx, gameServerAllocationsCount.M(1))
+		}
 		return res.gs, res.err
 	case <-ctx.Done():
 		return nil, ErrTotalTimeoutExceeded
