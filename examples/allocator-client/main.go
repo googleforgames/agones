@@ -55,6 +55,20 @@ func main() {
 
 	request := &pb.AllocationRequest{
 		Namespace: *namespace,
+		GameServerSelectors: []*pb.GameServerSelector{
+			{
+				GameServerState: pb.GameServerSelector_ALLOCATED,
+				MatchLabels: map[string]string{
+					"version": "1.2.3",
+				},
+			},
+			{
+				GameServerState: pb.GameServerSelector_READY,
+				MatchLabels: map[string]string{
+					"version": "1.2.3",
+				},
+			},
+		},
 		MultiClusterSetting: &pb.MultiClusterSetting{
 			Enabled: *multicluster,
 		},
