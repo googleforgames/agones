@@ -10,7 +10,7 @@ TLS_CA_FILE=ca.crt
 
 echo "Starting go runs"
 
-for _ in {1..1000}; do
+run_allocator_client () {
   go run ../examples/allocator-client/main.go \
     --ip "${EXTERNAL_IP}" \
     --port 443 \
@@ -18,6 +18,8 @@ for _ in {1..1000}; do
     --key "${KEY_FILE}" \
     --cert "${CERT_FILE}" \
     --cacert "${TLS_CA_FILE}"
-done
+}
 
+run_allocator_client
+wait
 echo "All done"

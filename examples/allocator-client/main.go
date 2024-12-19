@@ -85,7 +85,14 @@ func main() {
 	defer conn.Close()
 
 	grpcClient := pb.NewAllocationServiceClient(conn)
-	response, err := grpcClient.Allocate(context.Background(), request)
+
+	for i := 0; i < 1000; i++ {
+		allocateGameServer(grpcClient, request)
+	}
+}
+
+func allocateGameServer(client pb.AllocationServiceClient, request *pb.AllocationRequest) {
+	response, err := client.Allocate(context.Background(), request)
 	if err != nil {
 		panic(err)
 	}
