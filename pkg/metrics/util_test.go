@@ -140,7 +140,8 @@ func gameServerWithFleetAndState(fleetName string, state agonesv1.GameServerStat
 			Labels:    lbs,
 		},
 		Status: agonesv1.GameServerStatus{
-			State: state,
+			State:    state,
+			Counters: map[string]agonesv1.CounterStatus{},
 		},
 	}
 	return gs
