@@ -71,6 +71,7 @@ namespace Agones
         {
             String port = Environment.GetEnvironmentVariable("AGONES_SDK_HTTP_PORT");
             sidecarAddress = "http://localhost:" + (port ?? "9358");
+            Application.quitting += OnApplicationQuitting;
         }
 
         private void Start()
@@ -79,9 +80,14 @@ namespace Agones
             HealthCheckAsync();
         }
 
-        private void OnApplicationQuit()
+        private void OnApplicationQuitting()
         {
             cancellationTokenSource.Dispose();
+        }
+
+        private void OnDestroy()
+        {
+	        Application.quitting -= OnApplicationQuitting;
         }
         #endregion
 
