@@ -62,7 +62,7 @@ docker run --rm -v ${PWD}:/local swaggerapi/swagger-codegen-cli generate -i /loc
 
 The same could be run for `alpha.swagger.json` and `beta.swagger.json` as required.
 
-You can read more about OpenAPI/Swagger code generation in their [Command Line Tool Documentation](https://swagger.io/docs/open-source-tools/swagger-codegen/)
+You can read more about OpenAPI/Swagger code generation in their [Command Line Tool Documentation](https://swagger.io/docs/open-source-tools/swagger-codegen/codegen-v3/about/)
 
 ## Reference 
 
