@@ -30,6 +30,7 @@
 - Fix broken link by @0xaravindh in https://github.com/googleforgames/agones/pull/4070
 - Link to Google Cloud Agones Support. by @markmandel in https://github.com/googleforgames/agones/pull/4071
 - Upgrade Go to 1.23.4 and update example image tags by @0xaravindh in https://github.com/googleforgames/agones/pull/4072
+- Unblocks Agones release PR by waiting for either the Agones dev version or release version by @igooch in https://github.com/googleforgames/agones/pull/4078
 
 **New Contributors:**
 - @danfairs made their first contribution in https://github.com/googleforgames/agones/pull/4048
