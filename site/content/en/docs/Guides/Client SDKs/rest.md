@@ -46,7 +46,7 @@ Generally the REST interface gets used if gRPC isn't well supported for a given 
 
 {{< alert title="Warning" color="warning">}}
 The SDK Server sidecar process may startup after your game server binary. So your REST SDK API calls should
-contain some retry logic to take this into account. 
+contain some retry logic to take this into account.
 {{< /alert >}}
 
 ## Generating clients
@@ -62,9 +62,9 @@ docker run --rm -v ${PWD}:/local swaggerapi/swagger-codegen-cli generate -i /loc
 
 The same could be run for `alpha.swagger.json` and `beta.swagger.json` as required.
 
-You can read more about OpenAPI/Swagger code generation in their [Command Line Tool Documentation](https://swagger.io/docs/open-source-tools/swagger-codegen/)
+You can read more about OpenAPI/Swagger code generation in their [Command Line Tool Documentation](https://swagger.io/docs/open-source-tools/swagger-codegen/codegen-v3/about/)
 
-## Reference 
+## Reference
 
 ### Lifecycle Management
 
@@ -112,10 +112,10 @@ curl -d '{"seconds": "5"}' -H "Content-Type: application/json" -X POST http://lo
 #### Allocate
 
 With some matchmakers and game matching strategies, it can be important for game servers to mark themselves as `Allocated`.
-For those scenarios, this SDK functionality exists. 
+For those scenarios, this SDK functionality exists.
 
 {{< alert title="Note" color="info">}}
-Using a [GameServerAllocation]({{< ref "/docs/Reference/gameserverallocation.md" >}}) is preferred in all other scenarios, 
+Using a [GameServerAllocation]({{< ref "/docs/Reference/gameserverallocation.md" >}}) is preferred in all other scenarios,
 as it gives Agones control over how packed `GameServers` are scheduled within a cluster, whereas with `Allocate()` you
 relinquish control to an external service which likely doesn't have as much information as Agones.
 {{< /alert >}}
@@ -140,7 +140,7 @@ Call when the GameServer session is over and it's time to shut down
 curl -d "{}" -H "Content-Type: application/json" -X POST http://localhost:${AGONES_SDK_HTTP_PORT}/shutdown
 ```
 
-### Configuration Retrieval 
+### Configuration Retrieval
 
 
 #### GameServer
@@ -292,7 +292,7 @@ curl -H "Content-Type: application/json" -X GET http://localhost:${AGONES_SDK_HT
 
 Response:
 ```json
-{"name":"players", "capacity":"100", "values":["player0", "player1", "player2"]}     
+{"name":"players", "capacity":"100", "values":["player0", "player1", "player2"]}
 ```
 
 ##### Beta: UpdateList
@@ -310,7 +310,7 @@ Response:
 ##### Beta: AddListValue
 This function adds a new value to a list with the key `players` and returns the list with this addition.
 
-###### Example     
+###### Example
 
 ```bash
 curl -d '{"value": "player9"}' -H "Content-Type: application/json" -X POST http://localhost:${AGONES_SDK_HTTP_PORT}/v1beta1/lists/players:addValue
@@ -323,8 +323,8 @@ Response:
 
 ##### Beta: RemoveListValue
 This function removes a value from the list with the key `players` and returns updated list.
-     
-###### Example  
+
+###### Example
 
 ```bash
 curl -d '{"value": "player3"}' -H "Content-Type: application/json" -X POST http://localhost:${AGONES_SDK_HTTP_PORT}/v1beta1/lists/players:removeValue
@@ -341,10 +341,10 @@ Response:
 
 #### Alpha: PlayerConnect
 
-This function increases the SDK’s stored player count by one, and appends this playerID to 
+This function increases the SDK’s stored player count by one, and appends this playerID to
 `GameServer.Status.Players.IDs`.
-    
-##### Example    
+
+##### Example
 
 ```bash
 curl -d '{"playerID": "uzh7i"}' -H "Content-Type: application/json" -X POST http://localhost:${AGONES_SDK_HTTP_PORT}/alpha/player/connect
@@ -354,10 +354,10 @@ Response:
 ```json
 {"bool":true}
 ```
-    
+
 #### Alpha: PlayerDisconnect
 
-This function decreases the SDK’s stored player count by one, and removes the playerID from 
+This function decreases the SDK’s stored player count by one, and removes the playerID from
 [`GameServer.Status.Players.IDs`][playerstatus].
 
 ##### Example
@@ -399,7 +399,7 @@ Response:
 
 #### Alpha: GetPlayerCount
 
-This function retrieves the current player count. 
+This function retrieves the current player count.
 This is always accurate from what has been set through this SDK, even if the value has yet to be updated on the GameServer status resource.
 
 ##### Example
