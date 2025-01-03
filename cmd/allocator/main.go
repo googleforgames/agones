@@ -54,6 +54,7 @@ import (
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+	cliflag "k8s.io/component-base/cli/flag"
 
 	"agones.dev/agones/pkg/util/httpserver"
 	"agones.dev/agones/pkg/util/runtime"
@@ -368,6 +369,19 @@ func runHTTP(listenCtx context.Context, workerCtx context.Context, h *serviceHan
 	if !h.mTLSDisabled {
 		cfg.ClientAuth = tls.RequireAnyClientCert
 		cfg.VerifyPeerCertificate = h.verifyClientCertificate
+	}
+
+	if cfg.CipherSuites == nil {
+		// If no cipher suites are configured, use the default secure ones
+		// recommended by the TLS package, excluding those forbidden by RFC 7540.
+		// by https://datatracker.ietf.org/doc/html/rfc7540#appendix-A
+		preferredCiphers := cliflag.PreferredTLSCipherNames()
+		ciphersuites, err := cliflag.TLSCipherSuites(preferredCiphers)
+		if err != nil {
+			logger.WithError(err).Info("Failed to load TLS cipher suites")
+		} else {
+			cfg.CipherSuites = ciphersuites
+		}
 	}
 
 	// Create a Server instance to listen on the http port with the TLS config.
