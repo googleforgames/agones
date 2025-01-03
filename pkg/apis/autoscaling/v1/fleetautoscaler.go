@@ -316,6 +316,8 @@ type FleetAutoscaleRequest struct {
 	Namespace string `json:"namespace"`
 	// The Fleet's status values
 	Status agonesv1.FleetStatus `json:"status"`
+	// Standard object metadata; More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata.
+	MetaData *metav1.ObjectMeta `json:"metadata,omitempty"`
 }
 
 // FleetAutoscaleResponse defines the response of webhook autoscaler endpoint
