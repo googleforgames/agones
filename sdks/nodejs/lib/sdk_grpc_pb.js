@@ -79,6 +79,17 @@ function deserialize_agones_dev_sdk_KeyValue(buffer_arg) {
   return sdk_pb.KeyValue.deserializeBinary(new Uint8Array(buffer_arg));
 }
 
+function serialize_agones_dev_sdk_KeyValues(arg) {
+  if (!(arg instanceof sdk_pb.KeyValues)) {
+    throw new Error('Expected argument of type agones.dev.sdk.KeyValues');
+  }
+  return Buffer.from(arg.serializeBinary());
+}
+
+function deserialize_agones_dev_sdk_KeyValues(buffer_arg) {
+  return sdk_pb.KeyValues.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
 
 // SDK service to be used in the GameServer SDK to the Pod Sidecar
 var SDKService = exports['agones.dev.sdk.SDK'] = {
@@ -175,6 +186,18 @@ setAnnotation: {
     responseType: sdk_pb.Empty,
     requestSerialize: serialize_agones_dev_sdk_KeyValue,
     requestDeserialize: deserialize_agones_dev_sdk_KeyValue,
+    responseSerialize: serialize_agones_dev_sdk_Empty,
+    responseDeserialize: deserialize_agones_dev_sdk_Empty,
+  },
+  // Apply multiple Annotations to the backing GameServer metadata
+setAnnotations: {
+    path: '/agones.dev.sdk.SDK/SetAnnotations',
+    requestStream: false,
+    responseStream: false,
+    requestType: sdk_pb.KeyValues,
+    responseType: sdk_pb.Empty,
+    requestSerialize: serialize_agones_dev_sdk_KeyValues,
+    requestDeserialize: deserialize_agones_dev_sdk_KeyValues,
     responseSerialize: serialize_agones_dev_sdk_Empty,
     responseDeserialize: deserialize_agones_dev_sdk_Empty,
   },

@@ -54,6 +54,8 @@ type SDKClient interface {
 	SetLabel(ctx context.Context, in *KeyValue, opts ...grpc.CallOption) (*Empty, error)
 	// Apply a Annotation to the backing GameServer metadata
 	SetAnnotation(ctx context.Context, in *KeyValue, opts ...grpc.CallOption) (*Empty, error)
+	// Apply multiple Annotations to the backing GameServer metadata
+	SetAnnotations(ctx context.Context, in *KeyValues, opts ...grpc.CallOption) (*Empty, error)
 	// Marks the GameServer as the Reserved state for Duration
 	Reserve(ctx context.Context, in *Duration, opts ...grpc.CallOption) (*Empty, error)
 }
@@ -186,6 +188,15 @@ func (c *sDKClient) SetAnnotation(ctx context.Context, in *KeyValue, opts ...grp
 	return out, nil
 }
 
+func (c *sDKClient) SetAnnotations(ctx context.Context, in *KeyValues, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
+	err := c.cc.Invoke(ctx, "/agones.dev.sdk.SDK/SetAnnotations", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *sDKClient) Reserve(ctx context.Context, in *Duration, opts ...grpc.CallOption) (*Empty, error) {
 	out := new(Empty)
 	err := c.cc.Invoke(ctx, "/agones.dev.sdk.SDK/Reserve", in, out, opts...)
@@ -215,6 +226,8 @@ type SDKServer interface {
 	SetLabel(context.Context, *KeyValue) (*Empty, error)
 	// Apply a Annotation to the backing GameServer metadata
 	SetAnnotation(context.Context, *KeyValue) (*Empty, error)
+	// Apply multiple Annotations to the backing GameServer metadata
+	SetAnnotations(context.Context, *KeyValues) (*Empty, error)
 	// Marks the GameServer as the Reserved state for Duration
 	Reserve(context.Context, *Duration) (*Empty, error)
 }
@@ -246,6 +259,9 @@ func (UnimplementedSDKServer) SetLabel(context.Context, *KeyValue) (*Empty, erro
 }
 func (UnimplementedSDKServer) SetAnnotation(context.Context, *KeyValue) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetAnnotation not implemented")
+}
+func (UnimplementedSDKServer) SetAnnotations(context.Context, *KeyValues) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetAnnotations not implemented")
 }
 func (UnimplementedSDKServer) Reserve(context.Context, *Duration) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Reserve not implemented")
@@ -417,6 +433,24 @@ func _SDK_SetAnnotation_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
+func _SDK_SetAnnotations_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(KeyValues)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SDKServer).SetAnnotations(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/agones.dev.sdk.SDK/SetAnnotations",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SDKServer).SetAnnotations(ctx, req.(*KeyValues))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _SDK_Reserve_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(Duration)
 	if err := dec(in); err != nil {
@@ -465,6 +499,10 @@ var SDK_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SetAnnotation",
 			Handler:    _SDK_SetAnnotation_Handler,
+		},
+		{
+			MethodName: "SetAnnotations",
+			Handler:    _SDK_SetAnnotations_Handler,
 		},
 		{
 			MethodName: "Reserve",
