@@ -30,6 +30,7 @@ PortPolicyNone: false
 ScheduledAutoscaler: false
 
 # Dev features
+SidecarContainers: false
 
 # Example feature
 Example: false

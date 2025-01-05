@@ -745,6 +745,8 @@ func (gs *GameServer) Pod(apiHooks APIHooks, sidecars ...corev1.Container) (*cor
 		Spec:       *gs.Spec.Template.Spec.DeepCopy(),
 	}
 
+	// TOXO: (SidecarContainers) Update docs! (features.md, health checking, sidecar shutdowwn reference?).
+
 	if len(pod.Spec.Hostname) == 0 {
 		// replace . with - since it must match RFC 1123
 		pod.Spec.Hostname = strings.ReplaceAll(gs.ObjectMeta.Name, ".", "-")
@@ -788,11 +790,25 @@ func (gs *GameServer) Pod(apiHooks APIHooks, sidecars ...corev1.Container) (*cor
 		pod.ObjectMeta.Annotations[PassthroughPortAssignmentAnnotation] = string(containerToPassthroughMapJSON)
 	}
 
-	// Put the sidecars at the start of the list of containers so that the kubelet starts them first.
-	containers := make([]corev1.Container, 0, len(sidecars)+len(pod.Spec.Containers))
-	containers = append(containers, sidecars...)
-	containers = append(containers, pod.Spec.Containers...)
-	pod.Spec.Containers = containers
+	if runtime.FeatureEnabled(runtime.FeatureSidecarContainers) {
+		// make sure all sidecars have a restart policy of Always, so they are valid sidecar containers.
+		// https://kubernetes.io/docs/concepts/workloads/pods/sidecar-containers/#sidecar-containers-and-pod-lifecycle
+		always := corev1.ContainerRestartPolicyAlways
+		for i := range sidecars {
+			sidecars[i].RestartPolicy = &always
+		}
+
+		// addSidecarsAsInitContainers puts the sidecars in the initContainers list so that they can have their own independent
+		// container restart policies.
+		pod.Spec.InitContainers = append(pod.Spec.InitContainers, sidecars...)
+
+		// default GameServer container should also be Restart: Never
+		if len(pod.Spec.RestartPolicy) == 0 {
+			pod.Spec.RestartPolicy = corev1.RestartPolicyNever
+		}
+	} else {
+		gs.addSidecarsAsContainers(sidecars, pod)
+	}
 
 	gs.podScheduling(pod)
 
@@ -804,6 +820,15 @@ func (gs *GameServer) Pod(apiHooks APIHooks, sidecars ...corev1.Container) (*cor
 	}
 
 	return pod, nil
+}
+
+// addSidecarsAsContainers puts the sidecars at the start of the general list of containers so that the kubelet starts
+// them first
+func (gs *GameServer) addSidecarsAsContainers(sidecars []corev1.Container, pod *corev1.Pod) {
+	containers := make([]corev1.Container, 0, len(sidecars)+len(pod.Spec.Containers))
+	containers = append(containers, sidecars...)
+	containers = append(containers, pod.Spec.Containers...)
+	pod.Spec.Containers = containers
 }
 
 // podObjectMeta configures the pod ObjectMeta details
