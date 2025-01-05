@@ -29,6 +29,7 @@ import (
 	"agones.dev/agones/pkg/cloudproduct/generic"
 	"agones.dev/agones/pkg/portallocator"
 	agtesting "agones.dev/agones/pkg/testing"
+	agruntime "agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/webhooks"
 	"github.com/heptiolabs/healthcheck"
 	"github.com/sirupsen/logrus"
@@ -1424,6 +1425,9 @@ func TestControllerSyncGameServerRequestReadyState(t *testing.T) {
 	nodeName := "node"
 	containerID := "1234"
 
+	agruntime.FeatureTestMutex.Lock()
+	defer agruntime.FeatureTestMutex.Unlock()
+
 	t.Run("GameServer with ReadyRequest State", func(t *testing.T) {
 		c, m := newFakeController()
 
@@ -1452,7 +1456,11 @@ func TestControllerSyncGameServerRequestReadyState(t *testing.T) {
 			ua := action.(k8stesting.UpdateAction)
 			gs := ua.GetObject().(*agonesv1.GameServer)
 			assert.Equal(t, agonesv1.GameServerStateReady, gs.Status.State)
-			assert.Equal(t, containerID, gs.Annotations[agonesv1.GameServerReadyContainerIDAnnotation])
+
+			// only set if not using sidecars.
+			if !agruntime.FeatureEnabled(agruntime.FeatureSidecarContainers) {
+				assert.Equal(t, containerID, gs.Annotations[agonesv1.GameServerReadyContainerIDAnnotation])
+			}
 			return true, gs, nil
 		})
 		m.KubeClient.AddReactor("update", "pods", func(action k8stesting.Action) (bool, runtime.Object, error) {
@@ -1469,12 +1477,18 @@ func TestControllerSyncGameServerRequestReadyState(t *testing.T) {
 		gs, err := c.syncGameServerRequestReadyState(ctx, gsFixture)
 		assert.NoError(t, err, "should not error")
 		assert.True(t, gsUpdated, "GameServer wasn't updated")
-		assert.True(t, podUpdated, "Pod wasn't updated")
+		if agruntime.FeatureEnabled(agruntime.FeatureSidecarContainers) {
+			assert.False(t, podUpdated, "Pod was updated")
+		} else {
+			assert.True(t, podUpdated, "Pod was not updated")
+		}
 		assert.Equal(t, agonesv1.GameServerStateReady, gs.Status.State)
 		agtesting.AssertEventContains(t, m.FakeRecorder.Events, "SDK.Ready() complete")
 	})
 
 	t.Run("Error on GameServer update", func(t *testing.T) {
+		require.NoError(t, agruntime.ParseFeatures(string(agruntime.FeatureSidecarContainers)+"=false"))
+
 		c, m := newFakeController()
 
 		gsFixture := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
@@ -1925,6 +1939,10 @@ func TestControllerSyncGameServerShutdownState(t *testing.T) {
 
 func TestControllerGameServerPod(t *testing.T) {
 	t.Parallel()
+
+	agruntime.FeatureTestMutex.Lock()
+	defer agruntime.FeatureTestMutex.Unlock()
+	require.NoError(t, agruntime.ParseFeatures(string(agruntime.FeatureSidecarContainers)+"=false"))
 
 	setup := func() (*Controller, *agonesv1.GameServer, *watch.FakeWatcher, context.Context, context.CancelFunc) {
 		c, mocks := newFakeController()
