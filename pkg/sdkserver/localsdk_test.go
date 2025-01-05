@@ -160,9 +160,6 @@ func TestLocalSDKServerSetLabel(t *testing.T) {
 	}
 
 	for k, v := range fixtures {
-		// pin variables here, see scopelint for details
-		k := k
-		v := v
 		t.Run(k, func(t *testing.T) {
 			ctx := context.Background()
 			e := &sdk.Empty{}
@@ -470,9 +467,6 @@ func TestLocalSDKServerPlayerConnectAndDisconnect(t *testing.T) {
 	}
 
 	for k, v := range fixtures {
-		// pin variables here, see https://github.com/kyoh86/scopelint for the details
-		k := k
-		v := v
 		t.Run(k, func(t *testing.T) {
 			var l *LocalSDKServer
 			var err error
