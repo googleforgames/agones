@@ -138,7 +138,7 @@ spec:
       release: {{ .Release.Name }}
       heritage: {{ .Release.Service }}
 {{- end }}
-  {{- if .Values.agones.ping.http.expose }}
+{{- if .Values.agones.ping.http.expose }}
 ---
 apiVersion: v1
 kind: Service
@@ -171,6 +171,7 @@ spec:
   {{- if .Values.agones.ping.http.loadBalancerIP }}
   loadBalancerIP: {{ .Values.agones.ping.http.loadBalancerIP }}
   {{- end }}
+  externalTrafficPolicy: {{ .Values.agones.ping.http.externalTrafficPolicy }}
   {{- if .Values.agones.ping.http.loadBalancerSourceRanges }}
   loadBalancerSourceRanges:
 {{ toYaml .Values.agones.ping.http.loadBalancerSourceRanges | indent 4 }}
@@ -178,7 +179,7 @@ spec:
 {{- end }}
   {{- end }}
 
-  {{- if .Values.agones.ping.udp.expose }}
+{{- if .Values.agones.ping.udp.expose }}
 ---
 apiVersion: v1
 kind: Service
@@ -211,6 +212,7 @@ spec:
   {{- if .Values.agones.ping.udp.loadBalancerIP }}
   loadBalancerIP: {{ .Values.agones.ping.udp.loadBalancerIP }}
   {{- end }}
+  externalTrafficPolicy: {{ .Values.agones.ping.udp.externalTrafficPolicy }}
   {{- if .Values.agones.ping.udp.loadBalancerSourceRanges }}
   loadBalancerSourceRanges:
 {{ toYaml .Values.agones.ping.udp.loadBalancerSourceRanges | indent 4 }}
