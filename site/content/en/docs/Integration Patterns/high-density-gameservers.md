@@ -41,9 +41,9 @@ If an Allocated `GameServer` does not exist with available capacity, then use th
 `GameServer` from the `simple-game-server` `Fleet`.
 
 Whichever condition is met, once allocation is made against a `GameServer`, the `rooms` Counter will be incremented by
-one, thereby decrementing the available capacity of the `room` Counter on the `GameServer` instance. Once there is no 
-available capacity on the most full `GameServer`, the allocation will look for the next least full `GameServer` to
-ensure packing across `GameServer` instances.
+one, thereby decrementing the available capacity of the `room` Counter on the `GameServer` instance. Generally 
+speaking, once there is no available capacity on the most full `GameServer`, the allocation will prioritise the next 
+least full `GameServer` to ensure packing across `GameServer` instances.
 
 It will then be up to the game server process to decrement the `rooms` Counter via the SDK when a session comes to end,
 to increase the amount of available capacity within the `GameServer` instance.
@@ -56,7 +56,7 @@ spec:
   priorities:
     - type: Counter
       key: rooms
-      order: Ascending # Ensures the least full "rooms" get allocated first.
+      order: Ascending # Ensures the "rooms" with the least available capacity (most full rooms) get prioritised.
   selectors:
     # Check if there is an already Allocated GameServer with room for at least one more session.
     - gameServerState: Allocated
@@ -77,6 +77,15 @@ spec:
       action: Increment
       amount: 1 # Bump up the room count by one on Allocation.
 ```
+
+{{% alert title="Note" color="info" %}}
+When using `Packed` `scheduling`, Counter and List `priorities` are used as a tiebreaker within nodes, to ensure packing
+across the nodes is done as efficiently as possible first, and the packing within each `GameServer` on the node is done 
+second.
+
+For a `Distributed` `scheduling` implementation, Counter and List `priorities` are the only sorting that occurs across
+the potential set of GameServers that are to be allocated.
+{{% /alert %}}
 
 ## GameServer Label Locking
 
