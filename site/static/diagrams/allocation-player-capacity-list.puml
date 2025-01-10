@@ -1,0 +1,117 @@
+@startuml
+/'
+Copyright 2024 Google LLC All Rights Reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+'/
+
+'https://plantuml.com/sequence-diagram
+
+actor "Player One" as Player1
+actor "Player Two" as Player2
+participant Matchmaker
+participant Agones
+participant "GameServer\nResource" as GameServer
+box "Game Server Pod"
+  participant "Game Server\nProcess" as Binary
+  participant SDK
+end box
+
+activate GameServer
+
+== GameServer Start ==
+
+Agones -> GameServer: GameServer created through\na <i>Fleet</i> configuration
+note left
+<i>Fleet</i> configuration includes a <i>players</i> List with an initial empty value
+and a capacity set to the total number of players that be can be hosted on a <i>GameServer</i>.
+end note
+activate GameServer
+GameServer -> Binary: Agones creates a Pod with the\nconfigured Game Server Container
+activate Binary
+activate SDK
+Binary -> SDK: SDK.WatchGameServer()
+note right
+Use the SDK Watch function
+to watch and react to allocation
+and List mutation events
+end note
+
+Binary -> SDK: SDK.Ready()
+note right
+  Call <i>Ready()</i> when the
+  Game Server can take player
+  connections and is able to
+  be allocated.
+end note
+GameServer <-- SDK: Update to <i>Ready</i> State
+
+== No allocated <i>GameServers</i> ==
+
+Player1 -> Matchmaker: Requests a game session
+Matchmaker -> Agones: Create: <i>GameServerAllocation</i>
+note left
+  The <i>GameServerAllocation</i> is implemented to
+  optionally select an already allocated <i>GameServer</i>
+  with an available capacity under List <i>players</i>
+  of 1. If one cannot be found, allocate a <i>Ready</i>
+  <i>GameServer</i> instead.
+
+  Since at this stage there are no Allocated <i>GameServer<i>
+  Agones will allocate a <i>Ready</i> GameServer.
+end note
+Agones -> GameServer: Finds a <i>Ready</i> <i>GameServer</i>,\nsets it to <i>Allocated</i> State
+Matchmaker <-- Agones : <i>GameServerAllocation</i> is returned\nwith <i>GameServer</i> details\nincluding IP and port to connect to.
+Player1 <-- Matchmaker : Returns <i>GameServer</i> connection information
+Player1 -> Binary : Connects to game server process
+Binary -> SDK : SDK.Beta().AppendListValue("players", id)
+note left
+  Process calls <i>AppendListValue(...)</i>
+  on player client connection.
+end note
+GameServer <-- SDK : Appends <i>id</i> to <i>status.lists["players"].values</i>
+
+== Allocated <i>GameServers</i> with player(s) on them ==
+
+Player2 -> Matchmaker: Requests a game session
+Matchmaker -> Agones: Create: <i>GameServerAllocation</i>
+note left
+  The <i>GameServerAllocation</i> will this time find the
+  Allocated <i>GameServer</i> with the <i>players</i> List
+  with available capacity, indicating it has room for
+  more players.
+end note
+Agones -> GameServer: Finds the <i>Allocated</i> <i>GameServer</i> where\n<i>length(status["players"].values) < status["rooms"].capacity</i>.
+note right
+  This is the same <i>GameServer</i> that "Player One"
+  is currently playing on.
+end note
+Matchmaker <-- Agones: returns <i>Allocated GameServer</i> record
+Player2 <-- Matchmaker : Returns <i>GameServer</i> connection information
+Player2 -> Binary : Connects to game server process
+Binary -> SDK : SDK.Beta().AppendListValue("players", id)
+GameServer <-- SDK : Appends <i>id</i> to <i>status.lists["players"].values</i>
+
+alt <i>Player</i> disconnects
+  Binary -> SDK: SDK.Beta().DeleteListValue("players", id)
+  SDK --> GameServer: Removes <i>id</i> from <i>status.lists["players"].values</i>
+end alt
+note right
+  When a player disconnects,
+  remove their id from the "players" List,
+  to increase the available capacity
+  on this <i>GameServer</i>.
+end note
+
+
+@enduml
