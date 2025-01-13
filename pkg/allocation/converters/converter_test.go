@@ -626,7 +626,6 @@ func TestConvertAllocationRequestToGameServerAllocation(t *testing.T) {
 		},
 	}
 	for _, tc := range tests {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -834,7 +833,6 @@ func TestConvertGSAToAllocationRequest(t *testing.T) {
 		},
 	}
 	for _, tc := range tests {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -1370,7 +1368,6 @@ func TestConvertGSAToAllocationResponse(t *testing.T) {
 		},
 	}
 	for _, tc := range tests {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			runtime.FeatureTestMutex.Lock()
@@ -1561,7 +1558,6 @@ func TestConvertAllocationResponseToGSA(t *testing.T) {
 		},
 	}
 	for _, tc := range tests {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			runtime.FeatureTestMutex.Lock()

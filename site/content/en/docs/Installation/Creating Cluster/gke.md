@@ -338,3 +338,5 @@ gcloud container clusters get-credentials [CLUSTER_NAME] --region=[COMPUTE_REGIO
 ## Next Steps
 
 * Continue to [Install Agones]({{< relref "../Install Agones/_index.md" >}}).
+* Have a look at the 
+   [Best practices for running Agones on Google Kubernetes Engine]({{< ref "/docs/Guides/Best Practices/gke.md" >}}).

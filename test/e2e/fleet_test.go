@@ -303,7 +303,6 @@ func TestFleetScaleUpEditAndScaleDown(t *testing.T) {
 	fixtures := []bool{true, false}
 
 	for _, usePatch := range fixtures {
-		usePatch := usePatch
 		t.Run("Use fleet Patch "+fmt.Sprint(usePatch), func(t *testing.T) {
 			t.Parallel()
 			ctx := context.Background()
@@ -633,7 +632,6 @@ func TestScaleFleetUpAndDownWithGameServerAllocation(t *testing.T) {
 	fixtures := []bool{false, true}
 
 	for _, usePatch := range fixtures {
-		usePatch := usePatch
 		t.Run("Use fleet Patch "+fmt.Sprint(usePatch), func(t *testing.T) {
 			t.Parallel()
 
@@ -714,8 +712,6 @@ func TestFleetUpdates(t *testing.T) {
 	}
 
 	for k, v := range fixtures {
-		k := k
-		v := v
 		t.Run(k, func(t *testing.T) {
 			t.Parallel()
 			client := framework.AgonesClient.AgonesV1()
@@ -1380,7 +1376,6 @@ func TestFleetRecreateGameServers(t *testing.T) {
 			podClient := framework.KubeClient.CoreV1().Pods(framework.Namespace)
 
 			for _, gs := range list.Items {
-				gs := gs
 				pod, err := podClient.Get(ctx, gs.ObjectMeta.Name, metav1.GetOptions{})
 				assert.NoError(t, err)
 
@@ -1392,7 +1387,6 @@ func TestFleetRecreateGameServers(t *testing.T) {
 		}},
 		"gameserver shutdown": {f: func(t *testing.T, list *agonesv1.GameServerList) {
 			for _, gs := range list.Items {
-				gs := gs
 				var reply string
 				reply, err := framework.SendGameServerUDP(t, &gs, "EXIT")
 				if err != nil {
@@ -1410,7 +1404,6 @@ func TestFleetRecreateGameServers(t *testing.T) {
 		}},
 		"gameserver unhealthy": {f: func(t *testing.T, list *agonesv1.GameServerList) {
 			for _, gs := range list.Items {
-				gs := gs
 				var reply string
 				reply, err := framework.SendGameServerUDP(t, &gs, "UNHEALTHY")
 				if err != nil {
@@ -1423,8 +1416,6 @@ func TestFleetRecreateGameServers(t *testing.T) {
 	}
 
 	for k, v := range tests {
-		k := k
-		v := v
 		t.Run(k, func(t *testing.T) {
 			t.Parallel()
 			client := framework.AgonesClient.AgonesV1()

@@ -68,11 +68,6 @@ Follow the [Google Cloud Monitoring installation steps](#google-cloud-monitoring
 | agones_gameserver_state_duration                      | The distribution of gameserver state duration in seconds. Note: this metric could have some missing samples by design. Do not use the `_total` counter as the real value for state changes. | histogram |
 | agones_k8s_client_http_request_total                  | The total of HTTP requests to the Kubernetes API by status code                                                                                                                             | counter   |
 | agones_k8s_client_http_request_duration_seconds       | The distribution of HTTP requests latencies to the Kubernetes API by status code                                                                                                            | histogram |
-| agones_k8s_client_cache_list_total                    | The total number of list operations for client-go caches                                                                                                                                    | counter   |
-| agones_k8s_client_cache_list_duration_seconds         | Duration of a Kubernetes list API call in seconds                                                                                                                                           | histogram |
-| agones_k8s_client_cache_list_items                    | Count of items in a list from the Kubernetes API                                                                                                                                            | histogram |
-| agones_k8s_client_cache_watches_total                 | The total number of watch operations for client-go caches                                                                                                                                   | counter   |
-| agones_k8s_client_cache_last_resource_version         | Last resource version from the Kubernetes API                                                                                                                                               | gauge     |
 | agones_k8s_client_workqueue_depth                     | Current depth of the work queue                                                                                                                                                             | gauge     |
 | agones_k8s_client_workqueue_latency_seconds           | How long an item stays in the work queue                                                                                                                                                    | histogram |
 | agones_k8s_client_workqueue_items_total               | Total number of items added to the work queue                                                                                                                                               | counter   |
@@ -109,8 +104,6 @@ We provide a set of useful [Grafana](https://grafana.com/) dashboards to monitor
 - {{< ghlink href="/build/grafana/dashboard-controller-usage.yaml" branch="main" >}}Agones Controller Resource Usage{{< /ghlink >}} displays Agones Controller CPU and memory usage and also some Golang runtime metrics.
 
 - {{< ghlink href="/build/grafana/dashboard-goclient-requests.yaml" branch="main" >}}Agones Controller go-client requests{{< /ghlink >}} displays Agones Controller Kubernetes API consumption.
-
-- {{< ghlink href="/build/grafana/dashboard-goclient-caches.yaml" branch="main" >}}Agones Controller go-client caches{{< /ghlink >}} displays Agones Controller Kubernetes Watches/Lists operations used.
 
 - {{< ghlink href="/build/grafana/dashboard-goclient-workqueues.yaml" branch="main" >}}Agones Controller go-client workqueues{{< /ghlink >}} displays Agones Controller workqueue processing time and rates.
 
