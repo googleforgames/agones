@@ -1,0 +1,131 @@
+@startuml
+/'
+Copyright 2024 Google LLC All Rights Reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+'/
+
+participant Matchmaker
+participant Agones
+participant "Game Server\nProcess" as Binary
+participant SDK
+participant "GameServer\nResource" as GameServer
+box "Game Server Pod"
+  participant Binary
+  participant SDK
+end box
+
+== GameServer Start ==
+
+Agones -> GameServer: GameServer created through\na <i>Fleet</i> configuration
+note left
+<i>Fleet</i> configuration includes a <i>rooms</i> Counter with an initial value of 0
+and a capacity set to the total number of sessions that be can be hosted on a <i>GameServer</i>.
+end note
+activate GameServer
+GameServer -> Binary: Agones creates a Pod with the\nconfigured Game Server Container
+activate Binary
+activate SDK
+Binary -> SDK: SDK.WatchGameServer()
+note right
+Use the SDK Watch function
+to watch and react to allocation
+events
+end note
+
+Binary -> SDK: SDK.Ready()
+note right
+  Call <i>Ready()</i> when the
+  Game Server can take player
+  connections and is able to
+  be allocated.
+end note
+GameServer <-- SDK: Update to <i>Ready</i> State
+
+== No allocated <i>GameServers</i> ==
+
+Matchmaker -> Agones: Create: <i>GameServerAllocation</i>
+note left
+  The <i>GameServerAllocation</i> is implemented to
+  optionally select an already allocated <i>GameServer</i>
+  with a available capacity under Counter <i>rooms</i>
+  of 1. If one cannot be found, allocate a <i>Ready</i>
+  <i>GameServer</i> instead.
+
+  Since at this stage there are no Allocated <i>GameServer<i>
+  Agones will allocate a <i>Ready</i> GameServer.
+end note
+Agones -> GameServer: Finds a <i>Ready</i> <i>GameServer</i>.\n\nSets <i>status.state</i> to <i>Allocated</i> State\nand <i>status.counters["rooms"}.count++</i>\nand <i>metadata.annotations["agones.dev/last-allocated"] = current timestamp</i>
+note left
+By incrementing the <i>rooms</i> counter by one,
+this reduces the available capacity for this
+<i>GameServer</i> by one.
+end note
+Matchmaker <-- Agones : <i>GameServerAllocation</i> is returned\nwith <i>GameServer</i> details\nincluding IP and port to connect to.
+
+SDK --> Binary: Sends SDK.WatchGameServer()\nevent for Allocation.
+note right
+This initial allocation can be determined
+as a change in <i>GameServer.status.state</i>
+from <i>Ready</i> to <i>Allocated</i>, as well as an
+increment of one on
+<i>GameServer.status.counters["rooms"].count</i>
+end note
+
+== Allocated <i>GameServers</i> with available capacity for more sessions ==
+
+Matchmaker -> Agones: Create: <i>GameServerAllocation</i>
+note left
+  The <i>GameServerAllocation</i> will this time find the
+  Allocated <i>GameServer</i> with the <i>rooms</i> Counter
+  with available capacity, inculcating it has room for
+  more game sessions.
+end note
+Agones -> GameServer: Finds the <i>Allocated</i> <i>GameServer</i> where\n<i>status["rooms"].count < status["rooms"].capacity</i>.\n\nSets <i>status.counters["rooms"}.count++</i>\nand <i>metadata.annotations["agones.dev/last-allocated"] = current timestamp</i>
+note right
+  This is a <i>GameServer</i> that has room
+  for another concurrent game session.
+end note
+Matchmaker <-- Agones: returns <i>Allocated GameServer</i> record
+
+SDK --> Binary: Sends SDK.WatchGameServer()\nevent for Allocation.
+note right
+The game server process can watch for an
+increment of <i>status.counters["rooms"}.count</i> and/or
+change in <i>metadata.annotations["agones.dev/last-allocated"]</i>
+to determine if there is an allocation event.
+end note
+
+alt <i>GameServer</i> finishes a game session
+  Binary -> SDK: SDK.Beta().DecrementCounter("rooms", 1)
+  SDK --> GameServer: Sets <i>status["rooms"].count--</i>
+end alt
+note right
+  When a session ends, decrement the session counter
+  to increase the available capacity on this <i>GameServer</i>.
+end note
+
+== <i>GameServer</i> has completed <i>n</i> number of complete sessions ==
+
+Binary -> SDK: SDK.Shutdown()
+note left
+The <i>GameServer</i> process tracks the total number of sessions
+that it hosts, and after <i>n</i> number, calls <i>Shutdown()</i>
+to delete the <i>GameServer</i> resource and backing Pod.
+end note
+SDK --> GameServer: Update to <i>Shutdown</i> state.
+Agones -> GameServer: Deletes GameServer resource and backing Pod.
+destroy Binary
+destroy SDK
+destroy GameServer
+@enduml
