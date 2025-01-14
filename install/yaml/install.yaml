@@ -17727,6 +17727,7 @@ spec:
       targetPort: 8080
       protocol: TCP
   type: LoadBalancer
+  externalTrafficPolicy: Cluster
 ---
 # Source: agones/templates/ping.yaml
 apiVersion: v1
@@ -17749,6 +17750,7 @@ spec:
       targetPort: 8080
       protocol: UDP
   type: LoadBalancer
+  externalTrafficPolicy: Cluster
 ---
 # Source: agones/templates/service.yaml
 # Copyright 2018 Google LLC All Rights Reserved.

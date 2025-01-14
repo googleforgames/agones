@@ -184,6 +184,7 @@ agones:
       nodePort: 0 # nodePort will be used if the serviceType is set to NodePort
       serviceType: LoadBalancer
       loadBalancerIP: ""
+      externalTrafficPolicy: Cluster
       loadBalancerSourceRanges: []
       annotations: {}
     udp:
@@ -193,6 +194,7 @@ agones:
       nodePort: 0 # nodePort will be used if the serviceType is set to NodePort
       serviceType: LoadBalancer
       loadBalancerIP: ""
+      externalTrafficPolicy: Cluster
       loadBalancerSourceRanges: []
       annotations: {}
     healthCheck:
