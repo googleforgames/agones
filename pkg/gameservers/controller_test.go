@@ -1205,8 +1205,11 @@ func TestControllerSyncGameServerStartingState(t *testing.T) {
 		m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
 			ua := action.(k8stesting.UpdateAction)
 			gs := ua.GetObject().(*agonesv1.GameServer)
-			assert.Equal(t, agonesv1.GameServerStateScheduled, gs.Status.State)
-			return true, gs, errors.New("update-err")
+			assert.Equal(t, agonesv1.GameServerStateStarting, gs.Status.State)
+			assert.NotEmpty(t, gs.Status.Ports)
+			assert.NotEmpty(t, gs.Status.Address)
+			assert.NotEmpty(t, gs.Status.Addresses)
+			return true, gs, nil
 		})
 		ctx, cancel := agtesting.StartInformers(m, c.gameServerSynced, c.podSynced, c.nodeSynced)
 		defer cancel()
