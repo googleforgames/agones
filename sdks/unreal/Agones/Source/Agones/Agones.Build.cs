@@ -33,9 +33,7 @@ public class Agones : ModuleRules
 			new[]
 			{
 				"CoreUObject",
-				"Engine",
-				"Slate",
-				"SlateCore"
+				"Engine"
 			});
 		DynamicallyLoadedModuleNames.AddRange(new string[]{ });
 	}
