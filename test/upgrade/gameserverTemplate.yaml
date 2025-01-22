@@ -28,6 +28,8 @@ data:
         agonesVersion: {{ .AgonesVersion }}
         app: sdk-client-test
     spec:
+      eviction:
+        safe: Always
       ports:
         - name: default
           portPolicy: Dynamic
