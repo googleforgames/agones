@@ -951,7 +951,7 @@ func (c *Controller) syncGameServerRequestReadyState(ctx context.Context, gs *ag
 		}
 	}
 	addressPopulated := false
-	if gs.Status.NodeName == "" || !hasPodIPAddress {
+	if gs.Status.NodeName == "" || (!hasPodIPAddress && len(pod.Status.PodIPs) > 0) {
 		addressPopulated = true
 		if pod.Spec.NodeName == "" {
 			return gs, workerqueue.NewTraceError(errors.Errorf("node not yet populated for Pod %s", pod.ObjectMeta.Name))
