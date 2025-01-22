@@ -905,7 +905,6 @@ func (c *Controller) syncGameServerStartingState(ctx context.Context, gs *agones
 		if err != nil {
 			return gs, errors.Wrapf(err, "error updating GameServer %s address and port", gs.Name)
 		}
-	
 		return gs, workerqueue.NewTraceError(errors.Errorf("pod IPs not yet populated for Pod %s", pod.ObjectMeta.Name))
 	}
 
@@ -946,13 +945,13 @@ func (c *Controller) syncGameServerRequestReadyState(ctx context.Context, gs *ag
 	// before the controller has had a chance to do it, then
 	// do it here instead
 	var hasPodIPAddress bool
-	for i, addr := range gs.Status.Addresses {
+	for _, addr := range gs.Status.Addresses {
 		if addr.Type == agonesv1.NodePodIP {
 			hasPodIPAddress = true
 		}
 	}
 	addressPopulated := false
-	if gs.Status.NodeName == "" || !addressPopulated {
+	if gs.Status.NodeName == "" || !hasPodIPAddress {
 		addressPopulated = true
 		if pod.Spec.NodeName == "" {
 			return gs, workerqueue.NewTraceError(errors.Errorf("node not yet populated for Pod %s", pod.ObjectMeta.Name))
