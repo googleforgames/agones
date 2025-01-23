@@ -153,6 +153,13 @@ func (m *sdkMock) SetAnnotation(_ context.Context, in *sdk.KeyValue, _ ...grpc.C
 	return &sdk.Empty{}, nil
 }
 
+func (m *sdkMock) SetAnnotations(_ context.Context, in *sdk.KeyValues, _ ...grpc.CallOption) (*sdk.Empty, error) {
+	for _, kv := range in.KeyValues {
+		m.annotations["agones.dev/sdk-"+kv.Key] = kv.Value
+	}
+	return &sdk.Empty{}, nil
+}
+
 func (m *sdkMock) WatchGameServer(_ context.Context, _ *sdk.Empty, _ ...grpc.CallOption) (sdk.SDK_WatchGameServerClient, error) {
 	return m.wm, nil
 }
