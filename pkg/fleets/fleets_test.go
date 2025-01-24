@@ -100,7 +100,7 @@ func TestListGameServersByFleetOwner(t *testing.T) {
 		informer.GameServers().Informer().HasSynced)
 	defer cancel()
 
-	list, err := ListGameServersByFleetOwner(informer.GameServers().Lister(), f)
+	list, err := ListGameServersByFleetOwner(informer.GameServers().Lister().GameServers(f.Namespace), f)
 	require.NoError(t, err)
 	assert.Len(t, list, len(gsList), "Retrieved list should be same size as original")
 
