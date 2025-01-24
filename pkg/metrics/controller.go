@@ -259,7 +259,8 @@ func (c *Controller) recordFleetChanges(obj interface{}) {
 }
 
 func (c *Controller) recordFleetRolloutPercentage(fleet *agonesv1.Fleet) {
-	list, err := fleetsv1.ListGameServerSetsByFleetOwner(c.gameServerSetLister, fleet)
+	gameServerSetNamespacedLister := c.gameServerSetLister.GameServerSets(fleet.Namespace)
+	list, err := fleetsv1.ListGameServerSetsByFleetOwner(gameServerSetNamespacedLister, fleet)
 	if err != nil {
 		c.logger.Errorf("Error listing GameServerSets for fleet %s in namespace %s: %v", fleet.Name, fleet.Namespace, err.Error())
 		return
