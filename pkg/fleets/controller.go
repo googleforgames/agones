@@ -290,7 +290,7 @@ func (c *Controller) syncFleet(ctx context.Context, key string) error {
 		return nil
 	}
 
-	gameServerSetNamespacedLister := c.gameServerSetLister.GameServerSets(fleet.Namespace)
+	gameServerSetNamespacedLister := c.gameServerSetLister.GameServerSets(fleet.ObjectMeta.Namespace)
 	list, err := ListGameServerSetsByFleetOwner(gameServerSetNamespacedLister, fleet)
 	if err != nil {
 		return err
@@ -662,7 +662,7 @@ func (c *Controller) rollingUpdateRest(ctx context.Context, fleet *agonesv1.Flee
 func (c *Controller) updateFleetStatus(ctx context.Context, fleet *agonesv1.Fleet) error {
 	loggerForFleet(fleet, c.baseLogger).Debug("Update Fleet Status")
 
-	gameServerSetNamespacedLister := c.gameServerSetLister.GameServerSets(fleet.Namespace)
+	gameServerSetNamespacedLister := c.gameServerSetLister.GameServerSets(fleet.ObjectMeta.Namespace)
 	list, err := ListGameServerSetsByFleetOwner(gameServerSetNamespacedLister, fleet)
 	if err != nil {
 		return err

@@ -189,7 +189,7 @@ func TestComputeDesiredFleetSize(t *testing.T) {
 			_, cancel := agtesting.StartInformers(m, gameServers.Informer().HasSynced)
 			defer cancel()
 
-			replicas, limited, err := computeDesiredFleetSize(fas.Spec.Policy, f, gameServers.Lister().GameServers(f.Namespace), nc)
+			replicas, limited, err := computeDesiredFleetSize(fas.Spec.Policy, f, gameServers.Lister().GameServers(f.ObjectMeta.Namespace), nc)
 
 			if tc.expected.err != "" && assert.NotNil(t, err) {
 				assert.Equal(t, tc.expected.err, err.Error())
@@ -1487,7 +1487,7 @@ func TestApplyCounterPolicy(t *testing.T) {
 				informer.GameServers().Informer().HasSynced)
 			defer cancel()
 
-			replicas, limited, err := applyCounterOrListPolicy(tc.cp, nil, tc.fleet, informer.GameServers().Lister().GameServers(tc.fleet.Namespace), nc)
+			replicas, limited, err := applyCounterOrListPolicy(tc.cp, nil, tc.fleet, informer.GameServers().Lister().GameServers(tc.fleet.ObjectMeta.Namespace), nc)
 
 			if tc.want.wantErr {
 				assert.NotNil(t, err)
@@ -2212,7 +2212,7 @@ func TestApplyListPolicy(t *testing.T) {
 				informer.GameServers().Informer().HasSynced)
 			defer cancel()
 
-			replicas, limited, err := applyCounterOrListPolicy(nil, tc.lp, tc.fleet, informer.GameServers().Lister().GameServers(tc.fleet.Namespace), nc)
+			replicas, limited, err := applyCounterOrListPolicy(nil, tc.lp, tc.fleet, informer.GameServers().Lister().GameServers(tc.fleet.ObjectMeta.Namespace), nc)
 
 			if tc.want.wantErr {
 				assert.NotNil(t, err)

@@ -65,7 +65,7 @@ func TestListGameServerSetsByFleetOwner(t *testing.T) {
 	_, cancel := agtesting.StartInformers(m, gameServerSets.Informer().HasSynced)
 	defer cancel()
 
-	list, err := ListGameServerSetsByFleetOwner(gameServerSets.Lister(), f)
+	list, err := ListGameServerSetsByFleetOwner(gameServerSets.Lister().GameServerSets(f.ObjectMeta.Namespace), f)
 	require.NoError(t, err)
 
 	// sort of stable ordering
@@ -100,7 +100,7 @@ func TestListGameServersByFleetOwner(t *testing.T) {
 		informer.GameServers().Informer().HasSynced)
 	defer cancel()
 
-	list, err := ListGameServersByFleetOwner(informer.GameServers().Lister().GameServers(f.Namespace), f)
+	list, err := ListGameServersByFleetOwner(informer.GameServers().Lister().GameServers(f.ObjectMeta.Namespace), f)
 	require.NoError(t, err)
 	assert.Len(t, list, len(gsList), "Retrieved list should be same size as original")
 
