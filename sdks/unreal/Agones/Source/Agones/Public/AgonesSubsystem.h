@@ -152,9 +152,6 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = Agones)
 	FConnectedDelegate ConnectedDelegate;
 
-	UAgonesSubsystem();
-    ~UAgonesSubsystem();
-
 	/**
 	 * \brief ShouldCreateSubsystem is a built in subsystem function that is called before Initialize.
 	 */

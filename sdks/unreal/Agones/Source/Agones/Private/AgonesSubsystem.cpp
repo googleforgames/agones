@@ -100,27 +100,8 @@ FHttpRequestRef UAgonesSubsystem::BuildAgonesRequest(const FString Path, const F
 UAgonesSubsystem* UAgonesSubsystem::Get(const UObject* WorldContext)
 {
 	auto World = GEngine->GetWorldFromContextObject(WorldContext, EGetWorldErrorMode::LogAndReturnNull);
-	
 	const UGameInstance* GameInstance = World ? GameInstance = World->GetGameInstance() : Cast<UGameInstance>(WorldContext->GetOuter());
-
 	return GameInstance ? GameInstance->GetSubsystem<UAgonesSubsystem>() : nullptr;
-}
-
-UAgonesSubsystem::UAgonesSubsystem() 
-	: UGameInstanceSubsystem()
-{
-	if (!HasAllFlags(RF_ClassDefaultObject)) 
-	{
-		const FTickerDelegate TickDelegate = FTickerDelegate::CreateUObject(this, &UAgonesSubsystem::Tick);
-		TickHandle = FTSTicker::GetCoreTicker().AddTicker(TickDelegate);
-
-		TimerManager = MakeUnique<FTimerManager>();
-	}
-}
-
-UAgonesSubsystem::~UAgonesSubsystem() 
-{ 
-	FTSTicker::GetCoreTicker().RemoveTicker(TickHandle);
 }
 
 bool UAgonesSubsystem::ShouldCreateSubsystem(UObject *Outer) const 
@@ -131,6 +112,10 @@ bool UAgonesSubsystem::ShouldCreateSubsystem(UObject *Outer) const
 void UAgonesSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
+
+	const FTickerDelegate TickDelegate = FTickerDelegate::CreateUObject(this, &UAgonesSubsystem::Tick);
+	TickHandle = FTSTicker::GetCoreTicker().AddTicker(TickDelegate);
+	TimerManager = MakeUnique<FTimerManager>();
 
 	if (!bDisableAutoHealthPing) 
 	{
@@ -146,6 +131,8 @@ void UAgonesSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 void UAgonesSubsystem::Deinitialize()
 {
 	Super::Deinitialize();
+
+	FTSTicker::GetCoreTicker().RemoveTicker(TickHandle);
 
 	if (WatchWebSocket != nullptr && WatchWebSocket->IsConnected())
 	{
