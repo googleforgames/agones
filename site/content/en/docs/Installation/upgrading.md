@@ -51,7 +51,6 @@ The following are steps to implement this:
 If you are upgrading a single cluster, we recommend creating a maintenance window, in which your game goes offline
 for the period of your upgrade, as there will be a short period in which Agones will be non-responsive during the upgrade.
 
-{{% feature publishVersion="1.46.0" %}}
 #### In-Place Agones Upgrades
 
 {{< alert color="warning" title="Warning" >}}
@@ -118,7 +117,6 @@ configurable parameters.
         increases the likelihood of having multiple Game Server configurations on the same Fleet.
 4. Run any other tests to ensure the Agones installation is working as expected.
 5. Congratulations - you have now upgraded to a new version of Agones! 👍
-{{% /feature %}}
 
 #### Installation with install.yaml
 

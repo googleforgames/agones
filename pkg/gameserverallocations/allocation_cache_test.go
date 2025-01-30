@@ -174,8 +174,6 @@ func TestAllocationCacheListSortedGameServers(t *testing.T) {
 	}
 
 	for k, v := range fixtures {
-		k := k
-		v := v
 		t.Run(k, func(t *testing.T) {
 			// deliberately not resetting the Feature state, to catch any possible unknown regressions with the
 			// new feature flags

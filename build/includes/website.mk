@@ -80,9 +80,11 @@ site-images: ${site_path}/static/diagrams/system-diagram.dot.png
 site-images: $(site_path)/static/diagrams/gameserver-lifecycle.puml.png
 site-images: $(site_path)/static/diagrams/gameserver-reserved.puml.png
 site-images: $(site_path)/static/diagrams/canary-testing.puml.png
-site-images: $(site_path)/static/diagrams/allocation-player-capacity.puml.png
+site-images: $(site_path)/static/diagrams/allocation-player-capacity-tracking.puml.png
+site-images: $(site_path)/static/diagrams/allocation-player-capacity-list.puml.png
 site-images: $(site_path)/static/diagrams/reusing-gameservers.puml.png
-site-images: $(site_path)/static/diagrams/high-density.puml.png
+site-images: $(site_path)/static/diagrams/high-density-label-lock.puml.png
+site-images: $(site_path)/static/diagrams/high-density-counters.puml.png
 
 # generate pngs from dot files
 %.dot.png: %.dot

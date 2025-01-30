@@ -354,14 +354,18 @@ func checkHelmStatus(agonesVersion string) string {
 		log.Fatal("Could not Unmarshal", err)
 	}
 
-	// Remove the commit sha from the DevVersion i.e. from 1.46.0-dev-7168dd3 to 1.46.0-dev
+	// Remove the commit sha from the DevVersion i.e. from 1.46.0-dev-7168dd3 to 1.46.0-dev or 1.46.0
+	// for the case of this test running during a new Agones version release PR.
+	agonesRelease := ""
 	if agonesVersion == DevVersion {
 		r := regexp.MustCompile(`1\.\d+\.\d+-dev`)
 		agonesVersion = r.FindString(DevVersion)
+		r = regexp.MustCompile(`1\.\d+\.\d`)
+		agonesRelease = r.FindString(agonesVersion)
 	}
 
 	for _, status := range helmStatus {
-		if status.AppVersion == agonesVersion {
+		if (status.AppVersion == agonesVersion) || (status.AppVersion == agonesRelease) {
 			return status.Status
 		}
 	}

@@ -44,7 +44,6 @@ func TestCreateFleetAndGameServerAllocate(t *testing.T) {
 	fixtures := []apis.SchedulingStrategy{apis.Packed, apis.Distributed}
 
 	for _, strategy := range fixtures {
-		strategy := strategy
 		t.Run(string(strategy), func(t *testing.T) {
 			t.Parallel()
 			ctx := context.Background()
@@ -999,7 +998,6 @@ func TestMultiClusterAllocationOnLocalCluster(t *testing.T) {
 
 	fixtures := []apis.SchedulingStrategy{apis.Packed, apis.Distributed}
 	for _, strategy := range fixtures {
-		strategy := strategy
 		t.Run(string(strategy), func(t *testing.T) {
 			if strategy == apis.Distributed {
 				framework.SkipOnCloudProduct(t, "gke-autopilot", "Autopilot does not support Distributed scheduling")
@@ -1138,8 +1136,6 @@ func TestCreateFullFleetAndCantGameServerAllocate(t *testing.T) {
 	fixtures := []apis.SchedulingStrategy{apis.Packed, apis.Distributed}
 
 	for _, strategy := range fixtures {
-		strategy := strategy
-
 		t.Run(string(strategy), func(t *testing.T) {
 			if strategy == apis.Distributed {
 				framework.SkipOnCloudProduct(t, "gke-autopilot", "Autopilot does not support Distributed scheduling")
