@@ -14,6 +14,8 @@
 
 #include "AgonesSubsystem.h"
 
+#include "Engine/Engine.h"
+#include "Engine/GameInstance.h"
 #include "Engine/World.h"
 #include "HttpModule.h"
 #include "Interfaces/IHttpResponse.h"
@@ -25,7 +27,7 @@
 
 DEFINE_LOG_CATEGORY_STATIC(LogAgones, Log, Log);
 
-#if ENGINE_MAJOR_VERSION > 4
+#if defined(ENGINE_MAJOR_VERSION) && ENGINE_MAJOR_VERSION > 4
 typedef UTF8CHAR UTF8FromType;
 #else
 typedef ANSICHAR UTF8FromType;

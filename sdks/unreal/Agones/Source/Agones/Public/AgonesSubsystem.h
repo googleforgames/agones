@@ -17,6 +17,7 @@
 #include "Classes.h"
 #include "Components/ActorComponent.h"
 #include "CoreMinimal.h"
+#include "Containers/Ticker.h"
 #include "Interfaces/IHttpRequest.h"
 #include "IWebSocket.h"
 #include "Subsystems/GameInstanceSubsystem.h"
