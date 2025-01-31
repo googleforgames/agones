@@ -23,11 +23,12 @@
 #include "Policies/CondensedJsonPrintPolicy.h"
 #include "TimerManager.h"
 #include "IWebSocket.h"
+#include "Runtime/Launch/Resources/Version.h"
 #include "WebSocketsModule.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogAgones, Log, Log);
 
-#if defined(ENGINE_MAJOR_VERSION) && ENGINE_MAJOR_VERSION > 4
+#if ENGINE_MAJOR_VERSION > 4
 typedef UTF8CHAR UTF8FromType;
 #else
 typedef ANSICHAR UTF8FromType;
