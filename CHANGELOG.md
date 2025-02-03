@@ -1,5 +1,43 @@
 # Changelog
 
+## [v1.46.0](https://github.com/googleforgames/agones/tree/v1.46.0) (2025-01-02)
+
+[Full Changelog](https://github.com/googleforgames/agones/compare/v1.45.0...v1.46.0)
+
+**Breaking changes:**
+- Removed reflector metric usage by @vicentefb in https://github.com/googleforgames/agones/pull/4056
+
+**Implemented enhancements:**
+- Set externalTrafficPolicy as Local for agones-allocator by @osterante in https://github.com/googleforgames/agones/pull/4022
+- Integrates upgrades tests into Cloud Build by @igooch in https://github.com/googleforgames/agones/pull/4037
+- Delete List Value(s) on Game Server Allocation by @igooch in https://github.com/googleforgames/agones/pull/4054
+- In place upgrades version update instructions by @igooch in https://github.com/googleforgames/agones/pull/4064
+
+**Fixed bugs:**
+- Correct CI check for examples and add a unit test by @wheatear-dev in https://github.com/googleforgames/agones/pull/4045
+- Enable counter based autoscaler to scale from 0 replicas by @geopaulm in https://github.com/googleforgames/agones/pull/4049
+
+**Other:**
+- Preparation for Release v1.46.0 by @0xaravindh in https://github.com/googleforgames/agones/pull/4043
+- Updates Kubernetes templates for cpp-simple image by @0xaravindh in https://github.com/googleforgames/agones/pull/4044
+- Changes upgrades clusters to use only us based regions by @igooch in https://github.com/googleforgames/agones/pull/4046
+- Clarify docs on GKE Autopilot and node pools by @danfairs in https://github.com/googleforgames/agones/pull/4048
+- Updated typo's in multiple files by @nallave in https://github.com/googleforgames/agones/pull/4055
+- Flake: e2e/TestScheduleAutoscaler by @markmandel in https://github.com/googleforgames/agones/pull/4058
+- Add ability to specify additional labels for controller and extension pods by @R4oulDuk3 in https://github.com/googleforgames/agones/pull/4057
+- Adds Documention for how to run an in-place Agones upgrade by @igooch in https://github.com/googleforgames/agones/pull/3904
+- Fixes build error in push-upgrade-test by @igooch in https://github.com/googleforgames/agones/pull/4065
+- Fix broken link by @0xaravindh in https://github.com/googleforgames/agones/pull/4070
+- Link to Google Cloud Agones Support. by @markmandel in https://github.com/googleforgames/agones/pull/4071
+- Upgrade Go to 1.23.4 and update example image tags by @0xaravindh in https://github.com/googleforgames/agones/pull/4072
+- Unblocks Agones release PR by waiting for either the Agones dev version or release version by @igooch in https://github.com/googleforgames/agones/pull/4078
+
+**New Contributors:**
+- @danfairs made their first contribution in https://github.com/googleforgames/agones/pull/4048
+- @osterante made their first contribution in https://github.com/googleforgames/agones/pull/4022
+- @nallave made their first contribution in https://github.com/googleforgames/agones/pull/4055
+- @R4oulDuk3 made their first contribution in https://github.com/googleforgames/agones/pull/4057
+
 ## [v1.45.0](https://github.com/googleforgames/agones/tree/v1.45.0) (2024-11-19)
 
 [Full Changelog](https://github.com/googleforgames/agones/compare/v1.44.0...v1.45.0)

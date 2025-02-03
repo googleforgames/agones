@@ -13,7 +13,7 @@
 # limitations under the License.
 
 # Gather dependencies and build the executable
-FROM golang:1.22.6 as builder
+FROM golang:1.23.4 as builder
 WORKDIR /go/src/custom-controller
 COPY . .
 

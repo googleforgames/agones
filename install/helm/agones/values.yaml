@@ -184,6 +184,7 @@ agones:
       nodePort: 0 # nodePort will be used if the serviceType is set to NodePort
       serviceType: LoadBalancer
       loadBalancerIP: ""
+      externalTrafficPolicy: Cluster
       loadBalancerSourceRanges: []
       annotations: {}
     udp:
@@ -193,6 +194,7 @@ agones:
       nodePort: 0 # nodePort will be used if the serviceType is set to NodePort
       serviceType: LoadBalancer
       loadBalancerIP: ""
+      externalTrafficPolicy: Cluster
       loadBalancerSourceRanges: []
       annotations: {}
     healthCheck:
@@ -274,7 +276,7 @@ agones:
     topologySpreadConstraints: {}
   image:
     registry: us-docker.pkg.dev/agones-images/release
-    tag: 1.46.0-dev
+    tag: 1.47.0-dev
     controller:
       name: agones-controller
       pullPolicy: IfNotPresent

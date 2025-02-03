@@ -423,10 +423,10 @@ struct FCounterResponse
 	}
 
 	UPROPERTY(BlueprintReadOnly, Category = "Agones")
-	int64 Count;
+	int64 Count = 0;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Agones")
-	int64 Capacity;
+	int64 Capacity = 0;
 
 	explicit FCounterResponse(const TSharedPtr<FJsonObject> JsonObject)
 	{

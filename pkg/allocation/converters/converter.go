@@ -286,7 +286,6 @@ func convertInternalLabelSelectorToLabelSelector(in *metav1.LabelSelector) *pb.L
 func convertInternalLabelSelectorsToLabelSelectors(in []allocationv1.GameServerSelector) []*pb.GameServerSelector {
 	var result []*pb.GameServerSelector
 	for _, l := range in {
-		l := l
 		c := convertInternalGameServerSelectorToGameServer(&l)
 		result = append(result, c)
 	}

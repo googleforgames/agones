@@ -1,6 +1,6 @@
 module agones.dev/agones/test/upgrade/testContainer
 
-go 1.22.6
+go 1.23
 
 require (
 	agones.dev/agones v1.45.0

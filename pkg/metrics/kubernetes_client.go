@@ -196,7 +196,6 @@ func (c *clientGoMetricAdapter) Register() {
 		RequestLatency: c,
 		RequestResult:  c,
 	})
-	cache.SetReflectorMetricsProvider(c)
 	workqueue.SetProvider(c)
 }
 
