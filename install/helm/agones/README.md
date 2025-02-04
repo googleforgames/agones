@@ -36,7 +36,10 @@ Agones [extends the Kubernetes API with CustomResourceDefinitions](https://kuber
             default: 99 # Default for a nullable field is optional
 ```
 
-Once you have added a new field to a CRD, generate the values for the `install.yaml` file by running `~/agones/build$ make gen-install`. This ensure that the `yaml` installation methods has the same values as the preferred Helm installation method.
+Once you have added a new field to a CRD, generate the values for the `install.yaml` file by running
+`~/agones/build$ make gen-install`. This ensure that the `yaml` installation methods has the same
+values as the preferred Helm installation method. Note that changes to a CRD may also need changes
+to the [Helm schema validation file](#updating-the-helm-validation-schema).
 
 If the above example fields were added, for example, to the [_gameserverspecschema.yaml](./templates/crds/_gameserverspecschema.yaml), then the fields should also be added to the `GameServerSpec` struct in [gameserver.go](../../../pkg/apis/agones/v1/gameserver.go).
 
@@ -60,7 +63,7 @@ const (
 // Foos enum values for testing CRD defaulting
 type Foos string
 
-// Bars tracks the initial player capacity
+// Bars tracks the initial bar capacity
 type Bars struct {
 	BarCapacity int64 `json:"barCapacity,omitempty"`
 }
@@ -69,3 +72,48 @@ type Bars struct {
 ### Removing an Existing Field From a CRD
 
 Keep in mind that there can only be one definition of a `kind` in the `apiVersion: agones.dev/v1` in a Kubernetes cluster. This means that change to a CRD during an upgrade, downgrade, or Feature Gate change of Agones is immediately applied to custom resources in the cluster. Breaking changes to fields may be covered under our [SDK deprecation policy](../../../site/content/en/docs/Installation/upgrading.md).
+
+### Updating the Helm Validation Schema
+
+Any changes to the [Helm template](https://helm.sh/docs/topics/charts/#template-files) values which
+are denoted as `{{ .Values... }}` should also have a corresponding update the
+[values.schema.json](values.schema.json) file. The `values.schema.json` validates value field type,
+and whether or not the value or its subvalues are required. More information on how the schema
+validation works in Helm is in the
+[Helm chart](https://helm.sh/docs/topics/charts/#schema-files) documentation.
+
+For example, adding the [sample values](#adding-a-new-field-to-a-crd) `foo` and `bar` to a template
+such that the template uses the value from the [values.yaml](values.yaml) file like
+`foo: {{ .Values.gameservers.foo }}` the additions to the json schema would look like:
+
+```json
+    // ...
+    "gameservers": {
+      "type": "object",
+      "properties": {
+        // ...
+        "foo": {
+          "type": "string",
+          "enum": [
+            "foo1",
+            "foo2",
+            "foo3"
+          ]
+        },
+        "bar": {
+          "type": "object",
+          "properties": {
+            "barCapacity": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 99
+            },
+        }
+      },
+      "required": [
+        // ...
+        "foo"
+      ]
+    },
+    // ...
+```

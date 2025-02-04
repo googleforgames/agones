@@ -53,11 +53,21 @@ for the period of your upgrade, as there will be a short period in which Agones 
 
 #### In-Place Agones Upgrades
 
+publish='{{% feature expiryVersion="1.47.0" %}}'
 {{< alert color="warning" title="Warning" >}}
 Work is ongoing for [In-Place Agones Upgrades](https://github.com/googleforgames/agones/issues/3766),
 and the feature is currently in `Alpha`. Please continue to use the multi-cluster strategy for
 production critical upgrades. Feedback on this `Alpha` feature is welcome and appreciated.
 {{< /alert >}}
+{{% /feature %}}
+
+publish='{{% feature publishVersion="1.47.0" %}}'
+{{< alert color="warning" title="Warning" >}}
+Work is ongoing for [In-Place Agones Upgrades](https://github.com/googleforgames/agones/issues/3766),
+and the feature is currently in `Beta`. Please continue to use the multi-cluster strategy for
+production critical upgrades. Feedback on this `Beta` feature is welcome and appreciated.
+{{< /alert >}}
+{{% /feature %}}
 
 For In-Place Agones Upgrades we highly recommend installing using Helm. Helm has a significant
 advantage over `install.yaml` in that Helm automatically rolls back the upgrade if the agones-system
@@ -78,8 +88,10 @@ controller, such as the FEATURE_GATES or the Agones SDK Image.
 
 1. Run `helm upgrade my-release agones/agones --install --atomic --wait --timeout 10m --namespace=agones-system`
 with all the appropriate arguments, such a `--version`, for your specific upgrade. Keep in mind that
-`helm upgrade` overwrites all `--set agones.` arguments, so these must be set for each upgrade. See
-[Helm Configuration]({{< relref "./Install Agones/helm.md" >}}) for a list of all available
+`helm upgrade` overwrites all `--set agones.*` arguments, so these must be set for each upgrade. See
+the [Helm Upgrade](https://helm.sh/docs/helm/helm_upgrade/) documentaion for information on the Helm
+flags `--reset-values` or `--reuse-values`. See also the
+[Helm Configuration]({{< relref "./Install Agones/helm.md" >}}) for a list of all available Agones
 configurable parameters.
 2. Wait until the `helm upgrade` is complete.
 3. To Upgrade the Fleet, or Not to Upgrade
