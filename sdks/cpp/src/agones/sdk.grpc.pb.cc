@@ -47,6 +47,7 @@ static const char* SDK_method_names[] = {
   "/agones.dev.sdk.SDK/WatchGameServer",
   "/agones.dev.sdk.SDK/SetLabel",
   "/agones.dev.sdk.SDK/SetAnnotation",
+  "/agones.dev.sdk.SDK/SetAnnotations",
   "/agones.dev.sdk.SDK/Reserve",
 };
 
@@ -65,7 +66,8 @@ SDK::Stub::Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const
   , rpcmethod_WatchGameServer_(SDK_method_names[5], options.suffix_for_stats(),::grpc::internal::RpcMethod::SERVER_STREAMING, channel)
   , rpcmethod_SetLabel_(SDK_method_names[6], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
   , rpcmethod_SetAnnotation_(SDK_method_names[7], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_Reserve_(SDK_method_names[8], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_SetAnnotations_(SDK_method_names[8], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_Reserve_(SDK_method_names[9], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
   {}
 
 ::grpc::Status SDK::Stub::Ready(::grpc::ClientContext* context, const ::agones::dev::sdk::Empty& request, ::agones::dev::sdk::Empty* response) {
@@ -238,6 +240,29 @@ void SDK::Stub::async::SetAnnotation(::grpc::ClientContext* context, const ::ago
   return result;
 }
 
+::grpc::Status SDK::Stub::SetAnnotations(::grpc::ClientContext* context, const ::agones::dev::sdk::KeyValues& request, ::agones::dev::sdk::Empty* response) {
+  return ::grpc::internal::BlockingUnaryCall< ::agones::dev::sdk::KeyValues, ::agones::dev::sdk::Empty, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_SetAnnotations_, context, request, response);
+}
+
+void SDK::Stub::async::SetAnnotations(::grpc::ClientContext* context, const ::agones::dev::sdk::KeyValues* request, ::agones::dev::sdk::Empty* response, std::function<void(::grpc::Status)> f) {
+  ::grpc::internal::CallbackUnaryCall< ::agones::dev::sdk::KeyValues, ::agones::dev::sdk::Empty, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_SetAnnotations_, context, request, response, std::move(f));
+}
+
+void SDK::Stub::async::SetAnnotations(::grpc::ClientContext* context, const ::agones::dev::sdk::KeyValues* request, ::agones::dev::sdk::Empty* response, ::grpc::ClientUnaryReactor* reactor) {
+  ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_SetAnnotations_, context, request, response, reactor);
+}
+
+::grpc::ClientAsyncResponseReader< ::agones::dev::sdk::Empty>* SDK::Stub::PrepareAsyncSetAnnotationsRaw(::grpc::ClientContext* context, const ::agones::dev::sdk::KeyValues& request, ::grpc::CompletionQueue* cq) {
+  return ::grpc::internal::ClientAsyncResponseReaderHelper::Create< ::agones::dev::sdk::Empty, ::agones::dev::sdk::KeyValues, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), cq, rpcmethod_SetAnnotations_, context, request);
+}
+
+::grpc::ClientAsyncResponseReader< ::agones::dev::sdk::Empty>* SDK::Stub::AsyncSetAnnotationsRaw(::grpc::ClientContext* context, const ::agones::dev::sdk::KeyValues& request, ::grpc::CompletionQueue* cq) {
+  auto* result =
+    this->PrepareAsyncSetAnnotationsRaw(context, request, cq);
+  result->StartCall();
+  return result;
+}
+
 ::grpc::Status SDK::Stub::Reserve(::grpc::ClientContext* context, const ::agones::dev::sdk::Duration& request, ::agones::dev::sdk::Empty* response) {
   return ::grpc::internal::BlockingUnaryCall< ::agones::dev::sdk::Duration, ::agones::dev::sdk::Empty, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_Reserve_, context, request, response);
 }
@@ -345,6 +370,16 @@ SDK::Service::Service() {
   AddMethod(new ::grpc::internal::RpcServiceMethod(
       SDK_method_names[8],
       ::grpc::internal::RpcMethod::NORMAL_RPC,
+      new ::grpc::internal::RpcMethodHandler< SDK::Service, ::agones::dev::sdk::KeyValues, ::agones::dev::sdk::Empty, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
+          [](SDK::Service* service,
+             ::grpc::ServerContext* ctx,
+             const ::agones::dev::sdk::KeyValues* req,
+             ::agones::dev::sdk::Empty* resp) {
+               return service->SetAnnotations(ctx, req, resp);
+             }, this)));
+  AddMethod(new ::grpc::internal::RpcServiceMethod(
+      SDK_method_names[9],
+      ::grpc::internal::RpcMethod::NORMAL_RPC,
       new ::grpc::internal::RpcMethodHandler< SDK::Service, ::agones::dev::sdk::Duration, ::agones::dev::sdk::Empty, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
           [](SDK::Service* service,
              ::grpc::ServerContext* ctx,
@@ -407,6 +442,13 @@ SDK::Service::~Service() {
 }
 
 ::grpc::Status SDK::Service::SetAnnotation(::grpc::ServerContext* context, const ::agones::dev::sdk::KeyValue* request, ::agones::dev::sdk::Empty* response) {
+  (void) context;
+  (void) request;
+  (void) response;
+  return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+}
+
+::grpc::Status SDK::Service::SetAnnotations(::grpc::ServerContext* context, const ::agones::dev::sdk::KeyValues* request, ::agones::dev::sdk::Empty* response) {
   (void) context;
   (void) request;
   (void) response;
