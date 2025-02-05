@@ -298,7 +298,7 @@ push-release-chart: $(ensure-build-image)
 	CHART_DIR=install/.helm-$(RELEASE_VERSION)/agones $(MAKE) push-chart
 
 # Run all tests
-test: $(ensure-build-image) test-go test-sdks test-install-yaml site-test
+test: $(ensure-build-image) test-go test-sdks test-install-yaml site-test helm-lint
 
 # Run go tests
 test-go: $(ensure-build-image)
@@ -875,3 +875,6 @@ install-release: $(ensure-build-image)
 		$(DOCKER_RUN_ARGS) \
 		$(build_tag) /go/src/agones.dev/agones/build/install-release.sh
 
+# Validates the Helm values.yaml file against the values.schema.json file.
+helm-lint:
+	$(DOCKER_RUN) bash -c 'cd $(mount_path)/install/helm/agones && helm lint .'
