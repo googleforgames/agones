@@ -37,7 +37,8 @@ The current set of `alpha` and `beta` feature gates:
 | [Rolling Update Fixes](https://github.com/googleforgames/agones/issues/3688)                                                | `RollingUpdateFix`                 | Disabled | `Alpha` | 1.41.0 |
 | [Multiple dynamic port ranges](https://github.com/googleforgames/agones/issues/1911)                                        | `PortRanges`                       | Disabled | `Alpha` | 1.41.0 |
 | [Port Policy None](https://github.com/googleforgames/agones/issues/3804)                                                    | `PortPolicyNone`                   | Disabled | `Alpha` | 1.41.0 |
-| [Scheduled Fleet Autoscaling](https://github.com/googleforgames/agones/issues/3008)                                         | `ScheduledAutoscaler`              | Disabled | `Alpha` | 1.43.0 |
+| [Scheduled Fleet Autoscaling](https://github.com/googleforgames/agones/issues/3951)                                         | `ScheduledAutoscaler`              | Disabled | `Alpha` | 1.43.0 |
+| [Extend Webhook autoscaler to send fleet metadata with the request](https://github.com/googleforgames/agones/issues/3008)   | `FleetAutoscaleRequestMetaData`    | Disabled | `Alpha` | 1.47.0 |
 | Example Gate (not in use)                                                                                                   | `Example`                          | Disabled | None    | 0.13.0 |
 
 
