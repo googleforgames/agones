@@ -26,8 +26,8 @@ import (
 
 // ListGameServerSetsByFleetOwner lists all the GameServerSets for a given
 // Fleet
-func ListGameServerSetsByFleetOwner(gameServerSetLister listerv1.GameServerSetLister, f *agonesv1.Fleet) ([]*agonesv1.GameServerSet, error) {
-	list, err := gameServerSetLister.List(labels.SelectorFromSet(labels.Set{agonesv1.FleetNameLabel: f.ObjectMeta.Name}))
+func ListGameServerSetsByFleetOwner(gameServerSetNamespacedLister listerv1.GameServerSetNamespaceLister, f *agonesv1.Fleet) ([]*agonesv1.GameServerSet, error) {
+	list, err := gameServerSetNamespacedLister.List(labels.SelectorFromSet(labels.Set{agonesv1.FleetNameLabel: f.ObjectMeta.Name}))
 	if err != nil {
 		return list, errors.Wrapf(err, "error listing gameserversets for fleet %s", f.ObjectMeta.Name)
 	}
@@ -44,10 +44,10 @@ func ListGameServerSetsByFleetOwner(gameServerSetLister listerv1.GameServerSetLi
 
 // ListGameServersByFleetOwner lists all GameServers that belong to a fleet through the
 // GameServer -> GameServerSet -> Fleet owner chain
-func ListGameServersByFleetOwner(gameServerLister listerv1.GameServerLister,
+func ListGameServersByFleetOwner(gameServerNamespacedLister listerv1.GameServerNamespaceLister,
 	fleet *agonesv1.Fleet) ([]*agonesv1.GameServer, error) {
 
-	list, err := gameServerLister.List(labels.SelectorFromSet(labels.Set{agonesv1.FleetNameLabel: fleet.ObjectMeta.Name}))
+	list, err := gameServerNamespacedLister.List(labels.SelectorFromSet(labels.Set{agonesv1.FleetNameLabel: fleet.ObjectMeta.Name}))
 	if err != nil {
 		return list, errors.Wrapf(err, "error listing gameservers for fleets %s", fleet.ObjectMeta.Name)
 	}
