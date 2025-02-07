@@ -19,7 +19,7 @@ go 1.23
 require (
 	github.com/GoogleCloudPlatform/cloud-build-notifiers/lib/notifiers v0.0.0-20210219212036-163c92a64b27
 	github.com/Masterminds/sprig/v3 v3.2.3
-	github.com/golang/glog v1.2.0
+	github.com/golang/glog v1.2.4
 	github.com/google/go-github/v57 v57.0.0
 	golang.org/x/oauth2 v0.15.0
 	google.golang.org/genproto v0.0.0-20240102182953-50ed04b92917
