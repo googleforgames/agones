@@ -49,3 +49,4 @@ ignore:
   - /site/vendor/
   - /tmp/
   - /vendor/
+  - /docs/proposals
