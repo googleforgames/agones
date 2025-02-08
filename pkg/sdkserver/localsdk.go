@@ -349,6 +349,33 @@ func (l *LocalSDKServer) SetAnnotation(_ context.Context, kv *sdk.KeyValue) (*sd
 	return &sdk.Empty{}, nil
 }
 
+// SetAnnotations applies multiple Annotations to the backing GameServer metadata
+func (l *LocalSDKServer) SetAnnotations(_ context.Context, kvs *sdk.KeyValues) (*sdk.Empty, error) {
+	l.logger.WithField("values", kvs).Info("Setting annotations")
+	l.gsMutex.Lock()
+	defer l.gsMutex.Unlock()
+
+	if l.gs.ObjectMeta == nil {
+		l.gs.ObjectMeta = &sdk.GameServer_ObjectMeta{}
+	}
+	if l.gs.ObjectMeta.Annotations == nil {
+		l.gs.ObjectMeta.Annotations = map[string]string{}
+	}
+
+	var val strings.Builder
+	for _, kv := range kvs.KeyValues {
+		l.gs.ObjectMeta.Annotations[metadataPrefix+kv.Key] = kv.Value
+
+		val.WriteString(kv.Key)
+		val.WriteString("=")
+		val.WriteString(kv.Value)
+		val.WriteString("\n")
+	}
+	l.update <- struct{}{}
+	l.recordRequestWithValue("setannotations", val.String(), "UID")
+	return &sdk.Empty{}, nil
+}
+
 // GetGameServer returns current GameServer configuration.
 func (l *LocalSDKServer) GetGameServer(context.Context, *sdk.Empty) (*sdk.GameServer, error) {
 	l.logger.Info("Getting GameServer details")
