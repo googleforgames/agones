@@ -384,12 +384,25 @@ func (c *Controller) applyDeploymentStrategy(ctx context.Context, fleet *agonesv
 		return fleet.Spec.Replicas, nil
 	}
 
-	// if we do have `rest` but all their spec.replicas is zero, we can just do subtraction against whatever is allocated in `rest`.
 	if agonesv1.SumSpecReplicas(rest) == 0 {
 		blocked := agonesv1.SumGameServerSets(rest, func(gsSet *agonesv1.GameServerSet) int32 {
 			return gsSet.Status.ReservedReplicas + gsSet.Status.AllocatedReplicas
 		})
-		replicas := fleet.Spec.Replicas - blocked
+		var replicas int32
+		if !fleet.Spec.AllowReplicaSurge {
+			// if we do have `rest` but all their spec.replicas is zero, we can just do subtraction against whatever is allocated in `rest`.
+			replicas = fleet.Spec.Replicas - blocked
+		} else if fleet.Spec.Strategy.Type == appsv1.RollingUpdateDeploymentStrategyType {
+			// Allow to temporarily increase the number of replicas when doing a rolling update.
+			r, err := intstr.GetValueFromIntOrPercent(fleet.Spec.Strategy.RollingUpdate.MaxSurge, int(fleet.Spec.Replicas), true)
+			if err != nil {
+				return 0, errors.Wrapf(err, "error parsing MaxSurge value: %s", fleet.ObjectMeta.Name)
+			}
+			replicas = fleet.Spec.Replicas + int32(r) - blocked
+			if replicas > int32(r) {
+				replicas = int32(r)
+			}
+		}
 		if replicas < 0 {
 			replicas = 0
 		}
