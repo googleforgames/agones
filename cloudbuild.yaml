@@ -178,12 +178,12 @@ steps:
   #
   # Example version checks
   #
-  # - name: make-docker
-  #   id: check-example-versions
-  #   dir: build
-  #   args: [check-example-versions]
-  #   waitFor:
-  #     - push-images
+  - name: make-docker
+    id: check-example-versions
+    dir: build
+    args: [check-example-versions]
+    waitFor:
+      - push-images
 
   #
   # Run the all the automated tests (except e2e) in parallel
