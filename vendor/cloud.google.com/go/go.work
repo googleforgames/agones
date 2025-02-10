@@ -1,4 +1,4 @@
-go 1.18
+go 1.21
 
 use (
 	.
@@ -14,10 +14,14 @@ use (
 	./apigeeregistry
 	./apikeys
 	./appengine
+	./apphub
+	./apps
 	./area120
 	./artifactregistry
 	./asset
 	./assuredworkloads
+	./auth
+	./auth/oauth2adapt
 	./automl
 	./baremetalsolution
 	./batch
@@ -29,12 +33,16 @@ use (
 	./certificatemanager
 	./channel
 	./cloudbuild
+	./cloudcontrolspartner
 	./clouddms
+	./cloudprofiler
+	./cloudquotas
 	./cloudtasks
 	./commerce
 	./compute
 	./compute/metadata
 	./confidentialcomputing
+	./config
 	./contactcenterinsights
 	./container
 	./containeranalysis
@@ -55,6 +63,7 @@ use (
 	./documentai
 	./domains
 	./edgecontainer
+	./edgenetwork
 	./errorreporting
 	./essentialcontacts
 	./eventarc
@@ -80,6 +89,7 @@ use (
 	./internal/generated/snippets
 	./internal/godocfx
 	./internal/postprocessor
+	./internal/protoveneer
 	./iot
 	./kms
 	./language
@@ -103,6 +113,7 @@ use (
 	./orgpolicy
 	./osconfig
 	./oslogin
+	./parallelstore
 	./phishingprotection
 	./policysimulator
 	./policytroubleshooter
@@ -121,28 +132,36 @@ use (
 	./run
 	./scheduler
 	./secretmanager
+	./securesourcemanager
 	./security
 	./securitycenter
+	./securitycentermanagement
+	./securityposture
 	./servicecontrol
 	./servicedirectory
+	./servicehealth
 	./servicemanagement
 	./serviceusage
 	./shell
+	./shopping
 	./spanner
+	./spanner/test/opentelemetry/test
 	./speech
 	./storage
-	./storage/internal/benchmarks
 	./storageinsights
 	./storagetransfer
 	./support
 	./talent
+	./telcoautomation
 	./texttospeech
 	./tpu
 	./trace
 	./translate
+	./vertexai
 	./video
 	./videointelligence
 	./vision
+	./visionai
 	./vmmigration
 	./vmwareengine
 	./vpcaccess

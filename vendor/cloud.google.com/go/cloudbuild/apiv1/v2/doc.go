@@ -1,4 +1,4 @@
-// Copyright 2023 Google LLC
+// Copyright 2024 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,8 +21,15 @@
 //
 // # General documentation
 //
-// For information about setting deadlines, reusing contexts, and more
-// please visit https://pkg.go.dev/cloud.google.com/go.
+// For information that is relevant for all client libraries please reference
+// https://pkg.go.dev/cloud.google.com/go#pkg-overview. Some information on this
+// page includes:
+//
+//   - [Authentication and Authorization]
+//   - [Timeouts and Cancellation]
+//   - [Testing against Client Libraries]
+//   - [Debugging Client Libraries]
+//   - [Inspecting errors]
 //
 // # Example usage
 //
@@ -60,11 +67,11 @@
 //	}
 //	defer c.Close()
 //
-//	req := &cloudbuildpb.CreateBuildRequest{
+//	req := &cloudbuildpb.ApproveBuildRequest{
 //		// TODO: Fill request struct fields.
-//		// See https://pkg.go.dev/cloud.google.com/go/cloudbuild/apiv1/v2/cloudbuildpb#CreateBuildRequest.
+//		// See https://pkg.go.dev/cloud.google.com/go/cloudbuild/apiv1/v2/cloudbuildpb#ApproveBuildRequest.
 //	}
-//	op, err := c.CreateBuild(ctx, req)
+//	op, err := c.ApproveBuild(ctx, req)
 //	if err != nil {
 //		// TODO: Handle error.
 //	}
@@ -76,11 +83,6 @@
 //	// TODO: Use resp.
 //	_ = resp
 //
-// # Inspecting errors
-//
-// To see examples of how to inspect errors returned by this package please reference
-// [Inspecting errors](https://pkg.go.dev/cloud.google.com/go#hdr-Inspecting_errors).
-//
 // # Use of Context
 //
 // The ctx passed to NewClient is used for authentication requests and
@@ -88,14 +90,18 @@
 // Individual methods on the client use the ctx given to them.
 //
 // To close the open connection, use the Close() method.
+//
+// [Authentication and Authorization]: https://pkg.go.dev/cloud.google.com/go#hdr-Authentication_and_Authorization
+// [Timeouts and Cancellation]: https://pkg.go.dev/cloud.google.com/go#hdr-Timeouts_and_Cancellation
+// [Testing against Client Libraries]: https://pkg.go.dev/cloud.google.com/go#hdr-Testing
+// [Debugging Client Libraries]: https://pkg.go.dev/cloud.google.com/go#hdr-Debugging
+// [Inspecting errors]: https://pkg.go.dev/cloud.google.com/go#hdr-Inspecting_errors
 package cloudbuild // import "cloud.google.com/go/cloudbuild/apiv1/v2"
 
 import (
 	"context"
-	"net/http"
 
 	"google.golang.org/api/option"
-	"google.golang.org/grpc/metadata"
 )
 
 // For more information on implementing a client constructor hook, see
@@ -112,30 +118,9 @@ func getVersionClient() string {
 	return versionClient
 }
 
-func insertMetadata(ctx context.Context, mds ...metadata.MD) context.Context {
-	out, _ := metadata.FromOutgoingContext(ctx)
-	out = out.Copy()
-	for _, md := range mds {
-		for k, v := range md {
-			out[k] = append(out[k], v...)
-		}
-	}
-	return metadata.NewOutgoingContext(ctx, out)
-}
-
 // DefaultAuthScopes reports the default set of authentication scopes to use with this package.
 func DefaultAuthScopes() []string {
 	return []string{
 		"https://www.googleapis.com/auth/cloud-platform",
 	}
-}
-
-// buildHeaders extracts metadata from the outgoing context, joins it with any other
-// given metadata, and converts them into a http.Header.
-func buildHeaders(ctx context.Context, mds ...metadata.MD) http.Header {
-	if cmd, ok := metadata.FromOutgoingContext(ctx); ok {
-		mds = append(mds, cmd)
-	}
-	md := metadata.Join(mds...)
-	return http.Header(md)
 }
