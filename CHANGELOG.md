@@ -1,5 +1,33 @@
 # Changelog
 
+## [v1.47.0](https://github.com/googleforgames/agones/tree/v1.47.0) (2025-02-11)
+
+[Full Changelog](https://github.com/googleforgames/agones/compare/v1.46.0...v1.47.0)
+
+**Implemented enhancements:**
+- Docs: Update Player Tracking to use Lists by @markmandel in https://github.com/googleforgames/agones/pull/4086
+- Docs: Counters with High Density by @markmandel in https://github.com/googleforgames/agones/pull/4085
+- Add ability to change externalTrafficPolicy for agones-ping services (http&udp) by @zifter in https://github.com/googleforgames/agones/pull/4083
+- JSON Schema Validation for Helm by @igooch in https://github.com/googleforgames/agones/pull/4094
+- Adds helm schema validation test to the test suite by @igooch in https://github.com/googleforgames/agones/pull/4101
+
+**Fixed bugs:**
+- Changes upgrade game server template to use safe-to-evict: Always by @igooch in https://github.com/googleforgames/agones/pull/4096
+
+**Other:**
+- Preparation for Release v1.47.0 by @0xaravindh in https://github.com/googleforgames/agones/pull/4079
+- Update `.golangci.yml` config to resolve deprecation warnings by @paulinek13 in https://github.com/googleforgames/agones/pull/4082
+- Initialise FCounterResponse members by @alexrudd in https://github.com/googleforgames/agones/pull/4084
+- Bump golang.org/x/crypto from 0.21.0 to 0.31.0 in /build/agones-bot by @dependabot in https://github.com/googleforgames/agones/pull/4062
+- Added OKE steps in K8S version upgrade template by @kamaljeeti in https://github.com/googleforgames/agones/pull/4091
+- User and developer documentation for Helm json schema validation by @igooch in https://github.com/googleforgames/agones/pull/4100
+- Update All Go Module Dependencies to Latest Patches by @0xaravindh in https://github.com/googleforgames/agones/pull/4104
+- Bump github.com/go-git/go-git/v5 from 5.12.0 to 5.13.0 in /build/scripts/example-version-checker by @dependabot in https://github.com/googleforgames/agones/pull/4088
+
+**New Contributors:**
+- @paulinek13 made their first contribution in https://github.com/googleforgames/agones/pull/4082
+- @alexrudd made their first contribution in https://github.com/googleforgames/agones/pull/4084
+
 ## [v1.46.0](https://github.com/googleforgames/agones/tree/v1.46.0) (2025-01-02)
 
 [Full Changelog](https://github.com/googleforgames/agones/compare/v1.45.0...v1.46.0)
