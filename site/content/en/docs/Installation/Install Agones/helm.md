@@ -37,12 +37,10 @@ for your preferred environment.
 The command deploys Agones on the Kubernetes cluster with the default configuration. The
 [configuration](#configuration) section lists the parameters that can be configured during installation.
 
-publish='{{% feature publishVersion="1.47.0" %}}'
 The Agones chart uses a [Helm Schema](https://helm.sh/docs/topics/charts/#schema-files) to validate
 fields set by the user. In the event this validation schema marks a valid edge case as invalid,
 please [file a bug](https://github.com/googleforgames/agones/issues), and you can still attempt a
 Helm install or Helm upgrade with the Helm flag `--skip-schema-validation`.
-{{% /feature %}}
 
 {{< alert title="Tip" color="info">}}
 List all releases using `helm list --all-namespaces`
@@ -202,44 +200,6 @@ The following tables lists the configurable parameters of the Agones chart and t
 
 ### Ping Service
 
-{{% feature expiryVersion="1.47.0" %}}
-| Parameter | Description | Default |
-|----------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------|
-| `agones.ping.install` | Whether to install the [ping service][ping] | `true` |
-| `agones.ping.replicas` | The number of replicas to run in the deployment | `2` |
-| `agones.ping.http.expose` | Expose the http ping service via a Service | `true` |
-| `agones.ping.http.response` | The string response returned from the http service | `ok` |
-| `agones.ping.http.port` | The port to expose on the service | `80` |
-| `agones.ping.http.serviceType` | The [Service Type][service] of the HTTP Service | `LoadBalancer` |
-| `agones.ping.http.nodePort` | Static node port to use for HTTP ping service. (Only applies when `agones.ping.http.serviceType` is `NodePort`.) | `0` |
-| `agones.ping.http.loadBalancerIP` | The [Load Balancer IP][loadBalancer] of the HTTP Service load balancer. Only works if the Kubernetes provider supports this option. | \`\` |
-| `agones.ping.http.loadBalancerSourceRanges` | The [Load Balancer SourceRanges][loadBalancer] of the HTTP Service load balancer. Only works if the Kubernetes provider supports this option. | `[]` |
-| `agones.ping.http.annotations` | [Annotations][annotations] added to the Agones ping http service | `{}` |
-| `agones.ping.udp.expose` | Expose the udp ping service via a Service | `true` |
-| `agones.ping.udp.rateLimit` | Number of UDP packets the ping service handles per instance, per second, per sender | `20` |
-| `agones.ping.udp.port` | The port to expose on the service | `80` |
-| `agones.ping.udp.serviceType` | The [Service Type][service] of the UDP Service | `LoadBalancer` |
-| `agones.ping.udp.nodePort` | Static node port to use for UDP ping service. (Only applies when `agones.ping.udp.serviceType` is `NodePort`.) | `0` |
-| `agones.ping.udp.loadBalancerIP` | The [Load Balancer IP][loadBalancer] of the UDP Service load balancer. Only works if the Kubernetes provider supports this option. | \`\` |
-| `agones.ping.udp.loadBalancerSourceRanges` | The [Load Balancer SourceRanges][loadBalancer] of the UDP Service load balancer. Only works if the Kubernetes provider supports this option. | `[]` |
-| `agones.ping.udp.annotations` | [Annotations][annotations] added to the Agones ping udp service | `{}` |
-| `agones.ping.healthCheck.initialDelaySeconds` | Initial delay before performing the first probe (in seconds) | `3` |
-| `agones.ping.healthCheck.periodSeconds` | Seconds between every liveness probe (in seconds) | `3` |
-| `agones.ping.healthCheck.failureThreshold` | Number of times before giving up (in seconds) | `3` |
-| `agones.ping.healthCheck.timeoutSeconds` | Number of seconds after which the probe times out (in seconds) | `1` |
-| `agones.ping.resources` | Ping pods [resource requests/limit][resources] | `{}` |
-| `agones.ping.nodeSelector` | Ping [node labels][nodeSelector] for pod assignment | `{}` |
-| `agones.ping.tolerations` | Ping [toleration][toleration] labels for pod assignment | `[]` |
-| `agones.ping.affinity` | Ping [affinity][affinity] settings for pod assignment | `{}` |
-| `agones.ping.annotations` | [Annotations][annotations] added to the Agones ping pods | `{}` |
-| `agones.ping.updateStrategy` | The [strategy](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy) to apply to the allocator deployment | `{}` |
-| `agones.ping.pdb.enabled` | Set to `true` to enable the creation of a [PodDisruptionBudget](https://kubernetes.io/docs/tasks/run-application/configure-pdb/) for the ping deployment | `false` |
-| `agones.ping.pdb.minAvailable` | Description of the number of pods from that set that must still be available after the eviction, even in the absence of the evicted pod. Can be either an absolute number or a percentage. Mutually Exclusive with `maxUnavailable` | `1` |
-| `agones.ping.pdb.maxUnavailable` | Description of the number of pods from that set that can be unavailable after the eviction. It can be either an absolute number or a percentage Mutually Exclusive with `minAvailable` | \`\` |
-| `agones.ping.topologySpreadConstraints` | Ensures better resource utilization and high availability by evenly distributing Pods in the agones-system namespace | `{}` |
-
-{{% /feature %}}
-{{% feature publishVersion="1.47.0" %}}
 | Parameter | Description | Default |
 |----------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------|
 | `agones.ping.install` | Whether to install the [ping service][ping] | `true` |
@@ -276,7 +236,6 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.ping.pdb.minAvailable` | Description of the number of pods from that set that must still be available after the eviction, even in the absence of the evicted pod. Can be either an absolute number or a percentage. Mutually Exclusive with `maxUnavailable` | `1` |
 | `agones.ping.pdb.maxUnavailable` | Description of the number of pods from that set that can be unavailable after the eviction. It can be either an absolute number or a percentage Mutually Exclusive with `minAvailable` | \`\` |
 | `agones.ping.topologySpreadConstraints` | Ensures better resource utilization and high availability by evenly distributing Pods in the agones-system namespace | `{}` |
-{{% /feature %}}
 
 ### Allocator Service
 

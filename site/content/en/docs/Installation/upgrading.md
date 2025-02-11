@@ -53,21 +53,12 @@ for the period of your upgrade, as there will be a short period in which Agones 
 
 #### In-Place Agones Upgrades
 
-publish='{{% feature expiryVersion="1.47.0" %}}'
-{{< alert color="warning" title="Warning" >}}
-Work is ongoing for [In-Place Agones Upgrades](https://github.com/googleforgames/agones/issues/3766),
-and the feature is currently in `Alpha`. Please continue to use the multi-cluster strategy for
-production critical upgrades. Feedback on this `Alpha` feature is welcome and appreciated.
-{{< /alert >}}
-{{% /feature %}}
 
-publish='{{% feature publishVersion="1.47.0" %}}'
 {{< alert color="warning" title="Warning" >}}
 Work is ongoing for [In-Place Agones Upgrades](https://github.com/googleforgames/agones/issues/3766),
 and the feature is currently in `Beta`. Please continue to use the multi-cluster strategy for
 production critical upgrades. Feedback on this `Beta` feature is welcome and appreciated.
 {{< /alert >}}
-{{% /feature %}}
 
 For In-Place Agones Upgrades we highly recommend installing using Helm. Helm has a significant
 advantage over `install.yaml` in that Helm automatically rolls back the upgrade if the agones-system
