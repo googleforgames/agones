@@ -456,7 +456,7 @@
               "type": "integer"
             },
             "topologySpreadConstraints": {
-              "type": "object"
+              "type": "list"
             },
             "apiServerQPS": {
               "type": "integer"
@@ -736,7 +736,7 @@
               ]
             },
             "topologySpreadConstraints": {
-              "type": "object"
+              "type": "list"
             }
           },
           "allOf": [
@@ -1093,7 +1093,7 @@
               ]
             },
             "topologySpreadConstraints": {
-              "type": "object"
+              "type": "list"
             },
             "healthCheck": {
               "$ref": "#/definitions/healthCheck"
@@ -1209,7 +1209,7 @@
               "type": "boolean"
             },
             "customCertSecretPath": {
-              "type": "object"
+              "type": "list"
             },
             "allocationApiService": {
               "type": "object",
@@ -1286,7 +1286,7 @@
               ]
             },
             "topologySpreadConstraints": {
-              "type": "object"
+              "type": "list"
             }
           },
           "allOf": [
