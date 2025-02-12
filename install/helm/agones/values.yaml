@@ -98,7 +98,7 @@ agones:
     replicas: 2
     pdb:
         minAvailable: 1
-    topologySpreadConstraints: {}
+    topologySpreadConstraints: []
   extensions:
     resources: {}
       # requests:
@@ -134,7 +134,7 @@ agones:
     mutatingWebhook:
       annotations: {}
       disableCaBundle: false
-    customCertSecretPath: {}
+    customCertSecretPath: []
     persistentLogs: true
     persistentLogsSizeLimitMB: 10000
     logLevel: info
@@ -158,7 +158,7 @@ agones:
       initialDelaySeconds: 3
       periodSeconds: 3
       failureThreshold: 3
-    topologySpreadConstraints: {}
+    topologySpreadConstraints: []
   ping:
     install: true
     pdb:
@@ -202,7 +202,7 @@ agones:
       periodSeconds: 3
       failureThreshold: 3
       timeoutSeconds: 1
-    topologySpreadConstraints: {}
+    topologySpreadConstraints: []
   allocator:
     install: true
     pdb:
@@ -273,7 +273,7 @@ agones:
     remoteAllocationTimeout: 10s
     totalRemoteAllocationTimeout: 30s
     allocationBatchWaitTime: 500ms
-    topologySpreadConstraints: {}
+    topologySpreadConstraints: []
   image:
     registry: us-docker.pkg.dev/agones-images/release
     tag: 1.47.0
