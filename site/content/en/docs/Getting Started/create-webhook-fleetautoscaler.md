@@ -108,7 +108,7 @@ Annotations:  kubectl.kubernetes.io/last-applied-configuration={"apiVersion":
 :{},"name":"webhook-fleet-autoscaler","namespace":"default...
 API Version:  autoscaling.agones.dev/v1
 Kind:         FleetAutoscaler
-etadata:
+Metadata:
   Cluster Name:
   Creation Timestamp:  2018-12-22T12:52:23Z
   Generation:          1
