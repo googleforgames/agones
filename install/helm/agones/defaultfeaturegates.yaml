@@ -21,6 +21,7 @@ CountsAndLists: true
 DisableResyncOnSDKServer: true
 
 # Alpha features
+FleetAutoscaleRequestMetaData: false
 PlayerAllocationFilter: false
 PlayerTracking: false
 RollingUpdateFix: false
