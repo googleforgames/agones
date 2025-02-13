@@ -124,3 +124,5 @@ require (
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
+
+replace gomodules.xyz/jsonpatch/v2 => github.com/lacroixthomas/jsonpatch/v2 v2.0.0-20250120171921-4c723fc27712
