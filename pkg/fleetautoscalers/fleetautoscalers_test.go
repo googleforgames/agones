@@ -94,8 +94,8 @@ func (t testServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// override value for tests
-	if faReq.MetaData != nil {
-		if value, ok := faReq.MetaData.Annotations["fixedReplicas"]; ok {
+	if faReq.Annotations != nil {
+		if value, ok := faReq.Annotations["fixedReplicas"]; ok {
 			faResp.Scale = true
 			replicas, _ := strconv.Atoi(value)
 			faResp.Replicas = int32(replicas)
