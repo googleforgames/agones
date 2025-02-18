@@ -15,6 +15,7 @@
 package metrics
 
 import (
+	"context"
 	"net/http"
 	"os"
 	"time"
@@ -106,11 +107,11 @@ func SetReportingPeriod(forPrometheus, forStackdriver bool) {
 }
 
 func getMonitoredResource(projectID string) (*monitoredres.MonitoredResource, error) {
-	zone, err := metadata.Zone()
+	zone, err := metadata.ZoneWithContext(context.TODO())
 	if err != nil {
 		return nil, errors.Wrap(err, "error getting zone")
 	}
-	clusterName, err := metadata.InstanceAttributeValue("cluster-name")
+	clusterName, err := metadata.InstanceAttributeValueWithContext(context.TODO(), "cluster-name")
 	if err != nil {
 		return nil, errors.Wrap(err, "error getting cluster-name")
 	}
