@@ -21,6 +21,9 @@ List of items to do for upgrading to {version_1} {version_2} {version_3}
         {version_3}
   - [ ] Update Kubernetes version of EKS to the newest supported version in {version_1} {version_2}
         {version_3}
+- [ ] Update the OKE example cluster version of terraform submodules to the newest supported version in {version_1} {version_2} {version_3}. Note the version should include the patch version.
+  - [ ] Update Kubernetes version in examples/terraform-submodules/oke/variables.tf 
+  - [ ] Update Kubernetes version in examples/terraform-submodules/oke/terraform.auto.tfvars.example 
 - [ ] Update kubectl in dev tooling to {version_2}, the latest patch version can be found
       [here](https://kubernetes.io/releases/)
   - [ ] Update kubectl in `build/build-image/Dockerfile`
