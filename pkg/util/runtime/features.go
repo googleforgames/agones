@@ -48,6 +48,9 @@ const (
 	////////////////
 	// Alpha features
 
+	// FeatureFleetAutoscaleRequestMetaData is a feature flag that enables/disables fleet metadata on webhook autoscaler request.
+	FeatureFleetAutoscaleRequestMetaData Feature = "FleetAutoscaleRequestMetaData"
+
 	// FeaturePlayerAllocationFilter is a feature flag that enables the ability for Allocations to filter based on
 	// player capacity.
 	FeaturePlayerAllocationFilter Feature = "PlayerAllocationFilter"
@@ -134,12 +137,13 @@ var (
 		FeatureDisableResyncOnSDKServer:         true,
 
 		// Alpha features
-		FeaturePlayerAllocationFilter: false,
-		FeaturePlayerTracking:         false,
-		FeatureRollingUpdateFix:       false,
-		FeaturePortRanges:             false,
-		FeaturePortPolicyNone:         false,
-		FeatureScheduledAutoscaler:    false,
+		FeatureFleetAutoscaleRequestMetaData: false,
+		FeaturePlayerAllocationFilter:        false,
+		FeaturePlayerTracking:                false,
+		FeatureRollingUpdateFix:              false,
+		FeaturePortRanges:                    false,
+		FeaturePortPolicyNone:                false,
+		FeatureScheduledAutoscaler:           false,
 
 		// Dev features
 
