@@ -22,6 +22,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"testing"
 	"time"
 
@@ -90,6 +91,15 @@ func (t testServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if allocatedPercent > 0.7 {
 		faResp.Scale = true
 		faResp.Replicas = faReq.Status.Replicas * scaleFactor
+	}
+
+	// override value for tests
+	if faReq.Annotations != nil {
+		if value, ok := faReq.Annotations["fixedReplicas"]; ok {
+			faResp.Scale = true
+			replicas, _ := strconv.Atoi(value)
+			faResp.Replicas = int32(replicas)
+		}
 	}
 
 	review := &autoscalingv1.FleetAutoscaleReview{
@@ -577,6 +587,41 @@ func TestApplyWebhookPolicy(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestApplyWebhookPolicyWithMetadata(t *testing.T) {
+	t.Parallel()
+
+	utilruntime.FeatureTestMutex.Lock()
+	defer utilruntime.FeatureTestMutex.Unlock()
+
+	err := utilruntime.ParseFeatures(string(utilruntime.FeatureFleetAutoscaleRequestMetaData) + "=true")
+	assert.NoError(t, err)
+	defer func() {
+		_ = utilruntime.ParseFeatures("")
+	}()
+
+	ts := testServer{}
+	server := httptest.NewServer(ts)
+	defer server.Close()
+
+	_, fleet := defaultWebhookFixtures()
+
+	fixedReplicas := int32(11)
+	fleet.ObjectMeta.Annotations = map[string]string{
+		"fixedReplicas": fmt.Sprintf("%d", fixedReplicas),
+	}
+
+	webhookPolicy := &autoscalingv1.WebhookPolicy{
+		Service: nil,
+		URL:     &(server.URL),
+	}
+
+	replicas, limited, err := applyWebhookPolicy(webhookPolicy, fleet)
+
+	assert.Nil(t, err)
+	assert.False(t, limited)
+	assert.Equal(t, fixedReplicas, replicas)
 }
 
 func TestApplyWebhookPolicyNilFleet(t *testing.T) {
