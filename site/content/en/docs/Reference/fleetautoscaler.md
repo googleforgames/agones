@@ -374,6 +374,10 @@ type FleetAutoscaleRequest struct {
 	Namespace string `json:"namespace"`
 	// The Fleet's status values
 	Status v1.FleetStatus `json:"status"`
+{{% feature publishVersion="1.48.0" %}}
+	// Standard object metadata; More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata.
+	MetaData *metav1.ObjectMeta `json:"metadata,omitempty"`
+{{% /feature %}}
 }
 
 type FleetAutoscaleResponse struct {
