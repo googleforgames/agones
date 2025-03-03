@@ -172,6 +172,11 @@ func applyWebhookPolicy(w *autoscalingv1.WebhookPolicy, f *agonesv1.Fleet) (repl
 		Response: nil,
 	}
 
+	if runtime.FeatureEnabled(runtime.FeatureFleetAutoscaleRequestMetaData) {
+		faReq.Request.Annotations = f.ObjectMeta.Annotations
+		faReq.Request.Labels = f.ObjectMeta.Labels
+	}
+
 	b, err := json.Marshal(faReq)
 	if err != nil {
 		return 0, false, err

@@ -316,6 +316,10 @@ type FleetAutoscaleRequest struct {
 	Namespace string `json:"namespace"`
 	// The Fleet's status values
 	Status agonesv1.FleetStatus `json:"status"`
+	// Standard map labels; More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels.
+	Labels map[string]string `json:"labels,omitempty"`
+	// Standard map annotations; More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations.
+	Annotations map[string]string `json:"annotations,omitempty"`
 }
 
 // FleetAutoscaleResponse defines the response of webhook autoscaler endpoint
