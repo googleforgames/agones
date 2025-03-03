@@ -435,7 +435,7 @@
               "type": "string"
             },
             "customCertSecretPath": {
-              "type": "object"
+              "type": "array"
             },
             "maxCreationParallelism": {
               "type": "integer"
