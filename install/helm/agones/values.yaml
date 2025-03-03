@@ -187,6 +187,8 @@ agones:
       externalTrafficPolicy: Cluster
       loadBalancerSourceRanges: []
       annotations: {}
+      ipFamilyPolicy: ""
+      ipFamilies: []
     udp:
       expose: true
       rateLimit: 20
@@ -197,6 +199,8 @@ agones:
       externalTrafficPolicy: Cluster
       loadBalancerSourceRanges: []
       annotations: {}
+      ipFamilyPolicy: ""
+      ipFamilies: []
     healthCheck:
       initialDelaySeconds: 3
       periodSeconds: 3
@@ -240,6 +244,8 @@ agones:
       loadBalancerIP: ""
       loadBalancerSourceRanges: []
       annotations: {}
+      ipFamilyPolicy: ""
+      ipFamilies: []
       http:
         enabled: true
         appProtocol: ""
