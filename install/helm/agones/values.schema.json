@@ -173,13 +173,13 @@
                 "annotations": {
                   "type": "object",
                   "additionalProperties": {
-                    "type": "string"
+                    "type": "object"
                   }
                 },
                 "labels": {
                   "type": "object",
                   "additionalProperties": {
-                    "type": "string"
+                    "type": "object"
                   }
                 }
               },
@@ -196,7 +196,7 @@
                 "annotations": {
                   "type": "object",
                   "additionalProperties": {
-                    "type": "string"
+                    "type": "object"
                   }
                 }
               },
@@ -213,7 +213,7 @@
                 "annotations": {
                   "type": "object",
                   "additionalProperties": {
-                    "type": "string"
+                    "type": "object"
                   }
                 }
               },
@@ -422,13 +422,13 @@
             "labels": {
               "type": "object",
               "additionalProperties": {
-                "type": "string"
+                "type": "object"
               }
             },
             "annotations": {
               "type": "object",
               "additionalProperties": {
-                "type": "string"
+                "type": "object"
               }
             },
             "allocationBatchWaitTime": {
@@ -1009,7 +1009,7 @@
             "labels": {
               "type": "object",
               "additionalProperties": {
-                "type": "string"
+                "type": "object"
               }
             },
             "readiness": {
