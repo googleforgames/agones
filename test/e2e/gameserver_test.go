@@ -257,6 +257,10 @@ func TestUnhealthyGameServerAfterHealthCheckFail(t *testing.T) {
 
 func TestUnhealthyGameServersWithoutFreePorts(t *testing.T) {
 	framework.SkipOnCloudProduct(t, "gke-autopilot", "does not support Static PortPolicy")
+	if runtime.FeatureEnabled(runtime.FeatureSidecarContainers) {
+		t.SkipNow()
+	}
+
 	t.Parallel()
 	ctx := context.Background()
 	nodes, err := framework.KubeClient.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
@@ -321,6 +325,10 @@ func TestGameServerUnhealthyAfterDeletingPod(t *testing.T) {
 }
 
 func TestGameServerRestartBeforeReadyCrash(t *testing.T) {
+	if runtime.FeatureEnabled(runtime.FeatureSidecarContainers) {
+		t.SkipNow()
+	}
+
 	t.Parallel()
 	ctx := context.Background()
 	logger := e2eframework.TestLogger(t)
@@ -1650,7 +1658,45 @@ func TestLists(t *testing.T) {
 	}
 }
 
+func TestSideCarCommunicatesWhileTerminating(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	gs := framework.DefaultGameServer(framework.Namespace)
+
+	minute := int64(60)
+	gs.Spec.Template.Spec.Containers[0].Args = append(gs.Spec.Template.Spec.Containers[0].Args, "--gracefulTerminationDelaySec", "60")
+	gs.Spec.Template.Spec.TerminationGracePeriodSeconds = &minute
+	readyGs, err := framework.CreateGameServerAndWaitUntilReady(t, framework.Namespace, gs)
+	require.NoError(t, err)
+	require.Equal(t, readyGs.Status.State, agonesv1.GameServerStateReady)
+
+	// delete the GameServer
+	gameServers := framework.AgonesClient.AgonesV1().GameServers(framework.Namespace)
+	err = gameServers.Delete(context.Background(), readyGs.ObjectMeta.Name, metav1.DeleteOptions{})
+	require.NoError(t, err, "Could not delete GameServer")
+
+	// wait for the deletion timestamp to be set
+	err = wait.PollUntilContextTimeout(ctx, time.Second, time.Minute, true, func(ctx context.Context) (bool, error) {
+		gs, err := gameServers.Get(ctx, readyGs.ObjectMeta.Name, metav1.GetOptions{})
+		if err != nil {
+			return false, err
+		}
+		return gs.DeletionTimestamp != nil, nil
+	})
+	require.NoError(t, err, "Could not get a GameServer with deletion timestamp")
+
+	// send a "GAMESERVER" message, and confirm it works
+	reply, err := framework.SendGameServerUDP(t, readyGs, "GAMESERVER")
+	require.NoError(t, err)
+	require.Equal(t, fmt.Sprintf("NAME: %s\n", readyGs.ObjectMeta.Name), reply)
+}
+
 func TestGracefulShutdown(t *testing.T) {
+	// with the new sidecar pattern, there's no need for waiting on the Shutdown state.
+	if runtime.FeatureEnabled(runtime.FeatureSidecarContainers) {
+		t.SkipNow()
+	}
+
 	t.Parallel()
 
 	log := e2eframework.TestLogger(t)
