@@ -501,7 +501,7 @@ golang.org/x/tools/internal/gopathwalk
 golang.org/x/tools/internal/imports
 golang.org/x/tools/internal/modindex
 golang.org/x/tools/internal/stdlib
-# gomodules.xyz/jsonpatch/v2 v2.4.0 => github.com/lacroixthomas/jsonpatch/v2 v2.0.0-20250120171921-4c723fc27712
+# gomodules.xyz/jsonpatch/v2 v2.5.0
 ## explicit; go 1.20
 gomodules.xyz/jsonpatch/v2
 # google.golang.org/api v0.220.0
@@ -1201,4 +1201,3 @@ sigs.k8s.io/structured-merge-diff/v4/value
 ## explicit; go 1.12
 sigs.k8s.io/yaml
 sigs.k8s.io/yaml/goyaml.v2
-# gomodules.xyz/jsonpatch/v2 => github.com/lacroixthomas/jsonpatch/v2 v2.0.0-20250120171921-4c723fc27712
