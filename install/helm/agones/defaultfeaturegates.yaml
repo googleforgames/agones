@@ -28,9 +28,9 @@ RollingUpdateFix: false
 PortRanges: false
 PortPolicyNone: false
 ScheduledAutoscaler: false
+SidecarContainers: false
 
 # Dev features
-SidecarContainers: false
 
 # Example feature
 Example: false
