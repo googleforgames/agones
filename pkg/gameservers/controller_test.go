@@ -1262,6 +1262,10 @@ func TestControllerSyncGameServerStartingState(t *testing.T) {
 func TestControllerCreateGameServerPod(t *testing.T) {
 	t.Parallel()
 
+	// TODO: remove mutex when "SidecarContainers" moves to stable.
+	agruntime.FeatureTestMutex.Lock()
+	defer agruntime.FeatureTestMutex.Unlock()
+
 	newFixture := func() *agonesv1.GameServer {
 		fixture := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
 			Spec: newSingleContainerSpec(), Status: agonesv1.GameServerStatus{State: agonesv1.GameServerStateCreating}}
@@ -1293,9 +1297,20 @@ func TestControllerCreateGameServerPod(t *testing.T) {
 			assert.Empty(t, pod.Spec.NodeSelector)
 			assert.Empty(t, pod.Spec.Tolerations)
 
-			assert.Len(t, pod.Spec.Containers, 2, "Should have a sidecar container")
+			// if sidecar feature enabled, should be 1 container and 1 initContainer, otherwise 2 containers
+			var sidecarContainer corev1.Container
+			var gsContainer corev1.Container
+			if agruntime.FeatureEnabled(agruntime.FeatureSidecarContainers) {
+				assert.Len(t, pod.Spec.Containers, 1, "Should have 1 container")
+				assert.Len(t, pod.Spec.InitContainers, 1, "Should have init container")
+				gsContainer = pod.Spec.Containers[0]
+				sidecarContainer = pod.Spec.InitContainers[0]
+			} else {
+				assert.Len(t, pod.Spec.Containers, 2, "Should have a sidecar container")
+				sidecarContainer = pod.Spec.Containers[0]
+				gsContainer = pod.Spec.Containers[1]
+			}
 
-			sidecarContainer := pod.Spec.Containers[0]
 			assert.Equal(t, sidecarContainer.Image, c.sidecarImage)
 			assert.Equal(t, sidecarContainer.Resources.Limits.Cpu(), &c.sidecarCPULimit)
 			assert.Equal(t, sidecarContainer.Resources.Requests.Cpu(), &c.sidecarCPURequest)
@@ -1312,7 +1327,6 @@ func TestControllerCreateGameServerPod(t *testing.T) {
 			assert.Equal(t, *sidecarContainer.SecurityContext.RunAsNonRoot, true)
 			assert.Equal(t, *sidecarContainer.SecurityContext.RunAsUser, int64(sidecarRunAsUser))
 
-			gsContainer := pod.Spec.Containers[1]
 			assert.Equal(t, fixture.Spec.Ports[0].HostPort, gsContainer.Ports[0].HostPort)
 			assert.Equal(t, fixture.Spec.Ports[0].ContainerPort, gsContainer.Ports[0].ContainerPort)
 			assert.Equal(t, corev1.Protocol("UDP"), gsContainer.Ports[0].Protocol)
@@ -1346,7 +1360,11 @@ func TestControllerCreateGameServerPod(t *testing.T) {
 			created = true
 			ca := action.(k8stesting.CreateAction)
 			pod := ca.GetObject().(*corev1.Pod)
-			assert.Len(t, pod.Spec.Containers, 2, "Should have a sidecar container")
+			if agruntime.FeatureEnabled(agruntime.FeatureSidecarContainers) {
+				assert.Len(t, pod.Spec.InitContainers, 1, "Should have init container")
+			} else {
+				assert.Len(t, pod.Spec.Containers, 2, "Should have a sidecar container")
+			}
 			assert.Empty(t, pod.Spec.Containers[0].VolumeMounts)
 
 			return true, pod, nil
