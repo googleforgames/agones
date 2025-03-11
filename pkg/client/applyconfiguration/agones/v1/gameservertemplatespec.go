@@ -24,14 +24,14 @@ import (
 	v1 "k8s.io/client-go/applyconfigurations/meta/v1"
 )
 
-// GameServerTemplateSpecApplyConfiguration represents an declarative configuration of the GameServerTemplateSpec type for use
+// GameServerTemplateSpecApplyConfiguration represents a declarative configuration of the GameServerTemplateSpec type for use
 // with apply.
 type GameServerTemplateSpecApplyConfiguration struct {
 	*v1.ObjectMetaApplyConfiguration `json:"metadata,omitempty"`
 	Spec                             *GameServerSpecApplyConfiguration `json:"spec,omitempty"`
 }
 
-// GameServerTemplateSpecApplyConfiguration constructs an declarative configuration of the GameServerTemplateSpec type for use with
+// GameServerTemplateSpecApplyConfiguration constructs a declarative configuration of the GameServerTemplateSpec type for use with
 // apply.
 func GameServerTemplateSpec() *GameServerTemplateSpecApplyConfiguration {
 	return &GameServerTemplateSpecApplyConfiguration{}
@@ -185,4 +185,10 @@ func (b *GameServerTemplateSpecApplyConfiguration) ensureObjectMetaApplyConfigur
 func (b *GameServerTemplateSpecApplyConfiguration) WithSpec(value *GameServerSpecApplyConfiguration) *GameServerTemplateSpecApplyConfiguration {
 	b.Spec = value
 	return b
+}
+
+// GetName retrieves the value of the Name field in the declarative configuration.
+func (b *GameServerTemplateSpecApplyConfiguration) GetName() *string {
+	b.ensureObjectMetaApplyConfigurationExists()
+	return b.Name
 }

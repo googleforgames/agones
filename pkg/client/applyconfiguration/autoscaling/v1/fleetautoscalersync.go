@@ -22,14 +22,14 @@ import (
 	v1 "agones.dev/agones/pkg/apis/autoscaling/v1"
 )
 
-// FleetAutoscalerSyncApplyConfiguration represents an declarative configuration of the FleetAutoscalerSync type for use
+// FleetAutoscalerSyncApplyConfiguration represents a declarative configuration of the FleetAutoscalerSync type for use
 // with apply.
 type FleetAutoscalerSyncApplyConfiguration struct {
 	Type          *v1.FleetAutoscalerSyncType          `json:"type,omitempty"`
 	FixedInterval *FixedIntervalSyncApplyConfiguration `json:"fixedInterval,omitempty"`
 }
 
-// FleetAutoscalerSyncApplyConfiguration constructs an declarative configuration of the FleetAutoscalerSync type for use with
+// FleetAutoscalerSyncApplyConfiguration constructs a declarative configuration of the FleetAutoscalerSync type for use with
 // apply.
 func FleetAutoscalerSync() *FleetAutoscalerSyncApplyConfiguration {
 	return &FleetAutoscalerSyncApplyConfiguration{}

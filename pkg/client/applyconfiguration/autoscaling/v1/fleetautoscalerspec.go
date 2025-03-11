@@ -18,7 +18,7 @@
 
 package v1
 
-// FleetAutoscalerSpecApplyConfiguration represents an declarative configuration of the FleetAutoscalerSpec type for use
+// FleetAutoscalerSpecApplyConfiguration represents a declarative configuration of the FleetAutoscalerSpec type for use
 // with apply.
 type FleetAutoscalerSpecApplyConfiguration struct {
 	FleetName *string                                  `json:"fleetName,omitempty"`
@@ -26,7 +26,7 @@ type FleetAutoscalerSpecApplyConfiguration struct {
 	Sync      *FleetAutoscalerSyncApplyConfiguration   `json:"sync,omitempty"`
 }
 
-// FleetAutoscalerSpecApplyConfiguration constructs an declarative configuration of the FleetAutoscalerSpec type for use with
+// FleetAutoscalerSpecApplyConfiguration constructs a declarative configuration of the FleetAutoscalerSpec type for use with
 // apply.
 func FleetAutoscalerSpec() *FleetAutoscalerSpecApplyConfiguration {
 	return &FleetAutoscalerSpecApplyConfiguration{}

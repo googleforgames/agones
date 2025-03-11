@@ -22,7 +22,7 @@ import (
 	intstr "k8s.io/apimachinery/pkg/util/intstr"
 )
 
-// ListPolicyApplyConfiguration represents an declarative configuration of the ListPolicy type for use
+// ListPolicyApplyConfiguration represents a declarative configuration of the ListPolicy type for use
 // with apply.
 type ListPolicyApplyConfiguration struct {
 	Key         *string             `json:"key,omitempty"`
@@ -31,7 +31,7 @@ type ListPolicyApplyConfiguration struct {
 	BufferSize  *intstr.IntOrString `json:"bufferSize,omitempty"`
 }
 
-// ListPolicyApplyConfiguration constructs an declarative configuration of the ListPolicy type for use with
+// ListPolicyApplyConfiguration constructs a declarative configuration of the ListPolicy type for use with
 // apply.
 func ListPolicy() *ListPolicyApplyConfiguration {
 	return &ListPolicyApplyConfiguration{}

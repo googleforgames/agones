@@ -18,7 +18,7 @@
 
 package v1
 
-// PriorityApplyConfiguration represents an declarative configuration of the Priority type for use
+// PriorityApplyConfiguration represents a declarative configuration of the Priority type for use
 // with apply.
 type PriorityApplyConfiguration struct {
 	Type  *string `json:"type,omitempty"`
@@ -26,7 +26,7 @@ type PriorityApplyConfiguration struct {
 	Order *string `json:"order,omitempty"`
 }
 
-// PriorityApplyConfiguration constructs an declarative configuration of the Priority type for use with
+// PriorityApplyConfiguration constructs a declarative configuration of the Priority type for use with
 // apply.
 func Priority() *PriorityApplyConfiguration {
 	return &PriorityApplyConfiguration{}

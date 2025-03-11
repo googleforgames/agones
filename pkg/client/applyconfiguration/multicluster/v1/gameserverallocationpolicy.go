@@ -24,7 +24,7 @@ import (
 	v1 "k8s.io/client-go/applyconfigurations/meta/v1"
 )
 
-// GameServerAllocationPolicyApplyConfiguration represents an declarative configuration of the GameServerAllocationPolicy type for use
+// GameServerAllocationPolicyApplyConfiguration represents a declarative configuration of the GameServerAllocationPolicy type for use
 // with apply.
 type GameServerAllocationPolicyApplyConfiguration struct {
 	v1.TypeMetaApplyConfiguration    `json:",inline"`
@@ -32,7 +32,7 @@ type GameServerAllocationPolicyApplyConfiguration struct {
 	Spec                             *GameServerAllocationPolicySpecApplyConfiguration `json:"spec,omitempty"`
 }
 
-// GameServerAllocationPolicy constructs an declarative configuration of the GameServerAllocationPolicy type for use with
+// GameServerAllocationPolicy constructs a declarative configuration of the GameServerAllocationPolicy type for use with
 // apply.
 func GameServerAllocationPolicy(name, namespace string) *GameServerAllocationPolicyApplyConfiguration {
 	b := &GameServerAllocationPolicyApplyConfiguration{}
@@ -207,4 +207,10 @@ func (b *GameServerAllocationPolicyApplyConfiguration) ensureObjectMetaApplyConf
 func (b *GameServerAllocationPolicyApplyConfiguration) WithSpec(value *GameServerAllocationPolicySpecApplyConfiguration) *GameServerAllocationPolicyApplyConfiguration {
 	b.Spec = value
 	return b
+}
+
+// GetName retrieves the value of the Name field in the declarative configuration.
+func (b *GameServerAllocationPolicyApplyConfiguration) GetName() *string {
+	b.ensureObjectMetaApplyConfigurationExists()
+	return b.Name
 }
