@@ -34,7 +34,7 @@ require (
 	golang.org/x/oauth2 v0.26.0
 	golang.org/x/time v0.9.0
 	golang.org/x/tools v0.29.0
-	gomodules.xyz/jsonpatch/v2 v2.4.0
+	gomodules.xyz/jsonpatch/v2 v2.5.0
 	google.golang.org/api v0.220.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20250207221924-e9438ea467c6
 	google.golang.org/grpc v1.70.0
