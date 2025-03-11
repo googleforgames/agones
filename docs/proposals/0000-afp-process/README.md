@@ -193,11 +193,15 @@ A AFP has the following states:
 
 AFPs are checked into the repository under the `/docs/proposals` directory.
 
-New AFPs can be checked in with a file name in the form of `00x-feature-name.md`.
-The corresponding PR should be titled in the format `AFP-00x`, where 00x represents the AFP number.
-As significant work is done on the AFP, the authors can assign a AFP number.
-No other changes should be put in that PR so that it can be approved quickly and minimize merge conflicts.
-The AFP number can also be done as part of the initial submission if the PR is likely to be uncontested and merged quickly.
+New AFPs should be checked in with a folder name in the form of `00x-feature-name`, where 
+"00x" represents an incremental AFP number. The corresponding pull request (PR) should be titled 
+in the format `AFP-00x`, matching the folder naming convention.
+
+As significant work is done on the AFP, the authors can assign an AFP number. No other changes 
+should be included in that PR so that it can be approved quickly and minimize merge conflicts. 
+The AFP number can also be assigned as part of the initial submission if the PR is likely to 
+be uncontested and merged quickly.
+
 
 ### AFP Editor Role
 
