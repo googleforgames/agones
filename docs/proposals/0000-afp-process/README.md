@@ -13,12 +13,9 @@
   - [AFP Workflow](#afp-workflow)
   - [Git and GitHub Implementation](#git-and-github-implementation)
   - [AFP Editor Role](#afp-editor-role)
-  - [Important Metrics](#important-metrics)
-  - [Prior Art](#prior-art)
 - [Drawbacks](#drawbacks)
 - [Alternatives](#alternatives)
   - [GitHub Issues vs. AFPs](#github-issues-vs-afps)
-- [Unresolved Questions](#unresolved-questions)
 <!-- /toc -->
 
 ## Summary
@@ -27,8 +24,6 @@ A standardized development process for Agones is proposed, in order to:
 
 - provide a common structure for proposing changes to Agones
 - ensure that the motivation for a change is clear
-- allow for the enumeration of stability milestones and stability graduation
-  criteria
 - persist project information in a Version Control System (VCS) for future
   Agones
 - support the creation of _high-value, user-facing_ information such as:
@@ -36,9 +31,8 @@ A standardized development process for Agones is proposed, in order to:
   - motivation for impactful user-facing changes
 - reserve GitHub issues for tracking work in flight, instead of creating "umbrella"
   issues
-- ensure community participants can successfully drive changes to
-  completion across one or more releases while stakeholders are adequately
-  represented throughout the process
+- enable community participants to drive changes effectively across multiple releases 
+  while ensuring stakeholder representation throughout the process.
 
 This process is supported by a unit of work called a Agones Feature Proposal, or AFP.
 A AFP attempts to combine aspects of
@@ -51,27 +45,25 @@ into one file, which is created incrementally through collaboration with relevan
 
 ## Motivation
 
-For cross-project initiatives such as Agones, an abstraction beyond a
-single GitHub Issue or pull request seems to be required in order to understand
-and communicate upcoming changes to Agones. In a blog post describing the
-[road to Go 2][], Russ Cox explains:
+Currently, design discussions in Agones primarily occur as comments on GitHub issues. 
+While this provides flexibility, it can also lead to confusion and inefficiencies. 
+Consider the discussion in issue [#3882][] as an example:
 
-> that it is difficult but essential to describe the significance of a problem
-> in a way that someone working in a different environment can understand
+The design was introduced as a follow-up comment rather than in the original post, 
+making it harder to track. To improve clarity, the first comment was updated to link 
+to the design discussion, but the thread remained busy and somewhat disorganized.
 
-It is vital for the project to be able to track the chain of custody for a proposed
-feature from conception through implementation.
+In other cases, we create a new issue with the design and close the related issues, 
+which ensures the design appears at the top but fragments discussions.
 
-Without a standardized mechanism for describing important features, our
-talented technical writers and product managers struggle to weave a coherent
-narrative explaining why a particular release is important. Additionally, adopters
-of critical infrastructure such as Agones need a forward-looking roadmap in
-order to plan their adoption strategies.
+Version control is lacking, making it difficult to track iterations. For instance, 
+updates to the design might render prior comments irrelevant, leading to disjointed 
+conversations.Providing feedback on lengthy designs requires quoting sections manually 
+instead of allowing inline commenting.
 
-The purpose of the AFP process is to reduce the amount of "tribal knowledge" in
-our community. By moving decisions from a smattering of mailing lists, video
-calls and hallway conversations into a well tracked artifact, this process aims
-to enhance communication and discoverability.
+To address these challenges, we propose adopting a structured process for feature 
+proposals, similar to Kubernetes' KEP process. This would introduce a lightweight 
+mechanism called Agones Feature Proposals (AFP):
 
 A AFP is broken into sections which can be merged into source control
 incrementally in order to support an iterative development process. An important
@@ -80,8 +72,8 @@ contained in [design proposals][] is both clear and efficient. The AFP process
 is intended to create high-quality, uniform design and implementation documents 
 to support deliberation within the project.
 
-[road to Go 2]: https://blog.golang.org/toward-go2
 [design proposals]: /docs/proposals/NNNN-afp-template
+[#3882]: https://github.com/googleforgames/agones/issues/3882
 
 ## Stewardship
 The following DACI model identifies the responsible parties for AFPs.
@@ -92,14 +84,13 @@ The following DACI model identifies the responsible parties for AFPs.
 | Proposal Delivery | Proposal Owner |  Project Maintainers  | Proposal Implementer(s) (may overlap with Driver) | Community |
 
 
-
 ## Reference-Level Explanation
 
 ### What Type of Work Should Be Tracked by a AFP
 
-The definition of what constitutes an "feature" is a foundational concern
+The definition of what constitutes a "feature" is a foundational concern
 for the Agones project. Roughly any Agones user or operator facing
-feature should follow the AFP process. If an feature would be described
+feature should follow the AFP process. If a feature would be described
 in either written or verbal communication to anyone besides the AFP author or
 developer, then consider creating a AFP.
 
@@ -140,7 +131,7 @@ schema.
 
 Metadata items:
 * **title** Required
-  * The title of the AFP in plain language.  The title will also be used in the
+  * The title of the AFP in plain language. The title will also be used in the
     AFP filename.  See the template for instructions and details.
 * **status** Required
   * The current state of the AFP.
@@ -151,17 +142,11 @@ Metadata items:
     In the future we may enhance this to include other types of identification.
 * **reviewers** Required
   * Reviewer(s) chosen after triage, according to the proposal process.
-  * If not yet chosen, replace with `TBD`.
-  * Same name/contact scheme as `authors`.
-  * Reviewers should be a distinct set from authors.
-* **approvers** Required
-  * Approver(s) chosen after triage, according to the proposal process.
-  * Approver(s) selected based on the impacted areas or components of the project.
-    It is up to the individual areas to determine how they pick approvers for AFPs impacting them.
-    The approvers are speaking for the respective areas in the process of approving this AFP
+  * Reviewer(s) selected based on the impacted areas or components of the project.
+    It is up to the individual areas to determine how they pick reviewers for AFPs impacting them.
+    The reviewers are speaking for the respective areas in the process of approving this AFP
     The impacted areas can modify this list as necessary.
-  * The approvers are the individuals who decide when to move this AFP to the `implementable` state.
-  * Approvers should be a distinct set from authors.
+  * The reviewers are the individuals who decide when to move this AFP to the `implementable` state.
   * If not yet chosen, replace with `TBD`.
   * Same name/contact scheme as `authors`.
 * **editor** Required
@@ -179,7 +164,7 @@ Metadata items:
   * A list of other AFPs that are relevant to this AFP.
   * In the form `AFP-123`.
 * **replaces** Optional
-  * A list of AFPs that this AFP replaces.  Those AFPs should list this AFP in
+  * A list of AFPs that this AFP replaces. Those AFPs should list this AFP in
     their `superseded-by`.
   * In the form `AFP-123`.
 * **superseded-by**
@@ -195,10 +180,10 @@ A AFP has the following states:
 - `provisional`: The AFP has been proposed and is actively being defined.
   This is the starting state while the AFP is being fleshed out and actively defined and discussed.
   The maintainer has accepted that this work must be done.
-- `implementable`: The approvers have approved this AFP for implementation.
+- `implementable`: The reviewers have approved this AFP for implementation.
 - `implemented`: The AFP has been implemented and is no longer actively changed.
 - `deferred`: The AFP is proposed but not actively being worked on.
-- `rejected`: The approvers and authors have decided that this AFP is not moving forward.
+- `rejected`: The reviewers and authors have decided that this AFP is not moving forward.
   The AFP is kept around as a historical document.
 - `withdrawn`: The authors have withdrawn the AFP.
 - `replaced`: The AFP has been replaced by a new AFP.
@@ -206,9 +191,10 @@ A AFP has the following states:
 
 ### Git and GitHub Implementation
 
-AFPs are checked into the Features repo under the `/docs/proposals` directory.
+AFPs are checked into the repository under the `/docs/proposals` directory.
 
-New AFPs can be checked in with a file name in the form of `draft-YYYYMMDD-my-title.md`.
+New AFPs can be checked in with a file name in the form of `00x-feature-name.md`.
+The corresponding PR should be titled in the format `AFP-00x`, where 00x represents the AFP number.
 As significant work is done on the AFP, the authors can assign a AFP number.
 No other changes should be put in that PR so that it can be approved quickly and minimize merge conflicts.
 The AFP number can also be done as part of the initial submission if the PR is likely to be uncontested and merged quickly.
@@ -233,36 +219,12 @@ AFP editors can also help inform authors about the process and otherwise help th
 [Python PEP process]: https://www.python.org/dev/peps/pep-0001/
 [PEP editor responsibilities]: https://www.python.org/dev/peps/pep-0001/#pep-editor-responsibilities-workflow
 
-### Important Metrics
-
-It is proposed that the primary metrics that would signal the success or
-failure of the AFP process are:
-
-- how many "features" are tracked with a AFP
-- distribution of time a AFP spends in each state
-- AFP rejection rate
-- PRs referencing a AFP merged per week
-- number of issues open which reference a AFP
-- number of contributors who authored a AFP
-- number of contributors who authored a AFP for the first time
-- number of orphaned AFPs
-- number of retired AFPs
-- number of superseded AFPs
-
-### Prior Art
-
-The AFP process, as proposed, was essentially stolen from the [Kubernetes AFP process][] & [Rust RFC process][] & [Python PEP process][].
-
-[Kubernetes AFP process]: https://github.com/kubernetes/enhancements/tree/master/afps
-[Rust RFC process]: https://github.com/rust-lang/rfcs
-
 ## Drawbacks
 
-Any additional process has the potential to engender resentment within the
-community. There is also a risk that the AFP process as designed will not
-sufficiently address the scaling challenges we face today. PR review bandwidth is
-already at a premium, and we may find that the AFP process introduces an unreasonable
-bottleneck on our development velocity.
+Adding more steps to the process might frustrate people in the community. 
+There's also a chance that the AFP process won’t solve our scaling problems. 
+Since PR reviews already take a lot of time, and we may find that the AFP process 
+introduces an unreasonable bottleneck on our development velocity.
 
 It certainly can be argued that the lack of a dedicated issue/defect tracker
 beyond GitHub issues contributes to our challenges in managing a project as large
@@ -289,7 +251,7 @@ because anyone can open a GitHub issue at any time. Additionally, managing a pro
 change across multiple releases is somewhat cumbersome as labels and milestones
 need to be updated for every release that a change spans. These long-lived GitHub
 issues lead to an ever-increasing number of issues open against
-`agones/features`, which itself has become a management problem.
+`agones/docs/proposals`, which itself has become a management problem.
 
 In addition to the challenge of managing issues over time, searching for text
 within an issue can be challenging. The flat hierarchy of issues can also make
@@ -303,7 +265,3 @@ work in order to facilitate project management. This primitive for describing
 a unit of work may also allow contributors to create their own personalized
 view of the state of the project while relying on Git and GitHub for consistency
 and durable storage.
-
-## Unresolved Questions
-
-- 

@@ -42,7 +42,7 @@ The AFP process follows a series of stages to ensure that the proposal is well-d
 
 ### How to Submit an AFP
 
-To submit a new AFP, follow the instructions provided in the official AFP template. This template outlines the required sections and metadata, such as the title, authors, reviewers, and approval statuses. AFPs are stored in the project's **docs/proposals** directory, with filenames formatted as `NNNN-my-title.md`. The document undergoes iterative updates, with changes tracked via version control.
+To submit a new AFP, follow the instructions provided in the official AFP template. This template outlines the required sections and metadata, such as the title, authors, reviewers, and approval statuses. AFPs are stored in the project's **docs/proposals** directory, with filenames formatted as `00x-feature-name.md`. The document undergoes iterative updates, with changes tracked via version control.
 
 ### Why AFPs Are Important
 

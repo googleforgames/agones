@@ -8,9 +8,6 @@ creation-date: yyyy-mm-dd
 reviewers:
   - TBD
   - "@alice.doe"
-approvers:
-  - TBD
-  - "@oscar.doe"
 
 see-also:
   - "/docs/proposals/1234-we-heard-you-like-afps"
@@ -20,17 +17,6 @@ replaces:
 
 # The target maturity stage in the current dev cycle for this AFP.
 stage: alpha|beta|stable
-
-# The most recent milestone for which work toward delivery of this AFP has been
-# done. This can be the current (upcoming) milestone, if it is being actively
-# worked on.
-latest-milestone: "v1.46.0"
-
-# The milestone at which this feature was, or is targeted to be, at each stage.
-milestone:
-  alpha: "v1.46.0"
-  beta: "v1.47.0"
-  stable: "v1.48.0"
 
 # The following PRR answers are required at next release
 # List the feature gate name and the components for which it must be enabled

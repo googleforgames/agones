@@ -34,9 +34,8 @@ Our aim with AFPs is to clearly communicate new efforts to the Agones contributo
 As such, we want to build a well curated set of clear proposals in a common format with useful metadata.
 
 Benefits to AFP users (in the limit):
-* Exposure on a agones blessed web site that is findable via web search engines.
 * Cross indexing of AFPs so that users can find connections and the current status of any AFP.
-* A clear process with approvers and reviewers for making decisions.
+* A clear process with and reviewers for making decisions.
   This will lead to more structured decisions that stick as there is a discoverable record around the decisions.
 
 We are inspired by K8S KEPs, Python PEPs and Rust RFCs.
@@ -46,7 +45,7 @@ See [AFP-0000](0000-afp-process/README.md) for more details.
 
 Things we'd like to see happen to consider AFPs well on their way:
 * A set of AFPs that show healthy process around describing an effort and recording decisions in a reasonable amount of time.
-* AFPs exposed on a searchable and indexable web site.
+* AFPs indexed and maintained in a structured process for easy reference.
 * Presubmit checks for AFPs around metadata format and markdown validity.
 
 Even so, the process can evolve. As we find new techniques we can improve our processes.
