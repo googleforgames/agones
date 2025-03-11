@@ -18,7 +18,7 @@
 
 package v1
 
-// HealthApplyConfiguration represents an declarative configuration of the Health type for use
+// HealthApplyConfiguration represents a declarative configuration of the Health type for use
 // with apply.
 type HealthApplyConfiguration struct {
 	Disabled            *bool  `json:"disabled,omitempty"`
@@ -27,7 +27,7 @@ type HealthApplyConfiguration struct {
 	InitialDelaySeconds *int32 `json:"initialDelaySeconds,omitempty"`
 }
 
-// HealthApplyConfiguration constructs an declarative configuration of the Health type for use with
+// HealthApplyConfiguration constructs a declarative configuration of the Health type for use with
 // apply.
 func Health() *HealthApplyConfiguration {
 	return &HealthApplyConfiguration{}

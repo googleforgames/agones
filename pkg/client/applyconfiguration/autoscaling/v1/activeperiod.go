@@ -18,7 +18,7 @@
 
 package v1
 
-// ActivePeriodApplyConfiguration represents an declarative configuration of the ActivePeriod type for use
+// ActivePeriodApplyConfiguration represents a declarative configuration of the ActivePeriod type for use
 // with apply.
 type ActivePeriodApplyConfiguration struct {
 	Timezone  *string `json:"timezone,omitempty"`
@@ -26,7 +26,7 @@ type ActivePeriodApplyConfiguration struct {
 	Duration  *string `json:"duration,omitempty"`
 }
 
-// ActivePeriodApplyConfiguration constructs an declarative configuration of the ActivePeriod type for use with
+// ActivePeriodApplyConfiguration constructs a declarative configuration of the ActivePeriod type for use with
 // apply.
 func ActivePeriod() *ActivePeriodApplyConfiguration {
 	return &ActivePeriodApplyConfiguration{}

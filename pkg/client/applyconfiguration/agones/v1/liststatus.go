@@ -18,14 +18,14 @@
 
 package v1
 
-// ListStatusApplyConfiguration represents an declarative configuration of the ListStatus type for use
+// ListStatusApplyConfiguration represents a declarative configuration of the ListStatus type for use
 // with apply.
 type ListStatusApplyConfiguration struct {
 	Capacity *int64   `json:"capacity,omitempty"`
 	Values   []string `json:"values,omitempty"`
 }
 
-// ListStatusApplyConfiguration constructs an declarative configuration of the ListStatus type for use with
+// ListStatusApplyConfiguration constructs a declarative configuration of the ListStatus type for use with
 // apply.
 func ListStatus() *ListStatusApplyConfiguration {
 	return &ListStatusApplyConfiguration{}

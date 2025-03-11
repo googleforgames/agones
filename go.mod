@@ -41,9 +41,9 @@ require (
 	google.golang.org/protobuf v1.36.5
 	gopkg.in/fsnotify.v1 v1.4.7
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
-	k8s.io/api v0.31.0
+	k8s.io/api v0.31.6
 	k8s.io/apiextensions-apiserver v0.31.0
-	k8s.io/apimachinery v0.31.0
+	k8s.io/apimachinery v0.31.6
 	k8s.io/client-go v0.31.0
 	k8s.io/kube-openapi v0.0.0-20240903163716-9e1beecbcb38
 	k8s.io/utils v0.0.0-20240921022957-49e7df575cb6

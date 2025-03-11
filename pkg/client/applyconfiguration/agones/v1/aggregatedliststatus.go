@@ -18,7 +18,7 @@
 
 package v1
 
-// AggregatedListStatusApplyConfiguration represents an declarative configuration of the AggregatedListStatus type for use
+// AggregatedListStatusApplyConfiguration represents a declarative configuration of the AggregatedListStatus type for use
 // with apply.
 type AggregatedListStatusApplyConfiguration struct {
 	AllocatedCount    *int64 `json:"allocatedCount,omitempty"`
@@ -27,7 +27,7 @@ type AggregatedListStatusApplyConfiguration struct {
 	Capacity          *int64 `json:"capacity,omitempty"`
 }
 
-// AggregatedListStatusApplyConfiguration constructs an declarative configuration of the AggregatedListStatus type for use with
+// AggregatedListStatusApplyConfiguration constructs a declarative configuration of the AggregatedListStatus type for use with
 // apply.
 func AggregatedListStatus() *AggregatedListStatusApplyConfiguration {
 	return &AggregatedListStatusApplyConfiguration{}

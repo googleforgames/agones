@@ -22,7 +22,7 @@ import (
 	intstr "k8s.io/apimachinery/pkg/util/intstr"
 )
 
-// BufferPolicyApplyConfiguration represents an declarative configuration of the BufferPolicy type for use
+// BufferPolicyApplyConfiguration represents a declarative configuration of the BufferPolicy type for use
 // with apply.
 type BufferPolicyApplyConfiguration struct {
 	MaxReplicas *int32              `json:"maxReplicas,omitempty"`
@@ -30,7 +30,7 @@ type BufferPolicyApplyConfiguration struct {
 	BufferSize  *intstr.IntOrString `json:"bufferSize,omitempty"`
 }
 
-// BufferPolicyApplyConfiguration constructs an declarative configuration of the BufferPolicy type for use with
+// BufferPolicyApplyConfiguration constructs a declarative configuration of the BufferPolicy type for use with
 // apply.
 func BufferPolicy() *BufferPolicyApplyConfiguration {
 	return &BufferPolicyApplyConfiguration{}

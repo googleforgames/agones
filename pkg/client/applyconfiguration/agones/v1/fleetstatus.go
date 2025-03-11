@@ -18,7 +18,7 @@
 
 package v1
 
-// FleetStatusApplyConfiguration represents an declarative configuration of the FleetStatus type for use
+// FleetStatusApplyConfiguration represents a declarative configuration of the FleetStatus type for use
 // with apply.
 type FleetStatusApplyConfiguration struct {
 	Replicas          *int32                                               `json:"replicas,omitempty"`
@@ -30,7 +30,7 @@ type FleetStatusApplyConfiguration struct {
 	Lists             map[string]AggregatedListStatusApplyConfiguration    `json:"lists,omitempty"`
 }
 
-// FleetStatusApplyConfiguration constructs an declarative configuration of the FleetStatus type for use with
+// FleetStatusApplyConfiguration constructs a declarative configuration of the FleetStatus type for use with
 // apply.
 func FleetStatus() *FleetStatusApplyConfiguration {
 	return &FleetStatusApplyConfiguration{}

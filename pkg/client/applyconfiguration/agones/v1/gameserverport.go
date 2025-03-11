@@ -23,7 +23,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-// GameServerPortApplyConfiguration represents an declarative configuration of the GameServerPort type for use
+// GameServerPortApplyConfiguration represents a declarative configuration of the GameServerPort type for use
 // with apply.
 type GameServerPortApplyConfiguration struct {
 	Name          *string          `json:"name,omitempty"`
@@ -35,7 +35,7 @@ type GameServerPortApplyConfiguration struct {
 	Protocol      *corev1.Protocol `json:"protocol,omitempty"`
 }
 
-// GameServerPortApplyConfiguration constructs an declarative configuration of the GameServerPort type for use with
+// GameServerPortApplyConfiguration constructs a declarative configuration of the GameServerPort type for use with
 // apply.
 func GameServerPort() *GameServerPortApplyConfiguration {
 	return &GameServerPortApplyConfiguration{}
