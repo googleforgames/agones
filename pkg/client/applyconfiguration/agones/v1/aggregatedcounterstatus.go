@@ -18,7 +18,7 @@
 
 package v1
 
-// AggregatedCounterStatusApplyConfiguration represents an declarative configuration of the AggregatedCounterStatus type for use
+// AggregatedCounterStatusApplyConfiguration represents a declarative configuration of the AggregatedCounterStatus type for use
 // with apply.
 type AggregatedCounterStatusApplyConfiguration struct {
 	AllocatedCount    *int64 `json:"allocatedCount,omitempty"`
@@ -27,7 +27,7 @@ type AggregatedCounterStatusApplyConfiguration struct {
 	Capacity          *int64 `json:"capacity,omitempty"`
 }
 
-// AggregatedCounterStatusApplyConfiguration constructs an declarative configuration of the AggregatedCounterStatus type for use with
+// AggregatedCounterStatusApplyConfiguration constructs a declarative configuration of the AggregatedCounterStatus type for use with
 // apply.
 func AggregatedCounterStatus() *AggregatedCounterStatusApplyConfiguration {
 	return &AggregatedCounterStatusApplyConfiguration{}

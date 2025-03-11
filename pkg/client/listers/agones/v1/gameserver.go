@@ -20,8 +20,8 @@ package v1
 
 import (
 	v1 "agones.dev/agones/pkg/apis/agones/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/listers"
 	"k8s.io/client-go/tools/cache"
 )
 
@@ -38,25 +38,17 @@ type GameServerLister interface {
 
 // gameServerLister implements the GameServerLister interface.
 type gameServerLister struct {
-	indexer cache.Indexer
+	listers.ResourceIndexer[*v1.GameServer]
 }
 
 // NewGameServerLister returns a new GameServerLister.
 func NewGameServerLister(indexer cache.Indexer) GameServerLister {
-	return &gameServerLister{indexer: indexer}
-}
-
-// List lists all GameServers in the indexer.
-func (s *gameServerLister) List(selector labels.Selector) (ret []*v1.GameServer, err error) {
-	err = cache.ListAll(s.indexer, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1.GameServer))
-	})
-	return ret, err
+	return &gameServerLister{listers.New[*v1.GameServer](indexer, v1.Resource("gameserver"))}
 }
 
 // GameServers returns an object that can list and get GameServers.
 func (s *gameServerLister) GameServers(namespace string) GameServerNamespaceLister {
-	return gameServerNamespaceLister{indexer: s.indexer, namespace: namespace}
+	return gameServerNamespaceLister{listers.NewNamespaced[*v1.GameServer](s.ResourceIndexer, namespace)}
 }
 
 // GameServerNamespaceLister helps list and get GameServers.
@@ -74,26 +66,5 @@ type GameServerNamespaceLister interface {
 // gameServerNamespaceLister implements the GameServerNamespaceLister
 // interface.
 type gameServerNamespaceLister struct {
-	indexer   cache.Indexer
-	namespace string
-}
-
-// List lists all GameServers in the indexer for a given namespace.
-func (s gameServerNamespaceLister) List(selector labels.Selector) (ret []*v1.GameServer, err error) {
-	err = cache.ListAllByNamespace(s.indexer, s.namespace, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1.GameServer))
-	})
-	return ret, err
-}
-
-// Get retrieves the GameServer from the indexer for a given namespace and name.
-func (s gameServerNamespaceLister) Get(name string) (*v1.GameServer, error) {
-	obj, exists, err := s.indexer.GetByKey(s.namespace + "/" + name)
-	if err != nil {
-		return nil, err
-	}
-	if !exists {
-		return nil, errors.NewNotFound(v1.Resource("gameserver"), name)
-	}
-	return obj.(*v1.GameServer), nil
+	listers.ResourceIndexer[*v1.GameServer]
 }

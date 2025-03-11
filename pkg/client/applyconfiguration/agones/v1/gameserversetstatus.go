@@ -18,7 +18,7 @@
 
 package v1
 
-// GameServerSetStatusApplyConfiguration represents an declarative configuration of the GameServerSetStatus type for use
+// GameServerSetStatusApplyConfiguration represents a declarative configuration of the GameServerSetStatus type for use
 // with apply.
 type GameServerSetStatusApplyConfiguration struct {
 	Replicas          *int32                                               `json:"replicas,omitempty"`
@@ -31,7 +31,7 @@ type GameServerSetStatusApplyConfiguration struct {
 	Lists             map[string]AggregatedListStatusApplyConfiguration    `json:"lists,omitempty"`
 }
 
-// GameServerSetStatusApplyConfiguration constructs an declarative configuration of the GameServerSetStatus type for use with
+// GameServerSetStatusApplyConfiguration constructs a declarative configuration of the GameServerSetStatus type for use with
 // apply.
 func GameServerSetStatus() *GameServerSetStatusApplyConfiguration {
 	return &GameServerSetStatusApplyConfiguration{}
