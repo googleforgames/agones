@@ -3,7 +3,7 @@
 
 To get started with this template:
 
-- [ ] **Create an issue in agones/docs/proposals**
+- [ ] **Create an issue in agones repository**
   When filing an feature tracking issue, please make sure to complete all
   fields in that template. One of the fields asks for a link to the AFP. You
   can leave that blank until this AFP is filed, and then go back to the
