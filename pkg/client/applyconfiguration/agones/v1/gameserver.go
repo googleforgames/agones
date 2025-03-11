@@ -24,7 +24,7 @@ import (
 	v1 "k8s.io/client-go/applyconfigurations/meta/v1"
 )
 
-// GameServerApplyConfiguration represents an declarative configuration of the GameServer type for use
+// GameServerApplyConfiguration represents a declarative configuration of the GameServer type for use
 // with apply.
 type GameServerApplyConfiguration struct {
 	v1.TypeMetaApplyConfiguration    `json:",inline"`
@@ -33,7 +33,7 @@ type GameServerApplyConfiguration struct {
 	Status                           *GameServerStatusApplyConfiguration `json:"status,omitempty"`
 }
 
-// GameServer constructs an declarative configuration of the GameServer type for use with
+// GameServer constructs a declarative configuration of the GameServer type for use with
 // apply.
 func GameServer(name, namespace string) *GameServerApplyConfiguration {
 	b := &GameServerApplyConfiguration{}
@@ -216,4 +216,10 @@ func (b *GameServerApplyConfiguration) WithSpec(value *GameServerSpecApplyConfig
 func (b *GameServerApplyConfiguration) WithStatus(value *GameServerStatusApplyConfiguration) *GameServerApplyConfiguration {
 	b.Status = value
 	return b
+}
+
+// GetName retrieves the value of the Name field in the declarative configuration.
+func (b *GameServerApplyConfiguration) GetName() *string {
+	b.ensureObjectMetaApplyConfigurationExists()
+	return b.Name
 }

@@ -23,7 +23,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 )
 
-// FleetSpecApplyConfiguration represents an declarative configuration of the FleetSpec type for use
+// FleetSpecApplyConfiguration represents a declarative configuration of the FleetSpec type for use
 // with apply.
 type FleetSpecApplyConfiguration struct {
 	Replicas           *int32                                    `json:"replicas,omitempty"`
@@ -34,7 +34,7 @@ type FleetSpecApplyConfiguration struct {
 	Template           *GameServerTemplateSpecApplyConfiguration `json:"template,omitempty"`
 }
 
-// FleetSpecApplyConfiguration constructs an declarative configuration of the FleetSpec type for use with
+// FleetSpecApplyConfiguration constructs a declarative configuration of the FleetSpec type for use with
 // apply.
 func FleetSpec() *FleetSpecApplyConfiguration {
 	return &FleetSpecApplyConfiguration{}

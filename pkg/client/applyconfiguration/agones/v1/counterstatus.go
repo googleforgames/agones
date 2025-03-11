@@ -18,14 +18,14 @@
 
 package v1
 
-// CounterStatusApplyConfiguration represents an declarative configuration of the CounterStatus type for use
+// CounterStatusApplyConfiguration represents a declarative configuration of the CounterStatus type for use
 // with apply.
 type CounterStatusApplyConfiguration struct {
 	Count    *int64 `json:"count,omitempty"`
 	Capacity *int64 `json:"capacity,omitempty"`
 }
 
-// CounterStatusApplyConfiguration constructs an declarative configuration of the CounterStatus type for use with
+// CounterStatusApplyConfiguration constructs a declarative configuration of the CounterStatus type for use with
 // apply.
 func CounterStatus() *CounterStatusApplyConfiguration {
 	return &CounterStatusApplyConfiguration{}

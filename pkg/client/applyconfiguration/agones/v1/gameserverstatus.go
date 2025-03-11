@@ -24,7 +24,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// GameServerStatusApplyConfiguration represents an declarative configuration of the GameServerStatus type for use
+// GameServerStatusApplyConfiguration represents a declarative configuration of the GameServerStatus type for use
 // with apply.
 type GameServerStatusApplyConfiguration struct {
 	State         *v1.GameServerState                        `json:"state,omitempty"`
@@ -39,7 +39,7 @@ type GameServerStatusApplyConfiguration struct {
 	Eviction      *EvictionApplyConfiguration                `json:"eviction,omitempty"`
 }
 
-// GameServerStatusApplyConfiguration constructs an declarative configuration of the GameServerStatus type for use with
+// GameServerStatusApplyConfiguration constructs a declarative configuration of the GameServerStatus type for use with
 // apply.
 func GameServerStatus() *GameServerStatusApplyConfiguration {
 	return &GameServerStatusApplyConfiguration{}

@@ -22,7 +22,7 @@ import (
 	v1 "agones.dev/agones/pkg/apis/autoscaling/v1"
 )
 
-// FleetAutoscalerPolicyApplyConfiguration represents an declarative configuration of the FleetAutoscalerPolicy type for use
+// FleetAutoscalerPolicyApplyConfiguration represents a declarative configuration of the FleetAutoscalerPolicy type for use
 // with apply.
 type FleetAutoscalerPolicyApplyConfiguration struct {
 	Type     *v1.FleetAutoscalerPolicyType     `json:"type,omitempty"`
@@ -34,7 +34,7 @@ type FleetAutoscalerPolicyApplyConfiguration struct {
 	Chain    *v1.ChainPolicy                   `json:"chain,omitempty"`
 }
 
-// FleetAutoscalerPolicyApplyConfiguration constructs an declarative configuration of the FleetAutoscalerPolicy type for use with
+// FleetAutoscalerPolicyApplyConfiguration constructs a declarative configuration of the FleetAutoscalerPolicy type for use with
 // apply.
 func FleetAutoscalerPolicy() *FleetAutoscalerPolicyApplyConfiguration {
 	return &FleetAutoscalerPolicyApplyConfiguration{}

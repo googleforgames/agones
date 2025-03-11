@@ -45,22 +45,24 @@ var gameserversetsKind = v1.SchemeGroupVersion.WithKind("GameServerSet")
 
 // Get takes name of the gameServerSet, and returns the corresponding gameServerSet object, and an error if there is any.
 func (c *FakeGameServerSets) Get(ctx context.Context, name string, options metav1.GetOptions) (result *v1.GameServerSet, err error) {
+	emptyResult := &v1.GameServerSet{}
 	obj, err := c.Fake.
-		Invokes(testing.NewGetAction(gameserversetsResource, c.ns, name), &v1.GameServerSet{})
+		Invokes(testing.NewGetActionWithOptions(gameserversetsResource, c.ns, name, options), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1.GameServerSet), err
 }
 
 // List takes label and field selectors, and returns the list of GameServerSets that match those selectors.
 func (c *FakeGameServerSets) List(ctx context.Context, opts metav1.ListOptions) (result *v1.GameServerSetList, err error) {
+	emptyResult := &v1.GameServerSetList{}
 	obj, err := c.Fake.
-		Invokes(testing.NewListAction(gameserversetsResource, gameserversetsKind, c.ns, opts), &v1.GameServerSetList{})
+		Invokes(testing.NewListActionWithOptions(gameserversetsResource, gameserversetsKind, c.ns, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 
 	label, _, _ := testing.ExtractFromListOptions(opts)
@@ -79,40 +81,43 @@ func (c *FakeGameServerSets) List(ctx context.Context, opts metav1.ListOptions) 
 // Watch returns a watch.Interface that watches the requested gameServerSets.
 func (c *FakeGameServerSets) Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
-		InvokesWatch(testing.NewWatchAction(gameserversetsResource, c.ns, opts))
+		InvokesWatch(testing.NewWatchActionWithOptions(gameserversetsResource, c.ns, opts))
 
 }
 
 // Create takes the representation of a gameServerSet and creates it.  Returns the server's representation of the gameServerSet, and an error, if there is any.
 func (c *FakeGameServerSets) Create(ctx context.Context, gameServerSet *v1.GameServerSet, opts metav1.CreateOptions) (result *v1.GameServerSet, err error) {
+	emptyResult := &v1.GameServerSet{}
 	obj, err := c.Fake.
-		Invokes(testing.NewCreateAction(gameserversetsResource, c.ns, gameServerSet), &v1.GameServerSet{})
+		Invokes(testing.NewCreateActionWithOptions(gameserversetsResource, c.ns, gameServerSet, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1.GameServerSet), err
 }
 
 // Update takes the representation of a gameServerSet and updates it. Returns the server's representation of the gameServerSet, and an error, if there is any.
 func (c *FakeGameServerSets) Update(ctx context.Context, gameServerSet *v1.GameServerSet, opts metav1.UpdateOptions) (result *v1.GameServerSet, err error) {
+	emptyResult := &v1.GameServerSet{}
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateAction(gameserversetsResource, c.ns, gameServerSet), &v1.GameServerSet{})
+		Invokes(testing.NewUpdateActionWithOptions(gameserversetsResource, c.ns, gameServerSet, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1.GameServerSet), err
 }
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeGameServerSets) UpdateStatus(ctx context.Context, gameServerSet *v1.GameServerSet, opts metav1.UpdateOptions) (*v1.GameServerSet, error) {
+func (c *FakeGameServerSets) UpdateStatus(ctx context.Context, gameServerSet *v1.GameServerSet, opts metav1.UpdateOptions) (result *v1.GameServerSet, err error) {
+	emptyResult := &v1.GameServerSet{}
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceAction(gameserversetsResource, "status", c.ns, gameServerSet), &v1.GameServerSet{})
+		Invokes(testing.NewUpdateSubresourceActionWithOptions(gameserversetsResource, "status", c.ns, gameServerSet, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1.GameServerSet), err
 }
@@ -127,7 +132,7 @@ func (c *FakeGameServerSets) Delete(ctx context.Context, name string, opts metav
 
 // DeleteCollection deletes a collection of objects.
 func (c *FakeGameServerSets) DeleteCollection(ctx context.Context, opts metav1.DeleteOptions, listOpts metav1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(gameserversetsResource, c.ns, listOpts)
+	action := testing.NewDeleteCollectionActionWithOptions(gameserversetsResource, c.ns, opts, listOpts)
 
 	_, err := c.Fake.Invokes(action, &v1.GameServerSetList{})
 	return err
@@ -135,11 +140,12 @@ func (c *FakeGameServerSets) DeleteCollection(ctx context.Context, opts metav1.D
 
 // Patch applies the patch and returns the patched gameServerSet.
 func (c *FakeGameServerSets) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *v1.GameServerSet, err error) {
+	emptyResult := &v1.GameServerSet{}
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(gameserversetsResource, c.ns, name, pt, data, subresources...), &v1.GameServerSet{})
+		Invokes(testing.NewPatchSubresourceActionWithOptions(gameserversetsResource, c.ns, name, pt, data, opts, subresources...), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1.GameServerSet), err
 }
@@ -157,11 +163,12 @@ func (c *FakeGameServerSets) Apply(ctx context.Context, gameServerSet *agonesv1.
 	if name == nil {
 		return nil, fmt.Errorf("gameServerSet.Name must be provided to Apply")
 	}
+	emptyResult := &v1.GameServerSet{}
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(gameserversetsResource, c.ns, *name, types.ApplyPatchType, data), &v1.GameServerSet{})
+		Invokes(testing.NewPatchSubresourceActionWithOptions(gameserversetsResource, c.ns, *name, types.ApplyPatchType, data, opts.ToPatchOptions()), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1.GameServerSet), err
 }
@@ -180,33 +187,36 @@ func (c *FakeGameServerSets) ApplyStatus(ctx context.Context, gameServerSet *ago
 	if name == nil {
 		return nil, fmt.Errorf("gameServerSet.Name must be provided to Apply")
 	}
+	emptyResult := &v1.GameServerSet{}
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(gameserversetsResource, c.ns, *name, types.ApplyPatchType, data, "status"), &v1.GameServerSet{})
+		Invokes(testing.NewPatchSubresourceActionWithOptions(gameserversetsResource, c.ns, *name, types.ApplyPatchType, data, opts.ToPatchOptions(), "status"), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1.GameServerSet), err
 }
 
 // GetScale takes name of the gameServerSet, and returns the corresponding scale object, and an error if there is any.
 func (c *FakeGameServerSets) GetScale(ctx context.Context, gameServerSetName string, options metav1.GetOptions) (result *autoscalingv1.Scale, err error) {
+	emptyResult := &autoscalingv1.Scale{}
 	obj, err := c.Fake.
-		Invokes(testing.NewGetSubresourceAction(gameserversetsResource, c.ns, "scale", gameServerSetName), &autoscalingv1.Scale{})
+		Invokes(testing.NewGetSubresourceActionWithOptions(gameserversetsResource, c.ns, "scale", gameServerSetName, options), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*autoscalingv1.Scale), err
 }
 
 // UpdateScale takes the representation of a scale and updates it. Returns the server's representation of the scale, and an error, if there is any.
 func (c *FakeGameServerSets) UpdateScale(ctx context.Context, gameServerSetName string, scale *autoscalingv1.Scale, opts metav1.UpdateOptions) (result *autoscalingv1.Scale, err error) {
+	emptyResult := &autoscalingv1.Scale{}
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceAction(gameserversetsResource, "scale", c.ns, scale), &autoscalingv1.Scale{})
+		Invokes(testing.NewUpdateSubresourceActionWithOptions(gameserversetsResource, "scale", c.ns, scale, opts), &autoscalingv1.Scale{})
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*autoscalingv1.Scale), err
 }

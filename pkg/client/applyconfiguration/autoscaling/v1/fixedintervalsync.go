@@ -18,13 +18,13 @@
 
 package v1
 
-// FixedIntervalSyncApplyConfiguration represents an declarative configuration of the FixedIntervalSync type for use
+// FixedIntervalSyncApplyConfiguration represents a declarative configuration of the FixedIntervalSync type for use
 // with apply.
 type FixedIntervalSyncApplyConfiguration struct {
 	Seconds *int32 `json:"seconds,omitempty"`
 }
 
-// FixedIntervalSyncApplyConfiguration constructs an declarative configuration of the FixedIntervalSync type for use with
+// FixedIntervalSyncApplyConfiguration constructs a declarative configuration of the FixedIntervalSync type for use with
 // apply.
 func FixedIntervalSync() *FixedIntervalSyncApplyConfiguration {
 	return &FixedIntervalSyncApplyConfiguration{}

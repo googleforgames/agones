@@ -22,14 +22,14 @@ import (
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// BetweenApplyConfiguration represents an declarative configuration of the Between type for use
+// BetweenApplyConfiguration represents a declarative configuration of the Between type for use
 // with apply.
 type BetweenApplyConfiguration struct {
 	Start *v1.Time `json:"start,omitempty"`
 	End   *v1.Time `json:"end,omitempty"`
 }
 
-// BetweenApplyConfiguration constructs an declarative configuration of the Between type for use with
+// BetweenApplyConfiguration constructs a declarative configuration of the Between type for use with
 // apply.
 func Between() *BetweenApplyConfiguration {
 	return &BetweenApplyConfiguration{}

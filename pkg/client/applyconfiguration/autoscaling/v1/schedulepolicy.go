@@ -18,7 +18,7 @@
 
 package v1
 
-// SchedulePolicyApplyConfiguration represents an declarative configuration of the SchedulePolicy type for use
+// SchedulePolicyApplyConfiguration represents a declarative configuration of the SchedulePolicy type for use
 // with apply.
 type SchedulePolicyApplyConfiguration struct {
 	Between      *BetweenApplyConfiguration               `json:"between,omitempty"`
@@ -26,7 +26,7 @@ type SchedulePolicyApplyConfiguration struct {
 	Policy       *FleetAutoscalerPolicyApplyConfiguration `json:"policy,omitempty"`
 }
 
-// SchedulePolicyApplyConfiguration constructs an declarative configuration of the SchedulePolicy type for use with
+// SchedulePolicyApplyConfiguration constructs a declarative configuration of the SchedulePolicy type for use with
 // apply.
 func SchedulePolicy() *SchedulePolicyApplyConfiguration {
 	return &SchedulePolicyApplyConfiguration{}

@@ -24,8 +24,11 @@ import (
 	multiclusterv1 "agones.dev/agones/pkg/apis/multicluster/v1"
 	agonesv1 "agones.dev/agones/pkg/client/applyconfiguration/agones/v1"
 	applyconfigurationautoscalingv1 "agones.dev/agones/pkg/client/applyconfiguration/autoscaling/v1"
+	internal "agones.dev/agones/pkg/client/applyconfiguration/internal"
 	applyconfigurationmulticlusterv1 "agones.dev/agones/pkg/client/applyconfiguration/multicluster/v1"
+	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
+	testing "k8s.io/client-go/testing"
 )
 
 // ForKind returns an apply configuration type for the given GroupVersionKind, or nil if no
@@ -122,4 +125,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 
 	}
 	return nil
+}
+
+func NewTypeConverter(scheme *runtime.Scheme) *testing.TypeConverter {
+	return &testing.TypeConverter{Scheme: scheme, TypeResolver: internal.Parser()}
 }
