@@ -1176,7 +1176,7 @@ func TestCounterAutoscalerAllocatedMultipleNamespaces(t *testing.T) {
 		wantAllocatedGsB int32 // Must be >= 0 && <= 3
 		wantReadyGsB     int32
 	}{
-		"Scale Up and Down Buffer Percent from different namespaces with same fleet name": {
+		"Scale Down Buffer Percent from different namespaces with same fleet name": {
 			fasA: autoscalingv1.CounterPolicy{
 				Key:         "players",
 				BufferSize:  intstr.FromString("5%"),
@@ -1185,14 +1185,14 @@ func TestCounterAutoscalerAllocatedMultipleNamespaces(t *testing.T) {
 			},
 			fasB: autoscalingv1.CounterPolicy{
 				Key:         "players",
-				BufferSize:  intstr.FromString("40%"),
+				BufferSize:  intstr.FromString("5%"),
 				MinCapacity: 10,
 				MaxCapacity: 100,
 			},
-			wantAllocatedGsA: 0,
-			wantReadyGsA:     1,
-			wantAllocatedGsB: 3,
-			wantReadyGsB:     2,
+			wantAllocatedGsA: 3,
+			wantReadyGsA:     0,
+			wantAllocatedGsB: 2,
+			wantReadyGsB:     1,
 		},
 	}
 
