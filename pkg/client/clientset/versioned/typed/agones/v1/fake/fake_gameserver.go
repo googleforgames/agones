@@ -44,22 +44,24 @@ var gameserversKind = v1.SchemeGroupVersion.WithKind("GameServer")
 
 // Get takes name of the gameServer, and returns the corresponding gameServer object, and an error if there is any.
 func (c *FakeGameServers) Get(ctx context.Context, name string, options metav1.GetOptions) (result *v1.GameServer, err error) {
+	emptyResult := &v1.GameServer{}
 	obj, err := c.Fake.
-		Invokes(testing.NewGetAction(gameserversResource, c.ns, name), &v1.GameServer{})
+		Invokes(testing.NewGetActionWithOptions(gameserversResource, c.ns, name, options), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1.GameServer), err
 }
 
 // List takes label and field selectors, and returns the list of GameServers that match those selectors.
 func (c *FakeGameServers) List(ctx context.Context, opts metav1.ListOptions) (result *v1.GameServerList, err error) {
+	emptyResult := &v1.GameServerList{}
 	obj, err := c.Fake.
-		Invokes(testing.NewListAction(gameserversResource, gameserversKind, c.ns, opts), &v1.GameServerList{})
+		Invokes(testing.NewListActionWithOptions(gameserversResource, gameserversKind, c.ns, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 
 	label, _, _ := testing.ExtractFromListOptions(opts)
@@ -78,28 +80,30 @@ func (c *FakeGameServers) List(ctx context.Context, opts metav1.ListOptions) (re
 // Watch returns a watch.Interface that watches the requested gameServers.
 func (c *FakeGameServers) Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
-		InvokesWatch(testing.NewWatchAction(gameserversResource, c.ns, opts))
+		InvokesWatch(testing.NewWatchActionWithOptions(gameserversResource, c.ns, opts))
 
 }
 
 // Create takes the representation of a gameServer and creates it.  Returns the server's representation of the gameServer, and an error, if there is any.
 func (c *FakeGameServers) Create(ctx context.Context, gameServer *v1.GameServer, opts metav1.CreateOptions) (result *v1.GameServer, err error) {
+	emptyResult := &v1.GameServer{}
 	obj, err := c.Fake.
-		Invokes(testing.NewCreateAction(gameserversResource, c.ns, gameServer), &v1.GameServer{})
+		Invokes(testing.NewCreateActionWithOptions(gameserversResource, c.ns, gameServer, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1.GameServer), err
 }
 
 // Update takes the representation of a gameServer and updates it. Returns the server's representation of the gameServer, and an error, if there is any.
 func (c *FakeGameServers) Update(ctx context.Context, gameServer *v1.GameServer, opts metav1.UpdateOptions) (result *v1.GameServer, err error) {
+	emptyResult := &v1.GameServer{}
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateAction(gameserversResource, c.ns, gameServer), &v1.GameServer{})
+		Invokes(testing.NewUpdateActionWithOptions(gameserversResource, c.ns, gameServer, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1.GameServer), err
 }
@@ -114,7 +118,7 @@ func (c *FakeGameServers) Delete(ctx context.Context, name string, opts metav1.D
 
 // DeleteCollection deletes a collection of objects.
 func (c *FakeGameServers) DeleteCollection(ctx context.Context, opts metav1.DeleteOptions, listOpts metav1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(gameserversResource, c.ns, listOpts)
+	action := testing.NewDeleteCollectionActionWithOptions(gameserversResource, c.ns, opts, listOpts)
 
 	_, err := c.Fake.Invokes(action, &v1.GameServerList{})
 	return err
@@ -122,11 +126,12 @@ func (c *FakeGameServers) DeleteCollection(ctx context.Context, opts metav1.Dele
 
 // Patch applies the patch and returns the patched gameServer.
 func (c *FakeGameServers) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *v1.GameServer, err error) {
+	emptyResult := &v1.GameServer{}
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(gameserversResource, c.ns, name, pt, data, subresources...), &v1.GameServer{})
+		Invokes(testing.NewPatchSubresourceActionWithOptions(gameserversResource, c.ns, name, pt, data, opts, subresources...), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1.GameServer), err
 }
@@ -144,11 +149,12 @@ func (c *FakeGameServers) Apply(ctx context.Context, gameServer *agonesv1.GameSe
 	if name == nil {
 		return nil, fmt.Errorf("gameServer.Name must be provided to Apply")
 	}
+	emptyResult := &v1.GameServer{}
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(gameserversResource, c.ns, *name, types.ApplyPatchType, data), &v1.GameServer{})
+		Invokes(testing.NewPatchSubresourceActionWithOptions(gameserversResource, c.ns, *name, types.ApplyPatchType, data, opts.ToPatchOptions()), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1.GameServer), err
 }

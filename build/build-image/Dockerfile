@@ -50,7 +50,7 @@ RUN go install golang.org/x/tools/cmd/goimports@latest && \
     go install golang.org/x/pkgsite/cmd/pkgsite@latest
 
 # the kubernetes version for the file
-ENV KUBERNETES_VER 1.30.4
+ENV KUBERNETES_VER 1.31.0
 
 # overwrite kubectl as we want a specific version
 RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/v${KUBERNETES_VER}/bin/linux/amd64/kubectl && \

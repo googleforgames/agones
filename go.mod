@@ -34,16 +34,16 @@ require (
 	golang.org/x/oauth2 v0.26.0
 	golang.org/x/time v0.9.0
 	golang.org/x/tools v0.29.0
-	gomodules.xyz/jsonpatch/v2 v2.4.0
+	gomodules.xyz/jsonpatch/v2 v2.5.0
 	google.golang.org/api v0.220.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20250207221924-e9438ea467c6
 	google.golang.org/grpc v1.70.0
 	google.golang.org/protobuf v1.36.5
 	gopkg.in/fsnotify.v1 v1.4.7
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
-	k8s.io/api v0.31.0
+	k8s.io/api v0.31.6
 	k8s.io/apiextensions-apiserver v0.31.0
-	k8s.io/apimachinery v0.31.0
+	k8s.io/apimachinery v0.31.6
 	k8s.io/client-go v0.31.0
 	k8s.io/kube-openapi v0.0.0-20240903163716-9e1beecbcb38
 	k8s.io/utils v0.0.0-20240921022957-49e7df575cb6

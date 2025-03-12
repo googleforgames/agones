@@ -22,13 +22,13 @@ import (
 	v1 "agones.dev/agones/pkg/apis/agones/v1"
 )
 
-// EvictionApplyConfiguration represents an declarative configuration of the Eviction type for use
+// EvictionApplyConfiguration represents a declarative configuration of the Eviction type for use
 // with apply.
 type EvictionApplyConfiguration struct {
 	Safe *v1.EvictionSafe `json:"safe,omitempty"`
 }
 
-// EvictionApplyConfiguration constructs an declarative configuration of the Eviction type for use with
+// EvictionApplyConfiguration constructs a declarative configuration of the Eviction type for use with
 // apply.
 func Eviction() *EvictionApplyConfiguration {
 	return &EvictionApplyConfiguration{}

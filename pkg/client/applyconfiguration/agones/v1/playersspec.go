@@ -18,13 +18,13 @@
 
 package v1
 
-// PlayersSpecApplyConfiguration represents an declarative configuration of the PlayersSpec type for use
+// PlayersSpecApplyConfiguration represents a declarative configuration of the PlayersSpec type for use
 // with apply.
 type PlayersSpecApplyConfiguration struct {
 	InitialCapacity *int64 `json:"initialCapacity,omitempty"`
 }
 
-// PlayersSpecApplyConfiguration constructs an declarative configuration of the PlayersSpec type for use with
+// PlayersSpecApplyConfiguration constructs a declarative configuration of the PlayersSpec type for use with
 // apply.
 func PlayersSpec() *PlayersSpecApplyConfiguration {
 	return &PlayersSpecApplyConfiguration{}
