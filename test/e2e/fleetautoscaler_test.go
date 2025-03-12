@@ -1162,7 +1162,7 @@ func TestCounterAutoscalerAllocatedMultipleNamespaces(t *testing.T) {
 	defaultFltB.Spec.Template.Spec.Counters = map[string]agonesv1.CounterStatus{
 		"players": {
 			Count:    7,  // AggregateCount 21
-			Capacity: 10, // AggregateCapacity 30
+			Capacity: 20, // AggregateCapacity 60
 		},
 	}
 
@@ -1284,6 +1284,16 @@ func TestCounterAutoscalerAllocatedMultipleNamespaces(t *testing.T) {
 			fasB, err := fleetautoscalers.FleetAutoscalers(namespaceB).Create(ctx, counterFasB, metav1.CreateOptions{})
 			assert.NoError(t, err)
 			defer fleetautoscalers.FleetAutoscalers(namespaceB).Delete(ctx, fasB.ObjectMeta.Name, metav1.DeleteOptions{}) //nolint:errcheck
+
+			framework.WaitForFleetAutoScalerCondition(t, fasA, func(log *logrus.Entry, fas *autoscalingv1.FleetAutoscaler) bool {
+				log.WithField("fleet", fmt.Sprintf("%+v", fas.Status)).Info("Checking for fleet autoscaler")
+				return fas.Status.CurrentReplicas == testCase.wantAllocatedGsA
+			})
+
+			framework.WaitForFleetAutoScalerCondition(t, fasB, func(log *logrus.Entry, fas *autoscalingv1.FleetAutoscaler) bool {
+				log.WithField("fleet", fmt.Sprintf("%+v", fas.Status)).Info("Checking for fleet autoscaler")
+				return fas.Status.CurrentReplicas == testCase.wantAllocatedGsB
+			})
 
 			framework.AssertFleetCondition(t, fltA, func(_ *logrus.Entry, fleet *agonesv1.Fleet) bool {
 				return fleet.Status.AllocatedReplicas == testCase.wantAllocatedGsA && fleet.Status.ReadyReplicas == testCase.wantReadyGsA
