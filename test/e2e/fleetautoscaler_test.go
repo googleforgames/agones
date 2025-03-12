@@ -1192,7 +1192,7 @@ func TestCounterAutoscalerAllocatedMultipleNamespaces(t *testing.T) {
 			wantAllocatedGsA: 3,
 			wantReadyGsA:     0,
 			wantAllocatedGsB: 2,
-			wantReadyGsB:     1,
+			wantReadyGsB:     0,
 		},
 	}
 
