@@ -898,9 +898,9 @@ func (c *Controller) syncGameServerStartingState(ctx context.Context, gs *agones
 		return gs, err
 	}
 
-	// Ensure the pod IPs are populated
+	// Update ports and address even if there is no pod IPs populated yet
+	// Keep the state as GameServerStateStarting until pod IPs populated
 	if len(pod.Status.PodIPs) == 0 {
-		// Update ports and address even if there is no pod IPs populated yet
 		gs, err = c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(ctx, gsCopy, metav1.UpdateOptions{})
 		if err != nil {
 			return gs, errors.Wrapf(err, "error updating GameServer %s address and port", gs.Name)
