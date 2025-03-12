@@ -22,7 +22,7 @@ import (
 	v1 "agones.dev/agones/pkg/apis/agones/v1"
 )
 
-// SdkServerApplyConfiguration represents an declarative configuration of the SdkServer type for use
+// SdkServerApplyConfiguration represents a declarative configuration of the SdkServer type for use
 // with apply.
 type SdkServerApplyConfiguration struct {
 	LogLevel *v1.SdkServerLogLevel `json:"logLevel,omitempty"`
@@ -30,7 +30,7 @@ type SdkServerApplyConfiguration struct {
 	HTTPPort *int32                `json:"httpPort,omitempty"`
 }
 
-// SdkServerApplyConfiguration constructs an declarative configuration of the SdkServer type for use with
+// SdkServerApplyConfiguration constructs a declarative configuration of the SdkServer type for use with
 // apply.
 func SdkServer() *SdkServerApplyConfiguration {
 	return &SdkServerApplyConfiguration{}

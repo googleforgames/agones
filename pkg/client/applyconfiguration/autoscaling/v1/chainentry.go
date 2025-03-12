@@ -22,14 +22,14 @@ import (
 	autoscalingv1 "agones.dev/agones/pkg/apis/autoscaling/v1"
 )
 
-// ChainEntryApplyConfiguration represents an declarative configuration of the ChainEntry type for use
+// ChainEntryApplyConfiguration represents a declarative configuration of the ChainEntry type for use
 // with apply.
 type ChainEntryApplyConfiguration struct {
 	ID                                      *string `json:"id,omitempty"`
 	FleetAutoscalerPolicyApplyConfiguration `json:",inline"`
 }
 
-// ChainEntryApplyConfiguration constructs an declarative configuration of the ChainEntry type for use with
+// ChainEntryApplyConfiguration constructs a declarative configuration of the ChainEntry type for use with
 // apply.
 func ChainEntry() *ChainEntryApplyConfiguration {
 	return &ChainEntryApplyConfiguration{}

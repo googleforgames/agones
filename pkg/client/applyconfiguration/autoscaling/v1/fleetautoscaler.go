@@ -24,7 +24,7 @@ import (
 	v1 "k8s.io/client-go/applyconfigurations/meta/v1"
 )
 
-// FleetAutoscalerApplyConfiguration represents an declarative configuration of the FleetAutoscaler type for use
+// FleetAutoscalerApplyConfiguration represents a declarative configuration of the FleetAutoscaler type for use
 // with apply.
 type FleetAutoscalerApplyConfiguration struct {
 	v1.TypeMetaApplyConfiguration    `json:",inline"`
@@ -33,7 +33,7 @@ type FleetAutoscalerApplyConfiguration struct {
 	Status                           *FleetAutoscalerStatusApplyConfiguration `json:"status,omitempty"`
 }
 
-// FleetAutoscaler constructs an declarative configuration of the FleetAutoscaler type for use with
+// FleetAutoscaler constructs a declarative configuration of the FleetAutoscaler type for use with
 // apply.
 func FleetAutoscaler(name, namespace string) *FleetAutoscalerApplyConfiguration {
 	b := &FleetAutoscalerApplyConfiguration{}
@@ -216,4 +216,10 @@ func (b *FleetAutoscalerApplyConfiguration) WithSpec(value *FleetAutoscalerSpecA
 func (b *FleetAutoscalerApplyConfiguration) WithStatus(value *FleetAutoscalerStatusApplyConfiguration) *FleetAutoscalerApplyConfiguration {
 	b.Status = value
 	return b
+}
+
+// GetName retrieves the value of the Name field in the declarative configuration.
+func (b *FleetAutoscalerApplyConfiguration) GetName() *string {
+	b.ensureObjectMetaApplyConfigurationExists()
+	return b.Name
 }

@@ -20,8 +20,8 @@ package v1
 
 import (
 	v1 "agones.dev/agones/pkg/apis/multicluster/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/listers"
 	"k8s.io/client-go/tools/cache"
 )
 
@@ -38,25 +38,17 @@ type GameServerAllocationPolicyLister interface {
 
 // gameServerAllocationPolicyLister implements the GameServerAllocationPolicyLister interface.
 type gameServerAllocationPolicyLister struct {
-	indexer cache.Indexer
+	listers.ResourceIndexer[*v1.GameServerAllocationPolicy]
 }
 
 // NewGameServerAllocationPolicyLister returns a new GameServerAllocationPolicyLister.
 func NewGameServerAllocationPolicyLister(indexer cache.Indexer) GameServerAllocationPolicyLister {
-	return &gameServerAllocationPolicyLister{indexer: indexer}
-}
-
-// List lists all GameServerAllocationPolicies in the indexer.
-func (s *gameServerAllocationPolicyLister) List(selector labels.Selector) (ret []*v1.GameServerAllocationPolicy, err error) {
-	err = cache.ListAll(s.indexer, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1.GameServerAllocationPolicy))
-	})
-	return ret, err
+	return &gameServerAllocationPolicyLister{listers.New[*v1.GameServerAllocationPolicy](indexer, v1.Resource("gameserverallocationpolicy"))}
 }
 
 // GameServerAllocationPolicies returns an object that can list and get GameServerAllocationPolicies.
 func (s *gameServerAllocationPolicyLister) GameServerAllocationPolicies(namespace string) GameServerAllocationPolicyNamespaceLister {
-	return gameServerAllocationPolicyNamespaceLister{indexer: s.indexer, namespace: namespace}
+	return gameServerAllocationPolicyNamespaceLister{listers.NewNamespaced[*v1.GameServerAllocationPolicy](s.ResourceIndexer, namespace)}
 }
 
 // GameServerAllocationPolicyNamespaceLister helps list and get GameServerAllocationPolicies.
@@ -74,26 +66,5 @@ type GameServerAllocationPolicyNamespaceLister interface {
 // gameServerAllocationPolicyNamespaceLister implements the GameServerAllocationPolicyNamespaceLister
 // interface.
 type gameServerAllocationPolicyNamespaceLister struct {
-	indexer   cache.Indexer
-	namespace string
-}
-
-// List lists all GameServerAllocationPolicies in the indexer for a given namespace.
-func (s gameServerAllocationPolicyNamespaceLister) List(selector labels.Selector) (ret []*v1.GameServerAllocationPolicy, err error) {
-	err = cache.ListAllByNamespace(s.indexer, s.namespace, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1.GameServerAllocationPolicy))
-	})
-	return ret, err
-}
-
-// Get retrieves the GameServerAllocationPolicy from the indexer for a given namespace and name.
-func (s gameServerAllocationPolicyNamespaceLister) Get(name string) (*v1.GameServerAllocationPolicy, error) {
-	obj, exists, err := s.indexer.GetByKey(s.namespace + "/" + name)
-	if err != nil {
-		return nil, err
-	}
-	if !exists {
-		return nil, errors.NewNotFound(v1.Resource("gameserverallocationpolicy"), name)
-	}
-	return obj.(*v1.GameServerAllocationPolicy), nil
+	listers.ResourceIndexer[*v1.GameServerAllocationPolicy]
 }

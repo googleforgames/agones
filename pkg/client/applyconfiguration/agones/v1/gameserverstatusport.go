@@ -18,14 +18,14 @@
 
 package v1
 
-// GameServerStatusPortApplyConfiguration represents an declarative configuration of the GameServerStatusPort type for use
+// GameServerStatusPortApplyConfiguration represents a declarative configuration of the GameServerStatusPort type for use
 // with apply.
 type GameServerStatusPortApplyConfiguration struct {
 	Name *string `json:"name,omitempty"`
 	Port *int32  `json:"port,omitempty"`
 }
 
-// GameServerStatusPortApplyConfiguration constructs an declarative configuration of the GameServerStatusPort type for use with
+// GameServerStatusPortApplyConfiguration constructs a declarative configuration of the GameServerStatusPort type for use with
 // apply.
 func GameServerStatusPort() *GameServerStatusPortApplyConfiguration {
 	return &GameServerStatusPortApplyConfiguration{}

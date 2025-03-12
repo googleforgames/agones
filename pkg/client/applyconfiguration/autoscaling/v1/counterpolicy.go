@@ -22,7 +22,7 @@ import (
 	intstr "k8s.io/apimachinery/pkg/util/intstr"
 )
 
-// CounterPolicyApplyConfiguration represents an declarative configuration of the CounterPolicy type for use
+// CounterPolicyApplyConfiguration represents a declarative configuration of the CounterPolicy type for use
 // with apply.
 type CounterPolicyApplyConfiguration struct {
 	Key         *string             `json:"key,omitempty"`
@@ -31,7 +31,7 @@ type CounterPolicyApplyConfiguration struct {
 	BufferSize  *intstr.IntOrString `json:"bufferSize,omitempty"`
 }
 
-// CounterPolicyApplyConfiguration constructs an declarative configuration of the CounterPolicy type for use with
+// CounterPolicyApplyConfiguration constructs a declarative configuration of the CounterPolicy type for use with
 // apply.
 func CounterPolicy() *CounterPolicyApplyConfiguration {
 	return &CounterPolicyApplyConfiguration{}

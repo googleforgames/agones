@@ -18,7 +18,7 @@
 
 package v1
 
-// GameServerAllocationPolicySpecApplyConfiguration represents an declarative configuration of the GameServerAllocationPolicySpec type for use
+// GameServerAllocationPolicySpecApplyConfiguration represents a declarative configuration of the GameServerAllocationPolicySpec type for use
 // with apply.
 type GameServerAllocationPolicySpecApplyConfiguration struct {
 	Priority       *int32                                   `json:"priority,omitempty"`
@@ -26,7 +26,7 @@ type GameServerAllocationPolicySpecApplyConfiguration struct {
 	ConnectionInfo *ClusterConnectionInfoApplyConfiguration `json:"connectionInfo,omitempty"`
 }
 
-// GameServerAllocationPolicySpecApplyConfiguration constructs an declarative configuration of the GameServerAllocationPolicySpec type for use with
+// GameServerAllocationPolicySpecApplyConfiguration constructs a declarative configuration of the GameServerAllocationPolicySpec type for use with
 // apply.
 func GameServerAllocationPolicySpec() *GameServerAllocationPolicySpecApplyConfiguration {
 	return &GameServerAllocationPolicySpecApplyConfiguration{}

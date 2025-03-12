@@ -23,7 +23,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-// GameServerSpecApplyConfiguration represents an declarative configuration of the GameServerSpec type for use
+// GameServerSpecApplyConfiguration represents a declarative configuration of the GameServerSpec type for use
 // with apply.
 type GameServerSpecApplyConfiguration struct {
 	Container  *string                                    `json:"container,omitempty"`
@@ -38,7 +38,7 @@ type GameServerSpecApplyConfiguration struct {
 	Eviction   *EvictionApplyConfiguration                `json:"eviction,omitempty"`
 }
 
-// GameServerSpecApplyConfiguration constructs an declarative configuration of the GameServerSpec type for use with
+// GameServerSpecApplyConfiguration constructs a declarative configuration of the GameServerSpec type for use with
 // apply.
 func GameServerSpec() *GameServerSpecApplyConfiguration {
 	return &GameServerSpecApplyConfiguration{}

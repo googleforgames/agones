@@ -18,14 +18,14 @@
 
 package v1
 
-// AggregatedPlayerStatusApplyConfiguration represents an declarative configuration of the AggregatedPlayerStatus type for use
+// AggregatedPlayerStatusApplyConfiguration represents a declarative configuration of the AggregatedPlayerStatus type for use
 // with apply.
 type AggregatedPlayerStatusApplyConfiguration struct {
 	Count    *int64 `json:"count,omitempty"`
 	Capacity *int64 `json:"capacity,omitempty"`
 }
 
-// AggregatedPlayerStatusApplyConfiguration constructs an declarative configuration of the AggregatedPlayerStatus type for use with
+// AggregatedPlayerStatusApplyConfiguration constructs a declarative configuration of the AggregatedPlayerStatus type for use with
 // apply.
 func AggregatedPlayerStatus() *AggregatedPlayerStatusApplyConfiguration {
 	return &AggregatedPlayerStatusApplyConfiguration{}
