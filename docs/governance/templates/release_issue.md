@@ -51,6 +51,7 @@ and copy it into a release issue. Fill in relevant values, found inside {}
   - [ ] Run `make sdk-publish-csharp` to deploy to NuGet. Requires login credentials.
         Will need [NuGet API Key](https://www.nuget.org/account/apikeys) from Agones account.
 - [ ] Run `make post-build-release` to build the artifacts in GCS(These files will be attached in the release notes) and to push the latest images in the release repository and push chart on agones-chart.
+- [ ] Add a `deprecated-public-image-<version>` tags to previous version images to mark them as deprecated and signal that they are no longer actively maintained.
 - [ ] Run `make shell` and run `gcloud config configurations activate <your development project>` to switch Agones
       development tooling off of the `agones-images` project.
 - [ ] Smoke Test: run `make install-release` to view helm releases, uninstall agones-system namespace, fetch the latest version of Agones, verify the new version, installing agones-system namespace, and list all the pods of agones-system.
