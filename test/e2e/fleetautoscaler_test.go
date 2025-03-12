@@ -42,12 +42,14 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/apimachinery/pkg/util/uuid"
 	"k8s.io/apimachinery/pkg/util/wait"
 
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
 	autoscalingv1 "agones.dev/agones/pkg/apis/autoscaling/v1"
 	"agones.dev/agones/pkg/util/runtime"
+	helper "agones.dev/agones/test/e2e/allochelper"
 	e2e "agones.dev/agones/test/e2e/framework"
 )
 
@@ -1120,6 +1122,174 @@ func TestCounterAutoscalerAllocated(t *testing.T) {
 
 			framework.AssertFleetCondition(t, flt, func(_ *logrus.Entry, fleet *agonesv1.Fleet) bool {
 				return fleet.Status.AllocatedReplicas == testCase.wantAllocatedGs && fleet.Status.ReadyReplicas == testCase.wantReadyGs
+			})
+		})
+	}
+}
+
+func TestCounterAutoscalerAllocatedMultipleNamespaces(t *testing.T) {
+	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
+		t.SkipNow()
+	}
+
+	ctx := context.Background()
+	client := framework.AgonesClient.AgonesV1()
+	log := e2e.TestLogger(t)
+
+	// Create namespaces A and B
+	namespaceA := framework.Namespace // let's reuse an existing one
+	helper.CopyDefaultAllocatorClientSecret(ctx, t, namespaceA, framework)
+
+	namespaceB := fmt.Sprintf("autoscaler-b-%s", uuid.NewUUID())
+	err := framework.CreateNamespace(namespaceB)
+	require.NoError(t, err)
+	defer func() {
+		if derr := framework.DeleteNamespace(namespaceB); derr != nil {
+			t.Error(derr)
+		}
+	}()
+
+	defaultFltA := defaultFleet(namespaceA)
+	defaultFltA.ObjectMeta.Name = "simple-fleet"
+	defaultFltA.Spec.Template.Spec.Counters = map[string]agonesv1.CounterStatus{
+		"players": {
+			Count:    7,  // AggregateCount 21
+			Capacity: 10, // AggregateCapacity 30
+		},
+	}
+	defaultFltB := defaultFleet(namespaceB)
+	defaultFltB.ObjectMeta.Name = "simple-fleet"
+	defaultFltB.Spec.Template.Spec.Counters = map[string]agonesv1.CounterStatus{
+		"players": {
+			Count:    7,  // AggregateCount 21
+			Capacity: 10, // AggregateCapacity 30
+		},
+	}
+
+	fleetautoscalers := framework.AgonesClient.AutoscalingV1()
+
+	testCases := map[string]struct {
+		fasA             autoscalingv1.CounterPolicy
+		fasB             autoscalingv1.CounterPolicy
+		wantAllocatedGsA int32 // Must be >= 0 && <= 3
+		wantReadyGsA     int32
+		wantAllocatedGsB int32 // Must be >= 0 && <= 3
+		wantReadyGsB     int32
+	}{
+		"Scale Up and Down Buffer Percent from different namespaces with same fleet name": {
+			fasA: autoscalingv1.CounterPolicy{
+				Key:         "players",
+				BufferSize:  intstr.FromString("5%"),
+				MinCapacity: 10,
+				MaxCapacity: 100,
+			},
+			fasB: autoscalingv1.CounterPolicy{
+				Key:         "players",
+				BufferSize:  intstr.FromString("40%"),
+				MinCapacity: 10,
+				MaxCapacity: 100,
+			},
+			wantAllocatedGsA: 0,
+			wantReadyGsA:     1,
+			wantAllocatedGsB: 3,
+			wantReadyGsB:     2,
+		},
+	}
+
+	//nolint:dupl  // Linter errors on lines are duplicate of TestListAutoscalerAllocated
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			fltA, err := client.Fleets(namespaceA).Create(ctx, defaultFltA.DeepCopy(), metav1.CreateOptions{})
+			require.NoError(t, err)
+			defer client.Fleets(namespaceA).Delete(ctx, fltA.ObjectMeta.Name, metav1.DeleteOptions{}) //nolint:errcheck
+			framework.AssertFleetCondition(t, fltA, e2e.FleetReadyCount(fltA.Spec.Replicas))
+
+			fltB, err := client.Fleets(namespaceB).Create(ctx, defaultFltB.DeepCopy(), metav1.CreateOptions{})
+			require.NoError(t, err)
+			defer client.Fleets(namespaceB).Delete(ctx, fltB.ObjectMeta.Name, metav1.DeleteOptions{}) //nolint:errcheck
+			framework.AssertFleetCondition(t, fltB, e2e.FleetReadyCount(fltB.Spec.Replicas))
+
+			gsaA := allocationv1.GameServerAllocation{
+				Spec: allocationv1.GameServerAllocationSpec{
+					Selectors: []allocationv1.GameServerSelector{
+						{LabelSelector: metav1.LabelSelector{
+							MatchLabels: map[string]string{agonesv1.FleetNameLabel: fltA.ObjectMeta.Name}}},
+					}}}
+
+			// Allocate game servers, as Buffer Percent scales up (or down) based on allocated aggregate capacity
+			for i := int32(0); i < testCase.wantAllocatedGsA; i++ {
+				_, err := framework.AgonesClient.AllocationV1().GameServerAllocations(fltA.ObjectMeta.Namespace).Create(ctx, gsaA.DeepCopy(), metav1.CreateOptions{})
+				require.NoError(t, err)
+			}
+			framework.AssertFleetCondition(t, fltA, func(_ *logrus.Entry, fleet *agonesv1.Fleet) bool {
+				log.WithField("fleet", fmt.Sprintf("%+v", fleet.Status)).Info("Checking for game server allocations")
+				return fleet.Status.AllocatedReplicas == testCase.wantAllocatedGsA
+			})
+
+			gsaB := allocationv1.GameServerAllocation{
+				Spec: allocationv1.GameServerAllocationSpec{
+					Selectors: []allocationv1.GameServerSelector{
+						{LabelSelector: metav1.LabelSelector{
+							MatchLabels: map[string]string{agonesv1.FleetNameLabel: fltB.ObjectMeta.Name}}},
+					}}}
+
+			// Allocate game servers, as Buffer Percent scales up (or down) based on allocated aggregate capacity
+			for i := int32(0); i < testCase.wantAllocatedGsB; i++ {
+				_, err := framework.AgonesClient.AllocationV1().GameServerAllocations(fltB.ObjectMeta.Namespace).Create(ctx, gsaB.DeepCopy(), metav1.CreateOptions{})
+				require.NoError(t, err)
+			}
+			framework.AssertFleetCondition(t, fltB, func(_ *logrus.Entry, fleet *agonesv1.Fleet) bool {
+				log.WithField("fleet", fmt.Sprintf("%+v", fleet.Status)).Info("Checking for game server allocations")
+				return fleet.Status.AllocatedReplicas == testCase.wantAllocatedGsB
+			})
+
+			counterFasA := &autoscalingv1.FleetAutoscaler{
+				ObjectMeta: metav1.ObjectMeta{Name: fltA.ObjectMeta.Name + "-counter-autoscaler", Namespace: namespaceA},
+				Spec: autoscalingv1.FleetAutoscalerSpec{
+					FleetName: fltA.ObjectMeta.Name,
+					Policy: autoscalingv1.FleetAutoscalerPolicy{
+						Type:    autoscalingv1.CounterPolicyType,
+						Counter: &testCase.fasA,
+					},
+					Sync: &autoscalingv1.FleetAutoscalerSync{
+						Type: autoscalingv1.FixedIntervalSyncType,
+						FixedInterval: autoscalingv1.FixedIntervalSync{
+							Seconds: 1,
+						},
+					},
+				},
+			}
+
+			fasA, err := fleetautoscalers.FleetAutoscalers(namespaceA).Create(ctx, counterFasA, metav1.CreateOptions{})
+			assert.NoError(t, err)
+			defer fleetautoscalers.FleetAutoscalers(namespaceA).Delete(ctx, fasA.ObjectMeta.Name, metav1.DeleteOptions{}) //nolint:errcheck
+
+			counterFasB := &autoscalingv1.FleetAutoscaler{
+				ObjectMeta: metav1.ObjectMeta{Name: fltB.ObjectMeta.Name + "-counter-autoscaler", Namespace: namespaceB},
+				Spec: autoscalingv1.FleetAutoscalerSpec{
+					FleetName: fltB.ObjectMeta.Name,
+					Policy: autoscalingv1.FleetAutoscalerPolicy{
+						Type:    autoscalingv1.CounterPolicyType,
+						Counter: &testCase.fasB,
+					},
+					Sync: &autoscalingv1.FleetAutoscalerSync{
+						Type: autoscalingv1.FixedIntervalSyncType,
+						FixedInterval: autoscalingv1.FixedIntervalSync{
+							Seconds: 1,
+						},
+					},
+				},
+			}
+
+			fasB, err := fleetautoscalers.FleetAutoscalers(namespaceB).Create(ctx, counterFasB, metav1.CreateOptions{})
+			assert.NoError(t, err)
+			defer fleetautoscalers.FleetAutoscalers(namespaceB).Delete(ctx, fasB.ObjectMeta.Name, metav1.DeleteOptions{}) //nolint:errcheck
+
+			framework.AssertFleetCondition(t, fltA, func(_ *logrus.Entry, fleet *agonesv1.Fleet) bool {
+				return fleet.Status.AllocatedReplicas == testCase.wantAllocatedGsA && fleet.Status.ReadyReplicas == testCase.wantReadyGsA
+			})
+			framework.AssertFleetCondition(t, fltB, func(_ *logrus.Entry, fleet *agonesv1.Fleet) bool {
+				return fleet.Status.AllocatedReplicas == testCase.wantAllocatedGsB && fleet.Status.ReadyReplicas == testCase.wantReadyGsB
 			})
 		})
 	}
