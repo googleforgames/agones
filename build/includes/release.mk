@@ -87,3 +87,10 @@ pre-build-release:
 post-build-release:
 	docker run --rm $(common_mounts) -w $(workdir_path)/build/release $(build_tag) \
 		gcloud builds submit . --substitutions _VERSION=$(base_version) --config=./post_cloudbuild.yaml $(ARGS)
+
+tag-deprecated-images:
+	previous_version=$(shell echo $(base_version) | awk -F. '{print $$1"."$$2-1"."$$3}'); \
+	images="agones-controller agones-extensions agones-sdk agones-allocator agones-ping"; \
+	for image in $$images; do \
+		gcloud artifacts docker tags add ${release_registry}/$$image:$$previous_version ${release_registry}/$$image:deprecated-public-image-$$previous_version; \
+	done
