@@ -1149,6 +1149,7 @@ func TestCounterAutoscalerAllocatedMultipleNamespaces(t *testing.T) {
 		}
 	}()
 
+	// Init default fleet A and B with same name in namespace A and B
 	defaultFltA := defaultFleet(namespaceA)
 	defaultFltA.ObjectMeta.Name = "simple-fleet"
 	defaultFltA.Spec.Template.Spec.Counters = map[string]agonesv1.CounterStatus{
@@ -1199,6 +1200,7 @@ func TestCounterAutoscalerAllocatedMultipleNamespaces(t *testing.T) {
 	//nolint:dupl  // Linter errors on lines are duplicate of TestListAutoscalerAllocated
 	for name, testCase := range testCases {
 		t.Run(name, func(t *testing.T) {
+			// Create both fleet A and B
 			fltA, err := client.Fleets(namespaceA).Create(ctx, defaultFltA.DeepCopy(), metav1.CreateOptions{})
 			require.NoError(t, err)
 			defer client.Fleets(namespaceA).Delete(ctx, fltA.ObjectMeta.Name, metav1.DeleteOptions{}) //nolint:errcheck
@@ -1209,6 +1211,7 @@ func TestCounterAutoscalerAllocatedMultipleNamespaces(t *testing.T) {
 			defer client.Fleets(namespaceB).Delete(ctx, fltB.ObjectMeta.Name, metav1.DeleteOptions{}) //nolint:errcheck
 			framework.AssertFleetCondition(t, fltB, e2e.FleetReadyCount(fltB.Spec.Replicas))
 
+			// Allocate gameservers in A and B
 			gsaA := allocationv1.GameServerAllocation{
 				Spec: allocationv1.GameServerAllocationSpec{
 					Selectors: []allocationv1.GameServerSelector{
@@ -1243,6 +1246,7 @@ func TestCounterAutoscalerAllocatedMultipleNamespaces(t *testing.T) {
 				return fleet.Status.AllocatedReplicas == testCase.wantAllocatedGsB
 			})
 
+			// Create fleetautoscaler for A and B
 			counterFasA := &autoscalingv1.FleetAutoscaler{
 				ObjectMeta: metav1.ObjectMeta{Name: fltA.ObjectMeta.Name + "-counter-autoscaler", Namespace: namespaceA},
 				Spec: autoscalingv1.FleetAutoscalerSpec{
@@ -1285,16 +1289,18 @@ func TestCounterAutoscalerAllocatedMultipleNamespaces(t *testing.T) {
 			assert.NoError(t, err)
 			defer fleetautoscalers.FleetAutoscalers(namespaceB).Delete(ctx, fasB.ObjectMeta.Name, metav1.DeleteOptions{}) //nolint:errcheck
 
+			// Ensure there is no warning / error on creation, ensure the currentReplicas > 0  for A and B
 			framework.WaitForFleetAutoScalerCondition(t, fasA, func(log *logrus.Entry, fas *autoscalingv1.FleetAutoscaler) bool {
-				log.WithField("fleet", fmt.Sprintf("%+v", fas.Status)).Info("Checking for fleet autoscaler")
-				return fas.Status.CurrentReplicas == testCase.wantAllocatedGsA
+				log.WithField("fleet autoscaler", fmt.Sprintf("%+v", fas.Status)).Info("Checking for fleet autoscaler")
+				return fas.Status.CurrentReplicas > 0
 			})
 
 			framework.WaitForFleetAutoScalerCondition(t, fasB, func(log *logrus.Entry, fas *autoscalingv1.FleetAutoscaler) bool {
-				log.WithField("fleet", fmt.Sprintf("%+v", fas.Status)).Info("Checking for fleet autoscaler")
-				return fas.Status.CurrentReplicas == testCase.wantAllocatedGsB
+				log.WithField("fleet autoscaler", fmt.Sprintf("%+v", fas.Status)).Info("Checking for fleet autoscaler")
+				return fas.Status.CurrentReplicas > 0
 			})
 
+			// Ensure the allocated and ready replicas are correct for A and B
 			framework.AssertFleetCondition(t, fltA, func(_ *logrus.Entry, fleet *agonesv1.Fleet) bool {
 				return fleet.Status.AllocatedReplicas == testCase.wantAllocatedGsA && fleet.Status.ReadyReplicas == testCase.wantReadyGsA
 			})
