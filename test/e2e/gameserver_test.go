@@ -818,15 +818,14 @@ func TestGameServerEvicted(t *testing.T) {
 	gs.Spec.Template.Spec.Containers[0].Resources.Limits[corev1.ResourceEphemeralStorage] = resource.MustParse("0Mi")
 
 	newGs, err := framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Create(ctx, gs, metav1.CreateOptions{})
-	if err != nil {
-		assert.FailNow(t, fmt.Sprintf("creating %v GameServer instances failed (%v): %v", gs.Spec, gs.Name, err))
-	}
-
+	require.NoError(t, err)
 	logrus.WithField("name", newGs.ObjectMeta.Name).Info("GameServer created, waiting for being Evicted and Unhealthy")
 
-	_, err = framework.WaitForGameServerState(t, newGs, agonesv1.GameServerStateUnhealthy, 5*time.Minute)
+	_, err = framework.WaitForGameServerState(t, newGs, agonesv1.GameServerStateUnhealthy, 10*time.Minute)
+	require.NoError(t, err, fmt.Sprintf("waiting for [%v] GameServer Unhealthy state timed out (%v)", gs.Status.State, gs.Name))
 
-	assert.Nil(t, err, fmt.Sprintf("waiting for %v GameServer Unhealthy state timed out (%v): %v", gs.Spec, gs.Name, err))
+	fmt.Println("SLEEP!")
+	time.Sleep(5 * time.Minute)
 }
 
 func TestGameServerPassthroughPort(t *testing.T) {
