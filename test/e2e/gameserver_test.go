@@ -823,9 +823,6 @@ func TestGameServerEvicted(t *testing.T) {
 
 	_, err = framework.WaitForGameServerState(t, newGs, agonesv1.GameServerStateUnhealthy, 10*time.Minute)
 	require.NoError(t, err, fmt.Sprintf("waiting for [%v] GameServer Unhealthy state timed out (%v)", gs.Status.State, gs.Name))
-
-	fmt.Println("SLEEP!")
-	time.Sleep(5 * time.Minute)
 }
 
 func TestGameServerPassthroughPort(t *testing.T) {
