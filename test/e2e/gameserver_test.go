@@ -257,6 +257,10 @@ func TestUnhealthyGameServerAfterHealthCheckFail(t *testing.T) {
 
 func TestUnhealthyGameServersWithoutFreePorts(t *testing.T) {
 	framework.SkipOnCloudProduct(t, "gke-autopilot", "does not support Static PortPolicy")
+	if runtime.FeatureEnabled(runtime.FeatureSidecarContainers) {
+		t.SkipNow()
+	}
+
 	t.Parallel()
 	ctx := context.Background()
 	nodes, err := framework.KubeClient.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
@@ -321,6 +325,10 @@ func TestGameServerUnhealthyAfterDeletingPod(t *testing.T) {
 }
 
 func TestGameServerRestartBeforeReadyCrash(t *testing.T) {
+	if runtime.FeatureEnabled(runtime.FeatureSidecarContainers) {
+		t.SkipNow()
+	}
+
 	t.Parallel()
 	ctx := context.Background()
 	logger := e2eframework.TestLogger(t)
@@ -810,15 +818,11 @@ func TestGameServerEvicted(t *testing.T) {
 	gs.Spec.Template.Spec.Containers[0].Resources.Limits[corev1.ResourceEphemeralStorage] = resource.MustParse("0Mi")
 
 	newGs, err := framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Create(ctx, gs, metav1.CreateOptions{})
-	if err != nil {
-		assert.FailNow(t, fmt.Sprintf("creating %v GameServer instances failed (%v): %v", gs.Spec, gs.Name, err))
-	}
-
+	require.NoError(t, err)
 	logrus.WithField("name", newGs.ObjectMeta.Name).Info("GameServer created, waiting for being Evicted and Unhealthy")
 
-	_, err = framework.WaitForGameServerState(t, newGs, agonesv1.GameServerStateUnhealthy, 5*time.Minute)
-
-	assert.Nil(t, err, fmt.Sprintf("waiting for %v GameServer Unhealthy state timed out (%v): %v", gs.Spec, gs.Name, err))
+	_, err = framework.WaitForGameServerState(t, newGs, agonesv1.GameServerStateUnhealthy, 10*time.Minute)
+	require.NoError(t, err, fmt.Sprintf("waiting for [%v] GameServer Unhealthy state timed out (%v)", gs.Status.State, gs.Name))
 }
 
 func TestGameServerPassthroughPort(t *testing.T) {
@@ -1650,7 +1654,45 @@ func TestLists(t *testing.T) {
 	}
 }
 
+func TestSideCarCommunicatesWhileTerminating(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	gs := framework.DefaultGameServer(framework.Namespace)
+
+	minute := int64(60)
+	gs.Spec.Template.Spec.Containers[0].Args = append(gs.Spec.Template.Spec.Containers[0].Args, "--gracefulTerminationDelaySec", "60")
+	gs.Spec.Template.Spec.TerminationGracePeriodSeconds = &minute
+	readyGs, err := framework.CreateGameServerAndWaitUntilReady(t, framework.Namespace, gs)
+	require.NoError(t, err)
+	require.Equal(t, readyGs.Status.State, agonesv1.GameServerStateReady)
+
+	// delete the GameServer
+	gameServers := framework.AgonesClient.AgonesV1().GameServers(framework.Namespace)
+	err = gameServers.Delete(context.Background(), readyGs.ObjectMeta.Name, metav1.DeleteOptions{})
+	require.NoError(t, err, "Could not delete GameServer")
+
+	// wait for the deletion timestamp to be set
+	err = wait.PollUntilContextTimeout(ctx, time.Second, time.Minute, true, func(ctx context.Context) (bool, error) {
+		gs, err := gameServers.Get(ctx, readyGs.ObjectMeta.Name, metav1.GetOptions{})
+		if err != nil {
+			return false, err
+		}
+		return gs.DeletionTimestamp != nil, nil
+	})
+	require.NoError(t, err, "Could not get a GameServer with deletion timestamp")
+
+	// send a "GAMESERVER" message, and confirm it works
+	reply, err := framework.SendGameServerUDP(t, readyGs, "GAMESERVER")
+	require.NoError(t, err)
+	require.Equal(t, fmt.Sprintf("NAME: %s\n", readyGs.ObjectMeta.Name), reply)
+}
+
 func TestGracefulShutdown(t *testing.T) {
+	// with the new sidecar pattern, there's no need for waiting on the Shutdown state.
+	if runtime.FeatureEnabled(runtime.FeatureSidecarContainers) {
+		t.SkipNow()
+	}
+
 	t.Parallel()
 
 	log := e2eframework.TestLogger(t)

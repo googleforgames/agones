@@ -107,12 +107,17 @@ func NewHealthController(
 // isUnhealthy returns if the Pod event is going
 // to cause the GameServer to become Unhealthy
 func (hc *HealthController) isUnhealthy(pod *corev1.Pod) bool {
-	return hc.evictedPod(pod) || hc.unschedulableWithNoFreePorts(pod) || hc.failedContainer(pod)
+	return hc.evictedPod(pod) || hc.unschedulableWithNoFreePorts(pod) || hc.failedContainer(pod) || hc.failedPod(pod)
 }
 
 // unschedulableWithNoFreePorts checks if the reason the Pod couldn't be scheduled
 // was because there weren't any free ports in the range specified
 func (hc *HealthController) unschedulableWithNoFreePorts(pod *corev1.Pod) bool {
+	// return false, when sidecars are enabled, since we are just going to rely mostly on Pod Status.
+	if runtime.FeatureEnabled(runtime.FeatureSidecarContainers) {
+		return false
+	}
+
 	// On some cloud products (GKE Autopilot), wait on the Autoscaler to schedule a pod with conflicting ports.
 	if hc.waitOnFreePorts {
 		return false
@@ -128,6 +133,16 @@ func (hc *HealthController) unschedulableWithNoFreePorts(pod *corev1.Pod) bool {
 	return false
 }
 
+// failedPod checks if the Pod's phase is "Failed"
+func (hc *HealthController) failedPod(pod *corev1.Pod) bool {
+	// return false, since a failed pod only happens when sidecars are enabled.
+	if !runtime.FeatureEnabled(runtime.FeatureSidecarContainers) {
+		return false
+	}
+
+	return pod.Status.Phase == corev1.PodFailed
+}
+
 // evictedPod checks if the Pod was Evicted
 // could be caused by reaching limit on Ephemeral storage
 func (hc *HealthController) evictedPod(pod *corev1.Pod) bool {
@@ -141,6 +156,12 @@ func (hc *HealthController) evictedPod(pod *corev1.Pod) bool {
 // failedContainer checks each container, and determines if the main gameserver
 // container has failed
 func (hc *HealthController) failedContainer(pod *corev1.Pod) bool {
+	// return false, since there is no gameserver restart before ready. When this graduates, you can delete this
+	// whole function.
+	if runtime.FeatureEnabled(runtime.FeatureSidecarContainers) {
+		return false
+	}
+
 	container := pod.Annotations[agonesv1.GameServerContainerAnnotation]
 	for _, cs := range pod.Status.ContainerStatuses {
 		if cs.Name == container {
@@ -252,6 +273,12 @@ func (hc *HealthController) syncGameServer(ctx context.Context, key string) erro
 func (hc *HealthController) skipUnhealthyGameContainer(gs *agonesv1.GameServer, pod *corev1.Pod) (bool, error) {
 	if !metav1.IsControlledBy(pod, gs) {
 		// This is not the Pod we are looking for 🤖
+		return false, nil
+	}
+
+	// if Sidecar is enabled, always return false, since there is no skip - it's just whatever K8s/Agones wants tso do.
+	// on move to stable, this function can be deleted.
+	if runtime.FeatureEnabled(runtime.FeatureSidecarContainers) {
 		return false, nil
 	}
 
