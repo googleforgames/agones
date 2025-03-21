@@ -72,6 +72,12 @@ type Extensions struct {
 	baseLogger *logrus.Entry
 }
 
+type FasLogger struct {
+	fas        *autoscalingv1.FleetAutoscaler
+	baseLogger *logrus.Entry
+	recorder   record.EventRecorder
+}
+
 // Controller is the FleetAutoscaler controller
 //
 //nolint:govet // ignore fieldalignment, singleton
@@ -312,18 +318,30 @@ func (c *Controller) syncFleetAutoscaler(ctx context.Context, key string) error 
 		return nil
 	}
 
-	currentReplicas := fleet.Status.Replicas
-	desiredReplicas, scalingLimited, err := computeDesiredFleetSize(fas.Spec.Policy, fleet, c.gameServerLister, c.counter.Counts())
-	// If there err is nil and not an inactive schedule error (ignorable in this case), then record the event
-	if err != nil && !errors.Is(err, InactiveScheduleError{}) {
-		c.recorder.Eventf(fas, corev1.EventTypeWarning, "FleetAutoscaler",
-			"Error calculating desired fleet size on FleetAutoscaler %s. Error: %s", fas.ObjectMeta.Name, err.Error())
+	fasLog := FasLogger{
+		fas:        fas,
+		baseLogger: c.baseLogger,
+		recorder:   c.recorder,
+	}
 
-		if err := c.updateStatusUnableToScale(ctx, fas); err != nil {
-			return err
+	currentReplicas := fleet.Status.Replicas
+	desiredReplicas, scalingLimited, err := computeDesiredFleetSize(fas.Spec.Policy, fleet, c.gameServerLister, c.counter.Counts(), fasLog)
+
+	// If there err is nil and not an inactive schedule error (ignorable in this case), then record the event
+	if err != nil {
+		if !errors.Is(err, InactiveScheduleError{}) {
+			c.recorder.Eventf(fas, corev1.EventTypeWarning, "FleetAutoscaler",
+				"Error calculating desired fleet size on FleetAutoscaler %s. Error: %s", fas.ObjectMeta.Name, err.Error())
+
+			if err := c.updateStatusUnableToScale(ctx, fas); err != nil {
+				return err
+			}
 		}
 		return errors.Wrapf(err, "error calculating autoscaling fleet: %s", fleet.ObjectMeta.Name)
 	}
+
+	// Log the desired replicas and scaling status
+	c.loggerForFleetAutoscalerKey(key).Debugf("Computed desired fleet size: %d, Scaling limited: %v", desiredReplicas, scalingLimited)
 
 	// Scale the fleet to the new size
 	if err = c.scaleFleet(ctx, fas, fleet, desiredReplicas); err != nil {

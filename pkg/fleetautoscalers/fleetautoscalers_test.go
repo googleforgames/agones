@@ -199,7 +199,7 @@ func TestComputeDesiredFleetSize(t *testing.T) {
 			_, cancel := agtesting.StartInformers(m, gameServers.Informer().HasSynced)
 			defer cancel()
 
-			replicas, limited, err := computeDesiredFleetSize(fas.Spec.Policy, f, gameServers.Lister(), nc)
+			replicas, limited, err := computeDesiredFleetSize(fas.Spec.Policy, f, gameServers.Lister(), nc, FasLogger{})
 
 			if tc.expected.err != "" && assert.NotNil(t, err) {
 				assert.Equal(t, tc.expected.err, err.Error())
@@ -342,7 +342,7 @@ func TestApplyBufferPolicy(t *testing.T) {
 			f.Status.AllocatedReplicas = tc.statusAllocatedReplicas
 			f.Status.ReadyReplicas = tc.statusReadyReplicas
 
-			replicas, limited, err := applyBufferPolicy(tc.buffer, f)
+			replicas, limited, err := applyBufferPolicy(tc.buffer, f, FasLogger{})
 
 			if tc.expected.err != "" && assert.NotNil(t, err) {
 				assert.Equal(t, tc.expected.err, err.Error())
@@ -576,7 +576,7 @@ func TestApplyWebhookPolicy(t *testing.T) {
 			f.Status.AllocatedReplicas = tc.statusAllocatedReplicas
 			f.Status.ReadyReplicas = tc.statusReadyReplicas
 
-			replicas, limited, err := applyWebhookPolicy(tc.webhookPolicy, f)
+			replicas, limited, err := applyWebhookPolicy(tc.webhookPolicy, f, FasLogger{})
 
 			if tc.expected.err != "" && assert.NotNil(t, err) {
 				assert.Equal(t, tc.expected.err, err.Error())
@@ -617,7 +617,7 @@ func TestApplyWebhookPolicyWithMetadata(t *testing.T) {
 		URL:     &(server.URL),
 	}
 
-	replicas, limited, err := applyWebhookPolicy(webhookPolicy, fleet)
+	replicas, limited, err := applyWebhookPolicy(webhookPolicy, fleet, FasLogger{})
 
 	assert.Nil(t, err)
 	assert.False(t, limited)
@@ -636,7 +636,7 @@ func TestApplyWebhookPolicyNilFleet(t *testing.T) {
 		},
 	}
 
-	replicas, limited, err := applyWebhookPolicy(w, nil)
+	replicas, limited, err := applyWebhookPolicy(w, nil, FasLogger{})
 
 	if assert.NotNil(t, err) {
 		assert.Equal(t, "fleet parameter must not be nil", err.Error())
@@ -2433,7 +2433,7 @@ func TestApplySchedulePolicy(t *testing.T) {
 			assert.NoError(t, err)
 
 			_, f := defaultFixtures()
-			replicas, limited, err := applySchedulePolicy(tc.sp, f, nil, nil, tc.now)
+			replicas, limited, err := applySchedulePolicy(tc.sp, f, nil, nil, tc.now, FasLogger{})
 
 			if tc.want.wantErr {
 				assert.NotNil(t, err)
@@ -2617,7 +2617,7 @@ func TestApplyChainPolicy(t *testing.T) {
 			assert.NoError(t, err)
 
 			_, f := defaultFixtures()
-			replicas, limited, err := applyChainPolicy(*tc.cp, f, nil, nil, tc.now)
+			replicas, limited, err := applyChainPolicy(*tc.cp, f, nil, nil, tc.now, FasLogger{})
 
 			if tc.want.wantErr {
 				assert.NotNil(t, err)
