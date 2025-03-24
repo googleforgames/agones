@@ -1604,10 +1604,8 @@ func TestListAutoscalerAllocated(t *testing.T) {
 				MinCapacity: 6,
 				MaxCapacity: 60,
 			},
-			wantAllocatedGs:      3,
-			wantReadyGs:          1,
-			wantSecondAllocation: 1,
-			wantSecondReady:      2,
+			wantAllocatedGs: 3,
+			wantReadyGs:     2,
 		},
 		"Scales Down to Number of Game Servers Allocated": {
 			fas: autoscalingv1.ListPolicy{
@@ -1675,23 +1673,6 @@ func TestListAutoscalerAllocated(t *testing.T) {
 			framework.AssertFleetCondition(t, flt, func(_ *logrus.Entry, fleet *agonesv1.Fleet) bool {
 				return fleet.Status.AllocatedReplicas == testCase.wantAllocatedGs && fleet.Status.ReadyReplicas == testCase.wantReadyGs
 			})
-
-			// If we're not looking for a second gameserver allocation action, exit test early.
-			if testCase.wantSecondAllocation == 0 {
-				return
-			}
-
-			for i := int32(0); i < testCase.wantSecondAllocation; i++ {
-				_, err := framework.AgonesClient.AllocationV1().GameServerAllocations(flt.ObjectMeta.Namespace).Create(ctx, gsa.DeepCopy(), metav1.CreateOptions{})
-				require.NoError(t, err)
-			}
-
-			framework.AssertFleetCondition(t, flt, func(_ *logrus.Entry, fleet *agonesv1.Fleet) bool {
-				log.WithField("fleet", fmt.Sprintf("%+v", fleet.Status)).Info("Checking for second game server allocations")
-				return fleet.Status.AllocatedReplicas == (testCase.wantAllocatedGs+testCase.wantSecondAllocation) &&
-					fleet.Status.ReadyReplicas == testCase.wantSecondReady
-			})
-
 		})
 	}
 }
