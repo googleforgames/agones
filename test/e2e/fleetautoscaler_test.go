@@ -1484,6 +1484,10 @@ func TestListAutoscalerAllocated(t *testing.T) {
 			defer fleetautoscalers.Delete(ctx, fas.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
 
 			framework.AssertFleetCondition(t, flt, func(_ *logrus.Entry, fleet *agonesv1.Fleet) bool {
+				log.WithField("listStatus", fmt.Sprintf("%+v", fleet.Status.Lists)).
+					WithField("readyReplicas", fleet.Status.ReadyReplicas).WithField("wantReady", testCase.wantReadyGs).
+					WithField("allocatedReplicas", fleet.Status.AllocatedReplicas).WithField("wantAllocated", testCase.wantAllocatedGs).
+					Info("Checking for first allocation")
 				return fleet.Status.AllocatedReplicas == testCase.wantAllocatedGs && fleet.Status.ReadyReplicas == testCase.wantReadyGs
 			})
 		})
