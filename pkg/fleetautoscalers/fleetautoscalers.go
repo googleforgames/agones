@@ -468,6 +468,10 @@ func applyChainPolicy(c autoscalingv1.ChainPolicy, f *agonesv1.Fleet, gameServer
 	}
 
 	if err != nil {
+		emitChainPolicyEvent(fasLog, autoscalingv1.ChainEntry{
+			ID:   "Unknown",
+			FleetAutoscalerPolicy: autoscalingv1.FleetAutoscalerPolicy{},
+		})
 		loggerForFleetAutoscalerKey(fasLog.fas.ObjectMeta.Name, fasLog.baseLogger).Debug(
 			"Failed to apply ChainPolicy: no valid policy applied")
 	}
@@ -710,7 +714,20 @@ func emitChainPolicyEvent(fasLog FasLogger, chainEntry autoscalingv1.ChainEntry)
 		return
 	}
 
-	// Log with concise information
-	fasLog.recorder.Eventf(fasLog.fas, corev1.EventTypeNormal, "ChainPolicyApplied",
-		"FleetAutoscaler '%s' applied ChainPolicy | ID: %s | Type: %s", fasLog.fas.ObjectMeta.Name, chainEntry.ID, chainEntry.Type)
+	var eventMessage string
+	var eventType string
+
+	if chainEntry.ID == "Unknown" {
+		eventMessage = fmt.Sprintf("FleetAutoscaler '%s' failed to apply ChainPolicy | ID: %s | Type: %s",
+			fasLog.fas.ObjectMeta.Name, chainEntry.ID, chainEntry.Type)
+		eventType = corev1.EventTypeWarning // Use Warning for failure
+	} else {
+		eventMessage = fmt.Sprintf("FleetAutoscaler '%s' successfully applied ChainPolicy | ID: %s | Type: %s",
+			fasLog.fas.ObjectMeta.Name, chainEntry.ID, chainEntry.Type)
+		eventType = corev1.EventTypeNormal // Use Normal for success
+	}
+
+	// Emit the event
+	fasLog.recorder.Eventf(fasLog.fas, eventType, "ChainPolicy", eventMessage)
 }
+
