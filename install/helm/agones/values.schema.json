@@ -173,13 +173,13 @@
                 "annotations": {
                   "type": "object",
                   "additionalProperties": {
-                    "type": "object"
+                    "type": "string"
                   }
                 },
                 "labels": {
                   "type": "object",
                   "additionalProperties": {
-                    "type": "object"
+                    "type": "string"
                   }
                 }
               },
@@ -196,7 +196,7 @@
                 "annotations": {
                   "type": "object",
                   "additionalProperties": {
-                    "type": "object"
+                    "type": "string"
                   }
                 }
               },
@@ -213,8 +213,11 @@
                 "annotations": {
                   "type": "object",
                   "additionalProperties": {
-                    "type": "object"
-                  }
+                    "type": "object",
+                      "additionalProperties": {
+                        "type": "string"
+                      }                  
+                    }
                 }
               },
               "required": [
@@ -422,13 +425,13 @@
             "labels": {
               "type": "object",
               "additionalProperties": {
-                "type": "object"
+                "type": "string"
               }
             },
             "annotations": {
               "type": "object",
               "additionalProperties": {
-                "type": "object"
+                "type": "string"
               }
             },
             "allocationBatchWaitTime": {
@@ -1009,7 +1012,7 @@
             "labels": {
               "type": "object",
               "additionalProperties": {
-                "type": "object"
+                "type": "string"
               }
             },
             "readiness": {
