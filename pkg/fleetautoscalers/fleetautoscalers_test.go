@@ -26,6 +26,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	admregv1 "k8s.io/api/admissionregistration/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -199,7 +200,13 @@ func TestComputeDesiredFleetSize(t *testing.T) {
 			_, cancel := agtesting.StartInformers(m, gameServers.Informer().HasSynced)
 			defer cancel()
 
-			replicas, limited, err := computeDesiredFleetSize(fas.Spec.Policy, f, gameServers.Lister(), nc, FasLogger{})
+			fasLog := FasLogger{
+				fas:        fas,
+				baseLogger: newTestLogger(),
+				recorder:   m.FakeRecorder,
+			}
+
+			replicas, limited, err := computeDesiredFleetSize(fas.Spec.Policy, f, gameServers.Lister(), nc, fasLog)
 
 			if tc.expected.err != "" && assert.NotNil(t, err) {
 				assert.Equal(t, tc.expected.err, err.Error())
@@ -215,7 +222,7 @@ func TestComputeDesiredFleetSize(t *testing.T) {
 func TestApplyBufferPolicy(t *testing.T) {
 	t.Parallel()
 
-	_, f := defaultFixtures()
+	fas, f := defaultFixtures()
 
 	type expected struct {
 		replicas int32
@@ -342,7 +349,13 @@ func TestApplyBufferPolicy(t *testing.T) {
 			f.Status.AllocatedReplicas = tc.statusAllocatedReplicas
 			f.Status.ReadyReplicas = tc.statusReadyReplicas
 
-			replicas, limited, err := applyBufferPolicy(tc.buffer, f, FasLogger{})
+			m := agtesting.NewMocks()
+			fasLog := FasLogger{
+				fas:        fas,
+				baseLogger: newTestLogger(),
+				recorder:   m.FakeRecorder,
+			}
+			replicas, limited, err := applyBufferPolicy(tc.buffer, f, fasLog)
 
 			if tc.expected.err != "" && assert.NotNil(t, err) {
 				assert.Equal(t, tc.expected.err, err.Error())
@@ -361,7 +374,7 @@ func TestApplyWebhookPolicy(t *testing.T) {
 	server := httptest.NewServer(ts)
 	defer server.Close()
 
-	_, f := defaultWebhookFixtures()
+	fas, f := defaultWebhookFixtures()
 	url := webhookURL
 	emptyString := ""
 	invalidURL := ")1golang.org/"
@@ -576,7 +589,13 @@ func TestApplyWebhookPolicy(t *testing.T) {
 			f.Status.AllocatedReplicas = tc.statusAllocatedReplicas
 			f.Status.ReadyReplicas = tc.statusReadyReplicas
 
-			replicas, limited, err := applyWebhookPolicy(tc.webhookPolicy, f, FasLogger{})
+			m := agtesting.NewMocks()
+			fasLog := FasLogger{
+				fas:        fas,
+				baseLogger: newTestLogger(),
+				recorder:   m.FakeRecorder,
+			}
+			replicas, limited, err := applyWebhookPolicy(tc.webhookPolicy, f, fasLog)
 
 			if tc.expected.err != "" && assert.NotNil(t, err) {
 				assert.Equal(t, tc.expected.err, err.Error())
@@ -605,7 +624,7 @@ func TestApplyWebhookPolicyWithMetadata(t *testing.T) {
 	server := httptest.NewServer(ts)
 	defer server.Close()
 
-	_, fleet := defaultWebhookFixtures()
+	fas, fleet := defaultWebhookFixtures()
 
 	fixedReplicas := int32(11)
 	fleet.ObjectMeta.Annotations = map[string]string{
@@ -617,7 +636,13 @@ func TestApplyWebhookPolicyWithMetadata(t *testing.T) {
 		URL:     &(server.URL),
 	}
 
-	replicas, limited, err := applyWebhookPolicy(webhookPolicy, fleet, FasLogger{})
+	m := agtesting.NewMocks()
+	fasLog := FasLogger{
+		fas:        fas,
+		baseLogger: newTestLogger(),
+		recorder:   m.FakeRecorder,
+	}
+	replicas, limited, err := applyWebhookPolicy(webhookPolicy, fleet, fasLog)
 
 	assert.Nil(t, err)
 	assert.False(t, limited)
@@ -636,7 +661,14 @@ func TestApplyWebhookPolicyNilFleet(t *testing.T) {
 		},
 	}
 
-	replicas, limited, err := applyWebhookPolicy(w, nil, FasLogger{})
+	fas, _ := defaultFixtures()
+	m := agtesting.NewMocks()
+	fasLog := FasLogger{
+		fas:        fas,
+		baseLogger: newTestLogger(),
+		recorder:   m.FakeRecorder,
+	}
+	replicas, limited, err := applyWebhookPolicy(w, nil, fasLog)
 
 	if assert.NotNil(t, err) {
 		assert.Equal(t, "fleet parameter must not be nil", err.Error())
@@ -2432,8 +2464,14 @@ func TestApplySchedulePolicy(t *testing.T) {
 			err := utilruntime.ParseFeatures(tc.featureFlags)
 			assert.NoError(t, err)
 
-			_, f := defaultFixtures()
-			replicas, limited, err := applySchedulePolicy(tc.sp, f, nil, nil, tc.now, FasLogger{})
+			fas, f := defaultFixtures()
+			m := agtesting.NewMocks()
+			fasLog := FasLogger{
+				fas:        fas,
+				baseLogger: newTestLogger(),
+				recorder:   m.FakeRecorder,
+			}
+			replicas, limited, err := applySchedulePolicy(tc.sp, f, nil, nil, tc.now, fasLog)
 
 			if tc.want.wantErr {
 				assert.NotNil(t, err)
@@ -2616,8 +2654,14 @@ func TestApplyChainPolicy(t *testing.T) {
 			err := utilruntime.ParseFeatures(tc.featureFlags)
 			assert.NoError(t, err)
 
-			_, f := defaultFixtures()
-			replicas, limited, err := applyChainPolicy(*tc.cp, f, nil, nil, tc.now, FasLogger{})
+			fas, f := defaultFixtures()
+			m := agtesting.NewMocks()
+			fasLog := FasLogger{
+				fas:        fas,
+				baseLogger: newTestLogger(),
+				recorder:   m.FakeRecorder,
+			}
+			replicas, limited, err := applyChainPolicy(*tc.cp, f, nil, nil, tc.now, fasLog)
 
 			if tc.want.wantErr {
 				assert.NotNil(t, err)
@@ -2640,4 +2684,9 @@ func mustParseMetav1Time(timeStr string) metav1.Time {
 func mustParseTime(timeStr string) time.Time {
 	t, _ := time.Parse(time.RFC3339, timeStr)
 	return t
+}
+
+// Create a fake test logger using logr
+func newTestLogger() *logrus.Entry {
+	return utilruntime.NewLoggerWithType(testServer{})
 }

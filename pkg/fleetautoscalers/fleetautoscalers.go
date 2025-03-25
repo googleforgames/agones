@@ -218,8 +218,14 @@ func applyWebhookPolicy(w *autoscalingv1.WebhookPolicy, f *agonesv1.Fleet, fasLo
 	if faResp.Response.Scale {
 		return faResp.Response.Replicas, false, nil
 	}
+
+	// Log Fleet Autoscaler operation, handling nil or empty Name in one line
+	webhookPolicyName := "<nil>"
+	if w.Service != nil && w.Service.Name != "" {
+		webhookPolicyName = w.Service.Name
+	}
 	loggerForFleetAutoscalerKey(fasLog.fas.ObjectMeta.Name, fasLog.baseLogger).Debugf(
-		"Fleet Autoscaler operation completed for fleet: %s, with WebhookPolicy: %v", f.ObjectMeta.Name, w.Service.Name)
+		"Fleet Autoscaler operation completed for fleet: %s, with WebhookPolicy: %s", f.ObjectMeta.Name, webhookPolicyName)
 
 	return f.Status.Replicas, false, nil
 }
@@ -468,10 +474,7 @@ func applyChainPolicy(c autoscalingv1.ChainPolicy, f *agonesv1.Fleet, gameServer
 	}
 
 	if err != nil {
-		emitChainPolicyEvent(fasLog, autoscalingv1.ChainEntry{
-			ID:   "Unknown",
-			FleetAutoscalerPolicy: autoscalingv1.FleetAutoscalerPolicy{},
-		})
+		emitChainPolicyEvent(fasLog, autoscalingv1.ChainEntry{ID: "Unknown"})
 		loggerForFleetAutoscalerKey(fasLog.fas.ObjectMeta.Name, fasLog.baseLogger).Debug(
 			"Failed to apply ChainPolicy: no valid policy applied")
 	}
@@ -730,4 +733,3 @@ func emitChainPolicyEvent(fasLog FasLogger, chainEntry autoscalingv1.ChainEntry)
 	// Emit the event
 	fasLog.recorder.Eventf(fasLog.fas, eventType, "ChainPolicy", eventMessage)
 }
-

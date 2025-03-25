@@ -72,6 +72,7 @@ type Extensions struct {
 	baseLogger *logrus.Entry
 }
 
+// FasLogger helps log and record events related to FleetAutoscaler.
 type FasLogger struct {
 	fas        *autoscalingv1.FleetAutoscaler
 	baseLogger *logrus.Entry
