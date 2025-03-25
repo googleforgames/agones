@@ -22,7 +22,7 @@ import (
 	v1 "k8s.io/api/admissionregistration/v1"
 )
 
-// WebhookPolicyApplyConfiguration represents an declarative configuration of the WebhookPolicy type for use
+// WebhookPolicyApplyConfiguration represents a declarative configuration of the WebhookPolicy type for use
 // with apply.
 type WebhookPolicyApplyConfiguration struct {
 	URL      *string              `json:"url,omitempty"`
@@ -30,7 +30,7 @@ type WebhookPolicyApplyConfiguration struct {
 	CABundle []byte               `json:"caBundle,omitempty"`
 }
 
-// WebhookPolicyApplyConfiguration constructs an declarative configuration of the WebhookPolicy type for use with
+// WebhookPolicyApplyConfiguration constructs a declarative configuration of the WebhookPolicy type for use with
 // apply.
 func WebhookPolicy() *WebhookPolicyApplyConfiguration {
 	return &WebhookPolicyApplyConfiguration{}

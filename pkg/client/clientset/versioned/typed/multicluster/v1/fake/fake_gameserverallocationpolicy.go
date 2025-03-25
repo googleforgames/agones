@@ -44,22 +44,24 @@ var gameserverallocationpoliciesKind = v1.SchemeGroupVersion.WithKind("GameServe
 
 // Get takes name of the gameServerAllocationPolicy, and returns the corresponding gameServerAllocationPolicy object, and an error if there is any.
 func (c *FakeGameServerAllocationPolicies) Get(ctx context.Context, name string, options metav1.GetOptions) (result *v1.GameServerAllocationPolicy, err error) {
+	emptyResult := &v1.GameServerAllocationPolicy{}
 	obj, err := c.Fake.
-		Invokes(testing.NewGetAction(gameserverallocationpoliciesResource, c.ns, name), &v1.GameServerAllocationPolicy{})
+		Invokes(testing.NewGetActionWithOptions(gameserverallocationpoliciesResource, c.ns, name, options), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1.GameServerAllocationPolicy), err
 }
 
 // List takes label and field selectors, and returns the list of GameServerAllocationPolicies that match those selectors.
 func (c *FakeGameServerAllocationPolicies) List(ctx context.Context, opts metav1.ListOptions) (result *v1.GameServerAllocationPolicyList, err error) {
+	emptyResult := &v1.GameServerAllocationPolicyList{}
 	obj, err := c.Fake.
-		Invokes(testing.NewListAction(gameserverallocationpoliciesResource, gameserverallocationpoliciesKind, c.ns, opts), &v1.GameServerAllocationPolicyList{})
+		Invokes(testing.NewListActionWithOptions(gameserverallocationpoliciesResource, gameserverallocationpoliciesKind, c.ns, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 
 	label, _, _ := testing.ExtractFromListOptions(opts)
@@ -78,28 +80,30 @@ func (c *FakeGameServerAllocationPolicies) List(ctx context.Context, opts metav1
 // Watch returns a watch.Interface that watches the requested gameServerAllocationPolicies.
 func (c *FakeGameServerAllocationPolicies) Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
-		InvokesWatch(testing.NewWatchAction(gameserverallocationpoliciesResource, c.ns, opts))
+		InvokesWatch(testing.NewWatchActionWithOptions(gameserverallocationpoliciesResource, c.ns, opts))
 
 }
 
 // Create takes the representation of a gameServerAllocationPolicy and creates it.  Returns the server's representation of the gameServerAllocationPolicy, and an error, if there is any.
 func (c *FakeGameServerAllocationPolicies) Create(ctx context.Context, gameServerAllocationPolicy *v1.GameServerAllocationPolicy, opts metav1.CreateOptions) (result *v1.GameServerAllocationPolicy, err error) {
+	emptyResult := &v1.GameServerAllocationPolicy{}
 	obj, err := c.Fake.
-		Invokes(testing.NewCreateAction(gameserverallocationpoliciesResource, c.ns, gameServerAllocationPolicy), &v1.GameServerAllocationPolicy{})
+		Invokes(testing.NewCreateActionWithOptions(gameserverallocationpoliciesResource, c.ns, gameServerAllocationPolicy, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1.GameServerAllocationPolicy), err
 }
 
 // Update takes the representation of a gameServerAllocationPolicy and updates it. Returns the server's representation of the gameServerAllocationPolicy, and an error, if there is any.
 func (c *FakeGameServerAllocationPolicies) Update(ctx context.Context, gameServerAllocationPolicy *v1.GameServerAllocationPolicy, opts metav1.UpdateOptions) (result *v1.GameServerAllocationPolicy, err error) {
+	emptyResult := &v1.GameServerAllocationPolicy{}
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateAction(gameserverallocationpoliciesResource, c.ns, gameServerAllocationPolicy), &v1.GameServerAllocationPolicy{})
+		Invokes(testing.NewUpdateActionWithOptions(gameserverallocationpoliciesResource, c.ns, gameServerAllocationPolicy, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1.GameServerAllocationPolicy), err
 }
@@ -114,7 +118,7 @@ func (c *FakeGameServerAllocationPolicies) Delete(ctx context.Context, name stri
 
 // DeleteCollection deletes a collection of objects.
 func (c *FakeGameServerAllocationPolicies) DeleteCollection(ctx context.Context, opts metav1.DeleteOptions, listOpts metav1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(gameserverallocationpoliciesResource, c.ns, listOpts)
+	action := testing.NewDeleteCollectionActionWithOptions(gameserverallocationpoliciesResource, c.ns, opts, listOpts)
 
 	_, err := c.Fake.Invokes(action, &v1.GameServerAllocationPolicyList{})
 	return err
@@ -122,11 +126,12 @@ func (c *FakeGameServerAllocationPolicies) DeleteCollection(ctx context.Context,
 
 // Patch applies the patch and returns the patched gameServerAllocationPolicy.
 func (c *FakeGameServerAllocationPolicies) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *v1.GameServerAllocationPolicy, err error) {
+	emptyResult := &v1.GameServerAllocationPolicy{}
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(gameserverallocationpoliciesResource, c.ns, name, pt, data, subresources...), &v1.GameServerAllocationPolicy{})
+		Invokes(testing.NewPatchSubresourceActionWithOptions(gameserverallocationpoliciesResource, c.ns, name, pt, data, opts, subresources...), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1.GameServerAllocationPolicy), err
 }
@@ -144,11 +149,12 @@ func (c *FakeGameServerAllocationPolicies) Apply(ctx context.Context, gameServer
 	if name == nil {
 		return nil, fmt.Errorf("gameServerAllocationPolicy.Name must be provided to Apply")
 	}
+	emptyResult := &v1.GameServerAllocationPolicy{}
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(gameserverallocationpoliciesResource, c.ns, *name, types.ApplyPatchType, data), &v1.GameServerAllocationPolicy{})
+		Invokes(testing.NewPatchSubresourceActionWithOptions(gameserverallocationpoliciesResource, c.ns, *name, types.ApplyPatchType, data, opts.ToPatchOptions()), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1.GameServerAllocationPolicy), err
 }

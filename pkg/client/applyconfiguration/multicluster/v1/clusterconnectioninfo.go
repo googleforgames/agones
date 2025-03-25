@@ -18,7 +18,7 @@
 
 package v1
 
-// ClusterConnectionInfoApplyConfiguration represents an declarative configuration of the ClusterConnectionInfo type for use
+// ClusterConnectionInfoApplyConfiguration represents a declarative configuration of the ClusterConnectionInfo type for use
 // with apply.
 type ClusterConnectionInfoApplyConfiguration struct {
 	ClusterName         *string  `json:"clusterName,omitempty"`
@@ -28,7 +28,7 @@ type ClusterConnectionInfoApplyConfiguration struct {
 	ServerCA            []byte   `json:"serverCa,omitempty"`
 }
 
-// ClusterConnectionInfoApplyConfiguration constructs an declarative configuration of the ClusterConnectionInfo type for use with
+// ClusterConnectionInfoApplyConfiguration constructs a declarative configuration of the ClusterConnectionInfo type for use with
 // apply.
 func ClusterConnectionInfo() *ClusterConnectionInfoApplyConfiguration {
 	return &ClusterConnectionInfoApplyConfiguration{}

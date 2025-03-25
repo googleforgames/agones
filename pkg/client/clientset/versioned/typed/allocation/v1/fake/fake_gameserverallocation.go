@@ -38,11 +38,12 @@ var gameserverallocationsKind = v1.SchemeGroupVersion.WithKind("GameServerAlloca
 
 // Create takes the representation of a gameServerAllocation and creates it.  Returns the server's representation of the gameServerAllocation, and an error, if there is any.
 func (c *FakeGameServerAllocations) Create(ctx context.Context, gameServerAllocation *v1.GameServerAllocation, opts metav1.CreateOptions) (result *v1.GameServerAllocation, err error) {
+	emptyResult := &v1.GameServerAllocation{}
 	obj, err := c.Fake.
-		Invokes(testing.NewCreateAction(gameserverallocationsResource, c.ns, gameServerAllocation), &v1.GameServerAllocation{})
+		Invokes(testing.NewCreateActionWithOptions(gameserverallocationsResource, c.ns, gameServerAllocation, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1.GameServerAllocation), err
 }

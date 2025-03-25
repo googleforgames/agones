@@ -22,7 +22,7 @@ import (
 	apis "agones.dev/agones/pkg/apis"
 )
 
-// GameServerSetSpecApplyConfiguration represents an declarative configuration of the GameServerSetSpec type for use
+// GameServerSetSpecApplyConfiguration represents a declarative configuration of the GameServerSetSpec type for use
 // with apply.
 type GameServerSetSpecApplyConfiguration struct {
 	Replicas           *int32                                    `json:"replicas,omitempty"`
@@ -32,7 +32,7 @@ type GameServerSetSpecApplyConfiguration struct {
 	Template           *GameServerTemplateSpecApplyConfiguration `json:"template,omitempty"`
 }
 
-// GameServerSetSpecApplyConfiguration constructs an declarative configuration of the GameServerSetSpec type for use with
+// GameServerSetSpecApplyConfiguration constructs a declarative configuration of the GameServerSetSpec type for use with
 // apply.
 func GameServerSetSpec() *GameServerSetSpecApplyConfiguration {
 	return &GameServerSetSpecApplyConfiguration{}

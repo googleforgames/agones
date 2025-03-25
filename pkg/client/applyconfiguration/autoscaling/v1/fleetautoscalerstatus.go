@@ -22,7 +22,7 @@ import (
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// FleetAutoscalerStatusApplyConfiguration represents an declarative configuration of the FleetAutoscalerStatus type for use
+// FleetAutoscalerStatusApplyConfiguration represents a declarative configuration of the FleetAutoscalerStatus type for use
 // with apply.
 type FleetAutoscalerStatusApplyConfiguration struct {
 	CurrentReplicas *int32   `json:"currentReplicas,omitempty"`
@@ -32,7 +32,7 @@ type FleetAutoscalerStatusApplyConfiguration struct {
 	ScalingLimited  *bool    `json:"scalingLimited,omitempty"`
 }
 
-// FleetAutoscalerStatusApplyConfiguration constructs an declarative configuration of the FleetAutoscalerStatus type for use with
+// FleetAutoscalerStatusApplyConfiguration constructs a declarative configuration of the FleetAutoscalerStatus type for use with
 // apply.
 func FleetAutoscalerStatus() *FleetAutoscalerStatusApplyConfiguration {
 	return &FleetAutoscalerStatusApplyConfiguration{}

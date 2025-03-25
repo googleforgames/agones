@@ -18,14 +18,14 @@
 
 package v1
 
-// AllocationOverflowApplyConfiguration represents an declarative configuration of the AllocationOverflow type for use
+// AllocationOverflowApplyConfiguration represents a declarative configuration of the AllocationOverflow type for use
 // with apply.
 type AllocationOverflowApplyConfiguration struct {
 	Labels      map[string]string `json:"labels,omitempty"`
 	Annotations map[string]string `json:"annotations,omitempty"`
 }
 
-// AllocationOverflowApplyConfiguration constructs an declarative configuration of the AllocationOverflow type for use with
+// AllocationOverflowApplyConfiguration constructs a declarative configuration of the AllocationOverflow type for use with
 // apply.
 func AllocationOverflow() *AllocationOverflowApplyConfiguration {
 	return &AllocationOverflowApplyConfiguration{}

@@ -18,7 +18,7 @@
 
 package v1
 
-// PlayerStatusApplyConfiguration represents an declarative configuration of the PlayerStatus type for use
+// PlayerStatusApplyConfiguration represents a declarative configuration of the PlayerStatus type for use
 // with apply.
 type PlayerStatusApplyConfiguration struct {
 	Count    *int64   `json:"count,omitempty"`
@@ -26,7 +26,7 @@ type PlayerStatusApplyConfiguration struct {
 	IDs      []string `json:"ids,omitempty"`
 }
 
-// PlayerStatusApplyConfiguration constructs an declarative configuration of the PlayerStatus type for use with
+// PlayerStatusApplyConfiguration constructs a declarative configuration of the PlayerStatus type for use with
 // apply.
 func PlayerStatus() *PlayerStatusApplyConfiguration {
 	return &PlayerStatusApplyConfiguration{}
