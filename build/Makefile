@@ -711,16 +711,21 @@ endif
 ifeq ($(WITH_ARM64), 1)
 push-agones-sdk-image: push-agones-sdk-linux-image-arm64
 endif
-	$(MAKE) push-agones-sdk-manifest	
+	$(MAKE) push-agones-sdk-manifest
 
-push-agones-sdk-manifest:
+push-agones-sdk-manifest: 
 	docker manifest create --amend $(sidecar_tag) $(push_sidecar_manifest)
+	$(MAKE) push_windows_manifest
+	docker manifest push --purge $(sidecar_tag)
+
+push_windows_manifest:
+ifeq ($(WITH_WINDOWS), 1)
 	for osversion in $(WINDOWS_VERSIONS); do \
 		full_version=`docker manifest inspect ${BASE.windows}:$$osversion | grep "os.version" | head -n 1 | awk -F\" '{print $$4}'` || true; \
 		docker manifest annotate --os windows --arch amd64 --os-version $$full_version \
 		$(sidecar_tag) $(sidecar_tag)-windows_amd64-$$osversion; \
 	done
-	docker manifest push --purge $(sidecar_tag)
+endif
 
 push-agones-sdk-windows: WINDOWS_DOCKER_PUSH_ARGS=--push
 push-agones-sdk-windows: build-agones-sdk-image-windows
