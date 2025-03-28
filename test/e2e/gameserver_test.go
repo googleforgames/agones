@@ -31,6 +31,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
+	policyv1 "k8s.io/api/policy/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -811,15 +812,32 @@ func TestGameServerShutdown(t *testing.T) {
 // TestGameServerEvicted test that if Gameserver would be evicted than it becomes Unhealthy
 // Ephemeral Storage limit set to 0Mi
 func TestGameServerEvicted(t *testing.T) {
-	framework.SkipOnCloudProduct(t, "gke-autopilot", "Autopilot adjusts ephmeral storage to a minimum of 10Mi, see https://github.com/googleforgames/agones/issues/2890")
 	t.Parallel()
+	log := e2eframework.TestLogger(t)
+
 	ctx := context.Background()
 	gs := framework.DefaultGameServer(framework.Namespace)
-	gs.Spec.Template.Spec.Containers[0].Resources.Limits[corev1.ResourceEphemeralStorage] = resource.MustParse("0Mi")
-
-	newGs, err := framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Create(ctx, gs, metav1.CreateOptions{})
+	newGs, err := framework.CreateGameServerAndWaitUntilReady(t, framework.Namespace, gs)
 	require.NoError(t, err)
-	logrus.WithField("name", newGs.ObjectMeta.Name).Info("GameServer created, waiting for being Evicted and Unhealthy")
+	log.WithField("name", newGs.ObjectMeta.Name).Info("GameServer created, waiting for being Evicted and Unhealthy")
+	defer framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Delete(ctx, newGs.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint: errcheck
+
+	pods := framework.KubeClient.CoreV1().Pods(framework.Namespace)
+	pod, err := pods.Get(ctx, newGs.ObjectMeta.Name, metav1.GetOptions{})
+	require.NoError(t, err)
+
+	go func() {
+		time.Sleep(3 * time.Second) // just make sure it comes in later
+		eviction := &policyv1.Eviction{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      pod.Name,
+				Namespace: pod.Namespace,
+			},
+		}
+		log.WithField("name", pod.ObjectMeta.Name).Info("Evicting pod!")
+		err = pods.EvictV1(ctx, eviction)
+		require.NoError(t, err)
+	}()
 
 	_, err = framework.WaitForGameServerState(t, newGs, agonesv1.GameServerStateUnhealthy, 10*time.Minute)
 	require.NoError(t, err, fmt.Sprintf("waiting for [%v] GameServer Unhealthy state timed out (%v)", gs.Status.State, gs.Name))
