@@ -826,16 +826,16 @@ func TestGameServerEvicted(t *testing.T) {
 	pod, err := pods.Get(ctx, newGs.ObjectMeta.Name, metav1.GetOptions{})
 	require.NoError(t, err)
 
+	eviction := &policyv1.Eviction{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      pod.Name,
+			Namespace: pod.Namespace,
+		},
+	}
 	go func() {
 		time.Sleep(3 * time.Second) // just make sure it comes in later
-		eviction := &policyv1.Eviction{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      pod.Name,
-				Namespace: pod.Namespace,
-			},
-		}
-		log.WithField("name", pod.ObjectMeta.Name).Info("Evicting pod!")
-		err = pods.EvictV1(ctx, eviction)
+		log.WithField("name", eviction.ObjectMeta.Name).Info("Evicting pod!")
+		err := pods.EvictV1(context.Background(), eviction)
 		require.NoError(t, err)
 	}()
 
