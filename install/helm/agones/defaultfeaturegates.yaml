@@ -14,12 +14,16 @@
 
 # Default values for feature gates. Keep in sync with pkg/util/runtime/features.go:featureDefaults
 
+# Stable features
+# Note that stable features cannot be set to "false", and are here so that upgrades from a
+# previous version with the feature flag do not fail on parsing an unknown flag.
+DisableResyncOnSDKServer: true
+
 # Beta features
 PortPolicyNone: true
 GKEAutopilotExtendedDurationPods: true
 AutopilotPassthroughPort: true
 CountsAndLists: true
-DisableResyncOnSDKServer: true
 
 # Alpha features
 FleetAutoscaleRequestMetaData: false

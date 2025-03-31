@@ -143,10 +143,7 @@ type SDKServer struct {
 func NewSDKServer(gameServerName, namespace string, kubeClient kubernetes.Interface,
 	agonesClient versioned.Interface, logLevel logrus.Level, healthPort int) (*SDKServer, error) {
 	mux := http.NewServeMux()
-	resync := 30 * time.Second
-	if runtime.FeatureEnabled(runtime.FeatureDisableResyncOnSDKServer) {
-		resync = 0
-	}
+	resync := 0 * time.Second
 
 	// limit the informer to only working with the gameserver that the sdk is attached to
 	tweakListOptions := func(opts *metav1.ListOptions) {
