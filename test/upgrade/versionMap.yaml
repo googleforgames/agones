@@ -95,7 +95,7 @@ data:
         },
         "Dev": {
           "alphaGates": ["PlayerAllocationFilter", "PlayerTracking", "PortPolicyNone", "PortRanges", "RollingUpdateFix", "ScheduledAutoscaler"],
-          "betaGates": ["AutopilotPassthroughPort", "CountsAndLists", "DisableResyncOnSDKServer", "GKEAutopilotExtendedDurationPods"]
+          "betaGates": ["AutopilotPassthroughPort", "CountsAndLists", "GKEAutopilotExtendedDurationPods"]
         }
       }
     }

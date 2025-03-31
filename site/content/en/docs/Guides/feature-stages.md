@@ -19,13 +19,30 @@ A feature within Agones can be in `Alpha`, `Beta` or `Stable` stage.
 
 ## Feature Gates
 
-`Alpha` and `Beta` features can be enabled or disabled through the `agones.featureGates` configuration option 
-that can be found in the [Helm configuration]({{< ref "/docs/Installation/Install Agones/helm.md#configuration" >}}) documentation.
+`Alpha` and `Beta` features can be enabled or disabled through the `agones.featureGates` configuration option
+that can be found in the [Helm configuration]({{< ref "/docs/Installation/Install Agones/helm.md#configuration" >}})
+documentation. `Stable` features are always enabled, and exist for upgrade compatibility, and cannot
+be disabled.
 
 The current set of `alpha` and `beta` feature gates:
 
-
-
+{{%/* feature publishVersion="1.49.0" */%}}
+| Feature Name                                                                                                               | Gate                               | Default  | Stage    | Since  |
+|----------------------------------------------------------------------------------------------------------------------------|------------------------------------|----------|----------|--------|
+| [CountsAndLists](https://github.com/googleforgames/agones/issues/2716)                                                     | `CountsAndLists`                   | Enabled  | `Beta`   | 1.41.0 |
+| [DisableResyncOnSDKServer](https://github.com/googleforgames/agones/issues/3377)                                           | `DisableResyncOnSDKServer`         | Enabled  | `Stable` | 1.49.0 |
+| [Support Passthrough on GKE Autopilot](https://github.com/googleforgames/agones/issues/3721)                               | `AutopilotPassthroughPort`         | Enabled  | `Beta`   | 1.43.0 |
+| [Support for Extended Duration Pods on GKE Autopilot (*1.28+ only*)](https://github.com/googleforgames/agones/issues/3386) | `GKEAutopilotExtendedDurationPods` | Enabled  | `Beta`   | 1.44.0 |
+| [GameServer player capacity filtering on GameServerAllocations](https://github.com/googleforgames/agones/issues/1239)      | `PlayerAllocationFilter`           | Disabled | `Alpha`  | 1.14.0 |
+| [Player Tracking]({{< ref "/docs/Guides/player-tracking.md" >}})                                                           | `PlayerTracking`                   | Disabled | `Alpha`  | 1.6.0  |
+| [Rolling Update Fixes](https://github.com/googleforgames/agones/issues/3688)                                               | `RollingUpdateFix`                 | Disabled | `Alpha`  | 1.41.0 |
+| [Multiple dynamic port ranges](https://github.com/googleforgames/agones/issues/1911)                                       | `PortRanges`                       | Disabled | `Alpha`  | 1.41.0 |
+| [Port Policy None](https://github.com/googleforgames/agones/issues/3804)                                                   | `PortPolicyNone`                   | Disabled | `Alpha`  | 1.41.0 |
+| [Scheduled Fleet Autoscaling](https://github.com/googleforgames/agones/issues/3008)                                        | `ScheduledAutoscaler`              | Disabled | `Alpha`  | 1.43.0 |
+| [Extend Webhook autoscaler to send fleet metadata with the request](https://github.com/googleforgames/agones/issues/3951)  | `FleetAutoscaleRequestMetaData`    | Disabled | `Alpha`  | 1.48.0 |
+| Example Gate (not in use)                                                                                                  | `Example`                          | Disabled | None     | 0.13.0 |
+{{%/* /feature */%}}
+{{%/* feature expiryVersion="1.49.0" */%}}
 | Feature Name                                                                                                                | Gate                               | Default  | Stage   | Since  |
 |-----------------------------------------------------------------------------------------------------------------------------|------------------------------------|----------|---------|--------|
 | [CountsAndLists](https://github.com/googleforgames/agones/issues/2716)                                                      | `CountsAndLists`                   | Enabled  | `Beta`  | 1.41.0 |
@@ -40,7 +57,7 @@ The current set of `alpha` and `beta` feature gates:
 | [Scheduled Fleet Autoscaling](https://github.com/googleforgames/agones/issues/3008)                                         | `ScheduledAutoscaler`              | Disabled | `Alpha` | 1.43.0 |
 | [Extend Webhook autoscaler to send fleet metadata with the request](https://github.com/googleforgames/agones/issues/3951)   | `FleetAutoscaleRequestMetaData`    | Disabled | `Alpha` | 1.48.0 |
 | Example Gate (not in use)                                                                                                   | `Example`                          | Disabled | None    | 0.13.0 |
-
+{{%/* /feature */%}}
 
 [fleet-updates]: {{% relref "./fleet-updates.md#notifying-gameservers-on-fleet-updatedownscale" %}}
 
@@ -122,15 +139,15 @@ Attempting to populate these `alpha` and `beta` attributes on an Agones CRD will
  accompanying Feature Flag is not enabled.
 
 `alpha` and `beta` attributes can be subject to change of name and structure, and will result in breaking changes
- before moving to a `stable` stage. These changes will be outlined in release notes and feature documentation. 
+ before moving to a `stable` stage. These changes will be outlined in release notes and feature documentation.
 
 ### Agones Game Server SDK
 
 Any `alpha` or `beta` Game Server SDK functionality will be a subpackage of the `sdk` package. For example
 , functionality found in a `sdk.alphav1` package should be considered at the `alpha` feature stage.
 
-Only experimental functionality will be found in any `alpha` and `beta` SDK packages, and as such may change as 
-development occurs. 
+Only experimental functionality will be found in any `alpha` and `beta` SDK packages, and as such may change as
+development occurs.
 
 As SDK features move to through feature stages towards `stable`, the previous version of the SDK API
 will remain for at least one release to enable easy migration to the more stable feature stage (i.e. from `alpha
@@ -138,12 +155,12 @@ will remain for at least one release to enable easy migration to the more stable
 
 Any other SDK functionality not marked as `alpha` or `beta` is assumed to be `stable`.
 
-### REST & gRPC APIs 
+### REST & gRPC APIs
 
 REST and gRPC API will have versioned paths where appropriate to indicate their feature stage.
 
-For example, a REST API with a prefix of `v1alpha1` is an `alpha` stage feature: 
+For example, a REST API with a prefix of `v1alpha1` is an `alpha` stage feature:
 `http://api.example.com/v1alpha1/exampleaction`.
 
 Similar to the SDK, any `alpha` or `beta` gRPC functionality will be a subpackage of the main API package.
-For example, functionality found in a `api.alphav1` package should be considered at the `alpha` feature stage. 
+For example, functionality found in a `api.alphav1` package should be considered at the `alpha` feature stage.
