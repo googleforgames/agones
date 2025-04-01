@@ -93,13 +93,6 @@ func applyGameServerAddressAndPort(gs *agonesv1.GameServer, node *corev1.Node, p
 	gs.Status.Addresses = addrs
 	gs.Status.NodeName = pod.Spec.NodeName
 
-	for _, ip := range pod.Status.PodIPs {
-		gs.Status.Addresses = append(gs.Status.Addresses, corev1.NodeAddress{
-			Type:    agonesv1.NodePodIP,
-			Address: ip.IP,
-		})
-	}
-
 	if err := syncPodPortsToGameServer(gs, pod); err != nil {
 		return gs, errors.Wrapf(err, "cloud product error syncing ports on GameServer %s", gs.ObjectMeta.Name)
 	}
@@ -112,6 +105,21 @@ func applyGameServerAddressAndPort(gs *agonesv1.GameServer, node *corev1.Node, p
 	}
 
 	return gs, nil
+}
+
+func applyAddressPodIP(gs *agonesv1.GameServer, pod *corev1.Pod) (*agonesv1.GameServer, bool) {
+	if pod == nil || len(pod.Status.PodIPs) < 1 {
+		return gs, false
+	}
+
+	for _, ip := range pod.Status.PodIPs {
+		gs.Status.Addresses = append(gs.Status.Addresses, corev1.NodeAddress{
+			Type:    agonesv1.NodePodIP,
+			Address: ip.IP,
+		})
+	}
+
+	return gs, true
 }
 
 // isBeforePodCreated checks to see if the GameServer is in a state in which the pod could not have been
