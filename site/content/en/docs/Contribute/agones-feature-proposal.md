@@ -66,7 +66,7 @@ To get started with contributing to the AFP process, check out the following res
 
 - **[AFP Template](https://github.com/googleforgames/agones/blob/main/docs/proposals/NNNN-afp-template/README.md)**: A detailed template for creating an AFP.
 - **[AFP Metadata](https://github.com/googleforgames/agones/blob/main/docs/proposals/README.md#afp-metadata)**: Information on the metadata required for each AFP.
-- **[How to Propose a Feature](https://github.com/googleforgames/agones/issues/new/choose)**: Step-by-step instructions on how to submit a new AFP.
+- **[How to Propose a Feature](https://github.com/googleforgames/agones/issues/new?template=feature_request.md)**: Step-by-step instructions on how to submit a new AFP.
 
 <!-- ### Examples of AFPs
 
