@@ -72,8 +72,8 @@ GKE Autopilot supports only `Never` and `Always`, not `OnUpgrade`. However, with
 
 Outside of Cluster Autoscaler, the main source of disruption for long sessions is node upgrade. On some cloud products, such as GKE Standard, node upgrades are entirely within your control. On others, such as GKE Autopilot, node upgrade is automatic. Typical node upgrades use an eviction based, rolling recreate strategy, and may not honor `PodDisruptionBudget` for longer than an hour. See [Best Practices]({{< relref "Best Practices" >}}) for information specific to your cloud product.
 
-## Extended Duration Pods in GKE Autopilot (Kubernetes 1.27+)
-Starting with Kubernetes 1.27, GKE Autopilot introduces support for extended duration pods, allowing them to run continuously for up to 7 days. This feature is ideal for game servers that need longer operational periods. It helps to minimize disruptions during node upgrades over the 7-day duration. To avoid any issues, make sure your game servers appropriately handle `TERM` signals and set `terminationGracePeriodSeconds` accordingly.
+## [Extended Duration Pods in GKE Autopilot](https://cloud.google.com/kubernetes-engine/docs/how-to/extended-duration-pods) (Kubernetes 1.27+)
+Starting with Kubernetes 1.27, GKE Autopilot introduces support for extended duration pods, allowing them to run continuously for up to 7 days. This feature is ideal for game servers that need longer operational periods. It helps to minimize disruptions during node upgrades over the 7-day duration.
 
 ## Implementation / Under the hood
 
