@@ -602,6 +602,8 @@ func (c *Allocator) allocationUpdateWorkers(ctx context.Context, workerCount int
 						}
 						res.err = errors.Wrap(err, "error updating allocated gameserver")
 					} else {
+						// Ubi change: add the server back as soon as possible and not wait for the informer to update the cache
+						c.allocationCache.AddGameServer(gs)
 						res.gs = gs
 					}
 
