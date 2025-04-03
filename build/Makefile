@@ -69,10 +69,10 @@ KIND_CONTAINER_NAME=$(KIND_PROFILE)-control-plane
 GS_TEST_IMAGE ?= us-docker.pkg.dev/agones-images/examples/simple-game-server:0.36
 
 # Enable all beta feature gates. Keep in sync with `true` (beta) entries in pkg/util/runtime/features.go:featureDefaults
-BETA_FEATURE_GATES ?= "AutopilotPassthroughPort=true&CountsAndLists=true&DisableResyncOnSDKServer=true&GKEAutopilotExtendedDurationPods=true"
+BETA_FEATURE_GATES ?= "AutopilotPassthroughPort=true&CountsAndLists=true&DisableResyncOnSDKServer=true&GKEAutopilotExtendedDurationPods=true&PortPolicyNone=true"
 
 # Enable all alpha feature gates. Keep in sync with `false` (alpha) entries in pkg/util/runtime/features.go:featureDefaults
-ALPHA_FEATURE_GATES ?= "PlayerAllocationFilter=true&FleetAutoscaleRequestMetaData=true&PlayerTracking=true&RollingUpdateFix=true&PortRanges=true&PortPolicyNone=true&ScheduledAutoscaler=true&Example=true"
+ALPHA_FEATURE_GATES ?= "PlayerAllocationFilter=true&FleetAutoscaleRequestMetaData=true&PlayerTracking=true&RollingUpdateFix=true&PortRanges=true&ScheduledAutoscaler=true&Example=true"
 
 # Build with Windows support
 WITH_WINDOWS=1
