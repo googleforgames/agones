@@ -696,8 +696,9 @@ func Retry(backoff wait.Backoff, fn func() error) error {
 		switch {
 		case err == nil:
 			return true, nil
-		case err == ErrNoGameServer:
-			return true, err
+		// Ubi change: No quick 400s (still do retries for ErrNoGameServer)
+		//case err == ErrNoGameServer:
+		//	return true, err
 		case err == ErrTotalTimeoutExceeded:
 			return true, err
 		default:
