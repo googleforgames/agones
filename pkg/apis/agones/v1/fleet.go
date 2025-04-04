@@ -83,6 +83,8 @@ type FleetSpec struct {
 	Priorities []Priority `json:"priorities,omitempty"`
 	// Template the GameServer template to apply for this Fleet
 	Template GameServerTemplateSpec `json:"template"`
+	// Allows to surge the number of replicas above the desired replicas when scaling up.
+	AllowReplicaSurge bool `json:"allowReplicaSurge"`
 }
 
 // FleetStatus is the status of a Fleet
