@@ -45,6 +45,9 @@ const (
 	// FeatureDisableResyncOnSDKServer is a feature flag to enable/disable resync on SDK server.
 	FeatureDisableResyncOnSDKServer Feature = "DisableResyncOnSDKServer"
 
+	// FeaturePortPolicyNone is a feature flag to allow setting Port Policy to None.
+	FeaturePortPolicyNone Feature = "PortPolicyNone"
+
 	////////////////
 	// Alpha features
 
@@ -60,9 +63,6 @@ const (
 
 	// FeaturePortRanges is a feature flag to enable/disable specific port ranges.
 	FeaturePortRanges Feature = "PortRanges"
-
-	// FeaturePortPolicyNone is a feature flag to allow setting Port Policy to None.
-	FeaturePortPolicyNone Feature = "PortPolicyNone"
 
 	// FeatureRollingUpdateFix is a feature flag to enable/disable fleet controller fixes.
 	FeatureRollingUpdateFix Feature = "RollingUpdateFix"
@@ -135,6 +135,7 @@ var (
 		FeatureAutopilotPassthroughPort:         true,
 		FeatureCountsAndLists:                   true,
 		FeatureDisableResyncOnSDKServer:         true,
+		FeaturePortPolicyNone:                   true,
 
 		// Alpha features
 		FeatureFleetAutoscaleRequestMetaData: false,
@@ -142,7 +143,6 @@ var (
 		FeaturePlayerTracking:                false,
 		FeatureRollingUpdateFix:              false,
 		FeaturePortRanges:                    false,
-		FeaturePortPolicyNone:                false,
 		FeatureScheduledAutoscaler:           false,
 
 		// Dev features

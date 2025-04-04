@@ -440,7 +440,7 @@ steps:
         declare -A versionsAndRegions=( [1.30]=asia-east1 [1.31]=us-east1 [1.32]=us-west1 )
 
         # Keep in sync with (the inverse of) pkg/util/runtime/features.go:featureDefaults
-        featureWithGate="PlayerAllocationFilter=true&FleetAutoscaleRequestMetaData=true&PlayerTracking=true&CountsAndLists=false&RollingUpdateFix=true&PortRanges=true&PortPolicyNone=true&ScheduledAutoscaler=true&DisableResyncOnSDKServer=false&AutopilotPassthroughPort=false&GKEAutopilotExtendedDurationPods=false&Example=true"
+        featureWithGate="PlayerAllocationFilter=true&FleetAutoscaleRequestMetaData=true&PlayerTracking=true&CountsAndLists=false&RollingUpdateFix=true&PortRanges=true&PortPolicyNone=false&ScheduledAutoscaler=true&DisableResyncOnSDKServer=false&AutopilotPassthroughPort=false&GKEAutopilotExtendedDurationPods=false&Example=true"
         featureWithoutGate=""
 
         # Use this if specific feature gates can only be supported on specific Kubernetes versions.
