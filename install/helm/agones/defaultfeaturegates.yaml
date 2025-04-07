@@ -15,18 +15,19 @@
 # Default values for feature gates. Keep in sync with pkg/util/runtime/features.go:featureDefaults
 
 # Beta features
-PortPolicyNone: true
-GKEAutopilotExtendedDurationPods: true
+
 AutopilotPassthroughPort: true
 CountsAndLists: true
 DisableResyncOnSDKServer: true
+GKEAutopilotExtendedDurationPods: true
+PortPolicyNone: true
+PortRanges: true
 
 # Alpha features
 FleetAutoscaleRequestMetaData: false
 PlayerAllocationFilter: false
 PlayerTracking: false
 RollingUpdateFix: false
-PortRanges: false
 ScheduledAutoscaler: false
 
 # Dev features
