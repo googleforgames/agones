@@ -35,13 +35,29 @@ The following is the process for what happens to a `GameServer` when it is unhea
    but will immediately move to an `Unhealthy` state.
 1. If the SDK sidecar fails, then it will be restarted, assuming the `RestartPolicy` is Always/OnFailure.
 
+{{< alpha title="Sidecar Containers" gate="SidecarContainers" >}}
+
+When enabling the `SidecarContainers` feature gate, the Agones SDK server will be run as a
+[sidecar container](https://kubernetes.io/docs/concepts/workloads/pods/sidecar-containers/)
+in the same Pod as the game server, and the container restart and Health checking rules are more simplified from the 
+above.
+
+The following is the process for what happens to a `GameServer` when it is unhealthy.
+
+1. The Pod is set to `restartPolicy: Never` by default.
+2. The SDK server sidecar container is set to `restartPolicy: Always`.
+3. If main containers within the Pod fail, the `GameServere` will move to an `Unhealthy` state.
+4. The SDK server sidecar container stays alive for the entire duration of the Pod, and therefore SDK functionality 
+   is always available.
+5. If the SDK sidecar fails, then it will be restarted, assuming the `restartPolicy` remains the default.
+
 ## Fleet Management of Unhealthy GameServers
 
 If a `GameServer` moves into an `Unhealthy` state when it is not part of a Fleet, the `GameServer` will remain in the
 Unhealthy state until explicitly deleted.  This is useful for debugging `Unhealthy` `GameServers`, or if you are
 creating your own `GameServer` management layer, you can explicitly choose what to do if a `GameServer` becomes
 `Unhealthy`.
-  
+
 If a `GameServer` is part of a `Fleet`, the `Fleet` management system will _delete_ any `Unhealthy` `GameServers` and
 immediately replace them with a brand new `GameServer` to ensure it has the configured number of Replicas.
 
@@ -98,4 +114,3 @@ int main() {
 ### Full Game Server
 
 Also look in the {{< ghlink href="examples" >}}examples{{< /ghlink >}} directory.
-
