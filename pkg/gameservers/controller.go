@@ -591,10 +591,15 @@ func (c *Controller) syncGameServerCreatingState(ctx context.Context, gs *agones
 		return nil, errors.WithStack(err)
 	}
 
+	node, err := c.nodeLister.Get(pod.Spec.NodeName)
+	if err != nil {
+		return gs, errors.Wrapf(err, "error retrieving node %s for Pod %s", pod.Spec.NodeName, pod.ObjectMeta.Name)
+	}
+
 	gsCopy := gs.DeepCopy()
 
 	// Apply the pod IP if available
-	gsCopy, _ = applyAddressPodIP(gsCopy, pod)
+	gsCopy, _ = applyGameServerAddressAndPort(gsCopy, node, pod, c.controllerHooks.SyncPodPortsToGameServer)
 
 	gsCopy.Status.State = agonesv1.GameServerStateStarting
 	gs, err = c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(ctx, gsCopy, metav1.UpdateOptions{})
@@ -901,10 +906,9 @@ func (c *Controller) syncGameServerStartingState(ctx context.Context, gs *agones
 		return gs, err
 	}
 
-	gsCopy, podIPPopulated := applyAddressPodIP(gsCopy, pod)
 	// Update ports and address even if there is no pod IPs populated yet
 	// Don't update state to GameServerStateScheduled until pod IPs populated
-	if !podIPPopulated {
+	if !hasPodIPAddress(gsCopy) {
 		gs, err = c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(ctx, gsCopy, metav1.UpdateOptions{})
 		if err != nil {
 			return gs, errors.Wrapf(err, "error updating GameServer %s address and port", gs.Name)
@@ -948,15 +952,8 @@ func (c *Controller) syncGameServerRequestReadyState(ctx context.Context, gs *ag
 	// if the address hasn't been populated, and the Ready request comes
 	// before the controller has had a chance to do it, then
 	// do it here instead
-	var hasPodIPAddress bool
-	for _, addr := range gs.Status.Addresses {
-		if addr.Type == agonesv1.NodePodIP {
-			hasPodIPAddress = true
-		}
-	}
-
 	addressPopulated := false
-	if gs.Status.NodeName == "" || !hasPodIPAddress {
+	if gs.Status.NodeName == "" || !hasPodIPAddress(gs) {
 		addressPopulated = true
 
 		if pod.Spec.NodeName == "" {
@@ -971,9 +968,7 @@ func (c *Controller) syncGameServerRequestReadyState(ctx context.Context, gs *ag
 			return gs, err
 		}
 
-		var podIPPopulated bool
-		gsCopy, podIPPopulated = applyAddressPodIP(gsCopy, pod)
-		if !podIPPopulated {
+		if !hasPodIPAddress(gsCopy) {
 			addressPopulated = false
 		}
 	}
