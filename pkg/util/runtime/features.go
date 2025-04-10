@@ -37,10 +37,6 @@ const (
 	////////////////
 	// Beta features
 
-	// FeatureGKEAutopilotExtendedDurationPods enables the use of Extended Duration pods
-	// when Agones is running on Autopilot. Available on 1.28+ only.
-	FeatureGKEAutopilotExtendedDurationPods = "GKEAutopilotExtendedDurationPods"
-
 	// FeatureAutopilotPassthroughPort is a feature flag that enables/disables Passthrough Port Policy.
 	FeatureAutopilotPassthroughPort Feature = "AutopilotPassthroughPort"
 
@@ -48,8 +44,15 @@ const (
 	// (a generic implenetation of the player tracking feature).
 	FeatureCountsAndLists Feature = "CountsAndLists"
 
+	// FeatureGKEAutopilotExtendedDurationPods enables the use of Extended Duration pods
+	// when Agones is running on Autopilot. Available on 1.28+ only.
+	FeatureGKEAutopilotExtendedDurationPods = "GKEAutopilotExtendedDurationPods"
+
 	// FeaturePortPolicyNone is a feature flag to allow setting Port Policy to None.
 	FeaturePortPolicyNone Feature = "PortPolicyNone"
+
+	// FeaturePortRanges is a feature flag to enable/disable specific port ranges.
+	FeaturePortRanges Feature = "PortRanges"
 
 	////////////////
 	// Alpha features
@@ -63,9 +66,6 @@ const (
 
 	// FeaturePlayerTracking is a feature flag to enable/disable player tracking features.
 	FeaturePlayerTracking Feature = "PlayerTracking"
-
-	// FeaturePortRanges is a feature flag to enable/disable specific port ranges.
-	FeaturePortRanges Feature = "PortRanges"
 
 	// FeatureRollingUpdateFix is a feature flag to enable/disable fleet controller fixes.
 	FeatureRollingUpdateFix Feature = "RollingUpdateFix"
@@ -142,17 +142,17 @@ var (
 		FeatureDisableResyncOnSDKServer: true,
 
 		// Beta features
-		FeatureGKEAutopilotExtendedDurationPods: true,
 		FeatureAutopilotPassthroughPort:         true,
 		FeatureCountsAndLists:                   true,
+		FeatureGKEAutopilotExtendedDurationPods: true,
 		FeaturePortPolicyNone:                   true,
+		FeaturePortRanges:                       true,
 
 		// Alpha features
 		FeatureFleetAutoscaleRequestMetaData: false,
 		FeaturePlayerAllocationFilter:        false,
 		FeaturePlayerTracking:                false,
 		FeatureRollingUpdateFix:              false,
-		FeaturePortRanges:                    false,
 		FeatureScheduledAutoscaler:           false,
 
 		// Dev features

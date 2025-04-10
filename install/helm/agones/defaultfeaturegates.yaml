@@ -20,17 +20,18 @@
 DisableResyncOnSDKServer: true
 
 # Beta features
-PortPolicyNone: true
-GKEAutopilotExtendedDurationPods: true
+
 AutopilotPassthroughPort: true
 CountsAndLists: true
+GKEAutopilotExtendedDurationPods: true
+PortPolicyNone: true
+PortRanges: true
 
 # Alpha features
 FleetAutoscaleRequestMetaData: false
 PlayerAllocationFilter: false
 PlayerTracking: false
 RollingUpdateFix: false
-PortRanges: false
 ScheduledAutoscaler: false
 
 # Dev features
