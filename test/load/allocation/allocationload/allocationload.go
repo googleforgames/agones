@@ -87,12 +87,24 @@ func main() {
 			}
 			grpcClient := pb.NewAllocationServiceClient(conn)
 
+			// Create a WaitGroup for the allocations within this client
+			var allocWg sync.WaitGroup
+
 			for i := 0; i < *perClientAllocs; i++ {
-				_, err := grpcClient.Allocate(context.Background(), request)
-				if err != nil {
-					fmt.Printf("(failed(client=%v,allocation=%v): %v\n", clientID, i+1, err)
-				}
+				allocWg.Add(1)
+
+				// Launch each allocation in its own goroutine
+				go func(allocID int) {
+					defer allocWg.Done()
+					_, err := grpcClient.Allocate(context.Background(), request)
+					if err != nil {
+						fmt.Printf("(failed(client=%v,allocation=%v): %v\n", clientID, allocID+1, err)
+					}
+				}(i)
 			}
+
+			// Wait for all allocations from this client to complete
+			allocWg.Wait()
 			_ = conn.Close()
 		}(k)
 	}
