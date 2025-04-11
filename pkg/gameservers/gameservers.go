@@ -114,6 +114,19 @@ func applyGameServerAddressAndPort(gs *agonesv1.GameServer, node *corev1.Node, p
 	return gs, nil
 }
 
+func hasPodIPAddress(gs *agonesv1.GameServer) bool {
+	if gs == nil {
+		return false
+	}
+
+	for _, addr := range gs.Status.Addresses {
+		if addr.Type == agonesv1.NodePodIP {
+			return true
+		}
+	}
+	return false
+}
+
 // isBeforePodCreated checks to see if the GameServer is in a state in which the pod could not have been
 // created yet. This includes "Starting" in which a pod MAY exist, but may not yet be available, depending on when the
 // informer cache updates
