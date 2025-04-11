@@ -199,7 +199,7 @@ func TestComputeDesiredFleetSize(t *testing.T) {
 			_, cancel := agtesting.StartInformers(m, gameServers.Informer().HasSynced)
 			defer cancel()
 
-			replicas, limited, err := computeDesiredFleetSize(fas.Spec.Policy, f, gameServers.Lister(), nc)
+			replicas, limited, err := computeDesiredFleetSize(fas.Spec.Policy, f, gameServers.Lister().GameServers(f.ObjectMeta.Namespace), nc)
 
 			if tc.expected.err != "" && assert.NotNil(t, err) {
 				assert.Equal(t, tc.expected.err, err.Error())
@@ -923,7 +923,8 @@ func TestApplyCounterPolicy(t *testing.T) {
 			},
 			gsList: []agonesv1.GameServer{
 				{ObjectMeta: metav1.ObjectMeta{
-					Name: "gs1",
+					Name:      "gs1",
+					Namespace: "default",
 					// We need the Label here so that the Lister can pick up that the gameserver is a part of
 					// the fleet. If this was a real gameserver it would also have a label for
 					// "agones.dev/gameserverset": "gameServerSetName".
@@ -939,8 +940,9 @@ func TestApplyCounterPolicy(t *testing.T) {
 								Capacity: 10,
 							}}}},
 				{ObjectMeta: metav1.ObjectMeta{
-					Name:   "gs2",
-					Labels: map[string]string{"agones.dev/fleet": "fleet-1"}},
+					Name:      "gs2",
+					Namespace: "default",
+					Labels:    map[string]string{"agones.dev/fleet": "fleet-1"}},
 					Status: agonesv1.GameServerStatus{
 						NodeName: "n1",
 						Counters: map[string]agonesv1.CounterStatus{
@@ -949,8 +951,9 @@ func TestApplyCounterPolicy(t *testing.T) {
 								Capacity: 5,
 							}}}},
 				{ObjectMeta: metav1.ObjectMeta{
-					Name:   "gs3",
-					Labels: map[string]string{"agones.dev/fleet": "fleet-1"}},
+					Name:      "gs3",
+					Namespace: "default",
+					Labels:    map[string]string{"agones.dev/fleet": "fleet-1"}},
 					Status: agonesv1.GameServerStatus{
 						NodeName: "n1",
 						Counters: map[string]agonesv1.CounterStatus{
@@ -959,8 +962,9 @@ func TestApplyCounterPolicy(t *testing.T) {
 								Capacity: 7,
 							}}}},
 				{ObjectMeta: metav1.ObjectMeta{
-					Name:   "gs4",
-					Labels: map[string]string{"agones.dev/fleet": "fleet-1"}},
+					Name:      "gs4",
+					Namespace: "default",
+					Labels:    map[string]string{"agones.dev/fleet": "fleet-1"}},
 					Status: agonesv1.GameServerStatus{
 						NodeName: "n1",
 						Counters: map[string]agonesv1.CounterStatus{
@@ -969,8 +973,9 @@ func TestApplyCounterPolicy(t *testing.T) {
 								Capacity: 14,
 							}}}},
 				{ObjectMeta: metav1.ObjectMeta{
-					Name:   "gs5",
-					Labels: map[string]string{"agones.dev/fleet": "fleet-1"}},
+					Name:      "gs5",
+					Namespace: "default",
+					Labels:    map[string]string{"agones.dev/fleet": "fleet-1"}},
 					Status: agonesv1.GameServerStatus{
 						NodeName: "n1",
 						Counters: map[string]agonesv1.CounterStatus{
@@ -979,8 +984,9 @@ func TestApplyCounterPolicy(t *testing.T) {
 								Capacity: 13,
 							}}}},
 				{ObjectMeta: metav1.ObjectMeta{
-					Name:   "gs6",
-					Labels: map[string]string{"agones.dev/fleet": "fleet-1"}},
+					Name:      "gs6",
+					Namespace: "default",
+					Labels:    map[string]string{"agones.dev/fleet": "fleet-1"}},
 					Status: agonesv1.GameServerStatus{
 						NodeName: "n1",
 						Counters: map[string]agonesv1.CounterStatus{
@@ -989,8 +995,9 @@ func TestApplyCounterPolicy(t *testing.T) {
 								Capacity: 7,
 							}}}},
 				{ObjectMeta: metav1.ObjectMeta{
-					Name:   "gs7",
-					Labels: map[string]string{"agones.dev/fleet": "fleet-1"}},
+					Name:      "gs7",
+					Namespace: "default",
+					Labels:    map[string]string{"agones.dev/fleet": "fleet-1"}},
 					Status: agonesv1.GameServerStatus{
 						NodeName: "n1",
 						Counters: map[string]agonesv1.CounterStatus{
@@ -999,8 +1006,9 @@ func TestApplyCounterPolicy(t *testing.T) {
 								Capacity: 7,
 							}}}},
 				{ObjectMeta: metav1.ObjectMeta{
-					Name:   "gs8",
-					Labels: map[string]string{"agones.dev/fleet": "fleet-1"}},
+					Name:      "gs8",
+					Namespace: "default",
+					Labels:    map[string]string{"agones.dev/fleet": "fleet-1"}},
 					Status: agonesv1.GameServerStatus{
 						NodeName: "n1",
 						Counters: map[string]agonesv1.CounterStatus{
@@ -1147,8 +1155,9 @@ func TestApplyCounterPolicy(t *testing.T) {
 			},
 			gsList: []agonesv1.GameServer{
 				{ObjectMeta: metav1.ObjectMeta{
-					Name:   "gs1",
-					Labels: map[string]string{"agones.dev/fleet": "fleet-1"}},
+					Name:      "gs1",
+					Namespace: "default",
+					Labels:    map[string]string{"agones.dev/fleet": "fleet-1"}},
 					Status: agonesv1.GameServerStatus{
 						NodeName: "n1",
 						Counters: map[string]agonesv1.CounterStatus{
@@ -1157,8 +1166,9 @@ func TestApplyCounterPolicy(t *testing.T) {
 								Capacity: 10,
 							}}}},
 				{ObjectMeta: metav1.ObjectMeta{
-					Name:   "gs2",
-					Labels: map[string]string{"agones.dev/fleet": "fleet-1"}},
+					Name:      "gs2",
+					Namespace: "default",
+					Labels:    map[string]string{"agones.dev/fleet": "fleet-1"}},
 					Status: agonesv1.GameServerStatus{
 						NodeName: "n1",
 						Counters: map[string]agonesv1.CounterStatus{
@@ -1167,8 +1177,9 @@ func TestApplyCounterPolicy(t *testing.T) {
 								Capacity: 5,
 							}}}},
 				{ObjectMeta: metav1.ObjectMeta{
-					Name:   "gs3",
-					Labels: map[string]string{"agones.dev/fleet": "fleet-1"}},
+					Name:      "gs3",
+					Namespace: "default",
+					Labels:    map[string]string{"agones.dev/fleet": "fleet-1"}},
 					Status: agonesv1.GameServerStatus{
 						NodeName: "n1",
 						Counters: map[string]agonesv1.CounterStatus{
@@ -1177,8 +1188,9 @@ func TestApplyCounterPolicy(t *testing.T) {
 								Capacity: 7,
 							}}}},
 				{ObjectMeta: metav1.ObjectMeta{
-					Name:   "gs4",
-					Labels: map[string]string{"agones.dev/fleet": "fleet-1"}},
+					Name:      "gs4",
+					Namespace: "default",
+					Labels:    map[string]string{"agones.dev/fleet": "fleet-1"}},
 					Status: agonesv1.GameServerStatus{
 						NodeName: "n1",
 						Counters: map[string]agonesv1.CounterStatus{
@@ -1309,8 +1321,9 @@ func TestApplyCounterPolicy(t *testing.T) {
 			},
 			gsList: []agonesv1.GameServer{
 				{ObjectMeta: metav1.ObjectMeta{
-					Name:   "gs1",
-					Labels: map[string]string{"agones.dev/fleet": "fleet-1"}},
+					Name:      "gs1",
+					Namespace: "default",
+					Labels:    map[string]string{"agones.dev/fleet": "fleet-1"}},
 					Status: agonesv1.GameServerStatus{
 						NodeName: "n1",
 						Counters: map[string]agonesv1.CounterStatus{
@@ -1319,8 +1332,9 @@ func TestApplyCounterPolicy(t *testing.T) {
 								Capacity: 5,
 							}}}},
 				{ObjectMeta: metav1.ObjectMeta{
-					Name:   "gs2",
-					Labels: map[string]string{"agones.dev/fleet": "fleet-1"}},
+					Name:      "gs2",
+					Namespace: "default",
+					Labels:    map[string]string{"agones.dev/fleet": "fleet-1"}},
 					Status: agonesv1.GameServerStatus{
 						NodeName: "n1",
 						Counters: map[string]agonesv1.CounterStatus{
@@ -1329,8 +1343,9 @@ func TestApplyCounterPolicy(t *testing.T) {
 								Capacity: 5,
 							}}}},
 				{ObjectMeta: metav1.ObjectMeta{
-					Name:   "gs3",
-					Labels: map[string]string{"agones.dev/fleet": "fleet-1"}},
+					Name:      "gs3",
+					Namespace: "default",
+					Labels:    map[string]string{"agones.dev/fleet": "fleet-1"}},
 					Status: agonesv1.GameServerStatus{
 						NodeName: "n1",
 						Counters: map[string]agonesv1.CounterStatus{
@@ -1458,8 +1473,9 @@ func TestApplyCounterPolicy(t *testing.T) {
 			},
 			gsList: []agonesv1.GameServer{
 				{ObjectMeta: metav1.ObjectMeta{
-					Name:   "gs1",
-					Labels: map[string]string{"agones.dev/fleet": "fleet-1"}},
+					Name:      "gs1",
+					Namespace: "default",
+					Labels:    map[string]string{"agones.dev/fleet": "fleet-1"}},
 					Status: agonesv1.GameServerStatus{
 						NodeName: "n1",
 						Counters: map[string]agonesv1.CounterStatus{
@@ -1468,8 +1484,9 @@ func TestApplyCounterPolicy(t *testing.T) {
 								Capacity: 10,
 							}}}},
 				{ObjectMeta: metav1.ObjectMeta{
-					Name:   "gs2",
-					Labels: map[string]string{"agones.dev/fleet": "fleet-1"}},
+					Name:      "gs2",
+					Namespace: "default",
+					Labels:    map[string]string{"agones.dev/fleet": "fleet-1"}},
 					Status: agonesv1.GameServerStatus{
 						NodeName: "n1",
 						Counters: map[string]agonesv1.CounterStatus{
@@ -1478,8 +1495,9 @@ func TestApplyCounterPolicy(t *testing.T) {
 								Capacity: 10,
 							}}}},
 				{ObjectMeta: metav1.ObjectMeta{
-					Name:   "gs3",
-					Labels: map[string]string{"agones.dev/fleet": "fleet-1"}},
+					Name:      "gs3",
+					Namespace: "default",
+					Labels:    map[string]string{"agones.dev/fleet": "fleet-1"}},
 					Status: agonesv1.GameServerStatus{
 						NodeName: "n1",
 						Counters: map[string]agonesv1.CounterStatus{
@@ -1514,7 +1532,7 @@ func TestApplyCounterPolicy(t *testing.T) {
 				informer.GameServers().Informer().HasSynced)
 			defer cancel()
 
-			replicas, limited, err := applyCounterOrListPolicy(tc.cp, nil, tc.fleet, informer.GameServers().Lister(), nc)
+			replicas, limited, err := applyCounterOrListPolicy(tc.cp, nil, tc.fleet, informer.GameServers().Lister().GameServers(tc.fleet.ObjectMeta.Namespace), nc)
 
 			if tc.want.wantErr {
 				assert.NotNil(t, err)
@@ -1746,8 +1764,9 @@ func TestApplyListPolicy(t *testing.T) {
 			},
 			gsList: []agonesv1.GameServer{
 				{ObjectMeta: metav1.ObjectMeta{
-					Name:   "gs1",
-					Labels: map[string]string{"agones.dev/fleet": "fleet-1"}},
+					Name:      "gs1",
+					Namespace: "default",
+					Labels:    map[string]string{"agones.dev/fleet": "fleet-1"}},
 					Status: agonesv1.GameServerStatus{
 						NodeName: "n1",
 						Lists: map[string]agonesv1.ListStatus{
@@ -1756,8 +1775,9 @@ func TestApplyListPolicy(t *testing.T) {
 								Capacity: 10,
 							}}}},
 				{ObjectMeta: metav1.ObjectMeta{
-					Name:   "gs2",
-					Labels: map[string]string{"agones.dev/fleet": "fleet-1"}},
+					Name:      "gs2",
+					Namespace: "default",
+					Labels:    map[string]string{"agones.dev/fleet": "fleet-1"}},
 					Status: agonesv1.GameServerStatus{
 						NodeName: "n1",
 						Lists: map[string]agonesv1.ListStatus{
@@ -1766,8 +1786,9 @@ func TestApplyListPolicy(t *testing.T) {
 								Capacity: 10,
 							}}}},
 				{ObjectMeta: metav1.ObjectMeta{
-					Name:   "gs3",
-					Labels: map[string]string{"agones.dev/fleet": "fleet-1"}},
+					Name:      "gs3",
+					Namespace: "default",
+					Labels:    map[string]string{"agones.dev/fleet": "fleet-1"}},
 					Status: agonesv1.GameServerStatus{
 						NodeName: "n1",
 						Lists: map[string]agonesv1.ListStatus{
@@ -1776,8 +1797,9 @@ func TestApplyListPolicy(t *testing.T) {
 								Capacity: 10,
 							}}}},
 				{ObjectMeta: metav1.ObjectMeta{
-					Name:   "gs4",
-					Labels: map[string]string{"agones.dev/fleet": "fleet-1"}},
+					Name:      "gs4",
+					Namespace: "default",
+					Labels:    map[string]string{"agones.dev/fleet": "fleet-1"}},
 					Status: agonesv1.GameServerStatus{
 						NodeName: "n1",
 						Lists: map[string]agonesv1.ListStatus{
@@ -1786,8 +1808,9 @@ func TestApplyListPolicy(t *testing.T) {
 								Capacity: 8,
 							}}}},
 				{ObjectMeta: metav1.ObjectMeta{
-					Name:   "gs5",
-					Labels: map[string]string{"agones.dev/fleet": "fleet-1"}},
+					Name:      "gs5",
+					Namespace: "default",
+					Labels:    map[string]string{"agones.dev/fleet": "fleet-1"}},
 					Status: agonesv1.GameServerStatus{
 						NodeName: "n1",
 						Lists: map[string]agonesv1.ListStatus{
@@ -1796,8 +1819,9 @@ func TestApplyListPolicy(t *testing.T) {
 								Capacity: 10,
 							}}}},
 				{ObjectMeta: metav1.ObjectMeta{
-					Name:   "gs6",
-					Labels: map[string]string{"agones.dev/fleet": "fleet-1"}},
+					Name:      "gs6",
+					Namespace: "default",
+					Labels:    map[string]string{"agones.dev/fleet": "fleet-1"}},
 					Status: agonesv1.GameServerStatus{
 						NodeName: "n1",
 						Lists: map[string]agonesv1.ListStatus{
@@ -1806,8 +1830,9 @@ func TestApplyListPolicy(t *testing.T) {
 								Capacity: 4,
 							}}}},
 				{ObjectMeta: metav1.ObjectMeta{
-					Name:   "gs7",
-					Labels: map[string]string{"agones.dev/fleet": "fleet-1"}},
+					Name:      "gs7",
+					Namespace: "default",
+					Labels:    map[string]string{"agones.dev/fleet": "fleet-1"}},
 					Status: agonesv1.GameServerStatus{
 						NodeName: "n1",
 						Lists: map[string]agonesv1.ListStatus{
@@ -1816,8 +1841,9 @@ func TestApplyListPolicy(t *testing.T) {
 								Capacity: 8,
 							}}}},
 				{ObjectMeta: metav1.ObjectMeta{
-					Name:   "gs8",
-					Labels: map[string]string{"agones.dev/fleet": "fleet-1"}},
+					Name:      "gs8",
+					Namespace: "default",
+					Labels:    map[string]string{"agones.dev/fleet": "fleet-1"}},
 					Status: agonesv1.GameServerStatus{
 						NodeName: "n1",
 						Lists: map[string]agonesv1.ListStatus{
@@ -1885,8 +1911,9 @@ func TestApplyListPolicy(t *testing.T) {
 			},
 			gsList: []agonesv1.GameServer{
 				{ObjectMeta: metav1.ObjectMeta{
-					Name:   "gs1",
-					Labels: map[string]string{"agones.dev/fleet": "fleet-1"}},
+					Name:      "gs1",
+					Namespace: "default",
+					Labels:    map[string]string{"agones.dev/fleet": "fleet-1"}},
 					Status: agonesv1.GameServerStatus{
 						NodeName: "n1",
 						Lists: map[string]agonesv1.ListStatus{
@@ -1895,8 +1922,9 @@ func TestApplyListPolicy(t *testing.T) {
 								Capacity: 5,
 							}}}},
 				{ObjectMeta: metav1.ObjectMeta{
-					Name:   "gs2",
-					Labels: map[string]string{"agones.dev/fleet": "fleet-1"}},
+					Name:      "gs2",
+					Namespace: "default",
+					Labels:    map[string]string{"agones.dev/fleet": "fleet-1"}},
 					Status: agonesv1.GameServerStatus{
 						NodeName: "n1",
 						Lists: map[string]agonesv1.ListStatus{
@@ -1905,8 +1933,9 @@ func TestApplyListPolicy(t *testing.T) {
 								Capacity: 5,
 							}}}},
 				{ObjectMeta: metav1.ObjectMeta{
-					Name:   "gs3",
-					Labels: map[string]string{"agones.dev/fleet": "fleet-1"}},
+					Name:      "gs3",
+					Namespace: "default",
+					Labels:    map[string]string{"agones.dev/fleet": "fleet-1"}},
 					Status: agonesv1.GameServerStatus{
 						NodeName: "n1",
 						Lists: map[string]agonesv1.ListStatus{
@@ -1915,8 +1944,9 @@ func TestApplyListPolicy(t *testing.T) {
 								Capacity: 5,
 							}}}},
 				{ObjectMeta: metav1.ObjectMeta{
-					Name:   "gs4",
-					Labels: map[string]string{"agones.dev/fleet": "fleet-1"}},
+					Name:      "gs4",
+					Namespace: "default",
+					Labels:    map[string]string{"agones.dev/fleet": "fleet-1"}},
 					Status: agonesv1.GameServerStatus{
 						NodeName: "n1",
 						Lists: map[string]agonesv1.ListStatus{
@@ -2080,8 +2110,9 @@ func TestApplyListPolicy(t *testing.T) {
 			},
 			gsList: []agonesv1.GameServer{
 				{ObjectMeta: metav1.ObjectMeta{
-					Name:   "gs1",
-					Labels: map[string]string{"agones.dev/fleet": "fleet-1"}},
+					Name:      "gs1",
+					Namespace: "default",
+					Labels:    map[string]string{"agones.dev/fleet": "fleet-1"}},
 					Status: agonesv1.GameServerStatus{
 						NodeName: "n1",
 						Lists: map[string]agonesv1.ListStatus{
@@ -2090,8 +2121,9 @@ func TestApplyListPolicy(t *testing.T) {
 								Capacity: 15,
 							}}}},
 				{ObjectMeta: metav1.ObjectMeta{
-					Name:   "gs2",
-					Labels: map[string]string{"agones.dev/fleet": "fleet-1"}},
+					Name:      "gs2",
+					Namespace: "default",
+					Labels:    map[string]string{"agones.dev/fleet": "fleet-1"}},
 					Status: agonesv1.GameServerStatus{
 						NodeName: "n1",
 						Lists: map[string]agonesv1.ListStatus{
@@ -2100,8 +2132,9 @@ func TestApplyListPolicy(t *testing.T) {
 								Capacity: 10,
 							}}}},
 				{ObjectMeta: metav1.ObjectMeta{
-					Name:   "gs3",
-					Labels: map[string]string{"agones.dev/fleet": "fleet-1"}},
+					Name:      "gs3",
+					Namespace: "default",
+					Labels:    map[string]string{"agones.dev/fleet": "fleet-1"}},
 					Status: agonesv1.GameServerStatus{
 						NodeName: "n1",
 						Lists: map[string]agonesv1.ListStatus{
@@ -2110,8 +2143,9 @@ func TestApplyListPolicy(t *testing.T) {
 								Capacity: 5,
 							}}}},
 				{ObjectMeta: metav1.ObjectMeta{
-					Name:   "gs4",
-					Labels: map[string]string{"agones.dev/fleet": "fleet-1"}},
+					Name:      "gs4",
+					Namespace: "default",
+					Labels:    map[string]string{"agones.dev/fleet": "fleet-1"}},
 					Status: agonesv1.GameServerStatus{
 						NodeName: "n2",
 						Lists: map[string]agonesv1.ListStatus{
@@ -2120,8 +2154,9 @@ func TestApplyListPolicy(t *testing.T) {
 								Capacity: 5,
 							}}}},
 				{ObjectMeta: metav1.ObjectMeta{
-					Name:   "gs5",
-					Labels: map[string]string{"agones.dev/fleet": "fleet-1"}},
+					Name:      "gs5",
+					Namespace: "default",
+					Labels:    map[string]string{"agones.dev/fleet": "fleet-1"}},
 					Status: agonesv1.GameServerStatus{
 						NodeName: "n2",
 						Lists: map[string]agonesv1.ListStatus{
@@ -2163,8 +2198,9 @@ func TestApplyListPolicy(t *testing.T) {
 			},
 			gsList: []agonesv1.GameServer{
 				{ObjectMeta: metav1.ObjectMeta{
-					Name:   "gs1",
-					Labels: map[string]string{"agones.dev/fleet": "fleet-1"}},
+					Name:      "gs1",
+					Namespace: "default",
+					Labels:    map[string]string{"agones.dev/fleet": "fleet-1"}},
 					Status: agonesv1.GameServerStatus{
 						NodeName: "n1",
 						Lists: map[string]agonesv1.ListStatus{
@@ -2173,8 +2209,9 @@ func TestApplyListPolicy(t *testing.T) {
 								Capacity: 15,
 							}}}},
 				{ObjectMeta: metav1.ObjectMeta{
-					Name:   "gs2",
-					Labels: map[string]string{"agones.dev/fleet": "fleet-1"}},
+					Name:      "gs2",
+					Namespace: "default",
+					Labels:    map[string]string{"agones.dev/fleet": "fleet-1"}},
 					Status: agonesv1.GameServerStatus{
 						NodeName: "n1",
 						Lists: map[string]agonesv1.ListStatus{
@@ -2183,8 +2220,9 @@ func TestApplyListPolicy(t *testing.T) {
 								Capacity: 10,
 							}}}},
 				{ObjectMeta: metav1.ObjectMeta{
-					Name:   "gs3",
-					Labels: map[string]string{"agones.dev/fleet": "fleet-1"}},
+					Name:      "gs3",
+					Namespace: "default",
+					Labels:    map[string]string{"agones.dev/fleet": "fleet-1"}},
 					Status: agonesv1.GameServerStatus{
 						NodeName: "n1",
 						Lists: map[string]agonesv1.ListStatus{
@@ -2219,7 +2257,7 @@ func TestApplyListPolicy(t *testing.T) {
 				informer.GameServers().Informer().HasSynced)
 			defer cancel()
 
-			replicas, limited, err := applyCounterOrListPolicy(nil, tc.lp, tc.fleet, informer.GameServers().Lister(), nc)
+			replicas, limited, err := applyCounterOrListPolicy(nil, tc.lp, tc.fleet, informer.GameServers().Lister().GameServers(tc.fleet.ObjectMeta.Namespace), nc)
 
 			if tc.want.wantErr {
 				assert.NotNil(t, err)
