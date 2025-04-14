@@ -1,0 +1,22 @@
+name: Update Dependencies
+on:
+  schedule:
+    - cron: 0 0 * * 1
+jobs:
+  create_issue:
+    name: Create update dependency issue
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - name: Create issue every six weeks to update dependencies
+        run: |
+          [[ $(("( $(date +%s) - $(date +%s --date=20250310) ) / 86400 % 42")) -eq  0 ]] &&
+          new_issue_url=$(gh issue create \
+            --assignee "$ASSIGNEES" \
+            --template "Golang Version and Dependency Upgrades")
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          ASSIGNEES: 0xaravindh,kamaljeeti
