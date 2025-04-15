@@ -111,7 +111,7 @@ RUN apt-get update && apt-get install -y nodejs
 
 # install API reference docs generator
 RUN mkdir -p /go/src/github.com/ahmetb && \
-    cd /go/src/github.com/ahmetb && git clone -b v0.2.0 https://github.com/ahmetb/gen-crd-api-reference-docs && \
+    cd /go/src/github.com/ahmetb && git clone -b v0.3.0 https://github.com/ahmetb/gen-crd-api-reference-docs && \
     cd ./gen-crd-api-reference-docs && go build
 
 # html checker
