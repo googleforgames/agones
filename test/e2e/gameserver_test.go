@@ -31,6 +31,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
+	policyv1 "k8s.io/api/policy/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -803,22 +804,35 @@ func TestGameServerShutdown(t *testing.T) {
 // TestGameServerEvicted test that if Gameserver would be evicted than it becomes Unhealthy
 // Ephemeral Storage limit set to 0Mi
 func TestGameServerEvicted(t *testing.T) {
-	framework.SkipOnCloudProduct(t, "gke-autopilot", "Autopilot adjusts ephmeral storage to a minimum of 10Mi, see https://github.com/googleforgames/agones/issues/2890")
 	t.Parallel()
+	log := e2eframework.TestLogger(t)
+
 	ctx := context.Background()
 	gs := framework.DefaultGameServer(framework.Namespace)
-	gs.Spec.Template.Spec.Containers[0].Resources.Limits[corev1.ResourceEphemeralStorage] = resource.MustParse("0Mi")
+	newGs, err := framework.CreateGameServerAndWaitUntilReady(t, framework.Namespace, gs)
+	require.NoError(t, err)
+	log.WithField("name", newGs.ObjectMeta.Name).Info("GameServer created, waiting for being Evicted and Unhealthy")
+	defer framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Delete(ctx, newGs.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint: errcheck
 
-	newGs, err := framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Create(ctx, gs, metav1.CreateOptions{})
-	if err != nil {
-		assert.FailNow(t, fmt.Sprintf("creating %v GameServer instances failed (%v): %v", gs.Spec, gs.Name, err))
+	pods := framework.KubeClient.CoreV1().Pods(framework.Namespace)
+	pod, err := pods.Get(ctx, newGs.ObjectMeta.Name, metav1.GetOptions{})
+	require.NoError(t, err)
+
+	eviction := &policyv1.Eviction{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      pod.Name,
+			Namespace: pod.Namespace,
+		},
 	}
+	go func() {
+		time.Sleep(3 * time.Second) // just make sure it comes in later
+		log.WithField("name", eviction.ObjectMeta.Name).Info("Evicting pod!")
+		err := pods.EvictV1(context.Background(), eviction)
+		require.NoError(t, err)
+	}()
 
-	logrus.WithField("name", newGs.ObjectMeta.Name).Info("GameServer created, waiting for being Evicted and Unhealthy")
-
-	_, err = framework.WaitForGameServerState(t, newGs, agonesv1.GameServerStateUnhealthy, 5*time.Minute)
-
-	assert.Nil(t, err, fmt.Sprintf("waiting for %v GameServer Unhealthy state timed out (%v): %v", gs.Spec, gs.Name, err))
+	_, err = framework.WaitForGameServerState(t, newGs, agonesv1.GameServerStateUnhealthy, 10*time.Minute)
+	require.NoError(t, err, fmt.Sprintf("waiting for [%v] GameServer Unhealthy state timed out (%v)", gs.Status.State, gs.Name))
 }
 
 func TestGameServerPassthroughPort(t *testing.T) {
@@ -1648,6 +1662,39 @@ func TestLists(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestSideCarCommunicatesWhileTerminating(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	gs := framework.DefaultGameServer(framework.Namespace)
+
+	minute := int64(60)
+	gs.Spec.Template.Spec.Containers[0].Args = append(gs.Spec.Template.Spec.Containers[0].Args, "--gracefulTerminationDelaySec", "60")
+	gs.Spec.Template.Spec.TerminationGracePeriodSeconds = &minute
+	readyGs, err := framework.CreateGameServerAndWaitUntilReady(t, framework.Namespace, gs)
+	require.NoError(t, err)
+	require.Equal(t, readyGs.Status.State, agonesv1.GameServerStateReady)
+
+	// delete the GameServer
+	gameServers := framework.AgonesClient.AgonesV1().GameServers(framework.Namespace)
+	err = gameServers.Delete(context.Background(), readyGs.ObjectMeta.Name, metav1.DeleteOptions{})
+	require.NoError(t, err, "Could not delete GameServer")
+
+	// wait for the deletion timestamp to be set
+	err = wait.PollUntilContextTimeout(ctx, time.Second, time.Minute, true, func(ctx context.Context) (bool, error) {
+		gs, err := gameServers.Get(ctx, readyGs.ObjectMeta.Name, metav1.GetOptions{})
+		if err != nil {
+			return false, err
+		}
+		return gs.DeletionTimestamp != nil, nil
+	})
+	require.NoError(t, err, "Could not get a GameServer with deletion timestamp")
+
+	// send a "GAMESERVER" message, and confirm it works
+	reply, err := framework.SendGameServerUDP(t, readyGs, "GAMESERVER")
+	require.NoError(t, err)
+	require.Equal(t, fmt.Sprintf("NAME: %s\n", readyGs.ObjectMeta.Name), reply)
 }
 
 func TestGracefulShutdown(t *testing.T) {
