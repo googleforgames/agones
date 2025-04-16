@@ -867,6 +867,7 @@ func TestControllerUpdateStatus(t *testing.T) {
 		fas.Status.CurrentReplicas = 10
 		fas.Status.DesiredReplicas = 20
 		fas.Status.LastScaleTime = nil
+		fas.Status.LastAppliedPolicy = fas.Spec.Policy.Type
 
 		m.AgonesClient.AddReactor("update", "fleetautoscalers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			assert.FailNow(t, "should not update")

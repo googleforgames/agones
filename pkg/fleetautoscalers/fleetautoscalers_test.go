@@ -204,6 +204,7 @@ func TestComputeDesiredFleetSize(t *testing.T) {
 				fas:        fas,
 				baseLogger: newTestLogger(),
 				recorder:   m.FakeRecorder,
+				currChainEntry: &fas.Status.LastAppliedPolicy,
 			}
 
 			replicas, limited, err := computeDesiredFleetSize(fas.Spec.Policy, f, gameServers.Lister(), nc, &fasLog)
@@ -354,6 +355,7 @@ func TestApplyBufferPolicy(t *testing.T) {
 				fas:        fas,
 				baseLogger: newTestLogger(),
 				recorder:   m.FakeRecorder,
+				currChainEntry: &fas.Status.LastAppliedPolicy,
 			}
 			replicas, limited, err := applyBufferPolicy(tc.buffer, f, &fasLog)
 
@@ -594,6 +596,7 @@ func TestApplyWebhookPolicy(t *testing.T) {
 				fas:        fas,
 				baseLogger: newTestLogger(),
 				recorder:   m.FakeRecorder,
+				currChainEntry: &fas.Status.LastAppliedPolicy,
 			}
 			replicas, limited, err := applyWebhookPolicy(tc.webhookPolicy, f, &fasLog)
 
@@ -641,6 +644,7 @@ func TestApplyWebhookPolicyWithMetadata(t *testing.T) {
 		fas:        fas,
 		baseLogger: newTestLogger(),
 		recorder:   m.FakeRecorder,
+		currChainEntry: &fas.Status.LastAppliedPolicy,
 	}
 	replicas, limited, err := applyWebhookPolicy(webhookPolicy, fleet, &fasLog)
 
@@ -667,6 +671,7 @@ func TestApplyWebhookPolicyNilFleet(t *testing.T) {
 		fas:        fas,
 		baseLogger: newTestLogger(),
 		recorder:   m.FakeRecorder,
+		currChainEntry: &fas.Status.LastAppliedPolicy,
 	}
 	replicas, limited, err := applyWebhookPolicy(w, nil, &fasLog)
 
@@ -2470,6 +2475,7 @@ func TestApplySchedulePolicy(t *testing.T) {
 				fas:        fas,
 				baseLogger: newTestLogger(),
 				recorder:   m.FakeRecorder,
+				currChainEntry: &fas.Status.LastAppliedPolicy,
 			}
 			replicas, limited, err := applySchedulePolicy(tc.sp, f, nil, nil, tc.now, &fasLog)
 
@@ -2660,6 +2666,7 @@ func TestApplyChainPolicy(t *testing.T) {
 				fas:        fas,
 				baseLogger: newTestLogger(),
 				recorder:   m.FakeRecorder,
+				currChainEntry: &fas.Status.LastAppliedPolicy,
 			}
 			replicas, limited, err := applyChainPolicy(*tc.cp, f, nil, nil, tc.now, &fasLog)
 
