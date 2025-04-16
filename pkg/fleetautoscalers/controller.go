@@ -74,9 +74,10 @@ type Extensions struct {
 
 // FasLogger helps log and record events related to FleetAutoscaler.
 type FasLogger struct {
-	fas        *autoscalingv1.FleetAutoscaler
-	baseLogger *logrus.Entry
-	recorder   record.EventRecorder
+	fas            *autoscalingv1.FleetAutoscaler
+	baseLogger     *logrus.Entry
+	recorder       record.EventRecorder
+	currChainEntry *autoscalingv1.FleetAutoscalerPolicyType
 }
 
 // Controller is the FleetAutoscaler controller
@@ -320,13 +321,14 @@ func (c *Controller) syncFleetAutoscaler(ctx context.Context, key string) error 
 	}
 
 	fasLog := FasLogger{
-		fas:        fas,
-		baseLogger: c.baseLogger,
-		recorder:   c.recorder,
+		fas:            fas,
+		baseLogger:     c.baseLogger,
+		recorder:       c.recorder,
+		currChainEntry: &fas.Status.LastAppliedPolicy,
 	}
 
 	currentReplicas := fleet.Status.Replicas
-	desiredReplicas, scalingLimited, err := computeDesiredFleetSize(fas.Spec.Policy, fleet, c.gameServerLister, c.counter.Counts(), fasLog)
+	desiredReplicas, scalingLimited, err := computeDesiredFleetSize(fas.Spec.Policy, fleet, c.gameServerLister, c.counter.Counts(), &fasLog)
 
 	// If there err is nil and not an inactive schedule error (ignorable in this case), then record the event
 	if err != nil {
@@ -349,7 +351,7 @@ func (c *Controller) syncFleetAutoscaler(ctx context.Context, key string) error 
 		return errors.Wrapf(err, "error autoscaling fleet %s to %d replicas", fas.Spec.FleetName, desiredReplicas)
 	}
 
-	return c.updateStatus(ctx, fas, currentReplicas, desiredReplicas, desiredReplicas != fleet.Spec.Replicas, scalingLimited)
+	return c.updateStatus(ctx, fas, currentReplicas, desiredReplicas, desiredReplicas != fleet.Spec.Replicas, scalingLimited, *fasLog.currChainEntry)
 }
 
 // getFleetAutoscalerByKey gets the Fleet Autoscaler by key
@@ -393,12 +395,19 @@ func (c *Controller) scaleFleet(ctx context.Context, fas *autoscalingv1.FleetAut
 }
 
 // updateStatus updates the status of the given FleetAutoscaler
-func (c *Controller) updateStatus(ctx context.Context, fas *autoscalingv1.FleetAutoscaler, currentReplicas int32, desiredReplicas int32, scaled bool, scalingLimited bool) error {
+func (c *Controller) updateStatus(ctx context.Context, fas *autoscalingv1.FleetAutoscaler, currentReplicas int32, desiredReplicas int32, scaled bool, scalingLimited bool, chainEntry autoscalingv1.FleetAutoscalerPolicyType) error {
 	fasCopy := fas.DeepCopy()
 	fasCopy.Status.AbleToScale = true
 	fasCopy.Status.ScalingLimited = scalingLimited
 	fasCopy.Status.CurrentReplicas = currentReplicas
 	fasCopy.Status.DesiredReplicas = desiredReplicas
+
+	if fas.Spec.Policy.Type == autoscalingv1.ChainPolicyType {
+		fasCopy.Status.LastAppliedPolicy = chainEntry
+	} else {
+		fasCopy.Status.LastAppliedPolicy = fas.Spec.Policy.Type
+	}
+
 	if scaled {
 		now := metav1.NewTime(time.Now())
 		fasCopy.Status.LastScaleTime = &now

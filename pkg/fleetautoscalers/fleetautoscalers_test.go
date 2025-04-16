@@ -206,7 +206,7 @@ func TestComputeDesiredFleetSize(t *testing.T) {
 				recorder:   m.FakeRecorder,
 			}
 
-			replicas, limited, err := computeDesiredFleetSize(fas.Spec.Policy, f, gameServers.Lister(), nc, fasLog)
+			replicas, limited, err := computeDesiredFleetSize(fas.Spec.Policy, f, gameServers.Lister(), nc, &fasLog)
 
 			if tc.expected.err != "" && assert.NotNil(t, err) {
 				assert.Equal(t, tc.expected.err, err.Error())
@@ -355,7 +355,7 @@ func TestApplyBufferPolicy(t *testing.T) {
 				baseLogger: newTestLogger(),
 				recorder:   m.FakeRecorder,
 			}
-			replicas, limited, err := applyBufferPolicy(tc.buffer, f, fasLog)
+			replicas, limited, err := applyBufferPolicy(tc.buffer, f, &fasLog)
 
 			if tc.expected.err != "" && assert.NotNil(t, err) {
 				assert.Equal(t, tc.expected.err, err.Error())
@@ -595,7 +595,7 @@ func TestApplyWebhookPolicy(t *testing.T) {
 				baseLogger: newTestLogger(),
 				recorder:   m.FakeRecorder,
 			}
-			replicas, limited, err := applyWebhookPolicy(tc.webhookPolicy, f, fasLog)
+			replicas, limited, err := applyWebhookPolicy(tc.webhookPolicy, f, &fasLog)
 
 			if tc.expected.err != "" && assert.NotNil(t, err) {
 				assert.Equal(t, tc.expected.err, err.Error())
@@ -642,7 +642,7 @@ func TestApplyWebhookPolicyWithMetadata(t *testing.T) {
 		baseLogger: newTestLogger(),
 		recorder:   m.FakeRecorder,
 	}
-	replicas, limited, err := applyWebhookPolicy(webhookPolicy, fleet, fasLog)
+	replicas, limited, err := applyWebhookPolicy(webhookPolicy, fleet, &fasLog)
 
 	assert.Nil(t, err)
 	assert.False(t, limited)
@@ -668,7 +668,7 @@ func TestApplyWebhookPolicyNilFleet(t *testing.T) {
 		baseLogger: newTestLogger(),
 		recorder:   m.FakeRecorder,
 	}
-	replicas, limited, err := applyWebhookPolicy(w, nil, fasLog)
+	replicas, limited, err := applyWebhookPolicy(w, nil, &fasLog)
 
 	if assert.NotNil(t, err) {
 		assert.Equal(t, "fleet parameter must not be nil", err.Error())
@@ -2471,7 +2471,7 @@ func TestApplySchedulePolicy(t *testing.T) {
 				baseLogger: newTestLogger(),
 				recorder:   m.FakeRecorder,
 			}
-			replicas, limited, err := applySchedulePolicy(tc.sp, f, nil, nil, tc.now, fasLog)
+			replicas, limited, err := applySchedulePolicy(tc.sp, f, nil, nil, tc.now, &fasLog)
 
 			if tc.want.wantErr {
 				assert.NotNil(t, err)
@@ -2661,7 +2661,7 @@ func TestApplyChainPolicy(t *testing.T) {
 				baseLogger: newTestLogger(),
 				recorder:   m.FakeRecorder,
 			}
-			replicas, limited, err := applyChainPolicy(*tc.cp, f, nil, nil, tc.now, fasLog)
+			replicas, limited, err := applyChainPolicy(*tc.cp, f, nil, nil, tc.now, &fasLog)
 
 			if tc.want.wantErr {
 				assert.NotNil(t, err)
