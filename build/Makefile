@@ -24,7 +24,7 @@
 #
 
 # base version target. This is usually the next release.
-base_version = 1.48.0
+base_version = 1.49.0
 
 #
 # All of the following can be overwritten with environment variables
@@ -55,6 +55,8 @@ WINDOWS_VERSIONS = ltsc2019 ltsc2022
 # https://github.com/microsoft/Windows-Containers/issues/493: Pin the LTSC2019 image to an older sha
 LTSC2019_IMAGE_TAG = "@sha256:6fdf140282a2f809dae9b13fe441635867f0a27c33a438771673b8da8f3348a4"
 
+BASE.windows := mcr.microsoft.com/windows/servercore
+
 # Specify stress test level 1..100
 # STRESS_TEST_LEVEL=n requires capacity between 50*n up to 100*n simple-game-server Game Servers.
 STRESS_TEST_LEVEL ?= 20
@@ -67,10 +69,11 @@ KIND_CONTAINER_NAME=$(KIND_PROFILE)-control-plane
 GS_TEST_IMAGE ?= us-docker.pkg.dev/agones-images/examples/simple-game-server:0.36
 
 # Enable all beta feature gates. Keep in sync with `true` (beta) entries in pkg/util/runtime/features.go:featureDefaults
-BETA_FEATURE_GATES ?= "AutopilotPassthroughPort=true&CountsAndLists=true&DisableResyncOnSDKServer=true&GKEAutopilotExtendedDurationPods=true"
+BETA_FEATURE_GATES ?= "AutopilotPassthroughPort=true&CountsAndLists=true&GKEAutopilotExtendedDurationPods=true&PortPolicyNone=true&PortRanges=true"
+
 
 # Enable all alpha feature gates. Keep in sync with `false` (alpha) entries in pkg/util/runtime/features.go:featureDefaults
-ALPHA_FEATURE_GATES ?= "PlayerAllocationFilter=true&FleetAutoscaleRequestMetaData=true&PlayerTracking=true&RollingUpdateFix=true&PortRanges=true&PortPolicyNone=true&ScheduledAutoscaler=true&Example=true"
+ALPHA_FEATURE_GATES ?= "PlayerAllocationFilter=true&FleetAutoscaleRequestMetaData=true&PlayerTracking=true&RollingUpdateFix=true&ScheduledAutoscaler=true&Example=true"
 
 # Build with Windows support
 WITH_WINDOWS=1
@@ -582,7 +585,7 @@ build-extensions-image-amd64: $(ensure-build-image) build-extensions-binary buil
 	docker build $(agones_path)/cmd/extensions/ --tag=$(extensions_amd64_tag) $(DOCKER_BUILD_ARGS)
 # creating docker builder and then using that builder to build extensions image in buildx command
 build-extensions-image-arm64: $(ensure-build-image) build-extensions-binary create-arm64-builder
-	docker buildx build --platform linux/arm64 --builder $(BUILDX_ARM64_BUILDER) --build-arg ARCH=arm64 $(agones_path)/cmd/extensions/ --tag=$(extensions_arm64_tag) $(DOCKER_BUILD_ARGS)
+	docker buildx build --provenance false --platform linux/arm64 --builder $(BUILDX_ARM64_BUILDER) --build-arg ARCH=arm64 $(agones_path)/cmd/extensions/ --tag=$(extensions_arm64_tag) $(DOCKER_BUILD_ARGS)
 
 # push the gameservers extensions image
 push-extensions-image: push-extensions-image-amd64
@@ -611,14 +614,14 @@ build-agones-sdk-image-amd64: $(ensure-build-image) build-agones-sdk-binary-linu
 	docker build $(agones_path)/cmd/sdk-server/ --tag=$(sidecar_linux_amd64_tag) $(DOCKER_BUILD_ARGS)
 # creating docker builder and then using that builder to build sdk image in buildx command
 build-agones-sdk-image-arm64: $(ensure-build-image) build-agones-sdk-binary-linux-arm64 create-arm64-builder
-	docker buildx build --platform linux/arm64 --builder $(BUILDX_ARM64_BUILDER) --build-arg ARCH=arm64 $(agones_path)/cmd/sdk-server/ --tag=$(sidecar_linux_arm64_tag) $(DOCKER_BUILD_ARGS)
+	docker buildx build --provenance false --platform linux/arm64 --builder $(BUILDX_ARM64_BUILDER) --build-arg ARCH=arm64 $(agones_path)/cmd/sdk-server/ --tag=$(sidecar_linux_arm64_tag) $(DOCKER_BUILD_ARGS)
 
 build-agones-sdk-image-windows: build-agones-sdk-binary
 build-agones-sdk-image-windows: $(foreach winver, $(WINDOWS_VERSIONS), build-agones-sdk-image-windows-$(winver))
 
 # Build the image for the gameserver sidecar and SDK binaries
 build-agones-sdk-image-windows-%: $(ensure-build-image) build-agones-sdk-binary build-licenses build-required-src-dist ensure-windows-buildx
-	docker buildx build --platform windows/amd64 --builder $(BUILDX_WINDOWS_BUILDER) -f $(agones_path)/cmd/sdk-server/Dockerfile.windows --tag=$(sidecar_tag)-windows_amd64-$* --build-arg WINDOWS_VERSION=$* --build-arg IMAGE_TAG=$(if $(filter ltsc2019,$*),$(LTSC2019_IMAGE_TAG)) $(DOCKER_BUILD_ARGS) $(agones_path)/cmd/sdk-server/ $(WINDOWS_DOCKER_PUSH_ARGS)
+	docker buildx build --provenance false --platform windows/amd64 --builder $(BUILDX_WINDOWS_BUILDER) -f $(agones_path)/cmd/sdk-server/Dockerfile.windows --tag=$(sidecar_tag)-windows_amd64-$* --build-arg WINDOWS_VERSION=$* --build-arg IMAGE_TAG=$(if $(filter ltsc2019,$*),$(LTSC2019_IMAGE_TAG)) $(DOCKER_BUILD_ARGS) $(agones_path)/cmd/sdk-server/ $(WINDOWS_DOCKER_PUSH_ARGS)
 
 # Build a static binary for the ping service
 build-ping-binary: build-ping-binary-amd64
@@ -659,7 +662,7 @@ build-ping-image-amd64: $(ensure-build-image) build-ping-binary build-licenses b
 	docker build $(agones_path)/cmd/ping/ --tag=$(ping_amd64_tag) $(DOCKER_BUILD_ARGS)
 # creating docker builder and then using that builder to build ping image in buildx command
 build-ping-image-arm64: $(ensure-build-image) build-ping-binary create-arm64-builder
-	docker buildx build --platform linux/arm64 --builder $(BUILDX_ARM64_BUILDER) --build-arg ARCH=arm64 $(agones_path)/cmd/ping/ --tag=$(ping_arm64_tag) $(DOCKER_BUILD_ARGS)
+	docker buildx build --provenance false --platform linux/arm64 --builder $(BUILDX_ARM64_BUILDER) --build-arg ARCH=arm64 $(agones_path)/cmd/ping/ --tag=$(ping_arm64_tag) $(DOCKER_BUILD_ARGS)
 
 # Build a static binary for the allocator service
 build-allocator-binary: $(ensure-build-image) build-allocator-binary-linux-amd64
@@ -699,7 +702,7 @@ build-allocator-image-amd64: $(ensure-build-image) build-allocator-binary build-
 	docker build $(agones_path)/cmd/allocator/ --tag=$(allocator_amd64_tag) $(DOCKER_BUILD_ARGS)
 # creating docker builder and then using that builder to build allocator image in buildx command
 build-allocator-image-arm64: $(ensure-build-image) build-allocator-binary create-arm64-builder
-	docker buildx build $(agones_path)/cmd/allocator/ --builder $(BUILDX_ARM64_BUILDER) --tag=$(allocator_arm64_tag) --build-arg ARCH=arm64 --platform linux/arm64 $(DOCKER_BUILD_ARGS)
+	docker buildx build --provenance false $(agones_path)/cmd/allocator/ --builder $(BUILDX_ARM64_BUILDER) --tag=$(allocator_arm64_tag) --build-arg ARCH=arm64 --platform linux/arm64 $(DOCKER_BUILD_ARGS)
 
 # push the gameservers sidecar image
 push-agones-sdk-image: push-agones-sdk-linux-image-amd64
@@ -709,8 +712,21 @@ endif
 ifeq ($(WITH_ARM64), 1)
 push-agones-sdk-image: push-agones-sdk-linux-image-arm64
 endif
-	# Docker >=24.0.6
-	docker buildx imagetools create --tag $(sidecar_tag) $(push_sidecar_manifest)
+	$(MAKE) push-agones-sdk-manifest
+
+push-agones-sdk-manifest:
+	docker manifest create --amend $(sidecar_tag) $(push_sidecar_manifest)
+	$(MAKE) push_windows_manifest
+	docker manifest push --purge $(sidecar_tag)
+
+push_windows_manifest:
+ifeq ($(WITH_WINDOWS), 1)
+	for osversion in $(WINDOWS_VERSIONS); do \
+		full_version=`docker manifest inspect ${BASE.windows}:$$osversion | grep "os.version" | head -n 1 | awk -F\" '{print $$4}'` || true; \
+		docker manifest annotate --os windows --arch amd64 --os-version $$full_version \
+		$(sidecar_tag) $(sidecar_tag)-windows_amd64-$$osversion; \
+	done
+endif
 
 push-agones-sdk-windows: WINDOWS_DOCKER_PUSH_ARGS=--push
 push-agones-sdk-windows: build-agones-sdk-image-windows

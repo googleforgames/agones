@@ -1,5 +1,35 @@
 # Changelog
 
+## [v1.48.0](https://github.com/googleforgames/agones/tree/v1.48.0) (2025-03-25)
+
+[Full Changelog](https://github.com/googleforgames/agones/compare/v1.47.0...v1.48.0)
+
+**Implemented enhancements**
+- add metadata to agones webhook autoscaler request by @swermin in https://github.com/googleforgames/agones/pull/3957
+- feat(helm): support dual-stack networking for load balancers by @bergemalm in https://github.com/googleforgames/agones/pull/4073
+
+**Fixed bugs**
+- fix: bump version of jsonpatch for lossy max int64 by @lacroixthomas in https://github.com/googleforgames/agones/pull/4090
+- Fix JSON Schema validation for ServiceAccount annotations by @0xaravindh in https://github.com/googleforgames/agones/pull/4122
+- Refactor image build and manifest push process by @0xaravindh in https://github.com/googleforgames/agones/pull/4118
+
+**Other**
+- Preparation for Release v1.48.0 by @0xaravindh in https://github.com/googleforgames/agones/pull/4109
+- Increase wait time for upgrade test runner by @igooch in https://github.com/googleforgames/agones/pull/4113
+- Update Helm Schema Validation for topologySpreadConstraints and customCertSecretPath  by @AliaksandrTsimokhau in https://github.com/googleforgames/agones/pull/4112
+- Fix: Ensure Buildx Builders Are Created or Used for ARM64 and Windows by @0xaravindh in https://github.com/googleforgames/agones/pull/4115
+- Update Supported Kubernetes to 1.30, 1.31, 1.32 by @kamaljeeti in https://github.com/googleforgames/agones/pull/4124
+- helm: change type from object to array for controller.customCertSecre… by @Joseph-Irving in https://github.com/googleforgames/agones/pull/4120
+- Created performance test cluster for 1.31 by @kamaljeeti in https://github.com/googleforgames/agones/pull/4125
+- Add deprecation notice for older image versions in release template by @0xaravindh in https://github.com/googleforgames/agones/pull/4126
+- Fix flaky test TestListAutoscalerAllocated by @igooch in https://github.com/googleforgames/agones/pull/4130
+
+**New Contributors**
+- @AliaksandrTsimokhau made their first contribution in https://github.com/googleforgames/agones/pull/4112
+- @swermin made their first contribution in https://github.com/googleforgames/agones/pull/3957
+- @bergemalm made their first contribution in https://github.com/googleforgames/agones/pull/4073
+- @Joseph-Irving made their first contribution in https://github.com/googleforgames/agones/pull/4120
+
 ## [v1.47.0](https://github.com/googleforgames/agones/tree/v1.47.0) (2025-02-11)
 
 [Full Changelog](https://github.com/googleforgames/agones/compare/v1.46.0...v1.47.0)
