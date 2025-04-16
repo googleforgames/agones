@@ -93,6 +93,8 @@ spec:
                   type: boolean
                 scalingLimited:
                   type: boolean
+                lastAppliedPolicy:
+                  type: string
       subresources:
         # status enables the status subresource.
         status: {}

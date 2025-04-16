@@ -852,7 +852,7 @@ func TestControllerUpdateStatus(t *testing.T) {
 		ctx, cancel := agtesting.StartInformers(m, c.fleetAutoscalerSynced)
 		defer cancel()
 
-		err := c.updateStatus(ctx, fas, 10, 20, true, false)
+		err := c.updateStatus(ctx, fas, 10, 20, true, false, fas.Spec.Policy.Type)
 		assert.Nil(t, err)
 		assert.True(t, fasUpdated)
 		agtesting.AssertNoEvent(t, m.FakeRecorder.Events)
@@ -867,6 +867,7 @@ func TestControllerUpdateStatus(t *testing.T) {
 		fas.Status.CurrentReplicas = 10
 		fas.Status.DesiredReplicas = 20
 		fas.Status.LastScaleTime = nil
+		fas.Status.LastAppliedPolicy = fas.Spec.Policy.Type
 
 		m.AgonesClient.AddReactor("update", "fleetautoscalers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			assert.FailNow(t, "should not update")
@@ -876,7 +877,7 @@ func TestControllerUpdateStatus(t *testing.T) {
 		ctx, cancel := agtesting.StartInformers(m, c.fleetAutoscalerSynced)
 		defer cancel()
 
-		err := c.updateStatus(ctx, fas, fas.Status.CurrentReplicas, fas.Status.DesiredReplicas, false, fas.Status.ScalingLimited)
+		err := c.updateStatus(ctx, fas, fas.Status.CurrentReplicas, fas.Status.DesiredReplicas, false, fas.Status.ScalingLimited, fas.Spec.Policy.Type)
 		assert.Nil(t, err)
 		agtesting.AssertNoEvent(t, m.FakeRecorder.Events)
 	})
@@ -892,7 +893,7 @@ func TestControllerUpdateStatus(t *testing.T) {
 		ctx, cancel := agtesting.StartInformers(m, c.fleetAutoscalerSynced)
 		defer cancel()
 
-		err := c.updateStatus(ctx, fas, fas.Status.CurrentReplicas, fas.Status.DesiredReplicas, false, fas.Status.ScalingLimited)
+		err := c.updateStatus(ctx, fas, fas.Status.CurrentReplicas, fas.Status.DesiredReplicas, false, fas.Status.ScalingLimited, fas.Spec.Policy.Type)
 		if assert.NotNil(t, err) {
 			assert.Equal(t, "error updating status for fleetautoscaler fas-1: random-err", err.Error())
 		}
@@ -903,7 +904,7 @@ func TestControllerUpdateStatus(t *testing.T) {
 		c, m := newFakeController()
 		fas, _ := defaultFixtures()
 
-		err := c.updateStatus(context.Background(), fas, 10, 20, true, true)
+		err := c.updateStatus(context.Background(), fas, 10, 20, true, true, fas.Spec.Policy.Type)
 		assert.Nil(t, err)
 		agtesting.AssertEventContains(t, m.FakeRecorder.Events, "ScalingLimited")
 	})
@@ -912,7 +913,7 @@ func TestControllerUpdateStatus(t *testing.T) {
 		c, m := newFakeController()
 		fas, _ := defaultFixtures()
 
-		err := c.updateStatus(context.Background(), fas, 1, 3, true, true)
+		err := c.updateStatus(context.Background(), fas, 1, 3, true, true, fas.Spec.Policy.Type)
 		assert.Nil(t, err)
 		agtesting.AssertEventContains(t, m.FakeRecorder.Events, "limited to minimum size of 3")
 	})
@@ -921,7 +922,7 @@ func TestControllerUpdateStatus(t *testing.T) {
 		c, m := newFakeController()
 		fas, _ := defaultFixtures()
 
-		err := c.updateStatus(context.Background(), fas, 12, 10, true, true)
+		err := c.updateStatus(context.Background(), fas, 12, 10, true, true, fas.Spec.Policy.Type)
 		assert.Nil(t, err)
 		agtesting.AssertEventContains(t, m.FakeRecorder.Events, "limited to maximum size of 10")
 	})
