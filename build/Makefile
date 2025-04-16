@@ -24,7 +24,7 @@
 #
 
 # base version target. This is usually the next release.
-base_version = 1.48.0
+base_version = 1.49.0
 
 #
 # All of the following can be overwritten with environment variables
@@ -69,10 +69,11 @@ KIND_CONTAINER_NAME=$(KIND_PROFILE)-control-plane
 GS_TEST_IMAGE ?= us-docker.pkg.dev/agones-images/examples/simple-game-server:0.36
 
 # Enable all beta feature gates. Keep in sync with `true` (beta) entries in pkg/util/runtime/features.go:featureDefaults
-BETA_FEATURE_GATES ?= "AutopilotPassthroughPort=true&CountsAndLists=true&DisableResyncOnSDKServer=true&GKEAutopilotExtendedDurationPods=true"
+BETA_FEATURE_GATES ?= "AutopilotPassthroughPort=true&CountsAndLists=true&GKEAutopilotExtendedDurationPods=true&PortPolicyNone=true&PortRanges=true"
+
 
 # Enable all alpha feature gates. Keep in sync with `false` (alpha) entries in pkg/util/runtime/features.go:featureDefaults
-ALPHA_FEATURE_GATES ?= "PlayerAllocationFilter=true&FleetAutoscaleRequestMetaData=true&PlayerTracking=true&RollingUpdateFix=true&PortRanges=true&PortPolicyNone=true&ScheduledAutoscaler=true&Example=true"
+ALPHA_FEATURE_GATES ?= "PlayerAllocationFilter=true&FleetAutoscaleRequestMetaData=true&PlayerTracking=true&RollingUpdateFix=true&ScheduledAutoscaler=true&Example=true"
 
 # Build with Windows support
 WITH_WINDOWS=1
@@ -711,16 +712,21 @@ endif
 ifeq ($(WITH_ARM64), 1)
 push-agones-sdk-image: push-agones-sdk-linux-image-arm64
 endif
-	$(MAKE) push-agones-sdk-manifest	
+	$(MAKE) push-agones-sdk-manifest
 
 push-agones-sdk-manifest:
 	docker manifest create --amend $(sidecar_tag) $(push_sidecar_manifest)
+	$(MAKE) push_windows_manifest
+	docker manifest push --purge $(sidecar_tag)
+
+push_windows_manifest:
+ifeq ($(WITH_WINDOWS), 1)
 	for osversion in $(WINDOWS_VERSIONS); do \
 		full_version=`docker manifest inspect ${BASE.windows}:$$osversion | grep "os.version" | head -n 1 | awk -F\" '{print $$4}'` || true; \
 		docker manifest annotate --os windows --arch amd64 --os-version $$full_version \
 		$(sidecar_tag) $(sidecar_tag)-windows_amd64-$$osversion; \
 	done
-	docker manifest push --purge $(sidecar_tag)
+endif
 
 push-agones-sdk-windows: WINDOWS_DOCKER_PUSH_ARGS=--push
 push-agones-sdk-windows: build-agones-sdk-image-windows

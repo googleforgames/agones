@@ -72,7 +72,8 @@ func TestAllocatorWithDeprecatedRequired(t *testing.T) {
 	} else {
 		flt, err = helper.CreateFleet(ctx, framework.Namespace, framework)
 	}
-	assert.NoError(t, err)
+	require.NoError(t, err)
+	defer framework.AgonesClient.AgonesV1().Fleets(framework.Namespace).Delete(ctx, flt.Name, metav1.DeleteOptions{}) // nolint: errcheck
 
 	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 	request := &pb.AllocationRequest{
@@ -146,7 +147,7 @@ func TestAllocatorWithDeprecatedRequired(t *testing.T) {
 		return true, nil
 	})
 
-	assert.NoError(t, err)
+	require.NoError(t, err)
 }
 
 func TestAllocatorWithSelectors(t *testing.T) {
@@ -168,6 +169,7 @@ func TestAllocatorWithSelectors(t *testing.T) {
 		flt, err = helper.CreateFleet(ctx, framework.Namespace, framework)
 	}
 	assert.NoError(t, err)
+	defer framework.AgonesClient.AgonesV1().Fleets(framework.Namespace).Delete(ctx, flt.Name, metav1.DeleteOptions{}) // nolint: errcheck
 
 	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 	request := &pb.AllocationRequest{
@@ -250,6 +252,8 @@ func TestRestAllocatorWithDeprecatedRequired(t *testing.T) {
 		return
 	}
 	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
+	defer framework.AgonesClient.AgonesV1().Fleets(framework.Namespace).Delete(ctx, flt.Name, metav1.DeleteOptions{}) // nolint: errcheck
+
 	request := &pb.AllocationRequest{
 		Namespace:                    framework.Namespace,
 		RequiredGameServerSelector:   &pb.GameServerSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}},
@@ -328,7 +332,9 @@ func TestAllocatorWithCountersAndLists(t *testing.T) {
 		}
 	})
 	assert.NoError(t, err)
+	defer framework.AgonesClient.AgonesV1().Fleets(framework.Namespace).Delete(ctx, flt.Name, metav1.DeleteOptions{}) // nolint: errcheck
 	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
+
 	request := &pb.AllocationRequest{
 		Namespace: framework.Namespace,
 		GameServerSelectors: []*pb.GameServerSelector{{
@@ -413,7 +419,9 @@ func TestRestAllocatorWithCountersAndLists(t *testing.T) {
 		}
 	})
 	assert.NoError(t, err)
+	defer framework.AgonesClient.AgonesV1().Fleets(framework.Namespace).Delete(ctx, flt.Name, metav1.DeleteOptions{}) // nolint: errcheck
 	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
+
 	request := &pb.AllocationRequest{
 		Namespace: framework.Namespace,
 		GameServerSelectors: []*pb.GameServerSelector{{
@@ -498,10 +506,10 @@ func TestRestAllocatorWithSelectors(t *testing.T) {
 	tlsCA := helper.RefreshAllocatorTLSCerts(ctx, t, ip, framework)
 
 	flt, err := helper.CreateFleet(ctx, framework.Namespace, framework)
-	if !assert.Nil(t, err) {
-		return
-	}
+	require.NoError(t, err)
+	defer framework.AgonesClient.AgonesV1().Fleets(framework.Namespace).Delete(ctx, flt.Name, metav1.DeleteOptions{}) // nolint: errcheck
 	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
+
 	request := &pb.AllocationRequest{
 		Namespace:           framework.Namespace,
 		GameServerSelectors: []*pb.GameServerSelector{{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}}},
@@ -608,6 +616,8 @@ func TestAllocatorCrossNamespace(t *testing.T) {
 		return
 	}
 	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
+	defer framework.AgonesClient.AgonesV1().Fleets(namespaceB).Delete(ctx, flt.Name, metav1.DeleteOptions{}) // nolint: errcheck
+
 	request := &pb.AllocationRequest{
 		Namespace: namespaceA,
 		// Enable multi-cluster setting
