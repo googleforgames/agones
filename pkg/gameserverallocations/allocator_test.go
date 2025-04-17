@@ -890,6 +890,13 @@ func TestControllerAllocationUpdateWorkers(t *testing.T) {
 		assert.Equal(t, gs1.ObjectMeta.Name, r.gs.ObjectMeta.Name)
 		assert.Equal(t, agonesv1.GameServerStateAllocated, r.gs.Status.State)
 
+		// Verify that the GameServer was added back to the cache after successful allocation
+		key, err := cache.MetaNamespaceKeyFunc(gs1)
+		require.NoError(t, err)
+		cached, ok := a.allocationCache.cache.Load(key)
+		require.True(t, ok, "GameServer should be in the cache after successful allocation")
+		require.Equal(t, gs1.ObjectMeta.Name, cached.ObjectMeta.Name)
+
 		agtesting.AssertEventContains(t, m.FakeRecorder.Events, "Allocated")
 
 		// make sure we can do more allocations than number of workers
