@@ -258,6 +258,10 @@ func TestUnhealthyGameServerAfterHealthCheckFail(t *testing.T) {
 
 func TestUnhealthyGameServersWithoutFreePorts(t *testing.T) {
 	framework.SkipOnCloudProduct(t, "gke-autopilot", "does not support Static PortPolicy")
+	if runtime.FeatureEnabled(runtime.FeatureSidecarContainers) {
+		t.SkipNow()
+	}
+
 	t.Parallel()
 	ctx := context.Background()
 	nodes, err := framework.KubeClient.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
@@ -322,6 +326,10 @@ func TestGameServerUnhealthyAfterDeletingPod(t *testing.T) {
 }
 
 func TestGameServerRestartBeforeReadyCrash(t *testing.T) {
+	if runtime.FeatureEnabled(runtime.FeatureSidecarContainers) {
+		t.SkipNow()
+	}
+
 	t.Parallel()
 	ctx := context.Background()
 	logger := e2eframework.TestLogger(t)
@@ -1698,6 +1706,11 @@ func TestSideCarCommunicatesWhileTerminating(t *testing.T) {
 }
 
 func TestGracefulShutdown(t *testing.T) {
+	// with the new sidecar pattern, there's no need for waiting on the Shutdown state.
+	if runtime.FeatureEnabled(runtime.FeatureSidecarContainers) {
+		t.SkipNow()
+	}
+
 	t.Parallel()
 
 	log := e2eframework.TestLogger(t)
