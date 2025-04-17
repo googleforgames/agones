@@ -464,6 +464,15 @@ func (c *Allocator) allocate(ctx context.Context, gsa *allocationv1.GameServerAl
 
 	select {
 	case res := <-req.response: // wait for the batch to be completed
+		// TODO: Remove debug statements
+		if counter, ok := res.gs.Status.Counters["players"]; ok {
+			if counter.Count == 1 {
+				fmt.Println("FIRST ALLOCATION", res.gs.Name)
+			}
+			if counter.Count == counter.Capacity {
+				fmt.Println("LAST ALLOCATION", res.gs.Name)
+			}
+		}
 		return res.gs, res.err
 	case <-ctx.Done():
 		return nil, ErrTotalTimeoutExceeded
@@ -471,7 +480,7 @@ func (c *Allocator) allocate(ctx context.Context, gsa *allocationv1.GameServerAl
 }
 
 // ListenAndAllocate is a blocking function that runs in a loop
-// looking at c.requestBatches for batches of requests that are coming through.
+// looking at c.pendingRequests for batches of requests that are coming through.
 func (c *Allocator) ListenAndAllocate(ctx context.Context, updateWorkerCount int) {
 	// setup workers for allocation updates. Push response values into
 	// this queue for concurrent updating of GameServers to Allocated
@@ -557,13 +566,16 @@ func (c *Allocator) ListenAndAllocate(ctx context.Context, updateWorkerCount int
 				req.response <- response{request: req, gs: nil, err: err}
 				continue
 			}
-			// remove the game server that has been allocated
-			list = append(list[:index], list[index+1:]...)
 
-			if err := c.allocationCache.RemoveGameServer(gs); err != nil {
-				// this seems unlikely, but lets handle it just in case
-				req.response <- response{request: req, gs: nil, err: err}
-				continue
+			if !runtime.FeatureEnabled(runtime.FeatureReuseAllocated) {
+				// remove the game server that has been allocated
+				list = append(list[:index], list[index+1:]...)
+
+				if err := c.allocationCache.RemoveGameServer(gs); err != nil {
+					// this seems unlikely, but lets handle it just in case
+					req.response <- response{request: req, gs: nil, err: err}
+					continue
+				}
 			}
 
 			updateQueue <- response{request: req, gs: gs.DeepCopy(), err: nil}
