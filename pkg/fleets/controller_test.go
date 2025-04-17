@@ -1869,8 +1869,13 @@ func (fgsl *fakeGSSListerWithErr) List(_ labels.Selector) (ret []*v1.GameServerS
 	return nil, errors.New("random-err")
 }
 
+// GameServerSetLister interface implementation
+func (fgsl *fakeGSSListerWithErr) Get(_ string) (ret *v1.GameServerSet, err error) {
+	return nil, errors.New("random-err")
+}
+
 func (fgsl *fakeGSSListerWithErr) GameServerSets(_ string) agonesv1client.GameServerSetNamespaceLister {
-	panic("not implemented")
+	return fgsl
 }
 
 type fakeFleetsGetterWithErr struct{}
