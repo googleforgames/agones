@@ -24,6 +24,9 @@ on:
 jobs:
   autoupdate:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - name: Automatically update PR
         uses: adRise/update-pr-branch@v0.6.0
