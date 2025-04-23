@@ -1631,9 +1631,6 @@ func TestControllerSyncGameServerRequestReadyState(t *testing.T) {
 		gsFixture := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
 			Spec: newSingleContainerSpec(), Status: agonesv1.GameServerStatus{State: agonesv1.GameServerStateRequestReady}}
 		gsFixture.ApplyDefaults()
-		gsFixture.Status.Addresses = []corev1.NodeAddress{
-			{Type: agonesv1.NodePodIP, Address: "0.0.0.0"},
-		}
 		pod, err := gsFixture.Pod(agtesting.FakeAPIHooks{})
 		assert.Nil(t, err)
 		pod.Spec.NodeName = nodeFixtureName
@@ -1644,6 +1641,7 @@ func TestControllerSyncGameServerRequestReadyState(t *testing.T) {
 				ContainerID: containerID,
 			},
 		}
+		pod.Status.PodIPs = []corev1.PodIP{{IP: ipv6Fixture}}
 		gsUpdated := false
 		podUpdated := false
 
@@ -1684,7 +1682,10 @@ func TestControllerSyncGameServerRequestReadyState(t *testing.T) {
 
 		assert.Equal(t, gs.Status.NodeName, nodeFixture.ObjectMeta.Name)
 		assert.Equal(t, gs.Status.Address, ipFixture)
-		assert.Equal(t, []corev1.NodeAddress{{Address: ipFixture, Type: "ExternalIP"}}, gs.Status.Addresses)
+		assert.Equal(t, []corev1.NodeAddress{
+			{Address: ipFixture, Type: "ExternalIP"},
+			{Address: ipv6Fixture, Type: "PodIP"},
+		}, gs.Status.Addresses)
 
 		agtesting.AssertEventContains(t, m.FakeRecorder.Events, "Address and port populated")
 		agtesting.AssertEventContains(t, m.FakeRecorder.Events, "SDK.Ready() complete")
@@ -1760,6 +1761,9 @@ func TestControllerSyncGameServerRequestReadyState(t *testing.T) {
 			Spec: newSingleContainerSpec(), Status: agonesv1.GameServerStatus{State: agonesv1.GameServerStateRequestReady}}
 		gsFixture.ApplyDefaults()
 		gsFixture.Status.NodeName = nodeName
+		gsFixture.Status.Addresses = []corev1.NodeAddress{
+			{Type: agonesv1.NodePodIP, Address: "0.0.0.0"},
+		}
 		pod, err := gsFixture.Pod(agtesting.FakeAPIHooks{})
 		pod.Status.ContainerStatuses = []corev1.ContainerStatus{{Name: gsFixture.Spec.Container}}
 		assert.Nil(t, err)
