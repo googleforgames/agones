@@ -595,12 +595,10 @@ func (c *Controller) syncGameServerCreatingState(ctx context.Context, gs *agones
 
 	if pod != nil {
 		node, err := c.nodeLister.Get(pod.Spec.NodeName)
-		if err != nil {
-			return gs, errors.Wrapf(err, "error retrieving node %s for Pod %s", pod.Spec.NodeName, pod.ObjectMeta.Name)
+		if err == nil {
+			// Apply the pod IP if available
+			gsCopy, _ = applyGameServerAddressAndPort(gsCopy, node, pod, c.controllerHooks.SyncPodPortsToGameServer)
 		}
-
-		// Apply the pod IP if available
-		gsCopy, _ = applyGameServerAddressAndPort(gsCopy, node, pod, c.controllerHooks.SyncPodPortsToGameServer)
 	}
 
 	gsCopy.Status.State = agonesv1.GameServerStateStarting
