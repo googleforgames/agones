@@ -62,20 +62,20 @@ func (InactiveScheduleError) Error() string {
 
 // computeDesiredFleetSize computes the new desired size of the given fleet
 func computeDesiredFleetSize(pol autoscalingv1.FleetAutoscalerPolicy, f *agonesv1.Fleet,
-	gameServerLister listeragonesv1.GameServerLister, nodeCounts map[string]gameservers.NodeCount, fasLog *FasLogger) (int32, bool, error) {
+	gameServerNamespacedLister listeragonesv1.GameServerNamespaceLister, nodeCounts map[string]gameservers.NodeCount, fasLog *FasLogger) (int32, bool, error) {
 	switch pol.Type {
 	case autoscalingv1.BufferPolicyType:
 		return applyBufferPolicy(pol.Buffer, f, fasLog)
 	case autoscalingv1.WebhookPolicyType:
 		return applyWebhookPolicy(pol.Webhook, f, fasLog)
 	case autoscalingv1.CounterPolicyType:
-		return applyCounterOrListPolicyWrapper(pol.Counter, nil, f, gameServerLister, nodeCounts, fasLog)
+		return applyCounterOrListPolicyWrapper(pol.Counter, nil, f, gameServerNamespacedLister, nodeCounts, fasLog)
 	case autoscalingv1.ListPolicyType:
-		return applyCounterOrListPolicyWrapper(nil, pol.List, f, gameServerLister, nodeCounts, fasLog)
+		return applyCounterOrListPolicyWrapper(nil, pol.List, f, gameServerNamespacedLister, nodeCounts, fasLog)
 	case autoscalingv1.SchedulePolicyType:
-		return applySchedulePolicy(pol.Schedule, f, gameServerLister, nodeCounts, time.Now(), fasLog)
+		return applySchedulePolicy(pol.Schedule, f, gameServerNamespacedLister, nodeCounts, time.Now(), fasLog)
 	case autoscalingv1.ChainPolicyType:
-		return applyChainPolicy(pol.Chain, f, gameServerLister, nodeCounts, time.Now(), fasLog)
+		return applyChainPolicy(pol.Chain, f, gameServerNamespacedLister, nodeCounts, time.Now(), fasLog)
 	}
 
 	return 0, false, errors.New("wrong policy type, should be one of: Buffer, Webhook, Counter, List")
@@ -271,11 +271,11 @@ func applyBufferPolicy(b *autoscalingv1.BufferPolicy, f *agonesv1.Fleet, fasLog 
 
 // New function to call applyCounterOrListPolicy
 func applyCounterOrListPolicyWrapper(c *autoscalingv1.CounterPolicy, l *autoscalingv1.ListPolicy,
-	f *agonesv1.Fleet, gameServerLister listeragonesv1.GameServerLister,
+	f *agonesv1.Fleet, gameServerNamespacedLister listeragonesv1.GameServerNamespaceLister,
 	nodeCounts map[string]gameservers.NodeCount, fasLog *FasLogger) (int32, bool, error) {
 
 	// Call applyCounterOrListPolicy inside the wrapper
-	desiredReplicas, scalingLimited, err := applyCounterOrListPolicy(c, l, f, gameServerLister, nodeCounts)
+	desiredReplicas, scalingLimited, err := applyCounterOrListPolicy(c, l, f, gameServerNamespacedLister, nodeCounts)
 
 	if err == nil {
 		// Log directly based on which policy is used, with a description of the key
@@ -294,7 +294,7 @@ func applyCounterOrListPolicyWrapper(c *autoscalingv1.CounterPolicy, l *autoscal
 }
 
 func applyCounterOrListPolicy(c *autoscalingv1.CounterPolicy, l *autoscalingv1.ListPolicy,
-	f *agonesv1.Fleet, gameServerLister listeragonesv1.GameServerLister,
+	f *agonesv1.Fleet, gameServerNamespacedLister listeragonesv1.GameServerNamespaceLister,
 	nodeCounts map[string]gameservers.NodeCount) (int32, bool, error) {
 
 	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
@@ -392,23 +392,23 @@ func applyCounterOrListPolicy(c *autoscalingv1.CounterPolicy, l *autoscalingv1.L
 	switch availableCapacity := aggCapacity - aggCount; {
 	case availableCapacity == buffer:
 		if limited {
-			return scaleLimited(scale, f, gameServerLister, nodeCounts, key, isCounter, replicas,
+			return scaleLimited(scale, f, gameServerNamespacedLister, nodeCounts, key, isCounter, replicas,
 				capacity, aggCapacity, minCapacity, maxCapacity)
 		}
 		return replicas, false, nil
 	case availableCapacity < buffer: // Scale Up
 		if limited { // Case where we want to scale up but we're already limited by MaxCapacity.
-			return scaleLimited(scale, f, gameServerLister, nodeCounts, key, isCounter, replicas,
+			return scaleLimited(scale, f, gameServerNamespacedLister, nodeCounts, key, isCounter, replicas,
 				capacity, aggCapacity, minCapacity, maxCapacity)
 		}
 		return scaleUp(replicas, capacity, count, aggCapacity, availableCapacity, maxCapacity,
 			minCapacity, buffer)
 	case availableCapacity > buffer: // Scale Down
 		if limited && scale == 1 { // Case where we want to scale down but we're already limited by MinCapacity
-			return scaleLimited(scale, f, gameServerLister, nodeCounts, key, isCounter, replicas,
+			return scaleLimited(scale, f, gameServerNamespacedLister, nodeCounts, key, isCounter, replicas,
 				capacity, aggCapacity, minCapacity, maxCapacity)
 		}
-		return scaleDown(f, gameServerLister, nodeCounts, key, isCounter, replicas, aggCount,
+		return scaleDown(f, gameServerNamespacedLister, nodeCounts, key, isCounter, replicas, aggCount,
 			aggCapacity, minCapacity, buffer)
 	}
 
@@ -418,14 +418,14 @@ func applyCounterOrListPolicy(c *autoscalingv1.CounterPolicy, l *autoscalingv1.L
 	return 0, false, errors.Errorf("unable to apply ListPolicy %v", l)
 }
 
-func applySchedulePolicy(s *autoscalingv1.SchedulePolicy, f *agonesv1.Fleet, gameServerLister listeragonesv1.GameServerLister, nodeCounts map[string]gameservers.NodeCount, currentTime time.Time, fasLog *FasLogger) (int32, bool, error) {
+func applySchedulePolicy(s *autoscalingv1.SchedulePolicy, f *agonesv1.Fleet, gameServerNamespacedLister listeragonesv1.GameServerNamespaceLister, nodeCounts map[string]gameservers.NodeCount, currentTime time.Time, fasLog *FasLogger) (int32, bool, error) {
 	// Ensure the scheduled autoscaler feature gate is enabled
 	if !runtime.FeatureEnabled(runtime.FeatureScheduledAutoscaler) {
 		return 0, false, errors.Errorf("cannot apply SchedulePolicy unless feature flag %s is enabled", runtime.FeatureScheduledAutoscaler)
 	}
 
 	if isScheduleActive(s, currentTime) {
-		return computeDesiredFleetSize(s.Policy, f, gameServerLister, nodeCounts, fasLog)
+		return computeDesiredFleetSize(s.Policy, f, gameServerNamespacedLister, nodeCounts, fasLog)
 	}
 
 	loggerForFleetAutoscalerKey(fasLog.fas.ObjectMeta.Name, fasLog.baseLogger).Debugf(
@@ -435,7 +435,7 @@ func applySchedulePolicy(s *autoscalingv1.SchedulePolicy, f *agonesv1.Fleet, gam
 	return f.Status.Replicas, false, &InactiveScheduleError{}
 }
 
-func applyChainPolicy(c autoscalingv1.ChainPolicy, f *agonesv1.Fleet, gameServerLister listeragonesv1.GameServerLister, nodeCounts map[string]gameservers.NodeCount, currentTime time.Time, fasLog *FasLogger) (int32, bool, error) {
+func applyChainPolicy(c autoscalingv1.ChainPolicy, f *agonesv1.Fleet, gameServerNamespacedLister listeragonesv1.GameServerNamespaceLister, nodeCounts map[string]gameservers.NodeCount, currentTime time.Time, fasLog *FasLogger) (int32, bool, error) {
 	// Ensure the scheduled autoscaler feature gate is enabled
 	if !runtime.FeatureEnabled(runtime.FeatureScheduledAutoscaler) {
 		return 0, false, errors.Errorf("cannot apply ChainPolicy unless feature flag %s is enabled", runtime.FeatureScheduledAutoscaler)
@@ -450,12 +450,12 @@ func applyChainPolicy(c autoscalingv1.ChainPolicy, f *agonesv1.Fleet, gameServer
 	for _, entry := range c {
 		switch entry.Type {
 		case autoscalingv1.SchedulePolicyType:
-			replicas, limited, err = applySchedulePolicy(entry.Schedule, f, gameServerLister, nodeCounts, currentTime, fasLog)
+			replicas, limited, err = applySchedulePolicy(entry.Schedule, f, gameServerNamespacedLister, nodeCounts, currentTime, fasLog)
 		case autoscalingv1.WebhookPolicyType:
 			replicas, limited, err = applyWebhookPolicy(entry.Webhook, f, fasLog)
 		default:
 			// Every other policy type we just want to compute the desired fleet and return it
-			replicas, limited, err = computeDesiredFleetSize(entry.FleetAutoscalerPolicy, f, gameServerLister, nodeCounts, fasLog)
+			replicas, limited, err = computeDesiredFleetSize(entry.FleetAutoscalerPolicy, f, gameServerNamespacedLister, nodeCounts, fasLog)
 		}
 
 		// If no error occurred, exit the loop early
@@ -546,12 +546,13 @@ func isScheduleActive(s *autoscalingv1.SchedulePolicy, currentTime time.Time) bo
 
 // getSortedGameServers returns the list of Game Servers for the Fleet in the order in which the
 // Game Servers would be deleted.
-func getSortedGameServers(f *agonesv1.Fleet, gameServerLister listeragonesv1.GameServerLister,
+func getSortedGameServers(f *agonesv1.Fleet, gameServerNamespacedLister listeragonesv1.GameServerNamespaceLister,
 	nodeCounts map[string]gameservers.NodeCount) ([]*agonesv1.GameServer, error) {
-	gsList, err := fleets.ListGameServersByFleetOwner(gameServerLister, f)
+	gsList, err := fleets.ListGameServersByFleetOwner(gameServerNamespacedLister, f)
 	if err != nil {
 		return nil, err
 	}
+
 	gameServers := gssets.SortGameServersByStrategy(f.Spec.Scheduling, gsList, nodeCounts, f.Spec.Priorities)
 	return gameServers, nil
 }
@@ -583,11 +584,11 @@ func scaleUpLimited(replicas int32, capacity, aggCapacity, minCapacity int64) (i
 }
 
 // scaleDownLimited scales down the fleet to meet the MaxCapacity
-func scaleDownLimited(f *agonesv1.Fleet, gameServerLister listeragonesv1.GameServerLister,
+func scaleDownLimited(f *agonesv1.Fleet, gameServerNamespacedLister listeragonesv1.GameServerNamespaceLister,
 	nodeCounts map[string]gameservers.NodeCount, key string, isCounter bool, replicas int32,
 	aggCapacity, maxCapacity int64) (int32, bool, error) {
 	// Game Servers in order of deletion on scale down
-	gameServers, err := getSortedGameServers(f, gameServerLister, nodeCounts)
+	gameServers, err := getSortedGameServers(f, gameServerNamespacedLister, nodeCounts)
 	if err != nil {
 		return 0, false, err
 	}
@@ -616,7 +617,7 @@ func scaleDownLimited(f *agonesv1.Fleet, gameServerLister listeragonesv1.GameSer
 	return replicas, true, nil
 }
 
-func scaleLimited(scale int, f *agonesv1.Fleet, gameServerLister listeragonesv1.GameServerLister,
+func scaleLimited(scale int, f *agonesv1.Fleet, gameServerNamespacedLister listeragonesv1.GameServerNamespaceLister,
 	nodeCounts map[string]gameservers.NodeCount, key string, isCounter bool, replicas int32,
 	capacity, aggCapacity, minCapacity, maxCapacity int64) (int32, bool, error) {
 
@@ -624,7 +625,7 @@ func scaleLimited(scale int, f *agonesv1.Fleet, gameServerLister listeragonesv1.
 	case 1: // scale up
 		return scaleUpLimited(replicas, capacity, aggCapacity, minCapacity)
 	case -1: // scale down
-		return scaleDownLimited(f, gameServerLister, nodeCounts, key, isCounter, replicas,
+		return scaleDownLimited(f, gameServerNamespacedLister, nodeCounts, key, isCounter, replicas,
 			aggCapacity, maxCapacity)
 	case 0:
 		return replicas, false, nil
@@ -655,7 +656,7 @@ func scaleUp(replicas int32, capacity, count, aggCapacity, availableCapacity, ma
 }
 
 // scaleDown scales down for either Integer or Percentage Buffer.
-func scaleDown(f *agonesv1.Fleet, gameServerLister listeragonesv1.GameServerLister,
+func scaleDown(f *agonesv1.Fleet, gameServerNamespacedLister listeragonesv1.GameServerNamespaceLister,
 	nodeCounts map[string]gameservers.NodeCount, key string, isCounter bool, replicas int32,
 	aggCount, aggCapacity, minCapacity, buffer int64) (int32, bool, error) {
 	// Exit early if we're already at MinCapacity to avoid calling getSortedGameServers if unnecessary
@@ -665,7 +666,7 @@ func scaleDown(f *agonesv1.Fleet, gameServerLister listeragonesv1.GameServerList
 
 	// We first need to get the individual game servers in order of deletion on scale down, as any
 	// game server may have a unique value for counts and / or capacity.
-	gameServers, err := getSortedGameServers(f, gameServerLister, nodeCounts)
+	gameServers, err := getSortedGameServers(f, gameServerNamespacedLister, nodeCounts)
 	if err != nil {
 		return 0, false, err
 	}
