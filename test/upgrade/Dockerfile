@@ -17,7 +17,7 @@ FROM golang:1.23.4-alpine AS builder
 # install curl
 RUN apk update && \
     apk upgrade && \
-    apk --no-cache add curl jq
+    apk --no-cache add curl
 
 WORKDIR /usr/local
 
