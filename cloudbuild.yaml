@@ -282,6 +282,8 @@ steps:
         mkdir -p /go/src/agones.dev/ /root/.kube/
         ln -s /workspace /go/src/agones.dev/agones
         cd /go/src/agones.dev/agones/test/upgrade
+        
+        apt-get update && apt-get install -y jq
 
         pids=()
         typeset -A waitPids    # Associative array for mapping `kubectl wait job` pid -> `kubectl wait job` output log name
@@ -426,7 +428,7 @@ steps:
       - push-upgrade-test
 
   # cancel all the orphan e2e test cloud builds, fail to cancel any of the build will fail this whole build
-  - name: 
+  - name: gcr.io/cloud-builders/gcloud
     id: cancel-orphan-e2e-tests
     waitFor: [wait-to-become-leader]
     script: |
@@ -449,8 +451,6 @@ steps:
         pids=()
         cloudProducts=("generic" "gke-autopilot")
         declare -A versionsAndRegions=( [1.30]=asia-east1 [1.31]=us-east1 [1.32]=us-west1 )
-
-        apt-get update && apt-get install -y jq
 
         # Keep in sync with the inverse of 'alpha' and 'beta' features in
         # pkg/util/runtime/features.go:featureDefaults
