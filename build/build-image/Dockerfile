@@ -17,7 +17,7 @@
 FROM debian:bookworm
 
 RUN apt-get update && \
-    apt-get install -y build-essential gnupg curl git wget psmisc rsync make python3 bash-completion \
+    apt-get install -y build-essential gnupg curl git wget psmisc rsync make python3 bash-completion jq \
     zip nano jq graphviz gettext-base plantuml software-properties-common ruby-full && \
     apt-get clean
 
