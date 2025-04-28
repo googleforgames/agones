@@ -278,12 +278,11 @@ steps:
         #!/usr/bin/env bash
         set -e
         set -o pipefail
+        apt-get update && apt-get install -y jq
         export KUBECONFIG="/root/.kube/config"
         mkdir -p /go/src/agones.dev/ /root/.kube/
         ln -s /workspace /go/src/agones.dev/agones
         cd /go/src/agones.dev/agones/test/upgrade
-        
-        apt-get update && apt-get install -y jq
 
         pids=()
         typeset -A waitPids    # Associative array for mapping `kubectl wait job` pid -> `kubectl wait job` output log name
