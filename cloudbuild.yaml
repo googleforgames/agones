@@ -313,6 +313,8 @@ steps:
             fi
             testClusterLocation="${region}"
 
+            echo "===== Processing cluster: $testCluster in $testClusterLocation ====="
+
             gcloud container clusters get-credentials "$testCluster" --region="$testClusterLocation" --project="$PROJECT_ID"
 
             if [ "$cloudProduct" = gke-autopilot ] ; then
@@ -396,8 +398,12 @@ steps:
             # "Complete" is successful job run.
             # Version 1.31 has "SuccessCriteriaMet" as the first completion status returned, or "FailureTarget" in case of failure.
             if [ "$output" == "Complete" ] || [ "$output" == "SuccessCriteriaMet" ] ; then
+              echo "Job completed successfully on cluster associated with log: $outputLog"
               continue
             else
+              echo "Unexpected job status: '${output}' in log ${outputLog}"
+              echo "Collecting diagnostics from failed job..."
+              kubectl describe job upgrade-test-runner | awk '/Events:/,/^$/' | tail -n +2
               exit 1
             fi
           # This block executes when the process exits and pid status!=0
