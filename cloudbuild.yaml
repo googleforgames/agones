@@ -384,8 +384,8 @@ steps:
             pids+=( "$waitPid" )
             waitPids[$waitPid]="${tmpdir}"/"${testCluster}".log
 
-            JOB_CONDITIONS=$(kubectl get job/upgrade-test-runner -o json | jq '.status.conditions[] | select(.status=="True") | {type, reason, message}')
-            echo "$JOB_CONDITIONS"
+            job_conditions=$(kubectl get job/upgrade-test-runner -o json | jq '.status.conditions[] | select(.status=="True") | {type, reason, message}')
+            echo "$job_conditions"
           done
         done
 
