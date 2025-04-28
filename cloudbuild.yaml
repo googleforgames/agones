@@ -379,10 +379,13 @@ steps:
             kubectl wait --for=condition=ready pod -l job-name=upgrade-test-runner --timeout=5m
 
             echo Wait for job upgrade-test-runner to complete or fail on cluster "${testCluster}"
-            kubectl wait job/upgrade-test-runner --timeout=30m --for jsonpath='{.status.conditions[*].status}'=True -o jsonpath='{.status.conditions[*].type}' | tee "${tmpdir}"/"${testCluster}".log &
+            kubectl wait job/upgrade-test-runner --timeout=30m --for jsonpath='{.status.conditions[*].status}'=True -o jsonpath='{.status.conditions[*]['type','message']}' | tee "${tmpdir}"/"${testCluster}".log &
             waitPid=$!
             pids+=( "$waitPid" )
             waitPids[$waitPid]="${tmpdir}"/"${testCluster}".log
+
+            JOB_CONDITIONS=$(kubectl get job/upgrade-test-runner -o json | jq '.status.conditions[] | select(.status=="True") | {type, reason, message}')
+            echo "$JOB_CONDITIONS"
           done
         done
 
@@ -404,6 +407,7 @@ steps:
               echo "Unexpected job status: '${output}' in log ${outputLog}"
               echo "Collecting diagnostics from failed job..."
               kubectl describe job upgrade-test-runner | awk '/Events:/,/^$/' | tail -n +2
+              cat "${outputLog}"
               exit 1
             fi
           # This block executes when the process exits and pid status!=0
@@ -411,6 +415,7 @@ steps:
             status=$?
             outputLog="${waitPids[$pid]}"
             echo "One of the upgrade tests pid $pid from cluster log $outputLog exited with a non-zero status ${status}."
+            cat "${outputLog}"
             exit $status
           fi
         done
