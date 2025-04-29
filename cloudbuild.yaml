@@ -384,16 +384,20 @@ steps:
             waitPid=$!
             pids+=( "$waitPid" )
             waitPids[$waitPid]="${tmpdir}"/"${testCluster}".log
+
+            echo "===== Job status for upgrade-test-runner on cluster ${testCluster} ====="
+            kubectl get job/upgrade-test-runner -o json | jq '.status' > "${tmpdir}/${testCluster}-job-status.json"
+            cat "${tmpdir}/${testCluster}-job-status.json"
+
+            echo "===== Extracting job conditions (if available) ====="
+            job_conditions=$(kubectl get job/upgrade-test-runner -o json | jq -c 'if .status.conditions then .status.conditions[] | select(.status=="True") | {type, reason, message} else empty end')
+            echo "Job conditions output: $job_conditions"
           done
         done
 
         for pid in "${pids[@]}"; do
           # This block executes when the process exits and pid status==0
           if wait $pid; then
-            echo "===== Job status for upgrade-test-runner on cluster ${testCluster} ====="
-            job_conditions=$(kubectl get job/upgrade-test-runner -o json | jq -c 'if .status.conditions then .status.conditions[] | select(.status=="True") | {type, reason, message} else empty end')
-            echo "Job conditions output: $job_conditions"
-
             outputLog="${waitPids[$pid]}"
             # wait for output to finish writing to file
             until [ -s "$outputLog" ]; do sleep 1; done
