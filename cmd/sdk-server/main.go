@@ -158,7 +158,10 @@ func main() {
 		if err := s.WaitForConnection(ctx); err != nil {
 			logger.WithError(err).Fatalf("Sidecar networking failure")
 		}
-		if ctlConf.GracefulTermination {
+
+		// if sidecar init container, we no longer need to wait for Shutdown as the sdkserver has an independent lifecycle
+		// from the main pod containers.
+		if ctlConf.GracefulTermination && !runtime.FeatureEnabled(runtime.FeatureSidecarContainers) {
 			ctx = s.NewSDKServerContext(ctx)
 		}
 		go func() {
@@ -309,7 +312,7 @@ func parseEnvFlags() config {
 	pflag.String(kubeconfigFlag, viper.GetString(kubeconfigFlag),
 		"Optional. kubeconfig to run the SDK server out of the cluster.")
 	pflag.Bool(gracefulTerminationFlag, viper.GetBool(gracefulTerminationFlag),
-		"Immediately quits when receiving interrupt instead of waiting for GameServer state to progress to \"Shutdown\".")
+		"When false, immediately quits when receiving interrupt instead of waiting for GameServer state to progress to \"Shutdown\".")
 	runtime.FeaturesBindFlags()
 	pflag.Parse()
 
