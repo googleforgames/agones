@@ -6134,6 +6134,7 @@ spec:
                   type: boolean
                 lastAppliedPolicy:
                   type: string
+                  default: ""
       subresources:
         # status enables the status subresource.
         status: {}

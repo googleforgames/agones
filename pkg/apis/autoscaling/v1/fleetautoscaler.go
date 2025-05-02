@@ -304,7 +304,6 @@ type FleetAutoscalerStatus struct {
 
 	// LastAppliedPolicy is the ID of the last applied policy in the ChainPolicy.
 	// Used to track policy transitions for logging purposes.
-	// +optional
 	LastAppliedPolicy FleetAutoscalerPolicyType `json:"lastAppliedPolicy"`
 }
 

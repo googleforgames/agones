@@ -1301,6 +1301,20 @@ func TestCounterAutoscalerAllocatedMultipleNamespaces(t *testing.T) {
 				return fas.Status.CurrentReplicas > 0
 			})
 
+			// Wait for LastAppliedPolicy to be set to CounterPolicyType for fasA
+			framework.WaitForFleetAutoScalerCondition(t, fasA, func(log *logrus.Entry, fas *autoscalingv1.FleetAutoscaler) bool {
+				log.WithField("LastAppliedPolicy", fas.Status.LastAppliedPolicy).
+					Info("Waiting for LastAppliedPolicy to be set to CounterPolicyType")
+				return fas.Status.LastAppliedPolicy == autoscalingv1.CounterPolicyType
+			})
+
+			// Wait for LastAppliedPolicy to be set to CounterPolicyType for fasB
+			framework.WaitForFleetAutoScalerCondition(t, fasB, func(log *logrus.Entry, fas *autoscalingv1.FleetAutoscaler) bool {
+				log.WithField("LastAppliedPolicy", fas.Status.LastAppliedPolicy).
+					Info("Waiting for LastAppliedPolicy to be set to CounterPolicyType")
+				return fas.Status.LastAppliedPolicy == autoscalingv1.CounterPolicyType
+			})
+
 			// Ensure the allocated and ready replicas are correct for A and B
 			framework.AssertFleetCondition(t, fltA, func(_ *logrus.Entry, fleet *agonesv1.Fleet) bool {
 				return fleet.Status.AllocatedReplicas == testCase.wantAllocatedGsA && fleet.Status.ReadyReplicas == testCase.wantReadyGsA

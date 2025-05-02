@@ -206,6 +206,7 @@ func fleetAutoScaler(fleetName string, fasName string) *autoscalingv1.FleetAutos
 			ScalingLimited:  false,
 			CurrentReplicas: 10,
 			DesiredReplicas: 20,
+			LastAppliedPolicy: autoscalingv1.BufferPolicyType,
 		},
 	}
 }

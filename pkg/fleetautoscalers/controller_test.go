@@ -347,6 +347,7 @@ func TestControllerSyncFleetAutoscaler(t *testing.T) {
 			assert.Equal(t, fas.Status.ScalingLimited, false)
 			assert.Equal(t, fas.Status.CurrentReplicas, int32(5))
 			assert.Equal(t, fas.Status.DesiredReplicas, int32(12))
+			assert.Equal(t, fas.Status.LastAppliedPolicy, autoscalingv1.BufferPolicyType)
 			assert.NotNil(t, fas.Status.LastScaleTime)
 			return true, fas, nil
 		})
@@ -405,6 +406,7 @@ func TestControllerSyncFleetAutoscaler(t *testing.T) {
 			assert.Equal(t, fas.Status.ScalingLimited, false)
 			assert.Equal(t, fas.Status.CurrentReplicas, int32(50))
 			assert.Equal(t, fas.Status.DesiredReplicas, int32(100))
+			assert.Equal(t, fas.Status.LastAppliedPolicy, autoscalingv1.WebhookPolicyType )
 			assert.NotNil(t, fas.Status.LastScaleTime)
 			return true, fas, nil
 		})
@@ -503,6 +505,7 @@ func TestControllerSyncFleetAutoscaler(t *testing.T) {
 			assert.Equal(t, fas.Status.ScalingLimited, false)
 			assert.Equal(t, fas.Status.CurrentReplicas, int32(20))
 			assert.Equal(t, fas.Status.DesiredReplicas, int32(13))
+			assert.Equal(t, fas.Status.LastAppliedPolicy, autoscalingv1.BufferPolicyType)
 			assert.NotNil(t, fas.Status.LastScaleTime)
 			return true, fas, nil
 		})
@@ -845,6 +848,7 @@ func TestControllerUpdateStatus(t *testing.T) {
 			assert.Equal(t, fas.Status.ScalingLimited, false)
 			assert.Equal(t, fas.Status.CurrentReplicas, int32(10))
 			assert.Equal(t, fas.Status.DesiredReplicas, int32(20))
+			assert.Equal(t, fas.Status.LastAppliedPolicy, autoscalingv1.BufferPolicyType)
 			assert.NotNil(t, fas.Status.LastScaleTime)
 			return true, fas, nil
 		})
@@ -946,6 +950,7 @@ func TestControllerUpdateStatusUnableToScale(t *testing.T) {
 			assert.Equal(t, fas.Status.ScalingLimited, false)
 			assert.Equal(t, fas.Status.CurrentReplicas, int32(0))
 			assert.Equal(t, fas.Status.DesiredReplicas, int32(0))
+			assert.Equal(t, fas.Status.LastAppliedPolicy, autoscalingv1.FleetAutoscalerPolicyType(""))
 			assert.Nil(t, fas.Status.LastScaleTime)
 			return true, fas, nil
 		})
@@ -987,6 +992,7 @@ func TestControllerUpdateStatusUnableToScale(t *testing.T) {
 		fas.Status.ScalingLimited = false
 		fas.Status.CurrentReplicas = 0
 		fas.Status.DesiredReplicas = 0
+		fas.Status.LastAppliedPolicy = autoscalingv1.FleetAutoscalerPolicyType("")
 
 		m.AgonesClient.AddReactor("update", "fleetautoscalers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
 			assert.FailNow(t, "fleetautoscaler should not update")

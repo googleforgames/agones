@@ -441,6 +441,7 @@ func (c *Controller) updateStatusUnableToScale(ctx context.Context, fas *autosca
 	fasCopy.Status.ScalingLimited = false
 	fasCopy.Status.CurrentReplicas = 0
 	fasCopy.Status.DesiredReplicas = 0
+	fasCopy.Status.LastAppliedPolicy = autoscalingv1.FleetAutoscalerPolicyType("")
 
 	if !apiequality.Semantic.DeepEqual(fas.Status, fasCopy.Status) {
 		_, err := c.fleetAutoscalerGetter.FleetAutoscalers(fas.ObjectMeta.Namespace).UpdateStatus(ctx, fasCopy, metav1.UpdateOptions{})
