@@ -114,6 +114,7 @@ func applyGameServerAddressAndPort(gs *agonesv1.GameServer, node *corev1.Node, p
 	return gs, nil
 }
 
+// hasPodIPAddress checks to see if the GameServer has a Pod IP address already set
 func hasPodIPAddress(gs *agonesv1.GameServer) bool {
 	if gs == nil {
 		return false

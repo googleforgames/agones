@@ -150,7 +150,6 @@ func TestApplyGameServerAddressAndPort(t *testing.T) {
 					{IP: ipFixture},
 				}
 			},
-
 			podSyncer: noopSyncer,
 			wantPort:  9999,
 		},
