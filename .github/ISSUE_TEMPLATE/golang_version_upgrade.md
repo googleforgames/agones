@@ -57,6 +57,10 @@ Steps to upgrade Golang version and dependencies:
 
   - [ ] At the root directory, run: `find . -name 'go.mod' -not -path '*/\.*' -execdir go get -u \;`
 
+-  [ ] Run `go mod vendor` to ensure all modules are properly updated.
+-  [ ] In the `build` directory, run `make lint` to verify code style and linting rules.
+-  [ ] In the `build` directory, run `make test` to ensure all tests pass.
+
 - [ ] Run the following to generate and push the new example images:
 
   - [ ] In `examples/allocation-endpoint`, run: `make cloud-build`
