@@ -29,12 +29,26 @@ type gameServerCache struct {
 }
 
 // Store saves the data in the cache.
+// If there is already a value for this key, the incoming gs object is ignored
+// if its Generation metadata is less than the existing one, or if its Generation
+// is equal and its ResourceVersion is the same as the existing one.
+// Otherwise, the incoming gs object replaces the existing one.
 func (e *gameServerCache) Store(key string, gs *agonesv1.GameServer) {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 	if e.cache == nil {
 		e.cache = map[string]*agonesv1.GameServer{}
 	}
+
+	// Check if there's already a value for this key
+	if existingGS, ok := e.cache[key]; ok {
+		// If the incoming gs object's Generation is less than the existing one, ignore it, but also check the ResourceVersion
+		// saves us a deep copy if we don't need to
+		if gs.ObjectMeta.Generation < existingGS.ObjectMeta.Generation || gs.ObjectMeta.ResourceVersion == existingGS.ObjectMeta.ResourceVersion {
+			return
+		}
+	}
+	// If the incoming gs object's Generation is greater, store it
 	e.cache[key] = gs.DeepCopy()
 }
 

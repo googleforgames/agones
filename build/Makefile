@@ -73,7 +73,7 @@ BETA_FEATURE_GATES ?= "AutopilotPassthroughPort=true&CountsAndLists=true&GKEAuto
 
 
 # Enable all alpha feature gates. Keep in sync with `false` (alpha) entries in pkg/util/runtime/features.go:featureDefaults
-ALPHA_FEATURE_GATES ?= "PlayerAllocationFilter=true&FleetAutoscaleRequestMetaData=true&PlayerTracking=true&RollingUpdateFix=true&ScheduledAutoscaler=true&Example=true"
+ALPHA_FEATURE_GATES ?= "PlayerAllocationFilter=true&FleetAutoscaleRequestMetaData=true&PlayerTracking=true&RollingUpdateFix=true&ScheduledAutoscaler=true&SidecarContainers=true&Example=true"
 
 # Build with Windows support
 WITH_WINDOWS=1
@@ -334,7 +334,7 @@ test-e2e-integration: GO_E2E_TEST_INTEGRATION_ARGS ?=\
 test-e2e-integration: $(ensure-build-image)
 	echo "Starting e2e integration test!"
 ifdef E2E_USE_GOTESTSUM
-	$(GOTESTSUM) --packages=$(agones_package)/test/e2e -- $(go_test_args) -timeout=30m $(ARGS) -args \
+	$(GOTESTSUM) --packages=$(agones_package)/test/e2e -- $(go_test_args) -timeout=45m $(ARGS) -args \
 		$(GO_E2E_TEST_ARGS) $(GO_E2E_TEST_INTEGRATION_ARGS)
 else
 	$(GO_TEST) -timeout=30m $(ARGS) $(agones_package)/test/e2e -args \
