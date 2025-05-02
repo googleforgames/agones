@@ -973,11 +973,37 @@ func (c *Controller) syncGameServerRequestReadyState(ctx context.Context, gs *ag
 		}
 	}
 
+	gsCopy, err = c.applyGameServerReadyContainerIDAnnotation(ctx, gsCopy, pod)
+	if err != nil {
+		return gs, err
+	}
+
+	gsCopy.Status.State = agonesv1.GameServerStateReady
+	gs, err = c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(ctx, gsCopy, metav1.UpdateOptions{})
+	if err != nil {
+		return gs, errors.Wrapf(err, "error setting Ready, Port and address on GameServer %s Status", gs.ObjectMeta.Name)
+	}
+
+	if addressPopulated {
+		c.recorder.Event(gs, corev1.EventTypeNormal, string(gs.Status.State), "Address and port populated")
+	}
+	c.recorder.Event(gs, corev1.EventTypeNormal, string(gs.Status.State), "SDK.Ready() complete")
+	return gs, nil
+}
+
+// applyGameServerReadyContainerIDAnnotation updates the GameServer and its corresponding Pod with an annotation
+// indicating the ID of the container that is running the game server, once it's in a Running state.
+func (c *Controller) applyGameServerReadyContainerIDAnnotation(ctx context.Context, gsCopy *agonesv1.GameServer, pod *corev1.Pod) (*agonesv1.GameServer, error) {
+	// if there is a sidecar container, we escape right away. On move to stable, this method can be deleted.
+	if runtime.FeatureEnabled(runtime.FeatureSidecarContainers) {
+		return gsCopy, nil
+	}
+
 	// track the ready gameserver container, so we can determine that after this point, we should move to Unhealthy
 	// if there is a container crash/restart after we move to Ready
 	for _, cs := range pod.Status.ContainerStatuses {
-		if cs.Name == gs.Spec.Container {
-			if _, ok := gs.ObjectMeta.Annotations[agonesv1.GameServerReadyContainerIDAnnotation]; !ok {
+		if cs.Name == gsCopy.Spec.Container {
+			if _, ok := gsCopy.ObjectMeta.Annotations[agonesv1.GameServerReadyContainerIDAnnotation]; !ok {
 				// check to make sure this container is actually running. If there was a recent crash, the cache may
 				// not yet have the newer, running container.
 				if cs.State.Running == nil {
@@ -1002,22 +1028,11 @@ func (c *Controller) syncGameServerRequestReadyState(ctx context.Context, gs *ag
 		}
 
 		podCopy.ObjectMeta.Annotations[agonesv1.GameServerReadyContainerIDAnnotation] = gsCopy.ObjectMeta.Annotations[agonesv1.GameServerReadyContainerIDAnnotation]
-		if _, err = c.podGetter.Pods(pod.ObjectMeta.Namespace).Update(ctx, podCopy, metav1.UpdateOptions{}); err != nil {
-			return gs, errors.Wrapf(err, "error updating ready annotation on Pod: %s", pod.ObjectMeta.Name)
+		if _, err := c.podGetter.Pods(pod.ObjectMeta.Namespace).Update(ctx, podCopy, metav1.UpdateOptions{}); err != nil {
+			return nil, errors.Wrapf(err, "error updating ready annotation on Pod: %s", pod.ObjectMeta.Name)
 		}
 	}
-
-	gsCopy.Status.State = agonesv1.GameServerStateReady
-	gs, err = c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(ctx, gsCopy, metav1.UpdateOptions{})
-	if err != nil {
-		return gs, errors.Wrapf(err, "error setting Ready, Port and address on GameServer %s Status", gs.ObjectMeta.Name)
-	}
-
-	if addressPopulated {
-		c.recorder.Event(gs, corev1.EventTypeNormal, string(gs.Status.State), "Address and port populated")
-	}
-	c.recorder.Event(gs, corev1.EventTypeNormal, string(gs.Status.State), "SDK.Ready() complete")
-	return gs, nil
+	return gsCopy, nil
 }
 
 // syncGameServerShutdownState deletes the GameServer (and therefore the backing Pod) if it is in shutdown state

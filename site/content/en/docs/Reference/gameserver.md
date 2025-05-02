@@ -24,7 +24,7 @@ spec:
   ports:
     # name is a descriptive name for the port
   - name: default
-    # [Stage:Alpha]
+    # [Stage:Beta]
     # [FeatureFlag:PortRanges]
     # range is the optional port range name from which to select a port when using a 'Dynamic' or 'Passthrough' port policy.
     range: default
