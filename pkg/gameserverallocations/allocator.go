@@ -602,6 +602,8 @@ func (c *Allocator) allocationUpdateWorkers(ctx context.Context, workerCount int
 						}
 						res.err = errors.Wrap(err, "error updating allocated gameserver")
 					} else {
+						// put the GameServer back into the cache, so it's immediately around for re-allocation
+						c.allocationCache.AddGameServer(gs)
 						res.gs = gs
 					}
 

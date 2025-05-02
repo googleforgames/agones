@@ -33,6 +33,7 @@ PlayerAllocationFilter: false
 PlayerTracking: false
 RollingUpdateFix: false
 ScheduledAutoscaler: false
+SidecarContainers: false
 
 # Dev features
 
