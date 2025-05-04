@@ -68,11 +68,11 @@ release-branch: $(ensure-build-image)
 	@echo "Now go make the $(RELEASE_VERSION) release on Github!"
 
 # push the current chart to google cloud storage and update the index
-# or push the current charts to the helm registry `CHART_REGISTRY`
+# or push the current charts to the helm registry `CHARTS_REGISTRY`
 push-chart: $(ensure-build-image) build-chart
-ifdef CHART_REGISTRY
+ifneq ($(CHARTS_REGISTRY),)
 	docker run --rm $(common_mounts) -w $(workdir_path) $(build_tag) bash -c \
-		"helm push ./install/helm/bin/*.* $(CHART_REGISTRY)"
+		"helm push ./install/helm/bin/*.* $(CHARTS_REGISTRY)"
 else
 	docker run $(DOCKER_RUN_ARGS) --rm $(common_mounts) -w $(workdir_path) $(build_tag) bash -c \
 		"gsutil copy gs://$(GCP_BUCKET_CHARTS)/index.yaml ./install/helm/bin/index.yaml || /bin/true && \
