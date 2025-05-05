@@ -150,6 +150,19 @@ restart for a brief period, inline with our [Health Checking]({{% ref "/docs/Gui
 If the SDK server receives a TERM signal before calling SDK.Shutdown(),
 the SDK server will stay alive for the period of the `terminationGracePeriodSeconds` until `SDK.Shutdown()` has been called.
 
+{{< alpha title="Sidecar Containers" gate="SidecarContainers" >}}
+
+When enabling the `SidecarContainers` feature gate, the Agones SDK server will be run as a sidecar container in the same
+Pod as the game server, and the container restart and Health checking rules are more simplified from the above.
+
+Since the Agones SDK Server is a 
+[sidecar container](https://kubernetes.io/docs/concepts/workloads/pods/sidecar-containers/), the main container(s)
+will not restart by default, as the default `PodRestartPolicy` for `GameServer` Pod is `Never`, unless otherwise 
+configured.
+
+This also means the SDK Server will be terminated when the main container(s) are terminated, and is therefore accessible
+for the entire lifecycle of the `GameServer` Pod's main containers.
+
 ### Configuration Retrieval 
 
 #### GameServer()
