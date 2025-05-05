@@ -22,6 +22,7 @@ import (
 
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	agtesting "agones.dev/agones/pkg/testing"
+	agruntime "agones.dev/agones/pkg/util/runtime"
 	"github.com/heptiolabs/healthcheck"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -35,6 +36,10 @@ import (
 
 func TestHealthControllerFailedContainer(t *testing.T) {
 	t.Parallel()
+
+	agruntime.FeatureTestMutex.Lock()
+	defer agruntime.FeatureTestMutex.Unlock()
+	require.NoError(t, agruntime.ParseFeatures(string(agruntime.FeatureSidecarContainers)+"=false"))
 
 	m := agtesting.NewMocks()
 	hc := NewHealthController(healthcheck.NewHandler(), m.KubeClient, m.AgonesClient, m.KubeInformerFactory, m.AgonesInformerFactory, false)
@@ -60,8 +65,36 @@ func TestHealthControllerFailedContainer(t *testing.T) {
 	assert.False(t, hc.failedContainer(pod2))
 }
 
+func TestHealthControllerFailedPod(t *testing.T) {
+	t.Parallel()
+
+	agruntime.FeatureTestMutex.Lock()
+	defer agruntime.FeatureTestMutex.Unlock()
+
+	// set sidecar feature flag
+	require.NoError(t, agruntime.ParseFeatures(string(agruntime.FeatureSidecarContainers)+"=true"))
+
+	m := agtesting.NewMocks()
+	hc := NewHealthController(healthcheck.NewHandler(), m.KubeClient, m.AgonesClient, m.KubeInformerFactory, m.AgonesInformerFactory, false)
+
+	gs := agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test"}, Spec: newSingleContainerSpec()}
+	gs.ApplyDefaults()
+
+	pod, err := gs.Pod(agtesting.FakeAPIHooks{})
+	require.NoError(t, err)
+	assert.False(t, hc.failedPod(pod))
+
+	// set the pod to failed status
+	pod.Status.Phase = corev1.PodFailed
+	assert.True(t, hc.failedPod(pod))
+}
+
 func TestHealthUnschedulableWithNoFreePorts(t *testing.T) {
 	t.Parallel()
+
+	agruntime.FeatureTestMutex.Lock()
+	defer agruntime.FeatureTestMutex.Unlock()
+	require.NoError(t, agruntime.ParseFeatures(string(agruntime.FeatureSidecarContainers)+"=false"))
 
 	m := agtesting.NewMocks()
 	hc := NewHealthController(healthcheck.NewHandler(), m.KubeClient, m.AgonesClient, m.KubeInformerFactory, m.AgonesInformerFactory, false)
@@ -102,6 +135,10 @@ func TestHealthUnschedulableWithNoFreePorts(t *testing.T) {
 
 func TestHealthControllerSkipUnhealthyGameContainer(t *testing.T) {
 	t.Parallel()
+
+	agruntime.FeatureTestMutex.Lock()
+	defer agruntime.FeatureTestMutex.Unlock()
+	require.NoError(t, agruntime.ParseFeatures(string(agruntime.FeatureSidecarContainers)+"=false"))
 
 	type expected struct {
 		result bool
@@ -231,6 +268,7 @@ func TestHealthControllerSyncGameServer(t *testing.T) {
 	fixtures := map[string]struct {
 		state     agonesv1.GameServerState
 		podStatus *corev1.PodStatus
+		feature   string
 		expected  expected
 	}{
 		"started": {
@@ -270,7 +308,8 @@ func TestHealthControllerSyncGameServer(t *testing.T) {
 			expected: expected{updated: false},
 		},
 		"container failed after ready": {
-			state: agonesv1.GameServerStateAllocated,
+			state:   agonesv1.GameServerStateAllocated,
+			feature: string(agruntime.FeatureSidecarContainers) + "=false",
 			podStatus: &corev1.PodStatus{ContainerStatuses: []corev1.ContainerStatus{
 				{Name: "container", State: corev1.ContainerState{Terminated: &corev1.ContainerStateTerminated{}}}}},
 			expected: expected{updated: true},
@@ -293,10 +332,22 @@ func TestHealthControllerSyncGameServer(t *testing.T) {
 				{Name: "container", State: corev1.ContainerState{Running: &corev1.ContainerStateRunning{}}}}},
 			expected: expected{updated: false},
 		},
+		"pod failed": {
+			feature:   string(agruntime.FeatureSidecarContainers) + "=true",
+			state:     agonesv1.GameServerStateReady,
+			podStatus: &corev1.PodStatus{Phase: corev1.PodFailed},
+			expected:  expected{updated: true},
+		},
 	}
 
 	for name, test := range fixtures {
 		t.Run(name, func(t *testing.T) {
+			agruntime.FeatureTestMutex.Lock()
+			defer agruntime.FeatureTestMutex.Unlock()
+			if len(test.feature) > 0 {
+				require.NoError(t, agruntime.ParseFeatures(test.feature))
+			}
+
 			m := agtesting.NewMocks()
 			hc := NewHealthController(healthcheck.NewHandler(), m.KubeClient, m.AgonesClient, m.KubeInformerFactory, m.AgonesInformerFactory, false)
 			hc.recorder = m.FakeRecorder
@@ -376,8 +427,12 @@ func TestHealthControllerSyncGameServerUpdateFailed(t *testing.T) {
 	}
 }
 
-func TestHealthControllerRun(t *testing.T) {
+func TestHealthControllerRunNoSideCar(t *testing.T) {
 	t.Parallel()
+
+	agruntime.FeatureTestMutex.Lock()
+	defer agruntime.FeatureTestMutex.Unlock()
+	require.NoError(t, agruntime.ParseFeatures(string(agruntime.FeatureSidecarContainers)+"=false"))
 
 	m := agtesting.NewMocks()
 	hc := NewHealthController(healthcheck.NewHandler(), m.KubeClient, m.AgonesClient, m.KubeInformerFactory, m.AgonesInformerFactory, false)
@@ -442,6 +497,78 @@ func TestHealthControllerRun(t *testing.T) {
 	// gate
 	assert.True(t, hc.unschedulableWithNoFreePorts(pod))
 	assert.False(t, hc.failedContainer(pod))
+
+	podWatch.Modify(pod.DeepCopy())
+
+	select {
+	case <-updated:
+	case <-time.After(10 * time.Second):
+		assert.FailNow(t, "timeout on GameServer update")
+	}
+
+	agtesting.AssertEventContains(t, m.FakeRecorder.Events, string(agonesv1.GameServerStateUnhealthy))
+
+	podWatch.Delete(pod.DeepCopy())
+	select {
+	case <-updated:
+	case <-time.After(10 * time.Second):
+		assert.FailNow(t, "timeout on GameServer update")
+	}
+
+	agtesting.AssertEventContains(t, m.FakeRecorder.Events, string(agonesv1.GameServerStateUnhealthy))
+}
+
+func TestHealthControllerRunWithSideCar(t *testing.T) {
+	t.Parallel()
+
+	agruntime.FeatureTestMutex.Lock()
+	defer agruntime.FeatureTestMutex.Unlock()
+	require.NoError(t, agruntime.ParseFeatures(string(agruntime.FeatureSidecarContainers)+"=true"))
+
+	m := agtesting.NewMocks()
+	hc := NewHealthController(healthcheck.NewHandler(), m.KubeClient, m.AgonesClient, m.KubeInformerFactory, m.AgonesInformerFactory, false)
+	hc.recorder = m.FakeRecorder
+
+	gsWatch := watch.NewFake()
+	m.AgonesClient.AddWatchReactor("gameservers", k8stesting.DefaultWatchReactor(gsWatch, nil))
+
+	podWatch := watch.NewFake()
+	m.KubeClient.AddWatchReactor("pods", k8stesting.DefaultWatchReactor(podWatch, nil))
+
+	updated := make(chan bool)
+	defer close(updated)
+	m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		defer func() {
+			updated <- true
+		}()
+		ua := action.(k8stesting.UpdateAction)
+		gsObj := ua.GetObject().(*agonesv1.GameServer)
+		assert.Equal(t, agonesv1.GameServerStateUnhealthy, gsObj.Status.State)
+		return true, gsObj, nil
+	})
+
+	gs := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Namespace: "default", Name: "test"}, Spec: newSingleContainerSpec(),
+		Status: agonesv1.GameServerStatus{State: agonesv1.GameServerStateReady}}
+	gs.ApplyDefaults()
+	pod, err := gs.Pod(agtesting.FakeAPIHooks{})
+	require.NoError(t, err)
+
+	stop, cancel := agtesting.StartInformers(m)
+	defer cancel()
+
+	gsWatch.Add(gs.DeepCopy())
+	podWatch.Add(pod.DeepCopy())
+
+	go hc.Run(stop, 1) // nolint: errcheck
+	err = wait.PollUntilContextTimeout(context.Background(), time.Second, 10*time.Second, true, func(_ context.Context) (bool, error) {
+		return hc.workerqueue.RunCount() == 1, nil
+	})
+	assert.NoError(t, err)
+
+	pod.Status = corev1.PodStatus{Phase: corev1.PodFailed}
+	// gate
+	require.True(t, hc.failedPod(pod))
+	require.False(t, hc.evictedPod(pod))
 
 	podWatch.Modify(pod.DeepCopy())
 
