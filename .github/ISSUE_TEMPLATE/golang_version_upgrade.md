@@ -56,6 +56,11 @@ Steps to upgrade Golang version and dependencies:
 - [ ] Update Golang dependencies in all `go.mod` files:
 
   - [ ] At the root directory, run: `find . -name 'go.mod' -not -path '*/\.*' -execdir go get -u \;`
+  - [ ] At the root directory, run: `find . -name 'go.mod' -not -path '*/\.*' -execdir go mod tidy \;`
+
+-  [ ] Run `go mod vendor` to ensure all modules are properly updated.
+-  [ ] In the `build` directory, run `make lint` to verify code style and linting rules.
+-  [ ] In the `build` directory, run `make test` to ensure all tests pass.
 
 - [ ] Run the following to generate and push the new example images:
 
