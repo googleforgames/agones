@@ -301,6 +301,17 @@ steps:
         cloudProducts=("generic" "gke-autopilot")
         declare -A versionsAndRegions=( [1.32]=us-west1 [1.31]=us-east1 [1.30]=us-central1 )
 
+        # Function to log upgrade test job status and conditions
+        logUpgradeTestJobStatus() {
+            echo "===== Job status for upgrade-test-runner on cluster ${testCluster} ====="
+            kubectl get job/upgrade-test-runner -o json | jq '.status' > "${tmpdir}/${testCluster}-job-status.json"
+            cat "${tmpdir}/${testCluster}-job-status.json"
+
+            echo "===== Extracting job conditions (if available) ====="
+            job_conditions=$(kubectl get job/upgrade-test-runner -o json | jq -c 'if .status.conditions then .status.conditions[] | select(.status=="True") | {type, reason, message} else empty end')
+            echo "Job conditions output: $job_conditions"
+        }
+
         for cloudProduct in "${cloudProducts[@]}"
         do
           for version in "${!versionsAndRegions[@]}"
@@ -380,18 +391,11 @@ steps:
             kubectl wait --for=condition=ready pod -l job-name=upgrade-test-runner --timeout=5m
 
             echo Wait for job upgrade-test-runner to complete or fail on cluster "${testCluster}"
-            kubectl wait job/upgrade-test-runner --timeout=30m --for jsonpath='{.status.conditions[*].status}'=True -o jsonpath='{.status.conditions[*].type}' | tee "${tmpdir}"/"${testCluster}".log &
+            kubectl wait job/upgrade-test-runner --timeout=30m --for jsonpath='{.status.conditions[*].status}'=True -o jsonpath='{.status.conditions[*].type}' | tee "${tmpdir}"/"${testCluster}".log && logUpgradeTestJobStatus &
             waitPid=$!
             pids+=( "$waitPid" )
             waitPids[$waitPid]="${tmpdir}"/"${testCluster}".log
 
-            echo "===== Job status for upgrade-test-runner on cluster ${testCluster} ====="
-            kubectl get job/upgrade-test-runner -o json | jq '.status' > "${tmpdir}/${testCluster}-job-status.json"
-            cat "${tmpdir}/${testCluster}-job-status.json"
-
-            echo "===== Extracting job conditions (if available) ====="
-            job_conditions=$(kubectl get job/upgrade-test-runner -o json | jq -c 'if .status.conditions then .status.conditions[] | select(.status=="True") | {type, reason, message} else empty end')
-            echo "Job conditions output: $job_conditions"
           done
         done
 
@@ -411,8 +415,6 @@ steps:
               continue
             else
               echo "Unexpected job status: '${output}' in log ${outputLog}"
-              echo "Collecting diagnostics from failed job..."
-              kubectl describe job upgrade-test-runner | awk '/Events:/,/^$/' | tail -n +2
               cat "${outputLog}"
               exit 1
             fi
