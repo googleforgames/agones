@@ -303,13 +303,23 @@ steps:
 
         # Function to log upgrade test job status and conditions
         logUpgradeTestJobStatus() {
-            echo "===== Job status for upgrade-test-runner on cluster ${testCluster} ====="
-            kubectl get job/upgrade-test-runner -o json | jq '.status' > "${tmpdir}/${testCluster}-job-status.json"
-            cat "${tmpdir}/${testCluster}-job-status.json"
+          echo "===== Job status for upgrade-test-runner on cluster ${testCluster} ====="
+
+          # Try to get the job JSON
+          job_json=$(kubectl get job/upgrade-test-runner -o json 2>/dev/null)
+
+          if [[ -n "$job_json" ]]; then
+            # Save and print job status
+            echo "$job_json" | jq '.status' > "${tmpdir}/job-status.json"
+            cat "${tmpdir}/job-status.json"
 
             echo "===== Extracting job conditions (if available) ====="
-            job_conditions=$(kubectl get job/upgrade-test-runner -o json | jq -c 'if .status.conditions then .status.conditions[] | select(.status=="True") | {type, reason, message} else empty end')
+            job_conditions=$(echo "$job_json" | jq -c 'if .status.conditions then .status.conditions[] | select(.status=="True") | {type, reason, message} else empty end')
             echo "Job conditions output: $job_conditions"
+          else
+            # Fallback if job was not found
+            echo "Job 'upgrade-test-runner' not found on cluster ${testCluster}, skipping status and condition extraction."
+          fi
         }
 
         for cloudProduct in "${cloudProducts[@]}"
