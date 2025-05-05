@@ -303,7 +303,7 @@ steps:
 
         # Function to log upgrade test job status and conditions
         logUpgradeTestJobStatus() {
-          echo "===== Job status for upgrade-test-runner on cluster ${testCluster} ====="
+          echo $'\n===== Job status for upgrade-test-runner on cluster '"${testCluster}"' ====='
 
           # Try to get the job JSON
           job_json=$(kubectl get job/upgrade-test-runner -o json 2>/dev/null)
@@ -313,7 +313,7 @@ steps:
             echo "$job_json" | jq '.status' > "${tmpdir}/job-status.json"
             cat "${tmpdir}/job-status.json"
 
-            echo "===== Extracting job conditions (if available) ====="
+            echo $"\n===== Extracting job conditions (if available) ====="
             job_conditions=$(echo "$job_json" | jq -c 'if .status.conditions then .status.conditions[] | select(.status=="True") | {type, reason, message} else empty end')
             echo "Job conditions output: $job_conditions"
           else
@@ -401,10 +401,11 @@ steps:
             kubectl wait --for=condition=ready pod -l job-name=upgrade-test-runner --timeout=5m
 
             echo Wait for job upgrade-test-runner to complete or fail on cluster "${testCluster}"
-            kubectl wait job/upgrade-test-runner --timeout=30m --for jsonpath='{.status.conditions[*].status}'=True -o jsonpath='{.status.conditions[*].type}' | tee "${tmpdir}"/"${testCluster}".log && logUpgradeTestJobStatus &
+            kubectl wait job/upgrade-test-runner --timeout=30m --for jsonpath='{.status.conditions[*].status}'=True -o jsonpath='{.status.conditions[*].type}' | tee "${tmpdir}"/"${testCluster}".log &
             waitPid=$!
             pids+=( "$waitPid" )
             waitPids[$waitPid]="${tmpdir}"/"${testCluster}".log
+            logUpgradeTestJobStatus
 
           done
         done
