@@ -70,7 +70,6 @@ The following table lists recent Agones versions and their corresponding require
 | 1.29           | 1.24                  |
 | 1.28           | 1.23                  |
 | 1.27           | 1.23                  |
-| 1.26           | 1.23                  |
 
 ## Best Practices {#separation-of-agones-from-gameserver-nodes}
 <!-- keep installation/#separation-of-agones-from-gameserver-nodes permalink -->
