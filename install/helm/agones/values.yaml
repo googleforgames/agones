@@ -282,7 +282,7 @@ agones:
     topologySpreadConstraints: []
   image:
     registry: us-docker.pkg.dev/agones-images/release
-    tag: 1.49.0-dev
+    tag: 1.49.0
     controller:
       name: agones-controller
       pullPolicy: IfNotPresent
