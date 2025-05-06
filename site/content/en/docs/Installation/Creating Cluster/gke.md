@@ -86,7 +86,7 @@ The release channel you chose is `RELEASE_CHANNEL` below.
 
 A [cluster][cluster] consists of at least one *control plane* machine and multiple worker machines called *nodes*. In Google Kubernetes Engine, nodes are [Compute Engine virtual machine][vms] instances that run the Kubernetes processes necessary to make them part of the cluster.
 
-Agones supports both GKE Standard mode and GKE Autopilot mode. 
+Agones supports both GKE Standard mode and GKE Autopilot mode.
 Agones `GameServer` and `Fleet` manifests that work on Standard are compatible
 on Autopilot with some constraints, described in the following section. We recommend
 running GKE Autopilot clusters, if you meet the constraints.
@@ -129,7 +129,7 @@ whether these constraints impact your workloads:
    supported.
 * **Node pools:** Autopilot manages nodes for you. If you require node pools with different configurations, use GKE Standard.
 *  **[Host port policy]({{<ref "/docs/reference/agones_crd_api_reference#agones.dev/v1.GameServerPort">}}):** `Dynamic` is supported, which is the Agones default.
-   `Static` and `Passthrough` are not supported.
+   `Static` is not supported. `Passthrough` is supported with the feature gate `AutopilotPassthroughPort` set to `true`.
 *  **[Port range]({{<ref "/docs/reference/agones_crd_api_reference#agones.dev/v1.GameServerPort">}}):** `default` is supported, which is the Agones default.
    Additional port ranges are not supported.
 *  **Seccomp profile:** Agones sets the seccomp profile to `Unconfined` to
@@ -338,5 +338,5 @@ gcloud container clusters get-credentials [CLUSTER_NAME] --region=[COMPUTE_REGIO
 ## Next Steps
 
 * Continue to [Install Agones]({{< relref "../Install Agones/_index.md" >}}).
-* Have a look at the 
+* Have a look at the
    [Best practices for running Agones on Google Kubernetes Engine]({{< ref "/docs/Guides/Best Practices/gke.md" >}}).
