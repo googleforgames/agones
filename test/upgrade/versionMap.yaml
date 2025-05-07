@@ -19,7 +19,7 @@ metadata:
   name: version-map
 data:
   DevVersion: ${DevVersion}
-  ReleaseVersion: "1.48.0"
+  ReleaseVersion: "1.49.0"
   version-mappings.json: |
     {
       "k8sToAgonesVersions": {
@@ -92,6 +92,10 @@ data:
         "1.48.0": {
           "alphaGates": ["PlayerAllocationFilter", "PlayerTracking", "PortPolicyNone", "PortRanges", "RollingUpdateFix", "ScheduledAutoscaler"],
           "betaGates": ["AutopilotPassthroughPort", "CountsAndLists", "DisableResyncOnSDKServer", "GKEAutopilotExtendedDurationPods"]
+        },
+        "1.49.0": {
+          "alphaGates": ["FleetAutoscaleRequestMetaData", "PlayerAllocationFilter", "PlayerTracking", "RollingUpdateFix", "ScheduledAutoscaler", "SidecarContainers"],
+          "betaGates": ["AutopilotPassthroughPort", "CountsAndLists", "GKEAutopilotExtendedDurationPods", "PortPolicyNone", "PortRanges"]
         },
         "Dev": {
           "alphaGates": ["FleetAutoscaleRequestMetaData", "PlayerAllocationFilter", "PlayerTracking", "RollingUpdateFix", "ScheduledAutoscaler", "SidecarContainers"],
