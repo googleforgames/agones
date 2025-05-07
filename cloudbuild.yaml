@@ -278,6 +278,7 @@ steps:
         #!/usr/bin/env bash
         set -e
         set -o pipefail
+        apt-get update && apt-get install -y jq
         export KUBECONFIG="/root/.kube/config"
         mkdir -p /go/src/agones.dev/ /root/.kube/
         ln -s /workspace /go/src/agones.dev/agones
@@ -300,6 +301,27 @@ steps:
         cloudProducts=("generic" "gke-autopilot")
         declare -A versionsAndRegions=( [1.32]=us-west1 [1.31]=us-east1 [1.30]=us-central1 )
 
+        # Function to log upgrade test job status and conditions
+        logUpgradeTestJobStatus() {
+          echo $'\n===== Job status for upgrade-test-runner on cluster '"${testCluster}"' ====='
+
+          # Try to get the job JSON
+          job_json=$(kubectl get job/upgrade-test-runner -o json 2>/dev/null)
+
+          if [[ -n "$job_json" ]]; then
+            # Save and print job status
+            echo "$job_json" | jq '.status' > "${tmpdir}/job-status.json"
+            cat "${tmpdir}/job-status.json"
+
+            echo $"\n===== Extracting job conditions (if available) ====="
+            job_conditions=$(echo "$job_json" | jq -c 'if .status.conditions then .status.conditions[] | select(.status=="True") | {type, reason, message} else empty end')
+            echo "Job conditions output: $job_conditions"
+          else
+            # Fallback if job was not found
+            echo "Job 'upgrade-test-runner' not found on cluster ${testCluster}, skipping status and condition extraction."
+          fi
+        }
+
         for cloudProduct in "${cloudProducts[@]}"
         do
           for version in "${!versionsAndRegions[@]}"
@@ -312,6 +334,8 @@ steps:
               testCluster="gke-autopilot-upgrade-test-cluster-${version//./-}"
             fi
             testClusterLocation="${region}"
+
+            echo "===== Processing cluster: $testCluster in $testClusterLocation ====="
 
             gcloud container clusters get-credentials "$testCluster" --region="$testClusterLocation" --project="$PROJECT_ID"
 
@@ -381,6 +405,8 @@ steps:
             waitPid=$!
             pids+=( "$waitPid" )
             waitPids[$waitPid]="${tmpdir}"/"${testCluster}".log
+            logUpgradeTestJobStatus
+
           done
         done
 
@@ -396,8 +422,11 @@ steps:
             # "Complete" is successful job run.
             # Version 1.31 has "SuccessCriteriaMet" as the first completion status returned, or "FailureTarget" in case of failure.
             if [ "$output" == "Complete" ] || [ "$output" == "SuccessCriteriaMet" ] ; then
+              echo "Job completed successfully on cluster associated with log: $outputLog"
               continue
             else
+              echo "Unexpected job status: '${output}' in log ${outputLog}"
+              cat "${outputLog}"
               exit 1
             fi
           # This block executes when the process exits and pid status!=0
@@ -405,6 +434,7 @@ steps:
             status=$?
             outputLog="${waitPids[$pid]}"
             echo "One of the upgrade tests pid $pid from cluster log $outputLog exited with a non-zero status ${status}."
+            cat "${outputLog}"
             exit $status
           fi
         done
