@@ -79,6 +79,9 @@ const (
 	////////////////
 	// Dev features
 
+	// FeatureAllocatorBatchesUpdates is a feature flag to enable/disable applying the allocations in batches.
+	FeatureAllocatorBatchesUpdates = "AllocatorBatchesUpdates"
+
 	////////////////
 	// Example feature
 
@@ -160,6 +163,7 @@ var (
 		FeatureSidecarContainers:             false,
 
 		// Dev features
+		FeatureAllocatorBatchesUpdates: false,
 
 		// Example feature
 		FeatureExample: false,
