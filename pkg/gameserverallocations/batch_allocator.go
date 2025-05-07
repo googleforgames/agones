@@ -17,9 +17,9 @@ import (
 
 // batchResponse is an async list of responses for matching requests
 type batchResponses struct {
-	responses     []response
 	counterErrors error
 	listErrors    error
+	responses     []response
 }
 
 // batchAllocationUpdateWorkers tries to update each newly allocated gs with the last state. If
