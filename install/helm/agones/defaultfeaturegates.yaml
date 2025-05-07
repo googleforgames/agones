@@ -37,6 +37,7 @@ SidecarContainers: false
 
 # Dev features
 ProcessorAllocator: false
+AllocatorBatchesUpdates: false
 
 # Example feature
 Example: false
