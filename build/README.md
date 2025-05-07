@@ -430,6 +430,10 @@ The version of this build. Version defaults to the short hash of the latest comm
 ### REGISTRY
 The registry that is being used to store docker images. It doesn't have default value and has to be set explicitly.
 
+### CHARTS_REGISTRY
+The chart registry that is being used to store helm charts. It doesn't have default value and has to be set explicitly.
+If not set it would use the `GCP_BUCKET_CHARTS`.
+
 ### KUBECONFIG
 The Kubernetes config file used to access the cluster. Defaults to `~/.kube/config` - the file used by default by kubectl.
 
