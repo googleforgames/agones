@@ -174,7 +174,11 @@ func (c *Allocator) Run(ctx context.Context) error {
 	}
 
 	// workers and logic for batching allocations
-	go c.ListenAndAllocate(ctx, maxBatchQueue)
+	if runtime.FeatureEnabled(runtime.FeatureAllocatorBatchesUpdates) {
+		go c.ListenAndBatchAllocate(ctx, maxBatchQueue)
+	} else {
+		go c.ListenAndAllocate(ctx, maxBatchQueue)
+	}
 
 	return nil
 }
@@ -693,11 +697,10 @@ func Retry(backoff wait.Backoff, fn func() error) error {
 			}
 		}
 
+		// No quick 400s, still do retries for ErrNoGameServer
 		switch {
 		case err == nil:
 			return true, nil
-		case err == ErrNoGameServer:
-			return true, err
 		case err == ErrTotalTimeoutExceeded:
 			return true, err
 		default:
