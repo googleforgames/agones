@@ -1,5 +1,39 @@
 # Changelog
 
+## [v1.49.0](https://github.com/googleforgames/agones/tree/v1.49.0) (2025-05-06)
+
+[Full Changelog](https://github.com/googleforgames/agones/compare/v1.48.0...v1.49.0)
+
+**Breaking changes:**
+- Add AFP features and update documentation by @0xaravindh in https://github.com/googleforgames/agones/pull/4061
+- Adoption of Sidecar Containers by @markmandel in https://github.com/googleforgames/agones/pull/4146
+
+**Implemented enhancements:**
+- Promote PortPolicyNone to Beta by @kamaljeeti in https://github.com/googleforgames/agones/pull/4144
+- Promote FeatureDisableResyncOnSDKServer to Stable by @igooch in https://github.com/googleforgames/agones/pull/4138
+- Promote PortRanges to Beta by @kamaljeeti in https://github.com/googleforgames/agones/pull/4147
+
+**Fixed bugs:**
+- Update Windows manifest handling in push-agones-sdk-manifest by @0xaravindh in https://github.com/googleforgames/agones/pull/4136
+- Fix CRD API docs generation script by @0xaravindh in https://github.com/googleforgames/agones/pull/4152
+- fix: ensure fleet autoscaler policy are namespaced by @lacroixthomas in https://github.com/googleforgames/agones/pull/4098
+- Fix feature stages page to show expected content by @0xaravindh in https://github.com/googleforgames/agones/pull/4156
+- Allocation: Re-cache allocated `GameServer` by @markmandel in https://github.com/googleforgames/agones/pull/4159
+
+**Other:**
+- Preparation for Release v1.49.0 by @0xaravindh in https://github.com/googleforgames/agones/pull/4134
+- Updated doc for adding support of Extended Duration Pods on GKE Autopilot by @kamaljeeti in https://github.com/googleforgames/agones/pull/4139
+- Various e2e test improvements by @markmandel in https://github.com/googleforgames/agones/pull/4143
+- load test client make concurrent requests by @peterzhongyi in https://github.com/googleforgames/agones/pull/4149
+- Adds permissions in the agones-system namespace for the upgrade tests by @igooch in https://github.com/googleforgames/agones/pull/4148
+- Adds explicit permissions for github workflows by @igooch in https://github.com/googleforgames/agones/pull/4161
+- chore: update Nitrado GameFabric branding by @nrwiersma in https://github.com/googleforgames/agones/pull/4164
+- Adds instructions to update dependencies as part of upgrading Golang by @igooch in https://github.com/googleforgames/agones/pull/4155
+- Fix: Remove Kubernetes 1.29 from Agones 1.39.0 compatibility matrix by @0xaravindh in https://github.com/googleforgames/agones/pull/4168
+- Documentation for Sidecar Containers by @markmandel in https://github.com/googleforgames/agones/pull/4171
+- Upgrade: Go to 1.23.8 and deps by @0xaravindh in https://github.com/googleforgames/agones/pull/4170
+- Updates GKE Autopilot documentation to include Passthrough portPolicy by @igooch in https://github.com/googleforgames/agones/pull/4173
+
 ## [v1.48.0](https://github.com/googleforgames/agones/tree/v1.48.0) (2025-03-25)
 
 [Full Changelog](https://github.com/googleforgames/agones/compare/v1.47.0...v1.48.0)
