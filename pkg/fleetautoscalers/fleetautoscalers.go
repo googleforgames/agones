@@ -478,7 +478,7 @@ func applyChainPolicy(c autoscalingv1.ChainPolicy, f *agonesv1.Fleet, gameServer
 		prevChainEntry := strings.Split(string(lastAppliedPolicy), ":")
 
 		// Only log if there is a change in the policy
-		if len(prevChainEntry) > 2 && currChainEntry[2] != prevChainEntry[2] {
+		if len(prevChainEntry) > 2 && (currChainEntry[1] != prevChainEntry[1] || currChainEntry[2] != prevChainEntry[2]) {
 			fasLog.currChainEntry = &chainEntry
 			emitChainPolicyEvent(fasLog, currChainEntry[1], currChainEntry[2])
 		}
