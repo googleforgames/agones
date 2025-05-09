@@ -72,6 +72,14 @@ type Extensions struct {
 	baseLogger *logrus.Entry
 }
 
+// FasLogger helps log and record events related to FleetAutoscaler.
+type FasLogger struct {
+	fas            *autoscalingv1.FleetAutoscaler
+	baseLogger     *logrus.Entry
+	recorder       record.EventRecorder
+	currChainEntry *autoscalingv1.FleetAutoscalerPolicyType
+}
+
 // Controller is the FleetAutoscaler controller
 //
 //nolint:govet // ignore fieldalignment, singleton
@@ -312,26 +320,39 @@ func (c *Controller) syncFleetAutoscaler(ctx context.Context, key string) error 
 		return nil
 	}
 
+	fasLog := FasLogger{
+		fas:            fas,
+		baseLogger:     c.baseLogger,
+		recorder:       c.recorder,
+		currChainEntry: &fas.Status.LastAppliedPolicy,
+	}
+
 	currentReplicas := fleet.Status.Replicas
 	gameServerNamespacedLister := c.gameServerLister.GameServers(fleet.ObjectMeta.Namespace)
-	desiredReplicas, scalingLimited, err := computeDesiredFleetSize(fas.Spec.Policy, fleet, gameServerNamespacedLister, c.counter.Counts())
-	// If there err is nil and not an inactive schedule error (ignorable in this case), then record the event
-	if err != nil && !errors.Is(err, InactiveScheduleError{}) {
-		c.recorder.Eventf(fas, corev1.EventTypeWarning, "FleetAutoscaler",
-			"Error calculating desired fleet size on FleetAutoscaler %s. Error: %s", fas.ObjectMeta.Name, err.Error())
+	desiredReplicas, scalingLimited, err := computeDesiredFleetSize(fas.Spec.Policy, fleet, gameServerNamespacedLister, c.counter.Counts(), &fasLog)
 
-		if err := c.updateStatusUnableToScale(ctx, fas); err != nil {
-			return err
+	// If there err is nil and not an inactive schedule error (ignorable in this case), then record the event
+	if err != nil {
+		if !errors.Is(err, InactiveScheduleError{}) {
+			c.recorder.Eventf(fas, corev1.EventTypeWarning, "FleetAutoscaler",
+				"Error calculating desired fleet size on FleetAutoscaler %s. Error: %s", fas.ObjectMeta.Name, err.Error())
+
+			if err := c.updateStatusUnableToScale(ctx, fas); err != nil {
+				return err
+			}
 		}
 		return errors.Wrapf(err, "error calculating autoscaling fleet: %s", fleet.ObjectMeta.Name)
 	}
+
+	// Log the desired replicas and scaling status
+	c.loggerForFleetAutoscalerKey(key).Debugf("Computed desired fleet size: %d, Scaling limited: %v", desiredReplicas, scalingLimited)
 
 	// Scale the fleet to the new size
 	if err = c.scaleFleet(ctx, fas, fleet, desiredReplicas); err != nil {
 		return errors.Wrapf(err, "error autoscaling fleet %s to %d replicas", fas.Spec.FleetName, desiredReplicas)
 	}
 
-	return c.updateStatus(ctx, fas, currentReplicas, desiredReplicas, desiredReplicas != fleet.Spec.Replicas, scalingLimited)
+	return c.updateStatus(ctx, fas, currentReplicas, desiredReplicas, desiredReplicas != fleet.Spec.Replicas, scalingLimited, *fasLog.currChainEntry)
 }
 
 // getFleetAutoscalerByKey gets the Fleet Autoscaler by key
@@ -375,12 +396,19 @@ func (c *Controller) scaleFleet(ctx context.Context, fas *autoscalingv1.FleetAut
 }
 
 // updateStatus updates the status of the given FleetAutoscaler
-func (c *Controller) updateStatus(ctx context.Context, fas *autoscalingv1.FleetAutoscaler, currentReplicas int32, desiredReplicas int32, scaled bool, scalingLimited bool) error {
+func (c *Controller) updateStatus(ctx context.Context, fas *autoscalingv1.FleetAutoscaler, currentReplicas int32, desiredReplicas int32, scaled bool, scalingLimited bool, chainEntry autoscalingv1.FleetAutoscalerPolicyType) error {
 	fasCopy := fas.DeepCopy()
 	fasCopy.Status.AbleToScale = true
 	fasCopy.Status.ScalingLimited = scalingLimited
 	fasCopy.Status.CurrentReplicas = currentReplicas
 	fasCopy.Status.DesiredReplicas = desiredReplicas
+
+	if fas.Spec.Policy.Type == autoscalingv1.ChainPolicyType {
+		fasCopy.Status.LastAppliedPolicy = chainEntry
+	} else {
+		fasCopy.Status.LastAppliedPolicy = fas.Spec.Policy.Type
+	}
+
 	if scaled {
 		now := metav1.NewTime(time.Now())
 		fasCopy.Status.LastScaleTime = &now
@@ -413,6 +441,7 @@ func (c *Controller) updateStatusUnableToScale(ctx context.Context, fas *autosca
 	fasCopy.Status.ScalingLimited = false
 	fasCopy.Status.CurrentReplicas = 0
 	fasCopy.Status.DesiredReplicas = 0
+	fasCopy.Status.LastAppliedPolicy = autoscalingv1.FleetAutoscalerPolicyType("")
 
 	if !apiequality.Semantic.DeepEqual(fas.Status, fasCopy.Status) {
 		_, err := c.fleetAutoscalerGetter.FleetAutoscalers(fas.ObjectMeta.Namespace).UpdateStatus(ctx, fasCopy, metav1.UpdateOptions{})

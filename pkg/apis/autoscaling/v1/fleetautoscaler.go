@@ -301,6 +301,10 @@ type FleetAutoscalerStatus struct {
 	// ScalingLimited indicates that the calculated scale would be above or below the range
 	// defined by MinReplicas and MaxReplicas, and has thus been capped.
 	ScalingLimited bool `json:"scalingLimited"`
+
+	// LastAppliedPolicy is the ID of the last applied policy in the ChainPolicy.
+	// Used to track policy transitions for logging purposes.
+	LastAppliedPolicy FleetAutoscalerPolicyType `json:"lastAppliedPolicy"`
 }
 
 // FleetAutoscaleRequest defines the request to webhook autoscaler endpoint
