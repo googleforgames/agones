@@ -33,7 +33,7 @@ See [Creating a Cluster]({{< relref "Creating Cluster" >}}) for initial set up o
 
 ### Allocate Across Clusters
 
-Agones supports Multi-cluster Allocation to avoid a single point of failure when allocating game servers. While earlier versions of Agones included a custom multi-cluster allocation solution, the current best practice is to use a **Service Mesh** (e.g., Istio, Linkerd) to handle allocation traffic between clusters.
+Agones supports Multi-cluster Allocation to avoid a single point of failure when allocating game servers. While earlier versions of Agones included a custom multi-cluster allocation solution, the current best practice is to use a **Service Mesh** (e.g., Istio, Linkerd, [Google Cloud Service Mesh](https://cloud.google.com/service-mesh/docs/overview)) to handle allocation traffic between clusters.
 
 By deploying a Service Mesh in each of your Agones clusters and your backend services cluster, you can expose and route traffic to each cluster’s agones-allocator endpoint based on cluster priority, latency, or other criteria.
 
