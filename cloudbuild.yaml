@@ -401,10 +401,12 @@ steps:
             # wait for output to finish writing to file
             until [ -s "$outputLog" ]; do sleep 1; done
             output_json=$(<"${outputLog}")
-            echo "Reading output from log file: $outputLog: $output"
-            echo "$output_json"
+
+            echo "Reading output from log file: $outputLog:"
+            echo "$output_json" | jq '.'
 
             job_condition_type=$(echo "$output_json" | jq -r '.type')
+            job_condition_message=$(echo "$output_json" | jq -r '.message')
 
             # "Complete" is successful job run.
             # Version 1.31 has "SuccessCriteriaMet" as the first completion status returned, or "FailureTarget" in case of failure.
@@ -412,7 +414,7 @@ steps:
               echo "Job completed successfully on cluster associated with log: $outputLog"
               continue
             else
-              echo "Unexpected job status: '${job_condition_type}' in log ${outputLog}"
+              echo "Unexpected job status: '$job_condition_type' with message: '$job_condition_message' in log $outputLog"
               exit 1
             fi
           # This block executes when the process exits and pid status!=0
