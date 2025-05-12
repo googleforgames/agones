@@ -39,7 +39,7 @@ By deploying a Service Mesh in each of your Agones clusters and your backend ser
 
 To implement this approach, refer to the full setup and guidance in the [Multi-cluster Allocation documentation](https://agones.dev/site/docs/advanced/multi-cluster-allocation/).
 
-You can also explore the [Global Multiplayer Demo](https://github.com/googleforgames/global-multiplayer-demo) for a working example using htGoogle Cloud Service Mesh with Istio.
+You can also explore the [Global Multiplayer Demo](https://github.com/googleforgames/global-multiplayer-demo) for a working example using Google Cloud Service Mesh with Istio.
 
 ### Spread
 
