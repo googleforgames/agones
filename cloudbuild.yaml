@@ -301,27 +301,6 @@ steps:
         cloudProducts=("generic" "gke-autopilot")
         declare -A versionsAndRegions=( [1.32]=us-west1 [1.31]=us-east1 [1.30]=us-central1 )
 
-        # Function to log upgrade test job status and conditions
-        logUpgradeTestJobStatus() {
-          echo $'\n===== Job status for upgrade-test-runner on cluster '"${testCluster}"' ====='
-
-          # Try to get the job JSON
-          job_json=$(kubectl get job/upgrade-test-runner -o json 2>/dev/null)
-
-          if [[ -n "$job_json" ]]; then
-            # Save and print job status
-            echo "$job_json" | jq '.status' > "${tmpdir}/job-status.json"
-            cat "${tmpdir}/job-status.json"
-
-            echo $"\n===== Extracting job conditions (if available) ====="
-            job_conditions=$(echo "$job_json" | jq -c 'if .status.conditions then .status.conditions[] | select(.status=="True") | {type, reason, message} else empty end')
-            echo "Job conditions output: $job_conditions"
-          else
-            # Fallback if job was not found
-            echo "Job 'upgrade-test-runner' not found on cluster ${testCluster}, skipping status and condition extraction."
-          fi
-        }
-
         for cloudProduct in "${cloudProducts[@]}"
         do
           for version in "${!versionsAndRegions[@]}"
@@ -398,14 +377,19 @@ steps:
             # TODO: Once all test clusters are at Kubernetes Version >= 1.31 use `kubectl wait --for=create` instead of sleep.
             # kubectl wait --for=create pod -l job-name=upgrade-test-runner --timeout=1m
             sleep 10s
-            kubectl wait --for=condition=ready pod -l job-name=upgrade-test-runner --timeout=5m
+
+            # Wait for the pod to become ready (or timeout)
+            if ! kubectl wait --for=condition=ready pod -l job-name=upgrade-test-runner --timeout=5m; then
+              echo "ERROR: Pod for job 'upgrade-test-runner' did not become ready within timeout."
+              job_pod_name=$(kubectl get pods -l job-name=upgrade-test-runner -o jsonpath="{.items[0].metadata.name}")
+              kubectl logs --tail=20 "$job_pod_name" || echo "Could not fetch logs for pod: $job_pod_name"
+            fi
 
             echo Wait for job upgrade-test-runner to complete or fail on cluster "${testCluster}"
-            kubectl wait job/upgrade-test-runner --timeout=30m --for jsonpath='{.status.conditions[*].status}'=True -o jsonpath='{.status.conditions[*].type}' | tee "${tmpdir}"/"${testCluster}".log &
+            kubectl wait job/upgrade-test-runner --timeout=30m --for jsonpath='{.status.conditions[*].status}'=True -o jsonpath='{.status.conditions[*]}' | tee "${tmpdir}"/"${testCluster}".log &
             waitPid=$!
             pids+=( "$waitPid" )
             waitPids[$waitPid]="${tmpdir}"/"${testCluster}".log
-            logUpgradeTestJobStatus
 
           done
         done
@@ -416,17 +400,19 @@ steps:
             outputLog="${waitPids[$pid]}"
             # wait for output to finish writing to file
             until [ -s "$outputLog" ]; do sleep 1; done
-            output=$(<"${outputLog}")
-            echo  "${outputLog}": "${output}"
+            output_json=$(<"${outputLog}")
+            echo "Reading output from log file: $outputLog: $output"
+            echo "$output_json"
+
+            job_condition_type=$(echo "$output_json" | jq -r '.type')
 
             # "Complete" is successful job run.
             # Version 1.31 has "SuccessCriteriaMet" as the first completion status returned, or "FailureTarget" in case of failure.
-            if [ "$output" == "Complete" ] || [ "$output" == "SuccessCriteriaMet" ] ; then
+            if [ "$job_condition_type" == "Complete" ] || [ "$job_condition_type" == "SuccessCriteriaMet" ] ; then
               echo "Job completed successfully on cluster associated with log: $outputLog"
               continue
             else
-              echo "Unexpected job status: '${output}' in log ${outputLog}"
-              cat "${outputLog}"
+              echo "Unexpected job status: '${job_condition_type}' in log ${outputLog}"
               exit 1
             fi
           # This block executes when the process exits and pid status!=0
@@ -434,7 +420,6 @@ steps:
             status=$?
             outputLog="${waitPids[$pid]}"
             echo "One of the upgrade tests pid $pid from cluster log $outputLog exited with a non-zero status ${status}."
-            cat "${outputLog}"
             exit $status
           fi
         done
