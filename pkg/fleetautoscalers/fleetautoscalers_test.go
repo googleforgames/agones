@@ -178,7 +178,7 @@ func TestComputeDesiredFleetSize(t *testing.T) {
 			expected: expected{
 				replicas: 0,
 				limited:  false,
-				err:      "wrong policy type, should be one of: Buffer, Webhook, Counter, List",
+				err:      "wrong policy type, should be one of: Buffer, Webhook, Counter, List, Schedule, Chain",
 			},
 		},
 	}
