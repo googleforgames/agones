@@ -8783,7 +8783,8 @@ Chain policy config params. Present only if FleetAutoscalerPolicyType = Chain.</
 (<code>string</code> alias)</p></h3>
 <p>
 (<em>Appears on:</em>
-<a href="#autoscaling.agones.dev/v1.FleetAutoscalerPolicy">FleetAutoscalerPolicy</a>)
+<a href="#autoscaling.agones.dev/v1.FleetAutoscalerPolicy">FleetAutoscalerPolicy</a>, 
+<a href="#autoscaling.agones.dev/v1.FleetAutoscalerStatus">FleetAutoscalerStatus</a>)
 </p>
 <p>
 <p>FleetAutoscalerPolicyType is the policy for autoscaling
@@ -8962,6 +8963,20 @@ bool
 <td>
 <p>ScalingLimited indicates that the calculated scale would be above or below the range
 defined by MinReplicas and MaxReplicas, and has thus been capped.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>lastAppliedPolicy</code><br/>
+<em>
+<a href="#autoscaling.agones.dev/v1.FleetAutoscalerPolicyType">
+FleetAutoscalerPolicyType
+</a>
+</em>
+</td>
+<td>
+<p>LastAppliedPolicy is the ID of the last applied policy in the ChainPolicy.
+Used to track policy transitions for logging purposes.</p>
 </td>
 </tr>
 </tbody>
