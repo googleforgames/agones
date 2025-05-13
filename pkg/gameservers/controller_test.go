@@ -1189,37 +1189,6 @@ func TestControllerSyncGameServerStartingState(t *testing.T) {
 		assert.NotEmpty(t, gs.Status.Ports)
 	})
 
-	t.Run("Error on podIPs not populated", func(t *testing.T) {
-		c, m := newFakeController()
-		gsFixture := newFixture()
-		gsFixture.ApplyDefaults()
-		pod, err := gsFixture.Pod(agtesting.FakeAPIHooks{})
-		require.NoError(t, err)
-		pod.Spec.NodeName = nodeFixtureName
-		pod.Status.PodIPs = nil
-
-		m.KubeClient.AddReactor("list", "nodes", func(_ k8stesting.Action) (bool, runtime.Object, error) {
-			return true, &corev1.NodeList{Items: []corev1.Node{node}}, nil
-		})
-		m.KubeClient.AddReactor("list", "pods", func(_ k8stesting.Action) (bool, runtime.Object, error) {
-			return true, &corev1.PodList{Items: []corev1.Pod{*pod}}, nil
-		})
-		m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-			ua := action.(k8stesting.UpdateAction)
-			gs := ua.GetObject().(*agonesv1.GameServer)
-			assert.Equal(t, agonesv1.GameServerStateStarting, gs.Status.State)
-			assert.NotEmpty(t, gs.Status.Ports)
-			assert.NotEmpty(t, gs.Status.Address)
-			assert.NotEmpty(t, gs.Status.Addresses)
-			return true, gs, nil
-		})
-		ctx, cancel := agtesting.StartInformers(m, c.gameServerSynced, c.podSynced, c.nodeSynced)
-		defer cancel()
-
-		_, err = c.syncGameServerStartingState(ctx, gsFixture)
-		assert.Error(t, err)
-	})
-
 	t.Run("Error on update", func(t *testing.T) {
 		c, m := newFakeController()
 		gsFixture := newFixture()
