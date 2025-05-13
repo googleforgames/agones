@@ -48,7 +48,7 @@ The following table lists recent Agones versions and their corresponding require
 | Agones version | Kubernetes version(s) |
 | -------------- | ------------------    |
 | 1.49           | {{% k8s-version %}}   |
-| 1.48           | 1.29, 1.30, 1.31      |
+| 1.48           | 1.30, 1.31, 1.32      |
 | 1.47           | 1.29, 1.30, 1.31      |
 | 1.46           | 1.29, 1.30, 1.31      |
 | 1.45           | 1.29, 1.30, 1.31      |
