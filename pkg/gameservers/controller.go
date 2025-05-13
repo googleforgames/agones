@@ -935,14 +935,19 @@ func (c *Controller) syncGameServerRequestReadyState(ctx context.Context, gs *ag
 		return nil, err
 	}
 
-	gsCopy, podIPUpdated := applyGameServerPodIP(gsCopy, pod)
-	updateGSPodIP := func(gs *agonesv1.GameServer, forceUpdate bool) error {
-		if !forceUpdate {
-			return nil
-		}
+	var gsUpdated bool
 
-		_, err := c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(ctx, gs, metav1.UpdateOptions{})
-		return err
+	gsCopy, podIPUpdated := applyGameServerPodIP(gsCopy, pod)
+	if podIPUpdated {
+		// defer the update of the GameServer until the end of this function
+		// in case there is no gs state update and the podIP is available and populated
+		defer func(gs *agonesv1.GameServer, alreadyUpdated *bool) {
+			// Only update if the GameServer is not already updated
+			if alreadyUpdated == nil || *alreadyUpdated {
+				return
+			}
+			_, _ = c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(ctx, gs, metav1.UpdateOptions{})
+		}(gsCopy, &gsUpdated)
 	}
 
 	// if the address hasn't been populated, and the Ready request comes
@@ -953,26 +958,25 @@ func (c *Controller) syncGameServerRequestReadyState(ctx context.Context, gs *ag
 		addressPopulated = true
 
 		if pod.Spec.NodeName == "" {
-			_ = updateGSPodIP(gsCopy, podIPUpdated)
 			return gs, workerqueue.NewTraceError(errors.Errorf("node not yet populated for Pod %s", pod.ObjectMeta.Name))
 		}
 		node, err := c.nodeLister.Get(pod.Spec.NodeName)
 		if err != nil {
-			_ = updateGSPodIP(gsCopy, podIPUpdated)
 			return gs, errors.Wrapf(err, "error retrieving node %s for Pod %s", pod.Spec.NodeName, pod.ObjectMeta.Name)
 		}
 		gsCopy, err = applyGameServerAddressAndPort(gsCopy, node, pod, c.controllerHooks.SyncPodPortsToGameServer)
 		if err != nil {
-			_ = updateGSPodIP(gsCopy, podIPUpdated)
 			return gs, err
 		}
 	}
 
 	gsCopy, err = c.applyGameServerReadyContainerIDAnnotation(ctx, gsCopy, pod)
 	if err != nil {
-		_ = updateGSPodIP(gsCopy, podIPUpdated)
 		return gs, err
 	}
+
+	// if the address is already populated, then we don't need to re-update for podIPs
+	gsUpdated = true
 
 	gsCopy.Status.State = agonesv1.GameServerStateReady
 	gs, err = c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(ctx, gsCopy, metav1.UpdateOptions{})
