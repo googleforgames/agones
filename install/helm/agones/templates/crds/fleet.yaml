@@ -110,6 +110,10 @@ spec:
                           anyOf:
                             - type: integer
                             - type: string
+                allowReplicaSurge:
+                  type: boolean
+                  description: Allows the fleet to surge replicas beyond the specified limit.
+                  default: false
                 priorities:
                   type: array
                   description: Configuration of Counters and Lists scale down logic -- which gameservers in the Fleet are most important to keep around.
