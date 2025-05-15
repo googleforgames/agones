@@ -691,7 +691,7 @@ func TestControllerSyncFleetAutoscaler(t *testing.T) {
 
 		err := c.syncFleetAutoscaler(ctx, "default/fas-1")
 		if assert.NotNil(t, err) {
-			assert.Equal(t, "error calculating autoscaling fleet: fleet-1: wrong policy type, should be one of: Buffer, Webhook, Counter, List", err.Error())
+			assert.Equal(t, "error calculating autoscaling fleet: fleet-1: wrong policy type, should be one of: Buffer, Webhook, Counter, List, Schedule, Chain", err.Error())
 		}
 	})
 
