@@ -103,6 +103,7 @@ common_mounts = -v $(build_path)/.config/gcloud:/root/.config/gcloud \
 
 # Its possible for this to change in the future, so it gets its own variable.
 REGISTRY ?= local
+CHARTS_REGISTRY ?=
 workdir_path = $(mount_path)
 
 build_version = $(call sha,$(build_path)/build-image/Dockerfile)
