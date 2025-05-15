@@ -37,7 +37,7 @@ Agones supports Multi-cluster Allocation to avoid a single point of failure when
 
 By deploying a Service Mesh across your Agones clusters and backend services, you can expose and route traffic to each cluster’s agones-allocator endpoint based on cluster priority, latency, or other criteria.
 
-To implement this approach, refer to the full setup and guidance in the [Multi-cluster Allocation documentation](https://agones.dev/site/docs/advanced/multi-cluster-allocation/).
+To implement this approach, refer to the full setup and guidance in the [Multi-cluster Allocation documentation]({{< relref "multi-cluster-allocation" >}}).
 
 You can also explore the [Global Multiplayer Demo](https://github.com/googleforgames/global-multiplayer-demo) for a working example using Google Cloud Service Mesh with Istio.
 
