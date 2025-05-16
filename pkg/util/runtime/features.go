@@ -76,15 +76,14 @@ const (
 	// FeatureSidecarContainers is a feature flag to enable/disable k8s sidecar containers for the sdkserver
 	FeatureSidecarContainers = "SidecarContainers"
 
+	// FeatureAllocatorBatchesUpdates is a feature flag to enable/disable applying the allocations in batches.
+	FeatureAllocatorBatchesUpdates = "AllocatorBatchesUpdates"
+
 	////////////////
 	// Dev features
 
-	
 	// FeatureProcessorAllocator is a feature flag to enable/disable the processor allocator feature.
 	FeatureProcessorAllocator = "ProcessorAllocator"
-
-	// FeatureAllocatorBatchesUpdates is a feature flag to enable/disable applying the allocations in batches.
-	FeatureAllocatorBatchesUpdates = "AllocatorBatchesUpdates"
 
 	////////////////
 	// Example feature
@@ -167,10 +166,10 @@ var (
 		FeaturePlayerAllocationFilter:        false,
 		FeaturePlayerTracking:                false,
 		FeatureSidecarContainers:             false,
+		FeatureAllocatorBatchesUpdates:       false,
 
 		// Dev features
 		FeatureProcessorAllocator:      false,
-		FeatureAllocatorBatchesUpdates: false,
 
 		// Example feature
 		FeatureExample: false,

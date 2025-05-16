@@ -42,6 +42,7 @@ The current set of `alpha` and `beta` feature gates:
 | [Scheduled Fleet Autoscaling](https://github.com/googleforgames/agones/issues/3008)                                        | `ScheduledAutoscaler`              | Enabled  | `Beta`   | 1.51.0 |
 | [Extend Webhook autoscaler to send fleet metadata with the request](https://github.com/googleforgames/agones/issues/3951)  | `FleetAutoscaleRequestMetaData`    | Disabled | `Alpha`  | 1.48.0 |
 | [Sidecar Containers](https://github.com/googleforgames/agones/issues/3642)                                                 | `SidecarContainers`                | Disabled | `Alpha`  | 1.49.0 |
+| [Allocator Batches Updates](https://github.com/googleforgames/agones/issues/3992)                                          | `AllocatorBatchesUpdates`          | Disabled | `Alpha`  | 1.50.0 |
 | Example Gate (not in use)                                                                                                  | `Example`                          | Disabled | None     | 0.13.0 |
 
 [fleet-updates]: {{% relref "./fleet-updates.md#notifying-gameservers-on-fleet-updatedownscale" %}}
