@@ -1206,7 +1206,7 @@ func newFakeAllocator() (*Allocator, agtesting.Mocks) {
 	return a, m
 }
 
-// newFakeAllocator returns a fake allocator.
+// newFakeAllocatorWithCustomBatchWaitTime returns a fake allocator with a batchWaitTime
 func newFakeAllocatorWithCustomBatchWaitTime(batchWaitTime time.Duration) (*Allocator, agtesting.Mocks) {
 	m := agtesting.NewMocks()
 
