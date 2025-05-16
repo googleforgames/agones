@@ -208,7 +208,11 @@ func (c *Allocator) ListenAndBatchAllocate(ctx context.Context, updateWorkerCoun
 		default:
 			flush()
 
-			// slow down cpu churn, and allow items to batch
+			// If nothing is found in c.pendingRequests, we move to
+			// default: which will wait for c.batchWaitTime, to allow for some requests to backup in c.pendingRequests,
+			// providing us with a batch of Allocation requests in that channel
+
+			// Once we have 1 or more requests in c.pendingRequests (which is buffered to 100), we can start the batch process.
 			time.Sleep(c.batchWaitTime)
 		}
 	}
