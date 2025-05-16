@@ -515,14 +515,23 @@ func (c *Allocator) ListenAndAllocate(ctx context.Context, updateWorkerCount int
 	var list []*agonesv1.GameServer
 	var sortKey uint64
 	requestCount := 0
+	metrics := c.newMetrics(ctx)
+
+	flush := func() {
+		if requestCount > 0 {
+			metrics.recordAllocationsBatchSize(ctx, requestCount)
+		}
+
+		list = nil
+		requestCount = 0
+	}
 
 	for {
 		select {
 		case req := <-c.pendingRequests:
 			// refresh the list after every 100 allocations made in a single batch
 			if requestCount >= maxBatchBeforeRefresh {
-				list = nil
-				requestCount = 0
+				flush()
 			}
 
 			if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
@@ -540,8 +549,7 @@ func (c *Allocator) ListenAndAllocate(ctx context.Context, updateWorkerCount int
 
 				if newSortKey != sortKey {
 					sortKey = newSortKey
-					list = nil
-					requestCount = 0
+					flush()
 				}
 			}
 
@@ -575,8 +583,8 @@ func (c *Allocator) ListenAndAllocate(ctx context.Context, updateWorkerCount int
 		case <-ctx.Done():
 			return
 		default:
-			list = nil
-			requestCount = 0
+			flush()
+
 			// slow down cpu churn, and allow items to batch
 			time.Sleep(c.batchWaitTime)
 		}
@@ -667,10 +675,15 @@ func (c *Allocator) applyAllocationToGameServer(ctx context.Context, mp allocati
 		}
 	}
 
+	metrics := c.newMetrics(ctx)
+	requestStartTime := time.Now()
+
 	gsUpdate, updateErr := c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(ctx, gs, metav1.UpdateOptions{})
 	if updateErr != nil {
+		metrics.recordAllocationUpdateFailure(ctx, time.Since(requestStartTime))
 		return gsUpdate, updateErr
 	}
+	metrics.recordAllocationUpdateSuccess(ctx, time.Since(requestStartTime))
 
 	// If successful Update record any Counter or List action errors as a warning
 	if counterErrors != nil {
