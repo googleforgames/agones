@@ -34,9 +34,9 @@ PlayerAllocationFilter: false
 PlayerTracking: false
 ScheduledAutoscaler: false
 SidecarContainers: false
+AllocatorBatchesUpdates: false
 
 # Dev features
-AllocatorBatchesUpdates: false
 
 # Example feature
 Example: false
