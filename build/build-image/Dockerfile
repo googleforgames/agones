@@ -28,7 +28,7 @@ RUN gem install fpm && \
 
 # install go
 WORKDIR /usr/local
-ENV GO_VERSION=1.23.4
+ENV GO_VERSION=1.23.8
 ENV GOPATH /go
 ENV GO111MODULE=on
 RUN wget -q https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz && \

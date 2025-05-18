@@ -475,6 +475,13 @@ func TestAutoscalerWebhook(t *testing.T) {
 		return fleet.Status.Replicas > initialReplicasCount
 	})
 
+	// Wait for LastAppliedPolicy to be set to WebhookPolicyType
+	framework.WaitForFleetAutoScalerCondition(t, fas, func(log *logrus.Entry, fas *autoscalingv1.FleetAutoscaler) bool {
+		log.WithField("LastAppliedPolicy", fas.Status.LastAppliedPolicy).
+			Info("Waiting for LastAppliedPolicy to be set to WebhookPolicyType")
+		return fas.Status.LastAppliedPolicy == autoscalingv1.WebhookPolicyType
+	})
+
 	// Cause an error in Webhook config
 	// Use wrong service Path
 	err = wait.PollUntilContextTimeout(context.Background(), time.Second, time.Minute, true, func(ctx context.Context) (bool, error) {
@@ -632,6 +639,13 @@ func TestFleetAutoscalerTLSWebhook(t *testing.T) {
 	framework.AssertFleetCondition(t, flt, func(_ *logrus.Entry, fleet *agonesv1.Fleet) bool {
 		return fleet.Status.Replicas > initialReplicasCount
 	})
+
+	// Wait for LastAppliedPolicy to be set to WebhookPolicyType
+	framework.WaitForFleetAutoScalerCondition(t, fas, func(log *logrus.Entry, fas *autoscalingv1.FleetAutoscaler) bool {
+		log.WithField("LastAppliedPolicy", fas.Status.LastAppliedPolicy).
+			Info("Waiting for LastAppliedPolicy to be set to WebhookPolicyType")
+		return fas.Status.LastAppliedPolicy == autoscalingv1.WebhookPolicyType
+	})
 }
 
 func defaultAutoscalerWebhook(namespace string) (*corev1.Pod, *corev1.Service) {
@@ -647,7 +661,7 @@ func defaultAutoscalerWebhook(namespace string) (*corev1.Pod, *corev1.Service) {
 		},
 		Spec: corev1.PodSpec{
 			Containers: []corev1.Container{{Name: "webhook",
-				Image:           "us-docker.pkg.dev/agones-images/examples/autoscaler-webhook:0.16",
+				Image:           "us-docker.pkg.dev/agones-images/examples/autoscaler-webhook:0.17",
 				ImagePullPolicy: corev1.PullAlways,
 				Ports: []corev1.ContainerPort{{
 					ContainerPort: 8000,
@@ -1301,6 +1315,20 @@ func TestCounterAutoscalerAllocatedMultipleNamespaces(t *testing.T) {
 				return fas.Status.CurrentReplicas > 0
 			})
 
+			// Wait for LastAppliedPolicy to be set to CounterPolicyType for fasA
+			framework.WaitForFleetAutoScalerCondition(t, fasA, func(log *logrus.Entry, fas *autoscalingv1.FleetAutoscaler) bool {
+				log.WithField("LastAppliedPolicy", fas.Status.LastAppliedPolicy).
+					Info("Waiting for LastAppliedPolicy to be set to CounterPolicyType")
+				return fas.Status.LastAppliedPolicy == autoscalingv1.CounterPolicyType
+			})
+
+			// Wait for LastAppliedPolicy to be set to CounterPolicyType for fasB
+			framework.WaitForFleetAutoScalerCondition(t, fasB, func(log *logrus.Entry, fas *autoscalingv1.FleetAutoscaler) bool {
+				log.WithField("LastAppliedPolicy", fas.Status.LastAppliedPolicy).
+					Info("Waiting for LastAppliedPolicy to be set to CounterPolicyType")
+				return fas.Status.LastAppliedPolicy == autoscalingv1.CounterPolicyType
+			})
+
 			// Ensure the allocated and ready replicas are correct for A and B
 			framework.AssertFleetCondition(t, fltA, func(_ *logrus.Entry, fleet *agonesv1.Fleet) bool {
 				return fleet.Status.AllocatedReplicas == testCase.wantAllocatedGsA && fleet.Status.ReadyReplicas == testCase.wantReadyGsA
@@ -1846,6 +1874,12 @@ func TestChainAutoscaler(t *testing.T) {
 
 	// Verify only the second schedule ran
 	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(4))
+	expectedChainPolicy := autoscalingv1.FleetAutoscalerPolicyType(fmt.Sprintf("%s:%s:%s", autoscalingv1.ChainPolicyType, "schedule-2", autoscalingv1.SchedulePolicyType))
+	framework.WaitForFleetAutoScalerCondition(t, chainAutoscaler, func(log *logrus.Entry, fas *autoscalingv1.FleetAutoscaler) bool {
+		log.WithField("LastAppliedPolicy", fas.Status.LastAppliedPolicy).Info("Awaiting application of expected SchedulePolicyType in chain autoscaler")
+		return fas.Status.LastAppliedPolicy == expectedChainPolicy
+	})
+
 	fleetautoscalers.Delete(ctx, fas.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
 
 	// Return to starting 3 replicas
@@ -1870,8 +1904,18 @@ func TestChainAutoscaler(t *testing.T) {
 
 	// Verify the first schedule has been applied
 	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(10))
+	expectedChainPolicy = autoscalingv1.FleetAutoscalerPolicyType(fmt.Sprintf("%s:%s:%s", autoscalingv1.ChainPolicyType, "schedule-1", autoscalingv1.SchedulePolicyType))
+	framework.WaitForFleetAutoScalerCondition(t, chainAutoscaler, func(log *logrus.Entry, fas *autoscalingv1.FleetAutoscaler) bool {
+		log.WithField("LastAppliedPolicy", fas.Status.LastAppliedPolicy).Info("Awaiting application of expected SchedulePolicyType in chain autoscaler")
+		return fas.Status.LastAppliedPolicy == expectedChainPolicy
+	})
 	// Verify the second schedule has been applied
 	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(4))
+	expectedChainPolicy = autoscalingv1.FleetAutoscalerPolicyType(fmt.Sprintf("%s:%s:%s", autoscalingv1.ChainPolicyType, "schedule-2", autoscalingv1.SchedulePolicyType))
+	framework.WaitForFleetAutoScalerCondition(t, chainAutoscaler, func(log *logrus.Entry, fas *autoscalingv1.FleetAutoscaler) bool {
+		log.WithField("LastAppliedPolicy", fas.Status.LastAppliedPolicy).Info("Awaiting application of expected SchedulePolicyType in chain autoscaler")
+		return fas.Status.LastAppliedPolicy == expectedChainPolicy
+	})
 
 	fleetautoscalers.Delete(ctx, fas.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
 }

@@ -19,17 +19,19 @@
 package v1
 
 import (
+	autoscalingv1 "agones.dev/agones/pkg/apis/autoscaling/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // FleetAutoscalerStatusApplyConfiguration represents a declarative configuration of the FleetAutoscalerStatus type for use
 // with apply.
 type FleetAutoscalerStatusApplyConfiguration struct {
-	CurrentReplicas *int32   `json:"currentReplicas,omitempty"`
-	DesiredReplicas *int32   `json:"desiredReplicas,omitempty"`
-	LastScaleTime   *v1.Time `json:"lastScaleTime,omitempty"`
-	AbleToScale     *bool    `json:"ableToScale,omitempty"`
-	ScalingLimited  *bool    `json:"scalingLimited,omitempty"`
+	CurrentReplicas   *int32                                   `json:"currentReplicas,omitempty"`
+	DesiredReplicas   *int32                                   `json:"desiredReplicas,omitempty"`
+	LastScaleTime     *v1.Time                                 `json:"lastScaleTime,omitempty"`
+	AbleToScale       *bool                                    `json:"ableToScale,omitempty"`
+	ScalingLimited    *bool                                    `json:"scalingLimited,omitempty"`
+	LastAppliedPolicy *autoscalingv1.FleetAutoscalerPolicyType `json:"lastAppliedPolicy,omitempty"`
 }
 
 // FleetAutoscalerStatusApplyConfiguration constructs a declarative configuration of the FleetAutoscalerStatus type for use with
@@ -75,5 +77,13 @@ func (b *FleetAutoscalerStatusApplyConfiguration) WithAbleToScale(value bool) *F
 // If called multiple times, the ScalingLimited field is set to the value of the last call.
 func (b *FleetAutoscalerStatusApplyConfiguration) WithScalingLimited(value bool) *FleetAutoscalerStatusApplyConfiguration {
 	b.ScalingLimited = &value
+	return b
+}
+
+// WithLastAppliedPolicy sets the LastAppliedPolicy field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the LastAppliedPolicy field is set to the value of the last call.
+func (b *FleetAutoscalerStatusApplyConfiguration) WithLastAppliedPolicy(value autoscalingv1.FleetAutoscalerPolicyType) *FleetAutoscalerStatusApplyConfiguration {
+	b.LastAppliedPolicy = &value
 	return b
 }
