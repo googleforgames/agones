@@ -33,10 +33,13 @@ See [Creating a Cluster]({{< relref "Creating Cluster" >}}) for initial set up o
 
 ### Allocate Across Clusters
 
-Agones supports [Multi-cluster Allocation]({{< relref "multi-cluster-allocation" >}}), allowing you to allocate from a set of clusters, versus a single point of potential failure. There are several other options for multi-cluster allocation:
-* [Anthos Service Mesh](https://cloud.google.com/anthos/service-mesh) can be used to route allocation traffic to different clusters based on arbitrary criteria. See [Global Multiplayer Demo](https://github.com/googleforgames/global-multiplayer-demo) for an example where the match maker influences which cluster the allocation is routed to.
-* [Allocation Endpoint](https://github.com/googleforgames/agones/tree/main/examples/allocation-endpoint) can be used in Cloud Run to proxy allocation requests.
-* Or peruse the [Third Party Examples]({{< relref "../../Third Party Content/libraries-tools.md/#allocation" >}})
+Agones supports Multi-cluster Allocation to avoid a single point of failure when allocating game servers. While earlier versions of Agones included a custom multi-cluster allocation solution, the current best practice is to use a **Service Mesh** (e.g., Istio, Linkerd, [Google Cloud Service Mesh](https://cloud.google.com/service-mesh/docs/overview)) to handle allocation traffic between clusters.
+
+By deploying a Service Mesh across your Agones clusters and backend services, you can expose and route traffic to each cluster’s agones-allocator endpoint based on cluster priority, latency, or other criteria.
+
+To implement this approach, refer to the full setup and guidance in the [Multi-cluster Allocation documentation]({{< relref "multi-cluster-allocation" >}}).
+
+You can also explore the [Global Multiplayer Demo](https://github.com/googleforgames/global-multiplayer-demo) for a working example using Google Cloud Service Mesh with Istio.
 
 ### Spread
 
