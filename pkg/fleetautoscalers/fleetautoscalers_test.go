@@ -201,9 +201,9 @@ func TestComputeDesiredFleetSize(t *testing.T) {
 			defer cancel()
 
 			fasLog := FasLogger{
-				fas:        fas,
-				baseLogger: newTestLogger(),
-				recorder:   m.FakeRecorder,
+				fas:            fas,
+				baseLogger:     newTestLogger(),
+				recorder:       m.FakeRecorder,
 				currChainEntry: &fas.Status.LastAppliedPolicy,
 			}
 
@@ -352,9 +352,9 @@ func TestApplyBufferPolicy(t *testing.T) {
 
 			m := agtesting.NewMocks()
 			fasLog := FasLogger{
-				fas:        fas,
-				baseLogger: newTestLogger(),
-				recorder:   m.FakeRecorder,
+				fas:            fas,
+				baseLogger:     newTestLogger(),
+				recorder:       m.FakeRecorder,
 				currChainEntry: &fas.Status.LastAppliedPolicy,
 			}
 			replicas, limited, err := applyBufferPolicy(tc.buffer, f, &fasLog)
@@ -593,9 +593,9 @@ func TestApplyWebhookPolicy(t *testing.T) {
 
 			m := agtesting.NewMocks()
 			fasLog := FasLogger{
-				fas:        fas,
-				baseLogger: newTestLogger(),
-				recorder:   m.FakeRecorder,
+				fas:            fas,
+				baseLogger:     newTestLogger(),
+				recorder:       m.FakeRecorder,
 				currChainEntry: &fas.Status.LastAppliedPolicy,
 			}
 			replicas, limited, err := applyWebhookPolicy(tc.webhookPolicy, f, &fasLog)
@@ -641,9 +641,9 @@ func TestApplyWebhookPolicyWithMetadata(t *testing.T) {
 
 	m := agtesting.NewMocks()
 	fasLog := FasLogger{
-		fas:        fas,
-		baseLogger: newTestLogger(),
-		recorder:   m.FakeRecorder,
+		fas:            fas,
+		baseLogger:     newTestLogger(),
+		recorder:       m.FakeRecorder,
 		currChainEntry: &fas.Status.LastAppliedPolicy,
 	}
 	replicas, limited, err := applyWebhookPolicy(webhookPolicy, fleet, &fasLog)
@@ -668,9 +668,9 @@ func TestApplyWebhookPolicyNilFleet(t *testing.T) {
 	fas, _ := defaultFixtures()
 	m := agtesting.NewMocks()
 	fasLog := FasLogger{
-		fas:        fas,
-		baseLogger: newTestLogger(),
-		recorder:   m.FakeRecorder,
+		fas:            fas,
+		baseLogger:     newTestLogger(),
+		recorder:       m.FakeRecorder,
 		currChainEntry: &fas.Status.LastAppliedPolicy,
 	}
 	replicas, limited, err := applyWebhookPolicy(w, nil, &fasLog)
@@ -2510,9 +2510,9 @@ func TestApplySchedulePolicy(t *testing.T) {
 			fas, f := defaultFixtures()
 			m := agtesting.NewMocks()
 			fasLog := FasLogger{
-				fas:        fas,
-				baseLogger: newTestLogger(),
-				recorder:   m.FakeRecorder,
+				fas:            fas,
+				baseLogger:     newTestLogger(),
+				recorder:       m.FakeRecorder,
 				currChainEntry: &fas.Status.LastAppliedPolicy,
 			}
 			replicas, limited, err := applySchedulePolicy(tc.sp, f, nil, nil, tc.now, &fasLog)
@@ -2701,9 +2701,9 @@ func TestApplyChainPolicy(t *testing.T) {
 			fas, f := defaultFixtures()
 			m := agtesting.NewMocks()
 			fasLog := FasLogger{
-				fas:        fas,
-				baseLogger: newTestLogger(),
-				recorder:   m.FakeRecorder,
+				fas:            fas,
+				baseLogger:     newTestLogger(),
+				recorder:       m.FakeRecorder,
 				currChainEntry: &fas.Status.LastAppliedPolicy,
 			}
 			replicas, limited, err := applyChainPolicy(*tc.cp, f, nil, nil, tc.now, &fasLog)

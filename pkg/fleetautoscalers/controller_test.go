@@ -406,7 +406,7 @@ func TestControllerSyncFleetAutoscaler(t *testing.T) {
 			assert.Equal(t, fas.Status.ScalingLimited, false)
 			assert.Equal(t, fas.Status.CurrentReplicas, int32(50))
 			assert.Equal(t, fas.Status.DesiredReplicas, int32(100))
-			assert.Equal(t, fas.Status.LastAppliedPolicy, autoscalingv1.WebhookPolicyType )
+			assert.Equal(t, fas.Status.LastAppliedPolicy, autoscalingv1.WebhookPolicyType)
 			assert.NotNil(t, fas.Status.LastScaleTime)
 			return true, fas, nil
 		})
