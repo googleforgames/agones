@@ -437,6 +437,14 @@
             "allocationBatchWaitTime": {
               "type": "string"
             },
+            "sdk": {
+              "type": "object",
+              "properties": {
+                "requestsRateLimit": {
+                  "type": "string"
+                }
+              }
+            },
             "customCertSecretPath": {
               "type": "array"
             },
