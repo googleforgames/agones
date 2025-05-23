@@ -92,6 +92,14 @@ func FastRateLimiter(maxDelay time.Duration) workqueue.TypedRateLimiter[any] {
 	return workqueue.NewTypedItemFastSlowRateLimiter[any](fastDelay, maxDelay, numFastRetries)
 }
 
+// ConstantRateLimiter returns a rate limiter without exponential back-off, with constant retry delay.
+func ConstantRateLimiter(maxDelay time.Duration) workqueue.TypedRateLimiter[any] {
+	const numFastRetries = 0                 // only constant delay
+	const fastDelay = 200 * time.Millisecond // not needed
+
+	return workqueue.NewTypedItemFastSlowRateLimiter[any](fastDelay, maxDelay, numFastRetries)
+}
+
 // NewWorkerQueue returns a new worker queue for a given name
 func NewWorkerQueue(handler Handler, logger *logrus.Entry, keyName logfields.ResourceType, queueName string) *WorkerQueue {
 	return NewWorkerQueueWithRateLimiter(handler, logger, keyName, queueName, workqueue.DefaultTypedControllerRateLimiter[any]())

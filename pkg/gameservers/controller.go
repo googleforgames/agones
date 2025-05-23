@@ -76,33 +76,34 @@ type Extensions struct {
 //
 //nolint:govet // ignore fieldalignment, singleton
 type Controller struct {
-	baseLogger             *logrus.Entry
-	controllerHooks        cloudproduct.ControllerHooksInterface
-	sidecarImage           string
-	alwaysPullSidecarImage bool
-	sidecarCPURequest      resource.Quantity
-	sidecarCPULimit        resource.Quantity
-	sidecarMemoryRequest   resource.Quantity
-	sidecarMemoryLimit     resource.Quantity
-	sidecarRunAsUser       int
-	sdkServiceAccount      string
-	crdGetter              apiextclientv1.CustomResourceDefinitionInterface
-	podGetter              typedcorev1.PodsGetter
-	podLister              corelisterv1.PodLister
-	podSynced              cache.InformerSynced
-	gameServerGetter       getterv1.GameServersGetter
-	gameServerLister       listerv1.GameServerLister
-	gameServerSynced       cache.InformerSynced
-	nodeLister             corelisterv1.NodeLister
-	nodeSynced             cache.InformerSynced
-	portAllocator          portallocator.Interface
-	healthController       *HealthController
-	migrationController    *MigrationController
-	missingPodController   *MissingPodController
-	workerqueue            *workerqueue.WorkerQueue
-	creationWorkerQueue    *workerqueue.WorkerQueue // handles creation only
-	deletionWorkerQueue    *workerqueue.WorkerQueue // handles deletion only
-	recorder               record.EventRecorder
+	baseLogger               *logrus.Entry
+	controllerHooks          cloudproduct.ControllerHooksInterface
+	sidecarImage             string
+	alwaysPullSidecarImage   bool
+	sidecarCPURequest        resource.Quantity
+	sidecarCPULimit          resource.Quantity
+	sidecarMemoryRequest     resource.Quantity
+	sidecarMemoryLimit       resource.Quantity
+	sidecarRunAsUser         int
+	sidecarRequestsRateLimit time.Duration
+	sdkServiceAccount        string
+	crdGetter                apiextclientv1.CustomResourceDefinitionInterface
+	podGetter                typedcorev1.PodsGetter
+	podLister                corelisterv1.PodLister
+	podSynced                cache.InformerSynced
+	gameServerGetter         getterv1.GameServersGetter
+	gameServerLister         listerv1.GameServerLister
+	gameServerSynced         cache.InformerSynced
+	nodeLister               corelisterv1.NodeLister
+	nodeSynced               cache.InformerSynced
+	portAllocator            portallocator.Interface
+	healthController         *HealthController
+	migrationController      *MigrationController
+	missingPodController     *MissingPodController
+	workerqueue              *workerqueue.WorkerQueue
+	creationWorkerQueue      *workerqueue.WorkerQueue // handles creation only
+	deletionWorkerQueue      *workerqueue.WorkerQueue // handles deletion only
+	recorder                 record.EventRecorder
 }
 
 // NewController returns a new gameserver crd controller
@@ -117,6 +118,7 @@ func NewController(
 	sidecarMemoryRequest resource.Quantity,
 	sidecarMemoryLimit resource.Quantity,
 	sidecarRunAsUser int,
+	sidecarRequestsRateLimit time.Duration,
 	sdkServiceAccount string,
 	kubeClient kubernetes.Interface,
 	kubeInformerFactory informers.SharedInformerFactory,
@@ -130,28 +132,29 @@ func NewController(
 	gsInformer := gameServers.Informer()
 
 	c := &Controller{
-		controllerHooks:        controllerHooks,
-		sidecarImage:           sidecarImage,
-		sidecarCPULimit:        sidecarCPULimit,
-		sidecarCPURequest:      sidecarCPURequest,
-		sidecarMemoryLimit:     sidecarMemoryLimit,
-		sidecarMemoryRequest:   sidecarMemoryRequest,
-		sidecarRunAsUser:       sidecarRunAsUser,
-		alwaysPullSidecarImage: alwaysPullSidecarImage,
-		sdkServiceAccount:      sdkServiceAccount,
-		crdGetter:              extClient.ApiextensionsV1().CustomResourceDefinitions(),
-		podGetter:              kubeClient.CoreV1(),
-		podLister:              pods.Lister(),
-		podSynced:              pods.Informer().HasSynced,
-		gameServerGetter:       agonesClient.AgonesV1(),
-		gameServerLister:       gameServers.Lister(),
-		gameServerSynced:       gsInformer.HasSynced,
-		nodeLister:             kubeInformerFactory.Core().V1().Nodes().Lister(),
-		nodeSynced:             kubeInformerFactory.Core().V1().Nodes().Informer().HasSynced,
-		portAllocator:          controllerHooks.NewPortAllocator(portRanges, kubeInformerFactory, agonesInformerFactory),
-		healthController:       NewHealthController(health, kubeClient, agonesClient, kubeInformerFactory, agonesInformerFactory, controllerHooks.WaitOnFreePorts()),
-		migrationController:    NewMigrationController(health, kubeClient, agonesClient, kubeInformerFactory, agonesInformerFactory, controllerHooks.SyncPodPortsToGameServer),
-		missingPodController:   NewMissingPodController(health, kubeClient, agonesClient, kubeInformerFactory, agonesInformerFactory),
+		controllerHooks:          controllerHooks,
+		sidecarImage:             sidecarImage,
+		sidecarCPULimit:          sidecarCPULimit,
+		sidecarCPURequest:        sidecarCPURequest,
+		sidecarMemoryLimit:       sidecarMemoryLimit,
+		sidecarMemoryRequest:     sidecarMemoryRequest,
+		sidecarRunAsUser:         sidecarRunAsUser,
+		sidecarRequestsRateLimit: sidecarRequestsRateLimit,
+		alwaysPullSidecarImage:   alwaysPullSidecarImage,
+		sdkServiceAccount:        sdkServiceAccount,
+		crdGetter:                extClient.ApiextensionsV1().CustomResourceDefinitions(),
+		podGetter:                kubeClient.CoreV1(),
+		podLister:                pods.Lister(),
+		podSynced:                pods.Informer().HasSynced,
+		gameServerGetter:         agonesClient.AgonesV1(),
+		gameServerLister:         gameServers.Lister(),
+		gameServerSynced:         gsInformer.HasSynced,
+		nodeLister:               kubeInformerFactory.Core().V1().Nodes().Lister(),
+		nodeSynced:               kubeInformerFactory.Core().V1().Nodes().Informer().HasSynced,
+		portAllocator:            controllerHooks.NewPortAllocator(portRanges, kubeInformerFactory, agonesInformerFactory),
+		healthController:         NewHealthController(health, kubeClient, agonesClient, kubeInformerFactory, agonesInformerFactory, controllerHooks.WaitOnFreePorts()),
+		migrationController:      NewMigrationController(health, kubeClient, agonesClient, kubeInformerFactory, agonesInformerFactory, controllerHooks.SyncPodPortsToGameServer),
+		missingPodController:     NewMissingPodController(health, kubeClient, agonesClient, kubeInformerFactory, agonesInformerFactory),
 	}
 
 	c.baseLogger = runtime.NewLoggerWithType(c)
@@ -723,6 +726,10 @@ func (c *Controller) sidecar(gs *agonesv1.GameServer) corev1.Container {
 			{
 				Name:  "LOG_LEVEL",
 				Value: string(gs.Spec.SdkServer.LogLevel),
+			},
+			{
+				Name:  "REQUESTS_RATE_LIMIT",
+				Value: c.sidecarRequestsRateLimit.String(),
 			},
 		},
 		Resources: corev1.ResourceRequirements{},
