@@ -96,7 +96,7 @@ agones:
       timeoutSeconds: 1
     allocationBatchWaitTime: 500ms
     sdk:
-      requestsRateLimit: 1s
+      requestsRateLimit: 500ms
     replicas: 2
     pdb:
         minAvailable: 1
