@@ -87,7 +87,7 @@ func computeDesiredFleetSize(pol autoscalingv1.FleetAutoscalerPolicy, f *agonesv
 		err = errors.New("wrong policy type, should be one of: Buffer, Webhook, Counter, List, Schedule, Chain")
 	}
 
-	if err != nil {
+	if err != nil && !errors.Is(err, InactiveScheduleError{}) {
 		loggerForFleetAutoscalerKey(fasLog.fas.ObjectMeta.Name, fasLog.baseLogger).
 			Debugf("Failed to apply policy type %q: %v", pol.Type, err)
 	}
@@ -481,7 +481,7 @@ func applyChainPolicy(c autoscalingv1.ChainPolicy, f *agonesv1.Fleet, gameServer
 			// Every other policy type we just want to compute the desired fleet and return it
 			replicas, limited, err = computeDesiredFleetSize(entry.FleetAutoscalerPolicy, f, gameServerNamespacedLister, nodeCounts, fasLog)
 
-			if err != nil {
+			if err != nil && !errors.Is(err, InactiveScheduleError{}) {
 				loggerForFleetAutoscalerKey(fasLog.fas.ObjectMeta.Name, fasLog.baseLogger).Debugf(
 					"Failed to apply %s ID=%s in ChainPolicy: %v", entry.Type, entry.ID, err)
 			}
@@ -494,7 +494,7 @@ func applyChainPolicy(c autoscalingv1.ChainPolicy, f *agonesv1.Fleet, gameServer
 		}
 	}
 
-	if err != nil {
+	if err != nil && !errors.Is(err, InactiveScheduleError{}) {
 		emitChainPolicyEvent(fasLog, "Unknown", "")
 		loggerForFleetAutoscalerKey(fasLog.fas.ObjectMeta.Name, fasLog.baseLogger).Debug("Failed to apply ChainPolicy: no valid policy applied")
 		return replicas, limited, err
