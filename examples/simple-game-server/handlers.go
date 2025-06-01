@@ -187,7 +187,13 @@ func handleLabel(s *sdk.SDK, parts []string, _ ...context.CancelFunc) (response 
 
 func handleCrash(s *sdk.SDK, parts []string, _ ...context.CancelFunc) (response string, addACK bool, responseError error) {
 	log.Print("Crashing.")
-	os.Exit(1)
+	exitCode := 1
+	if len(parts) > 1 {
+		if code, err := strconv.Atoi(parts[1]); err == nil {
+			exitCode = code
+		}
+	}
+	os.Exit(exitCode)
 	return "", false, nil
 }
 
