@@ -70,7 +70,9 @@ and copy it into a release issue. Fill in relevant values, found inside {}
   - [ ] Within the shell `cd` to the `test/sdk/go/` directory and run `make cloud-build`.
 - [ ] In `test/upgrade/Makefile` change `base_version` to `{version}+1`.
 - [ ] Update `cloudbuild.yaml` by incrementing the `_BASE_VERSION` to `{version}+1`. 
-- [ ] In `test/upgrade/versionMap.yaml` change `ReleaseVersion` to `{version}`.
+- [ ] Verify and update Kubernetes version support and Agones version mappings in `test/upgrade/versionMap.yaml`.
+  - [ ] Update ReleaseVersion to the current release `{version}`.
+  - [ ] Ensure that the Kubernetes versions supported by the release are correctly listed in the k8sToAgonesVersions map, including the new release version `{version}` and the "Dev" label where appropriate.
   - [ ] In `test/upgrade/versionMap.yaml` copy and paste `“Dev”` in `agonesVersionFeatureGates` map.
   - [ ] Change one of the `“Dev”` in `agonesVersionFeatureGates` to `{version}`.
 - [ ] Create PR with these changes, and merge them with approval
