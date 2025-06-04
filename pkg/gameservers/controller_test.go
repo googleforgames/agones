@@ -1793,12 +1793,8 @@ func TestControllerSyncGameServerRequestReadyState(t *testing.T) {
 			Spec: newSingleContainerSpec(), Status: agonesv1.GameServerStatus{State: agonesv1.GameServerStateRequestReady}}
 		gsFixture.ApplyDefaults()
 		gsFixture.Status.NodeName = nodeName
-		// gsFixture.Status.Addresses = []corev1.NodeAddress{
-		// 	{Type: agonesv1.NodePodIP, Address: "0.0.0.0"},
-		// }
 		pod, err := gsFixture.Pod(agtesting.FakeAPIHooks{})
 		assert.Nil(t, err)
-		// pod.Spec.NodeName = nodeName
 		gsUpdated := false
 		podUpdated := false
 
