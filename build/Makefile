@@ -24,7 +24,7 @@
 #
 
 # base version target. This is usually the next release.
-base_version = 1.49.0
+base_version = 1.50.0
 
 #
 # All of the following can be overwritten with environment variables
@@ -66,7 +66,7 @@ KIND_PROFILE ?= agones
 KIND_CONTAINER_NAME=$(KIND_PROFILE)-control-plane
 
 # Game Server image to use while doing end-to-end tests
-GS_TEST_IMAGE ?= us-docker.pkg.dev/agones-images/examples/simple-game-server:0.36
+GS_TEST_IMAGE ?= us-docker.pkg.dev/agones-images/examples/simple-game-server:0.37
 
 # Enable all beta feature gates. Keep in sync with `true` (beta) entries in pkg/util/runtime/features.go:featureDefaults
 BETA_FEATURE_GATES ?= "AutopilotPassthroughPort=true&CountsAndLists=true&GKEAutopilotExtendedDurationPods=true&PortPolicyNone=true&PortRanges=true"
@@ -103,6 +103,7 @@ common_mounts = -v $(build_path)/.config/gcloud:/root/.config/gcloud \
 
 # Its possible for this to change in the future, so it gets its own variable.
 REGISTRY ?= local
+CHARTS_REGISTRY ?=
 workdir_path = $(mount_path)
 
 build_version = $(call sha,$(build_path)/build-image/Dockerfile)
