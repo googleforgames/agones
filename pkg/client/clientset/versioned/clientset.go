@@ -19,8 +19,8 @@
 package versioned
 
 import (
-	"fmt"
-	"net/http"
+	fmt "fmt"
+	http "net/http"
 
 	agonesv1 "agones.dev/agones/pkg/client/clientset/versioned/typed/agones/v1"
 	allocationv1 "agones.dev/agones/pkg/client/clientset/versioned/typed/allocation/v1"

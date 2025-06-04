@@ -19,13 +19,13 @@
 package v1
 
 import (
-	v1 "agones.dev/agones/pkg/apis/agones/v1"
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 )
 
 // EvictionApplyConfiguration represents a declarative configuration of the Eviction type for use
 // with apply.
 type EvictionApplyConfiguration struct {
-	Safe *v1.EvictionSafe `json:"safe,omitempty"`
+	Safe *agonesv1.EvictionSafe `json:"safe,omitempty"`
 }
 
 // EvictionApplyConfiguration constructs a declarative configuration of the Eviction type for use with
@@ -37,7 +37,7 @@ func Eviction() *EvictionApplyConfiguration {
 // WithSafe sets the Safe field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Safe field is set to the value of the last call.
-func (b *EvictionApplyConfiguration) WithSafe(value v1.EvictionSafe) *EvictionApplyConfiguration {
+func (b *EvictionApplyConfiguration) WithSafe(value agonesv1.EvictionSafe) *EvictionApplyConfiguration {
 	b.Safe = &value
 	return b
 }

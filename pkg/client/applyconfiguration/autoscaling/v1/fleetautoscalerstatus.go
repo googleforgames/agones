@@ -20,7 +20,7 @@ package v1
 
 import (
 	autoscalingv1 "agones.dev/agones/pkg/apis/autoscaling/v1"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // FleetAutoscalerStatusApplyConfiguration represents a declarative configuration of the FleetAutoscalerStatus type for use
@@ -28,7 +28,7 @@ import (
 type FleetAutoscalerStatusApplyConfiguration struct {
 	CurrentReplicas   *int32                                   `json:"currentReplicas,omitempty"`
 	DesiredReplicas   *int32                                   `json:"desiredReplicas,omitempty"`
-	LastScaleTime     *v1.Time                                 `json:"lastScaleTime,omitempty"`
+	LastScaleTime     *metav1.Time                             `json:"lastScaleTime,omitempty"`
 	AbleToScale       *bool                                    `json:"ableToScale,omitempty"`
 	ScalingLimited    *bool                                    `json:"scalingLimited,omitempty"`
 	LastAppliedPolicy *autoscalingv1.FleetAutoscalerPolicyType `json:"lastAppliedPolicy,omitempty"`
@@ -59,7 +59,7 @@ func (b *FleetAutoscalerStatusApplyConfiguration) WithDesiredReplicas(value int3
 // WithLastScaleTime sets the LastScaleTime field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the LastScaleTime field is set to the value of the last call.
-func (b *FleetAutoscalerStatusApplyConfiguration) WithLastScaleTime(value v1.Time) *FleetAutoscalerStatusApplyConfiguration {
+func (b *FleetAutoscalerStatusApplyConfiguration) WithLastScaleTime(value metav1.Time) *FleetAutoscalerStatusApplyConfiguration {
 	b.LastScaleTime = &value
 	return b
 }

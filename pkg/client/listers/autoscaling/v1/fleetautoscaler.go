@@ -19,10 +19,10 @@
 package v1
 
 import (
-	v1 "agones.dev/agones/pkg/apis/autoscaling/v1"
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/client-go/listers"
-	"k8s.io/client-go/tools/cache"
+	autoscalingv1 "agones.dev/agones/pkg/apis/autoscaling/v1"
+	labels "k8s.io/apimachinery/pkg/labels"
+	listers "k8s.io/client-go/listers"
+	cache "k8s.io/client-go/tools/cache"
 )
 
 // FleetAutoscalerLister helps list FleetAutoscalers.
@@ -30,7 +30,7 @@ import (
 type FleetAutoscalerLister interface {
 	// List lists all FleetAutoscalers in the indexer.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1.FleetAutoscaler, err error)
+	List(selector labels.Selector) (ret []*autoscalingv1.FleetAutoscaler, err error)
 	// FleetAutoscalers returns an object that can list and get FleetAutoscalers.
 	FleetAutoscalers(namespace string) FleetAutoscalerNamespaceLister
 	FleetAutoscalerListerExpansion
@@ -38,17 +38,17 @@ type FleetAutoscalerLister interface {
 
 // fleetAutoscalerLister implements the FleetAutoscalerLister interface.
 type fleetAutoscalerLister struct {
-	listers.ResourceIndexer[*v1.FleetAutoscaler]
+	listers.ResourceIndexer[*autoscalingv1.FleetAutoscaler]
 }
 
 // NewFleetAutoscalerLister returns a new FleetAutoscalerLister.
 func NewFleetAutoscalerLister(indexer cache.Indexer) FleetAutoscalerLister {
-	return &fleetAutoscalerLister{listers.New[*v1.FleetAutoscaler](indexer, v1.Resource("fleetautoscaler"))}
+	return &fleetAutoscalerLister{listers.New[*autoscalingv1.FleetAutoscaler](indexer, autoscalingv1.Resource("fleetautoscaler"))}
 }
 
 // FleetAutoscalers returns an object that can list and get FleetAutoscalers.
 func (s *fleetAutoscalerLister) FleetAutoscalers(namespace string) FleetAutoscalerNamespaceLister {
-	return fleetAutoscalerNamespaceLister{listers.NewNamespaced[*v1.FleetAutoscaler](s.ResourceIndexer, namespace)}
+	return fleetAutoscalerNamespaceLister{listers.NewNamespaced[*autoscalingv1.FleetAutoscaler](s.ResourceIndexer, namespace)}
 }
 
 // FleetAutoscalerNamespaceLister helps list and get FleetAutoscalers.
@@ -56,15 +56,15 @@ func (s *fleetAutoscalerLister) FleetAutoscalers(namespace string) FleetAutoscal
 type FleetAutoscalerNamespaceLister interface {
 	// List lists all FleetAutoscalers in the indexer for a given namespace.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1.FleetAutoscaler, err error)
+	List(selector labels.Selector) (ret []*autoscalingv1.FleetAutoscaler, err error)
 	// Get retrieves the FleetAutoscaler from the indexer for a given namespace and name.
 	// Objects returned here must be treated as read-only.
-	Get(name string) (*v1.FleetAutoscaler, error)
+	Get(name string) (*autoscalingv1.FleetAutoscaler, error)
 	FleetAutoscalerNamespaceListerExpansion
 }
 
 // fleetAutoscalerNamespaceLister implements the FleetAutoscalerNamespaceLister
 // interface.
 type fleetAutoscalerNamespaceLister struct {
-	listers.ResourceIndexer[*v1.FleetAutoscaler]
+	listers.ResourceIndexer[*autoscalingv1.FleetAutoscaler]
 }

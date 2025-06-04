@@ -19,7 +19,7 @@
 package v1
 
 import (
-	v1 "agones.dev/agones/pkg/apis/agones/v1"
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -27,7 +27,7 @@ import (
 // GameServerStatusApplyConfiguration represents a declarative configuration of the GameServerStatus type for use
 // with apply.
 type GameServerStatusApplyConfiguration struct {
-	State         *v1.GameServerState                        `json:"state,omitempty"`
+	State         *agonesv1.GameServerState                  `json:"state,omitempty"`
 	Ports         []GameServerStatusPortApplyConfiguration   `json:"ports,omitempty"`
 	Address       *string                                    `json:"address,omitempty"`
 	Addresses     []corev1.NodeAddress                       `json:"addresses,omitempty"`
@@ -48,7 +48,7 @@ func GameServerStatus() *GameServerStatusApplyConfiguration {
 // WithState sets the State field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the State field is set to the value of the last call.
-func (b *GameServerStatusApplyConfiguration) WithState(value v1.GameServerState) *GameServerStatusApplyConfiguration {
+func (b *GameServerStatusApplyConfiguration) WithState(value agonesv1.GameServerState) *GameServerStatusApplyConfiguration {
 	b.State = &value
 	return b
 }

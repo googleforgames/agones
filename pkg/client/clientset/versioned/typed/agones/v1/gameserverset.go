@@ -19,10 +19,10 @@
 package v1
 
 import (
-	"context"
+	context "context"
 
-	v1 "agones.dev/agones/pkg/apis/agones/v1"
-	agonesv1 "agones.dev/agones/pkg/client/applyconfiguration/agones/v1"
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
+	applyconfigurationagonesv1 "agones.dev/agones/pkg/client/applyconfiguration/agones/v1"
 	scheme "agones.dev/agones/pkg/client/clientset/versioned/scheme"
 	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -39,19 +39,19 @@ type GameServerSetsGetter interface {
 
 // GameServerSetInterface has methods to work with GameServerSet resources.
 type GameServerSetInterface interface {
-	Create(ctx context.Context, gameServerSet *v1.GameServerSet, opts metav1.CreateOptions) (*v1.GameServerSet, error)
-	Update(ctx context.Context, gameServerSet *v1.GameServerSet, opts metav1.UpdateOptions) (*v1.GameServerSet, error)
+	Create(ctx context.Context, gameServerSet *agonesv1.GameServerSet, opts metav1.CreateOptions) (*agonesv1.GameServerSet, error)
+	Update(ctx context.Context, gameServerSet *agonesv1.GameServerSet, opts metav1.UpdateOptions) (*agonesv1.GameServerSet, error)
 	// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-	UpdateStatus(ctx context.Context, gameServerSet *v1.GameServerSet, opts metav1.UpdateOptions) (*v1.GameServerSet, error)
+	UpdateStatus(ctx context.Context, gameServerSet *agonesv1.GameServerSet, opts metav1.UpdateOptions) (*agonesv1.GameServerSet, error)
 	Delete(ctx context.Context, name string, opts metav1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts metav1.DeleteOptions, listOpts metav1.ListOptions) error
-	Get(ctx context.Context, name string, opts metav1.GetOptions) (*v1.GameServerSet, error)
-	List(ctx context.Context, opts metav1.ListOptions) (*v1.GameServerSetList, error)
+	Get(ctx context.Context, name string, opts metav1.GetOptions) (*agonesv1.GameServerSet, error)
+	List(ctx context.Context, opts metav1.ListOptions) (*agonesv1.GameServerSetList, error)
 	Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error)
-	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *v1.GameServerSet, err error)
-	Apply(ctx context.Context, gameServerSet *agonesv1.GameServerSetApplyConfiguration, opts metav1.ApplyOptions) (result *v1.GameServerSet, err error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *agonesv1.GameServerSet, err error)
+	Apply(ctx context.Context, gameServerSet *applyconfigurationagonesv1.GameServerSetApplyConfiguration, opts metav1.ApplyOptions) (result *agonesv1.GameServerSet, err error)
 	// Add a +genclient:noStatus comment above the type to avoid generating ApplyStatus().
-	ApplyStatus(ctx context.Context, gameServerSet *agonesv1.GameServerSetApplyConfiguration, opts metav1.ApplyOptions) (result *v1.GameServerSet, err error)
+	ApplyStatus(ctx context.Context, gameServerSet *applyconfigurationagonesv1.GameServerSetApplyConfiguration, opts metav1.ApplyOptions) (result *agonesv1.GameServerSet, err error)
 	GetScale(ctx context.Context, gameServerSetName string, options metav1.GetOptions) (*autoscalingv1.Scale, error)
 	UpdateScale(ctx context.Context, gameServerSetName string, scale *autoscalingv1.Scale, opts metav1.UpdateOptions) (*autoscalingv1.Scale, error)
 
@@ -60,19 +60,20 @@ type GameServerSetInterface interface {
 
 // gameServerSets implements GameServerSetInterface
 type gameServerSets struct {
-	*gentype.ClientWithListAndApply[*v1.GameServerSet, *v1.GameServerSetList, *agonesv1.GameServerSetApplyConfiguration]
+	*gentype.ClientWithListAndApply[*agonesv1.GameServerSet, *agonesv1.GameServerSetList, *applyconfigurationagonesv1.GameServerSetApplyConfiguration]
 }
 
 // newGameServerSets returns a GameServerSets
 func newGameServerSets(c *AgonesV1Client, namespace string) *gameServerSets {
 	return &gameServerSets{
-		gentype.NewClientWithListAndApply[*v1.GameServerSet, *v1.GameServerSetList, *agonesv1.GameServerSetApplyConfiguration](
+		gentype.NewClientWithListAndApply[*agonesv1.GameServerSet, *agonesv1.GameServerSetList, *applyconfigurationagonesv1.GameServerSetApplyConfiguration](
 			"gameserversets",
 			c.RESTClient(),
 			scheme.ParameterCodec,
 			namespace,
-			func() *v1.GameServerSet { return &v1.GameServerSet{} },
-			func() *v1.GameServerSetList { return &v1.GameServerSetList{} }),
+			func() *agonesv1.GameServerSet { return &agonesv1.GameServerSet{} },
+			func() *agonesv1.GameServerSetList { return &agonesv1.GameServerSetList{} },
+		),
 	}
 }
 

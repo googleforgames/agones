@@ -168,6 +168,7 @@ func request_SDK_GetGameServer_0(ctx context.Context, marshaler runtime.Marshale
 		protoReq Empty
 		metadata runtime.ServerMetadata
 	)
+	io.Copy(io.Discard, req.Body)
 	msg, err := client.GetGameServer(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 }
@@ -186,6 +187,7 @@ func request_SDK_WatchGameServer_0(ctx context.Context, marshaler runtime.Marsha
 		protoReq Empty
 		metadata runtime.ServerMetadata
 	)
+	io.Copy(io.Discard, req.Body)
 	stream, err := client.WatchGameServer(ctx, &protoReq)
 	if err != nil {
 		return nil, metadata, err

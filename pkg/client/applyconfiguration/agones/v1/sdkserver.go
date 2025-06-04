@@ -19,15 +19,15 @@
 package v1
 
 import (
-	v1 "agones.dev/agones/pkg/apis/agones/v1"
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 )
 
 // SdkServerApplyConfiguration represents a declarative configuration of the SdkServer type for use
 // with apply.
 type SdkServerApplyConfiguration struct {
-	LogLevel *v1.SdkServerLogLevel `json:"logLevel,omitempty"`
-	GRPCPort *int32                `json:"grpcPort,omitempty"`
-	HTTPPort *int32                `json:"httpPort,omitempty"`
+	LogLevel *agonesv1.SdkServerLogLevel `json:"logLevel,omitempty"`
+	GRPCPort *int32                      `json:"grpcPort,omitempty"`
+	HTTPPort *int32                      `json:"httpPort,omitempty"`
 }
 
 // SdkServerApplyConfiguration constructs a declarative configuration of the SdkServer type for use with
@@ -39,7 +39,7 @@ func SdkServer() *SdkServerApplyConfiguration {
 // WithLogLevel sets the LogLevel field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the LogLevel field is set to the value of the last call.
-func (b *SdkServerApplyConfiguration) WithLogLevel(value v1.SdkServerLogLevel) *SdkServerApplyConfiguration {
+func (b *SdkServerApplyConfiguration) WithLogLevel(value agonesv1.SdkServerLogLevel) *SdkServerApplyConfiguration {
 	b.LogLevel = &value
 	return b
 }

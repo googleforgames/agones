@@ -46,6 +46,9 @@ data:
           "1.48.0",
           "1.49.0",
           "Dev"
+        ],
+        "1.33": [
+          "Dev"
         ]
       },
       "agonesVersionFeatureGates": {

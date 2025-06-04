@@ -19,19 +19,19 @@
 package v1
 
 import (
-	v1 "agones.dev/agones/pkg/apis/autoscaling/v1"
+	autoscalingv1 "agones.dev/agones/pkg/apis/autoscaling/v1"
 )
 
 // FleetAutoscalerPolicyApplyConfiguration represents a declarative configuration of the FleetAutoscalerPolicy type for use
 // with apply.
 type FleetAutoscalerPolicyApplyConfiguration struct {
-	Type     *v1.FleetAutoscalerPolicyType     `json:"type,omitempty"`
-	Buffer   *BufferPolicyApplyConfiguration   `json:"buffer,omitempty"`
-	Webhook  *WebhookPolicyApplyConfiguration  `json:"webhook,omitempty"`
-	Counter  *CounterPolicyApplyConfiguration  `json:"counter,omitempty"`
-	List     *ListPolicyApplyConfiguration     `json:"list,omitempty"`
-	Schedule *SchedulePolicyApplyConfiguration `json:"schedule,omitempty"`
-	Chain    *v1.ChainPolicy                   `json:"chain,omitempty"`
+	Type     *autoscalingv1.FleetAutoscalerPolicyType `json:"type,omitempty"`
+	Buffer   *BufferPolicyApplyConfiguration          `json:"buffer,omitempty"`
+	Webhook  *WebhookPolicyApplyConfiguration         `json:"webhook,omitempty"`
+	Counter  *CounterPolicyApplyConfiguration         `json:"counter,omitempty"`
+	List     *ListPolicyApplyConfiguration            `json:"list,omitempty"`
+	Schedule *SchedulePolicyApplyConfiguration        `json:"schedule,omitempty"`
+	Chain    *autoscalingv1.ChainPolicy               `json:"chain,omitempty"`
 }
 
 // FleetAutoscalerPolicyApplyConfiguration constructs a declarative configuration of the FleetAutoscalerPolicy type for use with
@@ -43,7 +43,7 @@ func FleetAutoscalerPolicy() *FleetAutoscalerPolicyApplyConfiguration {
 // WithType sets the Type field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Type field is set to the value of the last call.
-func (b *FleetAutoscalerPolicyApplyConfiguration) WithType(value v1.FleetAutoscalerPolicyType) *FleetAutoscalerPolicyApplyConfiguration {
+func (b *FleetAutoscalerPolicyApplyConfiguration) WithType(value autoscalingv1.FleetAutoscalerPolicyType) *FleetAutoscalerPolicyApplyConfiguration {
 	b.Type = &value
 	return b
 }
@@ -91,7 +91,7 @@ func (b *FleetAutoscalerPolicyApplyConfiguration) WithSchedule(value *SchedulePo
 // WithChain sets the Chain field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Chain field is set to the value of the last call.
-func (b *FleetAutoscalerPolicyApplyConfiguration) WithChain(value v1.ChainPolicy) *FleetAutoscalerPolicyApplyConfiguration {
+func (b *FleetAutoscalerPolicyApplyConfiguration) WithChain(value autoscalingv1.ChainPolicy) *FleetAutoscalerPolicyApplyConfiguration {
 	b.Chain = &value
 	return b
 }
