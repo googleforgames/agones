@@ -99,6 +99,7 @@ type Controller struct {
 	healthController       *HealthController
 	migrationController    *MigrationController
 	missingPodController   *MissingPodController
+	succeededController    *SucceededController
 	workerqueue            *workerqueue.WorkerQueue
 	creationWorkerQueue    *workerqueue.WorkerQueue // handles creation only
 	deletionWorkerQueue    *workerqueue.WorkerQueue // handles deletion only
@@ -152,6 +153,7 @@ func NewController(
 		healthController:       NewHealthController(health, kubeClient, agonesClient, kubeInformerFactory, agonesInformerFactory, controllerHooks.WaitOnFreePorts()),
 		migrationController:    NewMigrationController(health, kubeClient, agonesClient, kubeInformerFactory, agonesInformerFactory, controllerHooks.SyncPodPortsToGameServer),
 		missingPodController:   NewMissingPodController(health, kubeClient, agonesClient, kubeInformerFactory, agonesInformerFactory),
+		succeededController:    NewSucceededController(health, kubeClient, agonesClient, kubeInformerFactory, agonesInformerFactory),
 	}
 
 	c.baseLogger = runtime.NewLoggerWithType(c)
@@ -415,6 +417,15 @@ func (c *Controller) Run(ctx context.Context, workers int) error {
 			c.baseLogger.WithError(err).Error("error running missing pod controller")
 		}
 	}()
+
+	// Run the Succeeded Controller
+	if runtime.FeatureEnabled(runtime.FeatureSidecarContainers) {
+		go func() {
+			if err := c.succeededController.Run(ctx, workers); err != nil {
+				c.baseLogger.WithError(err).Error("error running succeeded controller")
+			}
+		}()
+	}
 
 	// start work queues
 	var wg sync.WaitGroup
