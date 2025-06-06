@@ -29,7 +29,7 @@ type FakeAutoscalingV1 struct {
 }
 
 func (c *FakeAutoscalingV1) FleetAutoscalers(namespace string) v1.FleetAutoscalerInterface {
-	return &FakeFleetAutoscalers{c, namespace}
+	return newFakeFleetAutoscalers(c, namespace)
 }
 
 // RESTClient returns a RESTClient that is used to communicate

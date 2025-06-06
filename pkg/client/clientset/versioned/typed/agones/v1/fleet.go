@@ -19,10 +19,10 @@
 package v1
 
 import (
-	"context"
+	context "context"
 
-	v1 "agones.dev/agones/pkg/apis/agones/v1"
-	agonesv1 "agones.dev/agones/pkg/client/applyconfiguration/agones/v1"
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
+	applyconfigurationagonesv1 "agones.dev/agones/pkg/client/applyconfiguration/agones/v1"
 	scheme "agones.dev/agones/pkg/client/clientset/versioned/scheme"
 	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -39,19 +39,19 @@ type FleetsGetter interface {
 
 // FleetInterface has methods to work with Fleet resources.
 type FleetInterface interface {
-	Create(ctx context.Context, fleet *v1.Fleet, opts metav1.CreateOptions) (*v1.Fleet, error)
-	Update(ctx context.Context, fleet *v1.Fleet, opts metav1.UpdateOptions) (*v1.Fleet, error)
+	Create(ctx context.Context, fleet *agonesv1.Fleet, opts metav1.CreateOptions) (*agonesv1.Fleet, error)
+	Update(ctx context.Context, fleet *agonesv1.Fleet, opts metav1.UpdateOptions) (*agonesv1.Fleet, error)
 	// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-	UpdateStatus(ctx context.Context, fleet *v1.Fleet, opts metav1.UpdateOptions) (*v1.Fleet, error)
+	UpdateStatus(ctx context.Context, fleet *agonesv1.Fleet, opts metav1.UpdateOptions) (*agonesv1.Fleet, error)
 	Delete(ctx context.Context, name string, opts metav1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts metav1.DeleteOptions, listOpts metav1.ListOptions) error
-	Get(ctx context.Context, name string, opts metav1.GetOptions) (*v1.Fleet, error)
-	List(ctx context.Context, opts metav1.ListOptions) (*v1.FleetList, error)
+	Get(ctx context.Context, name string, opts metav1.GetOptions) (*agonesv1.Fleet, error)
+	List(ctx context.Context, opts metav1.ListOptions) (*agonesv1.FleetList, error)
 	Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error)
-	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *v1.Fleet, err error)
-	Apply(ctx context.Context, fleet *agonesv1.FleetApplyConfiguration, opts metav1.ApplyOptions) (result *v1.Fleet, err error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *agonesv1.Fleet, err error)
+	Apply(ctx context.Context, fleet *applyconfigurationagonesv1.FleetApplyConfiguration, opts metav1.ApplyOptions) (result *agonesv1.Fleet, err error)
 	// Add a +genclient:noStatus comment above the type to avoid generating ApplyStatus().
-	ApplyStatus(ctx context.Context, fleet *agonesv1.FleetApplyConfiguration, opts metav1.ApplyOptions) (result *v1.Fleet, err error)
+	ApplyStatus(ctx context.Context, fleet *applyconfigurationagonesv1.FleetApplyConfiguration, opts metav1.ApplyOptions) (result *agonesv1.Fleet, err error)
 	GetScale(ctx context.Context, fleetName string, options metav1.GetOptions) (*autoscalingv1.Scale, error)
 	UpdateScale(ctx context.Context, fleetName string, scale *autoscalingv1.Scale, opts metav1.UpdateOptions) (*autoscalingv1.Scale, error)
 
@@ -60,19 +60,20 @@ type FleetInterface interface {
 
 // fleets implements FleetInterface
 type fleets struct {
-	*gentype.ClientWithListAndApply[*v1.Fleet, *v1.FleetList, *agonesv1.FleetApplyConfiguration]
+	*gentype.ClientWithListAndApply[*agonesv1.Fleet, *agonesv1.FleetList, *applyconfigurationagonesv1.FleetApplyConfiguration]
 }
 
 // newFleets returns a Fleets
 func newFleets(c *AgonesV1Client, namespace string) *fleets {
 	return &fleets{
-		gentype.NewClientWithListAndApply[*v1.Fleet, *v1.FleetList, *agonesv1.FleetApplyConfiguration](
+		gentype.NewClientWithListAndApply[*agonesv1.Fleet, *agonesv1.FleetList, *applyconfigurationagonesv1.FleetApplyConfiguration](
 			"fleets",
 			c.RESTClient(),
 			scheme.ParameterCodec,
 			namespace,
-			func() *v1.Fleet { return &v1.Fleet{} },
-			func() *v1.FleetList { return &v1.FleetList{} }),
+			func() *agonesv1.Fleet { return &agonesv1.Fleet{} },
+			func() *agonesv1.FleetList { return &agonesv1.FleetList{} },
+		),
 	}
 }
 

@@ -19,14 +19,14 @@
 package v1
 
 import (
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // BetweenApplyConfiguration represents a declarative configuration of the Between type for use
 // with apply.
 type BetweenApplyConfiguration struct {
-	Start *v1.Time `json:"start,omitempty"`
-	End   *v1.Time `json:"end,omitempty"`
+	Start *metav1.Time `json:"start,omitempty"`
+	End   *metav1.Time `json:"end,omitempty"`
 }
 
 // BetweenApplyConfiguration constructs a declarative configuration of the Between type for use with
@@ -38,7 +38,7 @@ func Between() *BetweenApplyConfiguration {
 // WithStart sets the Start field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Start field is set to the value of the last call.
-func (b *BetweenApplyConfiguration) WithStart(value v1.Time) *BetweenApplyConfiguration {
+func (b *BetweenApplyConfiguration) WithStart(value metav1.Time) *BetweenApplyConfiguration {
 	b.Start = &value
 	return b
 }
@@ -46,7 +46,7 @@ func (b *BetweenApplyConfiguration) WithStart(value v1.Time) *BetweenApplyConfig
 // WithEnd sets the End field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the End field is set to the value of the last call.
-func (b *BetweenApplyConfiguration) WithEnd(value v1.Time) *BetweenApplyConfiguration {
+func (b *BetweenApplyConfiguration) WithEnd(value metav1.Time) *BetweenApplyConfiguration {
 	b.End = &value
 	return b
 }

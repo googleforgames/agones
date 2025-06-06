@@ -19,13 +19,13 @@
 package v1
 
 import (
-	"context"
+	context "context"
 	time "time"
 
-	autoscalingv1 "agones.dev/agones/pkg/apis/autoscaling/v1"
+	apisautoscalingv1 "agones.dev/agones/pkg/apis/autoscaling/v1"
 	versioned "agones.dev/agones/pkg/client/clientset/versioned"
 	internalinterfaces "agones.dev/agones/pkg/client/informers/externalversions/internalinterfaces"
-	v1 "agones.dev/agones/pkg/client/listers/autoscaling/v1"
+	autoscalingv1 "agones.dev/agones/pkg/client/listers/autoscaling/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
@@ -36,7 +36,7 @@ import (
 // FleetAutoscalers.
 type FleetAutoscalerInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1.FleetAutoscalerLister
+	Lister() autoscalingv1.FleetAutoscalerLister
 }
 
 type fleetAutoscalerInformer struct {
@@ -71,7 +71,7 @@ func NewFilteredFleetAutoscalerInformer(client versioned.Interface, namespace st
 				return client.AutoscalingV1().FleetAutoscalers(namespace).Watch(context.TODO(), options)
 			},
 		},
-		&autoscalingv1.FleetAutoscaler{},
+		&apisautoscalingv1.FleetAutoscaler{},
 		resyncPeriod,
 		indexers,
 	)
@@ -82,9 +82,9 @@ func (f *fleetAutoscalerInformer) defaultInformer(client versioned.Interface, re
 }
 
 func (f *fleetAutoscalerInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&autoscalingv1.FleetAutoscaler{}, f.defaultInformer)
+	return f.factory.InformerFor(&apisautoscalingv1.FleetAutoscaler{}, f.defaultInformer)
 }
 
-func (f *fleetAutoscalerInformer) Lister() v1.FleetAutoscalerLister {
-	return v1.NewFleetAutoscalerLister(f.Informer().GetIndexer())
+func (f *fleetAutoscalerInformer) Lister() autoscalingv1.FleetAutoscalerLister {
+	return autoscalingv1.NewFleetAutoscalerLister(f.Informer().GetIndexer())
 }

@@ -29,7 +29,7 @@ type FakeMulticlusterV1 struct {
 }
 
 func (c *FakeMulticlusterV1) GameServerAllocationPolicies(namespace string) v1.GameServerAllocationPolicyInterface {
-	return &FakeGameServerAllocationPolicies{c, namespace}
+	return newFakeGameServerAllocationPolicies(c, namespace)
 }
 
 // RESTClient returns a RESTClient that is used to communicate

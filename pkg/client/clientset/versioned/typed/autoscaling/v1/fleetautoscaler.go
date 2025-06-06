@@ -19,10 +19,10 @@
 package v1
 
 import (
-	"context"
+	context "context"
 
-	v1 "agones.dev/agones/pkg/apis/autoscaling/v1"
-	autoscalingv1 "agones.dev/agones/pkg/client/applyconfiguration/autoscaling/v1"
+	autoscalingv1 "agones.dev/agones/pkg/apis/autoscaling/v1"
+	applyconfigurationautoscalingv1 "agones.dev/agones/pkg/client/applyconfiguration/autoscaling/v1"
 	scheme "agones.dev/agones/pkg/client/clientset/versioned/scheme"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
@@ -38,36 +38,37 @@ type FleetAutoscalersGetter interface {
 
 // FleetAutoscalerInterface has methods to work with FleetAutoscaler resources.
 type FleetAutoscalerInterface interface {
-	Create(ctx context.Context, fleetAutoscaler *v1.FleetAutoscaler, opts metav1.CreateOptions) (*v1.FleetAutoscaler, error)
-	Update(ctx context.Context, fleetAutoscaler *v1.FleetAutoscaler, opts metav1.UpdateOptions) (*v1.FleetAutoscaler, error)
+	Create(ctx context.Context, fleetAutoscaler *autoscalingv1.FleetAutoscaler, opts metav1.CreateOptions) (*autoscalingv1.FleetAutoscaler, error)
+	Update(ctx context.Context, fleetAutoscaler *autoscalingv1.FleetAutoscaler, opts metav1.UpdateOptions) (*autoscalingv1.FleetAutoscaler, error)
 	// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-	UpdateStatus(ctx context.Context, fleetAutoscaler *v1.FleetAutoscaler, opts metav1.UpdateOptions) (*v1.FleetAutoscaler, error)
+	UpdateStatus(ctx context.Context, fleetAutoscaler *autoscalingv1.FleetAutoscaler, opts metav1.UpdateOptions) (*autoscalingv1.FleetAutoscaler, error)
 	Delete(ctx context.Context, name string, opts metav1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts metav1.DeleteOptions, listOpts metav1.ListOptions) error
-	Get(ctx context.Context, name string, opts metav1.GetOptions) (*v1.FleetAutoscaler, error)
-	List(ctx context.Context, opts metav1.ListOptions) (*v1.FleetAutoscalerList, error)
+	Get(ctx context.Context, name string, opts metav1.GetOptions) (*autoscalingv1.FleetAutoscaler, error)
+	List(ctx context.Context, opts metav1.ListOptions) (*autoscalingv1.FleetAutoscalerList, error)
 	Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error)
-	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *v1.FleetAutoscaler, err error)
-	Apply(ctx context.Context, fleetAutoscaler *autoscalingv1.FleetAutoscalerApplyConfiguration, opts metav1.ApplyOptions) (result *v1.FleetAutoscaler, err error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *autoscalingv1.FleetAutoscaler, err error)
+	Apply(ctx context.Context, fleetAutoscaler *applyconfigurationautoscalingv1.FleetAutoscalerApplyConfiguration, opts metav1.ApplyOptions) (result *autoscalingv1.FleetAutoscaler, err error)
 	// Add a +genclient:noStatus comment above the type to avoid generating ApplyStatus().
-	ApplyStatus(ctx context.Context, fleetAutoscaler *autoscalingv1.FleetAutoscalerApplyConfiguration, opts metav1.ApplyOptions) (result *v1.FleetAutoscaler, err error)
+	ApplyStatus(ctx context.Context, fleetAutoscaler *applyconfigurationautoscalingv1.FleetAutoscalerApplyConfiguration, opts metav1.ApplyOptions) (result *autoscalingv1.FleetAutoscaler, err error)
 	FleetAutoscalerExpansion
 }
 
 // fleetAutoscalers implements FleetAutoscalerInterface
 type fleetAutoscalers struct {
-	*gentype.ClientWithListAndApply[*v1.FleetAutoscaler, *v1.FleetAutoscalerList, *autoscalingv1.FleetAutoscalerApplyConfiguration]
+	*gentype.ClientWithListAndApply[*autoscalingv1.FleetAutoscaler, *autoscalingv1.FleetAutoscalerList, *applyconfigurationautoscalingv1.FleetAutoscalerApplyConfiguration]
 }
 
 // newFleetAutoscalers returns a FleetAutoscalers
 func newFleetAutoscalers(c *AutoscalingV1Client, namespace string) *fleetAutoscalers {
 	return &fleetAutoscalers{
-		gentype.NewClientWithListAndApply[*v1.FleetAutoscaler, *v1.FleetAutoscalerList, *autoscalingv1.FleetAutoscalerApplyConfiguration](
+		gentype.NewClientWithListAndApply[*autoscalingv1.FleetAutoscaler, *autoscalingv1.FleetAutoscalerList, *applyconfigurationautoscalingv1.FleetAutoscalerApplyConfiguration](
 			"fleetautoscalers",
 			c.RESTClient(),
 			scheme.ParameterCodec,
 			namespace,
-			func() *v1.FleetAutoscaler { return &v1.FleetAutoscaler{} },
-			func() *v1.FleetAutoscalerList { return &v1.FleetAutoscalerList{} }),
+			func() *autoscalingv1.FleetAutoscaler { return &autoscalingv1.FleetAutoscaler{} },
+			func() *autoscalingv1.FleetAutoscalerList { return &autoscalingv1.FleetAutoscalerList{} },
+		),
 	}
 }
