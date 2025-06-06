@@ -23,6 +23,7 @@ import (
 	"os/exec"
 	"sort"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -443,8 +444,7 @@ func TestGameServerRestartBeforeReadyCrash(t *testing.T) {
 func TestGameServerUnhealthyAfterReadyCrash(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
-
-	l := logrus.WithField("test", "TestGameServerUnhealthyAfterReadyCrash")
+	log := e2eframework.TestLogger(t)
 
 	gs := framework.DefaultGameServer(framework.Namespace)
 	readyGs, err := framework.CreateGameServerAndWaitUntilReady(t, framework.Namespace, gs)
@@ -452,7 +452,7 @@ func TestGameServerUnhealthyAfterReadyCrash(t *testing.T) {
 		t.Fatalf("Could not get a GameServer ready: %v", err)
 	}
 
-	l.WithField("gs", readyGs.ObjectMeta.Name).Info("GameServer created")
+	log.WithField("gs", readyGs.ObjectMeta.Name).Info("GameServer created")
 
 	gsClient := framework.AgonesClient.AgonesV1().GameServers(framework.Namespace)
 	defer gsClient.Delete(ctx, readyGs.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint: errcheck
@@ -468,7 +468,7 @@ func TestGameServerUnhealthyAfterReadyCrash(t *testing.T) {
 	go func() {
 		for {
 			if atomic.LoadInt32(&stop) > 0 {
-				l.Info("UDP Crash stop signal received. Stopping.")
+				log.Info("UDP Crash stop signal received. Stopping.")
 				return
 			}
 			var writeErr error
@@ -479,15 +479,72 @@ func TestGameServerUnhealthyAfterReadyCrash(t *testing.T) {
 				_, writeErr = conn.Write([]byte("CRASH"))
 			}()
 			if writeErr != nil {
-				l.WithError(err).Warn("error sending udp packet. Stopping.")
+				log.WithError(err).Warn("error sending udp packet. Stopping.")
 				return
 			}
-			l.WithField("address", address).Info("sent UDP packet")
+			log.WithField("address", address).Info("sent UDP packet")
 			time.Sleep(5 * time.Second)
 		}
 	}()
 	_, err = framework.WaitForGameServerState(t, readyGs, agonesv1.GameServerStateUnhealthy, 3*time.Minute)
 	assert.NoError(t, err)
+}
+
+func TestGameServerPodCompletedAfterCleanExit(t *testing.T) {
+	t.Parallel()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	log := e2eframework.TestLogger(t)
+
+	gs := framework.DefaultGameServer(framework.Namespace)
+	readyGs, err := framework.CreateGameServerAndWaitUntilReady(t, framework.Namespace, gs)
+	if err != nil {
+		t.Fatalf("Could not get a GameServer ready: %v", err)
+	}
+
+	address := fmt.Sprintf("%s:%d", readyGs.Status.Address, readyGs.Status.Ports[0].Port)
+	conn, err := net.Dial("udp", address)
+	mtx := &sync.Mutex{}
+	require.NoError(t, err)
+	defer func() {
+		mtx.Lock()
+		defer mtx.Unlock()
+		if conn != nil {
+			err = conn.Close()
+			if err != nil {
+				log.WithError(err).Warn("error closing udp connection")
+			}
+		}
+	}()
+
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				mtx.Lock()
+				log.Info("Sending CRASH 0")
+				_, err := conn.Write([]byte("CRASH 0"))
+				mtx.Unlock()
+				if err != nil {
+					log.WithError(err).Warn("error sending udp packet. Stopping.")
+					return
+				}
+			}
+			time.Sleep(5 * time.Second)
+		}
+	}()
+
+	err = wait.PollUntilContextTimeout(ctx, 3*time.Second, 3*time.Minute, true, func(ctx context.Context) (bool, error) {
+		gs, err = framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Get(ctx, readyGs.ObjectMeta.Name, metav1.GetOptions{})
+		log.WithField("gs", readyGs.ObjectMeta.Name).WithField("state", gs.Status.State).WithError(err).Info("checking if GameServer exists")
+		if k8serrors.IsNotFound(err) {
+			return true, nil
+		}
+		return false, err
+	})
+	require.NoError(t, err)
 }
 
 func TestDevelopmentGameServerLifecycle(t *testing.T) {
