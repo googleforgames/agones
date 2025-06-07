@@ -67,6 +67,7 @@ const (
 	httpPortFlag            = "http-port"
 	healthPortFlag          = "health-port"
 	logLevelFlag            = "log-level"
+	requestRateLimitFlag    = "request-rate-limit"
 )
 
 var (
@@ -149,7 +150,7 @@ func main() {
 
 		var s *sdkserver.SDKServer
 		s, err = sdkserver.NewSDKServer(ctlConf.GameServerName, ctlConf.PodNamespace,
-			kubeClient, agonesClient, logLevel, ctlConf.HealthPort)
+			kubeClient, agonesClient, logLevel, ctlConf.HealthPort, ctlConf.RequestsRateLimit)
 		if err != nil {
 			logger.WithError(err).Fatalf("Could not start sidecar")
 		}
@@ -294,6 +295,7 @@ func parseEnvFlags() config {
 	viper.SetDefault(httpPortFlag, defaultHTTPPort)
 	viper.SetDefault(healthPortFlag, defaultHealthPort)
 	viper.SetDefault(logLevelFlag, "Info")
+	viper.SetDefault(requestRateLimitFlag, "500ms")
 	pflag.String(gameServerNameFlag, viper.GetString(gameServerNameFlag),
 		"Optional flag to set GameServer name. Overrides value given from `GAMESERVER_NAME` environment variable.")
 	pflag.String(podNamespaceFlag, viper.GetString(gameServerNameFlag),
@@ -313,6 +315,7 @@ func parseEnvFlags() config {
 		"Optional. kubeconfig to run the SDK server out of the cluster.")
 	pflag.Bool(gracefulTerminationFlag, viper.GetBool(gracefulTerminationFlag),
 		"When false, immediately quits when receiving interrupt instead of waiting for GameServer state to progress to \"Shutdown\".")
+	pflag.String(requestRateLimitFlag, viper.GetString(requestRateLimitFlag), "Time to delay between requests to the API server. Defaults to 500ms.")
 	runtime.FeaturesBindFlags()
 	pflag.Parse()
 
@@ -332,6 +335,7 @@ func parseEnvFlags() config {
 	runtime.Must(viper.BindEnv(healthPortFlag))
 	runtime.Must(viper.BindPFlags(pflag.CommandLine))
 	runtime.Must(viper.BindEnv(logLevelFlag))
+	runtime.Must(viper.BindEnv(requestRateLimitFlag))
 	runtime.Must(runtime.FeaturesBindEnv())
 	runtime.Must(runtime.ParseFeaturesFromEnv())
 
@@ -351,6 +355,7 @@ func parseEnvFlags() config {
 		HTTPPort:            viper.GetInt(httpPortFlag),
 		HealthPort:          viper.GetInt(healthPortFlag),
 		LogLevel:            viper.GetString(logLevelFlag),
+		RequestsRateLimit:   viper.GetDuration(requestRateLimitFlag),
 	}
 }
 
@@ -371,6 +376,7 @@ type config struct {
 	HTTPPort            int
 	HealthPort          int
 	LogLevel            string
+	RequestsRateLimit   time.Duration
 }
 
 // healthCheckWrapper ensures that an http 400 response is returned
