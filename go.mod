@@ -41,13 +41,13 @@ require (
 	google.golang.org/protobuf v1.36.6
 	gopkg.in/fsnotify.v1 v1.4.7
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
-	k8s.io/api v0.31.6
-	k8s.io/apiextensions-apiserver v0.31.0
-	k8s.io/apimachinery v0.31.6
-	k8s.io/client-go v0.31.0
-	k8s.io/kube-openapi v0.0.0-20240903163716-9e1beecbcb38
-	k8s.io/utils v0.0.0-20240921022957-49e7df575cb6
-	sigs.k8s.io/structured-merge-diff/v4 v4.4.1
+	k8s.io/api v0.32.0
+	k8s.io/apiextensions-apiserver v0.32.0
+	k8s.io/apimachinery v0.32.0
+	k8s.io/client-go v0.32.0
+	k8s.io/kube-openapi v0.0.0-20241105132330-32ad38e42d3f
+	k8s.io/utils v0.0.0-20241104100929-3ea5e8cea738
+	sigs.k8s.io/structured-merge-diff/v4 v4.4.2
 )
 
 require (
@@ -78,7 +78,6 @@ require (
 	github.com/googleapis/enterprise-certificate-proxy v0.3.4 // indirect
 	github.com/googleapis/gax-go/v2 v2.14.1 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
-	github.com/imdario/mergo v0.3.6 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
@@ -121,6 +120,6 @@ require (
 	k8s.io/gengo v0.0.0-20250207200755-1244d31929d7 // indirect
 	k8s.io/klog v1.0.0 // indirect
 	k8s.io/klog/v2 v2.130.1 // indirect
-	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
+	sigs.k8s.io/json v0.0.0-20241010143419-9aa6b5e7a4b3 // indirect
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )

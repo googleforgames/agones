@@ -127,6 +127,7 @@ func request_SDK_GetPlayerCapacity_0(ctx context.Context, marshaler runtime.Mars
 		protoReq Empty
 		metadata runtime.ServerMetadata
 	)
+	io.Copy(io.Discard, req.Body)
 	msg, err := client.GetPlayerCapacity(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 }
@@ -145,6 +146,7 @@ func request_SDK_GetPlayerCount_0(ctx context.Context, marshaler runtime.Marshal
 		protoReq Empty
 		metadata runtime.ServerMetadata
 	)
+	io.Copy(io.Discard, req.Body)
 	msg, err := client.GetPlayerCount(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 }
@@ -164,6 +166,7 @@ func request_SDK_IsPlayerConnected_0(ctx context.Context, marshaler runtime.Mars
 		metadata runtime.ServerMetadata
 		err      error
 	)
+	io.Copy(io.Discard, req.Body)
 	val, ok := pathParams["playerID"]
 	if !ok {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "playerID")
@@ -199,6 +202,7 @@ func request_SDK_GetConnectedPlayers_0(ctx context.Context, marshaler runtime.Ma
 		protoReq Empty
 		metadata runtime.ServerMetadata
 	)
+	io.Copy(io.Discard, req.Body)
 	msg, err := client.GetConnectedPlayers(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 }

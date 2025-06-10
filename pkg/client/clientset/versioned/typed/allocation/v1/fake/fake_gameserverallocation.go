@@ -19,31 +19,26 @@
 package fake
 
 import (
-	"context"
-
 	v1 "agones.dev/agones/pkg/apis/allocation/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	testing "k8s.io/client-go/testing"
+	allocationv1 "agones.dev/agones/pkg/client/clientset/versioned/typed/allocation/v1"
+	gentype "k8s.io/client-go/gentype"
 )
 
-// FakeGameServerAllocations implements GameServerAllocationInterface
-type FakeGameServerAllocations struct {
+// fakeGameServerAllocations implements GameServerAllocationInterface
+type fakeGameServerAllocations struct {
+	*gentype.FakeClient[*v1.GameServerAllocation]
 	Fake *FakeAllocationV1
-	ns   string
 }
 
-var gameserverallocationsResource = v1.SchemeGroupVersion.WithResource("gameserverallocations")
-
-var gameserverallocationsKind = v1.SchemeGroupVersion.WithKind("GameServerAllocation")
-
-// Create takes the representation of a gameServerAllocation and creates it.  Returns the server's representation of the gameServerAllocation, and an error, if there is any.
-func (c *FakeGameServerAllocations) Create(ctx context.Context, gameServerAllocation *v1.GameServerAllocation, opts metav1.CreateOptions) (result *v1.GameServerAllocation, err error) {
-	emptyResult := &v1.GameServerAllocation{}
-	obj, err := c.Fake.
-		Invokes(testing.NewCreateActionWithOptions(gameserverallocationsResource, c.ns, gameServerAllocation, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
+func newFakeGameServerAllocations(fake *FakeAllocationV1, namespace string) allocationv1.GameServerAllocationInterface {
+	return &fakeGameServerAllocations{
+		gentype.NewFakeClient[*v1.GameServerAllocation](
+			fake.Fake,
+			namespace,
+			v1.SchemeGroupVersion.WithResource("gameserverallocations"),
+			v1.SchemeGroupVersion.WithKind("GameServerAllocation"),
+			func() *v1.GameServerAllocation { return &v1.GameServerAllocation{} },
+		),
+		fake,
 	}
-	return obj.(*v1.GameServerAllocation), err
 }

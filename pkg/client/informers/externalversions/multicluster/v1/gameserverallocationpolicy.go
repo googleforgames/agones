@@ -19,13 +19,13 @@
 package v1
 
 import (
-	"context"
+	context "context"
 	time "time"
 
-	multiclusterv1 "agones.dev/agones/pkg/apis/multicluster/v1"
+	apismulticlusterv1 "agones.dev/agones/pkg/apis/multicluster/v1"
 	versioned "agones.dev/agones/pkg/client/clientset/versioned"
 	internalinterfaces "agones.dev/agones/pkg/client/informers/externalversions/internalinterfaces"
-	v1 "agones.dev/agones/pkg/client/listers/multicluster/v1"
+	multiclusterv1 "agones.dev/agones/pkg/client/listers/multicluster/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
@@ -36,7 +36,7 @@ import (
 // GameServerAllocationPolicies.
 type GameServerAllocationPolicyInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1.GameServerAllocationPolicyLister
+	Lister() multiclusterv1.GameServerAllocationPolicyLister
 }
 
 type gameServerAllocationPolicyInformer struct {
@@ -71,7 +71,7 @@ func NewFilteredGameServerAllocationPolicyInformer(client versioned.Interface, n
 				return client.MulticlusterV1().GameServerAllocationPolicies(namespace).Watch(context.TODO(), options)
 			},
 		},
-		&multiclusterv1.GameServerAllocationPolicy{},
+		&apismulticlusterv1.GameServerAllocationPolicy{},
 		resyncPeriod,
 		indexers,
 	)
@@ -82,9 +82,9 @@ func (f *gameServerAllocationPolicyInformer) defaultInformer(client versioned.In
 }
 
 func (f *gameServerAllocationPolicyInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&multiclusterv1.GameServerAllocationPolicy{}, f.defaultInformer)
+	return f.factory.InformerFor(&apismulticlusterv1.GameServerAllocationPolicy{}, f.defaultInformer)
 }
 
-func (f *gameServerAllocationPolicyInformer) Lister() v1.GameServerAllocationPolicyLister {
-	return v1.NewGameServerAllocationPolicyLister(f.Informer().GetIndexer())
+func (f *gameServerAllocationPolicyInformer) Lister() multiclusterv1.GameServerAllocationPolicyLister {
+	return multiclusterv1.NewGameServerAllocationPolicyLister(f.Informer().GetIndexer())
 }

@@ -47,7 +47,7 @@ func (b *ChainEntryApplyConfiguration) WithID(value string) *ChainEntryApplyConf
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Type field is set to the value of the last call.
 func (b *ChainEntryApplyConfiguration) WithType(value autoscalingv1.FleetAutoscalerPolicyType) *ChainEntryApplyConfiguration {
-	b.Type = &value
+	b.FleetAutoscalerPolicyApplyConfiguration.Type = &value
 	return b
 }
 
@@ -55,7 +55,7 @@ func (b *ChainEntryApplyConfiguration) WithType(value autoscalingv1.FleetAutosca
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Buffer field is set to the value of the last call.
 func (b *ChainEntryApplyConfiguration) WithBuffer(value *BufferPolicyApplyConfiguration) *ChainEntryApplyConfiguration {
-	b.Buffer = value
+	b.FleetAutoscalerPolicyApplyConfiguration.Buffer = value
 	return b
 }
 
@@ -63,7 +63,7 @@ func (b *ChainEntryApplyConfiguration) WithBuffer(value *BufferPolicyApplyConfig
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Webhook field is set to the value of the last call.
 func (b *ChainEntryApplyConfiguration) WithWebhook(value *WebhookPolicyApplyConfiguration) *ChainEntryApplyConfiguration {
-	b.Webhook = value
+	b.FleetAutoscalerPolicyApplyConfiguration.Webhook = value
 	return b
 }
 
@@ -71,7 +71,7 @@ func (b *ChainEntryApplyConfiguration) WithWebhook(value *WebhookPolicyApplyConf
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Counter field is set to the value of the last call.
 func (b *ChainEntryApplyConfiguration) WithCounter(value *CounterPolicyApplyConfiguration) *ChainEntryApplyConfiguration {
-	b.Counter = value
+	b.FleetAutoscalerPolicyApplyConfiguration.Counter = value
 	return b
 }
 
@@ -79,7 +79,7 @@ func (b *ChainEntryApplyConfiguration) WithCounter(value *CounterPolicyApplyConf
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the List field is set to the value of the last call.
 func (b *ChainEntryApplyConfiguration) WithList(value *ListPolicyApplyConfiguration) *ChainEntryApplyConfiguration {
-	b.List = value
+	b.FleetAutoscalerPolicyApplyConfiguration.List = value
 	return b
 }
 
@@ -87,7 +87,7 @@ func (b *ChainEntryApplyConfiguration) WithList(value *ListPolicyApplyConfigurat
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Schedule field is set to the value of the last call.
 func (b *ChainEntryApplyConfiguration) WithSchedule(value *SchedulePolicyApplyConfiguration) *ChainEntryApplyConfiguration {
-	b.Schedule = value
+	b.FleetAutoscalerPolicyApplyConfiguration.Schedule = value
 	return b
 }
 
@@ -95,6 +95,6 @@ func (b *ChainEntryApplyConfiguration) WithSchedule(value *SchedulePolicyApplyCo
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Chain field is set to the value of the last call.
 func (b *ChainEntryApplyConfiguration) WithChain(value autoscalingv1.ChainPolicy) *ChainEntryApplyConfiguration {
-	b.Chain = &value
+	b.FleetAutoscalerPolicyApplyConfiguration.Chain = &value
 	return b
 }

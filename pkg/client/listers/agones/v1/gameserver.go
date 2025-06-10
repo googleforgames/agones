@@ -19,10 +19,10 @@
 package v1
 
 import (
-	v1 "agones.dev/agones/pkg/apis/agones/v1"
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/client-go/listers"
-	"k8s.io/client-go/tools/cache"
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
+	labels "k8s.io/apimachinery/pkg/labels"
+	listers "k8s.io/client-go/listers"
+	cache "k8s.io/client-go/tools/cache"
 )
 
 // GameServerLister helps list GameServers.
@@ -30,7 +30,7 @@ import (
 type GameServerLister interface {
 	// List lists all GameServers in the indexer.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1.GameServer, err error)
+	List(selector labels.Selector) (ret []*agonesv1.GameServer, err error)
 	// GameServers returns an object that can list and get GameServers.
 	GameServers(namespace string) GameServerNamespaceLister
 	GameServerListerExpansion
@@ -38,17 +38,17 @@ type GameServerLister interface {
 
 // gameServerLister implements the GameServerLister interface.
 type gameServerLister struct {
-	listers.ResourceIndexer[*v1.GameServer]
+	listers.ResourceIndexer[*agonesv1.GameServer]
 }
 
 // NewGameServerLister returns a new GameServerLister.
 func NewGameServerLister(indexer cache.Indexer) GameServerLister {
-	return &gameServerLister{listers.New[*v1.GameServer](indexer, v1.Resource("gameserver"))}
+	return &gameServerLister{listers.New[*agonesv1.GameServer](indexer, agonesv1.Resource("gameserver"))}
 }
 
 // GameServers returns an object that can list and get GameServers.
 func (s *gameServerLister) GameServers(namespace string) GameServerNamespaceLister {
-	return gameServerNamespaceLister{listers.NewNamespaced[*v1.GameServer](s.ResourceIndexer, namespace)}
+	return gameServerNamespaceLister{listers.NewNamespaced[*agonesv1.GameServer](s.ResourceIndexer, namespace)}
 }
 
 // GameServerNamespaceLister helps list and get GameServers.
@@ -56,15 +56,15 @@ func (s *gameServerLister) GameServers(namespace string) GameServerNamespaceList
 type GameServerNamespaceLister interface {
 	// List lists all GameServers in the indexer for a given namespace.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1.GameServer, err error)
+	List(selector labels.Selector) (ret []*agonesv1.GameServer, err error)
 	// Get retrieves the GameServer from the indexer for a given namespace and name.
 	// Objects returned here must be treated as read-only.
-	Get(name string) (*v1.GameServer, error)
+	Get(name string) (*agonesv1.GameServer, error)
 	GameServerNamespaceListerExpansion
 }
 
 // gameServerNamespaceLister implements the GameServerNamespaceLister
 // interface.
 type gameServerNamespaceLister struct {
-	listers.ResourceIndexer[*v1.GameServer]
+	listers.ResourceIndexer[*agonesv1.GameServer]
 }

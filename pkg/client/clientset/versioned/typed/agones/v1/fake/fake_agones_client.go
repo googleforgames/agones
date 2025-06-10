@@ -29,15 +29,15 @@ type FakeAgonesV1 struct {
 }
 
 func (c *FakeAgonesV1) Fleets(namespace string) v1.FleetInterface {
-	return &FakeFleets{c, namespace}
+	return newFakeFleets(c, namespace)
 }
 
 func (c *FakeAgonesV1) GameServers(namespace string) v1.GameServerInterface {
-	return &FakeGameServers{c, namespace}
+	return newFakeGameServers(c, namespace)
 }
 
 func (c *FakeAgonesV1) GameServerSets(namespace string) v1.GameServerSetInterface {
-	return &FakeGameServerSets{c, namespace}
+	return newFakeGameServerSets(c, namespace)
 }
 
 // RESTClient returns a RESTClient that is used to communicate
