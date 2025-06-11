@@ -101,7 +101,7 @@ CMake option `-Wno-dev` is specified to suppress [CMP0048](https://cmake.org/cma
 
 ### Using SDK
 In CMake-based projects it's enough to specify a folder where SDK is installed with `CMAKE_PREFIX_PATH` and use `find_package(agones CONFIG REQUIRED)` command. For example: {{< ghlink href="examples/cpp-simple" >}}cpp-simple{{< / >}}.
-It may be useful to disable some [protobuf warnings](https://github.com/protocolbuffers/protobuf/blob/master/cmake/README.md#notes-on-compiler-warnings) in your project.
+It may be useful to disable some [protobuf warnings](https://github.com/protocolbuffers/protobuf/blob/main/cmake/README.md#notes-on-compiler-warnings) in your project.
 
 
 ## Usage
