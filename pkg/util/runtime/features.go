@@ -54,6 +54,9 @@ const (
 	// FeaturePortRanges is a feature flag to enable/disable specific port ranges.
 	FeaturePortRanges Feature = "PortRanges"
 
+	// FeatureRollingUpdateFix is a feature flag to enable/disable fleet controller fixes.
+	FeatureRollingUpdateFix Feature = "RollingUpdateFix"
+
 	////////////////
 	// Alpha features
 
@@ -66,9 +69,6 @@ const (
 
 	// FeaturePlayerTracking is a feature flag to enable/disable player tracking features.
 	FeaturePlayerTracking Feature = "PlayerTracking"
-
-	// FeatureRollingUpdateFix is a feature flag to enable/disable fleet controller fixes.
-	FeatureRollingUpdateFix Feature = "RollingUpdateFix"
 
 	// FeatureScheduledAutoscaler is a feature flag to enable/disable scheduled fleet autoscaling.
 	FeatureScheduledAutoscaler Feature = "ScheduledAutoscaler"
@@ -150,12 +150,12 @@ var (
 		FeatureGKEAutopilotExtendedDurationPods: true,
 		FeaturePortPolicyNone:                   true,
 		FeaturePortRanges:                       true,
+		FeatureRollingUpdateFix:                 true,
 
 		// Alpha features
 		FeatureFleetAutoscaleRequestMetaData: false,
 		FeaturePlayerAllocationFilter:        false,
 		FeaturePlayerTracking:                false,
-		FeatureRollingUpdateFix:              false,
 		FeatureScheduledAutoscaler:           false,
 		FeatureSidecarContainers:             false,
 
