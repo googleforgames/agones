@@ -13,7 +13,7 @@
 # limitations under the License.
 
 # build
-FROM golang:1.23.8 as builder
+FROM golang:1.24.4 as builder
 WORKDIR /go/src
 COPY . agones.dev/agones
 
