@@ -28,7 +28,7 @@ eksctl create cluster \
 
 {{< alert title="Note" color="info">}}
 EKS does not use the normal Kubernetes networking since it
-is <a href="https://itnext.io/kubernetes-is-hard-why-eks-makes-it-easier-for-network-and-security-architects-ea6d8b2ca965">incompatible with Amazon VPC networking</a>.
+is <a href="https://www.contino.io/insights/kubernetes-is-hard-why-eks-makes-it-easier-for-network-and-security-architects">incompatible with Amazon VPC networking</a>.
 {{< /alert >}}
 
 ## Allowing UDP Traffic
