@@ -54,6 +54,7 @@ type SucceededController struct {
 	recorder         record.EventRecorder
 }
 
+// NewSucceededController creates a new SucceededController and sets up event handlers.
 func NewSucceededController(health healthcheck.Handler,
 	kubeClient kubernetes.Interface,
 	agonesClient versioned.Interface,
@@ -97,6 +98,7 @@ func NewSucceededController(health healthcheck.Handler,
 	return c
 }
 
+// Run starts the SucceededController worker queue after ensuring caches are synced.
 func (c *SucceededController) Run(ctx context.Context, workers int) error {
 	c.baseLogger.Debug("Wait for cache sync")
 	if !cache.WaitForCacheSync(ctx.Done(), c.gameServerSynced, c.podSynced) {
