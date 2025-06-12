@@ -14,7 +14,7 @@ some general best practices. We also have cloud specific pages for:
 
 * [Google Kubernetes Engine (GKE)]({{< relref "gke.md" >}})
 
-If you are interested in submitting best practices for your cloud prodiver / on-prem, [please contribute!]({{< relref "/Contribute" >}})
+If you are interested in submitting best practices for your cloud prodiver / on-prem, [please contribute!]({{< relref "Contribute" >}})
 
 ## Separation of Agones from GameServer nodes
 
