@@ -51,6 +51,7 @@ and copy it into a release issue. Fill in relevant values, found inside {}
   - [ ] Run `make sdk-publish-csharp` to deploy to NuGet. Requires login credentials.
         Will need [NuGet API Key](https://www.nuget.org/account/apikeys) from Agones account.
 - [ ] Run `make post-build-release` to build the artifacts in GCS(These files will be attached in the release notes) and to push the latest images in the release repository and push chart on agones-chart.
+- [ ] Run `make tag-deprecated-images` to tag images from the previous version with a `deprecated-public-image-<version>` label, indicating they are no longer actively maintained.
 - [ ] Run `make shell` and run `gcloud config configurations activate <your development project>` to switch Agones
       development tooling off of the `agones-images` project.
 - [ ] Smoke Test: run `make install-release` to view helm releases, uninstall agones-system namespace, fetch the latest version of Agones, verify the new version, installing agones-system namespace, and list all the pods of agones-system.
@@ -67,8 +68,11 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 - [ ] In `test/sdk/go/Makefile` change `release_version` to `{version}`.
   - [ ] Run `make shell` and run `gcloud config configurations activate agones-images`.
   - [ ] Within the shell `cd` to the `test/sdk/go/` directory and run `make cloud-build`.
-- [ ] In `test/upgrade/Makefile` change `base_version` to `{version}`.
-- [ ] In `test/upgrade/versionMap.yaml` change `ReleaseVersion` to `{version}`.
+- [ ] In `test/upgrade/Makefile` change `base_version` to `{version}+1`.
+- [ ] Update `cloudbuild.yaml` by incrementing the `_BASE_VERSION` to `{version}+1`. 
+- [ ] Verify and update Kubernetes version support and Agones version mappings in `test/upgrade/versionMap.yaml`.
+  - [ ] Update ReleaseVersion to the current release `{version}`.
+  - [ ] Ensure that the Kubernetes versions supported by the release are correctly listed in the k8sToAgonesVersions map, including the new release version `{version}` and the "Dev" label where appropriate.
   - [ ] In `test/upgrade/versionMap.yaml` copy and paste `“Dev”` in `agonesVersionFeatureGates` map.
   - [ ] Change one of the `“Dev”` in `agonesVersionFeatureGates` to `{version}`.
 - [ ] Create PR with these changes, and merge them with approval

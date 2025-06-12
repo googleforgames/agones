@@ -28,7 +28,7 @@ RUN gem install fpm && \
 
 # install go
 WORKDIR /usr/local
-ENV GO_VERSION=1.23.4
+ENV GO_VERSION=1.24.4
 ENV GOPATH /go
 ENV GO111MODULE=on
 RUN wget -q https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz && \
@@ -50,10 +50,10 @@ RUN go install golang.org/x/tools/cmd/goimports@latest && \
     go install golang.org/x/pkgsite/cmd/pkgsite@latest
 
 # the kubernetes version for the file
-ENV KUBERNETES_VER 1.30.4
+ENV KUBERNETES_VER 1.32.5
 
 # overwrite kubectl as we want a specific version
-RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/v${KUBERNETES_VER}/bin/linux/amd64/kubectl && \
+RUN curl -LO https://dl.k8s.io/release/v${KUBERNETES_VER}/bin/linux/amd64/kubectl && \
     chmod go+rx ./kubectl && \
     mv ./kubectl /usr/local/bin/kubectl
 RUN echo "source <(kubectl completion bash)" >> /root/.bashrc
@@ -73,7 +73,7 @@ RUN curl -L  ${HELM_URL} > /tmp/helm.tar.gz \
 RUN echo "source <(helm completion bash)" >> /root/.bashrc
 
 # install golang-ci linter
-RUN go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.61.0
+RUN go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.8
 
 # Install yamllint
 RUN apt-get update && \
@@ -89,7 +89,7 @@ RUN go install gotest.tools/gotestsum@latest
 #     \_/\_/ \___|_.__/|___/_|\__\___|
 #
 
-ENV HUGO_VER 0.118.2
+ENV HUGO_VER 0.146.0
 RUN mkdir /tmp/hugo && \
     wget -q -O /tmp/hugo/hugo.tar.gz https://github.com/gohugoio/hugo/releases/download/v${HUGO_VER}/hugo_extended_${HUGO_VER}_Linux-64bit.tar.gz && \
     tar -zxvf /tmp/hugo/hugo.tar.gz -C /tmp/hugo/ && \
@@ -111,7 +111,7 @@ RUN apt-get update && apt-get install -y nodejs
 
 # install API reference docs generator
 RUN mkdir -p /go/src/github.com/ahmetb && \
-    cd /go/src/github.com/ahmetb && git clone -b v0.2.0 https://github.com/ahmetb/gen-crd-api-reference-docs && \
+    cd /go/src/github.com/ahmetb && git clone -b v0.3.0 https://github.com/ahmetb/gen-crd-api-reference-docs && \
     cd ./gen-crd-api-reference-docs && go build
 
 # html checker

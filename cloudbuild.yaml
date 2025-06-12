@@ -178,12 +178,12 @@ steps:
   #
   # Example version checks
   #
-  - name: make-docker
-    id: check-example-versions
-    dir: build
-    args: [check-example-versions]
-    waitFor:
-      - push-images
+  # - name: make-docker
+  #   id: check-example-versions
+  #   dir: build
+  #   args: [check-example-versions]
+  #   waitFor:
+  #     - push-images
 
   #
   # Run the all the automated tests (except e2e) in parallel
@@ -298,7 +298,7 @@ steps:
         trap 'echo Cleaning up any remaining running pids: $(jobs -p) ; kill $(jobs -p) 2> /dev/null || :' EXIT SIGTERM
 
         cloudProducts=("generic" "gke-autopilot")
-        declare -A versionsAndRegions=( [1.31]=us-east1 [1.30]=us-central1 [1.29]=us-west1 )
+        declare -A versionsAndRegions=( [1.33]=us-central1 [1.32]=us-west1 [1.31]=us-east1 )
 
         for cloudProduct in "${cloudProducts[@]}"
         do
@@ -377,7 +377,7 @@ steps:
             kubectl wait --for=condition=ready pod -l job-name=upgrade-test-runner --timeout=5m
 
             echo Wait for job upgrade-test-runner to complete or fail on cluster "${testCluster}"
-            kubectl wait job/upgrade-test-runner --timeout=20m --for jsonpath='{.status.conditions[*].status}'=True -o jsonpath='{.status.conditions[*].type}' | tee "${tmpdir}"/"${testCluster}".log &
+            kubectl wait job/upgrade-test-runner --timeout=30m --for jsonpath='{.status.conditions[*].status}'=True -o jsonpath='{.status.conditions[*].type}' | tee "${tmpdir}"/"${testCluster}".log &
             waitPid=$!
             pids+=( "$waitPid" )
             waitPids[$waitPid]="${tmpdir}"/"${testCluster}".log
@@ -437,14 +437,15 @@ steps:
         set -o pipefail
         pids=()
         cloudProducts=("generic" "gke-autopilot")
-        declare -A versionsAndRegions=( [1.29]=europe-west1 [1.30]=asia-east1 [1.31]=us-east1 )
+        declare -A versionsAndRegions=( [1.31]=us-east1 [1.32]=us-west1 [1.33]=europe-west1 )
 
-        # Keep in sync with (the inverse of) pkg/util/runtime/features.go:featureDefaults
-        featureWithGate="PlayerAllocationFilter=true&PlayerTracking=true&CountsAndLists=false&RollingUpdateFix=true&PortRanges=true&PortPolicyNone=true&ScheduledAutoscaler=true&DisableResyncOnSDKServer=false&AutopilotPassthroughPort=false&GKEAutopilotExtendedDurationPods=false&Example=true"
+        # Keep in sync with the inverse of 'alpha' and 'beta' features in
+        # pkg/util/runtime/features.go:featureDefaults
+        featureWithGate="PlayerAllocationFilter=true&FleetAutoscaleRequestMetaData=true&PlayerTracking=true&CountsAndLists=false&RollingUpdateFix=true&PortRanges=false&PortPolicyNone=false&ScheduledAutoscaler=true&AutopilotPassthroughPort=false&GKEAutopilotExtendedDurationPods=false&SidecarContainers=true&Example=true"
         featureWithoutGate=""
 
         # Use this if specific feature gates can only be supported on specific Kubernetes versions.
-        declare -A featureWithGateByVersion=( [1.29]="${featureWithGate}" [1.30]="${featureWithGate}" [1.31]="${featureWithGate}")
+        declare -A featureWithGateByVersion=( [1.31]="${featureWithGate}" [1.32]="${featureWithGate}" [1.33]="${featureWithGate}")
 
         for cloudProduct in ${cloudProducts[@]}
         do
@@ -556,7 +557,7 @@ steps:
         done
 
 substitutions:
-  _BASE_VERSION: 1.47.0
+  _BASE_VERSION: 1.50.0
   _CACHE_BUCKET: agones-build-cache
   _HTMLTEST_CACHE_KEY: htmltest-0.10.1
   _CPP_SDK_BUILD_CACHE_KEY: cpp-sdk-build

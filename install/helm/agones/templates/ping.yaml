@@ -158,6 +158,12 @@ metadata:
 spec:
   selector:
     agones.dev/role: ping
+{{- if .Values.agones.ping.http.ipFamilyPolicy }}
+  ipFamilyPolicy: {{ .Values.agones.ping.http.ipFamilyPolicy }}
+{{- end }}
+{{- if .Values.agones.ping.http.ipFamilies }}
+  ipFamilies: {{ toYaml .Values.agones.ping.http.ipFamilies | nindent 4 }}
+{{- end }}
   ports:
     - port: {{ .Values.agones.ping.http.port }}
       name: http
@@ -199,6 +205,12 @@ metadata:
 spec:
   selector:
     agones.dev/role: ping
+{{- if .Values.agones.ping.udp.ipFamilyPolicy }}
+  ipFamilyPolicy: {{ .Values.agones.ping.udp.ipFamilyPolicy }}
+{{- end }}
+{{- if .Values.agones.ping.udp.ipFamilies }}
+  ipFamilies: {{ toYaml .Values.agones.ping.udp.ipFamilies | nindent 4 }}
+{{- end }}
   ports:
     - port: {{ .Values.agones.ping.udp.port }}
       name: udp

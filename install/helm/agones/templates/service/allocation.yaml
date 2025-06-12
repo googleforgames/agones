@@ -33,6 +33,12 @@ metadata:
 spec:
   selector:
     multicluster.agones.dev/role: allocator
+{{- if .Values.agones.allocator.service.ipFamilyPolicy }}
+  ipFamilyPolicy: {{ .Values.agones.allocator.service.ipFamilyPolicy }}
+{{- end }}
+{{- if .Values.agones.allocator.service.ipFamilies }}
+  ipFamilies: {{ toYaml .Values.agones.allocator.service.ipFamilies | nindent 4 }}
+{{- end }}
   ports:
 {{- if .Values.agones.allocator.service.http.enabled }}
     - port: {{ .Values.agones.allocator.service.http.port }}

@@ -37,7 +37,7 @@ spec:
   ports:
     # name is a descriptive name for the port
     - name: default
-      # [Stage:Alpha]
+      # [Stage:Beta]
       # [FeatureFlag:PortRanges]
       # range is the optional port range name from which to select a port when using a 'Dynamic' or 'Passthrough' port policy.
       # Defaults to 'default'.
@@ -48,7 +48,7 @@ spec:
       # port is available. When static is the policy specified, `hostPort` is required to be populated
       # - "Passthrough" dynamically sets the `containerPort` to the same value as the dynamically selected hostPort.
       #      This will mean that users will need to lookup what port has been opened through the server side SDK.
-      # [Stage:Alpha]
+      # [Stage:Beta]
       # [FeatureFlag:PortPolicyNone]
       # - "None" means the `hostPort` is ignored and if defined, the `containerPort` (optional) is used to set the port on the GameServer instance.
       portPolicy: Dynamic
@@ -122,7 +122,7 @@ spec:
     spec:
       containers:
         - name: simple-game-server
-          image: us-docker.pkg.dev/agones-images/examples/simple-game-server:0.36
+          image: us-docker.pkg.dev/agones-images/examples/simple-game-server:0.38
           imagePullPolicy: Always
           # nodeSelector is a label that can be used to tell Kubernetes which host
           # OS to use. For Windows game servers uncomment the nodeSelector

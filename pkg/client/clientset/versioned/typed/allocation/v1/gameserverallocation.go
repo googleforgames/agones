@@ -19,12 +19,12 @@
 package v1
 
 import (
-	"context"
+	context "context"
 
-	v1 "agones.dev/agones/pkg/apis/allocation/v1"
+	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
 	scheme "agones.dev/agones/pkg/client/clientset/versioned/scheme"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	rest "k8s.io/client-go/rest"
+	gentype "k8s.io/client-go/gentype"
 )
 
 // GameServerAllocationsGetter has a method to return a GameServerAllocationInterface.
@@ -35,33 +35,24 @@ type GameServerAllocationsGetter interface {
 
 // GameServerAllocationInterface has methods to work with GameServerAllocation resources.
 type GameServerAllocationInterface interface {
-	Create(ctx context.Context, gameServerAllocation *v1.GameServerAllocation, opts metav1.CreateOptions) (*v1.GameServerAllocation, error)
+	Create(ctx context.Context, gameServerAllocation *allocationv1.GameServerAllocation, opts metav1.CreateOptions) (*allocationv1.GameServerAllocation, error)
 	GameServerAllocationExpansion
 }
 
 // gameServerAllocations implements GameServerAllocationInterface
 type gameServerAllocations struct {
-	client rest.Interface
-	ns     string
+	*gentype.Client[*allocationv1.GameServerAllocation]
 }
 
 // newGameServerAllocations returns a GameServerAllocations
 func newGameServerAllocations(c *AllocationV1Client, namespace string) *gameServerAllocations {
 	return &gameServerAllocations{
-		client: c.RESTClient(),
-		ns:     namespace,
+		gentype.NewClient[*allocationv1.GameServerAllocation](
+			"gameserverallocations",
+			c.RESTClient(),
+			scheme.ParameterCodec,
+			namespace,
+			func() *allocationv1.GameServerAllocation { return &allocationv1.GameServerAllocation{} },
+		),
 	}
-}
-
-// Create takes the representation of a gameServerAllocation and creates it.  Returns the server's representation of the gameServerAllocation, and an error, if there is any.
-func (c *gameServerAllocations) Create(ctx context.Context, gameServerAllocation *v1.GameServerAllocation, opts metav1.CreateOptions) (result *v1.GameServerAllocation, err error) {
-	result = &v1.GameServerAllocation{}
-	err = c.client.Post().
-		Namespace(c.ns).
-		Resource("gameserverallocations").
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Body(gameServerAllocation).
-		Do(ctx).
-		Into(result)
-	return
 }

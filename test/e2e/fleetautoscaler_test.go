@@ -42,12 +42,14 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/apimachinery/pkg/util/uuid"
 	"k8s.io/apimachinery/pkg/util/wait"
 
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
 	autoscalingv1 "agones.dev/agones/pkg/apis/autoscaling/v1"
 	"agones.dev/agones/pkg/util/runtime"
+	helper "agones.dev/agones/test/e2e/allochelper"
 	e2e "agones.dev/agones/test/e2e/framework"
 )
 
@@ -473,6 +475,13 @@ func TestAutoscalerWebhook(t *testing.T) {
 		return fleet.Status.Replicas > initialReplicasCount
 	})
 
+	// Wait for LastAppliedPolicy to be set to WebhookPolicyType
+	framework.WaitForFleetAutoScalerCondition(t, fas, func(log *logrus.Entry, fas *autoscalingv1.FleetAutoscaler) bool {
+		log.WithField("LastAppliedPolicy", fas.Status.LastAppliedPolicy).
+			Info("Waiting for LastAppliedPolicy to be set to WebhookPolicyType")
+		return fas.Status.LastAppliedPolicy == autoscalingv1.WebhookPolicyType
+	})
+
 	// Cause an error in Webhook config
 	// Use wrong service Path
 	err = wait.PollUntilContextTimeout(context.Background(), time.Second, time.Minute, true, func(ctx context.Context) (bool, error) {
@@ -630,6 +639,13 @@ func TestFleetAutoscalerTLSWebhook(t *testing.T) {
 	framework.AssertFleetCondition(t, flt, func(_ *logrus.Entry, fleet *agonesv1.Fleet) bool {
 		return fleet.Status.Replicas > initialReplicasCount
 	})
+
+	// Wait for LastAppliedPolicy to be set to WebhookPolicyType
+	framework.WaitForFleetAutoScalerCondition(t, fas, func(log *logrus.Entry, fas *autoscalingv1.FleetAutoscaler) bool {
+		log.WithField("LastAppliedPolicy", fas.Status.LastAppliedPolicy).
+			Info("Waiting for LastAppliedPolicy to be set to WebhookPolicyType")
+		return fas.Status.LastAppliedPolicy == autoscalingv1.WebhookPolicyType
+	})
 }
 
 func defaultAutoscalerWebhook(namespace string) (*corev1.Pod, *corev1.Service) {
@@ -645,7 +661,7 @@ func defaultAutoscalerWebhook(namespace string) (*corev1.Pod, *corev1.Service) {
 		},
 		Spec: corev1.PodSpec{
 			Containers: []corev1.Container{{Name: "webhook",
-				Image:           "us-docker.pkg.dev/agones-images/examples/autoscaler-webhook:0.16",
+				Image:           "us-docker.pkg.dev/agones-images/examples/autoscaler-webhook:0.18",
 				ImagePullPolicy: corev1.PullAlways,
 				Ports: []corev1.ContainerPort{{
 					ContainerPort: 8000,
@@ -1125,6 +1141,205 @@ func TestCounterAutoscalerAllocated(t *testing.T) {
 	}
 }
 
+// Related to the issue about the fleet autoscaler policy not namespaced: https://github.com/googleforgames/agones/issues/3954
+func TestCounterAutoscalerAllocatedMultipleNamespaces(t *testing.T) {
+	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
+		t.SkipNow()
+	}
+
+	ctx := context.Background()
+	client := framework.AgonesClient.AgonesV1()
+	log := e2e.TestLogger(t)
+
+	// Create namespaces A and B
+	namespaceA := framework.Namespace // let's reuse an existing one
+	helper.CopyDefaultAllocatorClientSecret(ctx, t, namespaceA, framework)
+
+	namespaceB := fmt.Sprintf("autoscaler-b-%s", uuid.NewUUID())
+	err := framework.CreateNamespace(namespaceB)
+	require.NoError(t, err)
+	defer func() {
+		if derr := framework.DeleteNamespace(namespaceB); derr != nil {
+			t.Error(derr)
+		}
+	}()
+
+	// Init default fleet A and B with same name in namespace A and B
+	defaultFltA := defaultFleet(namespaceA)
+	defaultFltA.ObjectMeta.Name = "simple-fleet"
+	defaultFltA.Spec.Template.Spec.Counters = map[string]agonesv1.CounterStatus{
+		"players": {
+			Count:    7,  // AggregateCount 21
+			Capacity: 10, // AggregateCapacity 30
+		},
+	}
+	defaultFltB := defaultFleet(namespaceB)
+	defaultFltB.ObjectMeta.Name = "simple-fleet"
+	defaultFltB.Spec.Template.Spec.Counters = map[string]agonesv1.CounterStatus{
+		"players": {
+			Count:    7,  // AggregateCount 21
+			Capacity: 20, // AggregateCapacity 60
+		},
+	}
+
+	fleetautoscalers := framework.AgonesClient.AutoscalingV1()
+
+	testCases := map[string]struct {
+		fasA             autoscalingv1.CounterPolicy
+		fasB             autoscalingv1.CounterPolicy
+		wantAllocatedGsA int32 // Must be >= 0 && <= 3
+		wantReadyGsA     int32
+		wantAllocatedGsB int32 // Must be >= 0 && <= 3
+		wantReadyGsB     int32
+	}{
+		"Scale Down Buffer Percent from different namespaces with same fleet name": {
+			fasA: autoscalingv1.CounterPolicy{
+				Key:         "players",
+				BufferSize:  intstr.FromString("5%"),
+				MinCapacity: 10,
+				MaxCapacity: 100,
+			},
+			fasB: autoscalingv1.CounterPolicy{
+				Key:         "players",
+				BufferSize:  intstr.FromString("5%"),
+				MinCapacity: 10,
+				MaxCapacity: 100,
+			},
+			wantAllocatedGsA: 3,
+			wantReadyGsA:     0,
+			wantAllocatedGsB: 2,
+			wantReadyGsB:     0,
+		},
+	}
+
+	//nolint:dupl  // Linter errors on lines are duplicate of TestListAutoscalerAllocated
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			// Create both fleet A and B
+			fltA, err := client.Fleets(namespaceA).Create(ctx, defaultFltA.DeepCopy(), metav1.CreateOptions{})
+			require.NoError(t, err)
+			defer client.Fleets(namespaceA).Delete(ctx, fltA.ObjectMeta.Name, metav1.DeleteOptions{}) //nolint:errcheck
+			framework.AssertFleetCondition(t, fltA, e2e.FleetReadyCount(fltA.Spec.Replicas))
+
+			fltB, err := client.Fleets(namespaceB).Create(ctx, defaultFltB.DeepCopy(), metav1.CreateOptions{})
+			require.NoError(t, err)
+			defer client.Fleets(namespaceB).Delete(ctx, fltB.ObjectMeta.Name, metav1.DeleteOptions{}) //nolint:errcheck
+			framework.AssertFleetCondition(t, fltB, e2e.FleetReadyCount(fltB.Spec.Replicas))
+
+			// Allocate gameservers in A and B
+			gsaA := allocationv1.GameServerAllocation{
+				Spec: allocationv1.GameServerAllocationSpec{
+					Selectors: []allocationv1.GameServerSelector{
+						{LabelSelector: metav1.LabelSelector{
+							MatchLabels: map[string]string{agonesv1.FleetNameLabel: fltA.ObjectMeta.Name}}},
+					}}}
+
+			// Allocate game servers, as Buffer Percent scales up (or down) based on allocated aggregate capacity
+			for i := int32(0); i < testCase.wantAllocatedGsA; i++ {
+				_, err := framework.AgonesClient.AllocationV1().GameServerAllocations(fltA.ObjectMeta.Namespace).Create(ctx, gsaA.DeepCopy(), metav1.CreateOptions{})
+				require.NoError(t, err)
+			}
+			framework.AssertFleetCondition(t, fltA, func(_ *logrus.Entry, fleet *agonesv1.Fleet) bool {
+				log.WithField("fleet", fmt.Sprintf("%+v", fleet.Status)).Info("Checking for game server allocations")
+				return fleet.Status.AllocatedReplicas == testCase.wantAllocatedGsA
+			})
+
+			gsaB := allocationv1.GameServerAllocation{
+				Spec: allocationv1.GameServerAllocationSpec{
+					Selectors: []allocationv1.GameServerSelector{
+						{LabelSelector: metav1.LabelSelector{
+							MatchLabels: map[string]string{agonesv1.FleetNameLabel: fltB.ObjectMeta.Name}}},
+					}}}
+
+			// Allocate game servers, as Buffer Percent scales up (or down) based on allocated aggregate capacity
+			for i := int32(0); i < testCase.wantAllocatedGsB; i++ {
+				_, err := framework.AgonesClient.AllocationV1().GameServerAllocations(fltB.ObjectMeta.Namespace).Create(ctx, gsaB.DeepCopy(), metav1.CreateOptions{})
+				require.NoError(t, err)
+			}
+			framework.AssertFleetCondition(t, fltB, func(_ *logrus.Entry, fleet *agonesv1.Fleet) bool {
+				log.WithField("fleet", fmt.Sprintf("%+v", fleet.Status)).Info("Checking for game server allocations")
+				return fleet.Status.AllocatedReplicas == testCase.wantAllocatedGsB
+			})
+
+			// Create fleetautoscaler for A and B
+			counterFasA := &autoscalingv1.FleetAutoscaler{
+				ObjectMeta: metav1.ObjectMeta{Name: fltA.ObjectMeta.Name + "-counter-autoscaler", Namespace: namespaceA},
+				Spec: autoscalingv1.FleetAutoscalerSpec{
+					FleetName: fltA.ObjectMeta.Name,
+					Policy: autoscalingv1.FleetAutoscalerPolicy{
+						Type:    autoscalingv1.CounterPolicyType,
+						Counter: &testCase.fasA,
+					},
+					Sync: &autoscalingv1.FleetAutoscalerSync{
+						Type: autoscalingv1.FixedIntervalSyncType,
+						FixedInterval: autoscalingv1.FixedIntervalSync{
+							Seconds: 1,
+						},
+					},
+				},
+			}
+
+			fasA, err := fleetautoscalers.FleetAutoscalers(namespaceA).Create(ctx, counterFasA, metav1.CreateOptions{})
+			assert.NoError(t, err)
+			defer fleetautoscalers.FleetAutoscalers(namespaceA).Delete(ctx, fasA.ObjectMeta.Name, metav1.DeleteOptions{}) //nolint:errcheck
+
+			counterFasB := &autoscalingv1.FleetAutoscaler{
+				ObjectMeta: metav1.ObjectMeta{Name: fltB.ObjectMeta.Name + "-counter-autoscaler", Namespace: namespaceB},
+				Spec: autoscalingv1.FleetAutoscalerSpec{
+					FleetName: fltB.ObjectMeta.Name,
+					Policy: autoscalingv1.FleetAutoscalerPolicy{
+						Type:    autoscalingv1.CounterPolicyType,
+						Counter: &testCase.fasB,
+					},
+					Sync: &autoscalingv1.FleetAutoscalerSync{
+						Type: autoscalingv1.FixedIntervalSyncType,
+						FixedInterval: autoscalingv1.FixedIntervalSync{
+							Seconds: 1,
+						},
+					},
+				},
+			}
+
+			fasB, err := fleetautoscalers.FleetAutoscalers(namespaceB).Create(ctx, counterFasB, metav1.CreateOptions{})
+			assert.NoError(t, err)
+			defer fleetautoscalers.FleetAutoscalers(namespaceB).Delete(ctx, fasB.ObjectMeta.Name, metav1.DeleteOptions{}) //nolint:errcheck
+
+			// Ensure there is no warning / error on creation, ensure the currentReplicas > 0  for A and B
+			framework.WaitForFleetAutoScalerCondition(t, fasA, func(log *logrus.Entry, fas *autoscalingv1.FleetAutoscaler) bool {
+				log.WithField("fleet autoscaler", fmt.Sprintf("%+v", fas.Status)).Info("Checking for fleet autoscaler")
+				return fas.Status.CurrentReplicas > 0
+			})
+
+			framework.WaitForFleetAutoScalerCondition(t, fasB, func(log *logrus.Entry, fas *autoscalingv1.FleetAutoscaler) bool {
+				log.WithField("fleet autoscaler", fmt.Sprintf("%+v", fas.Status)).Info("Checking for fleet autoscaler")
+				return fas.Status.CurrentReplicas > 0
+			})
+
+			// Wait for LastAppliedPolicy to be set to CounterPolicyType for fasA
+			framework.WaitForFleetAutoScalerCondition(t, fasA, func(log *logrus.Entry, fas *autoscalingv1.FleetAutoscaler) bool {
+				log.WithField("LastAppliedPolicy", fas.Status.LastAppliedPolicy).
+					Info("Waiting for LastAppliedPolicy to be set to CounterPolicyType")
+				return fas.Status.LastAppliedPolicy == autoscalingv1.CounterPolicyType
+			})
+
+			// Wait for LastAppliedPolicy to be set to CounterPolicyType for fasB
+			framework.WaitForFleetAutoScalerCondition(t, fasB, func(log *logrus.Entry, fas *autoscalingv1.FleetAutoscaler) bool {
+				log.WithField("LastAppliedPolicy", fas.Status.LastAppliedPolicy).
+					Info("Waiting for LastAppliedPolicy to be set to CounterPolicyType")
+				return fas.Status.LastAppliedPolicy == autoscalingv1.CounterPolicyType
+			})
+
+			// Ensure the allocated and ready replicas are correct for A and B
+			framework.AssertFleetCondition(t, fltA, func(_ *logrus.Entry, fleet *agonesv1.Fleet) bool {
+				return fleet.Status.AllocatedReplicas == testCase.wantAllocatedGsA && fleet.Status.ReadyReplicas == testCase.wantReadyGsA
+			})
+			framework.AssertFleetCondition(t, fltB, func(_ *logrus.Entry, fleet *agonesv1.Fleet) bool {
+				return fleet.Status.AllocatedReplicas == testCase.wantAllocatedGsB && fleet.Status.ReadyReplicas == testCase.wantReadyGsB
+			})
+		})
+	}
+}
+
 func TestListAutoscaler(t *testing.T) {
 	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
 		t.SkipNow()
@@ -1417,10 +1632,8 @@ func TestListAutoscalerAllocated(t *testing.T) {
 				MinCapacity: 6,
 				MaxCapacity: 60,
 			},
-			wantAllocatedGs:      3,
-			wantReadyGs:          1,
-			wantSecondAllocation: 1,
-			wantSecondReady:      2,
+			wantAllocatedGs: 3,
+			wantReadyGs:     2,
 		},
 		"Scales Down to Number of Game Servers Allocated": {
 			fas: autoscalingv1.ListPolicy{
@@ -1488,23 +1701,6 @@ func TestListAutoscalerAllocated(t *testing.T) {
 			framework.AssertFleetCondition(t, flt, func(_ *logrus.Entry, fleet *agonesv1.Fleet) bool {
 				return fleet.Status.AllocatedReplicas == testCase.wantAllocatedGs && fleet.Status.ReadyReplicas == testCase.wantReadyGs
 			})
-
-			// If we're not looking for a second gameserver allocation action, exit test early.
-			if testCase.wantSecondAllocation == 0 {
-				return
-			}
-
-			for i := int32(0); i < testCase.wantSecondAllocation; i++ {
-				_, err := framework.AgonesClient.AllocationV1().GameServerAllocations(flt.ObjectMeta.Namespace).Create(ctx, gsa.DeepCopy(), metav1.CreateOptions{})
-				require.NoError(t, err)
-			}
-
-			framework.AssertFleetCondition(t, flt, func(_ *logrus.Entry, fleet *agonesv1.Fleet) bool {
-				log.WithField("fleet", fmt.Sprintf("%+v", fleet.Status)).Info("Checking for second game server allocations")
-				return fleet.Status.AllocatedReplicas == (testCase.wantAllocatedGs+testCase.wantSecondAllocation) &&
-					fleet.Status.ReadyReplicas == testCase.wantSecondReady
-			})
-
 		})
 	}
 }
@@ -1678,6 +1874,12 @@ func TestChainAutoscaler(t *testing.T) {
 
 	// Verify only the second schedule ran
 	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(4))
+	expectedChainPolicy := autoscalingv1.FleetAutoscalerPolicyType(fmt.Sprintf("%s:%s:%s", autoscalingv1.ChainPolicyType, "schedule-2", autoscalingv1.SchedulePolicyType))
+	framework.WaitForFleetAutoScalerCondition(t, chainAutoscaler, func(log *logrus.Entry, fas *autoscalingv1.FleetAutoscaler) bool {
+		log.WithField("LastAppliedPolicy", fas.Status.LastAppliedPolicy).Info("Awaiting application of expected SchedulePolicyType in chain autoscaler")
+		return fas.Status.LastAppliedPolicy == expectedChainPolicy
+	})
+
 	fleetautoscalers.Delete(ctx, fas.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
 
 	// Return to starting 3 replicas
@@ -1702,8 +1904,18 @@ func TestChainAutoscaler(t *testing.T) {
 
 	// Verify the first schedule has been applied
 	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(10))
+	expectedChainPolicy = autoscalingv1.FleetAutoscalerPolicyType(fmt.Sprintf("%s:%s:%s", autoscalingv1.ChainPolicyType, "schedule-1", autoscalingv1.SchedulePolicyType))
+	framework.WaitForFleetAutoScalerCondition(t, chainAutoscaler, func(log *logrus.Entry, fas *autoscalingv1.FleetAutoscaler) bool {
+		log.WithField("LastAppliedPolicy", fas.Status.LastAppliedPolicy).Info("Awaiting application of expected SchedulePolicyType in chain autoscaler")
+		return fas.Status.LastAppliedPolicy == expectedChainPolicy
+	})
 	// Verify the second schedule has been applied
 	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(4))
+	expectedChainPolicy = autoscalingv1.FleetAutoscalerPolicyType(fmt.Sprintf("%s:%s:%s", autoscalingv1.ChainPolicyType, "schedule-2", autoscalingv1.SchedulePolicyType))
+	framework.WaitForFleetAutoScalerCondition(t, chainAutoscaler, func(log *logrus.Entry, fas *autoscalingv1.FleetAutoscaler) bool {
+		log.WithField("LastAppliedPolicy", fas.Status.LastAppliedPolicy).Info("Awaiting application of expected SchedulePolicyType in chain autoscaler")
+		return fas.Status.LastAppliedPolicy == expectedChainPolicy
+	})
 
 	fleetautoscalers.Delete(ctx, fas.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
 }

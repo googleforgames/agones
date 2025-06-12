@@ -1,5 +1,97 @@
 # Changelog
 
+## [v1.49.0](https://github.com/googleforgames/agones/tree/v1.49.0) (2025-05-06)
+
+[Full Changelog](https://github.com/googleforgames/agones/compare/v1.48.0...v1.49.0)
+
+**Breaking changes:**
+- Add AFP features and update documentation by @0xaravindh in https://github.com/googleforgames/agones/pull/4061
+- Adoption of Sidecar Containers by @markmandel in https://github.com/googleforgames/agones/pull/4146
+
+**Implemented enhancements:**
+- Promote PortPolicyNone to Beta by @kamaljeeti in https://github.com/googleforgames/agones/pull/4144
+- Promote FeatureDisableResyncOnSDKServer to Stable by @igooch in https://github.com/googleforgames/agones/pull/4138
+- Promote PortRanges to Beta by @kamaljeeti in https://github.com/googleforgames/agones/pull/4147
+
+**Fixed bugs:**
+- Update Windows manifest handling in push-agones-sdk-manifest by @0xaravindh in https://github.com/googleforgames/agones/pull/4136
+- Fix CRD API docs generation script by @0xaravindh in https://github.com/googleforgames/agones/pull/4152
+- fix: ensure fleet autoscaler policy are namespaced by @lacroixthomas in https://github.com/googleforgames/agones/pull/4098
+- Fix feature stages page to show expected content by @0xaravindh in https://github.com/googleforgames/agones/pull/4156
+- Allocation: Re-cache allocated `GameServer` by @markmandel in https://github.com/googleforgames/agones/pull/4159
+
+**Other:**
+- Preparation for Release v1.49.0 by @0xaravindh in https://github.com/googleforgames/agones/pull/4134
+- Updated doc for adding support of Extended Duration Pods on GKE Autopilot by @kamaljeeti in https://github.com/googleforgames/agones/pull/4139
+- Various e2e test improvements by @markmandel in https://github.com/googleforgames/agones/pull/4143
+- load test client make concurrent requests by @peterzhongyi in https://github.com/googleforgames/agones/pull/4149
+- Adds permissions in the agones-system namespace for the upgrade tests by @igooch in https://github.com/googleforgames/agones/pull/4148
+- Adds explicit permissions for github workflows by @igooch in https://github.com/googleforgames/agones/pull/4161
+- chore: update Nitrado GameFabric branding by @nrwiersma in https://github.com/googleforgames/agones/pull/4164
+- Adds instructions to update dependencies as part of upgrading Golang by @igooch in https://github.com/googleforgames/agones/pull/4155
+- Fix: Remove Kubernetes 1.29 from Agones 1.39.0 compatibility matrix by @0xaravindh in https://github.com/googleforgames/agones/pull/4168
+- Documentation for Sidecar Containers by @markmandel in https://github.com/googleforgames/agones/pull/4171
+- Upgrade: Go to 1.23.8 and deps by @0xaravindh in https://github.com/googleforgames/agones/pull/4170
+- Updates GKE Autopilot documentation to include Passthrough portPolicy by @igooch in https://github.com/googleforgames/agones/pull/4173
+
+## [v1.48.0](https://github.com/googleforgames/agones/tree/v1.48.0) (2025-03-25)
+
+[Full Changelog](https://github.com/googleforgames/agones/compare/v1.47.0...v1.48.0)
+
+**Implemented enhancements**
+- add metadata to agones webhook autoscaler request by @swermin in https://github.com/googleforgames/agones/pull/3957
+- feat(helm): support dual-stack networking for load balancers by @bergemalm in https://github.com/googleforgames/agones/pull/4073
+
+**Fixed bugs**
+- fix: bump version of jsonpatch for lossy max int64 by @lacroixthomas in https://github.com/googleforgames/agones/pull/4090
+- Fix JSON Schema validation for ServiceAccount annotations by @0xaravindh in https://github.com/googleforgames/agones/pull/4122
+- Refactor image build and manifest push process by @0xaravindh in https://github.com/googleforgames/agones/pull/4118
+
+**Other**
+- Preparation for Release v1.48.0 by @0xaravindh in https://github.com/googleforgames/agones/pull/4109
+- Increase wait time for upgrade test runner by @igooch in https://github.com/googleforgames/agones/pull/4113
+- Update Helm Schema Validation for topologySpreadConstraints and customCertSecretPath  by @AliaksandrTsimokhau in https://github.com/googleforgames/agones/pull/4112
+- Fix: Ensure Buildx Builders Are Created or Used for ARM64 and Windows by @0xaravindh in https://github.com/googleforgames/agones/pull/4115
+- Update Supported Kubernetes to 1.30, 1.31, 1.32 by @kamaljeeti in https://github.com/googleforgames/agones/pull/4124
+- helm: change type from object to array for controller.customCertSecre… by @Joseph-Irving in https://github.com/googleforgames/agones/pull/4120
+- Created performance test cluster for 1.31 by @kamaljeeti in https://github.com/googleforgames/agones/pull/4125
+- Add deprecation notice for older image versions in release template by @0xaravindh in https://github.com/googleforgames/agones/pull/4126
+- Fix flaky test TestListAutoscalerAllocated by @igooch in https://github.com/googleforgames/agones/pull/4130
+
+**New Contributors**
+- @AliaksandrTsimokhau made their first contribution in https://github.com/googleforgames/agones/pull/4112
+- @swermin made their first contribution in https://github.com/googleforgames/agones/pull/3957
+- @bergemalm made their first contribution in https://github.com/googleforgames/agones/pull/4073
+- @Joseph-Irving made their first contribution in https://github.com/googleforgames/agones/pull/4120
+
+## [v1.47.0](https://github.com/googleforgames/agones/tree/v1.47.0) (2025-02-11)
+
+[Full Changelog](https://github.com/googleforgames/agones/compare/v1.46.0...v1.47.0)
+
+**Implemented enhancements:**
+- Docs: Update Player Tracking to use Lists by @markmandel in https://github.com/googleforgames/agones/pull/4086
+- Docs: Counters with High Density by @markmandel in https://github.com/googleforgames/agones/pull/4085
+- Add ability to change externalTrafficPolicy for agones-ping services (http&udp) by @zifter in https://github.com/googleforgames/agones/pull/4083
+- JSON Schema Validation for Helm by @igooch in https://github.com/googleforgames/agones/pull/4094
+- Adds helm schema validation test to the test suite by @igooch in https://github.com/googleforgames/agones/pull/4101
+
+**Fixed bugs:**
+- Changes upgrade game server template to use safe-to-evict: Always by @igooch in https://github.com/googleforgames/agones/pull/4096
+
+**Other:**
+- Preparation for Release v1.47.0 by @0xaravindh in https://github.com/googleforgames/agones/pull/4079
+- Update `.golangci.yml` config to resolve deprecation warnings by @paulinek13 in https://github.com/googleforgames/agones/pull/4082
+- Initialise FCounterResponse members by @alexrudd in https://github.com/googleforgames/agones/pull/4084
+- Bump golang.org/x/crypto from 0.21.0 to 0.31.0 in /build/agones-bot by @dependabot in https://github.com/googleforgames/agones/pull/4062
+- Added OKE steps in K8S version upgrade template by @kamaljeeti in https://github.com/googleforgames/agones/pull/4091
+- User and developer documentation for Helm json schema validation by @igooch in https://github.com/googleforgames/agones/pull/4100
+- Update All Go Module Dependencies to Latest Patches by @0xaravindh in https://github.com/googleforgames/agones/pull/4104
+- Bump github.com/go-git/go-git/v5 from 5.12.0 to 5.13.0 in /build/scripts/example-version-checker by @dependabot in https://github.com/googleforgames/agones/pull/4088
+
+**New Contributors:**
+- @paulinek13 made their first contribution in https://github.com/googleforgames/agones/pull/4082
+- @alexrudd made their first contribution in https://github.com/googleforgames/agones/pull/4084
+
 ## [v1.46.0](https://github.com/googleforgames/agones/tree/v1.46.0) (2025-01-02)
 
 [Full Changelog](https://github.com/googleforgames/agones/compare/v1.45.0...v1.46.0)

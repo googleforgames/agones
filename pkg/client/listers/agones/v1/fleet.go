@@ -19,10 +19,10 @@
 package v1
 
 import (
-	v1 "agones.dev/agones/pkg/apis/agones/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/client-go/tools/cache"
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
+	labels "k8s.io/apimachinery/pkg/labels"
+	listers "k8s.io/client-go/listers"
+	cache "k8s.io/client-go/tools/cache"
 )
 
 // FleetLister helps list Fleets.
@@ -30,7 +30,7 @@ import (
 type FleetLister interface {
 	// List lists all Fleets in the indexer.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1.Fleet, err error)
+	List(selector labels.Selector) (ret []*agonesv1.Fleet, err error)
 	// Fleets returns an object that can list and get Fleets.
 	Fleets(namespace string) FleetNamespaceLister
 	FleetListerExpansion
@@ -38,25 +38,17 @@ type FleetLister interface {
 
 // fleetLister implements the FleetLister interface.
 type fleetLister struct {
-	indexer cache.Indexer
+	listers.ResourceIndexer[*agonesv1.Fleet]
 }
 
 // NewFleetLister returns a new FleetLister.
 func NewFleetLister(indexer cache.Indexer) FleetLister {
-	return &fleetLister{indexer: indexer}
-}
-
-// List lists all Fleets in the indexer.
-func (s *fleetLister) List(selector labels.Selector) (ret []*v1.Fleet, err error) {
-	err = cache.ListAll(s.indexer, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1.Fleet))
-	})
-	return ret, err
+	return &fleetLister{listers.New[*agonesv1.Fleet](indexer, agonesv1.Resource("fleet"))}
 }
 
 // Fleets returns an object that can list and get Fleets.
 func (s *fleetLister) Fleets(namespace string) FleetNamespaceLister {
-	return fleetNamespaceLister{indexer: s.indexer, namespace: namespace}
+	return fleetNamespaceLister{listers.NewNamespaced[*agonesv1.Fleet](s.ResourceIndexer, namespace)}
 }
 
 // FleetNamespaceLister helps list and get Fleets.
@@ -64,36 +56,15 @@ func (s *fleetLister) Fleets(namespace string) FleetNamespaceLister {
 type FleetNamespaceLister interface {
 	// List lists all Fleets in the indexer for a given namespace.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1.Fleet, err error)
+	List(selector labels.Selector) (ret []*agonesv1.Fleet, err error)
 	// Get retrieves the Fleet from the indexer for a given namespace and name.
 	// Objects returned here must be treated as read-only.
-	Get(name string) (*v1.Fleet, error)
+	Get(name string) (*agonesv1.Fleet, error)
 	FleetNamespaceListerExpansion
 }
 
 // fleetNamespaceLister implements the FleetNamespaceLister
 // interface.
 type fleetNamespaceLister struct {
-	indexer   cache.Indexer
-	namespace string
-}
-
-// List lists all Fleets in the indexer for a given namespace.
-func (s fleetNamespaceLister) List(selector labels.Selector) (ret []*v1.Fleet, err error) {
-	err = cache.ListAllByNamespace(s.indexer, s.namespace, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1.Fleet))
-	})
-	return ret, err
-}
-
-// Get retrieves the Fleet from the indexer for a given namespace and name.
-func (s fleetNamespaceLister) Get(name string) (*v1.Fleet, error) {
-	obj, exists, err := s.indexer.GetByKey(s.namespace + "/" + name)
-	if err != nil {
-		return nil, err
-	}
-	if !exists {
-		return nil, errors.NewNotFound(v1.Resource("fleet"), name)
-	}
-	return obj.(*v1.Fleet), nil
+	listers.ResourceIndexer[*agonesv1.Fleet]
 }

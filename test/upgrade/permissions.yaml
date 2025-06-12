@@ -423,6 +423,9 @@ subjects:
   - kind: ServiceAccount
     name: agones-sa
     namespace: default
+  - kind: ServiceAccount
+    name: agones-allocator
+    namespace: agones-system
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -438,6 +441,9 @@ metadata:
 subjects:
   - kind: User
     name: system:serviceaccount:default:agones-sa
+    apiGroup: rbac.authorization.k8s.io
+  - kind: User
+    name: system:serviceaccount:agones-system:agones-controller
     apiGroup: rbac.authorization.k8s.io
   - kind: ServiceAccount
     name: agones-sa
@@ -463,6 +469,9 @@ subjects:
   - kind: ServiceAccount
     name: agones-sa
     namespace: default
+  - kind: ServiceAccount
+    name: agones-controller
+    namespace: agones-system
 ---
 # Source: agones/templates/serviceaccounts/controller.yaml
 apiVersion: rbac.authorization.k8s.io/v1

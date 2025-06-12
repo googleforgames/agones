@@ -15,8 +15,10 @@
 package e2e
 
 import (
+	"context"
 	"testing"
 
+	e2eframework "agones.dev/agones/test/e2e/framework"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
@@ -28,6 +30,9 @@ import (
 
 func TestSuperTuxKartGameServerReady(t *testing.T) {
 	t.Parallel()
+
+	log := e2eframework.TestLogger(t)
+
 	gs := &agonesv1.GameServer{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: "supertuxkart-",
@@ -40,12 +45,16 @@ func TestSuperTuxKartGameServerReady(t *testing.T) {
 				PortPolicy:    agonesv1.Dynamic,
 				Protocol:      corev1.ProtocolUDP,
 			}},
+			Health: agonesv1.Health{
+				PeriodSeconds:       60,
+				InitialDelaySeconds: 30,
+			},
 			Template: corev1.PodTemplateSpec{
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{
 						{
 							Name:  "supertuxkart",
-							Image: "us-docker.pkg.dev/agones-images/examples/supertuxkart-example:0.16",
+							Image: "us-docker.pkg.dev/agones-images/examples/supertuxkart-example:0.18",
 							Env: []corev1.EnvVar{
 								{
 									Name:  "ENABLE_PLAYER_TRACKING",
@@ -61,10 +70,20 @@ func TestSuperTuxKartGameServerReady(t *testing.T) {
 
 	// Use the e2e framework's function to create the GameServer and wait until it's ready
 	readyGs, err := framework.CreateGameServerAndWaitUntilReady(t, framework.Namespace, gs)
+	if err != nil {
+		log.Info("Game Server Events:")
+		framework.LogEvents(t, log, readyGs.ObjectMeta.Namespace, readyGs)
+
+		// Get pod and log events
+		log.Info("Game Server Pod Events:")
+		pod, err := framework.KubeClient.CoreV1().Pods(framework.Namespace).Get(context.Background(), readyGs.ObjectMeta.Name, metav1.GetOptions{})
+		require.NoError(t, err)
+		framework.LogEvents(t, log, pod.ObjectMeta.Namespace, pod)
+	}
 	require.NoError(t, err)
 
 	// Assert that the GameServer is in the expected state
-	assert.Equal(t, agonesv1.GameServerStateReady, readyGs.Status.State)
+	require.Equal(t, agonesv1.GameServerStateReady, readyGs.Status.State)
 }
 
 func TestRustGameServerReady(t *testing.T) {
@@ -119,7 +138,7 @@ func TestCppSimpleGameServerReady(t *testing.T) {
 					Containers: []corev1.Container{
 						{
 							Name:  "cpp-simple",
-							Image: "us-docker.pkg.dev/agones-images/examples/cpp-simple-server:0.16",
+							Image: "us-docker.pkg.dev/agones-images/examples/cpp-simple-server:0.21",
 						},
 					},
 				},
@@ -203,7 +222,7 @@ func TestXonoticGameServerReady(t *testing.T) {
 					Containers: []corev1.Container{
 						{
 							Name:  "xonotic",
-							Image: "us-docker.pkg.dev/agones-images/examples/xonotic-example:2.2",
+							Image: "us-docker.pkg.dev/agones-images/examples/xonotic-example:2.4",
 							Resources: corev1.ResourceRequirements{
 								Requests: corev1.ResourceList{
 									corev1.ResourceMemory: resource.MustParse("700Mi"),

@@ -25,6 +25,7 @@ package sdk
 
 import (
 	"context"
+	"errors"
 	"io"
 	"net/http"
 
@@ -39,89 +40,86 @@ import (
 )
 
 // Suppress "imported and not used" errors
-var _ codes.Code
-var _ io.Reader
-var _ status.Status
-var _ = runtime.String
-var _ = utilities.NewDoubleArray
-var _ = metadata.Join
+var (
+	_ codes.Code
+	_ io.Reader
+	_ status.Status
+	_ = errors.New
+	_ = runtime.String
+	_ = utilities.NewDoubleArray
+	_ = metadata.Join
+)
 
 func request_SDK_Ready_0(ctx context.Context, marshaler runtime.Marshaler, client SDKClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq Empty
-	var metadata runtime.ServerMetadata
-
-	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
+	var (
+		protoReq Empty
+		metadata runtime.ServerMetadata
+	)
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-
 	msg, err := client.Ready(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
-
 }
 
 func local_request_SDK_Ready_0(ctx context.Context, marshaler runtime.Marshaler, server SDKServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq Empty
-	var metadata runtime.ServerMetadata
-
-	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
+	var (
+		protoReq Empty
+		metadata runtime.ServerMetadata
+	)
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-
 	msg, err := server.Ready(ctx, &protoReq)
 	return msg, metadata, err
-
 }
 
 func request_SDK_Allocate_0(ctx context.Context, marshaler runtime.Marshaler, client SDKClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq Empty
-	var metadata runtime.ServerMetadata
-
-	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
+	var (
+		protoReq Empty
+		metadata runtime.ServerMetadata
+	)
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-
 	msg, err := client.Allocate(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
-
 }
 
 func local_request_SDK_Allocate_0(ctx context.Context, marshaler runtime.Marshaler, server SDKServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq Empty
-	var metadata runtime.ServerMetadata
-
-	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
+	var (
+		protoReq Empty
+		metadata runtime.ServerMetadata
+	)
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-
 	msg, err := server.Allocate(ctx, &protoReq)
 	return msg, metadata, err
-
 }
 
 func request_SDK_Shutdown_0(ctx context.Context, marshaler runtime.Marshaler, client SDKClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq Empty
-	var metadata runtime.ServerMetadata
-
-	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
+	var (
+		protoReq Empty
+		metadata runtime.ServerMetadata
+	)
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-
 	msg, err := client.Shutdown(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
-
 }
 
 func local_request_SDK_Shutdown_0(ctx context.Context, marshaler runtime.Marshaler, server SDKServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq Empty
-	var metadata runtime.ServerMetadata
-
-	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
+	var (
+		protoReq Empty
+		metadata runtime.ServerMetadata
+	)
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-
 	msg, err := server.Shutdown(ctx, &protoReq)
 	return msg, metadata, err
-
 }
 
 func request_SDK_Health_0(ctx context.Context, marshaler runtime.Marshaler, client SDKClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
@@ -135,7 +133,7 @@ func request_SDK_Health_0(ctx context.Context, marshaler runtime.Marshaler, clie
 	for {
 		var protoReq Empty
 		err = dec.Decode(&protoReq)
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			break
 		}
 		if err != nil {
@@ -143,14 +141,13 @@ func request_SDK_Health_0(ctx context.Context, marshaler runtime.Marshaler, clie
 			return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 		}
 		if err = stream.Send(&protoReq); err != nil {
-			if err == io.EOF {
+			if errors.Is(err, io.EOF) {
 				break
 			}
 			grpclog.Errorf("Failed to send request: %v", err)
 			return nil, metadata, err
 		}
 	}
-
 	if err := stream.CloseSend(); err != nil {
 		grpclog.Errorf("Failed to terminate client stream: %v", err)
 		return nil, metadata, err
@@ -161,35 +158,36 @@ func request_SDK_Health_0(ctx context.Context, marshaler runtime.Marshaler, clie
 		return nil, metadata, err
 	}
 	metadata.HeaderMD = header
-
 	msg, err := stream.CloseAndRecv()
 	metadata.TrailerMD = stream.Trailer()
 	return msg, metadata, err
-
 }
 
 func request_SDK_GetGameServer_0(ctx context.Context, marshaler runtime.Marshaler, client SDKClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq Empty
-	var metadata runtime.ServerMetadata
-
+	var (
+		protoReq Empty
+		metadata runtime.ServerMetadata
+	)
+	io.Copy(io.Discard, req.Body)
 	msg, err := client.GetGameServer(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
-
 }
 
 func local_request_SDK_GetGameServer_0(ctx context.Context, marshaler runtime.Marshaler, server SDKServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq Empty
-	var metadata runtime.ServerMetadata
-
+	var (
+		protoReq Empty
+		metadata runtime.ServerMetadata
+	)
 	msg, err := server.GetGameServer(ctx, &protoReq)
 	return msg, metadata, err
-
 }
 
 func request_SDK_WatchGameServer_0(ctx context.Context, marshaler runtime.Marshaler, client SDKClient, req *http.Request, pathParams map[string]string) (SDK_WatchGameServerClient, runtime.ServerMetadata, error) {
-	var protoReq Empty
-	var metadata runtime.ServerMetadata
-
+	var (
+		protoReq Empty
+		metadata runtime.ServerMetadata
+	)
+	io.Copy(io.Discard, req.Body)
 	stream, err := client.WatchGameServer(ctx, &protoReq)
 	if err != nil {
 		return nil, metadata, err
@@ -200,102 +198,93 @@ func request_SDK_WatchGameServer_0(ctx context.Context, marshaler runtime.Marsha
 	}
 	metadata.HeaderMD = header
 	return stream, metadata, nil
-
 }
 
 func request_SDK_SetLabel_0(ctx context.Context, marshaler runtime.Marshaler, client SDKClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq KeyValue
-	var metadata runtime.ServerMetadata
-
-	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
+	var (
+		protoReq KeyValue
+		metadata runtime.ServerMetadata
+	)
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-
 	msg, err := client.SetLabel(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
-
 }
 
 func local_request_SDK_SetLabel_0(ctx context.Context, marshaler runtime.Marshaler, server SDKServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq KeyValue
-	var metadata runtime.ServerMetadata
-
-	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
+	var (
+		protoReq KeyValue
+		metadata runtime.ServerMetadata
+	)
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-
 	msg, err := server.SetLabel(ctx, &protoReq)
 	return msg, metadata, err
-
 }
 
 func request_SDK_SetAnnotation_0(ctx context.Context, marshaler runtime.Marshaler, client SDKClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq KeyValue
-	var metadata runtime.ServerMetadata
-
-	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
+	var (
+		protoReq KeyValue
+		metadata runtime.ServerMetadata
+	)
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-
 	msg, err := client.SetAnnotation(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
-
 }
 
 func local_request_SDK_SetAnnotation_0(ctx context.Context, marshaler runtime.Marshaler, server SDKServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq KeyValue
-	var metadata runtime.ServerMetadata
-
-	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
+	var (
+		protoReq KeyValue
+		metadata runtime.ServerMetadata
+	)
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-
 	msg, err := server.SetAnnotation(ctx, &protoReq)
 	return msg, metadata, err
-
 }
 
 func request_SDK_Reserve_0(ctx context.Context, marshaler runtime.Marshaler, client SDKClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq Duration
-	var metadata runtime.ServerMetadata
-
-	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
+	var (
+		protoReq Duration
+		metadata runtime.ServerMetadata
+	)
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-
 	msg, err := client.Reserve(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
-
 }
 
 func local_request_SDK_Reserve_0(ctx context.Context, marshaler runtime.Marshaler, server SDKServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq Duration
-	var metadata runtime.ServerMetadata
-
-	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
+	var (
+		protoReq Duration
+		metadata runtime.ServerMetadata
+	)
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-
 	msg, err := server.Reserve(ctx, &protoReq)
 	return msg, metadata, err
-
 }
 
 // RegisterSDKHandlerServer registers the http handlers for service SDK to "mux".
 // UnaryRPC     :call SDKServer directly.
 // StreamingRPC :currently unsupported pending https://github.com/grpc/grpc-go/issues/906.
 // Note that using this registration option will cause many gRPC library features to stop working. Consider using RegisterSDKHandlerFromEndpoint instead.
+// GRPC interceptors will not work for this type of registration. To use interceptors, you must use the "runtime.WithMiddlewares" option in the "runtime.NewServeMux" call.
 func RegisterSDKHandlerServer(ctx context.Context, mux *runtime.ServeMux, server SDKServer) error {
-
-	mux.Handle("POST", pattern_SDK_Ready_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle(http.MethodPost, pattern_SDK_Ready_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		var err error
-		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/agones.dev.sdk.SDK/Ready", runtime.WithHTTPPathPattern("/ready"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/agones.dev.sdk.SDK/Ready", runtime.WithHTTPPathPattern("/ready"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -307,20 +296,15 @@ func RegisterSDKHandlerServer(ctx context.Context, mux *runtime.ServeMux, server
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
-
 		forward_SDK_Ready_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
 	})
-
-	mux.Handle("POST", pattern_SDK_Allocate_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle(http.MethodPost, pattern_SDK_Allocate_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		var err error
-		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/agones.dev.sdk.SDK/Allocate", runtime.WithHTTPPathPattern("/allocate"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/agones.dev.sdk.SDK/Allocate", runtime.WithHTTPPathPattern("/allocate"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -332,20 +316,15 @@ func RegisterSDKHandlerServer(ctx context.Context, mux *runtime.ServeMux, server
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
-
 		forward_SDK_Allocate_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
 	})
-
-	mux.Handle("POST", pattern_SDK_Shutdown_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle(http.MethodPost, pattern_SDK_Shutdown_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		var err error
-		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/agones.dev.sdk.SDK/Shutdown", runtime.WithHTTPPathPattern("/shutdown"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/agones.dev.sdk.SDK/Shutdown", runtime.WithHTTPPathPattern("/shutdown"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -357,27 +336,22 @@ func RegisterSDKHandlerServer(ctx context.Context, mux *runtime.ServeMux, server
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
-
 		forward_SDK_Shutdown_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
 	})
 
-	mux.Handle("POST", pattern_SDK_Health_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle(http.MethodPost, pattern_SDK_Health_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		err := status.Error(codes.Unimplemented, "streaming calls are not yet supported in the in-process transport")
 		_, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 		return
 	})
-
-	mux.Handle("GET", pattern_SDK_GetGameServer_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle(http.MethodGet, pattern_SDK_GetGameServer_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		var err error
-		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/agones.dev.sdk.SDK/GetGameServer", runtime.WithHTTPPathPattern("/gameserver"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/agones.dev.sdk.SDK/GetGameServer", runtime.WithHTTPPathPattern("/gameserver"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -389,27 +363,22 @@ func RegisterSDKHandlerServer(ctx context.Context, mux *runtime.ServeMux, server
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
-
 		forward_SDK_GetGameServer_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
 	})
 
-	mux.Handle("GET", pattern_SDK_WatchGameServer_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle(http.MethodGet, pattern_SDK_WatchGameServer_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		err := status.Error(codes.Unimplemented, "streaming calls are not yet supported in the in-process transport")
 		_, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 		return
 	})
-
-	mux.Handle("PUT", pattern_SDK_SetLabel_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle(http.MethodPut, pattern_SDK_SetLabel_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		var err error
-		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/agones.dev.sdk.SDK/SetLabel", runtime.WithHTTPPathPattern("/metadata/label"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/agones.dev.sdk.SDK/SetLabel", runtime.WithHTTPPathPattern("/metadata/label"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -421,20 +390,15 @@ func RegisterSDKHandlerServer(ctx context.Context, mux *runtime.ServeMux, server
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
-
 		forward_SDK_SetLabel_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
 	})
-
-	mux.Handle("PUT", pattern_SDK_SetAnnotation_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle(http.MethodPut, pattern_SDK_SetAnnotation_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		var err error
-		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/agones.dev.sdk.SDK/SetAnnotation", runtime.WithHTTPPathPattern("/metadata/annotation"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/agones.dev.sdk.SDK/SetAnnotation", runtime.WithHTTPPathPattern("/metadata/annotation"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -446,20 +410,15 @@ func RegisterSDKHandlerServer(ctx context.Context, mux *runtime.ServeMux, server
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
-
 		forward_SDK_SetAnnotation_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
 	})
-
-	mux.Handle("POST", pattern_SDK_Reserve_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle(http.MethodPost, pattern_SDK_Reserve_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		var err error
-		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/agones.dev.sdk.SDK/Reserve", runtime.WithHTTPPathPattern("/reserve"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/agones.dev.sdk.SDK/Reserve", runtime.WithHTTPPathPattern("/reserve"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -471,9 +430,7 @@ func RegisterSDKHandlerServer(ctx context.Context, mux *runtime.ServeMux, server
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
-
 		forward_SDK_Reserve_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
 	})
 
 	return nil
@@ -500,7 +457,6 @@ func RegisterSDKHandlerFromEndpoint(ctx context.Context, mux *runtime.ServeMux, 
 			}
 		}()
 	}()
-
 	return RegisterSDKHandler(ctx, mux, conn)
 }
 
@@ -514,16 +470,13 @@ func RegisterSDKHandler(ctx context.Context, mux *runtime.ServeMux, conn *grpc.C
 // to "mux". The handlers forward requests to the grpc endpoint over the given implementation of "SDKClient".
 // Note: the gRPC framework executes interceptors within the gRPC handler. If the passed in "SDKClient"
 // doesn't go through the normal gRPC flow (creating a gRPC client etc.) then it will be up to the passed in
-// "SDKClient" to call the correct interceptors.
+// "SDKClient" to call the correct interceptors. This client ignores the HTTP middlewares.
 func RegisterSDKHandlerClient(ctx context.Context, mux *runtime.ServeMux, client SDKClient) error {
-
-	mux.Handle("POST", pattern_SDK_Ready_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle(http.MethodPost, pattern_SDK_Ready_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		var err error
-		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/agones.dev.sdk.SDK/Ready", runtime.WithHTTPPathPattern("/ready"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/agones.dev.sdk.SDK/Ready", runtime.WithHTTPPathPattern("/ready"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -534,18 +487,13 @@ func RegisterSDKHandlerClient(ctx context.Context, mux *runtime.ServeMux, client
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
-
 		forward_SDK_Ready_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
 	})
-
-	mux.Handle("POST", pattern_SDK_Allocate_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle(http.MethodPost, pattern_SDK_Allocate_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		var err error
-		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/agones.dev.sdk.SDK/Allocate", runtime.WithHTTPPathPattern("/allocate"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/agones.dev.sdk.SDK/Allocate", runtime.WithHTTPPathPattern("/allocate"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -556,18 +504,13 @@ func RegisterSDKHandlerClient(ctx context.Context, mux *runtime.ServeMux, client
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
-
 		forward_SDK_Allocate_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
 	})
-
-	mux.Handle("POST", pattern_SDK_Shutdown_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle(http.MethodPost, pattern_SDK_Shutdown_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		var err error
-		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/agones.dev.sdk.SDK/Shutdown", runtime.WithHTTPPathPattern("/shutdown"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/agones.dev.sdk.SDK/Shutdown", runtime.WithHTTPPathPattern("/shutdown"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -578,18 +521,13 @@ func RegisterSDKHandlerClient(ctx context.Context, mux *runtime.ServeMux, client
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
-
 		forward_SDK_Shutdown_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
 	})
-
-	mux.Handle("POST", pattern_SDK_Health_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle(http.MethodPost, pattern_SDK_Health_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		var err error
-		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/agones.dev.sdk.SDK/Health", runtime.WithHTTPPathPattern("/health"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/agones.dev.sdk.SDK/Health", runtime.WithHTTPPathPattern("/health"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -600,18 +538,13 @@ func RegisterSDKHandlerClient(ctx context.Context, mux *runtime.ServeMux, client
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
-
 		forward_SDK_Health_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
 	})
-
-	mux.Handle("GET", pattern_SDK_GetGameServer_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle(http.MethodGet, pattern_SDK_GetGameServer_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		var err error
-		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/agones.dev.sdk.SDK/GetGameServer", runtime.WithHTTPPathPattern("/gameserver"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/agones.dev.sdk.SDK/GetGameServer", runtime.WithHTTPPathPattern("/gameserver"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -622,18 +555,13 @@ func RegisterSDKHandlerClient(ctx context.Context, mux *runtime.ServeMux, client
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
-
 		forward_SDK_GetGameServer_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
 	})
-
-	mux.Handle("GET", pattern_SDK_WatchGameServer_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle(http.MethodGet, pattern_SDK_WatchGameServer_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		var err error
-		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/agones.dev.sdk.SDK/WatchGameServer", runtime.WithHTTPPathPattern("/watch/gameserver"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/agones.dev.sdk.SDK/WatchGameServer", runtime.WithHTTPPathPattern("/watch/gameserver"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -644,18 +572,13 @@ func RegisterSDKHandlerClient(ctx context.Context, mux *runtime.ServeMux, client
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
-
 		forward_SDK_WatchGameServer_0(annotatedContext, mux, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
-
 	})
-
-	mux.Handle("PUT", pattern_SDK_SetLabel_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle(http.MethodPut, pattern_SDK_SetLabel_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		var err error
-		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/agones.dev.sdk.SDK/SetLabel", runtime.WithHTTPPathPattern("/metadata/label"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/agones.dev.sdk.SDK/SetLabel", runtime.WithHTTPPathPattern("/metadata/label"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -666,18 +589,13 @@ func RegisterSDKHandlerClient(ctx context.Context, mux *runtime.ServeMux, client
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
-
 		forward_SDK_SetLabel_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
 	})
-
-	mux.Handle("PUT", pattern_SDK_SetAnnotation_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle(http.MethodPut, pattern_SDK_SetAnnotation_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		var err error
-		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/agones.dev.sdk.SDK/SetAnnotation", runtime.WithHTTPPathPattern("/metadata/annotation"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/agones.dev.sdk.SDK/SetAnnotation", runtime.WithHTTPPathPattern("/metadata/annotation"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -688,18 +606,13 @@ func RegisterSDKHandlerClient(ctx context.Context, mux *runtime.ServeMux, client
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
-
 		forward_SDK_SetAnnotation_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
 	})
-
-	mux.Handle("POST", pattern_SDK_Reserve_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle(http.MethodPost, pattern_SDK_Reserve_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		var err error
-		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/agones.dev.sdk.SDK/Reserve", runtime.WithHTTPPathPattern("/reserve"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/agones.dev.sdk.SDK/Reserve", runtime.WithHTTPPathPattern("/reserve"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -710,50 +623,31 @@ func RegisterSDKHandlerClient(ctx context.Context, mux *runtime.ServeMux, client
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
-
 		forward_SDK_Reserve_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
 	})
-
 	return nil
 }
 
 var (
-	pattern_SDK_Ready_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"ready"}, ""))
-
-	pattern_SDK_Allocate_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"allocate"}, ""))
-
-	pattern_SDK_Shutdown_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"shutdown"}, ""))
-
-	pattern_SDK_Health_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"health"}, ""))
-
-	pattern_SDK_GetGameServer_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"gameserver"}, ""))
-
+	pattern_SDK_Ready_0           = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"ready"}, ""))
+	pattern_SDK_Allocate_0        = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"allocate"}, ""))
+	pattern_SDK_Shutdown_0        = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"shutdown"}, ""))
+	pattern_SDK_Health_0          = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"health"}, ""))
+	pattern_SDK_GetGameServer_0   = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"gameserver"}, ""))
 	pattern_SDK_WatchGameServer_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"watch", "gameserver"}, ""))
-
-	pattern_SDK_SetLabel_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"metadata", "label"}, ""))
-
-	pattern_SDK_SetAnnotation_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"metadata", "annotation"}, ""))
-
-	pattern_SDK_Reserve_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"reserve"}, ""))
+	pattern_SDK_SetLabel_0        = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"metadata", "label"}, ""))
+	pattern_SDK_SetAnnotation_0   = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"metadata", "annotation"}, ""))
+	pattern_SDK_Reserve_0         = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"reserve"}, ""))
 )
 
 var (
-	forward_SDK_Ready_0 = runtime.ForwardResponseMessage
-
-	forward_SDK_Allocate_0 = runtime.ForwardResponseMessage
-
-	forward_SDK_Shutdown_0 = runtime.ForwardResponseMessage
-
-	forward_SDK_Health_0 = runtime.ForwardResponseMessage
-
-	forward_SDK_GetGameServer_0 = runtime.ForwardResponseMessage
-
+	forward_SDK_Ready_0           = runtime.ForwardResponseMessage
+	forward_SDK_Allocate_0        = runtime.ForwardResponseMessage
+	forward_SDK_Shutdown_0        = runtime.ForwardResponseMessage
+	forward_SDK_Health_0          = runtime.ForwardResponseMessage
+	forward_SDK_GetGameServer_0   = runtime.ForwardResponseMessage
 	forward_SDK_WatchGameServer_0 = runtime.ForwardResponseStream
-
-	forward_SDK_SetLabel_0 = runtime.ForwardResponseMessage
-
-	forward_SDK_SetAnnotation_0 = runtime.ForwardResponseMessage
-
-	forward_SDK_Reserve_0 = runtime.ForwardResponseMessage
+	forward_SDK_SetLabel_0        = runtime.ForwardResponseMessage
+	forward_SDK_SetAnnotation_0   = runtime.ForwardResponseMessage
+	forward_SDK_Reserve_0         = runtime.ForwardResponseMessage
 )

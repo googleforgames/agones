@@ -6,7 +6,7 @@ RUN apt-get update && \
 
 # install go
 WORKDIR /usr/local
-ENV GO_VERSION=1.23.4
+ENV GO_VERSION=1.24.4
 ENV GOPATH /go
 ENV GO111MODULE=on
 RUN wget -q https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz && \
@@ -15,8 +15,8 @@ RUN wget -q https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz && \
 ENV PATH /usr/local/go/bin:/go/bin:$PATH
 
 # install kubectl without gcloud as we want the last version
-ENV KUBECTL_VER 1.30.4
-RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/v${KUBECTL_VER}/bin/linux/amd64/kubectl && \
+ENV KUBECTL_VER 1.32.5
+RUN curl -LO https://dl.k8s.io/release/v${KUBECTL_VER}/bin/linux/amd64/kubectl && \
     chmod go+rx ./kubectl && \
     mv ./kubectl /usr/local/bin/kubectl
 

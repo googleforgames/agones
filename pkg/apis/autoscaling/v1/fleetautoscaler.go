@@ -301,6 +301,10 @@ type FleetAutoscalerStatus struct {
 	// ScalingLimited indicates that the calculated scale would be above or below the range
 	// defined by MinReplicas and MaxReplicas, and has thus been capped.
 	ScalingLimited bool `json:"scalingLimited"`
+
+	// LastAppliedPolicy is the ID of the last applied policy in the ChainPolicy.
+	// Used to track policy transitions for logging purposes.
+	LastAppliedPolicy FleetAutoscalerPolicyType `json:"lastAppliedPolicy"`
 }
 
 // FleetAutoscaleRequest defines the request to webhook autoscaler endpoint
@@ -316,6 +320,10 @@ type FleetAutoscaleRequest struct {
 	Namespace string `json:"namespace"`
 	// The Fleet's status values
 	Status agonesv1.FleetStatus `json:"status"`
+	// Standard map labels; More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels.
+	Labels map[string]string `json:"labels,omitempty"`
+	// Standard map annotations; More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations.
+	Annotations map[string]string `json:"annotations,omitempty"`
 }
 
 // FleetAutoscaleResponse defines the response of webhook autoscaler endpoint

@@ -1,0 +1,23 @@
+---
+name: Update Dependencies
+on:
+  schedule:
+    - cron: 0 0 * * 1
+jobs:
+  create_issue:
+    name: Create update dependency issue once every six weeks
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - name: Run this workflow only every six weeks (fail this step the other five weeks)
+        run: |
+          if [[ $(("( $(date +%s) - $(date +%s --date=20250310) ) / 86400 % 42")) -eq  0 ]] then exit 0; else exit 1; fi
+      - uses: actions/checkout@v3
+      - uses: JasonEtco/create-an-issue@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          filename: .github/ISSUE_TEMPLATE/golang_version_upgrade.md
+          assignees: 0xaravindh, kamaljeeti

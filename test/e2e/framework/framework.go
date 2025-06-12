@@ -150,7 +150,7 @@ func NewFromFlags() (*Framework, error) {
 	}
 
 	viper.SetDefault(kubeconfigFlag, filepath.Join(usr.HomeDir, ".kube", "config"))
-	viper.SetDefault(gsimageFlag, "us-docker.pkg.dev/agones-images/examples/simple-game-server:0.36")
+	viper.SetDefault(gsimageFlag, "us-docker.pkg.dev/agones-images/examples/simple-game-server:0.38")
 	viper.SetDefault(pullSecretFlag, "")
 	viper.SetDefault(stressTestLevelFlag, 0)
 	viper.SetDefault(perfOutputDirFlag, "")
@@ -226,7 +226,7 @@ func (f *Framework) CreateGameServerAndWaitUntilReady(t *testing.T, ns string, g
 	readyGs, err := f.WaitForGameServerState(t, newGs, agonesv1.GameServerStateReady, f.WaitForState)
 
 	if err != nil {
-		return nil, fmt.Errorf("waiting for %v GameServer instance readiness timed out (%v): %v",
+		return readyGs, fmt.Errorf("waiting for %v GameServer instance readiness timed out (%v): %v",
 			gs.Spec, gs.Name, err)
 	}
 
@@ -240,7 +240,7 @@ func (f *Framework) CreateGameServerAndWaitUntilReady(t *testing.T, ns string, g
 	}
 
 	if len(readyGs.Status.Ports) != expectedPortCount {
-		return nil, fmt.Errorf("ready GameServer instance has %d port(s), want %d", len(readyGs.Status.Ports), expectedPortCount)
+		return readyGs, fmt.Errorf("ready GameServer instance has %d port(s), want %d", len(readyGs.Status.Ports), expectedPortCount)
 	}
 
 	logrus.WithField("gs", newGs.ObjectMeta.Name).Info("GameServer Ready")

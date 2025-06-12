@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM golang:1.23.4-alpine AS builder
+FROM golang:1.24.4-alpine AS builder
 
 # install curl
 RUN apk update && \
@@ -22,8 +22,8 @@ RUN apk update && \
 WORKDIR /usr/local
 
 # install kubectl
-ENV KUBECTL_VER=1.30.4
-RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/v${KUBECTL_VER}/bin/linux/amd64/kubectl && \
+ENV KUBECTL_VER=1.32.5
+RUN curl -LO https://dl.k8s.io/release/v${KUBECTL_VER}/bin/linux/amd64/kubectl && \
     chmod go+rx ./kubectl && \
     mv ./kubectl /usr/local/bin/kubectl
 

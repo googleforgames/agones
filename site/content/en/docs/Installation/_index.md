@@ -47,14 +47,17 @@ The following table lists recent Agones versions and their corresponding require
 
 | Agones version | Kubernetes version(s) |
 | -------------- | ------------------    |
-| 1.46           | {{% k8s-version %}}   |
+| 1.49           | {{% k8s-version %}}   |
+| 1.48           | 1.30, 1.31, 1.32      |
+| 1.47           | 1.29, 1.30, 1.31      |
+| 1.46           | 1.29, 1.30, 1.31      |
 | 1.45           | 1.29, 1.30, 1.31      |
 | 1.44           | 1.28, 1.29, 1.30      |
 | 1.43           | 1.28, 1.29, 1.30      |
 | 1.42           | 1.27, 1.28, 1.29      |
 | 1.41           | 1.27, 1.28, 1.29      |
 | 1.40           | 1.27, 1.28, 1.29      |
-| 1.39           | 1.27, 1.28, 1.29      |
+| 1.39           | 1.26, 1.27, 1.28      |
 | 1.38           | 1.26, 1.27, 1.28      |
 | 1.37           | 1.26, 1.27, 1.28      |
 | 1.36           | 1.26, 1.27, 1.28      |
@@ -67,9 +70,6 @@ The following table lists recent Agones versions and their corresponding require
 | 1.29           | 1.24                  |
 | 1.28           | 1.23                  |
 | 1.27           | 1.23                  |
-| 1.26           | 1.23                  |
-| 1.25           | 1.22                  |
-| 1.24           | 1.22                  |
 
 ## Best Practices {#separation-of-agones-from-gameserver-nodes}
 <!-- keep installation/#separation-of-agones-from-gameserver-nodes permalink -->
