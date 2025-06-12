@@ -29,7 +29,7 @@ Steps to upgrade Golang version and dependencies:
 - [ ] Update the Dockerfiles for `build` directory.
 
   - [ ] At the root directory, run: `find build -type f \( -not -path '*/\.*' -and -not -path 'build/tmp/*' \) -exec sed -i 's/GO_VERSION=[0-9]\+\.[0-9]\+\.[0-9]\+/GO_VERSION=<NEW_GOLANG_VERSION>/g' {} \;`
-  - [ ] Update the `golang` version for file `build/agones-bot/Dockerfile` to <NEW_GOLANG_VERSION_WITHOUT_PATCH>
+  - [ ] Update the `golang` version for file `build/agones-bot/Dockerfile` to `golang:<NEW_GOLANG_VERSION_WITHOUT_PATCH>`
 
 - [ ] Update the Dockerfiles for `test` directory.
 
