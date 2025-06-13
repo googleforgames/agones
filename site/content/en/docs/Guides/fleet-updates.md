@@ -92,7 +92,7 @@ Fleet, we can specify that we `prefer` allocation to occur from the `v2` Fleet, 
 the `v1` Fleet, like so:
 
 
-{{< tabpane >}}
+{{< tabpane persist="header" >}}
   {{< tab header="selectors" lang="yaml" >}}
 apiVersion: "allocation.agones.dev/v1"
 kind: GameServerAllocation
