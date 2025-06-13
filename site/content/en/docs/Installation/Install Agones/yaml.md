@@ -15,7 +15,7 @@ certificates stored in this repository for securing Kubernetes webhooks communic
 For production workloads, we **strongly** recommend using the
 [helm installation]({{< relref "helm.md" >}}) which allows you to generate
 new, unique certificates or provide your own certificates. Alternatively,
-you can use `helm template` as described [below](#customizing-your-install)
+you can use `helm template` as described [below]({{< relref "yaml.md" >}}#customizing-your-install)
 to generate a custom yaml installation file with unique certificates.
 {{< /alert >}}
 

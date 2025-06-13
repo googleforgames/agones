@@ -19,15 +19,15 @@
 package v1
 
 import (
-	v1 "k8s.io/api/admissionregistration/v1"
+	admissionregistrationv1 "k8s.io/api/admissionregistration/v1"
 )
 
 // WebhookPolicyApplyConfiguration represents a declarative configuration of the WebhookPolicy type for use
 // with apply.
 type WebhookPolicyApplyConfiguration struct {
-	URL      *string              `json:"url,omitempty"`
-	Service  *v1.ServiceReference `json:"service,omitempty"`
-	CABundle []byte               `json:"caBundle,omitempty"`
+	URL      *string                                   `json:"url,omitempty"`
+	Service  *admissionregistrationv1.ServiceReference `json:"service,omitempty"`
+	CABundle []byte                                    `json:"caBundle,omitempty"`
 }
 
 // WebhookPolicyApplyConfiguration constructs a declarative configuration of the WebhookPolicy type for use with
@@ -47,7 +47,7 @@ func (b *WebhookPolicyApplyConfiguration) WithURL(value string) *WebhookPolicyAp
 // WithService sets the Service field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Service field is set to the value of the last call.
-func (b *WebhookPolicyApplyConfiguration) WithService(value v1.ServiceReference) *WebhookPolicyApplyConfiguration {
+func (b *WebhookPolicyApplyConfiguration) WithService(value admissionregistrationv1.ServiceReference) *WebhookPolicyApplyConfiguration {
 	b.Service = &value
 	return b
 }

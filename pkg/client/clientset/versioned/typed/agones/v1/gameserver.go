@@ -19,10 +19,10 @@
 package v1
 
 import (
-	"context"
+	context "context"
 
-	v1 "agones.dev/agones/pkg/apis/agones/v1"
-	agonesv1 "agones.dev/agones/pkg/client/applyconfiguration/agones/v1"
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
+	applyconfigurationagonesv1 "agones.dev/agones/pkg/client/applyconfiguration/agones/v1"
 	scheme "agones.dev/agones/pkg/client/clientset/versioned/scheme"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
@@ -38,32 +38,33 @@ type GameServersGetter interface {
 
 // GameServerInterface has methods to work with GameServer resources.
 type GameServerInterface interface {
-	Create(ctx context.Context, gameServer *v1.GameServer, opts metav1.CreateOptions) (*v1.GameServer, error)
-	Update(ctx context.Context, gameServer *v1.GameServer, opts metav1.UpdateOptions) (*v1.GameServer, error)
+	Create(ctx context.Context, gameServer *agonesv1.GameServer, opts metav1.CreateOptions) (*agonesv1.GameServer, error)
+	Update(ctx context.Context, gameServer *agonesv1.GameServer, opts metav1.UpdateOptions) (*agonesv1.GameServer, error)
 	Delete(ctx context.Context, name string, opts metav1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts metav1.DeleteOptions, listOpts metav1.ListOptions) error
-	Get(ctx context.Context, name string, opts metav1.GetOptions) (*v1.GameServer, error)
-	List(ctx context.Context, opts metav1.ListOptions) (*v1.GameServerList, error)
+	Get(ctx context.Context, name string, opts metav1.GetOptions) (*agonesv1.GameServer, error)
+	List(ctx context.Context, opts metav1.ListOptions) (*agonesv1.GameServerList, error)
 	Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error)
-	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *v1.GameServer, err error)
-	Apply(ctx context.Context, gameServer *agonesv1.GameServerApplyConfiguration, opts metav1.ApplyOptions) (result *v1.GameServer, err error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *agonesv1.GameServer, err error)
+	Apply(ctx context.Context, gameServer *applyconfigurationagonesv1.GameServerApplyConfiguration, opts metav1.ApplyOptions) (result *agonesv1.GameServer, err error)
 	GameServerExpansion
 }
 
 // gameServers implements GameServerInterface
 type gameServers struct {
-	*gentype.ClientWithListAndApply[*v1.GameServer, *v1.GameServerList, *agonesv1.GameServerApplyConfiguration]
+	*gentype.ClientWithListAndApply[*agonesv1.GameServer, *agonesv1.GameServerList, *applyconfigurationagonesv1.GameServerApplyConfiguration]
 }
 
 // newGameServers returns a GameServers
 func newGameServers(c *AgonesV1Client, namespace string) *gameServers {
 	return &gameServers{
-		gentype.NewClientWithListAndApply[*v1.GameServer, *v1.GameServerList, *agonesv1.GameServerApplyConfiguration](
+		gentype.NewClientWithListAndApply[*agonesv1.GameServer, *agonesv1.GameServerList, *applyconfigurationagonesv1.GameServerApplyConfiguration](
 			"gameservers",
 			c.RESTClient(),
 			scheme.ParameterCodec,
 			namespace,
-			func() *v1.GameServer { return &v1.GameServer{} },
-			func() *v1.GameServerList { return &v1.GameServerList{} }),
+			func() *agonesv1.GameServer { return &agonesv1.GameServer{} },
+			func() *agonesv1.GameServerList { return &agonesv1.GameServerList{} },
+		),
 	}
 }

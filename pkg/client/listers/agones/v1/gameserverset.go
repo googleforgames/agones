@@ -19,10 +19,10 @@
 package v1
 
 import (
-	v1 "agones.dev/agones/pkg/apis/agones/v1"
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/client-go/listers"
-	"k8s.io/client-go/tools/cache"
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
+	labels "k8s.io/apimachinery/pkg/labels"
+	listers "k8s.io/client-go/listers"
+	cache "k8s.io/client-go/tools/cache"
 )
 
 // GameServerSetLister helps list GameServerSets.
@@ -30,7 +30,7 @@ import (
 type GameServerSetLister interface {
 	// List lists all GameServerSets in the indexer.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1.GameServerSet, err error)
+	List(selector labels.Selector) (ret []*agonesv1.GameServerSet, err error)
 	// GameServerSets returns an object that can list and get GameServerSets.
 	GameServerSets(namespace string) GameServerSetNamespaceLister
 	GameServerSetListerExpansion
@@ -38,17 +38,17 @@ type GameServerSetLister interface {
 
 // gameServerSetLister implements the GameServerSetLister interface.
 type gameServerSetLister struct {
-	listers.ResourceIndexer[*v1.GameServerSet]
+	listers.ResourceIndexer[*agonesv1.GameServerSet]
 }
 
 // NewGameServerSetLister returns a new GameServerSetLister.
 func NewGameServerSetLister(indexer cache.Indexer) GameServerSetLister {
-	return &gameServerSetLister{listers.New[*v1.GameServerSet](indexer, v1.Resource("gameserverset"))}
+	return &gameServerSetLister{listers.New[*agonesv1.GameServerSet](indexer, agonesv1.Resource("gameserverset"))}
 }
 
 // GameServerSets returns an object that can list and get GameServerSets.
 func (s *gameServerSetLister) GameServerSets(namespace string) GameServerSetNamespaceLister {
-	return gameServerSetNamespaceLister{listers.NewNamespaced[*v1.GameServerSet](s.ResourceIndexer, namespace)}
+	return gameServerSetNamespaceLister{listers.NewNamespaced[*agonesv1.GameServerSet](s.ResourceIndexer, namespace)}
 }
 
 // GameServerSetNamespaceLister helps list and get GameServerSets.
@@ -56,15 +56,15 @@ func (s *gameServerSetLister) GameServerSets(namespace string) GameServerSetName
 type GameServerSetNamespaceLister interface {
 	// List lists all GameServerSets in the indexer for a given namespace.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1.GameServerSet, err error)
+	List(selector labels.Selector) (ret []*agonesv1.GameServerSet, err error)
 	// Get retrieves the GameServerSet from the indexer for a given namespace and name.
 	// Objects returned here must be treated as read-only.
-	Get(name string) (*v1.GameServerSet, error)
+	Get(name string) (*agonesv1.GameServerSet, error)
 	GameServerSetNamespaceListerExpansion
 }
 
 // gameServerSetNamespaceLister implements the GameServerSetNamespaceLister
 // interface.
 type gameServerSetNamespaceLister struct {
-	listers.ResourceIndexer[*v1.GameServerSet]
+	listers.ResourceIndexer[*agonesv1.GameServerSet]
 }
