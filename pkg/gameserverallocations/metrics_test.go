@@ -15,17 +15,30 @@
 package gameserverallocations
 
 import (
+	"bufio"
 	"context"
+	"net/http"
+	"strings"
 	"testing"
 	"time"
 
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
 	gameserverv1 "agones.dev/agones/pkg/client/listers/agones/v1"
+	mt "agones.dev/agones/pkg/metrics"
+	agtesting "agones.dev/agones/pkg/testing"
+	"agones.dev/agones/pkg/util/httpserver"
 	"agones.dev/agones/pkg/util/runtime"
+	"agones.dev/agones/test/e2e/framework"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"go.opencensus.io/stats/view"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	k8sruntime "k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/apimachinery/pkg/watch"
+	k8stesting "k8s.io/client-go/testing"
 )
 
 type mockGameServerLister struct {
@@ -52,6 +65,11 @@ func (s mockGameServerNamespaceLister) Get(_ string) (*agonesv1.GameServer, erro
 
 func (s mockGameServerNamespaceLister) List(_ labels.Selector) (ret []*agonesv1.GameServer, err error) {
 	return ret, nil
+}
+
+func resetMetrics() {
+	unRegisterViews()
+	registerViews()
 }
 
 func TestSetResponse(t *testing.T) {
@@ -116,4 +134,132 @@ func TestSetResponse(t *testing.T) {
 			assert.Equal(t, subtest.expectedCalled, gsl.gameServersCalled)
 		})
 	}
+}
+
+func TestAllocationMetrics(t *testing.T) {
+	resetMetrics()
+
+	runtime.FeatureTestMutex.Lock()
+	defer runtime.FeatureTestMutex.Unlock()
+
+	conf := mt.Config{
+		PrometheusMetrics: true,
+	}
+	server := &httpserver.Server{
+		Port:   "3001",
+		Logger: framework.TestLogger(t),
+	}
+
+	health, closer := mt.SetupMetrics(conf, server)
+	defer t.Cleanup(closer)
+
+	assert.NotNil(t, health, "Health check handler should not be nil")
+	server.Handle("/", health)
+
+	f, gsList := defaultFixtures(1)
+	a, m := newFakeAllocator()
+
+	m.AgonesClient.AddReactor("list", "gameservers", func(_ k8stesting.Action) (bool, k8sruntime.Object, error) {
+		return true, &agonesv1.GameServerList{Items: gsList}, nil
+	})
+
+	gsWatch := watch.NewFake()
+	m.AgonesClient.AddWatchReactor("gameservers", k8stesting.DefaultWatchReactor(gsWatch, nil))
+	m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
+		ua := action.(k8stesting.UpdateAction)
+		gs := ua.GetObject().(*agonesv1.GameServer)
+		assert.Equal(t, agonesv1.GameServerStateAllocated, gs.Status.State)
+		gsWatch.Modify(gs)
+
+		return true, gs, nil
+	})
+
+	ctxAlloc, cancelAlloc := agtesting.StartInformers(m, a.allocationCache.gameServerSynced)
+	defer cancelAlloc()
+
+	require.NoError(t, a.Run(ctxAlloc))
+	// wait for it to be up and running
+	err := wait.PollUntilContextTimeout(context.Background(), time.Second, 10*time.Second, true, func(_ context.Context) (done bool, err error) {
+		return a.allocationCache.workerqueue.RunCount() == 1, nil
+	})
+	require.NoError(t, err)
+
+	gsa := allocationv1.GameServerAllocation{ObjectMeta: metav1.ObjectMeta{Name: "gsa-1", Namespace: defaultNs},
+		Spec: allocationv1.GameServerAllocationSpec{
+			Selectors: []allocationv1.GameServerSelector{{LabelSelector: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: f.ObjectMeta.Name}}}},
+		}}
+	gsa.ApplyDefaults()
+	errs := gsa.Validate()
+	require.Len(t, errs, 0)
+
+	result, err := a.Allocate(ctxAlloc, &gsa)
+	require.NoError(t, err)
+	require.NotNil(t, result)
+
+	ctxHTTP, cancelHTTP := context.WithCancel(context.Background())
+	defer cancelHTTP()
+
+	// Start the HTTP server
+	go func() {
+		_ = server.Run(ctxHTTP, 0)
+	}()
+	time.Sleep(300 * time.Millisecond)
+
+	resp, err := http.Get("http://localhost:3001/metrics")
+	require.NoError(t, err, "Failed to GET metrics endpoint")
+	defer func() {
+		assert.NoError(t, resp.Body.Close())
+	}()
+
+	assert.Equal(t, http.StatusOK, resp.StatusCode, "Expected status code 200")
+
+	metricsSet := collectMetricNames(resp)
+	expectedMetrics := getMetricNames()
+
+	for _, metric := range expectedMetrics {
+		assert.Contains(t, metricsSet, metric, "Missing expected metric: %s", metric)
+	}
+}
+
+// getMetricNames returns all metric view names.
+func getMetricNames() []string {
+	var metricNames []string
+	for _, v := range stateViews {
+		metricName := "agones_" + v.Name
+
+		// Check if the aggregation type is Distribution
+		if v.Aggregation.Type == view.AggTypeDistribution {
+			// If it's a distribution, we append _bucket, _sum, and _count
+			metricNames = append(metricNames,
+				metricName+"_bucket",
+				metricName+"_sum",
+				metricName+"_count",
+			)
+		} else {
+			metricNames = append(metricNames, metricName)
+
+		}
+	}
+	return metricNames
+}
+
+func collectMetricNames(resp *http.Response) map[string]bool {
+	metrics := make(map[string]bool)
+	scanner := bufio.NewScanner(resp.Body)
+	for scanner.Scan() {
+		line := scanner.Text()
+		if strings.HasPrefix(line, "#") || line == "" {
+			continue
+		}
+		fields := strings.Fields(line)
+		if len(fields) > 0 {
+			// Extract only the metric name, excluding labels
+			metricName := fields[0]
+			if idx := strings.Index(metricName, "{"); idx != -1 {
+				metricName = metricName[:idx]
+			}
+			metrics[metricName] = true
+		}
+	}
+	return metrics
 }
