@@ -123,6 +123,10 @@ func TestControllerSyncFleet(t *testing.T) {
 	})
 
 	t.Run("gameserverset with different number of replicas", func(t *testing.T) {
+		if utilruntime.FeatureEnabled(utilruntime.FeatureRollingUpdateFix) {
+			t.SkipNow()
+		}
+
 		f := defaultFixture()
 		f.Spec.Strategy.Type = appsv1.RecreateDeploymentStrategyType
 		c, m := newFakeController()
@@ -198,6 +202,10 @@ func TestControllerSyncFleet(t *testing.T) {
 	})
 
 	t.Run("gameserverset with different image details", func(t *testing.T) {
+		if utilruntime.FeatureEnabled(utilruntime.FeatureRollingUpdateFix) {
+			t.SkipNow()
+		}
+
 		f := defaultFixture()
 		f.Spec.Strategy.Type = appsv1.RollingUpdateDeploymentStrategyType
 		f.Spec.Template.Spec.Ports = []agonesv1.GameServerPort{{HostPort: 5555}}
@@ -1066,6 +1074,10 @@ func TestControllerApplyDeploymentStrategy(t *testing.T) {
 
 	for k, v := range fixtures {
 		t.Run(k, func(t *testing.T) {
+			if utilruntime.FeatureEnabled(utilruntime.FeatureRollingUpdateFix) {
+				t.SkipNow()
+			}
+
 			f := defaultFixture()
 			f.Spec.Strategy.Type = v.strategyType
 			f.Spec.Replicas = 10
@@ -1620,6 +1632,7 @@ func TestControllerRollingUpdateDeployment(t *testing.T) {
 			},
 		},
 		"attempt to drive replicas over the max surge": {
+			features:                    "RollingUpdateFix=false",
 			fleetSpecReplicas:           100,
 			activeSpecReplicas:          25,
 			activeStatusReplicas:        25,
