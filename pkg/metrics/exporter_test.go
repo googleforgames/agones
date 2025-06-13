@@ -28,9 +28,10 @@ import (
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	agtesting "agones.dev/agones/pkg/testing"
 	"agones.dev/agones/pkg/util/httpserver"
+	"agones.dev/agones/test/e2e/framework"
+
 	"agones.dev/agones/pkg/util/runtime"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.opencensus.io/stats/view"
@@ -80,8 +81,8 @@ func TestMetrics_Endpoint_ExposesAllMetrics(t *testing.T) {
 		PrometheusMetrics: true,
 	}
 	server := &httpserver.Server{
-		Port:   "8093",
-		Logger: testLogger(t),
+		Port:   "3001",
+		Logger: framework.TestLogger(t),
 	}
 
 	m := newMockWithReactorNodesAndGameServers()
@@ -122,7 +123,7 @@ func TestMetrics_Endpoint_ExposesAllMetrics(t *testing.T) {
 	}()
 	time.Sleep(300 * time.Millisecond)
 
-	resp, err := http.Get("http://localhost:8093/metrics")
+	resp, err := http.Get("http://localhost:3001/metrics")
 	require.NoError(t, err, "Failed to GET metrics endpoint")
 	defer func() {
 		assert.NoError(t, resp.Body.Close())
@@ -146,8 +147,8 @@ func TestSetupMetrics_StackdriverOnly_NoPanic(t *testing.T) {
 		StackdriverLabels: "env=dev",
 	}
 	server := &httpserver.Server{
-		Port:   "8091",
-		Logger: testLogger(t),
+		Port:   "3001",
+		Logger: framework.TestLogger(t),
 	}
 
 	// Set required env vars to avoid nil pointer
@@ -156,8 +157,9 @@ func TestSetupMetrics_StackdriverOnly_NoPanic(t *testing.T) {
 	require.NoError(t, os.Setenv("CONTAINER_NAME", "test-container"))
 
 	// Call without expecting crash (error will be logged internally)
-	_, closer := SetupMetrics(conf, server)
+	health, closer := SetupMetrics(conf, server)
 	defer t.Cleanup(closer)
+	assert.NotNil(t, health, "Health check handler should not be nil")
 }
 
 func newMockWithReactorNodesAndGameServers() agtesting.Mocks {
@@ -307,9 +309,4 @@ func collectMetricNames(resp *http.Response) map[string]bool {
 		}
 	}
 	return metrics
-}
-
-// TestLogger returns the standard logger for helper functions.
-func testLogger(t *testing.T) *logrus.Entry {
-	return logrus.WithField("test", t.Name())
 }
