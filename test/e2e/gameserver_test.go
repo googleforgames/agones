@@ -488,6 +488,10 @@ func TestGameServerUnhealthyAfterReadyCrash(t *testing.T) {
 }
 
 func TestGameServerPodCompletedAfterCleanExit(t *testing.T) {
+	if !runtime.FeatureEnabled(runtime.FeatureSidecarContainers) {
+		t.SkipNow()
+	}
+
 	t.Parallel()
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
