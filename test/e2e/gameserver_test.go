@@ -313,17 +313,14 @@ func TestGameServerUnhealthyAfterDeletingPod(t *testing.T) {
 	defer gsClient.Delete(ctx, readyGs.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint: errcheck
 
 	pod, err := podClient.Get(ctx, readyGs.ObjectMeta.Name, metav1.GetOptions{})
-	if err != nil {
-		assert.FailNow(t, "Failed to get a pod", err.Error())
-	}
-
-	assert.True(t, metav1.IsControlledBy(pod, readyGs))
+	require.NoError(t, err)
+	require.True(t, metav1.IsControlledBy(pod, readyGs))
 
 	err = podClient.Delete(ctx, pod.ObjectMeta.Name, metav1.DeleteOptions{})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	_, err = framework.WaitForGameServerState(t, readyGs, agonesv1.GameServerStateUnhealthy, 3*time.Minute)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 }
 
 func TestGameServerRestartBeforeReadyCrash(t *testing.T) {

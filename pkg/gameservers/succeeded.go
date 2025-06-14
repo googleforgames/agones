@@ -132,8 +132,8 @@ func (c *SucceededController) syncGameServer(ctx context.Context, key string) er
 		return nil
 	}
 
-	// If the pod exists but is not in Succeeded state, we don't need to do anything
-	if !isGameServerPod(pod) || pod.Status.Phase != corev1.PodSucceeded {
+	// If the pod exists but is not in Succeeded state or is being terminated, we don't need to do anything
+	if !isGameServerPod(pod) || pod.Status.Phase != corev1.PodSucceeded || !pod.ObjectMeta.DeletionTimestamp.IsZero() {
 		return nil
 	}
 
@@ -149,7 +149,7 @@ func (c *SucceededController) syncGameServer(ctx context.Context, key string) er
 	}
 
 	// already on the way out, so no need to do anything.
-	if gs.IsBeingDeleted() || gs.Status.State == agonesv1.GameServerStateShutdown {
+	if gs.IsBeingDeleted() || agonesv1.TerminalGameServerStates[gs.Status.State] {
 		c.loggerForGameServerKey(key).WithField("state", gs.Status.State).Debug("GameServer already being deleted/shutdown. Skipping.")
 		return nil
 	}

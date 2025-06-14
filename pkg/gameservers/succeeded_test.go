@@ -108,9 +108,46 @@ func TestSucceededControllerSyncGameServer(t *testing.T) {
 				postTests:   func(_ *testing.T, _ agtesting.Mocks) {},
 			},
 		},
+		"game server is in Error state": {
+			setup: func(gs *agonesv1.GameServer, pod *corev1.Pod) (*agonesv1.GameServer, *corev1.Pod) {
+				gs.Status.State = agonesv1.GameServerStateError
+				pod.Status.Phase = corev1.PodSucceeded
+				return gs, pod
+			},
+			expected: expected{
+				updated:     false,
+				updateTests: func(_ *testing.T, _ *agonesv1.GameServer) {},
+				postTests:   func(_ *testing.T, _ agtesting.Mocks) {},
+			},
+		},
+		"game server is in Unhealthy state": {
+			setup: func(gs *agonesv1.GameServer, pod *corev1.Pod) (*agonesv1.GameServer, *corev1.Pod) {
+				gs.Status.State = agonesv1.GameServerStateUnhealthy
+				pod.Status.Phase = corev1.PodSucceeded
+				return gs, pod
+			},
+			expected: expected{
+				updated:     false,
+				updateTests: func(_ *testing.T, _ *agonesv1.GameServer) {},
+				postTests:   func(_ *testing.T, _ agtesting.Mocks) {},
+			},
+		},
 		"pod is not a gameserver pod": {
 			setup: func(gs *agonesv1.GameServer, _ *corev1.Pod) (*agonesv1.GameServer, *corev1.Pod) {
 				pod := &corev1.Pod{ObjectMeta: gs.ObjectMeta}
+				pod.Status.Phase = corev1.PodSucceeded
+				return gs, pod
+			},
+			expected: expected{
+				updated:     false,
+				updateTests: func(_ *testing.T, _ *agonesv1.GameServer) {},
+				postTests:   func(_ *testing.T, _ agtesting.Mocks) {},
+			},
+		},
+		"pod is in terminating state": {
+			setup: func(gs *agonesv1.GameServer, pod *corev1.Pod) (*agonesv1.GameServer, *corev1.Pod) {
+				now := metav1.Now()
+				pod.ObjectMeta.DeletionTimestamp = &now
 				pod.Status.Phase = corev1.PodSucceeded
 				return gs, pod
 			},
