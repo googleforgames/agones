@@ -19,14 +19,14 @@
 package v1
 
 import (
-	v1 "agones.dev/agones/pkg/apis/autoscaling/v1"
+	autoscalingv1 "agones.dev/agones/pkg/apis/autoscaling/v1"
 )
 
 // FleetAutoscalerSyncApplyConfiguration represents a declarative configuration of the FleetAutoscalerSync type for use
 // with apply.
 type FleetAutoscalerSyncApplyConfiguration struct {
-	Type          *v1.FleetAutoscalerSyncType          `json:"type,omitempty"`
-	FixedInterval *FixedIntervalSyncApplyConfiguration `json:"fixedInterval,omitempty"`
+	Type          *autoscalingv1.FleetAutoscalerSyncType `json:"type,omitempty"`
+	FixedInterval *FixedIntervalSyncApplyConfiguration   `json:"fixedInterval,omitempty"`
 }
 
 // FleetAutoscalerSyncApplyConfiguration constructs a declarative configuration of the FleetAutoscalerSync type for use with
@@ -38,7 +38,7 @@ func FleetAutoscalerSync() *FleetAutoscalerSyncApplyConfiguration {
 // WithType sets the Type field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Type field is set to the value of the last call.
-func (b *FleetAutoscalerSyncApplyConfiguration) WithType(value v1.FleetAutoscalerSyncType) *FleetAutoscalerSyncApplyConfiguration {
+func (b *FleetAutoscalerSyncApplyConfiguration) WithType(value autoscalingv1.FleetAutoscalerSyncType) *FleetAutoscalerSyncApplyConfiguration {
 	b.Type = &value
 	return b
 }

@@ -46,6 +46,9 @@ data:
           "1.48.0",
           "1.49.0",
           "Dev"
+        ],
+        "1.33": [
+          "Dev"
         ]
       },
       "agonesVersionFeatureGates": {
@@ -90,8 +93,8 @@ data:
           "betaGates": ["AutopilotPassthroughPort", "CountsAndLists", "GKEAutopilotExtendedDurationPods", "PortPolicyNone", "PortRanges"]
         },
         "Dev": {
-          "alphaGates": ["FleetAutoscaleRequestMetaData", "PlayerAllocationFilter", "PlayerTracking", "RollingUpdateFix", "ScheduledAutoscaler", "SidecarContainers"],
-          "betaGates": ["AutopilotPassthroughPort", "CountsAndLists", "GKEAutopilotExtendedDurationPods", "PortPolicyNone", "PortRanges"]
+          "alphaGates": ["FleetAutoscaleRequestMetaData", "PlayerAllocationFilter", "PlayerTracking", "ScheduledAutoscaler", "SidecarContainers"],
+          "betaGates": ["AutopilotPassthroughPort", "CountsAndLists", "GKEAutopilotExtendedDurationPods", "PortPolicyNone", "PortRanges", "RollingUpdateFix"]
         }
       }
     }

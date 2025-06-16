@@ -19,13 +19,13 @@
 package v1
 
 import (
-	"context"
+	context "context"
 	time "time"
 
-	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
+	apisagonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	versioned "agones.dev/agones/pkg/client/clientset/versioned"
 	internalinterfaces "agones.dev/agones/pkg/client/informers/externalversions/internalinterfaces"
-	v1 "agones.dev/agones/pkg/client/listers/agones/v1"
+	agonesv1 "agones.dev/agones/pkg/client/listers/agones/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
@@ -36,7 +36,7 @@ import (
 // Fleets.
 type FleetInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1.FleetLister
+	Lister() agonesv1.FleetLister
 }
 
 type fleetInformer struct {
@@ -71,7 +71,7 @@ func NewFilteredFleetInformer(client versioned.Interface, namespace string, resy
 				return client.AgonesV1().Fleets(namespace).Watch(context.TODO(), options)
 			},
 		},
-		&agonesv1.Fleet{},
+		&apisagonesv1.Fleet{},
 		resyncPeriod,
 		indexers,
 	)
@@ -82,9 +82,9 @@ func (f *fleetInformer) defaultInformer(client versioned.Interface, resyncPeriod
 }
 
 func (f *fleetInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&agonesv1.Fleet{}, f.defaultInformer)
+	return f.factory.InformerFor(&apisagonesv1.Fleet{}, f.defaultInformer)
 }
 
-func (f *fleetInformer) Lister() v1.FleetLister {
-	return v1.NewFleetLister(f.Informer().GetIndexer())
+func (f *fleetInformer) Lister() agonesv1.FleetLister {
+	return agonesv1.NewFleetLister(f.Informer().GetIndexer())
 }

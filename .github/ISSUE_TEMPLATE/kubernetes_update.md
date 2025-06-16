@@ -62,14 +62,14 @@ List of items to do for upgrading to {version_1} {version_2} {version_3}
   - [ ] Update the `grpc_release_tag` in the SDK [base image grpc version](https://github.com/googleforgames/agones/blob/main/build/includes/sdk.mk).
   - [ ] Update the gRPC version number in C++ gRPC Dependency documentation [here](https://github.com/googleforgames/agones/blob/main/site/content/en/docs/Guides/Client%20SDKs/cpp.md).
   - [ ] Update the gRPC version ([Dockerfile](https://github.com/googleforgames/agones/blob/main/examples/cpp-simple/Dockerfile))
+  - [ ] Regenerate all client sdks: [make gen-all-sdk-grpc](https://github.com/googleforgames/agones/blob/main/build/README.md#make-gen-all-sdk-grpc)
+        This can take 20 minutes or so, as the above changes force a rebuild. Plan your day accordingly 😃.
+  - [ ] Regenerate allocated API endpoints: [make gen-allocation-grpc](https://github.com/googleforgames/agones/blob/main/build/README.md#make-gen-allocation-grpc)
   - [ ] Update the C++ `cpp-simple` image.
     - [ ] Update the `cpp-simple` example images tag. At `build` directory, run:
       - [ ] `make bump-image IMAGENAME=cpp-simple-server VERSION=<current-image-version>`
     - [ ] Run the following to generate and push the new `cpp-simple` example images:
       - [ ] In `examples/cpp-simple`, run: `make cloud-build`
-  - [ ] Regenerate all client sdks: [make gen-all-sdk-grpc](https://github.com/googleforgames/agones/blob/main/build/README.md#make-gen-all-sdk-grpc)
-        This can take 20 minutes or so, as the above changes force a rebuild. Plan your day accordingly 😃.
-  - [ ] Regenerate allocated API endpoints: [make gen-allocation-grpc](https://github.com/googleforgames/agones/blob/main/build/README.md#make-gen-allocation-grpc)
 - [ ] Confirm the update works as expected by running e2e and upgrade tests
   - [ ] Add the new supported Kubernetes versions to the e2e clusters creation
     - [ ] In `build/terraform/e2e/module.tf`, add the new supported version to the map
@@ -85,11 +85,11 @@ List of items to do for upgrading to {version_1} {version_2} {version_3}
           to rotate the regions through new versions. (Keep the clusters on `RAPID`.) Note that the
           upgrade clusters do not use the exact same regions as the e2e tests.
     - [ ] Recreate the clusters with terraform:
-    ```
-    cd build; make shell; cd build/terraform/upgrade
-    terraform init -backend-config="bucket=agones-images-upgrade-infra-bucket-tfstate" -backend-config="prefix=terraform/state"
-    terraform apply -var project="agones-images"
-    ```
+      ```
+      cd build; make shell; cd build/terraform/upgrade
+      terraform init -backend-config="bucket=agones-images-upgrade-infra-bucket-tfstate" -backend-config="prefix=terraform/state"
+      terraform apply -var project="agones-images"
+      ```
   - [ ] Update the Cloud Build configuration to run e2e and ugprade tests on the new created clusters,
         and disable the e2e and ugprade tests on the clusters with the oldest supported K8s version
     - [ ] Update the `versionsAndRegions` variable to add the new supported version and remove the
@@ -101,8 +101,7 @@ List of items to do for upgrading to {version_1} {version_2} {version_3}
     - [ ] Update the `test/upgrade/versionMap.yaml` `k8sToAgonesVersions` to add the new Kubernetes
           version. For example:
       ```
-      ],
-      "1.32": [
+      "1.33": [
         "Dev"
       ]
       ```
@@ -134,4 +133,3 @@ List of items to do for upgrading to {version_1} {version_2} {version_3}
     ```
   - [ ] Update the `_TEST_CLUSTER_NAME` in `ci/perf-test-cloudbuild.yaml` to the name of the newly
         created performance test cluster, and send a PR with the changes.
--

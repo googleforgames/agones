@@ -29,7 +29,7 @@ type FakeAllocationV1 struct {
 }
 
 func (c *FakeAllocationV1) GameServerAllocations(namespace string) v1.GameServerAllocationInterface {
-	return &FakeGameServerAllocations{c, namespace}
+	return newFakeGameServerAllocations(c, namespace)
 }
 
 // RESTClient returns a RESTClient that is used to communicate

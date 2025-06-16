@@ -116,7 +116,7 @@ Dashboard screenshots :
 ![grafana dashboard controller](../../../images/grafana-dashboard-controller.png)
 
 {{< alert title="Note" color="info">}}
-You can import our dashboards by copying the json content from {{< ghlink href="/build/grafana" branch="main" >}}each config map{{< /ghlink >}} into your own instance of Grafana (+ > Create > Import > Or paste json) or follow the [installation](#installation) guide.
+You can import our dashboards by copying the json content from {{< ghlink href="/build/grafana" branch="main" >}}each config map{{< /ghlink >}} into your own instance of Grafana (+ > Create > Import > Or paste json) or follow the [installation]({{< relref "metrics.md" >}}#installation) guide.
 {{< /alert >}}
 
 ## Installation

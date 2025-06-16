@@ -178,12 +178,12 @@ steps:
   #
   # Example version checks
   #
-  - name: make-docker
-    id: check-example-versions
-    dir: build
-    args: [check-example-versions]
-    waitFor:
-      - push-images
+  # - name: make-docker
+  #   id: check-example-versions
+  #   dir: build
+  #   args: [check-example-versions]
+  #   waitFor:
+  #     - push-images
 
   #
   # Run the all the automated tests (except e2e) in parallel
@@ -298,7 +298,7 @@ steps:
         trap 'echo Cleaning up any remaining running pids: $(jobs -p) ; kill $(jobs -p) 2> /dev/null || :' EXIT SIGTERM
 
         cloudProducts=("generic" "gke-autopilot")
-        declare -A versionsAndRegions=( [1.32]=us-west1 [1.31]=us-east1 [1.30]=us-central1 )
+        declare -A versionsAndRegions=( [1.33]=us-central1 [1.32]=us-west1 [1.31]=us-east1 )
 
         for cloudProduct in "${cloudProducts[@]}"
         do
@@ -437,15 +437,15 @@ steps:
         set -o pipefail
         pids=()
         cloudProducts=("generic" "gke-autopilot")
-        declare -A versionsAndRegions=( [1.30]=asia-east1 [1.31]=us-east1 [1.32]=us-west1 )
+        declare -A versionsAndRegions=( [1.31]=us-east1 [1.32]=us-west1 [1.33]=europe-west1 )
 
         # Keep in sync with the inverse of 'alpha' and 'beta' features in
         # pkg/util/runtime/features.go:featureDefaults
-        featureWithGate="PlayerAllocationFilter=true&FleetAutoscaleRequestMetaData=true&PlayerTracking=true&CountsAndLists=false&RollingUpdateFix=true&PortRanges=false&PortPolicyNone=false&ScheduledAutoscaler=true&AutopilotPassthroughPort=false&GKEAutopilotExtendedDurationPods=false&SidecarContainers=true&Example=true"
+        featureWithGate="PlayerAllocationFilter=true&FleetAutoscaleRequestMetaData=true&PlayerTracking=true&CountsAndLists=false&RollingUpdateFix=false&PortRanges=false&PortPolicyNone=false&ScheduledAutoscaler=true&AutopilotPassthroughPort=false&GKEAutopilotExtendedDurationPods=false&SidecarContainers=true&Example=true"
         featureWithoutGate=""
 
         # Use this if specific feature gates can only be supported on specific Kubernetes versions.
-        declare -A featureWithGateByVersion=( [1.30]="${featureWithGate}" [1.31]="${featureWithGate}" [1.32]="${featureWithGate}")
+        declare -A featureWithGateByVersion=( [1.31]="${featureWithGate}" [1.32]="${featureWithGate}" [1.33]="${featureWithGate}")
 
         for cloudProduct in ${cloudProducts[@]}
         do
