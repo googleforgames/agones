@@ -19,20 +19,20 @@
 package v1
 
 import (
-	v1 "agones.dev/agones/pkg/apis/agones/v1"
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	corev1 "k8s.io/api/core/v1"
 )
 
 // GameServerPortApplyConfiguration represents a declarative configuration of the GameServerPort type for use
 // with apply.
 type GameServerPortApplyConfiguration struct {
-	Name          *string          `json:"name,omitempty"`
-	Range         *string          `json:"range,omitempty"`
-	PortPolicy    *v1.PortPolicy   `json:"portPolicy,omitempty"`
-	Container     *string          `json:"container,omitempty"`
-	ContainerPort *int32           `json:"containerPort,omitempty"`
-	HostPort      *int32           `json:"hostPort,omitempty"`
-	Protocol      *corev1.Protocol `json:"protocol,omitempty"`
+	Name          *string              `json:"name,omitempty"`
+	Range         *string              `json:"range,omitempty"`
+	PortPolicy    *agonesv1.PortPolicy `json:"portPolicy,omitempty"`
+	Container     *string              `json:"container,omitempty"`
+	ContainerPort *int32               `json:"containerPort,omitempty"`
+	HostPort      *int32               `json:"hostPort,omitempty"`
+	Protocol      *corev1.Protocol     `json:"protocol,omitempty"`
 }
 
 // GameServerPortApplyConfiguration constructs a declarative configuration of the GameServerPort type for use with
@@ -60,7 +60,7 @@ func (b *GameServerPortApplyConfiguration) WithRange(value string) *GameServerPo
 // WithPortPolicy sets the PortPolicy field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the PortPolicy field is set to the value of the last call.
-func (b *GameServerPortApplyConfiguration) WithPortPolicy(value v1.PortPolicy) *GameServerPortApplyConfiguration {
+func (b *GameServerPortApplyConfiguration) WithPortPolicy(value agonesv1.PortPolicy) *GameServerPortApplyConfiguration {
 	b.PortPolicy = &value
 	return b
 }

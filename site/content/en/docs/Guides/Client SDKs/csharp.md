@@ -1,7 +1,7 @@
 ---
 title: "C# Game Server Client SDK"
 linkTitle: "C#"
-date: 2020-2-25
+date: 2020-02-25
 weight: 50
 description: "This is the C# version of the Agones Game Server Client SDK."
 publishDate: 2020-05-28

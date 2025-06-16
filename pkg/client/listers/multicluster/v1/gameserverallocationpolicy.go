@@ -19,10 +19,10 @@
 package v1
 
 import (
-	v1 "agones.dev/agones/pkg/apis/multicluster/v1"
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/client-go/listers"
-	"k8s.io/client-go/tools/cache"
+	multiclusterv1 "agones.dev/agones/pkg/apis/multicluster/v1"
+	labels "k8s.io/apimachinery/pkg/labels"
+	listers "k8s.io/client-go/listers"
+	cache "k8s.io/client-go/tools/cache"
 )
 
 // GameServerAllocationPolicyLister helps list GameServerAllocationPolicies.
@@ -30,7 +30,7 @@ import (
 type GameServerAllocationPolicyLister interface {
 	// List lists all GameServerAllocationPolicies in the indexer.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1.GameServerAllocationPolicy, err error)
+	List(selector labels.Selector) (ret []*multiclusterv1.GameServerAllocationPolicy, err error)
 	// GameServerAllocationPolicies returns an object that can list and get GameServerAllocationPolicies.
 	GameServerAllocationPolicies(namespace string) GameServerAllocationPolicyNamespaceLister
 	GameServerAllocationPolicyListerExpansion
@@ -38,17 +38,17 @@ type GameServerAllocationPolicyLister interface {
 
 // gameServerAllocationPolicyLister implements the GameServerAllocationPolicyLister interface.
 type gameServerAllocationPolicyLister struct {
-	listers.ResourceIndexer[*v1.GameServerAllocationPolicy]
+	listers.ResourceIndexer[*multiclusterv1.GameServerAllocationPolicy]
 }
 
 // NewGameServerAllocationPolicyLister returns a new GameServerAllocationPolicyLister.
 func NewGameServerAllocationPolicyLister(indexer cache.Indexer) GameServerAllocationPolicyLister {
-	return &gameServerAllocationPolicyLister{listers.New[*v1.GameServerAllocationPolicy](indexer, v1.Resource("gameserverallocationpolicy"))}
+	return &gameServerAllocationPolicyLister{listers.New[*multiclusterv1.GameServerAllocationPolicy](indexer, multiclusterv1.Resource("gameserverallocationpolicy"))}
 }
 
 // GameServerAllocationPolicies returns an object that can list and get GameServerAllocationPolicies.
 func (s *gameServerAllocationPolicyLister) GameServerAllocationPolicies(namespace string) GameServerAllocationPolicyNamespaceLister {
-	return gameServerAllocationPolicyNamespaceLister{listers.NewNamespaced[*v1.GameServerAllocationPolicy](s.ResourceIndexer, namespace)}
+	return gameServerAllocationPolicyNamespaceLister{listers.NewNamespaced[*multiclusterv1.GameServerAllocationPolicy](s.ResourceIndexer, namespace)}
 }
 
 // GameServerAllocationPolicyNamespaceLister helps list and get GameServerAllocationPolicies.
@@ -56,15 +56,15 @@ func (s *gameServerAllocationPolicyLister) GameServerAllocationPolicies(namespac
 type GameServerAllocationPolicyNamespaceLister interface {
 	// List lists all GameServerAllocationPolicies in the indexer for a given namespace.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1.GameServerAllocationPolicy, err error)
+	List(selector labels.Selector) (ret []*multiclusterv1.GameServerAllocationPolicy, err error)
 	// Get retrieves the GameServerAllocationPolicy from the indexer for a given namespace and name.
 	// Objects returned here must be treated as read-only.
-	Get(name string) (*v1.GameServerAllocationPolicy, error)
+	Get(name string) (*multiclusterv1.GameServerAllocationPolicy, error)
 	GameServerAllocationPolicyNamespaceListerExpansion
 }
 
 // gameServerAllocationPolicyNamespaceLister implements the GameServerAllocationPolicyNamespaceLister
 // interface.
 type gameServerAllocationPolicyNamespaceLister struct {
-	listers.ResourceIndexer[*v1.GameServerAllocationPolicy]
+	listers.ResourceIndexer[*multiclusterv1.GameServerAllocationPolicy]
 }

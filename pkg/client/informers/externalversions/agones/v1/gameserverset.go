@@ -19,13 +19,13 @@
 package v1
 
 import (
-	"context"
+	context "context"
 	time "time"
 
-	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
+	apisagonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	versioned "agones.dev/agones/pkg/client/clientset/versioned"
 	internalinterfaces "agones.dev/agones/pkg/client/informers/externalversions/internalinterfaces"
-	v1 "agones.dev/agones/pkg/client/listers/agones/v1"
+	agonesv1 "agones.dev/agones/pkg/client/listers/agones/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
@@ -36,7 +36,7 @@ import (
 // GameServerSets.
 type GameServerSetInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1.GameServerSetLister
+	Lister() agonesv1.GameServerSetLister
 }
 
 type gameServerSetInformer struct {
@@ -71,7 +71,7 @@ func NewFilteredGameServerSetInformer(client versioned.Interface, namespace stri
 				return client.AgonesV1().GameServerSets(namespace).Watch(context.TODO(), options)
 			},
 		},
-		&agonesv1.GameServerSet{},
+		&apisagonesv1.GameServerSet{},
 		resyncPeriod,
 		indexers,
 	)
@@ -82,9 +82,9 @@ func (f *gameServerSetInformer) defaultInformer(client versioned.Interface, resy
 }
 
 func (f *gameServerSetInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&agonesv1.GameServerSet{}, f.defaultInformer)
+	return f.factory.InformerFor(&apisagonesv1.GameServerSet{}, f.defaultInformer)
 }
 
-func (f *gameServerSetInformer) Lister() v1.GameServerSetLister {
-	return v1.NewGameServerSetLister(f.Informer().GetIndexer())
+func (f *gameServerSetInformer) Lister() agonesv1.GameServerSetLister {
+	return agonesv1.NewGameServerSetLister(f.Informer().GetIndexer())
 }

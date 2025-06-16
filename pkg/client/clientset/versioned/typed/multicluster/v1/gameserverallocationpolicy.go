@@ -19,10 +19,10 @@
 package v1
 
 import (
-	"context"
+	context "context"
 
-	v1 "agones.dev/agones/pkg/apis/multicluster/v1"
-	multiclusterv1 "agones.dev/agones/pkg/client/applyconfiguration/multicluster/v1"
+	multiclusterv1 "agones.dev/agones/pkg/apis/multicluster/v1"
+	applyconfigurationmulticlusterv1 "agones.dev/agones/pkg/client/applyconfiguration/multicluster/v1"
 	scheme "agones.dev/agones/pkg/client/clientset/versioned/scheme"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
@@ -38,32 +38,35 @@ type GameServerAllocationPoliciesGetter interface {
 
 // GameServerAllocationPolicyInterface has methods to work with GameServerAllocationPolicy resources.
 type GameServerAllocationPolicyInterface interface {
-	Create(ctx context.Context, gameServerAllocationPolicy *v1.GameServerAllocationPolicy, opts metav1.CreateOptions) (*v1.GameServerAllocationPolicy, error)
-	Update(ctx context.Context, gameServerAllocationPolicy *v1.GameServerAllocationPolicy, opts metav1.UpdateOptions) (*v1.GameServerAllocationPolicy, error)
+	Create(ctx context.Context, gameServerAllocationPolicy *multiclusterv1.GameServerAllocationPolicy, opts metav1.CreateOptions) (*multiclusterv1.GameServerAllocationPolicy, error)
+	Update(ctx context.Context, gameServerAllocationPolicy *multiclusterv1.GameServerAllocationPolicy, opts metav1.UpdateOptions) (*multiclusterv1.GameServerAllocationPolicy, error)
 	Delete(ctx context.Context, name string, opts metav1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts metav1.DeleteOptions, listOpts metav1.ListOptions) error
-	Get(ctx context.Context, name string, opts metav1.GetOptions) (*v1.GameServerAllocationPolicy, error)
-	List(ctx context.Context, opts metav1.ListOptions) (*v1.GameServerAllocationPolicyList, error)
+	Get(ctx context.Context, name string, opts metav1.GetOptions) (*multiclusterv1.GameServerAllocationPolicy, error)
+	List(ctx context.Context, opts metav1.ListOptions) (*multiclusterv1.GameServerAllocationPolicyList, error)
 	Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error)
-	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *v1.GameServerAllocationPolicy, err error)
-	Apply(ctx context.Context, gameServerAllocationPolicy *multiclusterv1.GameServerAllocationPolicyApplyConfiguration, opts metav1.ApplyOptions) (result *v1.GameServerAllocationPolicy, err error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *multiclusterv1.GameServerAllocationPolicy, err error)
+	Apply(ctx context.Context, gameServerAllocationPolicy *applyconfigurationmulticlusterv1.GameServerAllocationPolicyApplyConfiguration, opts metav1.ApplyOptions) (result *multiclusterv1.GameServerAllocationPolicy, err error)
 	GameServerAllocationPolicyExpansion
 }
 
 // gameServerAllocationPolicies implements GameServerAllocationPolicyInterface
 type gameServerAllocationPolicies struct {
-	*gentype.ClientWithListAndApply[*v1.GameServerAllocationPolicy, *v1.GameServerAllocationPolicyList, *multiclusterv1.GameServerAllocationPolicyApplyConfiguration]
+	*gentype.ClientWithListAndApply[*multiclusterv1.GameServerAllocationPolicy, *multiclusterv1.GameServerAllocationPolicyList, *applyconfigurationmulticlusterv1.GameServerAllocationPolicyApplyConfiguration]
 }
 
 // newGameServerAllocationPolicies returns a GameServerAllocationPolicies
 func newGameServerAllocationPolicies(c *MulticlusterV1Client, namespace string) *gameServerAllocationPolicies {
 	return &gameServerAllocationPolicies{
-		gentype.NewClientWithListAndApply[*v1.GameServerAllocationPolicy, *v1.GameServerAllocationPolicyList, *multiclusterv1.GameServerAllocationPolicyApplyConfiguration](
+		gentype.NewClientWithListAndApply[*multiclusterv1.GameServerAllocationPolicy, *multiclusterv1.GameServerAllocationPolicyList, *applyconfigurationmulticlusterv1.GameServerAllocationPolicyApplyConfiguration](
 			"gameserverallocationpolicies",
 			c.RESTClient(),
 			scheme.ParameterCodec,
 			namespace,
-			func() *v1.GameServerAllocationPolicy { return &v1.GameServerAllocationPolicy{} },
-			func() *v1.GameServerAllocationPolicyList { return &v1.GameServerAllocationPolicyList{} }),
+			func() *multiclusterv1.GameServerAllocationPolicy { return &multiclusterv1.GameServerAllocationPolicy{} },
+			func() *multiclusterv1.GameServerAllocationPolicyList {
+				return &multiclusterv1.GameServerAllocationPolicyList{}
+			},
+		),
 	}
 }

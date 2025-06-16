@@ -41,7 +41,7 @@ spec:
       restartPolicy: Never
       containers:
       - name: pre-delete-delete-agones-resources
-        image: "bitnami/kubectl:1.31.0"
+        image: "bitnami/kubectl:1.32.4"
         command:
         - "/bin/sh"
         - "/scripts/delete_agones_resources.sh"

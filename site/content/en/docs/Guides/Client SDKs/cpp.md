@@ -60,7 +60,7 @@ the supported gRPC version for you. Unfortunately this process was very brittle 
 therefore this functionality has been removed, and a manual installation of gRPC is now required.
 {{< /alert >}}
 
-This version of the Agones C++ SDK has been tested with gRPC 1.70.0. To install it from source 
+This version of the Agones C++ SDK has been tested with gRPC 1.72.0. To install it from source 
 [follow the instructions](https://grpc.io/docs/languages/cpp/quickstart/#build-and-install-grpc-and-protocol-buffers).
 
 It may also be available from your system's package manager, but that may not align with the supported gRPC version, so
@@ -101,7 +101,7 @@ CMake option `-Wno-dev` is specified to suppress [CMP0048](https://cmake.org/cma
 
 ### Using SDK
 In CMake-based projects it's enough to specify a folder where SDK is installed with `CMAKE_PREFIX_PATH` and use `find_package(agones CONFIG REQUIRED)` command. For example: {{< ghlink href="examples/cpp-simple" >}}cpp-simple{{< / >}}.
-It may be useful to disable some [protobuf warnings](https://github.com/protocolbuffers/protobuf/blob/master/cmake/README.md#notes-on-compiler-warnings) in your project.
+It may be useful to disable some [protobuf warnings](https://github.com/protocolbuffers/protobuf/blob/main/cmake/README.md#notes-on-compiler-warnings) in your project.
 
 
 ## Usage
