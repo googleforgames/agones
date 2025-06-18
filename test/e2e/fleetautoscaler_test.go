@@ -19,16 +19,28 @@ import (
 	"context"
 	cryptorand "crypto/rand"
 	"crypto/rsa"
+	"crypto/sha256"
 	"crypto/x509"
 	"crypto/x509/pkix"
+	"encoding/hex"
 	"encoding/pem"
 	"fmt"
 	"math/big"
 	"math/rand"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
 
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
+	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
+	autoscalingv1 "agones.dev/agones/pkg/apis/autoscaling/v1"
+	"agones.dev/agones/pkg/util/runtime"
+	helper "agones.dev/agones/test/e2e/allochelper"
+	e2e "agones.dev/agones/test/e2e/framework"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
@@ -37,6 +49,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
@@ -44,13 +57,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/uuid"
 	"k8s.io/apimachinery/pkg/util/wait"
-
-	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
-	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
-	autoscalingv1 "agones.dev/agones/pkg/apis/autoscaling/v1"
-	"agones.dev/agones/pkg/util/runtime"
-	helper "agones.dev/agones/test/e2e/allochelper"
-	e2e "agones.dev/agones/test/e2e/framework"
 )
 
 var deletePropagationForeground = metav1.DeletePropagationForeground
@@ -2003,6 +2009,219 @@ func TestChainAutoscaler(t *testing.T) {
 	fleetautoscalers.Delete(ctx, fas.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
 }
 
+func TestWasmAutoScaler(t *testing.T) {
+	if !runtime.FeatureEnabled(runtime.FeatureWasmAutoscaler) {
+		t.SkipNow()
+	}
+	// Parent test is not marked t.Parallel() because it performs shared setup (nginx pod + service)
+	// that is reused by parallel subtests.
+
+	ctx := context.Background()
+
+	// Shared setup: Get the path to the WASM plugin file and ensure it exists
+	wasmFilePath := filepath.Join("..", "..", "examples", "autoscaler-wasm", "plugin.wasm")
+	_, err := os.Stat(wasmFilePath)
+	require.NoError(t, err, "WASM plugin file does not exist at %s", wasmFilePath)
+
+	// Shared setup: Create a single nginx pod to serve the WASM plugin
+	emptyDirSize := resource.MustParse("50Mi") // 50Mi ~= 50MB
+	var port int32 = 80
+	path := "/plugin.wasm"
+
+	pod := &corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			GenerateName: "wasm-server-",
+			Namespace:    framework.Namespace,
+			Labels: map[string]string{
+				"app": "wasm-server",
+			},
+		},
+		Spec: corev1.PodSpec{
+			Volumes: []corev1.Volume{
+				{
+					Name: "ephemeral",
+					VolumeSource: corev1.VolumeSource{
+						EmptyDir: &corev1.EmptyDirVolumeSource{SizeLimit: &emptyDirSize},
+					},
+				},
+			},
+			Containers: []corev1.Container{
+				{
+					Name:  "nginx",
+					Image: "nginx:alpine",
+					Ports: []corev1.ContainerPort{{
+						ContainerPort: port,
+						Name:          "http",
+					}},
+					VolumeMounts: []corev1.VolumeMount{
+						{
+							Name:      "ephemeral",
+							MountPath: "/usr/share/nginx/html",
+						},
+					},
+				},
+			},
+		},
+	}
+	podClient := framework.KubeClient.CoreV1().Pods(framework.Namespace)
+	pod, err = podClient.Create(ctx, pod, metav1.CreateOptions{})
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = podClient.Delete(context.Background(), pod.ObjectMeta.Name, metav1.DeleteOptions{}) })
+
+	// Wait until the Pod is Running
+	require.NoError(t, wait.PollUntilContextTimeout(ctx, time.Second, 2*time.Minute, true, func(ctx context.Context) (bool, error) {
+		p, err := podClient.Get(ctx, pod.ObjectMeta.Name, metav1.GetOptions{})
+		if err != nil {
+			return false, nil
+		}
+		return p.Status.Phase == corev1.PodRunning, nil
+	}))
+
+	// Copy the WASM plugin file to the nginx container once
+	err = copyFileToContainer(t, framework.Namespace, pod.ObjectMeta.Name, "nginx", wasmFilePath, "/usr/share/nginx/html/plugin.wasm")
+	require.NoError(t, err, "Failed to copy WASM plugin file to container")
+
+	// Compute correct and incorrect SHA256 hashes for the served WASM
+	pluginBytes, err := os.ReadFile(wasmFilePath)
+	require.NoError(t, err)
+	sum := sha256.Sum256(pluginBytes)
+	hashStr := hex.EncodeToString(sum[:])
+	badSum := make([]byte, len(sum))
+	copy(badSum, sum[:])
+	badSum[0] ^= 0xFF
+	badHash := hex.EncodeToString(badSum)
+
+	// Shared setup: Create a service to expose the pod
+	service := &corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			GenerateName: "wasm-server-",
+			Namespace:    framework.Namespace,
+		},
+		Spec: corev1.ServiceSpec{
+			Selector: map[string]string{
+				"app": "wasm-server",
+			},
+			Ports: []corev1.ServicePort{{
+				Port:       port,
+				TargetPort: intstr.FromInt32(port),
+				Protocol:   corev1.ProtocolTCP,
+			}},
+		},
+	}
+	serviceClient := framework.KubeClient.CoreV1().Services(framework.Namespace)
+	service, err = serviceClient.Create(ctx, service, metav1.CreateOptions{})
+	require.NoError(t, err)
+	t.Cleanup(func() {
+		_ = serviceClient.Delete(context.Background(), service.ObjectMeta.Name, metav1.DeleteOptions{})
+	})
+
+	testCases := map[string]struct {
+		bufferSizeConfig     *int
+		functionNameOverride *string
+		hash                 *string
+		expectedFleetSize    int32
+	}{
+		"No buffer_size config": {
+			bufferSizeConfig:  nil,
+			expectedFleetSize: 5,
+		},
+		"buffer_size config of 4": {
+			bufferSizeConfig:  func() *int { i := 4; return &i }(),
+			expectedFleetSize: 4,
+		},
+		"overwrite function to scaleNone": {
+			bufferSizeConfig:     nil,
+			functionNameOverride: func() *string { s := "scaleNone"; return &s }(),
+			expectedFleetSize:    3,
+		},
+		"Correct hash set; scales as expected": {
+			bufferSizeConfig:  nil,
+			hash:              func() *string { s := hashStr; return &s }(),
+			expectedFleetSize: 5,
+		},
+		"Incorrect hash set; no scaling occurs": {
+			bufferSizeConfig:  nil,
+			hash:              func() *string { s := badHash; return &s }(),
+			expectedFleetSize: 3,
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			ctx := context.Background()
+
+			// Create fleet
+			fleets := framework.AgonesClient.AgonesV1().Fleets(framework.Namespace)
+			flt, err := fleets.Create(ctx, defaultFleet(framework.Namespace), metav1.CreateOptions{})
+			require.NoError(t, err)
+			defer fleets.Delete(context.Background(), flt.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
+
+			// Create WASM FleetAutoscaler
+			fleetAutoscalers := framework.AgonesClient.AutoscalingV1().FleetAutoscalers(framework.Namespace)
+
+			wasmAutoscaler := &autoscalingv1.FleetAutoscaler{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      flt.ObjectMeta.Name + "-wasm-autoscaler",
+					Namespace: framework.Namespace,
+				},
+				Spec: autoscalingv1.FleetAutoscalerSpec{
+					FleetName: flt.ObjectMeta.Name,
+					Policy: autoscalingv1.FleetAutoscalerPolicy{
+						Type: autoscalingv1.WasmPolicyType,
+						Wasm: &autoscalingv1.WasmPolicy{
+							Function: "scale",
+							Config:   make(map[string]string),
+							From: autoscalingv1.WasmFrom{
+								URL: &autoscalingv1.URLConfiguration{
+									Service: &admregv1.ServiceReference{
+										Namespace: framework.Namespace,
+										Name:      service.ObjectMeta.Name,
+										Path:      &path,
+										Port:      &port,
+									},
+								},
+							},
+						},
+					},
+					Sync: &autoscalingv1.FleetAutoscalerSync{
+						Type: autoscalingv1.FixedIntervalSyncType,
+						FixedInterval: autoscalingv1.FixedIntervalSync{
+							Seconds: 1,
+						},
+					},
+				},
+			}
+
+			// Overwrite the function name if provided in the test case
+			if tc.functionNameOverride != nil {
+				wasmAutoscaler.Spec.Policy.Wasm.Function = *tc.functionNameOverride
+			}
+
+			// Set buffer_size config if provided
+			if tc.bufferSizeConfig != nil {
+				wasmAutoscaler.Spec.Policy.Wasm.Config["buffer_size"] = strconv.Itoa(*tc.bufferSizeConfig)
+			}
+
+			// Set hash if provided
+			if tc.hash != nil {
+				wasmAutoscaler.Spec.Policy.Wasm.Hash = *tc.hash
+			}
+
+			// make sure the fleet has the correct number of replicas
+			framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
+
+			// Create the FleetAutoscaler
+			fas, err := fleetAutoscalers.Create(ctx, wasmAutoscaler, metav1.CreateOptions{})
+			require.NoError(t, err)
+			defer func() { _ = fleetAutoscalers.Delete(ctx, fas.ObjectMeta.Name, metav1.DeleteOptions{}) }()
+
+			framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(tc.expectedFleetSize))
+		})
+	}
+}
+
 // defaultAutoscalerSchedule returns a default scheduled autoscaler for testing.
 func defaultAutoscalerSchedule(t *testing.T, f *agonesv1.Fleet) *autoscalingv1.FleetAutoscaler {
 	return &autoscalingv1.FleetAutoscaler{
@@ -2160,4 +2379,18 @@ func currentTimePlusDuration(t *testing.T, duration string) metav1.Time {
 	d := mustParseDuration(t, duration)
 	currentTimePlusDuration := time.Now().Add(d)
 	return metav1.NewTime(currentTimePlusDuration)
+}
+
+// copyFileToContainer copies a file from the local filesystem to a container in a pod
+// Needs kubectl to be on the file path.
+// May want to replace this with a more robust solution using the Kubernetes client-go library at some point, but since all e2e tests use kubectl, this is a quick solution.
+func copyFileToContainer(t *testing.T, namespace, podName, containerName, srcPath, destPath string) error {
+	cmd := exec.Command("kubectl", "cp", srcPath, fmt.Sprintf("%s/%s:%s", namespace, podName, destPath), "-c", containerName)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Logf("kubectl cp failed: %s", string(output))
+		return fmt.Errorf("failed to copy file to container: %w", err)
+	}
+	t.Logf("Successfully copied %s to %s/%s:%s", srcPath, namespace, podName, destPath)
+	return nil
 }

@@ -76,14 +76,14 @@ const (
 	// FeatureSidecarContainers is a feature flag to enable/disable k8s sidecar containers for the sdkserver
 	FeatureSidecarContainers = "SidecarContainers"
 
+	// FeatureWasmAutoscaler is a feature flag to enable/disable the script based autoscaler.
+	FeatureWasmAutoscaler Feature = "WasmAutoscaler"
+
 	////////////////
 	// Dev features
 
 	// FeatureProcessorAllocator is a feature flag to enable/disable the processor allocator feature.
 	FeatureProcessorAllocator = "ProcessorAllocator"
-
-	// FeatureWasmAutoscaler is a feature flag to enable/disable the script based autoscaler.
-	FeatureWasmAutoscaler Feature = "WasmAutoscaler"
 
 	////////////////
 	// Example feature

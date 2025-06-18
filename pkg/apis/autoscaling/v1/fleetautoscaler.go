@@ -147,7 +147,7 @@ const (
 	// nolint:revive // Linter contains comment doesn't start with ChainPolicyType
 	ChainPolicyType FleetAutoscalerPolicyType = "Chain"
 	// WasmPolicyType is for WebAssembly based fleet autoscaling
-	// [Stage:Dev]
+	// [Stage:Alpha]
 	// [FeatureFlag:WasmAutoscaler]
 	WasmPolicyType FleetAutoscalerPolicyType = "Wasm"
 	// FixedIntervalSyncType is a simple fixed interval based strategy for trigger autoscaling
@@ -299,6 +299,7 @@ type WasmPolicy struct {
 	// WasmFrom defines the source of the Wasm module
 	From WasmFrom `json:"from"`
 	// Hash of the Wasm module, used to verify the integrity of the module
+	// +optional
 	Hash string `json:"hash,omitempty"`
 }
 
