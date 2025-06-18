@@ -50,7 +50,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: agones-1.50.0-dev
+    chart: agones-1.50.0
     release: agones-manual
     heritage: Helm
 ---
@@ -75,7 +75,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: agones-1.50.0-dev
+    chart: agones-1.50.0
     release: agones-manual
     heritage: Helm
 ---
@@ -100,7 +100,7 @@ metadata:
   namespace: default
   labels:
     app: agones
-    chart: agones-1.50.0-dev
+    chart: agones-1.50.0
     release: agones-manual
     heritage: Helm
 ---
@@ -112,7 +112,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: "agones-1.50.0-dev"
+    chart: "agones-1.50.0"
     release: "agones-manual"
     heritage: "Helm"
 type: Opaque
@@ -129,7 +129,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: "agones-1.50.0-dev"
+    chart: "agones-1.50.0"
     release: "agones-manual"
     heritage: "Helm"
 data:
@@ -145,7 +145,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: "agones-1.50.0-dev"
+    chart: "agones-1.50.0"
     release: "agones-manual"
     heritage: "Helm"
 data:
@@ -161,7 +161,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: "agones-1.50.0-dev"
+    chart: "agones-1.50.0"
     release: "agones-manual"
     heritage: "Helm"
 data:
@@ -191,7 +191,7 @@ metadata:
   labels:
     component: crd
     app: agones
-    chart: agones-1.50.0-dev
+    chart: agones-1.50.0
     release: agones-manual
     heritage: Helm
 spec:
@@ -6021,7 +6021,7 @@ metadata:
   labels:
     component: crd
     app: agones
-    chart: agones-1.50.0-dev
+    chart: agones-1.50.0
     release: agones-manual
     heritage: Helm
 spec:
@@ -6214,7 +6214,7 @@ metadata:
   labels:
     component: crd
     app: agones
-    chart: agones-1.50.0-dev
+    chart: agones-1.50.0
     release: agones-manual
     heritage: Helm
 spec:
@@ -11876,7 +11876,7 @@ metadata:
   labels:
     component: crd
     app: agones
-    chart: agones-1.50.0-dev
+    chart: agones-1.50.0
     release: agones-manual
     heritage: Helm
   name: gameserverallocationpolicies.multicluster.agones.dev
@@ -11955,7 +11955,7 @@ metadata:
   labels:
     component: crd
     app: agones
-    chart: agones-1.50.0-dev
+    chart: agones-1.50.0
     release: agones-manual
     heritage: Helm
 spec:
@@ -17753,7 +17753,7 @@ metadata:
   name: agones-allocator
   labels:
     app: agones
-    chart: agones-1.50.0-dev
+    chart: agones-1.50.0
     release: agones-manual
     heritage: Helm
 rules:
@@ -17783,7 +17783,7 @@ metadata:
   name: agones-controller
   labels:
     app: agones
-    chart: agones-1.50.0-dev
+    chart: agones-1.50.0
     release: agones-manual
     heritage: Helm
 rules:
@@ -17837,7 +17837,7 @@ metadata:
   name: agones-sdk
   labels:
     app: agones
-    chart: agones-1.50.0-dev
+    chart: agones-1.50.0
     release: agones-manual
     heritage: Helm
 rules:
@@ -17856,7 +17856,7 @@ metadata:
   name: agones-allocator
   labels:
     app: agones
-    chart: agones-1.50.0-dev
+    chart: agones-1.50.0
     release: agones-manual
     heritage: Helm
 subjects:
@@ -17875,7 +17875,7 @@ metadata:
   name: agones-controller-access
   labels:
     app: agones
-    chart: agones-1.50.0-dev
+    chart: agones-1.50.0
     release: agones-manual
     heritage: Helm
 subjects:
@@ -17927,7 +17927,7 @@ metadata:
   namespace: default
   labels:
     app: agones
-    chart: agones-1.50.0-dev
+    chart: agones-1.50.0
     release: agones-manual
     heritage: Helm
 subjects:
@@ -17961,7 +17961,7 @@ metadata:
   labels:
     agones.dev/role: controller
     app: agones
-    chart: agones-1.50.0-dev
+    chart: agones-1.50.0
     release: agones-manual
     heritage: Helm
 spec:
@@ -17995,7 +17995,7 @@ metadata:
   labels:
     agones.dev/role: extensions
     app: agones
-    chart: agones-1.50.0-dev
+    chart: agones-1.50.0
     release: agones-manual
     heritage: Helm
 spec:
@@ -18015,7 +18015,7 @@ metadata:
   labels:
     component: ping
     app: agones
-    chart: agones-1.50.0-dev
+    chart: agones-1.50.0
     release: agones-manual
     heritage: Helm
 spec:
@@ -18038,7 +18038,7 @@ metadata:
   labels:
     component: ping
     app: agones
-    chart: agones-1.50.0-dev
+    chart: agones-1.50.0
     release: agones-manual
     heritage: Helm
 spec:
@@ -18075,7 +18075,7 @@ metadata:
   labels:
     agones.dev/role: extensions
     app: agones
-    chart: agones-1.50.0-dev
+    chart: agones-1.50.0
     release: agones-manual
     heritage: Helm
 spec:
@@ -18112,7 +18112,7 @@ metadata:
   labels:
     component: allocator
     app: agones
-    chart: agones-1.50.0-dev
+    chart: agones-1.50.0
     release: agones-manual
     heritage: Helm
 spec:
@@ -18135,7 +18135,7 @@ metadata:
   labels:
     multicluster.agones.dev/role: allocator
     app: agones
-    chart: agones-1.50.0-dev
+    chart: agones-1.50.0
     release: agones-manual
     heritage: Helm
 spec:
@@ -18169,7 +18169,7 @@ metadata:
   labels:
     component: controller
     app: agones
-    chart: agones-1.50.0-dev
+    chart: agones-1.50.0
     release: agones-manual
     heritage: Helm
 spec:
@@ -18211,7 +18211,7 @@ spec:
       serviceAccountName: agones-controller
       containers:
       - name: agones-controller
-        image: "us-docker.pkg.dev/agones-images/release/agones-controller:1.50.0-dev"
+        image: "us-docker.pkg.dev/agones-images/release/agones-controller:1.50.0"
         imagePullPolicy: IfNotPresent
         securityContext:
           runAsNonRoot: true
@@ -18225,7 +18225,7 @@ spec:
         - name: MAX_PORT
           value: "8000"
         - name: SIDECAR_IMAGE # overwrite the GameServer sidecar image that is used
-          value: "us-docker.pkg.dev/agones-images/release/agones-sdk:1.50.0-dev"
+          value: "us-docker.pkg.dev/agones-images/release/agones-sdk:1.50.0"
         - name: ALWAYS_PULL_SIDECAR # set the sidecar imagePullPolicy to Always
           value: "false"
         - name: SIDECAR_CPU_REQUEST
@@ -18343,7 +18343,7 @@ metadata:
   labels:
     component: extensions
     app: agones
-    chart: agones-1.50.0-dev
+    chart: agones-1.50.0
     release: agones-manual
     heritage: Helm
 spec:
@@ -18387,7 +18387,7 @@ spec:
       terminationGracePeriodSeconds: 27
       containers:
       - name: agones-extensions
-        image: "us-docker.pkg.dev/agones-images/release/agones-extensions:1.50.0-dev"
+        image: "us-docker.pkg.dev/agones-images/release/agones-extensions:1.50.0"
         imagePullPolicy: IfNotPresent
         securityContext:
           runAsNonRoot: true
@@ -18497,7 +18497,7 @@ metadata:
   labels:
     component: ping
     app: agones
-    chart: agones-1.50.0-dev
+    chart: agones-1.50.0
     release: agones-manual
     heritage: Helm
 spec:
@@ -18532,7 +18532,7 @@ spec:
       priorityClassName: agones-system
       containers:
         - name: agones-ping
-          image: "us-docker.pkg.dev/agones-images/release/agones-ping:1.50.0-dev"
+          image: "us-docker.pkg.dev/agones-images/release/agones-ping:1.50.0"
           imagePullPolicy: IfNotPresent
           securityContext:
             runAsNonRoot: true
@@ -18610,7 +18610,7 @@ spec:
           secretName: allocator-client-ca
       containers:
       - name: agones-allocator
-        image: "us-docker.pkg.dev/agones-images/release/agones-allocator:1.50.0-dev"
+        image: "us-docker.pkg.dev/agones-images/release/agones-allocator:1.50.0"
         imagePullPolicy: IfNotPresent
         securityContext:
           runAsNonRoot: true
@@ -18697,7 +18697,7 @@ metadata:
   labels:
     component: controller
     app: agones
-    chart: agones-1.50.0-dev
+    chart: agones-1.50.0
     release: agones-manual
     heritage: Helm
 spec:
@@ -18748,7 +18748,7 @@ metadata:
   labels:
     component: controller
     app: agones
-    chart: agones-1.50.0-dev
+    chart: agones-1.50.0
     release: agones-manual
     heritage: Helm
 webhooks:
@@ -18791,7 +18791,7 @@ metadata:
   labels:
     component: controller
     app: agones
-    chart: agones-1.50.0-dev
+    chart: agones-1.50.0
     release: agones-manual
     heritage: Helm
 webhooks:
@@ -18836,7 +18836,7 @@ metadata:
   labels:
     component: controller
     app: agones
-    chart: agones-1.50.0-dev
+    chart: agones-1.50.0
     release: agones-manual
     heritage: Helm
 webhooks:
