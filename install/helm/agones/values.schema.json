@@ -437,7 +437,7 @@
             "allocationBatchWaitTime": {
               "type": "string"
             },
-            "sdk": {
+            "sdkServer": {
               "type": "object",
               "properties": {
                 "requestsRateLimit": {

@@ -95,7 +95,7 @@ agones:
       failureThreshold: 3
       timeoutSeconds: 1
     allocationBatchWaitTime: 500ms
-    sdk:
+    sdkServer:
       requestsRateLimit: 500ms
     replicas: 2
     pdb:

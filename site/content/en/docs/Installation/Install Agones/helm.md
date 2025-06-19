@@ -197,8 +197,13 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.controller.maxDeletionParallelism`               | Maximum number of parallelizing deletion calls in GSS                                                                                                                                                                               | `64`    |
 | `agones.controller.maxGameServerDeletionsPerBatch`       | Maximum number of GameServer deletion calls per batch                                                                                                                                                                               | `64`    |
 | `agones.controller.maxPodPendingCount`                   | Maximum number of pending pods per game server set                                                                                                                                                                                  | `5000`  |
+
 {{% feature publishVersion="1.51.0" %}}
-| `agones.controller.sdk.requestsRateLimit`                | The GameServer sidecar requests rate limit                                                                                                                                                                                          | `500ms` |
+### SDK Server
+
+| Parameter                                                | Description                                                                                                                                                                                                                         | Default        |
+|----------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------|
+| `agones.controller.sdkServer.requestsRateLimit`                | The GameServer sidecar requests rate limit                                                                                                                                                                                          | `500ms` |
 {{% /feature %}}
 
 ### Ping Service
