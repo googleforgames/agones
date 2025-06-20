@@ -42,11 +42,8 @@ var (
 
 	gameServerAllocationsLatency    = stats.Float64("gameserver_allocations/latency", "The duration of gameserver allocations", "s")
 	gameServerAllocationsRetryTotal = stats.Int64("gameserver_allocations/errors", "The errors of gameserver allocations", "1")
-)
 
-func init() {
-
-	stateViews := []*view.View{
+	stateViews = []*view.View{
 		{
 			Name:        "gameserver_allocations_duration_seconds",
 			Measure:     gameServerAllocationsLatency,
@@ -62,11 +59,21 @@ func init() {
 			TagKeys:     []tag.Key{keyFleetName, keyClusterName, keyMultiCluster, keyStatus, keySchedulingStrategy},
 		},
 	}
+)
 
+// register all our state views to OpenCensus
+func registerViews() {
 	for _, v := range stateViews {
 		if err := view.Register(v); err != nil {
 			logger.WithError(err).Error("could not register view")
 		}
+	}
+}
+
+// unregister views, this is only useful for tests as it trigger reporting.
+func unRegisterViews() {
+	for _, v := range stateViews {
+		view.Unregister(v)
 	}
 }
 

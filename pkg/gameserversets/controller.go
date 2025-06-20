@@ -70,6 +70,10 @@ type Extensions struct {
 	apiHooks   agonesv1.APIHooks
 }
 
+func init() {
+	registerViews()
+}
+
 // Controller is a GameServerSet controller
 type Controller struct {
 	baseLogger                     *logrus.Entry
