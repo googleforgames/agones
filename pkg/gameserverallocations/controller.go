@@ -43,6 +43,10 @@ import (
 	"agones.dev/agones/pkg/util/runtime"
 )
 
+func init() {
+	registerViews()
+}
+
 // Extensions is a GameServerAllocation controller within the Extensions service
 type Extensions struct {
 	api        *apiserver.APIServer
