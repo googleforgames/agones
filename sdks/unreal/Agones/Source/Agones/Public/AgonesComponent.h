@@ -66,6 +66,8 @@ DECLARE_DYNAMIC_DELEGATE_OneParam(FShutdownDelegate, const FEmptyResponse&, Resp
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FConnectedDelegate, const FGameServerResponse&, Response);
 
+DECLARE_DYNAMIC_DELEGATE_OneParam(FListDelegate, const FList&, Response);
+
 class FHttpVerb
 {
 public:
@@ -351,6 +353,46 @@ public:
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Agones | Beta | Counters")
 	void SetCounterCapacity(FString Key, int64 Capacity, FSetCounterCapacityDelegate SuccessDelegate, FAgonesErrorDelegate ErrorDelegate);
+
+	/**
+	 * \brief GetList retrieves the list’s properties with the key, returns the list’s information.
+	 * \param Key
+	 * \param SuccessDelegate - Called on Successful call.
+	 * \param ErrorDelegate - Called on Unsuccessful call.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Agones | Beta | Lists")
+	void GetList(const FString& Key, FListDelegate SuccessDelegate, FAgonesErrorDelegate ErrorDelegate);
+
+	/**
+	 * \brief UpdateList updates the list’s properties with the key, such as its capacity and values,
+	 * and returns the updated list details. Use AddListValue or RemoveListValue for modifying the List.Values field.
+	 * \param Key - The list key
+	 * \param List - The list to replace the server list with
+	 * \param SuccessDelegate - Called on Successful call.
+	 * \param ErrorDelegate - Called on Unsuccessful call.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Agones | Beta | Lists")
+	void UpdateList(const FString& Key, const FList& List, FListDelegate SuccessDelegate, FAgonesErrorDelegate ErrorDelegate);
+	
+	/**
+	 * \brief AddListValue adds a new value to a list with the key and returns the list with this addition.
+	 * \param Key - The list key
+	 * \param Value - The value in the list to add
+	 * \param SuccessDelegate - Called on Successful call.
+	 * \param ErrorDelegate - Called on Unsuccessful call.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Agones | Beta | Lists")
+	void AddListValue(const FString& Key, const FString& Value, FListDelegate SuccessDelegate, FAgonesErrorDelegate ErrorDelegate);
+
+	/**
+	 * \brief RemoveListValue removes a value from the list with the key and returns updated list.
+	 * \param Key - The list key
+	 * \param Value - The value in the list to remove
+	 * \param SuccessDelegate - Called on Successful call.
+	 * \param ErrorDelegate - Called on Unsuccessful call.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Agones | Beta | Lists")
+	void RemoveListValue(const FString& Key, const FString& Value, FListDelegate SuccessDelegate, FAgonesErrorDelegate ErrorDelegate);
 
 private:
 	DECLARE_DELEGATE_OneParam(FUpdateCounterDelegate, const FEmptyResponse&);
