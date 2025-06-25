@@ -203,7 +203,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 
 | Parameter                                                | Description                                                                                                                                                                                                                         | Default        |
 |----------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------|
-| `agones.controller.sdkServer.requestsRateLimit`                | The GameServer sidecar requests rate limit                                                                                                                                                                                          | `500ms` |
+| `agones.sdkServer.requestsRateLimit`                | The GameServer sidecar requests rate limit                                                                                                                                                                                          | `500ms` |
 {{% /feature %}}
 
 ### Ping Service

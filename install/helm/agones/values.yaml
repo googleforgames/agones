@@ -48,6 +48,8 @@ agones:
   priorityClassName: agones-system
   cloudProduct: "auto"
   requireDedicatedNodes: false
+  sdkServer:
+    requestsRateLimit: 500ms
   controller:
     resources: {}
       # requests:
@@ -95,8 +97,6 @@ agones:
       failureThreshold: 3
       timeoutSeconds: 1
     allocationBatchWaitTime: 500ms
-    sdkServer:
-      requestsRateLimit: 500ms
     replicas: 2
     pdb:
         minAvailable: 1
