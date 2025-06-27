@@ -37,11 +37,8 @@ var (
 	keyType      = mt.MustTagKey("type")
 
 	gameServerCreationDuration = stats.Float64("gameserver_creation/duration", "The duration of gameserver creation", "s")
-)
 
-func init() {
-
-	stateViews := []*view.View{
+	stateViews = []*view.View{
 		{
 			Name:        "gameserver_creation_duration",
 			Measure:     gameServerCreationDuration,
@@ -50,14 +47,22 @@ func init() {
 			TagKeys:     []tag.Key{keyName, keyType, keyFleetName, keyNamespace},
 		},
 	}
+)
 
-	// register all our state views to OpenCensus
+// register all our state views to OpenCensus
+func registerViews() {
 	for _, v := range stateViews {
 		if err := view.Register(v); err != nil {
 			logger.WithError(err).Error("could not register view")
 		}
 	}
+}
 
+// unregister views, this is only useful for tests as it trigger reporting.
+func unRegisterViews() {
+	for _, v := range stateViews {
+		view.Unregister(v)
+	}
 }
 
 // default set of tags for latency metric

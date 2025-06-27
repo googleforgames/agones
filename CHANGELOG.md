@@ -1,5 +1,31 @@
 # Changelog
 
+## [v1.50.0](https://github.com/googleforgames/agones/tree/v1.49.0) (2025-06-17)
+
+[Full Changelog](https://github.com/googleforgames/agones/compare/v1.49.0...v1.50.0)
+
+**Breaking changes:**
+- Update supported Kubernetes versions to 1.31, 1.32, 1.33 by @0xaravindh in https://github.com/googleforgames/agones/pull/4199
+
+**Implemented enhancements:**
+- Feat: allow push-chart to custom helm registry by @lacroixthomas in https://github.com/googleforgames/agones/pull/4172
+- Specify exit code in simple-game-server CRASH by @markmandel in https://github.com/googleforgames/agones/pull/4196
+- Promote FeatureRollingUpdateFix to Beta by @0xaravindh in https://github.com/googleforgames/agones/pull/4205
+
+**Fixed bugs:**
+- Updated version mapping and post-release step by @kamaljeeti in https://github.com/googleforgames/agones/pull/4191
+
+**Other:**
+- Preparation for Release v1.50.0 by @kamaljeeti in https://github.com/googleforgames/agones/pull/4177
+- Log Chain ID in Events When Applying ChainPolicy in FleetAutoscaler by @0xaravindh in https://github.com/googleforgames/agones/pull/4131
+- Update release template by @kamaljeeti in https://github.com/googleforgames/agones/pull/4181
+- Enhance logging and error handling in computeDesiredFleetSize, including Chain policies by @0xaravindh in https://github.com/googleforgames/agones/pull/4179
+- Update best practices for multi-cluster allocation by @kamaljeeti in https://github.com/googleforgames/agones/pull/4157
+- fix: exclude InactiveScheduleError for error logging by @indexjoseph in https://github.com/googleforgames/agones/pull/4183
+- Updated goimports formatting by @markmandel in https://github.com/googleforgames/agones/pull/4195
+- Upgrade Golang to 1.24.4 and update related dependencies and Dockerfiles by @0xaravindh in https://github.com/googleforgames/agones/pull/4204
+- Created performance test cluster for 1.32 by @0xaravindh in https://github.com/googleforgames/agones/pull/4202
+
 ## [v1.49.0](https://github.com/googleforgames/agones/tree/v1.49.0) (2025-05-06)
 
 [Full Changelog](https://github.com/googleforgames/agones/compare/v1.48.0...v1.49.0)
