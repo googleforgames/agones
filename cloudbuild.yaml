@@ -278,6 +278,7 @@ steps:
         #!/usr/bin/env bash
         set -e
         set -o pipefail
+        apt-get update && apt-get install -y jq
         export KUBECONFIG="/root/.kube/config"
         mkdir -p /go/src/agones.dev/ /root/.kube/
         ln -s /workspace /go/src/agones.dev/agones
@@ -312,6 +313,8 @@ steps:
               testCluster="gke-autopilot-upgrade-test-cluster-${version//./-}"
             fi
             testClusterLocation="${region}"
+
+            echo "===== Processing cluster: $testCluster in $testClusterLocation ====="
 
             gcloud container clusters get-credentials "$testCluster" --region="$testClusterLocation" --project="$PROJECT_ID"
 
@@ -374,13 +377,20 @@ steps:
             # TODO: Once all test clusters are at Kubernetes Version >= 1.31 use `kubectl wait --for=create` instead of sleep.
             # kubectl wait --for=create pod -l job-name=upgrade-test-runner --timeout=1m
             sleep 10s
-            kubectl wait --for=condition=ready pod -l job-name=upgrade-test-runner --timeout=5m
+
+            # Wait for the pod to become ready (or timeout)
+            if ! kubectl wait --for=condition=ready pod -l job-name=upgrade-test-runner --timeout=5m; then
+              echo "ERROR: Pod for job 'upgrade-test-runner' did not become ready within timeout."
+              job_pod_name=$(kubectl get pods -l job-name=upgrade-test-runner -o jsonpath="{.items[0].metadata.name}")
+              kubectl logs --tail=20 "$job_pod_name" || echo "Could not fetch logs for pod: $job_pod_name"
+            fi
 
             echo Wait for job upgrade-test-runner to complete or fail on cluster "${testCluster}"
-            kubectl wait job/upgrade-test-runner --timeout=30m --for jsonpath='{.status.conditions[*].status}'=True -o jsonpath='{.status.conditions[*].type}' | tee "${tmpdir}"/"${testCluster}".log &
+            kubectl wait job/upgrade-test-runner --timeout=30m --for jsonpath='{.status.conditions[*].status}'=True -o jsonpath='{.status.conditions[*]}' | tee "${tmpdir}"/"${testCluster}".log &
             waitPid=$!
             pids+=( "$waitPid" )
             waitPids[$waitPid]="${tmpdir}"/"${testCluster}".log
+
           done
         done
 
@@ -390,14 +400,21 @@ steps:
             outputLog="${waitPids[$pid]}"
             # wait for output to finish writing to file
             until [ -s "$outputLog" ]; do sleep 1; done
-            output=$(<"${outputLog}")
-            echo  "${outputLog}": "${output}"
+            output_json=$(<"${outputLog}")
+
+            echo "Reading output from log file: $outputLog:"
+            echo "$output_json" | jq '.'
+
+            job_condition_type=$(echo "$output_json" | jq -r '.type')
+            job_condition_message=$(echo "$output_json" | jq -r '.message')
 
             # "Complete" is successful job run.
             # Version 1.31 has "SuccessCriteriaMet" as the first completion status returned, or "FailureTarget" in case of failure.
-            if [ "$output" == "Complete" ] || [ "$output" == "SuccessCriteriaMet" ] ; then
+            if [ "$job_condition_type" == "Complete" ] || [ "$job_condition_type" == "SuccessCriteriaMet" ] ; then
+              echo "Job completed successfully on cluster associated with log: $outputLog"
               continue
             else
+              echo "Unexpected job status: '$job_condition_type' with message: '$job_condition_message' in log $outputLog"
               exit 1
             fi
           # This block executes when the process exits and pid status!=0
