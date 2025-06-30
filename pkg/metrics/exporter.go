@@ -140,9 +140,10 @@ func SetupMetrics(conf Config, server *httpserver.Server) (healthcheck.Handler, 
 	if conf.Stackdriver {
 		sd, err := RegisterStackdriverExporter(conf.GCPProjectID, conf.StackdriverLabels)
 		if err != nil {
-			logger.WithError(err).Fatal("Could not register Stackdriver exporter")
+			logger.WithError(err).Error("Could not register Stackdriver exporter")
+		} else {
+			closer = func() { sd.Flush() }
 		}
-		closer = func() { sd.Flush() }
 	}
 
 	// Prometheus Metrics
@@ -150,7 +151,7 @@ func SetupMetrics(conf Config, server *httpserver.Server) (healthcheck.Handler, 
 		registry := prom.NewRegistry()
 		metricHandler, err := RegisterPrometheusExporter(registry)
 		if err != nil {
-			logger.WithError(err).Fatal("Could not register Prometheus exporter")
+			logger.WithError(err).Error("Could not register Prometheus exporter")
 		}
 		server.Handle("/metrics", metricHandler)
 		health = healthcheck.NewMetricsHandler(registry, "agones")
