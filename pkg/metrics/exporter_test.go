@@ -141,6 +141,29 @@ func TestMetrics_Endpoint_ExposesAllMetrics(t *testing.T) {
 }
 
 func TestSetupMetrics_StackdriverOnly_NoPanic(t *testing.T) {
+	// Set required env vars
+	require.NoError(t, os.Setenv("POD_NAMESPACE", "default"))
+	require.NoError(t, os.Setenv("POD_NAME", "test-pod"))
+	require.NoError(t, os.Setenv("CONTAINER_NAME", "test-container"))
+
+	// Fake metadata server
+	handler := http.NewServeMux()
+	handler.HandleFunc("/computeMetadata/v1/instance/zone", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Metadata-Flavor", "Google")
+		_, _ = w.Write([]byte("projects/123456789/zones/fake-zone"))
+	})
+	handler.HandleFunc("/computeMetadata/v1/instance/attributes/cluster-name", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Metadata-Flavor", "Google")
+		_, _ = w.Write([]byte("fake-cluster"))
+	})
+	fakeMetadataServer := httptest.NewServer(handler)
+	t.Cleanup(fakeMetadataServer.Close)
+
+	// Set env var to point to the fake metadata server
+	host := strings.TrimPrefix(fakeMetadataServer.URL, "http://")
+	require.NoError(t, os.Setenv("GCE_METADATA_HOST", host))
+
+	// Config for Stackdriver metrics
 	conf := Config{
 		Stackdriver:       true,
 		GCPProjectID:      "fake-project",
@@ -151,12 +174,6 @@ func TestSetupMetrics_StackdriverOnly_NoPanic(t *testing.T) {
 		Logger: framework.TestLogger(t),
 	}
 
-	// Set required env vars to avoid nil pointer
-	require.NoError(t, os.Setenv("POD_NAMESPACE", "default"))
-	require.NoError(t, os.Setenv("POD_NAME", "test-pod"))
-	require.NoError(t, os.Setenv("CONTAINER_NAME", "test-container"))
-
-	// Call without expecting crash (error will be logged internally)
 	health, closer := SetupMetrics(conf, server)
 	defer t.Cleanup(closer)
 	assert.NotNil(t, health, "Health check handler should not be nil")
