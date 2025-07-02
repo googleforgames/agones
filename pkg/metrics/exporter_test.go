@@ -148,11 +148,11 @@ func TestSetupMetrics_StackdriverOnly_NoPanic(t *testing.T) {
 
 	// Fake metadata server
 	handler := http.NewServeMux()
-	handler.HandleFunc("/computeMetadata/v1/instance/zone", func(w http.ResponseWriter, r *http.Request) {
+	handler.HandleFunc("/computeMetadata/v1/instance/zone", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Metadata-Flavor", "Google")
 		_, _ = w.Write([]byte("projects/123456789/zones/fake-zone"))
 	})
-	handler.HandleFunc("/computeMetadata/v1/instance/attributes/cluster-name", func(w http.ResponseWriter, r *http.Request) {
+	handler.HandleFunc("/computeMetadata/v1/instance/attributes/cluster-name", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Metadata-Flavor", "Google")
 		_, _ = w.Write([]byte("fake-cluster"))
 	})
