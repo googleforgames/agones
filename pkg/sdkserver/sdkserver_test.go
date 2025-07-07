@@ -205,7 +205,7 @@ func TestSidecarRun(t *testing.T) {
 				return true, gsCopy, nil
 			})
 
-			sc, err := NewSDKServer("test", "default", m.KubeClient, m.AgonesClient, logrus.DebugLevel, 8080)
+			sc, err := NewSDKServer("test", "default", m.KubeClient, m.AgonesClient, logrus.DebugLevel, 8080, 500*time.Millisecond)
 			stop := make(chan struct{})
 			defer close(stop)
 			ctx, cancel := context.WithCancel(context.Background())
@@ -462,7 +462,7 @@ func TestSidecarUnhealthyMessage(t *testing.T) {
 	t.Parallel()
 
 	m := agtesting.NewMocks()
-	sc, err := NewSDKServer("test", "default", m.KubeClient, m.AgonesClient, logrus.DebugLevel, 8080)
+	sc, err := NewSDKServer("test", "default", m.KubeClient, m.AgonesClient, logrus.DebugLevel, 8080, 500*time.Millisecond)
 	require.NoError(t, err)
 
 	gs := agonesv1.GameServer{
@@ -613,7 +613,7 @@ func TestSidecarHealthy(t *testing.T) {
 
 func TestSidecarHTTPHealthCheck(t *testing.T) {
 	m := agtesting.NewMocks()
-	sc, err := NewSDKServer("test", "default", m.KubeClient, m.AgonesClient, logrus.DebugLevel, 8080)
+	sc, err := NewSDKServer("test", "default", m.KubeClient, m.AgonesClient, logrus.DebugLevel, 8080, 500*time.Millisecond)
 	require.NoError(t, err)
 
 	now := time.Now().Add(time.Hour).UTC()
@@ -2388,7 +2388,7 @@ func TestSDKServerGracefulTerminationGameServerStateChannel(t *testing.T) {
 }
 
 func defaultSidecar(m agtesting.Mocks) (*SDKServer, error) {
-	server, err := NewSDKServer("test", "default", m.KubeClient, m.AgonesClient, logrus.DebugLevel, 8080)
+	server, err := NewSDKServer("test", "default", m.KubeClient, m.AgonesClient, logrus.DebugLevel, 8080, 500*time.Millisecond)
 	if err != nil {
 		return server, err
 	}
