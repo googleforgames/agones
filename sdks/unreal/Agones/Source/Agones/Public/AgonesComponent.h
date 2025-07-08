@@ -356,7 +356,7 @@ public:
 
 	/**
 	 * \brief GetList retrieves the list’s properties with the key, returns the list’s information.
-	 * \param Key
+	 * \param Key - Key to list value
 	 * \param SuccessDelegate - Called on Successful call.
 	 * \param ErrorDelegate - Called on Unsuccessful call.
 	 */
@@ -366,7 +366,7 @@ public:
 	/**
 	 * \brief UpdateList updates the list’s properties with the key, such as its capacity and values,
 	 * and returns the updated list details. Use AddListValue or RemoveListValue for modifying the List.Values field.
-	 * \param Key - The list key
+	 * \param Key - Key to list value
 	 * \param List - The list to replace the server list with
 	 * \param SuccessDelegate - Called on Successful call.
 	 * \param ErrorDelegate - Called on Unsuccessful call.
@@ -376,8 +376,8 @@ public:
 	
 	/**
 	 * \brief AddListValue adds a new value to a list with the key and returns the list with this addition.
-	 * \param Key - The list key
-	 * \param Value - The value in the list to add
+	 * \param Key - Key to list value
+	 * \param Value - Value to add
 	 * \param SuccessDelegate - Called on Successful call.
 	 * \param ErrorDelegate - Called on Unsuccessful call.
 	 */
@@ -385,15 +385,15 @@ public:
 	void AddListValue(const FString& Key, const FString& Value, FListDelegate SuccessDelegate, FAgonesErrorDelegate ErrorDelegate);
 
 	/**
-	 * \brief RemoveListValue removes a value from the list with the key and returns updated list.
-	 * \param Key - The list key
-	 * \param Value - The value in the list to remove
+	 * \brief RemoveListValue removes a value from the list with the key players and returns updated list.
+	 * \param Key - Key to list value
+	 * \param Value - Value to remove
 	 * \param SuccessDelegate - Called on Successful call.
 	 * \param ErrorDelegate - Called on Unsuccessful call.
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Agones | Beta | Lists")
 	void RemoveListValue(const FString& Key, const FString& Value, FListDelegate SuccessDelegate, FAgonesErrorDelegate ErrorDelegate);
-
+	
 private:
 	DECLARE_DELEGATE_OneParam(FUpdateCounterDelegate, const FEmptyResponse&);
 	void UpdateCounter(const FString& Key, const int64* Count, const int64* Capacity, const int64* CountDiff, FUpdateCounterDelegate SuccessDelegate, FAgonesErrorDelegate ErrorDelegate);

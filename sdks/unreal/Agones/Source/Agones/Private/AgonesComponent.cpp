@@ -645,7 +645,7 @@ void UAgonesComponent::GetConnectedPlayers(
 
 void UAgonesComponent::GetList(const FString& Key, FListDelegate SuccessDelegate, FAgonesErrorDelegate ErrorDelegate)
 {
-	const FString Path = FString::Printf(TEXT("/v1beta1/lists/%s"), *Key);
+	const FString Path = FString::Printf(TEXT("v1beta1/lists/%s"), *Key);
 	const FHttpRequestRef Request = BuildAgonesRequest(Path, FHttpVerb::Get, "");
 	Request->OnProcessRequestComplete().BindWeakLambda(this,
 		[SuccessDelegate, ErrorDelegate](FHttpRequestPtr HttpRequest, const FHttpResponsePtr HttpResponse, const bool bSucceeded) {
@@ -670,7 +670,7 @@ void UAgonesComponent::UpdateList(const FString& Key, const FList& List, FListDe
 		return;
 	}
 
-	const FString Path = FString::Printf(TEXT("/v1beta1/lists/%s"), *Key);
+	const FString Path = FString::Printf(TEXT("v1beta1/lists/%s"), *Key);
 	const FHttpRequestRef Request = BuildAgonesRequest(Path, FHttpVerb::Patch, Json);
 	Request->OnProcessRequestComplete().BindWeakLambda(this,
 		[SuccessDelegate, ErrorDelegate](FHttpRequestPtr HttpRequest, const FHttpResponsePtr HttpResponse, const bool bSucceeded) {
@@ -696,7 +696,7 @@ void UAgonesComponent::AddListValue(const FString& Key, const FString& Value, FL
 		return;
 	}
 
-	const FString Path = FString::Printf(TEXT("/v1beta1/lists/%s:addValue"), *Key);
+	const FString Path = FString::Printf(TEXT("v1beta1/lists/%s:addValue"), *Key);
 	const FHttpRequestRef Request = BuildAgonesRequest(Path, FHttpVerb::Post, Json);
 	Request->OnProcessRequestComplete().BindWeakLambda(this,
 		[SuccessDelegate, ErrorDelegate](FHttpRequestPtr HttpRequest, const FHttpResponsePtr HttpResponse, const bool bSucceeded) {
@@ -722,7 +722,7 @@ void UAgonesComponent::RemoveListValue(const FString& Key, const FString& Value,
 		return;
 	}
 
-	const FString Path = FString::Printf(TEXT("/v1beta1/lists/%s:removeValue"), *Key);
+	const FString Path = FString::Printf(TEXT("v1beta1/lists/%s:removeValue"), *Key);
 	const FHttpRequestRef Request = BuildAgonesRequest(Path, FHttpVerb::Post, Json);
 	Request->OnProcessRequestComplete().BindWeakLambda(this,
 		[SuccessDelegate, ErrorDelegate](FHttpRequestPtr HttpRequest, const FHttpResponsePtr HttpResponse, const bool bSucceeded) {
